@@ -2,17 +2,19 @@ from __future__ import print_function, division
 
 from sympy.core import sympify
 from sympy.core.add import Add
+from sympy.core.function import Lambda, Function, ArgumentIndexError
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import range
-from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
-from sympy.core.logic import fuzzy_not
-from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
+from sympy.core.mul import Mul
+from sympy.core.logic import fuzzy_not
+
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
+from sympy.core.compatibility import range
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -39,10 +41,8 @@ class ExpBase(Function):
     def as_numer_denom(self):
         """
         Returns this with a positive exponent as a 2-tuple (a fraction).
-
         Examples
         ========
-
         >>> from sympy.functions import exp
         >>> from sympy.abc import x
         >>> exp(-x).as_numer_denom()
@@ -118,29 +118,21 @@ class ExpBase(Function):
 class exp_polar(ExpBase):
     r"""
     Represent a 'polar number' (see g-function Sphinx documentation).
-
     ``exp_polar`` represents the function
     `Exp: \mathbb{C} \rightarrow \mathcal{S}`, sending the complex number
     `z = a + bi` to the polar number `r = exp(a), \theta = b`. It is one of
     the main functions to construct polar numbers.
-
     >>> from sympy import exp_polar, pi, I, exp
-
     The main difference is that polar numbers don't "wrap around" at `2 \pi`:
-
     >>> exp(2*pi*I)
     1
     >>> exp_polar(2*pi*I)
     exp_polar(2*I*pi)
-
     apart from that they behave mostly like classical complex numbers:
-
     >>> exp_polar(2)*exp_polar(3)
     exp_polar(5)
-
-    See Also
+    See also
     ========
-
     sympy.simplify.simplify.powsimp
     sympy.functions.elementary.complexes.polar_lift
     sympy.functions.elementary.complexes.periodic_argument
@@ -187,10 +179,8 @@ class exp_polar(ExpBase):
 class exp(ExpBase):
     """
     The exponential function, :math:`e^x`.
-
     See Also
     ========
-
     log
     """
 
@@ -229,7 +219,6 @@ class exp(ExpBase):
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
-        from sympy import logcombine
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -276,10 +265,9 @@ class exp(ExpBase):
 
             coeffs, log_term = [coeff], None
             for term in Mul.make_args(terms):
-                term_ = logcombine(term)
-                if isinstance(term_, log):
+                if isinstance(term, log):
                     if log_term is None:
-                        log_term = term_.args[0]
+                        log_term = term.args[0]
                     else:
                         return None
                 elif term.is_comparable:
@@ -334,10 +322,8 @@ class exp(ExpBase):
     def as_real_imag(self, deep=True, **hints):
         """
         Returns this function as a 2-tuple representing a complex number.
-
         Examples
         ========
-
         >>> from sympy import I
         >>> from sympy.abc import x
         >>> from sympy.functions import exp
@@ -349,10 +335,8 @@ class exp(ExpBase):
         (cos(1), sin(1))
         >>> exp(1+I).as_real_imag()
         (E*cos(1), E*sin(1))
-
         See Also
         ========
-
         sympy.functions.elementary.complexes.re
         sympy.functions.elementary.complexes.im
         """
@@ -467,12 +451,6 @@ class exp(ExpBase):
                 if not isinstance(cosine, cos) and not isinstance (sine, sin):
                     return cosine + S.ImaginaryUnit*sine
 
-    def _eval_rewrite_as_Pow(self, arg, **kwargs):
-        if arg.is_Mul:
-            logs = [a for a in arg.args if isinstance(a, log) and len(a.args) == 1]
-            if logs:
-                return Pow(logs[0].args[0], arg.coeff(logs[0]))
-
 
 class log(Function):
     r"""
@@ -480,10 +458,8 @@ class log(Function):
     Logarithms are taken with the natural base, `e`. To get
     a logarithm of a different base ``b``, use ``log(x, b)``,
     which is essentially short-hand for ``log(x)/log(b)``.
-
     See Also
     ========
-
     exp
     """
 
@@ -673,10 +649,8 @@ class log(Function):
     def as_real_imag(self, deep=True, **hints):
         """
         Returns this function as a complex coordinate.
-
         Examples
         ========
-
         >>> from sympy import I
         >>> from sympy.abc import x
         >>> from sympy.functions import log
@@ -688,7 +662,6 @@ class log(Function):
         (log(sqrt(2)), pi/4)
         >>> log(I*x).as_real_imag()
         (log(Abs(x)), arg(I*x))
-
         """
         from sympy import Abs, arg
         if deep:
@@ -785,21 +758,17 @@ class LambertW(Function):
     r"""
     The Lambert W function `W(z)` is defined as the inverse
     function of `w \exp(w)` [1]_.
-
     In other words, the value of `W(z)` is such that `z = W(z) \exp(W(z))`
     for any complex number `z`.  The Lambert W function is a multivalued
     function with infinitely many branches `W_k(z)`, indexed by
     `k \in \mathbb{Z}`.  Each branch gives a different solution `w`
     of the equation `z = w \exp(w)`.
-
     The Lambert W function has two partially real branches: the
     principal branch (`k = 0`) is real for real `z > -1/e`, and the
     `k = -1` branch is real for `-1/e < z < 0`. All branches except
     `k = 0` have a logarithmic singularity at `z = 0`.
-
     Examples
     ========
-
     >>> from sympy import LambertW
     >>> LambertW(1.2)
     0.635564016364870
@@ -807,10 +776,8 @@ class LambertW(Function):
     -1.34747534407696 - 4.41624341514535*I
     >>> LambertW(-1).is_real
     False
-
     References
     ==========
-
     .. [1] https://en.wikipedia.org/wiki/Lambert_W_function
     """
 
@@ -887,3 +854,91 @@ class LambertW(Function):
                 return False
         else:
             return s.is_algebraic
+
+class sigmoid(Function):
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return exp(-args[0])/( (1+exp(-args[0]) ** 2))
+
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, arg):
+
+        if arg is S.Zero:
+            return S.Half
+
+        arg = sympify(arg)
+        print("hello")
+        return 1/(1+exp(-arg))
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+
+        from sympy.ntheory.combinatorial.numbers import bernoulli
+
+        x = sympify(x)
+        if n < 0:
+            return S.Zero
+
+        if n == 0:
+            return S.Half
+
+        if n == 1:
+            return 1/4
+
+        if n == 2:
+            return S.Zero
+
+        else:
+            return x**n*(-1**n)*( 2** (n+1) - 1)*bernoulli(n)/(2*factorial(n))
+
+    def as_real_imag(self, deep=True, **hints):
+
+        import sympy
+        re, im = self.args[0].as_real_imag()
+        if deep:
+            re = re.expand(deep, **hints)
+            im = im.expand(deep, **hints)
+
+        a = ( 1 + exp(-re)*cos(rm))/(1 + exp(-2*re) + 2*exp(-re)*cos(rm))
+        b = exp(-a)*sin(b)/(1 + exp(-2*re) + 2*exp(-re)*cos(rm))
+
+        return (a,b)
+
+    def _eval_is_real(self):
+        if self.args[0].is_real:
+            return True
+        elif self.args[0].is_imaginary:
+            arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
+            return arg2.is_even
+
+    def _eval_is_algebraic(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if fuzzy_not(self.exp.is_zero):
+                if self.exp.is_algebraic:
+                    return False
+                elif (self.exp/S.Pi).is_rational:
+                    return False
+        else:
+            return s.is_algebraic
+
+    def _taylor(self, x, n):
+        from sympy import Order
+        l = []
+        g = None
+        for i in range(n):
+            g = self.taylor_term(i, self.args[0], g)
+            g = g.nseries(x, n=n)
+            l.append(g)
+        return Add(*l) + Order(x**n, x)
+
+    def _eval_rewrite_as_tanh(self,arg):
+        from sympy import tanh
+        return (1 + tanh(arg/2))/2
+    
+from sympy.core.function import _coeff_isneg
