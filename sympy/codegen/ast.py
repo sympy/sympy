@@ -1467,7 +1467,7 @@ class Variable(Node):
         >>> from sympy.codegen.ast import Variable
         >>> x = Variable('x')
         >>> decl1 = x.as_Declaration()
-        >>> decl1.variable.value is None
+        >>> decl1.variable.value == None
         True
         >>> decl2 = x.as_Declaration(value=42.0)
         >>> decl2.variable.value == 42
@@ -1560,7 +1560,7 @@ class Declaration(Token):
     >>> z = Declaration('z')
     >>> z.variable.type == untyped
     True
-    >>> z.variable.value is None
+    >>> z.variable.value == None
     True
     """
     __slots__ = ['variable']
