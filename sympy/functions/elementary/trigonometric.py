@@ -1530,7 +1530,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
             return arg.args[0]
 
         t = cls._reciprocal_of.eval(arg)
-        if t == None:
+        if t is None:
             return t
         elif any(isinstance(i, cos) for i in (t, -t)):
             return (1/t).rewrite(sec)

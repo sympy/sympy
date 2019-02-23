@@ -268,8 +268,8 @@ class FCodePrinter(CodePrinter):
                 pure_imaginary.append(arg)
             else:
                 mixed.append(arg)
-        if len(pure_imaginary) > 0:
-            if len(mixed) > 0:
+        if pure_imaginary:
+            if mixed:
                 PREC = precedence(expr)
                 term = Add(*mixed)
                 t = self._print(term)
@@ -547,7 +547,7 @@ class FCodePrinter(CodePrinter):
                     hunk = line[:pos]
                     line = line[pos:].lstrip()
                     result.append(hunk)
-                    while len(line) > 0:
+                    while line:
                         pos = line.rfind(" ", 0, 66)
                         if pos == -1 or len(line) < 66:
                             pos = 66
@@ -564,7 +564,7 @@ class FCodePrinter(CodePrinter):
                 if line:
                     hunk += trailing
                 result.append(hunk)
-                while len(line) > 0:
+                while line:
                     pos = split_pos_code(line, 65)
                     hunk = line[:pos].rstrip()
                     line = line[pos:].lstrip()

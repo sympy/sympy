@@ -486,11 +486,11 @@ def _TR56(rv, f, g, h, max, pow):
     >>> T(sin(x)**3, sin, cos, h, 4, False)
     sin(x)**3
     >>> T(sin(x)**6, sin, cos, h, 6, False)
-    (-cos(x)**2 + 1)**3
+    (1 - cos(x)**2)**3
     >>> T(sin(x)**6, sin, cos, h, 6, True)
     sin(x)**6
     >>> T(sin(x)**8, sin, cos, h, 10, True)
-    (-cos(x)**2 + 1)**4
+    (1 - cos(x)**2)**4
     """
 
     def _f(rv):
@@ -536,11 +536,11 @@ def TR5(rv, max=4, pow=False):
     >>> from sympy.abc import x
     >>> from sympy import sin
     >>> TR5(sin(x)**2)
-    -cos(x)**2 + 1
+    1 - cos(x)**2
     >>> TR5(sin(x)**-2)  # unchanged
     sin(x)**(-2)
     >>> TR5(sin(x)**4)
-    (-cos(x)**2 + 1)**2
+    (1 - cos(x)**2)**2
     """
     return _TR56(rv, sin, cos, lambda x: 1 - x, max=max, pow=pow)
 
@@ -557,11 +557,11 @@ def TR6(rv, max=4, pow=False):
     >>> from sympy.abc import x
     >>> from sympy import cos
     >>> TR6(cos(x)**2)
-    -sin(x)**2 + 1
+    1 - sin(x)**2
     >>> TR6(cos(x)**-2)  #unchanged
     cos(x)**(-2)
     >>> TR6(cos(x)**4)
-    (-sin(x)**2 + 1)**2
+    (1 - sin(x)**2)**2
     """
     return _TR56(rv, cos, sin, lambda x: 1 - x, max=max, pow=pow)
 
@@ -1534,7 +1534,7 @@ def TR111(rv):
     >>> from sympy.abc import x
     >>> from sympy import tan
     >>> TR111(1 - 1/tan(x)**2)
-    -cot(x)**2 + 1
+    1 - cot(x)**2
 
     """
 

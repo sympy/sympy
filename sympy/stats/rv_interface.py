@@ -52,7 +52,7 @@ def variance(X, condition=None, **kwargs):
     35/3
 
     >>> simplify(variance(B))
-    p*(-p + 1)
+    p*(1 - p)
     """
     return cmoment(X, 2, condition, **kwargs)
 
@@ -73,7 +73,7 @@ def standard_deviation(X, condition=None, **kwargs):
     >>> B = Bernoulli('B', p, 1, 0)
 
     >>> simplify(std(B))
-    sqrt(p*(-p + 1))
+    sqrt(p*(1 - p))
     """
     return sqrt(variance(X, condition, **kwargs))
 std = standard_deviation
