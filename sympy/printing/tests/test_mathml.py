@@ -925,6 +925,25 @@ def test_toprettyxml_hooking():
     assert prettyxml_old2 == doc2.toprettyxml()
 
 
+def test_print_domains():
+    from sympy import Complexes, Integers, Naturals, Naturals0, Reals
+
+    assert mpp.doprint(Complexes) == '<mi mathvariant="normal">&#x2102;</mi>'
+    assert mpp.doprint(Integers) == '<mi mathvariant="normal">&#x2124;</mi>'
+    assert mpp.doprint(Naturals) == '<mi mathvariant="normal">&#x2115;</mi>'
+    assert mpp.doprint(Naturals0) == '<msub><mi mathvariant="normal">&#x2115;</mi><mn>0</mn></msub>'
+    assert mpp.doprint(Reals) == '<mi mathvariant="normal">&#x211D;</mi>'
+
+
+def test_print_AssocOp():
+    from sympy.core.operations import AssocOp
+    class TestAssocOp(AssocOp):
+        identity = 0
+
+    expr = TestAssocOp(1, 2)
+    mpp.doprint(expr) == '<mrow><mi>testassocop</mi><mn>2</mn><mn>1</mn></mrow>'
+
+
 def test_print_basic():
     expr = Basic(1, 2)
     assert mpp.doprint(expr) == '<mrow><mi>basic</mi><mfenced><mn>1</mn><mn>2</mn></mfenced></mrow>'
