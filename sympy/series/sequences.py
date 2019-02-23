@@ -326,14 +326,14 @@ class SeqBase(Basic):
         >>> sequence(x+y*(-2)**(-n), (n, 0, oo)).find_linear_recurrence(30)
         [1/2, 1/2]
         >>> sequence(3*5**n + 12).find_linear_recurrence(20,gfvar=x)
-        ([6, -5], 3*(-21*x + 5)/((x - 1)*(5*x - 1)))
+        ([6, -5], 3*(5 - 21*x)/((x - 1)*(5*x - 1)))
         >>> sequence(lucas(n)).find_linear_recurrence(15,gfvar=x)
         ([1, 1], (x - 2)/(x**2 + x - 1))
         """
         from sympy.matrices import Matrix
         x = [simplify(expand(t)) for t in self[:n]]
         lx = len(x)
-        if d == None:
+        if d is None:
             r = lx//2
         else:
             r = min(d,lx//2)
@@ -356,7 +356,7 @@ class SeqBase(Basic):
                 if m*y == Matrix(x[l2:]):
                     coeffs = flatten(y[::-1])
                     break
-        if gfvar == None:
+        if gfvar is None:
             return coeffs
         else:
             l = len(coeffs)
@@ -647,9 +647,9 @@ class SeqFormula(SeqExpr):
 
         def _find_x(formula):
             free = formula.free_symbols
-            if len(formula.free_symbols) == 1:
+            if len(free) == 1:
                 return free.pop()
-            elif len(formula.free_symbols) == 0:
+            elif not free:
                 return Dummy('k')
             else:
                 raise ValueError(
@@ -1052,7 +1052,7 @@ class SeqAdd(SeqExprOp):
 
         """
         new_args = True
-        while(new_args):
+        while new_args:
             for id1, s in enumerate(args):
                 new_args = False
                 for id2, t in enumerate(args):
@@ -1159,7 +1159,7 @@ class SeqMul(SeqExprOp):
 
         """
         new_args = True
-        while(new_args):
+        while new_args:
             for id1, s in enumerate(args):
                 new_args = False
                 for id2, t in enumerate(args):

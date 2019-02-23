@@ -195,7 +195,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('times'))
-        if(coeff != 1):
+        if coeff != 1:
             x.appendChild(self._print(coeff))
         for term in terms:
             x.appendChild(self._print(term))
@@ -214,18 +214,18 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 x.appendChild(self._print(-arg))
                 # invert expression since this is now minused
                 lastProcessed = x
-                if(arg == args[-1]):
+                if arg == args[-1]:
                     plusNodes.append(lastProcessed)
             else:
                 plusNodes.append(lastProcessed)
                 lastProcessed = self._print(arg)
-                if(arg == args[-1]):
+                if arg == args[-1]:
                     plusNodes.append(self._print(arg))
         if len(plusNodes) == 1:
             return lastProcessed
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('plus'))
-        while len(plusNodes) > 0:
+        while plusNodes:
             x.appendChild(plusNodes.pop(0))
         return x
 
@@ -366,8 +366,8 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
         mname = self.dom.createElement('mml:mi')
         mname.appendChild(self.dom.createTextNode(name))
-        if len(supers) == 0:
-            if len(subs) == 0:
+        if not supers:
+            if not subs:
                 ci.appendChild(self.dom.createTextNode(name))
             else:
                 msub = self.dom.createElement('mml:msub')
@@ -375,7 +375,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 msub.appendChild(join(subs))
                 ci.appendChild(msub)
         else:
-            if len(subs) == 0:
+            if not subs:
                 msup = self.dom.createElement('mml:msup')
                 msup.appendChild(mname)
                 msup.appendChild(join(supers))
@@ -557,7 +557,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             if self.order != 'old':
                 terms = Mul._from_args(terms).as_ordered_factors()
 
-            if(coeff != 1):
+            if coeff != 1:
                 x = self._print(coeff)
                 y = self.dom.createElement('mo')
                 y.appendChild(self.dom.createTextNode(self.mathml_tag(expr)))

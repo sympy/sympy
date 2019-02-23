@@ -33,7 +33,7 @@ Examples
 >>> variance(X+Y) # Variance of the sum of two dice
 35/6
 >>> simplify(P(Z>1)) # Probability of Z being greater than 1
--erf(sqrt(2)/2)/2 + 1/2
+1/2 - erf(sqrt(2)/2)/2
 """
 
 __all__ = []

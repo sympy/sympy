@@ -340,7 +340,7 @@ def test_inv():
     B = MatrixSymbol('B', 3, 3)
     assert B.inv() == B**-1
 
-
+ 
 def test_factor_expand():
     A = MatrixSymbol("A", n, n)
     B = MatrixSymbol("B", n, n)
@@ -349,17 +349,25 @@ def test_factor_expand():
     assert expr1 != expr2
     assert expand(expr1) == expr2
     assert factor(expr2) == expr1
-        
-      
+
+
 def test_issue_2749():
     A = MatrixSymbol("A", 5, 2)
     assert (A.T * A).I.as_explicit() == Matrix([[(A.T * A).I[0, 0], (A.T * A).I[0, 1]], \
     [(A.T * A).I[1, 0], (A.T * A).I[1, 1]]])
-    
-    
+
+
+def test_issue_2750():
+    x = MatrixSymbol('x', 1, 1)
+    assert (x.T*x).as_explicit()**-1 == Matrix([[x[0, 0]**(-2)]])
+
+
 def test_matrix_equality():
     from sympy import Eq
     A = MatrixSymbol('A', 3, 1)
     B = MatrixSymbol('B', 2, 1)
     assert Eq(A, B) == False
     assert Eq(A[1,0], B[1, 0]).func is Eq
+    A = ZeroMatrix(2, 3)
+    B = ZeroMatrix(2, 3)
+    assert Eq(A, B) == True
