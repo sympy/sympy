@@ -360,3 +360,14 @@ def test_issue_2749():
 def test_issue_2750():
     x = MatrixSymbol('x', 1, 1)
     assert (x.T*x).as_explicit()**-1 == Matrix([[x[0, 0]**(-2)]])
+
+
+def test_matrix_equality():
+    from sympy import Eq
+    A = MatrixSymbol('A', 3, 1)
+    B = MatrixSymbol('B', 2, 1)
+    assert Eq(A, B) == False
+    assert Eq(A[1,0], B[1, 0]).func is Eq
+    A = ZeroMatrix(2, 3)
+    B = ZeroMatrix(2, 3)
+    assert Eq(A, B) == True

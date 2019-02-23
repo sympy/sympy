@@ -549,6 +549,15 @@ class MatrixExpr(Expr):
         from .applyfunc import ElementwiseApplyFunction
         return ElementwiseApplyFunction(func, self)
 
+    def _eval_Eq(self, other):
+        if not isinstance(other, MatrixExpr):
+            return False
+        if self.shape != other.shape:
+            return False
+        if (self - other).is_ZeroMatrix:
+            return True
+        return Eq(self, other, evaluate=False)
+
 
 def _matrix_derivative(expr, x):
     from sympy import Derivative
