@@ -110,7 +110,7 @@ def union_sets(a, b):
     # If `b` set contains one of my elements, remove it from `a`
     if any(b.contains(x) == True for x in a):
         return set((
-            FiniteSet(*[x for x in a if b.contains(x) != True]), b))
+            FiniteSet(*[x for x in a if not b.contains(x)]), b))
     return None
 
 @dispatch(Set, Set)
