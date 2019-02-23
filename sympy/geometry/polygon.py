@@ -788,7 +788,7 @@ class Polygon(GeometrySet):
         Returns the shortest distance between self and o.
 
         If o is a point, then self does not need to be convex.
-        If o is another polygon self and o must be complex.
+        If o is another polygon self and o must be convex.
 
         Examples
         ========
@@ -2231,7 +2231,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incenter
-        Point2D(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1)
+        Point2D(1 - sqrt(2)/2, 1 - sqrt(2)/2)
 
         """
         s = self.sides
@@ -2292,7 +2292,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(2, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incircle
-        Circle(Point2D(-sqrt(2) + 2, -sqrt(2) + 2), -sqrt(2) + 2)
+        Circle(Point2D(2 - sqrt(2), 2 - sqrt(2)), 2 - sqrt(2))
 
         """
         return Circle(self.incenter, self.inradius)

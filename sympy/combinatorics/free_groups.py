@@ -658,7 +658,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         substituted_word
 
         """
-        if by == None:
+        if by is None:
             by = self.group.identity
         if self.is_independent(gen) or gen == by:
             return self

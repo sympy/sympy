@@ -11,7 +11,7 @@ from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
-    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
+    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
 from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
@@ -1105,16 +1105,16 @@ def test_eigen():
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
     M = Matrix([[S(1)/4, 1], [1, 1]])
     assert M.eigenvects(simplify=True) == [
-        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-S(3)/8 + sqrt(73)/8], [1]])]),
-        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[-sqrt(73)/8 - S(3)/8], [1]])])]
-    assert M.eigenvects(simplify=False) ==[(S(5)/8 + sqrt(73)/8, 1, [Matrix([
-       [-1/(-sqrt(73)/8 - S(3)/8)],
-       [                     1]])]), (-sqrt(73)/8 + S(5)/8, 1, [Matrix([
-       [-1/(-S(3)/8 + sqrt(73)/8)],
-       [                     1]])])]
+        (S(5)/8 - sqrt(73)/8, 1, [Matrix([[-sqrt(73)/8 - S(3)/8], [1]])]),
+        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-S(3)/8 + sqrt(73)/8], [1]])])]
+    assert M.eigenvects(simplify=False) ==[
+        (S(5)/8 - sqrt(73)/8, 1, [Matrix([[-1/(-S(3)/8 + sqrt(73)/8)],
+                                          [                     1]])]),
+        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-1/(-sqrt(73)/8 - S(3)/8)],
+                                          [                     1]])])]
 
     m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
-    evals = {-sqrt(385)/20 + S(5)/4: 1, sqrt(385)/20 + S(5)/4: 1, S.Zero: 1}
+    evals = { S(5)/4 - sqrt(385)/20: 1, sqrt(385)/20 + S(5)/4: 1, S.Zero: 1}
     assert m.eigenvals() == evals
     nevals = list(sorted(m.eigenvals(rational=False).keys()))
     sevals = list(sorted(evals.keys()))
@@ -3369,6 +3369,12 @@ def test_legacy_det():
     assert M.det(method="bareis") == 123
     assert M.det(method="det_lu") == 123
     assert M.det(method="LU") == 123
+
+def test_case_6913():
+    m = MatrixSymbol('m', 1, 1)
+    a = Symbol("a")
+    a = m[0, 0]>0
+    assert str(a) == 'm[0, 0] > 0'
 
 def test_issue_15872():
     A = Matrix([[1, 1, 1, 0], [-2, -1, 0, -1], [0, 0, -1, -1], [0, 0, 2, 1]])
