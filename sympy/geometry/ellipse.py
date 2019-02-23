@@ -1006,33 +1006,18 @@ class Ellipse(GeometrySet):
         return self.major * (1 - self.eccentricity ** 2)
 
     def auxiliary_circle(self):
-        """Returns Circle object as auxiliary circle of the ellipse.
-
-        Auxiliary Circle of an ellipse is circumcircle of an ellipse i.e. the circle
-        whose center concurs with that of the ellipse and whose radius is equal to the ellipse's semi-major axis.
-
-        Returns
-        =======
-
-        equation : sympy expression
+        """Returns a Circle whose diameter is the major axis of the ellipse.
 
         Examples
         ========
 
-        >>> from sympy import Circle, Ellipse, Point2D, Symbol
-        >>> e = Symbol('e')
-        >>> c = Symbol('c')
-        >>> e1 = Ellipse(Point2D(3, 8), 7, 8)
-        >>> e = e1.auxiliary_circle()
-        >>> e
-        Circle(Point2D(3, 8), 8)
-        >>> e.equation()
-        (x - 3)**2 + (y - 8)**2 - 64
-        >>> c1 = Circle(Point2D(2, 5), 4)
-        >>> c = c1.auxiliary_circle()
-        >>> c
-        Circle(Point2D(2, 5), 4)
-
+        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> c = Point(1, 2)
+        >>> Ellipse(c, 8, 7).auxiliary_circle()
+        Circle(Point2D(1, 2), 8)
+        >>> a, b = symbols('a b')
+        >>> Ellipse(c, a, b).auxiliary_circle()
+        Circle(Point2D(1, 2), Max(a, b))
         """
         return Circle(self.center, Max(self.hradius, self.vradius))
 
