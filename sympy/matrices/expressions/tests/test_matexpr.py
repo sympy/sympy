@@ -11,6 +11,7 @@ from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
 from sympy.matrices.expressions.matexpr import (MatrixElement,
     GenericZeroMatrix, GenericIdentity)
 from sympy.utilities.pytest import raises
+from sympy import Eq
 
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
@@ -362,6 +363,17 @@ def test_issue_2750():
     x = MatrixSymbol('x', 1, 1)
     assert (x.T*x).as_explicit()**-1 == Matrix([[x[0, 0]**(-2)]])
 
+
+def test_issue_7842():
+    A = MatrixSymbol('A', 3, 1)
+    B = MatrixSymbol('B', 2, 1)
+    assert Eq(A, B) == False
+    assert Eq(A[1,0], B[1, 0]).func is Eq
+    A = ZeroMatrix(2, 3)
+    B = ZeroMatrix(2, 3)
+    assert Eq(A, B) == True
+
+
 def test_generic_zero_matrix():
     z = GenericZeroMatrix()
     A = MatrixSymbol("A", n, n)
@@ -380,6 +392,7 @@ def test_generic_zero_matrix():
     assert MatAdd(z, A) == MatAdd(A)
     # Make sure it is hashable
     hash(z)
+
 
 def test_generic_identity():
     I = GenericIdentity()
