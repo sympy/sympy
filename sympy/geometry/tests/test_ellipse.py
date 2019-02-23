@@ -436,6 +436,7 @@ def test_parameter_value():
     assert e.parameter_value((3, 0), t) == {t: 0}
     raises(ValueError, lambda: e.parameter_value((4, 0), t))
 
+
 def test_second_moment_of_area():
     x, y = symbols('x, y')
     e = Ellipse(Point(0, 0), 5, 4)
@@ -446,6 +447,7 @@ def test_second_moment_of_area():
     assert I_yy == e.second_moment_of_area()[1]
     assert I_xx == e.second_moment_of_area()[0]
     assert I_xy == e.second_moment_of_area()[2]
+
 
 def test_circumference():
     M = Symbol('M')
@@ -462,48 +464,14 @@ def test_circumference():
 
     # test numerically
     assert abs(Ellipse(None, hradius=5, vradius=3).circumference.evalf(16) - 25.52699886339813) < 1e-10
+
+
 def test_issue_15259():
     assert Circle((1, 2), 0) == Point(1, 2)
 
 
 def test_auxiliary_circle():
-    x, y = symbols('x, y')
-
-    p1 = Point(0, 0)
-    p2 = Point(3, 4)
-
-    e1 = Ellipse(p1, 1,1)
-    e2 = Ellipse(p2, 2,2)
-
-    c1 = Circle(p1, 4)
-    c2 = Circle(p2, 8)
-
-    e3 = Ellipse(p1, 5,2)
-    e4 = Ellipse(p2, 6,4)
-
-    e5 = Ellipse(p1, 4,7)
-    e6 = Ellipse(p2, 5,9)
-
-    # circle If self.hradius = self.vradius
-
-    assert e1.auxiliary_circle() == Circle(Point2D(0, 0), 1)
-    assert e2.auxiliary_circle() == Circle(Point2D(3, 4), 2)
-    assert c1.auxiliary_circle() == Circle(Point2D(0, 0), 4)
-    assert c2.auxiliary_circle() == Circle(Point2D(3, 4), 8)
-
-    # horizontal ellipse If self.hradius > self.vradius
-
-    assert e3.auxiliary_circle() == Circle(Point2D(0, 0), 5)
-    assert e4.auxiliary_circle() == Circle(Point2D(3, 4), 6)
-
-    # vertical ellipse If self.hradius < self.vradius
-
-    assert e5.auxiliary_circle() == Circle(Point2D(0, 0), 7)
-    assert e6.auxiliary_circle() == Circle(Point2D(3, 4), 9)
-
-
-    def test_auxiliary_circle():
     x, y, a, b, e = symbols('x y a b e')
     e = Ellipse((x, y), a, b)
     assert e.auxiliary_circle() == Circle((x, y), Max(a, b))
-
+    assert Circle((3, 4), 8).auxiliary_circle() == Circle((3, 4), 8)
