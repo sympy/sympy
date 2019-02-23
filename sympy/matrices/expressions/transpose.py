@@ -50,7 +50,7 @@ class Transpose(MatrixExpr):
     def shape(self):
         return self.arg.shape[::-1]
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, expand=False):
         return self.arg._entry(j, i)
 
     def _eval_adjoint(self):

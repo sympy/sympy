@@ -33,13 +33,13 @@ def test_factorial_simplify():
 
 def test_simplify_scalar_for_quadratic_Matrix_computations():
     n = 3
-    v = MatrixSymbol('v',3,1)
-    A = MatrixSymbol('A',3,3)
+    v = MatrixSymbol('v', 3, 1)
+    A = MatrixSymbol('A', 3, 3)
     quadratic = v.T*A*v
-    x = Matrix([i+1 for i in range(n)])
+    x = Matrix([i + 1 for i in range(n)])
     X = Identity(n)
-    subbed = quadratic.xreplace({v:x,A:X})
-    assert simplify(trace(subbed))==14
+    subbed = quadratic.xreplace({v:x, A:X})
+    assert simplify(trace(subbed)) == 14
 
 
 def test_simplify_expr():
