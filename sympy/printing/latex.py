@@ -2052,35 +2052,38 @@ class LatexPrinter(Printer):
             tex = r"%s^{%s}" % (tex, self._print(exp))
         return tex
 
+    def _print_UnifiedTransform(self, expr, s, inverse=False):
+        return r"\mathcal{{{}}}{}_{{{}}}\left[{}\right]\left({}\right)".format(s, '^{-1}' if inverse else '', self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
     def _print_MellinTransform(self, expr):
-        return r"\mathcal{M}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'M')
 
     def _print_InverseMellinTransform(self, expr):
-        return r"\mathcal{M}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'M', True)
 
     def _print_LaplaceTransform(self, expr):
-        return r"\mathcal{L}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'L')
 
     def _print_InverseLaplaceTransform(self, expr):
-        return r"\mathcal{L}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'L', True)
 
     def _print_FourierTransform(self, expr):
-        return r"\mathcal{F}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'F')
 
     def _print_InverseFourierTransform(self, expr):
-        return r"\mathcal{F}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'F', True)
 
     def _print_SineTransform(self, expr):
-        return r"\mathcal{SIN}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'SIN')
 
     def _print_InverseSineTransform(self, expr):
-        return r"\mathcal{SIN}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'SIN', True)
 
     def _print_CosineTransform(self, expr):
-        return r"\mathcal{COS}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'COS')
 
     def _print_InverseCosineTransform(self, expr):
-        return r"\mathcal{COS}^{-1}_{%s}\left[%s\right]\left(%s\right)" % (self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'COS', True)
 
     def _print_DMP(self, p):
         try:
