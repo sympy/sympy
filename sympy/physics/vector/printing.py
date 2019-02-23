@@ -7,6 +7,7 @@ from sympy.interactive.printing import init_printing
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter, translate
 from sympy.printing.pretty.pretty import PrettyPrinter
+from sympy.printing.pretty.pretty_symbology import center_accent
 from sympy.printing.str import StrPrinter
 
 __all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex',
@@ -185,7 +186,7 @@ class VectorPrettyPrinter(PrettyPrinter):
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
         # There are only special symbols up to fourth-order derivatives
-        if dot_i >= 5 or not self._use_unicode:
+        if dot_i >= 5:
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
         # Deal with special symbols
@@ -202,9 +203,15 @@ class VectorPrettyPrinter(PrettyPrinter):
         lu = len(uni) // 2 + 1
         pic_split = [pic[:lp], pic[lp:]]
         uni_split = [uni[:lu], uni[lu:]]
-        d['picture'] = [pic_split[0] + dots[dot_i] + pic_split[1]]
-        d['unicode'] =  uni_split[0] + dots[dot_i] + uni_split[1]
-
+        #if unicode is false then calculate number of apostrophes needed and add to output
+        if not self._use_unicode:
+            apostrophes = ""
+            for i in range(0, dot_i):
+                apostrophes += "'"
+            d['picture'][0] += apostrophes + "(t)"
+        else:
+            d['picture'] = [center_accent(d['picture'][0], dots[dot_i])]
+        d['unicode'] =  center_accent(d['unicode'], dots[dot_i])
         return pform
 
     def _print_Function(self, e):

@@ -1,7 +1,7 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
-    MatrixSymbol, Function, Derivative
+    MatrixSymbol, Function, Derivative, log
 from sympy.stats.rv import RandomSymbol
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
     MathMLPrinter
@@ -936,6 +936,22 @@ def test_mat_delim_print():
     assert mathml(expr, printer='presentation', mat_delim='[') == '<mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
     assert mathml(expr, printer='presentation', mat_delim='(') == '<mfenced><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
     assert mathml(expr, printer='presentation', mat_delim='') == '<mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable>'
+
+
+def test_ln_notation_print():
+    expr = log(x)
+    assert mathml(expr, printer='presentation') == '<mrow><mi>log</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(expr, printer='presentation', ln_notation=False) == '<mrow><mi>log</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(expr, printer='presentation', ln_notation=True) == '<mrow><mi>ln</mi><mfenced><mi>x</mi></mfenced></mrow>'
+
+
+def test_mul_symbol_print():
+    expr = x * y
+    assert mathml(expr, printer='presentation') == '<mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi></mrow>'
+    assert mathml(expr, printer='presentation', mul_symbol=None) == '<mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi></mrow>'
+    assert mathml(expr, printer='presentation', mul_symbol='dot') == '<mrow><mi>x</mi><mo>&#xB7;</mo><mi>y</mi></mrow>'
+    assert mathml(expr, printer='presentation', mul_symbol='ldot') == '<mrow><mi>x</mi><mo>&#x2024;</mo><mi>y</mi></mrow>'
+    assert mathml(expr, printer='presentation', mul_symbol='times') == '<mrow><mi>x</mi><mo>&#xD7;</mo><mi>y</mi></mrow>'
 
 
 def test_root_notation_print():
