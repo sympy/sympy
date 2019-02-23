@@ -1006,7 +1006,7 @@ class Ellipse(GeometrySet):
         return self.major * (1 - self.eccentricity ** 2)
 
     def auxiliary_circle(self):
-        """Returns equation of auxiliary circle of the ellipse.
+        """Returns Circle object as auxiliary circle of the ellipse.
 
         Auxiliary Circle of an ellipse is circumcircle of an ellipse i.e. the circle
         whose center concurs with that of the ellipse and whose radius is equal to the ellipse's semi-major axis.
@@ -1034,7 +1034,7 @@ class Ellipse(GeometrySet):
         Circle(Point2D(2, 5), 4)
 
         """
-        return Circle(Point2D(self.center), Max(self.hradius, self.vradius))
+        return Circle(self.center, Max(self.hradius, self.vradius))
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.
