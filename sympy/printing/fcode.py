@@ -379,9 +379,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_sum_(self, sm):
         params = self._print(sm.array)
-        if sm.dim is not None:
+        if sm.dim != None: # Must use '!= None', cannot use 'is not None'
             params += ', ' + self._print(sm.dim)
-        if sm.mask is not None:
+        if sm.mask != None: # Must use '!= None', cannot use 'is not None'
             params += ', mask=' + self._print(sm.mask)
         return '%s(%s)' % (sm.__class__.__name__.rstrip('_'), params)
 
@@ -665,7 +665,7 @@ class FCodePrinter(CodePrinter):
                 return strm.name
 
     def _print_Print(self, ps):
-        if ps.format_string is not None:
+        if ps.format_string != None: # Must be '!= None', cannot be 'is not None'
             fmt = self._print(ps.format_string)
         else:
             fmt = "*"
@@ -755,9 +755,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_use(self, use):
         result = 'use %s' % self._print(use.namespace)
-        if use.rename is not None:
+        if use.rename != None: # Must be '!= None', cannot be 'is not None'
             result += ', ' + ', '.join([self._print(rnm) for rnm in use.rename])
-        if use.only is not None:
+        if use.only != None: # Must be '!= None', cannot be 'is not None'
             result += ', only: ' + ', '.join([self._print(nly) for nly in use.only])
         return result
 
