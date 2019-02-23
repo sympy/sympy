@@ -3,10 +3,10 @@ from sympy import (
     collect,cos, cosh, cot, coth, count_ops, csch, Derivative, diff, E,
     Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
     factorial, Float, fraction, Function, gamma, GoldenRatio, hyper,
-    hypersimp, I, Integral, integrate, log, logcombine, Lt, Matrix,
+    hypersimp, I, Identity, Integral, integrate, log, logcombine, Lt, Matrix,
     MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
     Rational, root, S, separatevars, signsimp, simplify, sign, sin,
-    sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
+    sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh, trace,
     zoo)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import nthroot, inversecombine
@@ -32,15 +32,14 @@ def test_factorial_simplify():
 
 
 def test_simplify_scalar_for_quadratic_Matrix_computations():
-    import sympy as s
     n = 3
-    v = s.MatrixSymbol('v',3,1)
-    A = s.MatrixSymbol('A',3,3)
+    v = MatrixSymbol('v',3,1)
+    A = MatrixSymbol('A',3,3)
     quadratic = v.T*A*v
-    x = s.Matrix([i+1 for i in range(n)])
-    X = s.Identity(n)
+    x = Matrix([i+1 for i in range(n)])
+    X = Identity(n)
     subbed = quadratic.xreplace({v:x,A:X})
-    assert simplify(s.trace(subbed))
+    assert simplify(trace(subbed))==14
 
 
 def test_simplify_expr():

@@ -3,6 +3,8 @@ from sympy.matrices.expressions import MatrixSymbol, Adjoint, trace, Transpose
 from sympy.matrices import eye, Matrix
 from sympy import symbols, S
 from sympy import refine, Q
+from sympy import (Identity, Matrix, MatrixSymbol, simplify, trace)
+
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
 A = MatrixSymbol('A', n, m)
@@ -47,13 +49,12 @@ def test_transpose1x1():
 
 
 def test_as_explicit():
-    import sympy as s
     n = 3
-    v = s.MatrixSymbol('v',3,1)
-    A = s.MatrixSymbol('A',3,3)
+    v = MatrixSymbol('v',3,1)
+    A = MatrixSymbol('A',3,3)
     quadratic = v.T*A*v
-    x = s.Matrix([i+1 for i in range(n)])
-    X = s.Identity(n)
+    x = Matrix([i+1 for i in range(n)])
+    X = Identity(n)
     subbed = quadratic.xreplace({v:x,A:X})
-    assert subbed.as_explicit()
-    assert s.simplify((s.trace(quadratic.as_explicit())).xreplace({v:x,A:X}))
+    assert subbed.as_explicit() == Matrix([[14]])
+    
