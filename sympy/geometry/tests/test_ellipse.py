@@ -435,6 +435,7 @@ def test_parameter_value():
     assert e.parameter_value((3, 0), t) == {t: 0}
     raises(ValueError, lambda: e.parameter_value((4, 0), t))
 
+
 def test_second_moment_of_area():
     x, y = symbols('x, y')
     e = Ellipse(Point(0, 0), 5, 4)
@@ -445,6 +446,7 @@ def test_second_moment_of_area():
     assert I_yy == e.second_moment_of_area()[1]
     assert I_xx == e.second_moment_of_area()[0]
     assert I_xy == e.second_moment_of_area()[2]
+
 
 def test_circumference():
     M = Symbol('M')
@@ -461,19 +463,22 @@ def test_circumference():
 
     # test numerically
     assert abs(Ellipse(None, hradius=5, vradius=3).circumference.evalf(16) - 25.52699886339813) < 1e-10
+
+
 def test_issue_15259():
     assert Circle((1, 2), 0) == Point(1, 2)
 
+
 def test_issue_15797():
     Ri = 0.024127189424130748
-    Ci = Point(0.0864931002830291, 0.0819863295239654)
+    Ci = (0.0864931002830291, 0.0819863295239654)
     A = Point(0, 0.0578591400998346)
-    c = Circle(Ci, Ri)
+    c = Circle(Ci, Ri)  # evaluated
     assert c.is_tangent(c.tangent_lines(A)[0]) == True
     assert c.center.x.is_Rational
     assert c.center.y.is_Rational
     assert c.radius.is_Rational
-    u = Circle(Ci, Ri, evaluate=False)
+    u = Circle(Ci, Ri, evaluate=False)  # unevaluated
     assert u.center.x.is_Float
     assert u.center.y.is_Float
     assert u.radius.is_Float
