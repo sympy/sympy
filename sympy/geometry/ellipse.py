@@ -1400,7 +1400,7 @@ class Circle(Ellipse):
     def __new__(cls, *args, **kwargs):
         from sympy.geometry.util import find
         from .polygon import Triangle
-
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
         if len(args) == 1 and isinstance(args[0], Expr):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
@@ -1422,12 +1422,12 @@ class Circle(Ellipse):
             center_y = -d/b/2
             r2 = (center_x**2) + (center_y**2) - e
 
-            return Circle((center_x, center_y), sqrt(r2))
+            return Circle((center_x, center_y), sqrt(r2), evaluate=evaluate)
 
         else:
             c, r = None, None
             if len(args) == 3:
-                args = [Point(a, dim=2, **kwargs) for a in args]
+                args = [Point(a, dim=2, evaluate=evaluate) for a in args]
                 t = Triangle(*args)
                 if not isinstance(t, Triangle):
                     return t
@@ -1435,8 +1435,8 @@ class Circle(Ellipse):
                 r = t.circumradius
             elif len(args) == 2:
                 # Assume (center, radius) pair
-                c = Point(args[0], dim=2, **kwargs)
-                r = Point(r, 0, **kwargs).x  # convert to rational via Point
+                c = Point(args[0], dim=2, evaluate=evaluate)
+                r = Point(r, 0, evaluate=evaluate).x  # convert via Point as necessary
 
             if not (c is None or r is None):
                 if r == 0:
