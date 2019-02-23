@@ -19,6 +19,14 @@ from sympy.core.singleton import S
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 
+
+# Note: This list should be updated whenever new Mersenne primes are found.
+# Refer: https://www.mersenne.org/
+MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203,
+ 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049,
+ 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583,
+ 25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933)
+
 small_trailing = [0] * 256
 for j in range(1,8):
     small_trailing[1<<j::1<<(j+1)] = [j] * (1<<(7-j))
@@ -1429,13 +1437,6 @@ def divisor_count(n, modulus=1):
         return 0
     return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
 
-def proper_divisors(n, generator = False):
-    return divisors(n)[0:-1]
-
-
-def proper_divisors_count(n,modulus=1):
-    return divisor_count(n)-1
-
 
 def _udivisors(n):
     """Helper function for udivisors which generates the unitary divisors."""
@@ -2047,3 +2048,83 @@ class primeomega(Function):
                 raise ValueError("n must be a positive integer")
             else:
                 return sum(factorint(n).values())
+
+
+def mersenne_prime_exponent(nth):
+    """
+    Returns the nth Mersenne Prime Exponents.
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import mersenne_prime_exponent
+    >>> mersenne_prime_exponent(1)
+    2
+    >>> mersenne_prime_exponent(20)
+    4423
+    """
+    n = as_int(nth)
+    if n < 1:
+        raise ValueError("nth must be a positive integer; mersenne_prime_exponent(1) == 2")
+    if n > 51:
+        raise ValueError("There are only 51 perfect numbers; nth must be less than or equal to 51")
+    return MERSENNE_PRIME_EXPONENTS[n - 1]
+
+
+def is_perfect(n):
+    """
+    Checks whether n is a perfect number or not. A perfect number is
+    a positive integer that is equal to the sum of its
+    proper positive divisors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_perfect
+    >>> is_perfect(6)
+    True
+    >>> is_perfect(20)
+    False
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PerfectNumber.html
+
+    """
+    from sympy.core.power import integer_log
+
+    r, b = integer_nthroot(1 + 8*n, 2)
+    if not b:
+        return False
+    n, x = divmod(1 + r, 4)
+    if x:
+        return False
+    e, b = integer_log(n, 2)
+    return b and (e + 1) in MERSENNE_PRIME_EXPONENTS
+
+
+def is_Mersenne_prime(n):
+    """
+    Checks whether n is a Mersenne prime or not.
+    A Mersenne prime is a prime number that is
+    one less than a power of two.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_Mersenne_prime
+    >>> is_Mersenne_prime(6)
+    False
+    >>> is_Mersenne_prime(127)
+    True
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/MersennePrime.html
+
+    """
+    from sympy.core.power import integer_log
+
+    r, b = integer_log(n+1, 2)
+    return b and r in MERSENNE_PRIME_EXPONENTS
