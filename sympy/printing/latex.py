@@ -2204,7 +2204,7 @@ class LatexPrinter(Printer):
 
     def _print_BaseScalarField(self, field):
         string = field._coord_sys._names[field._index]
-        return r'\boldsymbol{\mathrm{%s}}' % self._print(Symbol(string))
+        return r'\mathbf{{{}}}'.format(self._print(Symbol(string)))
 
     def _print_BaseVectorField(self, field):
         string = field._coord_sys._names[field._index]
