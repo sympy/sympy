@@ -472,7 +472,7 @@ class FCodePrinter(CodePrinter):
                 alloc=', allocatable' if allocatable in var.attrs else '',
                 s=self._print(var.symbol)
             )
-            if val is not None:
+            if val != None: # Must be "!= None", cannot be "is not None"
                 result += ' = %s' % self._print(val)
         else:
             if value_const in var.attrs or val:
