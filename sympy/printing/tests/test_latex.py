@@ -148,11 +148,11 @@ def test_latex_basic():
 
 
 def test_latex_builtins():
-    assert latex(True) == r"\mathrm{True}"
-    assert latex(False) == r"\mathrm{False}"
-    assert latex(None) == r"\mathrm{None}"
-    assert latex(true) == r"\mathrm{True}"
-    assert latex(false) == r'\mathrm{False}'
+    assert latex(True) == r"\text{True}"
+    assert latex(False) == r"\text{False}"
+    assert latex(None) == r"\text{None}"
+    assert latex(true) == r"\text{True}"
+    assert latex(false) == r'\text{False}'
 
 
 def test_latex_SingularityFunction():
@@ -1785,7 +1785,7 @@ def test_WedgeProduct_printing():
     from sympy.diffgeom.rn import R2
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
-    assert latex(wp) == r"\mathrm{d}x \wedge \mathrm{d}y"
+    assert latex(wp) == r"\text{d}x \wedge \text{d}y"
 
 
 def test_issue_14041():
@@ -1904,8 +1904,8 @@ def test_trace():
     # Issue 15303
     from sympy import trace
     A = MatrixSymbol("A", 2, 2)
-    assert latex(trace(A)) == r"\mathrm{tr}\left(A \right)"
-    assert latex(trace(A**2)) == r"\mathrm{tr}\left(A^{2} \right)"
+    assert latex(trace(A)) == r"\text{tr}\left(A \right)"
+    assert latex(trace(A**2)) == r"\text{tr}\left(A^{2} \right)"
 
 
 def test_print_basic():
@@ -1936,8 +1936,8 @@ def test_MatrixSymbol_bold():
     # Issue #15871
     from sympy import trace
     A = MatrixSymbol("A", 2, 2)
-    assert latex(trace(A), mat_symbol_style='bold') == r"\mathrm{tr}\left(\mathbf{A} \right)"
-    assert latex(trace(A), mat_symbol_style='plain') == r"\mathrm{tr}\left(A \right)"
+    assert latex(trace(A), mat_symbol_style='bold') == r"\text{tr}\left(\mathbf{A} \right)"
+    assert latex(trace(A), mat_symbol_style='plain') == r"\text{tr}\left(A \right)"
 
     A = MatrixSymbol("A", 3, 3)
     B = MatrixSymbol("B", 3, 3)
@@ -1958,3 +1958,16 @@ def test_imaginary_unit():
     assert latex(1 + I, imaginary_unit='foo') == '1 + foo'
     assert latex(I, imaginary_unit="ti") == '\\text{i}'
     assert latex(I, imaginary_unit="tj") == '\\text{j}'
+
+
+def test_DiffGeomMethods():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, Point, BaseScalarField
+    r0, theta0 = symbols('r0, theta0')
+    m = Manifold('M', 2)
+    assert latex(m) == r'\text{M}'
+    p = Patch('P', m)
+    assert latex(p) == r'\text{P}_{\text{M}}'
+    rect = CoordSystem('rect', p)
+    assert latex(rect) == r'\text{rect}^{\text{P}}_{\text{M}}'
+    b = BaseScalarField(rect, 0)
+    assert latex(b) ==  r'\mathbf{rect_{0}}'

@@ -312,13 +312,13 @@ class LatexPrinter(Printer):
         return self._deal_with_super_sub(expr.__class__.__name__) + r"\left(%s\right)" % ", ".join(l)
 
     def _print_bool(self, e):
-        return r"\mathrm{%s}" % e
+        return r"\text{%s}" % e
 
     _print_BooleanTrue = _print_bool
     _print_BooleanFalse = _print_bool
 
     def _print_NoneType(self, e):
-        return r"\mathrm{%s}" % e
+        return r"\text{%s}" % e
 
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
@@ -1494,7 +1494,7 @@ class LatexPrinter(Printer):
 
     def _print_Trace(self, expr):
         mat = expr.arg
-        return r"\mathrm{tr}\left(%s \right)" % self._print(mat)
+        return r"\text{tr}\left(%s \right)" % self._print(mat)
 
     def _print_Adjoint(self, expr):
         mat = expr.arg
@@ -2127,7 +2127,7 @@ class LatexPrinter(Printer):
         return component_names + pretty_morphism
 
     def _print_Category(self, morphism):
-        return "\\mathbf{%s}" % self._print(Symbol(morphism.name))
+        return r"\mathbf{{{}}}".format(Symbol(morphism.name))
 
     def _print_Diagram(self, diagram):
         if not diagram.premises:
@@ -2214,11 +2214,11 @@ class LatexPrinter(Printer):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
             string = field._coord_sys._names[field._index]
-            return r'\mathrm{d}%s' % self._print(Symbol(string))
+            return r'\text{d}%s' % self._print(Symbol(string))
         else:
             return 'd(%s)' % self._print(field)
             string = self._print(field)
-            return r'\mathrm{d}\left(%s\right)' % string
+            return r'\text{d}\left(%s\right)' % string
 
     def _print_Tr(self, p):
         #Todo: Handle indices
@@ -2366,8 +2366,8 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         a MatrixSymbol A will be printed as ``\mathbf{A}``, otherwise as ``A``.
     imaginary_unit : string, optional
         String to use for the imaginary unit. Defined options are "i" (default)
-        and "j". Adding "b" or "t" in front gives ``\mathrm`` or ``\text``, so
-        "bi" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
+        and "j". Adding "r" or "t" in front gives ``\mathrm`` or ``\text``, so
+        "ri" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
 
     Notes
     =====
