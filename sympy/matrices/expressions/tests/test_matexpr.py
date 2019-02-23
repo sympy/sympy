@@ -10,6 +10,7 @@ from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         SparseMatrix, Transpose, Adjoint)
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.utilities.pytest import raises
+from sympy import Eq
 
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
@@ -362,8 +363,7 @@ def test_issue_2750():
     assert (x.T*x).as_explicit()**-1 == Matrix([[x[0, 0]**(-2)]])
 
 
-def test_matrix_equality():
-    from sympy import Eq
+def test_issue_7842():
     A = MatrixSymbol('A', 3, 1)
     B = MatrixSymbol('B', 2, 1)
     assert Eq(A, B) == False
