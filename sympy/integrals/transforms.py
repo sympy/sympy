@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from sympy.core import S
 from sympy.core.compatibility import reduce, range, iterable
 from sympy.core.function import Function
-from sympy.core.relational import _canonical
+from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
 from sympy.integrals import integrate, Integral
@@ -1003,13 +1003,15 @@ def _laplace_transform(f, t, s_, simplify=True):
             for d in disjuncts(c):
                 if d.is_Relational and s in d.rhs.free_symbols:
                     d = d.reversed
+                if d.is_Relational and isinstance(d, (Ge, Gt)):
+                    d = d.reversedsign
                 for pat in patterns:
                     m = d.match(pat)
                     if m:
                         break
                 if m:
                     if m[q].is_positive and m[w2]/m[p] == pi/2:
-                        d = re(s + m[w3]) > 0
+                        d = -re(s + m[w3]) < 0
                 m = d.match(p - cos(w1*abs(arg(s*w5))*w2)*abs(s**w3)**w4 < 0)
                 if not m:
                     m = d.match(
