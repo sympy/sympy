@@ -10,6 +10,7 @@ from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point, Point2D
 from sympy.abc import x, y, z
 
+from sympy.utilities.pytest import slow
 
 
 def test_decompose():
@@ -53,6 +54,7 @@ def test_best_origin():
     assert best_origin((1, 1), 2, l6, x ** 9 * y ** 2) == (2, 0)
 
 
+@slow
 def test_polytope_integrate():
     #  Convex 2-Polytopes
     #  Vertex representation

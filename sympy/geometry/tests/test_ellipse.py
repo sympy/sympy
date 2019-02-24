@@ -2,7 +2,7 @@ from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D
 from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy import integrate
 from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.functions.elementary.miscellaneous import Max
@@ -41,6 +41,7 @@ def test_object_from_equation():
     raises(ValueError, lambda: Circle(a**2 + b**2 + 3*a + 4*b - 8))
 
 
+@slow
 def test_ellipse_geom():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
@@ -437,6 +438,7 @@ def test_parameter_value():
     raises(ValueError, lambda: e.parameter_value((4, 0), t))
 
 
+@slow
 def test_second_moment_of_area():
     x, y = symbols('x, y')
     e = Ellipse(Point(0, 0), 5, 4)

@@ -85,6 +85,7 @@ def test_special_denom():
 
 @XFAIL
 def test_bound_degree_fail():
+    # Probably only fails in Python 2.7
     # Primitive
     DE = DifferentialExtension(extension={'D': [Poly(1, x),
         Poly(t0/x**2, t0), Poly(1/x, t)]})

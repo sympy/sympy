@@ -1,10 +1,9 @@
-from sympy import Dummy, S, Symbol, symbols, pi, sqrt, asin, sin, cos
+from sympy import Dummy, S, symbols, pi, sqrt, asin, sin, cos
 from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane
 from sympy.geometry.util import are_coplanar
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises
 
 
-@slow
 def test_plane():
     x, y, z, u, v = symbols('x y z u v', real=True)
     p1 = Point3D(0, 0, 0)

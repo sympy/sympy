@@ -2850,7 +2850,7 @@ def test_atoms():
     assert m.atoms() == {S(1),S(2),S(-1), x}
     assert m.atoms(Symbol) == {x}
 
-@slow
+
 def test_pinv():
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])

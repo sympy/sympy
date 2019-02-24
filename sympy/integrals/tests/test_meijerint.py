@@ -563,6 +563,7 @@ def test_probability():
                               (x, 0, oo)))) == polygamma(0, k)
 
 
+@slow
 def test_expint():
     """ Test various exponential integrals. """
     from sympy import (expint, unpolarify, Symbol, Ci, Si, Shi, Chi,

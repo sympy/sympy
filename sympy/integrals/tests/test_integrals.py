@@ -1301,6 +1301,8 @@ def test_issue_8901():
     assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
 
+
+@slow
 def test_issue_8945():
     assert integrate(sin(x)**3/x, (x, 0, 1)) == -Si(3)/4 + 3*Si(1)/4
     assert integrate(sin(x)**3/x, (x, 0, oo)) == pi/4
