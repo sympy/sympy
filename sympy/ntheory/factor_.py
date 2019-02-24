@@ -1429,6 +1429,13 @@ def divisor_count(n, modulus=1):
         return 0
     return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
 
+def proper_divisors(n, generator = False):
+    return divisors(n)[0:-1]
+
+
+def proper_divisors_count(n,modulus=1):
+    return divisor_count(n)-1
+
 
 def _udivisors(n):
     """Helper function for udivisors which generates the unitary divisors."""
@@ -2040,148 +2047,3 @@ class primeomega(Function):
                 raise ValueError("n must be a positive integer")
             else:
                 return sum(factorint(n).values())
-
-
-MERSENNE_PRIME_EXPONENTS = (2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933)
-
-def mersenne_prime_exponents(nth):
-    """
-    It returns the nth Mersenne Prime Exponents.
-    Examples
-    ========
-
-    >>> from sympy.ntheory.factor_ import mersenne_prime_exponents
-    >>> mersenne_prime_exponents(1)
-    2
-    >>> mersenne_prime_exponents(20)
-    4423
-    """
-    n = as_int(nth)
-    if n < 1:
-        raise ValueError("nth must be a positive integer; prime(1) == 2")
-    if n > 51:
-        raise ValueError("There are only 51 perfect numbers; nth must be less than or equal to 51")
-    return MERSENNE_PRIME_EXPONENTS[n-1]
-
-
-def ischeck_perfect_number(n):
-    """
-    Checks whether n is a perfect number or not.A perfect number is a positive integer that is equal to the sum of its proper positive divisors,
-    that is, the sum of its positive divisors excluding the number itself.
-
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/PerfectNumber.html
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.factor_ import ischeck_perfect_number
-    >>> ischeck_perfect_number(6)
-    True
-    >>> ischeck_perfect_number(20)
-    False
-    """
-    from sympy.functions.elementary.exponential import log
-    m = (1 + (1 + 4*n*2)**(1/2) )/4
-    if log(m,2)+1 in MERSENNE_PRIME_EXPONENTS:
-            return True
-    return False
-
-
-def ischeck_mersenne_prime(n):
-    """
-    Checks whether n is a mersenne prime or not.A Mersenne prime is a prime number that is one less than a power of two
-
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/MersennePrime.html
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.factor_ import ischeck_perfect_number
-    >>> ischeck_mersenne_prime(6)
-    False
-    >>> ischeck_mersenne_prime(127)
-    True
-    """
-    from sympy.functions.elementary.exponential import log
-    p = log(n+1,2)
-    if p in MERSENNE_PRIME_EXPONENTS:
-        return True
-    return False
-
-
-MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203, 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049, 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583, 25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933)
-
-def mersenne_prime_exponents(nth):
-    """
-    It returns the nth Mersenne Prime Exponents.
-    Examples
-    ========
-
-    >>> from sympy.ntheory.factor_ import mersenne_prime_exponents
-    >>> mersenne_prime_exponents(1)
-    2
-    >>> mersenne_prime_exponents(20)
-    4423
-    """
-    n = as_int(nth)
-    if n < 1:
-        raise ValueError("nth must be a positive integer; prime(1) == 2")
-    if n > 51:
-        raise ValueError("There are only 51 perfect numbers; nth must be less than or equal to 51")
-    return MERSENNE_PRIME_EXPONENTS[n-1]
-
-
-def ischeck_perfect_number(n):
-    """
-    Checks whether n is a perfect number or not.
-
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/PerfectNumber.html
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.factor_ import ischeck_perfect_number
-    >>> ischeck_perfect_number(6)
-    True
-    >>> ischeck_perfect_number(20)
-    False
-    """
-    from sympy.functions.elementary.exponential import log
-    m = (1 + (1 + 4*n*2)**(1/2))/4
-    if log(m, 2) + 1 in MERSENNE_PRIME_EXPONENTS:
-            return True
-    return False
-
-
-def ischeck_mersenne_prime(n):
-    """
-    Checks whether n is a mersenne prime or not.
-
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/MersennePrime.html
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.factor_ import ischeck_mersenne_prime
-    >>> ischeck_mersenne_prime(6)
-    False
-    >>> ischeck_mersenne_prime(127)
-    True
-    """
-    from sympy.functions.elementary.exponential import log
-    p = log(n+1, 2)
-    if p in MERSENNE_PRIME_EXPONENTS:
-        return True
-    return False

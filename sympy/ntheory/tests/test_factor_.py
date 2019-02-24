@@ -13,7 +13,7 @@ from sympy.ntheory import (isprime, n_order, is_primitive_root,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
-    udivisor_count, primenu, primeomega, small_trailing, mersenne_prime_exponents, ischeck_perfect_number, ischeck_mersenne_prime)
+    udivisor_count, primenu, primeomega, small_trailing)
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.multinomial import (
     multinomial_coefficients, multinomial_coefficients_iterator)
@@ -562,28 +562,3 @@ def test_primeomega():
     assert primeomega(n)
     assert primeomega(n).subs(n, 2 ** 31 - 1) == 1
     assert summation(primeomega(n), (n, 2, 30)) == 59
-
-
-def test_mersenne_prime_exponents():
-    assert mersenne_prime_exponents(1) == 2
-    assert mersenne_prime_exponents(4) == 7
-    assert mersenne_prime_exponents(10) == 89
-    assert mersenne_prime_exponents(25) == 21701
-
-
-def test_ischeck_perfect_number():
-    assert ischeck_perfect_number(6) is True
-    assert ischeck_perfect_number(15) is False
-    assert ischeck_perfect_number(28) is True
-    assert ischeck_perfect_number(400) is False
-    assert ischeck_perfect_number(496) is True
-    assert ischeck_perfect_number(8128) is True
-    assert ischeck_perfect_number(10000) is False
-
-
-def test_ischeck_mersenne_prime():
-    assert ischeck_mersenne_prime(10) is False
-    assert ischeck_mersenne_prime(127) is True
-    assert ischeck_mersenne_prime(511) is False
-    assert ischeck_mersenne_prime(131071) is True
-    assert ischeck_mersenne_prime(2147483647) is True
