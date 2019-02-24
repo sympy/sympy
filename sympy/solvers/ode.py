@@ -2333,7 +2333,7 @@ def odesimp(ode, eq, func, hint):
 
     for i, eqi in enumerate(eq):
         eq[i] = constantsimp(eqi, constants)
-        eq[i] = constant_renumber(ode, eq[i])
+        eq[i] = constant_renumber(eq[i], ode.free_symbols)
 
     # If there is only 1 solution, return it;
     # otherwise return the list of solutions.
@@ -2883,7 +2883,7 @@ def constantsimp(expr, constants):
     return expr
 
 
-def constant_renumber(eq, expr):
+def constant_renumber(expr, nonconstants=None, newconstants=None):
     r"""
     FIXME: Need to redo this docstring. This now renumbers constants in expr
     without using symbols from eq.
@@ -2917,10 +2917,23 @@ def constant_renumber(eq, expr):
 
     """
     if type(expr) in (set, list, tuple):
-        return type(expr)([constant_renumber(eq, e) for e in expr])
+        renumbered = [constant_renumber(e, nonconstants, newconstants) for e in expr]
+        return type(expr)(renumbered)
 
     # Symbols in solution bot not ODE are constants
-    constantsymbols = list(expr.free_symbols - eq.free_symbols)
+    if nonconstants is not None:
+        constantsymbols = list(expr.free_symbols - set(nonconstants))
+    else:
+        nonconstants = set()
+        # Any Cn is a constant...
+        isconstant = lambda s: s.startswith('C') and s[1:].isdigit()
+        constantsymbols = [sym for sym in expr.free_symbols if isconstant(sym.name)]
+
+    # Find new constants checking that they aren't alread in the ODE
+    if newconstants is None:
+        iter_constants = numbered_symbols(start=1, prefix='C', exclude=nonconstants)
+    else:
+        iter_constants = (sym for sym in newconstants if sym not in nonconstants)
 
     global newstartnumber
     newstartnumber = 1
@@ -2968,15 +2981,10 @@ def constant_renumber(eq, expr):
     expr = _constant_renumber(expr)
 
     # Don't renumber symbols present in the ODE.
-    constants_found = [c for c in constants_found if c not in eq.free_symbols]
-
-    # New symbol names mustn't clash with symbols already in the ODE
-    newconsts = get_numbered_constants(eq, num=newstartnumber)
-    if not iterable(newconsts):
-        newconsts = [newconsts]
+    constants_found = [c for c in constants_found if c not in nonconstants]
 
     # Renumbering happens here
-    expr = expr.subs(zip(constants_found[1:], newconsts), simultaneous=True)
+    expr = expr.subs(zip(constants_found[1:], iter_constants), simultaneous=True)
     return expr
 
 
