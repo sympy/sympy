@@ -4,18 +4,28 @@ should serve as a set of test cases.
 """
 
 from sympy import (acos, cos, cosh, Eq, exp, Function, I, Integral, log, Pow,
-                   S, sin, sinh, sqrt, Symbol)
-from sympy.solvers.ode import constant_renumber, constantsimp
+                   S, sin, sinh, sqrt, Symbol, Add)
+from sympy.solvers.ode import constantsimp
+from sympy.solvers.ode import constant_renumber as _constant_renumber
 from sympy.utilities.pytest import XFAIL
 
 
 x = Symbol('x')
 y = Symbol('y')
 z = Symbol('z')
+u2 = Symbol('u2')
+_a = Symbol('_a')
 C1 = Symbol('C1')
 C2 = Symbol('C2')
 C3 = Symbol('C3')
 f = Function('f')
+
+
+# FIXME: this is just temporary. The calls to constant_renumber below should
+# be updated.
+def constant_renumber(expr, C, i, j):
+    dummy_ode = x*y*z*_a
+    return _constant_renumber(dummy_ode, expr)
 
 
 def test_constant_mul():
@@ -152,8 +162,6 @@ def test_ode_solutions():
         cos(f(x)/x)*exp(-f(x)/x)/2, 0), [C1]), 'C', 1, 1) == \
         Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) - cos(f(x)/x)*
            exp(-f(x)/x)/2, 0)
-    u2 = Symbol('u2')
-    _a = Symbol('_a')
     assert constant_renumber(constantsimp(Eq(-Integral(-1/(sqrt(1 - u2**2)*u2),
         (u2, _a, x/f(x))) + log(f(x)/C1), 0), [C1]), 'C', 1, 1) == \
         Eq(-Integral(-1/(u2*sqrt(1 - u2**2)), (u2, _a, x/f(x))) +

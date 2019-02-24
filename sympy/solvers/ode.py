@@ -699,14 +699,13 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         # simplifications
         sols = solvefunc(eq, func, order, match)
         if isinstance(sols, Expr):
-            rv =  odesimp(sols, func, order, cons(sols), hint)
+            rv =  odesimp(eq, sols, func, hint)
         else:
-            rv = [odesimp(s, func, order, cons(s), hint) for s in sols]
+            rv = [odesimp(eq, s, func, hint) for s in sols]
     else:
         # We still want to integrate (you can disable it separately with the hint)
         match['simplify'] = False  # Some hints can take advantage of this option
-        rv = _handle_Integral(solvefunc(eq, func, order, match),
-            func, order, hint)
+        rv = _handle_Integral(solvefunc(eq, func, order, match), func, hint)
 
     if ics and not 'power_series' in hint:
         if isinstance(rv, Expr):
@@ -2158,8 +2157,10 @@ def checksysodesol(eqs, sols, func=None):
 
 
 @vectorize(0)
-def odesimp(eq, func, order, constants, hint):
+def odesimp(ode, eq, func, hint):
     r"""
+    FIXME: Need to update this docstring.
+
     Simplifies solutions of ODEs, including trying to solve for ``func`` and
     running :py:meth:`~sympy.solvers.ode.constantsimp`.
 
@@ -2218,9 +2219,10 @@ def odesimp(eq, func, order, constants, hint):
     x = func.args[0]
     f = func.func
     C1 = get_numbered_constants(eq, num=1)
+    constants = eq.free_symbols - ode.free_symbols
 
     # First, integrate if the hint allows it.
-    eq = _handle_Integral(eq, func, order, hint)
+    eq = _handle_Integral(eq, func, hint)
     if hint.startswith("nth_linear_euler_eq_nonhomogeneous"):
         eq = simplify(eq)
     if not isinstance(eq, Equality):
@@ -2331,7 +2333,7 @@ def odesimp(eq, func, order, constants, hint):
 
     for i, eqi in enumerate(eq):
         eq[i] = constantsimp(eqi, constants)
-        eq[i] = constant_renumber(eq[i], 'C', 1, 2*order, exclude=exclude)
+        eq[i] = constant_renumber(ode, eq[i])
 
     # If there is only 1 solution, return it;
     # otherwise return the list of solutions.
@@ -2881,8 +2883,11 @@ def constantsimp(expr, constants):
     return expr
 
 
-def constant_renumber(expr, symbolname, startnumber, endnumber, exclude=None):
+def constant_renumber(eq, expr):
     r"""
+    FIXME: Need to redo this docstring. This now renumbers constants in expr
+    without using symbols from eq.
+
     Renumber arbitrary constants in ``expr`` to have numbers 1 through `N`
     where `N` is ``endnumber - startnumber + 1`` at most.
     In the process, this reorders expression terms in a standard way.
@@ -2910,31 +2915,17 @@ def constant_renumber(expr, symbolname, startnumber, endnumber, exclude=None):
     Only constants in the given range (inclusive) are renumbered;
     the renumbering always starts from 1:
 
-    >>> constant_renumber(C1 + C3 + C4, 'C', 1, 3)
-    C1 + C2 + C4
-    >>> constant_renumber(C0 + C1 + C3 + C4, 'C', 2, 4)
-    C0 + 2*C1 + C2
-    >>> constant_renumber(C0 + 2*C1 + C2, 'C', 0, 1)
-    C1 + 3*C2
-    >>> pprint(C2 + C1*x + C3*x**2)
-                    2
-    C1*x + C2 + C3*x
-    >>> pprint(constant_renumber(C2 + C1*x + C3*x**2, 'C', 1, 3))
-                    2
-    C1 + C2*x + C3*x
-
     """
     if type(expr) in (set, list, tuple):
-        return type(expr)(
-            [constant_renumber(i, symbolname=symbolname, startnumber=startnumber, endnumber=endnumber, exclude=exclude)
-                for i in expr]
-        )
+        return type(expr)([constant_renumber(eq, e) for e in expr])
+
+    # Symbols in solution bot not ODE are constants
+    constantsymbols = list(expr.free_symbols - eq.free_symbols)
+
     global newstartnumber
     newstartnumber = 1
+    endnumber = len(constantsymbols)
     constants_found = [None]*(endnumber + 2)
-    constantsymbols = [Symbol(
-        symbolname + "%d" % t) for t in range(startnumber,
-        endnumber + 1)]
 
     # make a mapping to send all constantsymbols to S.One and use
     # that to make sure that term ordering is not dependent on
@@ -2976,21 +2967,20 @@ def constant_renumber(expr, symbolname, startnumber, endnumber, exclude=None):
             return expr.func(*[_constant_renumber(x) for x in sortedargs])
     expr = _constant_renumber(expr)
 
-    # Use Symbols not in the original ODE
-    if exclude is None:
-        exclude = []
-    dummy_ode = Add(*exclude)
-    newconsts = get_numbered_constants(dummy_ode, num=newstartnumber)
-    # FIXME: Why does get_numbered_constants not always return a list?
+    # Don't renumber symbols present in the ODE.
+    constants_found = [c for c in constants_found if c not in eq.free_symbols]
+
+    # New symbol names mustn't clash with symbols already in the ODE
+    newconsts = get_numbered_constants(eq, num=newstartnumber)
     if not iterable(newconsts):
         newconsts = [newconsts]
-    constants_found = [c for c in constants_found if c not in exclude]
+
     # Renumbering happens here
     expr = expr.subs(zip(constants_found[1:], newconsts), simultaneous=True)
     return expr
 
 
-def _handle_Integral(expr, func, order, hint):
+def _handle_Integral(expr, func, hint):
     r"""
     Converts a solution with Integrals in it into an actual solution.
 
@@ -3140,14 +3130,8 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     simplify = match.get('simplify', True)
     if simplify:
         # why is odesimp called here?  Should it be at the usual spot?
-        constants = sol1.free_symbols.difference(eq.free_symbols)
-        sol1 = odesimp(
-            sol1, func, order, constants,
-            "1st_homogeneous_coeff_subs_indep_div_dep")
-        constants = sol2.free_symbols.difference(eq.free_symbols)
-        sol2 = odesimp(
-            sol2, func, order, constants,
-            "1st_homogeneous_coeff_subs_dep_div_indep")
+        sol1 = odesimp(eq, sol1, func, "1st_homogeneous_coeff_subs_indep_div_dep")
+        sol2 = odesimp(eq, sol2, func, "1st_homogeneous_coeff_subs_dep_div_indep")
     return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
         trysolving=not simplify))
 
