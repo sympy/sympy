@@ -2564,7 +2564,7 @@ class PermutationGroup(Basic):
         degree
 
         """
-        if self._order != None:
+        if self._order is not None:
             return self._order
         if self._is_sym:
             n = self._degree

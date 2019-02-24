@@ -1207,7 +1207,7 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
         args = [x for x in args if x is not None]
         if args:
             return expr.func(*args)
-    if args and all(x != None for x in args):
+    if args and all(x is not None for x in args):
         return expr.func(*args)
 
 

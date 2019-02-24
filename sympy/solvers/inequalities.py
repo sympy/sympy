@@ -850,7 +850,7 @@ def _solve_inequality(ie, s, linear=False):
         a, e = ef.as_independent(s, as_Add=False)
         if (a.is_zero != False or  # don't divide by potential 0
                 a.is_negative ==
-                a.is_positive == None and  # if sign is not known then
+                a.is_positive is None and  # if sign is not known then
                 ie.rel_op not in ('!=', '==')): # reject if not Eq/Ne
             e = ef
             a = S.One

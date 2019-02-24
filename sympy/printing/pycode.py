@@ -328,10 +328,10 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Print(self, prnt):
         print_args = ', '.join(map(lambda arg: self._print(arg), prnt.print_args))
-        if prnt.format_string != None:
+        if prnt.format_string != None: # Must be '!= None', cannot be 'is not None'
             print_args = '{0} % ({1})'.format(
                 self._print(prnt.format_string), print_args)
-        if prnt.file != None:
+        if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
         return 'print(%s)' % print_args
 

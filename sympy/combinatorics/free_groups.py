@@ -960,11 +960,11 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         try:
-            return self.subword_index(word) != None
+            return self.subword_index(word) is not None
         except ValueError:
             pass
         try:
-            return self.subword_index(word**-1) != None
+            return self.subword_index(word**-1) is not None
         except ValueError:
             return False
 
