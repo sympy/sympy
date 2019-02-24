@@ -120,7 +120,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         >>> _.reversed
         1 > x
         """
-        ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
+        ops = {Eq: Eq, Gt: Lt, Ge: Le, Lt: Gt, Le: Ge, Ne: Ne}
         a, b = self.args
         return Relational.__new__(ops.get(self.func, self.func), b, a)
 
@@ -144,7 +144,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         """
         a, b = self.args
         if not (isinstance(a, BooleanAtom) or isinstance(b, BooleanAtom)):
-            ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
+            ops = {Eq: Eq, Gt: Lt, Ge: Le, Lt: Gt, Le: Ge, Ne: Ne}
             return Relational.__new__(ops.get(self.func, self.func), -a, -b)
         else:
             return self
@@ -221,8 +221,8 @@ class Relational(Boolean, Expr, EvalfMixin):
             # Right hand side have a minus, but not lhs.
             # How does the expression with reversed signs behave?
             # This is so that expressions of the type Eq(x, -y) and Eq(-x, y) have the same canonical representation
-            orderedlhs = ordered([r.lhs, -r.rhs])
-            if next(orderedlhs) != r.lhs:
+            expr1, _ = ordered([r.lhs, -r.rhs])
+            if expr1 != r.lhs:
                 r = r.reversed.reversedsign
         return r
 

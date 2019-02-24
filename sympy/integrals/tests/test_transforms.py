@@ -480,7 +480,7 @@ def test_laplace_transform():
 
     assert LT(exp(t), t, s)[:2] == (1/(s - 1), 1)
     assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
-    assert LT(exp(a*t), t, s)[:2] == (1/(s - a), 0)
+    assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
 
     assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
 
