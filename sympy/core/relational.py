@@ -318,7 +318,8 @@ class Relational(Boolean, Expr, EvalfMixin):
                     try:
                         p = poly(dif, x)
                         c = p.all_coeffs()
-                        constant = c.pop()
+                        constant = c[-1]
+                        c[-1] = 0
                         scale = gcd(c)
                         c = [ctmp/scale for ctmp in c]
                         r = r.func(Poly.from_list(c, x).as_expr(), -constant/scale)
