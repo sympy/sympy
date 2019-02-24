@@ -5,6 +5,7 @@ from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon
 from sympy.utilities.pytest import raises
 from sympy import integrate
 from sympy.functions.special.elliptic_integrals import elliptic_e
+from sympy.functions.elementary.miscellaneous import Max
 
 
 def test_ellipse_equation_using_slope():
@@ -435,6 +436,7 @@ def test_parameter_value():
     assert e.parameter_value((3, 0), t) == {t: 0}
     raises(ValueError, lambda: e.parameter_value((4, 0), t))
 
+
 def test_second_moment_of_area():
     x, y = symbols('x, y')
     e = Ellipse(Point(0, 0), 5, 4)
@@ -445,6 +447,7 @@ def test_second_moment_of_area():
     assert I_yy == e.second_moment_of_area()[1]
     assert I_xx == e.second_moment_of_area()[0]
     assert I_xy == e.second_moment_of_area()[2]
+
 
 def test_circumference():
     M = Symbol('M')
@@ -461,5 +464,16 @@ def test_circumference():
 
     # test numerically
     assert abs(Ellipse(None, hradius=5, vradius=3).circumference.evalf(16) - 25.52699886339813) < 1e-10
+
+
 def test_issue_15259():
     assert Circle((1, 2), 0) == Point(1, 2)
+
+
+def test_auxiliary_circle():
+    x, y, a, b = symbols('x y a b')
+    e = Ellipse((x, y), a, b)
+    # the general result
+    assert e.auxiliary_circle() == Circle((x, y), Max(a, b))
+    # a special case where Ellipse is a Circle
+    assert Circle((3, 4), 8).auxiliary_circle() == Circle((3, 4), 8)
