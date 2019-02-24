@@ -2939,7 +2939,7 @@ class MatrixBase(MatrixDeprecated,
         from sympy.matrices import Matrix, zeros
 
         aug = self.hstack(self.copy(), B.copy())
-        B_cols = B.shape[1]
+        B_cols = B.cols
         row, col = aug[:, :-B_cols].shape
 
         # solve by reduced row echelon form
@@ -2962,7 +2962,7 @@ class MatrixBase(MatrixDeprecated,
 
         # Get index of free symbols (free parameters)
         free_var_index = permutation[
-                            len(pivots):]  # non-pivots columns are free variables
+                        len(pivots):]  # non-pivots columns are free variables
 
         # Free parameters
         # what are current unnumbered free symbol names?
