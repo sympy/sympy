@@ -58,16 +58,16 @@ def _convert_numpy_types(a, **sympify_args):
     import numpy as np
     if not isinstance(a, np.floating):
         if np.iscomplex(a):
-            return converter[complex](np.asscalar(a))
+            return converter[complex](a.item())
         else:
-            return sympify(np.asscalar(a), **sympify_args)
+            return sympify(a.item(), **sympify_args)
     else:
         try:
             from sympy.core.numbers import Float
             prec = np.finfo(a).nmant + 1
             # E.g. double precision means prec=53 but nmant=52
             # Leading bit of mantissa is always 1, so is not stored
-            a = str(list(np.reshape(np.asarray(a),
+            a = str(list(np.reshape(a.item(),
                                     (1, np.size(a)))[0]))[1:-1]
             return Float(a, precision=prec)
         except NotImplementedError:
