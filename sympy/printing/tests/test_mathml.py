@@ -2,8 +2,10 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
     MatrixSymbol, Function, Derivative, log
-from sympy.sets.sets import Interval
 from sympy.core.containers import Tuple
+from sympy.functions.elementary.complexes import re, im, Abs
+from sympy.matrices.expressions.determinant import Determinant
+from sympy.sets.sets import Interval
 from sympy.stats.rv import RandomSymbol
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
     MathMLPrinter
@@ -923,6 +925,25 @@ def test_print_tuples():
     assert mpp.doprint(Tuple(0, a, a)) == '<mrow><mfenced><mn>0</mn><mi>a</mi><mi>a</mi></mfenced></mrow>'
     assert mpp.doprint(Tuple(0, 1, 2, 3, 4)) == '<mrow><mfenced><mn>0</mn><mn>1</mn><mn>2</mn><mn>3</mn><mn>4</mn></mfenced></mrow>'
     assert mpp.doprint(Tuple(0, 1, Tuple(2, 3, 4))) == '<mrow><mfenced><mn>0</mn><mn>1</mn><mrow><mfenced><mn>2</mn><mn>3</mn><mn>4</mn></mfenced></mrow></mfenced></mrow>'
+
+
+def test_print_re_im():
+    x = Symbol('x')
+    assert mpp.doprint(re(x)) == '<mrow><mi mathvariant="fraktur">R</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(im(x)) == '<mrow><mi mathvariant="fraktur">I</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(re(x + 1)) == '<mrow><mrow><mi mathvariant="fraktur">R</mi><mfenced><mi>x</mi></mfenced></mrow><mo>+</mo><mn>1</mn></mrow>'
+    assert mpp.doprint(im(x + 1)) == '<mrow><mi mathvariant="fraktur">I</mi><mfenced><mi>x</mi></mfenced></mrow>'
+
+
+def test_print_Abs():
+    x = Symbol('x')
+    assert mpp.doprint(Abs(x)) == '<mrow><mfenced close="|" open="|"><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(Abs(x + 1)) == '<mrow><mfenced close="|" open="|"><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced></mrow>'
+
+
+def test_print_Determinant():
+    assert mpp.doprint(Determinant(Matrix([[1, 2], [3, 4]]))) == '<mrow><mfenced close="|" open="|"><mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced></mfenced></mrow>'
+
 
 def test_presentation_settings():
     raises(TypeError, lambda: mathml(Symbol("x"), printer='presentation',method="garbage"))

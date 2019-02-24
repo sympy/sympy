@@ -958,6 +958,34 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(brac)
         return mrow
 
+    def _print_Abs(self, expr, exp=None):
+        mrow = self.dom.createElement('mrow')
+        x = self.dom.createElement('mfenced')
+        x.setAttribute('open', '|')
+        x.setAttribute('close', '|')
+        x.appendChild(self._print(expr.args[0]))
+        mrow.appendChild(x)
+        return mrow
+
+    _print_Determinant = _print_Abs
+
+    def _print_re_im(self, c, expr):
+        mrow = self.dom.createElement('mrow')
+        mi = self.dom.createElement('mi')
+        mi.setAttribute('mathvariant', 'fraktur')
+        mi.appendChild(self.dom.createTextNode(c))
+        mrow.appendChild(mi)
+        brac = self.dom.createElement('mfenced')
+        brac.appendChild(self._print(expr))
+        mrow.appendChild(brac)
+        return mrow
+
+    def _print_re(self, expr, exp=None):
+        return self._print_re_im('R', expr.args[0])
+
+    def _print_im(self, expr, exp=None):
+        return self._print_re_im('I', expr.args[0])
+
     def _print_AssocOp(self, e):
         mrow = self.dom.createElement('mrow')
         mi = self.dom.createElement('mi')
