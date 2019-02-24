@@ -1175,9 +1175,9 @@ def test_solve_decomposition():
     s3 = ImageSet(Lambda(n, n*pi - 1), S.Integers)
 
     assert solve_decomposition(f1, x, S.Reals) == FiniteSet(0, log(2), log(3))
-    assert solve_decomposition(f2, x, S.Reals) == s3
+    assert solve_decomposition(f2, x, S.Reals) == s2
     assert solve_decomposition(f3, x, S.Reals) == Union(s1, s2)
-    assert solve_decomposition(f4, x, S.Reals) == Union(s3)
+    assert solve_decomposition(f4, x, S.Reals) == s3
     assert solve_decomposition(f5, x, S.Reals) == FiniteSet(-2)
     assert solve_decomposition(f6, x, S.Reals) == S.EmptySet
     assert solve_decomposition(f7, x, S.Reals) == S.EmptySet
