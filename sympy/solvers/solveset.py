@@ -494,7 +494,7 @@ def _is_function_class_equation(func_class, f, symbol):
         return False
 
 
-def _solve_as_rational(f, symbol, domain):
+def _solve_as_rational(f, symbol, domain, _simplify=True):
     """ solve rational functions"""
     f = together(f, deep=True)
     g, h = fraction(f)
@@ -507,8 +507,8 @@ def _solve_as_rational(f, symbol, domain):
             # isn't implemented yet, e.g. ZZ[a] for some symbol a
             return ConditionSet(symbol, Eq(f, 0), domain)
     else:
-        valid_solns = _solveset(g, symbol, domain, _simplify=False)
-        invalid_solns = _solveset(h, symbol, domain, _simplify=False)
+        valid_solns = _solveset(g, symbol, domain, _simplify=_simplify)
+        invalid_solns = _solveset(h, symbol, domain, _simplify=_simplify)
         return valid_solns - invalid_solns
 
 
@@ -733,7 +733,7 @@ def _solve_trig2(f, symbol, domain, _simplify=True):
         return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
 
-def _solve_as_poly(f, symbol, domain=S.Complexes):
+def _solve_as_poly(f, symbol, domain=S.Complexes, _simplify=True):
     """
     Solve the equation using polynomial techniques if it already is a
     polynomial equation or, with a change of variables, can be made so.
@@ -832,12 +832,12 @@ def _has_rational_power(expr, symbol):
         return _has_rational_power(pattern_match[a], symbol)
 
 
-def _solve_radical(f, symbol, solveset_solver):
+def _solve_radical(f, symbol, solveset_solver, _simplify=True):
     """ Helper function to solve equations with radicals """
     eq, cov = unrad(f)
     if not cov:
-        result = solveset_solver(eq, symbol) - \
-            Union(*[solveset_solver(g, symbol) for g in denoms(f, symbol)])
+        result = solveset_solver(eq, symbol, _simplify=_simplify) - \
+            Union(*[solveset_solver(g, symbol, _simplify=_simplify) for g in denoms(f, symbol)])
     else:
         y, yeq = cov
         if not solveset_solver(y - I, y):
@@ -845,8 +845,8 @@ def _solve_radical(f, symbol, solveset_solver):
             yeq = yeq.xreplace({y: yreal})
             eq = eq.xreplace({y: yreal})
             y = yreal
-        g_y_s = solveset_solver(yeq, symbol)
-        f_y_sols = solveset_solver(eq, y)
+        g_y_s = solveset_solver(yeq, symbol, _simplify=_simplify)
+        f_y_sols = solveset_solver(eq, y, _simplify=_simplify)
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
@@ -865,7 +865,7 @@ def _solve_radical(f, symbol, solveset_solver):
     return solution_set
 
 
-def _solve_abs(f, symbol, domain):
+def _solve_abs(f, symbol, domain, _simplify=True):
     """ Helper function to solve equation involving absolute value function """
     if not domain.is_subset(S.Reals):
         raise ValueError(filldedent('''
@@ -882,9 +882,9 @@ def _solve_abs(f, symbol, domain):
         q_neg_cond = q_pos_cond.complement(domain)
 
         sols_q_pos = solveset_real(f_p*f_q + f_r,
-                                           symbol).intersect(q_pos_cond)
+                                   symbol, _simplify=_simplify).intersect(q_pos_cond)
         sols_q_neg = solveset_real(f_p*(-f_q) + f_r,
-                                           symbol).intersect(q_neg_cond)
+                                   symbol, _simplify=_simplify).intersect(q_neg_cond)
         return Union(sols_q_pos, sols_q_neg)
     else:
         return ConditionSet(symbol, Eq(f, 0), domain)
@@ -987,7 +987,7 @@ def _solveset(f, symbol, domain, _check=False, _simplify=True):
             f = a/m + h  # XXX condition `m != 0` should be added to soln
 
     # assign the solvers to use
-    solver = lambda f, x, domain=domain: _solveset(f, x, domain, _simplify=_simplify)
+    solver = lambda f, x, domain=domain, _simplify=_simplify: _solveset(f, x, domain, _simplify)
     inverter = lambda f, rhs, symbol: _invert(f, rhs, symbol, domain)
 
     result = EmptySet()
@@ -1058,11 +1058,13 @@ def _solveset(f, symbol, domain, _check=False, _simplify=True):
                            equation, symbol)[0]:
                         result += _solve_radical(equation,
                                                  symbol,
-                                                 solver)
+                                                 solver,
+                                                 _simplify=_simplify)
                     elif equation.has(Abs):
-                        result += _solve_abs(f, symbol, domain)
+                        result += _solve_abs(f, symbol, domain, _simplify=_simplify)
                     else:
-                        result_rational = _solve_as_rational(equation, symbol, domain)
+                        result_rational = _solve_as_rational(equation, symbol,
+                                                             domain, _simplify=_simplify)
                         if isinstance(result_rational, ConditionSet):
                             # may be a transcendental type equation
                             result += _transolve(equation, symbol, domain)
