@@ -2962,7 +2962,7 @@ class MatrixBase(MatrixDeprecated,
 
         # Get index of free symbols (free parameters)
         free_var_index = permutation[
-                        len(pivots):]  # non-pivots columns are free variables
+                         len(pivots):]  # non-pivots columns are free variables
 
         # Free parameters
         # what are current unnumbered free symbol names?
