@@ -172,7 +172,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 \begin{document}
 """ % (package_includes)
     else:
-        if len(packages) > 0:
+        if packages:
             raise ValueError("The \"packages\" keyword must not be set if a "
                              "custom LaTeX preamble was specified")
     latex_main = preamble + '\n%s\n\n' + r"\end{document}"

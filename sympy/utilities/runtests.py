@@ -1400,16 +1400,16 @@ class SymPyDocTests(object):
         for test in tests:
             assert len(test.examples) != 0
 
+            if self._reporter._verbose:
+                self._reporter.write("\n{} ".format(test.name))
+
             # check if there are external dependencies which need to be met
             if '_doctest_depends_on' in test.globs:
                 try:
                     self._check_dependencies(**test.globs['_doctest_depends_on'])
                 except DependencyError as e:
-                    self._reporter.test_skip(v="\n" + str(e))
+                    self._reporter.test_skip(v=str(e))
                     continue
-
-            if self._reporter._verbose:
-                self._reporter.write("\n{} ".format(test.name))
 
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
@@ -1487,7 +1487,8 @@ class SymPyDocTests(object):
     def _check_dependencies(self,
                             executables=(),
                             modules=(),
-                            disable_viewers=()):
+                            disable_viewers=(),
+                            python_version=(2,)):
         """
         Checks if the dependencies for the test are installed.
 
@@ -1528,6 +1529,10 @@ class SymPyDocTests(object):
                 # make the file executable
                 os.chmod(os.path.join(tempdir, viewer),
                          stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR)
+
+        if python_version:
+            if sys.version_info < python_version:
+                raise DependencyError("Requires Python >= " + '.'.join(map(str, python_version)))
 
         if 'pyglet' in modules:
             # monkey-patch pyglet s.t. it does not open a window during

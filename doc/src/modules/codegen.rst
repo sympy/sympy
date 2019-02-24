@@ -289,12 +289,12 @@ For example::
     >>> [arg.result_var for arg in routine.results]   # doctest: +SKIP
     [result₅₁₄₂₃₄₁₆₈₁₃₉₇₇₁₉₄₂₈]
     >>> [arg.expr for arg in routine.results]
-    ⎡                ___________                                           ⎤
-    ⎢          y    ╱ (-y + 2)!   -2⋅x                                     ⎥
-    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ───────── ⋅ℯ    ⋅assoc_laguerre(-y + 2, 2⋅y + 1, 4⋅x)⎥
-    ⎢            ╲╱    (y + 3)!                                            ⎥
-    ⎢──────────────────────────────────────────────────────────────────────⎥
-    ⎣                                  3                                   ⎦
+    ⎡                __________                                          ⎤
+    ⎢          y    ╱ (2 - y)!   -2⋅x                                    ⎥
+    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ──────── ⋅ℯ    ⋅assoc_laguerre(2 - y, 2⋅y + 1, 4⋅x)⎥
+    ⎢            ╲╱   (y + 3)!                                           ⎥
+    ⎢────────────────────────────────────────────────────────────────────⎥
+    ⎣                                 3                                  ⎦
     >>> [arg.name for arg in routine.arguments]
     [x, y]
 
@@ -505,9 +505,9 @@ Let us see an example for some quantitative analysis::
     >>> from sympy.physics.hydrogen import R_nl
     >>> expr = R_nl(3, 1, x, 6)
     >>> expr
-                    -2⋅x
-    8⋅x⋅(-4⋅x + 4)⋅ℯ
-    ────────────────────
+                   -2⋅x
+    8⋅x⋅(4 - 4⋅x)⋅ℯ
+    ───────────────────
              3
 
 The lambdify function translates SymPy expressions into Python functions,
