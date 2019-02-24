@@ -926,6 +926,38 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(brac)
         return mrow
 
+    def _print_Tuple(self, e):
+        mrow = self.dom.createElement('mrow')
+        x = self.dom.createElement('mfenced')
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        mrow.appendChild(x)
+        return mrow
+
+    def _print_Interval(self, i):
+        mrow = self.dom.createElement('mrow')
+        brac = self.dom.createElement('mfenced')
+        if i.start == i.end:
+            # Most often, this type of Interval is converted to a FiniteSet
+            brac.setAttribute('open', '{')
+            brac.setAttribute('close', '}')
+            brac.appendChild(self._print(i.start))
+        else:
+            if i.left_open:
+                brac.setAttribute('open', '(')
+            else:
+                brac.setAttribute('open', '[')
+
+            if i.right_open:
+                brac.setAttribute('close', ')')
+            else:
+                brac.setAttribute('close', ']')
+            brac.appendChild( self._print(i.start))
+            brac.appendChild( self._print(i.end))
+
+        mrow.appendChild(brac)
+        return mrow
+
     def _print_AssocOp(self, e):
         mrow = self.dom.createElement('mrow')
         mi = self.dom.createElement('mi')
