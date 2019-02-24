@@ -501,7 +501,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     .. math::
         f(x, y) = F(- a y + b x ) e^{- \frac{c (a x + b y)}{a^2 + b^2}}
 
-    and can be found in sympy with ``pdsolve``::
+    and can be found in SymPy with ``pdsolve``::
 
         >>> from sympy.solvers import pdsolve
         >>> from sympy.abc import x, y, a, b, c
@@ -582,7 +582,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         e^{- \frac{c \xi}{a^2 + b^2}}
         \right|_{\substack{\eta=- a y + b x\\ \xi=a x + b y }}
 
-    and can be found in sympy with ``pdsolve``::
+    and can be found in SymPy with ``pdsolve``::
 
         >>> from sympy.solvers import pdsolve
         >>> from sympy.abc import x, y, a, b, c
