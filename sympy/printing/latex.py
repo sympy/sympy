@@ -198,7 +198,7 @@ class LatexPrinter(Printer):
     def parenthesize(self, item, level, strict=False):
         prec_val = precedence_traditional(item)
         if (prec_val < level) or ((not strict) and prec_val <= level):
-            return r"\left(%s\right)" % self._print(item)
+            return r"\left({}\right)".format(self._print(item))
         else:
             return self._print(item)
 
@@ -2127,7 +2127,7 @@ class LatexPrinter(Printer):
         return component_names + pretty_morphism
 
     def _print_Category(self, morphism):
-        return r"\mathbf{{{}}}".format(Symbol(morphism.name))
+        return r"\mathbf{{{}}}".format(self._print(Symbol(morphism.name)))
 
     def _print_Diagram(self, diagram):
         if not diagram.premises:
@@ -2160,20 +2160,20 @@ class LatexPrinter(Printer):
         return latex_result
 
     def _print_FreeModule(self, M):
-        return '{%s}^{%s}' % (self._print(M.ring), self._print(M.rank))
+        return '{{{}}}^{{{}}}'.format(self._print(M.ring), self._print(M.rank))
 
     def _print_FreeModuleElement(self, m):
         # Print as row vector for convenience, for now.
-        return r"\left[ %s \right]" % ",".join(
-            '{' + self._print(x) + '}' for x in m)
+        return r"\left[ {} \right]".format(",".join(
+            '{' + self._print(x) + '}' for x in m))
 
     def _print_SubModule(self, m):
-        return r"\left\langle %s \right\rangle" % ",".join(
-            '{' + self._print(x) + '}' for x in m.gens)
+        return r"\left\langle {} \right\rangle".format(",".join(
+            '{' + self._print(x) + '}' for x in m.gens))
 
     def _print_ModuleImplementedIdeal(self, m):
-        return r"\left\langle %s \right\rangle" % ",".join(
-            '{' + self._print(x) + '}' for [x] in m._module.gens)
+        return r"\left\langle {} \right\rangle".format(",".join(
+            '{' + self._print(x) + '}' for [x] in m._module.gens))
 
     def _print_Quaternion(self, expr):
         # TODO: This expression is potentially confusing,
@@ -2184,22 +2184,22 @@ class LatexPrinter(Printer):
 
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...
-        return r"\frac{%s}{%s}" % (self._print(R.ring), self._print(R.base_ideal))
+        return r"\frac{{{}}}{{{}}}".format(self._print(R.ring), self._print(R.base_ideal))
 
     def _print_QuotientRingElement(self, x):
-        return r"{%s} + {%s}" % (self._print(x.data), self._print(x.ring.base_ideal))
+        return r"{{{}}} + {{{}}}".format(self._print(x.data), self._print(x.ring.base_ideal))
 
     def _print_QuotientModuleElement(self, m):
-        return r"{%s} + {%s}" % (self._print(m.data),
+        return r"{{{}}} + {{{}}}".format(self._print(m.data),
                                  self._print(m.module.killed_module))
 
     def _print_QuotientModule(self, M):
         # TODO nicer fractions for few generators...
-        return r"\frac{%s}{%s}" % (self._print(M.base),
+        return r"\frac{{{}}}{{{}}}".format(self._print(M.base),
                                    self._print(M.killed_module))
 
     def _print_MatrixHomomorphism(self, h):
-        return r"{%s} : {%s} \to {%s}" % (self._print(h._sympy_matrix()),
+        return r"{{{}}} : {{{}}} \to {{{}}}".format(self._print(h._sympy_matrix()),
             self._print(h.domain), self._print(h.codomain))
 
     def _print_BaseScalarField(self, field):
@@ -2208,22 +2208,22 @@ class LatexPrinter(Printer):
 
     def _print_BaseVectorField(self, field):
         string = field._coord_sys._names[field._index]
-        return r'\partial_{%s}' % self._print(Symbol(string))
+        return r'\partial_{{{}}}'.format(self._print(Symbol(string)))
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
             string = field._coord_sys._names[field._index]
-            return r'\text{d}%s' % self._print(Symbol(string))
+            return r'\text{{d}}{}'.format(self._print(Symbol(string)))
         else:
-            return 'd(%s)' % self._print(field)
+            return 'd({})'.format(self._print(field))
             string = self._print(field)
-            return r'\text{d}\left(%s\right)' % string
+            return r'\text{{d}}\left({}\right)'.format(string)
 
     def _print_Tr(self, p):
         #Todo: Handle indices
         contents = self._print(p.args[0])
-        return r'\mbox{Tr}\left(%s\right)' % (contents)
+        return r'\mbox{{Tr}}\left({}\right)'.format(contents)
 
     def _print_totient(self, expr, exp=None):
         if exp is not None:
