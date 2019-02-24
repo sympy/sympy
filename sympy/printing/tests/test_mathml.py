@@ -3,7 +3,7 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
     MatrixSymbol, Function, Derivative, log
 from sympy.functions.special.zeta_functions import polylog, lerchphi
-from sympy.logic.boolalg import And, Or, Implies, Equivalent, Xor
+from sympy.logic.boolalg import And, Or, Implies, Equivalent, Xor, Not
 from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, SymmetricDifference
 from sympy.stats.rv import RandomSymbol
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
@@ -1000,6 +1000,8 @@ def test_print_logic():
     assert mpp.doprint(Or(Eq(x, y), x > 4)) == '<mrow><mrow><mi>x</mi><mo>=</mo><mi>y</mi></mrow><mo>&#x2228;</mo><mrow><mi>x</mi><mo>></mo><mn>4</mn></mrow></mrow>'
     assert mpp.doprint(And(Eq(x, 3), Or(y < 3, x > y + 1))) == '<mrow><mrow><mi>x</mi><mo>=</mo><mn>3</mn></mrow><mo>&#x2227;</mo><mfenced><mrow><mrow><mi>x</mi><mo>></mo><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow></mrow><mo>&#x2228;</mo><mrow><mi>y</mi><mo><</mo><mn>3</mn></mrow></mrow></mfenced></mrow>'
 
+    assert mpp.doprint(Not(x)) == '<mrow><mo>&#xAC;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(Not(And(x, y))) == '<mrow><mo>&#xAC;</mo><mfenced><mrow><mi>x</mi><mo>&#x2227;</mo><mi>y</mi></mrow></mfenced></mrow>'
 
 def test_root_notation_print():
     assert mathml(x**(S(1)/3), printer='presentation') == '<mroot><mi>x</mi><mn>3</mn></mroot>'
