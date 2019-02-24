@@ -140,13 +140,13 @@ collect
     >>> collected_expr = collect(expr, x)
     >>> collected_expr
      3    2
-    x  + x ⋅(-z + 2) + x⋅(y + 1) - 3
+    x  + x ⋅(2 - z) + x⋅(y + 1) - 3
 
 ``collect()`` is particularly useful in conjunction with the ``.coeff()``
 method.  ``expr.coeff(x, n)`` gives the coefficient of ``x**n`` in ``expr``:
 
     >>> collected_expr.coeff(x, 2)
-    -z + 2
+    2 - z
 
 .. TODO: Discuss coeff method in more detail in some other section (maybe
    basic expression manipulation tools)
@@ -278,10 +278,10 @@ identities, use ``expand_trig()``.
     >>> expand_trig(sin(x + y))
     sin(x)⋅cos(y) + sin(y)⋅cos(x)
     >>> expand_trig(tan(2*x))
-       2⋅tan(x)
-    ─────────────
-         2
-    - tan (x) + 1
+      2⋅tan(x)
+    ───────────
+           2
+    1 - tan (x)
 
 Because ``expand_trig()`` tends to make trigonometric expressions larger, and
 ``trigsimp()`` tends to make them smaller, these identities can be applied in
@@ -650,8 +650,8 @@ To rewrite ``hyper`` in terms of more standard functions, use
 ``hyperexpand()``.
 
     >>> hyperexpand(hyper([1, 1], [2], z))
-    -log(-z + 1)
-    ─────────────
+    -log(1 - z)
+    ────────────
          z
 
 ``hyperexpand()`` also works on the more general Meijer G-function (see

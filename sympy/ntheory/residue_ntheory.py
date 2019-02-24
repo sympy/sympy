@@ -773,7 +773,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     # see Hackman "Elementary Number Theory" (2009), page 76
     if not is_nthpow_residue(a, n, p):
         return None
-    if primitive_root(p) == None:
+    if primitive_root(p) is None:
         raise NotImplementedError("Not Implemented for m without primitive root")
 
     if (p - 1) % n == 0:
@@ -1133,7 +1133,6 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
     if order is None:
         order = n_order(b, n)
-
     prng = Random()
     if rseed is not None:
         prng.seed(rseed)
@@ -1196,10 +1195,13 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
             if xa == xb:
                 r = (ba - bb) % order
-                if r != 0:
-                    return mod_inverse(r, order) * (ab - aa) % order
+                try:
+                    e = mod_inverse(r, order) * (ab - aa) % order
+                    if (pow(b, e, n) - a) % n == 0:
+                        return e
+                except ValueError:
+                    pass
                 break
-
     raise ValueError("Pollard's Rho failed to find logarithm")
 
 

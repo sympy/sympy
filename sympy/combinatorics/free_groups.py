@@ -658,7 +658,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         substituted_word
 
         """
-        if by == None:
+        if by is None:
             by = self.group.identity
         if self.is_independent(gen) or gen == by:
             return self
@@ -960,11 +960,11 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         try:
-            return self.subword_index(word) != None
+            return self.subword_index(word) is not None
         except ValueError:
             pass
         try:
-            return self.subword_index(word**-1) != None
+            return self.subword_index(word**-1) is not None
         except ValueError:
             return False
 
