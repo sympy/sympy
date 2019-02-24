@@ -20,7 +20,7 @@ from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
-    Assignment, Pointer, Type, Variable, Declaration,
+    Assignment, Pointer, Variable, Declaration,
     real, complex_, integer, bool_, float32, float64, float80,
     complex64, complex128, intc, value_const, pointer_const,
     int8, int16, int32, int64, uint8, uint16, uint32, uint64, untyped
@@ -498,7 +498,7 @@ class C89CodePrinter(CodePrinter):
             )
         else:
             raise NotImplementedError("Unknown type of var: %s" % type(var))
-        if val != None:
+        if val != None: # Must be "!= None", cannot be "is not None"
             result += ' = %s' % self._print(val)
         return result
 
@@ -524,14 +524,14 @@ class C89CodePrinter(CodePrinter):
         return 'false'
 
     def _print_Element(self, elem):
-        if elem.strides == None:
-            if elem.offset != None:
+        if elem.strides == None: # Must be "== None", cannot be "is None"
+            if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 raise ValueError("Expected strides when offset is given")
             idxs = ']['.join(map(lambda arg: self._print(arg),
                                  elem.indices))
         else:
             global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
-            if elem.offset != None:
+            if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 global_idx += elem.offset
             idxs = self._print(global_idx)
 

@@ -2,37 +2,32 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from sympy.core import (Basic, S, Add, Mul, Pow,
-    Symbol, sympify, expand_mul, expand_func,
-    Function, Dummy, Expr, factor_terms,
-    symbols, expand_power_exp)
-from sympy.core.compatibility import (iterable,
-    ordered, range, as_int)
-from sympy.core.numbers import Float, I, pi, Rational, Integer
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
-from sympy.core.rules import Transform
+from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify, expand_mul,
+                        expand_func, Function, Dummy, Expr, factor_terms,
+                        expand_power_exp)
+from sympy.core.compatibility import iterable, ordered, range, as_int
 from sympy.core.evaluate import global_evaluate
-from sympy.functions import (
-    gamma, exp, sqrt, log, exp_polar, piecewise_fold)
+from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
+from sympy.core.numbers import Float, I, pi, Rational, Integer
+from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
+from sympy.functions import gamma, exp, sqrt, log, exp_polar, piecewise_fold
+from sympy.functions.combinatorial.factorials import CombinatorialFunction
+from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
-from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
-
+from sympy.polys import together, cancel, factor
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.cse_opts import sub_pre, sub_post
+from sympy.simplify.powsimp import powsimp
+from sympy.simplify.radsimp import radsimp, fraction
+from sympy.simplify.sqrtdenest import sqrtdenest
+from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.iterables import has_variety
 
-from sympy.simplify.radsimp import radsimp, fraction
-from sympy.simplify.trigsimp import trigsimp, exptrigsimp
-from sympy.simplify.powsimp import powsimp
-from sympy.simplify.cse_opts import sub_pre, sub_post
-from sympy.simplify.sqrtdenest import sqrtdenest
-from sympy.simplify.combsimp import combsimp
-
-from sympy.polys import (together, cancel, factor)
 
 
 import mpmath
@@ -60,6 +55,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 
     Notes
     =====
+
     The order of the factors is determined by Mul, so that the
     separated expressions may not necessarily be grouped together.
 
@@ -465,7 +461,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     >>> g = log(a) + log(b) + log(a)*log(1/b)
     >>> h = simplify(g)
     >>> h
-    log(a*b**(-log(a) + 1))
+    log(a*b**(1 - log(a)))
     >>> count_ops(g)
     8
     >>> count_ops(h)
@@ -885,7 +881,7 @@ def logcombine(expr, force=False):
     """
     Takes logarithms and combines them using the following rules:
 
-    - log(x) + log(y) == log(x*y) if both are not negative
+    - log(x) + log(y) == log(x*y) if both are positive
     - a*log(x) == log(x**a) if x is positive and a is real
 
     If ``force`` is True then the assumptions above will be assumed to hold if
@@ -920,6 +916,7 @@ def logcombine(expr, force=False):
 
     See Also
     ========
+
     posify: replace all symbols with symbols having positive assumptions
     sympy.core.function.expand_log: expand the logarithms of products
         and powers; the opposite of logcombine
@@ -1067,6 +1064,7 @@ def walk(e, *target):
 
     See Also
     ========
+
     bottom_up
     """
     if isinstance(e, target):
@@ -1295,6 +1293,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     See Also
     ========
+
     sympy.core.function.nfloat
 
     """
@@ -1386,6 +1385,9 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     """
     Replace all reals in expr with rationals.
+
+    Examples
+    ========
 
     >>> from sympy import Rational
     >>> from sympy.simplify.simplify import _real_to_rational

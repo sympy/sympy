@@ -63,7 +63,7 @@ def test_autolev_tutorial():
     dir_path = os.path.join(FILE_DIR, 'autolev', 'test-examples',
                             'autolev-tutorial')
 
-    if(os.path.isdir(dir_path)):
+    if os.path.isdir(dir_path):
         l = ["tutor1", "tutor2", "tutor3", "tutor4", "tutor5", "tutor6",
              "tutor7"]
         for i in l:
@@ -77,7 +77,7 @@ def test_dynamics_online():
     dir_path = os.path.join(FILE_DIR, 'autolev', 'test-examples',
                             'dynamics-online')
 
-    if(os.path.isdir(dir_path)):
+    if os.path.isdir(dir_path):
         ch1 = ["1-4", "1-5", "1-6", "1-7", "1-8", "1-9_1", "1-9_2", "1-9_3"]
         ch2 = ["2-1", "2-2", "2-3", "2-4", "2-5", "2-6", "2-7", "2-8", "2-9",
                "circular"]

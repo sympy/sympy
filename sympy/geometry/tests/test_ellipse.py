@@ -5,6 +5,7 @@ from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon
 from sympy.utilities.pytest import raises
 from sympy import integrate
 from sympy.functions.special.elliptic_integrals import elliptic_e
+from sympy.functions.elementary.miscellaneous import Max
 
 
 def test_ellipse_equation_using_slope():
@@ -482,3 +483,12 @@ def test_issue_15797():
     assert u.center.x.is_Float
     assert u.center.y.is_Float
     assert u.radius.is_Float
+
+
+def test_auxiliary_circle():
+    x, y, a, b = symbols('x y a b')
+    e = Ellipse((x, y), a, b)
+    # the general result
+    assert e.auxiliary_circle() == Circle((x, y), Max(a, b))
+    # a special case where Ellipse is a Circle
+    assert Circle((3, 4), 8).auxiliary_circle() == Circle((3, 4), 8)

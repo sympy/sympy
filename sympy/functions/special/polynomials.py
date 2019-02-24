@@ -8,9 +8,9 @@ combinatorial polynomials.
 
 from __future__ import print_function, division
 
-from sympy.core.singleton import S
 from sympy.core import Rational
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import binomial, factorial, RisingFactorial
 from sympy.functions.elementary.complexes import re
@@ -306,7 +306,7 @@ class gegenbauer(OrthogonalPolynomial):
     (-1)**n*gegenbauer(n, a, x)
 
     >>> gegenbauer(n, a, 0)
-    2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(-n/2 + 1/2)*gamma(n + 1))
+    2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(1/2 - n/2)*gamma(n + 1))
     >>> gegenbauer(n, a, 1)
     gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
 
@@ -847,7 +847,7 @@ class assoc_legendre(Function):
     >>> assoc_legendre(1,0, x)
     x
     >>> assoc_legendre(1,1, x)
-    -sqrt(-x**2 + 1)
+    -sqrt(1 - x**2)
     >>> assoc_legendre(n,m,x)
     assoc_legendre(n, m, x)
 
@@ -1039,7 +1039,7 @@ class laguerre(OrthogonalPolynomial):
     >>> laguerre(0, x)
     1
     >>> laguerre(1, x)
-    -x + 1
+    1 - x
     >>> laguerre(2, x)
     x**2/2 - 2*x + 1
     >>> laguerre(3, x)

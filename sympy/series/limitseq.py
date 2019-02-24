@@ -2,17 +2,17 @@
 
 from __future__ import print_function, division
 
-from sympy.core.sympify import sympify
-from sympy.core.singleton import S
 from sympy.core.add import Add
-from sympy.core.power import Pow
-from sympy.core.symbol import Dummy
 from sympy.core.function import PoleError
-from sympy.series.limits import Limit
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.series.limits import Limit
 
 
 def difference_delta(expr, n=None, step=1):

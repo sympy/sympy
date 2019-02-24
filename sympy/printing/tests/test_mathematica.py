@@ -67,6 +67,42 @@ def test_containers():
     assert mcode(Tuple(*[1, 2, 3])) == "{1, 2, 3}"
 
 
+def test_matrices():
+    from sympy.matrices import MutableDenseMatrix, MutableSparseMatrix
+    A = MutableDenseMatrix(
+        [[1, -1, 0, 0],
+        [0, 1, -1, 0],
+        [0, 0, 1, -1],
+        [0, 0, 0, 1]]
+    )
+    B = MutableSparseMatrix(
+        [[1, -1, 0, 0],
+        [0, 1, -1, 0],
+        [0, 0, 1, -1],
+        [0, 0, 0, 1]]
+    )
+
+    assert mcode(A) == """\
+{{1, -1, 0, 0}, \
+{0, 1, -1, 0}, \
+{0, 0, 1, -1}, \
+{0, 0, 0, 1}}\
+"""
+    assert mcode(B) == """\
+SparseArray[\
+{{1, 1} -> 1, {1, 2} -> -1, {2, 2} -> 1, {2, 3} -> -1, \
+{3, 3} -> 1, {3, 4} -> -1, {4, 4} -> 1}, {4, 4}]\
+"""
+
+    # Trivial cases of matrices
+    assert mcode(MutableDenseMatrix(0, 0, [])) == '{}'
+    assert mcode(MutableSparseMatrix(0, 0, [])) == 'SparseArray[{}, {0, 0}]'
+    assert mcode(MutableDenseMatrix(0, 3, [])) == '{}'
+    assert mcode(MutableSparseMatrix(0, 3, [])) == 'SparseArray[{}, {0, 3}]'
+    assert mcode(MutableDenseMatrix(3, 0, [])) == '{{}, {}, {}}'
+    assert mcode(MutableSparseMatrix(3, 0, [])) == 'SparseArray[{}, {3, 0}]'
+
+
 def test_Integral():
     assert mcode(Integral(sin(sin(x)), x)) == "Hold[Integrate[Sin[Sin[x]], x]]"
     assert mcode(Integral(exp(-x**2 - y**2),

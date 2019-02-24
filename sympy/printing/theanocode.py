@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range, is_sequence
 from sympy.external import import_module
 from sympy.printing.printer import Printer
-from sympy.core.compatibility import range, is_sequence
 import sympy
 from functools import partial
 
@@ -292,7 +292,9 @@ class TheanoPrinter(Printer):
 
         See Also
         ========
+
         theano.tensor.Tensor
+
         """
         if dtypes is None:
             dtypes = {}
@@ -381,7 +383,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
             for s, d in dims.items()
         }
 
-    if broadcastables != None:
+    if broadcastables is not None:
         return broadcastables
 
     return {}

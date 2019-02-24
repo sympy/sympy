@@ -7,6 +7,7 @@ from sympy.interactive.printing import init_printing
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter, translate
 from sympy.printing.pretty.pretty import PrettyPrinter
+from sympy.printing.pretty.pretty_symbology import center_accent
 from sympy.printing.str import StrPrinter
 
 __all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex',
@@ -127,7 +128,6 @@ class VectorLatexPrinter(LatexPrinter):
             return r"\left(%s\right)" % self.doprint(der_expr)
 
         # check if expr is a dynamicsymbol
-        from sympy.core.function import AppliedUndef
         t = dynamicsymbols._t
         expr = der_expr.expr
         red = expr.atoms(AppliedUndef)
@@ -148,6 +148,10 @@ class VectorLatexPrinter(LatexPrinter):
             base = r"\ddot{%s}" % base
         elif dots == 3:
             base = r"\dddot{%s}" % base
+        elif dots == 4:
+            base = r"\ddddot{%s}" % base
+        else: # Fallback to standard printing
+            return LatexPrinter().doprint(der_expr)
         if len(base_split) is not 1:
             base += '_' + base_split[1]
         return base
@@ -161,9 +165,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
         t = dynamicsymbols._t
         dot_i = 0
-        can_break = True
         syms = list(reversed(deriv.variables))
-        x = None
 
         while len(syms) > 0:
             if syms[-1] == t:
@@ -177,11 +179,17 @@ class VectorPrettyPrinter(PrettyPrinter):
                 return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
         else:
             pform = self._print_Function(deriv.expr)
+
         # the following condition would happen with some sort of non-standard
         # dynamic symbol I guess, so we'll just print the SymPy way
         if len(pform.picture) > 1:
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
+        # There are only special symbols up to fourth-order derivatives
+        if dot_i >= 5:
+            return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+
+        # Deal with special symbols
         dots = {0 : u"",
                 1 : u"\N{COMBINING DOT ABOVE}",
                 2 : u"\N{COMBINING DIAERESIS}",
@@ -189,15 +197,9 @@ class VectorPrettyPrinter(PrettyPrinter):
                 4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
-        pic = d['picture'][0]
-        uni = d['unicode']
-        lp = len(pic) // 2 + 1
-        lu = len(uni) // 2 + 1
-        pic_split = [pic[:lp], pic[lp:]]
-        uni_split = [uni[:lu], uni[lu:]]
 
-        d['picture'] = [pic_split[0] + dots[dot_i] + pic_split[1]]
-        d['unicode'] =  uni_split[0] + dots[dot_i] + uni_split[1]
+        d['picture'] = [center_accent(d['picture'][0], dots[dot_i])]
+        d['unicode'] =  center_accent(d['unicode'], dots[dot_i])
 
         return pform
 

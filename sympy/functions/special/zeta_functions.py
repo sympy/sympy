@@ -2,8 +2,8 @@
 from __future__ import print_function, division
 
 from sympy.core import Function, S, sympify, pi, I
-from sympy.core.function import ArgumentIndexError
 from sympy.core.compatibility import range
+from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
 from sympy.functions.elementary.exponential import log, exp_polar
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -253,9 +253,9 @@ class polylog(Function):
     >>> from sympy import expand_func
     >>> from sympy.abc import z
     >>> expand_func(polylog(1, z))
-    -log(-z + 1)
+    -log(1 - z)
     >>> expand_func(polylog(0, z))
-    z/(-z + 1)
+    z/(1 - z)
 
     The derivative with respect to :math:`z` can be computed in closed form:
 
@@ -314,7 +314,7 @@ class polylog(Function):
         return z*lerchphi(z, s, 1)
 
     def _eval_expand_func(self, **hints):
-        from sympy import log, expand_mul, Dummy, exp_polar, I
+        from sympy import log, expand_mul, Dummy
         s, z = self.args
         if s == 1:
             return -log(1 - z)
@@ -389,7 +389,7 @@ class zeta(Function):
 
     >>> from sympy import dirichlet_eta
     >>> zeta(s).rewrite(dirichlet_eta)
-    dirichlet_eta(s)/(-2**(-s + 1) + 1)
+    dirichlet_eta(s)/(1 - 2**(1 - s))
 
     The Riemann zeta function at positive even integer and negative odd integer
     values is related to the Bernoulli numbers:
@@ -532,7 +532,7 @@ class dirichlet_eta(Function):
     >>> from sympy import dirichlet_eta, zeta
     >>> from sympy.abc import s
     >>> dirichlet_eta(s).rewrite(zeta)
-    (-2**(-s + 1) + 1)*zeta(s)
+    (1 - 2**(1 - s))*zeta(s)
 
     """
 
@@ -587,7 +587,7 @@ class stieltjes(Function):
     def eval(cls, n, a=None):
         n = sympify(n)
 
-        if a != None:
+        if a is not None:
             a = sympify(a)
             if a is S.NaN:
                 return S.NaN

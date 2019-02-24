@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.ntheory import isprime
 from sympy.combinatorics.permutations import Permutation, _af_invert, _af_rmul
 from sympy.core.compatibility import range
+from sympy.ntheory import isprime
 
 rmul = Permutation.rmul
 _af_new = Permutation._af_new
@@ -54,8 +54,8 @@ def _base_ordering(base, degree):
     References
     ==========
 
-    [1] Holt, D., Eick, B., O'Brien, E.
-    "Handbook of computational group theory"
+    .. [1] Holt, D., Eick, B., O'Brien, E.
+           "Handbook of computational group theory"
 
     """
     base_len = len(base)
@@ -105,7 +105,7 @@ def _check_cycles_alt_sym(perm):
             current_len = 1
             used.add(i)
             j = i
-            while(af[j] != i):
+            while af[j] != i:
                 current_len += 1
                 j = af[j]
                 used.add(j)
@@ -351,8 +351,8 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     References
     ==========
 
-    [1] Holt, D., Eick, B., O'Brien, E.
-    "Handbook of computational group theory"
+    .. [1] Holt, D., Eick, B., O'Brien, E.
+           "Handbook of computational group theory"
 
     """
     from sympy.combinatorics.perm_groups import _orbit
@@ -360,7 +360,6 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     degree = strong_gens[0].size
     if strong_gens_distr is None:
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
-    temp = strong_gens_distr[:]
     if basic_orbits is None:
         basic_orbits = []
         for i in range(base_len):

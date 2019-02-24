@@ -664,8 +664,10 @@ class MatrixSpecial(MatrixRequired):
 
         rows : rows of the resulting matrix; computed if
                not given.
+
         cols : columns of the resulting matrix; computed if
                not given.
+
         cls : class for the resulting matrix
 
         Examples
@@ -791,9 +793,13 @@ class MatrixSpecial(MatrixRequired):
         ======
 
         size : rows and columns of the matrix
+
         rows : rows of the matrix (if None, rows=size)
+
         cols : cols of the matrix (if None, cols=size)
+
         eigenvalue : value on the diagonal of the matrix
+
         band : position of off-diagonal 1s.  May be 'upper' or
                'lower'. (Default: 'upper')
 
@@ -962,7 +968,7 @@ class MatrixProperties(MatrixRequired):
     def _eval_is_zero(self):
         if any(i.is_zero == False for i in self):
             return False
-        if any(i.is_zero == None for i in self):
+        if any(i.is_zero is None for i in self):
             return None
         return True
 
@@ -1820,7 +1826,7 @@ class MatrixOperations(MatrixRequired):
         5
 
         """
-        if not self.rows == self.cols:
+        if self.rows != self.cols:
             raise NonSquareMatrixError()
         return self._eval_trace()
 
@@ -2043,7 +2049,7 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rpow__')
     def __pow__(self, num):
-        if not self.rows == self.cols:
+        if self.rows != self.cols:
             raise NonSquareMatrixError()
         try:
             a = self
@@ -2065,6 +2071,9 @@ class MatrixArithmetic(MatrixRequired):
                     except (AttributeError, MatrixError):
                         pass
                 return a._eval_pow_by_recursion(num)
+            elif not num.is_Number and num.is_negative is None and a.det() == 0:
+                from sympy.matrices.expressions import MatPow
+                return MatPow(a, num)
             elif isinstance(num, (Expr, float)):
                 return a._matrix_pow_by_jordan_blocks(num)
             else:

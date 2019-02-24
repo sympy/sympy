@@ -16,7 +16,7 @@ from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import ordered
 from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.geometry.exceptions import GeometryError
@@ -963,7 +963,7 @@ class Ellipse(GeometrySet):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.periapsis
-        -2*sqrt(2) + 3
+        3 - 2*sqrt(2)
 
         """
         return self.major * (1 - self.eccentricity)
@@ -1005,6 +1005,22 @@ class Ellipse(GeometrySet):
 
         """
         return self.major * (1 - self.eccentricity ** 2)
+
+    def auxiliary_circle(self):
+        """Returns a Circle whose diameter is the major axis of the ellipse.
+
+        Examples
+        ========
+
+        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> c = Point(1, 2)
+        >>> Ellipse(c, 8, 7).auxiliary_circle()
+        Circle(Point2D(1, 2), 8)
+        >>> a, b = symbols('a b')
+        >>> Ellipse(c, a, b).auxiliary_circle()
+        Circle(Point2D(1, 2), Max(a, b))
+        """
+        return Circle(self.center, Max(self.hradius, self.vradius))
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.

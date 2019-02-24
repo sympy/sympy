@@ -27,7 +27,7 @@ def pprint_nodes(subtrees):
             else:
                 r += "  %s\n" % a
         return r
-    if len(subtrees) == 0:
+    if not subtrees:
         return ""
     f = ""
     for a in subtrees[:-1]:
@@ -44,7 +44,7 @@ def print_node(node):
     """
     s = "%s: %s\n" % (node.__class__.__name__, str(node))
     d = node._assumptions
-    if len(d) > 0:
+    if d:
         for a in sorted(d):
             v = d[a]
             if v is None:
@@ -59,7 +59,11 @@ def tree(node):
 
     It uses print_node() together with pprint_nodes() on node.args recursively.
 
-    See also: print_tree()
+    See Also
+    ========
+
+    print_tree
+
     """
     subtrees = []
     for arg in node.args:
@@ -112,6 +116,10 @@ def print_tree(node):
       transcendental: False
       zero: False
 
-    See also: tree()
+    See Also
+    ========
+
+    tree
+
     """
     print(tree(node))

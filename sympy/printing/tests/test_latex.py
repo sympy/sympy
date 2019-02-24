@@ -17,7 +17,7 @@ from sympy import (
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
-     UnevaluatedExpr, Quaternion)
+     UnevaluatedExpr, Quaternion, I)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -96,6 +96,7 @@ def test_latex_basic():
 
     assert latex(sqrt(x)) == r"\sqrt{x}"
     assert latex(x**Rational(1, 3)) == r"\sqrt[3]{x}"
+    assert latex(x**Rational(1, 3), root_notation=False) == r"x^{\frac{1}{3}}"
     assert latex(sqrt(x)**3) == r"x^{\frac{3}{2}}"
     assert latex(sqrt(x), itex=True) == r"\sqrt{x}"
     assert latex(x**Rational(1, 3), itex=True) == r"\root{3}{x}"
@@ -111,12 +112,12 @@ def test_latex_basic():
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
     assert latex(1.5e20*x, mul_symbol='times') == r"1.5 \times 10^{20} \times x"
 
-    assert latex(1/sin(x)) == r"\frac{1}{\sin{\left (x \right )}}"
-    assert latex(sin(x)**-1) == r"\frac{1}{\sin{\left (x \right )}}"
+    assert latex(1/sin(x)) == r"\frac{1}{\sin{\left(x \right)}}"
+    assert latex(sin(x)**-1) == r"\frac{1}{\sin{\left(x \right)}}"
     assert latex(sin(x)**Rational(3, 2)) == \
-        r"\sin^{\frac{3}{2}}{\left (x \right )}"
+        r"\sin^{\frac{3}{2}}{\left(x \right)}"
     assert latex(sin(x)**Rational(3, 2), fold_frac_powers=True) == \
-        r"\sin^{3/2}{\left (x \right )}"
+        r"\sin^{3/2}{\left(x \right)}"
 
     assert latex(~x) == r"\neg x"
     assert latex(x & y) == r"x \wedge y"
@@ -143,7 +144,7 @@ def test_latex_basic():
         r"x_i \Rightarrow y_i"
 
     p = Symbol('p', positive=True)
-    assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left (p \right )}"
+    assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left(p \right)}"
 
 
 def test_latex_builtins():
@@ -155,12 +156,12 @@ def test_latex_builtins():
 
 
 def test_latex_SingularityFunction():
-    assert latex(SingularityFunction(x, 4, 5)) == r"{\langle x - 4 \rangle}^{5}"
-    assert latex(SingularityFunction(x, -3, 4)) == r"{\langle x + 3 \rangle}^{4}"
-    assert latex(SingularityFunction(x, 0, 4)) == r"{\langle x \rangle}^{4}"
-    assert latex(SingularityFunction(x, a, n)) == r"{\langle - a + x \rangle}^{n}"
-    assert latex(SingularityFunction(x, 4, -2)) == r"{\langle x - 4 \rangle}^{-2}"
-    assert latex(SingularityFunction(x, 4, -1)) == r"{\langle x - 4 \rangle}^{-1}"
+    assert latex(SingularityFunction(x, 4, 5)) == r"{\left\langle x - 4 \right\rangle}^{5}"
+    assert latex(SingularityFunction(x, -3, 4)) == r"{\left\langle x + 3 \right\rangle}^{4}"
+    assert latex(SingularityFunction(x, 0, 4)) == r"{\left\langle x \right\rangle}^{4}"
+    assert latex(SingularityFunction(x, a, n)) == r"{\left\langle - a + x \right\rangle}^{n}"
+    assert latex(SingularityFunction(x, 4, -2)) == r"{\left\langle x - 4 \right\rangle}^{-2}"
+    assert latex(SingularityFunction(x, 4, -1)) == r"{\left\langle x - 4 \right\rangle}^{-1}"
 
 def test_latex_cycle():
     assert latex(Cycle(1, 2, 4)) == r"\left( 1\; 2\; 4\right)"
@@ -252,61 +253,61 @@ def test_latex_functions():
     assert latex(exp(1) + exp(2)) == "e + e^{2}"
 
     f = Function('f')
-    assert latex(f(x)) == r'f{\left (x \right )}'
+    assert latex(f(x)) == r'f{\left(x \right)}'
     assert latex(f) == r'f'
 
     g = Function('g')
-    assert latex(g(x, y)) == r'g{\left (x,y \right )}'
+    assert latex(g(x, y)) == r'g{\left(x,y \right)}'
     assert latex(g) == r'g'
 
     h = Function('h')
-    assert latex(h(x, y, z)) == r'h{\left (x,y,z \right )}'
+    assert latex(h(x, y, z)) == r'h{\left(x,y,z \right)}'
     assert latex(h) == r'h'
 
     Li = Function('Li')
     assert latex(Li) == r'\operatorname{Li}'
-    assert latex(Li(x)) == r'\operatorname{Li}{\left (x \right )}'
+    assert latex(Li(x)) == r'\operatorname{Li}{\left(x \right)}'
 
     mybeta = Function('beta')
     # not to be confused with the beta function
-    assert latex(mybeta(x, y, z)) == r"\beta{\left (x,y,z \right )}"
+    assert latex(mybeta(x, y, z)) == r"\beta{\left(x,y,z \right)}"
     assert latex(beta(x, y)) == r'\operatorname{B}\left(x, y\right)'
-    assert latex(mybeta(x)) == r"\beta{\left (x \right )}"
+    assert latex(mybeta(x)) == r"\beta{\left(x \right)}"
     assert latex(mybeta) == r"\beta"
 
     g = Function('gamma')
     # not to be confused with the gamma function
-    assert latex(g(x, y, z)) == r"\gamma{\left (x,y,z \right )}"
-    assert latex(g(x)) == r"\gamma{\left (x \right )}"
+    assert latex(g(x, y, z)) == r"\gamma{\left(x,y,z \right)}"
+    assert latex(g(x)) == r"\gamma{\left(x \right)}"
     assert latex(g) == r"\gamma"
 
     a1 = Function('a_1')
 
     assert latex(a1) == r"\operatorname{a_{1}}"
-    assert latex(a1(x)) == r"\operatorname{a_{1}}{\left (x \right )}"
+    assert latex(a1(x)) == r"\operatorname{a_{1}}{\left(x \right)}"
 
     # issue 5868
     omega1 = Function('omega1')
     assert latex(omega1) == r"\omega_{1}"
-    assert latex(omega1(x)) == r"\omega_{1}{\left (x \right )}"
+    assert latex(omega1(x)) == r"\omega_{1}{\left(x \right)}"
 
-    assert latex(sin(x)) == r"\sin{\left (x \right )}"
+    assert latex(sin(x)) == r"\sin{\left(x \right)}"
     assert latex(sin(x), fold_func_brackets=True) == r"\sin {x}"
     assert latex(sin(2*x**2), fold_func_brackets=True) == \
         r"\sin {2 x^{2}}"
     assert latex(sin(x**2), fold_func_brackets=True) == \
         r"\sin {x^{2}}"
 
-    assert latex(asin(x)**2) == r"\operatorname{asin}^{2}{\left (x \right )}"
+    assert latex(asin(x)**2) == r"\operatorname{asin}^{2}{\left(x \right)}"
     assert latex(asin(x)**2, inv_trig_style="full") == \
-        r"\arcsin^{2}{\left (x \right )}"
+        r"\arcsin^{2}{\left(x \right)}"
     assert latex(asin(x)**2, inv_trig_style="power") == \
-        r"\sin^{-1}{\left (x \right )}^{2}"
+        r"\sin^{-1}{\left(x \right)}^{2}"
     assert latex(asin(x**2), inv_trig_style="power",
                  fold_func_brackets=True) == \
         r"\sin^{-1} {x^{2}}"
     assert latex(acsc(x), inv_trig_style="full") == \
-        r"\operatorname{arccsc}{\left (x \right )}"
+        r"\operatorname{arccsc}{\left(x \right)}"
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
@@ -322,8 +323,8 @@ def test_latex_functions():
     assert latex(FallingFactorial(3, k)) == r"{\left(3\right)}_{k}"
     assert latex(RisingFactorial(3, k)) == r"{3}^{\left(k\right)}"
 
-    assert latex(floor(x)) == r"\lfloor{x}\rfloor"
-    assert latex(ceiling(x)) == r"\lceil{x}\rceil"
+    assert latex(floor(x)) == r"\left\lfloor{x}\right\rfloor"
+    assert latex(ceiling(x)) == r"\left\lceil{x}\right\rceil"
     assert latex(Min(x, 2, x**3)) == r"\min\left(2, x, x^{3}\right)"
     assert latex(Min(x, y)**2) == r"\min\left(x, y\right)^{2}"
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
@@ -341,18 +342,18 @@ def test_latex_functions():
     assert latex(Order(x, (x, 0))) == r"O\left(x\right)"
     assert latex(Order(x, (x, oo))) == r"O\left(x; x\rightarrow \infty\right)"
     assert latex(Order(x - y, (x, y))) == r"O\left(x - y; x\rightarrow y\right)"
-    assert latex(Order(x, x, y)) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, x, y)) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( 0, \quad 0\right )\right)"
-    assert latex(Order(x, (x, oo), (y, oo))) == r"O\left(x; \left ( x, \quad y\right )\rightarrow \left ( \infty, \quad \infty\right )\right)"
+    assert latex(Order(x, x, y)) == r"O\left(x; \left( x, \  y\right)\rightarrow \left( 0, \  0\right)\right)"
+    assert latex(Order(x, x, y)) == r"O\left(x; \left( x, \  y\right)\rightarrow \left( 0, \  0\right)\right)"
+    assert latex(Order(x, (x, oo), (y, oo))) == r"O\left(x; \left( x, \  y\right)\rightarrow \left( \infty, \  \infty\right)\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
 
-    assert latex(cot(x)) == r'\cot{\left (x \right )}'
-    assert latex(coth(x)) == r'\coth{\left (x \right )}'
+    assert latex(cot(x)) == r'\cot{\left(x \right)}'
+    assert latex(coth(x)) == r'\coth{\left(x \right)}'
     assert latex(re(x)) == r'\Re{\left(x\right)}'
     assert latex(im(x)) == r'\Im{x}'
     assert latex(root(x, y)) == r'x^{\frac{1}{y}}'
-    assert latex(arg(x)) == r'\arg{\left (x \right )}'
+    assert latex(arg(x)) == r'\arg{\left(x \right)}'
     assert latex(zeta(x)) == r'\zeta\left(x\right)'
 
     assert latex(zeta(x)) == r"\zeta\left(x\right)"
@@ -381,12 +382,12 @@ def test_latex_functions():
     assert latex(elliptic_pi(x, y)) == r"\Pi\left(x\middle| y\right)"
     assert latex(elliptic_pi(x, y)**2) == r"\Pi^{2}\left(x\middle| y\right)"
 
-    assert latex(Ei(x)) == r'\operatorname{Ei}{\left (x \right )}'
-    assert latex(Ei(x)**2) == r'\operatorname{Ei}^{2}{\left (x \right )}'
+    assert latex(Ei(x)) == r'\operatorname{Ei}{\left(x \right)}'
+    assert latex(Ei(x)**2) == r'\operatorname{Ei}^{2}{\left(x \right)}'
     assert latex(expint(x, y)**2) == r'\operatorname{E}_{x}^{2}\left(y\right)'
-    assert latex(Shi(x)**2) == r'\operatorname{Shi}^{2}{\left (x \right )}'
-    assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
-    assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
+    assert latex(Shi(x)**2) == r'\operatorname{Shi}^{2}{\left(x \right)}'
+    assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left(x \right)}'
+    assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left(x \right)}'
     assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}\left(x\right)'
     assert latex(Chi(x)) == r'\operatorname{Chi}\left(x\right)'
     assert latex(
@@ -423,9 +424,9 @@ def test_latex_functions():
 
     # Test latex printing of function names with "_"
     assert latex(
-        polar_lift(0)) == r"\operatorname{polar\_lift}{\left (0 \right )}"
+        polar_lift(0)) == r"\operatorname{polar\_lift}{\left(0 \right)}"
     assert latex(polar_lift(
-        0)**3) == r"\operatorname{polar\_lift}^{3}{\left (0 \right )}"
+        0)**3) == r"\operatorname{polar\_lift}^{3}{\left(0 \right)}"
 
     assert latex(totient(n)) == r'\phi\left(n\right)'
     assert latex(totient(n) ** 2) == r'\left(\phi\left(n\right)\right)^{2}'
@@ -457,7 +458,7 @@ def test_latex_functions():
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
-    assert latex(fjlkd(x)) == r'\operatorname{fjlkd}{\left (x \right )}'
+    assert latex(fjlkd(x)) == r'\operatorname{fjlkd}{\left(x \right)}'
     # even when it is referred to without an argument
     assert latex(fjlkd) == r'\operatorname{fjlkd}'
 
@@ -467,7 +468,7 @@ def test_function_subclass_different_name():
     class mygamma(gamma):
         pass
     assert latex(mygamma) == r"\operatorname{mygamma}"
-    assert latex(mygamma(x)) == r"\operatorname{mygamma}{\left (x \right )}"
+    assert latex(mygamma(x)) == r"\operatorname{mygamma}{\left(x \right)}"
 
 
 def test_hyper_printing():
@@ -538,21 +539,21 @@ def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
         r"\frac{d}{d x} x^{3}"
     assert latex(diff(sin(x) + x**2, x, evaluate=False)) == \
-        r"\frac{d}{d x} \left(x^{2} + \sin{\left (x \right )}\right)"
+        r"\frac{d}{d x} \left(x^{2} + \sin{\left(x \right)}\right)"
     assert latex(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False)) == \
-        r"\frac{d^{2}}{d x^{2}} \left(x^{2} + \sin{\left (x \right )}\right)"
+        r"\frac{d^{2}}{d x^{2}} \left(x^{2} + \sin{\left(x \right)}\right)"
     assert latex(diff(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False), evaluate=False)) == \
-        r"\frac{d^{3}}{d x^{3}} \left(x^{2} + \sin{\left (x \right )}\right)"
+        r"\frac{d^{3}}{d x^{3}} \left(x^{2} + \sin{\left(x \right)}\right)"
 
     # \partial for partial derivatives
     assert latex(diff(sin(x * y), x, evaluate=False)) == \
-        r"\frac{\partial}{\partial x} \sin{\left (x y \right )}"
+        r"\frac{\partial}{\partial x} \sin{\left(x y \right)}"
     assert latex(diff(sin(x * y) + x**2, x, evaluate=False)) == \
-        r"\frac{\partial}{\partial x} \left(x^{2} + \sin{\left (x y \right )}\right)"
+        r"\frac{\partial}{\partial x} \left(x^{2} + \sin{\left(x y \right)}\right)"
     assert latex(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)) == \
-        r"\frac{\partial^{2}}{\partial x^{2}} \left(x^{2} + \sin{\left (x y \right )}\right)"
+        r"\frac{\partial^{2}}{\partial x^{2}} \left(x^{2} + \sin{\left(x y \right)}\right)"
     assert latex(diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)) == \
-        r"\frac{\partial^{3}}{\partial x^{3}} \left(x^{2} + \sin{\left (x y \right )}\right)"
+        r"\frac{\partial^{3}}{\partial x^{3}} \left(x^{2} + \sin{\left(x y \right)}\right)"
 
     # mixed partial derivatives
     f = Function("f")
@@ -571,10 +572,10 @@ def test_latex_derivatives():
         r"\left(\frac{d}{d x} x\right)^{2}"
 
     assert latex(diff(f(x), x)**2) == \
-        r"\left(\frac{d}{d x} f{\left (x \right )}\right)^{2}"
+        r"\left(\frac{d}{d x} f{\left(x \right)}\right)^{2}"
 
     assert latex(diff(f(x), (x, n))) == \
-        r"\frac{d^{n}}{d x^{n}} f{\left (x \right )}"
+        r"\frac{d^{n}}{d x^{n}} f{\left(x \right)}"
 
 
 def test_latex_subs():
@@ -583,7 +584,7 @@ def test_latex_subs():
 
 
 def test_latex_integrals():
-    assert latex(Integral(log(x), x)) == r"\int \log{\left (x \right )}\, dx"
+    assert latex(Integral(log(x), x)) == r"\int \log{\left(x \right)}\, dx"
     assert latex(Integral(x**2, (x, 0, 1))) == r"\int\limits_{0}^{1} x^{2}\, dx"
     assert latex(Integral(x**2, (x, 10, 20))) == r"\int\limits_{10}^{20} x^{2}\, dx"
     assert latex(Integral(
@@ -693,9 +694,18 @@ def test_latex_sequences():
     latex_str = r'\left[\ldots, 18, 4, 2, 0\right]'
     assert latex(SeqMul(s5, s6)) == latex_str
 
+    # Sequences with symbolic limits, issue 12629
+    s7 = SeqFormula(a**2, (a, 0, x))
+    latex_str = r'\left\{a^{2}\right\}_{a=0}^{x}'
+    assert latex(s7) == latex_str
+
+    b = Symbol('b')
+    s8 = SeqFormula(b*a**2, (a, 0, 2))
+    latex_str = r'\left[0, b, 4 b\right]'
+    assert latex(s8) == latex_str
 
 def test_latex_FourierSeries():
-    latex_str = r'2 \sin{\left (x \right )} - \sin{\left (2 x \right )} + \frac{2 \sin{\left (3 x \right )}}{3} + \ldots'
+    latex_str = r'2 \sin{\left(x \right)} - \sin{\left(2 x \right)} + \frac{2 \sin{\left(3 x \right)}}{3} + \ldots'
     assert latex(fourier_series(x, (x, -pi, pi))) == latex_str
 
 
@@ -716,9 +726,9 @@ def test_latex_intervals():
 
 def test_latex_AccumuBounds():
     a = Symbol('a', real=True)
-    assert latex(AccumBounds(0, 1)) == r"\langle 0, 1\rangle"
-    assert latex(AccumBounds(0, a)) == r"\langle 0, a\rangle"
-    assert latex(AccumBounds(a + 1, a + 2)) == r"\langle a + 1, a + 2\rangle"
+    assert latex(AccumBounds(0, 1)) == r"\left\langle 0, 1\right\rangle"
+    assert latex(AccumBounds(0, a)) == r"\left\langle 0, a\right\rangle"
+    assert latex(AccumBounds(a + 1, a + 2)) == r"\left\langle a + 1, a + 2\right\rangle"
 
 
 def test_latex_emptyset():
@@ -794,7 +804,7 @@ def test_latex_ComplexRegion():
     assert latex(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == \
         r"\left\{x + y i\; |\; x, y \in \left[3, 5\right] \times \left[4, 6\right] \right\}"
     assert latex(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == \
-        r"\left\{r \left(i \sin{\left (\theta \right )} + \cos{\left (\theta \right )}\right)\; |\; r, \theta \in \left[0, 1\right] \times \left[0, 2 \pi\right) \right\}"
+        r"\left\{r \left(i \sin{\left(\theta \right)} + \cos{\left(\theta \right)}\right)\; |\; r, \theta \in \left[0, 1\right] \times \left[0, 2 \pi\right) \right\}"
 
 
 def test_latex_Contains():
@@ -831,23 +841,23 @@ def test_latex_limits():
 
     # issue 8175
     f = Function('f')
-    assert latex(Limit(f(x), x, 0)) == r"\lim_{x \to 0^+} f{\left (x \right )}"
-    assert latex(Limit(f(x), x, 0, "-")) == r"\lim_{x \to 0^-} f{\left (x \right )}"
+    assert latex(Limit(f(x), x, 0)) == r"\lim_{x \to 0^+} f{\left(x \right)}"
+    assert latex(Limit(f(x), x, 0, "-")) == r"\lim_{x \to 0^-} f{\left(x \right)}"
 
     # issue #10806
-    assert latex(Limit(f(x), x, 0)**2) == r"\left(\lim_{x \to 0^+} f{\left (x \right )}\right)^{2}"
+    assert latex(Limit(f(x), x, 0)**2) == r"\left(\lim_{x \to 0^+} f{\left(x \right)}\right)^{2}"
     # bi-directional limit
-    assert latex(Limit(f(x), x, 0, dir='+-')) == r"\lim_{x \to 0} f{\left (x \right )}"
+    assert latex(Limit(f(x), x, 0, dir='+-')) == r"\lim_{x \to 0} f{\left(x \right)}"
 
 
 def test_latex_log():
-    assert latex(log(x)) == r"\log{\left (x \right )}"
-    assert latex(ln(x)) == r"\log{\left (x \right )}"
-    assert latex(log(x), ln_notation=True) == r"\ln{\left (x \right )}"
-    assert latex(log(x)+log(y)) == r"\log{\left (x \right )} + \log{\left (y \right )}"
-    assert latex(log(x)+log(y), ln_notation=True) == r"\ln{\left (x \right )} + \ln{\left (y \right )}"
-    assert latex(pow(log(x),x)) == r"\log{\left (x \right )}^{x}"
-    assert latex(pow(log(x),x), ln_notation=True) == r"\ln{\left (x \right )}^{x}"
+    assert latex(log(x)) == r"\log{\left(x \right)}"
+    assert latex(ln(x)) == r"\log{\left(x \right)}"
+    assert latex(log(x), ln_notation=True) == r"\ln{\left(x \right)}"
+    assert latex(log(x)+log(y)) == r"\log{\left(x \right)} + \log{\left(y \right)}"
+    assert latex(log(x)+log(y), ln_notation=True) == r"\ln{\left(x \right)} + \ln{\left(y \right)}"
+    assert latex(pow(log(x),x)) == r"\log{\left(x \right)}^{x}"
+    assert latex(pow(log(x),x), ln_notation=True) == r"\ln{\left(x \right)}^{x}"
 
 
 def test_issue_3568():
@@ -866,19 +876,19 @@ def test_latex():
         "\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}"
     assert latex((2*mu)**Rational(7, 2), mode='equation', itex=True) == \
         "$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$"
-    assert latex([2/x, y]) == r"\left [ \frac{2}{x}, \quad y\right ]"
+    assert latex([2/x, y]) == r"\left[ \frac{2}{x}, \  y\right]"
 
 
 def test_latex_dict():
     d = {Rational(1): 1, x**2: 2, x: 3, x**3: 4}
-    assert latex(d) == r'\left \{ 1 : 1, \quad x : 3, \quad x^{2} : 2, \quad x^{3} : 4\right \}'
+    assert latex(d) == r'\left\{ 1 : 1, \  x : 3, \  x^{2} : 2, \  x^{3} : 4\right\}'
     D = Dict(d)
-    assert latex(D) == r'\left \{ 1 : 1, \quad x : 3, \quad x^{2} : 2, \quad x^{3} : 4\right \}'
+    assert latex(D) == r'\left\{ 1 : 1, \  x : 3, \  x^{2} : 2, \  x^{3} : 4\right\}'
 
 
 def test_latex_list():
     l = [Symbol('omega1'), Symbol('a'), Symbol('alpha')]
-    assert latex(l) == r'\left [ \omega_{1}, \quad a, \quad \alpha\right ]'
+    assert latex(l) == r'\left[ \omega_{1}, \  a, \  \alpha\right]'
 
 
 def test_latex_rational():
@@ -982,12 +992,12 @@ def test_latex_matrix_with_functions():
     M = Matrix([[sin(theta1(t)), cos(theta1(t))],
                 [cos(theta1(t).diff(t)), sin(theta1(t).diff(t))]])
 
-    expected = (r'\left[\begin{matrix}\sin{\left '
-                r'(\theta_{1}{\left (t \right )} \right )} & '
-                r'\cos{\left (\theta_{1}{\left (t \right )} \right '
-                r')}\\\cos{\left (\frac{d}{d t} \theta_{1}{\left (t '
-                r'\right )} \right )} & \sin{\left (\frac{d}{d t} '
-                r'\theta_{1}{\left (t \right )} \right '
+    expected = (r'\left[\begin{matrix}\sin{\left('
+                r'\theta_{1}{\left(t \right)} \right)} & '
+                r'\cos{\left(\theta_{1}{\left(t \right)} \right)'
+                r'}\\\cos{\left(\frac{d}{d t} \theta_{1}{\left(t '
+                r'\right)} \right)} & \sin{\left(\frac{d}{d t} '
+                r'\theta_{1}{\left(t \right)} \right'
                 r')}\end{matrix}\right]')
 
     assert latex(M) == expected
@@ -1043,8 +1053,8 @@ def test_latex_mul_symbol():
 
 def test_latex_issue_4381():
     y = 4*4**log(2)
-    assert latex(y) == r'4 \cdot 4^{\log{\left (2 \right )}}'
-    assert latex(1/y) == r'\frac{1}{4 \cdot 4^{\log{\left (2 \right )}}}'
+    assert latex(y) == r'4 \cdot 4^{\log{\left(2 \right)}}'
+    assert latex(1/y) == r'\frac{1}{4 \cdot 4^{\log{\left(2 \right)}}}'
 
 
 def test_latex_issue_4576():
@@ -1103,7 +1113,7 @@ def test_latex_Lambda():
     assert latex(Lambda(x, x + 1)) == \
         r"\left( x \mapsto x + 1 \right)"
     assert latex(Lambda((x, y), x + 1)) == \
-        r"\left( \left ( x, \quad y\right ) \mapsto x + 1 \right)"
+        r"\left( \left( x, \  y\right) \mapsto x + 1 \right)"
 
 
 def test_latex_PolyElement():
@@ -1173,7 +1183,7 @@ def test_latex_ComplexRootOf():
 
 def test_latex_RootSum():
     assert latex(RootSum(x**5 + x + 3, sin)) == \
-        r"\operatorname{RootSum} {\left(x^{5} + x + 3, \left( x \mapsto \sin{\left (x \right )} \right)\right)}"
+        r"\operatorname{RootSum} {\left(x^{5} + x + 3, \left( x \mapsto \sin{\left(x \right)} \right)\right)}"
 
 
 def test_settings():
@@ -1275,20 +1285,20 @@ def test_integral_transforms():
     a = Symbol("a")
     b = Symbol("b")
 
-    assert latex(MellinTransform(f(x), x, k)) == r"\mathcal{M}_{x}\left[f{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseMellinTransform(f(k), k, x, a, b)) == r"\mathcal{M}^{-1}_{k}\left[f{\left (k \right )}\right]\left(x\right)"
+    assert latex(MellinTransform(f(x), x, k)) == r"\mathcal{M}_{x}\left[f{\left(x \right)}\right]\left(k\right)"
+    assert latex(InverseMellinTransform(f(k), k, x, a, b)) == r"\mathcal{M}^{-1}_{k}\left[f{\left(k \right)}\right]\left(x\right)"
 
-    assert latex(LaplaceTransform(f(x), x, k)) == r"\mathcal{L}_{x}\left[f{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseLaplaceTransform(f(k), k, x, (a, b))) == r"\mathcal{L}^{-1}_{k}\left[f{\left (k \right )}\right]\left(x\right)"
+    assert latex(LaplaceTransform(f(x), x, k)) == r"\mathcal{L}_{x}\left[f{\left(x \right)}\right]\left(k\right)"
+    assert latex(InverseLaplaceTransform(f(k), k, x, (a, b))) == r"\mathcal{L}^{-1}_{k}\left[f{\left(k \right)}\right]\left(x\right)"
 
-    assert latex(FourierTransform(f(x), x, k)) == r"\mathcal{F}_{x}\left[f{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseFourierTransform(f(k), k, x)) == r"\mathcal{F}^{-1}_{k}\left[f{\left (k \right )}\right]\left(x\right)"
+    assert latex(FourierTransform(f(x), x, k)) == r"\mathcal{F}_{x}\left[f{\left(x \right)}\right]\left(k\right)"
+    assert latex(InverseFourierTransform(f(k), k, x)) == r"\mathcal{F}^{-1}_{k}\left[f{\left(k \right)}\right]\left(x\right)"
 
-    assert latex(CosineTransform(f(x), x, k)) == r"\mathcal{COS}_{x}\left[f{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseCosineTransform(f(k), k, x)) == r"\mathcal{COS}^{-1}_{k}\left[f{\left (k \right )}\right]\left(x\right)"
+    assert latex(CosineTransform(f(x), x, k)) == r"\mathcal{COS}_{x}\left[f{\left(x \right)}\right]\left(k\right)"
+    assert latex(InverseCosineTransform(f(k), k, x)) == r"\mathcal{COS}^{-1}_{k}\left[f{\left(k \right)}\right]\left(x\right)"
 
-    assert latex(SineTransform(f(x), x, k)) == r"\mathcal{SIN}_{x}\left[f{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseSineTransform(f(k), k, x)) == r"\mathcal{SIN}^{-1}_{k}\left[f{\left (k \right )}\right]\left(x\right)"
+    assert latex(SineTransform(f(x), x, k)) == r"\mathcal{SIN}_{x}\left[f{\left(x \right)}\right]\left(k\right)"
+    assert latex(InverseSineTransform(f(k), k, x)) == r"\mathcal{SIN}^{-1}_{k}\left[f{\left(k \right)}\right]\left(x\right)"
 
 
 def test_PolynomialRingBase():
@@ -1323,22 +1333,22 @@ def test_categories():
     assert latex(d) == r"\emptyset"
 
     d = Diagram({f1: "unique", f2: S.EmptySet})
-    assert latex(d) == r"\left \{ f_{2}\circ f_{1}:A_{1}" \
-        r"\rightarrow A_{3} : \emptyset, \quad id:A_{1}\rightarrow " \
-        r"A_{1} : \emptyset, \quad id:A_{2}\rightarrow A_{2} : " \
-        r"\emptyset, \quad id:A_{3}\rightarrow A_{3} : \emptyset, " \
-        r"\quad f_{1}:A_{1}\rightarrow A_{2} : \left\{unique\right\}, " \
-        r"\quad f_{2}:A_{2}\rightarrow A_{3} : \emptyset\right \}"
+    assert latex(d) == r"\left\{ f_{2}\circ f_{1}:A_{1}" \
+        r"\rightarrow A_{3} : \emptyset, \  id:A_{1}\rightarrow " \
+        r"A_{1} : \emptyset, \  id:A_{2}\rightarrow A_{2} : " \
+        r"\emptyset, \  id:A_{3}\rightarrow A_{3} : \emptyset, " \
+        r"\  f_{1}:A_{1}\rightarrow A_{2} : \left\{unique\right\}, " \
+        r"\  f_{2}:A_{2}\rightarrow A_{3} : \emptyset\right\}"
 
     d = Diagram({f1: "unique", f2: S.EmptySet}, {f2 * f1: "unique"})
-    assert latex(d) == r"\left \{ f_{2}\circ f_{1}:A_{1}" \
-        r"\rightarrow A_{3} : \emptyset, \quad id:A_{1}\rightarrow " \
-        r"A_{1} : \emptyset, \quad id:A_{2}\rightarrow A_{2} : " \
-        r"\emptyset, \quad id:A_{3}\rightarrow A_{3} : \emptyset, " \
-        r"\quad f_{1}:A_{1}\rightarrow A_{2} : \left\{unique\right\}," \
-        r" \quad f_{2}:A_{2}\rightarrow A_{3} : \emptyset\right \}" \
-        r"\Longrightarrow \left \{ f_{2}\circ f_{1}:A_{1}" \
-        r"\rightarrow A_{3} : \left\{unique\right\}\right \}"
+    assert latex(d) == r"\left\{ f_{2}\circ f_{1}:A_{1}" \
+        r"\rightarrow A_{3} : \emptyset, \  id:A_{1}\rightarrow " \
+        r"A_{1} : \emptyset, \  id:A_{2}\rightarrow A_{2} : " \
+        r"\emptyset, \  id:A_{3}\rightarrow A_{3} : \emptyset, " \
+        r"\  f_{1}:A_{1}\rightarrow A_{2} : \left\{unique\right\}," \
+        r" \  f_{2}:A_{2}\rightarrow A_{3} : \emptyset\right\}" \
+        r"\Longrightarrow \left\{ f_{2}\circ f_{1}:A_{1}" \
+        r"\rightarrow A_{3} : \left\{unique\right\}\right\}"
 
     # A linear diagram.
     A = Object("A")
@@ -1365,15 +1375,15 @@ def test_Modules():
 
     assert latex(F) == r"{\mathbb{Q}\left[x, y\right]}^{2}"
     assert latex(M) == \
-        r"\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>"
+        r"\left\langle {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right\rangle"
 
     I = R.ideal(x**2, y)
-    assert latex(I) == r"\left< {x^{2}},{y} \right>"
+    assert latex(I) == r"\left\langle {x^{2}},{y} \right\rangle"
 
     Q = F / M
-    assert latex(Q) == r"\frac{{\mathbb{Q}\left[x, y\right]}^{2}}{\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}"
+    assert latex(Q) == r"\frac{{\mathbb{Q}\left[x, y\right]}^{2}}{\left\langle {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right\rangle}"
     assert latex(Q.submodule([1, x**3/2], [2, y])) == \
-        r"\left< {{\left[ {1},{\frac{x^{3}}{2}} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}},{{\left[ {2},{y} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}} \right>"
+        r"\left\langle {{\left[ {1},{\frac{x^{3}}{2}} \right]} + {\left\langle {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right\rangle}},{{\left[ {2},{y} \right]} + {\left\langle {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right\rangle}} \right\rangle"
 
     h = homomorphism(QQ.old_poly_ring(x).free_module(2), QQ.old_poly_ring(x).free_module(2), [0, 0])
 
@@ -1385,8 +1395,8 @@ def test_QuotientRing():
     R = QQ.old_poly_ring(x)/[x**2 + 1]
 
     assert latex(
-        R) == r"\frac{\mathbb{Q}\left[x\right]}{\left< {x^{2} + 1} \right>}"
-    assert latex(R.one) == r"{1} + {\left< {x^{2} + 1} \right>}"
+        R) == r"\frac{\mathbb{Q}\left[x\right]}{\left\langle {x^{2} + 1} \right\rangle}"
+    assert latex(R.one) == r"{1} + {\left\langle {x^{2} + 1} \right\rangle}"
 
 
 def test_Tr():
@@ -1461,21 +1471,21 @@ def test_latex_greek_functions():
     # \Alpha, \Beta, \Eta, etc.
     s = Function('Alpha')
     assert latex(s) == r'A'
-    assert latex(s(x)) == r'A{\left (x \right )}'
+    assert latex(s(x)) == r'A{\left(x \right)}'
     s = Function('Beta')
     assert latex(s) == r'B'
     s = Function('Eta')
     assert latex(s) == r'H'
-    assert latex(s(x)) == r'H{\left (x \right )}'
+    assert latex(s(x)) == r'H{\left(x \right)}'
 
     # bug because sympy.core.numbers.Pi is special
     p = Function('Pi')
-    # assert latex(p(x)) == r'\Pi{\left (x \right )}'
+    # assert latex(p(x)) == r'\Pi{\left(x \right)}'
     assert latex(p) == r'\Pi'
 
     # bug because not all greeks are included
     c = Function('chi')
-    assert latex(c(x)) == r'\chi{\left (x \right )}'
+    assert latex(c(x)) == r'\chi{\left(x \right)}'
     assert latex(c) == r'\chi'
 
 
@@ -1631,7 +1641,7 @@ def test_builtin_no_args():
 
 def test_issue_6853():
     p = Function('Pi')
-    assert latex(p(x)) == r"\Pi{\left (x \right )}"
+    assert latex(p(x)) == r"\Pi{\left(x \right)}"
 
 
 def test_Mul():
@@ -1698,7 +1708,7 @@ def test_issue_10489():
     latexSymbolWithBrace = 'C_{x_{0}}'
     s = Symbol(latexSymbolWithBrace)
     assert latex(s) == latexSymbolWithBrace
-    assert latex(cos(s)) == r'\cos{\left (C_{x_{0}} \right )}'
+    assert latex(cos(s)) == r'\cos{\left(C_{x_{0}} \right)}'
 
 
 def test_issue_12886():
@@ -1882,12 +1892,20 @@ def test_latex_printer_tensor():
     assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'
 
 
+def test_issue_15353():
+    from sympy import ConditionSet, Tuple, FiniteSet, S, sin, cos
+    a, x = symbols('a x')
+    # Obtained from nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
+    sol = ConditionSet(Tuple(x, a), FiniteSet(sin(a*x), cos(a*x)), S.Complexes)
+    assert latex(sol) == r'\left\{\left( x, \  a\right) \mid \left( x, \  a\right) \in \mathbb{C} \wedge \left\{\sin{\left(a x \right)}, \cos{\left(a x \right)}\right\} \right\}'
+
+
 def test_trace():
     # Issue 15303
     from sympy import trace
     A = MatrixSymbol("A", 2, 2)
-    assert latex(trace(A)) == r"\mathrm{tr}\left (A \right )"
-    assert latex(trace(A**2)) == r"\mathrm{tr}\left (A^{2} \right )"
+    assert latex(trace(A)) == r"\mathrm{tr}\left(A \right)"
+    assert latex(trace(A**2)) == r"\mathrm{tr}\left(A^{2} \right)"
 
 
 def test_print_basic():
@@ -1912,3 +1930,31 @@ def test_print_basic():
     assert latex(unimplemented_expr(x)) == r'UnimplementedExpr\left(x\right)'
     assert latex(unimplemented_expr(x**2)) == r'UnimplementedExpr\left(x^{2}\right)'
     assert latex(unimplemented_expr_sup_sub(x)) == r'UnimplementedExpr^{1}_{x}\left(x\right)'
+
+
+def test_MatrixSymbol_bold():
+    # Issue #15871
+    from sympy import trace
+    A = MatrixSymbol("A", 2, 2)
+    assert latex(trace(A), mat_symbol_style='bold') == r"\mathrm{tr}\left(\mathbf{A} \right)"
+    assert latex(trace(A), mat_symbol_style='plain') == r"\mathrm{tr}\left(A \right)"
+
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    C = MatrixSymbol("C", 3, 3)
+
+    assert latex(-A, mat_symbol_style='bold') == r"- \mathbf{A}"
+    assert latex(A - A*B - B, mat_symbol_style='bold') == r"\mathbf{A} - \mathbf{A} \mathbf{B} - \mathbf{B}"
+    assert latex(-A*B - A*B*C - B, mat_symbol_style='bold') == r"- \mathbf{A} \mathbf{B} - \mathbf{A} \mathbf{B} \mathbf{C} - \mathbf{B}"
+
+    A = MatrixSymbol("A_k", 3, 3)
+    assert latex(A, mat_symbol_style='bold') == r"\mathbf{A_{k}}"
+
+
+def test_imaginary_unit():
+    assert latex(1 + I) == '1 + i'
+    assert latex(1 + I, imaginary_unit='i') == '1 + i'
+    assert latex(1 + I, imaginary_unit='j') == '1 + j'
+    assert latex(1 + I, imaginary_unit='foo') == '1 + foo'
+    assert latex(I, imaginary_unit="ti") == '\\text{i}'
+    assert latex(I, imaginary_unit="tj") == '\\text{j}'

@@ -14,6 +14,7 @@ This module contain solvers for all kinds of equations:
 
 from __future__ import print_function, division
 
+from sympy import divisors
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, range)
 from sympy.core.sympify import sympify
@@ -22,11 +23,12 @@ from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          Function, expand_power_exp, Lambda, _mexpand)
+                          Function, expand_power_exp, Lambda, _mexpand, expand)
 from sympy.integrals.integrals import Integral
-from sympy.core.numbers import ilcm, Float
+from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.relational import Relational, Ge, _canonical
 from sympy.core.logic import fuzzy_not, fuzzy_and
+from sympy.core.power import integer_log
 from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.core.basic import preorder_traversal
 
@@ -35,7 +37,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify, denom, logcombine)
+                            nsimplify, denom, logcombine, sqrtdenest, fraction)
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1
 from sympy.matrices import Matrix, zeros
@@ -283,7 +285,7 @@ def checksol(f, symbol, sol=None, **flags):
             if val.atoms() & illegal:
                 return False
         elif attempt == 1:
-            if val.free_symbols:
+            if not val.is_number:
                 if not val.is_constant(*list(sol.keys()), simplify=not minimal):
                     return False
                 # there are free symbols -- simple expansion might work
@@ -302,7 +304,7 @@ def checksol(f, symbol, sol=None, **flags):
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
                 exval = _mexpand(val, recursive=True)
-                if exval.is_number or not exval.free_symbols:
+                if exval.is_number:
                     # we can decide now
                     val = exval
         else:
@@ -349,7 +351,7 @@ def checksol(f, symbol, sol=None, **flags):
             continue
         elif val.is_Rational:
             return val == 0
-        if numerical and not val.free_symbols:
+        if numerical and val.is_number:
             if val in (S.true, S.false):
                 return bool(val)
             return bool(abs(val.n(18).n(12, chop=True)) < 1e-9)
@@ -714,7 +716,7 @@ def solve(f, *symbols, **flags):
                 >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y, z)
                 {x: -3, y: 1}
                 >>> solve((x + 5*y - 2, -3*x + 6*y - z), z, x, y)
-                {x: -5*y + 2, z: 21*y - 6}
+                {x: 2 - 5*y, z: 21*y - 6}
 
             * without a solution
 
@@ -1083,8 +1085,7 @@ def solve(f, *symbols, **flags):
         if fi.has(*symset):
             ok = True
         else:
-            free = fi.free_symbols
-            if not free:
+            if fi.is_number:
                 if fi.is_Number:
                     if fi.is_zero:
                         continue
@@ -2019,7 +2020,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
 
     >>> eq = 1/(1/x - 2)
     >>> eq.as_numer_denom()
-    (x, -2*x + 1)
+    (x, 1 - 2*x)
     >>> solve_linear(eq)
     (0, 0)
 
@@ -2045,7 +2046,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     >>> solve_linear(cancel(eq))
     (x, 0)
     >>> solve_linear(eq)
-    (x**2*(-z**2 + 1), x)
+    (x**2*(1 - z**2), x)
 
     A list of symbols for which a solution is desired may be given:
 
@@ -2651,24 +2652,87 @@ def _tsolve(eq, sym, **flags):
             if lhs.exp.is_Integer:
                 if lhs - rhs != eq:
                     return _solve(lhs - rhs, sym, **flags)
-            elif sym not in lhs.exp.free_symbols:
+
+            if sym not in lhs.exp.free_symbols:
                 return _solve(lhs.base - rhs**(1/lhs.exp), sym, **flags)
-            elif not rhs and sym in lhs.exp.free_symbols:
+
+            # _tsolve calls this with Dummy before passing the actual number in.
+            if any(t.is_Dummy for t in rhs.free_symbols):
+                raise NotImplementedError # _tsolve will call here again...
+
+            # a ** g(x) == 0
+            if not rhs:
                 # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
                 # the same place
                 sol_base = _solve(lhs.base, sym, **flags)
-                if not sol_base:
-                    return sol_base  # no solutions to remove so return now
-                return list(ordered(set(sol_base) - set(
-                    _solve(lhs.exp, sym, **flags))))
-            elif (rhs is not S.Zero and
-                        lhs.base.is_positive and
-                        lhs.exp.is_real):
-                return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
-            elif lhs.base == 0 and rhs == 1:
-                return _solve(lhs.exp, sym, **flags)
+                return [s for s in sol_base if lhs.exp.subs(sym, s) != 0]
+
+            # a ** g(x) == b
+            if not lhs.base.has(sym):
+                if lhs.base == 0:
+                    return _solve(lhs.exp, sym, **flags) if rhs != 0 else []
+
+                # Gets most solutions...
+                if lhs.base == rhs.as_base_exp()[0]:
+                    # handles case when bases are equal
+                    sol = _solve(lhs.exp - rhs.as_base_exp()[1], sym, **flags)
+                else:
+                    # handles cases when bases are not equal and exp
+                    # may or may not be equal
+                    sol = _solve(exp(log(lhs.base)*lhs.exp)-exp(log(rhs)), sym, **flags)
+
+                # Check for duplicate solutions
+                def equal(expr1, expr2):
+                    return expr1.equals(expr2) or nsimplify(expr1) == nsimplify(expr2)
+
+                # Guess a rational exponent
+                e_rat = nsimplify(log(abs(rhs))/log(abs(lhs.base)))
+                e_rat = simplify(posify(e_rat)[0])
+                n, d = fraction(e_rat)
+                if expand(lhs.base**n - rhs**d) == 0:
+                    sol = [s for s in sol if not equal(lhs.exp.subs(sym, s), e_rat)]
+                    sol.extend(_solve(lhs.exp - e_rat, sym, **flags))
+
+                return list(ordered(set(sol)))
+
+            # f(x) ** g(x) == c
             else:
-                raise NotImplementedError
+                sol = []
+                logform = lhs.exp*log(lhs.base) - log(rhs)
+                if logform != lhs - rhs:
+                    try:
+                        sol.extend(_solve(logform, sym, **flags))
+                    except NotImplementedError:
+                        pass
+
+                # Collect possible solutions and check with subtitution later.
+                check = []
+                if rhs == 1:
+                    # f(x) ** g(x) = 1 -- g(x)=0 or f(x)=+-1
+                    check.extend(_solve(lhs.exp, sym, **flags))
+                    check.extend(_solve(lhs.base - 1, sym, **flags))
+                    check.extend(_solve(lhs.base + 1, sym, **flags))
+                elif rhs.is_Rational:
+                    for d in (i for i in divisors(abs(rhs.p)) if i != 1):
+                        e, t = integer_log(rhs.p, d)
+                        if not t:
+                            continue  # rhs.p != d**b
+                        for s in divisors(abs(rhs.q)):
+                            if s**e== rhs.q:
+                                r = Rational(d, s)
+                                check.extend(_solve(lhs.base - r, sym, **flags))
+                                check.extend(_solve(lhs.base + r, sym, **flags))
+                                check.extend(_solve(lhs.exp - e, sym, **flags))
+                elif rhs.is_irrational:
+                    b_l, e_l = lhs.base.as_base_exp()
+                    n, d = e_l*lhs.exp.as_numer_denom()
+                    b, e = sqrtdenest(rhs).as_base_exp()
+                    check = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, **flags))]
+                    check.extend([sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))])
+                    if (e_l*d) !=1 :
+                        check.extend(_solve(b_l**(n) - rhs**(e_l*d), sym, **flags))
+                sol.extend(s for s in check if eq.subs(sym, s).equals(0))
+                return list(ordered(set(sol)))
 
         elif lhs.is_Mul and rhs.is_positive:
             llhs = expand_log(log(lhs))
@@ -2714,7 +2778,12 @@ def _tsolve(eq, sym, **flags):
             try:
                 poly = lhs.as_poly()
                 g = _filtered_gens(poly, sym)
-                return _solve_lambert(lhs - rhs, sym, g)
+                sols = _solve_lambert(lhs - rhs, sym, g)
+                for n, s in enumerate(sols):
+                    ns = nsimplify(s)
+                    if ns != s and eq.subs(sym, ns).equals(0):
+                        sols[n] = ns
+                return sols
             except NotImplementedError:
                 # maybe it's a convoluted function
                 if len(g) == 2:

@@ -6,9 +6,9 @@ __all__ = ["Options"]
 
 from sympy.core import S, Basic, sympify
 from sympy.core.compatibility import string_types, with_metaclass
+from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
 from sympy.utilities.iterables import has_dups
-from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 
 import sympy.polys
 
