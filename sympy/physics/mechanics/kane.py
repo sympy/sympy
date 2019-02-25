@@ -271,7 +271,7 @@ class KanesMethod(object):
 
     def _form_fr(self, fl):
         """Form the generalized active force."""
-        if fl != None and (len(fl) == 0 or not iterable(fl)):
+        if fl is not None and (len(fl) == 0 or not iterable(fl)):
             raise ValueError('Force pairs must be supplied in an '
                 'non-empty iterable or None.')
 
@@ -524,7 +524,7 @@ class KanesMethod(object):
             Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
         """
-        if (bodies is None and loads != None) or isinstance(bodies[0], tuple):
+        if (bodies is None and loads is not None) or isinstance(bodies[0], tuple):
             # This switches the order if they use the old way.
             bodies, loads = loads, bodies
             SymPyDeprecationWarning(value='The API for kanes_equations() has changed such '

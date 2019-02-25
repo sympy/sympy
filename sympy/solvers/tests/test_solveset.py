@@ -1012,7 +1012,6 @@ def test_solvify():
     raises(NotImplementedError, lambda: solvify(sin(exp(x)), x, S.Complexes))
 
 
-@XFAIL
 def test_abs_invert_solvify():
     assert solvify(sin(Abs(x)), x, S.Reals) is None
 
@@ -1415,7 +1414,7 @@ def test_issue_6752():
 
 
 @SKIP("slow")
-def test_issue_5114():
+def test_issue_5114_solveset():
     # slow testcase
     a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('a:r')
 

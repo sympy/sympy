@@ -1868,7 +1868,7 @@ def simplify_union(args):
     # Here we depend on rules built into the constituent sets
     args = set(args)
     new_args = True
-    while(new_args):
+    while new_args:
         for s in args:
             new_args = False
             for t in args - set((s,)):
@@ -1938,7 +1938,7 @@ def simplify_intersection(args):
     # Here we depend on rules built into the constituent sets
     args = set(args)
     new_args = True
-    while(new_args):
+    while new_args:
         for s in args:
             new_args = False
             for t in args - set((s,)):

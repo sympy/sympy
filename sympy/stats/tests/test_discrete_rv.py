@@ -9,6 +9,7 @@ from sympy.stats import (P, E, variance, density, characteristic_function,
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
         Poisson, Geometric, Logarithmic, NegativeBinomial, YuleSimon, Zeta)
 from sympy.stats.rv import sample
+from sympy.utilities.pytest import slow
 
 def test_PoissonDistribution():
     l = 3
@@ -63,7 +64,9 @@ def test_zeta():
     assert E(x) == zeta(s-1) / zeta(s)
     assert simplify(variance(x)) == (zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
 
-def test_sample():
+
+@slow
+def test_sample_discrete():
     X, Y, Z = Geometric('X', S(1)/2), Poisson('Y', 4), Poisson('Z', 1000)
     W = Poisson('W', S(1)/100)
     assert sample(X) in X.pspace.domain.set

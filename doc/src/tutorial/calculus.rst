@@ -211,7 +211,7 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⌡
     0
     >>> integ.doit()
-    ⎧ Γ(y + 1)    for -re(y) < 1
+    ⎧ Γ(y + 1)    for re(y) > -1
     ⎪
     ⎪∞
     ⎪⌠

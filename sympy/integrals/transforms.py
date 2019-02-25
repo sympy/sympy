@@ -5,6 +5,7 @@ from __future__ import print_function, division
 from sympy.core import S
 from sympy.core.compatibility import reduce, range, iterable
 from sympy.core.function import Function
+from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
 from sympy.integrals import integrate, Integral
@@ -987,7 +988,6 @@ def _laplace_transform(f, t, s_, simplify=True):
         a = -oo
         aux = S.true
         conds = conjuncts(to_cnf(conds))
-        u = Dummy('u', real=True)
         p, q, w1, w2, w3, w4, w5 = symbols(
             'p q w1 w2 w3 w4 w5', cls=Wild, exclude=[s])
         patterns = (
@@ -1003,21 +1003,23 @@ def _laplace_transform(f, t, s_, simplify=True):
             for d in disjuncts(c):
                 if d.is_Relational and s in d.rhs.free_symbols:
                     d = d.reversed
+                if d.is_Relational and isinstance(d, (Ge, Gt)):
+                    d = d.reversedsign
                 for pat in patterns:
                     m = d.match(pat)
                     if m:
                         break
                 if m:
                     if m[q].is_positive and m[w2]/m[p] == pi/2:
-                        d = re(s + m[w3]) > 0
-                m = d.match(cos(w1*abs(arg(s*w5))*w2)*abs(s**w3)**w4 - p > 0)
+                        d = -re(s + m[w3]) < 0
+                m = d.match(p - cos(w1*abs(arg(s*w5))*w2)*abs(s**w3)**w4 < 0)
                 if not m:
                     m = d.match(
-                        cos(abs(arg_(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p > 0)
+                        cos(p - abs(arg_(s**w1*w5, q))*w2)*abs(s**w3)**w4 < 0)
                 if not m:
                     m = d.match(
-                        cos(abs(arg_(polar_lift(s)**w1*w5, q))*w2
-                            )*abs(s**w3)**w4 - p > 0)
+                        p - cos(abs(arg_(polar_lift(s)**w1*w5, q))*w2
+                            )*abs(s**w3)**w4 < 0)
                 if m and all(m[wild].is_positive for wild in [w1, w2, w3, w4, w5]):
                     d = re(s) > m[p]
                 d_ = d.replace(
@@ -1064,7 +1066,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     if simplify:
         F = _simplifyconds(F, s, a)
         aux = _simplifyconds(aux, s, a)
-    return _simplify(F.subs(s, s_), simplify), sbs(a), sbs(aux)
+    return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
 
 
 class LaplaceTransform(IntegralTransform):
@@ -1124,7 +1126,7 @@ def laplace_transform(f, t, s, **hints):
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**a, t, s)
-    (s**(-a)*gamma(a + 1)/s, 0, -re(a) < 1)
+    (s**(-a)*gamma(a + 1)/s, 0, re(a) > -1)
 
     See Also
     ========

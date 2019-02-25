@@ -1,5 +1,5 @@
 from sympy import KroneckerDelta, diff, Piecewise, And
-from sympy import Sum, Dummy, factor, expand, zeros, gcd_terms
+from sympy import Sum, Dummy, factor, expand, zeros, gcd_terms, Eq
 
 from sympy.core import S, symbols, Add, Mul
 from sympy.core.compatibility import long
@@ -8,7 +8,8 @@ from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         SparseMatrix, Transpose, Adjoint)
-from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.matrices.expressions.matexpr import (MatrixElement,
+    GenericZeroMatrix, GenericIdentity)
 from sympy.utilities.pytest import raises, XFAIL
 
 
@@ -364,6 +365,57 @@ def test_issue_2749():
 def test_issue_2750():
     x = MatrixSymbol('x', 1, 1)
     assert (x.T*x).as_explicit()**-1 == Matrix([[x[0, 0]**(-2)]])
+
+
+def test_issue_7842():
+    A = MatrixSymbol('A', 3, 1)
+    B = MatrixSymbol('B', 2, 1)
+    assert Eq(A, B) == False
+    assert Eq(A[1,0], B[1, 0]).func is Eq
+    A = ZeroMatrix(2, 3)
+    B = ZeroMatrix(2, 3)
+    assert Eq(A, B) == True
+
+
+def test_generic_zero_matrix():
+    z = GenericZeroMatrix()
+    A = MatrixSymbol("A", n, n)
+
+    assert z == z
+    assert z != A
+    assert A != z
+
+    assert z.is_ZeroMatrix
+
+    raises(TypeError, lambda: z.shape)
+    raises(TypeError, lambda: z.rows)
+    raises(TypeError, lambda: z.cols)
+
+    assert MatAdd() == z
+    assert MatAdd(z, A) == MatAdd(A)
+    # Make sure it is hashable
+    hash(z)
+
+
+def test_generic_identity():
+    I = GenericIdentity()
+    A = MatrixSymbol("A", n, n)
+
+    assert I == I
+    assert I != A
+    assert A != I
+
+    assert I.is_Identity
+    assert I**-1 == I
+
+    raises(TypeError, lambda: I.shape)
+    raises(TypeError, lambda: I.rows)
+    raises(TypeError, lambda: I.cols)
+
+    assert MatMul() == I
+    assert MatMul(I, A) == MatMul(A)
+    # Make sure it is hashable
+    hash(I)
 
 def test_MatMul_postprocessor():
     z = zeros(2)
