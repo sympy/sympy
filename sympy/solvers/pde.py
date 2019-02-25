@@ -492,7 +492,8 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
 
     The general form of this partial differential equation is
 
-    .. math:: a \frac{df(x,y)}{dx} + b \frac{df(x,y)}{dy} + c f(x,y) = 0
+    .. math:: a \frac{\partial f(x,y)}{\partial x}
+              + b \frac{\partial f(x,y)}{\partial y} + c f(x,y) = 0
 
     where `a`, `b` and `c` are constants.
 
@@ -567,7 +568,9 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
 
     The general form of this partial differential equation is
 
-    .. math:: a \frac{df(x,y)}{dx} + b \frac{df(x,y)}{dy} + c f(x,y) = G(x,y)
+    .. math:: a \frac{\partial f(x,y)}{\partial x}
+              + b \frac{\partial f(x,y)}{\partial y}
+              + c f(x,y) = G(x,y)
 
     where `a`, `b` and `c` are constants and `G(x, y)` can be an arbitrary
     function in `x` and `y`.
@@ -580,9 +583,10 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         \frac{- a \eta + b \xi}{a^2 + b^2} \right)
         e^{\frac{c \xi}{a^2 + b^2}}\, d\xi\right]
         e^{- \frac{c \xi}{a^2 + b^2}}
-        \right|_{\substack{\eta=- a y + b x\\ \xi=a x + b y }}
+        \right|_{\substack{\eta=- a y + b x\\ \xi=a x + b y }}\, ,
 
-    and can be found in SymPy with ``pdsolve``::
+    where `F(\eta)` is an arbitrary single-valued function. The solution
+    can be found in SymPy with ``pdsolve``::
 
         >>> from sympy.solvers import pdsolve
         >>> from sympy.abc import x, y, a, b, c
@@ -680,7 +684,8 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     with variable coefficients. The general form of this partial
     differential equation is
 
-    .. math:: a(x, y) \frac{df(x, y)}{dx} + b(x, y) \frac{df(x, y)}{dy}
+    .. math:: a(x, y) \frac{\partial f(x, y)}{\partial x}
+                + b(x, y) \frac{\partial f(x, y)}{\partial y}
                 + c(x, y) f(x, y) = G(x, y)
 
     where `a(x, y)`, `b(x, y)`, `c(x, y)` and `G(x, y)` are arbitrary
