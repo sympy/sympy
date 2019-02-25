@@ -1,5 +1,5 @@
-from sympy import KroneckerDelta, diff, Piecewise, And
-from sympy import Sum, Dummy, factor, expand, zeros, gcd_terms, Eq
+from sympy import (KroneckerDelta, diff, Piecewise, Sum, Dummy, factor,
+                   expand, zeros, gcd_terms, Eq)
 
 from sympy.core import S, symbols, Add, Mul
 from sympy.core.compatibility import long
