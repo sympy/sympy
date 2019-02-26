@@ -159,7 +159,7 @@ def test_get_prob():
 def test_entropy():
     up = JzKet(S(1)/2, S(1)/2)
     down = JzKet(S(1)/2, -S(1)/2)
-    d = Density((up, 0.5), (down, 0.5))
+    d = Density((up, S(1)/2), (down, S(1)/2))
 
     # test for density object
     ent = entropy(d)

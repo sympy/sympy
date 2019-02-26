@@ -1219,13 +1219,11 @@ class MatrixEigen(MatrixSubspaces):
         """
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
+        rational = flags.pop('rational', True)
 
         mat = self
         if not mat:
             return {}
-        if flags.pop('rational', True):
-            if mat.has(Float):
-                mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
         if mat.is_upper or mat.is_lower:
             if not self.is_square:
@@ -1242,6 +1240,10 @@ class MatrixEigen(MatrixSubspaces):
                         eigs[diagonal_entry] = 0
                     eigs[diagonal_entry] += 1
         else:
+            if rational:
+                if any(v.has(Float) for v in mat):
+                    mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
             flags.pop('simplify', None)  # pop unsupported flag
             if isinstance(simplify, FunctionType):
                 eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify), **flags)
