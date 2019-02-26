@@ -6,7 +6,7 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence, range
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.function import diff
+from sympy.core.function import diff, count_ops
 from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
 from sympy.core.relational import Eq, Ne
@@ -27,6 +27,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
+from sympy.simplify import simplify
 from sympy.simplify.fu import sincos_to_sum
 
 
@@ -1099,6 +1100,15 @@ class Integral(AddWithLimits):
             if leading_term != 0:
                 break
         return integrate(leading_term, *self.args[1:])
+
+    def _eval_simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+        from sympy.simplify.simplify import extract_constants_from_sum_integral
+
+        expr = extract_constants_from_sum_integral(self)
+        if isinstance(expr, Integral):
+            return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational, inverse=inverse)
+                         for x in expr.args])
+        return expr.simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
 
     def as_sum(self, n=None, method="midpoint", evaluate=True):
         """

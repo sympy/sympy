@@ -594,8 +594,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         # automatically passed to gammasimp
         expr = combsimp(expr)
 
-    if expr.has(Sum, Integral):
-        expr = extract_constants_from_sum_integral(expr)
+    if expr.has(Sum):
+        expr = sum_simplify(expr)
+
+    if isinstance(expr, Integral):
+        expr = expr._eval_simplify()
 
     if expr.has(Product):
         expr = product_simplify(expr)
@@ -649,6 +652,7 @@ def sum_simplify(s):
     from sympy.concrete.summations import Sum
     from sympy.core.function import expand
 
+    s = extract_constants_from_sum_integral(s)
     terms = Add.make_args(expand(s))
     s_t = [] # Sum Terms
     o_t = [] # Other Terms
