@@ -1494,7 +1494,7 @@ class LatexPrinter(Printer):
 
     def _print_Trace(self, expr):
         mat = expr.arg
-        return r"\text{tr}\left(%s \right)" % self._print(mat)
+        return r"\operatorname{tr}\left(%s \right)" % self._print(mat)
 
     def _print_Adjoint(self, expr):
         mat = expr.arg
@@ -2214,16 +2214,15 @@ class LatexPrinter(Printer):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
             string = field._coord_sys._names[field._index]
-            return r'\text{{d}}{}'.format(self._print(Symbol(string)))
+            return r'\operatorname{{d}}{}'.format(self._print(Symbol(string)))
         else:
-            return 'd({})'.format(self._print(field))
             string = self._print(field)
-            return r'\text{{d}}\left({}\right)'.format(string)
+            return r'\operatorname{{d}}\left({}\right)'.format(string)
 
     def _print_Tr(self, p):
         #Todo: Handle indices
         contents = self._print(p.args[0])
-        return r'\mbox{{Tr}}\left({}\right)'.format(contents)
+        return r'\operatorname{{tr}}\left({}\right)'.format(contents)
 
     def _print_totient(self, expr, exp=None):
         if exp is not None:

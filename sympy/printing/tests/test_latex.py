@@ -32,7 +32,7 @@ from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
-from sympy.physics.units import degree, radian, kg, meter, R
+from sympy.physics.units import degree, radian, kg, meter
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
@@ -1403,7 +1403,7 @@ def test_Tr():
     #TODO: Handle indices
     A, B = symbols('A B', commutative=False)
     t = Tr(A*B)
-    assert latex(t) == r'\mbox{Tr}\left(A B\right)'
+    assert latex(t) == r'\operatorname{tr}\left(A B\right)'
 
 
 def test_Adjoint():
@@ -1904,8 +1904,8 @@ def test_trace():
     # Issue 15303
     from sympy import trace
     A = MatrixSymbol("A", 2, 2)
-    assert latex(trace(A)) == r"\text{tr}\left(A \right)"
-    assert latex(trace(A**2)) == r"\text{tr}\left(A^{2} \right)"
+    assert latex(trace(A)) == r"\operatorname{tr}\left(A \right)"
+    assert latex(trace(A**2)) == r"\operatorname{tr}\left(A^{2} \right)"
 
 
 def test_print_basic():
@@ -1936,8 +1936,8 @@ def test_MatrixSymbol_bold():
     # Issue #15871
     from sympy import trace
     A = MatrixSymbol("A", 2, 2)
-    assert latex(trace(A), mat_symbol_style='bold') == r"\text{tr}\left(\mathbf{A} \right)"
-    assert latex(trace(A), mat_symbol_style='plain') == r"\text{tr}\left(A \right)"
+    assert latex(trace(A), mat_symbol_style='bold') == r"\operatorname{tr}\left(\mathbf{A} \right)"
+    assert latex(trace(A), mat_symbol_style='plain') == r"\operatorname{tr}\left(A \right)"
 
     A = MatrixSymbol("A", 3, 3)
     B = MatrixSymbol("B", 3, 3)
@@ -1961,8 +1961,8 @@ def test_imaginary_unit():
 
 
 def test_DiffGeomMethods():
-    from sympy.diffgeom import Manifold, Patch, CoordSystem, Point, BaseScalarField
-    r0, theta0 = symbols('r0, theta0')
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
+    from sympy.diffgeom.rn import R2
     m = Manifold('M', 2)
     assert latex(m) == r'\text{M}'
     p = Patch('P', m)
@@ -1971,3 +1971,7 @@ def test_DiffGeomMethods():
     assert latex(rect) == r'\text{rect}^{\text{P}}_{\text{M}}'
     b = BaseScalarField(rect, 0)
     assert latex(b) ==  r'\mathbf{rect_{0}}'
+
+    g = Function('g')
+    s_field = g(R2.x, R2.y)
+    assert latex(Differential(s_field)) == r'\operatorname{d}\left(g{\left(\mathbf{x},\mathbf{y} \right)}\right)'
