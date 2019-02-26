@@ -1,6 +1,7 @@
 language: python
 sudo: false
 stages:
+- quality
 - baseline
 - test
 env:
@@ -20,6 +21,13 @@ python:
 
 matrix:
   include:
+    - stage: quality
+      python: 3.7
+      dist: xenial
+      sudo: true
+      script: bin/test quality
+      env:
+
     - stage: baseline
       python: 3.7
       dist: xenial
