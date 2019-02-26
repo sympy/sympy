@@ -1225,6 +1225,10 @@ class MatrixEigen(MatrixSubspaces):
         if not mat:
             return {}
 
+        if rational:
+            mat = mat.applyfunc(
+                lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
+
         if mat.is_upper or mat.is_lower:
             if not self.is_square:
                 raise NonSquareMatrixError()
@@ -1240,10 +1244,6 @@ class MatrixEigen(MatrixSubspaces):
                         eigs[diagonal_entry] = 0
                     eigs[diagonal_entry] += 1
         else:
-            if rational:
-                if any(v.has(Float) for v in mat):
-                    mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
-
             flags.pop('simplify', None)  # pop unsupported flag
             if isinstance(simplify, FunctionType):
                 eigs = roots(mat.charpoly(x=Dummy('x'), simplify=simplify), **flags)
