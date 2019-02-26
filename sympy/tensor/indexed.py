@@ -159,13 +159,15 @@ class Indexed(Expr):
                 return base[args]
 
 
-        # Apply assumptions, with same logic as for Symbol.__new__.
-        obj = Expr.__new__(cls, base, *args, **kw_args)
+        # Apply assumptions, see sympy.core.symbol.Symbol
         assumptions = dict() if assumptions is None else assumptions
+        tmp_asm_copy = assumptions.copy()
+
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         assumptions['commutative'] = is_commutative
+        obj = Expr.__new__(cls, base, *args, **kw_args)
         obj._assumptions = StdFactKB(assumptions)
-
+        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
         return obj
 
     @property
