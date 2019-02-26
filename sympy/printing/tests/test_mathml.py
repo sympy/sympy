@@ -982,6 +982,20 @@ def test_root_notation_print():
     assert mathml(x**(S(1)/3), printer='content', root_notation=False) == '<apply><power/><ci>x</ci><apply><divide/><cn>1</cn><cn>3</cn></apply></apply>'
 
 
+def test_fold_frac_powers_print():
+    expr = x ** Rational(5, 2)
+    assert mathml(expr, printer='presentation') == '<msup><mi>x</mi><mfrac><mn>5</mn><mn>2</mn></mfrac></msup>'
+    assert mathml(expr, printer='presentation', fold_frac_powers=True) == '<msup><mi>x</mi><mfrac bevelled="true"><mn>5</mn><mn>2</mn></mfrac></msup>'
+    assert mathml(expr, printer='presentation', fold_frac_powers=False) == '<msup><mi>x</mi><mfrac><mn>5</mn><mn>2</mn></mfrac></msup>'
+
+
+def test_fold_short_frac_print():
+    expr = 1 / y ** 2
+    assert mathml(expr, printer='presentation') == '<msup><mrow><mfenced><mi>y</mi></mfenced></mrow><mn>-2</mn></msup>'
+    assert mathml(expr, printer='presentation', fold_short_frac=True) == '<mfrac bevelled="true"><mn>1</mn><msup><mrow><mfenced><mi>y</mi></mfenced></mrow><mn>2</mn></msup></mfrac>'
+    assert mathml(expr, printer='presentation', fold_short_frac=False) == '<msup><mrow><mfenced><mi>y</mi></mfenced></mrow><mn>-2</mn></msup>'
+
+
 def test_print_factorials():
     assert mpp.doprint(factorial(x)) == '<mrow><mi>x</mi><mo>!</mo></mrow>'
     assert mpp.doprint(factorial(x + 1)) == '<mrow><mfenced><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced><mo>!</mo></mrow>'

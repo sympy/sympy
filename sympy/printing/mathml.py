@@ -554,7 +554,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             numer, denom = fraction(expr)
             if denom is not S.One:
                 frac = self.dom.createElement('mfrac')
-                if self._settings["fold_short_frac"]:
+                print(expr)
+                if self._settings["fold_short_frac"] and len(str(expr)) < 7:
                     frac.setAttribute('bevelled', 'true')
                 xnum = self._print(numer)
                 xden = self._print(denom)
@@ -865,29 +866,29 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
-        if e.exp.is_negative:
-            if self._settings['fold_short_frac'] and len(str(e.base)) < 3:
-                frac = self.dom.createElement('mfrac')
-                frac.setAttribute('bevelled', 'true')
-                frac.appendChild(self._print(1))
-                mrow = self.dom.createElement('mrow')
-                x = self.dom.createElement('mfenced')
-                x.appendChild(self._print(e.base))
-                mrow.appendChild(x)
-                x = self.dom.createElement('msup')
-                x.appendChild(mrow)
-                x.appendChild(self._print(-e.exp))
-                frac.appendChild(x)
-                return frac
-            if len(str(e.base)) > 1:
-                mrow = self.dom.createElement('mrow')
-                x = self.dom.createElement('mfenced')
-                x.appendChild(self._print(e.base))
-                mrow.appendChild(x)
-                x = self.dom.createElement('msup')
-                x.appendChild(mrow)
-                x.appendChild(self._print(e.exp))
-                return x
+        if e.exp.is_negative and self._settings['fold_short_frac'] and len(str(e.base)) < 7:
+            frac = self.dom.createElement('mfrac')
+            frac.setAttribute('bevelled', 'true')
+            frac.appendChild(self._print(1))
+            mrow = self.dom.createElement('mrow')
+            x = self.dom.createElement('mfenced')
+            x.appendChild(self._print(e.base))
+            mrow.appendChild(x)
+            x = self.dom.createElement('msup')
+            x.appendChild(mrow)
+            x.appendChild(self._print(-e.exp))
+            frac.appendChild(x)
+            return frac
+
+        if e.exp.is_negative or len(str(e.base)) > 1:
+            mrow = self.dom.createElement('mrow')
+            x = self.dom.createElement('mfenced')
+            x.appendChild(self._print(e.base))
+            mrow.appendChild(x)
+            x = self.dom.createElement('msup')
+            x.appendChild(mrow)
+            x.appendChild(self._print(e.exp))
+            return x
 
         if e.exp.is_Rational and e.exp.p == 1 and self._settings['root_notation']:
             if e.exp.q == 2:
