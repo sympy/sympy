@@ -154,6 +154,8 @@ matrix:
           packages:
             - pypy
 
+  fast_finish: true
+
   allow_failures:
     # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
     - python: "pypy"
