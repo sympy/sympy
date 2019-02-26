@@ -1,5 +1,8 @@
 language: python
 sudo: false
+stages:
+- baseline
+- test
 env:
   matrix:
   - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
@@ -17,7 +20,8 @@ python:
 
 matrix:
   include:
-    - python: 3.7
+    - stage: baseline
+      python: 3.7
       dist: xenial
       sudo: true
       env:
@@ -33,7 +37,8 @@ matrix:
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
 
-    - python: 2.7
+    - stage: test
+      python: 2.7
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
