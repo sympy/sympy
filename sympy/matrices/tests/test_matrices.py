@@ -672,6 +672,10 @@ def test_LUsolve():
     b = A*x
     raises(NotImplementedError, lambda: A.LUsolve(b))
 
+    A = Matrix(4, 4, lambda i, j: 1/(i+j+1) if i != 3 else 0)
+    b = Matrix.zeros(4, 1)
+    raises(NotImplementedError, lambda: A.LUsolve(b))
+
 
 def test_QRsolve():
     A = Matrix([[2, 3, 5],
