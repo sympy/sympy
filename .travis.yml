@@ -6,9 +6,9 @@ stages:
 - test
 env:
   matrix:
-  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
   - SPLIT="1/2" TEST_SYMPY="true"
   - SPLIT="2/2" TEST_SYMPY="true"
+  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
   global:
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
 dist: trusty
