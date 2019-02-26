@@ -139,6 +139,18 @@ class Indexed(Expr):
     is_symbol = True
     is_Atom = True
 
+    @staticmethod
+    def _set_assumptions(obj, assumptions=None):
+        """Set assumptions on obj, making sure to apply consitent values."""
+        assumptions = dict() if assumptions is None else assumptions
+        Symbol._sanitize(assumptions)
+        tmp_asm_copy = assumptions.copy()
+
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        assumptions['commutative'] = is_commutative
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
+
     def __new__(cls, base, *args, assumptions=None, **kw_args):
         from sympy.utilities.misc import filldedent
         from sympy.tensor.array.ndim_array import NDimArray
@@ -158,16 +170,8 @@ class Indexed(Expr):
             else:
                 return base[args]
 
-
-        # Apply assumptions, see sympy.core.symbol.Symbol
-        assumptions = dict() if assumptions is None else assumptions
-        tmp_asm_copy = assumptions.copy()
-
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        assumptions['commutative'] = is_commutative
         obj = Expr.__new__(cls, base, *args, **kw_args)
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
+        Indexed._set_assumptions(obj, assumptions)
         return obj
 
     @property
@@ -419,7 +423,7 @@ class IndexedBase(Expr, NotIterable):
         obj._offset = offset
         obj._strides = strides
         obj._name = str(label)
-        obj._assumptions = dict() if assumptions is None else assumptions
+        Indexed._set_assumptions(obj, assumptions)
         return obj
 
     @property
