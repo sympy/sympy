@@ -15,6 +15,10 @@ See the webpage for more information and documentation:
 from __future__ import absolute_import, print_function
 del absolute_import, print_function
 
+import platform
+if platform.python_implementation() == 'PyPy':
+    raise ValueError('Failing on PyPy deliberately!')
+
 try:
     import mpmath
 except ImportError:
