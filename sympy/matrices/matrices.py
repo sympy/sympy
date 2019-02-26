@@ -1546,14 +1546,27 @@ class MatrixEigen(MatrixSubspaces):
             cols = self.cols
             ret = [0]
 
+            nullity_prev = 0
             i = 1
             while True:
-                nullity = cols - eig_mat(val, i).rank()
-                ret.append(nullity)
-                if nullity == algebraic_multiplicity:
+                nullity_next = cols - eig_mat(val, i).rank()
+
+                monotonic_check = nullity_next == nullity_prev
+                multiplicity_check = nullity_prev == algebraic_multiplicity
+
+                if monotonic_check is True and multiplicity_check is True:
                     break
-                else:
+                elif monotonic_check is False and multiplicity_check is False:
+                    ret.append(nullity_next)
+                    nullity_prev = nullity_next
                     i += 1
+                    continue
+                else:
+                    raise MatrixError(
+                        "SymPy had encountered an inconsistent result while"
+                        "computing Jordan block."
+                        )
+
             return ret
 
         def blocks_from_nullity_chain(d):
@@ -1618,6 +1631,13 @@ class MatrixEigen(MatrixSubspaces):
 
             block_structure.extend(
                 (eig, size) for size, num in size_nums for _ in range(num))
+
+        jordan_form_size = sum(size for eig, size in block_structure)
+        if jordan_form_size != self.rows:
+            raise MatrixError(
+                "SymPy had encountered an inconsistent result while"
+                "computing Jordan block.")
+
         blocks = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
         jordan_mat = mat.diag(*blocks)
 
