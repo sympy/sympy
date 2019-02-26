@@ -3727,7 +3727,13 @@ class MatrixBase(MatrixDeprecated,
         n = self.cols
         if m < n:
             raise NotImplementedError("Underdetermined systems not supported.")
-        A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
+
+        try:
+            A, perm = self.LUdecomposition_Simple(
+                iszerofunc=_iszero, rankcheck=True)
+        except ValueError:
+            raise NotImplementedError("Underdetermined systems not supported.")
+
         b = rhs.permute_rows(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
         for i in range(m):
