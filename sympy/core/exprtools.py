@@ -1098,6 +1098,25 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     return terms.func(*[handle(i) for i in terms.args])
 
 
+def _factor_sum_int(expr, **kwargs):
+    from sympy.core.exprtools import factor_terms
+    result = expr.function
+    if result == 0:
+        return S.Zero
+    limits = expr.limits
+
+    # get the wrt variables
+    sum_vars = set([i.args[0] for i in limits])
+
+    # factor out any common terms that are independent of sum_vars
+    f = factor_terms(result, **kwargs)
+    i, d = f.as_independent(*sum_vars)
+    if isinstance(f, Add):
+        return i * expr.func(1, *limits) + expr.func(d, *limits)
+    else:
+        return i * expr.func(d, *limits)
+
+
 def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
@@ -1153,7 +1172,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     """
     def do(expr):
         from sympy.concrete.summations import Sum
-        from sympy.simplify.simplify import factor_sum
+        from sympy.integrals.integrals import Integral
         is_iterable = iterable(expr)
 
         if not isinstance(expr, Basic) or expr.is_Atom:
@@ -1169,8 +1188,10 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
                 return expr
             return expr.func(*newargs)
 
-        if isinstance(expr, Sum):
-            return factor_sum(expr, radical=radical, clear=clear, fraction=fraction, sign=sign)
+        if isinstance(expr, (Sum, Integral)):
+            return _factor_sum_int(expr,
+                radical=radical, clear=clear,
+                fraction=fraction, sign=sign)
 
         cont, p = expr.as_content_primitive(radical=radical, clear=clear)
         if p.is_Add:

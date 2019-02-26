@@ -23,7 +23,7 @@ from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
 
-from sympy.utilities.iterables import has_variety
+from sympy.utilities.iterables import has_variety, sift
 
 from sympy.simplify.radsimp import radsimp, fraction
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
@@ -33,7 +33,6 @@ from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.combsimp import combsimp
 
 from sympy.polys import (together, cancel, factor)
-
 
 import mpmath
 
@@ -515,10 +514,13 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     x belongs to the set where this relation is true. The default is
     False.
     """
+
     expr = sympify(expr)
+    kwargs = dict(ratio=ratio, measure=measure,
+        rational=rational, inverse=inverse)
 
     try:
-        return expr._eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
+        return expr._eval_simplify(**kwargs)
     except AttributeError:
         pass
 
@@ -536,9 +538,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         if not expr.args:  # simplified to atomic
             return expr
 
-    if not isinstance(expr, (Add, Mul, Pow, ExpBase, Integral)):
-        return expr.func(*[simplify(x, ratio=ratio, measure=measure, rational=rational, inverse=inverse)
-                         for x in expr.args])
+    if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
+        return expr.func(*[simplify(x, **kwargs) for x in expr.args])
 
     if not expr.is_commutative:
         expr = nc_simplify(expr)
@@ -595,10 +596,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         expr = combsimp(expr)
 
     if expr.has(Sum):
-        expr = sum_simplify(expr)
+        expr = sum_simplify(expr, **kwargs)
 
-    if isinstance(expr, Integral):
-        expr = expr._eval_simplify()
+    if expr.has(Integral):
+        expr = expr.xreplace(dict([
+            (i, factor_terms(i)) for i in expr.atoms(Integral)]))
 
     if expr.has(Product):
         expr = product_simplify(expr)
@@ -647,49 +649,34 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     return expr
 
 
-def sum_simplify(s):
+def sum_simplify(s, **kwargs):
     """Main function for Sum simplification"""
     from sympy.concrete.summations import Sum
     from sympy.core.function import expand
 
-    s = extract_constants_from_sum_integral(s)
-    terms = Add.make_args(expand(s))
+    if not isinstance(s, Add):
+        s = s.xreplace(dict([(a, sum_simplify(a, **kwargs))
+            for a in s.atoms(Add) if a.has(Sum)]))
+    s = expand(s)
+    if not isinstance(s, Add):
+        return s
+
+    terms = s.args
     s_t = [] # Sum Terms
     o_t = [] # Other Terms
 
     for term in terms:
-        if isinstance(term, Mul):
-            other = 1
-            sum_terms = []
-
-            if not term.has(Sum):
-                o_t.append(term)
-                continue
-
-            mul_terms = Mul.make_args(term)
-            for mul_term in mul_terms:
-                if isinstance(mul_term, Sum):
-                    r = mul_term._eval_simplify()
-                    sum_terms.extend(Add.make_args(r))
-                else:
-                    other = other * mul_term
-            if len(sum_terms):
-                #some simplification may have happened
-                #use if so
-                s_t.append(Mul(*sum_terms) * other)
-            else:
-                o_t.append(other)
-        elif isinstance(term, Sum):
-            #as above, we need to turn this into an add list
-            r = term._eval_simplify()
-            s_t.extend(Add.make_args(r))
-        else:
+        sum_terms, other = sift(Mul.make_args(term), lambda i: isinstance(i, Sum), binary=True)
+        if not sum_terms:
             o_t.append(term)
-
+            continue
+        other = [Mul(*other)]
+        s_t.append(Mul(*(other + [s._eval_simplify(**kwargs) for s in sum_terms])))
 
     result = Add(sum_combine(s_t), *o_t)
 
     return result
+
 
 def sum_combine(s_t):
     """Helper function for Sum simplification
@@ -698,7 +685,6 @@ def sum_combine(s_t):
        returns the simplified sum
     """
     from sympy.concrete.summations import Sum
-
 
     used = [False] * len(s_t)
 
@@ -720,53 +706,32 @@ def sum_combine(s_t):
 
     return result
 
-def extract_constants_from_sum_integral(expr):
-
-    from sympy import Sum, Integral
-
-    si = expr.atoms(Sum, Integral)
-    reps = dict()
-    for i in si:
-        limsym = [a[0] for a in i.args[1:]]
-        e = i.args[0]
-        if isinstance(e, Add):
-            e = factor_terms(e)
-        c, d = e.as_independent(*limsym, as_Add=False)
-        if c != 1:
-            reps[i] = c*i.func(d, *i.args[1:])
-    return expr.xreplace(reps)
 
 def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, sign=True):
-    """Helper function for Sum simplification
+    """Return Sum with constant factors extracted.
 
-       if limits is specified, "self" is the inner part of a sum
+    If ``limits`` is specified then ``self`` is the summand; the other
+    keywords are passed to ``factor_terms``.
 
-       Returns the sum with constant factors brought outside
+    Examples
+    ========
+
+    >>> from sympy import Sum, Integral
+    >>> from sympy.abc import x, y
+    >>> from sympy.simplify.simplify import factor_sum
+    >>> s = Sum(x*y, (x, 1, 3))
+    >>> factor_sum(s)
+    y*Sum(x, (x, 1, 3))
+    >>> factor_sum(s.function, s.limits)
+    y*Sum(x, (x, 1, 3))
     """
-    from sympy.core.exprtools import factor_terms
+    # XXX deprecate in favor of direct call to factor_terms
     from sympy.concrete.summations import Sum
+    kwargs = dict(radical=radical, clear=clear,
+        fraction=fraction, sign=sign)
+    expr = Sum(self, limits) if limits else self
+    return factor_terms(expr, **kwargs)
 
-    result = self.function if limits is None else self
-    limits = self.limits if limits is None else limits
-    #avoid any confusion w/ as_independent
-    if result == 0:
-        return S.Zero
-
-    #get the summation variables
-    sum_vars = set([limit.args[0] for limit in limits])
-
-    #finally we try to factor out any common terms
-    #and remove the from the sum if independent
-    retv = factor_terms(result, radical=radical, clear=clear, fraction=fraction, sign=sign)
-    #avoid doing anything bad
-    if not result.is_commutative:
-        return Sum(result, *limits)
-
-    i, d = retv.as_independent(*sum_vars)
-    if isinstance(retv, Add):
-        return i * Sum(1, *limits) + Sum(d, *limits)
-    else:
-        return i * Sum(d, *limits)
 
 def sum_add(self, other, method=0):
     """Helper function for Sum simplification"""
