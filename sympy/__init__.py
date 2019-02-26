@@ -15,7 +15,8 @@ See the webpage for more information and documentation:
 from __future__ import absolute_import, print_function
 del absolute_import, print_function
 
-try:
+# Add whitespace:
+try:     
     import mpmath
 except ImportError:
     raise ImportError("SymPy now depends on mpmath as an external library. "
