@@ -1563,7 +1563,7 @@ class MatrixEigen(MatrixSubspaces):
                     continue
                 else:
                     raise MatrixError(
-                        "SymPy had encountered an inconsistent result while"
+                        "SymPy had encountered an inconsistent result while "
                         "computing Jordan block."
                         )
 
@@ -1635,7 +1635,7 @@ class MatrixEigen(MatrixSubspaces):
         jordan_form_size = sum(size for eig, size in block_structure)
         if jordan_form_size != self.rows:
             raise MatrixError(
-                "SymPy had encountered an inconsistent result while"
+                "SymPy had encountered an inconsistent result while "
                 "computing Jordan block.")
 
         blocks = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
