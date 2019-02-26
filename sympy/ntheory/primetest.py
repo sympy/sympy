@@ -6,7 +6,6 @@ Primality testing
 from __future__ import print_function, division
 
 from sympy.core.compatibility import range, as_int
-from sympy.core.numbers import Float
 
 from mpmath.libmp import bitcount as _bitlength
 
@@ -488,8 +487,18 @@ def isprime(n):
     >>> from sympy.ntheory import isprime
     >>> isprime(13)
     True
+    >>> isprime(13.0)  # limited precision
+    False
     >>> isprime(15)
     False
+
+    Notes
+    =====
+
+    This routine is not meant to deal with expressions which may
+    represent a prime number. Floats -- even those that are
+    equal to an integer value -- return False because they
+    represent numbers of limited precision.
 
     See Also
     ========
@@ -505,9 +514,10 @@ def isprime(n):
       http://mpqs.free.fr/LucasPseudoprimes.pdf
     - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
-    if isinstance(n, (Float, float)):
+    try:
+        n = as_int(n)
+    except ValueError:
         return False
-    n = int(n)
 
     # Step 1, do quick composite testing via trial division.  The individual
     # modulo tests benchmark faster than one or two primorial igcds for me.
