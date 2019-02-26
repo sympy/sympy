@@ -88,11 +88,23 @@ matrix:
     - python: 2.7
       env:
         - TEST_SLOW="true"
+        - SPLIT="1/2"
+    - python: 2.7
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="2/2"
     - python: 3.7
       dist: xenial
       sudo: true
       env:
         - TEST_SLOW="true"
+        - SPLIT="1/2"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="2/2"
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.

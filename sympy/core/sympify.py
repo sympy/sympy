@@ -58,9 +58,9 @@ def _convert_numpy_types(a, **sympify_args):
     import numpy as np
     if not isinstance(a, np.floating):
         if np.iscomplex(a):
-            return converter[complex](np.asscalar(a))
+            return converter[complex](a.item())
         else:
-            return sympify(np.asscalar(a), **sympify_args)
+            return sympify(a.item(), **sympify_args)
     else:
         try:
             from sympy.core.numbers import Float

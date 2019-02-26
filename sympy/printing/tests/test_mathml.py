@@ -2,6 +2,8 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
     MatrixSymbol, Function, Derivative, log
+from sympy.functions.combinatorial.factorials import factorial, factorial2, binomial
+from sympy.functions.elementary.complexes import conjugate
 from sympy.stats.rv import RandomSymbol
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
     MathMLPrinter
@@ -978,6 +980,20 @@ def test_root_notation_print():
     assert mathml(x**(S(1)/3), printer='presentation', root_notation=False) == '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
     assert mathml(x**(S(1)/3), printer='content') == '<apply><root/><degree><ci>3</ci></degree><ci>x</ci></apply>'
     assert mathml(x**(S(1)/3), printer='content', root_notation=False) == '<apply><power/><ci>x</ci><apply><divide/><cn>1</cn><cn>3</cn></apply></apply>'
+
+
+def test_print_factorials():
+    assert mpp.doprint(factorial(x)) == '<mrow><mi>x</mi><mo>!</mo></mrow>'
+    assert mpp.doprint(factorial(x + 1)) == '<mrow><mfenced><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced><mo>!</mo></mrow>'
+    assert mpp.doprint(factorial2(x)) == '<mrow><mi>x</mi><mo>!!</mo></mrow>'
+    assert mpp.doprint(factorial2(x + 1)) == '<mrow><mfenced><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced><mo>!!</mo></mrow>'
+    assert mpp.doprint(binomial(x, y)) == '<mfenced><mfrac linethickness="0"><mi>x</mi><mi>y</mi></mfrac></mfenced>'
+    assert mpp.doprint(binomial(4, x + y)) == '<mfenced><mfrac linethickness="0"><mn>4</mn><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow></mfrac></mfenced>'
+
+
+def test_print_conjugate():
+    assert mpp.doprint(conjugate(x)) == '<menclose notation="top"><mi>x</mi></menclose>'
+    assert mpp.doprint(conjugate(x + 1)) == '<mrow><menclose notation="top"><mi>x</mi></menclose><mo>+</mo><mn>1</mn></mrow>'
 
 
 def test_print_matrix_symbol():
