@@ -106,6 +106,7 @@ See the appropriate docstrings for a detailed explanation of the output.
 
 from __future__ import print_function, division
 
+from sympy.assumptions import Q
 from sympy.core.assumptions import StdFactKB
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
@@ -140,18 +141,24 @@ class Indexed(Expr):
     is_Atom = True
 
     @staticmethod
-    def _set_assumptions(obj, assumptions=None):
-        """Set assumptions on obj, making sure to apply consitent values."""
-        assumptions = dict() if assumptions is None else assumptions
+    def _filter_assumptions(kw_args):
+        """Split the given dict into two parts: assumptions and not assumptions.
+           Keys are taken as assumptions if they correspond to a handler on ``Q``."""
+        assumptions = {k: v for k, v in kw_args.items() if hasattr(Q, k)}
         Symbol._sanitize(assumptions)
-        tmp_asm_copy = assumptions.copy()
+        # return assumptions, not assumptions
+        return assumptions, {k: v for k, v in kw_args.items() if k not in assumptions}
 
+    @staticmethod
+    def _set_assumptions(obj, assumptions):
+        """Set assumptions on obj, making sure to apply consistent values."""
+        tmp_asm_copy = assumptions.copy()
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         assumptions['commutative'] = is_commutative
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = tmp_asm_copy  # Issue #8873
 
-    def __new__(cls, base, *args, assumptions=None, **kw_args):
+    def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
         from sympy.tensor.array.ndim_array import NDimArray
         from sympy.matrices.matrices import MatrixBase
@@ -170,6 +177,7 @@ class Indexed(Expr):
             else:
                 return base[args]
 
+        assumptions, kw_args = Indexed._filter_assumptions(kw_args)
         obj = Expr.__new__(cls, base, *args, **kw_args)
         Indexed._set_assumptions(obj, assumptions)
         return obj
@@ -393,7 +401,7 @@ class IndexedBase(Expr, NotIterable):
     is_symbol = True
     is_Atom = True
 
-    def __new__(cls, label, shape=None, assumptions=None, **kw_args):
+    def __new__(cls, label, shape=None, **kw_args):
         from sympy import MatrixBase, NDimArray
 
         if isinstance(label, string_types):
@@ -423,6 +431,7 @@ class IndexedBase(Expr, NotIterable):
         obj._offset = offset
         obj._strides = strides
         obj._name = str(label)
+        assumptions, _ = Indexed._filter_assumptions(kw_args)
         Indexed._set_assumptions(obj, assumptions)
         return obj
 
@@ -431,15 +440,17 @@ class IndexedBase(Expr, NotIterable):
         return self._name
 
     def __getitem__(self, indices, **kw_args):
+        # Propagate assumptions onto new Indexed object.
+        kw_args.update(self._assumptions)
         if is_sequence(indices):
             # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
                 raise IndexException("Rank mismatch.")
-            return Indexed(self, *indices, assumptions=self._assumptions, **kw_args)
+            return Indexed(self, *indices, **kw_args)
         else:
             if self.shape and len(self.shape) != 1:
                 raise IndexException("Rank mismatch.")
-            return Indexed(self, indices, assumptions=self._assumptions, **kw_args)
+            return Indexed(self, indices, **kw_args)
 
     @property
     def shape(self):
