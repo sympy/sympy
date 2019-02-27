@@ -1615,7 +1615,7 @@ def test_creation_args():
     raises(ValueError, lambda: zeros(3.))
     assert eye(long(3)) == eye(3)
     assert eye(Integer(3)) == eye(3)
-    assert eye(3.) == eye(3)
+    raises(ValueError, lambda: eye(3.))
     assert ones(long(3), Integer(4)) == ones(3, 4)
     raises(TypeError, lambda: Matrix(5))
     raises(TypeError, lambda: Matrix(1, 2))
