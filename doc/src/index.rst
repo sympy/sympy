@@ -26,7 +26,6 @@ Contents:
    guide.rst
    modules/index.rst
    special_topics/index.rst
-   python-comparisons.rst
    wiki.rst
    outreach.rst
    aboutus.rst
