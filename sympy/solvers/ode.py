@@ -2159,8 +2159,6 @@ def checksysodesol(eqs, sols, func=None):
 @vectorize(0)
 def odesimp(ode, eq, func, hint):
     r"""
-    FIXME: Need to update this docstring.
-
     Simplifies solutions of ODEs, including trying to solve for ``func`` and
     running :py:meth:`~sympy.solvers.ode.constantsimp`.
 
@@ -2320,17 +2318,6 @@ def odesimp(ode, eq, func, hint):
     # We cleaned up the constants before solving to help the solve engine with
     # a simpler expression, but the solved expression could have introduced
     # things like -C1, so rerun constantsimp() one last time before returning.
-
-    # Don't clobber the symbols already in the ODE. This is important when the
-    # input ODE derives from output of a previous call to dsolve (issue #4838)
-    if iterable(eq):
-        symbols_eq = set()
-        for eq_single in eq:
-            symbols_eq |= eq_single.free_symbols
-    else:
-        symbols_eq = eq.free_symbols
-    exclude = symbols_eq - constants
-
     for i, eqi in enumerate(eq):
         eq[i] = constantsimp(eqi, constants)
         eq[i] = constant_renumber(eq[i], ode.free_symbols)
@@ -2883,19 +2870,23 @@ def constantsimp(expr, constants):
     return expr
 
 
-def constant_renumber(expr, nonconstants=None, newconstants=None):
+def constant_renumber(expr, variables=None, newconstants=None):
     r"""
     FIXME: Need to redo this docstring. This now renumbers constants in expr
     without using symbols from eq.
 
-    Renumber arbitrary constants in ``expr`` to have numbers 1 through `N`
-    where `N` is ``endnumber - startnumber + 1`` at most.
-    In the process, this reorders expression terms in a standard way.
+    Renumber arbitrary constants in ``expr`` to use the symbol names as given
+    in ``newconstants``. In the process, this reorders expression terms in a
+    standard way.
 
-    This is a simple function that goes through and renumbers any
-    :py:class:`~sympy.core.symbol.Symbol` with a name in the form ``symbolname
-    + num`` where ``num`` is in the range from ``startnumber`` to
-    ``endnumber``.
+    If ``newconstants`` is not provided then the new constant names will be
+    ``C1``, ``C2`` etc. Otherwise ``newconstants`` should be an iterable
+    giving the new symbols to use for the constants in order.
+
+    The ``variables`` argument is a list of non-constant symbols. All other
+    free symbols found in ``expr`` are assumed to be constants and will be
+    renumbered. If ``variables`` is not given then any numbered symbol
+    beginning with ``C`` (e.g. ``C1``) is assumed to be a constant.
 
     Symbols are renumbered based on ``.sort_key()``, so they should be
     numbered roughly in the order that they appear in the final, printed
@@ -2910,30 +2901,44 @@ def constant_renumber(expr, nonconstants=None, newconstants=None):
 
     >>> from sympy import symbols, Eq, pprint
     >>> from sympy.solvers.ode import constant_renumber
-    >>> x, C0, C1, C2, C3, C4 = symbols('x,C:5')
+    >>> x, C1, C2, C3 = symbols('x,C1:4')
+    >>> expr = C3 + C2*x + C1*x**2
+    >>> expr
+    C1*x**2  + C2*x + C3
+    >>> constant_renumber(expr)
+    C1 + C2*x + C3*x**2
 
-    Only constants in the given range (inclusive) are renumbered;
-    the renumbering always starts from 1:
+    The ``variables`` argument specifies which are constants so that the
+    other symbols will not be renumbered:
+
+    >>> constant_renumber(expr, [C1, x])
+    C1*x**2  + C2 + C3*x
+
+    The ``newconstants`` argument is used to specify what symbols to use when
+    replacing the constants:
+
+    >>> constant_renumber(expr, [x], newconstants=symbols('E1:4'))
+    E1 + E2*x + E3*x**2
 
     """
     if type(expr) in (set, list, tuple):
-        renumbered = [constant_renumber(e, nonconstants, newconstants) for e in expr]
+        renumbered = [constant_renumber(e, variables, newconstants) for e in expr]
         return type(expr)(renumbered)
 
     # Symbols in solution bot not ODE are constants
-    if nonconstants is not None:
-        constantsymbols = list(expr.free_symbols - set(nonconstants))
+    if variables is not None:
+        constantsymbols = list(expr.free_symbols - set(variables))
     else:
-        nonconstants = set()
+        variables = set()
         # Any Cn is a constant...
         isconstant = lambda s: s.startswith('C') and s[1:].isdigit()
         constantsymbols = [sym for sym in expr.free_symbols if isconstant(sym.name)]
 
     # Find new constants checking that they aren't alread in the ODE
     if newconstants is None:
-        iter_constants = numbered_symbols(start=1, prefix='C', exclude=nonconstants)
+        iter_constants = numbered_symbols(start=1, prefix='C', exclude=variables)
     else:
-        iter_constants = (sym for sym in newconstants if sym not in nonconstants)
+        iter_constants = (sym for sym in newconstants if sym not in variables)
 
     global newstartnumber
     newstartnumber = 1
@@ -2981,7 +2986,7 @@ def constant_renumber(expr, nonconstants=None, newconstants=None):
     expr = _constant_renumber(expr)
 
     # Don't renumber symbols present in the ODE.
-    constants_found = [c for c in constants_found if c not in nonconstants]
+    constants_found = [c for c in constants_found if c not in variables]
 
     # Renumbering happens here
     expr = expr.subs(zip(constants_found[1:], iter_constants), simultaneous=True)
