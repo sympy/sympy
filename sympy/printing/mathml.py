@@ -865,19 +865,27 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
-        if e.exp.is_negative and self._settings['fold_short_frac'] and len(str(e.base)) < 7:
-            frac = self.dom.createElement('mfrac')
-            frac.setAttribute('bevelled', 'true')
-            frac.appendChild(self._print(1))
-            mrow = self.dom.createElement('mrow')
-            x = self.dom.createElement('mfenced')
-            x.appendChild(self._print(e.base))
-            mrow.appendChild(x)
-            x = self.dom.createElement('msup')
-            x.appendChild(mrow)
-            x.appendChild(self._print(-e.exp))
-            frac.appendChild(x)
-            return frac
+        if self._settings['fold_short_frac'] and len(str(e.base)) < 7:
+            if e.exp.is_negative:
+                frac = self.dom.createElement('mfrac')
+                frac.setAttribute('bevelled', 'true')
+                frac.appendChild(self._print(1))
+                mrow = self.dom.createElement('mrow')
+                if e.exp.p == -1 and e.exp.q == 1:
+                    mrow.appendChild(self._print(e.base))
+                    frac.appendChild(mrow)
+                    return frac
+                if type(e.base) == symbol.Symbol:
+                    x = self.dom.createElement('mfenced')
+                    x.appendChild(self._print(e.base))
+                    mrow.appendChild(x)
+                else:
+                    mrow.appendChild(self._print(e.base))
+                x = self.dom.createElement('msup')
+                x.appendChild(mrow)
+                x.appendChild(self._print(-e.exp))
+                frac.appendChild(x)
+                return frac
 
         if e.exp.is_negative or len(str(e.base)) > 1:
             mrow = self.dom.createElement('mrow')
