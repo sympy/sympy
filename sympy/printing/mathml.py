@@ -518,6 +518,19 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'StrictGreaterThan': '>',
             'StrictLessThan': '<',
             'lerchphi': '&#x3A6;',
+            'zeta': '&#x3B6;',
+            'dirichlet_eta': '&#x3B7;',
+            'elliptic_k': '&#x39A;',
+            'lowergamma': '&#x3B3;',
+            'uppergamma': '&#x393;',
+            'gamma': '&#x393;',
+            'totient': '&#x3D5;',
+            'reduced_totient': '&#x3BB;',
+            'primenu': '&#x3BD;',
+            'primeomega': '&#x3A9;',
+            'fresnels': 'S',
+            'fresnelc': 'C',
+            'Heaviside': '&#x398;',
         }
 
         def mul_symbol_selection():
@@ -677,10 +690,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_GoldenRatio(self, e):
-        """We use unicode #x3c6 for Greek letter phi as defined here
-        http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('mi')
-        x.appendChild(self.dom.createTextNode(u"\N{GREEK SMALL LETTER PHI}"))
+        x.appendChild(self.dom.createTextNode('&#x3A6;'))
         return x
 
     def _print_Exp1(self, e):
@@ -903,7 +914,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         brac.appendChild(self._print(i.min))
         brac.appendChild(self._print(i.max))
         return brac
-                
+
     def _print_Derivative(self, e):
 
         if requires_partial(e):
