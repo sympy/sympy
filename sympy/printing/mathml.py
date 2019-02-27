@@ -8,9 +8,9 @@ from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
 from sympy.core.compatibility import range, string_types, default_sort_key
 from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.precedence import precedence_traditional, PRECEDENCE
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer
-
 
 class MathMLPrinterBase(Printer):
     """Contains common code required for MathMLContentPrinter and
@@ -195,7 +195,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('times'))
-        if(coeff != 1):
+        if coeff != 1:
             x.appendChild(self._print(coeff))
         for term in terms:
             x.appendChild(self._print(term))
@@ -214,18 +214,18 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 x.appendChild(self._print(-arg))
                 # invert expression since this is now minused
                 lastProcessed = x
-                if(arg == args[-1]):
+                if arg == args[-1]:
                     plusNodes.append(lastProcessed)
             else:
                 plusNodes.append(lastProcessed)
                 lastProcessed = self._print(arg)
-                if(arg == args[-1]):
+                if arg == args[-1]:
                     plusNodes.append(self._print(arg))
         if len(plusNodes) == 1:
             return lastProcessed
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('plus'))
-        while len(plusNodes) > 0:
+        while plusNodes:
             x.appendChild(plusNodes.pop(0))
         return x
 
@@ -366,8 +366,8 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
         mname = self.dom.createElement('mml:mi')
         mname.appendChild(self.dom.createTextNode(name))
-        if len(supers) == 0:
-            if len(subs) == 0:
+        if not supers:
+            if not subs:
                 ci.appendChild(self.dom.createTextNode(name))
             else:
                 msub = self.dom.createElement('mml:msub')
@@ -375,7 +375,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
                 msub.appendChild(join(subs))
                 ci.appendChild(msub)
         else:
-            if len(subs) == 0:
+            if not subs:
                 msup = self.dom.createElement('mml:msup')
                 msup.appendChild(mname)
                 msup.appendChild(join(supers))
@@ -539,6 +539,15 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         n = e.__class__.__name__
         return n.lower()
 
+    def parenthesize(self, item, level, strict=False):
+        prec_val = precedence_traditional(item)
+        if (prec_val < level) or ((not strict) and prec_val <= level):
+            brac = self.dom.createElement('mfenced')
+            brac.appendChild(self._print(item))
+            return brac
+        else:
+            return self._print(item)
+
     def _print_Mul(self, expr):
 
         def multiply(expr, mrow):
@@ -558,7 +567,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             if self.order != 'old':
                 terms = Mul._from_args(terms).as_ordered_factors()
 
-            if(coeff != 1):
+            if coeff != 1:
                 x = self._print(coeff)
                 y = self.dom.createElement('mo')
                 y.appendChild(self.dom.createTextNode(self.mathml_tag(expr)))
@@ -822,6 +831,35 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     _print_RandomSymbol = _print_Symbol
 
+    def _print_conjugate(self, expr):
+        enc = self.dom.createElement('menclose')
+        enc.setAttribute('notation', 'top')
+        enc.appendChild(self._print(expr.args[0]))
+        return enc
+
+    def _print_operator_after(self, op, expr):
+        row = self.dom.createElement('mrow')
+        row.appendChild(self.parenthesize(expr, PRECEDENCE["Func"]))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode(op))
+        row.appendChild(mo)
+        return row
+
+    def _print_factorial(self, expr):
+        return self._print_operator_after('!', expr.args[0])
+
+    def _print_factorial2(self, expr):
+        return self._print_operator_after('!!', expr.args[0])
+
+    def _print_binomial(self, expr, exp=None):
+        brac = self.dom.createElement('mfenced')
+        frac = self.dom.createElement('mfrac')
+        frac.setAttribute('linethickness', '0')
+        frac.appendChild(self._print(expr.args[0]))
+        frac.appendChild(self._print(expr.args[1]))
+        brac.appendChild(frac)
+        return brac
+
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
         if e.exp.is_negative or len(str(e.base)) > 1:
@@ -944,7 +982,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_AssocOp(self, e):
         mrow = self.dom.createElement('mrow')
         mi = self.dom.createElement('mi')
-        mi.append(self.dom.createTextNode(self.mathml_tag(e)))
+        mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
         mrow.appendChild(mi)
         for arg in e.args:
             mrow.appendChild(self._print(arg))
@@ -1052,6 +1090,50 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         dom_element = self.dom.createElement(self.mathml_tag(p))
         dom_element.appendChild(self.dom.createTextNode(str(p)))
         return dom_element
+
+
+    def _print_Integers(self, e):
+        x = self.dom.createElement('mi')
+        x.setAttribute('mathvariant', 'normal')
+        x.appendChild(self.dom.createTextNode('&#x2124;'))
+        return x
+
+
+    def _print_Complexes(self, e):
+        x = self.dom.createElement('mi')
+        x.setAttribute('mathvariant', 'normal')
+        x.appendChild(self.dom.createTextNode('&#x2102;'))
+        return x
+
+
+    def _print_Reals(self, e):
+        x = self.dom.createElement('mi')
+        x.setAttribute('mathvariant', 'normal')
+        x.appendChild(self.dom.createTextNode('&#x211D;'))
+        return x
+
+
+    def _print_Naturals(self, e):
+        x = self.dom.createElement('mi')
+        x.setAttribute('mathvariant', 'normal')
+        x.appendChild(self.dom.createTextNode('&#x2115;'))
+        return x
+
+
+    def _print_Naturals0(self, e):
+        sub = self.dom.createElement('msub')
+        x = self.dom.createElement('mi')
+        x.setAttribute('mathvariant', 'normal')
+        x.appendChild(self.dom.createTextNode('&#x2115;'))
+        sub.appendChild(x)
+        sub.appendChild(self._print(S.Zero))
+        return sub
+
+
+    def _print_EmptySet(self, e):
+        x = self.dom.createElement('mo')
+        x.appendChild(self.dom.createTextNode('&#x2205;'))
+        return x
 
 
 def mathml(expr, printer='content', **settings):

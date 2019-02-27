@@ -160,7 +160,7 @@ class hyper(TupleParametersBase):
 
     >>> from sympy.abc import a
     >>> hyperexpand(hyper([-a], [], x))
-    (-x + 1)**a
+    (1 - x)**a
 
     See Also
     ========

@@ -1,10 +1,14 @@
 language: python
 sudo: false
+stages:
+- quality
+- baseline
+- test
 env:
   matrix:
-  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
   - SPLIT="1/2" TEST_SYMPY="true"
   - SPLIT="2/2" TEST_SYMPY="true"
+  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
   global:
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
 dist: trusty
@@ -17,7 +21,15 @@ python:
 
 matrix:
   include:
-    - python: 3.7
+    - stage: quality
+      python: 3.7
+      dist: xenial
+      sudo: true
+      script: bin/test quality
+      env:
+
+    - stage: baseline
+      python: 3.7
       dist: xenial
       sudo: true
       env:
@@ -33,7 +45,8 @@ matrix:
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
 
-    - python: 2.7
+    - stage: test
+      python: 2.7
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
@@ -88,11 +101,23 @@ matrix:
     - python: 2.7
       env:
         - TEST_SLOW="true"
+        - SPLIT="1/2"
+    - python: 2.7
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="2/2"
     - python: 3.7
       dist: xenial
       sudo: true
       env:
         - TEST_SLOW="true"
+        - SPLIT="1/2"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="2/2"
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
@@ -128,6 +153,8 @@ matrix:
             - pypy
           packages:
             - pypy
+
+  fast_finish: true
 
   allow_failures:
     # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)

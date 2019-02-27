@@ -395,7 +395,7 @@ def _sqrt_symbolic_denest(a, b, r):
 
     >>> a, b, r = 16 - 2*sqrt(29), 2, -10*sqrt(29) + 55
     >>> _sqrt_symbolic_denest(a, b, r)
-    sqrt(-2*sqrt(29) + 11) + sqrt(5)
+    sqrt(11 - 2*sqrt(29)) + sqrt(5)
 
     If the expression is numeric, it will be simplified:
 

@@ -285,7 +285,7 @@ def checksol(f, symbol, sol=None, **flags):
             if val.atoms() & illegal:
                 return False
         elif attempt == 1:
-            if val.free_symbols:
+            if not val.is_number:
                 if not val.is_constant(*list(sol.keys()), simplify=not minimal):
                     return False
                 # there are free symbols -- simple expansion might work
@@ -304,7 +304,7 @@ def checksol(f, symbol, sol=None, **flags):
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
                 exval = _mexpand(val, recursive=True)
-                if exval.is_number or not exval.free_symbols:
+                if exval.is_number:
                     # we can decide now
                     val = exval
         else:
@@ -351,7 +351,7 @@ def checksol(f, symbol, sol=None, **flags):
             continue
         elif val.is_Rational:
             return val == 0
-        if numerical and not val.free_symbols:
+        if numerical and val.is_number:
             if val in (S.true, S.false):
                 return bool(val)
             return bool(abs(val.n(18).n(12, chop=True)) < 1e-9)
@@ -716,7 +716,7 @@ def solve(f, *symbols, **flags):
                 >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y, z)
                 {x: -3, y: 1}
                 >>> solve((x + 5*y - 2, -3*x + 6*y - z), z, x, y)
-                {x: -5*y + 2, z: 21*y - 6}
+                {x: 2 - 5*y, z: 21*y - 6}
 
             * without a solution
 
@@ -1085,8 +1085,7 @@ def solve(f, *symbols, **flags):
         if fi.has(*symset):
             ok = True
         else:
-            free = fi.free_symbols
-            if not free:
+            if fi.is_number:
                 if fi.is_Number:
                     if fi.is_zero:
                         continue
@@ -2021,7 +2020,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
 
     >>> eq = 1/(1/x - 2)
     >>> eq.as_numer_denom()
-    (x, -2*x + 1)
+    (x, 1 - 2*x)
     >>> solve_linear(eq)
     (0, 0)
 
@@ -2047,7 +2046,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     >>> solve_linear(cancel(eq))
     (x, 0)
     >>> solve_linear(eq)
-    (x**2*(-z**2 + 1), x)
+    (x**2*(1 - z**2), x)
 
     A list of symbols for which a solution is desired may be given:
 

@@ -850,7 +850,7 @@ def _solve_inequality(ie, s, linear=False):
         a, e = ef.as_independent(s, as_Add=False)
         if (a.is_zero != False or  # don't divide by potential 0
                 a.is_negative ==
-                a.is_positive == None and  # if sign is not known then
+                a.is_positive is None and  # if sign is not known then
                 ie.rel_op not in ('!=', '==')): # reject if not Eq/Ne
             e = ef
             a = S.One
@@ -943,7 +943,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     (-3 <= x) & (x < oo)
 
     >>> reduce_inequalities(0 <= x + y*2 - 1, [x])
-    (x < oo) & (x >= -2*y + 1)
+    (x < oo) & (x >= 1 - 2*y)
     """
     if not iterable(inequalities):
         inequalities = [inequalities]

@@ -308,6 +308,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
     "Liouville",
+    "order_reducible",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
     "nth_algebraic_Integral",
@@ -323,7 +324,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
-    )
+       )
 
 lie_heuristics = (
     "abaco1_simple",
@@ -1350,6 +1351,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
 
     if order > 0:
+        # Any ODE that can be solved with a substitution and
+        # repeated integration e.g.:
+        # `d^2/dx^2(y) + x*d/dx(y) = constant
+        #f'(x) must be finite for this to work
+        r = _order_reducible_match(reduced_eq, func)
+        if r:
+            matching_hints['order_reducible'] = r
+
         # Any ODE that can be solved with a combination of algebra and
         # integrals e.g.:
         # d^3/dx^3(x y) = F(x)
@@ -2659,7 +2668,7 @@ def _get_constant_subexpressions(expr, Cs):
     Ces = []
     def _recursive_walk(expr):
         expr_syms = expr.free_symbols
-        if len(expr_syms) > 0 and expr_syms.issubset(Cs):
+        if expr_syms and expr_syms.issubset(Cs):
             Ces.append(expr)
         else:
             if expr.func == exp:
@@ -3696,10 +3705,10 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) + f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_ordinary'))
-              / 4    2    \        /   2    \
-              |x    x     |        |  x     |    / 6\
-    f(x) = C2*|-- - -- + 1| + C1*x*|- -- + 1| + O\x /
-              \24   2     /        \  6     /
+              / 4    2    \        /     2\
+              |x    x     |        |    x |    / 6\
+    f(x) = C2*|-- - -- + 1| + C1*x*|1 - --| + O\x /
+              \24   2     /        \    6 /
 
 
     References
@@ -3996,6 +4005,51 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
             frobdict[numsyms[i]] = -num/(indicial.subs(d, m+i))
 
     return frobdict
+
+def _order_reducible_match(eq, func):
+    r"""
+    Matches any differential equation that can be rewritten with a smaller
+    order. Only derivatives of ``func`` alone, wrt a single variable,
+    are considered, and only in them should ``func`` appear.
+    """
+    # ODE only handles functions of 1 variable so this affirms that state
+    assert len(func.args) == 1
+    x = func.args[0]
+    vc= [d.variable_count[0] for d in eq.atoms(Derivative)
+         if d.expr == func and len(d.variable_count) == 1]
+    ords = [c for v, c in vc if v == x]
+    if len(ords) < 2:
+        return
+    smallest = min(ords)
+    # make sure func does not appear outside of derivatives
+    D = Dummy()
+    if eq.subs(func.diff(x, smallest), D).has(func):
+        return
+    return {'n': smallest}
+
+def ode_order_reducible(eq, func, order, match):
+    r"""
+    Substitutes lowest order derivate in equation to function with order
+    of derivative as `f^(n)(x) = g(x)`, where `n` (`match['n']`)
+    is the least-order derivative. The solution for `f(x)` is the n-times
+    integrated value of `g(x)`.
+    """
+    x = func.args[0]
+    f = func.func
+    n = match['n']
+    # get a unique function name for g
+    names = [a.name for a in eq.atoms(AppliedUndef)]
+    while True:
+        name = Dummy().name
+        if name not in names:
+            g = Function(name)
+            break
+    w = f(x).diff(x, n)
+    geq = eq.subs(w, g(x))
+    gsol = dsolve(geq, g(x))
+    fsol = dsolve(gsol.subs(g(x), w), f(x))  # or do integration n times
+
+    return fsol
 
 def _nth_algebraic_match(eq, func):
     r"""
@@ -4758,13 +4812,13 @@ def ode_separable_reduced(eq, func, order, match):
     >>> d = f(x).diff(x)
     >>> eq = (x - x**2*f(x))*d - f(x)
     >>> dsolve(eq, hint='separable_reduced')
-    [Eq(f(x), (-sqrt(C1*x**2 + 1) + 1)/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
+    [Eq(f(x), (1 - sqrt(C1*x**2 + 1))/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
     >>> pprint(dsolve(eq, hint='separable_reduced'))
-                 ___________                ___________
-                /     2                    /     2
-            - \/  C1*x  + 1  + 1         \/  C1*x  + 1  + 1
-    [f(x) = --------------------, f(x) = ------------------]
-                     x                           x
+                   ___________            ___________
+                  /     2                /     2
+            1 - \/  C1*x  + 1          \/  C1*x  + 1  + 1
+    [f(x) = ------------------, f(x) = ------------------]
+                    x                          x
 
     References
     ==========

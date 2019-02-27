@@ -153,7 +153,7 @@ def test_characteristic_function():
     assert simplify(cf(1)) == S(25)/26 + 5*I/26
 
 
-def test_sample():
+def test_sample_continuous():
     z = Symbol('z')
     Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
     assert sample(Z) in Z.pspace.domain.set
@@ -753,6 +753,7 @@ def test_issue_10003():
     assert P(G < -1) == S.Zero
 
 
+@slow
 def test_precomputed_cdf():
     x = symbols("x", real=True, finite=True)
     mu = symbols("mu", real=True, finite=True)
@@ -771,6 +772,7 @@ def test_precomputed_cdf():
         assert compdiff == 0
 
 
+@slow
 def test_precomputed_characteristic_functions():
     import mpmath
 
