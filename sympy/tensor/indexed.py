@@ -182,6 +182,9 @@ class Indexed(Expr):
         Indexed._set_assumptions(obj, assumptions)
         return obj
 
+    def _hashable_content(self):
+        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
+
     @property
     def name(self):
         return str(self)
@@ -400,6 +403,8 @@ class IndexedBase(Expr, NotIterable):
     >>> B[i, j].shape
     (o, p)
 
+
+
     """
     is_commutative = True
     is_symbol = True
@@ -443,6 +448,9 @@ class IndexedBase(Expr, NotIterable):
     @property
     def name(self):
         return self._name
+
+    def _hashable_content(self):
+        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def assumptions0(self):
