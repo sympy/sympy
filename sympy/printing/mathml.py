@@ -4,7 +4,7 @@ A MathML printer.
 
 from __future__ import print_function, division
 
-from sympy import sympify, S, Mul
+from sympy import sympify, S, Mul, symbol
 from sympy.core.function import _coeff_isneg
 from sympy.core.compatibility import range, string_types
 from sympy.printing.conventions import split_super_sub, requires_partial
@@ -871,16 +871,15 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 frac.setAttribute('bevelled', 'true')
                 frac.appendChild(self._print(1))
                 mrow = self.dom.createElement('mrow')
-                if e.exp.p == -1 and e.exp.q == 1:
-                    mrow.appendChild(self._print(e.base))
-                    frac.appendChild(mrow)
-                    return frac
-                if type(e.base) == symbol.Symbol:
+                if e.base.is_symbol:
                     x = self.dom.createElement('mfenced')
                     x.appendChild(self._print(e.base))
                     mrow.appendChild(x)
                 else:
                     mrow.appendChild(self._print(e.base))
+                if e.exp.p == -1 and e.exp.q == 1:
+                    frac.appendChild(mrow)
+                    return frac
                 x = self.dom.createElement('msup')
                 x.appendChild(mrow)
                 x.appendChild(self._print(-e.exp))
