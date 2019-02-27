@@ -994,6 +994,27 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
 
+    def _print_tuple(self,e):
+        x = self.dom.createElement('mfenced')
+        for i in e:
+            x.appendChild(self._print(i))
+        return x
+
+
+    def _print_IndexedBase(self,e):
+        return self._print(e.label)
+        
+
+    def _print_Indexed(self,e):
+        x = self.dom.createElement('msub')
+        x.appendChild(self._print(e.base))
+        if len(e.indices) == 1:
+            x.appendChild(self._print(e.indices[0]))
+            return x
+        x.appendChild(self._print(e.indices))
+        return x 
+
+
 def mathml(expr, printer='content', **settings):
     """Returns the MathML representation of expr. If printer is presentation then
      prints Presentation MathML else prints content MathML.
@@ -1042,3 +1063,9 @@ def print_mathml(expr, printer='content', **settings):
 
 #For backward compatibility
 MathMLPrinter = MathMLContentPrinter
+
+from sympy import symbols,IndexedBase
+
+a,b,c,d = symbols('a b c d')
+
+print (mathml(IndexedBase(IndexedBase(a)[b])[c,d],printer='presentation'))
