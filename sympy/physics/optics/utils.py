@@ -176,24 +176,23 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
 
 
 def fresnel_coefficients(angle_of_incidence, medium1, medium2):
-    # TODO documentation + examples/doctests + tests 
     """
-    This function uses Fresnel equations to calculate reflection and 
+    This function uses Fresnel equations to calculate reflection and
     transmission coefficients. Those are obtained for both polarisations
     when the electric field vector is in the plane of incidence (labelled 'p')
-    and when the electric field vector is perpendicular to the plane of 
+    and when the electric field vector is perpendicular to the plane of
     incidence (labelled 's'). There four real coefficients unless the incident
     ray reflects in total internal in which case there are two complex ones.
-    Angle of incidence is the angle between the incident ray and the surface 
-    normal. `medium1` and `medium2` can be `Medium` or any sympifiable object.
+    Angle of incidence is the angle between the incident ray and the surface
+    normal. ``medium1`` and ``medium2`` can be ``Medium`` or any sympifiable object.
 
     Parameters
     ==========
 
-    angle_of_inciddence : sympifiable
-    medium1 : sympy.physics.optics.medium.Medium or sympifiable
+    angle_of_incidence : sympifiable
+    medium1 : Medium or sympifiable
         Medium 1 or its refractive index
-    medium2 : sympy.physics.optics.medium.Medium or sympifiable
+    medium2 : Medium or sympifiable
         Medium 2 or its refractive index
 
     Examples
@@ -201,7 +200,7 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
 
     >>> from sympy.physics.optics import fresnel_coefficients
     >>> fresnel_coefficients(0.3, 1, 2)
-    [0.317843553417859, -0.348645229818821, 
+    [0.317843553417859, -0.348645229818821,
             0.658921776708929, 0.651354770181179]
     >>> fresnel_coefficients(0.6, 2, 1)
     [-0.235625382192159 - 0.971843958291041*I,
@@ -387,7 +386,7 @@ def critical_angle(medium1, medium2):
         n2 = sympify(medium2)
 
     if n2 > n1:
-        raise ValueError('Total internal reflection impossible for n1 > n2')
+        raise ValueError('Total internal reflection impossible for n1 < n2')
     else:
         return asin(n2/n1)
 

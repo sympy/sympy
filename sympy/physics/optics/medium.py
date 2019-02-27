@@ -180,7 +180,7 @@ class Medium(Symbol):
 
     def __str__(self):
         from sympy.printing import sstr
-        return type(self).__name__ + ': ' + sstr([self._permittivity, 
+        return type(self).__name__ + ': ' + sstr([self._permittivity,
                 self._permeability, self._n])
 
     def __lt__(self, other):

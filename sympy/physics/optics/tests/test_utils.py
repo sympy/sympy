@@ -1,6 +1,6 @@
 from sympy.physics.optics.utils import (refraction_angle, fresnel_coefficients,
-        deviation, brewster_angle, critical_angle, lens_makers_formula, 
-        mirror_formula, lens_formula, hyperfocal_distance, 
+        deviation, brewster_angle, critical_angle, lens_makers_formula,
+        mirror_formula, lens_formula, hyperfocal_distance,
         transverse_magnification)
 from sympy.physics.optics.medium import Medium
 from sympy.physics.units import e0
@@ -64,16 +64,17 @@ def test_refraction_angle():
 
 
 def test_fresnel_coefficients():
-    assert fresnel_coefficients(0.5, 1, 1.33) == \
-        [0.111628141072695, -0.171375696718781, 0.8358100632385485, 0.828624303281219]
-    assert fresnel_coefficients(0.5, 1.33, 1) == \
-            [-0.0772642294415684, 0.204821852417292, 1.22723857484271, 1.20482185241729]
+    assert list(round(i, 5) for i in fresnel_coefficients(0.5, 1, 1.33)) == \
+        [0.11163, -0.17138, 0.83581, 0.82862]
+    assert list(round(i, 5) for i in fresnel_coefficients(0.5, 1.33, 1)) == \
+            [-0.07726, 0.20482, 1.22724, 1.20482]
     m1 = Medium('m1')
     m2 = Medium('m2', n=2)
-    assert fresnel_coefficients(0.3, m1, m2) == \
-        [0.317843553417859, -0.348645229818821, 0.658921776708929, 0.651354770181179]
-    assert fresnel_coefficients(0.6, m2, m1) == \
-        [-0.235625382192159 - 0.971843958291041*I, 0.816477005968898 - 0.577377951366403*I]
+    assert list(round(i, 5) for i in fresnel_coefficients(0.3, m1, m2)) == \
+        [0.31784, -0.34865, 0.65892, 0.65135]
+    assert list(list(round(j, 5) for j in i.as_real_imag()) for i in \
+            fresnel_coefficients(0.6, m2, m1)) == \
+        [[-0.23563, -0.97184], [0.81648, -0.57738]]
 
 
 def test_deviation():
@@ -96,12 +97,15 @@ def test_brewster_angle():
     m1 = Medium('m1', n=1)
     m2 = Medium('m2', n=1.33)
     assert round(brewster_angle(m1, m2), 2) == 0.93
+    m1 = Medium('m1', permittivity=e0, n=1)
+    m2 = Medium('m2', permittivity=e0, n=1.33)
+    assert round(brewster_angle(m1, m2), 2) == 0.93
 
 
 def test_critical_angle():
     m1 = Medium('m1', n=1)
     m2 = Medium('m2', n=1.33)
-    assert round(critical_angle(m1, m2), 2) == 0.85
+    assert round(critical_angle(m2, m1), 2) == 0.85
 
 
 def test_lens_makers_formula():
