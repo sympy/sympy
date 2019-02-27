@@ -309,7 +309,7 @@ class Wrt(with_metaclass(OptionType, Option)):
     def preprocess(cls, wrt):
         if isinstance(wrt, Basic):
             return [str(wrt)]
-        elif isinstance(wrt, str):
+        elif isinstance(wrt, string_types):
             wrt = wrt.strip()
             if wrt.endswith(','):
                 raise OptionError('Bad input: missing parameter.')
@@ -336,7 +336,7 @@ class Sort(with_metaclass(OptionType, Option)):
 
     @classmethod
     def preprocess(cls, sort):
-        if isinstance(sort, str):
+        if isinstance(sort, string_types):
             return [ gen.strip() for gen in sort.split('>') ]
         elif hasattr(sort, '__getitem__'):
             return list(map(str, sort))
@@ -716,7 +716,7 @@ class Method(with_metaclass(OptionType, Flag)):
 
     @classmethod
     def preprocess(cls, method):
-        if isinstance(method, str):
+        if isinstance(method, string_types):
             return method.lower()
         else:
             raise OptionError("expected a string, got %s" % method)

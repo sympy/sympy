@@ -49,7 +49,7 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
-from sympy.core.compatibility import as_int, range
+from sympy.core.compatibility import as_int, range, string_types
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from mpmath.libmp.libintmath import giant_steps
 import math
@@ -834,7 +834,7 @@ def rs_fun(p, f, *args):
     else:
         x1 = _x
         p1 = p
-    if isinstance(f, str):
+    if isinstance(f, string_types):
         q = getattr(x1, f)(*args1)
     else:
         q = f(x1, *args1)

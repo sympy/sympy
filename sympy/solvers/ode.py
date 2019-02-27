@@ -237,7 +237,7 @@ from itertools import islice
 from functools import cmp_to_key
 
 from sympy.core import Add, S, Mul, Pow, oo
-from sympy.core.compatibility import ordered, iterable, is_sequence, range
+from sympy.core.compatibility import ordered, iterable, is_sequence, range, string_types
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import AtomicExpr, Expr
@@ -4363,7 +4363,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     chareq, symbol = S.Zero, Dummy('x')
 
     for i in r.keys():
-        if not isinstance(i, str) and i >= 0:
+        if not isinstance(i, string_types) and i >= 0:
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
@@ -4479,7 +4479,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients(eq, func, o
     chareq, eq, symbol = S.Zero, S.Zero, Dummy('x')
 
     for i in r.keys():
-        if not isinstance(i, str) and i >= 0:
+        if not isinstance(i, string_types) and i >= 0:
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     for i in range(1,degree(Poly(chareq, symbol))+1):

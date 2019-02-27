@@ -12,7 +12,7 @@ from sympy.core import Basic
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, default_sort_key, is_sequence, iterable, ordered, range
+    as_int, default_sort_key, is_sequence, iterable, ordered, range, string_types
 )
 
 from sympy.utilities.enumerative import (
@@ -1325,7 +1325,7 @@ def multiset_partitions(multiset, m=None):
                 yield rv
         return
 
-    if len(multiset) == 1 and type(multiset) is str:
+    if len(multiset) == 1 and isinstance(multiset, string_types):
         multiset = [multiset]
 
     if not has_variety(multiset):
@@ -2096,7 +2096,7 @@ def minlex(seq, directed=True, is_set=False, small=None):
     '00011001011'
 
     """
-    is_str = isinstance(seq, str)
+    is_str = isinstance(seq, string_types)
     seq = list(seq)
     if small is None:
         small = min(seq, key=default_sort_key)

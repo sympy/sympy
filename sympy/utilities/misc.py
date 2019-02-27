@@ -7,7 +7,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from sympy.core.compatibility import get_function_name, range, as_int
+from sympy.core.compatibility import get_function_name, range, as_int, string_types
 
 
 
@@ -415,7 +415,7 @@ def translate(s, a, b=None, c=None):
         s = replace(s, mr)
         table = maketrans(a, b)
         # s may have become unicode which uses the py3 syntax for translate
-        if type(table) is str and type(s) is str:
+        if isinstance(table, string_types) and isinstance(s, string_types):
             s = s.translate(table)
         else:
             s = s.translate(dict(
