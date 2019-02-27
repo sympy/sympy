@@ -197,12 +197,6 @@ class VectorPrettyPrinter(PrettyPrinter):
                 4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
-        pic = d['picture'][0]
-        uni = d['unicode']
-        lp = len(pic) // 2 + 1
-        lu = len(uni) // 2 + 1
-        pic_split = [pic[:lp], pic[lp:]]
-        uni_split = [uni[:lu], uni[lu:]]
         #if unicode is false then calculate number of apostrophes needed and add to output
         if not self._use_unicode:
             apostrophes = ""
