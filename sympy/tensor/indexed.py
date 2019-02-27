@@ -166,7 +166,7 @@ class Indexed(Expr):
         if not args:
             raise IndexException("Indexed needs at least one index.")
         if isinstance(base, (string_types, Symbol)):
-            base = IndexedBase(base)
+            base = IndexedBase(base, **kw_args)
         elif not hasattr(base, '__getitem__') and not isinstance(base, IndexedBase):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol, or IndexedBase as base."""))
