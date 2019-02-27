@@ -4,7 +4,7 @@ A MathML printer.
 
 from __future__ import print_function, division
 
-from sympy import sympify, S, Mul, symbol
+from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
 from sympy.core.compatibility import range, string_types
 from sympy.printing.conventions import split_super_sub, requires_partial
