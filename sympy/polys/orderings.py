@@ -5,7 +5,7 @@ from __future__ import print_function, division
 __all__ = ["lex", "grlex", "grevlex", "ilex", "igrlex", "igrevlex"]
 
 from sympy.core import Symbol
-from sympy.core.compatibility import iterable, string_types
+from sympy.core.compatibility import iterable
 
 class MonomialOrder(object):
     """Base class for monomial orderings. """
@@ -225,7 +225,7 @@ def monomial_key(order=None, gens=None):
     if isinstance(order, Symbol):
         order = str(order)
 
-    if isinstance(order, string_types):
+    if isinstance(order, str):
         try:
             order = _monomial_key[order]
         except KeyError:
