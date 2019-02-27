@@ -1,12 +1,11 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core import Basic, Integer, Tuple, Dict, S, sympify
+from sympy.core import Basic, Dict, Integer, S, Tuple, sympify
 from sympy.core.sympify import converter as sympify_converter
-
-from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.dense import DenseMatrix
-from sympy.matrices.sparse import SparseMatrix, MutableSparseMatrix
 from sympy.matrices.expressions import MatrixExpr
+from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
 
 
 def sympify_matrix(arg):
