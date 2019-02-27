@@ -12,6 +12,9 @@ from sympy.printing.precedence import precedence_traditional, PRECEDENCE
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer
 
+import mpmath.libmp as mlib
+from mpmath.libmp import prec_to_dps
+
 class MathMLPrinterBase(Printer):
     """Contains common code required for MathMLContentPrinter and
     MathMLPresentationPrinter.
@@ -31,6 +34,7 @@ class MathMLPrinterBase(Printer):
         "mul_symbol": None,
         "root_notation": True,
         "symbol_names": {},
+        "mul_symbol_mathml_numbers": '&#xB7;',
     }
 
     def __init__(self, settings=None):
@@ -698,7 +702,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow = self.dom.createElement('mrow')
         y = self.dom.createElement('mo')
         y.appendChild(self.dom.createTextNode('-'))
-        x = self._print_Infinity(-e)
+        x = self._print_Infinity(e)
         mrow.appendChild(y)
         mrow.appendChild(x)
         return mrow
@@ -851,7 +855,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_factorial2(self, expr):
         return self._print_operator_after('!!', expr.args[0])
 
-    def _print_binomial(self, expr, exp=None):
+    def _print_binomial(self, expr):
         brac = self.dom.createElement('mfenced')
         frac = self.dom.createElement('mfrac')
         frac.setAttribute('linethickness', '0')
@@ -962,7 +966,46 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(y)
         return mrow
 
-    def _print_polylog(self, expr, exp=None):
+    def _print_Float(self, expr):
+        # Based off of that in StrPrinter
+        dps = prec_to_dps(expr._prec)
+        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
+
+        # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
+        # thus we use the number separator
+        separator = self._settings['mul_symbol_mathml_numbers']
+        mrow = self.dom.createElement('mrow')
+        if 'e' in str_real:
+            (mant, exp) = str_real.split('e')
+
+            if exp[0] == '+':
+                exp = exp[1:]
+
+            mn = self.dom.createElement('mn')
+            mn.appendChild(self.dom.createTextNode(mant))
+            mrow.appendChild(mn)
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode(separator))
+            mrow.appendChild(mo)
+            msup = self.dom.createElement('msup')
+            mn = self.dom.createElement('mn')
+            mn.appendChild(self.dom.createTextNode("10"))
+            msup.appendChild(mn)
+            mn = self.dom.createElement('mn')
+            mn.appendChild(self.dom.createTextNode(exp))
+            msup.appendChild(mn)
+            mrow.appendChild(msup)
+            return mrow
+        elif str_real == "+inf":
+            return self._print_Infinity(None)
+        elif str_real == "-inf":
+            return self._print_Negative_Infinity(None)
+        else:
+            mn = self.dom.createElement('mn')
+            mn.appendChild(self.dom.createTextNode(str_real))
+            return mn
+
+    def _print_polylog(self, expr):
         mrow = self.dom.createElement('mrow')
         m = self.dom.createElement('msub')
 
