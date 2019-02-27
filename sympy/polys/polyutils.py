@@ -196,7 +196,12 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
             coeff, monom = [], [0]*k
 
             for factor in Mul.make_args(term):
-                if not _not_a_coeff(factor) and factor.is_Number:
+                not_a_coeff = _not_a_coeff(factor)
+                if not_a_coeff:
+                    raise PolynomialError(
+                        "{} is not a valid coefficient.".format(factor))
+
+                if not not_a_coeff and factor.is_Number:
                     coeff.append(factor)
                 else:
                     try:
@@ -255,7 +260,12 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             coeff, elements = [], {}
 
             for factor in Mul.make_args(term):
-                if not _not_a_coeff(factor) and (factor.is_Number or _is_coeff(factor)):
+                not_a_coeff = _not_a_coeff(factor)
+                if not_a_coeff:
+                    raise PolynomialError(
+                        "{} is not a valid coefficient.".format(factor))
+
+                if not not_a_coeff and (factor.is_Number or _is_coeff(factor)):
                     coeff.append(factor)
                 else:
                     if opt.series is False:

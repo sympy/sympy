@@ -145,6 +145,8 @@ def test_Poly_from_list():
 
     raises(MultivariatePolynomialError, lambda: Poly.from_list([[]], gens=(x, y)))
 
+    raises(PolynomialError, lambda: Poly.from_list([S.NaN, S.NaN], gens=(x)))
+
 
 def test_Poly_from_poly():
     f = Poly(x + 7, x, domain=ZZ)
