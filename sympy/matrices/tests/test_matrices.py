@@ -1612,7 +1612,7 @@ def test_creation_args():
     raises(TypeError, lambda: zeros(1, 2, 3, 4))
     assert zeros(long(3)) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
-    assert zeros(3.) == zeros(3)
+    raises(ValueError, lambda: zeros(3.))
     assert eye(long(3)) == eye(3)
     assert eye(Integer(3)) == eye(3)
     assert eye(3.) == eye(3)
