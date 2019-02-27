@@ -212,6 +212,10 @@ class Indexed(Expr):
             return S.Zero
 
     @property
+    def assumptions0(self):
+        return {k: v for k, v in self._assumptions.items() if v is not None}
+
+    @property
     def base(self):
         """Returns the ``IndexedBase`` of the ``Indexed`` object.
 
@@ -438,6 +442,10 @@ class IndexedBase(Expr, NotIterable):
     @property
     def name(self):
         return self._name
+
+    @property
+    def assumptions0(self):
+        return {k: v for k, v in self._assumptions.items() if v is not None}
 
     def __getitem__(self, indices, **kw_args):
         # Propagate assumptions onto new Indexed object.
