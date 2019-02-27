@@ -495,10 +495,30 @@ def isprime(n):
     Notes
     =====
 
-    This routine is not meant to deal with expressions which may
-    represent a prime number. Floats -- even those that are
-    equal to an integer value -- return False because they
-    represent numbers of limited precision.
+    This routine is intended only for integer input, not numerical
+    expressions which may represent numbers. Floats are also
+    rejected as input because they represent numbers of limited
+    precision. While it is tempting to permit 7.0 to represent an
+    integer there are errors that may "pass silently" if this is
+    allowed:
+
+    >>> from sympy import Float, S
+    >>> int(1e3) == 1e3 == 10**3
+    True
+    >>> int(1e23) == 1e23
+    True
+    >>> int(1e23) == 10**23
+    False
+
+    >>> near_int = 1 + S(1)/10**19
+    >>> near_int == int(near_int)
+    False
+    >>> n = Float(near_int, 10)  # truncated by precision
+    >>> n == int(n)
+    True
+    >>> n = Float(near_int, 20)
+    >>> n = int(n)
+    False
 
     See Also
     ========
