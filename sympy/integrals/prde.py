@@ -773,7 +773,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     c = reduce(lambda i, j: i.lcm(j), (dn,) + En)  # lcm(dn, en1, ..., enm)
     hn = c.gcd(c.diff(DE.t))
     a = hn
-    b = -derivation(hn, DE)
+    b = derivation(hn, DE)
     N = 0
 
     # These are the cases where we know that S1irr = Sirr, but there could be
@@ -781,7 +781,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     if DE.case in ['base', 'primitive', 'exp', 'tan']:
         hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es)  # lcm(ds, es1, ..., esm)
         a = hn*hs
-        b = -derivation(hn, DE) - (hn*derivation(hs, DE)).quo(hs)
+        b = -b - (hn*b).quo(hs)
         mu = min(order_at_oo(fa, fd, DE.t), min([order_at_oo(ga, gd, DE.t) for
             ga, gd in G]))
         # So far, all the above are also nonlinear or Liouvillian, but if this
