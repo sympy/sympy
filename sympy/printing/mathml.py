@@ -8,9 +8,9 @@ from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
 from sympy.core.compatibility import range, string_types
 from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.precedence import precedence_traditional, PRECEDENCE
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer
-
 
 class MathMLPrinterBase(Printer):
     """Contains common code required for MathMLContentPrinter and
@@ -538,6 +538,15 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         n = e.__class__.__name__
         return n.lower()
 
+    def parenthesize(self, item, level, strict=False):
+        prec_val = precedence_traditional(item)
+        if (prec_val < level) or ((not strict) and prec_val <= level):
+            brac = self.dom.createElement('mfenced')
+            brac.appendChild(self._print(item))
+            return brac
+        else:
+            return self._print(item)
+
     def _print_Mul(self, expr):
 
         def multiply(expr, mrow):
@@ -820,6 +829,35 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return self._print_Symbol(sym, style=self._settings['mat_symbol_style'])
 
     _print_RandomSymbol = _print_Symbol
+
+    def _print_conjugate(self, expr):
+        enc = self.dom.createElement('menclose')
+        enc.setAttribute('notation', 'top')
+        enc.appendChild(self._print(expr.args[0]))
+        return enc
+
+    def _print_operator_after(self, op, expr):
+        row = self.dom.createElement('mrow')
+        row.appendChild(self.parenthesize(expr, PRECEDENCE["Func"]))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode(op))
+        row.appendChild(mo)
+        return row
+
+    def _print_factorial(self, expr):
+        return self._print_operator_after('!', expr.args[0])
+
+    def _print_factorial2(self, expr):
+        return self._print_operator_after('!!', expr.args[0])
+
+    def _print_binomial(self, expr, exp=None):
+        brac = self.dom.createElement('mfenced')
+        frac = self.dom.createElement('mfrac')
+        frac.setAttribute('linethickness', '0')
+        frac.appendChild(self._print(expr.args[0]))
+        frac.appendChild(self._print(expr.args[1]))
+        brac.appendChild(frac)
+        return brac
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer

@@ -2834,9 +2834,9 @@ class MatrixBase(MatrixDeprecated,
         else:
             return type(self)(ret)
 
-    def gauss_jordan_solve(self, b, freevar=False):
+    def gauss_jordan_solve(self, B, freevar=False):
         """
-        Solves ``Ax = b`` using Gauss Jordan elimination.
+        Solves ``Ax = B`` using Gauss Jordan elimination.
 
         There may be zero, one, or infinite solutions.  If one solution
         exists, it will be returned. If infinite solutions exist, it will
@@ -2846,7 +2846,7 @@ class MatrixBase(MatrixDeprecated,
         Parameters
         ==========
 
-        b : Matrix
+        B : Matrix
             The right hand side of the equation to be solved for.  Must have
             the same number of rows as matrix A.
 
@@ -2875,8 +2875,8 @@ class MatrixBase(MatrixDeprecated,
 
         >>> from sympy import Matrix
         >>> A = Matrix([[1, 2, 1, 1], [1, 2, 2, -1], [2, 4, 0, 6]])
-        >>> b = Matrix([7, 12, 4])
-        >>> sol, params = A.gauss_jordan_solve(b)
+        >>> B = Matrix([7, 12, 4])
+        >>> sol, params = A.gauss_jordan_solve(B)
         >>> sol
         Matrix([
         [-2*tau0 - 3*tau1 + 2],
@@ -2887,10 +2887,19 @@ class MatrixBase(MatrixDeprecated,
         Matrix([
         [tau0],
         [tau1]])
+        >>> taus_zeroes = { tau:0 for tau in params }
+        >>> sol_unique = sol.xreplace(taus_zeroes)
+        >>> sol_unique
+         Matrix([
+        [2],
+        [0],
+        [5],
+        [0]])
+
 
         >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
-        >>> b = Matrix([3, 6, 9])
-        >>> sol, params = A.gauss_jordan_solve(b)
+        >>> B = Matrix([3, 6, 9])
+        >>> sol, params = A.gauss_jordan_solve(B)
         >>> sol
         Matrix([
         [-1],
@@ -2898,6 +2907,16 @@ class MatrixBase(MatrixDeprecated,
         [ 0]])
         >>> params
         Matrix(0, 1, [])
+
+        >>> A = Matrix([[2, -7], [-1, 4]])
+        >>> B = Matrix([[-21, 3], [12, -2]])
+        >>> sol, params = A.gauss_jordan_solve(B)
+        >>> sol
+        Matrix([
+        [0, -2],
+        [3, -1]])
+        >>> params
+        Matrix(0, 2, [])
 
         See Also
         ========
@@ -2919,27 +2938,26 @@ class MatrixBase(MatrixDeprecated,
         """
         from sympy.matrices import Matrix, zeros
 
-        aug = self.hstack(self.copy(), b.copy())
-        row, col = aug[:, :-1].shape
+        aug = self.hstack(self.copy(), B.copy())
+        B_cols = B.cols
+        row, col = aug[:, :-B_cols].shape
 
         # solve by reduced row echelon form
         A, pivots = aug.rref(simplify=True)
-        A, v = A[:, :-1], A[:, -1]
+        A, v = A[:, :-B_cols], A[:, -B_cols:]
         pivots = list(filter(lambda p: p < col, pivots))
         rank = len(pivots)
 
         # Bring to block form
         permutation = Matrix(range(col)).T
-        A = A.vstack(A, permutation)
 
         for i, c in enumerate(pivots):
-            A.col_swap(i, c)
+            permutation.col_swap(i, c)
 
-        A, permutation = A[:-1, :], A[-1, :]
 
         # check for existence of solutions
         # rank of aug Matrix should be equal to rank of coefficient matrix
-        if not v[rank:, 0].is_zero:
+        if not v[rank:, :].is_zero:
             raise ValueError("Linear system has no solution")
 
         # Get index of free symbols (free parameters)
@@ -2951,17 +2969,20 @@ class MatrixBase(MatrixDeprecated,
         name = _uniquely_named_symbol('tau', aug,
             compare=lambda i: str(i).rstrip('1234567890')).name
         gen = numbered_symbols(name)
-        tau = Matrix([next(gen) for k in range(col - rank)]).reshape(col - rank, 1)
+        tau = Matrix([next(gen) for k in range((col - rank)*B_cols)]).reshape(
+            col - rank, B_cols)
 
         # Full parametric solution
-        V = A[:rank, rank:]
-        vt = v[:rank, 0]
+        V = A[:rank,:]
+        for c in reversed(pivots):
+            V.col_del(c)
+        vt = v[:rank, :]
         free_sol = tau.vstack(vt - V * tau, tau)
 
         # Undo permutation
-        sol = zeros(col, 1)
-        for k, v in enumerate(free_sol):
-            sol[permutation[k], 0] = v
+        sol = zeros(col, B_cols)
+        for k in range(col):
+            sol[permutation[k], :] = free_sol[k,:]
 
         if freevar:
             return sol, tau, free_var_index
@@ -3706,7 +3727,13 @@ class MatrixBase(MatrixDeprecated,
         n = self.cols
         if m < n:
             raise NotImplementedError("Underdetermined systems not supported.")
-        A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
+
+        try:
+            A, perm = self.LUdecomposition_Simple(
+                iszerofunc=_iszero, rankcheck=True)
+        except ValueError:
+            raise NotImplementedError("Underdetermined systems not supported.")
+
         b = rhs.permute_rows(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
         for i in range(m):

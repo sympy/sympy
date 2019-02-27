@@ -383,7 +383,7 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
             for s, d in dims.items()
         }
 
-    if broadcastables != None:
+    if broadcastables is not None:
         return broadcastables
 
     return {}

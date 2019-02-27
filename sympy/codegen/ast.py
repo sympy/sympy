@@ -188,7 +188,7 @@ class Token(Basic):
     @classmethod
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
-        if arg == None:
+        if arg == None: # Must be "== None", cannot be "is None"
             return cls.defaults.get(attr, none)
         else:
             if isinstance(arg, Dummy):  # sympy's replace uses Dummy instances
