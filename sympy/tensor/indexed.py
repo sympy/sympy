@@ -183,7 +183,7 @@ class Indexed(Expr):
         return obj
 
     def _hashable_content(self):
-        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
+        return super(Indexed, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def name(self):
@@ -450,7 +450,7 @@ class IndexedBase(Expr, NotIterable):
         return self._name
 
     def _hashable_content(self):
-        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
+        return super(IndexedBase, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def assumptions0(self):
