@@ -436,6 +436,7 @@ class IndexedBase(Expr, NotIterable):
         obj._strides = strides
         obj._name = str(label)
         assumptions, _ = Indexed._filter_assumptions(kw_args)
+        obj._init_assumptions = assumptions
         Indexed._set_assumptions(obj, assumptions)
         return obj
 
@@ -449,7 +450,7 @@ class IndexedBase(Expr, NotIterable):
 
     def __getitem__(self, indices, **kw_args):
         # Propagate assumptions onto new Indexed object.
-        kw_args.update(self._assumptions)
+        kw_args.update(self._init_assumptions)
         if is_sequence(indices):
             # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
