@@ -621,7 +621,6 @@ class meijerg(TupleParametersBase):
         from sympy.functions import exp_polar, ceiling
         from sympy import Expr
         import mpmath
-        z = self.argument
         znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):
             znum, branch = znum.as_coeff_mul(exp_polar)
