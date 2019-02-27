@@ -554,7 +554,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             numer, denom = fraction(expr)
             if denom is not S.One:
                 frac = self.dom.createElement('mfrac')
-                print(expr)
                 if self._settings["fold_short_frac"] and len(str(expr)) < 7:
                     frac.setAttribute('bevelled', 'true')
                 xnum = self._print(numer)
