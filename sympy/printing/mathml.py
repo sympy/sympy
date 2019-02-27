@@ -1063,9 +1063,3 @@ def print_mathml(expr, printer='content', **settings):
 
 #For backward compatibility
 MathMLPrinter = MathMLContentPrinter
-
-from sympy import symbols,IndexedBase
-
-a,b,c,d = symbols('a b c d')
-
-print (mathml(IndexedBase(IndexedBase(a)[b])[c,d],printer='presentation'))
