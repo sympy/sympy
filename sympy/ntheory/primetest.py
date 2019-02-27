@@ -517,7 +517,7 @@ def isprime(n):
     >>> n == int(n)
     True
     >>> n = Float(near_int, 20)
-    >>> n = int(n)
+    >>> n == int(n)
     False
 
     See Also
