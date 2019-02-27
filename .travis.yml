@@ -33,17 +33,27 @@ matrix:
       dist: xenial
       sudo: true
       env:
-        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true" TEST_COVERAGE="true"
     - python: 3.7
       dist: xenial
       sudo: true
       env:
-        - SPLIT="1/2" TEST_SYMPY="true"
+        - SPLIT="1/4" TEST_SYMPY="true" TEST_COVERAGE="true"
     - python: 3.7
       dist: xenial
       sudo: true
       env:
-        - SPLIT="2/2" TEST_SYMPY="true"
+        - SPLIT="2/4" TEST_SYMPY="true" TEST_COVERAGE="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="3/4" TEST_SYMPY="true" TEST_COVERAGE="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="4/4" TEST_SYMPY="true" TEST_COVERAGE="true"
 
     - stage: test
       python: 2.7
@@ -197,6 +207,10 @@ before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
     fi
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+      pip install coverage;
+      coverage debug sys;
+    fi
   - |
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     # We do this conditionally because it saves us some downloading if the
@@ -268,6 +282,9 @@ script:
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
+    fi
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+        bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports";
     fi
 notifications:
   email: false
