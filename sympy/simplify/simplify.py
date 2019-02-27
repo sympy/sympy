@@ -662,7 +662,8 @@ def sum_simplify(s, **kwargs):
     o_t = [] # Other Terms
 
     for term in terms:
-        sum_terms, other = sift(Mul.make_args(term), lambda i: isinstance(i, Sum), binary=True)
+        sum_terms, other = sift(Mul.make_args(term),
+            lambda i: isinstance(i, Sum), binary=True)
         if not sum_terms:
             o_t.append(term)
             continue
@@ -725,7 +726,7 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
     from sympy.concrete.summations import Sum
     kwargs = dict(radical=radical, clear=clear,
         fraction=fraction, sign=sign)
-    expr = Sum(self, limits) if limits else self
+    expr = Sum(self, *limits) if limits else self
     return factor_terms(expr, **kwargs)
 
 

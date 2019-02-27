@@ -1106,11 +1106,11 @@ def _factor_sum_int(expr, **kwargs):
     limits = expr.limits
 
     # get the wrt variables
-    sum_vars = set([i.args[0] for i in limits])
+    wrt = set([i.args[0] for i in limits])
 
-    # factor out any common terms that are independent of sum_vars
+    # factor out any common terms that are independent of wrt
     f = factor_terms(result, **kwargs)
-    i, d = f.as_independent(*sum_vars)
+    i, d = f.as_independent(*wrt)
     if isinstance(f, Add):
         return i * expr.func(1, *limits) + expr.func(d, *limits)
     else:
