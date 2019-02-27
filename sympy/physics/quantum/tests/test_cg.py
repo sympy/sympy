@@ -4,7 +4,6 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.pytest import slow
 
 
-@slow
 def test_cg_simp_add():
     j, m1, m1p, m2, m2p = symbols('j m1 m1p m2 m2p')
     # Test Varshalovich 8.7.1 Eq 1

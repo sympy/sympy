@@ -672,6 +672,10 @@ def test_LUsolve():
     b = A*x
     raises(NotImplementedError, lambda: A.LUsolve(b))
 
+    A = Matrix(4, 4, lambda i, j: 1/(i+j+1) if i != 3 else 0)
+    b = Matrix.zeros(4, 1)
+    raises(NotImplementedError, lambda: A.LUsolve(b))
+
 
 def test_QRsolve():
     A = Matrix([[2, 3, 5],
@@ -2850,7 +2854,7 @@ def test_atoms():
     assert m.atoms() == {S(1),S(2),S(-1), x}
     assert m.atoms(Symbol) == {x}
 
-@slow
+
 def test_pinv():
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])
@@ -2961,6 +2965,13 @@ def test_gauss_jordan_solve():
     assert sol == Matrix([[-1], [2], [0]])
     assert params == Matrix(0, 1, [])
 
+    # Square, full rank, unique solution, B has more columns than rows
+    A = eye(3)
+    B = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == B
+    assert params == Matrix(0, 4, [])
+
     # Square, reduced rank, parametrized solution
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     b = Matrix([3, 6, 9])
@@ -2971,6 +2982,20 @@ def test_gauss_jordan_solve():
         w[s.name] = s
     assert sol == Matrix([[w['tau0'] - 1], [-2*w['tau0'] + 2], [w['tau0']]])
     assert params == Matrix([[w['tau0']]])
+    assert freevar == [2]
+
+    # Square, reduced rank, parametrized solution, B has two columns
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    B = Matrix([[3, 4], [6, 8], [9, 12]])
+    sol, params, freevar = A.gauss_jordan_solve(B, freevar=True)
+    w = {}
+    for s in sol.atoms(Symbol):
+        # Extract dummy symbols used in the solution.
+        w[s.name] = s
+    assert sol == Matrix([[w['tau0'] - 1, w['tau1'] - S(4)/3],
+                          [-2*w['tau0'] + 2, -2*w['tau1'] + S(8)/3],
+                          [w['tau0'], w['tau1']],])
+    assert params == Matrix([[w['tau0'], w['tau1']]])
     assert freevar == [2]
 
     # Square, reduced rank, parametrized solution
@@ -3006,10 +3031,27 @@ def test_gauss_jordan_solve():
     assert sol == Matrix([[-S(1)/2], [0], [S(1)/6]])
     assert params == Matrix(0, 1, [])
 
+    # Rectangular, tall, full rank, unique solution, B has less columns than rows
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [1, 2], [0, 0]])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == Matrix([[-S(1)/2, -S(2)/2], [0, 0], [S(1)/6, S(2)/6]])
+    assert params == Matrix(0, 2, [])
+
     # Rectangular, tall, full rank, no solution
     A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
     b = Matrix([0, 0, 0, 1])
     raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+    # Rectangular, tall, full rank, no solution, B has two columns (2nd has no solution)
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [1, 0], [0, 1]])
+    raises(ValueError, lambda: A.gauss_jordan_solve(B))
+
+    # Rectangular, tall, full rank, no solution, B has two columns (1st has no solution)
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [0, 1], [1, 0]])
+    raises(ValueError, lambda: A.gauss_jordan_solve(B))
 
     # Rectangular, tall, reduced rank, parametrized solution
     A = Matrix([[1, 5, 3], [2, 10, 6], [3, 15, 9], [1, 4, 3]])

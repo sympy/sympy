@@ -2,6 +2,7 @@ from sympy.functions import bspline_basis_set, interpolating_spline
 from sympy.core.compatibility import range
 from sympy import Piecewise, Interval, And
 from sympy import symbols, Rational, sympify as S
+from sympy.utilities.pytest import slow
 
 x, y = symbols('x,y')
 
@@ -137,6 +138,7 @@ def test_5_points_degree_2():
                                (-1319*x**2/1645 + 21101*x/1645 - S(11216)/329, (x >= S(9)/2) & (x <= 10)))
 
 
+@slow
 def test_6_points_degree_3():
     d = 3
     X = [-1, 0, 2, 3, 9, 12]
