@@ -6,7 +6,7 @@ from __future__ import print_function, division
 
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
-from sympy.core.compatibility import range, string_types
+from sympy.core.compatibility import range, string_types, default_sort_key
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import precedence_traditional, PRECEDENCE
 from sympy.printing.pretty.pretty_symbology import greek_unicode
@@ -513,6 +513,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'LessThan': '&#x2264;',
             'StrictGreaterThan': '>',
             'StrictLessThan': '<',
+            'lerchphi': '&#x3A6;',
         }
 
         def mul_symbol_selection():
@@ -953,6 +954,20 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(y)
         return mrow
 
+    def _print_polylog(self, expr, exp=None):
+        mrow = self.dom.createElement('mrow')
+        m = self.dom.createElement('msub')
+
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('Li'))
+        m.appendChild(mi)
+        m.appendChild(self._print(expr.args[0]))
+        mrow.appendChild(m)
+        brac = self.dom.createElement('mfenced')
+        brac.appendChild(self._print(expr.args[1]))
+        mrow.appendChild(brac)
+        return mrow
+
     def _print_Basic(self, e):
         mrow = self.dom.createElement('mrow')
         mi = self.dom.createElement('mi')
@@ -1031,6 +1046,95 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(mi)
         for arg in e.args:
             mrow.appendChild(self._print(arg))
+        return mrow
+
+    def _print_SetOp(self, expr, symbol):
+        mrow = self.dom.createElement('mrow')
+        mrow.appendChild(self._print(expr.args[0]))
+        for arg in expr.args[1:]:
+            x = self.dom.createElement('mo')
+            x.appendChild(self.dom.createTextNode(symbol))
+            y = self._print(arg)
+            mrow.appendChild(x)
+            mrow.appendChild(y)
+        return mrow
+
+    def _print_Union(self, expr):
+        return self._print_SetOp(expr, '&#x222A;')
+
+    def _print_Intersection(self, expr):
+        return self._print_SetOp(expr, '&#x2229;')
+
+    def _print_Complement(self, expr):
+        return self._print_SetOp(expr, '&#x2216;')
+
+    def _print_SymmetricDifference(self, expr):
+        return self._print_SetOp(expr, '&#x2206;')
+
+    def _print_FiniteSet(self, s):
+        return self._print_set(s.args)
+
+    def _print_set(self, s):
+        items = sorted(s, key=default_sort_key)
+        brac = self.dom.createElement('mfenced')
+        brac.setAttribute('open', '{')
+        brac.setAttribute('close', '}')
+        for item in items:
+            brac.appendChild(self._print(item))
+        return brac
+
+    _print_frozenset = _print_set
+
+    def _print_LogOp(self, args, symbol):
+        mrow = self.dom.createElement('mrow')
+        if args[0].is_Boolean and not args[0].is_Not:
+            brac = self.dom.createElement('mfenced')
+            brac.appendChild(self._print(args[0]))
+            mrow.appendChild(brac)
+        else:
+            mrow.appendChild(self._print(args[0]))
+        for arg in args[1:]:
+            x = self.dom.createElement('mo')
+            x.appendChild(self.dom.createTextNode(symbol))
+            if arg.is_Boolean and not arg.is_Not:
+                y = self.dom.createElement('mfenced')
+                y.appendChild(self._print(arg))
+            else:
+                y = self._print(arg)
+            mrow.appendChild(x)
+            mrow.appendChild(y)
+        return mrow
+
+    def _print_And(self, expr):
+        args = sorted(expr.args, key=default_sort_key)
+        return self._print_LogOp(args, '&#x2227;')
+
+    def _print_Or(self, expr):
+        args = sorted(expr.args, key=default_sort_key)
+        return self._print_LogOp(args, '&#x2228;')
+
+    def _print_Xor(self, expr):
+        args = sorted(expr.args, key=default_sort_key)
+        return self._print_LogOp(args, '&#x22BB;')
+
+    def _print_Implies(self, expr):
+        return self._print_LogOp(expr.args, '&#x21D2;')
+
+    def _print_Equivalent(self, expr):
+        args = sorted(expr.args, key=default_sort_key)
+        return self._print_LogOp(args, '&#x21D4;')
+
+    def _print_Not(self, e):
+        mrow = self.dom.createElement('mrow')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#xAC;'))
+        mrow.appendChild(mo)
+        if (e.args[0].is_Boolean):
+            x = self.dom.createElement('mfenced')
+            x.appendChild(self._print(e.args[0]))
+        else:
+            x = self._print(e.args[0])
+        mrow.appendChild(x)
         return mrow
 
     def _print_Relational(self, e):
