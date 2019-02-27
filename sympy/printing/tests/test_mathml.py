@@ -2,6 +2,7 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
     MatrixSymbol, Function, Derivative, log
+from sympy.calculus.util import AccumBounds
 from sympy.functions.combinatorial.factorials import factorial, factorial2, binomial
 from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.special.zeta_functions import polylog, lerchphi
@@ -1043,6 +1044,13 @@ def test_print_factorials():
 def test_print_conjugate():
     assert mpp.doprint(conjugate(x)) == '<menclose notation="top"><mi>x</mi></menclose>'
     assert mpp.doprint(conjugate(x + 1)) == '<mrow><menclose notation="top"><mi>x</mi></menclose><mo>+</mo><mn>1</mn></mrow>'
+
+
+def test_print_AccumuBounds():
+    a = Symbol('a', real=True)
+    assert mpp.doprint(AccumBounds(0, 1)) == r"\left\langle 0, 1\right\rangle"
+    assert mpp.doprint(AccumBounds(0, a)) == r"\left\langle 0, a\right\rangle"
+    assert mpp.doprint(AccumBounds(a + 1, a + 2)) == r"\left\langle a + 1, a + 2\right\rangle"
 
 
 def test_print_matrix_symbol():
