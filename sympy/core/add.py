@@ -554,7 +554,7 @@ class Add(Expr, AssocOp):
                 return
         if z == len(self.args):
             return True
-        if len(nz) == len(self.args):
+        if len(nz) == 0 or len(nz) == len(self.args):
             return None
         b = self.func(*nz)
         if b.is_zero:
@@ -822,7 +822,7 @@ class Add(Expr, AssocOp):
         >>> ((1 + 2*I)*(1 + 3*I)).as_real_imag()
         (-5, 5)
         """
-        sargs, terms = self.args, []
+        sargs = self.args
         re_part, im_part = [], []
         for term in sargs:
             re, im = term.as_real_imag(deep=deep)

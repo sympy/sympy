@@ -85,10 +85,10 @@ import os
 import textwrap
 
 from sympy import __version__ as sympy_version
-from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
+from sympy.core import Symbol, S, Tuple, Equality, Function, Basic
 from sympy.core.compatibility import is_sequence, StringIO, string_types
-from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import c_code_printers
+from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fcode import FCodePrinter
 from sympy.printing.julia import JuliaCodePrinter
 from sympy.printing.octave import OctaveCodePrinter
@@ -576,7 +576,6 @@ class CodeGen(object):
                 for e in expr:
                     if not e.is_Equality:
                         raise CodeGenError("Lists of expressions must all be Equalities. {} is not.".format(e))
-                lhs = [e.lhs for e in expr]
 
                 # create a list of right hand sides and simplify them
                 rhs = [e.rhs for e in expr]

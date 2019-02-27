@@ -234,9 +234,9 @@ class Integral(AddWithLimits):
         replacing `x` must be identified by passing `u` as a tuple:
 
         >>> Integral(x, (x, 0, 1)).transform(x, (u + a, u))
-        Integral(a + u, (u, -a, -a + 1))
+        Integral(a + u, (u, -a, 1 - a))
         >>> Integral(x, (x, 0, 1)).transform(x, (u + a, a))
-        Integral(a + u, (a, -u, -u + 1))
+        Integral(a + u, (a, -u, 1 - u))
 
         See Also
         ========
@@ -1458,7 +1458,7 @@ def integrate(*args, **kwargs):
     in interactive sessions and should be avoided in library code.
 
     >>> integrate(x**a*exp(-x), (x, 0, oo)) # same as conds='piecewise'
-    Piecewise((gamma(a + 1), -re(a) < 1),
+    Piecewise((gamma(a + 1), re(a) > -1),
         (Integral(x**a*exp(-x), (x, 0, oo)), True))
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='none')

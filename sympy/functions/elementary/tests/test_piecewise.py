@@ -5,7 +5,7 @@ from sympy import (
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
     factor_terms, DiracDelta, Heaviside, Add, Mul, factorial)
 from sympy.printing import srepr
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises, slow
 
 from sympy.functions.elementary.piecewise import Undefined
 
@@ -209,6 +209,7 @@ def test_piecewise_integrate1b():
         (y - 1, True))
 
 
+@slow
 def test_piecewise_integrate1c():
     y = symbols('y', real=True)
     for i, g in enumerate([
@@ -288,6 +289,7 @@ def test_piecewise_integrate3_inequality_conditions():
     # values
 
 
+@slow
 def test_piecewise_integrate4_symbolic_conditions():
     a = Symbol('a', real=True, finite=True)
     b = Symbol('b', real=True, finite=True)
@@ -1125,7 +1127,21 @@ def test_issue_14240():
         Piecewise((i, a), (0, True)) for i in range(1, 41)])
         ) == Piecewise((factorial(40), a), (0, True))
 
+
 def test_issue_14787():
     x = Symbol('x')
     f = Piecewise((x, x < 1), ((S(58) / 7), True))
     assert str(f.evalf()) == "Piecewise((x, x < 1), (8.28571428571429, True))"
+
+
+def test_issue_8458():
+    x, y = symbols('x y')
+    # Original issue
+    p1 = Piecewise((0, Eq(x, 0)), (sin(x), True))
+    assert p1.simplify() == sin(x)
+    # Slightly larger variant
+    p2 = Piecewise((x, Eq(x, 0)), (4*x + (y-2)**4, Eq(x, 0) & Eq(x+y, 2)), (sin(x), True))
+    assert p2.simplify() == sin(x)
+    # Test for problem highlighted during review
+    p3 = Piecewise((x+1, Eq(x, -1)), (4*x + (y-2)**4, Eq(x, 0) & Eq(x+y, 2)), (sin(x), True))
+    assert p3.simplify() == Piecewise((0, Eq(x, -1)), (sin(x), True))

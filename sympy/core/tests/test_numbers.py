@@ -234,7 +234,8 @@ def test_igcd_lehmer():
     assert igcd_lehmer(a*c, b*c) == c
     # big divisor
     assert igcd_lehmer(a, 10**1000) == 1
-
+    # swapping argmument
+    assert igcd_lehmer(1, 2) == igcd_lehmer(2, 1)
 
 def test_igcd2():
     # short loop
@@ -255,12 +256,15 @@ def test_ilcm():
     assert ilcm(*[10, 20, 30]) == 60
     raises(ValueError, lambda: ilcm(8.1, 7))
     raises(ValueError, lambda: ilcm(8, 7.1))
+    raises(TypeError, lambda: ilcm(8))
 
 
 def test_igcdex():
     assert igcdex(2, 3) == (-1, 1, 1)
     assert igcdex(10, 12) == (-1, 1, 2)
     assert igcdex(100, 2004) == (-20, 1, 4)
+    assert igcdex(0, 0) == (0, 1, 0)
+    assert igcdex(1, 0) == (1, 0, 1)
 
 
 def _strictly_equal(a, b):
@@ -363,6 +367,23 @@ def test_Number_new():
     raises(TypeError, lambda: Number(cos))
     a = Rational(3, 5)
     assert Number(a) is a  # Check idempotence on Numbers
+
+
+def test_Number_cmp():
+    n1 = Number(1)
+    n2 = Number(2)
+    n3 = Number(-3)
+
+    assert n1 < n2
+    assert n1 <= n2
+    assert n3 < n1
+    assert n2 > n3
+    assert n2 >= n3
+
+    raises(TypeError, lambda: n1 < S.NaN)
+    raises(TypeError, lambda: n1 <= S.NaN)
+    raises(TypeError, lambda: n1 > S.NaN)
+    raises(TypeError, lambda: n1 >= S.NaN)
 
 
 def test_Rational_cmp():
@@ -1869,3 +1890,37 @@ def test_numpy_to_float():
 
     raises(TypeError, lambda: Float(np.complex64(1+2j)))
     raises(TypeError, lambda: Float(np.complex128(1+2j)))
+
+def test_Integer_ceiling_floor():
+    a = Integer(4)
+
+    assert(a.floor() == a)
+    assert(a.ceiling() == a)
+
+def test_ComplexInfinity():
+    assert((zoo).floor() == zoo)
+    assert((zoo).ceiling() == zoo)
+    assert(zoo**zoo == S.NaN)
+
+def test_Infinity_floor_ceiling_power():
+    assert((oo).floor() == oo)
+    assert((oo).ceiling() == oo)
+    assert((oo)**S.NaN == S.NaN)
+    assert((oo)**zoo == S.NaN)
+
+def test_One_power():
+    assert((S.One)**12 == S.One)
+    assert((S.NegativeOne)**S.NaN == S.NaN)
+
+def test_NegativeInfinity():
+    assert((-oo).floor() == -oo)
+    assert((-oo).ceiling() == -oo)
+    assert((-oo)**11 == -oo)
+    assert((-oo)**12 == oo)
+
+def test_issue_6133():
+    raises(TypeError, lambda: (-oo < None))
+    raises(TypeError, lambda: (S(-2) < None))
+    raises(TypeError, lambda: (oo < None))
+    raises(TypeError, lambda: (oo > None))
+    raises(TypeError, lambda: (S(2) < None))

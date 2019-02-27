@@ -236,7 +236,6 @@ def test_nthroot():
     assert nthroot(expand_multinomial(q**6), 6) == q
 
 
-@slow
 def test_nthroot1():
     q = 1 + sqrt(2) + sqrt(3) + S(1)/10**20
     p = expand_multinomial(q**5)

@@ -2,15 +2,13 @@
 
 from __future__ import print_function, division
 
-from random import uniform
-import random
+from random import uniform, Random, randrange, randint
 
-from sympy.core.numbers import I
-from sympy.simplify.simplify import nsimplify
-from sympy.core.containers import Tuple
-from sympy.core.numbers import comp
-from sympy.core.symbol import Symbol
 from sympy.core.compatibility import is_sequence, as_int
+from sympy.core.containers import Tuple
+from sympy.core.numbers import comp, I
+from sympy.core.symbol import Symbol
+from sympy.simplify.simplify import nsimplify
 
 
 def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
@@ -103,9 +101,9 @@ def _randrange(seed=None):
     (0, 1)
     """
     if seed is None:
-        return random.randrange
+        return randrange
     elif isinstance(seed, int):
-        return random.Random(seed).randrange
+        return Random(seed).randrange
     elif is_sequence(seed):
         seed = list(seed)  # make a copy
         seed.reverse()
@@ -154,9 +152,9 @@ def _randint(seed=None):
     (1, 2)
     """
     if seed is None:
-        return random.randint
+        return randint
     elif isinstance(seed, int):
-        return random.Random(seed).randint
+        return Random(seed).randint
     elif is_sequence(seed):
         seed = list(seed)  # make a copy
         seed.reverse()

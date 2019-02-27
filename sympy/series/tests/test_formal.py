@@ -175,6 +175,7 @@ def test_fps():
     raises(ValueError, lambda: fps(x, dir=0))
 
 
+@slow
 def test_fps__rational():
     assert fps(1/x) == (1/x)
     assert fps((x**2 + x + 1) / x**3, dir=-1) == (x**2 + x + 1) / x**3
@@ -226,6 +227,7 @@ def test_fps__rational():
     assert fps(f, x, full=True).truncate(n=10) == 2*x**3/3 + 2*x**7/7 + O(x**10)
 
 
+@slow
 def test_fps__hyper():
     f = sin(x)
     assert fps(f, x).truncate() == x - x**3/6 + x**5/120 + O(x**6)

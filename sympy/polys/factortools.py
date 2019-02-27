@@ -162,7 +162,7 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
     References
     ==========
 
-    1. [Gathen99]_
+    .. [1] [Gathen99]_
 
     """
     M = m**2
@@ -214,7 +214,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
     References
     ==========
 
-    1. [Gathen99]_
+    .. [1] [Gathen99]_
 
     """
     r = len(f_list)
@@ -492,7 +492,7 @@ def dup_zz_cyclotomic_factor(f, K):
     References
     ==========
 
-    1. [Weisstein09]_
+    .. [1] [Weisstein09]_
 
     """
     lc_f, tc_f = dup_LC(f, K), dup_TC(f, K)
@@ -568,7 +568,10 @@ def dup_zz_factor(f, K):
 
               (content(f), [(f_1, k_1), ..., (f_n, k_n))
 
-    Consider polynomial `f = 2*x**4 - 2`::
+    Examples
+    ========
+
+    Consider the polynomial `f = 2*x**4 - 2`::
 
         >>> from sympy.polys import ring, ZZ
         >>> R, x = ring("x", ZZ)
@@ -590,7 +593,7 @@ def dup_zz_factor(f, K):
     References
     ==========
 
-    1. [Gathen99]_
+    .. [1] [Gathen99]_
 
     """
     cont, g = dup_primitive(f, K)
@@ -916,8 +919,8 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     References
     ==========
 
-    1. [Wang78]_
-    2. [Geddes92]_
+    .. [1] [Wang78]_
+    .. [2] [Geddes92]_
 
     """
     from sympy.utilities.randtest import _randint
@@ -1019,7 +1022,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
             raise ExtraneousFactors(
                 "we need to restart algorithm with better parameters")
 
-    negative, result = 0, []
+    result = []
 
     for f in factors:
         _, f = dmp_ground_primitive(f, u, K)
@@ -1065,7 +1068,7 @@ def dmp_zz_factor(f, u, K):
     References
     ==========
 
-    1. [Gathen99]_
+    .. [1] [Gathen99]_
 
     """
     if not u:
@@ -1145,7 +1148,7 @@ def dmp_ext_factor(f, u, K):
     factors = dmp_factor_list_include(r, u, K.dom)
 
     if len(factors) == 1:
-        coeff, factors = lc, [f]
+        factors = [f]
     else:
         H = dmp_raise([K.one, s*K.unit], u, 0, K)
 

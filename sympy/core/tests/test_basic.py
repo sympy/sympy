@@ -210,6 +210,7 @@ def test_rewrite():
     f2 = sin(x) + cos(y)/gamma(z)
     assert f2.rewrite(sin,exp) == -I*(exp(I*x) - exp(-I*x))/2 + cos(y)/gamma(z)
 
+    assert f1.rewrite() == f1
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
     from sympy.integrals.integrals import Integral
@@ -252,6 +253,8 @@ def test_atomic():
     x = symbols('x')
     assert _atomic(g(x + h(x))) == {g(x + h(x))}
     assert _atomic(g(x + h(x)), recursive=True) == {h(x), x, g(x + h(x))}
+    assert _atomic(1) == set()
+    assert _atomic(Basic(1,2)) == {Basic(1, 2)}
 
 
 def test_as_dummy():
@@ -265,3 +268,15 @@ def test_canonical_variables():
     x, i0, i1 = symbols('x _:2')
     assert Integral(x, (x, x + 1)).canonical_variables == {x: i0}
     assert Integral(x, (x, x + i0)).canonical_variables == {x: i1}
+
+
+def test_replace_exceptions():
+    from sympy import Wild
+    x, y = symbols('x y')
+    e = (x**2 + x*y)
+    raises(TypeError, lambda: e.replace(sin, 2))
+    b = Wild('b')
+    c = Wild('c')
+    raises(TypeError, lambda: e.replace(b*c, c.is_real))
+    raises(TypeError, lambda: e.replace(b.is_real, 1))
+    raises(TypeError, lambda: e.replace(lambda d: d.is_Number, 1))

@@ -1,13 +1,12 @@
 from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
-    nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
+    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod, Dummy)
-from sympy.abc import a, b, c, d, f, k, m, x, y, z
+    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma)
+from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic
-from sympy.utilities.pytest import XFAIL, raises
-from sympy import simplify
+from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.matrices import Matrix
 from sympy.core.mod import Mod
 from sympy.core.compatibility import range
@@ -400,7 +399,10 @@ def test_euler_maclaurin():
         s, e = A.euler_maclaurin(m, n)
         assert abs((s - zeta(3)).evalf()) < e.evalf()
 
+    raises(ValueError, lambda: Sum(1, (x, 0, 1), (k, 0, 1)).euler_maclaurin())
 
+
+@slow
 def test_evalf_euler_maclaurin():
     assert NS(Sum(1/k**k, (k, 1, oo)), 15) == '1.29128599706266'
     assert NS(Sum(1/k**k, (k, 1, oo)),
@@ -1065,6 +1067,12 @@ def test_issue_14640():
     s = Sum(i*(a**(n - i) - b**(n - i))/(a - b), (i, 0, n)).doit()
     assert not s.has(Sum)
     assert s.subs({a: 2, b: 3, n: 5}) == 122
+
+
+def test_issue_15943():
+    assert Sum(binomial(n, k)*factorial(n - k), (k, 0, n)).doit() == -E*(
+        n + 1)*gamma(n + 1)*lowergamma(n + 1, 1)/gamma(n + 2
+        ) + E*gamma(n + 1)
 
 
 def test_Sum_dummy_eq():

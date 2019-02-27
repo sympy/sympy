@@ -3,34 +3,23 @@
 from __future__ import print_function, division
 
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.core.compatibility import range
 from sympy.core.singleton import S
-
-from sympy.polys.polytools import Poly, PurePoly
-from sympy.polys.polyutils import _analyze_gens
-
-from sympy.polys.polyclasses import DMP
-
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.ntheory import nextprime
+from sympy.polys.densearith import (
+    dmp_add_term, dmp_neg, dmp_mul, dmp_sqr
+)
 from sympy.polys.densebasic import (
     dmp_zero, dmp_one, dmp_ground,
     dup_from_raw_dict, dmp_raise, dup_random
 )
-
-from sympy.polys.densearith import (
-    dmp_add_term, dmp_neg, dmp_mul, dmp_sqr
-)
-
-from sympy.polys.factortools import (
-    dup_zz_cyclotomic_poly
-)
-
 from sympy.polys.domains import ZZ
-
-from sympy.ntheory import nextprime
-
+from sympy.polys.factortools import dup_zz_cyclotomic_poly
+from sympy.polys.polyclasses import DMP
+from sympy.polys.polytools import Poly, PurePoly
+from sympy.polys.polyutils import _analyze_gens
 from sympy.utilities import subsets, public
-
-from sympy.core.compatibility import range
 
 
 @public

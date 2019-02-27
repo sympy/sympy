@@ -613,7 +613,7 @@ class _TensorDataLazyEvaluator(CantSympify):
 
     @staticmethod
     def _flip_index_by_metric(data, metric, pos):
-        from .array import tensorproduct, tensorcontraction, permutedims, MutableDenseNDimArray, NDimArray
+        from .array import tensorproduct, tensorcontraction
 
         mdim = metric.rank()
         ddim = data.rank()
@@ -2048,7 +2048,7 @@ class TensExpr(Expr):
 
     @staticmethod
     def _match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict):
-        from .array import Array, tensorcontraction, tensorproduct, permutedims
+        from .array import tensorcontraction, tensorproduct, permutedims
 
         index_types1 = [i.tensor_index_type for i in free_ind1]
 
@@ -2168,7 +2168,7 @@ class TensExpr(Expr):
         >>> expr.replace_with_arrays(repl, [j, i])
         [[0, -b/2 + c/2], [b/2 - c/2, 0]]
         """
-        from .array import Array, permutedims
+        from .array import Array
 
         replacement_dict = {tensor: Array(array) for tensor, array in replacement_dict.items()}
 
@@ -2830,7 +2830,7 @@ class Tensor(TensExpr):
         return self.data[item]
 
     def _extract_data(self, replacement_dict):
-        from .array import Array, tensorcontraction, tensorproduct, permutedims
+        from .array import Array
         for k, v in replacement_dict.items():
             if isinstance(k, Tensor) and k.args[0] == self.args[0]:
                 other = k
@@ -2863,7 +2863,6 @@ class Tensor(TensExpr):
 
         free_ind1 = self.get_free_indices()
         free_ind2 = other.get_free_indices()
-        index_types1 = self.index_types
 
         return self._match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict)
 

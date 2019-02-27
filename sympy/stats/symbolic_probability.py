@@ -1,11 +1,9 @@
 import itertools
 
-from sympy.core.sympify import _sympify
-
+from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol
 from sympy.core.compatibility import default_sort_key
-
-from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol, Dummy, Basic
 from sympy.core.evaluate import global_evaluate
+from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
 from sympy.stats.rv import RandomSymbol, probability, expectation
 

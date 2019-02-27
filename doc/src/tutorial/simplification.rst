@@ -140,13 +140,13 @@ collect
     >>> collected_expr = collect(expr, x)
     >>> collected_expr
      3    2
-    x  + x ⋅(-z + 2) + x⋅(y + 1) - 3
+    x  + x ⋅(2 - z) + x⋅(y + 1) - 3
 
 ``collect()`` is particularly useful in conjunction with the ``.coeff()``
 method.  ``expr.coeff(x, n)`` gives the coefficient of ``x**n`` in ``expr``:
 
     >>> collected_expr.coeff(x, 2)
-    -z + 2
+    2 - z
 
 .. TODO: Discuss coeff method in more detail in some other section (maybe
    basic expression manipulation tools)
@@ -278,10 +278,10 @@ identities, use ``expand_trig()``.
     >>> expand_trig(sin(x + y))
     sin(x)⋅cos(y) + sin(y)⋅cos(x)
     >>> expand_trig(tan(2*x))
-       2⋅tan(x)
-    ─────────────
-         2
-    - tan (x) + 1
+      2⋅tan(x)
+    ───────────
+           2
+    1 - tan (x)
 
 Because ``expand_trig()`` tends to make trigonometric expressions larger, and
 ``trigsimp()`` tends to make them smaller, these identities can be applied in
@@ -315,7 +315,7 @@ under other conditions as well).  A common consequence of the failure of
 identity 2 is that `\sqrt{x}\sqrt{y} \neq \sqrt{xy}`.
 
 Identity 3 is not always true.  For example, if `x = -1`, `a = 2`, and `b =
-\frac{1}{2}`, then `(x^a)^b = {\left ((-1)^2\right )}^{1/2} = \sqrt{1} = 1`
+\frac{1}{2}`, then `(x^a)^b = {\left((-1)^2\right)}^{1/2} = \sqrt{1} = 1`
 and `x^{ab} = (-1)^{2\cdot1/2} = (-1)^1 = -1`.  However, identity 3 is true
 when `b` is an integer (again, it may also hold in other cases as well).  Two
 common consequences of the failure of identity 3 are that `\sqrt{x^2}\neq x`
@@ -330,7 +330,7 @@ To summarize
 +-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
 |2. `x^ay^a = (xy)^a`   |`x, y \geq 0` and `a \in \mathbb{R}`|`(-1)^{1/2}(-1)^{1/2} \neq (-1\cdot-1)^{1/2}`       |`\sqrt{x}\sqrt{y} \neq \sqrt{xy}` in general                                 |
 +-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
-|3. `(x^a)^b = x^{ab}`  |`b \in \mathbb{Z}`                  |`{\left((-1)^2\right )}^{1/2} \neq (-1)^{2\cdot1/2}`|`\sqrt{x^2}\neq x` and `\sqrt{\frac{1}{x}}\neq\frac{1}{\sqrt{x}}` in general |
+|3. `(x^a)^b = x^{ab}`  |`b \in \mathbb{Z}`                  |`{\left((-1)^2\right)}^{1/2} \neq (-1)^{2\cdot1/2}` |`\sqrt{x^2}\neq x` and `\sqrt{\frac{1}{x}}\neq\frac{1}{\sqrt{x}}` in general |
 +-----------------------+------------------------------------+----------------------------------------------------+-----------------------------------------------------------------------------+
 
 
@@ -499,16 +499,16 @@ is real.
 
 As before, ``z`` and ``t`` will be Symbols with no additional assumptions.
 
-Note that the identity `\log{\left (\frac{x}{y}\right )} = \log(x) - \log(y)`
-is a special case of identities 1 and 2 by `\log{\left (\frac{x}{y}\right )}
-=` `\log{\left (x\cdot\frac{1}{y}\right )} =` `\log(x) + \log{\left(
-y^{-1}\right )} =` `\log(x) - \log(y)`, and thus it also holds if `x` and `y`
+Note that the identity `\log{\left(\frac{x}{y}\right)} = \log(x) - \log(y)`
+is a special case of identities 1 and 2 by `\log{\left(\frac{x}{y}\right)}
+=` `\log{\left(x\cdot\frac{1}{y}\right)} =` `\log(x) + \log{\left(
+y^{-1}\right)} =` `\log(x) - \log(y)`, and thus it also holds if `x` and `y`
 are positive, but may not hold in general.
 
-We also see that `\log{\left( e^x \right)} = x` comes from `\log{\left ( e^x
+We also see that `\log{\left( e^x \right)} = x` comes from `\log{\left( e^x
 \right)} = x\log(e) = x`, and thus holds when `x` is real (and it can be
 verified that it does not hold in general for arbitrary complex `x`, for
-example, `\log{\left (e^{x + 2\pi i}\right)} = \log{\left (e^x\right )} = x
+example, `\log{\left(e^{x + 2\pi i}\right)} = \log{\left(e^x\right)} = x
 \neq x + 2\pi i`).
 
 expand_log
@@ -650,8 +650,8 @@ To rewrite ``hyper`` in terms of more standard functions, use
 ``hyperexpand()``.
 
     >>> hyperexpand(hyper([1, 1], [2], z))
-    -log(-z + 1)
-    ─────────────
+    -log(1 - z)
+    ────────────
          z
 
 ``hyperexpand()`` also works on the more general Meijer G-function (see

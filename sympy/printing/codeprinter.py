@@ -4,7 +4,6 @@ from functools import wraps
 
 from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
@@ -103,7 +102,7 @@ class CodePrinter(StrPrinter):
         # format the output
         if self._settings["human"]:
             frontlines = []
-            if len(self._not_supported) > 0:
+            if self._not_supported:
                 frontlines.append(self._get_comment(
                         "Not supported in {0}:".format(self.language)))
                 for expr in sorted(self._not_supported, key=str):
@@ -481,7 +480,7 @@ class CodePrinter(StrPrinter):
             if item.base in b:
                 b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
 
-        if len(b) == 0:
+        if not b:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
             return sign + '*'.join(a_str) + "/" + b_str[0]
@@ -519,6 +518,8 @@ class CodePrinter(StrPrinter):
     _print_RootSum = _print_not_supported
     _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
+    _print_MutableSparseMatrix = _print_not_supported
+    _print_ImmutableSparseMatrix = _print_not_supported
     _print_Uniform = _print_not_supported
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported

@@ -853,6 +853,7 @@ class UndefinedFunction(FunctionClass):
         __dict__.update({'_extra_kwargs': kwargs})
         __dict__['__module__'] = None # For pickling
         ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
+        ret.name = name
         return ret
 
     def __instancecheck__(cls, instance):
@@ -1165,7 +1166,7 @@ class Derivative(Expr):
 
         from sympy.matrices.common import MatrixCommon
         from sympy import Integer
-        from sympy.tensor.array import Array, NDimArray, derive_by_array
+        from sympy.tensor.array import Array, NDimArray
         from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)

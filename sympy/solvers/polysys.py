@@ -66,7 +66,7 @@ def solve_biquadratic(f, g, opt):
     >>> a = Poly(y + x**2 - 3, y, x, domain='ZZ')
     >>> b = Poly(-y + x - 4, y, x, domain='ZZ')
     >>> solve_biquadratic(a, b, NewOption)
-    [(-sqrt(29)/2 + 7/2, -sqrt(29)/2 - 1/2), (sqrt(29)/2 + 7/2, -1/2 + \
+    [(7/2 - sqrt(29)/2, -sqrt(29)/2 - 1/2), (sqrt(29)/2 + 7/2, -1/2 + \
       sqrt(29)/2)]
     """
     G = groebner([f, g])

@@ -5,35 +5,23 @@ from __future__ import print_function, division
 from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
-
-from sympy.core.mul import _keep_coeff
-from sympy.core.symbol import Symbol
 from sympy.core.basic import preorder_traversal
-from sympy.core.relational import Relational
-from sympy.core.sympify import sympify
+from sympy.core.compatibility import iterable, range, ordered
 from sympy.core.decorators import _sympifyit
 from sympy.core.function import Derivative
-
+from sympy.core.mul import _keep_coeff
+from sympy.core.relational import Relational
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.logic.boolalg import BooleanAtom
-
-from sympy.polys.polyclasses import DMP
-
-from sympy.polys.polyutils import (
-    basic_from_dict,
-    _sort_gens,
-    _unify_gens,
-    _dict_reorder,
-    _dict_from_expr,
-    _parallel_dict_from_expr,
-)
-
-from sympy.polys.rationaltools import together
-from sympy.polys.rootisolation import dup_isolate_real_roots_list
-from sympy.polys.groebnertools import groebner as _groebner
+from sympy.polys import polyoptions as options
+from sympy.polys.constructor import construct_domain
+from sympy.polys.domains import FF, QQ, ZZ
 from sympy.polys.fglmtools import matrix_fglm
+from sympy.polys.groebnertools import groebner as _groebner
 from sympy.polys.monomials import Monomial
 from sympy.polys.orderings import monomial_key
-
+from sympy.polys.polyclasses import DMP
 from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
@@ -44,19 +32,26 @@ from sympy.polys.polyerrors import (
     ComputationFailed,
     GeneratorsError,
 )
-
+from sympy.polys.polyutils import (
+    basic_from_dict,
+    _sort_gens,
+    _unify_gens,
+    _dict_reorder,
+    _dict_from_expr,
+    _parallel_dict_from_expr,
+)
+from sympy.polys.rationaltools import together
+from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, sift, public, filldedent
 
+# Required to avoid errors
 import sympy.polys
+
 import mpmath
 from mpmath.libmp.libhyper import NoConvergence
 
-from sympy.polys.domains import FF, QQ, ZZ
-from sympy.polys.constructor import construct_domain
 
-from sympy.polys import polyoptions as options
 
-from sympy.core.compatibility import iterable, range, ordered
 
 @public
 class Poly(Expr):
@@ -98,6 +93,7 @@ class Poly(Expr):
 
     See Also
     ========
+
     sympy.core.expr.Expr
 
     """
@@ -1118,7 +1114,7 @@ class Poly(Expr):
         if not dom.is_Numerical:
             raise DomainError("can't eject generators over %s" % dom)
 
-        n, k = len(f.gens), len(gens)
+        k = len(gens)
 
         if f.gens[:k] == gens:
             _gens, front = f.gens[k:], True
@@ -4908,7 +4904,7 @@ def half_gcdex(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> half_gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
-    (-x/5 + 3/5, x + 1)
+    (3/5 - x/5, x + 1)
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -4947,7 +4943,7 @@ def gcdex(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
-    (-x/5 + 3/5, x**2/5 - 6*x/5 + 2, x + 1)
+    (3/5 - x/5, x**2/5 - 6*x/5 + 2, x + 1)
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -6053,7 +6049,7 @@ def to_rational_coeffs(f):
     >>> p = Poly(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}), x, domain='EX')
     >>> lc, r, _, g = to_rational_coeffs(p)
     >>> lc, r
-    (7 + 5*sqrt(2), -2*sqrt(2) + 2)
+    (7 + 5*sqrt(2), 2 - 2*sqrt(2))
     >>> g
     Poly(x**3 + x**2 - 1/4*x - 1/4, x, domain='QQ')
     >>> r1 = simplify(1/r)
@@ -6927,9 +6923,9 @@ class GroebnerBasis(Basic):
         References
         ==========
 
-        J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
-        Computation of Zero-dimensional Groebner Bases by Change of
-        Ordering
+        .. [1] J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
+               Computation of Zero-dimensional Groebner Bases by Change of
+               Ordering
 
         """
         opt = self._options

@@ -247,7 +247,7 @@ res_z(f, g, x)
 from __future__ import print_function, division
 
 from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
-from sympy import (QQ, quo, prem, rem, S, sign, simplify, summation, var, zeros)
+from sympy import (QQ, pquo, quo, prem, rem, S, sign, simplify, summation, var, zeros)
 from sympy.polys.polyerrors import PolynomialError
 
 def sylvester(f, g, x, method = 1):
@@ -2409,7 +2409,7 @@ def subresultants_vv(p, q, x, method = 0):
 
         # treat last row of M as poly; find its degree
         d = find_degree(M, deg_f)
-        if d == None:
+        if d is None:
             break
         exp_deg = deg_g - 1
 
@@ -2527,7 +2527,7 @@ def subresultants_vv_2(p, q, x):
 
         # treat last row of M as poly; find its degree
         d = find_degree(M, deg_f)
-        if d == None:
+        if d is None:
             return sr_list
         exp_deg = deg_g - 1
 

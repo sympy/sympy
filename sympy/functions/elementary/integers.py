@@ -1,9 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core.singleton import S
-from sympy.core.function import Function
-from sympy.core import Add
+from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
+from sympy.core.function import Function
 from sympy.core.numbers import Integer
 from sympy.core.relational import Gt, Lt, Ge, Le
 from sympy.core.symbol import Symbol
@@ -254,7 +253,7 @@ class frac(Function):
     For real numbers it is defined [1]_ as
 
     .. math::
-        x - \lfloor{x}\rfloor
+        x - \left\lfloor{x}\right\rfloor
 
     Examples
     ========

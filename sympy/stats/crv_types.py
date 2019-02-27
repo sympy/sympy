@@ -52,13 +52,13 @@ from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, exp, besseli, besselj, besselk
+from sympy.external import import_module
+from sympy.matrices import MatrixBase
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
-from sympy.stats.rv import _value_check, RandomSymbol
-from sympy.matrices import MatrixBase
+from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.joint_rv_types import multivariate_rv
-from sympy.stats.joint_rv import MarginalDistribution, JointPSpace, CompoundDistribution
-from sympy.external import import_module
+from sympy.stats.rv import _value_check, RandomSymbol
 import random
 
 oo = S.Infinity
@@ -220,6 +220,7 @@ def Arcsin(name, a=0, b=1):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Arcsine_distribution
+
     """
 
     return rv(name, ArcsinDistribution, (a, b))
@@ -296,6 +297,7 @@ def Benini(name, alpha, beta, sigma):
 
     .. [1] https://en.wikipedia.org/wiki/Benini_distribution
     .. [2] http://reference.wolfram.com/legacy/v8/ref/BeniniDistribution.html
+
     """
 
     return rv(name, BeniniDistribution, (alpha, beta, sigma))
@@ -341,8 +343,10 @@ def Beta(name, alpha, beta):
     Parameters
     ==========
 
-    alpha : Real number, `\alpha > 0`, a shape
-    beta : Real number, `\beta > 0`, a shape
+    alpha : real positive
+        A shape
+    beta : real positive
+        A shape
 
     Returns
     =======
@@ -363,10 +367,10 @@ def Beta(name, alpha, beta):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-     alpha - 1         beta - 1
-    z         *(-z + 1)
-    ---------------------------
-           B(alpha, beta)
+     alpha - 1        beta - 1
+    z         *(1 - z)
+    --------------------------
+          B(alpha, beta)
 
     >>> expand_func(simplify(E(X, meijerg=True)))
     alpha/(alpha + beta)
@@ -379,6 +383,7 @@ def Beta(name, alpha, beta):
 
     .. [1] https://en.wikipedia.org/wiki/Beta_distribution
     .. [2] http://mathworld.wolfram.com/BetaDistribution.html
+
     """
 
     return rv(name, BetaDistribution, (alpha, beta))
@@ -442,6 +447,7 @@ def BetaPrime(name, alpha, beta):
 
     .. [1] https://en.wikipedia.org/wiki/Beta_prime_distribution
     .. [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
+
     """
 
     return rv(name, BetaPrimeDistribution, (alpha, beta))
@@ -476,8 +482,10 @@ def Cauchy(name, x0, gamma):
     Parameters
     ==========
 
-    x0 : Real number, the location
-    gamma : Real number, `\gamma > 0`, the scale
+    x0 : real
+        The location
+    gamma : real positive
+        The scale
 
     Returns
     =======
@@ -504,6 +512,7 @@ def Cauchy(name, x0, gamma):
 
     .. [1] https://en.wikipedia.org/wiki/Cauchy_distribution
     .. [2] http://mathworld.wolfram.com/CauchyDistribution.html
+
     """
 
     return rv(name, CauchyDistribution, (x0, gamma))
@@ -550,7 +559,8 @@ def Chi(name, k):
     Parameters
     ==========
 
-    k : A positive Integer, `k > 0`, the number of degrees of freedom
+    k : positive integer
+        The number of degrees of freedom
 
     Returns
     =======
@@ -569,13 +579,14 @@ def Chi(name, k):
     >>> X = Chi("x", k)
 
     >>> density(X)(z)
-    2**(-k/2 + 1)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
+    2**(1 - k/2)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Chi_distribution
     .. [2] http://mathworld.wolfram.com/ChiDistribution.html
+
     """
 
     return rv(name, ChiDistribution, (k,))
@@ -681,7 +692,8 @@ def ChiSquared(name, k):
     Parameters
     ==========
 
-    k : A positive Integer, `k > 0`, the number of degrees of freedom
+    k : positive integer
+        The number of degrees of freedom
 
     Returns
     =======
@@ -781,6 +793,7 @@ def Dagum(name, p, a, b):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Dagum_distribution
+
     """
 
     return rv(name, DagumDistribution, (p, a, b))
@@ -851,6 +864,7 @@ def Erlang(name, k, l):
 
     .. [1] https://en.wikipedia.org/wiki/Erlang_distribution
     .. [2] http://mathworld.wolfram.com/ErlangDistribution.html
+
     """
 
     return rv(name, GammaDistribution, (k, S.One/l))
@@ -952,6 +966,7 @@ def Exponential(name, rate):
 
     .. [1] https://en.wikipedia.org/wiki/Exponential_distribution
     .. [2] http://mathworld.wolfram.com/ExponentialDistribution.html
+
     """
 
     return rv(name, ExponentialDistribution, (rate, ))
@@ -1026,6 +1041,7 @@ def FDistribution(name, d1, d2):
 
     .. [1] https://en.wikipedia.org/wiki/F-distribution
     .. [2] http://mathworld.wolfram.com/F-Distribution.html
+
     """
 
     return rv(name, FDistributionDistribution, (d1, d2))
@@ -1094,6 +1110,7 @@ def FisherZ(name, d1, d2):
 
     .. [1] https://en.wikipedia.org/wiki/Fisher%27s_z-distribution
     .. [2] http://mathworld.wolfram.com/Fishersz-Distribution.html
+
     """
 
     return rv(name, FisherZDistribution, (d1, d2))
@@ -1166,6 +1183,7 @@ def Frechet(name, a, s=1, m=0):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
+
     """
 
     return rv(name, FrechetDistribution, (a, s, m))
@@ -1270,6 +1288,7 @@ def Gamma(name, k, theta):
 
     .. [1] https://en.wikipedia.org/wiki/Gamma_distribution
     .. [2] http://mathworld.wolfram.com/GammaDistribution.html
+
     """
 
     return rv(name, GammaDistribution, (k, theta))
@@ -1365,6 +1384,7 @@ def GammaInverse(name, a, b):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse-gamma_distribution
+
     """
 
     return rv(name, GammaInverseDistribution, (a, b))
@@ -1557,19 +1577,18 @@ def Kumaraswamy(name, a, b):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                         b - 1
-         a - 1 /   a    \
-    a*b*z     *\- z  + 1/
+                       b - 1
+         a - 1 /     a\
+    a*b*z     *\1 - z /
 
     >>> cdf(X)(z)
-    Piecewise((0, z < 0),
-            (-(-z**a + 1)**b + 1, z <= 1),
-            (1, True))
+    Piecewise((0, z < 0), (1 - (1 - z**a)**b, z <= 1), (1, True))
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Kumaraswamy_distribution
+
     """
 
     return rv(name, KumaraswamyDistribution, (a, b))
@@ -1636,8 +1655,7 @@ def Laplace(name, mu, b):
     exp(-Abs(mu - z)/b)/(2*b)
 
     >>> cdf(X)(z)
-    Piecewise((exp((-mu + z)/b)/2, mu > z),
-            (-exp((mu - z)/b)/2 + 1, True))
+    Piecewise((exp((-mu + z)/b)/2, mu > z), (1 - exp((mu - z)/b)/2, True))
 
     >>> L = Laplace('L', [1, 2], [[1, 0], [0, 1]])
     >>> pprint(density(L)(1, 2), use_unicode=False)
@@ -1651,6 +1669,7 @@ def Laplace(name, mu, b):
 
     .. [1] https://en.wikipedia.org/wiki/Laplace_distribution
     .. [2] http://mathworld.wolfram.com/LaplaceDistribution.html
+
     """
 
     if isinstance(mu, (list, MatrixBase)) and\
@@ -1725,6 +1744,7 @@ def Logistic(name, mu, s):
 
     .. [1] https://en.wikipedia.org/wiki/Logistic_distribution
     .. [2] http://mathworld.wolfram.com/LogisticDistribution.html
+
     """
 
     return rv(name, LogisticDistribution, (mu, s))
@@ -1813,6 +1833,7 @@ def LogNormal(name, mean, std):
 
     .. [1] https://en.wikipedia.org/wiki/Lognormal
     .. [2] http://mathworld.wolfram.com/LogNormalDistribution.html
+
     """
 
     return rv(name, LogNormalDistribution, (mean, std))
@@ -1878,6 +1899,7 @@ def Maxwell(name, a):
 
     .. [1] https://en.wikipedia.org/wiki/Maxwell_distribution
     .. [2] http://mathworld.wolfram.com/MaxwellDistribution.html
+
     """
 
     return rv(name, MaxwellDistribution, (a, ))
@@ -1965,6 +1987,7 @@ def Nakagami(name, mu, omega):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Nakagami_distribution
+
     """
 
     return rv(name, NakagamiDistribution, (mu, omega))
@@ -2059,12 +2082,12 @@ def Normal(name, mean, std):
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> pprint(density(m)(y, z))
-           /  y   1\ /2*y   z\   /  z    \ /  y   2*z    \
-           |- - + -|*|--- - -| + |- - + 1|*|- - + --- - 1|
-      ___  \  2   2/ \ 3    3/   \  2    / \  3    3     /
+           /1   y\ /2*y   z\   /    z\ /  y   2*z    \
+           |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
+      ___  \2   2/ \ 3    3/   \    2/ \  3    3     /
     \/ 3 *e
-    ------------------------------------------------------
-                             6*pi
+    --------------------------------------------------
+                           6*pi
 
     >>> marginal_distribution(m, m[0])(1)
      1/(2*sqrt(pi))
@@ -2075,6 +2098,7 @@ def Normal(name, mean, std):
 
     .. [1] https://en.wikipedia.org/wiki/Normal_distribution
     .. [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
+
     """
 
     if isinstance(mean, (list, MatrixBase)) and\
@@ -2165,6 +2189,7 @@ def Pareto(name, xm, alpha):
 
     .. [1] https://en.wikipedia.org/wiki/Pareto_distribution
     .. [2] http://mathworld.wolfram.com/ParetoDistribution.html
+
     """
 
     return rv(name, ParetoDistribution, (xm, alpha))
@@ -2250,6 +2275,7 @@ def QuadraticU(name, a, b):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/U-quadratic_distribution
+
     """
 
     return rv(name, QuadraticUDistribution, (a, b))
@@ -2333,6 +2359,7 @@ def RaisedCosine(name, mu, s):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Raised_cosine_distribution
+
     """
 
     return rv(name, RaisedCosineDistribution, (mu, s))
@@ -2405,6 +2432,7 @@ def Rayleigh(name, sigma):
 
     .. [1] https://en.wikipedia.org/wiki/Rayleigh_distribution
     .. [2] http://mathworld.wolfram.com/RayleighDistribution.html
+
     """
 
     return rv(name, RayleighDistribution, (sigma, ))
@@ -2546,6 +2574,7 @@ def StudentT(name, nu):
 
     .. [1] https://en.wikipedia.org/wiki/Student_t-distribution
     .. [2] http://mathworld.wolfram.com/Studentst-Distribution.html
+
     """
 
     return rv(name, StudentTDistribution, (nu, ))
@@ -2626,6 +2655,7 @@ def Trapezoidal(name, a, b, c, d):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trapezoidal_distribution
+
     """
     return rv(name, TrapezoidalDistribution, (a, b, c, d))
 
@@ -2714,6 +2744,7 @@ def Triangular(name, a, b, c):
 
     .. [1] https://en.wikipedia.org/wiki/Triangular_distribution
     .. [2] http://mathworld.wolfram.com/TriangularDistribution.html
+
     """
 
     return rv(name, TriangularDistribution, (a, b, c))
@@ -2816,6 +2847,7 @@ def Uniform(name, left, right):
 
     .. [1] https://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
     .. [2] http://mathworld.wolfram.com/UniformDistribution.html
+
     """
 
     return rv(name, UniformDistribution, (left, right))
@@ -2861,7 +2893,7 @@ def UniformSum(name, n):
     The density of the Irwin-Hall distribution is given by
 
     .. math ::
-        f(x) := \frac{1}{(n-1)!}\sum_{k=0}^{\lfloor x\rfloor}(-1)^k
+        f(x) := \frac{1}{(n-1)!}\sum_{k=0}^{\left\lfloor x\right\rfloor}(-1)^k
                 \binom{n}{k}(x-k)^{n-1}
 
     Parameters
@@ -2915,6 +2947,7 @@ def UniformSum(name, n):
 
     .. [1] https://en.wikipedia.org/wiki/Uniform_sum_distribution
     .. [2] http://mathworld.wolfram.com/UniformSumDistribution.html
+
     """
 
     return rv(name, UniformSumDistribution, (n, ))
@@ -2983,6 +3016,7 @@ def VonMises(name, mu, k):
 
     .. [1] https://en.wikipedia.org/wiki/Von_Mises_distribution
     .. [2] http://mathworld.wolfram.com/vonMisesDistribution.html
+
     """
 
     return rv(name, VonMisesDistribution, (mu, k))
@@ -3129,6 +3163,7 @@ def WignerSemicircle(name, R):
 
     .. [1] https://en.wikipedia.org/wiki/Wigner_semicircle_distribution
     .. [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
+
     """
 
     return rv(name, WignerSemicircleDistribution, (R,))

@@ -1,15 +1,15 @@
 """Module for querying SymPy objects about assumptions."""
 from __future__ import print_function, division
 
+from sympy.assumptions.assume import (global_assumptions, Predicate,
+        AppliedPredicate)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
+from sympy.core.decorators import deprecated
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
     BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
-from sympy.assumptions.assume import (global_assumptions, Predicate,
-        AppliedPredicate)
-from sympy.core.decorators import deprecated
 from sympy.utilities.decorator import memoize_property
 
 
@@ -1207,7 +1207,7 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
         args = [x for x in args if x is not None]
         if args:
             return expr.func(*args)
-    if args and all(x != None for x in args):
+    if args and all(x is not None for x in args):
         return expr.func(*args)
 
 

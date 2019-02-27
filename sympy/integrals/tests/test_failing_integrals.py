@@ -33,7 +33,6 @@ def test_issue_4491():
 
 
 @XFAIL
-@slow
 def test_issue_4511():
     # This works, but gives a complicated answer.  The correct answer is x - cos(x).
     # The last one is what Maple gives.  It is also quite slow.

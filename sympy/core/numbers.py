@@ -4,7 +4,6 @@ import decimal
 import fractions
 import math
 import re as regex
-from collections import defaultdict
 
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError, _convert_numpy_types
@@ -177,28 +176,12 @@ def igcd(*args):
     if len(args) < 2:
         raise TypeError(
             'igcd() takes at least 2 arguments (%s given)' % len(args))
-    if 1 in args:
-        a = 1
-        k = 0
-    else:
-        a = abs(as_int(args[0]))
-        k = 1
-    if a != 1:
-        while k < len(args):
-            b = args[k]
-            k += 1
-            b = as_int(b)
-            if not b:
-                continue
-            if b == 1:
-                a = 1
-                break
-            if b < 0:
-                b = -b
-            a = igcd2(a, b)
-    while k < len(args):
-        ok = as_int(args[k])
-        k += 1
+    args_temp = [abs(as_int(i)) for i in args]
+    if 1 in args_temp:
+        return 1
+    a = args_temp.pop()
+    for b in args_temp:
+        a = igcd2(a, b) if b else a
     return a
 
 
@@ -561,7 +544,6 @@ class Number(AtomicExpr):
 
     def __divmod__(self, other):
         from .containers import Tuple
-        from sympy.functions.elementary.complexes import sign
 
         try:
             other = Number(other)
@@ -3639,7 +3621,7 @@ class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
     >>> S.TribonacciConstant > 1
     True
     >>> S.TribonacciConstant.expand(func=True)
-    1/3 + (-3*sqrt(33) + 19)**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
+    1/3 + (19 - 3*sqrt(33))**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
     >>> S.TribonacciConstant.is_irrational
     True
     >>> S.TribonacciConstant.n(20)
@@ -3830,7 +3812,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     __slots__ = []
 
     def _latex(self, printer):
-        return r"i"
+        return printer._settings['imaginary_unit_latex']
 
     @staticmethod
     def __abs__():

@@ -1,12 +1,12 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, Expr, Rational, Symbol, Dummy
+from sympy.core import S, sympify, Expr, Rational, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, is_sequence
 from sympy.core.containers import Tuple
-from sympy.utilities.iterables import uniq
 from sympy.sets.sets import Complement
+from sympy.utilities.iterables import uniq
 
 
 class Order(Expr):
@@ -310,7 +310,7 @@ class Order(Expr):
             if (not all(o[1] == order_symbols[0][1] for o in order_symbols) and
                     not all(p == self.point[0] for p in self.point)):  # pragma: no cover
                 raise NotImplementedError('Order at points other than 0 '
-                    'or oo not supported, got %s as a point.' % point)
+                    'or oo not supported, got %s as a point.' % self.point)
             if order_symbols and order_symbols[0][1] != self.point[0]:
                 raise NotImplementedError(
                         "Multiplying Order at different points is not supported.")

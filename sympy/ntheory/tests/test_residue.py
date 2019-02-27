@@ -233,6 +233,9 @@ def test_residue():
     assert _discrete_log_pollard_rho(6138719, 2**19, 2, rseed=0) == 19
     assert _discrete_log_pollard_rho(36721943, 2**40, 2, rseed=0) == 40
     assert _discrete_log_pollard_rho(24567899, 3**333, 3, rseed=0) == 333
+    raises(ValueError, lambda: _discrete_log_pollard_rho(11, 7, 31, rseed=0))
+    raises(ValueError, lambda: _discrete_log_pollard_rho(227, 3**7, 5, rseed=0))
+
     assert _discrete_log_pohlig_hellman(98376431, 11**9, 11) == 9
     assert _discrete_log_pohlig_hellman(78723213, 11**31, 11) == 31
     assert _discrete_log_pohlig_hellman(32942478, 11**98, 11) == 98

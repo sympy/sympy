@@ -1,4 +1,9 @@
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
+                   Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
+                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
+                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
+from sympy.core.compatibility import range
+from sympy.external import import_module
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, characteristic_function, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy,
@@ -11,20 +16,10 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
                          moment, cmoment, smoment)
-
-from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
-                   Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
-
-
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
-
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.external import import_module
-
-from sympy.core.compatibility import range
+from sympy.utilities.randtest import verify_numerically as tn
 
 oo = S.Infinity
 
@@ -158,7 +153,7 @@ def test_characteristic_function():
     assert simplify(cf(1)) == S(25)/26 + 5*I/26
 
 
-def test_sample():
+def test_sample_continuous():
     z = Symbol('z')
     Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
     assert sample(Z) in Z.pspace.domain.set
@@ -758,6 +753,7 @@ def test_issue_10003():
     assert P(G < -1) == S.Zero
 
 
+@slow
 def test_precomputed_cdf():
     x = symbols("x", real=True, finite=True)
     mu = symbols("mu", real=True, finite=True)
@@ -776,6 +772,7 @@ def test_precomputed_cdf():
         assert compdiff == 0
 
 
+@slow
 def test_precomputed_characteristic_functions():
     import mpmath
 

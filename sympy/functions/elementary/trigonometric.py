@@ -2,22 +2,22 @@ from __future__ import print_function, division
 
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
+from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.numbers import igcdex, Rational, pi
-from sympy.core.singleton import S
-from sympy.core.symbol import Symbol, Wild
 from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.core.numbers import igcdex, Rational, pi
+from sympy.core.relational import Ne
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
-from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.exponential import log, exp
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh,
     coth, HyperbolicFunction, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.sets.sets import FiniteSet
 from sympy.utilities.iterables import numbered_symbols
-from sympy.core.compatibility import range
-from sympy.core.relational import Ne
-from sympy.functions.elementary.piecewise import Piecewise
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -77,7 +77,6 @@ class TrigonometricFunction(Function):
             return general_period
 
         if symbol in f.free_symbols:
-            p, q = Wild('p'), Wild('q')
             if f.is_Mul:
                 g, h = f.as_independent(symbol)
                 if h == symbol:
@@ -1006,7 +1005,7 @@ class tan(TrigonometricFunction):
                             and not isinstance(sresult, cos):
                         if sresult == 0:
                             return S.ComplexInfinity
-                        return (1 - cresult)/sresult
+                        return 1/sresult - cresult/sresult
                 table2 = {
                     12: (3, 4),
                     20: (4, 5),
@@ -1531,7 +1530,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
             return arg.args[0]
 
         t = cls._reciprocal_of.eval(arg)
-        if t == None:
+        if t is None:
             return t
         elif any(isinstance(i, cos) for i in (t, -t)):
             return (1/t).rewrite(sec)
@@ -1549,13 +1548,13 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
         # If calling method_name on _reciprocal_of returns a value != None
         # then return the reciprocal of that value
         t = self._call_reciprocal(method_name, *args, **kwargs)
-        return 1/t if t != None else t
+        return 1/t if t is not None else t
 
     def _rewrite_reciprocal(self, method_name, arg):
         # Special handling for rewrite functions. If reciprocal rewrite returns
         # unmodified expression, then return None
         t = self._call_reciprocal(method_name, arg)
-        if t != None and t != self._reciprocal_of(arg):
+        if t is not None and t != self._reciprocal_of(arg):
             return 1/t
 
     def _period(self, symbol):
@@ -2522,9 +2521,6 @@ class acot(InverseTrigonometricFunction):
             return arg
         else:
             return self.func(arg)
-
-    def _eval_is_real(self):
-        return self.args[0].is_real
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] == S.Infinity:
