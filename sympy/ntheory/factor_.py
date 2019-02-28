@@ -2151,7 +2151,7 @@ def is_abundant(n):
 
     """
 
-    if 2*n < sum(divisors(n)):
+    if 2 * n < sum(divisors(n)):
         return True
     return False
 
@@ -2176,6 +2176,6 @@ def is_deficient(n):
 
     """
 
-    if 2*n > sum(divisors(n)):
+    if 2 * n > sum(divisors(n)):
         return True
     return False
