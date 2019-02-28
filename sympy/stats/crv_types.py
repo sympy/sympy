@@ -232,6 +232,17 @@ def Arcsin(name, a=0, b=1):
 class BeniniDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'beta', 'sigma')
 
+    def __new__(name, *args):
+        alpha = args[BeniniDistribution._argnames.index('alpha')]
+        beta = args[BeniniDistribution._argnames.index('beta')]
+        sigma = args[BeniniDistribution._argnames.index('sigma')]
+
+        if not alpha.is_positive or not beta.is_positive:
+            raise ValueError("Shape parameters must be positive.")
+        if not sigma.is_positive:
+            raise ValueError("Scale paramter must be positive.")
+        return super(BeniniDistribution, name).__new__(name, *args)
+
     @property
     def set(self):
         return Interval(self.sigma, oo)
