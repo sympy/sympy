@@ -275,11 +275,9 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         if len(coords) != 3:
             raise ValueError('Need 3 coordinates for body or space')
         # Actual hard-coded kinematic differential equations
-        w1, w2, w3 = speeds
-        if w1 == w2 == w3 == 0:
-            return [S.Zero]*3
         q1, q2, q3 = coords
         q1d, q2d, q3d = [diff(i, dynamicsymbols._t) for i in coords]
+        w1, w2, w3 = speeds
         s1, s2, s3 = [sin(q1), sin(q2), sin(q3)]
         c1, c2, c3 = [cos(q1), cos(q2), cos(q3)]
         if rot_type.lower() == 'body':
