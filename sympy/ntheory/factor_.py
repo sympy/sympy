@@ -2051,7 +2051,8 @@ class primeomega(Function):
 
 
 def mersenne_prime_exponent(nth):
-    """Returns the nth Mersenne Prime Exponents.
+    """Returns the exponent ``i`` for the nth Mersenne prime (which
+    has the form `2^i - 1`).
 
     Examples
     ========
@@ -2072,16 +2073,19 @@ def mersenne_prime_exponent(nth):
 
 def is_perfect(n):
     """Returns True if ``n`` is a perfect number, else False.
+
     A perfect number is equal to the sum of its positive, proper divisors.
 
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import is_perfect
-    >>> is_perfect(6)
-    True
+    >>> from sympy.ntheory.factor_ import is_perfect, divisors
     >>> is_perfect(20)
     False
+    >>> is_perfect(6)
+    True
+    >>> sum(divisors(6)[:-1])
+    6
 
     References
     ==========
@@ -2102,9 +2106,9 @@ def is_perfect(n):
 
 
 def is_mersenne_prime(n):
-    """Returns True if  ``n`` is a Mersenne prime or not.
-    A Mersenne prime is a prime number that is
-    one less than a power of two.
+    """Returns True if  ``n`` is a Mersenne prime, else False.
+
+    A Mersenne prime is a prime number having the form `2^i - 1`.
 
     Examples
     ========
