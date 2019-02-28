@@ -1,25 +1,23 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import random
-from sympy import Derivative
 
 from sympy.core import SympifyError
 from sympy.core.basic import Basic
+from sympy.core.compatibility import is_sequence, range, reduce
 from sympy.core.expr import Expr
-from sympy.core.compatibility import is_sequence, as_int, range, reduce
 from sympy.core.function import count_ops, expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.simplify import simplify as _simplify
-from sympy.utilities.misc import filldedent
-from sympy.utilities.decorator import doctest_depends_on
-
-from sympy.matrices.matrices import MatrixBase, ShapeError
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import a2idx, classof
+from sympy.matrices.matrices import MatrixBase, ShapeError
+from sympy.simplify import simplify as _simplify
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.misc import filldedent
+
 
 def _iszero(x):
     """Returns True if x is zero."""

@@ -48,6 +48,10 @@ def test_compile_link_import_strings():
     if not cython:
         skip("cython not installed.")
 
+    from sympy.utilities._compilation import has_c
+    if not has_c():
+        skip("No C compiler found.")
+
     compile_kw = dict(std='c99', include_dirs=[numpy.get_include()])
     info = None
     try:

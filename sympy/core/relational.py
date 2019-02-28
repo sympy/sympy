@@ -104,7 +104,7 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     @property
     def reversed(self):
-        """Return the relationship with sides (and sign) reversed.
+        """Return the relationship with sides reversed.
 
         Examples
         ========
@@ -120,9 +120,34 @@ class Relational(Boolean, Expr, EvalfMixin):
         >>> _.reversed
         1 > x
         """
-        ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
+        ops = {Eq: Eq, Gt: Lt, Ge: Le, Lt: Gt, Le: Ge, Ne: Ne}
         a, b = self.args
         return Relational.__new__(ops.get(self.func, self.func), b, a)
+
+    @property
+    def reversedsign(self):
+        """Return the relationship with signs reversed.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x
+        >>> Eq(x, 1)
+        Eq(x, 1)
+        >>> _.reversedsign
+        Eq(-x, -1)
+        >>> x < 1
+        x < 1
+        >>> _.reversedsign
+        -x > -1
+        """
+        a, b = self.args
+        if not (isinstance(a, BooleanAtom) or isinstance(b, BooleanAtom)):
+            ops = {Eq: Eq, Gt: Lt, Ge: Le, Lt: Gt, Le: Ge, Ne: Ne}
+            return Relational.__new__(ops.get(self.func, self.func), -a, -b)
+        else:
+            return self
 
     @property
     def negated(self):
@@ -162,7 +187,8 @@ class Relational(Boolean, Expr, EvalfMixin):
     @property
     def canonical(self):
         """Return a canonical form of the relational by putting a
-        Number on the rhs else ordering the args. No other
+        Number on the rhs else ordering the args. The relation is also changed
+        so that the left-hand side expression does not start with a `-`. No other
         simplification is attempted.
 
         Examples
@@ -180,13 +206,24 @@ class Relational(Boolean, Expr, EvalfMixin):
         """
         args = self.args
         r = self
-        if r.rhs.is_Number:
-            if r.lhs.is_Number and r.lhs > r.rhs:
+        if r.rhs.is_number:
+            if r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
                 r = r.reversed
-        elif r.lhs.is_Number:
+        elif r.lhs.is_number:
             r = r.reversed
         elif tuple(ordered(args)) != args:
             r = r.reversed
+
+        # Check if first value has negative sign
+        if not isinstance(r.lhs, BooleanAtom) and r.lhs.could_extract_minus_sign():
+            r = r.reversedsign
+        elif not isinstance(r.rhs, BooleanAtom) and not r.rhs.is_number and r.rhs.could_extract_minus_sign():
+            # Right hand side has a minus, but not lhs.
+            # How does the expression with reversed signs behave?
+            # This is so that expressions of the type Eq(x, -y) and Eq(-x, y) have the same canonical representation
+            expr1, _ = ordered([r.lhs, -r.rhs])
+            if expr1 != r.lhs:
+                r = r.reversed.reversedsign
         return r
 
     def equals(self, other, failing_expression=False):
