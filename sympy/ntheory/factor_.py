@@ -2131,11 +2131,11 @@ def is_mersenne_prime(n):
     return b and r in MERSENNE_PRIME_EXPONENTS
 
 
-def _divisors_sum(n):
+def abundance(n):
     s = 0
     for d in divisors(n):
         s += d
-    return s
+    return s - 2 * n
 
 
 def is_abundant(n):
@@ -2159,7 +2159,7 @@ def is_abundant(n):
 
     """
     n = as_int(n)
-    return n != 6 and (n % 6 == 0 or _divisors_sum(n) > 2 * n)
+    return n != 6 and (n % 6 == 0 or abundance(n) > 0)
 
 
 def is_deficient(n):
@@ -2183,4 +2183,4 @@ def is_deficient(n):
 
     """
     n = as_int(n)
-    return _divisors_sum(n) < 2 * n
+    return abundance(n) < 0
