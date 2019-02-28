@@ -2164,9 +2164,9 @@ def is_deficient(n):
     ========
 
     >>> from sympy.ntheory.factor_ import is_deficient
-    >>> is_defecient(20)
+    >>> is_deficient(20)
     False
-    >>> is_defecient(15)
+    >>> is_deficient(15)
     True
 
     References
