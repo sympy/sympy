@@ -2,14 +2,19 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
     MatrixSymbol, Function, Derivative, log
+from sympy.core.containers import Tuple
+from sympy.functions.elementary.complexes import re, im, Abs, conjugate
 from sympy.functions.combinatorial.factorials import factorial, factorial2, binomial
 from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.special.zeta_functions import polylog, lerchphi
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, Xor, Not
-from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, SymmetricDifference
-from sympy.stats.rv import RandomSymbol
+from sympy.matrices.expressions.determinant import Determinant
 from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
     MathMLPrinter
+from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, SymmetricDifference
+from sympy.stats.rv import RandomSymbol
+from sympy.sets.sets import Interval
+from sympy.stats.rv import RandomSymbol
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
@@ -908,6 +913,42 @@ def test_presentation_mathml_order():
     assert mml.childNodes[6].nodeName == 'msup'
     assert mml.childNodes[6].childNodes[0].childNodes[0].nodeValue == 'x'
     assert mml.childNodes[6].childNodes[1].childNodes[0].nodeValue == '3'
+
+
+def test_print_intervals():
+    a = Symbol('a', real=True)
+    assert mpp.doprint(Interval(0, a)) == '<mrow><mfenced close="]" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Interval(0, a, False, False)) == '<mrow><mfenced close="]" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Interval(0, a, True, False)) == '<mrow><mfenced close="]" open="("><mn>0</mn><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Interval(0, a, False, True)) == '<mrow><mfenced close=")" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Interval(0, a, True, True)) == '<mrow><mfenced close=")" open="("><mn>0</mn><mi>a</mi></mfenced></mrow>'
+
+
+def test_print_tuples():
+    a = Symbol('a')
+    assert mpp.doprint(Tuple(0,)) == '<mrow><mfenced><mn>0</mn></mfenced></mrow>'
+    assert mpp.doprint(Tuple(0, a)) == '<mrow><mfenced><mn>0</mn><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Tuple(0, a, a)) == '<mrow><mfenced><mn>0</mn><mi>a</mi><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Tuple(0, 1, 2, 3, 4)) == '<mrow><mfenced><mn>0</mn><mn>1</mn><mn>2</mn><mn>3</mn><mn>4</mn></mfenced></mrow>'
+    assert mpp.doprint(Tuple(0, 1, Tuple(2, 3, 4))) == '<mrow><mfenced><mn>0</mn><mn>1</mn><mrow><mfenced><mn>2</mn><mn>3</mn><mn>4</mn></mfenced></mrow></mfenced></mrow>'
+
+
+def test_print_re_im():
+    x = Symbol('x')
+    assert mpp.doprint(re(x)) == '<mrow><mi mathvariant="fraktur">R</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(im(x)) == '<mrow><mi mathvariant="fraktur">I</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(re(x + 1)) == '<mrow><mrow><mi mathvariant="fraktur">R</mi><mfenced><mi>x</mi></mfenced></mrow><mo>+</mo><mn>1</mn></mrow>'
+    assert mpp.doprint(im(x + 1)) == '<mrow><mi mathvariant="fraktur">I</mi><mfenced><mi>x</mi></mfenced></mrow>'
+
+
+def test_print_Abs():
+    x = Symbol('x')
+    assert mpp.doprint(Abs(x)) == '<mrow><mfenced close="|" open="|"><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(Abs(x + 1)) == '<mrow><mfenced close="|" open="|"><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced></mrow>'
+
+
+def test_print_Determinant():
+    assert mpp.doprint(Determinant(Matrix([[1, 2], [3, 4]]))) == '<mrow><mfenced close="|" open="|"><mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced></mfenced></mrow>'
 
 
 def test_presentation_settings():
