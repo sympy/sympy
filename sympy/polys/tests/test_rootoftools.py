@@ -12,7 +12,7 @@ from sympy.polys.polyerrors import (
 
 from sympy import (
     S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
-    solve, legendre_poly, Symbol, Integral
+    solve, legendre_poly, Integral
 )
 
 from sympy.utilities.pytest import raises
@@ -566,8 +566,8 @@ def test_eval_approx_relative():
         '-0.10', '0.05 - 3.2*I', '0.05 + 3.2*I']
     assert all(abs(((a[i] - t[i])/t[i]).n()) < 1e-2 for i in range(len(a)))
 
+
 def test_issue_15920():
-    x = Symbol("x")
-    r = rootof(x**5-x+1,0)
+    r = rootof(x**5 - x + 1, 0)
     p = Integral(x, (x, 1, y))
     assert Eq(r, p).lhs is r and Eq(r, p).rhs is p
