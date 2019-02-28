@@ -1546,26 +1546,32 @@ class MatrixEigen(MatrixSubspaces):
             cols = self.cols
             ret = [0]
 
-            nullity_prev = 0
             i = 1
             while True:
-                nullity_next = cols - eig_mat(val, i).rank()
-
-                monotonic_check = nullity_next == nullity_prev
-                multiplicity_check = nullity_prev == algebraic_multiplicity
-
-                if monotonic_check is True and multiplicity_check is True:
-                    break
-                elif monotonic_check is False and multiplicity_check is False:
-                    ret.append(nullity_next)
-                    nullity_prev = nullity_next
-                    i += 1
-                    continue
-                else:
+                nullity = cols - eig_mat(val, i).rank()
+                if nullity > algebraic_multiplicity:
+                    # Nullity must not exceed algebraic multiplicity.
+                    # But if it happens with bad zero testing, The
+                    # computation must be aborted
                     raise MatrixError(
-                        "SymPy had encountered an inconsistent result while "
-                        "computing Jordan block."
-                        )
+                        "SymPy had encountered an inconsistent "
+                        "result while computing Jordan block: "
+                        "{}".format(self))
+                if nullity <= ret[-1]:
+                    # Nullity must always increase until the
+                    # algebraic multiplicity is met. But wrong
+                    # result may have to be caught in Runtime.
+                    raise MatrixError(
+                        "SymPy had encountered an inconsistent "
+                        "result while computing Jordan block: "
+                        "{}".format(self))
+
+                # Normal behavior
+                ret.append(nullity)
+                if nullity == algebraic_multiplicity:
+                    break
+                else:
+                    i += 1
 
             return ret
 
@@ -1636,7 +1642,7 @@ class MatrixEigen(MatrixSubspaces):
         if jordan_form_size != self.rows:
             raise MatrixError(
                 "SymPy had encountered an inconsistent result while "
-                "computing Jordan block.")
+                "computing Jordan block. : {}".format(self))
 
         blocks = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
         jordan_mat = mat.diag(*blocks)
