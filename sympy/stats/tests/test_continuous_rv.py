@@ -188,12 +188,26 @@ def test_arcsin():
 
 def test_benini():
     alpha = Symbol("alpha", positive=True)
-    b = Symbol("beta", positive=True)
+    beta = Symbol("beta", positive=True)
     sigma = Symbol("sigma", positive=True)
 
-    X = Benini('x', alpha, b, sigma)
-    assert density(X)(x) == ((alpha/x + 2*b*log(x/sigma)/x)
-                          *exp(-alpha*log(x/sigma) - b*log(x/sigma)**2))
+    X = Benini('x', alpha, beta, sigma)
+    assert density(X)(x) == ((alpha/x + 2*beta*log(x/sigma)/x)
+                          *exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
+
+    alpha = Symbol("alpha", positive=False)
+
+    raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
+
+    alpha = Symbol("alpha", positive=True)
+    beta = Symbol("beta", positive=False)
+
+    raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
+
+    beta = Symbol("beta", positive=True)
+    sigma = Symbol("sigma", positive=False)
+
+    raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
 
 def test_beta():
