@@ -2131,17 +2131,18 @@ def is_mersenne_prime(n):
     return b and r in MERSENNE_PRIME_EXPONENTS
 
 
-def abundance(n):
-    s = 0
-    for d in divisors(n):
-        s += d
-    return s - 2 * n
+def _divisors_sum(n):
+    facs = factorint(n)
+    s = 1
+    for k, v in facs.items():
+        s *= (k ** (v + 1) - 1) // (k - 1)
+    return s
 
 
 def is_abundant(n):
     """Returns True if ``n`` is a abundant number, else False.
 
-    A perfect number is smaller to the sum of its positive, proper divisors.
+    A abundant number is smaller to the sum of its positive, proper divisors.
 
     Examples
     ========
@@ -2159,13 +2160,13 @@ def is_abundant(n):
 
     """
     n = as_int(n)
-    return n != 6 and (n % 6 == 0 or abundance(n) > 0)
+    return n != 6 and (n % 6 == 0 or _divisors_sum(n) > 2 * n)
 
 
 def is_deficient(n):
     """Returns True if ``n`` is a deficient number, else False.
 
-    A perfect number is greater to the sum of its positive, proper divisors.
+    A deficient number is greater to the sum of its positive, proper divisors.
 
     Examples
     ========
@@ -2183,4 +2184,4 @@ def is_deficient(n):
 
     """
     n = as_int(n)
-    return abundance(n) < 0
+    return _divisors_sum(n) < 2 * n
