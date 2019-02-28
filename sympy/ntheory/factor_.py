@@ -2131,6 +2131,13 @@ def is_mersenne_prime(n):
     return b and r in MERSENNE_PRIME_EXPONENTS
 
 
+def _divisors_sum(n):
+    s = 0
+    for d in divisors(n):
+        s += d
+    return s
+
+
 def is_abundant(n):
     """Returns True if ``n`` is a abundant number, else False.
 
@@ -2151,10 +2158,8 @@ def is_abundant(n):
     .. [1] http://mathworld.wolfram.com/AbundantNumber.html
 
     """
-
-    if 2 * n < sum(divisors(n)):
-        return True
-    return False
+    n = as_int(n)
+    return n != 6 and (n % 6 == 0 or _divisors_sum(n) > 2 * n)
 
 
 def is_deficient(n):
@@ -2177,7 +2182,5 @@ def is_deficient(n):
     .. [1] http://mathworld.wolfram.com/DeficientNumber.html
 
     """
-
-    if 2 * n > sum(divisors(n)):
-        return True
-    return False
+    n = as_int(n)
+    return _divisors_sum(n) < 2 * n
