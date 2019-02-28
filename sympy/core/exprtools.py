@@ -1123,7 +1123,6 @@ def _factor_sum_int(expr, **kwargs):
     the symbol is replaced with an expression that depends
     on the variables of summation/integration:
 
-    >>> from sympy import Function
     >>> eq = Sum(y, (x, 1, 3))
     >>> factor_terms(eq).subs(y, x).doit()
     3*x
