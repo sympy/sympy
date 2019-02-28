@@ -737,7 +737,7 @@ def test_dsolve_options():
 
 def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
-        (
+        ('order_reducible_substitution',
         'nth_algebraic',
         'nth_linear_constant_coeff_homogeneous',
         'nth_linear_euler_eq_homogeneous',
@@ -3195,6 +3195,25 @@ def test_order_reducible():
     assert dsolve(eqn, f(x)) in (sol1, sol1s)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol2, sol2s)
 
+
+def test_order_reducible_substitution():
+    eqn = Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2))
+    sol = Eq(f(x),
+             C1 - sqrt(-1/C1)*log(-C1*sqrt(-1/C1) + x) + sqrt(-1/C1)*log(C1*sqrt(-1/C1) + x))
+    assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
+    assert sol == dsolve(eqn, f(x), hint='order_reducible_substitution')
+    assert sol == dsolve(eqn, f(x))
+
+    w, y= symbols('w y')
+    f = Function('f')
+    F = lambda eq: _order_reducible_substitution_match(eq, f(x))
+    fx = f(x)
+    D = Derivative
+    assert F(D(y*fx, x, y) + D(fx, x)) is None
+    assert F(D(y*f(y), y, y) + D(f(y), y)) is None
+    assert F(fx*D(fx, x) + D(fx, x, 2)) is None
+    assert F(D(x*f(y), y, 2) + D(w*y*fx, x, 3)) == dict(var=3)
+    assert F(D(f(w), w, 2) + D(f(w), w, 3) + D(fx, x, 4)) == dict(var=4)
 
 def test_nth_algebraic():
     eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
