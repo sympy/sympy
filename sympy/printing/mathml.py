@@ -1213,7 +1213,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             x.appendChild(self._print(e.indices[0]))
             return x
         x.appendChild(self._print(e.indices))
-        return x 
+        return x
 
 
 def mathml(expr, printer='content', **settings):
