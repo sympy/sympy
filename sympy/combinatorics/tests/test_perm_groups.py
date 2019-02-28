@@ -9,7 +9,7 @@ from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 rmul = Permutation.rmul
 
@@ -854,6 +854,8 @@ def test_sylow_subgroup():
     assert G.order() % S.order() == 0
     assert G.order()/S.order() % 2 > 0
 
+
+@slow
 def test_presentation():
     def _test(P):
         G = P.presentation()

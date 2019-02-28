@@ -279,7 +279,6 @@ class Plane(GeometryEntity):
 
         """
         from sympy.geometry.line import LinearEntity3D
-        x, y, z = map(Dummy, 'xyz')
         if self.intersection(o) != []:
             return S.Zero
 
