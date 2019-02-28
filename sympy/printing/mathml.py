@@ -1205,7 +1205,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_IndexedBase(self,e):
         return self._print(e.label)
-        
 
     def _print_Indexed(self,e):
         x = self.dom.createElement('msub')
