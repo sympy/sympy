@@ -12,7 +12,7 @@ from sympy.polys.polyerrors import (
 
 from sympy import (
     S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
-    solve, legendre_poly
+    solve, legendre_poly, Symbol, Integral
 )
 
 from sympy.utilities.pytest import raises
@@ -142,8 +142,7 @@ def test_CRootOf___eval_Eq__():
     assert Eq(r, 0) is S.false
     assert Eq(r, S.Infinity) is S.false
     assert Eq(r, I) is S.false
-    assert Eq(r, f(0)) is S.false
-    assert Eq(r, f(0)) is S.false
+    assert Eq(r, f(0)).lhs is r and Eq(r, f(0)).rhs is f(0)
     sol = solve(eq)
     for s in sol:
         if s.is_real:
@@ -566,3 +565,9 @@ def test_eval_approx_relative():
     assert [str(i) for i in a] == [
         '-0.10', '0.05 - 3.2*I', '0.05 + 3.2*I']
     assert all(abs(((a[i] - t[i])/t[i]).n()) < 1e-2 for i in range(len(a)))
+
+def test_issue_15920():
+    x = Symbol("x")
+    r = rootof(x**5-x+1,0)
+    p = Integral(x, (x, 1, y))
+    assert Eq(r, p).lhs is r and Eq(r, p).rhs is p
