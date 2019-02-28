@@ -2129,3 +2129,53 @@ def is_mersenne_prime(n):
 
     r, b = integer_log(n + 1, 2)
     return b and r in MERSENNE_PRIME_EXPONENTS
+
+
+def is_abundant(n):
+    """Returns True if ``n`` is a abundant number, else False.
+    A perfect number is smaller to the sum of its positive, proper divisors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_abundant
+    >>> is_abundant(20)
+    True
+    >>> is_abundant(15)
+    False
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/AbundantNumber.html
+
+    """
+
+    if 2*n < sum(divisors(n)):
+        return True
+    return False
+
+
+def is_deficient(n):
+    """Returns True if ``n`` is a deficient number, else False.
+    A perfect number is greater to the sum of its positive, proper divisors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_deficient
+    >>> is_defecient(20)
+    False
+    >>> is_defecient(15)
+    True
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/DeficientNumber.html
+
+    """
+
+    if 2*n > sum(divisors(n)):
+        return True
+    return False
