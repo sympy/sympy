@@ -2133,6 +2133,7 @@ def is_mersenne_prime(n):
 
 def is_abundant(n):
     """Returns True if ``n`` is a abundant number, else False.
+
     A perfect number is smaller to the sum of its positive, proper divisors.
 
     Examples
@@ -2158,6 +2159,7 @@ def is_abundant(n):
 
 def is_deficient(n):
     """Returns True if ``n`` is a deficient number, else False.
+
     A perfect number is greater to the sum of its positive, proper divisors.
 
     Examples
