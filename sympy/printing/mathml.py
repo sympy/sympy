@@ -1057,6 +1057,38 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
 
+    def _print_Floor(self, e):
+        mrow =  self.dom.createElement('mrow')
+        x = self.dom.createElement('mfenced')
+        x.setAttribute('open', '&#x230A;')
+        x.setAttribute('close', '&#x230B;')
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        mrow.appenChild(x)
+        return mrow
+
+
+    def _print_Ceiling(self, e):
+        mrow =  self.dom.createElement('mrow')
+        x = self.dom.createElement('mfenced')
+        x.setAttribute('open', '&#x2308;')
+        x.setAttribute('close', '&#x2309;')
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        mrow.appenChild(x)
+        return mrow
+        
+
+    def _print_Lambda(self, e):
+        mrow = self.dom.createElement('mrow')
+        x = self.dom.createElement('mfenced')
+        x.appendChild(self._print(e.args[0]))
+        x.appendChild(self.dom.createTextnode('&#x21A6;'))
+        x.appendChild(self._print(e.args[1]))
+        mrow.appendChild(x)
+        return mrow
+
+
 def mathml(expr, printer='content', **settings):
     """Returns the MathML representation of expr. If printer is presentation then
      prints Presentation MathML else prints content MathML.
