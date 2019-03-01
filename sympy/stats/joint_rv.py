@@ -164,7 +164,7 @@ class JointDistribution(Basic, NamedArgsMixin):
         rvs = other.keys()
         _set = self.domain.set
         expr = self.pdf(tuple(i.args[0] for i in self.symbols))
-        for i in range(len(other)):
+        for i in range(len(rvs)):
             if rvs[i].is_Continuous:
                 density = Integral(expr, (rvs[i], _set[i].inf,
                     other[rvs[i]]))
