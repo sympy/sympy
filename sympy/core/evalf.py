@@ -367,12 +367,14 @@ def get_integer_part(expr, no, options, return_ints=False):
             if s:
                 doit = True
                 from sympy.core.compatibility import as_int
+                # use strict=False with as_int because we take
+                # 2.0 == 2
                 for v in s.values():
                     try:
-                        as_int(v)
+                        as_int(v, strict=False)
                     except ValueError:
                         try:
-                            [as_int(i) for i in v.as_real_imag()]
+                            [as_int(i, strict=False) for i in v.as_real_imag()]
                             continue
                         except (ValueError, AttributeError):
                             doit = False
@@ -943,7 +945,7 @@ def do_integral(expr, prec, options):
         # difference
         if xhigh.free_symbols & xlow.free_symbols:
             diff = xhigh - xlow
-            if not diff.free_symbols:
+            if diff.is_number:
                 xlow, xhigh = 0, diff
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)

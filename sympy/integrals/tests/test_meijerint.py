@@ -563,6 +563,7 @@ def test_probability():
                               (x, 0, oo)))) == polygamma(0, k)
 
 
+@slow
 def test_expint():
     """ Test various exponential integrals. """
     from sympy import (expint, unpolarify, Symbol, Ci, Si, Shi, Chi,
@@ -630,7 +631,7 @@ def test_messy():
 
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
-        (0, And(S(0) < re(a/2) + S(1)/2, S(0) < re(a/2) + 1))
+        (0, And(re(a/2) + S(1)/2 > S(0), re(a/2) + 1 > S(0)))
 
     # NOTE s < 0 can be done, but argument reduction is not good enough yet
     assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \

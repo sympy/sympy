@@ -11,7 +11,7 @@ from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
-    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
+    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
 from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
@@ -672,6 +672,10 @@ def test_LUsolve():
     b = A*x
     raises(NotImplementedError, lambda: A.LUsolve(b))
 
+    A = Matrix(4, 4, lambda i, j: 1/(i+j+1) if i != 3 else 0)
+    b = Matrix.zeros(4, 1)
+    raises(NotImplementedError, lambda: A.LUsolve(b))
+
 
 def test_QRsolve():
     A = Matrix([[2, 3, 5],
@@ -1105,16 +1109,16 @@ def test_eigen():
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
     M = Matrix([[S(1)/4, 1], [1, 1]])
     assert M.eigenvects(simplify=True) == [
-        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-S(3)/8 + sqrt(73)/8], [1]])]),
-        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[-sqrt(73)/8 - S(3)/8], [1]])])]
-    assert M.eigenvects(simplify=False) ==[(S(5)/8 + sqrt(73)/8, 1, [Matrix([
-       [-1/(-sqrt(73)/8 - S(3)/8)],
-       [                     1]])]), (-sqrt(73)/8 + S(5)/8, 1, [Matrix([
-       [-1/(-S(3)/8 + sqrt(73)/8)],
-       [                     1]])])]
+        (S(5)/8 - sqrt(73)/8, 1, [Matrix([[-sqrt(73)/8 - S(3)/8], [1]])]),
+        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-S(3)/8 + sqrt(73)/8], [1]])])]
+    assert M.eigenvects(simplify=False) ==[
+        (S(5)/8 - sqrt(73)/8, 1, [Matrix([[-1/(-S(3)/8 + sqrt(73)/8)],
+                                          [                     1]])]),
+        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-1/(-sqrt(73)/8 - S(3)/8)],
+                                          [                     1]])])]
 
     m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
-    evals = {-sqrt(385)/20 + S(5)/4: 1, sqrt(385)/20 + S(5)/4: 1, S.Zero: 1}
+    evals = { S(5)/4 - sqrt(385)/20: 1, sqrt(385)/20 + S(5)/4: 1, S.Zero: 1}
     assert m.eigenvals() == evals
     nevals = list(sorted(m.eigenvals(rational=False).keys()))
     sevals = list(sorted(evals.keys()))
@@ -1612,10 +1616,10 @@ def test_creation_args():
     raises(TypeError, lambda: zeros(1, 2, 3, 4))
     assert zeros(long(3)) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
-    assert zeros(3.) == zeros(3)
+    raises(ValueError, lambda: zeros(3.))
     assert eye(long(3)) == eye(3)
     assert eye(Integer(3)) == eye(3)
-    assert eye(3.) == eye(3)
+    raises(ValueError, lambda: eye(3.))
     assert ones(long(3), Integer(4)) == ones(3, 4)
     raises(TypeError, lambda: Matrix(5))
     raises(TypeError, lambda: Matrix(1, 2))
@@ -2850,7 +2854,7 @@ def test_atoms():
     assert m.atoms() == {S(1),S(2),S(-1), x}
     assert m.atoms(Symbol) == {x}
 
-@slow
+
 def test_pinv():
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])
@@ -2961,6 +2965,13 @@ def test_gauss_jordan_solve():
     assert sol == Matrix([[-1], [2], [0]])
     assert params == Matrix(0, 1, [])
 
+    # Square, full rank, unique solution, B has more columns than rows
+    A = eye(3)
+    B = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == B
+    assert params == Matrix(0, 4, [])
+
     # Square, reduced rank, parametrized solution
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     b = Matrix([3, 6, 9])
@@ -2971,6 +2982,20 @@ def test_gauss_jordan_solve():
         w[s.name] = s
     assert sol == Matrix([[w['tau0'] - 1], [-2*w['tau0'] + 2], [w['tau0']]])
     assert params == Matrix([[w['tau0']]])
+    assert freevar == [2]
+
+    # Square, reduced rank, parametrized solution, B has two columns
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    B = Matrix([[3, 4], [6, 8], [9, 12]])
+    sol, params, freevar = A.gauss_jordan_solve(B, freevar=True)
+    w = {}
+    for s in sol.atoms(Symbol):
+        # Extract dummy symbols used in the solution.
+        w[s.name] = s
+    assert sol == Matrix([[w['tau0'] - 1, w['tau1'] - S(4)/3],
+                          [-2*w['tau0'] + 2, -2*w['tau1'] + S(8)/3],
+                          [w['tau0'], w['tau1']],])
+    assert params == Matrix([[w['tau0'], w['tau1']]])
     assert freevar == [2]
 
     # Square, reduced rank, parametrized solution
@@ -3006,10 +3031,27 @@ def test_gauss_jordan_solve():
     assert sol == Matrix([[-S(1)/2], [0], [S(1)/6]])
     assert params == Matrix(0, 1, [])
 
+    # Rectangular, tall, full rank, unique solution, B has less columns than rows
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [1, 2], [0, 0]])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == Matrix([[-S(1)/2, -S(2)/2], [0, 0], [S(1)/6, S(2)/6]])
+    assert params == Matrix(0, 2, [])
+
     # Rectangular, tall, full rank, no solution
     A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
     b = Matrix([0, 0, 0, 1])
     raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+    # Rectangular, tall, full rank, no solution, B has two columns (2nd has no solution)
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [1, 0], [0, 1]])
+    raises(ValueError, lambda: A.gauss_jordan_solve(B))
+
+    # Rectangular, tall, full rank, no solution, B has two columns (1st has no solution)
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [0, 1], [1, 0]])
+    raises(ValueError, lambda: A.gauss_jordan_solve(B))
 
     # Rectangular, tall, reduced rank, parametrized solution
     A = Matrix([[1, 5, 3], [2, 10, 6], [3, 15, 9], [1, 4, 3]])
@@ -3369,6 +3411,12 @@ def test_legacy_det():
     assert M.det(method="bareis") == 123
     assert M.det(method="det_lu") == 123
     assert M.det(method="LU") == 123
+
+def test_case_6913():
+    m = MatrixSymbol('m', 1, 1)
+    a = Symbol("a")
+    a = m[0, 0]>0
+    assert str(a) == 'm[0, 0] > 0'
 
 def test_issue_15872():
     A = Matrix([[1, 1, 1, 0], [-2, -1, 0, -1], [0, 0, -1, -1], [0, 0, 2, 1]])

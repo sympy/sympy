@@ -308,6 +308,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
     "Liouville",
+    "order_reducible",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
     "nth_algebraic_Integral",
@@ -323,7 +324,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
     "Liouville_Integral",
-    )
+       )
 
 lie_heuristics = (
     "abaco1_simple",
@@ -343,10 +344,6 @@ def sub_func_doit(eq, func, new):
     When replacing the func with something else, we usually want the
     derivative evaluated, so this function helps in making that happen.
 
-    To keep subs from having to look through all derivatives, we mask them off
-    with dummy variables, do the func sub, and then replace masked-off
-    derivatives with their doit values.
-
     Examples
     ========
 
@@ -363,29 +360,29 @@ def sub_func_doit(eq, func, new):
     x*(-1/(x**2*(z + 1/x)) + 1/(x**3*(z + 1/x)**2)) + 1/(x*(z + 1/x))
     ...- 1/(x**2*(z + 1/x)**2)
     """
-    reps = {}
-    repu = {}
+    reps= {func: new}
     for d in eq.atoms(Derivative):
-        u = Dummy('u')
-        repu[u] = d.subs(func, new).doit()
-        reps[d] = u
-
-    # Make sure that expressions such as ``Derivative(f(x), (x, 2))`` get
-    # replaced before ``Derivative(f(x), x)``:
-    #
-    # Also replace e.g. Derivative(x*Derivative(f(x), x), x) before
-    # Derivative(f(x), x)
-    def cmp(subs1, subs2):
-        return subs2[0].has(subs1[0]) - subs1[0].has(subs2[0])
-    key = lambda x: (-x[0].derivative_count, cmp_to_key(cmp)(x))
-    reps = sorted(reps.items(), key=key)
-
-    return eq.subs(reps).subs(func, new).subs(repu)
+        if d.expr == func:
+            reps[d] = new.diff(*d.variable_count)
+        else:
+            reps[d] = d.xreplace({func: new}).doit(deep=False)
+    return eq.xreplace(reps)
 
 
 def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     """
     Returns a list of constants that do not occur
+    in eq already.
+    """
+
+    ncs = iter_numbered_constants(eq, start, prefix)
+    Cs = [next(ncs) for i in range(num)]
+    return (Cs[0] if num == 1 else tuple(Cs))
+
+
+def iter_numbered_constants(eq, start=1, prefix='C'):
+    """
+    Returns an iterator of constants that do not occur
     in eq already.
     """
 
@@ -398,9 +395,7 @@ def get_numbered_constants(eq, num=1, start=1, prefix='C'):
     func_set = set().union(*[i.atoms(Function) for i in eq])
     if func_set:
         atom_set |= {Symbol(str(f.func)) for f in func_set}
-    ncs = numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
-    Cs = [next(ncs) for i in range(num)]
-    return (Cs[0] if num == 1 else tuple(Cs))
+    return numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
 
 
 def dsolve(eq, func=None, hint="default", simplify=True,
@@ -1356,6 +1351,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
 
     if order > 0:
+        # Any ODE that can be solved with a substitution and
+        # repeated integration e.g.:
+        # `d^2/dx^2(y) + x*d/dx(y) = constant
+        #f'(x) must be finite for this to work
+        r = _order_reducible_match(reduced_eq, func)
+        if r:
+            matching_hints['order_reducible'] = r
+
         # Any ODE that can be solved with a combination of algebra and
         # integrals e.g.:
         # d^3/dx^3(x y) = F(x)
@@ -2665,7 +2668,7 @@ def _get_constant_subexpressions(expr, Cs):
     Ces = []
     def _recursive_walk(expr):
         expr_syms = expr.free_symbols
-        if len(expr_syms) > 0 and expr_syms.issubset(Cs):
+        if expr_syms and expr_syms.issubset(Cs):
             Ces.append(expr)
         else:
             if expr.func == exp:
@@ -3702,10 +3705,10 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) + f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_ordinary'))
-              / 4    2    \        /   2    \
-              |x    x     |        |  x     |    / 6\
-    f(x) = C2*|-- - -- + 1| + C1*x*|- -- + 1| + O\x /
-              \24   2     /        \  6     /
+              / 4    2    \        /     2\
+              |x    x     |        |    x |    / 6\
+    f(x) = C2*|-- - -- + 1| + C1*x*|1 - --| + O\x /
+              \24   2     /        \    6 /
 
 
     References
@@ -4003,6 +4006,51 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
     return frobdict
 
+def _order_reducible_match(eq, func):
+    r"""
+    Matches any differential equation that can be rewritten with a smaller
+    order. Only derivatives of ``func`` alone, wrt a single variable,
+    are considered, and only in them should ``func`` appear.
+    """
+    # ODE only handles functions of 1 variable so this affirms that state
+    assert len(func.args) == 1
+    x = func.args[0]
+    vc= [d.variable_count[0] for d in eq.atoms(Derivative)
+         if d.expr == func and len(d.variable_count) == 1]
+    ords = [c for v, c in vc if v == x]
+    if len(ords) < 2:
+        return
+    smallest = min(ords)
+    # make sure func does not appear outside of derivatives
+    D = Dummy()
+    if eq.subs(func.diff(x, smallest), D).has(func):
+        return
+    return {'n': smallest}
+
+def ode_order_reducible(eq, func, order, match):
+    r"""
+    Substitutes lowest order derivate in equation to function with order
+    of derivative as `f^(n)(x) = g(x)`, where `n` (`match['n']`)
+    is the least-order derivative. The solution for `f(x)` is the n-times
+    integrated value of `g(x)`.
+    """
+    x = func.args[0]
+    f = func.func
+    n = match['n']
+    # get a unique function name for g
+    names = [a.name for a in eq.atoms(AppliedUndef)]
+    while True:
+        name = Dummy().name
+        if name not in names:
+            g = Function(name)
+            break
+    w = f(x).diff(x, n)
+    geq = eq.subs(w, g(x))
+    gsol = dsolve(geq, g(x))
+    fsol = dsolve(gsol.subs(g(x), w), f(x))  # or do integration n times
+
+    return fsol
+
 def _nth_algebraic_match(eq, func):
     r"""
     Matches any differential equation that nth_algebraic can solve. Uses
@@ -4013,7 +4061,7 @@ def _nth_algebraic_match(eq, func):
     """
 
     # Each integration should generate a different constant
-    constants = iter(numbered_symbols(prefix='C', cls=Symbol, start=1))
+    constants = iter_numbered_constants(eq)
     constant = lambda: next(constants, None)
 
     # Like Derivative but "invertible"
@@ -4764,13 +4812,13 @@ def ode_separable_reduced(eq, func, order, match):
     >>> d = f(x).diff(x)
     >>> eq = (x - x**2*f(x))*d - f(x)
     >>> dsolve(eq, hint='separable_reduced')
-    [Eq(f(x), (-sqrt(C1*x**2 + 1) + 1)/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
+    [Eq(f(x), (1 - sqrt(C1*x**2 + 1))/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
     >>> pprint(dsolve(eq, hint='separable_reduced'))
-                 ___________                ___________
-                /     2                    /     2
-            - \/  C1*x  + 1  + 1         \/  C1*x  + 1  + 1
-    [f(x) = --------------------, f(x) = ------------------]
-                     x                           x
+                   ___________            ___________
+                  /     2                /     2
+            1 - \/  C1*x  + 1          \/  C1*x  + 1  + 1
+    [f(x) = ------------------, f(x) = ------------------]
+                    x                          x
 
     References
     ==========

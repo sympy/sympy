@@ -1,7 +1,7 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 periodicity, lcim, AccumBounds)
+                                 periodicity, lcim, AccumBounds, is_convex)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
@@ -161,6 +161,12 @@ def test_lcim():
     assert lcim([S(1), 2*pi]) is None
     assert lcim([S(2) + 2*E, E/3 + S(1)/3, S(1) + E]) == S(2) + 2*E
 
+def test_is_convex():
+
+    assert is_convex(1/x, x, domain=Interval(0, oo)) == True
+    assert is_convex(1/x, x, domain=Interval(-oo, 0)) == False
+    assert is_convex(x**2, x, domain=Interval(0, oo)) == True
+    assert is_convex(log(x), x) == False
 
 def test_AccumBounds():
     assert AccumBounds(1, 2).args == (1, 2)

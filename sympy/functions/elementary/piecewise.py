@@ -267,12 +267,12 @@ class Piecewise(Function):
                 nonredundant = []
                 for c in cond.args:
                     if (isinstance(c, Relational) and
-                            (~c).canonical in current_cond):
+                            c.negated.canonical in current_cond):
                         continue
                     nonredundant.append(c)
                 cond = cond.func(*nonredundant)
             elif isinstance(cond, Relational):
-                if (~cond).canonical in current_cond:
+                if cond.negated.canonical in current_cond:
                     cond = S.true
 
             current_cond.add(cond)
@@ -351,6 +351,38 @@ class Piecewise(Function):
                         other = [ei.subs(*e.args) for ei in other]
                 cond = And(*(eqs + other))
                 args[i] = args[i].func(expr, cond)
+        # See if expressions valid for a single point happens to evaluate
+        # to the same function as in the next piecewise segment, see:
+        # https://github.com/sympy/sympy/issues/8458
+        prevexpr = None
+        for i, (expr, cond) in reversed(list(enumerate(args))):
+            if prevexpr is not None:
+                _prevexpr = prevexpr
+                _expr = expr
+                if isinstance(cond, And):
+                    eqs, other = sift(cond.args,
+                        lambda i: isinstance(i, Equality), binary=True)
+                elif isinstance(cond, Equality):
+                    eqs, other = [cond], []
+                else:
+                    eqs = other = []
+                if eqs:
+                    eqs = list(ordered(eqs))
+                    for j, e in enumerate(eqs):
+                        # these blessed lhs objects behave like Symbols
+                        # and the rhs are simple replacements for the "symbols"
+                        if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
+                            isinstance(e.rhs,
+                                (Rational, NumberSymbol,
+                                Symbol, UndefinedFunction)):
+                            _prevexpr = _prevexpr.subs(*e.args)
+                            _expr = _expr.subs(*e.args)
+                if _prevexpr == _expr:
+                    args[i] = args[i].func(args[i+1][0], cond)
+                else:
+                    prevexpr = expr
+            else:
+                prevexpr = expr
         return self.func(*args)
 
     def _eval_as_leading_term(self, x):

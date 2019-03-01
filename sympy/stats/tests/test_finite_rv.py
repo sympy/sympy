@@ -164,6 +164,9 @@ def test_bernoulli():
     assert E(a*X + b) == a*E(X) + b
     assert simplify(variance(a*X + b)) == simplify(a**2 * variance(X))
 
+    raises(ValueError, lambda: Bernoulli('B', 1.5))
+    raises(ValueError, lambda: Bernoulli('B', -0.5))
+
 def test_cdf():
     D = Die('D', 6)
     o = S.One
@@ -262,6 +265,10 @@ def test_FiniteRV():
 
     assert pspace(F).domain.as_boolean() == Or(
         *[Eq(F.symbol, i) for i in [1, 2, 3]])
+
+    raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S.Half, 3: S.Half}))
+    raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S(-1)/2, 3: S.One}))
+    raises(ValueError, lambda: FiniteRV('F', {1: S.One, 2: S(3)/2, 3: S.Zero, 4: S(-1)/2, 5: S(-3)/4, 6: S(-1)/4}))
 
 def test_density_call():
     from sympy.abc import p

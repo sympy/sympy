@@ -282,7 +282,7 @@ class GLSLPrinter(CodePrinter):
         return "%s.0/%s.0" % (expr.p, expr.q)
 
     def _print_Add(self, expr, order=None):
-        if(self._settings['use_operators']):
+        if self._settings['use_operators']:
             return CodePrinter._print_Add(self, expr, order=order)
 
         terms = expr.as_ordered_terms()
@@ -294,7 +294,7 @@ class GLSLPrinter(CodePrinter):
             # return self.known_functions['add']+'(%s, %s)' % (a,b)
         neg, pos = partition(lambda arg: _coeff_isneg(arg), terms)
         s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
-        if(len(neg) > 0):
+        if neg:
             # sum the absolute values of the negative terms
             neg = reduce(lambda a,b: add(a,b), map(lambda n: self._print(-n),neg))
             # then subtract them from the positive terms
@@ -303,7 +303,7 @@ class GLSLPrinter(CodePrinter):
         return s
 
     def _print_Mul(self, expr, **kwargs):
-        if(self._settings['use_operators']):
+        if self._settings['use_operators']:
             return CodePrinter._print_Mul(self, expr, **kwargs)
         terms = expr.as_ordered_factors()
         def mul(a,b):

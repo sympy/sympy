@@ -7,9 +7,9 @@ This module contains python code printers for plain python as well as NumPy & Sc
 
 from collections import defaultdict
 from itertools import chain
-from sympy.core import S
-from .codeprinter import CodePrinter
+from sympy.core import S, Number, Symbol
 from .precedence import precedence
+from .codeprinter import CodePrinter
 
 _kw_py2and3 = {
     'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
@@ -328,10 +328,10 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Print(self, prnt):
         print_args = ', '.join(map(lambda arg: self._print(arg), prnt.print_args))
-        if prnt.format_string != None:
+        if prnt.format_string != None: # Must be '!= None', cannot be 'is not None'
             print_args = '{0} % ({1})'.format(
                 self._print(prnt.format_string), print_args)
-        if prnt.file != None:
+        if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
         return 'print(%s)' % print_args
 
@@ -493,6 +493,8 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_MatMul(self, expr):
         "Matrix multiplication printer"
+        if isinstance(S(expr.args[0]), (Number, Symbol)):
+            return '({0})'.format(').dot('.join([self._print(expr.args[1]), self._print(expr.args[0])]))
         return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
 
     def _print_MatPow(self, expr):
@@ -609,7 +611,7 @@ class NumPyPrinter(PythonCodePrinter):
         from sympy.codegen.array_utils import CodegenArrayTensorProduct
         base = expr.expr
         contraction_indices = expr.contraction_indices
-        if len(contraction_indices) == 0:
+        if not contraction_indices:
             return self._print(base)
         if isinstance(base, CodegenArrayTensorProduct):
             counter = 0

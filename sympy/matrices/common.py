@@ -4,27 +4,25 @@ when creating more advanced matrices (e.g., matrices over rings,
 etc.).
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.add import Add
-from sympy.core.basic import Basic, Atom
+from collections import defaultdict
+from types import FunctionType
+
+from sympy.assumptions.refine import refine
+from sympy.core.basic import Atom
+from sympy.core.compatibility import (
+    Iterable, as_int, is_sequence, range, reduce)
+from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
-from sympy.core.symbol import Symbol
 from sympy.core.function import count_ops
 from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key, range, \
-    NotIterable, Iterable
-
-from sympy.simplify import simplify as _simplify, signsimp, nsimplify
-from sympy.utilities.iterables import flatten
 from sympy.functions import Abs
-from sympy.core.compatibility import reduce, as_int, string_types
-from sympy.assumptions.refine import refine
-from sympy.core.decorators import call_highest_priority
+from sympy.simplify import simplify as _simplify
+from sympy.utilities.iterables import flatten
 
-from types import FunctionType
-from collections import defaultdict
 
 class MatrixError(Exception):
     pass
@@ -968,7 +966,7 @@ class MatrixProperties(MatrixRequired):
     def _eval_is_zero(self):
         if any(i.is_zero == False for i in self):
             return False
-        if any(i.is_zero == None for i in self):
+        if any(i.is_zero is None for i in self):
             return None
         return True
 
@@ -1826,7 +1824,7 @@ class MatrixOperations(MatrixRequired):
         5
 
         """
-        if not self.rows == self.cols:
+        if self.rows != self.cols:
             raise NonSquareMatrixError()
         return self._eval_trace()
 
@@ -2049,7 +2047,7 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rpow__')
     def __pow__(self, num):
-        if not self.rows == self.cols:
+        if self.rows != self.cols:
             raise NonSquareMatrixError()
         try:
             a = self
@@ -2071,7 +2069,7 @@ class MatrixArithmetic(MatrixRequired):
                     except (AttributeError, MatrixError):
                         pass
                 return a._eval_pow_by_recursion(num)
-            elif num.is_Number != True and num.is_negative == None and a.det() == 0:
+            elif not num.is_Number and num.is_negative is None and a.det() == 0:
                 from sympy.matrices.expressions import MatPow
                 return MatPow(a, num)
             elif isinstance(num, (Expr, float)):
