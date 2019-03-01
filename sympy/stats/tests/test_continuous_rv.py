@@ -196,20 +196,16 @@ def test_benini():
                           *exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
 
     alpha = Symbol("alpha", positive=False)
-
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
     beta = Symbol("beta", positive=False)
-
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
     alpha = Symbol("alpha", positive=True)
-
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
     beta = Symbol("beta", positive=True)
     sigma = Symbol("sigma", positive=False)
-
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
 
