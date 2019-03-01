@@ -2158,7 +2158,7 @@ def is_abundant(n):
     n = as_int(n)
     if is_perfect(n):
         return False
-    return n % 6 == 0 or abundance(n) > 0
+    return n % 6 == 0 or bool(abundance(n) > 0)
 
 
 def is_deficient(n):
@@ -2184,4 +2184,4 @@ def is_deficient(n):
     n = as_int(n)
     if is_perfect(n):
         return False
-    return abundance(n) < 0
+    return bool(abundance(n) < 0)
