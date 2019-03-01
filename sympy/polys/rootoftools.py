@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
-    symbols, sympify, Rational, Dummy, Symbol)
+    symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
 from sympy.core.function import AppliedUndef
 from sympy.functions.elementary.miscellaneous import root as _root
