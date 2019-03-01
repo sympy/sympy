@@ -84,13 +84,12 @@ def gosper_term(f, n):
     r"""
     Compute Gosper's hypergeometric term for ``f``.
 
-    Suppose ``f`` is a hypergeometric term such that:
+    If ``f`` is a hypergeometric term such that `f_k` doesn't depend
+    on `n`, returns a hypergeometric term `g_n` such that `g_n f_n`
+    is an antidifference of `f_n`. That is:
 
     .. math::
-        s_n = \sum_{k=0}^{n-1} f_k
-
-    and `f_k` doesn't depend on `n`. Returns a hypergeometric
-    term `g_n` such that `g_{n+1} - g_n = f_n`.
+        g_{n+1} f_{n + 1} - g_n f_n = f_n.
 
     Examples
     ========
@@ -165,24 +164,28 @@ def gosper_sum(f, k):
     .. math ::
         s_n = \sum_{k=0}^{n-1} f_k
 
-    and `f(n)` doesn't depend on `n`, returns `g_{n} - g(0)` where
-    `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` can not be expressed
-    in closed form as a sum of hypergeometric terms.
+    and `f_k` doesn't depend on `n`, returns `s_{n + 1}`, or ``None``
+    if `s_n` can not be expressed in closed form as a sum of hypergeometric
+    terms.
 
     Examples
     ========
 
     >>> from sympy.concrete.gosper import gosper_sum
     >>> from sympy.functions import factorial
-    >>> from sympy.abc import i, n, k
+    >>> from sympy.abc import n
+    >>> from sympy import symbols
 
+    >>> k = symbols("k", integer=True)
     >>> f = (4*k + 1)*factorial(k)/factorial(2*k + 1)
-    >>> gosper_sum(f, (k, 0, n))
-    (-factorial(n) + 2*factorial(2*n + 1))/factorial(2*n + 1)
+    >>> gosper_sum(f, k).simplify()
+    -2*factorial(k)/factorial(2*k)
+    >>> gosper_sum(f, (k, 0, n)).expand()
+    -factorial(n)/factorial(2*n + 1) + 2
     >>> _.subs(n, 2) == sum(f.subs(k, i) for i in [0, 1, 2])
     True
-    >>> gosper_sum(f, (k, 3, n))
-    (-60*factorial(n) + factorial(2*n + 1))/(60*factorial(2*n + 1))
+    >>> gosper_sum(f, (k, 3, n)).expand()
+    -factorial(n)/factorial(2*n + 1) + 1/60
     >>> _.subs(n, 5) == sum(f.subs(k, i) for i in [3, 4, 5])
     True
 
