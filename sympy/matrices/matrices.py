@@ -1554,6 +1554,8 @@ class MatrixEigen(MatrixSubspaces):
                 nullity = cols - eig_mat(val, i).rank()
                 i += 1
 
+                # XXX Added runtime check. Must improve rank computation
+                # for matrices with complex numbers or symbols.
                 if nullity < ret[-1] or nullity > algebraic_multiplicity:
                     raise MatrixError(
                         "SymPy had encountered an inconsistent "
