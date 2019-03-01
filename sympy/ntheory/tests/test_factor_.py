@@ -593,16 +593,16 @@ def test_is_mersenne_prime():
 
 
 def test_is_abundant():
-    assert is_abundant(10) is False
-    assert is_abundant(12) is True
-    assert is_abundant(18) is True
-    assert is_abundant(21) is False
-    assert is_abundant(945) is True
+    assert is_abundant(10) == False
+    assert is_abundant(12) == True
+    assert is_abundant(18) == True
+    assert is_abundant(21) == False
+    assert is_abundant(945) == True
 
 
 def test_is_deficient():
-    assert is_deficient(10) is True
-    assert is_deficient(22) is True
-    assert is_deficient(56) is False
-    assert is_deficient(20) is False
-    assert is_deficient(36) is False
+    assert is_deficient(10) == True
+    assert is_deficient(22) == True
+    assert is_deficient(56) == False
+    assert is_deficient(20) == False
+    assert is_deficient(36) == False
