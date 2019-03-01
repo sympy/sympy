@@ -137,6 +137,7 @@ class LatexPrinter(Printer):
         "root_notation": True,
         "mat_symbol_style": "plain",
         "imaginary_unit": "i",
+        "text_re_im": False,
     }
 
     def __init__(self, settings=None):
@@ -885,12 +886,18 @@ class LatexPrinter(Printer):
     _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
-        tex = r"\Re{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Atom'])
+        if self._settings['text_re_im']:
+            tex = r"\operatorname{{re}}{{{}}}".format(self.parenthesize(expr.args[0], PRECEDENCE['Atom']))
+        else:
+            tex = r"\Re{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Atom'])
 
         return self._do_exponent(tex, exp)
 
     def _print_im(self, expr, exp=None):
-        tex = r"\Im{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Func'])
+        if self._settings['text_re_im']:
+            tex = r"\operatorname{{im}}{{{}}}".format(self.parenthesize(expr.args[0], PRECEDENCE['Atom']))
+        else:
+            tex = r"\Im{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Atom'])
 
         return self._do_exponent(tex, exp)
 
@@ -2304,7 +2311,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
     order=None, symbol_names=None, root_notation=True,
-    mat_symbol_style="plain", imaginary_unit="i"):
+    mat_symbol_style="plain", imaginary_unit="i", text_re_im=False):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2367,6 +2374,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         String to use for the imaginary unit. Defined options are "i" (default)
         and "j". Adding "r" or "t" in front gives ``\mathrm`` or ``\text``, so
         "ri" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
+    text_re_im : boolean, optional
+        If set to ``True``, a tectural representation is used for ``re`` and ``im``.
+        The default is ``False`` leading to `\Re` and `\Im`.
 
     Notes
     =====
@@ -2494,6 +2504,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'root_notation' : root_notation,
         'mat_symbol_style' : mat_symbol_style,
         'imaginary_unit' : imaginary_unit,
+        'text_re_im' : text_re_im,
     }
 
     return LatexPrinter(settings).doprint(expr)

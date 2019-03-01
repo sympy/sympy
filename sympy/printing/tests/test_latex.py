@@ -332,7 +332,7 @@ def test_latex_functions():
     assert latex(Abs(x)) == r"\left|{x}\right|"
     assert latex(re(x)) == r"\Re{\left(x\right)}"
     assert latex(re(x + y)) == r"\Re{\left(x\right)} + \Re{\left(y\right)}"
-    assert latex(im(x)) == r"\Im{x}"
+    assert latex(im(x)) == r"\Im{\left(x\right)}"
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
     w = Wild('w')
@@ -351,7 +351,7 @@ def test_latex_functions():
     assert latex(cot(x)) == r'\cot{\left(x \right)}'
     assert latex(coth(x)) == r'\coth{\left(x \right)}'
     assert latex(re(x)) == r'\Re{\left(x\right)}'
-    assert latex(im(x)) == r'\Im{x}'
+    assert latex(im(x)) == r'\Im{\left(x\right)}'
     assert latex(root(x, y)) == r'x^{\frac{1}{y}}'
     assert latex(arg(x)) == r'\arg{\left(x \right)}'
     assert latex(zeta(x)) == r'\zeta\left(x\right)'
@@ -1958,6 +1958,13 @@ def test_imaginary_unit():
     assert latex(1 + I, imaginary_unit='foo') == '1 + foo'
     assert latex(I, imaginary_unit="ti") == '\\text{i}'
     assert latex(I, imaginary_unit="tj") == '\\text{j}'
+
+
+def test_text_re_im():
+    assert latex(im(x), text_re_im=False) ==  r'\Im{\left(x\right)}'
+    assert latex(im(x), text_re_im=True) ==  r'\operatorname{im}{\left(x\right)}'
+    assert latex(re(x), text_re_im=False) ==  r'\Re{\left(x\right)}'
+    assert latex(re(x), text_re_im=True) ==  r'\operatorname{re}{\left(x\right)}'
 
 
 def test_DiffGeomMethods():
