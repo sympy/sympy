@@ -909,8 +909,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_AccumulationBounds(self, i):
         brac = self.dom.createElement('mfenced')
-        brac.setAttribute('open', '⟨')
-        brac.setAttribute('close', '⟩')
+        brac.setAttribute('open', u'\u27e8')
+        brac.setAttribute('close', u'\u27e9')
         brac.appendChild(self._print(i.min))
         brac.appendChild(self._print(i.max))
         return brac
