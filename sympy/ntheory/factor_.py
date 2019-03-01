@@ -2129,3 +2129,75 @@ def is_mersenne_prime(n):
 
     r, b = integer_log(n + 1, 2)
     return b and r in MERSENNE_PRIME_EXPONENTS
+
+
+def abundance(n):
+    """Returns the difference between the sum of the positive
+    proper divisors of a number and the number.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import abundance, is_perfect, is_abundant
+    >>> abundance(6)
+    0
+    >>> is_perfect(6)
+    True
+    >>> abundance(10)
+    -2
+    >>> is_abundant(10)
+    False
+    """
+    return divisor_sigma(n, 1) - 2 * n
+
+
+def is_abundant(n):
+    """Returns True if ``n`` is an abundant number, else False.
+
+    A abundant number is smaller than the sum of its positive proper divisors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_abundant
+    >>> is_abundant(20)
+    True
+    >>> is_abundant(15)
+    False
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/AbundantNumber.html
+
+    """
+    n = as_int(n)
+    if is_perfect(n):
+        return False
+    return n % 6 == 0 or bool(abundance(n) > 0)
+
+
+def is_deficient(n):
+    """Returns True if ``n`` is a deficient number, else False.
+
+    A deficient number is greater than the sum of its positive proper divisors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_deficient
+    >>> is_deficient(20)
+    False
+    >>> is_deficient(15)
+    True
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/DeficientNumber.html
+
+    """
+    n = as_int(n)
+    if is_perfect(n):
+        return False
+    return bool(abundance(n) < 0)
