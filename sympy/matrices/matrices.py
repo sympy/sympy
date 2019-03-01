@@ -1550,14 +1550,9 @@ class MatrixEigen(MatrixSubspaces):
             while True:
                 nullity = cols - eig_mat(val, i).rank()
 
-                # Raise exceptions during runtime if encountered
-                # wrong results
-                if nullity > algebraic_multiplicity:
-                    raise MatrixError(
-                        "SymPy had encountered an inconsistent "
-                        "result while computing Jordan block: "
-                        "{}".format(self))
-                if nullity <= ret[-1]:
+                # XXX Added runtime check. Must improve rank computation
+                # for matrices with complex numbers or symbols.
+                if nullity > algebraic_multiplicity or nullity <= ret[-1]:
                     raise MatrixError(
                         "SymPy had encountered an inconsistent "
                         "result while computing Jordan block: "
