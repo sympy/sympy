@@ -941,7 +941,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         sequence = list(sequence)
         for i, s in enumerate(sequence):
-            if type(s[0]) is str:
+            if isinstance(s[0], string_types):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
             try:

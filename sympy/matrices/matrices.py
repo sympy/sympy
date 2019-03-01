@@ -1,36 +1,33 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from types import FunctionType
 
 from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
+from sympy.core.compatibility import (
+    Callable, NotIterable, as_int, default_sort_key, is_sequence, range,
+    reduce, string_types)
+from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
+from sympy.core.numbers import Float, Integer, mod_inverse
 from sympy.core.power import Pow
-from sympy.core.symbol import (Symbol, Dummy, symbols,
-    _uniquely_named_symbol)
-from sympy.core.numbers import Integer, mod_inverse, Float
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol, symbols
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
-from sympy.polys import PurePoly, roots, cancel
+from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
+from sympy.polys import PurePoly, cancel, roots
 from sympy.printing import sstr
-from sympy.simplify import simplify as _simplify, nsimplify
-from sympy.core.compatibility import reduce, as_int, string_types, Callable
-
-from sympy.utilities.iterables import flatten, numbered_symbols
-from sympy.core.compatibility import (is_sequence, default_sort_key, range,
-    NotIterable)
-
+from sympy.simplify import nsimplify
+from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import flatten, numbered_symbols
 
-from types import FunctionType
-
-from .common import (a2idx, MatrixError, ShapeError,
-        NonSquareMatrixError, MatrixCommon)
-
-from sympy.core.decorators import deprecated
+from .common import (
+    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError, a2idx)
 
 
 def _iszero(x):
@@ -1219,13 +1216,15 @@ class MatrixEigen(MatrixSubspaces):
         """
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
+        rational = flags.pop('rational', True)
 
         mat = self
         if not mat:
             return {}
-        if flags.pop('rational', True):
-            if mat.has(Float):
-                mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
+        if rational:
+            mat = mat.applyfunc(
+                lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
 
         if mat.is_upper or mat.is_lower:
             if not self.is_square:

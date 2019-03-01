@@ -132,6 +132,7 @@ def test_isprime():
     sieve.extend(3000)
     assert isprime(2819)
     assert not isprime(2931)
+    assert not isprime(2.0)
 
 
 def test_is_square():
