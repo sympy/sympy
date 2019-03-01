@@ -233,13 +233,11 @@ class BeniniDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'beta', 'sigma')
 
     def __new__(name, *args):
-        alpha = args[BeniniDistribution._argnames.index('alpha')]
-        beta = args[BeniniDistribution._argnames.index('beta')]
-        sigma = args[BeniniDistribution._argnames.index('sigma')]
+        alpha, beta, sigma = args
 
-        if not alpha.is_positive or not beta.is_positive:
+        if not alpha > 0 or not beta > 0:
             raise ValueError("Shape parameters must be positive.")
-        if not sigma.is_positive:
+        if not sigma > 0:
             raise ValueError("Scale paramter must be positive.")
         return super(BeniniDistribution, name).__new__(name, *args)
 
