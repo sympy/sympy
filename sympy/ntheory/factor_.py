@@ -2138,7 +2138,7 @@ def deficient(n):
     Examples
     ========
 
-    >>>from sympy.ntheory.factor_ import deficient
+    >>> from sympy.ntheory.factor_ import deficient
     >>> deficient(1)
     True
     >>> deficient(100)
