@@ -342,7 +342,7 @@ class DimensionSystem(Basic):
             if isinstance(dim, string_types):
                 dim = Dimension(Symbol(dim))
             elif isinstance(dim, Dimension):
-                dim = dim
+                pass
             elif isinstance(dim, Symbol):
                 dim = Dimension(dim)
             else:

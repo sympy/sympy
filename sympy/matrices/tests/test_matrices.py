@@ -672,6 +672,10 @@ def test_LUsolve():
     b = A*x
     raises(NotImplementedError, lambda: A.LUsolve(b))
 
+    A = Matrix(4, 4, lambda i, j: 1/(i+j+1) if i != 3 else 0)
+    b = Matrix.zeros(4, 1)
+    raises(NotImplementedError, lambda: A.LUsolve(b))
+
 
 def test_QRsolve():
     A = Matrix([[2, 3, 5],
@@ -1612,10 +1616,10 @@ def test_creation_args():
     raises(TypeError, lambda: zeros(1, 2, 3, 4))
     assert zeros(long(3)) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
-    assert zeros(3.) == zeros(3)
+    raises(ValueError, lambda: zeros(3.))
     assert eye(long(3)) == eye(3)
     assert eye(Integer(3)) == eye(3)
-    assert eye(3.) == eye(3)
+    raises(ValueError, lambda: eye(3.))
     assert ones(long(3), Integer(4)) == ones(3, 4)
     raises(TypeError, lambda: Matrix(5))
     raises(TypeError, lambda: Matrix(1, 2))

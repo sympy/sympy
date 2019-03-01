@@ -534,11 +534,9 @@ def _rewrite_gamma(f, s, a, b):
             s_multiplier = common_coefficient \
                 *reduce(igcd, [S(x.p) for x in s_multipliers])
 
-    exponent = S(1)
-    fac = S(1)
     f = f.subs(s, s/s_multiplier)
-    fac /= s_multiplier
-    exponent = 1/s_multiplier
+    fac = S(1)/s_multiplier
+    exponent = S(1)/s_multiplier
     if a_ is not None:
         a_ *= s_multiplier
     if b_ is not None:
