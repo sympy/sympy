@@ -1545,25 +1545,20 @@ class MatrixEigen(MatrixSubspaces):
             # so use the rank-nullity theorem
             cols = self.cols
             ret = [0]
-
-            i = 1
-            while True:
+            nullity = cols - eig_mat(val, 1).rank()
+            i = 2
+            while nullity != ret[-1]:
+                ret.append(nullity)
+                if nullity == algebraic_multiplicity:
+                    break
                 nullity = cols - eig_mat(val, i).rank()
+                i += 1
 
-                # XXX Added runtime check. Must improve rank computation
-                # for matrices with complex numbers or symbols.
-                if nullity > algebraic_multiplicity or nullity <= ret[-1]:
+                if nullity < ret[-1] or nullity > algebraic_multiplicity:
                     raise MatrixError(
                         "SymPy had encountered an inconsistent "
                         "result while computing Jordan block: "
                         "{}".format(self))
-
-                # Normal behavior
-                ret.append(nullity)
-                if nullity == algebraic_multiplicity:
-                    break
-                else:
-                    i += 1
 
             return ret
 
