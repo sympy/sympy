@@ -2132,11 +2132,8 @@ def is_mersenne_prime(n):
 
 
 def deficient(n):
-    """
-    Function to check if a number n is deficient or not.
-    A number is said to be deficient if sum of all the 
-    divisors of the number is less than twice the value of the 
-    given number n. 
+    r"""
+    Returns True if n is a deficient number, else False.
 
     Examples
     ========
@@ -2150,7 +2147,7 @@ def deficient(n):
     True
     >>> deficient(14)
     True
- 
+
     See Also
     ========
 
@@ -2164,7 +2161,7 @@ def deficient(n):
     """
 
     l = divisors(n)
-    s = sum(l) 
+    s = sum(l)
     if s < 2*n:
         return True
     else:
