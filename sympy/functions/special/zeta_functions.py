@@ -587,7 +587,7 @@ class stieltjes(Function):
     def eval(cls, n, a=None):
         n = sympify(n)
 
-        if a != None:
+        if a is not None:
             a = sympify(a)
             if a is S.NaN:
                 return S.NaN

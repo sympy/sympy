@@ -172,7 +172,7 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
-@doctest_depends_on(modules=('numpy',), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
     """

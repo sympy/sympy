@@ -354,37 +354,66 @@ except ImportError:
     maketrans = str.maketrans
 
 
-def as_int(n):
+def as_int(n, strict=True):
     """
     Convert the argument to a builtin integer.
 
-    The return value is guaranteed to be equal to the input. ValueError is
-    raised if the input has a non-integral value.
+    The return value is guaranteed to be equal to the input. ValueError
+    is raised if the input has a non-integral value. When ``strict`` is
+    False, non-integer input that compares equal to the integer value
+    will not raise an error.
+
 
     Examples
     ========
 
     >>> from sympy.core.compatibility import as_int
-    >>> from sympy import sqrt
-    >>> 3.0
-    3.0
-    >>> as_int(3.0) # convert to int and test for equality
+    >>> from sympy import sqrt, S
+
+    The function is primarily concerned with sanitizing input for
+    functions that need to work with builtin integers, so anything that
+    is unambiguously an integer should be returned as an int:
+
+    >>> as_int(S(3))
     3
-    >>> int(sqrt(10))
-    3
-    >>> as_int(sqrt(10))
+
+    Floats, being of limited precision, are not assumed to be exact and
+    will raise an error unless the ``strict`` flag is False. This
+    precision issue becomes apparent for large floating point numbers:
+
+    >>> big = 1e23
+    >>> type(big) is float
+    True
+    >>> big == int(big)
+    True
+    >>> as_int(big)
     Traceback (most recent call last):
     ...
     ValueError: ... is not an integer
+    >>> as_int(big, strict=False)
+    99999999999999991611392
 
+    Input that might be a complex representation of an integer value is
+    also rejected by default:
+
+    >>> one = sqrt(3 + 2*sqrt(2)) - sqrt(2)
+    >>> int(one) == 1
+    True
+    >>> as_int(one)
+    Traceback (most recent call last):
+    ...
+    ValueError: ... is not an integer
     """
+    from sympy.core.numbers import Integer
     try:
+        if strict and not isinstance(n, SYMPY_INTS + (Integer,)):
+            raise TypeError
         result = int(n)
         if result != n:
             raise TypeError
+        return result
     except TypeError:
         raise ValueError('%s is not an integer' % (n,))
-    return result
 
 
 def default_sort_key(item, order=None):

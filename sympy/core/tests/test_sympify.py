@@ -660,3 +660,9 @@ def test_numpy_sympify_args():
     a = sympify(numpy.str_('x + x'), evaluate=False)
     assert isinstance(a, Add)
     assert a == Add(x, x, evaluate=False)
+
+
+def test_issue_5939():
+     a = Symbol('a')
+     b = Symbol('b')
+     assert sympify('''a+\nb''') == a + b

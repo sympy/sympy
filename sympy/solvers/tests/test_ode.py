@@ -188,6 +188,7 @@ def test_dsolve_linsystem_symbol_piecewise():
     assert all(s.has(Piecewise) for s in sol)
 
 
+@slow
 def test_linear_2eq_order2():
     x, y, z = symbols('x, y, z', cls=Function)
     k, l, m, n = symbols('k, l, m, n', Integer=True)
@@ -618,6 +619,7 @@ def test_nonlinear_3eq_order1():
     # FIXME: assert checksysodesol(eq2, sol2) == (True, [0, 0, 0])
 
 
+@slow
 def test_checkodesol():
     from sympy import Ei
     # For the most part, checkodesol is well tested in the tests below.
@@ -1218,7 +1220,6 @@ def test_old_ode_tests():
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
 
 
-@slow
 def test_1st_linear():
     # Type: first order linear form f'(x)+p(x)f(x)=q(x)
     eq = Eq(f(x).diff(x) + x*f(x), x**2)
@@ -1243,6 +1244,7 @@ def test_Riccati_special_minus2():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
+@slow
 def test_1st_exact1():
     # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
     # where dp/df == dq/dx
@@ -1328,6 +1330,7 @@ def test_separable1():
     assert checkodesol(eq6, sol6, order=1, solve_for_func=False)[0]
 
 
+@slow
 def test_separable2():
     a = Symbol('a')
     eq6 = f(x)*x**2*f(x).diff(x) - f(x)**3 - 2*x**2*f(x).diff(x)
@@ -2594,6 +2597,7 @@ def test_exact_enhancement():
     assert checkodesol(eq, sol, order=1, solve_for_func=False) == [(True, 0), (True, 0)]
 
 
+@slow
 def test_separable_reduced():
     f = Function('f')
     x = Symbol('x')
@@ -2946,6 +2950,7 @@ def test_issue_7081():
     assert checkodesol(eq, s) == (True, 0)
 
 
+@slow
 def test_2nd_power_series_ordinary():
     # FIXME: Maybe there should be a way to check series solutions
     # checkodesol doesn't work with them.
@@ -3069,6 +3074,7 @@ def test_issue_11290():
     assert checkodesol(eq, sol_1, order=1, solve_for_func=False)
 
 
+@slow
 def test_issue_14395():
     eq = Derivative(f(x), x, x) + 9*f(x) - sec(x)
     sol = Eq(f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (C2 + log(cos(x))
