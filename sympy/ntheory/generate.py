@@ -991,3 +991,24 @@ def compositepi(n):
     if n < 4:
         return 0
     return n - primepi(n) - 1
+
+
+def goldbach(n):
+    """ Returns True if n can be expressed as sum of two prime numbers less than n
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import goldbach
+    >>> goldbach(10)
+    True
+    >>> goldbach(1)
+    False
+
+    """
+    if n%2!=0 or n<3:
+        return False
+    for i in sieve.primerange(2, n):
+        if isprime(n-i):
+            return True
+    return False
