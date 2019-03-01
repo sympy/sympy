@@ -2129,3 +2129,43 @@ def is_mersenne_prime(n):
 
     r, b = integer_log(n + 1, 2)
     return b and r in MERSENNE_PRIME_EXPONENTS
+
+
+def deficient(n):
+    """
+    Function to check if a number n is deficient or not.
+    A number is said to be deficient if sum of all the 
+    divisors of the number is less than twice the value of the 
+    given number n. 
+
+    Examples
+    ========
+
+    >>>from sympy.ntheory.factor_ import deficient
+    >>> deficient(1)
+    True
+    >>> deficient(100)
+    False
+    >>> deficient(123)
+    True
+    >>> deficient(14)
+    True
+ 
+    See Also
+    ========
+
+    factorint
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/DeficientNumber.html
+
+    """
+
+    l = divisors(n)
+    s = sum(l) 
+    if s < 2*n:
+        return True
+    else:
+        return False
