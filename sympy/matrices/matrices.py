@@ -1628,6 +1628,9 @@ class MatrixEigen(MatrixSubspaces):
                 (eig, size) for size, num in size_nums for _ in range(num))
 
         jordan_form_size = sum(size for eig, size in block_structure)
+
+        # XXX Added runtime check. Must improve rank computation
+        # for matrices with complex numbers or symbols.
         if jordan_form_size != self.rows:
             raise MatrixError(
                 "SymPy had encountered an inconsistent result while "
