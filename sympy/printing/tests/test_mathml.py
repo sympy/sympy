@@ -1,7 +1,7 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
-    MatrixSymbol, Function, Derivative, log
+    MatrixSymbol, Function, Derivative, log, true, false, Range, exp, Min, Max
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.complexes import re, im, Abs, conjugate
 from sympy.functions.combinatorial.factorials import factorial, factorial2, binomial
@@ -1084,6 +1084,36 @@ def test_print_factorials():
 def test_print_conjugate():
     assert mpp.doprint(conjugate(x)) == '<menclose notation="top"><mi>x</mi></menclose>'
     assert mpp.doprint(conjugate(x + 1)) == '<mrow><menclose notation="top"><mi>x</mi></menclose><mo>+</mo><mn>1</mn></mrow>'
+
+
+def test_mathml_builtins():
+    assert mpp.doprint(None) == '<mi>None</mi>'
+    assert mpp.doprint(true) == '<mi>True</mi>'
+    assert mpp.doprint(false) == '<mi>False</mi>'
+
+
+def test_latex_Range():
+    assert mpp.doprint(Range(1, 51)) == \
+        '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mi>&#8230;</mi><mn>50</mn></mfenced>'
+    assert mpp.doprint(Range(1, 4)) == '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mn>3</mn></mfenced>'
+    assert mpp.doprint(Range(0, 3, 1)) == '<mfenced close="}" open="{"><mn>0</mn><mn>1</mn><mn>2</mn></mfenced>'
+    assert mpp.doprint(Range(0, 30, 1)) == '<mfenced close="}" open="{"><mn>0</mn><mn>1</mn><mi>&#8230;</mi><mn>29</mn></mfenced>'
+    assert mpp.doprint(Range(30, 1, -1)) == '<mfenced close="}" open="{"><mn>30</mn><mn>29</mn><mi>&#8230;</mi><mn>2</mn></mfenced>'
+    assert mpp.doprint(Range(0, oo, 2)) == '<mfenced close="}" open="{"><mn>0</mn><mn>2</mn><mi>&#8230;</mi><mi>&#x221E;</mi></mfenced>'
+    assert mpp.doprint(Range(oo, -2, -2)) == '<mfenced close="}" open="{"><mi>&#x221E;</mi><mi>&#8230;</mi><mn>2</mn><mn>0</mn></mfenced>'
+    assert mpp.doprint(Range(-2, -oo, -1)) == '<mfenced close="}" open="{"><mn>-2</mn><mn>-3</mn><mi>&#8230;</mi><mn>-oo</mn></mfenced>'
+
+
+def test_print_exp():
+    assert mpp.doprint(exp(x)) == '<msup><mi>&ExponentialE;</mi><mi>x</mi></msup>'
+    assert mpp.doprint(exp(1) + exp(2)) == '<mrow><mi>&ExponentialE;</mi><mo>+</mo><msup><mi>&ExponentialE;</mi><mn>2</mn></msup></mrow>'
+
+
+def test_print_MinMax():
+    assert mpp.doprint(Min(x, y)) == '<mrow><mo>min</mo><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow>'
+    assert mpp.doprint(Min(x, 2, x**3)) == '<mrow><mo>min</mo><mfenced><mn>2</mn><mi>x</mi><msup><mi>x</mi><mn>3</mn></msup></mfenced></mrow>'
+    assert mpp.doprint(Max(x, y)) == '<mrow><mo>max</mo><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow>'
+    assert mpp.doprint(Max(x, 2, x**3)) == '<mrow><mo>max</mo><mfenced><mn>2</mn><mi>x</mi><msup><mi>x</mi><mn>3</mn></msup></mfenced></mrow>'
 
 
 def test_print_matrix_symbol():
