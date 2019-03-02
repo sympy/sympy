@@ -2211,7 +2211,7 @@ def is_amicable(m, n):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import is_deficient
+    >>> from sympy.ntheory.factor_ import is_amicable
     >>> is_amicable(3259, 4576)
     False
     >>> is_amicable(5020, 5564)
