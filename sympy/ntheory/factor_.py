@@ -2228,4 +2228,3 @@ def is_amicable(m, n):
         return True
     else:
         return False
-    
