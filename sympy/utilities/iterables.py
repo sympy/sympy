@@ -2070,7 +2070,7 @@ def generate_oriented_forest(n):
 
     References
     ==========
-    .. [1] T. Beyer and S.M. Hedetniemi: constant time generation of 
+    .. [1] T. Beyer and S.M. Hedetniemi: constant time generation of
            rooted trees, SIAM J. Computing Vol. 9, No. 4, November 1980
 
     .. [2] https://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python
