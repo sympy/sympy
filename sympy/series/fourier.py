@@ -96,19 +96,17 @@ def finite_check(f, x, L):
     def check_fx(exprs, x):
         return x not in exprs.free_symbols
 
-    def check_sincos(expr, x, L):
-        if type(expr) == sin or type(expr) == cos:
-            sincos_args = expr.args[0]
+    def check_sincos(_expr, x, L):
+        if type(_expr) == sin or type(_expr) == cos:
+            sincos_args = _expr.args[0]
 
             if sincos_args.match(a*(pi/L)*x + b) is not None:
                 return True
             else:
                 return False
 
-    expr = sincos_to_sum(TR2(TR1(f)))
-    res_expr = S.Zero
-    add_coeff = expr.as_coeff_add()
-    res_expr += add_coeff[0]
+    _expr = sincos_to_sum(TR2(TR1(f)))
+    add_coeff = _expr.as_coeff_add()
 
     a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
     b = Wild('b', properties=[lambda k: x not in k.free_symbols or k == S.Zero, ])
@@ -118,8 +116,8 @@ def finite_check(f, x, L):
         for t in mul_coeffs:
             if not (check_fx(t, x) or check_sincos(t, x, L)):
                 return False, f
-        res_expr += TR10(s)
-    return True, res_expr.collect([sin(a*(pi/L)*x), cos(a*(pi/L)*x)])
+
+    return True, _expr
 
 
 class FourierSeries(SeriesBase):
@@ -440,16 +438,127 @@ class FourierSeries(SeriesBase):
         return self.__add__(-other)
 
 
-class FiniteFourierSeries(Basic):
+class FiniteFourierSeries(FourierSeries):
+
     def __new__(cls, *args):
-        obj = Basic.__new__(cls, *args)
-        return obj
+        if type(args[2]) == tuple and len(args[2]) == 3:
+            args = map(sympify, args)
+        else:
+            f, limits, exprs = args
+            exprs = exprs.as_coeff_add()
+            exprs = exprs[0] + Add(*[TR10(i) for i in exprs[1]])
+            exp_ls = exprs.expand(trig=False, power_base=False, power_exp=False, log=False).as_coeff_add()
+            a0 = exp_ls[0]
+            x = limits[0]
+            L = abs(limits[2] - limits[1]) / 2
+            a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
+            b = Wild('b', properties=[lambda k: x not in k.free_symbols or k == S.Zero, ])
+            an = dict()
+            bn = dict()
+            for p in exp_ls[1]:
+                t = p.match(b * cos(a * (pi / L) * x))
+                q = p.match(b * sin(a * (pi / L) * x))
+                if t:
+                    an[t[a]] = t[b] + an.get(t[a], S.Zero)
+                elif q:
+                    bn[q[a]] = q[b] + bn.get(q[a], S.Zero)
+                else:
+                    a0 += p
 
-    def truncate(self, n=3):
-        return Add(*self._args)
+            exprs = (a0, an, bn)
+            args = (f, limits, exprs)
+
+        return Expr.__new__(cls, *args)
+
+    @property
+    def interval(self):
+        _length = 1 if self.a0 else 0
+        _length += max(set(self.an.keys()).union(set(self.bn.keys()))) + 1
+        return Interval(0, _length)
+
+    @property
+    def length(self):
+        return self.stop - self.start
+
+    @property
+    def L(self):
+        return abs(self.period[1] - self.period[0]) / 2
+
+    def truncate(self, n=oo):
+        if n is None:
+            return iter(self)
+
+        terms = []
+        for t in self:
+            if len(terms) == n:
+                break
+            if t is not S.Zero:
+                terms.append(t)
+
+        return Add(*terms)
+
+    def shiftx(self, s):
+        s, x = sympify(s), self.x
+
+        if x in s.free_symbols:
+            raise ValueError("'%s' should be independent of %s" % (s, x))
+
+        _expr = self.truncate().subs(x, x + s)
+        sfunc = self.function.subs(x, x + s)
+
+        return self.func(sfunc, self.args[1], _expr)
+
+    def scale(self, s):
+        s, x = sympify(s), self.x
+
+        if x in s.free_symbols:
+            raise ValueError("'%s' should be independent of %s" % (s, x))
+
+        _expr = self.truncate() * s
+        sfunc = self.function * s
+
+        return self.func(sfunc, self.args[1], _expr)
+
+    def scalex(self, s):
+        s, x = sympify(s), self.x
+
+        if x in s.free_symbols:
+            raise ValueError("'%s' should be independent of %s" % (s, x))
+
+        _expr = self.truncate().subs(x, x * s)
+        sfunc = self.function.subs(x, x * s)
+
+        return self.func(sfunc, self.args[1], _expr)
+
+    def _eval_term(self, pt):
+        if pt == 0:
+            return self.a0
+
+        _term = self.an.get(pt, S.Zero) * cos(pt * (pi / self.L) * self.x) \
+                + self.bn.get(pt, S.Zero) * sin(pt * (pi / self.L) * self.x)
+        return _term
+
+    def __add__(self, other):
+        if isinstance(other, FourierSeries):
+            return other.__add__(fourier_series(self.function, self.args[1],\
+                                                finite=False))
+        elif isinstance(other, FiniteFourierSeries):
+            if self.period != other.period:
+                raise ValueError("Both the series should have same periods")
+
+            x, y = self.x, other.x
+            function = self.function + other.function.subs(y, x)
+
+            if self.x not in function.free_symbols:
+                return function
+
+            return fourier_series(function, limits=self.args[1])
+
+    def __sub__(self, other):
+        return self.__add__(-other)
 
 
-def fourier_series(f, limits=None):
+def fourier_series(f, limits=None, finite=True):
     """Computes Fourier sine/cosine series expansion.
 
     Returns a :class:`FourierSeries` object.
@@ -511,11 +620,11 @@ def fourier_series(f, limits=None):
     if x not in f.free_symbols:
         return f
 
-    L = abs(limits[2] - limits[1])/2
-    is_finite, res_f = finite_check(f, x, L)
-
-    if is_finite:
-        return FiniteFourierSeries(res_f)
+    if finite:
+        L = abs(limits[2] - limits[1]) / 2
+        is_finite, res_f = finite_check(f, x, L)
+        if is_finite:
+            return FiniteFourierSeries(f, limits, res_f)
 
     n = Dummy('n')
     neg_f = f.subs(x, -x)
