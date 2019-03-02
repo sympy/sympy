@@ -2872,9 +2872,6 @@ def constantsimp(expr, constants):
 
 def constant_renumber(expr, variables=None, newconstants=None):
     r"""
-    FIXME: Need to redo this docstring. This now renumbers constants in expr
-    without using symbols from eq.
-
     Renumber arbitrary constants in ``expr`` to use the symbol names as given
     in ``newconstants``. In the process, this reorders expression terms in a
     standard way.
@@ -2925,12 +2922,13 @@ def constant_renumber(expr, variables=None, newconstants=None):
         renumbered = [constant_renumber(e, variables, newconstants) for e in expr]
         return type(expr)(renumbered)
 
-    # Symbols in solution bot not ODE are constants
+    # Symbols in solution but not ODE are constants
     if variables is not None:
-        constantsymbols = list(expr.free_symbols - set(variables))
+        variables = set(variables)
+        constantsymbols = list(expr.free_symbols - variables)
+    # Any Cn is a constant...
     else:
         variables = set()
-        # Any Cn is a constant...
         isconstant = lambda s: s.startswith('C') and s[1:].isdigit()
         constantsymbols = [sym for sym in expr.free_symbols if isconstant(sym.name)]
 
