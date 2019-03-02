@@ -606,8 +606,8 @@ def test_is_deficient():
     assert is_deficient(56) is False
     assert is_deficient(20) is False
     assert is_deficient(36) is False
-    
-    
+
+
 def test_is_amicable():
     assert is_amicable(173, 129) is False
     assert is_amicable(220, 284) is True
