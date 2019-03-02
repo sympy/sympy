@@ -17,7 +17,7 @@ from sympy.core.compatibility import (ordered, range, with_metaclass,
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, ibin
 
 
 def as_Boolean(e):
@@ -1870,10 +1870,10 @@ def _rem_redundancy(l1, terms):
     return essential
 
 def _binary_from_list_or_number(lon, bits):
-        def tobin(n, bits):
-            return [(n >> k) & 1 for k in reversed(range(0, bits))]
         if isinstance(lon, int):
-            return tobin(lon, bits)
+            return ibin(lon, bits)
+        if len(lon) != bits:
+            raise ValueError("Each term must contain {} bits as there are {} variables\n(or be an integer)".format(bits, bits))
         return list(lon)
 
 def SOPform(variables, minterms, dontcares=None):

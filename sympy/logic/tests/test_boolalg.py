@@ -241,6 +241,11 @@ def test_simplification():
         Or(And(Not(w), z), And(y, z)))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
+
+    minterms = [[0, 0, 0]]
+    raises(ValueError, lambda : SOPform([w, x, y, z], minterms))
+    raises(ValueError, lambda : POSform([w, x, y, z], minterms))
+
     # test simplification
     ans = And(A, Or(B, C))
     assert simplify_logic(A & (B | C)) == ans
