@@ -9,6 +9,13 @@ if [[ "${TEST_SETUP}" == "true" ]]; then
     python bin/test_setup.py
 fi
 
+if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
+    if [[ "${AZURE}" == "true" ]]; then
+        sudo ln -s /usr/share/miniconda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+        conda activate optional-dependencies
+    fi
+fi
+
 if [[ "${TEST_SPHINX}" == "true" ]]; then
     echo "Testing SPHINX"
     cd doc
@@ -32,6 +39,14 @@ if [[ "${TEST_SAGE}" == "true" ]]; then
     source activate test-environment
 fi
 
+<<<<<<< HEAD
+=======
+# Print environment variables
+echo "Printing environment variables begin"
+printenv
+echo "Printing environment variables end"
+
+>>>>>>> fbccaa92c8... Fix merge conflict
 if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     python bin/test_external_imports.py
     python bin/test_executable.py
