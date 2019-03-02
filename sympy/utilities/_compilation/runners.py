@@ -217,10 +217,7 @@ class CCompilerRunner(CompilerRunner):
         'clang': 'llvm'
     }
 
-<<<<<<< HEAD
-=======
     default_compiler_environment_variable = 'CC'
->>>>>>> fbccaa92c8... Fix merge conflict
 
 def _mk_flag_filter(cmplr_name):  # helper for class initialization
     not_welcome = {'g++': ("Wimplicit-interface",)}  # "Wstrict-prototypes",)}
@@ -259,10 +256,7 @@ class CppCompilerRunner(CompilerRunner):
         'clang++': 'llvm'
     }
 
-<<<<<<< HEAD
-=======
     default_compiler_environment_variable = 'CXX'
->>>>>>> fbccaa92c8... Fix merge conflict
 
 class FortranCompilerRunner(CompilerRunner):
 
@@ -282,8 +276,5 @@ class FortranCompilerRunner(CompilerRunner):
         'gfortran': 'gnu',
         'ifort': 'intel',
     }
-<<<<<<< HEAD
-=======
 
     default_compiler_environment_variable = 'FC'
->>>>>>> fbccaa92c8... Fix merge conflict
