@@ -2204,7 +2204,7 @@ def is_deficient(n):
 
 
 def is_amicable(m, n):
-    """Returns True if the pair ``(m, n)`` is a Amicable Number, else False.
+    """Returns True if the pair (m, n) is a Amicable Number, else False.
 
     Amicable numbers are two different numbers so related that the sum of the proper divisors of each is equal to the other number.
 
