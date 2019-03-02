@@ -933,7 +933,7 @@ def simplify_presentation(*args, **kwargs):
                                               change_gens=change_gens)
         if gens:
             return FpGroup(gens[0].group, rels)
-        return FpGroup(free_group([]), [])
+        return FpGroup(FreeGroup([]), [])
     elif len(args) == 2:
         gens, rels = args[0][:], args[1][:]
         identity = gens[0].group.identity
