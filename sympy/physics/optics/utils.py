@@ -27,7 +27,8 @@ __all__ = ['refraction_angle',
            'transverse_magnification'
            ]
 
-from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin, cos, sin, tan, I, simplify
+from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin,\
+cos, sin, tan, I, cancel
 from sympy.core.compatibility import is_sequence
 from sympy.geometry.line import Ray3D, Point3D
 from sympy.geometry.util import intersection
@@ -251,11 +252,11 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
         return [R_p, R_s, T_p, T_s]
     else:
         n = n2/n1
-        R_s = simplify((cos(angle_of_incidence)-\
+        R_s = cancel((cos(angle_of_incidence)-\
                 I*sqrt(sin(angle_of_incidence)**2-n**2))\
                 /(cos(angle_of_incidence)+\
                 I*sqrt(sin(angle_of_incidence)**2-n**2)))
-        R_p = simplify((n**2*cos(angle_of_incidence)-\
+        R_p = cancel((n**2*cos(angle_of_incidence)-\
                 I*sqrt(sin(angle_of_incidence)**2-n**2))\
                 /(n**2*cos(angle_of_incidence)+\
                 I*sqrt(sin(angle_of_incidence)**2-n**2)))
