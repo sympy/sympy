@@ -2376,7 +2376,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         "ri" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
     gothic_re_im : boolean, optional
         If set to ``True``, `\Re` and `\Im` is used for ``re`` and ``im``, respectively.
-        The default is ``False`` leading to `\opeatorname{re}` and `\opeatorname{re}`.
+        The default is ``False`` leading to `\operatorname{re}` and `\operatorname{re}`.
 
     Notes
     =====
