@@ -241,25 +241,26 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
 
     if angle_of_total_internal_reflection_onset == None or\
     angle_of_total_internal_reflection_onset > angle_of_incidence:
-        R_s = -sin(angle_of_incidence-angle_of_refraction)\
-                /sin(angle_of_incidence+angle_of_refraction)
-        R_p = tan(angle_of_incidence-angle_of_refraction)\
-                /tan(angle_of_incidence+angle_of_refraction)
+        R_s = -sin(angle_of_incidence - angle_of_refraction)\
+                /sin(angle_of_incidence + angle_of_refraction)
+        R_p = tan(angle_of_incidence - angle_of_refraction)\
+                /tan(angle_of_incidence + angle_of_refraction)
         T_s = 2*sin(angle_of_refraction)*cos(angle_of_incidence)\
-                /sin(angle_of_incidence+angle_of_refraction)
+                /sin(angle_of_incidence + angle_of_refraction)
         T_p = 2*sin(angle_of_refraction)*cos(angle_of_incidence)\
-                /(sin(angle_of_incidence+angle_of_refraction)*cos(angle_of_incidence-angle_of_refraction))
+                /(sin(angle_of_incidence + angle_of_refraction)\
+                *cos(angle_of_incidence - angle_of_refraction))
         return [R_p, R_s, T_p, T_s]
     else:
         n = n2/n1
         R_s = cancel((cos(angle_of_incidence)-\
-                I*sqrt(sin(angle_of_incidence)**2-n**2))\
+                I*sqrt(sin(angle_of_incidence)**2 - n**2))\
                 /(cos(angle_of_incidence)+\
-                I*sqrt(sin(angle_of_incidence)**2-n**2)))
+                I*sqrt(sin(angle_of_incidence)**2 - n**2)))
         R_p = cancel((n**2*cos(angle_of_incidence)-\
-                I*sqrt(sin(angle_of_incidence)**2-n**2))\
+                I*sqrt(sin(angle_of_incidence)**2 - n**2))\
                 /(n**2*cos(angle_of_incidence)+\
-                I*sqrt(sin(angle_of_incidence)**2-n**2)))
+                I*sqrt(sin(angle_of_incidence)**2 - n**2)))
         return [R_p, R_s]
 
 
