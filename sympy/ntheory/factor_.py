@@ -2223,7 +2223,7 @@ def is_amicable(n, N):
     .. [1] https://en.wikipedia.org/wiki/Amicable_numbers
 
     """
-    if((divisor_sigma(n)) - n == N and (divisor_sigma(N)) - N == n ):
+    if((divisor_sigma(n, 1)) - n == N and (divisor_sigma(N, 1)) - N == n ):
         return True
     else:
         return False
