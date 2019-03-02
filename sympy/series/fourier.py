@@ -465,7 +465,7 @@ class FiniteFourierSeries(FourierSeries):
                 else:
                     a0 += p
 
-            exprs = Tuple((a0, an, bn))
+            exprs = Tuple(a0, an, bn)
             args = (f, limits, exprs)
 
         return Expr.__new__(cls, *args)
