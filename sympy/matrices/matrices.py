@@ -1554,8 +1554,9 @@ class MatrixEigen(MatrixSubspaces):
                 nullity = cols - eig_mat(val, i).rank()
                 i += 1
 
-                # XXX Added runtime check. Must improve rank computation
-                # for matrices with complex numbers or symbols.
+                # Due to issues like #7146 and #15872, SymPy sometimes
+                # gives the wrong rank. In this case, raise an error
+                # instead of returning an incorrect matrix
                 if nullity < ret[-1] or nullity > algebraic_multiplicity:
                     raise MatrixError(
                         "SymPy had encountered an inconsistent "
@@ -1629,8 +1630,6 @@ class MatrixEigen(MatrixSubspaces):
 
         jordan_form_size = sum(size for eig, size in block_structure)
 
-        # XXX Added runtime check. Must improve rank computation
-        # for matrices with complex numbers or symbols.
         if jordan_form_size != self.rows:
             raise MatrixError(
                 "SymPy had encountered an inconsistent result while "
