@@ -181,19 +181,29 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     transmission coefficients. Those are obtained for both polarisations
     when the electric field vector is in the plane of incidence (labelled 'p')
     and when the electric field vector is perpendicular to the plane of
-    incidence (labelled 's'). There four real coefficients unless the incident
-    ray reflects in total internal in which case there are two complex ones.
-    Angle of incidence is the angle between the incident ray and the surface
-    normal. ``medium1`` and ``medium2`` can be ``Medium`` or any sympifiable object.
+    incidence (labelled 's'). There are four real coefficients unless the
+    incident ray reflects in total internal in which case there are two complex
+    ones. Angle of incidence is the angle between the incident ray and the
+    surface normal. ``medium1`` and ``medium2`` can be ``Medium`` or any
+    sympifiable object.
 
     Parameters
     ==========
 
     angle_of_incidence : sympifiable
+
     medium1 : Medium or sympifiable
         Medium 1 or its refractive index
+
     medium2 : Medium or sympifiable
         Medium 2 or its refractive index
+
+    Returns a list with four real Fresnel coefficients:
+    [reflection p (TM), reflection s (TE),
+    transmission p (TM), transmission s (TE)]
+    If the ray is undergoes total internal reflection then returns a
+    list of two complex Fresnel coefficients:
+    [reflection p (TM), reflection s (TE)]
 
     Examples
     ========
@@ -205,6 +215,11 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     >>> fresnel_coefficients(0.6, 2, 1)
     [-0.235625382192159 - 0.971843958291041*I,
              0.816477005968898 - 0.577377951366403*I]
+
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/Fresnel_equations
     """
 
     if isinstance(medium1, Medium):
@@ -223,16 +238,27 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     except ValueError:
         angle_of_total_internal_reflection_onset = None
 
-    if angle_of_total_internal_reflection_onset == None or angle_of_total_internal_reflection_onset > angle_of_incidence:
-        R_s = -sin(angle_of_incidence-angle_of_refraction)/sin(angle_of_incidence+angle_of_refraction)
-        R_p = tan(angle_of_incidence-angle_of_refraction)/tan(angle_of_incidence+angle_of_refraction)
-        T_s = 2*sin(angle_of_refraction)*cos(angle_of_incidence)/sin(angle_of_incidence+angle_of_refraction)
-        T_p = 2*sin(angle_of_refraction)*cos(angle_of_incidence)/(sin(angle_of_incidence+angle_of_refraction)*cos(angle_of_incidence-angle_of_refraction))
+    if angle_of_total_internal_reflection_onset == None or\
+    angle_of_total_internal_reflection_onset > angle_of_incidence:
+        R_s = -sin(angle_of_incidence-angle_of_refraction)\
+                /sin(angle_of_incidence+angle_of_refraction)
+        R_p = tan(angle_of_incidence-angle_of_refraction)\
+                /tan(angle_of_incidence+angle_of_refraction)
+        T_s = 2*sin(angle_of_refraction)*cos(angle_of_incidence)\
+                /sin(angle_of_incidence+angle_of_refraction)
+        T_p = 2*sin(angle_of_refraction)*cos(angle_of_incidence)\
+                /(sin(angle_of_incidence+angle_of_refraction)*cos(angle_of_incidence-angle_of_refraction))
         return [R_p, R_s, T_p, T_s]
     else:
         n = n2/n1
-        R_s = simplify((cos(angle_of_incidence)-I*sqrt(sin(angle_of_incidence)**2-n**2))/(cos(angle_of_incidence)+I*sqrt(sin(angle_of_incidence)**2-n**2)))
-        R_p = simplify((n**2*cos(angle_of_incidence)-I*sqrt(sin(angle_of_incidence)**2-n**2))/(n**2*cos(angle_of_incidence)+I*sqrt(sin(angle_of_incidence)**2-n**2)))
+        R_s = simplify((cos(angle_of_incidence)-\
+                I*sqrt(sin(angle_of_incidence)**2-n**2))\
+                /(cos(angle_of_incidence)+\
+                I*sqrt(sin(angle_of_incidence)**2-n**2)))
+        R_p = simplify((n**2*cos(angle_of_incidence)-\
+                I*sqrt(sin(angle_of_incidence)**2-n**2))\
+                /(n**2*cos(angle_of_incidence)+\
+                I*sqrt(sin(angle_of_incidence)**2-n**2)))
         return [R_p, R_s]
 
 
