@@ -1221,6 +1221,50 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
 
+    def _print_floor(self, e):
+        mrow =  self.dom.createElement('mrow')
+        x = self.dom.createElement('mfenced')
+        x.setAttribute('open', u'\u230A')
+        x.setAttribute('close', u'\u230B')
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        mrow.appendChild(x)
+        return mrow
+
+
+    def _print_ceiling(self, e):
+        mrow =  self.dom.createElement('mrow')
+        x = self.dom.createElement('mfenced')
+        x.setAttribute('open', u'\u2308')
+        x.setAttribute('close', u'\u2309')
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        mrow.appendChild(x)
+        return mrow
+
+
+    def _print_Lambda(self, e):
+        mrow = self.dom.createElement('mrow')
+        mrow.appendChild(self._print(e.args[0]))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x21A6;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self._print(e.args[1]))
+        return mrow
+
+
+    def _print_exp(self, e):
+        mrow = self.dom.createElement('mrow')
+        x = self.dom.createElement('msup')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('e'))
+        x.appendChild(mi)
+        for arg in e.args:
+            x.appendChild(self._print(arg))
+        mrow.appendChild(x)
+        return mrow
+
+
 def mathml(expr, printer='content', **settings):
     """Returns the MathML representation of expr. If printer is presentation then
      prints Presentation MathML else prints content MathML.

@@ -1,9 +1,11 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
-    MatrixSymbol, Function, Derivative, log
+    MatrixSymbol, Function, Derivative, log, Lambda
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.complexes import re, im, Abs, conjugate
+from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.elementary.exponential import exp
 from sympy.functions.combinatorial.factorials import factorial, factorial2, binomial
 from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.special.zeta_functions import polylog, lerchphi
@@ -1093,6 +1095,26 @@ def test_print_factorials():
     assert mpp.doprint(factorial2(x + 1)) == '<mrow><mfenced><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced><mo>!!</mo></mrow>'
     assert mpp.doprint(binomial(x, y)) == '<mfenced><mfrac linethickness="0"><mi>x</mi><mi>y</mi></mfrac></mfenced>'
     assert mpp.doprint(binomial(4, x + y)) == '<mfenced><mfrac linethickness="0"><mn>4</mn><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow></mfrac></mfenced>'
+
+
+def test_print_floor():
+    expr = floor(x)
+    assert mathml(expr, printer='presentation') == '<mrow><mfenced close="&#8971;" open="&#8970;"><mi>x</mi></mfenced></mrow>'
+
+
+def test_print_ceiling():
+    expr = ceiling(x)
+    assert mathml(expr, printer='presentation') == '<mrow><mfenced close="&#8969;" open="&#8968;"><mi>x</mi></mfenced></mrow>'
+
+
+def test_print_Lambda():
+    expr = Lambda(x, x+1)
+    assert mathml(expr, printer='presentation') == '<mrow><mrow><mfenced><mi>x</mi></mfenced></mrow><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mrow>'
+
+
+def test_print_exp():
+    expr = exp(x)
+    assert mathml(expr, printer='presentation') == '<mrow><msup><mi>e</mi><mi>x</mi></msup></mrow>'
 
 
 def test_print_conjugate():
