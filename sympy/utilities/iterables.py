@@ -488,7 +488,7 @@ def subsets(seq, k=None, repetition=False):
 
        >>> from sympy.utilities.iterables import subsets
 
-       ``subsets(seq, k)`` will return the `\frac{n!}{k!(n - k)!}` `k`-subsets (combinations)
+       subsets(seq, k) will return the `\frac{n!}{k!(n - k)!}` `k`-subsets (combinations)
        without repetition, i.e. once an item has been removed, it can no
        longer be "taken":
 
@@ -500,7 +500,7 @@ def subsets(seq, k=None, repetition=False):
            [(1, 2), (1, 3), (2, 3)]
 
 
-       ``subsets(seq, k, repetition=True)`` will return the `\frac{(n - 1 + k)!}{k!(n - 1)!}`
+       subsets(seq, k, repetition=True) will return the `\frac{(n - 1 + k)!}{k!(n - 1)!}`
        combinations *with* repetition:
 
            >>> list(subsets([1, 2], 2, repetition=True))
@@ -646,8 +646,8 @@ def sift(seq, keyfunc, binary=False):
     >>> sift(range(5), lambda x: x % 2)
     {0: [0, 2, 4], 1: [1, 3]}
 
-    ``sift()`` returns a ``defaultdict()`` object, so any key that has no matches will
-    give ``[]``.
+    sift() returns a defaultdict() object, so any key that has no matches will
+    give [].
 
     >>> sift([x], lambda x: x.is_commutative)
     {True: [x]}
@@ -822,11 +822,11 @@ def topological_sort(graph, key=None):
     Parameters
     ==========
 
-    ``graph`` : ``tuple[list, list[tuple[T, T]]``
+    graph : tuple[list, list[tuple[T, T]]
         A tuple consisting of a list of vertices and a list of edges of
         a graph to be sorted topologically.
 
-    ``key`` : ``callable[T]`` (optional)
+    key : callable[T] (optional)
         Ordering key for vertices on the same level. By default the natural
         (e.g. lexicographic) ordering is used (in this case the base type
         must implement ordering relations).
@@ -880,7 +880,10 @@ def topological_sort(graph, key=None):
         ...
         ValueError: cycle detected
 
-    .. seealso:: https://en.wikipedia.org/wiki/Topological_sorting
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Topological_sorting
 
     """
     V, E = graph
@@ -979,7 +982,11 @@ def least_rotation(x):
     >>> rotate_left(a, _)
     [1, 2, 3, 1, 5]
 
-    .. seealso:: https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
+
     '''
     S = x + x      # Concatenate string to it self to avoid modular arithmetic
     f = [-1] * len(S)     # Failure function
@@ -1129,6 +1136,7 @@ def _partition(seq, vector, m=None):
 
     See Also
     ========
+
     combinatorics.partitions.Partition.from_rgs()
 
     """
@@ -1187,13 +1195,13 @@ def _set_partitions(n):
     This routine was rewritten to use 0-based lists while trying to
     preserve the beauty and efficiency of the original algorithm.
 
-    Reference
-    =========
+    References
+    ==========
 
-    Nijenhuis, Albert and Wilf, Herbert. (1978) Combinatorial Algorithms,
-    2nd Ed, p 91, algorithm "nexequ". Available online from
-    https://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
-    November 17, 2012).
+    .. [1] Nijenhuis, Albert and Wilf, Herbert. (1978) Combinatorial Algorithms,
+        2nd Ed, p 91, algorithm "nexequ". Available online from
+        https://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
+        November 17, 2012).
 
     """
     p = [0]*n
@@ -1444,9 +1452,11 @@ def partitions(n, m=None, k=None, size=False):
     >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]  # doctest: +SKIP
     [(3, {2: 3}), (4, {1: 2, 2: 2}), (5, {1: 4, 2: 1}), (6, {1: 6})]
 
-    Reference:
-        modified from Tim Peter's version to allow for k and m values:
-        http://code.activestate.com/recipes/218332-generator-for-integer-partitions/
+    References
+    ==========
+
+    .. [1] modified from Tim Peter's version to allow for k and m values:
+           http://code.activestate.com/recipes/218332-generator-for-integer-partitions/
 
     See Also
     ========
@@ -1866,12 +1876,16 @@ def generate_bell(n):
     References
     ==========
 
-    * https://en.wikipedia.org/wiki/Method_ringing
-    * https://stackoverflow.com/questions/4856615/recursive-permutation/4857018
-    * http://programminggeeks.com/bell-algorithm-for-permutation/
-    * https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
-    * Generating involutions, derangements, and relatives by ECO
-      Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
+    .. [1] https://en.wikipedia.org/wiki/Method_ringing
+
+    .. [2] https://stackoverflow.com/questions/4856615/recursive-permutation/4857018
+
+    .. [3] http://programminggeeks.com/bell-algorithm-for-permutation/
+
+    .. [4] https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
+
+    .. [5] Generating involutions, derangements, and relatives by ECO
+           Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
 
     """
     n = as_int(n)
@@ -1930,9 +1944,6 @@ def generate_involutions(n):
     a permutation that does not contain any cycles with
     a length that is greater than two.
 
-    Reference:
-    http://mathworld.wolfram.com/PermutationInvolution.html
-
     Examples
     ========
 
@@ -1941,6 +1952,12 @@ def generate_involutions(n):
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
     >>> len(list(generate_involutions(4)))
     10
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PermutationInvolution.html
+
     """
     idx = list(range(n))
     for p in permutations(idx):
@@ -2022,7 +2039,7 @@ def necklaces(n, k, free=False):
     References
     ==========
 
-    http://mathworld.wolfram.com/Necklace.html
+    .. [1] http://mathworld.wolfram.com/Necklace.html
 
     """
     return uniq(minlex(i, directed=not free) for i in
@@ -2053,7 +2070,7 @@ def generate_oriented_forest(n):
 
     References
     ==========
-    .. [1] T. Beyer and S.M. Hedetniemi: constant time generation of \
+    .. [1] T. Beyer and S.M. Hedetniemi: constant time generation of 
            rooted trees, SIAM J. Computing Vol. 9, No. 4, November 1980
 
     .. [2] https://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python
@@ -2212,7 +2229,7 @@ def kbins(l, k, ordered=None):
     [[0, 1, 2], [3, 4]]
     [[0, 1, 2, 3], [4]]
 
-    The ``ordered`` flag is either None (to give the simple partition
+    The ordered flag is either None (to give the simple partition
     of the elements) or is a 2 digit integer indicating whether the order of
     the bins and the order of the items in the bins matters. Given::
 
