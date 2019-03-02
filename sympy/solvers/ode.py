@@ -2955,6 +2955,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
         newstartnumber maintains its values throughout recursive calls.
 
         """
+        # FIXME: Use nonlocal here when support for Py2 is dropped:
         global newstartnumber
 
         if isinstance(expr, Equality):
