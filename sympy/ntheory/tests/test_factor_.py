@@ -611,7 +611,4 @@ def test_is_deficient():
 def test_is_amicable():
     assert is_amicable(173, 129) is False
     assert is_amicable(220, 284) is True
-    assert is_amicable(5410, 1855) is False
-    assert is_amicable(6232, 6368) is True
-    assert is_amicable(23594, 15945) is False
-    assert is_amicable(63020, 76084) is True
+    assert is_amicable(8756, 8756) is False
