@@ -493,7 +493,7 @@ class BooleanFunction(Application, Boolean):
         return Derivative(self, *symbols, **assumptions)
 
     def _eval_derivative(self, x):
-        from sympy.core.relational import Eq, Relational
+        from sympy.core.relational import Eq
         from sympy.functions.elementary.piecewise import Piecewise
         if x in self.binary_symbols:
             return Piecewise(
@@ -1869,6 +1869,12 @@ def _rem_redundancy(l1, terms):
 
     return essential
 
+def _binary_from_list_or_number(lon, bits):
+        def tobin(n, bits):
+            return [(n >> k) & 1 for k in reversed(range(0, bits))]
+        if isinstance(lon, int):
+            return tobin(lon, bits)
+        return list(lon)
 
 def SOPform(variables, minterms, dontcares=None):
     """
@@ -1897,6 +1903,20 @@ def SOPform(variables, minterms, dontcares=None):
     >>> SOPform([w, x, y, z], minterms, dontcares)
     (y & z) | (z & ~w)
 
+    The terms can also be represented as integers:
+
+    >>> minterms = [1, 3, 7, 11, 15]
+    >>> dontcares = [0, 2, 5]
+    >>> SOPform([w, x, y, z], minterms, dontcares)
+    (y & z) | (z & ~w)
+
+    Or a combination:
+
+    >>> minterms = [1, 3, 7, 11, [1, 1, 1, 1]]
+    >>> dontcares = [[0, 0, 0, 0], 2, 5]
+    >>> SOPform([w, x, y, z], minterms, dontcares)
+    (y & z) | (z & ~w)
+
     References
     ==========
 
@@ -1907,8 +1927,9 @@ def SOPform(variables, minterms, dontcares=None):
     if minterms == []:
         return false
 
-    minterms = [list(i) for i in minterms]
-    dontcares = [list(i) for i in (dontcares or [])]
+    bits = len(variables)
+    minterms = [_binary_from_list_or_number(i, bits) for i in minterms]
+    dontcares = [_binary_from_list_or_number(i, bits) for i in (dontcares or [])]
     for d in dontcares:
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
@@ -1949,6 +1970,20 @@ def POSform(variables, minterms, dontcares=None):
     >>> POSform([w, x, y, z], minterms, dontcares)
     z & (y | ~w)
 
+    The terms can also be represented as integers:
+
+    >>> minterms = [1, 3, 7, 11, 15]
+    >>> dontcares = [0, 2, 5]
+    >>> POSform([w, x, y, z], minterms, dontcares)
+    z & (y | ~w)
+
+    Or a combination:
+
+    >>> minterms = [1, 3, 7, 11, [1, 1, 1, 1]]
+    >>> dontcares = [[0, 0, 0, 0], 2, 5]
+    >>> POSform([w, x, y, z], minterms, dontcares)
+    z & (y | ~w)
+
     References
     ==========
 
@@ -1959,8 +1994,9 @@ def POSform(variables, minterms, dontcares=None):
     if minterms == []:
         return false
 
-    minterms = [list(i) for i in minterms]
-    dontcares = [list(i) for i in (dontcares or [])]
+    bits = len(variables)
+    minterms = [_binary_from_list_or_number(i, bits) for i in minterms]
+    dontcares = [_binary_from_list_or_number(i, bits) for i in (dontcares or [])]
     for d in dontcares:
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
@@ -1977,68 +2013,6 @@ def POSform(variables, minterms, dontcares=None):
         new = _simplified_pairs(old)
     essential = _rem_redundancy(new, maxterms)
     return And(*[_convert_to_varsPOS(x, variables) for x in essential])
-
-
-
-
-def mask(num, i):
-    return bool(num & 2**i)
-
-
-def SOPform__int(variables, minterms, dontcares=None):
-    """
-    The SOPform function uses simplified_pairs and a redundant group-
-    eliminating algorithm to convert the list of all input combos that
-    generate '1' (the minterms) into the smallest Sum of Products form.
-    The variables must be given as the first argument.
-    Return a logical Or function (i.e., the "sum of products" or "SOP"
-    form) that gives the desired outcome. If there are inputs that can
-    be ignored, pass them as a list, too.
-    The result will be one of the (perhaps many) functions that satisfy
-    the conditions.
-    Examples
-    ========
-    >>> from sympy.logic import SOPform__int
-    >>> minterms = [1, 3, 7, 11, 15]
-    >>> dontcares = [0, 2, 5]
-    >>> SOPform__int(['w','x','y','z'], minterms, dontcares)
-    Or(And(Not(w), z), And(y, z))
-    References
-    ==========
-    .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
-    """
-    cnt = len(variables)
-    return SOPform(variables, [[mask(number,i) for i in range(cnt-1,-1, -1)] for number in minterms],\
-        [[mask(number,i) for i in range(cnt-1,-1, -1)] for number in dontcares] if dontcares else None)
-
-
-def POSform__int(variables, minterms, dontcares=None):
-    """
-    The POSform function uses simplified_pairs and a redundant-group
-    eliminating algorithm to convert the list of all input combinations
-    that generate '1' (the minterms) into the smallest Product of Sums form.
-    The variables must be given as the first argument.
-    Return a logical And function (i.e., the "product of sums" or "POS"
-    form) that gives the desired outcome. If there are inputs that can
-    be ignored, pass them as a list, too.
-    The result will be one of the (perhaps many) functions that satisfy
-    the conditions.
-    Examples
-    ========
-    >>> from sympy.logic import POSform__int
-    >>> minterms = [1, 3, 7, 11, 15]
-    >>> dontcares = [0, 2, 5]
-    >>> POSform__int(['w','x','y','z'], minterms, dontcares)
-    And(Or(Not(w), y), z)
-    References
-    ==========
-    .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
-    """
-    cnt = len(variables)
-    return POSform(variables, [[mask(number,i) for i in range(cnt-1,-1, -1)] for number in minterms],\
-        [[mask(number,i) for i in range(cnt-1,-1, -1)] for number in dontcares] if dontcares else None)
-
-
 
 
 def _find_predicates(expr):
