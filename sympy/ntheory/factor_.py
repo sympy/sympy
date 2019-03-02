@@ -2224,7 +2224,5 @@ def is_amicable(m, n):
     .. [1] https://en.wikipedia.org/wiki/Amicable_numbers
 
     """
-    if((divisor_sigma(m, 1)) - m == n and (divisor_sigma(n, 1)) - n == m ):
-        return True
-    else:
-        return False
+    a, b = map(lambda i: divisor_sigma(i), (m, n))
+    return a == b == (m + n)
