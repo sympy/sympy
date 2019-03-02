@@ -13,7 +13,7 @@ from sympy.matrices import (
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
 from sympy.core.compatibility import long, iterable, range, Hashable
-from sympy.core import Tuple
+from sympy.core import Tuple, Wild
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.solvers import solve
@@ -3424,3 +3424,8 @@ def test_issue_15872():
     assert B.rank() == 3
     assert (B**2).rank() == 2
     assert (B**3).rank() == 2
+
+def test_issue_11948():
+    A = MatrixSymbol('A', 3, 3)
+    a = Wild('a')
+    assert A.match(a) == {a: A}
