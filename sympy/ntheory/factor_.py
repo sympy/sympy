@@ -2204,18 +2204,18 @@ def is_deficient(n):
 
 
 def is_amicable(m, n):
-    """Returns True if the pair `(m, n)` is an Amicable Number, else False.
+    """Returns True if the numbers `m` and `n` are "amicable", else False.
 
     Amicable numbers are two different numbers so related that the sum
-    of the proper divisors of each is equal to the other number.
+    of the proper divisors of each is equal to that of the other.
 
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import is_amicable
-    >>> is_amicable(3259, 4576)
-    False
-    >>> is_amicable(5020, 5564)
+    >>> from sympy.ntheory.factor_ import is_amicable, divisor_sigma
+    >>> is_amicable(220, 284)
+    True
+    >>> divisor_sigma(220) == divisor_sigma(284)
     True
 
     References
