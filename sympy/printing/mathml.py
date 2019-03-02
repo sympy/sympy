@@ -561,11 +561,13 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 xden = self._print(denom)
                 frac.appendChild(xnum)
                 frac.appendChild(xden)
-                return frac
+                mrow.appendChild(frac)
+                return mrow
 
             coeff, terms = expr.as_coeff_mul()
             if coeff is S.One and len(terms) == 1:
-                return self._print(terms[0])
+                mrow.appendChild(self._print(terms[0]))
+                return mrow
             if self.order != 'old':
                 terms = Mul._from_args(terms).as_ordered_factors()
 
@@ -635,19 +637,26 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_Rational(self, e):
         if e.q == 1:
             # don't divide
-            x = self.dom.createElement('mn')
-            x.appendChild(self.dom.createTextNode(str(e.p)))
-            return x
+            return self._print(e.p)
+
+        if e.p < 0:
+            p = -e.p
+        else:
+            p = e.p
         x = self.dom.createElement('mfrac')
         if self._settings["fold_frac_powers"]:
             x.setAttribute('bevelled', 'true')
-        num = self.dom.createElement('mn')
-        num.appendChild(self.dom.createTextNode(str(e.p)))
-        x.appendChild(num)
-        den = self.dom.createElement('mn')
-        den.appendChild(self.dom.createTextNode(str(e.q)))
-        x.appendChild(den)
-        return x
+        x.appendChild(self._print(p))
+        x.appendChild(self._print(e.q))
+        if e.p < 0:
+            mrow = self.dom.createElement('mrow')
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode('-'))
+            mrow.appendChild(mo)
+            mrow.appendChild(x)
+            return mrow
+        else:
+            return x
 
     def _print_Limit(self, e):
         mrow = self.dom.createElement('mrow')
