@@ -634,17 +634,13 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         brac.appendChild(table)
         return brac
 
-    def _print_Rational(self, e):
-        if e.q == 1:
-            # don't divide
-            return self._print(e.p)
-
+    def _get_printed_Rational(self, e, folded=None):
         if e.p < 0:
             p = -e.p
         else:
             p = e.p
         x = self.dom.createElement('mfrac')
-        if self._settings["fold_frac_powers"]:
+        if folded or self._settings["fold_short_frac"]:
             x.setAttribute('bevelled', 'true')
         x.appendChild(self._print(p))
         x.appendChild(self._print(e.q))
@@ -657,6 +653,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             return mrow
         else:
             return x
+
+
+    def _print_Rational(self, e):
+        if e.q == 1:
+            # don't divide
+            return self._print(e.p)
+
+        return self._get_printed_Rational(e, self._settings["fold_short_frac"])
 
     def _print_Limit(self, e):
         mrow = self.dom.createElement('mrow')
@@ -875,38 +879,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
-        if self._settings['fold_short_frac'] and len(str(e.base)) < 7:
-            if e.exp.is_negative:
-                frac = self.dom.createElement('mfrac')
-                frac.setAttribute('bevelled', 'true')
-                frac.appendChild(self._print(1))
-                mrow = self.dom.createElement('mrow')
-                if e.base.is_symbol:
-                    x = self.dom.createElement('mfenced')
-                    x.appendChild(self._print(e.base))
-                    mrow.appendChild(x)
-                else:
-                    mrow.appendChild(self._print(e.base))
-                if e.exp.p == -1 and e.exp.q == 1:
-                    frac.appendChild(mrow)
-                    return frac
-                x = self.dom.createElement('msup')
-                x.appendChild(mrow)
-                x.appendChild(self._print(-e.exp))
-                frac.appendChild(x)
-                return frac
-
-        if e.exp.is_negative or len(str(e.base)) > 1:
-            mrow = self.dom.createElement('mrow')
-            x = self.dom.createElement('mfenced')
-            x.appendChild(self._print(e.base))
-            mrow.appendChild(x)
-            x = self.dom.createElement('msup')
-            x.appendChild(mrow)
-            x.appendChild(self._print(e.exp))
-            return x
-
-        if e.exp.is_Rational and e.exp.p == 1 and self._settings['root_notation']:
+        if e.exp.is_Rational and abs(e.exp.p) == 1 and e.exp.q != 1 and self._settings['root_notation']:
             if e.exp.q == 2:
                 x = self.dom.createElement('msqrt')
                 x.appendChild(self._print(e.base))
@@ -914,10 +887,41 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 x = self.dom.createElement('mroot')
                 x.appendChild(self._print(e.base))
                 x.appendChild(self._print(e.exp.q))
-            return x
+            if e.exp.p == -1:
+                frac = self.dom.createElement('mfrac')
+                frac.appendChild(self._print(1))
+                frac.appendChild(x)
+                return frac
+            else:
+                return x
+
+        if e.exp.is_Rational and e.exp.q != 1:
+            if e.exp.is_negative:
+                top = self.dom.createElement('mfrac')
+                top.appendChild(self._print(1))
+                x = self.dom.createElement('msup')
+                x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
+                x.appendChild(self._get_printed_Rational(-e.exp, self._settings['fold_frac_powers']))
+                top.appendChild(x)
+                return top;
+            else:
+                x = self.dom.createElement('msup')
+                x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
+                x.appendChild(self._get_printed_Rational(e.exp, self._settings['fold_frac_powers']))
+                return x;
+
+        if e.exp.is_negative:
+                top = self.dom.createElement('mfrac')
+                top.appendChild(self._print(1))
+                x = self.dom.createElement('msup')
+                x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
+                x.appendChild(self._print(-e.exp))
+                top.appendChild(x)
+                return top;
+
 
         x = self.dom.createElement('msup')
-        x.appendChild(self._print(e.base))
+        x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
         x.appendChild(self._print(e.exp))
         return x
 
