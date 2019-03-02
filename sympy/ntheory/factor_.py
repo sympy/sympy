@@ -2211,7 +2211,7 @@ def is_amicable(n, N):
     Examples
     ========
 
-    >>> from sympy.ntheory.factor_ import divisor_sigma
+    >>> from sympy import *
     >>> is_amicable(3259, 4576)
     False
     >>> is_amicable(5020, 5564)
