@@ -7,17 +7,17 @@ from collections import defaultdict
 from itertools import combinations, product
 
 from sympy.core.add import Add
-from sympy.core.basic import Basic, as_Basic
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.numbers import Number, oo
-from sympy.core.operations import LatticeOp
-from sympy.core.function import Application, Derivative, count_ops
 from sympy.core.compatibility import (ordered, range, with_metaclass,
-    as_int, reduce)
-from sympy.core.sympify import converter, _sympify, sympify
+    as_int)
+from sympy.core.function import Application, Derivative, count_ops
+from sympy.core.numbers import Number
+from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
-from sympy.utilities.misc import filldedent
+from sympy.core.sympify import converter, _sympify, sympify
 from sympy.utilities.iterables import sift
+from sympy.utilities.misc import filldedent
 
 
 def as_Boolean(e):
@@ -493,7 +493,7 @@ class BooleanFunction(Application, Boolean):
         return Derivative(self, *symbols, **assumptions)
 
     def _eval_derivative(self, x):
-        from sympy.core.relational import Eq, Relational
+        from sympy.core.relational import Eq
         from sympy.functions.elementary.piecewise import Piecewise
         if x in self.binary_symbols:
             return Piecewise(
@@ -534,7 +534,7 @@ class BooleanFunction(Application, Boolean):
             the resulting value is S.true. Default is None. If replacementvalue
             is None and dominatingvalue is not None, replacementvalue = dominatingvalue
         """
-        from sympy.core.relational import Relational
+        from sympy.core.relational import Relational, _canonical
         if replacementvalue is None and dominatingvalue is not None:
             replacementvalue = dominatingvalue
         # Use replacement patterns for Relationals
@@ -542,7 +542,7 @@ class BooleanFunction(Application, Boolean):
         Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
         if len(Rel) <= 1:
             return rv
-        Rel, nonRealRel = sift(rv.args, lambda i: all(s.is_real for s in i.free_symbols), binary=True)
+        Rel, nonRealRel = sift(rv.args, lambda i: all(s.is_real is not False for s in i.free_symbols), binary=True)
         Rel = [i.canonical for i in Rel]
         while changed and len(Rel) >= 2:
             changed = False
@@ -585,7 +585,7 @@ class BooleanFunction(Application, Boolean):
                                 # will be replacementvalue
                                 return replacementvalue
                             # add replacement
-                            if isinstance(np, Relational): # We only want ITE if they simplify to Relationals
+                            if not isinstance(np, ITE): # We only want to use ITE replacements if they simplify
                                 costsaving = measure(oldexpr) - measure(np) # ratio?
                                 if costsaving > 0:
                                     results.append((costsaving, (i, j, np)))
@@ -598,14 +598,14 @@ class BooleanFunction(Application, Boolean):
                 # Remove the old relationals
                 del Rel[j]
                 del Rel[i]
-                if newrel != ~dominatingvalue:
+                if dominatingvalue is None or newrel != ~dominatingvalue:
                     # Insert the new one (no need to insert a value that will
                     # not affect the result)
-                    Rel.append(newrel.canonical)
-                # We did change comething so try again
+                    Rel.append(newrel)
+                # We did change something so try again
                 changed = True
 
-        rv = rv.func(*([i.canonical for i in ordered(Rel)] + nonRel + nonRealRel))
+        rv = rv.func(*([_canonical(i) for i in ordered(Rel)] + nonRel + nonRealRel))
         return rv
 
 class And(LatticeOp, BooleanFunction):
@@ -1004,6 +1004,16 @@ class Xor(BooleanFunction):
                 clause = [~s if s in neg else s for s in self.args]
                 args.append(Or(*clause))
         return And._to_nnf(*args, simplify=simplify)
+
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        # as standard simplify uses simplify_logic which writes things as
+        # And and Or, we only simplify the partial expressions before using patterns
+        rv = self.func(*[a._eval_simplify(ratio=ratio, measure=measure,
+            rational=rational, inverse=inverse) for a in self.args])
+        if not isinstance(rv, Xor): # This shouldn't really happen here
+            return rv
+        patterns = simplify_patterns_xor()
+        return self._apply_patternbased_simplification(rv, patterns, measure, None)
 
 
 class Nand(BooleanFunction):
@@ -2271,9 +2281,9 @@ def bool_map(bool1, bool2):
 
         # do some quick checks
         if function1.__class__ != function2.__class__:
-            return None  # maybe simplification would make them the same
+            return None  # maybe simplification makes them the same?
         if len(function1.args) != len(function2.args):
-            return None  # maybe simplification would make them the same
+            return None  # maybe simplification makes them the same?
         if function1.is_Symbol:
             return {function1: function2}
 
@@ -2332,6 +2342,8 @@ def simplify_patterns_and():
                      (And(Le(a, b), Le(a, c)), Le(a, Min(b, c))),
                      (And(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
                      (And(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
+                     # Sign
+                     (And(Eq(a, b), Eq(a, -b)), And(Eq(a, S(0)), Eq(b, S(0)))),
                      )
     return _matchers_and
 
@@ -2352,7 +2364,7 @@ def simplify_patterns_or():
                      (Or(Ge(a, b), Ne(a, b)), S.true),
                      (Or(Gt(a, b), Le(a, b)), S.true),
                      (Or(Gt(a, b), Lt(a, b)), Ne(a, b)),
-                     (Or(Gt(a, b), Ne(a, b)), Gt(a, b)),
+                     (Or(Gt(a, b), Ne(a, b)), Ne(a, b)),
                      (Or(Le(a, b), Lt(a, b)), Le(a, b)),
                      (Or(Le(a, b), Ne(a, b)), S.true),
                      (Or(Lt(a, b), Ne(a, b)), Ne(a, b)),
@@ -2361,7 +2373,38 @@ def simplify_patterns_or():
                      (Or(Ge(a, b), Gt(a, c)), ITE(b > c, Gt(a, c), Ge(a, b))),
                      (Or(Gt(a, b), Gt(a, c)), Gt(a, Min(b, c))),
                      (Or(Le(a, b), Le(a, c)), Le(a, Max(b, c))),
-                     (Or(Le(a, b), Lt(a, c)), ITE(b > c, Lt(a, c), Le(a, b))),
+                     (Or(Le(a, b), Lt(a, c)), ITE(b >= c, Le(a, b), Lt(a, c))),
                      (Or(Lt(a, b), Lt(a, c)), Lt(a, Max(b, c))),
                      )
     return _matchers_or
+
+def simplify_patterns_xor():
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.core import Wild
+    from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    a = Wild('a')
+    b = Wild('b')
+    c = Wild('c')
+    _matchers_xor = ((Xor(Eq(a, b), Ge(a, b)), Gt(a, b)),
+                     (Xor(Eq(a, b), Gt(a, b)), Ge(a, b)),
+                     (Xor(Eq(a, b), Le(a, b)), Lt(a, b)),
+                     (Xor(Eq(a, b), Lt(a, b)), Le(a, b)),
+                     (Xor(Ge(a, b), Gt(a, b)), Eq(a, b)),
+                     (Xor(Ge(a, b), Le(a, b)), Ne(a, b)),
+                     (Xor(Ge(a, b), Lt(a, b)), S.true),
+                     (Xor(Ge(a, b), Ne(a, b)), Le(a, b)),
+                     (Xor(Gt(a, b), Le(a, b)), S.true),
+                     (Xor(Gt(a, b), Lt(a, b)), Ne(a, b)),
+                     (Xor(Gt(a, b), Ne(a, b)), Lt(a, b)),
+                     (Xor(Le(a, b), Lt(a, b)), Eq(a, b)),
+                     (Xor(Le(a, b), Ne(a, b)), Ge(a, b)),
+                     (Xor(Lt(a, b), Ne(a, b)), Gt(a, b)),
+                     # Min/max
+                     (Xor(Ge(a, b), Ge(a, c)), And(Ge(a, Min(b, c)), Lt(a, Max(b, c)))),
+                     (Xor(Ge(a, b), Gt(a, c)), ITE(b > c, And(Gt(a, c), Lt(a, b)), And(Ge(a, b), Le(a, c)))),
+                     (Xor(Gt(a, b), Gt(a, c)), And(Gt(a, Min(b, c)), Le(a, Max(b, c)))),
+                     (Xor(Le(a, b), Le(a, c)), And(Le(a, Max(b, c)), Gt(a, Min(b, c)))),
+                     (Xor(Le(a, b), Lt(a, c)), ITE(b < c, And(Lt(a, c), Gt(a, b)), And(Le(a, b), Ge(a, c)))),
+                     (Xor(Lt(a, b), Lt(a, c)), And(Lt(a, Max(b, c)), Ge(a, Min(b, c)))),
+                     )
+    return _matchers_xor
