@@ -5,7 +5,6 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 from itertools import combinations, product
-
 from sympy.core.add import Add
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.cache import cacheit
@@ -1847,28 +1846,49 @@ def _rem_redundancy(l1, terms):
     implicant table method to recognize and eliminate redundant pairs,
     and return the essential arguments.
     """
-    essential = []
-    for x in terms:
-        temporary = []
-        for y in l1:
-            if _compare_term(x, y):
-                temporary.append(y)
-        if len(temporary) == 1:
-            if temporary[0] not in essential:
-                essential.append(temporary[0])
-    for x in terms:
-        for y in essential:
-            if _compare_term(x, y):
-                break
-        else:
-            for z in l1:
-                if _compare_term(x, z):
-                    if z not in essential:
-                        essential.append(z)
-                    break
 
-    return essential
+    if len(terms):
+        # Create dominating matrix
+        dominationmatrix = [[0]*len(l1) for n in range(len(terms))]
+        for primei, prime in enumerate(l1):
+            for termi, term in enumerate(terms):
+                if _compare_term(term, prime):
+                    dominationmatrix[termi][primei] = 1
 
+        nondominatedprimeimplicants = list(range(len(l1)))
+        nondominatedterms = list(range(len(terms)))
+
+        # Mark dominated rows and columns
+        oldnondominatedterms = None
+        oldnondominatedprimeimplicants = None
+        while nondominatedterms != oldnondominatedterms or nondominatedprimeimplicants != oldnondominatedprimeimplicants:
+            oldnondominatedterms = nondominatedterms[:]
+            oldnondominatedprimeimplicants = nondominatedprimeimplicants[:]
+            for rowi, row in enumerate(dominationmatrix):
+                if nondominatedterms[rowi] is not None:
+                    row = [row[i] for i in [_ for _ in nondominatedprimeimplicants if _ is not None]]
+                    for row2i, row2 in enumerate(dominationmatrix):
+                        if rowi != row2i and nondominatedterms[row2i] is not None:
+                            row2 = [row2[i] for i in [_ for _ in nondominatedprimeimplicants if _ is not None]]
+                            if all(a >= b for (a, b) in zip(row2, row)):
+                                # row2 dominating row, keep row
+                                nondominatedterms[row2i] = None
+            for coli in range(len(l1)):
+                if nondominatedprimeimplicants[coli] is not None:
+                    col = [dominationmatrix[a][coli] for a in range(len(terms))]
+                    col = [col[i] for i in [_ for _ in oldnondominatedterms if _ is not None]]
+                    for col2i in range(len(l1)):
+                        if coli != col2i and nondominatedprimeimplicants[col2i] is not None:
+                            col2 = [dominationmatrix[a][col2i] for a in range(len(terms))]
+                            col2 = [col2[i] for i in [_ for _ in oldnondominatedterms if _ is not None]]
+                            if all(a >= b for (a, b) in zip(col, col2)):
+                                # col dominating col2, keep col
+                                nondominatedprimeimplicants[col2i] = None
+        l1 = [l1[i] for i in [_ for _ in nondominatedprimeimplicants if _ is not None]]
+
+        return l1
+    else:
+        return []
 def _input_to_binlist(inputlist, variables):
     binlist = []
     bits = len(variables)
