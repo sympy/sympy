@@ -120,9 +120,15 @@ class Medium(Symbol):
         >>> m = Medium('m')
         >>> m.speed
         299792458*meter/second
+        >>> m2 = Medium('m2', n=1)
+        >>> m.speed == m2.speed
+        True
 
         """
-        return 1/sqrt(self._permittivity*self._permeability)
+        if self._permittivity is not None and self._permeability is not None:
+            return 1/sqrt(self._permittivity*self._permeability)
+        else:
+            return c/self._n
 
     @property
     def refractive_index(self):
@@ -174,7 +180,8 @@ class Medium(Symbol):
 
     def __str__(self):
         from sympy.printing import sstr
-        return type(self).__name__ + sstr(self.args)
+        return type(self).__name__ + ': ' + sstr([self._permittivity,
+                self._permeability, self._n])
 
     def __lt__(self, other):
         """
