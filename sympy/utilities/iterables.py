@@ -428,7 +428,7 @@ def ibin(n, bits=0, str=False):
 
 
 def variations(seq, n, repetition=False):
-    """Returns a generator of the n-sized variations of ``seq`` (size N).
+    r"""Returns a generator of the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
     Examples
@@ -488,7 +488,7 @@ def subsets(seq, k=None, repetition=False):
 
        >>> from sympy.utilities.iterables import subsets
 
-       By default, ``subsets(seq, k)`` will return the `\\frac{n!}{k!(n - k)!}` `k`-subsets (combinations)
+       ``subsets(seq, k)`` will return the `\\frac{n!}{k!(n - k)!}` `k`-subsets (combinations)
        without repetition, i.e. once an item has been removed, it can no
        longer be "taken":
 
