@@ -1492,7 +1492,8 @@ def to_cnf(expr, simplify=False):
     """
     Convert a propositional logical sentence s to conjunctive normal form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
-    If simplify is True, the expr is evaluated to its simplest CNF form.
+    If simplify is True, the expr is evaluated to its simplest CNF form  using
+    the Quine-McCluskey algorithm.
 
     Examples
     ========
@@ -1524,7 +1525,8 @@ def to_dnf(expr, simplify=False):
     """
     Convert a propositional logical sentence s to disjunctive normal form.
     That is, of the form ((A & ~B & ...) | (B & C & ...) | ...)
-    If simplify is True, the expr is evaluated to its simplest DNF form.
+    If simplify is True, the expr is evaluated to its simplest DNF form using
+    the Quine-McCluskey algorithm.
 
     Examples
     ========
