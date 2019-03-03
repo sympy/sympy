@@ -970,12 +970,8 @@ class ComplexRootOf(RootOf):
         # is_real value of the CRootOf instance.
         if type(self) == type(other):
             return sympify(self == other)
-        if other.is_number and other.has(AppliedUndef) or not other.is_number:
-            # it's a number that can't be evaluated or it's not a number in its current form
-            # though simplification might identify it as such (but that is the user's choice)
+        if not other.is_number:
             return None
-        if not (other.is_number and not other.has(AppliedUndef)):
-            return S.false
         if not other.is_finite:
             return S.false
         z = self.expr.subs(self.expr.free_symbols.pop(), other).is_zero
