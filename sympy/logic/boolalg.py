@@ -1869,12 +1869,27 @@ def _rem_redundancy(l1, terms):
 
     return essential
 
-def _binary_from_list_or_number(lon, bits):
-        if isinstance(lon, int):
-            return ibin(lon, bits)
-        if len(lon) != bits:
-            raise ValueError("Each term must contain {} bits as there are {} variables\n(or be an integer)".format(bits, bits))
-        return list(lon)
+def _input_to_binlist(inputlist, variables):
+    binlist = []
+    bits = len(variables)
+    for val in inputlist:
+        if isinstance(val, int):
+            binlist.append(ibin(val, bits))
+        elif isinstance(val, dict):
+            nonspecvars = variables.copy()
+            for key in val.keys():
+                nonspecvars.remove(key)
+            for t in product([0, 1], repeat=len(nonspecvars)):
+                d = dict(zip(nonspecvars, t))
+                d.update(val)
+                binlist.append([d[v] for v in variables])
+        elif isinstance(val, (list, tuple)):
+            if len(val) != bits:
+                raise ValueError("Each term must contain {} bits as there are {} variables\n(or be an integer)".format(bits, bits))
+            binlist.append(list(val))
+        else:
+            raise TypeError("A term list can only contain lists, ints or dicts.")
+    return binlist
 
 def SOPform(variables, minterms, dontcares=None):
     """
@@ -1910,12 +1925,19 @@ def SOPform(variables, minterms, dontcares=None):
     >>> SOPform([w, x, y, z], minterms, dontcares)
     (y & z) | (z & ~w)
 
+    They can also be specified using dicts, which does not have to be fully
+    specified:
+
+    >>> minterms = [{w: 0, x: 1}, {y: 1, z: 1, x: 0}]
+    >>> SOPform([w, x, y, z], minterms)
+    (x & ~w) | (y & z & ~x)
+
     Or a combination:
 
-    >>> minterms = [1, 3, 7, 11, [1, 1, 1, 1]]
-    >>> dontcares = [[0, 0, 0, 0], 2, 5]
+    >>> minterms = [4, 7, 11, [1, 1, 1, 1]]
+    >>> dontcares = [{w : 0, x : 0, y: 0}, 5]
     >>> SOPform([w, x, y, z], minterms, dontcares)
-    (y & z) | (z & ~w)
+    (w & y & z) | (x & y & z) | (~w & ~y)
 
     References
     ==========
@@ -1927,9 +1949,8 @@ def SOPform(variables, minterms, dontcares=None):
     if minterms == []:
         return false
 
-    bits = len(variables)
-    minterms = [_binary_from_list_or_number(i, bits) for i in minterms]
-    dontcares = [_binary_from_list_or_number(i, bits) for i in (dontcares or [])]
+    minterms = _input_to_binlist(minterms, variables)
+    dontcares = _input_to_binlist((dontcares or []), variables)
     for d in dontcares:
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
@@ -1977,12 +1998,20 @@ def POSform(variables, minterms, dontcares=None):
     >>> POSform([w, x, y, z], minterms, dontcares)
     z & (y | ~w)
 
+    They can also be specified using dicts, which does not have to be fully
+    specified:
+
+    >>> minterms = [{w: 0, x: 1}, {y: 1, z: 1, x: 0}]
+    >>> POSform([w, x, y, z], minterms)
+    (x | y) & (x | z) & (~w | ~x)
+
     Or a combination:
 
-    >>> minterms = [1, 3, 7, 11, [1, 1, 1, 1]]
-    >>> dontcares = [[0, 0, 0, 0], 2, 5]
+    >>> minterms = [4, 7, 11, [1, 1, 1, 1]]
+    >>> dontcares = [{w : 0, x : 0, y: 0}, 5]
     >>> POSform([w, x, y, z], minterms, dontcares)
-    z & (y | ~w)
+    (w | x) & (x | z) & (y | ~w) & (z | ~y)
+
 
     References
     ==========
@@ -1994,9 +2023,8 @@ def POSform(variables, minterms, dontcares=None):
     if minterms == []:
         return false
 
-    bits = len(variables)
-    minterms = [_binary_from_list_or_number(i, bits) for i in minterms]
-    dontcares = [_binary_from_list_or_number(i, bits) for i in (dontcares or [])]
+    minterms = _input_to_binlist(minterms, variables)
+    dontcares = _input_to_binlist((dontcares or []), variables)
     for d in dontcares:
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)

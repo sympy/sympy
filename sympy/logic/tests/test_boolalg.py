@@ -241,10 +241,14 @@ def test_simplification():
         Or(And(Not(w), z), And(y, z)))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
+    minterms = [{y : 1, z: 1}, 1]
+    dontcares = [[0, 0, 0, 0]]
 
     minterms = [[0, 0, 0]]
     raises(ValueError, lambda : SOPform([w, x, y, z], minterms))
     raises(ValueError, lambda : POSform([w, x, y, z], minterms))
+
+    raises(TypeError, lambda : POSform([w, x, y, z], ["abcdefg"]))
 
     # test simplification
     ans = And(A, Or(B, C))
@@ -853,3 +857,11 @@ def test_binary_symbols():
 
 def test_BooleanFunction_diff():
     assert And(x, y).diff(x) == Piecewise((0, Eq(y, False)), (1, True))
+
+@XFAIL
+def test_issue_14700():
+    minterms = [[0, 1, 0, 0], [0, 1, 0, 1], [0, 1, 1, 0], [0, 1, 1, 1], [0, 0, 1, 1], [1, 0, 1, 1]]
+    dontcares = [[1, 0, 0, 0], [1, 0, 0, 1], [1, 1, 0, 0], [1, 1, 0, 1]]
+    assert SOPform([w, x, y, z], minterms) == (x & ~w) | (y & z & ~x)
+    # Should not be more complicated with don't cares
+    assert SOPform([w, x, y, z], minterms, dontcares) == (x & ~w) | (y & z & ~x)
