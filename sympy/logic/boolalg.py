@@ -5,7 +5,6 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 from itertools import combinations, product
-
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
@@ -16,7 +15,7 @@ from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sympify import converter, _sympify, sympify
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
 
@@ -1493,7 +1492,8 @@ def to_cnf(expr, simplify=False):
     """
     Convert a propositional logical sentence s to conjunctive normal form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
-    If simplify is True, the expr is evaluated to its simplest CNF form.
+    If simplify is True, the expr is evaluated to its simplest CNF form  using
+    the Quine-McCluskey algorithm.
 
     Examples
     ========
@@ -1525,7 +1525,8 @@ def to_dnf(expr, simplify=False):
     """
     Convert a propositional logical sentence s to disjunctive normal form.
     That is, of the form ((A & ~B & ...) | (B & C & ...) | ...)
-    If simplify is True, the expr is evaluated to its simplest DNF form.
+    If simplify is True, the expr is evaluated to its simplest DNF form using
+    the Quine-McCluskey algorithm.
 
     Examples
     ========
@@ -1968,28 +1969,71 @@ def _rem_redundancy(l1, terms):
     implicant table method to recognize and eliminate redundant pairs,
     and return the essential arguments.
     """
-    essential = []
-    for x in terms:
-        temporary = []
-        for y in l1:
-            if _compare_term(x, y):
-                temporary.append(y)
-        if len(temporary) == 1:
-            if temporary[0] not in essential:
-                essential.append(temporary[0])
-    for x in terms:
-        for y in essential:
-            if _compare_term(x, y):
-                break
+
+    if len(terms):
+        # Create dominating matrix
+        dominationmatrix = [[0]*len(l1) for n in range(len(terms))]
+        for primei, prime in enumerate(l1):
+            for termi, term in enumerate(terms):
+                if _compare_term(term, prime):
+                    dominationmatrix[termi][primei] = 1
+
+        nondominatedprimeimplicants = list(range(len(l1)))
+        nondominatedterms = list(range(len(terms)))
+
+        # Mark dominated rows and columns
+        oldnondominatedterms = None
+        oldnondominatedprimeimplicants = None
+        while nondominatedterms != oldnondominatedterms or nondominatedprimeimplicants != oldnondominatedprimeimplicants:
+            oldnondominatedterms = nondominatedterms[:]
+            oldnondominatedprimeimplicants = nondominatedprimeimplicants[:]
+            for rowi, row in enumerate(dominationmatrix):
+                if nondominatedterms[rowi] is not None:
+                    row = [row[i] for i in [_ for _ in nondominatedprimeimplicants if _ is not None]]
+                    for row2i, row2 in enumerate(dominationmatrix):
+                        if rowi != row2i and nondominatedterms[row2i] is not None:
+                            row2 = [row2[i] for i in [_ for _ in nondominatedprimeimplicants if _ is not None]]
+                            if all(a >= b for (a, b) in zip(row2, row)):
+                                # row2 dominating row, keep row
+                                nondominatedterms[row2i] = None
+            for coli in range(len(l1)):
+                if nondominatedprimeimplicants[coli] is not None:
+                    col = [dominationmatrix[a][coli] for a in range(len(terms))]
+                    col = [col[i] for i in [_ for _ in oldnondominatedterms if _ is not None]]
+                    for col2i in range(len(l1)):
+                        if coli != col2i and nondominatedprimeimplicants[col2i] is not None:
+                            col2 = [dominationmatrix[a][col2i] for a in range(len(terms))]
+                            col2 = [col2[i] for i in [_ for _ in oldnondominatedterms if _ is not None]]
+                            if all(a >= b for (a, b) in zip(col, col2)):
+                                # col dominating col2, keep col
+                                nondominatedprimeimplicants[col2i] = None
+        l1 = [l1[i] for i in [_ for _ in nondominatedprimeimplicants if _ is not None]]
+
+        return l1
+    else:
+        return []
+
+def _input_to_binlist(inputlist, variables):
+    binlist = []
+    bits = len(variables)
+    for val in inputlist:
+        if isinstance(val, int):
+            binlist.append(ibin(val, bits))
+        elif isinstance(val, dict):
+            nonspecvars = list(variables)
+            for key in val.keys():
+                nonspecvars.remove(key)
+            for t in product([0, 1], repeat=len(nonspecvars)):
+                d = dict(zip(nonspecvars, t))
+                d.update(val)
+                binlist.append([d[v] for v in variables])
+        elif isinstance(val, (list, tuple)):
+            if len(val) != bits:
+                raise ValueError("Each term must contain {} bits as there are {} variables\n(or be an integer)".format(bits, bits))
+            binlist.append(list(val))
         else:
-            for z in l1:
-                if _compare_term(x, z):
-                    if z not in essential:
-                        essential.append(z)
-                    break
-
-    return essential
-
+            raise TypeError("A term list can only contain lists, ints or dicts.")
+    return binlist
 
 def SOPform(variables, minterms, dontcares=None):
     """
@@ -2018,6 +2062,27 @@ def SOPform(variables, minterms, dontcares=None):
     >>> SOPform([w, x, y, z], minterms, dontcares)
     (y & z) | (z & ~w)
 
+    The terms can also be represented as integers:
+
+    >>> minterms = [1, 3, 7, 11, 15]
+    >>> dontcares = [0, 2, 5]
+    >>> SOPform([w, x, y, z], minterms, dontcares)
+    (y & z) | (z & ~w)
+
+    They can also be specified using dicts, which does not have to be fully
+    specified:
+
+    >>> minterms = [{w: 0, x: 1}, {y: 1, z: 1, x: 0}]
+    >>> SOPform([w, x, y, z], minterms)
+    (x & ~w) | (y & z & ~x)
+
+    Or a combination:
+
+    >>> minterms = [4, 7, 11, [1, 1, 1, 1]]
+    >>> dontcares = [{w : 0, x : 0, y: 0}, 5]
+    >>> SOPform([w, x, y, z], minterms, dontcares)
+    (w & y & z) | (x & y & z) | (~w & ~y)
+
     References
     ==========
 
@@ -2028,8 +2093,8 @@ def SOPform(variables, minterms, dontcares=None):
     if minterms == []:
         return false
 
-    minterms = [list(i) for i in minterms]
-    dontcares = [list(i) for i in (dontcares or [])]
+    minterms = _input_to_binlist(minterms, variables)
+    dontcares = _input_to_binlist((dontcares or []), variables)
     for d in dontcares:
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
@@ -2070,6 +2135,28 @@ def POSform(variables, minterms, dontcares=None):
     >>> POSform([w, x, y, z], minterms, dontcares)
     z & (y | ~w)
 
+    The terms can also be represented as integers:
+
+    >>> minterms = [1, 3, 7, 11, 15]
+    >>> dontcares = [0, 2, 5]
+    >>> POSform([w, x, y, z], minterms, dontcares)
+    z & (y | ~w)
+
+    They can also be specified using dicts, which does not have to be fully
+    specified:
+
+    >>> minterms = [{w: 0, x: 1}, {y: 1, z: 1, x: 0}]
+    >>> POSform([w, x, y, z], minterms)
+    (x | y) & (x | z) & (~w | ~x)
+
+    Or a combination:
+
+    >>> minterms = [4, 7, 11, [1, 1, 1, 1]]
+    >>> dontcares = [{w : 0, x : 0, y: 0}, 5]
+    >>> POSform([w, x, y, z], minterms, dontcares)
+    (w | x) & (y | ~w) & (z | ~y)
+
+
     References
     ==========
 
@@ -2080,8 +2167,8 @@ def POSform(variables, minterms, dontcares=None):
     if minterms == []:
         return false
 
-    minterms = [list(i) for i in minterms]
-    dontcares = [list(i) for i in (dontcares or [])]
+    minterms = _input_to_binlist(minterms, variables)
+    dontcares = _input_to_binlist((dontcares or []), variables)
     for d in dontcares:
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
