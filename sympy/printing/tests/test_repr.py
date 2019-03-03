@@ -134,6 +134,7 @@ def test_Symbol():
     sT(x, "Symbol('x')")
     sT(y, "Symbol('y')")
     sT(Symbol('x', negative=True), "Symbol('x', negative=True)")
+    sT(Symbol(u'text'), "Symbol(u'text')")
 
 
 def test_Symbol_two_assumptions():
