@@ -181,6 +181,7 @@ class ReprPrinter(Printer):
     def _print_str(self, expr):
         return repr(expr)
     
+    # XXX: Can be removed once Py2 support is dropped
     def _print_basestring(self, expr):
         return repr(expr)
 
