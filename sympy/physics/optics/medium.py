@@ -125,7 +125,7 @@ class Medium(Symbol):
         True
 
         """
-        if self._permittivity != None and self._permeability != None:
+        if self._permittivity is not None and self._permeability is not None:
             return 1/sqrt(self._permittivity*self._permeability)
         else:
             return c/self._n
