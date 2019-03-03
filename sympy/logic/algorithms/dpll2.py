@@ -44,8 +44,8 @@ def dpll_satisfiable(expr, all_models=False):
     symbols_int_repr = range(1, len(symbols) + 1)
     clauses_int_repr = to_int_repr(clauses, symbols)
 
-    solvesetr = SAtsolver(clauses_int_repr, symbols_int_repr, set(), symbols)
-    models = solvesetr._find_model()
+    solver = SAtsolver(clauses_int_repr, symbols_int_repr, set(), symbols)
+    models = solver._find_model()
 
     if all_models:
         return _all_models(models)
@@ -58,7 +58,7 @@ def dpll_satisfiable(expr, all_models=False):
     # Uncomment to confirm the solution is valid (hitting set for the clauses)
     #else:
         #for cls in clauses_int_repr:
-            #assert solvesetr.var_settings.intersection(cls)
+            #assert solver.var_settings.intersection(cls)
 
 
 def _all_models(models):
@@ -74,7 +74,7 @@ def _all_models(models):
 
 class SAtsolver(object):
     """
-    Class for representing a SAT solvesetr capable of
+    Class for representing a SAT solver capable of
      finding a model to a boolean theory in conjunctive
      normal form.
     """
@@ -166,7 +166,7 @@ class SAtsolver(object):
 
         Variables are chosen successively, and assigned to be either
         True or False. If a solution is not found with this setting,
-        the opposite is chosen and the search continues. The solvesetr
+        the opposite is chosen and the search continues. The solver
         halts when every variable has a setting.
 
         Examples

@@ -745,7 +745,7 @@ class Formula(object):
         instantiations need not actually match, or be valid!
 
         """
-        from sympy.solvesetrs import solveset
+        from sympy.solvers import solveset
         ap = func.ap
         bq = func.bq
         if len(ap) != len(self.func.ap) or len(bq) != len(self.func.bq):

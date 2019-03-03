@@ -245,7 +245,7 @@ class ImageSet(Set):
 
     def _contains(self, other):
         from sympy.matrices import Matrix
-        from sympy.solvesetrs.solvesetset import solvesetset, linsolve
+        from sympy.solvers.solvesetset import solvesetset, linsolve
         from sympy.utilities.iterables import is_sequence, iterable, cartes
         L = self.lamda
         if is_sequence(other):

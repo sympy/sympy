@@ -807,7 +807,7 @@ def test_DifferentialOperatorEqPoly():
     assert not do == do2
 
     # polynomial comparison issue, see https://github.com/sympy/sympy/pull/15799
-    # should work once that is solvesetd
+    # should work once that is solved
     # p = do.listofpoly[0]
     # assert do == p
 

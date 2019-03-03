@@ -113,7 +113,7 @@ def intersection_sets(a, b):
 
 @dispatch(Range, Range)
 def intersection_sets(a, b):
-    from sympy.solvesetrs.diophantine import diop_linear
+    from sympy.solvers.diophantine import diop_linear
     from sympy.core.numbers import ilcm
     from sympy import sign
 
@@ -141,7 +141,7 @@ def intersection_sets(a, b):
 
     # we want to know when the two equations might
     # have integer solutions so we use the diophantine
-    # solvesetr
+    # solver
     va, vb = diop_linear(eq(r1, Dummy()) - eq(r2, Dummy()))
 
     # check for no solution
@@ -224,7 +224,7 @@ def intersection_sets(a, b):
 
 @dispatch(ImageSet, Set)
 def intersection_sets(self, other):
-    from sympy.solvesetrs.diophantine import diophantine
+    from sympy.solvers.diophantine import diophantine
     if self.base_set is S.Integers:
         g = None
         if isinstance(other, ImageSet) and other.base_set is S.Integers:
@@ -255,7 +255,7 @@ def intersection_sets(self, other):
             return imageset(Lambda(n, f.subs(a, nsol.subs(t, n))), S.Integers)
 
     if other == S.Reals:
-        from sympy.solvesetrs.solvesetset import solvesetset_real
+        from sympy.solvers.solvesetset import solvesetset_real
         from sympy.core.function import expand_complex
         if len(self.lamda.variables) > 1:
             return None
@@ -274,7 +274,7 @@ def intersection_sets(self, other):
                             solvesetset_real(im, n_)))
 
     elif isinstance(other, Interval):
-        from sympy.solvesetrs.solvesetset import (invert_real, invert_complex,
+        from sympy.solvers.solvesetset import (invert_real, invert_complex,
                                             solvesetset)
 
         f = self.lamda.expr

@@ -520,7 +520,7 @@ class GeometryEntity(Basic):
         """
         from sympy.geometry.point import Point
         from sympy.core.symbol import Dummy
-        from sympy.solvesetrs.solvesetrs import solveset
+        from sympy.solvers.solvers import solveset
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):

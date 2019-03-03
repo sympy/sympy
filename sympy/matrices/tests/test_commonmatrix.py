@@ -18,7 +18,7 @@ from sympy.matrices import (
 from sympy.core.compatibility import long, iterable, range
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.solvesetrs import solveset
+from sympy.solvers import solveset
 from sympy.assumptions import Q
 
 from sympy.abc import a, b, c, d, x, y, z

@@ -26,7 +26,7 @@ def ambiguity_warn(dispatcher, ambiguities):
     warn(warning_text(dispatcher.name, ambiguities), AmbiguityWarning)
 
 
-_unresolvesetd_dispatchers = set()
+_unresolved_dispatchers = set()
 _resolveset = [True]
 
 
@@ -36,8 +36,8 @@ def halt_ordering():
 
 def restart_ordering(on_ambiguity=ambiguity_warn):
     _resolveset[0] = True
-    while _unresolvesetd_dispatchers:
-        dispatcher = _unresolvesetd_dispatchers.pop()
+    while _unresolved_dispatchers:
+        dispatcher = _unresolved_dispatchers.pop()
         dispatcher.reorder(on_ambiguity=on_ambiguity)
 
 
@@ -181,7 +181,7 @@ class Dispatcher(object):
             if amb:
                 on_ambiguity(self, amb)
         else:
-            _unresolvesetd_dispatchers.add(self)
+            _unresolved_dispatchers.add(self)
 
     def __call__(self, *args, **kwargs):
         types = tuple([type(arg) for arg in args])

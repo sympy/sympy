@@ -16,7 +16,7 @@ the following function types in the given ``Interval``:
 """
 
 from sympy.core.sympify import sympify
-from sympy.solvesetrs.solvesetset import solvesetset
+from sympy.solvers.solvesetset import solvesetset
 from sympy.simplify import simplify
 from sympy import S, Symbol
 

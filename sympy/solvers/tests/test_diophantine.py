@@ -3,7 +3,7 @@ from sympy import (Add, factor_list, igcd, Matrix, Mul, S, simplify,
 from sympy.core.function import _mexpand
 from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import sin
-from sympy.solvesetrs.diophantine import (descent, diop_bf_DN, diop_DN,
+from sympy.solvers.diophantine import (descent, diop_bf_DN, diop_DN,
     diop_solve, diophantine, divisible, equivalent, find_DN, ldescent, length,
     reconstruct, partition, power_representation,
     prime_as_sum_of_two_squares, square_factor, sum_of_four_squares,
@@ -483,7 +483,7 @@ def test_diophantine():
     assert check_solutions((x**2 - 3*y**2 - 1)*(y - 7*z))
     assert check_solutions((x**2 + y**2 - z**2)*(x - 7*y - 3*z + 4*w))
     # Following test case caused problems in parametric representation
-    # But this can be solvesetd by factroing out y.
+    # But this can be solved by factroing out y.
     # No need to use methods for ternary quadratic equations.
     assert check_solutions(y**2 - 7*x*y + 4*y*z)
     assert check_solutions(x**2 - 2*x + 1)
@@ -533,7 +533,7 @@ def test_diophantine():
         (0, 2, 1)
     assert diophantine(eq) == \
         set([(24*p*q, 2*p**2 - 24*q**2, p**2 + 12*q**2)])
-    # solvesetrs have not been written for every type
+    # solvers have not been written for every type
     raises(NotImplementedError, lambda: diophantine(x*y**2 + 1))
 
     # rational expressions
@@ -760,7 +760,7 @@ def test_diopcoverage():
     assert sqf_normal(2 * 3**2 * 5, 2 * 5 * 11, 2 * 7**2 * 11)  == \
         (11, 1, 5)
 
-    # it's ok if these pass some day when the solvesetrs are implemented
+    # it's ok if these pass some day when the solvers are implemented
     raises(NotImplementedError, lambda: diophantine(x**2 + y**2 + x*y + 2*y*z - 12))
     raises(NotImplementedError, lambda: diophantine(x**3 + y**2))
     assert diop_quadratic(x**2 + y**2 - 1**2 - 3**4) == \

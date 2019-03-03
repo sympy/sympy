@@ -59,7 +59,7 @@ from sympy.core.mul import Mul
 from sympy.core import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar
-from sympy.solvesetrs import solveset, solve_undetermined_coeffs
+from sympy.solvers import solveset, solve_undetermined_coeffs
 from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
@@ -381,7 +381,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
     ========
 
     >>> from sympy.abc import x
-    >>> from sympy.solvesetrs.recurr import rsolve_ratio
+    >>> from sympy.solvers.recurr import rsolve_ratio
     >>> rsolve_ratio([-2*x**3 + x**2 + 2*x - 1, 2*x**3 + x**2 - 6*x,
     ... - 2*x**3 - 11*x**2 - 18*x - 9, 2*x**3 + 13*x**2 + 22*x + 8], 0, x)
     C2*(2*x - 3)/(2*(x**2 - 1))
@@ -494,7 +494,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     Examples
     ========
 
-    >>> from sympy.solvesetrs import rsolve_hyper
+    >>> from sympy.solvers import rsolve_hyper
     >>> from sympy.abc import x
 
     >>> rsolve_hyper([-1, -1, 1], 0, x)

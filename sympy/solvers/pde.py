@@ -18,7 +18,7 @@ infrastructure remains the same.
     - pde_separate_mul() - Helper function for searching multiplicative
                            separable solutions.
 
-**Currently implemented solvesetr methods**
+**Currently implemented solver methods**
 
 The following methods are implemented for solving partial differential
 equations.  See the docstrings of the various pde_hint() functions for
@@ -46,8 +46,8 @@ from sympy.integrals.integrals import Integral
 from sympy.utilities.iterables import has_dups
 from sympy.utilities.misc import filldedent
 
-from sympy.solvesetrs.deutils import _preprocess, ode_order, _desolveset
-from sympy.solvesetrs.solvesetrs import solveset
+from sympy.solvers.deutils import _preprocess, ode_order, _desolveset
+from sympy.solvers.solvers import solveset
 from sympy.simplify.radsimp import collect
 
 import operator
@@ -89,7 +89,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvesetfun=None, **kwarg
             more options that you can use for hint.
 
         ``solvesetfun`` is the convention used for arbitrary functions returned
-            by the PDE solvesetr. If not set by the user, it is set by default
+            by the PDE solver. If not set by the user, it is set by default
             to be F.
 
     **Hints**
@@ -150,7 +150,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvesetfun=None, **kwarg
     Examples
     ========
 
-    >>> from sympy.solvesetrs.pde import pdsolve
+    >>> from sympy.solvers.pde import pdsolve
     >>> from sympy import Function, diff, Eq
     >>> from sympy.abc import x, y
     >>> f = Function('f')
@@ -257,7 +257,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     Examples
     ========
 
-    >>> from sympy.solvesetrs.pde import classify_pde
+    >>> from sympy.solvers.pde import classify_pde
     >>> from sympy import Function, diff, Eq
     >>> from sympy.abc import x, y
     >>> f = Function('f')
@@ -409,7 +409,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     solution satisfies the PDE:
 
         1. Directly substitute the solution in the PDE and check. If the
-           solution hasn't been solvesetd for f, then it will solveset for f
+           solution hasn't been solved for f, then it will solveset for f
            provided solve_for_func hasn't been set to False.
 
     If the solution satisfies the PDE, then a tuple (True, 0) is returned.
@@ -421,7 +421,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     ========
 
     >>> from sympy import Function, symbols, diff
-    >>> from sympy.solvesetrs.pde import checkpdesol, pdsolve
+    >>> from sympy.solvers.pde import checkpdesol, pdsolve
     >>> x, y = symbols('x y')
     >>> f = Function('f')
     >>> eq = 2*f(x,y) + 3*f(x,y).diff(x) + 4*f(x,y).diff(y)
@@ -463,15 +463,15 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
         sol = sol.reversed
 
     # Try solving for the function
-    solvesetd = sol.lhs == func and not sol.rhs.has(func)
-    if solve_for_func and not solvesetd:
-        solvesetd = solveset(sol, func)
-        if solvesetd:
-            if len(solvesetd) == 1:
-                return checkpdesol(pde, Eq(func, solvesetd[0]),
+    solved = sol.lhs == func and not sol.rhs.has(func)
+    if solve_for_func and not solved:
+        solved = solveset(sol, func)
+        if solved:
+            if len(solved) == 1:
+                return checkpdesol(pde, Eq(func, solved[0]),
                     func=func, solve_for_func=False)
             else:
-                return checkpdesol(pde, [Eq(func, t) for t in solvesetd],
+                return checkpdesol(pde, [Eq(func, t) for t in solved],
                     func=func, solve_for_func=False)
 
     # try direct substitution of the solution into the PDE and simplify
@@ -498,7 +498,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvesetfu
 
     The general solution is of the form::
 
-        >>> from sympy.solvesetrs import pdsolve
+        >>> from sympy.solvers import pdsolve
         >>> from sympy.abc import x, y, a, b, c
         >>> from sympy import Function, pprint
         >>> f = Function('f')
@@ -521,7 +521,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvesetfu
     Examples
     ========
 
-    >>> from sympy.solvesetrs.pde import (
+    >>> from sympy.solvers.pde import (
     ... pde_1st_linear_constant_coeff_homogeneous)
     >>> from sympy import pdsolve
     >>> from sympy import Function, diff, pprint
@@ -569,7 +569,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvesetfun):
 
     The general solution of the PDE is::
 
-        >>> from sympy.solvesetrs import pdsolve
+        >>> from sympy.solvers import pdsolve
         >>> from sympy.abc import x, y, a, b, c
         >>> from sympy import Function, pprint
         >>> f = Function('f')
@@ -621,7 +621,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvesetfun):
     Examples
     ========
 
-    >>> from sympy.solvesetrs.pde import pdsolve
+    >>> from sympy.solvers.pde import pdsolve
     >>> from sympy import Function, diff, pprint, exp
     >>> from sympy.abc import x,y
     >>> f = Function('f')
@@ -650,11 +650,11 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvesetfun):
     e = -match[match['e']]
     expterm = exp(-S(d)/(b**2 + c**2)*xi)
     functerm = solvesetfun(eta)
-    solvesetdict = solveset((b*x + c*y - xi, c*x - b*y - eta), x, y)
+    solvedict = solveset((b*x + c*y - xi, c*x - b*y - eta), x, y)
     # Integral should remain as it is in terms of xi,
     # doit() should be done in _handle_Integral.
     genterm = (1/S(b**2 + c**2))*Integral(
-        (1/expterm*e).subs(solvesetdict), (xi, b*x + c*y))
+        (1/expterm*e).subs(solvedict), (xi, b*x + c*y))
     return Eq(f(x,y), Subs(expterm*(functerm + genterm),
         (eta, xi), (c*x - b*y, b*x + c*y)))
 
@@ -679,11 +679,11 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvesetfun):
 
     .. math:: a(\xi, \eta)\frac{du}{d\xi} + c(\xi, \eta)u - d(\xi, \eta) = 0
 
-    which can be solvesetd using dsolve.
+    which can be solved using dsolve.
 
     The general form of this PDE is::
 
-        >>> from sympy.solvesetrs.pde import pdsolve
+        >>> from sympy.solvers.pde import pdsolve
         >>> from sympy.abc import x, y
         >>> from sympy import Function, pprint
         >>> a, b, c, G, f= [Function(i) for i in ['a', 'b', 'c', 'G', 'f']]
@@ -699,7 +699,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvesetfun):
     Examples
     ========
 
-    >>> from sympy.solvesetrs.pde import pdsolve
+    >>> from sympy.solvers.pde import pdsolve
     >>> from sympy import Function, diff, pprint, exp
     >>> from sympy.abc import x,y
     >>> f = Function('f')
@@ -715,7 +715,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvesetfun):
 
     """
     from sympy.integrals.integrals import integrate
-    from sympy.solvesetrs.ode import dsolve
+    from sympy.solvers.ode import dsolve
 
     xi, eta = symbols("xi eta")
     f = func.func

@@ -1532,7 +1532,7 @@ def test_issue_5843():
 
 
 def test_is_constant():
-    from sympy.solvesetrs.solvesetrs import checksol
+    from sympy.solvers.solvers import checksol
     Sum(x, (x, 1, 10)).is_constant() is True
     Sum(x, (x, 1, n)).is_constant() is False
     Sum(x, (x, 1, n)).is_constant(y) is True

@@ -1,4 +1,4 @@
-""" Linear solvesetr for Holonomic Functions"""
+""" Linear solver for Holonomic Functions"""
 
 from __future__ import print_function, division
 

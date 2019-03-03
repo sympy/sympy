@@ -244,7 +244,7 @@ class Integral(AddWithLimits):
         variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
-        from sympy.solvesetrs.solvesetrs import solveset, posify
+        from sympy.solvers.solvers import solveset, posify
         d = Dummy('d')
 
         xfree = x.free_symbols.intersection(self.variables)
@@ -653,7 +653,7 @@ class Integral(AddWithLimits):
         Whenever an Integral is encountered that is equivalent to zero or
         has an integrand that is independent of the variable of integration
         those integrals are performed. All others are returned as Integral
-        instances which can be resolvesetd with doit() (provided they are integrable).
+        instances which can be resolved with doit() (provided they are integrable).
 
         References:
            [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
@@ -1050,7 +1050,7 @@ class Integral(AddWithLimits):
             # so let's try an expansion of the whole
             # thing before giving up; we don't try this
             # at the outset because there are things
-            # that cannot be solvesetd unless they are
+            # that cannot be solved unless they are
             # NOT expanded e.g., x**x*(1+log(x)). There
             # should probably be a checker somewhere in this
             # routine to look for such cases and try to do

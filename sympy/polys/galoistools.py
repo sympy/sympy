@@ -2328,7 +2328,7 @@ def gf_csolve(f, n):
     To solveset f(x) congruent 0 mod(n).
 
     n is divided into canonical factors and f(x) cong 0 mod(p**e) will be
-    solvesetd for each factor. Applying the Chinese Remainder Theorem to the
+    solved for each factor. Applying the Chinese Remainder Theorem to the
     results returns the final answers.
 
     Examples

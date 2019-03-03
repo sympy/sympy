@@ -23,7 +23,7 @@ from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
-from sympy.solvesetrs.solvesetset import solvesetset
+from sympy.solvers.solvesetset import solvesetset
 
 
 class RandomDomain(Basic):

@@ -1,7 +1,7 @@
 from sympy import (Derivative as D, Eq, exp, sin,
     Function, Symbol, symbols, cos, log)
 from sympy.core import S
-from sympy.solvesetrs.pde import (pde_separate, pde_separate_add, pde_separate_mul,
+from sympy.solvers.pde import (pde_separate, pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
 from sympy.utilities.pytest import raises
 

@@ -433,7 +433,7 @@ class Order(Expr):
                     # E.g.  O(y).subs(y, sin(x))
                     point = new.subs(var, self.point[i])
                     if point != self.point[i]:
-                        from sympy.solvesetrs.solvesetset import solvesetset
+                        from sympy.solvers.solvesetset import solvesetset
                         d = Dummy()
                         sol = solvesetset(old - new.subs(var, d), d)
                         if isinstance(sol, Complement):

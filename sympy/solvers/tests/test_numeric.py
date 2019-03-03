@@ -1,7 +1,7 @@
 from sympy import (Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise,
     symbols, Float, I, Rational)
 from mpmath import mnorm, mpf
-from sympy.solvesetrs import nsolve
+from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities.decorator import conserve_mpmath_dps

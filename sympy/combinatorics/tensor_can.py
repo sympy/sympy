@@ -335,7 +335,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     where `h_i = d_i*g*s_i` satisfying `h_i[j] = p_j` for `0 <= j < i`
     starting from `s_0 = id, d_0 = id, h_0 = g`.
 
-    The equations `h_0[0] = p_0, h_1[1] = p_1,...` are solvesetd in this order,
+    The equations `h_0[0] = p_0, h_1[1] = p_1,...` are solved in this order,
     choosing each time the lowest possible value of p_i
 
     For `j < i`

@@ -34,7 +34,7 @@ from sympy.utilities.randtest import verify_numerically as tn
 from sympy.physics.units import cm
 from sympy.core.containers import Dict
 
-from sympy.solvesetrs.solvesetset import (
+from sympy.solvers.solvesetset import (
     solvesetset_real, domain_check, solvesetset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solvesetset, solve_decomposition, substitution, nonlinsolve, solvify,
@@ -348,7 +348,7 @@ def test_return_root_of():
 
 
 def test__has_rational_power():
-    from sympy.solvesetrs.solvesetset import _has_rational_power
+    from sympy.solvers.solvesetset import _has_rational_power
     assert _has_rational_power(sqrt(2), x)[0] is False
     assert _has_rational_power(x*sqrt(2), x)[0] is False
 
@@ -368,13 +368,13 @@ def test_solveset_sqrt_1():
 
 
 def test_solveset_sqrt_2():
-    # http://tutorial.math.lamar.edu/Classes/Alg/solvesetRadicalEqns.aspx#solve_Rad_Ex2_a
+    # http://tutorial.math.lamar.edu/Classes/Alg/solveradicalEqns.aspx#solve_Rad_Ex2_a
     assert solvesetset_real(sqrt(2*x - 1) - sqrt(x - 4) - 2, x) == \
         FiniteSet(S(5), S(13))
     assert solvesetset_real(sqrt(x + 7) + 2 - sqrt(3 - x), x) == \
         FiniteSet(-6)
 
-    # http://www.purplemath.com/modules/solvesetrad.htm
+    # http://www.purplemath.com/modules/solverad.htm
     assert solvesetset_real(sqrt(17*x - sqrt(x**2 - 5)) - 7, x) == \
         FiniteSet(3)
 
@@ -981,7 +981,7 @@ def test_solveset_domain():
 
 
 def test_improve_coverage():
-    from sympy.solvesetrs.solvesetset import _has_rational_power
+    from sympy.solvers.solvesetset import _has_rational_power
     x = Symbol('x')
     solution = solvesetset(exp(x) + sin(x), x, S.Reals)
     unsolved_object = ConditionSet(x, Eq(exp(x) + sin(x), 0), S.Reals)
@@ -1237,7 +1237,7 @@ def test_trig_system():
 
 @XFAIL
 def test_trig_system_fail():
-    # fails because solvesetset trig solvesetr is not much smart.
+    # fails because solvesetset trig solver is not much smart.
     sys = [x + y - pi/2, sin(x) + sin(y) - 1]
     # solvesetset returns conditonset for sin(x) + sin(y) - 1
     soln_1 = (ImageSet(Lambda(n, n*pi + pi/2), S.Integers),
@@ -1353,7 +1353,7 @@ def test_nonlinsolve_complex():
 
 @XFAIL
 def test_solve_nonlinear_trans():
-    # After the transcendental equation solvesetr these will work
+    # After the transcendental equation solver these will work
     x, y, z = symbols('x, y, z', real=True)
     soln1 = FiniteSet((2*LambertW(y/2), y))
     soln2 = FiniteSet((-x*sqrt(exp(x)), y), (x*sqrt(exp(x)), y))
@@ -2015,7 +2015,7 @@ def test_solve_logarithm():
 
 
 def test_linear_coeffs():
-    from sympy.solvesetrs.solvesetset import linear_coeffs
+    from sympy.solvers.solvesetset import linear_coeffs
     assert linear_coeffs(0, x) == [0, 0]
     assert all(i is S.Zero for i in linear_coeffs(0, x))
     assert linear_coeffs(x + 2*y + 3, x, y) == [1, 2, 3]

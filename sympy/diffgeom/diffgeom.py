@@ -9,7 +9,7 @@ from sympy.core.numbers import Zero
 from sympy.functions import factorial
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
-from sympy.solvesetrs import solveset
+from sympy.solvers import solveset
 
 
 # TODO you are a bit excessive in the use of Dummies

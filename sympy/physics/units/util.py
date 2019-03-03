@@ -170,7 +170,7 @@ def quantity_simplify(expr):
 def check_dimensions(expr):
     """Return expr if there are not unitless values added to
     dimensional quantities, else raise a ValueError."""
-    from sympy.solvesetrs.solvesetset import _term_factors
+    from sympy.solvers.solvesetset import _term_factors
     # the case of adding a number to a dimensional quantity
     # is ignored for the sake of SymPy core routines, so this
     # function will raise an error now if such an addend is

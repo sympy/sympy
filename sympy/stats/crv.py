@@ -15,8 +15,8 @@ from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
-from sympy.solvesetrs.solvesetset import solvesetset
-from sympy.solvesetrs.inequalities import reduce_rational_inequalities
+from sympy.solvers.solvesetset import solvesetset
+from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 import random

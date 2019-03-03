@@ -170,7 +170,7 @@ class IntegralTransform(Function):
     def _eval_rewrite_as_Integral(self, *args, **kwargs):
         return self.as_integral
 
-from sympy.solvesetrs.inequalities import _solve_inequality
+from sympy.solvers.inequalities import _solve_inequality
 
 
 def _simplify(expr, doit):

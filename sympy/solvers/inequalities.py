@@ -27,7 +27,7 @@ def solve_poly_inequality(poly, rel):
 
     >>> from sympy import Poly
     >>> from sympy.abc import x
-    >>> from sympy.solvesetrs.inequalities import solve_poly_inequality
+    >>> from sympy.solvers.inequalities import solve_poly_inequality
 
     >>> solve_poly_inequality(Poly(x, x, domain='ZZ'), '==')
     [{0}]
@@ -117,7 +117,7 @@ def solve_poly_inequalities(polys):
     Examples
     ========
 
-    >>> from sympy.solvesetrs.inequalities import solve_poly_inequalities
+    >>> from sympy.solvers.inequalities import solve_poly_inequalities
     >>> from sympy.polys import Poly
     >>> from sympy.abc import x
     >>> solve_poly_inequalities(((
@@ -137,7 +137,7 @@ def solve_rational_inequalities(eqs):
 
     >>> from sympy.abc import x
     >>> from sympy import Poly
-    >>> from sympy.solvesetrs.inequalities import solve_rational_inequalities
+    >>> from sympy.solvers.inequalities import solve_rational_inequalities
 
     >>> solve_rational_inequalities([[
     ... ((Poly(-x + 1), Poly(1, x)), '>='),
@@ -203,7 +203,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     ========
 
     >>> from sympy import Poly, Symbol
-    >>> from sympy.solvesetrs.inequalities import reduce_rational_inequalities
+    >>> from sympy.solvers.inequalities import reduce_rational_inequalities
 
     >>> x = Symbol('x', real=True)
 
@@ -285,7 +285,7 @@ def reduce_abs_inequality(expr, rel, gen):
     ========
 
     >>> from sympy import Abs, Symbol
-    >>> from sympy.solvesetrs.inequalities import reduce_abs_inequality
+    >>> from sympy.solvers.inequalities import reduce_abs_inequality
     >>> x = Symbol('x', real=True)
 
     >>> reduce_abs_inequality(Abs(x - 5) - 3, '<', x)
@@ -368,7 +368,7 @@ def reduce_abs_inequalities(exprs, gen):
 
     >>> from sympy import Abs, Symbol
     >>> from sympy.abc import x
-    >>> from sympy.solvesetrs.inequalities import reduce_abs_inequalities
+    >>> from sympy.solvers.inequalities import reduce_abs_inequalities
     >>> x = Symbol('x', real=True)
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
@@ -396,11 +396,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     expr : Relational
         The target inequality
     gen : Symbol
-        The variable for which the inequality is solvesetd
+        The variable for which the inequality is solved
     relational : bool
         A Relational type output is expected or not
     domain : Set
-        The domain over which the equation is solvesetd
+        The domain over which the equation is solved
     continuous: bool
         True if expr is known to be continuous over the given domain
         (and so continuous_domain() doesn't need to be called on it)
@@ -422,12 +422,12 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     See Also
     ========
 
-    solvify: solvesetr returning solvesetset solutions with solveset's output API
+    solvify: solver returning solvesetset solutions with solveset's output API
 
     Examples
     ========
 
-    >>> from sympy.solvesetrs.inequalities import solve_univariate_inequality
+    >>> from sympy.solvers.inequalities import solve_univariate_inequality
     >>> from sympy import Symbol, sin, Interval, S
     >>> x = Symbol('x')
 
@@ -448,9 +448,9 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     from sympy import im
     from sympy.calculus.util import (continuous_domain, periodicity,
         function_range)
-    from sympy.solvesetrs.solvesetrs import denoms
-    from sympy.solvesetrs.solvesetset import solvesetset_real, solvify, solvesetset
-    from sympy.solvesetrs.solvesetrs import solveset
+    from sympy.solvers.solvers import denoms
+    from sympy.solvers.solvesetset import solvesetset_real, solvify, solvesetset
+    from sympy.solvers.solvers import solveset
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solvesetset` makes sure this function is called only when the domain is
@@ -523,7 +523,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 # replace gen with generic x since it's
                 # univariate anyway
                 raise NotImplementedError(filldedent('''
-                    The inequality, %s, cannot be solvesetd using
+                    The inequality, %s, cannot be solved using
                     solve_univariate_inequality.
                     ''' % expr.subs(gen, Symbol('x'))))
 
@@ -714,7 +714,7 @@ def _solve_inequality(ie, s, linear=False):
 
     If `linear` is True (default is False) an `s`-dependent expression
     will be isolated on the left, if possible
-    but it will not be solvesetd for `s` unless the expression is linear
+    but it will not be solved for `s` unless the expression is linear
     in `s`. Furthermore, only "safe" operations which don't change the
     sense of the relationship are applied: no division by an unsigned
     value is attempted unless the relationship involves Eq or Ne and
@@ -724,7 +724,7 @@ def _solve_inequality(ie, s, linear=False):
     ========
 
     >>> from sympy import Eq, Symbol
-    >>> from sympy.solvesetrs.inequalities import _solve_inequality as f
+    >>> from sympy.solvers.inequalities import _solve_inequality as f
     >>> from sympy.abc import x, y
 
     For linear expressions, the symbol can be isolated:
@@ -780,7 +780,7 @@ def _solve_inequality(ie, s, linear=False):
     >>> f(x < x*(2/x - 1), x)
     (x < 1) & Ne(x, 0)
     """
-    from sympy.solvesetrs.solvesetrs import denoms
+    from sympy.solvers.solvers import denoms
     if s not in ie.free_symbols:
         return ie
     if ie.rhs == s:
@@ -937,7 +937,7 @@ def reduce_inequalities(inequalities, symbols=[]):
 
     >>> from sympy import sympify as S, Symbol
     >>> from sympy.abc import x, y
-    >>> from sympy.solvesetrs.inequalities import reduce_inequalities
+    >>> from sympy.solvers.inequalities import reduce_inequalities
 
     >>> reduce_inequalities(0 <= x + 3, [])
     (-3 <= x) & (x < oo)

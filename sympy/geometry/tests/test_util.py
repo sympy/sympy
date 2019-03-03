@@ -1,7 +1,7 @@
 from sympy import Symbol, sqrt, Derivative, S, Function, exp
 from sympy.geometry import Point, Point2D, Line, Circle, Polygon, Segment, convex_hull, intersection, centroid
 from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points
-from sympy.solvesetrs.solvesetrs import solveset
+from sympy.solvers.solvers import solveset
 from sympy.utilities.pytest import raises
 
 

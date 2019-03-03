@@ -8,7 +8,7 @@ from sympy.core.basic import _aresame
 from sympy.core.function import PoleError, _mexpand
 from sympy.core.sympify import sympify
 from sympy.sets.sets import FiniteSet
-from sympy.solvesetrs.solvesetset import solvesetset
+from sympy.solvers.solvesetset import solvesetset
 from sympy.utilities.iterables import subsets, variations
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import range

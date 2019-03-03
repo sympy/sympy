@@ -407,7 +407,7 @@ class LagrangesMethod(object):
         else:
             raise TypeError("op_point must be either a dictionary or an "
                             "iterable of dictionaries.")
-        # Compose the system to be solvesetd
+        # Compose the system to be solved
         mass_matrix = self.mass_matrix.col_join((-self.lam_coeffs.row_join(
                 zeros(k, k))))
         force_matrix = self.forcing.col_join(self._f_cd)
@@ -424,7 +424,7 @@ class LagrangesMethod(object):
             raise ValueError("Unknown sol_type {:}.".format(sol_type))
 
     def rhs(self, inv_method=None, **kwargs):
-        """Returns equations that can be solvesetd numerically
+        """Returns equations that can be solved numerically
 
         Parameters
         ==========

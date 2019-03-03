@@ -20,7 +20,7 @@ def test_RecurrenceOperatorEqPoly():
     assert not rr == rr2
 
     # polynomial comparison issue, see https://github.com/sympy/sympy/pull/15799
-    # should work once that is solvesetd
+    # should work once that is solved
     # d = rr.listofpoly[0]
     # assert rr == d
 

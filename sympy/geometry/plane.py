@@ -14,7 +14,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.solvesetrs import solveset, linsolve
+from sympy.solvers import solveset, linsolve
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent, func_name
 
@@ -864,7 +864,7 @@ class Plane(GeometryEntity):
         """
         from sympy.geometry.point import Point
         from sympy.core.symbol import Dummy
-        from sympy.solvesetrs.solvesetrs import solveset
+        from sympy.solvers.solvers import solveset
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):

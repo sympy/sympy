@@ -3,12 +3,12 @@
     Examples
     ========
 
-    >>> from sympy.solvesetrs import solveset
+    >>> from sympy.solvers import solveset
     >>> from sympy.abc import x
     >>> solveset(x**5+5*x**4+10*x**3+10*x**2+5*x+1,x)
     [-1]
 """
-from .solvesetrs import solveset, solve_linear_system, solve_linear_system_LU, \
+from .solvers import solveset, solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
     det_quick, inv_quick, check_assumptions, failing_assumptions
 

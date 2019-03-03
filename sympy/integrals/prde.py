@@ -21,7 +21,7 @@ from sympy.core import Dummy, ilcm, Add, Mul, Pow, S, oo
 from sympy.matrices import zeros, eye
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 
-from sympy.solvesetrs import solveset
+from sympy.solvers import solveset
 
 from sympy.polys import Poly, lcm, cancel, sqf_list
 

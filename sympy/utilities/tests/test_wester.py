@@ -36,7 +36,7 @@ from sympy.physics.quantum import Commutator
 from sympy.assumptions import assuming
 from sympy.polys.rings import vring
 from sympy.polys.fields import vfield
-from sympy.polys.solvesetrs import solve_lin_sys
+from sympy.polys.solvers import solve_lin_sys
 from sympy.concrete import Sum
 from sympy.concrete.products import Product
 from sympy.integrals import integrate
@@ -45,9 +45,9 @@ from sympy.integrals.transforms import laplace_transform,\
     mellin_transform
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.delta_functions import Heaviside
-from sympy.solvesetrs.recurr import rsolve
-from sympy.solvesetrs.solvesetset import solvesetset, solvesetset_real, linsolve
-from sympy.solvesetrs.ode import dsolve
+from sympy.solvers.recurr import rsolve
+from sympy.solvers.solvesetset import solvesetset, solvesetset_real, linsolve
+from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
 from sympy.core.compatibility import range
 from itertools import islice, takewhile

@@ -5,7 +5,7 @@ from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
                    series, factorial, And)
 
 from sympy.polys.polyerrors import PolynomialError
-from sympy.solvesetrs.solvesetset import solvesetset
+from sympy.solvers.solvesetset import solvesetset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
                             random_symbols, PSpace, ConditionalDomain, RandomDomain,

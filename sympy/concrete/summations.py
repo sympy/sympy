@@ -22,8 +22,8 @@ from sympy.sets.sets import FiniteSet
 from sympy.simplify import denom
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
-from sympy.solvesetrs import solveset
-from sympy.solvesetrs.solvesetset import solvesetset
+from sympy.solvers import solveset
+from sympy.solvers.solvesetset import solvesetset
 import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):

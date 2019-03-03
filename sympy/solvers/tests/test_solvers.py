@@ -9,9 +9,9 @@ from sympy import (
 
 from sympy.core.compatibility import range
 from sympy.core.function import nfloat
-from sympy.solvesetrs import solve_linear_system, solve_linear_system_LU, \
+from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
-from sympy.solvesetrs.solvesetrs import _invert, unrad, checksol, posify, _ispow, \
+from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
     det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms, \
     failing_assumptions
 
@@ -337,7 +337,7 @@ def test_linear_systemLU():
                                                   y: 6*n/(n**2 + 18*n)}
 
 # Note: multiple solutions exist for some of these equations, so the tests
-# should be expected to break if the implementation of the solvesetr changes
+# should be expected to break if the implementation of the solver changes
 # in such a way that a different branch is chosen
 
 @slow
@@ -893,14 +893,14 @@ def test_unrad1():
         (x**2 - x + 4, []))
 
     # http://tutorial.math.lamar.edu/
-    #        Classes/Alg/solvesetRadicalEqns.aspx#solve_Rad_Ex2_a
+    #        Classes/Alg/solveradicalEqns.aspx#solve_Rad_Ex2_a
     assert solveset(Eq(x, sqrt(x + 6))) == [3]
     assert solveset(Eq(x + sqrt(x - 4), 4)) == [4]
     assert solveset(Eq(1, x + sqrt(2*x - 3))) == []
     assert set(solveset(Eq(sqrt(5*x + 6) - 2, x))) == set([-S(1), S(2)])
     assert set(solveset(Eq(sqrt(2*x - 1) - sqrt(x - 4), 2))) == set([S(5), S(13)])
     assert solveset(Eq(sqrt(x + 7) + 2, sqrt(3 - x))) == [-6]
-    # http://www.purplemath.com/modules/solvesetrad.htm
+    # http://www.purplemath.com/modules/solverad.htm
     assert solveset((2*x - 5)**Rational(1, 3) - 3) == [16]
     assert set(solveset(x + 1 - root(x**4 + 4*x**3 - x, 4))) == \
         set([-S(1)/2, -S(1)/3])
@@ -1183,14 +1183,14 @@ def test_issue_5849():
     v = I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4
     assert solveset(e, *v, manual=True, check=False, dict=True) == ans
     assert solveset(e, *v, manual=True) == []
-    # the matrix solvesetr (tested below) doesn't like this because it produces
+    # the matrix solver (tested below) doesn't like this because it produces
     # a zero row in the matrix. Is this related to issue 4551?
     assert [ei.subs(
         ans[0]) for ei in e] == [0, 0, I3 - I6, -I3 + I6, 0, 0, 0, 0, 0]
 
 
 def test_issue_5849_matrix():
-    '''Same as test_2750 but solvesetd with the matrix solvesetr.'''
+    '''Same as test_2750 but solved with the matrix solver.'''
     I1, I2, I3, I4, I5, I6 = symbols('I1:7')
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
 
@@ -1549,7 +1549,7 @@ def test_issue_14607():
 @slow
 def test_lambert_multivariate():
     from sympy.abc import a, x, y
-    from sympy.solvesetrs.bivariate import _filtered_gens, _lambert, _solve_lambert
+    from sympy.solvers.bivariate import _filtered_gens, _lambert, _solve_lambert
 
     assert _filtered_gens(Poly(x + 1/x + exp(x) + y), x) == set([x, exp(x)])
     assert _lambert(x, x) == []

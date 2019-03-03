@@ -68,7 +68,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Notes
     =====
 
-    By setting ``full=True``, range of admissible functions to be solvesetd using
+    By setting ``full=True``, range of admissible functions to be solved using
     ``rational_algorithm`` can be increased. This option should be used
     carefully as it can significantly slow down the computation as ``doit`` is
     performed on the :class:`RootSum` object returned by the ``apart`` function.
@@ -199,7 +199,7 @@ def simpleDE(f, x, g, order=4):
 
     Yields a tuple of (DE, order).
     """
-    from sympy.solvesetrs.solvesetset import linsolve
+    from sympy.solvers.solvesetset import linsolve
 
     a = symbols('a:%d' % (order))
 
@@ -561,7 +561,7 @@ def _solve_hyper_RE(f, x, RE, g, k):
 
 def _solve_explike_DE(f, x, DE, g, k):
     """solvesets DE with constant coefficients."""
-    from sympy.solvesetrs import rsolve
+    from sympy.solvers import rsolve
 
     for t in Add.make_args(DE):
         coeff, d = t.as_independent(g)
@@ -584,7 +584,7 @@ def _solve_explike_DE(f, x, DE, g, k):
 
 def _solve_simple(f, x, DE, g, k):
     """Converts DE into RE and solvesets using :func:`rsolve`."""
-    from sympy.solvesetrs import rsolve
+    from sympy.solvers import rsolve
 
     RE = hyper_re(DE, g, k)
 
@@ -602,7 +602,7 @@ def _solve_simple(f, x, DE, g, k):
 
 def _transform_explike_DE(DE, g, x, order, syms):
     """Converts DE with free parameters into DE with constant coefficients."""
-    from sympy.solvesetrs.solvesetset import linsolve
+    from sympy.solvers.solvesetset import linsolve
 
     eq = []
     highest_coeff = DE.coeff(Derivative(g(x), x, order))
@@ -630,7 +630,7 @@ def _transform_explike_DE(DE, g, x, order, syms):
 
 def _transform_DE_RE(DE, g, k, order, syms):
     """Converts DE with free parameters into RE of hypergeometric type."""
-    from sympy.solvesetrs.solvesetset import linsolve
+    from sympy.solvers.solvesetset import linsolve
 
     RE = hyper_re(DE, g, k)
 

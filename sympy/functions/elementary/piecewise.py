@@ -467,7 +467,7 @@ class Piecewise(Function):
                     andargs = Tuple(*[i for i in reps if reps[i]])
                     free = list(andargs.free_symbols)
                     if len(free) == 1:
-                        from sympy.solvesetrs.inequalities import (
+                        from sympy.solvers.inequalities import (
                             reduce_inequalities, _solve_inequality)
                         try:
                             t = reduce_inequalities(andargs, free[0])
@@ -741,7 +741,7 @@ class Piecewise(Function):
         numbers) or a <= b when involving symbols.
 
         If there are any relationals not involving sym, or any
-        relational cannot be solvesetd for sym, NotImplementedError is
+        relational cannot be solved for sym, NotImplementedError is
         raised. The calling routine should have removed such
         relationals before calling this routine.
 
@@ -750,7 +750,7 @@ class Piecewise(Function):
         identical expressions. The first condition that evaluates to
         True will be returned as the last tuple with a, b = -oo, oo.
         """
-        from sympy.solvesetrs.inequalities import _solve_inequality
+        from sympy.solvers.inequalities import _solve_inequality
         from sympy.logic.boolalg import to_cnf, distribute_or_over_and
 
         assert isinstance(self, Piecewise)

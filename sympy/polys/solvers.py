@@ -1,4 +1,4 @@
-"""Low-level linear systems solvesetr. """
+"""Low-level linear systems solver. """
 
 from __future__ import print_function, division
 

@@ -262,7 +262,7 @@ class FpGroup(DefaultPrinting):
             return True
         # Abelianisation test: check is the abelianisation is infinite
         abelian_rels = []
-        from sympy.polys.solvesetrs import RawMatrix as Matrix
+        from sympy.polys.solvers import RawMatrix as Matrix
         from sympy.polys.domains import ZZ
         from sympy.matrices.normalforms import invariant_factors
         for rel in self.relators:

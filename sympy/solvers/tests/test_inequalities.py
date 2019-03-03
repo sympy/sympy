@@ -3,15 +3,15 @@
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
                    Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
-from sympy.solvesetrs.inequalities import (reduce_inequalities,
+from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality,
                                         _solve_inequality)
 from sympy.polys.rootoftools import rootof
-from sympy.solvesetrs.solvesetrs import solveset
-from sympy.solvesetrs.solvesetset import solvesetset
+from sympy.solvers.solvers import solveset
+from sympy.solvers.solvesetset import solvesetset
 from sympy.abc import x, y
 
 from sympy.utilities.pytest import raises, slow, XFAIL
@@ -324,7 +324,7 @@ def test_solve_univariate_inequality():
 
 
 def test_trig_inequalities():
-    # all the inequalities are solvesetd in a periodic interval.
+    # all the inequalities are solved in a periodic interval.
     assert isolve(sin(x) < S.Half, x, relational=False) == \
         Union(Interval(0, pi/6, False, True), Interval(5*pi/6, 2*pi, True, False))
     assert isolve(sin(x) > S.Half, x, relational=False) == \
@@ -440,7 +440,7 @@ def test__solve_inequality():
 
 
 def test__pt():
-    from sympy.solvesetrs.inequalities import _pt
+    from sympy.solvers.inequalities import _pt
     assert _pt(-oo, oo) == 0
     assert _pt(S(1), S(3)) == 2
     assert _pt(S(1), oo) == _pt(oo, S(1)) == 2

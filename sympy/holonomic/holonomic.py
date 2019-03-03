@@ -590,7 +590,7 @@ class HolonomicFunction(object):
         homosys = [[S(0) for q in range(dim + 1)]]
         homosys = NewMatrix(homosys).transpose()
 
-        # solving the linear system using gauss jordan solvesetr
+        # solving the linear system using gauss jordan solver
         solcomp = r.gauss_jordan_solve(homosys)
         sol = solcomp[0]
 

@@ -23,8 +23,8 @@ from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
-from sympy.solvesetrs import solveset
-from sympy.solvesetrs.solvesetset import linear_coeffs
+from sympy.solvers import solveset
+from sympy.solvers.solvesetset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity, GeometrySet

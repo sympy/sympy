@@ -13,7 +13,7 @@ from sympy.utilities import filldedent
 from sympy.simplify.radsimp import denom
 from sympy.polys.rationaltools import together
 from sympy.core.compatibility import iterable
-from sympy.solvesetrs.inequalities import solve_univariate_inequality
+from sympy.solvers.inequalities import solve_univariate_inequality
 
 def continuous_domain(f, symbol, domain):
     """
@@ -61,8 +61,8 @@ def continuous_domain(f, symbol, domain):
         has not yet been developed.
 
     """
-    from sympy.solvesetrs.inequalities import solve_univariate_inequality
-    from sympy.solvesetrs.solvesetset import solvesetset, _has_rational_power
+    from sympy.solvers.inequalities import solve_univariate_inequality
+    from sympy.solvers.solvesetset import solvesetset, _has_rational_power
 
     if domain.is_subset(S.Reals):
         constrained_interval = domain
@@ -158,7 +158,7 @@ def function_range(f, symbol, domain):
         is continuous are not finite or real,
         OR if the critical points of the function on the domain can't be found.
     """
-    from sympy.solvesetrs.solvesetset import solvesetset
+    from sympy.solvers.solvesetset import solvesetset
 
     if isinstance(domain, EmptySet):
         return S.EmptySet
@@ -310,7 +310,7 @@ def not_empty_in(finset_intersection, *syms):
 
     def elm_domain(expr, intrvl):
         """ Finds the domain of an expression in any given interval """
-        from sympy.solvesetrs.solvesetset import solvesetset
+        from sympy.solvers.solvesetset import solvesetset
 
         _start = intrvl.start
         _end = intrvl.end
@@ -416,7 +416,7 @@ def periodicity(f, symbol, check=False):
     from sympy.functions.elementary.trigonometric import (
         TrigonometricFunction, sin, cos, csc, sec)
     from sympy.simplify.simplify import simplify
-    from sympy.solvesetrs.decompogen import decompogen
+    from sympy.solvers.decompogen import decompogen
     from sympy.polys.polytools import degree, lcm_list
 
     def _check(orig_f, period):
@@ -516,7 +516,7 @@ def periodicity(f, symbol, check=False):
                 period = Abs(n / a.diff(symbol))
 
     elif period is None:
-        from sympy.solvesetrs.decompogen import compogen
+        from sympy.solvers.decompogen import compogen
         g_s = decompogen(f, symbol)
         num_of_gs = len(g_s)
         if num_of_gs > 1:

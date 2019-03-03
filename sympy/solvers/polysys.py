@@ -1,4 +1,4 @@
-"""solvesetrs of systems of polynomial equations. """
+"""solvers of systems of polynomial equations. """
 
 from __future__ import print_function, division
 
@@ -13,7 +13,7 @@ from sympy.utilities.misc import filldedent
 
 
 class solvesetFailed(Exception):
-    """Raised when solvesetr's conditions weren't met. """
+    """Raised when solver's conditions weren't met. """
 
 
 def solve_poly_system(seq, *gens, **args):
@@ -55,7 +55,7 @@ def solve_biquadratic(f, g, opt):
 
     >>> from sympy.polys import Options, Poly
     >>> from sympy.abc import x, y
-    >>> from sympy.solvesetrs.polysys import solve_biquadratic
+    >>> from sympy.solvers.polysys import solve_biquadratic
     >>> NewOption = Options((x, y), {'domain': 'ZZ'})
 
     >>> a = Poly(y**2 - 4 + x, y, x, domain='ZZ')
@@ -115,7 +115,7 @@ def solve_generic(polys, opt):
     same set of solutions. By the elimination property,  if G is a
     reduced, zero-dimensional Groebner basis, then there exists an
     univariate polynomial in G (in its last variable). This can be
-    solvesetd by computing its roots. Substituting all computed roots
+    solved by computing its roots. Substituting all computed roots
     for the last (eliminated) variable in other elements of G, new
     polynomial system is generated. Applying the above procedure
     recursively, a finite number of solutions can be found.
@@ -140,7 +140,7 @@ def solve_generic(polys, opt):
     ========
 
     >>> from sympy.polys import Poly, Options
-    >>> from sympy.solvesetrs.polysys import solve_generic
+    >>> from sympy.solvers.polysys import solve_generic
     >>> from sympy.abc import x, y
     >>> NewOption = Options((x, y), {'domain': 'ZZ'})
 
@@ -255,7 +255,7 @@ def solve_triangulated(polys, *gens, **args):
     Examples
     ========
 
-    >>> from sympy.solvesetrs.polysys import solve_triangulated
+    >>> from sympy.solvers.polysys import solve_triangulated
     >>> from sympy.abc import x, y, z
 
     >>> F = [x**2 + y + z - 1, x + y**2 + z - 1, x + y + z**2 - 1]

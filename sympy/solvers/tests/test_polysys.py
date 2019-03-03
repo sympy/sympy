@@ -1,10 +1,10 @@
-"""Tests for solvesetrs of systems of polynomial equations. """
+"""Tests for solvers of systems of polynomial equations. """
 
 from sympy import (flatten, I, Integer, Poly, QQ, Rational, S, sqrt,
     solveset, symbols)
 from sympy.abc import x, y, z
 from sympy.polys import PolynomialError
-from sympy.solvesetrs.polysys import (solve_poly_system,
+from sympy.solvers.polysys import (solve_poly_system,
     solve_triangulated, solve_biquadratic, solvesetFailed)
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.utilities.pytest import raises

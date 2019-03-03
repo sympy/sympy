@@ -25,7 +25,7 @@ from sympy.polys.orthopolys import spherical_bessel_fn as fn
 # o Series Expansions for functions of the second kind about zero
 # o Nicer series expansions.
 # o More rewriting.
-# o Add solvesetrs to ode.py (or rather add solvesetrs for the hypergeometric equation).
+# o Add solvers to ode.py (or rather add solvers for the hypergeometric equation).
 
 
 class BesselBase(Function):
@@ -923,10 +923,10 @@ def jn_zeros(n, k, method="sympy", dps=15):
       `newton <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.newton.html>`_
       to find all
       roots, which is faster than computing the zeros using a general
-      numerical solvesetr, but it requires SciPy and only works with low
+      numerical solver, but it requires SciPy and only works with low
       precision floating point numbers.  [The function used with
       method="sympy" is a recent addition to mpmath, before that a general
-      solvesetr was used.]
+      solver was used.]
 
     Examples
     ========
@@ -961,7 +961,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
     else:
         raise NotImplementedError("Unknown method.")
 
-    def solvesetr(f, x):
+    def solver(f, x):
         if method == "scipy":
             root = newton(f, x)
         else:
@@ -971,11 +971,11 @@ def jn_zeros(n, k, method="sympy", dps=15):
     # we need to approximate the position of the first root:
     root = n + pi
     # determine the first root exactly:
-    root = solvesetr(f, root)
+    root = solver(f, root)
     roots = [root]
     for i in range(k - 1):
         # estimate the position of the next root using the last root + pi:
-        root = solvesetr(f, root + pi)
+        root = solver(f, root + pi)
         roots.append(root)
     return roots
 

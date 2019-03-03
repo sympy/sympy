@@ -2846,7 +2846,7 @@ class MatrixBase(MatrixDeprecated,
         ==========
 
         B : Matrix
-            The right hand side of the equation to be solvesetd for.  Must have
+            The right hand side of the equation to be solved for.  Must have
             the same number of rows as matrix A.
 
         freevar : List
@@ -3918,7 +3918,7 @@ class MatrixBase(MatrixDeprecated,
         ==========
 
         B : Matrix
-            The right hand side of the equation to be solvesetd for.  Must have
+            The right hand side of the equation to be solved for.  Must have
             the same number of rows as matrix A.
         arbitrary_matrix : Matrix
             If the system is underdetermined (e.g. A has more columns than
@@ -4196,7 +4196,7 @@ class MatrixBase(MatrixDeprecated,
 
         ``self`` is the matrix ``A``, the method argument is the vector
         ``b``.  The method returns the solution vector ``x``.  If ``b`` is a
-        matrix, the system is solvesetd for each column of ``b`` and the
+        matrix, the system is solved for each column of ``b`` and the
         return value is a matrix of the same shape as ``b``.
 
         This method is slower (approximately by a factor of 2) but

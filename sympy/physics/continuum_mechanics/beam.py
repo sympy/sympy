@@ -6,7 +6,7 @@ singularity functions in mechanics.
 from __future__ import print_function, division
 
 from sympy.core import S, Symbol, diff, symbols
-from sympy.solvesetrs import linsolve
+from sympy.solvers import linsolve
 from sympy.printing import sstr
 from sympy.functions import SingularityFunction, Piecewise, factorial
 from sympy.core import sympify
@@ -549,7 +549,7 @@ class Beam(object):
         composite beam connected via hinge.
         This method resolvesets the composite Beam into its sub-beams and then
         equations of shear force, bending moment, slope and deflection are
-        evaluated for both of them separately. These equations are then solvesetd
+        evaluated for both of them separately. These equations are then solved
         for unknown reactions and integration constants using the boundary
         conditions applied on the Beam. Equal deflection of both sub-beams
         at the hinge joint gives us another equation to solveset the system.

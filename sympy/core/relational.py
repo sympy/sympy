@@ -300,7 +300,7 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     def _eval_as_set(self):
         # self is univariate and periodicity(self, x) in (0, None)
-        from sympy.solvesetrs.inequalities import solve_univariate_inequality
+        from sympy.solvers.inequalities import solve_univariate_inequality
         syms = self.free_symbols
         assert len(syms) == 1
         x = syms.pop()
@@ -501,7 +501,7 @@ class Equality(Relational):
         return set()
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
-        from sympy.solvesetrs.solvesetset import linear_coeffs
+        from sympy.solvers.solvesetset import linear_coeffs
         # standard simplify
         e = super(Equality, self)._eval_simplify(
             ratio, measure, rational, inverse)

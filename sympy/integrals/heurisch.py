@@ -29,7 +29,7 @@ from sympy.polys.monomials import itermonomials
 from sympy.polys.polyroots import root_factors
 
 from sympy.polys.rings import PolyRing
-from sympy.polys.solvesetrs import solve_lin_sys
+from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
 from sympy.core.compatibility import reduce, ordered
@@ -123,7 +123,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     heurisch
     """
-    from sympy.solvesetrs.solvesetrs import solveset, denoms
+    from sympy.solvers.solvers import solveset, denoms
     f = sympify(f)
     if x not in f.free_symbols:
         return f*x

@@ -105,7 +105,7 @@ def msolve(f, x):
     Finds the first root of f(x) to the left of 0.
 
     The x0 and dx below are tailored to get the correct result for our
-    particular function --- the general solvesetr often overshoots the first
+    particular function --- the general solver often overshoots the first
     solution.
     """
     f = lambdify(x, f)

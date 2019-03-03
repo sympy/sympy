@@ -573,7 +573,7 @@ def roots_quintic(f):
 
     # solveset imported here. Causing problems if imported as 'solveset'
     # and hence the changed name
-    from sympy.solvesetrs.solvesetrs import solveset as _solve
+    from sympy.solvers.solvers import solveset as _solve
     a, b = symbols('a b', cls=Dummy)
     _sol = _solve( sol**5 - a - I*b, sol)
     for i in range(5):

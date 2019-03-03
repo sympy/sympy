@@ -65,7 +65,7 @@ from .concrete import *
 from .discrete import *
 from .simplify import *
 from .sets import *
-from .solvesetrs import *
+from .solvers import *
 from .matrices import *
 from .geometry import *
 from .utilities import *

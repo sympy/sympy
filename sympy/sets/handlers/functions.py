@@ -25,7 +25,7 @@ def _set_function(f, x):
 @dispatch(Lambda, Interval)
 def _set_function(f, x):
     from sympy.functions.elementary.miscellaneous import Min, Max
-    from sympy.solvesetrs.solvesetset import solvesetset
+    from sympy.solvers.solvesetset import solvesetset
     from sympy.core.function import diff, Lambda
     from sympy.series import limit
     from sympy.calculus.singularities import singularities

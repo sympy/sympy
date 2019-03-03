@@ -16,7 +16,7 @@ from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
-from sympy.solvesetrs import solveset
+from sympy.solvers import solveset
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
@@ -2873,7 +2873,7 @@ def test_pinv():
         assert ApA.H == ApA
 
 def test_pinv_solve():
-    # Fully determined system (unique result, identical to other solvesetrs).
+    # Fully determined system (unique result, identical to other solvers).
     A = Matrix([[1, 5], [7, 9]])
     B = Matrix([12, 13])
     assert A.pinv_solve(B) == A.cholesky_solve(B)

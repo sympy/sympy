@@ -347,7 +347,7 @@ class DiracDelta(Function):
         Returns the DiracDelta expression written in the form of Singularity Functions.
 
         """
-        from sympy.solvesetrs import solveset
+        from sympy.solvers import solveset
         from sympy.functions import SingularityFunction
         if self == DiracDelta(0):
             return SingularityFunction(0, 0, -1)
@@ -589,7 +589,7 @@ class Heaviside(Function):
         Returns the Heaviside expression written in the form of Singularity Functions.
 
         """
-        from sympy.solvesetrs import solveset
+        from sympy.solvers import solveset
         from sympy.functions import SingularityFunction
         if self == Heaviside(0):
             return SingularityFunction(0, 0, 0)

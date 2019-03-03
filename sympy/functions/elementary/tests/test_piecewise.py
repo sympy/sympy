@@ -708,10 +708,10 @@ def test_issue_11045():
     # targetcond is Eq
     assert Piecewise((1, x > 1), (2, Eq(1, x)), (3, True)
         ).integrate((x, 0, 4)) == 6
-    # And has Relational needing to be solvesetd
+    # And has Relational needing to be solved
     assert Piecewise((1, And(2*x > x + 1, x < 2)), (0, True)
         ).integrate((x, 0, 3)) == 1
-    # Or has Relational needing to be solvesetd
+    # Or has Relational needing to be solved
     assert Piecewise((1, Or(2*x > x + 2, x < 1)), (0, True)
         ).integrate((x, 0, 3)) == 2
     # ignore hidden false (handled in canonicalization)

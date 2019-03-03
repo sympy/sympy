@@ -559,7 +559,7 @@ class And(LatticeOp, BooleanFunction):
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
         from sympy.core.relational import Equality, Relational
-        from sympy.solvesetrs.solvesetset import linear_coeffs
+        from sympy.solvers.solvesetset import linear_coeffs
         # standard simplify
         rv = super(And, self)._eval_simplify(
             ratio, measure, rational, inverse)

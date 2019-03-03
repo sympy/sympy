@@ -118,7 +118,7 @@ class SymbolicSystem(object):
     alg_con : List
         This list contains the indices of the algebraic constraints in the
         combined equations of motion. The presence of these constraints
-        requires that a DAE solvesetr be used instead of an ODE solvesetr.
+        requires that a DAE solver be used instead of an ODE solver.
         If the system is given in form [3] the alg_con variable will be
         adjusted such that it is a representation of the combined kinematics
         and dynamics thus make sure it always matches the mass matrix

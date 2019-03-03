@@ -1608,8 +1608,8 @@ if AutolevListener:
 
         # Code commands
         def exitCodegen(self, ctx):
-            # Handles the CODE() command ie the solvesetrs and the codgen part.
-            # Uses linsolve for the algebraic solvesetrs and nsolve for non linear solvesetrs.
+            # Handles the CODE() command ie the solvers and the codgen part.
+            # Uses linsolve for the algebraic solvers and nsolve for non linear solvers.
 
             if ctx.functionCall().getChild(0).getText().lower() == "algebraic":
                 matrix_name = self.getValue(ctx.functionCall().expr(0))

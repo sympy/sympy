@@ -5,7 +5,7 @@ should serve as a set of test cases.
 
 from sympy import (acos, cos, cosh, Eq, exp, Function, I, Integral, log, Pow,
                    S, sin, sinh, sqrt, Symbol)
-from sympy.solvesetrs.ode import constant_renumber, constantsimp
+from sympy.solvers.ode import constant_renumber, constantsimp
 from sympy.utilities.pytest import XFAIL
 
 

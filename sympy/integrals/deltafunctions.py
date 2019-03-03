@@ -133,7 +133,7 @@ def deltaintegrate(f, x):
         return None
 
     from sympy.integrals import Integral, integrate
-    from sympy.solvesetrs import solveset
+    from sympy.solvers import solveset
 
     # g(x) = DiracDelta(h(x))
     if f.func == DiracDelta:

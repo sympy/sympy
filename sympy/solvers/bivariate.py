@@ -12,7 +12,7 @@ from sympy.polys.polytools import Poly, factor
 from sympy.core.function import _mexpand
 from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
-from sympy.solvesetrs.solvesetrs import solveset, _invert
+from sympy.solvers.solvers import solveset, _invert
 
 
 def _filtered_gens(poly, symbol):
@@ -23,7 +23,7 @@ def _filtered_gens(poly, symbol):
     Examples
     ========
 
-    >>> from sympy.solvesetrs.bivariate import _filtered_gens
+    >>> from sympy.solvers.bivariate import _filtered_gens
     >>> from sympy import Poly, exp
     >>> from sympy.abc import x
     >>> _filtered_gens(Poly(x + 1/x + exp(x)), x)
@@ -53,7 +53,7 @@ def _mostfunc(lhs, func, X=None):
     Examples
     ========
 
-    >>> from sympy.solvesetrs.bivariate import _mostfunc
+    >>> from sympy.solvers.bivariate import _mostfunc
     >>> from sympy.functions.elementary.exponential import exp
     >>> from sympy.utilities.pytest import raises
     >>> from sympy.abc import x, y
@@ -87,7 +87,7 @@ def _linab(arg, symbol):
     ========
 
     >>> from sympy.functions.elementary.exponential import exp
-    >>> from sympy.solvesetrs.bivariate import _linab
+    >>> from sympy.solvers.bivariate import _linab
     >>> from sympy.abc import x, y
     >>> from sympy import S
     >>> _linab(S(2), x)
@@ -320,7 +320,7 @@ def bivariate_type(f, x, y, **kwargs):
     ``y`` is equivalent to solving the original expression for ``x`` or
     ``y``. If ``x`` and ``y`` represent two functions in the same
     variable, e.g. ``x = g(t)`` and ``y = h(t)``, then if ``u(x, y) - p``
-    can be solvesetd for ``t`` then these represent the solutions to
+    can be solved for ``t`` then these represent the solutions to
     ``P(u) = 0`` when ``p`` are the solutions of ``P(u) = 0``.
 
     Only positive values of ``u`` are considered.
@@ -328,8 +328,8 @@ def bivariate_type(f, x, y, **kwargs):
     Examples
     ========
 
-    >>> from sympy.solvesetrs.solvesetrs import solveset
-    >>> from sympy.solvesetrs.bivariate import bivariate_type
+    >>> from sympy.solvers.solvers import solveset
+    >>> from sympy.solvers.bivariate import bivariate_type
     >>> from sympy.abc import x, y
     >>> eq = (x**2 - 3).subs(x, x + y)
     >>> bivariate_type(eq, x, y)

@@ -679,7 +679,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.simplify.simplify import nsimplify, simplify
-        from sympy.solvesetrs.solvesetset import solvesetset
+        from sympy.solvers.solvesetset import solvesetset
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
 
@@ -845,7 +845,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.series import limit, Limit
-        from sympy.solvesetrs.solvesetset import solvesetset
+        from sympy.solvers.solvesetset import solvesetset
         from sympy.sets.sets import Interval
         from sympy.functions.elementary.exponential import log
         from sympy.calculus.util import AccumBounds

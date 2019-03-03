@@ -23,9 +23,9 @@ def _preprocess(expr, func=None, hint='_Integral'):
     fail.)
 
     In case func is None, an attempt will be made to autodetect the
-    function to be solvesetd for.
+    function to be solved for.
 
-    >>> from sympy.solvesetrs.deutils import _preprocess
+    >>> from sympy.solvers.deutils import _preprocess
     >>> from sympy import Derivative, Function, Integral, sin
     >>> from sympy.abc import x, y, z
     >>> f, g = map(Function, 'fg')
@@ -95,7 +95,7 @@ def ode_order(expr, func):
     ========
 
     >>> from sympy import Function
-    >>> from sympy.solvesetrs.deutils import ode_order
+    >>> from sympy.solvers.deutils import ode_order
     >>> from sympy.abc import x
     >>> f, g = map(Function, ['f', 'g'])
     >>> ode_order(f(x).diff(x, 2) + f(x).diff(x)**2 +
@@ -133,14 +133,14 @@ def _desolveset(eq, func=None, hint="default", ics=None, simplify=True, **kwargs
     the following keys are returned
 
     'func'    - It provides the function for which the differential equation
-                has to be solvesetd. This is useful when the expression has
+                has to be solved. This is useful when the expression has
                 more than one function in it.
 
     'default' - The default key as returned by classifier functions in ode
                 and pde.py
 
     'hint'    - The hint given by the user for which the differential equation
-                is to be solvesetd. If the hint given by the user is 'default',
+                is to be solved. If the hint given by the user is 'default',
                 then the value of 'hint' and 'default' is the same.
 
     'order'   - The order of the function as returned by ode_order
@@ -186,13 +186,13 @@ def _desolveset(eq, func=None, hint="default", ics=None, simplify=True, **kwargs
     terms = kwargs.get('n')
 
     if type == 'ode':
-        from sympy.solvesetrs.ode import classify_ode, allhints
+        from sympy.solvers.ode import classify_ode, allhints
         classifier = classify_ode
         string = 'ODE '
         dummy = ''
 
     elif type == 'pde':
-        from sympy.solvesetrs.pde import classify_pde, allhints
+        from sympy.solvers.pde import classify_pde, allhints
         classifier = classify_pde
         string = 'PDE '
         dummy = 'p'

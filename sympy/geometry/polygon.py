@@ -677,7 +677,7 @@ class Polygon(GeometrySet):
         return Piecewise(*sides)
 
     def parameter_value(self, other, t):
-        from sympy.solvesetrs.solvesetrs import solveset
+        from sympy.solvers.solvers import solveset
         if not isinstance(other,GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other,Point):

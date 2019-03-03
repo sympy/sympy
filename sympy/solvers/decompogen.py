@@ -17,7 +17,7 @@ def decompogen(f, symbol):
     Examples
     ========
 
-    >>> from sympy.solvesetrs.decompogen import decompogen
+    >>> from sympy.solvers.decompogen import decompogen
     >>> from sympy.abc import x
     >>> from sympy import sqrt, sin, cos
     >>> decompogen(sin(cos(x)), x)
@@ -78,7 +78,7 @@ def compogen(g_s, symbol):
     Examples
     ========
 
-    >>> from sympy.solvesetrs.decompogen import compogen
+    >>> from sympy.solvers.decompogen import compogen
     >>> from sympy.abc import x
     >>> from sympy import sqrt, sin, cos
     >>> compogen([sin(x), cos(x)], x)
