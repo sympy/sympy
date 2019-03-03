@@ -274,19 +274,21 @@ class Application(with_metaclass(FunctionClass, Basic)):
         obj = super(Application, cls).__new__(cls, *args, **options)
 
         # make nargs uniform here
-        try:
+        sentinel = object()
+        objnargs = getattr(obj, "nargs", sentinel)
+        if objnargs is not sentinel:
             # things passing through here:
             #  - functions subclassed from Function (e.g. myfunc(1).nargs)
             #  - functions like cos(1).nargs
             #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
             # Canonicalize nargs here
-            if is_sequence(obj.nargs):
-                nargs = tuple(ordered(set(obj.nargs)))
-            elif obj.nargs is not None:
-                nargs = (as_int(obj.nargs),)
+            if is_sequence(objnargs):
+                nargs = tuple(ordered(set(objnargs)))
+            elif objnargs is not None:
+                nargs = (as_int(objnargs),)
             else:
                 nargs = None
-        except AttributeError:
+        else:
             # things passing through here:
             #  - WildFunction('f').nargs
             #  - AppliedUndef with no nargs like Function('f')(1).nargs
@@ -517,21 +519,31 @@ class Function(Application, Expr):
             return False
 
     def _eval_evalf(self, prec):
-        # Lookup mpmath function based on name
-        try:
+
+        def _get_mpmath_func(fname):
+            """Lookup mpmath function based on name"""
             if isinstance(self, AppliedUndef):
                 # Shouldn't lookup in mpmath but might have ._imp_
-                raise AttributeError
-            fname = self.func.__name__
+                return None
+
             if not hasattr(mpmath, fname):
                 from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
-                fname = MPMATH_TRANSLATIONS[fname]
-            func = getattr(mpmath, fname)
-        except (AttributeError, KeyError):
+                fname = MPMATH_TRANSLATIONS.get(fname, None)
+                if fname is None:
+                    return None
+            return getattr(mpmath, fname)
+
+        func = _get_mpmath_func(self.func.__name__)
+
+        # Fall-back evaluation
+        if func is None:
+            imp = getattr(self, '_imp_', None)
+            if imp is None:
+                return None
             try:
-                return Float(self._imp_(*[i.evalf(prec) for i in self.args]), prec)
-            except (AttributeError, TypeError, ValueError):
-                return
+                return Float(imp(*[i.evalf(prec) for i in self.args]), prec)
+            except (TypeError, ValueError) as e:
+                return None
 
         # Convert all args to mpf or mpc
         # Convert the arguments to *higher* precision than requested for the
@@ -1170,10 +1182,9 @@ class Derivative(Expr):
         from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
-        try:
-            has_symbol_set = isinstance(expr.free_symbols, set)
-        except AttributeError:
-            has_symbol_set = False
+        symbols_or_none = getattr(expr, "free_symbols", None)
+        has_symbol_set = isinstance(symbols_or_none, set)
+
         if not has_symbol_set:
             raise ValueError(filldedent('''
                 Since there are no variables in the expression %s,

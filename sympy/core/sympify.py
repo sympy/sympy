@@ -269,10 +269,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             return a
     except TypeError: # Type of a is unhashable
         pass
-    try:
-        cls = a.__class__
-    except AttributeError:  # a is probably an old-style class object
-        cls = type(a)
+    cls = getattr(a, "__class__", None)
+    if cls is None:
+        cls = type(a) # Probably an old-style class
     if cls in sympy_classes:
         return a
     if cls is type(None):
@@ -302,25 +301,27 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if isinstance(a, CantSympify):
         raise SympifyError(a)
 
-    try:
+    _sympy_ = getattr(a, "_sympy_", None)
+    if _sympy_ is not None:
         return a._sympy_()
-    except AttributeError:
-        pass
 
     if not strict:
         # Put numpy array conversion _before_ float/int, see
         # <https://github.com/sympy/sympy/issues/13924>.
-        try:
-            from ..tensor.array import Array
-            return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
-        except AttributeError:
-            pass
+        flat = getattr(a, "flat", None)
+        if flat is not None:
+            shape = getattr(a, "shape", None)
+            if shape is not None:
+                from ..tensor.array import Array
+                return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
             try:
                 return sympify(coerce(a))
-            except (TypeError, ValueError, AttributeError, SympifyError):
+            # XXX: Attribute error was being caught here but it doesn't seem
+            # to be needed...
+            except (TypeError, ValueError, SympifyError):
                 continue
 
     if strict:

@@ -806,17 +806,16 @@ class Expr(Basic, EvalfMixin):
         if self.is_number:
             if self.is_real is False:
                 return False
-            try:
-                # check to see that we can get a value
-                n2 = self._eval_evalf(2)
-                if n2 is None:
-                    raise AttributeError
-                if n2._prec == 1:  # no significance
-                    raise AttributeError
-                if n2 == S.NaN:
-                    raise AttributeError
-            except (AttributeError, ValueError):
+
+            # check to see that we can get a value
+            n2 = self._eval_evalf(2)
+            if n2 is None:
                 return None
+            if getattr(n2, '_prec', 1) == 1:  # no significance
+                return None
+            if n2 == S.NaN:
+                return None
+
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
@@ -966,11 +965,11 @@ class Expr(Basic, EvalfMixin):
         """Parse and configure the ordering of terms. """
         from sympy.polys.orderings import monomial_key
 
-        try:
-            reverse = order.startswith('rev-')
-        except AttributeError:
+        startswith = getattr(order, "startswith", None)
+        if startswith is None:
             reverse = False
         else:
+            reverse = startswith('rev-')
             if reverse:
                 order = order[4:]
 
