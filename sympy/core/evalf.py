@@ -693,7 +693,12 @@ def evalf_pow(v, prec, options):
                 return None, mpf_neg(z), None, target_prec
         # Zero raised to an integer power
         if not re:
-            return None, None, None, None
+            if exp > 0:
+                return None, None, None, None
+            elif exp < 0:
+                return mpmath_inf._mpf_, None, target_prec, None
+            else:
+                return mpf(1)._mpf_, None, target_prec, None
         # General complex number to arbitrary integer power
         re, im = libmp.mpc_pow_int((re, im), p, prec)
         # Assumes full accuracy in input

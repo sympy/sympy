@@ -535,3 +535,8 @@ def test_issue_14601():
     e2 = e.evalf(subs=subst)
     assert float(e2) == 0.0
     assert float((x + x*(x**2 + x)).evalf(subs={x: 0.0})) == 0.0
+
+
+def test_issue_8242():
+    assert (1/x).evalf(subs={x: 0}) == inf
+    assert (1/x + 1).evalf(subs={x: 0}) == inf
