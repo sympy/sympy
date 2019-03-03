@@ -12,7 +12,7 @@ from sympy.utilities import default_sort_key, postfixes
 from sympy.utilities.misc import filldedent
 
 
-class solvesetFailed(Exception):
+class solvefailed(Exception):
     """Raised when solver's conditions weren't met. """
 
 
@@ -41,7 +41,7 @@ def solve_poly_system(seq, *gens, **args):
         if all(i <= 2 for i in f.degree_list() + g.degree_list()):
             try:
                 return solve_biquadratic(f, g, opt)
-            except solvesetFailed:
+            except solvefailed:
                 pass
 
     return solve_generic(polys, opt)
@@ -75,13 +75,13 @@ def solve_biquadratic(f, g, opt):
         return None
 
     if len(G) != 2:
-        raise solvesetFailed
+        raise solvefailed
 
     x, y = opt.gens
     p, q = G
     if not p.gcd(q).is_ground:
         # not 0-dimensional
-        raise solvesetFailed
+        raise solvefailed
 
     p = Poly(p, x, expand=False)
     p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]

@@ -255,7 +255,7 @@ def intersection_sets(self, other):
             return imageset(Lambda(n, f.subs(a, nsol.subs(t, n))), S.Integers)
 
     if other == S.Reals:
-        from sympy.solvers.solvesetset import solvesetset_real
+        from sympy.solvers.solveset import solveset_real
         from sympy.core.function import expand_complex
         if len(self.lamda.variables) > 1:
             return None
@@ -271,11 +271,11 @@ def intersection_sets(self, other):
 
         return imageset(Lambda(n_, re),
                         self.base_set.intersect(
-                            solvesetset_real(im, n_)))
+                            solveset_real(im, n_)))
 
     elif isinstance(other, Interval):
-        from sympy.solvers.solvesetset import (invert_real, invert_complex,
-                                            solvesetset)
+        from sympy.solvers.solveset import (invert_real, invert_complex,
+                                            solveset)
 
         f = self.lamda.expr
         n = self.lamda.variables[0]
@@ -317,7 +317,7 @@ def intersection_sets(self, other):
                 range_set = base_set.intersect(new_interval)
             else:
                 if other.is_subset(S.Reals):
-                    solutions = solvesetset(f, n, S.Reals)
+                    solutions = solveset(f, n, S.Reals)
                     if not isinstance(range_set, (ImageSet, ConditionSet)):
                         range_set = solutions.intersect(other)
                     else:

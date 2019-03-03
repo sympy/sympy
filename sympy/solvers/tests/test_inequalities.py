@@ -11,7 +11,7 @@ from sympy.solvers.inequalities import (reduce_inequalities,
                                         _solve_inequality)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solveset
-from sympy.solvers.solvesetset import solvesetset
+from sympy.solvers.solveset import solveset
 from sympy.abc import x, y
 
 from sympy.utilities.pytest import raises, slow, XFAIL
@@ -404,10 +404,10 @@ def test_isolve_Sets():
 
 
 def test_issue_10671_12466():
-    assert solvesetset(sin(y), y, Interval(0, pi)) == FiniteSet(0, pi)
+    assert solveset(sin(y), y, Interval(0, pi)) == FiniteSet(0, pi)
     i = Interval(1, 10)
-    assert solvesetset((1/x).diff(x) < 0, x, i) == i
-    assert solvesetset((log(x - 6)/x) <= 0, x, S.Reals) == \
+    assert solveset((1/x).diff(x) < 0, x, i) == i
+    assert solveset((log(x - 6)/x) <= 0, x, S.Reals) == \
         Interval.Lopen(6, 7)
 
 

@@ -62,7 +62,7 @@ def continuous_domain(f, symbol, domain):
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
-    from sympy.solvers.solvesetset import solvesetset, _has_rational_power
+    from sympy.solvers.solveset import solveset, _has_rational_power
 
     if domain.is_subset(S.Reals):
         constrained_interval = domain
@@ -86,18 +86,18 @@ def continuous_domain(f, symbol, domain):
     try:
         sings = S.EmptySet
         if f.has(Abs):
-            sings = solvesetset(1/f, symbol, domain) + \
-                solvesetset(denom(together(f)), symbol, domain)
+            sings = solveset(1/f, symbol, domain) + \
+                solveset(denom(together(f)), symbol, domain)
         else:
             for atom in f.atoms(Pow):
                 predicate, denomin = _has_rational_power(atom, symbol)
                 if predicate and denomin == 2:
-                    sings = solvesetset(1/f, symbol, domain) +\
-                        solvesetset(denom(together(f)), symbol, domain)
+                    sings = solveset(1/f, symbol, domain) +\
+                        solveset(denom(together(f)), symbol, domain)
                     break
             else:
-                sings = Intersection(solvesetset(1/f, symbol), domain) + \
-                    solvesetset(denom(together(f)), symbol, domain)
+                sings = Intersection(solveset(1/f, symbol), domain) + \
+                    solveset(denom(together(f)), symbol, domain)
 
     except NotImplementedError:
         import sys
@@ -158,7 +158,7 @@ def function_range(f, symbol, domain):
         is continuous are not finite or real,
         OR if the critical points of the function on the domain can't be found.
     """
-    from sympy.solvers.solvesetset import solvesetset
+    from sympy.solvers.solveset import solveset
 
     if isinstance(domain, EmptySet):
         return S.EmptySet
@@ -211,7 +211,7 @@ def function_range(f, symbol, domain):
                 else:
                     vals += FiniteSet(f.subs(symbol, limit_point))
 
-            solution = solvesetset(f.diff(symbol), symbol, interval)
+            solution = solveset(f.diff(symbol), symbol, interval)
 
             if not iterable(solution):
                 raise NotImplementedError('Unable to find critical points for {}'.format(f))
@@ -310,28 +310,28 @@ def not_empty_in(finset_intersection, *syms):
 
     def elm_domain(expr, intrvl):
         """ Finds the domain of an expression in any given interval """
-        from sympy.solvers.solvesetset import solvesetset
+        from sympy.solvers.solveset import solveset
 
         _start = intrvl.start
         _end = intrvl.end
-        _singularities = solvesetset(expr.as_numer_denom()[1], symb,
+        _singularities = solveset(expr.as_numer_denom()[1], symb,
                                   domain=S.Reals)
 
         if intrvl.right_open:
             if _end is S.Infinity:
                 _domain1 = S.Reals
             else:
-                _domain1 = solvesetset(expr < _end, symb, domain=S.Reals)
+                _domain1 = solveset(expr < _end, symb, domain=S.Reals)
         else:
-            _domain1 = solvesetset(expr <= _end, symb, domain=S.Reals)
+            _domain1 = solveset(expr <= _end, symb, domain=S.Reals)
 
         if intrvl.left_open:
             if _start is S.NegativeInfinity:
                 _domain2 = S.Reals
             else:
-                _domain2 = solvesetset(expr > _start, symb, domain=S.Reals)
+                _domain2 = solveset(expr > _start, symb, domain=S.Reals)
         else:
-            _domain2 = solvesetset(expr >= _start, symb, domain=S.Reals)
+            _domain2 = solveset(expr >= _start, symb, domain=S.Reals)
 
         # domain in the interval
         expr_with_sing = Intersection(_domain1, _domain2)

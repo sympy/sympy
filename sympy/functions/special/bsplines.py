@@ -240,7 +240,7 @@ def interpolating_spline(d, x, X, Y):
     bsplines_basis_set, sympy.polys.specialpolys.interpolating_poly
     """
     from sympy import symbols, Number, Dummy, Rational
-    from sympy.solvers.solvesetset import linsolve
+    from sympy.solvers.solveset import linsolve
     from sympy.matrices.dense import Matrix
 
     # Input sanitization

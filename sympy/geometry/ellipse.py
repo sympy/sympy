@@ -24,7 +24,7 @@ from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solveset
-from sympy.solvers.solvesetset import linear_coeffs
+from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity, GeometrySet
@@ -920,7 +920,7 @@ class Ellipse(GeometrySet):
         slope = Line(p, (x, y)).slope
         seq = slope - norm
 
-        # TODO: Replace solveset with solvesetset, when this line is tested
+        # TODO: Replace solveset with solveset, when this line is tested
         yis = solveset(seq, y)[0]
         xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
         if len(xeq.free_symbols) == 1:
@@ -928,7 +928,7 @@ class Ellipse(GeometrySet):
                 # this is so much faster, it's worth a try
                 xsol = Poly(xeq, x).real_roots()
             except (DomainError, PolynomialError, NotImplementedError):
-                # TODO: Replace solveset with solvesetset, when these lines are tested
+                # TODO: Replace solveset with solveset, when these lines are tested
                 xsol = _nsort(solveset(xeq, x), separated=True)[0]
             points = [Point(i, solveset(eq.subs(x, i), y)[0]) for i in xsol]
         else:
@@ -1262,7 +1262,7 @@ class Ellipse(GeometrySet):
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
 
-            # TODO: Replace solveset with solvesetset, when this line is tested
+            # TODO: Replace solveset with solveset, when this line is tested
             tangent_points = solveset([slope - dydx, eq], [x, y])
 
             # handle horizontal and vertical tangent lines

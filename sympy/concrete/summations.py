@@ -23,7 +23,7 @@ from sympy.simplify import denom
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solveset
-from sympy.solvers.solvesetset import solvesetset
+from sympy.solvers.solveset import solveset
 import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -504,7 +504,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ------------- integral test -------------- ###
         check_interval = None
-        maxima = solvesetset(sequence_term.diff(sym), sym, interval)
+        maxima = solveset(sequence_term.diff(sym), sym, interval)
         if not maxima:
             check_interval = interval
         elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:

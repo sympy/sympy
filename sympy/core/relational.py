@@ -501,7 +501,7 @@ class Equality(Relational):
         return set()
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
-        from sympy.solvers.solvesetset import linear_coeffs
+        from sympy.solvers.solveset import linear_coeffs
         # standard simplify
         e = super(Equality, self)._eval_simplify(
             ratio, measure, rational, inverse)

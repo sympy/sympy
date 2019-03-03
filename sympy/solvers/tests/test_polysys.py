@@ -5,7 +5,7 @@ from sympy import (flatten, I, Integer, Poly, QQ, Rational, S, sqrt,
 from sympy.abc import x, y, z
 from sympy.polys import PolynomialError
 from sympy.solvers.polysys import (solve_poly_system,
-    solve_triangulated, solve_biquadratic, solvesetFailed)
+    solve_triangulated, solve_biquadratic, solvefailed)
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.utilities.pytest import raises
 
@@ -92,7 +92,7 @@ def test_solve_biquadratic():
     gens = (x, y)
     for seq in (s1, s2):
         (f, g), opt = parallel_poly_from_expr(seq, *gens)
-        raises(solvesetFailed, lambda: solve_biquadratic(f, g, opt))
+        raises(solvefailed, lambda: solve_biquadratic(f, g, opt))
     seq = (x**2 + y**2 - 2, y**2 - 1)
     (f, g), opt = parallel_poly_from_expr(seq, *gens)
     assert solve_biquadratic(f, g, opt) == [

@@ -24,7 +24,7 @@ from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polytools import Poly, factor_list
 from sympy.simplify.simplify import signsimp
 from sympy.solvers.solvers import check_assumptions
-from sympy.solvers.solvesetset import solvesetset_real
+from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
 
@@ -437,7 +437,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
         return _diop_general_pythagorean(var, coeff, param)
 
     elif eq_type == "univariate":
-        return set([(int(i),) for i in solvesetset_real(
+        return set([(int(i),) for i in solveset_real(
             eq, var[0]).intersect(S.Integers)])
 
     elif eq_type == "general_sum_of_squares":
@@ -979,7 +979,7 @@ def _diop_quadratic(var, coeff, t):
             if not _c:
                 z = symbols("z", real=True)
                 eq = sqa*g*z**2 + D*z + sqa*F
-                roots = solvesetset_real(eq, z).intersect(S.Integers)
+                roots = solveset_real(eq, z).intersect(S.Integers)
                 for root in roots:
                     ans = diop_solve(sqa*x + e*sqc*y - root)
                     sol.add((ans[0], ans[1]))

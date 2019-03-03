@@ -15,7 +15,7 @@ from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
-from sympy.solvers.solvesetset import solvesetset
+from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
@@ -183,7 +183,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
         # Invert CDF
         try:
-            inverse_cdf = solvesetset(self.cdf(x) - z, x, S.Reals)
+            inverse_cdf = solveset(self.cdf(x) - z, x, S.Reals)
             if isinstance(inverse_cdf, Intersection) and S.Reals in inverse_cdf.args:
                 inverse_cdf = list(inverse_cdf.args[1])
         except NotImplementedError:
@@ -503,7 +503,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             return self.density
         y = Dummy('y')
 
-        gs = solvesetset(expr - y, self.value, S.Reals)
+        gs = solveset(expr - y, self.value, S.Reals)
 
         if isinstance(gs, Intersection) and S.Reals in gs.args:
             gs = list(gs.args[1])

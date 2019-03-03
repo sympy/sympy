@@ -409,7 +409,7 @@ class Plane(GeometryEntity):
                 a = Point3D(o.arbitrary_point(t))
                 b = self.equation(x, y, z)
 
-                # TODO: Replace solveset with solvesetset, when this line is tested
+                # TODO: Replace solveset with solveset, when this line is tested
                 c = solveset(b.subs(list(zip((x, y, z), a.args))), t)
                 if not c:
                     return []

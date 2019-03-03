@@ -16,7 +16,7 @@ the following function types in the given ``Interval``:
 """
 
 from sympy.core.sympify import sympify
-from sympy.solvers.solvesetset import solvesetset
+from sympy.solvers.solveset import solveset
 from sympy.simplify import simplify
 from sympy import S, Symbol
 
@@ -87,7 +87,7 @@ def singularities(expression, symbol):
         )
     else:
         domain = S.Reals if symbol.is_real else S.Complexes
-        return solvesetset(simplify(1 / expression), symbol, domain)
+        return solveset(simplify(1 / expression), symbol, domain)
 
 
 ###########################################################################
@@ -138,7 +138,7 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
 
     variable = symbol or (free.pop() if free else Symbol('x'))
     derivative = expression.diff(variable)
-    predicate_interval = solvesetset(predicate(derivative), variable, S.Reals)
+    predicate_interval = solveset(predicate(derivative), variable, S.Reals)
     return interval.is_subset(predicate_interval)
 
 
@@ -368,5 +368,5 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
         )
 
     variable = symbol or (free.pop() if free else Symbol('x'))
-    turning_points = solvesetset(expression.diff(variable), variable, interval)
+    turning_points = solveset(expression.diff(variable), variable, interval)
     return interval.intersection(turning_points) is S.EmptySet

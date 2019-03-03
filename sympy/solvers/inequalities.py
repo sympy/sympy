@@ -422,7 +422,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     See Also
     ========
 
-    solvify: solver returning solvesetset solutions with solveset's output API
+    solvify: solver returning solveset solutions with solveset's output API
 
     Examples
     ========
@@ -449,11 +449,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     from sympy.calculus.util import (continuous_domain, periodicity,
         function_range)
     from sympy.solvers.solvers import denoms
-    from sympy.solvers.solvesetset import solvesetset_real, solvify, solvesetset
+    from sympy.solvers.solveset import solveset_real, solvify, solveset
     from sympy.solvers.solvers import solveset
 
     # This keeps the function independent of the assumptions about `gen`.
-    # `solvesetset` makes sure this function is called only when the domain is
+    # `solveset` makes sure this function is called only when the domain is
     # real.
     _gen = gen
     _domain = domain
@@ -595,7 +595,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 check = True
                 im_sol = FiniteSet()
                 try:
-                    a = solvesetset(im(expanded_e), gen, domain)
+                    a = solveset(im(expanded_e), gen, domain)
                     if not isinstance(a, Interval):
                         for z in a:
                             if z not in singularities and valid(z) and z.is_real:
