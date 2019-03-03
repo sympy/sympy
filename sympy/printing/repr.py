@@ -166,7 +166,7 @@ class ReprPrinter(Printer):
             d['dummy_index'] = expr.dummy_index
 
         if d == {}:
-            return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+            return "%s(%s)" % (expr.__class__.__name__, self._print(repr(expr.name)))
         else:
             attr = ['%s=%s' % (k, v) for k, v in d.items()]
             return "%s(%s, %s)" % (expr.__class__.__name__,
@@ -179,7 +179,7 @@ class ReprPrinter(Printer):
         return "%s(%s, %s)" % (expr.__class__.__name__, expr.func, expr.arg)
 
     def _print_str(self, expr):
-        return repr(expr)
+        return expr
 
     def _print_tuple(self, expr):
         if len(expr) == 1:
