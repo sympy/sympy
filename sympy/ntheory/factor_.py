@@ -2095,7 +2095,8 @@ def is_perfect(n):
     """
     from sympy.core.power import integer_log
 
-    if n % 10 != 6 and n % 100 != 28:
+    last2 = n % 100
+    if last2 != 28 and last2 % 10 != 6:
         return False
     r, b = integer_nthroot(1 + 8*n, 2)
     if not b:
