@@ -479,7 +479,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
             # d1*g*s1*b = dx*d*g*s*sx*b = p_i
             for j in NEXT:
                 if testb:
-                    # solveset s1*b = j with s1 = s*sx for some element sx
+                    # solve s1*b = j with s1 = s*sx for some element sx
                     # of the stabilizer of ..., base[i-1]
                     # sx*b = s**-1*j; sx = _trace_S(s, j,...)
                     # s1 = s*trace_S(s**-1*j,...)
@@ -491,7 +491,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
                 else:
                     s1 = s
                 # assert s1[b] == j  # invariant
-                # solveset d1*g*j = p_i with d1 = dx*d for some element dg
+                # solve d1*g*j = p_i with d1 = dx*d for some element dg
                 # of the stabilizer of ..., p_{i-1}
                 # dx**-1*p_i = d*g*j; dx**-1 = trace_D(d*g*j,...)
                 # d1 = trace_D(d*g*j,...)**-1*d

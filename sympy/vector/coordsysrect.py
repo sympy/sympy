@@ -4,7 +4,11 @@ from sympy.core.compatibility import string_types, range, Callable
 from sympy.core.cache import cacheit
 from sympy.core import S, Dummy, Lambda
 from sympy import symbols, MatrixBase, ImmutableDenseMatrix
+<<<<<<< HEAD
 from sympy.solvers import solveset
+=======
+from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.vector.scalar import BaseScalar
 from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos,\
     sqrt, diff, Tuple, acos, atan2, simplify
@@ -340,7 +344,11 @@ class CoordSys3D(Basic):
         equations = self._transformation(x1, x2, x3)
 
         try:
+<<<<<<< HEAD
             solved = solveset([equations[0] - x,
+=======
+            solved = solve([equations[0] - x,
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
                             equations[1] - y,
                             equations[2] - z], (x1, x2, x3), dict=True)[0]
             solved = solved[x1], solved[x2], solved[x3]

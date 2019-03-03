@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 """ Linear solver for Holonomic Functions"""
+=======
+""" Linear Solver for Holonomic Functions"""
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
 from __future__ import print_function, division
 
@@ -49,7 +53,7 @@ class NewMatrix(MutableDenseMatrix):
         aug = self.hstack(self.copy(), b.copy())
         row, col = aug[:, :-1].shape
 
-        # solveset by reduced row echelon form
+        # solve by reduced row echelon form
         A, pivots = aug.rref()
         A, v = A[:, :-1], A[:, -1]
         pivots = list(filter(lambda p: p < col, pivots))

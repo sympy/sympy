@@ -366,10 +366,10 @@ class SymbolicSystem(object):
         else:
             try:
                 inter1 = self.kin_explicit_rhs
-                inter2 = self._dyn_implicit_mat.LUsolveset(self._dyn_implicit_rhs)
+                inter2 = self._dyn_implicit_mat.LUsolve(self._dyn_implicit_rhs)
                 out = inter1.col_join(inter2)
             except AttributeError:
-                out = self._comb_implicit_mat.LUsolveset(self._comb_implicit_rhs)
+                out = self._comb_implicit_mat.LUsolve(self._comb_implicit_rhs)
 
         self._comb_explicit_rhs = out
 

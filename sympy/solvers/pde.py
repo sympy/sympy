@@ -7,7 +7,7 @@ infrastructure remains the same.
 
     These are the user functions in this module:
 
-    - pdsolve()     - solvesets PDE's
+    - pdsolve()     - Solves PDE's
     - classify_pde() - Classifies PDEs into possible hints for dsolve().
     - pde_separate() - Separate variables in partial differential equation either by
                        additive or multiplicative separation approach.
@@ -47,7 +47,11 @@ from sympy.utilities.iterables import has_dups
 from sympy.utilities.misc import filldedent
 
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
+<<<<<<< HEAD
 from sympy.solvers.solvers import solveset
+=======
+from sympy.solvers.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.simplify.radsimp import collect
 
 import operator
@@ -63,11 +67,11 @@ allhints = (
 
 def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     """
-    solvesets any (supported) kind of partial differential equation.
+    Solves any (supported) kind of partial differential equation.
 
     **Usage**
 
-        pdsolve(eq, f(x,y), hint) -> solveset partial differential equation
+        pdsolve(eq, f(x,y), hint) -> Solve partial differential equation
         eq for function f(x,y), using method hint.
 
     **Details**
@@ -169,8 +173,13 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         solvefun = Function('F')
 
     # See the docstring of _desolve for more details.
+<<<<<<< HEAD
     hints = _desolve(eq, func=func, hint=hint, simplify=True,
                      type='pde', **kwargs)
+=======
+    hints = _desolve(eq, func=func,
+        hint=hint, simplify=True, type='pde', **kwargs)
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     eq = hints.pop('eq', False)
     all_ = hints.pop('all', False)
 
@@ -194,13 +203,18 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         return pdedict
 
     else:
+<<<<<<< HEAD
         return _helper_simplify(eq, hints['hint'], hints['func'],
                                 hints['order'], hints[hints['hint']], solvefun)
+=======
+        return _helper_simplify(eq, hints['hint'],
+            hints['func'], hints['order'], hints[hints['hint']], solvefun)
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
 
 def _helper_simplify(eq, hint, func, order, match, solvefun):
     """Helper function of pdsolve that calls the respective
-    pde functions to solveset for the partial differential
+    pde functions to solve for the partial differential
     equations. This minimizes the computation in
     calling _desolve multiple times.
     """
@@ -235,7 +249,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     Returns a tuple of possible pdsolve() classifications for a PDE.
 
     The tuple is ordered so that first item is the classification that
-    pdsolve() uses to solveset the PDE by default.  In general,
+    pdsolve() uses to solve the PDE by default.  In general,
     classifications near the beginning of the list will produce
     better solutions faster than those near the end, though there are
     always exceptions.  To make pdsolve use a different classification,
@@ -409,7 +423,11 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     solution satisfies the PDE:
 
         1. Directly substitute the solution in the PDE and check. If the
+<<<<<<< HEAD
            solution hasn't been solved for f, then it will solveset for f
+=======
+           solution hasn't been solved for f, then it will solve for f
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
            provided solve_for_func hasn't been set to False.
 
     If the solution satisfies the PDE, then a tuple (True, 0) is returned.
@@ -465,7 +483,11 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     # Try solving for the function
     solved = sol.lhs == func and not sol.rhs.has(func)
     if solve_for_func and not solved:
+<<<<<<< HEAD
         solved = solveset(sol, func)
+=======
+        solved = solve(sol, func)
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
         if solved:
             if len(solved) == 1:
                 return checkpdesol(pde, Eq(func, solved[0]),
@@ -487,7 +509,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
 
 def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     r"""
-    solvesets a first order linear homogeneous
+    Solves a first order linear homogeneous
     partial differential equation with constant coefficients.
 
     The general form of this partial differential equation is
@@ -499,11 +521,14 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
 
     The general solution is of the form:
 
+<<<<<<< HEAD
     .. math::
         f(x, y) = F(- a y + b x ) e^{- \frac{c (a x + b y)}{a^2 + b^2}}
 
     and can be found in SymPy with ``pdsolve``::
 
+=======
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
         >>> from sympy.solvers import pdsolve
         >>> from sympy.abc import x, y, a, b, c
         >>> from sympy import Function, pprint
@@ -563,7 +588,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
 
 def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     r"""
-    solvesets a first order linear partial differential equation
+    Solves a first order linear partial differential equation
     with constant coefficients.
 
     The general form of this partial differential equation is
@@ -669,7 +694,11 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     e = -match[match['e']]
     expterm = exp(-S(d)/(b**2 + c**2)*xi)
     functerm = solvefun(eta)
+<<<<<<< HEAD
     solvedict = solveset((b*x + c*y - xi, c*x - b*y - eta), x, y)
+=======
+    solvedict = solve((b*x + c*y - xi, c*x - b*y - eta), x, y)
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     # Integral should remain as it is in terms of xi,
     # doit() should be done in _handle_Integral.
     genterm = (1/S(b**2 + c**2))*Integral(
@@ -680,9 +709,14 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
 
 def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     r"""
+<<<<<<< HEAD
 Solves a first order linear partial differential equation
     with variable coefficients. The general form of this partial
     differential equation is
+=======
+    Solves a first order linear partial differential equation
+    with variable coefficients. The general form of this partial differential equation is
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     .. math:: a(x, y) \frac{\partial f(x, y)}{\partial x}
                 + b(x, y) \frac{\partial f(x, y)}{\partial y}
@@ -701,7 +735,11 @@ Solves a first order linear partial differential equation
 
     .. math:: a(\xi, \eta)\frac{du}{d\xi} + c(\xi, \eta)u - G(\xi, \eta) = 0
 
+<<<<<<< HEAD
     which can be solved using ``dsolve``.
+=======
+    which can be solved using dsolve.
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     >>> from sympy.solvers.pde import pdsolve
     >>> from sympy.abc import x, y
@@ -716,6 +754,21 @@ Solves a first order linear partial differential equation
     -G(x, y) + a(x, y)*f(x, y) + b(x, y)*--(f(x, y)) + c(x, y)*--(f(x, y))
                                          dx                    dy
 
+<<<<<<< HEAD
+=======
+        >>> from sympy.solvers.pde import pdsolve
+        >>> from sympy.abc import x, y
+        >>> from sympy import Function, pprint
+        >>> a, b, c, G, f= [Function(i) for i in ['a', 'b', 'c', 'G', 'f']]
+        >>> u = f(x,y)
+        >>> ux = u.diff(x)
+        >>> uy = u.diff(y)
+        >>> genform = a(x, y)*u + b(x, y)*ux + c(x, y)*uy - G(x,y)
+        >>> pprint(genform)
+                                             d                     d
+        -G(x, y) + a(x, y)*f(x, y) + b(x, y)*--(f(x, y)) + c(x, y)*--(f(x, y))
+                                             dx                    dy
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     Examples
     ========
@@ -794,8 +847,8 @@ Solves a first order linear partial differential equation
     solsym = sol.free_symbols - h.free_symbols - {x, y}
     if len(solsym) == 1:
         solsym = solsym.pop()
-        etat = (solveset(sol, solsym)[0]).subs(dummy(x), y)
-        ysub = solveset(eta - etat, y)[0]
+        etat = (solve(sol, solsym)[0]).subs(dummy(x), y)
+        ysub = solve(eta - etat, y)[0]
         deq = (b*(f(x).diff(x)) + d*f(x) - e).subs(y, ysub)
         final = (dsolve(deq, f(x), hint='1st_linear')).rhs
         if isinstance(final, list):
@@ -805,7 +858,7 @@ Solves a first order linear partial differential equation
         return Eq(f(x, y), rhs)
 
     else:
-        raise NotImplementedError("Cannot solveset the partial differential equation due"
+        raise NotImplementedError("Cannot solve the partial differential equation due"
             " to inability of constantsimp")
 
 

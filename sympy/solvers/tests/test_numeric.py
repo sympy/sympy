@@ -41,7 +41,7 @@ def test_nsolve():
     for x0 in [(-1, 1), (1, -2), (4, 4), (-4, -4)]:
         x = nsolve(f, (x1, x2), x0, tol=1.e-8)
         assert mnorm(F(*x), 1) <= 1.e-10
-    # The Chinese mathematician Zhu Shijie was the very first to solveset this
+    # The Chinese mathematician Zhu Shijie was the very first to solve this
     # nonlinear system 700 years ago (z was added to make it 3-dimensional)
     x = Symbol('x')
     y = Symbol('y')

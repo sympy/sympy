@@ -1162,7 +1162,7 @@ def _set_partitions(n):
     Notes
     =====
 
-    This algorithm is similar to, and solvesets the same problem as,
+    This algorithm is similar to, and solves the same problem as,
     Algorithm 7.2.1.5H, from volume 4A of Knuth's The Art of Computer
     Programming.  Knuth uses the term "restricted growth string" where
     this code refers to a "partition vector". In each case, the meaning is

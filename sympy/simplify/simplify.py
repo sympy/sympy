@@ -212,7 +212,7 @@ def posify(eq):
     A dictionary that can be sent to subs to restore eq to its original
     symbols is also returned.
 
-    >>> from sympy import posify, Symbol, log, solveset
+    >>> from sympy import posify, Symbol, log, solve
     >>> from sympy.abc import x
     >>> posify(x + Symbol('p', positive=True) + Symbol('n', negative=True))
     (_x + n + p, {_x: x})
@@ -230,11 +230,11 @@ def posify(eq):
     of expressions:
 
     >>> eq = x**2 - 4
-    >>> solveset(eq, x)
+    >>> solve(eq, x)
     [-2, 2]
     >>> eq_x, reps = posify([eq, x]); eq_x
     [_x**2 - 4, _x]
-    >>> solveset(*eq_x)
+    >>> solve(*eq_x)
     [2]
     """
     eq = sympify(eq)
@@ -858,7 +858,11 @@ def _nthroot_solve(p, n, prec):
      It denests ``p**Rational(1, n)`` using its minimal polynomial
     """
     from sympy.polys.numberfields import _minimal_polynomial_sq
+<<<<<<< HEAD
     from sympy.solvers import solveset
+=======
+    from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     while n % 2 == 0:
         p = sqrtdenest(sqrt(p))
         n = n // 2
@@ -869,7 +873,7 @@ def _nthroot_solve(p, n, prec):
     f = _minimal_polynomial_sq(p, n, x)
     if f is None:
         return None
-    sols = solveset(f, x)
+    sols = solve(f, x)
     for sol in sols:
         if abs(sol - pn).n() < 1./10**prec:
             sol = sqrtdenest(sol)

@@ -56,8 +56,8 @@ def test_function_return_types():
     q, r = X.QRdecomposition()
     assert (type(q), type(r)) == (ImmutableMatrix, ImmutableMatrix)
 
-    assert type(X.LUsolveset(Y)) == ImmutableMatrix
-    assert type(X.Qrsolve(Y)) == ImmutableMatrix
+    assert type(X.LUsolve(Y)) == ImmutableMatrix
+    assert type(X.QRsolve(Y)) == ImmutableMatrix
 
     X = ImmutableMatrix([[5, 2], [2, 7]])
     assert X.T == X

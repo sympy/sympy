@@ -9,7 +9,11 @@ from sympy.core.numbers import Zero
 from sympy.functions import factorial
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
+<<<<<<< HEAD
 from sympy.solvers import solveset
+=======
+from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
 
 # TODO you are a bit excessive in the use of Dummies
@@ -107,7 +111,7 @@ class CoordSystem(Basic):
     True
 
     Connect the coordinate systems. An inverse transformation is automatically
-    found by ``solveset`` when possible:
+    found by ``solve`` when possible:
 
     >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
     >>> polar.coord_tuple_transform_to(rect, [0, 2])
@@ -245,7 +249,7 @@ class CoordSystem(Basic):
     @staticmethod
     def _inv_transf(from_coords, to_exprs):
         inv_from = [i.as_dummy() for i in from_coords]
-        inv_to = solveset(
+        inv_to = solve(
             [t[0] - t[1] for t in zip(inv_from, to_exprs)],
             list(from_coords), dict=True)[0]
         inv_to = [inv_to[fc] for fc in from_coords]

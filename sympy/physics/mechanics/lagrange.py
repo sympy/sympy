@@ -92,7 +92,7 @@ class LagrangesMethod(object):
         >>> print(l.form_lagranges_equations())
         Matrix([[b*Derivative(q(t), t) + 1.0*k*q(t) + m*Derivative(q(t), (t, 2))]])
 
-    We can also solveset for the states using the 'rhs' method.
+    We can also solve for the states using the 'rhs' method.
 
         >>> print(l.rhs())
         Matrix([[Derivative(q(t), t)], [(-b*Derivative(q(t), t) - 1.0*k*q(t))/m]])
@@ -375,13 +375,13 @@ class LagrangesMethod(object):
         return result + (linearizer.r,)
 
     def solve_multipliers(self, op_point=None, sol_type='dict'):
-        """solvesets for the values of the lagrange multipliers symbolically at
+        """Solves for the values of the lagrange multipliers symbolically at
         the specified operating point
 
         Parameters
         ==========
         op_point : dict or iterable of dicts, optional
-            Point at which to solveset at. The operating point is specified as
+            Point at which to solve at. The operating point is specified as
             a dictionary or iterable of dictionaries of {symbol: value}. The
             value may be numeric or symbolic itself.
 
@@ -394,7 +394,7 @@ class LagrangesMethod(object):
         # Determine number of multipliers
         k = len(self.lam_vec)
         if k == 0:
-            raise ValueError("System has no lagrange multipliers to solveset for.")
+            raise ValueError("System has no lagrange multipliers to solve for.")
         # Compose dict of operating conditions
         if isinstance(op_point, dict):
             op_point_dict = op_point
@@ -414,8 +414,8 @@ class LagrangesMethod(object):
         # Sub in the operating point
         mass_matrix = msubs(mass_matrix, op_point_dict)
         force_matrix = msubs(force_matrix, op_point_dict)
-        # solveset for the multipliers
-        sol_list = mass_matrix.LUsolveset(-force_matrix)[-k:]
+        # Solve for the multipliers
+        sol_list = mass_matrix.LUsolve(-force_matrix)[-k:]
         if sol_type == 'dict':
             return dict(zip(self.lam_vec, sol_list))
         elif sol_type == 'Matrix':
@@ -436,7 +436,7 @@ class LagrangesMethod(object):
         """
 
         if inv_method is None:
-            self._rhs = self.mass_matrix_full.LUsolveset(self.forcing_full)
+            self._rhs = self.mass_matrix_full.LUsolve(self.forcing_full)
         else:
             self._rhs = (self.mass_matrix_full.inv(inv_method,
                          try_block_diag=True) * self.forcing_full)

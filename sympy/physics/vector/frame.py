@@ -1,6 +1,6 @@
 from sympy.core.backend import (diff, expand, sin, cos, sympify,
                    eye, symbols, ImmutableMatrix as Matrix, MatrixBase)
-from sympy import (trigsimp, solveset, Symbol, Dummy)
+from sympy import (trigsimp, solve, Symbol, Dummy)
 from sympy.core.compatibility import string_types, range
 from sympy.physics.vector.vector import Vector, _check_vector
 
@@ -626,7 +626,7 @@ class ReferenceFrame(object):
                 templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
                                                rot_type, rot_order)
                 templist = [expand(i) for i in templist]
-                td = solveset(templist, [u1, u2, u3])
+                td = solve(templist, [u1, u2, u3])
                 u1 = expand(td[u1])
                 u2 = expand(td[u2])
                 u3 = expand(td[u3])

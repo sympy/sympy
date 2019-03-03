@@ -726,7 +726,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
 
 
 def dup_zz_diophantine(F, m, p, K):
-    """Wang/EEZ: solveset univariate Diophantine equations. """
+    """Wang/EEZ: Solve univariate Diophantine equations. """
     if len(F) == 2:
         a, b = F
 
@@ -774,7 +774,7 @@ def dup_zz_diophantine(F, m, p, K):
 
 
 def dmp_zz_diophantine(F, c, A, d, p, u, K):
-    """Wang/EEZ: solveset multivariate Diophantine equations. """
+    """Wang/EEZ: Solve multivariate Diophantine equations. """
     if not A:
         S = [ [] for _ in F ]
         n = dup_degree(c)

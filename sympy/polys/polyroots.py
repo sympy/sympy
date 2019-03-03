@@ -222,7 +222,11 @@ def _roots_quartic_euler(p, q, r, a):
     >>> _roots_quartic_euler(p, q, r, S(0))[0]
     -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
     """
+<<<<<<< HEAD
     # solveset the resolvent equation
+=======
+    # solve the resolvent equation
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     x = Dummy('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
     xsols = list(roots(Poly(eq, x), cubics=False).keys())
@@ -350,7 +354,7 @@ def roots_quartic(f):
             # if p != 0 then u below is not 0
             root = sqrt(q**2/4 + p**3/27)
             r = -q/2 + root  # or -q/2 - root
-            u = r**TH  # primary root of solveset(x**3 - r, x)
+            u = r**TH  # primary root of solve(x**3 - r, x)
             y2 = -5*e/6 + u - p/u/3
             if fuzzy_not(p.is_zero):
                 return _ans(y2)
@@ -571,9 +575,13 @@ def roots_quintic(f):
     R3 = _quintic_simplify(R3)
     R4 = _quintic_simplify(R4)
 
-    # solveset imported here. Causing problems if imported as 'solveset'
+    # Solve imported here. Causing problems if imported as 'solve'
     # and hence the changed name
+<<<<<<< HEAD
     from sympy.solvers.solvers import solveset as _solve
+=======
+    from sympy.solvers.solvers import solve as _solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     a, b = symbols('a b', cls=Dummy)
     _sol = _solve( sol**5 - a - I*b, sol)
     for i in range(5):
@@ -641,7 +649,7 @@ def roots_quintic(f):
         r = r.n(2)
         if r in saw:
             # Roots were identical. Abort, return []
-            # and fall back to usual solveset
+            # and fall back to usual solve
             return []
         saw.add(r)
     return result

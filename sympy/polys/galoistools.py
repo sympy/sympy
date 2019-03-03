@@ -2325,7 +2325,7 @@ def csolve_prime(f, p, e=1):
 
 def gf_csolve(f, n):
     """
-    To solveset f(x) congruent 0 mod(n).
+    To solve f(x) congruent 0 mod(n).
 
     n is divided into canonical factors and f(x) cong 0 mod(p**e) will be
     solved for each factor. Applying the Chinese Remainder Theorem to the
@@ -2334,7 +2334,7 @@ def gf_csolve(f, n):
     Examples
     ========
 
-    solveset [1, 1, 7] congruent 0 mod(189):
+    Solve [1, 1, 7] congruent 0 mod(189):
 
     >>> from sympy.polys.galoistools import gf_csolve
     >>> gf_csolve([1, 1, 7], 189)

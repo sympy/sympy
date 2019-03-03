@@ -345,7 +345,7 @@ class SeqBase(Basic):
                 mlist.append(x[k:k+l])
             m = Matrix(mlist)
             if m.det() != 0:
-                y = simplify(m.LUsolveset(Matrix(x[l:l2])))
+                y = simplify(m.LUsolve(Matrix(x[l:l2])))
                 if lx == l2:
                     coeffs = flatten(y[::-1])
                     break

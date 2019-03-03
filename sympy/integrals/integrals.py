@@ -244,7 +244,11 @@ class Integral(AddWithLimits):
         variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
+<<<<<<< HEAD
         from sympy.solvers.solvers import solveset, posify
+=======
+        from sympy.solvers.solvers import solve, posify
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
         d = Dummy('d')
 
         xfree = x.free_symbols.intersection(self.variables)
@@ -292,17 +296,17 @@ class Integral(AddWithLimits):
 
         if not x.is_Symbol:
             F = [x.subs(xvar, d)]
-            soln = solveset(u - x, xvar, check=False)
+            soln = solve(u - x, xvar, check=False)
             if not soln:
-                raise ValueError('no solution for solveset(F(x) - f(u), x)')
+                raise ValueError('no solution for solve(F(x) - f(u), x)')
             f = [fi.subs(uvar, d) for fi in soln]
         else:
             f = [u.subs(uvar, d)]
             pdiff, reps = posify(u - x)
             puvar = uvar.subs([(v, k) for k, v in reps.items()])
-            soln = [s.subs(reps) for s in solveset(pdiff, puvar)]
+            soln = [s.subs(reps) for s in solve(pdiff, puvar)]
             if not soln:
-                raise ValueError('no solution for solveset(F(x) - f(u), u)')
+                raise ValueError('no solution for solve(F(x) - f(u), u)')
             F = [fi.subs(xvar, d) for fi in soln]
 
         newfuncs = set([(self.function.subs(xvar, fi)*fi.diff(d)

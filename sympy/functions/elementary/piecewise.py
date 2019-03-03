@@ -763,7 +763,7 @@ class Piecewise(Function):
                 free = rv.args[1].free_symbols
                 if rv.args[0] != sym or sym in free:
                     raise NotImplementedError(filldedent('''
-                        Unable to solveset relational
+                        Unable to solve relational
                         %s for %s.''' % (r, sym)))
                 if rv.rel_op == '==':
                     # this equality has been affirmed to have the form

@@ -133,7 +133,11 @@ def deltaintegrate(f, x):
         return None
 
     from sympy.integrals import Integral, integrate
+<<<<<<< HEAD
     from sympy.solvers import solveset
+=======
+    from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     # g(x) = DiracDelta(h(x))
     if f.func == DiracDelta:
@@ -169,7 +173,7 @@ def deltaintegrate(f, x):
                 if deltaterm.is_Mul:  # Take out any extracted factors
                     deltaterm, rest_mult_2 = change_mul(deltaterm, x)
                     rest_mult = rest_mult*rest_mult_2
-                point = solveset(deltaterm.args[0], x)[0]
+                point = solve(deltaterm.args[0], x)[0]
 
                 # Return the largest hyperreal term left after
                 # repeated integration by parts.  For example,

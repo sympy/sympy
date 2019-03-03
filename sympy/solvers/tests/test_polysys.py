@@ -1,11 +1,15 @@
 """Tests for solvers of systems of polynomial equations. """
 
 from sympy import (flatten, I, Integer, Poly, QQ, Rational, S, sqrt,
-    solveset, symbols)
+    solve, symbols)
 from sympy.abc import x, y, z
 from sympy.polys import PolynomialError
 from sympy.solvers.polysys import (solve_poly_system,
+<<<<<<< HEAD
     solve_triangulated, solve_biquadratic, solvefailed)
+=======
+    solve_triangulated, solve_biquadratic, SolveFailed)
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.utilities.pytest import raises
 
@@ -86,13 +90,17 @@ def test_solve_biquadratic():
     assert all(len(r.find(query)) == 1 for r in flatten(result))
 
     s1 = (x*y - y, x**2 - x)
-    assert solveset(s1) == [{x: 1}, {x: 0, y: 0}]
+    assert solve(s1) == [{x: 1}, {x: 0, y: 0}]
     s2 = (x*y - x, y**2 - y)
-    assert solveset(s2) == [{y: 1}, {x: 0, y: 0}]
+    assert solve(s2) == [{y: 1}, {x: 0, y: 0}]
     gens = (x, y)
     for seq in (s1, s2):
         (f, g), opt = parallel_poly_from_expr(seq, *gens)
+<<<<<<< HEAD
         raises(solvefailed, lambda: solve_biquadratic(f, g, opt))
+=======
+        raises(SolveFailed, lambda: solve_biquadratic(f, g, opt))
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     seq = (x**2 + y**2 - 2, y**2 - 1)
     (f, g), opt = parallel_poly_from_expr(seq, *gens)
     assert solve_biquadratic(f, g, opt) == [

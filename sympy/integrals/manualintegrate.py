@@ -1368,7 +1368,7 @@ def eval_trigsubstitution(theta, func, rewritten, substep, restriction, integran
     trig_function = list(func.find(TrigonometricFunction))
     assert len(trig_function) == 1
     trig_function = trig_function[0]
-    relation = sympy.solveset(symbol - func, trig_function)
+    relation = sympy.solve(symbol - func, trig_function)
     assert len(relation) == 1
     numer, denom = sympy.fraction(relation[0])
 

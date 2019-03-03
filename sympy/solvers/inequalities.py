@@ -20,7 +20,7 @@ from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 
 def solve_poly_inequality(poly, rel):
-    """solveset a polynomial inequality with rational coefficients.
+    """Solve a polynomial inequality with rational coefficients.
 
     Examples
     ========
@@ -112,7 +112,7 @@ def solve_poly_inequality(poly, rel):
 
 
 def solve_poly_inequalities(polys):
-    """solveset polynomial inequalities with rational coefficients.
+    """Solve polynomial inequalities with rational coefficients.
 
     Examples
     ========
@@ -130,7 +130,7 @@ def solve_poly_inequalities(polys):
 
 
 def solve_rational_inequalities(eqs):
-    """solveset a system of rational inequalities with rational coefficients.
+    """Solve a system of rational inequalities with rational coefficients.
 
     Examples
     ========
@@ -301,7 +301,7 @@ def reduce_abs_inequality(expr, rel, gen):
     """
     if gen.is_real is False:
          raise TypeError(filldedent('''
-            can't solveset inequalities with absolute values containing
+            can't solve inequalities with absolute values containing
             non-real variables.
             '''))
 
@@ -388,7 +388,7 @@ def reduce_abs_inequalities(exprs, gen):
 
 
 def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, continuous=False):
-    """solvesets a real univariate inequality.
+    """Solves a real univariate inequality.
 
     Parameters
     ==========
@@ -415,14 +415,18 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Notes
     =====
 
-    Currently, we cannot solveset all the inequalities due to limitations in
+    Currently, we cannot solve all the inequalities due to limitations in
     `solvify`. Also, the solution returned for trigonometric inequalities
     are restricted in its periodic interval.
 
     See Also
     ========
 
+<<<<<<< HEAD
     solvify: solver returning solveset solutions with solveset's output API
+=======
+    solvify: solver returning solveset solutions with solve's output API
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     Examples
     ========
@@ -450,7 +454,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
         function_range)
     from sympy.solvers.solvers import denoms
     from sympy.solvers.solveset import solveset_real, solvify, solveset
+<<<<<<< HEAD
     from sympy.solvers.solvers import solveset
+=======
+    from sympy.solvers.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
@@ -983,7 +991,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     inequalities = keep
     del keep
 
-    # solveset system
+    # solve system
     rv = _reduce_inequalities(inequalities, symbols)
 
     # restore original symbols and return

@@ -10,7 +10,11 @@ from sympy.solvers.inequalities import (reduce_inequalities,
                                         reduce_abs_inequality,
                                         _solve_inequality)
 from sympy.polys.rootoftools import rootof
+<<<<<<< HEAD
 from sympy.solvers.solvers import solveset
+=======
+from sympy.solvers.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.solvers.solveset import solveset
 from sympy.abc import x, y
 
@@ -243,12 +247,12 @@ def test_issue_8235():
         Or(And(-oo < x, x <= S(-1)), And(S(1) <= x, x < oo))
 
     eq = x**8 + x - 9  # we want CRootOf solns here
-    sol = solveset(eq >= 0)
+    sol = solve(eq >= 0)
     tru = Or(And(rootof(eq, 1) <= x, x < oo), And(-oo < x, x <= rootof(eq, 0)))
     assert sol == tru
 
     # recast vanilla as real
-    assert solveset(sqrt((-x + 1)**2) < 1) == And(S(0) < x, x < 2)
+    assert solve(sqrt((-x + 1)**2) < 1) == And(S(0) < x, x < 2)
 
 
 def test_issue_5526():
@@ -356,7 +360,7 @@ def test_issue_9954():
 @XFAIL
 def test_slow_general_univariate():
     r = rootof(x**5 - x**2 + 1, 0)
-    assert solveset(sqrt(x) + 1/root(x, 3) > 1) == \
+    assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
         Or(And(S(0) < x, x < r**6), And(r**6 < x, x < oo))
 
 
@@ -389,11 +393,11 @@ def test_issue_10198():
 def test_issue_10047():
     # this must remain an inequality, not True, since if x
     # is not real the inequality is invalid
-    assert solveset(sin(x) < 2) == (x <= oo)
+    assert solve(sin(x) < 2) == (x <= oo)
 
 
 def test_issue_10268():
-    assert solveset(log(x) < 1000) == And(S(0) < x, x < exp(1000))
+    assert solve(log(x) < 1000) == And(S(0) < x, x < exp(1000))
 
 
 @XFAIL
@@ -415,7 +419,7 @@ def test__solve_inequality():
     for op in (Gt, Lt, Le, Ge, Eq, Ne):
         assert _solve_inequality(op(x, 1), x).lhs == x
         assert _solve_inequality(op(S.One, x), x).lhs == x
-    # don't get tricked by symbol on right: solveset it
+    # don't get tricked by symbol on right: solve it
     assert _solve_inequality(Eq(2*x - 1, x), x) == Eq(x, 1)
     ie = Eq(S.One, y)
     assert _solve_inequality(ie, x) == ie

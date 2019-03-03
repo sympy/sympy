@@ -150,7 +150,7 @@ class Linearizer(object):
         if l > 0:
             f_c_jac_q = self.f_c.jacobian(self.q)
             self._C_0 = (eye(n) - self._Pqd * (f_c_jac_q *
-                    self._Pqd).LUsolveset(f_c_jac_q)) * self._Pqi
+                    self._Pqd).LUsolve(f_c_jac_q)) * self._Pqi
         else:
             self._C_0 = eye(n)
         # If there are motion constraints (m > 0), form C_1 and C_2 as normal.
@@ -161,11 +161,11 @@ class Linearizer(object):
             temp = f_v_jac_u * self._Pud
             if n != 0:
                 f_v_jac_q = self.f_v.jacobian(self.q)
-                self._C_1 = -self._Pud * temp.LUsolveset(f_v_jac_q)
+                self._C_1 = -self._Pud * temp.LUsolve(f_v_jac_q)
             else:
                 self._C_1 = zeros(o, n)
             self._C_2 = (eye(o) - self._Pud *
-                    temp.LUsolveset(f_v_jac_u)) * self._Pui
+                    temp.LUsolve(f_v_jac_u)) * self._Pui
         else:
             self._C_1 = zeros(o, n)
             self._C_2 = eye(o)
@@ -252,7 +252,7 @@ class Linearizer(object):
             For this reason, it may be more desirable to use the default
             A_and_B=False, returning M, A, and B. More values may then be
             substituted in to these matrices later on. The state space form can
-            then be found as A = P.T*M.LUsolveset(A), B = P.T*M.LUsolveset(B), where
+            then be found as A = P.T*M.LUsolve(A), B = P.T*M.LUsolve(B), where
             P = Linearizer.perm_mat.
         """
 
@@ -378,9 +378,9 @@ class Linearizer(object):
         # kwarg A_and_B indicates to return  A, B for forming the equation
         # dx = [A]x + [B]r, where x = [q_indnd, u_indnd]^T,
         if A_and_B:
-            A_cont = self.perm_mat.T * M_eq.LUsolveset(Amat_eq)
+            A_cont = self.perm_mat.T * M_eq.LUsolve(Amat_eq)
             if Bmat_eq:
-                B_cont = self.perm_mat.T * M_eq.LUsolveset(Bmat_eq)
+                B_cont = self.perm_mat.T * M_eq.LUsolve(Bmat_eq)
             else:
                 # Bmat = Matrix([]), so no need to sub
                 B_cont = Bmat_eq

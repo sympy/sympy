@@ -113,7 +113,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     Usage
     =====
 
-    ``diophantine(eq, t, syms)``: solveset the diophantine
+    ``diophantine(eq, t, syms)``: Solve the diophantine
     equation ``eq``.
     ``t`` is the optional parameter to be used by ``diop_solve()``.
     ``syms`` is an optional list of symbols which determines the
@@ -377,7 +377,7 @@ def merge_solution(var, var_t, solution):
 
 def diop_solve(eq, param=symbols("t", integer=True)):
     """
-    solvesets the diophantine equation ``eq``.
+    Solves the diophantine equation ``eq``.
 
     Unlike ``diophantine()``, factoring of ``eq`` is not attempted. Uses
     ``classify_diop()`` to determine the type of the equation and calls
@@ -386,7 +386,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     Usage
     =====
 
-    ``diop_solve(eq, t)``: solveset diophantine equation, ``eq`` using ``t``
+    ``diop_solve(eq, t)``: Solve diophantine equation, ``eq`` using ``t``
     as a parameter if needed.
 
     Details
@@ -581,7 +581,7 @@ classify_diop.func_doc = '''
 
 def diop_linear(eq, param=symbols("t", integer=True)):
     """
-    solvesets linear diophantine equations.
+    Solves linear diophantine equations.
 
     A linear diophantine equation is an equation of the form `a_{1}x_{1} +
     a_{2}x_{2} + .. + a_{n}x_{n} = 0` where `a_{1}, a_{2}, ..a_{n}` are
@@ -605,7 +605,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
 
     >>> from sympy.solvers.diophantine import diop_linear
     >>> from sympy.abc import x, y, z, t
-    >>> diop_linear(2*x - 3*y - 5) # solvesets equation 2*x - 3*y - 5 == 0
+    >>> diop_linear(2*x - 3*y - 5) # solves equation 2*x - 3*y - 5 == 0
     (3*t_0 - 5, 2*t_0 - 5)
 
     Here x = -3*t_0 - 5 and y = -2*t_0 - 5
@@ -628,7 +628,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
 
 def _diop_linear(var, coeff, param):
     """
-    solvesets diophantine equations of the form:
+    Solves diophantine equations of the form:
 
     a_0*x_0 + a_1*x_1 + ... + a_n*x_n == c
 
@@ -657,7 +657,7 @@ def _diop_linear(var, coeff, param):
             return (None,)
 
     '''
-    base_solution_linear() can solveset diophantine equations of the form:
+    base_solution_linear() can solve diophantine equations of the form:
 
     a*x + b*y == c
 
@@ -695,7 +695,7 @@ def _diop_linear(var, coeff, param):
     c == the solution we find for y_0 in the first equation.
 
     The arrays A and B are the arrays of integers used for
-    'a' and 'b' in each of the n-1 bivariate equations we solveset.
+    'a' and 'b' in each of the n-1 bivariate equations we solve.
     '''
 
     A = [coeff[v] for v in var]
@@ -736,7 +736,7 @@ def _diop_linear(var, coeff, param):
 
     2*x_1 + x_2 == -2 - 4*t_0
 
-    We can then solveset for '-2' and '-4' independently,
+    We can then solve for '-2' and '-4' independently,
     and combine the results:
 
     2*x_1a + x_2a == -2
@@ -866,7 +866,7 @@ def divisible(a, b):
 
 def diop_quadratic(eq, param=symbols("t", integer=True)):
     """
-    solvesets quadratic diophantine equations.
+    Solves quadratic diophantine equations.
 
     i.e. equations of the form `Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0`. Returns a
     set containing the tuples `(x, y)` which contains the solutions. If there
@@ -896,7 +896,7 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
     References
     ==========
 
-    .. [1] Methods to solveset Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0, [online],
+    .. [1] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0, [online],
           Available: http://www.alpertron.com.ar/METHODS.HTM
     .. [2] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
           Available: http://www.jpr2718.org/ax2p.pdf
@@ -1110,11 +1110,11 @@ def is_solution_quad(var, coeff, u, v):
 
 def diop_DN(D, N, t=symbols("t", integer=True)):
     """
-    solvesets the equation `x^2 - Dy^2 = N`.
+    Solves the equation `x^2 - Dy^2 = N`.
 
     Mainly concerned with the case `D > 0, D` is not a perfect square,
     which is the same as the generalized Pell equation. The LMM
-    algorithm [1]_ is used to solveset this equation.
+    algorithm [1]_ is used to solve this equation.
 
     Returns one solution tuple, (`x, y)` for each class of the solutions.
     Other solutions of the class can be constructed according to the
@@ -1136,7 +1136,11 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
     ========
 
     >>> from sympy.solvers.diophantine import diop_DN
+<<<<<<< HEAD
     >>> diop_DN(13, -4) # solvesets equation x**2 - 13*y**2 = -4
+=======
+    >>> diop_DN(13, -4) # Solves equation x**2 - 13*y**2 = -4
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     [(3, 1), (393, 109), (36, 10)]
 
     The output can be interpreted as follows: There are three fundamental
@@ -1144,7 +1148,7 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
     and (36, 10). Each tuple is in the form (x, y), i.e. solution (3, 1) means
     that `x = 3` and `y = 1`.
 
-    >>> diop_DN(986, 1) # solvesets equation x**2 - 986*y**2 = 1
+    >>> diop_DN(986, 1) # Solves equation x**2 - 986*y**2 = 1
     [(49299, 1570)]
 
     See Also
@@ -1307,7 +1311,7 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
 
 def _special_diop_DN(D, N):
     """
-    solvesets the equation `x^2 - Dy^2 = N` for the special case where
+    Solves the equation `x^2 - Dy^2 = N` for the special case where
     `1 < N**2 < D` and `D` is not a perfect square.
     It is better to call `diop_DN` rather than this function, as
     the former checks the condition `1 < N**2 < D`, and calls the latter only
@@ -1329,7 +1333,11 @@ def _special_diop_DN(D, N):
     ========
 
     >>> from sympy.solvers.diophantine import _special_diop_DN
+<<<<<<< HEAD
     >>> _special_diop_DN(13, -3) # solvesets equation x**2 - 13*y**2 = -3
+=======
+    >>> _special_diop_DN(13, -3) # Solves equation x**2 - 13*y**2 = -3
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     [(7, 2), (137, 38)]
 
     The output can be interpreted as follows: There are two fundamental
@@ -1337,7 +1345,7 @@ def _special_diop_DN(D, N):
     (137, 38). Each tuple is in the form (x, y), i.e. solution (7, 2) means
     that `x = 7` and `y = 2`.
 
-    >>> _special_diop_DN(2445, -20) # solvesets equation x**2 - 2445*y**2 = -20
+    >>> _special_diop_DN(2445, -20) # Solves equation x**2 - 2445*y**2 = -20
     [(445, 9), (17625560, 356454), (698095554475, 14118073569)]
 
     See Also
@@ -1402,7 +1410,7 @@ def _special_diop_DN(D, N):
 
 def cornacchia(a, b, m):
     r"""
-    solvesets `ax^2 + by^2 = m` where `\gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
+    Solves `ax^2 + by^2 = m` where `\gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
 
     Uses the algorithm due to Cornacchia. The method only finds primitive
     solutions, i.e. ones with `\gcd(x, y) = 1`. So this method can't be used to
@@ -1464,7 +1472,7 @@ def cornacchia(a, b, m):
 
 def PQa(P_0, Q_0, D):
     r"""
-    Returns useful information needed to solveset the Pell equation.
+    Returns useful information needed to solve the Pell equation.
 
     There are six sequences of integers defined related to the continued
     fraction representation of `\\frac{P + \sqrt{D}}{Q}`, namely {`P_{i}`},
@@ -1524,7 +1532,7 @@ def PQa(P_0, Q_0, D):
 
 def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     r"""
-    Uses brute force to solveset the equation, `x^2 - Dy^2 = N`.
+    Uses brute force to solve the equation, `x^2 - Dy^2 = N`.
 
     Mainly concerned with the generalized Pell equation which is the case when
     `D > 0, D` is not a perfect square. For more information on the case refer
@@ -1699,7 +1707,7 @@ def transformation_to_DN(eq):
     `ax^2 + bxy + cy^2 + dx + ey + f = 0`
     to more easy to deal with `X^2 - DY^2 = N` form.
 
-    This is used to solveset the general quadratic equation by transforming it to
+    This is used to solve the general quadratic equation by transforming it to
     the latter form. Refer [1]_ for more detailed information on the
     transformation. This function returns a tuple (A, B) where A is a 2 X 2
     matrix and B is a 2 X 1 matrix such that,
@@ -1916,7 +1924,7 @@ def check_param(x, y, a, t):
 
 def diop_ternary_quadratic(eq):
     """
-    solvesets the general quadratic ternary form,
+    Solves the general quadratic ternary form,
     `ax^2 + by^2 + cz^2 + fxy + gyz + hxz = 0`.
 
     Returns a tuple `(x, y, z)` which is a base solution for the above
@@ -2235,7 +2243,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
 
 def diop_ternary_quadratic_normal(eq):
     """
-    solvesets the quadratic ternary diophantine equation,
+    Solves the quadratic ternary diophantine equation,
     `ax^2 + by^2 + cz^2 = 0`.
 
     Here the coefficients `a`, `b`, and `c` should be non zero. Otherwise the
@@ -2675,7 +2683,7 @@ def holzer(x, y, z, a, b, c):
 
 def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
     """
-    solvesets the general pythagorean equation,
+    Solves the general pythagorean equation,
     `a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - a_{n + 1}^2x_{n + 1}^2 = 0`.
 
     Returns a tuple which contains a parametrized solution to the equation,
@@ -2739,7 +2747,7 @@ def _diop_general_pythagorean(var, coeff, t):
 
 def diop_general_sum_of_squares(eq, limit=1):
     r"""
-    solvesets the equation `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`.
+    Solves the equation `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`.
 
     Returns at most ``limit`` number of solutions.
 
@@ -2778,7 +2786,7 @@ def diop_general_sum_of_squares(eq, limit=1):
 
 
 def _diop_general_sum_of_squares(var, k, limit=1):
-    # solvesets Eq(sum(i**2 for i in var), k)
+    # solves Eq(sum(i**2 for i in var), k)
     n = len(var)
     if n < 3:
         raise ValueError('n must be greater than 2')
@@ -2805,7 +2813,7 @@ def _diop_general_sum_of_squares(var, k, limit=1):
 
 def diop_general_sum_of_even_powers(eq, limit=1):
     """
-    solvesets the equation `x_{1}^e + x_{2}^e + . . . + x_{n}^e - k = 0`
+    Solves the equation `x_{1}^e + x_{2}^e + . . . + x_{n}^e - k = 0`
     where `e` is an even, integer power.
 
     Returns at most ``limit`` number of solutions.
@@ -2839,7 +2847,7 @@ def diop_general_sum_of_even_powers(eq, limit=1):
 
 
 def _diop_general_sum_of_even_powers(var, p, n, limit=1):
-    # solvesets Eq(sum(i**2 for i in var), n)
+    # solves Eq(sum(i**2 for i in var), n)
     k = len(var)
 
     s = set()

@@ -4,8 +4,13 @@ should serve as a set of test cases.
 """
 
 from sympy import (acos, cos, cosh, Eq, exp, Function, I, Integral, log, Pow,
+<<<<<<< HEAD
                    S, sin, sinh, sqrt, Symbol, Add)
 from sympy.solvers.ode import constantsimp, constant_renumber
+=======
+                   S, sin, sinh, sqrt, Symbol)
+from sympy.solvers.ode import constant_renumber, constantsimp
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.utilities.pytest import XFAIL
 
 

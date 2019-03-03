@@ -314,13 +314,17 @@ def test_return_root_of():
     for root in s:
         assert root.func == CRootOf
 
-    # if one uses solveset to get the roots of a polynomial that has a CRootOf
-    # solution, make sure that the use of nfloat during the solveset process
+    # if one uses solve to get the roots of a polynomial that has a CRootOf
+    # solution, make sure that the use of nfloat during the solve process
     # doesn't fail. Note: if you want numerical solutions to a polynomial
-    # it is *much* faster to use nroots to get them than to solveset the
+    # it is *much* faster to use nroots to get them than to solve the
     # equation only to get CRootOf solutions which are then numerically
     # evaluated. So for eq = x**5 + 3*x + 7 do Poly(eq).nroots() rather
+<<<<<<< HEAD
     # than [i.n() for i in solveset(eq)] to get the numerical roots of eq.
+=======
+    # than [i.n() for i in solve(eq)] to get the numerical roots of eq.
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     assert nfloat(list(solveset_complex(x**5 + 3*x**3 + 7, x))[0],
                   exponent=False) == CRootOf(x**5 + 3*x**3 + 7, 0).n()
 
@@ -368,7 +372,11 @@ def test_solveset_sqrt_1():
 
 
 def test_solveset_sqrt_2():
+<<<<<<< HEAD
     # http://tutorial.math.lamar.edu/Classes/Alg/solveradicalEqns.aspx#solve_Rad_Ex2_a
+=======
+    # http://tutorial.math.lamar.edu/Classes/Alg/SolveRadicalEqns.aspx#Solve_Rad_Ex2_a
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     assert solveset_real(sqrt(2*x - 1) - sqrt(x - 4) - 2, x) == \
         FiniteSet(S(5), S(13))
     assert solveset_real(sqrt(x + 7) + 2 - sqrt(3 - x), x) == \
@@ -1491,7 +1499,11 @@ def test_issue_8828():
 
 
 def test_nonlinsolve_conditionset():
+<<<<<<< HEAD
     # when solveset failed to solveset all the eq
+=======
+    # when solveset failed to solve all the eq
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     # return conditionset
     f = Function('f')
     f1 = f(x) - pi/2

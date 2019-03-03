@@ -1,5 +1,5 @@
 from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt
-from sympy import solveset, simplify
+from sympy import solve, simplify
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
@@ -54,7 +54,7 @@ def test_linearize_rolling_disc_kane():
     # Kinematic differential equations
     kindiffs = Matrix([dot(w_c_n_qd - C.ang_vel_in(N), uv) for uv in B] +
                         [dot(v_co_n_qd - CO.vel(N), uv) for uv in N])
-    qdots = solveset(kindiffs, qd)
+    qdots = solve(kindiffs, qd)
 
     # Set angular velocity of remaining frames
     B.set_ang_vel(N, w_b_n_qd.subs(qdots))
@@ -82,7 +82,7 @@ def test_linearize_rolling_disc_kane():
     assert linearizer.f_c == f_c
     assert linearizer.f_v == f_v
     assert linearizer.f_a == f_v.diff(t)
-    sol = solveset(linearizer.f_0 + linearizer.f_1, qd)
+    sol = solve(linearizer.f_0 + linearizer.f_1, qd)
     for qi in qd:
         assert sol[qi] == qdots[qi]
     assert simplify(linearizer.f_2 + linearizer.f_3 - fr - fr_star) == Matrix([0, 0, 0])
@@ -156,7 +156,7 @@ def test_linearize_pendulum_kane_minimal():
     # Input the force resultant at P
     R = m*g*N.x
 
-    # solveset for eom with kanes method
+    # Solve for eom with kanes method
     KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], kd_eqs=kde)
     with warns_deprecated_sympy():
         (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
@@ -194,7 +194,7 @@ def test_linearize_pendulum_kane_nonminimal():
     # Calculate the kinematic differential equations
     kde = Matrix([q1d - u1,
                   q2d - u2])
-    dq_dict = solveset(kde, [q1d, q2d])
+    dq_dict = solve(kde, [q1d, q2d])
 
     # Set velocity of point P
     P.set_vel(N, P.pos_from(pN).dt(N).subs(dq_dict))
@@ -252,7 +252,7 @@ def test_linearize_pendulum_lagrange_minimal():
     P.v2pt_theory(pN, N, A)
     pP = Particle('pP', P, m)
 
-    # solveset for eom with Lagranges method
+    # Solve for eom with Lagranges method
     Lag = Lagrangian(N, pP)
     LM = LagrangesMethod(Lag, [q1], forcelist=[(P, m*g*N.x)], frame=N)
     LM.form_lagranges_equations()
@@ -287,7 +287,7 @@ def test_linearize_pendulum_lagrange_nonminimal():
     LM.form_lagranges_equations()
     # Compose operating point
     op_point = {q1: L, q2: 0, q1d: 0, q2d: 0, q1d.diff(t): 0, q2d.diff(t): 0}
-    # solveset for multiplier operating point
+    # Solve for multiplier operating point
     lam_op = LM.solve_multipliers(op_point=op_point)
     op_point.update(lam_op)
     # Perform the Linearization

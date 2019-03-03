@@ -12,7 +12,11 @@ from sympy.polys.polytools import Poly, factor
 from sympy.core.function import _mexpand
 from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
+<<<<<<< HEAD
 from sympy.solvers.solvers import solveset, _invert
+=======
+from sympy.solvers.solvers import solve, _invert
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
 
 def _filtered_gens(poly, symbol):
@@ -156,7 +160,7 @@ def _lambert(eq, x):
             continue
         rhs = -c/b + (a/d)*l
 
-        solns = solveset(X1 - u, x)
+        solns = solve(X1 - u, x)
         for i, tmp in enumerate(solns):
             solns[i] = tmp.subs(u, rhs)
             sol.append(solns[i])
@@ -328,16 +332,20 @@ def bivariate_type(f, x, y, **kwargs):
     Examples
     ========
 
+<<<<<<< HEAD
     >>> from sympy.solvers.solvers import solveset
+=======
+    >>> from sympy.solvers.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     >>> from sympy.solvers.bivariate import bivariate_type
     >>> from sympy.abc import x, y
     >>> eq = (x**2 - 3).subs(x, x + y)
     >>> bivariate_type(eq, x, y)
     (x + y, _u**2 - 3, _u)
     >>> uxy, pu, u = _
-    >>> usol = solveset(pu, u); usol
+    >>> usol = solve(pu, u); usol
     [sqrt(3)]
-    >>> [solveset(uxy - s) for s in solveset(pu, u)]
+    >>> [solve(uxy - s) for s in solve(pu, u)]
     [[{x: -y + sqrt(3)}]]
     >>> all(eq.subs(s).equals(0) for sol in _ for s in sol)
     True

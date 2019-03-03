@@ -23,7 +23,11 @@ from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
+<<<<<<< HEAD
 from sympy.solvers import solveset
+=======
+from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
 
@@ -661,7 +665,7 @@ class Ellipse(GeometrySet):
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
         [Point2D(-17/5, -12/5), Point2D(-17/5, 12/5), Point2D(7/5, -12/5), Point2D(7/5, 12/5)]
         """
-        # TODO: Replace solveset with nonlinsolve, when nonlinsolve will be able to solveset in real domain
+        # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
         x = Dummy('x', real=True)
         y = Dummy('y', real=True)
 
@@ -673,7 +677,7 @@ class Ellipse(GeometrySet):
 
         elif isinstance(o, (Segment2D, Ray2D)):
             ellipse_equation = self.equation(x, y)
-            result = solveset([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
+            result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
             return list(ordered([Point(i) for i in result if i in o]))
 
         elif isinstance(o, Polygon):
@@ -684,7 +688,7 @@ class Ellipse(GeometrySet):
                 return self
             else:
                 ellipse_equation = self.equation(x, y)
-                return list(ordered([Point(i) for i in solveset([ellipse_equation, o.equation(x, y)], [x, y])]))
+                return list(ordered([Point(i) for i in solve([ellipse_equation, o.equation(x, y)], [x, y])]))
         elif isinstance(o, LinearEntity3D):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
@@ -920,17 +924,28 @@ class Ellipse(GeometrySet):
         slope = Line(p, (x, y)).slope
         seq = slope - norm
 
+<<<<<<< HEAD
         # TODO: Replace solveset with solveset, when this line is tested
         yis = solveset(seq, y)[0]
+=======
+        # TODO: Replace solve with solveset, when this line is tested
+        yis = solve(seq, y)[0]
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
         xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
         if len(xeq.free_symbols) == 1:
             try:
                 # this is so much faster, it's worth a try
                 xsol = Poly(xeq, x).real_roots()
             except (DomainError, PolynomialError, NotImplementedError):
+<<<<<<< HEAD
                 # TODO: Replace solveset with solveset, when these lines are tested
                 xsol = _nsort(solveset(xeq, x), separated=True)[0]
             points = [Point(i, solveset(eq.subs(x, i), y)[0]) for i in xsol]
+=======
+                # TODO: Replace solve with solveset, when these lines are tested
+                xsol = _nsort(solve(xeq, x), separated=True)[0]
+            points = [Point(i, solve(eq.subs(x, i), y)[0]) for i in xsol]
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
         else:
             raise NotImplementedError(
                 'intersections for the general ellipse are not supported')
@@ -1262,8 +1277,13 @@ class Ellipse(GeometrySet):
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
 
+<<<<<<< HEAD
             # TODO: Replace solveset with solveset, when this line is tested
             tangent_points = solveset([slope - dydx, eq], [x, y])
+=======
+            # TODO: Replace solve with solveset, when this line is tested
+            tangent_points = solve([slope - dydx, eq], [x, y])
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:

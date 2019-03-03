@@ -136,7 +136,11 @@ def continued_fraction_reduce(cf):
 
     """
     from sympy.core.symbol import Dummy
+<<<<<<< HEAD
     from sympy.solvers import solveset
+=======
+    from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     period = []
     x = Dummy('x')
@@ -155,7 +159,7 @@ def continued_fraction_reduce(cf):
 
     if period:
         y = Dummy('y')
-        solns = solveset(continued_fraction_reduce(period + [y]) - y, y)
+        solns = solve(continued_fraction_reduce(period + [y]) - y, y)
         solns.sort()
         pure = solns[-1]
         return a.subs(x, pure).radsimp()

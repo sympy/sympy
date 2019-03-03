@@ -22,7 +22,11 @@ from sympy.sets.sets import FiniteSet
 from sympy.simplify import denom
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
+<<<<<<< HEAD
 from sympy.solvers import solveset
+=======
+from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.solvers.solveset import solveset
 import itertools
 
@@ -878,9 +882,9 @@ def telescopic(L, R, limits):
     if L.is_Add or R.is_Add:
         return None
 
-    # We want to solveset(L.subs(i, i + m) + R, m)
+    # We want to solve(L.subs(i, i + m) + R, m)
     # First we try a simple match since this does things that
-    # solveset doesn't do, e.g. solveset(f(k+m)-f(k), m) fails
+    # solve doesn't do, e.g. solve(f(k+m)-f(k), m) fails
 
     k = Wild("k")
     sol = (-R).match(L.subs(i, i + k))
@@ -891,13 +895,13 @@ def telescopic(L, R, limits):
             # sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
             s = None
 
-    # But there are things that match doesn't do that solveset
+    # But there are things that match doesn't do that solve
     # can do, e.g. determine that 1/(x + m) = 1/(1 - x) when m = 1
 
     if s is None:
         m = Dummy('m')
         try:
-            sol = solveset(L.subs(i, i + m) + R, m) or []
+            sol = solve(L.subs(i, i + m) + R, m) or []
         except NotImplementedError:
             return None
         sol = [si for si in sol if si.is_Integer and
@@ -1062,7 +1066,7 @@ def eval_sum_symbolic(f, limits):
             args = []
             for v in ordered(den_sym):
                 try:
-                    s = solveset(den, v)
+                    s = solve(den, v)
                     m = Eq(v, s[0]) if s else S.false
                     if m != False:
                         args.append((Sum(f_orig.subs(*m.args), limits).doit(), m))

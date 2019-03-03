@@ -240,7 +240,7 @@ def lower_triangle(matlist, K):
 
 def rref_solve(matlist, variable, constant, K):
     """
-    solvesets a system of equations using reduced row echelon form given
+    Solves a system of equations using reduced row echelon form given
     a matrix of coefficients, a vector of variables and a vector of constants.
 
     Examples
@@ -279,7 +279,7 @@ def rref_solve(matlist, variable, constant, K):
 
 def LU_solve(matlist, variable, constant, K):
     """
-    solvesets a system of equations using  LU decomposition given a matrix
+    Solves a system of equations using  LU decomposition given a matrix
     of coefficients, a vector of variables and a vector of constants.
 
     Examples
@@ -322,7 +322,7 @@ def LU_solve(matlist, variable, constant, K):
 
 def cholesky_solve(matlist, variable, constant, K):
     """
-    solvesets a system of equations using Cholesky decomposition given
+    Solves a system of equations using Cholesky decomposition given
     a matrix of coefficients, a vector of variables and a vector of constants.
 
     Examples

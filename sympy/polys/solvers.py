@@ -20,7 +20,7 @@ def eqs_to_matrix(eqs, ring):
     return M
 
 def solve_lin_sys(eqs, ring, _raw=True):
-    """solveset a system of linear equations.
+    """Solve a system of linear equations.
 
     If ``_raw`` is False, the keys and values in the returned dictionary
     will be of type Expr (and the unit of the field will be removed from
@@ -34,7 +34,7 @@ def solve_lin_sys(eqs, ring, _raw=True):
     # transform from equations to matrix form
     matrix = eqs_to_matrix(eqs, ring)
 
-    # solveset by row-reduction
+    # solve by row-reduction
     echelon, pivots = matrix.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
 
     # construct the returnable form of the solutions

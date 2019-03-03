@@ -3,12 +3,20 @@
     Examples
     ========
 
+<<<<<<< HEAD
     >>> from sympy.solvers import solveset
+=======
+    >>> from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     >>> from sympy.abc import x
-    >>> solveset(x**5+5*x**4+10*x**3+10*x**2+5*x+1,x)
+    >>> solve(x**5+5*x**4+10*x**3+10*x**2+5*x+1,x)
     [-1]
 """
+<<<<<<< HEAD
 from .solvers import solveset, solve_linear_system, solve_linear_system_LU, \
+=======
+from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
     det_quick, inv_quick, check_assumptions, failing_assumptions
 

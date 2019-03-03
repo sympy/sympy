@@ -12,7 +12,7 @@ are_similar
 """
 from __future__ import division, print_function
 
-from sympy import Function, Symbol, solveset
+from sympy import Function, Symbol, solve
 from sympy.core.compatibility import (
     is_sequence, range, string_types, ordered)
 from sympy.core.containers import OrderedSet
@@ -586,7 +586,7 @@ def idiff(eq, y, x, n=1):
     eq = eq.subs(f)
     derivs = {}
     for i in range(n):
-        yp = solveset(eq.diff(x), dydx)[0].subs(derivs)
+        yp = solve(eq.diff(x), dydx)[0].subs(derivs)
         if i == n - 1:
             return yp.subs([(v, k) for k, v in f.items()])
         derivs[dydx] = yp

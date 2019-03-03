@@ -6,7 +6,7 @@ various operations on them.
 from __future__ import print_function, division
 
 from sympy import (Symbol, S, Dummy, Order, rf, meijerint, I,
-    solveset, limit, Float, nsimplify, gamma)
+    solve, limit, Float, nsimplify, gamma)
 from sympy.core.compatibility import range, ordered
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 from sympy.core.sympify import sympify
@@ -1384,8 +1384,8 @@ class HolonomicFunction(object):
 
                 eqs.append(eq)
 
-            # solveset the system of equations formed
-            soleqs = solveset(eqs, *unknowns)
+            # solve the system of equations formed
+            soleqs = solve(eqs, *unknowns)
 
             if isinstance(soleqs, dict):
 
@@ -1591,8 +1591,8 @@ class HolonomicFunction(object):
 
                     eqs.append(eq)
 
-                # solveset the system of equations formed
-                soleqs = solveset(eqs, *unknowns)
+                # solve the system of equations formed
+                soleqs = solve(eqs, *unknowns)
 
                 if isinstance(soleqs, dict):
 

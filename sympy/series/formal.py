@@ -459,9 +459,9 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
 
 
 def rsolve_hypergeometric(f, x, P, Q, k, m):
-    """solvesets RE of hypergeometric type.
+    """Solves RE of hypergeometric type.
 
-    Attempts to solveset RE of the form
+    Attempts to solve RE of the form
 
     Q(k)*a(k + m) - P(k)*a(k)
 
@@ -473,7 +473,7 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
         d. f(x**(1/m)): b(k + 1) = R(k*m)*b(k)
         e. f'(x): b(k + m) = ((k + m + 1)/(k + 1))*R(k + 1)*b(k)
 
-    Some of these transformations have been used to solveset the RE.
+    Some of these transformations have been used to solve the RE.
 
     Returns
     =======
@@ -560,7 +560,11 @@ def _solve_hyper_RE(f, x, RE, g, k):
 
 
 def _solve_explike_DE(f, x, DE, g, k):
+<<<<<<< HEAD
     """solvesets DE with constant coefficients."""
+=======
+    """Solves DE with constant coefficients."""
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     from sympy.solvers import rsolve
 
     for t in Add.make_args(DE):
@@ -583,7 +587,11 @@ def _solve_explike_DE(f, x, DE, g, k):
 
 
 def _solve_simple(f, x, DE, g, k):
+<<<<<<< HEAD
     """Converts DE into RE and solvesets using :func:`rsolve`."""
+=======
+    """Converts DE into RE and solves using :func:`rsolve`."""
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     from sympy.solvers import rsolve
 
     RE = hyper_re(DE, g, k)
@@ -652,9 +660,9 @@ def _transform_DE_RE(DE, g, k, order, syms):
 
 
 def solve_de(f, x, DE, order, g, k):
-    """solvesets the DE.
+    """Solves the DE.
 
-    Tries to solveset DE by either converting into a RE containing two terms or
+    Tries to solve DE by either converting into a RE containing two terms or
     converting into a DE having constant coefficients.
 
     Returns
@@ -709,7 +717,7 @@ def hyper_algorithm(f, x, k, order=4):
     Steps:
         * Generates DE
         * Convert the DE into RE
-        * solvesets the RE
+        * Solves the RE
 
     Examples
     ========

@@ -16,7 +16,11 @@ g = Function('g')
 h = Function('h')
 
 # Note: the tests below may fail (but still be correct) if ODE solver,
+<<<<<<< HEAD
 # the integral engine, solveset(), or even simplify() changes. Also, in
+=======
+# the integral engine, solve(), or even simplify() changes. Also, in
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 # differently formatted solutions, the arbitrary constants might not be
 # equal.  Using specific hints in tests can help to avoid this.
 
@@ -1165,7 +1169,7 @@ def test_ode_order():
 
 # In all tests below, checkodesol has the order option set to prevent
 # superfluous calls to ode_order(), and the solve_for_func flag set to False
-# because dsolve() already tries to solveset for the function, unless the
+# because dsolve() already tries to solve for the function, unless the
 # simplify=False option is set.
 def test_old_ode_tests():
     # These are simple tests from the old ode module
@@ -3268,6 +3272,10 @@ def test_nth_algebraic():
 
 
 def test_nth_algebraic_issue15999():
+<<<<<<< HEAD
+=======
+    # FIXME: When issue 4838 is resolved this test should be changed...
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     eqn = f(x).diff(x) - C1
     sol = Eq(f(x), C1*x + C2) # Correct solution
     assert checkodesol(eqn, sol, order=1, solve_for_func=False) == (True, 0)

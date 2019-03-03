@@ -543,7 +543,7 @@ def cancel_primitive(b, c, n, DE):
             n, z = A
             if n == 1:  # b == Dz/z
                 raise NotImplementedError("is_deriv_in_field() is required to "
-                    " solveset this problem.")
+                    " solve this problem.")
                 # if z*c == Dp for p in k[t] and deg(p) <= n:
                 #     return p/z
                 # else:
@@ -593,7 +593,7 @@ def cancel_exp(b, c, n, DE):
             a, m, z = A
             if a == 1:
                 raise NotImplementedError("is_deriv_in_field() is required to "
-                    "solveset this problem.")
+                    "solve this problem.")
                 # if c*z*t**m == Dp for p in k<t> and q = p/(z*t**m) in k[t] and
                 # deg(q) <= n:
                 #     return q
@@ -631,7 +631,7 @@ def cancel_exp(b, c, n, DE):
 
 def solve_poly_rde(b, cQ, n, DE, parametric=False):
     """
-    solveset a Polynomial Risch Differential Equation with degree bound n.
+    Solve a Polynomial Risch Differential Equation with degree bound n.
 
     This constitutes step 4 of the outline given in the rde.py docstring.
 
@@ -724,14 +724,14 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
 
 def rischDE(fa, fd, ga, gd, DE):
     """
-    solveset a Risch Differential Equation: Dy + f*y == g.
+    Solve a Risch Differential Equation: Dy + f*y == g.
 
     See the outline in the docstring of rde.py for more information
     about the procedure used.  Either raise NonElementaryIntegralException, in
     which case there is no solution y in the given differential field,
     or return y in k(t) satisfying Dy + f*y == g, or raise
     NotImplementedError, in which case, the algorithms necessary to
-    solveset the given Risch Differential Equation have not yet been
+    solve the given Risch Differential Equation have not yet been
     implemented.
     """
     _, (fa, fd) = weak_normalizer(fa, fd, DE)

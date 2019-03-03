@@ -178,8 +178,13 @@ def apart_undetermined_coeffs(P, Q):
     for (k,), coeff in F.terms():
         system.append(coeff - P.nth(k))
 
+<<<<<<< HEAD
     from sympy.solvers import solveset
     solution = solveset(system, symbols)
+=======
+    from sympy.solvers import solve
+    solution = solve(system, symbols)
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     for h, f, k in partial:
         h = h.as_expr().subs(solution)

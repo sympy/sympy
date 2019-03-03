@@ -1,6 +1,6 @@
 from sympy.core.compatibility import range
 from sympy.core.backend import cos, Matrix, sin, zeros, tan, pi, symbols
-from sympy import trigsimp, simplify, solveset
+from sympy import trigsimp, simplify, solve
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, KanesMethod,
                                      inertia, inertia_of_point_mass,
                                      Point, ReferenceFrame, RigidBody)
@@ -81,16 +81,16 @@ def test_aux_dep():
     # Two equalities: one is w_c_n_qd = C.ang_vel_in(N) in three coordinates
     #                 directions of B, for qd0, qd1 and qd2.
     #                 the other is v_o_n_qd = O.vel(N) in A.z direction for qd3.
-    # Then, solveset for dq/dt's in terms of u's: qd_kd.
+    # Then, solve for dq/dt's in terms of u's: qd_kd.
     w_c_n_qd = qd[0]*A.z + qd[1]*B.x + qd[2]*B.y
     v_o_n_qd = O.pos_from(P).diff(t, A) + cross(A.ang_vel_in(N), O.pos_from(P))
     kindiffs = Matrix([dot(w_c_n_qd - C.ang_vel_in(N), uv) for uv in B] +
                       [dot(v_o_n_qd - O.vel(N), A.z)])
-    qd_kd = solveset(kindiffs, qd)
+    qd_kd = solve(kindiffs, qd)
 
     # Values of generalized speeds during a steady turn for later substitution
     # into the Fr_star_steady.
-    steady_conditions = solveset(kindiffs.subs({qd[1] : 0, qd[3] : 0}), u)
+    steady_conditions = solve(kindiffs.subs({qd[1] : 0, qd[3] : 0}), u)
     steady_conditions.update({qd[1] : 0, qd[3] : 0})
 
     # Partial angular velocities and velocities.
@@ -109,7 +109,7 @@ def test_aux_dep():
     a_o_n = v_o_n.diff(t, A) + cross(A.ang_vel_in(N), v_o_n)
     f_a = Matrix([dot(O.acc(N) - a_o_n, ai) for ai in A])
 
-    # solveset for constraint equations in the form of
+    # Solve for constraint equations in the form of
     #                           u_dependent = A_rs * [u_i; u_aux].
     # First, obtain constraint coefficient matrix:  M_v * [u; ua] = 0;
     # Second, taking u[0], u[1], u[2] as independent,
@@ -192,7 +192,7 @@ def test_aux_dep():
 
 def test_non_central_inertia():
     # This tests that the calculation of Fr* does not depend the point
-    # about which the inertia of a rigid body is defined. This test solvesets
+    # about which the inertia of a rigid body is defined. This test solves
     # exercises 8.12, 8.17 from Kane 1985.
 
     # Declare symbols
@@ -265,7 +265,7 @@ def test_non_central_inertia():
     bodies = [rbA, rbB, rbC]
     with warns_deprecated_sympy():
         fr, fr_star = km.kanes_equations(forces, bodies)
-    vc_map = solveset(vc, [u4, u5])
+    vc_map = solve(vc, [u4, u5])
 
     # KanesMethod returns the negative of Fr, Fr* as defined in Kane1985.
     fr_star_expected = Matrix([
@@ -292,7 +292,7 @@ def test_non_central_inertia():
     assert (fr_star_expected - t).expand() == zeros(3, 1)
 
 def test_sub_qdot():
-    # This test solvesets exercises 8.12, 8.17 from Kane 1985 and defines
+    # This test solves exercises 8.12, 8.17 from Kane 1985 and defines
     # some velocities in terms of q, qdot.
 
     ## --- Declare symbols ---
@@ -338,7 +338,7 @@ def test_sub_qdot():
     # the velocities of B^, C^ are zero since B, C are assumed to roll w/o slip
     kde = [dot(p.vel(F), A.y) for p in [pB_hat, pC_hat]]
     kde += [u1 - q1d]
-    kde_map = solveset(kde, [q1d, q2d, q3d])
+    kde_map = solve(kde, [q1d, q2d, q3d])
     for k, v in list(kde_map.items()):
         kde_map[k.diff(t)] = v.diff(t)
 
@@ -381,7 +381,7 @@ def test_sub_qdot():
     assert ((fr_star_expected - trigsimp(fr_star)).expand() == zeros(3, 1))
 
 def test_sub_qdot2():
-    # This test solvesets exercises 8.3 from Kane 1985 and defines
+    # This test solves exercises 8.3 from Kane 1985 and defines
     # all velocities in terms of q, qdot. We check that the generalized active
     # forces are correctly computed if u terms are only defined in the
     # kinematic differential equations.

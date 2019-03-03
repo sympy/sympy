@@ -175,7 +175,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
         eq, func = _preprocess(eq, func)
         prep = False
 
-    # type is an argument passed by the solveset functions in ode and pde.py
+    # type is an argument passed by the solve functions in ode and pde.py
     # that identifies whether the function caller is an ordinary
     # or partial differential equation. Accordingly corresponding
     # changes are made in the function.
@@ -232,7 +232,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
         elif hint not in hints['ordered_hints'] and hint != 'default':
             raise ValueError(string + str(eq) + " does not match hint " + hint)
         else:
-            raise NotImplementedError(dummy + "solveset" + ": Cannot solveset " + str(eq))
+            raise NotImplementedError(dummy + "solve" + ": Cannot solve " + str(eq))
     if hint == 'default':
         return _desolve(eq, func, ics=ics, hint=hints['default'], simplify=simplify,
                       prep=prep, x0=x0, classify=False, order=hints['order'],
@@ -262,7 +262,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     elif hint not in hints:
         raise ValueError(string + str(eq) + " does not match hint " + hint)
     else:
-        # Key added to identify the hint needed to solveset the equation
+        # Key added to identify the hint needed to solve the equation
         hints['hint'] = hint
     hints.update({'func': func, 'eq': eq})
     return hints

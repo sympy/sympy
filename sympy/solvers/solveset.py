@@ -1,14 +1,14 @@
 """
 This module contains functions to:
 
-    - solveset a single equation for a single variable, in any domain either real or complex.
+    - solve a single equation for a single variable, in any domain either real or complex.
 
-    - solveset a single transcendental equation for a single variable in any domain either real or complex.
+    - solve a single transcendental equation for a single variable in any domain either real or complex.
       (currently supports solving in real domain only)
 
-    - solveset a system of linear equations with N variables and M equations.
+    - solve a system of linear equations with N variables and M equations.
 
-    - solveset a system of Non Linear Equations with N variables and M equations
+    - solve a system of Non Linear Equations with N variables and M equations
 """
 from __future__ import print_function, division
 
@@ -366,7 +366,7 @@ def _invert_abs(f, g_ys, symbol):
         conditions = True
     n = Dummy('n', real=True)
     # this is slightly different than above: instead of solving
-    # +/-f on positive values, here we solveset for f on +/- g_ys
+    # +/-f on positive values, here we solve for f on +/- g_ys
     g_x, values = _invert_real(f, Union(
         imageset(Lambda(n, n), g_ys),
         imageset(Lambda(n, -n), g_ys)), symbol)
@@ -495,7 +495,7 @@ def _is_function_class_equation(func_class, f, symbol):
 
 
 def _solve_as_rational(f, symbol, domain):
-    """ solveset rational functions"""
+    """ solve rational functions"""
     f = together(f, deep=True)
     g, h = fraction(f)
     if not h.has(symbol):
@@ -513,7 +513,7 @@ def _solve_as_rational(f, symbol, domain):
 
 
 def _solve_trig(f, symbol, domain):
-    """Function to call other helpers to solveset trigonometric equations """
+    """Function to call other helpers to solve trigonometric equations """
     sol1 = sol = None
     try:
         sol1 = _solve_trig1(f, symbol, domain)
@@ -537,7 +537,7 @@ def _solve_trig(f, symbol, domain):
 
 
 def _solve_trig1(f, symbol, domain):
-    """Primary Helper to solveset trigonometric equations """
+    """Primary Helper to solve trigonometric equations """
     f = trigsimp(f)
     f_original = f
     f = f.rewrite(exp)
@@ -566,7 +566,7 @@ def _solve_trig1(f, symbol, domain):
 
 
 def _solve_trig2(f, symbol, domain):
-    """Secondary helper to solveset trigonometric equations,
+    """Secondary helper to solve trigonometric equations,
     called when first helper fails """
     from sympy import ilcm, igcd, expand_trig, degree, simplify
     f = trigsimp(f)
@@ -581,7 +581,7 @@ def _solve_trig2(f, symbol, domain):
             poly_ar = Poly(ar, symbol)
 
         except ValueError:
-            raise ValueError("give up, we can't solveset if this is not a polynomial in x")
+            raise ValueError("give up, we can't solve if this is not a polynomial in x")
         if poly_ar.degree() > 1:  # degree >1 still bad
             raise ValueError("degree of variable inside polynomial should not exceed one")
         if poly_ar.degree() == 0:  # degree 0, don't care
@@ -628,7 +628,7 @@ def _solve_trig2(f, symbol, domain):
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):
     """
-    solveset the equation using polynomial techniques if it already is a
+    Solve the equation using polynomial techniques if it already is a
     polynomial equation or, with a change of variables, can be made so.
     """
     result = None
@@ -726,7 +726,11 @@ def _has_rational_power(expr, symbol):
 
 
 def _solve_radical(f, symbol, solveset_solver):
+<<<<<<< HEAD
     """ Helper function to solveset equations with radicals """
+=======
+    """ Helper function to solve equations with radicals """
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     eq, cov = unrad(f)
     if not cov:
         result = solveset_solver(eq, symbol) - \
@@ -759,7 +763,7 @@ def _solve_radical(f, symbol, solveset_solver):
 
 
 def _solve_abs(f, symbol, domain):
-    """ Helper function to solveset equation involving absolute value function """
+    """ Helper function to solve equation involving absolute value function """
     if not domain.is_subset(S.Reals):
         raise ValueError(filldedent('''
             Absolute values cannot be inverted in the
@@ -785,7 +789,7 @@ def _solve_abs(f, symbol, domain):
 
 def solve_decomposition(f, symbol, domain):
     """
-    Function to solveset equations via the principle of "Decomposition
+    Function to solve equations via the principle of "Decomposition
     and Rewriting".
 
     Examples
@@ -1187,7 +1191,7 @@ def _is_exponential(f, symbol):
 
 def _solve_logarithm(lhs, rhs, symbol, domain):
     r"""
-    Helper to solveset logarithmic equations which are reducible
+    Helper to solve logarithmic equations which are reducible
     to a single instance of `\log`.
 
     Logarithmic equations are (currently) the equations that contains
@@ -1334,7 +1338,11 @@ def _is_logarithmic(f, symbol):
 
 def _transolve(f, symbol, domain):
     r"""
+<<<<<<< HEAD
     Function to solveset transcendental equations. It is a helper to
+=======
+    Function to solve transcendental equations. It is a helper to
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     ``solveset`` and should be used internally. ``_transolve``
     currently supports the following class of equations:
 
@@ -1387,7 +1395,7 @@ def _transolve(f, symbol, domain):
     How ``_transolve`` works
     ========================
 
-    ``_transolve`` uses two types of helper functions to solveset equations
+    ``_transolve`` uses two types of helper functions to solve equations
     of a particular class:
 
     Identifying helpers: To determine whether a given equation
@@ -1395,18 +1403,26 @@ def _transolve(f, symbol, domain):
     ``True`` or ``False``.
 
     Solving helpers: Once an equation is identified, a corresponding
+<<<<<<< HEAD
     helper either solvesets the equation or returns a form of the equation
+=======
+    helper either solves the equation or returns a form of the equation
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     that ``solveset`` might better be able to handle.
 
     * Philosophy behind the module
 
     The purpose of ``_transolve`` is to take equations which are not
     already polynomial in their generator(s) and to either recast them
-    as such through a valid transformation or to solveset them outright.
+    as such through a valid transformation or to solve them outright.
     A pair of helper functions for each class of supported
     transcendental functions are employed for this purpose. One
     identifies the transcendental form of an equation and the other
+<<<<<<< HEAD
     either solvesets it or recasts it into a tractable form that can be
+=======
+    either solves it or recasts it into a tractable form that can be
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     solved by  ``solveset``.
     For example, an equation in the form `ab^{f(x)} - cd^{g(x)} = 0`
     can be transformed to
@@ -1437,7 +1453,7 @@ def _transolve(f, symbol, domain):
     2) Extensible
 
     The API of ``_transolve`` is designed such that it is easily
-    extensible, i.e. the code that solvesets a given class of
+    extensible, i.e. the code that solves a given class of
     equations is encapsulated in a helper and not mixed in with
     the code of ``_transolve`` itself.
 
@@ -1452,7 +1468,7 @@ def _transolve(f, symbol, domain):
     4) Faster Computation
 
     Solving equation via ``_transolve`` is much faster as compared to
-    ``_tsolve``. In ``solveset``, attempts are made computing every possibility
+    ``_tsolve``. In ``solve``, attempts are made computing every possibility
     to get the solutions. This series of attempts makes solving a bit
     slow. In ``_transolve``, computation begins only after a particular
     type of equation is identified.
@@ -1506,7 +1522,7 @@ def _transolve(f, symbol, domain):
       The documentation of the helpers should identify:
 
       - the purpose of the helper,
-      - the method used to identify and solveset the equation,
+      - the method used to identify and solve the equation,
       - a proof of correctness
       - the return values of the helpers
     """
@@ -1548,7 +1564,11 @@ def _transolve(f, symbol, domain):
 
 
 def solveset(f, symbol=None, domain=S.Complexes):
+<<<<<<< HEAD
     r"""solvesets a given inequality or equation with set as output
+=======
+    r"""Solves a given inequality or equation with set as output
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     Parameters
     ==========
@@ -1575,7 +1595,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     ======
 
     NotImplementedError
-        The algorithms to solveset inequalities in complex domain  are
+        The algorithms to solve inequalities in complex domain  are
         not yet implemented.
     ValueError
         The input is not valid.
@@ -1617,7 +1637,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers}
 
+<<<<<<< HEAD
     * If you want to use `solveset` to solveset the equation in the
+=======
+    * If you want to use `solveset` to solve the equation in the
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
       real domain, provide a real domain. (Using ``solveset_real``
       does this automatically.)
 
@@ -1723,8 +1747,13 @@ def solveset_complex(f, symbol):
 
 
 def solvify(f, symbol, domain):
+<<<<<<< HEAD
     """solvesets an equation using solveset and returns the solution in accordance
     with the `solveset` output API.
+=======
+    """Solves an equation using solveset and returns the solution in accordance
+    with the `solve` output API.
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     Returns
     =======
@@ -1773,7 +1802,11 @@ def solvify(f, symbol, domain):
         result = []
 
     elif isinstance(solution_set, ConditionSet):
+<<<<<<< HEAD
         raise NotImplementedError('solveset is unable to solveset this equation.')
+=======
+        raise NotImplementedError('solveset is unable to solve this equation.')
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     elif isinstance(solution_set, FiniteSet):
         result = list(solution_set)
@@ -1804,7 +1837,7 @@ def solvify(f, symbol, domain):
 
 
 ###############################################################################
-################################ LInsolve #####################################
+################################ LINSOLVE #####################################
 ###############################################################################
 
 
@@ -1988,7 +2021,7 @@ def linear_eq_to_matrix(equations, *symbols):
 
 def linsolve(system, *symbols):
     r"""
-    solveset system of N linear equations with M variables; both
+    Solve system of N linear equations with M variables; both
     underdetermined and overdetermined systems are supported.
     The possible number of solutions is zero, one or infinite.
     Zero solutions throws a ValueError, whereas infinite
@@ -2110,7 +2143,7 @@ def linsolve(system, *symbols):
     >>> linsolve(aug, x, y, z)
     {(3/10, 2/5, 0)}
 
-    * solveset for symbolic coefficients
+    * Solve for symbolic coefficients
 
     >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     >>> eqns = [a*x + b*y - c, d*x + e*y - f]
@@ -2243,7 +2276,7 @@ def _return_conditionset(eqs, symbols):
 def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
     r"""
-     solvesets the `system` using substitution method. It is used in
+     Solves the `system` using substitution method. It is used in
      `nonlinsolve`. This will be called from `nonlinsolve` when any
      equation(s) is non polynomial equation.
 
@@ -2367,7 +2400,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     intersections = {}
 
     # when total_solveset_call is equals to total_conditionset
-    # means solvesetst fail to solveset all the eq.
+    # means solvest fail to solve all the eq.
     total_conditionset = -1
     total_solveset_call = -1
 
@@ -2582,7 +2615,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         return result
 
     def _solve_using_known_values(result, solver):
+<<<<<<< HEAD
         """solvesets the system using already known solution
+=======
+        """Solves the system using already known solution
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
         (result contains the dict <symbol: value>).
         solver is `solveset_complex` or `solveset_real`.
         """
@@ -2596,7 +2633,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         for index, eq in enumerate(eqs_in_better_order):
             newresult = []
             original_imageset = {}
-            # if imageset expr is used to solveset other symbol
+            # if imageset expr is used to solve other symbol
             imgset_yes = False
             result = _new_order_result(result, eq)
             for res in result:
@@ -2657,7 +2694,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             if not isinstance(soln, (ImageSet, ConditionSet)):
                                 soln += solveset_complex(eq2, sym)
                     except NotImplementedError:
-                        # If sovleset is not able to solveset equation `eq2`. Next
+                        # If sovleset is not able to solve equation `eq2`. Next
                         # time we may get soln using next equation `eq2`
                         continue
                     if isinstance(soln, ConditionSet):
@@ -2724,7 +2761,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         old_result, solveset_complex)
 
     # when `total_solveset_call` is equals to `total_conditionset`
-    # means solvesetst fails to solveset all the eq.
+    # means solvest fails to solve all the eq.
     # return conditionset in this case
     total_conditionset += (cnd_call1 + cnd_call2)
     total_solveset_call += (solve_call1 + solve_call2)
@@ -2808,7 +2845,7 @@ def _handle_positive_dimensional(polys, symbols, denominators):
 
 
 def _handle_zero_dimensional(polys, symbols, system):
-    # solveset 0 dimensional poly system using `solve_poly_system`
+    # solve 0 dimensional poly system using `solve_poly_system`
     result = solve_poly_system(polys, *symbols)
     # May be some extra soln is added because
     # we used `unrad` in `_separate_poly_nonpoly`, so
@@ -2853,7 +2890,7 @@ def _separate_poly_nonpoly(system, symbols):
 
 def nonlinsolve(system, *symbols):
     r"""
-    solveset system of N non linear equations with M variables, which means both
+    Solve system of N non linear equations with M variables, which means both
     under and overdetermined systems are supported. Positive dimensional
     system is also supported (A system with infinitely many solutions is said
     to be positive-dimensional). In Positive dimensional system solution will
@@ -2950,10 +2987,10 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
     {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
 
-    4. `nonlinsolve` can solveset some linear(zero or positive dimensional)
+    4. `nonlinsolve` can solve some linear(zero or positive dimensional)
     system (because it is using `groebner` function to get the
     groebner basis and then `substitution` function basis as the new `system`).
-    But it is not recommended to solveset linear system using `nonlinsolve`,
+    But it is not recommended to solve linear system using `nonlinsolve`,
     because `linsolve` is better for all kind of linear system.
 
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z])
@@ -2993,7 +3030,11 @@ def nonlinsolve(system, *symbols):
     then using `solve_poly_system` both real and complex solution is returned.
     If all the equations in the system are not polynomial equation then goes to
     `substitution` method with this polynomial and non polynomial equation(s),
+<<<<<<< HEAD
     to solveset for unsolved variables. Here to solveset for particular variable
+=======
+    to solve for unsolved variables. Here to solve for particular variable
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     solveset_real and solveset_complex is used. For both real and complex
     solution function `_solve_using_know_values` is used inside `substitution`
     function.(`substitution` function will be called when there is any non

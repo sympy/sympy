@@ -771,7 +771,7 @@ def descendant_subgroups(S, C, R1_c_list, x, R2, N, Y):
 
 def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta, Y):
     r"""
-    solvesets the problem of trying out each individual possibility
+    Solves the problem of trying out each individual possibility
     for `\alpha^x.
 
     """

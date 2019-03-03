@@ -6,7 +6,11 @@ from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.utilities.pytest import XFAIL, raises, slow
 
+<<<<<<< HEAD
 #solvesets and Fixes Issue #10388 - This is the updated test for the same solved issue
+=======
+#Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
 def test_rf_eval_apply():
     x, y = symbols('x,y')
@@ -264,7 +268,11 @@ def test_factorial2():
     nt = Symbol('nt', nonnegative=True)
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nn')
+<<<<<<< HEAD
     #solvesets and Fixes Issue #10388 - This is the updated test for the same solved issue
+=======
+    #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     raises (ValueError, lambda: factorial2(oo))
     raises (ValueError, lambda: factorial2(S(5)/2))
     assert factorial2(n).is_integer is None

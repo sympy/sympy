@@ -9,7 +9,7 @@ class RewritingSystem(object):
     References
     ==========
     .. [1] Epstein, D., Holt, D. and Rees, S. (1991).
-           The use of Knuth-Bendix methods to solveset the word problem in automatic groups.
+           The use of Knuth-Bendix methods to solve the word problem in automatic groups.
            Journal of Symbolic Computation, 12(4-5), pp.397-414.
 
     .. [2] GAP's Manual on its KBMAG package

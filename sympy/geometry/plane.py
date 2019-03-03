@@ -14,7 +14,11 @@ from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
+<<<<<<< HEAD
 from sympy.solvers import solveset, linsolve
+=======
+from sympy.solvers import solve, linsolve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent, func_name
 
@@ -409,8 +413,13 @@ class Plane(GeometryEntity):
                 a = Point3D(o.arbitrary_point(t))
                 b = self.equation(x, y, z)
 
+<<<<<<< HEAD
                 # TODO: Replace solveset with solveset, when this line is tested
                 c = solveset(b.subs(list(zip((x, y, z), a.args))), t)
+=======
+                # TODO: Replace solve with solveset, when this line is tested
+                c = solve(b.subs(list(zip((x, y, z), a.args))), t)
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
                 if not c:
                     return []
                 else:
@@ -864,7 +873,11 @@ class Plane(GeometryEntity):
         """
         from sympy.geometry.point import Point
         from sympy.core.symbol import Dummy
+<<<<<<< HEAD
         from sympy.solvers.solvers import solveset
+=======
+        from sympy.solvers.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):
@@ -874,10 +887,10 @@ class Plane(GeometryEntity):
         if isinstance(u, Symbol) and v is None:
             delta = self.arbitrary_point(u) - self.p1
             eq = delta - (other - self.p1).unit
-            sol = solveset(eq, u, dict=True)
+            sol = solve(eq, u, dict=True)
         elif isinstance(u, Symbol) and isinstance(v, Symbol):
             pt = self.arbitrary_point(u, v)
-            sol = solveset(pt - other, (u, v), dict=True)
+            sol = solve(pt - other, (u, v), dict=True)
         else:
             raise ValueError('expecting 1 or 2 symbols')
         if not sol:

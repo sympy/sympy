@@ -30,7 +30,7 @@ def test_trigintegrate_odd():
 
     y = Symbol('y', positive=True)
     # TODO: remove conds='none' below. For this to work we would have to rule
-    #       out (e.g. by trying solveset) the condition y = 0, incompatible with
+    #       out (e.g. by trying solve) the condition y = 0, incompatible with
     #       y.is_positive being True.
     assert trigintegrate(sin(y*x), x, conds='none') == -cos(y*x)/y
     assert trigintegrate(cos(y*x), x, conds='none') == sin(y*x)/y

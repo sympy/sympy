@@ -59,7 +59,11 @@ from sympy.core.mul import Mul
 from sympy.core import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar
+<<<<<<< HEAD
 from sympy.solvers import solveset, solve_undetermined_coeffs
+=======
+from sympy.solvers import solve, solve_undetermined_coeffs
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
@@ -313,7 +317,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             E = [g(i) + _delta(h, i) for i in range(N + 1, U)]
 
         if E != []:
-            solutions = solveset(E, *C)
+            solutions = solve(E, *C)
 
             if not solutions:
                 if homogeneous:
@@ -365,7 +369,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
             `\operatorname{L} y = f`.
 
         (2) Construct new linear difference equation by substitution
-            `y(n) = u(n)/v(n)` and solveset it for `u(n)` finding all its
+            `y(n) = u(n)/v(n)` and solve it for `u(n)` finding all its
             polynomial solutions. Return ``None`` if none were found.
 
     Algorithm implemented here is a revised version of the original
@@ -661,7 +665,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
 def rsolve(f, y, init=None):
     r"""
-    solveset univariate recurrence with rational coefficients.
+    Solve univariate recurrence with rational coefficients.
 
     Given `k`-th order linear recurrence `\operatorname{L} y = f`,
     or equivalently:
@@ -819,7 +823,7 @@ def rsolve(f, y, init=None):
                 eq = solution.subs(n, i) - v
             equations.append(eq)
 
-        result = solveset(equations, *symbols)
+        result = solve(equations, *symbols)
 
         if not result:
             return None

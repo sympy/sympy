@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 """solvers of systems of polynomial equations. """
+=======
+"""Solvers of systems of polynomial equations. """
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
 from __future__ import print_function, division
 
@@ -12,13 +16,17 @@ from sympy.utilities import default_sort_key, postfixes
 from sympy.utilities.misc import filldedent
 
 
+<<<<<<< HEAD
 class solvefailed(Exception):
+=======
+class SolveFailed(Exception):
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     """Raised when solver's conditions weren't met. """
 
 
 def solve_poly_system(seq, *gens, **args):
     """
-    solveset a system of polynomial equations.
+    Solve a system of polynomial equations.
 
     Examples
     ========
@@ -41,14 +49,18 @@ def solve_poly_system(seq, *gens, **args):
         if all(i <= 2 for i in f.degree_list() + g.degree_list()):
             try:
                 return solve_biquadratic(f, g, opt)
+<<<<<<< HEAD
             except solvefailed:
+=======
+            except SolveFailed:
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
                 pass
 
     return solve_generic(polys, opt)
 
 
 def solve_biquadratic(f, g, opt):
-    """solveset a system of two bivariate quadratic polynomial equations.
+    """Solve a system of two bivariate quadratic polynomial equations.
 
     Examples
     ========
@@ -75,13 +87,21 @@ def solve_biquadratic(f, g, opt):
         return None
 
     if len(G) != 2:
+<<<<<<< HEAD
         raise solvefailed
+=======
+        raise SolveFailed
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     x, y = opt.gens
     p, q = G
     if not p.gcd(q).is_ground:
         # not 0-dimensional
+<<<<<<< HEAD
         raise solvefailed
+=======
+        raise SolveFailed
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     p = Poly(p, x, expand=False)
     p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]
@@ -101,7 +121,7 @@ def solve_biquadratic(f, g, opt):
 
 def solve_generic(polys, opt):
     """
-    solveset a generic system of polynomial equations.
+    Solve a generic system of polynomial equations.
 
     Returns all possible solutions over C[x_1, x_2, ..., x_m] of a
     set F = { f_1, f_2, ..., f_n } of polynomial equations,  using
@@ -177,7 +197,7 @@ def solve_generic(polys, opt):
         return p
 
     def _solve_reduced_system(system, gens, entry=False):
-        """Recursively solvesets reduced polynomial systems. """
+        """Recursively solves reduced polynomial systems. """
         if len(system) == len(gens) == 1:
             zeros = list(roots(system[0], gens[-1]).keys())
             return [ (zero,) for zero in zeros ]
@@ -246,7 +266,7 @@ def solve_generic(polys, opt):
 
 def solve_triangulated(polys, *gens, **args):
     """
-    solveset a polynomial system using Gianni-Kalkbrenner algorithm.
+    Solve a polynomial system using Gianni-Kalkbrenner algorithm.
 
     The algorithm proceeds by computing one Groebner basis in the ground
     domain and then by iteratively computing polynomial factorizations in

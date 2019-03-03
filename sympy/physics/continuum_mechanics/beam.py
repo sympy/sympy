@@ -1,5 +1,5 @@
 """
-This module can be used to solveset 2D beam bending problems with
+This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
 
@@ -98,7 +98,7 @@ class Beam(object):
         base_char : String, optional
             A String that will be used as base character to generate sequential
             symbols for integration constants in cases where boundary conditions
-            are not sufficient to solveset them.
+            are not sufficient to solve them.
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
@@ -552,7 +552,7 @@ class Beam(object):
         evaluated for both of them separately. These equations are then solved
         for unknown reactions and integration constants using the boundary
         conditions applied on the Beam. Equal deflection of both sub-beams
-        at the hinge joint gives us another equation to solveset the system.
+        at the hinge joint gives us another equation to solve the system.
 
         Examples
         ========
@@ -681,7 +681,7 @@ class Beam(object):
 
     def solve_for_reaction_loads(self, *reactions):
         """
-        solvesets for the reaction forces.
+        Solves for the reaction forces.
 
         Examples
         ========
@@ -783,7 +783,7 @@ class Beam(object):
     def max_shear_force(self):
         """Returns maximum Shear force and its coordinate
         in the Beam object."""
-        from sympy import solveset, Mul, Interval
+        from sympy import solve, Mul, Interval
         shear_curve = self.shear_force()
         x = self.variable
 
@@ -803,7 +803,7 @@ class Beam(object):
                 continue
             try:
                 shear_slope = Piecewise((float("nan"), x<=singularity[i-1]),(self._load.rewrite(Piecewise), x<s), (float("nan"), True))
-                points = solveset(shear_slope, x)
+                points = solve(shear_slope, x)
                 val = []
                 for point in points:
                     val.append(shear_curve.subs(x, point))
@@ -815,7 +815,7 @@ class Beam(object):
                 intervals.append(points[val.index(max_shear)])
             # If shear force in a particular Interval has zero or constant
             # slope, then above block gives NotImplementedError as
-            # solveset can't represent Interval solutions.
+            # solve can't represent Interval solutions.
             except NotImplementedError:
                 initial_shear = limit(shear_curve, x, singularity[i-1], '+')
                 final_shear = limit(shear_curve, x, s, '-')
@@ -869,7 +869,7 @@ class Beam(object):
     def max_bmoment(self):
         """Returns maximum Shear force and its coordinate
         in the Beam object."""
-        from sympy import solveset, Mul, Interval
+        from sympy import solve, Mul, Interval
         bending_curve = self.bending_moment()
         x = self.variable
 
@@ -889,7 +889,7 @@ class Beam(object):
                 continue
             try:
                 moment_slope = Piecewise((float("nan"), x<=singularity[i-1]),(self.shear_force().rewrite(Piecewise), x<s), (float("nan"), True))
-                points = solveset(moment_slope, x)
+                points = solve(moment_slope, x)
                 val = []
                 for point in points:
                     val.append(bending_curve.subs(x, point))
@@ -900,7 +900,7 @@ class Beam(object):
                 moment_values.append(max_moment)
                 intervals.append(points[val.index(max_moment)])
             # If bending moment in a particular Interval has zero or constant
-            # slope, then above block gives NotImplementedError as solveset
+            # slope, then above block gives NotImplementedError as solve
             # can't represent Interval solutions.
             except NotImplementedError:
                 initial_moment = limit(bending_curve, x, singularity[i-1], '+')
@@ -949,14 +949,14 @@ class Beam(object):
         >>> b.point_cflexure()
         [10/3]
         """
-        from sympy import solveset, Piecewise
+        from sympy import solve, Piecewise
 
         # To restrict the range within length of the Beam
         moment_curve = Piecewise((float("nan"), self.variable<=0),
                 (self.bending_moment(), self.variable<self.length),
                 (float("nan"), True))
 
-        points = solveset(moment_curve.rewrite(Piecewise), self.variable,
+        points = solve(moment_curve.rewrite(Piecewise), self.variable,
                         domain=S.Reals)
         return points
 
@@ -1168,14 +1168,14 @@ class Beam(object):
         Returns point of max deflection and its coresponding deflection value
         in a Beam object.
         """
-        from sympy import solveset, Piecewise
+        from sympy import solve, Piecewise
 
         # To restrict the range within length of the Beam
         slope_curve = Piecewise((float("nan"), self.variable<=0),
                 (self.slope(), self.variable<self.length),
                 (float("nan"), True))
 
-        points = solveset(slope_curve.rewrite(Piecewise), self.variable,
+        points = solve(slope_curve.rewrite(Piecewise), self.variable,
                         domain=S.Reals)
         deflection_curve = self.deflection()
         deflections = [deflection_curve.subs(self.variable, x) for x in points]
@@ -1752,7 +1752,7 @@ class Beam3D(Beam):
 
     def solve_for_reaction_loads(self, *reaction):
         """
-        solvesets for the reaction forces.
+        Solves for the reaction forces.
 
         Examples
         ========
@@ -1872,14 +1872,14 @@ class Beam3D(Beam):
         eq1 = Derivative(E*I_z*Derivative(theta(x), x), x) + (integrate(-load[1], x) + C_i) + moment[2]
         slope_z = dsolve(Eq(eq1, 0)).args[1]
 
-        # solveset for constants originated from using dsolve on eq1
+        # Solve for constants originated from using dsolve on eq1
         constants = list((linsolve([slope_z.subs(x, 0), slope_z.subs(x, l)], C1, C2).args)[0])
         slope_z = slope_z.subs({C1:constants[0], C2:constants[1]})
 
-        # Put value of slope obtained back in (2) to solveset for `C_i` and find deflection across y-axis
+        # Put value of slope obtained back in (2) to solve for `C_i` and find deflection across y-axis
         eq2 = G*A*(Derivative(defl(x), x)) + load[1]*x - C_i - G*A*slope_z
         def_y = dsolve(Eq(eq2, 0), defl(x)).args[1]
-        # solveset for constants originated from using dsolve on eq2
+        # Solve for constants originated from using dsolve on eq2
         constants = list((linsolve([def_y.subs(x, 0), def_y.subs(x, l)], C1, C_i).args)[0])
         self._deflection[1] = def_y.subs({C1:constants[0], C_i:constants[1]})
         self._slope[2] = slope_z.subs(C_i, constants[1])
@@ -1891,14 +1891,14 @@ class Beam3D(Beam):
         # Substitute value of `G*A*(Derivative(defl_y(x), x) + theta_z(x))` from (2) in (1)
         eq1 = Derivative(E*I_y*Derivative(theta(x), x), x) + (integrate(load[2], x) - C_i) + moment[1]
         slope_y = dsolve(Eq(eq1, 0)).args[1]
-        # solveset for constants originated from using dsolve on eq1
+        # Solve for constants originated from using dsolve on eq1
         constants = list((linsolve([slope_y.subs(x, 0), slope_y.subs(x, l)], C1, C2).args)[0])
         slope_y = slope_y.subs({C1:constants[0], C2:constants[1]})
 
-        # Put value of slope obtained back in (2) to solveset for `C_i` and find deflection across z-axis
+        # Put value of slope obtained back in (2) to solve for `C_i` and find deflection across z-axis
         eq2 = G*A*(Derivative(defl(x), x)) + load[2]*x - C_i + G*A*slope_y
         def_z = dsolve(Eq(eq2,0)).args[1]
-        # solveset for constants originated from using dsolve on eq2
+        # Solve for constants originated from using dsolve on eq2
         constants = list((linsolve([def_z.subs(x, 0), def_z.subs(x, l)], C1, C_i).args)[0])
         self._deflection[2] = def_z.subs({C1:constants[0], C_i:constants[1]})
         self._slope[1] = slope_y.subs(C_i, constants[1])

@@ -522,10 +522,10 @@ def test_issue_4559():
     assert (3*x).match(w/y) == {w: 3, y: 1/x}
     assert (3/x).match(w*y) == {w: 3, y: 1/x}
 
-    # Note that solveset will give
+    # Note that solve will give
     # multiple roots but match only gives one:
     #
-    # >>> solveset(x**r-y**2,y)
+    # >>> solve(x**r-y**2,y)
     # [-x**(r/2), x**(r/2)]
 
     r = Symbol('r', rational=True)

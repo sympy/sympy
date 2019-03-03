@@ -118,7 +118,11 @@ def _remove_multiple_delta(expr):
     """
     Evaluate products of KroneckerDelta's.
     """
+<<<<<<< HEAD
     from sympy.solvers import solveset
+=======
+    from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     if expr.is_Add:
         return expr.func(*list(map(_remove_multiple_delta, expr.args)))
     if not expr.is_Mul:
@@ -132,7 +136,7 @@ def _remove_multiple_delta(expr):
             newargs.append(arg)
     if not eqs:
         return expr
-    solns = solveset(eqs, dict=True)
+    solns = solve(eqs, dict=True)
     if len(solns) == 0:
         return S.Zero
     elif len(solns) == 1:
@@ -149,10 +153,14 @@ def _simplify_delta(expr):
     """
     Rewrite a KroneckerDelta's indices in its simplest form.
     """
+<<<<<<< HEAD
     from sympy.solvers import solveset
+=======
+    from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     if isinstance(expr, KroneckerDelta):
         try:
-            slns = solveset(expr.args[0] - expr.args[1], dict=True)
+            slns = solve(expr.args[0] - expr.args[1], dict=True)
             if slns and len(slns) == 1:
                 return Mul(*[KroneckerDelta(*(key, value))
                             for key, value in slns[0].items()])
@@ -292,7 +300,11 @@ def deltasummation(f, limit, no_piecewise=False):
     sympy.concrete.sums.summation
     """
     from sympy.concrete.summations import summation
+<<<<<<< HEAD
     from sympy.solvers import solveset
+=======
+    from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     if ((limit[2] - limit[1]) < 0) == True:
         return S.Zero
@@ -313,7 +325,7 @@ def deltasummation(f, limit, no_piecewise=False):
     if not delta:
         return summation(f, limit)
 
-    solns = solveset(delta.args[0] - delta.args[1], x)
+    solns = solve(delta.args[0] - delta.args[1], x)
     if len(solns) == 0:
         return S.Zero
     elif len(solns) != 1:

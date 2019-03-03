@@ -2,11 +2,15 @@ r"""
 This module contains :py:meth:`~sympy.solvers.ode.dsolve` and different helper
 functions that it uses.
 
+<<<<<<< HEAD
 :py:meth:`~sympy.solvers.ode.dsolve` solvesets ordinary differential equations.
+=======
+:py:meth:`~sympy.solvers.ode.dsolve` solves ordinary differential equations.
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 See the docstring on the various functions for their uses.  Note that partial
 differential equations support is in ``pde.py``.  Note that hint functions
 have docstrings describing their various methods, but they are intended for
-internal use.  Use ``dsolve(ode, func, hint=hint)`` to solveset an ODE using a
+internal use.  Use ``dsolve(ode, func, hint=hint)`` to solve an ODE using a
 specific hint.  See also the docstring on
 :py:meth:`~sympy.solvers.ode.dsolve`.
 
@@ -14,7 +18,11 @@ specific hint.  See also the docstring on
 
     These are the user functions in this module:
 
+<<<<<<< HEAD
     - :py:meth:`~sympy.solvers.ode.dsolve` - solvesets ODEs.
+=======
+    - :py:meth:`~sympy.solvers.ode.dsolve` - Solves ODEs.
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     - :py:meth:`~sympy.solvers.ode.classify_ode` - Classifies ODEs into
       possible hints for :py:meth:`~sympy.solvers.ode.dsolve`.
     - :py:meth:`~sympy.solvers.ode.checkodesol` - Checks if an equation is the
@@ -76,8 +84,13 @@ information on each (run ``help(ode)``):
 This module is designed to make it easy to add new ODE solving methods without
 having to mess with the solving code for other methods.  The idea is that
 there is a :py:meth:`~sympy.solvers.ode.classify_ode` function, which takes in
+<<<<<<< HEAD
 an ODE and tells you what hints, if any, will solveset the ODE.  It does this
 without attempting to solveset the ODE, so it is fast.  Each solving method is a
+=======
+an ODE and tells you what hints, if any, will solve the ODE.  It does this
+without attempting to solve the ODE, so it is fast.  Each solving method is a
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 hint, and it has its own function, named ``ode_<hint>``.  That function takes
 in the ODE and any match expression gathered by
 :py:meth:`~sympy.solvers.ode.classify_ode` and returns a solved result.  If
@@ -85,7 +98,11 @@ this result has any integrals in it, the hint function will return an
 unevaluated :py:class:`~sympy.integrals.Integral` class.
 :py:meth:`~sympy.solvers.ode.dsolve`, which is the user wrapper function
 around all of this, will then call :py:meth:`~sympy.solvers.ode.odesimp` on
+<<<<<<< HEAD
 the result, which, among other things, will attempt to solveset the equation for
+=======
+the result, which, among other things, will attempt to solve the equation for
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 the dependent variable (the function we are solving for), simplify the
 arbitrary constants in the expression, and evaluate any integrals, if the hint
 allows it.
@@ -93,8 +110,13 @@ allows it.
 **How to add new solution methods**
 
 If you have an ODE that you want :py:meth:`~sympy.solvers.ode.dsolve` to be
+<<<<<<< HEAD
 able to solveset, try to avoid adding special case code here.  Instead, try
 finding a general method that will solveset your ODE, as well as others.  This
+=======
+able to solve, try to avoid adding special case code here.  Instead, try
+finding a general method that will solve your ODE, as well as others.  This
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 way, the :py:mod:`~sympy.solvers.ode` module will become more robust, and
 unhindered by special case hacks.  WolphramAlpha and Maple's
 DETools[odeadvisor] function are two resources you can use to classify a
@@ -105,7 +127,7 @@ To add a new method, there are a few things that you need to do.  First, you
 need a hint name for your method.  Try to name your hint so that it is
 unambiguous with all other methods, including ones that may not be implemented
 yet.  If your method uses integrals, also include a ``hint_Integral`` hint.
-If there is more than one way to solveset ODEs with your method, include a hint
+If there is more than one way to solve ODEs with your method, include a hint
 for each one, as well as a ``<hint>_best`` hint.  Your ``ode_<hint>_best()``
 function should choose the best using min with ``ode_sol_simplicity`` as the
 key argument.  See
@@ -124,7 +146,11 @@ See also the :py:meth:`~sympy.solvers.ode.classify_ode` docstring for
 guidelines on writing a hint name.
 
 Determine *in general* how the solutions returned by your method compare with
+<<<<<<< HEAD
 other methods that can potentially solveset the same ODEs.  Then, put your hints
+=======
+other methods that can potentially solve the same ODEs.  Then, put your hints
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 in the :py:data:`~sympy.solvers.ode.allhints` tuple in the order that they
 should be called.  The ordering of this tuple determines which hints are
 default.  Note that exceptions are ok, because it is easy for the user to
@@ -134,7 +160,7 @@ general, ``_Integral`` variants should go at the end of the list, and
 example, the ``undetermined_coefficients`` hint comes before the
 ``variation_of_parameters`` hint because, even though variation of parameters
 is more general than undetermined coefficients, undetermined coefficients
-generally returns cleaner results for the ODEs that it can solveset than
+generally returns cleaner results for the ODEs that it can solve than
 variation of parameters does, and it does not require integration, so it is
 much faster.
 
@@ -150,7 +176,7 @@ solution method involves dividing by something, make sure you exclude the case
 where that division will be 0.
 
 In most cases, the matching of the ODE will also give you the various parts
-that you need to solveset it.  You should put that in a dictionary (``.match()``
+that you need to solve it.  You should put that in a dictionary (``.match()``
 will do this for you), and add that as ``matching_hints['hint'] = matchdict``
 in the relevant part of :py:meth:`~sympy.solvers.ode.classify_ode`.
 :py:meth:`~sympy.solvers.ode.classify_ode` will then send this to
@@ -161,8 +187,13 @@ dictionary.  For example, if you had to substitute in a dummy variable in
 :py:meth:`~sympy.solvers.ode.classify_ode` to match the ODE, you will need to
 pass it to your function using the `match` dict to access it.  You can access
 the independent variable using ``func.args[0]``, and the dependent variable
+<<<<<<< HEAD
 (the function you are trying to solveset for) as ``func.func``.  If, while trying
 to solveset the ODE, you find that you cannot, raise ``NotImplementedError``.
+=======
+(the function you are trying to solve for) as ``func.func``.  If, while trying
+to solve the ODE, you find that you cannot, raise ``NotImplementedError``.
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 :py:meth:`~sympy.solvers.ode.dsolve` will catch this error with the ``all``
 meta-hint, rather than causing the whole routine to fail.
 
@@ -186,10 +217,17 @@ solution.  If this is not the case, you will need to write special code in
 symbols named ``C1``, ``C2``, and so on.  All solution methods should return
 an equality instance.  If you need an arbitrary number of arbitrary constants,
 you can use ``constants = numbered_symbols(prefix='C', cls=Symbol, start=1)``.
+<<<<<<< HEAD
 If it is possible to solveset for the dependent function in a general way, do so.
 Otherwise, do as best as you can, but do not call solveset in your
 ``ode_<hint>()`` function.  :py:meth:`~sympy.solvers.ode.odesimp` will attempt
 to solveset the solution for you, so you do not need to do that.  Lastly, if your
+=======
+If it is possible to solve for the dependent function in a general way, do so.
+Otherwise, do as best as you can, but do not call solve in your
+``ode_<hint>()`` function.  :py:meth:`~sympy.solvers.ode.odesimp` will attempt
+to solve the solution for you, so you do not need to do that.  Lastly, if your
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 ODE has a common simplification that can be applied to your solutions, you can
 add a special case in :py:meth:`~sympy.solvers.ode.odesimp` for it.  For
 example, solutions returned from the ``1st_homogeneous_coeff`` hints often
@@ -266,7 +304,11 @@ from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, posify, cse
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const
+<<<<<<< HEAD
 from sympy.solvers import solveset
+=======
+from sympy.solvers import solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.solvers.pde import pdsolve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
@@ -401,7 +443,7 @@ def iter_numbered_constants(eq, start=1, prefix='C'):
 def dsolve(eq, func=None, hint="default", simplify=True,
     ics= None, xi=None, eta=None, x0=0, n=6, **kwargs):
     r"""
-    solvesets any (supported) kind of ordinary differential equation and
+    Solves any (supported) kind of ordinary differential equation and
     system of ordinary differential equations.
 
     For single ordinary differential equation
@@ -410,7 +452,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     It is classified under this when number of equation in ``eq`` is one.
     **Usage**
 
-        ``dsolve(eq, f(x), hint)`` -> solveset ordinary differential equation
+        ``dsolve(eq, f(x), hint)`` -> Solve ordinary differential equation
         ``eq`` for function ``f(x)``, using method ``hint``.
 
     **Details**
@@ -528,7 +570,11 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         - :py:meth:`~sympy.solvers.ode.dsolve` always returns an
           :py:class:`~sympy.core.relational.Equality` class (except for the
           case when the hint is ``all`` or ``all_Integral``).  If possible, it
+<<<<<<< HEAD
           solvesets the solution explicitly for the function being solved for.
+=======
+          solves the solution explicitly for the function being solved for.
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
           Otherwise, it returns an implicit solution.
         - Arbitrary constants are symbols named ``C1``, ``C2``, and so on.
         - Because all solutions should be mathematically equivalent, some
@@ -546,7 +592,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     =============================================
 
    **Usage**
-        ``dsolve(eq, func)`` -> solveset a system of ordinary differential
+        ``dsolve(eq, func)`` -> Solve a system of ordinary differential
         equations ``eq`` for ``func`` being list of functions including
         `x(t)`, `y(t)`, `z(t)` where number of functions in the list depends
         upon the number of equations provided in ``eq``.
@@ -609,7 +655,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
                         eq[i] = -eq[i]
         match['eq'] = eq
         if len(set(order.values()))!=1:
-            raise ValueError("It solvesets only those systems of equations whose orders are equal")
+            raise ValueError("It solves only those systems of equations whose orders are equal")
         match['order'] = list(order.values())[0]
         def recur_len(l):
             return sum(recur_len(item) if isinstance(item,list) else 1 for item in l)
@@ -677,7 +723,11 @@ def dsolve(eq, func=None, hint="default", simplify=True,
 def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
+<<<<<<< HEAD
     :py:mod:`~sympy.solvers.ode` functions to solveset for the ordinary
+=======
+    :py:mod:`~sympy.solvers.ode` functions to solve for the ordinary
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     differential equations. This minimizes the computation in calling
     :py:meth:`~sympy.solvers.deutils._desolve` multiple times.
     """
@@ -695,7 +745,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
 
     if simplify:
         # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
-        # attempt to solveset for func, and apply any other hint specific
+        # attempt to solve for func, and apply any other hint specific
         # simplifications
         sols = solvefunc(eq, func, order, match)
         if isinstance(sols, Expr):
@@ -705,7 +755,12 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     else:
         # We still want to integrate (you can disable it separately with the hint)
         match['simplify'] = False  # Some hints can take advantage of this option
+<<<<<<< HEAD
         rv = _handle_Integral(solvefunc(eq, func, order, match), func, hint)
+=======
+        rv = _handle_Integral(solvefunc(eq, func, order, match),
+            func, order, hint)
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     if ics and not 'power_series' in hint:
         if isinstance(rv, Expr):
@@ -721,7 +776,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
 
 def solve_ics(sols, funcs, constants, ics):
     """
-    solveset for the constants given initial conditions
+    Solve for the constants given initial conditions
 
     ``sols`` is a list of solutions.
 
@@ -755,8 +810,8 @@ def solve_ics(sols, funcs, constants, ics):
 
     """
     # Assume ics are of the form f(x0): value or Subs(diff(f(x), x, n), (x,
-    # x0)): value (currently checked by classify_ode). To solveset, replace x
-    # with x0, f(x0) with value, then solveset for constants. For f^(n)(x0),
+    # x0)): value (currently checked by classify_ode). To solve, replace x
+    # with x0, f(x0) with value, then solve for constants. For f^(n)(x0),
     # differentiate the solution n times, so that f^(n)(x) appears.
     x = funcs[0].args[0]
     diff_sols = []
@@ -800,16 +855,28 @@ def solve_ics(sols, funcs, constants, ics):
 
     # TODO: Use solveset here
     try:
+<<<<<<< HEAD
         solved_constants = solveset(subs_sols, constants, dict=True)
+=======
+        solved_constants = solve(subs_sols, constants, dict=True)
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     except NotImplementedError:
         solved_constants = []
 
     # XXX: We can't differentiate between the solution not existing because of
+<<<<<<< HEAD
     # invalid initial conditions, and not existing because solveset is not smart
     # enough. If we could use solveset, this might be improvable, but for now,
     # we use NotImplementedError in this case.
     if not solved_constants:
         raise NotImplementedError("Couldn't solveset for initial conditions")
+=======
+    # invalid initial conditions, and not existing because solve is not smart
+    # enough. If we could use solveset, this might be improvable, but for now,
+    # we use NotImplementedError in this case.
+    if not solved_constants:
+        raise NotImplementedError("Couldn't solve for initial conditions")
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     if solved_constants == True:
         raise ValueError("Initial conditions did not produce any solutions for constants. Perhaps they are degenerate.")
@@ -828,7 +895,11 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     classifications for an ODE.
 
     The tuple is ordered so that first item is the classification that
+<<<<<<< HEAD
     :py:meth:`~sympy.solvers.ode.dsolve` uses to solveset the ODE by default.  In
+=======
+    :py:meth:`~sympy.solvers.ode.dsolve` uses to solve the ODE by default.  In
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     general, classifications at the near the beginning of the list will
     produce better solutions faster than those near the end, thought there are
     always exceptions.  To make :py:meth:`~sympy.solvers.ode.dsolve` use a
@@ -874,7 +945,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         Note that some hints do not have ``_Integral`` counterparts.  This is
         because :py:meth:`~sympy.solvers.ode.integrate` is not used in solving
         the ODE for those method. For example, `n`\th order linear homogeneous
-        ODEs with constant coefficients do not require integration to solveset,
+        ODEs with constant coefficients do not require integration to solve,
         so there is no ``nth_linear_homogeneous_constant_coeff_Integrate``
         hint. You can easily evaluate any unevaluated
         :py:class:`~sympy.integrals.Integral`\s in an expression by doing
@@ -915,7 +986,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     ``_best``
 
-        Methods that have more than one fundamental way to solveset will have a
+        Methods that have more than one fundamental way to solve will have a
         hint for each sub-method and a ``_best`` meta-classification. This
         will evaluate all hints and return the best, using the same
         considerations as the normal ``best`` meta-hint.
@@ -1465,7 +1536,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     nonlinear, whereas terms like ``sin(t)*diff(x,t)`` are still linear operators.
 
     'func' (list) contains the :py:class:`~sympy.core.function.Function`s that
-    appear with a derivative in the ODE, i.e. those that we are trying to solveset
+    appear with a derivative in the ODE, i.e. those that we are trying to solve
     the ODE for.
 
     'order' (dict) with the maximum derivative for each element of the 'func'
@@ -1994,7 +2065,7 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
         num1, den1 = r1[a].as_numer_denom()
         num2, den2 = r2[b].as_numer_denom()
         num3, den3 = r3[c].as_numer_denom()
-        if solveset([num1*u-den1*(v-w), num2*v-den2*(w-u), num3*w-den3*(u-v)],[u, v]):
+        if solve([num1*u-den1*(v-w), num2*v-den2*(w-u), num3*w-den3*(u-v)],[u, v]):
             return 'type1'
     r = eq[0].match(diff(x(t),t) - y(t)*z(t)*f)
     if r:
@@ -2005,7 +2076,7 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
         num1, den1 = r1[a].as_numer_denom()
         num2, den2 = r2[b].as_numer_denom()
         num3, den3 = r3[c].as_numer_denom()
-        if solveset([num1*u-den1*(v-w), num2*v-den2*(w-u), num3*w-den3*(u-v)],[u, v]):
+        if solve([num1*u-den1*(v-w), num2*v-den2*(w-u), num3*w-den3*(u-v)],[u, v]):
             return 'type2'
     r = eq[0].match(diff(x(t),t) - (F2-F3))
     if r:
@@ -2134,7 +2205,11 @@ def checksysodesol(eqs, sols, func=None):
             sol = sol.reversed
         solved = sol.lhs == func and not sol.rhs.has(func)
         if not solved:
+<<<<<<< HEAD
             rhs = solveset(sol, func)
+=======
+            rhs = solve(sol, func)
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
             if not rhs:
                 raise NotImplementedError
         else:
@@ -2159,10 +2234,15 @@ def checksysodesol(eqs, sols, func=None):
 @vectorize(0)
 def odesimp(ode, eq, func, hint):
     r"""
+<<<<<<< HEAD
 Simplifies solutions of ODEs, including trying to solve for ``func`` and
     running :py:meth:`~sympy.solvers.ode.constantsimp`.
     It may use knowledge of the type of solution that the hint returns to
     apply additional simplifications.
+=======
+    Simplifies ODEs, including trying to solve for ``func`` and running
+    :py:meth:`~sympy.solvers.ode.constantsimp`.
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     It may use knowledge of the type of solution that the hint returns to
     apply additional simplifications.
@@ -2236,7 +2316,7 @@ Simplifies solutions of ODEs, including trying to solve for ``func`` and
     eq = constantsimp(eq, constants)
 
     # Lastly, now that we have cleaned up the expression, try solving for func.
-    # When CRootOf is implemented in solveset(), we will want to return a CRootOf
+    # When CRootOf is implemented in solve(), we will want to return a CRootOf
     # every time instead of an Equality.
 
     # Get the f(x) on the left if possible.
@@ -2286,10 +2366,14 @@ Simplifies solutions of ODEs, including trying to solve for ``func`` and
             eq[0] = Eq(f(x), sol)
 
     else:
+<<<<<<< HEAD
         # The solution is not solved, so try to solveset it
+=======
+        # The solution is not solved, so try to solve it
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
         try:
             floats = any(i.is_Float for i in eq.atoms(Number))
-            eqsol = solveset(eq, func, force=True, rational=False if floats else None)
+            eqsol = solve(eq, func, force=True, rational=False if floats else None)
             if not eqsol:
                 raise NotImplementedError
         except (NotImplementedError, PolynomialError):
@@ -2317,7 +2401,11 @@ Simplifies solutions of ODEs, including trying to solve for ``func`` and
                     newi = Eq(newi.lhs.args[0]/C1, C1)
                 eq[j] = newi
 
+<<<<<<< HEAD
     # We cleaned up the constants before solving to help the solveset engine with
+=======
+    # We cleaned up the constants before solving to help the solve engine with
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     # a simpler expression, but the solved expression could have introduced
     # things like -C1, so rerun constantsimp() one last time before returning.
     for i, eqi in enumerate(eq):
@@ -2349,7 +2437,11 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     It tries the following methods, in order, until it finds zero equivalence:
 
     1. Substitute the solution for `f` in the original equation.  This only
+<<<<<<< HEAD
        works if ``ode`` is solved for `f`.  It will attempt to solveset it first
+=======
+       works if ``ode`` is solved for `f`.  It will attempt to solve it first
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
        unless ``solve_for_func == False``.
     2. Take `n` derivatives of the solution, where `n` is the order of
        ``ode``, and check to see if that is equal to the solution.  This only
@@ -2416,7 +2508,11 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         order = ode_order(ode, func)
     solved = sol.lhs == func and not sol.rhs.has(func)
     if solve_for_func and not solved:
+<<<<<<< HEAD
         rhs = solveset(sol, func)
+=======
+        rhs = solve(sol, func)
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
         if rhs:
             eqs = [Eq(func, t) for t in rhs]
             if len(rhs) == 1:
@@ -2463,7 +2559,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             # the comments below are his, too.
             # The method:
             # - Take each of 1..n derivatives of the solution.
-            # - solveset each nth derivative for d^(n)f/dx^(n)
+            # - Solve each nth derivative for d^(n)f/dx^(n)
             #   (the differential of that order)
             # - Back substitute into the ODE in decreasing order
             #   (i.e., n, n-1, ...)
@@ -2478,12 +2574,12 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             for i in range(1, order + 1):
                 # Differentiation is a linear operator, so there should always
                 # be 1 solution. Nonetheless, we test just to make sure.
-                # We only need to solveset once.  After that, we automatically
+                # We only need to solve once.  After that, we automatically
                 # have the solution to the differential in the order we want.
                 if i == 1:
                     ds = sol.diff(x)
                     try:
-                        sdf = solveset(ds, func.diff(x, i))
+                        sdf = solve(ds, func.diff(x, i))
                         if not sdf:
                             raise NotImplementedError
                     except NotImplementedError:
@@ -2549,7 +2645,11 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     The following things are considered, in order from most simple to least:
 
     - ``sol`` is solved for ``func``.
+<<<<<<< HEAD
     - ``sol`` is not solved for ``func``, but can be if passed to solveset (e.g.,
+=======
+    - ``sol`` is not solved for ``func``, but can be if passed to solve (e.g.,
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
       a solution returned by ``dsolve(ode, func, simplify=False``).
     - If ``sol`` is not solved for ``func``, then base the result on the
       length of ``sol``, as computed by ``len(str(sol))``.
@@ -2580,7 +2680,11 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     ``oo`` here means the SymPy infinity, which should compare greater than
     any integer.
 
+<<<<<<< HEAD
     If you already know :py:meth:`~sympy.solvers.solvers.solveset` cannot solveset
+=======
+    If you already know :py:meth:`~sympy.solvers.solvers.solve` cannot solve
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     ``sol``, you can use ``trysolving=False`` to skip that step, which is the
     only potentially slow step.  For example,
     :py:meth:`~sympy.solvers.ode.dsolve` with the ``simplify=False`` flag
@@ -2633,8 +2737,8 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     if sol.has(Integral):
         return oo
 
-    # Next, try to solveset for func.  This code will change slightly when CRootOf
-    # is implemented in solveset().  Probably a CRootOf solution should fall
+    # Next, try to solve for func.  This code will change slightly when CRootOf
+    # is implemented in solve().  Probably a CRootOf solution should fall
     # somewhere between a normal solution and an unsolvable expression.
 
     # First, see if they are already solved
@@ -2644,7 +2748,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     # We are not so lucky, try solving manually
     if trysolving:
         try:
-            sols = solveset(sol, func)
+            sols = solve(sol, func)
             if not sols:
                 raise NotImplementedError
         except NotImplementedError:
@@ -2900,6 +3004,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
 
     >>> from sympy import symbols, Eq, pprint
     >>> from sympy.solvers.ode import constant_renumber
+<<<<<<< HEAD
     >>> x, C1, C2, C3 = symbols('x,C1:4')
     >>> expr = C3 + C2*x + C1*x**2
     >>> expr
@@ -2918,6 +3023,25 @@ def constant_renumber(expr, variables=None, newconstants=None):
 
     >>> constant_renumber(expr, [x], newconstants=symbols('E1:4'))
     E1 + E2*x + E3*x**2
+=======
+    >>> x, C0, C1, C2, C3, C4 = symbols('x,C:5')
+
+    Only constants in the given range (inclusive) are renumbered;
+    the renumbering always starts from 1:
+
+    >>> constant_renumber(C1 + C3 + C4, 'C', 1, 3)
+    C1 + C2 + C4
+    >>> constant_renumber(C0 + C1 + C3 + C4, 'C', 2, 4)
+    C0 + 2*C1 + C2
+    >>> constant_renumber(C0 + 2*C1 + C2, 'C', 0, 1)
+    C1 + 3*C2
+    >>> pprint(C2 + C1*x + C3*x**2)
+                    2
+    C1*x + C2 + C3*x
+    >>> pprint(constant_renumber(C2 + C1*x + C3*x**2, 'C', 1, 3))
+                    2
+    C1 + C2*x + C3*x
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     """
     if type(expr) in (set, list, tuple):
@@ -3024,7 +3148,7 @@ def _handle_Integral(expr, func, hint):
 # to have assumptions on P and Q that dP/dy = dQ/dx.
 def ode_1st_exact(eq, func, order, match):
     r"""
-    solvesets 1st order exact ordinary differential equations.
+    Solves 1st order exact ordinary differential equations.
 
     A 1st order differential equation is called exact if it is the total
     differential of a function. That is, the differential equation
@@ -3088,7 +3212,7 @@ def ode_1st_exact(eq, func, order, match):
     C1 = get_numbered_constants(eq, num=1)
     # Refer Joel Moses, "Symbolic Integration - The Stormy Decade",
     # Communications of the ACM, Volume 14, Number 8, August 1971, pp. 558
-    # which gives the method to solveset an exact differential equation.
+    # which gives the method to solve an exact differential equation.
     sol = Integral(d, x) + Integral((e - (Integral(d, x).diff(y))), y)
     return Eq(sol, C1)
 
@@ -3134,7 +3258,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     # indirect doctest
 
     """
-    # There are two substitutions that solveset the equation, u1=y/x and u2=x/y
+    # There are two substitutions that solve the equation, u1=y/x and u2=x/y
     # They produce different integrals, so try them both and see which
     # one is easier.
     sol1 = ode_1st_homogeneous_coeff_subs_indep_div_dep(eq,
@@ -3152,7 +3276,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
 
 def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     r"""
-    solvesets a 1st order differential equation with homogeneous coefficients
+    Solves a 1st order differential equation with homogeneous coefficients
     using the substitution `u_1 = \frac{\text{<dependent
     variable>}}{\text{<independent variable>}}`.
 
@@ -3245,7 +3369,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
 
 def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     r"""
-    solvesets a 1st order differential equation with homogeneous coefficients
+    Solves a 1st order differential equation with homogeneous coefficients
     using the substitution `u_2 = \frac{\text{<independent
     variable>}}{\text{<dependent variable>}}`.
 
@@ -3353,7 +3477,7 @@ def homogeneous_order(eq, *symbols):
 
     If the function is of two variables, `F(x, y)`, then `f` being homogeneous
     of any order is equivalent to being able to rewrite `F(x, y)` as `G(x/y)`
-    or `H(y/x)`.  This fact is used to solveset 1st order ordinary differential
+    or `H(y/x)`.  This fact is used to solve 1st order ordinary differential
     equations whose coefficients are homogeneous of the same order (see the
     docstrings of
     :py:meth:`~solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep` and
@@ -3435,7 +3559,7 @@ def homogeneous_order(eq, *symbols):
 
 def ode_1st_linear(eq, func, order, match):
     r"""
-    solvesets 1st order linear differential equations.
+    Solves 1st order linear differential equations.
 
     These are differential equations of the form
 
@@ -3496,7 +3620,7 @@ def ode_1st_linear(eq, func, order, match):
 
 def ode_Bernoulli(eq, func, order, match):
     r"""
-    solvesets Bernoulli differential equations.
+    Solves Bernoulli differential equations.
 
     These are equations of the form
 
@@ -3630,7 +3754,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
 
 def ode_Liouville(eq, func, order, match):
     r"""
-    solvesets 2nd order Liouville differential equations.
+    Solves 2nd order Liouville differential equations.
 
     The general form of a Liouville ODE is
 
@@ -3806,7 +3930,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
             finaldict[fargs.pop()] = 0
         else:
             maxf = max(fargs, key = lambda x: x.args[0])
-            sol = solveset(teq, maxf)
+            sol = solve(teq, maxf)
             if isinstance(sol, list):
                 sol = sol[0]
             finaldict[maxf] = sol
@@ -3820,7 +3944,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     else:
         startiter = -minf.args[0].as_independent(n)[0]
     lhs = maxf
-    rhs =  solveset(req, maxf)
+    rhs =  solve(req, maxf)
     if isinstance(rhs, list):
         rhs = rhs[0]
 
@@ -3862,7 +3986,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     1.  Try expressing `(x - x0)P(x)` and `((x - x0)^{2})Q(x)` as power series
         solutions about x0. Find `p0` and `q0` which are the constants of the
         power series expansions.
-    2.  solveset the indicial equation `f(m) = m(m - 1) + m*p0 + q0`, to obtain the
+    2.  Solve the indicial equation `f(m) = m(m - 1) + m*p0 + q0`, to obtain the
         roots `m1` and `m2` of the indicial equation.
     3.  If `m1 - m2` is a non integer there exists two series solutions. If
         `m1 = m2`, there exists only one solution. If `m1 - m2` is an integer,
@@ -3928,7 +4052,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
                         break
 
     p0, q0 = indicial
-    sollist = solveset(m*(m - 1) + m*p0 + q0, m)
+    sollist = solve(m*(m - 1) + m*p0 + q0, m)
     if sollist and isinstance(sollist, list) and all(
         [sol.is_real for sol in sollist]):
         serdict1 = {}
@@ -4071,10 +4195,10 @@ def ode_order_reducible(eq, func, order, match):
 
 def _nth_algebraic_match(eq, func):
     r"""
-    Matches any differential equation that nth_algebraic can solveset. Uses
-    `sympy.solveset` but teaches it how to integrate derivatives.
+    Matches any differential equation that nth_algebraic can solve. Uses
+    `sympy.solve` but teaches it how to integrate derivatives.
 
-    This involves calling `sympy.solveset` and does most of the work of finding a
+    This involves calling `sympy.solve` and does most of the work of finding a
     solution (apart from evaluating the integrals).
     """
 
@@ -4086,7 +4210,7 @@ def _nth_algebraic_match(eq, func):
     class diffx(Function):
         def inverse(self):
             # We mustn't use integrate here because fx has been replaced by _t
-            # in the equation so integrals will not be correct while solveset is
+            # in the equation so integrals will not be correct while solve is
             # still working.
             return lambda expr: Integral(expr, var) + constant()
 
@@ -4112,7 +4236,7 @@ def _nth_algebraic_match(eq, func):
     var = func.args[0]
     subs_eqn = replace(eq, var)
     try:
-        solns = solveset(subs_eqn, func)
+        solns = solve(subs_eqn, func)
     except NotImplementedError:
         solns = []
 
@@ -4122,10 +4246,14 @@ def _nth_algebraic_match(eq, func):
 
 def ode_nth_algebraic(eq, func, order, match):
     r"""
-    solvesets an `n`\th order ordinary differential equation using algebra and
+    Solves an `n`\th order ordinary differential equation using algebra and
     integrals.
 
+<<<<<<< HEAD
     There is no general form for the kind of equation that this can solveset. The
+=======
+    There is no general form for the kind of equation that this can solve. The
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
     the equation is solved algebraically treating differentiation as an
     invertible algebraic function.
 
@@ -4169,7 +4297,7 @@ def _nth_algebraic_remove_redundant_solutions(eq, solns, order, var):
         eq = Eq(f(x) * f(x).diff(x), 0)
 
     There are two ways to find solutions to eq. The first is the algebraic
-    solution f(x)=0. The second is to solveset the equation f(x).diff(x) = 0
+    solution f(x)=0. The second is to solve the equation f(x).diff(x) = 0
     leading to the solution f(x) = C1. In this particular case we then see
     that the first solution is a special case of the second and we don't
     want to return it.
@@ -4211,7 +4339,7 @@ def _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var):
     # f1'(x) and f2'(x). For an order n ode we should be able to differentiate
     # each solution n times to get n+1 equations.
     #
-    # We then try to solveset those n+1 equations for the integrations constants
+    # We then try to solve those n+1 equations for the integrations constants
     # in f2(x). If we can find a solution that doesn't depend on x then it
     # means that some value of the constants in f1(x) is a special case of
     # f2(x) corresponding to a paritcular choice of the integration constants.
@@ -4240,7 +4368,7 @@ def _nth_algebraic_is_special_case_of(soln1, soln2, eq, order, var):
         return False
     eqns = [eq for eq in eqns if not isinstance(eq, BooleanTrue)]
 
-    constant_solns = solveset(eqns, constants2)
+    constant_solns = solve(eqns, constants2)
 
     # Sometimes returns a dict and sometimes a list of dicts
     if isinstance(constant_solns, dict):
@@ -4305,7 +4433,7 @@ def _nth_linear_match(eq, func, order):
 
 def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     r"""
-    solvesets an `n`\th order linear homogeneous variable-coefficient
+    Solves an `n`\th order linear homogeneous variable-coefficient
     Cauchy-Euler equidimensional ordinary differential equation.
 
     This is an equation with form `0 = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
@@ -4446,7 +4574,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
 
 def ode_nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients(eq, func, order, match, returns='sol'):
     r"""
-    solvesets an `n`\th order linear non homogeneous Cauchy-Euler equidimensional
+    Solves an `n`\th order linear non homogeneous Cauchy-Euler equidimensional
     ordinary differential equation using undetermined coefficients.
 
     This is an equation with form `g(x) = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
@@ -4515,7 +4643,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients(eq, func, o
 
 def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, order, match, returns='sol'):
     r"""
-    solvesets an `n`\th order linear non homogeneous Cauchy-Euler equidimensional
+    Solves an `n`\th order linear non homogeneous Cauchy-Euler equidimensional
     ordinary differential equation using variation of parameters.
 
     This is an equation with form `g(x) = a_0 f(x) + a_1 x f'(x) + a_2 x^2 f''(x)
@@ -4537,7 +4665,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
     is the Wronskian of the fundamental system with the `i`\th column replaced
     with `[0, 0, \cdots, 0, \frac{x^{- n}}{a_n} g{\left(x \right)}]`.
 
-    This method is general enough to solveset any `n`\th order inhomogeneous
+    This method is general enough to solve any `n`\th order inhomogeneous
     linear differential equation, but sometimes SymPy cannot simplify the
     Wronskian well enough to integrate it.  If this method hangs, try using the
     ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
@@ -4580,7 +4708,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_variation_of_parameters(eq, func, ord
 
 def ode_almost_linear(eq, func, order, match):
     r"""
-    solvesets an almost-linear differential equation.
+    Solves an almost-linear differential equation.
 
     The general form of an almost linear differential equation is
 
@@ -4729,7 +4857,7 @@ def _linear_coeff_match(expr, func):
 
 def ode_linear_coefficients(eq, func, order, match):
     r"""
-    solvesets a differential equation with linear coefficients.
+    Solves a differential equation with linear coefficients.
 
     The general form of a differential equation with linear coefficients is
 
@@ -4784,7 +4912,7 @@ def ode_linear_coefficients(eq, func, order, match):
 
 def ode_separable_reduced(eq, func, order, match):
     r"""
-    solvesets a differential equation that can be reduced to the separable form.
+    Solves a differential equation that can be reduced to the separable form.
 
     The general form of this equation is
 
@@ -4936,7 +5064,7 @@ def ode_1st_power_series(eq, func, order, match):
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         returns='sol'):
     r"""
-    solvesets an `n`\th order linear homogeneous differential equation with
+    Solves an `n`\th order linear homogeneous differential equation with
     constant coefficients.
 
     This is an equation of the form
@@ -5093,7 +5221,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
 
 def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match):
     r"""
-    solvesets an `n`\th order linear differential equation with constant
+    Solves an `n`\th order linear differential equation with constant
     coefficients using the method of undetermined coefficients.
 
     This method works on differential equations of the form
@@ -5246,13 +5374,13 @@ def _solve_undetermined_coefficients(eq, func, order, match):
         s = separatevars(i, dict=True, symbols=[x])
         coeffsdict[s[x]] += s['coeff']
 
-    coeffvals = solveset(list(coeffsdict.values()), coefflist)
+    coeffvals = solve(list(coeffsdict.values()), coefflist)
 
     if not coeffvals:
         raise NotImplementedError(
-            "Could not solveset `%s` using the "
+            "Could not solve `%s` using the "
             "method of undetermined coefficients "
-            "(unable to solveset for coefficients)." % eq)
+            "(unable to solve for coefficients)." % eq)
 
     psol = trialfunc.subs(coeffvals)
 
@@ -5406,7 +5534,7 @@ def _undetermined_coefficients_match(expr, x):
 
 def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match):
     r"""
-    solvesets an `n`\th order linear differential equation with constant
+    Solves an `n`\th order linear differential equation with constant
     coefficients using the method of variation of parameters.
 
     This method works on any differential equations of the form
@@ -5430,7 +5558,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     is the Wronskian of the fundamental system with the `i`\th column replaced
     with `[0, 0, \cdots, 0, P(x)]`.
 
-    This method is general enough to solveset any `n`\th order inhomogeneous
+    This method is general enough to solve any `n`\th order inhomogeneous
     linear differential equation with constant coefficients, but sometimes
     SymPy cannot simplify the Wronskian well enough to integrate it.  If this
     method hangs, try using the
@@ -5541,7 +5669,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
 
 def ode_separable(eq, func, order, match):
     r"""
-    solvesets separable 1st order differential equations.
+    Solves separable 1st order differential equations.
 
     This is any differential equation that can be written as `P(y)
     \tfrac{dy}{dx} = Q(x)`.  The solution can then just be found by
@@ -5608,7 +5736,11 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
     r"""
     This function is used to check if the given infinitesimals are the
     actual infinitesimals of the given first order differential equation.
+<<<<<<< HEAD
     This method is specific to the Lie Group solver of ODEs.
+=======
+    This method is specific to the Lie Group Solver of ODEs.
+>>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     As of now, it simply checks, by substituting the infinitesimals in the
     partial differential equation.
@@ -5654,7 +5786,7 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
                 h = -simplify(match[b]/match[a])
             else:
                 try:
-                    sol = solveset(eq, df)
+                    sol = solve(eq, df)
                 except NotImplementedError:
                     raise NotImplementedError("Infinitesimals for the "
                         "first order ODE could not be found")
@@ -5747,11 +5879,11 @@ def ode_lie_group(eq, func, order, match):
         y = match['y']
     else:
         try:
-            sol = solveset(eq, df)
+            sol = solve(eq, df)
             if sol == []:
                 raise NotImplementedError
         except NotImplementedError:
-            raise NotImplementedError("Unable to solveset the differential equation " +
+            raise NotImplementedError("Unable to solve the differential equation " +
                 str(eq) + " by the lie group method")
         else:
             y = Dummy("y")
@@ -5769,10 +5901,10 @@ def ode_lie_group(eq, func, order, match):
     match = {'h': h, 'y': y}
 
     # This is done so that if:
-    # a] solveset raises a NotImplementedError.
+    # a] solve raises a NotImplementedError.
     # b] any heuristic raises a ValueError
     # another heuristic can be used.
-    tempsol = []  # Used by solveset below
+    tempsol = []  # Used by solve below
     for heuristic in heuristics:
         try:
             if not inf:
@@ -5786,7 +5918,7 @@ def ode_lie_group(eq, func, order, match):
                 # This condition creates recursion while using pdsolve.
                 # Since the first step while solving a PDE of form
                 # a*(f(x, y).diff(x)) + b*(f(x, y).diff(y)) + c = 0
-                # is to solveset the ODE dy/dx = b/a
+                # is to solve the ODE dy/dx = b/a
                 if simplify(etainf/xiinf) == h:
                     continue
                 rpde = f(x, y).diff(x)*xiinf + f(x, y).diff(y)*etainf
@@ -5799,7 +5931,7 @@ def ode_lie_group(eq, func, order, match):
                 rcoord = newcoord[0]
                 scoord = newcoord[-1]
                 try:
-                    sol = solveset([r - rcoord, s - scoord], x, y, dict=True)
+                    sol = solve([r - rcoord, s - scoord], x, y, dict=True)
                 except NotImplementedError:
                     continue
                 else:
@@ -5817,7 +5949,7 @@ def ode_lie_group(eq, func, order, match):
                             # Substituting and reverting back to original coordinates
                             deq = deq.subs([(r, rcoord), (s, scoord)])
                             try:
-                                sdeq = solveset(deq, y)
+                                sdeq = solve(deq, y)
                             except NotImplementedError:
                                 tempsol.append(deq)
                             else:
@@ -5828,10 +5960,10 @@ def ode_lie_group(eq, func, order, match):
 
 
                     elif denom: # (ds/dr) is zero which means s is constant
-                        return Eq(f(x), solveset(scoord - C1, y)[0])
+                        return Eq(f(x), solve(scoord - C1, y)[0])
 
                     elif num: # (dr/ds) is zero which means r is constant
-                        return Eq(f(x), solveset(rcoord - C1, y)[0])
+                        return Eq(f(x), solve(rcoord - C1, y)[0])
 
     # If nothing works, return solution as it is, without solving for y
     if tempsol:
@@ -5993,7 +6125,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                     h = -simplify(match[b]/match[a])
                 else:
                     try:
-                        sol = solveset(eq, df)
+                        sol = solve(eq, df)
                     except NotImplementedError:
                         raise NotImplementedError("Infinitesimals for the "
                             "first order ODE could not be found")
@@ -6227,7 +6359,7 @@ def lie_heuristic_bivariate(match, comp=False):
     though that may not be necessary for the infinitesimals to be
     bivariate polynomials. The coefficients of the infinitesimals
     are found out by substituting them in the PDE and grouping similar terms
-    that are polynomials and since they form a linear system, solveset and check
+    that are polynomials and since they form a linear system, solve and check
     for non trivial solutions. The degree of the assumed bivariates
     are increased till a certain maximum value.
 
@@ -6278,7 +6410,7 @@ def lie_heuristic_bivariate(match, comp=False):
                 polyy = Poly(pden, x, y).as_dict()
             if polyy:
                 symset = xieq.free_symbols.union(etaeq.free_symbols) - {x, y}
-                soldict = solveset(polyy.values(), *symset)
+                soldict = solve(polyy.values(), *symset)
                 if isinstance(soldict, list):
                     soldict = soldict[0]
                 if any(x for x in soldict.values()):
@@ -6345,7 +6477,7 @@ def lie_heuristic_chi(match, comp=False):
                 cpoly = Poly(cnum, x, y).as_dict()
                 if cpoly:
                     solsyms = chieq.free_symbols - {x, y}
-                    soldict = solveset(cpoly.values(), *solsyms)
+                    soldict = solve(cpoly.values(), *solsyms)
                     if isinstance(soldict, list):
                         soldict = soldict[0]
                     if any(x for x in soldict.values()):
@@ -6430,7 +6562,7 @@ def lie_heuristic_function_sum(match, comp=False):
                         fx = fx.subs(k, 1)
                         gy = (gy/k)
                     else:
-                        sol = solveset(check, k)
+                        sol = solve(check, k)
                         if sol:
                             sol = sol[0]
                             fx = fx.subs(k, sol)
@@ -6782,7 +6914,7 @@ def lie_heuristic_linear(match, comp=False):
                     coeffdict[term] += S(1)
 
     sollist = coeffdict.values()
-    soldict = solveset(sollist, symlist)
+    soldict = solve(sollist, symlist)
     if soldict:
         if isinstance(soldict, list):
             soldict = soldict[0]
@@ -7021,7 +7153,7 @@ def _linear_2eq_order1_type2(x, y, t, r, eq):
     r['k1'] = -r['k1']; r['k2'] = -r['k2']
     if (r['a']*r['d'] - r['b']*r['c']) != 0:
         x0, y0 = symbols('x0, y0', cls=Dummy)
-        sol = solveset((r['a']*x0+r['b']*y0+r['k1'], r['c']*x0+r['d']*y0+r['k2']), x0, y0)
+        sol = solve((r['a']*x0+r['b']*y0+r['k1'], r['c']*x0+r['d']*y0+r['k2']), x0, y0)
         psol = [sol[x0], sol[y0]]
     elif (r['a']*r['d'] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
         k = r['c']/r['a']
@@ -7437,7 +7569,7 @@ def _linear_2eq_order2_type2(x, y, t, r, eq):
     """
     x0, y0 = symbols('x0, y0')
     if r['c1']*r['d2'] - r['c2']*r['d1'] != 0:
-        sol = solveset((r['c1']*x0+r['d1']*y0+r['e1'], r['c2']*x0+r['d2']*y0+r['e2']), x0, y0)
+        sol = solve((r['c1']*x0+r['d1']*y0+r['e1'], r['c2']*x0+r['d2']*y0+r['e2']), x0, y0)
         psol = [sol[x0], sol[y0]]
     elif r['c1']*r['d2'] - r['c2']*r['d1'] == 0 and (r['c1']**2 + r['d1']**2) > 0:
         k = r['c2']/r['c1']
@@ -7542,9 +7674,9 @@ def _linear_2eq_order2_type4(x, y, t, r, eq):
     peq2 = a1*w*Ra + (-w**2+c1)*Ca + b1*w*Rb + d1*Cb
     peq3 = c2*Ra - a2*w*Ca + (-w**2+d2)*Rb - b2*w*Cb - k2
     peq4 = a2*w*Ra + c2*Ca + b2*w*Rb + (-w**2+d2)*Cb
-    # FIXME: solveset for what in what?  Ra, Rb, etc I guess
+    # FIXME: solve for what in what?  Ra, Rb, etc I guess
     # but then psol not used for anything?
-    psol = solveset([peq1, peq2, peq3, peq4])
+    psol = solve([peq1, peq2, peq3, peq4])
 
     chareq = (k**2+a1*k+c1)*(k**2+b2*k+d2) - (b1*k+d1)*(a2*k+c2)
     [k1, k2, k3, k4] = roots_quartic(Poly(chareq))
@@ -8180,7 +8312,7 @@ def _linear_neq_order1_type1(match_):
                 w[0] = evects[2][-1]
                 for r in range(1, evects[1]):
                     w_ = Mnew - w[r-1]
-                    sol_dict = solveset(list(w_), var_mat[1:])
+                    sol_dict = solve(list(w_), var_mat[1:])
                     sol_dict[var_mat[0]] = var_mat[0]
                     for key, value in sol_dict.items():
                         sol_dict[key] = value.subs(var_mat[0],1)
@@ -8266,7 +8398,7 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
     else:
         phi = C1*exp(Integral(1/g, v))
     phi = phi.doit()
-    sol2 = solveset(Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
+    sol2 = solve(Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
     sol = []
     for sols in sol2:
         sol.append(Eq(x(t),phi.subs(v, sols)))
@@ -8311,7 +8443,7 @@ def _nonlinear_2eq_order1_type2(x, y, t, eq):
     else:
         phi = C1 + Integral(1/g, v)
     phi = phi.doit()
-    sol2 = solveset(Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
+    sol2 = solve(Integral(1/(g*F.subs(u,phi)), v).doit() - t - C2, v)
     sol = []
     for sols in sol2:
         sol.append(Eq(x(t),phi.subs(v, sols)))
@@ -8347,7 +8479,7 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     G = r2[g].subs(x(t), u).subs(y(t), v(u))
     sol2r = dsolve(Eq(diff(v(u), u), G/F))
     for sol2s in sol2r:
-        sol1 = solveset(Integral(1/F.subs(v(u), sol2s.rhs), u).doit() - t - C2, u)
+        sol1 = solve(Integral(1/F.subs(v(u), sol2s.rhs), u).doit() - t - C2, u)
     sol = []
     for sols in sol1:
         sol.append(Eq(x(t), sols))
@@ -8392,8 +8524,8 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
     phi = (r1[f].subs(x(t),u).subs(y(t),v))/num
     F1 = R1[f1]; F2 = R2[f2]
     G1 = R1[g1]; G2 = R2[g2]
-    sol1r = solveset(Integral(F2/F1, u).doit() - Integral(G1/G2,v).doit() - C1, u)
-    sol2r = solveset(Integral(F2/F1, u).doit() - Integral(G1/G2,v).doit() - C1, v)
+    sol1r = solve(Integral(F2/F1, u).doit() - Integral(G1/G2,v).doit() - C1, u)
+    sol2r = solve(Integral(F2/F1, u).doit() - Integral(G1/G2,v).doit() - C1, v)
     sol = []
     for sols in sol1r:
         sol.append(Eq(y(t), dsolve(diff(V(t),t) - F2.subs(u,sols).subs(v,V(t))*G2.subs(v,V(t))*phi.subs(u,sols).subs(v,V(t))).rhs))
@@ -8503,7 +8635,7 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
     n1, d1 = r[p].as_numer_denom()
     n2, d2 = r[q].as_numer_denom()
     n3, d3 = r[s].as_numer_denom()
-    val = solveset([n1*u-d1*v+d1*w, d2*u+n2*v-d2*w, d3*u-d3*v-n3*w],[u,v])
+    val = solve([n1*u-d1*v+d1*w, d2*u+n2*v-d2*w, d3*u-d3*v-n3*w],[u,v])
     vals = [val[v], val[u]]
     c = lcm(vals[0].as_numer_denom()[1], vals[1].as_numer_denom()[1])
     b = vals[0].subs(w,c)
@@ -8559,7 +8691,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     n1, d1 = r[p].as_numer_denom()
     n2, d2 = r[q].as_numer_denom()
     n3, d3 = r[s].as_numer_denom()
-    val = solveset([n1*u-d1*v+d1*w, d2*u+n2*v-d2*w, -d3*u+d3*v+n3*w],[u,v])
+    val = solve([n1*u-d1*v+d1*w, d2*u+n2*v-d2*w, -d3*u+d3*v+n3*w],[u,v])
     vals = [val[v], val[u]]
     c = lcm(vals[0].as_numer_denom()[1], vals[1].as_numer_denom()[1])
     a = vals[0].subs(w,c)
