@@ -2154,7 +2154,7 @@ def POSform(variables, minterms, dontcares=None):
     >>> minterms = [4, 7, 11, [1, 1, 1, 1]]
     >>> dontcares = [{w : 0, x : 0, y: 0}, 5]
     >>> POSform([w, x, y, z], minterms, dontcares)
-    (w | x) & (x | z) & (y | ~w) & (z | ~y)
+    (w | x) & (y | ~w) & (z | ~y)
 
 
     References
