@@ -439,22 +439,62 @@ class FourierSeries(SeriesBase):
 
 
 class FiniteFourierSeries(FourierSeries):
+    r"""Represents Finite Fourier sine/cosine series.
 
-    def __new__(cls, *args):
-        if type(args[2]) == tuple and len(args[2]) == 3:
-            args = map(sympify, args)
-        else:
-            f, limits, exprs = args
+       For how to compute Fourier series, see the :func:`fourier_series`
+       docstring.
+
+       Parameters
+       ==========
+       f : Expr
+            Expression for finding fourier_series
+
+       limits : ( x, start, stop)
+            x is the independent variable for the expression f
+            (start, stop) is the period of the fourier series
+
+       exprs: (a0, an, bn) or Expr
+            a0 is the constant term a0 of the fourier series
+            an is a dictionary of coefficients of cos terms
+             `an[k] = coefficient of cos(pi*(k/L)*x)`
+            bn is a dictionary of coefficients of sin terms
+             `bn[k] = coefficient of sin(pi*(k/L)*x)`
+
+            or exprs can be an expression to be converted to fourier form
+
+       Methods
+       =======
+       This class is an extension of FourierSeries class.
+       Please refer to sympy.series.fourier.FourierSeries for
+       further information.
+
+       See Also
+       ========
+
+       sympy.series.fourier.FourierSeries
+       sympy.series.fourier.fourier_series
+       """
+
+    def __new__(cls, f, limits, exprs):
+
+        if not (type(exprs) == tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
+
+            # Converts the expression to fourier form
             exprs = exprs.as_coeff_add()
             exprs = exprs[0] + Add(*[TR10(i) for i in exprs[1]])
             exp_ls = exprs.expand(trig=False, power_base=False, power_exp=False, log=False).as_coeff_add()
+
             a0 = exp_ls[0]
             x = limits[0]
             L = abs(limits[2] - limits[1]) / 2
+
             a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
             b = Wild('b', properties=[lambda k: x not in k.free_symbols or k == S.Zero, ])
+
             an = dict()
             bn = dict()
+
+            # separates the coefficients of sin and cos terms in dictionaries an, and bn
             for p in exp_ls[1]:
                 t = p.match(b * cos(a * (pi / L) * x))
                 q = p.match(b * sin(a * (pi / L) * x))
@@ -465,8 +505,9 @@ class FiniteFourierSeries(FourierSeries):
                 else:
                     a0 += p
 
-            exprs = Tuple(a0, an, bn)
-            args = (f, limits, exprs)
+            exprs = (a0, an, bn)
+
+        args = map(sympify, (f, limits, exprs))
 
         return Expr.__new__(cls, *args)
 
@@ -485,6 +526,16 @@ class FiniteFourierSeries(FourierSeries):
         return abs(self.period[1] - self.period[0]) / 2
 
     def truncate(self, n=oo):
+        """
+        Return the first n nonzero terms of the series if n is less than the size of the finite fourier series.
+
+        If n is None return an iterator.
+
+        See Also
+        ========
+
+        sympy.series.fourier.FourierSeries.truncate
+        """
         if n is None:
             return iter(self)
 
@@ -498,6 +549,18 @@ class FiniteFourierSeries(FourierSeries):
         return Add(*terms)
 
     def shiftx(self, s):
+        """Shift x by a term independent of x.
+
+        f(x) -> f(x + s)
+
+        This is fast, if Fourier series of f(x) is already
+        computed.
+
+        See Also
+        ========
+        sympy.series.fourier.FourierSeries.shiftx
+
+        """
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
@@ -509,6 +572,18 @@ class FiniteFourierSeries(FourierSeries):
         return self.func(sfunc, self.args[1], _expr)
 
     def scale(self, s):
+        """Scale the function by a term independent of x.
+
+        f(x) -> s * f(x)
+
+        This is fast, if Fourier series of f(x) is already
+        computed.
+
+        See Also
+        ========
+        sympy.series.fourier.FourierSeries.scale
+
+        """
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
@@ -520,6 +595,17 @@ class FiniteFourierSeries(FourierSeries):
         return self.func(sfunc, self.args[1], _expr)
 
     def scalex(self, s):
+        """Scale x by a term independent of x.
+
+        f(x) -> f(s*x)
+
+        This is fast, if Fourier series of f(x) is already
+        computed.
+
+        See Also
+        ========
+        sympy.series.fourier.FourierSeries.scalex
+        """
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
