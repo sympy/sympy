@@ -209,5 +209,5 @@ def skewness(X, condition=None, **kwargs):
     return smoment(X, 3, condition, **kwargs)
 
 
-P = '\e'
+P = probability
 E = expectation
