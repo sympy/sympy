@@ -32,7 +32,11 @@ from sympy import symbols, S
 from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
 
-excluded_attrs = set(['_assumptions', '_mhash'])
+excluded_attrs = set(
+    ['_assumptions', '_mhash', 'message',
+    # XXX Remove these after deprecation is done for issue #15887
+    '_cache_eigenvects', '_cache_is_diagonalizable']
+    )
 
 
 def check(a, exclude=[], check_attr=True):
@@ -75,17 +79,9 @@ def check(a, exclude=[], check_attr=True):
                     assert hasattr(b, i), i
                     assert getattr(b, i) == attr, "%s != %s, protocol: %s" % (getattr(b, i), attr, protocol)
 
-        # XXX Can be removed if Py2 support is dropped.
-        # DeprecationWarnings on Python 2.6 from calling e.g. getattr(a, 'message')
-        # This check eliminates 800 warnings.
-        if sys.version_info < (3,):
-            with ignore_warnings(DeprecationWarning):
-                c(a, b, d1)
-                c(b, a, d2)
-        else:
-            with ignore_warnings(SymPyDeprecationWarning):
-                c(a, b, d1)
-                c(b, a, d2)
+        c(a, b, d1)
+        c(b, a, d2)
+
 
 
 #================== core =========================
