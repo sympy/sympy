@@ -264,14 +264,7 @@ EOF
 fi
 
 if [[ "${TEST_SYMPY}" == "true" ]]; then
-    # -We:invalid makes invalid escape sequences error in Python 3.6. See
-    # -#12028.
-    cat << EOF | python -We:invalid
-print('Testing SYMPY, split ${SPLIT}')
-import sympy
-if not sympy.test(split='${SPLIT}'):
-   raise Exception('Tests failed')
-EOF
+  pytest -m 'not slow' -n2
 fi
 if [[ "${TEST_COVERAGE}" == "true" ]]; then
     unset COVERAGE_PROCESS_START
