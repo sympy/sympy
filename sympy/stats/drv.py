@@ -5,7 +5,7 @@ from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
                    series, factorial, And)
 
 from sympy.polys.polyerrors import PolynomialError
-from sympy.solvers.solveset import solveset
+from sympy.solvers.solvesetset import solvesetset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
                             random_symbols, PSpace, ConditionalDomain, RandomDomain,
@@ -65,7 +65,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         cdf_temp = self.cdf(x)
         # Invert CDF
         try:
-            inverse_cdf = solveset(cdf_temp - z, x, domain=S.Reals)
+            inverse_cdf = solvesetset(cdf_temp - z, x, domain=S.Reals)
         except NotImplementedError:
             inverse_cdf = None
         if not inverse_cdf or len(inverse_cdf.free_symbols) != 1:

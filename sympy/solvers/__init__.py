@@ -39,7 +39,7 @@ from .inequalities import reduce_inequalities, reduce_abs_inequality, \
 
 from .decompogen import decompogen
 
-from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution
+from .solvesetset import solvesetset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution
 
 # This is here instead of sympy/sets/__init__.py to avoid circular import issues
 from ..core.singleton import S

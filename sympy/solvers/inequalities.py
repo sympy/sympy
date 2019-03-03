@@ -423,10 +423,14 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     ========
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     solvify: solver returning solveset solutions with solveset's output API
 =======
     solvify: solver returning solveset solutions with solve's output API
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
+=======
+    solvify: solver returning solvesetset solutions with solveset's output API
+>>>>>>> parent of b81c365... fixed solvesetset
 
     Examples
     ========
@@ -453,15 +457,19 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     from sympy.calculus.util import (continuous_domain, periodicity,
         function_range)
     from sympy.solvers.solvers import denoms
+<<<<<<< HEAD
     from sympy.solvers.solveset import solveset_real, solvify, solveset
 <<<<<<< HEAD
+=======
+    from sympy.solvers.solvesetset import solvesetset_real, solvify, solvesetset
+>>>>>>> parent of b81c365... fixed solvesetset
     from sympy.solvers.solvers import solveset
 =======
     from sympy.solvers.solvers import solve
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
     # This keeps the function independent of the assumptions about `gen`.
-    # `solveset` makes sure this function is called only when the domain is
+    # `solvesetset` makes sure this function is called only when the domain is
     # real.
     _gen = gen
     _domain = domain
@@ -603,7 +611,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 check = True
                 im_sol = FiniteSet()
                 try:
-                    a = solveset(im(expanded_e), gen, domain)
+                    a = solvesetset(im(expanded_e), gen, domain)
                     if not isinstance(a, Interval):
                         for z in a:
                             if z not in singularities and valid(z) and z.is_real:

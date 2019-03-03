@@ -65,7 +65,7 @@ allhints = (
     )
 
 
-def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
+def pdsolve(eq, func=None, hint='default', dict=False, solvesetfun=None, **kwargs):
     """
     Solves any (supported) kind of partial differential equation.
 
@@ -92,7 +92,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
             is returned first by classify_pde().  See Hints below for
             more options that you can use for hint.
 
-        ``solvefun`` is the convention used for arbitrary functions returned
+        ``solvesetfun`` is the convention used for arbitrary functions returned
             by the PDE solver. If not set by the user, it is set by default
             to be F.
 
@@ -169,8 +169,8 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
 
     given_hint = hint  # hint given by the user.
 
-    if not solvefun:
-        solvefun = Function('F')
+    if not solvesetfun:
+        solvesetfun = Function('F')
 
     # See the docstring of _desolve for more details.
 <<<<<<< HEAD
@@ -194,7 +194,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         for hint in hints:
             try:
                 rv = _helper_simplify(eq, hint, hints[hint]['func'],
-                    hints[hint]['order'], hints[hint][hint], solvefun)
+                    hints[hint]['order'], hints[hint][hint], solvesetfun)
             except NotImplementedError as detail:
                 failed_hints[hint] = detail
             else:
@@ -208,11 +208,15 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
                                 hints['order'], hints[hints['hint']], solvefun)
 =======
         return _helper_simplify(eq, hints['hint'],
+<<<<<<< HEAD
             hints['func'], hints['order'], hints[hints['hint']], solvefun)
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
+=======
+            hints['func'], hints['order'], hints[hints['hint']], solvesetfun)
+>>>>>>> parent of b81c365... fixed solvesetset
 
 
-def _helper_simplify(eq, hint, func, order, match, solvefun):
+def _helper_simplify(eq, hint, func, order, match, solvesetfun):
     """Helper function of pdsolve that calls the respective
     pde functions to solve for the partial differential
     equations. This minimizes the computation in
@@ -220,12 +224,12 @@ def _helper_simplify(eq, hint, func, order, match, solvefun):
     """
 
     if hint.endswith("_Integral"):
-        solvefunc = globals()[
+        solvesetfunc = globals()[
             "pde_" + hint[:-len("_Integral")]]
     else:
-        solvefunc = globals()["pde_" + hint]
-    return _handle_Integral(solvefunc(eq, func, order,
-        match, solvefun), func, order, hint)
+        solvesetfunc = globals()["pde_" + hint]
+    return _handle_Integral(solvesetfunc(eq, func, order,
+        match, solvesetfun), func, order, hint)
 
 
 def _handle_Integral(expr, func, order, hint):
@@ -507,7 +511,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
 
 
 
-def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
+def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvesetfun):
     r"""
     Solves a first order linear homogeneous
     partial differential equation with constant coefficients.
@@ -583,10 +587,10 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     b = match[match['b']]
     c = match[match['c']]
     d = match[match['d']]
-    return Eq(f(x,y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y))
+    return Eq(f(x,y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvesetfun(c*x - b*y))
 
 
-def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
+def pde_1st_linear_constant_coeff(eq, func, order, match, solvesetfun):
     r"""
     Solves a first order linear partial differential equation
     with constant coefficients.
@@ -693,8 +697,12 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     d = match[match['d']]
     e = -match[match['e']]
     expterm = exp(-S(d)/(b**2 + c**2)*xi)
+<<<<<<< HEAD
     functerm = solvefun(eta)
 <<<<<<< HEAD
+=======
+    functerm = solvesetfun(eta)
+>>>>>>> parent of b81c365... fixed solvesetset
     solvedict = solveset((b*x + c*y - xi, c*x - b*y - eta), x, y)
 =======
     solvedict = solve((b*x + c*y - xi, c*x - b*y - eta), x, y)
@@ -707,7 +715,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         (eta, xi), (c*x - b*y, b*x + c*y)))
 
 
-def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
+def pde_1st_linear_variable_coeff(eq, func, order, match, solvesetfun):
     r"""
 <<<<<<< HEAD
 Solves a first order linear partial differential equation
@@ -811,7 +819,7 @@ Solves a first order linear partial differential equation
                     raise NotImplementedError("Unable to find a solution"
                         " due to inability of integrate")
                 else:
-                    return Eq(f(x,y), solvefun(x) + tsol)
+                    return Eq(f(x,y), solvesetfun(x) + tsol)
             if b:
                 try:
                     tsol = integrate(e/b, x)
@@ -819,7 +827,7 @@ Solves a first order linear partial differential equation
                     raise NotImplementedError("Unable to find a solution"
                         " due to inability of integrate")
                 else:
-                    return Eq(f(x,y), solvefun(y) + tsol)
+                    return Eq(f(x,y), solvesetfun(y) + tsol)
 
     if not c:
         # To deal with cases when c is 0, a simpler method is used.
@@ -827,7 +835,7 @@ Solves a first order linear partial differential equation
         plode = f(x).diff(x)*b + d*f(x) - e
         sol = dsolve(plode, f(x))
         syms = sol.free_symbols - plode.free_symbols - {x, y}
-        rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, y)
+        rhs = _simplify_variable_coeff(sol.rhs, syms, solvesetfun, y)
         return Eq(f(x, y), rhs)
 
     if not b:
@@ -836,7 +844,7 @@ Solves a first order linear partial differential equation
         plode = f(y).diff(y)*c + d*f(y) - e
         sol = dsolve(plode, f(y))
         syms = sol.free_symbols - plode.free_symbols - {x, y}
-        rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, x)
+        rhs = _simplify_variable_coeff(sol.rhs, syms, solvesetfun, x)
         return Eq(f(x, y), rhs)
 
     dummy = Function('d')
@@ -854,7 +862,7 @@ Solves a first order linear partial differential equation
         if isinstance(final, list):
             final = final[0]
         finsyms = final.free_symbols - deq.free_symbols - {x, y}
-        rhs = _simplify_variable_coeff(final, finsyms, solvefun, etat)
+        rhs = _simplify_variable_coeff(final, finsyms, solvesetfun, etat)
         return Eq(f(x, y), rhs)
 
     else:

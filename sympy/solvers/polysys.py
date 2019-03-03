@@ -17,10 +17,14 @@ from sympy.utilities.misc import filldedent
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 class solvefailed(Exception):
 =======
 class SolveFailed(Exception):
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
+=======
+class solvesetFailed(Exception):
+>>>>>>> parent of b81c365... fixed solvesetset
     """Raised when solver's conditions weren't met. """
 
 
@@ -50,10 +54,14 @@ def solve_poly_system(seq, *gens, **args):
             try:
                 return solve_biquadratic(f, g, opt)
 <<<<<<< HEAD
+<<<<<<< HEAD
             except solvefailed:
 =======
             except SolveFailed:
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
+=======
+            except solvesetFailed:
+>>>>>>> parent of b81c365... fixed solvesetset
                 pass
 
     return solve_generic(polys, opt)
@@ -88,20 +96,28 @@ def solve_biquadratic(f, g, opt):
 
     if len(G) != 2:
 <<<<<<< HEAD
+<<<<<<< HEAD
         raise solvefailed
 =======
         raise SolveFailed
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
+=======
+        raise solvesetFailed
+>>>>>>> parent of b81c365... fixed solvesetset
 
     x, y = opt.gens
     p, q = G
     if not p.gcd(q).is_ground:
         # not 0-dimensional
 <<<<<<< HEAD
+<<<<<<< HEAD
         raise solvefailed
 =======
         raise SolveFailed
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
+=======
+        raise solvesetFailed
+>>>>>>> parent of b81c365... fixed solvesetset
 
     p = Poly(p, x, expand=False)
     p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]

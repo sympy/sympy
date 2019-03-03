@@ -6,10 +6,14 @@ from sympy.abc import x, y, z
 from sympy.polys import PolynomialError
 from sympy.solvers.polysys import (solve_poly_system,
 <<<<<<< HEAD
+<<<<<<< HEAD
     solve_triangulated, solve_biquadratic, solvefailed)
 =======
     solve_triangulated, solve_biquadratic, SolveFailed)
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
+=======
+    solve_triangulated, solve_biquadratic, solvesetFailed)
+>>>>>>> parent of b81c365... fixed solvesetset
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.utilities.pytest import raises
 
@@ -97,10 +101,14 @@ def test_solve_biquadratic():
     for seq in (s1, s2):
         (f, g), opt = parallel_poly_from_expr(seq, *gens)
 <<<<<<< HEAD
+<<<<<<< HEAD
         raises(solvefailed, lambda: solve_biquadratic(f, g, opt))
 =======
         raises(SolveFailed, lambda: solve_biquadratic(f, g, opt))
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
+=======
+        raises(solvesetFailed, lambda: solve_biquadratic(f, g, opt))
+>>>>>>> parent of b81c365... fixed solvesetset
     seq = (x**2 + y**2 - 2, y**2 - 1)
     (f, g), opt = parallel_poly_from_expr(seq, *gens)
     assert solve_biquadratic(f, g, opt) == [

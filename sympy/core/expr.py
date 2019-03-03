@@ -679,7 +679,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.simplify.simplify import nsimplify, simplify
-        from sympy.solvers.solveset import solveset
+        from sympy.solvers.solvesetset import solvesetset
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
 
@@ -737,7 +737,7 @@ class Expr(Basic, EvalfMixin):
                         # to see if we are in the right ballpark or not and if so
                         # *then* the simplification will be attempted.
                         if s.is_Symbol:
-                            sol = list(solveset(diff, s))
+                            sol = list(solvesetset(diff, s))
                         else:
                             sol = [s]
                         if sol:
@@ -845,7 +845,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.series import limit, Limit
-        from sympy.solvers.solveset import solveset
+        from sympy.solvers.solvesetset import solvesetset
         from sympy.sets.sets import Interval
         from sympy.functions.elementary.exponential import log
         from sympy.calculus.util import AccumBounds
@@ -896,10 +896,10 @@ class Expr(Basic, EvalfMixin):
                 domain = Interval(b, a)
             # check the singularities of self within the interval
             # if singularities is a ConditionSet (not iterable), catch the exception and pass
-            singularities = solveset(self.cancel().as_numer_denom()[1], x,
+            singularities = solvesetset(self.cancel().as_numer_denom()[1], x,
                 domain=domain)
             for logterm in self.atoms(log):
-                singularities = singularities | solveset(logterm.args[0], x,
+                singularities = singularities | solvesetset(logterm.args[0], x,
                     domain=domain)
             try:
                 for s in singularities:

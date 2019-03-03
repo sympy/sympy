@@ -23,7 +23,7 @@ from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
-from sympy.solvers.solveset import solveset
+from sympy.solvers.solvesetset import solvesetset
 
 
 class RandomDomain(Basic):
@@ -611,7 +611,7 @@ def given(expr, condition=None, **kwargs):
         not isinstance(pspace(expr).domain, ConditionalDomain)):
         rv = tuple(condsymbols)[0]
 
-        results = solveset(condition, rv)
+        results = solvesetset(condition, rv)
         if isinstance(results, Intersection) and S.Reals in results.args:
             results = list(results.args[1])
 

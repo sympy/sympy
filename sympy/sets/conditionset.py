@@ -114,7 +114,7 @@ class ConditionSet(Set):
     """
     def __new__(cls, sym, condition, base_set=S.UniversalSet):
         # nonlinsolve uses ConditionSet to return an unsolved system
-        # of equations (see _return_conditionset in solveset) so until
+        # of equations (see _return_conditionset in solvesetset) so until
         # that is changed we do minimal checking of the args
         if isinstance(sym, (Tuple, tuple)):  # unsolved eqns syntax
             sym = Tuple(*sym)

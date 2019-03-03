@@ -667,12 +667,12 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         else:
             if match['is_linear'] == True:
                 if match['no_of_equation'] > 3:
-                    solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
+                    solvesetfunc = globals()['sysode_linear_neq_order%(order)s' % match]
                 else:
-                    solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
+                    solvesetfunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
             else:
-                solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
-            sols = solvefunc(match)
+                solvesetfunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
+            sols = solvesetfunc(match)
             if ics:
                 constants = Tuple(*sols).free_symbols - Tuple(*eq).free_symbols
                 solved_constants = solve_ics(sols, func, constants, ics)
@@ -733,9 +733,9 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     """
     r = match
     if hint.endswith('_Integral'):
-        solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
+        solvesetfunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
-        solvefunc = globals()['ode_' + hint]
+        solvesetfunc = globals()['ode_' + hint]
     func = r['func']
     order = r['order']
     match = r[hint]
@@ -747,7 +747,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
         # attempt to solve for func, and apply any other hint specific
         # simplifications
-        sols = solvefunc(eq, func, order, match)
+        sols = solvesetfunc(eq, func, order, match)
         if isinstance(sols, Expr):
             rv =  odesimp(eq, sols, func, hint)
         else:
@@ -756,9 +756,13 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         # We still want to integrate (you can disable it separately with the hint)
         match['simplify'] = False  # Some hints can take advantage of this option
 <<<<<<< HEAD
+<<<<<<< HEAD
         rv = _handle_Integral(solvefunc(eq, func, order, match), func, hint)
 =======
         rv = _handle_Integral(solvefunc(eq, func, order, match),
+=======
+        rv = _handle_Integral(solvesetfunc(eq, func, order, match),
+>>>>>>> parent of b81c365... fixed solvesetset
             func, order, hint)
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 
@@ -853,7 +857,7 @@ def solve_ics(sols, funcs, constants, ics):
                 sol2 = sol2.subs(funcarg, value)
                 subs_sols.append(sol2)
 
-    # TODO: Use solveset here
+    # TODO: Use solvesetset here
     try:
 <<<<<<< HEAD
         solved_constants = solveset(subs_sols, constants, dict=True)
@@ -866,7 +870,7 @@ def solve_ics(sols, funcs, constants, ics):
     # XXX: We can't differentiate between the solution not existing because of
 <<<<<<< HEAD
     # invalid initial conditions, and not existing because solveset is not smart
-    # enough. If we could use solveset, this might be improvable, but for now,
+    # enough. If we could use solvesetset, this might be improvable, but for now,
     # we use NotImplementedError in this case.
     if not solved_constants:
         raise NotImplementedError("Couldn't solveset for initial conditions")

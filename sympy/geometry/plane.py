@@ -414,7 +414,11 @@ class Plane(GeometryEntity):
                 b = self.equation(x, y, z)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 # TODO: Replace solveset with solveset, when this line is tested
+=======
+                # TODO: Replace solveset with solvesetset, when this line is tested
+>>>>>>> parent of b81c365... fixed solvesetset
                 c = solveset(b.subs(list(zip((x, y, z), a.args))), t)
 =======
                 # TODO: Replace solve with solveset, when this line is tested

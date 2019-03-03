@@ -24,10 +24,14 @@ from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
 <<<<<<< HEAD
 from sympy.solvers import solveset
+<<<<<<< HEAD
 =======
 from sympy.solvers import solve
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.solvers.solveset import solveset
+=======
+from sympy.solvers.solvesetset import solvesetset
+>>>>>>> parent of b81c365... fixed solvesetset
 import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -508,7 +512,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ------------- integral test -------------- ###
         check_interval = None
-        maxima = solveset(sequence_term.diff(sym), sym, interval)
+        maxima = solvesetset(sequence_term.diff(sym), sym, interval)
         if not maxima:
             check_interval = interval
         elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:

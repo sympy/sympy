@@ -25,10 +25,14 @@ from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 <<<<<<< HEAD
 from sympy.solvers import solveset
+<<<<<<< HEAD
 =======
 from sympy.solvers import solve
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.solvers.solveset import linear_coeffs
+=======
+from sympy.solvers.solvesetset import linear_coeffs
+>>>>>>> parent of b81c365... fixed solvesetset
 from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity, GeometrySet
@@ -925,7 +929,11 @@ class Ellipse(GeometrySet):
         seq = slope - norm
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         # TODO: Replace solveset with solveset, when this line is tested
+=======
+        # TODO: Replace solveset with solvesetset, when this line is tested
+>>>>>>> parent of b81c365... fixed solvesetset
         yis = solveset(seq, y)[0]
 =======
         # TODO: Replace solve with solveset, when this line is tested
@@ -938,7 +946,11 @@ class Ellipse(GeometrySet):
                 xsol = Poly(xeq, x).real_roots()
             except (DomainError, PolynomialError, NotImplementedError):
 <<<<<<< HEAD
+<<<<<<< HEAD
                 # TODO: Replace solveset with solveset, when these lines are tested
+=======
+                # TODO: Replace solveset with solvesetset, when these lines are tested
+>>>>>>> parent of b81c365... fixed solvesetset
                 xsol = _nsort(solveset(xeq, x), separated=True)[0]
             points = [Point(i, solveset(eq.subs(x, i), y)[0]) for i in xsol]
 =======
@@ -1278,7 +1290,11 @@ class Ellipse(GeometrySet):
             slope = Line(p, Point(x, y)).slope
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             # TODO: Replace solveset with solveset, when this line is tested
+=======
+            # TODO: Replace solveset with solvesetset, when this line is tested
+>>>>>>> parent of b81c365... fixed solvesetset
             tangent_points = solveset([slope - dydx, eq], [x, y])
 =======
             # TODO: Replace solve with solveset, when this line is tested

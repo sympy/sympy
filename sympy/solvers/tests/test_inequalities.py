@@ -12,10 +12,14 @@ from sympy.solvers.inequalities import (reduce_inequalities,
 from sympy.polys.rootoftools import rootof
 <<<<<<< HEAD
 from sympy.solvers.solvers import solveset
+<<<<<<< HEAD
 =======
 from sympy.solvers.solvers import solve
 >>>>>>> parent of ce32a0d... I have changed most of the function calls from solve() to solveset()
 from sympy.solvers.solveset import solveset
+=======
+from sympy.solvers.solvesetset import solvesetset
+>>>>>>> parent of b81c365... fixed solvesetset
 from sympy.abc import x, y
 
 from sympy.utilities.pytest import raises, slow, XFAIL
@@ -408,10 +412,10 @@ def test_isolve_Sets():
 
 
 def test_issue_10671_12466():
-    assert solveset(sin(y), y, Interval(0, pi)) == FiniteSet(0, pi)
+    assert solvesetset(sin(y), y, Interval(0, pi)) == FiniteSet(0, pi)
     i = Interval(1, 10)
-    assert solveset((1/x).diff(x) < 0, x, i) == i
-    assert solveset((log(x - 6)/x) <= 0, x, S.Reals) == \
+    assert solvesetset((1/x).diff(x) < 0, x, i) == i
+    assert solvesetset((log(x - 6)/x) <= 0, x, S.Reals) == \
         Interval.Lopen(6, 7)
 
 
