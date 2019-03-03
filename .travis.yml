@@ -197,7 +197,7 @@ matrix:
 before_install:
   - set -e
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
-  - pip install pytest
+  - pip install pytest pytest-xdist
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
     fi
