@@ -83,8 +83,9 @@ def check(a, exclude=[], check_attr=True):
                 c(a, b, d1)
                 c(b, a, d2)
         else:
-            c(a, b, d1)
-            c(b, a, d2)
+            with ignore_warnings(SymPyDeprecationWarning):
+                c(a, b, d1)
+                c(b, a, d2)
 
 
 #================== core =========================
