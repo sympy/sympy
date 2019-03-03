@@ -14,7 +14,7 @@ something is not clear, like what the Ricci tensor is, etc.
 """
 
 from sympy import (exp, Symbol, sin, Rational, Derivative, dsolve, Function,
-                  Matrix, Eq, pprint, Pow, classify_ode, solve)
+                  Matrix, Eq, pprint, Pow, classify_ode, solveset)
 
 
 def grad(f, X):
@@ -187,11 +187,11 @@ def main():
     pprint_Rmn_dd(2, 2)
     pprint_Rmn_dd(3, 3)
     print("-"*40)
-    print("Solve Einstein's equations:")
+    print("solveset Einstein's equations:")
     e = e.subs(nu(r), -lam(r)).doit()
     l = dsolve(e, lam(r))
     pprint(l)
-    lamsol = solve(l, lam(r))[0]
+    lamsol = solveset(l, lam(r))[0]
     metric = gdd.subs(lam(r), lamsol).subs(nu(r), -lamsol)  # .combine()
     print("metric:")
     pprint(metric)

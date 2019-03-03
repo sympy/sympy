@@ -2,7 +2,7 @@
 
 """Partial Differential Equations example
 
-Demonstrates various ways to solve partial differential equations
+Demonstrates various ways to solveset partial differential equations
 """
 
 from sympy import symbols, Eq, Function, pde_separate, pprint, sin, cos, latex
