@@ -13,7 +13,7 @@ from sympy.matrices import (
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
 from sympy.core.compatibility import long, iterable, range, Hashable
-from sympy.core import Tuple
+from sympy.core import Tuple, Wild
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.solvers import solveset
@@ -1848,6 +1848,23 @@ def test_issue_10220():
                         [0, 0, 1, 0],
                         [0, 0, 0, 1]])
 
+def test_jordan_form_issue_15858():
+    A = Matrix([
+        [1, 1, 1, 0],
+        [-2, -1, 0, -1],
+        [0, 0, -1, -1],
+        [0, 0, 2, 1]])
+    (P, J) = A.jordan_form()
+    assert simplify(P) == Matrix([
+        [-I, -I/2, I, I/2],
+        [-1 + I, 0, -1 - I, 0],
+        [0, I*(-1 + I)/2, 0, I*(1 + I)/2],
+        [0, 1, 0, 1]])
+    assert J == Matrix([
+        [-I, 1, 0, 0],
+        [0, -I, 0, 0],
+        [0, 0, I, 1],
+        [0, 0, 0, I]])
 
 def test_Matrix_berkowitz_charpoly():
     UA, K_i, K_w = symbols('UA K_i K_w')
@@ -3424,3 +3441,8 @@ def test_issue_15872():
     assert B.rank() == 3
     assert (B**2).rank() == 2
     assert (B**3).rank() == 2
+
+def test_issue_11948():
+    A = MatrixSymbol('A', 3, 3)
+    a = Wild('a')
+    assert A.match(a) == {a: A}

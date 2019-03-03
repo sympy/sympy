@@ -5,6 +5,7 @@ from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
+from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import sin
 from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
@@ -17,9 +18,10 @@ from sympy.logic.boolalg import (
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.utilities import cartes
 
+from itertools import combinations
 
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
@@ -833,3 +835,64 @@ def test_binary_symbols():
 
 def test_BooleanFunction_diff():
     assert And(x, y).diff(x) == Piecewise((0, Eq(y, False)), (1, True))
+
+
+def test_relational_simplification():
+    w, x, y, z = symbols('w x y z', real=True)
+    d, e = symbols('d e', real=False)
+    assert Or(x >= y, x < y).simplify() == S.true
+    assert Or(x < y, x >= y).simplify() == S.true
+    assert And(x >= y, x < y).simplify() == S.false
+    assert Or(x >= y, Eq(y, x)).simplify() == (x >= y)
+    assert And(x >= y, Eq(y, x)).simplify() == Eq(x, y)
+    assert Or(Eq(x,y), x >= y, w < y, z < y).simplify() == Or(x >= y, y > Min(w, z))
+    assert And(Eq(x,y), x >= y, w < y, y >= z, z < y).simplify() == And(Eq(x, y), y > Max(w, z))
+    assert Or(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y).simplify() == (Eq(x, y) | (x >= 1) | (y > Min(2, z)))
+    assert And(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y).simplify() == (Eq(x, y) & (x >= 1) & (y >= 5) & (y > z))
+    assert (Eq(x, y) & Eq(d, e) & (x >= y) & (d >= e)).simplify() == (Eq(x, y) & Eq(d, e) & (d >= e))
+    assert And(Eq(x, y), Eq(x, -y)).simplify() == And(Eq(x, 0), Eq(y, 0))
+    assert Xor(x >= y, x <= y).simplify() == Ne(x, y)
+
+@slow
+def test_relational_simplification_numerically():
+    def test_simplification_numerically_function(original, simplified):
+        symb = original.free_symbols
+        n = len(symb)
+        valuelist = list(set(list(combinations(list(range(-(n-1),n))*n, n))))
+        for values in valuelist:
+            sublist = dict(zip(symb, values))
+            originalvalue = original.subs(sublist)
+            simplifiedvalue = simplified.subs(sublist)
+            assert originalvalue == simplifiedvalue, "Original: {}\nand simplified: {}\ndo not evaluate to the same value for {}".format(original, simplified, sublist)
+
+    w, x, y, z = symbols('w x y z', real=True)
+    d, e = symbols('d e', real=False)
+
+    expressions = (And(Eq(x,y), x >= y, w < y, y >= z, z < y),
+                   And(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y),
+                   Or(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y),
+                   And(x >= y, Eq(y, x)),
+                   Or(And(Eq(x,y), x >= y, w < y, Or(y >= z, z < y)), And(Eq(x,y), x >= 1, 2 < y, y >= -1, z < y)),
+                   (Eq(x, y) & Eq(d, e) & (x >= y) & (d >= e)),  )
+
+    for expression in expressions:
+        test_simplification_numerically_function(expression, expression.simplify())
+
+def test_relational_simplification_patterns_numerically():
+    from sympy.core import Wild
+    from sympy.logic.boolalg import simplify_patterns_and, simplify_patterns_or, simplify_patterns_xor
+    a = Wild('a')
+    b = Wild('b')
+    c = Wild('c')
+    symb = [a, b, c]
+    patternlists = [simplify_patterns_and(), simplify_patterns_or(), simplify_patterns_xor()]
+    for patternlist in patternlists:
+        for pattern in patternlist:
+            original = pattern[0]
+            simplified = pattern[1]
+            valuelist = list(set(list(combinations(list(range(-2,2))*3, 3))))
+            for values in valuelist:
+                sublist = dict(zip(symb, values))
+                originalvalue = original.subs(sublist)
+                simplifiedvalue = simplified.subs(sublist)
+                assert originalvalue == simplifiedvalue, "Original: {}\nand simplified: {}\ndo not evaluate to the same value for {}".format(original, simplified, sublist)
