@@ -513,10 +513,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     """
     expr = sympify(expr)
 
-    try:
-        return expr._eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
-    except AttributeError:
-        pass
+    _eval_simplify = getattr(expr, '_eval_simplify', None)
+    if _eval_simplify is not None:
+        return _eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
 
     original_expr = expr = signsimp(expr)
 

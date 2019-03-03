@@ -186,11 +186,10 @@ class Predicate(Boolean):
         for handler in self.handlers:
             cls = get_class(handler)
             for subclass in mro:
-                try:
-                    eval = getattr(cls, subclass.__name__)
-                except AttributeError:
+                eval_ = getattr(cls, subclass.__name__, None)
+                if eval_ is None:
                     continue
-                res = eval(expr, assumptions)
+                res = eval_(expr, assumptions)
                 # Do not stop if value returned is None
                 # Try to check for higher classes
                 if res is None:
