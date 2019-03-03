@@ -2201,3 +2201,30 @@ def is_deficient(n):
     if is_perfect(n):
         return False
     return bool(abundance(n) < 0)
+
+
+def is_amicable(m, n):
+    """Returns True if the numbers `m` and `n` are "amicable", else False.
+
+    Amicable numbers are two different numbers so related that the sum
+    of the proper divisors of each is equal to that of the other.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_amicable, divisor_sigma
+    >>> is_amicable(220, 284)
+    True
+    >>> divisor_sigma(220) == divisor_sigma(284)
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Amicable_numbers
+
+    """
+    if m == n:
+        return False
+    a, b = map(lambda i: divisor_sigma(i), (m, n))
+    return a == b == (m + n)
