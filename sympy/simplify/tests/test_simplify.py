@@ -6,7 +6,7 @@ from sympy import (
     hypersimp, I, Integral, integrate, log, logcombine, Lt, Matrix,
     MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
     Rational, root, S, separatevars, signsimp, simplify, sign, sin,
-    sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
+    sinc, sinh, solveset, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
     zoo)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import nthroot, inversecombine
@@ -129,7 +129,7 @@ def test_issue_3557():
     f_2 = x*d + y*e + z*f - 1
     f_3 = x*g + y*h + z*i - 1
 
-    solutions = solve([f_1, f_2, f_3], x, y, z, simplify=False)
+    solutions = solveset([f_1, f_2, f_3], x, y, z, simplify=False)
 
     assert simplify(solutions[y]) == \
         (a*i + c*d + f*g - a*f - c*g - d*i)/ \

@@ -1,7 +1,7 @@
 """
-This module contain solvers for all kinds of equations:
+This module contain solvesetrs for all kinds of equations:
 
-    - algebraic or transcendental, use solve()
+    - algebraic or transcendental, use solveset()
 
     - recurrence, use rsolve()
 
@@ -52,8 +52,8 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
 
-from sympy.solvers.polysys import solve_poly_system
-from sympy.solvers.inequalities import reduce_inequalities
+from sympy.solvesetrs.polysys import solve_poly_system
+from sympy.solvesetrs.inequalities import reduce_inequalities
 
 from types import GeneratorType
 from collections import defaultdict
@@ -69,7 +69,7 @@ def recast_to_symbols(eqs, symbols):
     Examples
     ========
 
-    >>> from sympy.solvers.solvers import recast_to_symbols
+    >>> from sympy.solvesetrs.solvesetrs import recast_to_symbols
     >>> from sympy import symbols, Function
     >>> x, y = symbols('x y')
     >>> fx = Function('f')(x)
@@ -128,7 +128,7 @@ def denoms(eq, *symbols):
     Examples
     ========
 
-    >>> from sympy.solvers.solvers import denoms
+    >>> from sympy.solvesetrs.solvesetrs import denoms
     >>> from sympy.abc import x, y, z
     >>> from sympy import sqrt
 
@@ -188,7 +188,7 @@ def checksol(f, symbol, sol=None, **flags):
     ========
 
     >>> from sympy import symbols
-    >>> from sympy.solvers import checksol
+    >>> from sympy.solvesetrs import checksol
     >>> x, y = symbols('x,y')
     >>> checksol(x**4 - 1, x, 1)
     True
@@ -449,9 +449,9 @@ def check_assumptions(expr, against=None, **assumptions):
     return fuzzy_and(_test(key) for key in assumptions)
 
 
-def solve(f, *symbols, **flags):
+def solveset(f, *symbols, **flags):
     r"""
-    Algebraically solves equations and systems of equations.
+    Algebraically solvesets equations and systems of equations.
 
     Currently supported are:
         - polynomial,
@@ -468,13 +468,13 @@ def solve(f, *symbols, **flags):
         - a Relational expression or boolean
         - iterable of one or more of the above
 
-    * symbols (object(s) to solve for) specified as
+    * symbols (object(s) to solveset for) specified as
         - none given (other non-numeric objects will be used)
         - single symbol
         - denested list of symbols
-          e.g. solve(f, x, y)
+          e.g. solveset(f, x, y)
         - ordered iterable of symbols
-          e.g. solve(f, [x, y])
+          e.g. solveset(f, [x, y])
 
     * flags
         'dict'=True (default is False)
@@ -482,7 +482,7 @@ def solve(f, *symbols, **flags):
         'set'=True (default is False)
             return list of symbols and set of tuple(s) of solution(s)
         'exclude=[] (default)'
-            don't try to solve for any of the free symbols in exclude;
+            don't try to solveset for any of the free symbols in exclude;
             if expressions are given, the free symbols in them will
             be extracted automatically.
         'check=True (default)'
@@ -505,20 +505,20 @@ def solve(f, *symbols, **flags):
             make positive all symbols without assumptions regarding sign.
         'rational=True (default)'
             recast Floats as Rational; if this option is not used, the
-            system containing floats may fail to solve because of issues
+            system containing floats may fail to solveset because of issues
             with polys. If rational=None, Floats will be recast as
             rationals but the answer will be recast as Floats. If the
             flag is False then nothing will be done to the Floats.
         'manual=True (default is False)'
-            do not use the polys/matrix method to solve a system of
-            equations, solve them one at a time as you might "manually"
+            do not use the polys/matrix method to solveset a system of
+            equations, solveset them one at a time as you might "manually"
         'implicit=True (default is False)'
-            allows solve to return a solution for a pattern in terms of
+            allows solveset to return a solution for a pattern in terms of
             other functions that contain that pattern; this is only
             needed if the pattern is inside of some invertible function
             like cos, exp, ....
         'particular=True (default is False)'
-            instructs solve to try to find a particular solution to a linear
+            instructs solveset to try to find a particular solution to a linear
             system with as many zeros as possible; this is very expensive
         'quick=True (default is False)'
             when using particular=True, use a fast heuristic instead to find a
@@ -537,21 +537,21 @@ def solve(f, *symbols, **flags):
 
     The output varies according to the input and can be seen by example::
 
-        >>> from sympy import solve, Poly, Eq, Function, exp
+        >>> from sympy import solveset, Poly, Eq, Function, exp
         >>> from sympy.abc import x, y, z, a, b
         >>> f = Function('f')
 
     * boolean or univariate Relational
 
-        >>> solve(x < 3)
+        >>> solveset(x < 3)
         (-oo < x) & (x < 3)
 
 
     * to always get a list of solution mappings, use flag dict=True
 
-        >>> solve(x - 3, dict=True)
+        >>> solveset(x - 3, dict=True)
         [{x: 3}]
-        >>> sol = solve([x - 3, y - 1], dict=True)
+        >>> sol = solveset([x - 3, y - 1], dict=True)
         >>> sol
         [{x: 3, y: 1}]
         >>> sol[0][x]
@@ -562,46 +562,46 @@ def solve(f, *symbols, **flags):
 
     * to get a list of symbols and set of solution(s) use flag set=True
 
-        >>> solve([x**2 - 3, y - 1], set=True)
+        >>> solveset([x**2 - 3, y - 1], set=True)
         ([x, y], {(-sqrt(3), 1), (sqrt(3), 1)})
 
 
     * single expression and single symbol that is in the expression
 
-        >>> solve(x - y, x)
+        >>> solveset(x - y, x)
         [y]
-        >>> solve(x - 3, x)
+        >>> solveset(x - 3, x)
         [3]
-        >>> solve(Eq(x, 3), x)
+        >>> solveset(Eq(x, 3), x)
         [3]
-        >>> solve(Poly(x - 3), x)
+        >>> solveset(Poly(x - 3), x)
         [3]
-        >>> solve(x**2 - y**2, x, set=True)
+        >>> solveset(x**2 - y**2, x, set=True)
         ([x], {(-y,), (y,)})
-        >>> solve(x**4 - 1, x, set=True)
+        >>> solveset(x**4 - 1, x, set=True)
         ([x], {(-1,), (1,), (-I,), (I,)})
 
     * single expression with no symbol that is in the expression
 
-        >>> solve(3, x)
+        >>> solveset(3, x)
         []
-        >>> solve(x - 3, y)
+        >>> solveset(x - 3, y)
         []
 
     * single expression with no symbol given
 
           In this case, all free symbols will be selected as potential
-          symbols to solve for. If the equation is univariate then a list
+          symbols to solveset for. If the equation is univariate then a list
           of solutions is returned; otherwise -- as is the case when symbols are
           given as an iterable of length > 1 -- a list of mappings will be returned.
 
-            >>> solve(x - 3)
+            >>> solveset(x - 3)
             [3]
-            >>> solve(x**2 - y**2)
+            >>> solveset(x**2 - y**2)
             [{x: -y}, {x: y}]
-            >>> solve(z**2*x**2 - z**2*y**2)
+            >>> solveset(z**2*x**2 - z**2*y**2)
             [{x: -y}, {x: y}, {z: 0}]
-            >>> solve(z**2*x - z**2*y**2)
+            >>> solveset(z**2*x - z**2*y**2)
             [{x: y**2}, {z: 0}]
 
     * when an object other than a Symbol is given as a symbol, it is
@@ -611,158 +611,158 @@ def solve(f, *symbols, **flags):
       work if the specified object can be replaced with a Symbol using the
       subs method.
 
-          >>> solve(f(x) - x, f(x))
+          >>> solveset(f(x) - x, f(x))
           [x]
-          >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
+          >>> solveset(f(x).diff(x) - f(x) - x, f(x).diff(x))
           [x + f(x)]
-          >>> solve(f(x).diff(x) - f(x) - x, f(x))
+          >>> solveset(f(x).diff(x) - f(x) - x, f(x))
           [-x + Derivative(f(x), x)]
-          >>> solve(x + exp(x)**2, exp(x), set=True)
+          >>> solveset(x + exp(x)**2, exp(x), set=True)
           ([exp(x)], {(-sqrt(-x),), (sqrt(-x),)})
 
           >>> from sympy import Indexed, IndexedBase, Tuple, sqrt
           >>> A = IndexedBase('A')
           >>> eqs = Tuple(A[1] + A[2] - 3, A[1] - A[2] + 1)
-          >>> solve(eqs, eqs.atoms(Indexed))
+          >>> solveset(eqs, eqs.atoms(Indexed))
           {A[1]: 1, A[2]: 2}
 
-        * To solve for a *symbol* implicitly, use 'implicit=True':
+        * To solveset for a *symbol* implicitly, use 'implicit=True':
 
-            >>> solve(x + exp(x), x)
+            >>> solveset(x + exp(x), x)
             [-LambertW(1)]
-            >>> solve(x + exp(x), x, implicit=True)
+            >>> solveset(x + exp(x), x, implicit=True)
             [-exp(x)]
 
-        * It is possible to solve for anything that can be targeted with
+        * It is possible to solveset for anything that can be targeted with
           subs:
 
-            >>> solve(x + 2 + sqrt(3), x + 2)
+            >>> solveset(x + 2 + sqrt(3), x + 2)
             [-sqrt(3)]
-            >>> solve((x + 2 + sqrt(3), x + 4 + y), y, x + 2)
+            >>> solveset((x + 2 + sqrt(3), x + 4 + y), y, x + 2)
             {y: -2 + sqrt(3), x + 2: -sqrt(3)}
 
         * Nothing heroic is done in this implicit solving so you may end up
           with a symbol still in the solution:
 
             >>> eqs = (x*y + 3*y + sqrt(3), x + 4 + y)
-            >>> solve(eqs, y, x + 2)
+            >>> solveset(eqs, y, x + 2)
             {y: -sqrt(3)/(x + 3), x + 2: (-2*x - 6 + sqrt(3))/(x + 3)}
-            >>> solve(eqs, y*x, x)
+            >>> solveset(eqs, y*x, x)
             {x: -y - 4, x*y: -3*y - sqrt(3)}
 
-        * if you attempt to solve for a number remember that the number
+        * if you attempt to solveset for a number remember that the number
           you have obtained does not necessarily mean that the value is
           equivalent to the expression obtained:
 
-            >>> solve(sqrt(2) - 1, 1)
+            >>> solveset(sqrt(2) - 1, 1)
             [sqrt(2)]
-            >>> solve(x - y + 1, 1)  # /!\ -1 is targeted, too
+            >>> solveset(x - y + 1, 1)  # /!\ -1 is targeted, too
             [x/(y - 1)]
-            >>> [_.subs(z, -1) for _ in solve((x - y + 1).subs(-1, z), 1)]
+            >>> [_.subs(z, -1) for _ in solveset((x - y + 1).subs(-1, z), 1)]
             [-x + y]
 
-        * To solve for a function within a derivative, use dsolve.
+        * To solveset for a function within a derivative, use dsolve.
 
     * single expression and more than 1 symbol
 
         * when there is a linear solution
 
-            >>> solve(x - y**2, x, y)
+            >>> solveset(x - y**2, x, y)
             [(y**2, y)]
-            >>> solve(x**2 - y, x, y)
+            >>> solveset(x**2 - y, x, y)
             [(x, x**2)]
-            >>> solve(x**2 - y, x, y, dict=True)
+            >>> solveset(x**2 - y, x, y, dict=True)
             [{y: x**2}]
 
         * when undetermined coefficients are identified
 
             * that are linear
 
-                >>> solve((a + b)*x - b + 2, a, b)
+                >>> solveset((a + b)*x - b + 2, a, b)
                 {a: -2, b: 2}
 
             * that are nonlinear
 
-                >>> solve((a + b)*x - b**2 + 2, a, b, set=True)
+                >>> solveset((a + b)*x - b**2 + 2, a, b, set=True)
                 ([a, b], {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))})
 
         * if there is no linear solution then the first successful
           attempt for a nonlinear solution will be returned
 
-            >>> solve(x**2 - y**2, x, y, dict=True)
+            >>> solveset(x**2 - y**2, x, y, dict=True)
             [{x: -y}, {x: y}]
-            >>> solve(x**2 - y**2/exp(x), x, y, dict=True)
+            >>> solveset(x**2 - y**2/exp(x), x, y, dict=True)
             [{x: 2*LambertW(y/2)}]
-            >>> solve(x**2 - y**2/exp(x), y, x)
+            >>> solveset(x**2 - y**2/exp(x), y, x)
             [(-x*sqrt(exp(x)), x), (x*sqrt(exp(x)), x)]
 
     * iterable of one or more of the above
 
         * involving relationals or bools
 
-            >>> solve([x < 3, x - 2])
+            >>> solveset([x < 3, x - 2])
             Eq(x, 2)
-            >>> solve([x > 3, x - 2])
+            >>> solveset([x > 3, x - 2])
             False
 
         * when the system is linear
 
             * with a solution
 
-                >>> solve([x - 3], x)
+                >>> solveset([x - 3], x)
                 {x: 3}
-                >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y)
+                >>> solveset((x + 5*y - 2, -3*x + 6*y - 15), x, y)
                 {x: -3, y: 1}
-                >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y, z)
+                >>> solveset((x + 5*y - 2, -3*x + 6*y - 15), x, y, z)
                 {x: -3, y: 1}
-                >>> solve((x + 5*y - 2, -3*x + 6*y - z), z, x, y)
+                >>> solveset((x + 5*y - 2, -3*x + 6*y - z), z, x, y)
                 {x: 2 - 5*y, z: 21*y - 6}
 
             * without a solution
 
-                >>> solve([x + 3, x - 3])
+                >>> solveset([x + 3, x - 3])
                 []
 
         * when the system is not linear
 
-            >>> solve([x**2 + y -2, y**2 - 4], x, y, set=True)
+            >>> solveset([x**2 + y -2, y**2 - 4], x, y, set=True)
             ([x, y], {(-2, -2), (0, 2), (2, -2)})
 
         * if no symbols are given, all free symbols will be selected and a list
           of mappings returned
 
-            >>> solve([x - 2, x**2 + y])
+            >>> solveset([x - 2, x**2 + y])
             [{x: 2, y: -4}]
-            >>> solve([x - 2, x**2 + f(x)], {f(x), x})
+            >>> solveset([x - 2, x**2 + f(x)], {f(x), x})
             [{x: 2, f(x): -4}]
 
         * if any equation doesn't depend on the symbol(s) given it will be
           eliminated from the equation set and an answer may be given
           implicitly in terms of variables that were not of interest
 
-            >>> solve([x - y, y - 3], x)
+            >>> solveset([x - y, y - 3], x)
             {x: y}
 
     Notes
     =====
 
-    solve() with check=True (default) will run through the symbol tags to
+    solveset() with check=True (default) will run through the symbol tags to
     elimate unwanted solutions.  If no assumptions are included all possible
     solutions will be returned.
 
-        >>> from sympy import Symbol, solve
+        >>> from sympy import Symbol, solveset
         >>> x = Symbol("x")
-        >>> solve(x**2 - 1)
+        >>> solveset(x**2 - 1)
         [-1, 1]
 
     By using the positive tag only one solution will be returned:
 
         >>> pos = Symbol("pos", positive=True)
-        >>> solve(pos**2 - 1)
+        >>> solveset(pos**2 - 1)
         [1]
 
 
-    Assumptions aren't checked when `solve()` input involves
+    Assumptions aren't checked when `solveset()` input involves
     relationals or bools.
 
     When the solutions are checked, those that make any denominator zero
@@ -770,23 +770,23 @@ def solve(f, *symbols, **flags):
     then use the check=False option:
 
         >>> from sympy import sin, limit
-        >>> solve(sin(x)/x)  # 0 is excluded
+        >>> solveset(sin(x)/x)  # 0 is excluded
         [pi]
 
     If check=False then a solution to the numerator being zero is found: x = 0.
     In this case, this is a spurious solution since sin(x)/x has the well known
     limit (without dicontinuity) of 1 at x = 0:
 
-        >>> solve(sin(x)/x, check=False)
+        >>> solveset(sin(x)/x, check=False)
         [0, pi]
 
     In the following case, however, the limit exists and is equal to the
     value of x = 0 that is excluded when check=True:
 
         >>> eq = x**2*(1/x - z**2/x)
-        >>> solve(eq, x)
+        >>> solveset(eq, x)
         []
-        >>> solve(eq, x, check=False)
+        >>> solveset(eq, x, check=False)
         [0]
         >>> limit(eq, x, 0, '-')
         0
@@ -800,20 +800,20 @@ def solve(f, *symbols, **flags):
     (which can be quite long). If the expression is univariate, CRootOf
     instances will be returned instead:
 
-        >>> solve(x**3 - x + 1)
+        >>> solveset(x**3 - x + 1)
         [-1/((-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)) - (-1/2 -
         sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3, -(-1/2 +
         sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3 - 1/((-1/2 +
         sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)), -(3*sqrt(69)/2 +
         27/2)**(1/3)/3 - 1/(3*sqrt(69)/2 + 27/2)**(1/3)]
-        >>> solve(x**3 - x + 1, cubics=False)
+        >>> solveset(x**3 - x + 1, cubics=False)
         [CRootOf(x**3 - x + 1, 0),
          CRootOf(x**3 - x + 1, 1),
          CRootOf(x**3 - x + 1, 2)]
 
         If the expression is multivariate, no solution might be returned:
 
-        >>> solve(x**3 - x + a, x, cubics=False)
+        >>> solveset(x**3 - x + a, x, cubics=False)
         []
 
     Sometimes solutions will be obtained even when a flag is False because the
@@ -822,7 +822,7 @@ def solve(f, *symbols, **flags):
     solutions (which did not require solving a cubic expression) are obtained:
 
         >>> eq = x**3 + 3*x**2 + x - 1
-        >>> solve(eq, cubics=False)
+        >>> solveset(eq, cubics=False)
         [-1, -1 + sqrt(2), -sqrt(2) - 1]
 
     Solving equations involving radicals
@@ -833,9 +833,9 @@ def solve(f, *symbols, **flags):
 
         >>> from sympy import root
         >>> eq = root(x**3 - 3*x**2, 3) + 1 - x
-        >>> solve(eq)
+        >>> solveset(eq)
         []
-        >>> solve(eq, check=False)
+        >>> solveset(eq, check=False)
         [1/3]
 
     In the above example there is only a single solution to the
@@ -845,10 +845,10 @@ def solve(f, *symbols, **flags):
 
         >>> from sympy import real_root, S
         >>> eq = root(x, 3) - root(x, 5) + S(1)/7
-        >>> solve(eq)  # this gives 2 solutions but misses a 3rd
+        >>> solveset(eq)  # this gives 2 solutions but misses a 3rd
         [CRootOf(7*_p**5 - 7*_p**3 + 1, 1)**15,
         CRootOf(7*_p**5 - 7*_p**3 + 1, 2)**15]
-        >>> sol = solve(eq, check=False)
+        >>> sol = solveset(eq, check=False)
         >>> [abs(eq.subs(x,i).n(2)) for i in sol]
         [0.48, 0.e-110, 0.e-110, 0.052, 0.052]
 
@@ -870,20 +870,20 @@ def solve(f, *symbols, **flags):
         >>> expr1 = root(x, 3, 1) - root(x, 5, 1)
         >>> v = expr1.subs(x, -3)
 
-    The solve function is unable to find any exact roots to this equation:
+    The solveset function is unable to find any exact roots to this equation:
 
         >>> eq = Eq(expr, v); eq1 = Eq(expr1, v)
-        >>> solve(eq, check=False), solve(eq1, check=False)
+        >>> solveset(eq, check=False), solveset(eq1, check=False)
         ([], [])
 
     The function unrad, however, can be used to get a form of the equation for
     which numerical roots can be found:
 
-        >>> from sympy.solvers.solvers import unrad
+        >>> from sympy.solvesetrs.solvesetrs import unrad
         >>> from sympy import nroots
         >>> e, (p, cov) = unrad(eq)
         >>> pvals = nroots(e)
-        >>> inversion = solve(cov, x)[0]
+        >>> inversion = solveset(cov, x)[0]
         >>> xvals = [inversion.subs(p, i) for i in pvals]
 
     Although eq or eq1 could have been used to find xvals, the solution can
@@ -1056,19 +1056,19 @@ def solve(f, *symbols, **flags):
         # be unambiguous
         symbols = sorted(symbols, key=default_sort_key)
 
-    # we can solve for non-symbol entities by replacing them with Dummy symbols
+    # we can solveset for non-symbol entities by replacing them with Dummy symbols
     f, symbols, swap_sym = recast_to_symbols(f, symbols)
 
     # this is needed in the next two events
     symset = set(symbols)
 
     # get rid of equations that have no symbols of interest; we don't
-    # try to solve them because the user didn't ask and they might be
-    # hard to solve; this means that solutions may be given in terms
-    # of the eliminated equations e.g. solve((x-y, y-3), x) -> {x: y}
+    # try to solveset them because the user didn't ask and they might be
+    # hard to solveset; this means that solutions may be given in terms
+    # of the eliminated equations e.g. solveset((x-y, y-3), x) -> {x: y}
     newf = []
     for fi in f:
-        # let the solver handle equations that..
+        # let the solvesetr handle equations that..
         # - have no symbols but are expressions
         # - have symbols of interest
         # - have no symbols of interest but are constant
@@ -1079,7 +1079,7 @@ def solve(f, *symbols, **flags):
         # solution for the equation set as a whole
         #
         # The reason for doing this filtering is to allow an answer
-        # to be obtained to queries like solve((x - y, y), x); without
+        # to be obtained to queries like solveset((x - y, y), x); without
         # this mod the return value is []
         ok = False
         if fi.has(*symset):
@@ -1214,7 +1214,7 @@ def solve(f, *symbols, **flags):
                               for k, v in sol.items()])
 
     # undo the dictionary solutions returned when the system was only partially
-    # solved with poly-system if all symbols are present
+    # solvesetd with poly-system if all symbols are present
     if (
             not flags.get('dict', False) and
             solution and
@@ -1353,11 +1353,11 @@ def _solve(f, *symbols, **flags):
     undetermined-coefficients equation is encountered (in which case
     a dictionary is returned).
 
-    If no method is implemented to solve the equation, a NotImplementedError
+    If no method is implemented to solveset the equation, a NotImplementedError
     will be raised. In the case that conversion of an expression to a Poly
     gives None a ValueError will be raised."""
 
-    not_impl_msg = "No algorithms are implemented to solve equation %s"
+    not_impl_msg = "No algorithms are implemented to solveset equation %s"
 
     if len(symbols) != 1:
         soln = None
@@ -1406,7 +1406,7 @@ def _solve(f, *symbols, **flags):
                     v = simplify(v)
                 vfree = v.free_symbols
                 if got_s and any([ss in vfree for ss in got_s]):
-                    # sol depends on previously solved symbols: discard it
+                    # sol depends on previously solvesetd symbols: discard it
                     continue
                 got_s.add(xi)
                 result.append({xi: v})
@@ -1419,7 +1419,7 @@ def _solve(f, *symbols, **flags):
                 soln = _solve(f, s, **flags)
                 for sol in soln:
                     if got_s and any([ss in sol.free_symbols for ss in got_s]):
-                        # sol depends on previously solved symbols: discard it
+                        # sol depends on previously solvesetd symbols: discard it
                         continue
                     got_s.add(s)
                     result.append({s: sol})
@@ -1463,7 +1463,7 @@ def _solve(f, *symbols, **flags):
         for i, (expr, cond) in enumerate(f.args):
             if expr.is_zero:
                 raise NotImplementedError(
-                    'solve cannot represent interval solutions')
+                    'solveset cannot represent interval solutions')
             candidates = _solve(expr, symbol, **flags)
             # the explicit condition for this expr is the current cond
             # and none of the previous conditions
@@ -1513,7 +1513,7 @@ def _solve(f, *symbols, **flags):
         # contains, so we will inspect the generators identified by
         # polys to figure out what to do.
 
-        # try to identify a single generator that will allow us to solve this
+        # try to identify a single generator that will allow us to solveset this
         # as a polynomial, followed (perhaps) by a change of variables if the
         # generator is not a symbol
 
@@ -1574,7 +1574,7 @@ def _solve(f, *symbols, **flags):
 
                 # just a simple case - see if replacement of single function
                 # clears all symbol-dependent functions, e.g.
-                # log(x) - log(log(x) - 1) - 3 can be solved even though it has
+                # log(x) - log(log(x) - 1) - 3 can be solvesetd even though it has
                 # two generators.
 
                 if result is False and funcs:
@@ -1584,7 +1584,7 @@ def _solve(f, *symbols, **flags):
                     # perform the substitution
                     ftry = f_num.subs(f1, t)
 
-                    # if no Functions left, we can proceed with usual solve
+                    # if no Functions left, we can proceed with usual solveset
                     if not ftry.has(symbol):
                         cv_sols = _solve(ftry, t, **flags)
                         cv_inv = _solve(t - f1, symbol, **flags)[0]
@@ -1602,7 +1602,7 @@ def _solve(f, *symbols, **flags):
                 t = Dummy('t')
                 inv = _solve(u - t, symbol, **flags)
                 if isinstance(u, (Pow, exp)):
-                    # this will be resolved by factor in _tsolve but we might
+                    # this will be resolvesetd by factor in _tsolve but we might
                     # as well try a simple expansion here to get things in
                     # order so something like the following will work now without
                     # having to factor:
@@ -1643,9 +1643,9 @@ def _solve(f, *symbols, **flags):
                 soln = None
                 deg = poly.degree()
                 flags['tsolve'] = True
-                solvers = dict([(k, flags.get(k, True)) for k in
+                solvesetrs = dict([(k, flags.get(k, True)) for k in
                     ('cubics', 'quartics', 'quintics')])
-                soln = roots(poly, **solvers)
+                soln = roots(poly, **solvesetrs)
                 if sum(soln.values()) < deg:
                     # e.g. roots(32*x**5 + 400*x**4 + 2032*x**3 +
                     #            5000*x**2 + 6250*x + 3189) -> {}
@@ -1661,7 +1661,7 @@ def _solve(f, *symbols, **flags):
     Neither high-order multivariate polynomials
     nor sorting of EX-domain polynomials is supported.
     If you want to see any results, pass keyword incomplete=True to
-    solve; to see numerical values of roots
+    solveset; to see numerical values of roots
     for univariate expressions, use nroots.
     '''))
                         else:
@@ -1784,7 +1784,7 @@ def _solve_system(exprs, symbols, **flags):
             failed.append(g)
 
     if not polys:
-        solved_syms = []
+        solvesetd_syms = []
     else:
         if all(p.is_linear for p in polys):
             n, m = len(polys), len(symbols)
@@ -1805,9 +1805,9 @@ def _solve_system(exprs, symbols, **flags):
                 result = solve_linear_system(matrix, *symbols, **flags)
             if failed:
                 if result:
-                    solved_syms = list(result.keys())
+                    solvesetd_syms = list(result.keys())
                 else:
-                    solved_syms = []
+                    solvesetd_syms = []
             else:
                 linear = True
 
@@ -1830,7 +1830,7 @@ def _solve_system(exprs, symbols, **flags):
                                     if got_s and any([ss in r1.free_symbols
                                            for ss in got_s]):
                                         # sol depends on previously
-                                        # solved symbols: discard it
+                                        # solvesetd symbols: discard it
                                         skip = True
                                 if not skip:
                                     got_s.update(syms)
@@ -1838,22 +1838,22 @@ def _solve_system(exprs, symbols, **flags):
                     except NotImplementedError:
                         pass
                 if got_s:
-                    solved_syms = list(got_s)
+                    solvesetd_syms = list(got_s)
                 else:
                     raise NotImplementedError('no valid subset found')
             else:
                 try:
                     result = solve_poly_system(polys, *symbols)
                     if result:
-                        solved_syms = symbols
+                        solvesetd_syms = symbols
                         # we don't know here if the symbols provided
-                        # were given or not, so let solve resolve that.
+                        # were given or not, so let solveset resolveset that.
                         # A list of dictionaries is going to always be
                         # returned from here.
-                        result = [dict(list(zip(solved_syms, r))) for r in result]
+                        result = [dict(list(zip(solvesetd_syms, r))) for r in result]
                 except NotImplementedError:
                     failed.extend([g.as_expr() for g in polys])
-                    solved_syms = []
+                    solvesetd_syms = []
                     result = None
 
     if result:
@@ -1863,19 +1863,19 @@ def _solve_system(exprs, symbols, **flags):
         result = [{}]
 
     if failed:
-        # For each failed equation, see if we can solve for one of the
+        # For each failed equation, see if we can solveset for one of the
         # remaining symbols from that equation. If so, we update the
         # solution set and continue with the next failed equation,
         # repeating until we are done or we get an equation that can't
-        # be solved.
+        # be solvesetd.
         def _ok_syms(e, sort=False):
-            rv = (e.free_symbols - solved_syms) & legal
+            rv = (e.free_symbols - solvesetd_syms) & legal
             if sort:
                 rv = list(rv)
                 rv.sort(key=default_sort_key)
             return rv
 
-        solved_syms = set(solved_syms)  # set of symbols we have solved for
+        solvesetd_syms = set(solvesetd_syms)  # set of symbols we have solvesetd for
         legal = set(symbols)  # what we are interested in
         # sort so equation with the fewest potential symbols is first
         u = Dummy()  # used in solution checking
@@ -1901,7 +1901,7 @@ def _solve_system(exprs, symbols, **flags):
                             bad_results.append(r)
                         continue
                 # search for a symbol amongst those available that
-                # can be solved for
+                # can be solvesetd for
                 ok_syms = _ok_syms(eq2, sort=True)
                 if not ok_syms:
                     if r:
@@ -1917,7 +1917,7 @@ def _solve_system(exprs, symbols, **flags):
                     # solution for s in being added in-place
                     for sol in soln:
                         if got_s and any([ss in sol.free_symbols for ss in got_s]):
-                            # sol depends on previously solved symbols: discard it
+                            # sol depends on previously solvesetd symbols: discard it
                             continue
                         rnew = r.copy()
                         for k, v in r.items():
@@ -1928,14 +1928,14 @@ def _solve_system(exprs, symbols, **flags):
                     hit = True
                     got_s.add(s)
                 if not hit:
-                    raise NotImplementedError('could not solve %s' % eq2)
+                    raise NotImplementedError('could not solveset %s' % eq2)
             else:
                 result = newresult
                 for b in bad_results:
                     if b in result:
                         result.remove(b)
 
-    default_simplify = bool(failed)  # rely on system-solvers to simplify
+    default_simplify = bool(failed)  # rely on system-solvesetrs to simplify
     if  flags.get('simplify', default_simplify):
         for r in result:
             for k in r:
@@ -1963,7 +1963,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
         (0, 1) meaning that ``f`` is independent of the symbols in
         ``symbols`` that aren't in ``exclude``, e.g::
 
-            >>> from sympy.solvers.solvers import solve_linear
+            >>> from sympy.solvesetrs.solvesetrs import solve_linear
             >>> from sympy.abc import x, y, z
             >>> from sympy import cos, sin
             >>> eq = y*cos(x)**2 + y*sin(x)**2 - y  # = y*(1 - 1) = 0
@@ -2084,12 +2084,12 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
             if len(bad) == 1:
                 bad = bad[0]
             if len(symbols) == 1:
-                eg = 'solve(%s, %s)' % (eq, symbols[0])
+                eg = 'solveset(%s, %s)' % (eq, symbols[0])
             else:
-                eg = 'solve(%s, *%s)' % (eq, list(symbols))
+                eg = 'solveset(%s, *%s)' % (eq, list(symbols))
             raise ValueError(filldedent('''
                 solve_linear only handles symbols, not %s. To isolate
-                non-symbols use solve, e.g. >>> %s <<<.
+                non-symbols use solveset, e.g. >>> %s <<<.
                              ''' % (bad, eg)))
         symbols = free.intersection(symbols)
     symbols = symbols.difference(exclude)
@@ -2153,7 +2153,7 @@ def minsolve_linear_system(system, *symbols, **flags):
     if not s0 or all(v == 0 for v in s0.values()):
         return s0
     if quick:
-        # We just solve the system and try to heuristically find a nice
+        # We just solveset the system and try to heuristically find a nice
         # solution.
         s = solve_linear_system(system, *symbols)
         def update(determined, solution):
@@ -2175,7 +2175,7 @@ def minsolve_linear_system(system, *symbols, **flags):
             if len(k.free_symbols) != 1:
                 determined[x] = S(0)
             else:
-                val = solve(k)[0]
+                val = solveset(k)[0]
                 if val == 0 and all(v.subs(x, val) == 0 for v in s.values()):
                     determined[x] = S(1)
                 else:
@@ -2184,7 +2184,7 @@ def minsolve_linear_system(system, *symbols, **flags):
         return determined
     else:
         # We try to select n variables which we want to be non-zero.
-        # All others will be assumed zero. We try to solve the modified system.
+        # All others will be assumed zero. We try to solveset the modified system.
         # If there is a non-trivial solution, just set the free variables to
         # one. If we do this for increasing n, trying all combinations of
         # variables, we will find an optimal solution.
@@ -2221,7 +2221,7 @@ def minsolve_linear_system(system, *symbols, **flags):
 
 def solve_linear_system(system, *symbols, **flags):
     r"""
-    Solve system of N linear equations with M variables, which means
+    solveset system of N linear equations with M variables, which means
     both under- and overdetermined systems are supported. The possible
     number of solutions is zero, one or infinite. Respectively, this
     procedure will return None or a dictionary with solutions. In the
@@ -2231,7 +2231,7 @@ def solve_linear_system(system, *symbols, **flags):
 
     Input to this functions is a Nx(M+1) matrix, which means it has
     to be in augmented form. If you prefer to enter N equations and M
-    unknowns then use `solve(Neqs, *Msymbols)` instead. Note: a local
+    unknowns then use `solveset(Neqs, *Msymbols)` instead. Note: a local
     copy of the matrix is made by this routine so the matrix that is
     passed will not be modified.
 
@@ -2243,7 +2243,7 @@ def solve_linear_system(system, *symbols, **flags):
     >>> from sympy import Matrix, solve_linear_system
     >>> from sympy.abc import x, y
 
-    Solve the following system::
+    solveset the following system::
 
            x + 4 y ==  2
         -2 x +   y == 14
@@ -2418,7 +2418,7 @@ def solve_linear_system(system, *symbols, **flags):
 
 
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
-    """Solve equation of a type p(x; a_1, ..., a_k) == q(x) where both
+    """solveset equation of a type p(x; a_1, ..., a_k) == q(x) where both
        p, q are univariate polynomials and f depends on k parameters.
        The result of this functions is a dictionary with symbolic
        values of those parameters with respect to coefficients in q.
@@ -2429,7 +2429,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
 
        >>> from sympy import Eq
        >>> from sympy.abc import a, b, c, x
-       >>> from sympy.solvers import solve_undetermined_coeffs
+       >>> from sympy.solvesetrs import solve_undetermined_coeffs
 
        >>> solve_undetermined_coeffs(Eq(2*a*x + a+b, x), [a, b], x)
        {a: 1/2, b: -1/2}
@@ -2449,16 +2449,16 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
 
     if not any(equ.has(sym) for equ in system):
         # consecutive powers in the input expressions have
-        # been successfully collected, so solve remaining
+        # been successfully collected, so solveset remaining
         # system using Gaussian elimination algorithm
-        return solve(system, *coeffs, **flags)
+        return solveset(system, *coeffs, **flags)
     else:
         return None  # no solutions
 
 
 def solve_linear_system_LU(matrix, syms):
     """
-    Solves the augmented matrix system using LUsolve and returns a dictionary
+    solvesets the augmented matrix system using LUsolveset and returns a dictionary
     in which solutions are keyed to the symbols of syms *as ordered*.
 
     The matrix must be invertible.
@@ -2468,7 +2468,7 @@ def solve_linear_system_LU(matrix, syms):
 
     >>> from sympy import Matrix
     >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.solvers import solve_linear_system_LU
+    >>> from sympy.solvesetrs.solvesetrs import solve_linear_system_LU
 
     >>> solve_linear_system_LU(Matrix([
     ... [1, 2, 0, 1],
@@ -2479,14 +2479,14 @@ def solve_linear_system_LU(matrix, syms):
     See Also
     ========
 
-    sympy.matrices.LUsolve
+    sympy.matrices.LUsolveset
 
     """
     if matrix.rows != matrix.cols - 1:
         raise ValueError("Rows should be equal to columns - 1")
     A = matrix[:matrix.rows, :matrix.rows]
     b = matrix[:, matrix.cols - 1:]
-    soln = A.LUsolve(b)
+    soln = A.LUsolveset(b)
     solutions = {}
     for i in range(soln.rows):
         solutions[syms[i]] = soln[i, 0]
@@ -2597,9 +2597,9 @@ multi_inverses = {
 
 def _tsolve(eq, sym, **flags):
     """
-    Helper for _solve that solves a transcendental equation with respect
+    Helper for _solve that solvesets a transcendental equation with respect
     to the given symbol. Various equations containing powers and logarithms,
-    can be solved.
+    can be solvesetd.
 
     There is currently no guarantee that all solutions will be returned or
     that a real solution will be favored over a complex one.
@@ -2613,7 +2613,7 @@ def _tsolve(eq, sym, **flags):
     ========
 
     >>> from sympy import log
-    >>> from sympy.solvers.solvers import _tsolve as tsolve
+    >>> from sympy.solvesetrs.solvesetrs import _tsolve as tsolve
     >>> from sympy.abc import x
 
     >>> tsolve(3**(2*x + 5) - 4, x)
@@ -2828,7 +2828,7 @@ def _tsolve(eq, sym, **flags):
 @conserve_mpmath_dps
 def nsolve(*args, **kwargs):
     r"""
-    Solve a nonlinear equation system numerically::
+    solveset a nonlinear equation system numerically::
 
         nsolve(f, [args,] x0, modules=['mpmath'], **kwargs)
 
@@ -2844,10 +2844,10 @@ def nsolve(*args, **kwargs):
 
     If the keyword arguments contain 'dict'=True (default is False) nsolve
     will return a list (perhaps empty) of solution mappings. This might be
-    especially useful if you want to use nsolve as a fallback to solve since
+    especially useful if you want to use nsolve as a fallback to solveset since
     using the dict argument for both methods produces return values of
     consistent type structure. Please note: to keep this consistency with
-    solve, the solution will be returned in a list even though nsolve
+    solveset, the solution will be returned in a list even though nsolve
     (currently at least) only finds one solution at a time.
 
     Overdetermined systems are supported.
@@ -2872,7 +2872,7 @@ def nsolve(*args, **kwargs):
     >>> nsolve(sin(x), 2)
     3.14159265358979
 
-    To solve with higher precision than the default, use the prec argument.
+    To solveset with higher precision than the default, use the prec argument.
 
     >>> from sympy import cos
     >>> nsolve(cos(x) - x, 1)
@@ -2882,7 +2882,7 @@ def nsolve(*args, **kwargs):
     >>> cos(_)
     0.73908513321516064165531208767387340401341175890076
 
-    To solve for complex roots of real functions, a nonreal initial point
+    To solveset for complex roots of real functions, a nonreal initial point
     must be specified:
 
     >>> from sympy import I
@@ -2891,7 +2891,7 @@ def nsolve(*args, **kwargs):
 
     mpmath.findroot is used and you can find there more extensive
     documentation, especially concerning keyword parameters and
-    available solvers. Note, however, that functions which are very
+    available solvesetrs. Note, however, that functions which are very
     steep near the root the verification of the solution may fail. In
     this case you should use the flag `verify=False` and
     independently verify the solution.
@@ -2914,7 +2914,7 @@ def nsolve(*args, **kwargs):
     and a bisection method is used:
 
     >>> bounds = lambda i: (3.14*i, 3.14*(i + 1))
-    >>> nsolve(f, bounds(100), solver='bisect', verify=False)
+    >>> nsolve(f, bounds(100), solvesetr='bisect', verify=False)
     315.730061685774
 
     Alternatively, a function may be better behaved when the
@@ -2936,9 +2936,9 @@ def nsolve(*args, **kwargs):
     if 'method' in kwargs:
         raise ValueError(filldedent('''
             Keyword "method" should not be used in this context.  When using
-            some mpmath solvers directly, the keyword "method" is
+            some mpmath solvesetrs directly, the keyword "method" is
             used, but when using nsolve (and findroot) the keyword to use is
-            "solver".'''))
+            "solvesetr".'''))
 
     if 'prec' in kwargs:
         prec = kwargs.pop('prec')
@@ -3017,7 +3017,7 @@ def nsolve(*args, **kwargs):
     # create functions
     f = lambdify(fargs, f.T, modules)
     J = lambdify(fargs, J, modules)
-    # solve the system numerically
+    # solveset the system numerically
     x = findroot(f, x0, J=J, **kwargs)
     if as_dict:
         return [dict(zip(fargs, [sympify(xi) for xi in x]))]
@@ -3035,7 +3035,7 @@ def _invert(eq, *symbols, **kwargs):
     Examples
     ========
 
-    >>> from sympy.solvers.solvers import _invert as invert
+    >>> from sympy.solvesetrs.solvesetrs import _invert as invert
     >>> from sympy import sqrt, cos
     >>> from sympy.abc import x, y
     >>> invert(x - 3)
@@ -3146,7 +3146,7 @@ def _invert(eq, *symbols, **kwargs):
                     if len(ad.args) == len(bd.args) == 1:
                         lhs = ad.args[0] - bd.args[0]
                     elif len(ad.args) == len(bd.args):
-                        # should be able to solve
+                        # should be able to solveset
                         # f(x, y) - f(2 - x, 0) == 0 -> x == 1
                         raise NotImplementedError(
                             'equal function with more than 1 argument')
@@ -3175,7 +3175,7 @@ def _invert(eq, *symbols, **kwargs):
                     lhs = lhs.args[0]
                     rhs = rhs.args[0]
                 elif len(lhs.args) == len(rhs.args):
-                    # should be able to solve
+                    # should be able to solveset
                     # f(x, y) == f(2, 3) -> x == 2
                     # f(x, x + y) == f(2, 3) -> x == 2
                     raise NotImplementedError(
@@ -3193,8 +3193,8 @@ def _invert(eq, *symbols, **kwargs):
         #    a is an Integer and dointpow=True (this gives real branch of root)
         #    a is not an Integer and the equation is multivariate and the
         #      base has more than 1 symbol in it
-        # The rationale for this is that right now the multi-system solvers
-        # doesn't try to resolve generators to see, for example, if the whole
+        # The rationale for this is that right now the multi-system solvesetrs
+        # doesn't try to resolveset generators to see, for example, if the whole
         # system is written in terms of sqrt(x + y) so it will just fail, so we
         # do that step here.
         if lhs.is_Pow and (
@@ -3217,7 +3217,7 @@ def unrad(eq, *syms, **flags):
     NotImplementedError is raised if there are radicals and they cannot be
     removed or if the relationship between the original symbols and the
     change of variable needed to rewrite the system as a polynomial cannot
-    be solved.
+    be solvesetd.
 
     Otherwise the tuple, ``(eq, cov)``, is returned where::
 
@@ -3257,9 +3257,9 @@ def unrad(eq, *syms, **flags):
     Examples
     ========
 
-    >>> from sympy.solvers.solvers import unrad
+    >>> from sympy.solvesetrs.solvesetrs import unrad
     >>> from sympy.abc import x
-    >>> from sympy import sqrt, Rational, root, real_roots, solve
+    >>> from sympy import sqrt, Rational, root, real_roots, solveset
 
     >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
     (x**5 - 64, [])
@@ -3584,5 +3584,5 @@ def unrad(eq, *syms, **flags):
     eq, cov = _canonical(eq, cov)
     return eq, cov
 
-from sympy.solvers.bivariate import (
+from sympy.solvesetrs.bivariate import (
     bivariate_type, _solve_lambert, _filtered_gens)

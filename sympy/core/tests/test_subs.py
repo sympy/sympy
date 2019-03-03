@@ -141,7 +141,7 @@ def test_dict_ambigous():   # see issue 3566
     assert f.subs(exp(x), y).subs(x, y) == y**2
 
     # length of args and count_ops are the same so
-    # default_sort_key resolves ordering...if one
+    # default_sort_key resolvesets ordering...if one
     # doesn't want this result then an unordered
     # sequence should not be used.
     e = 1 + x*y

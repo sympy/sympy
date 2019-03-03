@@ -2455,7 +2455,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
                     final_subs.append((x, v))
                 else:
                     # (x, y) -> (y, a),  x->y must be done last
-                    # but before temporary variables are resolved
+                    # but before temporary variables are resolvesetd
                     final_subs.insert(0, (k, v))
             else:
                 subslist.append((k, v))

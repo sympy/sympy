@@ -35,7 +35,7 @@ def test_one_dof():
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
 
     assert simplify(KM.rhs() -
-                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
+                    KM.mass_matrix_full.LUsolveset(KM.forcing_full)) == zeros(2, 1)
 
     assert (KM.linearize(A_and_B=True, )[0] == Matrix([[0, 1], [-k/m, -c/m]]))
 
@@ -65,7 +65,7 @@ def test_two_dof():
 
     # Finally we create the KanesMethod object, specify the inertial frame,
     # pass relevant information, and form Fr & Fr*. Then we calculate the mass
-    # matrix and forcing terms, and finally solve for the udots.
+    # matrix and forcing terms, and finally solveset for the udots.
     KM = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kd)
     # The old input format raises a deprecation warning, so catch it here so
     # it doesn't cause py.test to fail.
@@ -79,7 +79,7 @@ def test_two_dof():
                                     c2 * u2) / m)
 
     assert simplify(KM.rhs() -
-                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(4, 1)
+                    KM.mass_matrix_full.LUsolveset(KM.forcing_full)) == zeros(4, 1)
 
 
 def test_pend():
@@ -104,7 +104,7 @@ def test_pend():
     rhs.simplify()
     assert expand(rhs[0]) == expand(-g / l * sin(q))
     assert simplify(KM.rhs() -
-                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
+                    KM.mass_matrix_full.LUsolveset(KM.forcing_full)) == zeros(2, 1)
 
 
 def test_rolling_disc():
@@ -157,7 +157,7 @@ def test_rolling_disc():
     # before. Specify inertial frame, supply generalized speeds, supply
     # kinematic differential equation dictionary, compute Fr from the force
     # list and Fr* from the body list, compute the mass matrix and forcing
-    # terms, then solve for the u dots (time derivatives of the generalized
+    # terms, then solveset for the u dots (time derivatives of the generalized
     # speeds).
     KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd)
     with warns_deprecated_sympy():
@@ -171,7 +171,7 @@ def test_rolling_disc():
     assert rhs.expand() == Matrix([(6*u2*u3*r - u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
     assert simplify(KM.rhs() -
-                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(6, 1)
+                    KM.mass_matrix_full.LUsolveset(KM.forcing_full)) == zeros(6, 1)
 
     # This code tests our output vs. benchmark values. When r=g=m=1, the
     # critical speed (where all eigenvalues of the linearized equations are 0)

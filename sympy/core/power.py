@@ -1441,7 +1441,7 @@ class Pow(Expr):
                     try:
                         n = int(n.evalf()) + 1  # XXX why is 1 being added?
                     except TypeError:
-                        pass  # hope that base allows this to be resolved
+                        pass  # hope that base allows this to be resolvesetd
                 n = _sympify(n)
             return n, infinite
 

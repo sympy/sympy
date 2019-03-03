@@ -26,18 +26,18 @@ def ambiguity_warn(dispatcher, ambiguities):
     warn(warning_text(dispatcher.name, ambiguities), AmbiguityWarning)
 
 
-_unresolved_dispatchers = set()
-_resolve = [True]
+_unresolvesetd_dispatchers = set()
+_resolveset = [True]
 
 
 def halt_ordering():
-    _resolve[0] = False
+    _resolveset[0] = False
 
 
 def restart_ordering(on_ambiguity=ambiguity_warn):
-    _resolve[0] = True
-    while _unresolved_dispatchers:
-        dispatcher = _unresolved_dispatchers.pop()
+    _resolveset[0] = True
+    while _unresolvesetd_dispatchers:
+        dispatcher = _unresolvesetd_dispatchers.pop()
         dispatcher.reorder(on_ambiguity=on_ambiguity)
 
 
@@ -175,13 +175,13 @@ class Dispatcher(object):
         self._cache.clear()
 
     def reorder(self, on_ambiguity=ambiguity_warn):
-        if _resolve[0]:
+        if _resolveset[0]:
             self.ordering = ordering(self.funcs)
             amb = ambiguities(self.funcs)
             if amb:
                 on_ambiguity(self, amb)
         else:
-            _unresolved_dispatchers.add(self)
+            _unresolvesetd_dispatchers.add(self)
 
     def __call__(self, *args, **kwargs):
         types = tuple([type(arg) for arg in args])
@@ -250,13 +250,13 @@ class Dispatcher(object):
                 result = self.funcs[signature]
                 yield result
 
-    def resolve(self, types):
+    def resolveset(self, types):
         """ Deterimine appropriate implementation for this type signature
 
         .. deprecated:: 0.4.4
             Use ``dispatch(*types)`` instead
         """
-        warn("resolve() is deprecated, use dispatch(*types)",
+        warn("resolveset() is deprecated, use dispatch(*types)",
              DeprecationWarning)
 
         return self.dispatch(*types)

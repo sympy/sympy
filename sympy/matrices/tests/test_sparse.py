@@ -291,20 +291,20 @@ def test_sparse_matrix():
     assert U.is_upper
     assert (L*U).permute_rows(p, 'backward') - M == sparse_zeros(3)
 
-    # test_LUsolve
+    # test_LUsolveset
     A = SparseMatrix([[2, 3, 5],
                       [3, 6, 2],
                       [8, 3, 6]])
     x = SparseMatrix(3, 1, [3, 7, 5])
     b = A*x
-    soln = A.LUsolve(b)
+    soln = A.LUsolveset(b)
     assert soln == x
     A = SparseMatrix([[0, -1, 2],
                       [5, 10, 7],
                       [8,  3, 4]])
     x = SparseMatrix(3, 1, [-1, 2, 5])
     b = A*x
-    soln = A.LUsolve(b)
+    soln = A.LUsolveset(b)
     assert soln == x
 
     # test_inverse
@@ -571,9 +571,9 @@ def test_sparse_solve():
     assert A.inv(method='LDL') == ans
     assert A * ans == SparseMatrix(eye(3))
 
-    s = A.solve(A[:, 0], 'LDL')
+    s = A.solveset(A[:, 0], 'LDL')
     assert A*s == A[:, 0]
-    s = A.solve(A[:, 0], 'CH')
+    s = A.solveset(A[:, 0], 'CH')
     assert A*s == A[:, 0]
     A = A.col_join(A)
     s = A.solve_least_squares(A[:, 0], 'CH')

@@ -245,7 +245,7 @@ class ImageSet(Set):
 
     def _contains(self, other):
         from sympy.matrices import Matrix
-        from sympy.solvers.solveset import solveset, linsolve
+        from sympy.solvesetrs.solvesetset import solvesetset, linsolve
         from sympy.utilities.iterables import is_sequence, iterable, cartes
         L = self.lamda
         if is_sequence(other):
@@ -283,7 +283,7 @@ class ImageSet(Set):
                         continue
                     elif len(s) == 1:
                         sy = s.pop()
-                        sol = solveset(e, sy)
+                        sol = solvesetset(e, sy)
                         if sol is S.EmptySet:
                             return S.false
                         elif isinstance(sol, FiniteSet):
@@ -297,7 +297,7 @@ class ImageSet(Set):
             x = L.variables[0]
             if isinstance(L.expr, Expr):
                 # scalar -> scalar mapping
-                solnsSet = solveset(L.expr - other, x)
+                solnsSet = solvesetset(L.expr - other, x)
                 if solnsSet.is_FiniteSet:
                     solns = list(solnsSet)
                 else:
@@ -305,7 +305,7 @@ class ImageSet(Set):
             else:
                 # scalar -> vector
                 for e, o in zip(L.expr, other):
-                    solns = solveset(e - o, x)
+                    solns = solvesetset(e - o, x)
                     if solns is S.EmptySet:
                         return S.false
                     for soln in solns:

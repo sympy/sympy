@@ -1,7 +1,7 @@
 from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, ITE,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
-    Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
+    Piecewise, piecewise_fold, Rational, solveset, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
     factor_terms, DiracDelta, Heaviside, Add, Mul, factorial)
 from sympy.printing import srepr
@@ -381,41 +381,41 @@ def test_piecewise_simplify():
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
     f = abs2.subs(x, x - 2)
-    assert solve(f, x) == [2]
-    assert solve(f - 1, x) == [1, 3]
+    assert solveset(f, x) == [2]
+    assert solveset(f - 1, x) == [1, 3]
 
     f = Piecewise(((x - 2)**2, x >= 0), (1, True))
-    assert solve(f, x) == [2]
+    assert solveset(f, x) == [2]
 
     g = Piecewise(((x - 5)**5, x >= 4), (f, True))
-    assert solve(g, x) == [2, 5]
+    assert solveset(g, x) == [2, 5]
 
     g = Piecewise(((x - 5)**5, x >= 4), (f, x < 4))
-    assert solve(g, x) == [2, 5]
+    assert solveset(g, x) == [2, 5]
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, x < 2))
-    assert solve(g, x) == [5]
+    assert solveset(g, x) == [5]
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, True))
-    assert solve(g, x) == [5]
+    assert solveset(g, x) == [5]
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
-    assert solve(g, x) == [5]
+    assert solveset(g, x) == [5]
 
     g = Piecewise(((x - 5)**5, x >= 2),
                   (-x + 2, x - 2 <= 0), (x - 2, x - 2 > 0))
-    assert solve(g, x) == [5]
+    assert solveset(g, x) == [5]
 
     # if no symbol is given the piecewise detection must still work
-    assert solve(Piecewise((x - 2, x > 2), (2 - x, True)) - 3) == [-1, 5]
+    assert solveset(Piecewise((x - 2, x > 2), (2 - x, True)) - 3) == [-1, 5]
 
     f = Piecewise(((x - 2)**2, x >= 0), (0, True))
-    raises(NotImplementedError, lambda: solve(f, x))
+    raises(NotImplementedError, lambda: solveset(f, x))
 
     def nona(ans):
         return list(filter(lambda x: x is not S.NaN, ans))
     p = Piecewise((x**2 - 4, x < y), (x - 2, True))
-    ans = solve(p, x)
+    ans = solveset(p, x)
     assert nona([i.subs(y, -2) for i in ans]) == [2]
     assert nona([i.subs(y, 2) for i in ans]) == [-2, 2]
     assert nona([i.subs(y, 3) for i in ans]) == [-2, 2]
@@ -429,20 +429,20 @@ def test_piecewise_solve():
         (x - 3, S(0) <= x - 3),
         (3 - x, S(0) > x - 3)
     )
-    assert solve(absxm3 - y, x) == [
+    assert solveset(absxm3 - y, x) == [
         Piecewise((-y + 3, -y < 0), (S.NaN, True)),
         Piecewise((y + 3, y >= 0), (S.NaN, True))]
     p = Symbol('p', positive=True)
-    assert solve(absxm3 - p, x) == [-p + 3, p + 3]
+    assert solveset(absxm3 - p, x) == [-p + 3, p + 3]
 
     # issue 6989
     f = Function('f')
-    assert solve(Eq(-f(x), Piecewise((1, x > 0), (0, True))), f(x)) == \
+    assert solveset(Eq(-f(x), Piecewise((1, x > 0), (0, True))), f(x)) == \
         [Piecewise((-1, x > 0), (0, True))]
 
     # issue 8587
     f = Piecewise((2*x**2, And(S(0) < x, x < 1)), (2, True))
-    assert solve(f - 1) == [1/sqrt(2)]
+    assert solveset(f - 1) == [1/sqrt(2)]
 
 
 def test_piecewise_fold():
@@ -708,10 +708,10 @@ def test_issue_11045():
     # targetcond is Eq
     assert Piecewise((1, x > 1), (2, Eq(1, x)), (3, True)
         ).integrate((x, 0, 4)) == 6
-    # And has Relational needing to be solved
+    # And has Relational needing to be solvesetd
     assert Piecewise((1, And(2*x > x + 1, x < 2)), (0, True)
         ).integrate((x, 0, 3)) == 1
-    # Or has Relational needing to be solved
+    # Or has Relational needing to be solvesetd
     assert Piecewise((1, Or(2*x > x + 2, x < 1)), (0, True)
         ).integrate((x, 0, 3)) == 2
     # ignore hidden false (handled in canonicalization)
@@ -917,7 +917,7 @@ def test_issue_6900():
 
 
 def test_issue_10122():
-    assert solve(abs(x) + abs(x - 1) - 1 > 0, x
+    assert solveset(abs(x) + abs(x - 1) - 1 > 0, x
         ) == Or(And(-oo < x, x < 0), And(S.One < x, x < oo))
 
 

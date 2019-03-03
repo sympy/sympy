@@ -58,7 +58,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.163.6984
     (specifically, the second algorithm)
     """
-    from sympy import solve
+    from sympy import solveset
 
     quick = args.pop('quick', True)
     polynomial = args.pop('polynomial', False)
@@ -159,7 +159,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
                         order=opt.order, polys=True)[1]
 
             S = Poly(r, gens=opt.gens).coeffs()
-            sol = solve(S, Cs + Ds, particular=True, quick=True)
+            sol = solveset(S, Cs + Ds, particular=True, quick=True)
 
             if sol and not all([s == 0 for s in sol.values()]):
                 c = c_hat.subs(sol)
@@ -206,7 +206,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
         debug('Looking for best minimal solution. Got: %s' % len(allsol))
         newsol = []
         for c_hat, d_hat, S, ng in allsol:
-            sol = solve(S, ng, particular=True, quick=False)
+            sol = solveset(S, ng, particular=True, quick=False)
             newsol.append((c_hat.subs(sol), d_hat.subs(sol)))
         c, d = min(newsol, key=lambda x: len(x[0].terms()) + len(x[1].terms()))
 

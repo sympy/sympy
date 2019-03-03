@@ -12,7 +12,7 @@ from sympy.polys.polyerrors import (
 
 from sympy import (
     S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
-    solve, legendre_poly
+    solveset, legendre_poly
 )
 
 from sympy.utilities.pytest import raises, slow
@@ -144,7 +144,7 @@ def test_CRootOf___eval_Eq__():
     assert Eq(r, I) is S.false
     assert Eq(r, f(0)) is S.false
     assert Eq(r, f(0)) is S.false
-    sol = solve(eq)
+    sol = solveset(eq)
     for s in sol:
         if s.is_real:
             assert Eq(r, s) is S.false
@@ -153,7 +153,7 @@ def test_CRootOf___eval_Eq__():
         if s.is_real:
             assert Eq(r, s) is S.true
     eq = x**3 + x + 1
-    sol = solve(eq)
+    sol = solveset(eq)
     assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol] == [
         False, False, True, False, True, False, True, False, False]
     assert Eq(rootof(eq, 0), 1 + S.ImaginaryUnit) == False

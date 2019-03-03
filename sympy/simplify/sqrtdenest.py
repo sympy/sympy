@@ -117,7 +117,7 @@ def sqrtdenest(expr, max_iter=3):
     See Also
     ========
 
-    sympy.solvers.solvers.unrad
+    sympy.solvesetrs.solvesetrs.unrad
 
     References
     ==========
@@ -410,7 +410,7 @@ def _sqrt_symbolic_denest(a, b, r):
     sqrt((sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2))**2)
 
     Notice that the argument of the sqrt is a square. If x is made positive
-    then the sqrt of the square is resolved:
+    then the sqrt of the square is resolvesetd:
 
     >>> _.subs(x, Symbol('x', positive=True))
     sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2)

@@ -1594,7 +1594,7 @@ class Basic(with_metaclass(ManagedProperties)):
         4*x**2
 
         The ``old`` flag will give the old-style pattern matching where
-        expressions and patterns are essentially solved to give the
+        expressions and patterns are essentially solvesetd to give the
         match. Both of the following give None unless ``old=True``:
 
         >>> (x - 2).match(p - x, old=True)

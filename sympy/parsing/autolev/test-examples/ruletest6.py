@@ -19,8 +19,8 @@ a = (e).subs({q1:x**2+y**2,q2:x-y}).subs({x:2,y:z**2})
 j, k, l = sm.symbols('j k l', real=True)
 p1 = sm.Poly(sm.Matrix([j,k,l]).reshape(1, 3), x)
 p2 = sm.Poly(j*x+k, x)
-root1 = [i.evalf() for i in sm.solve(p1, x)]
-root2 = [i.evalf() for i in sm.solve(sm.Poly(sm.Matrix([1,2,3]).reshape(3, 1), x),x)]
+root1 = [i.evalf() for i in sm.solveset(p1, x)]
+root2 = [i.evalf() for i in sm.solveset(sm.Poly(sm.Matrix([1,2,3]).reshape(3, 1), x),x)]
 m = sm.Matrix([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]).reshape(4, 4)
 am = (m).T+m
 bm = sm.Matrix([i.evalf() for i in (m).eigenvals().keys()])

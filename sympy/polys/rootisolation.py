@@ -1908,10 +1908,10 @@ class ComplexInterval(object):
     (3975/51712, 2025/25856) x (29325/25856, 117375/103424)
 
     Even though the real ranges overlap, the imaginary do not, so
-    the roots have been resolved as distinct. Intervals are disjoint
+    the roots have been resolvesetd as distinct. Intervals are disjoint
     when either the real or imaginary component of the intervals is
     distinct. In the case above, the real components have not been
-    resolved (so we don't know, yet, which root has the smaller real
+    resolvesetd (so we don't know, yet, which root has the smaller real
     part) but the imaginary part of ``close`` is larger than ``root``:
 
     >>> close.n(3)

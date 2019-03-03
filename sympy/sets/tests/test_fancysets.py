@@ -104,7 +104,7 @@ def test_image_is_ImageSet():
 @XFAIL
 def test_halfcircle():
     # This test sometimes works and sometimes doesn't.
-    # It may be an issue with solve? Maybe with using Lambdas/dummys?
+    # It may be an issue with solveset? Maybe with using Lambdas/dummys?
     # I believe the code within fancysets is correct
     r, th = symbols('r, theta', real=True)
     L = Lambda((r, th), (r*cos(th), r*sin(th)))

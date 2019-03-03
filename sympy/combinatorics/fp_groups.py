@@ -262,7 +262,7 @@ class FpGroup(DefaultPrinting):
             return True
         # Abelianisation test: check is the abelianisation is infinite
         abelian_rels = []
-        from sympy.polys.solvers import RawMatrix as Matrix
+        from sympy.polys.solvesetrs import RawMatrix as Matrix
         from sympy.polys.domains import ZZ
         from sympy.matrices.normalforms import invariant_factors
         for rel in self.relators:
@@ -771,7 +771,7 @@ def descendant_subgroups(S, C, R1_c_list, x, R2, N, Y):
 
 def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta, Y):
     r"""
-    Solves the problem of trying out each individual possibility
+    solvesets the problem of trying out each individual possibility
     for `\alpha^x.
 
     """

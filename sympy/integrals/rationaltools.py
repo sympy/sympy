@@ -138,7 +138,7 @@ def ratint_ratpart(f, g, x):
 
     ratint, ratint_logpart
     """
-    from sympy import solve
+    from sympy import solveset
 
     f = Poly(f, x)
     g = Poly(g, x)
@@ -158,7 +158,7 @@ def ratint_ratpart(f, g, x):
 
     H = f - A.diff()*v + A*(u.diff()*v).quo(u) - B*u
 
-    result = solve(H.coeffs(), C_coeffs)
+    result = solveset(H.coeffs(), C_coeffs)
 
     A = A.as_expr().subs(result)
     B = B.as_expr().subs(result)

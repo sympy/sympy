@@ -14,7 +14,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.solvers import solve, linsolve
+from sympy.solvesetrs import solveset, linsolve
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent, func_name
 
@@ -409,8 +409,8 @@ class Plane(GeometryEntity):
                 a = Point3D(o.arbitrary_point(t))
                 b = self.equation(x, y, z)
 
-                # TODO: Replace solve with solveset, when this line is tested
-                c = solve(b.subs(list(zip((x, y, z), a.args))), t)
+                # TODO: Replace solveset with solvesetset, when this line is tested
+                c = solveset(b.subs(list(zip((x, y, z), a.args))), t)
                 if not c:
                     return []
                 else:
@@ -864,7 +864,7 @@ class Plane(GeometryEntity):
         """
         from sympy.geometry.point import Point
         from sympy.core.symbol import Dummy
-        from sympy.solvers.solvers import solve
+        from sympy.solvesetrs.solvesetrs import solveset
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):
@@ -874,10 +874,10 @@ class Plane(GeometryEntity):
         if isinstance(u, Symbol) and v is None:
             delta = self.arbitrary_point(u) - self.p1
             eq = delta - (other - self.p1).unit
-            sol = solve(eq, u, dict=True)
+            sol = solveset(eq, u, dict=True)
         elif isinstance(u, Symbol) and isinstance(v, Symbol):
             pt = self.arbitrary_point(u, v)
-            sol = solve(pt - other, (u, v), dict=True)
+            sol = solveset(pt - other, (u, v), dict=True)
         else:
             raise ValueError('expecting 1 or 2 symbols')
         if not sol:

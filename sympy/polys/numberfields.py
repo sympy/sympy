@@ -608,7 +608,7 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
     Examples
     ========
 
-    >>> from sympy import minimal_polynomial, sqrt, solve, QQ
+    >>> from sympy import minimal_polynomial, sqrt, solveset, QQ
     >>> from sympy.abc import x, y
 
     >>> minimal_polynomial(sqrt(2), x)
@@ -617,7 +617,7 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
     x - sqrt(2)
     >>> minimal_polynomial(sqrt(2) + sqrt(3), x)
     x**4 - 10*x**2 + 1
-    >>> minimal_polynomial(solve(x**3 + x + 3)[0], x)
+    >>> minimal_polynomial(solveset(x**3 + x + 3)[0], x)
     x**3 + x + 3
     >>> minimal_polynomial(sqrt(y), x)
     x**2 - y

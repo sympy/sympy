@@ -844,10 +844,10 @@ if AutolevListener:
                 self.matrix_expr.append(ctx)
                 expr = self.getValue(ch.expr(0))
                 if ch.expr(0) in self.matrix_expr or (expr in self.type.keys() and self.type[expr] == "matrix"):
-                    self.setValue(ctx, "[i.evalf() for i in " + "sm.solve(" +
+                    self.setValue(ctx, "[i.evalf() for i in " + "sm.solveset(" +
                                   "sm.Poly(" + expr + ", " + "x),x)]")
                 else:
-                    self.setValue(ctx, "[i.evalf() for i in " + "sm.solve(" +
+                    self.setValue(ctx, "[i.evalf() for i in " + "sm.solveset(" +
                                   expr + ", " + self.getValue(ch.expr(1)) + ")]")
 
             # Transpose(A), Inv(A)
@@ -1608,8 +1608,8 @@ if AutolevListener:
 
         # Code commands
         def exitCodegen(self, ctx):
-            # Handles the CODE() command ie the solvers and the codgen part.
-            # Uses linsolve for the algebraic solvers and nsolve for non linear solvers.
+            # Handles the CODE() command ie the solvesetrs and the codgen part.
+            # Uses linsolve for the algebraic solvesetrs and nsolve for non linear solvesetrs.
 
             if ctx.functionCall().getChild(0).getText().lower() == "algebraic":
                 matrix_name = self.getValue(ctx.functionCall().expr(0))
@@ -1771,8 +1771,8 @@ if AutolevListener:
                         self.write(expr + " = " + "sm.factor(" + expr + ", " +
                                    self.getValue(ctx.expr(1)) + ")\n")
 
-                # Solve(Zero, x, y)
-                elif func_name == "solve":
+                # solveset(Zero, x, y)
+                elif func_name == "solveset":
                     l = []
                     l2 = []
                     num = 0
@@ -1791,9 +1791,9 @@ if AutolevListener:
                                 pass
 
                     for i in l2:
-                        self.explicit.update({i: "sm.solve" + "".join(l) + "[" + i + "]"})
+                        self.explicit.update({i: "sm.solveset" + "".join(l) + "[" + i + "]"})
 
-                    self.write("print(sm.solve" + "".join(l) + ")\n")
+                    self.write("print(sm.solveset" + "".join(l) + ")\n")
 
                 # Arrange(y, n, x) *
                 elif func_name == "arrange":

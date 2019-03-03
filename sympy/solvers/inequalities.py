@@ -20,14 +20,14 @@ from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 
 def solve_poly_inequality(poly, rel):
-    """Solve a polynomial inequality with rational coefficients.
+    """solveset a polynomial inequality with rational coefficients.
 
     Examples
     ========
 
     >>> from sympy import Poly
     >>> from sympy.abc import x
-    >>> from sympy.solvers.inequalities import solve_poly_inequality
+    >>> from sympy.solvesetrs.inequalities import solve_poly_inequality
 
     >>> solve_poly_inequality(Poly(x, x, domain='ZZ'), '==')
     [{0}]
@@ -112,12 +112,12 @@ def solve_poly_inequality(poly, rel):
 
 
 def solve_poly_inequalities(polys):
-    """Solve polynomial inequalities with rational coefficients.
+    """solveset polynomial inequalities with rational coefficients.
 
     Examples
     ========
 
-    >>> from sympy.solvers.inequalities import solve_poly_inequalities
+    >>> from sympy.solvesetrs.inequalities import solve_poly_inequalities
     >>> from sympy.polys import Poly
     >>> from sympy.abc import x
     >>> solve_poly_inequalities(((
@@ -130,14 +130,14 @@ def solve_poly_inequalities(polys):
 
 
 def solve_rational_inequalities(eqs):
-    """Solve a system of rational inequalities with rational coefficients.
+    """solveset a system of rational inequalities with rational coefficients.
 
     Examples
     ========
 
     >>> from sympy.abc import x
     >>> from sympy import Poly
-    >>> from sympy.solvers.inequalities import solve_rational_inequalities
+    >>> from sympy.solvesetrs.inequalities import solve_rational_inequalities
 
     >>> solve_rational_inequalities([[
     ... ((Poly(-x + 1), Poly(1, x)), '>='),
@@ -203,7 +203,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     ========
 
     >>> from sympy import Poly, Symbol
-    >>> from sympy.solvers.inequalities import reduce_rational_inequalities
+    >>> from sympy.solvesetrs.inequalities import reduce_rational_inequalities
 
     >>> x = Symbol('x', real=True)
 
@@ -285,7 +285,7 @@ def reduce_abs_inequality(expr, rel, gen):
     ========
 
     >>> from sympy import Abs, Symbol
-    >>> from sympy.solvers.inequalities import reduce_abs_inequality
+    >>> from sympy.solvesetrs.inequalities import reduce_abs_inequality
     >>> x = Symbol('x', real=True)
 
     >>> reduce_abs_inequality(Abs(x - 5) - 3, '<', x)
@@ -301,7 +301,7 @@ def reduce_abs_inequality(expr, rel, gen):
     """
     if gen.is_real is False:
          raise TypeError(filldedent('''
-            can't solve inequalities with absolute values containing
+            can't solveset inequalities with absolute values containing
             non-real variables.
             '''))
 
@@ -368,7 +368,7 @@ def reduce_abs_inequalities(exprs, gen):
 
     >>> from sympy import Abs, Symbol
     >>> from sympy.abc import x
-    >>> from sympy.solvers.inequalities import reduce_abs_inequalities
+    >>> from sympy.solvesetrs.inequalities import reduce_abs_inequalities
     >>> x = Symbol('x', real=True)
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
@@ -388,7 +388,7 @@ def reduce_abs_inequalities(exprs, gen):
 
 
 def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, continuous=False):
-    """Solves a real univariate inequality.
+    """solvesets a real univariate inequality.
 
     Parameters
     ==========
@@ -396,11 +396,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     expr : Relational
         The target inequality
     gen : Symbol
-        The variable for which the inequality is solved
+        The variable for which the inequality is solvesetd
     relational : bool
         A Relational type output is expected or not
     domain : Set
-        The domain over which the equation is solved
+        The domain over which the equation is solvesetd
     continuous: bool
         True if expr is known to be continuous over the given domain
         (and so continuous_domain() doesn't need to be called on it)
@@ -415,19 +415,19 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Notes
     =====
 
-    Currently, we cannot solve all the inequalities due to limitations in
+    Currently, we cannot solveset all the inequalities due to limitations in
     `solvify`. Also, the solution returned for trigonometric inequalities
     are restricted in its periodic interval.
 
     See Also
     ========
 
-    solvify: solver returning solveset solutions with solve's output API
+    solvify: solvesetr returning solvesetset solutions with solveset's output API
 
     Examples
     ========
 
-    >>> from sympy.solvers.inequalities import solve_univariate_inequality
+    >>> from sympy.solvesetrs.inequalities import solve_univariate_inequality
     >>> from sympy import Symbol, sin, Interval, S
     >>> x = Symbol('x')
 
@@ -448,12 +448,12 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     from sympy import im
     from sympy.calculus.util import (continuous_domain, periodicity,
         function_range)
-    from sympy.solvers.solvers import denoms
-    from sympy.solvers.solveset import solveset_real, solvify, solveset
-    from sympy.solvers.solvers import solve
+    from sympy.solvesetrs.solvesetrs import denoms
+    from sympy.solvesetrs.solvesetset import solvesetset_real, solvify, solvesetset
+    from sympy.solvesetrs.solvesetrs import solveset
 
     # This keeps the function independent of the assumptions about `gen`.
-    # `solveset` makes sure this function is called only when the domain is
+    # `solvesetset` makes sure this function is called only when the domain is
     # real.
     _gen = gen
     _domain = domain
@@ -523,7 +523,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 # replace gen with generic x since it's
                 # univariate anyway
                 raise NotImplementedError(filldedent('''
-                    The inequality, %s, cannot be solved using
+                    The inequality, %s, cannot be solvesetd using
                     solve_univariate_inequality.
                     ''' % expr.subs(gen, Symbol('x'))))
 
@@ -595,7 +595,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 check = True
                 im_sol = FiniteSet()
                 try:
-                    a = solveset(im(expanded_e), gen, domain)
+                    a = solvesetset(im(expanded_e), gen, domain)
                     if not isinstance(a, Interval):
                         for z in a:
                             if z not in singularities and valid(z) and z.is_real:
@@ -714,7 +714,7 @@ def _solve_inequality(ie, s, linear=False):
 
     If `linear` is True (default is False) an `s`-dependent expression
     will be isolated on the left, if possible
-    but it will not be solved for `s` unless the expression is linear
+    but it will not be solvesetd for `s` unless the expression is linear
     in `s`. Furthermore, only "safe" operations which don't change the
     sense of the relationship are applied: no division by an unsigned
     value is attempted unless the relationship involves Eq or Ne and
@@ -724,7 +724,7 @@ def _solve_inequality(ie, s, linear=False):
     ========
 
     >>> from sympy import Eq, Symbol
-    >>> from sympy.solvers.inequalities import _solve_inequality as f
+    >>> from sympy.solvesetrs.inequalities import _solve_inequality as f
     >>> from sympy.abc import x, y
 
     For linear expressions, the symbol can be isolated:
@@ -780,7 +780,7 @@ def _solve_inequality(ie, s, linear=False):
     >>> f(x < x*(2/x - 1), x)
     (x < 1) & Ne(x, 0)
     """
-    from sympy.solvers.solvers import denoms
+    from sympy.solvesetrs.solvesetrs import denoms
     if s not in ie.free_symbols:
         return ie
     if ie.rhs == s:
@@ -937,7 +937,7 @@ def reduce_inequalities(inequalities, symbols=[]):
 
     >>> from sympy import sympify as S, Symbol
     >>> from sympy.abc import x, y
-    >>> from sympy.solvers.inequalities import reduce_inequalities
+    >>> from sympy.solvesetrs.inequalities import reduce_inequalities
 
     >>> reduce_inequalities(0 <= x + 3, [])
     (-3 <= x) & (x < oo)
@@ -983,7 +983,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     inequalities = keep
     del keep
 
-    # solve system
+    # solveset system
     rv = _reduce_inequalities(inequalities, symbols)
 
     # restore original symbols and return

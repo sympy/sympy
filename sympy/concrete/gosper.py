@@ -4,7 +4,7 @@ from __future__ import print_function, division
 from sympy.core import S, Dummy, symbols
 from sympy.core.compatibility import is_sequence, range
 from sympy.polys import Poly, parallel_poly_from_expr, factor
-from sympy.solvers import solve
+from sympy.solvesetrs import solveset
 from sympy.simplify import hypersimp
 
 
@@ -139,7 +139,7 @@ def gosper_term(f, n):
     x = Poly(coeffs, n, domain=domain)
     H = A*x.shift(1) - B*x - C
 
-    solution = solve(H.coeffs(), coeffs)
+    solution = solveset(H.coeffs(), coeffs)
 
     if solution is None:
         return None    # 'f(n)' is *not* Gosper-summable

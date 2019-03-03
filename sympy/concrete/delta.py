@@ -118,7 +118,7 @@ def _remove_multiple_delta(expr):
     """
     Evaluate products of KroneckerDelta's.
     """
-    from sympy.solvers import solve
+    from sympy.solvesetrs import solveset
     if expr.is_Add:
         return expr.func(*list(map(_remove_multiple_delta, expr.args)))
     if not expr.is_Mul:
@@ -132,7 +132,7 @@ def _remove_multiple_delta(expr):
             newargs.append(arg)
     if not eqs:
         return expr
-    solns = solve(eqs, dict=True)
+    solns = solveset(eqs, dict=True)
     if len(solns) == 0:
         return S.Zero
     elif len(solns) == 1:
@@ -149,10 +149,10 @@ def _simplify_delta(expr):
     """
     Rewrite a KroneckerDelta's indices in its simplest form.
     """
-    from sympy.solvers import solve
+    from sympy.solvesetrs import solveset
     if isinstance(expr, KroneckerDelta):
         try:
-            slns = solve(expr.args[0] - expr.args[1], dict=True)
+            slns = solveset(expr.args[0] - expr.args[1], dict=True)
             if slns and len(slns) == 1:
                 return Mul(*[KroneckerDelta(*(key, value))
                             for key, value in slns[0].items()])
@@ -292,7 +292,7 @@ def deltasummation(f, limit, no_piecewise=False):
     sympy.concrete.sums.summation
     """
     from sympy.concrete.summations import summation
-    from sympy.solvers import solve
+    from sympy.solvesetrs import solveset
 
     if ((limit[2] - limit[1]) < 0) == True:
         return S.Zero
@@ -313,7 +313,7 @@ def deltasummation(f, limit, no_piecewise=False):
     if not delta:
         return summation(f, limit)
 
-    solns = solve(delta.args[0] - delta.args[1], x)
+    solns = solveset(delta.args[0] - delta.args[1], x)
     if len(solns) == 0:
         return S.Zero
     elif len(solns) != 1:

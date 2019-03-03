@@ -21,7 +21,7 @@ from sympy.core import Dummy, ilcm, Add, Mul, Pow, S, oo
 from sympy.matrices import zeros, eye
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 
-from sympy.solvers import solve
+from sympy.solvesetrs import solveset
 
 from sympy.polys import Poly, lcm, cancel, sqf_list
 
@@ -448,7 +448,7 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     H = []
 
     # Why use DecrementLevel? Below line answers that:
-    # Assuming that we can solve such problems over 'k' (not k[t])
+    # Assuming that we can solveset such problems over 'k' (not k[t])
     if DE.case == 'primitive':
         with DecrementLevel(DE):
             ba, bd = frac_in(b, DE.t, field=True)
@@ -597,7 +597,7 @@ def param_poly_rischDE(a, b, q, n, DE):
     f = [(Mbeta*vj)[0] for vj in V]  # [f1, ..., fu]
 
     #
-    # Solve the reduced equation recursively.
+    # solveset the reduced equation recursively.
     #
     g, B = param_poly_rischDE(a.quo(d), b.quo(d), r, n, DE)
 
@@ -624,7 +624,7 @@ def param_poly_rischDE(a, b, q, n, DE):
 
 def param_rischDE(fa, fd, G, DE):
     """
-    Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
+    solveset a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
 
     Given a derivation D in k(t), f in k(t), and G
     = [G1, ..., Gm] in k(t)^m, return h = [h1, ..., hr] in k(t)^r and
@@ -798,7 +798,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
 
 def limited_integrate(fa, fd, G, DE):
     """
-    Solves the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
+    solvesets the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
     """
     fa, fd = fa*Poly(1/fd.LC(), DE.t), fd.monic()
     # interpretting limited integration problem as a
@@ -853,7 +853,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 
     if q.degree(DE.t) > B:
         eqs = [p.nth(i) - c1*q.nth(i) for i in range(B + 1, C + 1)]
-        s = solve(eqs, c1)
+        s = solveset(eqs, c1)
         if not s or not s[c1].is_Rational:
             # deg(q) > B, no solution for c.
             return None
@@ -892,7 +892,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     u2, r2 = (wa*l.quo(wd)).div(z)  # (l*w).div(z)
 
     eqs = [r1.nth(i) - c1*r2.nth(i) for i in range(z.degree(DE.t))]
-    s = solve(eqs, c1)
+    s = solveset(eqs, c1)
     if not s or not s[c1].is_Rational:
         # deg(q) <= B, no solution for c.
         return None

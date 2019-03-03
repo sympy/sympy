@@ -261,10 +261,10 @@ def run_all_tests(test_args=(), test_kwargs=None,
     support them (for now, test,  doctest, and the examples). See the
     docstrings of those functions for a description of the available options.
 
-    For example, to run the solvers tests with colors turned off:
+    For example, to run the solvesetrs tests with colors turned off:
 
     >>> from sympy.utilities.runtests import run_all_tests
-    >>> run_all_tests(test_args=("solvers",),
+    >>> run_all_tests(test_args=("solvesetrs",),
     ... test_kwargs={"colors:False"}) # doctest: +SKIP
 
     """
@@ -654,7 +654,7 @@ def _get_doctest_blacklist():
         "sympy/galgebra.py", # raises ImportError
         "sympy/this.py", # Prints text to the terminal
         "sympy/matrices/densearith.py", # raises deprecation warning
-        "sympy/matrices/densesolve.py", # raises deprecation warning
+        "sympy/matrices/densesolveset.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
         "sympy/physics/unitsystems.py", # raises deprecation warning
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
@@ -718,7 +718,7 @@ def _get_doctest_blacklist():
         "examples/advanced/autowrap_ufuncify.py"
         ])
 
-    # blacklist these modules until issue 4840 is resolved
+    # blacklist these modules until issue 4840 is resolvesetd
     blacklist.extend([
         "sympy/conftest.py",
         "sympy/utilities/benchmarking.py"

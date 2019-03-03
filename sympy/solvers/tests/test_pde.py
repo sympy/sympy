@@ -1,7 +1,7 @@
 from sympy import (Derivative as D, Eq, exp, sin,
     Function, Symbol, symbols, cos, log)
 from sympy.core import S
-from sympy.solvers.pde import (pde_separate, pde_separate_add, pde_separate_mul,
+from sympy.solvesetrs.pde import (pde_separate, pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
 from sympy.utilities.pytest import raises
 
@@ -126,8 +126,8 @@ def test_solvefun():
     f, F, G, H = map(Function, ['f', 'F', 'G', 'H'])
     eq1 = f(x,y) + f(x,y).diff(x) + f(x,y).diff(y)
     assert pdsolve(eq1) == Eq(f(x, y), F(x - y)*exp(-x/2 - y/2))
-    assert pdsolve(eq1, solvefun=G) == Eq(f(x, y), G(x - y)*exp(-x/2 - y/2))
-    assert pdsolve(eq1, solvefun=H) == Eq(f(x, y), H(x - y)*exp(-x/2 - y/2))
+    assert pdsolve(eq1, solvesetfun=G) == Eq(f(x, y), G(x - y)*exp(-x/2 - y/2))
+    assert pdsolve(eq1, solvesetfun=H) == Eq(f(x, y), H(x - y)*exp(-x/2 - y/2))
 
 
 def test_pde_1st_linear_constant_coeff_homogeneous():

@@ -2,7 +2,7 @@
 Integrate functions by rewriting them as Meijer G-functions.
 
 There are three user-visible functions that can be used by other parts of the
-sympy library to solve various integration problems:
+sympy library to solveset various integration problems:
 
 - meijerint_indefinite
 - meijerint_definite

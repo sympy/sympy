@@ -34,7 +34,7 @@ from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.sets import Intersection
 from sympy.matrices import Matrix
-from sympy.solvers.solveset import linear_coeffs
+from sympy.solvesetrs.solvesetset import linear_coeffs
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point3D
 from sympy.utilities.misc import Undecidable, filldedent
@@ -521,7 +521,7 @@ class LinearEntity(GeometrySet):
                 m = Matrix([l1.direction, -l2.direction]).transpose()
                 v = Matrix([l2.p1 - l1.p1]).transpose()
 
-                # we cannot use m.solve(v) because that only works for square matrices
+                # we cannot use m.solveset(v) because that only works for square matrices
                 m_rref, pivots = m.col_insert(2, v).rref(simplify=True)
                 # rank == 2 ensures we have 2 pivots, but let's check anyway
                 if len(pivots) != 2:
@@ -2482,13 +2482,13 @@ class Line3D(LinearEntity3D, Line):
         Examples
         ========
 
-        >>> from sympy import Point3D, Line3D, solve
+        >>> from sympy import Point3D, Line3D, solveset
         >>> from sympy.abc import x, y, z
         >>> p1, p2 = Point3D(1, 0, 0), Point3D(5, 3, 0)
         >>> l1 = Line3D(p1, p2)
         >>> eq = l1.equation(x, y, z); eq
         (-3*x + 4*y + 3, z)
-        >>> solve(eq.subs(z, 0), (x, y, z))
+        >>> solveset(eq.subs(z, 0), (x, y, z))
         {x: 4*y/3 + 1}
 
         """
@@ -2497,7 +2497,7 @@ class Line3D(LinearEntity3D, Line):
                             feature="equation() no longer needs 'k'",
                             issue=13742,
                             deprecated_since_version="1.2").warn()
-        from sympy import solve
+        from sympy import solveset
         x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, 'k')]
         p1, p2 = self.points
         d1, d2, d3 = p1.direction_ratio(p2)
@@ -2507,7 +2507,7 @@ class Line3D(LinearEntity3D, Line):
         # eliminate k from equations by solving first eq with k for k
         for i, e in enumerate(eqs):
             if e.has(k):
-                kk = solve(eqs[i], k)[0]
+                kk = solveset(eqs[i], k)[0]
                 eqs.pop(i)
                 break
         return Tuple(*[i.subs(k, kk).as_numer_denom()[0] for i in eqs])

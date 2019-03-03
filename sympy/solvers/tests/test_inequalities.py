@@ -3,15 +3,15 @@
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
                    Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
-from sympy.solvers.inequalities import (reduce_inequalities,
+from sympy.solvesetrs.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality,
                                         _solve_inequality)
 from sympy.polys.rootoftools import rootof
-from sympy.solvers.solvers import solve
-from sympy.solvers.solveset import solveset
+from sympy.solvesetrs.solvesetrs import solveset
+from sympy.solvesetrs.solvesetset import solvesetset
 from sympy.abc import x, y
 
 from sympy.utilities.pytest import raises, slow, XFAIL
@@ -243,12 +243,12 @@ def test_issue_8235():
         Or(And(-oo < x, x <= S(-1)), And(S(1) <= x, x < oo))
 
     eq = x**8 + x - 9  # we want CRootOf solns here
-    sol = solve(eq >= 0)
+    sol = solveset(eq >= 0)
     tru = Or(And(rootof(eq, 1) <= x, x < oo), And(-oo < x, x <= rootof(eq, 0)))
     assert sol == tru
 
     # recast vanilla as real
-    assert solve(sqrt((-x + 1)**2) < 1) == And(S(0) < x, x < 2)
+    assert solveset(sqrt((-x + 1)**2) < 1) == And(S(0) < x, x < 2)
 
 
 def test_issue_5526():
@@ -324,7 +324,7 @@ def test_solve_univariate_inequality():
 
 
 def test_trig_inequalities():
-    # all the inequalities are solved in a periodic interval.
+    # all the inequalities are solvesetd in a periodic interval.
     assert isolve(sin(x) < S.Half, x, relational=False) == \
         Union(Interval(0, pi/6, False, True), Interval(5*pi/6, 2*pi, True, False))
     assert isolve(sin(x) > S.Half, x, relational=False) == \
@@ -356,7 +356,7 @@ def test_issue_9954():
 @XFAIL
 def test_slow_general_univariate():
     r = rootof(x**5 - x**2 + 1, 0)
-    assert solve(sqrt(x) + 1/root(x, 3) > 1) == \
+    assert solveset(sqrt(x) + 1/root(x, 3) > 1) == \
         Or(And(S(0) < x, x < r**6), And(r**6 < x, x < oo))
 
 
@@ -389,11 +389,11 @@ def test_issue_10198():
 def test_issue_10047():
     # this must remain an inequality, not True, since if x
     # is not real the inequality is invalid
-    assert solve(sin(x) < 2) == (x <= oo)
+    assert solveset(sin(x) < 2) == (x <= oo)
 
 
 def test_issue_10268():
-    assert solve(log(x) < 1000) == And(S(0) < x, x < exp(1000))
+    assert solveset(log(x) < 1000) == And(S(0) < x, x < exp(1000))
 
 
 @XFAIL
@@ -404,10 +404,10 @@ def test_isolve_Sets():
 
 
 def test_issue_10671_12466():
-    assert solveset(sin(y), y, Interval(0, pi)) == FiniteSet(0, pi)
+    assert solvesetset(sin(y), y, Interval(0, pi)) == FiniteSet(0, pi)
     i = Interval(1, 10)
-    assert solveset((1/x).diff(x) < 0, x, i) == i
-    assert solveset((log(x - 6)/x) <= 0, x, S.Reals) == \
+    assert solvesetset((1/x).diff(x) < 0, x, i) == i
+    assert solvesetset((log(x - 6)/x) <= 0, x, S.Reals) == \
         Interval.Lopen(6, 7)
 
 
@@ -415,7 +415,7 @@ def test__solve_inequality():
     for op in (Gt, Lt, Le, Ge, Eq, Ne):
         assert _solve_inequality(op(x, 1), x).lhs == x
         assert _solve_inequality(op(S.One, x), x).lhs == x
-    # don't get tricked by symbol on right: solve it
+    # don't get tricked by symbol on right: solveset it
     assert _solve_inequality(Eq(2*x - 1, x), x) == Eq(x, 1)
     ie = Eq(S.One, y)
     assert _solve_inequality(ie, x) == ie
@@ -440,7 +440,7 @@ def test__solve_inequality():
 
 
 def test__pt():
-    from sympy.solvers.inequalities import _pt
+    from sympy.solvesetrs.inequalities import _pt
     assert _pt(-oo, oo) == 0
     assert _pt(S(1), S(3)) == 2
     assert _pt(S(1), oo) == _pt(oo, S(1)) == 2

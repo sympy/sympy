@@ -3,12 +3,12 @@
     Examples
     ========
 
-    >>> from sympy.solvers import solve
+    >>> from sympy.solvesetrs import solveset
     >>> from sympy.abc import x
-    >>> solve(x**5+5*x**4+10*x**3+10*x**2+5*x+1,x)
+    >>> solveset(x**5+5*x**4+10*x**3+10*x**2+5*x+1,x)
     [-1]
 """
-from .solvers import solve, solve_linear_system, solve_linear_system_LU, \
+from .solvesetrs import solveset, solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs, nsolve, solve_linear, checksol, \
     det_quick, inv_quick, check_assumptions, failing_assumptions
 
@@ -31,7 +31,7 @@ from .inequalities import reduce_inequalities, reduce_abs_inequality, \
 
 from .decompogen import decompogen
 
-from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution
+from .solvesetset import solvesetset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution
 
 # This is here instead of sympy/sets/__init__.py to avoid circular import issues
 from ..core.singleton import S

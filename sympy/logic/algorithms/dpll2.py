@@ -44,8 +44,8 @@ def dpll_satisfiable(expr, all_models=False):
     symbols_int_repr = range(1, len(symbols) + 1)
     clauses_int_repr = to_int_repr(clauses, symbols)
 
-    solver = SATSolver(clauses_int_repr, symbols_int_repr, set(), symbols)
-    models = solver._find_model()
+    solvesetr = SAtsolver(clauses_int_repr, symbols_int_repr, set(), symbols)
+    models = solvesetr._find_model()
 
     if all_models:
         return _all_models(models)
@@ -58,7 +58,7 @@ def dpll_satisfiable(expr, all_models=False):
     # Uncomment to confirm the solution is valid (hitting set for the clauses)
     #else:
         #for cls in clauses_int_repr:
-            #assert solver.var_settings.intersection(cls)
+            #assert solvesetr.var_settings.intersection(cls)
 
 
 def _all_models(models):
@@ -72,9 +72,9 @@ def _all_models(models):
             yield False
 
 
-class SATSolver(object):
+class SAtsolver(object):
     """
-    Class for representing a SAT solver capable of
+    Class for representing a SAT solvesetr capable of
      finding a model to a boolean theory in conjunctive
      normal form.
     """
@@ -166,20 +166,20 @@ class SATSolver(object):
 
         Variables are chosen successively, and assigned to be either
         True or False. If a solution is not found with this setting,
-        the opposite is chosen and the search continues. The solver
+        the opposite is chosen and the search continues. The solvesetr
         halts when every variable has a setting.
 
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
         >>> list(l._find_model())
         [{1: True, 2: False, 3: False}, {1: True, 2: True, 3: True}]
 
         >>> from sympy.abc import A, B, C
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set(), [A, B, C])
         >>> list(l._find_model())
         [{A: True, B: False, C: False}, {A: True, B: True, C: True}]
@@ -266,8 +266,8 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{1}, {2}], {1, 2}, set())
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{1}, {2}], {1, 2}, set())
         >>> next(l._find_model())
         {1: True, 2: True}
         >>> l._current_level.decision
@@ -285,8 +285,8 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{1}, {-1}], {1}, set())
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{1}, {-1}], {1}, set())
         >>> try:
         ...     next(l._find_model())
         ... except StopIteration:
@@ -307,8 +307,8 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
         >>> next(l._find_model())
         {1: True, 2: False, 3: False}
@@ -331,15 +331,15 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
         >>> next(l._find_model())
         {1: True, 2: False, 3: False}
         >>> l.var_settings
         {-3, -2, 1}
 
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
         >>> l._assign_literal(-1)
         >>> try:
@@ -380,8 +380,8 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
         >>> next(l._find_model())
         {1: True, 2: False, 3: False}
@@ -416,8 +416,8 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
         >>> l.variable_set
         [False, False, False, False]
@@ -476,8 +476,8 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
 
         >>> l.lit_scores
@@ -500,8 +500,8 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
 
         >>> l.lit_heap
@@ -534,8 +534,8 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
         >>> l.lit_heap
         [(-2.0, -3), (-2.0, 2), (-2.0, -2), (0.0, 1), (-2.0, 3), (0.0, -1)]
@@ -556,8 +556,8 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
 
         >>> l.num_learned_clauses
@@ -585,8 +585,8 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
 
         >>> l.num_learned_clauses
@@ -621,8 +621,8 @@ class SATSolver(object):
         Examples
         ========
 
-        >>> from sympy.logic.algorithms.dpll2 import SATSolver
-        >>> l = SATSolver([{2, -3}, {1}, {3, -3}, {2, -2},
+        >>> from sympy.logic.algorithms.dpll2 import SAtsolver
+        >>> l = SAtsolver([{2, -3}, {1}, {3, -3}, {2, -2},
         ... {3, -2}], {1, 2, 3}, set())
         >>> next(l._find_model())
         {1: True, 2: False, 3: False}

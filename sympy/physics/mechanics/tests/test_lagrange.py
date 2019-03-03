@@ -41,7 +41,7 @@ def test_disc_on_an_incline_plane():
     # equations. The constraint arises due to the disc rolling without slip on
     # on the inclined path. We then invoke the 'LagrangesMethod' class and
     # supply it the necessary arguments and generate the equations of motion.
-    # The'rhs' method solves for the q_double_dots (i.e. the second derivative
+    # The'rhs' method solvesets for the q_double_dots (i.e. the second derivative
     # with respect to time  of the generalized coordinates and the lagrange
     # multipliers.
     q = [y, theta]

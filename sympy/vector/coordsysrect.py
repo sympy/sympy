@@ -4,7 +4,7 @@ from sympy.core.compatibility import string_types, range, Callable
 from sympy.core.cache import cacheit
 from sympy.core import S, Dummy, Lambda
 from sympy import symbols, MatrixBase, ImmutableDenseMatrix
-from sympy.solvers import solve
+from sympy.solvesetrs import solveset
 from sympy.vector.scalar import BaseScalar
 from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos,\
     sqrt, diff, Tuple, acos, atan2, simplify
@@ -340,12 +340,12 @@ class CoordSys3D(Basic):
         equations = self._transformation(x1, x2, x3)
 
         try:
-            solved = solve([equations[0] - x,
+            solvesetd = solveset([equations[0] - x,
                             equations[1] - y,
                             equations[2] - z], (x1, x2, x3), dict=True)[0]
-            solved = solved[x1], solved[x2], solved[x3]
+            solvesetd = solvesetd[x1], solvesetd[x2], solvesetd[x3]
             self._transformation_from_parent_lambda = \
-                lambda x1, x2, x3: tuple(i.subs(list(zip((x, y, z), (x1, x2, x3)))) for i in solved)
+                lambda x1, x2, x3: tuple(i.subs(list(zip((x, y, z), (x1, x2, x3)))) for i in solvesetd)
         except:
             raise ValueError('Wrong set of parameters.')
 

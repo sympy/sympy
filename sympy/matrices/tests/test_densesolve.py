@@ -2,7 +2,7 @@ from sympy.utilities.pytest import ignore_warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 with ignore_warnings(SymPyDeprecationWarning):
-    from sympy.matrices.densesolve import LU_solve, rref_solve, cholesky_solve
+    from sympy.matrices.densesolveset import LU_solve, rref_solve, cholesky_solve
 
 from sympy import Dummy
 from sympy import QQ

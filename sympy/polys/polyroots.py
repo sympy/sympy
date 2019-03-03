@@ -206,10 +206,10 @@ def _roots_quartic_euler(p, q, r, a):
 
     To satisfy the quartic equation one must have
     ``p = -2*(R + A); q = -4*B*R; r = (R - A)**2 - B**2*R``
-    so that ``R`` must satisfy the Descartes-Euler resolvent equation
+    so that ``R`` must satisfy the Descartes-Euler resolvesetnt equation
     ``64*R**3 + 32*p*R**2 + (4*p**2 - 16*r)*R - q**2 = 0``
 
-    If the resolvent does not have a rational solution, return None;
+    If the resolvesetnt does not have a rational solution, return None;
     in that case it is likely that the Ferrari method gives a simpler
     solution.
 
@@ -222,7 +222,7 @@ def _roots_quartic_euler(p, q, r, a):
     >>> _roots_quartic_euler(p, q, r, S(0))[0]
     -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
     """
-    # solve the resolvent equation
+    # solveset the resolvesetnt equation
     x = Dummy('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
     xsols = list(roots(Poly(eq, x), cubics=False).keys())
@@ -350,7 +350,7 @@ def roots_quartic(f):
             # if p != 0 then u below is not 0
             root = sqrt(q**2/4 + p**3/27)
             r = -q/2 + root  # or -q/2 - root
-            u = r**TH  # primary root of solve(x**3 - r, x)
+            u = r**TH  # primary root of solveset(x**3 - r, x)
             y2 = -5*e/6 + u - p/u/3
             if fuzzy_not(p.is_zero):
                 return _ans(y2)
@@ -571,9 +571,9 @@ def roots_quintic(f):
     R3 = _quintic_simplify(R3)
     R4 = _quintic_simplify(R4)
 
-    # Solve imported here. Causing problems if imported as 'solve'
+    # solveset imported here. Causing problems if imported as 'solveset'
     # and hence the changed name
-    from sympy.solvers.solvers import solve as _solve
+    from sympy.solvesetrs.solvesetrs import solveset as _solve
     a, b = symbols('a b', cls=Dummy)
     _sol = _solve( sol**5 - a - I*b, sol)
     for i in range(5):
@@ -641,7 +641,7 @@ def roots_quintic(f):
         r = r.n(2)
         if r in saw:
             # Roots were identical. Abort, return []
-            # and fall back to usual solve
+            # and fall back to usual solveset
             return []
         saw.add(r)
     return result

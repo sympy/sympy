@@ -59,7 +59,7 @@ from sympy.core.mul import Mul
 from sympy.core import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar
-from sympy.solvers import solve, solve_undetermined_coeffs
+from sympy.solvesetrs import solveset, solve_undetermined_coeffs
 from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
@@ -313,7 +313,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             E = [g(i) + _delta(h, i) for i in range(N + 1, U)]
 
         if E != []:
-            solutions = solve(E, *C)
+            solutions = solveset(E, *C)
 
             if not solutions:
                 if homogeneous:
@@ -365,7 +365,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
             `\operatorname{L} y = f`.
 
         (2) Construct new linear difference equation by substitution
-            `y(n) = u(n)/v(n)` and solve it for `u(n)` finding all its
+            `y(n) = u(n)/v(n)` and solveset it for `u(n)` finding all its
             polynomial solutions. Return ``None`` if none were found.
 
     Algorithm implemented here is a revised version of the original
@@ -381,7 +381,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
     ========
 
     >>> from sympy.abc import x
-    >>> from sympy.solvers.recurr import rsolve_ratio
+    >>> from sympy.solvesetrs.recurr import rsolve_ratio
     >>> rsolve_ratio([-2*x**3 + x**2 + 2*x - 1, 2*x**3 + x**2 - 6*x,
     ... - 2*x**3 - 11*x**2 - 18*x - 9, 2*x**3 + 13*x**2 + 22*x + 8], 0, x)
     C2*(2*x - 3)/(2*(x**2 - 1))
@@ -494,7 +494,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     Examples
     ========
 
-    >>> from sympy.solvers import rsolve_hyper
+    >>> from sympy.solvesetrs import rsolve_hyper
     >>> from sympy.abc import x
 
     >>> rsolve_hyper([-1, -1, 1], 0, x)
@@ -661,7 +661,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
 def rsolve(f, y, init=None):
     r"""
-    Solve univariate recurrence with rational coefficients.
+    solveset univariate recurrence with rational coefficients.
 
     Given `k`-th order linear recurrence `\operatorname{L} y = f`,
     or equivalently:
@@ -819,7 +819,7 @@ def rsolve(f, y, init=None):
                 eq = solution.subs(n, i) - v
             equations.append(eq)
 
-        result = solve(equations, *symbols)
+        result = solveset(equations, *symbols)
 
         if not result:
             return None

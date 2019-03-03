@@ -25,7 +25,7 @@ def _set_function(f, x):
 @dispatch(Lambda, Interval)
 def _set_function(f, x):
     from sympy.functions.elementary.miscellaneous import Min, Max
-    from sympy.solvers.solveset import solveset
+    from sympy.solvesetrs.solvesetset import solvesetset
     from sympy.core.function import diff, Lambda
     from sympy.series import limit
     from sympy.calculus.singularities import singularities
@@ -79,7 +79,7 @@ def _set_function(f, x):
         _end = f(x.end)
 
     if len(sing) == 0:
-        solns = list(solveset(diff(expr, var), var))
+        solns = list(solvesetset(diff(expr, var), var))
 
         extr = [_start, _end] + [f(i) for i in solns
                                  if i.is_real and i in x]

@@ -108,7 +108,7 @@ def test_symbol_splitting():
         assert(parse_expr(letter, transformations=transformations) ==
                parse_expr(letter))
 
-    # Make sure symbol splitting resolves names
+    # Make sure symbol splitting resolvesets names
     transformations += (implicit_multiplication,)
     local_dict = { 'e': sympy.E }
     cases = {

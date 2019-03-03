@@ -583,7 +583,7 @@ def test_uniform():
 
 def test_uniform_P():
     """ This stopped working because SingleContinuousPSpace.compute_density no
-    longer calls integrate on a DiracDelta but rather just solves directly.
+    longer calls integrate on a DiracDelta but rather just solvesets directly.
     integrate used to call UniformDistribution.expectation which special-cased
     subsed out the Min and Max terms that Uniform produces
 
@@ -737,7 +737,7 @@ def test_conjugate_priors():
 
 
 def test_difficult_univariate():
-    """ Since using solve in place of deltaintegrate we're able to perform
+    """ Since using solveset in place of deltaintegrate we're able to perform
     substantially more complex density computations on single continuous random
     variables """
     x = Normal('x', 0, 1)

@@ -118,7 +118,7 @@ class SymbolicSystem(object):
     alg_con : List
         This list contains the indices of the algebraic constraints in the
         combined equations of motion. The presence of these constraints
-        requires that a DAE solver be used instead of an ODE solver.
+        requires that a DAE solvesetr be used instead of an ODE solvesetr.
         If the system is given in form [3] the alg_con variable will be
         adjusted such that it is a representation of the combined kinematics
         and dynamics thus make sure it always matches the mass matrix
@@ -366,10 +366,10 @@ class SymbolicSystem(object):
         else:
             try:
                 inter1 = self.kin_explicit_rhs
-                inter2 = self._dyn_implicit_mat.LUsolve(self._dyn_implicit_rhs)
+                inter2 = self._dyn_implicit_mat.LUsolveset(self._dyn_implicit_rhs)
                 out = inter1.col_join(inter2)
             except AttributeError:
-                out = self._comb_implicit_mat.LUsolve(self._comb_implicit_rhs)
+                out = self._comb_implicit_mat.LUsolveset(self._comb_implicit_rhs)
 
         self._comb_explicit_rhs = out
 

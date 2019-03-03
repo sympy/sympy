@@ -5,7 +5,7 @@ Contains
 ========
 _preprocess
 ode_order
-_desolve
+_desolveset
 
 """
 from __future__ import print_function, division
@@ -23,9 +23,9 @@ def _preprocess(expr, func=None, hint='_Integral'):
     fail.)
 
     In case func is None, an attempt will be made to autodetect the
-    function to be solved for.
+    function to be solvesetd for.
 
-    >>> from sympy.solvers.deutils import _preprocess
+    >>> from sympy.solvesetrs.deutils import _preprocess
     >>> from sympy import Derivative, Function, Integral, sin
     >>> from sympy.abc import x, y, z
     >>> f, g = map(Function, 'fg')
@@ -95,7 +95,7 @@ def ode_order(expr, func):
     ========
 
     >>> from sympy import Function
-    >>> from sympy.solvers.deutils import ode_order
+    >>> from sympy.solvesetrs.deutils import ode_order
     >>> from sympy.abc import x
     >>> f, g = map(Function, ['f', 'g'])
     >>> ode_order(f(x).diff(x, 2) + f(x).diff(x)**2 +
@@ -125,7 +125,7 @@ def ode_order(expr, func):
             order = max(order, ode_order(arg, func))
         return order
 
-def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
+def _desolveset(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     """This is a helper function to dsolve and pdsolve in the ode
     and pde modules.
 
@@ -133,14 +133,14 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     the following keys are returned
 
     'func'    - It provides the function for which the differential equation
-                has to be solved. This is useful when the expression has
+                has to be solvesetd. This is useful when the expression has
                 more than one function in it.
 
     'default' - The default key as returned by classifier functions in ode
                 and pde.py
 
     'hint'    - The hint given by the user for which the differential equation
-                is to be solved. If the hint given by the user is 'default',
+                is to be solvesetd. If the hint given by the user is 'default',
                 then the value of 'hint' and 'default' is the same.
 
     'order'   - The order of the function as returned by ode_order
@@ -175,7 +175,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
         eq, func = _preprocess(eq, func)
         prep = False
 
-    # type is an argument passed by the solve functions in ode and pde.py
+    # type is an argument passed by the solveset functions in ode and pde.py
     # that identifies whether the function caller is an ordinary
     # or partial differential equation. Accordingly corresponding
     # changes are made in the function.
@@ -186,13 +186,13 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     terms = kwargs.get('n')
 
     if type == 'ode':
-        from sympy.solvers.ode import classify_ode, allhints
+        from sympy.solvesetrs.ode import classify_ode, allhints
         classifier = classify_ode
         string = 'ODE '
         dummy = ''
 
     elif type == 'pde':
-        from sympy.solvers.pde import classify_pde, allhints
+        from sympy.solvesetrs.pde import classify_pde, allhints
         classifier = classify_pde
         string = 'PDE '
         dummy = 'p'
@@ -207,7 +207,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     else:
         # Here is what all this means:
         #
-        # hint:    The hint method given to _desolve() by the user.
+        # hint:    The hint method given to _desolveset() by the user.
         # hints:   The dictionary of hints that match the DE, along with other
         #          information (including the internal pass-through magic).
         # default: The default hint to return, the first hint from allhints
@@ -232,9 +232,9 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
         elif hint not in hints['ordered_hints'] and hint != 'default':
             raise ValueError(string + str(eq) + " does not match hint " + hint)
         else:
-            raise NotImplementedError(dummy + "solve" + ": Cannot solve " + str(eq))
+            raise NotImplementedError(dummy + "solveset" + ": Cannot solveset " + str(eq))
     if hint == 'default':
-        return _desolve(eq, func, ics=ics, hint=hints['default'], simplify=simplify,
+        return _desolveset(eq, func, ics=ics, hint=hints['default'], simplify=simplify,
                       prep=prep, x0=x0, classify=False, order=hints['order'],
                       match=hints[hints['default']], xi=xi, eta=eta, n=terms, type=type)
     elif hint in ('all', 'all_Integral', 'best'):
@@ -251,7 +251,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
                 if k in gethints:
                     gethints.remove(k)
         for i in gethints:
-            sol = _desolve(eq, func, ics=ics, hint=i, x0=x0, simplify=simplify, prep=prep,
+            sol = _desolveset(eq, func, ics=ics, hint=i, x0=x0, simplify=simplify, prep=prep,
                 classify=False, n=terms, order=hints['order'], match=hints[i], type=type)
             retdict[i] = sol
         retdict['all'] = True
@@ -262,7 +262,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     elif hint not in hints:
         raise ValueError(string + str(eq) + " does not match hint " + hint)
     else:
-        # Key added to identify the hint needed to solve the equation
+        # Key added to identify the hint needed to solveset the equation
         hints['hint'] = hint
     hints.update({'func': func, 'eq': eq})
     return hints

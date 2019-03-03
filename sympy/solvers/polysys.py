@@ -1,4 +1,4 @@
-"""Solvers of systems of polynomial equations. """
+"""solvesetrs of systems of polynomial equations. """
 
 from __future__ import print_function, division
 
@@ -12,13 +12,13 @@ from sympy.utilities import default_sort_key, postfixes
 from sympy.utilities.misc import filldedent
 
 
-class SolveFailed(Exception):
-    """Raised when solver's conditions weren't met. """
+class solvesetFailed(Exception):
+    """Raised when solvesetr's conditions weren't met. """
 
 
 def solve_poly_system(seq, *gens, **args):
     """
-    Solve a system of polynomial equations.
+    solveset a system of polynomial equations.
 
     Examples
     ========
@@ -41,21 +41,21 @@ def solve_poly_system(seq, *gens, **args):
         if all(i <= 2 for i in f.degree_list() + g.degree_list()):
             try:
                 return solve_biquadratic(f, g, opt)
-            except SolveFailed:
+            except solvesetFailed:
                 pass
 
     return solve_generic(polys, opt)
 
 
 def solve_biquadratic(f, g, opt):
-    """Solve a system of two bivariate quadratic polynomial equations.
+    """solveset a system of two bivariate quadratic polynomial equations.
 
     Examples
     ========
 
     >>> from sympy.polys import Options, Poly
     >>> from sympy.abc import x, y
-    >>> from sympy.solvers.polysys import solve_biquadratic
+    >>> from sympy.solvesetrs.polysys import solve_biquadratic
     >>> NewOption = Options((x, y), {'domain': 'ZZ'})
 
     >>> a = Poly(y**2 - 4 + x, y, x, domain='ZZ')
@@ -75,13 +75,13 @@ def solve_biquadratic(f, g, opt):
         return None
 
     if len(G) != 2:
-        raise SolveFailed
+        raise solvesetFailed
 
     x, y = opt.gens
     p, q = G
     if not p.gcd(q).is_ground:
         # not 0-dimensional
-        raise SolveFailed
+        raise solvesetFailed
 
     p = Poly(p, x, expand=False)
     p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]
@@ -101,7 +101,7 @@ def solve_biquadratic(f, g, opt):
 
 def solve_generic(polys, opt):
     """
-    Solve a generic system of polynomial equations.
+    solveset a generic system of polynomial equations.
 
     Returns all possible solutions over C[x_1, x_2, ..., x_m] of a
     set F = { f_1, f_2, ..., f_n } of polynomial equations,  using
@@ -115,7 +115,7 @@ def solve_generic(polys, opt):
     same set of solutions. By the elimination property,  if G is a
     reduced, zero-dimensional Groebner basis, then there exists an
     univariate polynomial in G (in its last variable). This can be
-    solved by computing its roots. Substituting all computed roots
+    solvesetd by computing its roots. Substituting all computed roots
     for the last (eliminated) variable in other elements of G, new
     polynomial system is generated. Applying the above procedure
     recursively, a finite number of solutions can be found.
@@ -140,7 +140,7 @@ def solve_generic(polys, opt):
     ========
 
     >>> from sympy.polys import Poly, Options
-    >>> from sympy.solvers.polysys import solve_generic
+    >>> from sympy.solvesetrs.polysys import solve_generic
     >>> from sympy.abc import x, y
     >>> NewOption = Options((x, y), {'domain': 'ZZ'})
 
@@ -177,7 +177,7 @@ def solve_generic(polys, opt):
         return p
 
     def _solve_reduced_system(system, gens, entry=False):
-        """Recursively solves reduced polynomial systems. """
+        """Recursively solvesets reduced polynomial systems. """
         if len(system) == len(gens) == 1:
             zeros = list(roots(system[0], gens[-1]).keys())
             return [ (zero,) for zero in zeros ]
@@ -246,7 +246,7 @@ def solve_generic(polys, opt):
 
 def solve_triangulated(polys, *gens, **args):
     """
-    Solve a polynomial system using Gianni-Kalkbrenner algorithm.
+    solveset a polynomial system using Gianni-Kalkbrenner algorithm.
 
     The algorithm proceeds by computing one Groebner basis in the ground
     domain and then by iteratively computing polynomial factorizations in
@@ -255,7 +255,7 @@ def solve_triangulated(polys, *gens, **args):
     Examples
     ========
 
-    >>> from sympy.solvers.polysys import solve_triangulated
+    >>> from sympy.solvesetrs.polysys import solve_triangulated
     >>> from sympy.abc import x, y, z
 
     >>> F = [x**2 + y + z - 1, x + y**2 + z - 1, x + y + z**2 - 1]

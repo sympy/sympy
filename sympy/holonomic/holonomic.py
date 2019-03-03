@@ -6,7 +6,7 @@ various operations on them.
 from __future__ import print_function, division
 
 from sympy import (Symbol, S, Dummy, Order, rf, meijerint, I,
-    solve, limit, Float, nsimplify, gamma)
+    solveset, limit, Float, nsimplify, gamma)
 from sympy.core.compatibility import range, ordered
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 from sympy.core.sympify import sympify
@@ -590,7 +590,7 @@ class HolonomicFunction(object):
         homosys = [[S(0) for q in range(dim + 1)]]
         homosys = NewMatrix(homosys).transpose()
 
-        # solving the linear system using gauss jordan solver
+        # solving the linear system using gauss jordan solvesetr
         solcomp = r.gauss_jordan_solve(homosys)
         sol = solcomp[0]
 
@@ -1384,8 +1384,8 @@ class HolonomicFunction(object):
 
                 eqs.append(eq)
 
-            # solve the system of equations formed
-            soleqs = solve(eqs, *unknowns)
+            # solveset the system of equations formed
+            soleqs = solveset(eqs, *unknowns)
 
             if isinstance(soleqs, dict):
 
@@ -1591,8 +1591,8 @@ class HolonomicFunction(object):
 
                     eqs.append(eq)
 
-                # solve the system of equations formed
-                soleqs = solve(eqs, *unknowns)
+                # solveset the system of equations formed
+                soleqs = solveset(eqs, *unknowns)
 
                 if isinstance(soleqs, dict):
 

@@ -15,8 +15,8 @@ eqn = sm.Matrix([[0]])
 eqn[0] = a*x+b*y
 eqn = eqn.row_insert(eqn.shape[0], sm.Matrix([[0]]))
 eqn[eqn.shape[0]-1] = 2*a*x-3*b*y
-print(sm.solve(eqn,x,y))
-rhs_y = sm.solve(eqn,x,y)[y]
+print(sm.solveset(eqn,x,y))
+rhs_y = sm.solveset(eqn,x,y)[y]
 e = (x+y)**2+2*x**2
 e.collect(x)
 a, b, c = sm.symbols('a b c', real=True)

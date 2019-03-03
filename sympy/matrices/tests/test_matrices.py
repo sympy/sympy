@@ -16,7 +16,7 @@ from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
-from sympy.solvers import solve
+from sympy.solvesetrs import solveset
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
@@ -637,26 +637,26 @@ def test_LUdecomp():
     )
     raises(ValueError, lambda : M.LUdecomposition_Simple(rankcheck=True))
 
-def test_LUsolve():
+def test_LUsolveset():
     A = Matrix([[2, 3, 5],
                 [3, 6, 2],
                 [8, 3, 6]])
     x = Matrix(3, 1, [3, 7, 5])
     b = A*x
-    soln = A.LUsolve(b)
+    soln = A.LUsolveset(b)
     assert soln == x
     A = Matrix([[0, -1, 2],
                 [5, 10, 7],
                 [8,  3, 4]])
     x = Matrix(3, 1, [-1, 2, 5])
     b = A*x
-    soln = A.LUsolve(b)
+    soln = A.LUsolveset(b)
     assert soln == x
     A = Matrix([[2, 1], [1, 0], [1, 0]])   # issue 14548
     b = Matrix([3, 1, 1])
-    assert A.LUsolve(b) == Matrix([1, 1])
+    assert A.LUsolveset(b) == Matrix([1, 1])
     b = Matrix([3, 1, 2])                  # inconsistent
-    raises(ValueError, lambda: A.LUsolve(b))
+    raises(ValueError, lambda: A.LUsolveset(b))
     A = Matrix([[0, -1, 2],
                 [5, 10, 7],
                 [8,  3, 4],
@@ -665,29 +665,29 @@ def test_LUsolve():
                 [8, 3, 6]])
     x = Matrix([2, 1, -4])
     b = A*x
-    soln = A.LUsolve(b)
+    soln = A.LUsolveset(b)
     assert soln == x
     A = Matrix([[0, -1, 2], [5, 10, 7]])  # underdetermined
     x = Matrix([-1, 2, 0])
     b = A*x
-    raises(NotImplementedError, lambda: A.LUsolve(b))
+    raises(NotImplementedError, lambda: A.LUsolveset(b))
 
     A = Matrix(4, 4, lambda i, j: 1/(i+j+1) if i != 3 else 0)
     b = Matrix.zeros(4, 1)
-    raises(NotImplementedError, lambda: A.LUsolve(b))
+    raises(NotImplementedError, lambda: A.LUsolveset(b))
 
 
-def test_QRsolve():
+def test_Qrsolve():
     A = Matrix([[2, 3, 5],
                 [3, 6, 2],
                 [8, 3, 6]])
     x = Matrix(3, 1, [3, 7, 5])
     b = A*x
-    soln = A.QRsolve(b)
+    soln = A.Qrsolve(b)
     assert soln == x
     x = Matrix([[1, 2], [3, 4], [5, 6]])
     b = A*x
-    soln = A.QRsolve(b)
+    soln = A.Qrsolve(b)
     assert soln == x
 
     A = Matrix([[0, -1, 2],
@@ -695,11 +695,11 @@ def test_QRsolve():
                 [8,  3, 4]])
     x = Matrix(3, 1, [-1, 2, 5])
     b = A*x
-    soln = A.QRsolve(b)
+    soln = A.Qrsolve(b)
     assert soln == x
     x = Matrix([[7, 8], [9, 10], [11, 12]])
     b = A*x
-    soln = A.QRsolve(b)
+    soln = A.Qrsolve(b)
     assert soln == x
 
 
@@ -984,7 +984,7 @@ def test_columnspace():
     X = Matrix([a, b, c, d, e])
     for i in range(len(basis)):
         eq=M*X-basis[i]
-        assert len(solve(eq, X)) != 0
+        assert len(solveset(eq, X)) != 0
 
     #check if rank-nullity theorem holds
     assert M.rank() == len(basis)
@@ -1991,7 +1991,7 @@ def test_errors():
            2], [3, 4]])))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).trace())
     raises(TypeError, lambda: Matrix([1]).applyfunc(1))
-    raises(ShapeError, lambda: Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]])))
+    raises(ShapeError, lambda: Matrix([1]).LUsolveset(Matrix([[1, 2], [3, 4]])))
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor(4, 5))
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor_submatrix(4, 5))
     raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))
@@ -2232,25 +2232,25 @@ def test_cholesky_solve():
     assert simplify(A*x) == b
 
 
-def test_LDLsolve():
+def test_LDLsolveset():
     A = Matrix([[2, 3, 5],
                 [3, 6, 2],
                 [8, 3, 6]])
     x = Matrix(3, 1, [3, 7, 5])
     b = A*x
-    soln = A.LDLsolve(b)
+    soln = A.LDLsolveset(b)
     assert soln == x
     A = Matrix([[0, -1, 2],
                 [5, 10, 7],
                 [8,  3, 4]])
     x = Matrix(3, 1, [-1, 2, 5])
     b = A*x
-    soln = A.LDLsolve(b)
+    soln = A.LDLsolveset(b)
     assert soln == x
     A = Matrix(((9, 3*I), (-3*I, 5)))
     x = Matrix((-2, 1))
     b = A*x
-    soln = A.LDLsolve(b)
+    soln = A.LDLsolveset(b)
     assert expand_mul(soln) == x
     A = Matrix(((9*I, 3), (-3 + I, 5)))
     x = Matrix((2 + 3*I, -1))
@@ -2873,17 +2873,17 @@ def test_pinv():
         assert ApA.H == ApA
 
 def test_pinv_solve():
-    # Fully determined system (unique result, identical to other solvers).
+    # Fully determined system (unique result, identical to other solvesetrs).
     A = Matrix([[1, 5], [7, 9]])
     B = Matrix([12, 13])
     assert A.pinv_solve(B) == A.cholesky_solve(B)
-    assert A.pinv_solve(B) == A.LDLsolve(B)
+    assert A.pinv_solve(B) == A.LDLsolveset(B)
     assert A.pinv_solve(B) == Matrix([sympify('-43/26'), sympify('71/26')])
     assert A * A.pinv() * B == B
     # Fully determined, with two-dimensional B matrix.
     B = Matrix([[12, 13, 14], [15, 16, 17]])
     assert A.pinv_solve(B) == A.cholesky_solve(B)
-    assert A.pinv_solve(B) == A.LDLsolve(B)
+    assert A.pinv_solve(B) == A.LDLsolveset(B)
     assert A.pinv_solve(B) == Matrix([[-33, -37, -41], [69, 75, 81]]) / 26
     assert A * A.pinv() * B == B
     # Underdetermined system (infinite results).
@@ -3107,9 +3107,9 @@ def test_gauss_jordan_solve():
 def test_solve():
     A = Matrix([[1,2], [2,4]])
     b = Matrix([[3], [4]])
-    raises(ValueError, lambda: A.solve(b)) #no solution
+    raises(ValueError, lambda: A.solveset(b)) #no solution
     b = Matrix([[ 4], [8]])
-    raises(ValueError, lambda: A.solve(b)) #infinite solution
+    raises(ValueError, lambda: A.solveset(b)) #infinite solution
 
 def test_issue_7201():
     assert ones(0, 1) + ones(0, 1) == Matrix(0, 1, [])

@@ -195,7 +195,7 @@ class SparseMatrix(MatrixBase):
         return C
 
     def _diagonal_solve(self, rhs):
-        "Diagonal solve."
+        "Diagonal solveset."
         return self._new(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
 
     def _eval_inverse(self, **kwargs):
@@ -238,13 +238,13 @@ class SparseMatrix(MatrixBase):
             I = t*I
         method = kwargs.get('method', 'LDL')
         if method in "LDL":
-            solve = M._LDL_solve
+            solveset = M._LDL_solve
         elif method == "CH":
-            solve = M._cholesky_solve
+            solveset = M._cholesky_solve
         else:
             raise NotImplementedError(
                 'Method may be "CH" or "LDL", not %s.' % method)
-        rv = M.hstack(*[solve(I[:, i]) for i in range(I.cols)])
+        rv = M.hstack(*[solveset(I[:, i]) for i in range(I.cols)])
         if not sym:
             scale = (r1*rv[:, 0])[0, 0]
             rv /= scale
@@ -796,7 +796,7 @@ class SparseMatrix(MatrixBase):
         [13],
         [18]])
 
-        But let's add 1 to the middle value and then solve for the
+        But let's add 1 to the middle value and then solveset for the
         least-squares value of xy:
 
         >>> xy = S.solve_least_squares(Matrix([8, 14, 18])); xy
@@ -824,7 +824,7 @@ class SparseMatrix(MatrixBase):
         t = self.T
         return (t*self).inv(method=method)*t*rhs
 
-    def solve(self, rhs, method='LDL'):
+    def solveset(self, rhs, method='LDL'):
         """Return solution to self*soln = rhs using given inversion method.
 
         For a list of possible inversion methods, see the .inv() docstring.

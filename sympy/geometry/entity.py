@@ -520,13 +520,13 @@ class GeometryEntity(Basic):
         """
         from sympy.geometry.point import Point
         from sympy.core.symbol import Dummy
-        from sympy.solvers.solvers import solve
+        from sympy.solvesetrs.solvesetrs import solveset
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):
             raise ValueError("other must be a point")
         T = Dummy('t', real=True)
-        sol = solve(self.arbitrary_point(T) - other, T, dict=True)
+        sol = solveset(self.arbitrary_point(T) - other, T, dict=True)
         if not sol:
             raise ValueError("Given point is not on %s" % func_name(self))
         return {t: sol[0][T]}

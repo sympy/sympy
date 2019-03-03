@@ -1,5 +1,5 @@
 from sympy import Symbol, Poly
-from sympy.polys.solvers import RawMatrix as Matrix
+from sympy.polys.solvesetrs import RawMatrix as Matrix
 from sympy.matrices.normalforms import invariant_factors, smith_normal_form
 from sympy.polys.domains import ZZ, QQ
 

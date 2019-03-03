@@ -1,4 +1,4 @@
-""" Linear Solver for Holonomic Functions"""
+""" Linear solvesetr for Holonomic Functions"""
 
 from __future__ import print_function, division
 
@@ -49,7 +49,7 @@ class NewMatrix(MutableDenseMatrix):
         aug = self.hstack(self.copy(), b.copy())
         row, col = aug[:, :-1].shape
 
-        # solve by reduced row echelon form
+        # solveset by reduced row echelon form
         A, pivots = aug.rref()
         A, v = A[:, :-1], A[:, -1]
         pivots = list(filter(lambda p: p < col, pivots))

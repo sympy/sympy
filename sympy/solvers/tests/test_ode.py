@@ -2,11 +2,11 @@ from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, simplify, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly, sec, Ei, re, im)
-from sympy.solvers.ode import (_undetermined_coefficients_match,
+from sympy.solvesetrs.ode import (_undetermined_coefficients_match,
     checkodesol, classify_ode, classify_sysode, constant_renumber,
     constantsimp, homogeneous_order, infinitesimals, checkinfsol,
     checksysodesol, solve_ics, dsolve, get_numbered_constants)
-from sympy.solvers.deutils import ode_order
+from sympy.solvesetrs.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -15,8 +15,8 @@ f = Function('f')
 g = Function('g')
 h = Function('h')
 
-# Note: the tests below may fail (but still be correct) if ODE solver,
-# the integral engine, solve(), or even simplify() changes. Also, in
+# Note: the tests below may fail (but still be correct) if ODE solvesetr,
+# the integral engine, solveset(), or even simplify() changes. Also, in
 # differently formatted solutions, the arbitrary constants might not be
 # equal.  Using specific hints in tests can help to avoid this.
 
@@ -1129,9 +1129,9 @@ def test_solve_ics():
         Subs(f(x).diff(x, 2), x, L): 0,
         Subs(f(x).diff(x, 3), x, L): 0}
 
-    solved_constants1 = solve_ics(sols, funcs, constants, ics1)
-    solved_constants2 = solve_ics(sols, funcs, constants, ics2)
-    assert solved_constants1 == solved_constants2 == {
+    solvesetd_constants1 = solve_ics(sols, funcs, constants, ics1)
+    solvesetd_constants2 = solve_ics(sols, funcs, constants, ics2)
+    assert solvesetd_constants1 == solvesetd_constants2 == {
         C1: 0,
         C2: 0,
         C3: L**2*q/(4*EI),
@@ -1165,7 +1165,7 @@ def test_ode_order():
 
 # In all tests below, checkodesol has the order option set to prevent
 # superfluous calls to ode_order(), and the solve_for_func flag set to False
-# because dsolve() already tries to solve for the function, unless the
+# because dsolve() already tries to solveset for the function, unless the
 # simplify=False option is set.
 def test_old_ode_tests():
     # These are simple tests from the old ode module
@@ -1873,7 +1873,7 @@ def test_nth_linear_constant_coeff_homogeneous_rootof_sol():
 @XFAIL
 def test_noncircularized_real_imaginary_parts():
     # If this passes, lines numbered 3878-3882 (at the time of this commit)
-    # of sympy/solvers/ode.py for nth_linear_constant_coeff_homogeneous
+    # of sympy/solvesetrs/ode.py for nth_linear_constant_coeff_homogeneous
     # should be removed.
     y = sqrt(1+x)
     i, r = im(y), re(y)
@@ -1883,7 +1883,7 @@ def test_noncircularized_real_imaginary_parts():
 @XFAIL
 def test_collect_respecting_exponentials():
     # If this test passes, lines 1306-1311 (at the time of this commit)
-    # of sympy/solvers/ode.py should be removed.
+    # of sympy/solvesetrs/ode.py should be removed.
     sol = 1 + exp(x/2)
     assert sol == collect( sol, exp(x/3))
 
@@ -2647,7 +2647,7 @@ def test_homogeneous_function():
 
 
 def test_linear_coeff_match():
-    from sympy.solvers.ode import _linear_coeff_match
+    from sympy.solvesetrs.ode import _linear_coeff_match
     n, d = z*(2*x + 3*f(x) + 5), z*(7*x + 9*f(x) + 11)
     rat = n/d
     eq1 = sin(rat) + cos(rat.expand())
@@ -2771,7 +2771,7 @@ def test_heuristic2():
     eta = Function('eta')
     df = f(x).diff(x)
 
-    # This ODE can be solved by the Lie Group method, when there are
+    # This ODE can be solvesetd by the Lie Group method, when there are
     # better assumptions
     eq = df - (f(x)/x)*(x*log(x**2/f(x)) + 2)
     i = infinitesimals(eq, hint='abaco1_product')
@@ -3111,7 +3111,7 @@ def test_sysode_linear_neq_order1():
 
 
 def test_order_reducible():
-    from sympy.solvers.ode import _order_reducible_match
+    from sympy.solvesetrs.ode import _order_reducible_match
 
     eqn = Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2))
     sol = Eq(f(x),
@@ -3246,7 +3246,7 @@ def test_nth_algebraic():
 
 
 def test_nth_algebraic_issue15999():
-    # FIXME: When issue 4838 is resolved this test should be changed...
+    # FIXME: When issue 4838 is resolvesetd this test should be changed...
     eqn = f(x).diff(x) - C1
     sol1 = Eq(f(x), C1*x + C2) # Correct solution
     sol2 = Eq(f(x), C2*x + C1) # Incorrect: issue 4838
@@ -3272,7 +3272,7 @@ def test_nth_algebraic_redundant_solutions():
 
     # This one doesn't work with dsolve at the time of writing but the
     # redundancy checking code should not remove the algebraic solution.
-    from sympy.solvers.ode import _nth_algebraic_remove_redundant_solutions
+    from sympy.solvesetrs.ode import _nth_algebraic_remove_redundant_solutions
     eqn = f(x) + f(x)*f(x).diff(x)
     solns = [Eq(f(x), 0),
              Eq(f(x), C1 - x)]

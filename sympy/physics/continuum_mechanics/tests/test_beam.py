@@ -180,7 +180,7 @@ def test_Beam():
 
 def test_insufficient_bconditions():
     # Test cases when required number of boundary conditions
-    # are not provided to solve the integration constants.
+    # are not provided to solveset the integration constants.
     L = symbols('L', positive=True)
     E, I, P, a3, a4 = symbols('E I P a3 a4')
 

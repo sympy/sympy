@@ -12,7 +12,7 @@ FACTOR(M,X)
 
 EQN[1] = A*X + B*Y
 EQN[2] = 2*A*X - 3*B*Y
-SOLVE(EQN, X, Y)
+solveset(EQN, X, Y)
 RHS_Y = RHS(Y)
 E = (X+Y)^2 + 2*X^2
 ARRANGE(E, 2, X)

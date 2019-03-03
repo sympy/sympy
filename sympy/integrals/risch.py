@@ -3,7 +3,7 @@ The Risch Algorithm for transcendental function integration.
 
 The core algorithms for the Risch algorithm are here.  The subproblem
 algorithms are in the rde.py and prde.py files for the Risch
-Differential Equation solver and the parametric problems solvers,
+Differential Equation solvesetr and the parametric problems solvesetrs,
 respectively.  All important information concerning the differential extension
 for an integrand is stored in a DifferentialExtension object, which in the code
 is usually called DE.  Throughout the code and Inside the DifferentialExtension

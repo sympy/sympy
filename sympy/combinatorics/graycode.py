@@ -16,7 +16,7 @@ class GrayCode(Basic):
     cube is ['000','100','110','010','011','111','101',
     '001'].
 
-    A Gray code solves the problem of sequentially
+    A Gray code solvesets the problem of sequentially
     generating all possible subsets of n objects in such
     a way that each subset is obtained from the previous
     one by either deleting or adding a single object.

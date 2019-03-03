@@ -178,8 +178,8 @@ def apart_undetermined_coeffs(P, Q):
     for (k,), coeff in F.terms():
         system.append(coeff - P.nth(k))
 
-    from sympy.solvers import solve
-    solution = solve(system, symbols)
+    from sympy.solvesetrs import solveset
+    solution = solveset(system, symbols)
 
     for h, f, k in partial:
         h = h.as_expr().subs(solution)

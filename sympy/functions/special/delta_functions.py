@@ -347,7 +347,7 @@ class DiracDelta(Function):
         Returns the DiracDelta expression written in the form of Singularity Functions.
 
         """
-        from sympy.solvers import solve
+        from sympy.solvesetrs import solveset
         from sympy.functions import SingularityFunction
         if self == DiracDelta(0):
             return SingularityFunction(0, 0, -1)
@@ -357,8 +357,8 @@ class DiracDelta(Function):
         if len(free) == 1:
             x = (free.pop())
             if len(args) == 1:
-                return SingularityFunction(x, solve(args[0], x)[0], -1)
-            return SingularityFunction(x, solve(args[0], x)[0], -args[1] - 1)
+                return SingularityFunction(x, solveset(args[0], x)[0], -1)
+            return SingularityFunction(x, solveset(args[0], x)[0], -args[1] - 1)
         else:
             # I don't know how to handle the case for DiracDelta expressions
             # having arguments with more than one variable.
@@ -589,14 +589,14 @@ class Heaviside(Function):
         Returns the Heaviside expression written in the form of Singularity Functions.
 
         """
-        from sympy.solvers import solve
+        from sympy.solvesetrs import solveset
         from sympy.functions import SingularityFunction
         if self == Heaviside(0):
             return SingularityFunction(0, 0, 0)
         free = self.free_symbols
         if len(free) == 1:
             x = (free.pop())
-            return SingularityFunction(x, solve(args, x)[0], 0)
+            return SingularityFunction(x, solveset(args, x)[0], 0)
             # TODO
             # ((x - 5)**3*Heaviside(x - 5)).rewrite(SingularityFunction) should output
             # SingularityFunction(x, 5, 0) instead of (x - 5)**3*SingularityFunction(x, 5, 0)

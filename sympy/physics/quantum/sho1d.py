@@ -412,7 +412,7 @@ class NumberOp(SHOOp):
 class Hamiltonian(SHOOp):
     """The Hamiltonian Operator.
 
-    The Hamiltonian is used to solve the time-independent Schrodinger
+    The Hamiltonian is used to solveset the time-independent Schrodinger
     equation. The Hamiltonian can be expressed using the ladder operators,
     as well as by position and momentum. We can represent the Hamiltonian
     Operator as a matrix, which will be its default basis.

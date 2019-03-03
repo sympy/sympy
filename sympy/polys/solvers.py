@@ -1,4 +1,4 @@
-"""Low-level linear systems solver. """
+"""Low-level linear systems solvesetr. """
 
 from __future__ import print_function, division
 
@@ -20,7 +20,7 @@ def eqs_to_matrix(eqs, ring):
     return M
 
 def solve_lin_sys(eqs, ring, _raw=True):
-    """Solve a system of linear equations.
+    """solveset a system of linear equations.
 
     If ``_raw`` is False, the keys and values in the returned dictionary
     will be of type Expr (and the unit of the field will be removed from
@@ -34,7 +34,7 @@ def solve_lin_sys(eqs, ring, _raw=True):
     # transform from equations to matrix form
     matrix = eqs_to_matrix(eqs, ring)
 
-    # solve by row-reduction
+    # solveset by row-reduction
     echelon, pivots = matrix.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
 
     # construct the returnable form of the solutions

@@ -1,14 +1,14 @@
 """
 This module contains functions to:
 
-    - solve a single equation for a single variable, in any domain either real or complex.
+    - solveset a single equation for a single variable, in any domain either real or complex.
 
-    - solve a single transcendental equation for a single variable in any domain either real or complex.
+    - solveset a single transcendental equation for a single variable in any domain either real or complex.
       (currently supports solving in real domain only)
 
-    - solve a system of linear equations with N variables and M equations.
+    - solveset a system of linear equations with N variables and M equations.
 
-    - solve a system of Non Linear Equations with N variables and M equations
+    - solveset a system of Non Linear Equations with N variables and M equations
 """
 from __future__ import print_function, division
 
@@ -38,10 +38,10 @@ from sympy.sets.sets import Set
 from sympy.matrices import Matrix, MatrixBase
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
-from sympy.solvers.solvers import (checksol, denoms, unrad,
+from sympy.solvesetrs.solvesetrs import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
-from sympy.solvers.polysys import solve_poly_system
-from sympy.solvers.inequalities import solve_univariate_inequality
+from sympy.solvesetrs.polysys import solve_poly_system
+from sympy.solvesetrs.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols, has_dups
 from sympy.calculus.util import periodicity, continuous_domain
@@ -64,7 +64,7 @@ def _masked(f, *atoms):
 
     >>> from sympy import cos
     >>> from sympy.abc import x
-    >>> from sympy.solvers.solveset import _masked
+    >>> from sympy.solvesetrs.solvesetset import _masked
 
     >>> f = cos(cos(x) + 1)
     >>> f, reps = _masked(cos(1 + cos(x)), cos)
@@ -120,7 +120,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import invert_complex, invert_real
+    >>> from sympy.solvesetrs.solvesetset import invert_complex, invert_real
     >>> from sympy.abc import x, y
     >>> from sympy import exp, log
 
@@ -218,7 +218,7 @@ def _invert_real(f, g_ys, symbol):
             if expo.is_rational:
                 numer, denom = expo.as_numer_denom()
                 if denom % 2 == 0:
-                    base_positive = solveset(base >= 0, symbol, S.Reals)
+                    base_positive = solvesetset(base >= 0, symbol, S.Reals)
                     res = imageset(Lambda(n, real_root(n, expo)
                         ), g_ys.intersect(
                         Interval.Ropen(S.Zero, S.Infinity)))
@@ -366,7 +366,7 @@ def _invert_abs(f, g_ys, symbol):
         conditions = True
     n = Dummy('n', real=True)
     # this is slightly different than above: instead of solving
-    # +/-f on positive values, here we solve for f on +/- g_ys
+    # +/-f on positive values, here we solveset for f on +/- g_ys
     g_x, values = _invert_real(f, Union(
         imageset(Lambda(n, n), g_ys),
         imageset(Lambda(n, -n), g_ys)), symbol)
@@ -383,7 +383,7 @@ def domain_check(f, symbol, p):
 
     >>> from sympy import Mul, oo
     >>> from sympy.abc import x
-    >>> from sympy.solvers.solveset import domain_check
+    >>> from sympy.solvesetrs.solvesetset import domain_check
     >>> g = 1/(1 + (1/(x + 1))**2)
     >>> domain_check(g, x, -1)
     False
@@ -455,7 +455,7 @@ def _is_function_class_equation(func_class, f, symbol):
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import _is_function_class_equation
+    >>> from sympy.solvesetrs.solvesetset import _is_function_class_equation
     >>> from sympy import tan, sin, tanh, sinh, exp
     >>> from sympy.abc import x
     >>> from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
@@ -495,7 +495,7 @@ def _is_function_class_equation(func_class, f, symbol):
 
 
 def _solve_as_rational(f, symbol, domain):
-    """ solve rational functions"""
+    """ solveset rational functions"""
     f = together(f, deep=True)
     g, h = fraction(f)
     if not h.has(symbol):
@@ -513,7 +513,7 @@ def _solve_as_rational(f, symbol, domain):
 
 
 def _solve_trig(f, symbol, domain):
-    """Function to call other helpers to solve trigonometric equations """
+    """Function to call other helpers to solveset trigonometric equations """
     sol1 = sol = None
     try:
         sol1 = _solve_trig1(f, symbol, domain)
@@ -537,7 +537,7 @@ def _solve_trig(f, symbol, domain):
 
 
 def _solve_trig1(f, symbol, domain):
-    """Primary Helper to solve trigonometric equations """
+    """Primary Helper to solveset trigonometric equations """
     f = trigsimp(f)
     f_original = f
     f = f.rewrite(exp)
@@ -549,7 +549,7 @@ def _solve_trig1(f, symbol, domain):
     if g.has(symbol) or h.has(symbol):
         return ConditionSet(symbol, Eq(f, 0), S.Reals)
 
-    solns = solveset_complex(g, y) - solveset_complex(h, y)
+    solns = solvesetset_complex(g, y) - solvesetset_complex(h, y)
     if isinstance(solns, ConditionSet):
         raise NotImplementedError
 
@@ -566,7 +566,7 @@ def _solve_trig1(f, symbol, domain):
 
 
 def _solve_trig2(f, symbol, domain):
-    """Secondary helper to solve trigonometric equations,
+    """Secondary helper to solveset trigonometric equations,
     called when first helper fails """
     from sympy import ilcm, igcd, expand_trig, degree, simplify
     f = trigsimp(f)
@@ -581,7 +581,7 @@ def _solve_trig2(f, symbol, domain):
             poly_ar = Poly(ar, symbol)
 
         except ValueError:
-            raise ValueError("give up, we can't solve if this is not a polynomial in x")
+            raise ValueError("give up, we can't solveset if this is not a polynomial in x")
         if poly_ar.degree() > 1:  # degree >1 still bad
             raise ValueError("degree of variable inside polynomial should not exceed one")
         if poly_ar.degree() == 0:  # degree 0, don't care
@@ -611,7 +611,7 @@ def _solve_trig2(f, symbol, domain):
 
     if g.has(x) or h.has(x):
         return ConditionSet(symbol, Eq(f_original, 0), domain)
-    solns = solveset(g, y, S.Reals) - solveset(h, y, S.Reals)
+    solns = solvesetset(g, y, S.Reals) - solvesetset(h, y, S.Reals)
 
     if isinstance(solns, FiniteSet):
         result = Union(*[invert_real(tan(symbol/mu), s, symbol)[1]
@@ -628,7 +628,7 @@ def _solve_trig2(f, symbol, domain):
 
 def _solve_as_poly(f, symbol, domain=S.Complexes):
     """
-    Solve the equation using polynomial techniques if it already is a
+    solveset the equation using polynomial techniques if it already is a
     polynomial equation or, with a change of variables, can be made so.
     """
     result = None
@@ -699,7 +699,7 @@ def _has_rational_power(expr, symbol):
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import _has_rational_power
+    >>> from sympy.solvesetrs.solvesetset import _has_rational_power
     >>> from sympy import sqrt
     >>> from sympy.abc import x
     >>> _has_rational_power(sqrt(x), x)
@@ -725,21 +725,21 @@ def _has_rational_power(expr, symbol):
         return _has_rational_power(pattern_match[a], symbol)
 
 
-def _solve_radical(f, symbol, solveset_solver):
-    """ Helper function to solve equations with radicals """
+def _solve_radical(f, symbol, solvesetset_solver):
+    """ Helper function to solveset equations with radicals """
     eq, cov = unrad(f)
     if not cov:
-        result = solveset_solver(eq, symbol) - \
-            Union(*[solveset_solver(g, symbol) for g in denoms(f, symbol)])
+        result = solvesetset_solver(eq, symbol) - \
+            Union(*[solvesetset_solver(g, symbol) for g in denoms(f, symbol)])
     else:
         y, yeq = cov
-        if not solveset_solver(y - I, y):
+        if not solvesetset_solver(y - I, y):
             yreal = Dummy('yreal', real=True)
             yeq = yeq.xreplace({y: yreal})
             eq = eq.xreplace({y: yreal})
             y = yreal
-        g_y_s = solveset_solver(yeq, symbol)
-        f_y_sols = solveset_solver(eq, y)
+        g_y_s = solvesetset_solver(yeq, symbol)
+        f_y_sols = solvesetset_solver(eq, y)
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
@@ -759,7 +759,7 @@ def _solve_radical(f, symbol, solveset_solver):
 
 
 def _solve_abs(f, symbol, domain):
-    """ Helper function to solve equation involving absolute value function """
+    """ Helper function to solveset equation involving absolute value function """
     if not domain.is_subset(S.Reals):
         raise ValueError(filldedent('''
             Absolute values cannot be inverted in the
@@ -774,9 +774,9 @@ def _solve_abs(f, symbol, domain):
                                                  relational=False, domain=domain, continuous=True)
         q_neg_cond = q_pos_cond.complement(domain)
 
-        sols_q_pos = solveset_real(f_p*f_q + f_r,
+        sols_q_pos = solvesetset_real(f_p*f_q + f_r,
                                            symbol).intersect(q_pos_cond)
-        sols_q_neg = solveset_real(f_p*(-f_q) + f_r,
+        sols_q_neg = solvesetset_real(f_p*(-f_q) + f_r,
                                            symbol).intersect(q_neg_cond)
         return Union(sols_q_pos, sols_q_neg)
     else:
@@ -785,13 +785,13 @@ def _solve_abs(f, symbol, domain):
 
 def solve_decomposition(f, symbol, domain):
     """
-    Function to solve equations via the principle of "Decomposition
+    Function to solveset equations via the principle of "Decomposition
     and Rewriting".
 
     Examples
     ========
     >>> from sympy import exp, sin, Symbol, pprint, S
-    >>> from sympy.solvers.solveset import solve_decomposition as sd
+    >>> from sympy.solvesetrs.solvesetset import solve_decomposition as sd
     >>> x = Symbol('x')
     >>> f1 = exp(2*x) - 3*exp(x) + 2
     >>> sd(f1, x, S.Reals)
@@ -806,12 +806,12 @@ def solve_decomposition(f, symbol, domain):
     {2*n*pi - 2 | n in Integers} U {2*n*pi - 2 + pi | n in Integers}
 
     """
-    from sympy.solvers.decompogen import decompogen
+    from sympy.solvesetrs.decompogen import decompogen
     from sympy.calculus.util import function_range
     # decompose the given function
     g_s = decompogen(f, symbol)
     # `y_s` represents the set of values for which the function `g` is to be
-    # solved.
+    # solvesetd.
     # `solutions` represent the solutions of the equations `g = y_s` or
     # `g = 0` depending on the type of `y_s`.
     # As we are interested in solving the equation: f = 0
@@ -822,7 +822,7 @@ def solve_decomposition(f, symbol, domain):
         result = S.EmptySet
         if isinstance(y_s, FiniteSet):
             for y in y_s:
-                solutions = solveset(Eq(g, y), symbol, domain)
+                solutions = solvesetset(Eq(g, y), symbol, domain)
                 if not isinstance(solutions, ConditionSet):
                     result += solutions
 
@@ -839,7 +839,7 @@ def solve_decomposition(f, symbol, domain):
                 return y_s
 
             for iset in iter_iset:
-                new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
+                new_solutions = solvesetset(Eq(iset.lamda.expr, g), symbol, domain)
                 dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
                 base_set = iset.base_set
                 if isinstance(new_solutions, FiniteSet):
@@ -861,7 +861,7 @@ def solve_decomposition(f, symbol, domain):
 
 
 def _solveset(f, symbol, domain, _check=False):
-    """Helper for solveset to return a result from an expression
+    """Helper for solvesetset to return a result from an expression
     that has already been sympify'ed and is known to contain the
     given symbol."""
     # _check controls whether the answer is checked or not
@@ -879,8 +879,8 @@ def _solveset(f, symbol, domain, _check=False):
                               S.NegativeInfinity]):
             f = a/m + h  # XXX condition `m != 0` should be added to soln
 
-    # assign the solvers to use
-    solver = lambda f, x, domain=domain: _solveset(f, x, domain)
+    # assign the solvesetrs to use
+    solvesetr = lambda f, x, domain=domain: _solveset(f, x, domain)
     inverter = lambda f, rhs, symbol: _invert(f, rhs, symbol, domain)
 
     result = EmptySet()
@@ -897,23 +897,23 @@ def _solveset(f, symbol, domain, _check=False):
         # f(x) == 0. To be sure that we are not silently allowing any
         # wrong solutions we are using this technique only if both f and g are
         # finite for a finite input.
-        result = Union(*[solver(m, symbol) for m in f.args])
+        result = Union(*[solvesetr(m, symbol) for m in f.args])
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_trig(f, symbol, domain)
     elif isinstance(f, arg):
         a = f.args[0]
-        result = solveset_real(a > 0, symbol)
+        result = solvesetset_real(a > 0, symbol)
     elif f.is_Piecewise:
         result = EmptySet()
         expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
             if in_set.is_Relational:
                 in_set = in_set.as_set()
-            solns = solver(expr, symbol, in_set)
+            solns = solvesetr(expr, symbol, in_set)
             result += solns
     elif isinstance(f, Eq):
-        result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
+        result = solvesetr(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
 
     elif f.is_Relational:
         if not domain.is_subset(S.Reals):
@@ -932,7 +932,7 @@ def _solveset(f, symbol, domain, _check=False):
         if lhs == symbol:
             # do some very minimal simplification since
             # repeated inversion may have left the result
-            # in a state that other solvers (e.g. poly)
+            # in a state that other solvesetrs (e.g. poly)
             # would have simplified; this is done here
             # rather than in the inverter since here it
             # is only done once whereas there it would
@@ -951,7 +951,7 @@ def _solveset(f, symbol, domain, _check=False):
                            equation, symbol)[0]:
                         result += _solve_radical(equation,
                                                  symbol,
-                                                 solver)
+                                                 solvesetr)
                     elif equation.has(Abs):
                         result += _solve_abs(f, symbol, domain)
                     else:
@@ -962,7 +962,7 @@ def _solveset(f, symbol, domain, _check=False):
                         else:
                             result += result_rational
                 else:
-                    result += solver(equation, symbol)
+                    result += solvesetr(equation, symbol)
 
         elif rhs_s is not S.EmptySet:
             result = ConditionSet(symbol, Eq(f, 0), domain)
@@ -977,7 +977,7 @@ def _solveset(f, symbol, domain, _check=False):
 
     if _check:
         if isinstance(result, ConditionSet):
-            # it wasn't solved or has enumerated all conditions
+            # it wasn't solvesetd or has enumerated all conditions
             # -- leave it alone
             return result
 
@@ -1013,7 +1013,7 @@ def _term_factors(f):
     ========
 
     >>> from sympy import symbols
-    >>> from sympy.solvers.solveset import _term_factors
+    >>> from sympy.solvesetrs.solvesetset import _term_factors
     >>> x = symbols('x')
     >>> list(_term_factors(-2 - x**2 + x*(x + 1)))
     [-2, -1, x**2, x, x + 1]
@@ -1041,13 +1041,13 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     ==========
 
     lhs, rhs : Expr
-        The exponential equation to be solved, `lhs = rhs`
+        The exponential equation to be solvesetd, `lhs = rhs`
 
     symbol : Symbol
-        The variable in which the equation is solved
+        The variable in which the equation is solvesetd
 
     domain : Set
-        A set over which the equation is solved.
+        A set over which the equation is solvesetd.
 
     Returns
     =======
@@ -1061,7 +1061,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import _solve_exponential as solve_expo
+    >>> from sympy.solvesetrs.solvesetset import _solve_exponential as solve_expo
     >>> from sympy import symbols, S
     >>> x = symbols('x', real=True)
     >>> a, b = symbols('a b')
@@ -1084,7 +1084,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     Therefore if we are given an equation with exponent terms, we can
     convert every term to its corresponding logarithmic form. This is
     achieved by taking logarithms and expanding the equation using
-    logarithmic identities so that it can easily be handled by ``solveset``.
+    logarithmic identities so that it can easily be handled by ``solvesetset``.
 
     For example:
 
@@ -1094,7 +1094,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     .. math:: (2x)\log(3) = (x + 3)\log(2)
 
-    This form can be easily handed by ``solveset``.
+    This form can be easily handed by ``solvesetset``.
     """
     unsolved_result = ConditionSet(symbol, Eq(lhs - rhs), domain)
     newlhs = powdenest(lhs)
@@ -1154,7 +1154,7 @@ def _is_exponential(f, symbol):
     ========
 
     >>> from sympy import symbols, cos, exp
-    >>> from sympy.solvers.solveset import _is_exponential as check
+    >>> from sympy.solvesetrs.solvesetset import _is_exponential as check
     >>> x, y = symbols('x y')
     >>> check(y, y)
     False
@@ -1187,7 +1187,7 @@ def _is_exponential(f, symbol):
 
 def _solve_logarithm(lhs, rhs, symbol, domain):
     r"""
-    Helper to solve logarithmic equations which are reducible
+    Helper to solveset logarithmic equations which are reducible
     to a single instance of `\log`.
 
     Logarithmic equations are (currently) the equations that contains
@@ -1206,13 +1206,13 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
     ==========
 
     lhs, rhs : Expr
-        The logarithmic equation to be solved, `lhs = rhs`
+        The logarithmic equation to be solvesetd, `lhs = rhs`
 
     symbol : Symbol
-        The variable in which the equation is solved
+        The variable in which the equation is solvesetd
 
     domain : Set
-        A set over which the equation is solved.
+        A set over which the equation is solvesetd.
 
     Returns
     =======
@@ -1224,7 +1224,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
     ========
 
     >>> from sympy import symbols, log, S
-    >>> from sympy.solvers.solveset import _solve_logarithm as solve_log
+    >>> from sympy.solvesetrs.solvesetset import _solve_logarithm as solve_log
     >>> x = symbols('x')
     >>> f = log(x - 3) + log(x + 3)
     >>> solve_log(f, 0, x, S.Reals)
@@ -1237,7 +1237,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
     .. math:: {\log_b x} = y \enspace if \enspace b^y = x
 
     When one side of the equation contains a single logarithm, the
-    equation can be solved by rewriting the equation as an equivalent
+    equation can be solvesetd by rewriting the equation as an equivalent
     exponential equation as defined above. But if one side contains
     more than one logarithm, we need to use the properties of logarithm
     to condense it into a single logarithm.
@@ -1265,7 +1265,7 @@ def _solve_logarithm(lhs, rhs, symbol, domain):
 
     .. math:: \log((x - 3)(x + 3))
 
-    This equation contains one logarithm and can be solved by rewriting
+    This equation contains one logarithm and can be solvesetd by rewriting
     to exponents.
     """
     new_lhs = logcombine(lhs, force=True)
@@ -1297,7 +1297,7 @@ def _is_logarithmic(f, symbol):
     ========
 
     >>> from sympy import symbols, tan, log
-    >>> from sympy.solvers.solveset import _is_logarithmic as check
+    >>> from sympy.solvesetrs.solvesetset import _is_logarithmic as check
     >>> x, y = symbols('x y')
     >>> check(log(x + 2) - log(x + 3), x)
     True
@@ -1334,8 +1334,8 @@ def _is_logarithmic(f, symbol):
 
 def _transolve(f, symbol, domain):
     r"""
-    Function to solve transcendental equations. It is a helper to
-    ``solveset`` and should be used internally. ``_transolve``
+    Function to solveset transcendental equations. It is a helper to
+    ``solvesetset`` and should be used internally. ``_transolve``
     currently supports the following class of equations:
 
         - Exponential equations
@@ -1344,14 +1344,14 @@ def _transolve(f, symbol, domain):
     Parameters
     ==========
 
-    f : Any transcendental equation that needs to be solved.
+    f : Any transcendental equation that needs to be solvesetd.
         This needs to be an expression, which is assumed
         to be equal to ``0``.
 
-    symbol : The variable for which the equation is solved.
+    symbol : The variable for which the equation is solvesetd.
         This needs to be of class ``Symbol``.
 
-    domain : A set over which the equation is solved.
+    domain : A set over which the equation is solvesetd.
         This needs to be of class ``Set``.
 
     Returns
@@ -1369,16 +1369,16 @@ def _transolve(f, symbol, domain):
 
     ``_transolve`` should not be used as an independent function, because
     it assumes that the equation (``f``) and the ``symbol`` comes from
-    ``solveset`` and might have undergone a few modification(s).
+    ``solvesetset`` and might have undergone a few modification(s).
     To use ``_transolve`` as an independent function the equation (``f``)
     and the ``symbol`` should be passed as they would have been by
-    ``solveset``.
+    ``solvesetset``.
 
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import _transolve as transolve
-    >>> from sympy.solvers.solvers import _tsolve as tsolve
+    >>> from sympy.solvesetrs.solvesetset import _transolve as transolve
+    >>> from sympy.solvesetrs.solvesetrs import _tsolve as tsolve
     >>> from sympy import symbols, S, pprint
     >>> x = symbols('x', real=True) # assumption added
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
@@ -1387,7 +1387,7 @@ def _transolve(f, symbol, domain):
     How ``_transolve`` works
     ========================
 
-    ``_transolve`` uses two types of helper functions to solve equations
+    ``_transolve`` uses two types of helper functions to solveset equations
     of a particular class:
 
     Identifying helpers: To determine whether a given equation
@@ -1395,23 +1395,23 @@ def _transolve(f, symbol, domain):
     ``True`` or ``False``.
 
     Solving helpers: Once an equation is identified, a corresponding
-    helper either solves the equation or returns a form of the equation
-    that ``solveset`` might better be able to handle.
+    helper either solvesets the equation or returns a form of the equation
+    that ``solvesetset`` might better be able to handle.
 
     * Philosophy behind the module
 
     The purpose of ``_transolve`` is to take equations which are not
     already polynomial in their generator(s) and to either recast them
-    as such through a valid transformation or to solve them outright.
+    as such through a valid transformation or to solveset them outright.
     A pair of helper functions for each class of supported
     transcendental functions are employed for this purpose. One
     identifies the transcendental form of an equation and the other
-    either solves it or recasts it into a tractable form that can be
-    solved by  ``solveset``.
+    either solvesets it or recasts it into a tractable form that can be
+    solvesetd by  ``solvesetset``.
     For example, an equation in the form `ab^{f(x)} - cd^{g(x)} = 0`
     can be transformed to
     `\log(a) + f(x)\log(b) - \log(c) - g(x)\log(d) = 0`
-    (under certain assumptions) and this can be solved with ``solveset``
+    (under certain assumptions) and this can be solvesetd with ``solvesetset``
     if `f(x)` and `g(x)` are in polynomial form.
 
     How ``_transolve`` is better than ``_tsolve``
@@ -1437,7 +1437,7 @@ def _transolve(f, symbol, domain):
     2) Extensible
 
     The API of ``_transolve`` is designed such that it is easily
-    extensible, i.e. the code that solves a given class of
+    extensible, i.e. the code that solvesets a given class of
     equations is encapsulated in a helper and not mixed in with
     the code of ``_transolve`` itself.
 
@@ -1452,7 +1452,7 @@ def _transolve(f, symbol, domain):
     4) Faster Computation
 
     Solving equation via ``_transolve`` is much faster as compared to
-    ``_tsolve``. In ``solve``, attempts are made computing every possibility
+    ``_tsolve``. In ``solveset``, attempts are made computing every possibility
     to get the solutions. This series of attempts makes solving a bit
     slow. In ``_transolve``, computation begins only after a particular
     type of equation is identified.
@@ -1460,7 +1460,7 @@ def _transolve(f, symbol, domain):
     How to add new class of equations
     =================================
 
-    Adding a new class of equation solver is a three-step procedure:
+    Adding a new class of equation solvesetr is a three-step procedure:
 
     - Identify the type of the equations
 
@@ -1486,7 +1486,7 @@ def _transolve(f, symbol, domain):
     - Define the solving helper.
 
     Apart from this, a few other things needs to be taken care while
-    adding an equation solver:
+    adding an equation solvesetr:
 
     - Naming conventions:
       Name of the identification helper should be as
@@ -1506,7 +1506,7 @@ def _transolve(f, symbol, domain):
       The documentation of the helpers should identify:
 
       - the purpose of the helper,
-      - the method used to identify and solve the equation,
+      - the method used to identify and solveset the equation,
       - a proof of correctness
       - the return values of the helpers
     """
@@ -1547,8 +1547,8 @@ def _transolve(f, symbol, domain):
     return result
 
 
-def solveset(f, symbol=None, domain=S.Complexes):
-    r"""Solves a given inequality or equation with set as output
+def solvesetset(f, symbol=None, domain=S.Complexes):
+    r"""solvesets a given inequality or equation with set as output
 
     Parameters
     ==========
@@ -1556,9 +1556,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
     f : Expr or a relational.
         The target equation or inequality
     symbol : Symbol
-        The variable for which the equation is solved
+        The variable for which the equation is solvesetd
     domain : Set
-        The domain over which the equation is solved
+        The domain over which the equation is solvesetd
 
     Returns
     =======
@@ -1569,13 +1569,13 @@ def solveset(f, symbol=None, domain=S.Complexes):
         A `ConditionSet` is returned as unsolved object if algorithms
         to evaluate complete solution are not yet implemented.
 
-    `solveset` claims to be complete in the solution set that it returns.
+    `solvesetset` claims to be complete in the solution set that it returns.
 
     Raises
     ======
 
     NotImplementedError
-        The algorithms to solve inequalities in complex domain  are
+        The algorithms to solveset inequalities in complex domain  are
         not yet implemented.
     ValueError
         The input is not valid.
@@ -1596,52 +1596,52 @@ def solveset(f, symbol=None, domain=S.Complexes):
     See Also
     ========
 
-    solveset_real: solver for real domain
-    solveset_complex: solver for complex domain
+    solvesetset_real: solvesetr for real domain
+    solvesetset_complex: solvesetr for complex domain
 
     Examples
     ========
 
     >>> from sympy import exp, sin, Symbol, pprint, S
-    >>> from sympy.solvers.solveset import solveset, solveset_real
+    >>> from sympy.solvesetrs.solvesetset import solvesetset, solvesetset_real
 
     * The default domain is complex. Not specifying a domain will lead
       to the solving of the equation in the complex domain (and this
       is not affected by the assumptions on the symbol):
 
     >>> x = Symbol('x')
-    >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
+    >>> pprint(solvesetset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers}
 
     >>> x = Symbol('x', real=True)
-    >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
+    >>> pprint(solvesetset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers}
 
-    * If you want to use `solveset` to solve the equation in the
-      real domain, provide a real domain. (Using ``solveset_real``
+    * If you want to use `solvesetset` to solveset the equation in the
+      real domain, provide a real domain. (Using ``solvesetset_real``
       does this automatically.)
 
     >>> R = S.Reals
     >>> x = Symbol('x')
-    >>> solveset(exp(x) - 1, x, R)
+    >>> solvesetset(exp(x) - 1, x, R)
     {0}
-    >>> solveset_real(exp(x) - 1, x)
+    >>> solvesetset_real(exp(x) - 1, x)
     {0}
 
     The solution is mostly unaffected by assumptions on the symbol,
     but there may be some slight difference:
 
-    >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
+    >>> pprint(solvesetset(sin(x)/x,x), use_unicode=False)
     ({2*n*pi | n in Integers} \ {0}) U ({2*n*pi + pi | n in Integers} \ {0})
 
     >>> p = Symbol('p', positive=True)
-    >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
+    >>> pprint(solvesetset(sin(p)/p, p), use_unicode=False)
     {2*n*pi | n in Integers} U {2*n*pi + pi | n in Integers}
 
-    * Inequalities can be solved over the real domain only. Use of a complex
+    * Inequalities can be solvesetd over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
 
-    >>> solveset(exp(x) > 1, x, R)
+    >>> solvesetset(exp(x) > 1, x, R)
     Interval.open(0, oo)
 
     """
@@ -1685,7 +1685,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     elif not isinstance(symbol, Symbol):
         f, s, swap = recast_to_symbols([f], [symbol])
         # the xreplace will be needed if a ConditionSet is returned
-        return solveset(f[0], s[0], domain).xreplace(swap)
+        return solvesetset(f[0], s[0], domain).xreplace(swap)
 
     if domain.is_subset(S.Reals):
         if not symbol.is_real:
@@ -1693,7 +1693,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             assumptions['real'] = True
             try:
                 r = Dummy('r', **assumptions)
-                return solveset(f.xreplace({symbol: r}), r, domain
+                return solvesetset(f.xreplace({symbol: r}), r, domain
                     ).xreplace({r: symbol})
             except InconsistentAssumptions:
                 pass
@@ -1714,22 +1714,22 @@ def solveset(f, symbol=None, domain=S.Complexes):
     return _solveset(f, symbol, domain, _check=True)
 
 
-def solveset_real(f, symbol):
-    return solveset(f, symbol, S.Reals)
+def solvesetset_real(f, symbol):
+    return solvesetset(f, symbol, S.Reals)
 
 
-def solveset_complex(f, symbol):
-    return solveset(f, symbol, S.Complexes)
+def solvesetset_complex(f, symbol):
+    return solvesetset(f, symbol, S.Complexes)
 
 
 def solvify(f, symbol, domain):
-    """Solves an equation using solveset and returns the solution in accordance
-    with the `solve` output API.
+    """solvesets an equation using solvesetset and returns the solution in accordance
+    with the `solveset` output API.
 
     Returns
     =======
 
-    We classify the output based on the type of solution returned by `solveset`.
+    We classify the output based on the type of solution returned by `solvesetset`.
 
     Solution    |    Output
     ----------------------------------------
@@ -1752,7 +1752,7 @@ def solvify(f, symbol, domain):
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import solvify, solveset
+    >>> from sympy.solvesetrs.solvesetset import solvify, solvesetset
     >>> from sympy.abc import x
     >>> from sympy import S, tan, sin, exp
     >>> solvify(x**2 - 9, x, S.Reals)
@@ -1767,13 +1767,13 @@ def solvify(f, symbol, domain):
     [0]
 
     """
-    solution_set = solveset(f, symbol, domain)
+    solution_set = solvesetset(f, symbol, domain)
     result = None
     if solution_set is S.EmptySet:
         result = []
 
     elif isinstance(solution_set, ConditionSet):
-        raise NotImplementedError('solveset is unable to solve this equation.')
+        raise NotImplementedError('solvesetset is unable to solveset this equation.')
 
     elif isinstance(solution_set, FiniteSet):
         result = list(solution_set)
@@ -1804,7 +1804,7 @@ def solvify(f, symbol, domain):
 
 
 ###############################################################################
-################################ LINSOLVE #####################################
+################################ LInsolve #####################################
 ###############################################################################
 
 
@@ -1817,7 +1817,7 @@ def linear_coeffs(eq, *syms, **_kw):
     Examples
     ========
 
-    >>> from sympy.solvers.solveset import linear_coeffs
+    >>> from sympy.solvesetrs.solvesetset import linear_coeffs
     >>> from sympy.abc import x, y, z
 
     >>> linear_coeffs(3*x + 2*y - 1, x, y)
@@ -1988,7 +1988,7 @@ def linear_eq_to_matrix(equations, *symbols):
 
 def linsolve(system, *symbols):
     r"""
-    Solve system of N linear equations with M variables; both
+    solveset system of N linear equations with M variables; both
     underdetermined and overdetermined systems are supported.
     The possible number of solutions is zero, one or infinite.
     Zero solutions throws a ValueError, whereas infinite
@@ -2044,7 +2044,7 @@ def linsolve(system, *symbols):
     A FiniteSet containing an ordered tuple of values for the
     unknowns for which the `system` has a solution. (Wrapping
     the tuple in FiniteSet is used to maintain a consistent
-    output format throughout solveset.)
+    output format throughout solvesetset.)
 
     Returns EmptySet(), if the linear system is inconsistent.
 
@@ -2110,7 +2110,7 @@ def linsolve(system, *symbols):
     >>> linsolve(aug, x, y, z)
     {(3/10, 2/5, 0)}
 
-    * Solve for symbolic coefficients
+    * solveset for symbolic coefficients
 
     >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     >>> eqns = [a*x + b*y - c, d*x + e*y - f]
@@ -2191,7 +2191,7 @@ def linsolve(system, *symbols):
         if any(set(symbols) & (A.free_symbols | b.free_symbols)):
             raise ValueError(filldedent('''
                 At least one of the symbols provided
-                already appears in the system to be solved.
+                already appears in the system to be solvesetd.
                 One way to avoid this is to use Dummy symbols in
                 the generator, e.g. numbered_symbols('%s', cls=Dummy)
             ''' % symbols[0].name.rstrip('1234567890')))
@@ -2243,7 +2243,7 @@ def _return_conditionset(eqs, symbols):
 def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
     r"""
-     Solves the `system` using substitution method. It is used in
+     solvesets the `system` using substitution method. It is used in
      `nonlinsolve`. This will be called from `nonlinsolve` when any
      equation(s) is non polynomial equation.
 
@@ -2252,9 +2252,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
     system : list of equations
         The target system of equations
-    symbols : list of symbols to be solved.
-        The variable(s) for which the system is solved
-    known_symbols : list of solved symbols
+    symbols : list of symbols to be solvesetd.
+        The variable(s) for which the system is solvesetd
+    known_symbols : list of solvesetd symbols
         Values are known for these variable(s)
     result : An empty list or list of dict
         If No symbol values is known then empty list otherwise
@@ -2280,7 +2280,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     Also note that solution could also have been returned as an ordered tuple,
     FiniteSet is just a wrapper `{}` around the tuple. It has no other
     significance except for the fact it is just used to maintain a consistent
-    output format throughout the solveset.
+    output format throughout the solvesetset.
 
     Raises
     ======
@@ -2296,7 +2296,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
     >>> from sympy.core.symbol import symbols
     >>> x, y = symbols('x, y', real=True)
-    >>> from sympy.solvers.solveset import substitution
+    >>> from sympy.solvesetrs.solvesetset import substitution
     >>> substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y])
     {(-1, 1)}
 
@@ -2367,7 +2367,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     intersections = {}
 
     # when total_solveset_call is equals to total_conditionset
-    # means solvest fail to solve all the eq.
+    # means solvesetst fail to solveset all the eq.
     total_conditionset = -1
     total_solveset_call = -1
 
@@ -2389,7 +2389,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         ordered(system, lambda _: len(_unsolved_syms(_))))
 
     def add_intersection_complement(result, sym_set, **flags):
-        # If solveset have returned some intersection/complement
+        # If solvesetset have returned some intersection/complement
         # for any symbol. It will be added in final solution.
         final_result = []
         for res in result:
@@ -2431,7 +2431,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             if isinstance(sol, Intersection):
                 # Interval/Set will be at 0th index always
                 if sol.args[0] != Interval(-oo, oo):
-                    # sometimes solveset returns soln
+                    # sometimes solvesetset returns soln
                     # with intersection `S.Reals`, to confirm that
                     # soln is in `domain=S.Reals` or not. We don't consider
                     # that intersection.
@@ -2581,10 +2581,10 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             return first_priority + second_priority
         return result
 
-    def _solve_using_known_values(result, solver):
-        """Solves the system using already known solution
+    def _solve_using_known_values(result, solvesetr):
+        """solvesets the system using already known solution
         (result contains the dict <symbol: value>).
-        solver is `solveset_complex` or `solveset_real`.
+        solvesetr is `solvesetset_complex` or `solvesetset_real`.
         """
         # stores imageset <expr: imageset(Lambda(n, expr), base)>.
         soln_imageset = {}
@@ -2596,11 +2596,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         for index, eq in enumerate(eqs_in_better_order):
             newresult = []
             original_imageset = {}
-            # if imageset expr is used to solve other symbol
+            # if imageset expr is used to solveset other symbol
             imgset_yes = False
             result = _new_order_result(result, eq)
             for res in result:
-                got_symbol = set()  # symbols solved in one iteration
+                got_symbol = set()  # symbols solvesetd in one iteration
                 if soln_imageset:
                     # find the imageset and use its expr.
                     for key_res, value_res in res.items():
@@ -2626,7 +2626,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             result.remove(res)
                     continue  # skip as it's independent of desired symbols
                 depen = eq2.as_independent(unsolved_syms)[0]
-                if depen.has(Abs) and solver == solveset_complex:
+                if depen.has(Abs) and solvesetr == solvesetset_complex:
                     # Absolute values cannot be inverted in the
                     # complex domain
                     continue
@@ -2634,7 +2634,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                 for sym in unsolved_syms:
                     not_solvable = False
                     try:
-                        soln = solver(eq2, sym)
+                        soln = solvesetr(eq2, sym)
                         total_solvest_call += 1
                         soln_new = S.EmptySet
                         if isinstance(soln, Complement):
@@ -2645,19 +2645,19 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         if isinstance(soln, Intersection):
                             # Interval will be at 0th index always
                             if soln.args[0] != Interval(-oo, oo):
-                                # sometimes solveset returns soln
+                                # sometimes solvesetset returns soln
                                 # with intersection S.Reals, to confirm that
                                 # soln is in domain=S.Reals
                                 intersections[sym] = soln.args[0]
                             soln_new += soln.args[1]
                         soln = soln_new if soln_new else soln
-                        if index > 0 and solver == solveset_real:
+                        if index > 0 and solvesetr == solvesetset_real:
                             # one symbol's real soln , another symbol may have
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
-                                soln += solveset_complex(eq2, sym)
+                                soln += solvesetset_complex(eq2, sym)
                     except NotImplementedError:
-                        # If sovleset is not able to solve equation `eq2`. Next
+                        # If sovleset is not able to solveset equation `eq2`. Next
                         # time we may get soln using next equation `eq2`
                         continue
                     if isinstance(soln, ConditionSet):
@@ -2681,7 +2681,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         if got_symbol and any([
                             ss in free for ss in got_symbol
                         ]):
-                            # sol depends on previously solved symbols
+                            # sol depends on previously solvesetd symbols
                             # then continue
                             continue
                         rnew = res.copy()
@@ -2719,12 +2719,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     # end def _solve_using_know_values()
 
     new_result_real, solve_call1, cnd_call1 = _solve_using_known_values(
-        old_result, solveset_real)
+        old_result, solvesetset_real)
     new_result_complex, solve_call2, cnd_call2 = _solve_using_known_values(
-        old_result, solveset_complex)
+        old_result, solvesetset_complex)
 
     # when `total_solveset_call` is equals to `total_conditionset`
-    # means solvest fails to solve all the eq.
+    # means solvesetst fails to solveset all the eq.
     # return conditionset in this case
     total_conditionset += (cnd_call1 + cnd_call2)
     total_solveset_call += (solve_call1 + solve_call2)
@@ -2745,9 +2745,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # Some or all the soln is dependent on 1 symbol.
         # eg. {x: y+2} then final soln {x: y+2, y: y}
         if len(res) < len(all_symbols):
-            solved_symbols = res.keys()
+            solvesetd_symbols = res.keys()
             unsolved = list(filter(
-                lambda x: x not in solved_symbols, all_symbols))
+                lambda x: x not in solvesetd_symbols, all_symbols))
             for unsolved_sym in unsolved:
                 res[unsolved_sym] = unsolved_sym
             result_infinite.append(res)
@@ -2781,7 +2781,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
 
 def _solveset_work(system, symbols):
-        soln = solveset(system[0], symbols[0])
+        soln = solvesetset(system[0], symbols[0])
         if isinstance(soln, FiniteSet):
             _soln = FiniteSet(*[tuple((s,)) for s in soln])
             return _soln
@@ -2808,7 +2808,7 @@ def _handle_positive_dimensional(polys, symbols, denominators):
 
 
 def _handle_zero_dimensional(polys, symbols, system):
-    # solve 0 dimensional poly system using `solve_poly_system`
+    # solveset 0 dimensional poly system using `solve_poly_system`
     result = solve_poly_system(polys, *symbols)
     # May be some extra soln is added because
     # we used `unrad` in `_separate_poly_nonpoly`, so
@@ -2853,7 +2853,7 @@ def _separate_poly_nonpoly(system, symbols):
 
 def nonlinsolve(system, *symbols):
     r"""
-    Solve system of N non linear equations with M variables, which means both
+    solveset system of N non linear equations with M variables, which means both
     under and overdetermined systems are supported. Positive dimensional
     system is also supported (A system with infinitely many solutions is said
     to be positive-dimensional). In Positive dimensional system solution will
@@ -2884,7 +2884,7 @@ def nonlinsolve(system, *symbols):
     Also note that solution could also have been returned as an ordered tuple,
     FiniteSet is just a wrapper `{}` around the tuple. It has no other
     significance except for the fact it is just used to maintain a consistent
-    output format throughout the solveset.
+    output format throughout the solvesetset.
 
     For the given set of Equations, the respective input types
     are given below:
@@ -2908,7 +2908,7 @@ def nonlinsolve(system, *symbols):
     ========
 
     >>> from sympy.core.symbol import symbols
-    >>> from sympy.solvers.solveset import nonlinsolve
+    >>> from sympy.solvesetrs.solvesetset import nonlinsolve
     >>> x, y, z = symbols('x, y, z', real=True)
     >>> nonlinsolve([x*y - 1, 4*x**2 + y**2 - 5], [x, y])
     {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
@@ -2950,17 +2950,17 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
     {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
 
-    4. `nonlinsolve` can solve some linear(zero or positive dimensional)
+    4. `nonlinsolve` can solveset some linear(zero or positive dimensional)
     system (because it is using `groebner` function to get the
     groebner basis and then `substitution` function basis as the new `system`).
-    But it is not recommended to solve linear system using `nonlinsolve`,
+    But it is not recommended to solveset linear system using `nonlinsolve`,
     because `linsolve` is better for all kind of linear system.
 
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z])
     {(3*z - 5, 4 - z, z)}
 
     5. System having polynomial equations and only real solution is present
-    (will be solved using `solve_poly_system`):
+    (will be solvesetd using `solve_poly_system`):
 
     >>> e1 = sqrt(x**2 + y**2) - 10
     >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
@@ -2973,18 +2973,18 @@ def nonlinsolve(system, *symbols):
 
     6. It is better to use symbols instead of Trigonometric Function or
     Function (e.g. replace `sin(x)` with symbol, replace `f(x)` with symbol
-    and so on. Get soln from `nonlinsolve` and then using `solveset` get
+    and so on. Get soln from `nonlinsolve` and then using `solvesetset` get
     the value of `x`)
 
-    How nonlinsolve is better than old solver `_solve_system` :
+    How nonlinsolve is better than old solvesetr `_solve_system` :
     ===========================================================
 
-    1. A positive dimensional system solver : nonlinsolve can return
+    1. A positive dimensional system solvesetr : nonlinsolve can return
     solution for positive dimensional system. It finds the
     Groebner Basis of the positive dimensional system(calling it as
     basis) then we can start solving equation(having least number of
-    variable first in the basis) using solveset and substituting that
-    solved solutions into other equation(of basis) to get solution in
+    variable first in the basis) using solvesetset and substituting that
+    solvesetd solutions into other equation(of basis) to get solution in
     terms of minimum variables. Here the important thing is how we
     are substituting the known values and in which equations.
 
@@ -2993,15 +2993,15 @@ def nonlinsolve(system, *symbols):
     then using `solve_poly_system` both real and complex solution is returned.
     If all the equations in the system are not polynomial equation then goes to
     `substitution` method with this polynomial and non polynomial equation(s),
-    to solve for unsolved variables. Here to solve for particular variable
-    solveset_real and solveset_complex is used. For both real and complex
+    to solveset for unsolved variables. Here to solveset for particular variable
+    solvesetset_real and solvesetset_complex is used. For both real and complex
     solution function `_solve_using_know_values` is used inside `substitution`
     function.(`substitution` function will be called when there is any non
     polynomial equation(s) is present). When solution is valid then add its
     general solution in the final result.
 
     3. Complement and Intersection will be added if any : nonlinsolve maintains
-    dict for complements and Intersections. If solveset find complements or/and
+    dict for complements and Intersections. If solvesetset find complements or/and
     Intersection with any Interval or set during the execution of
     `substitution` function ,then complement or/and Intersection for that
     variable is added before returning final solution.

@@ -244,7 +244,7 @@ class Integral(AddWithLimits):
         variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
-        from sympy.solvers.solvers import solve, posify
+        from sympy.solvesetrs.solvesetrs import solveset, posify
         d = Dummy('d')
 
         xfree = x.free_symbols.intersection(self.variables)
@@ -292,17 +292,17 @@ class Integral(AddWithLimits):
 
         if not x.is_Symbol:
             F = [x.subs(xvar, d)]
-            soln = solve(u - x, xvar, check=False)
+            soln = solveset(u - x, xvar, check=False)
             if not soln:
-                raise ValueError('no solution for solve(F(x) - f(u), x)')
+                raise ValueError('no solution for solveset(F(x) - f(u), x)')
             f = [fi.subs(uvar, d) for fi in soln]
         else:
             f = [u.subs(uvar, d)]
             pdiff, reps = posify(u - x)
             puvar = uvar.subs([(v, k) for k, v in reps.items()])
-            soln = [s.subs(reps) for s in solve(pdiff, puvar)]
+            soln = [s.subs(reps) for s in solveset(pdiff, puvar)]
             if not soln:
-                raise ValueError('no solution for solve(F(x) - f(u), u)')
+                raise ValueError('no solution for solveset(F(x) - f(u), u)')
             F = [fi.subs(xvar, d) for fi in soln]
 
         newfuncs = set([(self.function.subs(xvar, fi)*fi.diff(d)
@@ -653,7 +653,7 @@ class Integral(AddWithLimits):
         Whenever an Integral is encountered that is equivalent to zero or
         has an integrand that is independent of the variable of integration
         those integrals are performed. All others are returned as Integral
-        instances which can be resolved with doit() (provided they are integrable).
+        instances which can be resolvesetd with doit() (provided they are integrable).
 
         References:
            [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
@@ -1050,7 +1050,7 @@ class Integral(AddWithLimits):
             # so let's try an expansion of the whole
             # thing before giving up; we don't try this
             # at the outset because there are things
-            # that cannot be solved unless they are
+            # that cannot be solvesetd unless they are
             # NOT expanded e.g., x**x*(1+log(x)). There
             # should probably be a checker somewhere in this
             # routine to look for such cases and try to do

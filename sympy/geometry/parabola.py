@@ -9,7 +9,7 @@ from __future__ import division, print_function
 from sympy.core import S
 from sympy.core.compatibility import ordered
 from sympy.core.symbol import _symbol
-from sympy import symbols, simplify, solve
+from sympy import symbols, simplify, solveset
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point, Point2D
 from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
@@ -319,17 +319,17 @@ class Parabola(GeometrySet):
             if o in self:
                 return [o]
             else:
-                return list(ordered([Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
+                return list(ordered([Point(i) for i in solveset([parabola_eq, o.equation()], [x, y])]))
         elif isinstance(o, Point2D):
             if simplify(parabola_eq.subs(([(x, o._args[0]), (y, o._args[1])]))) == 0:
                 return [o]
             else:
                 return []
         elif isinstance(o, (Segment2D, Ray2D)):
-            result = solve([parabola_eq, Line2D(o.points[0], o.points[1]).equation()], [x, y])
+            result = solveset([parabola_eq, Line2D(o.points[0], o.points[1]).equation()], [x, y])
             return list(ordered([Point2D(i) for i in result if i in o]))
         elif isinstance(o, (Line2D, Ellipse)):
-            return list(ordered([Point2D(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
+            return list(ordered([Point2D(i) for i in solveset([parabola_eq, o.equation()], [x, y])]))
         elif isinstance(o, LinearEntity3D):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:

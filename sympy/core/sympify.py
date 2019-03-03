@@ -429,7 +429,7 @@ def kernS(s):
     If use of the hack fails, the un-hacked string will be passed to sympify...
     and you get what you get.
 
-    XXX This hack should not be necessary once issue 4596 has been resolved.
+    XXX This hack should not be necessary once issue 4596 has been resolvesetd.
     """
     import string
     from random import choice

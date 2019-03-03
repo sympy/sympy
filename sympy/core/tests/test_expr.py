@@ -1532,7 +1532,7 @@ def test_issue_5843():
 
 
 def test_is_constant():
-    from sympy.solvers.solvers import checksol
+    from sympy.solvesetrs.solvesetrs import checksol
     Sum(x, (x, 1, 10)).is_constant() is True
     Sum(x, (x, 1, n)).is_constant() is False
     Sum(x, (x, 1, n)).is_constant(y) is True
@@ -1607,7 +1607,7 @@ def test_equals():
 
     # issue 6829
     # eq = q*x + q/4 + x**4 + x**3 + 2*x**2 - S(1)/3
-    # z = eq.subs(x, solve(eq, x)[0])
+    # z = eq.subs(x, solveset(eq, x)[0])
     q = symbols('q')
     z = (q*(-sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
     S(13)/12)/2 - sqrt((2*q - S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 -

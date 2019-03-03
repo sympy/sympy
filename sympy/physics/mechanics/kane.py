@@ -38,7 +38,7 @@ class KanesMethod(object):
         describing the forces on the system.
     auxiliary : Matrix
         If applicable, the set of auxiliary Kane's
-        equations used to solve for non-contributing
+        equations used to solveset for non-contributing
         forces.
     mass_matrix : Matrix
         The system's mass matrix
@@ -225,7 +225,7 @@ class KanesMethod(object):
             # to independent speeds as: udep = Ars*uind, neglecting the C term.
             B_ind = self._k_nh[:, :p]
             B_dep = self._k_nh[:, p:o]
-            self._Ars = -B_dep.LUsolve(B_ind)
+            self._Ars = -B_dep.LUsolveset(B_ind)
         else:
             self._f_nh = Matrix()
             self._k_nh = Matrix()
@@ -253,8 +253,8 @@ class KanesMethod(object):
             k_ku = (msubs(kdeqs, qdot_zero) - f_k).jacobian(u)
             k_kqdot = (msubs(kdeqs, u_zero) - f_k).jacobian(qdot)
 
-            f_k = k_kqdot.LUsolve(f_k)
-            k_ku = k_kqdot.LUsolve(k_ku)
+            f_k = k_kqdot.LUsolveset(f_k)
+            k_ku = k_kqdot.LUsolveset(k_ku)
             k_kqdot = eye(len(qdot))
 
             self._qdot_u_map = solve_linear_system_LU(
@@ -582,7 +582,7 @@ class KanesMethod(object):
             rhs[i] = kdes[q_i.diff()]
 
         if inv_method is None:
-            rhs[len(self.q):, 0] = self.mass_matrix.LUsolve(self.forcing)
+            rhs[len(self.q):, 0] = self.mass_matrix.LUsolveset(self.forcing)
         else:
             rhs[len(self.q):, 0] = (self.mass_matrix.inv(inv_method,
                                                          try_block_diag=True) *

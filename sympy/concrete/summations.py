@@ -22,8 +22,8 @@ from sympy.sets.sets import FiniteSet
 from sympy.simplify import denom
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
-from sympy.solvers import solve
-from sympy.solvers.solveset import solveset
+from sympy.solvesetrs import solveset
+from sympy.solvesetrs.solvesetset import solvesetset
 import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -504,7 +504,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ------------- integral test -------------- ###
         check_interval = None
-        maxima = solveset(sequence_term.diff(sym), sym, interval)
+        maxima = solvesetset(sequence_term.diff(sym), sym, interval)
         if not maxima:
             check_interval = interval
         elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:
@@ -878,9 +878,9 @@ def telescopic(L, R, limits):
     if L.is_Add or R.is_Add:
         return None
 
-    # We want to solve(L.subs(i, i + m) + R, m)
+    # We want to solveset(L.subs(i, i + m) + R, m)
     # First we try a simple match since this does things that
-    # solve doesn't do, e.g. solve(f(k+m)-f(k), m) fails
+    # solveset doesn't do, e.g. solveset(f(k+m)-f(k), m) fails
 
     k = Wild("k")
     sol = (-R).match(L.subs(i, i + k))
@@ -891,13 +891,13 @@ def telescopic(L, R, limits):
             # sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
             s = None
 
-    # But there are things that match doesn't do that solve
+    # But there are things that match doesn't do that solveset
     # can do, e.g. determine that 1/(x + m) = 1/(1 - x) when m = 1
 
     if s is None:
         m = Dummy('m')
         try:
-            sol = solve(L.subs(i, i + m) + R, m) or []
+            sol = solveset(L.subs(i, i + m) + R, m) or []
         except NotImplementedError:
             return None
         sol = [si for si in sol if si.is_Integer and
@@ -1062,7 +1062,7 @@ def eval_sum_symbolic(f, limits):
             args = []
             for v in ordered(den_sym):
                 try:
-                    s = solve(den, v)
+                    s = solveset(den, v)
                     m = Eq(v, s[0]) if s else S.false
                     if m != False:
                         args.append((Sum(f_orig.subs(*m.args), limits).doit(), m))

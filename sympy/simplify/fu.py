@@ -931,7 +931,7 @@ def TR10i(rv):
                 rv = Add(*(args + [Add(*[_f for _f in v if _f])
                     for v in byrad.values()]))
             else:
-                rv = do(rv)  # final pass to resolve any new inducible pairs
+                rv = do(rv)  # final pass to resolveset any new inducible pairs
                 break
 
         return rv
@@ -1249,7 +1249,7 @@ def TRmorrie(rv):
     >>> TRmorrie(cos(pi/7)*cos(2*pi/7)*cos(4*pi/7))
     -sin(3*pi/7)*cos(3*pi/7)/(4*sin(pi/7))
 
-    A touch by TR8 resolves the expression to a Rational
+    A touch by TR8 resolvesets the expression to a Rational
 
     >>> TR8(_)
     -1/8
@@ -1273,7 +1273,7 @@ def TRmorrie(rv):
     >>> TR3(_)
     1/16
 
-    The original expression would have resolve to 1/16 directly with TR8,
+    The original expression would have resolveset to 1/16 directly with TR8,
     however:
 
     >>> TR8(eq)

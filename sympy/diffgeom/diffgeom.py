@@ -9,7 +9,7 @@ from sympy.core.numbers import Zero
 from sympy.functions import factorial
 from sympy.matrices import Matrix
 from sympy.simplify import simplify
-from sympy.solvers import solve
+from sympy.solvesetrs import solveset
 
 
 # TODO you are a bit excessive in the use of Dummies
@@ -107,7 +107,7 @@ class CoordSystem(Basic):
     True
 
     Connect the coordinate systems. An inverse transformation is automatically
-    found by ``solve`` when possible:
+    found by ``solveset`` when possible:
 
     >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
     >>> polar.coord_tuple_transform_to(rect, [0, 2])
@@ -245,7 +245,7 @@ class CoordSystem(Basic):
     @staticmethod
     def _inv_transf(from_coords, to_exprs):
         inv_from = [i.as_dummy() for i in from_coords]
-        inv_to = solve(
+        inv_to = solveset(
             [t[0] - t[1] for t in zip(inv_from, to_exprs)],
             list(from_coords), dict=True)[0]
         inv_to = [inv_to[fc] for fc in from_coords]

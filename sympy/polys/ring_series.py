@@ -586,7 +586,7 @@ def rs_series_reversion(p, x, n, y):
       x : Variable with name x.
       y : Variable with name y.
 
-    Solve `p = y`, that is, given `a*x + f(x) - y = 0`,
+    solveset `p = y`, that is, given `a*x + f(x) - y = 0`,
     find the solution x = r(y) up to O(y**n)
 
     Algorithm:
@@ -1892,7 +1892,7 @@ def _rs_series(expr, series_rs, a, prec):
         # `sin(x + 1)`. The ``EX`` domain allows all symbolic coefficients, but
         # that makes it very complex and hence slow.
         #
-        # To solve this problem, we add only those symbolic elements as
+        # To solveset this problem, we add only those symbolic elements as
         # generators to our ring, that we need. Here, series_inner might
         # involve terms like `sin(4)`, `exp(a)`, etc, which are not there in
         # R1 or R. Hence, we compose these three rings to create one that has

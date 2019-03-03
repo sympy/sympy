@@ -170,7 +170,7 @@ class IntegralTransform(Function):
     def _eval_rewrite_as_Integral(self, *args, **kwargs):
         return self.as_integral
 
-from sympy.solvers.inequalities import _solve_inequality
+from sympy.solvesetrs.inequalities import _solve_inequality
 
 
 def _simplify(expr, doit):
@@ -476,7 +476,7 @@ def _rewrite_gamma(f, s, a, b):
         """
         Decide whether pole at c lies to the left of the fundamental strip.
         """
-        # heuristically, this is the best chance for us to solve the inequalities
+        # heuristically, this is the best chance for us to solveset the inequalities
         c = expand(re(c))
         if a_ is None and b_ is oo:
             return True

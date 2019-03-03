@@ -15,7 +15,7 @@ from sympy.matrices.densetools import (
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 SymPyDeprecationWarning(
-    feature="densesolve",
+    feature="densesolveset",
     issue=12695,
     deprecated_since_version="1.1").warn()
 
@@ -28,7 +28,7 @@ def row_echelon(matlist, K):
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import row_echelon
+    >>> from sympy.matrices.densesolveset import row_echelon
     >>> from sympy import QQ
     >>> a = [
     ... [QQ(3), QQ(7), QQ(4)],
@@ -60,7 +60,7 @@ def rref(matlist, K):
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import rref
+    >>> from sympy.matrices.densesolveset import rref
     >>> from sympy import QQ
     >>> a = [
     ... [QQ(1), QQ(2), QQ(1)],
@@ -92,7 +92,7 @@ def LU(matlist, K, reverse = 0):
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import LU
+    >>> from sympy.matrices.densesolveset import LU
     >>> from sympy import QQ
     >>> a = [
     ... [QQ(1), QQ(2), QQ(3)],
@@ -125,7 +125,7 @@ def cholesky(matlist, K):
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import cholesky
+    >>> from sympy.matrices.densesolveset import cholesky
     >>> from sympy import QQ
     >>> cholesky([[QQ(25), QQ(15), QQ(-5)], [QQ(15), QQ(18), QQ(0)], [QQ(-5), QQ(0), QQ(11)]], QQ)
     ([[5, 0, 0], [3, 3, 0], [-1, 1, 3]], [[5, 3, -1], [0, 3, 1], [0, 0, 3]])
@@ -158,7 +158,7 @@ def LDL(matlist, K):
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import LDL
+    >>> from sympy.matrices.densesolveset import LDL
     >>> from sympy import QQ
 
     >>> a = [
@@ -192,7 +192,7 @@ def upper_triangle(matlist, K):
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import upper_triangle
+    >>> from sympy.matrices.densesolveset import upper_triangle
     >>> from sympy import QQ
     >>> a = [
     ... [QQ(4,1), QQ(12,1), QQ(-16,1)],
@@ -219,7 +219,7 @@ def lower_triangle(matlist, K):
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import lower_triangle
+    >>> from sympy.matrices.densesolveset import lower_triangle
     >>> from sympy import QQ
     >>> a = [
     ... [QQ(4,1), QQ(12,1), QQ(-16)],
@@ -240,13 +240,13 @@ def lower_triangle(matlist, K):
 
 def rref_solve(matlist, variable, constant, K):
     """
-    Solves a system of equations using reduced row echelon form given
+    solvesets a system of equations using reduced row echelon form given
     a matrix of coefficients, a vector of variables and a vector of constants.
 
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import rref_solve
+    >>> from sympy.matrices.densesolveset import rref_solve
     >>> from sympy import QQ
     >>> from sympy import Dummy
     >>> x, y, z = Dummy('x'), Dummy('y'), Dummy('z')
@@ -279,13 +279,13 @@ def rref_solve(matlist, variable, constant, K):
 
 def LU_solve(matlist, variable, constant, K):
     """
-    Solves a system of equations using  LU decomposition given a matrix
+    solvesets a system of equations using  LU decomposition given a matrix
     of coefficients, a vector of variables and a vector of constants.
 
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import LU_solve
+    >>> from sympy.matrices.densesolveset import LU_solve
     >>> from sympy import QQ
     >>> from sympy import Dummy
     >>> x, y, z = Dummy('x'), Dummy('y'), Dummy('z')
@@ -322,13 +322,13 @@ def LU_solve(matlist, variable, constant, K):
 
 def cholesky_solve(matlist, variable, constant, K):
     """
-    Solves a system of equations using Cholesky decomposition given
+    solvesets a system of equations using Cholesky decomposition given
     a matrix of coefficients, a vector of variables and a vector of constants.
 
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import cholesky_solve
+    >>> from sympy.matrices.densesolveset import cholesky_solve
     >>> from sympy import QQ
     >>> from sympy import Dummy
     >>> x, y, z = Dummy('x'), Dummy('y'), Dummy('z')
@@ -371,7 +371,7 @@ def forward_substitution(lower_triangle, variable, constant, K):
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import forward_substitution
+    >>> from sympy.matrices.densesolveset import forward_substitution
     >>> from sympy import QQ
     >>> from sympy import Dummy
     >>> x, y, z = Dummy('x'), Dummy('y'), Dummy('z')
@@ -415,7 +415,7 @@ def backward_substitution(upper_triangle, variable, constant, K):
     Examples
     ========
 
-    >>> from sympy.matrices.densesolve import backward_substitution
+    >>> from sympy.matrices.densesolveset import backward_substitution
     >>> from sympy import QQ
     >>> from sympy import Dummy
     >>> x, y, z = Dummy('x'), Dummy('y'), Dummy('z')

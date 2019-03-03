@@ -12,7 +12,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     I, trigsimp, tan, sin, cos, cot, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, legendre_poly, polylog, series, O,
-    atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc, sec,
+    atan, sinh, cosh, tanh, floor, ceiling, solveset, asinh, acot, csc, sec,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, ZZ,
     Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt, Min,
     ask, refine, AlgebraicNumber, continued_fraction_iterator as cf_i,
@@ -36,7 +36,7 @@ from sympy.physics.quantum import Commutator
 from sympy.assumptions import assuming
 from sympy.polys.rings import vring
 from sympy.polys.fields import vfield
-from sympy.polys.solvers import solve_lin_sys
+from sympy.polys.solvesetrs import solve_lin_sys
 from sympy.concrete import Sum
 from sympy.concrete.products import Product
 from sympy.integrals import integrate
@@ -45,9 +45,9 @@ from sympy.integrals.transforms import laplace_transform,\
     mellin_transform
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.delta_functions import Heaviside
-from sympy.solvers.recurr import rsolve
-from sympy.solvers.solveset import solveset, solveset_real, linsolve
-from sympy.solvers.ode import dsolve
+from sympy.solvesetrs.recurr import rsolve
+from sympy.solvesetrs.solvesetset import solvesetset, solvesetset_real, linsolve
+from sympy.solvesetrs.ode import dsolve
 from sympy.core.relational import Equality
 from sympy.core.compatibility import range
 from itertools import islice, takewhile
@@ -478,7 +478,7 @@ def test_H14():
 
 
 def test_H15():
-    assert simplify((Mul(*[x - r for r in solveset(x**3 + x**2 - 7)]))) == x**3 + x**2 - 7
+    assert simplify((Mul(*[x - r for r in solvesetset(x**3 + x**2 - 7)]))) == x**3 + x**2 - 7
 
 
 def test_H16():
@@ -502,7 +502,7 @@ def test_H18():
 
 def test_H19():
     a = symbols('a')
-    # The idea is to let a**2 == 2, then solve 1/(a-1). Answer is a+1")
+    # The idea is to let a**2 == 2, then solveset 1/(a-1). Answer is a+1")
     assert Poly(a - 1).invert(Poly(a**2 - 2)) == a + 1
 
 
@@ -854,17 +854,17 @@ def test_M1():
 def test_M2():
     # The roots of this equation should all be real. Note that this
     # doesn't test that they are correct.
-    sol = solveset(3*x**3 - 18*x**2 + 33*x - 19, x)
+    sol = solvesetset(3*x**3 - 18*x**2 + 33*x - 19, x)
     assert all(s.expand(complex=True).is_real for s in sol)
 
 
 @XFAIL
 def test_M5():
-    assert solveset(x**6 - 9*x**4 - 4*x**3 + 27*x**2 - 36*x - 23, x) == FiniteSet(2**(1/3) + sqrt(3), 2**(1/3) - sqrt(3), +sqrt(3) - 1/2**(2/3) + I*sqrt(3)/2**(2/3), +sqrt(3) - 1/2**(2/3) - I*sqrt(3)/2**(2/3), -sqrt(3) - 1/2**(2/3) + I*sqrt(3)/2**(2/3), -sqrt(3) - 1/2**(2/3) - I*sqrt(3)/2**(2/3))
+    assert solvesetset(x**6 - 9*x**4 - 4*x**3 + 27*x**2 - 36*x - 23, x) == FiniteSet(2**(1/3) + sqrt(3), 2**(1/3) - sqrt(3), +sqrt(3) - 1/2**(2/3) + I*sqrt(3)/2**(2/3), +sqrt(3) - 1/2**(2/3) - I*sqrt(3)/2**(2/3), -sqrt(3) - 1/2**(2/3) + I*sqrt(3)/2**(2/3), -sqrt(3) - 1/2**(2/3) - I*sqrt(3)/2**(2/3))
 
 
 def test_M6():
-    assert set(solveset(x**7 - 1, x)) == \
+    assert set(solvesetset(x**7 - 1, x)) == \
         {cos(n*2*pi/7) + I*sin(n*2*pi/7) for n in range(0, 7)}
     # The paper asks for exp terms, but sin's and cos's may be acceptable;
     # if the results are simplified, exp terms appear for all but
@@ -873,8 +873,8 @@ def test_M6():
 
 
 def test_M7():
-    # TODO: Replace solve with solveset, as of now test fails for solveset
-    sol = solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
+    # TODO: Replace solveset with solvesetset, as of now test fails for solvesetset
+    sol = solveset(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
         226*x**2 - 140*x + 46, x)
     assert [s.simplify() for s in sol] == [
         1 - sqrt(-6 - 2*I*sqrt(3 + 4*sqrt(3)))/2,
@@ -891,7 +891,7 @@ def test_M7():
 def test_M8():
     x = Symbol('x')
     z = symbols('z', complex=True)
-    assert solveset(exp(2*x) + 2*exp(x) + 1 - z, x, S.Reals) == \
+    assert solvesetset(exp(2*x) + 2*exp(x) + 1 - z, x, S.Reals) == \
         FiniteSet(log(1 + z - 2*sqrt(z))/2, log(1 + z + 2*sqrt(z))/2)
     # This one could be simplified better (the 1/2 could be pulled into the log
     # as a sqrt, and the function inside the log can be factored as a square,
@@ -904,23 +904,23 @@ def test_M8():
 @XFAIL
 def test_M9():
     x = symbols('x')
-    raise NotImplementedError("solveset(exp(2-x**2)-exp(-x),x) has complex solutions.")
+    raise NotImplementedError("solvesetset(exp(2-x**2)-exp(-x),x) has complex solutions.")
 
 
 def test_M10():
-    # TODO: Replace solve with solveset, as of now test fails for solveset
-    assert solve(exp(x) - x, x) == [-LambertW(-1)]
+    # TODO: Replace solveset with solvesetset, as of now test fails for solvesetset
+    assert solveset(exp(x) - x, x) == [-LambertW(-1)]
 
 
 @XFAIL
 def test_M11():
-    assert solveset(x**x - x, x) == FiniteSet(-1, 1)
+    assert solvesetset(x**x - x, x) == FiniteSet(-1, 1)
 
 
 def test_M12():
     # TODO: x = [-1, 2*(+/-asinh(1)*I + n*pi}, 3*(pi/6 + n*pi/3)]
-    # TODO: Replace solve with solveset, as of now test fails for solveset
-    assert solve((x + 1)*(sin(x)**2 + 1)**2*cos(3*x)**3, x) == [
+    # TODO: Replace solveset with solvesetset, as of now test fails for solvesetset
+    assert solveset((x + 1)*(sin(x)**2 + 1)**2*cos(3*x)**3, x) == [
         -1, pi/6, pi/2,
            - I*log(1 + sqrt(2)),      I*log(1 + sqrt(2)),
         pi - I*log(1 + sqrt(2)), pi + I*log(1 + sqrt(2)),
@@ -930,19 +930,19 @@ def test_M12():
 @XFAIL
 def test_M13():
     n = Dummy('n')
-    assert solveset_real(sin(x) - cos(x), x) == ImageSet(Lambda(n, n*pi - 7*pi/4), S.Integers)
+    assert solvesetset_real(sin(x) - cos(x), x) == ImageSet(Lambda(n, n*pi - 7*pi/4), S.Integers)
 
 
 @XFAIL
 def test_M14():
     n = Dummy('n')
-    assert solveset_real(tan(x) - 1, x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
+    assert solvesetset_real(tan(x) - 1, x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
 
 
 @XFAIL
 def test_M15():
     n = Dummy('n')
-    assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+    assert solvesetset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
                                            ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)),
                                            Union(ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers),
                                            ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
@@ -951,46 +951,46 @@ def test_M15():
 @XFAIL
 def test_M16():
     n = Dummy('n')
-    assert solveset(sin(x) - tan(x), x) == ImageSet(Lambda(n, n*pi), S.Integers)
+    assert solvesetset(sin(x) - tan(x), x) == ImageSet(Lambda(n, n*pi), S.Integers)
 
 
 @XFAIL
 def test_M17():
-    assert solveset_real(asin(x) - atan(x), x) == FiniteSet(0)
+    assert solvesetset_real(asin(x) - atan(x), x) == FiniteSet(0)
 
 
 @XFAIL
 def test_M18():
-    assert solveset_real(acos(x) - atan(x), x) == FiniteSet(sqrt((sqrt(5) - 1)/2))
+    assert solvesetset_real(acos(x) - atan(x), x) == FiniteSet(sqrt((sqrt(5) - 1)/2))
 
 
 def test_M19():
-    # TODO: Replace solve with solveset, as of now test fails for solveset
-    assert solve((x - 2)/x**R(1, 3), x) == [2]
+    # TODO: Replace solveset with solvesetset, as of now test fails for solvesetset
+    assert solveset((x - 2)/x**R(1, 3), x) == [2]
 
 
 def test_M20():
-    assert solveset(sqrt(x**2 + 1) - x + 2, x) == EmptySet()
+    assert solvesetset(sqrt(x**2 + 1) - x + 2, x) == EmptySet()
 
 
 def test_M21():
-    assert solveset(x + sqrt(x) - 2) == FiniteSet(1)
+    assert solvesetset(x + sqrt(x) - 2) == FiniteSet(1)
 
 
 def test_M22():
-    assert solveset(2*sqrt(x) + 3*x**R(1, 4) - 2) == FiniteSet(R(1, 16))
+    assert solvesetset(2*sqrt(x) + 3*x**R(1, 4) - 2) == FiniteSet(R(1, 16))
 
 
 def test_M23():
     x = symbols('x', complex=True)
-    # TODO: Replace solve with solveset, as of now test fails for solveset
-    assert solve(x - 1/sqrt(1 + x**2)) == [
+    # TODO: Replace solveset with solvesetset, as of now test fails for solvesetset
+    assert solveset(x - 1/sqrt(1 + x**2)) == [
         -I*sqrt(S.Half + sqrt(5)/2), sqrt(-S.Half + sqrt(5)/2)]
 
 
 def test_M24():
-    # TODO: Replace solve with solveset, as of now test fails for solveset
-    solution = solve(1 - binomial(m, 2)*2**k, k)
+    # TODO: Replace solveset with solvesetset, as of now test fails for solvesetset
+    solution = solveset(1 - binomial(m, 2)*2**k, k)
     answer = log(2/(m*(m - 1)), 2)
     assert solution[0].expand() == answer.expand()
 
@@ -998,13 +998,13 @@ def test_M24():
 def test_M25():
     a, b, c, d = symbols(':d', positive=True)
     x = symbols('x')
-    # TODO: Replace solve with solveset, as of now test fails for solveset
-    assert solve(a*b**x - c*d**x, x)[0].expand() == (log(c/a)/log(b/d)).expand()
+    # TODO: Replace solveset with solvesetset, as of now test fails for solvesetset
+    assert solveset(a*b**x - c*d**x, x)[0].expand() == (log(c/a)/log(b/d)).expand()
 
 
 def test_M26():
-    # TODO: Replace solve with solveset, as of now test fails for solveset
-    assert solve(sqrt(log(x)) - log(sqrt(x))) == [1, exp(4)]
+    # TODO: Replace solveset with solvesetset, as of now test fails for solvesetset
+    assert solveset(sqrt(log(x)) - log(sqrt(x))) == [1, exp(4)]
 
 
 @XFAIL
@@ -1012,56 +1012,56 @@ def test_M27():
     x = symbols('x', real=True)
     b = symbols('b', real=True)
     with assuming(Q.is_true(sin(cos(1/E**2) + 1) + b > 0)):
-        # TODO: Replace solve with solveset
-        solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/e**2))**R(3/2), b + sin(1 + cos(1/e**2))**R(3/2)]
+        # TODO: Replace solveset with solvesetset
+        solveset(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/e**2))**R(3/2), b + sin(1 + cos(1/e**2))**R(3/2)]
 
 
 @XFAIL
 def test_M28():
-    # TODO: Replace solve with solveset, as of now
-    # solveset doesn't supports assumptions
-    assert solve(5*x + exp((x - 5)/2) - 8*x**3, x, assume=Q.real(x)) == [-0.784966, -0.016291, 0.802557]
+    # TODO: Replace solveset with solvesetset, as of now
+    # solvesetset doesn't supports assumptions
+    assert solveset(5*x + exp((x - 5)/2) - 8*x**3, x, assume=Q.real(x)) == [-0.784966, -0.016291, 0.802557]
 
 
 def test_M29():
     x = symbols('x')
-    assert solveset(abs(x - 1) - 2, domain=S.Reals) == FiniteSet(-1, 3)
+    assert solvesetset(abs(x - 1) - 2, domain=S.Reals) == FiniteSet(-1, 3)
 
 
 @XFAIL
 def test_M30():
-    # TODO: Replace solve with solveset, as of now
-    # solveset doesn't supports assumptions
-    assert solve(abs(2*x + 5) - abs(x - 2),x, assume=Q.real(x)) == [-1, -7]
+    # TODO: Replace solveset with solvesetset, as of now
+    # solvesetset doesn't supports assumptions
+    assert solveset(abs(2*x + 5) - abs(x - 2),x, assume=Q.real(x)) == [-1, -7]
 
 
 @XFAIL
 def test_M31():
-    # TODO: Replace solve with solveset, as of now
-    # solveset doesn't supports assumptions
-    assert solve(1 - abs(x) - max(-x - 2, x - 2),x, assume=Q.real(x)) == [-3/2, 3/2]
+    # TODO: Replace solveset with solvesetset, as of now
+    # solvesetset doesn't supports assumptions
+    assert solveset(1 - abs(x) - max(-x - 2, x - 2),x, assume=Q.real(x)) == [-3/2, 3/2]
 
 
 @XFAIL
 def test_M32():
-    # TODO: Replace solve with solveset, as of now
-    # solveset doesn't supports assumptions
-    assert solve(max(2 - x**2, x)- max(-x, (x**3)/9), assume=Q.real(x)) == [-1, 3]
+    # TODO: Replace solveset with solvesetset, as of now
+    # solvesetset doesn't supports assumptions
+    assert solveset(max(2 - x**2, x)- max(-x, (x**3)/9), assume=Q.real(x)) == [-1, 3]
 
 
 @XFAIL
 def test_M33():
-    # TODO: Replace solve with solveset, as of now
-    # solveset doesn't supports assumptions
+    # TODO: Replace solveset with solvesetset, as of now
+    # solvesetset doesn't supports assumptions
 
     # Second answer can be written in another form. The second answer is the root of x**3 + 9*x**2 - 18 = 0 in the interval (-2, -1).
-    assert solve(max(2 - x**2, x) - x**3/9, assume=Q.real(x)) == [-3, -1.554894, 3]
+    assert solveset(max(2 - x**2, x) - x**3/9, assume=Q.real(x)) == [-3, -1.554894, 3]
 
 
 @XFAIL
 def test_M34():
     z = symbols('z', complex=True)
-    assert solveset((1 + I) * z + (2 - I) * conjugate(z) + 3*I, z) == FiniteSet(2 + 3*I)
+    assert solvesetset((1 + I) * z + (2 - I) * conjugate(z) + 3*I, z) == FiniteSet(2 + 3*I)
 
 
 def test_M35():
@@ -1071,9 +1071,9 @@ def test_M35():
 
 @XFAIL
 def test_M36():
-    # TODO: Replace solve with solveset, as of now
-    # solveset doesn't supports solving for function
-    assert solve(f**2 + f - 2, x) == [Eq(f(x), 1), Eq(f(x), -2)]
+    # TODO: Replace solveset with solvesetset, as of now
+    # solvesetset doesn't supports solving for function
+    assert solveset(f**2 + f - 2, x) == [Eq(f(x), 1), Eq(f(x), -2)]
 
 
 def test_M37():
@@ -1138,9 +1138,9 @@ def test_M38():
 
 def test_M39():
     x, y, z = symbols('x y z', complex=True)
-    # TODO: Replace solve with solveset, as of now
-    # solveset doesn't supports non-linear multivariate
-    assert solve([x**2*y + 3*y*z - 4, -3*x**2*z + 2*y**2 + 1, 2*y*z**2 - z**2 - 1 ]) ==\
+    # TODO: Replace solveset with solvesetset, as of now
+    # solvesetset doesn't supports non-linear multivariate
+    assert solveset([x**2*y + 3*y*z - 4, -3*x**2*z + 2*y**2 + 1, 2*y*z**2 - z**2 - 1 ]) ==\
             [{y: 1, z: 1, x: -1}, {y: 1, z: 1, x: 1},\
              {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: -sqrt(-1 - sqrt(2)*I)},\
              {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: sqrt(-1 - sqrt(2)*I)},\
@@ -1199,56 +1199,56 @@ def test_N8():
 
 def test_N9():
     x = Symbol('x')
-    assert solveset(abs(x - 1) > 2, domain=S.Reals) == Union(Interval(-oo, -1, False, True),
+    assert solvesetset(abs(x - 1) > 2, domain=S.Reals) == Union(Interval(-oo, -1, False, True),
                                              Interval(3, oo, True))
 
 
 def test_N10():
     x = Symbol('x')
     p = (x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5)
-    assert solveset(expand(p) < 0, domain=S.Reals) == Union(Interval(-oo, 1, True, True),
+    assert solvesetset(expand(p) < 0, domain=S.Reals) == Union(Interval(-oo, 1, True, True),
                                             Interval(2, 3, True, True),
                                             Interval(4, 5, True, True))
 
 
 def test_N11():
     x = Symbol('x')
-    assert solveset(6/(x - 3) <= 3, domain=S.Reals) == Union(Interval(-oo, 3, True, True), Interval(5, oo))
+    assert solvesetset(6/(x - 3) <= 3, domain=S.Reals) == Union(Interval(-oo, 3, True, True), Interval(5, oo))
 
 
 def test_N12():
     x = Symbol('x')
-    assert solveset(sqrt(x) < 2, domain=S.Reals) == Interval(0, 4, False, True)
+    assert solvesetset(sqrt(x) < 2, domain=S.Reals) == Interval(0, 4, False, True)
 
 
 def test_N13():
     x = Symbol('x')
-    assert solveset(sin(x) < 2, domain=S.Reals) == S.Reals
+    assert solvesetset(sin(x) < 2, domain=S.Reals) == S.Reals
 
 
 @XFAIL
 def test_N14():
     # raises NotImplementedError: can't reduce [sin(x) < 1]
     x = Symbol('x')
-    assert solveset(sin(x) < 1, domain=S.Reals) == Union(Interval(-oo, pi/2, True, True),
+    assert solvesetset(sin(x) < 1, domain=S.Reals) == Union(Interval(-oo, pi/2, True, True),
                                          Interval(pi/2, oo, True, True))
 
 
 def test_N15():
     r, t = symbols('r t')
     # raises NotImplementedError: only univariate inequalities are supported
-    solveset(abs(2*r*(cos(t) - 1) + 1) <= 1, r, S.Reals)
+    solvesetset(abs(2*r*(cos(t) - 1) + 1) <= 1, r, S.Reals)
 
 
 def test_N16():
     r, t = symbols('r t')
-    solveset((r**2)*((cos(t) - 4)**2)*sin(t)**2 < 9, r, S.Reals)
+    solvesetset((r**2)*((cos(t) - 4)**2)*sin(t)**2 < 9, r, S.Reals)
 
 
 @XFAIL
 def test_N17():
     # currently only univariate inequalities are supported
-    assert solveset((x + y > 0, x - y < 0), (x, y)) == (abs(x) < y)
+    assert solvesetset((x + y > 0, x - y < 0), (x, y)) == (abs(x) < y)
 
 
 def test_O1():
@@ -1796,8 +1796,8 @@ def test_R2():
     f = Sum((yn[i, 0] - m*xn[i, 0] - b)**2, (i, 0, n - 1))
     f1 = diff(f, m)
     f2 = diff(f, b)
-    # raises TypeError: solveset() takes at most 2 arguments (3 given)
-    solveset((f1, f2), m, b, domain=S.Reals)
+    # raises TypeError: solvesetset() takes at most 2 arguments (3 given)
+    solvesetset((f1, f2), m, b, domain=S.Reals)
 
 
 @XFAIL
@@ -2202,7 +2202,7 @@ def test_U8():
     x, y = symbols('x y', real=True)
     eq = cos(x*y) + x
     #  If SymPy had implicit_diff() function this hack could be avoided
-    # TODO: Replace solve with solveset, current test fails for solveset
+    # TODO: Replace solveset with solvesetset, current test fails for solvesetset
     assert idiff(y - eq, y, x) == (-y*sin(x*y) + 1)/(x*sin(x*y) + 1)
 
 
@@ -2267,14 +2267,14 @@ def test_U14():
 
 @XFAIL
 def test_U15():
-    raise NotImplementedError("minimize() not supported and also solve does \
+    raise NotImplementedError("minimize() not supported and also solveset does \
 not support multivariate inequalities")
 
 
 @XFAIL
 def test_U16():
     raise NotImplementedError("minimize() not supported in SymPy and also \
-solve does not support multivariate inequalities")
+solveset does not support multivariate inequalities")
 
 
 @XFAIL
@@ -2782,7 +2782,7 @@ def test_X19():
     # (d45)                   x = sin(y) + cos(y)
     #
     # (c46) taylor_revert(%, y, 7);
-    raise NotImplementedError("Solve using series not supported. \
+    raise NotImplementedError("solveset using series not supported. \
 Inverse Taylor series expansion also not supported")
 
 
@@ -2884,7 +2884,7 @@ def test_Y4():
 
 @XFAIL
 def test_Y5_Y6():
-# Solve y'' + y = 4 [H(t - 1) - H(t - 2)], y(0) = 1, y'(0) = 0 where H is the
+# solveset y'' + y = 4 [H(t - 1) - H(t - 2)], y(0) = 1, y'(0) = 0 where H is the
 # Heaviside (unit step) function (the RHS describes a pulse of magnitude 4 and
 # duration 1).  See David A. Sanchez, Richard C. Allen, Jr. and Walter T.
 # Kyner, _Differential Equations: An Introduction_, Addison-Wesley Publishing
@@ -2903,7 +2903,7 @@ def test_Y5_Y6():
     assert (F == s**2*LaplaceTransform(y(t), t, s) - s
             + LaplaceTransform(y(t), t, s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
 # TODO implement second part of test case
-# Now, solve for Y(s) and then take the inverse Laplace transform
+# Now, solveset for Y(s) and then take the inverse Laplace transform
 #   => Y(s) = s/(s^2 + 1) + 4 [1/s - s/(s^2 + 1)] [e^(-s) - e^(-2 s)]
 #   => y(t) = cos t + 4 {[1 - cos(t - 1)] H(t - 1) - [1 - cos(t - 2)] H(t - 2)}
 
@@ -3015,7 +3015,7 @@ def test_Z4():
 
 @XFAIL
 def test_Z5():
-    # Second order ODE with initial conditions---solve directly
+    # Second order ODE with initial conditions---solveset directly
     # transform: f(t) = sin(2 t)/8 - t cos(2 t)/4
     C1, C2 = symbols('C1 C2')
     # initial conditions not supported, this is a manual workaround
@@ -3025,8 +3025,8 @@ def test_Z5():
     f0 = Lambda(x, sol.rhs)
     assert f0(x) == C2*sin(2*x) + (C1 - x/4)*cos(2*x)
     f1 = Lambda(x, diff(f0(x), x))
-    # TODO: Replace solve with solveset, when it works for solveset
-    const_dict = solve((f0(0), f1(0)))
+    # TODO: Replace solveset with solvesetset, when it works for solvesetset
+    const_dict = solveset((f0(0), f1(0)))
     result = f0(x).subs(C1, const_dict[C1]).subs(C2, const_dict[C2])
     assert result == -x*cos(2*x)/4 + sin(2*x)/8
     # Result is OK, but ODE solving with initial conditions should be
@@ -3037,7 +3037,7 @@ not supported')
 
 @XFAIL
 def test_Z6():
-    # Second order ODE with initial conditions---solve  using Laplace
+    # Second order ODE with initial conditions---solveset  using Laplace
     # transform: f(t) = sin(2 t)/8 - t cos(2 t)/4
     t = symbols('t', real=True, positive=True)
     s = symbols('s')

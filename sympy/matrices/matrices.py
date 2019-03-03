@@ -1011,7 +1011,7 @@ class MatrixSubspaces(MatrixReductions):
         basis = []
         for free_var in free_vars:
             # for each free variable, we will set it to 1 and all others
-            # to 0.  Then, we will use back substitution to solve the system
+            # to 0.  Then, we will use back substitution to solveset the system
             vec = [S.Zero]*self.cols
             vec[free_var] = S.One
             for piv_row, piv_col in enumerate(pivots):
@@ -1176,7 +1176,7 @@ class MatrixEigen(MatrixSubspaces):
 
         rational : bool, optional
             If it is set to ``True``, every floating point numbers would be
-            replaced with rationals before computation. It can solve some
+            replaced with rationals before computation. It can solveset some
             issues of ``roots`` routine not working well with floats.
 
         multiple : bool, optional
@@ -2400,7 +2400,7 @@ class MatrixBase(MatrixDeprecated,
         return self + b
 
     def cholesky_solve(self, rhs):
-        """Solves ``Ax = B`` using Cholesky decomposition,
+        """solvesets ``Ax = B`` using Cholesky decomposition,
         for a general square non-singular matrix.
         For a non-square matrix with rows > cols,
         the least squares solution is returned.
@@ -2412,9 +2412,9 @@ class MatrixBase(MatrixDeprecated,
         upper_triangular_solve
         gauss_jordan_solve
         diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
+        LDLsolveset
+        LUsolveset
+        Qrsolve
         pinv_solve
         """
         hermitian = True
@@ -2616,7 +2616,7 @@ class MatrixBase(MatrixDeprecated,
         return self.H * mgamma(0)
 
     def diagonal_solve(self, rhs):
-        """Solves ``Ax = B`` efficiently, where A is a diagonal Matrix,
+        """solvesets ``Ax = B`` efficiently, where A is a diagonal Matrix,
         with non-zero diagonal entries.
 
         Examples
@@ -2635,9 +2635,9 @@ class MatrixBase(MatrixDeprecated,
         upper_triangular_solve
         gauss_jordan_solve
         cholesky_solve
-        LDLsolve
-        LUsolve
-        QRsolve
+        LDLsolveset
+        LUsolveset
+        Qrsolve
         pinv_solve
         """
         if not self.is_diagonal:
@@ -2835,7 +2835,7 @@ class MatrixBase(MatrixDeprecated,
 
     def gauss_jordan_solve(self, B, freevar=False):
         """
-        Solves ``Ax = B`` using Gauss Jordan elimination.
+        solvesets ``Ax = B`` using Gauss Jordan elimination.
 
         There may be zero, one, or infinite solutions.  If one solution
         exists, it will be returned. If infinite solutions exist, it will
@@ -2846,7 +2846,7 @@ class MatrixBase(MatrixDeprecated,
         ==========
 
         B : Matrix
-            The right hand side of the equation to be solved for.  Must have
+            The right hand side of the equation to be solvesetd for.  Must have
             the same number of rows as matrix A.
 
         freevar : List
@@ -2924,9 +2924,9 @@ class MatrixBase(MatrixDeprecated,
         upper_triangular_solve
         cholesky_solve
         diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
+        LDLsolveset
+        LUsolveset
+        Qrsolve
         pinv
 
         References
@@ -2941,7 +2941,7 @@ class MatrixBase(MatrixDeprecated,
         B_cols = B.cols
         row, col = aug[:, :-B_cols].shape
 
-        # solve by reduced row echelon form
+        # solveset by reduced row echelon form
         A, pivots = aug.rref(simplify=True)
         A, v = A[:, :-B_cols], A[:, -B_cols:]
         pivots = list(filter(lambda p: p < col, pivots))
@@ -3094,7 +3094,7 @@ class MatrixBase(MatrixDeprecated,
         if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
             raise ValueError("Matrix det == 0; not invertible.")
 
-        return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
+        return self.LUsolveset(self.eye(self.rows), iszerofunc=_iszero)
 
     def inv(self, method=None, **kwargs):
         """
@@ -3301,8 +3301,8 @@ class MatrixBase(MatrixDeprecated,
             raise ValueError("Matrix must be symmetric.")
         return self._LDLdecomposition(hermitian=hermitian)
 
-    def LDLsolve(self, rhs):
-        """Solves ``Ax = B`` using LDL decomposition,
+    def LDLsolveset(self, rhs):
+        """solvesets ``Ax = B`` using LDL decomposition,
         for a general square and non-singular matrix.
 
         For a non-square matrix with rows > cols,
@@ -3314,7 +3314,7 @@ class MatrixBase(MatrixDeprecated,
         >>> from sympy.matrices import Matrix, eye
         >>> A = eye(2)*2
         >>> B = Matrix([[1, 2], [3, 4]])
-        >>> A.LDLsolve(B) == B/2
+        >>> A.LDLsolveset(B) == B/2
         True
 
         See Also
@@ -3326,8 +3326,8 @@ class MatrixBase(MatrixDeprecated,
         gauss_jordan_solve
         cholesky_solve
         diagonal_solve
-        LUsolve
-        QRsolve
+        LUsolveset
+        Qrsolve
         pinv_solve
         """
         hermitian = True
@@ -3350,7 +3350,7 @@ class MatrixBase(MatrixDeprecated,
             return (L.T)._upper_triangular_solve(Z)
 
     def lower_triangular_solve(self, rhs):
-        """Solves ``Ax = B``, where A is a lower triangular matrix.
+        """solvesets ``Ax = B``, where A is a lower triangular matrix.
 
         See Also
         ========
@@ -3359,9 +3359,9 @@ class MatrixBase(MatrixDeprecated,
         gauss_jordan_solve
         cholesky_solve
         diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
+        LDLsolveset
+        LUsolveset
+        Qrsolve
         pinv_solve
         """
 
@@ -3409,7 +3409,7 @@ class MatrixBase(MatrixDeprecated,
         QRdecomposition
         LUdecomposition_Simple
         LUdecompositionFF
-        LUsolve
+        LUsolveset
         """
 
         combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc,
@@ -3524,7 +3524,7 @@ class MatrixBase(MatrixDeprecated,
 
         LUdecomposition
         LUdecompositionFF
-        LUsolve
+        LUsolveset
         """
 
         if rankcheck:
@@ -3667,7 +3667,7 @@ class MatrixBase(MatrixDeprecated,
 
         LUdecomposition
         LUdecomposition_Simple
-        LUsolve
+        LUsolveset
         """
         from sympy.matrices import SparseMatrix
         zeros = SparseMatrix.zeros
@@ -3699,8 +3699,8 @@ class MatrixBase(MatrixDeprecated,
         DD[n - 1, n - 1] = oldpivot
         return P, L, DD, U
 
-    def LUsolve(self, rhs, iszerofunc=_iszero):
-        """Solve the linear system ``Ax = rhs`` for ``x`` where ``A = self``.
+    def LUsolveset(self, rhs, iszerofunc=_iszero):
+        """solveset the linear system ``Ax = rhs`` for ``x`` where ``A = self``.
 
         This is for symbolic matrices, for real or complex ones use
         mpmath.lu_solve or mpmath.qr_solve.
@@ -3713,8 +3713,8 @@ class MatrixBase(MatrixDeprecated,
         gauss_jordan_solve
         cholesky_solve
         diagonal_solve
-        LDLsolve
-        QRsolve
+        LDLsolveset
+        Qrsolve
         pinv_solve
         LUdecomposition
         """
@@ -3907,7 +3907,7 @@ class MatrixBase(MatrixDeprecated,
                 raise NotImplementedError("Matrix Norms under development")
 
     def pinv_solve(self, B, arbitrary_matrix=None):
-        """Solve ``Ax = B`` using the Moore-Penrose pseudoinverse.
+        """solveset ``Ax = B`` using the Moore-Penrose pseudoinverse.
 
         There may be zero, one, or infinite solutions.  If one solution
         exists, it will be returned.  If infinite solutions exist, one will
@@ -3918,7 +3918,7 @@ class MatrixBase(MatrixDeprecated,
         ==========
 
         B : Matrix
-            The right hand side of the equation to be solved for.  Must have
+            The right hand side of the equation to be solvesetd for.  Must have
             the same number of rows as matrix A.
         arbitrary_matrix : Matrix
             If the system is underdetermined (e.g. A has more columns than
@@ -3962,9 +3962,9 @@ class MatrixBase(MatrixDeprecated,
         gauss_jordan_solve
         cholesky_solve
         diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
+        LDLsolveset
+        LUsolveset
+        Qrsolve
         pinv
 
         Notes
@@ -4143,7 +4143,7 @@ class MatrixBase(MatrixDeprecated,
         cholesky
         LDLdecomposition
         LUdecomposition
-        QRsolve
+        Qrsolve
         """
         cls = self.__class__
         mat = self.as_mutable()
@@ -4191,18 +4191,18 @@ class MatrixBase(MatrixDeprecated,
             cls(R.extract(range(Min(nOrig, m)), range(R.cols)))
             )
 
-    def QRsolve(self, b):
-        """Solve the linear system ``Ax = b``.
+    def Qrsolve(self, b):
+        """solveset the linear system ``Ax = b``.
 
         ``self`` is the matrix ``A``, the method argument is the vector
         ``b``.  The method returns the solution vector ``x``.  If ``b`` is a
-        matrix, the system is solved for each column of ``b`` and the
+        matrix, the system is solvesetd for each column of ``b`` and the
         return value is a matrix of the same shape as ``b``.
 
         This method is slower (approximately by a factor of 2) but
-        more stable for floating-point arithmetic than the LUsolve method.
-        However, LUsolve usually uses an exact arithmetic, so you don't need
-        to use QRsolve.
+        more stable for floating-point arithmetic than the LUsolveset method.
+        However, LUsolveset usually uses an exact arithmetic, so you don't need
+        to use Qrsolve.
 
         This is mainly for educational purposes and symbolic matrices, for real
         (or complex) matrices use mpmath.qr_solve.
@@ -4215,8 +4215,8 @@ class MatrixBase(MatrixDeprecated,
         gauss_jordan_solve
         cholesky_solve
         diagonal_solve
-        LDLsolve
-        LUsolve
+        LDLsolveset
+        LUsolveset
         pinv_solve
         QRdecomposition
         """
@@ -4224,7 +4224,7 @@ class MatrixBase(MatrixDeprecated,
         Q, R = self.as_mutable().QRdecomposition()
         y = Q.T * b
 
-        # back substitution to solve R*x = y:
+        # back substitution to solveset R*x = y:
         # We build up the result "backwards" in the vector 'x' and reverse it
         # only in the end.
         x = []
@@ -4248,14 +4248,14 @@ class MatrixBase(MatrixDeprecated,
         method : string or boolean, optional
             If set to ``'CH'``, ``cholesky_solve`` routine will be used.
 
-            If set to ``'LDL'``, ``LDLsolve`` routine will be used.
+            If set to ``'LDL'``, ``LDLsolveset`` routine will be used.
 
-            If set to ``'QR'``, ``QRsolve`` routine will be used.
+            If set to ``'QR'``, ``Qrsolve`` routine will be used.
 
             If set to ``'PINV'``, ``pinv_solve`` routine will be used.
 
             Otherwise, the conjugate of ``self`` will be used to create a system
-            of equations that is passed to ``solve`` along with the hint
+            of equations that is passed to ``solveset`` along with the hint
             defined by ``method``.
 
         Returns
@@ -4286,7 +4286,7 @@ class MatrixBase(MatrixDeprecated,
         [13],
         [18]])
 
-        But let's add 1 to the middle value and then solve for the
+        But let's add 1 to the middle value and then solveset for the
         least-squares value of xy:
 
         >>> xy = S.solve_least_squares(Matrix([8, 14, 18])); xy
@@ -4314,17 +4314,17 @@ class MatrixBase(MatrixDeprecated,
         if method == 'CH':
             return self.cholesky_solve(rhs)
         elif method == 'QR':
-            return self.QRsolve(rhs)
+            return self.Qrsolve(rhs)
         elif method == 'LDL':
-            return self.LDLsolve(rhs)
+            return self.LDLsolveset(rhs)
         elif method == 'PINV':
             return self.pinv_solve(rhs)
         else:
             t = self.H
-            return (t * self).solve(t * rhs, method=method)
+            return (t * self).solveset(t * rhs, method=method)
 
-    def solve(self, rhs, method='GJ'):
-        """Solves linear equation where the unique solution exists.
+    def solveset(self, rhs, method='GJ'):
+        """solvesets linear equation where the unique solution exists.
 
         Parameters
         ==========
@@ -4336,9 +4336,9 @@ class MatrixBase(MatrixDeprecated,
            If set to ``'GJ'``, the Gauss-Jordan elimination will be used, which
            is implemented in the routine ``gauss_jordan_solve``.
 
-           If set to ``'LU'``, ``LUsolve`` routine will be used.
+           If set to ``'LU'``, ``LUsolveset`` routine will be used.
 
-           If set to ``'QR'``, ``QRsolve`` routine will be used.
+           If set to ``'QR'``, ``Qrsolve`` routine will be used.
 
            If set to ``'PINV'``, ``pinv_solve`` routine will be used.
 
@@ -4348,7 +4348,7 @@ class MatrixBase(MatrixDeprecated,
 
            If set to ``'CH'``, ``cholesky_solve`` routine will be used.
 
-           If set to ``'LDL'``, ``LDLsolve`` routine will be used.
+           If set to ``'LDL'``, ``LDLsolveset`` routine will be used.
 
            To use a different method and to compute the solution via the
            inverse, use a method defined in the .inv() docstring.
@@ -4381,13 +4381,13 @@ class MatrixBase(MatrixDeprecated,
                 self.zeros(1).inv()
             return soln
         elif method == 'LU':
-            return self.LUsolve(rhs)
+            return self.LUsolveset(rhs)
         elif method == 'CH':
             return self.cholesky_solve(rhs)
         elif method == 'QR':
-            return self.QRsolve(rhs)
+            return self.Qrsolve(rhs)
         elif method == 'LDL':
-            return self.LDLsolve(rhs)
+            return self.LDLsolveset(rhs)
         elif method == 'PINV':
             return self.pinv_solve(rhs)
         else:
@@ -4472,7 +4472,7 @@ class MatrixBase(MatrixDeprecated,
         return rowsep.join(res)
 
     def upper_triangular_solve(self, rhs):
-        """Solves ``Ax = B``, where A is an upper triangular matrix.
+        """solvesets ``Ax = B``, where A is an upper triangular matrix.
 
         See Also
         ========
@@ -4481,9 +4481,9 @@ class MatrixBase(MatrixDeprecated,
         gauss_jordan_solve
         cholesky_solve
         diagonal_solve
-        LDLsolve
-        LUsolve
-        QRsolve
+        LDLsolveset
+        LUsolveset
+        Qrsolve
         pinv_solve
         """
         if not self.is_square:

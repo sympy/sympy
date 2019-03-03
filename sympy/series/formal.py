@@ -68,7 +68,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Notes
     =====
 
-    By setting ``full=True``, range of admissible functions to be solved using
+    By setting ``full=True``, range of admissible functions to be solvesetd using
     ``rational_algorithm`` can be increased. This option should be used
     carefully as it can significantly slow down the computation as ``doit`` is
     performed on the :class:`RootSum` object returned by the ``apart`` function.
@@ -199,7 +199,7 @@ def simpleDE(f, x, g, order=4):
 
     Yields a tuple of (DE, order).
     """
-    from sympy.solvers.solveset import linsolve
+    from sympy.solvesetrs.solvesetset import linsolve
 
     a = symbols('a:%d' % (order))
 
@@ -459,9 +459,9 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
 
 
 def rsolve_hypergeometric(f, x, P, Q, k, m):
-    """Solves RE of hypergeometric type.
+    """solvesets RE of hypergeometric type.
 
-    Attempts to solve RE of the form
+    Attempts to solveset RE of the form
 
     Q(k)*a(k + m) - P(k)*a(k)
 
@@ -473,7 +473,7 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
         d. f(x**(1/m)): b(k + 1) = R(k*m)*b(k)
         e. f'(x): b(k + m) = ((k + m + 1)/(k + 1))*R(k + 1)*b(k)
 
-    Some of these transformations have been used to solve the RE.
+    Some of these transformations have been used to solveset the RE.
 
     Returns
     =======
@@ -560,8 +560,8 @@ def _solve_hyper_RE(f, x, RE, g, k):
 
 
 def _solve_explike_DE(f, x, DE, g, k):
-    """Solves DE with constant coefficients."""
-    from sympy.solvers import rsolve
+    """solvesets DE with constant coefficients."""
+    from sympy.solvesetrs import rsolve
 
     for t in Add.make_args(DE):
         coeff, d = t.as_independent(g)
@@ -583,8 +583,8 @@ def _solve_explike_DE(f, x, DE, g, k):
 
 
 def _solve_simple(f, x, DE, g, k):
-    """Converts DE into RE and solves using :func:`rsolve`."""
-    from sympy.solvers import rsolve
+    """Converts DE into RE and solvesets using :func:`rsolve`."""
+    from sympy.solvesetrs import rsolve
 
     RE = hyper_re(DE, g, k)
 
@@ -602,7 +602,7 @@ def _solve_simple(f, x, DE, g, k):
 
 def _transform_explike_DE(DE, g, x, order, syms):
     """Converts DE with free parameters into DE with constant coefficients."""
-    from sympy.solvers.solveset import linsolve
+    from sympy.solvesetrs.solvesetset import linsolve
 
     eq = []
     highest_coeff = DE.coeff(Derivative(g(x), x, order))
@@ -630,7 +630,7 @@ def _transform_explike_DE(DE, g, x, order, syms):
 
 def _transform_DE_RE(DE, g, k, order, syms):
     """Converts DE with free parameters into RE of hypergeometric type."""
-    from sympy.solvers.solveset import linsolve
+    from sympy.solvesetrs.solvesetset import linsolve
 
     RE = hyper_re(DE, g, k)
 
@@ -652,9 +652,9 @@ def _transform_DE_RE(DE, g, k, order, syms):
 
 
 def solve_de(f, x, DE, order, g, k):
-    """Solves the DE.
+    """solvesets the DE.
 
-    Tries to solve DE by either converting into a RE containing two terms or
+    Tries to solveset DE by either converting into a RE containing two terms or
     converting into a DE having constant coefficients.
 
     Returns
@@ -709,7 +709,7 @@ def hyper_algorithm(f, x, k, order=4):
     Steps:
         * Generates DE
         * Convert the DE into RE
-        * Solves the RE
+        * solvesets the RE
 
     Examples
     ========

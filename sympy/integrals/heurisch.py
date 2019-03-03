@@ -29,7 +29,7 @@ from sympy.polys.monomials import itermonomials
 from sympy.polys.polyroots import root_factors
 
 from sympy.polys.rings import PolyRing
-from sympy.polys.solvers import solve_lin_sys
+from sympy.polys.solvesetrs import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
 from sympy.core.compatibility import reduce, ordered
@@ -123,7 +123,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     heurisch
     """
-    from sympy.solvers.solvers import solve, denoms
+    from sympy.solvesetrs.solvesetrs import solveset, denoms
     f = sympify(f)
     if x not in f.free_symbols:
         return f*x
@@ -138,7 +138,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     slns = []
     for d in denoms(res):
         try:
-            slns += solve(d, dict=True, exclude=(x,))
+            slns += solveset(d, dict=True, exclude=(x,))
         except NotImplementedError:
             pass
     if not slns:
@@ -148,7 +148,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     slns0 = []
     for d in denoms(f):
         try:
-            slns0 += solve(d, dict=True, exclude=(x,))
+            slns0 += solveset(d, dict=True, exclude=(x,))
         except NotImplementedError:
             pass
     slns = [s for s in slns if s not in slns0]
@@ -158,7 +158,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         eqs = []
         for sub_dict in slns:
             eqs.extend([Eq(key, value) for key, value in sub_dict.items()])
-        slns = solve(eqs, dict=True, exclude=(x,)) + slns
+        slns = solveset(eqs, dict=True, exclude=(x,)) + slns
     # For each case listed in the list slns, we reevaluate the integral.
     pairs = []
     for sub_dict in slns:
