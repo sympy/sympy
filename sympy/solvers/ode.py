@@ -270,7 +270,7 @@ from sympy.solvers import solveset
 from sympy.solvers.pde import pdsolve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
-from sympy.solvers.deutils import _preprocess, ode_order, _desolveset
+from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 #: This is a list of hints in the order that they should be preferred by
 #: :py:meth:`~sympy.solvers.ode.classify_ode`. In general, hints earlier in the
@@ -635,8 +635,8 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     else:
         given_hint = hint  # hint given by the user
 
-        # See the docstring of _desolveset for more details.
-        hints = _desolveset(eq, func=func,
+        # See the docstring of _desolve for more details.
+        hints = _desolve(eq, func=func,
             hint=hint, simplify=True, xi=xi, eta=eta, type='ode', ics=ics,
             x0=x0, n=n, **kwargs)
 
@@ -679,7 +679,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     Helper function of dsolve that calls the respective
     :py:mod:`~sympy.solvers.ode` functions to solveset for the ordinary
     differential equations. This minimizes the computation in calling
-    :py:meth:`~sympy.solvers.deutils._desolveset` multiple times.
+    :py:meth:`~sympy.solvers.deutils._desolve` multiple times.
     """
     r = match
     if hint.endswith('_Integral'):

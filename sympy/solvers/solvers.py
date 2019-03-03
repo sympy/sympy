@@ -1847,7 +1847,7 @@ def _solve_system(exprs, symbols, **flags):
                     if result:
                         solved_syms = symbols
                         # we don't know here if the symbols provided
-                        # were given or not, so let solveset resolveset that.
+                        # were given or not, so let solveset resolve that.
                         # A list of dictionaries is going to always be
                         # returned from here.
                         result = [dict(list(zip(solved_syms, r))) for r in result]
@@ -3194,7 +3194,7 @@ def _invert(eq, *symbols, **kwargs):
         #    a is not an Integer and the equation is multivariate and the
         #      base has more than 1 symbol in it
         # The rationale for this is that right now the multi-system solvers
-        # doesn't try to resolveset generators to see, for example, if the whole
+        # doesn't try to resolve generators to see, for example, if the whole
         # system is written in terms of sqrt(x + y) so it will just fail, so we
         # do that step here.
         if lhs.is_Pow and (

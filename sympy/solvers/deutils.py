@@ -5,7 +5,7 @@ Contains
 ========
 _preprocess
 ode_order
-_desolveset
+_desolve
 
 """
 from __future__ import print_function, division
@@ -125,7 +125,7 @@ def ode_order(expr, func):
             order = max(order, ode_order(arg, func))
         return order
 
-def _desolveset(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
+def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     """This is a helper function to dsolve and pdsolve in the ode
     and pde modules.
 
@@ -207,7 +207,7 @@ def _desolveset(eq, func=None, hint="default", ics=None, simplify=True, **kwargs
     else:
         # Here is what all this means:
         #
-        # hint:    The hint method given to _desolveset() by the user.
+        # hint:    The hint method given to _desolve() by the user.
         # hints:   The dictionary of hints that match the DE, along with other
         #          information (including the internal pass-through magic).
         # default: The default hint to return, the first hint from allhints
@@ -234,7 +234,7 @@ def _desolveset(eq, func=None, hint="default", ics=None, simplify=True, **kwargs
         else:
             raise NotImplementedError(dummy + "solveset" + ": Cannot solveset " + str(eq))
     if hint == 'default':
-        return _desolveset(eq, func, ics=ics, hint=hints['default'], simplify=simplify,
+        return _desolve(eq, func, ics=ics, hint=hints['default'], simplify=simplify,
                       prep=prep, x0=x0, classify=False, order=hints['order'],
                       match=hints[hints['default']], xi=xi, eta=eta, n=terms, type=type)
     elif hint in ('all', 'all_Integral', 'best'):
@@ -251,7 +251,7 @@ def _desolveset(eq, func=None, hint="default", ics=None, simplify=True, **kwargs
                 if k in gethints:
                     gethints.remove(k)
         for i in gethints:
-            sol = _desolveset(eq, func, ics=ics, hint=i, x0=x0, simplify=simplify, prep=prep,
+            sol = _desolve(eq, func, ics=ics, hint=i, x0=x0, simplify=simplify, prep=prep,
                 classify=False, n=terms, order=hints['order'], match=hints[i], type=type)
             retdict[i] = sol
         retdict['all'] = True

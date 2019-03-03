@@ -547,7 +547,7 @@ class Beam(object):
     def _solve_hinge_beams(self, *reactions):
         """Method to find integration constants and reactional variables in a
         composite beam connected via hinge.
-        This method resolvesets the composite Beam into its sub-beams and then
+        This method resolves the composite Beam into its sub-beams and then
         equations of shear force, bending moment, slope and deflection are
         evaluated for both of them separately. These equations are then solved
         for unknown reactions and integration constants using the boundary

@@ -654,7 +654,7 @@ def _get_doctest_blacklist():
         "sympy/galgebra.py", # raises ImportError
         "sympy/this.py", # Prints text to the terminal
         "sympy/matrices/densearith.py", # raises deprecation warning
-        "sympy/matrices/densesolveset.py", # raises deprecation warning
+        "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
         "sympy/physics/unitsystems.py", # raises deprecation warning
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code

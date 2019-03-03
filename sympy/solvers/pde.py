@@ -46,7 +46,7 @@ from sympy.integrals.integrals import Integral
 from sympy.utilities.iterables import has_dups
 from sympy.utilities.misc import filldedent
 
-from sympy.solvers.deutils import _preprocess, ode_order, _desolveset
+from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 from sympy.solvers.solvers import solveset
 from sympy.simplify.radsimp import collect
 
@@ -168,8 +168,8 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     if not solvefun:
         solvefun = Function('F')
 
-    # See the docstring of _desolveset for more details.
-    hints = _desolveset(eq, func=func,
+    # See the docstring of _desolve for more details.
+    hints = _desolve(eq, func=func,
         hint=hint, simplify=True, type='pde', **kwargs)
     eq = hints.pop('eq', False)
     all_ = hints.pop('all', False)
@@ -202,7 +202,7 @@ def _helper_simplify(eq, hint, func, order, match, solvefun):
     """Helper function of pdsolve that calls the respective
     pde functions to solveset for the partial differential
     equations. This minimizes the computation in
-    calling _desolveset multiple times.
+    calling _desolve multiple times.
     """
 
     if hint.endswith("_Integral"):

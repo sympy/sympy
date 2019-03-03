@@ -603,10 +603,10 @@ def ordered(seq, keys=None, default=True, warn=False):
     then no other keys will be computed.
 
     Two default keys will be applied if 1) keys are not provided or 2) the
-    given keys don't resolveset all ties (but only if `default` is True). The
+    given keys don't resolve all ties (but only if `default` is True). The
     two keys are `_nodes` (which places smaller expressions before large) and
     `default_sort_key` which (if the `sort_key` for an object is defined
-    properly) should resolveset any ties.
+    properly) should resolve any ties.
 
     If ``warn`` is True then an error will be raised if there were no
     keys remaining to break ties. This can be used if it was expected that

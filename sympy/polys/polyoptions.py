@@ -182,7 +182,7 @@ class Options(dict):
 
     @classmethod
     def _init_dependencies_order(cls):
-        """Resolveset the order of options' processing. """
+        """Resolve the order of options' processing. """
         if cls.__order__ is None:
             vertices, edges = [], set([])
 
