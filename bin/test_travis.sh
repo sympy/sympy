@@ -264,7 +264,7 @@ EOF
 fi
 
 if [[ "${TEST_SYMPY}" == "true" ]]; then
-  pytest -m 'not slow' -n2
+  pytest -m 'not slow' -n2 ../sympy
 fi
 if [[ "${TEST_COVERAGE}" == "true" ]]; then
     unset COVERAGE_PROCESS_START
