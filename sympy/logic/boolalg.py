@@ -1876,7 +1876,7 @@ def _input_to_binlist(inputlist, variables):
         if isinstance(val, int):
             binlist.append(ibin(val, bits))
         elif isinstance(val, dict):
-            nonspecvars = variables.copy()
+            nonspecvars = list(variables)
             for key in val.keys():
                 nonspecvars.remove(key)
             for t in product([0, 1], repeat=len(nonspecvars)):
