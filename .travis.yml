@@ -258,7 +258,7 @@ install:
       ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
       ~/.venv-no-setuptools/bin/python -We:invalid setup.py -q install;
     fi
-    python -We:invalid -m compileall -f -q sympy/;
+    python -We:invalid -m compileall -f sympy/;
     python -We:invalid setup.py -q install;
     pip list --format=columns;
 
