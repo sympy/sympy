@@ -222,7 +222,10 @@ def test_issue_13354():
     assert ascii_vpretty(z) == expected
 
 def test_vector_derivative_printing():
-    # First order tested above
+    # First order
+    v = omega.diff() * N.x 
+    assert unicode_vpretty(v) == u('ω̇ n_x')
+    assert ascii_vpretty(v) == u("omega'(t) n_x")
 
     # Second order
     v = omega.diff().diff() * N.x
