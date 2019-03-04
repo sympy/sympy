@@ -265,6 +265,9 @@ def test_chi():
     k = Symbol("k", integer=True, positive=False)
     raises(ValueError, lambda: Chi('x', k))
 
+    k = Symbol("k", integer=False, positive=True)
+    raises(ValueError, lambda: Chi('x', k))
+
 def test_chi_noncentral():
     k = Symbol("k", integer=True)
     l = Symbol("l")
@@ -276,8 +279,12 @@ def test_chi_noncentral():
     k = Symbol("k", integer=True, positive=False)
     raises(ValueError, lambda: ChiNoncentral('x', k, l))
 
-    k = Symbol("k", integer=True)
+    k = Symbol("k", integer=True, positive=True)
     l = Symbol("l", positive=False)
+    raises(ValueError, lambda: ChiNoncentral('x', k, l))
+
+    k = Symbol("k", integer=False)
+    l = Symbol("l", positive=True)
     raises(ValueError, lambda: ChiNoncentral('x', k, l))
 
 
@@ -294,6 +301,9 @@ def test_chi_squared():
     assert cdf(X)(3) == -14873*sqrt(6)*exp(-S(3)/2)/(5005*sqrt(pi)) + erf(sqrt(6)/2)
 
     k = Symbol("k", integer=True, positive=False)
+    raises(ValueError, lambda: ChiSquared('x', k))
+
+    k = Symbol("k", integer=False, positive=True)
     raises(ValueError, lambda: ChiSquared('x', k))
 
 

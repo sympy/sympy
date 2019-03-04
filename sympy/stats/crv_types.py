@@ -542,6 +542,7 @@ class ChiDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(k):
         _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
 
     set = Interval(0, oo)
 
@@ -622,6 +623,7 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(k, l):
         _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
         _value_check(l > 0, "Shift parameter Lambda must be positive.")
 
     set = Interval(0, oo)
@@ -687,6 +689,7 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(k):
         _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
 
     set = Interval(0, oo)
 
