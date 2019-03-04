@@ -480,22 +480,21 @@ class FiniteFourierSeries(FourierSeries):
         if not (type(exprs) == tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
 
             # Converts the expression to fourier form
-            exprs = exprs.as_coeff_add()
-            exprs = exprs[0] + Add(*[TR10(i) for i in exprs[1]])
-            exp_ls = exprs.expand(trig=False, power_base=False, power_exp=False, log=False).as_coeff_add()
+            c, e = exprs.as_coeff_add()
+            rexpr = c + Add(*[TR10(i) for i in e])
+            a0, exp_ls = rexpr.expand(trig=False, power_base=False, power_exp=False, log=False).as_coeff_add()
 
-            a0 = exp_ls[0]
             x = limits[0]
             L = abs(limits[2] - limits[1]) / 2
 
-            a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
+            a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k is not S.Zero, ])
             b = Wild('b', properties=[lambda k: x not in k.free_symbols, ])
 
             an = dict()
             bn = dict()
 
             # separates the coefficients of sin and cos terms in dictionaries an, and bn
-            for p in exp_ls[1]:
+            for p in exp_ls:
                 t = p.match(b * cos(a * (pi / L) * x))
                 q = p.match(b * sin(a * (pi / L) * x))
                 if t:
