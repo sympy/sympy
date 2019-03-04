@@ -280,7 +280,7 @@ def Benini(name, alpha, beta, sigma):
     Examples
     ========
 
-    >>> from sympy.stats import Benini, density
+    >>> from sympy.stats import Benini, density, cdf
     >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
