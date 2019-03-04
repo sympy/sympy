@@ -56,7 +56,7 @@ def test_ntt_intt():
     raises(ValueError, lambda: ntt([1.2, 2.1, 3.5], p))
     raises(ValueError, lambda: ntt([3, 5, 6], q))
     raises(ValueError, lambda: ntt([4, 5, 7], r))
-    raises(ValueError, lambda: ntt([1.0, 2.0, 3.0], p))
+      raises(ValueError, lambda: ntt([1.0, 2.0, 3.0], p))
 
 
 def test_fwht_ifwht():

@@ -150,9 +150,9 @@ def rv(symbol, cls, args):
         pspace = JointPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
 
-	########################################
-	# Continuous Probability Distributions #
-	########################################
+########################################
+# Continuous Probability Distributions #
+########################################
 
 #-------------------------------------------------------------------------------
 # Arcsin distribution ----------------------------------------------------------
