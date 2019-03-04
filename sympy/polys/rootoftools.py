@@ -1007,10 +1007,7 @@ class RootSum(Expr):
         if func is None:
             func = Lambda(poly.gen, poly.gen)
         else:
-            try:
-                is_func = func.is_Function
-            except AttributeError:
-                is_func = False
+            is_func = getattr(func, 'is_Function', False)
 
             if is_func and 1 in func.nargs:
                 if not isinstance(func, Lambda):

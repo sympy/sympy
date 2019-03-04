@@ -43,16 +43,17 @@ class DenseMatrix(MatrixBase):
     _class_priority = 4
 
     def __eq__(self, other):
-        try:
-            other = sympify(other)
-            if self.shape != other.shape:
-                return False
-            if isinstance(other, Matrix):
-                return _compare_sequence(self._mat,  other._mat)
-            elif isinstance(other, MatrixBase):
-                return _compare_sequence(self._mat, Matrix(other)._mat)
-        except AttributeError:
+        other = sympify(other)
+        self_shape = getattr(self, 'shape', None)
+        other_shape = getattr(other, 'shape', None)
+        if None in (self_shape, other_shape):
             return False
+        if self_shape != other_shape:
+            return False
+        if isinstance(other, Matrix):
+            return _compare_sequence(self._mat,  other._mat)
+        elif isinstance(other, MatrixBase):
+            return _compare_sequence(self._mat, Matrix(other)._mat)
 
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
@@ -396,20 +397,21 @@ class DenseMatrix(MatrixBase):
         ========
         sympy.core.expr.equals
         """
-        try:
-            if self.shape != other.shape:
-                return False
-            rv = True
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    ans = self[i, j].equals(other[i, j], failing_expression)
-                    if ans is False:
-                        return False
-                    elif ans is not True and rv is True:
-                        rv = ans
-            return rv
-        except AttributeError:
+        self_shape = getattr(self, 'shape', None)
+        other_shape = getattr(other, 'shape', None)
+        if None in (self_shape, other_shape):
             return False
+        if self_shape != other_shape:
+            return False
+        rv = True
+        for i in range(self.rows):
+            for j in range(self.cols):
+                ans = self[i, j].equals(other[i, j], failing_expression)
+                if ans is False:
+                    return False
+                elif ans is not True and rv is True:
+                    rv = ans
+        return rv
 
 
 def _force_mutable(x):

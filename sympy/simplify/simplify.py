@@ -555,7 +555,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         floats = True
         expr = nsimplify(expr, rational=True)
 
-    expr = bottom_up(expr, lambda w: w.normal())
+    expr = bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
     expr = Mul(*powsimp(expr).as_content_primitive())
     _e = cancel(expr)
     expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
@@ -1078,16 +1078,16 @@ def bottom_up(rv, F, atoms=False, nonbasic=False):
     bottom up. If ``atoms`` is True, apply ``F`` even if there are no args;
     if ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
     """
-    try:
-        if rv.args:
-            args = tuple([bottom_up(a, F, atoms, nonbasic)
-                for a in rv.args])
+    args = getattr(rv, 'args', None)
+    if args is not None:
+        if args:
+            args = tuple([bottom_up(a, F, atoms, nonbasic) for a in args])
             if args != rv.args:
                 rv = rv.func(*args)
             rv = F(rv)
         elif atoms:
             rv = F(rv)
-    except AttributeError:
+    else:
         if nonbasic:
             try:
                 rv = F(rv)

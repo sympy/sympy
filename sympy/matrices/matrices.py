@@ -32,10 +32,7 @@ from .common import (
 
 def _iszero(x):
     """Returns True if x is zero."""
-    try:
-        return x.is_zero
-    except AttributeError:
-        return None
+    return getattr(x, 'is_zero', None)
 
 
 def _is_zero_after_expand_mul(x):

@@ -1905,12 +1905,7 @@ class PrettyPrinter(Printer):
             _and = 'and'
 
         variables = self._print_seq(Tuple(ts.sym))
-        try:
-            cond = self._print(ts.condition.as_expr())
-        except AttributeError:
-            cond = self._print(ts.condition)
-            if self._use_unicode:
-                cond = self._print_seq(cond, "(", ")")
+        cond = self._print(ts.condition.as_expr())
 
         bar = self._print("|")
 
@@ -1995,6 +1990,10 @@ class PrettyPrinter(Printer):
                     # first element
                     s = pform
                 else:
+                    # XXX: Under the tests from #15686 this raises:
+                    # AttributeError: 'Fake' object has no attribute 'baseline'
+                    # This is caught below but that is not the right way to
+                    # fix it.
                     s = prettyForm(*stringPict.next(s, delimiter))
                     s = prettyForm(*stringPict.next(s, pform))
 

@@ -41,15 +41,17 @@ class PlotCamera(object):
         self.init_rot_matrix()
         try:
             r = self.rot_presets[preset_name]
-        except AttributeError:
+        # XXX: I'm unable to test this but it doesn't look like it should
+        # raise AttributeError so I'm changing it to IndexError
+        except IndexError:
             raise ValueError(
                 "%s is not a valid rotation preset." % preset_name)
-        try:
-            self.euler_rotate(r[0], 1, 0, 0)
-            self.euler_rotate(r[1], 0, 1, 0)
-            self.euler_rotate(r[2], 0, 0, 1)
-        except AttributeError:
-            pass
+        # XXX: The block below had try/except and AttributeError: pass around it
+        # but I don't see any good reason to cathc AttributeError so I removed
+        # it...
+        self.euler_rotate(r[0], 1, 0, 0)
+        self.euler_rotate(r[1], 0, 1, 0)
+        self.euler_rotate(r[2], 0, 0, 1)
 
     def reset(self):
         self._dist = 0.0

@@ -117,9 +117,11 @@ def _randrange(seed=None):
                 raise ValueError('_randrange got empty range')
             try:
                 x = seq.pop()
-            except AttributeError:
+            except AttributeError as e:
+                import pdb;pdb.set_trace()
                 raise ValueError('_randrange expects a list-like sequence')
-            except IndexError:
+            except IndexError as e:
+                import pdb;pdb.set_trace()
                 raise ValueError('_randrange sequence was too short')
             if a <= x < b:
                 return x
