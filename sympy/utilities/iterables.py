@@ -371,11 +371,11 @@ def ibin(n, bits=0, str=False):
     """Return a list of length ``bits`` corresponding to the binary value
     of ``n`` with small bits to the right (last). If bits is omitted, the
     length will be the number required to represent ``n``. If the bits are
-    desired in reversed order, use the [::-1] slice of the returned list.
+    desired in reversed order, use the ``[::-1]`` slice of the returned list.
 
-    If a sequence of all bits-length lists starting from [0, 0,..., 0]
-    through [1, 1, ..., 1] are desired, pass a non-integer for bits, e.g.
-    'all'.
+    If a sequence of all bits-length lists starting from ``[0, 0,..., 0]``
+    through ``[1, 1, ..., 1]`` are desired, pass a non-integer for bits, e.g.
+    ``'all'``.
 
     If the bit *string* is desired pass ``str=True``.
 
@@ -428,20 +428,20 @@ def ibin(n, bits=0, str=False):
 
 
 def variations(seq, n, repetition=False):
-    """Returns a generator of the n-sized variations of ``seq`` (size N).
+    r"""Returns a generator of the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
     Examples
     ========
 
-    variations(seq, n) will return N! / (N - n)! permutations without
-    repetition of seq's elements:
+    ``variations(seq, n)`` will return `\frac{N!}{(N - n)!}` permutations without
+    repetition of ``seq``'s elements:
 
         >>> from sympy.utilities.iterables import variations
         >>> list(variations([1, 2], 2))
         [(1, 2), (2, 1)]
 
-    variations(seq, n, True) will return the N**n permutations obtained
+    ``variations(seq, n, True)`` will return the `N^n` permutations obtained
     by allowing repetition of elements:
 
         >>> list(variations([1, 2], 2, repetition=True))
@@ -476,45 +476,45 @@ def variations(seq, n, repetition=False):
 
 
 def subsets(seq, k=None, repetition=False):
-    """Generates all k-subsets (combinations) from an n-element set, seq.
+    r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
 
-       A k-subset of an n-element set is any subset of length exactly k. The
-       number of k-subsets of an n-element set is given by binomial(n, k),
-       whereas there are 2**n subsets all together. If k is None then all
-       2**n subsets will be returned from shortest to longest.
+    A `k`-subset of an `n`-element set is any subset of length exactly `k`. The
+    number of `k`-subsets of an `n`-element set is given by ``binomial(n, k)``,
+    whereas there are `2^n` subsets all together. If `k` is ``None`` then all
+    `2^n` subsets will be returned from shortest to longest.
 
-       Examples
-       ========
+    Examples
+    ========
 
-       >>> from sympy.utilities.iterables import subsets
+    >>> from sympy.utilities.iterables import subsets
 
-       subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
-       without repetition, i.e. once an item has been removed, it can no
-       longer be "taken":
+    ``subsets(seq, k)`` will return the `\frac{n!}{k!(n - k)!}` `k`-subsets (combinations)
+    without repetition, i.e. once an item has been removed, it can no
+    longer be "taken":
 
-           >>> list(subsets([1, 2], 2))
-           [(1, 2)]
-           >>> list(subsets([1, 2]))
-           [(), (1,), (2,), (1, 2)]
-           >>> list(subsets([1, 2, 3], 2))
-           [(1, 2), (1, 3), (2, 3)]
+        >>> list(subsets([1, 2], 2))
+        [(1, 2)]
+        >>> list(subsets([1, 2]))
+        [(), (1,), (2,), (1, 2)]
+        >>> list(subsets([1, 2, 3], 2))
+        [(1, 2), (1, 3), (2, 3)]
 
 
-       subsets(seq, k, repetition=True) will return the (n - 1 + k)!/k!/(n - 1)!
-       combinations *with* repetition:
+    ``subsets(seq, k, repetition=True)`` will return the `\frac{(n - 1 + k)!}{k!(n - 1)!}`
+    combinations *with* repetition:
 
-           >>> list(subsets([1, 2], 2, repetition=True))
-           [(1, 1), (1, 2), (2, 2)]
+        >>> list(subsets([1, 2], 2, repetition=True))
+        [(1, 1), (1, 2), (2, 2)]
 
-       If you ask for more items than are in the set you get the empty set unless
-       you allow repetitions:
+    If you ask for more items than are in the set you get the empty set unless
+    you allow repetitions:
 
-           >>> list(subsets([0, 1], 3, repetition=False))
-           []
-           >>> list(subsets([0, 1], 3, repetition=True))
-           [(0, 0, 0), (0, 0, 1), (0, 1, 1), (1, 1, 1)]
+        >>> list(subsets([0, 1], 3, repetition=False))
+        []
+        >>> list(subsets([0, 1], 3, repetition=True))
+        [(0, 0, 0), (0, 0, 1), (0, 1, 1), (1, 1, 1)]
 
-       """
+    """
     if k is None:
         for k in range(len(seq) + 1):
             for i in subsets(seq, k, repetition):
@@ -555,7 +555,7 @@ def filter_symbols(iterator, exclude):
 def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
-    increasing subscripts provided that they do not occur in `exclude`.
+    increasing subscripts provided that they do not occur in ``exclude``.
 
     Parameters
     ==========
@@ -565,7 +565,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumpt
         the form "x0", "x1", etc.
 
     cls : class, optional
-        The class to use. By default, it uses Symbol, but you can also use Wild or Dummy.
+        The class to use. By default, it uses ``Symbol``, but you can also use ``Wild`` or ``Dummy``.
 
     start : int, optional
         The start number.  By default, it is 0.
@@ -594,7 +594,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumpt
 def capture(func):
     """Return the printed output of func().
 
-    `func` should be a function without arguments that produces output with
+    ``func`` should be a function without arguments that produces output with
     print statements.
 
     >>> from sympy.utilities.iterables import capture
@@ -625,12 +625,15 @@ def sift(seq, keyfunc, binary=False):
     """
     Sift the sequence, ``seq`` according to ``keyfunc``.
 
-    OUTPUT: When binary is False (default), the output is a dictionary
+    Returns
+    =======
+
+    When ``binary`` is ``False`` (default), the output is a dictionary
     where elements of ``seq`` are stored in a list keyed to the value
     of keyfunc for that element. If ``binary`` is True then a tuple
     with lists ``T`` and ``F`` are returned where ``T`` is a list
-    containing elements of seq for which ``keyfunc`` was True and
-    ``F`` containing those elements for which ``keyfunc`` was False;
+    containing elements of seq for which ``keyfunc`` was ``True`` and
+    ``F`` containing those elements for which ``keyfunc`` was ``False``;
     a ValueError is raised if the ``keyfunc`` is not binary.
 
     Examples
@@ -651,7 +654,7 @@ def sift(seq, keyfunc, binary=False):
     >>> _[False]
     []
 
-    Sometimes you won't know how many keys you will get:
+    Sometimes you will not know how many keys you will get:
 
     >>> sift([sqrt(x), exp(x), (y**x)**2],
     ...      lambda x: x.as_base_exp()[0])
@@ -819,11 +822,11 @@ def topological_sort(graph, key=None):
     Parameters
     ==========
 
-    ``graph`` : ``tuple[list, list[tuple[T, T]]``
+    graph : tuple[list, list[tuple[T, T]]
         A tuple consisting of a list of vertices and a list of edges of
         a graph to be sorted topologically.
 
-    ``key`` : ``callable[T]`` (optional)
+    key : callable[T] (optional)
         Ordering key for vertices on the same level. By default the natural
         (e.g. lexicographic) ordering is used (in this case the base type
         must implement ordering relations).
@@ -877,7 +880,10 @@ def topological_sort(graph, key=None):
         ...
         ValueError: cycle detected
 
-    .. seealso:: https://en.wikipedia.org/wiki/Topological_sorting
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Topological_sorting
 
     """
     V, E = graph
@@ -976,7 +982,11 @@ def least_rotation(x):
     >>> rotate_left(a, _)
     [1, 2, 3, 1, 5]
 
-    .. seealso:: https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
+
     '''
     S = x + x      # Concatenate string to it self to avoid modular arithmetic
     f = [-1] * len(S)     # Failure function
@@ -1126,6 +1136,7 @@ def _partition(seq, vector, m=None):
 
     See Also
     ========
+
     combinatorics.partitions.Partition.from_rgs()
 
     """
@@ -1184,13 +1195,13 @@ def _set_partitions(n):
     This routine was rewritten to use 0-based lists while trying to
     preserve the beauty and efficiency of the original algorithm.
 
-    Reference
-    =========
+    References
+    ==========
 
-    Nijenhuis, Albert and Wilf, Herbert. (1978) Combinatorial Algorithms,
-    2nd Ed, p 91, algorithm "nexequ". Available online from
-    https://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
-    November 17, 2012).
+    .. [1] Nijenhuis, Albert and Wilf, Herbert. (1978) Combinatorial Algorithms,
+        2nd Ed, p 91, algorithm "nexequ". Available online from
+        https://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
+        November 17, 2012).
 
     """
     p = [0]*n
@@ -1387,11 +1398,11 @@ def partitions(n, m=None, k=None, size=False):
     Parameters
     ==========
 
-    ``m`` : integer (default gives partitions of all sizes)
+    m : integer (default gives partitions of all sizes)
         limits number of parts in partition (mnemonic: m, maximum parts)
-    ``k`` : integer (default gives partitions number from 1 through n)
+    k : integer (default gives partitions number from 1 through n)
         limits the numbers that are kept in the partition (mnemonic: k, keys)
-    ``size`` : bool (default False, only partition is returned)
+    size : bool (default False, only partition is returned)
         when ``True`` then (M, P) is returned where M is the sum of the
         multiplicities and P is the generated partition.
 
@@ -1441,9 +1452,11 @@ def partitions(n, m=None, k=None, size=False):
     >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]  # doctest: +SKIP
     [(3, {2: 3}), (4, {1: 2, 2: 2}), (5, {1: 4, 2: 1}), (6, {1: 6})]
 
-    Reference:
-        modified from Tim Peter's version to allow for k and m values:
-        code.activestate.com/recipes/218332-generator-for-integer-partitions/
+    References
+    ==========
+
+    .. [1] modified from Tim Peter's version to allow for k and m values:
+           http://code.activestate.com/recipes/218332-generator-for-integer-partitions/
 
     See Also
     ========
@@ -1538,10 +1551,12 @@ def ordered_partitions(n, m=None, sort=True):
     Parameters
     ==========
 
-    ``m`` : integer (default gives partitions of all sizes) else only
+    m : integer (default None)
+        The default value gives partitions of all sizes else only
         those with size m. In addition, if ``m`` is not None then
         partitions are generated *in place* (see examples).
-    ``sort`` : bool (default True) controls whether partitions are
+    sort : bool (default True)
+        Controls whether partitions are
         returned in sorted order when ``m`` is not None; when False,
         the partitions are returned as fast as possible with elements
         sorted, but when m|n the partitions will not be in
@@ -1671,10 +1686,8 @@ def binary_partitions(n):
     Generates the binary partition of n.
 
     A binary partition consists only of numbers that are
-    powers of two. Each step reduces a 2**(k+1) to 2**k and
-    2**k. Thus 16 is converted to 8 and 8.
-
-    Reference: TAOCP 4, section 7.2.1.5, problem 64
+    powers of two. Each step reduces a `2^{k+1}` to `2^k` and
+    `2^k`. Thus 16 is converted to 8 and 8.
 
     Examples
     ========
@@ -1687,6 +1700,12 @@ def binary_partitions(n):
     [2, 2, 1]
     [2, 1, 1, 1]
     [1, 1, 1, 1, 1]
+
+    References
+    ==========
+
+    .. [1] TAOCP 4, section 7.2.1.5, problem 64
+
     """
     from math import ceil, log
     pow = int(2**(ceil(log(n, 2))))
@@ -1857,12 +1876,16 @@ def generate_bell(n):
     References
     ==========
 
-    * https://en.wikipedia.org/wiki/Method_ringing
-    * https://stackoverflow.com/questions/4856615/recursive-permutation/4857018
-    * http://programminggeeks.com/bell-algorithm-for-permutation/
-    * https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
-    * Generating involutions, derangements, and relatives by ECO
-      Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
+    .. [1] https://en.wikipedia.org/wiki/Method_ringing
+
+    .. [2] https://stackoverflow.com/questions/4856615/recursive-permutation/4857018
+
+    .. [3] http://programminggeeks.com/bell-algorithm-for-permutation/
+
+    .. [4] https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
+
+    .. [5] Generating involutions, derangements, and relatives by ECO
+           Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
 
     """
     n = as_int(n)
@@ -1921,9 +1944,6 @@ def generate_involutions(n):
     a permutation that does not contain any cycles with
     a length that is greater than two.
 
-    Reference:
-    http://mathworld.wolfram.com/PermutationInvolution.html
-
     Examples
     ========
 
@@ -1932,6 +1952,12 @@ def generate_involutions(n):
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
     >>> len(list(generate_involutions(4)))
     10
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PermutationInvolution.html
+
     """
     idx = list(range(n))
     for p in permutations(idx):
@@ -2013,7 +2039,7 @@ def necklaces(n, k, free=False):
     References
     ==========
 
-    http://mathworld.wolfram.com/Necklace.html
+    .. [1] http://mathworld.wolfram.com/Necklace.html
 
     """
     return uniq(minlex(i, directed=not free) for i in
@@ -2034,11 +2060,6 @@ def generate_oriented_forest(n):
     also be described as a disjoint union of trees, which are graphs in which
     any two vertices are connected by exactly one simple path.
 
-    Reference:
-    [1] T. Beyer and S.M. Hedetniemi: constant time generation of \
-        rooted trees, SIAM J. Computing Vol. 9, No. 4, November 1980
-    [2] https://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python
-
     Examples
     ========
 
@@ -2046,6 +2067,15 @@ def generate_oriented_forest(n):
     >>> list(generate_oriented_forest(4))
     [[0, 1, 2, 3], [0, 1, 2, 2], [0, 1, 2, 1], [0, 1, 2, 0], \
     [0, 1, 1, 1], [0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 0, 0], [0, 0, 0, 0]]
+
+    References
+    ==========
+
+    .. [1] T. Beyer and S.M. Hedetniemi: constant time generation of
+           rooted trees, SIAM J. Computing Vol. 9, No. 4, November 1980
+
+    .. [2] https://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python
+
     """
     P = list(range(-1, n))
     while True:
