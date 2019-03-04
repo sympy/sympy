@@ -97,7 +97,7 @@ def finite_check(f, x, L):
         return x not in exprs.free_symbols
 
     def check_sincos(_expr, x, L):
-        if type(_expr) == sin or type(_expr) == cos:
+        if isinstance(_expr, (sin, cos)):
             sincos_args = _expr.args[0]
 
             if sincos_args.match(a*(pi/L)*x + b) is not None:
@@ -109,7 +109,7 @@ def finite_check(f, x, L):
     add_coeff = _expr.as_coeff_add()
 
     a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
-    b = Wild('b', properties=[lambda k: x not in k.free_symbols or k == S.Zero, ])
+    b = Wild('b', properties=[lambda k: x not in k.free_symbols, ])
 
     for s in add_coeff[1]:
         mul_coeffs = s.as_coeff_mul()[1]
@@ -456,9 +456,9 @@ class FiniteFourierSeries(FourierSeries):
        exprs: (a0, an, bn) or Expr
             a0 is the constant term a0 of the fourier series
             an is a dictionary of coefficients of cos terms
-             `an[k] = coefficient of cos(pi*(k/L)*x)`
+             an[k] = coefficient of cos(pi*(k/L)*x)
             bn is a dictionary of coefficients of sin terms
-             `bn[k] = coefficient of sin(pi*(k/L)*x)`
+             bn[k] = coefficient of sin(pi*(k/L)*x)
 
             or exprs can be an expression to be converted to fourier form
 
@@ -489,7 +489,7 @@ class FiniteFourierSeries(FourierSeries):
             L = abs(limits[2] - limits[1]) / 2
 
             a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
-            b = Wild('b', properties=[lambda k: x not in k.free_symbols or k == S.Zero, ])
+            b = Wild('b', properties=[lambda k: x not in k.free_symbols, ])
 
             an = dict()
             bn = dict()
