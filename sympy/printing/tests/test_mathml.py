@@ -1112,11 +1112,6 @@ def test_print_Lambda():
     assert mathml(expr, printer='presentation') == '<mrow><mrow><mfenced><mi>x</mi></mfenced></mrow><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mrow>'
 
 
-def test_print_exp():
-    expr = exp(x)
-    assert mathml(expr, printer='presentation') == '<mrow><msup><mi>e</mi><mi>x</mi></msup></mrow>'
-
-
 def test_print_conjugate():
     assert mpp.doprint(conjugate(x)) == '<menclose notation="top"><mi>x</mi></menclose>'
     assert mpp.doprint(conjugate(x + 1)) == '<mrow><menclose notation="top"><mi>x</mi></menclose><mo>+</mo><mn>1</mn></mrow>'
