@@ -1537,7 +1537,7 @@ class MatrixEigen(MatrixSubspaces):
             return mat_cache[(val, pow)]
 
         # helper functions
-        def nullity_chain(val):
+        def nullity_chain(val, algebraic_multiplicity):
             """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
             until it is constant where ``E = self - val*I``"""
             # mat.rank() is faster than computing the null space,
@@ -1548,8 +1548,20 @@ class MatrixEigen(MatrixSubspaces):
             i = 2
             while nullity != ret[-1]:
                 ret.append(nullity)
+                if nullity == algebraic_multiplicity:
+                    break
                 nullity = cols - eig_mat(val, i).rank()
                 i += 1
+
+                # Due to issues like #7146 and #15872, SymPy sometimes
+                # gives the wrong rank. In this case, raise an error
+                # instead of returning an incorrect matrix
+                if nullity < ret[-1] or nullity > algebraic_multiplicity:
+                    raise MatrixError(
+                        "SymPy had encountered an inconsistent "
+                        "result while computing Jordan block: "
+                        "{}".format(self))
+
             return ret
 
         def blocks_from_nullity_chain(d):
@@ -1601,7 +1613,8 @@ class MatrixEigen(MatrixSubspaces):
 
         block_structure = []
         for eig in sorted(eigs.keys(), key=default_sort_key):
-            chain = nullity_chain(eig)
+            algebraic_multiplicity = eigs[eig]
+            chain = nullity_chain(eig, algebraic_multiplicity)
             block_sizes = blocks_from_nullity_chain(chain)
             # if block_sizes == [a, b, c, ...], then the number of
             # Jordan blocks of size 1 is a, of size 2 is b, etc.
@@ -1613,6 +1626,14 @@ class MatrixEigen(MatrixSubspaces):
 
             block_structure.extend(
                 (eig, size) for size, num in size_nums for _ in range(num))
+
+        jordan_form_size = sum(size for eig, size in block_structure)
+
+        if jordan_form_size != self.rows:
+            raise MatrixError(
+                "SymPy had encountered an inconsistent result while "
+                "computing Jordan block. : {}".format(self))
+
         blocks = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
         jordan_mat = mat.diag(*blocks)
 
