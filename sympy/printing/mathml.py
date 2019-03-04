@@ -1221,17 +1221,17 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
 
-    def _print_tuple(self,e):
+    def _print_tuple(self, e):
         x = self.dom.createElement('mfenced')
         for i in e:
             x.appendChild(self._print(i))
         return x
 
 
-    def _print_IndexedBase(self,e):
+    def _print_IndexedBase(self, e):
         return self._print(e.label)
 
-    def _print_Indexed(self,e):
+    def _print_Indexed(self, e):
         x = self.dom.createElement('msub')
         x.appendChild(self._print(e.base))
         if len(e.indices) == 1:
