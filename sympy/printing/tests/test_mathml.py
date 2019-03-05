@@ -1109,7 +1109,9 @@ def test_print_ceiling():
 
 def test_print_Lambda():
     expr = Lambda(x, x+1)
-    assert mathml(expr, printer='presentation') == '<mfenced><mrow><mrow><mfenced><mi>x</mi></mfenced></mrow><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mrow></mfenced>'
+    assert mathml(expr, printer='presentation') == '<mfenced><mrow><mi>x</mi><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mrow></mfenced>'
+    expr = Lambda((x, y), x + y)
+    assert mathml(expr, printer='presentation') == '<mfenced><mrow><mrow><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow></mrow></mfenced>'
 
 
 def test_print_conjugate():

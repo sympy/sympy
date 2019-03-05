@@ -1244,7 +1244,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_Lambda(self, e):
         x = self.dom.createElement('mfenced')
         mrow = self.dom.createElement('mrow')
-        mrow.appendChild(self._print(e.args[0]))
+        symbols = e.args[0]
+        if len(symbols) == 1:
+            symbols = self._print(symbols[0])
+        else:
+            symbols = self._print(symbols)
+        mrow.appendChild(symbols)
         mo = self.dom.createElement('mo')
         mo.appendChild(self.dom.createTextNode('&#x21A6;'))
         mrow.appendChild(mo)
