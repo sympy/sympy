@@ -3361,6 +3361,7 @@ def test_factoring_ode():
     assert checkodesol(eqn, soln, order=2, solve_for_func=False)[0]
     assert soln == dsolve(eqn, f(x))
 
+
 def test_issue_15913():
     eq = -C1/x - 2*x*f(x) - f(x) + Derivative(f(x), x)
     sol = C2*exp(x**2 + x) + exp(x**2 + x)*Integral(C1*exp(-x**2 - x)/x, x)
@@ -3368,3 +3369,8 @@ def test_issue_15913():
     sol = C1 + C2*exp(-x*y)
     eq = Derivative(y*f(x), x) + f(x).diff(x, 2)
     assert checkodesol(eq, sol, f(x)) == (True, 0)
+
+
+def test_issue_16146():
+    raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x), g(x), h(x)]))
+    raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x)]))
