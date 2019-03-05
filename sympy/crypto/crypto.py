@@ -1198,7 +1198,7 @@ def bifid6_square(key=None):
 def rsa_public_key(p, q, e):
     r"""
     Return the RSA *public key* pair, `(n, e)`, where `n`
-    is a product of two primes and `e` is relatively
+    is a product of two distinct primes and `e` is relatively
     prime (coprime) to the Euler totient `\phi(n)`. False
     is returned if any assumption is violated.
 
@@ -1213,12 +1213,11 @@ def rsa_public_key(p, q, e):
     False
 
     """
+    if p == q:
+        return False
     n = p*q
     if isprime(p) and isprime(q):
-        if p != q:
-            phi = (p - 1) * (q - 1)
-        else:
-            phi = p * (p - 1)
+        phi = (p - 1) * (q - 1)
         if gcd(e, phi) == 1:
             return n, e
     return False
@@ -1227,7 +1226,7 @@ def rsa_public_key(p, q, e):
 def rsa_private_key(p, q, e):
     r"""
     Return the RSA *private key*, `(n,d)`, where `n`
-    is a product of two primes and `d` is the inverse of
+    is a product of two distinct primes and `d` is the inverse of
     `e` (mod `\phi(n)`). False is returned if any assumption
     is violated.
 
@@ -1242,12 +1241,11 @@ def rsa_private_key(p, q, e):
     False
 
     """
+    if p == q:
+        return False
     n = p*q
     if isprime(p) and isprime(q):
-        if p != q:
-            phi = (p - 1) * (q - 1)
-        else:
-            phi = p * (p - 1)
+        phi = (p - 1) * (q - 1)
         if gcd(e, phi) == 1:
             d = mod_inverse(e, phi)
             return n, d
