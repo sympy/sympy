@@ -1075,7 +1075,7 @@ def test_classify_sysode():
 
 def test_solve_ics():
     # Basic tests that things work from dsolve.
-    assert dsolve(dsolve(f(x).diff(x) - 1/f(x), f(x), ics={f(1): 2})) == \
+    assert dsolve(f(x).diff(x) - 1/f(x), f(x), ics={f(1): 2}) == \
         Eq(f(x), sqrt(2 * x + 2))
     assert dsolve(f(x).diff(x) - f(x), f(x), ics={f(0): 1}) == Eq(f(x), exp(x))
     assert dsolve(f(x).diff(x) - f(x), f(x), ics={f(x).diff(x).subs(x, 0): 1}) == Eq(f(x), exp(x))
