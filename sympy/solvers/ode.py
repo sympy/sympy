@@ -714,8 +714,13 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         else:
             rv1 = []
             for s in rv:
-                solved_constants = solve_ics([s], [r['func']], cons(s), ics)
+                try:
+                    solved_constants = solve_ics([s], [r['func']], cons(s), ics)
+                except NotImplementedError:
+                    continue
                 rv1.append(s.subs(solved_constants))
+            if len(rv1) == 1:
+                return rv1[0]
             rv = rv1
     return rv
 
@@ -796,7 +801,10 @@ def solve_ics(sols, funcs, constants, ics):
                 sol2 = sol
                 sol2 = sol2.subs(x, x0)
                 sol2 = sol2.subs(funcarg, value)
-                subs_sols.append(sol2)
+                # This check is necessary because of issue #15724
+                if not isinstance(sol2, BooleanAtom) or not subs_sols:
+                    subs_sols = [s for s in subs_sols if not isinstance(s, BooleanAtom)]
+                    subs_sols.append(sol2)
 
     # TODO: Use solveset here
     try:
@@ -816,9 +824,6 @@ def solve_ics(sols, funcs, constants, ics):
 
     if len(solved_constants) > 1:
         raise NotImplementedError("Initial conditions produced too many solutions for constants")
-
-    if len(solved_constants[0]) != len(constants):
-        raise ValueError("Initial conditions did not produce a solution for all constants. Perhaps they are under-specified.")
 
     return solved_constants[0]
 
