@@ -1215,7 +1215,10 @@ def rsa_public_key(p, q, e):
     """
     n = p*q
     if isprime(p) and isprime(q):
-        phi = (p - 1) * (q - 1)
+        if p != q:
+            phi = (p - 1) * (q - 1)
+        else:
+            phi = p * (q - 1)
         if gcd(e, phi) == 1:
             return n, e
     return False
@@ -1241,7 +1244,10 @@ def rsa_private_key(p, q, e):
     """
     n = p*q
     if isprime(p) and isprime(q):
-        phi = (p - 1) * (q - 1)
+        if p != q:
+            phi = (p - 1) * (q - 1)
+        else:
+            phi = p * (q - 1)
         if gcd(e, phi) == 1:
             d = mod_inverse(e, phi)
             return n, d
