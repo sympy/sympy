@@ -1199,7 +1199,7 @@ def bifid6_square(key=None):
 def rsa_public_key(p, q, e):
     r"""
     Return the RSA *public key* pair, `(n, e)`, where `n`
-    is a product of two distinct primes and `e` is relatively
+    is a product of two primes and `e` is relatively
     prime (coprime) to the Euler totient `\phi(n)`. False
     is returned if any assumption is violated.
 
@@ -1219,6 +1219,7 @@ def rsa_public_key(p, q, e):
         if p == q:
             SymPyDeprecationWarning(
                 feature="Using non-distinct primes for rsa_public_key",
+                useinstead="distinct primes",
                 issue=16162,
                 deprecated_since_version="1.4").warn()
             phi = p * (p - 1)
@@ -1232,7 +1233,7 @@ def rsa_public_key(p, q, e):
 def rsa_private_key(p, q, e):
     r"""
     Return the RSA *private key*, `(n,d)`, where `n`
-    is a product of two distinct primes and `d` is the inverse of
+    is a product of two primes and `d` is the inverse of
     `e` (mod `\phi(n)`). False is returned if any assumption
     is violated.
 
@@ -1251,6 +1252,7 @@ def rsa_private_key(p, q, e):
         if p == q:
             SymPyDeprecationWarning(
                 feature="Using non-distinct primes for rsa_public_key",
+                useinstead="distinct primes",
                 issue=16162,
                 deprecated_since_version="1.4").warn()
             phi = p * (p - 1)
