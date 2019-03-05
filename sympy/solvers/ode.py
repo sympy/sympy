@@ -1543,6 +1543,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     funcs = list(set(funcs))
     if len(funcs) < len(eq):
         raise ValueError("Number of functions given is less than number of equations %s" % funcs)
+    if len(funcs) > len(eq):
+        raise ValueError("Number of functions given is more than number of equations %s" % funcs)
     func_dict = dict()
     for func in funcs:
         if not order.get(func, False):
