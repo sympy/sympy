@@ -1606,6 +1606,11 @@ class Derivative(Expr):
         # Derivative(expr, vars) for a variety of reasons
         # as handled below.
         if old in self._wrt_variables:
+            # first handle the counts
+            expr = self.func(self.expr, *[(v, c.subs(old, new))
+                for v, c in self.variable_count])
+            if expr != self:
+                return expr._eval_subs(old, new)
             # quick exit case
             if not getattr(new, '_diff_wrt', False):
                 # case (0): new is not a valid variable of
