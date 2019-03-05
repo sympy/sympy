@@ -362,7 +362,7 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
 
     free = expression.free_symbols
     if symbol is None and len(free) > 1:
-        raise NotImplementedError(
+        raise Error(
             'is_monotonic has not yet been implemented'
             ' for all multivariate expressions.'
         )
