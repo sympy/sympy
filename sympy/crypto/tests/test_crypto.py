@@ -165,7 +165,7 @@ def test_rsa_private_key():
 
     raises(SymPyDeprecationWarning, lambda: rsa_private_key(2, 2, 1))
     with warns_deprecated_sympy():
-        assert rsa_private_key(2, 2, 1) == (4, 1)    
+        assert rsa_private_key(2, 2, 1) == (4, 1)
 
 
 def test_rsa_large_key():
