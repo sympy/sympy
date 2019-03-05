@@ -13,7 +13,7 @@ from sympy.matrices import (
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
 from sympy.core.compatibility import long, iterable, range, Hashable
-from sympy.core import Tuple
+from sympy.core import Tuple, Wild
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.solvers import solve
@@ -670,6 +670,10 @@ def test_LUsolve():
     A = Matrix([[0, -1, 2], [5, 10, 7]])  # underdetermined
     x = Matrix([-1, 2, 0])
     b = A*x
+    raises(NotImplementedError, lambda: A.LUsolve(b))
+
+    A = Matrix(4, 4, lambda i, j: 1/(i+j+1) if i != 3 else 0)
+    b = Matrix.zeros(4, 1)
     raises(NotImplementedError, lambda: A.LUsolve(b))
 
 
@@ -1612,10 +1616,10 @@ def test_creation_args():
     raises(TypeError, lambda: zeros(1, 2, 3, 4))
     assert zeros(long(3)) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
-    assert zeros(3.) == zeros(3)
+    raises(ValueError, lambda: zeros(3.))
     assert eye(long(3)) == eye(3)
     assert eye(Integer(3)) == eye(3)
-    assert eye(3.) == eye(3)
+    raises(ValueError, lambda: eye(3.))
     assert ones(long(3), Integer(4)) == ones(3, 4)
     raises(TypeError, lambda: Matrix(5))
     raises(TypeError, lambda: Matrix(1, 2))
@@ -1720,6 +1724,32 @@ def test_diagonalization():
     m = Matrix(2, 2, [a, c, c, b])
     assert m.is_symmetric()
     assert m.is_diagonalizable()
+
+
+def test_issue_15887():
+    # Mutable matrix should not use cache
+    a = MutableDenseMatrix([[0, 1], [1, 0]])
+    assert a.is_diagonalizable() is True
+    a[1, 0] = 0
+    assert a.is_diagonalizable() is False
+
+    a = MutableDenseMatrix([[0, 1], [1, 0]])
+    a.diagonalize()
+    a[1, 0] = 0
+    raises(MatrixError, lambda: a.diagonalize())
+
+    # Test deprecated cache and kwargs
+    with warns_deprecated_sympy():
+        a._cache_eigenvects
+
+    with warns_deprecated_sympy():
+        a._cache_is_diagonalizable
+
+    with warns_deprecated_sympy():
+        a.is_diagonalizable(clear_cache=True)
+
+    with warns_deprecated_sympy():
+        a.is_diagonalizable(clear_subproducts=True)
 
 
 @XFAIL
@@ -1844,6 +1874,23 @@ def test_issue_10220():
                         [0, 0, 1, 0],
                         [0, 0, 0, 1]])
 
+def test_jordan_form_issue_15858():
+    A = Matrix([
+        [1, 1, 1, 0],
+        [-2, -1, 0, -1],
+        [0, 0, -1, -1],
+        [0, 0, 2, 1]])
+    (P, J) = A.jordan_form()
+    assert simplify(P) == Matrix([
+        [-I, -I/2, I, I/2],
+        [-1 + I, 0, -1 - I, 0],
+        [0, I*(-1 + I)/2, 0, I*(1 + I)/2],
+        [0, 1, 0, 1]])
+    assert J == Matrix([
+        [-I, 1, 0, 0],
+        [0, -I, 0, 0],
+        [0, 0, I, 1],
+        [0, 0, 0, I]])
 
 def test_Matrix_berkowitz_charpoly():
     UA, K_i, K_w = symbols('UA K_i K_w')
@@ -2850,7 +2897,7 @@ def test_atoms():
     assert m.atoms() == {S(1),S(2),S(-1), x}
     assert m.atoms(Symbol) == {x}
 
-@slow
+
 def test_pinv():
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])
@@ -2961,6 +3008,13 @@ def test_gauss_jordan_solve():
     assert sol == Matrix([[-1], [2], [0]])
     assert params == Matrix(0, 1, [])
 
+    # Square, full rank, unique solution, B has more columns than rows
+    A = eye(3)
+    B = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == B
+    assert params == Matrix(0, 4, [])
+
     # Square, reduced rank, parametrized solution
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     b = Matrix([3, 6, 9])
@@ -2971,6 +3025,20 @@ def test_gauss_jordan_solve():
         w[s.name] = s
     assert sol == Matrix([[w['tau0'] - 1], [-2*w['tau0'] + 2], [w['tau0']]])
     assert params == Matrix([[w['tau0']]])
+    assert freevar == [2]
+
+    # Square, reduced rank, parametrized solution, B has two columns
+    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    B = Matrix([[3, 4], [6, 8], [9, 12]])
+    sol, params, freevar = A.gauss_jordan_solve(B, freevar=True)
+    w = {}
+    for s in sol.atoms(Symbol):
+        # Extract dummy symbols used in the solution.
+        w[s.name] = s
+    assert sol == Matrix([[w['tau0'] - 1, w['tau1'] - S(4)/3],
+                          [-2*w['tau0'] + 2, -2*w['tau1'] + S(8)/3],
+                          [w['tau0'], w['tau1']],])
+    assert params == Matrix([[w['tau0'], w['tau1']]])
     assert freevar == [2]
 
     # Square, reduced rank, parametrized solution
@@ -3006,10 +3074,27 @@ def test_gauss_jordan_solve():
     assert sol == Matrix([[-S(1)/2], [0], [S(1)/6]])
     assert params == Matrix(0, 1, [])
 
+    # Rectangular, tall, full rank, unique solution, B has less columns than rows
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [1, 2], [0, 0]])
+    sol, params = A.gauss_jordan_solve(B)
+    assert sol == Matrix([[-S(1)/2, -S(2)/2], [0, 0], [S(1)/6, S(2)/6]])
+    assert params == Matrix(0, 2, [])
+
     # Rectangular, tall, full rank, no solution
     A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
     b = Matrix([0, 0, 0, 1])
     raises(ValueError, lambda: A.gauss_jordan_solve(b))
+
+    # Rectangular, tall, full rank, no solution, B has two columns (2nd has no solution)
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [1, 0], [0, 1]])
+    raises(ValueError, lambda: A.gauss_jordan_solve(B))
+
+    # Rectangular, tall, full rank, no solution, B has two columns (1st has no solution)
+    A = Matrix([[1, 5, 3], [2, 1, 6], [1, 7, 9], [1, 4, 3]])
+    B = Matrix([[0,0], [0, 0], [0, 1], [1, 0]])
+    raises(ValueError, lambda: A.gauss_jordan_solve(B))
 
     # Rectangular, tall, reduced rank, parametrized solution
     A = Matrix([[1, 5, 3], [2, 10, 6], [3, 15, 9], [1, 4, 3]])
@@ -3382,3 +3467,8 @@ def test_issue_15872():
     assert B.rank() == 3
     assert (B**2).rank() == 2
     assert (B**3).rank() == 2
+
+def test_issue_11948():
+    A = MatrixSymbol('A', 3, 3)
+    a = Wild('a')
+    assert A.match(a) == {a: A}

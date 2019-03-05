@@ -1020,7 +1020,7 @@ class Expr(Basic, EvalfMixin):
 
         from .numbers import Number, NumberSymbol
 
-        if order == None and self.is_Add:
+        if order is None and self.is_Add:
             # Spot the special case of Add(Number, Mul(Number, expr)) with the
             # first number positive and thhe second number nagative
             key = lambda x:not isinstance(x, (Number, NumberSymbol))

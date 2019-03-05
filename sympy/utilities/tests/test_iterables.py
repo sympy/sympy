@@ -15,7 +15,7 @@ from sympy.utilities.iterables import (
     multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
     permutations, postfixes, postorder_traversal, prefixes, reshape,
     rotate_left, rotate_right, runs, sift, subsets, take, topological_sort,
-    unflatten, uniq, variations, ordered_partitions)
+    unflatten, uniq, variations, ordered_partitions, rotations)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -732,3 +732,9 @@ def test_ordered_partitions():
                 sum(1 for p in f(i, j, 1)) ==
                 sum(1 for p in f(i, j, 0)) ==
                 nT(i, j))
+
+
+def test_rotations():
+    assert list(rotations('ab')) == [['a', 'b'], ['b', 'a']]
+    assert list(rotations(range(3))) == [[0, 1, 2], [1, 2, 0], [2, 0, 1]]
+    assert list(rotations(range(3), dir=-1)) == [[0, 1, 2], [2, 0, 1], [1, 2, 0]]
