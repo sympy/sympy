@@ -1211,6 +1211,8 @@ def rsa_public_key(p, q, e):
     (15, 7)
     >>> rsa_public_key(p, q, 30)
     False
+    >>> rsa_public_key(q, q, e)
+    False
 
     """
     if p == q:
@@ -1238,6 +1240,8 @@ def rsa_private_key(p, q, e):
     >>> rsa_private_key(p, q, e)
     (15, 7)
     >>> rsa_private_key(p, q, 30)
+    False
+    >>> rsa_private_key(q, q, e)
     False
 
     """

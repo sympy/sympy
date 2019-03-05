@@ -147,14 +147,14 @@ def test_bifid6_square():
 
 
 def test_rsa_public_key():
-    assert rsa_public_key(2, 2, 1) == (4, 1)
+    assert rsa_public_key(2, 2, 1) is False
     assert rsa_public_key(2, 3, 1) == (6, 1)
     assert rsa_public_key(5, 3, 3) == (15, 3)
     assert rsa_public_key(8, 8, 8) is False
 
 
 def test_rsa_private_key():
-    assert rsa_private_key(2, 2, 1) == (4, 1)
+    assert rsa_private_key(2, 2, 1) is False
     assert rsa_private_key(2, 3, 1) == (6, 1)
     assert rsa_private_key(5, 3, 3) == (15, 3)
     assert rsa_private_key(23,29,5) == (667,493)
@@ -177,8 +177,6 @@ def test_rsa_large_key():
 
 
 def test_encipher_rsa():
-    puk = rsa_public_key(2, 2, 1)
-    assert encipher_rsa(2, puk) == 2
     puk = rsa_public_key(2, 3, 1)
     assert encipher_rsa(2, puk) == 2
     puk = rsa_public_key(5, 3, 3)
@@ -186,8 +184,6 @@ def test_encipher_rsa():
 
 
 def test_decipher_rsa():
-    prk = rsa_private_key(2, 2, 1)
-    assert decipher_rsa(2, prk) == 2
     prk = rsa_private_key(2, 3, 1)
     assert decipher_rsa(2, prk) == 2
     prk = rsa_private_key(5, 3, 3)
