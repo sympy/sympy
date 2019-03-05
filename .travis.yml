@@ -17,7 +17,6 @@ python:
   - 2.7
   - 3.4
   - 3.5
-  - 3.6
 
 matrix:
   include:
@@ -38,22 +37,12 @@ matrix:
       dist: xenial
       sudo: true
       env:
-        - SPLIT="1/4" TEST_SYMPY="true" TEST_COVERAGE="true"
+        - SPLIT="1/2" TEST_SYMPY="true"
     - python: 3.7
       dist: xenial
       sudo: true
       env:
-        - SPLIT="2/4" TEST_SYMPY="true" TEST_COVERAGE="true"
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env:
-        - SPLIT="3/4" TEST_SYMPY="true" TEST_COVERAGE="true"
-    - python: 3.7
-      dist: xenial
-      sudo: true
-      env:
-        - SPLIT="4/4" TEST_SYMPY="true" TEST_COVERAGE="true"
+        - SPLIT="2/2" TEST_SYMPY="true"
 
     - stage: test
       python: 2.7
@@ -128,6 +117,36 @@ matrix:
       env:
         - TEST_SLOW="true"
         - SPLIT="2/2"
+
+    # Code coverage tests
+    - python: 3.6
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="1/4"
+    - python: 3.6
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="2/4"
+    - python: 3.6
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="3/4"
+    - python: 3.6
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="4/4"
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
