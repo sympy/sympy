@@ -161,6 +161,21 @@ def test_rsa_private_key():
     assert rsa_private_key(8, 8, 8) is False
 
 
+def test_rsa_large_key():
+    # Sample from
+    # http://www.herongyang.com/Cryptography/JCE-Public-Key-RSA-Private-Public-Key-Pair-Sample.html
+    p = int('101565610013301240713207239558950144682174355406589305284428666'\
+        '903702505233009')
+    q = int('894687191887545488935455605955948413812376003053143521429242133'\
+        '12069293984003')
+    e = int('65537')
+    d = int('893650581832704239530398858744759129594796235440844479456143566'\
+        '6999402846577625762582824202269399672579058991442587406384754958587'\
+        '400493169361356902030209')
+    assert rsa_public_key(p, q, e) == (p*q, e)
+    assert rsa_private_key(p, q, e) == (p*q, d)
+
+
 def test_encipher_rsa():
     puk = rsa_public_key(2, 2, 1)
     assert encipher_rsa(2, puk) == 2
