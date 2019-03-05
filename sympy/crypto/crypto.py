@@ -1218,7 +1218,7 @@ def rsa_public_key(p, q, e):
     if isprime(p) and isprime(q):
         if p == q:
             SymPyDeprecationWarning(
-                feature="Using non-distinct primes for RSA keys",
+                feature="Using non-distinct primes for rsa_public_key",
                 issue=16162,
                 deprecated_since_version="1.4").warn()
             phi = p * (p - 1)
@@ -1250,7 +1250,7 @@ def rsa_private_key(p, q, e):
     if isprime(p) and isprime(q):
         if p == q:
             SymPyDeprecationWarning(
-                feature="Using non-distinct primes for RSA keys",
+                feature="Using non-distinct primes for rsa_public_key",
                 issue=16162,
                 deprecated_since_version="1.4").warn()
             phi = p * (p - 1)
