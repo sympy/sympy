@@ -779,7 +779,13 @@ class Expr(Basic, EvalfMixin):
                 return False
 
             # check to see that we can get a value
-            n2 = self._eval_evalf(2)
+            try:
+                n2 = self._eval_evalf(2)
+            # XXX: This shouldn't be caught here
+            # Catches ValueError: hypsum() failed to converge to the requested
+            # 34 bits of accuracy
+            except ValueError:
+                return None
             if n2 is None:
                 return None
             if getattr(n2, '_prec', 1) == 1:  # no significance
@@ -808,7 +814,13 @@ class Expr(Basic, EvalfMixin):
                 return False
 
             # check to see that we can get a value
-            n2 = self._eval_evalf(2)
+            try:
+                n2 = self._eval_evalf(2)
+            # XXX: This shouldn't be caught here
+            # Catches ValueError: hypsum() failed to converge to the requested
+            # 34 bits of accuracy
+            except ValueError:
+                return None
             if n2 is None:
                 return None
             if getattr(n2, '_prec', 1) == 1:  # no significance
