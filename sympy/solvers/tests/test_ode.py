@@ -1112,8 +1112,8 @@ def test_solve_ics():
 
     assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0, f(x).diff(x).subs(x, 1):0}) == \
         [Eq(f(x), 0), Eq(f(x), x ** 3 / 6 - x / 2)]
-    assert dsolve(eq, ics={f(0):0, f(0):0}) == [Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)]
-    assert dsolve(eq, ics={f(0):0, f(0):0}) == [Eq(f(x), 0), Eq(f(x), x**3/6)]
+    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0}) == \
+        [Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)]
 
     K, r, f0 = symbols('K r f0')
     sol = Eq(f(x), -K*f0*exp(r*x)/((K - f0)*(-f0*exp(r*x)/(K - f0) - 1)))
