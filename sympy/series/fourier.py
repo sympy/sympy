@@ -441,44 +441,42 @@ class FourierSeries(SeriesBase):
 class FiniteFourierSeries(FourierSeries):
     r"""Represents Finite Fourier sine/cosine series.
 
-       For how to compute Fourier series, see the :func:`fourier_series`
-       docstring.
+    For how to compute Fourier series, see the :func:`fourier_series`
+    docstring.
 
-       Parameters
-       ==========
-       f : Expr
-            Expression for finding fourier_series
+    Parameters
+    ==========
+    f : Expr
+        Expression for finding fourier_series
 
-       limits : ( x, start, stop)
-            x is the independent variable for the expression f
-            (start, stop) is the period of the fourier series
+    limits : ( x, start, stop)
+        x is the independent variable for the expression f
+        (start, stop) is the period of the fourier series
 
-       exprs: (a0, an, bn) or Expr
-            a0 is the constant term a0 of the fourier series
-            an is a dictionary of coefficients of cos terms
-             an[k] = coefficient of cos(pi*(k/L)*x)
-            bn is a dictionary of coefficients of sin terms
-             bn[k] = coefficient of sin(pi*(k/L)*x)
+    exprs: (a0, an, bn) or Expr
+        a0 is the constant term a0 of the fourier series
+        an is a dictionary of coefficients of cos terms
+         an[k] = coefficient of cos(pi*(k/L)*x)
+        bn is a dictionary of coefficients of sin terms
+         bn[k] = coefficient of sin(pi*(k/L)*x)
 
-            or exprs can be an expression to be converted to fourier form
+        or exprs can be an expression to be converted to fourier form
 
-       Methods
-       =======
-       This class is an extension of FourierSeries class.
-       Please refer to sympy.series.fourier.FourierSeries for
-       further information.
+    Methods
+    =======
+    This class is an extension of FourierSeries class.
+    Please refer to sympy.series.fourier.FourierSeries for
+    further information.
 
-       See Also
-       ========
+    See Also
+    ========
 
-       sympy.series.fourier.FourierSeries
-       sympy.series.fourier.fourier_series
-       """
+    sympy.series.fourier.FourierSeries
+    sympy.series.fourier.fourier_series
+    """
 
     def __new__(cls, f, limits, exprs):
-
         if not (type(exprs) == tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
-
             # Converts the expression to fourier form
             c, e = exprs.as_coeff_add()
             rexpr = c + Add(*[TR10(i) for i in e])
