@@ -318,10 +318,15 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if not isinstance(a, string_types):
         for coerce in (float, int):
             try:
-                return sympify(coerce(a))
-            # XXX: Attribute error was being caught here but it doesn't seem
-            # to be needed...
-            except (TypeError, ValueError, SympifyError):
+                coerced = coerce(a)
+            except (TypeError, ValueError):
+                continue
+            # XXX: AttributeError only needed here for Py2
+            except AttributeError:
+                continue
+            try:
+                return sympify(coerced)
+            except SympifyError:
                 continue
 
     if strict:
