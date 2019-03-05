@@ -5,7 +5,7 @@ from sympy.core.compatibility import range
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
-    sqrt_mod_iter, mobius, discrete_log
+    sqrt_mod_iter, mobius, discrete_log, collatz
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _discrete_log_trial_mul, _discrete_log_shanks_steps, \
     _discrete_log_pollard_rho, _discrete_log_pohlig_hellman
@@ -247,3 +247,9 @@ def test_residue():
     args = 5779, 3528, 6215
     assert discrete_log(*args) == 687
     assert discrete_log(*Tuple(*args)) == 687
+
+    assert list(collatz(40)) == [40, 20, 10, 5, 16, 8, 4, 2, 1]
+    assert list(collatz(45)) == [45, 136, 68, 34, 17, 52, 26, 13, 40, 20, 10, 5, 16, 8, 4, 2, 1]
+    assert list(collatz(50)) == [50, 25, 76, 38, 19, 58, 29, 88, 44, 22, 11, 34, 17, 52, 26, 13, 40, 20, 10, 5, 16, 8, 4, 2, 1]
+    raises(ValueError, lambda: list(collatz(-5)))
+    raises(ValueError, lambda: list(collatz(0)))

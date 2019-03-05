@@ -1300,3 +1300,40 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         return _discrete_log_pollard_rho(n, a, b, order)
 
     return _discrete_log_pohlig_hellman(n, a, b, order)
+
+
+def collatz(n):
+    """Starting with any positive integer N, Collatz sequence corresponding
+    to N as the numbers formed by the following operations:
+    N → N/2 ( if N is even)
+    N → 3N + 1 (if N is odd)
+    It is conjectured but not yet proven that no matter which
+    positive integer we start with; we always end up with 1.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import collatz
+    >>> list(collatz(10))
+    [10, 5, 16, 8, 4, 2, 1]
+    >>> list(collatz(15))
+    [15, 46, 23, 70, 35, 106, 53, 160, 80, 40, 20, 10, 5, 16, 8, 4, 2, 1]
+    >>> list(collatz(21))
+    [21, 64, 32, 16, 8, 4, 2, 1]
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/CollatzProblem.html
+    """
+
+    n = as_int(n)
+    if n <= 0:
+        raise ValueError("Collatz Sequence only exist for positive integers")
+    yield n
+    while n != 1:
+        if n % 2:
+            n = 3*n + 1
+        else:
+            n = n//2
+        yield n
