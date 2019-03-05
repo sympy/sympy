@@ -1905,7 +1905,13 @@ class PrettyPrinter(Printer):
             _and = 'and'
 
         variables = self._print_seq(Tuple(ts.sym))
-        cond = self._print(ts.condition.as_expr())
+        as_expr = getattr(ts.condition, 'as_expr', None)
+        if as_expr is not None:
+            cond = self._print(ts.condition.as_expr())
+        else:
+            cond = self._print(ts.condition)
+            if self._use_unicode:
+                cond = self._print_seq(cond, "(", ")")
 
         bar = self._print("|")
 
