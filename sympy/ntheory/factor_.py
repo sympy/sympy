@@ -233,25 +233,22 @@ def multiplicity(p, n):
         p, n = as_int(p), as_int(n)
     except ValueError:
         if all(isinstance(i, (SYMPY_INTS, Rational)) for i in (p, n)):
-            try:
-                p = Rational(p)
-                n = Rational(n)
-                if p.q == 1:
-                    if n.p == 1:
-                        return -multiplicity(p.p, n.q)
-                    return multiplicity(p.p, n.p) - multiplicity(p.p, n.q)
-                elif p.p == 1:
-                    return multiplicity(p.q, n.q)
-                else:
-                    like = min(
-                        multiplicity(p.p, n.p),
-                        multiplicity(p.q, n.q))
-                    cross = min(
-                        multiplicity(p.q, n.p),
-                        multiplicity(p.p, n.q))
-                    return like - cross
-            except AttributeError:
-                pass
+            p = Rational(p)
+            n = Rational(n)
+            if p.q == 1:
+                if n.p == 1:
+                    return -multiplicity(p.p, n.q)
+                return multiplicity(p.p, n.p) - multiplicity(p.p, n.q)
+            elif p.p == 1:
+                return multiplicity(p.q, n.q)
+            else:
+                like = min(
+                    multiplicity(p.p, n.p),
+                    multiplicity(p.q, n.q))
+                cross = min(
+                    multiplicity(p.q, n.p),
+                    multiplicity(p.p, n.q))
+                return like - cross
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
 
     if n == 0:
