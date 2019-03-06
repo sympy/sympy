@@ -16,8 +16,10 @@ from sympy.matrices import (
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
 from sympy.core.compatibility import long, iterable, range
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises, XFAIL, slow, skip
+from sympy.utilities.pytest import (raises, XFAIL, slow, skip,
+    warns_deprecated_sympy)
 from sympy.solvers import solve
 from sympy.assumptions import Q
 
@@ -1148,8 +1150,6 @@ def test_diag():
 def test_jordan_block():
     assert SpecialOnlyMatrix.jordan_block(3, 2) == SpecialOnlyMatrix.jordan_block(3, eigenvalue=2) \
             == SpecialOnlyMatrix.jordan_block(size=3, eigenvalue=2) \
-            == SpecialOnlyMatrix.jordan_block(rows=3, eigenvalue=2) \
-            == SpecialOnlyMatrix.jordan_block(cols=3, eigenvalue=2) \
             == SpecialOnlyMatrix.jordan_block(3, 2, band='upper') == Matrix([
                     [2, 1, 0],
                     [0, 2, 1],
@@ -1162,6 +1162,27 @@ def test_jordan_block():
     raises(ValueError, lambda: SpecialOnlyMatrix.jordan_block(2))
     # non-integral size
     raises(ValueError, lambda: SpecialOnlyMatrix.jordan_block(3.5, 2))
+
+    # Deprecated feature
+    raises(SymPyDeprecationWarning,
+    lambda: SpecialOnlyMatrix.jordan_block(cols=3, eigenvalue=2))
+
+    raises(SymPyDeprecationWarning,
+    lambda: SpecialOnlyMatrix.jordan_block(rows=3, eigenvalue=2))
+
+    with warns_deprecated_sympy():
+        assert SpecialOnlyMatrix.jordan_block(3, 2) == \
+            SpecialOnlyMatrix.jordan_block(cols=3, eigenvalue=2) == \
+            SpecialOnlyMatrix.jordan_block(rows=3, eigenvalue=2)
+
+    with warns_deprecated_sympy():
+        assert SpecialOnlyMatrix.jordan_block(
+            rows=4, cols=3, eigenvalue=2) == \
+            Matrix([
+                [2, 1, 0],
+                [0, 2, 1],
+                [0, 0, 2],
+                [0, 0, 0]])
 
 
 # SubspaceOnlyMatrix tests
