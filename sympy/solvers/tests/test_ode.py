@@ -1127,7 +1127,7 @@ def test_solve_ics():
         [Eq(f(x), 0), Eq(f(x), x ** 3 / 6)]
 
     # XXX: Ought to be ValueError
-    raises(NotImplementedError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1, f(pi): 1}))
+    raises(ValueError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1, f(pi): 1}))
 
     # Degenerate case. f'(0) is identically 0.
     raises(ValueError, lambda: solve_ics([Eq(f(x), sqrt(C1 - x**2))], [f(x)], [C1], {f(x).diff(x).subs(x, 0): 0}))

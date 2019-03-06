@@ -716,7 +716,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             for s in rv:
                 try:
                     solved_constants = solve_ics([s], [r['func']], cons(s), ics)
-                except NotImplementedError:
+                except ValueError:
                     continue
                 rv1.append(s.subs(solved_constants))
             if len(rv1) == 1:
@@ -817,7 +817,7 @@ def solve_ics(sols, funcs, constants, ics):
     # enough. If we could use solveset, this might be improvable, but for now,
     # we use NotImplementedError in this case.
     if not solved_constants:
-        raise NotImplementedError("Couldn't solve for initial conditions")
+        raise ValueError("Couldn't solve for initial conditions")
 
     if solved_constants == True:
         raise ValueError("Initial conditions did not produce any solutions for constants. Perhaps they are degenerate.")
