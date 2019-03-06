@@ -1305,7 +1305,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 def collatz(n):
     """Starting with any positive integer N, Collatz sequence corresponding
     to N as the numbers formed by the following operations:
-    N → N/2 ( if N is even)
+    N → N/2 (if N is even)
     N → 3N + 1 (if N is odd)
     It is conjectured but not yet proven that no matter which
     positive integer we start with; we always end up with 1.
@@ -1329,7 +1329,7 @@ def collatz(n):
 
     n = as_int(n)
     if n <= 0:
-        raise ValueError("Collatz Sequence only exist for positive integers")
+        raise ValueError("Collatz sequence only exists for positive integers")
     yield n
     while n != 1:
         if n % 2:
