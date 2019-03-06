@@ -1234,6 +1234,43 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
 
+    def _print_floor(self, e):
+        mrow =  self.dom.createElement('mrow')
+        x = self.dom.createElement('mfenced')
+        x.setAttribute('open', u'\u230A')
+        x.setAttribute('close', u'\u230B')
+        x.appendChild(self._print(e.args[0]))
+        mrow.appendChild(x)
+        return mrow
+
+
+    def _print_ceiling(self, e):
+        mrow =  self.dom.createElement('mrow')
+        x = self.dom.createElement('mfenced')
+        x.setAttribute('open', u'\u2308')
+        x.setAttribute('close', u'\u2309')
+        x.appendChild(self._print(e.args[0]))
+        mrow.appendChild(x)
+        return mrow
+
+
+    def _print_Lambda(self, e):
+        x = self.dom.createElement('mfenced')
+        mrow = self.dom.createElement('mrow')
+        symbols = e.args[0]
+        if len(symbols) == 1:
+            symbols = self._print(symbols[0])
+        else:
+            symbols = self._print(symbols)
+        mrow.appendChild(symbols)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x21A6;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self._print(e.args[1]))
+        x.appendChild(mrow)
+        return x
+
+
 def mathml(expr, printer='content', **settings):
     """Returns the MathML representation of expr. If printer is presentation then
      prints Presentation MathML else prints content MathML.
