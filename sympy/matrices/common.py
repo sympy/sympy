@@ -7,6 +7,7 @@ etc.).
 from __future__ import division, print_function
 
 from collections import defaultdict
+from inspect import isfunction
 from types import FunctionType
 
 from sympy.assumptions.refine import refine
@@ -15,13 +16,14 @@ from sympy.core.compatibility import (
     Iterable, as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
-from sympy.core.function import count_ops
+from sympy.core.function import count_ops, _getnargs
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.iterables import flatten
+from sympy.utilities.misc import filldedent
 
 
 class MatrixError(Exception):
@@ -733,11 +735,22 @@ class MatrixSpecial(MatrixRequired):
             if hasattr(m, 'rows'):
                 return m.rows, m.cols
             if isinstance(m, dict):
-                return kwargs.get('rows'), kwargs.get('cols')
+                rv = m.pop('size', (kwargs.get('rows'), kwargs.get('cols')))
+                if None in rv:
+                    raise ValueError(filldedent('''
+                        If size is not given in dict the `rows`
+                        and `cols` must be given as arg to diag.'''))
+                return rv
             return 1, 1
 
-        diag_rows = sum(size(m)[0] for m in args)
-        diag_cols = sum(size(m)[1] for m in args)
+        dict_sizes = []
+        diag_rows = diag_cols = 0
+        for m in args:
+            s = r, c = size(m)
+            if isinstance(m, dict):
+                dict_sizes.append(s)
+            diag_rows += r
+            diag_cols += c
         rows = kwargs.get('rows', diag_rows)
         cols = kwargs.get('cols', diag_cols)
         if rows < diag_rows or cols < diag_cols:
@@ -748,6 +761,7 @@ class MatrixSpecial(MatrixRequired):
         # fill a default dict with the diagonal entries
         diag_entries = defaultdict(lambda: S.Zero)
         row_pos, col_pos = 0, 0
+        ndict = 0
         for m in args:
             if hasattr(m, 'rows'):
                 # in this case, we're a matrix
@@ -756,47 +770,56 @@ class MatrixSpecial(MatrixRequired):
                         diag_entries[(i + row_pos, j + col_pos)] = m[i, j]
                 row_pos += m.rows
                 col_pos += m.cols
-            elif isinstance(m, dict):
+            elif not isinstance(m, dict):
+                # in this case we're a single value
+                diag_entries[(row_pos, col_pos)] = m
+                row_pos += 1
+                col_pos += 1
+            else:
                 # in this case we're a dict
+                ix = lambda r, c: (row_pos + r, col_pos + c)
+                r, c = dict_sizes[ndict]
+                rmax = r - 1
+                cmax = c - 1
                 for key, value in m.items():
                     key = as_int(key)
-                    assert(key < diag_rows and key < diag_cols)
                     r_p = 0 if key >= 0 else -key
                     c_p = key if key > 0 else 0
-                    func_arg = 0
-                    while (r_p < diag_rows and c_p < diag_cols):
-                        from inspect import isfunction
-                        from sympy.core.function import _getnargs
-
+                    if r_p > rmax or c_p > cmax:
+                        raise ValueError(filldedent('''
+                        dict-specified diagonal index out of range'''))
+                    d = 0
+                    dlen = d + 1
+                    while (r_p < diag_rows and c_p < diag_cols and d <= dlen):
+                        dlen = min(rmax - r_p + 1, cmax - c_p + 1)
                         if(isinstance(value, list)):
-                            if(len(value) != min(diag_rows - r_p, diag_cols - c_p)):
-                                raise ValueError("The size of list provided should match the diagonal size")
+                            if(len(value) != dlen):
+                                raise ValueError(filldedent('''
+                                    The size of list provided should
+                                    match the diagonal size.'''))
                             for i in range(len(value)):
-                                diag_entries[(r_p, c_p)] = value[i]
+                                diag_entries[ix(r_p, c_p)] = value[i]
                                 r_p += 1
                                 c_p += 1
                         elif(isfunction(value)):
                             num_args = _getnargs(value)
-                            # print(num_args)
                             if(num_args == 2):
-                                diag_entries[(r_p, c_p)] = value(r_p, c_p)
+                                diag_entries[ix(r_p, c_p)] = value(r_p, c_p)
                             elif(num_args == 1):
-                                diag_entries[(r_p, c_p)] = value(func_arg)
-                                func_arg += 1
+                                diag_entries[ix(r_p, c_p)] = value(d)
                             else:
-                                raise ValueError("While passing function as a value in dictionary number of arguments must be either 1 or 2")
-                            r_p += 1
-                            c_p += 1
+                                raise ValueError(filldedent('''
+                                    The functions in dict-described
+                                    diagonals must have 1 or 2 args.'''))
                         else:
-                            diag_entries[(r_p, c_p)] = value
-                            r_p += 1
-                            c_p += 1
-
-            else:
-                # in this case, we're a single value
-                diag_entries[(row_pos, col_pos)] = m
-                row_pos += 1
-                col_pos += 1
+                            diag_entries[ix(r_p, c_p)] = value
+                        r_p += 1
+                        c_p += 1
+                        d+=1
+                r, c = dict_sizes[ndict]
+                row_pos += r
+                col_pos += c
+                ndict += 1
         return klass._eval_diag(rows, cols, diag_entries)
 
     @classmethod
