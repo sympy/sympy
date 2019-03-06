@@ -178,6 +178,10 @@ class FourierSeries(SeriesBase):
     def length(self):
         return oo
 
+    @property
+    def L(self):
+        return abs(self.period[1] - self.period[0]) / 2
+
     def _eval_subs(self, old, new):
         x = self.x
         if old.has(x):
@@ -518,46 +522,10 @@ class FiniteFourierSeries(FourierSeries):
     def length(self):
         return self.stop - self.start
 
-    @property
-    def L(self):
-        return abs(self.period[1] - self.period[0]) / 2
-
     def truncate(self, n=oo):
-        """
-        Return the first n nonzero terms of the series if n is less than the size of the finite fourier series.
-
-        If n is None return an iterator.
-
-        See Also
-        ========
-
-        sympy.series.fourier.FourierSeries.truncate
-        """
-        if n is None:
-            return iter(self)
-
-        terms = []
-        for t in self:
-            if len(terms) == n:
-                break
-            if t is not S.Zero:
-                terms.append(t)
-
-        return Add(*terms)
+        return super().truncate(n)
 
     def shiftx(self, s):
-        """Shift x by a term independent of x.
-
-        f(x) -> f(x + s)
-
-        This is fast, if Fourier series of f(x) is already
-        computed.
-
-        See Also
-        ========
-        sympy.series.fourier.FourierSeries.shiftx
-
-        """
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
@@ -569,18 +537,6 @@ class FiniteFourierSeries(FourierSeries):
         return self.func(sfunc, self.args[1], _expr)
 
     def scale(self, s):
-        """Scale the function by a term independent of x.
-
-        f(x) -> s * f(x)
-
-        This is fast, if Fourier series of f(x) is already
-        computed.
-
-        See Also
-        ========
-        sympy.series.fourier.FourierSeries.scale
-
-        """
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
@@ -592,17 +548,6 @@ class FiniteFourierSeries(FourierSeries):
         return self.func(sfunc, self.args[1], _expr)
 
     def scalex(self, s):
-        """Scale x by a term independent of x.
-
-        f(x) -> f(s*x)
-
-        This is fast, if Fourier series of f(x) is already
-        computed.
-
-        See Also
-        ========
-        sympy.series.fourier.FourierSeries.scalex
-        """
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
@@ -636,9 +581,6 @@ class FiniteFourierSeries(FourierSeries):
                 return function
 
             return fourier_series(function, limits=self.args[1])
-
-    def __sub__(self, other):
-        return self.__add__(-other)
 
 
 def fourier_series(f, limits=None, finite=True):
