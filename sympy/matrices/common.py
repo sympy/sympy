@@ -732,11 +732,12 @@ class MatrixSpecial(MatrixRequired):
             """Compute the size of the diagonal block"""
             if hasattr(m, 'rows'):
                 return m.rows, m.cols
-            if isinstance(m,dict):
-                return kwargs.get('rows'),kwargs.get('cols')
+            if isinstance(m, dict):
+                return kwargs.get('rows'), kwargs.get('cols')
             return 1, 1
+
         diag_rows = sum(size(m)[0] for m in args)
-        diag_cols =  sum(size(m)[1] for m in args)
+        diag_cols = sum(size(m)[1] for m in args)
         rows = kwargs.get('rows', diag_rows)
         cols = kwargs.get('cols', diag_cols)
         if rows < diag_rows or cols < diag_cols:
@@ -755,37 +756,37 @@ class MatrixSpecial(MatrixRequired):
                         diag_entries[(i + row_pos, j + col_pos)] = m[i, j]
                 row_pos += m.rows
                 col_pos += m.cols
-            elif(isinstance(m,dict)):
+            elif isinstance(m, dict):
                 # in this case we're a dict
-                for key,value in m.items():
-                    r_p = 0
-                    c_p = 0
-                    r_p = 0 if key>0 else -(key)
-                    c_p = key if key>0 else 0
+                for key, value in m.items():
+                    key = as_int(key)
+                    r_p = 0 if key >= 0 else -key
+                    c_p = key if key > 0 else 0
                     func_arg = 0
-                    while (r_p<diag_rows and c_p<diag_cols):
+                    while (r_p < diag_rows and c_p < diag_cols):
                         from inspect import isfunction, getargspec
 
-                        if(isinstance(value,list)):
-                            if(len(value)!=min(diag_rows-r_p,diag_cols-c_p)):
+                        if(isinstance(value, list)):
+                            if(len(value) != min(diag_rows - r_p, diag_cols - c_p)):
                                 raise ValueError("The size of list provided should match the diagonal size")
                             for i in range(len(value)):
-                                diag_entries[(r_p,c_p)] = value[i]
+                                diag_entries[(r_p, c_p)] = value[i]
                                 r_p += 1
                                 c_p += 1
                         elif(isfunction(value)):
                             num_args = len(getargspec(value).args)
-                            if(num_args==2):
-                                diag_entries[(r_p,c_p)] = value(r_p,c_p)
-                                r_p+=1
-                                c_p+=1
-                            if(num_args==1):
-                                diag_entries[(r_p,c_p)] = value(func_arg)
-                                func_arg+=1
-                                r_p +=1
-                                c_p +=1
+                            # print(num_args)
+                            if(num_args == 2):
+                                diag_entries[(r_p, c_p)] = value(r_p, c_p)
+                            elif(num_args == 1):
+                                diag_entries[(r_p, c_p)] = value(func_arg)
+                                func_arg += 1
+                            else:
+                                raise ValueError("While passing function as a value in dictionary number of arguments must be either 1 or 2")
+                            r_p += 1
+                            c_p += 1
                         else:
-                            diag_entries[(r_p,c_p)] = value
+                            diag_entries[(r_p, c_p)] = value
                             r_p += 1
                             c_p += 1
 
