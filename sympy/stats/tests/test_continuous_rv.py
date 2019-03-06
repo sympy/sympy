@@ -29,6 +29,9 @@ x, y, z = map(Symbol, 'xyz')
 def test_single_normal():
     mu = Symbol('mu', real=True, finite=True)
     sigma = Symbol('sigma', real=True, positive=True, finite=True)
+    X = Normal('x', mu, sigma)
+    assert density(X)(z) == sqrt(2)*exp(-(-mu + z)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)
+
     X = Normal('x', 0, 1)
     Y = X*sigma + mu
 
@@ -42,6 +45,9 @@ def test_single_normal():
     assert P(X**2 < 1) == erf(2**S.Half/2)
 
     assert E(X, Eq(X, mu)) == mu
+
+    sigma = Symbol('sigma', positive=False)
+    raises(ValueError, lambda: Normal('x', mu, sigma))
 
 
 @XFAIL
@@ -309,6 +315,9 @@ def test_exponential():
 
     assert where(X <= 1).set == Interval(0, 1)
 
+    rate = Symbol('lambda', positive=False)
+    raises(ValueError, lambda: Exponential('x', rate))
+
 
 def test_f_distribution():
     d1 = Symbol("d1", positive=True)
@@ -318,6 +327,19 @@ def test_f_distribution():
     assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
                              /(x*beta(d1/2, d2/2)))
 
+    d1 = Symbol("d1", positive=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d1))
+
+    d1 = Symbol("d1", positive=True, integer=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d1))
+
+    d1 = Symbol("d1", positive=True)
+    d2 = Symbol("d2", positive=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d2))
+
+    d2 = Symbol("d2", positive=True, integer=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d2))
+
 def test_fisher_z():
     d1 = Symbol("d1", positive=True)
     d2 = Symbol("d2", positive=True)
@@ -325,6 +347,19 @@ def test_fisher_z():
     X = FisherZ("x", d1, d2)
     assert density(X)(x) == (2*d1**(d1/2)*d2**(d2/2)*(d1*exp(2*x) + d2)
                              **(-d1/2 - d2/2)*exp(d1*x)/beta(d1/2, d2/2))
+
+    d1 = Symbol("d1", positive=False)
+    raises(ValueError, lambda: FisherZ('x', d1, d1))
+
+    d1 = Symbol("d1", positive=True, integer=False)
+    raises(ValueError, lambda: FisherZ('x', d1, d1))
+
+    d1 = Symbol("d1", positive=True)
+    d2 = Symbol("d2", positive=False)
+    raises(ValueError, lambda: FisherZ('x', d1, d2))
+
+    d2 = Symbol("d2", positive=True, integer=False)
+    raises(ValueError, lambda: FisherZ('x', d1, d2))
 
 def test_frechet():
     a = Symbol("a", positive=True)
@@ -334,6 +369,13 @@ def test_frechet():
     X = Frechet("x", a, s=s, m=m)
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
     assert cdf(X)(x) == Piecewise((exp(-((-m + x)/s)**(-a)), m <= x), (0, True))
+
+    a = Symbol("a", positive=False)
+    raises(ValueError, lambda: Frechet('x', a, s, m))
+
+    a = Symbol("a", positive=True)
+    s = Symbol("s", positive=False)
+    raises(ValueError, lambda: Frechet('x', a, s, m))
 
 
 def test_gamma():
@@ -355,6 +397,13 @@ def test_gamma():
     assert variance(X) == k*theta**2
     assert simplify(skewness(X)) == 2/sqrt(k)
 
+    k = Symbol("k", positive=False)
+    raises(ValueError, lambda: Gamma('x', k, theta))
+
+    k = Symbol("k", positive=True)
+    theta = Symbol("theta", positive=False)
+    raises(ValueError, lambda: Gamma('x', k, theta))
+
 
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
@@ -363,6 +412,13 @@ def test_gamma_inverse():
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
+
+    a = Symbol("a", positive=False)
+    raises(ValueError, lambda: GammaInverse('x', a, b))
+
+    a = Symbol("a", positive=True)
+    b = Symbol("b", positive=False)
+    raises(ValueError, lambda: GammaInverse('x', a, b))
 
 def test_sampling_gamma_inverse():
     scipy = import_module('scipy')
@@ -378,6 +434,13 @@ def test_gompertz():
     X = Gompertz("x", b, eta)
     assert density(X)(x) == b*eta*exp(eta)*exp(b*x)*exp(-eta*exp(b*x))
 
+    b = Symbol("b", positive=False)
+    raises(ValueError, lambda: Gompertz('x', b, eta))
+
+    b = Symbol("b", positive=True)
+    eta = Symbol("eta", positive=False)
+    raises(ValueError, lambda: Gompertz('x', b, eta))
+
 
 def test_gumbel():
     beta = Symbol("beta", positive=True)
@@ -385,6 +448,9 @@ def test_gumbel():
     x = Symbol("x")
     X = Gumbel("x", beta, mu)
     assert simplify(density(X)(x)) == exp((beta*exp((mu - x)/beta) + mu - x)/beta)/beta
+
+    beta = Symbol("beta", positive=False)
+    raises(ValueError, lambda: Gumbel('x', beta, mu))
 
 
 def test_kumaraswamy():
@@ -397,6 +463,13 @@ def test_kumaraswamy():
                                 (-(-x**a + 1)**b + 1, x <= 1),
                                 (1, True))
 
+    a = Symbol("a", positive=False)
+    raises(ValueError, lambda: Kumaraswamy('x', a, b))
+
+    a = Symbol("a", positive=True)
+    b = Symbol("b", positive=False)
+    raises(ValueError, lambda: Kumaraswamy('x', a, b))
+
 
 def test_laplace():
     mu = Symbol("mu")
@@ -407,6 +480,9 @@ def test_laplace():
     assert cdf(X)(x) == Piecewise((exp((-mu + x)/b)/2, mu > x),
                             (-exp((mu - x)/b)/2 + 1, True))
 
+    b = Symbol("b", positive=False)
+    raises(ValueError, lambda: Laplace('x', mu, b))
+
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
@@ -414,6 +490,9 @@ def test_logistic():
     X = Logistic('x', mu, s)
     assert density(X)(x) == exp((-x + mu)/s)/(s*(exp((-x + mu)/s) + 1)**2)
     assert cdf(X)(x) == 1/(exp((mu - x)/s) + 1)
+
+    s = Symbol("s", positive=False)
+    raises(ValueError, lambda: Logistic('x', mu, s))
 
 
 def test_lognormal():
@@ -442,6 +521,9 @@ def test_lognormal():
     X = LogNormal('x', 0, 1)  # Mean 0, standard deviation 1
     assert density(X)(x) == sqrt(2)*exp(-log(x)**2/2)/(2*x*sqrt(pi))
 
+    std = Symbol('sigma', negative=True)
+    raises(ValueError, lambda: LogNormal('x', mean, std))
+
 
 def test_maxwell():
     a = Symbol("a", positive=True)
@@ -452,6 +534,9 @@ def test_maxwell():
         (sqrt(pi)*a**3))
     assert E(X) == 2*sqrt(2)*a/sqrt(pi)
     assert simplify(variance(X)) == a**2*(-8 + 3*pi)/pi
+
+    a = Symbol("a", positive=False)
+    raises(ValueError, lambda: Maxwell('x',a))
 
 
 def test_nakagami():
@@ -469,6 +554,13 @@ def test_nakagami():
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
 
+    mu = S(0.3)
+    raises(ValueError, lambda: Nakagami('x', mu, omega))
+
+    mu = Symbol("mu", positive=True)
+    omega = Symbol("omega", positive=False)
+    raises(ValueError, lambda: Nakagami('x', mu, omega))
+
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True, finite=True)
@@ -480,6 +572,13 @@ def test_pareto():
     assert dens(x) == x**(-(alpha + 1))*xm**(alpha)*(alpha)
 
     assert simplify(E(X)) == alpha*xm/(alpha-1)
+
+    xm = Symbol('xm', positive=False)
+    raises(ValueError, lambda: Pareto('x', xm, alpha))
+
+    xm = Symbol('xm', positive=True)
+    alpha = Symbol('alpha', positive=False)
+    raises(ValueError, lambda: Pareto('x', xm, alpha))
 
     # computation of taylor series for MGF still too slow
     #assert simplify(variance(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
@@ -503,6 +602,9 @@ def test_raised_cosine():
     assert density(X)(x) == (Piecewise(((cos(pi*(x - mu)/s) + 1)/(2*s),
                           And(x <= mu + s, mu - s <= x)), (0, True)))
 
+    s = Symbol("s", positive=False)
+    raises(ValueError,  lambda: RaisedCosine('x', mu, s))
+
 
 def test_rayleigh():
     sigma = Symbol("sigma", positive=True)
@@ -512,12 +614,22 @@ def test_rayleigh():
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
+    sigma = Symbol("sigma", positive=False)
+    raises(ValueError, lambda: Rayleigh('x', sigma))
+
 
 def test_shiftedgompertz():
     b = Symbol("b", positive=True)
     eta = Symbol("eta", positive=True)
     X = ShiftedGompertz("x", b, eta)
     assert density(X)(x) == b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
+
+    b = Symbol("b", positive=False)
+    raises(ValueError, lambda: ShiftedGompertz('x', b, eta))
+
+    b = Symbol("b", positive=True)
+    eta = Symbol("eta", positive=False)
+    raises(ValueError, lambda: ShiftedGompertz('x', b, eta))
 
 
 def test_studentt():
@@ -527,6 +639,9 @@ def test_studentt():
     assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - S(1)/2)/(sqrt(nu)*beta(S(1)/2, nu/2))
     assert cdf(X)(x) == S(1)/2 + x*gamma(nu/2 + S(1)/2)*hyper((S(1)/2, nu/2 + S(1)/2),
                                 (S(3)/2,), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
+
+    nu = Symbol("nu", positive=False)
+    raises(ValueError, lambda:StudentT('x', nu))
 
 
 def test_trapezoidal():
@@ -626,6 +741,9 @@ def test_von_mises():
     X = VonMises("x", mu, k)
     assert density(X)(x) == exp(k*cos(x - mu))/(2*pi*besseli(0, k))
 
+    k = Symbol("k", positive=False)
+    raises(ValueError, lambda: VonMises('x', mu, k))
+
 
 def test_weibull():
     a, b = symbols('a b', positive=True)
@@ -634,6 +752,13 @@ def test_weibull():
     assert simplify(E(X)) == simplify(a * gamma(1 + 1/b))
     assert simplify(variance(X)) == simplify(a**2 * gamma(1 + 2/b) - E(X)**2)
     assert simplify(skewness(X)) == (2*gamma(1 + 1/b)**3 - 3*gamma(1 + 1/b)*gamma(1 + 2/b) + gamma(1 + 3/b))/(-gamma(1 + 1/b)**2 + gamma(1 + 2/b))**(S(3)/2)
+
+    a = Symbol("a", positive=False)
+    raises(ValueError, lambda:Weibull('x', a, b))
+
+    a = Symbol("a", positive=True)
+    b = Symbol("b", positive=False)
+    raises(ValueError, lambda:Weibull('x', a, b))
 
 def test_weibull_numeric():
     # Test for integers and rationals
@@ -653,6 +778,9 @@ def test_wignersemicircle():
     X = WignerSemicircle('x', R)
     assert density(X)(x) == 2*sqrt(-x**2 + R**2)/(pi*R**2)
     assert E(X) == 0
+
+    R = Symbol("R", positive=False)
+    raises(ValueError, lambda: WignerSemicircle('x', R))
 
 
 def test_prefab_sampling():
