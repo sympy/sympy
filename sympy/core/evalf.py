@@ -365,11 +365,22 @@ def get_integer_part(expr, no, options, return_ints=False):
             # expression
             s = options.get('subs', False)
             if s:
-                re_im = re_im.subs(s)
-                # XXX: There was a load more code here that was added in
-                # https://github.com/sympy/sympy/pull/10346
-                # I guess something has changed because now I can delete it
-                # without apparently affecting anything...
+                doit = True
+                from sympy.core.compatibility import as_int
+                # use strict=False with as_int because we take
+                # 2.0 == 2
+                for v in s.values():
+                    try:
+                        as_int(v, strict=False)
+                    except ValueError:
+                        try:
+                            [as_int(i, strict=False) for i in v.as_real_imag()]
+                            continue
+                        except (ValueError, AttributeError):
+                            doit = False
+                            break
+                if doit:
+                    re_im = re_im.subs(s)
 
             re_im = Add(re_im, -nint, evaluate=False)
             x, _, x_acc, _ = evalf(re_im, 10, options)
