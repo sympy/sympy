@@ -29,7 +29,7 @@ from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.relational import Relational, Ge, _canonical
 from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.core.power import integer_log
-from sympy.logic.boolalg import And, Or, BooleanAtom
+from sympy.logic.boolalg import And, Or, BooleanAtom, BooleanTrue
 from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
@@ -908,8 +908,6 @@ def solve(f, *symbols, **flags):
     # a dictionary of results will be returned.
     ###########################################################################
 
-    if isinstance(f, list):
-        f = [s for s in f if not isinstance(s, bool)]
     def _sympified_list(w):
         return list(map(sympify, w if iterable(w) else [w]))
     bare_f = not iterable(f)
@@ -921,7 +919,8 @@ def solve(f, *symbols, **flags):
                        )
                       )
     f, symbols = (_sympified_list(w) for w in [f, symbols])
-
+    if isinstance(f, list):
+        f = [s for s in f if s is not S.true and s is not True]
     implicit = flags.get('implicit', False)
 
     # preprocess symbol(s)
