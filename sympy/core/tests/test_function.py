@@ -5,7 +5,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Matrix, Basic)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.basic import _aresame
-from sympy.core.function import PoleError, _mexpand
+from sympy.core.function import PoleError, _mexpand, _getnargs
 from sympy.core.sympify import sympify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
@@ -157,6 +157,13 @@ def test_nargs():
     assert Function('f', nargs=None).nargs == S.Naturals0
     raises(ValueError, lambda: Function('f', nargs=()))
 
+def test__getnargs():
+    f = lambda x, y: 1
+    assert _getnargs(f) == 2
+    def f(x, y):
+        pass
+    assert _getnargs(f) == 2
+    assert _getnargs(log) == (1, 2)
 
 def test_Lambda():
     e = Lambda(x, x**2)

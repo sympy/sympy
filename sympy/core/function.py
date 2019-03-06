@@ -109,6 +109,11 @@ def _getnargs(cls):
             return _getnargs_old(cls.eval)
         else:
             return _getnargs_new(cls.eval)
+    elif inspect.isfunction(cls):
+        if sys.version_info < (3, ):
+            return len(inspect.getargspec(cls).args)
+        else:
+            return len(inspect.signature(cls).parameters)
     else:
         return None
 

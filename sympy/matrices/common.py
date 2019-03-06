@@ -760,11 +760,13 @@ class MatrixSpecial(MatrixRequired):
                 # in this case we're a dict
                 for key, value in m.items():
                     key = as_int(key)
+                    assert(key < diag_rows and key < diag_cols)
                     r_p = 0 if key >= 0 else -key
                     c_p = key if key > 0 else 0
                     func_arg = 0
                     while (r_p < diag_rows and c_p < diag_cols):
-                        from inspect import isfunction, getargspec
+                        from inspect import isfunction
+                        from sympy.core.function import _getnargs
 
                         if(isinstance(value, list)):
                             if(len(value) != min(diag_rows - r_p, diag_cols - c_p)):
@@ -774,7 +776,7 @@ class MatrixSpecial(MatrixRequired):
                                 r_p += 1
                                 c_p += 1
                         elif(isfunction(value)):
-                            num_args = len(getargspec(value).args)
+                            num_args = _getnargs(value)
                             # print(num_args)
                             if(num_args == 2):
                                 diag_entries[(r_p, c_p)] = value(r_p, c_p)
