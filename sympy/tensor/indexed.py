@@ -107,7 +107,7 @@ See the appropriate docstrings for a detailed explanation of the output.
 from __future__ import print_function, division
 
 from sympy.assumptions import Q
-from sympy.core.assumptions import StdFactKB
+from sympy.core.assumptions import StdFactKB, _assume_defined
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
                                       Iterable)
@@ -144,7 +144,7 @@ class Indexed(Expr):
     def _filter_assumptions(kw_args):
         """Split the given dict into two parts: assumptions and not assumptions.
            Keys are taken as assumptions if they correspond to a handler on ``Q``."""
-        assumptions = {k: v for k, v in kw_args.items() if hasattr(Q, k)}
+        assumptions = {k: v for k, v in kw_args.items() if k in _assume_defined}
         Symbol._sanitize(assumptions)
         # return assumptions, not assumptions
         return assumptions, {k: v for k, v in kw_args.items() if k not in assumptions}
