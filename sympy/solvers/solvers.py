@@ -908,6 +908,8 @@ def solve(f, *symbols, **flags):
     # a dictionary of results will be returned.
     ###########################################################################
 
+    if isinstance(f, list):
+        f = [s for s in f if not isinstance(s, bool)]
     def _sympified_list(w):
         return list(map(sympify, w if iterable(w) else [w]))
     bare_f = not iterable(f)
