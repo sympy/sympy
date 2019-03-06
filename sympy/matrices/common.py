@@ -790,7 +790,7 @@ class MatrixSpecial(MatrixRequired):
         Parameters
         ==========
 
-        size: Integer, optional
+        size : Integer, optional
             Specifies the shape of the Jordan block matrix.
 
         eigenvalue : Number or Symbol
