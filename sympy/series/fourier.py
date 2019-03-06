@@ -522,9 +522,6 @@ class FiniteFourierSeries(FourierSeries):
     def length(self):
         return self.stop - self.start
 
-    def truncate(self, n=oo):
-        return super().truncate(n)
-
     def shiftx(self, s):
         s, x = sympify(s), self.x
 
