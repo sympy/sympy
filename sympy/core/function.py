@@ -46,7 +46,7 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
-from sympy.core.compatibility import string_types, with_metaclass, range
+from sympy.core.compatibility import string_types, with_metaclass, PY3, range
 from sympy.utilities import default_sort_key
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import has_dups
@@ -105,15 +105,15 @@ class ArgumentIndexError(ValueError):
 
 def _getnargs(cls):
     if hasattr(cls, 'eval'):
-        if sys.version_info < (3, ):
-            return _getnargs_old(cls.eval)
-        else:
+        if PY3:
             return _getnargs_new(cls.eval)
-    elif inspect.isfunction(cls):
-        if sys.version_info < (3, ):
-            return len(inspect.getargspec(cls).args)
         else:
+            return _getnargs_old(cls.eval)
+    elif inspect.isfunction(cls):
+        if PY3:
             return len(inspect.signature(cls).parameters)
+        else:
+            return len(inspect.getargspec(cls).args)
     else:
         return None
 

@@ -739,7 +739,7 @@ class MatrixSpecial(MatrixRequired):
                 if None in rv:
                     raise ValueError(filldedent('''
                         If size is not given in dict the `rows`
-                        and `cols` must be given as arg to diag.'''))
+                        and `cols` must be given as args to diag.'''))
                 return rv
             return 1, 1
 
@@ -754,9 +754,17 @@ class MatrixSpecial(MatrixRequired):
         rows = kwargs.get('rows', diag_rows)
         cols = kwargs.get('cols', diag_cols)
         if rows < diag_rows or cols < diag_cols:
-            raise ValueError("A {} x {} diagnal matrix cannot accommodate a"
-                             "diagonal of size at least {} x {}.".format(rows, cols,
-                                                                         diag_rows, diag_cols))
+            if len(dict_sizes) == 1 and len(args) > 1:
+                r, c = dict_sizes[0]
+                dict_sizes = [
+                    (r - (diag_rows - rows), c - (diag_cols - cols))]
+                diag_rows = rows
+                diag_cols = cols
+            else:
+                raise ValueError(filldedent('''
+                    The diagonal elements need a matrix that is {} x {}
+                    but only {} x {} has been specified.'''.format(
+                    diag_rows, diag_cols, rows, cols)))
 
         # fill a default dict with the diagonal entries
         diag_entries = defaultdict(lambda: S.Zero)
