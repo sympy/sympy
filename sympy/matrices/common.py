@@ -881,12 +881,12 @@ class MatrixSpecial(MatrixRequired):
                     d_p = 0
                     while (r_p < diag_rows and c_p < diag_cols and
                             r_p < rmax and c_p < cmax):
-                        if(isinstance(value, list)):
+                        if isinstance(value, list):
                             for i in range(len(value)):
                                 diag_entries[ix(r_p, c_p)] = value[i]
                                 r_p += 1
                                 c_p += 1
-                        elif(isfunction(value)):
+                        elif isfunction(value):
                             num_args = _getnargs(value)
                             if(num_args == 2):
                                 diag_entries[ix(r_p, c_p)] = value(r_p, c_p)
@@ -896,8 +896,13 @@ class MatrixSpecial(MatrixRequired):
                                 raise ValueError(filldedent('''
                                     The functions in dict-described
                                     diagonals must have 1 or 2 args.'''))
-                        else:
+                        elif isinstance(sympify(value), Expr
+                                ) and not hasattr(value, 'rows'):
                             diag_entries[ix(r_p, c_p)] = value
+                        else:
+                            raise TypeError(filldedent(
+                                '''expecting list, function
+                                or Expr in dict'''))
                         r_p += 1
                         c_p += 1
                         d_p += 1

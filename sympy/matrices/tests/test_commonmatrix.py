@@ -1147,6 +1147,7 @@ def test_diag():
 
     # test of dictionary handling
     diag = SpecialOnlyMatrix.diag
+    raises(TypeError, lambda: diag({0: Matrix.eye(2)}))
     assert diag({0: 1}, {1: 2}) == diag({0: 1, 1: 2}) == Matrix([[1, 2]])
     assert diag({0: 1}, {1: 2}, 2) == diag({0: 1, 1: 2}, 2) == Matrix([
         [1, 2, 0],
