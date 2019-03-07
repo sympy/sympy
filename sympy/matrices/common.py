@@ -759,30 +759,39 @@ class MatrixSpecial(MatrixRequired):
 
         # collapse contiguous dicts
         newargs = []
-        nosize = []
+        nosize = None
         i = 0
         for a in args:
-            if newargs and all(isinstance(i, dict) and 'size' not in i for i in (a, newargs[-1])):
-                newargs[-1].update(a)
+            if type(a) is dict:
+                a = a.copy()  # leave original unchanged
+                if 'size' in a:
+                    minsize(a)  # check it
+                    newargs.append(a)
+                else:
+                    if nosize is None:
+                        # this is the first unsized
+                        newargs.append(a)
+                        nosize = i
+                    elif i - 1 == nosize:
+                        # merge unsized dict entries
+                        newargs[-1].update(a)
+                    else:
+                        raise ValueError(filldedent('''
+                            Only one non-contiguous dictionary can have
+                            unspecified size. For the others, give the
+                            size, e.g. {'size': (rows, cols), ...}.
+                            '''))
             else:
                 newargs.append(a)
-                if isinstance(a, dict) and 'size' not in a:
-                    nosize.append(i)
-                i += 1
-        if len(nosize) > 1:
-            raise ValueError(filldedent('''
-                Only one non-contiguous dictionary can have
-                unspecified size. For the others, give the size,
-                e.g. {'size': (rows, cols), ...}.'''))
-        elif nosize:  # length of 1
-            i = nosize[0]
+            i += 1
+        if nosize is not None:
+            dsize = minsize(newargs[nosize])
             if None in (rows, cols):
                 # the unspecified dict will have minimal size
-                dsize = minsize(newargs[i])
+                pass
             else:
                 # the unspecified dict will take up
                 # the remaining space
-                dsize = size(newargs[i])
                 spec_rows = spec_cols = 0
                 for a in newargs:
                     r, c = size(a)
@@ -793,7 +802,7 @@ class MatrixSpecial(MatrixRequired):
                 r, c = dsize
                 if rneed < 0 or cneed < 0:
                     # specified sizes are too small but let
-                    # this rise below when diagonal size is calculated
+                    # this raise below when diagonal size is calculated
                     pass
                 elif rneed < r or cneed < c:
                     raise ValueError(filldedent('''
@@ -801,8 +810,7 @@ class MatrixSpecial(MatrixRequired):
                         is too big for the specified size of this
                         matrix.'''))
                 dsize = max(rneed, r), max(cneed, c)
-            newargs[i]['size'] = dsize
-            del nosize
+            newargs[nosize]['size'] = dsize
         args = newargs
 
         # calculate size needed
@@ -820,7 +828,7 @@ class MatrixSpecial(MatrixRequired):
         if rows < diag_rows or cols < diag_cols:
             raise ValueError(filldedent('''
                 The diagonal elements need a matrix that is {} x {}
-                but only {} x {} has been specified.'''.format(
+                but {} x {} has been provided.'''.format(
                 diag_rows, diag_cols, rows, cols)))
 
         # fill a default dict with the diagonal entries
@@ -853,12 +861,7 @@ class MatrixSpecial(MatrixRequired):
                     d_p = 0
                     while (r_p < diag_rows and c_p < diag_cols and
                             r_p < rmax and c_p < cmax):
-                        dlen = min(rmax - r_p, cmax - c_p)
                         if(isinstance(value, list)):
-                            if(len(value) != dlen):
-                                raise ValueError(filldedent('''
-                                    The size of list provided should
-                                    match the diagonal size.'''))
                             for i in range(len(value)):
                                 diag_entries[ix(r_p, c_p)] = value[i]
                                 r_p += 1
