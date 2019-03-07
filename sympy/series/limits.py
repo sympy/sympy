@@ -247,11 +247,14 @@ class Limit(Expr):
                         inve = e.subs(z, -1/u)
                     else:
                         inve = e.subs(z, 1/u)
-                    r = limit(inve.as_leading_term(u), u, S.Zero, "+")
-                    if isinstance(r, Limit):
-                        return self
-                    else:
-                        return r
+                    try:
+                        r = limit(inve.as_leading_term(u), u, S.Zero, "+")
+                        if isinstance(r, Limit):
+                            return self
+                        else:
+                            return r
+                    except ValueError:
+                        pass
 
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])

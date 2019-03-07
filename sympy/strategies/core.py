@@ -9,7 +9,7 @@ def exhaust(rule):
     """ Apply a rule repeatedly until it has no effect """
     def exhaustive_rl(expr):
         new, old = rule(expr), expr
-        while(new != old):
+        while new != old:
             new, old = rule(new), new
         return new
     return exhaustive_rl

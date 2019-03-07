@@ -182,7 +182,6 @@ class JointRandomSymbol(RandomSymbol):
     to allow indexing."
     """
     def __getitem__(self, key):
-        from sympy.stats.joint_rv import JointPSpace
         if isinstance(self.pspace, JointPSpace):
             if self.pspace.component_count <= key:
                 raise ValueError("Index keys for %s can only up to %s." %

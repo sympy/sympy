@@ -1880,65 +1880,6 @@ class Rational(Number):
         return self, S.Zero
 
 
-# int -> Integer
-_intcache = {}
-
-
-# TODO move this tracing facility to sympy/core/trace.py  ?
-def _intcache_printinfo():
-    ints = sorted(_intcache.keys())
-    nhit = _intcache_hits
-    nmiss = _intcache_misses
-
-    if nhit == 0 and nmiss == 0:
-        print()
-        print('Integer cache statistic was not collected')
-        return
-
-    miss_ratio = float(nmiss) / (nhit + nmiss)
-
-    print()
-    print('Integer cache statistic')
-    print('-----------------------')
-    print()
-    print('#items: %i' % len(ints))
-    print()
-    print(' #hit   #miss               #total')
-    print()
-    print('%5i   %5i (%7.5f %%)   %5i' % (
-        nhit, nmiss, miss_ratio*100, nhit + nmiss)
-    )
-    print()
-    print(ints)
-
-_intcache_hits = 0
-_intcache_misses = 0
-
-
-def int_trace(f):
-    import os
-    if os.getenv('SYMPY_TRACE_INT', 'no').lower() != 'yes':
-        return f
-
-    def Integer_tracer(cls, i):
-        global _intcache_hits, _intcache_misses
-
-        try:
-            _intcache_hits += 1
-            return _intcache[i]
-        except KeyError:
-            _intcache_hits -= 1
-            _intcache_misses += 1
-
-            return f(cls, i)
-
-    # also we want to hook our _intcache_printinfo into sys.atexit
-    import atexit
-    atexit.register(_intcache_printinfo)
-
-    return Integer_tracer
-
-
 class Integer(Rational):
     """Represents integer numbers of any size.
 
@@ -1980,8 +1921,7 @@ class Integer(Rational):
     def _mpmath_(self, prec, rnd):
         return mpmath.make_mpf(self._as_mpf_val(prec))
 
-    # TODO caching with decorator, but not to degrade performance
-    @int_trace
+    @cacheit
     def __new__(cls, i):
         if isinstance(i, string_types):
             i = i.replace(' ', '')
@@ -1996,16 +1936,17 @@ class Integer(Rational):
         except TypeError:
             raise TypeError(
                 "Argument of Integer should be of numeric type, got %s." % i)
-        try:
-            return _intcache[ival]
-        except KeyError:
-            # We only work with well-behaved integer types. This converts, for
-            # example, numpy.int32 instances.
-            obj = Expr.__new__(cls)
-            obj.p = ival
-
-            _intcache[ival] = obj
-            return obj
+        # We only work with well-behaved integer types. This converts, for
+        # example, numpy.int32 instances.
+        if ival == 1:
+            return S.One
+        if ival == -1:
+            return S.NegativeOne
+        if ival == 0:
+            return S.Zero
+        obj = Expr.__new__(cls)
+        obj.p = ival
+        return obj
 
     def __getnewargs__(self):
         return (self.p,)
@@ -3621,7 +3562,7 @@ class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
     >>> S.TribonacciConstant > 1
     True
     >>> S.TribonacciConstant.expand(func=True)
-    1/3 + (-3*sqrt(33) + 19)**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
+    1/3 + (19 - 3*sqrt(33))**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
     >>> S.TribonacciConstant.is_irrational
     True
     >>> S.TribonacciConstant.n(20)
@@ -3905,10 +3846,6 @@ def sympify_complex(a):
     return real + S.ImaginaryUnit*imag
 
 converter[complex] = sympify_complex
-
-_intcache[0] = S.Zero
-_intcache[1] = S.One
-_intcache[-1] = S.NegativeOne
 
 from .power import Pow, integer_nthroot
 from .mul import Mul

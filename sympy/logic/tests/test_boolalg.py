@@ -5,6 +5,7 @@ from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
+from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import sin
 from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
@@ -17,9 +18,10 @@ from sympy.logic.boolalg import (
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.utilities import cartes
 
+from itertools import combinations
 
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
@@ -225,6 +227,30 @@ def test_simplification():
         SOPform([w, x, y, z], minterms, dontcares) ==
         Or(And(Not(w), z), And(y, z)))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
+
+    minterms = [1, 3, 7, 11, 15]
+    dontcares = [0, 2, 5]
+    assert (
+        SOPform([w, x, y, z], minterms, dontcares) ==
+        Or(And(Not(w), z), And(y, z)))
+    assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
+
+    minterms = [1, [0, 0, 1, 1], 7, [1, 0, 1, 1],
+        [1, 1, 1, 1]]
+    dontcares = [0, [0, 0, 1, 0], 5]
+    assert (
+        SOPform([w, x, y, z], minterms, dontcares) ==
+        Or(And(Not(w), z), And(y, z)))
+    assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
+
+    minterms = [{y : 1, z: 1}, 1]
+    dontcares = [[0, 0, 0, 0]]
+
+    minterms = [[0, 0, 0]]
+    raises(ValueError, lambda : SOPform([w, x, y, z], minterms))
+    raises(ValueError, lambda : POSform([w, x, y, z], minterms))
+
+    raises(TypeError, lambda : POSform([w, x, y, z], ["abcdefg"]))
 
     # test simplification
     ans = And(A, Or(B, C))
@@ -833,3 +859,91 @@ def test_binary_symbols():
 
 def test_BooleanFunction_diff():
     assert And(x, y).diff(x) == Piecewise((0, Eq(y, False)), (1, True))
+
+
+def test_issue_14700():
+    A, B, C, D, E, F, G, H = symbols('A B C D E F G H')
+    q = ((B & D & H & ~F) | (B & H & ~C & ~D) | (B & H & ~C & ~F) |
+            (B & H & ~D & ~G) | (B & H & ~F & ~G) | (C & G & ~B & ~D) |
+            (C & G & ~D & ~H) | (C & G & ~F & ~H) | (D & F & H & ~B) |
+            (D & F & ~G & ~H) | (B & D & F & ~C & ~H) | (D & E & F & ~B & ~C) |
+            (D & F & ~A & ~B & ~C) | (D & F & ~A & ~C & ~H) |
+            (A & B & D & F & ~E & ~H))
+    soldnf = ((B & D & H & ~F) | (D & F & H & ~B) | (B & H & ~C & ~D) |
+            (B & H & ~D & ~G) | (C & G & ~B & ~D) | (C & G & ~D & ~H) |
+            (C & G & ~F & ~H) | (D & F & ~G & ~H) | (D & E & F & ~C & ~H) |
+            (D & F & ~A & ~C & ~H) | (A & B & D & F & ~E & ~H))
+    solcnf = ((B | C | D) & (B | D | G) & (C | D | H) & (C | F | H) &
+              (D | G | H) & (F | G | H) & (B | F | ~D | ~H) &
+              (~B | ~D | ~F | ~H) & (D | ~B | ~C | ~G | ~H) &
+              (A | H | ~C | ~D | ~F | ~G) & (H | ~C | ~D | ~E | ~F | ~G) &
+              (B | E | H | ~A | ~D | ~F | ~G))
+    assert simplify_logic(q, "dnf") == soldnf
+    assert simplify_logic(q, "cnf") == solcnf
+
+    minterms = [[0, 1, 0, 0], [0, 1, 0, 1], [0, 1, 1, 0], [0, 1, 1, 1], [0, 0, 1, 1], [1, 0, 1, 1]]
+    dontcares = [[1, 0, 0, 0], [1, 0, 0, 1], [1, 1, 0, 0], [1, 1, 0, 1]]
+    assert SOPform([w, x, y, z], minterms) == (x & ~w) | (y & z & ~x)
+    # Should not be more complicated with don't cares
+    assert SOPform([w, x, y, z], minterms, dontcares) == (x & ~w) | (y & z & ~x)
+
+
+def test_relational_simplification():
+    w, x, y, z = symbols('w x y z', real=True)
+    d, e = symbols('d e', real=False)
+    assert Or(x >= y, x < y).simplify() == S.true
+    assert Or(x < y, x >= y).simplify() == S.true
+    assert And(x >= y, x < y).simplify() == S.false
+    assert Or(x >= y, Eq(y, x)).simplify() == (x >= y)
+    assert And(x >= y, Eq(y, x)).simplify() == Eq(x, y)
+    assert Or(Eq(x,y), x >= y, w < y, z < y).simplify() == Or(x >= y, y > Min(w, z))
+    assert And(Eq(x,y), x >= y, w < y, y >= z, z < y).simplify() == And(Eq(x, y), y > Max(w, z))
+    assert Or(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y).simplify() == (Eq(x, y) | (x >= 1) | (y > Min(2, z)))
+    assert And(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y).simplify() == (Eq(x, y) & (x >= 1) & (y >= 5) & (y > z))
+    assert (Eq(x, y) & Eq(d, e) & (x >= y) & (d >= e)).simplify() == (Eq(x, y) & Eq(d, e) & (d >= e))
+    assert And(Eq(x, y), Eq(x, -y)).simplify() == And(Eq(x, 0), Eq(y, 0))
+    assert Xor(x >= y, x <= y).simplify() == Ne(x, y)
+
+@slow
+def test_relational_simplification_numerically():
+    def test_simplification_numerically_function(original, simplified):
+        symb = original.free_symbols
+        n = len(symb)
+        valuelist = list(set(list(combinations(list(range(-(n-1),n))*n, n))))
+        for values in valuelist:
+            sublist = dict(zip(symb, values))
+            originalvalue = original.subs(sublist)
+            simplifiedvalue = simplified.subs(sublist)
+            assert originalvalue == simplifiedvalue, "Original: {}\nand simplified: {}\ndo not evaluate to the same value for {}".format(original, simplified, sublist)
+
+    w, x, y, z = symbols('w x y z', real=True)
+    d, e = symbols('d e', real=False)
+
+    expressions = (And(Eq(x,y), x >= y, w < y, y >= z, z < y),
+                   And(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y),
+                   Or(Eq(x,y), x >= 1, 2 < y, y >= 5, z < y),
+                   And(x >= y, Eq(y, x)),
+                   Or(And(Eq(x,y), x >= y, w < y, Or(y >= z, z < y)), And(Eq(x,y), x >= 1, 2 < y, y >= -1, z < y)),
+                   (Eq(x, y) & Eq(d, e) & (x >= y) & (d >= e)),  )
+
+    for expression in expressions:
+        test_simplification_numerically_function(expression, expression.simplify())
+
+def test_relational_simplification_patterns_numerically():
+    from sympy.core import Wild
+    from sympy.logic.boolalg import simplify_patterns_and, simplify_patterns_or, simplify_patterns_xor
+    a = Wild('a')
+    b = Wild('b')
+    c = Wild('c')
+    symb = [a, b, c]
+    patternlists = [simplify_patterns_and(), simplify_patterns_or(), simplify_patterns_xor()]
+    for patternlist in patternlists:
+        for pattern in patternlist:
+            original = pattern[0]
+            simplified = pattern[1]
+            valuelist = list(set(list(combinations(list(range(-2,2))*3, 3))))
+            for values in valuelist:
+                sublist = dict(zip(symb, values))
+                originalvalue = original.subs(sublist)
+                simplifiedvalue = simplified.subs(sublist)
+                assert originalvalue == simplifiedvalue, "Original: {}\nand simplified: {}\ndo not evaluate to the same value for {}".format(original, simplified, sublist)
