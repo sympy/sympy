@@ -4,7 +4,7 @@ from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
                    Eq, sqrt, Poly)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, slow
 
 #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
 
@@ -434,6 +434,7 @@ def test_binomial():
     assert isinstance(binomial(I, n), binomial)
 
 
+@slow
 def test_binomial_Mod():
     p, q = 10**5 + 3, 10**9 + 33 # prime modulo
     r, s = 10**7 + 5, 33333333 # composite modulo

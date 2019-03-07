@@ -2619,11 +2619,8 @@ def _extend_y0(Holonomic, n):
             sol = 0
             for a, b in zip(y1, list_red):
                 r = DMFsubs(b, Holonomic.x0)
-                try:
-                    if not r.is_finite:
-                        return y0
-                except AttributeError:
-                    pass
+                if not getattr(r, 'is_finite', True):
+                    return y0
                 if isinstance(r, (PolyElement, FracElement)):
                     r = r.as_expr()
                 sol += a * r

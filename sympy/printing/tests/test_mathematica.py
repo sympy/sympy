@@ -50,12 +50,25 @@ def test_Mul():
 
 
 def test_constants():
-    assert mcode(pi) == "Pi"
+    assert mcode(S.Zero) == "0"
+    assert mcode(S.One) == "1"
+    assert mcode(S.NegativeOne) == "-1"
+    assert mcode(S.Half) == "1/2"
+    assert mcode(S.ImaginaryUnit) == "I"
+
     assert mcode(oo) == "Infinity"
     assert mcode(S.NegativeInfinity) == "-Infinity"
+    assert mcode(S.ComplexInfinity) == "ComplexInfinity"
+    assert mcode(S.NaN) == "Indeterminate"
+
+    assert mcode(S.Exp1) == "E"
+    assert mcode(pi) == "Pi"
+    assert mcode(S.GoldenRatio) == "GoldenRatio"
+    assert mcode(S.TribonacciConstant) == \
+        "1/3 + (1/3)*(19 - 3*33^(1/2))^(1/3) + " \
+        "(1/3)*(3*33^(1/2) + 19)^(1/3)"
     assert mcode(S.EulerGamma) == "EulerGamma"
     assert mcode(S.Catalan) == "Catalan"
-    assert mcode(S.Exp1) == "E"
 
 
 def test_containers():
@@ -68,31 +81,29 @@ def test_containers():
 
 
 def test_matrices():
-    from sympy.matrices import MutableDenseMatrix, MutableSparseMatrix
+    from sympy.matrices import MutableDenseMatrix, MutableSparseMatrix, \
+        ImmutableDenseMatrix, ImmutableSparseMatrix
     A = MutableDenseMatrix(
         [[1, -1, 0, 0],
-        [0, 1, -1, 0],
-        [0, 0, 1, -1],
-        [0, 0, 0, 1]]
+         [0, 1, -1, 0],
+         [0, 0, 1, -1],
+         [0, 0, 0, 1]]
     )
-    B = MutableSparseMatrix(
-        [[1, -1, 0, 0],
-        [0, 1, -1, 0],
-        [0, 0, 1, -1],
-        [0, 0, 0, 1]]
-    )
+    B = MutableSparseMatrix(A)
+    C = ImmutableDenseMatrix(A)
+    D = ImmutableSparseMatrix(A)
 
-    assert mcode(A) == """\
-{{1, -1, 0, 0}, \
-{0, 1, -1, 0}, \
-{0, 0, 1, -1}, \
-{0, 0, 0, 1}}\
-"""
-    assert mcode(B) == """\
-SparseArray[\
-{{1, 1} -> 1, {1, 2} -> -1, {2, 2} -> 1, {2, 3} -> -1, \
-{3, 3} -> 1, {3, 4} -> -1, {4, 4} -> 1}, {4, 4}]\
-"""
+    assert mcode(C) == mcode(A) == \
+        "{{1, -1, 0, 0}, " \
+        "{0, 1, -1, 0}, " \
+        "{0, 0, 1, -1}, " \
+        "{0, 0, 0, 1}}"
+
+    assert mcode(D) == mcode(B) == \
+        "SparseArray[{" \
+        "{1, 1} -> 1, {1, 2} -> -1, {2, 2} -> 1, {2, 3} -> -1, " \
+        "{3, 3} -> 1, {3, 4} -> -1, {4, 4} -> 1" \
+        "}, {4, 4}]"
 
     # Trivial cases of matrices
     assert mcode(MutableDenseMatrix(0, 0, [])) == '{}'
@@ -127,3 +138,9 @@ def test_Sum():
                      (y, -oo, oo))) == \
         "Hold[Sum[Exp[-x^2 - y^2], {x, -Infinity, Infinity}, " \
         "{y, -Infinity, Infinity}]]"
+
+
+def test_comment():
+    from sympy.printing.mathematica import MCodePrinter
+    assert MCodePrinter()._get_comment("Hello World") == \
+        "(* Hello World *)"

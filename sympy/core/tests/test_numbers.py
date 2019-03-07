@@ -8,7 +8,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
 from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
+from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
 from sympy.core.mod import Mod
 from sympy.polys.domains.groundtypes import PythonRational
@@ -27,28 +27,6 @@ t = Symbol('t', real=False)
 def same_and_same_prec(a, b):
     # stricter matching for Floats
     return a == b and a._prec == b._prec
-
-
-def test_integers_cache():
-    python_int = 2**65 + 3175259
-
-    while python_int in _intcache or hash(python_int) in _intcache:
-        python_int += 1
-
-    sympy_int = Integer(python_int)
-
-    assert python_int in _intcache
-    assert hash(python_int) not in _intcache
-
-    sympy_int_int = Integer(sympy_int)
-
-    assert python_int in _intcache
-    assert hash(python_int) not in _intcache
-
-    sympy_hash_int = Integer(hash(python_int))
-
-    assert python_int in _intcache
-    assert hash(python_int) in _intcache
 
 
 def test_seterr():
@@ -1738,9 +1716,9 @@ def test_issue_10020():
 def test_invert_numbers():
     assert S(2).invert(5) == 3
     assert S(2).invert(S(5)/2) == S.Half
-    assert S(2).invert(5.) == 3
+    assert S(2).invert(5.) == 0.5
     assert S(2).invert(S(5)) == 3
-    assert S(2.).invert(5) == 3
+    assert S(2.).invert(5) == 0.5
     assert S(sqrt(2)).invert(5) == 1/sqrt(2)
     assert S(sqrt(2)).invert(sqrt(3)) == 1/sqrt(2)
 
@@ -1917,3 +1895,10 @@ def test_NegativeInfinity():
     assert((-oo).ceiling() == -oo)
     assert((-oo)**11 == -oo)
     assert((-oo)**12 == oo)
+
+def test_issue_6133():
+    raises(TypeError, lambda: (-oo < None))
+    raises(TypeError, lambda: (S(-2) < None))
+    raises(TypeError, lambda: (oo < None))
+    raises(TypeError, lambda: (oo > None))
+    raises(TypeError, lambda: (S(2) < None))

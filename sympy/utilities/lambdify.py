@@ -172,7 +172,7 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
-@doctest_depends_on(modules=('numpy',), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
     """
@@ -1054,9 +1054,11 @@ class _EvaluatorPrinter(object):
         from sympy.matrices import DeferredVector
         from sympy import sympify
 
-        try:
-            expr = sympify(expr).xreplace(dummies_dict)
-        except AttributeError:
+        expr = sympify(expr)
+        xreplace = getattr(expr, 'xreplace', None)
+        if xreplace is not None:
+            expr = xreplace(dummies_dict)
+        else:
             if isinstance(expr, DeferredVector):
                 pass
             elif isinstance(expr, dict):

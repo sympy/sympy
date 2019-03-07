@@ -13,7 +13,7 @@ class AskPrimeHandler(CommonHandler):
     """
     Handler for key 'prime'
     Test that an expression represents a prime number. When the
-    expression is a number the result, when True, is subject to
+    expression is an exact number, the result (when True) is subject to
     the limitations of isprime() which is used to return the result.
     """
 
@@ -24,19 +24,20 @@ class AskPrimeHandler(CommonHandler):
     @staticmethod
     def _number(expr, assumptions):
         # helper method
+        exact = not expr.atoms(Float)
         try:
             i = int(expr.round())
-            if not (expr - i).equals(0):
+            if (expr - i).equals(0) is False:
                 raise TypeError
         except TypeError:
             return False
-        return isprime(expr)
+        if exact:
+            return isprime(i)
+        # when not exact, we won't give a True or False
+        # since the number represents an approximate value
 
     @staticmethod
     def Basic(expr, assumptions):
-        # Just use int(expr) once
-        # https://github.com/sympy/sympy/issues/4561
-        # is solved
         if expr.is_number:
             return AskPrimeHandler._number(expr, assumptions)
 

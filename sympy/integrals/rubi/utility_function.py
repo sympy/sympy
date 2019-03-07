@@ -2563,7 +2563,7 @@ def GeneralizedTrinomialParts(expr, x):
 def MonomialQ(u, x):
     # If u is of the form a*x^n where n!=0 and a!=0, MonomialQ[u,x] returns True; else False
     if isinstance(u, list):
-        return all(MonomialQ(i) for i in u)
+        return all(MonomialQ(i, x) for i in u)
     else:
         a = Wild('a', exclude=[x])
         b = Wild('b', exclude=[x])
