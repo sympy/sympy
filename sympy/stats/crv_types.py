@@ -922,7 +922,7 @@ def Exponential(name, rate):
     Parameters
     ==========
 
-    lambda : A positive Real number, `\lambda > 0`, the rate (or inverse scale/inverse mean)
+    l : A positive Real number, `\lambda > 0`, the rate (or inverse scale/inverse mean)
 
     Returns
     =======
