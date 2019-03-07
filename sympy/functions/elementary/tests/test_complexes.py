@@ -5,7 +5,7 @@ from sympy import (
     Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
     ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda, Derivative)
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.misc import unchanged
+from sympy.core.expr import unchanged
 
 
 def N_equals(a, b):
