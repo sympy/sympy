@@ -29,7 +29,7 @@ from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.relational import Relational, Ge, _canonical
 from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.core.power import integer_log
-from sympy.logic.boolalg import And, Or, BooleanAtom
+from sympy.logic.boolalg import And, Or, BooleanAtom, BooleanTrue
 from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
