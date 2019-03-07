@@ -2347,10 +2347,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                'Not type %s: %s')
         raise TypeError(filldedent(msg % (type(symbols), symbols)))
 
-    try:
-        sym = symbols[0].is_Symbol
-    except AttributeError:
-        sym = False
+    sym = getattr(symbols[0], 'is_Symbol', False)
 
     if not sym:
         msg = ('Iterable of symbols must be given as '

@@ -43,11 +43,7 @@ from fabric.contrib.files import exists
 from fabric.colors import blue, red, green
 from fabric.utils import error, warn
 
-try:
-    # Only works in newer versions of fabric
-    env.colorize_errors = True
-except AttributeError:
-    pass
+env.colorize_errors = True
 
 try:
     import requests

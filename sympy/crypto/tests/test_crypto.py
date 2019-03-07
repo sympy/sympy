@@ -19,7 +19,8 @@ from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises, slow, warns_deprecated_sympy
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from random import randrange
 
@@ -147,36 +148,61 @@ def test_bifid6_square():
 
 
 def test_rsa_public_key():
-    assert rsa_public_key(2, 2, 1) == (4, 1)
     assert rsa_public_key(2, 3, 1) == (6, 1)
     assert rsa_public_key(5, 3, 3) == (15, 3)
     assert rsa_public_key(8, 8, 8) is False
 
+    raises(SymPyDeprecationWarning, lambda: rsa_public_key(2, 2, 1))
+    with warns_deprecated_sympy():
+        assert rsa_public_key(2, 2, 1) == (4, 1)
+
 
 def test_rsa_private_key():
-    assert rsa_private_key(2, 2, 1) == (4, 1)
     assert rsa_private_key(2, 3, 1) == (6, 1)
     assert rsa_private_key(5, 3, 3) == (15, 3)
     assert rsa_private_key(23,29,5) == (667,493)
     assert rsa_private_key(8, 8, 8) is False
 
+    raises(SymPyDeprecationWarning, lambda: rsa_private_key(2, 2, 1))
+    with warns_deprecated_sympy():
+        assert rsa_private_key(2, 2, 1) == (4, 1)
+
+
+def test_rsa_large_key():
+    # Sample from
+    # http://www.herongyang.com/Cryptography/JCE-Public-Key-RSA-Private-Public-Key-Pair-Sample.html
+    p = int('101565610013301240713207239558950144682174355406589305284428666'\
+        '903702505233009')
+    q = int('894687191887545488935455605955948413812376003053143521429242133'\
+        '12069293984003')
+    e = int('65537')
+    d = int('893650581832704239530398858744759129594796235440844479456143566'\
+        '6999402846577625762582824202269399672579058991442587406384754958587'\
+        '400493169361356902030209')
+    assert rsa_public_key(p, q, e) == (p*q, e)
+    assert rsa_private_key(p, q, e) == (p*q, d)
+
 
 def test_encipher_rsa():
-    puk = rsa_public_key(2, 2, 1)
-    assert encipher_rsa(2, puk) == 2
     puk = rsa_public_key(2, 3, 1)
     assert encipher_rsa(2, puk) == 2
     puk = rsa_public_key(5, 3, 3)
     assert encipher_rsa(2, puk) == 8
 
+    with warns_deprecated_sympy():
+        puk = rsa_public_key(2, 2, 1)
+        assert encipher_rsa(2, puk) == 2
+
 
 def test_decipher_rsa():
-    prk = rsa_private_key(2, 2, 1)
-    assert decipher_rsa(2, prk) == 2
     prk = rsa_private_key(2, 3, 1)
     assert decipher_rsa(2, prk) == 2
     prk = rsa_private_key(5, 3, 3)
     assert decipher_rsa(8, prk) == 2
+
+    with warns_deprecated_sympy():
+        prk = rsa_private_key(2, 2, 1)
+        assert decipher_rsa(2, prk) == 2
 
 
 def test_kid_rsa_public_key():

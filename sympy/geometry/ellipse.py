@@ -1454,11 +1454,11 @@ class Circle(Ellipse):
                 # Assume (center, radius) pair
                 c = Point(args[0], dim=2, evaluate=evaluate)
                 r = args[1]
-                # TODO: use this instead of the 'if evaluate' block below, but
                 # this will prohibit imaginary radius
-                # r = Point(r, 0, evaluate=evaluate).x  # convert via Point as necessary
-                if evaluate:
-                    r = simplify(nsimplify(r, rational=True))
+                try:
+                    r = Point(r, 0, evaluate=evaluate).x
+                except:
+                    raise GeometryError("Circle with imaginary radius is not permitted")
 
             if not (c is None or r is None):
                 if r == 0:

@@ -1075,6 +1075,8 @@ def test_classify_sysode():
 
 def test_solve_ics():
     # Basic tests that things work from dsolve.
+    assert dsolve(f(x).diff(x) - 1/f(x), f(x), ics={f(1): 2}) == \
+        Eq(f(x), sqrt(2 * x + 2))
     assert dsolve(f(x).diff(x) - f(x), f(x), ics={f(0): 1}) == Eq(f(x), exp(x))
     assert dsolve(f(x).diff(x) - f(x), f(x), ics={f(x).diff(x).subs(x, 0): 1}) == Eq(f(x), exp(x))
     assert dsolve(f(x).diff(x, x) + f(x), f(x), ics={f(0): 1,
@@ -1103,11 +1105,29 @@ def test_solve_ics():
     assert solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2],
         {f(0): 1, f(x).diff(x).subs(x, 0): 1}) == {C1: 1, C2: 1}
 
-    # XXX: Ought to be ValueError
-    raises(NotImplementedError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1, f(pi): 1}))
+    assert solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1}) == \
+        {C2: 1}
+
+    # Some more complicated tests Refer to PR #16098
+
+    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0, f(x).diff(x).subs(x, 1):0}) == \
+        [Eq(f(x), 0), Eq(f(x), x ** 3 / 6 - x / 2)]
+    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0}) == \
+        [Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)]
+
+    K, r, f0 = symbols('K r f0')
+    sol = Eq(f(x), -K*f0*exp(r*x)/((K - f0)*(-f0*exp(r*x)/(K - f0) - 1)))
+    assert (dsolve(Eq(f(x).diff(x), r * f(x) * (1 - f(x) / K)), f(x), ics={f(0): f0})) == sol
+
+
+    #Order dependent issues Refer to PR #16098
+    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(x).diff(x).subs(x,0):0, f(0):0}) == \
+        [Eq(f(x), 0), Eq(f(x), x ** 3 / 6)]
+    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0, f(x).diff(x).subs(x,0):0}) == \
+        [Eq(f(x), 0), Eq(f(x), x ** 3 / 6)]
 
     # XXX: Ought to be ValueError
-    raises(ValueError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1}))
+    raises(ValueError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1, f(pi): 1}))
 
     # Degenerate case. f'(0) is identically 0.
     raises(ValueError, lambda: solve_ics([Eq(f(x), sqrt(C1 - x**2))], [f(x)], [C1], {f(x).diff(x).subs(x, 0): 0}))
@@ -1667,36 +1687,36 @@ def test_nth_linear_constant_coeff_homogeneous():
                    + (C3*sin(sqrt(3)*x/2) + C4*cos(sqrt(3)*x/2))*sqrt(exp(x)))
     sol32 = Eq(f(x), C1*sin(x*sqrt(-sqrt(3) + 2)) + C2*sin(x*sqrt(sqrt(3) + 2))
                    + C3*cos(x*sqrt(-sqrt(3) + 2)) + C4*cos(x*sqrt(sqrt(3) + 2)))
-    sol1s = constant_renumber(sol1, 'C', 1, 2)
-    sol2s = constant_renumber(sol2, 'C', 1, 2)
-    sol3s = constant_renumber(sol3, 'C', 1, 2)
-    sol4s = constant_renumber(sol4, 'C', 1, 3)
-    sol5s = constant_renumber(sol5, 'C', 1, 2)
-    sol6s = constant_renumber(sol6, 'C', 1, 2)
-    sol7s = constant_renumber(sol7, 'C', 1, 3)
-    sol8s = constant_renumber(sol8, 'C', 1, 4)
-    sol9s = constant_renumber(sol9, 'C', 1, 4)
-    sol10s = constant_renumber(sol10, 'C', 1, 4)
-    sol11s = constant_renumber(sol11, 'C', 1, 2)
-    sol12s = constant_renumber(sol12, 'C', 1, 2)
-    sol13s = constant_renumber(sol13, 'C', 1, 4)
-    sol14s = constant_renumber(sol14, 'C', 1, 2)
-    sol15s = constant_renumber(sol15, 'C', 1, 3)
-    sol16s = constant_renumber(sol16, 'C', 1, 3)
-    sol17s = constant_renumber(sol17, 'C', 1, 2)
-    sol18s = constant_renumber(sol18, 'C', 1, 4)
-    sol19s = constant_renumber(sol19, 'C', 1, 4)
-    sol20s = constant_renumber(sol20, 'C', 1, 4)
-    sol21s = constant_renumber(sol21, 'C', 1, 4)
-    sol22s = constant_renumber(sol22, 'C', 1, 4)
-    sol23s = constant_renumber(sol23, 'C', 1, 2)
-    sol24s = constant_renumber(sol24, 'C', 1, 2)
-    sol25s = constant_renumber(sol25, 'C', 1, 4)
-    sol26s = constant_renumber(sol26, 'C', 1, 2)
-    sol27s = constant_renumber(sol27, 'C', 1, 4)
-    sol28s = constant_renumber(sol28, 'C', 1, 3)
-    sol29s = constant_renumber(sol29, 'C', 1, 4)
-    sol30s = constant_renumber(sol30, 'C', 1, 5)
+    sol1s = constant_renumber(sol1)
+    sol2s = constant_renumber(sol2)
+    sol3s = constant_renumber(sol3)
+    sol4s = constant_renumber(sol4)
+    sol5s = constant_renumber(sol5)
+    sol6s = constant_renumber(sol6)
+    sol7s = constant_renumber(sol7)
+    sol8s = constant_renumber(sol8)
+    sol9s = constant_renumber(sol9)
+    sol10s = constant_renumber(sol10)
+    sol11s = constant_renumber(sol11)
+    sol12s = constant_renumber(sol12)
+    sol13s = constant_renumber(sol13)
+    sol14s = constant_renumber(sol14)
+    sol15s = constant_renumber(sol15)
+    sol16s = constant_renumber(sol16)
+    sol17s = constant_renumber(sol17)
+    sol18s = constant_renumber(sol18)
+    sol19s = constant_renumber(sol19)
+    sol20s = constant_renumber(sol20)
+    sol21s = constant_renumber(sol21)
+    sol22s = constant_renumber(sol22)
+    sol23s = constant_renumber(sol23)
+    sol24s = constant_renumber(sol24)
+    sol25s = constant_renumber(sol25)
+    sol26s = constant_renumber(sol26)
+    sol27s = constant_renumber(sol27)
+    sol28s = constant_renumber(sol28)
+    sol29s = constant_renumber(sol29)
+    sol30s = constant_renumber(sol30)
     assert dsolve(eq1) in (sol1, sol1s)
     assert dsolve(eq2) in (sol2, sol2s)
     assert dsolve(eq3) in (sol3, sol3s)
@@ -2073,33 +2093,33 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
         C1 + (C2 + C3*x - x**2/8)*sin(x) + (C4 + C5*x + x**2/8)*cos(x) + x**2)
     sol27 = Eq(f(x), cos(3*x)/16 + C1*cos(x) + (C2 + x/4)*sin(x))
     sol28 = Eq(f(x), C1 + x)
-    sol1s = constant_renumber(sol1, 'C', 1, 3)
-    sol2s = constant_renumber(sol2, 'C', 1, 3)
-    sol3s = constant_renumber(sol3, 'C', 1, 2)
-    sol4s = constant_renumber(sol4, 'C', 1, 2)
-    sol5s = constant_renumber(sol5, 'C', 1, 2)
-    sol6s = constant_renumber(sol6, 'C', 1, 2)
-    sol7s = constant_renumber(sol7, 'C', 1, 2)
-    sol8s = constant_renumber(sol8, 'C', 1, 2)
-    sol9s = constant_renumber(sol9, 'C', 1, 2)
-    sol10s = constant_renumber(sol10, 'C', 1, 2)
-    sol11s = constant_renumber(sol11, 'C', 1, 2)
-    sol12s = constant_renumber(sol12, 'C', 1, 2)
-    sol13s = constant_renumber(sol13, 'C', 1, 4)
-    sol14s = constant_renumber(sol14, 'C', 1, 2)
-    sol15s = constant_renumber(sol15, 'C', 1, 2)
-    sol16s = constant_renumber(sol16, 'C', 1, 2)
-    sol17s = constant_renumber(sol17, 'C', 1, 2)
-    sol18s = constant_renumber(sol18, 'C', 1, 3)
-    sol19s = constant_renumber(sol19, 'C', 1, 2)
-    sol20s = constant_renumber(sol20, 'C', 1, 2)
-    sol21s = constant_renumber(sol21, 'C', 1, 2)
-    sol22s = constant_renumber(sol22, 'C', 1, 2)
-    sol23s = constant_renumber(sol23, 'C', 1, 3)
-    sol24s = constant_renumber(sol24, 'C', 1, 2)
-    sol25s = constant_renumber(sol25, 'C', 1, 3)
-    sol26s = constant_renumber(sol26, 'C', 1, 5)
-    sol27s = constant_renumber(sol27, 'C', 1, 2)
+    sol1s = constant_renumber(sol1)
+    sol2s = constant_renumber(sol2)
+    sol3s = constant_renumber(sol3)
+    sol4s = constant_renumber(sol4)
+    sol5s = constant_renumber(sol5)
+    sol6s = constant_renumber(sol6)
+    sol7s = constant_renumber(sol7)
+    sol8s = constant_renumber(sol8)
+    sol9s = constant_renumber(sol9)
+    sol10s = constant_renumber(sol10)
+    sol11s = constant_renumber(sol11)
+    sol12s = constant_renumber(sol12)
+    sol13s = constant_renumber(sol13)
+    sol14s = constant_renumber(sol14)
+    sol15s = constant_renumber(sol15)
+    sol16s = constant_renumber(sol16)
+    sol17s = constant_renumber(sol17)
+    sol18s = constant_renumber(sol18)
+    sol19s = constant_renumber(sol19)
+    sol20s = constant_renumber(sol20)
+    sol21s = constant_renumber(sol21)
+    sol22s = constant_renumber(sol22)
+    sol23s = constant_renumber(sol23)
+    sol24s = constant_renumber(sol24)
+    sol25s = constant_renumber(sol25)
+    sol26s = constant_renumber(sol26)
+    sol27s = constant_renumber(sol27)
     assert dsolve(eq1, hint=hint) in (sol1, sol1s)
     assert dsolve(eq2, hint=hint) in (sol2, sol2s)
     assert dsolve(eq3, hint=hint) in (sol3, sol3s)
@@ -2213,18 +2233,18 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol11 = Eq(f(x), cos(x)*(C2 - Integral(1/cos(x), x)) + sin(x)*(C1 +
         Integral(1/sin(x), x)))
     sol12 = Eq(f(x), C1 + C2*x + x**3*(C3 + log(x)/6) + C4*x**2)
-    sol1s = constant_renumber(sol1, 'C', 1, 3)
-    sol2s = constant_renumber(sol2, 'C', 1, 3)
-    sol3s = constant_renumber(sol3, 'C', 1, 2)
-    sol4s = constant_renumber(sol4, 'C', 1, 2)
-    sol5s = constant_renumber(sol5, 'C', 1, 2)
-    sol6s = constant_renumber(sol6, 'C', 1, 2)
-    sol7s = constant_renumber(sol7, 'C', 1, 2)
-    sol8s = constant_renumber(sol8, 'C', 1, 2)
-    sol9s = constant_renumber(sol9, 'C', 1, 3)
-    sol10s = constant_renumber(sol10, 'C', 1, 2)
-    sol11s = constant_renumber(sol11, 'C', 1, 2)
-    sol12s = constant_renumber(sol12, 'C', 1, 4)
+    sol1s = constant_renumber(sol1)
+    sol2s = constant_renumber(sol2)
+    sol3s = constant_renumber(sol3)
+    sol4s = constant_renumber(sol4)
+    sol5s = constant_renumber(sol5)
+    sol6s = constant_renumber(sol6)
+    sol7s = constant_renumber(sol7)
+    sol8s = constant_renumber(sol8)
+    sol9s = constant_renumber(sol9)
+    sol10s = constant_renumber(sol10)
+    sol11s = constant_renumber(sol11)
+    sol12s = constant_renumber(sol12)
     assert dsolve(eq1, hint=hint) in (sol1, sol1s)
     assert dsolve(eq2, hint=hint) in (sol2, sol2s)
     assert dsolve(eq3, hint=hint) in (sol3, sol3s)
@@ -2282,11 +2302,11 @@ def test_Liouville_ODE():
     sol4 = set([Eq(f(x), sqrt(C1 + C2*exp(x))*exp(-x/2)),
                 Eq(f(x), -sqrt(C1 + C2*exp(x))*exp(-x/2))])
     sol5 = Eq(f(x), log(C1 + C2/x))
-    sol1s = constant_renumber(sol1, 'C', 1, 2)
-    sol2s = constant_renumber(sol2, 'C', 1, 2)
-    sol3s = constant_renumber(sol3, 'C', 1, 2)
-    sol4s = constant_renumber(sol4, 'C', 1, 2)
-    sol5s = constant_renumber(sol5, 'C', 1, 2)
+    sol1s = constant_renumber(sol1)
+    sol2s = constant_renumber(sol2)
+    sol3s = constant_renumber(sol3)
+    sol4s = constant_renumber(sol4)
+    sol5s = constant_renumber(sol5)
     assert dsolve(eq1, hint=hint) in (sol1, sol1s)
     assert dsolve(eq1a, hint=hint) in (sol1, sol1s)
     assert dsolve(eq2, hint=hint) in (sol2, sol2s)
@@ -2314,7 +2334,7 @@ def test_unexpanded_Liouville_ODE():
     eq1 = diff(f(x), x)/x + diff(f(x), x, x)/2 - diff(f(x), x)**2/2
     eq2 = eq1*exp(-f(x))/exp(f(x))
     sol2 = Eq(f(x), log(x/(C1 + C2*x)))
-    sol2s = constant_renumber(sol2, 'C', 1, 2)
+    sol2s = constant_renumber(sol2)
     assert dsolve(eq2) in (sol2, sol2s)
     assert checkodesol(eq2, sol2, order=2, solve_for_func=False)[0]
 
@@ -2352,12 +2372,14 @@ def test_issue_4825():
 def test_constant_renumber_order_issue_5308():
     from sympy.utilities.iterables import variations
 
-    assert constant_renumber(C1*x + C2*y, "C", 1, 2) == \
-        constant_renumber(C1*y + C2*x, "C", 1, 2) == \
+    eq = f(x).diff(x) - y - x
+
+    assert constant_renumber(C1*x + C2*y) == \
+        constant_renumber(C1*y + C2*x) == \
         C1*x + C2*y
     e = C1*(C2 + x)*(C3 + y)
     for a, b, c in variations([C1, C2, C3], 3):
-        assert constant_renumber(a*(b + x)*(c + y), "C", 1, 3) == e
+        assert constant_renumber(a*(b + x)*(c + y)) == e
 
 
 def test_issue_5770():
@@ -2393,21 +2415,21 @@ def test_nth_order_linear_euler_eq_homogeneous():
 
     eq = Eq(-3*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0)
     sol = C1 + C2*x**Rational(5, 2)
-    sols = constant_renumber(sol, 'C', 1, 3)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(3*f(x) - 5*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0)
     sol = C1*sqrt(x) + C2*x**3
-    sols = constant_renumber(sol, 'C', 1, 3)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(4*f(x) + 5*diff(f(x), x)*x + x**2*diff(f(x), x, x), 0)
     sol = (C1 + C2*log(x))/x**2
-    sols = constant_renumber(sol, 'C', 1, 3)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
@@ -2415,14 +2437,14 @@ def test_nth_order_linear_euler_eq_homogeneous():
     eq = Eq(6*f(x) - 6*diff(f(x), x)*x + 1*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0)
     sol = dsolve(eq, f(x), hint=our_hint)
     sol = C1/x**2 + C2*x + C3*x**3
-    sols = constant_renumber(sol, 'C', 1, 4)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(-125*f(x) + 61*diff(f(x), x)*x - 12*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0)
     sol = x**5*(C1 + C2*log(x) + C3*log(x)**2)
-    sols = [sol, constant_renumber(sol, 'C', 1, 4)]
+    sols = [sol, constant_renumber(sol)]
     sols += [sols[-1].expand()]
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in sols
@@ -2430,14 +2452,14 @@ def test_nth_order_linear_euler_eq_homogeneous():
 
     eq = t**2*diff(y(t), t, 2) + t*diff(y(t), t) - 9*y(t)
     sol = C1*t**3 + C2*t**-3
-    sols = constant_renumber(sol, 'C', 1, 3)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, y(t), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) + sin(x)*f(x)
     sol = C1*sin(log(x)) + C2*cos(log(x))
-    sols = constant_renumber(sol, 'C', 1, 3)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
@@ -2456,35 +2478,35 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
 
     eq = Eq(x**2*diff(f(x), x, x) + x*diff(f(x), x), 1)
     sol =  C1 + C2*log(x) + log(x)**2/2
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq, f(x))
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(x**2*diff(f(x), x, x) - 2*x*diff(f(x), x) + 2*f(x), x**3)
     sol = x*(C1 + C2*x + Rational(1, 2)*x**2)
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq, f(x))
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(x**2*diff(f(x), x, x) - x*diff(f(x), x) - 3*f(x), log(x)/x)
     sol =  C1/x + C2*x**3 - Rational(1, 16)*log(x)/x - Rational(1, 8)*log(x)**2/x
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq, f(x))
     assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(x**2*diff(f(x), x, x) + 3*x*diff(f(x), x) - 8*f(x), log(x)**3 - log(x))
     sol = C1/x**4 + C2*x**2 - Rational(1,8)*log(x)**3 - Rational(3,32)*log(x)**2 - Rational(1,64)*log(x) - Rational(7, 256)
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), log(x))
     sol = C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) - Rational(11, 36)
-    sols = constant_renumber(sol, 'C', 1, 3)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
@@ -2503,28 +2525,28 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
 
     eq = Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4)
     sol = C1*x + C2*x**2 + x**4/6
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), x**3*exp(x))
     sol = C1/x**2 + C2*x + x*exp(x)/3 - 4*exp(x)/3 + 8*exp(x)/(3*x) - 8*exp(x)/(3*x**2)
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = Eq(x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x), x**4*exp(x))
     sol = C1*x + C2*x**2 + x**2*exp(x) - 2*x*exp(x)
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
     eq = x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) + 2*f(x) - log(x)
     sol = C1*x + C2*x**2 + log(x)/2 + S(3)/4
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol)
     assert our_hint in classify_ode(eq)
     assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
@@ -3074,6 +3096,26 @@ def test_issue_11290():
     assert checkodesol(eq, sol_1, order=1, solve_for_func=False)
 
 
+def test_issue_4838():
+    # Issue #15999
+    eq = f(x).diff(x) - C1*f(x)
+    sol = Eq(f(x), C2*exp(C1*x))
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=1, solve_for_func=False) == (True, 0)
+
+    # Issue #13691
+    eq = f(x).diff(x) - C1*g(x).diff(x)
+    sol = Eq(f(x), C2 + C1*g(x))
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, f(x), order=1, solve_for_func=False) == (True, 0)
+
+    # Issue #4838
+    eq = f(x).diff(x) - 3*C1 - 3*x**2
+    sol = Eq(f(x), C2 + 3*C1*x + x**3)
+    assert dsolve(eq, f(x)) == sol
+    assert checkodesol(eq, sol, order=1, solve_for_func=False) == (True, 0)
+
+
 @slow
 def test_issue_14395():
     eq = Derivative(f(x), x, x) + 9*f(x) - sec(x)
@@ -3143,14 +3185,14 @@ def test_order_reducible():
 
     eqn = f(x).diff(x, 2) + 2*f(x).diff(x)
     sol = Eq(f(x), C1 + C2*exp(-2*x))
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol)
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
 
     eqn = f(x).diff(x, 3) + f(x).diff(x, 2) - 6*f(x).diff(x)
     sol = Eq(f(x), C1 + C2*exp(-3*x) + C3*exp(2*x))
-    sols = constant_renumber(sol, 'C', 1, 2)
+    sols = constant_renumber(sol)
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
@@ -3158,28 +3200,28 @@ def test_order_reducible():
     eqn = f(x).diff(x, 4) - f(x).diff(x, 3) - 4*f(x).diff(x, 2) + \
         4*f(x).diff(x)
     sol = Eq(f(x), C1 + C2*exp(x) + C3*exp(-2*x) + C4*exp(2*x))
-    sols = constant_renumber(sol, 'C', 1, 4)
+    sols = constant_renumber(sol)
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
 
     eqn = f(x).diff(x, 4) + 3*f(x).diff(x, 3)
     sol = Eq(f(x), C1 + C2*x + C3*x**2 + C4*exp(-3*x))
-    sols = constant_renumber(sol, 'C', 1, 4)
+    sols = constant_renumber(sol)
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
 
     eqn = f(x).diff(x, 4) - 2*f(x).diff(x, 2)
     sol = Eq(f(x), C1 + C2*x + C3*exp(x*sqrt(2)) + C4*exp(-x*sqrt(2)))
-    sols = constant_renumber(sol, 'C', 1, 4)
+    sols = constant_renumber(sol)
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
 
     eqn = f(x).diff(x, 4) + 4*f(x).diff(x, 2)
     sol = Eq(f(x), C1 + C2*sin(2*x) + C3*cos(2*x) + C4*x)
-    sols = constant_renumber(sol, 'C', 1, 4)
+    sols = constant_renumber(sol)
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol, sols)
     assert dsolve(eqn, f(x), hint='order_reducible') in (sol, sols)
@@ -3188,8 +3230,8 @@ def test_order_reducible():
     # These are equivalent:
     sol1 = Eq(f(x), C1 + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
     sol2 = Eq(f(x), C1 + C2*(x*sin(x) + cos(x)) + C3*(-x*cos(x) + sin(x)) + C4*sin(x) + C5*cos(x))
-    sol1s = constant_renumber(sol1, 'C', 1, 5)
-    sol2s = constant_renumber(sol2, 'C', 1, 5)
+    sol1s = constant_renumber(sol1)
+    sol2s = constant_renumber(sol2)
     assert checkodesol(eqn, sol1, order=2, solve_for_func=False) == (True, 0)
     assert checkodesol(eqn, sol2, order=2, solve_for_func=False) == (True, 0)
     assert dsolve(eqn, f(x)) in (sol1, sol1s)
@@ -3246,13 +3288,11 @@ def test_nth_algebraic():
 
 
 def test_nth_algebraic_issue15999():
-    # FIXME: When issue 4838 is resolved this test should be changed...
     eqn = f(x).diff(x) - C1
-    sol1 = Eq(f(x), C1*x + C2) # Correct solution
-    sol2 = Eq(f(x), C2*x + C1) # Incorrect: issue 4838
-    assert checkodesol(eqn, sol1, order=1, solve_for_func=False) == (True, 0)
-    assert dsolve(eqn, f(x), hint='nth_algebraic') == sol2
-    assert dsolve(eqn, f(x)) == sol2
+    sol = Eq(f(x), C1*x + C2) # Correct solution
+    assert checkodesol(eqn, sol, order=1, solve_for_func=False) == (True, 0)
+    assert dsolve(eqn, f(x), hint='nth_algebraic') == sol
+    assert dsolve(eqn, f(x)) == sol
 
 
 def test_nth_algebraic_redundant_solutions():
