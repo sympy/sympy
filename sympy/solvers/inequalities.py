@@ -878,7 +878,7 @@ def _solve_inequality(ie, s, linear=False):
     conds.append(rv)
     return And(*conds)
 
-def _reduce_inequalities(inequalities, symbols):
+def _reduce_inequalities(inequalities, symbols, **flags):
     # helper for reduce_inequalities
 
     poly_part, abs_part = {}, {}
@@ -929,7 +929,7 @@ def _reduce_inequalities(inequalities, symbols):
     return And(*(poly_reduced + abs_reduced + other))
 
 
-def reduce_inequalities(inequalities, symbols=[]):
+def reduce_inequalities(inequalities, symbols=[], **flags):
     """Reduce a system of inequalities with rational coefficients.
 
     Examples
@@ -985,6 +985,18 @@ def reduce_inequalities(inequalities, symbols=[]):
 
     # solve system
     rv = _reduce_inequalities(inequalities, symbols)
+    as_dict = flags.get('dict', False)
 
-    # restore original symbols and return
-    return rv.xreplace({v: k for k, v in recast.items()})
+    # restore original symbols
+    solution = rv.xreplace({v: k for k, v in recast.items()})
+
+    if not as_dict:
+        return solution
+
+    if isinstance(solution, list):
+        solution = [{s.lhs: s.rhs} for s in solution]
+    else:
+        solution = [{solution.lhs: solution.rhs}]
+
+    if as_dict:
+        return solution
