@@ -107,6 +107,26 @@ def test_Xor():
     assert Xor(e, e.canonical) == Xor(0, 0) == Xor(1, 1)
 
 
+def test_rewrite_as_And():
+    expr = x ^ y
+    assert str(expr._rewrite_as_And()) == '(x & ~y) | (y & ~x)'
+
+
+def test_rewrite_as_Or():
+    expr = x ^ y
+    assert str(expr._rewrite_as_Or()) == '(x & ~y) | (y & ~x)'
+
+
+def test_rewrite_as_Nand():
+    expr = (y & z) | (z & ~w)
+    assert str(expr._rewrite_as_Nand()) == '~(~(y & z) & ~(z & ~w))'
+
+
+def test_rewrite_as_Nor():
+    expr = z & (y | ~w)
+    assert str(expr._rewrite_as_Nor()) == '~(~z | ~(y | ~w))'
+
+
 def test_Not():
     raises(TypeError, lambda: Not(True, False))
     assert Not(True) is false

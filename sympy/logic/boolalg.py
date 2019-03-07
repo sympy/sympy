@@ -618,6 +618,12 @@ class And(LatticeOp, BooleanFunction):
         from sympy.sets.sets import Intersection
         return Intersection(*[arg.as_set() for arg in self.args])
 
+    def _rewrite_as_Nor(self):
+        expr = 0
+        for arg in self.args:
+            expr = Or(expr, Not(arg))
+        return Not(expr)
+
 
 class Or(LatticeOp, BooleanFunction):
     """
@@ -670,6 +676,12 @@ class Or(LatticeOp, BooleanFunction):
     def _eval_as_set(self):
         from sympy.sets.sets import Union
         return Union(*[arg.as_set() for arg in self.args])
+
+    def _rewrite_as_Nand(self):
+        expr = 1
+        for arg in self.args:
+            expr = And(expr, Not(arg))
+        return Not(expr)
 
 
 class Not(BooleanFunction):
@@ -894,6 +906,17 @@ class Xor(BooleanFunction):
                 args.append(Or(*clause))
         return And._to_nnf(*args, simplify=simplify)
 
+    def _rewrite_as_And(self):
+        arguments = list(ordered(self._argset))
+        if len(arguments) == 2:
+            return Or(And(Not(arguments[0]), arguments[1]), And(Not(arguments[1]), arguments[0]))
+        else:
+            for i in range(len(arguments)-1):
+                eq = Or(And(Not(arguments[i]), arguments[i+1]), And(Not(arguments[i+1]), arguments[i])).simplify()
+                arguments[i+1] = eq
+        return eq
+
+    _rewrite_as_Or = _rewrite_as_And
 
 class Nand(BooleanFunction):
     """
