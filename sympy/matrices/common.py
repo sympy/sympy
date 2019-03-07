@@ -745,6 +745,20 @@ class MatrixSpecial(MatrixRequired):
 
         dict_sizes = []
         diag_rows = diag_cols = 0
+        newargs = []
+        nosize = 0
+        for a in args:
+            if newargs and all(isinstance(i, dict) and 'size' not in i for i in (a, newargs[-1])):
+                newargs[-1].update(a)
+            else:
+                newargs.append(a)
+                if isinstance(a, dict) and 'size' not in a:
+                    nosize += 1
+        if nosize > 1:
+            raise ValueError(filldedent('''
+                non-contiguous dictionaries must have a size specified,
+                e.g. {'size': (rows, cols), ...}'''))
+        args = newargs
         for m in args:
             s = r, c = size(m)
             if isinstance(m, dict):
@@ -798,7 +812,7 @@ class MatrixSpecial(MatrixRequired):
                         dict-specified diagonal index out of range'''))
                     d = 0
                     dlen = d + 1
-                    while (r_p < diag_rows and c_p < diag_cols and d <= dlen):
+                    while (r_p < diag_rows and c_p < diag_cols and (d < dlen or len(args) == 1)):
                         dlen = min(rmax - r_p + 1, cmax - c_p + 1)
                         if(isinstance(value, list)):
                             if(len(value) != dlen):
