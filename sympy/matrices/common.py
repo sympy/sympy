@@ -737,11 +737,12 @@ class MatrixSpecial(MatrixRequired):
         The type of the resulting matrix can be affected with the ``cls``
         keyword.
 
-        >>> type(Matrix.diag(1))
-        <class 'sympy.matrices.dense.MutableDenseMatrix'>
+        >>> from sympy.utilities.misc import func_name
         >>> from sympy.matrices import ImmutableMatrix
-        >>> type(Matrix.diag(1, cls=ImmutableMatrix))
-        <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
+        >>> func_name(Matrix.diag(1))
+        'MutableDenseMatrix'
+        >>> func_name(Matrix.diag(1, cls=ImmutableMatrix))
+        'ImmutableDenseMatrix'
         """
 
         klass = kwargs.get('cls', kls)
