@@ -878,7 +878,7 @@ def _solve_inequality(ie, s, linear=False):
     conds.append(rv)
     return And(*conds)
 
-def _reduce_inequalities(inequalities, symbols, **flags):
+def _reduce_inequalities(inequalities, symbols):
     # helper for reduce_inequalities
 
     poly_part, abs_part = {}, {}
@@ -998,5 +998,4 @@ def reduce_inequalities(inequalities, symbols=[], **flags):
     else:
         solution = [{solution.lhs: solution.rhs}]
 
-    if as_dict:
-        return solution
+    return solution
