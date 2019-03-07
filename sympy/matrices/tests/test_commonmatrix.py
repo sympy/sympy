@@ -1162,6 +1162,8 @@ def test_jordan_block():
     raises(ValueError, lambda: SpecialOnlyMatrix.jordan_block(2))
     # non-integral size
     raises(ValueError, lambda: SpecialOnlyMatrix.jordan_block(3.5, 2))
+    # size not specified
+    raises(ValueError, lambda: SpecialOnlyMatrix.jordan_block(eigenvalue=2))
 
     # Deprecated feature
     raises(SymPyDeprecationWarning,
@@ -1183,6 +1185,10 @@ def test_jordan_block():
                 [0, 2, 1],
                 [0, 0, 2],
                 [0, 0, 0]])
+
+    # Using alias keyword
+    assert SpecialOnlyMatrix.jordan_block(size=3, eigenvalue=2) == \
+        SpecialOnlyMatrix.jordan_block(size=3, eigenval=2)
 
 
 # SubspaceOnlyMatrix tests
