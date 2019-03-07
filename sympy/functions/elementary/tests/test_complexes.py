@@ -3,7 +3,7 @@ from sympy import (
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
     Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
-    ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda)
+    ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda, Derivative)
 from sympy.utilities.pytest import XFAIL, raises
 
 
@@ -907,3 +907,9 @@ def test_zero_assumptions():
 
     assert re(nzni).is_zero is False
     assert im(nzni).is_zero is None
+
+def test_issue_15893():
+    f = Function('f', real=True)
+    x = Symbol('x', real=True)
+    eq = Derivative(Abs(f(x)), f(x))
+    assert eq.doit() == sign(f(x))

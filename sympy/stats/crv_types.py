@@ -108,7 +108,7 @@ __all__ = ['ContinuousRV',
 
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
-    Create a Continuous Random Variable given the following:
+    Creates a Continuous Random Variable given the following:
 
     -- a symbol
     -- a probability density function
@@ -117,7 +117,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     Returns a RandomSymbol.
 
     Many common continuous random variable types are already implemented.
-    This function should be necessary only very rarely.
+    This function should be needed very rarely.
 
     Examples
     ========
@@ -175,14 +175,14 @@ class ArcsinDistribution(SingleContinuousDistribution):
 
 def Arcsin(name, a=0, b=1):
     r"""
-    Create a Continuous Random Variable with an arcsin distribution.
+    Creates a Continuous Random Variable with Arcsine distribution.
 
-    The density of the arcsin distribution is given by
+    The density of the Arcsine distribution is given by
 
     .. math::
         f(x) := \frac{1}{\pi\sqrt{(x-a)(b-x)}}
 
-    with :math:`x \in [a,b]`. It must hold that :math:`-\infty < a < b < \infty`.
+    with :math:`x \in (a,b)`. It must hold that :math:`-\infty < a < b < \infty`.
 
     Parameters
     ==========
@@ -232,6 +232,12 @@ def Arcsin(name, a=0, b=1):
 class BeniniDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'beta', 'sigma')
 
+    @staticmethod
+    def check(alpha, beta, sigma):
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
+        _value_check(sigma > 0, "Scale parameter Sigma must be positive.")
+
     @property
     def set(self):
         return Interval(self.sigma, oo)
@@ -247,7 +253,7 @@ class BeniniDistribution(SingleContinuousDistribution):
 
 def Benini(name, alpha, beta, sigma):
     r"""
-    Create a Continuous Random Variable with a Benini distribution.
+    Creates a Continuous Random Variable with Benini distribution.
 
     The density of the Benini distribution is given by
 
@@ -274,7 +280,7 @@ def Benini(name, alpha, beta, sigma):
     Examples
     ========
 
-    >>> from sympy.stats import Benini, density
+    >>> from sympy.stats import Benini, density, cdf
     >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
@@ -291,6 +297,11 @@ def Benini(name, alpha, beta, sigma):
     |alpha             \sigma/|             \sigma/             \sigma/
     |----- + -----------------|*e
     \  z             z        /
+
+    >>> cdf(X)(z)
+    Piecewise((1 - exp(-alpha*log(z/sigma) - beta*log(z/sigma)**2), sigma <= z),
+            (0, True))
+
 
     References
     ==========
@@ -313,8 +324,8 @@ class BetaDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(alpha, beta):
-        _value_check(alpha > 0, "Alpha must be positive")
-        _value_check(beta > 0, "Beta must be positive")
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
 
     def pdf(self, x):
         alpha, beta = self.alpha, self.beta
@@ -331,7 +342,7 @@ class BetaDistribution(SingleContinuousDistribution):
 
 def Beta(name, alpha, beta):
     r"""
-    Create a Continuous Random Variable with a Beta distribution.
+    Creates a Continuous Random Variable with Beta distribution.
 
     The density of the Beta distribution is given by
 
@@ -343,10 +354,8 @@ def Beta(name, alpha, beta):
     Parameters
     ==========
 
-    alpha : real positive
-        A shape
-    beta : real positive
-        A shape
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
 
     Returns
     =======
@@ -357,7 +366,7 @@ def Beta(name, alpha, beta):
     ========
 
     >>> from sympy.stats import Beta, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint, expand_func
+    >>> from sympy import Symbol, simplify, pprint, factor
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
@@ -372,10 +381,10 @@ def Beta(name, alpha, beta):
     --------------------------
           B(alpha, beta)
 
-    >>> expand_func(simplify(E(X, meijerg=True)))
+    >>> simplify(E(X))
     alpha/(alpha + beta)
 
-    >>> simplify(variance(X, meijerg=True))  #doctest: +SKIP
+    >>> factor(simplify(variance(X)))  #doctest: +SKIP
     alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
 
     References
@@ -395,6 +404,11 @@ def Beta(name, alpha, beta):
 class BetaPrimeDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'beta')
 
+    @staticmethod
+    def check(alpha, beta):
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
+
     set = Interval(0, oo)
 
     def pdf(self, x):
@@ -403,7 +417,7 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
 
 def BetaPrime(name, alpha, beta):
     r"""
-    Create a continuous random variable with a Beta prime distribution.
+    Creates a Continuous Random Variable with Beta prime distribution.
 
     The density of the Beta prime distribution is given by
 
@@ -459,6 +473,10 @@ def BetaPrime(name, alpha, beta):
 class CauchyDistribution(SingleContinuousDistribution):
     _argnames = ('x0', 'gamma')
 
+    @staticmethod
+    def check(x0, gamma):
+        _value_check(gamma > 0, "Scale parameter Gamma must be positive.")
+
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
@@ -471,21 +489,18 @@ class CauchyDistribution(SingleContinuousDistribution):
 
 def Cauchy(name, x0, gamma):
     r"""
-    Create a continuous random variable with a Cauchy distribution.
+    Creates a Continuous Random Variable with Cauchy distribution.
 
     The density of the Cauchy distribution is given by
 
     .. math::
-        f(x) := \frac{1}{\pi} \arctan\left(\frac{x-x_0}{\gamma}\right)
-                +\frac{1}{2}
+        f(x) := \frac{1}{\pi \gamma [1 + {(\frac{x-x_0}{\gamma})}^2]}
 
     Parameters
     ==========
 
-    x0 : real
-        The location
-    gamma : real positive
-        The scale
+    x0 : Real number, the location
+    gamma : Real number, `\gamma > 0`, a scale
 
     Returns
     =======
@@ -524,6 +539,11 @@ def Cauchy(name, x0, gamma):
 class ChiDistribution(SingleContinuousDistribution):
     _argnames = ('k',)
 
+    @staticmethod
+    def check(k):
+        _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
+
     set = Interval(0, oo)
 
     def pdf(self, x):
@@ -547,7 +567,7 @@ class ChiDistribution(SingleContinuousDistribution):
 
 def Chi(name, k):
     r"""
-    Create a continuous random variable with a Chi distribution.
+    Creates a Continuous Random Variable with Chi distribution.
 
     The density of the Chi distribution is given by
 
@@ -559,8 +579,7 @@ def Chi(name, k):
     Parameters
     ==========
 
-    k : positive integer
-        The number of degrees of freedom
+    k : Positive integer, The number of degrees of freedom
 
     Returns
     =======
@@ -570,7 +589,7 @@ def Chi(name, k):
     Examples
     ========
 
-    >>> from sympy.stats import Chi, density, E, std
+    >>> from sympy.stats import Chi, density, E
     >>> from sympy import Symbol, simplify
 
     >>> k = Symbol("k", integer=True)
@@ -580,6 +599,9 @@ def Chi(name, k):
 
     >>> density(X)(z)
     2**(1 - k/2)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
+
+    >>> simplify(E(X))
+    sqrt(2)*gamma(k/2 + 1/2)/gamma(k/2)
 
     References
     ==========
@@ -598,6 +620,12 @@ def Chi(name, k):
 class ChiNoncentralDistribution(SingleContinuousDistribution):
     _argnames = ('k', 'l')
 
+    @staticmethod
+    def check(k, l):
+        _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
+        _value_check(l > 0, "Shift parameter Lambda must be positive.")
+
     set = Interval(0, oo)
 
     def pdf(self, x):
@@ -606,9 +634,9 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
 
 def ChiNoncentral(name, k, l):
     r"""
-    Create a continuous random variable with a non-central Chi distribution.
+    Creates a Continuous Random Variable with Non-central Chi distribution.
 
-    The density of the non-central Chi distribution is given by
+    The density of the Non-central Chi distribution is given by
 
     .. math::
         f(x) := \frac{e^{-(x^2+\lambda^2)/2} x^k\lambda}
@@ -621,7 +649,7 @@ def ChiNoncentral(name, k, l):
     ==========
 
     k : A positive Integer, `k > 0`, the number of degrees of freedom
-    l : Shift parameter
+    lambda : Real number, `\lambda > 0`, Shift parameter
 
     Returns
     =======
@@ -631,8 +659,8 @@ def ChiNoncentral(name, k, l):
     Examples
     ========
 
-    >>> from sympy.stats import ChiNoncentral, density, E, std
-    >>> from sympy import Symbol, simplify
+    >>> from sympy.stats import ChiNoncentral, density
+    >>> from sympy import Symbol
 
     >>> k = Symbol("k", integer=True)
     >>> l = Symbol("l")
@@ -658,6 +686,11 @@ def ChiNoncentral(name, k, l):
 class ChiSquaredDistribution(SingleContinuousDistribution):
     _argnames = ('k',)
 
+    @staticmethod
+    def check(k):
+        _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
+
     set = Interval(0, oo)
 
     def pdf(self, x):
@@ -679,7 +712,7 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
 
 def ChiSquared(name, k):
     r"""
-    Create a continuous random variable with a Chi-squared distribution.
+    Creates a Continuous Random Variable with Chi-squared distribution.
 
     The density of the Chi-squared distribution is given by
 
@@ -692,8 +725,7 @@ def ChiSquared(name, k):
     Parameters
     ==========
 
-    k : positive integer
-        The number of degrees of freedom
+    k : Positive integer, The number of degrees of freedom
 
     Returns
     =======
@@ -703,8 +735,8 @@ def ChiSquared(name, k):
     Examples
     ========
 
-    >>> from sympy.stats import ChiSquared, density, E, variance
-    >>> from sympy import Symbol, simplify, gammasimp, expand_func
+    >>> from sympy.stats import ChiSquared, density, E, variance, moment
+    >>> from sympy import Symbol
 
     >>> k = Symbol("k", integer=True, positive=True)
     >>> z = Symbol("z")
@@ -714,11 +746,14 @@ def ChiSquared(name, k):
     >>> density(X)(z)
     2**(-k/2)*z**(k/2 - 1)*exp(-z/2)/gamma(k/2)
 
-    >>> gammasimp(E(X))
+    >>> E(X)
     k
 
-    >>> simplify(expand_func(variance(X)))
+    >>> variance(X)
     2*k
+
+    >>> moment(X, 3)
+    k**3 + 6*k**2 + 8*k
 
     References
     ==========
@@ -736,6 +771,12 @@ def ChiSquared(name, k):
 class DagumDistribution(SingleContinuousDistribution):
     _argnames = ('p', 'a', 'b')
 
+    @staticmethod
+    def check(p, a, b):
+        _value_check(p > 0, "Shape parameter p must be positive.")
+        _value_check(a > 0, "Shape parameter a must be positive.")
+        _value_check(b > 0, "Scale parameter b must be positive.")
+
     def pdf(self, x):
         p, a, b = self.p, self.a, self.b
         return a*p/x*((x/b)**(a*p)/(((x/b)**a + 1)**(p + 1)))
@@ -747,7 +788,7 @@ class DagumDistribution(SingleContinuousDistribution):
 
 def Dagum(name, p, a, b):
     r"""
-    Create a continuous random variable with a Dagum distribution.
+    Creates a Continuous Random Variable with Dagum distribution.
 
     The density of the Dagum distribution is given by
 
@@ -773,11 +814,11 @@ def Dagum(name, p, a, b):
     ========
 
     >>> from sympy.stats import Dagum, density, cdf
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol
 
     >>> p = Symbol("p", positive=True)
-    >>> b = Symbol("b", positive=True)
     >>> a = Symbol("a", positive=True)
+    >>> b = Symbol("b", positive=True)
     >>> z = Symbol("z")
 
     >>> X = Dagum("x", p, a, b)
@@ -804,7 +845,7 @@ def Dagum(name, p, a, b):
 
 def Erlang(name, k, l):
     r"""
-    Create a continuous random variable with an Erlang distribution.
+    Creates a Continuous Random Variable with Erlang distribution.
 
     The density of the Erlang distribution is given by
 
@@ -816,7 +857,7 @@ def Erlang(name, k, l):
     Parameters
     ==========
 
-    k : Integer
+    k : Positive integer
     l : Real number, `\lambda > 0`, the rate
 
     Returns
@@ -843,17 +884,16 @@ def Erlang(name, k, l):
     ---------------
         Gamma(k)
 
-    >>> C = cdf(X, meijerg=True)(z)
+    >>> C = cdf(X)(z)
     >>> pprint(C, use_unicode=False)
-    /   -2*I*pi*k
-    |k*e         *lowergamma(k, l*z)
-    |-------------------------------  for z >= 0
-    <          Gamma(k + 1)
+    /lowergamma(k, l*z)
+    |------------------  for z > 0
+    <     Gamma(k)
     |
-    |               0                 otherwise
-    \
+    \        0           otherwise
 
-    >>> simplify(E(X))
+
+    >>> E(X)
     k/l
 
     >>> simplify(variance(X))
