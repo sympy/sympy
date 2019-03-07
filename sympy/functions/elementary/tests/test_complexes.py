@@ -5,6 +5,7 @@ from sympy import (
     Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
     ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda, Derivative)
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.core.expr import unchanged
 
 
 def N_equals(a, b):
@@ -32,7 +33,7 @@ def test_re():
     assert re(E) == E
     assert re(-E) == -E
 
-    assert re(x) == re(x)
+    assert unchanged(re, x)
     assert re(x*I) == -im(x)
     assert re(r*I) == 0
     assert re(r) == r
@@ -128,7 +129,7 @@ def test_im():
     assert im(E*I) == E
     assert im(-E*I) == -E
 
-    assert im(x) == im(x)
+    assert unchanged(im, x)
     assert im(x*I) == re(x)
     assert im(r*I) == r
     assert im(r) == 0
