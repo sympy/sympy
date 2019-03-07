@@ -679,7 +679,7 @@ class Beam(object):
         self._hinge_beam_slope = slope_1*SingularityFunction(x, 0, 0) - slope_1*SingularityFunction(x, l, 0) + slope_2*SingularityFunction(x, l, 0)
         self._hinge_beam_deflection = def_1*SingularityFunction(x, 0, 0) - def_1*SingularityFunction(x, l, 0) + def_2*SingularityFunction(x, l, 0)
 
-    def solve_for_reaction_loads(self, *reactions):
+    def solve_for_reaction_loads(self, *reactions, value=None):
         """
         Solves for the reaction forces.
 
@@ -723,13 +723,13 @@ class Beam(object):
         C3 = Symbol('C3')
         C4 = Symbol('C4')
 
-        shear_curve = limit(self.shear_force(), x, l)
-        moment_curve = limit(self.bending_moment(), x, l)
+        shear_curve = limit(self.shear_force(value), x, l)
+        moment_curve = limit(self.bending_moment(value), x, l)
 
         slope_eqs = []
         deflection_eqs = []
 
-        slope_curve = integrate(self.bending_moment(), x) + C3
+        slope_curve = integrate(self.bending_moment(value), x) + C3
         for position, value in self._boundary_conditions['slope']:
             eqs = slope_curve.subs(x, position) - value
             slope_eqs.append(eqs)
@@ -746,7 +746,7 @@ class Beam(object):
         self._reaction_loads = dict(zip(reactions, solution))
         self._load = self._load.subs(self._reaction_loads)
 
-    def shear_force(self):
+    def shear_force(self, value=None):
         """
         Returns a Singularity Function expression which represents
         the shear force curve of the Beam object.
@@ -776,15 +776,19 @@ class Beam(object):
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.shear_force()
         -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
+        >>> b.shear_force(15)
+        -2
         """
         x = self.variable
+        if value != None:
+            return integrate(self.load, x).subs(x, value)
         return integrate(self.load, x)
 
-    def max_shear_force(self):
+    def max_shear_force(self, value=None):
         """Returns maximum Shear force and its coordinate
         in the Beam object."""
         from sympy import solve, Mul, Interval
-        shear_curve = self.shear_force()
+        shear_curve = self.shear_force(value)
         x = self.variable
 
         terms = shear_curve.args
@@ -832,7 +836,7 @@ class Beam(object):
         point = intervals[shear_values.index(maximum_shear)]
         return (point, maximum_shear)
 
-    def bending_moment(self):
+    def bending_moment(self, value=None):
         """
         Returns a Singularity Function expression which represents
         the bending moment curve of the Beam object.
@@ -862,15 +866,19 @@ class Beam(object):
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.bending_moment()
         -8*SingularityFunction(x, 0, 1) + 6*SingularityFunction(x, 10, 1) + 120*SingularityFunction(x, 30, 0) + 2*SingularityFunction(x, 30, 1)
+        >>> b.bending_moment(15)
+        -30
         """
         x = self.variable
-        return integrate(self.shear_force(), x)
+        if value != None:
+            return integrate(self.shear_force(value), x).subs(x, value)
+        return integrate(self.shear_force(value), x)
 
-    def max_bmoment(self):
+    def max_bmoment(self, value=None):
         """Returns maximum Shear force and its coordinate
         in the Beam object."""
         from sympy import solve, Mul, Interval
-        bending_curve = self.bending_moment()
+        bending_curve = self.bending_moment(value)
         x = self.variable
 
         terms = bending_curve.args
@@ -888,7 +896,7 @@ class Beam(object):
             if s == 0:
                 continue
             try:
-                moment_slope = Piecewise((float("nan"), x<=singularity[i-1]),(self.shear_force().rewrite(Piecewise), x<s), (float("nan"), True))
+                moment_slope = Piecewise((float("nan"), x<=singularity[i-1]),(self.shear_force(value).rewrite(Piecewise), x<s), (float("nan"), True))
                 points = solve(moment_slope, x)
                 val = []
                 for point in points:
@@ -918,7 +926,7 @@ class Beam(object):
         point = intervals[moment_values.index(maximum_moment)]
         return (point, maximum_moment)
 
-    def point_cflexure(self):
+    def point_cflexure(self, value=None):
         """
         Returns a Set of point(s) with zero bending moment and
         where bending moment curve of the beam object changes
@@ -953,14 +961,14 @@ class Beam(object):
 
         # To restrict the range within length of the Beam
         moment_curve = Piecewise((float("nan"), self.variable<=0),
-                (self.bending_moment(), self.variable<self.length),
+                (self.bending_moment(value), self.variable<self.length),
                 (float("nan"), True))
 
         points = solve(moment_curve.rewrite(Piecewise), self.variable,
                         domain=S.Reals)
         return points
 
-    def slope(self):
+    def slope(self, value=None):
         """
         Returns a Singularity Function expression which represents
         the slope the elastic curve of the Beam object.
@@ -991,6 +999,8 @@ class Beam(object):
         >>> b.slope()
         (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
+        >>> b.slope(15)
+        (600 - 30*x)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -999,7 +1009,7 @@ class Beam(object):
         if self._composite_type == "hinge":
             return self._hinge_beam_slope
         if not self._boundary_conditions['slope']:
-            return diff(self.deflection(), x)
+            return diff(self.deflection(value), x)
         if isinstance(I, Piecewise) and self._composite_type == "fixed":
             args = I.args
             slope = 0
@@ -1009,7 +1019,7 @@ class Beam(object):
             for i in range(len(args)):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
-                slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                slope_value = S(1)/E*integrate(self.bending_moment(value)/args[i][0], (x, prev_end, x))
                 if i != len(args) - 1:
                     slope += (prev_slope + slope_value)*SingularityFunction(x, prev_end, 0) - \
                         (prev_slope + slope_value)*SingularityFunction(x, args[i][1].args[1], 0)
@@ -1019,7 +1029,7 @@ class Beam(object):
             return slope
 
         C3 = Symbol('C3')
-        slope_curve = integrate(S(1)/(E*I)*self.bending_moment(), x) + C3
+        slope_curve = integrate(S(1)/(E*I)*self.bending_moment(value), x) + C3
 
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
@@ -1029,7 +1039,7 @@ class Beam(object):
         slope_curve = slope_curve.subs({C3: constants[0][0]})
         return slope_curve
 
-    def deflection(self):
+    def deflection(self, value=None):
         """
         Returns a Singularity Function expression which represents
         the elastic curve or deflection of the Beam object.
@@ -1060,6 +1070,8 @@ class Beam(object):
         >>> b.deflection()
         (4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
             + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
+        >>> b.deflection(15)
+        (-15*x**2 + 600*x - 4500)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -1077,7 +1089,7 @@ class Beam(object):
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = S(1)/E*integrate(self.bending_moment(value)/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1090,11 +1102,11 @@ class Beam(object):
                 return deflection
             base_char = self._base_char
             constants = symbols(base_char + '3:5')
-            return S(1)/(E*I)*integrate(integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
+            return S(1)/(E*I)*integrate(integrate(self.bending_moment(value), x), x) + constants[0]*x + constants[1]
         elif not self._boundary_conditions['deflection']:
             base_char = self._base_char
             constant = symbols(base_char + '4')
-            return integrate(self.slope(), x) + constant
+            return integrate(self.slope(value), x) + constant
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
             if isinstance(I, Piecewise) and self._composite_type == "fixed":
                 args = I.args
@@ -1106,7 +1118,7 @@ class Beam(object):
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = S(1)/E*integrate(self.bending_moment(value)/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1119,7 +1131,7 @@ class Beam(object):
                 return deflection
             base_char = self._base_char
             C3, C4 = symbols(base_char + '3:5')    # Integration constants
-            slope_curve = integrate(self.bending_moment(), x) + C3
+            slope_curve = integrate(self.bending_moment(value), x) + C3
             deflection_curve = integrate(slope_curve, x) + C4
             bc_eqs = []
             for position, value in self._boundary_conditions['deflection']:
@@ -1139,7 +1151,7 @@ class Beam(object):
             for i in range(len(args)):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
-                slope_value = S(1)/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                slope_value = S(1)/E*integrate(self.bending_moment(value)/args[i][0], (x, prev_end, x))
                 recent_segment_slope = prev_slope + slope_value
                 deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                 if i != len(args) - 1:
@@ -1152,7 +1164,7 @@ class Beam(object):
             return deflection
 
         C4 = Symbol('C4')
-        deflection_curve = integrate(self.slope(), x) + C4
+        deflection_curve = integrate(self.slope(value), x) + C4
 
         bc_eqs = []
         for position, value in self._boundary_conditions['deflection']:
@@ -1163,7 +1175,7 @@ class Beam(object):
         deflection_curve = deflection_curve.subs({C4: constants[0][0]})
         return deflection_curve
 
-    def max_deflection(self):
+    def max_deflection(self, value=None):
         """
         Returns point of max deflection and its coresponding deflection value
         in a Beam object.
@@ -1172,12 +1184,12 @@ class Beam(object):
 
         # To restrict the range within length of the Beam
         slope_curve = Piecewise((float("nan"), self.variable<=0),
-                (self.slope(), self.variable<self.length),
+                (self.slope(value), self.variable<self.length),
                 (float("nan"), True))
 
         points = solve(slope_curve.rewrite(Piecewise), self.variable,
                         domain=S.Reals)
-        deflection_curve = self.deflection()
+        deflection_curve = self.deflection(value)
         deflections = [deflection_curve.subs(self.variable, x) for x in points]
         deflections = list(map(abs, deflections))
         if len(deflections) != 0:
@@ -1186,7 +1198,7 @@ class Beam(object):
         else:
             return None
 
-    def plot_shear_force(self, subs=None):
+    def plot_shear_force(self, subs=None, value=None):
         """
         Returns a plot for Shear force present in the Beam object.
 
@@ -1223,7 +1235,7 @@ class Beam(object):
         + 10000*SingularityFunction(x, 4, 1) - 31250*SingularityFunction(x, 8, 0)
         - 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
         """
-        shear_force = self.shear_force()
+        shear_force = self.shear_force(value)
         if subs is None:
             subs = {}
         for sym in shear_force.atoms(Symbol):
@@ -1238,7 +1250,7 @@ class Beam(object):
         return plot(shear_force.subs(subs), (self.variable, 0, length), title='Shear Force',
                 xlabel='position', ylabel='Value', line_color='g')
 
-    def plot_bending_moment(self, subs=None):
+    def plot_bending_moment(self, subs=None, value=None):
         """
         Returns a plot for Bending moment present in the Beam object.
 
@@ -1275,7 +1287,7 @@ class Beam(object):
         + 5000*SingularityFunction(x, 4, 2) - 31250*SingularityFunction(x, 8, 1)
         - 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
         """
-        bending_moment = self.bending_moment()
+        bending_moment = self.bending_moment(value)
         if subs is None:
             subs = {}
         for sym in bending_moment.atoms(Symbol):
@@ -1290,7 +1302,7 @@ class Beam(object):
         return plot(bending_moment.subs(subs), (self.variable, 0, length), title='Bending Moment',
                 xlabel='position', ylabel='Value', line_color='b')
 
-    def plot_slope(self, subs=None):
+    def plot_slope(self, subs=None, value=None):
         """
         Returns a plot for slope of deflection curve of the Beam object.
 
@@ -1327,7 +1339,7 @@ class Beam(object):
         + 2.08333333333333e-5*SingularityFunction(x, 4, 3) - 0.0001953125*SingularityFunction(x, 8, 2)
         - 2.08333333333333e-5*SingularityFunction(x, 8, 3) + 0.00138541666666667 for x over (0.0, 8.0)
         """
-        slope = self.slope()
+        slope = self.slope(value)
         if subs is None:
             subs = {}
         for sym in slope.atoms(Symbol):
@@ -1342,7 +1354,7 @@ class Beam(object):
         return plot(slope.subs(subs), (self.variable, 0, length), title='Slope',
                 xlabel='position', ylabel='Value', line_color='m')
 
-    def plot_deflection(self, subs=None):
+    def plot_deflection(self, subs=None, value=None):
         """
         Returns a plot for deflection curve of the Beam object.
 
@@ -1380,7 +1392,7 @@ class Beam(object):
         - 6.51041666666667e-5*SingularityFunction(x, 8, 3) - 5.20833333333333e-6*SingularityFunction(x, 8, 4)
         for x over (0.0, 8.0)
         """
-        deflection = self.deflection()
+        deflection = self.deflection(value)
         if subs is None:
             subs = {}
         for sym in deflection.atoms(Symbol):
@@ -1397,7 +1409,7 @@ class Beam(object):
                     line_color='r')
 
     @doctest_depends_on(modules=('numpy', 'matplotlib',))
-    def plot_loading_results(self, subs=None):
+    def plot_loading_results(self, subs=None, value=None):
         """
         Returns Axes object containing subplots of Shear Force, Bending Moment,
         Slope and Deflection of the Beam object.
@@ -1448,7 +1460,7 @@ class Beam(object):
         variable = self.variable
         if subs is None:
             subs = {}
-        for sym in self.deflection().atoms(Symbol):
+        for sym in self.deflection(value).atoms(Symbol):
             if sym == self.variable:
                 continue
             if sym not in subs:
@@ -1461,15 +1473,15 @@ class Beam(object):
         # As we are using matplotlib directly in this method, we need to change
         # SymPy methods to numpy functions.
         shear = lambdify(variable,
-                         self.shear_force().subs(subs).rewrite(Piecewise),
+                         self.shear_force(value).subs(subs).rewrite(Piecewise),
                          'numpy')
         moment = lambdify(variable,
-                          self.bending_moment().subs(subs).rewrite(Piecewise),
+                          self.bending_moment(value).subs(subs).rewrite(Piecewise),
                           'numpy')
-        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise),
+        slope = lambdify(variable, self.slope(value).subs(subs).rewrite(Piecewise),
                          'numpy')
         deflection = lambdify(variable,
-                              self.deflection().subs(subs).rewrite(Piecewise),
+                              self.deflection(value).subs(subs).rewrite(Piecewise),
                               'numpy')
 
         points = linspace(0, float(length), num=100*length)
@@ -1815,7 +1827,7 @@ class Beam3D(Beam):
         """
         return self.shear_force()[0]
 
-    def bending_moment(self):
+    def bending_moment(self, value=None):
         """
         Returns a list of three expressions which represents the bending moment
         curve of the Beam object along all three axes.
