@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import pi, oo
+from sympy import pi, oo, Wild, Basic
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.compatibility import is_sequence
@@ -14,6 +14,7 @@ from sympy.functions.elementary.trigonometric import sin, cos, sinc
 from sympy.series.series_class import SeriesBase
 from sympy.series.sequences import SeqFormula
 from sympy.sets.sets import Interval
+from sympy.simplify.fu import TR8, TR2, TR1, TR10, sincos_to_sum
 
 
 def fourier_cos_seq(func, limits, n):
@@ -59,9 +60,9 @@ def _process_limits(func, limits):
     """
     def _find_x(func):
         free = func.free_symbols
-        if len(func.free_symbols) == 1:
+        if len(free) == 1:
             return free.pop()
-        elif len(func.free_symbols) == 0:
+        elif not free:
             return Dummy('k')
         else:
             raise ValueError(
@@ -88,6 +89,37 @@ def _process_limits(func, limits):
         raise ValueError("Both the start and end value should be bounded")
 
     return sympify((x, start, stop))
+
+
+def finite_check(f, x, L):
+
+    def check_fx(exprs, x):
+        return x not in exprs.free_symbols
+
+    def check_sincos(expr, x, L):
+        if type(expr) == sin or type(expr) == cos:
+            sincos_args = expr.args[0]
+
+            if sincos_args.match(a*(pi/L)*x + b) is not None:
+                return True
+            else:
+                return False
+
+    expr = sincos_to_sum(TR2(TR1(f)))
+    res_expr = S.Zero
+    add_coeff = expr.as_coeff_add()
+    res_expr += add_coeff[0]
+
+    a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k != S.Zero, ])
+    b = Wild('b', properties=[lambda k: x not in k.free_symbols or k == S.Zero, ])
+
+    for s in add_coeff[1]:
+        mul_coeffs = s.as_coeff_mul()[1]
+        for t in mul_coeffs:
+            if not (check_fx(t, x) or check_sincos(t, x, L)):
+                return False, f
+        res_expr += TR10(s)
+    return True, res_expr.collect([sin(a*(pi/L)*x), cos(a*(pi/L)*x)])
 
 
 class FourierSeries(SeriesBase):
@@ -408,6 +440,15 @@ class FourierSeries(SeriesBase):
         return self.__add__(-other)
 
 
+class FiniteFourierSeries(Basic):
+    def __new__(cls, *args):
+        obj = Basic.__new__(cls, *args)
+        return obj
+
+    def truncate(self, n=3):
+        return Add(*self._args)
+
+
 def fourier_series(f, limits=None):
     """Computes Fourier sine/cosine series expansion.
 
@@ -469,6 +510,12 @@ def fourier_series(f, limits=None):
 
     if x not in f.free_symbols:
         return f
+
+    L = abs(limits[2] - limits[1])/2
+    is_finite, res_f = finite_check(f, x, L)
+
+    if is_finite:
+        return FiniteFourierSeries(res_f)
 
     n = Dummy('n')
     neg_f = f.subs(x, -x)

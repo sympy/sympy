@@ -65,13 +65,8 @@ def test_external_imports():
         if mod in sys.builtin_module_names:
             continue
 
-        # if not hasattr(mod, '__file__'):
-        #     # bad.append(mod)
-        #     continue
-
-        try:
-            fname = sys.modules[mod].__file__
-        except AttributeError:
+        fname = getattr(sys.modules[mod], "__file__", None)
+        if fname is None:
             bad.append(mod)
             continue
 

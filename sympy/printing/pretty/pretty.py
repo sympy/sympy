@@ -41,6 +41,7 @@ class PrettyPrinter(Printer):
         "num_columns": None,
         "use_unicode_sqrt_char": True,
         "root_notation": True,
+        "mat_symbol_style": "plain",
         "imaginary_unit": "i",
     }
 
@@ -75,10 +76,12 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left('atan2'))
         return pform
 
-    def _print_Symbol(self, e):
-        symb = pretty_symbol(e.name)
+    def _print_Symbol(self, e, bold_name=False):
+        symb = pretty_symbol(e.name, bold_name)
         return prettyForm(symb)
     _print_RandomSymbol = _print_Symbol
+    def _print_MatrixSymbol(self, e):
+        return self._print_Symbol(e, self._settings['mat_symbol_style'] == "bold")
 
     def _print_Float(self, e):
         # we will use StrPrinter's Float printer, but we need to handle the
@@ -882,8 +885,6 @@ class PrettyPrinter(Printer):
         return self._print_seq(expr.args, None, None, delim,
                 parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
 
-    _print_MatrixSymbol = _print_Symbol
-
     def _print_FunctionMatrix(self, X):
         D = self._print(X.lamda.expr)
         D = prettyForm(*D.parens('[', ']'))
@@ -1370,11 +1371,13 @@ class PrettyPrinter(Printer):
     def _special_function_classes(self):
         from sympy.functions.special.tensor_functions import KroneckerDelta
         from sympy.functions.special.gamma_functions import gamma, lowergamma
+        from sympy.functions.special.zeta_functions import lerchphi
         from sympy.functions.special.beta_functions import beta
         from sympy.functions.special.delta_functions import DiracDelta
         from sympy.functions.special.error_functions import Chi
         return {KroneckerDelta: [greek_unicode['delta'], 'delta'],
                 gamma: [greek_unicode['Gamma'], 'Gamma'],
+                lerchphi: [greek_unicode['Phi'], 'lerchphi'],
                 lowergamma: [greek_unicode['gamma'], 'gamma'],
                 beta: [greek_unicode['Beta'], 'B'],
                 DiracDelta: [greek_unicode['delta'], 'delta'],
@@ -1393,6 +1396,10 @@ class PrettyPrinter(Printer):
     def _print_GeometryEntity(self, expr):
         # GeometryEntity is based on Tuple but should not print like a Tuple
         return self.emptyPrinter(expr)
+
+    def _print_lerchphi(self, e):
+        func_name = greek_unicode['Phi'] if self._use_unicode else 'lerchphi'
+        return self._print_Function(e, func_name=func_name)
 
     def _print_Lambda(self, e):
         vars, expr = e.args
@@ -1898,9 +1905,10 @@ class PrettyPrinter(Printer):
             _and = 'and'
 
         variables = self._print_seq(Tuple(ts.sym))
-        try:
+        as_expr = getattr(ts.condition, 'as_expr', None)
+        if as_expr is not None:
             cond = self._print(ts.condition.as_expr())
-        except AttributeError:
+        else:
             cond = self._print(ts.condition)
             if self._use_unicode:
                 cond = self._print_seq(cond, "(", ")")
@@ -1956,6 +1964,9 @@ class PrettyPrinter(Printer):
         else:
             dots = '...'
 
+        if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:
+            raise NotImplementedError("Pretty printing of sequences with symbolic bound not implemented")
+
         if s.start is S.NegativeInfinity:
             stop = s.stop
             printset = (dots, s.coeff(stop - 3), s.coeff(stop - 2),
@@ -1985,6 +1996,10 @@ class PrettyPrinter(Printer):
                     # first element
                     s = pform
                 else:
+                    # XXX: Under the tests from #15686 this raises:
+                    # AttributeError: 'Fake' object has no attribute 'baseline'
+                    # This is caught below but that is not the right way to
+                    # fix it.
                     s = prettyForm(*stringPict.next(s, delimiter))
                     s = prettyForm(*stringPict.next(s, pform))
 
@@ -2475,7 +2490,7 @@ def pretty(expr, **settings):
 
 def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
                  full_prec="auto", order=None, use_unicode_sqrt_char=True,
-                 root_notation = True, imaginary_unit="i"):
+                 root_notation = True, mat_symbol_style="plain", imaginary_unit="i"):
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
@@ -2506,9 +2521,13 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
     use_unicode_sqrt_char : bool, optional (default=True)
         Use compact single-character square root symbol (when unambiguous).
 
-    root_notation : bool,optional( default= True)
-        Set to 'False' for printing exponents of the form 1/n in fractional form;
+    root_notation : bool, optional (default=True)
+        Set to 'False' for printing exponents of the form 1/n in fractional form.
         By default exponent is printed in root form.
+
+    mat_symbol_style : string, optional (default="plain")
+        Set to "bold" for printing MatrixSymbols using a bold mathematical symbol face.
+        By default the standard face is used.
 
     imaginary_unit : string, optional (default="i")
         Letter to use for imaginary unit when use_unicode is True.
@@ -2517,7 +2536,8 @@ def pretty_print(expr, wrap_line=True, num_columns=None, use_unicode=None,
     print(pretty(expr, wrap_line=wrap_line, num_columns=num_columns,
                  use_unicode=use_unicode, full_prec=full_prec, order=order,
                  use_unicode_sqrt_char=use_unicode_sqrt_char,
-                 root_notation=root_notation, imaginary_unit=imaginary_unit))
+                 root_notation=root_notation, mat_symbol_style=mat_symbol_style,
+                 imaginary_unit=imaginary_unit))
 
 pprint = pretty_print
 
