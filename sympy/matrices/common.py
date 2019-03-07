@@ -2049,36 +2049,34 @@ class MatrixArithmetic(MatrixRequired):
     def __pow__(self, num):
         if self.rows != self.cols:
             raise NonSquareMatrixError()
-        try:
-            a = self
-            num = sympify(num)
-            if num.is_Number and num % 1 == 0:
-                if a.rows == 1:
-                    return a._new([[a[0]**num]])
-                if num == 0:
-                    return self._new(self.rows, self.cols, lambda i, j: int(i == j))
-                if num < 0:
-                    num = -num
-                    a = a.inv()
-                # When certain conditions are met,
-                # Jordan block algorithm is faster than
-                # computation by recursion.
-                elif a.rows == 2 and num > 100000:
-                    try:
-                        return a._matrix_pow_by_jordan_blocks(num)
-                    except (AttributeError, MatrixError):
-                        pass
-                return a._eval_pow_by_recursion(num)
-            elif not num.is_Number and num.is_negative is None and a.det() == 0:
-                from sympy.matrices.expressions import MatPow
-                return MatPow(a, num)
-            elif isinstance(num, (Expr, float)):
-                return a._matrix_pow_by_jordan_blocks(num)
-            else:
-                raise TypeError(
-                    "Only SymPy expressions or integers are supported as exponent for matrices")
-        except AttributeError:
-            raise TypeError("Don't know how to raise {} to {}".format(self.__class__, num))
+        a = self
+        jordan_pow = getattr(a, '_matrix_pow_by_jordan_blocks', None)
+        num = sympify(num)
+        if num.is_Number and num % 1 == 0:
+            if a.rows == 1:
+                return a._new([[a[0]**num]])
+            if num == 0:
+                return self._new(self.rows, self.cols, lambda i, j: int(i == j))
+            if num < 0:
+                num = -num
+                a = a.inv()
+            # When certain conditions are met,
+            # Jordan block algorithm is faster than
+            # computation by recursion.
+            elif a.rows == 2 and num > 100000 and jordan_pow is not None:
+                try:
+                    return jordan_pow(num)
+                except MatrixError:
+                    pass
+            return a._eval_pow_by_recursion(num)
+        elif not num.is_Number and num.is_negative is None and a.det() == 0:
+            from sympy.matrices.expressions import MatPow
+            return MatPow(a, num)
+        elif isinstance(num, (Expr, float)):
+            return jordan_pow(num)
+        else:
+            raise TypeError(
+                "Only SymPy expressions or integers are supported as exponent for matrices")
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
@@ -2188,12 +2186,9 @@ class _MinimalMatrix(object):
         if isinstance(mat, FunctionType):
             # if we passed in a function, use that to populate the indices
             mat = list(mat(i, j) for i in range(rows) for j in range(cols))
-        try:
-            if cols is None and mat is None:
-                mat = rows
-            rows, cols = mat.shape
-        except AttributeError:
-            pass
+        if cols is None and mat is None:
+            mat = rows
+        rows, cols = getattr(mat, 'shape', (rows, cols))
         try:
             # if we passed in a list of lists, flatten it and set the size
             if cols is None and mat is None:
@@ -2299,9 +2294,10 @@ def _matrixify(mat):
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
     if type(j) is not int:
-        try:
-            j = j.__index__()
-        except AttributeError:
+        jindex = getattr(j, '__index__', None)
+        if jindex is not None:
+            j = jindex()
+        else:
             raise IndexError("Invalid index a[%r]" % (j,))
     if n is not None:
         if j < 0:
@@ -2327,19 +2323,22 @@ def classof(A, B):
     >>> classof(M, IM)
     <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
     """
-    try:
+    priority_A = getattr(A, '_class_priority', None)
+    priority_B = getattr(B, '_class_priority', None)
+    if None not in (priority_A, priority_B):
         if A._class_priority > B._class_priority:
             return A.__class__
         else:
             return B.__class__
-    except AttributeError:
-        pass
+
     try:
         import numpy
+    except ImportError:
+        pass
+    else:
         if isinstance(A, numpy.ndarray):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except (AttributeError, ImportError):
-        pass
+
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))

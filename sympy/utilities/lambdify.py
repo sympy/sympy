@@ -1054,9 +1054,11 @@ class _EvaluatorPrinter(object):
         from sympy.matrices import DeferredVector
         from sympy import sympify
 
-        try:
-            expr = sympify(expr).xreplace(dummies_dict)
-        except AttributeError:
+        expr = sympify(expr)
+        xreplace = getattr(expr, 'xreplace', None)
+        if xreplace is not None:
+            expr = xreplace(dummies_dict)
+        else:
             if isinstance(expr, DeferredVector):
                 pass
             elif isinstance(expr, dict):

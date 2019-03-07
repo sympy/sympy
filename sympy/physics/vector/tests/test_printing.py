@@ -222,28 +222,31 @@ def test_issue_13354():
     assert ascii_vpretty(z) == expected
 
 def test_vector_derivative_printing():
-    # First order tested above
+    # First order
+    v = omega.diff() * N.x
+    assert unicode_vpretty(v) == u('ω̇ n_x')
+    assert ascii_vpretty(v) == u("omega'(t) n_x")
 
     # Second order
     v = omega.diff().diff() * N.x
 
     assert v._latex() == r'\ddot{\omega}\mathbf{\hat{n}_x}'
     assert unicode_vpretty(v) == u('ω̈ n_x')
-    assert ascii_vpretty(v) == u('omëga n_x')
+    assert ascii_vpretty(v) == u("omega''(t) n_x")
 
     # Third order
     v = omega.diff().diff().diff() * N.x
 
     assert v._latex() == r'\dddot{\omega}\mathbf{\hat{n}_x}'
     assert unicode_vpretty(v) == u('ω⃛ n_x')
-    assert ascii_vpretty(v) == u('ome⃛ga n_x')
+    assert ascii_vpretty(v) == u("omega'''(t) n_x")
 
     # Fourth order
     v = omega.diff().diff().diff().diff() * N.x
 
     assert v._latex() == r'\ddddot{\omega}\mathbf{\hat{n}_x}'
     assert unicode_vpretty(v) == u('ω⃜ n_x')
-    assert ascii_vpretty(v) == u('ome⃜ga n_x')
+    assert ascii_vpretty(v) == u("omega''''(t) n_x")
 
     # Fifth order
     v = omega.diff().diff().diff().diff().diff() * N.x

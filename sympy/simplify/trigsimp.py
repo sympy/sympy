@@ -471,10 +471,9 @@ def trigsimp(expr, **opts):
 
     expr = sympify(expr)
 
-    try:
-        return expr._eval_trigsimp(**opts)
-    except AttributeError:
-        pass
+    _eval_trigsimp = getattr(expr, '_eval_trigsimp', None)
+    if _eval_trigsimp is not None:
+        return _eval_trigsimp(**opts)
 
     old = opts.pop('old', False)
     if not old:

@@ -1,6 +1,7 @@
 from __future__ import division, print_function
 
 from sympy.core import Basic, Dict, Integer, S, Tuple, sympify
+from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
@@ -112,6 +113,13 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     def shape(self):
         return tuple(int(i) for i in self.args[:2])
 
+    def is_diagonalizable(self, reals_only=False, **kwargs):
+        return super(DenseMatrix, self).is_diagonalizable(
+            reals_only=reals_only, **kwargs)
+    is_diagonalizable.__doc__ = DenseMatrix.is_diagonalizable.__doc__
+    is_diagonalizable = cacheit(is_diagonalizable)
+
+
 # This is included after the class definition as a workaround for issue 7213.
 # See https://github.com/sympy/sympy/issues/7213
 # the object is non-zero
@@ -169,3 +177,9 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
         return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))
 
     _eval_Eq = ImmutableDenseMatrix._eval_Eq
+
+    def is_diagonalizable(self, reals_only=False, **kwargs):
+        return super(SparseMatrix, self).is_diagonalizable(
+            reals_only=reals_only, **kwargs)
+    is_diagonalizable.__doc__ = SparseMatrix.is_diagonalizable.__doc__
+    is_diagonalizable = cacheit(is_diagonalizable)
