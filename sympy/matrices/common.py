@@ -726,10 +726,19 @@ class MatrixSpecial(MatrixRequired):
         """
 
         klass = kwargs.get('cls', kls)
+        rows = kwargs.get('rows', None)
+        cols = kwargs.get('cols', None)
         # allow a sequence to be passed in as the only argument
         if len(args) == 1 and is_sequence(args[0]) and not getattr(args[0], 'is_Matrix', False):
             args = args[0]
 
+        def size(m):
+            """Compute the size of the diagonal block"""
+            if hasattr(m, 'rows'):
+                return m.rows, m.cols
+            if isinstance(m, dict):
+                return m.get('size', (0, 0))
+            return 1, 1
         def minsize(d):
             r = max(0, -min(d)) + 1
             c = -min(0, -max(d)) + 1
@@ -737,67 +746,79 @@ class MatrixSpecial(MatrixRequired):
                 size = len(d[k]) if type(d[k]) is list else 0
                 r = max(r, abs(k) + size)
                 c = max(c, abs(k) + size)
+            if 'size' in d:
+                R, C = d['size']
+                if r > R or c > C:
+                    raise ValueError(filldedent('''
+                        the dict size is too small
+                        for the given elements'''))
+                r, c = R, C
             return r, c
 
-        def size(m):
-            """Compute the size of the diagonal block"""
-            if hasattr(m, 'rows'):
-                return m.rows, m.cols
-            if isinstance(m, dict):
-                rv = m.pop('size', (kwargs.get('rows'), kwargs.get('cols')))
-                if None in rv:
-                    raise ValueError(filldedent('''
-                        If size is not given in dict the `rows`
-                        and `cols` must be given as args to diag.'''))
-                return rv
-            return 1, 1
-
-        dict_sizes = []
-        diag_rows = diag_cols = 0
+        # collapse contiguous dicts
         newargs = []
-        nosize = 0
-        num_dicts = 0
+        nosize = []
+        i = 0
         for a in args:
             if newargs and all(isinstance(i, dict) and 'size' not in i for i in (a, newargs[-1])):
                 newargs[-1].update(a)
             else:
                 newargs.append(a)
                 if isinstance(a, dict) and 'size' not in a:
-                    nosize += 1
-            if isinstance(a, dict):
-                num_dicts += 1
-        if nosize > 1:
+                    nosize.append(i)
+                i += 1
+        if len(nosize) > 1:
             raise ValueError(filldedent('''
-                non-contiguous dictionaries must have a size specified,
-                e.g. {'size': (rows, cols), ...}'''))
-        args = newargs
-        for m in args:
-            if isinstance(m, dict) and num_dicts == 1:
-                try:
-                    s = r, c = size(m)
-                except:
-                    s = r, c = minsize(m)
-                dict_sizes.append(s)
+                Only one non-contiguous dictionary can have
+                unspecified size. For the others, give the size,
+                e.g. {'size': (rows, cols), ...}.'''))
+        elif nosize:  # length of 1
+            i = nosize[0]
+            if None is (rows, cols):
+                # the unspecified dict will have minimal size
+                dsize = minsize(newargs[i])
             else:
-                s = r, c = size(m)
-                if isinstance(m, dict):
-                    dict_sizes.append(s)
+                # the unspecified dict will take up
+                # the remaining space
+                spec_rows = spec_cols = 0
+                for a in newargs:
+                    r, c = size(a)
+                    spec_rows += r
+                    spec_cols += c
+                rneed = rows - spec_rows
+                cneed = cols - spec_cols
+                r, c = dsize
+                if rneed < 0 or cneed < 0:
+                    # specified sizes are too small but let
+                    # this rise below when diagonal size is calculated
+                    pass
+                elif rneed < r or cneed < c:
+                    raise ValueError(filldedent('''
+                        The minimum size of the dict with no size given
+                        is too big for the specified size of this
+                        matrix.'''))
+                dsize = max(rneed, r), max(cneed, c)
+            newargs[i]['size'] = dsize
+            del nosize
+        args = newargs
+
+        # calculate size needed
+        dict_sizes = []
+        diag_rows = diag_cols = 0
+        for m in args:
+            s = r, c = size(m)
+            if isinstance(m, dict):
+                dict_sizes.append(s)
+                m.pop('size')  # don't need this anymore
             diag_rows += r
             diag_cols += c
-        rows = kwargs.get('rows', diag_rows)
-        cols = kwargs.get('cols', diag_cols)
+        rows = diag_rows if rows is None else rows
+        cols = diag_cols if cols is None else cols
         if rows < diag_rows or cols < diag_cols:
-            if len(dict_sizes) == 1 and len(args) > 1:
-                r, c = dict_sizes[0]
-                dict_sizes = [
-                    (r - (diag_rows - rows), c - (diag_cols - cols))]
-                diag_rows = rows
-                diag_cols = cols
-            else:
-                raise ValueError(filldedent('''
-                    The diagonal elements need a matrix that is {} x {}
-                    but only {} x {} has been specified.'''.format(
-                    diag_rows, diag_cols, rows, cols)))
+            raise ValueError(filldedent('''
+                The diagonal elements need a matrix that is {} x {}
+                but only {} x {} has been specified.'''.format(
+                diag_rows, diag_cols, rows, cols)))
 
         # fill a default dict with the diagonal entries
         diag_entries = defaultdict(lambda: S.Zero)
@@ -820,19 +841,16 @@ class MatrixSpecial(MatrixRequired):
                 # in this case we're a dict
                 ix = lambda r, c: (row_pos + r, col_pos + c)
                 r, c = dict_sizes[ndict]
-                rmax = r - 1
-                cmax = c - 1
+                rmax = r
+                cmax = c
                 for key, value in m.items():
                     key = as_int(key)
                     r_p = 0 if key >= 0 else -key
                     c_p = key if key > 0 else 0
-                    if r_p > rmax or c_p > cmax:
-                        raise ValueError(filldedent('''
-                            dict-specified diagonal index out of range'''))
-                    d = 0
-                    dlen = d + 1
-                    while (r_p < diag_rows and c_p < diag_cols and (d < dlen or len(args) == 1)):
-                        dlen = min(rmax - r_p + 1, cmax - c_p + 1)
+                    d_p = 0
+                    while (r_p < diag_rows and c_p < diag_cols and
+                            r_p < rmax and c_p < cmax):
+                        dlen = min(rmax - r_p, cmax - c_p)
                         if(isinstance(value, list)):
                             if(len(value) != dlen):
                                 raise ValueError(filldedent('''
@@ -847,7 +865,7 @@ class MatrixSpecial(MatrixRequired):
                             if(num_args == 2):
                                 diag_entries[ix(r_p, c_p)] = value(r_p, c_p)
                             elif(num_args == 1):
-                                diag_entries[ix(r_p, c_p)] = value(d)
+                                diag_entries[ix(r_p, c_p)] = value(d_p)
                             else:
                                 raise ValueError(filldedent('''
                                     The functions in dict-described
@@ -856,7 +874,7 @@ class MatrixSpecial(MatrixRequired):
                             diag_entries[ix(r_p, c_p)] = value
                         r_p += 1
                         c_p += 1
-                        d+=1
+                        d_p += 1
                 r, c = dict_sizes[ndict]
                 row_pos += r
                 col_pos += c
