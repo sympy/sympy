@@ -1233,6 +1233,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('&#x2205;'))
         return x
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 66a6fd6dac931b1e25144bd84db0990dab2d3693
     def _print_floor(self, e):
         mrow =  self.dom.createElement('mrow')
         x = self.dom.createElement('mfenced')

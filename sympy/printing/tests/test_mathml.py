@@ -2,7 +2,6 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
     MatrixSymbol, Function, Derivative, log, Lambda, IndexedBase, symbols
-
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.complexes import re, im, Abs, conjugate
 from sympy.functions.elementary.integers import floor, ceiling
