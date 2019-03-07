@@ -1,9 +1,11 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
-    MatrixSymbol, Function, Derivative, log
+    MatrixSymbol, Function, Derivative, log, Lambda
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.complexes import re, im, Abs, conjugate
+from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.elementary.exponential import exp
 from sympy.functions.combinatorial.factorials import factorial, factorial2, binomial
 from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.special.zeta_functions import polylog, lerchphi
@@ -981,6 +983,12 @@ def test_print_domains():
     assert mpp.doprint(Reals) == '<mi mathvariant="normal">&#x211D;</mi>'
 
 
+def test_print_expression_with_minus():
+    assert mpp.doprint(-x) == '<mrow><mo>-</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(-x/y) == '<mrow><mo>-</mo><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow>'
+    assert mpp.doprint(-Rational(1,2)) == '<mrow><mo>-</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow>'
+
+
 def test_print_AssocOp():
     from sympy.core.operations import AssocOp
     class TestAssocOp(AssocOp):
@@ -1070,6 +1078,8 @@ def test_root_notation_print():
     assert mathml(x**(S(1)/3), printer='presentation', root_notation=False) == '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
     assert mathml(x**(S(1)/3), printer='content') == '<apply><root/><degree><ci>3</ci></degree><ci>x</ci></apply>'
     assert mathml(x**(S(1)/3), printer='content', root_notation=False) == '<apply><power/><ci>x</ci><apply><divide/><cn>1</cn><cn>3</cn></apply></apply>'
+    assert mathml(x**(-S(1)/3), printer='presentation') == '<mfrac><mn>1</mn><mroot><mi>x</mi><mn>3</mn></mroot></mfrac>'
+    assert mathml(x**(-S(1)/3), printer='presentation', root_notation=False) == '<mfrac><mn>1</mn><msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup></mfrac>'
 
 
 def test_fold_frac_powers_print():
@@ -1080,10 +1090,10 @@ def test_fold_frac_powers_print():
 
 
 def test_fold_short_frac_print():
-    expr = 1 / y ** 2
-    assert mathml(expr, printer='presentation') == '<msup><mrow><mfenced><mi>y</mi></mfenced></mrow><mn>-2</mn></msup>'
-    assert mathml(expr, printer='presentation', fold_short_frac=True) == '<mfrac bevelled="true"><mn>1</mn><msup><mrow><mfenced><mi>y</mi></mfenced></mrow><mn>2</mn></msup></mfrac>'
-    assert mathml(expr, printer='presentation', fold_short_frac=False) == '<msup><mrow><mfenced><mi>y</mi></mfenced></mrow><mn>-2</mn></msup>'
+    expr = Rational(2, 5)
+    assert mathml(expr, printer='presentation') == '<mfrac><mn>2</mn><mn>5</mn></mfrac>'
+    assert mathml(expr, printer='presentation', fold_short_frac=True) == '<mfrac bevelled="true"><mn>2</mn><mn>5</mn></mfrac>'
+    assert mathml(expr, printer='presentation', fold_short_frac=False) == '<mfrac><mn>2</mn><mn>5</mn></mfrac>'
 
 
 def test_print_factorials():
@@ -1093,6 +1103,23 @@ def test_print_factorials():
     assert mpp.doprint(factorial2(x + 1)) == '<mrow><mfenced><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced><mo>!!</mo></mrow>'
     assert mpp.doprint(binomial(x, y)) == '<mfenced><mfrac linethickness="0"><mi>x</mi><mi>y</mi></mfrac></mfenced>'
     assert mpp.doprint(binomial(4, x + y)) == '<mfenced><mfrac linethickness="0"><mn>4</mn><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow></mfrac></mfenced>'
+
+
+def test_print_floor():
+    expr = floor(x)
+    assert mathml(expr, printer='presentation') == '<mrow><mfenced close="&#8971;" open="&#8970;"><mi>x</mi></mfenced></mrow>'
+
+
+def test_print_ceiling():
+    expr = ceiling(x)
+    assert mathml(expr, printer='presentation') == '<mrow><mfenced close="&#8969;" open="&#8968;"><mi>x</mi></mfenced></mrow>'
+
+
+def test_print_Lambda():
+    expr = Lambda(x, x+1)
+    assert mathml(expr, printer='presentation') == '<mfenced><mrow><mi>x</mi><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mrow></mfenced>'
+    expr = Lambda((x, y), x + y)
+    assert mathml(expr, printer='presentation') == '<mfenced><mrow><mrow><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow></mrow></mfenced>'
 
 
 def test_print_conjugate():

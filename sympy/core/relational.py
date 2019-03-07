@@ -22,12 +22,10 @@ __all__ = (
 
 def _canonical(cond):
     # return a condition in which all relationals are canonical
-    try:
-        reps = dict([(r, r.canonical)
-            for r in cond.atoms(Relational)])
-        return cond.xreplace(reps)
-    except AttributeError:
-        return cond
+    reps = {r: r.canonical for r in cond.atoms(Relational)}
+    return cond.xreplace(reps)
+    # XXX: AttributeError was being caught here but it wasn't triggered by any of
+    # the tests so I've removed it...
 
 
 class Relational(Boolean, Expr, EvalfMixin):
