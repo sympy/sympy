@@ -783,7 +783,7 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_eye(rows, cols)
 
     @classmethod
-    def jordan_block(kls, size=None, eigenvalue=None, band='upper', **kwargs):
+    def jordan_block(kls, size=None, eigenvalue=None, **kwargs):
         """Returns a Jordan block
 
         Parameters
@@ -909,6 +909,7 @@ class MatrixSpecial(MatrixRequired):
             ).warn()
 
         klass = kwargs.pop('cls', kls)
+        band = kwargs.pop('band', 'upper')
         rows = kwargs.pop('rows', None)
         cols = kwargs.pop('cols', None)
 
