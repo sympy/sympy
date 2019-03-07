@@ -2211,8 +2211,12 @@ def odesimp(ode, eq, func, hint):
 
     >>> pprint(odesimp(eq, f(x), 1, {C1},
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
-    ... ))
-    f(x) = 2*x*atan(C1*x)
+    ... )) #doctest: +SKIP
+        x
+    --------- = C1
+       /f(x)\
+    tan|----|
+       \2*x /
 
     """
     x = func.args[0]
