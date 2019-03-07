@@ -1148,3 +1148,10 @@ def test_print_IndexedBase():
     assert mathml(IndexedBase(a)[b,c,d],printer = 'presentation') == '<msub><mi>a</mi><mfenced><mi>b</mi><mi>c</mi><mi>d</mi></mfenced></msub>'
     assert mathml(IndexedBase(a)[b]*IndexedBase(c)[d]*IndexedBase(e),printer = 'presentation') == '<mrow><msub><mi>a</mi><mi>b</mi></msub><mo>&InvisibleTimes;</mo><msub><mi>c</mi><mi>d</mi></msub><mo>&InvisibleTimes;</mo><mi>e</mi></mrow>'
 
+
+def test_print_Indexed():
+    a,b,c = symbols('a b c')
+    assert mathml(IndexedBase(a),printer = 'presentation') == '<mi>a</mi>'
+    assert mathml(IndexedBase(a/b),printer = 'presentation') == '<mrow><mfrac><mi>a</mi><mi>b</mi></mfrac></mrow>'
+    assert mathml(IndexedBase((a,b)),printer = 'presentation') == '<mrow><mfenced><mi>a</mi><mi>b</mi></mfenced></mrow>'
+
