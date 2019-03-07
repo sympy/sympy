@@ -674,16 +674,18 @@ class MatrixSpecial(MatrixRequired):
         ========
 
         >>> from sympy.matrices import Matrix
-        >>> Matrix.diag(1, 2, 3)
+
+        All diagonal elements can be given individually
+        or in a list:
+
+        >>> d123 = Matrix.diag(1, 2, 3)
+        >>> d123
         Matrix([
         [1, 0, 0],
         [0, 2, 0],
         [0, 0, 3]])
-        >>> Matrix.diag([1, 2, 3])
-        Matrix([
-        [1, 0, 0],
-        [0, 2, 0],
-        [0, 0, 3]])
+        >>> Matrix.diag([1, 2, 3]) == d123
+        True
 
         The diagonal elements can be matrices; diagonal filling will
         continue on the diagonal from the last element of the matrix:
@@ -702,18 +704,35 @@ class MatrixSpecial(MatrixRequired):
         [0, 0, 3, 4, 0, 0],
         [0, 0, 0, 0, 5, 6]])
 
-        A given band off the diagonal can be made by padding with a
-        vertical or horizontal "kerning" vector:
+        Bands off the diagonal can be made by using a dictionary whose
+        keys tell the diagonal on which to put the non-matrix elements:
 
-        >>> hpad = Matrix(0, 2, [])
-        >>> vpad = Matrix(2, 0, [])
-        >>> Matrix.diag(vpad, 1, 2, 3, hpad) + Matrix.diag(hpad, 4, 5, 6, vpad)
+        >>> Matrix.diag({-2: [1, 2, 3], 2: [4, 5, 6]})
         Matrix([
         [0, 0, 4, 0, 0],
         [0, 0, 0, 5, 0],
         [1, 0, 0, 0, 6],
         [0, 2, 0, 0, 0],
         [0, 0, 3, 0, 0]])
+        >>> Matrix.diag({0: 2, 1: 1}, rows=4, cols=4)
+        Matrix([
+        [2, 1, 0, 0],
+        [0, 2, 1, 0],
+        [0, 0, 2, 1],
+        [0, 0, 0, 2]])
+
+        Dictionary values can also be 1 or 2 arg functions which compute
+        the value from the relative diagonal distance or position in the
+        submatrix that it describes:
+
+        >>> d = {0: lambda d: (1 + d)**2, 1: lambda i, j: i + j}
+        >>> Matrix.diag(1, 2, d, rows=5, cols=5)
+        Matrix([
+        [1, 0, 0, 0, 0],
+        [0, 2, 0, 0, 0],
+        [0, 0, 1, 1, 0],
+        [0, 0, 0, 4, 3],
+        [0, 0, 0, 0, 9]])
 
         The type of the resulting matrix can be affected with the ``cls``
         keyword.

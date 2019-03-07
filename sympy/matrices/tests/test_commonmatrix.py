@@ -1145,6 +1145,70 @@ def test_diag():
     assert type(SpecialOnlyMatrix.diag(1)) == SpecialOnlyMatrix
     assert type(SpecialOnlyMatrix.diag(1, cls=Matrix)) == Matrix
 
+    # test of dictionary handling
+    diag = SpecialOnlyMatrix.diag
+    assert diag({0: 1}, {1: 2}) == diag({0: 1, 1: 2}) == Matrix([[1, 2]])
+    assert diag({0: 1}, {1: 2}, 2) == diag({0: 1, 1: 2}, 2) == Matrix([
+        [1, 2, 0],
+        [0, 0, 2]])
+    # specified dict is too small: needs to be at least 2 x 3
+    small = {2: 1, 'size': (2, 2)}
+    raises(ValueError, lambda:  diag(small))
+    raises(ValueError, lambda:  diag(small, row=3, cols=3))
+    # flexible dict but too many elements already specified
+    raises(ValueError, lambda: diag(1, 2, 3, 4, {0:1}, rows=3, cols=3))
+    # non-contiguous unsized dicst
+    raises(ValueError, lambda:  diag({0: 1}, 3, {1: 2}))
+    assert diag({0: 1, 'size': (3, 3)}, 3, {1: 2})
+    assert diag({0: 1, 'size': (3, 3)}, 3, {1: 2}) == Matrix([
+        [1, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 3, 0, 0],
+        [0, 0, 0, 0, 0, 2]])
+    assert diag({0: 1, 'size': (3, 3)}, 3, {1: 2, 'size': (2, 2)}
+            ) == diag({0: 1, 'size': (3, 3)}, 3, {1: 2}, rows=6, cols=6
+            ) == Matrix([
+        [1, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 3, 0, 0],
+        [0, 0, 0, 0, 0, 2],
+        [0, 0, 0, 0, 0, 0]])
+    assert diag({1: 2, -2: 1}, 4) == Matrix([
+        [0, 2, 0],
+        [0, 0, 0],
+        [1, 0, 0],
+        [0, 0, 4]])
+    assert diag({1: 2, -2: 1}) == diag(
+            {1: 2, -2: 1}, rows=3, cols=2) == Matrix([
+        [0, 2],
+        [0, 0],
+        [1, 0]])
+    raises(ValueError, lambda: diag({1: 2, -2: 1}, rows=2, cols=2))
+    raises(ValueError, lambda: diag({1: 2, -2: 1}, rows=2, cols=3))
+    raises(ValueError, lambda: diag({1: 2, -2: 1}, rows=3, cols=1))
+    assert diag({1: [1, 2]}, rows=3, cols=3) == Matrix([
+        [0, 1, 0],
+        [0, 0, 2],
+        [0, 0, 0]])
+    raises(ValueError, lambda: diag({1: [1, 2]}, rows=2, cols=2))
+    raises(ValueError, lambda: diag({1: [1, 2]}, rows=3, cols=2))
+    assert diag({0: lambda x: (1 + x)**2}, rows=3, cols=3) == Matrix([
+        [1, 0, 0],
+        [0, 4, 0],
+        [0, 0, 9]])
+    assert diag(-1, {0: lambda x: (1 + x)**2}, rows=3, cols=3) == Matrix([
+        [-1, 0, 0],
+        [ 0, 1, 0],
+        [ 0, 0, 4]])
+    assert diag({1: lambda i, j: i + j}, rows=3, cols=3) == Matrix([
+        [0, 1, 0],
+        [0, 0, 3],
+        [0, 0, 0]])
+    raises(ValueError, lambda: diag({0: lambda i, j, k: 1}))
+
+
 def test_jordan_block():
     assert SpecialOnlyMatrix.jordan_block(3, 2) == SpecialOnlyMatrix.jordan_block(3, eigenvalue=2) \
             == SpecialOnlyMatrix.jordan_block(size=3, eigenvalue=2) \
