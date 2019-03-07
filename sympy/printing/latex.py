@@ -2506,7 +2506,7 @@ def print_latex(expr, **settings):
 def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=False, **settings):
     r"""
     This function generates a LaTeX equation with a multiline right-hand side
-    in either an ``eqnarray`` or ``align*`` environment.
+    in an ``align*``, ``eqnarray`` or ``IEEEeqnarray`` environment.
 
     Parameters
     ==========
@@ -2554,7 +2554,7 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=F
     & & - \cos{\left(\log{\left(y \right)} \right)}
     \end{eqnarray}
 
-    Using "IEEEeqnarray":
+    Using ``IEEEeqnarray``:
     >>> print(multiline_latex(x, expr, environment="IEEEeqnarray"))
     \begin{IEEEeqnarray}{rCl}
     x & = & e^{i \alpha} \nonumber\\
@@ -2620,8 +2620,8 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=F
             term = -1*term
             sign = r'-'
         if i == 0: # beginning
-            if sign == r'+':
-                sign = r""
+            if sign == '+':
+                sign = ''
             result += r'{:s} {:s}{:s} {:s} {:s}'.format(l.doprint(lhs),
                         first_term, sign, l.doprint(term), term_end)
         else:
