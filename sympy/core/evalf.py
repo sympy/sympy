@@ -360,12 +360,12 @@ def get_integer_part(expr, no, options, return_ints=False):
                 is_int = (p == 0)
                 nint = int(to_int(nexpr, rnd))
         if not is_int:
-            # if there are subs and they all contain integer re/im parts
-            # then we can (hopefully) safely substitute them into the
-            # expression
+            # if there are subs they can (hopefully) be substituted them
+            # into the expression; in general this is a bad idea because
+            # they cannot be re-substituted later with higher precision.
             s = options.get('subs', False)
             if s:
-                re_im = re_im.subs(s)
+                re_im = re_im.subs(options.get('subs', {}))
 
             re_im = Add(re_im, -nint, evaluate=False)
             x, _, x_acc, _ = evalf(re_im, 10, options)

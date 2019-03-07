@@ -256,6 +256,8 @@ def test_evalf_integer_parts():
     assert ceiling(x).evalf(subs={x: 3.}) == 3
     assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
     assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
+    assert ceiling(x - 4.2).evalf(subs={x: 4.2}) == 0
+    assert ceiling(x - I).evalf(subs={x: I}) == 0
 
     assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
     assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
