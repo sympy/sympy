@@ -730,6 +730,15 @@ class MatrixSpecial(MatrixRequired):
         if len(args) == 1 and is_sequence(args[0]) and not getattr(args[0], 'is_Matrix', False):
             args = args[0]
 
+        def minsize(d):
+            r = max(0, -min(d)) + 1
+            c = -min(0, -max(d)) + 1
+            for k in d:
+                size = len(d[k]) if type(d[k]) is list else 0
+                r = max(r, abs(k) + size)
+                c = max(c, abs(k) + size)
+            return r, c
+
         def size(m):
             """Compute the size of the diagonal block"""
             if hasattr(m, 'rows'):
@@ -747,6 +756,7 @@ class MatrixSpecial(MatrixRequired):
         diag_rows = diag_cols = 0
         newargs = []
         nosize = 0
+        num_dicts = 0
         for a in args:
             if newargs and all(isinstance(i, dict) and 'size' not in i for i in (a, newargs[-1])):
                 newargs[-1].update(a)
@@ -754,15 +764,24 @@ class MatrixSpecial(MatrixRequired):
                 newargs.append(a)
                 if isinstance(a, dict) and 'size' not in a:
                     nosize += 1
+            if isinstance(a, dict):
+                num_dicts += 1
         if nosize > 1:
             raise ValueError(filldedent('''
                 non-contiguous dictionaries must have a size specified,
                 e.g. {'size': (rows, cols), ...}'''))
         args = newargs
         for m in args:
-            s = r, c = size(m)
-            if isinstance(m, dict):
+            if isinstance(m, dict) and num_dicts == 1:
+                try:
+                    s = r, c = size(m)
+                except:
+                    s = r, c = minsize(m)
                 dict_sizes.append(s)
+            else:
+                s = r, c = size(m)
+                if isinstance(m, dict):
+                    dict_sizes.append(s)
             diag_rows += r
             diag_cols += c
         rows = kwargs.get('rows', diag_rows)
@@ -809,7 +828,7 @@ class MatrixSpecial(MatrixRequired):
                     c_p = key if key > 0 else 0
                     if r_p > rmax or c_p > cmax:
                         raise ValueError(filldedent('''
-                        dict-specified diagonal index out of range'''))
+                            dict-specified diagonal index out of range'''))
                     d = 0
                     dlen = d + 1
                     while (r_p < diag_rows and c_p < diag_cols and (d < dlen or len(args) == 1)):
