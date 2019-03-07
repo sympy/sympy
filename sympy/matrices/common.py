@@ -740,19 +740,21 @@ class MatrixSpecial(MatrixRequired):
                 return m.get('size', (0, 0))
             return 1, 1
         def minsize(d):
+            size = d.pop('size', None)
             r = max(0, -min(d)) + 1
             c = -min(0, -max(d)) + 1
             for k in d:
-                size = len(d[k]) if type(d[k]) is list else 0
-                r = max(r, abs(k) + size)
-                c = max(c, abs(k) + size)
-            if 'size' in d:
-                R, C = d['size']
+                L = len(d[k]) if type(d[k]) is list else 0
+                r = max(r, abs(k) + L)
+                c = max(c, abs(k) + L)
+            if size:
+                R, C = size
                 if r > R or c > C:
                     raise ValueError(filldedent('''
                         the dict size is too small
                         for the given elements'''))
                 r, c = R, C
+                d['size'] = size
             return r, c
 
         # collapse contiguous dicts
