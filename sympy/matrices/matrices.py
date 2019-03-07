@@ -32,10 +32,7 @@ from .common import (
 
 def _iszero(x):
     """Returns True if x is zero."""
-    try:
-        return x.is_zero
-    except AttributeError:
-        return None
+    return getattr(x, 'is_zero', None)
 
 
 def _is_zero_after_expand_mul(x):
@@ -1075,8 +1072,23 @@ class MatrixEigen(MatrixSubspaces):
     """Provides basic matrix eigenvalue/vector operations.
     Should not be instantiated directly."""
 
-    _cache_is_diagonalizable = None
-    _cache_eigenvects = None
+    @property
+    def _cache_is_diagonalizable(self):
+        SymPyDeprecationWarning(
+            feature='_cache_is_diagonalizable',
+            deprecated_since_version="1.4",
+            issue=15887
+            ).warn()
+        return None
+
+    @property
+    def _cache_eigenvects(self):
+        SymPyDeprecationWarning(
+            feature='_cache_eigenvects',
+            deprecated_since_version="1.4",
+            issue=15887
+            ).warn()
+        return None
 
     def diagonalize(self, reals_only=False, sort=False, normalize=False):
         """
@@ -1131,12 +1143,10 @@ class MatrixEigen(MatrixSubspaces):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        if not self.is_diagonalizable(reals_only=reals_only, clear_cache=False):
+        if not self.is_diagonalizable(reals_only=reals_only):
             raise MatrixError("Matrix is not diagonalizable")
 
-        eigenvecs = self._cache_eigenvects
-        if eigenvecs is None:
-            eigenvecs = self.eigenvects(simplify=True)
+        eigenvecs = self.eigenvects(simplify=True)
 
         if sort:
             eigenvecs = sorted(eigenvecs, key=default_sort_key)
@@ -1421,43 +1431,36 @@ class MatrixEigen(MatrixSubspaces):
         is_diagonal
         diagonalize
         """
-
-        clear_cache = kwargs.get('clear_cache', True)
+        if 'clear_cache' in kwargs:
+            SymPyDeprecationWarning(
+                feature='clear_cache',
+                deprecated_since_version=1.4,
+                issue=15887
+            ).warn()
         if 'clear_subproducts' in kwargs:
-            clear_cache = kwargs.get('clear_subproducts')
-
-        def cleanup():
-            """Clears any cached values if requested"""
-            if clear_cache:
-                self._cache_eigenvects = None
-                self._cache_is_diagonalizable = None
+            SymPyDeprecationWarning(
+                feature='clear_subproducts',
+                deprecated_since_version=1.4,
+                issue=15887
+            ).warn()
 
         if not self.is_square:
-            cleanup()
             return False
-
-        # use the cached value if we have it
-        if self._cache_is_diagonalizable is not None:
-            ret = self._cache_is_diagonalizable
-            cleanup()
-            return ret
 
         if all(e.is_real for e in self) and self.is_symmetric():
             # every real symmetric matrix is real diagonalizable
-            self._cache_is_diagonalizable = True
-            cleanup()
             return True
 
-        self._cache_eigenvects = self.eigenvects(simplify=True)
+        eigenvecs = self.eigenvects(simplify=True)
+
         ret = True
-        for val, mult, basis in self._cache_eigenvects:
+        for val, mult, basis in eigenvecs:
             # if we have a complex eigenvalue
             if reals_only and not val.is_real:
                 ret = False
             # if the geometric multiplicity doesn't equal the algebraic
             if mult != len(basis):
                 ret = False
-        cleanup()
         return ret
 
     def jordan_form(self, calc_transform=True, **kwargs):

@@ -92,9 +92,10 @@ def recast_to_symbols(eqs, symbols):
             new_symbols[i] = swap_sym[s]
     new_f = []
     for i in eqs:
-        try:
-            new_f.append(i.subs(swap_sym))
-        except AttributeError:
+        isubs = getattr(i, 'subs', None)
+        if isubs is not None:
+            new_f.append(isubs(swap_sym))
+        else:
             new_f.append(i)
     swap_sym = {v: k for k, v in swap_sym.items()}
     return new_f, new_symbols, swap_sym
@@ -1475,12 +1476,10 @@ def _solve(f, *symbols, **flags):
                     continue
                 try:
                     v = cond.subs(symbol, candidate)
-                    try:
-                        # unconditionally take the simplification of v
-                        v = v._eval_simpify(
-                            ratio=2, measure=lambda x: 1)
-                    except AttributeError:
-                        pass
+                    _eval_simpify = getattr(v, '_eval_simpify', None)
+                    if _eval_simpify is not None:
+                        # unconditionally take the simpification of v
+                        v = _eval_simpify(ratio=2, measure=lambda x: 1)
                 except TypeError:
                     # incompatible type with condition(s)
                     continue
@@ -2507,15 +2506,14 @@ def det_perm(M):
     args = []
     s = True
     n = M.rows
-    try:
-        list = M._mat
-    except AttributeError:
-        list = flatten(M.tolist())
+    list_ = getattr(M, '_mat', None)
+    if list_ is None:
+        list_ = flatten(M.tolist())
     for perm in generate_bell(n):
         fac = []
         idx = 0
         for j in perm:
-            fac.append(list[idx + j])
+            fac.append(list_[idx + j])
             idx += n
         term = Mul(*fac) # disaster with unevaluated Mul -- takes forever for n=7
         args.append(term if s else -term)

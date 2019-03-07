@@ -161,9 +161,7 @@ class TheanoPrinter(Printer):
         return self._get_or_create(X, dtype=dtype, broadcastable=(None, None))
 
     def _print_DenseMatrix(self, X, **kwargs):
-        try:
-            tt.stacklists
-        except AttributeError:
+        if not hasattr(tt, 'stacklists'):
             raise NotImplementedError(
                "Matrix translation not yet supported in this version of Theano")
 

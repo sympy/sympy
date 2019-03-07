@@ -237,6 +237,13 @@ def test_betaprime():
     X = BetaPrime('x', alpha, betap)
     assert density(X)(x) == x**(alpha - 1)*(x + 1)**(-alpha - betap)/beta(alpha, betap)
 
+    alpha = Symbol("alpha", positive=False)
+    raises(ValueError, lambda: BetaPrime('x', alpha, betap))
+
+    alpha = Symbol("alpha", positive=True)
+    betap = Symbol("beta", positive=False)
+    raises(ValueError, lambda: BetaPrime('x', alpha, betap))
+
 
 def test_cauchy():
     x0 = Symbol("x0")
@@ -245,12 +252,21 @@ def test_cauchy():
     X = Cauchy('x', x0, gamma)
     assert density(X)(x) == 1/(pi*gamma*(1 + (x - x0)**2/gamma**2))
 
+    gamma = Symbol("gamma", positive=False)
+    raises(ValueError, lambda: Cauchy('x', x0, gamma))
+
 
 def test_chi():
     k = Symbol("k", integer=True)
 
     X = Chi('x', k)
     assert density(X)(x) == 2**(-k/2 + 1)*x**(k - 1)*exp(-x**2/2)/gamma(k/2)
+
+    k = Symbol("k", integer=True, positive=False)
+    raises(ValueError, lambda: Chi('x', k))
+
+    k = Symbol("k", integer=False, positive=True)
+    raises(ValueError, lambda: Chi('x', k))
 
 def test_chi_noncentral():
     k = Symbol("k", integer=True)
@@ -260,6 +276,17 @@ def test_chi_noncentral():
     assert density(X)(x) == (x**k*l*(x*l)**(-k/2)*
                           exp(-x**2/2 - l**2/2)*besseli(k/2 - 1, x*l))
 
+    k = Symbol("k", integer=True, positive=False)
+    raises(ValueError, lambda: ChiNoncentral('x', k, l))
+
+    k = Symbol("k", integer=True, positive=True)
+    l = Symbol("l", positive=False)
+    raises(ValueError, lambda: ChiNoncentral('x', k, l))
+
+    k = Symbol("k", integer=False)
+    l = Symbol("l", positive=True)
+    raises(ValueError, lambda: ChiNoncentral('x', k, l))
+
 
 def test_chi_squared():
     k = Symbol("k", integer=True)
@@ -267,9 +294,17 @@ def test_chi_squared():
     X = ChiSquared('x', k)
     assert density(X)(x) == 2**(-k/2)*x**(k/2 - 1)*exp(-x/2)/gamma(k/2)
     assert cdf(X)(x) == Piecewise((lowergamma(k/2, x/2)/gamma(k/2), x >= 0), (0, True))
+    assert E(X) == k
+    assert variance(X) == 2*k
 
     X = ChiSquared('x', 15)
     assert cdf(X)(3) == -14873*sqrt(6)*exp(-S(3)/2)/(5005*sqrt(pi)) + erf(sqrt(6)/2)
+
+    k = Symbol("k", integer=True, positive=False)
+    raises(ValueError, lambda: ChiSquared('x', k))
+
+    k = Symbol("k", integer=False, positive=True)
+    raises(ValueError, lambda: ChiSquared('x', k))
 
 
 def test_dagum():
@@ -281,6 +316,17 @@ def test_dagum():
     assert density(X)(x) == a*p*(x/b)**(a*p)*((x/b)**a + 1)**(-p - 1)/x
     assert cdf(X)(x) == Piecewise(((1 + (x/b)**(-a))**(-p), x >= 0),
                                     (0, True))
+
+    p = Symbol("p", positive=False)
+    raises(ValueError, lambda: Dagum('x', p, a, b))
+
+    p = Symbol("p", positive=True)
+    b = Symbol("b", positive=False)
+    raises(ValueError, lambda: Dagum('x', p, a, b))
+
+    b = Symbol("b", positive=True)
+    a = Symbol("a", positive=False)
+    raises(ValueError, lambda: Dagum('x', p, a, b))
 
 
 def test_erlang():

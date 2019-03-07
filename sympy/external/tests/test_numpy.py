@@ -22,6 +22,7 @@ import sympy
 import mpmath
 from sympy.abc import x, y, z
 from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.pytest import raises
 
 
 # first, systematically check, that all operations are implemented and don't
@@ -230,11 +231,8 @@ def test_lambdify():
     f = lambdify(x, sin(x), "numpy")
     prec = 1e-15
     assert -prec < f(0.2) - sin02 < prec
-    try:
+    with raises(AttributeError):
         f(x)  # if this succeeds, it can't be a numpy function
-        assert False
-    except AttributeError:
-        pass
 
 
 def test_lambdify_matrix():

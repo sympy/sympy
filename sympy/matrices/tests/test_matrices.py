@@ -1726,6 +1726,32 @@ def test_diagonalization():
     assert m.is_diagonalizable()
 
 
+def test_issue_15887():
+    # Mutable matrix should not use cache
+    a = MutableDenseMatrix([[0, 1], [1, 0]])
+    assert a.is_diagonalizable() is True
+    a[1, 0] = 0
+    assert a.is_diagonalizable() is False
+
+    a = MutableDenseMatrix([[0, 1], [1, 0]])
+    a.diagonalize()
+    a[1, 0] = 0
+    raises(MatrixError, lambda: a.diagonalize())
+
+    # Test deprecated cache and kwargs
+    with warns_deprecated_sympy():
+        a._cache_eigenvects
+
+    with warns_deprecated_sympy():
+        a._cache_is_diagonalizable
+
+    with warns_deprecated_sympy():
+        a.is_diagonalizable(clear_cache=True)
+
+    with warns_deprecated_sympy():
+        a.is_diagonalizable(clear_subproducts=True)
+
+
 @XFAIL
 def test_eigen_vects():
     m = Matrix(2, 2, [1, 0, 0, I])
