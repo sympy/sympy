@@ -919,7 +919,8 @@ def solve(f, *symbols, **flags):
                        )
                       )
     f, symbols = (_sympified_list(w) for w in [f, symbols])
-
+    if isinstance(f, list):
+        f = [s for s in f if s is not S.true and s is not True]
     implicit = flags.get('implicit', False)
 
     # preprocess symbol(s)
