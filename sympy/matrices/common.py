@@ -774,12 +774,13 @@ class MatrixSpecial(MatrixRequired):
                 e.g. {'size': (rows, cols), ...}.'''))
         elif nosize:  # length of 1
             i = nosize[0]
-            if None is (rows, cols):
+            if None in (rows, cols):
                 # the unspecified dict will have minimal size
                 dsize = minsize(newargs[i])
             else:
                 # the unspecified dict will take up
                 # the remaining space
+                dsize = size(newargs[i])
                 spec_rows = spec_cols = 0
                 for a in newargs:
                     r, c = size(a)
