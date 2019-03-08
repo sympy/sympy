@@ -787,14 +787,7 @@ class MatrixSpecial(MatrixRequired):
                     continue
                 elif isfunction(value):
                     num_args = _getnargs(value)
-                    if num_args == 2:
-                        d[k] = lambda i, j: value(i, j)
-                    elif num_args == 1:
-                        def f2(i, j):
-                            k = min(i, j)
-                            return value(k)
-                        d[k] = lambda i, j: f2(i, j)
-                    else:
+                    if num_args not in (1, 2):
                         raise ValueError(filldedent('''
                             The functions in dict-described
                             diagonals must have 1 or 2 args.'''))
@@ -912,7 +905,11 @@ class MatrixSpecial(MatrixRequired):
                             r_p = rmax
                             continue
                         if isfunction(value):
-                            diag_entries[D] = value(r_p, c_p)
+                            if _getnargs(value) == 2:
+                                diag_entries[D] = value(r_p, c_p)
+                            else:
+                                d = min(r_p, c_p)
+                                diag_entries[D] = value(d)
                         else:
                             diag_entries[D] = value
                         r_p += 1
