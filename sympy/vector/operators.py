@@ -9,7 +9,6 @@ from sympy.core.function import Derivative
 from sympy import Add, Mul
 
 
-
 def _get_coord_systems(expr):
     g = preorder_traversal(expr)
     ret = set([])
