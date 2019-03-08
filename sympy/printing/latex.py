@@ -1769,12 +1769,12 @@ class LatexPrinter(Printer):
 
     def _print_RandomDomain(self, d):
         if hasattr(d, 'as_boolean'):
-            return 'Domain: ' + self._print(d.as_boolean())
+            return '\\text{Domain: }' + self._print(d.as_boolean())
         elif hasattr(d, 'set'):
-            return ('Domain: ' + self._print(d.symbols) + ' in ' +
+            return ('\\text{Domain: }' + self._print(d.symbols) + '\\text{ in }' +
                     self._print(d.set))
         elif hasattr(d, 'symbols'):
-            return 'Domain on ' + self._print(d.symbols)
+            return '\\text{Domain on }' + self._print(d.symbols)
         else:
             return self._print(None)
 
