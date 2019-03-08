@@ -1153,4 +1153,3 @@ def test_print_Indexed():
     assert mathml(IndexedBase(a),printer = 'presentation') == '<mi>a</mi>'
     assert mathml(IndexedBase(a/b),printer = 'presentation') == '<mrow><mfrac><mi>a</mi><mi>b</mi></mfrac></mrow>'
     assert mathml(IndexedBase((a,b)),printer = 'presentation') == '<mrow><mfenced><mi>a</mi><mi>b</mi></mfenced></mrow>'
-
