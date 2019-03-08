@@ -679,7 +679,7 @@ class Beam(object):
         self._hinge_beam_slope = slope_1*SingularityFunction(x, 0, 0) - slope_1*SingularityFunction(x, l, 0) + slope_2*SingularityFunction(x, l, 0)
         self._hinge_beam_deflection = def_1*SingularityFunction(x, 0, 0) - def_1*SingularityFunction(x, l, 0) + def_2*SingularityFunction(x, l, 0)
 
-    def solve_for_reaction_loads(self, *reactions, value=None):
+    def solve_for_reaction_loads(self, *reactions):
         """
         Solves for the reaction forces.
 
@@ -722,7 +722,7 @@ class Beam(object):
         l = self.length
         C3 = Symbol('C3')
         C4 = Symbol('C4')
-
+        value = None
         shear_curve = limit(self.shear_force(value), x, l)
         moment_curve = limit(self.bending_moment(value), x, l)
 
