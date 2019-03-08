@@ -3537,6 +3537,27 @@ def _n2(a, b):
             return dif
 
 
+def unchanged(func, *args):
+    """Return True if `func` applied to the `args` is unchanged.
+    Can be used instead of `assert foo == foo`.
+
+    Examples
+    ========
+
+    >>> from sympy.core.expr import unchanged
+    >>> from sympy.functions.elementary.trigonometric import cos
+    >>> from sympy.core.numbers import pi
+
+    >>> unchanged(cos, 1)  # instead of assert cos(1) == cos(1)
+    True
+
+    >>> unchanged(cos, pi)
+    False
+    """
+    f = func(*args)
+    return f.func == func and f.args == tuple([sympify(a) for a in args])
+
+
 from .mul import Mul
 from .add import Add
 from .power import Pow

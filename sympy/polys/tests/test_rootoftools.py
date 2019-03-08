@@ -16,6 +16,7 @@ from sympy import (
 )
 
 from sympy.utilities.pytest import raises, slow
+from sympy.core.expr import unchanged
 from sympy.core.compatibility import range
 
 from sympy.abc import a, b, x, y, z, r
@@ -138,11 +139,11 @@ def test_CRootOf___eval_Eq__():
     r1 = rootof(eq, 1)
     assert Eq(r, r1) is S.false
     assert Eq(r, r) is S.true
-    assert Eq(r, x).lhs is r and Eq(r, x).rhs is x
+    assert unchanged(Eq, r, x)
     assert Eq(r, 0) is S.false
     assert Eq(r, S.Infinity) is S.false
     assert Eq(r, I) is S.false
-    assert Eq(r, f(0)).lhs is r and Eq(r, f(0)).rhs is f(0)
+    assert unchanged(Eq, r, f(0))
     sol = solve(eq)
     for s in sol:
         if s.is_real:
@@ -572,4 +573,4 @@ def test_eval_approx_relative():
 def test_issue_15920():
     r = rootof(x**5 - x + 1, 0)
     p = Integral(x, (x, 1, y))
-    assert Eq(r, p).lhs is r and Eq(r, p).rhs is p
+    assert unchanged(Eq, r, p)

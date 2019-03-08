@@ -293,7 +293,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
     def _print_Infinity(self, e):
         return self.dom.createElement('infinity')
 
-    def _print_Negative_Infinity(self, e):
+    def _print_NegativeInfinity(self, e):
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('minus'))
         x.appendChild(self.dom.createElement('infinity'))
@@ -715,7 +715,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('&#x221E;'))
         return x
 
-    def _print_Negative_Infinity(self, e):
+    def _print_NegativeInfinity(self, e):
         mrow = self.dom.createElement('mrow')
         y = self.dom.createElement('mo')
         y.appendChild(self.dom.createTextNode('-'))
@@ -1329,6 +1329,26 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(mo)
         mrow.appendChild(self._print(e.args[1]))
         x.appendChild(mrow)
+        return x
+
+
+    def _print_tuple(self, e):
+        x = self.dom.createElement('mfenced')
+        for i in e:
+            x.appendChild(self._print(i))
+        return x
+
+
+    def _print_IndexedBase(self, e):
+        return self._print(e.label)
+
+    def _print_Indexed(self, e):
+        x = self.dom.createElement('msub')
+        x.appendChild(self._print(e.base))
+        if len(e.indices) == 1:
+            x.appendChild(self._print(e.indices[0]))
+            return x
+        x.appendChild(self._print(e.indices))
         return x
 
 

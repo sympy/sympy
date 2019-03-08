@@ -1,7 +1,8 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
-    MatrixSymbol, Function, Derivative, log, true, false, Range, Min, Max, Lambda
+    MatrixSymbol, Function, Derivative, log, true, false, Range, Min, Max, \
+    Lambda, IndexedBase, symbols
 from sympy.core.containers import Tuple
 from sympy.functions.combinatorial.factorials import factorial, factorial2, binomial
 from sympy.functions.elementary.complexes import re, im, Abs, conjugate
@@ -15,7 +16,6 @@ from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentati
 from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, SymmetricDifference
 from sympy.stats.rv import RandomSymbol
 from sympy.sets.sets import Interval
-from sympy.stats.rv import RandomSymbol
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
@@ -1132,7 +1132,7 @@ def test_mathml_builtins():
     assert mpp.doprint(false) == '<mi>False</mi>'
 
 
-def test_latex_Range():
+def test_mathml_Range():
     assert mpp.doprint(Range(1, 51)) == \
         '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mi>&#8230;</mi><mn>50</mn></mfenced>'
     assert mpp.doprint(Range(1, 4)) == '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mn>3</mn></mfenced>'
@@ -1141,7 +1141,7 @@ def test_latex_Range():
     assert mpp.doprint(Range(30, 1, -1)) == '<mfenced close="}" open="{"><mn>30</mn><mn>29</mn><mi>&#8230;</mi><mn>2</mn></mfenced>'
     assert mpp.doprint(Range(0, oo, 2)) == '<mfenced close="}" open="{"><mn>0</mn><mn>2</mn><mi>&#8230;</mi><mi>&#x221E;</mi></mfenced>'
     assert mpp.doprint(Range(oo, -2, -2)) == '<mfenced close="}" open="{"><mi>&#x221E;</mi><mi>&#8230;</mi><mn>2</mn><mn>0</mn></mfenced>'
-    assert mpp.doprint(Range(-2, -oo, -1)) == '<mfenced close="}" open="{"><mn>-2</mn><mn>-3</mn><mi>&#8230;</mi><mn>-oo</mn></mfenced>'
+    assert mpp.doprint(Range(-2, -oo, -1)) == '<mfenced close="}" open="{"><mn>-2</mn><mn>-3</mn><mi>&#8230;</mi><mrow><mo>-</mo><mi>&#x221E;</mi></mrow></mfenced>'
 
 
 def test_print_exp():
@@ -1168,3 +1168,17 @@ def test_print_random_symbol():
     R = RandomSymbol(Symbol('R'))
     assert mpp.doprint(R) == '<mi>R</mi>'
     assert mp.doprint(R) == '<ci>R</ci>'
+
+
+def test_print_IndexedBase():
+    a,b,c,d,e = symbols('a b c d e')
+    assert mathml(IndexedBase(a)[b],printer='presentation') == '<msub><mi>a</mi><mi>b</mi></msub>'
+    assert mathml(IndexedBase(a)[b,c,d],printer = 'presentation') == '<msub><mi>a</mi><mfenced><mi>b</mi><mi>c</mi><mi>d</mi></mfenced></msub>'
+    assert mathml(IndexedBase(a)[b]*IndexedBase(c)[d]*IndexedBase(e),printer = 'presentation') == '<mrow><msub><mi>a</mi><mi>b</mi></msub><mo>&InvisibleTimes;</mo><msub><mi>c</mi><mi>d</mi></msub><mo>&InvisibleTimes;</mo><mi>e</mi></mrow>'
+
+
+def test_print_Indexed():
+    a,b,c = symbols('a b c')
+    assert mathml(IndexedBase(a),printer = 'presentation') == '<mi>a</mi>'
+    assert mathml(IndexedBase(a/b),printer = 'presentation') == '<mrow><mfrac><mi>a</mi><mi>b</mi></mfrac></mrow>'
+    assert mathml(IndexedBase((a,b)),printer = 'presentation') == '<mrow><mfenced><mi>a</mi><mi>b</mi></mfenced></mrow>'
