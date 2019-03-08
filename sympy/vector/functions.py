@@ -1,11 +1,11 @@
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
 from sympy import diff, integrate, S, simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
+from sympy.vector.deloperator import Del
 
 
 def express(expr, system, system2=None, variables=False):
@@ -198,6 +198,7 @@ def laplacian(expr):
     2*R.i + 6*R.y*R.j + 12*R.z**2*R.k
 
     """
+
     delop = Del()
     if expr.is_Vector:
         return (gradient(divergence(expr)) - curl(curl(expr))).doit()

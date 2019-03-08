@@ -9,6 +9,7 @@ from sympy.core.function import Derivative
 from sympy import Add, Mul
 
 
+
 def _get_coord_systems(expr):
     g = preorder_traversal(expr)
     ret = set([])
@@ -325,6 +326,34 @@ def gradient(scalar_field, coord_sys=None, doit=True):
             s = _split_mul_args_wrt_coordsys(scalar_field)
             return VectorAdd.fromiter(scalar_field / i * gradient(i) for i in s)
         return Gradient(scalar_field)
+
+
+class Laplacian(Expr):
+    """
+    Represents unevaluated Laplacian.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D, Laplacian
+    >>> R = CoordSys3D('R')
+    >>> v = 3*R.x**3*R.y**2*R.z**3
+    >>> Laplacian(v)
+    Laplacian(3*R.x**3*R.y**2*R.z**3)
+    >>> Laplacian(v).doit()
+    18*R.x*R.y**2*R.z**3 + 6*R.x**3*R.z**3 + 18*R.x**3*R.y**2*R.z
+
+    """
+
+    def __new__(cls, expr):
+        expr = sympify(expr)
+        obj = Expr.__new__(cls, expr)
+        obj._expr = expr
+        return obj
+
+    def doit(self, **kwargs):
+        from sympy.vector.functions import laplacian
+        return laplacian(self._expr)
 
 
 def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):
