@@ -916,7 +916,7 @@ class MatrixSpecial(MatrixRequired):
         eigenval = kwargs.get('eigenval', None)
         if eigenvalue is None and eigenval is None:
             raise ValueError("Must supply an eigenvalue")
-        elif eigenvalue is not None and eigenval is not None:
+        elif eigenvalue != eigenval and None not in (eigenval, eigenvalue):
             raise ValueError(
                 "Inconsistent values are given: 'eigenval'={}, "
                 "'eigenvalue'={}".format(eigenval, eigenvalue))

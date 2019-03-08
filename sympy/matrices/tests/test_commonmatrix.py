@@ -1150,10 +1150,14 @@ def test_diag():
 def test_jordan_block():
     assert SpecialOnlyMatrix.jordan_block(3, 2) == SpecialOnlyMatrix.jordan_block(3, eigenvalue=2) \
             == SpecialOnlyMatrix.jordan_block(size=3, eigenvalue=2) \
-            == SpecialOnlyMatrix.jordan_block(3, 2, band='upper') == Matrix([
-                    [2, 1, 0],
-                    [0, 2, 1],
-                    [0, 0, 2]])
+            == SpecialOnlyMatrix.jordan_block(3, 2, band='upper') \
+            == SpecialOnlyMatrix.jordan_block(
+                size=3, eigenval=2, eigenvalue=2) \
+            == Matrix([
+                [2, 1, 0],
+                [0, 2, 1],
+                [0, 0, 2]])
+
     assert SpecialOnlyMatrix.jordan_block(3, 2, band='lower') == Matrix([
                     [2, 0, 0],
                     [1, 2, 0],
