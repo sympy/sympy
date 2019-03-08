@@ -1164,6 +1164,10 @@ def test_jordan_block():
     raises(ValueError, lambda: SpecialOnlyMatrix.jordan_block(3.5, 2))
     # size not specified
     raises(ValueError, lambda: SpecialOnlyMatrix.jordan_block(eigenvalue=2))
+    # inconsistent eigenvalue
+    raises(ValueError,
+    lambda: SpecialOnlyMatrix.jordan_block(
+        eigenvalue=2, eigenval=4))
 
     # Deprecated feature
     raises(SymPyDeprecationWarning,

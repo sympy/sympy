@@ -913,13 +913,16 @@ class MatrixSpecial(MatrixRequired):
         rows = kwargs.pop('rows', None)
         cols = kwargs.pop('cols', None)
 
-        if eigenvalue is None:
-            # allow for a shortened form of `eigenvalue`
-            eigenval = kwargs.get('eigenval', None)
+        eigenval = kwargs.get('eigenval', None)
+        if eigenvalue is None and eigenval is None:
+            raise ValueError("Must supply an eigenvalue")
+        elif eigenvalue is not None and eigenval is not None:
+            raise ValueError(
+                "Inconsistent values are given: 'eigenval'={}, "
+                "'eigenvalue'={}".format(eigenval, eigenvalue))
+        else:
             if eigenval is not None:
                 eigenvalue = eigenval
-            else:
-                raise ValueError("Must supply an eigenvalue")
 
         if (size, rows, cols) == (None, None, None):
             raise ValueError("Must supply a matrix size")
