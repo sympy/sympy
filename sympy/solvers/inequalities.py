@@ -929,7 +929,7 @@ def _reduce_inequalities(inequalities, symbols):
     return And(*(poly_reduced + abs_reduced + other))
 
 
-def reduce_inequalities(inequalities, symbols=[], **flags):
+def reduce_inequalities(inequalities, dict_flag, symbols=[]):
     """Reduce a system of inequalities with rational coefficients.
 
     Examples
@@ -985,12 +985,11 @@ def reduce_inequalities(inequalities, symbols=[], **flags):
 
     # solve system
     rv = _reduce_inequalities(inequalities, symbols)
-    as_dict = flags.get('dict', False)
 
     # restore original symbols
     solution = rv.xreplace({v: k for k, v in recast.items()})
 
-    if not as_dict:
+    if not dict_flag:
         return solution
 
     if isinstance(solution, list):
