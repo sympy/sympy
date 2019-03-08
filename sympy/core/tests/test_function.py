@@ -1127,7 +1127,7 @@ def test_issue_15241():
     assert (y*G + y*Gy*G).diff(y, G) == y*Gy.diff(y) + Gy + 1
 
 
-def test_issue_15266():
+def test_issue_15226():
     assert Subs(Derivative(f(y), x, y), y, g(x)).doit() != 0
 
 
