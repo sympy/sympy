@@ -198,7 +198,7 @@ class FpGroup(DefaultPrinting):
 
         """
         if not H:
-            if self._coset_table != None:
+            if self._coset_table is not None:
                 if not self._is_standardized:
                     self.standardize_coset_table()
             else:
@@ -230,9 +230,9 @@ class FpGroup(DefaultPrinting):
 
         """
         from sympy import S, gcd
-        if self._order != None:
+        if self._order is not None:
             return self._order
-        if self._coset_table != None:
+        if self._coset_table is not None:
             self._order = len(self._coset_table.table)
         elif len(self.relators) == 0:
             self._order = self.free_group.order()

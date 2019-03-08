@@ -265,15 +265,21 @@ class Indexed(Expr):
 
         if self.base.shape:
             return self.base.shape
-        try:
-            return Tuple(*[i.upper - i.lower + 1 for i in self.indices])
-        except AttributeError:
-            raise IndexException(filldedent("""
-                Range is not defined for all indices in: %s""" % self))
-        except TypeError:
-            raise IndexException(filldedent("""
-                Shape cannot be inferred from Idx with
-                undefined range: %s""" % self))
+        sizes = []
+        for i in self.indices:
+            upper = getattr(i, 'upper', None)
+            lower = getattr(i, 'lower', None)
+            if None in (upper, lower):
+                raise IndexException(filldedent("""
+                    Range is not defined for all indices in: %s""" % self))
+            try:
+                size = upper - lower + 1
+            except TypeError:
+                raise IndexException(filldedent("""
+                    Shape cannot be inferred from Idx with
+                    undefined range: %s""" % self))
+            sizes.append(size)
+        return Tuple(*sizes)
 
     @property
     def ranges(self):
@@ -297,9 +303,12 @@ class Indexed(Expr):
         """
         ranges = []
         for i in self.indices:
-            try:
-                ranges.append(Tuple(i.lower, i.upper))
-            except AttributeError:
+            sentinel = object()
+            upper = getattr(i, 'upper', sentinel)
+            lower = getattr(i, 'lower', sentinel)
+            if sentinel not in (upper, lower):
+                ranges.append(Tuple(lower, upper))
+            else:
                 ranges.append(None)
         return ranges
 

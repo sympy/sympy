@@ -74,5 +74,3 @@ sample.tex
 
 # pytest related data file for slow tests
 .ci/durations.log
-#visual code launch file
-.vscode/launch.json

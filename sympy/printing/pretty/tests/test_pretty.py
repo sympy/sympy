@@ -11,7 +11,7 @@ from sympy import (
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
-from sympy.core.compatibility import range, u_decode as u
+from sympy.core.compatibility import range, u_decode as u, PY3
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.trace import Tr
 
@@ -302,16 +302,16 @@ def test_upretty_subs_missing_in_24():
     assert upretty( Symbol('F_x') ) == u'Fₓ'
 
 
-@XFAIL
 def test_missing_in_2X_issue_9047():
-    assert upretty( Symbol('F_h') ) == u'Fₕ'
-    assert upretty( Symbol('F_k') ) == u'Fₖ'
-    assert upretty( Symbol('F_l') ) == u'Fₗ'
-    assert upretty( Symbol('F_m') ) == u'Fₘ'
-    assert upretty( Symbol('F_n') ) == u'Fₙ'
-    assert upretty( Symbol('F_p') ) == u'Fₚ'
-    assert upretty( Symbol('F_s') ) == u'Fₛ'
-    assert upretty( Symbol('F_t') ) == u'Fₜ'
+    if PY3:
+        assert upretty( Symbol('F_h') ) == u'Fₕ'
+        assert upretty( Symbol('F_k') ) == u'Fₖ'
+        assert upretty( Symbol('F_l') ) == u'Fₗ'
+        assert upretty( Symbol('F_m') ) == u'Fₘ'
+        assert upretty( Symbol('F_n') ) == u'Fₙ'
+        assert upretty( Symbol('F_p') ) == u'Fₚ'
+        assert upretty( Symbol('F_s') ) == u'Fₛ'
+        assert upretty( Symbol('F_t') ) == u'Fₜ'
 
 
 def test_upretty_modifiers():
@@ -728,11 +728,11 @@ u("""\
     expr = S(1)/2 - 3*x
     ascii_str = \
 """\
--3*x + 1/2\
+1/2 - 3*x\
 """
     ucode_str = \
 u("""\
--3⋅x + 1/2\
+1/2 - 3⋅x\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -756,15 +756,15 @@ u("""\
     expr = S(1)/2 - 3*x/2
     ascii_str = \
 """\
-  3*x   1\n\
-- --- + -\n\
-   2    2\
+1   3*x\n\
+- - ---\n\
+2    2 \
 """
     ucode_str = \
 u("""\
-  3⋅x   1\n\
-- ─── + ─\n\
-   2    2\
+1   3⋅x\n\
+─ - ───\n\
+2    2 \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -937,16 +937,15 @@ u("""\
 def test_issue_5524():
     assert pretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 """\
-        /         ___    \\           2\n\
-(x - 5)*\\-x - 2*\\/ 2  + 5/ - (-y + 5) \
+         2           /         ___    \\\n\
+- (5 - y)  + (x - 5)*\\-x - 2*\\/ 2  + 5/\
 """
 
     assert upretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 u("""\
-                                  2\n\
-(x - 5)⋅(-x - 2⋅√2 + 5) - (-y + 5) \
+         2                          \n\
+- (5 - y)  + (x - 5)⋅(-x - 2⋅√2 + 5)\
 """)
-
 
 def test_pretty_ordering():
     assert pretty(x**2 + x + 1, order='lex') == \
@@ -5825,7 +5824,7 @@ def test_Tr():
 
 def test_pretty_Add():
     eq = Mul(-2, x - 2, evaluate=False) + 5
-    assert pretty(eq) == '-2*(x - 2) + 5'
+    assert pretty(eq) == '5 - 2*(x - 2)'
 
 
 def test_issue_7179():

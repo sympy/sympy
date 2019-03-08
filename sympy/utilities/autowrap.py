@@ -878,11 +878,12 @@ class UfuncifyCodeWrapper(CodeWrapper):
         funcname
             Name of the main function to be returned.
         """
-        if (funcname is None) and (len(routines) == 1):
-            funcname = routines[0].name
-        elif funcname is None:
-            msg = 'funcname must be specified for multiple output routines'
-            raise ValueError(msg)
+        if funcname is None:
+            if len(routines) == 1:
+                funcname = routines[0].name
+            else:
+                msg = 'funcname must be specified for multiple output routines'
+                raise ValueError(msg)
         functions = []
         function_creation = []
         ufunc_init = []
@@ -1091,7 +1092,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
             expr = [expr]
         if len(expr) == 0:
             raise ValueError('Expression iterable has zero length')
-        if (len(expr) + len(args)) > maxargs:
+        if len(expr) + len(args) > maxargs:
             msg = ('Cannot create ufunc with more than {0} total arguments: '
                    'got {1} in, {2} out')
             raise ValueError(msg.format(maxargs, len(args), len(expr)))

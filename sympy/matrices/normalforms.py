@@ -1,10 +1,9 @@
-from __future__ import print_function, division
-from sympy.matrices import diag
+'''Functions returning normal forms of matrices'''
+from __future__ import division, print_function
 
-'''
-Functions returning normal forms of matrices
+from sympy.matrices.dense import diag
 
-'''
+
 def smith_normal_form(m, domain = None):
     '''
     Return the Smith Normal Form of a matrix `m` over the ring `domain`.

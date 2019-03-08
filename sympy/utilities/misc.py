@@ -377,7 +377,7 @@ def translate(s, a, b=None, c=None):
         if type(a) is dict:
             short = {}
             for k in list(a.keys()):
-                if (len(k) == 1 and len(a[k]) == 1):
+                if len(k) == 1 and len(a[k]) == 1:
                     short[k] = a.pop(k)
             mr = a
             c = b

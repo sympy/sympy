@@ -627,8 +627,11 @@ def test_AlgebraicFunctionQ():
     assert AlgebraicFunctionQ([sin(x)], x) == False
 
 def test_MonomialQ():
-    assert not MonomialQ(2*x**7+6, x)
+    assert not MonomialQ(2*x**7 + 6, x)
     assert MonomialQ(2*x**7, x)
+    assert not MonomialQ(2*x**7 + 5*x**3, x)
+    assert not MonomialQ([2*x**7 + 6, 2*x**7], x)
+    assert MonomialQ([2*x**7, 5*x**3], x)
 
 def test_MonomialSumQ():
     assert MonomialSumQ(2*x**7 + 6, x) == True

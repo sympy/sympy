@@ -1104,7 +1104,7 @@ class catalan(Function):
     4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))
 
     >>> catalan(n).rewrite(hyper)
-    hyper((-n + 1, -n), (2,), 1)
+    hyper((1 - n, -n), (2,), 1)
 
     For some non-integer values of n we can get closed form
     expressions by rewriting in terms of gamma functions:

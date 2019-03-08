@@ -505,9 +505,10 @@ def random_symbols(expr):
     """
     Returns all RandomSymbols within a SymPy Expression.
     """
-    try:
-        return list(expr.atoms(RandomSymbol))
-    except AttributeError:
+    atoms = getattr(expr, 'atoms', None)
+    if atoms is not None:
+        return list(atoms(RandomSymbol))
+    else:
         return []
 
 
@@ -527,7 +528,7 @@ def pspace(expr):
     True
     """
     expr = sympify(expr)
-    if isinstance(expr, RandomSymbol) and expr.pspace != None:
+    if isinstance(expr, RandomSymbol) and expr.pspace is not None:
         return expr.pspace
     rvs = random_symbols(expr)
     if not rvs:
