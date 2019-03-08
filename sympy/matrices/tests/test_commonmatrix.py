@@ -1152,6 +1152,7 @@ def test_diag():
     assert diag({0: 1}, {1: 2}, 2) == diag({0: 1, 1: 2}, 2) == Matrix([
         [1, 2, 0],
         [0, 0, 2]])
+    assert diag({1: [1, 2, 3], 0: 1, -1: [-2, 3]}).shape == (3, 4)
     # specified dict is too small: needs to be at least 2 x 3
     small = {2: 1, 'size': (2, 2)}
     raises(ValueError, lambda:  diag(small))
