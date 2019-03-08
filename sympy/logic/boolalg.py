@@ -1016,7 +1016,6 @@ class Xor(BooleanFunction):
                 args.append(Or(*clause))
         return And._to_nnf(*args, simplify=simplify)
 
-<<<<<<< HEAD
     def _rewrite_as_And(self):
         arguments = list(ordered(self._argset))
         if len(arguments) == 2:
@@ -1028,7 +1027,7 @@ class Xor(BooleanFunction):
         return eq
 
     _rewrite_as_Or = _rewrite_as_And
-=======
+
     def _eval_simplify(self, ratio, measure, rational, inverse):
         # as standard simplify uses simplify_logic which writes things as
         # And and Or, we only simplify the partial expressions before using patterns
@@ -1039,7 +1038,6 @@ class Xor(BooleanFunction):
         patterns = simplify_patterns_xor()
         return self._apply_patternbased_simplification(rv, patterns, measure, None)
 
->>>>>>> 0e987498b00167fdd4a08a41c852a97cb70ce8f2
 
 class Nand(BooleanFunction):
     """
