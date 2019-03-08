@@ -340,8 +340,6 @@ class Laplacian(Expr):
     >>> v = 3*R.x**3*R.y**2*R.z**3
     >>> Laplacian(v)
     Laplacian(3*R.x**3*R.y**2*R.z**3)
-    >>> Laplacian(v).doit()
-    18*R.x*R.y**2*R.z**3 + 6*R.x**3*R.z**3 + 18*R.x**3*R.y**2*R.z
 
     """
 
