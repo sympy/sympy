@@ -1075,7 +1075,7 @@ class LatexPrinter(Printer):
         tex = r"!%s" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
 
         if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
+            return r"\left(%s\right)^{%s}" % (tex, exp)
         else:
             return tex
 
@@ -1740,7 +1740,7 @@ class LatexPrinter(Printer):
             tex = r'\delta_{%s %s}' % (i, j)
         else:
             tex = r'\delta_{%s, %s}' % (i, j)
-        if exp:
+        if exp is not None:
             tex = r'\left(%s\right)^{%s}' % (tex, exp)
         return tex
 
