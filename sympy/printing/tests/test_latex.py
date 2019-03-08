@@ -1256,6 +1256,8 @@ def test_latex_MatrixSlice():
 
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
+    from sympy.stats.rv import RandomDomain
+
     X = Normal('x1', 0, 1)
     assert latex(where(X > 0)) == r"\text{Domain: }0 < x_{1} \wedge x_{1} < \infty"
 
@@ -1268,6 +1270,8 @@ def test_latex_RandomDomain():
         pspace(Tuple(A, B)).domain) == \
         r"\text{Domain: }0 \leq a \wedge 0 \leq b \wedge a < \infty \wedge b < \infty"
 
+    assert latex(RandomDomain(FiniteSet(x), FiniteSet(1, 2))) == \
+        r'\text{Domain: }\left\{x\right\}\text{ in }\left\{1, 2\right\}'
 
 def test_PrettyPoly():
     from sympy.polys.domains import QQ
