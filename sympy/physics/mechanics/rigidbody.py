@@ -296,3 +296,28 @@ class RigidBody(object):
         """
 
         self._pe = sympify(scalar)
+
+    def total_energy(self, frame):
+        """The total energy of the RigidBody.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
+        >>> from sympy import symbols
+        >>> M, v, r, omega, g, h = symbols('M v r omega g h')
+        >>> N = ReferenceFrame('N')
+        >>> b = ReferenceFrame('b')
+        >>> b.set_ang_vel(N, omega * b.x)
+        >>> P = Point('P')
+        >>> P.set_vel(N, v * N.x)
+        >>> I = outer (b.x, b.x)
+        >>> Inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
+        >>> B.potential_energy = M * g * h
+        >>> B.total_energy(N)
+        M*g*h + M*v**2/2 + omega**2/2
+        
+
+        """
+        return self.kinetic_energy(frame) + self.potential_energy
