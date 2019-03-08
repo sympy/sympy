@@ -92,7 +92,7 @@ class VectorLatexPrinter(LatexPrinter):
             # If the function is an inverse trig function, handle the style
             if func in inv_trig_table:
                 if inv_trig_style == "abbreviated":
-                    func = func
+                    pass
                 elif inv_trig_style == "full":
                     func = "arc" + func[1:]
                 elif inv_trig_style == "power":

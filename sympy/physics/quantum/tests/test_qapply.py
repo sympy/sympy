@@ -1,4 +1,4 @@
-from sympy import I, Integer, sqrt, symbols
+from sympy import I, Integer, sqrt, symbols, S, Mul
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
@@ -8,6 +8,7 @@ from sympy.physics.quantum.gate import H
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.spin import Jx, Jy, Jz, Jplus, Jminus, J2, JzKet
+from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.state import Ket
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit
@@ -117,3 +118,10 @@ def test_issue_6073():
 def test_density():
     d = Density([Jz*mo, 0.5], [Jz*po, 0.5])
     assert qapply(d) == Density([-hbar*mo, 0.5], [hbar*po, 0.5])
+
+
+def test_issue3044():
+    expr1 = TensorProduct(Jz*JzKet(S(2),S(-1))/sqrt(2), Jz*JzKet(S(1)/2,S(1)/2))
+    result = Mul(S(-1), S(1)/4, (2**(S(1)/2)), hbar**2)
+    result *= TensorProduct(JzKet(2,-1), JzKet(S(1)/2,S(1)/2))
+    assert qapply(expr1) == result

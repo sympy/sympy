@@ -29,6 +29,7 @@ from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq
 from sympy.utilities.randtest import _randrange, _randint
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def AZ(s=None):
@@ -1215,7 +1216,15 @@ def rsa_public_key(p, q, e):
     """
     n = p*q
     if isprime(p) and isprime(q):
-        phi = totient(n)
+        if p == q:
+            SymPyDeprecationWarning(
+                feature="Using non-distinct primes for rsa_public_key",
+                useinstead="distinct primes",
+                issue=16162,
+                deprecated_since_version="1.4").warn()
+            phi = p * (p - 1)
+        else:
+            phi = (p - 1) * (q - 1)
         if gcd(e, phi) == 1:
             return n, e
     return False
@@ -1237,11 +1246,18 @@ def rsa_private_key(p, q, e):
     (15, 7)
     >>> rsa_private_key(p, q, 30)
     False
-
     """
     n = p*q
     if isprime(p) and isprime(q):
-        phi = totient(n)
+        if p == q:
+            SymPyDeprecationWarning(
+                feature="Using non-distinct primes for rsa_public_key",
+                useinstead="distinct primes",
+                issue=16162,
+                deprecated_since_version="1.4").warn()
+            phi = p * (p - 1)
+        else:
+            phi = (p - 1) * (q - 1)
         if gcd(e, phi) == 1:
             d = mod_inverse(e, phi)
             return n, d

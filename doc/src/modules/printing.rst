@@ -177,9 +177,9 @@ Two basic examples:
     >>> from sympy import *
     >>> x = symbols("x")
     >>> fcode(sqrt(1-x**2))
-    '      sqrt(-x**2 + 1)'
+    '      sqrt(1 - x**2)'
     >>> fcode((3 + 4*I)/(1 - conjugate(x)))
-    '      (cmplx(3,4))/(-conjg(x) + 1)'
+    '      (cmplx(3,4))/(1 - conjg(x))'
 
 An example where line wrapping is required:
 
@@ -257,7 +257,7 @@ When some functions are not part of the Fortran standard, it might be desirable
 to introduce the names of user-defined functions in the Fortran expression.
 
     >>> print(fcode(1 - gamma(x)**2, user_functions={'gamma': 'mygamma'}))
-          -mygamma(x)**2 + 1
+          1 - mygamma(x)**2
 
 However, when the user_functions argument is not provided, ``fcode`` will
 generate code which assumes that a function of the same name will be provided
@@ -266,12 +266,12 @@ by the user.  A comment will be added to inform the user of the issue:
     >>> print(fcode(1 - gamma(x)**2))
     C     Not supported in Fortran:
     C     gamma
-          -gamma(x)**2 + 1
+          1 - gamma(x)**2
 
 The printer can be configured to omit these comments:
 
     >>> print(fcode(1 - gamma(x)**2, allow_unknown_functions=True))
-          -gamma(x)**2 + 1
+          1 - gamma(x)**2
 
 By default the output is human readable code, ready for copy and paste. With the
 option ``human=False``, the return value is suitable for post-processing with
@@ -281,9 +281,9 @@ be defined as 'Fortran parameters', (ii) a list functions that cannot be
 translated in pure Fortran and (iii) a string of Fortran code. A few examples:
 
     >>> fcode(1 - gamma(x)**2, human=False)
-    (set(), {gamma(x)}, '      -gamma(x)**2 + 1')
+    (set(), {gamma(x)}, '      1 - gamma(x)**2')
     >>> fcode(1 - sin(x)**2, human=False)
-    (set(), set(), '      -sin(x)**2 + 1')
+    (set(), set(), '      1 - sin(x)**2')
     >>> fcode(x - pi**2, human=False)
     ({(pi, '3.1415926535897932d0')}, set(), '      x - pi**2')
 

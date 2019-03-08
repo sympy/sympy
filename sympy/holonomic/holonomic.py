@@ -1310,7 +1310,6 @@ class HolonomicFunction(object):
 
                 if (i - k, k) in dict1:
                     dict1[(i - k, k)] += (dom.to_sympy(coeff) * rf(n - k + 1, i))
-
                 else:
                     dict1[(i - k, k)] = (dom.to_sympy(coeff) * rf(n - k + 1, i))
 
@@ -1520,7 +1519,6 @@ class HolonomicFunction(object):
 
                     if (i - k, k - i) in dict1:
                         dict1[(i - k, k - i)] += (dom.to_sympy(coeff) * rf(n - k + 1 + p, i))
-
                     else:
                         dict1[(i - k, k - i)] = (dom.to_sympy(coeff) * rf(n - k + 1 + p, i))
 
@@ -1664,7 +1662,7 @@ class HolonomicFunction(object):
         HolonomicFunction.to_sequence()
         """
 
-        if _recur == None:
+        if _recur is None:
             recurrence = self.to_sequence()
         else:
             recurrence = _recur
@@ -1902,7 +1900,7 @@ class HolonomicFunction(object):
         from_hyper, from_meijerg
         """
 
-        if _recur == None:
+        if _recur is None:
             recurrence = self.to_sequence()
         else:
             recurrence = _recur
@@ -2091,7 +2089,7 @@ class HolonomicFunction(object):
 
         symbolic = True
 
-        if lenics == None and len(self.y0) > self.annihilator.order:
+        if lenics is None and len(self.y0) > self.annihilator.order:
             lenics = len(self.y0)
         dom = self.annihilator.parent.base.domain
 
@@ -2185,7 +2183,7 @@ def from_hyper(func, x0=0, evalf=False):
             else:
                 val = simp.subs(x, x0)
             # return None if it is Infinite or NaN
-            if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
+            if val.is_finite is False or isinstance(val, NaN):
                 return None
             y0.append(val)
             simp = simp.diff(x)
@@ -2270,7 +2268,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
                 val = simp.subs(x, x0).evalf()
             else:
                 val = simp.subs(x, x0)
-            if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
+            if val.is_finite is False or isinstance(val, NaN):
                 return None
             y0.append(val)
             simp = simp.diff(x)
@@ -2357,7 +2355,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
 
     extra_syms = list(syms)
 
-    if domain == None:
+    if domain is None:
         if func.has(Float):
             domain = RR
         else:
@@ -2621,11 +2619,8 @@ def _extend_y0(Holonomic, n):
             sol = 0
             for a, b in zip(y1, list_red):
                 r = DMFsubs(b, Holonomic.x0)
-                try:
-                    if not r.is_finite:
-                        return y0
-                except AttributeError:
-                    pass
+                if not getattr(r, 'is_finite', True):
+                    return y0
                 if isinstance(r, (PolyElement, FracElement)):
                     r = r.as_expr()
                 sol += a * r
@@ -2719,7 +2714,7 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
         is_singular = sol.is_singular(x0)
 
         # try to compute the conditions for singular points
-        if y0 == None and x0 == 0 and is_singular:
+        if y0 is None and x0 == 0 and is_singular:
             rep = R.from_sympy(func).rep
             for i, j in enumerate(reversed(rep)):
                 if j == 0:
@@ -2745,8 +2740,8 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
         is_singular = sol.is_singular(x0)
 
         # try to compute the conditions for singular points
-        if y0 == None and x0 == 0 and is_singular and \
-            (lenics == None or lenics <= 1):
+        if y0 is None and x0 == 0 and is_singular and \
+            (lenics is None or lenics <= 1):
             rep = R.from_sympy(basepoly).rep
             for i, j in enumerate(reversed(rep)):
                 if j == 0:
@@ -2878,7 +2873,7 @@ def _find_conditions(func, x, x0, order):
         val = func.subs(x, x0)
         if isinstance(val, NaN):
             val = limit(func, x, x0)
-        if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
+        if val.is_finite is False or isinstance(val, NaN):
             return None
         y0.append(val)
         func = func.diff(x)

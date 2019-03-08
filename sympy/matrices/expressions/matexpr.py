@@ -549,6 +549,15 @@ class MatrixExpr(Expr):
         from .applyfunc import ElementwiseApplyFunction
         return ElementwiseApplyFunction(func, self)
 
+    def _eval_Eq(self, other):
+        if not isinstance(other, MatrixExpr):
+            return False
+        if self.shape != other.shape:
+            return False
+        if (self - other).is_ZeroMatrix:
+            return True
+        return Eq(self, other, evaluate=False)
+
 
 def _matrix_derivative(expr, x):
     from sympy import Derivative
@@ -738,6 +747,10 @@ class Identity(MatrixExpr):
     def shape(self):
         return (self.args[0], self.args[0])
 
+    @property
+    def is_square(self):
+        return True
+
     def _eval_transpose(self):
         return self
 
@@ -761,6 +774,39 @@ class Identity(MatrixExpr):
     def _eval_determinant(self):
         return S.One
 
+class GenericIdentity(Identity):
+    """
+    An identity matrix without a specified shape
+
+    This exists primarily so MatMul() with no arguments can return something
+    meaningful.
+    """
+    def __new__(cls):
+        # super(Identity, cls) instead of super(GenericIdentity, cls) because
+        # Identity.__new__ doesn't have the same signature
+        return super(Identity, cls).__new__(cls)
+
+    @property
+    def rows(self):
+        raise TypeError("GenericIdentity does not have a specified shape")
+
+    @property
+    def cols(self):
+        raise TypeError("GenericIdentity does not have a specified shape")
+
+    @property
+    def shape(self):
+        raise TypeError("GenericIdentity does not have a specified shape")
+
+    # Avoid Matrix.__eq__ which might call .shape
+    def __eq__(self, other):
+        return isinstance(other, GenericIdentity)
+
+    def __ne__(self, other):
+        return not (self == other)
+
+    def __hash__(self):
+        return super(GenericIdentity, self).__hash__()
 
 class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
@@ -816,6 +862,40 @@ class ZeroMatrix(MatrixExpr):
 
     __bool__ = __nonzero__
 
+class GenericZeroMatrix(ZeroMatrix):
+    """
+    A zero matrix without a specified shape
+
+    This exists primarily so MatAdd() with no arguments can return something
+    meaningful.
+    """
+    def __new__(cls):
+        # super(ZeroMatrix, cls) instead of super(GenericZeroMatrix, cls)
+        # because ZeroMatrix.__new__ doesn't have the same signature
+        return super(ZeroMatrix, cls).__new__(cls)
+
+    @property
+    def rows(self):
+        raise TypeError("GenericZeroMatrix does not have a specified shape")
+
+    @property
+    def cols(self):
+        raise TypeError("GenericZeroMatrix does not have a specified shape")
+
+    @property
+    def shape(self):
+        raise TypeError("GenericZeroMatrix does not have a specified shape")
+
+    # Avoid Matrix.__eq__ which might call .shape
+    def __eq__(self, other):
+        return isinstance(other, GenericZeroMatrix)
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+    def __hash__(self):
+        return super(GenericZeroMatrix, self).__hash__()
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]

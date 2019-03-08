@@ -1893,9 +1893,10 @@ def test_latex_printer_tensor():
 
 
 def test_issue_15353():
-    from sympy import nonlinsolve, sin, cos, symbols
+    from sympy import ConditionSet, Tuple, FiniteSet, S, sin, cos
     a, x = symbols('a x')
-    sol = nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
+    # Obtained from nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
+    sol = ConditionSet(Tuple(x, a), FiniteSet(sin(a*x), cos(a*x)), S.Complexes)
     assert latex(sol) == r'\left\{\left( x, \  a\right) \mid \left( x, \  a\right) \in \mathbb{C} \wedge \left\{\sin{\left(a x \right)}, \cos{\left(a x \right)}\right\} \right\}'
 
 
@@ -1936,6 +1937,7 @@ def test_MatrixSymbol_bold():
     from sympy import trace
     A = MatrixSymbol("A", 2, 2)
     assert latex(trace(A), mat_symbol_style='bold') == r"\mathrm{tr}\left(\mathbf{A} \right)"
+    assert latex(trace(A), mat_symbol_style='plain') == r"\mathrm{tr}\left(A \right)"
 
     A = MatrixSymbol("A", 3, 3)
     B = MatrixSymbol("B", 3, 3)
@@ -1951,6 +1953,8 @@ def test_MatrixSymbol_bold():
 
 def test_imaginary_unit():
     assert latex(1 + I) == '1 + i'
+    assert latex(1 + I, imaginary_unit='i') == '1 + i'
     assert latex(1 + I, imaginary_unit='j') == '1 + j'
     assert latex(1 + I, imaginary_unit='foo') == '1 + foo'
-    assert latex(I, imaginary_unit=r"ti") == '\\text{i}'
+    assert latex(I, imaginary_unit="ti") == '\\text{i}'
+    assert latex(I, imaginary_unit="tj") == '\\text{j}'
