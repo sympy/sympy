@@ -764,9 +764,11 @@ class MatrixSpecial(MatrixRequired):
             r = max(0, -min(d)) + 1
             c = -min(0, -max(d)) + 1
             for k in d:
-                L = len(d[k]) if type(d[k]) is list else 0
-                r = max(r, abs(k) + L)
-                c = max(c, abs(k) + L)
+                if not type(d[k]) is list:
+                    continue
+                L = len(d[k])
+                r = max(r, L if k > 0 else abs(k) + L)
+                c = max(c, L if k < 0 else abs(k) + L)
             if size:
                 R, C = size
                 if r > R or c > C:
@@ -788,7 +790,10 @@ class MatrixSpecial(MatrixRequired):
                     if num_args == 2:
                         d[k] = lambda i, j: value(i, j)
                     elif num_args == 1:
-                        d[k] = lambda i, j: value(min(i, j))
+                        def f2(i, j):
+                            k = min(i, j)
+                            return value(k)
+                        d[k] = lambda i, j: f2(i, j)
                     else:
                         raise ValueError(filldedent('''
                             The functions in dict-described
