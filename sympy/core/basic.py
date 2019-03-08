@@ -945,7 +945,8 @@ class Basic(with_metaclass(ManagedProperties)):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
             try:
-                s = [sympify(_, strict=type(_) is not str) for _ in s]
+                s = [sympify(_, strict=not isinstance(_, string_types))
+                     for _ in s]
             except SympifyError:
                 # if it can't be sympified, skip it
                 sequence[i] = None
