@@ -317,7 +317,5 @@ class RigidBody(object):
         >>> B.potential_energy = M * g * h
         >>> B.total_energy(N)
         M*g*h + M*v**2/2 + omega**2/2
-        
-
         """
         return self.kinetic_energy(frame) + self.potential_energy

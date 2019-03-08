@@ -54,6 +54,7 @@ def test_rigidbody2():
     B.potential_energy = M * g * h
     assert B.potential_energy == M * g * h
     assert expand(2 * B.kinetic_energy(N)) == omega**2 + M * v**2
+    assert B.total_energy(N) == M * g * h + M * v**2/2 + omega**2/2
 
 def test_rigidbody3():
     q1, q2, q3, q4 = dynamicsymbols('q1:5')
