@@ -902,8 +902,7 @@ class MatrixSpecial(MatrixRequired):
                             for i in range(len(value)):
                                 diag_entries[D] = value[i]
                                 D = D[0] + 1, D[1] + 1
-                            r_p = rmax
-                            continue
+                            break
                         if isfunction(value):
                             if _getnargs(value) == 2:
                                 diag_entries[D] = value(r_p, c_p)
