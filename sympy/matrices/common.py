@@ -674,16 +674,18 @@ class MatrixSpecial(MatrixRequired):
         ========
 
         >>> from sympy.matrices import Matrix
-        >>> Matrix.diag(1, 2, 3)
+
+        All diagonal elements can be given individually
+        or in a list:
+
+        >>> d123 = Matrix.diag(1, 2, 3)
+        >>> d123
         Matrix([
         [1, 0, 0],
         [0, 2, 0],
         [0, 0, 3]])
-        >>> Matrix.diag([1, 2, 3])
-        Matrix([
-        [1, 0, 0],
-        [0, 2, 0],
-        [0, 0, 3]])
+        >>> Matrix.diag([1, 2, 3]) == d123
+        True
 
         The diagonal elements can be matrices; diagonal filling will
         continue on the diagonal from the last element of the matrix:
@@ -702,27 +704,45 @@ class MatrixSpecial(MatrixRequired):
         [0, 0, 3, 4, 0, 0],
         [0, 0, 0, 0, 5, 6]])
 
-        A given band off the diagonal can be made by padding with a
-        vertical or horizontal "kerning" vector:
+        Bands off the diagonal can be made by using a dictionary whose
+        keys tell the diagonal on which to put the non-matrix elements:
 
-        >>> hpad = Matrix(0, 2, [])
-        >>> vpad = Matrix(2, 0, [])
-        >>> Matrix.diag(vpad, 1, 2, 3, hpad) + Matrix.diag(hpad, 4, 5, 6, vpad)
+        >>> Matrix.diag({-2: [1, 2, 3], 2: [4, 5, 6]})
         Matrix([
         [0, 0, 4, 0, 0],
         [0, 0, 0, 5, 0],
         [1, 0, 0, 0, 6],
         [0, 2, 0, 0, 0],
         [0, 0, 3, 0, 0]])
+        >>> Matrix.diag({0: 2, 1: 1}, rows=4, cols=4)
+        Matrix([
+        [2, 1, 0, 0],
+        [0, 2, 1, 0],
+        [0, 0, 2, 1],
+        [0, 0, 0, 2]])
+
+        Dictionary values can also be 1 or 2 arg functions which compute
+        the value from the relative diagonal distance or position in the
+        submatrix that it describes:
+
+        >>> d = {0: lambda d: (1 + d)**2, 1: lambda i, j: i + j}
+        >>> Matrix.diag(1, 2, d, rows=5, cols=5)
+        Matrix([
+        [1, 0, 0, 0, 0],
+        [0, 2, 0, 0, 0],
+        [0, 0, 1, 1, 0],
+        [0, 0, 0, 4, 3],
+        [0, 0, 0, 0, 9]])
 
         The type of the resulting matrix can be affected with the ``cls``
         keyword.
 
-        >>> type(Matrix.diag(1))
-        <class 'sympy.matrices.dense.MutableDenseMatrix'>
+        >>> from sympy.utilities.misc import func_name
         >>> from sympy.matrices import ImmutableMatrix
-        >>> type(Matrix.diag(1, cls=ImmutableMatrix))
-        <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
+        >>> func_name(Matrix.diag(1))
+        'MutableDenseMatrix'
+        >>> func_name(Matrix.diag(1, cls=ImmutableMatrix))
+        'ImmutableDenseMatrix'
         """
 
         klass = kwargs.get('cls', kls)
@@ -740,49 +760,87 @@ class MatrixSpecial(MatrixRequired):
                 return m.get('size', (0, 0))
             return 1, 1
         def minsize(d):
+            size = d.pop('size', None)
             r = max(0, -min(d)) + 1
             c = -min(0, -max(d)) + 1
             for k in d:
-                size = len(d[k]) if type(d[k]) is list else 0
-                r = max(r, abs(k) + size)
-                c = max(c, abs(k) + size)
-            if 'size' in d:
-                R, C = d['size']
+                if not type(d[k]) is list:
+                    continue
+                L = len(d[k])
+                r = max(r, L if k > 0 else abs(k) + L)
+                c = max(c, L if k < 0 else abs(k) + L)
+            if size:
+                R, C = size
                 if r > R or c > C:
                     raise ValueError(filldedent('''
                         the dict size is too small
                         for the given elements'''))
                 r, c = R, C
+                d['size'] = size
             return r, c
+        def standardize_values(d):
+            for k, value in d.items():
+                if k == 'size':
+                    continue
+                as_int(k)  # check
+                if isinstance(value, list):
+                    continue
+                elif isfunction(value):
+                    num_args = _getnargs(value)
+                    if num_args not in (1, 2):
+                        raise ValueError(filldedent('''
+                            The functions in dict-described
+                            diagonals must have 1 or 2 args.'''))
+                else:
+                    value = sympify(value)
+                    if isinstance(value, Expr
+                        ) and not hasattr(value, 'rows'):
+                        d[k] = value
+                    else:
+                        raise TypeError(filldedent(
+                            '''expecting list, function
+                            or Expr in dict'''))
 
         # collapse contiguous dicts
         newargs = []
-        nosize = []
+        nosize = None
         i = 0
         for a in args:
-            if newargs and all(isinstance(i, dict) and 'size' not in i for i in (a, newargs[-1])):
-                newargs[-1].update(a)
+            if type(a) is dict:
+                a = a.copy()  # leave original unchanged
+                if 'size' in a:
+                    minsize(a)  # check it
+                    newargs.append(a)
+                else:
+                    if nosize is None:
+                        # this is the first unsized
+                        newargs.append(a)
+                        nosize = i
+                    elif i - 1 == nosize:
+                        # merge unsized dict entries
+                        newargs[-1].update(a)
+                    else:
+                        raise ValueError(filldedent('''
+                            Only one non-contiguous dictionary can have
+                            unspecified size. For the others, give the
+                            size, e.g. {'size': (rows, cols), ...}.
+                            '''))
             else:
                 newargs.append(a)
-                if isinstance(a, dict) and 'size' not in a:
-                    nosize.append(i)
-                i += 1
-        if len(nosize) > 1:
-            raise ValueError(filldedent('''
-                Only one non-contiguous dictionary can have
-                unspecified size. For the others, give the size,
-                e.g. {'size': (rows, cols), ...}.'''))
-        elif nosize:  # length of 1
-            i = nosize[0]
+            i += 1
+        args = newargs
+
+        # assign size to size-unspecified dict
+        if nosize is not None:
+            dsize = minsize(args[nosize])
             if None in (rows, cols):
                 # the unspecified dict will have minimal size
-                dsize = minsize(newargs[i])
+                pass
             else:
                 # the unspecified dict will take up
                 # the remaining space
-                dsize = size(newargs[i])
                 spec_rows = spec_cols = 0
-                for a in newargs:
+                for a in args:
                     r, c = size(a)
                     spec_rows += r
                     spec_cols += c
@@ -791,7 +849,7 @@ class MatrixSpecial(MatrixRequired):
                 r, c = dsize
                 if rneed < 0 or cneed < 0:
                     # specified sizes are too small but let
-                    # this rise below when diagonal size is calculated
+                    # this raise below when diagonal size is calculated
                     pass
                 elif rneed < r or cneed < c:
                     raise ValueError(filldedent('''
@@ -799,18 +857,12 @@ class MatrixSpecial(MatrixRequired):
                         is too big for the specified size of this
                         matrix.'''))
                 dsize = max(rneed, r), max(cneed, c)
-            newargs[i]['size'] = dsize
-            del nosize
-        args = newargs
+            args[nosize]['size'] = dsize
 
         # calculate size needed
-        dict_sizes = []
         diag_rows = diag_cols = 0
         for m in args:
-            s = r, c = size(m)
-            if isinstance(m, dict):
-                dict_sizes.append(s)
-                m.pop('size')  # don't need this anymore
+            r, c = size(m)
             diag_rows += r
             diag_cols += c
         rows = diag_rows if rows is None else rows
@@ -818,13 +870,12 @@ class MatrixSpecial(MatrixRequired):
         if rows < diag_rows or cols < diag_cols:
             raise ValueError(filldedent('''
                 The diagonal elements need a matrix that is {} x {}
-                but only {} x {} has been specified.'''.format(
+                but {} x {} has been provided.'''.format(
                 diag_rows, diag_cols, rows, cols)))
 
         # fill a default dict with the diagonal entries
         diag_entries = defaultdict(lambda: S.Zero)
         row_pos, col_pos = 0, 0
-        ndict = 0
         for m in args:
             if hasattr(m, 'rows'):
                 # in this case, we're a matrix
@@ -840,46 +891,32 @@ class MatrixSpecial(MatrixRequired):
                 col_pos += 1
             else:
                 # in this case we're a dict
-                ix = lambda r, c: (row_pos + r, col_pos + c)
-                r, c = dict_sizes[ndict]
-                rmax = r
-                cmax = c
+                standardize_values(m)
+                rmax, cmax = m.pop('size')
                 for key, value in m.items():
-                    key = as_int(key)
                     r_p = 0 if key >= 0 else -key
-                    c_p = key if key > 0 else 0
-                    d_p = 0
-                    while (r_p < diag_rows and c_p < diag_cols and
-                            r_p < rmax and c_p < cmax):
-                        dlen = min(rmax - r_p, cmax - c_p)
-                        if(isinstance(value, list)):
-                            if(len(value) != dlen):
-                                raise ValueError(filldedent('''
-                                    The size of list provided should
-                                    match the diagonal size.'''))
+                    c_p = 0 if r_p else key
+                    while (r_p < rmax and c_p < cmax):
+                        D = r_p + row_pos, c_p + col_pos
+                        if isinstance(value, list):
                             for i in range(len(value)):
-                                diag_entries[ix(r_p, c_p)] = value[i]
-                                r_p += 1
-                                c_p += 1
-                        elif(isfunction(value)):
-                            num_args = _getnargs(value)
-                            if(num_args == 2):
-                                diag_entries[ix(r_p, c_p)] = value(r_p, c_p)
-                            elif(num_args == 1):
-                                diag_entries[ix(r_p, c_p)] = value(d_p)
+                                diag_entries[D] = value[i]
+                                D = D[0] + 1, D[1] + 1
+                            r_p = rmax
+                            continue
+                        if isfunction(value):
+                            if _getnargs(value) == 2:
+                                diag_entries[D] = value(r_p, c_p)
                             else:
-                                raise ValueError(filldedent('''
-                                    The functions in dict-described
-                                    diagonals must have 1 or 2 args.'''))
+                                d = min(r_p, c_p)
+                                diag_entries[D] = value(d)
                         else:
-                            diag_entries[ix(r_p, c_p)] = value
+                            diag_entries[D] = value
                         r_p += 1
                         c_p += 1
-                        d_p += 1
-                r, c = dict_sizes[ndict]
-                row_pos += r
-                col_pos += c
-                ndict += 1
+                row_pos += rmax
+                col_pos += cmax
+
         return klass._eval_diag(rows, cols, diag_entries)
 
     @classmethod
