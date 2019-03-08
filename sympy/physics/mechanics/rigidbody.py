@@ -299,11 +299,11 @@ class RigidBody(object):
 
     def total_energy(self, frame):
         """The total energy of the RigidBody.
-        
+
         The total energy E, of rigidbody B, is given by
         E = K.E. + P.E.
 
-        where P.E. is the potential energy of the rigid body B and 
+        where P.E. is the potential energy of the rigid body B and
         K.E. is kinetic energy of the rigid body B in the supplied ReferenceFrame.
 
         Parameters

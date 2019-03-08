@@ -223,7 +223,7 @@ class Particle(object):
         """
 
         self._pe = sympify(scalar)
-    
+
     def total_energy(self, frame):
         """The total energy of the Particle.
 
@@ -231,7 +231,7 @@ class Particle(object):
 
         'E = K.E + P.E.'
 
-        where P.E. is the potential energy of the particle P, and 
+        where P.E. is the potential energy of the particle P, and
         K.E. is kinetic energy of the particle P, in the supplied ReferenceFrame.
 
         Parameters
