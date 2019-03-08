@@ -21,6 +21,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
 from sympy.simplify import simplify as _simplify
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 
 
@@ -782,29 +783,58 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_eye(rows, cols)
 
     @classmethod
-    def jordan_block(kls, *args, **kwargs):
-        """Returns a Jordan block with the specified size
-        and eigenvalue.  You may call `jordan_block` with
-        two args (size, eigenvalue) or with keyword arguments.
+    def jordan_block(kls, size=None, eigenvalue=None, **kwargs):
+        """Returns a Jordan block
 
-        kwargs
+        Parameters
+        ==========
+
+        size : Integer, optional
+            Specifies the shape of the Jordan block matrix.
+
+        eigenvalue : Number or Symbol
+            Specifies the value for the main diagonal of the matrix.
+
+            .. note::
+                The keyword ``eigenval`` is also specified as an alias
+                of this keyword, but it is not recommended to use.
+
+                We may deprecate the alias in later release.
+
+        band : 'upper' or 'lower', optional
+            Specifies the position of the off-diagonal to put `1` s on.
+
+        cls : Matrix, optional
+            Specifies the matrix class of the output form.
+
+            If it is not specified, the class type where the method is
+            being executed on will be returned.
+
+        rows, cols : Integer, optional
+            Specifies the shape of the Jordan block matrix. See Notes
+            section for the details of how these key works.
+
+            .. note::
+                This feature will be deprecated in the future.
+
+
+        Returns
+        =======
+
+        Matrix
+            A Jordan block matrix.
+
+        Raises
         ======
 
-        size : rows and columns of the matrix
-
-        rows : rows of the matrix (if None, rows=size)
-
-        cols : cols of the matrix (if None, cols=size)
-
-        eigenvalue : value on the diagonal of the matrix
-
-        band : position of off-diagonal 1s.  May be 'upper' or
-               'lower'. (Default: 'upper')
-
-        cls : class of the returned matrix
+        ValueError
+            If insufficient arguments are given for matrix size
+            specification, or no eigenvalue is given.
 
         Examples
         ========
+
+        Creating a default Jordan block:
 
         >>> from sympy import Matrix
         >>> from sympy.abc import x
@@ -814,37 +844,85 @@ class MatrixSpecial(MatrixRequired):
         [0, x, 1, 0],
         [0, 0, x, 1],
         [0, 0, 0, x]])
+
+        Creating an alternative Jordan block matrix where `1` is on
+        lower off-diagonal:
+
         >>> Matrix.jordan_block(4, x, band='lower')
         Matrix([
         [x, 0, 0, 0],
         [1, x, 0, 0],
         [0, 1, x, 0],
         [0, 0, 1, x]])
+
+        Creating a Jordan block with keyword arguments
+
         >>> Matrix.jordan_block(size=4, eigenvalue=x)
         Matrix([
         [x, 1, 0, 0],
         [0, x, 1, 0],
         [0, 0, x, 1],
         [0, 0, 0, x]])
+
+        Notes
+        =====
+
+        .. note::
+            This feature will be deprecated in the future.
+
+        The keyword arguments ``size``, ``rows``, ``cols`` relates to
+        the Jordan block size specifications.
+
+        If you want to create a square Jordan block, specify either
+        one of the three arguments.
+
+        If you want to create a rectangular Jordan block, specify
+        ``rows`` and ``cols`` individually.
+
+        +--------------------------------+---------------------+
+        |        Arguments Given         |     Matrix Shape    |
+        +----------+----------+----------+----------+----------+
+        |   size   |   rows   |   cols   |   rows   |   cols   |
+        +==========+==========+==========+==========+==========+
+        |   size   |         Any         |   size   |   size   |
+        +----------+----------+----------+----------+----------+
+        |          |        None         |     ValueError      |
+        |          +----------+----------+----------+----------+
+        |   None   |   rows   |   None   |   rows   |   rows   |
+        |          +----------+----------+----------+----------+
+        |          |   None   |   cols   |   cols   |   cols   |
+        +          +----------+----------+----------+----------+
+        |          |   rows   |   cols   |   rows   |   cols   |
+        +----------+----------+----------+----------+----------+
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Jordan_matrix
         """
+        if 'rows' in kwargs or 'cols' in kwargs:
+            SymPyDeprecationWarning(
+                feature="Keyword arguments 'rows' or 'cols'",
+                issue=16102,
+                useinstead="a more generic banded matrix constructor",
+                deprecated_since_version="1.4"
+            ).warn()
 
-        klass = kwargs.get('cls', kls)
-        size, eigenvalue = None, None
-        if len(args) == 2:
-            size, eigenvalue = args
-        elif len(args) == 1:
-            size = args[0]
-        elif len(args) != 0:
-            raise ValueError("'jordan_block' accepts 0, 1, or 2 arguments, not {}".format(len(args)))
-        rows, cols = kwargs.get('rows', None), kwargs.get('cols', None)
-        size = kwargs.get('size', size)
-        band = kwargs.get('band', 'upper')
-        # allow for a shortened form of `eigenvalue`
-        eigenvalue = kwargs.get('eigenval', eigenvalue)
-        eigenvalue = kwargs.get('eigenvalue', eigenvalue)
+        klass = kwargs.pop('cls', kls)
+        band = kwargs.pop('band', 'upper')
+        rows = kwargs.pop('rows', None)
+        cols = kwargs.pop('cols', None)
 
-        if eigenvalue is None:
+        eigenval = kwargs.get('eigenval', None)
+        if eigenvalue is None and eigenval is None:
             raise ValueError("Must supply an eigenvalue")
+        elif eigenvalue != eigenval and None not in (eigenval, eigenvalue):
+            raise ValueError(
+                "Inconsistent values are given: 'eigenval'={}, "
+                "'eigenvalue'={}".format(eigenval, eigenvalue))
+        else:
+            if eigenval is not None:
+                eigenvalue = eigenval
 
         if (size, rows, cols) == (None, None, None):
             raise ValueError("Must supply a matrix size")
