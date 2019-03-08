@@ -33,6 +33,8 @@ def test_particle():
     assert p.angular_momentum(O, N) == m2 * r * (v3 * N.x - v1 * N.z)
     p.potential_energy = m * g * h
     assert p.potential_energy == m * g * h
+    assert p.total_energy(N) in [m*g*h + m2*(v1**2 + v2**2 + v3**2)/2,
+        m*g*h + m2 * v1**2 / 2 + m2 * v2**2 / 2 + m2 * v3**2 / 2]
     # TODO make the result not be system-dependent
     assert p.kinetic_energy(
         N) in [m2*(v1**2 + v2**2 + v3**2)/2,

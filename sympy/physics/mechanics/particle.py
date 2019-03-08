@@ -223,3 +223,38 @@ class Particle(object):
         """
 
         self._pe = sympify(scalar)
+    
+    def total_energy(self, frame):
+        """The total energy of the Particle.
+
+        The total energy, E, of a particle, P, is given by
+
+        'E = K.E + P.E.'
+
+        where P.E. is the potential energy of the particle P, and 
+        K.E. is kinetic energy of the particle P, in the supplied ReferenceFrame.
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            The Particle's velocity is typically defined with respect to
+            an inertial frame but any relevant frame in which the velocity is
+            known can be supplied.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
+        >>> from sympy import symbols
+        >>> m, v, r, g, h = symbols('m v r g h')
+        >>> N = ReferenceFrame('N')
+        >>> O = Point('O')
+        >>> P = Particle('P', O, m)
+        >>> P.point.set_vel(N, v * N.y)
+        >>> P.total_energy(N)
+        >>> P.potential_energy = m * g * h
+        g*h*m + m*v**2/2
+
+        """
+        return self.kinetic_energy(frame) + self.potential_energy
