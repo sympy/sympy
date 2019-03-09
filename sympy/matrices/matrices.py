@@ -2419,9 +2419,6 @@ class MatrixBase(MatrixDeprecated,
                 return i, j, self._sympify(value)
             return
 
-    def _sympy_(self):
-        return self.as_immutable()
-
     def add(self, b):
         """Return self + b """
         return self + b

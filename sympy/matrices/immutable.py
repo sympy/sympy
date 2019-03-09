@@ -8,6 +8,10 @@ from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
 
 
+def sympify_matrix(arg):
+    return arg.as_immutable()
+sympify_converter[MatrixBase] = sympify_matrix
+
 class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     """Create an immutable version of a matrix.
 
