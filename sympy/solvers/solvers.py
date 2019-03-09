@@ -981,7 +981,7 @@ def solve(f, *symbols, **flags):
             f[i] = fi
 
         if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
-            return reduce_inequalities(f, flags.get('dict', False), symbols=symbols)
+            return reduce_inequalities(f, symbols=symbols)
 
         if isinstance(fi, Poly):
             f[i] = fi.as_expr()

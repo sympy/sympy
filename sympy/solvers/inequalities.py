@@ -13,7 +13,7 @@ from sympy.core.singleton import S
 from sympy.core.function import expand_mul
 
 from sympy.functions import Abs
-from sympy.logic import And
+from sympy.logic import And, Or
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
 from sympy.utilities.iterables import sift
@@ -929,7 +929,7 @@ def _reduce_inequalities(inequalities, symbols):
     return And(*(poly_reduced + abs_reduced + other))
 
 
-def reduce_inequalities(inequalities, dict_flag, symbols=[]):
+def reduce_inequalities(inequalities, symbols=[]):
     """Reduce a system of inequalities with rational coefficients.
 
     Examples
@@ -986,15 +986,5 @@ def reduce_inequalities(inequalities, dict_flag, symbols=[]):
     # solve system
     rv = _reduce_inequalities(inequalities, symbols)
 
-    # restore original symbols
-    solution = rv.xreplace({v: k for k, v in recast.items()})
-
-    if not dict_flag:
-        return solution
-
-    if isinstance(solution, list):
-        solution = [{s.lhs: s.rhs} for s in solution]
-    else:
-        solution = [{solution.lhs: solution.rhs}]
-
-    return solution
+    # restore original symbols and return
+    return rv.xreplace({v: k for k, v in recast.items()})

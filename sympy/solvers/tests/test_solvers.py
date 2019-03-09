@@ -167,9 +167,6 @@ def test_solve_args():
     # When one or more args are Boolean
     assert solve([True, Eq(x, 0)], [x], dict=True) == [{x: 0}]
     assert solve([Eq(x, x), Eq(x, 0), Eq(x, x+1)], [x], dict=True) == False
-    # Tests for relational cases See Issue #13534
-    assert solve([Eq(x**2-1, 0), Gt(x, 0)], [x]) == Eq(x, 1)
-    assert solve([Eq(x**2-1, 0), Gt(x, 0)], [x], dict=True) == [{x: 1}]
 
 
 def test_solve_polynomial1():
