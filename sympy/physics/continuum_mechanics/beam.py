@@ -396,10 +396,11 @@ class Beam(object):
         start = sympify(start)
         order = sympify(order)
 
-        if start.is_real and start > self.length or (end != None and end.is_real and end > self.length):
-            msg = ("Start and End of load application must be less than "
-                   "the length of the Beam.")
-            raise ValueError(msg)
+        if start.is_real:
+            if start > self.length or (end != None and end > self.length):
+                msg = ("Start and End of load application must be less than "
+                       "the length of the Beam.")
+                raise ValueError(msg)
 
         self._applied_loads.append((value, start, order, end))
         self._load += value*SingularityFunction(x, start, order)
