@@ -921,6 +921,9 @@ def solve(f, *symbols, **flags):
     f, symbols = (_sympified_list(w) for w in [f, symbols])
     if isinstance(f, list):
         f = [s for s in f if s is not S.true and s is not True]
+        for s in f:
+            if isinstance(s, BooleanAtom):
+                return []
     implicit = flags.get('implicit', False)
 
     # preprocess symbol(s)
@@ -980,7 +983,7 @@ def solve(f, *symbols, **flags):
                     fi = fi.rewrite(Add, evaluate=False)
             f[i] = fi
 
-        if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
+        if fi.is_Relational:
             return reduce_inequalities(f, symbols=symbols)
 
         if isinstance(fi, Poly):
