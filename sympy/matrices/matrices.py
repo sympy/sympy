@@ -877,29 +877,89 @@ class MatrixReductions(MatrixDeterminant):
         echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
         return len(pivots)
 
-    def Rankdecomposition(self, iszerofunc=_iszero, simplify=False):
-        """Returns rank-factorized form of A as A = C*F where F is in reduced
-        row echelon form.
+    def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
+        """Returns the rank-factorized form of `A`, as `C` and `F`.
 
         Parameters
         ==========
 
         iszerofunc : Function, optional
+            A function used for detecting whether an element can
+            act as a pivot.  ``lambda x: x.is_zero`` is used by default.
 
         simplify : Bool or Function, optional
+            A function used to simplify elements when looking for a
+            pivot. By default SymPy's ``simplify`` is used.
 
         Returns
         =======
 
         (C, F) : Matrices
+            `F` is the RREF of `A`, and `C` is the inverse of the
+            product of the elimination matrices, which can restore
+            `A = C \cdot F`
+
+            See Notes for additional mathematical details.
 
         Examples
         ========
 
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([
+        ...     [1, 3, 1, 4],
+        ...     [2, 7, 3, 9],
+        ...     [1, 5, 3, 1],
+        ...     [1, 2, 0, 8]
+        ... ])
+        >>> C, F = A.rank_decomposition()
+        >>> C
+        Matrix([
+        [1, 3, 4, 0],
+        [2, 7, 9, 0],
+        [1, 5, 1, 0],
+        [1, 2, 8, 0]])
+        >>> F
+        Matrix([
+        [1, 0, -2, 0],
+        [0, 1,  1, 0],
+        [0, 0,  0, 1],
+        [0, 0,  0, 0]])
+        >>> C * F == A
+        True
+
+        Notes
+        =====
+
+        Obtaining `F`, an RREF of `A`, is equivalent to creating a
+        product
+
+        .. math::
+            E_n \cdot E_{n-1} \cdot ... \cdot E_1 \cdot A = F
+
+        where `E_n, E_{n-1}, ... , E_1` are the elimination matrices or
+        permutation matrices equivant to each row reduction steps.
+
+        As putting a matrix in a row echeolon form introduces the
+        concept of the LU decomposition, similarly, putting a matrix in
+        a reduced row echeolon form introduces the matrix
+
+        .. math::
+            C = (E_n \cdot E_{n-1} \cdot ... \cdot E_1)^{-1}
+
+        However, in actual computation, we can simplify the procedure
+        by taking the columns from the original matrix, where the
+        column indices are the indices of the pivot columns of the `F`
+        matrix.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Rank_factorization
+
         See Also
         ========
+
         rref
-        rank
         """
         cls = self.__class__
         mat = self.as_mutable()
