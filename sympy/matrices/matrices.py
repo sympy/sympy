@@ -956,6 +956,10 @@ class MatrixReductions(MatrixDeterminant):
 
         .. [1] https://en.wikipedia.org/wiki/Rank_factorization
 
+        .. [2] Piziak, R.; Odell, P. L. (1 June 1999).
+            "Full Rank Factorization of Matrices".
+            Mathematics Magazine. 72 (3): 193. doi:10.2307/2690882
+
         See Also
         ========
 
