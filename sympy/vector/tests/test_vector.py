@@ -6,6 +6,7 @@ from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
      VectorMul, VectorZero
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.vector import Cross, Dot, dot, cross
+from sympy.utilities.pytest import raises
 
 C = CoordSys3D('C')
 
@@ -101,6 +102,9 @@ def test_vector():
     assert VectorMul(1, i) == i
     assert VectorAdd(v1, Vector.zero) == v1
     assert VectorMul(0, Vector.zero) == Vector.zero
+    raises(TypeError, lambda: v1._vect_div(v4))
+    raises(TypeError, lambda: v1.outer(1))
+    raises(TypeError, lambda: v1.dot(1))
 
 
 def test_vector_magnitude_normalize():
@@ -180,6 +184,8 @@ def test_vector_dot():
     assert k & j == 0
     assert k & k == 1
 
+    raises(TypeError, lambda: k.dot(1))
+
 
 def test_vector_cross():
     assert i.cross(Vector.zero) == Vector.zero
@@ -206,6 +212,8 @@ def test_vector_cross():
     assert k ^ j == -i
     assert k ^ k == Vector.zero
 
+    assert k.cross(1) == Cross(k, 1)
+
 
 def test_projection():
     v1 = i + j + k
@@ -227,3 +235,8 @@ def test_vector_diff_integrate():
             (Derivative(f(a), a))*C.i + 2*a*C.j)
     assert (Integral(v, a) == (Integral(f(a), a))*C.i +
             (Integral(a**2, a))*C.j + (Integral(-1, a))*C.k)
+
+
+def test_vector_args():
+    raises(ValueError, lambda: BaseVector(3, C))
+    raises(TypeError, lambda: BaseVector(0, Vector.zero))

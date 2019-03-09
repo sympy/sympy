@@ -1,5 +1,5 @@
 from sympy.core.compatibility import range, unichr
-from sympy.utilities.misc import translate, replace, ordinal
+from sympy.utilities.misc import translate, replace, ordinal, rawlines
 
 def test_translate():
     abc = 'abc'
@@ -36,3 +36,8 @@ def test_ordinal():
     assert ordinal(104) == '104th'
     assert ordinal(200) == '200th'
     assert all(ordinal(i) == str(i) + 'th' for i in range(-220, -203))
+
+
+def test_rawlines():
+    assert rawlines('a a\na') == "dedent('''\\\n    a a\n    a''')"
+    assert rawlines('a a') == "'a a'"
