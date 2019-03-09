@@ -197,10 +197,15 @@ class VectorPrettyPrinter(PrettyPrinter):
                 4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
-
-        d['picture'] = [center_accent(d['picture'][0], dots[dot_i])]
+        #if unicode is false then calculate number of apostrophes needed and add to output
+        if not self._use_unicode:
+            apostrophes = ""
+            for i in range(0, dot_i):
+                apostrophes += "'"
+            d['picture'][0] += apostrophes + "(t)"
+        else:
+            d['picture'] = [center_accent(d['picture'][0], dots[dot_i])]
         d['unicode'] =  center_accent(d['unicode'], dots[dot_i])
-
         return pform
 
     def _print_Function(self, e):

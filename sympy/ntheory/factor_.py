@@ -233,25 +233,22 @@ def multiplicity(p, n):
         p, n = as_int(p), as_int(n)
     except ValueError:
         if all(isinstance(i, (SYMPY_INTS, Rational)) for i in (p, n)):
-            try:
-                p = Rational(p)
-                n = Rational(n)
-                if p.q == 1:
-                    if n.p == 1:
-                        return -multiplicity(p.p, n.q)
-                    return multiplicity(p.p, n.p) - multiplicity(p.p, n.q)
-                elif p.p == 1:
-                    return multiplicity(p.q, n.q)
-                else:
-                    like = min(
-                        multiplicity(p.p, n.p),
-                        multiplicity(p.q, n.q))
-                    cross = min(
-                        multiplicity(p.q, n.p),
-                        multiplicity(p.p, n.q))
-                    return like - cross
-            except AttributeError:
-                pass
+            p = Rational(p)
+            n = Rational(n)
+            if p.q == 1:
+                if n.p == 1:
+                    return -multiplicity(p.p, n.q)
+                return multiplicity(p.p, n.p) - multiplicity(p.p, n.q)
+            elif p.p == 1:
+                return multiplicity(p.q, n.q)
+            else:
+                like = min(
+                    multiplicity(p.p, n.p),
+                    multiplicity(p.q, n.q))
+                cross = min(
+                    multiplicity(p.q, n.p),
+                    multiplicity(p.p, n.q))
+                return like - cross
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
 
     if n == 0:
@@ -2201,3 +2198,30 @@ def is_deficient(n):
     if is_perfect(n):
         return False
     return bool(abundance(n) < 0)
+
+
+def is_amicable(m, n):
+    """Returns True if the numbers `m` and `n` are "amicable", else False.
+
+    Amicable numbers are two different numbers so related that the sum
+    of the proper divisors of each is equal to that of the other.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_amicable, divisor_sigma
+    >>> is_amicable(220, 284)
+    True
+    >>> divisor_sigma(220) == divisor_sigma(284)
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Amicable_numbers
+
+    """
+    if m == n:
+        return False
+    a, b = map(lambda i: divisor_sigma(i), (m, n))
+    return a == b == (m + n)

@@ -24,7 +24,7 @@ def sample2d(f, x_args):
         raise ValueError("f could not be interpretted as a SymPy function")
     try:
         x, x_min, x_max, x_n = x_args
-    except AttributeError:
+    except (TypeError, IndexError):
         raise ValueError("x_args must be a tuple of the form (var, min, max, n)")
 
     x_l = float(x_max - x_min)
@@ -58,7 +58,7 @@ def sample3d(f, x_args, y_args):
     try:
         x, x_min, x_max, x_n = x_args
         y, y_min, y_max, y_n = y_args
-    except AttributeError:
+    except (TypeError, IndexError):
         raise ValueError("x_args and y_args must be tuples of the form (var, min, max, intervals)")
 
     x_l = float(x_max - x_min)
