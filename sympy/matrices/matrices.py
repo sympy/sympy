@@ -2722,7 +2722,7 @@ class MatrixBase(MatrixDeprecated,
         multiply
         multiply_elementwise
         """
-        from .dense import MutableDenseMatrix
+        from .dense import MutableDenseMatrix as Matrix
 
         if not isinstance(b, MatrixBase):
             if is_sequence(b):
@@ -2730,7 +2730,7 @@ class MatrixBase(MatrixDeprecated,
                     raise ShapeError(
                         "Dimensions incorrect for dot product: %s, %s" % (
                             self.shape, len(b)))
-                return self.dot(MutableDenseMatrix(b))
+                return self.dot(Matrix(b))
             else:
                 raise TypeError(
                     "`b` must be an ordered iterable or Matrix, not %s." %
@@ -3090,12 +3090,12 @@ class MatrixBase(MatrixDeprecated,
         inverse_LU
         inverse_ADJ
         """
-        from .dense import MutableDenseMatrix
+        from .dense import MutableDenseMatrix as Matrix
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
-        big = MutableDenseMatrix.hstack(
-            self.as_mutable(), MutableDenseMatrix.eye(self.rows))
+        big = Matrix.hstack(
+            self.as_mutable(), Matrix.eye(self.rows))
         red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
             raise ValueError("Matrix det == 0; not invertible.")

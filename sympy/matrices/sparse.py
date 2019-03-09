@@ -78,8 +78,8 @@ class SparseMatrix(MatrixBase):
                             self._smat[(i, j)] = value
         else:
             # handle full matrix forms with _handle_creation_inputs
-            from .dense import MutableDenseMatrix
-            r, c, _list = MutableDenseMatrix._handle_creation_inputs(*args)
+            from .dense import MutableDenseMatrix as Matrix
+            r, c, _list = Matrix._handle_creation_inputs(*args)
             self.rows = r
             self.cols = c
             for i in range(self.rows):
@@ -1063,11 +1063,11 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
             self._smat[k, j] = v
 
     def copyin_list(self, key, value):
-        from .dense import MutableDenseMatrix
+        from .dense import MutableDenseMatrix as Matrix
 
         if not is_sequence(value):
             raise TypeError("`value` must be of type list or tuple.")
-        self.copyin_matrix(key, MutableDenseMatrix(value))
+        self.copyin_matrix(key, Matrix(value))
 
     def copyin_matrix(self, key, value):
         # include this here because it's not part of BaseMatrix
