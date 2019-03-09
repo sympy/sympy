@@ -1521,9 +1521,6 @@ def test_integer():
 
     assert ask(Q.integer(x/2), Q.odd(x)) is False
     assert ask(Q.integer(x/2), Q.even(x)) is True
-    assert ask(Q.integer(x/3), Q.odd(x)) is None
-    assert ask(Q.integer(x/3), Q.even(x)) is None
-
 
 def test_negative():
     assert ask(Q.negative(x), Q.negative(x)) is True
@@ -1542,9 +1539,17 @@ def test_negative():
     assert ask(Q.negative(x + y), Q.negative(x)) is None
     assert ask(Q.negative(x + y), Q.negative(x) & Q.negative(y)) is True
     assert ask(Q.negative(x + y), Q.negative(x) & Q.nonpositive(y)) is True
+    assert ask(Q.negative(x + y), Q.nonpositive(x) & Q.negative(y)) is True
     assert ask(Q.negative(2 + I)) is False
-    # although this could be False, it is representative of expressions
-    # that don't evaluate to a zero with precision
+
+    assert ask(Q.negative(-x + 1), Q.negative(x)) is False
+    assert ask(Q.negative(x + y), Q.nonnegative(x) & Q.nonnegative(y)) is False
+    assert ask(Q.negative(x + y), Q.nonpositive(x) & Q.negative(y)) is True
+    assumption = Q.zero(x) & Q.nonpositive(y) & Q.negative(z)
+    assert ask(Q.negative(x+y+z), assumption) is True
+    assert ask(Q.negative(x+y-z), assumption) is None
+    assert ask(Q.negative(-x+y+z), assumption) is True
+    assert ask(Q.negative(-x+y-z), assumption) is None
     assert ask(Q.negative(cos(I)**2 + sin(I)**2 - 1)) is None
     assert ask(Q.negative(-I + I*(cos(2)**2 + sin(2)**2))) is None
 
@@ -1578,6 +1583,7 @@ def test_nonzero():
     assert ask(Q.nonzero(x + y), Q.positive(x) & Q.positive(y)) is True
     assert ask(Q.nonzero(x + y), Q.positive(x) & Q.negative(y)) is None
     assert ask(Q.nonzero(x + y), Q.negative(x) & Q.negative(y)) is True
+    assert ask(Q.nonzero(x + y), Q.positive(y) & Q.negative(x)) is None
 
     assert ask(Q.nonzero(2*x)) is None
     assert ask(Q.nonzero(2*x), Q.positive(x)) is True
@@ -1594,6 +1600,20 @@ def test_nonzero():
     # although this could be False, it is representative of expressions
     # that don't evaluate to a zero with precision
     assert ask(Q.nonzero(cos(1)**2 + sin(1)**2 - 1)) is None
+    assert ask(Q.negative(x+y), ~Q.real(x) & Q.real(y)) is False
+    assert ask(Q.negative(x+y), Q.zero(x) & Q.zero(y)) is False
+    assert ask(Q.negative(x+y), Q.infinite(x) & Q.negative(y)) is None
+    assert ask(Q.negative(x + y), Q.infinite(x) & Q.positive(x)
+               & Q.infinite(y) & Q.negative(y)) is None
+    assert ask(Q.negative(x + y), Q.infinite(x) & Q.positive(x)
+               & Q.negative(y) & ~Q.infinite(y)) is False
+    assert ask(Q.negative(x + y), Q.infinite(x) & Q.negative(x)
+               & Q.negative(y) & ~Q.infinite(y)) is True
+    assum = ~Q.infinite(x) & ~Q.infinite(y) & ~Q.infinite(z) # finite values
+    assert ask(Q.negative(x + y), assum & Q.positive(x) & Q.negative(y)) is None
+    assert ask(Q.negative(x + y + z), assum & Q.negative(x) & Q.nonnegative(y)
+               & Q.nonpositive(z)) is None
+    assert ask(Q.negative(x + y), assum & Q.negative(x)) is None
 
 
 def test_zero():
@@ -1611,6 +1631,11 @@ def test_zero():
     assert ask(Q.zero(x + y), Q.negative(x) & Q.negative(y)) is False
 
     assert ask(Q.zero(2*x)) is None
+    assert ask(Q.zero(4*x)) is None
+    assert ask(Q.zero(22*x)) is None
+    assert ask(Q.zero(123*x)) is None
+    assert ask(Q.zero(2188*x)) is None
+    assert ask(Q.zero(84029*x)) is None
     assert ask(Q.zero(2*x), Q.positive(x)) is False
     assert ask(Q.zero(2*x), Q.negative(x)) is False
     assert ask(Q.zero(x*y), Q.nonzero(x)) is None
@@ -1725,6 +1750,7 @@ def test_prime():
     assert ask(Q.prime(x*y), Q.integer(x) & Q.integer(y)) is None
     assert ask(Q.prime(4*x), Q.integer(x)) is False
     assert ask(Q.prime(4*x)) is None
+    assert ask(Q.prime(23*x)) is None
 
     assert ask(Q.prime(x**2), Q.integer(x)) is False
     assert ask(Q.prime(x**2), Q.prime(x)) is False
@@ -1743,6 +1769,13 @@ def test_positive():
     assert ask(Q.positive(x + y), Q.positive(x) & Q.nonnegative(y)) is True
     assert ask(Q.positive(x + y), Q.positive(x) & Q.negative(y)) is None
     assert ask(Q.positive(x + y), Q.positive(x) & Q.imaginary(y)) is False
+
+    assert ask(Q.positive(-x - 1), Q.positive(x)) is False
+    assert ask(Q.positive(x + y), Q.nonpositive(x) & Q.nonpositive(y)) is False
+    assert ask(Q.positive(x + y), Q.nonnegative(x) & Q.positive(y)) is True
+    assumption = Q.zero(x) & Q.nonnegative(y) & Q.positive(z)
+    assert ask(Q.positive(x+y+z),assumption) is True
+    assert ask(Q.positive(x+y-z),assumption) is None
 
     assert ask(Q.positive(2*x), Q.positive(x)) is True
     assumptions = Q.positive(x) & Q.negative(y) & Q.negative(z) & Q.positive(w)
@@ -1787,12 +1820,30 @@ def test_positive():
     #absolute value
     assert ask(Q.positive(Abs(x))) is None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) is True
-
+    assert ask(Q.positive(x+y), ~Q.real(x) & Q.real(y)) is False
+    assert ask(Q.positive(x+y), Q.zero(x) & Q.zero(y)) is False
+    assert ask(Q.positive(x+y), Q.infinite(x) & Q.positive(y)) is None
+    assert ask(Q.positive(x+y), Q.infinite(x) & Q.positive(x)
+               & Q.infinite(y) & Q.negative(y)) is None
+    assert ask(Q.positive(x + y), Q.infinite(x) & Q.positive(x)
+               & Q.negative(y) & ~Q.infinite(y)) is True
+    assert ask(Q.positive(x + y), Q.infinite(x) & Q.negative(x)
+               & Q.negative(y) & ~Q.infinite(y)) is False
+    assum = ~Q.infinite(x) & ~Q.infinite(y) & ~Q.infinite(z) # finite values
+    assert ask(Q.positive(x+y), assum & Q.positive(x) & Q.negative(y)) is None
+    assert ask(Q.positive(x+y+z), assum & Q.positive(x) & Q.nonnegative(y)
+               & Q.nonpositive(z)) is None
+    assert ask(Q.positive(x+y), assum & Q.positive(x)) is None
+    assump = Q.infinite(x) & Q.infinite(y) # infinite values
+    assert ask(Q.positive(x), assump & Q.negative(y)) is None
 
 def test_nonpositive():
     assert ask(Q.nonpositive(-1))
+    assert ask(Q.nonpositive(-12))
+    assert ask(~Q.positive(x), Q.nonpositive(x))
     assert ask(Q.nonpositive(0))
     assert ask(Q.nonpositive(1)) is False
+    assert ask(Q.nonpositive(12)) is False
     assert ask(~Q.positive(x), Q.nonpositive(x))
     assert ask(Q.nonpositive(x), Q.positive(x)) is False
     assert ask(Q.nonpositive(sqrt(-1))) is False
@@ -1830,6 +1881,20 @@ def test_real_basic():
     assert ask(Q.real(I*x), Q.imaginary(x)) is True
     assert ask(Q.real(I*x), Q.complex(x)) is None
 
+def test_Mul():
+    assert ask(Q.real(x*2), Q.real(x)) is True
+    assert ask(Q.real(x*y), Q.real(x) & Q.integer(y)) is True
+    assert ask(Q.real(x*y), Q.positive(x) & Q.integer(y)) is True
+    assert ask(Q.real(x*y), Q.negative(x) & Q.integer(y)) is True
+    assert ask(Q.real(x*y), Q.positive(x) & Q.real(y)) is True
+    assert ask(Q.real(x*y), Q.negative(x) & Q.real(y)) is True
+    assert ask(Q.real(x*y), Q.real(x) & Q.real(y)) is True
+    assert ask(Q.real(x*0), Q.positive(x)) is True
+    assert ask(Q.real(x*0), Q.real(x)) is True
+    assert ask(Q.real(x*y), Q.zero(x) & ~Q.infinite(y)) is True
+    assumption1 = ~Q.infinite(x) & ~Q.infinite(y) & ~Q.infinite(z) & Q.integer(y)
+    assert ask(Q.real(x*y), Q.nonnegative(x) & assumption1) is True
+    assert ask(Q.real(x*y), Q.nonpositive(x) & assumption1) is True
 
 def test_real_pow():
     assert ask(Q.real(x**2), Q.real(x)) is True
@@ -1877,6 +1942,7 @@ def test_real_functions():
     # logarithm
     assert ask(Q.real(log(I))) is False
     assert ask(Q.real(log(2*I))) is False
+    assert ask(Q.real(log(2**I))) is False
     assert ask(Q.real(log(I + 1))) is False
     assert ask(Q.real(log(x)), Q.complex(x)) is None
     assert ask(Q.real(log(x)), Q.imaginary(x)) is False
@@ -1920,6 +1986,8 @@ def test_algebraic():
     assert ask(Q.algebraic(x)) is None
 
     assert ask(Q.algebraic(I)) is True
+    assert ask(Q.algebraic(I+6)) is True
+    assert ask(Q.algebraic(I-4)) is True
     assert ask(Q.algebraic(2*I)) is True
     assert ask(Q.algebraic(I/3)) is True
 
