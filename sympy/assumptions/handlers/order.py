@@ -67,16 +67,26 @@ class AskNegativeHandler(CommonHandler):
         if r is not True:
             return r
 
-        nonpos = 0
-        for arg in expr.args:
-            if ask(Q.negative(arg), assumptions) is not True:
-                if ask(Q.positive(arg), assumptions) is False:
-                    nonpos += 1
-                else:
-                    break
-        else:
-            if nonpos < len(expr.args):
+        # Helper method to check positive or negative
+        # Returns False if positive, True if negative or None otherwise
+        def neg_pos(expr):
+            if ask(Q.negative(expr), assumptions):
                 return True
+            elif ask(Q.positive(expr), assumptions):
+                return False
+            else:
+                return None
+
+        val = None
+        for arg in expr.args:
+            check = neg_pos(arg)
+            if val is None:
+                val = check
+
+            if check is None or check is not val:
+                return
+
+        return val
 
     @staticmethod
     def Mul(expr, assumptions):
@@ -272,16 +282,27 @@ class AskPositiveHandler(CommonHandler):
         if r is not True:
             return r
 
-        nonneg = 0
-        for arg in expr.args:
-            if ask(Q.positive(arg), assumptions) is not True:
-                if ask(Q.negative(arg), assumptions) is False:
-                    nonneg += 1
-                else:
-                    break
-        else:
-            if nonneg < len(expr.args):
+
+        # Helper method to check positive or negative
+        # Returns True if positive, False if negative or None otherwise
+        def neg_pos(expr):
+            if ask(Q.negative(expr), assumptions):
+                return False
+            elif ask(Q.positive(expr), assumptions):
                 return True
+            else:
+                return None
+
+        val = None
+        for arg in expr.args:
+            check = neg_pos(arg)
+            if val is None:
+                val = check
+
+            if check is None or check is not val:
+                return
+
+        return val
 
     @staticmethod
     def Pow(expr, assumptions):
