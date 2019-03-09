@@ -2042,7 +2042,7 @@ class motzkin(Function):
 
     @staticmethod
     def find_motzkin_numbers_in_range(x, y):
-        if 0 <= x <= y:
+        if  x <= y:
             motzkin = list()
             m_0 = 1
             m_1 = 1
@@ -2063,7 +2063,7 @@ class motzkin(Function):
                     return motzkin
 
         else:
-            raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
+            raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
 
     @staticmethod
     def find_first_n_motzkin(n):
