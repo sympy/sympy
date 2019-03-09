@@ -5,6 +5,7 @@ from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
+from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
 
 
