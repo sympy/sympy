@@ -1984,3 +1984,102 @@ def nT(n, k=None):
     for discard in m.enum_range(n[_M], k-1, k):
         tot += 1
     return tot
+
+#-----------------------------------------------------------------------------#
+#                                                                             #
+#                          Motzkin numbers                                    #
+#                                                                             #
+#-----------------------------------------------------------------------------#
+class motzkin(Function):
+    """
+    In mathematics, the nth Motzkin number is the number
+    of different ways of drawing non-intersecting chords
+    between n points on a circle (not necessarily touching
+    every point by a chord). The Motzkin numbers are named
+    after Theodore Motzkin and have diverse applications
+    in geometry, combinatorics and number theory.
+
+    Motzkin numbers satisfy this recurrence relation
+    M(n) = ( (2n+1) / (n+2) )*M(n-1)  +  ( (3n-3) / (n+2) )*M(n-2)
+    Examples
+    ========
+
+    >>> from sympy import motzkin
+    >>> motzkin.find_first_n_motzkin(10)
+        [1, 1, 2.0, 4.0, 9.0, 21.0, 51.0, 127.0, 323.0, 835.0]
+
+    >>> motzkin.find_motzkin_numbers_in_range(100,1000)
+        [127.0, 323.0, 835.0]
+
+    >>> motzkin.is_motzkin(100)
+        False
+
+    >>> motzkin.is_motzkin(51)
+        True
+    """
+    @staticmethod
+    def is_motzkin(n):
+        if n >= 0:
+             if n==1:
+                 return True
+             m_0=1
+             m_1=1
+             i=2
+             while (1):
+                 next_num=((2*i+1)/(i+2))*m_1+((3*i-3)/(i+2))*m_0
+                 if next_num==n:
+                     return True
+                 if next_num>n:
+                     return False
+                 m_0=m_1
+                 m_1=next_num
+                 i=i+1
+
+        else:
+            raise ValueError('The provided number must be greater than or equal to 0')
+
+    @staticmethod
+    def find_motzkin_numbers_in_range(x, y):
+        if 0 <= x <= y:
+            motzkin=list()
+            m_0=1
+            m_1=1
+            if x<=m_0 :
+                motzkin.append(m_0)
+                motzkin.append(m_1)
+            i=2
+            while (1):
+                next_num=((2*i+1)/(i+2))*m_1+((3*i-3)/(i+2))*m_0
+                m_0=m_1
+                m_1=next_num
+                i=i+1
+                if next_num <x:
+                    continue
+                if next_num<=y:
+                    motzkin.append(next_num)
+                else:
+                    return motzkin
+
+        else:
+            raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
+
+    @staticmethod
+    def find_first_n_motzkin(n):
+        n=n-1
+        i = 0
+        motzkin=list()
+        m_0=1
+        m_1=1
+        if i<=n:
+            motzkin.append(m_0)
+            i=i+1
+        if i<=n:
+            motzkin.append(m_1)
+            i=i+1
+        while (i<=n):
+            next_num=((2*i+1)/(i+2))*m_1+((3*i-3)/(i+2))*m_0
+            m_0=m_1
+            m_1=next_num
+            motzkin.append(next_num)
+            i=i+1
+        return motzkin
