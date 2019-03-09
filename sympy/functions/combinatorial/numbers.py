@@ -2001,6 +2001,8 @@ class motzkin(Function):
 
     Motzkin numbers satisfy this recurrence relation
     M(n) = ( (2n+1) / (n+2) )*M(n-1)  +  ( (3n-3) / (n+2) )*M(n-2)
+    
+    
     Examples
     ========
 
@@ -2019,43 +2021,43 @@ class motzkin(Function):
     """
     @staticmethod
     def is_motzkin(n):
-        if n >= 0:
-             if n==1:
+        if n > 0:
+             if n == 1:
                  return True
-             m_0=1
-             m_1=1
-             i=2
-             while (1):
-                 next_num=((2*i+1)/(i+2))*m_1+((3*i-3)/(i+2))*m_0
-                 if next_num==n:
+             m_0 = 1
+             m_1 = 1
+             i = 2
+             while(1):
+                 next_num = ((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0
+                 if next_num == n:
                      return True
-                 if next_num>n:
+                 if next_num > n:
                      return False
-                 m_0=m_1
-                 m_1=next_num
-                 i=i+1
+                 m_0 = m_1
+                 m_1 = next_num
+                 i = i + 1
 
         else:
-            raise ValueError('The provided number must be greater than or equal to 0')
+            raise ValueError('The provided number must be greater than to 0')
 
     @staticmethod
     def find_motzkin_numbers_in_range(x, y):
         if 0 <= x <= y:
-            motzkin=list()
-            m_0=1
-            m_1=1
-            if x<=m_0 :
+            motzkin = list()
+            m_0 = 1
+            m_1 = 1
+            if x <= m_0 :
                 motzkin.append(m_0)
                 motzkin.append(m_1)
-            i=2
-            while (1):
-                next_num=((2*i+1)/(i+2))*m_1+((3*i-3)/(i+2))*m_0
-                m_0=m_1
-                m_1=next_num
-                i=i+1
-                if next_num <x:
+            i = 2
+            while(1):
+                next_num = ((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0
+                m_0 = m_1
+                m_1 = next_num
+                i = i + 1
+                if next_num < x:
                     continue
-                if next_num<=y:
+                if next_num <= y:
                     motzkin.append(next_num)
                 else:
                     return motzkin
@@ -2065,21 +2067,21 @@ class motzkin(Function):
 
     @staticmethod
     def find_first_n_motzkin(n):
-        n=n-1
+        n = n-1
         i = 0
-        motzkin=list()
-        m_0=1
-        m_1=1
-        if i<=n:
+        motzkin = list()
+        m_0 = 1
+        m_1 = 1
+        if i <= n:
             motzkin.append(m_0)
-            i=i+1
-        if i<=n:
+            i = i + 1
+        if i <= n:
             motzkin.append(m_1)
-            i=i+1
-        while (i<=n):
-            next_num=((2*i+1)/(i+2))*m_1+((3*i-3)/(i+2))*m_0
-            m_0=m_1
-            m_1=next_num
+            i = i + 1
+        while(i <= n):
+            next_num = ((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0
+            m_0 = m_1
+            m_1 = next_num
             motzkin.append(next_num)
-            i=i+1
+            i = i + 1
         return motzkin
