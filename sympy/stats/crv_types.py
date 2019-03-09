@@ -936,10 +936,10 @@ def Exponential(name, rate):
     >>> from sympy.stats import variance, std, skewness
     >>> from sympy import Symbol
 
-    >>> l = Symbol("lambda", positive=True)
+    >>> rate = Symbol("lambda", positive=True)
     >>> z = Symbol("z")
 
-    >>> X = Exponential("x", l)
+    >>> X = Exponential("x", rate)
 
     >>> density(X)(z)
     lambda*exp(-lambda*z)
@@ -1133,8 +1133,8 @@ class FrechetDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(a, s, m):
-        _value_check(a > 0, "Shape paramter a must be positive.")
-        _value_check(s > 0, "Scale paramter s must be positive.")
+        _value_check(a > 0, "Shape parameter a must be positive.")
+        _value_check(s > 0, "Scale parameter s must be positive.")
 
     def __new__(cls, a, s=1, m=0):
         a, s, m = list(map(sympify, (a, s, m)))
@@ -1318,7 +1318,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(a, b):
         _value_check(a > 0, "Shape parameter Alpha must be positive.")
-        _value_check(b > 0, "Shape paramter Beta must be positive.")
+        _value_check(b > 0, "Shape parameter Beta must be positive.")
 
     def pdf(self, x):
         a, b = self.a, self.b
@@ -1360,8 +1360,8 @@ def GammaInverse(name, a, b):
     Parameters
     ==========
 
-    alpha : Real number, `\alpha > 0` a shape
-    beta : Real number, `\beta > 0` a scale
+    a : Real number, `\alpha > 0` a shape
+    b : Real number, `\beta > 0` a scale
 
     Returns
     =======
@@ -1374,23 +1374,24 @@ def GammaInverse(name, a, b):
     >>> from sympy.stats import GammaInverse, density, cdf, E, variance
     >>> from sympy import Symbol, pprint
 
-    >>> a = Symbol("a", positive=True)
-    >>> b = Symbol("b", positive=True)
+    >>> a = Symbol("alpha", positive=True)
+    >>> b = Symbol("beta", positive=True)
     >>> z = Symbol("z")
 
     >>> X = GammaInverse("x", a, b)
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                -b
-                ---
-     a  -a - 1   z
-    b *z      *e
-    ---------------
-       Gamma(a)
+                           -beta
+                           ------
+        alpha  -alpha - 1    z
+    beta     *z          *e
+    -----------------------------
+             Gamma(alpha)
+
 
     >>> cdf(X)(z)
-    Piecewise((uppergamma(a, b/z)/gamma(a), z > 0), (0, True))
+    Piecewise((uppergamma(alpha, beta/z)/gamma(alpha), z > 0), (0, True))
 
 
     References
@@ -1413,7 +1414,7 @@ class GompertzDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(b, eta):
-        _value_check(b > 0, "Scale paramter b must be positive.")
+        _value_check(b > 0, "Scale parameter b must be positive.")
         _value_check(eta > 0, "Shape parameter eta must be positive.")
 
     def pdf(self, x):
@@ -1499,15 +1500,15 @@ def Gumbel(name, beta, mu):
     The density of the Gumbel distribution is given by
 
     .. math::
-        f(x) := \exp \left( -exp \left( x + \exp \left( -x \right) \right) \right)
+        f(x) := \frac{1}{\beta}\exp^{-(\frac{(x - \mu)}{\beta} + \exp^{-\frac{(x - \mu)}{\beta}})}
 
     with ::math 'x \in [ - \inf, \inf ]'.
 
     Parameters
     ==========
 
-    mu: Real number, 'mu' is a location
     beta: Real number, 'beta > 0' is a scale
+    mu: Real number, 'mu' is a location
 
     Returns
     ==========
@@ -1516,11 +1517,11 @@ def Gumbel(name, beta, mu):
 
     Examples
     ==========
-    >>> from sympy.stats import Gumbel, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import Gumbel, density
+    >>> from sympy import Symbol
 
-    >>> mu = Symbol("mu")
     >>> beta = Symbol("beta", positive=True)
+    >>> mu = Symbol("mu")
     >>> z = Symbol("z")
 
     >>> X = Gumbel("x", beta, mu)
@@ -1742,8 +1743,8 @@ def Logistic(name, mu, s):
     Parameters
     ==========
 
-    mu : Real number, the location (mean)
-    s : Real number, `s > 0` a scale
+    mu : Real number, `\mu`, the location (mean)
+    s : Real number, `s > 0`, a scale
 
     Returns
     =======
@@ -1810,7 +1811,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
 
 def LogNormal(name, mean, std):
     r"""
-    Create a continuous random variable with a log-normal distribution.
+    Creates a Continuous Random Variable with log-normal distribution.
 
     The density of the log-normal distribution is given by
 
@@ -1823,8 +1824,8 @@ def LogNormal(name, mean, std):
     Parameters
     ==========
 
-    mu : Real number, the log-scale
-    sigma : Real number, :math:`\sigma > 0` a shape
+    mean : Real number, :math:`\mu` ,the log-scale
+    std : Real number, :math:`\sigma > 0` a shape
 
     Returns
     =======
@@ -1837,11 +1838,11 @@ def LogNormal(name, mean, std):
     >>> from sympy.stats import LogNormal, density
     >>> from sympy import Symbol, pprint
 
-    >>> mu = Symbol("mu", real=True)
-    >>> sigma = Symbol("sigma", positive=True)
+    >>> mean = Symbol("mu", real=True)
+    >>> std = Symbol("sigma", positive=True)
     >>> z = Symbol("z")
 
-    >>> X = LogNormal("x", mu, sigma)
+    >>> X = LogNormal("x", mean, std)
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
@@ -2075,9 +2076,9 @@ def Normal(name, mean, std):
     Parameters
     ==========
 
-    mu : Real number or a list representing the mean or the mean vector
-    sigma : Real number or a positive definite sqaure matrix,
-         :math:`\sigma^2 > 0` the variance
+    mean : Real number or a list representing the mean or the mean vector, :math:`\mu`
+    std : Real number or a positive definite sqaure matrix,
+         :math:`\sigma > 0` the standard deviation
 
     Returns
     =======
@@ -2218,13 +2219,13 @@ def Pareto(name, xm, alpha):
     >>> from sympy import Symbol
 
     >>> xm = Symbol("xm", positive=True)
-    >>> beta = Symbol("beta", positive=True)
+    >>> alpha = Symbol("alpha", positive=True)
     >>> z = Symbol("z")
 
-    >>> X = Pareto("x", xm, beta)
+    >>> X = Pareto("x", xm, alpha)
 
     >>> density(X)(z)
-    beta*xm**beta*z**(-beta - 1)
+    alpha*xm**alpha*z**(-alpha - 1)
 
     References
     ==========
@@ -2269,7 +2270,7 @@ class QuadraticUDistribution(SingleContinuousDistribution):
 
 def QuadraticU(name, a, b):
     r"""
-    Create a Continuous Random Variable with a U-quadratic distribution.
+    Creates a Continuous Random Variable with U-quadratic distribution.
 
     The density of the U-quadratic distribution is given by
 
@@ -2331,7 +2332,7 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(mu, s):
-        _value_check(s > 0, "The paramter s must be positive.")
+        _value_check(s > 0, "The parameter s must be positive.")
 
     @property
     def set(self):
@@ -2808,50 +2809,50 @@ def Triangular(name, a, b, c):
 
 
 class UniformDistribution(SingleContinuousDistribution):
-    _argnames = ('left', 'right')
+    _argnames = ('a', 'b')
 
     @staticmethod
-    def check(left, right):
-        _value_check(left <= right, "The right boundary must be greater than left.")
+    def check(a, b):
+        _value_check(a <= b, "The right boundary (b) must be greater than left boundary (a).")
 
     def pdf(self, x):
-        left, right = self.left, self.right
+        a, b = self.a, self.b
         return Piecewise(
-            (S.One/(right - left), And(left <= x, x <= right)),
+            (S.One/(b - a), And(a <= x, x <= b)),
             (S.Zero, True)
         )
 
     def _cdf(self, x):
-        left, right = self.left, self.right
+        a, b = self.a, self.b
         return Piecewise(
-            (S.Zero, x < left),
-            ((x - left)/(right - left), x <= right),
+            (S.Zero, x < a),
+            ((x - a)/(b - a), x <= b),
             (S.One, True)
         )
 
     def _characteristic_function(self, t):
-        left, right = self.left, self.right
-        return Piecewise(((exp(I*t*right) - exp(I*t*left)) / (I*t*(right - left)), Ne(t, 0)),
+        a, b = self.a, self.b
+        return Piecewise(((exp(I*t*b) - exp(I*t*a)) / (I*t*(b - a)), Ne(t, 0)),
                          (S.One, True))
 
     def _moment_generating_function(self, t):
-        left, right = self.left, self.right
-        return Piecewise(((exp(t*right) - exp(t*left)) / (t * (right - left)), Ne(t, 0)),
+        a, b = self.a, self.b
+        return Piecewise(((exp(t*b) - exp(t*a)) / (t * (b - a)), Ne(t, 0)),
                          (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
         from sympy import Max, Min
         kwargs['evaluate'] = True
         result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
-        result = result.subs({Max(self.left, self.right): self.right,
-                              Min(self.left, self.right): self.left})
+        result = result.subs({Max(self.a, self.b): self.b,
+                              Min(self.a, self.b): self.a})
         return result
 
     def sample(self):
-        return random.uniform(self.left, self.right)
+        return random.uniform(self.a, self.b)
 
 
-def Uniform(name, left, right):
+def Uniform(name, a, b):
     r"""
     Creates a Continuous Random Variable with Uniform distribution.
 
@@ -2908,7 +2909,7 @@ def Uniform(name, left, right):
 
     """
 
-    return rv(name, UniformDistribution, (left, right))
+    return rv(name, UniformDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
 # UniformSum distribution ------------------------------------------------------
@@ -3088,23 +3089,23 @@ def VonMises(name, mu, k):
 
 
 class WeibullDistribution(SingleContinuousDistribution):
-    _argnames = ('alpha', 'beta')
+    _argnames = ('l', 'k')
 
     set = Interval(0, oo)
 
     @staticmethod
-    def check(alpha, beta):
-        _value_check(alpha > 0, "Scale parameter lambda must be positive.")
-        _value_check(beta > 0, "Shape parameter k must be positive.")
+    def check(l, k):
+        _value_check(l > 0, "Scale parameter lambda must be positive.")
+        _value_check(k > 0, "Shape parameter k must be positive.")
 
     def pdf(self, x):
-        alpha, beta = self.alpha, self.beta
-        return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
+        l, k = self.l, self.k
+        return k * (x/l)**(k - 1) * exp(-(x/l)**k) / l
 
     def sample(self):
-        return random.weibullvariate(self.alpha, self.beta)
+        return random.weibullvariate(self.l, self.k)
 
-def Weibull(name, alpha, beta):
+def Weibull(name, l, k):
     r"""
     Creates a Continuous Random Variable with Weibull distribution.
 
@@ -3120,7 +3121,7 @@ def Weibull(name, alpha, beta):
     Parameters
     ==========
 
-    lambda : Real number, :math:`\lambda > 0` a scale
+    l : Real number, :math:`\lambda > 0` a scale
     k : Real number, `k > 0` a shape
 
     Returns
@@ -3157,7 +3158,7 @@ def Weibull(name, alpha, beta):
 
     """
 
-    return rv(name, WeibullDistribution, (alpha, beta))
+    return rv(name, WeibullDistribution, (l, k))
 
 #-------------------------------------------------------------------------------
 # Wigner semicircle distribution -----------------------------------------------
