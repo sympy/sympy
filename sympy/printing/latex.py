@@ -405,7 +405,7 @@ class LatexPrinter(Printer):
 
     def _print_Gradient(self, expr):
         func = expr._expr
-        return r"\nabla\cdot %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+        return r"\nabla %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
         from sympy.core.power import Pow

@@ -138,7 +138,6 @@ class PrettyPrinter(Printer):
         pform = self._print(func)
         pform = prettyForm(*pform.left('('))
         pform = prettyForm(*pform.right(')'))
-        pform = prettyForm(*pform.left(self._print(U('DOT OPERATOR'))))
         pform = prettyForm(*pform.left(self._print(U('NABLA'))))
         return pform
 
