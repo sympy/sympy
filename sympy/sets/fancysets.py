@@ -1,20 +1,15 @@
 from __future__ import print_function, division
 
-from sympy.logic.boolalg import And
-from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
-from sympy.core.function import Lambda, _coeff_isneg
+from sympy.core.function import Lambda
 from sympy.core.singleton import Singleton, S
-from sympy.core.decorators import deprecated
-from sympy.multipledispatch import dispatch
-from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.core.symbol import Dummy, symbols
 from sympy.core.sympify import _sympify, sympify, converter
-from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet, imageset)
-from sympy.sets.conditionset import ConditionSet
-from sympy.utilities.misc import filldedent, func_name
+from sympy.logic.boolalg import And
+from sympy.sets.sets import Set, Interval, Union, FiniteSet
+from sympy.utilities.misc import filldedent
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -41,6 +36,7 @@ class Naturals(with_metaclass(Singleton, Set)):
 
     See Also
     ========
+
     Naturals0 : non-negative integers (i.e. includes 0, too)
     Integers : also includes negative integers
     """
@@ -74,6 +70,7 @@ class Naturals0(Naturals):
 
     See Also
     ========
+
     Naturals : positive integers; does not include 0
     Integers : also includes the negative integers
     """
@@ -114,6 +111,7 @@ class Integers(with_metaclass(Singleton, Set)):
 
     See Also
     ========
+
     Naturals0 : non-negative integers
     Integers : positive and negative integers and zero
     """
@@ -215,6 +213,7 @@ class ImageSet(Set):
 
     See Also
     ========
+
     sympy.sets.sets.imageset
     """
     def __new__(cls, flambda, *sets):
