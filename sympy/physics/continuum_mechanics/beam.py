@@ -396,7 +396,7 @@ class Beam(object):
         start = sympify(start)
         order = sympify(order)
 
-        if start.is_real and start > self.length or (end != None and end > self.length):
+        if start.is_real and start > self.length or (end != None and end.is_real and end > self.length):
             msg = ("Start and End of load application must be less than "
                    "the length of the Beam.")
             raise ValueError(msg)
