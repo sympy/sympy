@@ -2001,8 +2001,8 @@ class motzkin(Function):
 
     Motzkin numbers satisfy this recurrence relation
     M(n) = ( (2n+1) / (n+2) )*M(n-1)  +  ( (3n-3) / (n+2) )*M(n-2)
-    
-    
+
+
     Examples
     ========
 
