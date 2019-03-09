@@ -366,7 +366,7 @@ class DenseMatrix(MatrixBase):
         [1, 2],
         [3, 5]])
         """
-        return Matrix(self)
+        return MutableDenseMatrix(self)
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
@@ -424,7 +424,7 @@ def _force_mutable(x):
         a = x.__array__()
         if len(a.shape) == 0:
             return sympify(a)
-        return Matrix(x)
+        return MutableDenseMatrix(x)
     return x
 
 
@@ -611,7 +611,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         """
         if not is_sequence(value):
             raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
-        return self.copyin_matrix(key, Matrix(value))
+        return self.copyin_matrix(key, MutableDenseMatrix(value))
 
     def copyin_matrix(self, key, value):
         """Copy in values from a matrix into the given bounds.
@@ -798,8 +798,6 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
     # Utility functions
 
-MutableMatrix = Matrix = MutableDenseMatrix
-
 ###########
 # Numpy Utility Functions:
 # list2numpy, matrix2numpy, symmarray, rot_axis[123]
@@ -877,7 +875,7 @@ def rot_axis3(theta):
     lil = ((ct, st, 0),
            (-st, ct, 0),
            (0, 0, 1))
-    return Matrix(lil)
+    return MutableDenseMatrix(lil)
 
 
 def rot_axis2(theta):
@@ -920,7 +918,7 @@ def rot_axis2(theta):
     lil = ((ct, 0, -st),
            (0, 1, 0),
            (st, 0, ct))
-    return Matrix(lil)
+    return MutableDenseMatrix(lil)
 
 
 def rot_axis1(theta):
@@ -963,7 +961,7 @@ def rot_axis1(theta):
     lil = ((1, 0, 0),
            (0, ct, st),
            (0, -st, ct))
-    return Matrix(lil)
+    return MutableDenseMatrix(lil)
 
 
 @doctest_depends_on(modules=('numpy',))
@@ -1073,8 +1071,6 @@ def casoratian(seqs, n, zero=True):
        True
 
     """
-    from .dense import Matrix
-
     seqs = list(map(sympify, seqs))
 
     if not zero:
@@ -1084,7 +1080,7 @@ def casoratian(seqs, n, zero=True):
 
     k = len(seqs)
 
-    return Matrix(k, k, f).det()
+    return MutableDenseMatrix(k, k, f).det()
 
 
 def eye(*args, **kwargs):
@@ -1097,9 +1093,7 @@ def eye(*args, **kwargs):
     zeros
     ones
     """
-    from .dense import Matrix
-
-    return Matrix.eye(*args, **kwargs)
+    return MutableDenseMatrix.eye(*args, **kwargs)
 
 
 def diag(*values, **kwargs):
@@ -1188,18 +1182,15 @@ def diag(*values, **kwargs):
 
     eye
     """
-
-    from .dense import Matrix
-
     # diag assumes any lists passed in are to be interpreted
     # as arguments to Matrix, so apply Matrix to any list arguments
     def normalize(m):
         if is_sequence(m) and not isinstance(m, MatrixBase):
-            return Matrix(m)
+            return MutableDenseMatrix(m)
         return m
     values = (normalize(m) for m in values)
 
-    return Matrix.diag(*values, **kwargs)
+    return MutableDenseMatrix.diag(*values, **kwargs)
 
 
 def GramSchmidt(vlist, orthonormal=False):
@@ -1317,9 +1308,7 @@ def jordan_cell(eigenval, n):
     [0, 0, x, 1],
     [0, 0, 0, x]])
     """
-    from .dense import Matrix
-
-    return Matrix.jordan_block(size=n, eigenvalue=eigenval)
+    return MutableDenseMatrix.jordan_block(size=n, eigenvalue=eigenval)
 
 
 def matrix_multiply_elementwise(A, B):
@@ -1356,9 +1345,8 @@ def ones(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-    from .dense import Matrix
 
-    return Matrix.ones(*args, **kwargs)
+    return MutableDenseMatrix.ones(*args, **kwargs)
 
 
 def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
@@ -1415,7 +1403,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     prng = prng or random.Random(seed)
 
     if not symmetric:
-        m = Matrix._new(r, c, lambda i, j: prng.randint(min, max))
+        m = MutableDenseMatrix._new(r, c, lambda i, j: prng.randint(min, max))
         if percent == 100:
             return m
         z = int(r*c*(100 - percent) // 100)
@@ -1460,14 +1448,12 @@ def wronskian(functions, var, method='bareiss'):
     sympy.matrices.mutable.Matrix.jacobian
     hessian
     """
-    from .dense import Matrix
-
     for index in range(0, len(functions)):
         functions[index] = sympify(functions[index])
     n = len(functions)
     if n == 0:
         return 1
-    W = Matrix(n, n, lambda i, j: functions[i].diff(var, j))
+    W = MutableDenseMatrix(n, n, lambda i, j: functions[i].diff(var, j))
     return W.det(method)
 
 
@@ -1482,10 +1468,7 @@ def zeros(*args, **kwargs):
     eye
     diag
     """
-
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
 
-    from .dense import Matrix
-
-    return Matrix.zeros(*args, **kwargs)
+    return MutableDenseMatrix.zeros(*args, **kwargs)

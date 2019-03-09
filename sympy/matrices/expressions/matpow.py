@@ -4,7 +4,6 @@ from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 from .transpose import Transpose
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import range
-from sympy.matrices import MatrixBase
 from sympy.core import S, Basic
 
 
@@ -51,6 +50,7 @@ class MatPow(MatrixExpr):
         return A._entry(i, j)
 
     def doit(self, **kwargs):
+        from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.expressions import Inverse
         deep = kwargs.get('deep', True)
         if deep:

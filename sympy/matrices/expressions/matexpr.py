@@ -591,7 +591,7 @@ class MatrixElement(Expr):
 
     def __new__(cls, name, n, m):
         n, m = map(sympify, (n, m))
-        from sympy import MatrixBase
+        from sympy.matrices.matrices import MatrixBase
         if isinstance(name, (MatrixBase,)):
             if n.is_Integer and m.is_Integer:
                 return name[n, m]
@@ -615,7 +615,7 @@ class MatrixElement(Expr):
         from sympy import Sum, symbols, Dummy
 
         if not isinstance(v, MatrixElement):
-            from sympy import MatrixBase
+            from sympy.matrices.matrices import MatrixBase
             if isinstance(self.parent, MatrixBase):
                 return self.parent.diff(v)[self.i, self.j]
             return S.Zero

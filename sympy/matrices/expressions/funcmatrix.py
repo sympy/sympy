@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 from .matexpr import MatrixExpr
 from sympy import Basic, sympify
-from sympy.matrices import Matrix
 from sympy.functions.elementary.complexes import re, im
 
 class FunctionMatrix(MatrixExpr):
@@ -49,4 +48,5 @@ class FunctionMatrix(MatrixExpr):
         return Trace(self).rewrite(Sum).doit()
 
     def as_real_imag(self):
-        return (re(Matrix(self)), im(Matrix(self)))
+        from sympy.matrices.dense import MutableDenseMatrix
+        return (re(MutableDenseMatrix(self)), im(MutableDenseMatrix(self)))

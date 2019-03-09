@@ -5,7 +5,6 @@ from operator import add
 
 from sympy.core import Add, Basic, sympify
 from sympy.functions import adjoint
-from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
@@ -118,6 +117,7 @@ def merge_explicit(matadd):
     A + [    ]
         [3  5]
     """
+    from sympy.matrices.matrices import MatrixBase
     groups = sift(matadd.args, lambda arg: isinstance(arg, MatrixBase))
     if len(groups[True]) > 1:
         return MatAdd(*(groups[False] + [reduce(add, groups[True])]))

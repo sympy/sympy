@@ -241,7 +241,7 @@ def interpolating_spline(d, x, X, Y):
     """
     from sympy import symbols, Number, Dummy, Rational
     from sympy.solvers.solveset import linsolve
-    from sympy.matrices.dense import Matrix
+    from sympy.matrices.dense import MutableDenseMatrix as Matrix
 
     # Input sanitization
     d = sympify(d)

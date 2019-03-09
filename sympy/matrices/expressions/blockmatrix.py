@@ -16,7 +16,7 @@ from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices import Matrix, ShapeError
+from sympy.matrices.common import ShapeError
 from sympy.functions.elementary.complexes import re, im
 
 class BlockMatrix(MatrixExpr):
@@ -101,6 +101,7 @@ class BlockMatrix(MatrixExpr):
         return self + other
 
     def _eval_transpose(self):
+        from sympy.matrices.dense import MutableDenseMatrix as Matrix
         # Flip all the individual matrices
         matrices = [transpose(matrix) for matrix in self.blocks]
         # Make a copy
@@ -127,6 +128,8 @@ class BlockMatrix(MatrixExpr):
         return Determinant(self)
 
     def as_real_imag(self):
+        from sympy.matrices.dense import MutableDenseMatrix as Matrix
+
         real_matrices = [re(matrix) for matrix in self.blocks]
         real_matrices = Matrix(self.blockshape[0], self.blockshape[1], real_matrices)
 
@@ -381,6 +384,7 @@ def bc_inverse(expr):
     return blockinverse_2x2(Inverse(reblock_2x2(expr.arg)))
 
 def blockinverse_1x1(expr):
+    from sympy.matrices.dense import MutableDenseMatrix as Matrix
     if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (1, 1):
         mat = Matrix([[expr.arg.blocks[0].inverse()]])
         return BlockMatrix(mat)
@@ -404,7 +408,7 @@ def deblock(B):
     wrap = lambda x: x if isinstance(x, BlockMatrix) else BlockMatrix([[x]])
     bb = B.blocks.applyfunc(wrap)  # everything is a block
 
-    from sympy import Matrix
+    from sympy.matrices.dense import MutableDenseMatrix as Matrix
     try:
         MM = Matrix(0, sum(bb[0, i].blocks.shape[1] for i in range(bb.shape[1])), [])
         for row in range(0, bb.shape[0]):

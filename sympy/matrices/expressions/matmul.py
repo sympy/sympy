@@ -10,7 +10,6 @@ from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
         Identity, ZeroMatrix, GenericIdentity)
 from sympy.matrices.expressions.matpow import MatPow
-from sympy.matrices.matrices import MatrixBase
 
 
 class MatMul(MatrixExpr, Mul):
@@ -56,7 +55,8 @@ class MatMul(MatrixExpr, Mul):
         return (matrices[0].rows, matrices[-1].cols)
 
     def _entry(self, i, j, expand=True):
-        from sympy import Dummy, Sum, Mul, ImmutableMatrix, Integer
+        from sympy import Dummy, Sum, Mul, Integer
+        from sympy.matrices.immutable import ImmutableDenseMatrix
 
         coeff, matrices = self.as_coeff_matrices()
 
@@ -73,7 +73,7 @@ class MatMul(MatrixExpr, Mul):
             ind_ranges[i] = arg.shape[1] - 1
         matrices = [arg[indices[i], indices[i+1]] for i, arg in enumerate(matrices)]
         expr_in_sum = Mul.fromiter(matrices)
-        if any(v.has(ImmutableMatrix) for v in matrices):
+        if any(v.has(ImmutableDenseMatrix) for v in matrices):
             expand = True
         result = coeff*Sum(
                 expr_in_sum,
@@ -221,6 +221,7 @@ def merge_explicit(matmul):
     [    ]*A*[    ]
     [1  1]   [3  4]
     """
+    from sympy.matrices.matrices import MatrixBase
     if not any(isinstance(arg, MatrixBase) for arg in matmul.args):
         return matmul
     newargs = []

@@ -1,5 +1,5 @@
 from sympy.matrices.expressions import MatrixExpr
-from sympy import MatrixBase
+from sympy.matrices.matrices import MatrixBase
 
 
 class ElementwiseApplyFunction(MatrixExpr):

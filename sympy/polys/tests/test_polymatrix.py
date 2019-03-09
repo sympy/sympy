@@ -1,4 +1,4 @@
-from sympy.matrices.dense import Matrix
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.polys.polymatrix import PolyMatrix
 from sympy.polys import Poly
 

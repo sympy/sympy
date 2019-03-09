@@ -5,13 +5,8 @@ from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
-from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
 
-
-def sympify_matrix(arg):
-    return arg.as_immutable()
-sympify_converter[MatrixBase] = sympify_matrix
 
 class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     """Create an immutable version of a matrix.
@@ -125,9 +120,6 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
 # the object is non-zero
 # See https://github.com/sympy/sympy/issues/7213
 ImmutableDenseMatrix.is_zero = DenseMatrix.is_zero
-
-# make sure ImmutableDenseMatrix is aliased as ImmutableMatrix
-ImmutableMatrix = ImmutableDenseMatrix
 
 
 class ImmutableSparseMatrix(SparseMatrix, Basic):
