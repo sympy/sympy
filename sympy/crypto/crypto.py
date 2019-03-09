@@ -1268,21 +1268,21 @@ def encipher_rsa(i, key):
     """
     Return encryption of "i" by computing 'i^e' (mod 'n'),
     where "key" is the key '(n, e)'. "key" may be a public
-	key or a private key.
+    key or a private key.
 
     Examples
     ========
-	*Public Key Encryption*
-	
+    *Public Key Encryption*
+    
     >>> from sympy.crypto.crypto import encipher_rsa, rsa_public_key
     >>> p, q, e = 3, 5, 7
     >>> puk = rsa_public_key(p, q, e)
     >>> msg = 12
     >>> encipher_rsa(msg, puk)
     3
-	
-	*Private Key Encryption*
-	>>> from sympy.crypto.crypto import encipher_rsa, rsa_private_key
+    
+    *Private Key Encryption*
+    >>> from sympy.crypto.crypto import encipher_rsa, rsa_private_key
     >>> p, q, e = 3, 5, 7
     >>> prk = rsa_private_key(p, q, e)
     >>> msg = 12
@@ -1297,18 +1297,18 @@ def decipher_rsa(i, key):
     """
     Return decyption of "i" by computing 'i^d' (mod 'n'),
     where "key" is the key '(n, d)'. "key" may be a public
-	key or a private key.
+    key or a private key.
 
     Examples
     ========
     >>> from sympy.crypto.crypto import decipher_rsa, rsa_private_key
     >>> p, q, e = 3, 5, 7
     >>> prk = rsa_private_key(p, q, e)
-	>>> puk = rsa_public_key(p, q, e)
-	>>> msg = 12
-	>>> new_msg = encipher_rsa(msg, prk)
-	>>> new_msg
-	3
+    >>> puk = rsa_public_key(p, q, e)
+    >>> msg = 12
+    >>> new_msg = encipher_rsa(msg, prk)
+    >>> new_msg
+    3
     >>> decipher_rsa(new_msg, puk)
     12
     """
