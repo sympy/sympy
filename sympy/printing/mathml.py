@@ -720,42 +720,41 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(x)
         return mrow
 
-    def _print_Integral(self, e):
-        limits = list(e.limits)
-        if len(limits[0]) == 3:
-            subsup = self.dom.createElement('msubsup')
-            low_elem = self._print(limits[0][1])
-            up_elem = self._print(limits[0][2])
-            integral = self.dom.createElement('mo')
-            integral.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-            subsup.appendChild(integral)
-            subsup.appendChild(low_elem)
-            subsup.appendChild(up_elem)
-        if len(limits[0]) == 1:
-            subsup = self.dom.createElement('mrow')
-            integral = self.dom.createElement('mo')
-            integral.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-            subsup.appendChild(integral)
+    def _print_Integral(self, expr):
+        intsymbols = {1: "&#x222B;", 2: "&#x222C;", 3: "&#x222D;" }
 
         mrow = self.dom.createElement('mrow')
-        diff = self.dom.createElement('mo')
-        diff.appendChild(self.dom.createTextNode('&dd;'))
-        if len(str(limits[0][0])) > 1:
-            var = self.dom.createElement('mfenced')
-            var.appendChild(self._print(limits[0][0]))
+        if len(expr.limits) <= 3 and all(len(lim) == 1 for lim in expr.limits):
+            # Only up to three-integral signs exists
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode(intsymbols[len(expr.limits)]))
+            mrow.appendChild(mo)
         else:
-            var = self._print(limits[0][0])
-
-        mrow.appendChild(subsup)
-        if len(str(e.function)) == 1:
-            mrow.appendChild(self._print(e.function))
-        else:
-            fence = self.dom.createElement('mfenced')
-            fence.appendChild(self._print(e.function))
-            mrow.appendChild(fence)
-
-        mrow.appendChild(diff)
-        mrow.appendChild(var)
+            # Either more than three or limits provided
+            for lim in reversed(expr.limits):
+                mo = self.dom.createElement('mo')
+                mo.appendChild(self.dom.createTextNode(intsymbols[1]))
+                if len(lim) == 1:
+                    mrow.appendChild(mo)
+                if len(lim) == 2:
+                    msup = self.dom.createElement('msup')
+                    msup.appendChild(mo)
+                    msup.appendChild(self._print(lim[1]))
+                    mrow.appendChild(msup)
+                if len(lim) == 3:
+                    msubsup = self.dom.createElement('msubsup')
+                    msubsup.appendChild(mo)
+                    msubsup.appendChild(self._print(lim[1]))
+                    msubsup.appendChild(self._print(lim[2]))
+                    mrow.appendChild(msubsup)
+        # print function
+        mrow.appendChild(self.parenthesize(expr.function, PRECEDENCE["Mul"], strict=True))
+        # print integration variables
+        for lim in reversed(expr.limits):
+            d = self.dom.createElement('mo')
+            d.appendChild(self.dom.createTextNode('&dd;'))
+            mrow.appendChild(d)
+            mrow.appendChild(self._print(lim[0]))
         return mrow
 
     def _print_Sum(self, e):
