@@ -102,7 +102,6 @@ def test_vector():
     assert VectorMul(1, i) == i
     assert VectorAdd(v1, Vector.zero) == v1
     assert VectorMul(0, Vector.zero) == Vector.zero
-    raises(TypeError, lambda: v1._vect_div(v4))
     raises(TypeError, lambda: v1.outer(1))
     raises(TypeError, lambda: v1.dot(1))
 

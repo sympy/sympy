@@ -519,10 +519,10 @@ def test_polytopes_intersecting_sides():
 
 
 def test_max_degree():
-    polygon = Polygon(Point(0,0), Point(0,1), Point(1,1), Point(1,0))
+    polygon = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
     polys = [1, x, y, x*y, x**2*y, x*y**2]
     assert polytope_integrate(polygon, polys, max_degree=3) == \
-        {1: 1, x: 1/2, y: 1/2, x*y: 1/4, x**2*y: 1/6, x*y**2: 1/6}
+        {1: 1, x: S(1)/2, y: S(1)/2, x*y: S(1)/4, x**2*y: S(1)/6, x*y**2: S(1)/6}
 
 
 def test_main_integrate3d():
@@ -534,12 +534,14 @@ def test_main_integrate3d():
     faces = cube[1:]
     hp_params = hyperplane_parameters(faces, vertices)
     assert main_integrate3d(1, faces, vertices, hp_params) == -125
-    assert main_integrate3d(1, faces, vertices, hp_params, max_degree=1) == {1: -125, y: -S(625)/2, z: -S(625)/2, x: -S(625)/2}
+    assert main_integrate3d(1, faces, vertices, hp_params, max_degree=1) == \
+        {1: -125, y: -S(625)/2, z: -S(625)/2, x: -S(625)/2}
 
 
 def test_main_integrate():
-    triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
+    triangle = Polygon((0, 3), (5, 3), (1, 1))
     facets = triangle.sides
     hp_params = hyperplane_parameters(triangle)
     assert main_integrate(x**2 + y**2, facets, hp_params) == S(325)/6
-    assert main_integrate(x**2 + y**2, facets, hp_params, max_degree=1) == {0: 0, 1: 5, y: S(35)/3, x: 10}
+    assert main_integrate(x**2 + y**2, facets, hp_params, max_degree=1) == \
+        {0: 0, 1: 5, y: S(35)/3, x: 10}
