@@ -74,16 +74,18 @@ class AskNegativeHandler(CommonHandler):
                 return True
             elif ask(Q.positive(expr), assumptions):
                 return False
+            elif ask(Q.nonnegative(expr) | Q.nonpositive(expr), assumptions):
+                return 0
             else:
                 return None
 
         val = None
         for arg in expr.args:
             check = neg_pos(arg)
-            if val is None:
+            if val is None and check in (True, False):
                 val = check
 
-            if check is (not val):
+            if check is None or check is (not val) :
                 return None
 
         return val
@@ -289,16 +291,18 @@ class AskPositiveHandler(CommonHandler):
                 return False
             elif ask(Q.positive(expr), assumptions):
                 return True
+            elif ask(Q.nonnegative(expr) | Q.nonpositive(expr), assumptions):
+                return 0
             else:
                 return None
 
         val = None
         for arg in expr.args:
             check = neg_pos(arg)
-            if val is None:
+            if val is None and check in (True, False):
                 val = check
 
-            if check is (not val):
+            if check is None or check is (not val):
                 return None
 
         return val
