@@ -1489,7 +1489,6 @@ def encipher_rsa(i, key):
     >>> msg = 12
     >>> encipher_rsa(msg, prk)
     3
-	
     """
     n, e = key
     return pow(i, e, n)
@@ -1503,7 +1502,6 @@ def decipher_rsa(i, key):
 
     Examples
     ========
-	
     >>> from sympy.crypto.crypto import decipher_rsa, rsa_private_key
     >>> p, q, e = 3, 5, 7
     >>> prk = rsa_private_key(p, q, e)
@@ -1514,7 +1512,6 @@ def decipher_rsa(i, key):
 	3
     >>> decipher_rsa(new_msg, puk)
     12
-	
     """
     n, d = key
     return pow(i, d, n)
