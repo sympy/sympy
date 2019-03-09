@@ -642,11 +642,10 @@ def test_issue_8601():
     assert str(c1) == '6.93334070531408e-5'
     c2 = catalan(-35.4).evalf()
     assert str(c2) == '-4.14189164517449e-24'
-    
+
+
 def test_motzkin():
-    assert motzkin.find_motzkin_numbers_in_range(100,10000) == [127.0, 323.0, 835.0, 2188.0, 5798.0]                                                                                                            562)
+    assert motzkin.find_motzkin_numbers_in_range(100,10000) == [127.0, 323.0, 835.0, 2188.0, 5798.0]
     assert motzkin.find_first_n_motzkin(7) == [1, 1, 2.0, 4.0, 9.0, 21.0, 51.0]
     assert motzkin.is_motzkin(51) == True
     assert motzkin.is_motzkin(25) == False
-    
-
