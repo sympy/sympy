@@ -48,5 +48,5 @@ class FunctionMatrix(MatrixExpr):
         return Trace(self).rewrite(Sum).doit()
 
     def as_real_imag(self):
-        from sympy.matrices.dense import MutableDenseMatrix
-        return (re(MutableDenseMatrix(self)), im(MutableDenseMatrix(self)))
+        from sympy.matrices.dense import MutableDenseMatrix as Matrix
+        return (re(Matrix(self)), im(Matrix(self)))

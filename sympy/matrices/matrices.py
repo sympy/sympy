@@ -1903,15 +1903,14 @@ class MatrixDeprecated(MatrixCommon):
     def _legacy_array_dot(self, b):
         """Compatibility function for deprecated behavior of ``matrix.dot(vector)``
         """
-        from .dense import MutableDenseMatrix
-
+        from .dense import MutableDenseMatrix as Matrix
         if not isinstance(b, MatrixBase):
             if is_sequence(b):
                 if len(b) != self.cols and len(b) != self.rows:
                     raise ShapeError(
                         "Dimensions incorrect for dot product: %s, %s" % (
                             self.shape, len(b)))
-                return self.dot(MutableDenseMatrix(b))
+                return self.dot(Matrix(b))
             else:
                 raise TypeError(
                     "`b` must be an ordered iterable or Matrix, not %s." %
@@ -2389,7 +2388,7 @@ class MatrixBase(MatrixDeprecated,
         [0, 0, 4, 0],
         [2, 2, 4, 2]])
         """
-        from .dense import MutableDenseMatrix
+        from .dense import MutableDenseMatrix as Matrix
 
         is_slice = isinstance(key, slice)
         i, j = key = self.key2ij(key)
@@ -2405,7 +2404,7 @@ class MatrixBase(MatrixDeprecated,
         else:
             if (not is_mat and
                     not isinstance(value, Basic) and is_sequence(value)):
-                value = MutableDenseMatrix(value)
+                value = Matrix(value)
                 is_mat = True
             if is_mat:
                 if is_slice:
@@ -3094,8 +3093,7 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
 
-        big = Matrix.hstack(
-            self.as_mutable(), Matrix.eye(self.rows))
+        big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
         red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
             raise ValueError("Matrix det == 0; not invertible.")
