@@ -5,8 +5,9 @@ A MathML printer.
 from __future__ import print_function, division
 
 from sympy import sympify, S, Mul
-from sympy.core.function import _coeff_isneg
 from sympy.core.compatibility import range, string_types, default_sort_key
+from sympy.core.function import _coeff_isneg
+from sympy.core.numbers import E
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import precedence_traditional, PRECEDENCE
 from sympy.printing.pretty.pretty_symbology import greek_unicode
@@ -292,7 +293,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
     def _print_Infinity(self, e):
         return self.dom.createElement('infinity')
 
-    def _print_Negative_Infinity(self, e):
+    def _print_NegativeInfinity(self, e):
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('minus'))
         x.appendChild(self.dom.createElement('infinity'))
@@ -514,6 +515,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'StrictGreaterThan': '>',
             'StrictLessThan': '<',
             'lerchphi': '&#x3A6;',
+            'BooleanTrue' : 'True',
+            'BooleanFalse' : 'False',
+            'NoneType' : 'None',
         }
 
         def mul_symbol_selection():
@@ -711,7 +715,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('&#x221E;'))
         return x
 
-    def _print_Negative_Infinity(self, e):
+    def _print_NegativeInfinity(self, e):
         mrow = self.dom.createElement('mrow')
         y = self.dom.createElement('mo')
         y.appendChild(self.dom.createTextNode('-'))
@@ -1174,6 +1178,63 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             x = self._print(e.args[0])
         mrow.appendChild(x)
         return mrow
+
+    def _print_bool(self, e):
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
+        return mi
+
+    _print_BooleanTrue = _print_bool
+    _print_BooleanFalse = _print_bool
+
+    def _print_NoneType(self, e):
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
+        return mi
+
+    def _print_Range(self, s):
+        dots = u"\u2026"
+        brac = self.dom.createElement('mfenced')
+        brac.setAttribute('open', '{')
+        brac.setAttribute('close', '}')
+
+        if s.start.is_infinite:
+            printset = s.start, dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite or len(s) > 4:
+            it = iter(s)
+            printset = next(it), next(it), dots, s[-1]
+        else:
+            printset = tuple(s)
+
+        for el in printset:
+            if el == dots:
+                mi = self.dom.createElement('mi')
+                mi.appendChild(self.dom.createTextNode(dots))
+                brac.appendChild(mi)
+            else:
+                brac.appendChild(self._print(el))
+
+        return brac
+
+    def _hprint_variadic_function(self, expr):
+        args = sorted(expr.args, key=default_sort_key)
+        mrow = self.dom.createElement('mrow')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode((str(expr.func)).lower()))
+        mrow.appendChild(mo)
+        brac = self.dom.createElement('mfenced')
+        for symbol in args:
+            brac.appendChild(self._print(symbol))
+        mrow.appendChild(brac)
+        return mrow
+
+    _print_Min = _print_Max = _hprint_variadic_function
+
+    def _print_exp(self, expr):
+        msup = self.dom.createElement('msup')
+        msup.appendChild(self._print_Exp1(None))
+        msup.appendChild(self._print(expr.args[0]))
+        return msup
 
     def _print_Relational(self, e):
         mrow = self.dom.createElement('mrow')
