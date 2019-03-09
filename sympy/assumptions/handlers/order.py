@@ -83,8 +83,8 @@ class AskNegativeHandler(CommonHandler):
             if val is None:
                 val = check
 
-            if check is None or check is not val:
-                return
+            if check is (not val):
+                return None
 
         return val
 
@@ -282,7 +282,6 @@ class AskPositiveHandler(CommonHandler):
         if r is not True:
             return r
 
-
         # Helper method to check positive or negative
         # Returns True if positive, False if negative or None otherwise
         def neg_pos(expr):
@@ -299,8 +298,8 @@ class AskPositiveHandler(CommonHandler):
             if val is None:
                 val = check
 
-            if check is None or check is not val:
-                return
+            if check is (not val):
+                return None
 
         return val
 
