@@ -353,7 +353,8 @@ class BaseVector(Vector, AtomicExpr):
         obj._pretty_form = u'' + pretty_str
         obj._latex_form = latex_str
         obj._system = system
-
+        # The _id is used for printing purposes
+        obj._id = (index, system)
         assumptions = {'commutative': True}
         obj._assumptions = StdFactKB(assumptions)
 

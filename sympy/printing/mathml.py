@@ -1251,6 +1251,91 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return dom_element
 
 
+    def _print_BaseScalar(self, e):
+        msub = self.dom.createElement('msub')
+        index, system = e._id
+        mi = self.dom.createElement('mi')
+        mi.setAttribute('mathvariant', 'bold')
+        mi.appendChild(self.dom.createTextNode(system._variable_names[index]))
+        msub.appendChild(mi)
+        mi = self.dom.createElement('mi')
+        mi.setAttribute('mathvariant', 'bold')
+        mi.appendChild(self.dom.createTextNode(system._name))
+        msub.appendChild(mi)
+        return msub
+
+    def _print_BaseVector(self, e):
+        msub = self.dom.createElement('msub')
+        index, system = e._id
+        mover = self.dom.createElement('mover')
+        mi = self.dom.createElement('mi')
+        mi.setAttribute('mathvariant', 'bold')
+        mi.appendChild(self.dom.createTextNode(system._vector_names[index]))
+        mover.appendChild(mi)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('^'))
+        mover.appendChild(mo)
+        msub.appendChild(mover)
+        mi = self.dom.createElement('mi')
+        mi.setAttribute('mathvariant', 'bold')
+        mi.appendChild(self.dom.createTextNode(system._name))
+        msub.appendChild(mi)
+        return msub
+
+    def _print_Cross(self, expr):
+        mrow = self.dom.createElement('mrow')
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        mrow.appendChild(self.parenthesize(vec1, PRECEDENCE['Mul']))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#xD7;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self.parenthesize(vec2, PRECEDENCE['Mul']))
+        return mrow
+
+    def _print_Curl(self, expr):
+        mrow = self.dom.createElement('mrow')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x2207;'))
+        mrow.appendChild(mo)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#xD7;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self.parenthesize(expr._expr, PRECEDENCE['Mul']))
+        return mrow
+        vec = expr._expr
+        return r"\nabla\times %s" % self.parenthesize(vec, PRECEDENCE['Mul'])
+
+    def _print_Divergence(self, expr):
+        mrow = self.dom.createElement('mrow')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x2207;'))
+        mrow.appendChild(mo)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#xB7;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self.parenthesize(expr._expr, PRECEDENCE['Mul']))
+        return mrow
+
+    def _print_Dot(self, expr):
+        mrow = self.dom.createElement('mrow')
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        mrow.appendChild(self.parenthesize(vec1, PRECEDENCE['Mul']))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#xB7;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self.parenthesize(vec2, PRECEDENCE['Mul']))
+        return mrow
+
+    def _print_Gradient(self, expr):
+        mrow = self.dom.createElement('mrow')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x2207;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self.parenthesize(expr._expr, PRECEDENCE['Mul']))
+        return mrow
+
     def _print_Integers(self, e):
         x = self.dom.createElement('mi')
         x.setAttribute('mathvariant', 'normal')
