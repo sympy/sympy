@@ -878,7 +878,7 @@ class MatrixReductions(MatrixDeterminant):
         return len(pivots)
 
     def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
-        """Returns the rank-factorized form of `A`, as `C` and `F`.
+        r"""Returns the rank-factorized form of `A`, as `C` and `F`.
 
         Parameters
         ==========
