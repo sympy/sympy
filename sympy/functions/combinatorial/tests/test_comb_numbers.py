@@ -645,11 +645,11 @@ def test_issue_8601():
 
 
 def test_motzkin():
-    assert motzkin.find_motzkin_numbers_in_range(100,10000) == [127, 323, 835, 2188, 5798]
+    assert motzkin.find_motzkin_numbers_in_range(100, 10000) == [127, 323, 835, 2188, 5798]
     assert motzkin.find_first_n_motzkin(7) == [1, 1, 2, 4, 9, 21, 51]
     assert motzkin.is_motzkin(51) == True
     assert motzkin.is_motzkin(25) == False
     assert motzkin.is_motzkin(1) == True
-    assert motzkin.find_motzkin_numbers_in_range(-10,40) == [1, 1, 2, 4, 9, 21]
+    assert motzkin.find_motzkin_numbers_in_range(-10, 40) == [1, 1, 2, 4, 9, 21]
     assert motzkin.eval_motzkin(1) == 1
     assert motzkin.eval_motzkin(8) == 127

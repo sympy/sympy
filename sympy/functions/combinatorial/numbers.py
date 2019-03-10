@@ -2041,7 +2041,7 @@ class motzkin(Function):
                  i = i + 1
 
         else:
-            raise ValueError('The provided number must be greater than to 0')
+            raise ValueError('The provided number must be greater than 0')
 
     @staticmethod
     def find_motzkin_numbers_in_range(x, y):
@@ -2070,7 +2070,7 @@ class motzkin(Function):
 
     @staticmethod
     def find_first_n_motzkin(n):
-        n = n-1
+        n = n - 1
         i = 0
         motzkin = list()
         m_0 = 1
