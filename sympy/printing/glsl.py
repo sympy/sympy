@@ -5,6 +5,7 @@ from sympy.core.function import _coeff_isneg, Lambda
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from functools import reduce
+from string import Template
 
 known_functions = {
     'Abs': 'abs',
@@ -42,6 +43,7 @@ class GLSLPrinter(CodePrinter):
         'mat_nested': False,
         'mat_separator': ',\n',
         'mat_transpose': False,
+        'array_constructor': 'float[${size}]',
         'glsl_types': True,
 
         'order': None,
@@ -107,6 +109,7 @@ class GLSLPrinter(CodePrinter):
         mat_separator = self._settings['mat_separator']
         mat_transpose = self._settings['mat_transpose']
         glsl_types = self._settings['glsl_types']
+        array_constructor = Template(self._settings['array_constructor'])
         column_vector = (mat.rows == 1) if mat_transpose else (mat.cols == 1)
         A = mat.transpose() if mat_transpose != column_vector else mat
 
@@ -116,20 +119,26 @@ class GLSLPrinter(CodePrinter):
             if A.rows == 1:
                 return 'vec%s%s' % (A.cols, A.table(self,rowstart='(',rowend=')'))
             elif A.rows == A.cols:
-                return 'mat%s(%s)' %   (A.rows, A.table(self,rowsep=', ',
-                                        rowstart='',rowend=''))
+                return 'mat%s(%s)' % (
+                    A.rows, A.table(self,rowsep=', ',
+                            rowstart='',rowend=''))
             else:
                 return 'mat%sx%s(%s)' % (A.cols, A.rows,
                                         A.table(self,rowsep=', ',
                                         rowstart='',rowend=''))
         elif A.cols == 1 or A.rows == 1:
-            return 'float[%s](%s)' % (A.cols*A.rows, A.table(self,rowsep=mat_separator,rowstart='',rowend=''))
+            return array_constructor.substitute({'size': A.cols*A.rows}) +\
+                '(%s)' % A.table(self,rowsep=mat_separator,rowstart='',rowend='')
         elif not self._settings['mat_nested']:
-            return 'float[%s](\n%s\n) /* a %sx%s matrix */' % (A.cols*A.rows,
-                            A.table(self,rowsep=mat_separator,rowstart='',rowend=''),
-                            A.rows,A.cols)
+            return array_constructor.substitute({'size': A.cols*A.rows}) +\
+                '(\n%s\n) /* a %sx%s matrix */' % (
+                    A.table(self,rowsep=mat_separator,rowstart='',rowend=''),
+                    A.rows, A.cols
+                )
         elif self._settings['mat_nested']:
-            return 'float[%s][%s](\n%s\n)' % (A.rows,A.cols,A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')'))
+            return 'float[%s][%s](\n%s\n)' % (A.rows, A.cols, 
+                A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')')
+            )
 
     def _print_SparseMatrix(self, mat):
         # do not allow sparse matrices to be made dense
@@ -352,6 +361,12 @@ def glsl_code(expr,assign_to=None,**settings):
         By default, this printer ignores that convention. Setting this option to
         ``True`` transposes all matrix output.
         [default=False]
+    array_constructor: str, optional
+        By default, any object printed as an n-dimensional GLSL array will be 
+        printed using the GLSL ``float[n]`` constructor. To modify this, you can 
+        pass a template string with a single argument, ``${size}``, for the size
+        of the array.
+        [default='float[${size}]']
     precision : integer, optional
         The precision for numbers such as pi [default=15].
     user_functions : dict, optional
@@ -400,6 +415,12 @@ def glsl_code(expr,assign_to=None,**settings):
        6, 7, 8, 9, 10
     ) /* a 2x5 matrix */
 
+    Any object printed by default as a GLSL float array can be printed with an
+    alternative constructor by passing a template string via the ``array_constructor``
+    parameter:
+    >>> int_constructor = 'int[${size}]'
+    >>> glsl_code(Matrix[[1,2,3,4,5]], array_constructor=int_constructor)
+
     Passing ``mat_nested = True`` instead prints out nested float arrays, which are
     supported in GLSL 4.3 and above.
     >>> mat = Matrix([
@@ -416,6 +437,7 @@ def glsl_code(expr,assign_to=None,**settings):
        float[]( 9, 10, 11),
        float[](12, 13, 14)
     )
+    
 
 
 

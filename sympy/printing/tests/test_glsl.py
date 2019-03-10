@@ -399,6 +399,12 @@ def test_Matrices_1x7():
     assert gl(A) == 'float[7](1, 2, 3, 4, 5, 6, 7)'
     assert gl(A.transpose()) == 'float[7](1, 2, 3, 4, 5, 6, 7)'
 
+def test_Matrices_1x7_custom_constructor():
+    gl = glsl_code
+    constructor = 'SevenNumberStruct'
+    A = Matrix([1,2,3,4,5,6,7])
+    assert gl(A, array_constructor = constructor) == 'SevenNumberStruct(1, 2, 3, 4, 5, 6, 7)'
+
 def test_1xN_vecs():
     gl = glsl_code
     for i in range(1,10):
