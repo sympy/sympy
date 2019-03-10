@@ -780,7 +780,7 @@ class MatrixSpecial(MatrixRequired):
                 d['size'] = size
             return r, c
 
-        def arg_size(args):                    
+        def arg_size(args):
             prev = None
             o_r, o_c, g_r, g_c, m_r, m_c = 0, 0, 0, 0, 0, 0
             max_row, max_col = 0, 0
@@ -795,10 +795,10 @@ class MatrixSpecial(MatrixRequired):
                     prev = 'move'
                     prev_size = a_size
                     continue
-                else: 
-                    o_r += a_size[0] 
-                    o_c += a_size[1] 
-                    if prev is None: 
+                else:
+                    o_r += a_size[0]
+                    o_c += a_size[1]
+                    if prev is None:
                         max_row = o_r
                         max_col = o_c
                         continue
@@ -806,14 +806,14 @@ class MatrixSpecial(MatrixRequired):
                         g_r += a_size[0]
                         g_c += a_size[1]
                         if max_row < g_r:
-                            max_row = g_r 
+                            max_row = g_r
                         if max_col < g_c:
-                            max_col = g_c 
+                            max_col = g_c
                     elif 'move' in prev:
-                        m_r = o_r - prev_size[0]                    
+                        m_r = o_r - prev_size[0]
                         m_c = o_c - prev_size[1]
                         if max_row < m_r:
-                            max_row = m_r 
+                            max_row = m_r
                         if max_col < m_c:
                             max_col = m_c
             return max_row, max_col
@@ -840,7 +840,7 @@ class MatrixSpecial(MatrixRequired):
                         raise TypeError(filldedent(
                             '''expecting list, function
                             or Expr in dict'''))
-        
+
         def kern(d):
             if 'move' in d or 'goto' in d:
                 assert len(d) == 1
@@ -931,7 +931,7 @@ class MatrixSpecial(MatrixRequired):
                 prev = 'move'
                 prev_size = m_size
                 continue
-            o_r += m_size[0] 
+            o_r += m_size[0]
             o_c += m_size[1]
             if hasattr(m, 'rows'):
                 # in this case, we're a matrix
@@ -946,7 +946,7 @@ class MatrixSpecial(MatrixRequired):
                         for j in range(m.cols):
                             diag_entries[(i + g_r - m_size[0], j + g_c - m_size[1])] = m[i, j]
                 elif 'move' in prev:
-                        m_r = o_r - prev_size[0]                    
+                        m_r = o_r - prev_size[0]
                         m_c = o_c - prev_size[1]
                         for i in range(m.rows):
                             for j in range(m.cols):
@@ -962,7 +962,7 @@ class MatrixSpecial(MatrixRequired):
 
                     diag_entries[(g_r - m_size[0] , g_c - m_size[1])] = m
                 elif 'move' in prev:
-                    m_r = o_r - prev_size[0]                    
+                    m_r = o_r - prev_size[0]
                     m_c = o_c - prev_size[1]
                     diag_entries[(m_r - m_size[0], m_c - m_size[1])] = m
                 row_pos += 1
