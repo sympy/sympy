@@ -76,23 +76,28 @@ class CodePrinter(StrPrinter):
         expr : Expression
             The expression to be printed.
 
-        assign_to : Symbol, MatrixSymbol, or string (optional)
-            If provided, the printed code will set the expression to a
+        assign_to : Symbol, string, MatrixSymbol, list of strings or Symbols (optional)
+            If provided, the printed code will set the expression to a variable or multiple variables.
             variable with name ``assign_to``.
         """
         from sympy.codegen.ast import Assignment
         from sympy.matrices.expressions.matexpr import MatrixSymbol
+        from sympy.codegen.ast import CodeBlock, Assignment
 
         if isinstance(assign_to, str):
             if expr.is_Matrix:
                 assign_to = MatrixSymbol(assign_to, *expr.shape)
             else:
                 assign_to = Symbol(assign_to)
+        elif isinstance(assign_to, (list, tuple)):
+            assign_to = tuple(x if isinstance(x, Symbol) else Symbol(x) for x in assign_to)
         elif not isinstance(assign_to, (Basic, type(None))):
             raise TypeError("{} cannot assign to object of type {}".format(
                     type(self).__name__, type(assign_to)))
 
-        if assign_to:
+        if isinstance(assign_to, tuple):
+            expr = CodeBlock(*[Assignment(lhs, rhs) for lhs, rhs in zip(assign_to,expr)])
+        elif assign_to:
             expr = Assignment(assign_to, expr)
         else:
             # _sympify is not enough b/c it errors on iterables

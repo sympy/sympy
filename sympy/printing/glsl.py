@@ -334,10 +334,15 @@ def glsl_code(expr,assign_to=None,**settings):
     expr : Expr
         A sympy expression to be converted.
     assign_to : optional
-        When given, the argument is used as the name of the variable to which
-        the expression is assigned. Can be a string, ``Symbol``,
-        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
-        line-wrapping, or for expressions that generate multi-line statements.
+        When given, the argument is used for naming the variable or variables
+        to which the expression is assigned. Can be a string, ``Symbol``, 
+        ``MatrixSymbol`` or ``Indexed`` type object. In cases where ``expr``
+        would be printed as an array, a list of string or ``Symbol`` objects
+        can also be passed.
+
+        This is helpful in case of line-wrapping, or for expressions that
+        generate multi-line statements.  It can also be used to spread an array-like
+        expression into multiple assignments.
     use_operators: bool, optional
         If set to False, then *,/,+,- operators will be replaced with functions
         mul, add, and sub, which must be implemented by the user, e.g. for
@@ -419,7 +424,27 @@ def glsl_code(expr,assign_to=None,**settings):
     alternative constructor by passing a template string via the ``array_constructor``
     parameter:
     >>> int_constructor = 'int[${size}]'
-    >>> glsl_code(Matrix[[1,2,3,4,5]], array_constructor=int_constructor)
+    >>> glsl_code(Matrix([1,2,3,4,5]), array_constructor=int_constructor)
+    int[5](1, 2, 3, 4, 5)
+
+    Passing a list of strings or ``symbols`` to the ``assign_to`` parameter will yield
+    a multi-line assignment for each item in an array-like expression:
+    >>> x_struct_members = symbols('x.a x.b x.c x.d')
+    >>> print(glsl_code(Matrix([1,2,3,4]), assign_to=x_struct_members))
+    x.a = 1;
+    x.b = 2;
+    x.c = 3;
+    x.d = 4;
+
+    This could be useful in cases where it's desirable to modify members of a
+    GLSL ``Struct``.  It could also be used to spread items from an array-like
+    expression into various miscellaneous assignments:
+    >>> misc_assignments = ('x[0]', 'x[1]', 'float y', 'float z')
+    >>> print(glsl_code(Matrix([1,2,3,4]), assign_to=misc_assignments))
+    x[0] = 1;
+    x[1] = 2;
+    float y = 3;
+    float z = 4;
 
     Passing ``mat_nested = True`` instead prints out nested float arrays, which are
     supported in GLSL 4.3 and above.
