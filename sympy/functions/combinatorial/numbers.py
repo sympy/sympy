@@ -2091,8 +2091,7 @@ class motzkin(Function):
 
     @staticmethod
     def eval_motzkin(n):
-        if (n - (int(n))) != 0 or n <= 0:
-            raise ValueError('The number is not valid n should be a positive integer')
+        n = as_int(n)
         if n == 1 or n == 2:
             return 1
         i = 2
