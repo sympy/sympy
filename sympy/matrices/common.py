@@ -782,34 +782,29 @@ class MatrixSpecial(MatrixRequired):
 
         def arg_size(args):
             prev = None
-            o_r, o_c, g_r, g_c, m_r, m_c = [0]*6
-            max_row, max_col = 0, 0
+            max_row, max_col, o_r, o_c, g_r, g_c = [0]*6
             for a_ in args:
                 a_size = size(a_)
-                if type(a_) is dict and 'goto' in a_:
-                    prev = 'goto'
-                    prev_size = a_size
-                    g_r , g_c = prev_size[0], prev_size[1]
-                    continue
-                elif type(a_) is dict and 'move' in a_:
-                    prev = 'move'
-                    prev_size = a_size
-                    continue
+                if type(a_) is dict and ('goto' in a_ or 'move' in a_):
+                    prev_size = size(a_)
+                    if 'goto' in a_:
+                        prev = 'goto'
+                        g_r, g_c = a_size
+                    else:
+                        prev = 'move'
                 else:
                     o_r += a_size[0]
                     o_c += a_size[1]
                     if prev is None:
                         max_row, max_col = o_r, o_c
-                        continue
                     elif 'goto' in prev:
                         g_r += a_size[0]
                         g_c += a_size[1]
                         max_row = max(max_row, g_r)
                         max_col = max(max_col, g_c)
                     elif 'move' in prev:
-                        m_r, m_c = o_r - prev_size[0], o_c - prev_size[1]
-                        max_row = max(max_row, m_r)
-                        max_col = max(max_col, m_c)
+                        max_row = max(max_row, o_r - prev_size[0])
+                        max_col = max(max_col, o_c - prev_size[1])
             return max_row, max_col
 
         def standardize_values(d):
