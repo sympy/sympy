@@ -560,16 +560,14 @@ def test_presentation_mathml_limits():
 
 
 def test_presentation_mathml_integrals():
-    integrand = x
-    mml_1 = mpp._print(Integral(integrand, (x, 0, 1)))
-    assert mml_1.childNodes[0].nodeName == 'msubsup'
-    assert len(mml_1.childNodes[0].childNodes) == 3
-    assert mml_1.childNodes[0].childNodes[0
-        ].childNodes[0].nodeValue == '&int;'
-    assert mml_1.childNodes[0].childNodes[1
-        ].childNodes[0].nodeValue == '0'
-    assert mml_1.childNodes[0].childNodes[2
-        ].childNodes[0].nodeValue == '1'
+    assert mpp.doprint(Integral(x, (x, 0, 1))) == '<mrow><msubsup><mo>&#x222B;</mo><mn>0</mn><mn>1</mn></msubsup><mi>x</mi><mo>&dd;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(Integral(log(x), x)) == '<mrow><mo>&#x222B;</mo><mrow><mi>log</mi><mfenced><mi>x</mi></mfenced></mrow><mo>&dd;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(Integral(x*y, x, y)) == '<mrow><mo>&#x222C;</mo><mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi></mrow><mo>&dd;</mo><mi>y</mi><mo>&dd;</mo><mi>x</mi></mrow>'
+    z, w = symbols('z w')
+    assert mpp.doprint(Integral(x*y*z, x, y, z)) == '<mrow><mo>&#x222D;</mo><mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi><mo>&InvisibleTimes;</mo><mi>z</mi></mrow><mo>&dd;</mo><mi>z</mi><mo>&dd;</mo><mi>y</mi><mo>&dd;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(Integral(x*y*z*w, x, y, z, w)) == '<mrow><mo>&#x222B;</mo><mo>&#x222B;</mo><mo>&#x222B;</mo><mo>&#x222B;</mo><mrow><mi>w</mi><mo>&InvisibleTimes;</mo><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi><mo>&InvisibleTimes;</mo><mi>z</mi></mrow><mo>&dd;</mo><mi>w</mi><mo>&dd;</mo><mi>z</mi><mo>&dd;</mo><mi>y</mi><mo>&dd;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(Integral(x, x, y, (z, 0, 1))) == '<mrow><msubsup><mo>&#x222B;</mo><mn>0</mn><mn>1</mn></msubsup><mo>&#x222B;</mo><mo>&#x222B;</mo><mi>x</mi><mo>&dd;</mo><mi>z</mi><mo>&dd;</mo><mi>y</mi><mo>&dd;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(Integral(x, (x, 0))) == '<mrow><msup><mo>&#x222B;</mo><mn>0</mn></msup><mi>x</mi><mo>&dd;</mo><mi>x</mi></mrow>'
 
 
 def test_presentation_mathml_matrices():
