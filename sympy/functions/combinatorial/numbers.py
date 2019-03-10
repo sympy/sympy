@@ -2088,7 +2088,7 @@ class motzkin(Function):
             motzkin.append(next_num)
             i = i + 1
         return motzkin
-    
+
     @staticmethod
     def eval_motzkin(n):
         if (n - (int(n))) != 0 or n <= 0:
