@@ -2018,6 +2018,9 @@ class motzkin(Function):
 
     >>> motzkin.is_motzkin(51)
         True
+
+    >>> motzkin.eval_motzkin(10)
+        835
     """
     @staticmethod
     def is_motzkin(n):
@@ -2087,21 +2090,17 @@ class motzkin(Function):
         return motzkin
 
     def eval_motzkin(n):
-        if (n-(int(n)))!=0 or n<=0:
+        if (n - (int(n))) != 0 or n <= 0:
             raise ValueError('The number is not valid n should be a positive integer')
-        if n==1 or n==2:
+        if n == 1 or n == 2:
             return 1
-        n = n-1
         i = 2
         m_0 = 1
         m_1 = 1
-        while(i <= n):
+        while(i <= (n-1)):
             next_num = int(((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0)
             m_0 = m_1
             m_1 = next_num
             i = i + 1
-            if i>n:
+            if i > (n-1):
                 return next_num
-
-        
-        

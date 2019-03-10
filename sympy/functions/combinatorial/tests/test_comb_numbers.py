@@ -653,5 +653,3 @@ def test_motzkin():
     assert motzkin.find_motzkin_numbers_in_range(-10,40) == [1, 1, 2, 4, 9, 21]
     assert motzkin.eval_motzkin(1) == 1
     assert motzkin.eval_motzkin(8) == 127
-
-    
