@@ -782,7 +782,7 @@ class MatrixSpecial(MatrixRequired):
 
         def arg_size(args):
             prev = None
-            o_r, o_c, g_r, g_c, m_r, m_c = 0, 0, 0, 0, 0, 0
+            o_r, o_c, g_r, g_c, m_r, m_c = [0]*6
             max_row, max_col = 0, 0
             for a_ in args:
                 a_size = size(a_)
@@ -799,23 +799,17 @@ class MatrixSpecial(MatrixRequired):
                     o_r += a_size[0]
                     o_c += a_size[1]
                     if prev is None:
-                        max_row = o_r
-                        max_col = o_c
+                        max_row, max_col = o_r, o_c
                         continue
                     elif 'goto' in prev:
                         g_r += a_size[0]
                         g_c += a_size[1]
-                        if max_row < g_r:
-                            max_row = g_r
-                        if max_col < g_c:
-                            max_col = g_c
+                        max_row = max(max_row, g_r)
+                        max_col = max(max_col, g_c)
                     elif 'move' in prev:
-                        m_r = o_r - prev_size[0]
-                        m_c = o_c - prev_size[1]
-                        if max_row < m_r:
-                            max_row = m_r
-                        if max_col < m_c:
-                            max_col = m_c
+                        m_r, m_c = o_r - prev_size[0], o_c - prev_size[1]
+                        max_row = max(max_row, m_r)
+                        max_col = max(max_col, m_c)
             return max_row, max_col
 
         def standardize_values(d):
@@ -933,38 +927,25 @@ class MatrixSpecial(MatrixRequired):
                 continue
             o_r += m_size[0]
             o_c += m_size[1]
-            if hasattr(m, 'rows'):
-                # in this case, we're a matrix
+            if type(m) is not dict:
                 if prev is None:
-                    for i in range(m.rows):
-                        for j in range(m.cols):
-                            diag_entries[(i + o_r - m_size[0], j + o_c - m_size[1])] = m[i, j]
+                    row_pos, col_pos = o_r - m_size[0], o_c - m_size[1]
                 elif 'goto' in prev:
                     g_r += m_size[0]
                     g_c += m_size[1]
-                    for i in range(m.rows):
-                        for j in range(m.cols):
-                            diag_entries[(i + g_r - m_size[0], j + g_c - m_size[1])] = m[i, j]
-                elif 'move' in prev:
-                        m_r = o_r - prev_size[0]
-                        m_c = o_c - prev_size[1]
-                        for i in range(m.rows):
-                            for j in range(m.cols):
-                                diag_entries[(i + m_r - m_size[0], j + m_c - m_size[1])] = m[i, j]
+                    row_pos, col_pos = g_r - m_size[0], g_c - m_size[1]
+                else:
+                    m_r, m_c = o_r - prev_size[0], o_c - prev_size[1]
+                    row_pos, col_pos = m_r - m_size[0], m_c - m_size[1]
+            if hasattr(m, 'rows'):
+                # in this case, we're a matrix
+                for i in range(m.rows):
+                    for j in range(m.cols):
+                        diag_entries[(row_pos + i, col_pos + j)] = m[i, j]
                 row_pos += m.rows
                 col_pos += m.cols
             elif not isinstance(m, dict):
-                if prev is None:
-                    diag_entries[(o_r -m_size[0], o_c-m_size[1])] = m
-                elif 'goto' in prev:
-                    g_r += m_size[0]
-                    g_c += m_size[1]
-
-                    diag_entries[(g_r - m_size[0] , g_c - m_size[1])] = m
-                elif 'move' in prev:
-                    m_r = o_r - prev_size[0]
-                    m_c = o_c - prev_size[1]
-                    diag_entries[(m_r - m_size[0], m_c - m_size[1])] = m
+                diag_entries[(row_pos, col_pos)] = m
                 row_pos += 1
                 col_pos += 1
             else:
