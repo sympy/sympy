@@ -53,6 +53,8 @@ def test_rigidbody2():
     assert B.angular_momentum(O, N) == omega * b.x - M*v*r*b.z
     B.potential_energy = M * g * h
     assert B.potential_energy == M * g * h
+    assert expand(2 * B.translational_kinetic_energy(N)) == M * v**2
+    assert expand(2 * B.rotational_kinetic_energy(N)) == omega**2
     assert expand(2 * B.kinetic_energy(N)) == omega**2 + M * v**2
     assert B.total_energy(N) == M * g * h + M * v**2/2 + omega**2/2
 

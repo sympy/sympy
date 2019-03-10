@@ -199,6 +199,89 @@ class RigidBody(object):
 
         return I.dot(w) + r.cross(m * v)
 
+    def rotational_kinetic_energy(self, frame):
+        """Rotational kinetic energy of the rigid body
+
+        The rotational kinetic energy, T, of a rigid body, B, is given by
+
+        'T = 1/2 (I omega^2)'
+
+        where I is the central inertia dyadic of rigid body B,
+        omega is the body's angular velocity of the body's
+        mass center in the supplied ReferenceFrame.
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            The RigidBody's angular velocity and the velocity of it's mass
+            center are typically defined with respect to an inertial frame but
+            any relevant frame in which the velocities are known can be supplied.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import RigidBody
+        >>> from sympy import symbols
+        >>> M, v, r, omega = symbols('M v r omega')
+        >>> N = ReferenceFrame('N')
+        >>> b = ReferenceFrame('b')
+        >>> b.set_ang_vel(N, omega * b.x)
+        >>> P = Point('P')
+        >>> P.set_vel(N, v * N.x)
+        >>> I = outer (b.x, b.x)
+        >>> inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, b, M, inertia_tuple)
+        >>> B.rotational_kinetic_energy(N)
+        omega**2/2
+
+        """
+
+        return (self.frame.ang_vel_in(frame) & (self.central_inertia &
+                self.frame.ang_vel_in(frame)) / sympify(2))
+
+    def translational_kinetic_energy(self, frame):
+        """Translational kinetic energy of the rigid body
+
+        The translational kinetic energy, T, of a rigid body, B, is given by
+
+        'T = 1/2 (m v^2)'
+
+        where m is the mass of rigid body B, v is the velocity of the body's
+        mass center in the supplied ReferenceFrame.
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            The RigidBody's angular velocity and the velocity of it's mass
+            center are typically defined with respect to an inertial frame but
+            any relevant frame in which the velocities are known can be supplied.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import RigidBody
+        >>> from sympy import symbols
+        >>> M, v, r, omega = symbols('M v r omega')
+        >>> N = ReferenceFrame('N')
+        >>> b = ReferenceFrame('b')
+        >>> b.set_ang_vel(N, omega * b.x)
+        >>> P = Point('P')
+        >>> P.set_vel(N, v * N.x)
+        >>> I = outer (b.x, b.x)
+        >>> inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, b, M, inertia_tuple)
+        >>> B.rotational_kinetic_energy(N)
+        M*v**2/2
+
+        """
+
+        return (self.mass * (self.masscenter.vel(frame) &
+            self.masscenter.vel(frame)) / sympify(2))
+
     def kinetic_energy(self, frame):
         """Kinetic energy of the rigid body
 
@@ -238,13 +321,7 @@ class RigidBody(object):
 
         """
 
-        rotational_KE = (self.frame.ang_vel_in(frame) & (self.central_inertia &
-                self.frame.ang_vel_in(frame)) / sympify(2))
-
-        translational_KE = (self.mass * (self.masscenter.vel(frame) &
-            self.masscenter.vel(frame)) / sympify(2))
-
-        return rotational_KE + translational_KE
+        return self.rotational_kinetic_energy(frame) + self.translational_kinetic_energy(frame)
 
     @property
     def potential_energy(self):
