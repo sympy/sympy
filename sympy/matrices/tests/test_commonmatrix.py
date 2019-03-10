@@ -1209,6 +1209,39 @@ def test_diag():
         [0, 0, 3],
         [0, 0, 0]])
     raises(ValueError, lambda: diag({0: lambda i, j, k: 1}))
+    assert diag(dict(goto=(0,2)),1,4, rows = 2, cols = 4) == Matrix([
+        [0, 0, 1, 0], 
+        [0, 0, 0, 4]])
+    assert diag(dict(move=(-2,0)), 1, 2, 3,dict(goto=(0,2)),4,5,6) == Matrix([
+        [0, 0, 4, 0, 0], 
+        [0, 0, 0, 5, 0], 
+        [1, 0, 0, 0, 6], 
+        [0, 2, 0, 0, 0], 
+        [0, 0, 3, 0, 0]])
+    A = Matrix.ones(2,2)
+    B = Matrix.ones(3,3)
+    assert diag(dict(move=(-2,0)),A,dict(goto=(0,2)), B) == Matrix([
+        [0, 0, 1, 1, 1], 
+        [0, 0, 1, 1, 1], 
+        [1, 1, 1, 1, 1], 
+        [1, 1, 0, 0, 0]])
+    assert diag(dict(goto=(2,0)),{1: [1,2,3],0:(lambda i, j: i + 1) ,-1:[-2,3]}) == Matrix([
+        [0, 0, 0, 0], 
+        [0, 0, 0, 0], 
+        [1, 1, 0, 0], 
+        [-2, 2, 2, 0], 
+        [0, 3, 3, 3]])
+
+    assert diag(dict(move=(-2,0)),{1: [1,2,3],0:(lambda i, j: i + 1) ,-1:[-2,3]}) == Matrix([
+        [0, 0, 0, 0], 
+        [0, 0, 0, 0], 
+        [1, 1, 0, 0], 
+        [-2, 2, 2, 0], 
+        [0, 3, 3, 3]])
+
+    
+
+
 
 
 def test_jordan_block():

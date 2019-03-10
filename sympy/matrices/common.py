@@ -757,7 +757,8 @@ class MatrixSpecial(MatrixRequired):
             if hasattr(m, 'rows'):
                 return m.rows, m.cols
             if isinstance(m, dict):
-                return m.get('size', (0, 0))
+                rv = kern(m) or (0, 0)
+                return m.get('size', rv)
             return 1, 1
         def minsize(d):
             size = d.pop('size', None)
@@ -778,6 +779,45 @@ class MatrixSpecial(MatrixRequired):
                 r, c = R, C
                 d['size'] = size
             return r, c
+
+        def arg_size(args):                    
+            prev = None
+            o_r, o_c, g_r, g_c, m_r, m_c = 0, 0, 0, 0, 0, 0
+            max_row, max_col = 0, 0
+            for a_ in args:
+                a_size = size(a_)
+                if type(a_) is dict and 'goto' in a_:
+                    prev = 'goto'
+                    prev_size = a_size
+                    g_r , g_c = prev_size[0], prev_size[1]
+                    continue
+                elif type(a_) is dict and 'move' in a_:
+                    prev = 'move'
+                    prev_size = a_size
+                    continue
+                else: 
+                    o_r += a_size[0] 
+                    o_c += a_size[1] 
+                    if prev is None: 
+                        max_row = o_r
+                        max_col = o_c
+                        continue
+                    elif 'goto' in prev:
+                        g_r += a_size[0]
+                        g_c += a_size[1]
+                        if max_row < g_r:
+                            max_row = g_r 
+                        if max_col < g_c:
+                            max_col = g_c 
+                    elif 'move' in prev:
+                        m_r = o_r - prev_size[0]                    
+                        m_c = o_c - prev_size[1]
+                        if max_row < m_r:
+                            max_row = m_r 
+                        if max_col < m_c:
+                            max_col = m_c
+            return max_row, max_col
+
         def standardize_values(d):
             for k, value in d.items():
                 if k == 'size':
@@ -800,13 +840,18 @@ class MatrixSpecial(MatrixRequired):
                         raise TypeError(filldedent(
                             '''expecting list, function
                             or Expr in dict'''))
+        
+        def kern(d):
+            if 'move' in d or 'goto' in d:
+                assert len(d) == 1
+                return tuple(list(d.values())[0])
 
         # collapse contiguous dicts
         newargs = []
         nosize = None
         i = 0
         for a in args:
-            if type(a) is dict:
+            if type(a) is dict and not kern(a):
                 a = a.copy()  # leave original unchanged
                 if 'size' in a:
                     minsize(a)  # check it
@@ -829,7 +874,6 @@ class MatrixSpecial(MatrixRequired):
                 newargs.append(a)
             i += 1
         args = newargs
-
         # assign size to size-unspecified dict
         if nosize is not None:
             dsize = minsize(args[nosize])
@@ -861,10 +905,7 @@ class MatrixSpecial(MatrixRequired):
 
         # calculate size needed
         diag_rows = diag_cols = 0
-        for m in args:
-            r, c = size(m)
-            diag_rows += r
-            diag_cols += c
+        diag_rows, diag_cols = arg_size(args)
         rows = diag_rows if rows is None else rows
         cols = diag_cols if cols is None else cols
         if rows < diag_rows or cols < diag_cols:
@@ -876,22 +917,66 @@ class MatrixSpecial(MatrixRequired):
         # fill a default dict with the diagonal entries
         diag_entries = defaultdict(lambda: S.Zero)
         row_pos, col_pos = 0, 0
+        prev = None
+        o_r = o_c = g_r = g_c =  m_r = m_c = 0
+        prev_size = (0, 0)
         for m in args:
+            m_size = size(m)
+            if type(m) is dict and 'goto' in m:
+                prev = 'goto'
+                prev_size = m_size
+                g_r , g_c = prev_size[0], prev_size[1]
+                continue
+            elif type(m) is dict and 'move' in m:
+                prev = 'move'
+                prev_size = m_size
+                continue
+            o_r += m_size[0] 
+            o_c += m_size[1]
             if hasattr(m, 'rows'):
                 # in this case, we're a matrix
-                for i in range(m.rows):
-                    for j in range(m.cols):
-                        diag_entries[(i + row_pos, j + col_pos)] = m[i, j]
+                if prev is None:
+                    for i in range(m.rows):
+                        for j in range(m.cols):
+                            diag_entries[(i + o_r - m_size[0], j + o_c - m_size[1])] = m[i, j]
+                elif 'goto' in prev:
+                    g_r += m_size[0]
+                    g_c += m_size[1]
+                    for i in range(m.rows):
+                        for j in range(m.cols):
+                            diag_entries[(i + g_r - m_size[0], j + g_c - m_size[1])] = m[i, j]
+                elif 'move' in prev:
+                        m_r = o_r - prev_size[0]                    
+                        m_c = o_c - prev_size[1]
+                        for i in range(m.rows):
+                            for j in range(m.cols):
+                                diag_entries[(i + m_r - m_size[0], j + m_c - m_size[1])] = m[i, j]
                 row_pos += m.rows
                 col_pos += m.cols
             elif not isinstance(m, dict):
-                # in this case we're a single value
-                diag_entries[(row_pos, col_pos)] = m
+                if prev is None:
+                    diag_entries[(o_r -m_size[0], o_c-m_size[1])] = m
+                elif 'goto' in prev:
+                    g_r += m_size[0]
+                    g_c += m_size[1]
+
+                    diag_entries[(g_r - m_size[0] , g_c - m_size[1])] = m
+                elif 'move' in prev:
+                    m_r = o_r - prev_size[0]                    
+                    m_c = o_c - prev_size[1]
+                    diag_entries[(m_r - m_size[0], m_c - m_size[1])] = m
                 row_pos += 1
                 col_pos += 1
             else:
                 # in this case we're a dict
                 standardize_values(m)
+                if prev is not None and 'goto' in prev:
+                    row_pos += prev_size[0]
+                    col_pos += prev_size[1]
+                elif prev is not None and 'move' in prev:
+                    dr, dc = prev_size[0], prev_size[1]
+                    row_pos -= dr
+                    col_pos -= dc
                 rmax, cmax = m.pop('size')
                 for key, value in m.items():
                     r_p = 0 if key >= 0 else -key
@@ -915,7 +1000,6 @@ class MatrixSpecial(MatrixRequired):
                         c_p += 1
                 row_pos += rmax
                 col_pos += cmax
-
         return klass._eval_diag(rows, cols, diag_entries)
 
     @classmethod
