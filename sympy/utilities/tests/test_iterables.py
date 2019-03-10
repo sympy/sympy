@@ -10,7 +10,7 @@ from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
     cartes, common_prefix, common_suffix, dict_merge, filter_symbols,
     flatten, generate_bell, generate_derangements, generate_involutions,
-    generate_oriented_forest, group, has_dups, kbins, minlex, multiset,
+    generate_oriented_forest, group, has_dups, ibin, kbins, minlex, multiset,
     multiset_combinations, multiset_partitions,
     multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
     permutations, postfixes, postorder_traversal, prefixes, reshape,
@@ -613,7 +613,8 @@ def test_reshape():
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
     assert reshape(list(range(12)), [2, [3], {2}, (1, (3,), 1)]) == \
         [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
-
+    raises(ValueError, lambda: reshape([0, 1], [-1]))
+    raises(ValueError, lambda: reshape([0, 1], [3]))
 
 def test_uniq():
     assert list(uniq(p.copy() for p in partitions(4))) == \
@@ -738,3 +739,12 @@ def test_rotations():
     assert list(rotations('ab')) == [['a', 'b'], ['b', 'a']]
     assert list(rotations(range(3))) == [[0, 1, 2], [1, 2, 0], [2, 0, 1]]
     assert list(rotations(range(3), dir=-1)) == [[0, 1, 2], [2, 0, 1], [1, 2, 0]]
+
+
+def test_ibin():
+    assert ibin(3) == [1, 1]
+    assert ibin(3, 3) == [0, 1, 1]
+    assert ibin(3, str=True) == '11'
+    assert ibin(3, 3, str=True) == '011'
+    assert list(ibin(2, 'all')) == [(0, 0), (0, 1), (1, 0), (1, 1)]
+    assert list(ibin(2, 'all', str=True)) == ['00', '01', '10', '11']
