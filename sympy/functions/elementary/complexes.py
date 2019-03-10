@@ -594,7 +594,7 @@ class Abs(Function):
             return Piecewise((arg, arg >= 0), (-arg, True))
 
     def _eval_rewrite_as_sign(self, arg, **kwargs):
-        return arg/sign(arg)
+        return arg*sign(arg)
 
 
 class arg(Function):
