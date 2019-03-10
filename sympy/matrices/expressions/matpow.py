@@ -1,11 +1,10 @@
 from __future__ import print_function, division
 
 from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
-from .transpose import Transpose
-from sympy.core.sympify import _sympify
+from sympy.core import S
 from sympy.core.compatibility import range
+from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
-from sympy.core import S, Basic
 
 
 class MatPow(MatrixExpr):
@@ -90,6 +89,7 @@ class MatPow(MatrixExpr):
 
     def _eval_derivative_matrix_lines(self, x):
         from .matmul import MatMul
+        from .inverse import Inverse
         exp = self.exp
         if (exp > 0) == True:
             newexpr = MatMul.fromiter([self.base for i in range(exp)])
