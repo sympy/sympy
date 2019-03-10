@@ -932,6 +932,7 @@ def test_relational_simplification():
     w, x, y, z = symbols('w x y z', real=True)
     d, e = symbols('d e', real=False)
     assert Or(x >= y, x < y).simplify() == S.true
+    assert Or(y <= y, x < y).simplify() == S.true
     assert Or(x < y, x >= y).simplify() == S.true
     assert Or(x >= y, x <= y, w < z).simplify() == S.true
     assert And(x >= y, x < y).simplify() == S.false

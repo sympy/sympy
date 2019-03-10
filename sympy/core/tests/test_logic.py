@@ -74,6 +74,10 @@ def test_logic_cmp():
     assert And('a', 'b', 'c') == And('c', 'b', 'a')
     assert And('a', 'b', 'c') == And('c', 'a', 'b')
 
+    assert Not('a') < Not('b')
+    assert (Not('b') < Not('a')) is False
+    assert (Not('a') < 2) is False
+
 
 def test_logic_onearg():
     assert And() is True
@@ -154,16 +158,23 @@ def test_logic_fromstring():
     raises(ValueError, lambda: S('a|b'))
     raises(ValueError, lambda: S('!'))
     raises(ValueError, lambda: S('! a'))
+    raises(ValueError, lambda: S('!(a + 1)'))
+    raises(ValueError, lambda: S(''))
 
 
 def test_logic_not():
     assert Not('a') != '!a'
     assert Not('!a') != 'a'
+    assert Not(True) == False
+    assert Not(False) == True
 
     # NOTE: we may want to change default Not behaviour and put this
     # functionality into some method.
     assert Not(And('a', 'b')) == Or(Not('a'), Not('b'))
     assert Not(Or('a', 'b')) == And(Not('a'), Not('b'))
+
+    S = Logic.fromstring
+    raises(ValueError, lambda: Not(1))
 
 
 def test_formatting():
