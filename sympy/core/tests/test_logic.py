@@ -1,5 +1,5 @@
 from sympy.core.logic import (fuzzy_not, Logic, And, Or, Not, fuzzy_and,
-    fuzzy_or, _fuzzy_group, _torf)
+                              fuzzy_or, _fuzzy_group, _torf)
 from sympy.utilities.pytest import raises
 
 T = True
@@ -11,20 +11,19 @@ def test_torf():
     from sympy.utilities.iterables import cartes
     v = [T, F, U]
     for i in cartes(*[v]*3):
-        assert _torf(i) is (
-            True if all(j for j in i) else (False if all(j is False for j in i) else None))
+        assert _torf(i) is (True if all(j for j in i) else
+                            (False if all(j is False for j in i) else None))
 
 
 def test_fuzzy_group():
     from sympy.utilities.iterables import cartes
     v = [T, F, U]
     for i in cartes(*[v]*3):
-        assert _fuzzy_group(i) is (
-            None if None in i else (
-            True if all(j for j in i) else False))
-        assert _fuzzy_group(i, quick_exit=True) is (
-            None if (i.count(False) > 1) else (None if None in i else (
-            True if all(j for j in i) else False)))
+        assert _fuzzy_group(i) is (None if None in i else
+                                   (True if all(j for j in i) else False))
+        assert _fuzzy_group(i, quick_exit=True) is \
+            (None if (i.count(False) > 1) else
+             (None if None in i else (True if all(j for j in i) else False)))
     it = (True if (i == 0) else None for i in range(2))
     assert _torf(it) is None
     it = (True if (i == 1) else None for i in range(2))
@@ -115,11 +114,11 @@ def test_logic_combine_args():
     assert And('a', 'b', 'a') == And('a', 'b')
     assert Or('a', 'b', 'a') == Or('a', 'b')
 
-    assert And( And('a', 'b'), And('c', 'd') ) == And('a', 'b', 'c', 'd')
-    assert Or( Or('a', 'b'), Or('c', 'd') ) == Or('a', 'b', 'c', 'd')
+    assert And(And('a', 'b'), And('c', 'd')) == And('a', 'b', 'c', 'd')
+    assert Or(Or('a', 'b'), Or('c', 'd')) == Or('a', 'b', 'c', 'd')
 
-    assert Or( 't', And('n', 'p', 'r'), And('n', 'r'), And('n', 'p', 'r'), 't', And('n', 'r') ) == \
-        Or('t', And('n', 'p', 'r'), And('n', 'r'))
+    assert Or('t', And('n', 'p', 'r'), And('n', 'r'), And('n', 'p', 'r'), 't',
+              And('n', 'r')) == Or('t', And('n', 'p', 'r'), And('n', 'r'))
 
 
 def test_logic_expand():
