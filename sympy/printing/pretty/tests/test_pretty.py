@@ -6182,7 +6182,7 @@ def test_vector_expr_pretty_printing():
 
     assert upretty(Dot(A.i, A.x*A.i+3*A.y*A.j)) == u("(A_i)⋅((A_x) A_i + (3⋅A_y) A_j)")
 
-    assert upretty(Gradient(A.x+3*A.y)) == u("∇⋅(A_x + 3⋅A_y)")
+    assert upretty(Gradient(A.x+3*A.y)) == u("∇(A_x + 3⋅A_y)")
     # TODO: add support for ASCII pretty.
 
 

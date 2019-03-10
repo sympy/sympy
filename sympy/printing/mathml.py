@@ -5,8 +5,9 @@ A MathML printer.
 from __future__ import print_function, division
 
 from sympy import sympify, S, Mul
-from sympy.core.function import _coeff_isneg
 from sympy.core.compatibility import range, string_types, default_sort_key
+from sympy.core.function import _coeff_isneg
+from sympy.core.numbers import E
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import precedence_traditional, PRECEDENCE
 from sympy.printing.pretty.pretty_symbology import greek_unicode
@@ -296,7 +297,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
     def _print_Infinity(self, e):
         return self.dom.createElement('infinity')
 
-    def _print_Negative_Infinity(self, e):
+    def _print_NegativeInfinity(self, e):
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('minus'))
         x.appendChild(self.dom.createElement('infinity'))
@@ -531,6 +532,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'fresnels': 'S',
             'fresnelc': 'C',
             'Heaviside': '&#x398;',
+            'BooleanTrue' : 'True',
+            'BooleanFalse' : 'False',
+            'NoneType' : 'None',
         }
 
         def mul_symbol_selection():
@@ -572,15 +576,19 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             numer, denom = fraction(expr)
             if denom is not S.One:
                 frac = self.dom.createElement('mfrac')
+                if self._settings["fold_short_frac"] and len(str(expr)) < 7:
+                    frac.setAttribute('bevelled', 'true')
                 xnum = self._print(numer)
                 xden = self._print(denom)
                 frac.appendChild(xnum)
                 frac.appendChild(xden)
-                return frac
+                mrow.appendChild(frac)
+                return mrow
 
             coeff, terms = expr.as_coeff_mul()
             if coeff is S.One and len(terms) == 1:
-                return self._print(terms[0])
+                mrow.appendChild(self._print(terms[0]))
+                return mrow
             if self.order != 'old':
                 terms = Mul._from_args(terms).as_ordered_factors()
 
@@ -647,20 +655,33 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         brac.appendChild(table)
         return brac
 
+    def _get_printed_Rational(self, e, folded=None):
+        if e.p < 0:
+            p = -e.p
+        else:
+            p = e.p
+        x = self.dom.createElement('mfrac')
+        if folded or self._settings["fold_short_frac"]:
+            x.setAttribute('bevelled', 'true')
+        x.appendChild(self._print(p))
+        x.appendChild(self._print(e.q))
+        if e.p < 0:
+            mrow = self.dom.createElement('mrow')
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode('-'))
+            mrow.appendChild(mo)
+            mrow.appendChild(x)
+            return mrow
+        else:
+            return x
+
+
     def _print_Rational(self, e):
         if e.q == 1:
             # don't divide
-            x = self.dom.createElement('mn')
-            x.appendChild(self.dom.createTextNode(str(e.p)))
-            return x
-        x = self.dom.createElement('mfrac')
-        num = self.dom.createElement('mn')
-        num.appendChild(self.dom.createTextNode(str(e.p)))
-        x.appendChild(num)
-        den = self.dom.createElement('mn')
-        den.appendChild(self.dom.createTextNode(str(e.q)))
-        x.appendChild(den)
-        return x
+            return self._print(e.p)
+
+        return self._get_printed_Rational(e, self._settings["fold_short_frac"])
 
     def _print_Limit(self, e):
         mrow = self.dom.createElement('mrow')
@@ -709,7 +730,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('&#x221E;'))
         return x
 
-    def _print_Negative_Infinity(self, e):
+    def _print_NegativeInfinity(self, e):
         mrow = self.dom.createElement('mrow')
         y = self.dom.createElement('mo')
         y.appendChild(self.dom.createTextNode('-'))
@@ -718,42 +739,41 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(x)
         return mrow
 
-    def _print_Integral(self, e):
-        limits = list(e.limits)
-        if len(limits[0]) == 3:
-            subsup = self.dom.createElement('msubsup')
-            low_elem = self._print(limits[0][1])
-            up_elem = self._print(limits[0][2])
-            integral = self.dom.createElement('mo')
-            integral.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-            subsup.appendChild(integral)
-            subsup.appendChild(low_elem)
-            subsup.appendChild(up_elem)
-        if len(limits[0]) == 1:
-            subsup = self.dom.createElement('mrow')
-            integral = self.dom.createElement('mo')
-            integral.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-            subsup.appendChild(integral)
+    def _print_Integral(self, expr):
+        intsymbols = {1: "&#x222B;", 2: "&#x222C;", 3: "&#x222D;" }
 
         mrow = self.dom.createElement('mrow')
-        diff = self.dom.createElement('mo')
-        diff.appendChild(self.dom.createTextNode('&dd;'))
-        if len(str(limits[0][0])) > 1:
-            var = self.dom.createElement('mfenced')
-            var.appendChild(self._print(limits[0][0]))
+        if len(expr.limits) <= 3 and all(len(lim) == 1 for lim in expr.limits):
+            # Only up to three-integral signs exists
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode(intsymbols[len(expr.limits)]))
+            mrow.appendChild(mo)
         else:
-            var = self._print(limits[0][0])
-
-        mrow.appendChild(subsup)
-        if len(str(e.function)) == 1:
-            mrow.appendChild(self._print(e.function))
-        else:
-            fence = self.dom.createElement('mfenced')
-            fence.appendChild(self._print(e.function))
-            mrow.appendChild(fence)
-
-        mrow.appendChild(diff)
-        mrow.appendChild(var)
+            # Either more than three or limits provided
+            for lim in reversed(expr.limits):
+                mo = self.dom.createElement('mo')
+                mo.appendChild(self.dom.createTextNode(intsymbols[1]))
+                if len(lim) == 1:
+                    mrow.appendChild(mo)
+                if len(lim) == 2:
+                    msup = self.dom.createElement('msup')
+                    msup.appendChild(mo)
+                    msup.appendChild(self._print(lim[1]))
+                    mrow.appendChild(msup)
+                if len(lim) == 3:
+                    msubsup = self.dom.createElement('msubsup')
+                    msubsup.appendChild(mo)
+                    msubsup.appendChild(self._print(lim[1]))
+                    msubsup.appendChild(self._print(lim[2]))
+                    mrow.appendChild(msubsup)
+        # print function
+        mrow.appendChild(self.parenthesize(expr.function, PRECEDENCE["Mul"], strict=True))
+        # print integration variables
+        for lim in reversed(expr.limits):
+            d = self.dom.createElement('mo')
+            d.appendChild(self.dom.createTextNode('&dd;'))
+            mrow.appendChild(d)
+            mrow.appendChild(self._print(lim[0]))
         return mrow
 
     def _print_Sum(self, e):
@@ -877,17 +897,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_Pow(self, e):
         # Here we use root instead of power if the exponent is the reciprocal of an integer
-        if e.exp.is_negative or len(str(e.base)) > 1:
-            mrow = self.dom.createElement('mrow')
-            x = self.dom.createElement('mfenced')
-            x.appendChild(self._print(e.base))
-            mrow.appendChild(x)
-            x = self.dom.createElement('msup')
-            x.appendChild(mrow)
-            x.appendChild(self._print(e.exp))
-            return x
-
-        if e.exp.is_Rational and e.exp.p == 1 and self._settings['root_notation']:
+        if e.exp.is_Rational and abs(e.exp.p) == 1 and e.exp.q != 1 and self._settings['root_notation']:
             if e.exp.q == 2:
                 x = self.dom.createElement('msqrt')
                 x.appendChild(self._print(e.base))
@@ -895,10 +905,41 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 x = self.dom.createElement('mroot')
                 x.appendChild(self._print(e.base))
                 x.appendChild(self._print(e.exp.q))
-            return x
+            if e.exp.p == -1:
+                frac = self.dom.createElement('mfrac')
+                frac.appendChild(self._print(1))
+                frac.appendChild(x)
+                return frac
+            else:
+                return x
+
+        if e.exp.is_Rational and e.exp.q != 1:
+            if e.exp.is_negative:
+                top = self.dom.createElement('mfrac')
+                top.appendChild(self._print(1))
+                x = self.dom.createElement('msup')
+                x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
+                x.appendChild(self._get_printed_Rational(-e.exp, self._settings['fold_frac_powers']))
+                top.appendChild(x)
+                return top;
+            else:
+                x = self.dom.createElement('msup')
+                x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
+                x.appendChild(self._get_printed_Rational(e.exp, self._settings['fold_frac_powers']))
+                return x;
+
+        if e.exp.is_negative:
+                top = self.dom.createElement('mfrac')
+                top.appendChild(self._print(1))
+                x = self.dom.createElement('msup')
+                x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
+                x.appendChild(self._print(-e.exp))
+                top.appendChild(x)
+                return top;
+
 
         x = self.dom.createElement('msup')
-        x.appendChild(self._print(e.base))
+        x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
         x.appendChild(self._print(e.exp))
         return x
 
@@ -1010,7 +1051,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         elif str_real == "+inf":
             return self._print_Infinity(None)
         elif str_real == "-inf":
-            return self._print_Negative_Infinity(None)
+            return self._print_NegativeInfinity(None)
         else:
             mn = self.dom.createElement('mn')
             mn.appendChild(self.dom.createTextNode(str_real))
@@ -1199,6 +1240,63 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(x)
         return mrow
 
+    def _print_bool(self, e):
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
+        return mi
+
+    _print_BooleanTrue = _print_bool
+    _print_BooleanFalse = _print_bool
+
+    def _print_NoneType(self, e):
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
+        return mi
+
+    def _print_Range(self, s):
+        dots = u"\u2026"
+        brac = self.dom.createElement('mfenced')
+        brac.setAttribute('open', '{')
+        brac.setAttribute('close', '}')
+
+        if s.start.is_infinite:
+            printset = s.start, dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite or len(s) > 4:
+            it = iter(s)
+            printset = next(it), next(it), dots, s[-1]
+        else:
+            printset = tuple(s)
+
+        for el in printset:
+            if el == dots:
+                mi = self.dom.createElement('mi')
+                mi.appendChild(self.dom.createTextNode(dots))
+                brac.appendChild(mi)
+            else:
+                brac.appendChild(self._print(el))
+
+        return brac
+
+    def _hprint_variadic_function(self, expr):
+        args = sorted(expr.args, key=default_sort_key)
+        mrow = self.dom.createElement('mrow')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode((str(expr.func)).lower()))
+        mrow.appendChild(mo)
+        brac = self.dom.createElement('mfenced')
+        for symbol in args:
+            brac.appendChild(self._print(symbol))
+        mrow.appendChild(brac)
+        return mrow
+
+    _print_Min = _print_Max = _hprint_variadic_function
+
+    def _print_exp(self, expr):
+        msup = self.dom.createElement('msup')
+        msup.appendChild(self._print_Exp1(None))
+        msup.appendChild(self._print(expr.args[0]))
+        return msup
+
     def _print_Relational(self, e):
         mrow = self.dom.createElement('mrow')
         mrow.appendChild(self._print(e.lhs))
@@ -1255,6 +1353,63 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_EmptySet(self, e):
         x = self.dom.createElement('mo')
         x.appendChild(self.dom.createTextNode('&#x2205;'))
+        return x
+
+
+    def _print_floor(self, e):
+        mrow =  self.dom.createElement('mrow')
+        x = self.dom.createElement('mfenced')
+        x.setAttribute('open', u'\u230A')
+        x.setAttribute('close', u'\u230B')
+        x.appendChild(self._print(e.args[0]))
+        mrow.appendChild(x)
+        return mrow
+
+
+    def _print_ceiling(self, e):
+        mrow =  self.dom.createElement('mrow')
+        x = self.dom.createElement('mfenced')
+        x.setAttribute('open', u'\u2308')
+        x.setAttribute('close', u'\u2309')
+        x.appendChild(self._print(e.args[0]))
+        mrow.appendChild(x)
+        return mrow
+
+
+    def _print_Lambda(self, e):
+        x = self.dom.createElement('mfenced')
+        mrow = self.dom.createElement('mrow')
+        symbols = e.args[0]
+        if len(symbols) == 1:
+            symbols = self._print(symbols[0])
+        else:
+            symbols = self._print(symbols)
+        mrow.appendChild(symbols)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x21A6;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self._print(e.args[1]))
+        x.appendChild(mrow)
+        return x
+
+
+    def _print_tuple(self, e):
+        x = self.dom.createElement('mfenced')
+        for i in e:
+            x.appendChild(self._print(i))
+        return x
+
+
+    def _print_IndexedBase(self, e):
+        return self._print(e.label)
+
+    def _print_Indexed(self, e):
+        x = self.dom.createElement('msub')
+        x.appendChild(self._print(e.base))
+        if len(e.indices) == 1:
+            x.appendChild(self._print(e.indices[0]))
+            return x
+        x.appendChild(self._print(e.indices))
         return x
 
 

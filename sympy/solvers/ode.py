@@ -699,14 +699,13 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         # simplifications
         sols = solvefunc(eq, func, order, match)
         if isinstance(sols, Expr):
-            rv =  odesimp(sols, func, order, cons(sols), hint)
+            rv =  odesimp(eq, sols, func, hint)
         else:
-            rv = [odesimp(s, func, order, cons(s), hint) for s in sols]
+            rv = [odesimp(eq, s, func, hint) for s in sols]
     else:
         # We still want to integrate (you can disable it separately with the hint)
         match['simplify'] = False  # Some hints can take advantage of this option
-        rv = _handle_Integral(solvefunc(eq, func, order, match),
-            func, order, hint)
+        rv = _handle_Integral(solvefunc(eq, func, order, match), func, hint)
 
     if ics and not 'power_series' in hint:
         if isinstance(rv, Expr):
@@ -715,8 +714,13 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
         else:
             rv1 = []
             for s in rv:
-                solved_constants = solve_ics([s], [r['func']], cons(s), ics)
+                try:
+                    solved_constants = solve_ics([s], [r['func']], cons(s), ics)
+                except ValueError:
+                    continue
                 rv1.append(s.subs(solved_constants))
+            if len(rv1) == 1:
+                return rv1[0]
             rv = rv1
     return rv
 
@@ -797,7 +801,10 @@ def solve_ics(sols, funcs, constants, ics):
                 sol2 = sol
                 sol2 = sol2.subs(x, x0)
                 sol2 = sol2.subs(funcarg, value)
-                subs_sols.append(sol2)
+                # This check is necessary because of issue #15724
+                if not isinstance(sol2, BooleanAtom) or not subs_sols:
+                    subs_sols = [s for s in subs_sols if not isinstance(s, BooleanAtom)]
+                    subs_sols.append(sol2)
 
     # TODO: Use solveset here
     try:
@@ -810,16 +817,13 @@ def solve_ics(sols, funcs, constants, ics):
     # enough. If we could use solveset, this might be improvable, but for now,
     # we use NotImplementedError in this case.
     if not solved_constants:
-        raise NotImplementedError("Couldn't solve for initial conditions")
+        raise ValueError("Couldn't solve for initial conditions")
 
     if solved_constants == True:
         raise ValueError("Initial conditions did not produce any solutions for constants. Perhaps they are degenerate.")
 
     if len(solved_constants) > 1:
         raise NotImplementedError("Initial conditions produced too many solutions for constants")
-
-    if len(solved_constants[0]) != len(constants):
-        raise ValueError("Initial conditions did not produce a solution for all constants. Perhaps they are under-specified.")
 
     return solved_constants[0]
 
@@ -1541,8 +1545,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
             for func_ in  func:
                 funcs.append(func_)
     funcs = list(set(funcs))
-    if len(funcs) < len(eq):
-        raise ValueError("Number of functions given is less than number of equations %s" % funcs)
+    if len(funcs) != len(eq):
+        raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
     func_dict = dict()
     for func in funcs:
         if not order.get(func, False):
@@ -2158,10 +2162,10 @@ def checksysodesol(eqs, sols, func=None):
 
 
 @vectorize(0)
-def odesimp(eq, func, order, constants, hint):
+def odesimp(ode, eq, func, hint):
     r"""
-    Simplifies ODEs, including trying to solve for ``func`` and running
-    :py:meth:`~sympy.solvers.ode.constantsimp`.
+    Simplifies solutions of ODEs, including trying to solve for ``func`` and
+    running :py:meth:`~sympy.solvers.ode.constantsimp`.
 
     It may use knowledge of the type of solution that the hint returns to
     apply additional simplifications.
@@ -2218,9 +2222,10 @@ def odesimp(eq, func, order, constants, hint):
     x = func.args[0]
     f = func.func
     C1 = get_numbered_constants(eq, num=1)
+    constants = eq.free_symbols - ode.free_symbols
 
     # First, integrate if the hint allows it.
-    eq = _handle_Integral(eq, func, order, hint)
+    eq = _handle_Integral(eq, func, hint)
     if hint.startswith("nth_linear_euler_eq_nonhomogeneous"):
         eq = simplify(eq)
     if not isinstance(eq, Equality):
@@ -2320,7 +2325,7 @@ def odesimp(eq, func, order, constants, hint):
     # things like -C1, so rerun constantsimp() one last time before returning.
     for i, eqi in enumerate(eq):
         eq[i] = constantsimp(eqi, constants)
-        eq[i] = constant_renumber(eq[i], 'C', 1, 2*order)
+        eq[i] = constant_renumber(eq[i], ode.free_symbols)
 
     # If there is only 1 solution, return it;
     # otherwise return the list of solutions.
@@ -2870,16 +2875,20 @@ def constantsimp(expr, constants):
     return expr
 
 
-def constant_renumber(expr, symbolname, startnumber, endnumber):
+def constant_renumber(expr, variables=None, newconstants=None):
     r"""
-    Renumber arbitrary constants in ``expr`` to have numbers 1 through `N`
-    where `N` is ``endnumber - startnumber + 1`` at most.
-    In the process, this reorders expression terms in a standard way.
+    Renumber arbitrary constants in ``expr`` to use the symbol names as given
+    in ``newconstants``. In the process, this reorders expression terms in a
+    standard way.
 
-    This is a simple function that goes through and renumbers any
-    :py:class:`~sympy.core.symbol.Symbol` with a name in the form ``symbolname
-    + num`` where ``num`` is in the range from ``startnumber`` to
-    ``endnumber``.
+    If ``newconstants`` is not provided then the new constant names will be
+    ``C1``, ``C2`` etc. Otherwise ``newconstants`` should be an iterable
+    giving the new symbols to use for the constants in order.
+
+    The ``variables`` argument is a list of non-constant symbols. All other
+    free symbols found in ``expr`` are assumed to be constants and will be
+    renumbered. If ``variables`` is not given then any numbered symbol
+    beginning with ``C`` (e.g. ``C1``) is assumed to be a constant.
 
     Symbols are renumbered based on ``.sort_key()``, so they should be
     numbered roughly in the order that they appear in the final, printed
@@ -2894,36 +2903,50 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
 
     >>> from sympy import symbols, Eq, pprint
     >>> from sympy.solvers.ode import constant_renumber
-    >>> x, C0, C1, C2, C3, C4 = symbols('x,C:5')
+    >>> x, C1, C2, C3 = symbols('x,C1:4')
+    >>> expr = C3 + C2*x + C1*x**2
+    >>> expr
+    C1*x**2  + C2*x + C3
+    >>> constant_renumber(expr)
+    C1 + C2*x + C3*x**2
 
-    Only constants in the given range (inclusive) are renumbered;
-    the renumbering always starts from 1:
+    The ``variables`` argument specifies which are constants so that the
+    other symbols will not be renumbered:
 
-    >>> constant_renumber(C1 + C3 + C4, 'C', 1, 3)
-    C1 + C2 + C4
-    >>> constant_renumber(C0 + C1 + C3 + C4, 'C', 2, 4)
-    C0 + 2*C1 + C2
-    >>> constant_renumber(C0 + 2*C1 + C2, 'C', 0, 1)
-    C1 + 3*C2
-    >>> pprint(C2 + C1*x + C3*x**2)
-                    2
-    C1*x + C2 + C3*x
-    >>> pprint(constant_renumber(C2 + C1*x + C3*x**2, 'C', 1, 3))
-                    2
-    C1 + C2*x + C3*x
+    >>> constant_renumber(expr, [C1, x])
+    C1*x**2  + C2 + C3*x
+
+    The ``newconstants`` argument is used to specify what symbols to use when
+    replacing the constants:
+
+    >>> constant_renumber(expr, [x], newconstants=symbols('E1:4'))
+    E1 + E2*x + E3*x**2
 
     """
     if type(expr) in (set, list, tuple):
-        return type(expr)(
-            [constant_renumber(i, symbolname=symbolname, startnumber=startnumber, endnumber=endnumber)
-                for i in expr]
-        )
+        renumbered = [constant_renumber(e, variables, newconstants) for e in expr]
+        return type(expr)(renumbered)
+
+    # Symbols in solution but not ODE are constants
+    if variables is not None:
+        variables = set(variables)
+        constantsymbols = list(expr.free_symbols - variables)
+    # Any Cn is a constant...
+    else:
+        variables = set()
+        isconstant = lambda s: s.startswith('C') and s[1:].isdigit()
+        constantsymbols = [sym for sym in expr.free_symbols if isconstant(sym.name)]
+
+    # Find new constants checking that they aren't alread in the ODE
+    if newconstants is None:
+        iter_constants = numbered_symbols(start=1, prefix='C', exclude=variables)
+    else:
+        iter_constants = (sym for sym in newconstants if sym not in variables)
+
     global newstartnumber
     newstartnumber = 1
+    endnumber = len(constantsymbols)
     constants_found = [None]*(endnumber + 2)
-    constantsymbols = [Symbol(
-        symbolname + "%d" % t) for t in range(startnumber,
-        endnumber + 1)]
 
     # make a mapping to send all constantsymbols to S.One and use
     # that to make sure that term ordering is not dependent on
@@ -2937,6 +2960,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         newstartnumber maintains its values throughout recursive calls.
 
         """
+        # FIXME: Use nonlocal here when support for Py2 is dropped:
         global newstartnumber
 
         if isinstance(expr, Equality):
@@ -2964,13 +2988,16 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             sortedargs.sort(key=sort_key)
             return expr.func(*[_constant_renumber(x) for x in sortedargs])
     expr = _constant_renumber(expr)
+
+    # Don't renumber symbols present in the ODE.
+    constants_found = [c for c in constants_found if c not in variables]
+
     # Renumbering happens here
-    newconsts = symbols('C1:%d' % newstartnumber)
-    expr = expr.subs(zip(constants_found[1:], newconsts), simultaneous=True)
+    expr = expr.subs(zip(constants_found[1:], iter_constants), simultaneous=True)
     return expr
 
 
-def _handle_Integral(expr, func, order, hint):
+def _handle_Integral(expr, func, hint):
     r"""
     Converts a solution with Integrals in it into an actual solution.
 
@@ -3120,14 +3147,8 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     simplify = match.get('simplify', True)
     if simplify:
         # why is odesimp called here?  Should it be at the usual spot?
-        constants = sol1.free_symbols.difference(eq.free_symbols)
-        sol1 = odesimp(
-            sol1, func, order, constants,
-            "1st_homogeneous_coeff_subs_indep_div_dep")
-        constants = sol2.free_symbols.difference(eq.free_symbols)
-        sol2 = odesimp(
-            sol2, func, order, constants,
-            "1st_homogeneous_coeff_subs_dep_div_indep")
+        sol1 = odesimp(eq, sol1, func, "1st_homogeneous_coeff_subs_indep_div_dep")
+        sol2 = odesimp(eq, sol2, func, "1st_homogeneous_coeff_subs_dep_div_indep")
     return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
         trysolving=not simplify))
 
