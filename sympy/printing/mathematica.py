@@ -161,9 +161,12 @@ class MCodePrinter(CodePrinter):
         return 'SparseArray[{}, {}]'.format(print_data(), print_dims())
 
     def _print_ImmutableDenseNDimArray(self, expr):
-        return self._print_list(expr.tolist())
+        return self.doprint(expr.tolist())
 
     def _print_ImmutableSparseNDimArray(self, expr):
+        def print_string_list(string_list):
+            return '{' + ', '.join(a for a in string_list) + '}'
+
         def to_mathematica_index(*args):
             """Helper function to change Python style indexing to
             Pathematica indexing.
@@ -175,8 +178,7 @@ class MCodePrinter(CodePrinter):
 
         def print_rule(pos, val):
             """Helper function to print a rule of Mathematica"""
-            return '{} -> {}'.format(
-            self.doprint(pos), self.doprint(val))
+            return '{} -> {}'.format(self.doprint(pos), self.doprint(val))
 
         def print_data():
             """Helper function to print data part of Mathematica
@@ -188,7 +190,7 @@ class MCodePrinter(CodePrinter):
 
             ``data`` must be formatted with rule.
             """
-            return self._print_list(
+            return print_string_list(
                 [print_rule(
                     to_mathematica_index(*(expr._get_tuple_index(key))),
                     value)
@@ -203,7 +205,7 @@ class MCodePrinter(CodePrinter):
             from
             https://reference.wolfram.com/language/ref/SparseArray.html
             """
-            return self._print_list(expr.shape)
+            return self.doprint(expr.shape)
 
         return 'SparseArray[{}, {}]'.format(print_data(), print_dims())
 
