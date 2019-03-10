@@ -202,11 +202,12 @@ def test_Equivalent():
 
 
 def test_equals():
-    assert Not(Or(A, B)).equals( And(Not(A), Not(B)) ) is True
+    assert Not(Or(A, B)).equals(And(Not(A), Not(B))) is True
     assert Equivalent(A, B).equals((A >> B) & (B >> A)) is True
     assert ((A | ~B) & (~A | B)).equals((~A & ~B) | (A & B)) is True
     assert (A >> B).equals(~A >> ~B) is False
     assert (A >> (B >> A)).equals(A >> (C >> A)) is False
+    raises(NotImplementedError, lambda: (A & B).equals(A > B))
 
 
 def test_simplification():
@@ -245,6 +246,14 @@ def test_simplification():
         Or(And(Not(w), z), And(y, z)))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
+    minterms = [1, {y: 1, z: 1}]
+    dontcares = [0, [0, 0, 1, 0], 5]
+    assert (
+        SOPform([w, x, y, z], minterms, dontcares) ==
+        Or(And(Not(w), z), And(y, z)))
+    assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
+
+
     minterms = [{y: 1, z: 1}, 1]
     dontcares = [[0, 0, 0, 0]]
 
@@ -270,6 +279,15 @@ def test_simplification():
     b = (~x & ~y & ~z) | (~x & ~y & z)
     e = And(A, b)
     assert simplify_logic(e) == A & ~x & ~y
+    raises(ValueError, lambda: simplify_logic(A & (B | C), form='blabla'))
+
+    # Check that expressions with nine variables or more are not simplified
+    # (without the force-flag)
+    a, b, c, d, e, f, g, h, j = symbols('a b c d e f g h j')
+    expr = a & b & c & d & e & f & g & h & j | \
+        a & b & c & d & e & f & g & h & ~j
+    # This expression can be simplified to get rid of the j variables
+    assert simplify_logic(expr) == expr
 
     # check input
     ans = SOPform([x, y], [[1, 0]])
@@ -321,7 +339,8 @@ def test_bool_map():
     assert bool_map(function1, function2) == \
         (function1, {y: a, z: b})
     assert bool_map(Xor(x, y), ~Xor(x, y)) == False
-
+    assert bool_map(And(x, y), Or(x, y)) is None
+    assert bool_map(And(x, y), And(x, y, z)) is None
 
 def test_bool_symbol():
     """Test that mixing symbols with boolean values
@@ -450,12 +469,14 @@ def test_to_cnf():
     assert to_cnf(A >> B) == (~A) | B
     assert to_cnf(A >> (B & C)) == (~A | B) & (~A | C)
     assert to_cnf(A & (B | C) | ~A & (B | C), True) == B | C
+    assert to_cnf(A & B) == And(A, B)
 
     assert to_cnf(Equivalent(A, B)) == And(Or(A, Not(B)), Or(B, Not(A)))
     assert to_cnf(Equivalent(A, B & C)) == \
         (~A | B) & (~A | C) & (~B | ~C | A)
     assert to_cnf(Equivalent(A, B | C), True) == \
         And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
+    assert to_cnf(A + 1) == A + 1
 
 
 def test_to_dnf():
@@ -463,11 +484,13 @@ def test_to_dnf():
     assert to_dnf(A & (B | C)) == Or(And(A, B), And(A, C))
     assert to_dnf(A >> B) == (~A) | B
     assert to_dnf(A >> (B & C)) == (~A) | (B & C)
+    assert to_dnf(A | B) == A | B
 
     assert to_dnf(Equivalent(A, B), True) == \
         Or(And(A, B), And(Not(A), Not(B)))
     assert to_dnf(Equivalent(A, B & C), True) == \
         Or(And(A, B, C), And(Not(A), Not(B)), And(Not(A), Not(C)))
+    assert to_dnf(A + 1) == A + 1
 
 
 def test_to_int_repr():
@@ -503,6 +526,7 @@ def test_is_cnf():
     assert is_cnf(x & y & z) is True
     assert is_cnf((x | y) & z) is True
     assert is_cnf((x & y) | z) is False
+    assert is_cnf(~(x & y) | z) is False
 
 
 def test_is_dnf():
@@ -511,6 +535,7 @@ def test_is_dnf():
     assert is_dnf(x & y & z) is True
     assert is_dnf((x & y) | z) is True
     assert is_dnf((x | y) & z) is False
+    assert is_dnf(~(x | y) & z) is False
 
 
 def test_ITE():
@@ -544,6 +569,10 @@ def test_ITE():
     assert ITE(Eq(x, False), y, x) == ITE(~x, y, x)
     assert ITE(Ne(x, True), y, x) == ITE(~x, y, x)
     assert ITE(Ne(x, False), y, x) == ITE(x, y, x)
+    assert ITE(Eq(S. true, x), y, x) == ITE(x, y, x)
+    assert ITE(Eq(S.false, x), y, x) == ITE(~x, y, x)
+    assert ITE(Ne(S.true, x), y, x) == ITE(~x, y, x)
+    assert ITE(Ne(S.false, x), y, x) == ITE(x, y, x)
     # 0 and 1 in the context are not treated as True/False
     # so the equality must always be False since dissimilar
     # objects cannot be equal
@@ -553,6 +582,7 @@ def test_ITE():
     assert ITE(Ne(x, 1), y, x) == y
     assert ITE(Eq(x, 0), y, z).subs(x, 0) == y
     assert ITE(Eq(x, 0), y, z).subs(x, 1) == z
+    raises(ValueError, lambda: ITE(x > 1, y, x, z))
 
 
 def test_is_literal():
@@ -801,6 +831,8 @@ def test_truth_table():
         [False, True, True, True]
     assert list(truth_table(x >> y, [x, y], input=False)) == \
         [True, True, False, True]
+    assert list(truth_table(And(x, y), [x, y])) == \
+        [([0, 0], False), ([0, 1], False), ([1, 0], False), ([1, 1], True)]
 
 
 def test_issue_8571():
@@ -901,6 +933,7 @@ def test_relational_simplification():
     d, e = symbols('d e', real=False)
     assert Or(x >= y, x < y).simplify() == S.true
     assert Or(x < y, x >= y).simplify() == S.true
+    assert Or(x >= y, x <= y, w < z).simplify() == S.true
     assert And(x >= y, x < y).simplify() == S.false
     assert Or(x >= y, Eq(y, x)).simplify() == (x >= y)
     assert And(x >= y, Eq(y, x)).simplify() == Eq(x, y)
