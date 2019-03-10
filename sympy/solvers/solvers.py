@@ -987,7 +987,7 @@ def solve(f, *symbols, **flags):
         if isinstance(fi, Poly):
             f[i] = fi.as_expr()
 
-        if not fi:
+        if not fi and isinstance(fi, BooleanAtom):
             bool_check = True
 
         # rewrite hyperbolics in terms of exp
