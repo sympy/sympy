@@ -207,10 +207,10 @@ def test_latex_vector_expressions():
     assert latex(Dot(x*A.i, A.j)) == r"\mathbf{\hat{j}_{A}} \cdot \left((x)\mathbf{\hat{i}_{A}}\right)"
     assert latex(x*Dot(A.i, A.j)) == r"x \left(\mathbf{\hat{i}_{A}} \cdot \mathbf{\hat{j}_{A}}\right)"
 
-    assert latex(Gradient(A.x)) == r"\nabla\cdot \mathbf{{x}_{A}}"
-    assert latex(Gradient(A.x + 3*A.y)) == r"\nabla\cdot \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
-    assert latex(x*Gradient(A.x)) == r"x \left(\nabla\cdot \mathbf{{x}_{A}}\right)"
-    assert latex(Gradient(x*A.x)) == r"\nabla\cdot \left(\mathbf{{x}_{A}} x\right)"
+    assert latex(Gradient(A.x)) == r"\nabla \mathbf{{x}_{A}}"
+    assert latex(Gradient(A.x + 3*A.y)) == r"\nabla \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
+    assert latex(x*Gradient(A.x)) == r"x \left(\nabla \mathbf{{x}_{A}}\right)"
+    assert latex(Gradient(x*A.x)) == r"\nabla \left(\mathbf{{x}_{A}} x\right)"
 
 
 def test_latex_symbols():
