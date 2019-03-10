@@ -1147,6 +1147,49 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             mrow.appendChild(y)
         return mrow
 
+
+    def _print_BasisDependent(self, expr):
+        from sympy.vector import Vector
+
+        if expr == expr.zero:
+            # Not clear if this is ever called
+            return self._print(expr.zero)
+        if isinstance(expr, Vector):
+            items = expr.separate().items()
+        else:
+            items = [(0, expr)]
+
+        mrow = self.dom.createElement('mrow')
+        for system, vect in items:
+            inneritems = list(vect.components.items())
+            inneritems.sort(key = lambda x:x[0].__str__())
+            for i, (k, v) in enumerate(inneritems):
+                if v == 1:
+                    if i: # No + for first item
+                        mo = self.dom.createElement('mo')
+                        mo.appendChild(self.dom.createTextNode('+'))
+                        mrow.appendChild(mo)
+                    mrow.appendChild(self._print(k))
+                elif v == -1:
+                    mo = self.dom.createElement('mo')
+                    mo.appendChild(self.dom.createTextNode('-'))
+                    mrow.appendChild(mo)
+                    mrow.appendChild(self._print(k))
+                else:
+                    if i: # No + for first item
+                        mo = self.dom.createElement('mo')
+                        mo.appendChild(self.dom.createTextNode('+'))
+                        mrow.appendChild(mo)
+                    mbrac = self.dom.createElement('mfenced')
+                    mbrac.appendChild(self._print(v))
+                    mrow.appendChild(mbrac)
+                    mo = self.dom.createElement('mo')
+                    mo.appendChild(self.dom.createTextNode('&InvisibleTimes;'))
+                    mrow.appendChild(mo)
+                    mrow.appendChild(self._print(k))
+        return mrow
+
+
     def _print_And(self, expr):
         args = sorted(expr.args, key=default_sort_key)
         return self._print_LogOp(args, '&#x2227;')
@@ -1281,6 +1324,17 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mi.appendChild(self.dom.createTextNode(system._name))
         msub.appendChild(mi)
         return msub
+
+    def _print_VectorZero(self, e):
+        mover = self.dom.createElement('mover')
+        mi = self.dom.createElement('mi')
+        mi.setAttribute('mathvariant', 'bold')
+        mi.appendChild(self.dom.createTextNode("0"))
+        mover.appendChild(mi)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('^'))
+        mover.appendChild(mo)
+        return mover
 
     def _print_Cross(self, expr):
         mrow = self.dom.createElement('mrow')
