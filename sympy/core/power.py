@@ -58,7 +58,7 @@ def integer_nthroot(y, n):
     if y < 0:
         raise ValueError("y must be nonnegative")
     if n < 1:
-        raise ValueError("n must be positive")
+        raise ValueError("n must be greater than or equal to 1")
     if y in (0, 1):
         return y, True
     if n == 1:
