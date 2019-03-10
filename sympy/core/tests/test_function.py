@@ -301,11 +301,9 @@ def test_Subs():
         ).doit() == 2*exp(x)
     assert Subs(Derivative(g(x)**2, g(x), x), g(x), exp(x)
         ).doit(deep=False) == 2*Derivative(exp(x), x)
-
-    assert Derivative(f(x, g(x)), x).doit() == Derivative(g(x), x
-        )*Subs(Derivative(f(x, y), y), y, g(x)
-        ) + Subs(Derivative(f(y, g(x)), y), y, x)
-
+    assert Derivative(f(x, g(x)), x).doit() == Derivative(
+        f(x, g(x)), g(x))*Derivative(g(x), x) + Subs(Derivative(
+        f(y, g(x)), y), y, x)
 
 def test_doitdoit():
     done = Derivative(f(x, g(x)), x, g(x)).doit()
@@ -1129,7 +1127,7 @@ def test_issue_15241():
     assert (y*G + y*Gy*G).diff(y, G) == y*Gy.diff(y) + Gy + 1
 
 
-def test_issue_15266():
+def test_issue_15226():
     assert Subs(Derivative(f(y), x, y), y, g(x)).doit() != 0
 
 

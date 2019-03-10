@@ -10,14 +10,15 @@ system has common roots. That is when the resultant is equal to zero.
 """
 
 from sympy import IndexedBase, Matrix, Mul, Poly
-from sympy import rem, prod, total_degree
+from sympy import rem, prod, degree_list, diag
 from sympy.core.compatibility import range
 from sympy.polys.monomials import monomial_deg, itermonomials
 from sympy.polys.orderings import monomial_key
-from sympy.polys.polytools import poly_from_expr
+from sympy.polys.polytools import poly_from_expr, total_degree
 from sympy.functions.combinatorial.factorials import binomial
 
 from itertools import combinations_with_replacement
+
 
 class DixonResultant():
     """
@@ -85,8 +86,9 @@ class DixonResultant():
         self.dummy_variables = [a[i] for i in range(self.n)]
 
         # A list of the d_max of each variable.
-        self.max_degrees = [total_degree(poly, *self.variables) for poly
-                            in self.polynomials]
+        self.max_degrees = [
+            max(degree_list(poly)[i] for poly in self.polynomials)
+            for i in range(self.n)]
 
     def get_dixon_polynomial(self):
         r"""
@@ -125,8 +127,8 @@ class DixonResultant():
         return poly_from_expr(dixon_polynomial, self.dummy_variables)[0]
 
     def get_upper_degree(self):
-        list_of_products = [self.variables[i] ** ((i + 1) *
-                            self.max_degrees[i] - 1) for i in range(self.n)]
+        list_of_products = [self.variables[i] ** self.max_degrees[i]
+                            for i in range(self.n)]
         product = prod(list_of_products)
         product = Poly(product).monoms()
 
@@ -160,7 +162,8 @@ class DixonResultant():
 class MacaulayResultant():
     """
     A class for calculating the Macaulay resultant. Note that the
-    coefficients of the polynomials must be given as symbols.
+    polynomials must be homogenized and their coefficients must be
+    given as symbols.
 
     Examples
     ========
@@ -176,10 +179,12 @@ class MacaulayResultant():
 
     >>> f = a_0 * y -  a_1 * x + a_2 * z
     >>> g = b_1 * x ** 2 + b_0 * y ** 2 - b_2 * z ** 2
-    >>> h = c_0 * y - c_1 * x ** 3 + c_2 * x ** 2 * z - c_3 * x * z ** 2 + c_4 * z ** 3
+    >>> h = c_0 * y * z ** 2 - c_1 * x ** 3 + c_2 * x ** 2 * z - c_3 * x * z ** 2 + c_4 * z ** 3
 
     >>> mac = MacaulayResultant(polynomials=[f, g, h], variables=[x, y, z])
-    >>> mac.get_monomials_set()
+    >>> mac.monomial_set
+    [x**4, x**3*y, x**3*z, x**2*y**2, x**2*y*z, x**2*z**2, x*y**3,
+    x*y**2*z, x*y*z**2, x*z**3, y**4, y**3*z, y**2*z**2, y*z**3, z**4]
     >>> matrix = mac.get_matrix()
     >>> submatrix = mac.get_submatrix(matrix)
     >>> submatrix
@@ -215,12 +220,15 @@ class MacaulayResultant():
         self.variables = variables
         self.n = len(variables)
 
-        # A list of the d_max of each variable.
+        # A list of the d_max of each polynomial.
         self.degrees = [total_degree(poly, *self.variables) for poly
                         in self.polynomials]
 
         self.degree_m = self._get_degree_m()
         self.monomials_size = self.get_size()
+
+        # The set T of all possible monomials of degree degree_m
+        self.monomial_set = self.get_monomials_of_certain_degree(self.degree_m)
 
     def _get_degree_m(self):
         r"""
@@ -260,17 +268,6 @@ class MacaulayResultant():
         return sorted(monomials, reverse=True,
                       key=monomial_key('lex', self.variables))
 
-    def get_monomials_set(self):
-        r"""
-        Returns
-        =======
-
-        self.monomial_set: set
-            The set T. Set of all possible monomials of degree degree_m
-        """
-        monomial_set = self.get_monomials_of_certain_degree(self.degree_m)
-        self.monomial_set = monomial_set
-
     def get_row_coefficients(self):
         """
         Returns
@@ -305,7 +302,7 @@ class MacaulayResultant():
         =======
 
         macaulay_matrix: Matrix
-            The Macaulay's matrix
+            The Macaulay numerator matrix
         """
         rows = []
         row_coefficients = self.get_row_coefficients()
@@ -359,12 +356,17 @@ class MacaulayResultant():
         =======
 
         macaulay_submatrix: Matrix
-            The Macaulay's matrix. Columns that are non reduced are kept.
-            The row which contain one if the a_{i}s is dropped. a_{i}s
+            The Macaulay denominator matrix. Columns that are non reduced are kept.
+            The row which contains one of the a_{i}s is dropped. a_{i}s
             are the coefficients of x_i ^ {d_i}.
         """
         reduced, non_reduced = self.get_reduced_nonreduced()
 
+        # if reduced == [], then det(matrix) should be 1
+        if reduced == []:
+            return diag([1])
+
+        # reduced != []
         reduction_set = [v ** self.degrees[i] for i, v
                          in enumerate(self.variables)]
 

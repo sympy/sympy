@@ -1,10 +1,6 @@
-from sympy.core import Basic, Expr, Function, Add, Mul, Pow, Dummy, Integer
-from sympy import latex, Min, Max, Set, sympify, Lambda, symbols
-from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-        ProductSet)
+from sympy.core import Expr
 from sympy.core.decorators import call_highest_priority, _sympifyit
-from sympy.utilities.iterables import sift
-from sympy.multipledispatch import dispatch, Dispatcher
+from sympy.sets import ImageSet
 from sympy.sets.sets import set_add, set_sub, set_mul, set_div, set_pow, set_function
 
 class SetExpr(Expr):

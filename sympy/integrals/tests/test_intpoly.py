@@ -2,14 +2,19 @@ from sympy import sqrt, Abs
 
 from sympy.core import S
 
-from sympy.integrals.intpoly import (decompose, best_origin,
-                                     polytope_integrate)
+from sympy.integrals.intpoly import (decompose, best_origin, distance_to_side,
+                                     polytope_integrate, point_sort,
+                                     hyperplane_parameters, main_integrate3d,
+                                     main_integrate, polygon_integrate,
+                                     lineseg_integrate, integration_reduction,
+                                     integration_reduction_dynamic, is_vertex)
 
 from sympy.geometry.line import Segment2D
 from sympy.geometry.polygon import Polygon
-from sympy.geometry.point import Point
+from sympy.geometry.point import Point, Point2D
 from sympy.abc import x, y, z
 
+from sympy.utilities.pytest import slow
 
 
 def test_decompose():
@@ -53,6 +58,7 @@ def test_best_origin():
     assert best_origin((1, 1), 2, l6, x ** 9 * y ** 2) == (2, 0)
 
 
+@slow
 def test_polytope_integrate():
     #  Convex 2-Polytopes
     #  Vertex representation
@@ -490,6 +496,14 @@ def test_polytope_integrate():
          y * z: 3125 / S(4), z ** 2: 3125 / S(3), y ** 2: 3125 / S(3),
          z: 625 / S(2), x * y: 3125 / S(4), x ** 2: 3125 / S(3)}
 
+def test_point_sort():
+    assert point_sort([Point(0, 0), Point(1, 0), Point(1, 1)]) == \
+        [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
+
+    fig6 = Polygon((0, 0), (1, 0), (1, 1))
+    assert polytope_integrate(fig6, x*y) == S(-1)/8
+    assert polytope_integrate(fig6, x*y, clockwise = True) == S(1)/8
+
 
 def test_polytopes_intersecting_sides():
     fig5 = Polygon(Point(-4.165, -0.832), Point(-3.668, 1.568),
@@ -504,3 +518,85 @@ def test_polytopes_intersecting_sides():
                    Point(4.203, 0.478))
     assert polytope_integrate(fig6, x**2 + x*y + y**2) ==\
         S(88161333955921)/(3*10**12)
+
+
+def test_max_degree():
+    polygon = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
+    polys = [1, x, y, x*y, x**2*y, x*y**2]
+    assert polytope_integrate(polygon, polys, max_degree=3) == \
+        {1: 1, x: S(1)/2, y: S(1)/2, x*y: S(1)/4, x**2*y: S(1)/6, x*y**2: S(1)/6}
+
+
+def test_main_integrate3d():
+    cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),\
+             (5, 0, 5), (5, 5, 0), (5, 5, 5)],\
+            [2, 6, 7, 3], [3, 7, 5, 1], [7, 6, 4, 5], [1, 5, 4, 0],\
+            [3, 1, 0, 2], [0, 4, 6, 2]]
+    vertices = cube[0]
+    faces = cube[1:]
+    hp_params = hyperplane_parameters(faces, vertices)
+    assert main_integrate3d(1, faces, vertices, hp_params) == -125
+    assert main_integrate3d(1, faces, vertices, hp_params, max_degree=1) == \
+        {1: -125, y: -S(625)/2, z: -S(625)/2, x: -S(625)/2}
+
+
+def test_main_integrate():
+    triangle = Polygon((0, 3), (5, 3), (1, 1))
+    facets = triangle.sides
+    hp_params = hyperplane_parameters(triangle)
+    assert main_integrate(x**2 + y**2, facets, hp_params) == S(325)/6
+    assert main_integrate(x**2 + y**2, facets, hp_params, max_degree=1) == \
+        {0: 0, 1: 5, y: S(35)/3, x: 10}
+
+
+def test_polygon_integrate():
+    cube = [[(0, 0, 0), (0, 0, 5), (0, 5, 0), (0, 5, 5), (5, 0, 0),\
+             (5, 0, 5), (5, 5, 0), (5, 5, 5)],\
+            [2, 6, 7, 3], [3, 7, 5, 1], [7, 6, 4, 5], [1, 5, 4, 0],\
+            [3, 1, 0, 2], [0, 4, 6, 2]]
+    facet = cube[1]
+    facets = cube[1:]
+    vertices = cube[0]
+    assert polygon_integrate(facet, [(0, 1, 0), 5], 0, facets, vertices, 1, 0) == -25
+
+
+def test_distance_to_side():
+    point = (0, 0, 0)
+    assert distance_to_side(point, [(0, 0, 1), (0, 1, 0)], (1, 0, 0)) == -sqrt(2)/2
+
+
+def test_lineseg_integrate():
+    polygon = [(0, 5, 0), (5, 5, 0), (5, 5, 5), (0, 5, 5)]
+    line_seg = [(0, 5, 0), (5, 5, 0)]
+    assert lineseg_integrate(polygon, 0, line_seg, 1, 0) == 5
+    assert lineseg_integrate(polygon, 0, line_seg, 0, 0) == 0
+
+
+def test_integration_reduction():
+    triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
+    facets = triangle.sides
+    a, b = hyperplane_parameters(triangle)[0]
+    assert integration_reduction(facets, 0, a, b, 1, (x, y), 0) == 5
+    assert integration_reduction(facets, 0, a, b, 0, (x, y), 0) == 0
+
+
+def test_integration_reduction_dynamic():
+    triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
+    facets = triangle.sides
+    a, b = hyperplane_parameters(triangle)[0]
+    x0 = facets[0].points[0]
+    monomial_values = [[0, 0, 0, 0], [1, 0, 0, 5],\
+                       [y, 0, 1, 15], [x, 1, 0, None]]
+
+    assert integration_reduction_dynamic(facets, 0, a, b, x, 1, (x, y), 1,\
+                                         0, 1, x0, monomial_values, 3) == S(25)/2
+    assert integration_reduction_dynamic(facets, 0, a, b, 0, 1, (x, y), 1,\
+                                         0, 1, x0, monomial_values, 3) == 0
+
+
+def test_is_vertex():
+    assert is_vertex(2) is False
+    assert is_vertex((2, 3)) is True
+    assert is_vertex(Point(2, 3)) is True
+    assert is_vertex((2, 3, 4)) is True
+    assert is_vertex((2, 3, 4, 5)) is False

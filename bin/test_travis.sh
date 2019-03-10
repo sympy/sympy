@@ -22,18 +22,14 @@ fi
 
 if [[ "${TEST_SAGE}" == "true" ]]; then
     echo "Testing SAGE"
-    if [[ "${AZURE}" != "true" ]]; then
-        source deactivate
-        source activate sage
-    fi
+    source deactivate
+    source activate sage
     sage -v
     sage -python bin/test sympy/external/tests/test_sage.py
     PYTHONPATH=. sage -t sympy/external/tests/test_sage.py
     export MPMATH_NOSAGE=1
-    if [[ "${AZURE}" != "true" ]]; then
-        source deactivate
-        source activate test-environment
-    fi
+    source deactivate
+    source activate test-environment
 fi
 
 if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
@@ -46,9 +42,30 @@ fi
 mkdir empty
 cd empty
 
+if [[ "${TEST_COVERAGE}" == "true" ]]; then
+    rm -f $TRAVIS_BUILD_DIR/.coverage.* $TRAVIS_BUILD_DIR/.coverage
+    cat << EOF | python
+import distutils.sysconfig
+import os
+
+with open(os.path.join(distutils.sysconfig.get_python_lib(), 'coverage.pth'), 'w') as pth:
+    pth.write('import sys; exec(%r)\n' % '''\
+try:
+    import coverage
+except ImportError:
+    pass
+else:
+    coverage.process_startup()
+''')
+EOF
+    export COVERAGE_PROCESS_START=$TRAVIS_BUILD_DIR/.coveragerc
+fi
+
 if [[ "${TEST_ASCII}" == "true" ]]; then
-    export OLD_LC_ALL=$LC_ALL
-    export LC_ALL=C
+    # Force Python to act like pre-3.7 where LC_ALL=C causes
+    # UnicodeEncodeErrors. Once the lowest Python version we support is 3.7,
+    # we can consider dropping this test entirely. See PEP 538.
+    export PYTHONIOENCODING=ascii:strict
     cat <<EOF | python
 print('Testing ASCII')
 try:
@@ -61,7 +78,6 @@ import sympy
 if not (sympy.test('print') and sympy.doctest()):
     raise Exception('Tests failed')
 EOF
-    export LC_ALL=$OLD_LC_ALL
 fi
 
 if [[ "${TEST_DOCTESTS}" == "true" ]]; then
@@ -75,8 +91,6 @@ if not sympy.doctest():
 EOF
     cd ..
     bin/doctest doc/
-    # Run full code quality tests here, as they test non-installed files
-    bin/test quality
 fi
 
 if [[ "${TEST_SLOW}" == "true" ]]; then
@@ -224,4 +238,7 @@ import sympy
 if not sympy.test(split='${SPLIT}'):
    raise Exception('Tests failed')
 EOF
+fi
+if [[ "${TEST_COVERAGE}" == "true" ]]; then
+    unset COVERAGE_PROCESS_START
 fi

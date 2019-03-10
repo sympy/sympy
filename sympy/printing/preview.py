@@ -1,11 +1,11 @@
 from __future__ import print_function, division
 
-import os
-from os.path import join
-import tempfile
-import shutil
 import io
 from io import BytesIO
+import os
+from os.path import join
+import shutil
+import tempfile
 
 try:
     from subprocess import STDOUT, CalledProcessError, check_output
@@ -13,12 +13,10 @@ except ImportError:
     pass
 
 from sympy.core.compatibility import unicode, u_decode
-
+from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
 from .latex import latex
-
-from sympy.utilities.decorator import doctest_depends_on
 
 __doctest_requires__ = {('preview',): ['pyglet']}
 
@@ -174,7 +172,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 \begin{document}
 """ % (package_includes)
     else:
-        if len(packages) > 0:
+        if packages:
             raise ValueError("The \"packages\" keyword must not be set if a "
                              "custom LaTeX preamble was specified")
     latex_main = preamble + '\n%s\n\n' + r"\end{document}"

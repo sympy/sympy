@@ -2,28 +2,27 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy.core.sympify import (_sympify, sympify, converter,
-    SympifyError)
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
-from sympy.core.singleton import Singleton, S
-from sympy.core.evalf import EvalfMixin
-from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import Float
 from sympy.core.compatibility import (iterable, with_metaclass,
     ordered, range, PY3)
+from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
+from sympy.core.expr import Expr
 from sympy.core.function import FunctionClass
+from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
+from sympy.core.numbers import Float
 from sympy.core.relational import Eq, Ne
+from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
+from sympy.core.sympify import _sympify, sympify, converter
+from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.sets.contains import Contains
+from sympy.utilities import subsets
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
+
 from mpmath import mpi, mpf
-from sympy.logic.boolalg import And, Or, Not, true, false
-from sympy.utilities import subsets
-from sympy.multipledispatch import dispatch
 
 class Set(Basic):
     """
@@ -1868,7 +1867,7 @@ def simplify_union(args):
     # Here we depend on rules built into the constituent sets
     args = set(args)
     new_args = True
-    while(new_args):
+    while new_args:
         for s in args:
             new_args = False
             for t in args - set((s,)):
@@ -1938,7 +1937,7 @@ def simplify_intersection(args):
     # Here we depend on rules built into the constituent sets
     args = set(args)
     new_args = True
-    while(new_args):
+    while new_args:
         for s in args:
             new_args = False
             for t in args - set((s,)):

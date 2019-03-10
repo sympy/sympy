@@ -7,19 +7,18 @@ from __future__ import print_function, division
 import itertools
 
 from sympy.core import S, Add, Symbol, Mod
-from sympy.core.sympify import SympifyError
 from sympy.core.alphabets import greeks
-from sympy.core.operations import AssocOp
 from sympy.core.containers import Tuple
+from sympy.core.function import _coeff_isneg, AppliedUndef, Derivative
+from sympy.core.operations import AssocOp
+from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true
-from sympy.core.function import (_coeff_isneg,
-    UndefinedFunction, AppliedUndef, Derivative)
 
 ## sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
-from .printer import Printer
-from .conventions import split_super_sub, requires_partial
-from .precedence import precedence, PRECEDENCE
+from sympy.printing.printer import Printer
+from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.precedence import precedence, PRECEDENCE
 
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
@@ -122,19 +121,22 @@ class LatexPrinter(Printer):
     printmethod = "_latex"
 
     _default_settings = {
-        "order": None,
-        "mode": "plain",
-        "itex": False,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": None,
-        "long_frac_ratio": None,
-        "mul_symbol": None,
         "inv_trig_style": "abbreviated",
-        "mat_str": None,
-        "mat_delim": "[",
-        "symbol_names": {},
+        "itex": False,
         "ln_notation": False,
+        "long_frac_ratio": None,
+        "mat_delim": "[",
+        "mat_str": None,
+        "mode": "plain",
+        "mul_symbol": None,
+        "order": None,
+        "symbol_names": {},
+        "root_notation": True,
+        "mat_symbol_style": "plain",
+        "imaginary_unit": "i",
     }
 
     def __init__(self, settings=None):
@@ -176,6 +178,22 @@ class LatexPrinter(Printer):
                     self._settings['mul_symbol']
 
         self._delim_dict = {'(': ')', '[': ']'}
+
+        imaginary_unit_table = {
+            None: r"i",
+            "i": r"i",
+            "ri": r"\mathrm{i}",
+            "ti": r"\text{i}",
+            "j": r"j",
+            "rj": r"\mathrm{j}",
+            "tj": r"\text{j}",
+        }
+        try:
+            self._settings['imaginary_unit_latex'] = \
+                imaginary_unit_table[self._settings['imaginary_unit']]
+        except KeyError:
+            self._settings['imaginary_unit_latex'] = \
+                self._settings['imaginary_unit']
 
     def parenthesize(self, item, level, strict=False):
         prec_val = precedence_traditional(item)
@@ -239,7 +257,7 @@ class LatexPrinter(Printer):
         specifies that this expr is the last to appear in a Mul.
         ``first=True`` specifies that this expr is the first to appear in a Mul.
         """
-        from sympy import Integral, Piecewise, Product, Sum
+        from sympy import Integral, Product, Sum
 
         if expr.is_Mul:
             if not first and _coeff_isneg(expr):
@@ -387,7 +405,7 @@ class LatexPrinter(Printer):
 
     def _print_Gradient(self, expr):
         func = expr._expr
-        return r"\nabla\cdot %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+        return r"\nabla %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
         from sympy.core.power import Pow
@@ -491,7 +509,7 @@ class LatexPrinter(Printer):
 
     def _print_Pow(self, expr):
         # Treat x**Rational(1,n) as special case
-        if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1:
+        if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1 and self._settings['root_notation']:
             base = self._print(expr.base)
             expq = expr.exp.q
 
@@ -748,7 +766,7 @@ class LatexPrinter(Printer):
             # If the function is an inverse trig function, handle the style
             if func in inv_trig_table:
                 if inv_trig_style == "abbreviated":
-                    func = func
+                    pass
                 elif inv_trig_style == "full":
                     func = "arc" + func[1:]
                 elif inv_trig_style == "power":
@@ -815,7 +833,6 @@ class LatexPrinter(Printer):
         else:
             symbols = self._print(tuple(symbols))
 
-        args = (symbols, self._print(expr))
         tex = r"\left( %s \mapsto %s \right)" % (symbols, self._print(expr))
 
         return tex
@@ -1058,7 +1075,7 @@ class LatexPrinter(Printer):
         tex = r"!%s" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
 
         if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
+            return r"\left(%s\right)^{%s}" % (tex, exp)
         else:
             return tex
 
@@ -1121,7 +1138,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _hprint_vec(self, vec):
-        if len(vec) == 0:
+        if not vec:
             return ""
         s = ""
         for i in vec[:-1]:
@@ -1336,7 +1353,7 @@ class LatexPrinter(Printer):
             s += '; '
             if len(expr.variables) > 1:
                 s += self._print(expr.variables)
-            elif len(expr.variables):
+            elif expr.variables:
                 s += self._print(expr.variables[0])
             s += r'\rightarrow '
             if len(expr.point) > 1:
@@ -1345,15 +1362,22 @@ class LatexPrinter(Printer):
                 s += self._print(expr.point[0])
         return r"O\left(%s\right)" % s
 
-    def _print_Symbol(self, expr):
+    def _print_Symbol(self, expr, style='plain'):
         if expr in self._settings['symbol_names']:
             return self._settings['symbol_names'][expr]
 
-        return self._deal_with_super_sub(expr.name) if \
+        result = self._deal_with_super_sub(expr.name) if \
             '\\' not in expr.name else expr.name
 
+        if style == 'bold':
+            result = r"\mathbf{{{}}}".format(result)
+
+        return result
+
     _print_RandomSymbol = _print_Symbol
-    _print_MatrixSymbol = _print_Symbol
+
+    def _print_MatrixSymbol(self, expr):
+        return self._print_Symbol(expr, style=self._settings['mat_symbol_style'])
 
     def _deal_with_super_sub(self, string):
         if '{' in string:
@@ -1366,9 +1390,9 @@ class LatexPrinter(Printer):
         subs = [translate(sub) for sub in subs]
 
         # glue all items together:
-        if len(supers) > 0:
+        if supers:
             name += "^{%s}" % " ".join(supers)
-        if len(subs) > 0:
+        if subs:
             name += "_{%s}" % " ".join(subs)
 
         return name
@@ -1481,7 +1505,7 @@ class LatexPrinter(Printer):
             return r"%s^\dagger" % self._print(mat)
 
     def _print_MatMul(self, expr):
-        from sympy import Add, MatAdd, HadamardProduct, MatMul, Mul
+        from sympy import MatMul, Mul
 
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr), False)
 
@@ -1657,7 +1681,7 @@ class LatexPrinter(Printer):
 
     def _print_tuple(self, expr):
         return r"\left( %s\right)" % \
-            r", \quad ".join([ self._print(i) for i in expr ])
+            r", \  ".join([ self._print(i) for i in expr ])
 
     def _print_TensorProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
@@ -1672,7 +1696,7 @@ class LatexPrinter(Printer):
 
     def _print_list(self, expr):
         return r"\left[ %s\right]" % \
-            r", \quad ".join([ self._print(i) for i in expr ])
+            r", \  ".join([ self._print(i) for i in expr ])
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -1682,7 +1706,7 @@ class LatexPrinter(Printer):
             val = d[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
-        return r"\left\{ %s\right\}" % r", \quad ".join(items)
+        return r"\left\{ %s\right\}" % r", \  ".join(items)
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
@@ -1716,7 +1740,7 @@ class LatexPrinter(Printer):
             tex = r'\delta_{%s %s}' % (i, j)
         else:
             tex = r'\delta_{%s, %s}' % (i, j)
-        if exp:
+        if exp is not None:
             tex = r'\left(%s\right)^{%s}' % (tex, exp)
         return tex
 
@@ -1774,6 +1798,13 @@ class LatexPrinter(Printer):
               + r"\right\}")
 
     def _print_SeqFormula(self, s):
+        if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:
+            return r"\left\{%s\right\}_{%s=%s}^{%s}" % (
+                self._print(s.formula),
+                self._print(s.variables[0]),
+                self._print(s.start),
+                self._print(s.stop)
+            )
         if s.start is S.NegativeInfinity:
             stop = s.stop
             printset = (r'\ldots', s.coeff(stop - 3), s.coeff(stop - 2),
@@ -1863,7 +1894,7 @@ class LatexPrinter(Printer):
             vars_print,
             vars_print,
             self._print(s.base_set),
-            self._print(s.condition.as_expr()))
+            self._print(s.condition))
 
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])
@@ -2261,7 +2292,7 @@ def translate(s):
     else:
         # Process modifiers, if any, and recurse
         for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True):
-            if s.lower().endswith(key) and len(s)>len(key):
+            if s.lower().endswith(key) and len(s) > len(key):
                 return modifier_dict[key](translate(s[:-len(key)]))
         return s
 
@@ -2270,7 +2301,8 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     fold_short_frac=None, inv_trig_style="abbreviated",
     itex=False, ln_notation=False, long_frac_ratio=None,
     mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-    order=None, symbol_names=None):
+    order=None, symbol_names=None, root_notation=True,
+    mat_symbol_style="plain", imaginary_unit="i"):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2323,6 +2355,16 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         ``order`` keyword to ``none`` if speed is a concern.
     symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.
+    root_notation : boolean, optional
+        If set to ``False``, exponents of the form 1/n are printed in fractonal form.
+        Default is ``True``, to print exponent in root form.
+    mat_symbol_style : string, optional
+        Can be either ``plain`` (default) or ``bold``. If set to ``bold``,
+        a MatrixSymbol A will be printed as ``\mathbf{A}``, otherwise as ``A``.
+    imaginary_unit : string, optional
+        String to use for the imaginary unit. Defined options are "i" (default)
+        and "j". Adding "b" or "t" in front gives ``\mathrm`` or ``\text``, so
+        "bi" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
 
     Notes
     =====
@@ -2427,7 +2469,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     dictionary.
 
     >>> print(latex([2/x, y], mode='inline'))
-    $\left[ 2 / x, \quad y\right]$
+    $\left[ 2 / x, \  y\right]$
 
     """
     if symbol_names is None:
@@ -2447,6 +2489,9 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'mul_symbol' : mul_symbol,
         'order' : order,
         'symbol_names' : symbol_names,
+        'root_notation' : root_notation,
+        'mat_symbol_style' : mat_symbol_style,
+        'imaginary_unit' : imaginary_unit,
     }
 
     return LatexPrinter(settings).doprint(expr)

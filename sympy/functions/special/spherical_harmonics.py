@@ -1,15 +1,15 @@
 from __future__ import print_function, division
 
 from sympy import pi, I
-from sympy.core.singleton import S
 from sympy.core import Dummy, sympify
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.singleton import S
 from sympy.functions import assoc_legendre
-from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin, cos, cot
 
 _x = Dummy("x")
 

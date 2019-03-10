@@ -7,13 +7,12 @@ as a SymPy function for symbolic manipulation.
 
 """
 
-import math
-from sympy.core.singleton import S
+from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Rational
-from sympy.core.function import ArgumentIndexError, Function, Lambda
 from sympy.core.power import Pow
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 def _expm1(x):
@@ -91,6 +90,7 @@ class log1p(Function):
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log1p
     >>> from sympy.core.function import expand_log
@@ -104,7 +104,6 @@ class log1p(Function):
 
     See Also
     ========
-
 
     expm1
     """
@@ -170,6 +169,7 @@ class exp2(Function):
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import exp2
     >>> exp2(2).evalf() == 4
@@ -222,6 +222,7 @@ class log2(Function):
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log2
     >>> log2(4).evalf() == 2
@@ -279,6 +280,7 @@ class fma(Function):
 
     Examples
     ========
+
     >>> from sympy.abc import x, y, z
     >>> from sympy.codegen.cfunctions import fma
     >>> fma(x, y, z).diff(x)
@@ -319,6 +321,7 @@ class log10(Function):
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log10
     >>> log10(100).evalf() == 2
@@ -375,6 +378,7 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import Sqrt
     >>> Sqrt(x)

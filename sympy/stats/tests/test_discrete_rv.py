@@ -1,18 +1,15 @@
-from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
-        Poisson, Geometric, Logarithmic, NegativeBinomial, YuleSimon, Zeta)
-from sympy.abc import x
-
 from sympy import S, Sum, I, lambdify, re, im, log, simplify, zeta, pi
-from sympy.stats import (P, E, variance, density, characteristic_function,
-        where, moment_generating_function)
-
-from sympy.stats.rv import sample
-from sympy.stats.symbolic_probability import Probability
+from sympy.abc import x
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.piecewise import Piecewise
-from sympy.sets.fancysets import Range
 from sympy.logic.boolalg import Or
+from sympy.sets.fancysets import Range
+from sympy.stats import (P, E, variance, density, characteristic_function,
+        where, moment_generating_function)
+from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
+        Poisson, Geometric, Logarithmic, NegativeBinomial, YuleSimon, Zeta)
+from sympy.stats.rv import sample
+from sympy.utilities.pytest import slow
 
 def test_PoissonDistribution():
     l = 3
@@ -33,7 +30,6 @@ def test_Poisson():
 def test_GeometricDistribution():
     p = S.One / 5
     d = GeometricDistribution(p)
-    t = S('t')
     assert d.expectation(x, x) == 1/p
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
@@ -68,7 +64,9 @@ def test_zeta():
     assert E(x) == zeta(s-1) / zeta(s)
     assert simplify(variance(x)) == (zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
 
-def test_sample():
+
+@slow
+def test_sample_discrete():
     X, Y, Z = Geometric('X', S(1)/2), Poisson('Y', 4), Poisson('Z', 1000)
     W = Poisson('W', S(1)/100)
     assert sample(X) in X.pspace.domain.set

@@ -384,9 +384,9 @@ def test_rewrite_MaxMin_as_Piecewise():
     assert Min(x,  y, a, b).rewrite(Piecewise) ==  Piecewise((a, (a <= b) & (a <= x) & (a <= y)),
         (b, (b <= x) & (b <= y)), (x, x <= y), (y, True))
 
-    # Piecewise rewriting of Min/Max does not takes place for non-real arguments
-    assert Max(vx, vy).rewrite(Piecewise) == Max(vx, vy)
-    assert Min(va, vx, vy).rewrite(Piecewise) == Min(va, vx, vy)
+    # Piecewise rewriting of Min/Max does also takes place for not explicitly real arguments
+    assert Max(vx, vy).rewrite(Piecewise) == Piecewise((vx, vx >= vy), (vy, True))
+    assert Min(va, vx, vy).rewrite(Piecewise) == Piecewise((va, (va <= vx) & (va <= vy)), (vx, vx <= vy), (vy, True))
 
 
 def test_issue_11099():

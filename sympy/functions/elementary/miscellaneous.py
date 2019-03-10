@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify
+from sympy.core import Function, S, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
@@ -15,9 +15,8 @@ from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
-from sympy.core.compatibility import as_int, with_metaclass, range
+from sympy.core.compatibility import with_metaclass, range
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
-from sympy.functions.elementary.integers import floor
 from sympy.logic.boolalg import And, Or
 
 def _minmax_as_Piecewise(op, *args):
@@ -394,7 +393,6 @@ class MinMaxBase(Expr, LatticeOp):
 
         """
         from sympy.utilities.iterables import ordered
-        from sympy.utilities.iterables import sift
         from sympy.simplify.simplify import walk
 
         if not args:
@@ -746,9 +744,7 @@ class Max(MinMaxBase, Application):
                 for j in args])
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        is_real = all(i.is_real for i in args)
-        if is_real:
-            return _minmax_as_Piecewise('>=', *args)
+        return _minmax_as_Piecewise('>=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_or(a.is_positive for a in self.args)
@@ -811,9 +807,7 @@ class Min(MinMaxBase, Application):
                 for j in args])
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        is_real = all(i.is_real for i in args)
-        if is_real:
-            return _minmax_as_Piecewise('<=', *args)
+        return _minmax_as_Piecewise('<=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_and(a.is_positive for a in self.args)
