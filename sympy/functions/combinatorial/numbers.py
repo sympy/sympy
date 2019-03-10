@@ -2008,10 +2008,10 @@ class motzkin(Function):
 
     >>> from sympy import motzkin
     >>> motzkin.find_first_n_motzkin(10)
-        [1, 1, 2.0, 4.0, 9.0, 21.0, 51.0, 127.0, 323.0, 835.0]
+        [1, 1, 2, 4, 9, 21, 51, 127, 323, 835]
 
     >>> motzkin.find_motzkin_numbers_in_range(100,1000)
-        [127.0, 323.0, 835.0]
+        [127, 323, 835]
 
     >>> motzkin.is_motzkin(100)
         False
@@ -2028,7 +2028,7 @@ class motzkin(Function):
              m_1 = 1
              i = 2
              while(1):
-                 next_num = ((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0
+                 next_num = int(((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0)
                  if next_num == n:
                      return True
                  if next_num > n:
@@ -2051,7 +2051,7 @@ class motzkin(Function):
                 motzkin.append(m_1)
             i = 2
             while(1):
-                next_num = ((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0
+                next_num = int(((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0)
                 m_0 = m_1
                 m_1 = next_num
                 i = i + 1
@@ -2079,7 +2079,7 @@ class motzkin(Function):
             motzkin.append(m_1)
             i = i + 1
         while(i <= n):
-            next_num = ((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0
+            next_num = int(((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0)
             m_0 = m_1
             m_1 = next_num
             motzkin.append(next_num)
