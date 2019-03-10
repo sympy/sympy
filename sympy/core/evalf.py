@@ -365,9 +365,9 @@ def get_integer_part(expr, no, options, return_ints=False):
             # they cannot be re-substituted later with higher precision.
             s = options.get('subs', False)
             if s:
-                re_im = re_im.subs(options.get('subs', {}))
+                re_im = re_im.subs(s)
 
-            re_im = Add(re_im, -nint, evaluate=False)
+            re_im = Add(re_im, -nint, evaluate=False)  # trying it unevaluated this time
             x, _, x_acc, _ = evalf(re_im, 10, options)
             try:
                 check_target(re_im, (x, None, x_acc, None), 3)
@@ -1288,7 +1288,19 @@ def _create_evalf_table():
 
 
 def evalf(x, prec, options):
-    from sympy import re as re_, im as im_
+    from sympy import re as re_, im as im_, Number, Dict
+    if not x.is_number:
+        s = Dict(options.pop('subs', {}))
+        if s:
+            # put in numbers that are exact
+            undone = dict()
+            for k, v in s.items():
+                if all(i.is_Rational for i in v.atoms(Number)):
+                    x = x.subs(k, v)
+                else:
+                    undone[k] = v
+            if undone:
+                options['subs'] = undone
     try:
         rf = evalf_table[x.func]
         r = rf(x, prec, options)
