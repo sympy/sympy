@@ -2085,3 +2085,23 @@ class motzkin(Function):
             motzkin.append(next_num)
             i = i + 1
         return motzkin
+
+    def eval_motzkin(n):
+        if (n-(int(n)))!=0 or n<=0:
+            raise ValueError('The number is not valid n should be a positive integer')
+        if n==1 or n==2:
+            return 1
+        n = n-1
+        i = 2
+        m_0 = 1
+        m_1 = 1
+        while(i <= n):
+            next_num = int(((2*i + 1)/(i + 2))*m_1 + ((3*i - 3)/(i + 2))*m_0)
+            m_0 = m_1
+            m_1 = next_num
+            i = i + 1
+            if i>n:
+                return next_num
+
+        
+        
