@@ -2469,7 +2469,12 @@ class _MinimalMatrix(object):
         return self.mat[key]
 
     def __eq__(self, other):
-        return self.shape == other.shape and list(self) == list(other)
+        try:
+            classof(self, other)
+        except TypeError:
+            return False
+        return (
+            self.shape == other.shape and list(self) == list(other))
 
     def __len__(self):
         return self.rows*self.cols

@@ -1468,3 +1468,10 @@ def test_issue_13774():
     v = [1,1,1]
     raises(TypeError, lambda: M*v)
     raises(TypeError, lambda: v*M)
+
+
+def test___eq__():
+    assert (EigenOnlyMatrix(
+        [[0, 1, 1],
+        [1, 0, 0],
+        [1, 1, 1]]) == {}) is False
