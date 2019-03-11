@@ -74,3 +74,15 @@ def test_ordered():
     assert list(ordered(l, warn=True)) == [[1], [1], [2]]
     raises(ValueError, lambda: list(ordered(['a', 'ab'], keys=[lambda x: x[0]],
         default=False, warn=True)))
+
+def test_subclasses():
+    from sympy.core.assumptions import ManagedProperties
+    from sympy.core.core import BasicMeta
+    from sympy.core.function import FunctionClass, UndefinedFunction
+    from sympy.core.singleton import Singleton
+
+    BasicMeta.__subclasses__()
+    FunctionClass.__subclasses__()
+    ManagedProperties.__subclasses__()
+    Singleton.__subclasses__()
+    UndefinedFunction.__subclasses__()
