@@ -485,9 +485,12 @@ def test_bfs_identity_search():
 
 
 # @XFAIL
-# Seems to fail on Python 2.7, but not 3.X
+# Seems to fail on Python 2.7, but not 3.X, unless scipy is installed
 def test_bfs_identity_search_xfail():
     if PY3:
+        scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+        if scipy:
+            skip("scipy installed.")
         s = PhaseGate(0)
         t = TGate(0)
         gate_list = [Dagger(s), t]
