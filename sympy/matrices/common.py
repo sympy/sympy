@@ -8,7 +8,6 @@ from __future__ import division, print_function
 
 from collections import defaultdict
 from inspect import isfunction
-from types import FunctionType
 
 from sympy.assumptions.refine import refine
 from sympy.core.basic import Atom
@@ -1379,7 +1378,7 @@ class MatrixProperties(MatrixRequired):
         """
         # accept custom simplification
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         if not self.is_square:
@@ -1462,7 +1461,7 @@ class MatrixProperties(MatrixRequired):
             return False
 
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         return self._eval_is_matrix_hermitian(simpfunc)
@@ -1642,7 +1641,7 @@ class MatrixProperties(MatrixRequired):
         True
         """
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         if not self.is_square:
