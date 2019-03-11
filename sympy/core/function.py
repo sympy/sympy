@@ -1556,7 +1556,10 @@ class Derivative(Expr):
         if hints.get('deep', True):
             expr = expr.doit(**hints)
         hints['evaluate'] = True
-        return self.func(expr, *self.variable_count, **hints)
+        rv = self.func(expr, *self.variable_count, **hints)
+        if rv!= self and rv.has(Derivative):
+            rv =  rv.doit(**hints)
+        return rv
 
     @_sympifyit('z0', NotImplementedError)
     def doit_numerically(self, z0):

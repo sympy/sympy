@@ -1121,7 +1121,11 @@ def test_checksol():
     assert checksol(Eq(x < 1, False), {x: 1}) is True
     assert checksol(Eq(x < 1, False), {x: 0}) is False
     assert checksol(Eq(x + 1, x**2 + 1), {x: 1}) is True
-
+    assert checksol([x - 1, x**2 - 1], x, 1) is True
+    assert checksol([x - 1, x**2 - 2], x, 1) is False
+    assert checksol(Poly(x**2 - 1), x, 1) is True
+    raises(ValueError, lambda: checksol(x, 1))
+    raises(ValueError, lambda: checksol([], x, 1))
 
 def test__invert():
     assert _invert(x - 2) == (2, x)
