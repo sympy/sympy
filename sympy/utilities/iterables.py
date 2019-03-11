@@ -1080,6 +1080,8 @@ def connected_components(G):
     We can find the connected components using this function if we include
     each edge in both directions::
 
+        >>> from sympy.utilities.iterables import connected_components
+
         >>> V = ['A', 'B', 'C', 'D']
         >>> E = [('A', 'B'), ('B', 'A'), ('C', 'D'), ('D', 'C')]
         >>> connected_components((V, E))
