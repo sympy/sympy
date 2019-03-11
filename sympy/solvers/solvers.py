@@ -920,7 +920,6 @@ def solve(f, *symbols, **flags):
                        )
                       )
     f, symbols = (_sympified_list(w) for w in [f, symbols])
-    bool_check = False
     if isinstance(f, list):
         f = [s for s in f if s is not S.true and s is not True]
     implicit = flags.get('implicit', False)
@@ -988,9 +987,6 @@ def solve(f, *symbols, **flags):
         if isinstance(fi, Poly):
             f[i] = fi.as_expr()
 
-        if not fi and isinstance(fi, BooleanAtom):
-            bool_check = True
-
         # rewrite hyperbolics in terms of exp
         f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction),
                 lambda w: w.rewrite(exp))
@@ -1014,7 +1010,7 @@ def solve(f, *symbols, **flags):
                 f[i: i + 1] = [fr, fi]
 
     # real/imag handling -----------------------------
-    if bool_check:
+    if any(isinstance(fi, (bool, BooleanAtom)) for fi in f):
         return []
 
     w = Dummy('w')
