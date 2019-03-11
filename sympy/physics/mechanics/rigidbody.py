@@ -274,7 +274,7 @@ class RigidBody(object):
         >>> I = outer (b.x, b.x)
         >>> inertia_tuple = (I, P)
         >>> B = RigidBody('B', P, b, M, inertia_tuple)
-        >>> B.rotational_kinetic_energy(N)
+        >>> B.translational_kinetic_energy(N)
         M*v**2/2
 
         """
