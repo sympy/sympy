@@ -68,27 +68,49 @@ class AskNegativeHandler(CommonHandler):
             return r
 
         # Helper method to check positive or negative
-        # Returns False if positive, True if negative or None otherwise
         def neg_pos(expr):
-            if ask(Q.negative(expr), assumptions):
-                return True
-            elif ask(Q.positive(expr), assumptions):
-                return False
-            elif ask(Q.nonnegative(expr) | Q.nonpositive(expr), assumptions):
-                return 0
+            if ask(Q.positive(expr), assumptions):
+                res = 1  # positive
+            elif ask(Q.negative(expr), assumptions):
+                res = 2  # negative
             else:
-                return None
+                nn = ask(Q.nonnegative(expr), assumptions)
+                np = ask(Q.nonpositive(expr), assumptions)
+                if nn and np:
+                    res = 3  # zero
+                elif nn:
+                    res = 4  # non-negative
+                elif np:
+                    res = 5  # non-positive
+                elif nn is None and np is None:
+                    return None
+            return res
 
-        val = None
+        val = 3  # zero
+        contras = [
+            (1, 2), (2, 1),  # positive + negative := unknown
+            (1, 5), (5, 1),  # positive + non-positive := unknown
+            (2, 4), (4, 2),  # negative + non-negative := unknown
+            (4, 5), (5, 4),  # non-positive + non-negative := unknown
+        ]
+
         for arg in expr.args:
             check = neg_pos(arg)
-            if val is None and check in (True, False):
+            if check is None:
+                return check
+            elif check == val or check == 3 or val == 3:  # added with 0 or same type.
                 val = check
-
-            if check is None or check is (not val) :
+            elif (val, check) in contras:
                 return None
+            elif (val == 1 and check == 4) or (check == 1 and val == 4):
+                val = 1  # positive + non-negative := positive
+            elif (val == 2 and check == 5) or (check == 2 and val == 5):
+                val = 2
 
-        return val
+        # True if negative, False if positive, zero, non-negative
+        # None if non-positive
+        result = True if val == 2 else (None if val == 5 else False)
+        return result
 
     @staticmethod
     def Mul(expr, assumptions):
@@ -285,27 +307,49 @@ class AskPositiveHandler(CommonHandler):
             return r
 
         # Helper method to check positive or negative
-        # Returns True if positive, False if negative or None otherwise
         def neg_pos(expr):
-            if ask(Q.negative(expr), assumptions):
-                return False
-            elif ask(Q.positive(expr), assumptions):
-                return True
-            elif ask(Q.nonnegative(expr) | Q.nonpositive(expr), assumptions):
-                return 0
+            if ask(Q.positive(expr), assumptions):
+                res = 1  # positive
+            elif ask(Q.negative(expr), assumptions):
+                res = 2  # negative
             else:
-                return None
+                nn = ask(Q.nonnegative(expr), assumptions)
+                np = ask(Q.nonpositive(expr), assumptions)
+                if nn and np:
+                    res = 3  # zero
+                elif nn:
+                    res = 4  # non-negative
+                elif np:
+                    res = 5  # non-positive
+                elif nn is None and np is None:
+                    return None
+            return res
 
-        val = None
+        val = 3  # zero
+        contras = [
+            (1, 2), (2, 1),  # positive + negative := unknown
+            (1, 5), (5, 1),  # positive + non-positive := unknown
+            (2, 4), (4, 2),  # negative + non-negative := unknown
+            (4, 5), (5, 4),  # non-positive + non-negative := unknown
+        ]
+
         for arg in expr.args:
             check = neg_pos(arg)
-            if val is None and check in (True, False):
+            if check is None:
+                return check
+            elif check == val or check == 3 or val == 3:  # added with 0 or same type.
                 val = check
-
-            if check is None or check is (not val):
+            elif (val, check) in contras:
                 return None
+            elif (val == 1 and check == 4) or (check == 1 and val == 4):
+                val = 1   # positive + non-negative := positive
+            elif (val == 2 and check == 5) or (check == 2 and val == 5):
+                val = 2
 
-        return val
+        # True if positive, False if negative, zero, non-positive
+        # None if non-negative
+        result = True if val == 1 else (None if val == 4 else False)
+        return result
 
     @staticmethod
     def Pow(expr, assumptions):
