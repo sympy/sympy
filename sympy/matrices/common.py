@@ -2473,25 +2473,36 @@ class _MinimalMatrix(object):
         return cls(*args, **kwargs)
 
     def __init__(self, rows, cols=None, mat=None):
-        if isinstance(mat, FunctionType):
-            # if we passed in a function, use that to populate the indices
-            mat = list(mat(i, j) for i in range(rows) for j in range(cols))
-        if cols is None and mat is None:
+        ok = not all(i is None for i in (rows, cols, mat))
+        if cols is mat is None:
             mat = rows
-        rows, cols = getattr(mat, 'shape', (rows, cols))
-        try:
-            # if we passed in a list of lists, flatten it and set the size
-            if cols is None and mat is None:
-                mat = rows
-            cols = len(mat[0])
-            rows = len(mat)
-            mat = [x for l in mat for x in l]
-        except (IndexError, TypeError):
-            pass
+            rows = None
+        if None not in (rows, cols) and mat is not None:
+            if isfunction(mat):
+                # if we passed in a function, use that to populate the indices
+                mat = [mat(i, j) for i in range(rows) for j in range(cols)]
+            elif len(mat) != rows*cols:
+                ok = False
+        elif rows == cols == None and mat is not None:
+            try:
+                rows, cols = mat.shape
+            except AttributeError:
+                # mat might be a list of rows
+                try:
+                    assert isinstance(mat, (list, tuple))
+                    rows = len(mat)
+                    mat = [x for l in mat for x in l]  # TypeError if not iterable
+                    # len of mat should be divisible by rows
+                    cols, bad = divmod(len(mat), rows)
+                    assert not bad
+                except (AssertionError, TypeError):
+                    ok = False
+                    pass
+        if not ok:
+            raise NotImplementedError(filldedent('''
+                Can't initialize matrix with the given parameters.'''))
         self.mat = tuple(self._sympify(x) for x in mat)
         self.rows, self.cols = rows, cols
-        if self.rows is None or self.cols is None:
-            raise NotImplementedError("Cannot initialize matrix with given parameters")
 
     def __getitem__(self, key):
         def _normalize_slices(row_slice, col_slice):

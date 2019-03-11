@@ -45,6 +45,7 @@ def eye_Shaping(n):
 def zeros_Shaping(n):
     return ShapingOnlyMatrix(n, n, lambda i, j: 0)
 
+
 class PropertiesOnlyMatrix(_MinimalMatrix, MatrixProperties):
     pass
 
@@ -55,6 +56,7 @@ def eye_Properties(n):
 
 def zeros_Properties(n):
     return PropertiesOnlyMatrix(n, n, lambda i, j: 0)
+
 
 class OperationsOnlyMatrix(_MinimalMatrix, MatrixOperations):
     pass
@@ -67,6 +69,7 @@ def eye_Operations(n):
 def zeros_Operations(n):
     return OperationsOnlyMatrix(n, n, lambda i, j: 0)
 
+
 class ArithmeticOnlyMatrix(_MinimalMatrix, MatrixArithmetic):
     pass
 
@@ -77,6 +80,7 @@ def eye_Arithmetic(n):
 
 def zeros_Arithmetic(n):
     return ArithmeticOnlyMatrix(n, n, lambda i, j: 0)
+
 
 class DeterminantOnlyMatrix(_MinimalMatrix, MatrixDeterminant):
     pass
@@ -89,6 +93,7 @@ def eye_Determinant(n):
 def zeros_Determinant(n):
     return DeterminantOnlyMatrix(n, n, lambda i, j: 0)
 
+
 class ReductionsOnlyMatrix(_MinimalMatrix, MatrixReductions):
     pass
 
@@ -100,33 +105,45 @@ def eye_Reductions(n):
 def zeros_Reductions(n):
     return ReductionsOnlyMatrix(n, n, lambda i, j: 0)
 
+
 class SpecialOnlyMatrix(_MinimalMatrix, MatrixSpecial):
     pass
+
 
 class SubspaceOnlyMatrix(_MinimalMatrix, MatrixSubspaces):
     pass
 
+
 class EigenOnlyMatrix(_MinimalMatrix, MatrixEigen):
     pass
+
 
 class CalculusOnlyMatrix(_MinimalMatrix, MatrixCalculus):
     pass
 
 
 def test__MinimalMatrix():
-    x = _MinimalMatrix(2,3,[1,2,3,4,5,6])
+    x = _MinimalMatrix(2, 3, [1, 2, 3, 4, 5, 6])
     assert x.rows == 2
     assert x.cols == 3
     assert x[2] == 3
-    assert x[1,1] == 5
-    assert list(x) == [1,2,3,4,5,6]
-    assert list(x[1,:]) == [4,5,6]
-    assert list(x[:,1]) == [2,5]
-    assert list(x[:,:]) == list(x)
-    assert x[:,:] == x
+    assert x[1, 1] == 5
+    assert list(x) == [1, 2, 3, 4, 5, 6]
+    assert list(x[1, :]) == [4, 5, 6]
+    assert list(x[:, 1]) == [2, 5]
+    assert list(x[:, :]) == list(x)
+    assert x[:, :] == x
     assert _MinimalMatrix(x) == x
     assert _MinimalMatrix([[1, 2, 3], [4, 5, 6]]) == x
+    assert _MinimalMatrix(([1, 2, 3], [4, 5, 6])) == x
+    assert _MinimalMatrix([(1, 2, 3), (4, 5, 6)]) == x
+    assert _MinimalMatrix(((1, 2, 3), (4, 5, 6))) == x
     assert not (_MinimalMatrix([[1, 2], [3, 4], [5, 6]]) == x)
+    raises(NotImplementedError, lambda: _MinimalMatrix({}))
+    # this failed before the changes were made to __init__
+    ans = Matrix([[1, 2]])
+    assert diag({0: 1}, {1: 2}) == ans
+    assert ans == diag({0: 1}, {1: 2})
 
 
 # ShapingOnlyMatrix tests
@@ -1217,18 +1234,21 @@ def test_diag_make():
     # [                [1  1]]
     # [  0       0     [    ]]
     # [                [1  1]]
-    assert (Matrix.diag({0: [a, a, a]})) == Matrix([[Matrix([
+    assert diag({0: [a, a, a]}) == Matrix([[Matrix([
         [1, 1],
         [1, 1]]), 0, 0], [0, Matrix([
         [1, 1],
         [1, 1]]), 0], [0, 0, Matrix([
         [1, 1],
         [1, 1]])]])
-    assert diag({0: 1}, {1: 2}) == diag({0: 1, 1: 2}) == Matrix([
-        [1, 2]])
-    assert diag({0: 1}, {1: 2}, 2) == diag({0: 1, 1: 2}, 2) == Matrix([
+    ans = Matrix([[1, 2]])
+    assert diag({0: 1}, {1: 2}) == ans
+    assert diag({0: 1, 1: 2}) == ans
+    ans = Matrix([
         [1, 2, 0],
         [0, 0, 2]])
+    assert diag({0: 1}, {1: 2}, 2) == ans
+    assert diag({0: 1, 1: 2}, 2) == ans
     assert diag({1: [1, 2, 3], 0: 1, -1: [-2, 3]}) == Matrix([
         [ 1, 1, 0, 0],
         [-2, 1, 2, 0],
