@@ -490,33 +490,29 @@ def test_max_deflection():
 
 
 
-def test_max_bending_stress():
-    # beam with circular cross section of diameter 120 mm(0.12 m)
-    E = Symbol('E')
-    b = Beam(10, E, 0.00001018)
+def test_bending_stress():
+    E, I, y = symbols('E, I, y')
+    b = Beam(10, E, I)
     R1, R2 = symbols('R1, R2')
     b.apply_load(R1, 0, -1)
     b.apply_load(R2, 10, -1)
     b.apply_load(1000, 0, 0, end=10)
     b.solve_for_reaction_loads(R1, R2)
-    I = Symbol('I')
-    assert b.max_bending_stress(0.06) == ((5, 0.06), 73673870.3339882)
-    b.second_moment = I
-    assert b.max_bending_stress(0.06, 12500) == ((5, 0.06), 750.0/I)
+    assert b.bending_stress() ==  y*(-5000*SingularityFunction(x, 0, 1) + 500*SingularityFunction(x, 0, 2)
+            - 5000*SingularityFunction(x, 10, 1) - 500*SingularityFunction(x, 10, 2))/I
 
 
-def test_max_shear_stress():
+def test_shear_stress():
     # beam with a rectangular cross-section of z*d units
-    z, E, d, I, F, y = symbols('z, E, d, I, F, y')
+    z, E, d, I, F, y, Q, t= symbols('z, E, d, I, F, y, Q, t')
     b = Beam(10, E, (z*d**3)/12)
     R1, R2 = symbols('R1, R2')
     b.apply_load(R1, 0, -1)
     b.apply_load(R2, 10, -1)
     b.apply_load(1000, 0, 0, end=10)
     b.solve_for_reaction_loads(R1, R2)
-    b.solve_for_reaction_loads(R1, R2)
-    assert b.max_shear_stress(z*((d**2)/4)/2, z, F) == ((0, 0), 3*F/(2*d*z))
-    assert b.max_shear_stress(z*((d**2)/4)/2, z) == ((0, 0), 7500/(d*z))
+    assert b.shear_stress() == 12*Q*(-5000*SingularityFunction(x, 0, 0) + 1000*SingularityFunction(x, 0, 1)
+            - 5000*SingularityFunction(x, 10, 0) - 1000*SingularityFunction(x, 10, 1))/(t*d**3*z)
 
 
 @slow

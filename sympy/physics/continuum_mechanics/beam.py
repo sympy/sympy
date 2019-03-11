@@ -1187,19 +1187,9 @@ class Beam(object):
             return None
 
 
-    def bending_stress(self, y, m):
+    def bending_stress(self):
         """
-        Returns bending stress of any point(or layer) in the beam cross-section at a distance `y`
-        from the neutral axis.
-
-        Parameters
-        ==========
-        y : Sympifiable
-            A symbol or a value representing the vertical distance of the required point(or layer)
-            on the cross-section from the neutral axis.
-        m : Sympifiable
-            A symbol or a value representing the bending moment at the required cross-section of
-            the beam.
+        Returns bending stress of a beam cross-section at a distance `y` from the neutral axis.
 
         Example
         =======
@@ -1209,7 +1199,7 @@ class Beam(object):
         has to be determined.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols, Symbol
+        >>> from sympy import symbols, Piecewise
         >>> E, I = symbols('E, I')
         >>> R1, R2 = symbols('R1, R2')
         >>> b = Beam(6, E, I)
@@ -1217,110 +1207,57 @@ class Beam(object):
         >>> b.apply_load(40, 0, 0, end=6)
         >>> b.apply_load(R2, 6, -1)
         >>> b.solve_for_reaction_loads(R1, R2)
-        >>> moment = b.bending_moment()
-        >>> x = Symbol('x')
-        >>> moment = abs(moment.subs(x, 4))
-        >>> b.bending_stress(0.2, moment)
-        32.0/I
+        >>> b.bending_stress()
+        y*(-120*SingularityFunction(x, 0, 1) + 20*SingularityFunction(x, 0, 2)
+        - 120*SingularityFunction(x, 6, 1) - 20*SingularityFunction(x, 6, 2))/I
+
         """
-        b_stress = (m*y)/self.second_moment
+        y = Symbol('y')
+        M = self.bending_moment()
+        b_stress = (M*y)/self.second_moment
         return b_stress
 
 
-    def max_bending_stress(self, y_max, m=None):
+
+    def shear_stress(self):
         """
-        Returns the maximum bending stress and its coordinates
-        in the Beam object.
-
-        Parameters
-        ==========
-        y_max : Sympifiable
-                A Symbol or a value representing the maximum vertical distance from the neutral axis
-        m : Sympifiable or Optional
-            A symbol or a value representing maximum bending moment. If not given will be determined
-            by the function max_bmoment()
-        """
-        if m is None:
-            x, m = self.max_bmoment()
-        else:
-            x = self.max_bmoment()[0]
-        max_b_stress = self.bending_stress(y_max, m)
-        return ((x, y_max), max_b_stress)
-
-
-    def shear_stress(self, q, b, v):
-        """
-        Returns the transverse shear stress of a beam cross-section at a point(or a layer) above or
-        below the neutral axis where its first moment of area is `q` and the width of the
-        cross section is `b`.
-
-        Parameters
-        ==========
-        q : Sympifiable
-            A symbol or a value representing the first moment of area between the location
-            where the shear stress is being calculated and the location where the shear stress is
-            zero about the neutral (centroidal) axis.
-        b : Sympifiable
-            A symbol or a value representing the width of the beam cross section at that point.
-        v : Sympifiable
-            A symbol or a value representing the shear force at the required cross section of the beam.
+        Returns the shear stress of a beam cross-section at point(or layer) above the
+        neutral axis with its first moment of area as `Q` and width of the cross-section as 't'.
 
         Example
         =======
-        There is symmetrical I-section beam with flange width as `W` and web width as `w`. The total height
-        is  `D` while the height of the web is `d`.
-        The first moment of area at a point on the web at `y` units above the neutral axis is determined as:
-        Q = Q_flange + Q_web
-        Therefore shear stress = V(Q_flange + Q_web)/I*b
+        A cantilever beam of I-cross-section and length 8 meters is under downward distributed constant load with magnitude
+        of 5.0 KN/m from starting point till 2 meters away from it. A ramp load of 2 kN/m applied from the mid till the end of the beam.
+        A point load of 12KN is also applied in same direction 4 meters away from start.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
-        >>> E, I, l = symbols('E, I, l')
-        >>> b = Beam(l, E, I)
-        >>> y, W, D, w, d, F = symbols('y, W, D, w, d, F')
+        >>> from sympy import symbols, Symbol
+        >>> E,I,M,V = symbols('E I M V')
+        >>> b = Beam(8, E, I)
+        >>> b.apply_load(V, 0, -1)
+        >>> b.apply_load(M, 0, -2)
+        >>> b.apply_load(5, 0, 0, end=2)
+        >>> b.apply_load(12, 4, -1)
+        >>> b.apply_load(2, 3, 1, end=8)
+        >>> b.solve_for_reaction_loads(V, M)
+        >>> tau = b.shear_stress()
+        >>> tau
+        Q*(649*SingularityFunction(x, 0, -1)/3 - 47*SingularityFunction(x, 0, 0) + 5*SingularityFunction(x, 0, 1)
+        - 5*SingularityFunction(x, 2, 1) + SingularityFunction(x, 3, 2) + 12*SingularityFunction(x, 4, 0)
+        - 10*SingularityFunction(x, 8, 1) - SingularityFunction(x, 8, 2))/(I*t)
+        >>> W, w, D, d, y, x = symbols('W, w, D, d, y, x')
         >>> q_flange = W*(D**2 - d**2)/8
         >>> q_web = w*((d**2)/4 - y**2)/2
         >>> q = q_flange + q_web
-        >>> tau = b.shear_stress(q, w, F)
-        >>> tau               # shear stress at a point on the web at `y` units above the neutral axis
-        F*(W*(D**2 - d**2)/8 + w*(d**2/4 - y**2)/2)/(I*w)
-        >>> q_neutral_axis = q.subs(y, 0)
-        >>> tau_neutral_axis = b.shear_stress(q_neutral_axis, w, F)
-        >>> tau_neutral_axis           # shear stress on the neutral axis
-        F*(W*(D**2 - d**2)/8 + d**2*w/8)/(I*w)
-        >>> q_top_of_web = q.subs(y, d/2)
-        >>> tau_top_of_web = b.shear_stress(q_top_of_web, w, F)
-        >>> tau_top_of_web              # shear stress at the top of web
-        F*W*(D**2 - d**2)/(8*I*w)
-
-        The above example is simply a cross sectional analysis. Load(s) can be applied on the beam to calculate
-        the shear force on the beam if needed.
+        >>> Q = Symbol('Q')
+        >>> tau.subs({Q: q, b: 10, x: 3})
+        -37*(W*(D**2 - d**2)/8 + w*(d**2/4 - y**2)/2)/(I*t)
         """
-        shear = (q*v)/(self.second_moment*b)
-        return shear
+        Q, t = symbols('Q, t')
+        V = self.shear_force()
+        sh_stress = (Q*V)/(self.second_moment*t)
+        return sh_stress
 
-
-    def max_shear_stress(self, q_max, b, v=None):
-        """
-        Returns the maximum trannsverse shear stress and its coordinates
-        in the Beam object
-
-        Parameters
-        ==========
-        q_max : Sympifiable
-                A symbol or a value representing the maximum first moment of area i.e. w.r.t the neutral axis(y = 0).
-        b : Sympifiable
-            A symbol or a value representing the width of the cross section of the Beam.
-        v : Sympifiable or Optional
-            A symbol or a value representing the maximum shear force on the Beam. If not given will be determined
-            by the function max_shear_force().
-        """
-        if v is None:
-            x, v = self.max_shear_force()
-        else:
-            x = self.max_shear_force()[0]
-        max_shear = self.shear_stress(q_max, b, v)
-        return ((x, 0), max_shear)
 
 
     def plot_shear_force(self, subs=None):
