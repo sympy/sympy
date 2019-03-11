@@ -760,6 +760,7 @@ class MatrixSpecial(MatrixRequired):
                 rv = kern(m) or (0, 0)
                 return m.get('size', rv)
             return 1, 1
+
         def minsize(d):
             size = d.pop('size', None)
             r = max(0, -min(d)) + 1
@@ -780,12 +781,18 @@ class MatrixSpecial(MatrixRequired):
                 d['size'] = size
             return r, c
 
+        def kern(d):
+            if type(d) is dict and ('move' in d or 'goto' in d):
+                assert len(d) == 1
+                return tuple(list(d.values())[0])
+
         def arg_size(args):
             prev = None
             max_row, max_col, o_r, o_c, g_r, g_c = [0]*6
             for a_ in args:
-                a_size = size(a_)
-                if type(a_) is dict and ('goto' in a_ or 'move' in a_):
+                k = kern(a_)
+                a_size = size(a_) if k is None else k
+                if k:
                     prev_size = size(a_)
                     if 'goto' in a_:
                         prev = 'goto'
@@ -829,68 +836,71 @@ class MatrixSpecial(MatrixRequired):
                         raise TypeError(filldedent(
                             '''expecting list, function
                             or Expr in dict'''))
-
-        def kern(d):
-            if 'move' in d or 'goto' in d:
-                assert len(d) == 1
-                return tuple(list(d.values())[0])
-
-        # collapse contiguous dicts
-        newargs = []
-        nosize = None
-        i = 0
-        for a in args:
-            if type(a) is dict and not kern(a):
-                a = a.copy()  # leave original unchanged
-                if 'size' in a:
-                    minsize(a)  # check it
-                    newargs.append(a)
-                else:
-                    if nosize is None:
-                        # this is the first unsized
+        
+        def collapse_cont_dicts(newargs, args):         
+            """Collapse contiguous dicts"""
+            i = 0
+            nosize = None
+            for a in args:
+                if type(a) is dict and not kern(a):
+                    a = a.copy()  # leave original unchanged
+                    if 'size' in a:
+                        minsize(a)  # check it
                         newargs.append(a)
-                        nosize = i
-                    elif i - 1 == nosize:
-                        # merge unsized dict entries
-                        newargs[-1].update(a)
                     else:
-                        raise ValueError(filldedent('''
-                            Only one non-contiguous dictionary can have
-                            unspecified size. For the others, give the
-                            size, e.g. {'size': (rows, cols), ...}.
-                            '''))
-            else:
-                newargs.append(a)
-            i += 1
-        args = newargs
-        # assign size to size-unspecified dict
-        if nosize is not None:
-            dsize = minsize(args[nosize])
-            if None in (rows, cols):
-                # the unspecified dict will have minimal size
-                pass
-            else:
-                # the unspecified dict will take up
-                # the remaining space
-                spec_rows = spec_cols = 0
-                for a in args:
-                    r, c = size(a)
-                    spec_rows += r
-                    spec_cols += c
-                rneed = rows - spec_rows
-                cneed = cols - spec_cols
-                r, c = dsize
-                if rneed < 0 or cneed < 0:
-                    # specified sizes are too small but let
-                    # this raise below when diagonal size is calculated
+                        if nosize is None:
+                            # this is the first unsized
+                            newargs.append(a)
+                            nosize = i
+                        elif i - 1 == nosize:
+                            # merge unsized dict entries
+                            newargs[-1].update(a)
+                        else:
+                            raise ValueError(filldedent('''
+                                Only one non-contiguous dictionary can have
+                                unspecified size. For the others, give the
+                                size, e.g. {'size': (rows, cols), ...}.
+                                '''))
+                else:
+                    newargs.append(a)
+                i += 1
+            return newargs, nosize
+
+        def assign_size_for_dicts(nosize, args):
+            """Assign sizes for unspecified dicts"""
+            if nosize is not None:
+                dsize = minsize(args[nosize])
+                if None in (rows, cols):
+                    # the unspecified dict will have minimal size
                     pass
-                elif rneed < r or cneed < c:
-                    raise ValueError(filldedent('''
-                        The minimum size of the dict with no size given
-                        is too big for the specified size of this
-                        matrix.'''))
-                dsize = max(rneed, r), max(cneed, c)
-            args[nosize]['size'] = dsize
+                else:
+                    # the unspecified dict will take up
+                    # the remaining space
+                    spec_rows = spec_cols = 0
+                    for a in args:
+                        r, c = size(a)
+                        spec_rows += r
+                        spec_cols += c
+                    rneed = rows - spec_rows
+                    cneed = cols - spec_cols
+                    r, c = dsize
+                    if rneed < 0 or cneed < 0:
+                        # specified sizes are too small but let
+                        # this raise below when diagonal size is calculated
+                        pass
+                    elif rneed < r or cneed < c:
+                        raise ValueError(filldedent('''
+                            The minimum size of the dict with no size given
+                            is too big for the specified size of this
+                            matrix.'''))
+                    dsize = max(rneed, r), max(cneed, c)
+                args[nosize]['size'] = dsize
+            return args
+
+        newargs = []
+        args, nosize = collapse_cont_dicts(newargs, args)
+        # assign size to size-unspecified dict
+        args = assign_size_for_dicts(nosize, args)
 
         # calculate size needed
         diag_rows = diag_cols = 0
