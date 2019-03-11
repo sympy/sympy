@@ -941,11 +941,12 @@ class Basic(with_metaclass(ManagedProperties)):
 
         sequence = list(sequence)
         for i, s in enumerate(sequence):
-            if type(s[0]) is str:
+            if isinstance(s[0], string_types):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
             try:
-                s = [sympify(_, strict=type(_) is not str) for _ in s]
+                s = [sympify(_, strict=not isinstance(_, string_types))
+                     for _ in s]
             except SympifyError:
                 # if it can't be sympified, skip it
                 sequence[i] = None
@@ -1191,11 +1192,12 @@ class Basic(with_metaclass(ManagedProperties)):
             args = []
             changed = False
             for a in self.args:
-                try:
-                    a_xr = a._xreplace(rule)
+                _xreplace = getattr(a, '_xreplace', None)
+                if _xreplace is not None:
+                    a_xr = _xreplace(rule)
                     args.append(a_xr[0])
                     changed |= a_xr[1]
-                except AttributeError:
+                else:
                     args.append(a)
             args = tuple(args)
             if changed:
@@ -1263,10 +1265,11 @@ class Basic(with_metaclass(ManagedProperties)):
             return any(isinstance(arg, pattern)
             for arg in preorder_traversal(self))
 
-        try:
-            match = pattern._has_matcher()
+        _has_matcher = getattr(pattern, '_has_matcher', None)
+        if _has_matcher is not None:
+            match = _has_matcher()
             return any(match(arg) for arg in preorder_traversal(self))
-        except AttributeError:
+        else:
             return any(arg == pattern for arg in preorder_traversal(self))
 
     def _has_matcher(self):
@@ -1899,9 +1902,8 @@ def _atomic(e, recursive=False):
     pot = preorder_traversal(e)
     seen = set()
     if isinstance(e, Basic):
-        try:
-            free = e.free_symbols
-        except AttributeError:
+        free = getattr(e, "free_symbols", None)
+        if free is None:
             return {e}
     else:
         return set()

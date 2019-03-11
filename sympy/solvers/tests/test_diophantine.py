@@ -540,6 +540,8 @@ def test_diophantine():
     assert diophantine(1/x) == set()
     assert diophantine(1/x + 1/y - S.Half)
     set([(6, 3), (-2, 1), (4, 4), (1, -2), (3, 6)])
+    assert diophantine(x**2 + y**2 +3*x- 5, permute=True) == \
+        set([(-1, 1), (-4, -1), (1, -1), (1, 1), (-4, 1), (-1, -1), (4, 1), (4, -1)])
 
 
 def test_general_pythagorean():

@@ -716,8 +716,11 @@ def test_imps_errors():
     # Test errors that implemented functions can return, and still be able to
     # form expressions.
     # See: https://github.com/sympy/sympy/issues/10810
-    for val, error_class in product((0, 0., 2, 2.0),
-                                    (AttributeError, TypeError, ValueError)):
+    #
+    # XXX: Removed AttributeError here. This test was added due to issue 10810
+    # but that issue was about ValueError. It doesn't seem reasonable to
+    # "support" catching AttributeError in the same context...
+    for val, error_class in product((0, 0., 2, 2.0), (TypeError, ValueError)):
 
         def myfunc(a):
             if a == 0:
@@ -1125,3 +1128,11 @@ def test_issue_15654():
     f = lambdify((n, l, r, Z), hydrogen.R_nl(n, l, r, Z))
     scipy_value = f(nv, lv, rv, Zv)
     assert abs(sympy_value - scipy_value) < 1e-15
+
+def test_issue_15827():
+    if not numpy:
+        skip("numpy not installed")
+    A = MatrixSymbol("A", 3, 3)
+    f = lambdify(A, 2*A)
+    assert numpy.array_equal(f(numpy.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])), \
+    numpy.array([[2, 4, 6], [2, 4, 6], [2, 4, 6]]))

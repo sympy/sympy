@@ -4,12 +4,12 @@ from __future__ import print_function, division
 
 from sympy.core import S, pi, I
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.functions.elementary.hyperbolic import atanh
-from sympy.functions.elementary.trigonometric import sin, tan
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import sign
-from sympy.functions.special.hyper import hyper, meijerg
+from sympy.functions.elementary.hyperbolic import atanh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin, tan
 from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import hyper, meijerg
 
 class elliptic_k(Function):
     r"""
@@ -40,16 +40,17 @@ class elliptic_k(Function):
     >>> elliptic_k(m).series(n=3)
     pi/2 + pi*m/8 + 9*pi*m**2/128 + O(m**3)
 
+    See Also
+    ========
+
+    elliptic_f
+
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
     .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticK
 
-    See Also
-    ========
-
-    elliptic_f
     """
 
     @classmethod
@@ -116,16 +117,17 @@ class elliptic_f(Function):
     >>> elliptic_f(3.0 + I/2, 1.0 + I)
     2.909449841483 + 1.74720545502474*I
 
+    See Also
+    ========
+
+    elliptic_k
+
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
     .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticF
 
-    See Also
-    ========
-
-    elliptic_k
     """
 
     @classmethod
@@ -200,6 +202,7 @@ class elliptic_e(Function):
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
     .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticE2
     .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticE
+
     """
 
     @classmethod
@@ -309,6 +312,7 @@ class elliptic_pi(Function):
     .. [1] https://en.wikipedia.org/wiki/Elliptic_integrals
     .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticPi3
     .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticPi
+
     """
 
     @classmethod

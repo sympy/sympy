@@ -1,12 +1,10 @@
 from distutils.version import LooseVersion as V
-import collections
 
+from sympy import Mul
 from sympy.core.compatibility import Iterable
-from sympy.printing.printer import Printer
+from sympy.external import import_module
 from sympy.printing.precedence import PRECEDENCE
 from sympy.printing.pycode import AbstractPythonCodePrinter
-from sympy import Mul
-from sympy.external import import_module
 import sympy
 
 
@@ -92,7 +90,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         if any(isinstance(i, Iterable) for i in variables):
             raise NotImplementedError("derivation by multiple variables is not supported")
         def unfold(expr, args):
-            if len(args) == 0:
+            if not args:
                 return self._print(expr)
             return "%s(%s, %s)[0]" % (
                     self._module_format("tensorflow.gradients"),
@@ -184,7 +182,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         contraction_indices = expr.contraction_indices
         contraction_string, letters_free, letters_dum = self._get_einsum_string(base.subranks, contraction_indices)
 
-        if len(contraction_indices) == 0:
+        if not contraction_indices:
             return self._print(base)
         if isinstance(base, CodegenArrayTensorProduct):
             elems = ["%s" % (self._print(arg)) for arg in base.args]

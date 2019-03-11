@@ -2,17 +2,17 @@ from __future__ import print_function, division
 
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.compatibility import string_types
+from sympy.core.exprtools import factor_terms
+from sympy.core.numbers import GoldenRatio
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.core.numbers import GoldenRatio
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.special.gamma_functions import gamma
-from sympy.series.order import Order
-from .gruntz import gruntz
-from sympy.core.exprtools import factor_terms
-from sympy.simplify.ratsimp import ratsimp
 from sympy.polys import PolynomialError, factor
+from sympy.series.order import Order
+from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.simplify import together
+from .gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
     """Computes the limit of ``e(z)`` at the point ``z0``.
@@ -247,11 +247,14 @@ class Limit(Expr):
                         inve = e.subs(z, -1/u)
                     else:
                         inve = e.subs(z, 1/u)
-                    r = limit(inve.as_leading_term(u), u, S.Zero, "+")
-                    if isinstance(r, Limit):
-                        return self
-                    else:
-                        return r
+                    try:
+                        r = limit(inve.as_leading_term(u), u, S.Zero, "+")
+                        if isinstance(r, Limit):
+                            return self
+                        else:
+                            return r
+                    except ValueError:
+                        pass
 
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])

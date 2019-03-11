@@ -8,7 +8,7 @@ from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-        Identity, ZeroMatrix)
+        Identity, ZeroMatrix, GenericIdentity)
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.matrices import MatrixBase
 
@@ -31,12 +31,22 @@ class MatMul(MatrixExpr, Mul):
 
     def __new__(cls, *args, **kwargs):
         check = kwargs.get('check', True)
+
+        if not args:
+            return GenericIdentity()
+
+        # This must be removed aggressively in the constructor to avoid
+        # TypeErrors from GenericIdentity().shape
+        args = filter(lambda i: GenericIdentity() != i, args)
         args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
         if check:
             validate(*matrices)
         if not matrices:
+            # Should it be
+            #
+            # return Basic.__neq__(cls, factor, GenericIdentity()) ?
             return factor
         return obj
 

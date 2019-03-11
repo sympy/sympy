@@ -1,3 +1,5 @@
+.. _physics_vector:
+
 =========================
 The Physics Vector Module
 =========================

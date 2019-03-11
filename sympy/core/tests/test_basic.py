@@ -7,7 +7,7 @@ import sys
 from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
     _atomic)
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
@@ -116,6 +116,17 @@ def test_subs():
     # will convert the first to a symbol but will raise an error if foo
     # cannot be sympified; sympification is strict if foo is not string
     raises(ValueError, lambda: b21.subs(b1='bad arg'))
+
+    assert Symbol(u"text").subs({u"text": b1}) == b1
+
+
+def test_subs_with_unicode_symbols():
+    expr = Symbol('var1')
+    replaced = expr.subs('var1', u'x')
+    assert replaced.name == 'x'
+
+    replaced = expr.subs('var1', 'x')
+    assert replaced.name == 'x'
 
 
 def test_atoms():

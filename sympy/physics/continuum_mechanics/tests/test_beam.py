@@ -1,7 +1,7 @@
-from sympy import Symbol, symbols, S, simplify
+from sympy import Symbol, symbols, S, simplify, Interval
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
 
@@ -459,7 +459,7 @@ def test_remove_support():
             + 10*SingularityFunction(x, 5, 3)/3)/(E*I)
 
 
-def max_shear_force(self):
+def test_max_shear_force():
     E = Symbol('E')
     I = Symbol('I')
 
@@ -519,6 +519,8 @@ def test_max_deflection():
     b.apply_load(-F, l/2, -1)
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
 
+
+@slow
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')
     R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
