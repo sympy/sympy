@@ -422,16 +422,19 @@ class HolonomicFunction(object):
 
     To plot a Holonomic Function, one can use `.evalf()` for numerical
     computation. Here's an example on `sin(x)**2/x` using numpy and matplotlib.
-
-    >>> import sympy.holonomic # doctest: +SKIP
-    >>> from sympy import var, sin # doctest: +SKIP
-    >>> import matplotlib.pyplot as plt # doctest: +SKIP
-    >>> import numpy as np # doctest: +SKIP
-    >>> var("x") # doctest: +SKIP
-    >>> r = np.linspace(1, 5, 100) # doctest: +SKIP
-    >>> y = sympy.holonomic.expr_to_holonomic(sin(x)**2/x, x0=1).evalf(r) # doctest: +SKIP
-    >>> plt.plot(r, y, label="holonomic function") # doctest: +SKIP
-    >>> plt.show() # doctest: +SKIP
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+        >>> import sympy.holonomic # doctest: +SKIP
+        >>> from sympy import var, sin # doctest: +SKIP
+        >>> import matplotlib.pyplot as plt # doctest: +SKIP
+        >>> import numpy as np # doctest: +SKIP
+        >>> var("x") # doctest: +SKIP
+        >>> r = np.linspace(1, 5, 100) # doctest: +SKIP
+        >>> y = sympy.holonomic.expr_to_holonomic(sin(x)**2/x, x0=1).evalf(r) # doctest: +SKIP
+        >>> plt.plot(r, y, label="holonomic function") # doctest: +SKIP
+        >>> plt.show() # doctest: +SKIP
 
     """
 
