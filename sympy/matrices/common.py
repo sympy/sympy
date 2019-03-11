@@ -769,7 +769,11 @@ class MatrixSpecial(MatrixRequired):
 
         def kern(d):
             if d and type(d) is dict and ('move' in d or 'goto' in d):
-                assert len(d) == 1
+                if len(d) != 1:
+                    raise ValueError(filldedent('''
+                        A kerning dict should not contain any other
+                        items; do not inlude kerning directives in
+                        other dict entries.'''))
                 r, c = list(d.values())[0]
                 if 'move' in d:
                     r = -r
@@ -801,10 +805,15 @@ class MatrixSpecial(MatrixRequired):
                 d['size'] = size
             return r, c
         def standardize_values(d):
-            if kern(d):
-                v = list(d.values())[0]
-                assert len(v) == 2
-                map(as_int, v)
+            v = kern(d)
+            if v:
+                try:
+                    # will raise ValueError if not ints or not 2
+                    r, c = map(as_int, v)
+                except ValueError:
+                    raise ValueError(filldedent('''
+                        kerning directives values should be a tuple
+                        with two integers'''))
                 return
             for k, value in d.items():
                 if k == 'size':
@@ -827,7 +836,10 @@ class MatrixSpecial(MatrixRequired):
             for a in args:
                 r, c = size(a)
                 if type(a) is dict and 'goto' in a:
-                    assert not r < 0 and not c < 0
+                    if r < 0 or c < 0:
+                        raise ValueError(filldedent('''
+                            The kerning directive 'goto' must
+                            be followed by nonnegative values.'''))
                     R = max(0, r)
                     C = max(0, c)
                 elif a == {}:

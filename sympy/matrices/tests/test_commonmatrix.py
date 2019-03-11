@@ -26,8 +26,10 @@ from sympy.matrices import (Matrix, diag, eye,
 from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
-from sympy.utilities.pytest import raises, XFAIL, slow, skip
+from sympy.utilities.pytest import (raises, XFAIL, slow, skip,
+    warns_deprecated_sympy)
 
 from sympy.abc import a, b, c, d, x, y, z
 
@@ -1293,9 +1295,13 @@ def test_diag_make():
         [0, 0, 0],
         [1, 0, 0],
         [0, 0, 2]])
-    assert ans == Matrix.diag({-1: 1}, {}, 2)
-    assert ans == Matrix.diag({-1: 1}, {'move': (0, 1)}, 2)
-    assert ans == Matrix.diag({-1: 1}, {'goto': (2, 2)}, 2)
+    assert diag({-1: 1}, {}, 2) == ans
+    assert diag({-1: 1}, {'move': (0, 1)}, 2) == ans
+    assert diag({-1: 1}, {'goto': (2, 2)}, 2) == ans
+    raises(ValueError, lambda: diag({-1: 1}, {'goto': (2, 3, 2)}, 2))
+    raises(ValueError, lambda: diag({-1: 1}, {'goto': (2.1, 2)}, 2))
+    raises(ValueError, lambda: diag({-1: 1}, {'goto': (-2, 2)}, 2))
+    raises(ValueError, lambda: diag({-1: 1, 'goto': (2, 2)}, 2))
     blade = Matrix([list(range(5))])
     tip = {'goto': (0, 0)}
     shaft = {0: [7]*6}
