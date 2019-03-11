@@ -102,3 +102,8 @@ class BasicMeta(type):
         if cls.__cmp__(other) == 1:
             return True
         return False
+
+    # XXX Workaround for IPython errors when calling __subclasses__
+    @classmethod
+    def __subclasses__(cls):
+        return type.__subclasses__(cls)
