@@ -170,6 +170,7 @@ def test_solve_args():
     assert solve([Eq(x, x+1), x < 2], x) == False
     assert solve([Eq(x, 0), x+1<2]) == Eq(x, 0)
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
+    assert solve(True, x) == []
 
 
 def test_solve_polynomial1():

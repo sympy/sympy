@@ -466,7 +466,8 @@ def solve(f, *symbols, **flags):
     * f
         - a single Expr or Poly that must be zero,
         - an Equality
-        - a Relational expression or boolean
+        - a Relational expression
+        - a Boolean
         - iterable of one or more of the above
 
     * symbols (object(s) to solve for) specified as
