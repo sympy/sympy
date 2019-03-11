@@ -786,7 +786,7 @@ class MatrixSpecial(MatrixRequired):
                 assert len(d) == 1
                 return tuple(list(d.values())[0])
 
-        def arg_size(args):
+        def arg_size(args, rows, cols):
             prev = None
             max_row, max_col, o_r, o_c, g_r, g_c = [0]*6
             for a_ in args:
@@ -812,7 +812,14 @@ class MatrixSpecial(MatrixRequired):
                     elif 'move' in prev:
                         max_row = max(max_row, o_r - prev_size[0])
                         max_col = max(max_col, o_c - prev_size[1])
-            return max_row, max_col
+            rows = max_row if rows is None else rows
+            cols = max_col if cols is None else cols
+            if rows < max_row or cols < max_col:
+                raise ValueError(filldedent('''
+                    The diagonal elements need a matrix that is {} x {}
+                    but {} x {} has been provided.'''.format(
+                    max_row, max_col, rows, cols)))
+            return rows, cols
 
         def standardize_values(d):
             for k, value in d.items():
@@ -836,11 +843,12 @@ class MatrixSpecial(MatrixRequired):
                         raise TypeError(filldedent(
                             '''expecting list, function
                             or Expr in dict'''))
-        
-        def collapse_cont_dicts(newargs, args):         
+
+        def collapse_cont_dicts(args):
             """Collapse contiguous dicts"""
             i = 0
             nosize = None
+            newargs = []
             for a in args:
                 if type(a) is dict and not kern(a):
                     a = a.copy()  # leave original unchanged
@@ -897,95 +905,85 @@ class MatrixSpecial(MatrixRequired):
                 args[nosize]['size'] = dsize
             return args
 
-        newargs = []
-        args, nosize = collapse_cont_dicts(newargs, args)
-        # assign size to size-unspecified dict
-        args = assign_size_for_dicts(nosize, args)
-
-        # calculate size needed
-        diag_rows = diag_cols = 0
-        diag_rows, diag_cols = arg_size(args)
-        rows = diag_rows if rows is None else rows
-        cols = diag_cols if cols is None else cols
-        if rows < diag_rows or cols < diag_cols:
-            raise ValueError(filldedent('''
-                The diagonal elements need a matrix that is {} x {}
-                but {} x {} has been provided.'''.format(
-                diag_rows, diag_cols, rows, cols)))
-
-        # fill a default dict with the diagonal entries
-        diag_entries = defaultdict(lambda: S.Zero)
-        row_pos, col_pos = 0, 0
-        prev = None
-        o_r = o_c = g_r = g_c =  m_r = m_c = 0
-        prev_size = (0, 0)
-        for m in args:
-            m_size = size(m)
-            if type(m) is dict and 'goto' in m:
-                prev = 'goto'
-                prev_size = m_size
-                g_r , g_c = prev_size[0], prev_size[1]
-                continue
-            elif type(m) is dict and 'move' in m:
-                prev = 'move'
-                prev_size = m_size
-                continue
-            o_r += m_size[0]
-            o_c += m_size[1]
-            if type(m) is not dict:
-                if prev is None:
-                    row_pos, col_pos = o_r - m_size[0], o_c - m_size[1]
-                elif 'goto' in prev:
-                    g_r += m_size[0]
-                    g_c += m_size[1]
-                    row_pos, col_pos = g_r - m_size[0], g_c - m_size[1]
+        def fill_matrix(args):
+            row_pos, col_pos = 0, 0
+            prev = None
+            o_r = o_c = g_r = g_c =  m_r = m_c = 0
+            prev_size = (0, 0)
+            for m in args:
+                m_size = size(m)
+                if type(m) is dict and 'goto' in m:
+                    prev = 'goto'
+                    prev_size = m_size
+                    g_r , g_c = prev_size[0], prev_size[1]
+                    continue
+                elif type(m) is dict and 'move' in m:
+                    prev = 'move'
+                    prev_size = m_size
+                    continue
+                o_r += m_size[0]
+                o_c += m_size[1]
+                if type(m) is not dict:
+                    if prev is None:
+                        row_pos, col_pos = o_r - m_size[0], o_c - m_size[1]
+                    elif 'goto' in prev:
+                        g_r += m_size[0]
+                        g_c += m_size[1]
+                        row_pos, col_pos = g_r - m_size[0], g_c - m_size[1]
+                    else:
+                        m_r, m_c = o_r - prev_size[0], o_c - prev_size[1]
+                        row_pos, col_pos = m_r - m_size[0], m_c - m_size[1]
+                if hasattr(m, 'rows'):
+                    # in this case, we're a matrix
+                    for i in range(m.rows):
+                        for j in range(m.cols):
+                            diag_entries[(row_pos + i, col_pos + j)] = m[i, j]
+                    row_pos += m.rows
+                    col_pos += m.cols
+                elif not isinstance(m, dict):
+                    diag_entries[(row_pos, col_pos)] = m
+                    row_pos += 1
+                    col_pos += 1
                 else:
-                    m_r, m_c = o_r - prev_size[0], o_c - prev_size[1]
-                    row_pos, col_pos = m_r - m_size[0], m_c - m_size[1]
-            if hasattr(m, 'rows'):
-                # in this case, we're a matrix
-                for i in range(m.rows):
-                    for j in range(m.cols):
-                        diag_entries[(row_pos + i, col_pos + j)] = m[i, j]
-                row_pos += m.rows
-                col_pos += m.cols
-            elif not isinstance(m, dict):
-                diag_entries[(row_pos, col_pos)] = m
-                row_pos += 1
-                col_pos += 1
-            else:
-                # in this case we're a dict
-                standardize_values(m)
-                if prev is not None and 'goto' in prev:
-                    row_pos += prev_size[0]
-                    col_pos += prev_size[1]
-                elif prev is not None and 'move' in prev:
-                    dr, dc = prev_size[0], prev_size[1]
-                    row_pos -= dr
-                    col_pos -= dc
-                rmax, cmax = m.pop('size')
-                for key, value in m.items():
-                    r_p = 0 if key >= 0 else -key
-                    c_p = 0 if r_p else key
-                    while (r_p < rmax and c_p < cmax):
-                        D = r_p + row_pos, c_p + col_pos
-                        if isinstance(value, list):
-                            for i in range(len(value)):
-                                diag_entries[D] = value[i]
-                                D = D[0] + 1, D[1] + 1
-                            break
-                        if isfunction(value):
-                            if _getnargs(value) == 2:
-                                diag_entries[D] = value(r_p, c_p)
+                    # in this case we're a dict
+                    standardize_values(m)
+                    if prev is not None and 'goto' in prev:
+                        row_pos += prev_size[0]
+                        col_pos += prev_size[1]
+                    elif prev is not None and 'move' in prev:
+                        dr, dc = prev_size[0], prev_size[1]
+                        row_pos -= dr
+                        col_pos -= dc
+                    rmax, cmax = m.pop('size')
+                    for key, value in m.items():
+                        r_p = 0 if key >= 0 else -key
+                        c_p = 0 if r_p else key
+                        while (r_p < rmax and c_p < cmax):
+                            D = r_p + row_pos, c_p + col_pos
+                            if isinstance(value, list):
+                                for i in range(len(value)):
+                                    diag_entries[D] = value[i]
+                                    D = D[0] + 1, D[1] + 1
+                                break
+                            if isfunction(value):
+                                if _getnargs(value) == 2:
+                                    diag_entries[D] = value(r_p, c_p)
+                                else:
+                                    d = min(r_p, c_p)
+                                    diag_entries[D] = value(d)
                             else:
-                                d = min(r_p, c_p)
-                                diag_entries[D] = value(d)
-                        else:
-                            diag_entries[D] = value
-                        r_p += 1
-                        c_p += 1
-                row_pos += rmax
-                col_pos += cmax
+                                diag_entries[D] = value
+                            r_p += 1
+                            c_p += 1
+                    row_pos += rmax
+                    col_pos += cmax
+            return diag_entries
+
+        args, nosize = collapse_cont_dicts(args)
+        args = assign_size_for_dicts(nosize, args)  # assign size to size-unspecified dict
+        rows, cols = arg_size(args, rows, cols) # calculate size needed
+        diag_entries = defaultdict(lambda: S.Zero)
+        diag_entries = fill_matrix(args)  # fill the matrix using given arguments
         return klass._eval_diag(rows, cols, diag_entries)
 
     @classmethod
