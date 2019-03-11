@@ -427,7 +427,8 @@ def combine_kronecker(expr):
              MatMul: kronecker_mat_mul,
              MatPow: kronecker_mat_pow})))))
     result = rule(expr)
-    try:
-        return result.doit()
-    except AttributeError:
+    doit = getattr(result, 'doit', None)
+    if doit is not None:
+        return doit()
+    else:
         return result

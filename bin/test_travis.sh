@@ -42,6 +42,25 @@ fi
 mkdir empty
 cd empty
 
+if [[ "${TEST_COVERAGE}" == "true" ]]; then
+    rm -f $TRAVIS_BUILD_DIR/.coverage.* $TRAVIS_BUILD_DIR/.coverage
+    cat << EOF | python
+import distutils.sysconfig
+import os
+
+with open(os.path.join(distutils.sysconfig.get_python_lib(), 'coverage.pth'), 'w') as pth:
+    pth.write('import sys; exec(%r)\n' % '''\
+try:
+    import coverage
+except ImportError:
+    pass
+else:
+    coverage.process_startup()
+''')
+EOF
+    export COVERAGE_PROCESS_START=$TRAVIS_BUILD_DIR/.coveragerc
+fi
+
 if [[ "${TEST_ASCII}" == "true" ]]; then
     # Force Python to act like pre-3.7 where LC_ALL=C causes
     # UnicodeEncodeErrors. Once the lowest Python version we support is 3.7,
@@ -219,4 +238,7 @@ import sympy
 if not sympy.test(split='${SPLIT}'):
    raise Exception('Tests failed')
 EOF
+fi
+if [[ "${TEST_COVERAGE}" == "true" ]]; then
+    unset COVERAGE_PROCESS_START
 fi

@@ -138,7 +138,6 @@ class PrettyPrinter(Printer):
         pform = self._print(func)
         pform = prettyForm(*pform.left('('))
         pform = prettyForm(*pform.right(')'))
-        pform = prettyForm(*pform.left(self._print(U('DOT OPERATOR'))))
         pform = prettyForm(*pform.left(self._print(U('NABLA'))))
         return pform
 
@@ -1905,9 +1904,10 @@ class PrettyPrinter(Printer):
             _and = 'and'
 
         variables = self._print_seq(Tuple(ts.sym))
-        try:
+        as_expr = getattr(ts.condition, 'as_expr', None)
+        if as_expr is not None:
             cond = self._print(ts.condition.as_expr())
-        except AttributeError:
+        else:
             cond = self._print(ts.condition)
             if self._use_unicode:
                 cond = self._print_seq(cond, "(", ")")
@@ -1995,6 +1995,10 @@ class PrettyPrinter(Printer):
                     # first element
                     s = pform
                 else:
+                    # XXX: Under the tests from #15686 this raises:
+                    # AttributeError: 'Fake' object has no attribute 'baseline'
+                    # This is caught below but that is not the right way to
+                    # fix it.
                     s = prettyForm(*stringPict.next(s, delimiter))
                     s = prettyForm(*stringPict.next(s, pform))
 

@@ -1075,6 +1075,8 @@ def test_classify_sysode():
 
 def test_solve_ics():
     # Basic tests that things work from dsolve.
+    assert dsolve(f(x).diff(x) - 1/f(x), f(x), ics={f(1): 2}) == \
+        Eq(f(x), sqrt(2 * x + 2))
     assert dsolve(f(x).diff(x) - f(x), f(x), ics={f(0): 1}) == Eq(f(x), exp(x))
     assert dsolve(f(x).diff(x) - f(x), f(x), ics={f(x).diff(x).subs(x, 0): 1}) == Eq(f(x), exp(x))
     assert dsolve(f(x).diff(x, x) + f(x), f(x), ics={f(0): 1,
@@ -1103,11 +1105,29 @@ def test_solve_ics():
     assert solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2],
         {f(0): 1, f(x).diff(x).subs(x, 0): 1}) == {C1: 1, C2: 1}
 
-    # XXX: Ought to be ValueError
-    raises(NotImplementedError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1, f(pi): 1}))
+    assert solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1}) == \
+        {C2: 1}
+
+    # Some more complicated tests Refer to PR #16098
+
+    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0, f(x).diff(x).subs(x, 1):0}) == \
+        [Eq(f(x), 0), Eq(f(x), x ** 3 / 6 - x / 2)]
+    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0}) == \
+        [Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)]
+
+    K, r, f0 = symbols('K r f0')
+    sol = Eq(f(x), -K*f0*exp(r*x)/((K - f0)*(-f0*exp(r*x)/(K - f0) - 1)))
+    assert (dsolve(Eq(f(x).diff(x), r * f(x) * (1 - f(x) / K)), f(x), ics={f(0): f0})) == sol
+
+
+    #Order dependent issues Refer to PR #16098
+    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(x).diff(x).subs(x,0):0, f(0):0}) == \
+        [Eq(f(x), 0), Eq(f(x), x ** 3 / 6)]
+    assert dsolve(f(x).diff(x)*(f(x).diff(x, 2)-x), ics={f(0):0, f(x).diff(x).subs(x,0):0}) == \
+        [Eq(f(x), 0), Eq(f(x), x ** 3 / 6)]
 
     # XXX: Ought to be ValueError
-    raises(ValueError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1}))
+    raises(ValueError, lambda: solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1, f(pi): 1}))
 
     # Degenerate case. f'(0) is identically 0.
     raises(ValueError, lambda: solve_ics([Eq(f(x), sqrt(C1 - x**2))], [f(x)], [C1], {f(x).diff(x).subs(x, 0): 0}))
@@ -3381,6 +3401,7 @@ def test_factoring_ode():
     assert checkodesol(eqn, soln, order=2, solve_for_func=False)[0]
     assert soln == dsolve(eqn, f(x))
 
+
 def test_issue_15913():
     eq = -C1/x - 2*x*f(x) - f(x) + Derivative(f(x), x)
     sol = C2*exp(x**2 + x) + exp(x**2 + x)*Integral(C1*exp(-x**2 - x)/x, x)
@@ -3388,3 +3409,8 @@ def test_issue_15913():
     sol = C1 + C2*exp(-x*y)
     eq = Derivative(y*f(x), x) + f(x).diff(x, 2)
     assert checkodesol(eq, sol, f(x)) == (True, 0)
+
+
+def test_issue_16146():
+    raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x), g(x), h(x)]))
+    raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x)]))
