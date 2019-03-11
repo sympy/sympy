@@ -931,10 +931,43 @@ def test_issue_14700():
 def test_relational_simplification():
     w, x, y, z = symbols('w x y z', real=True)
     d, e = symbols('d e', real=False)
+    # Test all combinations or sign and order
     assert Or(x >= y, x < y).simplify() == S.true
-    assert Or(y <= y, x < y).simplify() == S.true
+    assert Or(x >= y, y > x).simplify() == S.true
+    assert Or(x >= y, -x > -y).simplify() == S.true
+    assert Or(x >= y, -y < -x).simplify() == S.true
+    assert Or(-x <= -y, x < y).simplify() == S.true
+    assert Or(-x <= -y, -x > -y).simplify() == S.true
+    assert Or(-x <= -y, y > x).simplify() == S.true
+    assert Or(-x <= -y, -y < -x).simplify() == S.true
+    assert Or(y <= x, x < y).simplify() == S.true
+    assert Or(y <= x, y > x).simplify() == S.true
+    assert Or(y <= x, -x > -y).simplify() == S.true
+    assert Or(y <= x, -y < -x).simplify() == S.true
+    assert Or(-y >= -x, x < y).simplify() == S.true
+    assert Or(-y >= -x, y > x).simplify() == S.true
+    assert Or(-y >= -x, -x > -y).simplify() == S.true
+    assert Or(-y >= -x, -y < -x).simplify() == S.true
+
     assert Or(x < y, x >= y).simplify() == S.true
-    assert Or(x >= y, x <= y, w < z).simplify() == S.true
+    assert Or(y > x, x >= y).simplify() == S.true
+    assert Or(-x > -y, x >= y).simplify() == S.true
+    assert Or(-y < -x, x >= y).simplify() == S.true
+    assert Or(x < y, -x <= -y).simplify() == S.true
+    assert Or(-x > -y, -x <= -y).simplify() == S.true
+    assert Or(y > x, -x <= -y).simplify() == S.true
+    assert Or(-y < -x, -x <= -y).simplify() == S.true
+    assert Or(x < y, y <= x).simplify() == S.true
+    assert Or(y > x, y <= x).simplify() == S.true
+    assert Or(-x > -y, y <= x).simplify() == S.true
+    assert Or(-y < -x, y <= x).simplify() == S.true
+    assert Or(x < y, -y >= -x).simplify() == S.true
+    assert Or(y > x, -y >= -x).simplify() == S.true
+    assert Or(-x > -y, -y >= -x).simplify() == S.true
+    assert Or(-y < -x, -y >= -x).simplify() == S.true
+
+    # Some other tests
+    assert Or(x >= y, w < z, x <= y).simplify() == S.true
     assert And(x >= y, x < y).simplify() == S.false
     assert Or(x >= y, Eq(y, x)).simplify() == (x >= y)
     assert And(x >= y, Eq(y, x)).simplify() == Eq(x, y)
