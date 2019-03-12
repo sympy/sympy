@@ -1474,14 +1474,12 @@ def encipher_rsa(i, key):
     Examples
     ========
     *Public Key Encryption*
-    
     >>> from sympy.crypto.crypto import encipher_rsa, rsa_public_key
     >>> p, q, e = 3, 5, 7
     >>> puk = rsa_public_key(p, q, e)
     >>> msg = 12
     >>> encipher_rsa(msg, puk)
     3
-    
     *Private Key Encryption*
     >>> from sympy.crypto.crypto import encipher_rsa, rsa_private_key
     >>> p, q, e = 3, 5, 7
