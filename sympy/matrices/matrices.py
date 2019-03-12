@@ -1739,8 +1739,8 @@ class MatrixEigen(MatrixSubspaces):
 
         # Pad with zeros if singular values are computed in reverse way,
         # to give consistent format.
-        if len(vals) < self.rows:
-            vals += [S.Zero] * (self.rows - len(vals))
+        if len(vals) < self.cols:
+            vals += [S.Zero] * (self.cols - len(vals))
 
         # sort them in descending order
         vals.sort(reverse=True, key=default_sort_key)

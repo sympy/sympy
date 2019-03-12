@@ -1371,9 +1371,9 @@ def test_singular_values():
         [0, 0]
         ])
     assert A.singular_values() == \
-        [sqrt(sqrt(221) + 15), sqrt(15 - sqrt(221)), 0, 0]
-    assert A.T.singular_values() == \
         [sqrt(sqrt(221) + 15), sqrt(15 - sqrt(221))]
+    assert A.T.singular_values() == \
+        [sqrt(sqrt(221) + 15), sqrt(15 - sqrt(221)), 0, 0]
 
 
 # CalculusOnlyMatrix tests
