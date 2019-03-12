@@ -8,7 +8,6 @@ from __future__ import division, print_function
 
 from collections import defaultdict
 from inspect import isfunction
-from types import FunctionType
 
 from sympy.assumptions.refine import refine
 from sympy.core.basic import Atom
@@ -770,7 +769,11 @@ class MatrixSpecial(MatrixRequired):
 
         def kern(d):
             if d and type(d) is dict and ('move' in d or 'goto' in d):
-                assert len(d) == 1
+                if len(d) != 1:
+                    raise ValueError(filldedent('''
+                        A kerning dict should not contain any other
+                        items; do not inlude kerning directives in
+                        other dict entries.'''))
                 r, c = list(d.values())[0]
                 if 'move' in d:
                     r = -r
@@ -802,10 +805,15 @@ class MatrixSpecial(MatrixRequired):
                 d['size'] = size
             return r, c
         def standardize_values(d):
-            if kern(d):
-                v = list(d.values())[0]
-                assert len(v) == 2
-                map(as_int, v)
+            v = kern(d)
+            if v:
+                try:
+                    # will raise ValueError if not ints or not 2
+                    r, c = map(as_int, v)
+                except ValueError:
+                    raise ValueError(filldedent('''
+                        kerning directives values should be a tuple
+                        with two integers'''))
                 return
             for k, value in d.items():
                 if k == 'size':
@@ -828,7 +836,10 @@ class MatrixSpecial(MatrixRequired):
             for a in args:
                 r, c = size(a)
                 if type(a) is dict and 'goto' in a:
-                    assert not r < 0 and not c < 0
+                    if r < 0 or c < 0:
+                        raise ValueError(filldedent('''
+                            The kerning directive 'goto' must
+                            be followed by nonnegative values.'''))
                     R = max(0, r)
                     C = max(0, c)
                 elif a == {}:
@@ -1379,7 +1390,7 @@ class MatrixProperties(MatrixRequired):
         """
         # accept custom simplification
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         if not self.is_square:
@@ -1462,7 +1473,7 @@ class MatrixProperties(MatrixRequired):
             return False
 
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         return self._eval_is_matrix_hermitian(simpfunc)
@@ -1642,7 +1653,7 @@ class MatrixProperties(MatrixRequired):
         True
         """
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         if not self.is_square:
@@ -2462,25 +2473,36 @@ class _MinimalMatrix(object):
         return cls(*args, **kwargs)
 
     def __init__(self, rows, cols=None, mat=None):
-        if isinstance(mat, FunctionType):
-            # if we passed in a function, use that to populate the indices
-            mat = list(mat(i, j) for i in range(rows) for j in range(cols))
-        if cols is None and mat is None:
+        ok = not all(i is None for i in (rows, cols, mat))
+        if cols is mat is None:
             mat = rows
-        rows, cols = getattr(mat, 'shape', (rows, cols))
-        try:
-            # if we passed in a list of lists, flatten it and set the size
-            if cols is None and mat is None:
-                mat = rows
-            cols = len(mat[0])
-            rows = len(mat)
-            mat = [x for l in mat for x in l]
-        except (IndexError, TypeError):
-            pass
+            rows = None
+        if None not in (rows, cols) and mat is not None:
+            if isfunction(mat):
+                # if we passed in a function, use that to populate the indices
+                mat = [mat(i, j) for i in range(rows) for j in range(cols)]
+            elif len(mat) != rows*cols:
+                ok = False
+        elif rows == cols == None and mat is not None:
+            try:
+                rows, cols = mat.shape
+            except AttributeError:
+                # mat might be a list of rows
+                try:
+                    assert isinstance(mat, (list, tuple))
+                    rows = len(mat)
+                    mat = [x for l in mat for x in l]  # TypeError if not iterable
+                    # len of mat should be divisible by rows
+                    cols, bad = divmod(len(mat), rows)
+                    assert not bad
+                except (AssertionError, TypeError):
+                    ok = False
+                    pass
+        if not ok:
+            raise NotImplementedError(filldedent('''
+                Can't initialize matrix with the given parameters.'''))
         self.mat = tuple(self._sympify(x) for x in mat)
         self.rows, self.cols = rows, cols
-        if self.rows is None or self.cols is None:
-            raise NotImplementedError("Cannot initialize matrix with given parameters")
 
     def __getitem__(self, key):
         def _normalize_slices(row_slice, col_slice):
