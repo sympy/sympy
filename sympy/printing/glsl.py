@@ -174,10 +174,12 @@ class GLSLPrinter(CodePrinter):
     def _print_list(self, expr):
         l = ', '.join(self._print(item) for item in expr)
         glsl_types = self._settings['glsl_types']
+        array_constructor = Template(self._settings['array_constructor'])
+
         if len(expr) <= 4 and glsl_types:
             return 'vec%s(%s)' % (len(expr),l)
         else:
-            return 'float[%s](%s)' % (len(expr),l)
+            return array_constructor.substitute(size=len(expr))+('(%s)' % l)
 
     _print_tuple = _print_list
     _print_Tuple = _print_list

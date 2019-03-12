@@ -405,6 +405,12 @@ def test_Matrices_1x7_custom_constructor():
     A = Matrix([1,2,3,4,5,6,7])
     assert gl(A, array_constructor = constructor) == 'SevenNumberStruct(1, 2, 3, 4, 5, 6, 7)'
 
+def test_Tuple_custom_constructor():
+    gl = glsl_code
+    constructor = 'Abc'
+    A = symbols('a b c')
+    assert gl(A, array_constructor = constructor, glsl_types=False) == 'Abc(a, b, c)'
+
 def test_Matrices_1x7_assign_to_symbols():
     gl = glsl_code
     A = Matrix([1,2,3,4,5,6,7])
