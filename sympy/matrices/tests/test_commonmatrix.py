@@ -1364,6 +1364,17 @@ def test_singular_values():
     vals = [sv.trigsimp() for sv in A.singular_values()]
     assert vals == [S(1), S(1)]
 
+    A = EigenOnlyMatrix([
+        [2, 4],
+        [1, 3],
+        [0, 0],
+        [0, 0]
+        ])
+    assert A.singular_values() == \
+        [sqrt(sqrt(221) + 15), sqrt(15 - sqrt(221)), 0, 0]
+    assert A.T.singular_values() == \
+        [sqrt(sqrt(221) + 15), sqrt(15 - sqrt(221))]
+
 
 # CalculusOnlyMatrix tests
 @XFAIL

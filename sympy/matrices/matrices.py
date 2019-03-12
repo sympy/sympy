@@ -1727,13 +1727,21 @@ class MatrixEigen(MatrixSubspaces):
         condition_number
         """
         mat = self
-        # Compute eigenvalues of A.H A
-        valmultpairs = (mat.H * mat).eigenvals()
+        if self.rows >= self.cols:
+            valmultpairs = (mat.H * mat).eigenvals()
+        else:
+            valmultpairs = (mat * mat.H).eigenvals()
 
         # Expands result from eigenvals into a simple list
         vals = []
         for k, v in valmultpairs.items():
             vals += [sqrt(k)] * v  # dangerous! same k in several spots!
+
+        # Pad with zeros if singular values are computed in reverse way,
+        # to give consistent format.
+        if len(vals) < self.rows:
+            vals += [S.Zero] * (self.rows - len(vals))
+
         # sort them in descending order
         vals.sort(reverse=True, key=default_sort_key)
 
