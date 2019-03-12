@@ -1029,7 +1029,8 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        Circle: A director circle returned as a geometric object.
+        Circle
+        A director circle returned as a geometric object.
 
         Examples
         ========
