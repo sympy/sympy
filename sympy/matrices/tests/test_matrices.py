@@ -3329,6 +3329,11 @@ def test_rank_decomposition():
     assert f.is_echelon
     assert c * f == a
 
+    c, f = a.rank_decomposition(format='reduced')
+    assert f.is_echelon
+    assert c.cols == f.rows == a.rank()
+    assert c * f == a
+
 @slow
 def test_issue_11238():
     from sympy import Point

@@ -877,7 +877,8 @@ class MatrixReductions(MatrixDeterminant):
         echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
         return len(pivots)
 
-    def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
+    def rank_decomposition(self,
+        iszerofunc=_iszero, simplify=False, format='original'):
         r"""Returns the rank-factorized form of `A`, as `C` and `F`.
 
         Parameters
@@ -890,6 +891,15 @@ class MatrixReductions(MatrixDeterminant):
         simplify : Bool or Function, optional
             A function used to simplify elements when looking for a
             pivot. By default SymPy's ``simplify`` is used.
+
+        format : String, optional
+            If 'original', additional zeros would be appended to the
+            `C` and `F` to keep the shape of `F` as same as the
+            original matrix.
+            It is also corresponding to the format as ``rref`` function.
+
+            If `reduced`, it will truncate trivial zero rows from `F`,
+            and zero columns from `C`.
 
         Returns
         =======
@@ -924,6 +934,22 @@ class MatrixReductions(MatrixDeterminant):
         [0, 1,  1, 0],
         [0, 0,  0, 1],
         [0, 0,  0, 0]])
+        >>> C * F == A
+        True
+
+        Format the result to make it compact:
+        >>> C, F = A.rank_decomposition(format='reduced')
+        >>> C
+        Matrix([
+        [1, 3, 4],
+        [2, 7, 9],
+        [1, 5, 1],
+        [1, 2, 8]])
+        >>> F
+        Matrix([
+        [1, 0, -2, 0],
+        [0, 1,  1, 0],
+        [0, 0,  0, 1]])
         >>> C * F == A
         True
 
@@ -968,10 +994,16 @@ class MatrixReductions(MatrixDeterminant):
         cls = self.__class__
         mat = self.as_mutable()
 
-        (F, pivot_cols) = mat.rref(simplify=simplify, pivots=True)
+        (F, pivot_cols) = mat.rref(
+            simplify=simplify, iszerofunc=iszerofunc, pivots=True)
+        rank = len(pivot_cols)
 
-        C = mat.extract(range(self.rows), pivot_cols)
-        C = C.row_join(C.zeros(C.rows, F.rows - C.cols))
+        if format == 'original':
+            C = mat.extract(range(self.rows), pivot_cols)
+            C = C.row_join(C.zeros(C.rows, F.rows - C.cols))
+        elif format == 'reduced':
+            C = mat.extract(range(self.rows), pivot_cols)
+            F = F[:rank, :]
 
         return (cls(C), cls(F))
 
