@@ -1,6 +1,6 @@
 from sympy.sets import (ConditionSet, Intersection, FiniteSet,
     EmptySet, Union)
-from sympy import (Symbol, Eq, Lt, S, Abs, sin, pi, Lambda, Interval,
+from sympy import (Symbol, Eq, S, Abs, sin, pi, Interval,
     And, Mod, oo, Function)
 from sympy.utilities.pytest import raises
 

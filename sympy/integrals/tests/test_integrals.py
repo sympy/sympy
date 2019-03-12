@@ -1476,7 +1476,7 @@ def test_issue_15509():
         (-sin(a*x_1 + b)/a + sin(a*x_2 + b)/a, (a > -oo) & (a < oo) & Ne(a, 0)), \
             (-x_1*cos(b) + x_2*cos(b), True))
 
-
+@slow
 def test_issue_4311():
     x = symbols('x')
     assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)
