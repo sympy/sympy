@@ -1072,7 +1072,7 @@ def connected_components(G):
 
     Given an undirected graph::
 
-        digraph {
+        graph {
             A -- B
             C -- D
         }
