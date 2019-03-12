@@ -167,7 +167,7 @@ def test_solve_args():
     # When one or more args are Boolean
     assert solve([True, Eq(x, 0)], [x], dict=True) == [{x: 0}]
     assert solve([Eq(x, x), Eq(x, 0), Eq(x, x+1)], [x], dict=True) == []
-    assert solve([Eq(x, x+1), x < 2], x) is False
+    assert not solve([Eq(x, x+1), x < 2], x)
     assert solve([Eq(x, 0), x+1<2]) == Eq(x, 0)
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
