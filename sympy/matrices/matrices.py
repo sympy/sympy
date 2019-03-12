@@ -1037,10 +1037,33 @@ class MatrixSubspaces(MatrixReductions):
             vectors to be made orthogonal
 
         normalize : bool
-            If true, return an orthonormal basis.
-        """
+            If ``True``, return an orthonormal basis.
 
+        rankcheck : bool
+            If ``True``, the computation does not stop when encountering
+            linearly dependent vectors.
+
+            If ``False``, it will raise ``ValueError`` when any zero
+            or linearly dependent vectors are found.
+
+        Returns
+        =======
+
+        list
+            List of orthogonal (or orthonormal) basis vectors.
+
+        See Also
+        ========
+
+        MatrixBase.QRdecomposition
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+        """
         normalize = kwargs.get('normalize', False)
+        rankcheck = kwargs.get('rankcheck', False)
 
         def project(a, b):
             return b * (a.dot(b) / b.dot(b))
@@ -1057,12 +1080,19 @@ class MatrixSubspaces(MatrixReductions):
         # make sure we start with a non-zero vector
         vecs = list(vecs)
         while len(vecs) > 0 and vecs[0].is_zero:
-            del vecs[0]
+            if rankcheck is False:
+                del vecs[0]
+            else:
+                raise ValueError(
+                    "GramSchmidt: vector set not linearly independent")
 
         for vec in vecs:
             perp = perp_to_subspace(vec, ret)
             if not perp.is_zero:
                 ret.append(perp)
+            elif rankcheck is True:
+                raise ValueError(
+                    "GramSchmidt: vector set not linearly independent")
 
         if normalize:
             ret = [vec / vec.norm() for vec in ret]
