@@ -2,4 +2,5 @@ comment: off
 
 coverage:
     precision: 3
-    range: "0..100"
+    target: 0
+    threshold: null
