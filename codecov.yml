@@ -5,12 +5,11 @@ coverage:
     project:
       default:
         target: 0%
-        threshold: null
-        branches: null
+        threshold: 100%
 
     patch:
       default:
         target: 0%
-        branches: null
+        threshold: 100%
 
   precision: 3
