@@ -10,10 +10,10 @@ coverage:
         target: 0%
         threshold: null
         branches: null
-        precision: 3
 
     patch:
       default:
         target: 0%
         branches: null
-        precision: 3
+
+  precision: 3
