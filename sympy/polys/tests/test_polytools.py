@@ -3214,9 +3214,12 @@ def test_keep_coeff():
 def test_poly_matching_consistency():
     # Test for this issue:
     # https://github.com/sympy/sympy/issues/5514
-    if PY3:
-        assert I * Poly(x, x) == Poly(I*x, x)
-        assert Poly(x, x) * I == Poly(I*x, x)
+    assert I * Poly(x, x) == Poly(I*x, x)
+    assert Poly(x, x) * I == Poly(I*x, x)
+
+
+if not PY3:
+    test_poly_matching_consistency = XFAIL(test_poly_matching_consistency)
 
 
 @XFAIL
