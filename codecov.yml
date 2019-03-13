@@ -11,3 +11,8 @@ coverage:
         threshold: 100%
 
   precision: 3
+
+comment:
+  layout: "diff"
+  behavior: default
+  require_changes: yes
