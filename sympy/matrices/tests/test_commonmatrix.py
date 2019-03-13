@@ -1310,33 +1310,6 @@ def test_diag_make():
         [0, 0, 3],
         [0, 0, 0]])
     raises(ValueError, lambda: diag({0: lambda i, j, k: 1}))
-    # kerning
-    ans = Matrix([
-        [0, 0, 0],
-        [1, 0, 0],
-        [0, 0, 2]])
-    assert diag({-1: 1}, {}, 2) == ans
-    assert diag({-1: 1}, {'move': (0, 1)}, 2) == ans
-    assert diag({-1: 1}, {'goto': (2, 2)}, 2) == ans
-    raises(ValueError, lambda: diag({-1: 1}, {'goto': (2, 3, 2)}, 2))
-    raises(ValueError, lambda: diag({-1: 1}, {'goto': (2.1, 2)}, 2))
-    raises(ValueError, lambda: diag({-1: 1}, {'goto': (-2, 2)}, 2))
-    raises(ValueError, lambda: diag({-1: 1, 'goto': (2, 2)}, 2))
-    blade = Matrix([list(range(5))])
-    tip = {'goto': (0, 0)}
-    shaft = {0: [7]*6}
-    arrow = diag(blade, tip, blade.T, tip, shaft)
-    assert arrow == Matrix([
-        [7, 1, 2, 3, 4, 0],
-        [1, 7, 0, 0, 0, 0],
-        [2, 0, 7, 0, 0, 0],
-        [3, 0, 0, 7, 0, 0],
-        [4, 0, 0, 0, 7, 0],
-        [0, 0, 0, 0, 0, 7]])
-    assert arrow == Matrix(6, 6, lambda i, j: Piecewise(
-        (7, Eq(i,j)),
-        (Max(i, j), And(Lt(Max(i, j), 5), Or(Eq(i, 0),
-        Eq(j, 0)))), (0, True)))
 
 
 def test_jordan_block():

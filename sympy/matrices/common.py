@@ -658,44 +658,33 @@ class MatrixSpecial(MatrixRequired):
         """Returns a matrix with the specified diagonal.
         If matrices are passed, a block-diagonal matrix
         is created.
-
         kwargs
         ======
-
         rows : rows of the resulting matrix; computed if
                not given.
-
         cols : columns of the resulting matrix; computed if
                not given.
-
         cls : class for the resulting matrix
-
         Examples
         ========
-
         >>> from sympy.matrices import Matrix
-        >>> diag = Matrix.diag
-
         All diagonal elements can be given individually
         or in a list:
-
-        >>> d123 = diag(1, 2, 3)
+        >>> d123 = Matrix.diag(1, 2, 3)
         >>> d123
         Matrix([
         [1, 0, 0],
         [0, 2, 0],
         [0, 0, 3]])
-        >>> diag([1, 2, 3]) == d123
+        >>> Matrix.diag([1, 2, 3]) == d123
         True
-
         The diagonal elements can be matrices; diagonal filling will
         continue on the diagonal from the last element of the matrix:
-
         >>> from sympy.abc import x, y, z
         >>> a = Matrix([x, y, z])
         >>> b = Matrix([[1, 2], [3, 4]])
         >>> c = Matrix([[5, 6]])
-        >>> diag(a, 7, b, c)
+        >>> Matrix.diag(a, 7, b, c)
         Matrix([
         [x, 0, 0, 0, 0, 0],
         [y, 0, 0, 0, 0, 0],
@@ -704,59 +693,39 @@ class MatrixSpecial(MatrixRequired):
         [0, 0, 1, 2, 0, 0],
         [0, 0, 3, 4, 0, 0],
         [0, 0, 0, 0, 5, 6]])
-
         Bands off the diagonal can be made by using a dictionary whose
         keys tell the diagonal on which to put the non-matrix elements:
-
-        >>> diag({-2: [1, 2, 3], 2: [4, 5, 6]})
+        >>> Matrix.diag({-2: [1, 2, 3], 2: [4, 5, 6]})
         Matrix([
         [0, 0, 4, 0, 0],
         [0, 0, 0, 5, 0],
         [1, 0, 0, 0, 6],
         [0, 2, 0, 0, 0],
         [0, 0, 3, 0, 0]])
-        >>> diag({0: 2, 1: 1}, rows=4, cols=4)
+        >>> Matrix.diag({0: 2, 1: 1}, rows=4, cols=4)
         Matrix([
         [2, 1, 0, 0],
         [0, 2, 1, 0],
         [0, 0, 2, 1],
         [0, 0, 0, 2]])
-
         Dictionary values can also be 1 or 2 arg functions which compute
         the value from the relative diagonal distance or position in the
         submatrix that it describes:
-
         >>> d = {0: lambda d: (1 + d)**2, 1: lambda i, j: i + j}
-        >>> diag(1, 2, d, rows=5, cols=5)
+        >>> Matrix.diag(1, 2, d, rows=5, cols=5)
         Matrix([
         [1, 0, 0, 0, 0],
         [0, 2, 0, 0, 0],
         [0, 0, 1, 1, 0],
         [0, 0, 0, 4, 3],
         [0, 0, 0, 0, 9]])
-
-        A kerning dictionary can be used to reposition the filling:
-        {'move': (row change, col change)},
-        {'goto': (row, col)}, or
-        {} (to go to the diagonal):
-
-        >>> diag(7, {'move': (-1, -1)}, 1, 2, 3, {'goto': (0, 2)}, 4, 5, 6, {}, 8)
-        Matrix([
-        [7, 0, 4, 0, 0, 0],
-        [0, 0, 0, 5, 0, 0],
-        [1, 0, 0, 0, 6, 0],
-        [0, 2, 0, 0, 0, 0],
-        [0, 0, 3, 0, 0, 0],
-        [0, 0, 0, 0, 0, 8]])
-
         The type of the resulting matrix can be affected with the ``cls``
         keyword.
-
         >>> from sympy.utilities.misc import func_name
         >>> from sympy.matrices import ImmutableMatrix
-        >>> func_name(diag(1))
+        >>> func_name(Matrix.diag(1))
         'MutableDenseMatrix'
-        >>> func_name(diag(1, cls=ImmutableMatrix))
+        >>> func_name(Matrix.diag(1, cls=ImmutableMatrix))
         'ImmutableDenseMatrix'
         """
 
@@ -767,24 +736,14 @@ class MatrixSpecial(MatrixRequired):
         if len(args) == 1 and is_sequence(args[0]) and not getattr(args[0], 'is_Matrix', False):
             args = args[0]
 
-        def kern(d):
-            if d and type(d) is dict and ('move' in d or 'goto' in d):
-                if len(d) != 1:
-                    raise ValueError(filldedent('''
-                        A kerning dict should not contain any other
-                        items; do not inlude kerning directives in
-                        other dict entries.'''))
-                r, c = list(d.values())[0]
-                if 'move' in d:
-                    r = -r
-                return (r, c)
         def size(m):
             """Compute the size of the diagonal block"""
             if hasattr(m, 'rows'):
                 return m.rows, m.cols
             if isinstance(m, dict):
-                return m.get('size', kern(m) or (0, 0))
+                return m.get('size', (0, 0))
             return 1, 1
+
         def minsize(d):
             size = d.pop('size', None)
             r = max(0, -min(d)) + 1
@@ -804,17 +763,8 @@ class MatrixSpecial(MatrixRequired):
                 r, c = R, C
                 d['size'] = size
             return r, c
+
         def standardize_values(d):
-            v = kern(d)
-            if v:
-                try:
-                    # will raise ValueError if not ints or not 2
-                    r, c = map(as_int, v)
-                except ValueError:
-                    raise ValueError(filldedent('''
-                        kerning directives values should be a tuple
-                        with two integers'''))
-                return
             for k, value in d.items():
                 if k == 'size':
                     continue
@@ -828,35 +778,21 @@ class MatrixSpecial(MatrixRequired):
                             The functions in dict-described
                             diagonals must have 1 or 2 args.'''))
                 else:
-                    d[k] = value
-        def size_of(args):
-            """Return the shape of the matrix needed to contain the
-            given args."""
-            R, C, rmax, cmax = [0]*4
-            for a in args:
-                r, c = size(a)
-                if type(a) is dict and 'goto' in a:
-                    if r < 0 or c < 0:
-                        raise ValueError(filldedent('''
-                            The kerning directive 'goto' must
-                            be followed by nonnegative values.'''))
-                    R = max(0, r)
-                    C = max(0, c)
-                elif a == {}:
-                    R = C = max(R, C)
-                else:
-                    R += r
-                    C += c
-                rmax = max(R, rmax)
-                cmax = max(C, cmax)
-            return rmax, cmax
+                    value = sympify(value)
+                    if isinstance(value, Expr
+                        ) and not hasattr(value, 'rows'):
+                        d[k] = value
+                    else:
+                        raise TypeError(filldedent(
+                            '''expecting list, function
+                            or Expr in dict'''))
 
         # collapse contiguous dicts
         newargs = []
         nosize = None
         i = 0
         for a in args:
-            if a and type(a) is dict and not kern(a):
+            if type(a) is dict:
                 a = a.copy()  # leave original unchanged
                 if 'size' in a:
                     minsize(a)  # check it
@@ -889,7 +825,11 @@ class MatrixSpecial(MatrixRequired):
             else:
                 # the unspecified dict will take up
                 # the remaining space
-                spec_rows, spec_cols = size_of(args)
+                spec_rows = spec_cols = 0
+                for a in args:
+                    r, c = size(a)
+                    spec_rows += r
+                    spec_cols += c
                 rneed = rows - spec_rows
                 cneed = cols - spec_cols
                 r, c = dsize
@@ -906,7 +846,11 @@ class MatrixSpecial(MatrixRequired):
             args[nosize]['size'] = dsize
 
         # calculate size needed
-        diag_rows, diag_cols = size_of(args)
+        diag_rows = diag_cols = 0
+        for m in args:
+            r, c = size(m)
+            diag_rows += r
+            diag_cols += c
         rows = diag_rows if rows is None else rows
         cols = diag_cols if cols is None else cols
         if rows < diag_rows or cols < diag_cols:
@@ -916,7 +860,7 @@ class MatrixSpecial(MatrixRequired):
                 diag_rows, diag_cols, rows, cols)))
 
         # fill a default dict with the diagonal entries
-        diag_entries = defaultdict(lambda: 0)
+        diag_entries = defaultdict(lambda: S.Zero)
         row_pos, col_pos = 0, 0
         for m in args:
             if hasattr(m, 'rows'):
@@ -931,22 +875,9 @@ class MatrixSpecial(MatrixRequired):
                 diag_entries[(row_pos, col_pos)] = m
                 row_pos += 1
                 col_pos += 1
-            elif not m:
-                # the empty dictionary indicating that filling
-                # should continue from diagonal
-                row_pos = col_pos = max(row_pos, col_pos)
             else:
-                # in this case we're a dict with content
+                # in this case we're a dict
                 standardize_values(m)
-                krn = kern(m)
-                if krn:
-                    if 'goto' in m:
-                        row_pos, col_pos = krn
-                    else:
-                        dr, dc = krn
-                        row_pos += dr
-                        col_pos += dc
-                    continue
                 rmax, cmax = m.pop('size')
                 for key, value in m.items():
                     r_p = 0 if key >= 0 else -key
