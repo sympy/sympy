@@ -1316,11 +1316,10 @@ def test_diag_make():
     assert diag({-1: 1}, {}, 2) == Matrix([
         [0, 0],
         [1, 2]])
-    vblade = Matrix(list(range(5)))
+    vblade = Matrix(list(range(1, 5)))
     hblade = vblade.T
-    tip = {0}
-    shaft = {0: [7]*6}
-    arrow = diag(vblade, tip, hblade, tip, shaft)
+    shaft = [7]*6
+    arrow = diag({-1: vblade, 1: hblade, 0: shaft})
     assert arrow == Matrix([
         [7, 1, 2, 3, 4, 0],
         [1, 7, 0, 0, 0, 0],
@@ -1332,7 +1331,16 @@ def test_diag_make():
         (7, Eq(i,j)),
         (Max(i, j), And(Lt(Max(i, j), 5), Or(Eq(i, 0),
         Eq(j, 0)))), (0, True)))
-    raises(ValueError, lambda: diag(1, tip, 2))
+    raises(ValueError, lambda: diag({0: vblade, -1: hblade}))
+    a = ones(2)
+    assert diag({0:[1]*7, 3:a, -3:-a}) == Matrix([
+        [ 1,  0,  0,  1, 1, 0, 0],
+        [ 0,  1,  0,  1, 1, 0, 0],
+        [ 0,  0,  1,  0, 0, 1, 1],
+        [-1, -1,  0,  1, 0, 1, 1],
+        [-1, -1,  0,  0, 1, 0, 0],
+        [ 0,  0, -1, -1, 0, 1, 0],
+        [ 0,  0, -1, -1, 0, 0, 1]])
     # /!\: there is a difference in how args are handled
     # when calling dense.diag and common.diag (Matrix.diag):
     # dense.diag does not unpack args but converts seqs to Matrix

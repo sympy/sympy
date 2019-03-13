@@ -720,18 +720,17 @@ class MatrixSpecial(MatrixRequired):
         [2, 4],
         [3, 0]])
 
-        To make an arrowhead matrix, the `{0}` element can be used
-        to move back to the top left of the matrix:
+        To make an arrowhead matrix, use matrices at the off-diagonals:
 
-        >>> blade = Matrix([0, 1, 2])
-        >>> tip = {0}
+        >>> edge = Matrix([1, 2, 3])
+        >>> blade = {-1: edge, 1: edge.T}
         >>> shaft = {0: [7]*4}
-        >>> arrow = diag(blade, tip, blade.T, tip, shaft); arrow
+        >>> arrow = diag(blade, shaft); arrow
         Matrix([
-        [7, 1, 2, 0],
+        [7, 1, 2, 3],
         [1, 7, 0, 0],
         [2, 0, 7, 0],
-        [0, 0, 0, 7]])
+        [3, 0, 0, 7]])
 
         Bands off the diagonal can be made by using a dictionary whose
         keys tell the diagonal on which to put the non-matrix elements:
@@ -796,12 +795,27 @@ class MatrixSpecial(MatrixRequired):
             size = d.pop('size', None)
             r = max(0, -min(d)) + 1
             c = -min(0, -max(d)) + 1
+            # lists first
             for k in d:
-                if not type(d[k]) is list:
-                    continue
-                L = len(d[k])
-                r = max(r, L if k > 0 else abs(k) + L)
-                c = max(c, L if k < 0 else abs(k) + L)
+                if type(d[k]) is list:
+                    L = len(d[k])
+                    r = max(r, L if k > 0 else abs(k) + L)
+                    c = max(c, L if k < 0 else abs(k) + L)
+            for k in d:
+                if hasattr(d[k], 'rows'):
+                    R, C = d[k].shape
+                    r_p = 0 if k >= 0 else -k
+                    c_p = 0 if r_p else k
+                    did = 0
+                    while r_p + R < r and c_p + C < c:
+                        r_p += R
+                        c_p += C
+                        did += 1
+                    if not did:  # take at least 1
+                        r_p += R
+                        c_p += C  # error to raise below
+                    r = max(r, r_p)
+                    c = max(c, c_p)
             if size:
                 R, C = size
                 if r > R or c > C:
@@ -849,10 +863,6 @@ class MatrixSpecial(MatrixRequired):
                     rmax = max(rmax, R)
                     cmax = max(cmax, C)
                     R = C = min(R, C)
-                elif a == {0}:
-                    rmax = max(rmax, R)
-                    cmax = max(cmax, C)
-                    R = C = 0
                 else:
                     R += r
                     C += c
@@ -943,8 +953,6 @@ class MatrixSpecial(MatrixRequired):
                         update((i + R, j + C), m[i, j])
                 R += m.rows
                 C += m.cols
-            elif m == {0}:
-                R = C = 0
             elif not isinstance(m, dict):
                 # in this case we're a single value
                 update((R, C), m)
@@ -960,23 +968,34 @@ class MatrixSpecial(MatrixRequired):
                 for key, value in m.items():
                     r_p = 0 if key >= 0 else -key
                     c_p = 0 if r_p else key
-                    while (r_p < rmax and c_p < cmax):
-                        D = r_p + R, c_p + C
-                        if isinstance(value, list):
-                            for i in range(len(value)):
-                                update(D, value[i])
-                                D = D[0] + 1, D[1] + 1
-                            break
-                        if isfunction(value):
-                            if _getnargs(value) == 2:
-                                update(D, value(r_p, c_p))
+                    D = r_p + R, c_p + C
+                    if hasattr(value, 'rows'):
+                        # in this case, we're a matrix
+                        r, c = value.shape
+                        while (r_p + r <= rmax and c_p + c <= cmax):
+                            for i in range(value.rows):
+                                for j in range(value.cols):
+                                    update((i + r_p, j + c_p), value[i, j])
+                            r_p += value.rows
+                            c_p += value.cols
+                    elif isinstance(value, list):
+                        for i in range(len(value)):
+                            update(D, value[i])
+                            D = D[0] + 1, D[1] + 1
+                    else:
+                        while (r_p < rmax and c_p < cmax):
+                            if isfunction(value):
+                                if _getnargs(value) == 2:
+                                    v = value(r_p, c_p)
+                                else:
+                                    d = min(r_p, c_p)
+                                    v = value(d)
                             else:
-                                d = min(r_p, c_p)
-                                update(D, value(d))
-                        else:
-                            update(D, value)
-                        r_p += 1
-                        c_p += 1
+                                v = value
+                            update(D, v)
+                            D = D[0] + 1, D[1] + 1
+                            r_p += 1
+                            c_p += 1
                 R += rmax
                 C += cmax
         return klass._eval_diag(rows, cols, diag_entries)
