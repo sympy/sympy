@@ -1103,7 +1103,7 @@ def eye(*args, **kwargs):
 
 
 def diag(*values, **kwargs):
-    """Create a sparse, diagonal matrix from a list of diagonal values.
+    """Create a diagonal matrix from the given values.
 
     Notes
     =====
