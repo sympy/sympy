@@ -668,23 +668,26 @@ class MatrixSpecial(MatrixRequired):
         Examples
         ========
         >>> from sympy.matrices import Matrix
+        >>> diag = Matrix.diag
+
         All diagonal elements can be given individually
         or in a list:
-        >>> d123 = Matrix.diag(1, 2, 3)
+        >>> d123 = diag(1, 2, 3)
         >>> d123
         Matrix([
         [1, 0, 0],
         [0, 2, 0],
         [0, 0, 3]])
-        >>> Matrix.diag([1, 2, 3]) == d123
+        >>> diag([1, 2, 3]) == d123
         True
+
         The diagonal elements can be matrices; diagonal filling will
         continue on the diagonal from the last element of the matrix:
         >>> from sympy.abc import x, y, z
         >>> a = Matrix([x, y, z])
         >>> b = Matrix([[1, 2], [3, 4]])
         >>> c = Matrix([[5, 6]])
-        >>> Matrix.diag(a, 7, b, c)
+        >>> diag(a, 7, b, c)
         Matrix([
         [x, 0, 0, 0, 0, 0],
         [y, 0, 0, 0, 0, 0],
@@ -693,32 +696,42 @@ class MatrixSpecial(MatrixRequired):
         [0, 0, 1, 2, 0, 0],
         [0, 0, 3, 4, 0, 0],
         [0, 0, 0, 0, 5, 6]])
+
         Bands off the diagonal can be made by using a dictionary whose
         keys tell the diagonal on which to put the non-matrix elements:
-        >>> Matrix.diag({-2: [1, 2, 3], 2: [4, 5, 6]})
+        >>> diag({-2: [1, 2, 3], 2: [4, 5, 6]})
         Matrix([
         [0, 0, 4, 0, 0],
         [0, 0, 0, 5, 0],
         [1, 0, 0, 0, 6],
         [0, 2, 0, 0, 0],
         [0, 0, 3, 0, 0]])
-        >>> Matrix.diag({0: 2, 1: 1}, rows=4, cols=4)
+        >>> diag({0: 2, 1: 1}, rows=4, cols=4)
         Matrix([
         [2, 1, 0, 0],
         [0, 2, 1, 0],
         [0, 0, 2, 1],
         [0, 0, 0, 2]])
+        >>> diag(1, {1: 2, 'size': (3, 3)}, 3, rows=5, cols=5)
+        Matrix([
+        [1, 0, 0, 0, 0],
+        [0, 0, 2, 0, 0],
+        [0, 0, 0, 2, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 3]])
+
         Dictionary values can also be 1 or 2 arg functions which compute
         the value from the relative diagonal distance or position in the
         submatrix that it describes:
         >>> d = {0: lambda d: (1 + d)**2, 1: lambda i, j: i + j}
-        >>> Matrix.diag(1, 2, d, rows=5, cols=5)
+        >>> diag(1, 2, d, rows=5, cols=5)
         Matrix([
         [1, 0, 0, 0, 0],
         [0, 2, 0, 0, 0],
         [0, 0, 1, 1, 0],
         [0, 0, 0, 4, 3],
         [0, 0, 0, 0, 9]])
+
         The type of the resulting matrix can be affected with the ``cls``
         keyword.
         >>> from sympy.utilities.misc import func_name
