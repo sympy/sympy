@@ -1,6 +1,19 @@
 comment: off
 
+codecov:
+  branch: master
+
 coverage:
-    precision: 3
-    target: 0
-    threshold: null
+  status:
+    project:
+      default:
+        target: 0%
+        threshold: null
+        branches: null
+        precision: 3
+
+    patch:
+      default:
+        target: 0%
+        branches: null
+        precision: 3
