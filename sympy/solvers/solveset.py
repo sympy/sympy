@@ -42,14 +42,14 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
-from sympy.utilities import filldedent
+from sympy.utilities import filldedent, sift
 from sympy.utilities.iterables import numbered_symbols, has_dups
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
 from types import GeneratorType
 from collections import defaultdict
-
+from itertools import combinations
 
 def _masked(f, *atoms):
     """Return ``f``, with all objects given by ``atoms`` replaced with
@@ -494,7 +494,7 @@ def _is_function_class_equation(func_class, f, symbol):
         return False
 
 
-def _solve_as_rational(f, symbol, domain):
+def _solve_as_rational(f, symbol, domain, _simplify=True):
     """ solve rational functions"""
     f = together(f, deep=True)
     g, h = fraction(f)
@@ -507,21 +507,21 @@ def _solve_as_rational(f, symbol, domain):
             # isn't implemented yet, e.g. ZZ[a] for some symbol a
             return ConditionSet(symbol, Eq(f, 0), domain)
     else:
-        valid_solns = _solveset(g, symbol, domain)
-        invalid_solns = _solveset(h, symbol, domain)
+        valid_solns = _solveset(g, symbol, domain, _simplify=_simplify)
+        invalid_solns = _solveset(h, symbol, domain, _simplify=_simplify)
         return valid_solns - invalid_solns
 
 
-def _solve_trig(f, symbol, domain):
+def _solve_trig(f, symbol, domain, _simplify=True):
     """Function to call other helpers to solve trigonometric equations """
     sol1 = sol = None
     try:
-        sol1 = _solve_trig1(f, symbol, domain)
+        sol1 = _solve_trig1(f, symbol, domain, _simplify=_simplify)
     except BaseException as error:
         pass
     if sol1 is None or isinstance(sol1, ConditionSet):
         try:
-            sol = _solve_trig2(f, symbol, domain)
+            sol = _solve_trig2(f, symbol, domain, _simplify=_simplify)
         except BaseException as error:
             sol = sol1
         if isinstance(sol1, ConditionSet) and isinstance(sol, ConditionSet):
@@ -535,8 +535,109 @@ def _solve_trig(f, symbol, domain):
             is yet to be implemented'''))
     return sol
 
+def _simplify_union(expr):
+    if isinstance(expr, Union):
+        imagesets, othersets = sift(expr.args, lambda lSet: isinstance(lSet, ImageSet)
+                                        and isinstance(lSet.args[0], Lambda)
+                                        and lSet.args[1] == S.Integers, binary=True)
+    elif (isinstance(expr, ImageSet) and isinstance(expr.args[0], Lambda)
+                                        and expr.args[1] == S.Integers):
+        imagesets = [expr]
+        othersets = []
+    else:
+        return expr
 
-def _solve_trig1(f, symbol, domain):
+    expressions = []
+    for cSet in imagesets:
+        symbol = cSet.args[0].args[0]
+        if len(symbol) == 1:
+            symbol = symbol[0]
+            if isinstance(cSet.args[0].args[1], Add):
+                withdummies, wodummies = sift(cSet.args[0].args[1].args, lambda addTerm: addTerm.has(symbol), binary=True)
+                dummyconstant = Add(*[dummy/symbol for dummy in withdummies])
+                if not dummyconstant.has(symbol):
+                    newwodummies = []
+                    # Remove constant terms equal to the integer multiple,
+                    # e.g., 2*pi*_n + 2*pi => 2*pi*_n
+                    for cons in wodummies:
+                        if not (cons/dummyconstant).is_integer:
+                            newwodummies.append(cons)
+                    if len(newwodummies):
+                        expressions.append((symbol, dummyconstant, Add(*newwodummies)))
+                    else:
+                        expressions.append((symbol, dummyconstant, S.Zero))
+                else:
+                    othersets.append(cSet)
+                    continue
+            else: # Just a single entry
+                dummyconstant = cSet.args[0].args[1]/symbol
+                if not dummyconstant.has(symbol):
+                    expressions.append((symbol, dummyconstant, S.Zero))
+                else:
+                    othersets.append(cSet)
+                    continue
+        else:
+            othersets.append(cSet)
+    mergeablecombinations = []
+    def get_int_multiplier(e):
+        if isinstance(e, Mul):
+            for a in e.args:
+                if a.is_integer and a.is_Number:
+                    return a
+        elif e.is_integer and e.is_Number:
+            return e
+        return 0
+    def determine_order(e1, e2, i, j):
+        e1ops = e1.count_ops()
+        e2ops = e2.count_ops()
+        if e1ops == e2ops:
+            if e1 == 0:
+                return (i, j)
+            elif e2 == 0:
+                return (j, i)
+            elif e1 < 0:
+                return (j, i)
+            else:
+                return (i, j)
+        elif e1ops < e2ops:
+            return (i, j)
+        else:
+            return (j, i)
+
+    merging = dict()
+    if len(expressions) >= 2:
+        for (i, expr1), (j, expr2) in combinations(enumerate(expressions), 2):
+            if expr1[0].name == expr2[0].name and expr1[1] == expr2[1]:
+                if expr1[2] == expr2[2]:
+                    mergeablecombinations.append((i, j))
+                else:
+                    maxint = get_int_multiplier(expr1[1])
+                    if maxint >= 2:
+                        e2 = expr2[2] + expr2[1]/maxint
+                        if expr1[2] == e2:
+                            mergeablecombinations.append(determine_order(expr1[2], expr2[2], i, j))
+                        e2 = expr2[2] - expr2[1]/maxint
+                        if expr1[2] == e2:
+                            mergeablecombinations.append(determine_order(expr1[2], expr2[2], i, j))
+        for i, j in mergeablecombinations:
+            if i in merging:
+                merging[i].append(j)
+            else:
+                merging[i] = [j]
+    for i, e in enumerate(expressions):
+        tobemerged = True
+        for key in merging:
+            if i in merging[key]:
+                tobemerged = False
+        if tobemerged:
+            if i in merging.keys():
+                othersets.append(ImageSet(Lambda(e[0], e[0]*e[1]/get_int_multiplier(e[1]) + e[2]), S.Integers))
+            else:
+                othersets.append(ImageSet(Lambda(e[0], e[0]*e[1] + e[2]), S.Integers))
+
+    return Union(*othersets)
+
+def _solve_trig1(f, symbol, domain, _simplify=True):
     """Primary Helper to solve trigonometric equations """
     f = trigsimp(f)
     f_original = f
@@ -558,14 +659,17 @@ def _solve_trig1(f, symbol, domain):
             raise NotImplementedError
         result = Union(*[invert_complex(exp(I*symbol), s, symbol)[1]
                        for s in solns])
-        return Intersection(result, domain)
+        if _simplify:
+            return Intersection(_simplify_union(result), domain)
+        else:
+            return Intersection(result, domain)
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
         return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
 
-def _solve_trig2(f, symbol, domain):
+def _solve_trig2(f, symbol, domain, _simplify=True):
     """Secondary helper to solve trigonometric equations,
     called when first helper fails """
     from sympy import ilcm, igcd, expand_trig, degree, simplify
@@ -611,7 +715,7 @@ def _solve_trig2(f, symbol, domain):
 
     if g.has(x) or h.has(x):
         return ConditionSet(symbol, Eq(f_original, 0), domain)
-    solns = solveset(g, y, S.Reals) - solveset(h, y, S.Reals)
+    solns = solveset(g, y, S.Reals, _simplify=_simplify) - solveset(h, y, S.Reals, _simplify=_simplify)
 
     if isinstance(solns, FiniteSet):
         result = Union(*[invert_real(tan(symbol/mu), s, symbol)[1]
@@ -619,14 +723,17 @@ def _solve_trig2(f, symbol, domain):
         dsol = invert_real(tan(symbol/mu), oo, symbol)[1]
         if degree(h) > degree(g):                   # If degree(denom)>degree(num) then there
             result = Union(result, dsol)            # would be another sol at Lim(denom-->oo)
-        return Intersection(result, domain)
+        if _simplify:
+            return Intersection(_simplify_union(result), domain)
+        else:
+            return Intersection(result, domain)
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
         return ConditionSet(symbol, Eq(f_original, 0), S.Reals)
 
 
-def _solve_as_poly(f, symbol, domain=S.Complexes):
+def _solve_as_poly(f, symbol, domain=S.Complexes, _simplify=True):
     """
     Solve the equation using polynomial techniques if it already is a
     polynomial equation or, with a change of variables, can be made so.
@@ -725,12 +832,12 @@ def _has_rational_power(expr, symbol):
         return _has_rational_power(pattern_match[a], symbol)
 
 
-def _solve_radical(f, symbol, solveset_solver):
+def _solve_radical(f, symbol, solveset_solver, _simplify=True):
     """ Helper function to solve equations with radicals """
     eq, cov = unrad(f)
     if not cov:
-        result = solveset_solver(eq, symbol) - \
-            Union(*[solveset_solver(g, symbol) for g in denoms(f, symbol)])
+        result = solveset_solver(eq, symbol, _simplify=_simplify) - \
+            Union(*[solveset_solver(g, symbol, _simplify=_simplify) for g in denoms(f, symbol)])
     else:
         y, yeq = cov
         if not solveset_solver(y - I, y):
@@ -738,8 +845,8 @@ def _solve_radical(f, symbol, solveset_solver):
             yeq = yeq.xreplace({y: yreal})
             eq = eq.xreplace({y: yreal})
             y = yreal
-        g_y_s = solveset_solver(yeq, symbol)
-        f_y_sols = solveset_solver(eq, y)
+        g_y_s = solveset_solver(yeq, symbol, _simplify=_simplify)
+        f_y_sols = solveset_solver(eq, y, _simplify=_simplify)
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
@@ -758,7 +865,7 @@ def _solve_radical(f, symbol, solveset_solver):
     return solution_set
 
 
-def _solve_abs(f, symbol, domain):
+def _solve_abs(f, symbol, domain, _simplify=True):
     """ Helper function to solve equation involving absolute value function """
     if not domain.is_subset(S.Reals):
         raise ValueError(filldedent('''
@@ -775,9 +882,9 @@ def _solve_abs(f, symbol, domain):
         q_neg_cond = q_pos_cond.complement(domain)
 
         sols_q_pos = solveset_real(f_p*f_q + f_r,
-                                           symbol).intersect(q_pos_cond)
+                                   symbol, _simplify=_simplify).intersect(q_pos_cond)
         sols_q_neg = solveset_real(f_p*(-f_q) + f_r,
-                                           symbol).intersect(q_neg_cond)
+                                   symbol, _simplify=_simplify).intersect(q_neg_cond)
         return Union(sols_q_pos, sols_q_neg)
     else:
         return ConditionSet(symbol, Eq(f, 0), domain)
@@ -803,7 +910,7 @@ def solve_decomposition(f, symbol, domain):
                2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi - 2 | n in Integers} U {2*n*pi - 2 + pi | n in Integers}
+    {n*pi - 2 | n in Integers}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -860,7 +967,7 @@ def solve_decomposition(f, symbol, domain):
     return y_s
 
 
-def _solveset(f, symbol, domain, _check=False):
+def _solveset(f, symbol, domain, _check=False, _simplify=True):
     """Helper for solveset to return a result from an expression
     that has already been sympify'ed and is known to contain the
     given symbol."""
@@ -880,7 +987,7 @@ def _solveset(f, symbol, domain, _check=False):
             f = a/m + h  # XXX condition `m != 0` should be added to soln
 
     # assign the solvers to use
-    solver = lambda f, x, domain=domain: _solveset(f, x, domain)
+    solver = lambda f, x, domain=domain, _simplify=_simplify: _solveset(f, x, domain, _simplify)
     inverter = lambda f, rhs, symbol: _invert(f, rhs, symbol, domain)
 
     result = EmptySet()
@@ -900,7 +1007,7 @@ def _solveset(f, symbol, domain, _check=False):
         result = Union(*[solver(m, symbol) for m in f.args])
     elif _is_function_class_equation(TrigonometricFunction, f, symbol) or \
             _is_function_class_equation(HyperbolicFunction, f, symbol):
-        result = _solve_trig(f, symbol, domain)
+        result = _solve_trig(f, symbol, domain, _simplify=_simplify)
     elif isinstance(f, arg):
         a = f.args[0]
         result = solveset_real(a > 0, symbol)
@@ -951,11 +1058,13 @@ def _solveset(f, symbol, domain, _check=False):
                            equation, symbol)[0]:
                         result += _solve_radical(equation,
                                                  symbol,
-                                                 solver)
+                                                 solver,
+                                                 _simplify=_simplify)
                     elif equation.has(Abs):
-                        result += _solve_abs(f, symbol, domain)
+                        result += _solve_abs(f, symbol, domain, _simplify=_simplify)
                     else:
-                        result_rational = _solve_as_rational(equation, symbol, domain)
+                        result_rational = _solve_as_rational(equation, symbol,
+                                                             domain, _simplify=_simplify)
                         if isinstance(result_rational, ConditionSet):
                             # may be a transcendental type equation
                             result += _transolve(equation, symbol, domain)
@@ -970,9 +1079,9 @@ def _solveset(f, symbol, domain, _check=False):
     if isinstance(result, ConditionSet):
         num, den = f.as_numer_denom()
         if den.has(symbol):
-            _result = _solveset(num, symbol, domain)
+            _result = _solveset(num, symbol, domain, _simplify=_simplify)
             if not isinstance(_result, ConditionSet):
-                singularities = _solveset(den, symbol, domain)
+                singularities = _solveset(den, symbol, domain, _simplify=_simplify)
                 result = _result - singularities
 
     if _check:
@@ -1547,7 +1656,7 @@ def _transolve(f, symbol, domain):
     return result
 
 
-def solveset(f, symbol=None, domain=S.Complexes):
+def solveset(f, symbol=None, domain=S.Complexes, _simplify=True):
     r"""Solves a given inequality or equation with set as output
 
     Parameters
@@ -1559,6 +1668,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
         The variable for which the equation is solved
     domain : Set
         The domain over which the equation is solved
+    _simplify : boolean, optional
+        If True (default), the solution sets are simplified
 
     Returns
     =======
@@ -1632,11 +1743,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
     but there may be some slight difference:
 
     >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
-    ({2*n*pi | n in Integers} \ {0}) U ({2*n*pi + pi | n in Integers} \ {0})
+    {n*pi | n in Integers} \ {0}
 
     >>> p = Symbol('p', positive=True)
     >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
-    {2*n*pi | n in Integers} U {2*n*pi + pi | n in Integers}
+    {n*pi | n in Integers}
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
@@ -1685,7 +1796,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     elif not isinstance(symbol, Symbol):
         f, s, swap = recast_to_symbols([f], [symbol])
         # the xreplace will be needed if a ConditionSet is returned
-        return solveset(f[0], s[0], domain).xreplace(swap)
+        return solveset(f[0], s[0], domain, _simplify=_simplify).xreplace(swap)
 
     if domain.is_subset(S.Reals):
         if not symbol.is_real:
@@ -1693,7 +1804,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             assumptions['real'] = True
             try:
                 r = Dummy('r', **assumptions)
-                return solveset(f.xreplace({symbol: r}), r, domain
+                return solveset(f.xreplace({symbol: r}), r, domain, _simplify=_simplify
                     ).xreplace({r: symbol})
             except InconsistentAssumptions:
                 pass
@@ -1711,15 +1822,15 @@ def solveset(f, symbol=None, domain=S.Complexes):
         f = f.xreplace({d: e})
     f = piecewise_fold(f)
 
-    return _solveset(f, symbol, domain, _check=True)
+    return _solveset(f, symbol, domain, _check=True, _simplify=_simplify)
 
 
-def solveset_real(f, symbol):
-    return solveset(f, symbol, S.Reals)
+def solveset_real(f, symbol, _simplify=True):
+    return solveset(f, symbol, S.Reals, _simplify=_simplify)
 
 
-def solveset_complex(f, symbol):
-    return solveset(f, symbol, S.Complexes)
+def solveset_complex(f, symbol, _simplify=True):
+    return solveset(f, symbol, S.Complexes, _simplify=_simplify)
 
 
 def solvify(f, symbol, domain):
@@ -2631,7 +2742,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                 for sym in unsolved_syms:
                     not_solvable = False
                     try:
-                        soln = solver(eq2, sym)
+                        soln = solver(eq2, sym, _simplify=False)
                         total_solvest_call += 1
                         soln_new = S.EmptySet
                         if isinstance(soln, Complement):
@@ -2777,8 +2888,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 # end of def substitution()
 
 
-def _solveset_work(system, symbols):
-        soln = solveset(system[0], symbols[0])
+def _solveset_work(system, symbols, _simplify=True):
+        soln = solveset(system[0], symbols[0], _simplify=_simplify)
         if isinstance(soln, FiniteSet):
             _soln = FiniteSet(*[tuple((s,)) for s in soln])
             return _soln
@@ -3029,7 +3140,7 @@ def nonlinsolve(system, *symbols):
         return FiniteSet(*[tuple(i.xreplace(swap) for i in s) for s in soln])
 
     if len(system) == 1 and len(symbols) == 1:
-        return _solveset_work(system, symbols)
+        return _solveset_work(system, symbols, _simplify=False)
 
     # main code of def nonlinsolve() starts from here
     polys, polys_expr, nonpolys, denominators = _separate_poly_nonpoly(

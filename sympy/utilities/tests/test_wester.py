@@ -45,6 +45,7 @@ from sympy.integrals.transforms import laplace_transform,\
     mellin_transform
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.sets import ImageSet
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.solveset import solveset, solveset_real, linsolve
 from sympy.solvers.ode import dsolve
@@ -927,13 +928,11 @@ def test_M12():
     ]
 
 
-@XFAIL
 def test_M13():
     n = Dummy('n')
-    assert solveset_real(sin(x) - cos(x), x) == ImageSet(Lambda(n, n*pi - 7*pi/4), S.Integers)
+    assert solveset_real(sin(x) - cos(x), x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
 
 
-@XFAIL
 def test_M14():
     n = Dummy('n')
     assert solveset_real(tan(x) - 1, x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
@@ -948,7 +947,6 @@ def test_M15():
                                                ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
 
 
-@XFAIL
 def test_M16():
     n = Dummy('n')
     assert solveset(sin(x) - tan(x), x) == ImageSet(Lambda(n, n*pi), S.Integers)
