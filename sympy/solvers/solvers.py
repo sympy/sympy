@@ -1011,6 +1011,8 @@ def solve(f, *symbols, **flags):
 
     # real/imag handling -----------------------------
     if any(isinstance(fi, (bool, BooleanAtom)) for fi in f):
+        if flags.get('set', False):
+            return [], set()
         return []
 
     w = Dummy('w')

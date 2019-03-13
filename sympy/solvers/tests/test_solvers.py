@@ -171,6 +171,7 @@ def test_solve_args():
     assert solve([Eq(x, 0), x+1<2]) == Eq(x, 0)
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
+    assert solve([x-1, False], [x], set=True) == ([], set())
 
 
 def test_solve_polynomial1():
