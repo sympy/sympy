@@ -1,8 +1,5 @@
 comment: off
 
-codecov:
-  branch: master
-
 coverage:
   status:
     project:
