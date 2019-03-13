@@ -20,7 +20,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
     residue, Derivative, logcombine, Symbol, Intersection, Union,
-    EmptySet, Interval, Integral, idiff, ImageSet, acos)
+    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -49,7 +49,7 @@ from sympy.solvers.recurr import rsolve
 from sympy.solvers.solveset import solveset, solveset_real, linsolve
 from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, PY3
 from itertools import islice, takewhile
 from sympy.series.fourier import fourier_series
 
@@ -939,13 +939,13 @@ def test_M14():
     assert solveset_real(tan(x) - 1, x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
 
 
-@XFAIL
 def test_M15():
-    n = Dummy('n')
-    assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
-                                           ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)),
-                                           Union(ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers),
-                                           ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
+    if PY3:
+        n = Dummy('n')
+        assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+                                               ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers)),
+                                               Union(ImageSet(Lambda(n, 2*n*pi + 5*pi/6), S.Integers),
+                                               ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
 
 
 @XFAIL
@@ -1028,25 +1028,25 @@ def test_M29():
     assert solveset(abs(x - 1) - 2, domain=S.Reals) == FiniteSet(-1, 3)
 
 
-@XFAIL
 def test_M30():
     # TODO: Replace solve with solveset, as of now
     # solveset doesn't supports assumptions
-    assert solve(abs(2*x + 5) - abs(x - 2),x, assume=Q.real(x)) == [-1, -7]
+    # assert solve(abs(2*x + 5) - abs(x - 2),x, assume=Q.real(x)) == [-1, -7]
+    assert solveset_real(abs(2*x + 5) - abs(x - 2), x) == FiniteSet(-1, -7)
 
 
-@XFAIL
 def test_M31():
     # TODO: Replace solve with solveset, as of now
     # solveset doesn't supports assumptions
-    assert solve(1 - abs(x) - max(-x - 2, x - 2),x, assume=Q.real(x)) == [-3/2, 3/2]
+    # assert solve(1 - abs(x) - max(-x - 2, x - 2),x, assume=Q.real(x)) == [-3/2, 3/2]
+    assert solveset_real(1 - abs(x) - Max(-x - 2, x - 2), x) == FiniteSet(-S(3)/2, S(3)/2)
 
 
 @XFAIL
 def test_M32():
     # TODO: Replace solve with solveset, as of now
     # solveset doesn't supports assumptions
-    assert solve(max(2 - x**2, x)- max(-x, (x**3)/9), assume=Q.real(x)) == [-1, 3]
+    assert solveset_real(Max(2 - x**2, x)- Max(-x, (x**3)/9), x) == FiniteSet(-1, 3)
 
 
 @XFAIL
@@ -1055,7 +1055,7 @@ def test_M33():
     # solveset doesn't supports assumptions
 
     # Second answer can be written in another form. The second answer is the root of x**3 + 9*x**2 - 18 = 0 in the interval (-2, -1).
-    assert solve(max(2 - x**2, x) - x**3/9, assume=Q.real(x)) == [-3, -1.554894, 3]
+    assert solveset_real(Max(2 - x**2, x) - x**3/9, x) == FiniteSet(-3, -1.554894, 3)
 
 
 @XFAIL
@@ -1069,11 +1069,11 @@ def test_M35():
     assert linsolve((3*x - 2*y - I*y + 3*I).as_real_imag(), y, x) == FiniteSet((3, 2))
 
 
-@XFAIL
 def test_M36():
     # TODO: Replace solve with solveset, as of now
     # solveset doesn't supports solving for function
-    assert solve(f**2 + f - 2, x) == [Eq(f(x), 1), Eq(f(x), -2)]
+    # assert solve(f**2 + f - 2, x) == [Eq(f(x), 1), Eq(f(x), -2)]
+    assert solveset(f(x)**2 + f(x) - 2, f(x)) == FiniteSet(-2, 1)
 
 
 def test_M37():
@@ -1228,9 +1228,11 @@ def test_N13():
 
 @XFAIL
 def test_N14():
-    # raises NotImplementedError: can't reduce [sin(x) < 1]
     x = Symbol('x')
-    assert solveset(sin(x) < 1, domain=S.Reals) == Union(Interval(-oo, pi/2, True, True),
+    # Gives 'Union(Interval(Integer(0), Mul(Rational(1, 2), pi), false, true),
+    #        Interval(Mul(Rational(1, 2), pi), Mul(Integer(2), pi), true, false))'
+    # which is not the correct answer, but the provided also seems wrong.
+    assert solveset(sin(x) < 1, x, domain=S.Reals) == Union(Interval(-oo, pi/2, True, True),
                                          Interval(pi/2, oo, True, True))
 
 
@@ -1395,7 +1397,7 @@ def test_P9():
 @XFAIL
 def test_P10():
     M = Matrix([[1, 2 + 3*I],
-                [f(4 - 5*i), 6]])
+                [f(4 - 5*I), 6]])
     # conjugate(f(4 - 5*i)) is not simplified to f(4+5*I)
     assert M.H == Matrix([[1, f(4 + 5*I)],
                           [2 + 3*I, 6]])
@@ -1507,14 +1509,8 @@ def test_P21():
     assert M.charpoly(x).as_expr() == x**3 - 2*x**2 - 5*x + 6
 
 
-@slow
 def test_P22():
-    # Wester test calculates eigenvalues for a diagonal matrix of dimension 100
-    # This currently takes forever with sympy:
-    # M = (2 - x)*eye(100);
-    # assert M.eigenvals() == {-x + 2: 100}
-    # So we will speed-up the test checking only for dimension=12
-    d = 12
+    d = 100
     M = (2 - x)*eye(d)
     assert M.eigenvals() == {-x + 2: d}
 
@@ -1709,7 +1705,9 @@ def test_P37():
     M = Matrix([[1, 1, 0],
                 [0, 1, 0],
                 [0, 0, 1]])
-    M**Rational(1, 2)
+    assert M**Rational(1, 2) == Matrix([[1, R(1, 2), 0],
+                                        [0, 1,       0],
+                                        [0, 0,       1]])
 
 
 @XFAIL
@@ -1780,10 +1778,10 @@ def test_P45():
 
 @XFAIL
 def test_R1():
-    i, n = symbols('i n', integer=True, positive=True)
+    i, j, n = symbols('i j n', integer=True, positive=True)
     xn = MatrixSymbol('xn', n, 1)
     Sm = Sum((xn[i, 0] - Sum(xn[j, 0], (j, 0, n - 1))/n)**2, (i, 0, n - 1))
-    # raises AttributeError: 'str' object has no attribute 'is_Piecewise'
+    # raises TypeError: BooleanAtom not allowed in this context.
     Sm.doit()
 
 
@@ -1797,7 +1795,7 @@ def test_R2():
     f1 = diff(f, m)
     f2 = diff(f, b)
     # raises TypeError: solveset() takes at most 2 arguments (3 given)
-    solveset((f1, f2), m, b, domain=S.Reals)
+    solveset((f1, f2), (m, b), domain=S.Reals)
 
 
 @XFAIL
@@ -1844,12 +1842,10 @@ def test_R5():
     assert T == factorial(a+b+c)/(factorial(a)*factorial(b)*factorial(c))
 
 
-@XFAIL
 def test_R6():
     n, k = symbols('n k', integer=True, positive=True)
-    gn = MatrixSymbol('gn', n + 1, 1)
+    gn = MatrixSymbol('gn', n + 2, 1)
     Sm = Sum(gn[k, 0] - gn[k - 1, 0], (k, 1, n + 1))
-    # raises AttributeError: 'str' object has no attribute 'is_Piecewise'
     assert Sm.doit() == -gn[0, 0] + gn[n + 1, 0]
 
 
@@ -1863,7 +1859,6 @@ def test_R8():
     n, k = symbols('n k', integer=True, positive=True)
     Sm = Sum(k**2*binomial(n, k), (k, 1, n))
     T = Sm.doit() #returns Piecewise function
-    # T.simplify() raisesAttributeError
     assert T.combsimp() == n*(n + 1)*2**(n - 2)
 
 
@@ -2024,11 +2019,10 @@ def test_S5():
             gamma(n + Rational(1, 2))/(sqrt(pi)*gamma(n + 1)))
 
 
-@SKIP("https://github.com/sympy/sympy/issues/7133")
+@XFAIL
 def test_S6():
     n, k = symbols('n k', integer=True, positive=True)
-    # Product raises Infinite recursion error.
-    # https://github.com/sympy/sympy/issues/7133
+    # Product does not evaluate
     assert (Product(x**2 -2*x*cos(k*pi/n) + 1, (k, 1, n - 1)).doit().simplify()
             == (x**(2*n) - 1)/(x**2 - 1))
 
@@ -2037,8 +2031,8 @@ def test_S6():
 def test_S7():
     k = symbols('k', integer=True, positive=True)
     Pr = Product((k**3 - 1)/(k**3 + 1), (k, 2, oo))
-    T = Pr.doit()
-    assert T.simplify() == Rational(2, 3)  # T simplifies incorrectly to 0
+    T = Pr.doit()     # Product does not evaluate
+    assert T.simplify() == Rational(2, 3)
 
 
 @XFAIL
@@ -2046,27 +2040,26 @@ def test_S8():
     k = symbols('k', integer=True, positive=True)
     Pr = Product(1 - 1/(2*k)**2, (k, 1, oo))
     T = Pr.doit()
-    # T = nan https://github.com/sympy/sympy/issues/7136
+    # Product does not evaluate
     assert T.simplify() == 2/pi
 
 
-@SKIP("https://github.com/sympy/sympy/issues/7133")
+@XFAIL
 def test_S9():
     k = symbols('k', integer=True, positive=True)
     Pr = Product(1 + (-1)**(k + 1)/(2*k - 1), (k, 1, oo))
-    # Product.doit() raises Infinite recursion error.
-    # https://github.com/sympy/sympy/issues/7133
     T = Pr.doit()
+    # Product produces 0
+    # https://github.com/sympy/sympy/issues/7133
     assert T.simplify() == sqrt(2)
 
 
-@SKIP("https://github.com/sympy/sympy/issues/7137")
+@XFAIL
 def test_S10():
     k = symbols('k', integer=True, positive=True)
     Pr = Product((k*(k + 1) + 1 + I)/(k*(k + 1) + 1 - I), (k, 0, oo))
     T = Pr.doit()
-    # raises OverflowError
-    # https://github.com/sympy/sympy/issues/7137
+    # Product does not evaluate
     assert T.simplify() == -1
 
 
@@ -2122,15 +2115,14 @@ def test_T10():
 @XFAIL
 def test_T11():
     n, k = symbols('n k', integer=True, positive=True)
-    # raises NotImplementedError
+    # evaluates to 0
     assert limit(n**x/(x*product((1 + x/k), (k, 1, n))), n, oo) == gamma(x)
 
 
 @XFAIL
 def test_T12():
     x, t = symbols('x t', real=True)
-    # raises PoleError: Don't know how to calculate the
-    #           limit(sqrt(pi)*x*erf(x)/(2*(1 - exp(-x**2))), x, 0, dir=+)
+    # Does not evaluate the limit but returns an expression with erf
     assert limit(x * integrate(exp(-t**2), (t, 0, x))/(1 - exp(-x**2)),
                  x, 0) == 1
 
@@ -2167,8 +2159,8 @@ def test_U3():
 def test_U4():
     n = symbols('n', integer=True, positive=True)
     x = symbols('x', real=True)
-    diff(x**n, x, n)
-    assert diff(x**n, x, n).rewrite(factorial) == factorial(n)
+    d = diff(x**n, x, n)
+    assert d.rewrite(factorial) == factorial(n)
 
 
 def test_U5():
@@ -2303,9 +2295,8 @@ def test_V4():
 
 @XFAIL
 def test_V5():
-    # Takes extremely long time
-    # https://github.com/sympy/sympy/issues/7149
-    assert (integrate((3*x - 5)**2/(2*x - 1)**(Rational(7, 2)), x) ==
+    # Returns (-45*x**2 + 80*x - 41)/(5*sqrt(2*x - 1)*(4*x**2 - 4*x + 1))
+    assert (integrate((3*x - 5)**2/(2*x - 1)**(Rational(7, 2)), x).simplify() ==
             (-41 + 80*x - 45*x**2)/(5*(2*x - 1)**Rational(5, 2)))
 
 
@@ -2357,7 +2348,6 @@ def test_V12():
     assert r1 == -1/(tan(x/2) + 2)
 
 
-@slow
 @XFAIL
 def test_V13():
     r1 = integrate(1/(6 + 3*cos(x) + 4*sin(x)), x)
@@ -2392,7 +2382,6 @@ def test_V16():
     raise NotImplementedError("cosine integral function not supported")
 
 
-@slow
 @XFAIL
 def test_V17():
     r1 = integrate((diff(f(x), x)*g(x)
