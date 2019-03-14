@@ -113,7 +113,7 @@ class Boolean(Basic):
         if self.has(Relational) or other.has(Relational):
             raise NotImplementedError('handling of relationals')
         return self.atoms() == other.atoms() and \
-                not satisfiable(Not(Equivalent(self, other)))
+            not satisfiable(Not(Equivalent(self, other)))
 
     def to_nnf(self, simplify=True):
         # override where necessary
@@ -163,8 +163,8 @@ class Boolean(Basic):
     def binary_symbols(self):
         from sympy.core.relational import Eq, Ne
         return set().union(*[i.binary_symbols for i in self.args
-            if i.is_Boolean or i.is_Symbol
-            or isinstance(i, (Eq, Ne))])
+                           if i.is_Boolean or i.is_Symbol
+                           or isinstance(i, (Eq, Ne))])
 
 
 class BooleanAtom(Boolean):
@@ -255,10 +255,9 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
     ``True`` or ``False``, and does so in terms of structural equality
     rather than mathematical, so it should return ``True``. The assumptions
     system should use ``True`` and ``False``. Aside from not satisfying
-    the above rule of thumb, the
-    assumptions system uses a three-valued logic (``True``, ``False``, ``None``),
-    whereas ``S.true`` and ``S.false`` represent a two-valued logic. When in
-    doubt, use ``True``.
+    the above rule of thumb, the assumptions system uses a three-valued logic
+    (``True``, ``False``, ``None``), whereas ``S.true`` and ``S.false``
+    represent a two-valued logic. When in doubt, use ``True``.
 
     "``S.true == True is True``."
 
@@ -403,6 +402,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
         """
         return S.EmptySet
 
+
 true = BooleanTrue()
 false = BooleanFalse()
 # We want S.true and S.false to work, rather than S.BooleanTrue and
@@ -414,6 +414,7 @@ S.false = false
 
 converter[bool] = lambda x: S.true if x else S.false
 
+
 class BooleanFunction(Application, Boolean):
     """Boolean function is a function that lives in a boolean space
     It is used as base class for And, Or, Not, etc.
@@ -422,10 +423,12 @@ class BooleanFunction(Application, Boolean):
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
         rv = self.func(*[a._eval_simplify(ratio=ratio, measure=measure,
-            rational=rational, inverse=inverse) for a in self.args])
+                                          rational=rational, inverse=inverse)
+                         for a in self.args])
         return simplify_logic(rv)
 
-    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False,
+                 inverse=False):
         return self._eval_simplify(ratio, measure, rational, inverse)
 
     # /// drop when Py2 is no longer supported
@@ -505,7 +508,9 @@ class BooleanFunction(Application, Boolean):
         else:
             return S.Zero
 
-    def _apply_patternbased_simplification(self, rv, patterns, measure, dominatingvalue, replacementvalue=None):
+    def _apply_patternbased_simplification(self, rv, patterns, measure,
+                                           dominatingvalue,
+                                           replacementvalue=None):
         """
         Replace patterns of Relational
 
@@ -531,17 +536,21 @@ class BooleanFunction(Application, Boolean):
             evaluates to dominatingvalue.
             For example, for Nand S.false is dominating, but in this case
             the resulting value is S.true. Default is None. If replacementvalue
-            is None and dominatingvalue is not None, replacementvalue = dominatingvalue
+            is None and dominatingvalue is not None,
+            replacementvalue = dominatingvalue
         """
         from sympy.core.relational import Relational, _canonical
         if replacementvalue is None and dominatingvalue is not None:
             replacementvalue = dominatingvalue
         # Use replacement patterns for Relationals
         changed = True
-        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
+        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational),
+                           binary=True)
         if len(Rel) <= 1:
             return rv
-        Rel, nonRealRel = sift(rv.args, lambda i: all(s.is_real is not False for s in i.free_symbols), binary=True)
+        Rel, nonRealRel = sift(rv.args, lambda i: all(s.is_real is not False
+                                                      for s in i.free_symbols),
+                               binary=True)
         Rel = [i.canonical for i in Rel]
         while changed and len(Rel) >= 2:
             changed = False
@@ -559,7 +568,8 @@ class BooleanFunction(Application, Boolean):
                     if tmpres:
                         res.append((tmpres, oldexpr))
                     # Try reversing first relational
-                    # This and the rest should not be required with a better canonical
+                    # This and the rest should not be required with a better
+                    # canonical
                     oldexpr = rv.func(pi.reversed, pj)
                     tmpres = oldexpr.match(pattern)
                     if tmpres:
@@ -584,13 +594,16 @@ class BooleanFunction(Application, Boolean):
                                 # will be replacementvalue
                                 return replacementvalue
                             # add replacement
-                            if not isinstance(np, ITE): # We only want to use ITE replacements if they simplify
-                                costsaving = measure(oldexpr) - measure(np) # ratio?
+                            if not isinstance(np, ITE):
+                                # We only want to use ITE replacements if
+                                # they simplify to a relational
+                                costsaving = measure(oldexpr) - measure(np)
                                 if costsaving > 0:
                                     results.append((costsaving, (i, j, np)))
             if results:
                 # Sort results based on complexity
-                results = list(reversed(sorted(results, key=lambda pair: pair[0])))
+                results = list(reversed(sorted(results,
+                                               key=lambda pair: pair[0])))
                 # Replace the one providing most simplification
                 cost, replacement = results[0]
                 i, j, newrel = replacement
@@ -604,8 +617,10 @@ class BooleanFunction(Application, Boolean):
                 # We did change something so try again
                 changed = True
 
-        rv = rv.func(*([_canonical(i) for i in ordered(Rel)] + nonRel + nonRealRel))
+        rv = rv.func(*([_canonical(i) for i in ordered(Rel)]
+                     + nonRel + nonRealRel))
         return rv
+
 
 class And(LatticeOp, BooleanFunction):
     """
@@ -667,7 +682,8 @@ class And(LatticeOp, BooleanFunction):
             return rv
         # simplify args that are equalities involving
         # symbols so x == 0 & x == y -> x==0 & y == 0
-        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational), binary=True)
+        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational),
+                           binary=True)
         if not Rel:
             return rv
         eqs, other = sift(Rel, lambda i: isinstance(i, Equality), binary=True)
@@ -713,7 +729,8 @@ class And(LatticeOp, BooleanFunction):
         other = [ei.subs(reps) for ei in other]
         rv = rv.func(*([i.canonical for i in (eqs + other)] + nonRel))
         patterns = simplify_patterns_and()
-        return self._apply_patternbased_simplification(rv, patterns, measure, False)
+        return self._apply_patternbased_simplification(rv, patterns,
+                                                       measure, False)
 
     def _eval_as_set(self):
         from sympy.sets.sets import Intersection
@@ -779,7 +796,8 @@ class Or(LatticeOp, BooleanFunction):
         if not isinstance(rv, Or):
             return rv
         patterns = simplify_patterns_or()
-        return self._apply_patternbased_simplification(rv, patterns, measure, S.true)
+        return self._apply_patternbased_simplification(rv, patterns,
+                                                       measure, S.true)
 
 
 class Not(BooleanFunction):
@@ -887,7 +905,8 @@ class Not(BooleanFunction):
             return And._to_nnf(a, ~b, simplify=simplify)
 
         if func == Equivalent:
-            return And._to_nnf(Or(*args), Or(*[~arg for arg in args]), simplify=simplify)
+            return And._to_nnf(Or(*args), Or(*[~arg for arg in args]),
+                               simplify=simplify)
 
         if func == Xor:
             result = []
@@ -960,7 +979,8 @@ class Xor(BooleanFunction):
                 argset.remove(arg)
             else:
                 argset.add(arg)
-        rel = [(r, r.canonical, r.negated.canonical) for r in argset if r.is_Relational]
+        rel = [(r, r.canonical, r.negated.canonical)
+               for r in argset if r.is_Relational]
         odd = False  # is number of complimentary pairs odd? start 0 -> False
         remove = []
         for i, (r, c, nc) in enumerate(rel):
@@ -1006,13 +1026,16 @@ class Xor(BooleanFunction):
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
         # as standard simplify uses simplify_logic which writes things as
-        # And and Or, we only simplify the partial expressions before using patterns
+        # And and Or, we only simplify the partial expressions before using
+        # patterns
         rv = self.func(*[a._eval_simplify(ratio=ratio, measure=measure,
-            rational=rational, inverse=inverse) for a in self.args])
-        if not isinstance(rv, Xor): # This shouldn't really happen here
+                                          rational=rational, inverse=inverse)
+                       for a in self.args])
+        if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
         patterns = simplify_patterns_xor()
-        return self._apply_patternbased_simplification(rv, patterns, measure, None)
+        return self._apply_patternbased_simplification(rv, patterns,
+                                                       measure, None)
 
 
 class Nand(BooleanFunction):
@@ -1215,7 +1238,7 @@ class Equivalent(BooleanFunction):
 
         argset = set(args)
         for x in args:
-            if isinstance(x, Number) or x in [True, False]: # Includes 0, 1
+            if isinstance(x, Number) or x in [True, False]:  # Includes 0, 1
                 argset.discard(x)
                 argset.add(True if x else False)
         rel = []
@@ -1374,7 +1397,7 @@ class ITE(BooleanFunction):
         from sympy.functions import Piecewise
         return Piecewise((args[1], args[0]), (args[2], True))
 
-### end class definitions. Some useful methods
+# end class definitions. Some useful methods
 
 
 def conjuncts(expr):
@@ -1458,10 +1481,12 @@ def _distribute(info):
             return info[0]
         rest = info[2](*[a for a in info[0].args if a is not conj])
         return info[1](*list(map(_distribute,
-            [(info[2](c, rest), info[1], info[2]) for c in conj.args])))
+                                 [(info[2](c, rest), info[1], info[2])
+                                  for c in conj.args])))
     elif isinstance(info[0], info[1]):
         return info[1](*list(map(_distribute,
-            [(x, info[1], info[2]) for x in info[0].args])))
+                                 [(x, info[1], info[2])
+                                  for x in info[0].args])))
     else:
         return info[0]
 
@@ -1972,46 +1997,57 @@ def _rem_redundancy(l1, terms):
 
     if len(terms):
         # Create dominating matrix
-        dominationmatrix = [[0]*len(l1) for n in range(len(terms))]
+        dommatrix = [[0]*len(l1) for n in range(len(terms))]
         for primei, prime in enumerate(l1):
             for termi, term in enumerate(terms):
                 if _compare_term(term, prime):
-                    dominationmatrix[termi][primei] = 1
+                    dommatrix[termi][primei] = 1
 
-        nondominatedprimeimplicants = list(range(len(l1)))
-        nondominatedterms = list(range(len(terms)))
+        # Non-dominated prime implicants, dominated set to None
+        ndprimeimplicants = list(range(len(l1)))
+        # Non-dominated terms, dominated set to None
+        ndterms = list(range(len(terms)))
 
         # Mark dominated rows and columns
-        oldnondominatedterms = None
-        oldnondominatedprimeimplicants = None
-        while nondominatedterms != oldnondominatedterms or nondominatedprimeimplicants != oldnondominatedprimeimplicants:
-            oldnondominatedterms = nondominatedterms[:]
-            oldnondominatedprimeimplicants = nondominatedprimeimplicants[:]
-            for rowi, row in enumerate(dominationmatrix):
-                if nondominatedterms[rowi] is not None:
-                    row = [row[i] for i in [_ for _ in nondominatedprimeimplicants if _ is not None]]
-                    for row2i, row2 in enumerate(dominationmatrix):
-                        if rowi != row2i and nondominatedterms[row2i] is not None:
-                            row2 = [row2[i] for i in [_ for _ in nondominatedprimeimplicants if _ is not None]]
+        oldndterms = None
+        oldndprimeimplicants = None
+        while ndterms != oldndterms or \
+                ndprimeimplicants != oldndprimeimplicants:
+            oldndterms = ndterms[:]
+            oldndprimeimplicants = ndprimeimplicants[:]
+            for rowi, row in enumerate(dommatrix):
+                if ndterms[rowi] is not None:
+                    row = [row[i] for i in
+                           [_ for _ in ndprimeimplicants if _ is not None]]
+                    for row2i, row2 in enumerate(dommatrix):
+                        if rowi != row2i and ndterms[row2i] is not None:
+                            row2 = [row2[i] for i in
+                                    [_ for _ in ndprimeimplicants
+                                     if _ is not None]]
                             if all(a >= b for (a, b) in zip(row2, row)):
                                 # row2 dominating row, keep row
-                                nondominatedterms[row2i] = None
+                                ndterms[row2i] = None
             for coli in range(len(l1)):
-                if nondominatedprimeimplicants[coli] is not None:
-                    col = [dominationmatrix[a][coli] for a in range(len(terms))]
-                    col = [col[i] for i in [_ for _ in oldnondominatedterms if _ is not None]]
+                if ndprimeimplicants[coli] is not None:
+                    col = [dommatrix[a][coli] for a in range(len(terms))]
+                    col = [col[i] for i in
+                           [_ for _ in oldndterms if _ is not None]]
                     for col2i in range(len(l1)):
-                        if coli != col2i and nondominatedprimeimplicants[col2i] is not None:
-                            col2 = [dominationmatrix[a][col2i] for a in range(len(terms))]
-                            col2 = [col2[i] for i in [_ for _ in oldnondominatedterms if _ is not None]]
+                        if coli != col2i and \
+                                ndprimeimplicants[col2i] is not None:
+                            col2 = [dommatrix[a][col2i]
+                                    for a in range(len(terms))]
+                            col2 = [col2[i] for i in
+                                    [_ for _ in oldndterms if _ is not None]]
                             if all(a >= b for (a, b) in zip(col, col2)):
                                 # col dominating col2, keep col
-                                nondominatedprimeimplicants[col2i] = None
-        l1 = [l1[i] for i in [_ for _ in nondominatedprimeimplicants if _ is not None]]
+                                ndprimeimplicants[col2i] = None
+        l1 = [l1[i] for i in [_ for _ in ndprimeimplicants if _ is not None]]
 
         return l1
     else:
         return []
+
 
 def _input_to_binlist(inputlist, variables):
     binlist = []
@@ -2029,11 +2065,15 @@ def _input_to_binlist(inputlist, variables):
                 binlist.append([d[v] for v in variables])
         elif isinstance(val, (list, tuple)):
             if len(val) != bits:
-                raise ValueError("Each term must contain {} bits as there are {} variables\n(or be an integer)".format(bits, bits))
+                raise ValueError("Each term must contain {} bits as there are"
+                                 "\n{} variables (or be an integer)."
+                                 "".format(bits, bits))
             binlist.append(list(val))
         else:
-            raise TypeError("A term list can only contain lists, ints or dicts.")
+            raise TypeError("A term list can only contain lists,"
+                            " ints or dicts.")
     return binlist
+
 
 def SOPform(variables, minterms, dontcares=None):
     """
@@ -2262,7 +2302,7 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     variables = c + v
     truthtable = []
     # standardize constants to be 1 or 0 in keeping with truthtable
-    c = [1 if i==True else 0 for i in c]
+    c = [1 if i == True else 0 for i in c]
     for t in product([0, 1], repeat=len(v)):
         if expr.xreplace(dict(zip(v, t))) == True:
             truthtable.append(c + list(t))
@@ -2411,6 +2451,7 @@ def bool_map(bool1, bool2):
         return a, m
     return m
 
+
 def simplify_patterns_and():
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.core import Wild
@@ -2445,6 +2486,7 @@ def simplify_patterns_and():
                      )
     return _matchers_and
 
+
 def simplify_patterns_or():
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.core import Wild
@@ -2453,27 +2495,27 @@ def simplify_patterns_or():
     b = Wild('b')
     c = Wild('c')
     _matchers_or = ((Or(Eq(a, b), Ge(a, b)), Ge(a, b)),
-                     (Or(Eq(a, b), Gt(a, b)), Ge(a, b)),
-                     (Or(Eq(a, b), Le(a, b)), Le(a, b)),
-                     (Or(Eq(a, b), Lt(a, b)), Le(a, b)),
-                     (Or(Ge(a, b), Gt(a, b)), Ge(a, b)),
-                     (Or(Ge(a, b), Le(a, b)), S.true),
-                     (Or(Ge(a, b), Lt(a, b)), S.true),
-                     (Or(Ge(a, b), Ne(a, b)), S.true),
-                     (Or(Gt(a, b), Le(a, b)), S.true),
-                     (Or(Gt(a, b), Lt(a, b)), Ne(a, b)),
-                     (Or(Gt(a, b), Ne(a, b)), Ne(a, b)),
-                     (Or(Le(a, b), Lt(a, b)), Le(a, b)),
-                     (Or(Le(a, b), Ne(a, b)), S.true),
-                     (Or(Lt(a, b), Ne(a, b)), Ne(a, b)),
-                     # Min/max
-                     (Or(Ge(a, b), Ge(a, c)), Ge(a, Min(b, c))),
-                     (Or(Ge(a, b), Gt(a, c)), ITE(b > c, Gt(a, c), Ge(a, b))),
-                     (Or(Gt(a, b), Gt(a, c)), Gt(a, Min(b, c))),
-                     (Or(Le(a, b), Le(a, c)), Le(a, Max(b, c))),
-                     (Or(Le(a, b), Lt(a, c)), ITE(b >= c, Le(a, b), Lt(a, c))),
-                     (Or(Lt(a, b), Lt(a, c)), Lt(a, Max(b, c))),
-                     )
+                    (Or(Eq(a, b), Gt(a, b)), Ge(a, b)),
+                    (Or(Eq(a, b), Le(a, b)), Le(a, b)),
+                    (Or(Eq(a, b), Lt(a, b)), Le(a, b)),
+                    (Or(Ge(a, b), Gt(a, b)), Ge(a, b)),
+                    (Or(Ge(a, b), Le(a, b)), S.true),
+                    (Or(Ge(a, b), Lt(a, b)), S.true),
+                    (Or(Ge(a, b), Ne(a, b)), S.true),
+                    (Or(Gt(a, b), Le(a, b)), S.true),
+                    (Or(Gt(a, b), Lt(a, b)), Ne(a, b)),
+                    (Or(Gt(a, b), Ne(a, b)), Ne(a, b)),
+                    (Or(Le(a, b), Lt(a, b)), Le(a, b)),
+                    (Or(Le(a, b), Ne(a, b)), S.true),
+                    (Or(Lt(a, b), Ne(a, b)), Ne(a, b)),
+                    # Min/max
+                    (Or(Ge(a, b), Ge(a, c)), Ge(a, Min(b, c))),
+                    (Or(Ge(a, b), Gt(a, c)), ITE(b > c, Gt(a, c), Ge(a, b))),
+                    (Or(Gt(a, b), Gt(a, c)), Gt(a, Min(b, c))),
+                    (Or(Le(a, b), Le(a, c)), Le(a, Max(b, c))),
+                    (Or(Le(a, b), Lt(a, c)), ITE(b >= c, Le(a, b), Lt(a, c))),
+                    (Or(Lt(a, b), Lt(a, c)), Lt(a, Max(b, c))),
+                    )
     return _matchers_or
 
 def simplify_patterns_xor():
@@ -2498,11 +2540,19 @@ def simplify_patterns_xor():
                      (Xor(Le(a, b), Ne(a, b)), Ge(a, b)),
                      (Xor(Lt(a, b), Ne(a, b)), Gt(a, b)),
                      # Min/max
-                     (Xor(Ge(a, b), Ge(a, c)), And(Ge(a, Min(b, c)), Lt(a, Max(b, c)))),
-                     (Xor(Ge(a, b), Gt(a, c)), ITE(b > c, And(Gt(a, c), Lt(a, b)), And(Ge(a, b), Le(a, c)))),
-                     (Xor(Gt(a, b), Gt(a, c)), And(Gt(a, Min(b, c)), Le(a, Max(b, c)))),
-                     (Xor(Le(a, b), Le(a, c)), And(Le(a, Max(b, c)), Gt(a, Min(b, c)))),
-                     (Xor(Le(a, b), Lt(a, c)), ITE(b < c, And(Lt(a, c), Gt(a, b)), And(Le(a, b), Ge(a, c)))),
-                     (Xor(Lt(a, b), Lt(a, c)), And(Lt(a, Max(b, c)), Ge(a, Min(b, c)))),
+                     (Xor(Ge(a, b), Ge(a, c)),
+                      And(Ge(a, Min(b, c)), Lt(a, Max(b, c)))),
+                     (Xor(Ge(a, b), Gt(a, c)),
+                      ITE(b > c, And(Gt(a, c), Lt(a, b)),
+                          And(Ge(a, b), Le(a, c)))),
+                     (Xor(Gt(a, b), Gt(a, c)),
+                      And(Gt(a, Min(b, c)), Le(a, Max(b, c)))),
+                     (Xor(Le(a, b), Le(a, c)),
+                      And(Le(a, Max(b, c)), Gt(a, Min(b, c)))),
+                     (Xor(Le(a, b), Lt(a, c)),
+                      ITE(b < c, And(Lt(a, c), Gt(a, b)),
+                          And(Le(a, b), Ge(a, c)))),
+                     (Xor(Lt(a, b), Lt(a, c)),
+                      And(Lt(a, Max(b, c)), Ge(a, Min(b, c)))),
                      )
     return _matchers_xor

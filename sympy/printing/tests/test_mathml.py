@@ -1,28 +1,30 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, S, \
-    MatrixSymbol, Function, Derivative, log, Lambda
+    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, \
+    S, MatrixSymbol, Function, Derivative, log, true, false, Range, Min, Max, \
+    Lambda, IndexedBase, symbols
 from sympy.core.containers import Tuple
+from sympy.functions.combinatorial.factorials import factorial, factorial2, \
+    binomial
 from sympy.functions.elementary.complexes import re, im, Abs, conjugate
-from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.combinatorial.factorials import factorial, factorial2, binomial
-from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.zeta_functions import polylog, lerchphi
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, Xor, Not
 from sympy.matrices.expressions.determinant import Determinant
-from sympy.printing.mathml import mathml, MathMLContentPrinter, MathMLPresentationPrinter, \
-    MathMLPrinter
-from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, SymmetricDifference
+from sympy.printing.mathml import mathml, MathMLContentPrinter, \
+    MathMLPresentationPrinter, MathMLPrinter
+from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, \
+    SymmetricDifference
 from sympy.stats.rv import RandomSymbol
 from sympy.sets.sets import Interval
-from sympy.stats.rv import RandomSymbol
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
 y = Symbol('y')
 mp = MathMLContentPrinter()
 mpp = MathMLPresentationPrinter()
+
 
 def test_mathml_printer():
     m = MathMLPrinter()
@@ -110,6 +112,7 @@ def test_content_mathml_integrals():
     assert mml_1.childNodes[3].nodeName == 'uplimit'
     assert mml_1.childNodes[4].toxml() == mp._print(integrand).toxml()
 
+
 def test_content_mathml_matrices():
     A = Matrix([1, 2, 3])
     B = Matrix([[0, 5, 4], [2, 3, 1], [9, 7, 9]])
@@ -145,6 +148,7 @@ def test_content_mathml_matrices():
     assert mll_2.childNodes[2].childNodes[1].childNodes[0].nodeValue == '7'
     assert mll_2.childNodes[2].childNodes[2].nodeName == 'cn'
     assert mll_2.childNodes[2].childNodes[2].childNodes[0].nodeValue == '9'
+
 
 def test_content_mathml_sums():
     summand = x
@@ -405,7 +409,7 @@ def test_content_mathml_greek():
     assert mp.doprint(Symbol('omicron')) == '<ci>&#959;</ci>'
     assert mp.doprint(Symbol('pi')) == '<ci>&#960;</ci>'
     assert mp.doprint(Symbol('rho')) == '<ci>&#961;</ci>'
-    assert mp.doprint(Symbol('varsigma')) == '<ci>&#962;</ci>', mp.doprint(Symbol('varsigma'))
+    assert mp.doprint(Symbol('varsigma')) == '<ci>&#962;</ci>'
     assert mp.doprint(Symbol('sigma')) == '<ci>&#963;</ci>'
     assert mp.doprint(Symbol('tau')) == '<ci>&#964;</ci>'
     assert mp.doprint(Symbol('upsilon')) == '<ci>&#965;</ci>'
@@ -473,7 +477,11 @@ def test_content_settings():
 def test_presentation_printmethod():
     assert mpp.doprint(1 + x) == '<mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow>'
     assert mpp.doprint(x**2) == '<msup><mi>x</mi><mn>2</mn></msup>'
-    assert mpp.doprint(2*x) == '<mrow><mn>2</mn><mo>&InvisibleTimes;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(x**-1) == '<mfrac><mn>1</mn><mi>x</mi></mfrac>'
+    assert mpp.doprint(x**-2) == \
+        '<mfrac><mn>1</mn><msup><mi>x</mi><mn>2</mn></msup></mfrac>'
+    assert mpp.doprint(2*x) == \
+        '<mrow><mn>2</mn><mo>&InvisibleTimes;</mo><mi>x</mi></mrow>'
 
 
 def test_presentation_mathml_core():
@@ -539,8 +547,10 @@ def test_print_derivative():
     f = Function('f')
     z = Symbol('z')
     d = Derivative(f(x, y, z), x, z, x, z, z, y)
-    assert mathml(d) == r'<apply><partialdiff/><bvar><ci>y</ci><ci>z</ci><degree><cn>2</cn></degree><ci>x</ci><ci>z</ci><ci>x</ci></bvar><apply><f/><ci>x</ci><ci>y</ci><ci>z</ci></apply></apply>'
-    assert mathml(d, printer='presentation') == r'<mrow><mfrac><mrow><msup><mo>&#x2202;</mo><mn>6</mn></msup></mrow><mrow><mo>&#x2202;</mo><mi>y</mi><msup><mo>&#x2202;</mo><mn>2</mn></msup><mi>z</mi><mo>&#x2202;</mo><mi>x</mi><mo>&#x2202;</mo><mi>z</mi><mo>&#x2202;</mo><mi>x</mi></mrow></mfrac><mrow><mi>f</mi><mfenced><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow></mrow>'
+    assert mathml(d) == \
+        '<apply><partialdiff/><bvar><ci>y</ci><ci>z</ci><degree><cn>2</cn></degree><ci>x</ci><ci>z</ci><ci>x</ci></bvar><apply><f/><ci>x</ci><ci>y</ci><ci>z</ci></apply></apply>'
+    assert mathml(d, printer='presentation') == \
+        '<mrow><mfrac><mrow><msup><mo>&#x2202;</mo><mn>6</mn></msup></mrow><mrow><mo>&#x2202;</mo><mi>y</mi><msup><mo>&#x2202;</mo><mn>2</mn></msup><mi>z</mi><mo>&#x2202;</mo><mi>x</mi><mo>&#x2202;</mo><mi>z</mi><mo>&#x2202;</mo><mi>x</mi></mrow></mfrac><mrow><mi>f</mi><mfenced><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow></mrow>'
 
 
 def test_presentation_mathml_limits():
@@ -561,16 +571,21 @@ def test_presentation_mathml_limits():
 
 
 def test_presentation_mathml_integrals():
-    integrand = x
-    mml_1 = mpp._print(Integral(integrand, (x, 0, 1)))
-    assert mml_1.childNodes[0].nodeName == 'msubsup'
-    assert len(mml_1.childNodes[0].childNodes) == 3
-    assert mml_1.childNodes[0].childNodes[0
-        ].childNodes[0].nodeValue == '&int;'
-    assert mml_1.childNodes[0].childNodes[1
-        ].childNodes[0].nodeValue == '0'
-    assert mml_1.childNodes[0].childNodes[2
-        ].childNodes[0].nodeValue == '1'
+    assert mpp.doprint(Integral(x, (x, 0, 1))) == \
+        '<mrow><msubsup><mo>&#x222B;</mo><mn>0</mn><mn>1</mn></msubsup><mi>x</mi><mo>&dd;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(Integral(log(x), x)) == \
+        '<mrow><mo>&#x222B;</mo><mrow><mi>log</mi><mfenced><mi>x</mi></mfenced></mrow><mo>&dd;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(Integral(x*y, x, y)) == \
+        '<mrow><mo>&#x222C;</mo><mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi></mrow><mo>&dd;</mo><mi>y</mi><mo>&dd;</mo><mi>x</mi></mrow>'
+    z, w = symbols('z w')
+    assert mpp.doprint(Integral(x*y*z, x, y, z)) == \
+        '<mrow><mo>&#x222D;</mo><mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi><mo>&InvisibleTimes;</mo><mi>z</mi></mrow><mo>&dd;</mo><mi>z</mi><mo>&dd;</mo><mi>y</mi><mo>&dd;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(Integral(x*y*z*w, x, y, z, w)) == \
+        '<mrow><mo>&#x222B;</mo><mo>&#x222B;</mo><mo>&#x222B;</mo><mo>&#x222B;</mo><mrow><mi>w</mi><mo>&InvisibleTimes;</mo><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi><mo>&InvisibleTimes;</mo><mi>z</mi></mrow><mo>&dd;</mo><mi>w</mi><mo>&dd;</mo><mi>z</mi><mo>&dd;</mo><mi>y</mi><mo>&dd;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(Integral(x, x, y, (z, 0, 1))) == \
+        '<mrow><msubsup><mo>&#x222B;</mo><mn>0</mn><mn>1</mn></msubsup><mo>&#x222B;</mo><mo>&#x222B;</mo><mi>x</mi><mo>&dd;</mo><mi>z</mi><mo>&dd;</mo><mi>y</mi><mo>&dd;</mo><mi>x</mi></mrow>'
+    assert mpp.doprint(Integral(x, (x, 0))) == \
+        '<mrow><msup><mo>&#x222B;</mo><mn>0</mn></msup><mi>x</mi><mo>&dd;</mo><mi>x</mi></mrow>'
 
 
 def test_presentation_mathml_matrices():
@@ -857,7 +872,7 @@ def test_presentation_mathml_greek():
     assert mpp.doprint(Symbol('omicron')) == '<mi>&#959;</mi>'
     assert mpp.doprint(Symbol('pi')) == '<mi>&#960;</mi>'
     assert mpp.doprint(Symbol('rho')) == '<mi>&#961;</mi>'
-    assert mpp.doprint(Symbol('varsigma')) == '<mi>&#962;</mi>', mp.doprint(Symbol('varsigma'))
+    assert mpp.doprint(Symbol('varsigma')) == '<mi>&#962;</mi>'
     assert mpp.doprint(Symbol('sigma')) == '<mi>&#963;</mi>'
     assert mpp.doprint(Symbol('tau')) == '<mi>&#964;</mi>'
     assert mpp.doprint(Symbol('upsilon')) == '<mi>&#965;</mi>'
@@ -919,49 +934,69 @@ def test_presentation_mathml_order():
 
 def test_print_intervals():
     a = Symbol('a', real=True)
-    assert mpp.doprint(Interval(0, a)) == '<mrow><mfenced close="]" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
-    assert mpp.doprint(Interval(0, a, False, False)) == '<mrow><mfenced close="]" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
-    assert mpp.doprint(Interval(0, a, True, False)) == '<mrow><mfenced close="]" open="("><mn>0</mn><mi>a</mi></mfenced></mrow>'
-    assert mpp.doprint(Interval(0, a, False, True)) == '<mrow><mfenced close=")" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
-    assert mpp.doprint(Interval(0, a, True, True)) == '<mrow><mfenced close=")" open="("><mn>0</mn><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Interval(0, a)) == \
+        '<mrow><mfenced close="]" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Interval(0, a, False, False)) == \
+        '<mrow><mfenced close="]" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Interval(0, a, True, False)) == \
+        '<mrow><mfenced close="]" open="("><mn>0</mn><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Interval(0, a, False, True)) == \
+        '<mrow><mfenced close=")" open="["><mn>0</mn><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Interval(0, a, True, True)) == \
+        '<mrow><mfenced close=")" open="("><mn>0</mn><mi>a</mi></mfenced></mrow>'
 
 
 def test_print_tuples():
     a = Symbol('a')
-    assert mpp.doprint(Tuple(0,)) == '<mrow><mfenced><mn>0</mn></mfenced></mrow>'
-    assert mpp.doprint(Tuple(0, a)) == '<mrow><mfenced><mn>0</mn><mi>a</mi></mfenced></mrow>'
-    assert mpp.doprint(Tuple(0, a, a)) == '<mrow><mfenced><mn>0</mn><mi>a</mi><mi>a</mi></mfenced></mrow>'
-    assert mpp.doprint(Tuple(0, 1, 2, 3, 4)) == '<mrow><mfenced><mn>0</mn><mn>1</mn><mn>2</mn><mn>3</mn><mn>4</mn></mfenced></mrow>'
-    assert mpp.doprint(Tuple(0, 1, Tuple(2, 3, 4))) == '<mrow><mfenced><mn>0</mn><mn>1</mn><mrow><mfenced><mn>2</mn><mn>3</mn><mn>4</mn></mfenced></mrow></mfenced></mrow>'
+    assert mpp.doprint(Tuple(0,)) == \
+        '<mrow><mfenced><mn>0</mn></mfenced></mrow>'
+    assert mpp.doprint(Tuple(0, a)) == \
+        '<mrow><mfenced><mn>0</mn><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Tuple(0, a, a)) == \
+        '<mrow><mfenced><mn>0</mn><mi>a</mi><mi>a</mi></mfenced></mrow>'
+    assert mpp.doprint(Tuple(0, 1, 2, 3, 4)) == \
+        '<mrow><mfenced><mn>0</mn><mn>1</mn><mn>2</mn><mn>3</mn><mn>4</mn></mfenced></mrow>'
+    assert mpp.doprint(Tuple(0, 1, Tuple(2, 3, 4))) == \
+        '<mrow><mfenced><mn>0</mn><mn>1</mn><mrow><mfenced><mn>2</mn><mn>3</mn><mn>4</mn></mfenced></mrow></mfenced></mrow>'
 
 
 def test_print_re_im():
     x = Symbol('x')
-    assert mpp.doprint(re(x)) == '<mrow><mi mathvariant="fraktur">R</mi><mfenced><mi>x</mi></mfenced></mrow>'
-    assert mpp.doprint(im(x)) == '<mrow><mi mathvariant="fraktur">I</mi><mfenced><mi>x</mi></mfenced></mrow>'
-    assert mpp.doprint(re(x + 1)) == '<mrow><mrow><mi mathvariant="fraktur">R</mi><mfenced><mi>x</mi></mfenced></mrow><mo>+</mo><mn>1</mn></mrow>'
-    assert mpp.doprint(im(x + 1)) == '<mrow><mi mathvariant="fraktur">I</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(re(x)) == \
+        '<mrow><mi mathvariant="fraktur">R</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(im(x)) == \
+        '<mrow><mi mathvariant="fraktur">I</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(re(x + 1)) == \
+        '<mrow><mrow><mi mathvariant="fraktur">R</mi><mfenced><mi>x</mi></mfenced></mrow><mo>+</mo><mn>1</mn></mrow>'
+    assert mpp.doprint(im(x + 1)) == \
+        '<mrow><mi mathvariant="fraktur">I</mi><mfenced><mi>x</mi></mfenced></mrow>'
 
 
 def test_print_Abs():
     x = Symbol('x')
-    assert mpp.doprint(Abs(x)) == '<mrow><mfenced close="|" open="|"><mi>x</mi></mfenced></mrow>'
-    assert mpp.doprint(Abs(x + 1)) == '<mrow><mfenced close="|" open="|"><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced></mrow>'
+    assert mpp.doprint(Abs(x)) == \
+        '<mrow><mfenced close="|" open="|"><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(Abs(x + 1)) == \
+        '<mrow><mfenced close="|" open="|"><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced></mrow>'
 
 
 def test_print_Determinant():
-    assert mpp.doprint(Determinant(Matrix([[1, 2], [3, 4]]))) == '<mrow><mfenced close="|" open="|"><mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced></mfenced></mrow>'
+    assert mpp.doprint(Determinant(Matrix([[1, 2], [3, 4]]))) == \
+        '<mrow><mfenced close="|" open="|"><mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced></mfenced></mrow>'
 
 
 def test_presentation_settings():
-    raises(TypeError, lambda: mathml(Symbol("x"), printer='presentation',method="garbage"))
+    raises(TypeError, lambda: mathml(Symbol("x"), printer='presentation',
+                                     method="garbage"))
+
 
 def test_toprettyxml_hooking():
-    # test that the patch doesn't influence the behavior of the standard library
+    # test that the patch doesn't influence the behavior of the standard
+    # library
     import xml.dom.minidom
     doc1 = xml.dom.minidom.parseString(
         "<apply><plus/><ci>x</ci><cn>1</cn></apply>")
-    doc2 =  xml.dom.minidom.parseString(
+    doc2 = xml.dom.minidom.parseString(
         "<mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow>")
     prettyxml_old1 = doc1.toprettyxml()
     prettyxml_old2 = doc2.toprettyxml()
@@ -979,163 +1014,288 @@ def test_print_domains():
     assert mpp.doprint(Complexes) == '<mi mathvariant="normal">&#x2102;</mi>'
     assert mpp.doprint(Integers) == '<mi mathvariant="normal">&#x2124;</mi>'
     assert mpp.doprint(Naturals) == '<mi mathvariant="normal">&#x2115;</mi>'
-    assert mpp.doprint(Naturals0) == '<msub><mi mathvariant="normal">&#x2115;</mi><mn>0</mn></msub>'
+    assert mpp.doprint(Naturals0) == \
+        '<msub><mi mathvariant="normal">&#x2115;</mi><mn>0</mn></msub>'
     assert mpp.doprint(Reals) == '<mi mathvariant="normal">&#x211D;</mi>'
 
 
 def test_print_expression_with_minus():
     assert mpp.doprint(-x) == '<mrow><mo>-</mo><mi>x</mi></mrow>'
-    assert mpp.doprint(-x/y) == '<mrow><mo>-</mo><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow>'
-    assert mpp.doprint(-Rational(1,2)) == '<mrow><mo>-</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow>'
+    assert mpp.doprint(-x/y) == \
+        '<mrow><mo>-</mo><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow>'
+    assert mpp.doprint(-Rational(1, 2)) == \
+        '<mrow><mo>-</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow>'
 
 
 def test_print_AssocOp():
     from sympy.core.operations import AssocOp
+
     class TestAssocOp(AssocOp):
         identity = 0
 
     expr = TestAssocOp(1, 2)
-    mpp.doprint(expr) == '<mrow><mi>testassocop</mi><mn>2</mn><mn>1</mn></mrow>'
+    mpp.doprint(expr) == \
+        '<mrow><mi>testassocop</mi><mn>2</mn><mn>1</mn></mrow>'
 
 
 def test_print_basic():
     expr = Basic(1, 2)
-    assert mpp.doprint(expr) == '<mrow><mi>basic</mi><mfenced><mn>1</mn><mn>2</mn></mfenced></mrow>'
+    assert mpp.doprint(expr) == \
+        '<mrow><mi>basic</mi><mfenced><mn>1</mn><mn>2</mn></mfenced></mrow>'
     assert mp.doprint(expr) == '<basic><cn>1</cn><cn>2</cn></basic>'
 
 
 def test_mat_delim_print():
     expr = Matrix([[1, 2], [3, 4]])
-    assert mathml(expr, printer='presentation', mat_delim='[') == '<mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
-    assert mathml(expr, printer='presentation', mat_delim='(') == '<mfenced><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
-    assert mathml(expr, printer='presentation', mat_delim='') == '<mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable>'
+    assert mathml(expr, printer='presentation', mat_delim='[') == \
+        '<mfenced close="]" open="["><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
+    assert mathml(expr, printer='presentation', mat_delim='(') == \
+        '<mfenced><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></mfenced>'
+    assert mathml(expr, printer='presentation', mat_delim='') == \
+        '<mtable><mtr><mtd><mn>1</mn></mtd><mtd><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable>'
 
 
 def test_ln_notation_print():
     expr = log(x)
-    assert mathml(expr, printer='presentation') == '<mrow><mi>log</mi><mfenced><mi>x</mi></mfenced></mrow>'
-    assert mathml(expr, printer='presentation', ln_notation=False) == '<mrow><mi>log</mi><mfenced><mi>x</mi></mfenced></mrow>'
-    assert mathml(expr, printer='presentation', ln_notation=True) == '<mrow><mi>ln</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(expr, printer='presentation') == \
+        '<mrow><mi>log</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(expr, printer='presentation', ln_notation=False) == \
+        '<mrow><mi>log</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(expr, printer='presentation', ln_notation=True) == \
+        '<mrow><mi>ln</mi><mfenced><mi>x</mi></mfenced></mrow>'
 
 
 def test_mul_symbol_print():
     expr = x * y
-    assert mathml(expr, printer='presentation') == '<mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi></mrow>'
-    assert mathml(expr, printer='presentation', mul_symbol=None) == '<mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi></mrow>'
-    assert mathml(expr, printer='presentation', mul_symbol='dot') == '<mrow><mi>x</mi><mo>&#xB7;</mo><mi>y</mi></mrow>'
-    assert mathml(expr, printer='presentation', mul_symbol='ldot') == '<mrow><mi>x</mi><mo>&#x2024;</mo><mi>y</mi></mrow>'
-    assert mathml(expr, printer='presentation', mul_symbol='times') == '<mrow><mi>x</mi><mo>&#xD7;</mo><mi>y</mi></mrow>'
+    assert mathml(expr, printer='presentation') == \
+        '<mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi></mrow>'
+    assert mathml(expr, printer='presentation', mul_symbol=None) == \
+        '<mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mi>y</mi></mrow>'
+    assert mathml(expr, printer='presentation', mul_symbol='dot') == \
+        '<mrow><mi>x</mi><mo>&#xB7;</mo><mi>y</mi></mrow>'
+    assert mathml(expr, printer='presentation', mul_symbol='ldot') == \
+        '<mrow><mi>x</mi><mo>&#x2024;</mo><mi>y</mi></mrow>'
+    assert mathml(expr, printer='presentation', mul_symbol='times') == \
+        '<mrow><mi>x</mi><mo>&#xD7;</mo><mi>y</mi></mrow>'
 
 
 def test_print_lerchphi():
-    assert mpp.doprint(lerchphi(1, 2, 3)) == '<mrow><mi>&#x3A6;</mi><mfenced><mn>1</mn><mn>2</mn><mn>3</mn></mfenced></mrow>'
+    assert mpp.doprint(lerchphi(1, 2, 3)) == \
+        '<mrow><mi>&#x3A6;</mi><mfenced><mn>1</mn><mn>2</mn><mn>3</mn></mfenced></mrow>'
 
 
 def test_print_polylog():
-    assert mp.doprint(polylog(x, y)) == '<apply><polylog/><ci>x</ci><ci>y</ci></apply>'
-    assert mpp.doprint(polylog(x, y)) == '<mrow><msub><mi>Li</mi><mi>x</mi></msub><mfenced><mi>y</mi></mfenced></mrow>'
+    assert mp.doprint(polylog(x, y)) == \
+        '<apply><polylog/><ci>x</ci><ci>y</ci></apply>'
+    assert mpp.doprint(polylog(x, y)) == \
+        '<mrow><msub><mi>Li</mi><mi>x</mi></msub><mfenced><mi>y</mi></mfenced></mrow>'
 
 
 def test_print_set_frozenset():
     f = frozenset({1, 5, 3})
-    assert mpp.doprint(f) == '<mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mn>5</mn></mfenced>'
+    assert mpp.doprint(f) == \
+        '<mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mn>5</mn></mfenced>'
     s = set({1, 2, 3})
-    assert mpp.doprint(s) == '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mn>3</mn></mfenced>'
+    assert mpp.doprint(s) == \
+        '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mn>3</mn></mfenced>'
 
 
 def test_print_FiniteSet():
     f1 = FiniteSet(x, 1, 3)
-    assert mpp.doprint(f1) == '<mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced>'
+    assert mpp.doprint(f1) == \
+        '<mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced>'
 
 
 def test_print_SetOp():
     f1 = FiniteSet(x, 1, 3)
     f2 = FiniteSet(y, 2, 4)
 
-    assert mpp.doprint(Union(f1, f2, evaluate=False)) == '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x222A;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
-    assert mpp.doprint(Intersection(f1, f2, evaluate=False)) == '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x2229;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
-    assert mpp.doprint(Complement(f1, f2, evaluate=False)) == '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x2216;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
-    assert mpp.doprint(SymmetricDifference(f1, f2, evaluate=False)) == '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x2206;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
+    assert mpp.doprint(Union(f1, f2, evaluate=False)) == \
+    '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x222A;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
+    assert mpp.doprint(Intersection(f1, f2, evaluate=False)) == \
+    '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x2229;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
+    assert mpp.doprint(Complement(f1, f2, evaluate=False)) == \
+    '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x2216;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
+    assert mpp.doprint(SymmetricDifference(f1, f2, evaluate=False)) == \
+    '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced><mo>&#x2206;</mo><mfenced close="}" open="{"><mn>2</mn><mn>4</mn><mi>y</mi></mfenced></mrow>'
 
 
 def test_print_logic():
-    assert mpp.doprint(And(x, y)) == '<mrow><mi>x</mi><mo>&#x2227;</mo><mi>y</mi></mrow>'
-    assert mpp.doprint(Or(x, y)) == '<mrow><mi>x</mi><mo>&#x2228;</mo><mi>y</mi></mrow>'
-    assert mpp.doprint(Xor(x, y)) == '<mrow><mi>x</mi><mo>&#x22BB;</mo><mi>y</mi></mrow>'
-    assert mpp.doprint(Implies(x, y)) == '<mrow><mi>x</mi><mo>&#x21D2;</mo><mi>y</mi></mrow>'
-    assert mpp.doprint(Equivalent(x, y)) == '<mrow><mi>x</mi><mo>&#x21D4;</mo><mi>y</mi></mrow>'
+    assert mpp.doprint(And(x, y)) == \
+        '<mrow><mi>x</mi><mo>&#x2227;</mo><mi>y</mi></mrow>'
+    assert mpp.doprint(Or(x, y)) == \
+        '<mrow><mi>x</mi><mo>&#x2228;</mo><mi>y</mi></mrow>'
+    assert mpp.doprint(Xor(x, y)) == \
+        '<mrow><mi>x</mi><mo>&#x22BB;</mo><mi>y</mi></mrow>'
+    assert mpp.doprint(Implies(x, y)) == \
+        '<mrow><mi>x</mi><mo>&#x21D2;</mo><mi>y</mi></mrow>'
+    assert mpp.doprint(Equivalent(x, y)) == \
+        '<mrow><mi>x</mi><mo>&#x21D4;</mo><mi>y</mi></mrow>'
 
-    assert mpp.doprint(And(Eq(x, y), x > 4)) == '<mrow><mrow><mi>x</mi><mo>=</mo><mi>y</mi></mrow><mo>&#x2227;</mo><mrow><mi>x</mi><mo>></mo><mn>4</mn></mrow></mrow>'
-    assert mpp.doprint(And(Eq(x, 3), y < 3, x > y + 1)) == '<mrow><mrow><mi>x</mi><mo>=</mo><mn>3</mn></mrow><mo>&#x2227;</mo><mrow><mi>x</mi><mo>></mo><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow></mrow><mo>&#x2227;</mo><mrow><mi>y</mi><mo><</mo><mn>3</mn></mrow></mrow>'
-    assert mpp.doprint(Or(Eq(x, y), x > 4)) == '<mrow><mrow><mi>x</mi><mo>=</mo><mi>y</mi></mrow><mo>&#x2228;</mo><mrow><mi>x</mi><mo>></mo><mn>4</mn></mrow></mrow>'
-    assert mpp.doprint(And(Eq(x, 3), Or(y < 3, x > y + 1))) == '<mrow><mrow><mi>x</mi><mo>=</mo><mn>3</mn></mrow><mo>&#x2227;</mo><mfenced><mrow><mrow><mi>x</mi><mo>></mo><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow></mrow><mo>&#x2228;</mo><mrow><mi>y</mi><mo><</mo><mn>3</mn></mrow></mrow></mfenced></mrow>'
+    assert mpp.doprint(And(Eq(x, y), x > 4)) == \
+        '<mrow><mrow><mi>x</mi><mo>=</mo><mi>y</mi></mrow><mo>&#x2227;</mo><mrow><mi>x</mi><mo>></mo><mn>4</mn></mrow></mrow>'
+    assert mpp.doprint(And(Eq(x, 3), y < 3, x > y + 1)) == \
+        '<mrow><mrow><mi>x</mi><mo>=</mo><mn>3</mn></mrow><mo>&#x2227;</mo><mrow><mi>x</mi><mo>></mo><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow></mrow><mo>&#x2227;</mo><mrow><mi>y</mi><mo><</mo><mn>3</mn></mrow></mrow>'
+    assert mpp.doprint(Or(Eq(x, y), x > 4)) == \
+        '<mrow><mrow><mi>x</mi><mo>=</mo><mi>y</mi></mrow><mo>&#x2228;</mo><mrow><mi>x</mi><mo>></mo><mn>4</mn></mrow></mrow>'
+    assert mpp.doprint(And(Eq(x, 3), Or(y < 3, x > y + 1))) == \
+        '<mrow><mrow><mi>x</mi><mo>=</mo><mn>3</mn></mrow><mo>&#x2227;</mo><mfenced><mrow><mrow><mi>x</mi><mo>></mo><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow></mrow><mo>&#x2228;</mo><mrow><mi>y</mi><mo><</mo><mn>3</mn></mrow></mrow></mfenced></mrow>'
 
     assert mpp.doprint(Not(x)) == '<mrow><mo>&#xAC;</mo><mi>x</mi></mrow>'
-    assert mpp.doprint(Not(And(x, y))) == '<mrow><mo>&#xAC;</mo><mfenced><mrow><mi>x</mi><mo>&#x2227;</mo><mi>y</mi></mrow></mfenced></mrow>'
+    assert mpp.doprint(Not(And(x, y))) == \
+        '<mrow><mo>&#xAC;</mo><mfenced><mrow><mi>x</mi><mo>&#x2227;</mo><mi>y</mi></mrow></mfenced></mrow>'
+
 
 def test_root_notation_print():
-    assert mathml(x**(S(1)/3), printer='presentation') == '<mroot><mi>x</mi><mn>3</mn></mroot>'
-    assert mathml(x**(S(1)/3), printer='presentation', root_notation=False) == '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
-    assert mathml(x**(S(1)/3), printer='content') == '<apply><root/><degree><ci>3</ci></degree><ci>x</ci></apply>'
-    assert mathml(x**(S(1)/3), printer='content', root_notation=False) == '<apply><power/><ci>x</ci><apply><divide/><cn>1</cn><cn>3</cn></apply></apply>'
-    assert mathml(x**(-S(1)/3), printer='presentation') == '<mfrac><mn>1</mn><mroot><mi>x</mi><mn>3</mn></mroot></mfrac>'
-    assert mathml(x**(-S(1)/3), printer='presentation', root_notation=False) == '<mfrac><mn>1</mn><msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup></mfrac>'
+    assert mathml(x**(S(1)/3), printer='presentation') == \
+        '<mroot><mi>x</mi><mn>3</mn></mroot>'
+    assert mathml(x**(S(1)/3), printer='presentation', root_notation=False) ==\
+        '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
+    assert mathml(x**(S(1)/3), printer='content') == \
+        '<apply><root/><degree><ci>3</ci></degree><ci>x</ci></apply>'
+    assert mathml(x**(S(1)/3), printer='content', root_notation=False) == \
+        '<apply><power/><ci>x</ci><apply><divide/><cn>1</cn><cn>3</cn></apply></apply>'
+    assert mathml(x**(-S(1)/3), printer='presentation') == \
+        '<mfrac><mn>1</mn><mroot><mi>x</mi><mn>3</mn></mroot></mfrac>'
+    assert mathml(x**(-S(1)/3), printer='presentation', root_notation=False) \
+        == '<mfrac><mn>1</mn><msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup></mfrac>'
 
 
 def test_fold_frac_powers_print():
     expr = x ** Rational(5, 2)
-    assert mathml(expr, printer='presentation') == '<msup><mi>x</mi><mfrac><mn>5</mn><mn>2</mn></mfrac></msup>'
-    assert mathml(expr, printer='presentation', fold_frac_powers=True) == '<msup><mi>x</mi><mfrac bevelled="true"><mn>5</mn><mn>2</mn></mfrac></msup>'
-    assert mathml(expr, printer='presentation', fold_frac_powers=False) == '<msup><mi>x</mi><mfrac><mn>5</mn><mn>2</mn></mfrac></msup>'
+    assert mathml(expr, printer='presentation') == \
+        '<msup><mi>x</mi><mfrac><mn>5</mn><mn>2</mn></mfrac></msup>'
+    assert mathml(expr, printer='presentation', fold_frac_powers=True) == \
+        '<msup><mi>x</mi><mfrac bevelled="true"><mn>5</mn><mn>2</mn></mfrac></msup>'
+    assert mathml(expr, printer='presentation', fold_frac_powers=False) == \
+        '<msup><mi>x</mi><mfrac><mn>5</mn><mn>2</mn></mfrac></msup>'
 
 
 def test_fold_short_frac_print():
     expr = Rational(2, 5)
-    assert mathml(expr, printer='presentation') == '<mfrac><mn>2</mn><mn>5</mn></mfrac>'
-    assert mathml(expr, printer='presentation', fold_short_frac=True) == '<mfrac bevelled="true"><mn>2</mn><mn>5</mn></mfrac>'
-    assert mathml(expr, printer='presentation', fold_short_frac=False) == '<mfrac><mn>2</mn><mn>5</mn></mfrac>'
+    assert mathml(expr, printer='presentation') == \
+        '<mfrac><mn>2</mn><mn>5</mn></mfrac>'
+    assert mathml(expr, printer='presentation', fold_short_frac=True) == \
+        '<mfrac bevelled="true"><mn>2</mn><mn>5</mn></mfrac>'
+    assert mathml(expr, printer='presentation', fold_short_frac=False) == \
+        '<mfrac><mn>2</mn><mn>5</mn></mfrac>'
 
 
 def test_print_factorials():
     assert mpp.doprint(factorial(x)) == '<mrow><mi>x</mi><mo>!</mo></mrow>'
-    assert mpp.doprint(factorial(x + 1)) == '<mrow><mfenced><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced><mo>!</mo></mrow>'
+    assert mpp.doprint(factorial(x + 1)) == \
+        '<mrow><mfenced><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced><mo>!</mo></mrow>'
     assert mpp.doprint(factorial2(x)) == '<mrow><mi>x</mi><mo>!!</mo></mrow>'
-    assert mpp.doprint(factorial2(x + 1)) == '<mrow><mfenced><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced><mo>!!</mo></mrow>'
-    assert mpp.doprint(binomial(x, y)) == '<mfenced><mfrac linethickness="0"><mi>x</mi><mi>y</mi></mfrac></mfenced>'
-    assert mpp.doprint(binomial(4, x + y)) == '<mfenced><mfrac linethickness="0"><mn>4</mn><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow></mfrac></mfenced>'
+    assert mpp.doprint(factorial2(x + 1)) == \
+        '<mrow><mfenced><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mfenced><mo>!!</mo></mrow>'
+    assert mpp.doprint(binomial(x, y)) == \
+        '<mfenced><mfrac linethickness="0"><mi>x</mi><mi>y</mi></mfrac></mfenced>'
+    assert mpp.doprint(binomial(4, x + y)) == \
+        '<mfenced><mfrac linethickness="0"><mn>4</mn><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow></mfrac></mfenced>'
 
 
 def test_print_floor():
     expr = floor(x)
-    assert mathml(expr, printer='presentation') == '<mrow><mfenced close="&#8971;" open="&#8970;"><mi>x</mi></mfenced></mrow>'
+    assert mathml(expr, printer='presentation') == \
+        '<mrow><mfenced close="&#8971;" open="&#8970;"><mi>x</mi></mfenced></mrow>'
 
 
 def test_print_ceiling():
     expr = ceiling(x)
-    assert mathml(expr, printer='presentation') == '<mrow><mfenced close="&#8969;" open="&#8968;"><mi>x</mi></mfenced></mrow>'
+    assert mathml(expr, printer='presentation') == \
+        '<mrow><mfenced close="&#8969;" open="&#8968;"><mi>x</mi></mfenced></mrow>'
 
 
 def test_print_Lambda():
     expr = Lambda(x, x+1)
-    assert mathml(expr, printer='presentation') == '<mfenced><mrow><mi>x</mi><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mrow></mfenced>'
+    assert mathml(expr, printer='presentation') == \
+        '<mfenced><mrow><mi>x</mi><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow></mrow></mfenced>'
     expr = Lambda((x, y), x + y)
-    assert mathml(expr, printer='presentation') == '<mfenced><mrow><mrow><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow></mrow></mfenced>'
+    assert mathml(expr, printer='presentation') == \
+        '<mfenced><mrow><mrow><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow><mo>&#x21A6;</mo><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow></mrow></mfenced>'
 
 
 def test_print_conjugate():
-    assert mpp.doprint(conjugate(x)) == '<menclose notation="top"><mi>x</mi></menclose>'
-    assert mpp.doprint(conjugate(x + 1)) == '<mrow><menclose notation="top"><mi>x</mi></menclose><mo>+</mo><mn>1</mn></mrow>'
+    assert mpp.doprint(conjugate(x)) == \
+        '<menclose notation="top"><mi>x</mi></menclose>'
+    assert mpp.doprint(conjugate(x + 1)) == \
+        '<mrow><menclose notation="top"><mi>x</mi></menclose><mo>+</mo><mn>1</mn></mrow>'
+
+
+def test_mathml_builtins():
+    assert mpp.doprint(None) == '<mi>None</mi>'
+    assert mpp.doprint(true) == '<mi>True</mi>'
+    assert mpp.doprint(false) == '<mi>False</mi>'
+
+
+def test_mathml_Range():
+    assert mpp.doprint(Range(1, 51)) == \
+        '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mi>&#8230;</mi><mn>50</mn></mfenced>'
+    assert mpp.doprint(Range(1, 4)) == \
+        '<mfenced close="}" open="{"><mn>1</mn><mn>2</mn><mn>3</mn></mfenced>'
+    assert mpp.doprint(Range(0, 3, 1)) == \
+        '<mfenced close="}" open="{"><mn>0</mn><mn>1</mn><mn>2</mn></mfenced>'
+    assert mpp.doprint(Range(0, 30, 1)) == \
+        '<mfenced close="}" open="{"><mn>0</mn><mn>1</mn><mi>&#8230;</mi><mn>29</mn></mfenced>'
+    assert mpp.doprint(Range(30, 1, -1)) == \
+        '<mfenced close="}" open="{"><mn>30</mn><mn>29</mn><mi>&#8230;</mi><mn>2</mn></mfenced>'
+    assert mpp.doprint(Range(0, oo, 2)) == \
+        '<mfenced close="}" open="{"><mn>0</mn><mn>2</mn><mi>&#8230;</mi><mi>&#x221E;</mi></mfenced>'
+    assert mpp.doprint(Range(oo, -2, -2)) == \
+        '<mfenced close="}" open="{"><mi>&#x221E;</mi><mi>&#8230;</mi><mn>2</mn><mn>0</mn></mfenced>'
+    assert mpp.doprint(Range(-2, -oo, -1)) == \
+        '<mfenced close="}" open="{"><mn>-2</mn><mn>-3</mn><mi>&#8230;</mi><mrow><mo>-</mo><mi>&#x221E;</mi></mrow></mfenced>'
+
+
+def test_print_exp():
+    assert mpp.doprint(exp(x)) == \
+        '<msup><mi>&ExponentialE;</mi><mi>x</mi></msup>'
+    assert mpp.doprint(exp(1) + exp(2)) == \
+        '<mrow><mi>&ExponentialE;</mi><mo>+</mo><msup><mi>&ExponentialE;</mi><mn>2</mn></msup></mrow>'
+
+
+def test_print_MinMax():
+    assert mpp.doprint(Min(x, y)) == \
+        '<mrow><mo>min</mo><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow>'
+    assert mpp.doprint(Min(x, 2, x**3)) == \
+        '<mrow><mo>min</mo><mfenced><mn>2</mn><mi>x</mi><msup><mi>x</mi><mn>3</mn></msup></mfenced></mrow>'
+    assert mpp.doprint(Max(x, y)) == \
+        '<mrow><mo>max</mo><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow>'
+    assert mpp.doprint(Max(x, 2, x**3)) == \
+        '<mrow><mo>max</mo><mfenced><mn>2</mn><mi>x</mi><msup><mi>x</mi><mn>3</mn></msup></mfenced></mrow>'
 
 
 def test_print_matrix_symbol():
     A = MatrixSymbol('A', 1, 2)
     assert mpp.doprint(A) == '<mi>A</mi>'
     assert mp.doprint(A) == '<ci>A</ci>'
-    assert mathml(A, printer='presentation', mat_symbol_style="bold" )== '<mi mathvariant="bold">A</mi>'
-    assert mathml(A, mat_symbol_style="bold" )== '<ci>A</ci>' # No effect in content printer
+    assert mathml(A, printer='presentation', mat_symbol_style="bold") == \
+        '<mi mathvariant="bold">A</mi>'
+    # No effect in content printer
+    assert mathml(A, mat_symbol_style="bold") == '<ci>A</ci>'
 
 
 def test_print_random_symbol():
     R = RandomSymbol(Symbol('R'))
     assert mpp.doprint(R) == '<mi>R</mi>'
     assert mp.doprint(R) == '<ci>R</ci>'
+
+
+def test_print_IndexedBase():
+    a, b, c, d, e = symbols('a b c d e')
+    assert mathml(IndexedBase(a)[b], printer='presentation') == \
+        '<msub><mi>a</mi><mi>b</mi></msub>'
+    assert mathml(IndexedBase(a)[b, c, d], printer='presentation') == \
+        '<msub><mi>a</mi><mfenced><mi>b</mi><mi>c</mi><mi>d</mi></mfenced></msub>'
+    assert mathml(IndexedBase(a)[b]*IndexedBase(c)[d]*IndexedBase(e),
+                  printer='presentation') == \
+                  '<mrow><msub><mi>a</mi><mi>b</mi></msub><mo>&InvisibleTimes;</mo><msub><mi>c</mi><mi>d</mi></msub><mo>&InvisibleTimes;</mo><mi>e</mi></mrow>'
+
+
+def test_print_Indexed():
+    a, b, c = symbols('a b c')
+    assert mathml(IndexedBase(a), printer='presentation') == '<mi>a</mi>'
+    assert mathml(IndexedBase(a/b), printer='presentation') == \
+        '<mrow><mfrac><mi>a</mi><mi>b</mi></mfrac></mrow>'
+    assert mathml(IndexedBase((a, b)), printer='presentation') == \
+        '<mrow><mfenced><mi>a</mi><mi>b</mi></mfenced></mrow>'
