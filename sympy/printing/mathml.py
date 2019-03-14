@@ -7,11 +7,11 @@ from __future__ import print_function, division
 from sympy import sympify, S, Mul
 from sympy.core.compatibility import range, string_types, default_sort_key
 from sympy.core.function import _coeff_isneg
-from sympy.core.numbers import E
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import precedence_traditional, PRECEDENCE
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer
+
 
 class MathMLPrinterBase(Printer):
     """Contains common code required for MathMLContentPrinter and
@@ -36,12 +36,14 @@ class MathMLPrinterBase(Printer):
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
-        from xml.dom.minidom import Document,Text
+        from xml.dom.minidom import Document, Text
 
         self.dom = Document()
 
         # Workaround to allow strings to remain unescaped
-        # Based on https://stackoverflow.com/questions/38015864/python-xml-dom-minidom-please-dont-escape-my-strings/38041194
+        # Based on
+        # https://stackoverflow.com/questions/38015864/python-xml-dom-minidom-\
+        #                              please-dont-escape-my-strings/38041194
         class RawText(Text):
             def writexml(self, writer, indent='', addindent='', newl=''):
                 if self.data:
@@ -68,8 +70,8 @@ class MathMLPrinterBase(Printer):
     def apply_patch(self):
         # Applying the patch of xml.dom.minidom bug
         # Date: 2011-11-18
-        # Description: http://ronrothman.com/public/leftbraned/xml-dom-minidom-\
-        #                   toprettyxml-and-silly-whitespace/#best-solution
+        # Description: http://ronrothman.com/public/leftbraned/xml-dom-minidom\
+        #                   -toprettyxml-and-silly-whitespace/#best-solution
         # Issue: http://bugs.python.org/issue4147
         # Patch: http://hg.python.org/cpython/rev/7262f8f276ff/
 
@@ -393,8 +395,10 @@ class MathMLContentPrinter(MathMLPrinterBase):
     _print_RandomSymbol = _print_Symbol
 
     def _print_Pow(self, e):
-        # Here we use root instead of power if the exponent is the reciprocal of an integer
-        if self._settings['root_notation'] and e.exp.is_Rational and e.exp.p == 1:
+        # Here we use root instead of power if the exponent is the reciprocal
+        # of an integer
+        if (self._settings['root_notation'] and e.exp.is_Rational
+                and e.exp.p == 1):
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('root'))
             if e.exp.q != 2:
@@ -490,7 +494,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         """Returns the MathML tag for an expression."""
         translate = {
             'Number': 'mn',
-            'Limit' : '&#x2192;',
+            'Limit': '&#x2192;',
             'Derivative': '&dd;',
             'int': 'mn',
             'Symbol': 'mi',
@@ -515,13 +519,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'StrictGreaterThan': '>',
             'StrictLessThan': '<',
             'lerchphi': '&#x3A6;',
-            'BooleanTrue' : 'True',
-            'BooleanFalse' : 'False',
-            'NoneType' : 'None',
+            'BooleanTrue': 'True',
+            'BooleanFalse': 'False',
+            'NoneType': 'None',
         }
 
         def mul_symbol_selection():
-            if self._settings["mul_symbol"] is None or self._settings["mul_symbol"] == 'None':
+            if (self._settings["mul_symbol"] is None or
+                    self._settings["mul_symbol"] == 'None'):
                 return '&InvisibleTimes;'
             elif self._settings["mul_symbol"] == 'times':
                 return '&#xD7;'
@@ -658,7 +663,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         else:
             return x
 
-
     def _print_Rational(self, e):
         if e.q == 1:
             # don't divide
@@ -724,42 +728,42 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(x)
         return mrow
 
-    def _print_Integral(self, e):
-        limits = list(e.limits)
-        if len(limits[0]) == 3:
-            subsup = self.dom.createElement('msubsup')
-            low_elem = self._print(limits[0][1])
-            up_elem = self._print(limits[0][2])
-            integral = self.dom.createElement('mo')
-            integral.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-            subsup.appendChild(integral)
-            subsup.appendChild(low_elem)
-            subsup.appendChild(up_elem)
-        if len(limits[0]) == 1:
-            subsup = self.dom.createElement('mrow')
-            integral = self.dom.createElement('mo')
-            integral.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
-            subsup.appendChild(integral)
+    def _print_Integral(self, expr):
+        intsymbols = {1: "&#x222B;", 2: "&#x222C;", 3: "&#x222D;"}
 
         mrow = self.dom.createElement('mrow')
-        diff = self.dom.createElement('mo')
-        diff.appendChild(self.dom.createTextNode('&dd;'))
-        if len(str(limits[0][0])) > 1:
-            var = self.dom.createElement('mfenced')
-            var.appendChild(self._print(limits[0][0]))
+        if len(expr.limits) <= 3 and all(len(lim) == 1 for lim in expr.limits):
+            # Only up to three-integral signs exists
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode(intsymbols[len(expr.limits)]))
+            mrow.appendChild(mo)
         else:
-            var = self._print(limits[0][0])
-
-        mrow.appendChild(subsup)
-        if len(str(e.function)) == 1:
-            mrow.appendChild(self._print(e.function))
-        else:
-            fence = self.dom.createElement('mfenced')
-            fence.appendChild(self._print(e.function))
-            mrow.appendChild(fence)
-
-        mrow.appendChild(diff)
-        mrow.appendChild(var)
+            # Either more than three or limits provided
+            for lim in reversed(expr.limits):
+                mo = self.dom.createElement('mo')
+                mo.appendChild(self.dom.createTextNode(intsymbols[1]))
+                if len(lim) == 1:
+                    mrow.appendChild(mo)
+                if len(lim) == 2:
+                    msup = self.dom.createElement('msup')
+                    msup.appendChild(mo)
+                    msup.appendChild(self._print(lim[1]))
+                    mrow.appendChild(msup)
+                if len(lim) == 3:
+                    msubsup = self.dom.createElement('msubsup')
+                    msubsup.appendChild(mo)
+                    msubsup.appendChild(self._print(lim[1]))
+                    msubsup.appendChild(self._print(lim[2]))
+                    mrow.appendChild(msubsup)
+        # print function
+        mrow.appendChild(self.parenthesize(expr.function, PRECEDENCE["Mul"],
+                                           strict=True))
+        # print integration variables
+        for lim in reversed(expr.limits):
+            d = self.dom.createElement('mo')
+            d.appendChild(self.dom.createTextNode('&dd;'))
+            mrow.appendChild(d)
+            mrow.appendChild(self._print(lim[0]))
         return mrow
 
     def _print_Sum(self, e):
@@ -848,7 +852,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_MatrixSymbol(self, sym):
-        return self._print_Symbol(sym, style=self._settings['mat_symbol_style'])
+        return self._print_Symbol(sym,
+                                  style=self._settings['mat_symbol_style'])
 
     _print_RandomSymbol = _print_Symbol
 
@@ -882,8 +887,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return brac
 
     def _print_Pow(self, e):
-        # Here we use root instead of power if the exponent is the reciprocal of an integer
-        if e.exp.is_Rational and abs(e.exp.p) == 1 and e.exp.q != 1 and self._settings['root_notation']:
+        # Here we use root instead of power if the exponent is the
+        # reciprocal of an integer
+        if (e.exp.is_Rational and abs(e.exp.p) == 1 and e.exp.q != 1 and
+                self._settings['root_notation']):
             if e.exp.q == 2:
                 x = self.dom.createElement('msqrt')
                 x.appendChild(self._print(e.base))
@@ -905,24 +912,28 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 top.appendChild(self._print(1))
                 x = self.dom.createElement('msup')
                 x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
-                x.appendChild(self._get_printed_Rational(-e.exp, self._settings['fold_frac_powers']))
+                x.appendChild(self._get_printed_Rational(-e.exp,
+                                    self._settings['fold_frac_powers']))
                 top.appendChild(x)
-                return top;
+                return top
             else:
                 x = self.dom.createElement('msup')
                 x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
-                x.appendChild(self._get_printed_Rational(e.exp, self._settings['fold_frac_powers']))
-                return x;
+                x.appendChild(self._get_printed_Rational(e.exp,
+                                    self._settings['fold_frac_powers']))
+                return x
 
         if e.exp.is_negative:
                 top = self.dom.createElement('mfrac')
                 top.appendChild(self._print(1))
-                x = self.dom.createElement('msup')
-                x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
-                x.appendChild(self._print(-e.exp))
-                top.appendChild(x)
-                return top;
-
+                if e.exp == -1:
+                    top.appendChild(self._print(e.base))
+                else:
+                    x = self.dom.createElement('msup')
+                    x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
+                    x.appendChild(self._print(-e.exp))
+                    top.appendChild(x)
+                return top
 
         x = self.dom.createElement('msup')
         x.appendChild(self.parenthesize(e.base, PRECEDENCE['Pow']))
@@ -943,7 +954,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
         # Determine denominator
         m = self.dom.createElement('mrow')
-        dim = 0 # Total diff dimension, for numerator
+        dim = 0  # Total diff dimension, for numerator
         for sym, num in reversed(e.variable_count):
             dim += num
             if num >= 2:
@@ -985,7 +996,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_Function(self, e):
         mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mi')
-        if self.mathml_tag(e) == 'log' and self._settings["ln_notation"] == True:
+        if self.mathml_tag(e) == 'log' and self._settings["ln_notation"]:
             x.appendChild(self.dom.createTextNode('ln'))
         else:
             x.appendChild(self.dom.createTextNode(self.mathml_tag(e)))
@@ -1047,8 +1058,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 brac.setAttribute('close', ')')
             else:
                 brac.setAttribute('close', ']')
-            brac.appendChild( self._print(i.start))
-            brac.appendChild( self._print(i.end))
+            brac.appendChild(self._print(i.start))
+            brac.appendChild(self._print(i.end))
 
         mrow.appendChild(brac)
         return mrow
@@ -1293,7 +1304,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         dom_element.appendChild(self.dom.createTextNode(str(p)))
         return dom_element
 
-
     def _print_BaseScalar(self, e):
         msub = self.dom.createElement('msub')
         index, system = e._id
@@ -1396,13 +1406,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('&#x2124;'))
         return x
 
-
     def _print_Complexes(self, e):
         x = self.dom.createElement('mi')
         x.setAttribute('mathvariant', 'normal')
         x.appendChild(self.dom.createTextNode('&#x2102;'))
         return x
-
 
     def _print_Reals(self, e):
         x = self.dom.createElement('mi')
@@ -1410,13 +1418,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('&#x211D;'))
         return x
 
-
     def _print_Naturals(self, e):
         x = self.dom.createElement('mi')
         x.setAttribute('mathvariant', 'normal')
         x.appendChild(self.dom.createTextNode('&#x2115;'))
         return x
-
 
     def _print_Naturals0(self, e):
         sub = self.dom.createElement('msub')
@@ -1427,15 +1433,13 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         sub.appendChild(self._print(S.Zero))
         return sub
 
-
     def _print_EmptySet(self, e):
         x = self.dom.createElement('mo')
         x.appendChild(self.dom.createTextNode('&#x2205;'))
         return x
 
-
     def _print_floor(self, e):
-        mrow =  self.dom.createElement('mrow')
+        mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mfenced')
         x.setAttribute('open', u'\u230A')
         x.setAttribute('close', u'\u230B')
@@ -1443,16 +1447,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(x)
         return mrow
 
-
     def _print_ceiling(self, e):
-        mrow =  self.dom.createElement('mrow')
+        mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mfenced')
         x.setAttribute('open', u'\u2308')
         x.setAttribute('close', u'\u2309')
         x.appendChild(self._print(e.args[0]))
         mrow.appendChild(x)
         return mrow
-
 
     def _print_Lambda(self, e):
         x = self.dom.createElement('mfenced')
@@ -1470,13 +1472,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(mrow)
         return x
 
-
     def _print_tuple(self, e):
         x = self.dom.createElement('mfenced')
         for i in e:
             x.appendChild(self._print(i))
         return x
-
 
     def _print_IndexedBase(self, e):
         return self._print(e.label)
@@ -1492,8 +1492,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
 
 def mathml(expr, printer='content', **settings):
-    """Returns the MathML representation of expr. If printer is presentation then
-     prints Presentation MathML else prints content MathML.
+    """Returns the MathML representation of expr. If printer is presentation
+    then prints Presentation MathML else prints content MathML.
     """
     if printer == 'presentation':
         return MathMLPresentationPrinter(settings).doprint(expr)
@@ -1537,5 +1537,6 @@ def print_mathml(expr, printer='content', **settings):
 
     print(pretty_xml)
 
-#For backward compatibility
+
+# For backward compatibility
 MathMLPrinter = MathMLContentPrinter
