@@ -312,7 +312,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
 
         # pyx
-        with open(pyxfilename, 'w') as f:
+        with open(os.path.join(build_dir, pyxfilename), 'w') as f:
             self.dump_pyx([routine], f, self.filename)
 
         # setup.py
@@ -532,7 +532,8 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     """Generates python callable binaries based on the math expression.
 
     Parameters
-    ----------
+    ==========
+
     expr
         The SymPy expression that should be wrapped as a binary routine.
     language : string, optional
@@ -554,13 +555,14 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     verbose : bool, optional
         If True, autowrap will not mute the command line backends. This can be
         helpful for debugging.
-    helpers : iterable, optional
+    helpers : 3-tuple or iterable of 3-tuples, optional
         Used to define auxiliary expressions needed for the main expr. If the
-        main expression needs to call a specialized function it should be put
-        in the ``helpers`` iterable. Autowrap will then make sure that the
+        main expression needs to call a specialized function it should be
+        passed in via ``helpers``. Autowrap will then make sure that the
         compiled main expression can link to the helper routine. Items should
-        be tuples with (<funtion_name>, <sympy_expression>, <arguments>). It
-        is mandatory to supply an argument sequence to helper routines.
+        be 3-tuples with (<function_name>, <sympy_expression>,
+        <argument_tuple>). It is mandatory to supply an argument sequence to
+        helper routines.
     code_gen : CodeGen instance
         An instance of a CodeGen subclass. Overrides ``language``.
     include_dirs : [string]
@@ -582,13 +584,15 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         'extra_compile_args'.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.abc import x, y, z
     >>> from sympy.utilities.autowrap import autowrap
     >>> expr = ((x - y + z)**(13)).expand()
     >>> binary_func = autowrap(expr)
     >>> binary_func(1, 4, 2)
     -1.0
+
     """
     if language:
         if not isinstance(language, type):
@@ -596,7 +600,12 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     else:
         language = _infer_language(backend)
 
-    helpers = [helpers] if helpers else ()
+    # two cases 1) helpers is an iterable of 3-tuples and 2) helpers is a
+    # 3-tuple
+    if iterable(helpers) and len(helpers) != 0 and iterable(helpers[0]):
+        helpers = helpers if helpers else ()
+    else:
+        helpers = [helpers] if helpers else ()
     args = list(args) if iterable(args, exclude=set) else args
 
     if code_gen is None:
@@ -643,7 +652,8 @@ def binary_function(symfunc, expr, **kwargs):
     with implemented_function().
 
     Parameters
-    ----------
+    ==========
+
     symfunc : sympy Function
         The function to bind the callable to.
     expr : sympy Expression
@@ -652,7 +662,8 @@ def binary_function(symfunc, expr, **kwargs):
         Any kwargs accepted by autowrap.
 
     Examples
-    --------
+    ========
+
     >>> from sympy.abc import x, y
     >>> from sympy.utilities.autowrap import binary_function
     >>> expr = ((x - y)**(25)).expand()
@@ -663,6 +674,7 @@ def binary_function(symfunc, expr, **kwargs):
     2*f(x, y)
     >>> f(x, y).evalf(2, subs={x: 1, y: 2})
     -1.0
+
     """
     binary = autowrap(expr, **kwargs)
     return implemented_function(symfunc, binary)
@@ -866,11 +878,12 @@ class UfuncifyCodeWrapper(CodeWrapper):
         funcname
             Name of the main function to be returned.
         """
-        if (funcname is None) and (len(routines) == 1):
-            funcname = routines[0].name
-        elif funcname is None:
-            msg = 'funcname must be specified for multiple output routines'
-            raise ValueError(msg)
+        if funcname is None:
+            if len(routines) == 1:
+                funcname = routines[0].name
+            else:
+                msg = 'funcname must be specified for multiple output routines'
+                raise ValueError(msg)
         functions = []
         function_creation = []
         ufunc_init = []
@@ -970,7 +983,8 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     """Generates a binary function that supports broadcasting on numpy arrays.
 
     Parameters
-    ----------
+    ==========
+
     args : iterable
         Either a Symbol or an iterable of symbols. Specifies the argument
         sequence for the function.
@@ -1004,8 +1018,9 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         These kwargs will be passed to autowrap if the `f2py` or `cython`
         backend is used and ignored if the `numpy` backend is used.
 
-    Note
-    ----
+    Notes
+    =====
+
     The default backend ('numpy') will create actual instances of
     ``numpy.ufunc``. These support ndimensional broadcasting, and implicit type
     conversion. Use of the other backends will result in a "ufunc-like"
@@ -1013,8 +1028,9 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     arguments, and will not perform any type conversions.
 
     References
-    ----------
-    [1] http://docs.scipy.org/doc/numpy/reference/ufuncs.html
+    ==========
+
+    .. [1] http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
     Examples
     ========
@@ -1046,6 +1062,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     TypeError: Argument '_x' has incorrect type (expected numpy.ndarray, got int)
     >>> f_cython(np.array([1.0]), np.array([2.0]))
     array([ 3.])
+
     """
 
     if isinstance(args, Symbol):
@@ -1075,7 +1092,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
             expr = [expr]
         if len(expr) == 0:
             raise ValueError('Expression iterable has zero length')
-        if (len(expr) + len(args)) > maxargs:
+        if len(expr) + len(args) > maxargs:
             msg = ('Cannot create ufunc with more than {0} total arguments: '
                    'got {1} in, {2} out')
             raise ValueError(msg.format(maxargs, len(args), len(expr)))

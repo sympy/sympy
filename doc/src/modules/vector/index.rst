@@ -33,6 +33,6 @@ Vector API
 References for Vector
 =====================
 
-.. [Dyadics] http://en.wikipedia.org/wiki/Dyadics
-.. [DyadicProducts] http://en.wikipedia.org/wiki/Dyadic_product
-.. [DelOperator] http://en.wikipedia.org/wiki/Del
+.. [Dyadics] https://en.wikipedia.org/wiki/Dyadics
+.. [DyadicProducts] https://en.wikipedia.org/wiki/Dyadic_product
+.. [DelOperator] https://en.wikipedia.org/wiki/Del

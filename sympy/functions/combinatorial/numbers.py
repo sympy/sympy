@@ -10,16 +10,19 @@ the separate 'factorials' module.
 from __future__ import print_function, division
 
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
-from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.cache import cacheit
+from sympy.core.compatibility import as_int, SYMPY_INTS, range
 from sympy.core.function import Function, expand_mul
+from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import E, pi
 from sympy.core.relational import LessThan, StrictGreaterThan
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import log
-from sympy.functions.elementary.integers import ceiling, floor
-from sympy.functions.elementary.trigonometric import sin, cos, cot
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
+from sympy.functions.elementary.trigonometric import sin, cos, cot
+from sympy.ntheory import isprime
+from sympy.ntheory.primetest import is_square
 from sympy.utilities.memoization import recurrence_memo
 
 from mpmath import bernfrac, workprec
@@ -37,6 +40,127 @@ def _product(a, b):
 # Dummy symbol used for computing polynomial sequences
 _sym = Symbol('x')
 _symbols = Function('x')
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Carmichael numbers                               #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class carmichael(Function):
+    """
+    Carmichael Numbers:
+
+    Certain cryptographic algorithms make use of big prime numbers.
+    However, checking whether a big number is prime is not so easy.
+    Randomized prime number checking tests exist that offer a high degree of confidence of
+    accurate determination at low cost, such as the Fermat test.
+
+    Let 'a' be a random number between 2 and n - 1, where n is the number whose primality we are testing.
+    Then, n is probably prime if it satisfies the modular arithmetic congruence relation :
+
+    a^(n-1) = 1(mod n).
+    (where mod refers to the modulo operation)
+
+    If a number passes the Fermat test several times, then it is prime with a
+    high probability.
+
+    Unfortunately, certain composite numbers (non-primes) still pass the Fermat test
+    with every number smaller than themselves.
+    These numbers are called Carmichael numbers.
+
+    A Carmichael number will pass a Fermat primality test to every base b relatively prime to the number,
+    even though it is not actually prime. This makes tests based on Fermat's Little Theorem less effective than
+    strong probable prime tests such as the Baillie-PSW primality test and the Miller-Rabin primality test.
+    mr functions given in sympy/sympy/ntheory/primetest.py will produce wrong results for each and every
+    carmichael number.
+
+    Examples
+    ========
+
+    >>> from sympy import carmichael
+    >>> carmichael.find_first_n_carmichaels(5)
+    [561, 1105, 1729, 2465, 2821]
+    >>> carmichael.is_prime(2465)
+    False
+    >>> carmichael.is_prime(1729)
+    False
+    >>> carmichael.find_carmichael_numbers_in_range(0, 562)
+    [561]
+    >>> carmichael.find_carmichael_numbers_in_range(0,1000)
+    [561]
+    >>> carmichael.find_carmichael_numbers_in_range(0,2000)
+    [561, 1105, 1729]
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Carmichael_number
+    .. [2] https://en.wikipedia.org/wiki/Fermat_primality_test
+    .. [3] https://www.jstor.org/stable/23248683?seq=1#metadata_info_tab_contents
+    """
+
+    @staticmethod
+    def is_perfect_square(n):
+        return is_square(n)
+
+    @staticmethod
+    def divides(p, n):
+        return n % p == 0
+
+    @staticmethod
+    def is_prime(n):
+        return isprime(n)
+
+    @staticmethod
+    def is_carmichael(n):
+        if n >= 0:
+            if (n == 1) or (carmichael.is_prime(n)) or (n % 2 == 0):
+                return False
+
+            divisors = list([1, n])
+
+            # get divisors
+            for i in range(3, n // 2 + 1, 2):
+                if n % i == 0:
+                    divisors.append(i)
+
+            for i in divisors:
+                if carmichael.is_perfect_square(i) and i != 1:
+                    return False
+                if carmichael.is_prime(i):
+                    if not carmichael.divides(i - 1, n - 1):
+                        return False
+
+            return True
+
+        else:
+            raise ValueError('The provided number must be greater than or equal to 0')
+
+    @staticmethod
+    def find_carmichael_numbers_in_range(x, y):
+        if 0 <= x <= y:
+            if x % 2 == 0:
+                return list([i for i in range(x + 1, y, 2) if carmichael.is_carmichael(i)])
+            else:
+                return list([i for i in range(x, y, 2) if carmichael.is_carmichael(i)])
+
+        else:
+            raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
+
+    @staticmethod
+    def find_first_n_carmichaels(n):
+        i = 1
+        carmichaels = list()
+
+        while len(carmichaels) < n:
+            if carmichael.is_carmichael(i):
+                carmichaels.append(i)
+            i += 2
+
+        return carmichaels
 
 
 #----------------------------------------------------------------------------#
@@ -75,16 +199,17 @@ class fibonacci(Function):
     >>> fibonacci(5, Symbol('t'))
     t**4 + 3*t**2 + 1
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Fibonacci_number
-    .. [2] http://mathworld.wolfram.com/FibonacciNumber.html
-
     See Also
     ========
 
     bell, bernoulli, catalan, euler, harmonic, lucas, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Fibonacci_number
+    .. [2] http://mathworld.wolfram.com/FibonacciNumber.html
+
     """
 
     @staticmethod
@@ -113,10 +238,10 @@ class fibonacci(Function):
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
 
-    def _eval_rewrite_as_sqrt(self, n):
+    def _eval_rewrite_as_sqrt(self, n, **kwargs):
         return 2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
 
-    def _eval_rewrite_as_GoldenRatio(self,n):
+    def _eval_rewrite_as_GoldenRatio(self,n, **kwargs):
         return (S.GoldenRatio**n - 1/(-S.GoldenRatio)**n)/(2*S.GoldenRatio-1)
 
 
@@ -146,16 +271,17 @@ class lucas(Function):
     >>> [lucas(x) for x in range(11)]
     [2, 1, 3, 4, 7, 11, 18, 29, 47, 76, 123]
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Lucas_number
-    .. [2] http://mathworld.wolfram.com/LucasNumber.html
-
     See Also
     ========
 
     bell, bernoulli, catalan, euler, fibonacci, harmonic, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lucas_number
+    .. [2] http://mathworld.wolfram.com/LucasNumber.html
+
     """
 
     @classmethod
@@ -166,7 +292,7 @@ class lucas(Function):
         if n.is_Integer:
             return fibonacci(n + 1) + fibonacci(n - 1)
 
-    def _eval_rewrite_as_sqrt(self, n):
+    def _eval_rewrite_as_sqrt(self, n, **kwargs):
         return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
 
 
@@ -181,7 +307,7 @@ class tribonacci(Function):
     r"""
     Tribonacci numbers / Tribonacci polynomials
 
-    The Fibonacci numbers are the integer sequence defined by the
+    The Tibonacci numbers are the integer sequence defined by the
     initial terms `T_0 = 0`, `T_1 = 1`, `T_2 = 1` and the three-term
     recurrence relation `T_n = T_{n-1} + T_{n-2} + T_{n-3}`.
 
@@ -202,6 +328,11 @@ class tribonacci(Function):
     >>> tribonacci(5, Symbol('t'))
     t**8 + 3*t**5 + 3*t**2
 
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, genocchi, partition
+
     References
     ==========
 
@@ -209,10 +340,6 @@ class tribonacci(Function):
     .. [2] http://mathworld.wolfram.com/TribonacciNumber.html
     .. [3] https://oeis.org/A000073
 
-    See Also
-    ========
-
-    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, genocchi, partition
     """
 
     @staticmethod
@@ -242,7 +369,7 @@ class tribonacci(Function):
                        "only for non-negative integer indices.")
                 return cls._tribpoly(n).subs(_sym, sym)
 
-    def _eval_rewrite_as_sqrt(self, n):
+    def _eval_rewrite_as_sqrt(self, n, **kwargs):
         w = (-1 + S.ImaginaryUnit * sqrt(3)) / 2
         a = (1 + cbrt(19 + 3*sqrt(33)) + cbrt(19 - 3*sqrt(33))) / 3
         b = (1 + w*cbrt(19 + 3*sqrt(33)) + w**2*cbrt(19 - 3*sqrt(33))) / 3
@@ -252,7 +379,7 @@ class tribonacci(Function):
             + c**(n + 1)/((c - a)*(c - b)))
         return Tn
 
-    def _eval_rewrite_as_TribonacciConstant(self, n):
+    def _eval_rewrite_as_TribonacciConstant(self, n, **kwargs):
         b = cbrt(586 + 102*sqrt(33))
         Tn = 3 * b * S.TribonacciConstant**n / (b**2 - 2*b + 4)
         return floor(Tn + S.Half)
@@ -316,18 +443,19 @@ class bernoulli(Function):
     >>> bernoulli(1000001)
     0
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Bernoulli_number
-    .. [2] http://en.wikipedia.org/wiki/Bernoulli_polynomial
-    .. [3] http://mathworld.wolfram.com/BernoulliNumber.html
-    .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
-
     See Also
     ========
 
     bell, catalan, euler, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Bernoulli_number
+    .. [2] https://en.wikipedia.org/wiki/Bernoulli_polynomial
+    .. [3] http://mathworld.wolfram.com/BernoulliNumber.html
+    .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
+
     """
 
     # Calculates B_n for positive even n
@@ -456,17 +584,18 @@ class bell(Function):
     >>> bell(6, 2, symbols('x:6')[1:])
     6*x1*x5 + 15*x2*x4 + 10*x3**2
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Bell_number
-    .. [2] http://mathworld.wolfram.com/BellNumber.html
-    .. [3] http://mathworld.wolfram.com/BellPolynomial.html
-
     See Also
     ========
 
     bernoulli, catalan, euler, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Bell_number
+    .. [2] http://mathworld.wolfram.com/BellNumber.html
+    .. [3] http://mathworld.wolfram.com/BellPolynomial.html
+
     """
 
     @staticmethod
@@ -538,7 +667,7 @@ class bell(Function):
                 r = cls._bell_incomplete_poly(int(n), int(k_sym), symbols)
                 return r
 
-    def _eval_rewrite_as_Sum(self, n, k_sym=None, symbols=None):
+    def _eval_rewrite_as_Sum(self, n, k_sym=None, symbols=None, **kwargs):
         from sympy import Sum
         if (k_sym is not None) or (symbols is not None):
             return self
@@ -670,17 +799,18 @@ class harmonic(Function):
 
     which equals ``zeta(m)`` for ``m > 1``.
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Harmonic_number
-    .. [2] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber/
-    .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
-
     See Also
     ========
 
     bell, bernoulli, catalan, euler, fibonacci, lucas, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Harmonic_number
+    .. [2] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber/
+    .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
+
     """
 
     # Generate one memoized Harmonic number-generating function for each
@@ -720,19 +850,19 @@ class harmonic(Function):
                 cls._functions[m] = f
             return cls._functions[m](int(n))
 
-    def _eval_rewrite_as_polygamma(self, n, m=1):
+    def _eval_rewrite_as_polygamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
         return S.NegativeOne**m/factorial(m - 1) * (polygamma(m - 1, 1) - polygamma(m - 1, n + 1))
 
-    def _eval_rewrite_as_digamma(self, n, m=1):
+    def _eval_rewrite_as_digamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
         return self.rewrite(polygamma)
 
-    def _eval_rewrite_as_trigamma(self, n, m=1):
+    def _eval_rewrite_as_trigamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
         return self.rewrite(polygamma)
 
-    def _eval_rewrite_as_Sum(self, n, m=None):
+    def _eval_rewrite_as_Sum(self, n, m=None, **kwargs):
         from sympy import Sum
         k = Dummy("k", integer=True)
         if m is None:
@@ -772,7 +902,7 @@ class harmonic(Function):
 
         return self
 
-    def _eval_rewrite_as_tractable(self, n, m=1):
+    def _eval_rewrite_as_tractable(self, n, m=1, **kwargs):
         from sympy import polygamma
         return self.rewrite(polygamma).rewrite("tractable", deep=True)
 
@@ -846,19 +976,20 @@ class euler(Function):
     >>> euler(12)
     2702765
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Euler_numbers
-    .. [2] http://mathworld.wolfram.com/EulerNumber.html
-    .. [3] http://en.wikipedia.org/wiki/Alternating_permutation
-    .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
-    .. [5] http://dlmf.nist.gov/24.2#ii
-
     See Also
     ========
 
     bell, bernoulli, catalan, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler_numbers
+    .. [2] http://mathworld.wolfram.com/EulerNumber.html
+    .. [3] https://en.wikipedia.org/wiki/Alternating_permutation
+    .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
+    .. [5] http://dlmf.nist.gov/24.2#ii
+
     """
 
     @classmethod
@@ -900,7 +1031,7 @@ class euler(Function):
             if m.is_odd and m.is_positive:
                 return S.Zero
 
-    def _eval_rewrite_as_Sum(self, n, x=None):
+    def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
         from sympy import Sum
         if x is None and n.is_even:
             k = Dummy("k", integer=True)
@@ -973,7 +1104,7 @@ class catalan(Function):
     4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))
 
     >>> catalan(n).rewrite(hyper)
-    hyper((-n + 1, -n), (2,), 1)
+    hyper((1 - n, -n), (2,), 1)
 
     For some non-integer values of n we can get closed form
     expressions by rewriting in terms of gamma functions:
@@ -1003,19 +1134,20 @@ class catalan(Function):
     >>> catalan(I).evalf(20)
     0.39764993382373624267 - 0.020884341620842555705*I
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Catalan_number
-    .. [2] http://mathworld.wolfram.com/CatalanNumber.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/CatalanNumber/
-    .. [4] http://geometer.org/mathcircles/catalan.pdf
-
     See Also
     ========
 
     bell, bernoulli, euler, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
     sympy.functions.combinatorial.factorials.binomial
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Catalan_number
+    .. [2] http://mathworld.wolfram.com/CatalanNumber.html
+    .. [3] http://functions.wolfram.com/GammaBetaErf/CatalanNumber/
+    .. [4] http://geometer.org/mathcircles/catalan.pdf
+
     """
 
     @classmethod
@@ -1036,22 +1168,22 @@ class catalan(Function):
         n = self.args[0]
         return catalan(n)*(polygamma(0, n + Rational(1, 2)) - polygamma(0, n + 2) + log(4))
 
-    def _eval_rewrite_as_binomial(self, n):
+    def _eval_rewrite_as_binomial(self, n, **kwargs):
         return binomial(2*n, n)/(n + 1)
 
-    def _eval_rewrite_as_factorial(self, n):
+    def _eval_rewrite_as_factorial(self, n, **kwargs):
         return factorial(2*n) / (factorial(n+1) * factorial(n))
 
-    def _eval_rewrite_as_gamma(self, n):
+    def _eval_rewrite_as_gamma(self, n, **kwargs):
         from sympy import gamma
         # The gamma function allows to generalize Catalan numbers to complex n
         return 4**n*gamma(n + S.Half)/(gamma(S.Half)*gamma(n + 2))
 
-    def _eval_rewrite_as_hyper(self, n):
+    def _eval_rewrite_as_hyper(self, n, **kwargs):
         from sympy import hyper
         return hyper([1 - n, -n], [2], 1)
 
-    def _eval_rewrite_as_Product(self, n):
+    def _eval_rewrite_as_Product(self, n, **kwargs):
         from sympy import Product
         if not (n.is_integer and n.is_nonnegative):
             return self
@@ -1074,6 +1206,7 @@ class catalan(Function):
         from sympy import gamma
         if self.args[0].is_number:
             return self.rewrite(gamma)._eval_evalf(prec)
+
 
 
 #----------------------------------------------------------------------------#
@@ -1103,16 +1236,17 @@ class genocchi(Function):
     >>> genocchi(2*n + 1)
     0
 
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, partition, tribonacci
+
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Genocchi_number
     .. [2] http://mathworld.wolfram.com/GenocchiNumber.html
 
-    See Also
-    ========
-
-    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, partition, tribonacci
     """
 
     @classmethod
@@ -1129,7 +1263,7 @@ class genocchi(Function):
         if (n - 1).is_zero:
             return S.One
 
-    def _eval_rewrite_as_bernoulli(self, n):
+    def _eval_rewrite_as_bernoulli(self, n, **kwargs):
         if n.is_integer and n.is_nonnegative:
             return (1 - S(2) ** n) * bernoulli(n) * 2
 
@@ -1201,16 +1335,17 @@ class partition(Function):
     >>> partition(n)
     0
 
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, genocchi, tribonacci
+
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Partition_(number_theory%29
     .. [2] https://en.wikipedia.org/wiki/Pentagonal_number_theorem
 
-    See Also
-    ========
-
-    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, genocchi, tribonacci
     """
 
     @staticmethod
@@ -1353,14 +1488,14 @@ def nP(n, k=None, replacement=False):
     >>> sum(_)
     121
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Permutation
-
     See Also
     ========
     sympy.utilities.iterables.multiset_permutations
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Permutation
 
     """
     try:
@@ -1528,15 +1663,17 @@ def nC(n, k=None, replacement=False):
     >>> sum(nC(4, i) for i in range(5))
     16
 
+    See Also
+    ========
+
+    sympy.utilities.iterables.multiset_combinations
+
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Combination
+    .. [1] https://en.wikipedia.org/wiki/Combination
     .. [2] http://tinyurl.com/cep849r
 
-    See Also
-    ========
-    sympy.utilities.iterables.multiset_combinations
     """
     from sympy.functions.combinatorial.factorials import binomial
     from sympy.core.mul import prod
@@ -1684,15 +1821,16 @@ def stirling(n, k, d=None, kind=2, signed=False):
     >>> stirling(5, 3, 2)
     7
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
-    .. [2] http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
-
     See Also
     ========
     sympy.utilities.iterables.multiset_partitions
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
+    .. [2] https://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
 
     """
     # TODO: make this a class like bell()
@@ -1785,16 +1923,16 @@ def nT(n, k=None):
     >>> nT('1'*4)
     5
 
-    References
-    ==========
-
-    .. [1] http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
-
     See Also
     ========
     sympy.utilities.iterables.partitions
     sympy.utilities.iterables.multiset_partitions
     sympy.functions.combinatorial.numbers.partition
+
+    References
+    ==========
+
+    .. [1] http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
 
     """
     from sympy.utilities.enumerative import MultisetPartitionTraverser

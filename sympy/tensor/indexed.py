@@ -18,73 +18,72 @@ matrix element ``M[i, j]`` as in the following diagram::
            The stem used by itself is usually taken to represent the entire
            array.
 
-    There can be any number of indices on an Indexed object.  No
-    transformation properties are implemented in these Base objects, but
-    implicit contraction of repeated indices is supported.
+There can be any number of indices on an Indexed object.  No
+transformation properties are implemented in these Base objects, but
+implicit contraction of repeated indices is supported.
 
-    Note that the support for complicated (i.e. non-atomic) integer
-    expressions as indices is limited.  (This should be improved in
-    future releases.)
+Note that the support for complicated (i.e. non-atomic) integer
+expressions as indices is limited.  (This should be improved in
+future releases.)
 
-    Examples
-    ========
+Examples
+========
 
-    To express the above matrix element example you would write:
+To express the above matrix element example you would write:
 
-    >>> from sympy import symbols, IndexedBase, Idx
-    >>> M = IndexedBase('M')
-    >>> i, j = symbols('i j', cls=Idx)
-    >>> M[i, j]
-    M[i, j]
+>>> from sympy import symbols, IndexedBase, Idx
+>>> M = IndexedBase('M')
+>>> i, j = symbols('i j', cls=Idx)
+>>> M[i, j]
+M[i, j]
 
-    Repeated indices in a product implies a summation, so to express a
-    matrix-vector product in terms of Indexed objects:
+Repeated indices in a product implies a summation, so to express a
+matrix-vector product in terms of Indexed objects:
 
-    >>> x = IndexedBase('x')
-    >>> M[i, j]*x[j]
-    M[i, j]*x[j]
+>>> x = IndexedBase('x')
+>>> M[i, j]*x[j]
+M[i, j]*x[j]
 
-    If the indexed objects will be converted to component based arrays, e.g.
-    with the code printers or the autowrap framework, you also need to provide
-    (symbolic or numerical) dimensions.  This can be done by passing an
-    optional shape parameter to IndexedBase upon construction:
+If the indexed objects will be converted to component based arrays, e.g.
+with the code printers or the autowrap framework, you also need to provide
+(symbolic or numerical) dimensions.  This can be done by passing an
+optional shape parameter to IndexedBase upon construction:
 
-    >>> dim1, dim2 = symbols('dim1 dim2', integer=True)
-    >>> A = IndexedBase('A', shape=(dim1, 2*dim1, dim2))
-    >>> A.shape
-    (dim1, 2*dim1, dim2)
-    >>> A[i, j, 3].shape
-    (dim1, 2*dim1, dim2)
+>>> dim1, dim2 = symbols('dim1 dim2', integer=True)
+>>> A = IndexedBase('A', shape=(dim1, 2*dim1, dim2))
+>>> A.shape
+(dim1, 2*dim1, dim2)
+>>> A[i, j, 3].shape
+(dim1, 2*dim1, dim2)
 
-    If an IndexedBase object has no shape information, it is assumed that the
-    array is as large as the ranges of its indices:
+If an IndexedBase object has no shape information, it is assumed that the
+array is as large as the ranges of its indices:
 
-    >>> n, m = symbols('n m', integer=True)
-    >>> i = Idx('i', m)
-    >>> j = Idx('j', n)
-    >>> M[i, j].shape
-    (m, n)
-    >>> M[i, j].ranges
-    [(0, m - 1), (0, n - 1)]
+>>> n, m = symbols('n m', integer=True)
+>>> i = Idx('i', m)
+>>> j = Idx('j', n)
+>>> M[i, j].shape
+(m, n)
+>>> M[i, j].ranges
+[(0, m - 1), (0, n - 1)]
 
-    The above can be compared with the following:
+The above can be compared with the following:
 
-    >>> A[i, 2, j].shape
-    (dim1, 2*dim1, dim2)
-    >>> A[i, 2, j].ranges
-    [(0, m - 1), None, (0, n - 1)]
+>>> A[i, 2, j].shape
+(dim1, 2*dim1, dim2)
+>>> A[i, 2, j].ranges
+[(0, m - 1), None, (0, n - 1)]
 
-    To analyze the structure of indexed expressions, you can use the methods
-    get_indices() and get_contraction_structure():
+To analyze the structure of indexed expressions, you can use the methods
+get_indices() and get_contraction_structure():
 
-    >>> from sympy.tensor import get_indices, get_contraction_structure
-    >>> get_indices(A[i, j, j])
-    ({i}, {})
-    >>> get_contraction_structure(A[i, j, j])
-    {(j,): {A[i, j, j]}}
+>>> from sympy.tensor import get_indices, get_contraction_structure
+>>> get_indices(A[i, j, j])
+({i}, {})
+>>> get_contraction_structure(A[i, j, j])
+{(j,): {A[i, j, j]}}
 
-    See the appropriate docstrings for a detailed explanation of the output.
-
+See the appropriate docstrings for a detailed explanation of the output.
 """
 
 #   TODO:  (some ideas for improvement)
@@ -107,11 +106,11 @@ matrix element ``M[i, j]`` as in the following diagram::
 
 from __future__ import print_function, division
 
-from sympy.core.sympify import _sympify
-from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
-    range, Iterable)
+                                      Iterable)
+from sympy.core.sympify import _sympify
+from sympy.functions.special.tensor_functions import KroneckerDelta
 
 
 class IndexException(Exception):
@@ -266,15 +265,21 @@ class Indexed(Expr):
 
         if self.base.shape:
             return self.base.shape
-        try:
-            return Tuple(*[i.upper - i.lower + 1 for i in self.indices])
-        except AttributeError:
-            raise IndexException(filldedent("""
-                Range is not defined for all indices in: %s""" % self))
-        except TypeError:
-            raise IndexException(filldedent("""
-                Shape cannot be inferred from Idx with
-                undefined range: %s""" % self))
+        sizes = []
+        for i in self.indices:
+            upper = getattr(i, 'upper', None)
+            lower = getattr(i, 'lower', None)
+            if None in (upper, lower):
+                raise IndexException(filldedent("""
+                    Range is not defined for all indices in: %s""" % self))
+            try:
+                size = upper - lower + 1
+            except TypeError:
+                raise IndexException(filldedent("""
+                    Shape cannot be inferred from Idx with
+                    undefined range: %s""" % self))
+            sizes.append(size)
+        return Tuple(*sizes)
 
     @property
     def ranges(self):
@@ -298,9 +303,12 @@ class Indexed(Expr):
         """
         ranges = []
         for i in self.indices:
-            try:
-                ranges.append(Tuple(i.lower, i.upper))
-            except AttributeError:
+            sentinel = object()
+            upper = getattr(i, 'upper', sentinel)
+            lower = getattr(i, 'lower', sentinel)
+            if sentinel not in (upper, lower):
+                ranges.append(Tuple(lower, upper))
+            else:
                 ranges.append(None)
         return ranges
 
@@ -677,6 +685,10 @@ class Idx(Expr):
 
     def _sympystr(self, p):
         return p.doprint(self.label)
+
+    @property
+    def name(self):
+        return self.label.name if self.label.is_Symbol else str(self.label)
 
     @property
     def free_symbols(self):

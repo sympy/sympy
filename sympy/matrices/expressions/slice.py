@@ -16,7 +16,7 @@ def normalize(i, parentsize):
         i.append(1)
     start, stop, step = i
     start = start or 0
-    if stop == None:
+    if stop is None:
         stop = parentsize
     if (start < 0) == True:
         start += parentsize

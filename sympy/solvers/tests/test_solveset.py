@@ -868,6 +868,9 @@ def test_conditionset():
     assert solveset(Eq(sin(Abs(x)), x), x, domain=S.Reals
         ) == ConditionSet(x, Eq(-x + sin(Abs(x)), 0), S.Reals)
 
+    assert solveset(y**x-z, x, S.Reals) == \
+        ConditionSet(x, Eq(y**x - z, 0), S.Reals)
+
 
 @XFAIL
 def test_conditionset_equality():
@@ -907,41 +910,60 @@ def test_solvify():
     x = Symbol('x')
 
     assert solvify(x**2 + 10, x, S.Reals) == []
-    assert solvify(x**3 + 1, x, S.Complexes) == [-1, 1/2 - sqrt(3)*I/2,
-                                                 1/2 + sqrt(3)*I/2]
+    assert solvify(x**3 + 1, x, S.Complexes) == [-1, S(1)/2 - sqrt(3)*I/2,
+                                                 S(1)/2 + sqrt(3)*I/2]
     assert solvify(log(x), x, S.Reals) == [1]
     assert solvify(cos(x), x, S.Reals) == [pi/2, 3*pi/2]
     assert solvify(sin(x) + 1, x, S.Reals) == [3*pi/2]
     raises(NotImplementedError, lambda: solvify(sin(exp(x)), x, S.Complexes))
 
 
-@XFAIL
 def test_abs_invert_solvify():
     assert solvify(sin(Abs(x)), x, S.Reals) is None
 
 
 def test_linear_eq_to_matrix():
     x, y, z = symbols('x, y, z')
+    a, b, c, d, e, f, g, h, i, j, k, l = symbols('a:l')
+
     eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
     eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
 
-    A, b = linear_eq_to_matrix(eqns1, x, y, z)
+    A, B = linear_eq_to_matrix(eqns1, x, y, z)
     assert A == Matrix([[2, 1, -2], [1, -1, -1], [1, 1, 3]])
-    assert b == Matrix([[3], [0], [12]])
+    assert B == Matrix([[3], [0], [12]])
 
-    A, b = linear_eq_to_matrix(eqns2, x, y, z)
+    A, B = linear_eq_to_matrix(eqns2, x, y, z)
     assert A == Matrix([[3, 2, -1], [2, -2, 4], [-2, 1, -2]])
-    assert b == Matrix([[1], [-2], [0]])
+    assert B == Matrix([[1], [-2], [0]])
 
     # Pure symbolic coefficients
-    from sympy.abc import a, b, c, d, e, f, g, h, i, j, k, l
-    eqns3 = [a*x + b*y + c*z - d, e*x + f*y + g*z - h, i*x + j*y + k*z - l]
+    eqns3 = [a*b*x + b*y + c*z - d, e*x + d*x + f*y + g*z - h, i*x + j*y + k*z - l]
     A, B = linear_eq_to_matrix(eqns3, x, y, z)
-    assert A == Matrix([[a, b, c], [e, f, g], [i, j, k]])
+    assert A == Matrix([[a*b, b, c], [d + e, f, g], [i, j, k]])
     assert B == Matrix([[d], [h], [l]])
 
-    # raise ValueError if no symbols are given
+    # raise ValueError if
+    # 1) no symbols are given
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3))
+    # 2) there are duplicates
+    raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, x, y]))
+    # 3) there are non-symbols
+    raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, 1/a, y]))
+    # 4) a nonlinear term is detected in the original expression
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x)))
+
+    assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
+    # issue 15195
+    assert linear_eq_to_matrix(x + y*(z*(3*x + 2) + 3), x) == (
+        Matrix([[3*y*z + 1]]), Matrix([[-y*(2*z + 3)]]))
+    assert linear_eq_to_matrix(Matrix(
+        [[a*x + b*y - 7], [5*x + 6*y - c]]), x, y) == (
+        Matrix([[a, b], [5, 6]]), Matrix([[7], [c]]))
+
+    # issue 15312
+    assert linear_eq_to_matrix(Eq(x + 2, 1), x) == (
+        Matrix([[1]]), Matrix([[-1]]))
 
 
 def test_linsolve():
@@ -1036,6 +1058,13 @@ def test_linsolve():
     Eqns = [8*kilo*newton + x + y, 28*kilo*newton*meter + 3*x*meter]
     assert linsolve(Eqns, x, y) == {(-28000*newton/3, 4000*newton/3)}
 
+    # linsolve fully expands expressions, so removable singularities
+    # and other nonlinearity does not raise an error
+    assert linsolve([Eq(x, x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
+
 
 def test_solve_decomposition():
     x = Symbol('x')
@@ -1100,6 +1129,7 @@ def test_nonlinsolve_abs():
 def test_raise_exception_nonlinsolve():
     raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
+    raises(NotImplementedError, lambda: nonlinsolve([(x+y)**2 - 9, x**2 - y**2 -3/4], (x, y)))
 
 
 def test_trig_system():
@@ -1285,7 +1315,7 @@ def test_issue_6752():
 
 
 @SKIP("slow")
-def test_issue_5114():
+def test_issue_5114_solveset():
     # slow testcase
     a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('a:r')
 
@@ -1489,6 +1519,27 @@ def test_issue_10397():
     assert solveset(sqrt(x), x, S.Complexes) == FiniteSet(0)
 
 
+def test_issue_14987():
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x**2], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x*(-3/x + 1) + 2*y - a], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x**2 - 3*x)/(x - 3) - 3], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x + 1)**3 - x**3 - 3*x**2 + 7], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x*(1/x + 1) + y], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x + 1)*y], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(1/x, 1/x + y)], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(y/x, y/x + y)], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(x*(x + 1), x**2 + y)], [x, y]))
+
+
 def test_simplification():
     eq = x + (a - b)/(-2*a + 2*b)
     assert solveset(eq, x) == FiniteSet(S.Half)
@@ -1570,7 +1621,7 @@ def test_issue_12429():
 
 def test_solveset_arg():
     assert solveset(arg(x), x, S.Reals)  == Interval.open(0, oo)
-    assert solveset(arg(4*x -3), x) == Interval.open(3/4, oo)
+    assert solveset(arg(4*x -3), x) == Interval.open(S(3)/4, oo)
 
 
 def test__is_finite_with_finite_vars():
@@ -1608,10 +1659,8 @@ def test_issue_10158():
     assert solveset(Abs(x + 4*Abs(x + 1)), x, dom) == FiniteSet(-4/S(3), -4/S(5))
     assert solveset(2*Abs(x + Abs(x + Max(3, x))) - 2, x, S.Reals) == FiniteSet(-1, -2)
     dom = S.Complexes
-    assert solveset(x*Max(x, 15) - 10, x, dom) == \
-        ConditionSet(x, Eq(x*Max(15, x) - 10, 0), dom)
-    assert solveset(x*Min(x, 15) - 10, x, dom) == \
-        ConditionSet(x, Eq(x*Min(15, x) - 10, 0), dom)
+    raises(ValueError, lambda: solveset(x*Max(x, 15) - 10, x, dom))
+    raises(ValueError, lambda: solveset(x*Min(x, 15) - 10, x, dom))
     raises(ValueError, lambda: solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom))
     raises(ValueError, lambda: solveset(Abs(x - 1) - Abs(y), x, dom))
     raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))
@@ -1858,12 +1907,15 @@ def test_is_logarithmic():
 
 
 def test_solve_logarithm():
+    y = Symbol('y')
     assert _solve_logarithm(log(x**y) - y*log(x), 0, x, S.Reals) == S.Reals
+    y = Symbol('y', positive=True)
     assert _solve_logarithm(log(x)*log(y), 0, x, S.Reals) == FiniteSet(1)
 
 # end of logarithmic tests
 
 
+<<<<<<< HEAD
 # lambert tests
 
 def test_solve_lambert():
@@ -1978,3 +2030,16 @@ def test_other_lambert():
     a = S(6)/5
     assert solveset_real(x**a - a**x, x) == FiniteSet(
         a, -a*LambertW(-log(a)/a)/log(a))
+=======
+def test_linear_coeffs():
+    from sympy.solvers.solveset import linear_coeffs
+    assert linear_coeffs(0, x) == [0, 0]
+    assert all(i is S.Zero for i in linear_coeffs(0, x))
+    assert linear_coeffs(x + 2*y + 3, x, y) == [1, 2, 3]
+    assert linear_coeffs(x + 2*y + 3, y, x) == [2, 1, 3]
+    assert linear_coeffs(x + 2*x**2 + 3, x, x**2) == [1, 2, 3]
+    raises(ValueError, lambda:
+        linear_coeffs(x + 2*x**2 + x**3, x, x**2))
+    raises(ValueError, lambda:
+        linear_coeffs(1/x*(x - 1) + 1/x, x))
+>>>>>>> 413257beef45fd416ef299e5ea6d11941ebf6270

@@ -1,12 +1,9 @@
-from __future__ import division
-
-from sympy import Dummy, S, Symbol, symbols, pi, sqrt, asin, sin, cos
+from sympy import Dummy, S, symbols, pi, sqrt, asin, sin, cos
 from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane
 from sympy.geometry.util import are_coplanar
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises
 
 
-@slow
 def test_plane():
     x, y, z, u, v = symbols('x y z u v', real=True)
     p1 = Point3D(0, 0, 0)
@@ -219,7 +216,7 @@ def test_plane():
 def test_dimension_normalization():
     A = Plane(Point3D(1, 1, 2), normal_vector=(1, 1, 1))
     b = Point(1, 1)
-    assert A.projection(b) == Point(5/3, 5/3, 2/3)
+    assert A.projection(b) == Point(S(5)/3, S(5)/3, S(2)/3)
 
     a, b = Point(0, 0), Point3D(0, 1)
     Z = (0, 0, 1)

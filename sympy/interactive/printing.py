@@ -42,8 +42,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     except ImportError:
         pass
 
-    preamble = "\\documentclass[%s]{article}\n" \
-               "\\pagestyle{empty}\n" \
+    preamble = "\\documentclass[varwidth,%s]{standalone}\n" \
                "\\usepackage{amsmath,amsfonts}%s\\begin{document}"
     if euler:
         addpackages = '\\usepackage{euler}'
@@ -96,6 +95,16 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             debug('matplotlib exception caught:', repr(e))
             return None
 
+
+    from sympy import Basic
+    from sympy.matrices import MatrixBase
+    from sympy.physics.vector import Vector, Dyadic
+    from sympy.tensor.array import NDimArray
+
+    # These should all have _repr_latex_ and _repr_latex_orig. If you update
+    # this also update printable_types below.
+    sympy_latex_types = (Basic, MatrixBase, Vector, Dyadic, NDimArray)
+
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
 
@@ -104,10 +113,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
 
         try:
-            from sympy import Basic
-            from sympy.matrices import MatrixBase
-            from sympy.physics.vector import Vector, Dyadic
-            from sympy.tensor.array import NDimArray
             # If you're adding another type, make sure you add it to printable_types
             # later in this file as well
 
@@ -125,7 +130,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 return False
             # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
             # to use here, than these explicit imports.
-            elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic, NDimArray)):
+            elif isinstance(o, sympy_latex_types):
                 return True
             elif isinstance(o, (float, integer_types)) and print_builtin:
                 return True
@@ -143,6 +148,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         if _can_print_latex(o):
             s = latex(o, mode=latex_mode, **settings)
+            if latex_mode == 'plain':
+                s = '$\\displaystyle %s$' % s
             try:
                 return _preview_wrapper(s)
             except RuntimeError as e:
@@ -165,9 +172,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function to generate the latex representation of sympy expressions.
         """
         if _can_print_latex(o):
-            s = latex(o, mode='plain', **settings)
-            s = s.strip('$')
-            return '$$%s$$' % s
+            s = latex(o, mode=latex_mode, **settings)
+            if latex_mode == 'plain':
+                return '$\\displaystyle %s$' % s
+            return s
 
     def _result_display(self, arg):
         """IPython's pretty-printer display hook, for use in IPython 0.10
@@ -224,6 +232,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             debug("init_printing: using mathjax formatter")
             for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
+            for typ in sympy_latex_types:
+                typ._repr_latex_ = typ._repr_latex_orig
         else:
             debug("init_printing: not using text/latex formatter")
             for cls in printable_types:
@@ -231,6 +241,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 #latex_formatter.for_type(cls, None)
                 if cls in latex_formatter.type_printers:
                     latex_formatter.type_printers.pop(cls)
+
+            for typ in sympy_latex_types:
+                typ._repr_latex_ = None
 
     else:
         ip.set_hook('result_display', _result_display)
@@ -252,12 +265,14 @@ def _is_ipython(shell):
             return False
     return isinstance(shell, InteractiveShell)
 
+# Used by the doctester to override the default for no_global
+NO_GLOBAL = False
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
                   no_global=False, ip=None, euler=False, forecolor='Black',
                   backcolor='Transparent', fontsize='10pt',
-                  latex_mode='equation*', print_builtin=True,
+                  latex_mode='plain', print_builtin=True,
                   str_printer=None, pretty_printer=None,
                   latex_printer=None, **settings):
     r"""
@@ -313,7 +328,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     fontsize: string, optional, default='10pt'
         A font size to pass to the LaTeX documentclass function in the
         preamble.
-    latex_mode: string, optional, default='equation*'
+    latex_mode: string, optional, default='plain'
         The mode used in the LaTeX printer. Can be one of:
         {'inline'|'plain'|'equation'|'equation*'}.
     print_builtin: boolean, optional, default=True
@@ -414,7 +429,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                     debug("init_printing: Setting use_latex to True")
                     use_latex = True
 
-    if not no_global:
+    if not NO_GLOBAL and not no_global:
         Printer.set_global_settings(order=order, use_unicode=use_unicode,
                                     wrap_line=wrap_line, num_columns=num_columns)
     else:

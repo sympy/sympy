@@ -1,23 +1,22 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
+from sympy.core.compatibility import is_sequence
+from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
-from sympy.core.relational import Equality
-from sympy.sets.sets import Interval
+from sympy.core.relational import Equality, Relational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, range
-from sympy.core.containers import Tuple
-from sympy.core.relational import Relational
-from sympy.logic.boolalg import BooleanFunction
 from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
-from sympy.utilities import flatten
-from sympy.utilities.iterables import sift
+from sympy.logic.boolalg import BooleanFunction
 from sympy.matrices import Matrix
 from sympy.tensor.indexed import Idx
+from sympy.sets.sets import Interval
+from sympy.utilities import flatten
+from sympy.utilities.iterables import sift
 
 
 def _common_new(cls, function, *symbols, **assumptions):
@@ -189,7 +188,7 @@ class ExprWithLimits(Expr):
 
     @property
     def variables(self):
-        """Return a list of the dummy variables
+        """Return a list of the limit variables.
 
         >>> from sympy import Sum
         >>> from sympy.abc import x, i
@@ -204,6 +203,27 @@ class ExprWithLimits(Expr):
         transform : Perform mapping on the dummy variable
         """
         return [l[0] for l in self.limits]
+
+    @property
+    def bound_symbols(self):
+        """Return only variables that are dummy variables.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, i, j, k
+        >>> Integral(x**i, (i, 1, 3), (j, 2), k).bound_symbols
+        [i, j]
+
+        See Also
+        ========
+
+        function, limits, free_symbols
+        as_dummy : Rename dummy variables
+        transform : Perform mapping on the dummy variable
+        """
+        return [l[0] for l in self.limits if len(l) != 1]
 
     @property
     def free_symbols(self):
@@ -240,55 +260,6 @@ class ExprWithLimits(Expr):
     def is_number(self):
         """Return True if the Sum has no free symbols, else False."""
         return not self.free_symbols
-
-    def as_dummy(self):
-        """
-        Replace instances of the given dummy variables with explicit dummy
-        counterparts to make clear what are dummy variables and what
-        are real-world symbols in an object.
-
-        Examples
-        ========
-
-        >>> from sympy import Integral
-        >>> from sympy.abc import x, y
-        >>> Integral(x, (x, x, y), (y, x, y)).as_dummy()
-        Integral(_x, (_x, x, _y), (_y, x, y))
-
-        If the object supperts the "integral at" limit ``(x,)`` it
-        is not treated as a dummy, but the explicit form, ``(x, x)``
-        of length 2 does treat the variable as a dummy.
-
-        >>> Integral(x, x).as_dummy()
-        Integral(x, x)
-        >>> Integral(x, (x, x)).as_dummy()
-        Integral(_x, (_x, x))
-
-        If there were no dummies in the original expression, then the
-        the symbols which cannot be changed by subs() are clearly seen as
-        those with an underscore prefix.
-
-        See Also
-        ========
-
-        variables : Lists the integration variables
-        transform : Perform mapping on the integration variable
-        """
-        reps = {}
-        f = self.function
-        limits = list(self.limits)
-        for i in range(-1, -len(limits) - 1, -1):
-            xab = list(limits[i])
-            if len(xab) == 1:
-                continue
-            x = xab[0]
-            xab[0] = x.as_dummy()
-            for j in range(1, len(xab)):
-                xab[j] = xab[j].subs(reps)
-            reps[x] = xab[0]
-            limits[i] = xab
-        f = f.subs(reps)
-        return self.func(f, *limits)
 
     def _eval_interval(self, x, a, b):
         limits = [(i if i[0] != x else (x, a, b)) for i in self.limits]
@@ -341,7 +312,10 @@ class ExprWithLimits(Expr):
             sub_into_func = True
             for i, xab in enumerate(limits):
                 if 1 == len(xab) and old == xab[0]:
-                    xab = (old, old)
+                    if new._diff_wrt:
+                        xab = (new,)
+                    else:
+                        xab = (old, old)
                 limits[i] = Tuple(xab[0], *[l._subs(old, new) for l in xab[1:]])
                 if len(xab[0].free_symbols.intersection(old.free_symbols)) != 0:
                     sub_into_func = False

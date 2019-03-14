@@ -1,4 +1,4 @@
-from sympy.core import I, symbols, Basic
+from sympy.core import I, symbols, Basic, Mul
 from sympy.functions import adjoint, transpose
 from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
         eye, ImmutableMatrix)
@@ -135,3 +135,7 @@ def test_matmul_args_cnc():
 def test_issue_12950():
     M = Matrix([[Symbol("x")]]) * MatrixSymbol("A", 1, 1)
     assert MatrixSymbol("A", 1, 1).as_explicit()[0]*Symbol('x') == M.as_explicit()[0]
+
+def test_construction_with_Mul():
+    assert Mul(C, D) == MatMul(C, D)
+    assert Mul(D, C) == MatMul(D, C)

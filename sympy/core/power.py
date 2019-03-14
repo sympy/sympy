@@ -232,9 +232,9 @@ class Pow(Expr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Exponentiation
-    .. [2] http://en.wikipedia.org/wiki/Exponentiation#Zero_to_the_power_of_zero
-    .. [3] http://en.wikipedia.org/wiki/Indeterminate_forms
+    .. [1] https://en.wikipedia.org/wiki/Exponentiation
+    .. [2] https://en.wikipedia.org/wiki/Exponentiation#Zero_to_the_power_of_zero
+    .. [3] https://en.wikipedia.org/wiki/Indeterminate_forms
 
     """
     is_Pow = True
@@ -671,12 +671,12 @@ class Pow(Expr):
                     # Allow fractional powers for commutative objects
                     pow = coeff1/coeff2
                     try:
-                        pow = as_int(pow)
+                        pow = as_int(pow, strict=False)
                         combines = True
                     except ValueError:
-                        combines = Pow._eval_power(
+                        combines = isinstance(Pow._eval_power(
                             Pow(*old.as_base_exp(), evaluate=False),
-                            pow) is not None
+                            pow), (Pow, exp, Symbol))
                     return combines, pow, None
                 else:
                     # With noncommutative symbols, substitute only integer powers
@@ -1232,7 +1232,7 @@ class Pow(Expr):
         else:
             return True
 
-    def _eval_rewrite_as_exp(self, base, expo):
+    def _eval_rewrite_as_exp(self, base, expo, **kwargs):
         from sympy import exp, log, I, arg
 
         if base.is_zero or base.has(exp) or expo.has(exp):

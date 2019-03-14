@@ -4,8 +4,8 @@ import math as m
 import numpy as np
 
 x, y = me.dynamicsymbols('x y')
-a11, a12, a21, a22, b1, b2=sm.symbols('a11 a12 a21 a22 b1 b2', real=True)
-eqn=sm.Matrix([[0]])
+a11, a12, a21, a22, b1, b2 = sm.symbols('a11 a12 a21 a22 b1 b2', real=True)
+eqn = sm.Matrix([[0]])
 eqn[0] = a11*x+a12*y-b1
 eqn = eqn.row_insert(eqn.shape[0], sm.Matrix([[0]]))
 eqn[eqn.shape[0]-1] = a21*x+a22*y-b2

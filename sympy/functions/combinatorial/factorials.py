@@ -1,19 +1,17 @@
 from __future__ import print_function, division
 
 from sympy.core import S, sympify, Dummy, Mod
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import reduce, range, HAS_GMPY
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
 from sympy.core.relational import Eq
-
 from sympy.ntheory import sieve
+from sympy.polys.polytools import Poly
 
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, range, HAS_GMPY
-from sympy.core.cache import cacheit
-
-from sympy.polys.polytools import Poly
 
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
@@ -234,11 +232,11 @@ class factorial(CombinatorialFunction):
 
                     return Integer(fc % q)
 
-    def _eval_rewrite_as_gamma(self, n):
+    def _eval_rewrite_as_gamma(self, n, **kwargs):
         from sympy import gamma
         return gamma(n + 1)
 
-    def _eval_rewrite_as_Product(self, n):
+    def _eval_rewrite_as_Product(self, n, **kwargs):
         from sympy import Product
         if n.is_nonnegative and n.is_integer:
             i = Dummy('i', integer=True)
@@ -293,7 +291,7 @@ class subfactorial(CombinatorialFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Subfactorial
+    .. [1] https://en.wikipedia.org/wiki/Subfactorial
     .. [2] http://mathworld.wolfram.com/Subfactorial.html
 
     Examples
@@ -341,7 +339,7 @@ class subfactorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
-    def _eval_rewrite_as_uppergamma(self, arg):
+    def _eval_rewrite_as_uppergamma(self, arg, **kwargs):
         from sympy import uppergamma
         return uppergamma(arg + 1, -1)/S.Exp1
 
@@ -460,7 +458,7 @@ class factorial2(CombinatorialFunction):
             if n.is_odd:
                 return ((n + 1) / 2).is_even
 
-    def _eval_rewrite_as_gamma(self, n):
+    def _eval_rewrite_as_gamma(self, n, **kwargs):
         from sympy import gamma, Piecewise, sqrt
         return 2**(n/2)*gamma(n/2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)),
                 (sqrt(2/pi), Eq(Mod(n, 2), 1)))
@@ -580,18 +578,18 @@ class RisingFactorial(CombinatorialFunction):
                                             r*(x - i),
                                             range(1, abs(int(k)) + 1), 1)
 
-    def _eval_rewrite_as_gamma(self, x, k):
+    def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma
         return gamma(x + k) / gamma(x)
 
-    def _eval_rewrite_as_FallingFactorial(self, x, k):
+    def _eval_rewrite_as_FallingFactorial(self, x, k, **kwargs):
         return FallingFactorial(x + k - 1, k)
 
-    def _eval_rewrite_as_factorial(self, x, k):
+    def _eval_rewrite_as_factorial(self, x, k, **kwargs):
         if x.is_integer and k.is_integer:
             return factorial(k + x - 1) / factorial(x - 1)
 
-    def _eval_rewrite_as_binomial(self, x, k):
+    def _eval_rewrite_as_binomial(self, x, k, **kwargs):
         if k.is_integer:
             return factorial(k) * binomial(x + k - 1, k)
 
@@ -713,18 +711,18 @@ class FallingFactorial(CombinatorialFunction):
                             return 1/reduce(lambda r, i: r*(x + i),
                                             range(1, abs(int(k)) + 1), 1)
 
-    def _eval_rewrite_as_gamma(self, x, k):
+    def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma
         return (-1)**k*gamma(k - x) / gamma(-x)
 
-    def _eval_rewrite_as_RisingFactorial(self, x, k):
+    def _eval_rewrite_as_RisingFactorial(self, x, k, **kwargs):
         return rf(x - k + 1, k)
 
-    def _eval_rewrite_as_binomial(self, x, k):
+    def _eval_rewrite_as_binomial(self, x, k, **kwargs):
         if k.is_integer:
             return factorial(k) * binomial(x, k)
 
-    def _eval_rewrite_as_factorial(self, x, k):
+    def _eval_rewrite_as_factorial(self, x, k, **kwargs):
         if x.is_integer and k.is_integer:
             return factorial(x) / factorial(x - k)
 
@@ -842,8 +840,6 @@ class binomial(CombinatorialFunction):
     @classmethod
     def _eval(self, n, k):
         # n.is_Number and k.is_Integer and k != 1 and n != k
-        from sympy.functions.elementary.exponential import log
-        from sympy.core import N
 
         if k.is_Integer:
             if n.is_Integer and n >= 0:
@@ -1003,17 +999,17 @@ class binomial(CombinatorialFunction):
         else:
             return binomial(*self.args)
 
-    def _eval_rewrite_as_factorial(self, n, k):
+    def _eval_rewrite_as_factorial(self, n, k, **kwargs):
         return factorial(n)/(factorial(k)*factorial(n - k))
 
-    def _eval_rewrite_as_gamma(self, n, k):
+    def _eval_rewrite_as_gamma(self, n, k, **kwargs):
         from sympy import gamma
         return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
-    def _eval_rewrite_as_tractable(self, n, k):
+    def _eval_rewrite_as_tractable(self, n, k, **kwargs):
         return self._eval_rewrite_as_gamma(n, k).rewrite('tractable')
 
-    def _eval_rewrite_as_FallingFactorial(self, n, k):
+    def _eval_rewrite_as_FallingFactorial(self, n, k, **kwargs):
         if k.is_integer:
             return ff(n, k) / factorial(k)
 

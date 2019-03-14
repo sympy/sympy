@@ -62,6 +62,7 @@ class JuliaCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
     }
@@ -179,7 +180,7 @@ class JuliaCodePrinter(CodePrinter):
                 r = r + mulsym + a_str[i]
             return r
 
-        if len(b) == 0:
+        if not b:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
             divsym = '/' if b[0].is_number else './'

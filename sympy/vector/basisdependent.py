@@ -115,9 +115,6 @@ class BasisDependent(Expr):
                                for k, v in self.components.items()]
         return self._add_func(*integral_components)
 
-    def _eval_diff(self, *args, **kwargs):
-        return self.diff(*args, **kwargs)
-
     def as_numer_denom(self):
         """
         Returns the expression as a tuple wrt the following
@@ -126,7 +123,7 @@ class BasisDependent(Expr):
         expression -> a/b -> a, b
 
         """
-        return self, 1
+        return self, S.One
 
     def factor(self, *args, **kwargs):
         """

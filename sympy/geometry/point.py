@@ -380,18 +380,19 @@ class Point(GeometryEntity):
         points = list(uniq(points))
         return Point.affine_rank(*points) <= 2
 
-    def distance(self, p):
-        """The Euclidean distance from self to point p.
-
-        Parameters
-        ==========
-
-        p : Point
+    def distance(self, other):
+        """The Euclidean distance between self and another GeometricEntity.
 
         Returns
         =======
 
         distance : number or symbolic expression.
+
+        Raises
+        ======
+
+        TypeError : if other is not recognized as a GeometricEntity or is a
+                    GeometricEntity for which distance is not defined.
 
         See Also
         ========
@@ -402,19 +403,34 @@ class Point(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy.geometry import Point
+        >>> from sympy.geometry import Point, Line
         >>> p1, p2 = Point(1, 1), Point(4, 5)
+        >>> l = Line((3, 1), (2, 2))
         >>> p1.distance(p2)
         5
+        >>> p1.distance(l)
+        sqrt(2)
+
+        The computed distance may be symbolic, too:
 
         >>> from sympy.abc import x, y
         >>> p3 = Point(x, y)
-        >>> p3.distance(Point(0, 0))
+        >>> p3.distance((0, 0))
         sqrt(x**2 + y**2)
 
         """
-        s, p = Point._normalize_dimension(self, Point(p))
-        return sqrt(Add(*((a - b)**2 for a, b in zip(s, p))))
+        if not isinstance(other , GeometryEntity) :
+            try :
+                other = Point(other, dim=self.ambient_dimension)
+            except TypeError :
+                raise TypeError("not recognized as a GeometricEntity: %s" % type(other))
+        if isinstance(other , Point) :
+            s, p = Point._normalize_dimension(self, Point(other))
+            return sqrt(Add(*((a - b)**2 for a, b in zip(s, p))))
+        distance = getattr(other, 'distance', None)
+        if distance is None:
+            raise TypeError("distance between Point and %s is not defined" % type(other))
+        return distance(self)
 
     def dot(self, p):
         """Return dot product of self with another Point."""
@@ -985,15 +1001,11 @@ class Point2D(Point):
         geometry.entity.scale
         geometry.entity.translate
         """
-        try:
-            col, row = matrix.shape
-            valid_matrix = matrix.is_square and col == 3
-        except AttributeError:
-            # We hit this block if matrix argument is not actually a Matrix.
-            valid_matrix = False
-        if not valid_matrix:
-            raise ValueError("The argument to the transform function must be " \
-            + "a 3x3 matrix")
+        if not (matrix.is_Matrix and matrix.shape == (3, 3)):
+            raise ValueError("matrix must be a 3x3 matrix")
+
+        col, row = matrix.shape
+        valid_matrix = matrix.is_square and col == 3
         x, y = self.args
         return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
 
@@ -1268,15 +1280,11 @@ class Point3D(Point):
         geometry.entity.scale
         geometry.entity.translate
         """
-        try:
-            col, row = matrix.shape
-            valid_matrix = matrix.is_square and col == 4
-        except AttributeError:
-            # We hit this block if matrix argument is not actually a Matrix.
-            valid_matrix = False
-        if not valid_matrix:
-            raise ValueError("The argument to the transform function must be " \
-            + "a 4x4 matrix")
+        if not (matrix.is_Matrix and matrix.shape == (4, 4)):
+            raise ValueError("matrix must be a 4x4 matrix")
+
+        col, row = matrix.shape
+        valid_matrix = matrix.is_square and col == 4
         from sympy.matrices.expressions import Transpose
         x, y, z = self.args
         m = Transpose(matrix)

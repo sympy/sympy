@@ -2,28 +2,27 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy.core.sympify import (_sympify, sympify, converter,
-    SympifyError)
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
-from sympy.core.singleton import Singleton, S
-from sympy.core.evalf import EvalfMixin
-from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import Float
 from sympy.core.compatibility import (iterable, with_metaclass,
     ordered, range, PY3)
+from sympy.core.evalf import EvalfMixin
 from sympy.core.evaluate import global_evaluate
+from sympy.core.expr import Expr
 from sympy.core.function import FunctionClass
+from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
+from sympy.core.numbers import Float
 from sympy.core.relational import Eq, Ne
+from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
+from sympy.core.sympify import _sympify, sympify, converter
+from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.sets.contains import Contains
+from sympy.utilities import subsets
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import func_name, filldedent
+
 from mpmath import mpi, mpf
-from sympy.logic.boolalg import And, Or, Not, true, false
-from sympy.utilities import subsets
-from sympy.multipledispatch import dispatch
 
 class Set(Basic):
     """
@@ -130,7 +129,7 @@ class Set(Basic):
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Disjoint_sets
+        .. [1] https://en.wikipedia.org/wiki/Disjoint_sets
         """
         return self.intersect(other) == S.EmptySet
 
@@ -401,7 +400,7 @@ class Set(Basic):
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Power_set
+        .. [1] https://en.wikipedia.org/wiki/Power_set
 
         """
         return self._eval_powerset()
@@ -594,7 +593,7 @@ class ProductSet(Set):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Cartesian_product
+    .. [1] https://en.wikipedia.org/wiki/Cartesian_product
     """
     is_ProductSet = True
 
@@ -749,7 +748,7 @@ class Interval(Set, EvalfMixin):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Interval_%28mathematics%29
+    .. [1] https://en.wikipedia.org/wiki/Interval_%28mathematics%29
     """
     is_Interval = True
 
@@ -1006,7 +1005,7 @@ class Union(Set, EvalfMixin):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Union_%28set_theory%29
+    .. [1] https://en.wikipedia.org/wiki/Union_%28set_theory%29
     """
     is_Union = True
 
@@ -1187,7 +1186,7 @@ class Intersection(Set):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Intersection_%28set_theory%29
+    .. [1] https://en.wikipedia.org/wiki/Intersection_%28set_theory%29
     """
     is_Intersection = True
 
@@ -1402,7 +1401,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Empty_set
+    .. [1] https://en.wikipedia.org/wiki/Empty_set
     """
     is_EmptySet = True
     is_FiniteSet = True
@@ -1460,7 +1459,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Universal_set
+    .. [1] https://en.wikipedia.org/wiki/Universal_set
     """
 
     is_UniversalSet = True
@@ -1511,7 +1510,7 @@ class FiniteSet(Set, EvalfMixin):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Finite_set
+    .. [1] https://en.wikipedia.org/wiki/Finite_set
     """
     is_FiniteSet = True
     is_iterable = True
@@ -1700,7 +1699,7 @@ class SymmetricDifference(Set):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Symmetric_difference
+    .. [1] https://en.wikipedia.org/wiki/Symmetric_difference
     """
 
     is_SymmetricDifference = True
@@ -1868,7 +1867,7 @@ def simplify_union(args):
     # Here we depend on rules built into the constituent sets
     args = set(args)
     new_args = True
-    while(new_args):
+    while new_args:
         for s in args:
             new_args = False
             for t in args - set((s,)):
@@ -1938,7 +1937,7 @@ def simplify_intersection(args):
     # Here we depend on rules built into the constituent sets
     args = set(args)
     new_args = True
-    while(new_args):
+    while new_args:
         for s in args:
             new_args = False
             for t in args - set((s,)):

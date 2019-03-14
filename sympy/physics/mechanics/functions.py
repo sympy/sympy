@@ -373,9 +373,8 @@ def gravity(acceleration, *bodies):
         raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
 
     for e in bodies:
-        try:
-            point = e.masscenter
-        except AttributeError:
+        point = getattr(e, 'masscenter', None)
+        if point is None:
             point = e.point
 
         gravity_force.append((point, e.mass*acceleration))
@@ -393,29 +392,27 @@ def center_of_mass(point, *bodies):
 
     >>> from sympy import symbols, S
     >>> from sympy.physics.vector import Point
-    >>> from sympy.physics.mechanics import Particle, ReferenceFrame
+    >>> from sympy.physics.mechanics import Particle, ReferenceFrame, RigidBody, outer
     >>> from sympy.physics.mechanics.functions import center_of_mass
-    >>> frame_a=ReferenceFrame('a')
-    >>> mu=symbols('mu', real=True)
-    >>> p1=Particle('p1', Point('p1_pt'), S(1))
-    >>> p2=Particle('p2', Point('p2_pt'), S(2))
-    >>> p3=Particle('p3', Point('p3_pt'), S(3))
-    >>> p4=Particle('p4', Point('p4_pt'), S(4))
-    >>> p5=Particle('p5', Point('p5_pt'), S(5))
-    >>> p6=Particle('p6', Point('p6_pt'), S(6))
-    >>> p7=Particle('p7', Point('p7_pt'), S(7))
-    >>> p8=Particle('p8', Point('p8_pt'), mu)
-    >>> p2.point.set_pos(p1.point, frame_a.x)
-    >>> p3.point.set_pos(p1.point, frame_a.x+frame_a.y)
-    >>> p4.point.set_pos(p1.point, frame_a.y)
-    >>> p5.point.set_pos(p1.point, frame_a.z)
-    >>> p6.point.set_pos(p1.point, frame_a.x+frame_a.z)
-    >>> p7.point.set_pos(p1.point, frame_a.x+frame_a.y+frame_a.z)
-    >>> p8.point.set_pos(p1.point, frame_a.y+frame_a.z)
-    >>> point_so=Point('so')
-    >>> point_so.set_pos(p1.point, center_of_mass(p1.point, p1, p2, p3, p4, p5, p6, p7, p8))
-    >>> point_so.pos_from(p1.point)
-    18/(mu + 28)*a.x + (mu + 14)/(mu + 28)*a.y + (mu + 18)/(mu + 28)*a.z
+    >>> a = ReferenceFrame('a')
+    >>> m = symbols('m', real=True)
+    >>> p1 = Particle('p1', Point('p1_pt'), S(1))
+    >>> p2 = Particle('p2', Point('p2_pt'), S(2))
+    >>> p3 = Particle('p3', Point('p3_pt'), S(3))
+    >>> p4 = Particle('p4', Point('p4_pt'), m)
+    >>> b_f = ReferenceFrame('b_f')
+    >>> b_cm = Point('b_cm')
+    >>> mb = symbols('mb')
+    >>> b = RigidBody('b', b_cm, b_f, mb, (outer(b_f.x, b_f.x), b_cm))
+    >>> p2.point.set_pos(p1.point, a.x)
+    >>> p3.point.set_pos(p1.point, a.x + a.y)
+    >>> p4.point.set_pos(p1.point, a.y)
+    >>> b.masscenter.set_pos(p1.point, a.y + a.z)
+    >>> point_o=Point('o')
+    >>> point_o.set_pos(p1.point, center_of_mass(p1.point, p1, p2, p3, p4, b))
+    >>> expr = 5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
+    >>> point_o.pos_from(p1.point)
+    5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
     """
     if not bodies:
         raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
@@ -424,10 +421,12 @@ def center_of_mass(point, *bodies):
     vec = Vector(0)
     for i in bodies:
         total_mass += i.mass
-        try:
-            vec += i.mass*i.masscenter.pos_from(point)
-        except AttributeError:
-            vec += i.mass*i.point.pos_from(point)
+
+        masscenter = getattr(i, 'masscenter', None)
+        if masscenter is None:
+            masscenter = i.point
+        vec += i.mass*masscenter.pos_from(point)
+
     return vec/total_mass
 
 

@@ -189,7 +189,7 @@ class Dimension(Expr):
                 other = Dimension(Quantity.get_dimensional_expr(other))
             if isinstance(other, Dimension):
                 return Dimension(self.name*other.name)
-            if not other.free_symbols:
+            if not other.free_symbols: # other.is_number cannot be used
                 return self
             return super(Dimension, self).__mul__(other)
         return self
@@ -342,7 +342,7 @@ class DimensionSystem(Basic):
             if isinstance(dim, string_types):
                 dim = Dimension(Symbol(dim))
             elif isinstance(dim, Dimension):
-                dim = dim
+                pass
             elif isinstance(dim, Symbol):
                 dim = Dimension(dim)
             else:

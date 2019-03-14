@@ -1,6 +1,4 @@
-from __future__ import division
-
-from sympy import Rational, oo, sqrt
+from sympy import Rational, oo, sqrt, S
 from sympy import Line, Point, Point2D, Parabola, Segment2D, Ray2D
 from sympy import Circle, Ellipse
 from sympy.utilities.pytest import raises
@@ -105,4 +103,4 @@ def test_parabola_intersection():
     assert parabola1.intersection(Ellipse(p2, 2, 1)) == [Point2D(0, -1), Point2D(0, -1)]
     assert parabola1.intersection(Ellipse(Point(0, 19), 5, 7)) == []
     assert parabola1.intersection(Ellipse((0, 3), 12, 4)) == \
-           [Point2D(0, -1), Point2D(0, -1), Point2D(-4*sqrt(17)/3, 59/9), Point2D(4*sqrt(17)/3, 59/9)]
+           [Point2D(0, -1), Point2D(0, -1), Point2D(-4*sqrt(17)/3, S(59)/9), Point2D(4*sqrt(17)/3, S(59)/9)]

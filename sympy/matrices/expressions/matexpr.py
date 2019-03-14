@@ -31,7 +31,7 @@ def _sympifyit(arg, retval=None):
 
 
 class MatrixExpr(Expr):
-    """ Superclass for Matrix Expressions
+    """Superclass for Matrix Expressions
 
     MatrixExprs represent abstract matrices, linear transformations represented
     within a particular basis.
@@ -46,11 +46,8 @@ class MatrixExpr(Expr):
 
     See Also
     ========
-        MatrixSymbol
-        MatAdd
-        MatMul
-        Transpose
-        Inverse
+
+    MatrixSymbol, MatAdd, MatMul, Transpose, Inverse
     """
 
     # Should not be considered iterable by the
@@ -71,7 +68,7 @@ class MatrixExpr(Expr):
 
     is_commutative = False
     is_number = False
-    is_symbol = True
+    is_symbol = False
 
     def __new__(cls, *args, **kwargs):
         args = map(sympify, args)
@@ -87,22 +84,22 @@ class MatrixExpr(Expr):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return MatAdd(self, other).doit()
+        return MatAdd(self, other, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return MatAdd(other, self).doit()
+        return MatAdd(other, self, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return MatAdd(self, -other).doit()
+        return MatAdd(self, -other, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return MatAdd(other, -self).doit()
+        return MatAdd(other, -self, check=True).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
@@ -131,13 +128,11 @@ class MatrixExpr(Expr):
             raise ShapeError("Power of non-square matrix %s" % self)
         elif self.is_Identity:
             return self
-        elif other is S.NegativeOne:
-            return Inverse(self)
         elif other is S.Zero:
             return Identity(self.rows)
         elif other is S.One:
             return self
-        return MatPow(self, other)
+        return MatPow(self, other).doit(deep=False)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
@@ -201,51 +196,11 @@ class MatrixExpr(Expr):
         from sympy.matrices.expressions.adjoint import Adjoint
         return Adjoint(self)
 
-    def _eval_derivative(self, v):
-        if not isinstance(v, MatrixExpr):
-            return None
+    def _eval_derivative(self, x):
+        return _matrix_derivative(self, x)
 
-        # Convert to the index-summation notation, perform the derivative, then
-        # reconvert it back to matrix expression.
-        from sympy import symbols, Dummy, Lambda, Trace
-        i, j, m, n = symbols("i j m n", cls=Dummy)
-        M = self._entry(i, j, expand=False)
-
-        # Replace traces with summations:
-        def getsum(x):
-            di = Dummy("d_i")
-            return Sum(x.args[0], (di, 0, x.args[0].shape[0]-1))
-        M = M.replace(lambda x: isinstance(x, Trace), getsum)
-
-        repl = {}
-        if self.shape[0] == 1:
-            repl[i] = 0
-        if self.shape[1] == 1:
-            repl[j] = 0
-        if v.shape[0] == 1:
-            repl[m] = 0
-        if v.shape[1] == 1:
-            repl[n] = 0
-        res = M.diff(v[m, n])
-        res = res.xreplace(repl)
-        if res == 0:
-            return res
-        if len(repl) < 2:
-            parsed = res
-        else:
-            if m not in repl:
-                parsed = MatrixExpr.from_index_summation(res, m)
-            elif i not in repl:
-                parsed = MatrixExpr.from_index_summation(res, i)
-            else:
-                parsed = MatrixExpr.from_index_summation(res)
-
-        if (parsed.has(m)) or (parsed.has(n)) or (parsed.has(i)) or (parsed.has(j)):
-            # In this case, there are still some KroneckerDelta.
-            # It's because the result is not a matrix, but a higher dimensional array.
-            return None
-        else:
-            return parsed
+    def _eval_derivative_n_times(self, x, n):
+        return Basic._eval_derivative_n_times(self, x, n)
 
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
@@ -399,7 +354,7 @@ class MatrixExpr(Expr):
         return 1, MatMul(self)
 
     @staticmethod
-    def from_index_summation(expr, first_index=None, last_index=None):
+    def from_index_summation(expr, first_index=None, last_index=None, dimensions=None):
         r"""
         Parse expression of matrices with explicitly summed indices into a
         matrix expression without indices, if possible.
@@ -548,7 +503,11 @@ class MatrixExpr(Expr):
                 return [(MatrixElement(Add.fromiter(v), *k), k) for k, v in d.items()]
             elif isinstance(expr, KroneckerDelta):
                 i1, i2 = expr.args
-                return [(MatrixElement(S.One, i1, i2), (i1, i2))]
+                if dimensions is not None:
+                    identity = Identity(dimensions[0])
+                else:
+                    identity = S.One
+                return [(MatrixElement(identity, i1, i2), (i1, i2))]
             elif isinstance(expr, MatrixElement):
                 matrix_symbol, i1, i2 = expr.args
                 if i1 in index_ranges:
@@ -586,6 +545,41 @@ class MatrixExpr(Expr):
         else:
             return remove_matelement(retexpr, first_index, last_index)
 
+    def applyfunc(self, func):
+        from .applyfunc import ElementwiseApplyFunction
+        return ElementwiseApplyFunction(func, self)
+
+    def _eval_Eq(self, other):
+        if not isinstance(other, MatrixExpr):
+            return False
+        if self.shape != other.shape:
+            return False
+        if (self - other).is_ZeroMatrix:
+            return True
+        return Eq(self, other, evaluate=False)
+
+
+def _matrix_derivative(expr, x):
+    from sympy import Derivative
+    lines = expr._eval_derivative_matrix_lines(x)
+
+    first = lines[0].first
+    second = lines[0].second
+    higher = lines[0].higher
+
+    ranks = [i.rank() for i in lines]
+    assert len(set(ranks)) == 1
+    rank = ranks[0]
+
+    if rank <= 2:
+        return reduce(lambda x, y: x+y, [i.matrix_form() for i in lines])
+        if first != 1:
+            return reduce(lambda x,y: x+y, [lr.first * lr.second.T for lr in lines])
+        elif higher != 1:
+            return reduce(lambda x,y: x+y, [lr.higher for lr in lines])
+
+    return Derivative(expr, x)
+
 
 class MatrixElement(Expr):
     parent = property(lambda self: self.args[0])
@@ -612,6 +606,10 @@ class MatrixElement(Expr):
         else:
             args = self.args
         return args[0][args[1], args[2]]
+
+    @property
+    def indices(self):
+        return self.args[1:]
 
     def _eval_derivative(self, v):
         from sympy import Sum, symbols, Dummy
@@ -646,6 +644,9 @@ class MatrixSymbol(MatrixExpr):
     Creates a SymPy Symbol to represent a Matrix. This matrix has a shape and
     can be included in Matrix Expressions
 
+    Examples
+    ========
+
     >>> from sympy import MatrixSymbol, Identity
     >>> A = MatrixSymbol('A', 3, 4) # A 3 by 4 Matrix
     >>> B = MatrixSymbol('B', 4, 3) # A 4 by 3 Matrix
@@ -655,6 +656,7 @@ class MatrixSymbol(MatrixExpr):
     I + 2*A*B
     """
     is_commutative = False
+    is_symbol = True
     _diff_wrt = True
 
     def __new__(cls, name, n, m):
@@ -663,7 +665,7 @@ class MatrixSymbol(MatrixExpr):
         return obj
 
     def _hashable_content(self):
-        return(self.name, self.shape)
+        return (self.name, self.shape)
 
     @property
     def shape(self):
@@ -679,7 +681,7 @@ class MatrixSymbol(MatrixExpr):
         return MatrixSymbol(self.name, *shape)
 
     def __call__(self, *args):
-        raise TypeError( "%s object is not callable" % self.__class__ )
+        raise TypeError("%s object is not callable" % self.__class__)
 
     def _entry(self, i, j, **kwargs):
         return MatrixElement(self, i, j)
@@ -698,9 +700,28 @@ class MatrixSymbol(MatrixExpr):
     def _eval_simplify(self, **kwargs):
         return self
 
+    def _eval_derivative_matrix_lines(self, x):
+        if self != x:
+            return [_LeftRightArgs(
+                ZeroMatrix(x.shape[0], self.shape[0]),
+                ZeroMatrix(x.shape[1], self.shape[1]),
+                transposed=False,
+            )]
+        else:
+            first=Identity(self.shape[0])
+            second=Identity(self.shape[1])
+            return [_LeftRightArgs(
+                first=first,
+                second=second,
+                transposed=False,
+            )]
+
 
 class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity
+
+    Examples
+    ========
 
     >>> from sympy.matrices import Identity, MatrixSymbol
     >>> A = MatrixSymbol('A', 3, 5)
@@ -726,6 +747,10 @@ class Identity(MatrixExpr):
     def shape(self):
         return (self.args[0], self.args[0])
 
+    @property
+    def is_square(self):
+        return True
+
     def _eval_transpose(self):
         return self
 
@@ -749,14 +774,50 @@ class Identity(MatrixExpr):
     def _eval_determinant(self):
         return S.One
 
+class GenericIdentity(Identity):
+    """
+    An identity matrix without a specified shape
+
+    This exists primarily so MatMul() with no arguments can return something
+    meaningful.
+    """
+    def __new__(cls):
+        # super(Identity, cls) instead of super(GenericIdentity, cls) because
+        # Identity.__new__ doesn't have the same signature
+        return super(Identity, cls).__new__(cls)
+
+    @property
+    def rows(self):
+        raise TypeError("GenericIdentity does not have a specified shape")
+
+    @property
+    def cols(self):
+        raise TypeError("GenericIdentity does not have a specified shape")
+
+    @property
+    def shape(self):
+        raise TypeError("GenericIdentity does not have a specified shape")
+
+    # Avoid Matrix.__eq__ which might call .shape
+    def __eq__(self, other):
+        return isinstance(other, GenericIdentity)
+
+    def __ne__(self, other):
+        return not (self == other)
+
+    def __hash__(self):
+        return super(GenericIdentity, self).__hash__()
 
 class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
 
+    Examples
+    ========
+
     >>> from sympy import MatrixSymbol, ZeroMatrix
     >>> A = MatrixSymbol('A', 3, 5)
     >>> Z = ZeroMatrix(3, 5)
-    >>> A+Z
+    >>> A + Z
     A
     >>> Z*A.T
     0
@@ -769,7 +830,6 @@ class ZeroMatrix(MatrixExpr):
     @property
     def shape(self):
         return (self.args[0], self.args[1])
-
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
@@ -802,9 +862,113 @@ class ZeroMatrix(MatrixExpr):
 
     __bool__ = __nonzero__
 
+class GenericZeroMatrix(ZeroMatrix):
+    """
+    A zero matrix without a specified shape
+
+    This exists primarily so MatAdd() with no arguments can return something
+    meaningful.
+    """
+    def __new__(cls):
+        # super(ZeroMatrix, cls) instead of super(GenericZeroMatrix, cls)
+        # because ZeroMatrix.__new__ doesn't have the same signature
+        return super(ZeroMatrix, cls).__new__(cls)
+
+    @property
+    def rows(self):
+        raise TypeError("GenericZeroMatrix does not have a specified shape")
+
+    @property
+    def cols(self):
+        raise TypeError("GenericZeroMatrix does not have a specified shape")
+
+    @property
+    def shape(self):
+        raise TypeError("GenericZeroMatrix does not have a specified shape")
+
+    # Avoid Matrix.__eq__ which might call .shape
+    def __eq__(self, other):
+        return isinstance(other, GenericZeroMatrix)
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+    def __hash__(self):
+        return super(GenericZeroMatrix, self).__hash__()
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
+
+
+class _LeftRightArgs(object):
+    r"""
+    Helper class to compute matrix derivatives.
+
+    The logic: when an expression is derived by a matrix `X_{mn}`, two lines of
+    matrix multiplications are created: the one contracted to `m` (first line),
+    and the one contracted to `n` (second line).
+
+    Transposition flips the side by which new matrices are connected to the
+    lines.
+
+    The trace connects the end of the two lines.
+    """
+
+    def __init__(self, first, second, higher=S.One, transposed=False):
+        self.first = first
+        self.second = second
+        self.higher = higher
+        self.transposed = transposed
+
+    def __repr__(self):
+        return "_LeftRightArgs(first=%s[%s], second=%s[%s], higher=%s, transposed=%s)" % (
+            self.first, self.first.shape if isinstance(self.first, MatrixExpr) else None,
+            self.second, self.second.shape if isinstance(self.second, MatrixExpr) else None,
+            self.higher,
+            self.transposed,
+        )
+
+    def transpose(self):
+        self.transposed = not self.transposed
+        return self
+
+    def matrix_form(self):
+        if self.first != 1 and self.higher != 1:
+            raise ValueError("higher dimensional array cannot be represented")
+        if self.first != 1:
+            return self.first*self.second.T
+        else:
+            return self.higher
+
+    def rank(self):
+        """
+        Number of dimensions different from trivial (warning: not related to
+        matrix rank).
+        """
+        rank = 0
+        if self.first != 1:
+            rank += sum([i != 1 for i in self.first.shape])
+        if self.second != 1:
+            rank += sum([i != 1 for i in self.second.shape])
+        if self.higher != 1:
+            rank += 2
+        return rank
+
+    def append_first(self, other):
+        self.first *= other
+
+    def append_second(self, other):
+        self.second *= other
+
+    def __hash__(self):
+        return hash((self.first, self.second, self.transposed))
+
+    def __eq__(self, other):
+        if not isinstance(other, _LeftRightArgs):
+            return False
+        return (self.first == other.first) and (self.second == other.second) and (self.transposed == other.transposed)
+
 
 from .matmul import MatMul
 from .matadd import MatAdd

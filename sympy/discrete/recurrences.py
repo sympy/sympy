@@ -30,7 +30,7 @@ def linrec(coeffs, init, n):
     Then,
 
     .. math :: y(n) = \begin{cases} b_n & 0 \le n < k \\
-        c_0 y(n-1) + c_1 y(n-2) + \cdots + c_{k-1} y(n-k) & n > k
+        c_0 y(n-1) + c_1 y(n-2) + \cdots + c_{k-1} y(n-k) & n \ge k
         \end{cases}
 
     Let `x_0, x_1, \ldots, x_n` be a sequence and consider the transformation

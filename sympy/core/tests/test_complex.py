@@ -8,7 +8,7 @@ def test_complex():
     b = Symbol("b", real=True)
     e = (a + I*b)*(a - I*b)
     assert e.expand() == a**2 + b**2
-    assert sqrt(I) == (-1)**Rational(1, 4)
+    assert sqrt(I) == sqrt(I)
 
 
 def test_conjugate():

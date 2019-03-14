@@ -8,11 +8,12 @@ from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-        Identity, ZeroMatrix)
+        Identity, ZeroMatrix, GenericIdentity)
+from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.matrices import MatrixBase
 
 
-class MatMul(MatrixExpr):
+class MatMul(MatrixExpr, Mul):
     """
     A product of matrix expressions
 
@@ -31,12 +32,21 @@ class MatMul(MatrixExpr):
     def __new__(cls, *args, **kwargs):
         check = kwargs.get('check', True)
 
+        if not args:
+            return GenericIdentity()
+
+        # This must be removed aggressively in the constructor to avoid
+        # TypeErrors from GenericIdentity().shape
+        args = filter(lambda i: GenericIdentity() != i, args)
         args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
         if check:
             validate(*matrices)
         if not matrices:
+            # Should it be
+            #
+            # return Basic.__neq__(cls, factor, GenericIdentity()) ?
             return factor
         return obj
 
@@ -121,7 +131,10 @@ class MatMul(MatrixExpr):
             args = [arg.doit(**kwargs) for arg in self.args]
         else:
             args = self.args
-        return canonicalize(MatMul(*args))
+        # treat scalar*MatrixSymbol or scalar*MatPow separately
+        mats = [arg for arg in self.args if arg.is_Matrix]
+        expr = canonicalize(MatMul(*args))
+        return expr
 
     # Needed for partial compatibility with Mul
     def args_cnc(self, **kwargs):
@@ -131,6 +144,31 @@ class MatMul(MatrixExpr):
         coeff_c, coeff_nc = coeff.args_cnc(**kwargs)
 
         return coeff_c, coeff_nc + matrices
+
+    def _eval_derivative_matrix_lines(self, x):
+        from .transpose import Transpose
+        with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
+        lines = []
+        for ind in with_x_ind:
+            left_args = self.args[:ind]
+            right_args = self.args[ind+1:]
+
+            right_mat = MatMul.fromiter(right_args)
+            right_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(right_args)])
+            left_mat = MatMul.fromiter(left_args)
+            left_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(left_args)])
+
+            d = self.args[ind]._eval_derivative_matrix_lines(x)
+            for i in d:
+                if i.transposed:
+                    i.append_first(right_mat)
+                    i.append_second(left_rev)
+                else:
+                    i.append_first(left_rev)
+                    i.append_second(right_mat)
+                lines.append(i)
+
+        return lines
 
 
 def validate(*matrices):
@@ -199,15 +237,25 @@ def merge_explicit(matmul):
 
 def xxinv(mul):
     """ Y * X * X.I -> Y """
+    from sympy.matrices.expressions.inverse import Inverse
     factor, matrices = mul.as_coeff_matrices()
     for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
         try:
-            if X.is_square and Y.is_square and X == Y.inverse():
-                I = Identity(X.rows)
-                return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
+            if X.is_square and Y.is_square:
+                _X, x_exp = X, 1
+                _Y, y_exp = Y, 1
+                if isinstance(X, MatPow) and not isinstance(X, Inverse):
+                    _X, x_exp = X.args
+                if isinstance(Y, MatPow) and not isinstance(Y, Inverse):
+                    _Y, y_exp = Y.args
+                if _X == _Y.inverse():
+                    if x_exp - y_exp > 0:
+                        I = _X**(x_exp-y_exp)
+                    else:
+                        I = _Y**(y_exp-x_exp)
+                    return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
         except ValueError:  # Y might not be invertible
             pass
-
     return mul
 
 def remove_ids(mul):
@@ -218,8 +266,9 @@ def remove_ids(mul):
     as args.
 
     See Also
-    --------
-        sympy.strategies.rm_id
+    ========
+
+    sympy.strategies.rm_id
     """
     # Separate Exprs from MatrixExprs in args
     factor, mmul = mul.as_coeff_mmul()
@@ -236,13 +285,44 @@ def factor_in_front(mul):
         return newmul(factor, *matrices)
     return mul
 
-rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
-         merge_explicit, factor_in_front, flatten)
+def combine_powers(mul):
+    # combine consecutive powers with the same base into one
+    # e.g. A*A**2 -> A**3
+    from sympy.matrices.expressions import MatPow
+    factor, mmul = mul.as_coeff_mmul()
+    args = []
+    base = None
+    exp = 0
+    for arg in mmul.args:
+        if isinstance(arg, MatPow):
+            current_base = arg.args[0]
+            current_exp = arg.args[1]
+        else:
+            current_base = arg
+            current_exp = 1
+        if current_base == base:
+            exp += current_exp
+        else:
+            if not base is None:
+                if exp == 1:
+                    args.append(base)
+                else:
+                    args.append(base**exp)
+            exp = current_exp
+            base = current_base
+    if exp == 1:
+        args.append(base)
+    else:
+        args.append(base**exp)
 
+    return newmul(factor, *args)
+
+rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
+         merge_explicit, factor_in_front, flatten, combine_powers)
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
 def only_squares(*matrices):
-    """ factor matrices only if they are square """
+    """factor matrices only if they are square"""
     if matrices[0].rows != matrices[-1].cols:
         raise RuntimeError("Invalid matrices being multiplied")
     out = []

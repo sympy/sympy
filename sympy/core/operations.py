@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.sympify import _sympify, sympify
-from sympy.core.basic import Basic, _aresame
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, range
 from sympy.core.logic import fuzzy_and
@@ -395,7 +395,7 @@ class LatticeOp(AssocOp):
 
     References:
 
-    [1] - http://en.wikipedia.org/wiki/Lattice_%28order%29
+    [1] - https://en.wikipedia.org/wiki/Lattice_%28order%29
     """
 
     is_commutative = True

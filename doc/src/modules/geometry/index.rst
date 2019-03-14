@@ -140,7 +140,7 @@ References
 
 .. [WikiPappus] "Pappus's Hexagon Theorem" Wikipedia, the Free Encyclopedia.
         Web. 26 Apr. 2013.
-        <http://en.wikipedia.org/wiki/Pappus's_hexagon_theorem>
+        <https://en.wikipedia.org/wiki/Pappus's_hexagon_theorem>
 
 Miscellaneous Notes
 -------------------

@@ -100,7 +100,7 @@ class QExpr(Expr):
     def free_symbols(self):
         return {self}
 
-    def __new__(cls, *args, **old_assumptions):
+    def __new__(cls, *args, **kwargs):
         """Construct a new quantum object.
 
         Parameters
@@ -129,10 +129,10 @@ class QExpr(Expr):
         """
 
         # First compute args and call Expr.__new__ to create the instance
-        args = cls._eval_args(args)
+        args = cls._eval_args(args, **kwargs)
         if len(args) == 0:
-            args = cls._eval_args(tuple(cls.default_args()))
-        inst = Expr.__new__(cls, *args, **old_assumptions)
+            args = cls._eval_args(tuple(cls.default_args()), **kwargs)
+        inst = Expr.__new__(cls, *args)
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
@@ -320,25 +320,6 @@ class QExpr(Expr):
     #-------------------------------------------------------------------------
 
     def doit(self, **kw_args):
-        return self
-
-    def _eval_rewrite(self, pattern, rule, **hints):
-        if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints)
-                    for a in self.args ]
-        else:
-            args = self.args
-
-        # TODO: Make Basic.rewrite use hints in evaluating
-        # self.rule(*args, **hints), not having hints breaks spin state
-        # (un)coupling on rewrite
-        if pattern is None or isinstance(self, pattern):
-            if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args, **hints)
-
-                if rewritten is not None:
-                    return rewritten
-
         return self
 
     #-------------------------------------------------------------------------

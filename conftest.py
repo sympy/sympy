@@ -8,9 +8,23 @@ import json
 import sys
 import warnings
 import pytest
+from sympy.utilities.runtests import setup_pprint, _get_doctest_blacklist
 
 durations_path = os.path.join(os.path.dirname(__file__), '.ci', 'durations.json')
 blacklist_path = os.path.join(os.path.dirname(__file__), '.ci', 'blacklisted.json')
+
+# Collecting tests from rubi_tests under pytest leads to errors even if the
+# tests will be skipped.
+collect_ignore = ["sympy/integrals/rubi"] + _get_doctest_blacklist()
+if sys.version_info < (3,):
+    collect_ignore.append('doc/src/gotchas.rst')
+
+# Set up printing for doctests
+setup_pprint()
+sys.__displayhook__ = sys.displayhook
+#from sympy import pprint_use_unicode
+#pprint_use_unicode(False)
+
 
 def _mk_group(group_dict):
     return list(chain(*[[k+'::'+v for v in files] for k, files in group_dict.items()]))

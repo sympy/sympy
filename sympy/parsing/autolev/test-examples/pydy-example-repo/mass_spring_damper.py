@@ -3,15 +3,15 @@ import sympy as sm
 import math as m
 import numpy as np
 
-m, k, b, g=sm.symbols('m k b g', real=True)
+m, k, b, g = sm.symbols('m k b g', real=True)
 position, speed = me.dynamicsymbols('position speed')
 positiond, speedd = me.dynamicsymbols('position speed', 1)
 o = me.dynamicsymbols('o')
 force = o*sm.sin(me.dynamicsymbols._t)
-frame_ceiling=me.ReferenceFrame('ceiling')
-point_origin=me.Point('origin')
+frame_ceiling = me.ReferenceFrame('ceiling')
+point_origin = me.Point('origin')
 point_origin.set_vel(frame_ceiling, 0)
-particle_block=me.Particle('block', me.Point('block_pt'), sm.Symbol('m'))
+particle_block = me.Particle('block', me.Point('block_pt'), sm.Symbol('m'))
 particle_block.point.set_pos(point_origin, position*frame_ceiling.x)
 particle_block.mass = m
 particle_block.point.set_vel(frame_ceiling, speed*frame_ceiling.x)

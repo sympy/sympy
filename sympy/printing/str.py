@@ -9,8 +9,7 @@ from sympy.core.mul import _keep_coeff
 from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
-import mpmath.libmp as mlib
-from mpmath.libmp import prec_to_dps
+from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
 from sympy.utilities import default_sort_key
 
@@ -39,10 +38,7 @@ class StrPrinter(Printer):
         if isinstance(expr, str):
             return expr
         elif isinstance(expr, Basic):
-            if hasattr(expr, "args"):
-                return repr(expr)
-            else:
-                raise
+            return repr(expr)
         else:
             return str(expr)
 
@@ -209,7 +205,7 @@ class StrPrinter(Printer):
                                         self._print(i.max))
 
     def _print_Inverse(self, I):
-        return "%s^-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
+        return "%s**(-1)" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
 
     def _print_Lambda(self, obj):
         args, expr = obj.args
@@ -316,7 +312,7 @@ class StrPrinter(Printer):
             if item.base in b:
                 b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
 
-        if len(b) == 0:
+        if not b:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
             return sign + '*'.join(a_str) + "/" + b_str[0]
@@ -339,22 +335,6 @@ class StrPrinter(Printer):
         return '.*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
 
-    def _print_MatAdd(self, expr):
-        terms = [self.parenthesize(arg, precedence(expr))
-             for arg in expr.args]
-        l = []
-        for t in terms:
-            if t.startswith('-'):
-                sign = "-"
-                t = t[1:]
-            else:
-                sign = "+"
-            l.extend([sign, t])
-        sign = l.pop(0)
-        if sign == '+':
-            sign = ""
-        return sign + ' '.join(l)
-
     def _print_NaN(self, expr):
         return 'nan'
 
@@ -365,7 +345,7 @@ class StrPrinter(Printer):
         return "Normal(%s, %s)" % (self._print(expr.mu), self._print(expr.sigma))
 
     def _print_Order(self, expr):
-        if all(p is S.Zero for p in expr.point) or not len(expr.variables):
+        if not expr.variables or all(p is S.Zero for p in expr.point):
             if len(expr.variables) <= 1:
                 return 'O(%s)' % self._print(expr.expr)
             else:
@@ -404,6 +384,14 @@ class StrPrinter(Printer):
                 use = trim
             return 'Permutation(%s)' % use
 
+    def _print_Subs(self, obj):
+        expr, old, new = obj.args
+        if len(obj.point) == 1:
+            old = old[0]
+            new = new[0]
+        return "Subs(%s, %s, %s)" % (
+            self._print(expr), self._print(old), self._print(new))
+
     def _print_TensorIndex(self, expr):
         return expr._print()
 
@@ -414,7 +402,11 @@ class StrPrinter(Printer):
         return expr._print()
 
     def _print_TensMul(self, expr):
-        return expr._print()
+        # prints expressions like "A(a)", "3*A(a)", "(1+x)*A(a)"
+        sign, args = expr._get_args_for_traditional_printer()
+        return sign + "*".join(
+            [self.parenthesize(arg, precedence(expr)) for arg in args]
+        )
 
     def _print_TensAdd(self, expr):
         return expr._print()
@@ -629,7 +621,7 @@ class StrPrinter(Printer):
             strip = True
         elif self._settings["full_prec"] == "auto":
             strip = self._print_level > 1
-        rv = mlib.to_str(expr._mpf_, dps, strip_zeros=strip)
+        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip)
         if rv.startswith('-.0'):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):

@@ -3,8 +3,9 @@
 from __future__ import print_function, division
 
 from sympy.core import S
-from sympy.core.compatibility import reduce, range
+from sympy.core.compatibility import reduce, range, iterable
 from sympy.core.function import Function
+from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
 from sympy.integrals import integrate, Integral
@@ -87,6 +88,7 @@ class IntegralTransform(Function):
         cond = And(*extra)
         if cond == False:
             raise IntegralTransformError(self.__class__.name, None, '')
+        return cond
 
     def doit(self, **hints):
         """
@@ -132,14 +134,21 @@ class IntegralTransform(Function):
                 if not isinstance(x, tuple):
                     x = [x]
                 ress.append(x[0])
-                if len(x) > 1:
+                if len(x) == 2:
+                    # only a condition
+                    extra.append(x[1])
+                elif len(x) > 2:
+                    # some region parameters and a condition (Mellin, Laplace)
                     extra += [x[1:]]
             res = Add(*ress)
             if not extra:
                 return res
             try:
                 extra = self._collapse_extra(extra)
-                return tuple([res]) + tuple(extra)
+                if iterable(extra):
+                    return tuple([res]) + tuple(extra)
+                else:
+                    return (res, extra)
             except IntegralTransformError:
                 pass
 
@@ -158,7 +167,7 @@ class IntegralTransform(Function):
         return self._as_integral(self.function, self.function_variable,
                                  self.transform_variable)
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         return self.as_integral
 
 from sympy.solvers.inequalities import _solve_inequality
@@ -362,19 +371,19 @@ def _rewrite_sin(m_n, s, a, b):
     >>> from sympy import pi, S
     >>> from sympy.abc import s
     >>> _rewrite_sin((pi, 0), s, 0, 1)
-    (gamma(s), gamma(-s + 1), pi)
+    (gamma(s), gamma(1 - s), pi)
     >>> _rewrite_sin((pi, 0), s, 1, 0)
-    (gamma(s - 1), gamma(-s + 2), -pi)
+    (gamma(s - 1), gamma(2 - s), -pi)
     >>> _rewrite_sin((pi, 0), s, -1, 0)
     (gamma(s + 1), gamma(-s), -pi)
     >>> _rewrite_sin((pi, pi/2), s, S(1)/2, S(3)/2)
-    (gamma(s - 1/2), gamma(-s + 3/2), -pi)
+    (gamma(s - 1/2), gamma(3/2 - s), -pi)
     >>> _rewrite_sin((pi, pi), s, 0, 1)
-    (gamma(s), gamma(-s + 1), -pi)
+    (gamma(s), gamma(1 - s), -pi)
     >>> _rewrite_sin((2*pi, 0), s, 0, S(1)/2)
-    (gamma(2*s), gamma(-2*s + 1), pi)
+    (gamma(2*s), gamma(1 - 2*s), pi)
     >>> _rewrite_sin((2*pi, 0), s, S(1)/2, 1)
-    (gamma(2*s - 1), gamma(-2*s + 2), -pi)
+    (gamma(2*s - 1), gamma(2 - 2*s), -pi)
     """
     # (This is a separate function because it is moderately complicated,
     #  and I want to doctest it.)
@@ -525,11 +534,9 @@ def _rewrite_gamma(f, s, a, b):
             s_multiplier = common_coefficient \
                 *reduce(igcd, [S(x.p) for x in s_multipliers])
 
-    exponent = S(1)
-    fac = S(1)
     f = f.subs(s, s/s_multiplier)
-    fac /= s_multiplier
-    exponent = 1/s_multiplier
+    fac = S(1)/s_multiplier
+    exponent = S(1)/s_multiplier
     if a_ is not None:
         a_ *= s_multiplier
     if b_ is not None:
@@ -850,9 +857,9 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     >>> inverse_mellin_transform(f, s, x, (-oo, -1))
     (x/2 - 1/(2*x))*Heaviside(x - 1)
     >>> inverse_mellin_transform(f, s, x, (-1, 1))
-    -x*Heaviside(-x + 1)/2 - Heaviside(x - 1)/(2*x)
+    -x*Heaviside(1 - x)/2 - Heaviside(x - 1)/(2*x)
     >>> inverse_mellin_transform(f, s, x, (1, oo))
-    (-x/2 + 1/(2*x))*Heaviside(-x + 1)
+    (-x/2 + 1/(2*x))*Heaviside(1 - x)
 
     See Also
     ========
@@ -979,7 +986,6 @@ def _laplace_transform(f, t, s_, simplify=True):
         a = -oo
         aux = S.true
         conds = conjuncts(to_cnf(conds))
-        u = Dummy('u', real=True)
         p, q, w1, w2, w3, w4, w5 = symbols(
             'p q w1 w2 w3 w4 w5', cls=Wild, exclude=[s])
         patterns = (
@@ -995,21 +1001,23 @@ def _laplace_transform(f, t, s_, simplify=True):
             for d in disjuncts(c):
                 if d.is_Relational and s in d.rhs.free_symbols:
                     d = d.reversed
+                if d.is_Relational and isinstance(d, (Ge, Gt)):
+                    d = d.reversedsign
                 for pat in patterns:
                     m = d.match(pat)
                     if m:
                         break
                 if m:
                     if m[q].is_positive and m[w2]/m[p] == pi/2:
-                        d = re(s + m[w3]) > 0
-                m = d.match(cos(w1*abs(arg(s*w5))*w2)*abs(s**w3)**w4 - p > 0)
+                        d = -re(s + m[w3]) < 0
+                m = d.match(p - cos(w1*abs(arg(s*w5))*w2)*abs(s**w3)**w4 < 0)
                 if not m:
                     m = d.match(
-                        cos(abs(arg_(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p > 0)
+                        cos(p - abs(arg_(s**w1*w5, q))*w2)*abs(s**w3)**w4 < 0)
                 if not m:
                     m = d.match(
-                        cos(abs(arg_(polar_lift(s)**w1*w5, q))*w2
-                            )*abs(s**w3)**w4 - p > 0)
+                        p - cos(abs(arg_(polar_lift(s)**w1*w5, q))*w2
+                            )*abs(s**w3)**w4 < 0)
                 if m and all(m[wild].is_positive for wild in [w1, w2, w3, w4, w5]):
                     d = re(s) > m[p]
                 d_ = d.replace(
@@ -1056,7 +1064,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     if simplify:
         F = _simplifyconds(F, s, a)
         aux = _simplifyconds(aux, s, a)
-    return _simplify(F.subs(s, s_), simplify), sbs(a), sbs(aux)
+    return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
 
 
 class LaplaceTransform(IntegralTransform):
@@ -1116,7 +1124,7 @@ def laplace_transform(f, t, s, **hints):
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**a, t, s)
-    (s**(-a)*gamma(a + 1)/s, 0, -re(a) < 1)
+    (s**(-a)*gamma(a + 1)/s, 0, re(a) > -1)
 
     See Also
     ========
@@ -1543,7 +1551,7 @@ def sine_transform(f, x, k, **hints):
     >>> sine_transform(x*exp(-a*x**2), x, k)
     sqrt(2)*k*exp(-k**2/(4*a))/(4*a**(3/2))
     >>> sine_transform(x**(-a), x, k)
-    2**(-a + 1/2)*k**(a - 1)*gamma(-a/2 + 1)/gamma(a/2 + 1/2)
+    2**(1/2 - a)*k**(a - 1)*gamma(1 - a/2)/gamma(a/2 + 1/2)
 
     See Also
     ========

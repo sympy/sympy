@@ -1,8 +1,7 @@
 from sympy.sets.setexpr import SetExpr
-from sympy.utilities.pytest import XFAIL
 from sympy.sets import Interval, FiniteSet, Intersection, ImageSet, Union
-from sympy import (Expr, Set, exp, log, sin, cos, Symbol, Min, Max, S, oo,
-        symbols, Lambda, sqrt, Pow, Dummy, tan, pi, Mul)
+from sympy import (Expr, Set, exp, log, cos, Symbol, Min, Max, S, oo,
+        symbols, Lambda, Dummy)
 
 I = Interval(0, 2)
 a, x = symbols("a, x")
@@ -252,7 +251,7 @@ def test_SetExpr_Interval_pow():
     assert SetExpr(Interval(1, 5))**(-2) == SetExpr(Interval(S.One/25, 1))
     assert SetExpr(Interval(-1, 3))**(-2) == SetExpr(Interval(0, oo))
     assert SetExpr(Interval(0, 2))**(-2) == SetExpr(Interval(S.One/4, oo))
-    assert SetExpr(Interval(-1, 2))**(-3) == SetExpr(Union(Interval(-oo, -1), Interval(1/8, oo)))
+    assert SetExpr(Interval(-1, 2))**(-3) == SetExpr(Union(Interval(-oo, -1), Interval(S(1)/8, oo)))
     assert SetExpr(Interval(-3, -2))**(-3) == SetExpr(Interval(S(-1)/8, -S.One/27))
     assert SetExpr(Interval(-3, -2))**(-2) == SetExpr(Interval(S.One/9, S.One/4))
     #assert SetExpr(Interval(0, oo))**(S.One/2) == SetExpr(Interval(0, oo))

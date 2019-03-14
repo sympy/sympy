@@ -681,7 +681,6 @@ def test_prudnikov_misc():
     assert can_do([a], [a + 1], lowerplane=True)  # lowergamma
 
 
-@slow
 def test_prudnikov_1():
     # A. P. Prudnikov, Yu. A. Brychkov and O. I. Marichev (1990).
     # Integrals and Series: More Special Functions, Vol. 3,.
@@ -893,7 +892,6 @@ def test_prudnikov_11():
     assert can_do([1, 1], [S(3)/2, 2, 2])  # cosh-integral chi
 
 
-@slow
 def test_prudnikov_12():
     # 7.16
     assert can_do(

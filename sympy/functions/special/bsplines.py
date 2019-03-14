@@ -119,7 +119,7 @@ def bspline_basis(d, knots, n, x):
         >>> d = 1
         >>> knots = [0, 0, 2, 3, 4]
         >>> bspline_basis(d, knots, 0, x)
-        Piecewise((-x/2 + 1, (x >= 0) & (x <= 2)), (0, True))
+        Piecewise((1 - x/2, (x >= 0) & (x <= 2)), (0, True))
 
     It is quite time consuming to construct and evaluate B-splines. If
     you need to evaluate a B-splines many times, it is best to
@@ -140,7 +140,7 @@ def bspline_basis(d, knots, n, x):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/B-spline
+    .. [1] https://en.wikipedia.org/wiki/B-spline
 
     """
     knots = [sympify(k) for k in knots]
@@ -228,7 +228,7 @@ def interpolating_spline(d, x, X, Y):
     >>> from sympy.abc import x
     >>> interpolating_spline(1, x, [1, 2, 4, 7], [3, 6, 5, 7])
     Piecewise((3*x, (x >= 1) & (x <= 2)),
-            (-x/2 + 7, (x >= 2) & (x <= 4)),
+            (7 - x/2, (x >= 2) & (x <= 4)),
             (2*x/3 + 7/3, (x >= 4) & (x <= 7)))
     >>> interpolating_spline(3, x, [-2, 0, 1, 3, 4], [4, 2, 1, 1, 3])
     Piecewise((-x**3/36 - x**2/36 - 17*x/18 + 2, (x >= -2) & (x <= 1)),

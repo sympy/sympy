@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import sqrt, simplify
 from sympy.physics.optics import Medium
 from sympy.abc import epsilon, mu

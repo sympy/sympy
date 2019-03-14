@@ -713,7 +713,7 @@ def _solve_inequality(ie, s, linear=False):
     is never True or always True, respectively.
 
     If `linear` is True (default is False) an `s`-dependent expression
-    will be isoloated on the left, if possible
+    will be isolated on the left, if possible
     but it will not be solved for `s` unless the expression is linear
     in `s`. Furthermore, only "safe" operations which don't change the
     sense of the relationship are applied: no division by an unsigned
@@ -758,7 +758,7 @@ def _solve_inequality(ie, s, linear=False):
     >>> f(x*y < 1, x)
     x*y < 1
 
-    And while an equality (or unequality) still holds after dividing by a
+    And while an equality (or inequality) still holds after dividing by a
     non-zero quantity
 
     >>> nz = Symbol('nz', nonzero=True)
@@ -850,7 +850,7 @@ def _solve_inequality(ie, s, linear=False):
         a, e = ef.as_independent(s, as_Add=False)
         if (a.is_zero != False or  # don't divide by potential 0
                 a.is_negative ==
-                a.is_positive == None and  # if sign is not known then
+                a.is_positive is None and  # if sign is not known then
                 ie.rel_op not in ('!=', '==')): # reject if not Eq/Ne
             e = ef
             a = S.One
@@ -943,7 +943,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     (-3 <= x) & (x < oo)
 
     >>> reduce_inequalities(0 <= x + y*2 - 1, [x])
-    (x < oo) & (x >= -2*y + 1)
+    (x < oo) & (x >= 1 - 2*y)
     """
     if not iterable(inequalities):
         inequalities = [inequalities]

@@ -1,15 +1,17 @@
 from sympy import KroneckerDelta, diff, Piecewise, And
-from sympy import Sum, Dummy
+from sympy import Sum, Dummy, factor, expand
 
 from sympy.core import S, symbols, Add, Mul
 from sympy.core.compatibility import long
-from sympy.functions import transpose, sin, cos, sqrt
+from sympy.functions import transpose, sin, cos, sqrt, cbrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         SparseMatrix, Transpose, Adjoint)
-from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.matrices.expressions.matexpr import (MatrixElement,
+    GenericZeroMatrix, GenericIdentity)
 from sympy.utilities.pytest import raises
+from sympy import Eq
 
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
@@ -142,6 +144,10 @@ def test_multiplication():
     B = MatrixSymbol('B', n, n)
     assert Identity(n) * (A + B) == A + B
 
+    assert A**2*A == A**3
+    assert A**2*(A.I)**3 == A.I
+    assert A**3*(A.I)**2 == A
+
 
 def test_MatPow():
     A = MatrixSymbol('A', n, n)
@@ -155,7 +161,10 @@ def test_MatPow():
     assert A**1 == A
     assert A**2 == AA
     assert A**-1 == Inverse(A)
+    assert (A**-1)**-1 == A
+    assert (A**2)**3 == A**6
     assert A**S.Half == sqrt(A)
+    assert A**(S(1)/3) == cbrt(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
 
 
@@ -328,6 +337,79 @@ def test_MatrixElement_with_values():
     raises(ValueError, lambda: M[2, i])
     raises(ValueError, lambda: M[-1, i])
 
+
 def test_inv():
     B = MatrixSymbol('B', 3, 3)
     assert B.inv() == B**-1
+
+
+def test_factor_expand():
+    A = MatrixSymbol("A", n, n)
+    B = MatrixSymbol("B", n, n)
+    expr1 = (A + B)*(C + D)
+    expr2 = A*C + B*C + A*D + B*D
+    assert expr1 != expr2
+    assert expand(expr1) == expr2
+    assert factor(expr2) == expr1
+
+
+def test_issue_2749():
+    A = MatrixSymbol("A", 5, 2)
+    assert (A.T * A).I.as_explicit() == Matrix([[(A.T * A).I[0, 0], (A.T * A).I[0, 1]], \
+    [(A.T * A).I[1, 0], (A.T * A).I[1, 1]]])
+
+
+def test_issue_2750():
+    x = MatrixSymbol('x', 1, 1)
+    assert (x.T*x).as_explicit()**-1 == Matrix([[x[0, 0]**(-2)]])
+
+
+def test_issue_7842():
+    A = MatrixSymbol('A', 3, 1)
+    B = MatrixSymbol('B', 2, 1)
+    assert Eq(A, B) == False
+    assert Eq(A[1,0], B[1, 0]).func is Eq
+    A = ZeroMatrix(2, 3)
+    B = ZeroMatrix(2, 3)
+    assert Eq(A, B) == True
+
+
+def test_generic_zero_matrix():
+    z = GenericZeroMatrix()
+    A = MatrixSymbol("A", n, n)
+
+    assert z == z
+    assert z != A
+    assert A != z
+
+    assert z.is_ZeroMatrix
+
+    raises(TypeError, lambda: z.shape)
+    raises(TypeError, lambda: z.rows)
+    raises(TypeError, lambda: z.cols)
+
+    assert MatAdd() == z
+    assert MatAdd(z, A) == MatAdd(A)
+    # Make sure it is hashable
+    hash(z)
+
+
+def test_generic_identity():
+    I = GenericIdentity()
+    A = MatrixSymbol("A", n, n)
+
+    assert I == I
+    assert I != A
+    assert A != I
+
+    assert I.is_Identity
+    assert I**-1 == I
+
+    raises(TypeError, lambda: I.shape)
+    raises(TypeError, lambda: I.rows)
+    raises(TypeError, lambda: I.cols)
+
+    assert MatMul() == I
+    assert MatMul(I, A) == MatMul(A)
+    # Make sure it is hashable
+    hash(I)

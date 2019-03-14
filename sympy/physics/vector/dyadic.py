@@ -10,7 +10,7 @@ class Dyadic(object):
     """A Dyadic object.
 
     See:
-    http://en.wikipedia.org/wiki/Dyadic_tensor
+    https://en.wikipedia.org/wiki/Dyadic_tensor
     Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
 
     A more powerful way to represent a rigid body's inertia. While it is more
@@ -372,6 +372,25 @@ class Dyadic(object):
         for i, v in enumerate(self.args):
             ol += v[0] * (v[1] | (v[2] ^ other))
         return ol
+
+    # We don't define _repr_png_ here because it would add a large amount of
+    # data to any notebook containing SymPy expressions, without adding
+    # anything useful to the notebook. It can still enabled manually, e.g.,
+    # for the qtconsole, with init_printing().
+    def _repr_latex_(self):
+        """
+        IPython/Jupyter LaTeX printing
+
+        To change the behavior of this (e.g., pass in some settings to LaTeX),
+        use init_printing(). init_printing() will also enable LaTeX printing
+        for built in numeric types like ints and container types that contain
+        SymPy objects, like lists and dictionaries of expressions.
+        """
+        from sympy.printing.latex import latex
+        s = latex(self, mode='plain')
+        return "$\\displaystyle %s$" % s
+
+    _repr_latex_orig = _repr_latex_
 
     _sympystr = __str__
     _sympyrepr = _sympystr

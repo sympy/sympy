@@ -170,7 +170,7 @@ def rs_puiseux(f, p, x, prec):
             num, den = power.as_numer_denom()
             n = int(n*den // igcd(n, den))
         elif power != int(power):
-            num, den = power.numerator, power.denominator
+            den = power.denominator
             n = int(n*den // igcd(n, den))
     if n != 1:
         p1 = pow_xin(p, index, n)
@@ -198,7 +198,7 @@ def rs_puiseux2(f, p, q, x, prec):
             num, den = power.as_numer_denom()
             n = n*den // igcd(n, den)
         elif power != int(power):
-            num, den = power.numerator, power.denominator
+            den = power.denominator
             n = n*den // igcd(n, den)
     if n != 1:
         p1 = pow_xin(p, index, n)
@@ -316,7 +316,6 @@ def rs_pow(p1, n, x, prec):
     6*x**2 + 4*x + 1
     """
     R = p1.ring
-    p = R.zero
     if isinstance(n, Rational):
         np = int(n.p)
         nq = int(n.q)
@@ -686,7 +685,6 @@ def rs_series_from_list(p, c, x, prec, concur=1):
     if r:
         K += 1
     ax = [R(1)]
-    b = 1
     q = R(1)
     if len(p) < 20:
         for i in range(1, J):
@@ -730,7 +728,8 @@ def rs_diff(p, x):
     Return partial derivative of ``p`` with respect to ``x``.
 
     Parameters
-    ----------
+    ==========
+
     x : :class:`PolyElement` with respect to which ``p`` is differentiated.
 
     Examples
@@ -761,7 +760,8 @@ def rs_integrate(p, x):
     Integrate ``p`` with respect to ``x``.
 
     Parameters
-    ----------
+    ==========
+
     x : :class:`PolyElement` with respect to which ``p`` is integrated.
 
     Examples
@@ -801,7 +801,8 @@ def rs_fun(p, f, *args):
         desired series
 
     Parameters
-    ----------
+    ==========
+
     p : :class:`PolyElement` The multivariate series to be expanded.
     f : `ring\_series` function to be applied on `p`.
     args[-2] : :class:`PolyElement` with respect to which, the series is to be expanded.
@@ -915,10 +916,15 @@ def rs_nth_root(p, n, x, prec):
     Multivariate series expansion of the nth root of ``p``.
 
     Parameters
-    ----------
-    n : `p**(1/n)` is returned.
+    ==========
+
+    p : Expr
+        The polynomial to computer the root of.
+    n : integer
+        The order of the root to be computed.
     x : :class:`PolyElement`
-    prec : Order of the expanded series.
+    prec : integer
+        Order of the expanded series.
 
     Notes
     =====
@@ -1138,7 +1144,6 @@ def rs_exp(p, x, prec):
         return _exp1(p, x, prec)
     one = R(1)
     n = 1
-    k = 1
     c = []
     for k in range(prec):
         c.append(one/n)
@@ -1806,10 +1811,10 @@ def rs_compose_add(p1, p2):
     References
     ==========
 
-    A. Bostan, P. Flajolet, B. Salvy and E. Schost
-    "Fast Computation with Two Algebraic Numbers",
-    (2002) Research Report 4579, Institut
-    National de Recherche en Informatique et en Automatique
+    .. [1] A. Bostan, P. Flajolet, B. Salvy and E. Schost
+           "Fast Computation with Two Algebraic Numbers",
+           (2002) Research Report 4579, Institut
+           National de Recherche en Informatique et en Automatique
     """
     R = p1.ring
     x = R.gens[0]
@@ -1948,7 +1953,8 @@ def rs_series(expr, a, prec):
     """Return the series expansion of an expression about 0.
 
     Parameters
-    ----------
+    ==========
+
     expr : :class:`Expr`
     a : :class:`Symbol` with respect to which expr is to be expanded
     prec : order of the series expansion

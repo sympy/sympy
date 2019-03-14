@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function)
+from __future__ import (absolute_import, print_function)
 
 from sympy import log, exp, Symbol, Pow, sin
 from sympy.printing.ccode import ccode
@@ -169,3 +169,5 @@ def test_create_expand_pow_optimization():
 
     sin4x = sin(x)**4
     assert ccode(optimize(sin4x, [my_opt])) == 'pow(sin(x), 4)'
+
+    assert ccode(optimize((x**(-4)), [my_opt])) == 'pow(x, -4)'

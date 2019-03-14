@@ -4,27 +4,26 @@ when creating more advanced matrices (e.g., matrices over rings,
 etc.).
 """
 
-from __future__ import print_function, division
+from __future__ import division, print_function
 
-from sympy.core.add import Add
-from sympy.core.basic import Basic, Atom
+from collections import defaultdict
+from types import FunctionType
+
+from sympy.assumptions.refine import refine
+from sympy.core.basic import Atom
+from sympy.core.compatibility import (
+    Iterable, as_int, is_sequence, range, reduce)
+from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
-from sympy.core.symbol import Symbol
 from sympy.core.function import count_ops
 from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key, range, \
-    NotIterable, Iterable
-
-from sympy.simplify import simplify as _simplify, signsimp, nsimplify
-from sympy.utilities.iterables import flatten
 from sympy.functions import Abs
-from sympy.core.compatibility import reduce, as_int, string_types
-from sympy.assumptions.refine import refine
-from sympy.core.decorators import call_highest_priority
+from sympy.simplify import simplify as _simplify
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import flatten
 
-from types import FunctionType
-from collections import defaultdict
 
 class MatrixError(Exception):
     pass
@@ -203,6 +202,8 @@ class MatrixShaping(MatrixRequired):
         if not self:
             return type(self)(other)
 
+        pos = as_int(pos)
+
         if pos < 0:
             pos = self.cols + pos
         if pos < 0:
@@ -212,7 +213,7 @@ class MatrixShaping(MatrixRequired):
 
         if self.rows != other.rows:
             raise ShapeError(
-                "self and other must have the same number of rows.")
+                "`self` and `other` must have the same number of rows.")
 
         return self._eval_col_insert(pos, other)
 
@@ -435,10 +436,11 @@ class MatrixShaping(MatrixRequired):
         row
         col_insert
         """
-        from sympy.matrices import MutableMatrix
         # Allows you to build a matrix even if it is null matrix
         if not self:
             return self._new(other)
+
+        pos = as_int(pos)
 
         if pos < 0:
             pos = self.rows + pos
@@ -661,8 +663,10 @@ class MatrixSpecial(MatrixRequired):
 
         rows : rows of the resulting matrix; computed if
                not given.
+
         cols : columns of the resulting matrix; computed if
                not given.
+
         cls : class for the resulting matrix
 
         Examples
@@ -779,25 +783,58 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_eye(rows, cols)
 
     @classmethod
-    def jordan_block(kls, *args, **kwargs):
-        """Returns a Jordan block with the specified size
-        and eigenvalue.  You may call `jordan_block` with
-        two args (size, eigenvalue) or with keyword arguments.
+    def jordan_block(kls, size=None, eigenvalue=None, **kwargs):
+        """Returns a Jordan block
 
-        kwargs
+        Parameters
+        ==========
+
+        size : Integer, optional
+            Specifies the shape of the Jordan block matrix.
+
+        eigenvalue : Number or Symbol
+            Specifies the value for the main diagonal of the matrix.
+
+            .. note::
+                The keyword ``eigenval`` is also specified as an alias
+                of this keyword, but it is not recommended to use.
+
+                We may deprecate the alias in later release.
+
+        band : 'upper' or 'lower', optional
+            Specifies the position of the off-diagonal to put `1` s on.
+
+        cls : Matrix, optional
+            Specifies the matrix class of the output form.
+
+            If it is not specified, the class type where the method is
+            being executed on will be returned.
+
+        rows, cols : Integer, optional
+            Specifies the shape of the Jordan block matrix. See Notes
+            section for the details of how these key works.
+
+            .. note::
+                This feature will be deprecated in the future.
+
+
+        Returns
+        =======
+
+        Matrix
+            A Jordan block matrix.
+
+        Raises
         ======
 
-        size : rows and columns of the matrix
-        rows : rows of the matrix (if None, rows=size)
-        cols : cols of the matrix (if None, cols=size)
-        eigenvalue : value on the diagonal of the matrix
-        band : position of off-diagonal 1s.  May be 'upper' or
-               'lower'. (Default: 'upper')
-
-        cls : class of the returned matrix
+        ValueError
+            If insufficient arguments are given for matrix size
+            specification, or no eigenvalue is given.
 
         Examples
         ========
+
+        Creating a default Jordan block:
 
         >>> from sympy import Matrix
         >>> from sympy.abc import x
@@ -807,37 +844,85 @@ class MatrixSpecial(MatrixRequired):
         [0, x, 1, 0],
         [0, 0, x, 1],
         [0, 0, 0, x]])
+
+        Creating an alternative Jordan block matrix where `1` is on
+        lower off-diagonal:
+
         >>> Matrix.jordan_block(4, x, band='lower')
         Matrix([
         [x, 0, 0, 0],
         [1, x, 0, 0],
         [0, 1, x, 0],
         [0, 0, 1, x]])
+
+        Creating a Jordan block with keyword arguments
+
         >>> Matrix.jordan_block(size=4, eigenvalue=x)
         Matrix([
         [x, 1, 0, 0],
         [0, x, 1, 0],
         [0, 0, x, 1],
         [0, 0, 0, x]])
+
+        Notes
+        =====
+
+        .. note::
+            This feature will be deprecated in the future.
+
+        The keyword arguments ``size``, ``rows``, ``cols`` relates to
+        the Jordan block size specifications.
+
+        If you want to create a square Jordan block, specify either
+        one of the three arguments.
+
+        If you want to create a rectangular Jordan block, specify
+        ``rows`` and ``cols`` individually.
+
+        +--------------------------------+---------------------+
+        |        Arguments Given         |     Matrix Shape    |
+        +----------+----------+----------+----------+----------+
+        |   size   |   rows   |   cols   |   rows   |   cols   |
+        +==========+==========+==========+==========+==========+
+        |   size   |         Any         |   size   |   size   |
+        +----------+----------+----------+----------+----------+
+        |          |        None         |     ValueError      |
+        |          +----------+----------+----------+----------+
+        |   None   |   rows   |   None   |   rows   |   rows   |
+        |          +----------+----------+----------+----------+
+        |          |   None   |   cols   |   cols   |   cols   |
+        +          +----------+----------+----------+----------+
+        |          |   rows   |   cols   |   rows   |   cols   |
+        +----------+----------+----------+----------+----------+
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Jordan_matrix
         """
+        if 'rows' in kwargs or 'cols' in kwargs:
+            SymPyDeprecationWarning(
+                feature="Keyword arguments 'rows' or 'cols'",
+                issue=16102,
+                useinstead="a more generic banded matrix constructor",
+                deprecated_since_version="1.4"
+            ).warn()
 
-        klass = kwargs.get('cls', kls)
-        size, eigenvalue = None, None
-        if len(args) == 2:
-            size, eigenvalue = args
-        elif len(args) == 1:
-            size = args[0]
-        elif len(args) != 0:
-            raise ValueError("'jordan_block' accepts 0, 1, or 2 arguments, not {}".format(len(args)))
-        rows, cols = kwargs.get('rows', None), kwargs.get('cols', None)
-        size = kwargs.get('size', size)
-        band = kwargs.get('band', 'upper')
-        # allow for a shortened form of `eigenvalue`
-        eigenvalue = kwargs.get('eigenval', eigenvalue)
-        eigenvalue = kwargs.get('eigenvalue', eigenvalue)
+        klass = kwargs.pop('cls', kls)
+        band = kwargs.pop('band', 'upper')
+        rows = kwargs.pop('rows', None)
+        cols = kwargs.pop('cols', None)
 
-        if eigenvalue is None:
+        eigenval = kwargs.get('eigenval', None)
+        if eigenvalue is None and eigenval is None:
             raise ValueError("Must supply an eigenvalue")
+        elif eigenvalue != eigenval and None not in (eigenval, eigenvalue):
+            raise ValueError(
+                "Inconsistent values are given: 'eigenval'={}, "
+                "'eigenvalue'={}".format(eigenval, eigenvalue))
+        else:
+            if eigenval is not None:
+                eigenvalue = eigenval
 
         if (size, rows, cols) == (None, None, None):
             raise ValueError("Must supply a matrix size")
@@ -959,7 +1044,7 @@ class MatrixProperties(MatrixRequired):
     def _eval_is_zero(self):
         if any(i.is_zero == False for i in self):
             return False
-        if any(i.is_zero == None for i in self):
+        if any(i.is_zero is None for i in self):
             return None
         return True
 
@@ -1817,7 +1902,7 @@ class MatrixOperations(MatrixRequired):
         5
 
         """
-        if not self.rows == self.cols:
+        if self.rows != self.cols:
             raise NonSquareMatrixError()
         return self._eval_trace()
 
@@ -2040,35 +2125,36 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rpow__')
     def __pow__(self, num):
-        if not self.rows == self.cols:
+        if self.rows != self.cols:
             raise NonSquareMatrixError()
-        try:
-            a = self
-            num = sympify(num)
-            if num.is_Number and num % 1 == 0:
-                if a.rows == 1:
-                    return a._new([[a[0]**num]])
-                if num == 0:
-                    return self._new(self.rows, self.cols, lambda i, j: int(i == j))
-                if num < 0:
-                    num = -num
-                    a = a.inv()
-                # When certain conditions are met,
-                # Jordan block algorithm is faster than
-                # computation by recursion.
-                elif a.rows == 2 and num > 100000:
-                    try:
-                        return a._matrix_pow_by_jordan_blocks(num)
-                    except (AttributeError, MatrixError):
-                        pass
-                return a._eval_pow_by_recursion(num)
-            elif isinstance(num, (Expr, float)):
-                return a._matrix_pow_by_jordan_blocks(num)
-            else:
-                raise TypeError(
-                    "Only SymPy expressions or integers are supported as exponent for matrices")
-        except AttributeError:
-            raise TypeError("Don't know how to raise {} to {}".format(self.__class__, num))
+        a = self
+        jordan_pow = getattr(a, '_matrix_pow_by_jordan_blocks', None)
+        num = sympify(num)
+        if num.is_Number and num % 1 == 0:
+            if a.rows == 1:
+                return a._new([[a[0]**num]])
+            if num == 0:
+                return self._new(self.rows, self.cols, lambda i, j: int(i == j))
+            if num < 0:
+                num = -num
+                a = a.inv()
+            # When certain conditions are met,
+            # Jordan block algorithm is faster than
+            # computation by recursion.
+            elif a.rows == 2 and num > 100000 and jordan_pow is not None:
+                try:
+                    return jordan_pow(num)
+                except MatrixError:
+                    pass
+            return a._eval_pow_by_recursion(num)
+        elif not num.is_Number and num.is_negative is None and a.det() == 0:
+            from sympy.matrices.expressions import MatPow
+            return MatPow(a, num)
+        elif isinstance(num, (Expr, float)):
+            return jordan_pow(num)
+        else:
+            raise TypeError(
+                "Only SymPy expressions or integers are supported as exponent for matrices")
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
@@ -2178,12 +2264,9 @@ class _MinimalMatrix(object):
         if isinstance(mat, FunctionType):
             # if we passed in a function, use that to populate the indices
             mat = list(mat(i, j) for i in range(rows) for j in range(cols))
-        try:
-            if cols is None and mat is None:
-                mat = rows
-            rows, cols = mat.shape
-        except AttributeError:
-            pass
+        if cols is None and mat is None:
+            mat = rows
+        rows, cols = getattr(mat, 'shape', (rows, cols))
         try:
             # if we passed in a list of lists, flatten it and set the size
             if cols is None and mat is None:
@@ -2289,9 +2372,10 @@ def _matrixify(mat):
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
     if type(j) is not int:
-        try:
-            j = j.__index__()
-        except AttributeError:
+        jindex = getattr(j, '__index__', None)
+        if jindex is not None:
+            j = jindex()
+        else:
             raise IndexError("Invalid index a[%r]" % (j,))
     if n is not None:
         if j < 0:
@@ -2311,25 +2395,28 @@ def classof(A, B):
     ========
 
     >>> from sympy import Matrix, ImmutableMatrix
-    >>> from sympy.matrices.matrices import classof
+    >>> from sympy.matrices.common import classof
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
     <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
     """
-    try:
+    priority_A = getattr(A, '_class_priority', None)
+    priority_B = getattr(B, '_class_priority', None)
+    if None not in (priority_A, priority_B):
         if A._class_priority > B._class_priority:
             return A.__class__
         else:
             return B.__class__
-    except Exception:
-        pass
+
     try:
         import numpy
+    except ImportError:
+        pass
+    else:
         if isinstance(A, numpy.ndarray):
             return B.__class__
         if isinstance(B, numpy.ndarray):
             return A.__class__
-    except Exception:
-        pass
+
     raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))

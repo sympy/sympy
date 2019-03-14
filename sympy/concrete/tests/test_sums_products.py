@@ -1,13 +1,12 @@
 from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
-    nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
+    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod)
-from sympy.abc import a, b, c, d, f, k, m, x, y, z
+    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma)
+from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic
-from sympy.utilities.pytest import XFAIL, raises
-from sympy import simplify
+from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.matrices import Matrix
 from sympy.core.mod import Mod
 from sympy.core.compatibility import range
@@ -400,7 +399,10 @@ def test_euler_maclaurin():
         s, e = A.euler_maclaurin(m, n)
         assert abs((s - zeta(3)).evalf()) < e.evalf()
 
+    raises(ValueError, lambda: Sum(1, (x, 0, 1), (k, 0, 1)).euler_maclaurin())
 
+
+@slow
 def test_evalf_euler_maclaurin():
     assert NS(Sum(1/k**k, (k, 1, oo)), 15) == '1.29128599706266'
     assert NS(Sum(1/k**k, (k, 1, oo)),
@@ -526,7 +528,6 @@ def test_function_subs():
     raises(ValueError, lambda: S.subs(f(y),x+y) )
     S = Sum(x*log(y),(x,0,oo),(y,0,oo))
     assert S.subs(log(y),y) == S
-    f = Symbol('f')
     S = Sum(x*f(y),(x,0,oo),(y,0,oo))
     assert S.subs(f(y),y) == Sum(x*y,(x,0,oo),(y,0,oo))
 
@@ -543,17 +544,19 @@ def test_equality():
             assert F(1, x) != F(1, y)
         except ValueError:
             pass
-        assert F(a, (x, 1, 2)) != F(a, (x, 1, 3))
-        assert F(a, (x, 1, 2)) != F(b, (x, 1, 2))
-        assert F(x, (x, 1, 2)) != F(r, (r, 1, 2))
-        assert F(1, (x, 1, x)) != F(1, (y, 1, x))
-        assert F(1, (x, 1, x)) != F(1, (y, 1, y))
+        assert F(a, (x, 1, 2)) != F(a, (x, 1, 3))  # diff limit
+        assert F(a, (x, 1, x)) != F(a, (y, 1, y))
+        assert F(a, (x, 1, 2)) != F(b, (x, 1, 2))  # diff expression
+        assert F(x, (x, 1, 2)) != F(r, (r, 1, 2))  # diff assumptions
+        assert F(1, (x, 1, x)) != F(1, (y, 1, x))  # only dummy is diff
+        assert F(1, (x, 1, x)).dummy_eq(F(1, (y, 1, x)))
 
     # issue 5265
     assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
 
 
 def test_Sum_doit():
+    f = Function('f')
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit() == a**3
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit(deep=False) == \
         3*Integral(a**2)
@@ -614,7 +617,7 @@ def test_Sum_interface():
     raises(ValueError, lambda: summation(1))
 
 
-def test_eval_diff():
+def test_diff():
     assert Sum(x, (x, 1, 2)).diff(x) == 0
     assert Sum(x*y, (x, 1, 2)).diff(x) == 0
     assert Sum(x*y, (y, 1, 2)).diff(x) == Sum(y, (y, 1, 2))
@@ -875,6 +878,7 @@ def test_factor_expand_subs():
 
 
 def test_distribution_over_equality():
+    f = Function('f')
     assert Product(Eq(x*2, f(x)), (x, 1, 3)).doit() == Eq(48, f(1)*f(2)*f(3))
     assert Sum(Eq(f(x), x**2), (x, 0, y)) == \
         Eq(Sum(f(x), (x, 0, y)), Sum(x**2, (x, 0, y)))
@@ -1013,6 +1017,21 @@ def test_issue_10156():
         8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))
 
 
+def test_issue_14129():
+    assert Sum( k*x**k, (k, 0, n-1)).doit() == \
+        Piecewise((n**2/2 - n/2, Eq(x, 1)), ((n*x*x**n -
+            n*x**n - x*x**n + x)/(x - 1)**2, True))
+    assert Sum( x**k, (k, 0, n-1)).doit() == \
+        Piecewise((n, Eq(x, 1)), ((-x**n + 1)/(-x + 1), True))
+    assert Sum( k*(x/y+x)**k, (k, 0, n-1)).doit() == \
+        Piecewise((n*(n - 1)/2, Eq(x, y/(y + 1))),
+        (x*(y + 1)*(n*x*y*(x + x/y)**n/(x + x/y)
+        + n*x*(x + x/y)**n/(x + x/y) - n*y*(x
+        + x/y)**n/(x + x/y) - x*y*(x + x/y)**n/(x
+        + x/y) - x*(x + x/y)**n/(x + x/y) + y)/(x*y
+        + x - y)**2, True))
+
+
 def test_issue_14112():
     assert Sum((-1)**n/sqrt(n), (n, 1, oo)).is_absolutely_convergent() is S.false
     assert Sum((-1)**(2*n)/n, (n, 1, oo)).is_convergent() is S.false
@@ -1048,3 +1067,25 @@ def test_issue_14640():
     s = Sum(i*(a**(n - i) - b**(n - i))/(a - b), (i, 0, n)).doit()
     assert not s.has(Sum)
     assert s.subs({a: 2, b: 3, n: 5}) == 122
+
+
+def test_issue_15943():
+    assert Sum(binomial(n, k)*factorial(n - k), (k, 0, n)).doit() == -E*(
+        n + 1)*gamma(n + 1)*lowergamma(n + 1, 1)/gamma(n + 2
+        ) + E*gamma(n + 1)
+
+
+def test_Sum_dummy_eq():
+    assert not Sum(x, (x, a, b)).dummy_eq(1)
+    assert not Sum(x, (x, a, b)).dummy_eq(Sum(x, (x, a, b), (a, 1, 2)))
+    assert not Sum(x, (x, a, b)).dummy_eq(Sum(x, (x, a, c)))
+    assert Sum(x, (x, a, b)).dummy_eq(Sum(x, (x, a, b)))
+    d = Dummy()
+    assert Sum(x, (x, a, d)).dummy_eq(Sum(x, (x, a, c)), c)
+    assert not Sum(x, (x, a, d)).dummy_eq(Sum(x, (x, a, c)))
+    assert Sum(x, (x, a, c)).dummy_eq(Sum(y, (y, a, c)))
+    assert Sum(x, (x, a, d)).dummy_eq(Sum(y, (y, a, c)), c)
+    assert not Sum(x, (x, a, d)).dummy_eq(Sum(y, (y, a, c)))
+
+def test_issue_15852():
+    assert summation(x**y*y, (y, -oo, oo)).doit() == Sum(x**y*y, (y, -oo, oo))

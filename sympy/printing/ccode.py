@@ -20,7 +20,7 @@ from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
 from sympy.codegen.ast import (
-    Assignment, Pointer, Type, Variable, Declaration,
+    Assignment, Pointer, Variable, Declaration,
     real, complex_, integer, bool_, float32, float64, float80,
     complex64, complex128, intc, value_const, pointer_const,
     int8, int16, int32, int64, uint8, uint16, uint32, uint64, untyped
@@ -33,17 +33,6 @@ from sympy.sets.fancysets import Range
 # Used in C89CodePrinter._print_Function(self)
 known_functions_C89 = {
     "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
-    "Mod": [
-        (
-            lambda numer, denom: numer.is_integer and denom.is_integer,
-            lambda printer, numer, denom, *args: "((%s) %% (%s))" % (
-                printer._print(numer), printer._print(denom))
-        ),
-        (
-            lambda numer, denom: not numer.is_integer or not denom.is_integer,
-            "fmod"
-        )
-    ],
     "sin": "sin",
     "cos": "cos",
     "tan": "tan",
@@ -168,6 +157,7 @@ class C89CodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
         'contract': True,
         'dereference': set(),
         'error_on_reserved': False,
@@ -298,6 +288,13 @@ class C89CodePrinter(CodePrinter):
             return '%spow%s(%s, %s)' % (self._ns, suffix, self._print(expr.base),
                                    self._print(expr.exp))
 
+    def _print_Mod(self, expr):
+        num, den = expr.args
+        if num.is_integer and den.is_integer:
+            return "(({}) % ({}))".format(self._print(num), self._print(den))
+        else:
+            return self._print_math_func(expr, known='fmod')
+
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
         suffix = self._get_literal_suffix(real)
@@ -420,20 +417,28 @@ class C89CodePrinter(CodePrinter):
     def _print_Max(self, expr):
         if "Max" in self.known_functions:
             return self._print_Function(expr)
-        from sympy import Max
-        if len(expr.args) == 1:
-            return self._print(expr.args[0])
-        return "((%(a)s > %(b)s) ? %(a)s : %(b)s)" % {
-            'a': expr.args[0], 'b': self._print(Max(*expr.args[1:]))}
+        def inner_print_max(args): # The more natural abstraction of creating
+            if len(args) == 1:     # and printing smaller Max objects is slow
+                return self._print(args[0]) # when there are many arguments.
+            half = len(args) // 2
+            return "((%(a)s > %(b)s) ? %(a)s : %(b)s)" % {
+                'a': inner_print_max(args[:half]),
+                'b': inner_print_max(args[half:])
+            }
+        return inner_print_max(expr.args)
 
     def _print_Min(self, expr):
         if "Min" in self.known_functions:
             return self._print_Function(expr)
-        from sympy import Min
-        if len(expr.args) == 1:
-            return self._print(expr.args[0])
-        return "((%(a)s < %(b)s) ? %(a)s : %(b)s)" % {
-            'a': expr.args[0], 'b': self._print(Min(*expr.args[1:]))}
+        def inner_print_min(args): # The more natural abstraction of creating
+            if len(args) == 1:     # and printing smaller Min objects is slow
+                return self._print(args[0]) # when there are many arguments.
+            half = len(args) // 2
+            return "((%(a)s < %(b)s) ? %(a)s : %(b)s)" % {
+                'a': inner_print_min(args[:half]),
+                'b': inner_print_min(args[half:])
+            }
+        return inner_print_min(expr.args)
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
@@ -501,7 +506,7 @@ class C89CodePrinter(CodePrinter):
             )
         else:
             raise NotImplementedError("Unknown type of var: %s" % type(var))
-        if val != None:
+        if val != None: # Must be "!= None", cannot be "is not None"
             result += ' = %s' % self._print(val)
         return result
 
@@ -527,14 +532,14 @@ class C89CodePrinter(CodePrinter):
         return 'false'
 
     def _print_Element(self, elem):
-        if elem.strides == None:
-            if elem.offset != None:
+        if elem.strides == None: # Must be "== None", cannot be "is None"
+            if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 raise ValueError("Expected strides when offset is given")
             idxs = ']['.join(map(lambda arg: self._print(arg),
                                  elem.indices))
         else:
             global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
-            if elem.offset != None:
+            if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 global_idx += elem.offset
             idxs = self._print(global_idx)
 
@@ -681,8 +686,9 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
 
     @requires(headers={'math.h'}, libraries={'m'})
     @_as_macro_if_defined
-    def _print_math_func(self, expr, nest=False):
-        known = self.known_functions[expr.__class__.__name__]
+    def _print_math_func(self, expr, nest=False, known=None):
+        if known is None:
+            known = self.known_functions[expr.__class__.__name__]
         if not isinstance(known, string_types):
             for cb, name in known:
                 if cb(*expr.args):
@@ -698,7 +704,19 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
         if nest:
             args = self._print(expr.args[0])
             if len(expr.args) > 1:
-                args += ', %s' % self._print(expr.func(*expr.args[1:]))
+                paren_pile = ''
+                for curr_arg in expr.args[1:-1]:
+                    paren_pile += ')'
+                    args += ', {ns}{name}{suffix}({next}'.format(
+                        ns=self._ns,
+                        name=known,
+                        suffix=suffix,
+                        next = self._print(curr_arg)
+                    )
+                args += ', %s%s' % (
+                    self._print(expr.func(expr.args[-1])),
+                    paren_pile
+                )
         else:
             args = ', '.join(map(lambda arg: self._print(arg), expr.args))
         return '{ns}{name}{suffix}({args})'.format(
@@ -715,7 +733,7 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
         return self._print_math_func(expr, nest=True)
 
 
-for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma Mod'
+for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma'
           ' loggamma sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh '
           'atanh erf erfc loggamma gamma ceiling floor').split():
     setattr(C99CodePrinter, '_print_%s' % k, C99CodePrinter._print_math_func)

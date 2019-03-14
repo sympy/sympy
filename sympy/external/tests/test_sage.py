@@ -26,10 +26,6 @@ if not sage:
     #bin/test will not execute any tests now
     disabled = True
 
-if sys.version_info[0] == 3:
-    # Sage does not support Python 3 currently
-    disabled = True
-
 import sympy
 
 from sympy.utilities.pytest import XFAIL

@@ -304,7 +304,7 @@ class RecurrenceOperator(object):
                 return False
         else:
             if self.listofpoly[0] == other:
-                for i in listofpoly[1:]:
+                for i in self.listofpoly[1:]:
                     if i is not self.parent.base.zero:
                         return False
                 return True

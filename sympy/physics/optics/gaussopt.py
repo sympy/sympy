@@ -105,7 +105,7 @@ class RayTransferMatrix(Matrix):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
+    .. [1] https://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
     """
 
     def __new__(cls, *args):
@@ -509,8 +509,8 @@ class BeamParameter(Expr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Complex_beam_parameter
-    .. [2] http://en.wikipedia.org/wiki/Gaussian_beam
+    .. [1] https://en.wikipedia.org/wiki/Complex_beam_parameter
+    .. [2] https://en.wikipedia.org/wiki/Gaussian_beam
     """
     #TODO A class Complex may be implemented. The BeamParameter may
     # subclass it. See:
@@ -826,7 +826,7 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     >>> l, w_i, w_o, f = symbols('l w_i w_o f')
 
     >>> conjugate_gauss_beams(l, w_i, w_o, f=f)[0]
-    f*(-sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)) + 1)
+    f*(1 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))
 
     >>> factor(conjugate_gauss_beams(l, w_i, w_o, f=f)[1])
     f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 -

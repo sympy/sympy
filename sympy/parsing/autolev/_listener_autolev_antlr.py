@@ -1,18 +1,28 @@
 import collections
 import sys
+import warnings
 
 from sympy.external import import_module
 
-AutolevParser = AutolevLexer = AutolevListener = None
-try:
-    AutolevParser = import_module('sympy.parsing.autolev._antlr.autolevparser',
-                                  __import__kwargs={'fromlist': ['AutolevParser']}).AutolevParser
-    AutolevLexer = import_module('sympy.parsing.autolev._antlr.autolevlexer',
-                                 __import__kwargs={'fromlist': ['AutolevLexer']}).AutolevLexer
-    AutolevListener = import_module('sympy.parsing.autolev._antlr.autolevlistener',
-                                    __import__kwargs={'fromlist': ['AutolevListener']}).AutolevListener
-except Exception:
-    pass
+autolevparser = import_module('sympy.parsing.autolev._antlr.autolevparser',
+                              __import__kwargs={'fromlist': ['AutolevParser']})
+autolevlexer = import_module('sympy.parsing.autolev._antlr.autolevlexer',
+                             __import__kwargs={'fromlist': ['AutolevLexer']})
+autolevlistener = import_module('sympy.parsing.autolev._antlr.autolevlistener',
+                                __import__kwargs={'fromlist': ['AutolevListener']})
+
+AutolevParser = getattr(autolevparser, 'AutolevParser', None)
+AutolevLexer = getattr(autolevlexer, 'AutolevLexer', None)
+AutolevListener = getattr(autolevlistener, 'AutolevListener', None)
+
+
+def strfunc(z):
+    if z == 0:
+        return ""
+    elif z == 1:
+        return "d"
+    else:
+        return "d" + str(z)
 
 def declare_phy_entities(self, ctx, phy_type, i, j=None):
     if phy_type in ("frame", "newtonian"):
@@ -43,7 +53,7 @@ def declare_frames(self, ctx, i, j=None):
     self.symbol_table.update({name1 + "3>": name2 + ".z"})
 
     self.type2.update({name1: "frame"})
-    self.write(name2 + "=" + "me.ReferenceFrame('" + name1 + "')\n")
+    self.write(name2 + " = " + "me.ReferenceFrame('" + name1 + "')\n")
 
 def declare_points(self, ctx, i, j=None):
     if "{" in ctx.getText():
@@ -58,7 +68,7 @@ def declare_points(self, ctx, i, j=None):
 
     self.symbol_table2.update({name1: name2})
     self.type2.update({name1: "point"})
-    self.write(name2 + "=" + "me.Point('" + name1 + "')\n")
+    self.write(name2 + " = " + "me.Point('" + name1 + "')\n")
 
 def declare_particles(self, ctx, i, j=None):
     if "{" in ctx.getText():
@@ -74,7 +84,7 @@ def declare_particles(self, ctx, i, j=None):
     self.symbol_table2.update({name1: name2})
     self.type2.update({name1: "particle"})
     self.bodies.update({name1: name2})
-    self.write(name2 + "=" + "me.Particle('" + name1 + "', " + "me.Point('" +
+    self.write(name2 + " = " + "me.Particle('" + name1 + "', " + "me.Point('" +
                 name1 + "_pt" + "'), " + "sm.Symbol('m'))\n")
 
 def declare_bodies(self, ctx, i, j=None):
@@ -100,13 +110,13 @@ def declare_bodies(self, ctx, i, j=None):
     self.type2.update({name1: "bodies"})
     self.type2.update({name1+"o": "point"})
 
-    self.write(masscenter + "=" + "me.Point('" + name1 + "_cm" + "')\n")
+    self.write(masscenter + " = " + "me.Point('" + name1 + "_cm" + "')\n")
     if self.newtonian:
         self.write(masscenter + ".set_vel(" + self.newtonian + ", " + "0)\n")
-    self.write(refFrame + "=" + "me.ReferenceFrame('" + name1 + "_f" + "')\n")
+    self.write(refFrame + " = " + "me.ReferenceFrame('" + name1 + "_f" + "')\n")
     # We set a dummy mass and inertia here.
     # They will be reset using the setters later in the code anyway.
-    self.write(name2 + "=" + "me.RigidBody('" + name1 + "', " + masscenter + ", " +
+    self.write(name2 + " = " + "me.RigidBody('" + name1 + "', " + masscenter + ", " +
                 refFrame + ", " + "sm.symbols('m'), (me.outer(" + refFrame +
                 ".x," + refFrame + ".x)," + masscenter + "))\n")
 
@@ -241,15 +251,15 @@ def writeConstants(self, ctx):
         real = ", real=True"
 
     if l1:
-        a = ", ".join(l1) + "=" + "sm.symbols(" + "'" +\
+        a = ", ".join(l1) + " = " + "sm.symbols(" + "'" +\
             " ".join(l1) + "'" + real + ")\n"
         self.write(a)
     if l2:
-        a = ", ".join(l2) + "=" + "sm.symbols(" + "'" +\
+        a = ", ".join(l2) + " = " + "sm.symbols(" + "'" +\
             " ".join(l2) + "'" + real + ", nonnegative=True)\n"
         self.write(a)
     if l3:
-        a = ", ".join(l3) + "=" + "sm.symbols(" + "'" + \
+        a = ", ".join(l3) + " = " + "sm.symbols(" + "'" + \
             " ".join(l3) + "'" + real + ", nonpositive=True)\n"
         self.write(a)
     self.var_list = []
@@ -277,84 +287,80 @@ def processVariables(self, ctx):
         if ctx.getText().count("'") > self.maxDegree:
             self.maxDegree = ctx.getText().count("'")
         for i in range(ctx.getChildCount()):
-            if i == 0:
-                j = ""
-            elif i == 1:
-                j = "d"
-            else:
-                j = "d" + str(i)
-            self.sign[name + str(j)] = i
-            self.symbol_table[name + "'"*i] = name + str(j)
+            self.sign[name + strfunc(i)] = i
+            self.symbol_table[name + "'"*i] = name + strfunc(i)
             if self.getValue(ctx.parentCtx.getChild(0)) in ("variable", "specified", "motionvariable", "motionvariable'"):
                 self.type.update({name + "'"*i: self.getValue(ctx.parentCtx.getChild(0))})
-            self.var_list.append(name + str(j))
+            self.var_list.append(name + strfunc(i))
 
     elif "{" in ctx.getText():
-        # Process variables of the type: Variables y{3}', y{2}''
-        if "'" in ctx.getText():
-            dashCount = ctx.getText().count("'")
-            if dashCount > self.maxDegree:
-                self.maxDegree = dashCount
-
-            for i in range(dashCount+1):
-                if i == 0:
-                    j = ""
-                elif i == 1:
-                    j = "d"
-                else:
-                    j = "d" + str(i)
-                num = int(ctx.INT(0).getText())
-                for z in range(1, num+1):
-                    self.sign[name + str(z) + str(j)] = i
-                    self.symbol_table[name + str(z) + "'"*i] = name + str(z) + str(j)
-                    if self.getValue(ctx.parentCtx.getChild(0)) in ("variable", "specified", "motionvariable", "motionvariable'"):
-                        self.type.update({name + str(z) + "'"*i: self.getValue(ctx.parentCtx.getChild(0))})
-
-                    self.var_list.append(name + str(z) + str(j))
-
-            if dashCount > self.maxDegree:
-                self.maxDegree = dashCount
-
         # Process variables of the type: Variales x{3}, y{2}
-        else:
-            if ":" in ctx.getText():
-                # Variables C{1:2, 1:2}
-                if "," in ctx.getText():
-                    num1 = int(ctx.INT(0).getText())
-                    num2 = int(ctx.INT(1).getText()) + 1
-                    num3 = int(ctx.INT(2).getText())
-                    num4 = int(ctx.INT(3).getText()) + 1
-                # Variables C{1:2}
-                else:
-                    num1 = int(ctx.INT(0).getText())
-                    num2 = int(ctx.INT(1).getText()) + 1
 
-            # Variables C{1,3}
-            elif "," in ctx.getText():
-                num1 = 1
-                num2 = int(ctx.INT(0).getText()) + 1
-                num3 = 1
-                num4 = int(ctx.INT(1).getText()) + 1
+        if "'" in ctx.getText():
+            dash_count = ctx.getText().count("'")
+            if dash_count > self.maxDegree:
+                self.maxDegree = dash_count
+
+        if ":" in ctx.getText():
+            # Variables C{1:2, 1:2}
+            if "," in ctx.getText():
+                num1 = int(ctx.INT(0).getText())
+                num2 = int(ctx.INT(1).getText()) + 1
+                num3 = int(ctx.INT(2).getText())
+                num4 = int(ctx.INT(3).getText()) + 1
+            # Variables C{1:2}
             else:
-                num1 = 1
-                num2 = int(ctx.INT(0).getText()) + 1
+                num1 = int(ctx.INT(0).getText())
+                num2 = int(ctx.INT(1).getText()) + 1
 
-            for i in range(num1, num2):
-                try:
-                    for j in range(num3, num4):
-                        self.symbol_table[name + str(i) + str(j)] = name + str(i) + str(j)
+        # Variables C{1,3}
+        elif "," in ctx.getText():
+            num1 = 1
+            num2 = int(ctx.INT(0).getText()) + 1
+            num3 = 1
+            num4 = int(ctx.INT(1).getText()) + 1
+        else:
+            num1 = 1
+            num2 = int(ctx.INT(0).getText()) + 1
+
+        for i in range(num1, num2):
+            try:
+                for j in range(num3, num4):
+                    try:
+                        for z in range(dash_count+1):
+                            self.symbol_table.update({name + str(i) + str(j) + "'"*z: name + str(i) + str(j) + strfunc(z)})
+                            if self.getValue(ctx.parentCtx.getChild(0)) in ("variable", "specified", "motionvariable", "motionvariable'"):
+                                self.type.update({name + str(i) + str(j) +  "'"*z: self.getValue(ctx.parentCtx.getChild(0))})
+                            self.var_list.append(name + str(i) + str(j) + strfunc(z))
+                            self.sign.update({name + str(i) + str(j) + strfunc(z): z})
+                            if dash_count > self.maxDegree:
+                                self.maxDegree = dash_count
+                    except Exception:
+                        self.symbol_table.update({name + str(i) + str(j): name + str(i) + str(j)})
                         if self.getValue(ctx.parentCtx.getChild(0)) in ("variable", "specified", "motionvariable", "motionvariable'"):
                             self.type.update({name + str(i) + str(j): self.getValue(ctx.parentCtx.getChild(0))})
                         self.var_list.append(name + str(i) + str(j))
-                        self.sign[name + str(i) + str(j)] = 0
+                        self.sign.update({name + str(i) + str(j): 0})
+            except Exception:
+                try:
+                    for z in range(dash_count+1):
+                        self.symbol_table.update({name + str(i) + "'"*z: name + str(i) + strfunc(z)})
+                        if self.getValue(ctx.parentCtx.getChild(0)) in ("variable", "specified", "motionvariable", "motionvariable'"):
+                            self.type.update({name + str(i) +  "'"*z: self.getValue(ctx.parentCtx.getChild(0))})
+                        self.var_list.append(name + str(i) + strfunc(z))
+                        self.sign.update({name + str(i) + strfunc(z): z})
+                        if dash_count > self.maxDegree:
+                            self.maxDegree = dash_count
                 except Exception:
-                    self.symbol_table[name + str(i)] = name + str(i)
+                    self.symbol_table.update({name + str(i): name + str(i)})
                     if self.getValue(ctx.parentCtx.getChild(0)) in ("variable", "specified", "motionvariable", "motionvariable'"):
                         self.type.update({name + str(i): self.getValue(ctx.parentCtx.getChild(0))})
                     self.var_list.append(name + str(i))
-                    self.sign[name + str(i)] = 0
+                    self.sign.update({name + str(i): 0})
 
 def writeVariables(self, ctx):
+    #print(self.sign)
+    #print(self.symbol_table)
     if self.var_list:
         for i in range(self.maxDegree+1):
             if i == 0:
@@ -395,7 +401,7 @@ def writeImaginary(self, ctx):
 
 if AutolevListener:
     class MyListener(AutolevListener):
-        def __init__(self, output=None):
+        def __init__(self, include_numeric=False):
             # Stores data in tree nodes(tree annotation). Especially useful for expr reconstruction.
             self.tree_property = {}
 
@@ -428,32 +434,17 @@ if AutolevListener:
             self.vector_expr = []
             self.fr_expr = []
 
-            # The second parameter of parse_autolev(inp, output).
-            # Can be the name of an output file, "print" or "list".
-            self.output = output
-
-            # This list will store the SymPy code. Each element represents one line of code.
-            # This list is returned by parse_autolev if "list" is passed in for the second parameter.
             self.output_code = []
 
             # Stores the variables and their rhs for substituting upon the Autolev command EXPLICIT.
             self.explicit = collections.OrderedDict()
 
             # Write code to import common dependencies.
-            if self.output:
-                if self.output == "list":
-                    self.output_code.append("import sympy.physics.mechanics as me")
-                    self.output_code.append("import sympy as sm")
-                    self.output_code.append("import math as m")
-                    self.output_code.append("import numpy as np")
-                    self.output_code.append("")
-                elif self.output == "print":
-                    sys.stdout.write(
-                        "import sympy.physics.mechanics as me\nimport sympy as sm\nimport math as m\nimport numpy as np\n\n")
-                else:
-                    self.file = open(self.output, "w")
-                    self.file.write(
-                        "import sympy.physics.mechanics as me\nimport sympy as sm\nimport math as m\nimport numpy as np\n\n")
+            self.output_code.append("import sympy.physics.mechanics as me\n")
+            self.output_code.append("import sympy as sm\n")
+            self.output_code.append("import math as m\n")
+            self.output_code.append("import numpy as np\n")
+            self.output_code.append("\n")
 
             # Just a store for the max degree variable in a line.
             self.maxDegree = 0
@@ -467,6 +458,7 @@ if AutolevListener:
             # Boolean which changes the behaviour of some expression reconstruction
             # when parsing Input Autolev commands.
             self.in_inputs = False
+            self.in_outputs = False
 
             # Stores for the physical entities.
             self.newtonian = None
@@ -481,19 +473,17 @@ if AutolevListener:
             self.dependent_variables = []
             self.kd_equivalents = collections.OrderedDict()
             self.kd_equivalents2 = collections.OrderedDict()
+            self.kd_eqs_supplied = None
             self.kane_type = "no_args"
             self.inertia_point = collections.OrderedDict()
             self.kane_parsed = False
             self.t = False
 
+            # PyDy ode code will be included only if this flag is set to True.
+            self.include_numeric = include_numeric
+
         def write(self, string):
-            if self.output:
-                if self.output == "list":
-                    self.output_code.append(string.rstrip())
-                elif self.output == "print":
-                    sys.stdout.write(string)
-                else:
-                    self.file.write(string)
+            self.output_code.append(string)
 
         def getValue(self, node):
             return self.tree_property[node]
@@ -584,6 +574,14 @@ if AutolevListener:
         def exitId(self, ctx):
             # Tree annotation for ID which is a labeled subrule of the parser rule expr.
             # A_C
+            python_keywords = ["and", "as", "assert", "break", "class", "continue", "def", "del", "elif", "else", "except",\
+            "exec", "finally", "for", "from", "global", "if", "import", "in", "is", "lambda", "not", "or", "pass", "print",\
+            "raise", "return", "try", "while", "with", "yield"]
+
+            if ctx.ID().getText().lower() in python_keywords:
+                warnings.warn("Python keywords must not be used as identifiers. Please refer to the list of keywords at https://docs.python.org/2.5/ref/keywords.html",
+                SyntaxWarning)
+
             if "_" in ctx.ID().getText() and ctx.ID().getText().count('_') == 1:
                 e1, e2 = ctx.ID().getText().lower().split('_')
                 try:
@@ -608,7 +606,8 @@ if AutolevListener:
                 # Reserved variable T (for time)
                 elif ctx.ID().getText().lower() == "t":
                     self.setValue(ctx, "me.dynamicsymbols._t")
-                    self.t = True
+                    if not self.in_inputs and not self.in_outputs:
+                        self.t = True
 
                 else:
                     idText = ctx.ID().getText().lower() + "'"*(ctx.getChildCount() - 1)
@@ -1068,13 +1067,21 @@ if AutolevListener:
 
             # MATRIX(A, I_R>>)
             elif func_name == "matrix":
+                if self.type2[ch.expr(0).getText().lower()] == "frame":
+                    text = ""
+                elif self.type2[ch.expr(0).getText().lower()] == "bodies":
+                    text = "_f"
                 self.setValue(ctx, "(" + self.getValue(ch.expr(1)) + ")" + ".to_matrix(" +
-                              self.symbol_table2[ch.expr(0).getText().lower()] + ")")
+                              self.symbol_table2[ch.expr(0).getText().lower()] + text + ")")
 
             # VECTOR(A, ROWS(EIGVECS,1))
             elif func_name == "vector":
+                if self.type2[ch.expr(0).getText().lower()] == "frame":
+                    text = ""
+                elif self.type2[ch.expr(0).getText().lower()] == "bodies":
+                    text = "_f"
                 v = self.getValue(ch.expr(1))
-                f = self.symbol_table2[ch.expr(0).getText().lower()]
+                f = self.symbol_table2[ch.expr(0).getText().lower()] + text
                 self.setValue(ctx, v + "[0]*" + f + ".x +" + v + "[1]*" + f + ".y +" +
                               v + "[2]*" + f + ".z")
 
@@ -1155,6 +1162,13 @@ if AutolevListener:
             elif func_name == "unitvec":
                 self.setValue(ctx, "(" + self.getValue(ch.expr(0)) + ")" + ".normalize()")
 
+            # Units(deg, rad)
+            elif func_name == "units":
+                if ch.expr(0).getText().lower() == "deg" and ch.expr(1).getText().lower() == "rad":
+                    factor = 0.0174533
+                elif ch.expr(0).getText().lower() == "rad" and ch.expr(1).getText().lower() == "deg":
+                    factor = 57.2958
+                self.setValue(ctx, str(factor))
             # Mass(A)
             elif func_name == "mass":
                 l = []
@@ -1183,6 +1197,7 @@ if AutolevListener:
 
                     # Do all of this if kd_eqs are not specified
                     if not self.kd_eqs:
+                        self.kd_eqs_supplied = False
                         self.matrix_expr.append(ctx)
                         for i in self.type.keys():
                             if self.type[i] == "motionvariable":
@@ -1191,7 +1206,7 @@ if AutolevListener:
                                 elif self.sign[self.symbol_table[i.lower()]] == 1:
                                     name = "u_" + self.symbol_table[i.lower()]
                                     self.symbol_table.update({name: name})
-                                    self.write(name + "=" + "me.dynamicsymbols('" + name + "')\n")
+                                    self.write(name + " = " + "me.dynamicsymbols('" + name + "')\n")
                                     if self.symbol_table[i.lower()] not in self.dependent_variables:
                                         self.u_ind.append(name)
                                         self.kd_equivalents.update({name: self.symbol_table[i.lower()]})
@@ -1213,9 +1228,8 @@ if AutolevListener:
                         if i in self.u_ind:
                             self.u_ind.remove(i)
 
-                for i in self.u_dep:
-                    if i in self.kd_equivalents.values():
-                        self.u_dep.remove(i)
+
+                self.u_dep[:] = [i for i in self.u_dep if i not in self.kd_equivalents.values()]
 
                 force_list = []
                 for i in self.forces.keys():
@@ -1370,7 +1384,7 @@ if AutolevListener:
             if ctx.equals().getText() in ["=", "+=", "-=", "*=", "/="]:
                 equals = ctx.equals().getText()
             elif ctx.equals().getText() == ":=":
-                equals = "="
+                equals = " = "
             elif ctx.equals().getText() == "^=":
                 equals = "**="
 
@@ -1405,10 +1419,19 @@ if AutolevListener:
 
                 if "_" in a and a.count("_") == 1:
                     e1, e2 = a.split('_')
-                    if e1 in self.type2.keys() and self.type2[e1] == "frame"\
-                    and e2 in self.type2.keys() and self.type2[e2] == "frame":
-                        self.write(self.symbol_table2[e2] + ".orient(" + self.symbol_table2[e1] +
-                                    ", 'DCM', " + self.getValue(ctx.expr()) + ")\n")
+                    if e1 in self.type2.keys() and self.type2[e1] in ("frame", "bodies")\
+                    and e2 in self.type2.keys() and self.type2[e2] in ("frame", "bodies"):
+                        if self.type2[e1] == "bodies":
+                            t1 = "_f"
+                        else:
+                            t1 = ""
+                        if self.type2[e2] == "bodies":
+                            t2 = "_f"
+                        else:
+                            t2 = ""
+
+                        self.write(self.symbol_table2[e2] + t2 + ".orient(" + self.symbol_table2[e1] +
+                                   t1 + ", 'DCM', " + self.getValue(ctx.expr()) + ")\n")
                     else:
                         self.write(self.symbol_table[a] + " " + equals + " " +
                                     self.getValue(ctx.expr()) + "\n")
@@ -1421,7 +1444,7 @@ if AutolevListener:
                 if ctx.equals().getText() in ["=", "+=", "-=", "*=", "/="]:
                     equals = ctx.equals().getText()
                 elif ctx.equals().getText() == ":=":
-                    equals = "="
+                    equals = " = "
                 elif ctx.equals().getText() == "^=":
                     equals = "**="
 
@@ -1432,7 +1455,7 @@ if AutolevListener:
                     if ctx.index().getChild(0).getText() == "1":
                         self.type.update({text: "matrix"})
                         self.symbol_table.update({text: text})
-                        self.write(text + "=" + "sm.Matrix([[0]])\n")
+                        self.write(text + " = " + "sm.Matrix([[0]])\n")
                         self.write(text + "[0] = " + self.getValue(ctx.expr()) + "\n")
                     else:
                         # m = m.row_insert(m.shape[0], sm.Matrix([[0]]))
@@ -1505,7 +1528,15 @@ if AutolevListener:
                             e2 = self.symbol_table2[v2] + ".point"
                         self.write(e2 + text + self.symbol_table2[v3] +
                                    ", " + self.getValue(ctx.expr()) + ")\n")
-
+                    elif v1 == "i":
+                        if v2 in self.type2.keys() and self.type2[v2] == "bodies":
+                            self.write(self.symbol_table2[v2] + ".inertia = (" + self.getValue(ctx.expr()) +
+                            ", " + self.symbol_table2[v3] + ")\n")
+                            self.inertia_point.update({v2: v3})
+                        elif v2 in self.type2.keys() and self.type2[v2] == "particle":
+                            self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
+                        else:
+                            self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
                     else:
                         self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
 
@@ -1518,11 +1549,12 @@ if AutolevListener:
                         elif self.type2[v2] == "particle":
                             e2 = self.symbol_table2[v2] + ".point"
                         self.symbol_table.update({vec_text: ch.ID().getText().lower()})
-                        self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
+
                         if e2 in self.forces.keys():
                             self.forces[e2] = self.forces[e2] + " + " + self.getValue(ctx.expr())
                         else:
                             self.forces.update({e2: self.getValue(ctx.expr())})
+                        self.write(ch.ID().getText().lower() + " = " + self.forces[e2] + "\n")
 
                     else:
                         name = ch.ID().getText().lower()
@@ -1546,18 +1578,23 @@ if AutolevListener:
             # are used for codegen and numerical analysis.
             if ctx.getChildCount() == 3:
                 try:
-                    self.inputs.update({self.symbol_table[ctx.ID().getText().lower()]: self.getValue(ctx.expr(0))})
+                    self.inputs.update({self.symbol_table[ctx.id_diff().getText().lower()]: self.getValue(ctx.expr(0))})
                 except Exception:
-                    self.inputs.update({ctx.ID().getText().lower(): self.getValue(ctx.expr(0))})
+                    self.inputs.update({ctx.id_diff().getText().lower(): self.getValue(ctx.expr(0))})
             elif ctx.getChildCount() == 4:
                 try:
-                    self.inputs.update({self.symbol_table[ctx.ID().getText().lower()]:
+                    self.inputs.update({self.symbol_table[ctx.id_diff().getText().lower()]:
                     (self.getValue(ctx.expr(0)), self.getValue(ctx.expr(1)))})
                 except Exception:
-                    self.inputs.update({ctx.ID().getText().lower():
+                    self.inputs.update({ctx.id_diff().getText().lower():
                     (self.getValue(ctx.expr(0)), self.getValue(ctx.expr(1)))})
 
             self.in_inputs = False
+
+        def enterOutputs(self, ctx):
+            self.in_outputs = True
+        def exitOutputs(self, ctx):
+            self.in_outputs = False
 
         def exitOutputs2(self, ctx):
             try:
@@ -1622,7 +1659,7 @@ if AutolevListener:
                 self.write("print(sm.nsolve(matrix_list," + "(" + ",".join(e) + ")" +
                            ",(" + ",".join(guess) + ")" + "))\n")
 
-            elif ctx.functionCall().getChild(0).getText().lower() in ["ode", "dynamics"]:
+            elif ctx.functionCall().getChild(0).getText().lower() in ["ode", "dynamics"] and self.include_numeric:
                 if self.kane_type == "no_args":
                     for i in self.symbol_table.keys():
                         try:
@@ -1650,12 +1687,6 @@ if AutolevListener:
                         except Exception:
                             pass
 
-                    coordinates = self.q_ind + self.q_dep
-                    speeds = self.u_ind + self.u_dep
-
-                    if len(x0) < len(coordinates) + len(speeds):
-                        x0.extend(["0"]*(len(coordinates) + len(speeds) - len(x0)))
-
                     # numerical constants
                     numerical_constants = []
                     for i in self.constants:
@@ -1671,8 +1702,9 @@ if AutolevListener:
 
                     self.write("from pydy.system import System\n")
                     const_list = []
-                    for i in range(len(self.constants)):
-                        const_list.append(self.constants[i] + ":" + numerical_constants[i])
+                    if numerical_constants:
+                        for i in range(len(self.constants)):
+                            const_list.append(self.constants[i] + ":" + numerical_constants[i])
                     specifieds = []
                     if self.t:
                         specifieds.append("me.dynamicsymbols('t')" + ":" + "lambda x, t: t")
@@ -1701,11 +1733,10 @@ if AutolevListener:
                         self.write(i[0] + "_out" + " = " + "[]\n")
                     if other_outputs:
                         self.write("for i in y:\n")
-                        self.write("    q_u_dict = dict(zip(coordinates+speeds, i))\n")
-                        self.write("    constants_dict = dict(zip(constants, numerical_constants))\n")
+                        self.write("    q_u_dict = dict(zip(sys.coordinates+sys.speeds, i))\n")
                         for i in other_outputs:
                             self.write(" "*4 + i[0] + "_out" + ".append(" + i[1] + ".subs(q_u_dict)" +
-                                    ".subs(constants_dict).evalf())\n")
+                                    ".subs(sys.constants).evalf())\n")
 
         # Standalone function calls (used for dual functions)
         def exitFunctionCall(self, ctx):
@@ -1751,10 +1782,15 @@ if AutolevListener:
                             num+=1
                         try:
                             l.append(self.getValue(ctx.getChild(i)))
-                            if i!=1:
-                                l2.append(self.getValue(ctx.getChild(i)))
                         except Exception:
                             l.append(ctx.getChild(i).getText())
+
+                        if i != 2:
+                            try:
+                                l2.append(self.getValue(ctx.getChild(i)))
+                            except Exception:
+                                pass
+
                     for i in l2:
                         self.explicit.update({i: "sm.solve" + "".join(l) + "[" + i + "]"})
 
@@ -1766,7 +1802,7 @@ if AutolevListener:
                     symbol = self.symbol_table[ctx.expr(0).getText().lower()]
 
                     if ctx.expr(0) in self.matrix_expr or (expr in self.type.keys() and self.type[expr] == "matrix"):
-                        self.write(symbol + "=" + "sm.Matrix([i.collect(" + self.getValue(ctx.expr(2)) +
+                        self.write(symbol + " = " + "sm.Matrix([i.collect(" + self.getValue(ctx.expr(2)) +
                                    ")" + "for i in " + expr + "])" +
                                    ".reshape((" + expr + ").shape[0], " + "(" + expr + ").shape[1])\n")
                     else:
@@ -1892,6 +1928,7 @@ if AutolevListener:
                         else:
                             self.forces.update({e: self.symbol_table2[i] +
                                                ".mass*(" + self.getValue(ctx.expr(0)) + ")"})
+                        self.write("force_" + i + " = " + self.forces[e] + "\n")
 
                 # Explicit(EXPRESS(IMPLICIT>,C))
                 elif func_name == "explicit":
@@ -1936,16 +1973,16 @@ if AutolevListener:
                             pt2 = self.symbol_table2[p2] + ".point"
                         if pt1 in self.forces.keys():
                             self.forces[pt1] = self.forces[pt1] + " + -1*("+self.getValue(ctx.expr(1)) + ")"
-                            self.write("force_" + p1 + " += " + self.getValue(ctx.expr(1)) + "\n")
+                            self.write("force_" + p1 + " = " + self.forces[pt1] + "\n")
                         else:
-                            self.write("force_" + p1 + " = " + self.getValue(ctx.expr(1)) + "\n")
                             self.forces.update({pt1: "-1*("+self.getValue(ctx.expr(1)) + ")"})
+                            self.write("force_" + p1 + " = " + self.forces[pt1] + "\n")
                         if pt2 in self.forces.keys():
                             self.forces[pt2] = self.forces[pt2] + "+ " + self.getValue(ctx.expr(1))
-                            self.write("force_" + p2 + " += " + self.getValue(ctx.expr(1)) + "\n")
+                            self.write("force_" + p2 + " = " + self.forces[pt2] + "\n")
                         else:
                             self.forces.update({pt2: self.getValue(ctx.expr(1))})
-                            self.write("force_" + p2 + " += " + self.getValue(ctx.expr(1)) + "\n")
+                            self.write("force_" + p2 + " = " + self.forces[pt2] + "\n")
 
                     elif ctx.expr(0).getChildCount() == 1:
                         p1 = ctx.expr(0).getText().lower()
@@ -1982,20 +2019,27 @@ if AutolevListener:
 
         def exitMassDecl2(self, ctx):
             # Used for declaring the masses of particles and rigidbodies.
-            if ctx.getChildCount() == 5:
-                self.inputs.update({ctx.getChild(2).getText().lower(): ctx.getChild(4).getText()})
             particle = self.symbol_table2[ctx.getChild(0).getText().lower()]
-            try:
-                if ctx.expr() in self.numeric_expr:
-                    mass = "sm.S(" + self.getValue(ctx.expr()) + ")"
+            if ctx.getText().count("=") == 2:
+                if ctx.expr().expr(1) in self.numeric_expr:
+                    e = "sm.S(" + self.getValue(ctx.expr().expr(1)) + ")"
                 else:
-                    mass = self.getValue(ctx.expr())
-            except Exception:
-                a_text = ctx.expr().getText().lower()
-                self.symbol_table.update({a_text: a_text})
-                self.type.update({a_text: "constants"})
-                self.write(a_text + "=" + "sm.symbols('" + a_text + "')\n")
-                mass = a_text
+                    e = self.getValue(ctx.expr().expr(1))
+                self.symbol_table.update({ctx.expr().expr(0).getText().lower(): ctx.expr().expr(0).getText().lower()})
+                self.write(ctx.expr().expr(0).getText().lower() + " = " + e + "\n")
+                mass = ctx.expr().expr(0).getText().lower()
+            else:
+                try:
+                    if ctx.expr() in self.numeric_expr:
+                        mass = "sm.S(" + self.getValue(ctx.expr()) + ")"
+                    else:
+                        mass = self.getValue(ctx.expr())
+                except Exception:
+                    a_text = ctx.expr().getText().lower()
+                    self.symbol_table.update({a_text: a_text})
+                    self.type.update({a_text: "constants"})
+                    self.write(a_text + " = " + "sm.symbols('" + a_text + "')\n")
+                    mass = a_text
 
             self.write(particle + ".mass = " + mass + "\n")
 

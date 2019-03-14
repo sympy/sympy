@@ -1,6 +1,6 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
-    Pow, Or, true, false, Abs, pi, Range)
+    Pow, Or, true, false, Abs, pi, Range, Xor)
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
@@ -481,6 +481,13 @@ def test_kernS():
     assert kernS(['2*(x + y)*y', ('2*(x + y)*y',)]) == [e, (e,)]
     assert kernS('-(2*sin(x)**2 + 2*sin(x)*cos(x))*y/2') == \
         -y*(2*sin(x)**2 + 2*sin(x)*cos(x))/2
+    # issue 15132
+    assert kernS('(1 - x)/(1 - x*(1-y))') == kernS('(1-x)/(1-(1-y)*x)')
+    assert kernS('(1-2**-(4+1)*(1-y)*x)') == (1 - x*(1 - y)/32)
+    assert kernS('(1-2**(4+1)*(1-y)*x)') == (1 - 32*x*(1 - y))
+    assert kernS('(1-2.*(1-y)*x)') == 1 - 2.*x*(1 - y)
+    one = kernS('x - (x - 1)')
+    assert one != 1 and one.expand() == 1
 
 
 def test_issue_6540_6552():
@@ -589,17 +596,14 @@ def test_sympify_numpy():
     assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
     assert equal(sympify(np.longcomplex(1 + 2j)), S(1.0 + 2.0*I))
 
-    try:
+    #float96 does not exist on all platforms
+    if hasattr(np, 'float96'):
         assert equal(sympify(np.float96(1.123456789)),
                     Float(1.123456789, precision=80))
-    except AttributeError:  #float96 does not exist on all platforms
-        pass
-
-    try:
+    #float128 does not exist on all platforms
+    if hasattr(np, 'float128'):
         assert equal(sympify(np.float128(1.123456789123)),
                     Float(1.123456789123, precision=80))
-    except AttributeError:  #float128 does not exist on all platforms
-        pass
 
 
 @XFAIL
@@ -615,3 +619,47 @@ def test_issue_13924():
     a = sympify(numpy.array([1]))
     assert isinstance(a, ImmutableDenseNDimArray)
     assert a[0] == 1
+
+def test_numpy_sympify_args():
+    # Issue 15098. Make sure sympify args work with numpy types (like numpy.str_)
+    if not numpy:
+        skip("numpy not installed.")
+
+    a = sympify(numpy.str_('a'))
+    assert type(a) is Symbol
+    assert a == Symbol('a')
+
+    class CustomSymbol(Symbol):
+        pass
+
+    a = sympify(numpy.str_('a'), {"Symbol": CustomSymbol})
+    assert isinstance(a, CustomSymbol)
+
+    a = sympify(numpy.str_('x^y'))
+    assert a == x**y
+    a = sympify(numpy.str_('x^y'), convert_xor=False)
+    assert a == Xor(x, y)
+
+    raises(SympifyError, lambda: sympify(numpy.str_('x'), strict=True))
+
+    a = sympify(numpy.str_('1.1'))
+    assert isinstance(a, Float)
+    assert a == 1.1
+
+    a = sympify(numpy.str_('1.1'), rational=True)
+    assert isinstance(a, Rational)
+    assert a == Rational(11, 10)
+
+    a = sympify(numpy.str_('x + x'))
+    assert isinstance(a, Mul)
+    assert a == 2*x
+
+    a = sympify(numpy.str_('x + x'), evaluate=False)
+    assert isinstance(a, Add)
+    assert a == Add(x, x, evaluate=False)
+
+
+def test_issue_5939():
+     a = Symbol('a')
+     b = Symbol('b')
+     assert sympify('''a+\nb''') == a + b

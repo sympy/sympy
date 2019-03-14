@@ -4,14 +4,14 @@ from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
 
-from sympy.core.evaluate import global_evaluate
-from sympy.core.compatibility import iterable, ordered, default_sort_key
 from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, symbols, expand_mul
-from sympy.core.numbers import Rational
-from sympy.core.exprtools import Factors, gcd_terms
-from sympy.core.mul import _keep_coeff, _unevaluated_Mul
-from sympy.core.function import _mexpand
 from sympy.core.add import _unevaluated_Add
+from sympy.core.compatibility import iterable, ordered, default_sort_key
+from sympy.core.evaluate import global_evaluate
+from sympy.core.exprtools import Factors, gcd_terms
+from sympy.core.function import _mexpand
+from sympy.core.mul import _keep_coeff, _unevaluated_Mul
+from sympy.core.numbers import Rational
 from sympy.functions import exp, sqrt, log
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
@@ -155,6 +155,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     See Also
     ========
+
     collect_const, collect_sqrt, rcollect
     """
     expr = sympify(expr)
@@ -325,7 +326,12 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             return [_f for _f in terms if _f], elems, common_expo, has_deriv
 
     if evaluate:
-        if expr.is_Mul:
+        if expr.is_Add:
+            o = expr.getO() or 0
+            expr = expr.func(*[
+                    collect(a, syms, func, True, exact, distribute_order_term)
+                    for a in expr.args if a != o]) + o
+        elif expr.is_Mul:
             return expr.func(*[
                 collect(term, syms, func, True, exact, distribute_order_term)
                 for term in expr.args])
@@ -371,6 +377,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                 print("DEBUG: returned %s" % str(result))
 
             if result is not None:
+                if not symbol.is_commutative:
+                    raise AttributeError("Can not collect noncommutative symbol")
+
                 terms, elems, common_expo, has_deriv = result
 
                 # when there was derivative in current pattern we
@@ -430,6 +439,7 @@ def rcollect(expr, *vars):
 
     See Also
     ========
+
     collect, collect_const, collect_sqrt
     """
     if expr.is_Atom or not expr.has(*vars):
@@ -481,6 +491,7 @@ def collect_sqrt(expr, evaluate=None):
 
     See Also
     ========
+
     collect, collect_const, rcollect
     """
     if evaluate is None:
@@ -580,6 +591,7 @@ def collect_const(expr, *vars, **kwargs):
 
     See Also
     ========
+
     collect, collect_sqrt, rcollect
     """
     if not expr.is_Add:
@@ -682,7 +694,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> from sympy.abc import a, b, c
 
     >>> radsimp(1/(2 + sqrt(2)))
-    (-sqrt(2) + 2)/2
+    (2 - sqrt(2))/2
     >>> x,y = map(Symbol, 'xy')
     >>> e = ((2 + 2*sqrt(2))*x + (2 + sqrt(8))*y)/(2 + sqrt(2))
     >>> radsimp(e)

@@ -141,7 +141,7 @@ def time_derivative(expr, frame, order=1):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Rotating_reference_frame#Time_derivatives_in_the_two_frames
+    https://en.wikipedia.org/wiki/Rotating_reference_frame#Time_derivatives_in_the_two_frames
 
     Parameters
     ==========

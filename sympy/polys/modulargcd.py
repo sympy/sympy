@@ -1,14 +1,13 @@
+from sympy import Dummy
+from sympy.core.compatibility import range
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
-
+from sympy.polys.domains import PolynomialRing
 from sympy.polys.galoistools import (
     gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm)
 from sympy.polys.polyerrors import ModularGCDFailed
-from sympy.polys.domains import PolynomialRing
 
-from sympy.core.compatibility import range
 from mpmath import sqrt
-from sympy import Dummy
 import random
 
 
@@ -451,7 +450,6 @@ def _swap(f, i):
     Make the variable `x_i` the leading one in a multivariate polynomial `f`.
     """
     ring = f.ring
-    k = ring.ngens
     fswap = ring.zero
     for monom, coeff in f.iterterms():
         monomswap = (monom[i],) + monom[:i] + monom[i+1:]
@@ -1486,11 +1484,10 @@ def _trial_division(f, h, minpoly, p=None):
     References
     ==========
 
-    1. [Hoeij02]_
+    .. [1] [Hoeij02]_
 
     """
     ring = f.ring
-    domain = ring.domain
 
     zxring = ring.clone(symbols=(ring.symbols[1], ring.symbols[0]))
 

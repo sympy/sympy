@@ -8,37 +8,39 @@ from sympy import (
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
+
+from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
+    SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
+from sympy.core.compatibility import range, u_decode as u, PY3
 from sympy.core.expr import UnevaluatedExpr
+from sympy.core.trace import Tr
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
-    meijerg, sin, sqrt, subfactorial, tan, uppergamma,
+    meijerg, sin, sqrt, subfactorial, tan, uppergamma, lerchphi,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
 
-from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
-    SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
+from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerProduct
 
-from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
+from sympy.physics import mechanics
+from sympy.physics.units import joule, degree
+from sympy.printing.pretty import pprint, pretty as xpretty
+from sympy.printing.pretty.pretty_symbology import center_accent
 
-from sympy.printing.pretty import pretty as xpretty
-from sympy.printing.pretty import pprint
-
-from sympy.physics.units import joule, degree, radian
+from sympy.sets import ImageSet
+from sympy.sets.setexpr import SetExpr
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
+from sympy.tensor.functions import TensorProduct
+from sympy.tensor.tensor import (TensorIndexType, tensor_indices, tensorhead,
+        TensorElement)
 
 from sympy.utilities.pytest import raises, XFAIL
-from sympy.core.trace import Tr
-
-from sympy.core.compatibility import u_decode as u
-from sympy.core.compatibility import range
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
-from sympy.tensor.functions import TensorProduct
 
-from sympy.sets.setexpr import SetExpr
-from sympy.sets import ImageSet
+
 
 import sympy as sym
 class lowergamma(sym.lowergamma):
@@ -300,11 +302,8 @@ def test_upretty_subs_missing_in_24():
     assert upretty( Symbol('F_x') ) == u'Fₓ'
 
 
-@XFAIL
 def test_missing_in_2X_issue_9047():
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    if PY3:
         assert upretty( Symbol('F_h') ) == u'Fₕ'
         assert upretty( Symbol('F_k') ) == u'Fₖ'
         assert upretty( Symbol('F_l') ) == u'Fₗ'
@@ -318,8 +317,8 @@ def test_missing_in_2X_issue_9047():
 def test_upretty_modifiers():
     # Accents
     assert upretty( Symbol('Fmathring') ) == u'F̊'
-    assert upretty( Symbol('Fddddot') ) == u'F̈̈'
-    assert upretty( Symbol('Fdddot') ) == u'F̈̇'
+    assert upretty( Symbol('Fddddot') ) == u'F⃜'
+    assert upretty( Symbol('Fdddot') ) == u'F⃛'
     assert upretty( Symbol('Fddot') ) == u'F̈'
     assert upretty( Symbol('Fdot') ) == u'Ḟ'
     assert upretty( Symbol('Fcheck') ) == u'F̌'
@@ -458,6 +457,23 @@ x \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+    #see issue #14033
+    expr = x**Rational(1, 3)
+    ascii_str = \
+"""\
+ 1/3\n\
+x   \
+"""
+    ucode_str = \
+u("""\
+ 1/3\n\
+x   \
+""")
+    assert xpretty(expr, use_unicode=False, wrap_line=False,\
+    root_notation = False) == ascii_str
+    assert xpretty(expr, use_unicode=True, wrap_line=False,\
+    root_notation = False) == ucode_str
 
     expr = x**Rational(-5, 2)
     ascii_str = \
@@ -712,11 +728,11 @@ u("""\
     expr = S(1)/2 - 3*x
     ascii_str = \
 """\
--3*x + 1/2\
+1/2 - 3*x\
 """
     ucode_str = \
 u("""\
--3⋅x + 1/2\
+1/2 - 3⋅x\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -740,15 +756,15 @@ u("""\
     expr = S(1)/2 - 3*x/2
     ascii_str = \
 """\
-  3*x   1\n\
-- --- + -\n\
-   2    2\
+1   3*x\n\
+- - ---\n\
+2    2 \
 """
     ucode_str = \
 u("""\
-  3⋅x   1\n\
-- ─── + ─\n\
-   2    2\
+1   3⋅x\n\
+─ - ───\n\
+2    2 \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -921,16 +937,15 @@ u("""\
 def test_issue_5524():
     assert pretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 """\
-        /         ___    \\           2\n\
-(x - 5)*\\-x - 2*\\/ 2  + 5/ - (-y + 5) \
+         2           /         ___    \\\n\
+- (5 - y)  + (x - 5)*\\-x - 2*\\/ 2  + 5/\
 """
 
     assert upretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 u("""\
-                                  2\n\
-(x - 5)⋅(-x - 2⋅√2 + 5) - (-y + 5) \
+         2                          \n\
+- (5 - y)  + (x - 5)⋅(-x - 2⋅√2 + 5)\
 """)
-
 
 def test_pretty_ordering():
     assert pretty(x**2 + x + 1, order='lex') == \
@@ -3753,6 +3768,18 @@ def test_pretty_sequences():
     assert pretty(SeqMul(s5, s6)) == ascii_str
     assert upretty(SeqMul(s5, s6)) == ucode_str
 
+    # Sequences with symbolic limits, issue 12629
+    s7 = SeqFormula(a**2, (a, 0, x))
+    raises(NotImplementedError, lambda: pretty(s7))
+    raises(NotImplementedError, lambda: upretty(s7))
+
+    b = Symbol('b')
+    s8 = SeqFormula(b*a**2, (a, 0, 2))
+    ascii_str = u'[0, b, 4*b]'
+    ucode_str = u'[0, b, 4⋅b]'
+    assert pretty(s8) == ascii_str
+    assert upretty(s8) == ucode_str
+
 
 def test_pretty_FourierSeries():
     f = fourier_series(x, (x, -pi, pi))
@@ -5797,7 +5824,7 @@ def test_Tr():
 
 def test_pretty_Add():
     eq = Mul(-2, x - 2, evaluate=False) + 5
-    assert pretty(eq) == '-2*(x - 2) + 5'
+    assert pretty(eq) == '5 - 2*(x - 2)'
 
 
 def test_issue_7179():
@@ -5854,6 +5881,7 @@ u("""\
 
 
 def test_issue_4335():
+    y = Function('y')
     expr = -y(x).diff(x)
     ucode_str = \
 u("""\
@@ -5924,7 +5952,8 @@ u("""\
 
 
 def test_issue_6134():
-    from sympy.abc import lamda, phi, t
+    from sympy.abc import lamda, t
+    phi = Function('phi')
 
     e = lamda*x*Integral(phi(t)*pi*sin(pi*t), (t, 0, 1)) + lamda*x**2*Integral(phi(t)*2*pi*sin(2*pi*t), (t, 0, 1))
     ucode_str = \
@@ -6124,7 +6153,12 @@ def test_MatrixSymbol_printing():
     x = MatrixSymbol('x', n, n)
     y = MatrixSymbol('y*', n, n)
     assert pretty(x + y) == "x + y*"
-    assert pretty(-a*x + -2*y*y) == "-a*x -2*y**y*"
+    ascii_str = \
+"""\
+     2     \n\
+-2*y*  -a*x\
+"""
+    assert pretty(-a*x + -2*y*y) == ascii_str
 
 
 def test_degree_printing():
@@ -6148,5 +6182,408 @@ def test_vector_expr_pretty_printing():
 
     assert upretty(Dot(A.i, A.x*A.i+3*A.y*A.j)) == u("(A_i)⋅((A_x) A_i + (3⋅A_y) A_j)")
 
-    assert upretty(Gradient(A.x+3*A.y)) == u("∇⋅(A_x + 3⋅A_y)")
+    assert upretty(Gradient(A.x+3*A.y)) == u("∇(A_x + 3⋅A_y)")
     # TODO: add support for ASCII pretty.
+
+
+def test_pretty_print_tensor_expr():
+    L = TensorIndexType("L")
+    i, j, k = tensor_indices("i j k", L)
+    i0 = tensor_indices("i_0", L)
+    A, B, C, D = tensorhead("A B C D", [L], [[1]])
+    H = tensorhead("H", [L, L], [[1], [1]])
+
+    expr = -i
+    ascii_str = \
+"""\
+-i\
+"""
+    ucode_str = \
+u("""\
+-i\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(i)
+    ascii_str = \
+"""\
+ i\n\
+A \n\
+  \
+"""
+    ucode_str = \
+u("""\
+ i\n\
+A \n\
+  \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(i0)
+    ascii_str = \
+"""\
+ i_0\n\
+A   \n\
+    \
+"""
+    ucode_str = \
+u("""\
+ i₀\n\
+A  \n\
+   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(-i)
+    ascii_str = \
+"""\
+  \n\
+A \n\
+ i\
+"""
+    ucode_str = \
+u("""\
+  \n\
+A \n\
+ i\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = -3*A(-i)
+    ascii_str = \
+"""\
+     \n\
+-3*A \n\
+    i\
+"""
+    ucode_str = \
+u("""\
+     \n\
+-3⋅A \n\
+    i\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = H(i, -j)
+    ascii_str = \
+"""\
+ i \n\
+H  \n\
+  j\
+"""
+    ucode_str = \
+u("""\
+ i \n\
+H  \n\
+  j\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = H(i, -i)
+    ascii_str = \
+"""\
+ L_0   \n\
+H      \n\
+    L_0\
+"""
+    ucode_str = \
+u("""\
+ L₀  \n\
+H    \n\
+   L₀\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = H(i, -j)*A(j)*B(k)
+    ascii_str = \
+"""\
+ i     L_0  k\n\
+H    *A   *B \n\
+  L_0        \
+"""
+    ucode_str = \
+u("""\
+ i    L₀  k\n\
+H   ⋅A  ⋅B \n\
+  L₀       \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = (1+x)*A(i)
+    ascii_str = \
+"""\
+         i\n\
+(x + 1)*A \n\
+          \
+"""
+    ucode_str = \
+u("""\
+         i\n\
+(x + 1)⋅A \n\
+          \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(i) + 3*B(i)
+    ascii_str = \
+"""\
+ i      i\n\
+A  + 3*B \n\
+         \
+"""
+    ucode_str = \
+u("""\
+ i      i\n\
+A  + 3⋅B \n\
+         \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+
+def test_pretty_print_tensor_partial_deriv():
+    from sympy.tensor.toperators import PartialDerivative
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+
+    L = TensorIndexType("L")
+    i, j, k = tensor_indices("i j k", L)
+    i0 = tensor_indices("i0", L)
+
+    A, B, C, D = tensorhead("A B C D", [L], [[1]])
+
+    H = tensorhead("H", [L, L], [[1], [1]])
+
+    expr = PartialDerivative(A(i), A(j))
+    ascii_str = \
+"""\
+ d / i\\\n\
+---|A |\n\
+  j\\  /\n\
+dA     \n\
+       \
+"""
+    ucode_str = \
+u("""\
+ ∂ ⎛ i⎞\n\
+───⎜A ⎟\n\
+  j⎝  ⎠\n\
+∂A     \n\
+       \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(i)*PartialDerivative(H(k, -i), A(j))
+    ascii_str = \
+"""\
+ L_0  d / k   \\\n\
+A   *---|H    |\n\
+       j\\  L_0/\n\
+     dA        \n\
+               \
+"""
+    ucode_str = \
+u("""\
+ L₀  ∂ ⎛ k  ⎞\n\
+A  ⋅───⎜H   ⎟\n\
+      j⎝  L₀⎠\n\
+    ∂A       \n\
+             \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A(i)*PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j))
+    ascii_str = \
+"""\
+ L_0  d / k           k   \\\n\
+A   *---|B *C    + 3*H    |\n\
+       j\\    L_0       L_0/\n\
+     dA                    \n\
+                           \
+"""
+    ucode_str = \
+u("""\
+ L₀  ∂ ⎛ k          k  ⎞\n\
+A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
+      j⎝    L₀       L₀⎠\n\
+    ∂A                  \n\
+                        \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = (A(i) + B(i))*PartialDerivative(C(-j), D(j))
+    ascii_str = \
+"""\
+/ i    i\\   d  /    \\\n\
+|A  + B |*-----|C   |\n\
+\\       /   L_0\\ L_0/\n\
+          dD         \n\
+                     \
+"""
+    ucode_str = \
+u("""\
+⎛ i    i⎞  ∂  ⎛   ⎞\n\
+⎜A  + B ⎟⋅────⎜C  ⎟\n\
+⎝       ⎠   L₀⎝ L₀⎠\n\
+          ∂D       \n\
+                   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = (A(i) + B(i))*PartialDerivative(C(-i), D(j))
+    ascii_str = \
+"""\
+/ L_0    L_0\\  d /    \\\n\
+|A    + B   |*---|C   |\n\
+\\           /   j\\ L_0/\n\
+              dD       \n\
+                       \
+"""
+    ucode_str = \
+u("""\
+⎛ L₀    L₀⎞  ∂ ⎛   ⎞\n\
+⎜A   + B  ⎟⋅───⎜C  ⎟\n\
+⎝         ⎠   j⎝ L₀⎠\n\
+            ∂D      \n\
+                    \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = TensorElement(H(i, j), {i:1})
+    ascii_str = \
+"""\
+ i=1,j\n\
+H     \n\
+      \
+"""
+    ucode_str = ascii_str
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = TensorElement(H(i, j), {i:1, j:1})
+    ascii_str = \
+"""\
+ i=1,j=1\n\
+H       \n\
+        \
+"""
+    ucode_str = ascii_str
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = TensorElement(H(i, j), {j:1})
+    ascii_str = \
+"""\
+ i,j=1\n\
+H     \n\
+      \
+"""
+    ucode_str = ascii_str
+
+    expr = TensorElement(H(-i, j), {-i:1})
+    ascii_str = \
+"""\
+    j\n\
+H    \n\
+ i=1 \
+"""
+    ucode_str = ascii_str
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+
+def test_issue_15560():
+    a = MatrixSymbol('a', 1, 1)
+    e = pretty(a*(KroneckerProduct(a, a)))
+    result = 'a*(a x a)'
+    assert e == result
+
+
+def test_print_lerchphi():
+    # Part of issue 6013
+    a = Symbol('a')
+    pretty(lerchphi(a, 1, 2))
+    uresult = u'Φ(a, 1, 2)'
+    aresult = 'lerchphi(a, 1, 2)'
+    assert pretty(lerchphi(a, 1, 2)) == aresult
+    assert upretty(lerchphi(a, 1, 2)) == uresult
+
+def test_issue_15583():
+
+    N = mechanics.ReferenceFrame('N')
+    result = '(n_x, n_y, n_z)'
+    e = pretty((N.x, N.y, N.z))
+    assert e == result
+
+
+def test_matrixSymbolBold():
+    # Issue 15871
+    def boldpretty(expr):
+        return xpretty(expr, use_unicode=True, wrap_line=False, mat_symbol_style="bold")
+
+    from sympy import trace
+    A = MatrixSymbol("A", 2, 2)
+    assert boldpretty(trace(A)) == u'tr(𝐀)'
+
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+    C = MatrixSymbol("C", 3, 3)
+
+    assert boldpretty(-A) == u'-𝐀'
+    assert boldpretty(A - A*B - B) == u'-𝐁 -𝐀⋅𝐁 + 𝐀'
+    assert boldpretty(-A*B - A*B*C - B) == u'-𝐁 -𝐀⋅𝐁 -𝐀⋅𝐁⋅𝐂'
+
+    A = MatrixSymbol("Addot", 3, 3)
+    assert boldpretty(A) == u'𝐀̈'
+    omega = MatrixSymbol("omega", 3, 3)
+    assert boldpretty(omega) == u'ω'
+    omega = MatrixSymbol("omeganorm", 3, 3)
+    assert boldpretty(omega) == u'‖ω‖'
+
+    a = Symbol('alpha')
+    b = Symbol('b')
+    c = MatrixSymbol("c", 3, 1)
+    d = MatrixSymbol("d", 3, 1)
+
+    assert boldpretty(a*B*c+b*d) == u'b⋅𝐝 + α⋅𝐁⋅𝐜'
+
+    d = MatrixSymbol("delta", 3, 1)
+    B = MatrixSymbol("Beta", 3, 3)
+
+    assert boldpretty(a*B*c+b*d) == u'b⋅δ + α⋅Β⋅𝐜'
+
+    A = MatrixSymbol("A_2", 3, 3)
+    assert boldpretty(A) == u'𝐀₂'
+
+
+def test_center_accent():
+    assert center_accent('a', u'\N{COMBINING TILDE}') == u'ã'
+    assert center_accent('aa', u'\N{COMBINING TILDE}') == u'aã'
+    assert center_accent('aaa', u'\N{COMBINING TILDE}') == u'aãa'
+    assert center_accent('aaaa', u'\N{COMBINING TILDE}') == u'aaãa'
+    assert center_accent('aaaaa', u'\N{COMBINING TILDE}') == u'aaãaa'
+    assert center_accent('abcdefg', u'\N{COMBINING FOUR DOTS ABOVE}') == u'abcd⃜efg'
+
+
+def test_imaginary_unit():
+    from sympy import pretty # As it is redefined above
+    assert pretty(1 + I, use_unicode=False) == '1 + I'
+    assert pretty(1 + I, use_unicode=True) == u'1 + ⅈ'
+    assert pretty(1 + I, use_unicode=False, imaginary_unit='j') == '1 + I'
+    assert pretty(1 + I, use_unicode=True, imaginary_unit='j') == u'1 + ⅉ'
+
+    raises(TypeError, lambda: pretty(I, imaginary_unit=I))
+    raises(ValueError, lambda: pretty(I, imaginary_unit="kkk"))

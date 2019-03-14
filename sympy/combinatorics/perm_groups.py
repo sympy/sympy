@@ -3,8 +3,6 @@ from __future__ import print_function, division
 from random import randrange, choice
 from math import log
 
-from sympy.core import Basic
-from sympy.core.compatibility import range
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
     _af_rmul, _af_rmuln, _af_pow, Cycle)
@@ -12,6 +10,8 @@ from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _distribute_gens_by_base, _orbits_transversals_from_bsgs,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
     _strip, _strip_af)
+from sympy.core import Basic
+from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
@@ -85,36 +85,35 @@ class PermutationGroup(Basic):
     References
     ==========
 
-    [1] Holt, D., Eick, B., O'Brien, E.
-    "Handbook of Computational Group Theory"
+    .. [1] Holt, D., Eick, B., O'Brien, E.
+           "Handbook of Computational Group Theory"
 
-    [2] Seress, A.
-    "Permutation Group Algorithms"
+    .. [2] Seress, A.
+           "Permutation Group Algorithms"
 
-    [3] http://en.wikipedia.org/wiki/Schreier_vector
+    .. [3] https://en.wikipedia.org/wiki/Schreier_vector
 
-    [4] http://en.wikipedia.org/wiki/Nielsen_transformation
-    #Product_replacement_algorithm
+    .. [4] https://en.wikipedia.org/wiki/Nielsen_transformation#Product_replacement_algorithm
 
-    [5] Frank Celler, Charles R.Leedham-Green, Scott H.Murray,
-    Alice C.Niemeyer, and E.A.O'Brien. "Generating Random
-    Elements of a Finite Group"
+    .. [5] Frank Celler, Charles R.Leedham-Green, Scott H.Murray,
+           Alice C.Niemeyer, and E.A.O'Brien. "Generating Random
+           Elements of a Finite Group"
 
-    [6] http://en.wikipedia.org/wiki/Block_%28permutation_group_theory%29
+    .. [6] https://en.wikipedia.org/wiki/Block_%28permutation_group_theory%29
 
-    [7] http://www.algorithmist.com/index.php/Union_Find
+    .. [7] http://www.algorithmist.com/index.php/Union_Find
 
-    [8] http://en.wikipedia.org/wiki/Multiply_transitive_group#Multiply_transitive_groups
+    .. [8] https://en.wikipedia.org/wiki/Multiply_transitive_group#Multiply_transitive_groups
 
-    [9] http://en.wikipedia.org/wiki/Center_%28group_theory%29
+    .. [9] https://en.wikipedia.org/wiki/Center_%28group_theory%29
 
-    [10] http://en.wikipedia.org/wiki/Centralizer_and_normalizer
+    .. [10] https://en.wikipedia.org/wiki/Centralizer_and_normalizer
 
-    [11] http://groupprops.subwiki.org/wiki/Derived_subgroup
+    .. [11] http://groupprops.subwiki.org/wiki/Derived_subgroup
 
-    [12] http://en.wikipedia.org/wiki/Nilpotent_group
+    .. [12] https://en.wikipedia.org/wiki/Nilpotent_group
 
-    [13] http://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
+    .. [13] http://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
 
     """
     is_group = True
@@ -358,10 +357,10 @@ class PermutationGroup(Basic):
         References
         ==========
 
-        [1] Holt, D., Eick, B., O'Brien, E.
-        "Handbook of computational group theory"
+        .. [1] Holt, D., Eick, B., O'Brien, E.
+               "Handbook of computational group theory"
 
-        [7] http://www.algorithmist.com/index.php/Union_Find
+        .. [7] http://www.algorithmist.com/index.php/Union_Find
 
         """
         rep_first = self._union_find_rep(first, parents)
@@ -403,10 +402,10 @@ class PermutationGroup(Basic):
         References
         ==========
 
-        [1] Holt, D., Eick, B., O'Brien, E.
-        "Handbook of computational group theory"
+        .. [1] Holt, D., Eick, B., O'Brien, E.
+               "Handbook of computational group theory"
 
-        [7] http://www.algorithmist.com/index.php/Union_Find
+        .. [7] http://www.algorithmist.com/index.php/Union_Find
 
         """
         rep, parent = num, parents[num]
@@ -1070,7 +1069,11 @@ class PermutationGroup(Basic):
         >>> G.coset_factor(c)
         []
 
-        see util._strip
+        See Also
+        ========
+
+        util._strip
+
         """
         if isinstance(g, (Cycle, Permutation)):
             g = g.list()
@@ -1359,7 +1362,6 @@ class PermutationGroup(Basic):
         """
         r = self._r
         gens = [p._array_form for p in self.generators]
-        gens_inv = [_af_invert(p) for p in gens]
         set_commutators = set()
         degree = self._degree
         rng = list(range(degree))
@@ -1434,12 +1436,6 @@ class PermutationGroup(Basic):
 
         If af == True it yields the array form of the permutations
 
-        References
-        ==========
-
-        [1] The Implementation of Various Algorithms for Permutation Groups in
-        the Computer Algebra System: AXIOM, N.J. Doye, M.Sc. Thesis
-
         Examples
         ========
 
@@ -1452,6 +1448,12 @@ class PermutationGroup(Basic):
         >>> list(g.generate_dimino(af=True))
         [[0, 1, 2, 3], [0, 2, 1, 3], [0, 2, 3, 1],
          [0, 1, 3, 2], [0, 3, 2, 1], [0, 3, 1, 2]]
+
+        References
+        ==========
+
+        .. [1] The Implementation of Various Algorithms for Permutation Groups in
+               the Computer Algebra System: AXIOM, N.J. Doye, M.Sc. Thesis
 
         """
         idn = list(range(self.degree))
@@ -1817,8 +1819,12 @@ class PermutationGroup(Basic):
         True
 
         """
+        if not self.is_subgroup(gr, strict=strict):
+            return False
         d_self = self.degree
         d_gr = gr.degree
+        if self.is_trivial and (d_self == d_gr or not strict):
+            return True
         new_self = self.copy()
         if not strict and d_self != d_gr:
             if d_self < d_gr:
@@ -1874,7 +1880,6 @@ class PermutationGroup(Basic):
         """
         if self._is_primitive is not None:
             return self._is_primitive
-        n = self.degree
         if randomized:
             random_stab_gens = []
             v = self.schreier_vector(0)
@@ -2555,10 +2560,11 @@ class PermutationGroup(Basic):
 
         See Also
         ========
+
         degree
 
         """
-        if self._order != None:
+        if self._order is not None:
             return self._order
         if self._is_sym:
             n = self._degree
@@ -3516,6 +3522,7 @@ class PermutationGroup(Basic):
 
         See Also
         ========
+
         is_transitive, orbit
 
         """
@@ -3613,6 +3620,7 @@ class PermutationGroup(Basic):
 
         See Also
         ========
+
         sylow_subgroup, is_alt_sym
 
         '''
@@ -3718,8 +3726,8 @@ class PermutationGroup(Basic):
         True
 
         '''
-        from sympy.combinatorics.homomorphisms import (homomorphism,
-            orbit_homomorphism, block_homomorphism)
+        from sympy.combinatorics.homomorphisms import (
+                orbit_homomorphism, block_homomorphism)
         from sympy.ntheory.primetest import isprime
 
         if not isprime(p):
@@ -3818,7 +3826,6 @@ class PermutationGroup(Basic):
     def _block_verify(H, L, alpha):
         delta = sorted(list(H.orbit(alpha)))
         H_gens = H.generators
-        L_gens = L.generators
         # p[i] will be the number of the block
         # delta[i] belongs to
         p = [-1]*len(delta)
@@ -3892,8 +3899,9 @@ class PermutationGroup(Basic):
 
         The algorithm is described in [1], Chapter 6.
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics.homomorphisms import homomorphism
@@ -3917,6 +3925,7 @@ class PermutationGroup(Basic):
 
         See also
         ========
+
         strong_presentation, presentation, stabilizer
 
         '''
@@ -4002,8 +4011,9 @@ class PermutationGroup(Basic):
         The algorithm is based on Sims' Verify algorithm described
         in [1], Chapter 6.
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> P = DihedralGroup(4)
@@ -4013,6 +4023,7 @@ class PermutationGroup(Basic):
 
         See Also
         ========
+
         presentation, _verify
 
         '''
@@ -4021,7 +4032,6 @@ class PermutationGroup(Basic):
         from sympy.combinatorics.free_groups import free_group
         from sympy.combinatorics.homomorphisms import (block_homomorphism,
                                            homomorphism, GroupHomomorphism)
-        from itertools import product
 
         strong_gens = G.strong_gens[:]
         stabs = G.basic_stabilizers[:]
@@ -4321,7 +4331,6 @@ def _orbits(degree, generators):
     [{0, 1, 2}]
     """
 
-    seen = set()  # elements that have already appeared in orbits
     orbs = []
     sorted_I = list(range(degree))
     I = set(sorted_I)
