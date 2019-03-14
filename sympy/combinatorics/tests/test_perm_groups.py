@@ -894,12 +894,12 @@ def test_polycyclic():
     a = Permutation([0, 1, 2])
     b = Permutation([2, 1, 0])
     G = PermutationGroup([a, b])
-    assert G.is_polycyclic() == True
+    assert G.is_polycyclic == True
 
     a = Permutation([1, 2, 3, 4, 0])
     b = Permutation([1, 0, 2, 3, 4])
     G = PermutationGroup([a, b])
-    G.is_polycyclic() == False
+    assert G.is_polycyclic == False
 
 
 def test_elementary():

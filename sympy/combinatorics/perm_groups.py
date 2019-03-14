@@ -155,6 +155,7 @@ class PermutationGroup(Basic):
         obj._is_trivial = None
         obj._transitivity_degree = None
         obj._max_div = None
+        obj._is_polycyclic = None
         obj._r = len(obj._generators)
         obj._degree = obj._generators[0].size
 
@@ -2098,6 +2099,7 @@ class PermutationGroup(Basic):
             return False
         return all(G.contains(g, strict=strict) for g in gens)
 
+    @property
     def is_polycyclic(self):
         """Return ``True`` if a group is polycyclic. A group is polycyclic if
         it has a subnormal series with cyclic factors. For finite groups,
@@ -2110,7 +2112,7 @@ class PermutationGroup(Basic):
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([2, 0, 1, 3])
         >>> G = PermutationGroup([a, b])
-        >>> G.is_polycyclic()
+        >>> G.is_polycyclic
         True
 
         """
