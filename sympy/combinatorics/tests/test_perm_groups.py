@@ -914,3 +914,8 @@ def test_elementary():
     c = Permutation(4, 5, 6)
     G = PermutationGroup([a, b, c])
     assert G.is_elementary(2) == False
+
+    G = SymmetricGroup(4).sylow_subgroup(2)
+    assert G.is_elementary(2) == False
+    H = AlternatingGroup(4).sylow_subgroup(2)
+    assert H.is_elementary(2) == True
