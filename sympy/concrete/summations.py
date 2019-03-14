@@ -200,6 +200,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 else:
                     return self.func(f, *self.limits[n:])
             f = newf
+        if !(self.fucntion.is_convergent):
+            return oo
 
         if hints.get('deep', True):
             # eval_sum could return partially unevaluated
