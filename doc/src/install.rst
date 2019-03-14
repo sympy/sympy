@@ -34,7 +34,7 @@ If you wish to contribute to SymPy or like to get the latest updates as they
 come, install SymPy from git. To download the repository, execute the
 following from the command line::
 
-    git clone git://github.com/sympy/sympy.git
+    git clone https://github.com/sympy/sympy.git
 
 To update to the latest version, go into your repository and execute::
 

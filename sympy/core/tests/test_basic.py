@@ -120,6 +120,15 @@ def test_subs():
     assert Symbol(u"text").subs({u"text": b1}) == b1
 
 
+def test_subs_with_unicode_symbols():
+    expr = Symbol('var1')
+    replaced = expr.subs('var1', u'x')
+    assert replaced.name == 'x'
+
+    replaced = expr.subs('var1', 'x')
+    assert replaced.name == 'x'
+
+
 def test_atoms():
     assert b21.atoms() == set()
 
