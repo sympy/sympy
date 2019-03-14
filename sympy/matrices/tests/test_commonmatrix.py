@@ -1253,15 +1253,18 @@ def test_diag_make():
         [ 1, 1, 0, 0],
         [-2, 1, 2, 0],
         [ 0, 3, 1, 3]])
+    raises(ValueError, lambda:  diag({'size': 1}))
+    raises(ValueError, lambda:  diag({0:1, 'size': 0}))
+    raises(ValueError, lambda:  diag({0:1, 'size': (1, 2, 3)}))
     # specified dict is too small: needs to be at least 2 x 3
-    small = {2: 1, 'size': (2, 2)}
+    small = {2: 1, 'size': 2}
     raises(ValueError, lambda:  diag(small))
     raises(ValueError, lambda:  diag(small, row=3, cols=3))
     # flexible dict but too many elements already specified
     raises(ValueError, lambda: diag(1, 2, 3, 4, {0:1}, rows=3, cols=3))
     # non-contiguous unsized dicst
     raises(ValueError, lambda:  diag({0: 1}, 3, {1: 2}))
-    assert diag({0: 1, 'size': (3, 3)}, 3, {1: 2})
+    assert diag({0: 1, 'size': 3}, 3, {1: 2})
     assert diag({0: 1, 'size': (3, 3)}, 3, {1: 2}) == Matrix([
         [1, 0, 0, 0, 0, 0],
         [0, 1, 0, 0, 0, 0],
@@ -1310,6 +1313,43 @@ def test_diag_make():
         [0, 0, 3],
         [0, 0, 0]])
     raises(ValueError, lambda: diag({0: lambda i, j, k: 1}))
+    assert diag({-1: 1}, {}, 2) == Matrix([
+        [0, 0],
+        [1, 2]])
+    vblade = Matrix(list(range(1, 5)))
+    hblade = vblade.T
+    shaft = [7]*6
+    arrow = diag({-1: vblade, 1: hblade, 0: shaft})
+    assert arrow == Matrix([
+        [7, 1, 2, 3, 4, 0],
+        [1, 7, 0, 0, 0, 0],
+        [2, 0, 7, 0, 0, 0],
+        [3, 0, 0, 7, 0, 0],
+        [4, 0, 0, 0, 7, 0],
+        [0, 0, 0, 0, 0, 7]])
+    assert arrow == Matrix(6, 6, lambda i, j: Piecewise(
+        (7, Eq(i,j)),
+        (Max(i, j), And(Lt(Max(i, j), 5), Or(Eq(i, 0),
+        Eq(j, 0)))), (0, True)))
+    raises(ValueError, lambda: diag({0: vblade, -1: hblade}))
+    a = ones(2)
+    assert diag({0:[1]*7, 3:a, -3:-a}) == Matrix([
+        [ 1,  0,  0,  1, 1, 0, 0],
+        [ 0,  1,  0,  1, 1, 0, 0],
+        [ 0,  0,  1,  0, 0, 1, 1],
+        [-1, -1,  0,  1, 0, 1, 1],
+        [-1, -1,  0,  0, 1, 0, 0],
+        [ 0,  0, -1, -1, 0, 1, 0],
+        [ 0,  0, -1, -1, 0, 0, 1]])
+    # /!\: there is a difference in how args are handled
+    # when calling dense.diag and common.diag (Matrix.diag):
+    # dense.diag does not unpack args but converts seqs to Matrix
+    # common.diag unpacks args and does not convert seqs to Matrix
+    from sympy.matrices.dense import diag as dense_diag
+    assert dense_diag( [1, 2] )[0, 0] == 1
+    assert dense_diag([[1, 2]])[0, 0] == 1
+    assert diag( [1, 2] )[0, 0] == 1
+    assert diag([[1, 2]])[0, 0] == [1, 2]
 
 
 def test_jordan_block():
