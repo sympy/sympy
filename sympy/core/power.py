@@ -17,7 +17,6 @@ from sympy.utilities.iterables import sift
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 
 from math import sqrt as _sqrt
-from decimal import Decimal
 
 
 def isqrt(n):
