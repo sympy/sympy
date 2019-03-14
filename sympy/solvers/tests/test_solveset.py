@@ -1915,7 +1915,6 @@ def test_solve_logarithm():
 # end of logarithmic tests
 
 
-<<<<<<< HEAD
 # lambert tests
 
 def test_solve_lambert():
@@ -2030,7 +2029,9 @@ def test_other_lambert():
     a = S(6)/5
     assert solveset_real(x**a - a**x, x) == FiniteSet(
         a, -a*LambertW(-log(a)/a)/log(a))
-=======
+
+# end of transolve's tests
+
 def test_linear_coeffs():
     from sympy.solvers.solveset import linear_coeffs
     assert linear_coeffs(0, x) == [0, 0]
@@ -2042,4 +2043,3 @@ def test_linear_coeffs():
         linear_coeffs(x + 2*x**2 + x**3, x, x**2))
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
->>>>>>> 413257beef45fd416ef299e5ea6d11941ebf6270
