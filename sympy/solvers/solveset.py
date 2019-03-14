@@ -1352,12 +1352,10 @@ def _solve_as_bivariate(lhs, rhs, symbol, domain):
     gpu = bivariate_type(lhs - rhs, *gens)
     if gpu is not None:
         g, p, u = gpu
-        inversion = _transolve(g - u, symbol, domain)
-        if inversion:
-            sol = _solveset(p, u, domain)
-            result = FiniteSet(*[i.subs(u, s)
-                               for i in inversion for s in sol])
-
+        if g != lhs:
+            usol = _solveset(p, u, domain)
+            if not isinstance(usol, ConditionSet):
+                result = [_solveset(g - us, symbol, domain) for us in usol]
     return result
 
 
