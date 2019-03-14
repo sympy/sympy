@@ -1475,3 +1475,7 @@ def test_print_Vector():
         '<mi>x</mi></mrow></mfenced></mrow>'
     assert mathml(Cross(ACS.x, ACS.z) + Cross(ACS.z, ACS.x), printer='presentation') == \
         '<mover><mi mathvariant="bold">0</mi><mo>^</mo></mover>'
+    assert mathml(Cross(ACS.z, ACS.x), printer='presentation') == \
+        '<mrow><mo>-</mo><mrow><msub><mi mathvariant="bold">x</mi>'\
+        '<mi mathvariant="bold">A</mi></msub><mo>&#xD7;</mo><msub>'\
+        '<mi mathvariant="bold">z</mi><mi mathvariant="bold">A</mi></msub></mrow></mrow>'

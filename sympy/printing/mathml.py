@@ -1367,8 +1367,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(mo)
         mrow.appendChild(self.parenthesize(expr._expr, PRECEDENCE['Mul']))
         return mrow
-        vec = expr._expr
-        return r"\nabla\times %s" % self.parenthesize(vec, PRECEDENCE['Mul'])
 
     def _print_Divergence(self, expr):
         mrow = self.dom.createElement('mrow')
