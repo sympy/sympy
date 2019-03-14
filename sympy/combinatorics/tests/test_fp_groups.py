@@ -224,3 +224,9 @@ def test_permutation_methods():
     assert len(G.derived_series()) == 3
     S = FpSubgroup(G, G.derived_subgroup())
     assert S.order() == 4
+
+def test_simplify_presentation():
+    # ref #16083
+    G = simplify_presentation(FpGroup(FreeGroup([]), []))
+    assert not G.generators
+    assert not G.relators
