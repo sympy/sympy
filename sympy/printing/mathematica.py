@@ -184,7 +184,7 @@ class MCodePrinter(CodePrinter):
             """Helper function to print data part of Mathematica
             sparse array.
 
-            It uses the fourth notation ``SparseArray[data,{d1,d2,…}]``
+            It uses the fourth notation ``SparseArray[data,{d1,d2,...}]``
             from
             https://reference.wolfram.com/language/ref/SparseArray.html
 
