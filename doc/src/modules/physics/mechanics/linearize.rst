@@ -1,3 +1,5 @@
+.. _Linearization in physics_Mechanics:
+
 ==================================
 Linearization in Physics/Mechanics
 ==================================

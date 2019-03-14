@@ -1,4 +1,4 @@
-.. _inequality-docs:
+.. _Inequality Solvers:
 
 Inequality Solvers
 ==================

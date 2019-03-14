@@ -1,3 +1,5 @@
+.. _Lagranges_method:
+
 ======================================
 Lagrange's Method in Physics/Mechanics
 ======================================

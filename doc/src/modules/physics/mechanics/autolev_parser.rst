@@ -148,7 +148,7 @@ If you are completely new to SymPy mechanics, the :ref:`SymPy Mechanics for Auto
 guide should help. You might also have to use basic SymPy simplifications
 and manipulations like ``trigsimp()``, ``expand()``, ``evalf()`` etc for 
 getting outputs similar to Autolev.
-Refer to the `SymPy Tutorial <https://docs.sympy.org/latest/tutorial/index.html>`_
+Refer to the :ref:`SymPy Tutorial <SymPy Tutorial>`_
 to know more about these.
 
 .. _gotchas_autolev:
