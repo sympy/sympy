@@ -3,8 +3,6 @@ from __future__ import print_function, division
 from random import randrange, choice
 from math import log
 
-from sympy import S
-from sympy.ntheory import isprime
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
     _af_rmul, _af_rmuln, _af_pow, Cycle)
@@ -1680,7 +1678,7 @@ class PermutationGroup(Basic):
                     return False
         return True
 
-    def is_elementary_group(self):
+    def is_elementary(self, p):
         """Return ``True`` if the group is elementary abelian. An elementary
         abelian group is a finite abelian group, where every nontrivial
         element has order `p`, where `p` is a prime.
@@ -1692,37 +1690,18 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
         >>> G = PermutationGroup([a])
-        >>> G.is_elementary_group()
+        >>> G.is_elementary(2)
         True
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([3, 1, 2, 0])
         >>> G = PermutationGroup([a, b])
-        >>> G.is_elementary_group()
+        >>> G.is_elementary(2)
         True
+        >>> G.is_elementary(3)
+        False
 
         """
-        if not self.is_abelian:
-            return False
-        elif self.is_trivial:
-            return True
-        elif self.order == S.Infinity:
-            return False
-
-        else:
-            i = 0
-            while i < len(self.generators):
-                p = self.generators[i].order()
-                if p < 2:
-                    break
-                i = i + 1
-        if not isprime(p):
-            return False
-        else:
-            for i in range(len(self.generators)):
-                g = self.generators[i].order()
-                if g != p:
-                    return False
-            return True
+        return self.is_abelian and all(g.order() == p for g in self.generators)
 
     def is_alt_sym(self, eps=0.05, _random_prec=None):
         r"""Monte Carlo test for the symmetric/alternating group for degrees
@@ -2135,10 +2114,7 @@ class PermutationGroup(Basic):
         True
 
         """
-        if not (self.is_solvable):
-            return False
-        if self.order != S.Infinity:
-            return self.is_solvable
+        return self.is_solvable
 
     def is_transitive(self, strict=True):
         """Test if the group is transitive.

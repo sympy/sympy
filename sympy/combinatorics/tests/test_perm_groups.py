@@ -902,15 +902,15 @@ def test_polycyclic():
     G.is_polycyclic() == False
 
 
-def test_is_elementary_group():
+def test_elementary():
     a = Permutation([1, 5, 2, 0, 3, 6, 4])
     G = PermutationGroup([a])
-    assert G.is_elementary_group() == False
+    assert G.is_elementary(7) == False
 
     a = Permutation(0, 1)(2, 3)
     b = Permutation(0, 2)(3, 1)
     G = PermutationGroup([a, b])
-    assert G.is_elementary_group() == True
+    assert G.is_elementary(2) == True
     c = Permutation(4, 5, 6)
     G = PermutationGroup([a, b, c])
-    assert G.is_elementary_group() == False
+    assert G.is_elementary(2) == False
