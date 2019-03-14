@@ -1030,7 +1030,7 @@ class Ellipse(GeometrySet):
         =======
 
         Circle
-        A director circle returned as a geometric object.
+            A director circle returned as a geometric object.
 
         Examples
         ========
@@ -1045,8 +1045,8 @@ class Ellipse(GeometrySet):
 
         References
         ==========
-        .. [1] https://en.wikipedia.org/wiki/Director_circle
 
+        .. [1] https://en.wikipedia.org/wiki/Director_circle
         """
         return Circle(self.center, sqrt(self.hradius**2 + self.vradius**2))
 
