@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+#from sympy.matrices import MatrixExpr
 from sympy.core import S, Add, Expr, Basic, Mul
 from sympy.assumptions import Q, ask
 
@@ -239,6 +240,16 @@ def refine_Relational(expr, assumptions):
     """
     return ask(Q.is_true(expr), assumptions)
 
+def refine_matrixelement(expr,assumptions):
+
+
+
+    x=expr.parent
+    if (ask(Q.symmetric(x),assumptions)==True):
+        if(expr.args[1]+expr.args[2]>2*expr.args[2]):
+            return(expr.func(*(x,expr.args[2],expr.args[1])))
+    return(expr)
+
 
 handlers_dict = {
     'Abs': refine_abs,
@@ -249,5 +260,6 @@ handlers_dict = {
     'GreaterThan': refine_Relational,
     'LessThan': refine_Relational,
     'StrictGreaterThan': refine_Relational,
-    'StrictLessThan': refine_Relational
+    'StrictLessThan': refine_Relational,
+    'MatrixElement': refine_matrixelement
 }
