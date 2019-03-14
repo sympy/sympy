@@ -451,7 +451,7 @@ def check_assumptions(expr, against=None, **assumptions):
 
 
 def solve(f, *symbols, **flags):
-    r"""
+    """
     Algebraically solves equations and systems of equations.
 
     Currently supported are:
@@ -657,7 +657,7 @@ def solve(f, *symbols, **flags):
 
             >>> solve(sqrt(2) - 1, 1)
             [sqrt(2)]
-            >>> solve(x - y + 1, 1)  # /!\ -1 is targeted, too
+            >>> solve(x - y + 1, 1)  # /! -1 is targeted, too
             [x/(y - 1)]
             >>> [_.subs(z, -1) for _ in solve((x - y + 1).subs(-1, z), 1)]
             [-x + y]

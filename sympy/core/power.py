@@ -17,7 +17,7 @@ from sympy.utilities.iterables import sift
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 
 from math import sqrt as _sqrt
-
+from decimal import Decimal
 
 
 def isqrt(n):
@@ -73,7 +73,8 @@ def integer_nthroot(y, n):
     try:
         guess = int(y**(1./n) + 0.5)
     except OverflowError:
-        exp = _log(y, 2)/n
+        logy = _log(y, 2)
+        exp = logy/n if logy >= n else 0
         if exp > 53:
             shift = int(exp - 53)
             guess = int(2.0**(exp - shift) + 1) << shift
