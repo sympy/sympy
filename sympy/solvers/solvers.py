@@ -10,7 +10,7 @@ This module contain solvers for all kinds of equations:
     - nonlinear (numerically), use nsolve()
       (you will need a good starting point)
 
-r"""
+ r"""
 
 from __future__ import print_function, division
 
