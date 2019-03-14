@@ -1345,7 +1345,7 @@ def _is_bivariate(f, symbol):
     poly = f.as_poly()
     gens = _filtered_gens(poly, symbol)
 
-    return True if len(gens) == 2 else False
+    return len(gens) == 2
 
 
 def _solve_as_bivariate(lhs, rhs, symbol, domain):
@@ -1576,13 +1576,8 @@ def _transolve(f, symbol, domain):
       of the class of equation. The solving helper will be named as
       ``_solve_class``.
       For example: for exponential equations it becomes
-<<<<<<< HEAD
-      `\_is\_exponential` and `\_solve\_expo`.
-    - The `identifying helpers` should take two input parameters,
-=======
       ``_is_exponential`` and ``_solve_expo``.
     - The identifying helpers should take two input parameters,
->>>>>>> 413257beef45fd416ef299e5ea6d11941ebf6270
       the equation to be checked and the variable for which a solution
       is being sought, while solving helpers would require an additional
       domain parameter.
