@@ -1,7 +1,7 @@
 from sympy.combinatorics.graycode import (GrayCode, bin_to_gray,
     random_bitstring, get_subset_from_bitstring, graycode_subsets,
     gray_to_bin)
-
+from sympy.utilities.pytest import raises
 
 def test_graycode():
     g = GrayCode(2)
@@ -56,6 +56,11 @@ def test_graycode():
     assert list(graycode_subsets(['a', 'b', 'c'])) == \
         [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'],
     ['a', 'c'], ['a']]
+
+    raises(ValueError, lambda: GrayCode(0))
+    raises(ValueError, lambda: GrayCode(2.2))
+    raises(ValueError, lambda: GrayCode(2, start=[1, 1, 0]))
+    raises(ValueError, lambda: GrayCode(2, rank=2.5))
 
 def test_live_issue_117():
     assert bin_to_gray('0100') == '0110'
