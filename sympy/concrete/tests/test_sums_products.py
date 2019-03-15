@@ -1089,3 +1089,6 @@ def test_Sum_dummy_eq():
 
 def test_issue_15852():
     assert summation(x**y*y, (y, -oo, oo)).doit() == Sum(x**y*y, (y, -oo, oo))
+def test_issue_16250():
+    assert  Sum(sqrt(x), (x,1,oo)).doit() == oo
+    assert Sum(-sqrt(n), (n, 1, oo)) == -oo
