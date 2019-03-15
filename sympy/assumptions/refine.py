@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-#from sympy.matrices import MatrixExpr
 from sympy.core import S, Add, Expr, Basic, Mul
 from sympy.assumptions import Q, ask
 
