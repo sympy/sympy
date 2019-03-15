@@ -16,7 +16,7 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
 
 
 def lagrange_inversion_theorem(eq, x, a=0, n=3):
-    """
+    r"""
     The Lagrange inversion theorem (or Lagrange inversion formula, which we abbreviate
     as LIT), also known as the Lagrange--Bürmann formula, gives the Taylor series
     expansion of the inverse function of an analytic function.
@@ -37,15 +37,14 @@ def lagrange_inversion_theorem(eq, x, a=0, n=3):
     where f is analytic at a point a and f'(a) is not equal to 0.
     Then it is possible to invert or solve the equation for w in the form of a series:
 
-    . . math::
-    g(z) = a + \sum_{n = 1}^{oo} \frac{g_n (z - f(a))^n}{/n!}
+    .. math::
+        g(z) = a + \sum_{n = 1}^{oo} \frac{g_n (z - f(a))^n}{n!}
 
     where
-                      n-1
-                    d            w - a       n
-    g_n =  lim   ( ------- (  -----------  )   )
-          w-->a       n-1     f(w) - f(a)
-                   dw
+
+    .. math::
+        g_n = \lim_{w \to a} \left[ \frac{d^{n-1}}{dw^{n-1}}
+        \left( \frac{w-a}{f(w)-f(a)} \right) ^n \right]
 
     The theorem further states that this series has a non-zero radius of convergence,
     i.e., w represents an analytic function of z in a neighbourhood of z = f(a).

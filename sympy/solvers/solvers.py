@@ -55,8 +55,6 @@ from sympy.solvers.inequalities import reduce_inequalities
 
 from types import GeneratorType
 from collections import defaultdict
-
-
 import warnings
 
 
@@ -3139,6 +3137,7 @@ def _invert(eq, *symbols, **kwargs):
         if lhs == was:
             break
     return rhs, lhs
+
 
 def unrad(eq, *syms, **flags):
     """ Remove radicals with symbolic arguments and return (eq, cov),
