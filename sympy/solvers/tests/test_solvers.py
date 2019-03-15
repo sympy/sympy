@@ -172,6 +172,10 @@ def test_solve_args():
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
     assert solve([x-1, False], [x], set=True) == ([], set())
+    # dict flag set for inequalities
+    assert solve([Eq(x-1,0),Gt(x,0)],(x,), dict=True) == [{x: 1}]
+    assert solve([x + y < 2, y - 1], [x]) == Eq(y, 1) & (x < 2 - y)
+    raises(NotImplementedError, lambda: solve([x + y < 2, y - 1], [x], dict=True))
 
 
 def test_solve_polynomial1():
