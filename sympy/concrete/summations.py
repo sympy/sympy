@@ -189,7 +189,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if dif.is_integer and (dif < 0) == True:
                 a, b = b + 1, a - 1
                 f = -f
-
             newf = eval_sum(f, (i, a, b))
             if newf is None:
                 if f == self.function:
@@ -200,11 +199,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 else:
                     return self.func(f, *self.limits[n:])
             f = newf
-        if !(self.function.is_convergent) and self.function.is_positive:
-            return oo
-        elif !(self.function.is_convergent) and self.function.is_negative:
-            return -oo
-
+        
         if hints.get('deep', True):
             # eval_sum could return partially unevaluated
             # result with Piecewise.  In this case we won't
@@ -950,12 +945,19 @@ def eval_sum(f, limits):
         return eval_sum_direct(f, (i, a, b))
     if isinstance(f, Piecewise):
         return None
+    #If the number of terms is infinite and series is convergent
+    if !(f.is_convergent) and expr.subs(1,a+1)is_positive:
+        return oo
+    elif !(f.is_convergent) and expr.subs(i,a+1).is_negative:
+        return -oo
+
     # Try to do it symbolically. Even when the number of terms is known,
     # this can save time when b-a is big.
     # We should try to transform to partial fractions
-    value = eval_sum_symbolic(f.expand(), (i, a, b))
-    if value is not None:
-        return value
+    if b != oo:
+        value = eval_sum_symbolic(f.expand(), (i, a, b))
+        if value is not None:
+            return value
     # Do it directly
     if definite:
         return eval_sum_direct(f, (i, a, b))
