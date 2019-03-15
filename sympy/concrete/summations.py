@@ -946,9 +946,9 @@ def eval_sum(f, limits):
     if isinstance(f, Piecewise):
         return None
     #If the number of terms is infinite and series is convergent
-    if !(f.is_convergent) and expr.subs(1,a+1)is_positive:
+    if not(f.is_convergent) and expr.subs(1,a+1)is_positive:
         return oo
-    elif !(f.is_convergent) and expr.subs(i,a+1).is_negative:
+    elif not(f.is_convergent) and expr.subs(i,a+1).is_negative:
         return -oo
 
     # Try to do it symbolically. Even when the number of terms is known,
@@ -957,7 +957,7 @@ def eval_sum(f, limits):
     if b != oo:
         value = eval_sum_symbolic(f.expand(), (i, a, b))
         if value is not None:
-            return value
+           return value
     # Do it directly
     if definite:
         return eval_sum_direct(f, (i, a, b))
