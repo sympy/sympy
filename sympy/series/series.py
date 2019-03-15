@@ -79,8 +79,7 @@ def lagrange_inversion_theorem(eq, x, a=0, n=3):
     Here the number of terms required in the expansion is provided.
 
     >>> lagrange_inversion_theorem(eq, x, 1, 4)
-    -(x**2*exp(x) - E)**3*(-14*exp(3) - 14*E + 7 + 21*exp(2) + 7*exp(4))*exp(-4)/54 - 7*(x**2*exp(x) - E)**2*exp(-2)/54
-    + (x**2*exp(x) - E)*exp(-1)/3 + 1
+    2*(x**2*exp(x) - E)**3*exp(-3)/27 - 7*(x**2*exp(x) - E)**2*exp(-2)/54 + (x**2*exp(x) - E)*exp(-1)/3 + 1
 
     Here the number of terms required is, by default, 3.
 
@@ -153,12 +152,9 @@ def lagrange_inversion_theorem(eq, x, a=0, n=3):
     if n == 2:
         return result
 
-    a_2 = diff(((w - a)/(z - f_a))**2, w, 1)
-
     for i in range(2, n):
-        l = limit(a_2, w, a)
+        l = limit(diff(((w - a) / (z - f_a)) ** i, w, i - 1), w, a)
         result = result + (((z - f_a) ** i) / factorial(i)) * l
-        a_2 = (i+1) * ((w - a / z - f_a) ** i) * a_2
 
     result = result.subs(w, x)
     return result
