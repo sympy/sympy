@@ -118,6 +118,7 @@ def test_subs():
     raises(ValueError, lambda: b21.subs(b1='bad arg'))
 
     assert Symbol(u"text").subs({u"text": b1}) == b1
+    assert Symbol(u"s").subs({u"s": 1}) == 1
 
 
 def test_subs_with_unicode_symbols():

@@ -1644,12 +1644,12 @@ def test_latex():
     assert latex(pi) == r"\pi"
     assert latex(E) == r"e"
     assert latex(GoldenRatio) == r"\phi"
-    assert latex(TribonacciConstant) == r"\mathrm{TribonacciConstant}"
+    assert latex(TribonacciConstant) == r"\text{TribonacciConstant}"
     assert latex(EulerGamma) == r"\gamma"
     assert latex(oo) == r"\infty"
     assert latex(-oo) == r"-\infty"
     assert latex(zoo) == r"\tilde{\infty}"
-    assert latex(nan) == r"\mathrm{NaN}"
+    assert latex(nan) == r"\text{NaN}"
     assert latex(I) == r"i"
 
 
