@@ -7,7 +7,7 @@ from __future__ import print_function, division
 
 from sympy import (Symbol, S, Dummy, Order, rf, meijerint, I,
     solve, limit, Float, nsimplify, gamma)
-from sympy.core.compatibility import range, ordered
+from sympy.core.compatibility import range, ordered, string_types
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial, factorial
@@ -113,7 +113,7 @@ class DifferentialOperatorAlgebra(object):
         if generator is None:
             self.gen_symbol = Symbol('Dx', commutative=False)
         else:
-            if isinstance(generator, str):
+            if isinstance(generator, string_types):
                 self.gen_symbol = Symbol(generator, commutative=False)
             elif isinstance(generator, Symbol):
                 self.gen_symbol = generator

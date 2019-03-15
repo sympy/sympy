@@ -194,7 +194,7 @@ class GLSLPrinter(CodePrinter):
         if func in self.known_functions:
             cond_func = self.known_functions[func]
             func = None
-            if isinstance(cond_func, str):
+            if isinstance(cond_func, string_types):
                 func = cond_func
             else:
                 for cond, func in cond_func:

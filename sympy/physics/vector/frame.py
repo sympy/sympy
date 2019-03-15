@@ -210,7 +210,7 @@ class ReferenceFrame(object):
         If the index is a number, returns the coordinate variable correspon-
         -ding to that index.
         """
-        if not isinstance(ind, str):
+        if not isinstance(ind, string_types):
             if ind < 3:
                 return self.varlist[ind]
             else:
