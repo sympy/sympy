@@ -155,7 +155,6 @@ class PermutationGroup(Basic):
         obj._is_trivial = None
         obj._transitivity_degree = None
         obj._max_div = None
-        obj._is_polycyclic = None
         obj._r = len(obj._generators)
         obj._degree = obj._generators[0].size
 
