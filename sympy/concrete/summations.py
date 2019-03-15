@@ -200,12 +200,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 else:
                     return self.func(f, *self.limits[n:])
             f = newf
-        for n,limit in enumerate(self.limits):
-            i,a,b =limit
-            if !(self.function.is_convergent) and b.is_positive:
-                return oo
-            elif !(self.function.is_convergent) and b.is_negative:
-                return -oo
+        if !(self.function.is_convergent) and self.function.is_positive:
+            return oo
+        elif !(self.function.is_convergent) and self.function.is_negative:
+            return -oo
 
         if hints.get('deep', True):
             # eval_sum could return partially unevaluated
