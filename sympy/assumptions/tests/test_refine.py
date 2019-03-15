@@ -4,6 +4,7 @@ from sympy.abc import x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.pytest import slow
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 
 
 def test_Abs():
@@ -143,6 +144,12 @@ def test_atan2():
     assert refine(atan2(y, x), Q.positive(y) & Q.zero(x)) == pi/2
     assert refine(atan2(y, x), Q.negative(y) & Q.zero(x)) == -pi/2
     assert refine(atan2(y, x), Q.zero(y) & Q.zero(x)) == nan
+
+def test_matrixelement():
+    x=MatrixSymbol('x',8,8)
+    assert refine(x[0,1],Q.symmetric(x)) == x[0,1]
+    assert refine(x[1,0],Q.symmetric(x)) == x[0,1]
+    assert refine(x[5,5],Q.symmetric(x)) == x[5,5]
 
 
 def test_func_args():
