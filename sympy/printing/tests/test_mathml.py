@@ -1240,11 +1240,11 @@ def test_mathml_Range():
     assert mpp.doprint(Range(30, 1, -1)) == \
         '<mfenced close="}" open="{"><mn>30</mn><mn>29</mn><mi>&#8230;</mi><mn>2</mn></mfenced>'
     assert mpp.doprint(Range(0, oo, 2)) == \
-        '<mfenced close="}" open="{"><mn>0</mn><mn>2</mn><mi>&#8230;</mi><mi>&#x221E;</mi></mfenced>'
+        '<mfenced close="}" open="{"><mn>0</mn><mn>2</mn><mi>&#8230;</mi></mfenced>'
     assert mpp.doprint(Range(oo, -2, -2)) == \
-        '<mfenced close="}" open="{"><mi>&#x221E;</mi><mi>&#8230;</mi><mn>2</mn><mn>0</mn></mfenced>'
+        '<mfenced close="}" open="{"><mi>&#8230;</mi><mn>2</mn><mn>0</mn></mfenced>'
     assert mpp.doprint(Range(-2, -oo, -1)) == \
-        '<mfenced close="}" open="{"><mn>-2</mn><mn>-3</mn><mi>&#8230;</mi><mrow><mo>-</mo><mi>&#x221E;</mi></mrow></mfenced>'
+        '<mfenced close="}" open="{"><mn>-2</mn><mn>-3</mn><mi>&#8230;</mi></mfenced>'
 
 
 def test_print_exp():
