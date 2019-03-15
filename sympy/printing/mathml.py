@@ -1158,6 +1158,49 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             mrow.appendChild(y)
         return mrow
 
+
+    def _print_BasisDependent(self, expr):
+        from sympy.vector import Vector
+
+        if expr == expr.zero:
+            # Not clear if this is ever called
+            return self._print(expr.zero)
+        if isinstance(expr, Vector):
+            items = expr.separate().items()
+        else:
+            items = [(0, expr)]
+
+        mrow = self.dom.createElement('mrow')
+        for system, vect in items:
+            inneritems = list(vect.components.items())
+            inneritems.sort(key = lambda x:x[0].__str__())
+            for i, (k, v) in enumerate(inneritems):
+                if v == 1:
+                    if i: # No + for first item
+                        mo = self.dom.createElement('mo')
+                        mo.appendChild(self.dom.createTextNode('+'))
+                        mrow.appendChild(mo)
+                    mrow.appendChild(self._print(k))
+                elif v == -1:
+                    mo = self.dom.createElement('mo')
+                    mo.appendChild(self.dom.createTextNode('-'))
+                    mrow.appendChild(mo)
+                    mrow.appendChild(self._print(k))
+                else:
+                    if i: # No + for first item
+                        mo = self.dom.createElement('mo')
+                        mo.appendChild(self.dom.createTextNode('+'))
+                        mrow.appendChild(mo)
+                    mbrac = self.dom.createElement('mfenced')
+                    mbrac.appendChild(self._print(v))
+                    mrow.appendChild(mbrac)
+                    mo = self.dom.createElement('mo')
+                    mo.appendChild(self.dom.createTextNode('&InvisibleTimes;'))
+                    mrow.appendChild(mo)
+                    mrow.appendChild(self._print(k))
+        return mrow
+
+
     def _print_And(self, expr):
         args = sorted(expr.args, key=default_sort_key)
         return self._print_LogOp(args, '&#x2227;')
@@ -1260,6 +1303,100 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         dom_element = self.dom.createElement(self.mathml_tag(p))
         dom_element.appendChild(self.dom.createTextNode(str(p)))
         return dom_element
+
+    def _print_BaseScalar(self, e):
+        msub = self.dom.createElement('msub')
+        index, system = e._id
+        mi = self.dom.createElement('mi')
+        mi.setAttribute('mathvariant', 'bold')
+        mi.appendChild(self.dom.createTextNode(system._variable_names[index]))
+        msub.appendChild(mi)
+        mi = self.dom.createElement('mi')
+        mi.setAttribute('mathvariant', 'bold')
+        mi.appendChild(self.dom.createTextNode(system._name))
+        msub.appendChild(mi)
+        return msub
+
+    def _print_BaseVector(self, e):
+        msub = self.dom.createElement('msub')
+        index, system = e._id
+        mover = self.dom.createElement('mover')
+        mi = self.dom.createElement('mi')
+        mi.setAttribute('mathvariant', 'bold')
+        mi.appendChild(self.dom.createTextNode(system._vector_names[index]))
+        mover.appendChild(mi)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('^'))
+        mover.appendChild(mo)
+        msub.appendChild(mover)
+        mi = self.dom.createElement('mi')
+        mi.setAttribute('mathvariant', 'bold')
+        mi.appendChild(self.dom.createTextNode(system._name))
+        msub.appendChild(mi)
+        return msub
+
+    def _print_VectorZero(self, e):
+        mover = self.dom.createElement('mover')
+        mi = self.dom.createElement('mi')
+        mi.setAttribute('mathvariant', 'bold')
+        mi.appendChild(self.dom.createTextNode("0"))
+        mover.appendChild(mi)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('^'))
+        mover.appendChild(mo)
+        return mover
+
+    def _print_Cross(self, expr):
+        mrow = self.dom.createElement('mrow')
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        mrow.appendChild(self.parenthesize(vec1, PRECEDENCE['Mul']))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#xD7;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self.parenthesize(vec2, PRECEDENCE['Mul']))
+        return mrow
+
+    def _print_Curl(self, expr):
+        mrow = self.dom.createElement('mrow')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x2207;'))
+        mrow.appendChild(mo)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#xD7;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self.parenthesize(expr._expr, PRECEDENCE['Mul']))
+        return mrow
+
+    def _print_Divergence(self, expr):
+        mrow = self.dom.createElement('mrow')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x2207;'))
+        mrow.appendChild(mo)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#xB7;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self.parenthesize(expr._expr, PRECEDENCE['Mul']))
+        return mrow
+
+    def _print_Dot(self, expr):
+        mrow = self.dom.createElement('mrow')
+        vec1 = expr._expr1
+        vec2 = expr._expr2
+        mrow.appendChild(self.parenthesize(vec1, PRECEDENCE['Mul']))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#xB7;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self.parenthesize(vec2, PRECEDENCE['Mul']))
+        return mrow
+
+    def _print_Gradient(self, expr):
+        mrow = self.dom.createElement('mrow')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x2207;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self.parenthesize(expr._expr, PRECEDENCE['Mul']))
+        return mrow
 
     def _print_Integers(self, e):
         x = self.dom.createElement('mi')
