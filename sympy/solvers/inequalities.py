@@ -929,7 +929,7 @@ def _reduce_inequalities(inequalities, symbols):
     return And(*(poly_reduced + abs_reduced + other))
 
 
-def reduce_inequalities(inequalities, dict_flag, symbols=[]):
+def reduce_inequalities(inequalities, symbols=[], dict_flag=False):
     """Reduce a system of inequalities with rational coefficients.
 
     Examples
