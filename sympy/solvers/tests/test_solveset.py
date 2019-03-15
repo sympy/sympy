@@ -1786,7 +1786,7 @@ def test_expo_conditionset():
     f5 = 2**x + 3**x - 5**x
 
     assert solveset(f1, x, S.Reals) == ConditionSet(
-        x, Eq((exp(x) + 1)**x - 2, 0), S.Reals)
+        x, Eq(x*log(exp(x) + 1) - log(2), 0), S.Reals)
     assert solveset(f2, x, S.Reals) == ConditionSet(
         x, Eq(x*(x + 2)**y - 3, 0), S.Reals)
     assert solveset(f3, x, S.Reals) == ConditionSet(
@@ -1951,9 +1951,7 @@ def test_solve_lambert():
 
     p = symbols('p', positive=True)
     eq = 3*log(p**(3*x + 5)) + p**(3*x + 5)
-    assert solveset(eq, x) == FiniteSet(log(3**(S(1)/3)*LambertW(S(1)/3)**(S(1)/3)/p**(S(5)/3))/log(p),
-    log(-3**(S(1)/3)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)) - 3**(S(5)/6)*I*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)))/log(p),
-    log(-3**(S(1)/3)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)) + 3**(S(5)/6)*I*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)))/log(p))
+    assert solveset(eq, x) == Intersection(Interval(0, oo), FiniteSet(-S(5)/3 - LambertW(S(1)/3)/(3*log(p))))
     assert solveset_real(eq, x) == FiniteSet(-S(5)/3 - LambertW(S(1)/3)/(3*log(p)))
 
     assert solveset_real(2*x + 5 + log(3*x - 2), x) == \
@@ -1986,6 +1984,7 @@ def test_solve_lambert():
     a = 1
     assert solveset_real((a/x + exp(x/2)).diff(x), x) == FiniteSet(
         4*LambertW(sqrt(2)/4))
+    assert solveset_real(x**x - 2, x) == FiniteSet(exp(LambertW(log(2))))
 
 
 @XFAIL
@@ -2017,7 +2016,6 @@ def test_other_solve_bivariate():
     assert result == ans
     assert solveset_real(eq.expand(), x) == result
 
-    assert solveset_real(x**x - 2) == FiniteSet(exp(LambertW(log(2))))
     # coverage test
     assert solveset_real(tanh(x + 3)*tanh(x - 3) - 1, x) == EmptySet()
     assert solveset_real(3**cos(x) - cos(x)**3) == FiniteSet(

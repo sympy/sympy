@@ -258,6 +258,8 @@ def _invert_real(f, g_ys, symbol):
                     return _invert_real(expo, FiniteSet(0), symbol)
                 elif one == S.false:
                     return _invert_real(expo, S.EmptySet, symbol)
+        else:
+            return _invert_real(expo*log(base), imageset(Lambda(n, log(n)), g_ys), symbol)
 
 
     if isinstance(f, TrigonometricFunction):
