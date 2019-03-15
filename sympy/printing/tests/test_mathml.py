@@ -2,7 +2,7 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, \
     S, MatrixSymbol, Function, Derivative, log, true, false, Range, Min, Max, \
-    Lambda, IndexedBase, symbols
+    Lambda, IndexedBase, symbols, MatrixSymbol
 from sympy.core.containers import Tuple
 from sympy.functions.combinatorial.factorials import factorial, factorial2, \
     binomial
@@ -1344,6 +1344,16 @@ def test_print_Indexed():
         '<mrow><mfrac><mi>a</mi><mi>b</mi></mfrac></mrow>'
     assert mathml(IndexedBase((a, b)), printer='presentation') == \
         '<mrow><mfenced><mi>a</mi><mi>b</mi></mfenced></mrow>'
+
+def test_print_MatrixElement():
+    i,j = symbols('i j')
+    A = MatrixSymbol('A', i, j)
+    assert mathml(A[0,0],printer = 'presentation') == \
+        '<msub><mi>A</mi><mfenced><mn>0</mn><mn>0</mn></mfenced></msub>'
+    assert mathml(A[i,j], printer = 'presentation') == \
+        '<msub><mi>A</mi><mfenced><mi>i</mi><mi>j</mi></mfenced></msub>'
+    assert mathml(A[i*j,0], printer = 'presentation') == \
+        '<msub><mi>A</mi><mfenced><mrow><mi>i</mi><mo>&InvisibleTimes;</mo><mi>j</mi></mrow><mn>0</mn></mfenced></msub>'
 
 
 def test_print_Vector():
