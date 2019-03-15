@@ -203,19 +203,19 @@ class Logic(object):
         return self.args
 
     def __hash__(self):
-        return hash( (type(self).__name__,) + tuple(self.args) )
+        return hash((type(self).__name__,) + tuple(self.args))
 
-    def __eq__(a, b):
-        if not isinstance(b, type(a)):
+    def __eq__(self, b):
+        if not isinstance(b, type(self)):
             return False
         else:
-            return a.args == b.args
+            return self.args == b.args
 
-    def __ne__(a, b):
-        if not isinstance(b, type(a)):
+    def __ne__(self, b):
+        if not isinstance(b, type(self)):
             return True
         else:
-            return a.args != b.args
+            return self.args != b.args
 
     def __lt__(self, other):
         if self.__cmp__(other) == -1:
