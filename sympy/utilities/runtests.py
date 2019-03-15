@@ -501,7 +501,7 @@ def _test(*paths, **kwargs):
     tb = kwargs.get("tb", "short")
     kw = kwargs.get("kw", None) or ()
     # ensure that kw is a tuple
-    if isinstance(kw, str):
+    if isinstance(kw, string_types):
         kw = (kw, )
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)

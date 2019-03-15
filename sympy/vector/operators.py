@@ -327,6 +327,32 @@ def gradient(scalar_field, coord_sys=None, doit=True):
         return Gradient(scalar_field)
 
 
+class Laplacian(Expr):
+    """
+    Represents unevaluated Laplacian.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D, Laplacian
+    >>> R = CoordSys3D('R')
+    >>> v = 3*R.x**3*R.y**2*R.z**3
+    >>> Laplacian(v)
+    Laplacian(3*R.x**3*R.y**2*R.z**3)
+
+    """
+
+    def __new__(cls, expr):
+        expr = sympify(expr)
+        obj = Expr.__new__(cls, expr)
+        obj._expr = expr
+        return obj
+
+    def doit(self, **kwargs):
+        from sympy.vector.functions import laplacian
+        return laplacian(self._expr)
+
+
 def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):
     """
     First re-expresses expr in the system that base_scalar belongs to.
