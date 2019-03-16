@@ -264,6 +264,7 @@ from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, posify, cse
+from sympy.simplify.simplify import _separatevars_dict
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const
 from sympy.solvers import solve
@@ -1187,6 +1188,13 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             # m1[coeff]*m1[x]*m1[y] + m2[coeff]*m2[x]*m2[y]*y'
             m1 = separatevars(r[d], dict=True, symbols=(x, y))
             m2 = separatevars(r[e], dict=True, symbols=(x, y))
+            if not (m1 and m2):
+                try:
+                    m1 = separate_vars(r[d], symbols=(x,y))
+                    m2 = separate_vars(r[e], symbols=(x,y))
+                except NotImplementedError:
+                    pass
+
             if m1 and m2:
                 r1 = {'m1': m1, 'm2': m2, 'y': y}
                 matching_hints["separable"] = r1
@@ -1451,6 +1459,37 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return matching_hints
     else:
         return tuple(retlist)
+
+def separate_vars(f, symbols=[]):
+    if symbols:
+        if not all((t.is_Atom for t in symbols)):
+            raise ValueError("symbols must be Atoms.")
+    elif symbols is None:
+        return {'coeff':f}
+    else:
+        symbols = list(f.free_symbols)
+        if not symbols:
+            return None
+
+    f = simplify(f)
+    expsym = f.free_symbols
+    intersection = set(symbols).intersection(expsym)
+    if len(intersection) == 0 or len(intersection) == 1:
+        return _separatevars_dict(f, symbols)
+    elif len(intersection) == 2:
+         b = Dummy('b')
+         a = Dummy('a')
+         f1 = f.subs(symbols[1], b)
+         f2 = f.subs(symbols[0], a)
+         f3 = (f.subs(symbols[1], b)).subs(symbols[0], a)
+         f4 = expand(cancel((f1*f2)/f3))
+         f = expand(cancel(f))
+         if simplify(f-f4)==0:
+             return _separatevars_dict(Mul(*[simplify(f1/f3),f2]),symbols)
+         else:
+             return None
+    else:
+        raise NotImplementedError('for more than two variable not implemented')
 
 def classify_sysode(eq, funcs=None, **kwargs):
     r"""

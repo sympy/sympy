@@ -736,6 +736,24 @@ def test_dsolve_options():
 
 
 def test_classify_ode():
+    assert  classify_ode(Eq(f(x).diff(x),exp(x+f(x))*(cos(x+f(x))+cos(x-f(x)))),f(x)) == \
+        (
+        'separable',
+        '1st_exact',
+        '1st_power_series',
+        'lie_group',
+        'separable_Integral',
+        '1st_exact_Integral'
+        )
+    assert classify_ode(Eq(f(x).diff(x),exp(x**2+y**2)*(cos(x+f(x))+cos(x-f(x)))),f(x)) == \
+        (
+        'separable',
+        '1st_exact',
+        '1st_power_series',
+        'lie_group',
+        'separable_Integral',
+        '1st_exact_Integral'
+        )        
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
         (
         'nth_algebraic',
