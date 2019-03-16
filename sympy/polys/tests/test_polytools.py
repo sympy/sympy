@@ -2471,6 +2471,11 @@ def test_factor():
         0.5*y + 1.0, evaluate = False)
     assert factor(expand((0.5*x+0.5)**2)) == 0.25*(1.0*x + 1.0)**2
 
+    eq = x**2*y**2 + 11*x**2*y + 30*x**2 + 7*x*y**2 + 77*x*y + 210*x + 12*y**2 + 132*y + 360
+    assert factor(eq, x) == (x + 3)*(x + 4)*(y**2 + 11*y + 30)
+    assert factor(eq, x, deep=True) == (x + 3)*(x + 4)*(y**2 + 11*y + 30)
+    assert factor(eq, y, deep=True) == (y + 5)*(y + 6)*(x**2 + 7*x + 12)
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
