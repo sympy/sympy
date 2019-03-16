@@ -146,10 +146,10 @@ def test_atan2():
     assert refine(atan2(y, x), Q.zero(y) & Q.zero(x)) == nan
 
 def test_matrixelement():
-    x=MatrixSymbol('x',8,8)
-    assert refine(x[0,1],Q.symmetric(x)) == x[0,1]
-    assert refine(x[1,0],Q.symmetric(x)) == x[0,1]
-    assert refine(x[5,5],Q.symmetric(x)) == x[5,5]
+    x = MatrixSymbol('x', 8, 8)
+    assert refine(x[0, 1], Q.symmetric(x)) == x[0, 1]
+    assert refine(x[1, 0], Q.symmetric(x)) == x[0, 1]
+    assert refine(x[5, 5], Q.symmetric(x)) == x[5, 5]
 
 
 def test_func_args():
