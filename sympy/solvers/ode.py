@@ -1467,24 +1467,24 @@ def separate_vars(f, symbols=[]):
     elif symbols is None:
         return {'coeff':f}
     else:
-        symbols = list(f.free_symbols)
+        symbols = list(orderd(f.free_symbols))
         if not symbols:
             return None
 
     f = simplify(f)
     expsym = f.free_symbols
     intersection = set(symbols).intersection(expsym)
-    if len(intersection) == 0 or len(intersection) == 1:
+    if len(intersection) < 2:
         return _separatevars_dict(f, symbols)
     elif len(intersection) == 2:
          b = Dummy('b')
          a = Dummy('a')
          f1 = f.subs(symbols[1], b)
          f2 = f.subs(symbols[0], a)
-         f3 = (f.subs(symbols[1], b)).subs(symbols[0], a)
+         f3 = f1.subs(symbols[0], a)
          f4 = expand(cancel((f1*f2)/f3))
          f = expand(cancel(f))
-         if simplify(f-f4)==0:
+         if not any(i in simplify(expand(cancel(f1*f2/f))).free_symbols for i in symbols):
              return _separatevars_dict(Mul(*[simplify(f1/f3),f2]),symbols)
          else:
              return None

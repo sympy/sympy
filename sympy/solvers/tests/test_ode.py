@@ -753,7 +753,7 @@ def test_classify_ode():
         'lie_group',
         'separable_Integral',
         '1st_exact_Integral'
-        )        
+        )
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
         (
         'nth_algebraic',
