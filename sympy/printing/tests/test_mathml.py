@@ -1386,6 +1386,16 @@ def test_print_Indexed():
     assert mathml(IndexedBase((a, b)), printer='presentation') == \
         '<mrow><mfenced><mi>a</mi><mi>b</mi></mfenced></mrow>'
 
+def test_print_MatrixElement():
+    i,j = symbols('i j')
+    A = MatrixSymbol('A', i, j)
+    assert mathml(A[0,0],printer = 'presentation') == \
+        '<msub><mi>A</mi><mfenced close="" open=""><mn>0</mn><mn>0</mn></mfenced></msub>'
+    assert mathml(A[i,j], printer = 'presentation') == \
+        '<msub><mi>A</mi><mfenced close="" open=""><mi>i</mi><mi>j</mi></mfenced></msub>'
+    assert mathml(A[i*j,0], printer = 'presentation') == \
+        '<msub><mi>A</mi><mfenced close="" open=""><mrow><mi>i</mi><mo>&InvisibleTimes;</mo><mi>j</mi></mrow><mn>0</mn></mfenced></msub>'
+
 
 def test_print_Vector():
     ACS = CoordSys3D('A')
