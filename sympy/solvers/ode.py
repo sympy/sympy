@@ -1470,7 +1470,7 @@ def separate_vars(f, symbols=[]):
     elif symbols is None:
         return {'coeff':f}
     else:
-        symbols = list(orderd(f.free_symbols))
+        symbols = list(ordered(f.free_symbols))
         if not symbols:
             return None
 
