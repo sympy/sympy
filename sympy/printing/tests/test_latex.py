@@ -708,12 +708,12 @@ def test_latex_Range():
 
     assert latex(Range(30, 1, -1)) == r'\left\{30, 29, \ldots, 2\right\}'
 
-    assert latex(Range(0, oo, 2)) == r'\left\{0, 2, \ldots, \infty\right\}'
+    assert latex(Range(0, oo, 2)) == r'\left\{0, 2, \ldots\right\}'
 
-    assert latex(Range(oo, -2, -2)) == r'\left\{\infty, \ldots, 2, 0\right\}'
+    assert latex(Range(oo, -2, -2)) == r'\left\{\ldots, 2, 0\right\}'
 
     assert latex(Range(-2, -oo, -1)) == \
-        r'\left\{-2, -3, \ldots, -\infty\right\}'
+        r'\left\{-2, -3, \ldots\right\}'
 
 
 def test_latex_sequences():
