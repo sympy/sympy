@@ -1489,13 +1489,13 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_MatrixElement(self, e):
-    	x = self.dom.createElement('msub')
-    	x.appendChild(self._print(e.parent))
-    	if len(e.indices) == 1:
-    		x.appendChild(self._print(e.indices[0]))
-    		return x
-    	x.appendChild(self._print(e.indices))
-    	return x
+        x = self.dom.createElement('msub')
+        x.appendChild(self._print(e.parent))
+        if len(e.indices) == 1:
+            x.appendChild(self._print(e.indices[0]))
+            return x
+        x.appendChild(self._print(e.indices))
+        return x
 
 def mathml(expr, printer='content', **settings):
     """Returns the MathML representation of expr. If printer is presentation
