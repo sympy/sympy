@@ -56,10 +56,6 @@ class AskNegativeHandler(CommonHandler):
 
     @staticmethod
     def Add(expr, assumptions):
-        """
-        Positive + Positive -> Positive,
-        Negative + Negative -> Negative
-        """
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
 
@@ -67,50 +63,53 @@ class AskNegativeHandler(CommonHandler):
         if r is not True:
             return r
 
-        # Helper method to check positive or negative
-        def neg_pos(expr):
-            if ask(Q.positive(expr), assumptions):
-                res = 1  # positive
-            elif ask(Q.negative(expr), assumptions):
-                res = 2  # negative
-            else:
-                nn = ask(Q.nonnegative(expr), assumptions)
-                np = ask(Q.nonpositive(expr), assumptions)
-                if nn and np:
-                    res = 3  # zero
-                elif nn:
-                    res = 4  # non-negative
-                elif np:
-                    res = 5  # non-positive
-                elif nn is None and np is None:
+        args = [arg for arg in expr.args if not ask(Q.zero(arg), assumptions)]
+        if not args:
+            return False
+
+        inf = neg_inf = pos_inf = neg = npos = nneg = False
+
+        for arg in args:
+            n  = ask(Q.negative(arg), assumptions)
+            np = ask(Q.nonpositive(arg), assumptions)
+
+            infinite = ask(Q.infinite(arg), assumptions)
+            if infinite:
+                inf = True
+                k = fuzzy_or((n, np))
+                if k is True:
+                    neg_inf = True
+                elif k is False:
+                    pos_inf = True
+                else:
                     return None
-            return res
-
-        val = 3  # zero
-        contras = [
-            (1, 2), (2, 1),  # positive + negative := unknown
-            (1, 5), (5, 1),  # positive + non-positive := unknown
-            (2, 4), (4, 2),  # negative + non-negative := unknown
-            (4, 5), (5, 4),  # non-positive + non-negative := unknown
-        ]
-
-        for arg in expr.args:
-            check = neg_pos(arg)
-            if check is None:
-                return check
-            elif check == val or check == 3 or val == 3:  # added with 0 or same type.
-                val = check
-            elif (val, check) in contras:
+            if pos_inf and neg_inf:
                 return None
-            elif (val == 1 and check == 4) or (check == 1 and val == 4):
-                val = 1  # positive + non-negative := positive
-            elif (val == 2 and check == 5) or (check == 2 and val == 5):
-                val = 2
-
-        # True if negative, False if positive, zero, non-negative
-        # None if non-positive
-        result = True if val == 2 else (None if val == 5 else False)
-        return result
+            elif pos_inf or neg_inf:
+                continue
+            else:
+                nn = ask(Q.nonnegative(arg), assumptions)
+                if n:
+                    neg = True
+                    continue
+                elif np:
+                    npos = True
+                    continue
+                elif nn:
+                    nneg = True
+                    continue
+                else:
+                    return None  # Unknown symbol
+        if pos_inf:
+            return False
+        elif neg_inf:
+            return True
+        elif neg and not npos and not nneg:
+            return True
+        elif neg and not nneg:
+            return True
+        elif not neg and not npos:
+            return False
 
     @staticmethod
     def Mul(expr, assumptions):
@@ -169,6 +168,20 @@ class AskNonNegativeHandler(CommonHandler):
             else:
                 return notnegative
 
+    @staticmethod
+    def Mul(expr, assumptions):
+        if expr.is_number:
+            nneg = fuzzy_not(AskNegativeHandler._number(expr, assumptions))
+            if nneg:
+                return ask(Q.real(expr), assumptions)
+            else:
+                return nneg
+        else:
+            r = ask(Q.real(expr), assumptions)
+            if r is not True:
+                return r
+            nneg = fuzzy_not(AskNegativeHandler.Mul(expr,assumptions))
+            return nneg
 
 class AskNonZeroHandler(CommonHandler):
     """
@@ -248,6 +261,18 @@ class AskNonPositiveHandler(CommonHandler):
             else:
                 return notpositive
 
+    @staticmethod
+    def Mul(expr, assumptions):
+        r = ask(Q.real(expr), assumptions)
+        if r is not True:
+            return r
+        if expr.is_number:
+            npos = fuzzy_not(AskPositiveHandler._number(expr, assumptions))
+            return npos
+        else:
+            npos = fuzzy_not(AskPositiveHandler.Mul(expr, assumptions))
+            return npos
+
 class AskPositiveHandler(CommonHandler):
     """
     Handler for key 'positive'
@@ -306,50 +331,54 @@ class AskPositiveHandler(CommonHandler):
         if r is not True:
             return r
 
-        # Helper method to check positive or negative
-        def neg_pos(expr):
-            if ask(Q.positive(expr), assumptions):
-                res = 1  # positive
-            elif ask(Q.negative(expr), assumptions):
-                res = 2  # negative
-            else:
-                nn = ask(Q.nonnegative(expr), assumptions)
-                np = ask(Q.nonpositive(expr), assumptions)
-                if nn and np:
-                    res = 3  # zero
-                elif nn:
-                    res = 4  # non-negative
-                elif np:
-                    res = 5  # non-positive
-                elif nn is None and np is None:
+        args = [arg for arg in expr.args if not ask(Q.zero(arg), assumptions)]
+        if not args:
+            return False
+
+        inf = neg_inf = pos_inf = pos = npos = nneg = False
+
+        for arg in args:
+            p  = ask(Q.positive(arg), assumptions)
+            nn = ask(Q.nonnegative(arg), assumptions)
+
+            infinite = ask(Q.infinite(arg), assumptions)
+            if infinite:
+                inf = True
+                k = fuzzy_or((p, nn))
+                if k is True:
+                    pos_inf = True
+                elif k is False:
+                    neg_inf = True
+                else:
                     return None
-            return res
-
-        val = 3  # zero
-        contras = [
-            (1, 2), (2, 1),  # positive + negative := unknown
-            (1, 5), (5, 1),  # positive + non-positive := unknown
-            (2, 4), (4, 2),  # negative + non-negative := unknown
-            (4, 5), (5, 4),  # non-positive + non-negative := unknown
-        ]
-
-        for arg in expr.args:
-            check = neg_pos(arg)
-            if check is None:
-                return check
-            elif check == val or check == 3 or val == 3:  # added with 0 or same type.
-                val = check
-            elif (val, check) in contras:
+            if pos_inf and neg_inf:
                 return None
-            elif (val == 1 and check == 4) or (check == 1 and val == 4):
-                val = 1   # positive + non-negative := positive
-            elif (val == 2 and check == 5) or (check == 2 and val == 5):
-                val = 2
+            elif pos_inf or neg_inf:
+                continue
+            else:
+                np = ask(Q.nonpositive(arg), assumptions)
+                if p :
+                    pos  = True
+                    continue
+                elif nn:
+                    nneg = True
+                    continue
+                elif np:
+                    npos = True
+                    continue
+                else:
+                    return None  # Unknown symbol
 
-        # True if positive, False if negative, zero, non-positive
-        # None if non-negative
-        result = True if val == 1 else (None if val == 4 else False)
-        return result
+        if pos_inf:
+            return True
+        elif neg_inf:
+            return False
+        elif pos and not npos and not nneg:
+            return True
+        elif pos and not npos:
+            return True
+        elif not pos and not nneg:
+            return False
 
     @staticmethod
     def Pow(expr, assumptions):
