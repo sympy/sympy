@@ -1461,6 +1461,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return tuple(retlist)
 
 def separate_vars(f, symbols=[]):
+
+    from sympy import ordered
+
     if symbols:
         if not all((t.is_Atom for t in symbols)):
             raise ValueError("symbols must be Atoms.")
@@ -1473,15 +1476,15 @@ def separate_vars(f, symbols=[]):
 
     f = simplify(f)
     expsym = f.free_symbols
-    intersection = set(symbols).intersection(expsym)
+    intersection = list(ordered(set(symbols).intersection(expsym)))
     if len(intersection) < 2:
         return _separatevars_dict(f, symbols)
     elif len(intersection) == 2:
          b = Dummy('b')
          a = Dummy('a')
-         f1 = f.subs(symbols[1], b)
-         f2 = f.subs(symbols[0], a)
-         f3 = f1.subs(symbols[0], a)
+         f1 = f.subs(intersection[1], b)
+         f2 = f.subs(intersection[0], a)
+         f3 = f1.subs(intersection[0], a)
          f4 = expand(cancel((f1*f2)/f3))
          f = expand(cancel(f))
          if not any(i in simplify(expand(cancel(f1*f2/f))).free_symbols for i in symbols):
