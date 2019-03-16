@@ -1555,10 +1555,12 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_MatrixElement(self, e):
         x = self.dom.createElement('msub')
         x.appendChild(self._print(e.parent))
-        if len(e.indices) == 1:
-            x.appendChild(self._print(e.indices[0]))
-            return x
-        x.appendChild(self._print(e.indices))
+        brac = self.dom.createElement('mfenced')
+        brac.setAttribute("open","")
+        brac.setAttribute("close","")
+        for i in e.indices:
+            brac.appendChild(self._print(i))
+        x.appendChild(brac)
         return x
 
 def mathml(expr, printer='content', **settings):
