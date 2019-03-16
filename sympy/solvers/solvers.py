@@ -47,7 +47,8 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import uniq, generate_bell, flatten
+from sympy.utilities.iterables import (uniq, generate_bell, flatten, cartes,
+                                    connected_components)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
@@ -1764,6 +1765,39 @@ def _solve(f, *symbols, **flags):
 def _solve_system(exprs, symbols, **flags):
     if not exprs:
         return []
+
+    # Split the system into connected components?
+    V = exprs
+    exprsyms = {e: {s for s in symbols if e.has(s)} for e in exprs}
+    E = []
+    for n, e1 in enumerate(exprs):
+        for e2 in exprs[:n]:
+            # Equations are connected if they share a symbol
+            if any(s in exprsyms[e1] and s in exprsyms[e2] for s in symbols):
+                E.append((e1, e2))
+    G = V, E
+    subexprs = connected_components(G)
+    if len(subexprs) > 1:
+        subsols = []
+        for subexpr in subexprs:
+            subsyms = set()
+            for e in subexpr:
+                subsyms |= exprsyms[e]
+            subsol = _solve_system(subexpr, subsyms, **flags)
+            if not isinstance(subsol, list):
+                subsol = [subsol]
+            subsols.append(subsol)
+        # Full solution is cartesion product of subsystems
+        sols = []
+        for soldicts in cartes(*subsols):
+            sols.append(dict(item for sd in soldicts for item in sd.items()))
+        #if flags.get('set', False):
+        #    sols = [set(sd.values()) for sd in sols]
+        #elif not flags.get('dict', False):
+        #    sols = [[sol[s] for s in symbols] for sol in sols]
+        if len(sols) == 1:
+            return sols[0]
+        return sols
 
     polys = []
     dens = set()
