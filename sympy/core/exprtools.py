@@ -1210,7 +1210,7 @@ def _mask_nc(eq, name=None):
     and cannot be made commutative. The third value returned is a list
     of any non-commutative symbols that appear in the returned equation.
 
-    ``name``, if given, is the name that will be used with numered Dummy
+    ``name``, if given, is the name that will be used with numbered Dummy
     variables that will replace the non-commutative objects and is mainly
     used for doctesting purposes.
 
