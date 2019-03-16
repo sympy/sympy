@@ -2,6 +2,7 @@ from os import walk, sep, pardir
 from os.path import split, join, abspath, exists, isfile
 from glob import glob
 import re
+import fnmatch
 import random
 import ast
 
@@ -36,6 +37,45 @@ message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s
 message_duplicate_test = "This is a duplicate test function: %s, line %s"
 message_self_assignments = "File contains assignments to self/cls: %s, line %s."
 message_func_is = "File contains '.func is': %s, line %s."
+
+# XXX Python 2 unicode import test.
+# May remove after deprecating python 2.7.
+message_py2_unicode_not_whitelisted = \
+    "File contains a unicode character : %s, line %s. " \
+    "But with no encoding header. " \
+    "See https://www.python.org/dev/peps/pep-0263/ " \
+    "and add '# coding=utf-8'"
+message_py2_unicode_whitelisted = \
+    "File contains a unicode character : %s, line %s. " \
+    "But not in the whitelist " \
+    "If necessary, add the file to the whitelist in " \
+    "'test_code_quality.py'"
+encoding_header_re = re.compile(
+    r'^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)')
+
+# Whitelist pattern for files which can have unicode.
+unicode_whitelist = [
+    r'*/bin/authors_update.py',
+    r'*/physics/quantum/tests/test_printing.py',
+    r'*/sympy/physics/vector/tests/test_printing.py',
+    r'*/sympy/vector/tests/test_printing.py',
+    r'*/parsing/*',
+    r'*/printing/*',
+    # TODO Delete unicode in these files.
+    r'*/combinatorics/coset_table.py',
+    r'*/combinatorics/fp_groups.py',
+    r'*/combinatorics/free_groups.py',
+    r'*/combinatorics/tests/test_coset_table.py',
+    r'*/crypto/crypto.py',
+    r'*/discrete/transforms.py',
+    r'*/liealgebras/root_system.py',
+    r'*/liealgebras/type_g.py',
+    r'*/liealgebras/weyl_group.py',
+    r'*/liealgebras/tests/test_type_G.py',
+    r'*/ntheory/residue_ntheory.py',
+    r'*/physics/mechanics/rigidbody.py',
+    r'*/polys/subresultants_qq_zz.py'
+]
 
 implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
@@ -144,9 +184,13 @@ def test_files():
         if PY3:
             with open(fname, "rt", encoding="utf8") as test_file:
                 test_this_file(fname, test_file)
+            with open(fname, 'rt', encoding='utf8') as test_file:
+                test_this_file_encoding(fname, test_file)
         else:
             with open(fname, "rt") as test_file:
                 test_this_file(fname, test_file)
+            with open(fname, 'rt') as test_file:
+                test_this_file_encoding(fname, test_file)
 
             with open(fname, "rt") as test_file:
                 source = test_file.read()
@@ -196,6 +240,48 @@ def test_files():
             elif not line.endswith('\n'):
                 # eof newline check
                 assert False, message_eof % (fname, idx + 1)
+
+    def test_this_file_encoding(fname, test_file):
+        """Test helper function for python 2 importability test
+
+        This test checks whether the file has
+        # coding=utf-8
+        or
+        # -*- coding: utf-8 -*-
+        line if there is a unicode character in the code
+
+        The test may have to operate on filewise manner, so it had moved
+        to a separate process.
+        May remove after deprecating python 2.7.
+        """
+        has_coding_utf8 = False
+
+        is_in_whitelist = False
+        for patt in unicode_whitelist:
+            if fnmatch.fnmatch(fname, patt):
+                is_in_whitelist = True
+                break
+
+        if is_in_whitelist:
+            for idx, line in enumerate(test_file):
+                if idx in (0, 1):
+                    match = encoding_header_re.match(line)
+                    if match:
+                        if match.group(1).lower() == 'utf-8':
+                            has_coding_utf8 = True
+                if has_coding_utf8 is False:
+                    try:
+                        line.encode(encoding='ascii')
+                    except UnicodeEncodeError:
+                        assert False, \
+                        message_py2_unicode_whitelisted % (fname, idx + 1)
+        else:
+            for idx, line in enumerate(test_file):
+                try:
+                    line.encode(encoding='ascii')
+                except UnicodeEncodeError:
+                    assert False, \
+                        message_py2_unicode_not_whitelisted % (fname, idx + 1)
 
     # Files to test at top level
     top_level_files = [join(TOP_PATH, file) for file in [
