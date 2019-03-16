@@ -3591,18 +3591,18 @@ frozenset({x , x*y})\
     assert pretty(Range(30, 1, -1)) == ascii_str
     assert upretty(Range(30, 1, -1)) == ucode_str
 
-    ascii_str = '{0, 2, ..., oo}'
-    ucode_str = u'{0, 2, …, ∞}'
+    ascii_str = '{0, 2, ...}'
+    ucode_str = u'{0, 2, …}'
     assert pretty(Range(0, oo, 2)) == ascii_str
     assert upretty(Range(0, oo, 2)) == ucode_str
 
-    ascii_str = '{oo, ..., 2, 0}'
-    ucode_str = u('{∞, …, 2, 0}')
+    ascii_str = '{..., 2, 0}'
+    ucode_str = u('{…, 2, 0}')
     assert pretty(Range(oo, -2, -2)) == ascii_str
     assert upretty(Range(oo, -2, -2)) == ucode_str
 
-    ascii_str = '{-2, -3, ..., -oo}'
-    ucode_str = u('{-2, -3, …, -∞}')
+    ascii_str = '{-2, -3, ...}'
+    ucode_str = u('{-2, -3, …}')
     assert pretty(Range(-2, -oo, -1)) == ascii_str
     assert upretty(Range(-2, -oo, -1)) == ucode_str
 
