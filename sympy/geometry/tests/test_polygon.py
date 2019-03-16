@@ -113,7 +113,7 @@ def test_polygon():
         Point(0, 0)
     raises(ValueError, lambda: Polygon(
         Point(x, 0), Point(0, y), Point(x, y)).arbitrary_point('x'))
-    assert p6.intersection(r) == [Point(-9, -84/13), Point(-9, 33/5)]
+    assert p6.intersection(r) == [Point(-9, -S(84)/13), Point(-9, S(33)/5)]
     #
     # Regular polygon
     #
@@ -159,7 +159,7 @@ def test_polygon():
     assert p1 == p1_old
 
     assert p1.area == (-250*sqrt(5) + 1250)/(4*tan(pi/5))
-    assert p1.length == 20*sqrt(-sqrt(5)/8 + 5/8)
+    assert p1.length == 20*sqrt(-sqrt(5)/8 + S(5)/8)
     assert p1.scale(2, 2) == \
         RegularPolygon(p1.center, p1.radius*2, p1._n, p1.rotation)
     assert RegularPolygon((0, 0), 1, 4).scale(2, 3) == \
