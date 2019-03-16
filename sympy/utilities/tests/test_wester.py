@@ -1338,7 +1338,7 @@ def test_P3():
     # B is a matrix consisting of several matrices
     # https://github.com/sympy/sympy/issues/16278
     assert B == Matrix([[12, 13, 14, 13, 11, 14],
-                        [22, 22, 24, 23, 21, 24],
+                        [22, 23, 24, 23, 21, 24],
                         [32, 33, 34, 43, 41, 44],
                         [11, 12, 13, 14, 13, 14],
                         [21, 22, 23, 24, 23, 24],
