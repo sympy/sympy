@@ -992,13 +992,9 @@ def reduce_inequalities(inequalities, symbols=[], dict_flag=False):
     if not dict_flag:
         return res
 
-    if isinstance(res, (And, Or)):
-        if dict_flag:
-            raise NotImplementedError("Cannot represent inequalities as dict type")
-        else:
-            return res
-
-    if isinstance(res, list):
+    if isinstance(res, (And, Or)) and dict_flag:
+        raise NotImplementedError("Cannot represent inequalities as dict type")
+    elif isinstance(res, list):
         return [{s.lhs: s.rhs} for s in res]
     else:
         return [{res.lhs: res.rhs}]
