@@ -1219,7 +1219,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             mrow.appendChild(y)
         return mrow
 
-
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 
@@ -1495,9 +1494,131 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         sub.appendChild(self._print(S.Zero))
         return sub
 
+    def _print_SingularityFunction(self, expr):
+        shift = expr.args[0] - expr.args[1]
+        power = expr.args[2]
+        sup = self.dom.createElement('msup')
+        brac = self.dom.createElement('mfenced')
+        brac.setAttribute('open', u'\u27e8')
+        brac.setAttribute('close', u'\u27e9')
+        brac.appendChild(self._print(shift))
+        sup.appendChild(brac)
+        sup.appendChild(self._print(power))
+        return sup
+
+    def _print_NaN(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('NaN'))
+        return x
+
+    def _print_ComplexInfinity(self, e):
+        x = self.dom.createElement('mover')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x221E;'))
+        x.appendChild(mo)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('~'))
+        x.appendChild(mo)
+        return x
+
     def _print_EmptySet(self, e):
         x = self.dom.createElement('mo')
         x.appendChild(self.dom.createTextNode('&#x2205;'))
+        return x
+
+    def _print_Adjoint(self, expr):
+        from sympy.matrices import MatrixSymbol
+        mat = expr.arg
+        sup = self.dom.createElement('msup')
+        if not isinstance(mat, MatrixSymbol):
+            brac = self.dom.createElement('mfenced')
+            brac.appendChild(self._print(mat))
+            sup.appendChild(brac)
+        else:
+            sup.appendChild(self._print(mat))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x2020;'))
+        sup.appendChild(mo)
+        return sup
+
+    def _print_Transpose(self, expr):
+        from sympy.matrices import MatrixSymbol
+        mat = expr.arg
+        sup = self.dom.createElement('msup')
+        if not isinstance(mat, MatrixSymbol):
+            brac = self.dom.createElement('mfenced')
+            brac.appendChild(self._print(mat))
+            sup.appendChild(brac)
+        else:
+            sup.appendChild(self._print(mat))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('T'))
+        sup.appendChild(mo)
+        return sup
+
+    def _print_Inverse(self, expr):
+        from sympy.matrices import MatrixSymbol
+        mat = expr.arg
+        sup = self.dom.createElement('msup')
+        if not isinstance(mat, MatrixSymbol):
+            brac = self.dom.createElement('mfenced')
+            brac.appendChild(self._print(mat))
+            sup.appendChild(brac)
+        else:
+            sup.appendChild(self._print(mat))
+        sup.appendChild(self._print(-1))
+        return sup
+
+    def _print_MatMul(self, expr):
+        from sympy import MatMul
+
+        x = self.dom.createElement('mrow')
+        args = expr.args
+        if isinstance(args[0], Mul):
+            args = args[0].as_ordered_factors() + list(args[1:])
+        else:
+            args = list(args)
+
+        if isinstance(expr, MatMul) and _coeff_isneg(expr):
+            if args[0] == -1:
+                args = args[1:]
+            else:
+                args[0] = -args[0]
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode('-'))
+            x.appendChild(mo)
+
+        for arg in args[:-1]:
+            x.appendChild(self.parenthesize(arg, precedence_traditional(expr),
+                                            False))
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode('&InvisibleTimes;'))
+            x.appendChild(mo)
+        x.appendChild(self.parenthesize(args[-1], precedence_traditional(expr),
+                                        False))
+        return x
+
+    def _print_MatPow(self, expr):
+        from sympy.matrices import MatrixSymbol
+        base, exp = expr.base, expr.exp
+        sup = self.dom.createElement('msup')
+        if not isinstance(base, MatrixSymbol):
+            brac = self.dom.createElement('mfenced')
+            brac.appendChild(self._print(base))
+            sup.appendChild(brac)
+        else:
+            sup.appendChild(self._print(base))
+        sup.appendChild(self._print(exp))
+        return sup
+
+    def _print_ZeroMatrix(self, Z):
+        x = self.dom.createElement('mn')
+        x.appendChild(self.dom.createTextNode('&#x1D7D8'))
+        return x
+
+    def _print_Identity(self, I):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('&#x1D540;'))
         return x
 
     def _print_floor(self, e):

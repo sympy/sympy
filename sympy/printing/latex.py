@@ -1506,9 +1506,9 @@ class LatexPrinter(Printer):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
         if not isinstance(mat, MatrixSymbol):
-            return r"\left(%s\right)^T" % self._print(mat)
+            return r"\left(%s\right)^{T}" % self._print(mat)
         else:
-            return "%s^T" % self._print(mat)
+            return "%s^{T}" % self._print(mat)
 
     def _print_Trace(self, expr):
         mat = expr.arg
@@ -1518,9 +1518,9 @@ class LatexPrinter(Printer):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
         if not isinstance(mat, MatrixSymbol):
-            return r"\left(%s\right)^\dagger" % self._print(mat)
+            return r"\left(%s\right)^{\dagger}" % self._print(mat)
         else:
-            return r"%s^\dagger" % self._print(mat)
+            return r"%s^{\dagger}" % self._print(mat)
 
     def _print_MatMul(self, expr):
         from sympy import MatMul, Mul
