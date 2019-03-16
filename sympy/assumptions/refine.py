@@ -241,10 +241,10 @@ def refine_Relational(expr, assumptions):
 
 
 def refine_matrixelement(expr, assumptions):
-    if (ask(Q.symmetric(expr.parent), assumptions)==True):
-        if(expr.args[1]>expr.args[2]):
-            return(expr.func(*(expr.parent, expr.args[2], expr.args[1])))
-    return(expr)
+    if ask(Q.symmetric(expr.parent), assumptions):
+        if expr.args[1] > expr.args[2]:
+            return expr.func(*(expr.parent, expr.args[2], expr.args[1]))
+    return expr
 
 
 handlers_dict = {
