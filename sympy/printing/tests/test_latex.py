@@ -1562,6 +1562,9 @@ def test_Adjoint():
     assert latex(Inverse(Adjoint(X))) == r'\left(X^\dagger\right)^{-1}'
     assert latex(Adjoint(Transpose(X))) == r'\left(X^T\right)^\dagger'
     assert latex(Transpose(Adjoint(X))) == r'\left(X^\dagger\right)^T'
+    assert latex(Transpose(Adjoint(X) + Y)) == r'\left(X^\dagger + Y\right)^T'
+    assert latex(Transpose(X)) == r'X^T'
+    assert latex(Transpose(X + Y)) == r'\left(X + Y\right)^T'
 
 
 def test_Hadamard():
