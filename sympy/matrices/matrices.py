@@ -879,7 +879,8 @@ class MatrixReductions(MatrixDeterminant):
 
     def rank_decomposition(self,
         iszerofunc=_iszero, simplify=False, format='original'):
-        r"""Returns the rank-factorized form of `A`, as `C` and `F`.
+        r"""Returns a pair of matrices (`C`, `F`) with matching rank
+        such that `A = C \cdot F`.
 
         Parameters
         ==========
@@ -893,10 +894,9 @@ class MatrixReductions(MatrixDeterminant):
             pivot. By default SymPy's ``simplify`` is used.
 
         format : String, optional
-            If 'original', additional zeros would be appended to the
-            `C` and `F` to keep the shape of `F` as same as the
-            original matrix.
-            It is also corresponding to the format as ``rref`` function.
+            If 'original', the returned matrices will have the same
+            shape as the original matrix. This is similar to the
+            return value of the ``rref`` function.
 
             If `reduced`, it will truncate trivial zero rows from `F`,
             and zero columns from `C`.
@@ -905,9 +905,9 @@ class MatrixReductions(MatrixDeterminant):
         =======
 
         (C, F) : Matrices
-            `F` is the RREF of `A`, and `C` is the inverse of the
-            product of the elimination matrices, which can restore
-            `A = C \cdot F`
+            `F` is the reduced row echelon form (RREF) of `A`, and `C`
+            has the same rank as `F` and its product with `C` restores `A`:
+            `A = C \cdot F`.
 
             See Notes for additional mathematical details.
 
@@ -963,19 +963,17 @@ class MatrixReductions(MatrixDeterminant):
             E_n \cdot E_{n-1} \cdot ... \cdot E_1 \cdot A = F
 
         where `E_n, E_{n-1}, ... , E_1` are the elimination matrices or
-        permutation matrices equivant to each row reduction steps.
+        permutation matrices equivalent to each row-reduction step.
 
-        As putting a matrix in a row echeolon form introduces the
-        concept of the LU decomposition, similarly, putting a matrix in
-        a reduced row echeolon form introduces the matrix
+        The inverse of the same product of elimination matrices gives
+        `C`:
 
         .. math::
             C = (E_n \cdot E_{n-1} \cdot ... \cdot E_1)^{-1}
 
-        However, in actual computation, we can simplify the procedure
-        by taking the columns from the original matrix, where the
-        column indices are the indices of the pivot columns of the `F`
-        matrix.
+        It is not necessary, however, to actually compute the inverse:
+        the columns of `C` are those from the original matrix with the
+        same column indices as the indices of the pivot columns of `F`.
 
         References
         ==========
