@@ -2,7 +2,9 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, \
     S, MatrixSymbol, Function, Derivative, log, true, false, Range, Min, Max, \
-    Lambda, IndexedBase, symbols, MatrixSymbol
+    Lambda, IndexedBase, symbols, elliptic_f, elliptic_e, elliptic_pi, Ei, \
+    expint, jacobi, gegenbauer, chebyshevt, chebyshevu, legendre, assoc_legendre, \
+    laguerre, assoc_laguerre, hermite
 from sympy.core.containers import Tuple
 from sympy.functions.combinatorial.factorials import factorial, factorial2, \
     binomial
@@ -1346,7 +1348,7 @@ def test_print_Indexed():
         '<mrow><mfenced><mi>a</mi><mi>b</mi></mfenced></mrow>'
 
 def test_print_MatrixElement():
-    i,j = symbols('i j')
+    i, j = symbols('i j')
     A = MatrixSymbol('A', i, j)
     assert mathml(A[0,0],printer = 'presentation') == \
         '<msub><mi>A</mi><mfenced><mn>0</mn><mn>0</mn></mfenced></msub>'
@@ -1489,3 +1491,83 @@ def test_print_Vector():
         '<mrow><mo>-</mo><mrow><msub><mi mathvariant="bold">x</mi>'\
         '<mi mathvariant="bold">A</mi></msub><mo>&#xD7;</mo><msub>'\
         '<mi mathvariant="bold">z</mi><mi mathvariant="bold">A</mi></msub></mrow></mrow>'
+
+def test_print_elliptic_f():
+    x, y = symbols('x y')
+    assert mathml(elliptic_f(x, y), printer = 'presentation') == \
+        '<mrow><mi>&#x1d5a5;</mi><mfenced separators="|"><mi>x</mi><mi>y</mi></mfenced></mrow>'
+    assert mathml(elliptic_f(x/y, y), printer = 'presentation') == \
+        '<mrow><mi>&#x1d5a5;</mi><mfenced separators="|"><mrow><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow><mi>y</mi></mfenced></mrow>'
+
+def test_print_elliptic_e():
+    x, y = symbols('x y')
+    assert mathml(elliptic_e(x), printer = 'presentation') == \
+        '<mrow><mi>&#x1d5a4;</mi><mfenced separators="|"><mi>x</mi></mfenced></mrow>'
+    assert mathml(elliptic_e(x, y), printer = 'presentation') == \
+        '<mrow><mi>&#x1d5a4;</mi><mfenced separators="|"><mi>x</mi><mi>y</mi></mfenced></mrow>'
+
+def test_print_elliptic_pi():
+    x, y, z = symbols('x y z')
+    assert mathml(elliptic_pi(x, y), printer = 'presentation') == \
+        '<mrow><mi>&#x1d6f1;</mi><mfenced separators="|"><mi>x</mi><mi>y</mi></mfenced></mrow>'
+    assert mathml(elliptic_pi(x, y, z), printer = 'presentation') == \
+        '<mrow><mi>&#x1d6f1;</mi><mfenced separators=";|"><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow>'
+
+def test_print_Ei():
+    x, y = symbols('x y')
+    assert mathml(Ei(x), printer = 'presentation') == \
+        '<mrow><mi>Ei</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(Ei(x**y), printer = 'presentation') == \
+        '<mrow><mi>Ei</mi><mfenced><msup><mi>x</mi><mi>y</mi></msup></mfenced></mrow>'
+
+def test_print_expint():
+    x, y = symbols('x y')
+    assert mathml(expint(x, y), printer = 'presentation') == \
+        '<mrow><msub><mo>E</mo><mi>x</mi></msub><mfenced><mi>y</mi></mfenced></mrow>'
+    assert mathml(expint(IndexedBase(x)[1], IndexedBase(x)[2]), printer = 'presentation') == \
+        '<mrow><msub><mo>E</mo><msub><mi>x</mi><mn>1</mn></msub></msub><mfenced><msub><mi>x</mi><mn>2</mn></msub></mfenced></mrow>'
+
+def test_print_jacobi():
+    n, a, b, x = symbols('n a b x')
+    assert mathml(jacobi(n, a, b, x), printer = 'presentation') == \
+        '<mrow><msubsup><mo>P</mo><mi>n</mi><mfenced><mi>a</mi><mi>b</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
+
+def test_print_gegenbauer():
+    n, a, x = symbols('n a x')
+    assert mathml(gegenbauer(n, a, x), printer = 'presentation') == \
+        '<mrow><msubsup><mo>C</mo><mi>n</mi><mfenced><mi>a</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
+
+def test_print_chebyshevt():
+    n, x = symbols('n x')
+    assert mathml(chebyshevt(n, x), printer = 'presentation') == \
+        '<mrow><msub><mo>T</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+
+def test_print_chebyshevu():
+    n, x = symbols('n x')
+    assert mathml(chebyshevu(n, x), printer = 'presentation') == \
+        '<mrow><msub><mo>U</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+
+def test_print_legendre():
+    n, x = symbols('n x')
+    assert mathml(legendre(n, x), printer = 'presentation') == \
+        '<mrow><msub><mo>P</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+
+def test_print_assoc_legendre():
+    n, a, x = symbols('n a x')
+    assert mathml(assoc_legendre(n, a, x), printer = 'presentation') == \
+        '<mrow><msubsup><mo>P</mo><mi>n</mi><mfenced><mi>a</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
+
+def test_print_laguerre():
+    n, x = symbols('n x')
+    assert mathml(laguerre(n, x), printer = 'presentation') == \
+        '<mrow><msub><mo>L</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+
+def test_print_assoc_laguerre():
+    n, a, x = symbols('n a x')
+    assert mathml(assoc_laguerre(n, a, x), printer = 'presentation') == \
+        '<mrow><msubsup><mo>L</mo><mi>n</mi><mfenced><mi>a</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
+
+def test_print_hermite():
+    n, x = symbols('n x')
+    assert mathml(hermite(n, x), printer = 'presentation') == \
+        '<mrow><msub><mo>H</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
