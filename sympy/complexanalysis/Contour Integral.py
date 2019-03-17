@@ -27,14 +27,13 @@ class ComplexIntegral:
     def residue_calc(self, rooot, mult, x ):
         
         return Rational(1/factorial(mult-1)) *limit(diff(self.eq*(x - rooot)**mult, x, mult - 1), x, complex(rooot))
-    
     def solveit_cir(self):
 
-        eqn_residues = solve(self.eq.as_numer_denom()[1]) 
+        eqn_residues = self.eq.as_numer_denom()[1]
         residues = roots(eqn_residues)
         sum_residues = 0
-        x = list(self.eq.atoms())[0]
-        for i, j in residues.items(): 
-            sum_residues += self.residue_calc(i, j, x)
-    
+        x = list(self.eq.atoms(Symbol))[0]
+        for i, j in residues.items():   
+            if im(i) > 0:    
+                sum_residues += self.residue_calc(i, j, x)
         return simplify(2*pi*I*sum_residues)  
