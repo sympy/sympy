@@ -56,7 +56,7 @@ from sympy import (
     exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, PY3
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.simplify import simplify
@@ -3214,12 +3214,17 @@ def test_keep_coeff():
     assert _keep_coeff(x + 1, S(2)) == u
 
 
-@XFAIL
+# @XFAIL
+# Seems to pass on Python 3.X, but not on Python 2.7
 def test_poly_matching_consistency():
     # Test for this issue:
     # https://github.com/sympy/sympy/issues/5514
     assert I * Poly(x, x) == Poly(I*x, x)
     assert Poly(x, x) * I == Poly(I*x, x)
+
+
+if not PY3:
+    test_poly_matching_consistency = XFAIL(test_poly_matching_consistency)
 
 
 @XFAIL

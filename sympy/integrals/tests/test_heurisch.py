@@ -2,6 +2,7 @@ from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
     I, erf, tan, asin, asinh, acos, atan, Function, Derivative, diff, simplify, \
     LambertW, Eq, Ne, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
     besselj, besselk, bessely, jn, tanh
+from sympy.core.compatibility import PY3
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
 from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
 from sympy.integrals.integrals import integrate
@@ -244,12 +245,18 @@ def test_pmint_logexp():
 
     assert ratsimp(heurisch(f, x)) == g
 
-@XFAIL  # there's a hash dependent failure lurking here
+
+# @XFAIL  # there's a hash dependent failure lurking here
+# Seems to work on Python 3, but keeping the comment above just in case
 def test_pmint_erf():
     f = exp(-x**2)*erf(x)/(erf(x)**3 - erf(x)**2 - erf(x) + 1)
     g = sqrt(pi)*log(erf(x) - 1)/8 - sqrt(pi)*log(erf(x) + 1)/8 - sqrt(pi)/(4*erf(x) - 4)
 
     assert ratsimp(heurisch(f, x)) == g
+
+
+if not PY3:
+    test_pmint_erf = XFAIL(test_pmint_erf)
 
 def test_pmint_LambertW():
     f = LambertW(x)
