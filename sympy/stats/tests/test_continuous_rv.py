@@ -92,7 +92,6 @@ def test_multiple_normal():
     assert variance(X, Eq(X + Y, 0)) == S.Half
 
 
-@slow
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, finite=True)
     s1, s2 = symbols('sigma1 sigma2', real=True, finite=True, positive=True)
