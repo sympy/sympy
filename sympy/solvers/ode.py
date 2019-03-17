@@ -1192,7 +1192,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 try:
                     m1 = separate_vars(r[d], symbols=(x,y))
                     m2 = separate_vars(r[e], symbols=(x,y))
-                except NotImplementedError:
+                except (NotImplementedError, ValueError):
                     pass
 
             if m1 and m2:
@@ -1461,17 +1461,15 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         return tuple(retlist)
 
 def separate_vars(f, symbols=[]):
-
-    from sympy import ordered
-
     if symbols:
         if not all((t.is_Atom for t in symbols)):
             raise ValueError("symbols must be Atoms.")
     elif symbols is None:
         return {'coeff':f}
     else:
-        symbols = list(ordered(f.free_symbols))
-        if not symbols:
+        expsym = list(ordered(f.free_symbols))
+        symbols = []
+        if expsym is None:
             return None
 
     f = simplify(f)
@@ -1485,7 +1483,6 @@ def separate_vars(f, symbols=[]):
          f1 = f.subs(intersection[1], b)
          f2 = f.subs(intersection[0], a)
          f3 = f1.subs(intersection[0], a)
-         f4 = expand(cancel((f1*f2)/f3))
          f = expand(cancel(f))
          if not any(i in simplify(expand(cancel(f1*f2/f))).free_symbols for i in symbols):
              return _separatevars_dict(Mul(*[simplify(f1/f3),f2]),symbols)
