@@ -4316,7 +4316,7 @@ class MatrixBase(MatrixDeprecated,
         product
 
         .. math::
-            E_n \cdot E_{n-1} \cdot ... \cdot E_1 \cdot A = F
+            E_n E_{n-1} ... E_1 A = F
 
         where `E_n, E_{n-1}, ... , E_1` are the elimination matrices or
         permutation matrices equivalent to each row-reduction step.
@@ -4325,7 +4325,7 @@ class MatrixBase(MatrixDeprecated,
         `C`:
 
         .. math::
-            C = (E_n \cdot E_{n-1} \cdot ... \cdot E_1)^{-1}
+            C = (E_n E_{n-1} ... E_1)^{-1}
 
         It is not necessary, however, to actually compute the inverse:
         the columns of `C` are those from the original matrix with the
