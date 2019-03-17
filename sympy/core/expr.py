@@ -777,17 +777,22 @@ class Expr(Basic, EvalfMixin):
         if self.is_number:
             if self.is_real is False:
                 return False
+
+            # check to see that we can get a value
             try:
-                # check to see that we can get a value
                 n2 = self._eval_evalf(2)
-                if n2 is None:
-                    raise AttributeError
-                if n2._prec == 1:  # no significance
-                    raise AttributeError
-                if n2 == S.NaN:
-                    raise AttributeError
-            except (AttributeError, ValueError):
+            # XXX: This shouldn't be caught here
+            # Catches ValueError: hypsum() failed to converge to the requested
+            # 34 bits of accuracy
+            except ValueError:
                 return None
+            if n2 is None:
+                return None
+            if getattr(n2, '_prec', 1) == 1:  # no significance
+                return None
+            if n2 == S.NaN:
+                return None
+
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
@@ -807,17 +812,22 @@ class Expr(Basic, EvalfMixin):
         if self.is_number:
             if self.is_real is False:
                 return False
+
+            # check to see that we can get a value
             try:
-                # check to see that we can get a value
                 n2 = self._eval_evalf(2)
-                if n2 is None:
-                    raise AttributeError
-                if n2._prec == 1:  # no significance
-                    raise AttributeError
-                if n2 == S.NaN:
-                    raise AttributeError
-            except (AttributeError, ValueError):
+            # XXX: This shouldn't be caught here
+            # Catches ValueError: hypsum() failed to converge to the requested
+            # 34 bits of accuracy
+            except ValueError:
                 return None
+            if n2 is None:
+                return None
+            if getattr(n2, '_prec', 1) == 1:  # no significance
+                return None
+            if n2 == S.NaN:
+                return None
+
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
@@ -967,11 +977,11 @@ class Expr(Basic, EvalfMixin):
         """Parse and configure the ordering of terms. """
         from sympy.polys.orderings import monomial_key
 
-        try:
-            reverse = order.startswith('rev-')
-        except AttributeError:
+        startswith = getattr(order, "startswith", None)
+        if startswith is None:
             reverse = False
         else:
+            reverse = startswith('rev-')
             if reverse:
                 order = order[4:]
 
@@ -3525,6 +3535,27 @@ def _n2(a, b):
         dif = (a - b).evalf(2)
         if dif.is_comparable:
             return dif
+
+
+def unchanged(func, *args):
+    """Return True if `func` applied to the `args` is unchanged.
+    Can be used instead of `assert foo == foo`.
+
+    Examples
+    ========
+
+    >>> from sympy.core.expr import unchanged
+    >>> from sympy.functions.elementary.trigonometric import cos
+    >>> from sympy.core.numbers import pi
+
+    >>> unchanged(cos, 1)  # instead of assert cos(1) == cos(1)
+    True
+
+    >>> unchanged(cos, pi)
+    False
+    """
+    f = func(*args)
+    return f.func == func and f.args == tuple([sympify(a) for a in args])
 
 
 from .mul import Mul

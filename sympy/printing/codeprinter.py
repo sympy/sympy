@@ -364,7 +364,7 @@ class CodePrinter(StrPrinter):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
             func = None
-            if isinstance(cond_func, str):
+            if isinstance(cond_func, string_types):
                 func = cond_func
             else:
                 for cond, func in cond_func:

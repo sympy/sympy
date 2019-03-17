@@ -240,7 +240,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x,), (y, )]
                     for v1 in var_mul:
                         try:
-                            coeff = c[var[0]]
+                            coeff = c[v1[0]]
                         except KeyError:
                             coeff = 0
                         x_coeff = bool(x_coeff) and bool(coeff)
@@ -265,7 +265,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x,), (y, )]
                     for v1 in var_mul:
                         try:
-                            coeff = c[var[0]]
+                            coeff = c[v1[0]]
                         except KeyError:
                             coeff = 0
                         x_coeff = bool(x_coeff) and bool(coeff)

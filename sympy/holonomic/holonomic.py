@@ -7,7 +7,7 @@ from __future__ import print_function, division
 
 from sympy import (Symbol, S, Dummy, Order, rf, meijerint, I,
     solve, limit, Float, nsimplify, gamma)
-from sympy.core.compatibility import range, ordered
+from sympy.core.compatibility import range, ordered, string_types
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial, factorial
@@ -113,7 +113,7 @@ class DifferentialOperatorAlgebra(object):
         if generator is None:
             self.gen_symbol = Symbol('Dx', commutative=False)
         else:
-            if isinstance(generator, str):
+            if isinstance(generator, string_types):
                 self.gen_symbol = Symbol(generator, commutative=False)
             elif isinstance(generator, Symbol):
                 self.gen_symbol = generator
@@ -2619,11 +2619,8 @@ def _extend_y0(Holonomic, n):
             sol = 0
             for a, b in zip(y1, list_red):
                 r = DMFsubs(b, Holonomic.x0)
-                try:
-                    if not r.is_finite:
-                        return y0
-                except AttributeError:
-                    pass
+                if not getattr(r, 'is_finite', True):
+                    return y0
                 if isinstance(r, (PolyElement, FracElement)):
                     r = r.as_expr()
                 sol += a * r
