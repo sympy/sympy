@@ -1,4 +1,4 @@
-from sympy import Order, S, log, limit, lcm_list, pi, Abs
+from sympy import Order, S, log, limit, lcm_list, pi, Abs, im, re, Symbol, Dummy
 from sympy.core.basic import Basic
 from sympy.core import Add, Mul, Pow
 from sympy.logic.boolalg import And
@@ -412,12 +412,17 @@ def periodicity(f, symbol, check=False):
     from sympy.core.function import diff
     from sympy.core.mod import Mod
     from sympy.core.relational import Relational
+    from sympy.functions.elementary.exponential import exp
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions.elementary.trigonometric import (
         TrigonometricFunction, sin, cos, csc, sec)
     from sympy.simplify.simplify import simplify
     from sympy.solvers.decompogen import decompogen
     from sympy.polys.polytools import degree, lcm_list
+
+    temp = Dummy('x', real=True)
+    f = f.subs(symbol, temp)
+    symbol = temp
 
     def _check(orig_f, period):
         '''Return the checked period or raise an error.'''
@@ -473,6 +478,13 @@ def periodicity(f, symbol, check=False):
                     raise NotImplementedError(err)
             # else let new orig_f and period be
             # checked below
+
+    if isinstance(f, exp):
+        if im(f) != 0:
+            period_real = periodicity(re(f), symbol)
+            period_imag = periodicity(im(f), symbol)
+            if period_real is not None and period_imag is not None:
+                period = lcim([period_real, period_imag])
 
     if f.is_Pow:
         base, expo = f.args

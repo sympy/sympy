@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy import S
-from sympy.sets.contains import Contains
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -9,11 +8,10 @@ from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_bool
 from sympy.core.symbol import Symbol, Dummy
 from sympy.logic.boolalg import And, as_Boolean
-from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet)
+from sympy.sets.contains import Contains
+from sympy.sets.sets import Set, EmptySet, Union, FiniteSet
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
-from sympy.multipledispatch import dispatch
 
 
 class ConditionSet(Set):

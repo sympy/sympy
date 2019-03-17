@@ -11,6 +11,7 @@ from sympy.combinatorics.coset_table import (CosetTable,
 from sympy.combinatorics import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
+from sympy.core.compatibility import string_types
 
 from itertools import product
 
@@ -933,9 +934,11 @@ def simplify_presentation(*args, **kwargs):
                                               change_gens=change_gens)
         if gens:
             return FpGroup(gens[0].group, rels)
-        return FpGroup([])
+        return FpGroup(FreeGroup([]), [])
     elif len(args) == 2:
         gens, rels = args[0][:], args[1][:]
+        if not gens:
+            return gens, rels
         identity = gens[0].group.identity
     else:
         if len(args) == 0:
@@ -1135,7 +1138,7 @@ def define_schreier_generators(C, homomorphism=False):
         # if equals "<identity>", replace by identity element
         if C.P[i][j] == "<identity>":
             C.P[i][j] = C._schreier_free_group.identity
-        elif isinstance(C.P[i][j], str):
+        elif isinstance(C.P[i][j], string_types):
             r = C._schreier_generators[y.index(C.P[i][j])]
             C.P[i][j] = r
             beta = C.table[i][j]

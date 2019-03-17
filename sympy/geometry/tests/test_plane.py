@@ -46,11 +46,11 @@ def test_plane():
 
     assert pl3.projection(Point(0, 0)) == p1
     p = pl3.projection(Point3D(1, 1, 0))
-    assert p == Point3D(7/6, 2/3, 1/6)
+    assert p == Point3D(S(7)/6, S(2)/3, S(1)/6)
     assert p in pl3
 
     l = pl3.projection_line(Line(Point(0, 0), Point(1, 1)))
-    assert l == Line3D(Point3D(0, 0, 0), Point3D(7/6, 2/3, 1/6))
+    assert l == Line3D(Point3D(0, 0, 0), Point3D(S(7)/6, S(2)/3, S(1)/6))
     assert l in pl3
     # get a segment that does not intersect the plane which is also
     # parallel to pl3's normal veector
@@ -61,9 +61,9 @@ def test_plane():
     assert s.p1 not in pl3 and s.p2 not in pl3
     assert pl3.projection_line(s).equals(r)
     assert pl3.projection_line(Segment(Point(1, 0), Point(1, 1))) == \
-               Segment3D(Point3D(5/6, 1/3, -1/6), Point3D(7/6, 2/3, 1/6))
+               Segment3D(Point3D(S(5)/6, S(1)/3, -S(1)/6), Point3D(S(7)/6, S(2)/3, S(1)/6))
     assert pl6.projection_line(Ray(Point(1, 0), Point(1, 1))) == \
-               Ray3D(Point3D(14/3, 11/3, 11/3), Point3D(13/3, 13/3, 10/3))
+               Ray3D(Point3D(S(14)/3, S(11)/3, S(11)/3), Point3D(S(13)/3, S(13)/3, S(10)/3))
     assert pl3.perpendicular_line(r.args) == pl3.perpendicular_line(r)
 
     assert pl3.is_parallel(pl6) is False
@@ -150,7 +150,7 @@ def test_plane():
     assert pl3.intersection(pl6) == [
         Line3D(Point3D(8, 4, 0), Point3D(2, 4, 6))]
     assert pl3.intersection(Line3D(Point3D(1,2,4), Point3D(4,4,2))) == [
-        Point3D(2, 8/3, 10/3)]
+        Point3D(2, S(8)/3, S(10)/3)]
     assert pl3.intersection(Plane(Point3D(6, 0, 0), normal_vector=(2, -5, 3))
         ) == [Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
     assert pl6.intersection(Ray3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == [
@@ -158,7 +158,7 @@ def test_plane():
     assert pl6.intersection(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == [
         Point3D(-1, 3, 10)]
     assert pl7.intersection(Line(Point(2, 3), Point(4, 2))) == [
-        Point3D(13/2, 3/4, 0)]
+        Point3D(S(13)/2, S(3)/4, 0)]
     r = Ray(Point(2, 3), Point(4, 2))
     assert Plane((1,2,0), normal_vector=(0,0,1)).intersection(r) == [
         Ray3D(Point(2, 3), Point(4, 2))]

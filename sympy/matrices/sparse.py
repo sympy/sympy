@@ -90,15 +90,16 @@ class SparseMatrix(MatrixBase):
         return self
 
     def __eq__(self, other):
-        try:
-            if self.shape != other.shape:
-                return False
-            if isinstance(other, SparseMatrix):
-                return self._smat == other._smat
-            elif isinstance(other, MatrixBase):
-                return self._smat == MutableSparseMatrix(other)._smat
-        except AttributeError:
+        self_shape = getattr(self, 'shape', None)
+        other_shape = getattr(other, 'shape', None)
+        if None in (self_shape, other_shape):
             return False
+        if self_shape != other_shape:
+            return False
+        if isinstance(other, SparseMatrix):
+            return self._smat == other._smat
+        elif isinstance(other, MatrixBase):
+            return self._smat == MutableSparseMatrix(other)._smat
 
     def __getitem__(self, key):
 

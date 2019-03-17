@@ -27,7 +27,7 @@ def find(x, equation):
     """
 
     free = equation.free_symbols
-    xs = [i for i in free if (i.name if type(x) is str else i) == x]
+    xs = [i for i in free if (i.name if isinstance(x, string_types) else i) == x]
     if not xs:
         raise ValueError('could not find %s' % x)
     if len(xs) != 1:
@@ -161,16 +161,16 @@ def are_similar(e1, e2):
 
     if e1 == e2:
         return True
-    try:
-        return e1.is_similar(e2)
-    except AttributeError:
-        try:
-            return e2.is_similar(e1)
-        except AttributeError:
-            n1 = e1.__class__.__name__
-            n2 = e2.__class__.__name__
-            raise GeometryError(
-                "Cannot test similarity between %s and %s" % (n1, n2))
+    is_similar1 = getattr(e1, 'is_similar', None)
+    if is_similar1:
+        return is_similar1(e2)
+    is_similar2 = getattr(e2, 'is_similar', None)
+    if is_similar2:
+        return is_similar2(e1)
+    n1 = e1.__class__.__name__
+    n2 = e2.__class__.__name__
+    raise GeometryError(
+        "Cannot test similarity between %s and %s" % (n1, n2))
 
 
 def centroid(*args):
