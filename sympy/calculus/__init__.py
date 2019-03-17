@@ -1,6 +1,7 @@
 """Calculus-related methods."""
 
-from .euler import euler_equations, hamilton_equations
+from .euler import euler_equations
+from .hamilton import hamilton_equations
 from .singularities import (singularities, is_increasing,
                             is_strictly_increasing, is_decreasing,
                             is_strictly_decreasing, is_monotonic)
