@@ -1783,6 +1783,7 @@ def _solve_system(exprs, symbols, **flags):
             subsyms = set()
             for e in subexpr:
                 subsyms |= exprsyms[e]
+            subsyms = sorted(subsyms, key=default_sort_key)
             subsol = _solve_system(subexpr, subsyms, **flags)
             if not isinstance(subsol, list):
                 subsol = [subsol]
