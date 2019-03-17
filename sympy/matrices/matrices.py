@@ -877,8 +877,7 @@ class MatrixReductions(MatrixDeterminant):
         echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
         return len(pivots)
 
-    def rank_decomposition(self,
-        iszerofunc=_iszero, simplify=False, format='original'):
+    def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
         r"""Returns a pair of matrices (`C`, `F`) with matching rank
         such that `A = C \cdot F`.
 
@@ -892,14 +891,6 @@ class MatrixReductions(MatrixDeterminant):
         simplify : Bool or Function, optional
             A function used to simplify elements when looking for a
             pivot. By default SymPy's ``simplify`` is used.
-
-        format : String, optional
-            If 'original', the returned matrices will have the same
-            shape as the original matrix. This is similar to the
-            return value of the ``rref`` function.
-
-            If `reduced`, it will truncate trivial zero rows from `F`,
-            and zero columns from `C`.
 
         Returns
         =======
@@ -922,23 +913,6 @@ class MatrixReductions(MatrixDeterminant):
         ...     [1, 2, 0, 8]
         ... ])
         >>> C, F = A.rank_decomposition()
-        >>> C
-        Matrix([
-        [1, 3, 4, 0],
-        [2, 7, 9, 0],
-        [1, 5, 1, 0],
-        [1, 2, 8, 0]])
-        >>> F
-        Matrix([
-        [1, 0, -2, 0],
-        [0, 1,  1, 0],
-        [0, 0,  0, 1],
-        [0, 0,  0, 0]])
-        >>> C * F == A
-        True
-
-        Format the result to make it compact:
-        >>> C, F = A.rank_decomposition(format='reduced')
         >>> C
         Matrix([
         [1, 3, 4],
@@ -989,21 +963,14 @@ class MatrixReductions(MatrixDeterminant):
 
         rref
         """
-        cls = self.__class__
-        mat = self.as_mutable()
-
-        (F, pivot_cols) = mat.rref(
+        (F, pivot_cols) = self.rref(
             simplify=simplify, iszerofunc=iszerofunc, pivots=True)
         rank = len(pivot_cols)
 
-        if format == 'original':
-            C = mat.extract(range(self.rows), pivot_cols)
-            C = C.row_join(C.zeros(C.rows, F.rows - C.cols))
-        elif format == 'reduced':
-            C = mat.extract(range(self.rows), pivot_cols)
-            F = F[:rank, :]
+        C = self.extract(range(self.rows), pivot_cols)
+        F = F[:rank, :]
 
-        return (cls(C), cls(F))
+        return (C, F)
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True, normalize_last=True):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
