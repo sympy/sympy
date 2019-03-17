@@ -74,3 +74,4 @@ sample.tex
 
 # pytest related data file for slow tests
 .ci/durations.log
+trials.py

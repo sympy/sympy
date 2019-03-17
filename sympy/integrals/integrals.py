@@ -27,7 +27,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
-from sympy.simplify.fu import sincos_to_sum
+#from sympy.simplify.fu import sincos_to_sum
 
 
 class Integral(AddWithLimits):
@@ -386,16 +386,19 @@ class Integral(AddWithLimits):
         risch = hints.get('risch', None)
         heurisch = hints.get('heurisch', None)
         manual = hints.get('manual', None)
-        if len(list(filter(None, (manual, meijerg, risch, heurisch)))) > 1:
+        trigo = hints.get('trigo',None)
+        if len(list(filter(None, (manual, meijerg, risch, heurisch, trigo)))) > 1:
             raise ValueError("At most one of manual, meijerg, risch, heurisch can be True")
         elif manual:
-            meijerg = risch = heurisch = False
+            meijerg = risch = heurisch = trigo = False
         elif meijerg:
-            manual = risch = heurisch = False
+            manual = risch = heurisch = trigo = False
         elif risch:
-            manual = meijerg = heurisch = False
+            manual = meijerg = heurisch = trigo = False
         elif heurisch:
-            manual = meijerg = risch = False
+            manual = meijerg = risch = trigo = False
+        elif trigo:
+            manual = meijerg = risch = heurisch = False
         eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual, heurisch=heurisch,
             conds=conds)
 
@@ -734,7 +737,7 @@ class Integral(AddWithLimits):
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
-                       heurisch=None, conds='piecewise'):
+                       heurisch=None, trigo=None, conds='piecewise'):
         """
         Calculate the anti-derivative to the function f(x).
 
@@ -1529,3 +1532,9 @@ def line_integrate(field, curve, vars):
 
     integral = Integral(Ft, curve.limits).doit(deep=False)
     return integral
+
+
+a = Symbol("a")
+x = Symbol("x")
+expr = ( Integral((a+x)**(-1), (x, 0, 1)) )**(-1)
+print(expr)
