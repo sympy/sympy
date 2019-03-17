@@ -4262,7 +4262,7 @@ class MatrixBase(MatrixDeprecated,
 
     def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
         r"""Returns a pair of matrices (`C`, `F`) with matching rank
-        such that `A = C \cdot F`.
+        such that `A = C F`.
 
         Parameters
         ==========
