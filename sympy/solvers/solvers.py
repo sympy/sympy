@@ -1768,12 +1768,14 @@ def _solve_system(exprs, symbols, **flags):
 
     # Split the system into connected components?
     V = exprs
-    exprsyms = {e: {s for s in symbols if e.has(s)} for e in exprs}
+    #exprsyms = {e: {s for s in symbols if e.has(s)} for e in exprs}
+    symsset = set(symbols)
+    exprsyms = {e: e.free_symbols & symsset for e in exprs}
     E = []
     for n, e1 in enumerate(exprs):
         for e2 in exprs[:n]:
             # Equations are connected if they share a symbol
-            if any(s in exprsyms[e1] and s in exprsyms[e2] for s in symbols):
+            if exprsyms[e1] & exprsyms[e2]:
                 E.append((e1, e2))
     G = V, E
     subexprs = connected_components(G)
