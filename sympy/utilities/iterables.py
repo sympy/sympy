@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from itertools import (
     combinations, combinations_with_replacement, permutations,
     product, product as cartes
@@ -927,6 +927,200 @@ def topological_sort(graph, key=None):
         raise ValueError("cycle detected")
     else:
         return L
+
+
+def strongly_connected_components(G):
+    r"""
+    Strongly connected components of a directed graph in reverse topological
+    order.
+
+
+    Parameters
+    ==========
+
+    graph : tuple[list, list[tuple[T, T]]
+        A tuple consisting of a list of vertices and a list of edges of
+        a graph whose strongly connected components are to be found.
+
+
+    Examples
+    ========
+
+    Consider a directed graph (in dot notation)::
+
+        digraph {
+            A -> B
+            A -> C
+            B -> C
+            C -> B
+            B -> D
+        }
+
+    where vertices are the letters A, B, C and D. This graph can be encoded
+    using Python's elementary data structures as follows::
+
+        >>> V = ['A', 'B', 'C', 'D']
+        >>> E = [('A', 'B'), ('A', 'C'), ('B', 'C'), ('C', 'B'), ('B', 'D')]
+
+    The strongly connected components of this graph can be computed as
+
+        >>> from sympy.utilities.iterables import strongly_connected_components
+
+        >>> strongly_connected_components((V, E))
+        [['D'], ['B', 'C'], ['A']]
+
+    This also gives the components in reverse topological order.
+
+    Since the subgraph containing B and C has a cycle they must be together in
+    a strongly connected component. A and D are connected to the rest of the
+    graph but not in a cyclic manner so they appear as their own strongly
+    connected components.
+
+
+    Notes
+    =====
+
+    The vertices of the graph must be hashable for the data structures used.
+    If the vertices are unhashable replace them with integer indices.
+
+    This function uses Tarjan's algorithm to compute the strongly connected
+    components in `O(|V|+|E|)` (linear) time.
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Strongly_connected_component
+    .. [2] https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+
+
+    See Also
+    ========
+
+    utilities.iterables.connected_components()
+
+    """
+    # Map from a vertex to its neighbours
+    V, E = G
+    Gmap = {vi: [] for vi in V}
+    for v1, v2 in E:
+        Gmap[v1].append(v2)
+
+    # Non-recursive Tarjan's algorithm:
+    lowlink = {}
+    indices = {}
+    stack = OrderedDict()
+    callstack = []
+    components = []
+    nomore = object()
+
+    def start(v):
+        index = len(stack)
+        indices[v] = lowlink[v] = index
+        stack[v] = None
+        callstack.append((v, iter(Gmap[v])))
+
+    def finish(v1):
+        # Finished a component?
+        if lowlink[v1] == indices[v1]:
+            component = [stack.popitem()[0]]
+            while component[-1] is not v1:
+                component.append(stack.popitem()[0])
+            components.append(component[::-1])
+        v2, _ = callstack.pop()
+        if callstack:
+            v1, _ = callstack[-1]
+            lowlink[v1] = min(lowlink[v1], lowlink[v2])
+
+    for v in V:
+        if v in indices:
+            continue
+        start(v)
+        while callstack:
+            v1, it1 = callstack[-1]
+            v2 = next(it1, nomore)
+            # Finished children of v1?
+            if v2 is nomore:
+                finish(v1)
+            # Recurse on v2
+            elif v2 not in indices:
+                start(v2)
+            elif v2 in stack:
+                lowlink[v1] = min(lowlink[v1], indices[v2])
+
+    # Reverse topological sort order:
+    return components
+
+
+def connected_components(G):
+    r"""
+    Connected components of an undirected graph or weakly connected components
+    of a directed graph.
+
+
+    Parameters
+    ==========
+
+    graph : tuple[list, list[tuple[T, T]]
+        A tuple consisting of a list of vertices and a list of edges of
+        a graph whose connected components are to be found.
+
+
+    Examples
+    ========
+
+
+    Given an undirected graph::
+
+        graph {
+            A -- B
+            C -- D
+        }
+
+    We can find the connected components using this function if we include
+    each edge in both directions::
+
+        >>> from sympy.utilities.iterables import connected_components
+
+        >>> V = ['A', 'B', 'C', 'D']
+        >>> E = [('A', 'B'), ('B', 'A'), ('C', 'D'), ('D', 'C')]
+        >>> connected_components((V, E))
+        [['A', 'B'], ['C', 'D']]
+
+    The weakly connected components of a directed graph can found the same
+    way.
+
+
+    Notes
+    =====
+
+    The vertices of the graph must be hashable for the data structures used.
+    If the vertices are unhashable replace them with integer indices.
+
+    This function uses Tarjan's algorithm to compute the connected components
+    in `O(|V|+|E|)` (linear) time.
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Connected_component_(graph_theory)
+    .. [2] https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+
+
+    See Also
+    ========
+
+    utilities.iterables.strongly_connected_components()
+
+    """
+    # Duplicate edges both ways so that the graph is effectively undirected
+    # and return the strongly connected components:
+    V, E = G
+    E_undirected = []
+    for v1, v2 in E:
+        E_undirected.extend([(v1, v2), (v2, v1)])
+    return strongly_connected_components((V, E_undirected))
 
 
 def rotate_left(x, y):

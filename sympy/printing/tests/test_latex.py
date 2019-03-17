@@ -708,12 +708,12 @@ def test_latex_Range():
 
     assert latex(Range(30, 1, -1)) == r'\left\{30, 29, \ldots, 2\right\}'
 
-    assert latex(Range(0, oo, 2)) == r'\left\{0, 2, \ldots, \infty\right\}'
+    assert latex(Range(0, oo, 2)) == r'\left\{0, 2, \ldots\right\}'
 
-    assert latex(Range(oo, -2, -2)) == r'\left\{\infty, \ldots, 2, 0\right\}'
+    assert latex(Range(oo, -2, -2)) == r'\left\{\ldots, 2, 0\right\}'
 
     assert latex(Range(-2, -oo, -1)) == \
-        r'\left\{-2, -3, \ldots, -\infty\right\}'
+        r'\left\{-2, -3, \ldots\right\}'
 
 
 def test_latex_sequences():
@@ -1551,17 +1551,20 @@ def test_Adjoint():
     from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    assert latex(Adjoint(X)) == r'X^\dagger'
-    assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^\dagger'
-    assert latex(Adjoint(X) + Adjoint(Y)) == r'X^\dagger + Y^\dagger'
-    assert latex(Adjoint(X*Y)) == r'\left(X Y\right)^\dagger'
-    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^\dagger X^\dagger'
-    assert latex(Adjoint(X**2)) == r'\left(X^{2}\right)^\dagger'
-    assert latex(Adjoint(X)**2) == r'\left(X^\dagger\right)^{2}'
-    assert latex(Adjoint(Inverse(X))) == r'\left(X^{-1}\right)^\dagger'
-    assert latex(Inverse(Adjoint(X))) == r'\left(X^\dagger\right)^{-1}'
-    assert latex(Adjoint(Transpose(X))) == r'\left(X^T\right)^\dagger'
-    assert latex(Transpose(Adjoint(X))) == r'\left(X^\dagger\right)^T'
+    assert latex(Adjoint(X)) == r'X^{\dagger}'
+    assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^{\dagger}'
+    assert latex(Adjoint(X) + Adjoint(Y)) == r'X^{\dagger} + Y^{\dagger}'
+    assert latex(Adjoint(X*Y)) == r'\left(X Y\right)^{\dagger}'
+    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^{\dagger} X^{\dagger}'
+    assert latex(Adjoint(X**2)) == r'\left(X^{2}\right)^{\dagger}'
+    assert latex(Adjoint(X)**2) == r'\left(X^{\dagger}\right)^{2}'
+    assert latex(Adjoint(Inverse(X))) == r'\left(X^{-1}\right)^{\dagger}'
+    assert latex(Inverse(Adjoint(X))) == r'\left(X^{\dagger}\right)^{-1}'
+    assert latex(Adjoint(Transpose(X))) == r'\left(X^{T}\right)^{\dagger}'
+    assert latex(Transpose(Adjoint(X))) == r'\left(X^{\dagger}\right)^{T}'
+    assert latex(Transpose(Adjoint(X) + Y)) == r'\left(X^{\dagger} + Y\right)^{T}'
+    assert latex(Transpose(X)) == r'X^{T}'
+    assert latex(Transpose(X + Y)) == r'\left(X + Y\right)^{T}'
 
 
 def test_Hadamard():

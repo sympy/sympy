@@ -365,9 +365,10 @@ class Range(Set):
         >>> Range(0, 10, 3)
         Range(0, 12, 3)
 
-    Infinite ranges are allowed. If the starting point is infinite,
-    then the final value is ``stop - step``. To iterate such a range,
-    it needs to be reversed:
+    Infinite ranges are allowed. ``oo`` and ``-oo`` are never included in the
+    set (``Range`` is always a subset of ``Integers``). If the starting point
+    is infinite, then the final value is ``stop - step``. To iterate such a
+    range, it needs to be reversed:
 
         >>> from sympy import oo
         >>> r = Range(-oo, 1)
@@ -390,7 +391,7 @@ class Range(Set):
         >>> list(_)
         [4, 6]
 
-    Athough slicing of a Range will always return a Range -- possibly
+    Although slicing of a Range will always return a Range -- possibly
     empty -- an empty set will be returned from any intersection that
     is empty:
 

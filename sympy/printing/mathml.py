@@ -12,6 +12,8 @@ from sympy.printing.precedence import precedence_traditional, PRECEDENCE
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer
 
+import mpmath.libmp as mlib
+from mpmath.libmp import prec_to_dps
 
 class MathMLPrinterBase(Printer):
     """Contains common code required for MathMLContentPrinter and
@@ -32,6 +34,7 @@ class MathMLPrinterBase(Printer):
         "mul_symbol": None,
         "root_notation": True,
         "symbol_names": {},
+        "mul_symbol_mathml_numbers": '&#xB7;',
     }
 
     def __init__(self, settings=None):
@@ -519,6 +522,19 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'StrictGreaterThan': '>',
             'StrictLessThan': '<',
             'lerchphi': '&#x3A6;',
+            'zeta': '&#x3B6;',
+            'dirichlet_eta': '&#x3B7;',
+            'elliptic_k': '&#x39A;',
+            'lowergamma': '&#x3B3;',
+            'uppergamma': '&#x393;',
+            'gamma': '&#x393;',
+            'totient': '&#x3D5;',
+            'reduced_totient': '&#x3BB;',
+            'primenu': '&#x3BD;',
+            'primeomega': '&#x3A9;',
+            'fresnels': 'S',
+            'fresnelc': 'C',
+            'Heaviside': '&#x398;',
             'BooleanTrue': 'True',
             'BooleanFalse': 'False',
             'NoneType': 'None',
@@ -698,10 +714,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_GoldenRatio(self, e):
-        """We use unicode #x3c6 for Greek letter phi as defined here
-        http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('mi')
-        x.appendChild(self.dom.createTextNode(u"\N{GREEK SMALL LETTER PHI}"))
+        x.appendChild(self.dom.createTextNode('&#x3A6;'))
         return x
 
     def _print_Exp1(self, e):
@@ -723,7 +737,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow = self.dom.createElement('mrow')
         y = self.dom.createElement('mo')
         y.appendChild(self.dom.createTextNode('-'))
-        x = self._print_Infinity(-e)
+        x = self._print_Infinity(e)
         mrow.appendChild(y)
         mrow.appendChild(x)
         return mrow
@@ -877,7 +891,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_factorial2(self, expr):
         return self._print_operator_after('!!', expr.args[0])
 
-    def _print_binomial(self, expr, exp=None):
+    def _print_binomial(self, expr):
         brac = self.dom.createElement('mfenced')
         frac = self.dom.createElement('mfrac')
         frac.setAttribute('linethickness', '0')
@@ -945,6 +959,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode(str(e)))
         return x
 
+    def _print_AccumulationBounds(self, i):
+        brac = self.dom.createElement('mfenced')
+        brac.setAttribute('open', u'\u27e8')
+        brac.setAttribute('close', u'\u27e9')
+        brac.appendChild(self._print(i.min))
+        brac.appendChild(self._print(i.max))
+        return brac
+
     def _print_Derivative(self, e):
 
         if requires_partial(e):
@@ -1007,7 +1029,46 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(y)
         return mrow
 
-    def _print_polylog(self, expr, exp=None):
+    def _print_Float(self, expr):
+        # Based off of that in StrPrinter
+        dps = prec_to_dps(expr._prec)
+        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
+
+        # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
+        # thus we use the number separator
+        separator = self._settings['mul_symbol_mathml_numbers']
+        mrow = self.dom.createElement('mrow')
+        if 'e' in str_real:
+            (mant, exp) = str_real.split('e')
+
+            if exp[0] == '+':
+                exp = exp[1:]
+
+            mn = self.dom.createElement('mn')
+            mn.appendChild(self.dom.createTextNode(mant))
+            mrow.appendChild(mn)
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode(separator))
+            mrow.appendChild(mo)
+            msup = self.dom.createElement('msup')
+            mn = self.dom.createElement('mn')
+            mn.appendChild(self.dom.createTextNode("10"))
+            msup.appendChild(mn)
+            mn = self.dom.createElement('mn')
+            mn.appendChild(self.dom.createTextNode(exp))
+            msup.appendChild(mn)
+            mrow.appendChild(msup)
+            return mrow
+        elif str_real == "+inf":
+            return self._print_Infinity(None)
+        elif str_real == "-inf":
+            return self._print_NegativeInfinity(None)
+        else:
+            mn = self.dom.createElement('mn')
+            mn.appendChild(self.dom.createTextNode(str_real))
+            return mn
+
+    def _print_polylog(self, expr):
         mrow = self.dom.createElement('mrow')
         m = self.dom.createElement('msub')
 
@@ -1158,7 +1219,6 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             mrow.appendChild(y)
         return mrow
 
-
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 
@@ -1253,8 +1313,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         brac.setAttribute('close', '}')
 
         if s.start.is_infinite:
-            printset = s.start, dots, s[-1] - s.step, s[-1]
-        elif s.stop.is_infinite or len(s) > 4:
+            printset = dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite:
+            it = iter(s)
+            printset = next(it), next(it), dots
+        elif len(s) > 4:
             it = iter(s)
             printset = next(it), next(it), dots, s[-1]
         else:
@@ -1431,9 +1494,131 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         sub.appendChild(self._print(S.Zero))
         return sub
 
+    def _print_SingularityFunction(self, expr):
+        shift = expr.args[0] - expr.args[1]
+        power = expr.args[2]
+        sup = self.dom.createElement('msup')
+        brac = self.dom.createElement('mfenced')
+        brac.setAttribute('open', u'\u27e8')
+        brac.setAttribute('close', u'\u27e9')
+        brac.appendChild(self._print(shift))
+        sup.appendChild(brac)
+        sup.appendChild(self._print(power))
+        return sup
+
+    def _print_NaN(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('NaN'))
+        return x
+
+    def _print_ComplexInfinity(self, e):
+        x = self.dom.createElement('mover')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x221E;'))
+        x.appendChild(mo)
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('~'))
+        x.appendChild(mo)
+        return x
+
     def _print_EmptySet(self, e):
         x = self.dom.createElement('mo')
         x.appendChild(self.dom.createTextNode('&#x2205;'))
+        return x
+
+    def _print_Adjoint(self, expr):
+        from sympy.matrices import MatrixSymbol
+        mat = expr.arg
+        sup = self.dom.createElement('msup')
+        if not isinstance(mat, MatrixSymbol):
+            brac = self.dom.createElement('mfenced')
+            brac.appendChild(self._print(mat))
+            sup.appendChild(brac)
+        else:
+            sup.appendChild(self._print(mat))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x2020;'))
+        sup.appendChild(mo)
+        return sup
+
+    def _print_Transpose(self, expr):
+        from sympy.matrices import MatrixSymbol
+        mat = expr.arg
+        sup = self.dom.createElement('msup')
+        if not isinstance(mat, MatrixSymbol):
+            brac = self.dom.createElement('mfenced')
+            brac.appendChild(self._print(mat))
+            sup.appendChild(brac)
+        else:
+            sup.appendChild(self._print(mat))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('T'))
+        sup.appendChild(mo)
+        return sup
+
+    def _print_Inverse(self, expr):
+        from sympy.matrices import MatrixSymbol
+        mat = expr.arg
+        sup = self.dom.createElement('msup')
+        if not isinstance(mat, MatrixSymbol):
+            brac = self.dom.createElement('mfenced')
+            brac.appendChild(self._print(mat))
+            sup.appendChild(brac)
+        else:
+            sup.appendChild(self._print(mat))
+        sup.appendChild(self._print(-1))
+        return sup
+
+    def _print_MatMul(self, expr):
+        from sympy import MatMul
+
+        x = self.dom.createElement('mrow')
+        args = expr.args
+        if isinstance(args[0], Mul):
+            args = args[0].as_ordered_factors() + list(args[1:])
+        else:
+            args = list(args)
+
+        if isinstance(expr, MatMul) and _coeff_isneg(expr):
+            if args[0] == -1:
+                args = args[1:]
+            else:
+                args[0] = -args[0]
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode('-'))
+            x.appendChild(mo)
+
+        for arg in args[:-1]:
+            x.appendChild(self.parenthesize(arg, precedence_traditional(expr),
+                                            False))
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode('&InvisibleTimes;'))
+            x.appendChild(mo)
+        x.appendChild(self.parenthesize(args[-1], precedence_traditional(expr),
+                                        False))
+        return x
+
+    def _print_MatPow(self, expr):
+        from sympy.matrices import MatrixSymbol
+        base, exp = expr.base, expr.exp
+        sup = self.dom.createElement('msup')
+        if not isinstance(base, MatrixSymbol):
+            brac = self.dom.createElement('mfenced')
+            brac.appendChild(self._print(base))
+            sup.appendChild(brac)
+        else:
+            sup.appendChild(self._print(base))
+        sup.appendChild(self._print(exp))
+        return sup
+
+    def _print_ZeroMatrix(self, Z):
+        x = self.dom.createElement('mn')
+        x.appendChild(self.dom.createTextNode('&#x1D7D8'))
+        return x
+
+    def _print_Identity(self, I):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('&#x1D540;'))
         return x
 
     def _print_floor(self, e):
@@ -1489,13 +1674,15 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_MatrixElement(self, e):
-    	x = self.dom.createElement('msub')
-    	x.appendChild(self._print(e.parent))
-    	if len(e.indices) == 1:
-    		x.appendChild(self._print(e.indices[0]))
-    		return x
-    	x.appendChild(self._print(e.indices))
-    	return x
+        x = self.dom.createElement('msub')
+        x.appendChild(self.parenthesize(e.parent, PRECEDENCE["Atom"], strict = True))
+        brac = self.dom.createElement('mfenced')
+        brac.setAttribute("open", "")
+        brac.setAttribute("close", "")
+        for i in e.indices:
+            brac.appendChild(self._print(i))
+        x.appendChild(brac)
+        return x
 
     def _print_elliptic_f(self, e):
         x = self.dom.createElement('mrow')
