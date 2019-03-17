@@ -207,7 +207,7 @@ class RigidBody(object):
         'T = 1/2 (I omega^2)'
 
         where I is the central inertia dyadic of rigid body B,
-        omega is the body's angular velocity of the body's
+        omega is the angular velocity of the body's
         mass center in the supplied ReferenceFrame.
 
         Parameters
