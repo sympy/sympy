@@ -1498,8 +1498,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     	return x
 
     def _print_elliptic_f(self, e):
-        x = self.dom.createElement('mi')
-        x.appendChild(self.dom.createTextNode('&#x1d5a5;'))
+        x = self.dom.createElement('mrow')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('&#x1d5a5;'))
+        x.appendChild(mi)
         y = self.dom.createElement('mfenced')
         y.setAttribute("separators", "|")
         for i in e.args:
@@ -1508,8 +1510,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_elliptic_e(self, e):
-        x = self.dom.createElement('mi')
-        x.appendChild(self.dom.createTextNode('&#x1d5a4;'))
+        x = self.dom.createElement('mrow')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('&#x1d5a4;'))
+        x.appendChild(mi)
         y = self.dom.createElement('mfenced')
         y.setAttribute("separators", "|")
         for i in e.args:
@@ -1518,8 +1522,10 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
     def _print_elliptic_pi(self, e):
-        x = self.dom.createElement('mi')
-        x.appendChild(self.dom.createTextNode('&#x1d6f1;'))
+        x = self.dom.createElement('mrow')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('&#x1d6f1;'))
+        x.appendChild(mi)
         y = self.dom.createElement('mfenced')
         if len(e.args) == 2:
             y.setAttribute("separators", "|")
@@ -1532,14 +1538,18 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_Ei(self, e):
         x = self.dom.createElement('mrow')
-        x.appendChild(self.dom.createTextNode('Ei'))
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('Ei'))
+        x.appendChild(mi)
         x.appendChild(self._print(e.args))
         return x
 
     def _print_expint(self, e):
         x = self.dom.createElement('mrow')
         y = self.dom.createElement('msub')
-        y.appendChild(self.dom.createTextNode('E'))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('E'))
+        y.appendChild(mo)
         y.appendChild(self._print(e.args[0]))
         x.appendChild(y)
         x.appendChild(self._print(e.args[1:]))
@@ -1548,7 +1558,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_jacobi(self, e):
         x = self.dom.createElement('mrow')
         y = self.dom.createElement('msubsup')
-        y.appendChild(self.dom.createTextNode('P'))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('P'))
+        y.appendChild(mo)
         y.appendChild(self._print(e.args[0]))
         y.appendChild(self._print(e.args[1:3]))
         x.appendChild(y)
@@ -1558,7 +1570,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_gegenbauer(self, e):
         x = self.dom.createElement('mrow')
         y = self.dom.createElement('msubsup')
-        y.appendChild(self.dom.createTextNode('C'))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('C'))
+        y.appendChild(mo)
         y.appendChild(self._print(e.args[0]))
         y.appendChild(self._print(e.args[1:2]))
         x.appendChild(y)
@@ -1568,7 +1582,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_chebyshevt(self, e):
         x = self.dom.createElement('mrow')
         y = self.dom.createElement('msub')
-        y.appendChild(self.dom.createTextNode('T'))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('T'))
+        y.appendChild(mo)
         y.appendChild(self._print(e.args[0]))
         x.appendChild(y)
         x.appendChild(self._print(e.args[1:]))
@@ -1577,7 +1593,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_chebyshevu(self, e):
         x = self.dom.createElement('mrow')
         y = self.dom.createElement('msub')
-        y.appendChild(self.dom.createTextNode('U'))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('U'))
+        y.appendChild(mo)
         y.appendChild(self._print(e.args[0]))
         x.appendChild(y)
         x.appendChild(self._print(e.args[1:]))
@@ -1586,7 +1604,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_legendre(self, e):
         x = self.dom.createElement('mrow')
         y = self.dom.createElement('msub')
-        y.appendChild(self.dom.createTextNode('P'))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('P'))
+        y.appendChild(mo)
         y.appendChild(self._print(e.args[0]))
         x.appendChild(y)
         x.appendChild(self._print(e.args[1:]))
@@ -1595,7 +1615,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_assoc_legendre(self, e):
         x = self.dom.createElement('mrow')
         y = self.dom.createElement('msubsup')
-        y.appendChild(self.dom.createTextNode('P'))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('P'))
+        y.appendChild(mo)
         y.appendChild(self._print(e.args[0]))
         y.appendChild(self._print(e.args[1:2]))
         x.appendChild(y)
@@ -1605,7 +1627,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_laguerre(self, e):
         x = self.dom.createElement('mrow')
         y = self.dom.createElement('msub')
-        y.appendChild(self.dom.createTextNode('L'))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('L'))
+        y.appendChild(mo)
         y.appendChild(self._print(e.args[0]))
         x.appendChild(y)
         x.appendChild(self._print(e.args[1:]))
@@ -1614,7 +1638,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_assoc_laguerre(self, e):
         x = self.dom.createElement('mrow')
         y = self.dom.createElement('msubsup')
-        y.appendChild(self.dom.createTextNode('L'))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('L'))
+        y.appendChild(mo)
         y.appendChild(self._print(e.args[0]))
         y.appendChild(self._print(e.args[1:2]))
         x.appendChild(y)
@@ -1624,7 +1650,9 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_hermite(self, e):
         x = self.dom.createElement('mrow')
         y = self.dom.createElement('msub')
-        y.appendChild(self.dom.createTextNode('H'))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('H'))
+        y.appendChild(mo)
         y.appendChild(self._print(e.args[0]))
         x.appendChild(y)
         x.appendChild(self._print(e.args[1:]))
