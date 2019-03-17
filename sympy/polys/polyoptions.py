@@ -722,6 +722,16 @@ class Method(with_metaclass(OptionType, Flag)):
             raise OptionError("expected a string, got %s" % method)
 
 
+class Fraction(with_metaclass(OptionType, Flag)):
+    """``fraction`` flag to polynomial manipulation functions. """
+
+    option = 'fraction'
+
+    @classmethod
+    def default(cls):
+        return True
+
+
 def build_options(gens, args=None):
     """Construct options from keyword arguments or ... options. """
     if args is None:

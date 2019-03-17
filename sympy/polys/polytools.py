@@ -5961,7 +5961,7 @@ def _symbolic_factor(expr, opt, method):
     if isinstance(expr, Expr) and not expr.is_Relational:
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
-        coeff, factors = _symbolic_factor_list(together(expr), opt, method)
+        coeff, factors = _symbolic_factor_list(together(expr, fraction=opt.get('fraction', True)), opt, method)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
         return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
@@ -6014,7 +6014,7 @@ def _generic_factor_list(expr, gens, args, method):
 
 def _generic_factor(expr, gens, args, method):
     """Helper function for :func:`sqf` and :func:`factor`. """
-    options.allowed_flags(args, [])
+    options.allowed_flags(args, ['fraction'])
     opt = options.build_options(gens, args)
     return _symbolic_factor(sympify(expr), opt, method)
 
