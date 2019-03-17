@@ -8,7 +8,7 @@ from sympy.core.compatibility import (iterable, range)
 
 def hamilton_equations(H, coords, momenta, time):
     r"""
-    Find the Euler-Lagrange equations [1]_ for a given Lagrangian.
+    Find the Hamilton's equations [1]_ for a given Hamiltonian.
 
     Parameters
     ==========
