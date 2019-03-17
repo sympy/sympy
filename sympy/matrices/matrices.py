@@ -877,101 +877,6 @@ class MatrixReductions(MatrixDeterminant):
         echelon_form, pivots, swaps = mat._eval_echelon_form(iszerofunc=iszerofunc, simpfunc=simpfunc)
         return len(pivots)
 
-    def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
-        r"""Returns a pair of matrices (`C`, `F`) with matching rank
-        such that `A = C \cdot F`.
-
-        Parameters
-        ==========
-
-        iszerofunc : Function, optional
-            A function used for detecting whether an element can
-            act as a pivot.  ``lambda x: x.is_zero`` is used by default.
-
-        simplify : Bool or Function, optional
-            A function used to simplify elements when looking for a
-            pivot. By default SymPy's ``simplify`` is used.
-
-        Returns
-        =======
-
-        (C, F) : Matrices
-            `F` is the reduced row echelon form (RREF) of `A`, and `C`
-            has the same rank as `F` and its product with `C` restores `A`:
-            `A = C \cdot F`.
-
-            See Notes for additional mathematical details.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix([
-        ...     [1, 3, 1, 4],
-        ...     [2, 7, 3, 9],
-        ...     [1, 5, 3, 1],
-        ...     [1, 2, 0, 8]
-        ... ])
-        >>> C, F = A.rank_decomposition()
-        >>> C
-        Matrix([
-        [1, 3, 4],
-        [2, 7, 9],
-        [1, 5, 1],
-        [1, 2, 8]])
-        >>> F
-        Matrix([
-        [1, 0, -2, 0],
-        [0, 1,  1, 0],
-        [0, 0,  0, 1]])
-        >>> C * F == A
-        True
-
-        Notes
-        =====
-
-        Obtaining `F`, an RREF of `A`, is equivalent to creating a
-        product
-
-        .. math::
-            E_n \cdot E_{n-1} \cdot ... \cdot E_1 \cdot A = F
-
-        where `E_n, E_{n-1}, ... , E_1` are the elimination matrices or
-        permutation matrices equivalent to each row-reduction step.
-
-        The inverse of the same product of elimination matrices gives
-        `C`:
-
-        .. math::
-            C = (E_n \cdot E_{n-1} \cdot ... \cdot E_1)^{-1}
-
-        It is not necessary, however, to actually compute the inverse:
-        the columns of `C` are those from the original matrix with the
-        same column indices as the indices of the pivot columns of `F`.
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Rank_factorization
-
-        .. [2] Piziak, R.; Odell, P. L. (1 June 1999).
-            "Full Rank Factorization of Matrices".
-            Mathematics Magazine. 72 (3): 193. doi:10.2307/2690882
-
-        See Also
-        ========
-
-        rref
-        """
-        (F, pivot_cols) = self.rref(
-            simplify=simplify, iszerofunc=iszerofunc, pivots=True)
-        rank = len(pivot_cols)
-
-        C = self.extract(range(self.rows), pivot_cols)
-        F = F[:rank, :]
-
-        return (C, F)
-
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True, normalize_last=True):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
@@ -4354,6 +4259,101 @@ class MatrixBase(MatrixDeprecated,
                 tmp -= R[j, k] * x[n - 1 - k]
             x.append(tmp / R[j, j])
         return self._new([row._mat for row in reversed(x)])
+
+    def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
+        r"""Returns a pair of matrices (`C`, `F`) with matching rank
+        such that `A = C \cdot F`.
+
+        Parameters
+        ==========
+
+        iszerofunc : Function, optional
+            A function used for detecting whether an element can
+            act as a pivot.  ``lambda x: x.is_zero`` is used by default.
+
+        simplify : Bool or Function, optional
+            A function used to simplify elements when looking for a
+            pivot. By default SymPy's ``simplify`` is used.
+
+        Returns
+        =======
+
+        (C, F) : Matrices
+            `F` is the reduced row echelon form (RREF) of `A`, and `C`
+            has the same rank as `F` and its product with `C` restores `A`:
+            `A = C \cdot F`.
+
+            See Notes for additional mathematical details.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([
+        ...     [1, 3, 1, 4],
+        ...     [2, 7, 3, 9],
+        ...     [1, 5, 3, 1],
+        ...     [1, 2, 0, 8]
+        ... ])
+        >>> C, F = A.rank_decomposition()
+        >>> C
+        Matrix([
+        [1, 3, 4],
+        [2, 7, 9],
+        [1, 5, 1],
+        [1, 2, 8]])
+        >>> F
+        Matrix([
+        [1, 0, -2, 0],
+        [0, 1,  1, 0],
+        [0, 0,  0, 1]])
+        >>> C * F == A
+        True
+
+        Notes
+        =====
+
+        Obtaining `F`, an RREF of `A`, is equivalent to creating a
+        product
+
+        .. math::
+            E_n \cdot E_{n-1} \cdot ... \cdot E_1 \cdot A = F
+
+        where `E_n, E_{n-1}, ... , E_1` are the elimination matrices or
+        permutation matrices equivalent to each row-reduction step.
+
+        The inverse of the same product of elimination matrices gives
+        `C`:
+
+        .. math::
+            C = (E_n \cdot E_{n-1} \cdot ... \cdot E_1)^{-1}
+
+        It is not necessary, however, to actually compute the inverse:
+        the columns of `C` are those from the original matrix with the
+        same column indices as the indices of the pivot columns of `F`.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Rank_factorization
+
+        .. [2] Piziak, R.; Odell, P. L. (1 June 1999).
+            "Full Rank Factorization of Matrices".
+            Mathematics Magazine. 72 (3): 193. doi:10.2307/2690882
+
+        See Also
+        ========
+
+        rref
+        """
+        (F, pivot_cols) = self.rref(
+            simplify=simplify, iszerofunc=iszerofunc, pivots=True)
+        rank = len(pivot_cols)
+
+        C = self.extract(range(self.rows), pivot_cols)
+        F = F[:rank, :]
+
+        return (C, F)
 
     def solve_least_squares(self, rhs, method='CH'):
         """Return the least-square fit to the data.
