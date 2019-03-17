@@ -1792,10 +1792,7 @@ def _solve_system(exprs, symbols, **flags):
         sols = []
         for soldicts in cartes(*subsols):
             sols.append(dict(item for sd in soldicts for item in sd.items()))
-        #if flags.get('set', False):
-        #    sols = [set(sd.values()) for sd in sols]
-        #elif not flags.get('dict', False):
-        #    sols = [[sol[s] for s in symbols] for sol in sols]
+        # Return a single dict if it would be a list of one dicts
         if len(sols) == 1:
             return sols[0]
         return sols

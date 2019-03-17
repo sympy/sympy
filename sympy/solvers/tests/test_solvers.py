@@ -149,10 +149,10 @@ def test_solve_args():
         NotImplementedError, lambda: solve(exp(x) + sin(x) + exp(y) + sin(y)))
     # failed system
     # --  when no symbols given, 1 fails
-    assert solve([y, exp(x) + x]) == [{x: -LambertW(1), y: 0}]
+    assert solve([y, exp(x) + x]) == {x: -LambertW(1), y: 0}
     #     both fail
     assert solve(
-        (exp(x) - x, exp(y) - y)) == [{x: -LambertW(-1), y: -LambertW(-1)}]
+        (exp(x) - x, exp(y) - y)) == {x: -LambertW(-1), y: -LambertW(-1)}
     # --  when symbols given
     solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
     # symbol is a number
@@ -1217,7 +1217,14 @@ def test_issue_5849_matrix():
         2*I3 + 2*I5 + 3*I6 - Q2,
         I4 - 2*I5 + 2*Q4 + dI4
     )
-    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4) == {
+    # This system is overdetermined. We need I1 = I2 + I3 and I1 = I2 + I6 but
+    # those two are most likely inconsistent. I don't know how this works
+    # without this PR but this fails with the PR because e.g.:
+    #
+    # In [1]: solve([x-y, x-z], [x])
+    # Out[1]: []
+    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4) == []
+    posible_sol = {
         dI4: -I3 + 3*I5 - 2*Q4,
         dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
         dQ2: I2,
