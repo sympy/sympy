@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from sympy import symbols, sin, cos, sqrt, Function
+from sympy import symbols, sin, asin, cos, sqrt, Function
 from sympy.core.compatibility import u_decode as u
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols
-from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint)
+from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint,
+                                           vsprint, vsstrrepr)
 
 # TODO : Figure out how to make the pretty printing tests readable like the
 # ones in sympy.printing.pretty.tests.test_printing.
@@ -16,6 +17,7 @@ N = ReferenceFrame('N')
 
 v = a ** 2 * N.x + b * N.y + c * sin(alpha) * N.z
 w = alpha * N.x + sin(omega) * N.y + alpha * beta * N.z
+ww = alpha * N.x + asin(omega) * N.y + alpha * beta * N.z
 o = a/b * N.x + (c+b)/a * N.y + c**2/b * N.z
 
 y = a ** 2 * (N.x | N.y) + b * (N.y | N.y) + c * sin(alpha) * (N.z | N.y)
@@ -30,6 +32,11 @@ def unicode_vpretty(expr):
 def test_latex_printer():
     r = Function('r')('t')
     assert VectorLatexPrinter().doprint(r ** 2) == "r^{2}"
+    r2 = Function('r^2')('t')
+    assert VectorLatexPrinter().doprint(r2.diff()) == r'\dot{r^{2}}'
+    ra = Function('r__a')('t')
+    assert VectorLatexPrinter().doprint(ra.diff().diff()) == r'\ddot{r^{a}}'
+
 
 def test_vector_pretty_print():
 
@@ -133,6 +140,11 @@ def test_vector_latex():
                 r'\operatorname{cos}\left(\omega\right)\hat{k}')
     assert v._latex() == expected
 
+    expected = r'\alpha\mathbf{\hat{n}_x} + \operatorname{asin}\left(\omega'\
+        r'\right)\mathbf{\hat{n}_y} + \alpha \beta\mathbf{\hat{n}_z}'
+    assert ww._latex() == expected
+    assert lp.doprint(ww) == expected
+
 
 def test_vector_latex_with_functions():
 
@@ -184,6 +196,7 @@ def test_dyadic_latex():
                 r'\alpha \beta\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_x}')
 
     assert x._latex() == expected
+
 
 def test_vlatex(): # vlatex is broken #12078
     from sympy.physics.vector import vlatex
@@ -254,3 +267,9 @@ def test_vector_derivative_printing():
     assert v._latex() == r'\frac{d^{5}}{d t^{5}} \omega{\left(t \right)}\mathbf{\hat{n}_x}'
     assert unicode_vpretty(v) == u('  5\n d\n───(ω) n_x\n  5\ndt')
     assert ascii_vpretty(v) == '  5\n d\n---(omega) n_x\n  5\ndt'
+
+
+def test_vector_str_printing():
+    assert vsprint(w) == 'alpha*N.x + sin(omega)*N.y + alpha*beta*N.z'
+    assert vsprint(omega.diff() * N.x) == "omega'*N.x"
+    assert vsstrrepr(w) == 'alpha*N.x + sin(omega)*N.y + alpha*beta*N.z'
