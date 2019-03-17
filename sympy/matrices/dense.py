@@ -1103,90 +1103,71 @@ def eye(*args, **kwargs):
 
 
 def diag(*values, **kwargs):
-    """Create a diagonal matrix from the given values.
+    """Create a diagonal matrix from the given values after
+    converting any values which are sequences to Matrices.
 
-    Notes
-    =====
-
-    When arguments are matrices they are fitted in resultant matrix.
-
-    The returned matrix is a mutable, dense matrix. To make it a different
-    type, send the desired class for keyword ``cls``.
+    By default, the returned matrix is a mutable, dense matrix. This
+    can be changed by sending the desired class for keyword ``cls``.
 
     Examples
     ========
 
     >>> from sympy.matrices import diag, Matrix, ones
+    >>> from sympy.abc import x
+
+    Each element is interpreted as an element to be put on the
+    diagonal; each one starts on the diagonal from the lower right
+    of the last element placed on the diagonal:
+
     >>> diag(1, 2, 3)
     Matrix([
     [1, 0, 0],
     [0, 2, 0],
     [0, 0, 3]])
-    >>> diag(*[1, 2, 3])
+
+    >>> diag(1, [2, 3], 4)
     Matrix([
     [1, 0, 0],
     [0, 2, 0],
-    [0, 0, 3]])
+    [0, 3, 0],
+    [0, 0, 4]])
 
-    The diagonal elements can be matrices; diagonal filling will
-    continue on the diagonal from the last element of the matrix:
+    The previous example showed that a list is interpreted as a
+    column vector; each list in a list is a row vector:
 
-    >>> from sympy.abc import x, y, z
-    >>> a = Matrix([x, y, z])
-    >>> b = Matrix([[1, 2], [3, 4]])
-    >>> c = Matrix([[5, 6]])
-    >>> diag(a, 7, b, c)
+    >>> diag([[1, 2, 3]], rows=3)
     Matrix([
-    [x, 0, 0, 0, 0, 0],
-    [y, 0, 0, 0, 0, 0],
-    [z, 0, 0, 0, 0, 0],
-    [0, 7, 0, 0, 0, 0],
-    [0, 0, 1, 2, 0, 0],
-    [0, 0, 3, 4, 0, 0],
-    [0, 0, 0, 0, 5, 6]])
+    [1, 2, 3],
+    [0, 0, 0],
+    [0, 0, 0]])
 
-    When diagonal elements are lists, they will be treated as arguments
-    to Matrix:
+    A block-diagonal matrix can be formed by passing matrices for
+    several elements:
 
-    >>> diag([1, 2, 3], 4)
+    >>> diag(ones(2), ones(2))
     Matrix([
-    [1, 0],
-    [2, 0],
-    [3, 0],
-    [0, 4]])
-    >>> diag([[1, 2, 3]], 4)
+    [1, 1, 0, 0],
+    [1, 1, 0, 0],
+    [0, 0, 1, 1],
+    [0, 0, 1, 1]])
+
+    A banded matrix can be easily formed by using a dictionary
+    to given the diagonal number (0 for main, positive for upper,
+    and negative for lower) and the element(s) to go on that diagonal:
+
+    >>> diag({0: x, 1: 1}, rows=3)
     Matrix([
-    [1, 2, 3, 0],
-    [0, 0, 0, 4]])
+    [x, 1, 0],
+    [0, x, 1],
+    [0, 0, x]])
 
-    A given band off the diagonal can be made by padding with a
-    vertical or horizontal "kerning" vector:
-
-    >>> hpad = ones(0, 2)
-    >>> vpad = ones(2, 0)
-    >>> diag(vpad, 1, 2, 3, hpad) + diag(hpad, 4, 5, 6, vpad)
-    Matrix([
-    [0, 0, 4, 0, 0],
-    [0, 0, 0, 5, 0],
-    [1, 0, 0, 0, 6],
-    [0, 2, 0, 0, 0],
-    [0, 0, 3, 0, 0]])
-
-
-
-    The type is mutable by default but can be made immutable by setting
-    the ``mutable`` flag to False:
-
-    >>> type(diag(1))
-    <class 'sympy.matrices.dense.MutableDenseMatrix'>
-    >>> from sympy.matrices import ImmutableMatrix
-    >>> type(diag(1, cls=ImmutableMatrix))
-    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
+    There are more examples given in the function by the same
+    name in 'sympy.matrices.common.py'.
 
     See Also
     ========
-
     eye
+    matrices.common.diag
     """
 
     from .dense import Matrix
