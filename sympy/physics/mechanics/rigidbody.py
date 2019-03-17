@@ -118,6 +118,42 @@ class RigidBody(object):
         """The body's central inertia dyadic."""
         return self._central_inertia
 
+    def force(self, frame):
+        """ force acting on the rigid body.
+
+        The force acting F on a rigid body B, with respect to frame N is
+        given by
+
+        F = M * a*
+
+        where M is the mass of the rigid body and a* is the acceleration of
+        the mass center of B in the frame, N.
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            The frame in which acceleration is desired.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import RigidBody, dynamicsymbols
+        >>> M, a = dynamicsymbols('M a')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_acc(N, a * N.v)
+        >>> I = outer (N.v, N.v)
+        >>> Inertia_tuple = (I, P)
+        >>> B = RigidBody('B', P, N, M, Inertia_tuple)
+        >>> B.force(N)
+        M*a*N.x
+
+        """
+
+        return self.mass * self.masscenter.acc(frame)    
+
     def linear_momentum(self, frame):
         """ Linear momentum of the rigid body.
 
