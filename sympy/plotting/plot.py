@@ -293,7 +293,7 @@ class PlotGrid(object):
     """This class helps to plot subplots from already created sympy plots
     in a single figure
     """
-    def __init__(self, nrows, ncolumns, *args, show=True):
+    def __init__(self, nrows, ncolumns, *args, **kwargs):
         self.nrows = nrows
         self.ncolumns = ncolumns
         self._series = []
@@ -301,9 +301,9 @@ class PlotGrid(object):
         for arg in args:
             self._series.append(arg._series)
         self.backend = DefaultBackend
+        show = kwargs.pop('show', True)
         if show:
             self.show()
-
 
     def show(self):
         if hasattr(self, '_backend'):
@@ -311,13 +311,11 @@ class PlotGrid(object):
         self._backend = self.backend(self)
         self._backend.show()
 
-
     def save(self, path):
         if hasattr(self, '_backend'):
             self._backend.close()
         self._backend = self.backend(self)
         self._backend.save(path)
-
 
     def __str__(self):
         plot_strs = [('Plot[%d]:' % i) + str(plot)
@@ -951,7 +949,6 @@ class MatplotlibBackend(BaseBackend):
         self.plt = self.matplotlib.pyplot
         self.cm = self.matplotlib.cm
         self.LineCollection = self.matplotlib.collections.LineCollection
-        self.gridspec = self.matplotlib.gridspec
 
         if isinstance(self.parent, Plot):
             nrows, ncolumns = 1, 1
@@ -1027,8 +1024,8 @@ class MatplotlibBackend(BaseBackend):
                         x, y = _matplotlib_list(points[0])
                         ax.fill(x, y, facecolor=s.line_color, edgecolor='None')
                     else:
-                          # use contourf or contour depending on whether it is
-                          # an inequality or equality.
+                        # use contourf or contour depending on whether it is
+                        # an inequality or equality.
                         # XXX: ``contour`` plots multiple lines. Should be fixed.
                         ListedColormap = self.matplotlib.colors.ListedColormap
                         colormap = ListedColormap(["white", s.line_color])
@@ -1042,8 +1039,8 @@ class MatplotlibBackend(BaseBackend):
                                      'is_2Dline, is_3Dline, is_3Dsurface and '
                                      'is_contour objects.')
 
-                 # Customise the collections with the corresponding per-series
-                 # options.
+                # Customise the collections with the corresponding per-series
+                # options.
                 if hasattr(s, 'label'):
                     collection.set_label(s.label)
                 if s.is_line and s.line_color:
@@ -1064,6 +1061,7 @@ class MatplotlibBackend(BaseBackend):
 
             if isinstance(parent, PlotGrid):
                 parent = parent.args[i]
+
             # Set global options.
             # TODO The 3D stuff
             # XXX The order of those is important.
@@ -1134,7 +1132,6 @@ class MatplotlibBackend(BaseBackend):
                 ax.set_xlabel(parent.xlabel, position=(1, 0))
             if parent.ylabel:
                 ax.set_ylabel(parent.ylabel, position=(0, 1))
-
 
     def show(self):
         self.process_series()
