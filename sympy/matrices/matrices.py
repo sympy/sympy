@@ -4279,9 +4279,8 @@ class MatrixBase(MatrixDeprecated,
         =======
 
         (C, F) : Matrices
-            `F` is the reduced row echelon form (RREF) of `A`, and `C`
-            has the same rank as `F` and its product with `C` restores `A`:
-            `A = C \cdot F`.
+            `C` and `F` are full-rank matrices with rank as same as `A`,
+            whose product gives `A`.
 
             See Notes for additional mathematical details.
 
