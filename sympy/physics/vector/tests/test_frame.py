@@ -1,9 +1,13 @@
 from sympy import symbols, sin, cos, pi, zeros, eye, ImmutableMatrix as Matrix
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
-                                  dynamicsymbols, time_derivative, express, dot)
+                                  dynamicsymbols, time_derivative, express,
+                                  dot)
+from sympy.physics.vector.frame import _check_frame
+from sympy.physics.vector.vector import VectorTypeError
 from sympy.utilities.pytest import raises
 
 Vector.simp = True
+
 
 def test_coordinate_vars():
     """Tests the coordinate variables functionality"""
@@ -312,9 +316,9 @@ def test_reference_frame():
     assert N[2] == CoordinateSym('N_z', N, 2)
     raises(ValueError, lambda: N[3])
     N = ReferenceFrame('N', ['a', 'b', 'c'])
-    assert N['a'] == N['a']
-    assert N['b'] == N['b']
-    assert N['c'] == N['c']
+    assert N['a'] == N.x
+    assert N['b'] == N.y
+    assert N['c'] == N.z
     raises(ValueError, lambda: N['d'])
     assert str(N) == 'N'
 
@@ -330,8 +334,14 @@ def test_reference_frame():
     raises(TypeError, lambda: B.orient(N, 'Quaternion', q0))
     raises(TypeError, lambda: B.orient(N, 'Quaternion', [q0, q1, q2]))
     raises(NotImplementedError, lambda: B.orient(N, 'Foo', [q0, q1, q2]))
+    raises(TypeError, lambda: B.orient(N, 'Body', [q1, q2], '232'))
+    raises(TypeError, lambda: B.orient(N, 'Space', [q1, q2], '232'))
 
     N.set_ang_acc(B, 0)
     assert N.ang_acc_in(B) == Vector(0)
     N.set_ang_vel(B, 0)
     assert N.ang_vel_in(B) == Vector(0)
+
+
+def test_check_frame():
+    raises(VectorTypeError, lambda: _check_frame(0))

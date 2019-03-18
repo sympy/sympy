@@ -2,7 +2,7 @@
 
 from sympy import symbols, sin, asin, cos, sqrt, Function
 from sympy.core.compatibility import u_decode as u
-from sympy.physics.vector import ReferenceFrame, dynamicsymbols
+from sympy.physics.vector import ReferenceFrame, dynamicsymbols, Dyadic
 from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint,
                                            vsprint, vsstrrepr)
 
@@ -17,17 +17,21 @@ N = ReferenceFrame('N')
 
 v = a ** 2 * N.x + b * N.y + c * sin(alpha) * N.z
 w = alpha * N.x + sin(omega) * N.y + alpha * beta * N.z
-ww = alpha * N.x + asin(omega) * N.y + alpha * beta * N.z
+ww = alpha * N.x + asin(omega) * N.y - alpha.diff() * beta * N.z
 o = a/b * N.x + (c+b)/a * N.y + c**2/b * N.z
 
 y = a ** 2 * (N.x | N.y) + b * (N.y | N.y) + c * sin(alpha) * (N.z | N.y)
 x = alpha * (N.x | N.x) + sin(omega) * (N.y | N.z) + alpha * beta * (N.z | N.x)
+xx = N.x | (-N.y - N.z)
+
 
 def ascii_vpretty(expr):
     return vpprint(expr, use_unicode=False, wrap_line=False)
 
+
 def unicode_vpretty(expr):
     return vpprint(expr, use_unicode=True, wrap_line=False)
+
 
 def test_latex_printer():
     r = Function('r')('t')
@@ -140,11 +144,15 @@ def test_vector_latex():
                 r'\operatorname{cos}\left(\omega\right)\hat{k}')
     assert v._latex() == expected
 
-    expected = r'\alpha\mathbf{\hat{n}_x} + \operatorname{asin}\left(\omega'\
-        r'\right)\mathbf{\hat{n}_y} + \alpha \beta\mathbf{\hat{n}_z}'
+    expected = r'\alpha\mathbf{\hat{n}_x} + \operatorname{asin}\left(\omega' \
+        r'\right)\mathbf{\hat{n}_y} -  \beta \dot{\alpha}\mathbf{\hat{n}_z}'
     assert ww._latex() == expected
     assert lp.doprint(ww) == expected
 
+    expected = r'- \mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_y} - ' \
+        r'\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_z}'
+    assert xx._latex() == expected
+    assert lp.doprint(xx) == expected
 
 def test_vector_latex_with_functions():
 
@@ -181,6 +189,13 @@ a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
     assert ascii_vpretty(x) == expected
     assert unicode_vpretty(x) == uexpected
 
+    assert ascii_vpretty(Dyadic([])) == '0'
+    assert unicode_vpretty(Dyadic([])) == '0'
+
+    assert ascii_vpretty(xx) == '- n_x|n_y - n_x|n_z'
+    assert unicode_vpretty(xx) == u('- n_x⊗n_y - n_x⊗n_z')
+
+
 def test_dyadic_latex():
 
     expected = (r'a^{2}\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_y} + '
@@ -196,6 +211,15 @@ def test_dyadic_latex():
                 r'\alpha \beta\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_x}')
 
     assert x._latex() == expected
+
+    assert Dyadic([])._latex() == '0'
+
+
+def test_dyadic_str():
+    str(Dyadic([])) == '0'
+    str(y) == 'a**2*(N.x|N.y) + b*(N.y|N.y) + c*sin(alpha)*(N.z|N.y)'
+    str(x) == 'alpha*(N.x|N.x) + sin(omega)*(N.y|N.z) + alpha*beta*(N.z|N.x)'
+    str(ww) == "alpha*N.x + asin(omega)*N.y - beta*alpha'*N.z"
 
 
 def test_vlatex(): # vlatex is broken #12078
@@ -233,6 +257,7 @@ def test_issue_13354():
     expected = """(a + b) a_x + (b + c) a_y + (a + c) a_z"""
 
     assert ascii_vpretty(z) == expected
+
 
 def test_vector_derivative_printing():
     # First order

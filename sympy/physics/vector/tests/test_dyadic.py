@@ -1,6 +1,7 @@
 from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix
 from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols
-
+from sympy.physics.vector.dyadic import _check_dyadic
+from sympy.utilities.pytest import raises
 
 Vector.simp = True
 A = ReferenceFrame('A')
@@ -81,3 +82,14 @@ def test_dyadic_simplify():
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * dy
     test4 = test4.simplify()
     assert (N.x & test4 & N.x) == -2 * y
+
+
+def test_dyadic_subs():
+    N = ReferenceFrame('N')
+    s = symbols('s')
+    a = s*(N.x | N.x)
+    assert a.subs({s: 2}) == 2*(N.x | N.x)
+
+
+def test_check_dyadic():
+    raises(TypeError, lambda: _check_dyadic(0))
