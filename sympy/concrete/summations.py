@@ -949,7 +949,6 @@ def eval_sum(f, limits):
         return oo
     elif not(f.is_convergent) and expr.subs(i,a+i).is_negative:
         return -oo
-
     # Try to do it symbolically. Even when the number of terms is known,
     # this can save time when b-a is big.
     # We should try to transform to partial fractions
@@ -960,7 +959,6 @@ def eval_sum(f, limits):
     # Do it directly
     if definite:
         return eval_sum_direct(f, (i, a, b))
-
 
 def eval_sum_direct(expr, limits):
     from sympy.core import Add
