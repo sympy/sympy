@@ -116,7 +116,12 @@ class RigidBody(object):
     def central_inertia(self):
         """The body's central inertia dyadic."""
         return self._central_inertia
+  	
 
+   	@property
+   	def total_force(self,frame):
+   		return self.masscenter.acc(frame) * self.mass
+   	
     def linear_momentum(self, frame):
         """ Linear momentum of the rigid body.
 
@@ -296,3 +301,4 @@ class RigidBody(object):
         """
 
         self._pe = sympify(scalar)
+
