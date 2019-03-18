@@ -4034,7 +4034,7 @@ class MatrixBase(MatrixDeprecated,
         and have small decision.
         """
         if self.is_zero:
-            return self
+            return self.H
 
         if self.rows >= self.cols:
             return (self.H * self).inv() * self.H
@@ -4049,7 +4049,7 @@ class MatrixBase(MatrixDeprecated,
         individually.
         """
         if self.is_zero:
-            return self
+            return self.H
 
         B, C = self.rank_decomposition()
 
@@ -4065,7 +4065,7 @@ class MatrixBase(MatrixDeprecated,
         computation is not reliable.
         """
         if self.is_zero:
-            return self
+            return self.H
 
         A = self
         AH = self.H
@@ -4137,10 +4137,9 @@ class MatrixBase(MatrixDeprecated,
         .. [1] https://en.wikipedia.org/wiki/Moore-Penrose_pseudoinverse
 
         """
-
         # Trivial case: pseudoinverse of all-zero matrix is its transpose.
         if self.is_zero:
-            return self
+            return self.H
 
         if method == 'RD':
             return self._eval_pinv_rank_decomposition()
