@@ -1,4 +1,4 @@
-from sympy import symbols
+from sympy import symbols,Symbol
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer, inertia
 from sympy.physics.mechanics import inertia_of_point_mass
@@ -76,6 +76,17 @@ def test_rigidbody3():
     assert rb1.central_inertia == rb2.central_inertia
     assert rb1.angular_momentum(O, A) == rb2.angular_momentum(O, A)
 
+def test_rigidbody_totalforce():
+    m = Symbol('m')
+    v = dynamicsymbols('v')
+    P = Point('P')
+    N =ReferenceFrame('N')
+    P.set_vel(N,v*N.x)
+    I = outer(N.x,N.x)
+    B = RigidBody('B',P,N,m,(I,P))
+
+    assert B.total_force(N) == m*v.diff()*N.x
+
 
 def test_pendulum_angular_momentum():
     """Consider a pendulum of length OA = 2a, of mass m as a rigid body of
@@ -105,3 +116,5 @@ def test_pendulum_angular_momentum():
 
     assert (4 * m * a**2 / 3 * q.diff() * R.z -
             S.angular_momentum(O, R).express(R)) == 0
+
+

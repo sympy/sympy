@@ -65,7 +65,7 @@ class RigidBody(object):
 
     @property
     def frame(self):
-        return 1
+        return self._frame
 
     @frame.setter
     def frame(self, F):
@@ -118,7 +118,7 @@ class RigidBody(object):
         return self._central_inertia
 
     def total_force(self,frame):
-        """The body's central inertia dyadic."""
+        """The total external force applied on the body"""
         return self.mass*self.masscenter.acc(frame)
    	
     def linear_momentum(self, frame):
