@@ -1461,6 +1461,14 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(self.parenthesize(expr._expr, PRECEDENCE['Mul']))
         return mrow
 
+    def _print_Laplacian(self, expr):
+        mrow = self.dom.createElement('mrow')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x2206;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self.parenthesize(expr._expr, PRECEDENCE['Mul']))
+        return mrow
+
     def _print_Integers(self, e):
         x = self.dom.createElement('mi')
         x.setAttribute('mathvariant', 'normal')
@@ -1510,6 +1518,48 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x = self.dom.createElement('mi')
         x.appendChild(self.dom.createTextNode('NaN'))
         return x
+
+    def _print_bernoulli(self, e):
+        sub = self.dom.createElement('msub')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('B'))
+        sub.appendChild(mi)
+        sub.appendChild(self._print(e.args[0]))
+        return sub
+
+    _print_bell = _print_bernoulli
+
+    def _print_catalan(self, e):
+        sub = self.dom.createElement('msub')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('C'))
+        sub.appendChild(mi)
+        sub.appendChild(self._print(e.args[0]))
+        return sub
+
+    def _print_fibonacci(self, e):
+        sub = self.dom.createElement('msub')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('F'))
+        sub.appendChild(mi)
+        sub.appendChild(self._print(e.args[0]))
+        return sub
+
+    def _print_lucas(self, e):
+        sub = self.dom.createElement('msub')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('L'))
+        sub.appendChild(mi)
+        sub.appendChild(self._print(e.args[0]))
+        return sub
+
+    def _print_tribonacci(self, e):
+        sub = self.dom.createElement('msub')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('T'))
+        sub.appendChild(mi)
+        sub.appendChild(self._print(e.args[0]))
+        return sub
 
     def _print_ComplexInfinity(self, e):
         x = self.dom.createElement('mover')

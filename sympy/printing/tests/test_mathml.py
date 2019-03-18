@@ -12,6 +12,8 @@ from sympy.calculus.util import AccumBounds
 from sympy.core.containers import Tuple
 from sympy.functions.combinatorial.factorials import factorial, factorial2, \
     binomial
+from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
+    fibonacci, tribonacci, catalan
 from sympy.functions.elementary.complexes import re, im, Abs, conjugate
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.integers import floor, ceiling
@@ -26,7 +28,7 @@ from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, \
     SymmetricDifference, Interval, EmptySet
 from sympy.stats.rv import RandomSymbol
 from sympy.utilities.pytest import raises
-from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
+from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 
 x, y, z, a, b, c, d, e, n = symbols('x:z a:e n')
 mp = MathMLContentPrinter()
@@ -1348,6 +1350,22 @@ def test_print_MinMax():
         '<mn>3</mn></msup></mfenced></mrow>'
 
 
+def test_mathml_presentation_numbers():
+    n = Symbol('n')
+    assert mathml(catalan(n), printer='presentation') == \
+        '<msub><mi>C</mi><mi>n</mi></msub>'
+    assert mathml(bernoulli(n), printer='presentation') == \
+        '<msub><mi>B</mi><mi>n</mi></msub>'
+    assert mathml(bell(n), printer='presentation') == \
+        '<msub><mi>B</mi><mi>n</mi></msub>'
+    assert mathml(fibonacci(n), printer='presentation') == \
+        '<msub><mi>F</mi><mi>n</mi></msub>'
+    assert mathml(lucas(n), printer='presentation') == \
+        '<msub><mi>L</mi><mi>n</mi></msub>'
+    assert mathml(tribonacci(n), printer='presentation') == \
+        '<msub><mi>T</mi><mi>n</mi></msub>'
+
+
 def test_print_matrix_symbol():
     A = MatrixSymbol('A', 1, 2)
     assert mpp.doprint(A) == '<mi>A</mi>'
@@ -1526,6 +1544,22 @@ def test_print_Vector():
         '<mrow><mo>-</mo><mrow><msub><mi mathvariant="bold">x</mi>'\
         '<mi mathvariant="bold">A</mi></msub><mo>&#xD7;</mo><msub>'\
         '<mi mathvariant="bold">z</mi><mi mathvariant="bold">A</mi></msub></mrow></mrow>'
+    assert mathml(Laplacian(ACS.x), printer='presentation') == \
+        '<mrow><mo>&#x2206;</mo><msub><mi mathvariant="bold">x</mi>'\
+        '<mi mathvariant="bold">A</mi></msub></mrow>'
+    assert mathml(Laplacian(ACS.x + 3*ACS.y), printer='presentation') == \
+        '<mrow><mo>&#x2206;</mo><mfenced><mrow><msub><mi mathvariant="bold">'\
+        'x</mi><mi mathvariant="bold">A</mi></msub><mo>+</mo><mrow><mn>3</mn>'\
+        '<mo>&InvisibleTimes;</mo><msub><mi mathvariant="bold">y</mi>'\
+        '<mi mathvariant="bold">A</mi></msub></mrow></mrow></mfenced></mrow>'
+    assert mathml(x*Laplacian(ACS.x), printer='presentation') == \
+        '<mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mrow><mo>&#x2206;</mo>'\
+        '<msub><mi mathvariant="bold">x</mi><mi mathvariant="bold">A</mi>'\
+        '</msub></mrow></mrow>'
+    assert mathml(Laplacian(x*ACS.x), printer='presentation') == \
+        '<mrow><mo>&#x2206;</mo><mfenced><mrow><msub><mi mathvariant="bold">'\
+        'x</mi><mi mathvariant="bold">A</mi></msub><mo>&InvisibleTimes;</mo>'\
+        '<mi>x</mi></mrow></mfenced></mrow>'
 
 def test_print_elliptic_f():
     assert mathml(elliptic_f(x, y), printer = 'presentation') == \
