@@ -13,6 +13,7 @@ from sympy.core.function import _mexpand
 from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
 from sympy.solvers.solvers import solve, _invert
+from sympy.sets import Intersection, ConditionSet
 
 
 def _filtered_gens(poly, symbol):
@@ -148,6 +149,7 @@ def _lambert(eq, x):
     u = Dummy('rhs')
     sol = []
     # check only real solutions:
+    from sympy.solvers.solveset import solveset_real
     for k in [-1, 0]:
         l = LambertW(d/(a*b)*exp(c*d/a/b)*exp(-f/a), k)
         # if W's arg is between -1/e and 0 there is
@@ -156,10 +158,13 @@ def _lambert(eq, x):
             continue
         rhs = -c/b + (a/d)*l
 
-        solns = solve(X1 - u, x)
-        for i, tmp in enumerate(solns):
-            solns[i] = tmp.subs(u, rhs)
-            sol.append(solns[i])
+        solns = solveset_real(X1 - u, x)
+        if isinstance(solns, Intersection):
+            solns = [u]
+        if not isinstance(solns, ConditionSet):
+            for i, tmp in enumerate(solns):
+                solns[i] = tmp.subs(u, rhs)
+                sol.append(solns[i])
     return sol
 
 
@@ -209,7 +214,7 @@ def _solve_lambert(f, symbol, gens):
         lhs = expand_log(log(lhs))
         rhs = log(rhs)
 
-    lhs = factor(lhs, deep=True)
+    lhs = factor(lhs)
     # make sure we have inverted as completely as possible
     r = Dummy()
     i, lhs = _invert(lhs - r, symbol)
