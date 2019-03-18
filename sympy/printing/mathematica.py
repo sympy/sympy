@@ -93,7 +93,7 @@ class MCodePrinter(CodePrinter):
     def _print_NegativeOne(self, expr):
         return '-1'
 
-    def _print_half(self, expr):
+    def _print_Half(self, expr):
         return '1/2'
 
     def _print_ImaginaryUnit(self, expr):
