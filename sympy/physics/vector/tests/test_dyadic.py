@@ -60,6 +60,8 @@ def test_dyadic():
                                 d5.to_matrix(C)):
         assert (expected - actual).simplify() == 0
 
+    raises(TypeError, lambda: d1.applyfunc(0))
+
 
 def test_dyadic_simplify():
     x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
