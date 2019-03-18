@@ -4105,8 +4105,21 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
+        Computing pseudoinverse by rank decomposition :
+
         >>> from sympy import Matrix
-        >>> Matrix([[1, 2, 3], [4, 5, 6]]).pinv()
+        >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
+        >>> A.pinv()
+        Matrix([
+        [-17/18,  4/9],
+        [  -1/9,  1/9],
+        [ 13/18, -2/9]])
+
+        Computing pseudoinverse by diagonalization :
+
+        >>> B = A.pinv(method='diag')
+        >>> B.simplify()
+        >>> B
         Matrix([
         [-17/18,  4/9],
         [  -1/9,  1/9],
