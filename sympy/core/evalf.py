@@ -1186,7 +1186,7 @@ def evalf_sum(expr, prec, options):
     if len(limits) != 1 or len(limits[0]) != 3:
         raise NotImplementedError
     if func is S.Zero:
-        return mpf(0), None, None, None
+        return None, None, None, None
     prec2 = prec + 10
     try:
         n, a, b = limits[0]
