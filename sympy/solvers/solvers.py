@@ -1093,7 +1093,7 @@ def solve(f, *symbols, **flags):
         # to be obtained to queries like solve((x - y, y), x); without
         # this mod the return value is []
         ok = False
-        if fi.has(*symset):
+        if fi.free_symbols & symset:
             ok = True
         else:
             if fi.is_number:
@@ -1233,8 +1233,7 @@ def solve(f, *symbols, **flags):
             not isinstance(solution, dict) and
             all(isinstance(sol, dict) for sol in solution)
     ):
-        solution = [tuple([r.get(s, s).subs(r) for s in symbols])
-                    for r in solution]
+        solution = [tuple([r.get(s, s) for s in symbols]) for r in solution]
 
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still
@@ -1342,7 +1341,7 @@ def solve(f, *symbols, **flags):
         if isinstance(solution, dict):
             solution = [solution]
         elif iterable(solution[0]):
-            solution = [dict(list(zip(symbols, s))) for s in solution]
+            solution = [dict(zip(symbols, s)) for s in solution]
         elif isinstance(solution[0], dict):
             pass
         else:
