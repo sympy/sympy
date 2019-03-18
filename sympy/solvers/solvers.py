@@ -1040,22 +1040,24 @@ def solve(f, *symbols, **flags):
         f[i] = fi
 
     # see if re(s) or im(s) appear
-    irf = []
-    for s in symbols:
-        if s.is_real or s.is_imaginary:
-            continue  # neither re(x) nor im(x) will appear
-        # if re(s) or im(s) appear, the auxiliary equation must be present
-        if any(fi.has(re(s), im(s)) for fi in f):
-            irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
-    if irf:
-        for s, rhs in irf:
-            for i, fi in enumerate(f):
-                f[i] = fi.xreplace({s: rhs})
-            f.append(s - rhs)
-            symbols.extend([re(s), im(s)])
-        if bare_f:
-            bare_f = False
-        flags['dict'] = True
+    freim = [fi for fi in f if fi.has('re', 'im')]
+    if freim:
+        irf = []
+        for s in symbols:
+            if s.is_real or s.is_imaginary:
+                continue  # neither re(x) nor im(x) will appear
+            # if re(s) or im(s) appear, the auxiliary equation must be present
+            if any(fi.has(re(s), im(s)) for fi in freim):
+                irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
+        if irf:
+            for s, rhs in irf:
+                for i, fi in enumerate(f):
+                    f[i] = fi.xreplace({s: rhs})
+                f.append(s - rhs)
+                symbols.extend([re(s), im(s)])
+            if bare_f:
+                bare_f = False
+            flags['dict'] = True
     # end of real/imag handling  -----------------------------
 
     symbols = list(uniq(symbols))
