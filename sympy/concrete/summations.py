@@ -199,7 +199,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 else:
                     return self.func(f, *self.limits[n:])
             f = newf
-        
         if hints.get('deep', True):
             # eval_sum could return partially unevaluated
             # result with Piecewise.  In this case we won't
@@ -946,15 +945,15 @@ def eval_sum(f, limits):
     if isinstance(f, Piecewise):
         return None
     #If the number of terms is infinite and series is convergent
-    if not(f.is_convergent) and expr.subs(1,a+1)is_positive:
+    if not(f.is_convergent) and expr.subs(1,a+i)is_positive:
         return oo
-    elif not(f.is_convergent) and expr.subs(i,a+1).is_negative:
+    elif not(f.is_convergent) and expr.subs(i,a+i).is_negative:
         return -oo
 
     # Try to do it symbolically. Even when the number of terms is known,
     # this can save time when b-a is big.
     # We should try to transform to partial fractions
-    if b != oo:
+    if b != oo and a != -oo:
         value = eval_sum_symbolic(f.expand(), (i, a, b))
         if value is not None:
            return value
