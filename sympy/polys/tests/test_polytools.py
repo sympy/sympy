@@ -2476,6 +2476,11 @@ def test_factor():
     assert factor(eq, x, deep=True) == (x + 3)*(x + 4)*(y**2 + 11*y + 30)
     assert factor(eq, y, deep=True) == (y + 5)*(y + 6)*(x**2 + 7*x + 12)
 
+    # fraction option
+    f = 5*x + 3*exp(2 - 7*x)
+    assert factor(f, deep=True) == factor(f, deep=True, fraction=True)
+    factor(f, deep=True, fraction=False) == 5*x + 3*exp(2)*exp(-7*x)
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567

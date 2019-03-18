@@ -6014,8 +6014,10 @@ def _generic_factor_list(expr, gens, args, method):
 
 def _generic_factor(expr, gens, args, method):
     """Helper function for :func:`sqf` and :func:`factor`. """
-    options.allowed_flags(args, ['fraction'])
+    fraction = args.pop('fraction', True)
+    options.allowed_flags(args, [])
     opt = options.build_options(gens, args)
+    opt['fraction'] = fraction
     return _symbolic_factor(sympify(expr), opt, method)
 
 
@@ -6274,7 +6276,7 @@ def factor(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import factor, sqrt
+    >>> from sympy import factor, sqrt, exp
     >>> from sympy.abc import x, y
 
     >>> factor(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
@@ -6306,6 +6308,14 @@ def factor(f, *gens, **args):
 
     >>> factor(eq, deep=True)
     2**((x + 1)**2)
+
+    If the ``fraction`` flag is False then rational expressions
+    won't be combined. By default it is True.
+
+    >>> factor(5*x + 3*exp(2 - 7*x), deep=True)
+    (5*x*exp(7*x) + 3*exp(2))*exp(-7*x)
+    >>> factor(5*x + 3*exp(2 - 7*x), deep=True, fraction=False)
+    5*x + 3*exp(2)*exp(-7*x)
 
     See Also
     ========
