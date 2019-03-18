@@ -17,12 +17,13 @@ Queries on random expressions can be made using the functions
  ``density(expression)``   Probability Density Function
  ``sample(expression)``    Produce a realization
  ``where(condition)``      Where the condition is true
+ ``mean(expression)``      Arithmetic average value
 ========================= =============================
 
 Examples
 ========
 
->>> from sympy.stats import P, E, variance, Die, Normal
+>>> from sympy.stats import P, E, variance, mean, Die, Normal
 >>> from sympy import Eq, simplify
 >>> X, Y = Die('X', 6), Die('Y', 6) # Define two six sided dice
 >>> Z = Normal('Z', 0, 1) # Declare a Normal random variable with mean 0, std 1
@@ -34,6 +35,8 @@ Examples
 35/6
 >>> simplify(P(Z>1)) # Probability of Z being greater than 1
 1/2 - erf(sqrt(2)/2)/2
+>>> mean(X) # Average value of outcome of dice
+7/2
 """
 
 __all__ = []
@@ -43,6 +46,7 @@ from .rv_interface import (
     cdf, characteristic_function, covariance, density, dependent, E, given, independent, P, pspace,
     random_symbols, sample, sample_iter, skewness, std, variance, where,
     correlation, moment, cmoment, smoment, sampling_density, moment_generating_function,
+    mean
 )
 __all__.extend(rv_interface.__all__)
 

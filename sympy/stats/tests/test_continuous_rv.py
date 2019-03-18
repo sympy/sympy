@@ -15,7 +15,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
-                         moment, cmoment, smoment)
+                         moment, cmoment, smoment, mean)
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
@@ -343,6 +343,7 @@ def test_exponential():
     X = Exponential('x', rate)
 
     assert E(X) == 1/rate
+    assert mean(X) == 1/rate
     assert variance(X) == 1/rate**2
     assert skewness(X) == 2
     assert skewness(X) == smoment(X, 3)

@@ -4,7 +4,7 @@ from sympy import (FiniteSet, S, Symbol, sqrt,
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
-    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
+    Hypergeometric, Rademacher, P, E, mean, variance, covariance, skewness, sample,
     density, where, FiniteRV, pspace, cdf,
     correlation, moment, cmoment, smoment, characteristic_function, moment_generating_function)
 from sympy.stats.frv_types import DieDistribution
@@ -51,6 +51,7 @@ def test_dice():
     a, b, t = symbols('a b t')
 
     assert E(X) == 3 + S.Half
+    assert mean(X) == S(7)/2
     assert variance(X) == S(35)/12
     assert E(X + Y) == 7
     assert E(X + X) == 7
@@ -156,6 +157,7 @@ def test_bernoulli():
     assert density(X)[b] == 1 - p
     assert characteristic_function(X)(t) == p * exp(I * a * t) + (-p + 1) * exp(I * b * t)
     assert moment_generating_function(X)(t) == p * exp(a * t) + (-p + 1) * exp(b * t)
+    assert mean(X) == a*p + b*(-p + 1)
 
     X = Bernoulli('B', p, 1, 0)
 

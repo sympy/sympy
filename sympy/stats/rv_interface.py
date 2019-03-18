@@ -8,7 +8,7 @@ from sympy import sqrt
 __all__ = ['P', 'E', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'covariance',
         'dependent', 'independent', 'random_symbols', 'correlation',
-        'moment', 'cmoment', 'sampling_density', 'moment_generating_function']
+        'moment', 'cmoment', 'sampling_density', 'moment_generating_function', 'mean']
 
 
 
@@ -211,3 +211,4 @@ def skewness(X, condition=None, **kwargs):
 
 P = probability
 E = expectation
+mean = expectation
