@@ -1316,12 +1316,8 @@ class Mul(Expr, AssocOp):
                 return
         if sign == 1 and saw_NON is False and saw_NOT is False:
             return True
-        elif sign == -1 and saw_NON is False and saw_NOT is False:
+        if sign < 0:
             return False
-        elif saw_NOT:
-            return False
-        else:
-            return None
 
     def _eval_is_negative(self):
         if self.args[0] == -1:
