@@ -116,5 +116,3 @@ def test_pendulum_angular_momentum():
 
     assert (4 * m * a**2 / 3 * q.diff() * R.z -
             S.angular_momentum(O, R).express(R)) == 0
-
-

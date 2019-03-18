@@ -120,7 +120,7 @@ class RigidBody(object):
     def total_force(self,frame):
         """The total external force applied on the body"""
         return self.mass*self.masscenter.acc(frame)
-   	
+
     def linear_momentum(self, frame):
         """ Linear momentum of the rigid body.
 
@@ -300,4 +300,3 @@ class RigidBody(object):
         """
 
         self._pe = sympify(scalar)
-
