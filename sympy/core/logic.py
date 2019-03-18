@@ -8,7 +8,7 @@ this stuff for general purpose.
 """
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, string_types
 
 
 def _torf(args):
@@ -372,7 +372,7 @@ class Or(AndOr_Base):
 class Not(Logic):
 
     def __new__(cls, arg):
-        if isinstance(arg, str):
+        if isinstance(arg, string_types):
             return Logic.__new__(cls, arg)
 
         elif isinstance(arg, bool):

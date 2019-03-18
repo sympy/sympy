@@ -5,7 +5,7 @@ from plot_interval import PlotInterval
 from plot_object import PlotObject
 from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
-from sympy.core.compatibility import is_sequence, range
+from sympy.core.compatibility import is_sequence, range, string_types
 
 
 class PlotMode(PlotObject):
@@ -144,7 +144,7 @@ class PlotMode(PlotObject):
                                      m.i_var_count))
             return m
         # If it is a string, there are two possibilities.
-        if isinstance(mode_arg, str):
+        if isinstance(mode_arg, string_types):
             i, d = i_var_count, d_var_count
             if i > PlotMode._i_var_max:
                 raise ValueError(var_count_error(True, True))
@@ -376,7 +376,7 @@ class PlotMode(PlotObject):
     def _extract_options(args, kwargs):
         newkwargs, newargs = {}, []
         for a in args:
-            if isinstance(a, str):
+            if isinstance(a, string_types):
                 newkwargs = dict(newkwargs, **parse_option_string(a))
             else:
                 newargs.append(a)

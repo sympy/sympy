@@ -888,3 +888,34 @@ def test_presentation():
     c = Permutation(4,5)
     P = PermutationGroup(c, a, b)
     assert _strong_test(P)
+
+
+def test_polycyclic():
+    a = Permutation([0, 1, 2])
+    b = Permutation([2, 1, 0])
+    G = PermutationGroup([a, b])
+    assert G.is_polycyclic == True
+
+    a = Permutation([1, 2, 3, 4, 0])
+    b = Permutation([1, 0, 2, 3, 4])
+    G = PermutationGroup([a, b])
+    assert G.is_polycyclic == False
+
+
+def test_elementary():
+    a = Permutation([1, 5, 2, 0, 3, 6, 4])
+    G = PermutationGroup([a])
+    assert G.is_elementary(7) == False
+
+    a = Permutation(0, 1)(2, 3)
+    b = Permutation(0, 2)(3, 1)
+    G = PermutationGroup([a, b])
+    assert G.is_elementary(2) == True
+    c = Permutation(4, 5, 6)
+    G = PermutationGroup([a, b, c])
+    assert G.is_elementary(2) == False
+
+    G = SymmetricGroup(4).sylow_subgroup(2)
+    assert G.is_elementary(2) == False
+    H = AlternatingGroup(4).sylow_subgroup(2)
+    assert H.is_elementary(2) == True

@@ -6319,7 +6319,7 @@ def factor(f, *gens, **args):
             """
             Factor, but avoid changing the expression when unable to.
             """
-            fac = factor(expr)
+            fac = factor(expr, *gens, **args)
             if fac.is_Mul or fac.is_Pow:
                 return fac
             return expr

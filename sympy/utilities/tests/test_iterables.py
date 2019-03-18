@@ -8,14 +8,15 @@ from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.core.compatibility import range
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
-    cartes, common_prefix, common_suffix, dict_merge, filter_symbols,
-    flatten, generate_bell, generate_derangements, generate_involutions,
-    generate_oriented_forest, group, has_dups, ibin, kbins, minlex, multiset,
-    multiset_combinations, multiset_partitions,
+    cartes, common_prefix, common_suffix, connected_components, dict_merge,
+    filter_symbols, flatten, generate_bell, generate_derangements,
+    generate_involutions, generate_oriented_forest, group, has_dups, ibin,
+    kbins, minlex, multiset, multiset_combinations, multiset_partitions,
     multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
     permutations, postfixes, postorder_traversal, prefixes, reshape,
-    rotate_left, rotate_right, runs, sift, subsets, take, topological_sort,
-    unflatten, uniq, variations, ordered_partitions, rotations)
+    rotate_left, rotate_right, runs, sift, strongly_connected_components,
+    subsets, take, topological_sort, unflatten, uniq, variations,
+    ordered_partitions, rotations)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -239,6 +240,40 @@ def test_topological_sort():
         [7, 5, 11, 3, 10, 8, 9, 2]
 
     raises(ValueError, lambda: topological_sort((V, E + [(10, 7)])))
+
+
+def test_strongly_connected_components():
+    assert strongly_connected_components(([], [])) == []
+    assert strongly_connected_components(([1, 2, 3], [])) == [[1], [2], [3]]
+
+    V = [1, 2, 3]
+    E = [(1, 2), (1, 3), (2, 1), (2, 3), (3, 1)]
+    assert strongly_connected_components((V, E)) == [[1, 2, 3]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (2, 3), (3, 2), (3, 4)]
+    assert strongly_connected_components((V, E)) == [[4], [2, 3], [1]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (2, 1), (3, 4), (4, 3)]
+    assert strongly_connected_components((V, E)) == [[1, 2], [3, 4]]
+
+
+def test_connected_components():
+    assert connected_components(([], [])) == []
+    assert connected_components(([1, 2, 3], [])) == [[1], [2], [3]]
+
+    V = [1, 2, 3]
+    E = [(1, 2), (1, 3), (2, 1), (2, 3), (3, 1)]
+    assert connected_components((V, E)) == [[1, 2, 3]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (2, 3), (3, 2), (3, 4)]
+    assert connected_components((V, E)) == [[1, 2, 3, 4]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (3, 4)]
+    assert connected_components((V, E)) == [[1, 2], [3, 4]]
 
 
 def test_rotate():
