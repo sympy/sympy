@@ -7,7 +7,7 @@ etc.).
 from __future__ import division, print_function
 
 from collections import defaultdict
-from types import FunctionType
+from inspect import isfunction
 
 from sympy.assumptions.refine import refine
 from sympy.core.basic import Atom
@@ -1178,7 +1178,7 @@ class MatrixProperties(MatrixRequired):
         """
         # accept custom simplification
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         if not self.is_square:
@@ -1261,7 +1261,7 @@ class MatrixProperties(MatrixRequired):
             return False
 
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         return self._eval_is_matrix_hermitian(simpfunc)
@@ -1441,7 +1441,7 @@ class MatrixProperties(MatrixRequired):
         True
         """
         simpfunc = simplify
-        if not isinstance(simplify, FunctionType):
+        if not isfunction(simplify):
             simpfunc = _simplify if simplify else lambda x: x
 
         if not self.is_square:
@@ -2261,7 +2261,7 @@ class _MinimalMatrix(object):
         return cls(*args, **kwargs)
 
     def __init__(self, rows, cols=None, mat=None):
-        if isinstance(mat, FunctionType):
+        if isfunction(mat):
             # if we passed in a function, use that to populate the indices
             mat = list(mat(i, j) for i in range(rows) for j in range(cols))
         if cols is None and mat is None:
