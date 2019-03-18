@@ -363,8 +363,8 @@ class IndependentProductPSpace(ProductPSpace):
         raise NotImplementedError("Density not available for ProductSpaces")
 
     def sample(self):
-        return dict([(k, v) for space in self.spaces
-            for k, v in space.sample().items()])
+        return {k: v for space in self.spaces
+            for k, v in space.sample().items()}
 
     def probability(self, condition, **kwargs):
         cond_inv = False

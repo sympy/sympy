@@ -561,7 +561,7 @@ class Basic(with_metaclass(ManagedProperties)):
         True
         """
         def can(x):
-            d = dict([(i, i.as_dummy()) for i in x.bound_symbols])
+            d = {i: i.as_dummy() for i in x.bound_symbols}
             # mask free that shadow bound
             x = x.subs(d)
             c = x.canonical_variables
@@ -1443,12 +1443,12 @@ class Basic(with_metaclass(ManagedProperties)):
                 # if ``exact`` is True, only accept match if there are no null
                 # values amongst those matched.
                 if exact:
-                    _value = lambda expr, result: (value(**dict([(
-                        str(key)[:-1], val) for key, val in result.items()]))
+                    _value = lambda expr, result: (value(**
+                        {str(k)[:-1]: v for k, v in result.items()})
                         if all(val for val in result.values()) else expr)
                 else:
-                    _value = lambda expr, result: value(**dict([(
-                        str(key)[:-1], val) for key, val in result.items()]))
+                    _value = lambda expr, result: value(**
+                        {str(k)[:-1]: v for k, v in result.items()})
             else:
                 raise TypeError(
                     "given an expression, replace() expects "

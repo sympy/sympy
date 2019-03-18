@@ -10,8 +10,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 
 def _rewrite_hyperbolics_as_exp(expr):
     expr = sympify(expr)
-    return expr.xreplace(dict([(h, h.rewrite(exp))
-        for h in expr.atoms(HyperbolicFunction)]))
+    return expr.xreplace({h: h.rewrite(exp)
+        for h in expr.atoms(HyperbolicFunction)})
 
 
 ###############################################################################

@@ -735,10 +735,10 @@ for k in SciPyPrinter._kc:
 
 class SymPyPrinter(PythonCodePrinter):
 
-    _kf = dict([(k, 'sympy.' + v) for k, v in chain(
+    _kf = {k: 'sympy.' + v for k, v in chain(
         _known_functions.items(),
         _known_functions_math.items()
-    )])
+    )}
 
     def _print_Function(self, expr):
         mod = expr.func.__module__ or ''

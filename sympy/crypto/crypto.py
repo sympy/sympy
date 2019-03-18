@@ -796,8 +796,7 @@ def encipher_bifid(msg, key, symbols=None):
       long_key = list(long_key) + [x for x in A if x not in long_key]
 
     # the fractionalization
-    row_col = dict([(ch, divmod(i, N))
-        for i, ch in enumerate(long_key)])
+    row_col = {ch: divmod(i, N) for i, ch in enumerate(long_key)}
     r, c = zip(*[row_col[x] for x in msg])
     rc = r + c
     ch = {i: ch for ch, i in row_col.items()}
