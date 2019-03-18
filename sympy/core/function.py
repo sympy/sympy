@@ -46,10 +46,10 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
-from sympy.core.compatibility import string_types, with_metaclass, range
+from sympy.core.compatibility import string_types, with_metaclass, PY3, range
 from sympy.utilities import default_sort_key
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import has_dups
+from sympy.utilities.iterables import has_dups, sift
 from sympy.core.evaluate import global_evaluate
 
 import sys
@@ -103,41 +103,50 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                (self.args[1], self.args[0]))
 
-def _getnargs(cls):
-    if hasattr(cls, 'eval'):
-        if sys.version_info < (3, ):
-            return _getnargs_old(cls.eval)
+
+# Python 2 and 3 compatible version that do not raise a Deprecation warning.
+def arity(cls):
+    """Return the arity of the function if it is known, else None.
+
+    When default values are specified for some arguments, they are
+    optional and the arity is reported as a tuple of possible values.
+
+    Examples
+    ========
+
+    >>> from sympy.core.function import arity
+    >>> from sympy import log
+    >>> arity(lambda x: x)
+    1
+    >>> arity(log)
+    (1, 2)
+    >>> arity(lambda *x: sum(x)) is None
+    True
+    """
+    eval_ = getattr(cls, 'eval', cls)
+    if PY3:
+        parameters = inspect.signature(eval_).parameters.items()
+        if [p for _, p in parameters if p.kind == p.VAR_POSITIONAL]:
+            return
+        p_or_k = [p for _, p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
+        # how many have no default and how many have a default value
+        no, yes = map(len, sift(p_or_k,
+            lambda p:p.default == p.empty, binary=True))
+        return no if not yes else tuple(range(no, no + yes + 1))
+    else:
+        cls_ = int(hasattr(cls, 'eval'))  # correction for cls arguments
+        evalargspec = inspect.getargspec(eval_)
+        if evalargspec.varargs:
+            return
         else:
-            return _getnargs_new(cls.eval)
-    else:
-        return None
-
-def _getnargs_old(eval_):
-    evalargspec = inspect.getargspec(eval_)
-    if evalargspec.varargs:
-        return None
-    else:
-        evalargs = len(evalargspec.args) - 1  # subtract 1 for cls
-        if evalargspec.defaults:
-            # if there are default args then they are optional; the
-            # fewest args will occur when all defaults are used and
-            # the most when none are used (i.e. all args are given)
-            return tuple(range(
-                evalargs - len(evalargspec.defaults), evalargs + 1))
-
-        return evalargs
-
-def _getnargs_new(eval_):
-    parameters = inspect.signature(eval_).parameters.items()
-    if [p for n,p in parameters if p.kind == p.VAR_POSITIONAL]:
-        return None
-    else:
-        p_or_k = [p for n,p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
-        num_no_default = len(list(filter(lambda p:p.default == p.empty, p_or_k)))
-        num_with_default = len(list(filter(lambda p:p.default != p.empty, p_or_k)))
-        if not num_with_default:
-            return num_no_default
-        return tuple(range(num_no_default, num_no_default+num_with_default+1))
+            evalargs = len(evalargspec.args) - cls_
+            if evalargspec.defaults:
+                # if there are default args then they are optional; the
+                # fewest args will occur when all defaults are used and
+                # the most when none are used (i.e. all args are given)
+                fewest = evalargs - len(evalargspec.defaults)
+                return tuple(range(fewest, evalargs + 1))
+            return evalargs
 
 
 class FunctionClass(ManagedProperties):
@@ -152,7 +161,7 @@ class FunctionClass(ManagedProperties):
     def __init__(cls, *args, **kwargs):
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
-        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', _getnargs(cls)))
+        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', arity(cls)))
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
