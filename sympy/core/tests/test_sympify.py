@@ -13,6 +13,7 @@ from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+from sympy.tensor import IndexedBase
 from sympy.external import import_module
 
 import mpmath
@@ -558,6 +559,19 @@ def test_sympify_set():
     assert sympify({n}) == FiniteSet(n)
     assert sympify(set()) == EmptySet()
 
+def test_sympify_indexed():
+    # usually the shape cannot be derived from the string
+    assert sympify('B[1]') == IndexedBase('B')[1]
+    # but if the shape information is present in the locals
+    # it should be honored and not replaces
+    assert sympify('B[1]',locals={'B':IndexedBase('B',shape=(5))}).shape == (5,)
+    # it could also be used to check if the new B has  incompatible shape (1,2) with the B in locals which has shape (5,)
+    raises(AssertionError, lambda:sympify('B[1,2]',locals={'B':IndexedBase('B',shape=(5))}))
+    # this should also be detected if no previous definition is available in locals but the shapes of the same variable
+    # contradict each other in the same expression: B[1,2],B[1] should also raise an exception
+    raises(AssertionError, lambda:sympify('B[1,2],B[1]'))
+    #nested expressions should work
+    assert(sympify('B[C[1,3]]')==IndexedBase('B')[IndexedBase('C')[1,3]])
 
 def test_sympify_numpy():
     if not numpy:
