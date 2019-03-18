@@ -9,11 +9,9 @@ def test_hamilton_error1():
     p = Function('p')
     t = Symbol('t')
     h1 = x(t)**2 / 2 + p(t)**2 / 2
-    h2 = x(t)**2 / 2 + p
-    h3 = x(p)**2 / 2 + p(t)**2 / 2
+    h2 = x(p)**2 / 2 + p(t)**2 / 2
     raises(TypeError, lambda: hamilton(h1, x(t), p, t))
     raises(TypeError, lambda: hamilton(h2, x(t), p(t), t))
-    raises(TypeError, lambda: hamilton(h3, x(t), p(t), t))
 
 
 def test_hamilton_shm1():
