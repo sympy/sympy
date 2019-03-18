@@ -8,6 +8,8 @@ from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 def test_gosper_normal():
     assert gosper_normal(4*n + 5, 2*(4*n + 1)*(2*n + 3), n) == \
         (Poly(S(1)/4, n), Poly(n + S(3)/2), Poly(n + S(1)/4))
+    assert gosper_normal(4*n+5, 2*(4*n+1)*(2*n+3), n, polys=False) == \
+        (1/4, n + 3/2, n + 1/4)
 
 
 def test_gosper_term():
