@@ -960,8 +960,8 @@ def reduce_inequalities(inequalities, symbols=[]):
             '''))
 
     # make vanilla symbol real
-    recast = dict([(i, Dummy(i.name, real=True))
-        for i in gens if i.is_real is None])
+    recast = {i: Dummy(i.name, real=True)
+        for i in gens if i.is_real is None}
     inequalities = [i.xreplace(recast) for i in inequalities]
     symbols = {i.xreplace(recast) for i in symbols}
 
