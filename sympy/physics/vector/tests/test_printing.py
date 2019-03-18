@@ -154,7 +154,7 @@ def test_vector_latex():
     assert xx._latex() == expected
     assert lp.doprint(xx) == expected
 
-    expected = '\mathbf{\hat{n}_x}\otimes \mathbf{\\hat{n}_y} + ' \
+    expected = r'\mathbf{\hat{n}_x}\otimes \mathbf{\\hat{n}_y} + ' \
         r'\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_z}'
     assert xx2._latex() == expected
     assert lp.doprint(xx2) == expected
