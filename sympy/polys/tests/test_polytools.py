@@ -2479,7 +2479,7 @@ def test_factor():
     # fraction option
     f = 5*x + 3*exp(2 - 7*x)
     assert factor(f, deep=True) == factor(f, deep=True, fraction=True)
-    factor(f, deep=True, fraction=False) == 5*x + 3*exp(2)*exp(-7*x)
+    assert factor(f, deep=True, fraction=False) == 5*x + 3*exp(2)*exp(-7*x)
 
 
 def test_factor_large():
