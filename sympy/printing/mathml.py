@@ -1684,6 +1684,168 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(brac)
         return x
 
+    def _print_elliptic_f(self, e):
+        x = self.dom.createElement('mrow')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('&#x1d5a5;'))
+        x.appendChild(mi)
+        y = self.dom.createElement('mfenced')
+        y.setAttribute("separators", "|")
+        for i in e.args:
+            y.appendChild(self._print(i))
+        x.appendChild(y)
+        return x
+
+    def _print_elliptic_e(self, e):
+        x = self.dom.createElement('mrow')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('&#x1d5a4;'))
+        x.appendChild(mi)
+        y = self.dom.createElement('mfenced')
+        y.setAttribute("separators", "|")
+        for i in e.args:
+            y.appendChild(self._print(i))
+        x.appendChild(y)
+        return x
+
+    def _print_elliptic_pi(self, e):
+        x = self.dom.createElement('mrow')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('&#x1d6f1;'))
+        x.appendChild(mi)
+        y = self.dom.createElement('mfenced')
+        if len(e.args) == 2:
+            y.setAttribute("separators", "|")
+        else:
+            y.setAttribute("separators", ";|")
+        for i in e.args:
+            y.appendChild(self._print(i))
+        x.appendChild(y)
+        return x
+
+    def _print_Ei(self, e):
+        x = self.dom.createElement('mrow')
+        mi = self.dom.createElement('mi')
+        mi.appendChild(self.dom.createTextNode('Ei'))
+        x.appendChild(mi)
+        x.appendChild(self._print(e.args))
+        return x
+
+    def _print_expint(self, e):
+        x = self.dom.createElement('mrow')
+        y = self.dom.createElement('msub')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('E'))
+        y.appendChild(mo)
+        y.appendChild(self._print(e.args[0]))
+        x.appendChild(y)
+        x.appendChild(self._print(e.args[1:]))
+        return x
+
+    def _print_jacobi(self, e):
+        x = self.dom.createElement('mrow')
+        y = self.dom.createElement('msubsup')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('P'))
+        y.appendChild(mo)
+        y.appendChild(self._print(e.args[0]))
+        y.appendChild(self._print(e.args[1:3]))
+        x.appendChild(y)
+        x.appendChild(self._print(e.args[3:]))
+        return x
+
+    def _print_gegenbauer(self, e):
+        x = self.dom.createElement('mrow')
+        y = self.dom.createElement('msubsup')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('C'))
+        y.appendChild(mo)
+        y.appendChild(self._print(e.args[0]))
+        y.appendChild(self._print(e.args[1:2]))
+        x.appendChild(y)
+        x.appendChild(self._print(e.args[2:]))
+        return x
+
+    def _print_chebyshevt(self, e):
+        x = self.dom.createElement('mrow')
+        y = self.dom.createElement('msub')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('T'))
+        y.appendChild(mo)
+        y.appendChild(self._print(e.args[0]))
+        x.appendChild(y)
+        x.appendChild(self._print(e.args[1:]))
+        return x
+
+    def _print_chebyshevu(self, e):
+        x = self.dom.createElement('mrow')
+        y = self.dom.createElement('msub')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('U'))
+        y.appendChild(mo)
+        y.appendChild(self._print(e.args[0]))
+        x.appendChild(y)
+        x.appendChild(self._print(e.args[1:]))
+        return x
+
+    def _print_legendre(self, e):
+        x = self.dom.createElement('mrow')
+        y = self.dom.createElement('msub')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('P'))
+        y.appendChild(mo)
+        y.appendChild(self._print(e.args[0]))
+        x.appendChild(y)
+        x.appendChild(self._print(e.args[1:]))
+        return x
+
+    def _print_assoc_legendre(self, e):
+        x = self.dom.createElement('mrow')
+        y = self.dom.createElement('msubsup')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('P'))
+        y.appendChild(mo)
+        y.appendChild(self._print(e.args[0]))
+        y.appendChild(self._print(e.args[1:2]))
+        x.appendChild(y)
+        x.appendChild(self._print(e.args[2:]))
+        return x
+
+    def _print_laguerre(self, e):
+        x = self.dom.createElement('mrow')
+        y = self.dom.createElement('msub')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('L'))
+        y.appendChild(mo)
+        y.appendChild(self._print(e.args[0]))
+        x.appendChild(y)
+        x.appendChild(self._print(e.args[1:]))
+        return x
+
+    def _print_assoc_laguerre(self, e):
+        x = self.dom.createElement('mrow')
+        y = self.dom.createElement('msubsup')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('L'))
+        y.appendChild(mo)
+        y.appendChild(self._print(e.args[0]))
+        y.appendChild(self._print(e.args[1:2]))
+        x.appendChild(y)
+        x.appendChild(self._print(e.args[2:]))
+        return x
+
+    def _print_hermite(self, e):
+        x = self.dom.createElement('mrow')
+        y = self.dom.createElement('msub')
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('H'))
+        y.appendChild(mo)
+        y.appendChild(self._print(e.args[0]))
+        x.appendChild(y)
+        x.appendChild(self._print(e.args[1:]))
+        return x
+
+
 def mathml(expr, printer='content', **settings):
     """Returns the MathML representation of expr. If printer is presentation
     then prints Presentation MathML else prints content MathML.
