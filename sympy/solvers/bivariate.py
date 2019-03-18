@@ -214,7 +214,7 @@ def _solve_lambert(f, symbol, gens):
         lhs = expand_log(log(lhs))
         rhs = log(rhs)
 
-    lhs = factor(lhs)
+    lhs = factor(lhs, deep=True)
     # make sure we have inverted as completely as possible
     r = Dummy()
     i, lhs = _invert(lhs - r, symbol)
