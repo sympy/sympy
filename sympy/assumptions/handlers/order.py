@@ -115,17 +115,36 @@ class AskNegativeHandler(CommonHandler):
     def Mul(expr, assumptions):
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
-        result = None
+        result = True
+        non = False
+        non_real = False
+
+        # Handle if the expression is non-real
         for arg in expr.args:
-            if result is None:
-                result = False
+            if not ask(Q.real(arg), assumptions):
+                if non_real:
+                    return None
+                non_real = True
+        if non_real:
+            return False
+
+        for arg in expr.args:
             if ask(Q.negative(arg), assumptions):
-                result = not result
+                continue
             elif ask(Q.positive(arg), assumptions):
-                pass
+                result = not result
+            elif ask(Q.zero(arg), assumptions):
+                if all(ask(Q.finite(a), assumptions) for a in expr.args):
+                    return False
+                return None
+            elif ask(Q.nonnegaitive(arg), assumptions):
+                non = True
+                result = not result
+            elif ask(Q.nonpositive(arg), assumptions):
+                non = True
             else:
-                return
-        return result
+                return None
+        return (not non_real) and result and (not non)
 
     @staticmethod
     def Pow(expr, assumptions):
@@ -313,14 +332,35 @@ class AskPositiveHandler(CommonHandler):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
         result = True
+        non = False
+        non_real = False
+
+        # Handle if the expression is non-real
+        for arg in expr.args:
+            if not ask(Q.real(arg), assumptions):
+                if non_real:
+                    return None
+                non_real = True
+        if non_real:
+            return False
+
         for arg in expr.args:
             if ask(Q.positive(arg), assumptions):
                 continue
             elif ask(Q.negative(arg), assumptions):
-                result = result ^ True
+                result = not result
+            elif ask(Q.zero(arg), assumptions):
+                if all(ask(Q.finite(a), assumptions) for a in expr.args):
+                    return False
+                return None
+            elif ask(Q.nonpositive(arg), assumptions):
+                non = True
+                result = not result
+            elif ask(Q.nonnegative(arg), assumptions):
+                non = True
             else:
-                return
-        return result
+                return None
+        return (not non_real) and result and (not non)
 
     @staticmethod
     def Add(expr, assumptions):
