@@ -1054,6 +1054,7 @@ class MatrixSubspaces(MatrixReductions):
 
         ret = []
         # make sure we start with a non-zero vector
+        vecs = list(vecs)
         while len(vecs) > 0 and vecs[0].is_zero:
             del vecs[0]
 
