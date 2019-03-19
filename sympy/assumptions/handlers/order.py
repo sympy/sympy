@@ -265,6 +265,8 @@ class AskZeroHandler(CommonHandler):
         # TODO: This should be deducible from the nonzero handler
         return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
 
+    NaN = staticmethod(CommonHandler.AlwaysNone)
+
 class AskNonPositiveHandler(CommonHandler):
 
     @staticmethod
@@ -423,15 +425,19 @@ class AskPositiveHandler(CommonHandler):
 
     @staticmethod
     def Pow(expr, assumptions):
+
+        base = expr.base
+        exp  = expr.exp
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
-        if ask(Q.positive(expr.base), assumptions):
-            if ask(Q.real(expr.exp), assumptions):
+        elif base == exp and ask(Q.nonnegative(base), assumptions):
+            return True
+        elif ask(Q.positive(base), assumptions) and ask(Q.real(exp), assumptions):
                 return True
-        if ask(Q.negative(expr.base), assumptions):
-            if ask(Q.even(expr.exp), assumptions):
+        elif ask(Q.negative(base), assumptions):
+            if ask(Q.even(exp), assumptions):
                 return True
-            if ask(Q.odd(expr.exp), assumptions):
+            if ask(Q.odd(exp), assumptions):
                 return False
 
     @staticmethod
