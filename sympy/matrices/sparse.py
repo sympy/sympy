@@ -23,7 +23,7 @@ class SparseMatrix(MatrixBase):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy.matrices import SparseMatrix, ones
     >>> SparseMatrix(2, 2, range(4))
     Matrix([
     [0, 1],
@@ -33,8 +33,52 @@ class SparseMatrix(MatrixBase):
     [0, 0],
     [0, 2]])
 
+    Values that are themselves a Matrix are automatically expanded:
+
+    >>> SparseMatrix(4, 4, {(1, 1): ones(2)})
+    Matrix([
+    [0, 0, 0, 0],
+    [0, 1, 1, 0],
+    [0, 1, 1, 0],
+    [0, 0, 0, 0]])
+
+    A SparseMatrix can be instantiated from a ragged list of lists:
+
+    >>> SparseMatrix([[1, 2, 3], [1, 2], [1]])
+    Matrix([
+    [1, 2, 3],
+    [1, 2, 0],
+    [1, 0, 0]])
+
+    For safety, one may include the expected size and then an error
+    will be raised if the indices of any element are out of range or
+    (for a flat list) if the total number of elements does not match
+    the expected shape:
+
+    >>> SparseMatrix(2, 2, [1, 2])
+    Traceback (most recent call last):
+    ...
+    ValueError: List length (1) != rows*columns (4)
+
+    Here, an error is not raised because the list is not flat and no
+    element is out of range:
+
+    >>> SparseMatrix(2, 2, [[1, 2]])
+    Matrix([
+    [1, 2],
+    [0, 0]])
+
+    But adding another element to the first (and only) row will cause
+    an error to be raised:
+
+    >>> SparseMatrix(2, 2, [[1, 2, 3]])
+    Traceback (most recent call last):
+    ...
+    ValueError: The location (0, 2) is out of the designated shape: (2, 2)
+
     See Also
     ========
+    sympy.matrices.common.diag
     sympy.matrices.dense.Matrix
     """
 
@@ -47,7 +91,6 @@ class SparseMatrix(MatrixBase):
             return self
 
         self._smat = {}
-
         if len(args) == 3:
             self.rows = as_int(args[0])
             self.cols = as_int(args[1])
@@ -62,31 +105,64 @@ class SparseMatrix(MatrixBase):
                             self._smat[(i, j)] = value
             elif isinstance(args[2], (dict, Dict)):
                 # manual copy, copy.deepcopy() doesn't work
-                for key in args[2].keys():
-                    v = args[2][key]
-                    if v:
-                        self._smat[key] = self._sympify(v)
+                for key, v in args[2].items():
+                    if isinstance(v, SparseMatrix):
+                        r, c = key
+                        for (i, j), vij in v._smat.items():
+                            self._smat[(r + i, c + j)] = vij
+                    else:
+                        if isinstance(v, (Matrix, list, tuple)):
+                            v = SparseMatrix(v)
+                            r, c = key
+                            for i, j in v._smat:
+                                self._smat[r + i, c + j] = v[i, j]
+                        else:
+                            v = self._sympify(v)
+                            if v:
+                                self._smat[key] = self._sympify(v)
             elif is_sequence(args[2]):
-                if len(args[2]) != self.rows*self.cols:
-                    raise ValueError(
-                        'List length (%s) != rows*columns (%s)' %
-                        (len(args[2]), self.rows*self.cols))
-                flat_list = args[2]
+                flat = not any(is_sequence(i) for i in args[2])
+                if not flat:
+                    s = SparseMatrix(args[2])
+                    self._smat = s._smat
+                else:
+                    if len(args[2]) != self.rows*self.cols:
+                        raise ValueError(
+                            'Flat list length (%s) != rows*columns (%s)' %
+                            (len(args[2]), self.rows*self.cols))
+                    flat_list = args[2]
+                    for i in range(self.rows):
+                        for j in range(self.cols):
+                            value = self._sympify(flat_list[i*self.cols + j])
+                            if value:
+                                self._smat[(i, j)] = value
+            for i, j in self._smat.keys():
+                if i and i >= self.rows or j and j >= self.cols:
+                    raise ValueError('The location %s is out of the designated shape: %s' % ((i, j), self.shape))
+        else:
+            if (len(args) == 1 and isinstance(args[0], (list, tuple))):
+                # list of values or lists
+                v = args[0]
+                c = 0
+                for i, row in enumerate(v):
+                    if not isinstance(row, (list, tuple)):
+                        row = [row]
+                    for j, vij in enumerate(row):
+                        if vij:
+                            self._smat[(i, j)] = self._sympify(vij)
+                    c = max(c, len(row))
+                self.rows = len(v) if c else 0
+                self.cols = c
+            else:
+                # handle full matrix forms with _handle_creation_inputs
+                r, c, _list = Matrix._handle_creation_inputs(*args)
+                self.rows = r
+                self.cols = c
                 for i in range(self.rows):
                     for j in range(self.cols):
-                        value = self._sympify(flat_list[i*self.cols + j])
+                        value = _list[self.cols*i + j]
                         if value:
                             self._smat[(i, j)] = value
-        else:
-            # handle full matrix forms with _handle_creation_inputs
-            r, c, _list = Matrix._handle_creation_inputs(*args)
-            self.rows = r
-            self.cols = c
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    value = _list[self.cols*i + j]
-                    if value:
-                        self._smat[(i, j)] = value
         return self
 
     def __eq__(self, other):
