@@ -6,8 +6,6 @@ from sympy.physics.vector import ReferenceFrame, dynamicsymbols, Dyadic
 from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint,
                                            vsprint, vsstrrepr)
 
-# TODO : Figure out how to make the pretty printing tests readable like the
-# ones in sympy.printing.pretty.tests.test_printing.
 
 a, b, c = symbols('a, b, c')
 alpha, omega, beta = dynamicsymbols('alpha, omega, beta')
