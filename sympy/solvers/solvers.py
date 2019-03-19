@@ -25,8 +25,8 @@ from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
                           Function, expand_power_exp, Lambda, _mexpand, expand)
 from sympy.integrals.integrals import Integral
-from sympy.core.numbers import ilcm, Float, Rational
-from sympy.core.relational import Relational, Ge, _canonical
+from sympy.core.numbers import ilcm, Float, Rational, pi, nan
+from sympy.core.relational import Relational, Eq, Ge, _canonical, Ne
 from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.core.power import integer_log
 from sympy.logic.boolalg import And, Or, BooleanAtom
@@ -1033,8 +1033,21 @@ def solve(f, *symbols, **flags):
 
         # arg
         _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
-        fi = fi.xreplace(dict(list(zip(_arg,
-            [atan(im(a.args[0])/re(a.args[0])) for a in _arg]))))
+
+        # This is not intended to stay. Really atan2.rewrite should do this
+        # so arg(a).rewrite(atan2).rewrite(atan) should give piecewise if
+        # necessary. Actually we shouldn't have to go via atan2 so
+        # arg(a).rewrite(atan) should go straight to Piecewise.
+        def _newarg(a):
+            x = re(a)
+            y = im(a)
+            return Piecewise(
+                (2*atan(y / (sqrt(x**2 + y**2) + x)), Or(x>0, Ne(y, 0))),
+                (pi, And(x<0, Eq(y, 0))),
+                (nan, True),
+                    )
+
+        fi = fi.xreplace(dict(list(zip(_arg, [_newarg(a.args[0]) for a in _arg]))))
 
         # save changes
         f[i] = fi

@@ -1491,14 +1491,7 @@ def test_issues_6819_6820_6821_6248_8692():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
-    # This example fails with this PR. On master it passes due to a
-    # cancellation of two bugs. Somewhere earlier in solve the arg(x)-pi
-    # equation is turned into -pi (i.e. arg(x) becomes 0). Then the
-    # _solve_system code ignores that equation even though it has no
-    # solutions.
-    # This PR currently returns [] as a result. The tested result is also
-    # incorrect though since arg(2)=0.
-    #assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,), (2,)]
+    assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,)]
     assert set(solve(abs(x - 7) - 8)) == set([-S(1), S(15)])
 
     # issue 8692
