@@ -761,7 +761,7 @@ def descendant_subgroups(S, C, R1_c_list, x, R2, N, Y):
                 undefined_coset, undefined_gen = alpha, x
                 break
         # for filling up the undefine entry we try all possible values
-        # of β ∈ Ω or β = n where β^(undefined_gen^-1) is undefined
+        # of beta in Omega or beta = n where beta^(undefined_gen^-1) is undefined
         reach = C.omega + [C.n]
         for beta in reach:
             if beta < N:
@@ -837,25 +837,25 @@ def first_in_class(C, Y=[]):
 
     # TODO:: Sims points out in [Sim94] that performance can be improved by
     # remembering some of the information computed by ``first_in_class``. If
-    # the ``continue α`` statement is executed at line 14, then the same thing
-    # will happen for that value of α in any descendant of the table C, and so
-    # the values the values of α for which this occurs could profitably be
+    # the ``continue alpha`` statement is executed at line 14, then the same thing
+    # will happen for that value of alpha in any descendant of the table C, and so
+    # the values the values of alpha for which this occurs could profitably be
     # stored and passed through to the descendants of C. Of course this would
     # make the code more complicated.
 
     # The code below is taken directly from the function on page 208 of [Sim94]
-    # ν[α]
+    # nu[alpha]
 
     """
     n = C.n
-    # lamda is the largest numbered point in Ω_c_α which is currently defined
+    # lamda is the largest numbered point in Omega_c_alpha which is currently defined
     lamda = -1
-    # for α ∈ Ω_c, ν[α] is the point in Ω_c_α corresponding to α
+    # for alpha in Omega_c, nu[alpha] is the point in Omega_c_alpha corresponding to alpha
     nu = [None]*n
-    # for α ∈ Ω_c_α, μ[α] is the point in Ω_c corresponding to α
+    # for alpha in Omega_c_alpha, mu[alpha] is the point in Omega_c corresponding to alpha
     mu = [None]*n
-    # mutually ν and μ are the mutually-inverse equivalence maps between
-    # Ω_c_α and Ω_c
+    # mutually nu and mu are the mutually-inverse equivalence maps between
+    # Omega_c_alpha and Omega_c
     next_alpha = False
     # For each 0≠α ∈ [0 .. nc-1], we start by constructing the equivalent
     # standardized coset table C_α corresponding to H_α
