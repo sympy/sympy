@@ -970,10 +970,10 @@ class MatplotlibBackend(BaseBackend):
                 # projection='3d'
                 mpl_toolkits = import_module('mpl_toolkits',
                                      __import__kwargs={'fromlist': ['mplot3d']})
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i+1, projection='3d'))
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d'))
 
             elif not any(are_3D):
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i+1))
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1))
                 self.ax[i].spines['left'].set_position('zero')
                 self.ax[i].spines['right'].set_color('none')
                 self.ax[i].spines['bottom'].set_position('zero')
@@ -983,158 +983,160 @@ class MatplotlibBackend(BaseBackend):
                 self.ax[i].xaxis.set_ticks_position('bottom')
                 self.ax[i].yaxis.set_ticks_position('left')
 
-    def process_series(self):
-        parent = self.parent
-        if isinstance(self.parent, Plot):
-            series_list = [self.parent._series]
+    def process_series(self, series, ax, parent):
+        for s in series:
+            # Create the collections
+            if s.is_2Dline:
+                collection = self.LineCollection(s.get_segments())
+                ax.add_collection(collection)
+            elif s.is_contour:
+                ax.contour(*s.get_meshes())
+            elif s.is_3Dline:
+                # TODO too complicated, I blame matplotlib
+                mpl_toolkits = import_module('mpl_toolkits',
+                    __import__kwargs={'fromlist': ['mplot3d']})
+                art3d = mpl_toolkits.mplot3d.art3d
+                collection = art3d.Line3DCollection(s.get_segments())
+                ax.add_collection(collection)
+                x, y, z = s.get_points()
+                ax.set_xlim((min(x), max(x)))
+                ax.set_ylim((min(y), max(y)))
+                ax.set_zlim((min(z), max(z)))
+            elif s.is_3Dsurface:
+                x, y, z = s.get_meshes()
+                collection = ax.plot_surface(x, y, z,
+                    cmap=getattr(self.cm, 'viridis', self.cm.jet),
+                    rstride=1, cstride=1, linewidth=0.1)
+            elif s.is_implicit:
+                # Smart bounds have to be set to False for implicit plots.
+                ax.spines['left'].set_smart_bounds(False)
+                ax.spines['bottom'].set_smart_bounds(False)
+                points = s.get_raster()
+                if len(points) == 2:
+                    # interval math plotting
+                    x, y = _matplotlib_list(points[0])
+                    ax.fill(x, y, facecolor=s.line_color, edgecolor='None')
+                else:
+                    # use contourf or contour depending on whether it is
+                    # an inequality or equality.
+                    # XXX: ``contour`` plots multiple lines. Should be fixed.
+                    ListedColormap = self.matplotlib.colors.ListedColormap
+                    colormap = ListedColormap(["white", s.line_color])
+                    xarray, yarray, zarray, plot_type = points
+                    if plot_type == 'contour':
+                        ax.contour(xarray, yarray, zarray, cmap=colormap)
+                    else:
+                        ax.contourf(xarray, yarray, zarray, cmap=colormap)
+            else:
+                raise ValueError('The matplotlib backend supports only '
+                                 'is_2Dline, is_3Dline, is_3Dsurface and '
+                                 'is_contour objects.')
+
+            # Customise the collections with the corresponding per-series
+            # options.
+            if hasattr(s, 'label'):
+                collection.set_label(s.label)
+            if s.is_line and s.line_color:
+                if isinstance(s.line_color, (float, int)) or isinstance(s.line_color, Callable):
+                    color_array = s.get_color_array()
+                    collection.set_array(color_array)
+                else:
+                    collection.set_color(s.line_color)
+            if s.is_3Dsurface and s.surface_color:
+                if self.matplotlib.__version__ < "1.2.0":  # TODO in the distant future remove this check
+                    warnings.warn('The version of matplotlib is too old to use surface coloring.')
+                elif isinstance(s.surface_color, (float, int)) or isinstance(s.surface_color, Callable):
+                    color_array = s.get_color_array()
+                    color_array = color_array.reshape(color_array.size)
+                    collection.set_array(color_array)
+                else:
+                    collection.set_color(s.surface_color)
+
+        # Set global options.
+        # TODO The 3D stuff
+        # XXX The order of those is important.
+        mpl_toolkits = import_module('mpl_toolkits',
+            __import__kwargs={'fromlist': ['mplot3d']})
+        Axes3D = mpl_toolkits.mplot3d.Axes3D
+        if parent.xscale and not isinstance(ax, Axes3D):
+            ax.set_xscale(parent.xscale)
+        if parent.yscale and not isinstance(ax, Axes3D):
+            ax.set_yscale(parent.yscale)
+        if parent.xlim:
+            from sympy.core.basic import Basic
+            xlim = parent.xlim
+            if any(isinstance(i,Basic) and not i.is_real for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be real".format(xlim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be finite".format(xlim))
+            xlim = (float(i) for i in xlim)
+            ax.set_xlim(xlim)
         else:
-            series_list = self.parent._series
+            if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
+                starts = [s.start for s in parent._series]
+                ends = [s.end for s in parent._series]
+                ax.set_xlim(min(starts), max(ends))
+        if parent.ylim:
+            from sympy.core.basic import Basic
+            ylim = parent.ylim
+            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be real".format(ylim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be finite".format(ylim))
+            ylim = (float(i) for i in ylim)
+            ax.set_ylim(ylim)
+        if not isinstance(ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
+            ax.set_autoscale_on(parent.autoscale)
+        if parent.axis_center:
+            val = parent.axis_center
+            if isinstance(ax, Axes3D):
+                pass
+            elif val == 'center':
+                ax.spines['left'].set_position('center')
+                ax.spines['bottom'].set_position('center')
+            elif val == 'auto':
+                xl, xh = ax.get_xlim()
+                yl, yh = ax.get_ylim()
+                pos_left = ('data', 0) if xl*xh <= 0 else 'center'
+                pos_bottom = ('data', 0) if yl*yh <= 0 else 'center'
+                ax.spines['left'].set_position(pos_left)
+                ax.spines['bottom'].set_position(pos_bottom)
+            else:
+                ax.spines['left'].set_position(('data', val[0]))
+                ax.spines['bottom'].set_position(('data', val[1]))
+        if not parent.axis:
+            ax.set_axis_off()
+        if parent.legend:
+            if ax.legend():
+                ax.legend_.set_visible(parent.legend)
+        if parent.margin:
+            ax.set_xmargin(parent.margin)
+            ax.set_ymargin(parent.margin)
+        if parent.title:
+            ax.set_title(parent.title)
+        if parent.xlabel:
+            ax.set_xlabel(parent.xlabel, position=(1, 0))
+        if parent.ylabel:
+            ax.set_ylabel(parent.ylabel, position=(0, 1))
+
+    def _process_series(self):
+        parent = self.parent
+        if isinstance(parent, Plot):
+            series_list = [parent._series]
+        else:
+            series_list = parent._series
 
         for i, (series, ax) in enumerate(zip(series_list, self.ax)):
-            for s in series:
-                 # Create the collections
-                if s.is_2Dline:
-                    collection = self.LineCollection(s.get_segments())
-                    ax.add_collection(collection)
-                elif s.is_contour:
-                    ax.contour(*s.get_meshes())
-                elif s.is_3Dline:
-                     # TODO too complicated, I blame matplotlib
-                    mpl_toolkits = import_module('mpl_toolkits',
-                        __import__kwargs={'fromlist': ['mplot3d']})
-                    art3d = mpl_toolkits.mplot3d.art3d
-                    collection = art3d.Line3DCollection(s.get_segments())
-                    ax.add_collection(collection)
-                    x, y, z = s.get_points()
-                    ax.set_xlim((min(x), max(x)))
-                    ax.set_ylim((min(y), max(y)))
-                    ax.set_zlim((min(z), max(z)))
-                elif s.is_3Dsurface:
-                    x, y, z = s.get_meshes()
-                    collection = ax.plot_surface(x, y, z,
-                        cmap=getattr(self.cm, 'viridis', self.cm.jet),
-                        rstride=1, cstride=1, linewidth=0.1)
-                elif s.is_implicit:
-                    # Smart bounds have to be set to False for implicit plots.
-                    ax.spines['left'].set_smart_bounds(False)
-                    ax.spines['bottom'].set_smart_bounds(False)
-                    points = s.get_raster()
-                    if len(points) == 2:
-                         # interval math plotting
-                        x, y = _matplotlib_list(points[0])
-                        ax.fill(x, y, facecolor=s.line_color, edgecolor='None')
-                    else:
-                        # use contourf or contour depending on whether it is
-                        # an inequality or equality.
-                        # XXX: ``contour`` plots multiple lines. Should be fixed.
-                        ListedColormap = self.matplotlib.colors.ListedColormap
-                        colormap = ListedColormap(["white", s.line_color])
-                        xarray, yarray, zarray, plot_type = points
-                        if plot_type == 'contour':
-                            ax.contour(xarray, yarray, zarray, cmap=colormap)
-                        else:
-                            ax.contourf(xarray, yarray, zarray, cmap=colormap)
-                else:
-                    raise ValueError('The matplotlib backend supports only '
-                                     'is_2Dline, is_3Dline, is_3Dsurface and '
-                                     'is_contour objects.')
-
-                # Customise the collections with the corresponding per-series
-                # options.
-                if hasattr(s, 'label'):
-                    collection.set_label(s.label)
-                if s.is_line and s.line_color:
-                    if isinstance(s.line_color, (float, int)) or isinstance(s.line_color, Callable):
-                        color_array = s.get_color_array()
-                        collection.set_array(color_array)
-                    else:
-                        collection.set_color(s.line_color)
-                if s.is_3Dsurface and s.surface_color:
-                    if self.matplotlib.__version__ < "1.2.0":  # TODO in the distant future remove this check
-                        warnings.warn('The version of matplotlib is too old to use surface coloring.')
-                    elif isinstance(s.surface_color, (float, int)) or isinstance(s.surface_color, Callable):
-                        color_array = s.get_color_array()
-                        color_array = color_array.reshape(color_array.size)
-                        collection.set_array(color_array)
-                    else:
-                        collection.set_color(s.surface_color)
-
             if isinstance(parent, PlotGrid):
                 parent = parent.args[i]
-
-            # Set global options.
-            # TODO The 3D stuff
-            # XXX The order of those is important.
-            mpl_toolkits = import_module('mpl_toolkits',
-                __import__kwargs={'fromlist': ['mplot3d']})
-            Axes3D = mpl_toolkits.mplot3d.Axes3D
-            if parent.xscale and not isinstance(ax, Axes3D):
-                ax.set_xscale(parent.xscale)
-            if parent.yscale and not isinstance(ax, Axes3D):
-                ax.set_yscale(parent.yscale)
-            if parent.xlim:
-                from sympy.core.basic import Basic
-                xlim = parent.xlim
-                if any(isinstance(i,Basic) and not i.is_real for i in xlim):
-                    raise ValueError(
-                    "All numbers from xlim={} must be real".format(xlim))
-                if any(isinstance(i,Basic) and not i.is_finite for i in xlim):
-                    raise ValueError(
-                    "All numbers from xlim={} must be finite".format(xlim))
-                xlim = (float(i) for i in xlim)
-                ax.set_xlim(xlim)
-            else:
-                if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
-                    starts = [s.start for s in parent._series]
-                    ends = [s.end for s in parent._series]
-                    ax.set_xlim(min(starts), max(ends))
-            if parent.ylim:
-                from sympy.core.basic import Basic
-                ylim = parent.ylim
-                if any(isinstance(i,Basic) and not i.is_real for i in ylim):
-                    raise ValueError(
-                    "All numbers from ylim={} must be real".format(ylim))
-                if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
-                    raise ValueError(
-                    "All numbers from ylim={} must be finite".format(ylim))
-                ylim = (float(i) for i in ylim)
-                ax.set_ylim(ylim)
-            if not isinstance(ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
-                ax.set_autoscale_on(parent.autoscale)
-            if parent.axis_center:
-                val = parent.axis_center
-                if isinstance(ax, Axes3D):
-                    pass
-                elif val == 'center':
-                    ax.spines['left'].set_position('center')
-                    ax.spines['bottom'].set_position('center')
-                elif val == 'auto':
-                    xl, xh = ax.get_xlim()
-                    yl, yh = ax.get_ylim()
-                    pos_left = ('data', 0) if xl*xh <= 0 else 'center'
-                    pos_bottom = ('data', 0) if yl*yh <= 0 else 'center'
-                    ax.spines['left'].set_position(pos_left)
-                    ax.spines['bottom'].set_position(pos_bottom)
-                else:
-                    ax.spines['left'].set_position(('data', val[0]))
-                    ax.spines['bottom'].set_position(('data', val[1]))
-            if not parent.axis:
-                ax.set_axis_off()
-            if parent.legend:
-                if ax.legend():
-                    ax.legend_.set_visible(parent.legend)
-            if parent.margin:
-                ax.set_xmargin(parent.margin)
-                ax.set_ymargin(parent.margin)
-            if parent.title:
-                ax.set_title(parent.title)
-            if parent.xlabel:
-                ax.set_xlabel(parent.xlabel, position=(1, 0))
-            if parent.ylabel:
-                ax.set_ylabel(parent.ylabel, position=(0, 1))
+            self.process_series(series, ax, parent)
 
     def show(self):
-        self.process_series()
+        self._process_series()
         #TODO after fixing https://github.com/ipython/ipython/issues/1255
         # you can uncomment the next line and remove the pyplot.show() call
         #self.fig.show()
