@@ -214,7 +214,7 @@ class CoordSys3D(Basic):
 
         _check_strings('variable_names', vector_names)
         variable_names = list(variable_names)
-        latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
+        latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (name, x)) for
                          x in variable_names]
         pretty_scalars = [(name + '_' + x) for x in variable_names]
 
