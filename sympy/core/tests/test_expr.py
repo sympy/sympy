@@ -674,9 +674,11 @@ def test_replace():
         sin(a), lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
     # test exact
     assert (2*x).replace(a*x + b, b - a, exact=True) == 2*x
-    assert (2*x).replace(a*x + b, b - a) == 2/x
+    assert (2*x).replace(a*x + b, b - a) == 2*x
+    assert (2*x).replace(a*x + b, b - a, exact=False) == 2/x
     assert (2*x).replace(a*x + b, lambda a, b: b - a, exact=True) == 2*x
-    assert (2*x).replace(a*x + b, lambda a, b: b - a) == 2/x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a) == 2*x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a, exact=False) == 2/x
 
     g = 2*sin(x**3)
 
