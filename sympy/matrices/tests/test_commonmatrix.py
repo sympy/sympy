@@ -1309,6 +1309,19 @@ def test_nullspace():
     assert all(e.is_zero for e in m*basis[1])
 
 
+def test_orthogonalize():
+    m = Matrix([[1, 2], [3, 4]])
+    assert m.orthogonalize(Matrix([[2], [1]])) == [Matrix([[2], [1]])]
+    assert m.orthogonalize(Matrix([[2], [1]]), normalize=True) == [Matrix([[2*sqrt(5)/5], [sqrt(5)/5]])]
+    assert m.orthogonalize(Matrix([[1], [2]]), Matrix([[-1], [4]])) == [Matrix([[1], [2]]), Matrix([[-S(12)/5], [S(6)/5]])]
+    assert m.orthogonalize(Matrix([[0], [0]]), Matrix([[-1], [4]])) == [Matrix([[-1], [4]])]
+    assert m.orthogonalize(Matrix([[0], [0]])) == []
+
+    n = Matrix([[9, 1, 9], [3, 6, 10], [8, 5, 2]])
+    vecs = [Matrix([[-5], [1]]), Matrix([[-5], [2]]), Matrix([[-5], [-2]])]
+    assert n.orthogonalize(*vecs) == [Matrix([[-5], [1]]), Matrix([[S(5)/26], [S(25)/26]])]
+
+
 # EigenOnlyMatrix tests
 def test_eigenvals():
     M = EigenOnlyMatrix([[0, 1, 1],
