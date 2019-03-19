@@ -122,7 +122,7 @@ def test_ang_vel():
         2 * (q2d * q0 + q3d * q1 - q1d * q3 - q0d * q2) * E.y +
         2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3) * E.z)
 
-    F = N.orientnew('F', 'Body', (q1, q2, q3), '313')
+    F = N.orientnew('F', 'Body', (q1, q2, q3), 313)
     assert F.ang_vel_in(N) == ((sin(q2)*sin(q3)*q1d + cos(q3)*q2d)*F.x +
         (sin(q2)*cos(q3)*q1d - sin(q3)*q2d)*F.y + (cos(q2)*q1d + q3d)*F.z)
     G = N.orientnew('G', 'Axis', (q1, N.x + N.y))
