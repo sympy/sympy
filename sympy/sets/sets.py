@@ -1249,7 +1249,7 @@ class Intersection(Set):
                     elif c is S.false:
                         pass
                     else:
-                        yield c
+                        raise ValueError("Cannot determine if {x} is contained in the set during iteration".format(x=x))
 
         if no_iter:
             raise ValueError("None of the constituent sets are iterable")

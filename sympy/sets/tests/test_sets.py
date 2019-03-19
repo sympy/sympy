@@ -981,8 +981,7 @@ def test_issue_10113():
 
 
 def test_issue_10248():
-    assert list(Intersection(S.Reals, FiniteSet(x))) == [
-        And(x < oo, x > -oo)]
+    raises(ValueError, lambda: list(Intersection(S.Reals, FiniteSet(x))))
 
 
 def test_issue_9447():
