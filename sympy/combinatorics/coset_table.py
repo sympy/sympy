@@ -948,7 +948,7 @@ class CosetTable(DefaultPrinting):
         Parameters
         ==========
 
-        A coincident pair \alpha,\beta \in \Omega, w \in `Y \cup Y^{-1}`
+        A coincident pair `\alpha, \beta \in \Omega, w \in Y \cup Y^{-1}`
 
         See Also
         ========
