@@ -372,6 +372,8 @@ def test_time_derivative():
            (-q1*qd + q2d)*A.y + q3d*A.z
     assert time_derivative(d, C) == - qd*(A.y|A.x) + \
            sin(q)*q4d*(A.z|A.x) - qd*(A.x|A.y) + sin(q)*q4d*(A.x|A.z)
+    raises(ValueError, lambda: time_derivative(B.x, C, order=0.5))
+    raises(ValueError, lambda: time_derivative(B.x, C, order=-1))
 
 
 def test_get_motion_methods():
@@ -440,6 +442,16 @@ def test_kin_eqs():
             -0.5 * q0 * u2 + 0.5 * q1 * u3 - 0.5 * q3 * u1 + q2d,
             -0.5 * q0 * u3 - 0.5 * q1 * u2 + 0.5 * q2 * u1 + q3d,
             0.5 * q1 * u1 + 0.5 * q2 * u2 + 0.5 * q3 * u3 + q0d]
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2], 'quaternion'))
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2, q3], 'quaternion', '123'))
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2, q3], 'foo'))
+    raises(TypeError, lambda: kinematic_equations(u1, [q0, q1, q2, q3], 'quaternion'))
+    raises(TypeError, lambda: kinematic_equations([u1], [q0, q1, q2, q3], 'quaternion'))
+    raises(TypeError, lambda: kinematic_equations([u1, u2, u3], q0, 'quaternion'))
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2, q3], 'body'))
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2, q3], 'space'))
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2], 'body', '222'))
+    assert kinematic_equations([0, 0, 0], [q0, q1, q2], 'space') == [S.Zero, S.Zero, S.Zero]
 
 
 def test_partial_velocity():
@@ -471,3 +483,6 @@ def test_partial_velocity():
     B = ReferenceFrame('B')
     v = u4 * A.x + u5 * B.y
     assert partial_velocity((v, ), (u4, u5), A) == [[A.x, B.y]]
+
+    raises(TypeError, lambda: partial_velocity(Dmc.vel(N), u_list, N))
+    raises(TypeError, lambda: partial_velocity(vel_list, u1, N))
