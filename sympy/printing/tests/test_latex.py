@@ -31,6 +31,8 @@ from sympy.tensor.array import (ImmutableDenseNDimArray,
 from sympy.tensor.array import tensorproduct
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
+from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
+    fibonacci, tribonacci
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
@@ -39,7 +41,7 @@ from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
 from sympy import MatrixSymbol, ln
-from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
+from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 from sympy.sets.setexpr import SetExpr
 
 import sympy as sym
@@ -245,6 +247,11 @@ def test_latex_vector_expressions():
     assert latex(x*Gradient(A.x)) == r"x \left(\nabla \mathbf{{x}_{A}}\right)"
     assert latex(Gradient(x*A.x)) == r"\nabla \left(\mathbf{{x}_{A}} x\right)"
 
+    assert latex(Laplacian(A.x)) == r"\triangle \mathbf{{x}_{A}}"
+    assert latex(Laplacian(A.x + 3*A.y)) == \
+        r"\triangle \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
+    assert latex(x*Laplacian(A.x)) == r"x \left(\triangle \mathbf{{x}_{A}}\right)"
+    assert latex(Laplacian(x*A.x)) == r"\triangle \left(\mathbf{{x}_{A}} x\right)"
 
 def test_latex_symbols():
     Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
@@ -708,12 +715,12 @@ def test_latex_Range():
 
     assert latex(Range(30, 1, -1)) == r'\left\{30, 29, \ldots, 2\right\}'
 
-    assert latex(Range(0, oo, 2)) == r'\left\{0, 2, \ldots, \infty\right\}'
+    assert latex(Range(0, oo, 2)) == r'\left\{0, 2, \ldots\right\}'
 
-    assert latex(Range(oo, -2, -2)) == r'\left\{\infty, \ldots, 2, 0\right\}'
+    assert latex(Range(oo, -2, -2)) == r'\left\{\ldots, 2, 0\right\}'
 
     assert latex(Range(-2, -oo, -1)) == \
-        r'\left\{-2, -3, \ldots, -\infty\right\}'
+        r'\left\{-2, -3, \ldots\right\}'
 
 
 def test_latex_sequences():
@@ -1311,7 +1318,16 @@ def test_settings():
 def test_latex_numbers():
     assert latex(catalan(n)) == r"C_{n}"
     assert latex(catalan(n)**2) == r"C_{n}^{2}"
-
+    assert latex(bernoulli(n)) == r"B_{n}"
+    assert latex(bernoulli(n)**2) == r"B_{n}^{2}"
+    assert latex(bell(n)) == r"B_{n}"
+    assert latex(bell(n)**2) == r"B_{n}^{2}"
+    assert latex(fibonacci(n)) == r"F_{n}"
+    assert latex(fibonacci(n)**2) == r"F_{n}^{2}"
+    assert latex(lucas(n)) == r"L_{n}"
+    assert latex(lucas(n)**2) == r"L_{n}^{2}"
+    assert latex(tribonacci(n)) == r"T_{n}"
+    assert latex(tribonacci(n)**2) == r"T_{n}^{2}"
 
 def test_latex_euler():
     assert latex(euler(n)) == r"E_{n}"
@@ -1551,17 +1567,20 @@ def test_Adjoint():
     from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    assert latex(Adjoint(X)) == r'X^\dagger'
-    assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^\dagger'
-    assert latex(Adjoint(X) + Adjoint(Y)) == r'X^\dagger + Y^\dagger'
-    assert latex(Adjoint(X*Y)) == r'\left(X Y\right)^\dagger'
-    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^\dagger X^\dagger'
-    assert latex(Adjoint(X**2)) == r'\left(X^{2}\right)^\dagger'
-    assert latex(Adjoint(X)**2) == r'\left(X^\dagger\right)^{2}'
-    assert latex(Adjoint(Inverse(X))) == r'\left(X^{-1}\right)^\dagger'
-    assert latex(Inverse(Adjoint(X))) == r'\left(X^\dagger\right)^{-1}'
-    assert latex(Adjoint(Transpose(X))) == r'\left(X^T\right)^\dagger'
-    assert latex(Transpose(Adjoint(X))) == r'\left(X^\dagger\right)^T'
+    assert latex(Adjoint(X)) == r'X^{\dagger}'
+    assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^{\dagger}'
+    assert latex(Adjoint(X) + Adjoint(Y)) == r'X^{\dagger} + Y^{\dagger}'
+    assert latex(Adjoint(X*Y)) == r'\left(X Y\right)^{\dagger}'
+    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^{\dagger} X^{\dagger}'
+    assert latex(Adjoint(X**2)) == r'\left(X^{2}\right)^{\dagger}'
+    assert latex(Adjoint(X)**2) == r'\left(X^{\dagger}\right)^{2}'
+    assert latex(Adjoint(Inverse(X))) == r'\left(X^{-1}\right)^{\dagger}'
+    assert latex(Inverse(Adjoint(X))) == r'\left(X^{\dagger}\right)^{-1}'
+    assert latex(Adjoint(Transpose(X))) == r'\left(X^{T}\right)^{\dagger}'
+    assert latex(Transpose(Adjoint(X))) == r'\left(X^{\dagger}\right)^{T}'
+    assert latex(Transpose(Adjoint(X) + Y)) == r'\left(X^{\dagger} + Y\right)^{T}'
+    assert latex(Transpose(X)) == r'X^{T}'
+    assert latex(Transpose(X + Y)) == r'\left(X + Y\right)^{T}'
 
 
 def test_Hadamard():

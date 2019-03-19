@@ -410,6 +410,10 @@ class LatexPrinter(Printer):
         func = expr._expr
         return r"\nabla %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
+    def _print_Laplacian(self, expr):
+        func = expr._expr
+        return r"\triangle %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+
     def _print_Mul(self, expr):
         from sympy.core.power import Pow
         from sympy.physics.units import Quantity
@@ -1506,9 +1510,9 @@ class LatexPrinter(Printer):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
         if not isinstance(mat, MatrixSymbol):
-            return r"\left(%s\right)^T" % self._print(mat)
+            return r"\left(%s\right)^{T}" % self._print(mat)
         else:
-            return "%s^T" % self._print(mat)
+            return "%s^{T}" % self._print(mat)
 
     def _print_Trace(self, expr):
         mat = expr.arg
@@ -1518,9 +1522,9 @@ class LatexPrinter(Printer):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
         if not isinstance(mat, MatrixSymbol):
-            return r"\left(%s\right)^\dagger" % self._print(mat)
+            return r"\left(%s\right)^{\dagger}" % self._print(mat)
         else:
-            return r"%s^\dagger" % self._print(mat)
+            return r"%s^{\dagger}" % self._print(mat)
 
     def _print_MatMul(self, expr):
         from sympy import MatMul, Mul
@@ -1813,8 +1817,11 @@ class LatexPrinter(Printer):
         dots = r'\ldots'
 
         if s.start.is_infinite:
-            printset = s.start, dots, s[-1] - s.step, s[-1]
-        elif s.stop.is_infinite or len(s) > 4:
+            printset = dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite:
+            it = iter(s)
+            printset = next(it), next(it), dots
+        elif len(s) > 4:
             it = iter(s)
             printset = next(it), next(it), dots, s[-1]
         else:
@@ -1823,6 +1830,32 @@ class LatexPrinter(Printer):
         return (r"\left\{" +
                 r", ".join(self._print(el) for el in printset) +
                 r"\right\}")
+
+    def _print_bernoulli(self, expr, exp=None):
+        tex = r"B_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
+
+    _print_bell = _print_bernoulli
+
+    def _print_fibonacci(self, expr, exp=None):
+        tex = r"F_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
+
+    def _print_lucas(self, expr, exp=None):
+        tex = r"L_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
+
+    def _print_tribonacci(self, expr, exp=None):
+        tex = r"T_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
 
     def _print_SeqFormula(self, s):
         if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:

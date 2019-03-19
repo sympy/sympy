@@ -1190,7 +1190,7 @@ class SymPyTests(object):
                     except ImportError:
                         pass
 
-                code = compile(source, filename, "exec")
+                code = compile(source, filename, "exec", flags=0, dont_inherit=True)
                 exec_(code, gl)
             except (SystemExit, KeyboardInterrupt):
                 raise
