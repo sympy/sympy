@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Finitely Presented Groups and its algorithms. """
 
 from __future__ import print_function, division
