@@ -1263,6 +1263,7 @@ class Intersection(Set):
             binary=True)
         if not fs_args:
             return
+        fs_args.sort(key=len)
         s = fs_args[0]
         fs_args = fs_args[1:]
 
@@ -1311,9 +1312,12 @@ class Intersection(Set):
             other_sets = Intersection(*other)
             if not other_sets:
                 return S.EmptySet  # b/c we use evaluate=False below
-            res += Intersection(
-                FiniteSet(*unk),
-                other_sets, evaluate=False)
+            elif other_sets == S.UniversalSet:
+                res += FiniteSet(*unk)
+            else:
+                res += Intersection(
+                    FiniteSet(*unk),
+                    other_sets, evaluate=False)
         return res
 
     def as_relational(self, symbol):

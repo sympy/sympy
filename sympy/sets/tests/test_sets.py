@@ -1063,3 +1063,10 @@ def test_issue_11174():
 
     soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
     assert Intersection(FiniteSet(x), S.Reals) == soln
+
+def test_finite_set_intersection():
+    # The following should not produce recursion errors
+    assert Intersection(FiniteSet(-oo, x), FiniteSet(x)) == FiniteSet(x)
+    assert Intersection._handle_finite_sets([FiniteSet(-oo, x), FiniteSet(0, x)]) == FiniteSet(x)
+
+    Intersection._handle_finite_sets([FiniteSet(-oo, x), FiniteSet(x)]) == FiniteSet(x)
