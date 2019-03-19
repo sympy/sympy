@@ -786,6 +786,32 @@ def test_Mul_is_prime_composite():
     assert ( (x+1)*(y+1) ).is_prime is None
     assert ( (x+1)*(y+1) ).is_composite is None
 
+
+def test_Pow_is_pos_neg():
+    z = Symbol('z', real=True)
+    w = Symbol('w', nonpositive=True)
+
+    assert (S(-1)**S(2)).is_positive is True
+    assert (S(1)**z).is_positive is True
+    assert (S(-1)**S(3)).is_positive is False
+    assert (S(0)**S(0)).is_positive is True  # 0**0 is 1
+    assert (w**S(3)).is_positive is False
+    assert (w**S(2)).is_positive is None
+    assert (I**2).is_positive is False
+    assert (I**4).is_positive is True
+
+    # tests emerging from #16332 issue
+    p = Symbol('p', zero=True)
+    q = Symbol('q', zero=False, real=True)
+    j = Symbol('j', zero=False, even=True)
+    x = Symbol('x', zero=True)
+    y = Symbol('y', zero=True)
+    assert (p**q).is_positive is False
+    assert (p**q).is_negative is False
+    assert (p**j).is_positive is False
+    assert (x**y).is_positive is True   # 0**0
+    assert (x**y).is_negative is False
+
 def test_Pow_is_prime_composite():
     from sympy import Pow
     x = Symbol('x', positive=True, integer=True)
@@ -1028,10 +1054,4 @@ def test_complex_reciprocal_imaginary():
     assert (1 / (4 + 3*I)).is_imaginary is False
 
 
-def test_issue_16332():
-    p = Symbol('p', zero=True)
-    q = Symbol('q', zero=False, real=True)
-    j = Symbol('j', zero=False, even=True)
-    assert (p**q).is_positive is False
-    assert (p**q).is_negative is False
-    assert (p**j).is_positive is False
+
