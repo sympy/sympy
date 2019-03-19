@@ -859,7 +859,7 @@ def first_in_class(C, Y=[]):
     # For each 0!=alpha in [0 .. nc-1], we start by constructing the equivalent
     # standardized coset table C_alpha corresponding to H_alpha
     for alpha in range(1, n):
-        # reset v to "None" after previous value of alpha
+        # reset nu to "None" after previous value of alpha
         for beta in range(lamda+1):
             nu[mu[beta]] = None
         # we only want to reject our current table in favour of a preceding
