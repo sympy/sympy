@@ -699,10 +699,8 @@ class Quaternion(Expr):
                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
 
     def differentiate(self, vector):
-        """
-        returns the differentiation of quaternion which represents 
+        """returns the differentiation of quaternion which represents 
         the rotation of the quaternion at the rate of 3d vector -'vector'.
-    
         """
         vec = vector._args
         quat = Quaternion(0, vec[0], vec[1], vec[2])
