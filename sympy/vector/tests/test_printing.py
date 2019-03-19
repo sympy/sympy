@@ -148,12 +148,12 @@ def test_latex_printing():
     assert latex(v[2]) == '- \\mathbf{\\hat{i}_{N}}'
     assert latex(v[5]) == ('(a)\\mathbf{\\hat{i}_{N}} + ' +
                            '(- b)\\mathbf{\\hat{j}_{N}}')
-    assert latex(v[6]) == ('(\\mathbf{{x}_{N}} + a^{2})\\mathbf{\\hat{i}_' +
+    assert latex(v[6]) == ('(\\mathbf{{N}_{x}} + a^{2})\\mathbf{\\hat{i}_' +
                           '{N}} + \\mathbf{\\hat{k}_{N}}')
-    assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + (\\mathbf{{x}_' +
-                           '{C}}^{2} - \\int f{\\left(b \\right)}\\,' +
+    assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + (\\mathbf{{C}_' +
+                           '{x}}^{2} - \\int f{\\left(b \\right)}\\,' +
                            ' db)\\mathbf{\\hat{k}_{N}}')
-    assert latex(s) == '3 \\mathbf{{y}_{C}} \\mathbf{{x}_{N}}^{2}'
+    assert latex(s) == '3 \\mathbf{{C}_{y}} \\mathbf{{N}_{x}}^{2}'
     assert latex(d[0]) == '(\\mathbf{\\hat{0}}|\\mathbf{\\hat{0}})'
     assert latex(d[4]) == ('(a)(\\mathbf{\\hat{i}_{N}}{|}\\mathbf' +
                            '{\\hat{k}_{N}})')
@@ -173,5 +173,5 @@ def test_custom_names():
     assert A.x.__str__() == 'A.x'
     assert A.i._pretty_form == 'A_i'
     assert A.x._pretty_form == 'A_x'
-    assert A.i._latex_form == r'\mathbf{{i}_{A}}'
+    assert A.i._latex_form == r'\mathbf{{A}_{i}}'
     assert A.x._latex_form == r"\mathbf{\hat{x}_{A}}"
