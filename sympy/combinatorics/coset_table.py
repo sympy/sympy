@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import print_function, division
 
 from sympy.combinatorics.free_groups import free_group
