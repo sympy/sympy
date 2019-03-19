@@ -1026,3 +1026,12 @@ def test_issue_10302():
 
 def test_complex_reciprocal_imaginary():
     assert (1 / (4 + 3*I)).is_imaginary is False
+
+
+def test_issue_16332():
+    p = Symbol('p', zero=True)
+    q = Symbol('q', zero=False, real=True)
+    j = Symbol('j', zero=False, even=True)
+    assert (p**q).is_positive is False
+    assert (p**q).is_negative is False
+    assert (p**j).is_positive is False
