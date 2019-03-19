@@ -857,50 +857,50 @@ def first_in_class(C, Y=[]):
     # mutually nu and mu are the mutually-inverse equivalence maps between
     # Omega_c_alpha and Omega_c
     next_alpha = False
-    # For each 0≠α ∈ [0 .. nc-1], we start by constructing the equivalent
-    # standardized coset table C_α corresponding to H_α
+    # For each 0!=alpha in [0 .. nc-1], we start by constructing the equivalent
+    # standardized coset table C_alpha corresponding to H_alpha
     for alpha in range(1, n):
-        # reset ν to "None" after previous value of α
+        # reset v to "None" after previous value of alpha
         for beta in range(lamda+1):
             nu[mu[beta]] = None
         # we only want to reject our current table in favour of a preceding
-        # table in the ordering in which 1 is replaced by α, if the subgroup
-        # G_α corresponding to this preceding table definitely contains the
+        # table in the ordering in which 1 is replaced by alpha, if the subgroup
+        # G_alpha corresponding to this preceding table definitely contains the
         # given subgroup
         for w in Y:
             # TODO: this should support input of a list of general words
             # not just the words which are in "A" (i.e gen and gen^-1)
             if C.table[alpha][C.A_dict[w]] != alpha:
-                # continue with α
+                # continue with alpha
                 next_alpha = True
                 break
         if next_alpha:
             next_alpha = False
             continue
-        # try α as the new point 0 in Ω_C_α
+        # try alpha as the new point 0 in Omega_C_alpha
         mu[0] = alpha
         nu[alpha] = 0
-        # compare corresponding entries in C and C_α
+        # compare corresponding entries in C and C_alpha
         lamda = 0
         for beta in range(n):
             for x in C.A:
                 gamma = C.table[beta][C.A_dict[x]]
                 delta = C.table[mu[beta]][C.A_dict[x]]
                 # if either of the entries is undefined,
-                # we move with next α
+                # we move with next alpha
                 if gamma is None or delta is None:
-                    # continue with α
+                    # continue with alpha
                     next_alpha = True
                     break
                 if nu[delta] is None:
-                    # delta becomes the next point in Ω_C_α
+                    # delta becomes the next point in Omega_C_alpha
                     lamda += 1
                     nu[delta] = lamda
                     mu[lamda] = delta
                 if nu[delta] < gamma:
                     return False
                 if nu[delta] > gamma:
-                    # continue with α
+                    # continue with alpha
                     next_alpha = True
                     break
             if next_alpha:
@@ -1181,13 +1181,13 @@ def rewrite(C, alpha, w):
     ==========
 
     C: CosetTable
-    α: A live coset
+    alpha: A live coset
     w: A word in `A*`
 
     Returns
     =======
 
-    ρ(τ(α), w)
+    rho(tau(alpha), w)
 
     Examples
     ========
