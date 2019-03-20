@@ -36,9 +36,8 @@ def test_polygon():
     assert Polygon(Point(-4, 15), Point(-11, 15), Point(-15, 15),
         Point(-15, 33/5), Point(-15, -87/10), Point(-15, -15),
         Point(-42/5, -15), Point(-2, -15), Point(7, -15), Point(15, -15),
-        Point(15, -3), Point(15, 10), Point(15, 15)) ==
+        Point(15, -3), Point(15, 10), Point(15, 15)) == \
         Polygon(Point(-15,-15), Point(15,-15), Point(15,15), Point(-15,15))
-
 
     p1 = Polygon(
         Point(0, 0), Point(3, -1),
@@ -115,7 +114,7 @@ def test_polygon():
     assert Polygon(Point(4, 4), Point(0, 4), Point(0, 0)) in p5
     assert p5 != Point(0, 4)
     assert Point(0, 1) in p5
-    assert p5.arbitrary_point('t').subs(Symbol('t', real=True), 0) ==
+    assert p5.arbitrary_point('t').subs(Symbol('t', real=True), 0) == \
         Point(0, 0)
     raises(ValueError, lambda: Polygon(
         Point(x, 0), Point(0, y), Point(x, y)).arbitrary_point('x'))
@@ -318,15 +317,15 @@ def test_polygon():
 
 
 def test_convex_hull():
-    p = [Point(-5, -1), Point(-2, 1), Point(-2, -1), Point(-1, -3),.\
-         Point(0, 0), Point(1, 1), Point(2, 2), Point(2, -1), Point(3, 1),.\
+    p = [Point(-5, -1), Point(-2, 1), Point(-2, -1), Point(-1, -3), \
+         Point(0, 0), Point(1, 1), Point(2, 2), Point(2, -1), Point(3, 1), \
          Point(4, -1), Point(6, 2)]
     ch = Polygon(p[0], p[3], p[9], p[10], p[6], p[1])
     #test handling of duplicate points
     p.append(p[3])
 
     #more than 3 collinear points
-    another_p = [Point(-45, -85), Point(-45, 85), Point(-45, 26),.\
+    another_p = [Point(-45, -85), Point(-45, 85), Point(-45, 26), \
                  Point(-45, -24)]
     ch2 = Segment(another_p[0], another_p[1])
 
@@ -339,15 +338,15 @@ def test_convex_hull():
     assert convex_hull(*[p[-1]]*3) == p[-1]
 
     # collection of items
-    assert convex_hull(*[Point(0, 0),.\
-                        Segment(Point(1, 0), Point(1, 1)),.\
+    assert convex_hull(*[Point(0, 0), \
+                        Segment(Point(1, 0), Point(1, 1)), \
                         RegularPolygon(Point(2, 0), 2, 4)]) == \
         Polygon(Point(0, 0), Point(2, -2), Point(4, 0), Point(2, 2))
 
 
 def test_encloses():
     # square with a dimpled left side
-    s = Polygon(Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1),.\
+    s = Polygon(Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1), \
         Point(S.Half, S.Half))
     # the following is True if the polygon isn't treated as closing on itself
     assert s.encloses(Point(0, S.Half)) is False
@@ -356,11 +355,11 @@ def test_encloses():
 
 
 def test_triangle_kwargs():
-    assert Triangle(sss=(3, 4, 5)) ==
+    assert Triangle(sss=(3, 4, 5)) == \
         Triangle(Point(0, 0), Point(3, 0), Point(3, 4))
-    assert Triangle(asa=(30, 2, 30)) ==
+    assert Triangle(asa=(30, 2, 30)) == \
         Triangle(Point(0, 0), Point(2, 0), Point(1, sqrt(3)/3))
-    assert Triangle(sas=(1, 45, 2)) ==
+    assert Triangle(sas=(1, 45, 2)) == \
         Triangle(Point(0, 0), Point(2, 0), Point(sqrt(2)/2, sqrt(2)/2))
     assert Triangle(sss=(1, 2, 5)) is None
     assert deg(rad(180)) == 180
