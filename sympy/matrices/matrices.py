@@ -4100,7 +4100,7 @@ class MatrixBase(MatrixDeprecated,
 
             If ``'RD'``, Rank-Decomposition will be used.
 
-            If ``'diag'``, Diagonalization will be used.
+            If ``'ED'``, Diagonalization will be used.
 
         Examples
         ========
@@ -4117,7 +4117,7 @@ class MatrixBase(MatrixDeprecated,
 
         Computing pseudoinverse by diagonalization :
 
-        >>> B = A.pinv(method='diag')
+        >>> B = A.pinv(method='ED')
         >>> B.simplify()
         >>> B
         Matrix([
@@ -4143,8 +4143,10 @@ class MatrixBase(MatrixDeprecated,
 
         if method == 'RD':
             return self._eval_pinv_rank_decomposition()
-        elif method == 'diag':
+        elif method == 'ED':
             return self._eval_pinv_diagonalization()
+        else:
+            raise ValueError()
 
     def print_nonzero(self, symb="X"):
         """Shows location of non-zero entries for fast shape lookup.
