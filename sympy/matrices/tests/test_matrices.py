@@ -3022,7 +3022,7 @@ def test_pinv_rank_deficient_when_diagonalization_fails():
         assert AAp.H == AAp
         assert ApA.H == ApA
 
-def test_pinv_rank_deficient_when_diagonalization_fails():
+def test_pinv_succeeds_with_rank_decomposition_method():
     # Test rank decomposition method of pseudoinverse succeeding
     As = [Matrix([
         [61, 89, 55, 20, 71, 0],
