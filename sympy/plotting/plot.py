@@ -291,9 +291,86 @@ class Plot(object):
 
 class PlotGrid(object):
     """This class helps to plot subplots from already created sympy plots
-    in a single figure
+    in a single figure.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.plotting.plot import plot, plot3d, PlotGrid
+    >>> x, y = symbols('x, y')
+    >>> p1 = plot(x, x**2, x**3, (x, -5, 5))
+    >>> p2 = plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
+    >>> p3 = plot(x**3, (x, -5, 5))
+    >>> p4 = plot3d(x*y, (x, -5, 5), (y, -5, 5))
+
+    Plotting vertically in a single line
+
+    >>> PlotGrid(2, 1 , p1, p2)
+    PlotGrid object containing:
+    Plot[0]:Plot object containing:
+    [0]: cartesian line: x for x over (-5.0, 5.0)
+    [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+    [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+    Plot[1]:Plot object containing:
+    [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+    [1]: cartesian line: x for x over (-5.0, 5.0)
+
+    Plotting horizontally in a single line
+
+    >>> PlotGrid(1, 3 , p2, p3, p4)
+    PlotGrid object containing:
+    Plot[0]:Plot object containing:
+    [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+    [1]: cartesian line: x for x over (-5.0, 5.0)
+    Plot[1]:Plot object containing:
+    [0]: cartesian line: x**3 for x over (-5.0, 5.0)
+    Plot[2]:Plot object containing:
+    [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+
+    Plotting in a grid form
+
+    >>> PlotGrid(2, 2, p1, p2 ,p3, p4)
+    PlotGrid object containing:
+    Plot[0]:Plot object containing:
+    [0]: cartesian line: x for x over (-5.0, 5.0)
+    [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+    [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+    Plot[1]:Plot object containing:
+    [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+    [1]: cartesian line: x for x over (-5.0, 5.0)
+    Plot[2]:Plot object containing:
+    [0]: cartesian line: x**3 for x over (-5.0, 5.0)
+    Plot[3]:Plot object containing:
+    [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+
     """
     def __init__(self, nrows, ncolumns, *args, **kwargs):
+        """
+        Parameters
+        ==========
+        nrows : The number of rows that should be in the grid of the
+                required subplot
+        ncolumns : The number of columns that should be in the grid
+                   of the required subplot
+
+        nrows and ncolumns together define the required grid
+
+        Arguments
+        =========
+        A list of predefined plot objects entered in a row-wise sequence
+        i.e. plot objects which are to be in the top row of the required
+        grid are written first, then the second row objects and so on
+
+        Keyword arguments
+        =================
+        show : Boolean
+               The default value is set to ``True``. Set show to ``False`` and
+               the function will not display the subplot. The returned instance
+               of the ``PlotGrid`` class can then be used to save or display the
+               plot by calling the ``save()`` and ``show()`` methods
+               respectively.
+        """
         self.nrows = nrows
         self.ncolumns = ncolumns
         self._series = []
@@ -983,7 +1060,7 @@ class MatplotlibBackend(BaseBackend):
                 self.ax[i].xaxis.set_ticks_position('bottom')
                 self.ax[i].yaxis.set_ticks_position('left')
 
-    def process_series(self, series, ax, parent):
+    def _process_series(self, series, ax, parent):
         for s in series:
             # Create the collections
             if s.is_2Dline:
@@ -1123,7 +1200,11 @@ class MatplotlibBackend(BaseBackend):
         if parent.ylabel:
             ax.set_ylabel(parent.ylabel, position=(0, 1))
 
-    def _process_series(self):
+    def process_series(self):
+        """
+        Iterates over every ``Plot`` object and further calls
+        _process_series()
+        """
         parent = self.parent
         if isinstance(parent, Plot):
             series_list = [parent._series]
@@ -1133,10 +1214,10 @@ class MatplotlibBackend(BaseBackend):
         for i, (series, ax) in enumerate(zip(series_list, self.ax)):
             if isinstance(parent, PlotGrid):
                 parent = parent.args[i]
-            self.process_series(series, ax, parent)
+            self._process_series(series, ax, parent)
 
     def show(self):
-        self._process_series()
+        self.process_series()
         #TODO after fixing https://github.com/ipython/ipython/issues/1255
         # you can uncomment the next line and remove the pyplot.show() call
         #self.fig.show()
