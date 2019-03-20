@@ -34,43 +34,43 @@ parser = ArgumentParser(
 )
 
 parser.add_argument("--source-dir", type=str, dest="source_dir",
-    help="Directory of the source *.svg file [default: %default]",
+    help="Directory of the source *.svg file [default: %(default)s]",
     default=default_source_dir)
 
 parser.add_argument("--source-svg", type=str, dest="source_svg",
-    help="File name of the source *.svg file [default: %default]",
+    help="File name of the source *.svg file [default: %(default)s]",
     default=default_source_svg)
 
 parser.add_argument("--svg", action="store_true", dest="generate_svg",
-    help="Generate *.svg versions without tails and without text 'SymPy' [default: %default]",
+    help="Generate *.svg versions without tails and without text 'SymPy' [default: %(default)s]",
     default=False)
 
 parser.add_argument("--png", action="store_true", dest="generate_png",
-    help="Generate *.png versions [default: %default]",
+    help="Generate *.png versions [default: %(default)s]",
     default=False)
 
 parser.add_argument("--ico", action="store_true", dest="generate_ico",
-    help="Generate *.ico versions [default: %default]",
+    help="Generate *.ico versions [default: %(default)s]",
     default=False)
 
 parser.add_argument("--clear", action="store_true", dest="clear",
-    help="Remove temporary files [default: %default]",
+    help="Remove temporary files [default: %(default)s]",
     default=False)
 
 parser.add_argument("-a", "--all", action="store_true", dest="generate_all",
-    help="Shorthand for '--svg --png --ico --clear' options [default: %default]",
+    help="Shorthand for '--svg --png --ico --clear' options [default: %(default)s]",
     default=True)
 
 parser.add_argument("-s", "--sizes", type=str, dest="sizes",
-    help="Sizes of png pictures [default: %default]",
+    help="Sizes of png pictures [default: %(default)s]",
     default="160,500")
 
 parser.add_argument("--icon-sizes", type=str, dest="icon_sizes",
-    help="Sizes of icons embedded in favicon file [default: %default]",
+    help="Sizes of icons embedded in favicon file [default: %(default)s]",
     default="16,32,48,64")
 
 parser.add_argument("--output-dir", type=str, dest="output_dir",
-    help="Output dir [default: %default]",
+    help="Output dir [default: %(default)s]",
     default=default_output_dir)
 
 parser.add_argument("-d", "--debug", action="store_true", dest="debug",
