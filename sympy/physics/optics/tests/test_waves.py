@@ -45,3 +45,5 @@ def test_twave():
     assert w3.rewrite(exp) == sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2)
     + A2**2)*exp(I*(pi*f*n*x*s/(149896229*m) - 2*pi*f*t
     + atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2))))
+    w4 = TWave(A1, None, 0, 1/f)
+    assert w4.frequency == f
