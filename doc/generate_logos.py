@@ -8,7 +8,7 @@ Requirements:
     imagemagick     - for converting to *.ico favicon format
 """
 
-from optparse import OptionParser
+from argparse import ArgumentParser
 import xml.dom.minidom
 import os.path
 import logging
@@ -29,54 +29,55 @@ svg_sizes['notext'] = {"prefix":"notext", "dx":-7, "dy":90, "size":750, "title":
 # The list of identifiers of various versions
 versions = ['notail', 'notail-notext', 'notext']
 
-parser = OptionParser()
-parser.set_usage("%s [options ...]")
+parser = ArgumentParser(
+    usage="%s [options ...]"
+)
 
-parser.add_option("--source-dir", type="string", dest="source_dir",
+parser.add_argument("--source-dir", type=str, dest="source_dir",
     help="Directory of the source *.svg file [default: %default]",
     default=default_source_dir)
 
-parser.add_option("--source-svg", type="string", dest="source_svg",
+parser.add_argument("--source-svg", type=str, dest="source_svg",
     help="File name of the source *.svg file [default: %default]",
     default=default_source_svg)
 
-parser.add_option("--svg", action="store_true", dest="generate_svg",
+parser.add_argument("--svg", action="store_true", dest="generate_svg",
     help="Generate *.svg versions without tails and without text 'SymPy' [default: %default]",
     default=False)
 
-parser.add_option("--png", action="store_true", dest="generate_png",
+parser.add_argument("--png", action="store_true", dest="generate_png",
     help="Generate *.png versions [default: %default]",
     default=False)
 
-parser.add_option("--ico", action="store_true", dest="generate_ico",
+parser.add_argument("--ico", action="store_true", dest="generate_ico",
     help="Generate *.ico versions [default: %default]",
     default=False)
 
-parser.add_option("--clear", action="store_true", dest="clear",
+parser.add_argument("--clear", action="store_true", dest="clear",
     help="Remove temporary files [default: %default]",
     default=False)
 
-parser.add_option("-a", "--all", action="store_true", dest="generate_all",
+parser.add_argument("-a", "--all", action="store_true", dest="generate_all",
     help="Shorthand for '--svg --png --ico --clear' options [default: %default]",
     default=True)
 
-parser.add_option("-s", "--sizes", type="string", dest="sizes",
+parser.add_argument("-s", "--sizes", type=str, dest="sizes",
     help="Sizes of png pictures [default: %default]",
     default="160,500")
 
-parser.add_option("--icon-sizes", type="string", dest="icon_sizes",
+parser.add_argument("--icon-sizes", type=str, dest="icon_sizes",
     help="Sizes of icons embedded in favicon file [default: %default]",
     default="16,32,48,64")
 
-parser.add_option("--output-dir", type="string", dest="output_dir",
-    help="Outpu dir [default: %default]",
+parser.add_argument("--output-dir", type=str, dest="output_dir",
+    help="Output dir [default: %default]",
     default=default_output_dir)
 
-parser.add_option("-d", "--debug", action="store_true", dest="debug",
+parser.add_argument("-d", "--debug", action="store_true", dest="debug",
     default=False)
 
 def main():
-    options, args = parser.parse_args()
+    options, args = parser.parse_known_args()
     if options.debug:
         logging.basicConfig(level=logging.DEBUG)
 
