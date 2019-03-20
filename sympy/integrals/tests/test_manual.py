@@ -476,5 +476,5 @@ def test_manual_subs():
 
 def test_issue_15471():
     f = log(x)*cos(log(x))/x**(S(3)/4)
-    F = -128*x**(1/4)*sin(log(x))/289 + 240*x**(1/4)*cos(log(x))/289 + (16*x**(1/4)*sin(log(x))/17 + 4*x**(1/4)*cos(log(x))/17)*log(x)
+    F = -128*x**(S(1)/4)*sin(log(x))/289 + 240*x**(S(1)/4)*cos(log(x))/289 + (16*x**(S(1)/4)*sin(log(x))/17 + 4*x**(S(1)/4)*cos(log(x))/17)*log(x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)

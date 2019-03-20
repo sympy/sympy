@@ -139,6 +139,7 @@ class LatexPrinter(Printer):
         "root_notation": True,
         "mat_symbol_style": "plain",
         "imaginary_unit": "i",
+        "gothic_re_im": False,
     }
 
     def __init__(self, settings=None):
@@ -200,7 +201,7 @@ class LatexPrinter(Printer):
     def parenthesize(self, item, level, strict=False):
         prec_val = precedence_traditional(item)
         if (prec_val < level) or ((not strict) and prec_val <= level):
-            return r"\left(%s\right)" % self._print(item)
+            return r"\left({}\right)".format(self._print(item))
         else:
             return self._print(item)
 
@@ -314,13 +315,13 @@ class LatexPrinter(Printer):
             r"\left(%s\right)" % ", ".join(ls)
 
     def _print_bool(self, e):
-        return r"\mathrm{%s}" % e
+        return r"\text{%s}" % e
 
     _print_BooleanTrue = _print_bool
     _print_BooleanFalse = _print_bool
 
     def _print_NoneType(self, e):
-        return r"\mathrm{%s}" % e
+        return r"\text{%s}" % e
 
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
@@ -408,6 +409,10 @@ class LatexPrinter(Printer):
     def _print_Gradient(self, expr):
         func = expr._expr
         return r"\nabla %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+
+    def _print_Laplacian(self, expr):
+        func = expr._expr
+        return r"\triangle %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
         from sympy.core.power import Pow
@@ -898,12 +903,18 @@ class LatexPrinter(Printer):
     _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
-        tex = r"\Re{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Atom'])
+        if self._settings['gothic_re_im']:
+            tex = r"\Re{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Atom'])
+        else:
+            tex = r"\operatorname{{re}}{{{}}}".format(self.parenthesize(expr.args[0], PRECEDENCE['Atom']))
 
         return self._do_exponent(tex, exp)
 
     def _print_im(self, expr, exp=None):
-        tex = r"\Im{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Func'])
+        if self._settings['gothic_re_im']:
+            tex = r"\Im{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Atom'])
+        else:
+            tex = r"\operatorname{{im}}{{{}}}".format(self.parenthesize(expr.args[0], PRECEDENCE['Atom']))
 
         return self._do_exponent(tex, exp)
 
@@ -1499,21 +1510,21 @@ class LatexPrinter(Printer):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
         if not isinstance(mat, MatrixSymbol):
-            return r"\left(%s\right)^T" % self._print(mat)
+            return r"\left(%s\right)^{T}" % self._print(mat)
         else:
-            return "%s^T" % self._print(mat)
+            return "%s^{T}" % self._print(mat)
 
     def _print_Trace(self, expr):
         mat = expr.arg
-        return r"\mathrm{tr}\left(%s \right)" % self._print(mat)
+        return r"\operatorname{tr}\left(%s \right)" % self._print(mat)
 
     def _print_Adjoint(self, expr):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
         if not isinstance(mat, MatrixSymbol):
-            return r"\left(%s\right)^\dagger" % self._print(mat)
+            return r"\left(%s\right)^{\dagger}" % self._print(mat)
         else:
-            return r"%s^\dagger" % self._print(mat)
+            return r"%s^{\dagger}" % self._print(mat)
 
     def _print_MatMul(self, expr):
         from sympy import MatMul, Mul
@@ -1782,12 +1793,12 @@ class LatexPrinter(Printer):
 
     def _print_RandomDomain(self, d):
         if hasattr(d, 'as_boolean'):
-            return 'Domain: ' + self._print(d.as_boolean())
+            return '\\text{Domain: }' + self._print(d.as_boolean())
         elif hasattr(d, 'set'):
-            return ('Domain: ' + self._print(d.symbols) + ' in ' +
+            return ('\\text{Domain: }' + self._print(d.symbols) + '\\text{ in }' +
                     self._print(d.set))
         elif hasattr(d, 'symbols'):
-            return 'Domain on ' + self._print(d.symbols)
+            return '\\text{Domain on }' + self._print(d.symbols)
         else:
             return self._print(None)
 
@@ -1806,8 +1817,11 @@ class LatexPrinter(Printer):
         dots = r'\ldots'
 
         if s.start.is_infinite:
-            printset = s.start, dots, s[-1] - s.step, s[-1]
-        elif s.stop.is_infinite or len(s) > 4:
+            printset = dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite:
+            it = iter(s)
+            printset = next(it), next(it), dots
+        elif len(s) > 4:
             it = iter(s)
             printset = next(it), next(it), dots, s[-1]
         else:
@@ -1816,6 +1830,32 @@ class LatexPrinter(Printer):
         return (r"\left\{" +
                 r", ".join(self._print(el) for el in printset) +
                 r"\right\}")
+
+    def _print_bernoulli(self, expr, exp=None):
+        tex = r"B_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
+
+    _print_bell = _print_bernoulli
+
+    def _print_fibonacci(self, expr, exp=None):
+        tex = r"F_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
+
+    def _print_lucas(self, expr, exp=None):
+        tex = r"L_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
+
+    def _print_tribonacci(self, expr, exp=None):
+        tex = r"T_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
 
     def _print_SeqFormula(self, s):
         if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:
@@ -2073,55 +2113,38 @@ class LatexPrinter(Printer):
             tex = r"%s^{%s}" % (tex, self._print(exp))
         return tex
 
+    def _print_UnifiedTransform(self, expr, s, inverse=False):
+        return r"\mathcal{{{}}}{}_{{{}}}\left[{}\right]\left({}\right)".format(s, '^{-1}' if inverse else '', self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
     def _print_MellinTransform(self, expr):
-        return r"\mathcal{M}_{%s}\left[%s\right]\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]),
-             self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'M')
 
     def _print_InverseMellinTransform(self, expr):
-        return r"\mathcal{M}^{-1}_{%s}\left[%s\right]\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]),
-             self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'M', True)
 
     def _print_LaplaceTransform(self, expr):
-        return r"\mathcal{L}_{%s}\left[%s\right]\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]),
-             self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'L')
 
     def _print_InverseLaplaceTransform(self, expr):
-        return r"\mathcal{L}^{-1}_{%s}\left[%s\right]\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]),
-             self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'L', True)
 
     def _print_FourierTransform(self, expr):
-        return r"\mathcal{F}_{%s}\left[%s\right]\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]),
-             self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'F')
 
     def _print_InverseFourierTransform(self, expr):
-        return r"\mathcal{F}^{-1}_{%s}\left[%s\right]\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]),
-             self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'F', True)
 
     def _print_SineTransform(self, expr):
-        return r"\mathcal{SIN}_{%s}\left[%s\right]\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]),
-             self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'SIN')
 
     def _print_InverseSineTransform(self, expr):
-        return r"\mathcal{SIN}^{-1}_{%s}\left[%s\right]\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]),
-             self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'SIN', True)
 
     def _print_CosineTransform(self, expr):
-        return r"\mathcal{COS}_{%s}\left[%s\right]\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]),
-             self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'COS')
 
     def _print_InverseCosineTransform(self, expr):
-        return r"\mathcal{COS}^{-1}_{%s}\left[%s\right]\left(%s\right)" % \
-            (self._print(expr.args[1]), self._print(expr.args[0]),
-             self._print(expr.args[2]))
+        return self._print_UnifiedTransform(expr, 'COS', True)
 
     def _print_DMP(self, p):
         try:
@@ -2165,7 +2188,7 @@ class LatexPrinter(Printer):
         return component_names + pretty_morphism
 
     def _print_Category(self, morphism):
-        return "\\mathbf{%s}" % self._print(Symbol(morphism.name))
+        return r"\mathbf{{{}}}".format(self._print(Symbol(morphism.name)))
 
     def _print_Diagram(self, diagram):
         if not diagram.premises:
@@ -2198,20 +2221,20 @@ class LatexPrinter(Printer):
         return latex_result
 
     def _print_FreeModule(self, M):
-        return '{%s}^{%s}' % (self._print(M.ring), self._print(M.rank))
+        return '{{{}}}^{{{}}}'.format(self._print(M.ring), self._print(M.rank))
 
     def _print_FreeModuleElement(self, m):
         # Print as row vector for convenience, for now.
-        return r"\left[ %s \right]" % ",".join(
-            '{' + self._print(x) + '}' for x in m)
+        return r"\left[ {} \right]".format(",".join(
+            '{' + self._print(x) + '}' for x in m))
 
     def _print_SubModule(self, m):
-        return r"\left\langle %s \right\rangle" % ",".join(
-            '{' + self._print(x) + '}' for x in m.gens)
+        return r"\left\langle {} \right\rangle".format(",".join(
+            '{' + self._print(x) + '}' for x in m.gens))
 
     def _print_ModuleImplementedIdeal(self, m):
-        return r"\left\langle %s \right\rangle" % ",".join(
-            '{' + self._print(x) + '}' for [x] in m._module.gens)
+        return r"\left\langle {} \right\rangle".format(",".join(
+            '{' + self._print(x) + '}' for [x] in m._module.gens))
 
     def _print_Quaternion(self, expr):
         # TODO: This expression is potentially confusing,
@@ -2223,49 +2246,47 @@ class LatexPrinter(Printer):
 
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...
-        return r"\frac{%s}{%s}" % (self._print(R.ring),
-                                   self._print(R.base_ideal))
+        return r"\frac{{{}}}{{{}}}".format(self._print(R.ring),
+                 self._print(R.base_ideal))
 
     def _print_QuotientRingElement(self, x):
-        return r"{%s} + {%s}" % (self._print(x.data),
-                                 self._print(x.ring.base_ideal))
+        return r"{{{}}} + {{{}}}".format(self._print(x.data),
+                 self._print(x.ring.base_ideal))
 
     def _print_QuotientModuleElement(self, m):
-        return r"{%s} + {%s}" % (self._print(m.data),
-                                 self._print(m.module.killed_module))
+        return r"{{{}}} + {{{}}}".format(self._print(m.data),
+                 self._print(m.module.killed_module))
 
     def _print_QuotientModule(self, M):
         # TODO nicer fractions for few generators...
-        return r"\frac{%s}{%s}" % (self._print(M.base),
-                                   self._print(M.killed_module))
+        return r"\frac{{{}}}{{{}}}".format(self._print(M.base),
+                 self._print(M.killed_module))
 
     def _print_MatrixHomomorphism(self, h):
-        return r"{%s} : {%s} \to {%s}" % (self._print(h._sympy_matrix()),
-                                          self._print(h.domain),
-                                          self._print(h.codomain))
+        return r"{{{}}} : {{{}}} \to {{{}}}".format(self._print(h._sympy_matrix()),
+            self._print(h.domain), self._print(h.codomain))
 
     def _print_BaseScalarField(self, field):
         string = field._coord_sys._names[field._index]
-        return r'\boldsymbol{\mathrm{%s}}' % self._print(Symbol(string))
+        return r'\mathbf{{{}}}'.format(self._print(Symbol(string)))
 
     def _print_BaseVectorField(self, field):
         string = field._coord_sys._names[field._index]
-        return r'\partial_{%s}' % self._print(Symbol(string))
+        return r'\partial_{{{}}}'.format(self._print(Symbol(string)))
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
             string = field._coord_sys._names[field._index]
-            return r'\mathrm{d}%s' % self._print(Symbol(string))
+            return r'\operatorname{{d}}{}'.format(self._print(Symbol(string)))
         else:
-            return 'd(%s)' % self._print(field)
             string = self._print(field)
-            return r'\mathrm{d}\left(%s\right)' % string
+            return r'\operatorname{{d}}\left({}\right)'.format(string)
 
     def _print_Tr(self, p):
         # TODO: Handle indices
         contents = self._print(p.args[0])
-        return r'\mbox{Tr}\left(%s\right)' % (contents)
+        return r'\operatorname{{tr}}\left({}\right)'.format(contents)
 
     def _print_totient(self, expr, exp=None):
         if exp is not None:
@@ -2347,7 +2368,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
           itex=False, ln_notation=False, long_frac_ratio=None,
           mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
           order=None, symbol_names=None, root_notation=True,
-          mat_symbol_style="plain", imaginary_unit="i"):
+          mat_symbol_style="plain", imaginary_unit="i", gothic_re_im=False):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2408,8 +2429,11 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         a MatrixSymbol A will be printed as ``\mathbf{A}``, otherwise as ``A``.
     imaginary_unit : string, optional
         String to use for the imaginary unit. Defined options are "i" (default)
-        and "j". Adding "b" or "t" in front gives ``\mathrm`` or ``\text``, so
-        "bi" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
+        and "j". Adding "r" or "t" in front gives ``\mathrm`` or ``\text``, so
+        "ri" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
+    gothic_re_im : boolean, optional
+        If set to ``True``, `\Re` and `\Im` is used for ``re`` and ``im``, respectively.
+        The default is ``False`` leading to `\operatorname{re}` and `\operatorname{im}`.
 
     Notes
     =====
@@ -2537,6 +2561,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'root_notation': root_notation,
         'mat_symbol_style': mat_symbol_style,
         'imaginary_unit': imaginary_unit,
+        'gothic_re_im': gothic_re_im,
     }
 
     return LatexPrinter(settings).doprint(expr)

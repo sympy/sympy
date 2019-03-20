@@ -251,8 +251,8 @@ def posify(eq):
             eq[i] = e.subs(reps)
         return f(eq), {r: s for s, r in reps.items()}
 
-    reps = dict([(s, Dummy(s.name, positive=True))
-                 for s in eq.free_symbols if s.is_positive is None])
+    reps = {s: Dummy(s.name, positive=True)
+                 for s in eq.free_symbols if s.is_positive is None}
     eq = eq.subs(reps)
     return eq, {r: s for s, r in reps.items()}
 

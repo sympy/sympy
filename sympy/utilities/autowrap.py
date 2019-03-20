@@ -377,7 +377,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             local_decs = []
             for arg, val in py_inf.items():
                 proto = self._prototype_arg(arg)
-                mat, ind = val
+                mat, ind = [self._string_var(v) for v in val]
                 local_decs.append("    cdef {0} = {1}.shape[{2}]".format(proto, mat, ind))
             local_decs.extend(["    cdef {0}".format(self._declare_arg(a)) for a in py_loc])
             declarations = "\n".join(local_decs)
@@ -386,7 +386,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
             # Function Body
             args_c = ", ".join([self._call_arg(a) for a in routine.arguments])
-            rets = ", ".join([str(r.name) for r in py_rets])
+            rets = ", ".join([self._string_var(r.name) for r in py_rets])
             if routine.results:
                 body = '    return %s(%s)' % (routine.name, args_c)
                 if rets:
@@ -444,14 +444,14 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             self._need_numpy = True
             ndim = len(arg.dimensions)
             mtype = np_types[t]
-            return mat_dec.format(mtype=mtype, ndim=ndim, name=arg.name)
+            return mat_dec.format(mtype=mtype, ndim=ndim, name=self._string_var(arg.name))
         else:
-            return "%s %s" % (t, str(arg.name))
+            return "%s %s" % (t, self._string_var(arg.name))
 
     def _declare_arg(self, arg):
         proto = self._prototype_arg(arg)
         if arg.dimensions:
-            shape = '(' + ','.join(str(i[1] + 1) for i in arg.dimensions) + ')'
+            shape = '(' + ','.join(self._string_var(i[1] + 1) for i in arg.dimensions) + ')'
             return proto + " = np.empty({shape})".format(shape=shape)
         else:
             return proto + " = 0"
@@ -459,11 +459,15 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     def _call_arg(self, arg):
         if arg.dimensions:
             t = arg.get_datatype('c')
-            return "<{0}*> {1}.data".format(t, arg.name)
+            return "<{0}*> {1}.data".format(t, self._string_var(arg.name))
         elif isinstance(arg, ResultBase):
-            return "&{0}".format(arg.name)
+            return "&{0}".format(self._string_var(arg.name))
         else:
-            return str(arg.name)
+            return self._string_var(arg.name)
+
+    def _string_var(self, var):
+        printer = self.generator.printer.doprint
+        return printer(var)
 
 
 class F2PyCodeWrapper(CodeWrapper):

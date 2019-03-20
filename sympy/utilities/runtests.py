@@ -501,7 +501,7 @@ def _test(*paths, **kwargs):
     tb = kwargs.get("tb", "short")
     kw = kwargs.get("kw", None) or ()
     # ensure that kw is a tuple
-    if isinstance(kw, str):
+    if isinstance(kw, string_types):
         kw = (kw, )
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
@@ -1190,7 +1190,7 @@ class SymPyTests(object):
                     except ImportError:
                         pass
 
-                code = compile(source, filename, "exec")
+                code = compile(source, filename, "exec", flags=0, dont_inherit=True)
                 exec_(code, gl)
             except (SystemExit, KeyboardInterrupt):
                 raise

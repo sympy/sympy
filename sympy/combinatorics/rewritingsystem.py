@@ -52,7 +52,7 @@ class RewritingSystem(object):
         Set the maximum number of rules that can be defined
 
         '''
-        if self._max_exceeded and n > self.maxeqns:
+        if n > self.maxeqns:
             self._max_exceeded = False
         self.maxeqns = n
         return

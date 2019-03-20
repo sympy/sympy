@@ -561,7 +561,7 @@ class Basic(with_metaclass(ManagedProperties)):
         True
         """
         def can(x):
-            d = dict([(i, i.as_dummy()) for i in x.bound_symbols])
+            d = {i: i.as_dummy() for i in x.bound_symbols}
             # mask free that shadow bound
             x = x.subs(d)
             c = x.canonical_variables
@@ -1276,7 +1276,7 @@ class Basic(with_metaclass(ManagedProperties)):
         """Helper for .has()"""
         return lambda other: self == other
 
-    def replace(self, query, value, map=False, simultaneous=True, exact=False):
+    def replace(self, query, value, map=False, simultaneous=True, exact=None):
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
@@ -1339,7 +1339,7 @@ class Basic(with_metaclass(ManagedProperties)):
             Replace subexpressions matching ``pattern`` with the expression
             written in terms of the Wild symbols in ``pattern``.
 
-            >>> a = Wild('a')
+            >>> a, b = map(Wild, 'ab')
             >>> f.replace(sin(a), tan(a))
             log(tan(x)) + tan(tan(x**2))
             >>> f.replace(sin(a), tan(a/2))
@@ -1349,21 +1349,19 @@ class Basic(with_metaclass(ManagedProperties)):
             >>> (x*y).replace(a*x, a)
             y
 
-            When the default value of False is used with patterns that have
-            more than one Wild symbol, non-intuitive results may be obtained:
+            Matching is exact by default when more than one Wild symbol
+            is used: matching fails unless the match gives non-zero
+            values for all Wild symbols:
 
-            >>> b = Wild('b')
-            >>> (2*x).replace(a*x + b, b - a)
-            2/x
-
-            For this reason, the ``exact`` option can be used to make the
-            replacement only when the match gives non-zero values for all
-            Wild symbols:
-
-            >>> (2*x + y).replace(a*x + b, b - a, exact=True)
+            >>> (2*x + y).replace(a*x + b, b - a)
             y - 2
-            >>> (2*x).replace(a*x + b, b - a, exact=True)
+            >>> (2*x).replace(a*x + b, b - a)
             2*x
+
+            When set to False, the results may be non-intuitive:
+
+            >>> (2*x).replace(a*x + b, b - a, exact=False)
+            2/x
 
         2.2. pattern -> func
             obj.replace(pattern(wild), lambda wild: expr(wild))
@@ -1399,7 +1397,7 @@ class Basic(with_metaclass(ManagedProperties)):
                   using matching rules
 
         """
-        from sympy.core.symbol import Dummy
+        from sympy.core.symbol import Dummy, Wild
         from sympy.simplify.simplify import bottom_up
 
         try:
@@ -1423,18 +1421,12 @@ class Basic(with_metaclass(ManagedProperties)):
                     "type or a callable")
         elif isinstance(query, Basic):
             _query = lambda expr: expr.match(query)
+            exact = len(query.atoms(Wild)) > 1 if exact is None else exact
 
-            # XXX remove the exact flag and make multi-symbol
-            # patterns use exact=True semantics; to do this the query must
-            # be tested to find out how many Wild symbols are present.
-            # See https://groups.google.com/forum/
-            # ?fromgroups=#!topic/sympy/zPzo5FtRiqI
-            # for a method of inspecting a function to know how many
-            # parameters it has.
             if isinstance(value, Basic):
                 if exact:
                     _value = lambda expr, result: (value.subs(result)
-                        if all(val for val in result.values()) else expr)
+                        if all(result.values()) else expr)
                 else:
                     _value = lambda expr, result: value.subs(result)
             elif callable(value):
@@ -1443,12 +1435,12 @@ class Basic(with_metaclass(ManagedProperties)):
                 # if ``exact`` is True, only accept match if there are no null
                 # values amongst those matched.
                 if exact:
-                    _value = lambda expr, result: (value(**dict([(
-                        str(key)[:-1], val) for key, val in result.items()]))
+                    _value = lambda expr, result: (value(**
+                        {str(k)[:-1]: v for k, v in result.items()})
                         if all(val for val in result.values()) else expr)
                 else:
-                    _value = lambda expr, result: value(**dict([(
-                        str(key)[:-1], val) for key, val in result.items()]))
+                    _value = lambda expr, result: value(**
+                        {str(k)[:-1]: v for k, v in result.items()})
             else:
                 raise TypeError(
                     "given an expression, replace() expects "

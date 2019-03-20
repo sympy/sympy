@@ -1122,8 +1122,8 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
             self._smat = {}
         else:
             v = self._sympify(value)
-            self._smat = dict([((i, j), v)
-                for i in range(self.rows) for j in range(self.cols)])
+            self._smat = {(i, j): v
+                for i in range(self.rows) for j in range(self.cols)}
 
     def row_del(self, k):
         """Delete the given row of the matrix.

@@ -415,7 +415,7 @@ class Add(Expr, AssocOp):
             reps = {
                 S.Infinity: oo,
                 S.NegativeInfinity: -oo}
-            ireps = dict([(v, k) for k, v in reps.items()])
+            ireps = {v: k for k, v in reps.items()}
             eq = expand_mul(lhs.xreplace(reps) - rhs.xreplace(reps))
             if eq.has(oo):
                 eq = eq.replace(

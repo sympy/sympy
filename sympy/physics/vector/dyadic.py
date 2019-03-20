@@ -529,7 +529,7 @@ class Dyadic(object):
         >>> from sympy import Symbol
         >>> N = ReferenceFrame('N')
         >>> s = Symbol('s')
-        >>> a = s * (N.x|N.x)
+        >>> a = s*(N.x|N.x)
         >>> a.subs({s: 2})
         2*(N.x|N.x)
 

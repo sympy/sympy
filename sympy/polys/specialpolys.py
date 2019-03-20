@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, string_types
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import nextprime
@@ -143,10 +143,10 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
 @public
 def interpolating_poly(n, x, X='x', Y='y'):
     """Construct Lagrange interpolating polynomial for ``n`` data points. """
-    if isinstance(X, str):
+    if isinstance(X, string_types):
         X = symbols("%s:%s" % (X, n))
 
-    if isinstance(Y, str):
+    if isinstance(Y, string_types):
         Y = symbols("%s:%s" % (Y, n))
 
     coeffs = []
