@@ -10,10 +10,12 @@ from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
+from sympy.utilities.misc import filldedent
 
 from .common import a2idx
 from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
+
 
 
 class SparseMatrix(MatrixBase):
@@ -76,6 +78,17 @@ class SparseMatrix(MatrixBase):
     ...
     ValueError: The location (0, 2) is out of the designated shape: (2, 2)
 
+    To autosize the matrix, pass None for rows:
+
+    >>> SparseMatrix(None, [[1, 2, 3]])
+    Matrix([[1, 2, 3]])
+    >>> SparseMatrix(None, {(1, 1): 1, (3, 3): 3})
+    Matrix([
+    [0, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 3]])
+
     See Also
     ========
     sympy.matrices.common.diag
@@ -91,9 +104,18 @@ class SparseMatrix(MatrixBase):
             return self
 
         self._smat = {}
+        # autosizing
+        if len(args) == 2 and args[0] is None:
+            args = (None,) + args
         if len(args) == 3:
-            self.rows = as_int(args[0])
-            self.cols = as_int(args[1])
+            r, c = args[:2]
+            if r is c is None:
+                self.rows = self.cols = None
+            elif None in (r, c):
+                raise ValueError(
+                    'Pass rows=None and no cols for autosizing.')
+            else:
+                self.rows, self.cols = map(as_int, args[:2])
 
             if isinstance(args[2], Callable):
                 op = args[2]
@@ -135,10 +157,17 @@ class SparseMatrix(MatrixBase):
                         for j in range(self.cols):
                             value = self._sympify(flat_list[i*self.cols + j])
                             if value:
-                                self._smat[(i, j)] = value
-            for i, j in self._smat.keys():
-                if i and i >= self.rows or j and j >= self.cols:
-                    raise ValueError('The location %s is out of the designated shape: %s' % ((i, j), self.shape))
+                                self._smat[i, j] = value
+            if self.rows is None:  # autosizing
+                k = self._smat.keys()
+                self.rows = max([i[0] for i in k]) + 1 if k else 0
+                self.cols = max([i[1] for i in k]) + 1 if k else 0
+            else:
+                for i, j in self._smat.keys():
+                    if i and i >= self.rows or j and j >= self.cols:
+                        raise ValueError(filldedent('''
+                            The location %s is out of the designated
+                            shape: %s''' % ((i, j), self.shape)))
         else:
             if (len(args) == 1 and isinstance(args[0], (list, tuple))):
                 # list of values or lists

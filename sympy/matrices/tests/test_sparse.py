@@ -176,6 +176,12 @@ def test_sparse_matrix():
     raises(ValueError, lambda: SparseMatrix(2, 2, [1]))
     raises(ValueError, lambda: SparseMatrix(1, 1, [[1, 2]]))
     assert SparseMatrix([.1]).has(Float)
+    # autosizing
+    assert SparseMatrix(None, {(0, 1): 0}).shape == (0, 0)
+    assert SparseMatrix(None, {(0, 1): 1}).shape == (1, 2)
+    assert SparseMatrix(None, None, {(0, 1): 1}).shape == (1, 2)
+    raises(ValueError, lambda: SparseMatrix(None, 1, [[1, 2]]))
+    raises(ValueError, lambda: SparseMatrix(1, None, [[1, 2]]))
 
     # test_determinant
     x, y = Symbol('x'), Symbol('y')
