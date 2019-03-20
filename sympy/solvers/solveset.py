@@ -20,6 +20,7 @@ from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand)
+from sympy.core.mod import Mod
 from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
@@ -157,6 +158,8 @@ def _invert(f_x, y, x, domain=S.Complexes):
     else:
         x1, s = _invert_complex(f_x, FiniteSet(y), x)
 
+    if (f_x - y).has(Mod):
+        x1, s = _invert_modular(f_x, FiniteSet(y), x)
     if not isinstance(s, FiniteSet) or x1 != x:
         return x1, s
 
@@ -372,7 +375,9 @@ def _invert_abs(f, g_ys, symbol):
         imageset(Lambda(n, -n), g_ys)), symbol)
     return g_x, ConditionSet(g_x, conditions, values)
 
-
+def _invert_modular(f, g_ys, symbol):
+    print("hello")
+    return 0, 0
 def domain_check(f, symbol, p):
     """Returns False if point p is infinite or any subexpression of f
     is infinite or becomes so after replacing symbol with p. If none of
