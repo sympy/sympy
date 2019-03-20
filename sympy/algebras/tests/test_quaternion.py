@@ -149,16 +149,3 @@ def test_quaternion_differentiation():
     assert q.differentiate(v2) == Quaternion(-36.5, 4.0, -8.5, 9.0)
     assert q.differentiate(v3) == Quaternion(-58.5, 7.0, 18.0, -8.5)
     assert q.differentiate(v4) == Quaternion(-25.5, -11.0, 9.0, 3.5)
-
-
-def test_quaternion_integration():
-    x = Symbol('x')
-    q1 = Quaternion(2, 9, 6, 3)
-    q2 = Quaternion(x-1, x-2, x-3, x-4)
-    q3 = Quaternion(1/x, 1/x**2, 1/x**3, 1/x**4)
-    q4 = Quaternion(sin(x), sin(2*x), cos(x), cos(2*x))
-
-    assert q1.integrate(x) == Quaternion(2*x, 9*x, 6*x, 3*x)
-    assert q2.integrate(x) == Quaternion(x**2/2-x, x**2/2 -2*x, x**2/2 -3*x, x**2/2 - 4*x)
-    assert q3.integrate(x) == Quaternion(log(x), -1/x, -1/(2*x**2), -1/(3*x**3))
-    assert q4.integrate(x) == Quaternion(-cos(x), -cos(2*x)/2, sin(x), sin(2*x)/2)
