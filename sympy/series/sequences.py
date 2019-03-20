@@ -953,7 +953,7 @@ class SeqExprOp(SeqBase):
         """Sequence is defined on the intersection
         of all the intervals of respective sequences
         """
-        return Intersection(a.interval for a in self.args)
+        return Intersection(*(a.interval for a in self.args))
 
     @property
     def start(self):
@@ -1027,7 +1027,7 @@ class SeqAdd(SeqExprOp):
         if not args:
             return S.EmptySequence
 
-        if Intersection(a.interval for a in args) is S.EmptySet:
+        if Intersection(*(a.interval for a in args)) is S.EmptySet:
             return S.EmptySequence
 
         # reduce using known rules
@@ -1134,7 +1134,7 @@ class SeqMul(SeqExprOp):
         if not args:
             return S.EmptySequence
 
-        if Intersection(a.interval for a in args) is S.EmptySet:
+        if Intersection(*(a.interval for a in args)) is S.EmptySet:
             return S.EmptySequence
 
         # reduce using known rules
