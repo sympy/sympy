@@ -313,8 +313,7 @@ def test_intersection():
     raises(ValueError, lambda: list(i))
 
     a = Intersection(Intersection(S.Integers, S.Naturals, evaluate=False), S.Reals, evaluate=False)
-    assert a.args[0].args == (S.Naturals, S.Integers)
-    assert a.args[1] == S.Reals
+    assert a._argset == frozenset([Intersection(S.Naturals, S.Integers, evaluate=False), S.Reals])
 
     assert Intersection(S.Complexes, FiniteSet(S.ComplexInfinity)) == S.EmptySet
 
