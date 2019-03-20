@@ -38,7 +38,7 @@ def _fourier_transform(seq, dps, inverse=False, fourier_params=(1, 1)):
 
     (alpha, beta) = sympify(fourier_params)
     beta = as_int(beta)
-    if beta != S.One and beta != S.NegativeOne:
+    if beta not in [-1, 1]:
         raise NotImplementedError("The second fourier_params must be 1 or -1")
 
     b = n.bit_length() - 1
