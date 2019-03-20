@@ -338,12 +338,12 @@ class Beam(object):
         self._applied_supports.append((loc, type))
 
         if type == "pin" or type == "roller":
-            reaction_load = Symbol('R_'+str(loc))
+            reaction_load = Symbol('R_'+ str(loc))
             self.apply_load(reaction_load, loc, -1)
             self.bc_deflection.append((loc, 0))
         else:
-            reaction_load = Symbol('R_'+str(loc))
-            reaction_moment = Symbol('M_'+str(loc))
+            reaction_load = Symbol('R_'+ str(loc))
+            reaction_moment = Symbol('M_'+ str(loc))
             self.apply_load(reaction_load, loc, -1)
             self.apply_load(reaction_moment, loc, -2)
             self.bc_deflection.append((loc, 0))
@@ -395,16 +395,16 @@ class Beam(object):
 
         if (loc, type) in self._applied_supports:
             if type == "pin" or type == "roller":
-                reaction_load = Symbol('R_'+ str(loc))
+                reaction_load = Symbol('R_' + str(loc))
                 self.remove_load(reaction_load, loc, -1)
                 self.bc_deflection.remove((loc, 0))
             else:
                 reaction_load = Symbol('R_'+ str(loc))
-                reaction_moment = Symbol('M_'+str(loc))
+                reaction_moment = Symbol('M_'+ str(loc))
                 self.remove_load(reaction_load, loc, -1)
                 self.remove_load(reaction_moment, loc, -2)
-                self.bc_deflection.remove((loc,0))
-                self.bc_slope.remove((loc,0))
+                self.bc_deflection.remove((loc, 0))
+                self.bc_slope.remove((loc, 0))
 
             self._applied_supports.remove((loc, type))
 
