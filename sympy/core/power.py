@@ -464,7 +464,7 @@ class Pow(Expr):
                 return False
         elif self.base.is_zero:
             if self.exp.is_real:
-                return self.exp.is_zero and False
+                return False
         elif self.base.is_nonnegative:
             if self.exp.is_nonnegative:
                 return False
