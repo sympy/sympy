@@ -12,6 +12,8 @@ from sympy.geometry.plane import Plane
 
 from sympy.core import S
 
+from sympy.utilities.pytest import raises
+
 
 def test_refraction_angle():
     n1, n2 = symbols('n1, n2')
@@ -61,6 +63,9 @@ def test_refraction_angle():
     assert refraction_angle(r1, 1.33, 1, plane=P) == 0  # TIR
     assert refraction_angle(r1, 1, 1, normal_ray) == \
         Ray3D(Point3D(0, 0, 0), direction_ratio=[1, 1, -1])
+    raises(ValueError, lambda: refraction_angle(r1, m1, m2, normal_ray, P))
+    raises(TypeError, lambda: refraction_angle(m1, m1, m2)) # can add other values for arg[0]
+    raises(TypeError, lambda: refraction_angle(r1, m1, m2, None, i))
 
 
 def test_fresnel_coefficients():
