@@ -2283,6 +2283,7 @@ def test_LDLsolve():
     b = A*x
     soln = A.LDLsolve(b)
     assert soln == x
+
     A = Matrix([[0, -1, 2],
                 [5, 10, 7],
                 [8,  3, 4]])
@@ -2290,16 +2291,29 @@ def test_LDLsolve():
     b = A*x
     soln = A.LDLsolve(b)
     assert soln == x
+
     A = Matrix(((9, 3*I), (-3*I, 5)))
     x = Matrix((-2, 1))
     b = A*x
     soln = A.LDLsolve(b)
     assert expand_mul(soln) == x
+
     A = Matrix(((9*I, 3), (-3 + I, 5)))
     x = Matrix((2 + 3*I, -1))
     b = A*x
-    soln = A.cholesky_solve(b)
+    soln = A.LDLsolve(b)
     assert expand_mul(soln) == x
+
+    A = Matrix(((9, 3), (3, 9)))
+    x = Matrix((1, 1))
+    b = A * x
+    soln = A.LDLsolve(b)
+    assert expand_mul(soln) == x
+
+    A = Matrix([[-5, -3, -4], [-3, -7, 7]])
+    x = Matrix([[8], [7], [-2]])
+    b = A * x
+    raises(NotImplementedError, lambda: A.LDLsolve(b))
 
 
 def test_lower_triangular_solve():
@@ -2343,6 +2357,9 @@ def test_diagonal_solve():
     A = Matrix([[1, 0], [0, 1]])*2
     B = Matrix([[x, y], [y, x]])
     assert A.diagonal_solve(B) == B/2
+
+    A = Matrix([[1, 0], [1, 2]])
+    raises(TypeError, lambda: A.diagonal_solve(B))
 
 
 def test_matrix_norm():
@@ -2714,6 +2731,7 @@ def test_dot():
     assert Matrix([1, 2, 3*I]).dot(Matrix([4, 5*I, 6]), hermitian=True, conjugate_convention="left") == 4 - 8*I
     assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), hermitian=False, conjugate_convention="left") == -5
     assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), conjugate_convention="left") == 5
+    raises(ValueError, lambda: Matrix([1, 2]).dot(Matrix([3, 4]), hermitian=True, conjugate_convention="test"))
 
 
 def test_dual():

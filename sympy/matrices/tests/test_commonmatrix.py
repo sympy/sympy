@@ -806,6 +806,7 @@ def test_det():
     assert e.det() == 4*x - 24
     assert e.det(method='bareiss') == 4*x - 24
     assert e.det(method='berkowitz') == 4*x - 24
+    raises(ValueError, lambda: e.det(iszerofunc="test"))
 
 
 def test_adjugate():
@@ -872,6 +873,7 @@ def test_charpoly():
     assert eye_Determinant(3).charpoly(x) == Poly((x - 1)**3, x)
     assert eye_Determinant(3).charpoly(y) == Poly((y - 1)**3, y)
     assert m.charpoly() == Poly(x**3 - 15*x**2 - 18*x, x)
+    raises(NonSquareMatrixError, lambda: Matrix([[1], [2]]).charpoly())
 
 # ReductionsOnlyMatrix tests
 def test_row_op():
