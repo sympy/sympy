@@ -66,6 +66,7 @@ def test_refraction_angle():
     raises(ValueError, lambda: refraction_angle(r1, m1, m2, normal_ray, P))
     raises(TypeError, lambda: refraction_angle(m1, m1, m2)) # can add other values for arg[0]
     raises(TypeError, lambda: refraction_angle(r1, m1, m2, None, i))
+    raises(TypeError, lambda: refraction_angle(r1, m1, m2, m2))
 
 
 def test_fresnel_coefficients():
@@ -105,6 +106,7 @@ def test_brewster_angle():
     m1 = Medium('m1', permittivity=e0, n=1)
     m2 = Medium('m2', permittivity=e0, n=1.33)
     assert round(brewster_angle(m1, m2), 2) == 0.93
+    assert round(brewster_angle(1, 1.33), 2) == 0.93
 
 
 def test_critical_angle():
@@ -129,6 +131,15 @@ def test_mirror_formula():
     assert mirror_formula(u=u, v=v) == u*v/(u + v)
     assert mirror_formula(u=oo, v=v) == v
     assert mirror_formula(u=oo, v=oo) == oo
+    assert mirror_formula(focal_length=oo, u=u) == -u
+    assert mirror_formula(u=u, v=oo) == u
+    assert mirror_formula(focal_length=oo, v=oo) == oo
+    assert mirror_formula(focal_length=f, v=oo) == f
+    assert mirror_formula(focal_length=oo, v=v) == -v
+    assert mirror_formula(focal_length=oo, u=oo) == oo
+    assert mirror_formula(focal_length=f, u=oo) == f
+    assert mirror_formula(focal_length=oo, u=u) == -u
+    raises(ValueError, lambda: mirror_formula(focal_length=f, u=u, v=v))
 
 
 def test_lens_formula():
@@ -138,6 +149,15 @@ def test_lens_formula():
     assert lens_formula(u=u, v=v) == u*v/(u - v)
     assert lens_formula(u=oo, v=v) == v
     assert lens_formula(u=oo, v=oo) == oo
+    assert lens_formula(focal_length=oo, u=u) == u
+    assert lens_formula(u=u, v=oo) == -u
+    assert lens_formula(focal_length=oo, v=oo) == -oo
+    assert lens_formula(focal_length=oo, v=v) == v
+    assert lens_formula(focal_length=f, v=oo) == -f
+    assert lens_formula(focal_length=oo, u=oo) == oo
+    assert lens_formula(focal_length=oo, u=u) == u
+    assert lens_formula(focal_length=f, u=oo) == f
+    raises(ValueError, lambda: lens_formula(focal_length=f, u=u, v=v))
 
 def test_hyperfocal_distance():
     f, N, c = symbols('f, N, c')
