@@ -68,7 +68,7 @@ def are_coplanar(*e):
     from sympy.geometry.line import LinearEntity3D
     from sympy.geometry.point import Point3D
     from sympy.geometry.plane import Plane
-
+    from sympy.geometry.entity import GeometryEntity
     # XXX update tests for coverage
 
     e = set(e)
