@@ -149,7 +149,7 @@ def _lambert(eq, x):
     u = Dummy('rhs')
     sol = []
     # check only real solutions:
-    from sympy.solvers.solveset import solveset_real
+    from sympy.solvers.solveset import solvify
     for k in [-1, 0]:
         l = LambertW(d/(a*b)*exp(c*d/a/b)*exp(-f/a), k)
         # if W's arg is between -1/e and 0 there is
@@ -158,13 +158,10 @@ def _lambert(eq, x):
             continue
         rhs = -c/b + (a/d)*l
 
-        solns = solveset_real(X1 - u, x)
-        if isinstance(solns, Intersection):
-            solns = [u]
-        if not isinstance(solns, ConditionSet):
-            for i, tmp in enumerate(solns):
-                solns[i] = tmp.subs(u, rhs)
-                sol.append(solns[i])
+        solns = solvify(X1 - u, x, S.Complexes)
+        for i, tmp in enumerate(solns):
+            solns[i] = tmp.subs(u, rhs)
+            sol.append(solns[i])
     return sol
 
 
