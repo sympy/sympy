@@ -46,7 +46,7 @@ class Density(HermitianOperator):
             if not (isinstance(arg, Tuple)):
                 raise ValueError("Each argument should be of form [state,prob]"
                                  " or ( state, prob )")
-            elif !len(arg) == 2:
+            elif not len(arg) == 2:
                 return ValueError("Length should be of size 2") 
                        
 
