@@ -47,7 +47,7 @@ class Density(HermitianOperator):
                 raise ValueError("Each argument should be of form [state,prob]"
                                  " or ( state, prob )")
             elif not len(arg) == 2:
-                return ValueError("Length should be of size 2") 
+                raise ValueError("Length should be of size 2") 
                        
 
         return args
