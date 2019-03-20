@@ -36,9 +36,7 @@ svg_sizes['notext'] = {
 # The list of identifiers of various versions
 versions = ['notail', 'notail-notext', 'notext']
 
-parser = ArgumentParser(
-    usage="%s [options ...]"
-)
+parser = ArgumentParser(usage="%(prog)s [options ...]")
 
 parser.add_argument("--source-dir", type=str, dest="source_dir",
     help="Directory of the source *.svg file [default: %(default)s]",
