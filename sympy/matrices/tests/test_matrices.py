@@ -2901,13 +2901,26 @@ def test_atoms():
 def test_pinv():
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])
-    assert simplify(A1.pinv()) == simplify(A1.inv())
+    assert simplify(A1.pinv(method="RD")) == simplify(A1.inv())
+    A1 = Matrix([[a, b], [c, d]])
+    assert simplify(A1.pinv(method="ED")) == simplify(A1.inv())
+
     # Test the four properties of the pseudoinverse for various matrices.
     As = [Matrix([[13, 104], [2212, 3], [-3, 5]]),
           Matrix([[1, 7, 9], [11, 17, 19]]),
           Matrix([a, b])]
+
     for A in As:
-        A_pinv = A.pinv()
+        A_pinv = A.pinv(method="RD")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
+    for A in As:
+        A_pinv = A.pinv(method="ED")
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert simplify(AAp * A) == A
@@ -2953,14 +2966,25 @@ def test_pinv_rank_deficient():
     As = [Matrix([[1, 1, 1], [2, 2, 2]]),
           Matrix([[1, 0], [0, 0]]),
           Matrix([[1, 2], [2, 4], [3, 6]])]
+
     for A in As:
-        A_pinv = A.pinv()
+        A_pinv = A.pinv(method="RD")
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert simplify(AAp * A) == A
         assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
+
+    for A in As:
+        A_pinv = A.pinv(method="ED")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
     # Test solving with rank-deficient matrices.
     A = Matrix([[1, 0], [0, 0]])
     # Exact, non-unique solution.
@@ -2990,7 +3014,7 @@ def test_pinv_rank_deficient_when_diagonalization_fails():
         [ 7, 30, 10, 48, 90, 0],
         [0,0,0,0,0,0]])]
     for A in As:
-        A_pinv = A.pinv()
+        A_pinv = A.pinv(method="ED")
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert simplify(AAp * A) == A
@@ -2998,6 +3022,23 @@ def test_pinv_rank_deficient_when_diagonalization_fails():
         assert AAp.H == AAp
         assert ApA.H == ApA
 
+def test_pinv_rank_deficient_when_diagonalization_fails():
+    # Test rank decomposition method of pseudoinverse succeeding
+    As = [Matrix([
+        [61, 89, 55, 20, 71, 0],
+        [62, 96, 85, 85, 16, 0],
+        [69, 56, 17,  4, 54, 0],
+        [10, 54, 91, 41, 71, 0],
+        [ 7, 30, 10, 48, 90, 0],
+        [0,0,0,0,0,0]])]
+    for A in As:
+        A_pinv = A.pinv(method="RD")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
 
 def test_gauss_jordan_solve():
 
