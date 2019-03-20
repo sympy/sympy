@@ -699,15 +699,21 @@ class Quaternion(Expr):
                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
 
     def differentiate(self, vector):
-        """returns the differentiation of quaternion which represents
-        the rotation of the quaternion at the rate of 3d vector -'vector'.
+       """returns the differentiation of quaternion which represents
+        the rotation of the quaternion at the rate of W.
+
+        Parameters
+        ==========
+        W: 3D Vector
+            A pure quaternion representing angular velocity.
+            W = 0 + i*W_x + j*W_y + k*W_z
+
+        Returns
+        =======
+        A quaternion
+            Returns a quaternion representing the rotation of the given quaternion 
+            function at the rate of W.
         """
         vec = vector._args
         quat = Quaternion(0, vec[0], vec[1], vec[2])
         return 0.5 * self * quat
-
-    def integrate(self, wrt):
-        res = []
-        for term in self.args:
-            res.append(integrate(term, wrt))
-        return Quaternion(res[0], res[1], res[2], res[3])
