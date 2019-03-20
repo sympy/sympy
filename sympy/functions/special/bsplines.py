@@ -5,7 +5,6 @@ from sympy.core.compatibility import range
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.sets.sets import Interval
 
-
 def _add_splines(c, b1, d, b2):
     """Construct c*b1 + d*b2."""
     if b1 == S.Zero or c == S.Zero:
@@ -15,72 +14,60 @@ def _add_splines(c, b1, d, b2):
     else:
         new_args = []
         n_intervals = len(b1.args)
-        if n_intervals != len(b2.args):
-            # Args of b1 and b2 are not equal. Just combining the
-            # Piecewise without any fancy optimization
-            p1 = piecewise_fold(c*b1)
-            p2 = piecewise_fold(d*b2)
+        # Just combining the Piecewise without any fancy optimization
+        p1 = piecewise_fold(c*b1)
+        p2 = piecewise_fold(d*b2)
 
-            # Search all Piecewise arguments except (0, True)
-            p2args = list(p2.args[:-1])
+        # Search all Piecewise arguments except (0, True)
+        p2args = list(p2.args[:-1])
 
-            # This merging algorithm assumes the conditions in
-            # p1 and p2 are sorted
-            for arg in p1.args[:-1]:
-                # Conditional of Piecewise are And objects
-                # the args of the And object is a tuple of two
-                # Relational objects the numerical value is in the .rhs
-                # of the Relational object
-                expr = arg.expr
-                cond = arg.cond
+        # This merging algorithm assumes the conditions in
+        # p1 and p2 are sorted
+        for arg in p1.args[:-1]:
+            # Conditional of Piecewise are And objects
+            # the args of the And object is a tuple of two
+            # Relational objects the numerical value is in the .rhs
+            # of the Relational object
+            expr = arg.expr
+            cond = arg.cond
 
-                lower = cond.args[0].rhs
+            lower = cond.args[0].rhs
 
-                # Check p2 for matching conditions that can be merged
-                for i, arg2 in enumerate(p2args):
-                    expr2 = arg2.expr
-                    cond2 = arg2.cond
+            # Check p2 for matching conditions that can be merged
+            for i, arg2 in enumerate(p2args):
+                expr2 = arg2.expr
+                cond2 = arg2.cond
 
-                    lower_2 = cond2.args[0].rhs
-                    upper_2 = cond2.args[1].rhs
+                lower_2 = cond2.args[0].rhs
+                upper_2 = cond2.args[1].rhs
 
-                    if cond2 == cond:
-                        # Conditions match, join expressions
-                        expr += expr2
-                        # Remove matching element
-                        del p2args[i]
-                        # No need to check the rest
-                        break
-                    elif lower_2 < lower and upper_2 <= lower:
-                        # Check if arg2 condition smaller than arg1,
-                        # add to new_args by itself (no match expected
-                        # in p1)
-                        new_args.append(arg2)
-                        del p2args[i]
-                        break
+                if cond2 == cond:
+                    # Conditions match, join expressions
+                    expr += expr2
+                    # Remove matching element
+                    del p2args[i]
+                    # No need to check the rest
+                    break
+                elif lower_2 < lower and upper_2 <= lower:
+                    # Check if arg2 condition smaller than arg1,
+                    # add to new_args by itself (no match expected
+                    # in p1)
+                    new_args.append(arg2)
+                    del p2args[i]
+                    break
 
-                # Checked all, add expr and cond
-                new_args.append((expr, cond))
+            # Checked all, add expr and cond
+            new_args.append((expr, cond))
 
-            # Add remaining items from p2args
-            new_args.extend(p2args)
+        # Add remaining items from p2args
+        new_args.extend(p2args)
 
-            # Add final (0, True)
-            new_args.append((0, True))
-        else:
-            new_args.append((c*b1.args[0].expr, b1.args[0].cond))
-            for i in range(1, n_intervals - 1):
-                new_args.append((
-                    c*b1.args[i].expr + d*b2.args[i - 1].expr,
-                    b1.args[i].cond
-                ))
-            new_args.append((d*b2.args[-2].expr, b2.args[-2].cond))
-            new_args.append(b2.args[-1])
+        # Add final (0, True)
+        new_args.append((0, True))
 
         rv = Piecewise(*new_args)
 
     return rv.expand()
-
 
 def bspline_basis(d, knots, n, x):
     """The `n`-th B-spline at `x` of degree `d` with knots.
