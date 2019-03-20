@@ -1018,9 +1018,8 @@ class Union(Set, LatticeOp, EvalfMixin):
     def zero(self):
         return S.UniversalSet
 
-    def __new__(cls, *args, evaluate=None):
-        if evaluate is None:
-            evaluate = global_evaluate[0]
+    def __new__(cls, *args, **kwargs):
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
         args = _sympify(args)
@@ -1201,9 +1200,8 @@ class Intersection(Set, LatticeOp):
     def zero(self):
         return S.EmptySet
 
-    def __new__(cls, *args, evaluate=None):
-        if evaluate is None:
-            evaluate = global_evaluate[0]
+    def __new__(cls, *args, **kwargs):
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
         args = _sympify(args)
