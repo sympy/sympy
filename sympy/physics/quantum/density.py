@@ -43,10 +43,12 @@ class Density(HermitianOperator):
 
         for arg in args:
             # Check if arg is a tuple
-            if not (isinstance(arg, Tuple) and
-                    len(arg) == 2):
+            if not (isinstance(arg, Tuple)):
                 raise ValueError("Each argument should be of form [state,prob]"
                                  " or ( state, prob )")
+            elif !len(arg) == 2:
+                return ValueError("Length should be of size 2") 
+                       
 
         return args
 
@@ -168,6 +170,10 @@ class Density(HermitianOperator):
                 for arg in product(state.args, repeat=2):
                     terms.append(prob *
                                  self._generate_outer_prod(arg[0], arg[1]))
+            elif state!=null:
+                terms.append(prob *
+                                 self._generate_outer_prod(arg[0]))
+                    
             else:
                 terms.append(prob *
                              self._generate_outer_prod(state, state))
