@@ -466,8 +466,7 @@ def test_intersection():
         Segment(Point(S(1)/2, -S(1)/10), Point(1, 0)),
         Segment(Point(1, 0), Point(0, 1))]
     assert poly2.intersection(Triangle(Point(0, 1), Point(1, 0), Point(-1, 1))) \
-        == [Point(-S(5)/7, S(6)/7),
-                                                                                    Segment(Point2D(0, 1), Point(1, 0))]
+        == [Point(-S(5)/7, S(6)/7), Segment(Point2D(0, 1), Point(1, 0))]
     assert poly1.intersection(RegularPolygon((-12, -15), 3, 3)) == []
 
 
