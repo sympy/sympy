@@ -5,6 +5,7 @@ from sympy.functions.elementary.exponential import exp
 from sympy.physics.units import speed_of_light, m, s
 from sympy.physics.optics import TWave
 
+from sympy.utilities.pytest import raises
 
 c = speed_of_light.convert_to(m/s)
 
@@ -47,3 +48,5 @@ def test_twave():
     + atan2(A1*cos(phi1) + A2*cos(phi2), A1*sin(phi1) + A2*sin(phi2))))
     w4 = TWave(A1, None, 0, 1/f)
     assert w4.frequency == f
+    raises(ValueError, lambda:TWave(A1))
+    raises(ValueError, lambda:TWave(A1, f, phi1, t))
