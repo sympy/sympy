@@ -779,6 +779,7 @@ class MatrixSpecial(MatrixRequired):
         """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
+        from sympy.matrices.sparse import SparseMatrix
         klass = kwargs.get('cls', kls)
         strict = kwargs.get('strict', False) # lists -> Matrices
         unpack = kwargs.get('unpack', True)  # unpack single sequence
@@ -790,35 +791,33 @@ class MatrixSpecial(MatrixRequired):
         diag_entries = defaultdict(int)
         R = C = 0  # keep track of the biggest index seen
         for m in args:
-            if hasattr(m, 'rows') or isinstance(m, list):
-                # in this case, we're a matrix or list
-                if hasattr(m, 'rows'):
-                    # convert to list of lists
-                    r, c = m.shape
-                    m = m.tolist()
-                else:
-                    # make sure all list elements are lists
-                    r = len(m)
-                    if strict:
-                        # let Matrix raise the error
-                        m = Matrix(m)
-                        c = m.cols
-                        m = m.tolist()
-                    else:
-                        m = [mi if isinstance(mi, list) else [mi]
-                            for mi in m]
-                        c = max(map(len, m))
-                # process list of lists
-                for i in range(len(m)):
-                    for j, mij in enumerate(m[i]):
+            if isinstance(m, list):
+                if not strict:
+                    m = SparseMatrix(m)
+                    for (i, j), mij in m._smat.items():
                         diag_entries[(i + R, j + C)] = mij
-                R += r
-                C += c
-            else:
-                # in this case, we're a single value
+                    r, c = m.shape
+                    m = []  # to skip process below
+                else:
+                    # if malformed, Matrix will raise an error
+                    _ = Matrix(m)
+                    r, c = _.shape
+                    m = _.tolist()
+            elif hasattr(m, 'shape'):  # a Matrix
+                # convert to list of lists
+                r, c = m.shape
+                m = m.tolist()
+            else:  # in this case, we're a single value
                 diag_entries[(R, C)] = m
                 R += 1
                 C += 1
+                continue
+            # process list of lists
+            for i in range(len(m)):
+                for j, mij in enumerate(m[i]):
+                    diag_entries[(i + R, j + C)] = mij
+            R += r
+            C += c
         rows = kwargs.get('rows', None)
         cols = kwargs.get('cols', None)
         if rows is None:
