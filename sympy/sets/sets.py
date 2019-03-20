@@ -1251,7 +1251,7 @@ class Intersection(Set, LatticeOp):
                     elif c is S.false:
                         pass
                     else:
-                        raise ValueError("Cannot determine if {x} is contained in the set during iteration".format(x=x))
+                        yield c
 
         if no_iter:
             raise ValueError("None of the constituent sets are iterable")
