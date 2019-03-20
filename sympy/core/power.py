@@ -437,6 +437,9 @@ class Pow(Expr):
                 return True
             if self.exp.is_odd:
                 return False
+        elif self.base.is_zero:
+            if self.exp.is_real:
+                return self.exp.is_zero
         elif self.base.is_nonpositive:
             if self.exp.is_odd:
                 return False
@@ -457,6 +460,9 @@ class Pow(Expr):
             if self.exp.is_even:
                 return False
         elif self.base.is_positive:
+            if self.exp.is_real:
+                return False
+        elif self.base.is_zero:
             if self.exp.is_real:
                 return False
         elif self.base.is_nonnegative:
