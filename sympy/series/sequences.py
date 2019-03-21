@@ -603,7 +603,7 @@ class SeqPer(SeqExpr):
 
 
 class SeqFormula(SeqExpr):
-    """Represents sequence based on a formula.  
+    """Represents sequence based on a formula.
 
     Elements are generated using a formula.
 
