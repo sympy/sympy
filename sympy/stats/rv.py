@@ -586,15 +586,14 @@ def given(expr, condition=None, **kwargs):
     >>> X = Normal('X', 0, 1)
     >>> Y = Normal('Y', 0, 1)
     >>> pprint(density(X + Y, Y)(z), use_unicode=False)
-                           2       2
-                     -z      -z
-                     ----    ----
-    /      /z\    \   4       4       /z\
-    |- erfc|-| + 2|*e       e    *erfc|-|
-    \      \2/    /                   \2/
-    --------------------- + -------------
-               ____                ____
-           4*\/ pi             4*\/ pi
+                    2
+           -(-Y + z)
+           -----------
+      ___       2
+    \/ 2 *e
+    ------------------
+             ____
+         2*\/ pi
 
     """
 
@@ -615,7 +614,6 @@ def given(expr, condition=None, **kwargs):
 
         sums = 0
         for res in results:
-            res = RandomSymbol(res, rv.pspace)
             temp = expr.subs(rv, res)
             if temp == True:
                 return True
@@ -727,8 +725,22 @@ def probability(condition, given_condition=None, numsamples=None,
     condition = sympify(condition)
     given_condition = sympify(given_condition)
 
+    if isinstance(given_condition, RandomSymbol):
+        rand_var = given_condition
+        rvs_cond = random_symbols(condition)
+        if len(rvs_cond) > 1:
+            raise NotImplementedError("Multivariate inequalities not implemented yet.")
+        if independent(rvs_cond[0], rand_var):
+            return probability(condition, numsamples=None, evaluate=evaluate, **kwargs)
+        p_a = probability(condition, numsamples=None, evaluate=evaluate, **kwargs)
+        _t = Symbol('_t')
+        _x = Symbol('_x')
+        pdf = Lambda(_x, density(rand_var, condition)(_t)*p_a/density(rand_var)(_x))
+        return pdf
+
+
     if given_condition is not None and \
-            not isinstance(given_condition, (Relational, Boolean, RandomSymbol)):
+            not isinstance(given_condition, (Relational, Boolean)):
         raise ValueError("%s is not a relational or combination of relationals"
                 % (given_condition))
     if given_condition == False:
