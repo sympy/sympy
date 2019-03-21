@@ -227,7 +227,7 @@ def test_polygon():
     assert are_similar(t1, t3)
     assert are_similar(t2, t3) is False
     assert t1.is_similar(Point(0, 0)) is False
-    assert t1.is_similar(t1, t2) is False
+    assert t1.is_similar(t2) is False
 
     # Bisectors
     bisectors = t1.bisectors()
