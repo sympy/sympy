@@ -320,7 +320,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         tself = type(self)
         tother = type(other)
-        if type(self) is not type(other):
+        if tself is not tother:
             try:
                 other = _sympify(other)
                 tother = type(other)
@@ -1865,8 +1865,7 @@ def _aresame(a, b):
                     return False
             else:
                 return False
-    else:
-        return True
+    return True
 
 
 def _atomic(e, recursive=False):
