@@ -7,10 +7,10 @@ from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 
 
 def test_gosper_normal():
-    eq = 4*n + 5, 2*(4*n + 1)*(2*n + 3)
-    assert gosper_normal(eq, n) == \
+    eq = 4*n + 5, 2*(4*n + 1)*(2*n + 3), n
+    assert gosper_normal(*eq) == \
         (Poly(S(1)/4, n), Poly(n + S(3)/2), Poly(n + S(1)/4))
-    assert gosper_normal(eq, n, polys=False) == \
+    assert gosper_normal(*eq, polys=False) == \
         (S(1)/4, n + S(3)/2, n + S(1)/4)
 
 
