@@ -96,6 +96,16 @@ def test_Beam():
     q = 4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3) + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000
     assert p == q/(E*I)
 
+    # Test for shear stress distribution function
+    p = b1.shear_stress()
+    q = -8*SingularityFunction(x, 0, 4) + 6*SingularityFunction(x, 10, 4) + 120*SingularityFunction(x, 30, 3) + 2*SingularityFunction(x, 30, 4)
+    assert p == q
+
+    # Test for axial stress distribution function
+    p = b1.axial_stress()
+    q = -8*SingularityFunction(x, 0, 5) + 6*SingularityFunction(x, 10, 5) + 120*SingularityFunction(x, 30, 4) + 2*SingularityFunction(x, 30, 5)
+    assert p == q
+
     # Test using symbols
     l = Symbol('l')
     w0 = Symbol('w0')
@@ -138,6 +148,16 @@ def test_Beam():
     # Test for deflection distribution function
     p = b2.deflection()
     q = x*(E*I*f - w0*SingularityFunction(e, a1, 4)/24 - w2*SingularityFunction(e, c1, 2)/2)/(E*I) + (w0*SingularityFunction(x, a1, 5)/120 + w2*SingularityFunction(x, c1, 3)/6)/(E*I) + (E*I*(-c*f + d) + c*w0*SingularityFunction(e, a1, 4)/24 + c*w2*SingularityFunction(e, c1, 2)/2 - w0*SingularityFunction(c, a1, 5)/120 - w2*SingularityFunction(c, c1, 3)/6)/(E*I)
+    assert p == q
+
+    # Test for shear stress distribution function
+    p = b2.shear_stress()
+    q = w0*SingularityFunction(x, a1, 5)/2 + w2*SingularityFunction(x, c1, 4)
+    assert p == q
+
+    # Test for axial stress distribution function
+    p = b2.axial_stress()
+    q = w0*SingularityFunction(x, a1, 6)/2 + w2*SingularityFunction(x, c1, 5)
     assert p == q
 
     b3 = Beam(9, E, I)
@@ -487,6 +507,56 @@ def test_max_deflection():
     b.apply_load(F*l/8, l, -2)
     b.apply_load(-F, l/2, -1)
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
+
+
+def test_max_shear_stress():
+    E = Symbol('E')
+    I = Symbol('I')
+
+    b = Beam(3, E, I)
+    R, M = symbols('R, M')
+    b.apply_load(R, 0, -1)
+    b.apply_load(M, 0, -2)
+    b.apply_load(2, 3, -1)
+    b.apply_load(4, 2, -1)
+    b.apply_load(2, 2, 0, end=3)
+    b.solve_for_reaction_loads(R, M)
+    assert b.max_shear_stress() == (Interval(0, 2), 8)
+
+    l = symbols('l', positive=True)
+    P = Symbol('P')
+    b = Beam(l, E, I)
+    R1, R2 = symbols('R1, R2')
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
+    b.apply_load(P, 0, 0, end=l)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.max_shear_stress() == (0, l*Abs(P)/2)
+
+
+def test_max_axial_stress():
+    E = Symbol('E')
+    I = Symbol('I')
+
+    b = Beam(3, E, I)
+    R, M = symbols('R, M')
+    b.apply_load(R, 0, -1)
+    b.apply_load(M, 0, -2)
+    b.apply_load(2, 3, -1)
+    b.apply_load(4, 2, -1)
+    b.apply_load(2, 2, 0, end=3)
+    b.solve_for_reaction_loads(R, M)
+    assert b.max_axial_stress() == (Interval(0, 2), 8)
+
+    l = symbols('l', positive=True)
+    P = Symbol('P')
+    b = Beam(l, E, I)
+    R1, R2 = symbols('R1, R2')
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
+    b.apply_load(P, 0, 0, end=l)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.max_axial_stress() == (0, l*Abs(P)/2)            
 
 
 @slow
