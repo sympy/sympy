@@ -459,7 +459,7 @@ class Order(Expr):
             return self.func(expr, *self.args[1:])
 
     def _eval_derivative(self, x):
-        return self.func(self.expr.diff(x), *self.args[1:]) or self
+        raise TypeError('Derivative of Order objects cannot be evaluated')
 
     def _eval_transpose(self):
         expr = self.expr._eval_transpose()
