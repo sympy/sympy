@@ -1217,9 +1217,8 @@ def test_nonlinsolve_using_substitution():
 
     system = [z**2*x**2 - z**2*y**2/exp(x)]
     syms = [y, x, z]
-    soln = FiniteSet((y, FiniteSet(x) - Interval(0, oo), 0),
-        (y, FiniteSet(2*LambertW(Abs(y)/2)) - Interval(0, oo), z))
-    assert nonlinsolve(system,syms) == soln
+    soln = FiniteSet((y, x, 0), (y, 2*LambertW(Abs(y)/2), z))
+    assert nonlinsolve(system, syms) == soln
 
 
 def test_nonlinsolve_complex():
@@ -1951,7 +1950,7 @@ def test_solve_lambert():
 
     p = symbols('p', positive=True)
     eq = 3*log(p**(3*x + 5)) + p**(3*x + 5)
-    assert solveset(eq, x) == Intersection(Interval(0, oo), FiniteSet(-S(5)/3 - LambertW(S(1)/3)/(3*log(p))))
+    assert solveset(eq, x) == FiniteSet(-S(5)/3 - LambertW(S(1)/3)/(3*log(p)))
     assert solveset_real(eq, x) == FiniteSet(-S(5)/3 - LambertW(S(1)/3)/(3*log(p)))
 
     assert solveset_real(2*x + 5 + log(3*x - 2), x) == \
@@ -1968,17 +1967,16 @@ def test_solve_lambert():
         FiniteSet(LambertW(3*exp(-LambertW(3))))
 
     assert solveset_real(x*log(x) + 3*x + 1, x) == \
-        Intersection(Interval(0, oo), FiniteSet(exp(-3 + LambertW(-exp(3)))))
+        FiniteSet(exp(-3 + LambertW(-exp(3))))
     # issue 4271
-    assert solveset_real((a/x + exp(x/2)).diff(x, 2), x) == Intersection(
-        Interval(0, oo), FiniteSet(6*LambertW((-a)**(S(1)/3)/3))) - FiniteSet(0)
+    assert solveset_real((a/x + exp(x/2)).diff(x, 2), x) == \
+        FiniteSet(6*LambertW((-a)**(S(1)/3)/3)) - FiniteSet(0)
     assert solveset_real(x**3 - 3**x, x) == FiniteSet(
         -3*LambertW(-log(3)/3)/log(3), -3*LambertW(-log(3)/3, -1)/log(3))
     assert solveset_real(x**2 - 2**x, x) == solveset_real(-x**2 + 2**x, x)
 
     assert solveset_real((a/x + exp(x/2)).diff(x), x) == \
-        Intersection(Interval(0, oo),
-            FiniteSet(4*LambertW(sqrt(2)*sqrt(a)/4))) - FiniteSet(0)
+        FiniteSet(4*LambertW(sqrt(2)*sqrt(a)/4)) - FiniteSet(0)
     a = -1
     assert solveset_real((a/x + exp(x/2)).diff(x), x) == S.EmptySet
     a = 1

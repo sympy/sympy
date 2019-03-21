@@ -1340,9 +1340,7 @@ def _is_logarithmic(f, symbol):
 
 def _is_bivariate(f, symbol):
     r"""
-    Helper to check if the equation takes bivariate form.
-    If the equation has exactly two generators then we can
-    say it to be in bivariate form.
+    Return True if the equation has two generators, else False.
     """
     poly = f.as_poly()
     gens = _filtered_gens(poly, symbol)
@@ -1370,16 +1368,16 @@ def _solve_as_bivariate(lhs, rhs, symbol, domain):
 
 def _is_lambert(f, symbol):
     r"""
-    Helper to check whether an equation is of lambert type.
-    Equations containing `Pow`, `log` or `exp` terms are currently checked
-    for having lambert solutions
+    Return True if the equation is of Lambert type, else False.
+    Equations containing `Pow`, `log` or `exp` terms are currently
+    treated as Lambert types.
     """
     return any(isinstance(arg, (Pow, exp, log)) for arg in _term_factors(f))
 
 
 def _compute_lambert_solutions(lhs, rhs, symbol):
     """
-    Computes the lambert solutions. Returns `None` if it
+    Computes the Lambert solutions. Returns `None` if it
     fails doing so.
     """
     try:
@@ -1393,10 +1391,9 @@ def _compute_lambert_solutions(lhs, rhs, symbol):
 
 def _solve_as_lambert(lhs, rhs, symbol, domain):
     r"""
-    Helper solver to handle equations having LambertW solutions.
-    First tries to solve equation directly, if unsuccessful
+    Helper solver to handle equations having Lambert solutions.
+    First tries to solve equation directly. If unsuccessful
     attempts to find the solutions by making the `symbol` positive.
-    The second attempt modifies the `domain` having only posiive values.
     """
     result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
 
@@ -1405,10 +1402,9 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
         # try with positive `symbol`
         u = Dummy('u', positive=True)
         pos_lhs = lhs.subs({symbol: u})
-        dom = Intersection(domain, Interval(0, oo))
         soln = _compute_lambert_solutions(pos_lhs, rhs, u)
         if soln:
-            result = Intersection(FiniteSet(*soln), dom)
+            result = FiniteSet(*soln)
     else:
         result = FiniteSet(*soln)
 
@@ -1612,7 +1608,7 @@ def _transolve(f, symbol, domain):
             result = _solve_logarithm(lhs, rhs, symbol, domain)
 
         elif _is_lambert(lhs, symbol):
-            # try to get solutions in form of lambert
+            # try to get solutions in form of Lambert
             result = _solve_as_lambert(lhs, rhs, symbol, domain)
             if isinstance(result, ConditionSet):
                 if _is_bivariate(lhs, symbol):
@@ -1633,7 +1629,7 @@ def _transolve(f, symbol, domain):
         if lhs.is_Add:
             result = add_type(lhs, rhs, symbol, domain)
         elif _is_lambert(lhs, symbol):
-            # try to get solutions in form of lambert
+            # try to get solutions in form of Lambert
             result = _solve_as_lambert(lhs, rhs, symbol, domain)
             if isinstance(result, ConditionSet):
                 if _is_bivariate(lhs, symbol):
