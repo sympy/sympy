@@ -1134,7 +1134,7 @@ def solve(f, *symbols, **flags):
                     continue
             pot.skip()
     del seen
-    non_inverts = dict(list(zip(non_inverts, [Dummy() for d in non_inverts])))
+    non_inverts = dict(list(zip(non_inverts, [Dummy() for _ in non_inverts])))
     f = [fi.subs(non_inverts) for fi in f]
 
     # Both xreplace and subs are needed below: xreplace to force substitution
