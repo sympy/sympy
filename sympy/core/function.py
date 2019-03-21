@@ -104,7 +104,7 @@ class ArgumentIndexError(ValueError):
                (self.args[1], self.args[0]))
 
 
-# Python 2 and 3 compatible version that do not raise a Deprecation warning.
+# Python 2/3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
 
