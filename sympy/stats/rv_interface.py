@@ -221,14 +221,14 @@ def kurtosis(X, condition=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import skewness, Exponential, Normal
+    >>> from sympy.stats import kurtosis, Exponential, Normal
     >>> from sympy import Symbol
     >>> X = Normal('X', 0, 1)
     >>> kurtosis(X)
     3
     >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
     >>> Y = Exponential('Y', rate)
-    >>> krutosis(Y)
+    >>> kurtosis(Y)
     9
     """
     return smoment(X, 4, condition, **kwargs)
