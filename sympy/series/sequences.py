@@ -713,8 +713,11 @@ class SeqFormula(SeqExpr):
         formula = self.formula * coeff
         return SeqFormula(formula, self.args[1])
 
-    def expand(self, trig = True, log = True, power_exp = True, power_base = True):
-        return expand(self.formula, trig = trig, log = log, power_exp = power_exp, power_base = power_base)
+    def expand(self,deep = True, modulus = None, mul = True, multinomial = True, basic = True, 
+     trig = True, log = True, power_exp = True, power_base = True):
+
+        return expand(self.formula, deep = deep, modulus = modulus, mul = mul, trig = trig, log = log, multinomial = multinomial,
+            power_exp = power_exp, power_base = power_base, basic = True)
 
 
 class RecursiveSeq(SeqBase):
