@@ -1708,7 +1708,6 @@ class LatexPrinter(Printer):
             "^" if expr.is_up else "_",
             self._print(expr.args[0])
         )
-        return self._print(expr.args[0])
 
     def _print_tuple(self, expr):
         return r"\left( %s\right)" % \

@@ -27,7 +27,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, numbered_symbols
 
 from .common import (
-    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError, a2idx)
+    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError)
 
 
 def _iszero(x):
