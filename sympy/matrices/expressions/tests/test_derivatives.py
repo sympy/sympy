@@ -140,8 +140,7 @@ def test_matrix_derivatives_of_traces():
 
     # Cookbook example 107:
     expr = Trace(X**2*B)
-    # TODO: wrong result
-    #assert expr.diff(X) == (X*B + B*X).T
+    assert expr.diff(X) == (X*B + B*X).T
     expr = Trace(MatMul(X, X, B))
     assert expr.diff(X) == (X*B + B*X).T
 
