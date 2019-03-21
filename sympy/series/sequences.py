@@ -603,7 +603,7 @@ class SeqPer(SeqExpr):
 
 
 class SeqFormula(SeqExpr):
-    """Represents sequence based on a formula.
+    """Represents sequence based on a formula.  
 
     Elements are generated using a formula.
 
@@ -712,6 +712,9 @@ class SeqFormula(SeqExpr):
         coeff = sympify(coeff)
         formula = self.formula * coeff
         return SeqFormula(formula, self.args[1])
+
+    def expand(self, trig = True, log = True, power_exp = True, power_base = True):
+        return expand(self.formula, trig = trig, log = log, power_exp = power_exp, power_base = power_base)
 
 
 class RecursiveSeq(SeqBase):
