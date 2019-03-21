@@ -2205,6 +2205,113 @@ class MatrixArithmetic(MatrixRequired):
     def __truediv__(self, other):
         return self.__div__(other)
 
+    def _eval_matrix_mul_strassen(self, other):
+        """Strassen subroutine for matrix multiplication.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Strassen_algorithm
+        """
+        a_rows, a_cols = sympify(self.shape)
+        b_rows, b_cols = sympify(other.shape)
+
+        def _ceiling_2(i):
+            """Helper function to decide augmented matrix size, which
+            should have even dimensions.
+            """
+            if i.is_odd:
+                return i + 1
+            else:
+                return i
+
+        def _pad_zeros(mat, i_old, j_old, i_new, j_new):
+            """Helper function to pad zeros to the matrix
+            """
+            cls = mat.__class__
+            if i_new > i_old:
+                diff = i_new - i_old
+                mat = cls.vstack(mat, cls.zeros(diff, j_old))
+            if j_new > j_old:
+                diff = j_new - j_old
+                mat = cls.hstack(mat, cls.zeros(i_new, diff))
+            return mat
+
+        _strasson = MatrixArithmetic._eval_matrix_mul_strassen
+
+        if (a_rows, a_cols) == (1, 1) and (b_rows, b_cols) == (1, 1):
+            return self.multiply(other, method='naive')
+
+        elif (a_rows.is_even and a_cols.is_even
+              and b_rows.is_even and b_cols.is_even):
+            a11 = self[:a_rows//2, :a_cols//2]
+            a12 = self[:a_rows//2, -a_cols//2:]
+            a21 = self[-a_rows//2:, :a_cols//2]
+            a22 = self[-a_rows//2:, -a_cols//2:]
+
+            b11 = other[:b_rows//2, :b_cols//2]
+            b12 = other[:b_rows//2, -b_cols//2:]
+            b21 = other[-b_rows//2:, :b_cols//2]
+            b22 = other[-b_rows//2:, -b_cols//2:]
+
+            m1 = _strasson(a11 + a22, b11 + b22)
+            m2 = _strasson(a21 + a22, b11)
+            m3 = _strasson(a11, b12 - b22)
+            m4 = _strasson(a22, b21 - b11)
+            m5 = _strasson(a11 + a12, b22)
+            m6 = _strasson(a21 - a11, b11 + b12)
+            m7 = _strasson(a12 - a22, b21 + b22)
+
+            c11 = m1 + m4 - m5 + m7
+            c12 = m3 + m5
+            c21 = m2 + m4
+            c22 = m1 - m2 + m3 + m6
+
+            cls = self.__class__
+            return cls.vstack(cls.hstack(c11, c12), cls.hstack(c21, c22))
+
+        else:
+            a_rows_new = _ceiling_2(a_rows)
+            b_rows_new = _ceiling_2(b_rows)
+            a_cols_new = _ceiling_2(a_cols)
+            b_cols_new = _ceiling_2(b_cols)
+
+            a_new = _pad_zeros(self, a_rows, a_cols, a_rows_new, a_cols_new)
+            b_new = _pad_zeros(other, b_rows, b_cols, b_rows_new, b_cols_new)
+
+            c_aug = _strasson(a_new, b_new)
+            return c_aug[:a_rows, :b_cols]
+
+    def multiply(self, other, method='naive'):
+        """Returns matrix multiplication of `A` and `B`
+
+        Parameters
+        ==========
+
+        other : Matrix or Scalar
+            Matrix dimensions should match.
+
+            If ``other`` is scalar, it is equivalent of multiplying
+            `A` and `B I` where `I` is an identity matrix which has rows
+            and columns as same as `A` 's columns.
+
+        method : String, optional
+            Specifies the method used for mathematrix multiplication
+
+        See Also
+        ========
+
+        dot
+        cross
+        multiply_elementwise
+        """
+        if method == 'naive':
+            return self * other
+        elif method == 'strassen':
+            return self._eval_matrix_mul_strassen(other)
+        else:
+            raise ValueError()
+
     def multiply_elementwise(self, other):
         """Return the Hadamard product (elementwise product) of A and B
 

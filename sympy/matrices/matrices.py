@@ -3788,18 +3788,6 @@ class MatrixBase(MatrixDeprecated,
             b.row_op(i, lambda x, _: x / scale)
         return rhs.__class__(b)
 
-    def multiply(self, b):
-        """Returns ``self*b``
-
-        See Also
-        ========
-
-        dot
-        cross
-        multiply_elementwise
-        """
-        return self * b
-
     def normalized(self, iszerofunc=_iszero):
         """Return the normalized version of ``self``.
 
