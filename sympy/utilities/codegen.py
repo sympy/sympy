@@ -95,7 +95,7 @@ from sympy.printing.octave import OctaveCodePrinter
 from sympy.printing.rust import RustCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
-                            MatrixExpr, MatrixSlice)
+                            MatrixExpr, MatrixSlice, MatAdd, MatMul, MatPow)
 
 
 __all__ = [
@@ -661,7 +661,8 @@ class CodeGen(object):
                 if symbol not in local_vars:
                     # avoid duplicate arguments
                     symbols.remove(symbol)
-            elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
+            elif isinstance(expr, (ImmutableMatrix, MatrixSlice, MatAdd,
+                                   MatMul, MatPow)):
                 # Create a "dummy" MatrixSymbol to use as the Output arg
                 out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
                 dims = tuple([(S.Zero, dim - 1) for dim in out_arg.shape])

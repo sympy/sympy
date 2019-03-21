@@ -562,6 +562,28 @@ def test_ccode_matrixsymbol_slice():
     )
     assert source == expected
 
+def test_ccode_matrix_implicit():
+    A = MatrixSymbol('A', 2, 4)
+    B = MatrixSymbol('B', 4, 2)
+    prod = A * B
+    name_expr = ("test", prod)
+    result = codegen(name_expr, "c99", "test", header=False, empty=False)
+    source = result[0][1]
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'void test(double *A, double *B, double *out_{hash}) {{\n'
+        '   out_{hash}[0] = A[0]*B[0] + A[1]*B[2] + A[2]*B[4] + A[3]*B[6];\n'
+        '   out_{hash}[1] = A[0]*B[1] + A[1]*B[3] + A[2]*B[5] + A[3]*B[7];\n'
+        '   out_{hash}[2] = A[4]*B[0] + A[5]*B[2] + A[6]*B[4] + A[7]*B[6];\n'
+        '   out_{hash}[3] = A[4]*B[1] + A[5]*B[3] + A[6]*B[5] + A[7]*B[7];\n'
+        '}}\n'
+    )
+    # find the hash as in matrixsymbol_slice_autoname
+    out_hash = source.splitlines()[2]. split('_')[1].split(')')[0]
+    expected = expected.format(hash=out_hash)
+    assert source == expected
+
 def test_ccode_cse():
     a, b, c, d = symbols('a b c d')
     e = MatrixSymbol('e', 3, 1)
@@ -1421,6 +1443,33 @@ def test_fcode_matrixsymbol_slice_autoname():
     b = a.split('_')
     out = b[1]
     expected = expected % {'hash': out}
+    assert source == expected
+
+def test_fcode_matrix_implicit():
+    A = MatrixSymbol('A', 2, 4)
+    B = MatrixSymbol('B', 4, 2)
+    prod = A * B
+    name_expr = ("test", prod)
+    result = codegen(name_expr, "f95", "test", header=False, empty=False)
+    source = result[0][1]
+    expected = (
+        'subroutine test(A, B, out_{hash})\n'
+        'implicit none\n'
+        'REAL*8, intent(in), dimension(1:2, 1:4) :: A\n'
+        'REAL*8, intent(in), dimension(1:4, 1:2) :: B\n'
+        'REAL*8, intent(out), dimension(1:2, 1:2) :: out_{hash}\n'
+        'out_{hash}(1, 1) = A(1, 1)*B(1, 1) + A(1, 2)*B(2, 1) + A(1, &\n'
+        '      3)*B(3, 1) + A(1, 4)*B(4, 1)\n'
+        'out_{hash}(2, 1) = A(2, 1)*B(1, 1) + A(2, 2)*B(2, 1) + A(2, &\n'
+        '      3)*B(3, 1) + A(2, 4)*B(4, 1)\n'
+        'out_{hash}(1, 2) = A(1, 1)*B(1, 2) + A(1, 2)*B(2, 2) + A(1, &\n'
+        '      3)*B(3, 2) + A(1, 4)*B(4, 2)\n'
+        'out_{hash}(2, 2) = A(2, 1)*B(1, 2) + A(2, 2)*B(2, 2) + A(2, &\n'
+        '      3)*B(3, 2) + A(2, 4)*B(4, 2)\n'
+        'end subroutine\n'
+    )
+    out_hash = source.splitlines()[4].split('_')[1]
+    expected = expected.format(hash=out_hash)
     assert source == expected
 
 def test_global_vars():
