@@ -35,15 +35,6 @@ class SparseMatrix(MatrixBase):
     [0, 0],
     [0, 2]])
 
-    Values that are themselves a Matrix are automatically expanded:
-
-    >>> SparseMatrix(4, 4, {(1, 1): ones(2)})
-    Matrix([
-    [0, 0, 0, 0],
-    [0, 1, 1, 0],
-    [0, 1, 1, 0],
-    [0, 0, 0, 0]])
-
     A SparseMatrix can be instantiated from a ragged list of lists:
 
     >>> SparseMatrix([[1, 2, 3], [1, 2], [1]])
@@ -89,6 +80,23 @@ class SparseMatrix(MatrixBase):
     [0, 0, 0, 0],
     [0, 0, 0, 3]])
 
+    Values that are themselves a Matrix are automatically expanded:
+
+    >>> SparseMatrix(4, 4, {(1, 1): ones(2)})
+    Matrix([
+    [0, 0, 0, 0],
+    [0, 1, 1, 0],
+    [0, 1, 1, 0],
+    [0, 0, 0, 0]])
+
+    A ValueError is raised if the expanding matrix tries to overwrite
+    a different element already present:
+
+    >>> SparseMatrix(3, 3, {(0, 0): ones(2), (1, 1): 2})
+    Traceback (most recent call last):
+    ...
+    ValueError: collision at (1, 1)
+
     See Also
     ========
     sympy.matrices.common.diag
@@ -104,6 +112,7 @@ class SparseMatrix(MatrixBase):
             return self
 
         self._smat = {}
+
         # autosizing
         if len(args) == 2 and args[0] is None:
             args = (None,) + args
@@ -126,22 +135,27 @@ class SparseMatrix(MatrixBase):
                         if value:
                             self._smat[(i, j)] = value
             elif isinstance(args[2], (dict, Dict)):
+                def update(i, j, v):
+                    # update self._smat and make sure there are
+                    # no collisions
+                    if v:
+                        if (i, j) in self._smat and v != self._smat[i, j]:
+                            raise ValueError('collision at %s' % ((i, j),))
+                        self._smat[i, j] = v
                 # manual copy, copy.deepcopy() doesn't work
                 for key, v in args[2].items():
+                    r, c = key
                     if isinstance(v, SparseMatrix):
-                        r, c = key
                         for (i, j), vij in v._smat.items():
-                            self._smat[(r + i, c + j)] = vij
+                            update(r + i, c + j, vij)
                     else:
                         if isinstance(v, (Matrix, list, tuple)):
                             v = SparseMatrix(v)
-                            r, c = key
                             for i, j in v._smat:
-                                self._smat[r + i, c + j] = v[i, j]
+                                update(r + i, c + j, v[i, j])
                         else:
                             v = self._sympify(v)
-                            if v:
-                                self._smat[key] = self._sympify(v)
+                            update(r, c, self._sympify(v))
             elif is_sequence(args[2]):
                 flat = not any(is_sequence(i) for i in args[2])
                 if not flat:
