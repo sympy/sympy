@@ -160,11 +160,6 @@ def test_sparse_matrix():
         [1, 2, 3],
         [1, 2, 0],
         [1, 0, 0]])
-    assert SparseMatrix(4, 4, {(1, 1): ones(2), (2, 2): 2*ones(2)}) == Matrix([
-        [0, 0, 0, 0],
-        [0, 1, 1, 0],
-        [0, 1, 2, 2],
-        [0, 0, 2, 2]])
     assert SparseMatrix(4, 4, {(1, 1): sparse_eye(2)}) == Matrix([
         [0, 0, 0, 0],
         [0, 1, 0, 0],
@@ -182,6 +177,7 @@ def test_sparse_matrix():
     assert SparseMatrix(None, None, {(0, 1): 1}).shape == (1, 2)
     raises(ValueError, lambda: SparseMatrix(None, 1, [[1, 2]]))
     raises(ValueError, lambda: SparseMatrix(1, None, [[1, 2]]))
+    raises(ValueError, lambda: SparseMatrix(3, 3, {(0, 0): ones(2), (1, 1): 2}))
 
     # test_determinant
     x, y = Symbol('x'), Symbol('y')

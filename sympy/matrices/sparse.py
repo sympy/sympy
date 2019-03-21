@@ -51,7 +51,7 @@ class SparseMatrix(MatrixBase):
     >>> SparseMatrix(2, 2, [1, 2])
     Traceback (most recent call last):
     ...
-    ValueError: List length (1) != rows*columns (4)
+    ValueError: List length (2) != rows*columns (4)
 
     Here, an error is not raised because the list is not flat and no
     element is out of range:
@@ -67,7 +67,7 @@ class SparseMatrix(MatrixBase):
     >>> SparseMatrix(2, 2, [[1, 2, 3]])
     Traceback (most recent call last):
     ...
-    ValueError: The location (0, 2) is out of the designated shape: (2, 2)
+    ValueError: The location (0, 2) is out of designated range: (1, 1)
 
     To autosize the matrix, pass None for rows:
 
@@ -179,9 +179,10 @@ class SparseMatrix(MatrixBase):
             else:
                 for i, j in self._smat.keys():
                     if i and i >= self.rows or j and j >= self.cols:
+                        r, c = self.shape
                         raise ValueError(filldedent('''
-                            The location %s is out of the designated
-                            shape: %s''' % ((i, j), self.shape)))
+                            The location %s is out of designated
+                            range: %s''' % ((i, j), (r - 1, c - 1))))
         else:
             if (len(args) == 1 and isinstance(args[0], (list, tuple))):
                 # list of values or lists
