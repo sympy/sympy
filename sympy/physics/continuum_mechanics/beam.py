@@ -1809,11 +1809,24 @@ class Beam3D(Beam):
         m = self._moment_load_vector
         return [integrate(-q[0], x), integrate(-q[1], x), integrate(-q[2], x)]
 
+    def shear_stress(self):
+        """
+        Returns expression of shear stress present inside the Beam object.
+        """
+        return self.shear_force()[0]/self.area
+
+
     def axial_force(self):
         """
         Returns expression of Axial shear force present inside the Beam object.
         """
         return self.shear_force()[0]
+
+    def axial_stress(self):
+        """
+        Returns expression of Axial shear stress present inside the Beam object.
+        """
+        return self.shear_force()[0]/self.area    
 
     def bending_moment(self):
         """
