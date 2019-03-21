@@ -970,9 +970,10 @@ class Interval(Set, EvalfMixin):
 
     def _eval_Eq(self, other):
         if not isinstance(other, Interval):
-            if isinstance(other, Set):
-                if isinstance(other, FiniteSet):
-                    return false
+            if isinstance(other, FiniteSet):
+                return false
+            elif isinstance(other, Set):
+                return None
             return false
 
         return And(Eq(self.left, other.left),
@@ -1539,9 +1540,10 @@ class FiniteSet(Set, EvalfMixin):
 
     def _eval_Eq(self, other):
         if not isinstance(other, FiniteSet):
-            if isinstance(other, Set):
-                if isinstance(other, Interval):
-                    return false
+            if isinstance(other, Interval):
+                return false
+            elif isinstance(other, Set):
+                return None
             return false
 
         if len(self) != len(other):
