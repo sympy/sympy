@@ -199,6 +199,27 @@ class Symbol(AtomicExpr, Boolean):
                 continue
             assumptions[key] = bool(v)
 
+    def float_multiply(letter,number):
+
+        if number == 0 :
+            return 0
+        elif number > 0 and (number % int(number)) == 0:
+
+            return Symbol(letter) * int(number)
+
+        elif number > 0 :
+
+            return Symbol(letter) * number
+
+        elif number < 0 and (number % int(number)) == 0:
+
+            return Symbol(letter) * int(number)
+
+        elif number < 0:
+            return Symbol(letter)* number
+
+
+
     def __new__(cls, name, **assumptions):
         """Symbols are identified by name and assumptions::
 
