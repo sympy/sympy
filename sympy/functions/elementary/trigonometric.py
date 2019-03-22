@@ -2924,7 +2924,10 @@ class atan2(InverseTrigonometricFunction):
         return -S.ImaginaryUnit*log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
 
     def _eval_rewrite_as_atan(self, y, x, **kwargs):
-        return 2*atan(y / (sqrt(x**2 + y**2) + x))
+        if y != 0:
+            return 2*atan(y / (sqrt(x**2 + y**2) + x))
+        else:
+            return Piecewise((0, x>0), (pi, True))
 
     def _eval_rewrite_as_arg(self, y, x, **kwargs):
         from sympy import arg
