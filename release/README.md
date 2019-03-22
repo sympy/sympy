@@ -24,6 +24,12 @@ First, make sure that you have done the following things
 - Push the release branch up to origin, and make a pull request for it against
   master.
 
+- Create the release notes page for the new release on the wiki. See
+  https://github.com/sympy/sympy-bot/issues/26. The easiest way to do this is
+  to copy the old release notes to a new page and remove all the changes, and
+  update the version number. The formatting on the release notes page is
+  important as otherwise the bot will fail, so it is best to do it this way.
+
 It is important to create a new branch because that lets master continue as
 normal. The release script will automatically checkout the release branch from
 origin, which is why you need to push it (it determines what the release
