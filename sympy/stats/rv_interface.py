@@ -191,7 +191,7 @@ def skewness(X, condition=None, **kwargs):
     Positive skew indicates that most of the values lie to the right of
     the mean.
 
-    skewness(X) = E( ((X - E(X))/sigma)**3 )
+    skewness(X) = E(((X - E(X))/sigma)**3)
 
     Examples
     ========
@@ -216,7 +216,9 @@ def kurtosis(X, condition=None, **kwargs):
     3 means that the distribution produces fewer and less extreme outliers
     than the normal distribution.
 
-    kurtosis(X) = E( ((X - E(X))/sigma)**4 )
+    kurtosis(X) = E(((X - E(X))/sigma)**4)
+
+    .. [1] https://en.wikipedia.org/wiki/Kurtosis
 
     Examples
     ========
