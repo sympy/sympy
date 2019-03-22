@@ -1449,6 +1449,10 @@ class GumbelDistribution(SingleContinuousDistribution):
         beta, mu = self.beta, self.mu
         return (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
 
+    def cdf(self, x):
+        beta, mu = self.beta, self.mu
+        return exp(-exp(x - mu)/beta)
+
     def _characteristic_function(self, t):
         return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
 
