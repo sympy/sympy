@@ -218,8 +218,6 @@ def kurtosis(X, condition=None, **kwargs):
 
     kurtosis(X) = E(((X - E(X))/sigma)**4)
 
-    .. [1] https://en.wikipedia.org/wiki/Kurtosis
-
     Examples
     ========
 
@@ -232,6 +230,13 @@ def kurtosis(X, condition=None, **kwargs):
     >>> Y = Exponential('Y', rate)
     >>> kurtosis(Y)
     9
+    
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Kurtosis
+
     """
     return smoment(X, 4, condition=condition, **kwargs)
 
