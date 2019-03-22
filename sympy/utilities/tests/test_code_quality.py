@@ -62,8 +62,6 @@ unicode_whitelist = [
     r'*/parsing/*',
     r'*/printing/*',
     # TODO Delete unicode in these files.
-    r'*/combinatorics/coset_table.py',
-    r'*/combinatorics/fp_groups.py',
     r'*/combinatorics/free_groups.py',
     r'*/combinatorics/tests/test_coset_table.py',
     r'*/crypto/crypto.py',
