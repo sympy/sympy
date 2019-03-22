@@ -273,13 +273,6 @@ class Mul(Expr, AssocOp):
                 coeff = o.__mul__(coeff)
                 continue
 
-            elif isinstance(o, MatrixExpr):
-                if isinstance(coeff, MatrixExpr):
-                    coeff *= o
-                else:
-                    coeff = o.__mul__(coeff)
-                continue
-
             elif o is S.ComplexInfinity:
                 if not coeff:
                     # 0 * zoo = NaN
@@ -595,7 +588,9 @@ class Mul(Expr, AssocOp):
         # 0
         elif coeff is S.Zero:
             # we know for sure the result will be 0 except the multiplicand
-            # is infinity
+            # is infinity or a matrix
+            if any(isinstance(c, MatrixExpr) for c in nc_part):
+                return [coeff], nc_part, order_symbols
             if any(c.is_finite == False for c in c_part):
                 return [S.NaN], [], order_symbols
             return [coeff], [], order_symbols
@@ -1782,7 +1777,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
                 r = c/q
                 if r == int(r):
                     return coeff*factors
-        return Mul._from_args((coeff, factors))
+        return Mul(coeff, factors, evaluate=False)
     elif factors.is_Mul:
         margs = list(factors.args)
         if margs[0].is_Number:

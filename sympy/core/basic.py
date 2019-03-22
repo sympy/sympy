@@ -1768,24 +1768,18 @@ class Basic(with_metaclass(ManagedProperties)):
         postprocessors = defaultdict(list)
         for i in obj.args:
             try:
-                if i in Basic._constructor_postprocessor_mapping:
-                    for k, v in Basic._constructor_postprocessor_mapping[i].items():
-                        postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
-                else:
-                    postprocessor_mappings = (
-                        Basic._constructor_postprocessor_mapping[cls].items()
-                        for cls in type(i).mro()
-                        if cls in Basic._constructor_postprocessor_mapping
-                    )
-                    for k, v in chain.from_iterable(postprocessor_mappings):
-                        postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
+                postprocessor_mappings = (
+                    Basic._constructor_postprocessor_mapping[cls].items()
+                    for cls in type(i).mro()
+                    if cls in Basic._constructor_postprocessor_mapping
+                )
+                for k, v in chain.from_iterable(postprocessor_mappings):
+                    postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
             except TypeError:
                 pass
 
         for f in postprocessors.get(clsname, []):
             obj = f(obj)
-        if len(postprocessors) > 0 and obj not in Basic._constructor_postprocessor_mapping:
-            Basic._constructor_postprocessor_mapping[obj] = postprocessors
 
         return obj
 
