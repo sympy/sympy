@@ -710,8 +710,8 @@ class Quaternion(Expr):
         Returns
         =======
         A quaternion
-            Returns a quaternion representing the rotation of the given quaternion
-            function at the rate of W.
+            Returns a quaternion derivative representing the rotation of
+            the given quaternion function at the rate of W.
         """
         vec = W._args
         quat = Quaternion(0, vec[0], vec[1], vec[2])
