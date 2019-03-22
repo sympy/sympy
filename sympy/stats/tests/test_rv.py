@@ -230,4 +230,5 @@ def test_issue_8129():
 
 def test_issue_12237():
     X = Normal('X', 0, 1)
-    assert P(X > 0, X) == 1/2
+    Z = P(X > 0, X)
+    assert Z == Probability(X > 0, X)

@@ -726,18 +726,8 @@ def probability(condition, given_condition=None, numsamples=None,
     given_condition = sympify(given_condition)
 
     if isinstance(given_condition, RandomSymbol):
-        rand_var = given_condition
-        rvs_cond = random_symbols(condition)
-        if len(rvs_cond) > 1:
-            raise NotImplementedError("Multivariate inequalities not implemented yet.")
-        if independent(rvs_cond[0], rand_var):
-            return probability(condition, numsamples=None, evaluate=evaluate, **kwargs)
-        p_a = probability(condition, numsamples=None, evaluate=evaluate, **kwargs)
-        _t = Symbol('_t')
-        _x = Symbol('_x')
-        pdf = Lambda(_x, density(rand_var, condition)(_t)*p_a/density(rand_var)(_x))
-        return pdf
-
+        from sympy.stats.symbolic_probability import Probability
+        return Probability(condition, given_condition)
 
     if given_condition is not None and \
             not isinstance(given_condition, (Relational, Boolean)):
