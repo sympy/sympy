@@ -33,7 +33,8 @@ def test_matrix_derivative_non_matrix_result():
 
 def test_matrix_derivative_trivial_cases():
     # Cookbook example 33:
-    assert X.diff(A) == 0
+    # TODO: find a way to represent a four-dimensional zero-array:
+    assert X.diff(A) == Derivative(X, A)
 
 
 def test_matrix_derivative_with_inverse():
