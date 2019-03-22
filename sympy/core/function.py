@@ -1291,7 +1291,7 @@ class Derivative(Expr):
         if len(variable_count) == 0:
             return expr
 
-        evaluate = kwargs.get('evaluate', False)
+        evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         if evaluate:
             if isinstance(expr, Derivative):
@@ -1335,11 +1335,10 @@ class Derivative(Expr):
             #TODO: check if assumption of discontinuous derivatives exist
             variable_count = cls._sort_variable_count(variable_count)
 
-        # denest
-        if isinstance(expr, Derivative):
-            variable_count = list(expr.variable_count) + variable_count
-            expr = expr.expr
-            return self.func(expr, *variable_count, **kwargs)
+            # denest
+            if isinstance(expr, Derivative):
+                variable_count = list(expr.variable_count) + variable_count
+                return expr.func(expr.expr, *variable_count, **kwargs)
 
         # we return here if evaluate is False or if there is no
         # _eval_derivative method
