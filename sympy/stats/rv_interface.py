@@ -186,10 +186,10 @@ def smoment(X, n, condition=None, **kwargs):
 
 def skewness(X, condition=None, **kwargs):
     """
-    Measure of the asymmetry of the probability distribution
+    Measure of the asymmetry of the probability distribution.
 
     Positive skew indicates that most of the values lie to the right of
-    the mean
+    the mean.
 
     skewness(X) = E( ((X - E(X))/sigma)**3 )
 
@@ -206,15 +206,15 @@ def skewness(X, condition=None, **kwargs):
     >>> skewness(Y)
     2
     """
-    return smoment(X, 3, condition, **kwargs)
+    return smoment(X, 3, condition=condition, **kwargs)
 
 def kurtosis(X, condition=None, **kwargs):
     """
-    Measure of the tailedness(outliers) of the probability distribution
+    Measure of the tailedness (outliers) of the probability distribution.
 
     Kurtosis of any univariate normal distribution is 3. Kurtosis less than
     3 means that the distribution produces fewer and less extreme outliers
-    than the normal distribution
+    than the normal distribution.
 
     kurtosis(X) = E( ((X - E(X))/sigma)**4 )
 
@@ -231,7 +231,7 @@ def kurtosis(X, condition=None, **kwargs):
     >>> kurtosis(Y)
     9
     """
-    return smoment(X, 4, condition, **kwargs)
+    return smoment(X, 4, condition=condition, **kwargs)
 
 
 P = probability
