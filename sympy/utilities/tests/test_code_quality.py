@@ -52,9 +52,7 @@ message_py2_unicode_whitelisted = \
     "'test_code_quality.py'"
 message_unnecessary_unicode_cookie = \
     "File contains a unicode encoding header : %s, line %s. " \
-    "But it would (should) not be needed." \
-    "See https://www.python.org/dev/peps/pep-0263/ " \
-    "For more information."
+    "But it would not be needed."
 
 encoding_header_re = re.compile(
     r'^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)')
@@ -276,13 +274,13 @@ def test_files():
                             has_coding_utf8 = True
                             unicode_header_idx = idx
 
-                    try:
-                        line.encode(encoding='ascii')
-                    except UnicodeEncodeError:
-                        has_unicode = True
-                        if has_coding_utf8 is False:
-                            assert False, message_py2_unicode_whitelisted % \
-                                (fname, idx + 1)
+                try:
+                    line.encode(encoding='ascii')
+                except UnicodeEncodeError:
+                    has_unicode = True
+                    if has_coding_utf8 is False:
+                        assert False, message_py2_unicode_whitelisted % \
+                            (fname, idx + 1)
 
             if has_unicode is False and has_coding_utf8 is True:
                 assert False, message_unnecessary_unicode_cookie % \
