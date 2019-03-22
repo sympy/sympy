@@ -38,6 +38,7 @@ class Beam(object):
 
     Examples
     ========
+
     There is a beam of length 4 meters. A constant distributed load of 6 N/m
     is applied from half of the beam till the end. There are two simple supports
     below the beam, one at the starting point and another at the ending point
@@ -193,6 +194,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 4 meters. The bending moment at 0 should be 4
         and at 4 it should be 0. The slope of the beam should be 1 at 0. The
         deflection should be 2 at 0.
@@ -246,6 +248,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a cantilever beam of length 4 meters. For first 2 meters
         its moment of inertia is `1.5*I` and `I` for the other end.
         A pointload of magnitude 4 N is applied from the top at its free end.
@@ -307,6 +310,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -373,6 +377,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
         A point load of magnitude 4 N is applied from the top of the beam at
@@ -440,6 +445,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
         A pointload of magnitude 4 N is applied from the top of the beam at
@@ -497,6 +503,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
         A point load of magnitude 4 N is applied from the top of the beam at
@@ -524,6 +531,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
         A pointload of magnitude 4 N is applied from the top of the beam at
@@ -556,9 +564,10 @@ class Beam(object):
 
         Examples
         ========
+
         A combined beam, with constant flexural rigidity E*I, is formed by joining
         a Beam of length 2*l to the right of another Beam of length l. The whole beam
-        is fixed at both of its both end. A point load of magnitude P is also applied
+        is fixed at both of its end. A point load of magnitude P is also applied
         from the top at a distance of 2*l from starting point.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -685,6 +694,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -753,6 +763,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -839,6 +850,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -866,8 +878,8 @@ class Beam(object):
         x = self.variable
         return integrate(self.shear_force(), x)
 
-    def max_bmoment(self):
-        """Returns maximum Bending Moment and its coordinate
+    def max_bending_moment(self):
+        """Returns maximum bending moment and its coordinate
         in the Beam object."""
         from sympy import solve, Mul, Interval
         bending_curve = self.bending_moment()
@@ -926,6 +938,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is is 10 meter long overhanging beam. There are
         two simple supports below the beam. One at the start
         and another one at a distance of 6 meters from the start.
@@ -967,6 +980,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -1036,6 +1050,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -1191,12 +1206,13 @@ class Beam(object):
         """
         Returns bending stress of a beam cross-section at a distance `y` from the neutral axis.
 
-        Example
-        =======
-        There is a beam of length 6 m with a u.d.l of 40 KN/m over its length. The beam has a rectangular
-        cross-section(0.3 x 0.6 m) with moment of inertia. The bending stress at a point
-        0.2 m above the neutral axis and at a cross-section which is 4 meters from the start of the beam
-        has to be determined.
+        Examples
+        ========
+
+        There is a beam of length 6 m with a uniformly distributed load of 40 KN/m over its length.
+        The beam has a rectangular cross-section (0.3 x 0.6 m) with moment of inertia. The bending
+        stress at a point 0.2 m above the neutral axis and at a cross-section which is 4 meters from
+        the start of the beam has to be determined.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols, Piecewise
@@ -1224,10 +1240,12 @@ class Beam(object):
         Returns the shear stress of a beam cross-section at point(or layer) above the
         neutral axis with its first moment of area as `Q` and width of the cross-section as 't'.
 
-        Example
-        =======
-        A cantilever beam of I-cross-section and length 8 meters is under downward distributed constant load with magnitude
-        of 5.0 KN/m from starting point till 2 meters away from it. A ramp load of 2 kN/m applied from the mid till the end of the beam.
+        Examples
+        ========
+
+        A cantilever beam of I-cross-section and length 8 meters is under downward distributed
+        constant load with magnitude of 5.0 KN/m from starting point till 2 meters away from it.
+        A ramp load of 2 kN/m applied from the mid till the end of the beam.
         A point load of 12KN is also applied in same direction 4 meters away from start.
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
@@ -1272,6 +1290,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 8 meters. A constant distributed load of 10 KN/m
         is applied from half of the beam till the end. There are two simple supports
         below the beam, one at the starting point and another at the ending point
@@ -1324,6 +1343,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 8 meters. A constant distributed load of 10 KN/m
         is applied from half of the beam till the end. There are two simple supports
         below the beam, one at the starting point and another at the ending point
@@ -1376,6 +1396,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 8 meters. A constant distributed load of 10 KN/m
         is applied from half of the beam till the end. There are two simple supports
         below the beam, one at the starting point and another at the ending point
@@ -1428,6 +1449,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 8 meters. A constant distributed load of 10 KN/m
         is applied from half of the beam till the end. There are two simple supports
         below the beam, one at the starting point and another at the ending point
@@ -1488,6 +1510,7 @@ class Beam(object):
 
         Examples
         ========
+
         There is a beam of length 8 meters. A constant distributed load of 10
         KN/m is applied from half of the beam till the end. There are two
         simple supports below the beam, one at the starting point and another
@@ -1578,6 +1601,7 @@ class Beam3D(Beam):
 
     Examples
     ========
+
     There is a beam of l meters long. A constant distributed load of magnitude q
     is applied along y-axis from start till the end of beam. A constant distributed
     moment of magnitude m is also applied along z-axis from start till the end of beam.
@@ -1719,6 +1743,7 @@ class Beam3D(Beam):
 
         Examples
         ========
+
         There is a beam of length 4 meters. The slope at 0 should be 4 along
         the x-axis and 0 along others. At the other end of beam, deflection
         along all the three axes should be zero.
@@ -1830,6 +1855,7 @@ class Beam3D(Beam):
 
         Examples
         ========
+
         There is a beam of length 30 meters. It it supported by rollers at
         of its end. A constant distributed load of magnitude 8 N is applied
         from start till its end along y-axis. Another linear load having

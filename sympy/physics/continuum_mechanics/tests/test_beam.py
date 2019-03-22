@@ -453,7 +453,7 @@ def test_max_shear_force():
     assert b.max_shear_force() == (0, l*Abs(P)/2)
 
 
-def test_max_bmoment():
+def test_max_bending_moment():
     E = Symbol('E')
     I = Symbol('I')
     l, P = symbols('l, P', positive=True)
@@ -465,7 +465,7 @@ def test_max_bmoment():
     b.apply_load(P, l/2, -1)
     b.solve_for_reaction_loads(R1, R2)
     b.reaction_loads
-    assert b.max_bmoment() == (l/2, P*l/4)
+    assert b.max_bending_moment() == (l/2, P*l/4)
 
     b = Beam(l, E, I)
     R1, R2 = symbols('R1, R2')
@@ -473,7 +473,7 @@ def test_max_bmoment():
     b.apply_load(R2, l, -1)
     b.apply_load(P, 0, 0, end=l)
     b.solve_for_reaction_loads(R1, R2)
-    assert b.max_bmoment() == (l/2, P*l**2/8)
+    assert b.max_bending_moment() == (l/2, P*l**2/8)
 
 
 def test_max_deflection():
@@ -515,7 +515,6 @@ def test_shear_stress():
             - 5000*SingularityFunction(x, 10, 0) - 1000*SingularityFunction(x, 10, 1))/(t*d**3*z)
 
 
-@slow
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')
     R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
