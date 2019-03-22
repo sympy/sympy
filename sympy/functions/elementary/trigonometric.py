@@ -2925,7 +2925,7 @@ class atan2(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_atan(self, y, x, **kwargs):
         if y.is_zero is True:
-            und = Function('undefined')
+            und = Function('NaN')
             return Piecewise(
                 (pi, x < 0),
                 (0, x > 0),
