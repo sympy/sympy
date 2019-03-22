@@ -836,7 +836,7 @@ def test_sympy__sets__ordinals__OrdinalZero():
     assert _test_args(OrdinalZero())
 
 def test_sympy__sets__sets__EmptySet():
-    from sympy.sets.sets import EmptySet
+    from sympy import EmptySet
     assert _test_args(EmptySet())
 
 
