@@ -60,6 +60,8 @@ def test_Vector():
     v6 = x*A.x + y*A.y + z*A.z
     assert v6.free_symbols(A) == {x,y,z}
 
+    raises(TypeError, lambda: v3.applyfunc(v1))
+
 
 def test_Vector_diffs():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')

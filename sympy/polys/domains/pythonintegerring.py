@@ -2,12 +2,11 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.domains.integerring import IntegerRing
 from sympy.polys.domains.groundtypes import (
     PythonInteger, SymPyInteger, python_sqrt,
     python_factorial, python_gcdex, python_gcd, python_lcm,
 )
-
+from sympy.polys.domains.integerring import IntegerRing
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 

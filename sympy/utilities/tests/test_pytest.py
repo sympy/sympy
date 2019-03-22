@@ -1,14 +1,9 @@
 import warnings
 
-from sympy.utilities.pytest import (raises, warns, ignore_warnings, USE_PYTEST,
-                                    warns_deprecated_sympy)
+from sympy.utilities.pytest import (raises, warns, ignore_warnings,
+                                    warns_deprecated_sympy, Failed)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-
-if USE_PYTEST:
-    from _pytest.outcomes import Failed
-else:
-    Failed = AssertionError
 
 
 # Test callables

@@ -21,6 +21,9 @@ matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']
 numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
 
 
+__doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
+
+
 class Beam(object):
     """
     A Beam is a structural element that is capable of withstanding load
@@ -1000,7 +1003,6 @@ class Beam(object):
         if isinstance(I, Piecewise) and self._composite_type == "fixed":
             args = I.args
             slope = 0
-            conditions = []
             prev_slope = 0
             prev_end = 0
             for i in range(len(args)):
@@ -1066,7 +1068,6 @@ class Beam(object):
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
             if isinstance(I, Piecewise) and self._composite_type == "fixed":
                 args = I.args
-                conditions = []
                 prev_slope = 0
                 prev_def = 0
                 prev_end = 0
@@ -1095,7 +1096,6 @@ class Beam(object):
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
             if isinstance(I, Piecewise) and self._composite_type == "fixed":
                 args = I.args
-                conditions = []
                 prev_slope = 0
                 prev_def = 0
                 prev_end = 0
@@ -1128,7 +1128,6 @@ class Beam(object):
 
         if isinstance(I, Piecewise) and self._composite_type == "fixed":
             args = I.args
-            conditions = []
             prev_slope = 0
             prev_def = 0
             prev_end = 0
@@ -1441,7 +1440,6 @@ class Beam(object):
         else:
             linspace = numpy.linspace
 
-        length = self.length
         variable = self.variable
         if subs is None:
             subs = {}
@@ -1571,17 +1569,12 @@ class Beam3D(Beam):
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
         """
-        self.length = length
-        self.elastic_modulus = elastic_modulus
+        super(Beam3D, self).__init__(length, elastic_modulus, second_moment, variable)
         self.shear_modulus = shear_modulus
-        self.second_moment = second_moment
         self.area = area
-        self.variable = variable
-        self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load_vector = [0, 0, 0]
         self._moment_load_vector = [0, 0, 0]
         self._load_Singularity = [0, 0, 0]
-        self._reaction_loads = {}
         self._slope = [0, 0, 0]
         self._deflection = [0, 0, 0]
 
@@ -1775,9 +1768,8 @@ class Beam3D(Beam):
         {R1: -120, R2: -120, R3: -1350, R4: -2700}
         """
         x = self.variable
-        l=self.length
+        l = self.length
         q = self._load_Singularity
-        m = self._moment_load_vector
         shear_curves = [integrate(load, x) for load in q]
         moment_curves = [integrate(shear, x) for shear in shear_curves]
         for i in range(3):
@@ -1803,7 +1795,6 @@ class Beam3D(Beam):
         """
         x = self.variable
         q = self._load_vector
-        m = self._moment_load_vector
         return [integrate(-q[0], x), integrate(-q[1], x), integrate(-q[2], x)]
 
     def axial_force(self):
@@ -1818,14 +1809,13 @@ class Beam3D(Beam):
         curve of the Beam object along all three axes.
         """
         x = self.variable
-        q = self._load_vector
         m = self._moment_load_vector
         shear = self.shear_force()
 
         return [integrate(-m[0], x), integrate(-m[1] + shear[2], x),
                 integrate(-m[2] - shear[1], x) ]
 
-    def torsional_moment():
+    def torsional_moment(self):
         """
         Returns expression of Torsional moment present inside the Beam object.
         """

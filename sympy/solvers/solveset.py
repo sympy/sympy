@@ -129,7 +129,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     >>> invert_complex(exp(x), y, x)
     (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers))
     >>> invert_real(exp(x), y, x)
-    (x, Intersection(Reals, {log(y)}))
+    (x, Intersection({log(y)}, Reals))
 
     When does exp(x) == 1?
 
@@ -2084,14 +2084,14 @@ def linsolve(system, *symbols):
     >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> b = Matrix([3, 6, 9])
     >>> linsolve((A, b), x, y, z)
-    {(z - 1, -2*z + 2, z)}
+    {(z - 1, 2 - 2*z, z)}
 
     If no symbols are given, internally generated symbols will be used.
     The `tau0` in the 3rd position indicates (as before) that the 3rd
     variable -- whatever it's named -- can take on any value:
 
     >>> linsolve((A, b))
-    {(tau0 - 1, -2*tau0 + 2, tau0)}
+    {(tau0 - 1, 2 - 2*tau0, tau0)}
 
     * List of Equations as input
 
@@ -2347,10 +2347,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                'Not type %s: %s')
         raise TypeError(filldedent(msg % (type(symbols), symbols)))
 
-    try:
-        sym = symbols[0].is_Symbol
-    except AttributeError:
-        sym = False
+    sym = getattr(symbols[0], 'is_Symbol', False)
 
     if not sym:
         msg = ('Iterable of symbols must be given as '
@@ -2803,6 +2800,7 @@ def _handle_positive_dimensional(polys, symbols, denominators):
         new_system, symbols, result, [],
         denominators)
     return result
+
 # end of def _handle_positive_dimensional()
 
 
@@ -2929,7 +2927,7 @@ def nonlinsolve(system, *symbols):
     {(---, -d, -, {d} \ {0}), (-, -d, ---, {d} \ {0})}
        d       d               d       d
     >>> nonlinsolve([(x+y)**2 - 4, x + y - 2], [x, y])
-    {(-y + 2, y)}
+    {(2 - y, y)}
 
     2. If some of the equations are non polynomial equation then `nonlinsolve`
     will call `substitution` function and returns real and complex solutions,
@@ -2956,7 +2954,7 @@ def nonlinsolve(system, *symbols):
     because `linsolve` is better for all kind of linear system.
 
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z])
-    {(3*z - 5, -z + 4, z)}
+    {(3*z - 5, 4 - z, z)}
 
     5. System having polynomial equations and only real solution is present
     (will be solved using `solve_poly_system`):
@@ -2966,9 +2964,9 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve((e1, e2), (x, y))
     {(191/20, -3*sqrt(391)/20), (191/20, 3*sqrt(391)/20)}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [x, y])
-    {(1, 2), (1 + sqrt(5), -sqrt(5) + 2), (-sqrt(5) + 1, 2 + sqrt(5))}
+    {(1, 2), (1 - sqrt(5), 2 + sqrt(5)), (1 + sqrt(5), 2 - sqrt(5))}
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
-    {(2, 1), (2 + sqrt(5), -sqrt(5) + 1), (-sqrt(5) + 2, 1 + sqrt(5))}
+    {(2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5))}
 
     6. It is better to use symbols instead of Trigonometric Function or
     Function (e.g. replace `sin(x)` with symbol, replace `f(x)` with symbol
@@ -3007,6 +3005,7 @@ def nonlinsolve(system, *symbols):
 
     """
     from sympy.polys.polytools import is_zero_dimensional
+    from sympy.polys import RR
 
     if not system:
         return S.EmptySet
@@ -3051,7 +3050,11 @@ def nonlinsolve(system, *symbols):
                 return result
 
         # positive dimensional system
-        return _handle_positive_dimensional(polys, symbols, denominators)
+        res = _handle_positive_dimensional(polys, symbols, denominators)
+        if isinstance(res, EmptySet) and any(not p.domain.is_Exact for p in polys):
+            raise NotImplementedError("Equation not in exact domain. Try converting to rational")
+        else:
+            return res
 
     else:
         # If all the equations are not polynomial.

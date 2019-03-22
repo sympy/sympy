@@ -1,4 +1,9 @@
-from sympy.utilities.randtest import verify_numerically as tn
+from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
+                   Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
+                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
+                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
+from sympy.core.compatibility import range
+from sympy.external import import_module
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, characteristic_function, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy,
@@ -11,20 +16,10 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
                          moment, cmoment, smoment)
-
-from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
-                   Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
-                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
-
-
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
-
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
-from sympy.external import import_module
-
-from sympy.core.compatibility import range
+from sympy.utilities.randtest import verify_numerically as tn
 
 oo = S.Infinity
 
@@ -97,7 +92,6 @@ def test_multiple_normal():
     assert variance(X, Eq(X + Y, 0)) == S.Half
 
 
-@slow
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, finite=True)
     s1, s2 = symbols('sigma1 sigma2', real=True, finite=True, positive=True)
@@ -158,7 +152,7 @@ def test_characteristic_function():
     assert simplify(cf(1)) == S(25)/26 + 5*I/26
 
 
-def test_sample():
+def test_sample_continuous():
     z = Symbol('z')
     Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
     assert sample(Z) in Z.pspace.domain.set
@@ -193,12 +187,25 @@ def test_arcsin():
 
 def test_benini():
     alpha = Symbol("alpha", positive=True)
-    b = Symbol("beta", positive=True)
+    beta = Symbol("beta", positive=True)
     sigma = Symbol("sigma", positive=True)
 
-    X = Benini('x', alpha, b, sigma)
-    assert density(X)(x) == ((alpha/x + 2*b*log(x/sigma)/x)
-                          *exp(-alpha*log(x/sigma) - b*log(x/sigma)**2))
+    X = Benini('x', alpha, beta, sigma)
+    assert density(X)(x) == ((alpha/x + 2*beta*log(x/sigma)/x)
+                          *exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
+
+    alpha = Symbol("alpha", positive=False)
+    raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
+
+    beta = Symbol("beta", positive=False)
+    raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
+
+    alpha = Symbol("alpha", positive=True)
+    raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
+
+    beta = Symbol("beta", positive=True)
+    sigma = Symbol("sigma", positive=False)
+    raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
 
 def test_beta():
@@ -229,6 +236,13 @@ def test_betaprime():
     X = BetaPrime('x', alpha, betap)
     assert density(X)(x) == x**(alpha - 1)*(x + 1)**(-alpha - betap)/beta(alpha, betap)
 
+    alpha = Symbol("alpha", positive=False)
+    raises(ValueError, lambda: BetaPrime('x', alpha, betap))
+
+    alpha = Symbol("alpha", positive=True)
+    betap = Symbol("beta", positive=False)
+    raises(ValueError, lambda: BetaPrime('x', alpha, betap))
+
 
 def test_cauchy():
     x0 = Symbol("x0")
@@ -237,12 +251,21 @@ def test_cauchy():
     X = Cauchy('x', x0, gamma)
     assert density(X)(x) == 1/(pi*gamma*(1 + (x - x0)**2/gamma**2))
 
+    gamma = Symbol("gamma", positive=False)
+    raises(ValueError, lambda: Cauchy('x', x0, gamma))
+
 
 def test_chi():
     k = Symbol("k", integer=True)
 
     X = Chi('x', k)
     assert density(X)(x) == 2**(-k/2 + 1)*x**(k - 1)*exp(-x**2/2)/gamma(k/2)
+
+    k = Symbol("k", integer=True, positive=False)
+    raises(ValueError, lambda: Chi('x', k))
+
+    k = Symbol("k", integer=False, positive=True)
+    raises(ValueError, lambda: Chi('x', k))
 
 def test_chi_noncentral():
     k = Symbol("k", integer=True)
@@ -252,6 +275,17 @@ def test_chi_noncentral():
     assert density(X)(x) == (x**k*l*(x*l)**(-k/2)*
                           exp(-x**2/2 - l**2/2)*besseli(k/2 - 1, x*l))
 
+    k = Symbol("k", integer=True, positive=False)
+    raises(ValueError, lambda: ChiNoncentral('x', k, l))
+
+    k = Symbol("k", integer=True, positive=True)
+    l = Symbol("l", positive=False)
+    raises(ValueError, lambda: ChiNoncentral('x', k, l))
+
+    k = Symbol("k", integer=False)
+    l = Symbol("l", positive=True)
+    raises(ValueError, lambda: ChiNoncentral('x', k, l))
+
 
 def test_chi_squared():
     k = Symbol("k", integer=True)
@@ -259,9 +293,17 @@ def test_chi_squared():
     X = ChiSquared('x', k)
     assert density(X)(x) == 2**(-k/2)*x**(k/2 - 1)*exp(-x/2)/gamma(k/2)
     assert cdf(X)(x) == Piecewise((lowergamma(k/2, x/2)/gamma(k/2), x >= 0), (0, True))
+    assert E(X) == k
+    assert variance(X) == 2*k
 
     X = ChiSquared('x', 15)
     assert cdf(X)(3) == -14873*sqrt(6)*exp(-S(3)/2)/(5005*sqrt(pi)) + erf(sqrt(6)/2)
+
+    k = Symbol("k", integer=True, positive=False)
+    raises(ValueError, lambda: ChiSquared('x', k))
+
+    k = Symbol("k", integer=False, positive=True)
+    raises(ValueError, lambda: ChiSquared('x', k))
 
 
 def test_dagum():
@@ -273,6 +315,17 @@ def test_dagum():
     assert density(X)(x) == a*p*(x/b)**(a*p)*((x/b)**a + 1)**(-p - 1)/x
     assert cdf(X)(x) == Piecewise(((1 + (x/b)**(-a))**(-p), x >= 0),
                                     (0, True))
+
+    p = Symbol("p", positive=False)
+    raises(ValueError, lambda: Dagum('x', p, a, b))
+
+    p = Symbol("p", positive=True)
+    b = Symbol("b", positive=False)
+    raises(ValueError, lambda: Dagum('x', p, a, b))
+
+    b = Symbol("b", positive=True)
+    a = Symbol("a", positive=False)
+    raises(ValueError, lambda: Dagum('x', p, a, b))
 
 
 def test_erlang():
@@ -758,6 +811,7 @@ def test_issue_10003():
     assert P(G < -1) == S.Zero
 
 
+@slow
 def test_precomputed_cdf():
     x = symbols("x", real=True, finite=True)
     mu = symbols("mu", real=True, finite=True)
@@ -776,6 +830,7 @@ def test_precomputed_cdf():
         assert compdiff == 0
 
 
+@slow
 def test_precomputed_characteristic_functions():
     import mpmath
 

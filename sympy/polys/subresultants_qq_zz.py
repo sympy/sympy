@@ -247,7 +247,7 @@ res_z(f, g, x)
 from __future__ import print_function, division
 
 from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
-from sympy import (QQ, quo, prem, rem, S, sign, simplify, summation, var, zeros)
+from sympy import (QQ, pquo, quo, prem, rem, S, sign, simplify, summation, var, zeros)
 from sympy.polys.polyerrors import PolynomialError
 
 def sylvester(f, g, x, method = 1):
@@ -1011,7 +1011,7 @@ def sturm_q(p, q, x):
     Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Submitted for publication.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
 
     """
     # make sure neither p nor q is 0
@@ -1103,15 +1103,15 @@ def sturm_amv(p, q, x, method=0):
     References
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Submitted for publication.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``On the Remainders
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.'' Serdica
-    Journal of Computing, to appear.
+    Journal of Computing 9(2) (2015), 123-138.
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Subresultant Polynomial
     Remainder Sequences Obtained by Polynomial Divisions in Q[x] or in Z[x].''
-    Submitted for publication.
+    Serdica Journal of Computing 10 (2016), Νο.3-4, 197-217.
 
     """
     # compute the euclidean sequence
@@ -1190,15 +1190,15 @@ def euclid_pg(p, q, x):
     References
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Submitted for publication.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``On the Remainders
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.'' Serdica
-    Journal of Computing, to appear.
+    Journal of Computing 9(2) (2015), 123-138.
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Subresultant Polynomial
     Remainder Sequences Obtained by Polynomial Divisions in Q[x] or in Z[x].''
-    Submitted for publication.
+    Serdica Journal of Computing 10 (2016), Νο.3-4, 197-217.
 
     """
     # compute the sturmian sequence using the Pell-Gordon (or AMV) theorem
@@ -1266,7 +1266,7 @@ def euclid_q(p, q, x):
     Serdica Journal of Computing, Vol. 8, No 1, 29–46, 2014.
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Submitted for publication.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
 
     """
     # make sure neither p nor q is 0
@@ -1342,11 +1342,11 @@ def euclid_amv(f, g, x):
     References
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Submitted for publication.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Subresultant Polynomial
     remainder Sequences Obtained by Polynomial Divisions in Q[x] or in Z[x].''
-    Submitted for publication.
+    Serdica Journal of Computing 10 (2016), Νο.3-4, 197-217.
 
     """
     # make sure neither f nor g is 0
@@ -1601,7 +1601,7 @@ def subresultants_pg(p, q, x):
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ‘‘On the Remainders
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
-    Serdica Journal of Computing, to appear.
+    Serdica Journal of Computing 9(2) (2015), 123-138.
 
     """
     # compute the modified subresultant prs
@@ -1665,11 +1665,11 @@ def subresultants_amv_q(p, q, x):
     References
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Submitted for publication.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Subresultant Polynomial
     remainder Sequences Obtained by Polynomial Divisions in Q[x] or in Z[x].''
-    Submitted for publication.
+    Serdica Journal of Computing 10 (2016), Νο.3-4, 197-217.
 
     """
     # make sure neither p nor q is 0
@@ -1789,12 +1789,12 @@ def rem_z(p, q, x):
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``On the Remainders
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
-    Serdica Journal of Computing, to appear.
+    Serdica Journal of Computing, 9(2) (2015), 123-138.
 
     2. http://planetMath.org/sturmstheorem
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result on
-    the Theory of Subresultants.'' Submitted for publication.
+    the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
 
     '''
     if (p.as_poly().is_univariate and q.as_poly().is_univariate and
@@ -1821,8 +1821,12 @@ def quo_z(p, q, x):
     See also function rem_z(p, q, x) for additional comments and references.
 
     """
-    delta = (degree(p, x) - degree(q, x) + 1)
-    return quo(Abs(LC(q, x))**delta  *  p, q, x)
+    if (p.as_poly().is_univariate and q.as_poly().is_univariate and
+            p.as_poly().gens == q.as_poly().gens):
+        delta = (degree(p, x) - degree(q, x) + 1)
+        return quo(Abs(LC(q, x))**delta  *  p, q, x)
+    else:
+        return pquo(p, q, x)
 
 def subresultants_amv(f, g, x):
     """
@@ -1847,11 +1851,11 @@ def subresultants_amv(f, g, x):
     References
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result
-    on the Theory of Subresultants.'' Submitted for publication.
+    on the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), Νο.1, 31-48.
 
     2. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``Subresultant Polynomial
     remainder Sequences Obtained by Polynomial Divisions in Q[x] or in Z[x].''
-    Submitted for publication.
+    Serdica Journal of Computing 10 (2016), Νο.3-4, 197-217.
 
     """
     # make sure neither f nor g is 0
@@ -1988,7 +1992,7 @@ def modified_subresultants_amv(p, q, x):
     ==========
     1. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ‘‘On the Remainders
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
-    Serdica Journal of Computing, to appear.
+    Serdica Journal of Computing, Serdica Journal of Computing, 9(2) (2015), 123-138.
 
     """
     # compute the subresultant prs
@@ -2099,8 +2103,7 @@ def subresultants_rem(p, q, x):
     References
     ==========
     1. Akritas, A. G.:``Three New Methods for Computing Subresultant
-    Polynomial Remainder Sequences (PRS’s).'' Serdica Journal of Computing,
-    to appear.
+    Polynomial Remainder Sequences (PRS’s).'' Serdica Journal of Computing 9(1) (2015), 1-26.
 
     """
     # make sure neither p nor q is 0
@@ -2340,8 +2343,7 @@ def subresultants_vv(p, q, x, method = 0):
     Serdica Journal of Computing, 7, No 4, 101–134, 2013.
 
     3. Akritas, A. G.:``Three New Methods for Computing Subresultant
-    Polynomial Remainder Sequences (PRS’s).'' Serdica Journal of Computing,
-    to appear.
+    Polynomial Remainder Sequences (PRS’s).'' Serdica Journal of Computing 9(1) (2015), 1-26.
 
     """
     # make sure neither p nor q is 0
@@ -2407,7 +2409,7 @@ def subresultants_vv(p, q, x, method = 0):
 
         # treat last row of M as poly; find its degree
         d = find_degree(M, deg_f)
-        if d == None:
+        if d is None:
             break
         exp_deg = deg_g - 1
 
@@ -2480,8 +2482,7 @@ def subresultants_vv_2(p, q, x):
     Serdica Journal of Computing, 7, No 4, 101–134, 2013.
 
     3. Akritas, A. G.:``Three New Methods for Computing Subresultant
-    Polynomial Remainder Sequences (PRS’s).'' Serdica Journal of Computing,
-    to appear.
+    Polynomial Remainder Sequences (PRS’s).'' Serdica Journal of Computing 9(1) (2015), 1-26.
 
     """
     # make sure neither p nor q is 0
@@ -2526,7 +2527,7 @@ def subresultants_vv_2(p, q, x):
 
         # treat last row of M as poly; find its degree
         d = find_degree(M, deg_f)
-        if d == None:
+        if d is None:
             return sr_list
         exp_deg = deg_g - 1
 

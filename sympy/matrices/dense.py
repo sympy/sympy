@@ -1,25 +1,23 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import random
-from sympy import Derivative
 
 from sympy.core import SympifyError
 from sympy.core.basic import Basic
+from sympy.core.compatibility import is_sequence, range, reduce
 from sympy.core.expr import Expr
-from sympy.core.compatibility import is_sequence, as_int, range, reduce
 from sympy.core.function import count_ops, expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.simplify import simplify as _simplify
-from sympy.utilities.misc import filldedent
-from sympy.utilities.decorator import doctest_depends_on
-
-from sympy.matrices.matrices import MatrixBase, ShapeError
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import a2idx, classof
+from sympy.matrices.matrices import MatrixBase, ShapeError
+from sympy.simplify import simplify as _simplify
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.misc import filldedent
+
 
 def _iszero(x):
     """Returns True if x is zero."""
@@ -45,16 +43,17 @@ class DenseMatrix(MatrixBase):
     _class_priority = 4
 
     def __eq__(self, other):
-        try:
-            other = sympify(other)
-            if self.shape != other.shape:
-                return False
-            if isinstance(other, Matrix):
-                return _compare_sequence(self._mat,  other._mat)
-            elif isinstance(other, MatrixBase):
-                return _compare_sequence(self._mat, Matrix(other)._mat)
-        except AttributeError:
+        other = sympify(other)
+        self_shape = getattr(self, 'shape', None)
+        other_shape = getattr(other, 'shape', None)
+        if None in (self_shape, other_shape):
             return False
+        if self_shape != other_shape:
+            return False
+        if isinstance(other, Matrix):
+            return _compare_sequence(self._mat,  other._mat)
+        elif isinstance(other, MatrixBase):
+            return _compare_sequence(self._mat, Matrix(other)._mat)
 
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
@@ -398,20 +397,21 @@ class DenseMatrix(MatrixBase):
         ========
         sympy.core.expr.equals
         """
-        try:
-            if self.shape != other.shape:
-                return False
-            rv = True
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    ans = self[i, j].equals(other[i, j], failing_expression)
-                    if ans is False:
-                        return False
-                    elif ans is not True and rv is True:
-                        rv = ans
-            return rv
-        except AttributeError:
+        self_shape = getattr(self, 'shape', None)
+        other_shape = getattr(other, 'shape', None)
+        if None in (self_shape, other_shape):
             return False
+        if self_shape != other_shape:
+            return False
+        rv = True
+        for i in range(self.rows):
+            for j in range(self.cols):
+                ans = self[i, j].equals(other[i, j], failing_expression)
+                if ans is False:
+                    return False
+                elif ans is not True and rv is True:
+                    rv = ans
+        return rv
 
 
 def _force_mutable(x):
@@ -1339,11 +1339,7 @@ def matrix_multiply_elementwise(A, B):
 
     __mul__
     """
-    if A.shape != B.shape:
-        raise ShapeError()
-    shape = A.shape
-    return classof(A, B)._new(shape[0], shape[1],
-                              lambda i, j: A[i, j]*B[i, j])
+    return A.multiply_elementwise(B)
 
 
 def ones(*args, **kwargs):

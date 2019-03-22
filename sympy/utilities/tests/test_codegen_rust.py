@@ -237,7 +237,7 @@ def test_piecewise_():
         "    } else if (x <= 1) {\n"
         "        x.powi(2)\n"
         "    } else if (x > 1) {\n"
-        "        -x + 2\n"
+        "        2 - x\n"
         "    } else {\n"
         "        1\n"
         "    };\n"

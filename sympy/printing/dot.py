@@ -33,6 +33,9 @@ def purestr(x):
 def styleof(expr, styles=default_styles):
     """ Merge style dictionaries in order
 
+    Examples
+    ========
+
     >>> from sympy import Symbol, Basic, Expr
     >>> from sympy.printing.dot import styleof
     >>> styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
@@ -54,6 +57,9 @@ def styleof(expr, styles=default_styles):
 def attrprint(d, delimiter=', '):
     """ Print a dictionary of attributes
 
+    Examples
+    ========
+
     >>> from sympy.printing.dot import attrprint
     >>> print(attrprint({'color': 'blue', 'shape': 'ellipse'}))
     "color"="blue", "shape"="ellipse"
@@ -62,6 +68,9 @@ def attrprint(d, delimiter=', '):
 
 def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
     """ String defining a node
+
+    Examples
+    ========
 
     >>> from sympy.printing.dot import dotnode
     >>> from sympy.abc import x
@@ -85,6 +94,9 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True)
     """ List of strings for all expr->expr.arg pairs
 
     See the docstring of dotprint for explanations of the options.
+
+    Examples
+    ========
 
     >>> from sympy.printing.dot import dotedges
     >>> from sympy.abc import x

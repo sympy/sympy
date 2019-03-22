@@ -6,9 +6,8 @@ This module contains python code printers for plain python as well as NumPy & Sc
 
 
 from collections import defaultdict
-from functools import wraps
 from itertools import chain
-from sympy.core import sympify, S
+from sympy.core import S, Number, Symbol, Mul, Add
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
@@ -106,9 +105,6 @@ class AbstractPythonCodePrinter(CodePrinter):
         self.known_constants = dict(self._kc, **(settings or {}).get(
             'user_constants', {}))
 
-    def _get_statement(self, codestring):
-        return codestring
-
     def _declare_number_const(self, name, value):
         return "%s = %s" % (name, value)
 
@@ -126,7 +122,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         return lines
 
     def _get_statement(self, codestring):
-        return "%s" % codestring
+        return "{}".format(codestring)
 
     def _get_comment(self, text):
         return "  # {0}".format(text)
@@ -332,10 +328,10 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Print(self, prnt):
         print_args = ', '.join(map(lambda arg: self._print(arg), prnt.print_args))
-        if prnt.format_string != None:
+        if prnt.format_string != None: # Must be '!= None', cannot be 'is not None'
             print_args = '{0} % ({1})'.format(
                 self._print(prnt.format_string), print_args)
-        if prnt.file != None:
+        if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
         return 'print(%s)' % print_args
 
@@ -492,11 +488,14 @@ class NumPyPrinter(PythonCodePrinter):
         "General sequence printer: converts to tuple"
         # Print tuples here instead of lists because numba supports
         #     tuples in nopython mode.
-        delimite.get('delimiter', ', ')
+        delimiter=', '
         return '({},)'.format(delimiter.join(self._print(item) for item in seq))
 
     def _print_MatMul(self, expr):
         "Matrix multiplication printer"
+        if expr.as_coeff_matrices()[0] is not S(1):
+            expr_list = expr.as_coeff_matrices()[1]+[(expr.as_coeff_matrices()[0])]
+            return '({0})'.format(').dot('.join(self._print(i) for i in expr_list))
         return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
 
     def _print_MatPow(self, expr):
@@ -613,7 +612,7 @@ class NumPyPrinter(PythonCodePrinter):
         from sympy.codegen.array_utils import CodegenArrayTensorProduct
         base = expr.expr
         contraction_indices = expr.contraction_indices
-        if len(contraction_indices) == 0:
+        if not contraction_indices:
             return self._print(base)
         if isinstance(base, CodegenArrayTensorProduct):
             counter = 0
@@ -737,10 +736,10 @@ for k in SciPyPrinter._kc:
 
 class SymPyPrinter(PythonCodePrinter):
 
-    _kf = dict([(k, 'sympy.' + v) for k, v in chain(
+    _kf = {k: 'sympy.' + v for k, v in chain(
         _known_functions.items(),
         _known_functions_math.items()
-    )])
+    )}
 
     def _print_Function(self, expr):
         mod = expr.func.__module__ or ''

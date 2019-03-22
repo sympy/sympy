@@ -148,6 +148,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         if _can_print_latex(o):
             s = latex(o, mode=latex_mode, **settings)
+            if latex_mode == 'plain':
+                s = '$\\displaystyle %s$' % s
             try:
                 return _preview_wrapper(s)
             except RuntimeError as e:
@@ -171,8 +173,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         if _can_print_latex(o):
             s = latex(o, mode=latex_mode, **settings)
-            s = s.strip('$')
-            return '$$%s$$' % s
+            if latex_mode == 'plain':
+                return '$\\displaystyle %s$' % s
+            return s
 
     def _result_display(self, arg):
         """IPython's pretty-printer display hook, for use in IPython 0.10
@@ -269,7 +272,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
                   no_global=False, ip=None, euler=False, forecolor='Black',
                   backcolor='Transparent', fontsize='10pt',
-                  latex_mode='equation*', print_builtin=True,
+                  latex_mode='plain', print_builtin=True,
                   str_printer=None, pretty_printer=None,
                   latex_printer=None, **settings):
     r"""
@@ -325,7 +328,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     fontsize: string, optional, default='10pt'
         A font size to pass to the LaTeX documentclass function in the
         preamble.
-    latex_mode: string, optional, default='equation*'
+    latex_mode: string, optional, default='plain'
         The mode used in the LaTeX printer. Can be one of:
         {'inline'|'plain'|'equation'|'equation*'}.
     print_builtin: boolean, optional, default=True

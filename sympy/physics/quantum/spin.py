@@ -1633,8 +1633,8 @@ class JzKetCoupled(CoupledSpinState, Ket):
     The other required parameter in ``jn``, which is a tuple defining the `j_n`
     angular momentum quantum numbers of the product spaces. So for example, if
     a state represented the coupling of the product basis state
-    `|j_1,m_1\rangle\times|j_2,m_2\rangle`, the ``jn`` for this state would be
-    ``(j1,j2)``.
+    `\left|j_1,m_1\right\rangle\times\left|j_2,m_2\right\rangle`, the ``jn``
+    for this state would be ``(j1,j2)``.
 
     The final option is ``jcoupling``, which is used to define how the spaces
     specified by ``jn`` are coupled, which includes both the order these spaces

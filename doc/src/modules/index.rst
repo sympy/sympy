@@ -56,6 +56,7 @@ access any SymPy module, or use the list below:
    categories.rst
    diffgeom.rst
    vector/index.rst
+   algebras.rst
 
 Contributions to docs
 ---------------------

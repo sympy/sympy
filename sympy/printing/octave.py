@@ -11,10 +11,10 @@ complete source code files.
 """
 
 from __future__ import print_function, division
+from sympy.codegen.ast import Assignment
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
-from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
@@ -197,7 +197,7 @@ class OctaveCodePrinter(CodePrinter):
                 r = r + mulsym + a_str[i]
             return r
 
-        if len(b) == 0:
+        if not b:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
             divsym = '/' if b[0].is_number else './'

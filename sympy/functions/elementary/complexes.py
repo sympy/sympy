@@ -1,18 +1,18 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
+from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
+from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
+from sympy.core.relational import Eq
+from sympy.functions.elementary.exponential import exp, exp_polar, log
+from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.core.expr import Expr
-from sympy.core.relational import Eq
-from sympy.core.logic import fuzzy_not, fuzzy_or
-from sympy.functions.elementary.exponential import exp, exp_polar, log
 from sympy.functions.elementary.trigonometric import atan, atan2
-from sympy.functions.elementary.integers import ceiling
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -577,9 +577,10 @@ class Abs(Function):
         if self.args[0].is_real or self.args[0].is_imaginary:
             return Derivative(self.args[0], x, evaluate=True) \
                 * sign(conjugate(self.args[0]))
-        return (re(self.args[0]) * Derivative(re(self.args[0]), x,
+        rv = (re(self.args[0]) * Derivative(re(self.args[0]), x,
             evaluate=True) + im(self.args[0]) * Derivative(im(self.args[0]),
                 x, evaluate=True)) / Abs(self.args[0])
+        return rv.rewrite(sign)
 
     def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         # Note this only holds for real arg (since Heaviside is not defined

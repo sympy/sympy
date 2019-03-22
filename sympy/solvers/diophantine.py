@@ -176,9 +176,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                 return {tuple([t[dict_sym_index[i]] for i in var])
                             for t in diophantine(eq, param)}
         n, d = eq.as_numer_denom()
-        if not n.free_symbols:
+        if n.is_number:
             return set()
-        if d.free_symbols:
+        if not d.is_number:
             dsol = diophantine(d)
             good = diophantine(n) - dsol
             return {s for s in good if _mexpand(d.subs(zip(var, s)))}
@@ -240,7 +240,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x,), (y, )]
                     for v1 in var_mul:
                         try:
-                            coeff = c[var[0]]
+                            coeff = c[v1[0]]
                         except KeyError:
                             coeff = 0
                         x_coeff = bool(x_coeff) and bool(coeff)
@@ -265,7 +265,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x,), (y, )]
                     for v1 in var_mul:
                         try:
-                            coeff = c[var[0]]
+                            coeff = c[v1[0]]
                         except KeyError:
                             coeff = 0
                         x_coeff = bool(x_coeff) and bool(coeff)
@@ -401,7 +401,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     >>> from sympy.solvers.diophantine import diop_solve
     >>> from sympy.abc import x, y, z, w
     >>> diop_solve(2*x + 3*y - 5)
-    (3*t_0 - 5, -2*t_0 + 5)
+    (3*t_0 - 5, 5 - 2*t_0)
     >>> diop_solve(4*x + 3*y - 4*z + 5)
     (t_0, 8*t_0 + 4*t_1 + 5, 7*t_0 + 3*t_1 + 5)
     >>> diop_solve(x + 3*y - 4*z + w - 6)
@@ -827,7 +827,7 @@ def base_solution_linear(c, a, b, t=None):
     >>> base_solution_linear(0, 5, 7) # equation 5*x + 7*y = 0
     (0, 0)
     >>> base_solution_linear(5, 2, 3, t) # equation 2*x + 3*y = 5
-    (3*t - 5, -2*t + 5)
+    (3*t - 5, 5 - 2*t)
     >>> base_solution_linear(0, 5, 7, t) # equation 5*x + 7*y = 0
     (7*t, -5*t)
     """
@@ -1505,7 +1505,7 @@ def PQa(P_0, Q_0, D):
     P_i = P_0
     Q_i = Q_0
 
-    while(1):
+    while True:
 
         a_i = floor((P_i + sqrt(D))/Q_i)
         A_i = a_i*A_i_1 + A_i_2
@@ -2197,8 +2197,6 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
     # called for a*x**2 + b*y**2 + c*z**2 + d*x*y + e*y*z + f*x*z = 0
     assert 1 not in coeff
 
-    x, y, z = _var
-
     x_0, y_0, z_0 = solution
 
     v = list(_var)  # copy
@@ -2363,7 +2361,7 @@ def sqf_normal(a, b, c, steps=False):
 
     reconstruct()
     """
-    ABC = A, B, C = _remove_gcd(a, b, c)
+    ABC = _remove_gcd(a, b, c)
     sq = tuple(square_factor(i) for i in ABC)
     sqf = A, B, C = tuple([i//j**2 for i,j in zip(ABC, sq)])
     pc = igcd(A, B)

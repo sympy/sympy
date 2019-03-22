@@ -3,6 +3,7 @@ from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sign, im, nan, Dummy, factorial, comp, refine
 )
 from sympy.core.compatibility import long, range
+from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import verify_numerically
@@ -345,8 +346,8 @@ def test_powerbug():
 def test_Mul_doesnt_expand_exp():
     x = Symbol('x')
     y = Symbol('y')
-    assert exp(x)*exp(y) == exp(x)*exp(y)
-    assert 2**x*2**y == 2**x*2**y
+    assert unchanged(Mul, exp(x), exp(y))
+    assert unchanged(Mul, 2**x, 2**y)
     assert x**2*x**3 == x**5
     assert 2**x*3**x == 6**x
     assert x**(y)*x**(2*y) == x**(3*y)
@@ -1662,6 +1663,12 @@ def test_Mod():
     assert Mod(Mod(x + 2, 4)*(x + 4), 4) == Mod(x*(x + 2), 4)
     assert Mod(Mod(x + 2, 4)*4, 4) == 0
 
+    # issue 15493
+    i, j = symbols('i j', integer=True, positive=True)
+    assert Mod(3*i, 2) == Mod(i, 2)
+    assert Mod(8*i/j, 4) == 4*Mod(2*i/j, 1)
+    assert Mod(8*i, 4) == 0
+
 
 def test_Mod_is_integer():
     p = Symbol('p', integer=True)
@@ -1980,9 +1987,14 @@ def test_Add_is_zero():
     x, y = symbols('x y', zero=True)
     assert (x + y).is_zero
 
+    # Issue 15873
+    e = -2*I + (1 + I)**2
+    assert e.is_zero is None
+
 
 def test_issue_14392():
     assert (sin(zoo)**2).as_real_imag() == (nan, nan)
+
 
 def test_divmod():
     assert divmod(x, y) == (x//y, x % y)

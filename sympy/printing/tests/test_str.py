@@ -16,6 +16,7 @@ from sympy.core.compatibility import range
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
 from sympy import MatrixSymbol
+from sympy import factorial, log, integrate
 
 x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')
@@ -47,7 +48,7 @@ def test_Add():
     assert str(1 + x + x**2/2 + x**3/3) == "x**3/3 + x**2/2 + x + 1"
     assert str(2*x - 7*x**2 + 2 + 3*y) == "-7*x**2 + 2*x + 3*y + 2"
     assert str(x - y) == "x - y"
-    assert str(2 - x) == "-x + 2"
+    assert str(2 - x) == "2 - x"
     assert str(x - 2) == "x - 2"
     assert str(x - y - z - w) == "-w + x - y - z"
     assert str(x - z*y**2*z*w) == "-w*y**2*z**2 + x"
@@ -616,7 +617,7 @@ def test_wild_str():
     assert str(3*w + 1) == '3*x_ + 1'
     assert str(1/w + 1) == '1 + 1/x_'
     assert str(w**2 + 1) == 'x_**2 + 1'
-    assert str(1/(1 - w)) == '1/(-x_ + 1)'
+    assert str(1/(1 - w)) == '1/(1 - x_)'
 
 
 def test_zeta():
@@ -809,3 +810,9 @@ def test_MatrixSymbol_printing():
 def test_Subs_printing():
     assert str(Subs(x, (x,), (1,))) == 'Subs(x, x, 1)'
     assert str(Subs(x + y, (x, y), (1, 2))) == 'Subs(x + y, (x, y), (1, 2))'
+
+def test_issue_15716():
+    x = Symbol('x')
+    e = -3**x*exp(-3)*log(3**x*exp(-3)/factorial(x))/factorial(x)
+    assert str(Integral(e, (x, -oo, oo)).doit()) ==  '-(Integral(-3*3**x/factorial(x), (x, -oo, oo))' \
+    ' + Integral(3**x*log(3**x/factorial(x))/factorial(x), (x, -oo, oo)))*exp(-3)'

@@ -102,6 +102,9 @@ def test_matrix_derivative_vectors_and_scalars():
 
 def test_matrix_derivatives_of_traces():
 
+    expr = Trace(A)*A
+    assert expr.diff(A) == Derivative(Trace(A)*A, A)
+
     ## First order:
 
     # Cookbook example 99:
@@ -141,8 +144,7 @@ def test_matrix_derivatives_of_traces():
 
     # Cookbook example 107:
     expr = Trace(X**2*B)
-    # TODO: wrong result
-    #assert expr.diff(X) == (X*B + B*X).T
+    assert expr.diff(X) == (X*B + B*X).T
     expr = Trace(MatMul(X, X, B))
     assert expr.diff(X) == (X*B + B*X).T
 

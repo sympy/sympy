@@ -127,6 +127,8 @@ any order and any precision:
 
 .. autofunction:: sympy.integrals.quadrature.gauss_jacobi
 
+.. autofunction:: sympy.integrals.quadrature.gauss_lobatto
+
 Integration over Polytopes
 ==========================
 

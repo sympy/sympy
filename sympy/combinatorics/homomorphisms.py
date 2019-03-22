@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 import itertools
 from sympy.combinatorics.fp_groups import FpGroup, FpSubgroup, simplify_presentation
-from sympy.combinatorics.free_groups import FreeGroup, FreeGroupElement
+from sympy.combinatorics.free_groups import FreeGroup
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core.numbers import igcd
 from sympy.ntheory.factor_ import totient
@@ -13,7 +13,8 @@ class GroupHomomorphism(object):
 
     References
     ==========
-    [1] Holt, D., Eick, B. and O'Brien, E. (2005). Handbook of computational group theory.
+
+    .. [1] Holt, D., Eick, B. and O'Brien, E. (2005). Handbook of computational group theory.
 
     '''
 
@@ -425,21 +426,20 @@ def group_isomorphism(G, H, isomorphism=True):
     '''
     Compute an isomorphism between 2 given groups.
 
-    Arguments:
+    Parameters
+    ==========
+
         G (a finite `FpGroup` or a `PermutationGroup`) -- First group
         H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
         isomorphism (boolean) -- This is used to avoid the computation of homomorphism
                                  when the user only wants to check if there exists
                                  an isomorphism between the groups.
 
-    Returns:
+    Returns
+    =======
+
     If isomorphism = False -- Returns a boolean.
     If isomorphism = True  -- Returns a boolean and an isomorphism between `G` and `H`.
-
-    Summary:
-    Uses the approach suggested by Robert Tarjan to compute the isomorphism between two groups.
-    First, the generators of `G` are mapped to the elements of `H` and
-    we check if the mapping induces an isomorphism.
 
     Examples
     ========
@@ -466,6 +466,13 @@ def group_isomorphism(G, H, isomorphism=True):
     True
     >>> T(b*a*b**-1*a**-1*b**-1)
     (0 2 3)
+
+    Notes
+    =====
+
+    Uses the approach suggested by Robert Tarjan to compute the isomorphism between two groups.
+    First, the generators of `G` are mapped to the elements of `H` and
+    we check if the mapping induces an isomorphism.
 
     '''
     if not isinstance(G, (PermutationGroup, FpGroup)):
@@ -532,10 +539,15 @@ def is_isomorphic(G, H):
     '''
     Check if the groups are isomorphic to each other
 
-    Arguments:
+    Parameters
+    ==========
+
         G (a finite `FpGroup` or a `PermutationGroup`) -- First group
         H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
 
-    Returns -- boolean
+    Returns
+    =======
+
+    boolean
     '''
     return group_isomorphism(G, H, isomorphism=False)

@@ -115,6 +115,7 @@ def test_tribonacci():
     assert tribonacci(n).rewrite(sqrt).subs(n, 4).simplify() == tribonacci(4)
     assert tribonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
         tribonacci(10)
+    raises(ValueError, lambda: tribonacci(-1, x))
 
 
 def test_bell():

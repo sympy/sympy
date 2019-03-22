@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
 from sympy.combinatorics.permutations import Permutation
-from sympy.utilities.iterables import variations, rotate_left
+from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
-from sympy.core.compatibility import range
+from sympy.utilities.iterables import variations, rotate_left
 
 
 def symmetric(n):
@@ -40,6 +40,7 @@ def cyclic(n):
 
     See Also
     ========
+
     dihedral
     """
     gen = list(range(n))
@@ -86,6 +87,7 @@ def dihedral(n):
 
     See Also
     ========
+
     cyclic
     """
     if n == 1:

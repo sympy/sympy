@@ -123,11 +123,8 @@ def call_highest_priority(method_name):
         def binary_op_wrapper(self, other):
             if hasattr(other, '_op_priority'):
                 if other._op_priority > self._op_priority:
-                    try:
-                        f = getattr(other, method_name)
-                    except AttributeError:
-                        pass
-                    else:
+                    f = getattr(other, method_name, None)
+                    if f is not None:
                         return f(self)
             return func(self, other)
         return binary_op_wrapper
