@@ -535,3 +535,5 @@ def test_issue_14601():
     e2 = e.evalf(subs=subst)
     assert float(e2) == 0.0
     assert float((x + x*(x**2 + x)).evalf(subs={x: 0.0})) == 0.0
+def test_issue_11151():
+	assert evalf.evalf(Sum(0,(a,1,2)) , 15 , {}) == evalf.evalf(S(0) , 15 , {})
