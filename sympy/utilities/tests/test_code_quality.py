@@ -50,6 +50,12 @@ message_py2_unicode_whitelisted = \
     "But not in the whitelist " \
     "If necessary, add the file to the whitelist in " \
     "'test_code_quality.py'"
+message_unnecessary_unicode_cookie = \
+    "File contains a unicode encoding header : %s, line %s. " \
+    "But it would (should) not be needed." \
+    "See https://www.python.org/dev/peps/pep-0263/ " \
+    "For more information."
+
 encoding_header_re = re.compile(
     r'^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)')
 
@@ -253,6 +259,7 @@ def test_files():
         May remove after deprecating python 2.7.
         """
         has_coding_utf8 = False
+        has_unicode = False
 
         is_in_whitelist = False
         for patt in unicode_whitelist:
@@ -267,14 +274,30 @@ def test_files():
                     if match:
                         if match.group(1).lower() == 'utf-8':
                             has_coding_utf8 = True
-                if has_coding_utf8 is False:
+                            unicode_header_idx = idx
+
                     try:
                         line.encode(encoding='ascii')
                     except UnicodeEncodeError:
-                        assert False, \
-                        message_py2_unicode_whitelisted % (fname, idx + 1)
+                        has_unicode = True
+                        if has_coding_utf8 is False:
+                            assert False, message_py2_unicode_whitelisted % \
+                                (fname, idx + 1)
+
+            if has_unicode is False and has_coding_utf8 is True:
+                assert False, message_unnecessary_unicode_cookie % \
+                    (fname, unicode_header_idx + 1)
+
         else:
             for idx, line in enumerate(test_file):
+                if idx in (0, 1):
+                    match = encoding_header_re.match(line)
+                    if match:
+                        if match.group(1).lower() == 'utf-8':
+                            assert False, \
+                                message_unnecessary_unicode_cookie % \
+                                (fname, idx + 1)
+
                 try:
                     line.encode(encoding='ascii')
                 except UnicodeEncodeError:
