@@ -489,6 +489,32 @@ def test_max_deflection():
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
 
 
+
+def test_bending_stress():
+    E, I, y = symbols('E, I, y')
+    b = Beam(10, E, I)
+    R1, R2 = symbols('R1, R2')
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, 10, -1)
+    b.apply_load(1000, 0, 0, end=10)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.bending_stress() ==  y*(-5000*SingularityFunction(x, 0, 1) + 500*SingularityFunction(x, 0, 2)
+            - 5000*SingularityFunction(x, 10, 1) - 500*SingularityFunction(x, 10, 2))/I
+
+
+def test_shear_stress():
+    # beam with a rectangular cross-section of z*d units
+    z, E, d, I, F, y, Q, t= symbols('z, E, d, I, F, y, Q, t')
+    b = Beam(10, E, (z*d**3)/12)
+    R1, R2 = symbols('R1, R2')
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, 10, -1)
+    b.apply_load(1000, 0, 0, end=10)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.shear_stress() == 12*Q*(-5000*SingularityFunction(x, 0, 0) + 1000*SingularityFunction(x, 0, 1)
+            - 5000*SingularityFunction(x, 10, 0) - 1000*SingularityFunction(x, 10, 1))/(t*d**3*z)
+
+
 @slow
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')

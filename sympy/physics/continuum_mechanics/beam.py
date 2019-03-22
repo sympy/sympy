@@ -556,7 +556,7 @@ class Beam(object):
 
         Examples
         ========
-        A combined beam, with constant fkexural rigidity E*I, is formed by joining
+        A combined beam, with constant flexural rigidity E*I, is formed by joining
         a Beam of length 2*l to the right of another Beam of length l. The whole beam
         is fixed at both of its both end. A point load of magnitude P is also applied
         from the top at a distance of 2*l from starting point.
@@ -867,7 +867,7 @@ class Beam(object):
         return integrate(self.shear_force(), x)
 
     def max_bmoment(self):
-        """Returns maximum Shear force and its coordinate
+        """Returns maximum Bending Moment and its coordinate
         in the Beam object."""
         from sympy import solve, Mul, Interval
         bending_curve = self.bending_moment()
@@ -1185,6 +1185,80 @@ class Beam(object):
             return (points[deflections.index(max_def)], max_def)
         else:
             return None
+
+
+    def bending_stress(self):
+        """
+        Returns bending stress of a beam cross-section at a distance `y` from the neutral axis.
+
+        Example
+        =======
+        There is a beam of length 6 m with a u.d.l of 40 KN/m over its length. The beam has a rectangular
+        cross-section(0.3 x 0.6 m) with moment of inertia. The bending stress at a point
+        0.2 m above the neutral axis and at a cross-section which is 4 meters from the start of the beam
+        has to be determined.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols, Piecewise
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(6, E, I)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(40, 0, 0, end=6)
+        >>> b.apply_load(R2, 6, -1)
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.bending_stress()
+        y*(-120*SingularityFunction(x, 0, 1) + 20*SingularityFunction(x, 0, 2)
+        - 120*SingularityFunction(x, 6, 1) - 20*SingularityFunction(x, 6, 2))/I
+
+        """
+        y = Symbol('y')
+        M = self.bending_moment()
+        b_stress = (M*y)/self.second_moment
+        return b_stress
+
+
+
+    def shear_stress(self):
+        """
+        Returns the shear stress of a beam cross-section at point(or layer) above the
+        neutral axis with its first moment of area as `Q` and width of the cross-section as 't'.
+
+        Example
+        =======
+        A cantilever beam of I-cross-section and length 8 meters is under downward distributed constant load with magnitude
+        of 5.0 KN/m from starting point till 2 meters away from it. A ramp load of 2 kN/m applied from the mid till the end of the beam.
+        A point load of 12KN is also applied in same direction 4 meters away from start.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols, Symbol
+        >>> E,I,M,V = symbols('E I M V')
+        >>> b = Beam(8, E, I)
+        >>> b.apply_load(V, 0, -1)
+        >>> b.apply_load(M, 0, -2)
+        >>> b.apply_load(5, 0, 0, end=2)
+        >>> b.apply_load(12, 4, -1)
+        >>> b.apply_load(2, 3, 1, end=8)
+        >>> b.solve_for_reaction_loads(V, M)
+        >>> tau = b.shear_stress()
+        >>> tau
+        Q*(649*SingularityFunction(x, 0, -1)/3 - 47*SingularityFunction(x, 0, 0) + 5*SingularityFunction(x, 0, 1)
+        - 5*SingularityFunction(x, 2, 1) + SingularityFunction(x, 3, 2) + 12*SingularityFunction(x, 4, 0)
+        - 10*SingularityFunction(x, 8, 1) - SingularityFunction(x, 8, 2))/(I*t)
+        >>> W, w, D, d, y, x = symbols('W, w, D, d, y, x')
+        >>> q_flange = W*(D**2 - d**2)/8
+        >>> q_web = w*((d**2)/4 - y**2)/2
+        >>> q = q_flange + q_web
+        >>> Q = Symbol('Q')
+        >>> tau.subs({Q: q, b: 10, x: 3})
+        -37*(W*(D**2 - d**2)/8 + w*(d**2/4 - y**2)/2)/(I*t)
+        """
+        Q, t = symbols('Q, t')
+        V = self.shear_force()
+        sh_stress = (Q*V)/(self.second_moment*t)
+        return sh_stress
+
+
 
     def plot_shear_force(self, subs=None):
         """
