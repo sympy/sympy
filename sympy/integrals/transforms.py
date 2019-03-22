@@ -14,6 +14,7 @@ from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
 from sympy.matrices.matrices import MatrixBase
+from sympy.polys.partfrac import apart
 
 
 ##########################################################################
@@ -1243,7 +1244,7 @@ class InverseLaplaceTransform(IntegralTransform):
         return Integral(exp(s*t)*F, (s, c - I*oo, c + I*oo))/(2*S.Pi*S.ImaginaryUnit)
 
 
-def inverse_laplace_transform(F, s, t, plane=None, **hints):
+def inverse_laplace_transform(F, s, t, plane=None, part=False, **hints):
     r"""
     Compute the inverse Laplace transform of `F(s)`, defined as
 
@@ -1281,6 +1282,8 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     laplace_transform
     hankel_transform, inverse_hankel_transform
     """
+    if apart:
+        F = apart(F)
     if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
         return F.applyfunc(lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
