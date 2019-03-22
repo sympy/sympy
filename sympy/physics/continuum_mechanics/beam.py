@@ -724,6 +724,8 @@ class Beam(object):
         C4 = Symbol('C4')
 
         shear_curve = limit(self.shear_force(), x, l)
+        shear_stress_curve = limit(self.shear_stress(), x, l)
+        axial_curve = limit(self.axial_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
 
         slope_eqs = []
@@ -779,6 +781,74 @@ class Beam(object):
         """
         x = self.variable
         return integrate(self.load, x)
+
+    def shear_stress(self):
+        """
+        Returns a Singularity Function expression which represents
+        the shear stress curve of the Beam object.
+
+        Examples
+        ========
+        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        applied in the clockwise direction at the end of the beam. A pointload
+        of magnitude 8 N is applied from the top of the beam at the starting
+        point. There are two simple supports below the beam. One at the end
+        and another one at a distance of 10 meters from the start. The
+        deflection is restricted at both the supports.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> b.apply_load(R1, 10, -1)
+        >>> b.apply_load(R2, 30, -1)
+        >>> b.apply_load(120, 30, -2)
+        >>> b.bc_deflection = [(10, 0), (30, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.shear_stress()
+        -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
+        """
+        x = self.variable
+        return integrate(self.shear_force, x)
+
+    def axial_force(self):
+        """
+        Returns a Singularity Function expression which represents
+        the axial force curve of the Beam object.
+
+        Examples
+        ========
+        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        applied in the clockwise direction at the end of the beam. A pointload
+        of magnitude 8 N is applied from the top of the beam at the starting
+        point. There are two simple supports below the beam. One at the end
+        and another one at a distance of 10 meters from the start. The
+        deflection is restricted at both the supports.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> b.apply_load(R1, 10, -1)
+        >>> b.apply_load(R2, 30, -1)
+        >>> b.apply_load(120, 30, -2)
+        >>> b.bc_deflection = [(10, 0), (30, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.axial_force()
+        -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
+        """
+        x = self.variable
+        return integrate(self.axial_force, x)          
 
     def max_shear_force(self):
         """Returns maximum Shear force and its coordinate
@@ -1238,6 +1308,110 @@ class Beam(object):
         return plot(shear_force.subs(subs), (self.variable, 0, length), title='Shear Force',
                 xlabel='position', ylabel='Value', line_color='g')
 
+    def plot_shear_stress(self, subs=None):
+        """
+        Returns a plot for Shear stress present in the Beam object.
+
+        Parameters
+        ==========
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
+        is applied from half of the beam till the end. There are two simple supports
+        below the beam, one at the starting point and another at the ending point
+        of the beam. A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        Using the sign convention of downwards forces being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+        >>> b.apply_load(5000, 2, -1)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(R2, 8, -1)
+        >>> b.apply_load(10000, 4, 0, end=8)
+        >>> b.bc_deflection = [(0, 0), (8, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.plot_shear_stress()
+        Plot object containing:
+        [0]: cartesian line: -13750*SingularityFunction(x, 0, 0) + 5000*SingularityFunction(x, 2, 0)
+        + 10000*SingularityFunction(x, 4, 1) - 31250*SingularityFunction(x, 8, 0)
+        - 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
+        """
+        shear_stress = self.shear_stress()
+        if subs is None:
+            subs = {}
+        for sym in shear_stress.atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+        return plot(shear_stress.subs(subs), (self.variable, 0, length), title='Shear Stress',
+                xlabel='position', ylabel='Value', line_color='g') 
+
+    def plot_axial_force(self, subs=None):
+        """
+        Returns a plot for Axial force present in the Beam object.
+
+        Parameters
+        ==========
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
+        is applied from half of the beam till the end. There are two simple supports
+        below the beam, one at the starting point and another at the ending point
+        of the beam. A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        Using the sign convention of downwards forces being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+        >>> b.apply_load(5000, 2, -1)
+        >>> b.apply_load(R1, 0, -1)
+        >>> b.apply_load(R2, 8, -1)
+        >>> b.apply_load(10000, 4, 0, end=8)
+        >>> b.bc_deflection = [(0, 0), (8, 0)]
+        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.plot_axial_force()
+        Plot object containing:
+        [0]: cartesian line: -13750*SingularityFunction(x, 0, 0) + 5000*SingularityFunction(x, 2, 0)
+        + 10000*SingularityFunction(x, 4, 1) - 31250*SingularityFunction(x, 8, 0)
+        - 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
+        """
+        axial_force = self.axial_force()
+        if subs is None:
+            subs = {}
+        for sym in axial_force.atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+        return plot(axial_force.subs(subs), (self.variable, 0, length), title='Axial Force',
+                xlabel='position', ylabel='Value', line_color='g')               
+
     def plot_bending_moment(self, subs=None):
         """
         Returns a plot for Bending moment present in the Beam object.
@@ -1462,6 +1636,12 @@ class Beam(object):
         # SymPy methods to numpy functions.
         shear = lambdify(variable,
                          self.shear_force().subs(subs).rewrite(Piecewise),
+                         'numpy')
+        shearstress = lambdify(variable,
+                         self.shear_stress().subs(subs).rewrite(Piecewise),
+                         'numpy')
+        axialforce = lambdify(variable,
+                         self.axial_force().subs(subs).rewrite(Piecewise),
                          'numpy')
         moment = lambdify(variable,
                           self.bending_moment().subs(subs).rewrite(Piecewise),
@@ -1814,7 +1994,6 @@ class Beam3D(Beam):
         Returns expression of shear stress present inside the Beam object.
         """
         return self.shear_force()[0]/self.area
-
 
     def axial_force(self):
         """

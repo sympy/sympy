@@ -96,6 +96,16 @@ def test_Beam():
     q = 4000*x/3 - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3) + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000
     assert p == q/(E*I)
 
+    # Test for shear stress distribution function
+    p = b1.shear_stress()
+    q = -8*SingularityFunction(x, 0, 4) + 6*SingularityFunction(x, 10, 4) + 120*SingularityFunction(x, 30, 3) + 2*SingularityFunction(x, 30, 4)
+    assert p == q
+
+    # Test for axial force distribution function
+    p = b1.axial_force()
+    q = -8*SingularityFunction(x, 0, 5) + 6*SingularityFunction(x, 10, 5) + 120*SingularityFunction(x, 30, 4) + 2*SingularityFunction(x, 30, 5)
+    assert p == q
+
     # Test using symbols
     l = Symbol('l')
     w0 = Symbol('w0')
@@ -138,6 +148,16 @@ def test_Beam():
     # Test for deflection distribution function
     p = b2.deflection()
     q = x*(E*I*f - w0*SingularityFunction(e, a1, 4)/24 - w2*SingularityFunction(e, c1, 2)/2)/(E*I) + (w0*SingularityFunction(x, a1, 5)/120 + w2*SingularityFunction(x, c1, 3)/6)/(E*I) + (E*I*(-c*f + d) + c*w0*SingularityFunction(e, a1, 4)/24 + c*w2*SingularityFunction(e, c1, 2)/2 - w0*SingularityFunction(c, a1, 5)/120 - w2*SingularityFunction(c, c1, 3)/6)/(E*I)
+    assert p == q
+
+    # Test for shear stress distribution function
+    p = b2.shear_stress()
+    q = w0*SingularityFunction(x, a1, 5)/2 + w2*SingularityFunction(x, c1, 3)
+    assert p == q
+
+    # Test for axial force distribution function
+    p = b2.axial_force()
+    q = w0*SingularityFunction(x, a1, 6)/2 + w2*SingularityFunction(x, c1, 4)
     assert p == q
 
     b3 = Beam(9, E, I)
@@ -503,6 +523,8 @@ def test_Beam3D():
     b.solve_slope_deflection()
 
     assert b.shear_force() == [0, -q*x, 0]
+    assert b.shear_stress() == [0, -q/x, 0]
+    assert b.axial_force() == [0, -q*x, 0]
     assert b.bending_moment() == [0, 0, -m*x + q*x**2/2]
     expected_deflection = (-l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m)
             + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I)) + l*m*x**2/(4*E*I)
