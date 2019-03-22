@@ -699,7 +699,7 @@ class Quaternion(Expr):
                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
 
     def differentiate(self, W):
-       """Returns the instantaneous quaternion derivative representing a quaternion rotating at the rate of W.
+        """Returns the instantaneous quaternion derivative representing a quaternion rotating at the rate of W.
 
         Parameters
         ==========
