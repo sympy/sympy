@@ -230,7 +230,7 @@ def kurtosis(X, condition=None, **kwargs):
     >>> Y = Exponential('Y', rate)
     >>> kurtosis(Y)
     9
-    
+
 
     References
     ==========
