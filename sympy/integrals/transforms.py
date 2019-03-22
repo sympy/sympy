@@ -1282,7 +1282,7 @@ def inverse_laplace_transform(F, s, t, plane=None, part=False, **hints):
     laplace_transform
     hankel_transform, inverse_hankel_transform
     """
-    if apart:
+    if part:
         F = apart(F)
     if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
         return F.applyfunc(lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
