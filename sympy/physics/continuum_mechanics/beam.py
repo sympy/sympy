@@ -1815,7 +1815,6 @@ class Beam3D(Beam):
         """
         return self.shear_force()[0]/self.area
 
-
     def axial_force(self):
         """
         Returns expression of Axial shear force present inside the Beam object.
