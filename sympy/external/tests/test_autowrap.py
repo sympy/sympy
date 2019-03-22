@@ -1,7 +1,7 @@
 import sympy
 import tempfile
 import os
-from sympy import symbols, Eq, Mod
+from sympy import symbols, Eq, Mod, MatrixSymbol
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
@@ -100,6 +100,22 @@ def runtest_ufuncify(language, backend):
     expected = grid*b + c
     numpy.testing.assert_allclose(fabc(grid, b, c), expected)
     numpy.testing.assert_allclose(facb(grid, c, b), expected)
+
+
+def runtest_autowrap_implicit(language, backend):
+    has_module('numpy')
+    X = MatrixSymbol('X', 5, 5)
+    Y = MatrixSymbol('Y', 5, 5)
+    mpro = autowrap(X * Y, language, backend)
+    msum = autowrap(X + Y, language, backend)
+    mpow = autowrap(X ** 2, language, backend)
+
+    X1 = numpy.random.rand(5, 5)
+    Y1 = numpy.random.rand(5, 5)
+
+    numpy.testing.assert_allclose(numpy.matmul(X1, Y1), mpro(X1, Y1))
+    numpy.testing.assert_allclose(numpy.add(X1, Y1), msum(X1, Y1))
+    numpy.testing.assert_allclose(numpy.matmul(X1, X1), mpow(X1))
 
 
 def runtest_issue_10274(language, backend):
@@ -203,6 +219,11 @@ def test_autowrap_matrix_matrix_f95_f2py():
     runtest_autowrap_matrix_matrix('f95', 'f2py')
 
 
+def test_autowrap_implicit_f95_f2py():
+    has_module('f2py')
+    runtest_autowrap_implicit('f95', 'f2py')
+
+
 def test_ufuncify_f95_f2py():
     has_module('f2py')
     runtest_ufuncify('f95', 'f2py')
@@ -233,6 +254,11 @@ def test_autowrap_matrix_vector_C_cython():
 def test_autowrap_matrix_matrix_C_cython():
     has_module('Cython')
     runtest_autowrap_matrix_matrix('C99', 'cython')
+
+
+def test_autowrap_implicit_C_cython():
+    has_module('Cython')
+    runtest_autowrap_implicit('C99', 'cython')
 
 
 def test_ufuncify_C_Cython():
