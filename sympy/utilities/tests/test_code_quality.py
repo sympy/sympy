@@ -60,11 +60,15 @@ encoding_header_re = re.compile(
 # Whitelist pattern for files which can have unicode.
 unicode_whitelist = [
     r'*/bin/authors_update.py',
+    r'*/bin/mailmap_update.py',
     r'*/physics/quantum/tests/test_printing.py',
     r'*/sympy/physics/vector/tests/test_printing.py',
     r'*/sympy/vector/tests/test_printing.py',
     r'*/parsing/*',
     r'*/printing/*',
+    # Ignore junk files
+    r'*/.ipynb_checkpoints/*',
+
     # TODO Delete unicode in these files.
     r'*/combinatorics/free_groups.py',
     r'*/combinatorics/tests/test_coset_table.py',
@@ -272,7 +276,6 @@ def test_files():
                     if match:
                         if match.group(1).lower() == 'utf-8':
                             has_coding_utf8 = True
-                            unicode_header_idx = idx
 
                 try:
                     line.encode(encoding='ascii')
@@ -281,10 +284,6 @@ def test_files():
                     if has_coding_utf8 is False:
                         assert False, message_py2_unicode_whitelisted % \
                             (fname, idx + 1)
-
-            if has_unicode is False and has_coding_utf8 is True:
-                assert False, message_unnecessary_unicode_cookie % \
-                    (fname, unicode_header_idx + 1)
 
         else:
             for idx, line in enumerate(test_file):
