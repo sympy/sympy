@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 """
 Definition of physical dimensions.
 
