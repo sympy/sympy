@@ -79,11 +79,11 @@ def test_SeqFormula():
     assert seq.expand() == SeqFormula(x*y**2 + x*z, (z, 1, 100))
     seq = SeqFormula(sin(x*(y**2 + z)),(z, 1, 100))
     assert seq.expand() == SeqFormula(sin(x*y**2)*cos(x*z) + sin(x*z)*cos(x*y**2), (z, 1, 100))
-    assert seq.expand(trig = False) == SeqFormula(sin(x*y**2 + x*z), (z, 1, 100))
+    assert seq.expand(trig=False) == SeqFormula(sin(x*y**2 + x*z), (z, 1, 100))
     seq = SeqFormula(exp(x*(y**2 + z)), (z, 1, 100))
     assert seq.expand() == SeqFormula(exp(x*y**2)*exp(x*z), (z, 1, 100))
-    assert seq.expand(power_exp = False) == SeqFormula(exp(x*y**2 + x*z), (z, 1, 100))
-    assert seq.expand(mul = False, power_exp = False) == SeqFormula(exp(x*(y**2 + z)), (z, 1, 100))
+    assert seq.expand(power_exp=False) == SeqFormula(exp(x*y**2 + x*z), (z, 1, 100))
+    assert seq.expand(mul=False, power_exp=False) == SeqFormula(exp(x*(y**2 + z)), (z, 1, 100))
 
 def test_sequence():
     form = SeqFormula(n**2, (n, 0, 5))
