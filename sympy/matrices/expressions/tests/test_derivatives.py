@@ -33,7 +33,8 @@ def test_matrix_derivative_non_matrix_result():
 
 def test_matrix_derivative_trivial_cases():
     # Cookbook example 33:
-    assert X.diff(A) == 0
+    # TODO: find a way to represent a four-dimensional zero-array:
+    assert X.diff(A) == Derivative(X, A)
 
 
 def test_matrix_derivative_with_inverse():
@@ -245,6 +246,13 @@ def test_derivatives_of_complicated_matrix_expr():
 
 
 def test_mixed_deriv_mixed_expressions():
+    expr = k
+    deriv = expr.diff(A)
+    assert isinstance(deriv, ZeroMatrix)
+    assert deriv == ZeroMatrix(k, k)
+
+    expr = Trace(A)**2
+    assert expr.diff(A) == (2*Trace(A))*Identity(k)
 
     expr = Trace(A)*A
     # TODO: this is not yet supported:
@@ -252,3 +260,6 @@ def test_mixed_deriv_mixed_expressions():
 
     expr = Trace(Trace(A)*A)
     assert expr.diff(A) == (2*Trace(A))*Identity(k)
+
+    expr = Trace(Trace(Trace(A)*A)*A)
+    assert expr.diff(A) == (3*Trace(A)**2)*Identity(k)

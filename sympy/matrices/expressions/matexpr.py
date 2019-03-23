@@ -202,6 +202,23 @@ class MatrixExpr(Expr):
     def _eval_derivative_n_times(self, x, n):
         return Basic._eval_derivative_n_times(self, x, n)
 
+    def _visit_eval_derivative_scalar(self, x):
+        # `x` is a scalar:
+        if x.has(self):
+            return _matrix_derivative(x, self)
+        else:
+            return ZeroMatrix(*self.shape)
+
+    def _visit_eval_derivative_array(self, x):
+        if x.has(self):
+            return _matrix_derivative(x, self)
+        else:
+            from sympy import Derivative
+            return Derivative(x, self)
+
+    def _accept_eval_derivative(self, s):
+        return s._visit_eval_derivative_array(self)
+
     def _entry(self, i, j, **kwargs):
         raise NotImplementedError(
             "Indexing not implemented for %s" % self.__class__.__name__)
