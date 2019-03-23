@@ -476,22 +476,38 @@ class Pow(Expr):
                 return False
 
     def _eval_is_zero(self):
-        if self.base.is_zero:
-            if self.exp.is_positive:
-                return True
-            elif self.exp.is_nonpositive:
+        b = self.base
+        e = self.exp
+
+        if b.is_zero:
+            return e.is_positive
+        elif b.is_infinite:
+            return e.is_negative
+        elif b.is_finite:
+            if e.is_finite:
+                if b.is_zero is False or e.is_negative:
+                    return False
+        elif b.is_zero is False:
+            if e.is_finite or e.is_positive:
                 return False
-        elif self.base.is_zero is False:
-            if self.exp.is_finite:
-                return False
-            elif self.exp.is_infinite:
-                if (1 - abs(self.base)).is_positive:
-                    return self.exp.is_positive
-                elif (1 - abs(self.base)).is_negative:
-                    return self.exp.is_negative
-        else:
-            # when self.base.is_zero is None
-            return None
+
+        if e.is_zero:
+            return False
+        elif e.is_infinite:
+            if e in (S.Infinity, S.NegativeInfinity):
+                absb = abs(b)
+                if (absb > 1) is S.true:
+                    return e is S.NegativeInfinity
+                elif (absb < 1) is S.true:
+                    return e is S.Infinity
+                elif absb is S.One:
+                    return None
+            elif e is S.ComplexInfinity:
+                return None
+            elif e.is_infinite:
+                assert False
+
+        return None
 
     def _eval_is_integer(self):
         b, e = self.args
