@@ -897,7 +897,7 @@ class Mul(Expr, AssocOp):
                 # Note: reduce is used in step of Mul as Mul is unable to
                 # handle subtypes and operation priority:
                 terms.append(reduce(lambda x, y: x*y, (args[:i] + [d] + args[i + 1:]), S.One))
-        return reduce(lambda x, y: x+y, terms, S.Zero)
+        return Add.fromiter(terms)
 
     @cacheit
     def _eval_derivative_n_times(self, s, n):
