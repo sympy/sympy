@@ -599,24 +599,17 @@ Basic._constructor_postprocessor_mapping[MatrixExpr] = {
     "Add": [get_postprocessor(Add)],
 }
 
+
 def _matrix_derivative(expr, x):
     from sympy import Derivative
     lines = expr._eval_derivative_matrix_lines(x)
-
-    first = lines[0].first
-    second = lines[0].second
-    higher = lines[0].higher
 
     ranks = [i.rank() for i in lines]
     assert len(set(ranks)) == 1
     rank = ranks[0]
 
     if rank <= 2:
-        return reduce(lambda x, y: x+y, [i.matrix_form() for i in lines])
-        if first != 1:
-            return reduce(lambda x,y: x+y, [lr.first * lr.second.T for lr in lines])
-        elif higher != 1:
-            return reduce(lambda x,y: x+y, [lr.higher for lr in lines])
+        return Add.fromiter([i.matrix_form() for i in lines])
 
     return Derivative(expr, x)
 
@@ -748,8 +741,8 @@ class MatrixSymbol(MatrixExpr):
                 transposed=False,
             )]
         else:
-            first=Identity(self.shape[0])
-            second=Identity(self.shape[1])
+            first = Identity(self.shape[0])
+            second = Identity(self.shape[1])
             return [_LeftRightArgs(
                 first=first,
                 second=second,
@@ -848,6 +841,7 @@ class GenericIdentity(Identity):
     def __hash__(self):
         return super(GenericIdentity, self).__hash__()
 
+
 class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
 
@@ -902,6 +896,7 @@ class ZeroMatrix(MatrixExpr):
 
     __bool__ = __nonzero__
 
+
 class GenericZeroMatrix(ZeroMatrix):
     """
     A zero matrix without a specified shape
@@ -936,6 +931,7 @@ class GenericZeroMatrix(ZeroMatrix):
 
     def __hash__(self):
         return super(GenericZeroMatrix, self).__hash__()
+
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
@@ -976,6 +972,12 @@ class _LeftRightArgs(object):
     def matrix_form(self):
         if self.first != 1 and self.higher != 1:
             raise ValueError("higher dimensional array cannot be represented")
+        # Remove one-dimensional identity matrices:
+        # (this is needed by `a.diff(a)` where `a` is a vector)
+        if self.first == Identity(1):
+            return self.second.T
+        if self.second == Identity(1):
+            return self.first
         if self.first != 1:
             return self.first*self.second.T
         else:
