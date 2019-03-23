@@ -45,7 +45,7 @@ from .singleton import S
 from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import fuzzy_and, fuzzy_bool
 from sympy.core.compatibility import string_types, with_metaclass, PY3, range
 from sympy.utilities import default_sort_key
 from sympy.utilities.misc import filldedent
@@ -1156,7 +1156,7 @@ class Derivative(Expr):
         ========
 
         >>> from sympy import Function, Derivative, cos
-        >>> from sympy.abc import x
+        >>> from sympy.abc import y, x
         >>> f = Function('f')
 
         >>> Derivative(f(x), x)._diff_wrt
@@ -1178,6 +1178,14 @@ class Derivative(Expr):
 
         >>> Derivative(f(f(x)), x)._diff_wrt
         False
+
+        Denesting will occur unless `evaluate` is explicitly set to False:
+
+        >>> d = Derivative(y, x)
+        >>> Derivative(d, x)
+        Derivative(y, (x, 2))
+        >>> Derivative(d, x, evaluate=False)
+        Derivative(Derivative(y, x), x)
         """
         return self.expr._diff_wrt and isinstance(self.doit(), Derivative)
 
@@ -1291,7 +1299,7 @@ class Derivative(Expr):
         if len(variable_count) == 0:
             return expr
 
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = fuzzy_bool(kwargs.get('evaluate', None))
 
         if evaluate:
             if isinstance(expr, Derivative):
@@ -1335,12 +1343,12 @@ class Derivative(Expr):
             #TODO: check if assumption of discontinuous derivatives exist
             variable_count = cls._sort_variable_count(variable_count)
 
-        # denest
-        if isinstance(expr, Derivative) and evaluate:
+        # denest unless evaluate is explicitly set to False
+        if evaluate is not False and isinstance(expr, Derivative):
             variable_count = list(expr.variable_count) + variable_count
             return expr.func(expr.expr, *variable_count, **kwargs)
 
-        # we return here if evaluate is False or if there is no
+        # we return here if evaluate is not True or if there is no
         # _eval_derivative method
         if not evaluate or not hasattr(expr, '_eval_derivative'):
             # return an unevaluated Derivative
