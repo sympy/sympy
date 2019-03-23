@@ -1336,7 +1336,7 @@ class Derivative(Expr):
             variable_count = cls._sort_variable_count(variable_count)
 
         # denest
-        if isinstance(expr, Derivative):
+        if isinstance(expr, Derivative) and evaluate:
             variable_count = list(expr.variable_count) + variable_count
             return expr.func(expr.expr, *variable_count, **kwargs)
 
