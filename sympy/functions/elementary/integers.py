@@ -9,7 +9,7 @@ from sympy.core.symbol import Symbol
 
 
 ###############################################################################
-######################### FLOOR and CEILING FUNCTIONS #########################
+# FLOOR and CEILING FUNCTIONS #########################
 ###############################################################################
 
 
@@ -51,7 +51,8 @@ class RoundFunction(Function):
         # Evaluate npart numerically if independent of spart
         if npart and (
             not spart or
-            npart.is_real and (spart.is_imaginary or (S.ImaginaryUnit*spart).is_real) or
+            npart.is_real and
+            (spart.is_imaginary or (S.ImaginaryUnit*spart).is_real) or
                 npart.is_imaginary and spart.is_real):
             try:
                 r, i = get_integer_part(
@@ -121,7 +122,8 @@ class floor(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             return arg.floor()
-        elif any(isinstance(i, j)
+        elif any(
+                isinstance(i, j)
                 for i in (arg, -arg) for j in (floor, ceiling)):
             return arg
         if arg.is_NumberSymbol:
@@ -205,7 +207,8 @@ class ceiling(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             return arg.ceiling()
-        elif any(isinstance(i, j)
+        elif any(
+                isinstance(i, j)
                 for i in (arg, -arg) for j in (floor, ceiling)):
             return arg
         if arg.is_NumberSymbol:
@@ -343,3 +346,33 @@ class frac(Function):
             if (self.rewrite(floor) == other) or \
                     (self.rewrite(ceiling) == other):
                 return S.true
+
+
+class shift_transformation(Function):
+    """
+    Shift Transformation of an argument is defined as the fractional part
+    of reciprocal of the argument.
+
+    The transformation T(x) = frac(1/x)
+
+    For example
+    ===========
+
+    >>> from sympy import shift_transformation, Symbol
+    >>> shift_transformation(5.35)
+    0.186915887850467
+    >>> x = Symbol('x')
+    >>> shift_transformation(x)
+    frac(1/x)
+
+    Reference
+    ===========
+
+    [1] Weisstein, Eric W. "Shift Transformation." From MathWorld-A
+        Wolfram Web Resource.
+        "http://mathworld.wolfram.com/ShiftTransformation.html"
+
+    """
+    @classmethod
+    def eval(cls, arg):
+        return frac(1/arg)
