@@ -3243,8 +3243,8 @@ def test_nth_order_reducible():
            Eq(f(x), C2 + sqrt(2)*I*(C1 + x)*sqrt(1/(C1 + x)))]
     sols = constant_renumber(sol)
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == [(True, 0), (True, 0)]
-    assert dsolve(eqn, f(x)) in (sol1, sol1s)
-    assert dsolve(eqn, f(x), hint='nth_order_reducible') in (sol2, sol2s)
+    assert dsolve(eqn, f(x)) in (sol, sols)
+    assert dsolve(eqn, f(x), hint='nth_order_reducible') in (sol, sols)
 
 
 def test_nth_algebraic():
