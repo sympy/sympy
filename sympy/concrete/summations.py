@@ -946,9 +946,15 @@ def eval_sum(f, limits):
         return eval_sum_direct(f, (i, a, b))
     if isinstance(f, Piecewise):
         return None
+    #If the number of terms is infinite and series is convergent
+    #if not(f.is_convergent) and expr.subs(1,a+i).is_positive:
+    #    return oo
+    # elif not(f.is_convergent) and expr.subs(i,a+i).is_negative:
+    #    return -oo
     # Try to do it symbolically. Even when the number of terms is known,
     # this can save time when b-a is big.
     # We should try to transform to partial fractions
+    #if b != oo or a == -oo:
     value = eval_sum_symbolic(f.expand(), (i, a, b))
     if value is not None:
         return value
