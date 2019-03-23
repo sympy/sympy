@@ -59,6 +59,9 @@ def test_matrix_derivative_with_inverse():
 
 def test_matrix_derivative_vectors_and_scalars():
 
+    assert x.diff(x) == Identity(k)
+    assert x.T.diff(x) == Identity(k)
+
     # Cookbook example 69:
     expr = x.T*a
     assert expr.diff(x) == a
