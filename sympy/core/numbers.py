@@ -149,7 +149,7 @@ def _decimal_to_Rational_prec(dec):
 
 def _literal_float(f):
     """Return True if n can be interpreted as a floating point number."""
-    pat = r"[-+]?((\d*\.\d+)|(\d+\.?))(eE[-+]?\d+)?"
+    pat = r"[-+]?((\d*\.\d+)|(\d+\.?))([eE][-+]?\d+)?"
     return bool(regex.match(pat, f))
 
 # (a,b) -> gcd(a,b)
