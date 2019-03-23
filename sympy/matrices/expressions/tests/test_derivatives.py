@@ -246,6 +246,10 @@ def test_derivatives_of_complicated_matrix_expr():
 
 
 def test_mixed_deriv_mixed_expressions():
+
+    expr = 3*Trace(A)
+    assert expr.diff(A) == 3*Identity(k)
+
     expr = k
     deriv = expr.diff(A)
     assert isinstance(deriv, ZeroMatrix)
