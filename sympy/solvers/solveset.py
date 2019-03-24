@@ -37,6 +37,7 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set
 from sympy.matrices import Matrix, MatrixBase
+from sympy.ntheory.residue_ntheory import discrete_log
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.solvers.solvers import (checksol, denoms, unrad,
@@ -47,6 +48,7 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import numbered_symbols, has_dups
 from sympy.calculus.util import periodicity, continuous_domain
 from sympy.core.compatibility import ordered, default_sort_key, is_sequence
+from sympy import invert
 
 from types import GeneratorType
 from collections import defaultdict
@@ -158,8 +160,6 @@ def _invert(f_x, y, x, domain=S.Complexes):
     else:
         x1, s = _invert_complex(f_x, FiniteSet(y), x)
 
-    if (f_x - y).has(Mod):
-        x1, s = _invert_modular(f_x, FiniteSet(y), x)
     if not isinstance(s, FiniteSet) or x1 != x:
         return x1, s
 
@@ -375,9 +375,7 @@ def _invert_abs(f, g_ys, symbol):
         imageset(Lambda(n, -n), g_ys)), symbol)
     return g_x, ConditionSet(g_x, conditions, values)
 
-def _invert_modular(f, g_ys, symbol):
-    print("hello")
-    return 0, 0
+
 def domain_check(f, symbol, p):
     """Returns False if point p is infinite or any subexpression of f
     is infinite or becomes so after replacing symbol with p. If none of
@@ -932,6 +930,16 @@ def _solveset(f, symbol, domain, _check=False):
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result
+
+    elif f.has(Mod) and not f.has(TrigonometricFunction):
+        modterm = list(f.atoms(Mod))[0]
+        t = Dummy('t', integer=True)
+        f = f.xreplace({modterm: t})
+        g_ys = solver(f , t, S.Integers)
+        if isinstance(g_ys, FiniteSet):
+            for rhs in g_ys:
+                if not rhs.has(symbol) and modterm.has(symbol):
+                    result += _solve_modular(modterm, rhs, symbol, domain)
     else:
         lhs, rhs_s = inverter(f, 0, symbol)
         if lhs == symbol:
@@ -999,7 +1007,18 @@ def _solveset(f, symbol, domain, _check=False):
 
     return result
 
-
+def _solve_modular(modterm, rhs, symbol, domain):
+    "Helper function to solve modular equations"
+    #It is incomplete needs to be completed
+    a, m = modterm.args
+    if a is symbol:
+        return FiniteSet(rhs)
+    if a.is_Mul:
+        g, h = a.as_independent(symbol)
+        return _solveset(Mod(h, m) - rhs*invert(g, m), symbol, domain)
+    if a.is_Pow:
+        if a.exp is symbol:
+            return _solveset(Mod(a.exp, m) - discrete_log(m, rhs, a.base), symbol, domain)
 def _term_factors(f):
     """
     Iterator to get the factors of all terms present
