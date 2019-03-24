@@ -2925,11 +2925,10 @@ class atan2(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_atan(self, y, x, **kwargs):
         if y.is_zero is True:
-            und = Function('NaN')
             return Piecewise(
                 (pi, x < 0),
                 (0, x > 0),
-                (und, True)
+                (S.NaN, True)
             )
         else:
             return 2 * atan(y / (sqrt(x ** 2 + y ** 2) + x))
