@@ -537,4 +537,4 @@ def test_issue_14601():
     assert float((x + x*(x**2 + x)).evalf(subs={x: 0.0})) == 0.0
 def test_issue_11151():
     e=Sum(0,(x,1,2))
-    assert evalf.evalf(e,15,{}) == evalf.evalf(S(0),15,{})
+    assert n.evalf(e,15,{}) == n.evalf(S(0),15,{})
