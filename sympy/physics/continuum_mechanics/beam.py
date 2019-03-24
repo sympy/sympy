@@ -1810,8 +1810,7 @@ class Beam3D(Beam):
 
     def shear_force(self):
         """
-        Returns a list of three expressions which represents the shear force
-        curve of the Beam object along all three axes.
+        Returns a list of three expressions which represents the shear force curve of the Beam object along all three axes.
         """
         x = self.variable
         q = self._load_vector
