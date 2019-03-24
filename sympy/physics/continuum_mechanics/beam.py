@@ -780,9 +780,18 @@ class Beam(object):
         x = self.variable
         return integrate(self.load, x)
 
+    def shear_stress(self):
+        """
+        Returns a Singularity Function expression which represents
+        the shear stress curve of the Beam object.
+        """
+        return self.shear_force/self.area
+
     def max_shear_force(self):
-        """Returns maximum Shear force and its coordinate
-        in the Beam object."""
+        """
+        Returns maximum Shear force and its coordinate
+        in the Beam object.
+        """
         from sympy import solve, Mul, Interval
         shear_curve = self.shear_force()
         x = self.variable
@@ -1809,11 +1818,24 @@ class Beam3D(Beam):
         m = self._moment_load_vector
         return [integrate(-q[0], x), integrate(-q[1], x), integrate(-q[2], x)]
 
+    def shear_stress(self):
+        """
+        Returns a list of three expressions which represents the shear stress
+        curve of the Beam object along all three axes.
+        """  
+        return [self.shear_force()[0]/self.area, self.shear_force()[1]/self.area, self.shear_force()[2]/self.area]  
+
     def axial_force(self):
         """
         Returns expression of Axial shear force present inside the Beam object.
         """
         return self.shear_force()[0]
+
+    def axial_stress(self):
+        """
+        Returns expression of Axial stress present inside the Beam object.
+        """
+        return self.axial_force()[0]/self.area    
 
     def bending_moment(self):
         """
