@@ -391,6 +391,40 @@ def test_remove_load():
     assert b.applied_loads == []
 
 
+def test_remove_support():
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(4, E, I)
+
+    try:
+        b.remove_support(0, 1)
+    # As no support is applied on beam, ValueError should be returned.
+    except ValueError:
+        assert True
+    else:
+        assert False
+
+    b.apply_support(1, 2)
+    b.apply_support(2, 1)
+    b.remove_support(1, 2)
+    assert b.support == -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1)
+    assert b.apply_load == [(1, 2), (2, 1)]
+
+    try:
+        b.remove_load(3, 1)
+    # As load of this magnitude was never applied at
+    # this position, method should return a ValueError.
+    except ValueError:
+        assert True
+    else:
+        assert False
+
+    b.remove_support(0, 1)
+    b.remove_support(2, 1)
+    assert b.load == 0
+    assert b.apply_load == []
+
+
 def test_apply_support():
     E = Symbol('E')
     I = Symbol('I')

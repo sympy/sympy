@@ -346,6 +346,56 @@ class Beam(object):
             self.bc_deflection.append((loc, 0))
             self.bc_slope.append((loc, 0))
 
+    def remove_support(self, loc, type="fixed"):
+        """
+        This method removes support from a particular beam object.
+
+        Parameters
+        ==========
+        loc : Sympifyable
+            Location of point at which support was applied to.
+        type : String
+            Determines type of Beam support applied to. To apply support structure
+            with
+            - zero degree of freedom, type = "fixed"
+            - one degree of freedom, type = "pin"
+            - two degrees of freedom, type = "roller"
+
+        Examples
+        ========
+        There is a beam of length 30 meters. A moment of magnitude 120 Nm is
+        applied in the clockwise direction at the end of the beam. A pointload
+        of magnitude 8 N is applied from the top of the beam at the starting
+        point. There are two simple supports below the beam. One at the end
+        and another one at a distance of 10 meters from the start. The
+        deflection is restricted at both the supports.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_support(10, 'roller')
+        >>> b.apply_support(30, 'roller')
+        >>> b.apply_load(-8, 0, -1)
+        >>> b.apply_load(120, 30, -2)
+        >>> R_10, R_30 = symbols('R_10, R_30')
+        >>> b.solve_for_reaction_loads(R_10, R_30)
+        >>> b.load
+        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
+        + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
+        >>> b.slope()
+        (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
+            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
+        """
+        if (loc,type) in self.reaction_load:
+            self.apply_load.remove((loc,type))   
+        else:
+            msg = "No such support exists on the beam object."
+            raise ValueError(msg)    
+
     def apply_load(self, value, start, order, end=None):
         """
         This method adds up the loads given to a particular beam object.
