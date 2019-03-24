@@ -480,9 +480,16 @@ class Pow(Expr):
         e = self.exp
 
         if b.is_zero:
+            # This is needed because zoo.is_positive is False
+            if e is S.ComplexInfinity:
+                return None
             return e.is_positive
         elif b.is_infinite:
-            return e.is_negative
+            # This is needed because zoo.is_negative is False
+            if e is S.ComplexInfinity:
+                return None
+            else:
+                return e.is_negative
         elif b.is_finite:
             if e.is_finite:
                 if b.is_zero is False or e.is_negative:

@@ -264,6 +264,46 @@ def test_pow_as_base_exp():
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S(1), S(2))
 
 
+def test_pow_iszero():
+    # All combinations of real/complex base/exponent
+    h = S.Half
+    T = True
+    F = False
+    N = None
+
+    # Not sure about these evaluations (all give is_zero False)
+    # (-oo)**0 == 1
+    # 0**0 == 1
+    # zoo**0 == 1
+
+    # (+-1)**(-oo) give nan. is_zero gives False here.
+    # Returning None leads to False down the line though...
+
+    pow_iszero = [
+        ['**', -oo, -2, -1, -h,  0,  h,  1,  2, oo, zoo],
+        [ -oo,   T,  T,  T,  T,  F,  F,  F,  F,  F,  N],
+        [  -2,   T,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [  -1,   F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [  -h,   F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
+        [   0,   F,  F,  F,  F,  F,  T,  T,  T,  T,  N],
+        [   h,   F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
+        [   1,   F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [   2,   T,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [  oo,   T,  T,  T,  T,  F,  F,  F,  F,  F,  N],
+        [ zoo,   T,  T,  T,  T,  F,  F,  F,  F,  F,  N],
+    ]
+
+    n = len(pow_iszero)
+    for row in range(1, n):
+        base = pow_iszero[row][0]
+        for col in range(1, n):
+            exp = pow_iszero[0][col]
+            is_zero = pow_iszero[row][col]
+            # The actual test here:
+            assert Pow(base, exp, evaluate=False).is_zero is is_zero
+
+
+
 def test_issue_6100_12942():
     x = Symbol('x')
     y = Symbol('y')
