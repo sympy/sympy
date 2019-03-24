@@ -1244,7 +1244,7 @@ class InverseLaplaceTransform(IntegralTransform):
         return Integral(exp(s*t)*F, (s, c - I*oo, c + I*oo))/(2*S.Pi*S.ImaginaryUnit)
 
 
-def inverse_laplace_transform(F, s, t, plane=None, part=False, **hints):
+def inverse_laplace_transform(F, s, t, plane=None, **hints):
     r"""
     Compute the inverse Laplace transform of `F(s)`, defined as
 
