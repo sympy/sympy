@@ -434,6 +434,7 @@ def test_logcombine_1():
     a = Symbol("a")
     z, w = symbols("z,w", positive=True)
     b = Symbol("b", real=True)
+
     # a single unknown can combine
     assert logcombine(log(x) + log(2)) == log(2*x)
 
