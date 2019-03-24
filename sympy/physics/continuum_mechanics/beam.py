@@ -391,7 +391,7 @@ class Beam(object):
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
         """
         if (loc,type) in self.reaction_load:
-            self.apply_load.remove((loc,type))   
+            self.apply_load.remove((loc, type))   
         else:
             msg = "No such support exists on the beam object."
             raise ValueError(msg)    
