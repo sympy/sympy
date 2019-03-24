@@ -7,18 +7,18 @@ from sympy.sets.sets import Interval
 
 from functools import lru_cache
 
+
 def _add_splines(c, b1, d, b2):
     """Construct c*b1 + d*b2."""
     if b1 == S.Zero or c == S.Zero:
-        rv = piecewise_fold(d*b2)
+        rv = piecewise_fold(d * b2)
     elif b2 == S.Zero or d == S.Zero:
-        rv = piecewise_fold(c*b1)
+        rv = piecewise_fold(c * b1)
     else:
         new_args = []
-        n_intervals = len(b1.args)
         # Just combining the Piecewise without any fancy optimization
-        p1 = piecewise_fold(c*b1)
-        p2 = piecewise_fold(d*b2)
+        p1 = piecewise_fold(c * b1)
+        p2 = piecewise_fold(d * b2)
 
         # Search all Piecewise arguments except (0, True)
         p2args = list(p2.args[:-1])
@@ -70,6 +70,7 @@ def _add_splines(c, b1, d, b2):
         rv = Piecewise(*new_args)
 
     return rv.expand()
+
 
 @lru_cache(maxsize=128)
 def bspline_basis(d, knots, n, x):
@@ -139,30 +140,29 @@ def bspline_basis(d, knots, n, x):
     n_knots = len(knots)
     n_intervals = n_knots - 1
     if n + d + 1 > n_intervals:
-        raise ValueError('n + d + 1 must not exceed len(knots) - 1')
+        raise ValueError("n + d + 1 must not exceed len(knots) - 1")
     if d == 0:
         result = Piecewise(
-            (S.One, Interval(knots[n], knots[n + 1]).contains(x)),
-            (0, True)
+            (S.One, Interval(knots[n], knots[n + 1]).contains(x)), (0, True)
         )
     elif d > 0:
         denom = knots[n + d + 1] - knots[n + 1]
         if denom != S.Zero:
-            B = (knots[n + d + 1] - x)/denom
+            B = (knots[n + d + 1] - x) / denom
             b2 = bspline_basis(d - 1, knots, n + 1, x)
         else:
             b2 = B = S.Zero
 
         denom = knots[n + d] - knots[n]
         if denom != S.Zero:
-            A = (x - knots[n])/denom
+            A = (x - knots[n]) / denom
             b1 = bspline_basis(d - 1, knots, n, x)
         else:
             b1 = A = S.Zero
 
         result = _add_splines(A, b1, B, b2)
     else:
-        raise ValueError('degree must be non-negative: %r' % n)
+        raise ValueError("degree must be non-negative: %r" % n)
     return result
 
 
@@ -235,18 +235,14 @@ def interpolating_spline(d, x, X, Y):
 
     # Input sanitization
     d = sympify(d)
-    if not(d.is_Integer and d.is_positive):
-        raise ValueError(
-            "Spline degree must be a positive integer, not %s." % d)
+    if not (d.is_Integer and d.is_positive):
+        raise ValueError("Spline degree must be a positive integer, not %s." % d)
     if len(X) != len(Y):
-        raise ValueError(
-            "Number of X and Y coordinates must be the same.")
+        raise ValueError("Number of X and Y coordinates must be the same.")
     if len(X) < d + 1:
-        raise ValueError(
-            "Degree must be less than the number of control points.")
+        raise ValueError("Degree must be less than the number of control points.")
     if not all(a < b for a, b in zip(X, X[1:])):
-        raise ValueError(
-            "The x-coordinates must be strictly increasing.")
+        raise ValueError("The x-coordinates must be strictly increasing.")
 
     # Evaluating knots value
     if d.is_odd:
@@ -254,8 +250,9 @@ def interpolating_spline(d, x, X, Y):
         interior_knots = X[j:-j]
     else:
         j = d // 2
-        interior_knots = [Rational(a + b, 2) for a, b in
-            zip(X[j:-j - 1], X[j + 1:-j])]
+        interior_knots = [
+            Rational(a + b, 2) for a, b in zip(X[j : -j - 1], X[j + 1 : -j])
+        ]
 
     knots = [X[0]] * (d + 1) + list(interior_knots) + [X[-1]] * (d + 1)
 
@@ -263,11 +260,9 @@ def interpolating_spline(d, x, X, Y):
 
     A = [[b.subs(x, v) for b in basis] for v in X]
 
-    coeff = linsolve((Matrix(A), Matrix(Y)), symbols('c0:{}'.format(
-        len(X)), cls=Dummy))
+    coeff = linsolve((Matrix(A), Matrix(Y)), symbols("c0:{}".format(len(X)), cls=Dummy))
     coeff = list(coeff)[0]
-    intervals = set([c for b in basis for (e, c) in b.args
-        if c != True])
+    intervals = set([c for b in basis for (e, c) in b.args if c != True])
 
     # Sorting the intervals
     #  ival contains the end-points of each interval
@@ -280,7 +275,8 @@ def interpolating_spline(d, x, X, Y):
     basis_dicts = [dict((c, e) for (e, c) in b.args) for b in basis]
     spline = []
     for i in intervals:
-        piece = sum([c*d.get(i, S.Zero) for (c, d) in
-            zip(coeff, basis_dicts)], S.Zero)
+        piece = sum(
+            [c * d.get(i, S.Zero) for (c, d) in zip(coeff, basis_dicts)], S.Zero
+        )
         spline.append((piece, i))
-    return(Piecewise(*spline))
+    return Piecewise(*spline)
