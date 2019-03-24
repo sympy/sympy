@@ -2027,7 +2027,7 @@ class PermutationGroup(Basic):
 
         """
         if self._is_solvable is None:
-            if self._order is not None and self._order % 2 != 0:
+            if self.order() % 2 != 0:
                 return True
             ds = self.derived_series()
             terminator = ds[len(ds) - 1]
