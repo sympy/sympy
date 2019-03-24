@@ -324,9 +324,9 @@ class Piecewise(Function):
     def _eval_simplify(self, ratio, measure, rational, inverse):
         args = [a._eval_simplify(ratio, measure, rational, inverse)
             for a in self.args]
-        _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and \
-            getattr(e.rhs, '_diff_wrt', isinstance(e.rhs, (
-            Rational, NumberSymbol)))
+        _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (
+            getattr(e.rhs, '_diff_wrt', None) or
+            isinstance(e.rhs, (Rational, NumberSymbol)))
         for i, (expr, cond) in enumerate(args):
             # try to simplify conditions and the expression for
             # equalities that are part of the condition, e.g.
