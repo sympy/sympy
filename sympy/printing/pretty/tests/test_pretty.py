@@ -6208,7 +6208,7 @@ def test_issue_12675():
     ucode_str = \
 u("""\
 ⎛   t⎞    \n\
-⎜⎛x⎞ ⎟ e_j\n\
+⎜⎛x⎞ ⎟ j_e\n\
 ⎜⎜─⎟ ⎟    \n\
 ⎝⎝y⎠ ⎠    \
 """)
@@ -6216,7 +6216,7 @@ u("""\
     ucode_str = \
 u("""\
 ⎛1⎞    \n\
-⎜─⎟ e_j\n\
+⎜─⎟ j_e\n\
 ⎝y⎠    \
 """)
     assert upretty((1/y)*e.j) == ucode_str
