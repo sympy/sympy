@@ -293,15 +293,70 @@ def test_pow_iszero():
         [ zoo,   T,  T,  T,  T,  F,  F,  F,  F,  F,  N],
     ]
 
-    n = len(pow_iszero)
-    for row in range(1, n):
-        base = pow_iszero[row][0]
-        for col in range(1, n):
-            exp = pow_iszero[0][col]
-            is_zero = pow_iszero[row][col]
-            # The actual test here:
-            assert Pow(base, exp, evaluate=False).is_zero is is_zero
+    def test_table(table):
+        n = len(table[0])
+        for row in range(1, n):
+            base = table[row][0]
+            for col in range(1, n):
+                exp = table[0][col]
+                is_zero = table[row][col]
+                # The actual test here:
+                assert Pow(base, exp, evaluate=False).is_zero is is_zero
 
+    test_table(pow_iszero)
+
+    # All combinations of finite symbols
+    zf = Symbol('zf', finite=True)
+    wf = Symbol('wf', nonzero=True, finite=True)
+    xf = Symbol('xf', real=True, finite=True)
+    yf = Symbol('yf', nonzero=True, real=True, finite=True)
+    af = Symbol('af', positive=True, finite=True)
+    bf = Symbol('bf', nonnegative=True, finite=True)
+    cf = Symbol('cf', negative=True, finite=True)
+    df = Symbol('df', nonpositive=True, finite=True)
+
+    # Without finiteness:
+    zi = Symbol('zi')
+    wi = Symbol('wi', nonzero=True)
+    xi = Symbol('xi', real=True)
+    yi = Symbol('yi', nonzero=True, real=True)
+    ai = Symbol('ai', positive=True)
+    bi = Symbol('bi', nonnegative=True)
+    ci = Symbol('ci', negative=True)
+    di = Symbol('di', nonpositive=True)
+
+    # af**wi should be None - becomes False later though...
+    # af**xi, af**ai, af**bi, af**ci, af**di same
+
+    # bf**bf cannot be zero but b1**b2 with same assumptions can...
+    # bi**bi same...
+
+    # ai**wf should be None - becomes False later though...
+    # ai**xf, ai**yf, ai**cf, ai**df, ai**wi, ai**xi, ai**yi, ai**ai, ai**bi,
+    # ai**ci, ai**di same
+
+    pow_iszero_sym = [
+        ['**',zf,wf,xf,yf,af,bf,cf,df,zi,wi,xi,yi,ai,bi,ci,di],
+        [  zf, N, N, N, N, N, N, F, N, N, N, N, N, N, N, N, N],
+        [  wf, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
+        [  xf, N, N, N, N, N, N, F, N, N, N, N, N, N, N, N, N],
+        [  yf, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
+        [  af, F, F, F, F, F, F, F, F, N, F, F, F, F, F, F, F],
+        [  bf, N, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N],
+        [  cf, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
+        [  df, N, N, N, N, N, N, F, N, N, N, N, N, N, N, N, N],
+        [  zi, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
+        [  wi, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
+        [  xi, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
+        [  yi, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
+        [  ai, N, F, F, F, F, F, F, F, N, F, F, F, F, F, F, F],
+        [  bi, N, N, N, N, N, N, N, N, N, N, N, N, N, F, N, N],
+        [  ci, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
+        [  di, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
+    ]
+
+
+    test_table(pow_iszero_sym)
 
 
 def test_issue_6100_12942():

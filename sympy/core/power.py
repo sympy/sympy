@@ -492,10 +492,10 @@ class Pow(Expr):
                 return e.is_negative
         elif b.is_finite:
             if e.is_finite:
-                if b.is_zero is False or e.is_negative:
+                if b.is_nonzero and e.is_negative:
                     return False
-        elif b.is_zero is False:
-            if e.is_finite or e.is_positive:
+        elif b.is_nonzero:
+            if e.is_finite and e.is_nonnegative:
                 return False
 
         if e.is_zero:
@@ -513,6 +513,10 @@ class Pow(Expr):
                 return None
             elif e.is_infinite:
                 assert False
+        elif e.is_negative and e.is_finite and b.is_finite:
+            return False
+        elif e.is_finite and b.is_nonzero and b.is_finite:
+            return False
 
         return None
 
