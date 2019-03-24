@@ -657,7 +657,7 @@ class MatrixSpecial(MatrixRequired):
     def diag(kls, *args, **kwargs):
         """Returns a matrix with the specified diagonal.
         If matrices are passed, a block-diagonal matrix
-        is created.
+        is created (i.e. the "direct sum" of the matrices).
 
         kwargs
         ======
