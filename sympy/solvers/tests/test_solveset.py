@@ -2026,3 +2026,11 @@ def test_linear_coeffs():
         linear_coeffs(x + 2*x**2 + x**3, x, x**2))
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
+
+def test_solve_modular():
+    n = symbols('n', integer=True)
+    a = 742938285
+    z = 1898888478
+    m = 2**31 - 1
+    x = 20170816
+    assert solveset(x - Mod(a**n*z, m), n, S.Integers) == FiniteSet(100)
