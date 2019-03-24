@@ -200,7 +200,7 @@ class CoordSys3D(Basic):
         vector_names = list(vector_names)
         latex_vects = [(r'\mathbf{\hat{%s}_{%s}}' % (x, name)) for
                            x in vector_names]
-        pretty_vects = [(name + '_' + x) for x in vector_names]
+        pretty_vects = ['%s_%s' % (x, name) for x in vector_names]
 
         obj._vector_names = vector_names
 
@@ -216,7 +216,7 @@ class CoordSys3D(Basic):
         variable_names = list(variable_names)
         latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
                          x in variable_names]
-        pretty_scalars = [(name + '_' + x) for x in variable_names]
+        pretty_scalars = ['%s_%s' % (x, name) for x in variable_names]
 
         obj._variable_names = variable_names
         obj._vector_names = vector_names
