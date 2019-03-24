@@ -351,14 +351,12 @@ class Piecewise(Function):
                         other = [ei.subs(*e.args) for ei in other]
                 cond = And(*(eqs + other))
                 args[i] = args[i].func(expr, cond)
-        # See if expressions valid for a single point happens to evaluate
+        # See if expressions valid for an Equal expression happens to evaluate
         # to the same function as in the next piecewise segment, see:
         # https://github.com/sympy/sympy/issues/8458
         prevexpr = None
         for i, (expr, cond) in reversed(list(enumerate(args))):
             if prevexpr is not None:
-                _prevexpr = prevexpr
-                _expr = expr
                 if isinstance(cond, And):
                     eqs, other = sift(cond.args,
                         lambda i: isinstance(i, Equality), binary=True)
@@ -366,9 +364,11 @@ class Piecewise(Function):
                     eqs, other = [cond], []
                 else:
                     eqs = other = []
-                if eqs:
+                _prevexpr = prevexpr
+                _expr = expr
+                if eqs and not other:
                     eqs = list(ordered(eqs))
-                    for j, e in enumerate(eqs):
+                    for e in eqs:
                         # these blessed lhs objects behave like Symbols
                         # and the rhs are simple replacements for the "symbols"
                         if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
@@ -377,9 +377,14 @@ class Piecewise(Function):
                                 Symbol, UndefinedFunction)):
                             _prevexpr = _prevexpr.subs(*e.args)
                             _expr = _expr.subs(*e.args)
+                # Did it evaluate to the same?
                 if _prevexpr == _expr:
+                    # Set the expression for the Not equal section to the same
+                    # as the next. These will be merged when creating the new
+                    # Piecewise
                     args[i] = args[i].func(args[i+1][0], cond)
                 else:
+                    # Update the expression that we compare against
                     prevexpr = expr
             else:
                 prevexpr = expr

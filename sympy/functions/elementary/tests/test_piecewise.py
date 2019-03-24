@@ -3,7 +3,7 @@ from sympy import (
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
-    factor_terms, DiracDelta, Heaviside, Add, Mul, factorial)
+    factor_terms, DiracDelta, Heaviside, Add, Mul, factorial, Ge)
 from sympy.printing import srepr
 from sympy.utilities.pytest import raises, slow
 
@@ -433,6 +433,13 @@ def test_piecewise_simplify():
             (2*x, And(Eq(a, 0), Eq(y, 0))),
             (2, And(Eq(a, 1), Eq(y, 0))),
             (0, True))
+    assert Piecewise((2, And(Eq(x, 2), Ge(y,0))), (x, True)).simplify() == \
+        Piecewise((2, And(Eq(x, 2), Ge(y,0))), (x, True))
+    assert Piecewise((2+y, And(Eq(x, 2), Eq(y, 0))), (x, True)).simplify() == x
+    assert Piecewise((1, Eq(x, 0)), (sin(x)/x, True)).simplify() == \
+        Piecewise((1, Eq(x, 0)), (sin(x)/x, True))
+    assert Piecewise((1, Eq(x, 0)), (sin(x) + 1 + x, True)).simplify() == \
+        x + sin(x) + 1
 
 
 def test_piecewise_solve():
