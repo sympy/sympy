@@ -349,6 +349,7 @@ class PlotGrid(object):
         """
         Parameters
         ==========
+
         nrows : The number of rows that should be in the grid of the
                 required subplot
         ncolumns : The number of columns that should be in the grid
@@ -358,12 +359,14 @@ class PlotGrid(object):
 
         Arguments
         =========
+
         A list of predefined plot objects entered in a row-wise sequence
         i.e. plot objects which are to be in the top row of the required
         grid are written first, then the second row objects and so on
 
         Keyword arguments
         =================
+
         show : Boolean
                The default value is set to ``True``. Set show to ``False`` and
                the function will not display the subplot. The returned instance
@@ -1212,8 +1215,8 @@ class MatplotlibBackend(BaseBackend):
             series_list = parent._series
 
         for i, (series, ax) in enumerate(zip(series_list, self.ax)):
-            if isinstance(parent, PlotGrid):
-                parent = parent.args[i]
+            if isinstance(self.parent, PlotGrid):
+                parent = self.parent.args[i]
             self._process_series(series, ax, parent)
 
     def show(self):
@@ -1222,6 +1225,7 @@ class MatplotlibBackend(BaseBackend):
         # you can uncomment the next line and remove the pyplot.show() call
         #self.fig.show()
         if _show:
+            self.fig.tight_layout()
             self.plt.show()
         else:
             self.close()
