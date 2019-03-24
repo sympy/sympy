@@ -705,8 +705,8 @@ def test_issue_4671_4463_4467():
     #assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [-sqrt(x*log(1 + I*pi/log(2)))
     #                                                    , sqrt(x*log(1 + I*pi/log(2)))]
     assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [
-         sqrt(x*(-log(log(2)) + log(log(2) + I*pi))),
-        -sqrt(-x*(log(log(2)) - log(log(2) + I*pi)))]
+         sqrt(x*(log((log(2) + I*pi)/log(2)))),
+        -sqrt(-x*(log((log(2) + I*pi)/log(2))))]
 
     C1, C2 = symbols('C1 C2')
     f = Function('f')
