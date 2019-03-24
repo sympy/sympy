@@ -717,7 +717,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
     # Actually, we won't try integration at all. Instead we use the definition
     # of the Meijer G function as a fairly general inverse mellin transform.
     F = F.rewrite(gamma)
-    for g in [factor(F), expand_mul(F), expand(F)]:
+    for g in [factor(F), expand_mul(F), expand(F), apart(F)]:
         if g.is_Add:
             # do all terms separately
             ress = [_inverse_mellin_transform(G, s, x, strip, as_meijerg,
@@ -1282,8 +1282,6 @@ def inverse_laplace_transform(F, s, t, plane=None, part=False, **hints):
     laplace_transform
     hankel_transform, inverse_hankel_transform
     """
-    if apart:
-        F = apart(F)
     if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
         return F.applyfunc(lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
