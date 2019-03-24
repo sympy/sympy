@@ -10,6 +10,7 @@ from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArg
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import range
 from sympy.abc import x
+from sympy.stats.symbolic_probability import Probability
 
 
 def test_where():
