@@ -326,7 +326,7 @@ class Piecewise(Function):
             for a in self.args]
         _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and \
             getattr(e.rhs, '_diff_wrt', isinstance(e.rhs, (
-            Rational, NumberSymbol))
+            Rational, NumberSymbol)))
         for i, (expr, cond) in enumerate(args):
             # try to simplify conditions and the expression for
             # equalities that are part of the condition, e.g.
