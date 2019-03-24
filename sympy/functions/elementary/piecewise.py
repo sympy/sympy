@@ -351,14 +351,12 @@ class Piecewise(Function):
                         other = [ei.subs(*e.args) for ei in other]
                 cond = And(*(eqs + other))
                 args[i] = args[i].func(expr, cond)
-        # See if expressions valid for a single point happens to evaluate
+        # See if expressions valid for an Equal expression happens to evaluate
         # to the same function as in the next piecewise segment, see:
         # https://github.com/sympy/sympy/issues/8458
         prevexpr = None
         for i, (expr, cond) in reversed(list(enumerate(args))):
             if prevexpr is not None:
-                _prevexpr = prevexpr
-                _expr = expr
                 if isinstance(cond, And):
                     eqs, other = sift(cond.args,
                         lambda i: isinstance(i, Equality), binary=True)
@@ -366,9 +364,11 @@ class Piecewise(Function):
                     eqs, other = [cond], []
                 else:
                     eqs = other = []
-                if eqs:
+                _prevexpr = prevexpr
+                _expr = expr
+                if eqs and not other:
                     eqs = list(ordered(eqs))
-                    for j, e in enumerate(eqs):
+                    for e in eqs:
                         # these blessed lhs objects behave like Symbols
                         # and the rhs are simple replacements for the "symbols"
                         if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
@@ -377,12 +377,106 @@ class Piecewise(Function):
                                 Symbol, UndefinedFunction)):
                             _prevexpr = _prevexpr.subs(*e.args)
                             _expr = _expr.subs(*e.args)
+                # Did it evaluate to the same?
                 if _prevexpr == _expr:
+                    # Set the expression for the Not equal section to the same
+                    # as the next. These will be merged when creating the new
+                    # Piecewise
                     args[i] = args[i].func(args[i+1][0], cond)
                 else:
+                    # Update the expression that we compare against
                     prevexpr = expr
             else:
                 prevexpr = expr
+        # Handle segments of the type Or(Eq(x, y), Eq(x, z), And(Eq(x, 2), Eq(y, 3)))
+        # Check if any of the Or-terms can be moved to the next segment
+        # This may or may not be a good idea, so we check the consequences here
+        newargs = args.copy()
+        prevexpr = None
+        anythingchanged = False
+        for i, (expr, cond) in reversed(list(enumerate(newargs))):
+            if prevexpr is not None:
+                if isinstance(cond, Or):
+                    terms = [] # Terms that must stay in the same segment
+                    movedterms = [] # Terms that can may just as well be in the next segment
+                    for j, orterm in enumerate(cond.args):
+                        if isinstance(orterm, And):
+                            eqs, other = sift(orterm.args,
+                                lambda i: isinstance(i, Equality), binary=True)
+                        elif isinstance(orterm, Equality):
+                            eqs, other = [orterm], []
+                        else:
+                            eqs = other = []
+                        _prevexpr = prevexpr
+                        _expr = expr
+                        if eqs and not other:
+                            eqs = list(ordered(eqs))
+                            for e in eqs:
+                                # these blessed lhs objects behave like Symbols
+                                # and the rhs are simple replacements for the "symbols"
+                                if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
+                                    isinstance(e.rhs,
+                                        (Rational, NumberSymbol,
+                                        Symbol, UndefinedFunction)):
+                                    _prevexpr = _prevexpr.subs(*e.args)
+                                    _expr = _expr.subs(*e.args)
+                        if _prevexpr == _expr:
+                            movedterms.append(orterm)
+                        else:
+                            terms.append(orterm)
+                    # Are there any terms that can be in the next segment?
+                    if movedterms:
+                        anythingchanged = True
+                        newcond = Or(*(terms))
+                        movecond = Or(*(movedterms))
+                        newargs[i] = newargs[i].func(expr, newcond)
+                        newargs[i+1] = newargs[i+1].func(prevexpr, Or(newargs[i+1].cond, movecond))
+            prevexpr = expr
+        if anythingchanged:
+            oldcost = sum([measure(cond) for expr, cond in args])
+            newcost = sum([measure(cond) for expr, cond in newargs])
+            if newcost < ratio*oldcost:
+                args = newargs
+
+        # See if not equal expressions happens to evaluate to the
+        # same function as in the next piecewise segment for the not equal condition
+        prevexpr = None
+        prevcond = None
+        for i, (expr, cond) in list(enumerate(args)):
+            if prevexpr is not None and prevcond is not None:
+                _prevexpr = prevexpr
+                _expr = expr
+                if isinstance(prevcond, And):
+                    eqs, other = sift(prevcond.args,
+                        lambda i: isinstance(i, Unequality), binary=True)
+                elif isinstance(prevcond, Unequality):
+                    eqs, other = [prevcond], []
+                else:
+                    eqs = other = []
+                if eqs and not other:
+                    eqs = list(ordered(eqs))
+                    for e in eqs:
+                        # these blessed lhs objects behave like Symbols
+                        # and the rhs are simple replacements for the "symbols"
+                        if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
+                            isinstance(e.rhs,
+                                (Rational, NumberSymbol,
+                                Symbol, UndefinedFunction)):
+                            _prevexpr = _prevexpr.subs(*e.args)
+                            _expr = _expr.subs(*e.args)
+                # Did it evaluate to the same?
+                if _prevexpr == _expr:
+                    # Set the expression for the Not equal section to the same
+                    # as the next. These will be merged when creating the new
+                    # Piecewise
+                    args[i] = args[i].func(prevexpr, cond)
+                else:
+                    prevexpr = expr
+                    prevcond = cond
+            else:
+                prevexpr = expr
+                prevcond = cond
+
         return self.func(*args)
 
     def _eval_as_leading_term(self, x):
