@@ -5,6 +5,8 @@ from sympy.core.compatibility import range
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.sets.sets import Interval
 
+from functools import lru_cache
+
 def _add_splines(c, b1, d, b2):
     """Construct c*b1 + d*b2."""
     if b1 == S.Zero or c == S.Zero:
@@ -69,6 +71,7 @@ def _add_splines(c, b1, d, b2):
 
     return rv.expand()
 
+@lru_cache(maxsize=128)
 def bspline_basis(d, knots, n, x):
     """The `n`-th B-spline at `x` of degree `d` with knots.
 
@@ -218,7 +221,7 @@ def interpolating_spline(d, x, X, Y):
             (7 - x/2, (x >= 2) & (x <= 4)),
             (2*x/3 + 7/3, (x >= 4) & (x <= 7)))
     >>> interpolating_spline(3, x, [-2, 0, 1, 3, 4], [4, 2, 1, 1, 3])
-    Piecewise((7*x**3/117 + 7*x**2/117 - 131*x/117 + 2, (x >= -2) & (x <= 1)), 
+    Piecewise((7*x**3/117 + 7*x**2/117 - 131*x/117 + 2, (x >= -2) & (x <= 1)),
             (10*x**3/117 - 2*x**2/117 - 122*x/117 + 77/39, (x >= 1) & (x <= 4)))
 
     See Also
