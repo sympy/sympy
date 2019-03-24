@@ -908,11 +908,7 @@ def test_atan2():
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
     assert atan2(y, x).rewrite(atan) == 2*atan(y/(x + sqrt(x**2 + y**2)))
     assert atan2(0, 0).rewrite(atan) == S.NaN
-    assert atan2(0, w).rewrite(atan) == Piecewise(
-                                            (pi, w < 0),
-                                            (0, w > 0),
-                                            (S.NaN, True)
-                                        )
+    assert atan2(0, w).rewrite(atan) == Piecewise((pi, w < 0), (0, w > 0), (S.NaN, True))
 
     ex = atan2(y, x) - arg(x + I*y)
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0
