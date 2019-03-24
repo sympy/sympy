@@ -433,13 +433,17 @@ def test_piecewise_simplify():
             (2*x, And(Eq(a, 0), Eq(y, 0))),
             (2, And(Eq(a, 1), Eq(y, 0))),
             (0, True))
-    assert Piecewise((2, And(Eq(x, 2), Ge(y,0))), (x, True)).simplify() == \
-        Piecewise((2, And(Eq(x, 2), Ge(y,0))), (x, True))
-    assert Piecewise((2+y, And(Eq(x, 2), Eq(y, 0))), (x, True)).simplify() == x
-    assert Piecewise((1, Eq(x, 0)), (sin(x)/x, True)).simplify() == \
-        Piecewise((1, Eq(x, 0)), (sin(x)/x, True))
-    assert Piecewise((1, Eq(x, 0)), (sin(x) + 1 + x, True)).simplify() == \
-        x + sin(x) + 1
+    args = (2, And(Eq(x, 2), Ge(y ,0))), (x, True)
+    assert Piecewise(*args).simplify() == Piecewise(*args)
+    args = (1, Eq(x, 0)), (sin(x)/x, True)
+    assert Piecewise(*args).simplify() == Piecewise(*args)
+    assert Piecewise((2 + y, And(Eq(x, 2), Eq(y, 0))), (x, True)
+        ).simplify() == x
+    # check that x or f(x) are recognized as being Symbol-like for lhs
+    args = Tuple((1, Eq(x, 0)), (sin(x) + 1 + x, True))
+    ans = x + sin(x) + 1
+    assert Piecewise(*args).simplify() == ans
+    assert Piecewise(*args.subs(x, f(x))).simplify() == ans.subs(x, f(x))
 
 
 def test_piecewise_solve():
