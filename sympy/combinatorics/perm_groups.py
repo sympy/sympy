@@ -1661,7 +1661,9 @@ class PermutationGroup(Basic):
         False
 
         """
-        return self == self.derived_subgroup()
+        if self._is_perfect is None:
+            self._is_perfect = self == self.derived_subgroup()
+        return self._is_perfect
 
     @property
     def is_abelian(self):
