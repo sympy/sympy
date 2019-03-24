@@ -442,6 +442,7 @@ def test_piecewise_simplify():
     # check that x or f(x) are recognized as being Symbol-like for lhs
     args = Tuple((1, Eq(x, 0)), (sin(x) + 1 + x, True))
     ans = x + sin(x) + 1
+    f = Function('f')
     assert Piecewise(*args).simplify() == ans
     assert Piecewise(*args.subs(x, f(x))).simplify() == ans.subs(x, f(x))
 
