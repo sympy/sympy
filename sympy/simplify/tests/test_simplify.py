@@ -434,7 +434,15 @@ def test_logcombine_1():
     a = Symbol("a")
     z, w = symbols("z,w", positive=True)
     b = Symbol("b", real=True)
+
+    # a single unknown can combine
     assert logcombine(log(x) + log(2)) == log(2*x)
+
+    eq = log(abs(x)) + log(abs(y))
+    assert logcombine(eq) == eq
+    reps = {x: 0, y: 0}
+    assert log(abs(x)*abs(y)).subs(reps) != eq.subs(reps)
+
     assert logcombine(log(x) + 2*log(y)) == log(x) + 2*log(y)
     assert logcombine(log(x) + 2*log(y), force=True) == log(x*y**2)
     assert logcombine(a*log(w) + log(z)) == a*log(w) + log(z)
