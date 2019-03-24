@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Symbol
 from sympy.core.basic import as_Basic
 from sympy.core.compatibility import range
-from sympy.core.function import UndefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.relational import (Equality, Unequality, Relational,
     _canonical)
@@ -325,6 +324,9 @@ class Piecewise(Function):
     def _eval_simplify(self, ratio, measure, rational, inverse):
         args = [a._eval_simplify(ratio, measure, rational, inverse)
             for a in self.args]
+        _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and \
+            getattr(e.rhs, '_diff_wrt', isinstance(e.rhs, (
+            Rational, NumberSymbol))
         for i, (expr, cond) in enumerate(args):
             # try to simplify conditions and the expression for
             # equalities that are part of the condition, e.g.
@@ -342,10 +344,7 @@ class Piecewise(Function):
                 for j, e in enumerate(eqs):
                     # these blessed lhs objects behave like Symbols
                     # and the rhs are simple replacements for the "symbols"
-                    if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
-                        isinstance(e.rhs,
-                            (Rational, NumberSymbol,
-                            Symbol, UndefinedFunction)):
+                    if _blessed(e):
                         expr = expr.subs(*e.args)
                         eqs[j + 1:] = [ei.subs(*e.args) for ei in eqs[j + 1:]]
                         other = [ei.subs(*e.args) for ei in other]
@@ -371,10 +370,7 @@ class Piecewise(Function):
                     for e in eqs:
                         # these blessed lhs objects behave like Symbols
                         # and the rhs are simple replacements for the "symbols"
-                        if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
-                            isinstance(e.rhs,
-                                (Rational, NumberSymbol,
-                                Symbol, UndefinedFunction)):
+                        if _blessed(e):
                             _prevexpr = _prevexpr.subs(*e.args)
                             _expr = _expr.subs(*e.args)
                 # Did it evaluate to the same?
