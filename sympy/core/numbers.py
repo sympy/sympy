@@ -1013,6 +1013,7 @@ class Float(Number):
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, precision, rnd)
         elif isinstance(num, string_types):
+            num = num.replace('_','')
             _mpf_ = mlib.from_str(num, precision, rnd)
         elif isinstance(num, decimal.Decimal):
             if num.is_finite():
