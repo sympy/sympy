@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Several methods to simplify expressions involving unit objects.
 """

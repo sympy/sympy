@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from sympy import S
 from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
                                    reidemeister_presentation, FpSubgroup,

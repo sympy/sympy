@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from sympy import (Abs, Add, Basic, Function, Number, Rational, S, Symbol,
     diff, exp, integrate, log, sin, sqrt, symbols)
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,

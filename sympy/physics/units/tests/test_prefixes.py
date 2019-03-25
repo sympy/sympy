@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from sympy import symbols, log, Mul, Symbol, S
 from sympy.physics.units import Quantity, Dimension, length
 from sympy.physics.units.prefixes import PREFIXES, Prefix, prefix_unit, kilo, \
