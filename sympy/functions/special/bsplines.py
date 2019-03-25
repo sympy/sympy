@@ -5,7 +5,7 @@ from sympy.core.compatibility import range
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.sets.sets import Interval
 
-from functools import lru_cache
+from sympy.core.cache import lru_cache
 
 
 def _add_splines(c, b1, d, b2):
@@ -134,7 +134,7 @@ def bspline_basis(d, knots, n, x):
     .. [1] https://en.wikipedia.org/wiki/B-spline
 
     """
-    knots = [sympify(k) for k in knots]
+    knots = tuple(sympify(k) for k in knots)
     d = int(d)
     n = int(n)
     n_knots = len(knots)
@@ -256,7 +256,7 @@ def interpolating_spline(d, x, X, Y):
 
     knots = [X[0]] * (d + 1) + list(interior_knots) + [X[-1]] * (d + 1)
 
-    basis = bspline_basis_set(d, knots, x)
+    basis = bspline_basis_set(d, tuple(knots), x)
 
     A = [[b.subs(x, v) for b in basis] for v in X]
 
