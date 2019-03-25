@@ -159,89 +159,89 @@ def solve_generic(polys, opt):
     >>> solve_generic([a, b], NewOption)
     [(0, 0), (1/4, -1/16)]
     """
-    def _is_univariate(f):
-        """Returns True if 'f' is univariate in its last variable. """
-        for monom in f.monoms():
-            if any(m for m in monom[:-1]):
-                return False
 
-        return True
+    def _gens_in_expr(f, gens):
+        """Return the set of variables in gens that are present in f. """
+        return set.intersection(set(f.free_symbols), set(gens))
 
-    def _subs_root(f, gen, zero):
-        """Replace generator with a root so that the result is nice. """
-        p = f.as_expr({gen: zero})
+    def _is_constant(f, gens):
+        """Return True, if the polynomial f is constant in variables in gens. """
+        return len(_gens_in_expr(f, gens)) == 0
 
-        if f.degree(gen) >= 2:
-            p = p.expand(deep=False)
+    def _is_univariate(f, gens):
+        """Return True, if the polynomial f is univariate in variables in gens. """
+        return len(_gens_in_expr(f, gens)) == 1
 
-        return p
+    def _eliminate(system, gens):
+        """
+        Recursively execute the elimination phase of the algorithm.
+        Polynomials in gbasis are expected to be sorted by the number of
+        variables in descending order.
+        """
 
-    def _solve_reduced_system(system, gens, entry=False):
-        """Recursively solves reduced polynomial systems. """
-        if len(system) == len(gens) == 1:
-            zeros = list(roots(system[0], gens[-1]).keys())
-            return [ (zero,) for zero in zeros ]
+        """Remove polynomials from system that are constant in variables in gens. """
+        const_poly = set(filter(lambda h: _is_constant(h, gens), system))
+        system = system - const_poly
 
-        basis = groebner(system, gens, polys=True)
-
-        if len(basis) == 1 and basis[0].is_ground:
-            if not entry:
+        """Check if all constant polynomials are satisfiable. """
+        for p in const_poly:
+            p = p.as_expr()
+            if p.simplify() != 0:
                 return []
-            else:
-                return None
 
-        univariate = list(filter(_is_univariate, basis))
+        """If there are no variables left to eliminate, we have reached the bottom of recursion. """
+        if len(gens) == 0:
+            return [[]]
 
-        if len(univariate) == 1:
-            f = univariate.pop()
-        else:
+        """If there are no polynomials in the system, the values for the variables in gens can be
+        chosen freely. """
+        if len(system) == 0:
             raise NotImplementedError(filldedent('''
                 only zero-dimensional systems supported
                 (finite number of solutions)
                 '''))
 
-        gens = f.gens
-        gen = gens[-1]
+        """Get univariate polynomials from the system. """
+        univariate_poly = list(filter(lambda h: _is_univariate(h, gens), system))
+        if len(univariate_poly) == 0:
+            raise NotImplementedError(filldedent('''
+                only zero-dimensional systems supported
+                (finite number of solutions)
+                '''))
 
-        zeros = list(roots(f.ltrim(gen)).keys())
+        """Let f be the polynomial we shall solve in this step.
+        Let gen be the variable that we shall eliminate in this step. """
+        f = univariate_poly[0]
+        gen = _gens_in_expr(f, gens).pop()
 
-        if not zeros:
-            return []
+        """Find roots of polynomial f. """
+        zeros = list(roots(f, gen).keys())
 
-        if len(basis) == 1:
-            return [ (zero,) for zero in zeros ]
-
+        """Substitute the roots into the system and recursively eliminate. """
         solutions = []
-
         for zero in zeros:
-            new_system = []
-            new_gens = gens[:-1]
+            new_system = { g.subs(gen, zero) for g in system }
+            new_gens = gens - set([gen])
 
-            for b in basis[:-1]:
-                eq = _subs_root(b, gen, zero)
+            rec_solutions = _eliminate(new_system, new_gens)
+            solutions = solutions + [ sol + [(gen, zero)] for sol in rec_solutions ]
 
-                if eq is not S.Zero:
-                    new_system.append(eq)
-
-            for solution in _solve_reduced_system(new_system, new_gens):
-                solutions.append(solution + (zero,))
-
-        if solutions and len(solutions[0]) != len(gens):
-            raise NotImplementedError(filldedent('''
-                only zero-dimensional systems supported
-                (finite number of solutions)
-                '''))
         return solutions
 
+    def _solve_reduced_system(system, gens):
+        """Recursively solves reduced polynomial systems. """
+
+        gbasis = groebner(system, gens, polys=True, order='lex')
+        return _eliminate(set(gbasis), set(gens))
+
     try:
-        result = _solve_reduced_system(polys, opt.gens, entry=True)
+        solutions = _solve_reduced_system(polys, opt.gens)
     except CoercionFailed:
         raise NotImplementedError
 
-    if result is not None:
-        return sorted(result, key=default_sort_key)
-    else:
-        return None
+    dict_result = [ dict(sol) for sol in solutions ]
+    tuples_result = [ tuple( sol[x] for x in opt.gens ) for sol in dict_result ]
+    return sorted(tuples_result, key=default_sort_key)
 
 
 def solve_triangulated(polys, *gens, **args):
