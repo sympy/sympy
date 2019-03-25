@@ -2,7 +2,7 @@ from sympy.core import symbols
 from sympy.utilities.pytest import raises
 
 from sympy.matrices import ShapeError, MatrixSymbol
-from sympy.matrices.expressions import HadamardProduct, hadamard_product
+from sympy.matrices.expressions import (HadamardProduct, hadamard_product, HadamardPower, hadamard_power)
 
 n, m, k = symbols('n,m,k')
 Z = MatrixSymbol('Z', n, n)
@@ -55,3 +55,16 @@ def test_hadamard():
     assert hadamard_product(A, B).doit() == hadamard_product(A, B)
     with raises(ShapeError):
         hadamard_product(A, C)
+
+
+def test_hadamard_power():
+    m, n, p = symbols('m, n, p', integer=True)
+    A = MatrixSymbol('A', m, n)
+    B = MatrixSymbol('B', m, n)
+    C = MatrixSymbol('C', m, p)
+
+    assert hadamard_power(A, 1) == A
+    assert isinstance(hadamard_power(A, 2), HadamardPower)
+    assert hadamard_power(A, n).T == hadamard_power(A.T, n)
+    assert hadamard_power(A, n)[0, 0] == A[0, 0]**n
+    assert hadamard_power(m, n) == m**n

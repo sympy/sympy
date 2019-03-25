@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Mul, sympify
+from sympy.core import Mul, sympify, Pow
 from sympy.strategies import unpack, flatten, condition, exhaust, do_one
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
@@ -81,3 +81,43 @@ rules = (unpack,
 
 canonicalize = exhaust(condition(lambda x: isinstance(x, HadamardProduct),
                                  do_one(*rules)))
+
+
+def hadamard_power(base, exp):
+    if exp == 1:
+        return base
+    if not base.is_Matrix:
+        return base**exp
+    return HadamardPower(base, exp)
+
+
+class HadamardPower(MatrixExpr):
+    """
+    Elementwise power of matrix expressions
+    """
+
+    def __new__(cls, base, exp):
+        base = sympify(base)
+        exp = sympify(exp)
+        obj = super(HadamardPower, cls).__new__(cls, base, exp)
+        return obj
+
+    @property
+    def base(self):
+        return self._args[0]
+
+    @property
+    def exp(self):
+        return self._args[1]
+
+    @property
+    def shape(self):
+        return self.base.shape
+
+    def _entry(self, i, j, **kwargs):
+        return self.base[i, j]**self.exp
+        return Pow(self.base[i, j], self.exp)
+
+    def _eval_transpose(self):
+        from sympy.matrices.expressions.transpose import transpose
+        return HadamardPower(transpose(self.base), self.exp)
