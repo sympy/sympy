@@ -926,6 +926,3 @@ def test_perfect():
     assert G.is_perfect == False
     G = AlternatingGroup(5)
     assert G.is_perfect == True
-    a = Permutation(1)
-    G = PermutationGroup([a])
-    assert G.is_perfect == True
