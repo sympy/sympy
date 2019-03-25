@@ -1561,13 +1561,14 @@ def test_lambert_multivariate():
     raises(NotImplementedError, lambda: solve(x - sin(x)*log(y - x), x))
 
     x0 = 1/log(a)
-    x1 = a**(-5)
-    x2 = LambertW(S(1)/3)
+    x1 = LambertW(S(1)/3)
+    x2 = a**(-5)
     x3 = 3**(S(1)/3)
-    x4 = 3**(S(5)/6)*I
-    x5 = x1**(S(1)/3)*x2**(S(1)/3)*S(1)/2
+    x4 = 3**(5/6)*I
+    x5 = x1**(1/3)*x2**(1/3)/2
     ans = solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x)
-    assert ans == [x0*(log(x1) + log(3*x2))/3, x0*log(-x5*(x3 - x4)), x0*log(-x5*(x3 + x4))]
+    assert ans == [
+        x0*log(3*x1*x2)/3, x0*log(-x5*(x3 - x4)), x0*log(-x5*(x3 + x4))]
 
     # check collection
     K = ((b + 3)*LambertW(1/(b + 3))/a**5)**(S(1)/3)
