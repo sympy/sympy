@@ -950,6 +950,7 @@ class Expr(Basic, EvalfMixin):
             return conjugate(self)
         elif self.is_antihermitian:
             return -conjugate(self)
+        return self
 
     def transpose(self):
         from sympy.functions.elementary.complexes import transpose

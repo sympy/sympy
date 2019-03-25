@@ -22,16 +22,19 @@ def test_applyfunc_matrix():
     assert isinstance(expr, ElementwiseApplyFunction)
     assert expr.doit() == Xd.applyfunc(lambda x: x**2)
     assert expr.shape == (3, 3)
+    assert expr.func(*expr.args) == expr
 
     expr = ElementwiseApplyFunction(double, X)
     assert isinstance(expr, ElementwiseApplyFunction)
     assert isinstance(expr.doit(), ElementwiseApplyFunction)
     assert expr == X.applyfunc(double)
+    assert expr.func(*expr.args) == expr
 
     expr = ElementwiseApplyFunction(exp, X*Y)
     assert expr.expr == X*Y
     assert expr.function == exp
     assert expr == (X*Y).applyfunc(exp)
+    assert expr.func(*expr.args) == expr
 
     assert isinstance(X*expr, MatMul)
     assert (X*expr).shape == (3, 3)
@@ -52,6 +55,7 @@ def test_applyfunc_matrix():
     assert expr.expr == M
     assert expr.doit() == M.applyfunc(sin)
     assert expr.doit() == Matrix([[sin(x), sin(y)], [sin(z), sin(t)]])
+    assert expr.func(*expr.args) == expr
 
     expr = ElementwiseApplyFunction(double, Xk)
     assert expr.doit() == expr
