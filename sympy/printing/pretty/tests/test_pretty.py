@@ -19,7 +19,8 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
     meijerg, sin, sqrt, subfactorial, tan, uppergamma, lerchphi,
-    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta)
+    elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta, bell,
+    bernoulli, fibonacci, tribonacci, lucas)
 
 from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerProduct
 
@@ -38,7 +39,7 @@ from sympy.tensor.tensor import (TensorIndexType, tensor_indices, tensorhead,
 
 from sympy.utilities.pytest import raises, XFAIL
 
-from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross
+from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
 
 
@@ -1560,6 +1561,90 @@ C \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = catalan(n)
+    ascii_str = \
+"""\
+C \n\
+ n\
+"""
+    ucode_str = \
+u("""\
+C \n\
+ n\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = bell(n)
+    ascii_str = \
+"""\
+B \n\
+ n\
+"""
+    ucode_str = \
+u("""\
+B \n\
+ n\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = bernoulli(n)
+    ascii_str = \
+"""\
+B \n\
+ n\
+"""
+    ucode_str = \
+u("""\
+B \n\
+ n\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = fibonacci(n)
+    ascii_str = \
+"""\
+F \n\
+ n\
+"""
+    ucode_str = \
+u("""\
+F \n\
+ n\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = lucas(n)
+    ascii_str = \
+"""\
+L \n\
+ n\
+"""
+    ucode_str = \
+u("""\
+L \n\
+ n\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = tribonacci(n)
+    ascii_str = \
+"""\
+T \n\
+ n\
+"""
+    ucode_str = \
+u("""\
+T \n\
+ n\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
     expr = conjugate(x)
     ascii_str = \
 """\
@@ -2054,51 +2139,48 @@ def test_pretty_product():
     unicode_str = \
 u("""\
     l           \n\
-┬────────┬      \n\
-│        │  ⎛ 2⎞\n\
-│        │  ⎜n ⎟\n\
-│        │ f⎜──⎟\n\
-│        │  ⎝9 ⎠\n\
-│        │      \n\
+─┬──────┬─      \n\
+ │      │   ⎛ 2⎞\n\
+ │      │   ⎜n ⎟\n\
+ │      │  f⎜──⎟\n\
+ │      │   ⎝9 ⎠\n\
+ │      │       \n\
        2        \n\
   n = k         """)
     ascii_str = \
 """\
     l           \n\
 __________      \n\
-|        |  / 2\\\n\
-|        |  |n |\n\
-|        | f|--|\n\
-|        |  \\9 /\n\
-|        |      \n\
+ |      |   / 2\\\n\
+ |      |   |n |\n\
+ |      |  f|--|\n\
+ |      |   \\9 /\n\
+ |      |       \n\
        2        \n\
   n = k         """
-
-    assert pretty(expr) == ascii_str
-    assert upretty(expr) == unicode_str
 
     expr = Product(f((n/3)**2), (n, k**2, l), (l, 1, m))
 
     unicode_str = \
 u("""\
     m          l           \n\
-┬────────┬ ┬────────┬      \n\
-│        │ │        │  ⎛ 2⎞\n\
-│        │ │        │  ⎜n ⎟\n\
-│        │ │        │ f⎜──⎟\n\
-│        │ │        │  ⎝9 ⎠\n\
-│        │ │        │      \n\
+─┬──────┬─ ─┬──────┬─      \n\
+ │      │   │      │   ⎛ 2⎞\n\
+ │      │   │      │   ⎜n ⎟\n\
+ │      │   │      │  f⎜──⎟\n\
+ │      │   │      │   ⎝9 ⎠\n\
+ │      │   │      │       \n\
   l = 1           2        \n\
              n = k         """)
     ascii_str = \
 """\
     m          l           \n\
 __________ __________      \n\
-|        | |        |  / 2\\\n\
-|        | |        |  |n |\n\
-|        | |        | f|--|\n\
-|        | |        |  \\9 /\n\
-|        | |        |      \n\
+ |      |   |      |   / 2\\\n\
+ |      |   |      |   |n |\n\
+ |      |   |      |  f|--|\n\
+ |      |   |      |   \\9 /\n\
+ |      |   |      |       \n\
   l = 1           2        \n\
              n = k         """
 
@@ -5514,19 +5596,19 @@ u("""\
            2
 /  2      \\ \n\
 |______   | \n\
-||    |  2| \n\
-||    | x | \n\
-||    |   | \n\
+| |  |   2| \n\
+| |  |  x | \n\
+| |  |    | \n\
 \\x = 1    / \
 """
     assert upretty(Product(x**2, (x, 1, 2))**2) == \
 u("""\
            2
 ⎛  2      ⎞ \n\
-⎜┬────┬   ⎟ \n\
-⎜│    │  2⎟ \n\
-⎜│    │ x ⎟ \n\
-⎜│    │   ⎟ \n\
+⎜─┬──┬─   ⎟ \n\
+⎜ │  │   2⎟ \n\
+⎜ │  │  x ⎟ \n\
+⎜ │  │    ⎟ \n\
 ⎝x = 1    ⎠ \
 """)
 
@@ -6183,6 +6265,7 @@ def test_vector_expr_pretty_printing():
     assert upretty(Dot(A.i, A.x*A.i+3*A.y*A.j)) == u("(A_i)⋅((A_x) A_i + (3⋅A_y) A_j)")
 
     assert upretty(Gradient(A.x+3*A.y)) == u("∇(A_x + 3⋅A_y)")
+    assert upretty(Laplacian(A.x+3*A.y)) == u("∆(A_x + 3⋅A_y)")
     # TODO: add support for ASCII pretty.
 
 

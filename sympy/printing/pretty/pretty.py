@@ -20,9 +20,9 @@ from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_variety
 
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
-from sympy.printing.pretty.pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
-    pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek_unicode, U, \
-    annotated
+from sympy.printing.pretty.pretty_symbology import xstr, hobj, vobj, xobj, \
+    xsym, pretty_symbol, pretty_atom, pretty_use_unicode, greek_unicode, U, \
+    pretty_try_use_unicode,  annotated
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
@@ -139,6 +139,14 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left('('))
         pform = prettyForm(*pform.right(')'))
         pform = prettyForm(*pform.left(self._print(U('NABLA'))))
+        return pform
+
+    def _print_Laplacian(self, e):
+        func = e._expr
+        pform = self._print(func)
+        pform = prettyForm(*pform.left('('))
+        pform = prettyForm(*pform.right(')'))
+        pform = prettyForm(*pform.left(self._print(U('INCREMENT'))))
         return pform
 
     def _print_Atom(self, e):
@@ -491,10 +499,9 @@ class PrettyPrinter(Printer):
 
         for lim in expr.limits:
             width = (func_height + 2) * 5 // 3 - 2
-            sign_lines = []
-            sign_lines.append(corner_chr + (horizontal_chr*width) + corner_chr)
-            for i in range(func_height + 1):
-                sign_lines.append(vertical_chr + (' '*width) + vertical_chr)
+            sign_lines = [horizontal_chr + corner_chr + (horizontal_chr * (width-2)) + corner_chr + horizontal_chr]
+            for _ in range(func_height + 1):
+                sign_lines.append(' ' + vertical_chr + (' ' * (width-2)) + vertical_chr + ' ')
 
             pretty_sign = stringPict('')
             pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
@@ -2258,6 +2265,40 @@ class PrettyPrinter(Printer):
 
     def _print_catalan(self, e):
         pform = prettyForm("C")
+        arg = self._print(e.args[0])
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
+        pform = prettyForm(*pform.right(pform_arg))
+        return pform
+
+    def _print_bernoulli(self, e):
+        pform = prettyForm("B")
+        arg = self._print(e.args[0])
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
+        pform = prettyForm(*pform.right(pform_arg))
+        return pform
+
+    _print_bell = _print_bernoulli
+
+    def _print_lucas(self, e):
+        pform = prettyForm("L")
+        arg = self._print(e.args[0])
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
+        pform = prettyForm(*pform.right(pform_arg))
+        return pform
+
+    def _print_fibonacci(self, e):
+        pform = prettyForm("F")
+        arg = self._print(e.args[0])
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
+        pform = prettyForm(*pform.right(pform_arg))
+        return pform
+
+    def _print_tribonacci(self, e):
+        pform = prettyForm("T")
         arg = self._print(e.args[0])
         pform_arg = prettyForm(" "*arg.width())
         pform_arg = prettyForm(*pform_arg.below(arg))

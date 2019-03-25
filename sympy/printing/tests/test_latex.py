@@ -31,6 +31,8 @@ from sympy.tensor.array import (ImmutableDenseNDimArray,
 from sympy.tensor.array import tensorproduct
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
+from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
+    fibonacci, tribonacci
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
@@ -39,7 +41,7 @@ from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
 from sympy import MatrixSymbol, ln
-from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
+from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 from sympy.sets.setexpr import SetExpr
 
 import sympy as sym
@@ -245,6 +247,11 @@ def test_latex_vector_expressions():
     assert latex(x*Gradient(A.x)) == r"x \left(\nabla \mathbf{{x}_{A}}\right)"
     assert latex(Gradient(x*A.x)) == r"\nabla \left(\mathbf{{x}_{A}} x\right)"
 
+    assert latex(Laplacian(A.x)) == r"\triangle \mathbf{{x}_{A}}"
+    assert latex(Laplacian(A.x + 3*A.y)) == \
+        r"\triangle \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
+    assert latex(x*Laplacian(A.x)) == r"x \left(\triangle \mathbf{{x}_{A}}\right)"
+    assert latex(Laplacian(x*A.x)) == r"\triangle \left(\mathbf{{x}_{A}} x\right)"
 
 def test_latex_symbols():
     Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
@@ -1311,7 +1318,16 @@ def test_settings():
 def test_latex_numbers():
     assert latex(catalan(n)) == r"C_{n}"
     assert latex(catalan(n)**2) == r"C_{n}^{2}"
-
+    assert latex(bernoulli(n)) == r"B_{n}"
+    assert latex(bernoulli(n)**2) == r"B_{n}^{2}"
+    assert latex(bell(n)) == r"B_{n}"
+    assert latex(bell(n)**2) == r"B_{n}^{2}"
+    assert latex(fibonacci(n)) == r"F_{n}"
+    assert latex(fibonacci(n)**2) == r"F_{n}^{2}"
+    assert latex(lucas(n)) == r"L_{n}"
+    assert latex(lucas(n)**2) == r"L_{n}^{2}"
+    assert latex(tribonacci(n)) == r"T_{n}"
+    assert latex(tribonacci(n)**2) == r"T_{n}^{2}"
 
 def test_latex_euler():
     assert latex(euler(n)) == r"E_{n}"

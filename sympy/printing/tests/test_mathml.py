@@ -12,6 +12,8 @@ from sympy.calculus.util import AccumBounds
 from sympy.core.containers import Tuple
 from sympy.functions.combinatorial.factorials import factorial, factorial2, \
     binomial
+from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
+    fibonacci, tribonacci, catalan
 from sympy.functions.elementary.complexes import re, im, Abs, conjugate
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.integers import floor, ceiling
@@ -26,10 +28,9 @@ from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, \
     SymmetricDifference, Interval, EmptySet
 from sympy.stats.rv import RandomSymbol
 from sympy.utilities.pytest import raises
-from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient
+from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 
-x = Symbol('x')
-y = Symbol('y')
+x, y, z, a, b, c, d, e, n = symbols('x:z a:e n')
 mp = MathMLContentPrinter()
 mpp = MathMLPresentationPrinter()
 
@@ -289,7 +290,7 @@ def test_content_mathml_relational():
 
 
 def test_content_symbol():
-    mml = mp._print(Symbol("x"))
+    mml = mp._print(x)
     assert mml.nodeName == 'ci'
     assert mml.childNodes[0].nodeValue == 'x'
     del mml
@@ -479,7 +480,7 @@ def test_content_mathml_order():
 
 
 def test_content_settings():
-    raises(TypeError, lambda: mathml(Symbol("x"), method="garbage"))
+    raises(TypeError, lambda: mathml(x, method="garbage"))
 
 
 def test_presentation_printmethod():
@@ -553,7 +554,6 @@ def test_presentation_mathml_functions():
 
 def test_print_derivative():
     f = Function('f')
-    z = Symbol('z')
     d = Derivative(f(x, y, z), x, z, x, z, z, y)
     assert mathml(d) == \
         '<apply><partialdiff/><bvar><ci>y</ci><ci>z</ci><degree><cn>2</cn></degree><ci>x</ci><ci>z</ci><ci>x</ci></bvar><apply><f/><ci>x</ci><ci>y</ci><ci>z</ci></apply></apply>'
@@ -785,7 +785,7 @@ def test_presentation_mathml_relational():
 
 
 def test_presentation_symbol():
-    mml = mpp._print(Symbol("x"))
+    mml = mpp._print(x)
     assert mml.nodeName == 'mi'
     assert mml.childNodes[0].nodeValue == 'x'
     del mml
@@ -971,7 +971,6 @@ def test_print_intervals():
 
 
 def test_print_tuples():
-    a = Symbol('a')
     assert mpp.doprint(Tuple(0,)) == \
         '<mrow><mfenced><mn>0</mn></mfenced></mrow>'
     assert mpp.doprint(Tuple(0, a)) == \
@@ -986,7 +985,6 @@ def test_print_tuples():
 
 
 def test_print_re_im():
-    x = Symbol('x')
     assert mpp.doprint(re(x)) == \
         '<mrow><mi mathvariant="fraktur">R</mi><mfenced><mi>x</mi></mfenced></mrow>'
     assert mpp.doprint(im(x)) == \
@@ -999,7 +997,6 @@ def test_print_re_im():
 
 
 def test_print_Abs():
-    x = Symbol('x')
     assert mpp.doprint(Abs(x)) == \
         '<mrow><mfenced close="|" open="|"><mi>x</mi></mfenced></mrow>'
     assert mpp.doprint(Abs(x + 1)) == \
@@ -1012,7 +1009,7 @@ def test_print_Determinant():
 
 
 def test_presentation_settings():
-    raises(TypeError, lambda: mathml(Symbol("x"), printer='presentation',
+    raises(TypeError, lambda: mathml(x, printer='presentation',
                                      method="garbage"))
 
 
@@ -1353,6 +1350,22 @@ def test_print_MinMax():
         '<mn>3</mn></msup></mfenced></mrow>'
 
 
+def test_mathml_presentation_numbers():
+    n = Symbol('n')
+    assert mathml(catalan(n), printer='presentation') == \
+        '<msub><mi>C</mi><mi>n</mi></msub>'
+    assert mathml(bernoulli(n), printer='presentation') == \
+        '<msub><mi>B</mi><mi>n</mi></msub>'
+    assert mathml(bell(n), printer='presentation') == \
+        '<msub><mi>B</mi><mi>n</mi></msub>'
+    assert mathml(fibonacci(n), printer='presentation') == \
+        '<msub><mi>F</mi><mi>n</mi></msub>'
+    assert mathml(lucas(n), printer='presentation') == \
+        '<msub><mi>L</mi><mi>n</mi></msub>'
+    assert mathml(tribonacci(n), printer='presentation') == \
+        '<msub><mi>T</mi><mi>n</mi></msub>'
+
+
 def test_print_matrix_symbol():
     A = MatrixSymbol('A', 1, 2)
     assert mpp.doprint(A) == '<mi>A</mi>'
@@ -1370,7 +1383,6 @@ def test_print_random_symbol():
 
 
 def test_print_IndexedBase():
-    a, b, c, d, e = symbols('a b c d e')
     assert mathml(IndexedBase(a)[b], printer='presentation') == \
         '<msub><mi>a</mi><mi>b</mi></msub>'
     assert mathml(IndexedBase(a)[b, c, d], printer='presentation') == \
@@ -1382,7 +1394,6 @@ def test_print_IndexedBase():
 
 
 def test_print_Indexed():
-    a, b, c = symbols('a b c')
     assert mathml(IndexedBase(a), printer='presentation') == '<mi>a</mi>'
     assert mathml(IndexedBase(a/b), printer='presentation') == \
         '<mrow><mfrac><mi>a</mi><mi>b</mi></mfrac></mrow>'
@@ -1533,90 +1544,90 @@ def test_print_Vector():
         '<mrow><mo>-</mo><mrow><msub><mi mathvariant="bold">x</mi>'\
         '<mi mathvariant="bold">A</mi></msub><mo>&#xD7;</mo><msub>'\
         '<mi mathvariant="bold">z</mi><mi mathvariant="bold">A</mi></msub></mrow></mrow>'
+    assert mathml(Laplacian(ACS.x), printer='presentation') == \
+        '<mrow><mo>&#x2206;</mo><msub><mi mathvariant="bold">x</mi>'\
+        '<mi mathvariant="bold">A</mi></msub></mrow>'
+    assert mathml(Laplacian(ACS.x + 3*ACS.y), printer='presentation') == \
+        '<mrow><mo>&#x2206;</mo><mfenced><mrow><msub><mi mathvariant="bold">'\
+        'x</mi><mi mathvariant="bold">A</mi></msub><mo>+</mo><mrow><mn>3</mn>'\
+        '<mo>&InvisibleTimes;</mo><msub><mi mathvariant="bold">y</mi>'\
+        '<mi mathvariant="bold">A</mi></msub></mrow></mrow></mfenced></mrow>'
+    assert mathml(x*Laplacian(ACS.x), printer='presentation') == \
+        '<mrow><mi>x</mi><mo>&InvisibleTimes;</mo><mrow><mo>&#x2206;</mo>'\
+        '<msub><mi mathvariant="bold">x</mi><mi mathvariant="bold">A</mi>'\
+        '</msub></mrow></mrow>'
+    assert mathml(Laplacian(x*ACS.x), printer='presentation') == \
+        '<mrow><mo>&#x2206;</mo><mfenced><mrow><msub><mi mathvariant="bold">'\
+        'x</mi><mi mathvariant="bold">A</mi></msub><mo>&InvisibleTimes;</mo>'\
+        '<mi>x</mi></mrow></mfenced></mrow>'
 
 def test_print_elliptic_f():
-    x, y = symbols('x y')
     assert mathml(elliptic_f(x, y), printer = 'presentation') == \
         '<mrow><mi>&#x1d5a5;</mi><mfenced separators="|"><mi>x</mi><mi>y</mi></mfenced></mrow>'
     assert mathml(elliptic_f(x/y, y), printer = 'presentation') == \
         '<mrow><mi>&#x1d5a5;</mi><mfenced separators="|"><mrow><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow><mi>y</mi></mfenced></mrow>'
 
 def test_print_elliptic_e():
-    x, y = symbols('x y')
     assert mathml(elliptic_e(x), printer = 'presentation') == \
         '<mrow><mi>&#x1d5a4;</mi><mfenced separators="|"><mi>x</mi></mfenced></mrow>'
     assert mathml(elliptic_e(x, y), printer = 'presentation') == \
         '<mrow><mi>&#x1d5a4;</mi><mfenced separators="|"><mi>x</mi><mi>y</mi></mfenced></mrow>'
 
 def test_print_elliptic_pi():
-    x, y, z = symbols('x y z')
     assert mathml(elliptic_pi(x, y), printer = 'presentation') == \
         '<mrow><mi>&#x1d6f1;</mi><mfenced separators="|"><mi>x</mi><mi>y</mi></mfenced></mrow>'
     assert mathml(elliptic_pi(x, y, z), printer = 'presentation') == \
         '<mrow><mi>&#x1d6f1;</mi><mfenced separators=";|"><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow>'
 
 def test_print_Ei():
-    x, y = symbols('x y')
     assert mathml(Ei(x), printer = 'presentation') == \
         '<mrow><mi>Ei</mi><mfenced><mi>x</mi></mfenced></mrow>'
     assert mathml(Ei(x**y), printer = 'presentation') == \
         '<mrow><mi>Ei</mi><mfenced><msup><mi>x</mi><mi>y</mi></msup></mfenced></mrow>'
 
 def test_print_expint():
-    x, y = symbols('x y')
     assert mathml(expint(x, y), printer = 'presentation') == \
         '<mrow><msub><mo>E</mo><mi>x</mi></msub><mfenced><mi>y</mi></mfenced></mrow>'
     assert mathml(expint(IndexedBase(x)[1], IndexedBase(x)[2]), printer = 'presentation') == \
         '<mrow><msub><mo>E</mo><msub><mi>x</mi><mn>1</mn></msub></msub><mfenced><msub><mi>x</mi><mn>2</mn></msub></mfenced></mrow>'
 
 def test_print_jacobi():
-    n, a, b, x = symbols('n a b x')
     assert mathml(jacobi(n, a, b, x), printer = 'presentation') == \
         '<mrow><msubsup><mo>P</mo><mi>n</mi><mfenced><mi>a</mi><mi>b</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
 
 def test_print_gegenbauer():
-    n, a, x = symbols('n a x')
     assert mathml(gegenbauer(n, a, x), printer = 'presentation') == \
         '<mrow><msubsup><mo>C</mo><mi>n</mi><mfenced><mi>a</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
 
 def test_print_chebyshevt():
-    n, x = symbols('n x')
     assert mathml(chebyshevt(n, x), printer = 'presentation') == \
         '<mrow><msub><mo>T</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
 
 def test_print_chebyshevu():
-    n, x = symbols('n x')
     assert mathml(chebyshevu(n, x), printer = 'presentation') == \
         '<mrow><msub><mo>U</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
 
 def test_print_legendre():
-    n, x = symbols('n x')
     assert mathml(legendre(n, x), printer = 'presentation') == \
         '<mrow><msub><mo>P</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
 
 def test_print_assoc_legendre():
-    n, a, x = symbols('n a x')
     assert mathml(assoc_legendre(n, a, x), printer = 'presentation') == \
         '<mrow><msubsup><mo>P</mo><mi>n</mi><mfenced><mi>a</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
 
 def test_print_laguerre():
-    n, x = symbols('n x')
     assert mathml(laguerre(n, x), printer = 'presentation') == \
         '<mrow><msub><mo>L</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
 
 def test_print_assoc_laguerre():
-    n, a, x = symbols('n a x')
     assert mathml(assoc_laguerre(n, a, x), printer = 'presentation') == \
         '<mrow><msubsup><mo>L</mo><mi>n</mi><mfenced><mi>a</mi></mfenced></msubsup><mfenced><mi>x</mi></mfenced></mrow>'
 
 def test_print_hermite():
-    n, x = symbols('n x')
     assert mathml(hermite(n, x), printer = 'presentation') == \
         '<mrow><msub><mo>H</mo><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
 
 def test_mathml_SingularityFunction():
-    a = Symbol('a')
-    n = Symbol('n')
     assert mathml(SingularityFunction(x, 4, 5), printer='presentation') == \
         '<msup><mfenced close="&#10217;" open="&#10216;"><mrow><mi>x</mi>' \
         '<mo>-</mo><mn>4</mn></mrow></mfenced><mn>5</mn></msup>'

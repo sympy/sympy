@@ -3066,7 +3066,7 @@ class TensMul(TensExpr, AssocOp):
 
     @staticmethod
     def _tensMul_contract_indices(args, replace_indices=True):
-        replacements = [{} for arg in args]
+        replacements = [{} for _ in args]
 
         #_index_order = all([_has_index_order(arg) for arg in args])
 

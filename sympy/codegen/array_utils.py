@@ -689,8 +689,7 @@ def _codegen_array_parse(expr):
                 subexpr = CodegenArrayDiagonal(subexpr.expr, *diagonal_indices)
             else:
                 subexpr = subexpr.expr
-        else:
-            subindices = subindices
+
         axes_contraction = defaultdict(list)
         for i, ind in enumerate(subindices):
             if ind in summation_indices:
