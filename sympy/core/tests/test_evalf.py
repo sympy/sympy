@@ -545,7 +545,7 @@ def test_issue_11151():
     assert evalf(e, 15, {}) == \
         evalf(z, 15, {}) == (None, None, 15, None)
     # so this shouldn't fail
-    assert (e/2).n() == 0 
+    assert (e/2).n() == 0
     # this was where the issue appeared
     expr0 = Sum(x**2 + x, (x, 1, 2))
     expr1 = Sum(0, (x, 1, 2))
