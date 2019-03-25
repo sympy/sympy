@@ -161,6 +161,7 @@ def test_powdenest():
     from sympy import powdenest
     from sympy.abc import x, y, z, a, b
     p, q = symbols('p q', positive=True)
+    pf, qf = symbols('pf qf', positive=True, finite=True)
     i, j = symbols('i,j', integer=True, finite=True)
 
     assert powdenest(x) == x
@@ -181,7 +182,7 @@ def test_powdenest():
     assert powdenest(((x**(2*a/3))**(3*y/i))**x) == \
         (((x**(2*a/3))**(3*y/i))**x)
     assert powdenest((x**(2*i)*y**(4*i))**z, force=True) == (x*y**2)**(2*i*z)
-    assert powdenest((p**(2*i)*q**(4*i))**j) == (p*q**2)**(2*i*j)
+    assert powdenest((pf**(2*i)*qf**(4*i))**j) == (pf*qf**2)**(2*i*j)
     e = ((p**(2*a))**(3*y))**x
     assert powdenest(e) == e
     e = ((x**2*y**4)**a)**(x*y)
@@ -196,7 +197,8 @@ def test_powdenest():
     x, y = symbols('x,y', positive=True)
     assert powdenest((x**2*y**6)**i) == (x*y**3)**(2*i)
 
-    assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**(S(4)/3)*y)**(i**2)
+    xf, yf = symbols('xf yf', positive=True, finite=True)
+    assert powdenest((xf**(2*i/3)*yf**(i/2))**(2*i)) == (xf**(S(4)/3)*yf)**(i**2)
     assert powdenest(sqrt(x**(2*i)*y**(6*i))) == (x*y**3)**i
 
     assert powdenest(4**x) == 2**(2*x)
