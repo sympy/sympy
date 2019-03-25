@@ -1109,14 +1109,18 @@ def test_Pow_is_even_odd():
 
 def test_Pow_is_negative_positive():
     r = Symbol('r', real=True)
+    rf = Symbol('r', real=True, finite=True)
 
     k = Symbol('k', integer=True, positive=True)
-    n = Symbol('n', even=True)
-    m = Symbol('m', odd=True)
+    # I shouldn't need to declare these as finite:
+    # https://github.com/sympy/sympy/issues/16432
+    n = Symbol('n', even=True, finite=True)
+    m = Symbol('m', odd=True, finite=True)
 
     x = Symbol('x')
 
-    assert (2**r).is_positive is True
+    assert (2**r).is_positive is None
+    assert (2**rf).is_positive is True
     assert ((-2)**r).is_positive is None
     assert ((-2)**n).is_positive is True
     assert ((-2)**m).is_positive is False
@@ -1124,7 +1128,8 @@ def test_Pow_is_negative_positive():
     assert (k**2).is_positive is True
     assert (k**(-2)).is_positive is True
 
-    assert (k**r).is_positive is True
+    assert (k**r).is_positive is None
+    assert (k**rf).is_positive is True
     assert ((-k)**r).is_positive is None
     assert ((-k)**n).is_positive is True
     assert ((-k)**m).is_positive is False
@@ -1171,11 +1176,14 @@ def test_Pow_is_zero():
 
 def test_Pow_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
+    xf = Symbol('xf', real=True, finite=True)
 
     k = Symbol('k', integer=True, nonnegative=True)
     l = Symbol('l', integer=True, positive=True)
-    n = Symbol('n', even=True)
-    m = Symbol('m', odd=True)
+    # finite=True is needed due to:
+    # https://github.com/sympy/sympy/issues/16432
+    n = Symbol('n', even=True, finite=True)
+    m = Symbol('m', odd=True, finite=True)
 
     assert (x**(4*k)).is_nonnegative is True
     assert (2**x).is_nonnegative is True
@@ -1189,12 +1197,14 @@ def test_Pow_is_nonpositive_nonnegative():
 
     assert (k**x).is_nonnegative is None    # NOTE (0**x).is_real = U
     assert (l**x).is_nonnegative is True
-    assert (l**x).is_positive is True
+    assert (l**x).is_positive is None
+    assert (l**xf).is_positive is True
     assert ((-k)**x).is_nonnegative is None
 
     assert ((-k)**m).is_nonnegative is None
 
-    assert (2**x).is_nonpositive is False
+    assert (2**x).is_nonpositive is None
+    assert (2**xf).is_nonpositive is False
     assert ((-2)**x).is_nonpositive is None
     assert ((-2)**n).is_nonpositive is False
     assert ((-2)**m).is_nonpositive is True

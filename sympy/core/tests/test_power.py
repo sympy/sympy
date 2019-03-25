@@ -325,15 +325,8 @@ def test_pow_iszero():
     ci = Symbol('ci', negative=True)
     di = Symbol('di', nonpositive=True)
 
-    # af**wi should be None - becomes False later though...
-    # af**xi, af**ai, af**bi, af**ci, af**di same
-
-    # bf**bf cannot be zero but b1**b2 with same assumptions can...
-    # bi**bi same...
-
     # ai**wf should be None - becomes False later though...
-    # ai**xf, ai**yf, ai**cf, ai**df, ai**wi, ai**xi, ai**yi, ai**ai, ai**bi,
-    # ai**ci, ai**di same
+    # ai**xf, ai**yf, ai**cf, ai**df
 
     pow_iszero_sym = [
         ['**',zf,wf,xf,yf,af,bf,cf,df,zi,wi,xi,yi,ai,bi,ci,di],
@@ -341,7 +334,7 @@ def test_pow_iszero():
         [  wf, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
         [  xf, N, N, N, N, N, N, F, N, N, N, N, N, N, N, N, N],
         [  yf, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
-        [  af, F, F, F, F, F, F, F, F, N, F, F, F, F, F, F, F],
+        [  af, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
         [  bf, N, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N],
         [  cf, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
         [  df, N, N, N, N, N, N, F, N, N, N, N, N, N, N, N, N],
@@ -349,7 +342,7 @@ def test_pow_iszero():
         [  wi, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
         [  xi, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
         [  yi, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
-        [  ai, N, F, F, F, F, F, F, F, N, F, F, F, F, F, F, F],
+        [  ai, N, F, F, F, F, F, F, F, N, N, N, N, F, N, N, N],
         [  bi, N, N, N, N, N, N, N, N, N, N, N, N, N, F, N, N],
         [  ci, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
         [  di, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
@@ -357,6 +350,18 @@ def test_pow_iszero():
 
 
     test_table(pow_iszero_sym)
+
+    # bf**bf cannot be zero but b1**b2 with same assumptions can...
+    # bi**bi and ai**ai same...
+    bf1, bf2 = symbols('bf1 bf2', nonnegative=True, finite=True)
+    bi1, bi2 = symbols('bi1 bi2', nonnegative=True)
+    ai1, ai2 = symbols('ai1 ai2', positive=True)
+    assert (bf1**bf1).is_zero is False
+    assert (bf1**bf2).is_zero is None
+    assert (bi1**bi1).is_zero is False
+    assert (bi1**bi2).is_zero is None
+    assert (ai1**ai1).is_zero is False
+    assert (ai1**ai2).is_zero is None
 
 
 def test_issue_6100_12942():
