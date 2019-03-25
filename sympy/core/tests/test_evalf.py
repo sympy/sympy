@@ -539,10 +539,29 @@ def test_issue_14601():
 
 
 def test_issue_11151():
+    e=Sum(0,(x,1,2))
+    array1=[]
+    array2=[]
+    array1.append(evalf.evalf(e, 15, {}))
+    array2.append(evalf.evalf(S(0), 15, {}))
+    assert array1 == array2
+
+
+def test_issue_11151_1():
     expr0 = Sum(a**2+a,(a,1,2))
     expr1 = Sum(0,(a,1,2))
     expr2 = expr1/expr0
     expr3 = factor(expr2)
     expr4 = expr3-expr2
     expr5 = simplify(expr4)
-    assert expr5 == 0 
+    assert expr5 == 0
+
+
+def test_issue_11151_2():
+   z = S.Zero
+   e = Sum(z, (a, 1, 2))
+   assert e != z  # it shouldn't evaluate
+   # when it does evaluate, this is what it should give
+   assert evalf.evalf(e, 15, {}) == evalf.evalf(z, 15, {}) == (None, None, 15, None)
+   # so this shouldn't fail
+   assert (e/2).n() == 0 
