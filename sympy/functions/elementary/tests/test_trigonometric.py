@@ -906,7 +906,8 @@ def test_atan2():
     w = Symbol('w')
 
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
-    assert atan2(y, x).rewrite(atan) == Piecewise((2*atan(y/(sqrt(x**2+y**2) + x)), Ne(y, 0)), (pi, And(Lt(x, 0), Eq(y, 0))), (0, And(Eq(y, 0), Gt(x, 0))), (S.NaN, True))
+    from sympy.logic.boolalg import And
+    from sympy.core.relational import Ne, Lt, Eq, Gt
     assert atan2(0, 0).rewrite(atan) == S.NaN
     assert atan2(0, w).rewrite(atan) == Piecewise((pi, w < 0), (0, w > 0), (S.NaN, True))
 
