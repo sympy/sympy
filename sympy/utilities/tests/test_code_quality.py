@@ -279,7 +279,7 @@ def test_files():
 
                 try:
                     line.encode(encoding='ascii')
-                except UnicodeEncodeError:
+                except (UnicodeEncodeError, UnicodeDecodeError):
                     has_unicode = True
                     if has_coding_utf8 is False:
                         assert False, message_py2_unicode_whitelisted % \
@@ -297,7 +297,7 @@ def test_files():
 
                 try:
                     line.encode(encoding='ascii')
-                except UnicodeEncodeError:
+                except (UnicodeEncodeError, UnicodeDecodeError):
                     assert False, \
                         message_py2_unicode_not_whitelisted % (fname, idx + 1)
 
