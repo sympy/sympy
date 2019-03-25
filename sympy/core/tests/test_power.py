@@ -325,9 +325,6 @@ def test_pow_iszero():
     ci = Symbol('ci', negative=True)
     di = Symbol('di', nonpositive=True)
 
-    # ai**wf should be None - becomes False later though...
-    # ai**xf, ai**yf, ai**cf, ai**df
-
     pow_iszero_sym = [
         ['**',zf,wf,xf,yf,af,bf,cf,df,zi,wi,xi,yi,ai,bi,ci,di],
         [  zf, N, N, N, N, N, N, F, N, N, N, N, N, N, N, N, N],
@@ -342,12 +339,11 @@ def test_pow_iszero():
         [  wi, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
         [  xi, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
         [  yi, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
-        [  ai, N, F, F, F, F, F, F, F, N, N, N, N, F, N, N, N],
+        [  ai, N, N, N, N, F, F, N, N, N, N, N, N, F, N, N, N],
         [  bi, N, N, N, N, N, N, N, N, N, N, N, N, N, F, N, N],
         [  ci, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
         [  di, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
     ]
-
 
     test_table(pow_iszero_sym)
 

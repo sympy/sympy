@@ -1111,9 +1111,9 @@ def test_Pow_is_negative_positive():
     r = Symbol('r', real=True)
     rf = Symbol('r', real=True, finite=True)
 
-    k = Symbol('k', integer=True, positive=True)
     # I shouldn't need to declare these as finite:
     # https://github.com/sympy/sympy/issues/16432
+    k = Symbol('k', integer=True, positive=True, finite=True)
     n = Symbol('n', even=True, finite=True)
     m = Symbol('m', odd=True, finite=True)
 
@@ -1179,9 +1179,9 @@ def test_Pow_is_nonpositive_nonnegative():
     xf = Symbol('xf', real=True, finite=True)
 
     k = Symbol('k', integer=True, nonnegative=True)
-    l = Symbol('l', integer=True, positive=True)
     # finite=True is needed due to:
     # https://github.com/sympy/sympy/issues/16432
+    l = Symbol('l', integer=True, positive=True, finite=True)
     n = Symbol('n', even=True, finite=True)
     m = Symbol('m', odd=True, finite=True)
 

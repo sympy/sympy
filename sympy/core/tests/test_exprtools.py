@@ -430,8 +430,9 @@ def test_monotonic_sign():
     p = Dummy(nonpositive=True)
     assert F(p/(-p + 1)).is_nonpositive
 
-    p = Dummy(positive=True, integer=True)
-    q = Dummy(positive=True, integer=True)
+    # Shouldn't need to declare finite with integer...
+    p = Dummy(positive=True, integer=True, finite=True)
+    q = Dummy(positive=True, integer=True, finite=True)
     assert F(-2/p/q).is_negative
     assert F(-2/(p - 1)/q) is None
 
