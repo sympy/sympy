@@ -1,7 +1,7 @@
-from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp,
+from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
     integrate, log, Mul, N, oo, pi, Pow, product, Product,
-    Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
+    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath)
 from mpmath import inf, ninf
@@ -9,7 +9,7 @@ from mpmath.libmp.libmpf import from_float
 from sympy.core.compatibility import long, range
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core import evalf
-from sympy.abc import n, x, y
+from sympy.abc import n, x, y, a
 
 
 def NS(e, n=15, **options):
@@ -539,9 +539,10 @@ def test_issue_14601():
 
 
 def test_issue_11151():
-    e=Sum(0,(x,1,2))
-    array1=[]
-    array2=[]
-    array1.append(evalf.evalf(e, 15, {}))
-    array2.append(evalf.evalf(S(0), 15, {}))
-    assert array1 == array2
+    expr0 = Sum(a**2+a,(a,1,2))
+    expr1 = Sum(0,(a,1,2))
+    expr2 = expr1/expr0
+    expr3 = factor(expr2)
+    expr4 = expr3-expr2
+    expr5 = simplify(expr4)
+    assert expr5 == 0 
