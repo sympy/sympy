@@ -463,6 +463,12 @@ def test_logcombine_1():
     assert logcombine(3*log(w) + 3*log(z)) == log(w**3*z**3)
     assert logcombine(x*(y + 1) + log(2) + log(3)) == x*(y + 1) + log(6)
     assert logcombine((x + y)*log(w) + (-x - y)*log(3)) == (x + y)*log(w/3)
+    # a single unknown can combine
+    assert logcombine(log(x) + log(2)) == log(2*x)
+    eq = log(abs(x)) + log(abs(y))
+    assert logcombine(eq) == eq
+    reps = {x: 0, y: 0}
+    assert log(abs(x)*abs(y)).subs(reps) != eq.subs(reps)
 
 
 def test_logcombine_complex_coeff():
