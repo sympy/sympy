@@ -1825,7 +1825,7 @@ class Beam3D(Beam):
         """
         Returns expression of Azimuthal shear force present inside the Beam object.
         """
-        return self.shear_force()[2]        
+        return self.shear_force()[2]
 
     def bending_moment(self):
         """
@@ -1928,3 +1928,4 @@ class Beam3D(Beam):
         the three axes.
         """
         return self._deflection
+
