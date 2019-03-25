@@ -626,6 +626,9 @@ class log(Function):
         elif arg.is_Rational:
             return log(arg.p) - log(arg.q)
         elif arg.is_Mul:
+            from sympy import srepr
+            print(srepr(self))
+            import pdb; pdb.set_trace()
             expr = []
             nonpos = []
             for x in arg.args:

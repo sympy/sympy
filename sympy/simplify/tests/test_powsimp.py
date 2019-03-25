@@ -161,7 +161,7 @@ def test_powdenest():
     from sympy import powdenest
     from sympy.abc import x, y, z, a, b
     p, q = symbols('p q', positive=True)
-    i, j = symbols('i,j', integer=True)
+    i, j = symbols('i,j', integer=True, finite=True)
 
     assert powdenest(x) == x
     assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == (x + 2*(x**(2*a/3))**(3*x))
@@ -169,7 +169,6 @@ def test_powdenest():
     assert powdenest((x**(2*a/3))**(3*x)) == ((x**(2*a/3))**(3*x))
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p
-    i, j = symbols('i,j', integer=True)
     eq = p**(2*i)*q**(4*i)
     assert powdenest(eq) == (p*q**2)**(2*i)
     # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
