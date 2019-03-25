@@ -694,12 +694,8 @@ def test_checking():
 def test_issue_4671_4463_4467():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
-    # This is probably better than the form below but equivalent:
-    #assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [-sqrt(x*log(1 + I*pi/log(2)))
-    #                                                    , sqrt(x*log(1 + I*pi/log(2)))]
     assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [
-         sqrt(x*(log((log(2) + I*pi)/log(2)))),
-        -sqrt(-x*(log((log(2) + I*pi)/log(2))))]
+        -sqrt(x*log(1 + I*pi/log(2))), sqrt(x*log(1 + I*pi/log(2)))]
 
     C1, C2 = symbols('C1 C2')
     f = Function('f')
