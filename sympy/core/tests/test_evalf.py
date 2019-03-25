@@ -3,12 +3,11 @@ from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     integrate, log, Mul, N, oo, pi, Pow, product, Product,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
-    scaled_zero, get_integer_part, as_mpmath)
+    scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
 from sympy.core.compatibility import long, range
 from sympy.utilities.pytest import raises, XFAIL
-from sympy.core import evalf
 from sympy.abc import n, x, y
 
 
@@ -543,8 +542,8 @@ def test_issue_11151():
     e = Sum(z, (x, 1, 2))
     assert e != z  # it shouldn't evaluate
     # when it does evaluate, this is what it should give
-    assert evalf.evalf(e, 15, {}) == \
-        evalf.evalf(z, 15, {}) == (None, None, 15, None)
+    assert evalf(e, 15, {}) == \
+        evalf(z, 15, {}) == (None, None, 15, None)
     # so this shouldn't fail
     assert (e/2).n() == 0 
     # this was where the issue appeared
