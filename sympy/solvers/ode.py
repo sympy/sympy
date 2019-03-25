@@ -237,7 +237,7 @@ from itertools import islice
 from functools import cmp_to_key
 
 from sympy.core import Add, S, Mul, Pow, oo
-from sympy.core.compatibility import ordered, iterable, is_sequence, range
+from sympy.core.compatibility import ordered, iterable, is_sequence, range, string_types
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import AtomicExpr, Expr
@@ -263,7 +263,7 @@ from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, denom, posify, cse
+    simplify, trigsimp, posify, cse
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const
 from sympy.solvers import solve
@@ -4384,7 +4384,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     chareq, symbol = S.Zero, Dummy('x')
 
     for i in r.keys():
-        if not isinstance(i, str) and i >= 0:
+        if not isinstance(i, string_types) and i >= 0:
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
@@ -4500,7 +4500,7 @@ def ode_nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients(eq, func, o
     chareq, eq, symbol = S.Zero, S.Zero, Dummy('x')
 
     for i in r.keys():
-        if not isinstance(i, str) and i >= 0:
+        if not isinstance(i, string_types) and i >= 0:
             chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     for i in range(1,degree(Poly(chareq, symbol))+1):
@@ -6763,7 +6763,7 @@ def lie_heuristic_linear(match, comp=False):
 
     coeffdict = {}
     symbols = numbered_symbols("c", cls=Dummy)
-    symlist = [next(symbols) for i in islice(symbols, 6)]
+    symlist = [next(symbols) for _ in islice(symbols, 6)]
     C0, C1, C2, C3, C4, C5 = symlist
     pde = C3 + (C4 - C0)*h -(C0*x + C1*y + C2)*hx - (C3*x + C4*y + C5)*hy - C1*h**2
     pde, denom = pde.as_numer_denom()

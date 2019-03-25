@@ -307,7 +307,7 @@ class tribonacci(Function):
     r"""
     Tribonacci numbers / Tribonacci polynomials
 
-    The Tibonacci numbers are the integer sequence defined by the
+    The Tribonacci numbers are the integer sequence defined by the
     initial terms `T_0 = 0`, `T_1 = 1`, `T_2 = 1` and the three-term
     recurrence relation `T_n = T_{n-1} + T_{n-2} + T_{n-3}`.
 
@@ -360,13 +360,11 @@ class tribonacci(Function):
         if n.is_Integer:
             n = int(n)
             if n < 0:
-                raise NotImplementedError
+                raise ValueError("Tribonacci polynomials are defined "
+                       "only for non-negative integer indices.")
             if sym is None:
                 return Integer(cls._trib(n))
             else:
-                if n < 0:
-                    raise ValueError("Tribonacci polynomials are defined "
-                       "only for non-negative integer indices.")
                 return cls._tribpoly(n).subs(_sym, sym)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):

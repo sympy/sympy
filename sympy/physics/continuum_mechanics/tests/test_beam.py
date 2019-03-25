@@ -489,7 +489,6 @@ def test_max_deflection():
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
 
 
-@slow
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')
     R1, R2, R3, R4 = symbols('R1, R2, R3, R4')

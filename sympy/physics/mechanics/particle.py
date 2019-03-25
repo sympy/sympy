@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.backend import sympify
+from sympy.core.compatibility import string_types
 from sympy.physics.vector import Point
 
 __all__ = ['Particle']
@@ -39,7 +40,7 @@ class Particle(object):
     """
 
     def __init__(self, name, point, mass):
-        if not isinstance(name, str):
+        if not isinstance(name, string_types):
             raise TypeError('Supply a valid name.')
         self._name = name
         self.mass = mass

@@ -116,6 +116,8 @@ class Add(Expr, AssocOp):
                         # e.g. 3 + ...
         order_factors = []
 
+        extra = []
+
         for o in seq:
 
             # O(x)
@@ -133,12 +135,12 @@ class Add(Expr, AssocOp):
             # 3 or NaN
             elif o.is_Number:
                 if (o is S.NaN or coeff is S.ComplexInfinity and
-                        o.is_finite is False):
+                        o.is_finite is False) and not extra:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 if coeff.is_Number:
                     coeff += o
-                    if coeff is S.NaN:
+                    if coeff is S.NaN and not extra:
                         # we know for sure the result will be nan
                         return [S.NaN], [], None
                 continue
@@ -149,7 +151,7 @@ class Add(Expr, AssocOp):
 
             elif isinstance(o, MatrixExpr):
                 # can't add 0 to Matrix so make sure coeff is not 0
-                coeff = o.__add__(coeff) if coeff else o
+                extra.append(o)
                 continue
 
             elif isinstance(o, TensExpr):
@@ -157,7 +159,7 @@ class Add(Expr, AssocOp):
                 continue
 
             elif o is S.ComplexInfinity:
-                if coeff.is_finite is False:
+                if coeff.is_finite is False and not extra:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
                 coeff = S.ComplexInfinity
@@ -196,7 +198,7 @@ class Add(Expr, AssocOp):
             # 2*x**2 + 3*x**2  ->  5*x**2
             if s in terms:
                 terms[s] += c
-                if terms[s] is S.NaN:
+                if terms[s] is S.NaN and not extra:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
             else:
@@ -275,6 +277,10 @@ class Add(Expr, AssocOp):
         # current code expects coeff to be first
         if coeff is not S.Zero:
             newseq.insert(0, coeff)
+
+        if extra:
+            newseq += extra
+            noncommutative = True
 
         # we are done
         if noncommutative:
@@ -415,7 +421,7 @@ class Add(Expr, AssocOp):
             reps = {
                 S.Infinity: oo,
                 S.NegativeInfinity: -oo}
-            ireps = dict([(v, k) for k, v in reps.items()])
+            ireps = {v: k for k, v in reps.items()}
             eq = expand_mul(lhs.xreplace(reps) - rhs.xreplace(reps))
             if eq.has(oo):
                 eq = eq.replace(

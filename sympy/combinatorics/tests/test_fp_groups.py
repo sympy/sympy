@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 from sympy import S
 from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
-                                   reidemeister_presentation, FpSubgroup)
-from sympy.combinatorics.free_groups import free_group
+                                   reidemeister_presentation, FpSubgroup,
+                                           simplify_presentation)
+from sympy.combinatorics.free_groups import (free_group, FreeGroup)
 
 from sympy.utilities.pytest import slow
 
@@ -224,3 +224,9 @@ def test_permutation_methods():
     assert len(G.derived_series()) == 3
     S = FpSubgroup(G, G.derived_subgroup())
     assert S.order() == 4
+
+def test_simplify_presentation():
+    # ref #16083
+    G = simplify_presentation(FpGroup(FreeGroup([]), []))
+    assert not G.generators
+    assert not G.relators

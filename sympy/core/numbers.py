@@ -147,10 +147,10 @@ def _decimal_to_Rational_prec(dec):
     return rv, prec
 
 
+_floatpat = regex.compile(r"[-+]?((\d*\.\d+)|(\d+\.?))")
 def _literal_float(f):
-    """Return True if n can be interpreted as a floating point number."""
-    pat = r"[-+]?((\d*\.\d+)|(\d+\.?))(eE[-+]?\d+)?"
-    return bool(regex.match(pat, f))
+    """Return True if n starts like a floating point number."""
+    return bool(_floatpat.match(f))
 
 # (a,b) -> gcd(a,b)
 
@@ -3141,7 +3141,7 @@ class NaN(with_metaclass(Singleton, Number)):
         return AtomicExpr.__new__(cls)
 
     def _latex(self, printer):
-        return r"\mathrm{NaN}"
+        return r"\text{NaN}"
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -3585,7 +3585,7 @@ class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
     __slots__ = []
 
     def _latex(self, printer):
-        return r"\mathrm{TribonacciConstant}"
+        return r"\text{TribonacciConstant}"
 
     def __int__(self):
         return 2

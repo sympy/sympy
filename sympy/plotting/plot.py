@@ -24,12 +24,11 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 
 from __future__ import print_function, division
 
-import inspect
 import warnings
-import sys
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
+from sympy.core.function import arity
 from sympy.core.compatibility import range, Callable
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
@@ -56,16 +55,6 @@ def unset_show():
 ##############################################################################
 # The public interface
 ##############################################################################
-
-def _arity(f):
-    """
-    Python 2 and 3 compatible version that do not raise a Deprecation warning.
-    """
-    if sys.version_info < (3,):
-        return len(inspect.getargspec(f)[0])
-    else:
-       param = inspect.signature(f).parameters.values()
-       return len([p for p in param if p.kind == p.POSITIONAL_OR_KEYWORD])
 
 
 class Plot(object):
@@ -406,15 +395,15 @@ class Line2DBaseSeries(BaseSeries):
         c = self.line_color
         if hasattr(c, '__call__'):
             f = np.vectorize(c)
-            arity = _arity(c)
-            if arity == 1 and self.is_parametric:
+            nargs = arity(c)
+            if nargs == 1 and self.is_parametric:
                 x = self.get_parameter_points()
                 return f(centers_of_segments(x))
             else:
                 variables = list(map(centers_of_segments, self.get_points()))
-                if arity == 1:
+                if nargs == 1:
                     return f(variables[0])
-                elif arity == 2:
+                elif nargs == 2:
                     return f(*variables[:2])
                 else:  # only if the line is 3D (otherwise raises an error)
                     return f(*variables)
@@ -750,17 +739,17 @@ class SurfaceBaseSeries(BaseSeries):
         c = self.surface_color
         if isinstance(c, Callable):
             f = np.vectorize(c)
-            arity = _arity(c)
+            nargs = arity(c)
             if self.is_parametric:
                 variables = list(map(centers_of_faces, self.get_parameter_meshes()))
-                if arity == 1:
+                if nargs == 1:
                     return f(variables[0])
-                elif arity == 2:
+                elif nargs == 2:
                     return f(*variables)
             variables = list(map(centers_of_faces, self.get_meshes()))
-            if arity == 1:
+            if nargs == 1:
                 return f(variables[0])
-            elif arity == 2:
+            elif nargs == 2:
                 return f(*variables[:2])
             else:
                 return f(*variables)

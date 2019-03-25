@@ -92,7 +92,6 @@ def test_multiple_normal():
     assert variance(X, Eq(X + Y, 0)) == S.Half
 
 
-@slow
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, finite=True)
     s1, s2 = symbols('sigma1 sigma2', real=True, finite=True, positive=True)
@@ -363,6 +362,20 @@ def test_f_distribution():
     X = FDistribution("x", d1, d2)
     assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
                              /(x*beta(d1/2, d2/2)))
+
+    d1 = Symbol("d1", positive=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d1))
+
+    d1 = Symbol("d1", positive=True, integer=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d1))
+
+    d1 = Symbol("d1", positive=True)
+    d2 = Symbol("d2", positive=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d2))
+
+    d2 = Symbol("d2", positive=True, integer=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d2))
+
 
 def test_fisher_z():
     d1 = Symbol("d1", positive=True)

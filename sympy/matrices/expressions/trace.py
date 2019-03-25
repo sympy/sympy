@@ -19,6 +19,7 @@ class Trace(Expr):
     Trace(A)
     """
     is_Trace = True
+    is_commutative = True
 
     def __new__(cls, mat):
         mat = sympify(mat)

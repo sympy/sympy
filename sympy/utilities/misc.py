@@ -7,7 +7,8 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from sympy.core.compatibility import get_function_name, range, as_int
+from sympy.core.compatibility import (get_function_name, range, as_int,
+    string_types)
 
 
 
@@ -24,13 +25,71 @@ def filldedent(s, w=70):
 
     Empty line stripping serves to deal with docstrings like this one that
     start with a newline after the initial triple quote, inserting an empty
-    line at the beginning of the string."""
+    line at the beginning of the string.
+
+    See Also
+    ========
+    strlines, rawlines
+    """
     return '\n' + fill(dedent(str(s)).strip('\n'), width=w)
+
+
+def strlines(s, c=64, short=False):
+    """Return a cut-and-pastable string that, when printed, is
+    equivalent to the input.  The lines will be surrounded by
+    parentheses and no line will be longer than c (default 64)
+    characters. If the line contains newlines characters, the
+    `rawlines` result will be returned.  If ``short`` is True
+    (default is False) then if there is one line it will be
+    returned without bounding parentheses.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.misc import strlines
+    >>> q = 'this is a long string that should be broken into shorter lines'
+    >>> print(strlines(q, 40))
+    (
+    'this is a long string that should be b'
+    'roken into shorter lines'
+    )
+    >>> q == (
+    ... 'this is a long string that should be b'
+    ... 'roken into shorter lines'
+    ... )
+    True
+
+    See Also
+    ========
+    filldedent, rawlines
+    """
+    if type(s) not in string_types:
+        raise ValueError('expecting string input')
+    if '\n' in s:
+        return rawlines(s)
+    q = '"' if repr(s).startswith('"') else "'"
+    q = (q,)*2
+    if '\\' in s:  # use r-string
+        m = '(\nr%s%%s%s\n)' % q
+        j = '%s\nr%s' % q
+        c -= 3
+    else:
+        m = '(\n%s%%s%s\n)' % q
+        j = '%s\n%s' % q
+        c -= 2
+    out = []
+    while s:
+        out.append(s[:c])
+        s=s[c:]
+    if short and len(out) == 1:
+        return (m % out[0]).splitlines()[1]  # strip bounding (\n...\n)
+    return m % j.join(out)
 
 
 def rawlines(s):
     """Return a cut-and-pastable string that, when printed, is equivalent
-    to the input. The string returned is formatted so it can be indented
+    to the input. Use this when there is more than one line in the
+    string. The string returned is formatted so it can be indented
     nicely within tests; in some cases it is wrapped in the dedent
     function which has to be imported from textwrap.
 
@@ -82,22 +141,26 @@ def rawlines(s):
         'that\\n'
         '    '
     )
+
+    See Also
+    ========
+    filldedent, strlines
     """
     lines = s.split('\n')
     if len(lines) == 1:
         return repr(lines[0])
     triple = ["'''" in s, '"""' in s]
     if any(li.endswith(' ') for li in lines) or '\\' in s or all(triple):
-        rv = ["("]
+        rv = []
         # add on the newlines
         trailing = s.endswith('\n')
         last = len(lines) - 1
         for i, li in enumerate(lines):
             if i != last or trailing:
-                rv.append(repr(li)[:-1] + '\\n\'')
+                rv.append(repr(li + '\n'))
             else:
                 rv.append(repr(li))
-        return '\n    '.join(rv) + '\n)'
+        return '(\n    %s\n)' % '\n    '.join(rv)
     else:
         rv = '\n    '.join(lines)
         if triple[0]:
@@ -220,7 +283,7 @@ def find_executable(executable, path=None):
 
 
 def func_name(x, short=False):
-    '''Return function name of `x` (if defined) else the `type(x)`.
+    """Return function name of `x` (if defined) else the `type(x)`.
     If short is True and there is a shorter alias for the result,
     return the alias.
 
@@ -228,7 +291,10 @@ def func_name(x, short=False):
     ========
 
     >>> from sympy.utilities.misc import func_name
+    >>> from sympy import Matrix
     >>> from sympy.abc import x
+    >>> func_name(Matrix.eye(3))
+    'MutableDenseMatrix'
     >>> func_name(x < 1)
     'StrictLessThan'
     >>> func_name(x < 1, short=True)
@@ -237,7 +303,7 @@ def func_name(x, short=False):
     See Also
     ========
     sympy.core.compatibility get_function_name
-    '''
+    """
     alias = {
     'GreaterThan': 'Ge',
     'StrictGreaterThan': 'Gt',
@@ -252,6 +318,8 @@ def func_name(x, short=False):
     elif str(typ).startswith("<class '"):
         typ = str(typ).split("'")[1].split("'")[0]
     rv = getattr(getattr(x, 'func', x), '__name__', typ)
+    if '.' in rv:
+        rv = rv.split('.')[-1]
     if short:
         rv = alias.get(rv, rv)
     return rv
@@ -415,7 +483,7 @@ def translate(s, a, b=None, c=None):
         s = replace(s, mr)
         table = maketrans(a, b)
         # s may have become unicode which uses the py3 syntax for translate
-        if type(table) is str and type(s) is str:
+        if isinstance(table, str) and isinstance(s, str):
             s = s.translate(table)
         else:
             s = s.translate(dict(

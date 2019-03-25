@@ -97,7 +97,7 @@ def test_union():
     assert Union(Interval(1, 2), S.EmptySet) == Interval(1, 2)
     assert Union(S.EmptySet) == S.EmptySet
 
-    assert Union(Interval(0, 1), [FiniteSet(1.0/n) for n in range(1, 10)]) == \
+    assert Union(Interval(0, 1), *[FiniteSet(1.0/n) for n in range(1, 10)]) == \
         Interval(0, 1)
 
     assert Interval(1, 2).union(Interval(2, 3)) == \
@@ -143,10 +143,10 @@ def test_union():
 
 def test_union_iter():
     # Use Range because it is ordered
-    u = Union(Range(3), Range(5), Range(3), evaluate=False)
+    u = Union(Range(3), Range(5), Range(4), evaluate=False)
 
     # Round robin
-    assert list(u) == [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 4]
+    assert list(u) == [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
 
 def test_difference():
     assert Interval(1, 3) - Interval(1, 2) == Interval(2, 3, True)
@@ -171,8 +171,8 @@ def test_difference():
 def test_Complement():
     assert Complement(Interval(1, 3), Interval(1, 2)) == Interval(2, 3, True)
     assert Complement(FiniteSet(1, 3, 4), FiniteSet(3, 4)) == FiniteSet(1)
-    assert Complement(Union(Interval(0, 2),
-                            FiniteSet(2, 3, 4)), Interval(1, 3)) == \
+    assert Complement(Union(Interval(0, 2), FiniteSet(2, 3, 4)),
+                      Interval(1, 3)) == \
         Union(Interval(0, 1, False, True), FiniteSet(4))
 
     assert not 3 in Complement(Interval(0, 5), Interval(1, 4), evaluate=False)
@@ -312,9 +312,8 @@ def test_intersection():
     assert (2, 2, 2) not in i
     raises(ValueError, lambda: list(i))
 
-    assert Intersection(Intersection(S.Integers, S.Naturals, evaluate=False),
-                        S.Reals, evaluate=False) == \
-            Intersection(S.Integers, S.Naturals, S.Reals, evaluate=False)
+    a = Intersection(Intersection(S.Integers, S.Naturals, evaluate=False), S.Reals, evaluate=False)
+    assert a._argset == frozenset([Intersection(S.Naturals, S.Integers, evaluate=False), S.Reals])
 
     assert Intersection(S.Complexes, FiniteSet(S.ComplexInfinity)) == S.EmptySet
 
@@ -938,7 +937,10 @@ def test_issue_9637():
     assert Complement(a, Interval(1, 3)) == Complement(a, Interval(1, 3), evaluate=False)
 
 
+
+@XFAIL
 def test_issue_9808():
+    # See https://github.com/sympy/sympy/issues/16342
     assert Complement(FiniteSet(y), FiniteSet(1)) == Complement(FiniteSet(y), FiniteSet(1), evaluate=False)
     assert Complement(FiniteSet(1, 2, x), FiniteSet(x, y, 2, 3)) == \
         Complement(FiniteSet(1), FiniteSet(y), evaluate=False)
@@ -1063,3 +1065,34 @@ def test_issue_11174():
 
     soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
     assert Intersection(FiniteSet(x), S.Reals) == soln
+
+def test_finite_set_intersection():
+    # The following should not produce recursion errors
+    # Note: some of these are not completely correct. See
+    # https://github.com/sympy/sympy/issues/16342.
+    assert Intersection(FiniteSet(-oo, x), FiniteSet(x)) == FiniteSet(x)
+    assert Intersection._handle_finite_sets([FiniteSet(-oo, x), FiniteSet(0, x)]) == FiniteSet(x)
+
+    assert Intersection._handle_finite_sets([FiniteSet(-oo, x), FiniteSet(x)]) == FiniteSet(x)
+    assert Intersection._handle_finite_sets([FiniteSet(2, 3, x, y), FiniteSet(1, 2, x)]) == \
+        Intersection._handle_finite_sets([FiniteSet(1, 2, x), FiniteSet(2, 3, x, y)]) == \
+        Intersection(FiniteSet(1, 2, x), FiniteSet(2, 3, x, y)) == \
+        FiniteSet(1, 2, x)
+
+def test_union_intersection_constructor():
+    # The actual exception does not matter here, so long as these fail
+    sets = [FiniteSet(1), FiniteSet(2)]
+    raises(Exception, lambda: Union(sets))
+    raises(Exception, lambda: Intersection(sets))
+    raises(Exception, lambda: Union(tuple(sets)))
+    raises(Exception, lambda: Intersection(tuple(sets)))
+    raises(Exception, lambda: Union(i for i in sets))
+    raises(Exception, lambda: Intersection(i for i in sets))
+
+    # Python sets are treated the same as FiniteSet
+    # The union of a single set (of sets) is the set (of sets) itself
+    assert Union(set(sets)) == FiniteSet(*sets)
+    assert Intersection(set(sets)) == FiniteSet(*sets)
+
+    assert Union({1}, {2}) == FiniteSet(1, 2)
+    assert Intersection({1, 2}, {2, 3}) == FiniteSet(2)

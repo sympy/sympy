@@ -277,7 +277,8 @@ def test_new_relational():
 
         raises(ValueError, lambda: Relational(x, 1, relation_type))
     assert all(Relational(x, 0, op).rel_op == '==' for op in ('eq', '=='))
-    assert all(Relational(x, 0, op).rel_op == '!=' for op in ('ne', '<>', '!='))
+    assert all(Relational(x, 0, op).rel_op == '!='
+               for op in ('ne', '<>', '!='))
     assert all(Relational(x, 0, op).rel_op == '>' for op in ('gt', '>'))
     assert all(Relational(x, 0, op).rel_op == '<' for op in ('lt', '<'))
     assert all(Relational(x, 0, op).rel_op == '>=' for op in ('ge', '>='))
@@ -600,7 +601,7 @@ def test_simplify_relational():
     # reason for the 'if r.is_Relational' in Relational's
     # _eval_simplify routine
     assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
-        2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
+                    2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
     # canonical at least
     for f in (Eq, Ne):
         f(y, x).simplify() == f(x, y)
@@ -670,6 +671,7 @@ def test_issue_8444_nonworkingtests():
     assert x <= ceiling(x)
     assert (x > ceiling(x)) == False
 
+
 def test_issue_8444_workingtests():
     x = symbols('x')
     assert Gt(x, floor(x)) == Gt(x, floor(x), evaluate=False)
@@ -708,7 +710,6 @@ def test_issue_10401():
     assert Eq(fin/inf, 0) is T
     assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
     assert Eq(inf, -inf) is F
-
 
     assert Eq(fin/(fin + 1), 1) is S.false
 
@@ -750,8 +751,7 @@ def test_issues_13081_12583_12534():
     # Rational(pi.n(p    )).n(25) = 3.14159265358979323846 1987
     assert [p for p in range(20, 50) if
             (Rational(pi.n(p)) < pi) and
-            (pi < Rational(pi.n(p + 1)))
-        ] == [20, 24, 27, 33, 37, 43, 48]
+            (pi < Rational(pi.n(p + 1)))] == [20, 24, 27, 33, 37, 43, 48]
     # pick one such precision and affirm that the reversed operation
     # gives the opposite result, i.e. if x < y is true then x > y
     # must be false
@@ -774,11 +774,9 @@ def test_issues_13081_12583_12534():
     # Float vs Rational
     # the rational form is less than the floating representation
     # at the same precision
-    assert [i for i in range(15, 50) if Rational(pi.n(i)) > pi.n(i)
-        ] == []
+    assert [i for i in range(15, 50) if Rational(pi.n(i)) > pi.n(i)] == []
     # this should be the same if we reverse the relational
-    assert [i for i in range(15, 50) if pi.n(i) < Rational(pi.n(i))
-        ] == []
+    assert [i for i in range(15, 50) if pi.n(i) < Rational(pi.n(i))] == []
 
 
 def test_binary_symbols():
@@ -850,6 +848,7 @@ def test_reversedsign_property():
     for f in (Eq, Ne, Ge, Gt, Le, Lt):
         assert f(-x, -y).reversedsign.reversedsign == f(-x, -y)
 
+
 def test_reversed_reversedsign_property():
     for f in (Eq, Ne, Ge, Gt, Le, Lt):
         assert f(x, y).reversed.reversedsign == f(x, y).reversedsign.reversed
@@ -861,14 +860,19 @@ def test_reversed_reversedsign_property():
         assert f(x, -y).reversed.reversedsign == f(x, -y).reversedsign.reversed
 
     for f in (Eq, Ne, Ge, Gt, Le, Lt):
-        assert f(-x, -y).reversed.reversedsign == f(-x, -y).reversedsign.reversed
+        assert f(-x, -y).reversed.reversedsign == \
+            f(-x, -y).reversedsign.reversed
+
 
 def test_improved_canonical():
     def test_different_forms(listofforms):
         for form1, form2 in combinations(listofforms, 2):
             assert form1.canonical == form2.canonical
+
     def generate_forms(expr):
-        return [expr, expr.reversed, expr.reversedsign, expr.reversed.reversedsign]
+        return [expr, expr.reversed, expr.reversedsign,
+                expr.reversed.reversedsign]
+
     test_different_forms(generate_forms(x > -y))
     test_different_forms(generate_forms(x >= -y))
     test_different_forms(generate_forms(Eq(x, -y)))

@@ -68,7 +68,6 @@ def continuous_domain(f, symbol, domain):
         constrained_interval = domain
         for atom in f.atoms(Pow):
             predicate, denomin = _has_rational_power(atom, symbol)
-            constraint = S.EmptySet
             if predicate and denomin == 2:
                 constraint = solve_univariate_inequality(atom.base >= 0,
                                                          symbol).as_set()
@@ -84,7 +83,6 @@ def continuous_domain(f, symbol, domain):
         domain = constrained_interval
 
     try:
-        sings = S.EmptySet
         if f.has(Abs):
             sings = solveset(1/f, symbol, domain) + \
                 solveset(denom(together(f)), symbol, domain)

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 SI unit system.
 Based on MKSA, which stands for "meter, kilogram, second, ampere".

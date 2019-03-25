@@ -1266,7 +1266,7 @@ def tensor_indices(s, typ):
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     """
-    if isinstance(s, str):
+    if isinstance(s, string_types):
         a = [x.name for x in symbols(s, seq=True)]
     else:
         raise ValueError('expecting a string')
@@ -1502,7 +1502,7 @@ class TensorType(Basic):
         >>> canon_bp(W(a, b)*W(-b, -a))
         0
         """
-        if isinstance(s, str):
+        if isinstance(s, string_types):
             names = [x.name for x in symbols(s, seq=True)]
         else:
             raise ValueError('expecting a string')
@@ -3066,7 +3066,7 @@ class TensMul(TensExpr, AssocOp):
 
     @staticmethod
     def _tensMul_contract_indices(args, replace_indices=True):
-        replacements = [{} for arg in args]
+        replacements = [{} for _ in args]
 
         #_index_order = all([_has_index_order(arg) for arg in args])
 
