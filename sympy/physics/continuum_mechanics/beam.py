@@ -1815,6 +1815,18 @@ class Beam3D(Beam):
         """
         return self.shear_force()[0]
 
+    def radial_force(self):
+        """
+        Returns expression of Radial shear force present inside the Beam object.
+        """
+        return self.shear_force()[1]
+
+    def azimuthal_force(self):
+        """
+        Returns expression of Azimuthal shear force present inside the Beam object.
+        """
+        return self.shear_force()[2]        
+
     def bending_moment(self):
         """
         Returns a list of three expressions which represents the bending moment
