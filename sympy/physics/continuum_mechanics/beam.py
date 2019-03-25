@@ -290,6 +290,12 @@ class Beam(object):
             new_beam._hinge_position = self.length
             return new_beam
 
+    def polar_moment(self,axis=None):
+        if(axis==None or axis=='x'):
+            if isinstance(self._second_moment,int) or isinstance(self._second_moment,Symbol):
+                return 2*self.second_moment
+            return self.second_moment[0]+self.second_moment[1]
+
     def apply_support(self, loc, type="fixed"):
         """
         This method applies support to a particular beam object.

@@ -502,6 +502,7 @@ def test_Beam3D():
     b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     b.solve_slope_deflection()
 
+    assert b.polar_moment()==2*I
     assert b.shear_force() == [0, -q*x, 0]
     assert b.bending_moment() == [0, 0, -m*x + q*x**2/2]
     expected_deflection = (-l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m)
