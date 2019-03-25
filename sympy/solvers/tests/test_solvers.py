@@ -1564,8 +1564,8 @@ def test_lambert_multivariate():
     x1 = LambertW(S(1)/3)
     x2 = a**(-5)
     x3 = 3**(S(1)/3)
-    x4 = 3**(5/6)*I
-    x5 = x1**(1/3)*x2**(1/3)/2
+    x4 = 3**(S(5)/6)*I
+    x5 = x1**(S(1)/3)*x2**(S(1)/3)/2
     ans = solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x)
     assert ans == [
         x0*log(3*x1*x2)/3, x0*log(-x5*(x3 - x4)), x0*log(-x5*(x3 + x4))]
