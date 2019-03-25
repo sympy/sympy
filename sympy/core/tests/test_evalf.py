@@ -11,6 +11,7 @@ from sympy.utilities.pytest import raises, XFAIL
 from sympy.core import evalf
 from sympy.abc import n, x, y
 
+
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
@@ -535,6 +536,12 @@ def test_issue_14601():
     e2 = e.evalf(subs=subst)
     assert float(e2) == 0.0
     assert float((x + x*(x**2 + x)).evalf(subs={x: 0.0})) == 0.0
+
+
 def test_issue_11151():
     e=Sum(0,(x,1,2))
-    assert n.evalf(e,15,{}) == n.evalf(S(0),15,{})
+    array1=[]
+    array2=[]
+    array1.append(evalf.evalf(e, 15, {}))
+    array2.append(evalf.evalf(S(0), 15, {}))
+    assert array1 == array2
