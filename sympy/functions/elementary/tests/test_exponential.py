@@ -455,7 +455,7 @@ def test_polar():
 
 def test_log_product():
     from sympy.abc import n, m
-    i, j = symbols('i,j', positive=True, integer=True)
+    i, j = symbols('i,j', positive=True, integer=True, finite=True)
     x, y = symbols('x,y', positive=True)
     from sympy.concrete import Product, Sum
     f, g = Function('f'), Function('g')
