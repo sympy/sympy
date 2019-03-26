@@ -2430,7 +2430,7 @@ def test_W6():
 
 
 def test_W7():
-    a = symbols('a', real=True, positive=True)
+    a = symbols('a', real=True, positive=True, finite=True)
     r1 = integrate(cos(x)/(x**2 + a**2), (x, -oo, oo))
     assert r1.simplify() == pi*exp(-a)/a
 
@@ -2547,7 +2547,7 @@ def test_W23():
 
 def test_W23b():
     # like W23 but limits are reversed
-    x = symbols('x', real=True, positive=True)
+    x = symbols('x', real=True, positive=True, finite=True)
     y = symbols('y', real=True)
     a, b = symbols('a b', real=True, positive=True)
     r2 = integrate(integrate(x/(x**2 + y**2), (y, -oo, oo)), (x, a, b))
@@ -2864,7 +2864,7 @@ def test_Y2():
     w = symbols('w', real=True)
     s = symbols('s')
     f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
-    assert f == cos(t*w - t)
+    assert f == cos(t*(w - 1))
 
 
 def test_Y3():

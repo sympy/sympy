@@ -300,10 +300,11 @@ def test_solve_univariate_inequality():
     n = Dummy('n')
     raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
     c1 = Dummy("c1", positive=True)
+    c1f = Dummy("c1", positive=True, finite=True)
     raises(NotImplementedError, lambda: isolve(n/c1 < 0, c1))
     n = Dummy('n', negative=True)
     assert isolve(n/c1 > -2, c1) == (-n/2 < c1)
-    assert isolve(n/c1 < 0, c1) == True
+    assert isolve(n/c1f < 0, c1f) == True
     assert isolve(n/c1 > 0, c1) == False
 
     zero = cos(1)**2 + sin(1)**2 - 1

@@ -1904,8 +1904,9 @@ def test_exponential_symbols():
         S.Reals, FiniteSet(log(y)/log(z)))
 
     w = symbols('w')
-    f1 = 2*x**w - 4*y**w
-    f2 = (x/y)**w - 2
+    yf = symbols('y', positive=True, finite=True)
+    f1 = 2*x**w - 4*yf**w
+    f2 = (x/yf)**w - 2
     ans1 = solveset(f1, w, S.Reals)
     ans2 = solveset(f2, w, S.Reals)
     assert ans1 == simplify(ans2)

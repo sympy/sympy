@@ -503,7 +503,7 @@ def test_lognormal():
 
 
 def test_maxwell():
-    a = Symbol("a", positive=True)
+    a = Symbol("a", positive=True, finite=True)
 
     X = Maxwell('x', a)
 
@@ -515,7 +515,7 @@ def test_maxwell():
 
 def test_nakagami():
     mu = Symbol("mu", positive=True)
-    omega = Symbol("omega", positive=True)
+    omega = Symbol("omega", positive=True, finite=True)
 
     X = Nakagami('x', mu, omega)
     assert density(X)(x) == (2*x**(2*mu - 1)*mu**mu*omega**(-mu)
@@ -687,7 +687,9 @@ def test_von_mises():
 
 
 def test_weibull():
-    a, b = symbols('a b', positive=True)
+    # simplify(E(X)) seems to hang without the finite=True
+    # On my Linux machine this had a rapid memory leak...
+    a, b = symbols('a b', positive=True, finite=True)
     X = Weibull('x', a, b)
 
     assert simplify(E(X)) == simplify(a * gamma(1 + 1/b))

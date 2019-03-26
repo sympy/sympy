@@ -90,7 +90,7 @@ def test_mellin_transform():
     from sympy import Max, Min
     MT = mellin_transform
 
-    bpos = symbols('b', positive=True)
+    bpos = symbols('b', positive=True, finite=True)
 
     # 8.4.2
     assert MT(x**nu*Heaviside(x - 1), x, s) == \
@@ -630,7 +630,7 @@ def test_fourier_transform():
     f = Function("f")
 
     # TODO for this to work with real a, need to expand abs(a*x) to abs(a)*abs(x)
-    a = symbols('a', positive=True)
+    a = symbols('a', positive=True, finite=True)
     b = symbols('b', positive=True)
 
     posk = symbols('posk', positive=True)

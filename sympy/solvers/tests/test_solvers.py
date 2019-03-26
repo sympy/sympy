@@ -1591,7 +1591,7 @@ def test_lambert_multivariate():
         log(K*(1 + sqrt(3)*I)/-2)/log(a),
         log((b + 3)*LambertW(1/(b + 3))/a**5)/(3*log(a))]
 
-    p = symbols('p', positive=True)
+    p = symbols('p', positive=True, finite=True)
     eq = 4*2**(2*p + 3) - 2*p - 3
     assert _solve_lambert(eq, p, _filtered_gens(Poly(eq), p)) == [
         -S(3)/2 - LambertW(-4*log(2))/(2*log(2))]

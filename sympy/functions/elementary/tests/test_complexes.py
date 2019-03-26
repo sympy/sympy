@@ -536,7 +536,7 @@ def test_arg():
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 
-    p = Symbol('p', positive=True)
+    p = Symbol('p', positive=True, finite=True)
     assert arg(p) == 0
 
     n = Symbol('n', negative=True)
