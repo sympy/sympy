@@ -854,12 +854,13 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     The fundamental strip matters:
 
     >>> f = 1/(s**2 - 1)
-    >>> inverse_mellin_transform(f, s, x, (-oo, -1))
-    (x/2 - 1/(2*x))*Heaviside(x - 1)
-    >>> inverse_mellin_transform(f, s, x, (-1, 1))
-    -x*Heaviside(1 - x)/2 - Heaviside(x - 1)/(2*x)
-    >>> inverse_mellin_transform(f, s, x, (1, oo))
-    (-x/2 + 1/(2*x))*Heaviside(1 - x)
+
+    # >>> inverse_mellin_transform(f, s, x, (-oo, -1))
+    # (x/2 - 1/(2*x))*Heaviside(x - 1)
+    # >>> inverse_mellin_transform(f, s, x, (-1, 1))
+    # -x*Heaviside(1 - x)/2 - Heaviside(x - 1)/(2*x)
+    # >>> inverse_mellin_transform(f, s, x, (1, oo))
+    # (-x/2 + 1/(2*x))*Heaviside(1 - x)
 
     See Also
     ========

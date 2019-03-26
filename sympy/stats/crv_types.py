@@ -3119,8 +3119,8 @@ def Weibull(name, alpha, beta):
     >>> from sympy.stats import Weibull, density, E, variance
     >>> from sympy import Symbol, simplify
 
-    >>> l = Symbol("lambda", positive=True)
-    >>> k = Symbol("k", positive=True)
+    >>> l = Symbol("lambda", positive=True, finite=True)
+    >>> k = Symbol("k", positive=True, finite=True)
     >>> z = Symbol("z")
 
     >>> X = Weibull("x", l, k)
