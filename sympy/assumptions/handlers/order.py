@@ -73,8 +73,8 @@ class AskNegativeHandler(CommonHandler):
             n  = ask(Q.negative(arg), assumptions)
             np = ask(Q.nonpositive(arg), assumptions)
 
-            infinite = ask(Q.infinite(arg), assumptions)
-            if infinite:
+            finite = ask(Q.finite(arg), assumptions)
+            if finite is not True:
                 inf = True
                 k = fuzzy_or((n, np))
                 if k is True:
@@ -384,8 +384,8 @@ class AskPositiveHandler(CommonHandler):
             p  = ask(Q.positive(arg), assumptions)
             nn = ask(Q.nonnegative(arg), assumptions)
 
-            infinite = ask(Q.infinite(arg), assumptions)
-            if infinite:
+            finite = ask(Q.finite(arg), assumptions)
+            if finite is not True:
                 inf = True
                 k = fuzzy_or((p, nn))
                 if k is True:
