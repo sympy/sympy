@@ -245,6 +245,7 @@ def test_bessel():
     # TODO can do higher powers, but come out as high order ... should they be
     #      reduced to order 0, 1?
     assert integrate(besselj(1, x), x, meijerg=True) == -besselj(0, x)
+    import pdb;pdb.set_trace()
     assert integrate(besselj(1, x)**2/x, x, meijerg=True) == \
         -(besselj(0, x)**2 + besselj(1, x)**2)/2
     # TODO more besseli when tables are extended or recursive mellin works
