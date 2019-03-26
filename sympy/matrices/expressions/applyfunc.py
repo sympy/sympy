@@ -10,20 +10,25 @@ class ElementwiseApplyFunction(MatrixExpr):
     Examples
     ========
 
+    It can be created by calling ``.applyfunc(<function>)`` on a matrix
+    expression:
+
     >>> from sympy.matrices.expressions import MatrixSymbol
     >>> from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
     >>> from sympy import exp
     >>> X = MatrixSymbol("X", 3, 3)
     >>> X.applyfunc(exp)
-    ElementwiseApplyFunction(exp, X)
+    exp(X...)
+
+    Otherwise using the class constructor:
 
     >>> from sympy import eye
     >>> expr = ElementwiseApplyFunction(exp, eye(3))
     >>> expr
-    ElementwiseApplyFunction(exp, Matrix([
+    exp(Matrix([
     [1, 0, 0],
     [0, 1, 0],
-    [0, 0, 1]]))
+    [0, 0, 1]])...)
     >>> expr.doit()
     Matrix([
     [E, 1, 1],

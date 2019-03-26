@@ -153,7 +153,7 @@ class MatMul(MatrixExpr, Mul):
             right_args = self.args[ind+1:]
 
             right_mat = MatMul.fromiter(right_args)
-            left_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(left_args)])
+            left_rev = MatMul.fromiter([Transpose(i).doit() if i.is_Matrix else i for i in reversed(left_args)])
 
             d = self.args[ind]._eval_derivative_matrix_lines(x)
             for i in d:
