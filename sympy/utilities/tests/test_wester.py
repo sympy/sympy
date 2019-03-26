@@ -1348,20 +1348,11 @@ def test_P4():
     raise NotImplementedError("Block matrix diagonalization not supported")
 
 
-@XFAIL
 def test_P5():
     M = Matrix([[7, 11],
                 [3, 8]])
-    # Raises exception % not supported for matrices
     assert  M % 2 == Matrix([[1, 1],
                              [1, 0]])
-
-
-def test_P5_workaround():
-    M = Matrix([[7, 11],
-                [3, 8]])
-    assert  M.applyfunc(lambda i: i % 2) == Matrix([[1, 1],
-                                                    [1, 0]])
 
 
 def test_P6():

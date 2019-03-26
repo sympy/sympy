@@ -2126,6 +2126,9 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.__mul__(other)
 
+    def __mod__(self, other):
+        return self.applyfunc(lambda x: x % other)
+
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
         """Return self*other where other is either a scalar or a matrix
