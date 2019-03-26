@@ -1304,11 +1304,8 @@ def test_O10():
                               [S(-423)/706]])]
 
 
-@XFAIL
 def test_P1():
-    raise NotImplementedError("Matrix property/function to extract Nth \
-diagonal not implemented. See Matlab diag(A,k) \
-http://www.mathworks.de/de/help/symbolic/diag.html")
+    assert Matrix(3, 3, lambda i, j: j - i).diagonal(-1) == (-1,)*2
 
 
 def test_P2():

@@ -1543,3 +1543,10 @@ def test___eq__():
         [[0, 1, 1],
         [1, 0, 0],
         [1, 1, 1]]) == {}) is False
+
+
+def test_diagonal():
+    A = Matrix(3, 3, lambda i, j: j - i)
+    for i in range(-2, 3):
+        assert A.diagonal(i) == (i,)*(3 - abs(i))
+    raises(ValueError, lambda: A.diagonal(3))

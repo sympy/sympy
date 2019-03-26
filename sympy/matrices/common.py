@@ -486,6 +486,33 @@ class MatrixShaping(MatrixRequired):
                 "`self` and `rhs` must have the same number of rows.")
         return self._eval_row_join(other)
 
+    def diagonal(self, k):
+        """Return a tuple of the the kth diagonal.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> Matrix(3, 3, lambda i, j: j - i)
+        Matrix([
+        [ 0,  1, 2],
+        [-1,  0, 1],
+        [-2, -1, 0]])
+        >>> _.diagonal(1)
+        (1, 1)
+        """
+        rv = []
+        k = as_int(k)
+        r = 0 if k > 0 else -k
+        c = k if k > 0 else 0
+        for i in range(min(self.shape) - max(r, c)):
+            rv.append(self[r + i, c + i])
+        if not rv:
+            raise ValueError(filldedent('''
+            The %s diagonal is out of range [%s, %s]''' % (
+            k, 1 - self.rows, self.cols - 1)))
+        return tuple(rv)
+
     def row(self, i):
         """Elementary row selector.
 
