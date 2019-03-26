@@ -17,6 +17,7 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy import lambdify
 
+import math
 matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
 numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
 
@@ -1664,6 +1665,24 @@ class Beam3D(Beam):
         """
         return self._boundary_conditions
 
+    def diameter(self):
+        """
+        Returns Diameter of the beam object
+        """
+        return 1.13*math.sqrt(self.area)
+
+    def polar_moment(self):
+        """
+        Returns the Polar moment of inertia of the beam object
+        """
+        return 2*self.second_moment
+
+    def section_modulus(self):
+        """
+        Returns the Section modulus of the beam object
+        """
+        return (2*self.second_moment)/self.diameter()
+
     def apply_load(self, value, start, order, dir="y"):
         """
         This method adds up the force load to a particular beam object.
@@ -1833,6 +1852,12 @@ class Beam3D(Beam):
         Returns expression of Torsional moment present inside the Beam object.
         """
         return self.bending_moment()[0]
+
+    def torsional_shear_stress():
+        """
+        Returns expression of Torsional shear stress present inside the Beam object.
+        """
+        return (self.torsional_moment()*self.diameter())/(2*self.polar_moment())
 
     def solve_slope_deflection(self):
         from sympy import dsolve, Function, Derivative, Eq
