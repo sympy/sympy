@@ -85,7 +85,7 @@ def bspline_basis(d, knots, n, x):
         >>> from sympy import bspline_basis
         >>> from sympy.abc import x
         >>> d = 0
-        >>> knots = range(5)
+        >>> knots = tuple(range(5))
         >>> bspline_basis(d, knots, 0, x)
         Piecewise((1, (x >= 0) & (x <= 1)), (0, True))
 
@@ -94,7 +94,7 @@ def bspline_basis(d, knots, n, x):
 
     Here is an example of a cubic B-spline:
 
-        >>> bspline_basis(3, range(5), 0, x)
+        >>> bspline_basis(3, tuple(range(5)), 0, x)
         Piecewise((x**3/6, (x >= 0) & (x <= 1)),
                   (-x**3/2 + 2*x**2 - 2*x + 2/3,
                   (x >= 1) & (x <= 2)),
@@ -118,7 +118,7 @@ def bspline_basis(d, knots, n, x):
 
         >>> from sympy import lambdify
         >>> d = 3
-        >>> knots = range(10)
+        >>> knots = tuple(range(10))
         >>> b0 = bspline_basis(d, knots, 0, x)
         >>> f = lambdify(x, b0)
         >>> y = f(0.5)
