@@ -1,6 +1,6 @@
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
+                   Piecewise, Integral, sin, cos, atan, besseli, factorial, binomial,
                    floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
 from sympy.core.compatibility import range
 from sympy.external import import_module
@@ -250,6 +250,8 @@ def test_cauchy():
 
     X = Cauchy('x', x0, gamma)
     assert density(X)(x) == 1/(pi*gamma*(1 + (x - x0)**2/gamma**2))
+    assert cdf(X)(x) == atan((x - x0)/gamma)/pi + S.Half
+    assert diff(cdf(X)(x), x) == density(X)(x)
 
     gamma = Symbol("gamma", positive=False)
     raises(ValueError, lambda: Cauchy('x', x0, gamma))
@@ -436,6 +438,8 @@ def test_gompertz():
 
     X = Gompertz("x", b, eta)
     assert density(X)(x) == b*eta*exp(eta)*exp(b*x)*exp(-eta*exp(b*x))
+    assert cdf(X)(x) == 1 - exp(eta)*exp(-eta*exp(b*x))
+    assert diff(cdf(X)(x), x) == density(X)(x)
 
 
 def test_gumbel():
