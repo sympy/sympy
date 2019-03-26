@@ -512,6 +512,7 @@ def test_maxwell():
     assert E(X) == 2*sqrt(2)*a/sqrt(pi)
     assert simplify(variance(X)) == a**2*(-8 + 3*pi)/pi
     assert cdf(X)(x) == erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
+    assert diff(cdf(X)(x), x) == density(X)(x)
 
 
 def test_nakagami():
@@ -572,6 +573,7 @@ def test_rayleigh():
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
     assert cdf(X)(x) == 1 - exp(-x**2/(2*sigma**2))
+    assert diff(cdf(X)(x), x) == density(X)(x)
 
 
 def test_shiftedgompertz():
