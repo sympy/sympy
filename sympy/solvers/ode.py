@@ -6284,7 +6284,7 @@ def lie_heuristic_bivariate(match, comp=False):
                 soldict = solve(polyy.values(), *symset)
                 if isinstance(soldict, list):
                     soldict = soldict[0]
-                if any(x for x in soldict.values()):
+                if any(soldict.values()):
                     xired = xieq.subs(soldict)
                     etared = etaeq.subs(soldict)
                     # Scaling is done by substituting one for the parameters
@@ -6351,7 +6351,7 @@ def lie_heuristic_chi(match, comp=False):
                     soldict = solve(cpoly.values(), *solsyms)
                     if isinstance(soldict, list):
                         soldict = soldict[0]
-                    if any(x for x in soldict.values()):
+                    if any(soldict.values()):
                         chieq = chieq.subs(soldict)
                         dict_ = dict((sym, 1) for sym in solsyms)
                         chieq = chieq.subs(dict_)

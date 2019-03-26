@@ -635,7 +635,7 @@ class Poly(Expr):
 
         for monom, coeff in rep.items():
 
-            if any(i for i in monom[:j]):
+            if any(monom[:j]):
                 # some generator is used in the portion to be trimmed
                 raise PolynomialError("can't left trim %s" % f)
 
