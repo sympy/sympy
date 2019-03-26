@@ -17,7 +17,7 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy import lambdify
 
-import math
+import sympy
 matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
 numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
 
@@ -1669,7 +1669,7 @@ class Beam3D(Beam):
         """
         Returns Diameter of the beam object
         """
-        return 1.13*math.sqrt(self.area)
+        return 1.13*sympy.sqrt(self.area)
 
     def polar_moment(self):
         """
