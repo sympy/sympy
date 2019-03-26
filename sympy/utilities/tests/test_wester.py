@@ -20,7 +20,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
     residue, Derivative, logcombine, Symbol, Intersection, Union,
-    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max)
+    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max, MatMul)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -1401,6 +1401,14 @@ def test_P11():
     assert Matrix([[x, y],
                    [1, x*y]]).inv() == (1/(x**2 - 1))*Matrix([[x, -1],
                                                               [-1/y, x/y]])
+
+
+def test_P11_workaround():
+    M = Matrix([[x, y], [1, x*y]]).inv()
+    c = gcd(tuple(M))
+    assert MatMul(c, M/c, evaluate=False) == MatMul(c, Matrix([
+        [-x*y,  y],
+        [   1, -x]]), evaluate=False)
 
 
 def test_P12():
