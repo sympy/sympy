@@ -222,8 +222,6 @@ def test_meijerint():
         a**(-s/2 - S(1)/2)*((-1)**s + 1)*gamma(s/2 + S(1)/2)/2
 
 
-from sympy.utilities.pytest import XFAIL
-@XFAIL
 def test_bessel():
     from sympy import besselj, besseli
     assert simplify(integrate(besselj(a, z)*besselj(b, z)/z, (z, 0, oo),
