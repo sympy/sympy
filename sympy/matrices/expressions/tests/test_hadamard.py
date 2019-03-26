@@ -68,3 +68,9 @@ def test_hadamard_power():
     assert hadamard_power(A, n).T == hadamard_power(A.T, n)
     assert hadamard_power(A, n)[0, 0] == A[0, 0]**n
     assert hadamard_power(m, n) == m**n
+    raises(ValueError, lambda: hadamard_power(A, A))
+
+    # Testing printer:
+    assert str(hadamard_power(A, n)) == "A.**n"
+    assert str(hadamard_power(A, 1+n)) == "A.**(n + 1)"
+    assert str(hadamard_power(A*B.T, 1+n)) == "(A*B.T).**(n + 1)"
