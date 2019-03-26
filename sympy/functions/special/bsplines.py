@@ -108,7 +108,7 @@ def bspline_basis(d, knots, n, x):
     B-splines and their derivatives:
 
         >>> d = 1
-        >>> knots = [0, 0, 2, 3, 4]
+        >>> knots = (0, 0, 2, 3, 4)
         >>> bspline_basis(d, knots, 0, x)
         Piecewise((1 - x/2, (x >= 0) & (x <= 2)), (0, True))
 
@@ -199,7 +199,7 @@ def bspline_basis_set(d, knots, x):
     bsplines_basis
     """
     n_splines = len(knots) - d - 1
-    return [bspline_basis(d, knots, i, x) for i in range(n_splines)]
+    return [bspline_basis(d, tuple(knots), i, x) for i in range(n_splines)]
 
 
 def interpolating_spline(d, x, X, Y):
@@ -256,7 +256,7 @@ def interpolating_spline(d, x, X, Y):
 
     knots = [X[0]] * (d + 1) + list(interior_knots) + [X[-1]] * (d + 1)
 
-    basis = bspline_basis_set(d, tuple(knots), x)
+    basis = bspline_basis_set(d, knots, x)
 
     A = [[b.subs(x, v) for b in basis] for v in X]
 
