@@ -571,6 +571,7 @@ def test_rayleigh():
     assert density(X)(x) ==  x*exp(-x**2/(2*sigma**2))/sigma**2
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
+    assert cdf(X)(x) == 1 - exp(-x**2/(2*sigma**2))
 
 
 def test_shiftedgompertz():

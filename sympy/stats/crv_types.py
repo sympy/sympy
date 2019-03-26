@@ -2428,6 +2428,10 @@ class RayleighDistribution(SingleContinuousDistribution):
         sigma = self.sigma
         return x/sigma**2*exp(-x**2/(2*sigma**2))
 
+    def _cdf(self, x):
+        sigma = self.sigma
+        return 1 - exp(-(x**2/(2*sigma**2)))
+
     def _characteristic_function(self, t):
         sigma = self.sigma
         return 1 - sigma*t*exp(-sigma**2*t**2/2) * sqrt(pi/2) * (erfi(sigma*t/sqrt(2)) - I)
