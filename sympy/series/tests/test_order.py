@@ -262,7 +262,7 @@ def test_getn():
 
 
 def test_diff():
-    assert O(x**2).diff(x) == O(x)
+    raises(TypeError, lambda: O(x**2).diff(x))
 
 
 def test_getO():
