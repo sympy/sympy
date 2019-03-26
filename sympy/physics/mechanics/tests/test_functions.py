@@ -164,6 +164,7 @@ def test_Lagrangian():
     raises(TypeError, lambda: Lagrangian(N, N, Pa))
     assert Lagrangian(N, Pa, A) == -M*g*h - g*h*m + 350
 
+
 def test_msubs():
     a, b = symbols('a, b')
     x, y, z = dynamicsymbols('x, y, z')
