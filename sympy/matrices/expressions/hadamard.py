@@ -120,7 +120,6 @@ class HadamardPower(MatrixExpr):
 
     def _entry(self, i, j, **kwargs):
         return self.base[i, j]**self.exp
-        return Pow(self.base[i, j], self.exp)
 
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose
