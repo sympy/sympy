@@ -1898,6 +1898,10 @@ class MaxwellDistribution(SingleContinuousDistribution):
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
 
+    def _cdf(self, x):
+        a = self.a
+        return erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
+
 def Maxwell(name, a):
     r"""
     Create a continuous random variable with a Maxwell distribution.
