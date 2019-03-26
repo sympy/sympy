@@ -162,7 +162,6 @@ def test_Lagrangian():
     A.potential_energy = M * g * h
     raises(TypeError, lambda: Lagrangian(A, A, Pa))
     raises(TypeError, lambda: Lagrangian(N, N, Pa))
-    assert Lagrangian(N, Pa, A) == -M*g*h - g*h*m + 350
 
 
 def test_msubs():
