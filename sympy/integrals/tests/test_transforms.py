@@ -453,7 +453,7 @@ def test_inverse_mellin_transform():
 def test_laplace_transform():
     from sympy import fresnels, fresnelc
     LT = laplace_transform
-    a, b, c, = symbols('a b c', positive=True)
+    a, b, c, = symbols('a b c', positive=True, finite=True)
     t = symbols('t')
     w = Symbol("w")
     f = Function("f")
