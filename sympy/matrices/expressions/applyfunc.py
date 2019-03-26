@@ -1,5 +1,5 @@
 from sympy.matrices.expressions import MatrixExpr
-from sympy import MatrixBase, Dummy, Lambda, Function, DiagonalMatrix, DiagonalOf
+from sympy import MatrixBase, Dummy, Lambda, Function, DiagonalMatrix, DiagonalOf, Basic, FunctionClass
 from sympy.matrices.expressions.diagonal import DiagonalizeVector, diagonalize_vector
 
 
@@ -46,9 +46,15 @@ class ElementwiseApplyFunction(MatrixExpr):
 
     def __new__(cls, function, expr):
         obj = MatrixExpr.__new__(cls, expr)
+        if not isinstance(function, FunctionClass):
+            d = Dummy("d")
+            function = Lambda(d, function(d))
         obj._function = function
         obj._expr = expr
         return obj
+
+    def _hashable_content(self):
+        return (self.function, self.expr)
 
     @property
     def function(self):
@@ -85,7 +91,7 @@ class ElementwiseApplyFunction(MatrixExpr):
         if isinstance(fdiff, Function):
             fdiff = type(fdiff)
         else:
-            fdiff = Lambda(d, function.diff(d))
+            fdiff = Lambda(d, fdiff)
         lr = self.expr._eval_derivative_matrix_lines(x)
         if 1 in self.shape:
             # Vector:

@@ -3,7 +3,7 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
-from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative, sin, exp, cos
+from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative, sin, exp, cos, tan
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
 
 k = symbols("k")
@@ -275,6 +275,9 @@ def test_mixed_deriv_mixed_expressions():
 
 def test_derivatives_elementwise_applyfunc():
     from sympy.matrices.expressions.diagonal import DiagonalizeVector
+
+    expr = x.applyfunc(tan)
+    assert expr.diff(x) == DiagonalizeVector(x.applyfunc(lambda x: tan(x)**2 + 1))
 
     expr = A*x.applyfunc(exp)
     assert expr.diff(x) == DiagonalizeVector(x.applyfunc(exp))*A.T

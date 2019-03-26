@@ -23,6 +23,7 @@ def test_applyfunc_matrix():
     assert expr.doit() == Xd.applyfunc(lambda x: x**2)
     assert expr.shape == (3, 3)
     assert expr.func(*expr.args) == expr
+    assert expr[0, 0] == double(Xd[0, 0])
 
     expr = ElementwiseApplyFunction(double, X)
     assert isinstance(expr, ElementwiseApplyFunction)
@@ -70,3 +71,7 @@ def test_applyfunc_matrix():
     assert expr3.shape == (k, t)
 
     raises(ShapeError, lambda: M*expr)
+
+    expr1 = ElementwiseApplyFunction(lambda x: x+1, Xk)
+    expr2 = ElementwiseApplyFunction(lambda x: x, Xk)
+    assert expr1 != expr2
