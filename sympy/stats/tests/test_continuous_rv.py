@@ -511,6 +511,7 @@ def test_maxwell():
         (sqrt(pi)*a**3))
     assert E(X) == 2*sqrt(2)*a/sqrt(pi)
     assert simplify(variance(X)) == a**2*(-8 + 3*pi)/pi
+    assert cdf(X)(x) == erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
 
 
 def test_nakagami():
