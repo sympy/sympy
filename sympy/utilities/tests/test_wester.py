@@ -1317,7 +1317,6 @@ def test_P2():
                         [7, 8]])
 
 
-@XFAIL
 def test_P3():
     A = Matrix([
         [11, 12, 13, 14],
@@ -1330,18 +1329,19 @@ def test_P3():
     A21 = A
     A221 = A[0:2, 2:4]
     A222 = A[(3, 0), (2, 1)]
-    A22 = BlockMatrix([A221, A222])
-    B = BlockMatrix([[A11, A12],
-                    [A21, A22]])
-    # B is a matrix consisting of several matrices
-    # https://github.com/sympy/sympy/issues/16278
-    assert B == Matrix([[12, 13, 14, 13, 11, 14],
-                        [22, 23, 24, 23, 21, 24],
-                        [32, 33, 34, 43, 41, 44],
-                        [11, 12, 13, 14, 13, 14],
-                        [21, 22, 23, 24, 23, 24],
-                        [31, 32, 33, 34, 43, 42],
-                        [41, 42, 43, 44, 13, 12]])
+    A22 = BlockMatrix([[A221, A222]]).T
+    rows = [[-A11, A12], [A21, -A22]]
+    from sympy.utilities.pytest import raises
+    raises(ValueError, lambda: BlockMatrix(rows))
+    B = BlockMatrix(rows, strict=False)
+    assert B == Matrix([
+        [-12, -13, -14, 13, 11, 14],
+        [-22, -23, -24, 23, 21, 24],
+        [-32, -33, -34, 43, 41, 44],
+        [11, 12, 13, 14, -13, -23],
+        [21, 22, 23, 24, -14, -24],
+        [31, 32, 33, 34, -43, -13],
+        [41, 42, 43, 44, -42, -12]])
 
 
 @XFAIL
