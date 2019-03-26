@@ -64,7 +64,7 @@ class Expectation(Expr):
     >>> from sympy.stats import Expectation, Normal, Probability
     >>> from sympy import symbols, Integral
     >>> mu = symbols("mu")
-    >>> sigma = symbols("sigma", positive=True)
+    >>> sigma = symbols("sigma", positive=True, finite=True)
     >>> X = Normal("X", mu, sigma)
     >>> Expectation(X)
     Expectation(X)

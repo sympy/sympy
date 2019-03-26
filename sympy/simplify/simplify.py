@@ -457,7 +457,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     For example:
 
     >>> from sympy import symbols, log
-    >>> a, b = symbols('a b', positive=True)
+    >>> a, b = symbols('a b', positive=True, finite=True)
     >>> g = log(a) + log(b) + log(a)*log(1/b)
     >>> h = simplify(g)
     >>> h
@@ -898,8 +898,8 @@ def logcombine(expr, force=False):
     a*log(x) + log(y) - log(z)
     >>> logcombine(a*log(x) + log(y) - log(z), force=True)
     log(x**a*y/z)
-    >>> x,y,z = symbols('x,y,z', positive=True)
-    >>> a = Symbol('a', real=True)
+    >>> x,y,z = symbols('x,y,z', positive=True, finite=True)
+    >>> a = Symbol('a', real=True, finite=True)
     >>> logcombine(a*log(x) + log(y) - log(z))
     log(x**a*y/z)
 

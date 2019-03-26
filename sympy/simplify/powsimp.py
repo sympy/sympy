@@ -551,7 +551,7 @@ def powdenest(eq, force=False, polar=False):
 
     If assumptions allow, symbols can also be moved to the outermost exponent:
 
-    >>> i = Symbol('i', integer=True)
+    >>> i = Symbol('i', integer=True, finite=True)
     >>> powdenest(((x**(2*i))**(3*y))**x)
     ((x**(2*i))**(3*y))**x
     >>> powdenest(((x**(2*i))**(3*y))**x, force=True)
