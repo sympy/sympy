@@ -290,33 +290,6 @@ class Beam(object):
             new_beam._hinge_position = self.length
             return new_beam
 
-    def polar_moment(self,axis=None):
-        """
-        This function calculates the Polar moment of Inertia of the beam about the axis passed.
-        If no axis is passed, axis is assumed to be x by default.
-
-        Parameters
-        ==========
-        axis: String
-            The axis about which the polar moment of inertia is calculated
-
-        Examples
-        ========
-
-        >>> l, E, G, I, A = symbols('l, E, G, I, A')
-        >>> b = Beam3D(l, E, G, I, A)
-        >>> b.polar_moment()
-        2*I
-        >>> I1 = [9, 15]
-        >>> b = Beam3D(l, E, G, I1, A)
-        >>> b.polar_moment('x')
-        24
-        """
-        if axis==None or axis=='x':
-            if isinstance(self._second_moment,int) or isinstance(self._second_moment,Symbol):
-                return 2*self.second_moment
-            return self._second_moment[0]+self._second_moment[1]
-
     def apply_support(self, loc, type="fixed"):
         """
         This method applies support to a particular beam object.
@@ -1690,6 +1663,36 @@ class Beam3D(Beam):
         along y and z axis at ``0``.
         """
         return self._boundary_conditions
+
+
+    def polar_moment(self,axis=None):
+        """
+        This function calculates the Polar moment of Inertia of the beam about the axis passed.
+        If no axis is passed, axis is assumed to be x by default.
+
+        Parameters
+        ==========
+        axis: String
+            The axis about which the polar moment of inertia is calculated
+
+        Examples
+        ========
+        >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+        >>> from sympy import symbols
+        >>> l, E, G, I, A = symbols('l, E, G, I, A')
+        >>> b = Beam3D(l, E, G, I, A)
+        >>> b.polar_moment()
+        2*I
+        >>> I1 = [9, 15]
+        >>> b = Beam3D(l, E, G, I1, A)
+        >>> b.polar_moment('x')
+        24
+        """
+        if axis==None or axis=='x':
+            if isinstance(self.second_moment,int) or isinstance(self.second_moment,Symbol):
+                return 2*self.second_moment
+            return self.second_moment[0]+self.second_moment[1]
+
 
     def apply_load(self, value, start, order, dir="y"):
         """
