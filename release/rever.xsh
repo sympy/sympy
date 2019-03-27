@@ -980,13 +980,16 @@ git_whitelist = {
     '.gitattributes',
     '.gitignore',
     '.mailmap',
-    # Travis
+    # Travis and CI
     '.travis.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
     '.ci/blacklisted.json',
     '.editorconfig',
+    '.coveragerc',
+    'codecov.yml',
+    'pytest.ini',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Pull request template
