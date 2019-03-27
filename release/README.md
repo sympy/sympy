@@ -144,3 +144,9 @@ Once you have it working, push the changes up to Dockerhub
     docker push sympy/sympy-release
 
 You'll need access to the sympy org, ask Aaron or Ondřej if you need it.
+
+It is usually not necessary to rebuild the Docker container. The container
+first pulls the latest version of the release branch before running rever
+(see `pull_and_run_rever.sh`), so unless you modify that script, or change the
+packages that are installed in the container, it should not be necessary to
+rebuild it.
