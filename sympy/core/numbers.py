@@ -806,10 +806,10 @@ class Float(Number):
     100.0
 
     Float can automatically count significant figures if a null string
-    is sent for the precision; space are also allowed in the string. (Auto-
+    is sent for the precision; spaces or underscores are also allowed. (Auto-
     counting is only allowed for strings, ints and longs).
 
-    >>> Float('123 456 789 . 123 456', '')
+    >>> Float('123 456 789.123_456', '')
     123456789.123456
     >>> Float('12e-3', '')
     0.012
@@ -943,7 +943,16 @@ class Float(Number):
                              'Supply only one. ')
 
         if isinstance(num, string_types):
+            # Float already accepts spaces as digit separators; in Py 3.6
+            # underscores are allowed. In anticipation of that, we ignore
+            # legally placed underscores
             num = num.replace(' ', '')
+            if '_' in num:
+                if num.startswith('_') or num.endswith('_') or any(
+                        i in num for i in ('__', '_.', '._')):
+                    # copy Py 3.6 error
+                    raise ValueError("could not convert string to float: '%s'" % num)
+                num = num.replace('_', '')
             if num.startswith('.') and len(num) > 1:
                 num = '0' + num
             elif num.startswith('-.') and len(num) > 2:
