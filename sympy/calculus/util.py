@@ -1,19 +1,18 @@
-from sympy import Order, S, log, limit, lcm_list, pi, Abs, im, re, Symbol, Dummy
-from sympy.core.basic import Basic
+from sympy import Order, S, log, limit, lcm_list, Abs, im, re, Dummy
 from sympy.core import Add, Mul, Pow
-from sympy.logic.boolalg import And
+from sympy.core.basic import Basic
+from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
+from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.logic.boolalg import And
+from sympy.polys.rationaltools import together
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
-from sympy.sets.conditionset import ConditionSet
-from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.utilities import filldedent
 from sympy.simplify.radsimp import denom
-from sympy.polys.rationaltools import together
-from sympy.core.compatibility import iterable
 from sympy.solvers.inequalities import solve_univariate_inequality
+from sympy.utilities import filldedent
 
 def continuous_domain(f, symbol, domain):
     """

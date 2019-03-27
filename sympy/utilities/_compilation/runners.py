@@ -7,7 +7,6 @@ import subprocess
 import sys
 
 from .util import (
-    get_abspath, FileNotFoundError,
     find_binary_of_command, unique_list,
     CompileError
 )

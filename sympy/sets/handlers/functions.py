@@ -1,12 +1,11 @@
-from sympy.multipledispatch import dispatch, Dispatcher
-from sympy.core import Basic, Expr, Function, Add, Mul, Pow, Dummy, Integer
-from sympy import Min, Max, Set, sympify, symbols, exp, log, S, Wild
+from sympy import Set, symbols, exp, log, S, Wild
+from sympy.core import Expr, Add
+from sympy.core.function import Lambda, _coeff_isneg, FunctionClass
+from sympy.logic.boolalg import true
+from sympy.multipledispatch import dispatch
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-    ProductSet, EmptySet, Intersection, Range)
-from sympy.core.function import Lambda, _coeff_isneg
+                        EmptySet, Intersection, Range)
 from sympy.sets.fancysets import Integers
-from sympy.core.function import FunctionClass
-from sympy.logic.boolalg import And, Or, Not, true, false
 
 
 _x, _y = symbols("x y")

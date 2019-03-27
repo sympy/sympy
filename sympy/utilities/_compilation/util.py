@@ -1,11 +1,7 @@
 from __future__ import (absolute_import, division, print_function)
 
 from collections import namedtuple
-from contextlib import contextmanager
-from distutils.errors import CompileError
 from hashlib import sha256
-import glob
-import io
 import os
 import shutil
 import sys
