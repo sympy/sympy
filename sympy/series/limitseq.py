@@ -211,7 +211,7 @@ def limit_seq(expr, n=None, trials=5):
         return expr
 
     expr = expr.rewrite(fibonacci, S.GoldenRatio)
-    n_ = Dummy("n", integer=True, positive=True)
+    n_ = Dummy("n", integer=True, positive=True, finite=True)
     n1 = Dummy("n", odd=True, positive=True)
     n2 = Dummy("n", even=True, positive=True)
 
