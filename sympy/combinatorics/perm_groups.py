@@ -155,6 +155,7 @@ class PermutationGroup(Basic):
         obj._is_trivial = None
         obj._transitivity_degree = None
         obj._max_div = None
+        obj._is_perfect = None
         obj._r = len(obj._generators)
         obj._degree = obj._generators[0].size
 
@@ -1642,6 +1643,27 @@ class PermutationGroup(Basic):
         if g in self.generators:
             return True
         return bool(self.coset_factor(g.array_form, True))
+
+    @property
+    def is_perfect(self):
+        """Return ``True`` if the group is perfect.
+        A group is perfect if it equals to its derived subgroup.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation(1,2,3)(4,5)
+        >>> b = Permutation(1,2,3,4,5)
+        >>> G = PermutationGroup([a, b])
+        >>> G.is_perfect
+        False
+
+        """
+        if self._is_perfect is None:
+            self._is_perfect = self == self.derived_subgroup()
+        return self._is_perfect
 
     @property
     def is_abelian(self):
