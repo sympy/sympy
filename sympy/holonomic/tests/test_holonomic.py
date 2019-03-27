@@ -572,7 +572,6 @@ def test_to_expr():
     xp = symbols('x', positive=True)
     p = expr_to_holonomic(sin(xp)**2/xp).integrate((xp, 0, xp)).to_expr()
     q = (sin(xp)**2/xp).integrate((xp, 0, xp))
-    # This test fails. lhs has log(x)/2 and rhs has log(x) - log(x**2)/2
     assert p == q
     C_0, C_1, C_2, C_3 = symbols('C_0, C_1, C_2, C_3')
     p = expr_to_holonomic(log(1+x**2)).to_expr()
