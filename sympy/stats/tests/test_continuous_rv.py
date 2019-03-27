@@ -10,7 +10,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          Chi, ChiSquared,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
-                         Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
+                         Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
@@ -465,6 +465,14 @@ def test_laplace():
     assert density(X)(x) == exp(-Abs(x - mu)/b)/(2*b)
     assert cdf(X)(x) == Piecewise((exp((-mu + x)/b)/2, mu > x),
                             (-exp((mu - x)/b)/2 + 1, True))
+
+def test_levy():
+    mu = Symbol("mu")
+    c = Symbol("b", positive=True)
+
+    X = Levy('x', mu, c)
+    assert density(X)(x) == sqrt(c/(2*pi))*exp(-c/(2*(x - mu)))/((x - mu)**(S.One + S.Half))
+    assert cdf(X)(x) == erfc(sqrt(c/(2*(x - mu))))
 
 def test_logistic():
     mu = Symbol("mu", real=True)
