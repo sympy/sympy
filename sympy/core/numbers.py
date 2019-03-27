@@ -943,10 +943,16 @@ class Float(Number):
                              'Supply only one. ')
 
         if isinstance(num, string_types):
+            # Float already accepts spaces as digit separators; in Py 3.6
+            # underscores are allowed. In anticipation of that, we ignore
+            # legally placed underscores
             num = num.replace(' ', '')
-            if num.startswith('_'):
-                raise ValueError('underscore not allowed at the start of a number')
-            num = num.replace('_', '')
+            if '_' in num:
+                if num.startswith('_') or num.endswith('_') or any(
+                        i in num for i in ('__', '_.', '._')):
+                    # copy Py 3.6 error
+                    raise ValueError("could not convert string to float: '%s'" % num)
+                num = num.replace('_', '')
             if num.startswith('.') and len(num) > 1:
                 num = '0' + num
             elif num.startswith('-.') and len(num) > 2:
@@ -1016,13 +1022,6 @@ class Float(Number):
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, precision, rnd)
         elif isinstance(num, string_types):
-       # workaround for https://github.com/fredrik-johansson/mpmath/issues/377
-            if '_' in num:
-                float(num)  # passes if it is a valid float in Py >= 3.6
-            # older versions of mpmath do not properly handle the _ past
-            # the decimal, so delete them all since we already know the
-            # form is a valid Python float
-            num = num.replace('_', '')
             _mpf_ = mlib.from_str(num, precision, rnd)
         elif isinstance(num, decimal.Decimal):
             if num.is_finite():
