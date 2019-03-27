@@ -1073,7 +1073,6 @@ def casoratian(seqs, n, zero=True):
        True
 
     """
-    from .dense import Matrix
 
     seqs = list(map(sympify, seqs))
 
@@ -1097,7 +1096,6 @@ def eye(*args, **kwargs):
     zeros
     ones
     """
-    from .dense import Matrix
 
     return Matrix.eye(*args, **kwargs)
 
@@ -1134,7 +1132,6 @@ def diag(*values, **kwargs):
     eye
     sympy.matrices.common.diag
     """
-    from .dense import Matrix
     # Extract any setting so we don't duplicate keywords sent
     # as named parameters:
     kw = kwargs.copy()
@@ -1258,7 +1255,6 @@ def jordan_cell(eigenval, n):
     [0, 0, x, 1],
     [0, 0, 0, x]])
     """
-    from .dense import Matrix
 
     return Matrix.jordan_block(size=n, eigenvalue=eigenval)
 
@@ -1297,7 +1293,6 @@ def ones(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-    from .dense import Matrix
 
     return Matrix.ones(*args, **kwargs)
 
@@ -1401,7 +1396,6 @@ def wronskian(functions, var, method='bareiss'):
     sympy.matrices.mutable.Matrix.jacobian
     hessian
     """
-    from .dense import Matrix
 
     for index in range(0, len(functions)):
         functions[index] = sympify(functions[index])
@@ -1426,7 +1420,5 @@ def zeros(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-
-    from .dense import Matrix
 
     return Matrix.zeros(*args, **kwargs)
