@@ -1665,18 +1665,13 @@ class Beam3D(Beam):
         return self._boundary_conditions
 
 
-    def polar_moment(self,axis=None):
+    def polar_moment(self):
         """
-        This function calculates the Polar moment of Inertia of the beam about the axis passed.
-        If no axis is passed, axis is assumed to be x by default.
-
-        Parameters
-        ==========
-        axis: String
-            The axis about which the polar moment of inertia is calculated
+        This function calculates the Polar moment of Inertia of the beam about the x axis.
 
         Examples
         ========
+
         >>> from sympy.physics.continuum_mechanics.beam import Beam3D
         >>> from sympy import symbols
         >>> l, E, G, I, A = symbols('l, E, G, I, A')
@@ -1685,13 +1680,12 @@ class Beam3D(Beam):
         2*I
         >>> I1 = [9, 15]
         >>> b = Beam3D(l, E, G, I1, A)
-        >>> b.polar_moment('x')
+        >>> b.polar_moment()
         24
         """
-        if axis==None or axis=='x':
-            if isinstance(self.second_moment,int) or isinstance(self.second_moment,Symbol):
-                return 2*self.second_moment
-            return self.second_moment[0]+self.second_moment[1]
+        if isinstance(self.second_moment, int) or isinstance(self.second_moment, Symbol):
+            return 2*self.second_moment
+        return self.second_moment[0] + self.second_moment[1]
 
 
     def apply_load(self, value, start, order, dir="y"):

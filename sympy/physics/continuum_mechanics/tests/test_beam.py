@@ -552,8 +552,6 @@ def test_polar_moment_Beam3D():
     b = Beam3D(l, E, G, I, A)
     assert b.polar_moment() == I1 + I2
 
-    assert b.polar_moment('x') == I1 + I2
-
 def test_parabolic_loads():
 
     E, I, L = symbols('E, I, L', positive=True, real=True)
