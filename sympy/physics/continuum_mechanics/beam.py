@@ -291,6 +291,19 @@ class Beam(object):
             return new_beam
 
     def polar_moment(self,axis=None):
+        """
+        This function calculates the Polar moment of Inertia of the beam about the axis passed.
+        If no axis is passed, axis is assumed to be x by default.
+
+        >>>l, E, G, I, A = symbols('l, E, G, I, A')
+        >>>b = Beam3D(l, E, G, I, A)
+        >>>b.polar_moment()
+        2*I
+        >>>I1 = [9, 15]
+        >>>b = Beam3D(l, E, G, I1, A)
+        >>>b.polar_moment('x')
+        24
+        """
         if axis==None or axis=='x':
             if isinstance(self._second_moment,int) or isinstance(self._second_moment,Symbol):
                 return 2*self.second_moment
