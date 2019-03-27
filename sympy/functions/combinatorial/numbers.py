@@ -1349,6 +1349,12 @@ class partition(Function):
     @staticmethod
     @recurrence_memo([1, 1])
     def _partition(n, prev):
+        if type(n) is tuple:  # called from _nT
+            n, k = n
+            if not (0 < k <= n//2):
+                raise ValueError('k is not in range (0, %s]' % (n//2))
+        else:
+            k = None
         v, g, i = 0, 0, 0
         while 1:
             s = 0
@@ -1363,7 +1369,7 @@ class partition(Function):
                 break
             else:
                 v += s if i%2 == 1 else -s
-        return v
+        return v if k is None else v - sum(prev[:n - k])
 
     @classmethod
     def eval(cls, n):
@@ -1859,9 +1865,33 @@ def stirling(n, k, d=None, kind=2, signed=False):
 def _nT(n, k):
     """Return the partitions of ``n`` items into ``k`` parts. This
     is used by ``nT`` for the case when ``n`` is an integer."""
+    if k > n or k < 0:
+        return 0
+    if k == n or k == 1:
+        return 1
     if k == 0:
-        return 1 if k == n else 0
-    return sum(_nT(n - k, j) for j in range(min(k, n - k) + 1))
+        return 0
+    # quick exits
+    if k == 2:
+        return n//2
+    d = n - k
+    if d <= 3:
+        return d
+    try:
+        # if 2*k >= d (i.e. 3*k >= n) then we can
+        # use values in the cache
+        return partition._partition((d, k))
+    except ValueError:
+        p = [1]*d
+        for i in range(2, k + 1):
+            for m  in range(i + 1, d):
+                p[m] += p[m - i]
+            d -= 1
+    # if p[0] were appended to the end of p then the last
+    # k values of p are the nT(n, j) values for 0 < j < k in reverse order
+    # p[-1] = nT(n, 1), p[-2] = nT(n, 2), etc.... Instead of putting the 1
+    # from p[0] there, however, it is simply added to the sum below.
+    return (1 + sum(p[1 - k:])) # ok for 1 < k <= n//2
 
 
 def nT(n, k=None):
@@ -1916,10 +1946,16 @@ def nT(n, k=None):
     >>> from sympy.functions.combinatorial.numbers import partition
     >>> partition(4)
     5
-    >>> sum([nT(4, i) for i in range(4 + 1)])
+    >>> nT(4, 1) + nT(4, 2) + nT(4, 3) + nT(4, 4)
     5
     >>> nT('1'*4)
     5
+
+    The partition of an integer `n` into `k` parts is equivalent to the
+    sum of the partitions of `n - k` into `k` or fewer parts:
+
+    >>> nT(6, 2) == nT(4, 1) + nT(4, 2)
+    True
 
     See Also
     ========
