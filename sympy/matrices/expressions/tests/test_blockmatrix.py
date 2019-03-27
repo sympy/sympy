@@ -203,20 +203,3 @@ def test_deblock():
                     for i in range(4)])
 
     assert deblock(reblock_2x2(B)) == B
-
-
-def test_irregular_block():
-    assert BlockMatrix([
-        [ones(3,2), ones(3,3)*2],
-        [ones(2,3)*3, ones(2,2)*4]], strict=False) == Matrix([
-        [1, 1, 2, 2, 2],
-        [1, 1, 2, 2, 2],
-        [1, 1, 2, 2, 2],
-        [3, 3, 3, 4, 4],
-        [3, 3, 3, 4, 4]])
-    assert BlockMatrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
-        ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7) == Matrix([
-        [1, 2, 2, 2, 3, 3],
-        [1, 2, 2, 2, 3, 3],
-        [4, 2, 2, 2, 5, 5],
-        [6, 6, 7, 7, 5, 5]])

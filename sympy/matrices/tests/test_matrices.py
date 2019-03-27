@@ -287,13 +287,9 @@ def test_creation():
 
     assert Matrix(b) == b
 
-    c = Matrix((
-        Matrix((
-            (1, 2, 3),
-            (4, 5, 6)
-        )),
-        (7, 8, 9)
-    ))
+    c23 = Matrix(2, 3, range(1, 7))
+    c13 = Matrix(1, 3, range(7, 10))
+    c = Matrix([c23, c13])
     assert c.cols == 3
     assert c.rows == 3
     assert c[:] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -304,6 +300,35 @@ def test_creation():
     assert Matrix(ImmutableMatrix(c)) == ImmutableMatrix(c).as_mutable()
 
     assert c is not Matrix(c)
+
+    dat = [[ones(3,2), ones(3,3)*2], [ones(2,3)*3, ones(2,2)*4]]
+    M = Matrix(dat)
+    assert M == Matrix([
+        [1, 1, 2, 2, 2],
+        [1, 1, 2, 2, 2],
+        [1, 1, 2, 2, 2],
+        [3, 3, 3, 4, 4],
+        [3, 3, 3, 4, 4]])
+    assert M.tolist() != dat
+    # keep block form if evaluate=False
+    assert Matrix(dat, evaluate=False).tolist() == dat
+    A = MatrixSymbol("A", 2, 2)
+    dat = [ones(2), A]
+    assert Matrix(dat) == Matrix([
+    [      1,       1],
+    [      1,       1],
+    [A[0, 0], A[0, 1]],
+    [A[1, 0], A[1, 1]]])
+    assert Matrix(dat, evaluate=False).tolist() == [[i] for i in dat]
+
+
+def test_irregular_block():
+    assert Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
+        ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7) == Matrix([
+        [1, 2, 2, 2, 3, 3],
+        [1, 2, 2, 2, 3, 3],
+        [4, 2, 2, 2, 5, 5],
+        [6, 6, 7, 7, 5, 5]])
 
 
 def test_tolist():
@@ -2649,7 +2674,6 @@ def test_invertible_check():
     raises(ValueError, lambda: m.inv(method="LU"))
 
 
-@XFAIL
 def test_issue_3959():
     x, y = symbols('x, y')
     e = x*y

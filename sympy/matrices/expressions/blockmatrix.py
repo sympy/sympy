@@ -50,13 +50,21 @@ class BlockMatrix(MatrixExpr):
     rows all having the same total number of columns but
     not having the same number of columns for each matrix
     in each row. In this case, the matrix is not a block
-    matrix but BlockMatrix can be used to construct it
-    by setting `strict` to False.
+    matrix and should be instantiated by Matrix.
 
-    >>> from sympy import ones
-    >>> BlockMatrix([
+    >>> from sympy import ones, Matrix
+    >>> dat = [
     ... [ones(3,2), ones(3,3)*2],
-    ... [ones(2,3)*3, ones(2,2)*4]], strict=False)
+    ... [ones(2,3)*3, ones(2,2)*4]]
+    ...
+    >>> BlockMatrix(dat)
+    Traceback (most recent call last):
+    ...
+    ValueError:
+    Although this matrix is comprised of blocks, the blocks do not fill
+    the matrix in a size-symmetric fashion. To create a full matrix from
+    these arguments, pass them directly to Matrix.
+    >>> Matrix(dat)
     Matrix([
     [1, 1, 2, 2, 2],
     [1, 1, 2, 2, 2],
@@ -66,14 +74,14 @@ class BlockMatrix(MatrixExpr):
 
     See Also
     ========
-    irregular
+    sympy.matrices.matrices.MatrixBase.irregular
     """
     def __new__(cls, *args, **kwargs):
         from sympy.matrices.immutable import ImmutableDenseMatrix
         from sympy.matrices import zeros
+        from sympy.matrices.matrices import MatrixBase
         from sympy.utilities.iterables import is_sequence
         isMat = lambda i: getattr(i, 'is_Matrix', False)
-        isBlock = lambda i: isinstance(i, BlockMatrix) and is_sequence(i)
         if len(args) != 1 or \
                 not is_sequence(args[0]) or \
                 len(set([isMat(r) for r in args[0]])) != 1:
@@ -83,10 +91,7 @@ class BlockMatrix(MatrixExpr):
         rows = args[0] if args else []
         if not isMat(rows):
             if rows and isMat(rows[0]):
-                rows = [rows]
-            # make BlockMatrices explicit -- only one level of nesting
-            rows = [[i.as_explicit() if isBlock(i)
-                else i for i in r] for r in rows]
+                rows = [rows]  # rows is not list of lists or []
             # regularity check
             # same number of matrices in each row
             blocky = ok = len(set([len(r) for r in rows])) == 1
@@ -108,23 +113,20 @@ class BlockMatrix(MatrixExpr):
                 ok = len(set([
                     sum([i.cols for i in r]) for r in rows])) == 1
                 if blocky and ok:
-                    if kwargs.get('strict', True):
-                        raise ValueError(filldedent('''
-                            These blocks are not symmetric so this is
-                            not a true block matrix. It can be
-                            assembled as a full Matrix, however, by
-                            passing keyword `strict=False`."
-                            '''))
-                    return BlockMatrix.irregular(len(rows[0]),
-                        *[i for r in rows for i in r])
+                    raise ValueError(filldedent('''
+                        Although this matrix is comprised of blocks,
+                        the blocks do not fill the matrix in a
+                        size-symmetric fashion. To create a full matrix
+                        from these arguments, pass them directly to
+                        Matrix.'''))
                 raise ValueError(filldedent('''
                     When there are not the same number of rows in each
                     row's matrices or there are not the same number of
-                    total columns in each row, the matrix cannot be
-                    constructed by simple concatenation. If this matrix
-                    is known to consist of blocks fully filling a 2-D
-                    space then see BlockMatrix.irregular.'''))
-        mat = ImmutableDenseMatrix(rows)
+                    total columns in each row, the matrix is not a
+                    block matrix. If this matrix is known to consist of
+                    blocks fully filling a 2-D space then see
+                    Matrix.irregular.'''))
+        mat = ImmutableDenseMatrix(rows, evaluate=False)
         obj = Basic.__new__(cls, mat)
         return obj
 
@@ -269,51 +271,6 @@ class BlockMatrix(MatrixExpr):
         if (isinstance(other, BlockMatrix) and self.blocks == other.blocks):
             return True
         return super(BlockMatrix, self).equals(other)
-
-    @classmethod
-    def irregular(cls, ntop, *matrices, **kwargs):
-      """Return a matrix filled by the given matarices which
-      are listed in order of appearance from left to right, top to
-      bottom as they first appear in the matrix. They must fill the
-      matrix completely.
-
-      Examples
-      ========
-
-      >>> from sympy import ones
-      >>> from sympy.matrices.expressions.blockmatrix import BlockMatrix
-      >>> BlockMatrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
-      ...   ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7)
-      Matrix([
-        [1, 2, 2, 2, 3, 3],
-        [1, 2, 2, 2, 3, 3],
-        [4, 2, 2, 2, 5, 5],
-        [6, 6, 7, 7, 5, 5]])
-      """
-      from sympy import Matrix
-      from sympy.core.compatibility import as_int
-      ntop = as_int(ntop)
-      # make sure we are working with explicit matrices
-      b = [i.as_explicit() if hasattr(i, 'as_explicit') else i
-          for i in matrices]
-      q = list(range(len(b)))
-      dat = [i.rows for i in b]
-      active = [q.pop(0) for _ in range(ntop)]
-      cols = sum([b[i].cols for i in active])
-      rows = []
-      while any(dat):
-          r = []
-          for a, j in enumerate(active):
-              r.extend(b[j][-dat[j], :])
-              dat[j] -= 1
-              if dat[j] == 0 and q:
-                  active[a] = q.pop(0)
-          if len(r) != cols:
-            raise ValueError(filldedent('''
-                Matrices provided do not appear to fill
-                the space completely.'''))
-          rows.append(r)
-      return Matrix(rows)
 
 
 class BlockDiagMatrix(BlockMatrix):

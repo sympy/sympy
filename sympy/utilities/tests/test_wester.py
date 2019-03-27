@@ -1327,13 +1327,13 @@ def test_P3():
     A11 = A[0:3, 1:4]
     A12 = A[(0, 1, 3), (2, 0, 3)]
     A21 = A
-    A221 = A[0:2, 2:4]
-    A222 = A[(3, 0), (2, 1)]
+    A221 = -A[0:2, 2:4]
+    A222 = -A[(3, 0), (2, 1)]
     A22 = BlockMatrix([[A221, A222]]).T
-    rows = [[-A11, A12], [A21, -A22]]
+    rows = [[-A11, A12], [A21, A22]]
     from sympy.utilities.pytest import raises
     raises(ValueError, lambda: BlockMatrix(rows))
-    B = BlockMatrix(rows, strict=False)
+    B = Matrix(rows)
     assert B == Matrix([
         [-12, -13, -14, 13, 11, 14],
         [-22, -23, -24, 23, 21, 24],
