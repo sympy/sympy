@@ -1305,7 +1305,8 @@ def test_O10():
 
 
 def test_P1():
-    assert Matrix(3, 3, lambda i, j: j - i).diagonal(-1) == (-1,)*2
+    assert Matrix(3, 3, lambda i, j: j - i).diagonal(-1) == Matrix(
+        1, 2, [-1, -1])
 
 
 def test_P2():
