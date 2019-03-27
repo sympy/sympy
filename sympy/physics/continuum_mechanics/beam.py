@@ -294,6 +294,14 @@ class Beam(object):
         """
         This function calculates the Polar moment of Inertia of the beam about the axis passed.
         If no axis is passed, axis is assumed to be x by default.
+        
+        Parameters
+        ==========
+        axis: String
+            The axis about which the polar moment of inertia is calculated
+
+        Examples
+        ========
 
         >>> l, E, G, I, A = symbols('l, E, G, I, A')
         >>> b = Beam3D(l, E, G, I, A)
