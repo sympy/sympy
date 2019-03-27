@@ -126,7 +126,7 @@ class PygletPlot(object):
         >>> p[1].style = 'both'
         >>> p[2].style = 'both'
         >>> p.close()
-    
+
 
     Plot Window Keyboard Controls
     =============================
