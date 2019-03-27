@@ -809,7 +809,7 @@ class Float(Number):
     is sent for the precision; spaces or underscores are also allowed. (Auto-
     counting is only allowed for strings, ints and longs).
 
-    >>> Float('123 456 789 ._123_456', '')
+    >>> Float('123 456 789.123_456', '')
     123456789.123456
     >>> Float('12e-3', '')
     0.012
