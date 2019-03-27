@@ -32,7 +32,7 @@ import os
 import inspect
 from sympy import sympify, Function, Set, Symbol
 from sympy.core.compatibility import string_types
-from sympy.printing import sstr, StrPrinter
+from sympy.printing import StrPrinter
 from sympy.utilities.misc import debug
 
 class RubiStrPrinter(StrPrinter):
