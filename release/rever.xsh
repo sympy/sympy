@@ -85,7 +85,7 @@ def source_tarball():
 
 @activity(deps={'_version'})
 def build_docs():
-    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath'],
+    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath', 'matplotlib'],
         envname='sympy-release-docs'):
 
         cd doc
@@ -980,13 +980,16 @@ git_whitelist = {
     '.gitattributes',
     '.gitignore',
     '.mailmap',
-    # Travis
+    # Travis and CI
     '.travis.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
     '.ci/blacklisted.json',
     '.editorconfig',
+    '.coveragerc',
+    'codecov.yml',
+    'pytest.ini',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Pull request template
