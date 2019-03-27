@@ -208,8 +208,6 @@ def simpleDE(f, x, g, order=4):
         DE = g(x).diff(x, k) + Add(*[a[i]*g(x).diff(x, i) for i in range(0, k)])
         return eq, DE
 
-    eq, DE = _makeDE(order)
-
     found = False
     for k in range(1, order + 1):
         eq, DE = _makeDE(k)
