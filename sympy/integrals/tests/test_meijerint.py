@@ -482,7 +482,6 @@ def test_probability():
     a, b, p = symbols('a b p', positive=True, finite=True)
     # XXX (x/b)**a does not work
     dagum = a*p/x*(x/b)**(a*p)/(1 + x**a/b**a)**(p + 1)
-    # FIXME: This test seems to hang with this PR:
     assert simplify(integrate(dagum, (x, 0, oo), meijerg=True)) == 1
     # XXX conditions are a mess
     arg = x*dagum
