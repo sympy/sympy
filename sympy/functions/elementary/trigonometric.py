@@ -2867,7 +2867,7 @@ class atan2(InverseTrigonometricFunction):
 
     >>> from sympy import atan
     >>> atan2(y, x).rewrite(atan)
-    2*atan(y/(x + sqrt(x**2 + y**2)))
+    Piecewise((2*atan(y/(sqrt(x**2+y**2) + x)), Ne(y, 0)), (pi, And(Lt(x, 0), Eq(y, 0))), (0, And(Eq(y, 0), Gt(x, 0))), (S.NaN, True))
 
     but note that this form is undefined on the negative real axis.
 
