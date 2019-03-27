@@ -1418,8 +1418,8 @@ def factor_nc(expr):
                         ok = hit = True
                         l = b**e
                         il = b**-e
-                        for i, a in enumerate(args):
-                            args[i][1][0] = il*args[i][1][0]
+                        for j, a in enumerate(args):
+                            args[j][1][0] = il*args[j][1][0]
                         break
                 if not ok:
                     break
@@ -1454,8 +1454,8 @@ def factor_nc(expr):
                         ok = hit = True
                         r = b**e
                         il = b**-e
-                        for i, a in enumerate(args):
-                            args[i][1][-1] = args[i][1][-1]*il
+                        for j, a in enumerate(args):
+                            args[j][1][-1] = args[j][1][-1]*il
                         break
                 if not ok:
                     break
