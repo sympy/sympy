@@ -100,29 +100,32 @@ class PygletPlot(object):
 
     Calculator-like Interface
     =========================
-
-    >>> p = Plot(visible=False)
-    >>> f = x**2
-    >>> p[1] = f
-    >>> p[2] = f.diff(x)
-    >>> p[3] = f.diff(x).diff(x) # doctest: +SKIP
-    >>> p # doctest: +SKIP
-    [1]: x**2, 'mode=cartesian'
-    [2]: 2*x, 'mode=cartesian'
-    [3]: 2, 'mode=cartesian'
-    >>> p.show()
-    >>> p.clear()
-    >>> p
-    <blank plot>
-    >>> p[1] =  x**2+y**2
-    >>> p[1].style = 'solid'
-    >>> p[2] = -x**2-y**2
-    >>> p[2].style = 'wireframe'
-    >>> p[1].color = z, (0.4,0.4,0.9), (0.9,0.4,0.4)
-    >>> p[1].style = 'both'
-    >>> p[2].style = 'both'
-    >>> p.close()
-
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+        >>> p = Plot(visible=False)
+        >>> f = x**2
+        >>> p[1] = f
+        >>> p[2] = f.diff(x)
+        >>> p[3] = f.diff(x).diff(x) # doctest: +SKIP
+        >>> p # doctest: +SKIP
+        [1]: x**2, 'mode=cartesian'
+        [2]: 2*x, 'mode=cartesian'
+        [3]: 2, 'mode=cartesian'
+        >>> p.show()
+        >>> p.clear()
+        >>> p
+        <blank plot>
+        >>> p[1] =  x**2+y**2
+        >>> p[1].style = 'solid'
+        >>> p[2] = -x**2-y**2
+        >>> p[2].style = 'wireframe'
+        >>> p[1].color = z, (0.4,0.4,0.9), (0.9,0.4,0.4)
+        >>> p[1].style = 'both'
+        >>> p[2].style = 'both'
+        >>> p.close()
+    
 
     Plot Window Keyboard Controls
     =============================
