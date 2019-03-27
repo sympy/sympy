@@ -555,10 +555,9 @@ def test_inverse_laplace_transform():
     # TODO is there a way around simp_hyp?
     assert simp_hyp(ILT(a/(s**2 - a**2), s, t)) == sinh(a*t)*Heaviside(t)
     assert simp_hyp(ILT(s/(s**2 - a**2), s, t)) == cosh(a*t)*Heaviside(t)
-    # Not sure why this isn't working:
-    #assert ILT(a/((s + b)**2 + a**2), s, t) == exp(-b*t)*sin(a*t)*Heaviside(t)
-    #assert ILT(
-    #    (s + b)/((s + b)**2 + a**2), s, t) == exp(-b*t)*cos(a*t)*Heaviside(t)
+    assert ILT(a/((s + b)**2 + a**2), s, t) == exp(-b*t)*sin(a*t)*Heaviside(t)
+    assert ILT(
+        (s + b)/((s + b)**2 + a**2), s, t) == exp(-b*t)*cos(a*t)*Heaviside(t)
     # TODO sinh/cosh shifted come out a mess. also delayed trig is a mess
     # TODO should this simplify further?
     assert ILT(exp(-a*s)/s**b, s, t) == \
@@ -824,16 +823,16 @@ def test_issue_8514():
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t', positive=True)
     ft = simplify(inverse_laplace_transform(1/(a*s**2+b*s+c),s, t))
-    # Not sure why this isn't working...
-    #assert ft == (I*exp(t*cos(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
-    #              b**2))/a)*sin(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(
-    #              4*a*c - b**2))/(2*a)) + exp(t*cos(atan2(0, -4*a*c + b**2)
-    #              /2)*sqrt(Abs(4*a*c - b**2))/a)*cos(t*sin(atan2(0, -4*a*c
-    #              + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a)) + I*sin(t*sin(
-    #              atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a))
-    #              - cos(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
-    #              b**2))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
-    #              *sqrt(Abs(4*a*c - b**2)))/(2*a))/sqrt(-4*a*c + b**2)
+    assert ft == (I*exp(t*cos(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
+                  b**2))/a)*sin(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(
+                  4*a*c - b**2))/(2*a)) + exp(t*cos(atan2(0, -4*a*c + b**2)
+                  /2)*sqrt(Abs(4*a*c - b**2))/a)*cos(t*sin(atan2(0, -4*a*c
+                  + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a)) + I*sin(t*sin(
+                  atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a))
+                  - cos(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
+                  b**2))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
+                  *sqrt(Abs(4*a*c - b**2)))/(2*a))/sqrt(-4*a*c + b**2)
+
 def test_issue_12591():
     x, y = symbols("x y", real=True)
     assert fourier_transform(exp(x), x, y) == FourierTransform(exp(x), x, y)
