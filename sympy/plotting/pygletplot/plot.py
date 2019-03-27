@@ -25,7 +25,8 @@ from sympy.geometry.entity import GeometryEntity
 
 from sympy.utilities.decorator import doctest_depends_on
 
-@doctest_depends_on(modules=('pyglet',))
+
+@doctest_depends_on(modules=('pyglet', ))
 class PygletPlot(object):
     """
     Plot Examples
@@ -159,7 +160,7 @@ class PygletPlot(object):
 
     """
 
-    @doctest_depends_on(modules=('pyglet',))
+    @doctest_depends_on(modules=('pyglet', ))
     def __init__(self, *fargs, **win_args):
         """
         Positional Arguments
@@ -308,8 +309,7 @@ class PygletPlot(object):
         list.
         """
         if not (isinstance(i, (SYMPY_INTS, Integer)) and i >= 0):
-            raise ValueError("Function index must "
-                             "be an integer >= 0.")
+            raise ValueError("Function index must " "be an integer >= 0.")
 
         if isinstance(args, PlotObject):
             f = args
@@ -326,8 +326,8 @@ class PygletPlot(object):
             self._functions[i] = f
             self._render_lock.release()
         else:
-            raise ValueError("Failed to parse '%s'."
-                    % ', '.join(str(a) for a in args))
+            raise ValueError(
+                "Failed to parse '%s'." % ', '.join(str(a) for a in args))
 
     def __delitem__(self, i):
         """
@@ -382,8 +382,10 @@ class PygletPlot(object):
             s += "<blank plot>"
         else:
             self._render_lock.acquire()
-            s += "\n".join(["%s[%i]: %s" % ("", i, str(self._functions[i]))
-                            for i in self._functions])
+            s += "\n".join([
+                "%s[%i]: %s" % ("", i, str(self._functions[i]))
+                for i in self._functions
+            ])
             self._render_lock.release()
         return s
 
@@ -403,6 +405,7 @@ class PygletPlot(object):
             while a() or b():
                 sleep(0)
         self._render_lock.release()
+
 
 class ScreenShot:
     def __init__(self, plot):
@@ -426,12 +429,12 @@ class ScreenShot:
             return
 
         size_x, size_y = self._plot._window.get_size()
-        size = size_x*size_y*4*sizeof(c_ubyte)
+        size = size_x * size_y * 4 * sizeof(c_ubyte)
         image = create_string_buffer(size)
         glReadPixels(0, 0, size_x, size_y, GL_RGBA, GL_UNSIGNED_BYTE, image)
         from PIL import Image
-        im = Image.frombuffer('RGBA', (size_x, size_y),
-                              image.raw, 'raw', 'RGBA', 0, 1)
+        im = Image.frombuffer('RGBA', (size_x, size_y), image.raw, 'raw',
+                              'RGBA', 0, 1)
         im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile, self.format)
 
         self.flag = 0
