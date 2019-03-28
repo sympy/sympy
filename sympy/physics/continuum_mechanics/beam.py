@@ -1664,10 +1664,10 @@ class Beam3D(Beam):
         """
         return self._boundary_conditions
 
-
     def polar_moment(self):
         """
-        Returns the polar moment of area of the beam about the X axis with respect to the centroid.
+        Returns the polar moment of area of the beam
+        about the X axis with respect to the centroid.
 
         Examples
         ========
@@ -1686,7 +1686,6 @@ class Beam3D(Beam):
         if not hasattr(self.second_moment, '__iter__'):
             return 2*self.second_moment
         return self.second_moment[0] + self.second_moment[1]
-
 
     def apply_load(self, value, start, order, dir="y"):
         """

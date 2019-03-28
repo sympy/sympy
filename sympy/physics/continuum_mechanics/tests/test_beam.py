@@ -502,7 +502,7 @@ def test_Beam3D():
     b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     b.solve_slope_deflection()
 
-    assert b.polar_moment()==2*I
+    assert b.polar_moment() == 2*I
     assert b.shear_force() == [0, -q*x, 0]
     assert b.bending_moment() == [0, 0, -m*x + q*x**2/2]
     expected_deflection = (-l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m)
@@ -544,6 +544,7 @@ def test_Beam3D():
     b3.solve_for_reaction_loads(R1, R2, R3, R4)
     assert b3.reaction_loads == {R1: -120, R2: -120, R3: -1350, R4: -2700}
 
+
 def test_polar_moment_Beam3D():
     l, E, G, A, I1, I2 = symbols('l, E, G, A, I1, I2')
     R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
@@ -551,6 +552,7 @@ def test_polar_moment_Beam3D():
 
     b = Beam3D(l, E, G, I, A)
     assert b.polar_moment() == I1 + I2
+
 
 def test_parabolic_loads():
 
