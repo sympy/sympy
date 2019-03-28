@@ -709,6 +709,133 @@ def is_convex(f, *syms, **kwargs):
         return False
     return True
 
+
+def stationary_points(f, symbol, domain = S.Reals):
+    """
+    Returns the stationary points of a function in the given domain.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for which the stationary points are to be determined.
+    domain : Interval
+        The domain over which the stationary points have to be checked.
+        If unspecified, S.Reals will be the default domain.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, S, sin, log, pi, pprint
+    >>> from sympy.sets import Interval
+    >>> from sympy.calculus.util import stationary_points
+    >>> x = Symbol('x')
+
+    >>> stationary_points(1/x, x, S.Reals)
+    EmptySet()
+
+    >>> pprint(stationary_points(sin(x), x), use_unicode=False)
+              pi                              3*pi
+    {2*n*pi + -- | n in Integers} U {2*n*pi + ---- | n in Integers}
+              2                                2
+
+    >>> stationary_points(sin(x),x, Interval(0, 4*pi))
+    {pi/2, 3*pi/2, 5*pi/2, 7*pi/2}
+
+    """
+    from sympy import solveset, diff
+
+    if isinstance(domain, EmptySet):
+        return S.EmptySet
+
+    #domain = continuous_domain(f, symbol, domain)
+    set = solveset(diff(f, symbol), symbol, domain)
+
+    return set
+
+
+def maximize(f, symbol, domain = S.Reals):
+    """
+    Returns the maximum value of a function in the given domain.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for maximum value needs to be determined.
+    domain : Interval
+        The domain over which the maximum have to be checked.
+        If unspecified, then Global maximum is returned.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, S, sin, cos, pi
+    >>> from sympy.sets import Interval
+    >>> from sympy.calculus.util import maximize
+    >>> x = Symbol('x')
+
+    >>> f = -x**2 + 2*x + 5
+    >>> maximize(f, x, S.Reals)
+    6
+
+    >>> maximize(sin(x), x, Interval(-pi, pi/4))
+    sqrt(2)/2
+
+    >>> maximize(sin(x)*cos(x), x)
+    1/2
+
+    """
+    if isinstance(domain, EmptySet):
+        return S.EmptySet
+
+    return function_range(f, symbol, domain).sup
+
+
+def minimize(f, symbol, domain = S.Reals):
+    """
+    Returns the minimum value of a function in the given domain.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for minimum value needs to be determined.
+    domain : Interval
+        The domain over which the minimum have to be checked.
+        If unspecified, then Global minimum is returned.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, S, sin, cos
+    >>> from sympy.sets import Interval
+    >>> from sympy.calculus.util import minimize
+    >>> x = Symbol('x')
+
+    >>> f = x**2 + 2*x + 5
+    >>> minimize(f, x, S.Reals)
+    4
+
+    >>> minimize(sin(x), x, Interval(2, 3))
+    sin(3)
+
+    >>> minimize(sin(x)*cos(x), x)
+    -1/2
+
+    """
+    if isinstance(domain, EmptySet):
+        return S.EmptySet
+
+    return function_range(f, symbol, domain).inf
+
+
 class AccumulationBounds(AtomicExpr):
     r"""
     # Note AccumulationBounds has an alias: AccumBounds
