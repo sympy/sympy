@@ -73,7 +73,7 @@ class AssumptionKeys(object):
         """
         Idempotent predicate.
 
-        ``Q.idempotent(x)`` is true iff ``x^n=x`` for non-negative ``x``. 
+        ``Q.idempotent(x)`` is true iff ``x^n=x`` for positive ``n``.
 
         References
         ==========

@@ -107,7 +107,7 @@ Here follows a list of possible assumption names:
         (antihermitian) operators.
 
     idempotent
-        non-zero power of the element is equal
+        positive power of the element is equal
         to the element
 
 Examples
