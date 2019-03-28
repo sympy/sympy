@@ -33,6 +33,38 @@ from sympy.utilities.iterables import has_variety
 import mpmath
 
 
+def separable(expr, symbols=[]):
+    """Return the subset of symbols which appear in expr that
+    test as being positively separable from other symbols in expr
+    and those that do not test as being unseparable.
+
+    If `f(x, y)` is separable in `x` then `f(x, y).diff(x)/f(x, y)`
+    should be constant wrt y.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.simplify import separable
+    >>> from sympy import cos
+    >>> from sympy.abc import x, y
+    >>> eq = cos(x + y) + cos(x - y)
+    >>> separable(eq)
+    {x, y}, {}
+    """
+    s = []
+    u = set()
+    free = expr.free_symbols
+    symbols = set(symbols) or free
+    present = free & set(symbols)
+    for x in present:
+        free.remove(x)
+        separable = (expr.diff(x)/expr).is_constant(*free, **dict(simplify=True))
+        if separable:
+            s.append(x)
+        elif separable is not False:
+            u.add(x)
+        free.add(x)
+    return set(s), set(u)
 
 def separatevars(expr, symbols=[], dict=False, force=False):
     """

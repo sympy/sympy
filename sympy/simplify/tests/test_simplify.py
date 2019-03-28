@@ -9,7 +9,7 @@ from sympy import (
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
     zoo)
 from sympy.core.mul import _keep_coeff
-from sympy.simplify.simplify import nthroot, inversecombine
+from sympy.simplify.simplify import nthroot, inversecombine, separable
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.core.compatibility import range
 
@@ -793,3 +793,11 @@ def test_nc_simplify():
     assert nc_simplify(expr) == (1-c)**-1
     # commutative expressions should be returned without an error
     assert nc_simplify(2*x**2) == 2*x**2
+
+def test_separable_issue_16291():
+    eq1 = exp(x**2 +y**2) * (cos(x+y) - cos(x-y))
+    eq2 = sin(x+y) + sin(x-y)
+    eq3 = sin(x) + cos(y)
+    assert separable(eq1, [x, y]) == ({x, y}, set())
+    assert separable(eq2 ,[x, y, z]) == ({x, y}, set())
+    assert separable(eq3, [x, y]) == (set(), {x, y})
