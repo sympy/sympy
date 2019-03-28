@@ -4579,13 +4579,13 @@ def test_sympy__integrals__rubi__utility_function__rubi_unevaluated_expr():
     a = symbols('a')
     assert _test_args(rubi_unevaluated_expr(a))
 
-def test_sympy__integrals__rubi__utility_function__exp():
-    from sympy.integrals.rubi.utility_function import exp
-    assert _test_args(exp(5))
+def test_sympy__integrals__rubi__utility_function__rubi_exp():
+    from sympy.integrals.rubi.utility_function import rubi_exp
+    assert _test_args(rubi_exp(5))
 
-def test_sympy__integrals__rubi__utility_function__log():
-    from sympy.integrals.rubi.utility_function import log
-    assert _test_args(log(5))
+def test_sympy__integrals__rubi__utility_function__rubi_log():
+    from sympy.integrals.rubi.utility_function import rubi_log
+    assert _test_args(rubi_log(5))
 
 def test_sympy__integrals__rubi__utility_function__Int():
     from sympy.integrals.rubi.utility_function import Int
