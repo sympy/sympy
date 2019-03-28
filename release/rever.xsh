@@ -262,7 +262,7 @@ def test_tarball(py_version):
         cp @('/root/release/{source}'.format(**tarball_format)) @("releasetar.tar.gz".format(**tarball_format))
         tar xvf releasetar.tar.gz
 
-        cd @("/root/{source-orig-notar}".format(**tarball_format))
+        cd @("{source-orig-notar}".format(**tarball_format))
         python setup.py install
         python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
         python -m isympy --help
