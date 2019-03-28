@@ -1793,10 +1793,10 @@ def Levy(name, mu, c):
     >>> X = Levy("x", mu, c)
 
     >>> density(X)(z)
-    sqrt(c/(2*pi))*exp(-c/(2*(x - mu)))/((x - mu)**(S.One + S.Half))
+    sqrt(2)*sqrt(c)*exp(-c/(-2*mu + 2*z))/(2*sqrt(pi)*(-mu + z)**(3/2))
 
     >>> cdf(X)(z)
-    erfc(sqrt(c/(2*(x - mu))))
+    erfc(sqrt(c)*sqrt(1/(-2*mu + 2*z)))
 
     References
     ==========
