@@ -2092,6 +2092,8 @@ class motzkin(Function):
     @staticmethod
     def motzkin(n):
         n = as_int(n)
+        if n < 0:
+             raise ValueError('The number must be positive.')
         if n == 1 or n == 2:
             return 1
         i = 2
