@@ -1103,103 +1103,44 @@ def eye(*args, **kwargs):
 
 
 def diag(*values, **kwargs):
-    """Create a sparse, diagonal matrix from a list of diagonal values.
-
-    Notes
-    =====
-
-    When arguments are matrices they are fitted in resultant matrix.
-
-    The returned matrix is a mutable, dense matrix. To make it a different
-    type, send the desired class for keyword ``cls``.
+    """Returns a matrix with the provided values placed on the
+    diagonal. If non-square matrices are included, they will
+    produce a block-diagonal matrix.
 
     Examples
     ========
 
-    >>> from sympy.matrices import diag, Matrix, ones
-    >>> diag(1, 2, 3)
+    This version of diag is a thin wrapper to Matrix.diag that differs
+    in that it treats all lists like matrices -- even when a single list
+    is given. If this is not desired, either put a `*` before the list or
+    set `unpack=True`.
+
+    >>> from sympy import diag
+
+    >>> diag([1, 2, 3], unpack=True)  # = diag(1,2,3) or diag(*[1,2,3])
     Matrix([
     [1, 0, 0],
     [0, 2, 0],
     [0, 0, 3]])
-    >>> diag(*[1, 2, 3])
+
+    >>> diag([1, 2, 3])  # a column vector
     Matrix([
-    [1, 0, 0],
-    [0, 2, 0],
-    [0, 0, 3]])
-
-    The diagonal elements can be matrices; diagonal filling will
-    continue on the diagonal from the last element of the matrix:
-
-    >>> from sympy.abc import x, y, z
-    >>> a = Matrix([x, y, z])
-    >>> b = Matrix([[1, 2], [3, 4]])
-    >>> c = Matrix([[5, 6]])
-    >>> diag(a, 7, b, c)
-    Matrix([
-    [x, 0, 0, 0, 0, 0],
-    [y, 0, 0, 0, 0, 0],
-    [z, 0, 0, 0, 0, 0],
-    [0, 7, 0, 0, 0, 0],
-    [0, 0, 1, 2, 0, 0],
-    [0, 0, 3, 4, 0, 0],
-    [0, 0, 0, 0, 5, 6]])
-
-    When diagonal elements are lists, they will be treated as arguments
-    to Matrix:
-
-    >>> diag([1, 2, 3], 4)
-    Matrix([
-    [1, 0],
-    [2, 0],
-    [3, 0],
-    [0, 4]])
-    >>> diag([[1, 2, 3]], 4)
-    Matrix([
-    [1, 2, 3, 0],
-    [0, 0, 0, 4]])
-
-    A given band off the diagonal can be made by padding with a
-    vertical or horizontal "kerning" vector:
-
-    >>> hpad = ones(0, 2)
-    >>> vpad = ones(2, 0)
-    >>> diag(vpad, 1, 2, 3, hpad) + diag(hpad, 4, 5, 6, vpad)
-    Matrix([
-    [0, 0, 4, 0, 0],
-    [0, 0, 0, 5, 0],
-    [1, 0, 0, 0, 6],
-    [0, 2, 0, 0, 0],
-    [0, 0, 3, 0, 0]])
-
-
-
-    The type is mutable by default but can be made immutable by setting
-    the ``mutable`` flag to False:
-
-    >>> type(diag(1))
-    <class 'sympy.matrices.dense.MutableDenseMatrix'>
-    >>> from sympy.matrices import ImmutableMatrix
-    >>> type(diag(1, cls=ImmutableMatrix))
-    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
+    [1],
+    [2],
+    [3]])
 
     See Also
     ========
-
     eye
+    sympy.matrices.common.diag
     """
-
     from .dense import Matrix
-
-    # diag assumes any lists passed in are to be interpreted
-    # as arguments to Matrix, so apply Matrix to any list arguments
-    def normalize(m):
-        if is_sequence(m) and not isinstance(m, MatrixBase):
-            return Matrix(m)
-        return m
-    values = (normalize(m) for m in values)
-
-    return Matrix.diag(*values, **kwargs)
+    # Extract any setting so we don't duplicate keywords sent
+    # as named parameters:
+    kw = kwargs.copy()
+    strict = kw.pop('strict', True)  # lists will be converted to Matrices
+    unpack = kw.pop('unpack', False)
+    return Matrix.diag(*values, strict=strict, unpack=unpack, **kw)
 
 
 def GramSchmidt(vlist, orthonormal=False):

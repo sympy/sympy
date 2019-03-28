@@ -2733,6 +2733,14 @@ def test_sympy__matrices__expressions__hadamard__HadamardProduct():
     Y = MatrixSymbol('Y', x, y)
     assert _test_args(HadamardProduct(X, Y))
 
+def test_sympy__matrices__expressions__hadamard__HadamardPower():
+    from sympy.matrices.expressions.hadamard import HadamardPower
+    from sympy.matrices.expressions import MatrixSymbol
+    from sympy import Symbol
+    X = MatrixSymbol('X', x, y)
+    n = Symbol("n")
+    assert _test_args(HadamardPower(X, n))
+
 def test_sympy__matrices__expressions__kronecker__KroneckerProduct():
     from sympy.matrices.expressions.kronecker import KroneckerProduct
     from sympy.matrices.expressions import MatrixSymbol

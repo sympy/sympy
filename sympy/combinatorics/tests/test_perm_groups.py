@@ -931,3 +931,10 @@ def test_elementary():
     assert G.is_elementary(2) == False
     H = AlternatingGroup(4).sylow_subgroup(2)
     assert H.is_elementary(2) == True
+
+
+def test_perfect():
+    G = AlternatingGroup(3)
+    assert G.is_perfect == False
+    G = AlternatingGroup(5)
+    assert G.is_perfect == True

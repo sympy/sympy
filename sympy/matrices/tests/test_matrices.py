@@ -1522,52 +1522,11 @@ def test_vech_errors():
 
 
 def test_diag():
-    a = Matrix([[1, 2], [2, 3]])
-    b = Matrix([[3, x], [y, 3]])
-    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
-    assert diag(a, b, b) == Matrix([
-        [1, 2, 0, 0, 0, 0],
-        [2, 3, 0, 0, 0, 0],
-        [0, 0, 3, x, 0, 0],
-        [0, 0, y, 3, 0, 0],
-        [0, 0, 0, 0, 3, x],
-        [0, 0, 0, 0, y, 3],
-    ])
-    assert diag(a, b, c) == Matrix([
-        [1, 2, 0, 0, 0, 0, 0],
-        [2, 3, 0, 0, 0, 0, 0],
-        [0, 0, 3, x, 0, 0, 0],
-        [0, 0, y, 3, 0, 0, 0],
-        [0, 0, 0, 0, 3, x, 3],
-        [0, 0, 0, 0, y, 3, z],
-        [0, 0, 0, 0, x, y, z],
-    ])
-    assert diag(a, c, b) == Matrix([
-        [1, 2, 0, 0, 0, 0, 0],
-        [2, 3, 0, 0, 0, 0, 0],
-        [0, 0, 3, x, 3, 0, 0],
-        [0, 0, y, 3, z, 0, 0],
-        [0, 0, x, y, z, 0, 0],
-        [0, 0, 0, 0, 0, 3, x],
-        [0, 0, 0, 0, 0, y, 3],
-    ])
-    a = Matrix([x, y, z])
-    b = Matrix([[1, 2], [3, 4]])
-    c = Matrix([[5, 6]])
-    assert diag(a, 7, b, c) == Matrix([
-        [x, 0, 0, 0, 0, 0],
-        [y, 0, 0, 0, 0, 0],
-        [z, 0, 0, 0, 0, 0],
-        [0, 7, 0, 0, 0, 0],
-        [0, 0, 1, 2, 0, 0],
-        [0, 0, 3, 4, 0, 0],
-        [0, 0, 0, 0, 5, 6],
-    ])
-    assert diag(1, [2, 3], [[4, 5]]) == Matrix([
-        [1, 0, 0, 0],
-        [0, 2, 0, 0],
-        [0, 3, 0, 0],
-        [0, 0, 4, 5]])
+    # mostly tested in testcommonmatrix.py
+    assert diag([1, 2, 3]) == Matrix([1, 2, 3])
+    m = [1, 2, [3]]
+    raises(ValueError, lambda: diag(m))
+    assert diag(m, strict=False) == Matrix([1, 2, 3])
 
 
 def test_get_diag_blocks1():
@@ -1623,6 +1582,7 @@ def test_creation_args():
     assert ones(long(3), Integer(4)) == ones(3, 4)
     raises(TypeError, lambda: Matrix(5))
     raises(TypeError, lambda: Matrix(1, 2))
+    raises(ValueError, lambda: Matrix([1, [2]]))
 
 
 def test_diagonal_symmetrical():

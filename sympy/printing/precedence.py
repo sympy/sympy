@@ -43,6 +43,7 @@ PRECEDENCE_VALUES = {
     # As soon as `TensMul` is a subclass of `Mul`, remove this:
     "TensMul": PRECEDENCE["Mul"],
     "HadamardProduct": PRECEDENCE["Mul"],
+    "HadamardPower": PRECEDENCE["Pow"],
     "KroneckerProduct": PRECEDENCE["Mul"],
     "Equality": PRECEDENCE["Mul"],
     "Unequality": PRECEDENCE["Mul"],
