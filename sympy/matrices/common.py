@@ -1886,7 +1886,13 @@ class MatrixOperations(MatrixRequired):
         >>> Matrix(_).subs(y, x)
         Matrix([[x]])
         """
-        return self.applyfunc(lambda x: x.subs(*args, **kwargs))
+        #return self.applyfunc(lambda x: x.subs(*args, **kwargs))
+        try:
+            iter(args)
+        except TypeError:
+            return self.applyfunc(lambda x: x.subs(*args, **kwargs))
+        else:
+            return self.applyfunc(lambda x: x.subs(list(args) , **kwargs))
 
     def trace(self):
         """

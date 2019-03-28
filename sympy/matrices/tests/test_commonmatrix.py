@@ -1520,3 +1520,9 @@ def test___eq__():
         [[0, 1, 1],
         [1, 0, 0],
         [1, 1, 1]]) == {}) is False
+
+
+def test_issue_10589():
+    vect = Matrix([x,y])
+    assert vect.subs(zip([x,y] , [1,1])) == Matrix([[1],[1]])
+
