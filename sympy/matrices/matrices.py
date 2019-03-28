@@ -2344,37 +2344,44 @@ class MatrixBase(MatrixDeprecated,
             elif is_sequence(args[0]) \
                     and not isinstance(args[0], DeferredVector):
                 dat = list(args[0])
-                raw = lambda i: isinstance(i, (list, tuple))
+                ismat = lambda i: isinstance(i, MatrixBase) and (
+                    evaluate or
+                    isinstance(i, BlockMatrix) or
+                    isinstance(i, MatrixSymbol))
+                raw = lambda i: is_sequence(i) and not ismat(i)
                 evaluate = kwargs.get('evaluate', True)
                 if evaluate:
                     def do(x):
                         # make Block and Symbol explicit
                         if isinstance(x, (list, tuple)):
-                            return type(x)([do(i) for i in x])
+                            return [do(i) for i in x]
                         if isinstance(x, BlockMatrix) or \
                                 isinstance(x, MatrixSymbol) and \
                                 all(_.is_Integer for _ in x.shape):
                             return x.as_explicit()
                         return x
                     dat = do(dat)
-                ismat = lambda i: isinstance(i, MatrixBase) and (
-                    evaluate or
-                    isinstance(i, BlockMatrix) or
-                    isinstance(i, MatrixSymbol))
 
-                if not any(raw(i) or ismat(i) for i in dat):
+                if dat == [] or dat == [[]]:
+                    rows = cols = 0
+                    flat_list = []
+                elif not any(raw(i) or ismat(i) for i in dat):
                     # a column as a list of values
                     flat_list = [cls._sympify(i) for i in dat]
                     rows = len(flat_list)
                     cols = 1 if rows else 0
                 elif evaluate and all(ismat(i) for i in dat):
                     # a column as a list of matrices
-                    ncol = set(i.cols for i in dat)
-                    if len(ncol) != 1:
-                        raise ValueError('mismatched dimensions')
-                    flat_list = [_ for i in dat for r in i.tolist() for _ in r]
-                    cols = ncol.pop()
-                    rows = len(flat_list)//cols
+                    ncol = set(i.cols for i in dat if any(i.shape))
+                    if ncol:
+                        if len(ncol) != 1:
+                            raise ValueError('mismatched dimensions')
+                        flat_list = [_ for i in dat for r in i.tolist() for _ in r]
+                        cols = ncol.pop()
+                        rows = len(flat_list)//cols
+                    else:
+                        rows = cols = 0
+                        flat_list = []
                 elif evaluate and any(ismat(i) for i in dat):
                     ncol = set()
                     flat_list = []
@@ -2382,10 +2389,12 @@ class MatrixBase(MatrixDeprecated,
                         if ismat(i):
                             flat_list.extend(
                                 [k for j in i.tolist() for k in j])
-                            ncol.add(i.cols)
+                            if any(i.shape):
+                                ncol.add(i.cols)
                         elif raw(i):
-                            ncol.add(len(i))
-                            flat_list.extend(i)
+                            if i:
+                                ncol.add(len(i))
+                                flat_list.extend(i)
                         else:
                             ncol.add(1)
                             flat_list.append(i)
@@ -2401,7 +2410,8 @@ class MatrixBase(MatrixDeprecated,
                     ncol = set()
                     rows = cols = 0
                     for row in dat:
-                        if not is_sequence(row):
+                        if not is_sequence(row) and \
+                                not getattr(row, 'is_Matrix', False):
                             raise ValueError('expecting list of lists')
                         if not row:
                             continue
@@ -2413,8 +2423,12 @@ class MatrixBase(MatrixDeprecated,
                             r, c = c, r
                         else:
                             r = 1
-                            c = len(row)
-                            flat = [cls._sympify(i) for i in row]
+                            if getattr(row, 'is_Matrix', False):
+                                c = 1
+                                flat = [row]
+                            else:
+                                c = len(row)
+                                flat = [cls._sympify(i) for i in row]
                         ncol.add(c)
                         if len(ncol) > 1:
                             raise ValueError('mismatched dimensions')

@@ -321,6 +321,11 @@ def test_creation():
     [A[1, 0], A[1, 1]]])
     assert Matrix(dat, evaluate=False).tolist() == [[i] for i in dat]
 
+    # 0-dim tolerance
+    assert Matrix([ones(2), ones(0)]) == Matrix([ones(2)])
+    raises(ValueError, lambda: Matrix([ones(2), ones(0, 3)]))
+    raises(ValueError, lambda: Matrix([ones(2), ones(3, 0)]))
+
 
 def test_irregular_block():
     assert Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
