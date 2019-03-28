@@ -547,7 +547,7 @@ def test_Beam3D():
 def test_polar_moment_Beam3D():
     l, E, G, A, I1, I2 = symbols('l, E, G, A, I1, I2')
     R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
-    I=[I1, I2]
+    I = [I1, I2]
 
     b = Beam3D(l, E, G, I, A)
     assert b.polar_moment() == I1 + I2

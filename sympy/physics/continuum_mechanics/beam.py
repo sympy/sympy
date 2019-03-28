@@ -1667,7 +1667,7 @@ class Beam3D(Beam):
 
     def polar_moment(self):
         """
-        This function calculates the Polar moment of Inertia of the beam about the x axis.
+        Returns the polar moment of area of the beam about the X axis with respect to the centroid.
 
         Examples
         ========
@@ -1683,7 +1683,7 @@ class Beam3D(Beam):
         >>> b.polar_moment()
         24
         """
-        if isinstance(self.second_moment, int) or isinstance(self.second_moment, Symbol):
+        if not hasattr(self.second_moment, '__iter__'):
             return 2*self.second_moment
         return self.second_moment[0] + self.second_moment[1]
 
