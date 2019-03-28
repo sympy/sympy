@@ -1992,8 +1992,8 @@ def nT(n, k=None):
 #-----------------------------------------------------------------------------#
 class motzkin(Function):
     """
-    In mathematics, the nth Motzkin number is the number
-    of different ways of drawing non-intersecting chords
+    The nth Motzkin number is the number
+    of ways of drawing non-intersecting chords
     between n points on a circle (not necessarily touching
     every point by a chord). The Motzkin numbers are named
     after Theodore Motzkin and have diverse applications
@@ -2019,7 +2019,7 @@ class motzkin(Function):
     >>> motzkin.is_motzkin(51)
         True
 
-    >>> motzkin.eval_motzkin(10)
+    >>> motzkin.motzkin(10)
         835
     """
     @staticmethod
@@ -2090,7 +2090,7 @@ class motzkin(Function):
         return motzkin
 
     @staticmethod
-    def eval_motzkin(n):
+    def motzkin(n):
         n = as_int(n)
         if n == 1 or n == 2:
             return 1
