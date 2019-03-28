@@ -263,6 +263,11 @@ class Pow(Expr):
                     b = -b
                 elif e.is_odd:
                     return -Pow(-b, e)
+            if b.is_idempotent:
+                if e is S.Zero:
+                    return S.One
+                else:
+                    return b
             if S.NaN in (b, e):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
                 return S.NaN
             elif b is S.One:
