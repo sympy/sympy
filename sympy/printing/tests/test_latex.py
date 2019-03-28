@@ -1584,11 +1584,19 @@ def test_Adjoint():
 
 
 def test_Hadamard():
-    from sympy.matrices import MatrixSymbol, HadamardProduct
+    from sympy.matrices import MatrixSymbol, HadamardProduct, HadamardPower
+    from sympy.matrices.expressions import MatAdd, MatMul
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert latex(HadamardProduct(X, Y*Y)) == r'X \circ Y^{2}'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
+
+    assert latex(HadamardPower(X, 2)) == r'X^{\circ {2}}'
+    assert latex(HadamardPower(X, -1)) == r'X^{\circ {-1}}'
+    assert latex(HadamardPower(MatAdd(X, Y), 2)) == \
+        r'\left(X + Y\right)^{\circ {2}}'
+    assert latex(HadamardPower(MatMul(X, Y), 2)) == \
+        r'\left(X Y\right)^{\circ {2}}'
 
 
 def test_ZeroMatrix():
