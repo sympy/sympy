@@ -452,3 +452,22 @@ def test_better_sqrt():
     assert sqrt(-I/2) == Mul(S.Half, 1 - I, evaluate=False)
     # fractional im part
     assert Pow(-9*I/2, 3/S(2)) == 27*(1 - I)**3/8
+
+def test_idempotence():
+    x = Symbol('x', idempotent=True)
+    n = Symbol('n', positive=True)
+    y = Symbol('y')
+
+    # positive powers equal the element
+    assert x**2     == x
+    assert x**125   == x
+    assert x**n     == x
+    assert x**(n+1) == x
+
+    # not-necessarily-positive powers are left untouched
+    assert x**(-1)  != x
+    assert x**(-12) != x
+    assert x**y     != x
+
+    # empty product
+    assert x**0     == 1
