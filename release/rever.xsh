@@ -259,8 +259,8 @@ def test_tarball(py_version):
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
-        cp @('/root/release/{source}'.format(**tarball_format)) @("releasetar.tar".format(**tarball_format))
-        tar xvf releasetar.tar
+        cp @('/root/release/{source}'.format(**tarball_format)) @("releasetar.tar.gz".format(**tarball_format))
+        tar xvf releasetar.tar.gz
 
         cd @("/root/{source-orig-notar}".format(**tarball_format))
         python setup.py install
