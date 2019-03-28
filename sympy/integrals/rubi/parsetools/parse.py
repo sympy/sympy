@@ -331,8 +331,7 @@ def get_free_symbols(s, symbols, free_symbols=None):
     '''
     Returns free_symbols present in `s`.
     '''
-    if not free_symbols:
-        free_symbols = []
+    free_symbols = free_symbols or []
     if not isinstance(s, list):
         if s in symbols:
             free_symbols.append(s)

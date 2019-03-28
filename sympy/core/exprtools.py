@@ -1418,7 +1418,7 @@ def factor_nc(expr):
                         ok = hit = True
                         l = b**e
                         il = b**-e
-                        for j, a in enumerate(args):
+                        for j in range(len(args)):
                             args[j][1][0] = il*args[j][1][0]
                         break
                 if not ok:
@@ -1427,7 +1427,7 @@ def factor_nc(expr):
             hit = True
             lenn = len(n)
             l = Mul(*n)
-            for i, a in enumerate(args):
+            for i in range(len(args)):
                 args[i][1] = args[i][1][lenn:]
         # find any noncommutative common suffix
         for i, a in enumerate(args):
@@ -1454,7 +1454,7 @@ def factor_nc(expr):
                         ok = hit = True
                         r = b**e
                         il = b**-e
-                        for j, a in enumerate(args):
+                        for j in range(len(args)):
                             args[j][1][-1] = args[j][1][-1]*il
                         break
                 if not ok:
