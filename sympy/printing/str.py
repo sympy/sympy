@@ -336,6 +336,13 @@ class StrPrinter(Printer):
         return '.*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
 
+    def _print_HadamardPower(self, expr):
+        PREC = precedence(expr)
+        return '.**'.join([
+            self.parenthesize(expr.base, PREC),
+            self.parenthesize(expr.exp, PREC)
+        ])
+
     def _print_NaN(self, expr):
         return 'nan'
 

@@ -713,6 +713,8 @@ class SeqFormula(SeqExpr):
         formula = self.formula * coeff
         return SeqFormula(formula, self.args[1])
 
+    def expand(self, *args, **kwargs):
+        return SeqFormula(expand(self.formula, *args, **kwargs), self.args[1])
 
 class RecursiveSeq(SeqBase):
     """A finite degree recursive sequence.

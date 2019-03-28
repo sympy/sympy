@@ -102,7 +102,7 @@ class ArgumentIndexError(ValueError):
                (self.args[1], self.args[0]))
 
 
-# Python 2 and 3 compatible version that do not raise a Deprecation warning.
+# Python 2/3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
 
@@ -1184,8 +1184,8 @@ class Derivative(Expr):
     def __new__(cls, expr, *variables, **kwargs):
 
         from sympy.matrices.common import MatrixCommon
-        from sympy import Integer
-        from sympy.tensor.array import Array, NDimArray
+        from sympy import Integer, MatrixExpr
+        from sympy.tensor.array import Array, NDimArray, derive_by_array
         from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
@@ -1317,6 +1317,9 @@ class Derivative(Expr):
                         if not expr.xreplace({v: D}).has(D):
                             zero = True
                             break
+                    elif isinstance(v, MatrixExpr):
+                        zero = False
+                        break
                     elif isinstance(v, Symbol) and v not in free:
                         zero = True
                         break

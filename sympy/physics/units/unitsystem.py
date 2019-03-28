@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Unit system for physical quantities; include definition of constants.
 """

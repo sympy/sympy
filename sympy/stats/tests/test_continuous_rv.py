@@ -363,6 +363,20 @@ def test_f_distribution():
     assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
                              /(x*beta(d1/2, d2/2)))
 
+    d1 = Symbol("d1", positive=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d1))
+
+    d1 = Symbol("d1", positive=True, integer=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d1))
+
+    d1 = Symbol("d1", positive=True)
+    d2 = Symbol("d2", positive=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d2))
+
+    d2 = Symbol("d2", positive=True, integer=False)
+    raises(ValueError, lambda: FDistribution('x', d1, d2))
+
+
 def test_fisher_z():
     d1 = Symbol("d1", positive=True)
     d2 = Symbol("d2", positive=True)

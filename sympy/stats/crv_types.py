@@ -1020,6 +1020,13 @@ class FDistributionDistribution(SingleContinuousDistribution):
 
     set = Interval(0, oo)
 
+    @staticmethod
+    def check(d1, d2):
+        _value_check(d1 > 0 and d1.is_integer, \
+            "Degrees of freedom d1 must be positive integer.")
+        _value_check(d2 > 0 and d2.is_integer, \
+            "Degrees of freedom d2 must be positive integer.")
+
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
         return (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))

@@ -701,12 +701,8 @@ def test_checking():
 def test_issue_4671_4463_4467():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
-    # This is probably better than the form below but equivalent:
-    #assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [-sqrt(x*log(1 + I*pi/log(2)))
-    #                                                    , sqrt(x*log(1 + I*pi/log(2)))]
     assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [
-         sqrt(x*(-log(log(2)) + log(log(2) + I*pi))),
-        -sqrt(-x*(log(log(2)) - log(log(2) + I*pi)))]
+        -sqrt(x*log(1 + I*pi/log(2))), sqrt(x*log(1 + I*pi/log(2)))]
 
     C1, C2 = symbols('C1 C2')
     f = Function('f')
@@ -1576,17 +1572,18 @@ def test_lambert_multivariate():
     # coverage test
     raises(NotImplementedError, lambda: solve(x - sin(x)*log(y - x), x))
 
-    _13 = S(1)/3
-    _56 = S(5)/6
-    _53 = S(5)/3
-    K = (a**(-5))**(_13)*LambertW(_13)**(_13)/-2
-    assert solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
-        (log(a**(-5)) + log(3*LambertW(_13)))/(3*log(a)),
-        log((3**(_13) - 3**(_56)*I)*K)/log(a),
-        log((3**(_13) + 3**(_56)*I)*K)/log(a)]
+    x0 = 1/log(a)
+    x1 = LambertW(S(1)/3)
+    x2 = a**(-5)
+    x3 = 3**(S(1)/3)
+    x4 = 3**(S(5)/6)*I
+    x5 = x1**(S(1)/3)*x2**(S(1)/3)/2
+    ans = solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x)
+    assert ans == [
+        x0*log(3*x1*x2)/3, x0*log(-x5*(x3 - x4)), x0*log(-x5*(x3 + x4))]
 
     # check collection
-    K = ((b + 3)*LambertW(1/(b + 3))/a**5)**(_13)
+    K = ((b + 3)*LambertW(1/(b + 3))/a**5)**(S(1)/3)
     assert solve(
             3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5),
             x) == [
