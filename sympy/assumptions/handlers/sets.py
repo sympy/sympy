@@ -94,6 +94,38 @@ class AskIntegerHandler(CommonHandler):
     Determinant = Trace = MatrixElement
 
 
+class AskIdempotentHandler(CommonHandler):
+    """
+    Handler for Q.idempotent
+    Test that an expression belongs to the field of Idempotent operators
+    """
+
+    @staticmethod
+    def Add(expr, assumptions):
+        """
+        Idempotent + Idempotent not necessarily Idempotent
+        """
+        return None
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        """
+        As long as there is at most only one noncommutative term:
+        Idempotent*Idempotent -> Idempotent
+        """
+        nccount = 0
+        result = True
+        for arg in expr.args:
+            if ask(Q.idempotent(arg), assumptions):
+                result = result ^ True
+            if ask(~Q.commutative(arg), assumptions):
+                nccount += 1
+                if nccount > 1:
+                    break
+        else:
+            return result
+
+
 class AskRationalHandler(CommonHandler):
     """
     Handler for Q.rational

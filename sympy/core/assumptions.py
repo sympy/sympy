@@ -106,6 +106,10 @@ Here follows a list of possible assumption names:
         object belongs to the field of hermitian
         (antihermitian) operators.
 
+    idempotent
+        non-zero power of the element is equal
+        to the element
+
 Examples
 ========
 
@@ -199,9 +203,9 @@ _assume_rules = FactRules([
     'noninteger     ==  real & !integer',
     'nonzero        ==  real & !zero',
 ])
-
 _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
+_assume_defined.add('idempotent')
 _assume_defined = frozenset(_assume_defined)
 
 

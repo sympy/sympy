@@ -69,6 +69,22 @@ class AssumptionKeys(object):
         return Predicate('antihermitian')
 
     @predicate_memo
+    def idempotent(self):
+        """
+        Idempotent predicate.
+
+        ``Q.idempotent(x)`` is true iff ``x^n=x`` for non-negative ``x``. 
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Idempotence
+
+        """
+        # TODO: Add examples
+        return Predicate('idempotent')
+
+    @predicate_memo
     def real(self):
         r"""
         Real number predicate.
@@ -1424,6 +1440,7 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("antihermitian",     "sets.AskAntiHermitianHandler"),
+    ("idempotent",        "sets.AskIdempotentHandler"),
     ("finite",           "calculus.AskFiniteHandler"),
     ("commutative",       "AskCommutativeHandler"),
     ("complex",           "sets.AskComplexHandler"),
