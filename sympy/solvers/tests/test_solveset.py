@@ -176,7 +176,8 @@ def test_invert_modular():
     f = x - Mod(a**n*z, m)
     assert solveset(f, n, S.Integers) == FiniteSet(100)
     x = symbols('x')
-    assert solveset(2 - Mod(4*x, 5), x, S.Integers) == FiniteSet(3)
+    n = Dummy('n', integer=True)
+    assert solveset(2 - Mod(4*x, 5), x, S.Integers) == ImageSet(Lambda(n, 5*n + 3), S.Integers)
 
 
 def test_domain_check():

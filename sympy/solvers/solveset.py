@@ -345,7 +345,7 @@ def invert_modular(f_x, y, m, x, domain=S.Integers):
 
 
 def _invert_modular(f, g_ys, m, symbol):
-    """Helper function for invert_modular()."""
+    """Helper function for invert_modular"""
 
     if f == symbol:
         return (f, g_ys)
@@ -369,14 +369,16 @@ def _invert_modular(f, g_ys, m, symbol):
         base_has_sym = base.has(symbol)
         expo_has_sym = expo.has(symbol)
 
-        if not expo_has_sym :
+        if not expo_has_sym:
             if expo.is_rational:
                 numer, denom = expo.as_numer_denom()
                 if numer is S.One:
-                    res = imageset(Lambda(n, Mod(pow(n, denom , m), m)), g_ys)
+                    res = imageset(Lambda(n, Mod(pow(n, denom, m), m)), g_ys)
                     _inv, _set = _invert_modular(base, res, m, symbol)
                     return (_inv, _set)
         if not base_has_sym:
+            global sym_in_expo
+            sym_in_expo = S.true
             return _invert_modular(expo,
                 imageset(Lambda(n, Mod(discrete_log(m, g_ys.args[0], base), m)), g_ys), m, symbol)
 
@@ -964,10 +966,16 @@ def _solveset(f, symbol, domain, _check=False):
             result = ConditionSet(symbol, f, domain)
         return result
     else:
+        global sym_in_expo
+        sym_in_expo = S.false
         try:
             lhs, rhs_s = inverter(f, 0, symbol)
         except TypeError:
             lhs, rhs_s = inverter(f, 0, m, symbol)
+            n = Dummy('n', integer=True)
+            if not sym_in_expo and lhs == symbol:
+                ans = list(rhs_s)[0]
+                rhs_s = ImageSet(Lambda(n, m * n + ans), S.Integers)
         if lhs == symbol:
             # do some very minimal simplification since
             # repeated inversion may have left the result
@@ -3101,3 +3109,4 @@ def nonlinsolve(system, *symbols):
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
         return result
+
