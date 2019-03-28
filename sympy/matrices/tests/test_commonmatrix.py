@@ -1250,6 +1250,9 @@ def test_diagonal():
     s = SparseMatrix(3, 3, {(1, 1): 1})
     assert type(s.diagonal()) == type(s)
     assert type(m) != type(s)
+    raises(ValueError, lambda: m.diagonal(3))
+    raises(ValueError, lambda: m.diagonal(-3))
+    raises(ValueError, lambda: m.diagonal(pi))
 
 
 def test_jordan_block():
