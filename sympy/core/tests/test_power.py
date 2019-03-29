@@ -469,4 +469,3 @@ def test_idempotence():
 
     # not-necessarily-positive powers are left untouched
     assert x**y     != x
-

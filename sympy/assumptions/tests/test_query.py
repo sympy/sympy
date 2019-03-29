@@ -2255,7 +2255,7 @@ def test_autosimp_used_to_fail():
 def test_idempotence():
     t = symbols('x', idempotent=True)
     s = symbols('s')
-    
+
     assert ask(Q.idempotent(t)) is True
     assert ask(Q.idempotent(s)) is None
 
