@@ -60,9 +60,9 @@ script can take about an hour or so to run (depending on how long the tests
 take). Every time you re-run the script, it pulls from the branch and runs
 everything from scratch.
 
-At the end it will print two things, the list of authors, and the md5 sums.
+At the end it will print two things, the list of authors, and the sha256 sums.
 Copy the list of authors into the release notes. You should verify that the
-md5 sums of the release files are the same as what are printed.
+sha256 sums of the release files are the same as what are printed.
 
 # Tagging the release
 
