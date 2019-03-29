@@ -1571,9 +1571,15 @@ class LatexPrinter(Printer):
         prec = PRECEDENCE_VALUES['HadamardPower']
         parens = self.parenthesize
 
+        def parens_exp(exp, prec, strict=True):
+            if exp.is_Integer:
+                return self._print(exp)
+            else:
+                return parens(exp, prec, strict=strict)
+
         return r'{}^{{\circ {{{}}}}}'.format(
-            parens(base, prec, strict=True),
-            parens(exp, prec, strict=True))
+            parens(base, prec, strict=False),
+            parens_exp(exp, prec, strict=False))
 
     def _print_KroneckerProduct(self, expr):
         args = expr.args
@@ -1588,9 +1594,15 @@ class LatexPrinter(Printer):
         prec = PRECEDENCE_VALUES['MatPow']
         parens = self.parenthesize
 
+        def parens_exp(exp, prec, strict=True):
+            if exp.is_Integer:
+                return self._print(exp)
+            else:
+                return parens(exp, prec, strict=strict)
+
         return "%s^{%s}" % (
-            parens(base, prec, strict=True),
-            parens(exp, prec, strict=True))
+            parens(base, prec, strict=False),
+            parens_exp(exp, prec, strict=False))
 
     def _print_ZeroMatrix(self, Z):
         return r"\mathbb{0}"
