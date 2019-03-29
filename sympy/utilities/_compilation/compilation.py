@@ -6,12 +6,12 @@ import subprocess
 import sys
 import tempfile
 import warnings
+from distutils.errors import CompileError
 from distutils.sysconfig import get_config_var
 
 from .util import (
     get_abspath, make_dirs, copy, Glob, ArbitraryDepthGlob,
-    glob_at_depth, CompileError,
-    import_module_from_file, pyx_is_cplus,
+    glob_at_depth, import_module_from_file, pyx_is_cplus,
     sha256_of_string, sha256_of_file
 )
 
