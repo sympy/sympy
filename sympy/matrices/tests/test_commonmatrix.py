@@ -21,7 +21,7 @@ from sympy.matrices.common import (ShapeError, MatrixError, NonSquareMatrixError
 from sympy.matrices.matrices import (MatrixDeterminant,
     MatrixReductions, MatrixSubspaces, MatrixEigen, MatrixCalculus)
 from sympy.matrices import (Matrix, diag, eye,
-    matrix_multiply_elementwise, ones, zeros)
+    matrix_multiply_elementwise, ones, zeros, SparseMatrix)
 from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
@@ -1236,6 +1236,23 @@ def test_diag_make():
         [0, 0],
         [1, 0],
         [0, 2]])
+
+
+def test_diagonal():
+    m = Matrix(3, 3, range(9))
+    d = m.diagonal()
+    assert d == m.diagonal(0)
+    assert tuple(d) == (0, 4, 8)
+    assert tuple(m.diagonal(1)) == (1, 5)
+    assert tuple(m.diagonal(-1)) == (3, 7)
+    assert tuple(m.diagonal(2)) == (2,)
+    assert type(m.diagonal()) == type(m)
+    s = SparseMatrix(3, 3, {(1, 1): 1})
+    assert type(s.diagonal()) == type(s)
+    assert type(m) != type(s)
+    raises(ValueError, lambda: m.diagonal(3))
+    raises(ValueError, lambda: m.diagonal(-3))
+    raises(ValueError, lambda: m.diagonal(pi))
 
 
 def test_jordan_block():

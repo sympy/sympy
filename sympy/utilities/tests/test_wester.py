@@ -20,7 +20,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
     residue, Derivative, logcombine, Symbol, Intersection, Union,
-    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max)
+    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max, MatMul)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -1304,11 +1304,9 @@ def test_O10():
                               [S(-423)/706]])]
 
 
-@XFAIL
 def test_P1():
-    raise NotImplementedError("Matrix property/function to extract Nth \
-diagonal not implemented. See Matlab diag(A,k) \
-http://www.mathworks.de/de/help/symbolic/diag.html")
+    assert Matrix(3, 3, lambda i, j: j - i).diagonal(-1) == Matrix(
+        1, 2, [-1, -1])
 
 
 def test_P2():
@@ -1351,20 +1349,11 @@ def test_P4():
     raise NotImplementedError("Block matrix diagonalization not supported")
 
 
-@XFAIL
 def test_P5():
     M = Matrix([[7, 11],
                 [3, 8]])
-    # Raises exception % not supported for matrices
     assert  M % 2 == Matrix([[1, 1],
                              [1, 0]])
-
-
-def test_P5_workaround():
-    M = Matrix([[7, 11],
-                [3, 8]])
-    assert  M.applyfunc(lambda i: i % 2) == Matrix([[1, 1],
-                                                    [1, 0]])
 
 
 def test_P6():
@@ -1413,6 +1402,14 @@ def test_P11():
     assert Matrix([[x, y],
                    [1, x*y]]).inv() == (1/(x**2 - 1))*Matrix([[x, -1],
                                                               [-1/y, x/y]])
+
+
+def test_P11_workaround():
+    M = Matrix([[x, y], [1, x*y]]).inv()
+    c = gcd(tuple(M))
+    assert MatMul(c, M/c, evaluate=False) == MatMul(c, Matrix([
+        [-x*y,  y],
+        [   1, -x]]), evaluate=False)
 
 
 def test_P12():

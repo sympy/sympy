@@ -486,6 +486,47 @@ class MatrixShaping(MatrixRequired):
                 "`self` and `rhs` must have the same number of rows.")
         return self._eval_row_join(other)
 
+    def diagonal(self, k=0):
+        """Returns the kth diagonal of self. The main diagonal
+        corresponds to `k=0`; diagonals above and below correspond to
+        `k > 0` and `k < 0`, respectively. The values of `self[i, j]`
+        for which `j - i = k`, are returned in order of increasing
+        `i + j`, starting with `i + j = |k|`.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, SparseMatrix
+        >>> m = Matrix(3, 3, lambda i, j: j - i); m
+        Matrix([
+        [ 0,  1, 2],
+        [-1,  0, 1],
+        [-2, -1, 0]])
+        >>> _.diagonal()
+        Matrix([[0, 0, 0]])
+        >>> m.diagonal(1)
+        Matrix([[1, 1]])
+        >>> m.diagonal(-2)
+        Matrix([[-2]])
+
+        Even though the diagonal is returned as a Matrix, the element
+        retrieval can be done with a single index:
+
+        >>> Matrix.diag(1, 2, 3).diagonal()[1]  # instead of [0, 1]
+        2
+        """
+        rv = []
+        k = as_int(k)
+        r = 0 if k > 0 else -k
+        c = 0 if r else k
+        for i in range(min(self.shape) - max(r, c)):
+            rv.append(self[r + i, c + i])
+        if not rv:
+            raise ValueError(filldedent('''
+            The %s diagonal is out of range [%s, %s]''' % (
+            k, 1 - self.rows, self.cols - 1)))
+        return self._new(1, len(rv), rv)
+
     def row(self, i):
         """Elementary row selector.
 
@@ -2098,6 +2139,9 @@ class MatrixArithmetic(MatrixRequired):
             return NotImplemented
 
         return self.__mul__(other)
+
+    def __mod__(self, other):
+        return self.applyfunc(lambda x: x % other)
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
