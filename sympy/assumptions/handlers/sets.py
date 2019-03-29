@@ -97,11 +97,15 @@ class AskIntegerHandler(CommonHandler):
 class AskIdempotentHandler(CommonHandler):
     """
     Handler for Q.idempotent
-    Test that an expression belongs to the field of Idempotent operators
+    Test that an expression is idempotent
     """
 
     @staticmethod
     def Symbol(expr, assumptions):
+        return expr.is_idempotent
+
+    @staticmethod
+    def Expr(expr, assumptions):
         return expr.is_idempotent
 
     @staticmethod
@@ -115,7 +119,8 @@ class AskIdempotentHandler(CommonHandler):
     def Mul(expr, assumptions):
         """
         As long as there is at most one noncommutative term:
-        Idempotent*Idempotent -> Idempotent
+        Idempotent*Idempotent  -> Idempotent
+        Idempotent*?Idempotent -> ?Idempotent
         """
         nccount = 0
         result = True
