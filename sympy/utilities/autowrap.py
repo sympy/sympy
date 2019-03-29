@@ -133,7 +133,8 @@ class CodeWrapper(object):
             routines, self.filename, True, self.include_header,
             self.include_empty)
 
-    def wrap_code(self, routine, helpers=[]):
+    def wrap_code(self, routine, helpers=None):
+        helpers = helpers or []
         if self.filepath:
             workdir = os.path.abspath(self.filepath)
         else:

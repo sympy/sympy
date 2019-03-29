@@ -2507,7 +2507,7 @@ def SimplerIntegrandQ(u, v, x):
     v1 = lst[1]
     if Head(u1) == Head(v1) and Length(u1) == 1 and Length(v1) == 1:
         return SimplerIntegrandQ(u1.args[0], v1.args[0], x)
-    if LeafCount(u1)<3/4*LeafCount(v1):
+    if 4*LeafCount(u1) < 3*LeafCount(v1):
         return True
     if RationalFunctionQ(u1, x):
         if RationalFunctionQ(v1, x):
@@ -3644,7 +3644,7 @@ def NormalizePowerOfLinear(u, x):
 
 def SimplifyIntegrand(u, x):
     v = NormalizeLeadTermSigns(NormalizeIntegrandAux(Simplify(u), x))
-    if LeafCount(v) < 4/5*LeafCount(u):
+    if 5*LeafCount(v) < 4*LeafCount(u):
         return v
     if v != NormalizeLeadTermSigns(u):
         return v
@@ -5275,7 +5275,7 @@ def Rt(u, n):
     return RtAux(TogetherSimplify(u), n)
 
 def NthRoot(u, n):
-    return nsimplify(u**(1/n))
+    return nsimplify(u**(S(1)/n))
 
 def AtomBaseQ(u):
     # If u is an atom or an atom raised to an odd degree,  AtomBaseQ(u) returns True; else it returns False

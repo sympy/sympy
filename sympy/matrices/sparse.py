@@ -571,7 +571,7 @@ class SparseMatrix(MatrixBase):
                             break
                     L[i, j] -= summ
                     L[i, j] /= D[j, j]
-                elif i == j:
+                else: # i == j
                     D[i, i] = self[i, i]
                     summ = 0
                     for k in Lrowstruc[i]:

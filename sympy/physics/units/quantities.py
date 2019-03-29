@@ -4,11 +4,10 @@ Physical quantities.
 
 from __future__ import division
 
-from sympy import (Abs, Add, AtomicExpr, Basic, Derivative, Function, Mul,
+from sympy import (Abs, Add, AtomicExpr, Derivative, Function, Mul,
     Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
-from sympy.physics.units.dimensions import dimsys_default, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
