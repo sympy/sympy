@@ -103,6 +103,7 @@ def get_known_facts_dict():
         Q.finite: set([Q.finite]),
         Q.fullrank: set([Q.fullrank]),
         Q.hermitian: set([Q.hermitian]),
+        Q.idempotent: set([Q.idempotent]),
         Q.imaginary: set([Q.antihermitian, Q.complex, Q.imaginary]),
         Q.infinite: set([Q.extended_real, Q.infinite]),
         Q.integer: set([Q.algebraic, Q.complex, Q.extended_real, Q.hermitian,
