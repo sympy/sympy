@@ -463,9 +463,8 @@ class Vector(object):
         SymPy objects, like lists and dictionaries of expressions.
         """
         from sympy.printing.latex import latex
-        s = latex(self, mode='equation*')
-        s = s.strip('$')
-        return "$$%s$$" % s
+        s = latex(self, mode='plain')
+        return "$\\displaystyle %s$" % s
 
     _repr_latex_orig = _repr_latex_
 

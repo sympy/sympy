@@ -320,7 +320,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         tself = type(self)
         tother = type(other)
-        if type(self) is not type(other):
+        if tself is not tother:
             try:
                 other = _sympify(other)
                 tother = type(other)
@@ -424,9 +424,8 @@ class Basic(with_metaclass(ManagedProperties)):
         SymPy objects, like lists and dictionaries of expressions.
         """
         from sympy.printing.latex import latex
-        s = latex(self, mode='equation*')
-        s = s.strip('$')
-        return "$$%s$$" % s
+        s = latex(self, mode='plain')
+        return "$\\displaystyle %s$" % s
 
     _repr_latex_orig = _repr_latex_
 
@@ -562,7 +561,7 @@ class Basic(with_metaclass(ManagedProperties)):
         True
         """
         def can(x):
-            d = dict([(i, i.as_dummy()) for i in x.bound_symbols])
+            d = {i: i.as_dummy() for i in x.bound_symbols}
             # mask free that shadow bound
             x = x.subs(d)
             c = x.canonical_variables
@@ -942,11 +941,12 @@ class Basic(with_metaclass(ManagedProperties)):
 
         sequence = list(sequence)
         for i, s in enumerate(sequence):
-            if type(s[0]) is str:
+            if isinstance(s[0], string_types):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
             try:
-                s = [sympify(_, strict=type(_) is not str) for _ in s]
+                s = [sympify(_, strict=not isinstance(_, string_types))
+                     for _ in s]
             except SympifyError:
                 # if it can't be sympified, skip it
                 sequence[i] = None
@@ -1192,11 +1192,12 @@ class Basic(with_metaclass(ManagedProperties)):
             args = []
             changed = False
             for a in self.args:
-                try:
-                    a_xr = a._xreplace(rule)
+                _xreplace = getattr(a, '_xreplace', None)
+                if _xreplace is not None:
+                    a_xr = _xreplace(rule)
                     args.append(a_xr[0])
                     changed |= a_xr[1]
-                except AttributeError:
+                else:
                     args.append(a)
             args = tuple(args)
             if changed:
@@ -1264,17 +1265,18 @@ class Basic(with_metaclass(ManagedProperties)):
             return any(isinstance(arg, pattern)
             for arg in preorder_traversal(self))
 
-        try:
-            match = pattern._has_matcher()
+        _has_matcher = getattr(pattern, '_has_matcher', None)
+        if _has_matcher is not None:
+            match = _has_matcher()
             return any(match(arg) for arg in preorder_traversal(self))
-        except AttributeError:
+        else:
             return any(arg == pattern for arg in preorder_traversal(self))
 
     def _has_matcher(self):
         """Helper for .has()"""
         return lambda other: self == other
 
-    def replace(self, query, value, map=False, simultaneous=True, exact=False):
+    def replace(self, query, value, map=False, simultaneous=True, exact=None):
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
@@ -1337,7 +1339,7 @@ class Basic(with_metaclass(ManagedProperties)):
             Replace subexpressions matching ``pattern`` with the expression
             written in terms of the Wild symbols in ``pattern``.
 
-            >>> a = Wild('a')
+            >>> a, b = map(Wild, 'ab')
             >>> f.replace(sin(a), tan(a))
             log(tan(x)) + tan(tan(x**2))
             >>> f.replace(sin(a), tan(a/2))
@@ -1347,21 +1349,19 @@ class Basic(with_metaclass(ManagedProperties)):
             >>> (x*y).replace(a*x, a)
             y
 
-            When the default value of False is used with patterns that have
-            more than one Wild symbol, non-intuitive results may be obtained:
+            Matching is exact by default when more than one Wild symbol
+            is used: matching fails unless the match gives non-zero
+            values for all Wild symbols:
 
-            >>> b = Wild('b')
-            >>> (2*x).replace(a*x + b, b - a)
-            2/x
-
-            For this reason, the ``exact`` option can be used to make the
-            replacement only when the match gives non-zero values for all
-            Wild symbols:
-
-            >>> (2*x + y).replace(a*x + b, b - a, exact=True)
+            >>> (2*x + y).replace(a*x + b, b - a)
             y - 2
-            >>> (2*x).replace(a*x + b, b - a, exact=True)
+            >>> (2*x).replace(a*x + b, b - a)
             2*x
+
+            When set to False, the results may be non-intuitive:
+
+            >>> (2*x).replace(a*x + b, b - a, exact=False)
+            2/x
 
         2.2. pattern -> func
             obj.replace(pattern(wild), lambda wild: expr(wild))
@@ -1397,15 +1397,15 @@ class Basic(with_metaclass(ManagedProperties)):
                   using matching rules
 
         """
-        from sympy.core.symbol import Dummy
+        from sympy.core.symbol import Dummy, Wild
         from sympy.simplify.simplify import bottom_up
 
         try:
-            query = sympify(query)
+            query = _sympify(query)
         except SympifyError:
             pass
         try:
-            value = sympify(value)
+            value = _sympify(value)
         except SympifyError:
             pass
         if isinstance(query, type):
@@ -1421,18 +1421,12 @@ class Basic(with_metaclass(ManagedProperties)):
                     "type or a callable")
         elif isinstance(query, Basic):
             _query = lambda expr: expr.match(query)
+            exact = len(query.atoms(Wild)) > 1 if exact is None else exact
 
-            # XXX remove the exact flag and make multi-symbol
-            # patterns use exact=True semantics; to do this the query must
-            # be tested to find out how many Wild symbols are present.
-            # See https://groups.google.com/forum/
-            # ?fromgroups=#!topic/sympy/zPzo5FtRiqI
-            # for a method of inspecting a function to know how many
-            # parameters it has.
             if isinstance(value, Basic):
                 if exact:
                     _value = lambda expr, result: (value.subs(result)
-                        if all(val for val in result.values()) else expr)
+                        if all(result.values()) else expr)
                 else:
                     _value = lambda expr, result: value.subs(result)
             elif callable(value):
@@ -1441,12 +1435,12 @@ class Basic(with_metaclass(ManagedProperties)):
                 # if ``exact`` is True, only accept match if there are no null
                 # values amongst those matched.
                 if exact:
-                    _value = lambda expr, result: (value(**dict([(
-                        str(key)[:-1], val) for key, val in result.items()]))
+                    _value = lambda expr, result: (value(**
+                        {str(k)[:-1]: v for k, v in result.items()})
                         if all(val for val in result.values()) else expr)
                 else:
-                    _value = lambda expr, result: value(**dict([(
-                        str(key)[:-1], val) for key, val in result.items()]))
+                    _value = lambda expr, result: value(**
+                        {str(k)[:-1]: v for k, v in result.items()})
             else:
                 raise TypeError(
                     "given an expression, replace() expects "
@@ -1774,24 +1768,18 @@ class Basic(with_metaclass(ManagedProperties)):
         postprocessors = defaultdict(list)
         for i in obj.args:
             try:
-                if i in Basic._constructor_postprocessor_mapping:
-                    for k, v in Basic._constructor_postprocessor_mapping[i].items():
-                        postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
-                else:
-                    postprocessor_mappings = (
-                        Basic._constructor_postprocessor_mapping[cls].items()
-                        for cls in type(i).mro()
-                        if cls in Basic._constructor_postprocessor_mapping
-                    )
-                    for k, v in chain.from_iterable(postprocessor_mappings):
-                        postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
+                postprocessor_mappings = (
+                    Basic._constructor_postprocessor_mapping[cls].items()
+                    for cls in type(i).mro()
+                    if cls in Basic._constructor_postprocessor_mapping
+                )
+                for k, v in chain.from_iterable(postprocessor_mappings):
+                    postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
             except TypeError:
                 pass
 
         for f in postprocessors.get(clsname, []):
             obj = f(obj)
-        if len(postprocessors) > 0 and obj not in Basic._constructor_postprocessor_mapping:
-            Basic._constructor_postprocessor_mapping[obj] = postprocessors
 
         return obj
 
@@ -1871,8 +1859,7 @@ def _aresame(a, b):
                     return False
             else:
                 return False
-    else:
-        return True
+    return True
 
 
 def _atomic(e, recursive=False):
@@ -1900,9 +1887,8 @@ def _atomic(e, recursive=False):
     pot = preorder_traversal(e)
     seen = set()
     if isinstance(e, Basic):
-        try:
-            free = e.free_symbols
-        except AttributeError:
+        free = getattr(e, "free_symbols", None)
+        if free is None:
             return {e}
     else:
         return set()

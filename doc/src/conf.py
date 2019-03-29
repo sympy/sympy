@@ -32,8 +32,10 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode',
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
 
-# MathJax file, which is free to use.  See https://www.mathjax.org/docs/2.0/start.html
-mathjax_path = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
+# MathJax file, which is free to use.  See https://www.mathjax.org/#gettingstarted
+# As explained in the link using latest.js will get the latest version even
+# though it says 2.7.5.
+mathjax_path = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML-full'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -48,7 +50,7 @@ suppress_warnings = ['ref.citation', 'ref.footnote']
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2018 SymPy Development Team'
+copyright = '2019 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.

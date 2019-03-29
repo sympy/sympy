@@ -8,7 +8,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
 from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
+from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
 from sympy.core.mod import Mod
 from sympy.polys.domains.groundtypes import PythonRational
@@ -27,28 +27,6 @@ t = Symbol('t', real=False)
 def same_and_same_prec(a, b):
     # stricter matching for Floats
     return a == b and a._prec == b._prec
-
-
-def test_integers_cache():
-    python_int = 2**65 + 3175259
-
-    while python_int in _intcache or hash(python_int) in _intcache:
-        python_int += 1
-
-    sympy_int = Integer(python_int)
-
-    assert python_int in _intcache
-    assert hash(python_int) not in _intcache
-
-    sympy_int_int = Integer(sympy_int)
-
-    assert python_int in _intcache
-    assert hash(python_int) not in _intcache
-
-    sympy_hash_int = Integer(hash(python_int))
-
-    assert python_int in _intcache
-    assert hash(python_int) in _intcache
 
 
 def test_seterr():
@@ -234,7 +212,8 @@ def test_igcd_lehmer():
     assert igcd_lehmer(a*c, b*c) == c
     # big divisor
     assert igcd_lehmer(a, 10**1000) == 1
-
+    # swapping argmument
+    assert igcd_lehmer(1, 2) == igcd_lehmer(2, 1)
 
 def test_igcd2():
     # short loop
@@ -255,12 +234,15 @@ def test_ilcm():
     assert ilcm(*[10, 20, 30]) == 60
     raises(ValueError, lambda: ilcm(8.1, 7))
     raises(ValueError, lambda: ilcm(8, 7.1))
+    raises(TypeError, lambda: ilcm(8))
 
 
 def test_igcdex():
     assert igcdex(2, 3) == (-1, 1, 1)
     assert igcdex(10, 12) == (-1, 1, 2)
     assert igcdex(100, 2004) == (-20, 1, 4)
+    assert igcdex(0, 0) == (0, 1, 0)
+    assert igcdex(1, 0) == (1, 0, 1)
 
 
 def _strictly_equal(a, b):
@@ -363,6 +345,23 @@ def test_Number_new():
     raises(TypeError, lambda: Number(cos))
     a = Rational(3, 5)
     assert Number(a) is a  # Check idempotence on Numbers
+
+
+def test_Number_cmp():
+    n1 = Number(1)
+    n2 = Number(2)
+    n3 = Number(-3)
+
+    assert n1 < n2
+    assert n1 <= n2
+    assert n3 < n1
+    assert n2 > n3
+    assert n2 >= n3
+
+    raises(TypeError, lambda: n1 < S.NaN)
+    raises(TypeError, lambda: n1 <= S.NaN)
+    raises(TypeError, lambda: n1 > S.NaN)
+    raises(TypeError, lambda: n1 >= S.NaN)
 
 
 def test_Rational_cmp():
@@ -1645,12 +1644,12 @@ def test_latex():
     assert latex(pi) == r"\pi"
     assert latex(E) == r"e"
     assert latex(GoldenRatio) == r"\phi"
-    assert latex(TribonacciConstant) == r"\mathrm{TribonacciConstant}"
+    assert latex(TribonacciConstant) == r"\text{TribonacciConstant}"
     assert latex(EulerGamma) == r"\gamma"
     assert latex(oo) == r"\infty"
     assert latex(-oo) == r"-\infty"
     assert latex(zoo) == r"\tilde{\infty}"
-    assert latex(nan) == r"\mathrm{NaN}"
+    assert latex(nan) == r"\text{NaN}"
     assert latex(I) == r"i"
 
 
@@ -1717,9 +1716,9 @@ def test_issue_10020():
 def test_invert_numbers():
     assert S(2).invert(5) == 3
     assert S(2).invert(S(5)/2) == S.Half
-    assert S(2).invert(5.) == 3
+    assert S(2).invert(5.) == 0.5
     assert S(2).invert(S(5)) == 3
-    assert S(2.).invert(5) == 3
+    assert S(2.).invert(5) == 0.5
     assert S(sqrt(2)).invert(5) == 1/sqrt(2)
     assert S(sqrt(2)).invert(sqrt(3)) == 1/sqrt(2)
 
@@ -1858,9 +1857,9 @@ def test_numpy_to_float():
         y = Float(ratval, precision=prec)
         assert abs((x - y)/y) < 2**(-(prec + 1))
 
-    check_prec_and_relerr(np.float16(2/3), S(2)/3)
-    check_prec_and_relerr(np.float32(2/3), S(2)/3)
-    check_prec_and_relerr(np.float64(2/3), S(2)/3)
+    check_prec_and_relerr(np.float16(2.0/3), S(2)/3)
+    check_prec_and_relerr(np.float32(2.0/3), S(2)/3)
+    check_prec_and_relerr(np.float64(2.0/3), S(2)/3)
     # extended precision, on some arch/compilers:
     x = np.longdouble(2)/3
     check_prec_and_relerr(x, S(2)/3)
@@ -1869,3 +1868,37 @@ def test_numpy_to_float():
 
     raises(TypeError, lambda: Float(np.complex64(1+2j)))
     raises(TypeError, lambda: Float(np.complex128(1+2j)))
+
+def test_Integer_ceiling_floor():
+    a = Integer(4)
+
+    assert(a.floor() == a)
+    assert(a.ceiling() == a)
+
+def test_ComplexInfinity():
+    assert((zoo).floor() == zoo)
+    assert((zoo).ceiling() == zoo)
+    assert(zoo**zoo == S.NaN)
+
+def test_Infinity_floor_ceiling_power():
+    assert((oo).floor() == oo)
+    assert((oo).ceiling() == oo)
+    assert((oo)**S.NaN == S.NaN)
+    assert((oo)**zoo == S.NaN)
+
+def test_One_power():
+    assert((S.One)**12 == S.One)
+    assert((S.NegativeOne)**S.NaN == S.NaN)
+
+def test_NegativeInfinity():
+    assert((-oo).floor() == -oo)
+    assert((-oo).ceiling() == -oo)
+    assert((-oo)**11 == -oo)
+    assert((-oo)**12 == oo)
+
+def test_issue_6133():
+    raises(TypeError, lambda: (-oo < None))
+    raises(TypeError, lambda: (S(-2) < None))
+    raises(TypeError, lambda: (oo < None))
+    raises(TypeError, lambda: (oo > None))
+    raises(TypeError, lambda: (S(2) < None))

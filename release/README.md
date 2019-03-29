@@ -24,6 +24,12 @@ First, make sure that you have done the following things
 - Push the release branch up to origin, and make a pull request for it against
   master.
 
+- Create the release notes page for the new release on the wiki. See
+  https://github.com/sympy/sympy-bot/issues/26. The easiest way to do this is
+  to copy the old release notes to a new page and remove all the changes, and
+  update the version number. The formatting on the release notes page is
+  important as otherwise the bot will fail, so it is best to do it this way.
+
 It is important to create a new branch because that lets master continue as
 normal. The release script will automatically checkout the release branch from
 origin, which is why you need to push it (it determines what the release
@@ -138,3 +144,9 @@ Once you have it working, push the changes up to Dockerhub
     docker push sympy/sympy-release
 
 You'll need access to the sympy org, ask Aaron or Ondřej if you need it.
+
+It is usually not necessary to rebuild the Docker container. The container
+first pulls the latest version of the release branch before running rever
+(see `pull_and_run_rever.sh`), so unless you modify that script, or change the
+packages that are installed in the container, it should not be necessary to
+rebuild it.

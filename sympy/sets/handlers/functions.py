@@ -118,14 +118,14 @@ def _set_function(f, x):
 
 @dispatch(FunctionUnion, Union)
 def _set_function(f, x):
-    return Union(imageset(f, arg) for arg in x.args)
+    return Union(*(imageset(f, arg) for arg in x.args))
 
 @dispatch(FunctionUnion, Intersection)
 def _set_function(f, x):
     from sympy.sets.sets import is_function_invertible_in_set
     # If the function is invertible, intersect the maps of the sets.
     if is_function_invertible_in_set(f, x):
-        return Intersection(imageset(f, arg) for arg in x.args)
+        return Intersection(*(imageset(f, arg) for arg in x.args))
     else:
         return ImageSet(Lambda(_x, f(_x)), x)
 

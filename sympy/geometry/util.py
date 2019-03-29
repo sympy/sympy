@@ -27,7 +27,7 @@ def find(x, equation):
     """
 
     free = equation.free_symbols
-    xs = [i for i in free if (i.name if type(x) is str else i) == x]
+    xs = [i for i in free if (i.name if isinstance(x, string_types) else i) == x]
     if not xs:
         raise ValueError('could not find %s' % x)
     if len(xs) != 1:
@@ -161,16 +161,16 @@ def are_similar(e1, e2):
 
     if e1 == e2:
         return True
-    try:
-        return e1.is_similar(e2)
-    except AttributeError:
-        try:
-            return e2.is_similar(e1)
-        except AttributeError:
-            n1 = e1.__class__.__name__
-            n2 = e2.__class__.__name__
-            raise GeometryError(
-                "Cannot test similarity between %s and %s" % (n1, n2))
+    is_similar1 = getattr(e1, 'is_similar', None)
+    if is_similar1:
+        return is_similar1(e2)
+    is_similar2 = getattr(e2, 'is_similar', None)
+    if is_similar2:
+        return is_similar2(e1)
+    n1 = e1.__class__.__name__
+    n2 = e2.__class__.__name__
+    raise GeometryError(
+        "Cannot test similarity between %s and %s" % (n1, n2))
 
 
 def centroid(*args):
@@ -200,7 +200,7 @@ def centroid(*args):
     Point2D(20/3, 40/3)
     >>> p, q = Segment((0, 0), (2, 0)), Segment((0, 0), (2, 2))
     >>> centroid(p, q)
-    Point2D(1, -sqrt(2) + 2)
+    Point2D(1, 2 - sqrt(2))
     >>> centroid(Point(0, 0), Point(2, 0))
     Point2D(1, 0)
 
@@ -570,12 +570,19 @@ def idiff(eq, y, x, n=1):
         y = y[0]
     elif isinstance(y, Symbol):
         dep = {y}
+    elif isinstance(y, Function):
+        pass
     else:
-        raise ValueError("expecting x-dependent symbol(s) but got: %s" % y)
+        raise ValueError("expecting x-dependent symbol(s) or function(s) but got: %s" % y)
 
-    f = dict([(s, Function(
-        s.name)(x)) for s in eq.free_symbols if s != x and s in dep])
-    dydx = Function(y.name)(x).diff(x)
+    f = {s: Function(s.name)(x) for s in eq.free_symbols
+        if s != x and s in dep}
+
+    if isinstance(y, Symbol):
+        dydx = Function(y.name)(x).diff(x)
+    else:
+        dydx = y.diff(x)
+
     eq = eq.subs(f)
     derivs = {}
     for i in range(n):

@@ -7,7 +7,8 @@ from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Ei, Ci, Si, Chi, Shi, fresnels, fresnelc, polylog, erf, erfi,
                    sinh, cosh, elliptic_f, elliptic_e)
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule, integral_steps, contains_dont_know)
+    _parts_rule, integral_steps, contains_dont_know, manual_subs)
+from sympy.utilities.pytest import slow
 
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
 f = Function('f')
@@ -354,6 +355,7 @@ def test_issue_6746():
         Integral(1/(-a**x + b**2*x + x), x)
 
 
+@slow
 def test_issue_2850():
     assert manualintegrate(asin(x)*log(x), x) == -x*asin(x) - sqrt(-x**2 + 1) \
             + (x*asin(x) + sqrt(-x**2 + 1))*log(x) - Integral(sqrt(-x**2 + 1)/x, x)
@@ -380,6 +382,7 @@ def test_cyclic_parts():
     assert manualintegrate(f, x) == F and F.diff(x) == f
 
 
+@slow
 def test_issue_10847():
     assert manualintegrate(x**2 / (x**2 - c), x) == c*Piecewise((atan(x/sqrt(-c))/sqrt(-c), -c > 0), \
                                                                 (-acoth(x/sqrt(c))/sqrt(c), And(-c < 0, x**2 > c)), \
@@ -440,6 +443,7 @@ def test_issue_14470():
         log(-1 + 1/sqrt(x + 1)) - log(1 + 1/sqrt(x + 1))
 
 
+@slow
 def test_issue_9858():
     assert manualintegrate(exp(x)*cos(exp(x)), x) == sin(exp(x))
     assert manualintegrate(exp(2*x)*cos(exp(x)), x) == \
@@ -459,3 +463,18 @@ def test_issue_8520():
     assert manualintegrate(x**2/(x**6 + 25), x) == atan(x**3/5)/15
     f = x/(9*x**4 + 4)**2
     assert manualintegrate(f, x).diff(x).factor() == f
+
+
+def test_manual_subs():
+    x, y = symbols('x y')
+    expr = log(x) + exp(x)
+    # if log(x) is y, then exp(y) is x
+    assert manual_subs(expr, log(x), y) == y + exp(exp(y))
+    # if exp(x) is y, then log(y) need not be x
+    assert manual_subs(expr, exp(x), y) == log(x) + y
+
+
+def test_issue_15471():
+    f = log(x)*cos(log(x))/x**(S(3)/4)
+    F = -128*x**(S(1)/4)*sin(log(x))/289 + 240*x**(S(1)/4)*cos(log(x))/289 + (16*x**(S(1)/4)*sin(log(x))/17 + 4*x**(S(1)/4)*cos(log(x))/17)*log(x)
+    assert manualintegrate(f, x) == F and F.diff(x).equals(f)

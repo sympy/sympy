@@ -14,18 +14,18 @@ from __future__ import print_function, division
 # __all__ = ['marginal_distribution']
 
 from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
- Dummy, Mul)
+ Dummy)
 from sympy.concrete.summations import Sum, summation
+from sympy.core.compatibility import string_types
+from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
-from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-     ProductDomain, RandomSymbol, random_symbols, SingleDomain)
+from sympy.matrices import ImmutableMatrix
 from sympy.stats.crv import (ContinuousDistribution,
     SingleContinuousDistribution, SingleContinuousPSpace)
 from sympy.stats.drv import (DiscreteDistribution,
     SingleDiscreteDistribution, SingleDiscretePSpace)
-from sympy.core.compatibility import string_types
-from sympy.matrices import ImmutableMatrix
-from sympy.core.containers import Tuple
+from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
+     ProductDomain, RandomSymbol, random_symbols, SingleDomain)
 from sympy.utilities.misc import filldedent
 
 
@@ -164,7 +164,7 @@ class JointDistribution(Basic, NamedArgsMixin):
         rvs = other.keys()
         _set = self.domain.set
         expr = self.pdf(tuple(i.args[0] for i in self.symbols))
-        for i in len(other):
+        for i in range(len(other)):
             if rvs[i].is_Continuous:
                 density = Integral(expr, (rvs[i], _set[i].inf,
                     other[rvs[i]]))
@@ -182,7 +182,6 @@ class JointRandomSymbol(RandomSymbol):
     to allow indexing."
     """
     def __getitem__(self, key):
-        from sympy.stats.joint_rv import JointPSpace
         if isinstance(self.pspace, JointPSpace):
             if self.pspace.component_count <= key:
                 raise ValueError("Index keys for %s can only up to %s." %
@@ -211,10 +210,12 @@ def marginal_distribution(rv, *indices):
 
     Returns
     =======
+
     A Lambda expression n `sym`.
 
     Examples
     ========
+
     >>> from sympy.stats.crv_types import Normal
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
@@ -281,7 +282,7 @@ class MarginalDistribution(Basic):
     distribution.
     """
 
-    def __new__(cls,dist, rvs):
+    def __new__(cls, dist, rvs):
         if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
             raise ValueError(filldedent('''Marginal distribution can be
              intitialised only in terms of random variables or indexed random

@@ -5,10 +5,10 @@ from collections import defaultdict
 
 from sympy.core import Basic
 from sympy.core.compatibility import is_sequence, reduce, range, as_int
+from sympy.matrices import zeros
+from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
-from sympy.polys.polytools import lcm
-from sympy.matrices import zeros
 from mpmath.libmp.libintmath import ifac
 
 
@@ -40,6 +40,7 @@ def _af_rmul(a, b):
 
     See Also
     ========
+
     rmul, _af_rmuln
     """
     return [a[i] for i in b]
@@ -72,6 +73,7 @@ def _af_rmuln(*abc):
 
     See Also
     ========
+
     rmul, _af_rmul
     """
     a = abc
@@ -1484,7 +1486,7 @@ class Permutation(Basic):
         References
         ==========
 
-        1. https://en.wikipedia.org/wiki/Transposition_%28mathematics%29#Properties
+        .. [1] https://en.wikipedia.org/wiki/Transposition_%28mathematics%29#Properties
 
         """
         a = self.cyclic_form
@@ -1534,6 +1536,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation([[2,0], [3,1]])
         >>> ~p
         Permutation([2, 3, 0, 1])
@@ -2061,11 +2064,6 @@ class Permutation(Basic):
         For large length of p, it uses a variation of merge
         sort to calculate the number of inversions.
 
-        References
-        ==========
-
-        [1] http://www.cp.eng.chula.ac.th/~piak/teaching/algo/algo2008/count-inv.htm
-
         Examples
         ========
 
@@ -2080,6 +2078,12 @@ class Permutation(Basic):
         ========
 
         descents, ascents, min, max
+
+        References
+        ==========
+
+        .. [1] http://www.cp.eng.chula.ac.th/~piak/teaching/algo/algo2008/count-inv.htm
+
         """
         inversions = 0
         a = self.array_form
@@ -2336,6 +2340,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation([4, 8, 0, 7, 1, 5, 3, 6, 2])
         >>> p.inversion_vector()
         [4, 7, 0, 5, 0, 2, 1, 1]
@@ -2360,6 +2365,7 @@ class Permutation(Basic):
 
         See Also
         ========
+
         from_inversion_vector
         """
         self_array_form = self.array_form
@@ -2515,6 +2521,7 @@ class Permutation(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.print_cyclic = False
         >>> p = Permutation.josephus(3, 6, 1)
         >>> p
         Permutation([2, 5, 3, 1, 4, 0])
@@ -2720,9 +2727,9 @@ class Permutation(Basic):
         References
         ==========
 
-        1. https://en.wikipedia.org/wiki/Flavius_Josephus
-        2. https://en.wikipedia.org/wiki/Josephus_problem
-        3. http://www.wou.edu/~burtonl/josephus.html
+        .. [1] https://en.wikipedia.org/wiki/Flavius_Josephus
+        .. [2] https://en.wikipedia.org/wiki/Josephus_problem
+        .. [3] http://www.wou.edu/~burtonl/josephus.html
 
         """
         from collections import deque

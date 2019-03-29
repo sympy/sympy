@@ -1,20 +1,19 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import copy
 from collections import defaultdict
 
+from sympy.core.compatibility import Callable, as_int, is_sequence, range
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.compatibility import is_sequence, as_int, range, Callable
-from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
 
-from .matrices import MatrixBase, ShapeError
-from .dense import Matrix
 from .common import a2idx
+from .dense import Matrix
+from .matrices import MatrixBase, ShapeError
 
 
 class SparseMatrix(MatrixBase):
@@ -91,15 +90,16 @@ class SparseMatrix(MatrixBase):
         return self
 
     def __eq__(self, other):
-        try:
-            if self.shape != other.shape:
-                return False
-            if isinstance(other, SparseMatrix):
-                return self._smat == other._smat
-            elif isinstance(other, MatrixBase):
-                return self._smat == MutableSparseMatrix(other)._smat
-        except AttributeError:
+        self_shape = getattr(self, 'shape', None)
+        other_shape = getattr(other, 'shape', None)
+        if None in (self_shape, other_shape):
             return False
+        if self_shape != other_shape:
+            return False
+        if isinstance(other, SparseMatrix):
+            return self._smat == other._smat
+        elif isinstance(other, MatrixBase):
+            return self._smat == MutableSparseMatrix(other)._smat
 
     def __getitem__(self, key):
 
@@ -1122,8 +1122,8 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
             self._smat = {}
         else:
             v = self._sympify(value)
-            self._smat = dict([((i, j), v)
-                for i in range(self.rows) for j in range(self.cols)])
+            self._smat = {(i, j): v
+                for i in range(self.rows) for j in range(self.cols)}
 
     def row_del(self, k):
         """Delete the given row of the matrix.

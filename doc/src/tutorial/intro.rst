@@ -161,9 +161,9 @@ Find the eigenvalues of `\left[\begin{smallmatrix}1 & 2\\2 &
 2\end{smallmatrix}\right]`.
 
  >>> Matrix([[1, 2], [2, 2]]).eigenvals()
- ⎧3   √17       √17   3   ⎫
- ⎨─ + ───: 1, - ─── + ─: 1⎬
- ⎩2    2         2    2   ⎭
+ ⎧3   √17     3   √17   ⎫
+ ⎨─ - ───: 1, ─ + ───: 1⎬
+ ⎩2    2      2    2    ⎭
 
 Rewrite the Bessel function `J_{\nu}\left(z\right)` in terms of the
 spherical Bessel function `j_\nu(z)`.
@@ -173,10 +173,10 @@ spherical Bessel function `j_\nu(z)`.
   ────────────────────
            √π
 
-Print `\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx` using `\LaTeX`.
+Print `\int_{0}^{\pi} \cos^{2}{\left(x \right)}\, dx` using `\LaTeX`.
 
   >>> latex(Integral(cos(x)**2, (x, 0, pi)))
-  \int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx
+  \int\limits_{0}^{\pi} \cos^{2}{\left(x \right)}\, dx
 
 Why SymPy?
 ==========

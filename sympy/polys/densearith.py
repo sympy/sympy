@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import range
 from sympy.polys.densebasic import (
     dup_slice,
     dup_LC, dmp_LC,
@@ -10,9 +11,7 @@ from sympy.polys.densebasic import (
     dmp_zero_p, dmp_zero,
     dmp_one_p, dmp_one,
     dmp_ground, dmp_zeros)
-
 from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
-from sympy.core.compatibility import range
 
 def dup_add_term(f, c, i, K):
     """

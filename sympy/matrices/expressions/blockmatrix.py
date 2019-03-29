@@ -295,9 +295,10 @@ def block_collapse(expr):
              Inverse: bc_inverse,
              BlockMatrix: do_one(bc_unpack, deblock)})))))
     result = rule(expr)
-    try:
-        return result.doit()
-    except AttributeError:
+    doit = getattr(result, 'doit', None)
+    if doit is not None:
+        return doit()
+    else:
         return result
 
 def bc_unpack(expr):

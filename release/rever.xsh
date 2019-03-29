@@ -70,8 +70,8 @@ def mailmap_update():
 @activity
 def test_sympy():
     with run_in_conda_env(['mpmath', 'matplotlib>=2.2', 'numpy', 'scipy', 'theano',
-        'ipython', 'gmpy2', 'fastcache', 'symengine', 'libgfortran', 'libgcc',
-        'gcc', 'cython', 'tensorflow', 'llvmlite', 'wurlitzer', 'autowrap',
+        'ipython', 'gmpy2', 'fastcache', 'symengine', 'libgfortran', 'cython',
+        'tensorflow', 'llvmlite', 'wurlitzer', 'autowrap',
         'python-symengine=0.3.*', 'numexpr', 'antlr-python-runtime>=4.7,<4.8',
         'antlr>=4.7,<4.8'], 'sympy-tests'):
 
@@ -85,7 +85,7 @@ def source_tarball():
 
 @activity(deps={'_version'})
 def build_docs():
-    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath'],
+    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath', 'matplotlib'],
         envname='sympy-release-docs'):
 
         cd doc
@@ -259,10 +259,10 @@ def test_tarball(py_version):
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
-        cp @('/root/release/{source}'.format(**tarball_format)) @("releasetar.tar".format(**tarball_format))
-        tar xvf releasetar.tar
+        cp @('/root/release/{source}'.format(**tarball_format)) @("releasetar.tar.gz".format(**tarball_format))
+        tar xvf releasetar.tar.gz
 
-        cd @("/root/{source-orig-notar}".format(**tarball_format))
+        cd @("{source-orig-notar}".format(**tarball_format))
         python setup.py install
         python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
         python -m isympy --help
@@ -980,13 +980,16 @@ git_whitelist = {
     '.gitattributes',
     '.gitignore',
     '.mailmap',
-    # Travis
+    # Travis and CI
     '.travis.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
     '.ci/blacklisted.json',
     '.editorconfig',
+    '.coveragerc',
+    'codecov.yml',
+    'pytest.ini',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Pull request template

@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import Basic, Expr, sympify
+from sympy import Basic, Expr, sympify, S
 from sympy.matrices.matrices import MatrixBase
 from .matexpr import ShapeError
 
@@ -19,6 +19,7 @@ class Trace(Expr):
     Trace(A)
     """
     is_Trace = True
+    is_commutative = True
 
     def __new__(cls, mat):
         mat = sympify(mat)
@@ -41,7 +42,13 @@ class Trace(Expr):
     def _eval_derivative_matrix_lines(self, x):
         r = self.args[0]._eval_derivative_matrix_lines(x)
         for lr in r:
-            lr.trace = True
+            if lr.higher == 1:
+                lr.higher *= lr.first * lr.second.T
+            else:
+                # This is not a matrix line:
+                lr.higher *= Trace(lr.first * lr.second.T)
+            lr.first = S.One
+            lr.second = S.One
         return r
 
     @property

@@ -4,6 +4,8 @@ from __future__ import print_function, division
 
 import sys
 import warnings
+from string import ascii_lowercase, ascii_uppercase
+
 unicode_warnings = ''
 
 from sympy.core.compatibility import unicode, range
@@ -30,7 +32,6 @@ except ImportError:
 
 from sympy.printing.conventions import split_super_sub
 from sympy.core.alphabets import greeks
-
 
 # prefix conventions when constructing tables
 # L   - LATIN     i
@@ -129,6 +130,29 @@ greek_unicode['lambda'] = greek_unicode['lamda']
 greek_unicode['Lambda'] = greek_unicode['Lamda']
 greek_unicode['varsigma'] = u'\N{GREEK SMALL LETTER FINAL SIGMA}'
 
+# BOLD
+b = lambda l: U('MATHEMATICAL BOLD SMALL %s' % l.upper())
+B = lambda l: U('MATHEMATICAL BOLD CAPITAL %s' % l.upper())
+
+bold_unicode = dict((l, b(l)) for l in ascii_lowercase)
+bold_unicode.update((L, B(L)) for L in ascii_uppercase)
+
+# GREEK BOLD
+gb = lambda l: U('MATHEMATICAL BOLD SMALL %s' % l.upper())
+GB = lambda l: U('MATHEMATICAL BOLD CAPITAL  %s' % l.upper())
+
+greek_bold_letters = list(greeks) # make a copy, not strictly required here
+# deal with Unicode's funny spelling of lambda
+greek_bold_letters[greek_bold_letters.index('lambda')] = 'lamda'
+
+# {}  greek letter -> (g,G)
+greek_bold_unicode = {l: (g(l), G(l)) for l in greek_bold_letters}
+greek_bold_unicode = dict((L, g(L)) for L in greek_bold_letters)
+greek_bold_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_bold_letters)
+greek_bold_unicode['lambda'] = greek_unicode['lamda']
+greek_bold_unicode['Lambda'] = greek_unicode['Lamda']
+greek_bold_unicode['varsigma'] = u'\N{MATHEMATICAL BOLD SMALL FINAL SIGMA}'
+
 digit_2txt = {
     '0':    'ZERO',
     '1':    'ONE',
@@ -191,23 +215,22 @@ for s in '+-=()':
     sup[s] = SSUP(s)
 
 # Variable modifiers
-# TODO: Is it worth trying to handle faces with, e.g., 'MATHEMATICAL BOLD CAPITAL A'?
 # TODO: Make brackets adjust to height of contents
 modifier_dict = {
     # Accents
-    'mathring': lambda s: s+u'\N{COMBINING RING ABOVE}',
-    'ddddot': lambda s: s+u'\N{COMBINING DIAERESIS}\N{COMBINING DIAERESIS}',
-    'dddot': lambda s: s+u'\N{COMBINING DIAERESIS}\N{COMBINING DOT ABOVE}',
-    'ddot': lambda s: s+u'\N{COMBINING DIAERESIS}',
-    'dot': lambda s: s+u'\N{COMBINING DOT ABOVE}',
-    'check': lambda s: s+u'\N{COMBINING CARON}',
-    'breve': lambda s: s+u'\N{COMBINING BREVE}',
-    'acute': lambda s: s+u'\N{COMBINING ACUTE ACCENT}',
-    'grave': lambda s: s+u'\N{COMBINING GRAVE ACCENT}',
-    'tilde': lambda s: s+u'\N{COMBINING TILDE}',
-    'hat': lambda s: s+u'\N{COMBINING CIRCUMFLEX ACCENT}',
-    'bar': lambda s: s+u'\N{COMBINING OVERLINE}',
-    'vec': lambda s: s+u'\N{COMBINING RIGHT ARROW ABOVE}',
+    'mathring': lambda s: center_accent(s, u'\N{COMBINING RING ABOVE}'),
+    'ddddot': lambda s: center_accent(s, u'\N{COMBINING FOUR DOTS ABOVE}'),
+    'dddot': lambda s: center_accent(s, u'\N{COMBINING THREE DOTS ABOVE}'),
+    'ddot': lambda s: center_accent(s, u'\N{COMBINING DIAERESIS}'),
+    'dot': lambda s: center_accent(s, u'\N{COMBINING DOT ABOVE}'),
+    'check': lambda s: center_accent(s, u'\N{COMBINING CARON}'),
+    'breve': lambda s: center_accent(s, u'\N{COMBINING BREVE}'),
+    'acute': lambda s: center_accent(s, u'\N{COMBINING ACUTE ACCENT}'),
+    'grave': lambda s: center_accent(s, u'\N{COMBINING GRAVE ACCENT}'),
+    'tilde': lambda s: center_accent(s, u'\N{COMBINING TILDE}'),
+    'hat': lambda s: center_accent(s, u'\N{COMBINING CIRCUMFLEX ACCENT}'),
+    'bar': lambda s: center_accent(s, u'\N{COMBINING OVERLINE}'),
+    'vec': lambda s: center_accent(s, u'\N{COMBINING RIGHT ARROW ABOVE}'),
     'prime': lambda s: s+u'\N{PRIME}',
     'prm': lambda s: s+u'\N{PRIME}',
     # # Faces -- these are here for some compatibility with latex printing
@@ -487,10 +510,13 @@ atoms_table = {
 }
 
 
-def pretty_atom(atom_name, default=None):
+def pretty_atom(atom_name, default=None, printer=None):
     """return pretty representation of an atom"""
     if _use_unicode:
-        return atoms_table[atom_name]
+        if printer is not None and atom_name == 'ImaginaryUnit' and printer._settings['imaginary_unit'] == 'j':
+            return U('DOUBLE-STRUCK ITALIC SMALL J')
+        else:
+            return atoms_table[atom_name]
     else:
         if default is not None:
             return default
@@ -498,7 +524,7 @@ def pretty_atom(atom_name, default=None):
         raise KeyError('only unicode')  # send it default printer
 
 
-def pretty_symbol(symb_name):
+def pretty_symbol(symb_name, bold_name=False):
     """return pretty representation of a symbol"""
     # let's split symb_name into symbol + index
     # UC: beta1
@@ -509,16 +535,21 @@ def pretty_symbol(symb_name):
 
     name, sups, subs = split_super_sub(symb_name)
 
-    def translate(s) :
-        gG = greek_unicode.get(s)
+    def translate(s, bold_name) :
+        if bold_name:
+            gG = greek_bold_unicode.get(s)
+        else:
+            gG = greek_unicode.get(s)
         if gG is not None:
             return gG
         for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True) :
             if s.lower().endswith(key) and len(s)>len(key):
-                return modifier_dict[key](translate(s[:-len(key)]))
+                return modifier_dict[key](translate(s[:-len(key)], bold_name))
+        if bold_name:
+            return ''.join([bold_unicode[c] for c in s])
         return s
 
-    name = translate(name)
+    name = translate(name, bold_name)
 
     # Let's prettify sups/subs. If it fails at one of them, pretty sups/subs are
     # not used at all.
@@ -543,9 +574,9 @@ def pretty_symbol(symb_name):
     # glue the results into one string
     if pretty_subs is None:  # nice formatting of sups/subs did not work
         if subs:
-            name += '_'+'_'.join([translate(s) for s in subs])
+            name += '_'+'_'.join([translate(s, bold_name) for s in subs])
         if sups:
-            name += '__'+'__'.join([translate(s) for s in sups])
+            name += '__'+'__'.join([translate(s, bold_name) for s in sups])
         return name
     else:
         sups_result = ' '.join(pretty_sups)
@@ -580,3 +611,32 @@ def annotated(letter):
         return ucode_pics[letter]
     else:
         return ascii_pics[letter]
+
+
+def center_accent(string, accent):
+    """
+    Returns a string with accent inserted on the middle character. Useful to
+    put combining accents on symbol names, including multi-character names.
+
+    Parameters
+    ==========
+
+    string : string
+        The string to place the accent in.
+    accent : string
+        The combining accent to insert
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Combining_character
+    .. [2] https://en.wikipedia.org/wiki/Combining_Diacritical_Marks
+
+    """
+
+    # Accent is placed on the previous character, although it may not always look
+    # like that depending on console
+    midpoint = len(string) // 2 + 1
+    firstpart = string[:midpoint]
+    secondpart = string[midpoint:]
+    return firstpart + accent + secondpart

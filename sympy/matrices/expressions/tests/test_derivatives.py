@@ -4,7 +4,7 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative
-from sympy import MatAdd, Identity, MatMul
+from sympy import MatAdd, Identity, MatMul, ZeroMatrix
 
 k = symbols("k")
 
@@ -33,7 +33,8 @@ def test_matrix_derivative_non_matrix_result():
 
 def test_matrix_derivative_trivial_cases():
     # Cookbook example 33:
-    assert X.diff(A) == 0
+    # TODO: find a way to represent a four-dimensional zero-array:
+    assert X.diff(A) == Derivative(X, A)
 
 
 def test_matrix_derivative_with_inverse():
@@ -57,6 +58,9 @@ def test_matrix_derivative_with_inverse():
 
 
 def test_matrix_derivative_vectors_and_scalars():
+
+    assert x.diff(x) == Identity(k)
+    assert x.T.diff(x) == Identity(k)
 
     # Cookbook example 69:
     expr = x.T*a
@@ -102,7 +106,7 @@ def test_matrix_derivative_vectors_and_scalars():
 def test_matrix_derivatives_of_traces():
 
     expr = Trace(A)*A
-    assert expr.diff(A) == Trace(A)*Identity(k) + A.T
+    assert expr.diff(A) == Derivative(Trace(A)*A, A)
 
     ## First order:
 
@@ -143,8 +147,7 @@ def test_matrix_derivatives_of_traces():
 
     # Cookbook example 107:
     expr = Trace(X**2*B)
-    # TODO: wrong result
-    #assert expr.diff(X) == (X*B + B*X).T
+    assert expr.diff(X) == (X*B + B*X).T
     expr = Trace(MatMul(X, X, B))
     assert expr.diff(X) == (X*B + B*X).T
 
@@ -243,3 +246,27 @@ def test_derivatives_of_complicated_matrix_expr():
     expr = a.T*(A*X*(X.T*B + X*A) + B.T*X.T*(a*b.T*(X*D*X.T + X*(X.T*B + A*X)*D*B - X.T*C.T*A)*B + B*(X*D.T + B*A*X*A.T - 3*X*D))*B + 42*X*B*X.T*A.T*(X + X.T))*b
     result = (B*(B*A*X*A.T - 3*X*D + X*D.T) + a*b.T*(X*(A*X + X.T*B)*D*B + X*D*X.T - X.T*C.T*A)*B)*B*b*a.T*B.T + B**2*b*a.T*B.T*X.T*a*b.T*X*D + 42*A*X*B.T*X.T*a*b.T + B*D*B**3*b*a.T*B.T*X.T*a*b.T*X + B*b*a.T*A*X + 42*a*b.T*(X + X.T)*A*X*B.T + b*a.T*X*B*a*b.T*B.T**2*X*D.T + b*a.T*X*B*a*b.T*B.T**3*D.T*(B.T*X + X.T*A.T) + 42*b*a.T*X*B*X.T*A.T + 42*A.T*(X + X.T)*b*a.T*X*B + A.T*B.T**2*X*B*a*b.T*B.T*A + A.T*a*b.T*(A.T*X.T + B.T*X) + A.T*X.T*b*a.T*X*B*a*b.T*B.T**3*D.T + B.T*X*B*a*b.T*B.T*D - 3*B.T*X*B*a*b.T*B.T*D.T - C.T*A*B**2*b*a.T*B.T*X.T*a*b.T + X.T*A.T*a*b.T*A.T
     assert expr.diff(X) == result
+
+
+def test_mixed_deriv_mixed_expressions():
+
+    expr = 3*Trace(A)
+    assert expr.diff(A) == 3*Identity(k)
+
+    expr = k
+    deriv = expr.diff(A)
+    assert isinstance(deriv, ZeroMatrix)
+    assert deriv == ZeroMatrix(k, k)
+
+    expr = Trace(A)**2
+    assert expr.diff(A) == (2*Trace(A))*Identity(k)
+
+    expr = Trace(A)*A
+    # TODO: this is not yet supported:
+    assert expr.diff(A) == Derivative(expr, A)
+
+    expr = Trace(Trace(A)*A)
+    assert expr.diff(A) == (2*Trace(A))*Identity(k)
+
+    expr = Trace(Trace(Trace(A)*A)*A)
+    assert expr.diff(A) == (3*Trace(A)**2)*Identity(k)

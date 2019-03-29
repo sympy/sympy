@@ -9,7 +9,7 @@ from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 rmul = Permutation.rmul
 
@@ -284,10 +284,26 @@ def test_is_normal():
     assert G1.is_subgroup(G6)
     assert not G1.is_subgroup(G4)
     assert G2.is_subgroup(G4)
-    s4 = PermutationGroup(Permutation(0, 1, 2, 3), Permutation(3)(0, 1))
-    s6 = PermutationGroup(Permutation(0, 1, 2, 3, 5), Permutation(5)(0, 1))
-    assert s6.is_normal(s4, strict=False)
-    assert not s4.is_normal(s6, strict=False)
+    I5 = PermutationGroup(Permutation(4))
+    assert I5.is_normal(G5)
+    assert I5.is_normal(G6, strict=False)
+    p1 = Permutation([1, 0, 2, 3, 4])
+    p2 = Permutation([0, 1, 2, 4, 3])
+    p3 = Permutation([3, 4, 2, 1, 0])
+    id_ = Permutation([0, 1, 2, 3, 4])
+    H = PermutationGroup([p1, p3])
+    H_n1 = PermutationGroup([p1, p2])
+    H_n2_1 = PermutationGroup(p1)
+    H_n2_2 = PermutationGroup(p2)
+    H_id = PermutationGroup(id_)
+    assert H_n1.is_normal(H)
+    assert H_n2_1.is_normal(H_n1)
+    assert H_n2_2.is_normal(H_n1)
+    assert H_id.is_normal(H_n2_1)
+    assert H_id.is_normal(H_n1)
+    assert H_id.is_normal(H)
+    assert not H_n2_1.is_normal(H)
+    assert not H_n2_2.is_normal(H)
 
 
 def test_eq():
@@ -460,6 +476,7 @@ def test_minimal_block():
     assert P1.minimal_block([0, 2]) == [0, 1, 0, 1, 0, 1]
     assert P2.minimal_block([0, 2]) == [0, 1, 0, 1, 0, 1]
 
+
 def test_minimal_blocks():
     P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
     assert P.minimal_blocks() == [[0, 1, 0, 1, 0, 1], [0, 1, 2, 0, 1, 2]]
@@ -469,6 +486,7 @@ def test_minimal_blocks():
 
     P = PermutationGroup(Permutation(0, 3))
     assert P.minimal_blocks() == False
+
 
 def test_max_div():
     S = SymmetricGroup(10)
@@ -750,6 +768,8 @@ def test_is_group():
 
 def test_PermutationGroup():
     assert PermutationGroup() == PermutationGroup(Permutation())
+    assert (PermutationGroup() == 0) is False
+
 
 def test_coset_transvesal():
     G = AlternatingGroup(5)
@@ -759,6 +779,7 @@ def test_coset_transvesal():
          Permutation(1, 2, 4), Permutation(4)(1, 2, 3), Permutation(1, 3)(2, 4),
          Permutation(0, 1, 2, 3, 4), Permutation(0, 1, 2, 4, 3),
          Permutation(0, 1, 3, 2, 4), Permutation(0, 2, 4, 1, 3)]
+
 
 def test_coset_table():
     G = PermutationGroup(Permutation(0,1,2,3), Permutation(0,1,2),
@@ -772,10 +793,12 @@ def test_coset_table():
          [10, 9, 10, 7, 3, 11, 2, 2, 11, 11], [8, 7, 9, 9, 9, 9, 4, 4, 9, 9],
          [7, 8, 7, 8, 10, 10, 5, 5, 10, 10], [11, 11, 11, 11, 8, 7, 6, 6, 8, 8]]
 
+
 def test_subgroup():
     G = PermutationGroup(Permutation(0,1,2), Permutation(0,2,3))
     H = G.subgroup([Permutation(0,1,3)])
     assert H.is_subgroup(G)
+
 
 def test_generator_product():
     G = SymmetricGroup(5)
@@ -786,6 +809,7 @@ def test_generator_product():
     for g in gens:
         w = g*w
     assert w == p
+
 
 def test_sylow_subgroup():
     P = PermutationGroup(Permutation(1, 5)(2, 4), Permutation(0, 1, 2, 3, 4, 5))
@@ -838,6 +862,8 @@ def test_sylow_subgroup():
     assert G.order() % S.order() == 0
     assert G.order()/S.order() % 2 > 0
 
+
+@slow
 def test_presentation():
     def _test(P):
         G = P.presentation()
@@ -870,3 +896,34 @@ def test_presentation():
     c = Permutation(4,5)
     P = PermutationGroup(c, a, b)
     assert _strong_test(P)
+
+
+def test_polycyclic():
+    a = Permutation([0, 1, 2])
+    b = Permutation([2, 1, 0])
+    G = PermutationGroup([a, b])
+    assert G.is_polycyclic == True
+
+    a = Permutation([1, 2, 3, 4, 0])
+    b = Permutation([1, 0, 2, 3, 4])
+    G = PermutationGroup([a, b])
+    assert G.is_polycyclic == False
+
+
+def test_elementary():
+    a = Permutation([1, 5, 2, 0, 3, 6, 4])
+    G = PermutationGroup([a])
+    assert G.is_elementary(7) == False
+
+    a = Permutation(0, 1)(2, 3)
+    b = Permutation(0, 2)(3, 1)
+    G = PermutationGroup([a, b])
+    assert G.is_elementary(2) == True
+    c = Permutation(4, 5, 6)
+    G = PermutationGroup([a, b, c])
+    assert G.is_elementary(2) == False
+
+    G = SymmetricGroup(4).sylow_subgroup(2)
+    assert G.is_elementary(2) == False
+    H = AlternatingGroup(4).sylow_subgroup(2)
+    assert H.is_elementary(2) == True

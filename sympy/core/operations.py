@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.sympify import _sympify, sympify
-from sympy.core.basic import Basic, _aresame
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, range
 from sympy.core.logic import fuzzy_and
@@ -35,7 +35,9 @@ class AssocOp(Basic):
         if evaluate is None:
             evaluate = global_evaluate[0]
         if not evaluate:
-            return cls._from_args(args)
+            obj = cls._from_args(args)
+            obj = cls._exec_constructor_postprocessors(obj)
+            return obj
 
         if len(args) == 0:
             return cls.identity

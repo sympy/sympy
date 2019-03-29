@@ -1,7 +1,7 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc, Abs, symbols)
+                   cot, sec, csc, Abs, symbols, I, re)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 periodicity, lcim, AccumBounds)
+                                 periodicity, lcim, AccumBounds, is_convex)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import Interval, FiniteSet, Complement, Union
 from sympy.utilities.pytest import raises
@@ -93,6 +93,7 @@ def test_not_empty_in():
 def test_periodicity():
     x = Symbol('x')
     y = Symbol('y')
+    z = Symbol('z', real=True)
 
     assert periodicity(sin(2*x), x) == pi
     assert periodicity((-2)*tan(4*x), x) == pi/4
@@ -117,11 +118,22 @@ def test_periodicity():
     assert periodicity(tan((3*x-2)%4), x) == S(4)/3
     assert periodicity((sqrt(2)*(x+1)+x) % 3, x) == 3 / (sqrt(2)+1)
     assert periodicity((x**2+1) % x, x) == None
-
+    assert periodicity(sin(re(x)), x) == 2*pi
     assert periodicity(sin(x)**2 + cos(x)**2, x) == S.Zero
     assert periodicity(tan(x), y) == S.Zero
+    assert periodicity(sin(x) + I*cos(x), x) == 2*pi
+    assert periodicity(x - sin(2*y), y) == pi
 
     assert periodicity(exp(x), x) is None
+    assert periodicity(exp(I*x), x) == 2*pi
+    assert periodicity(exp(I*z), z) == 2*pi
+    assert periodicity(exp(z), z) is None
+    assert periodicity(exp(log(sin(z) + I*cos(2*z)), evaluate=False), z) == 2*pi
+    assert periodicity(exp(log(sin(2*z) + I*cos(z)), evaluate=False), z) == 2*pi
+    assert periodicity(exp(sin(z)), z) == 2*pi
+    assert periodicity(exp(2*I*z), z) == pi
+    assert periodicity(exp(z + I*sin(z)), z) is None
+    assert periodicity(exp(cos(z/2) + sin(z)), z) == 4*pi
     assert periodicity(log(x), x) is None
     assert periodicity(exp(x)**sin(x), x) is None
     assert periodicity(sin(x)**y, y) is None
@@ -161,6 +173,12 @@ def test_lcim():
     assert lcim([S(1), 2*pi]) is None
     assert lcim([S(2) + 2*E, E/3 + S(1)/3, S(1) + E]) == S(2) + 2*E
 
+def test_is_convex():
+
+    assert is_convex(1/x, x, domain=Interval(0, oo)) == True
+    assert is_convex(1/x, x, domain=Interval(-oo, 0)) == False
+    assert is_convex(x**2, x, domain=Interval(0, oo)) == True
+    assert is_convex(log(x), x) == False
 
 def test_AccumBounds():
     assert AccumBounds(1, 2).args == (1, 2)
