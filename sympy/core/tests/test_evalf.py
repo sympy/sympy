@@ -1,15 +1,15 @@
-from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp,
+from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
     integrate, log, Mul, N, oo, pi, Pow, product, Product,
-    Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
+    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
-    scaled_zero, get_integer_part, as_mpmath)
+    scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
 from sympy.core.compatibility import long, range
 from sympy.utilities.pytest import raises, XFAIL
-
 from sympy.abc import n, x, y
+
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
@@ -196,7 +196,7 @@ def test_evalf_bugs():
     assert NS(20 - 5008329267844*n**25 - 477638700*n**37 - 19*n,
               subs={n: .01}) == '19.8100000000000'
     assert NS(((x - 1)*((1 - x))**1000).n()
-              ) == '(-x + 1.00000000000000)**1000*(x - 1.00000000000000)'
+              ) == '(1.00000000000000 - x)**1000*(x - 1.00000000000000)'
     assert NS((-x).n()) == '-x'
     assert NS((-2*x).n()) == '-2.00000000000000*x'
     assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
@@ -333,6 +333,8 @@ def test_implemented_function_evalf():
     assert str(f(2)) == "f(2)"
     assert f(2).evalf() == 3
     assert f(x).evalf() == f(x)
+    f = implemented_function(Function('sin'), lambda x: x + 1)
+    assert f(2).evalf() != sin(2)
     del f._imp_     # XXX: due to caching _imp_ would influence all other tests
 
 
@@ -525,3 +527,27 @@ def test_issue_13098():
     assert ceiling(log(S('9.'+'9'*20), 10)) == 1
     assert floor(log(20 - S('9.'+'9'*20), 10)) == 1
     assert ceiling(log(20 - S('9.'+'9'*20), 10)) == 2
+
+
+def test_issue_14601():
+    e = 5*x*y/2 - y*(35*(x**3)/2 - 15*x/2)
+    subst = {x:0.0, y:0.0}
+    e2 = e.evalf(subs=subst)
+    assert float(e2) == 0.0
+    assert float((x + x*(x**2 + x)).evalf(subs={x: 0.0})) == 0.0
+
+
+def test_issue_11151():
+    z = S.Zero
+    e = Sum(z, (x, 1, 2))
+    assert e != z  # it shouldn't evaluate
+    # when it does evaluate, this is what it should give
+    assert evalf(e, 15, {}) == \
+        evalf(z, 15, {}) == (None, None, 15, None)
+    # so this shouldn't fail
+    assert (e/2).n() == 0
+    # this was where the issue appeared
+    expr0 = Sum(x**2 + x, (x, 1, 2))
+    expr1 = Sum(0, (x, 1, 2))
+    expr2 = expr1/expr0
+    assert simplify(factor(expr2) - expr2) == 0

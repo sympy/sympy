@@ -13,12 +13,14 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_elgamal, decipher_elgamal, dh_private_key, dh_public_key,
       dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
       decipher_bifid, bifid_square, padded_key, uniq, decipher_gm,
-      encipher_gm, gm_public_key, gm_private_key)
+      encipher_gm, gm_public_key, gm_private_key, encipher_bg, decipher_bg,
+      bg_private_key, bg_public_key)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
-from sympy.utilities.pytest import raises, slow
+from sympy.utilities.pytest import raises, slow, warns_deprecated_sympy
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from random import randrange
 
@@ -146,36 +148,61 @@ def test_bifid6_square():
 
 
 def test_rsa_public_key():
-    assert rsa_public_key(2, 2, 1) == (4, 1)
     assert rsa_public_key(2, 3, 1) == (6, 1)
     assert rsa_public_key(5, 3, 3) == (15, 3)
     assert rsa_public_key(8, 8, 8) is False
 
+    raises(SymPyDeprecationWarning, lambda: rsa_public_key(2, 2, 1))
+    with warns_deprecated_sympy():
+        assert rsa_public_key(2, 2, 1) == (4, 1)
+
 
 def test_rsa_private_key():
-    assert rsa_private_key(2, 2, 1) == (4, 1)
     assert rsa_private_key(2, 3, 1) == (6, 1)
     assert rsa_private_key(5, 3, 3) == (15, 3)
     assert rsa_private_key(23,29,5) == (667,493)
     assert rsa_private_key(8, 8, 8) is False
 
+    raises(SymPyDeprecationWarning, lambda: rsa_private_key(2, 2, 1))
+    with warns_deprecated_sympy():
+        assert rsa_private_key(2, 2, 1) == (4, 1)
+
+
+def test_rsa_large_key():
+    # Sample from
+    # http://www.herongyang.com/Cryptography/JCE-Public-Key-RSA-Private-Public-Key-Pair-Sample.html
+    p = int('101565610013301240713207239558950144682174355406589305284428666'\
+        '903702505233009')
+    q = int('894687191887545488935455605955948413812376003053143521429242133'\
+        '12069293984003')
+    e = int('65537')
+    d = int('893650581832704239530398858744759129594796235440844479456143566'\
+        '6999402846577625762582824202269399672579058991442587406384754958587'\
+        '400493169361356902030209')
+    assert rsa_public_key(p, q, e) == (p*q, e)
+    assert rsa_private_key(p, q, e) == (p*q, d)
+
 
 def test_encipher_rsa():
-    puk = rsa_public_key(2, 2, 1)
-    assert encipher_rsa(2, puk) == 2
     puk = rsa_public_key(2, 3, 1)
     assert encipher_rsa(2, puk) == 2
     puk = rsa_public_key(5, 3, 3)
     assert encipher_rsa(2, puk) == 8
 
+    with warns_deprecated_sympy():
+        puk = rsa_public_key(2, 2, 1)
+        assert encipher_rsa(2, puk) == 2
+
 
 def test_decipher_rsa():
-    prk = rsa_private_key(2, 2, 1)
-    assert decipher_rsa(2, prk) == 2
     prk = rsa_private_key(2, 3, 1)
     assert decipher_rsa(2, prk) == 2
     prk = rsa_private_key(5, 3, 3)
     assert decipher_rsa(8, prk) == 2
+
+    with warns_deprecated_sympy():
+        prk = rsa_private_key(2, 2, 1)
+        assert decipher_rsa(2, prk) == 2
 
 
 def test_kid_rsa_public_key():
@@ -335,3 +362,32 @@ def test_gm_public_key():
     assert 323 == gm_public_key(17, 19)[1]
     assert 15  == gm_public_key(3, 5)[1]
     raises(ValueError, lambda: gm_public_key(15, 19))
+
+def test_encipher_decipher_bg():
+    ps = [67, 7, 71, 103, 11, 43, 107, 47,
+          79, 19, 83, 23, 59, 127, 31]
+    qs = qs = [7, 71, 103, 11, 43, 107, 47,
+               79, 19, 83, 23, 59, 127, 31, 67]
+    messages = [
+        0, 328, 343, 148, 1280, 758, 383,
+        724, 603, 516, 766, 618, 186,
+    ]
+
+    for p, q in zip(ps, qs):
+        pri = bg_private_key(p, q)
+        for msg in messages:
+            pub = bg_public_key(p, q)
+            enc = encipher_bg(msg, pub)
+            dec = decipher_bg(enc, pri)
+            assert dec == msg
+
+def test_bg_private_key():
+    raises(ValueError, lambda: bg_private_key(8, 16))
+    raises(ValueError, lambda: bg_private_key(8, 8))
+    raises(ValueError, lambda: bg_private_key(13, 17))
+    assert 23, 31 == bg_private_key(23, 31)
+
+def test_bg_public_key():
+    assert 5293 == bg_public_key(67, 79)
+    assert 713 == bg_public_key(23, 31)
+    raises(ValueError, lambda: bg_private_key(13, 17))

@@ -38,7 +38,9 @@ from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
-    _is_finite_with_finite_vars)
+    _is_finite_with_finite_vars, _transolve, _is_exponential,
+    _solve_exponential, _is_logarithmic,
+    _solve_logarithm, _term_factors)
 
 
 a = Symbol('a', real=True)
@@ -269,7 +271,7 @@ def test_solve_invert():
         S.Reals, FiniteSet(a/log(y/b)))
 
     # issue 4504
-    assert solveset_real(2**x - 10, x) == FiniteSet(log(10)/log(2))
+    assert solveset_real(2**x - 10, x) == FiniteSet(1 + log(5)/log(2))
 
 
 def test_errorinverses():
@@ -471,9 +473,9 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    unsolved_object = ConditionSet(q, Eq(sqrt((m - q)**2 + (-m/(2*q) + 1/2)**2) -
-        sqrt((-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2 + (m**2/2 - m -
-        sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2), 0), S.Reals)
+    unsolved_object = ConditionSet(q, Eq(sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) -
+        sqrt((-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m -
+        sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2), 0), S.Reals)
     assert solveset_real(eq, q) == unsolved_object
 
 
@@ -559,23 +561,6 @@ def test_poly_gens():
         FiniteSet(-Rational(3, 2), S.Half)
 
 
-@XFAIL
-def test_uselogcombine_1():
-    assert solveset_real(log(x - 3) + log(x + 3), x) == \
-        FiniteSet(sqrt(10))
-    assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
-    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3) == FiniteSet(
-        -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
-        -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
-
-
-@XFAIL
-def test_uselogcombine_2():
-    eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
-    assert solveset_real(eq, x) == \
-        FiniteSet(-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z))))
-
-
 def test_solve_abs():
     x = Symbol('x')
     n = Dummy('n')
@@ -648,14 +633,6 @@ def test_solve_only_exp_1():
     assert solveset_real(exp(x) + exp(-x) - 4, x) == \
         FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
     assert solveset_real(exp(x) + exp(-x) - y, x) != S.EmptySet
-
-
-@XFAIL
-def test_solve_only_exp_2():
-    assert solveset_real(exp(x/y)*exp(-z/y) - 2, y) == \
-        FiniteSet((x - z)/log(2))
-    assert solveset_real(sqrt(exp(x)) + sqrt(exp(-x)) - 4, x) == \
-        FiniteSet(2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2))
 
 
 def test_atan2():
@@ -748,6 +725,8 @@ def test_solveset_real_exp():
     assert solveset(Eq(2**(x-3), -16), x, S.Reals) == S.EmptySet
     assert solveset(Eq((-3)**(x - 3), -3**39), x, S.Reals) == FiniteSet(42)
     assert solveset(Eq(2**x, y), x, S.Reals) == Intersection(S.Reals, FiniteSet(log(y)/log(2)))
+
+    assert invert_real((-2)**(2*x) - 16, 0, x) == (x, FiniteSet(2))
 
 
 def test_solve_complex_log():
@@ -842,11 +821,11 @@ def test_solve_trig_simplified():
 @XFAIL
 def test_solve_lambert():
     assert solveset_real(x*exp(x) - 1, x) == FiniteSet(LambertW(1))
+    assert solveset_real(exp(x) + x, x) == FiniteSet(-LambertW(1))
     assert solveset_real(x + 2**x, x) == \
         FiniteSet(-LambertW(log(2))/log(2))
 
     # issue 4739
-    assert solveset_real(exp(log(5)*x) - 2**x, x) == FiniteSet(0)
     ans = solveset_real(3*x + 5 + 2**(-5*x + 3), x)
     assert ans == FiniteSet(-Rational(5, 3) +
                             LambertW(-10240*2**(S(1)/3)*log(2)/3)/(5*log(2)))
@@ -867,9 +846,6 @@ def test_solve_lambert():
     assert solveset_real(3*x + log(4*x), x) == \
         FiniteSet(LambertW(Rational(3, 4))/3)
 
-    assert solveset_complex(x**z*y**z - 2, z) == \
-        FiniteSet(log(2)/(log(x) + log(y)))
-
     assert solveset_real(x**x - 2) == FiniteSet(exp(LambertW(log(2))))
 
     a = Symbol('a')
@@ -880,14 +856,8 @@ def test_solve_lambert():
     assert solveset_real((a/x + exp(x/2)).diff(x), x) == \
         FiniteSet(4*LambertW(sqrt(2)*sqrt(a)/4))
 
-    assert solveset_real(1/(1/x - y + exp(y)), x) == EmptySet()
     # coverage test
-    p = Symbol('p', positive=True)
-    w = Symbol('w')
-    assert solveset_real((1/p + 1)**(p + 1), p) == EmptySet()
     assert solveset_real(tanh(x + 3)*tanh(x - 3) - 1, x) == EmptySet()
-    assert solveset_real(2*x**w - 4*y**w, w) == \
-        solveset_real((x/y)**w - 2, w)
 
     assert solveset_real((x**2 - 2*x + 1).subs(x, log(x) + 3*x), x) == \
         FiniteSet(LambertW(3*S.Exp1)/3)
@@ -921,15 +891,25 @@ def test_solve_lambert():
 
     assert solveset_real(x**3 - 3**x, x) == \
         FiniteSet(-3/log(3)*LambertW(-log(3)/3))
-    assert solveset_real(x**2 - 2**x, x) == FiniteSet(2)
-    assert solveset_real(-x**2 + 2**x, x) == FiniteSet(2)
     assert solveset_real(3**cos(x) - cos(x)**3) == FiniteSet(
         acos(-3*LambertW(-log(3)/3)/log(3)))
 
-    assert solveset_real(4**(x/2) - 2**(x/3), x) == FiniteSet(0)
-    assert solveset_real(5**(x/2) - 2**(x/3), x) == FiniteSet(0)
-    b = sqrt(6)*sqrt(log(2))/sqrt(log(5))
-    assert solveset_real(5**(x/2) - 2**(3/x), x) == FiniteSet(-b, b)
+    assert solveset_real(x**2 - 2**x, x) == \
+        solveset_real(-x**2 + 2**x, x)
+
+    assert solveset_real(3*log(x) - x*log(3)) == FiniteSet(
+        -3*LambertW(-log(3)/3)/log(3),
+        -3*LambertW(-log(3)/3, -1)/log(3))
+
+    assert solveset_real(LambertW(2*x) - y) == FiniteSet(
+        y*exp(y)/2)
+
+
+@XFAIL
+def test_other_lambert():
+    a = S(6)/5
+    assert solveset_real(x**a - a**x, x) == FiniteSet(
+        a, -a*LambertW(-log(a)/a)/log(a))
 
 
 def test_solveset():
@@ -982,6 +962,9 @@ def test_conditionset():
     assert solveset(Eq(sin(Abs(x)), x), x, domain=S.Reals
         ) == ConditionSet(x, Eq(-x + sin(Abs(x)), 0), S.Reals)
 
+    assert solveset(y**x-z, x, S.Reals) == \
+        ConditionSet(x, Eq(y**x - z, 0), S.Reals)
+
 
 @XFAIL
 def test_conditionset_equality():
@@ -1021,41 +1004,60 @@ def test_solvify():
     x = Symbol('x')
 
     assert solvify(x**2 + 10, x, S.Reals) == []
-    assert solvify(x**3 + 1, x, S.Complexes) == [-1, 1/2 - sqrt(3)*I/2,
-                                                 1/2 + sqrt(3)*I/2]
+    assert solvify(x**3 + 1, x, S.Complexes) == [-1, S(1)/2 - sqrt(3)*I/2,
+                                                 S(1)/2 + sqrt(3)*I/2]
     assert solvify(log(x), x, S.Reals) == [1]
     assert solvify(cos(x), x, S.Reals) == [pi/2, 3*pi/2]
     assert solvify(sin(x) + 1, x, S.Reals) == [3*pi/2]
     raises(NotImplementedError, lambda: solvify(sin(exp(x)), x, S.Complexes))
 
 
-@XFAIL
 def test_abs_invert_solvify():
     assert solvify(sin(Abs(x)), x, S.Reals) is None
 
 
 def test_linear_eq_to_matrix():
     x, y, z = symbols('x, y, z')
+    a, b, c, d, e, f, g, h, i, j, k, l = symbols('a:l')
+
     eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
     eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
 
-    A, b = linear_eq_to_matrix(eqns1, x, y, z)
+    A, B = linear_eq_to_matrix(eqns1, x, y, z)
     assert A == Matrix([[2, 1, -2], [1, -1, -1], [1, 1, 3]])
-    assert b == Matrix([[3], [0], [12]])
+    assert B == Matrix([[3], [0], [12]])
 
-    A, b = linear_eq_to_matrix(eqns2, x, y, z)
+    A, B = linear_eq_to_matrix(eqns2, x, y, z)
     assert A == Matrix([[3, 2, -1], [2, -2, 4], [-2, 1, -2]])
-    assert b == Matrix([[1], [-2], [0]])
+    assert B == Matrix([[1], [-2], [0]])
 
     # Pure symbolic coefficients
-    from sympy.abc import a, b, c, d, e, f, g, h, i, j, k, l
-    eqns3 = [a*x + b*y + c*z - d, e*x + f*y + g*z - h, i*x + j*y + k*z - l]
+    eqns3 = [a*b*x + b*y + c*z - d, e*x + d*x + f*y + g*z - h, i*x + j*y + k*z - l]
     A, B = linear_eq_to_matrix(eqns3, x, y, z)
-    assert A == Matrix([[a, b, c], [e, f, g], [i, j, k]])
+    assert A == Matrix([[a*b, b, c], [d + e, f, g], [i, j, k]])
     assert B == Matrix([[d], [h], [l]])
 
-    # raise ValueError if no symbols are given
+    # raise ValueError if
+    # 1) no symbols are given
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3))
+    # 2) there are duplicates
+    raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, x, y]))
+    # 3) there are non-symbols
+    raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, 1/a, y]))
+    # 4) a nonlinear term is detected in the original expression
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x)))
+
+    assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
+    # issue 15195
+    assert linear_eq_to_matrix(x + y*(z*(3*x + 2) + 3), x) == (
+        Matrix([[3*y*z + 1]]), Matrix([[-y*(2*z + 3)]]))
+    assert linear_eq_to_matrix(Matrix(
+        [[a*x + b*y - 7], [5*x + 6*y - c]]), x, y) == (
+        Matrix([[a, b], [5, 6]]), Matrix([[7], [c]]))
+
+    # issue 15312
+    assert linear_eq_to_matrix(Eq(x + 2, 1), x) == (
+        Matrix([[1]]), Matrix([[-1]]))
 
 
 def test_linsolve():
@@ -1145,6 +1147,18 @@ def test_linsolve():
     f = Function('f')
     assert linsolve([f(x) - 5], f(x)) == FiniteSet((5,))
 
+    # Issue #14860
+    from sympy.physics.units import meter, newton, kilo
+    Eqns = [8*kilo*newton + x + y, 28*kilo*newton*meter + 3*x*meter]
+    assert linsolve(Eqns, x, y) == {(-28000*newton/3, 4000*newton/3)}
+
+    # linsolve fully expands expressions, so removable singularities
+    # and other nonlinearity does not raise an error
+    assert linsolve([Eq(x, x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
+
 
 def test_solve_decomposition():
     x = Symbol('x')
@@ -1209,6 +1223,7 @@ def test_nonlinsolve_abs():
 def test_raise_exception_nonlinsolve():
     raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
+    raises(NotImplementedError, lambda: nonlinsolve([(x+y)**2 - 9, x**2 - y**2 - 0.75], (x, y)))
 
 
 def test_trig_system():
@@ -1399,7 +1414,7 @@ def test_issue_6752():
 
 
 @SKIP("slow")
-def test_issue_5114():
+def test_issue_5114_solveset():
     # slow testcase
     a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('a:r')
 
@@ -1603,6 +1618,27 @@ def test_issue_10397():
     assert solveset(sqrt(x), x, S.Complexes) == FiniteSet(0)
 
 
+def test_issue_14987():
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x**2], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x*(-3/x + 1) + 2*y - a], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x**2 - 3*x)/(x - 3) - 3], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x + 1)**3 - x**3 - 3*x**2 + 7], x))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [x*(1/x + 1) + y], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [(x + 1)*y], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(1/x, 1/x + y)], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(y/x, y/x + y)], [x, y]))
+    raises(ValueError, lambda: linear_eq_to_matrix(
+        [Eq(x*(x + 1), x**2 + y)], [x, y]))
+
+
 def test_simplification():
     eq = x + (a - b)/(-2*a + 2*b)
     assert solveset(eq, x) == FiniteSet(S.Half)
@@ -1613,9 +1649,9 @@ def test_issue_10555():
     f = Function('f')
     g = Function('g')
     assert solveset(f(x) - pi/2, x, S.Reals) == \
-        ConditionSet(x, Eq(2*f(x) - pi, 0), S.Reals)
+        ConditionSet(x, Eq(f(x) - pi/2, 0), S.Reals)
     assert solveset(f(g(x)) - pi/2, g(x), S.Reals) == \
-        ConditionSet(g(x), Eq(2*f(g(x)) - pi, 0), S.Reals)
+        ConditionSet(g(x), Eq(f(g(x)) - pi/2, 0), S.Reals)
 
 
 def test_issue_8715():
@@ -1684,7 +1720,7 @@ def test_issue_12429():
 
 def test_solveset_arg():
     assert solveset(arg(x), x, S.Reals)  == Interval.open(0, oo)
-    assert solveset(arg(4*x -3), x) == Interval.open(3/4, oo)
+    assert solveset(arg(4*x -3), x) == Interval.open(S(3)/4, oo)
 
 
 def test__is_finite_with_finite_vars():
@@ -1722,10 +1758,8 @@ def test_issue_10158():
     assert solveset(Abs(x + 4*Abs(x + 1)), x, dom) == FiniteSet(-4/S(3), -4/S(5))
     assert solveset(2*Abs(x + Abs(x + Max(3, x))) - 2, x, S.Reals) == FiniteSet(-1, -2)
     dom = S.Complexes
-    assert solveset(x*Max(x, 15) - 10, x, dom) == \
-        ConditionSet(x, Eq(x*Max(15, x) - 10, 0), dom)
-    assert solveset(x*Min(x, 15) - 10, x, dom) == \
-        ConditionSet(x, Eq(x*Min(15, x) - 10, 0), dom)
+    raises(ValueError, lambda: solveset(x*Max(x, 15) - 10, x, dom))
+    raises(ValueError, lambda: solveset(x*Min(x, 15) - 10, x, dom))
     raises(ValueError, lambda: solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom))
     raises(ValueError, lambda: solveset(Abs(x - 1) - Abs(y), x, dom))
     raises(ValueError, lambda: solveset(Abs(x + 4*Abs(x + 1)), x, dom))
@@ -1749,3 +1783,245 @@ def test_issue_14454():
     number = CRootOf(x**4 + x - 1, 2)
     raises(ValueError, lambda: invert_real(number, 0, x, S.Reals))
     assert invert_real(x**2, number, x, S.Reals)  # no error
+
+
+def test_term_factors():
+    assert list(_term_factors(3**x - 2)) == [-2, 3**x]
+    expr = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
+    assert set(_term_factors(expr)) == set([
+        3**(x + 2), 4**(x + 2), 3**(x + 3), 4**(x - 1), -1, 4**(x + 1)])
+
+
+#################### tests for transolve and its helpers ###############
+
+def test_transolve():
+
+    assert _transolve(3**x, x, S.Reals) == S.EmptySet
+    assert _transolve(3**x - 9**(x + 5), x, S.Reals) == FiniteSet(-10)
+
+
+# exponential tests
+def test_exponential_real():
+    from sympy.abc import x, y, z
+
+    e1 = 3**(2*x) - 2**(x + 3)
+    e2 = 4**(5 - 9*x) - 8**(2 - x)
+    e3 = 2**x + 4**x
+    e4 = exp(log(5)*x) - 2**x
+    e5 = exp(x/y)*exp(-z/y) - 2
+    e6 = 5**(x/2) - 2**(x/3)
+    e7 = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
+    e8 = -9*exp(-2*x + 5) + 4*exp(3*x + 1)
+    e9 = 2**x + 4**x + 8**x - 84
+
+    assert solveset(e1, x, S.Reals) == FiniteSet(
+        -3*log(2)/(-2*log(3) + log(2)))
+    assert solveset(e2, x, S.Reals) == FiniteSet(4/S(15))
+    assert solveset(e3, x, S.Reals) == S.EmptySet
+    assert solveset(e4, x, S.Reals) == FiniteSet(0)
+    assert solveset(e5, x, S.Reals) == Intersection(
+        S.Reals, FiniteSet(y*log(2*exp(z/y))))
+    assert solveset(e6, x, S.Reals) == FiniteSet(0)
+    assert solveset(e7, x, S.Reals) == FiniteSet(2)
+    assert solveset(e8, x, S.Reals) == FiniteSet(-2*log(2)/5 + 2*log(3)/5 + S(4)/5)
+    assert solveset(e9, x, S.Reals) == FiniteSet(2)
+
+    assert solveset_real(-9*exp(-2*x + 5) + 2**(x + 1), x) == FiniteSet(
+        -((-5 - 2*log(3) + log(2))/(log(2) + 2)))
+    assert solveset_real(4**(x/2) - 2**(x/3), x) == FiniteSet(0)
+    b = sqrt(6)*sqrt(log(2))/sqrt(log(5))
+    assert solveset_real(5**(x/2) - 2**(3/x), x) == FiniteSet(-b, b)
+
+    # coverage test
+    C1, C2 = symbols('C1 C2')
+    f = Function('f')
+    assert solveset_real(C1 + C2/x**2 - exp(-f(x)), f(x)) == Intersection(
+        S.Reals, FiniteSet(-log(C1 + C2/x**2)))
+    y = symbols('y', positive=True)
+    assert solveset_real(x**2 - y**2/exp(x), y) == Intersection(
+        S.Reals, FiniteSet(-sqrt(x**2*exp(x)), sqrt(x**2*exp(x))))
+    p = Symbol('p', positive=True)
+    assert solveset_real((1/p + 1)**(p + 1), p) == EmptySet()
+
+
+@XFAIL
+def test_exponential_complex():
+    from sympy.abc import x
+    from sympy import Dummy
+    n = Dummy('n')
+
+    assert solveset_complex(2**x + 4**x, x) == imageset(
+        Lambda(n, I*(2*n*pi + pi)/log(2)), S.Integers)
+    assert solveset_complex(x**z*y**z - 2, z) == FiniteSet(
+        log(2)/(log(x) + log(y)))
+    assert solveset_complex(4**(x/2) - 2**(x/3), x) == imageset(
+        Lambda(n, 3*n*I*pi/log(2)), S.Integers)
+    assert solveset(2**x + 32, x) == imageset(
+        Lambda(n, (I*(2*n*pi + pi) + 5*log(2))/log(2)), S.Integers)
+
+    eq = (2**exp(y**2/x) + 2)/(x**2 + 15)
+    a = sqrt(x)*sqrt(-log(log(2)) + log(log(2) + 2*n*I*pi))
+    assert solveset_complex(eq, y) == FiniteSet(-a, a)
+
+    union1 = imageset(Lambda(n, I*(2*n*pi - 2*pi/3)/log(2)), S.Integers)
+    union2 = imageset(Lambda(n, I*(2*n*pi + 2*pi/3)/log(2)), S.Integers)
+    assert solveset(2**x + 4**x + 8**x, x) == Union(union1, union2)
+
+    eq = 4**(x + 1) + 4**(x + 2) + 4**(x - 1) - 3**(x + 2) - 3**(x + 3)
+    res = solveset(eq, x)
+    num = 2*n*I*pi - 4*log(2) + 2*log(3)
+    den = -2*log(2) + log(3)
+    ans = imageset(Lambda(n, num/den), S.Integers)
+    assert res == ans
+
+
+def test_expo_conditionset():
+    from sympy.abc import x, y
+
+    f1 = (exp(x) + 1)**x - 2
+    f2 = (x + 2)**y*x - 3
+    f3 = 2**x - exp(x) - 3
+    f4 = log(x) - exp(x)
+    f5 = 2**x + 3**x - 5**x
+
+    assert solveset(f1, x, S.Reals) == ConditionSet(
+        x, Eq((exp(x) + 1)**x - 2, 0), S.Reals)
+    assert solveset(f2, x, S.Reals) == ConditionSet(
+        x, Eq(x*(x + 2)**y - 3, 0), S.Reals)
+    assert solveset(f3, x, S.Reals) == ConditionSet(
+        x, Eq(2**x - exp(x) - 3, 0), S.Reals)
+    assert solveset(f4, x, S.Reals) == ConditionSet(
+        x, Eq(-exp(x) + log(x), 0), S.Reals)
+    assert solveset(f5, x, S.Reals) == ConditionSet(
+        x, Eq(2**x + 3**x - 5**x, 0), S.Reals)
+
+
+def test_exponential_symbols():
+    x, y, z = symbols('x y z', positive=True)
+    from sympy import simplify
+
+    assert solveset(z**x - y, x, S.Reals) == Intersection(
+        S.Reals, FiniteSet(log(y)/log(z)))
+
+    w = symbols('w')
+    f1 = 2*x**w - 4*y**w
+    f2 = (x/y)**w - 2
+    ans1 = solveset(f1, w, S.Reals)
+    ans2 = solveset(f2, w, S.Reals)
+    assert ans1 == simplify(ans2)
+
+    assert solveset(x**x, x, S.Reals) == S.EmptySet
+    assert solveset(x**y - 1, y, S.Reals) == FiniteSet(0)
+    assert solveset(exp(x/y)*exp(-z/y) - 2, y, S.Reals) == FiniteSet(
+        (x - z)/log(2)) - FiniteSet(0)
+
+    a, b, x, y = symbols('a b x y')
+    assert solveset_real(a**x - b**x, x) == ConditionSet(
+        x, (a > 0) & (b > 0), FiniteSet(0))
+    assert solveset(a**x - b**x, x) == ConditionSet(
+        x, Ne(a, 0) & Ne(b, 0), FiniteSet(0))
+
+
+@XFAIL
+def test_issue_10864():
+    assert solveset(x**(y*z) - x, x, S.Reals) == FiniteSet(1)
+
+
+@XFAIL
+def test_solve_only_exp_2():
+    assert solveset_real(sqrt(exp(x)) + sqrt(exp(-x)) - 4, x) == \
+        FiniteSet(2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2))
+
+
+def test_is_exponential():
+    x, y, z = symbols('x y z')
+
+    assert _is_exponential(y, x) is False
+    assert _is_exponential(3**x - 2, x) is True
+    assert _is_exponential(5**x - 7**(2 - x), x) is True
+    assert _is_exponential(sin(2**x) - 4*x, x) is False
+    assert _is_exponential(x**y - z, y) is True
+    assert _is_exponential(x**y - z, x) is False
+    assert _is_exponential(2**x + 4**x - 1, x) is True
+    assert _is_exponential(x**(y*z) - x, x) is False
+    assert _is_exponential(x**(2*x) - 3**x, x) is False
+    assert _is_exponential(x**y - y*z, y) is False
+    assert _is_exponential(x**y - x*z, y) is True
+
+
+def test_solve_exponential():
+    assert _solve_exponential(3**(2*x) - 2**(x + 3), 0, x, S.Reals) == \
+        FiniteSet(-3*log(2)/(-2*log(3) + log(2)))
+    assert _solve_exponential(2**y + 4**y, 1, y, S.Reals) == \
+        FiniteSet(log(-S(1)/2 + sqrt(5)/2)/log(2))
+    assert _solve_exponential(2**y + 4**y, 0, y, S.Reals) == \
+        S.EmptySet
+    assert _solve_exponential(2**x + 3**x - 5**x, 0, x, S.Reals) == \
+        ConditionSet(x, Eq(2**x + 3**x - 5**x, 0), S.Reals)
+
+# end of exponential tests
+
+
+# logarithmic tests
+def test_logarithmic():
+    assert solveset_real(log(x - 3) + log(x + 3), x) == FiniteSet(
+        -sqrt(10), sqrt(10))
+    assert solveset_real(log(x + 1) - log(2*x - 1), x) == FiniteSet(2)
+    assert solveset_real(log(x + 3) + log(1 + 3/x) - 3, x) == FiniteSet(
+        -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
+        -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
+
+    eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
+    assert solveset_real(eq, x) == \
+        Intersection(S.Reals, FiniteSet(-sqrt(y**2 - y*exp(z)),
+            sqrt(y**2 - y*exp(z)))) - \
+        Intersection(S.Reals, FiniteSet(-sqrt(y**2), sqrt(y**2)))
+    assert solveset_real(
+        log(3*x) - log(-x + 1) - log(4*x + 1), x) == FiniteSet(-S(1)/2, S(1)/2)
+    assert solveset(log(x**y) - y*log(x), x, S.Reals) == S.Reals
+
+@XFAIL
+def test_uselogcombine_2():
+    eq = log(exp(2*x) + 1) + log(-tanh(x) + 1) - log(2)
+    assert solveset_real(eq, x) == EmptySet()
+    eq = log(8*x) - log(sqrt(x) + 1) - 2
+    assert solveset_real(eq, x) == EmptySet()
+
+
+def test_is_logarithmic():
+    assert _is_logarithmic(y, x) is False
+    assert _is_logarithmic(log(x), x) is True
+    assert _is_logarithmic(log(x) - 3, x) is True
+    assert _is_logarithmic(log(x)*log(y), x) is True
+    assert _is_logarithmic(log(x)**2, x) is False
+    assert _is_logarithmic(log(x - 3) + log(x + 3), x) is True
+    assert _is_logarithmic(log(x**y) - y*log(x), x) is True
+    assert _is_logarithmic(sin(log(x)), x) is False
+    assert _is_logarithmic(x + y, x) is False
+    assert _is_logarithmic(log(3*x) - log(1 - x) + 4, x) is True
+    assert _is_logarithmic(log(x) + log(y) + x, x) is False
+    assert _is_logarithmic(log(log(x - 3)) + log(x - 3), x) is True
+    assert _is_logarithmic(log(log(3) + x) + log(x), x) is True
+    assert _is_logarithmic(log(x)*(y + 3) + log(x), y) is False
+
+
+def test_solve_logarithm():
+    y = Symbol('y')
+    assert _solve_logarithm(log(x**y) - y*log(x), 0, x, S.Reals) == S.Reals
+    y = Symbol('y', positive=True)
+    assert _solve_logarithm(log(x)*log(y), 0, x, S.Reals) == FiniteSet(1)
+
+# end of logarithmic tests
+
+
+def test_linear_coeffs():
+    from sympy.solvers.solveset import linear_coeffs
+    assert linear_coeffs(0, x) == [0, 0]
+    assert all(i is S.Zero for i in linear_coeffs(0, x))
+    assert linear_coeffs(x + 2*y + 3, x, y) == [1, 2, 3]
+    assert linear_coeffs(x + 2*y + 3, y, x) == [2, 1, 3]
+    assert linear_coeffs(x + 2*x**2 + 3, x, x**2) == [1, 2, 3]
+    raises(ValueError, lambda:
+        linear_coeffs(x + 2*x**2 + x**3, x, x**2))
+    raises(ValueError, lambda:
+        linear_coeffs(1/x*(x - 1) + 1/x, x))

@@ -5,25 +5,25 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy import oo, zoo, nan
-from sympy.core.expr import Expr
 from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core.function import Derivative, Function
-from sympy.core.singleton import S
-from sympy.core.sympify import sympify
-from sympy.core.symbol import Wild, Dummy, symbols, Symbol
-from sympy.core.relational import Eq
-from sympy.core.numbers import Rational
 from sympy.core.compatibility import iterable
+from sympy.core.expr import Expr
+from sympy.core.function import Derivative, Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import Rational
+from sympy.core.relational import Eq
 from sympy.sets.sets import Interval
+from sympy.core.singleton import S
+from sympy.core.symbol import Wild, Dummy, symbols, Symbol
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
-from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.integers import floor, frac, ceiling
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.series.limits import Limit
+from sympy.series.order import Order
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
-from sympy.series.order import Order
-from sympy.series.limits import Limit
 
 
 def rational_algorithm(f, x, k, order=4, full=False):
@@ -366,6 +366,8 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
 
     sol = []
     for i in range(k_max + 1, k_max + m + 1):
+        if (i < 0) == True:
+            continue
         r = f.diff(x, i).limit(x, 0) / factorial(i)
         if r is S.Zero:
             continue
@@ -666,10 +668,11 @@ def solve_de(f, x, DE, order, g, k):
     Examples
     ========
 
-    >>> from sympy import Derivative as D
+    >>> from sympy import Derivative as D, Function
     >>> from sympy import exp, ln
     >>> from sympy.series.formal import solve_de
-    >>> from sympy.abc import x, k, f
+    >>> from sympy.abc import x, k
+    >>> f = Function('f')
 
     >>> solve_de(exp(x), x, D(f(x), x) - f(x), 1, f, k)
     (Piecewise((1/factorial(k), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
@@ -1080,7 +1083,7 @@ class FormalPowerSeries(SeriesBase):
         >>> f.integrate(x).truncate()
         -1 + x**2/2 - x**4/24 + O(x**6)
         >>> integrate(f, (x, 0, 1))
-        -cos(1) + 1
+        1 - cos(1)
         """
         from sympy.integrals import integrate
 

@@ -1,33 +1,32 @@
+import math
 from sympy import (
-    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Tuple
+    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Symbol, Tuple, Lt, nan, oo
 )
-from sympy.core.relational import Relational
-from sympy.utilities.pytest import raises
+from sympy.core.relational import StrictLessThan
+from sympy.utilities.pytest import raises, XFAIL
 
 
 from sympy.codegen.ast import (
-    Assignment, aug_assign, CodeBlock, For, Type, Variable, Pointer, Declaration,
+    Assignment, Attribute, aug_assign, CodeBlock, For, Type, Variable, Pointer, Declaration,
     AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
     DivAugmentedAssignment, ModAugmentedAssignment, value_const, pointer_const,
     integer, real, complex_, int8, uint8, float16 as f16, float32 as f32,
-    float64 as f64, float80 as f80, float128 as f128, complex64 as c64, complex128 as c128
+    float64 as f64, float80 as f80, float128 as f128, complex64 as c64, complex128 as c128,
+    While, Scope, String, Print, QuotedString, FunctionPrototype, FunctionDefinition, Return,
+    FunctionCall, untyped, IntBaseType, intc, Node, none, NoneToken, Token, Comment
 )
 
-x, y, z, t, x0 = symbols("x, y, z, t, x0")
+x, y, z, t, x0, x1, x2, a, b = symbols("x, y, z, t, x0, x1, x2, a, b")
 n = symbols("n", integer=True)
 A = MatrixSymbol('A', 3, 1)
 mat = Matrix([1, 2, 3])
 B = IndexedBase('B')
 i = Idx("i", n)
+A22 = MatrixSymbol('A22',2,2)
+B22 = MatrixSymbol('B22',2,2)
 
 
 def test_Assignment():
-    x, y = symbols("x, y")
-    A = MatrixSymbol('A', 3, 1)
-    mat = Matrix([1, 2, 3])
-    B = IndexedBase('B')
-    n = symbols("n", integer=True)
-    i = Idx("i", n)
     # Here we just do things to show they don't error
     Assignment(x, y)
     Assignment(x, 0)
@@ -38,6 +37,7 @@ def test_Assignment():
     Assignment(B[i], 0)
     a = Assignment(x, y)
     assert a.func(*a.args) == a
+    assert a.op == ':='
     # Here we test things to show that they error
     # Matrix to scalar
     raises(ValueError, lambda: Assignment(B[i], A))
@@ -55,7 +55,6 @@ def test_Assignment():
     raises(TypeError, lambda: Assignment(A + A, mat))
     raises(TypeError, lambda: Assignment(B, 0))
 
-    assert Relational(x, y, ':=') == Assignment(x, y)
 
 def test_AugAssign():
     # Here we just do things to show they don't error
@@ -67,25 +66,19 @@ def test_AugAssign():
     aug_assign(B[i], '+', x)
     aug_assign(B[i], '+', 0)
 
-    a = aug_assign(x, '+', y)
-    b = AddAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '-', y)
-    b = SubAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '*', y)
-    b = MulAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '/', y)
-    b = DivAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
-
-    a = aug_assign(x, '%', y)
-    b = ModAugmentedAssignment(x, y)
-    assert a.func(*a.args) == a == b
+    # Check creation via aug_assign vs constructor
+    for binop, cls in [
+            ('+', AddAugmentedAssignment),
+            ('-', SubAugmentedAssignment),
+            ('*', MulAugmentedAssignment),
+            ('/', DivAugmentedAssignment),
+            ('%', ModAugmentedAssignment),
+        ]:
+        a = aug_assign(x, binop, y)
+        b = cls(x, y)
+        assert a.func(*a.args) == a == b
+        assert a.binop == binop
+        assert a.op == binop + '='
 
     # Here we test things to show that they error
     # Matrix to scalar
@@ -103,6 +96,29 @@ def test_AugAssign():
     raises(TypeError, lambda: aug_assign(x * x, '+', 1))
     raises(TypeError, lambda: aug_assign(A + A, '+', mat))
     raises(TypeError, lambda: aug_assign(B, '+', 0))
+
+
+def test_Assignment_printing():
+    assignment_classes = [
+        Assignment,
+        AddAugmentedAssignment,
+        SubAugmentedAssignment,
+        MulAugmentedAssignment,
+        DivAugmentedAssignment,
+        ModAugmentedAssignment,
+    ]
+    pairs = [
+        (x, 2 * y + 2),
+        (B[i], x),
+        (A22, B22),
+        (A[0, 0], x),
+    ]
+
+    for cls in assignment_classes:
+        for lhs, rhs in pairs:
+            a = cls(lhs, rhs)
+            assert repr(a) == '%s(%s, %s)' % (cls.__name__, repr(lhs), repr(rhs))
+
 
 def test_CodeBlock():
     c = CodeBlock(Assignment(x, 1), Assignment(y, x + 1))
@@ -126,8 +142,8 @@ def test_CodeBlock_topological_sort():
         Assignment(x, y + z),
         Assignment(t, x),
         ]
-    c = CodeBlock.topological_sort(assignments)
-    assert c == CodeBlock(*ordered_assignments)
+    c1 = CodeBlock.topological_sort(assignments)
+    assert c1 == CodeBlock(*ordered_assignments)
 
     # Cycle
     invalid_assignments = [
@@ -139,30 +155,87 @@ def test_CodeBlock_topological_sort():
 
     raises(ValueError, lambda: CodeBlock.topological_sort(invalid_assignments))
 
-    # Undefined variable
-    invalid_assignments = [
-        Assignment(x, y)
+    # Free symbols
+    free_assignments = [
+        Assignment(x, y + z),
+        Assignment(z, a * b),
+        Assignment(t, x),
+        Assignment(y, b + 3),
         ]
 
-    raises(ValueError, lambda: CodeBlock.topological_sort(invalid_assignments))
+    free_assignments_ordered = [
+        Assignment(z, a * b),
+        Assignment(y, b + 3),
+        Assignment(x, y + z),
+        Assignment(t, x),
+        ]
+
+    c2 = CodeBlock.topological_sort(free_assignments)
+    assert c2 == CodeBlock(*free_assignments_ordered)
+
+def test_CodeBlock_free_symbols():
+    c1 = CodeBlock(
+        Assignment(x, y + z),
+        Assignment(z, 1),
+        Assignment(t, x),
+        Assignment(y, 2),
+        )
+    assert c1.free_symbols == set()
+
+    c2 = CodeBlock(
+        Assignment(x, y + z),
+        Assignment(z, a * b),
+        Assignment(t, x),
+        Assignment(y, b + 3),
+    )
+    assert c2.free_symbols == {a, b}
 
 def test_CodeBlock_cse():
-    c = CodeBlock(
+    c1 = CodeBlock(
         Assignment(y, 1),
         Assignment(x, sin(y)),
         Assignment(z, sin(y)),
         Assignment(t, x*z),
         )
-    assert c.cse() == CodeBlock(
+    assert c1.cse() == CodeBlock(
         Assignment(y, 1),
         Assignment(x0, sin(y)),
         Assignment(x, x0),
         Assignment(z, x0),
         Assignment(t, x*z),
+    )
+
+    # Multiple assignments to same symbol not supported
+    raises(NotImplementedError, lambda: CodeBlock(
+        Assignment(x, 1),
+        Assignment(y, 1), Assignment(y, 2)
+    ).cse())
+
+    # Check auto-generated symbols do not collide with existing ones
+    c2 = CodeBlock(
+        Assignment(x0, sin(y) + 1),
+        Assignment(x1, 2 * sin(y)),
+        Assignment(z, x * y),
+        )
+    assert c2.cse() == CodeBlock(
+        Assignment(x2, sin(y)),
+        Assignment(x0, x2 + 1),
+        Assignment(x1, 2 * x2),
+        Assignment(z, x * y),
         )
 
-    raises(NotImplementedError, lambda: CodeBlock(Assignment(x, 1),
-        Assignment(y, 1), Assignment(y, 2)).cse())
+
+def test_CodeBlock_cse__issue_14118():
+    # see https://github.com/sympy/sympy/issues/14118
+    c = CodeBlock(
+        Assignment(A22, Matrix([[x, sin(y)],[3, 4]])),
+        Assignment(B22, Matrix([[sin(y), 2*sin(y)], [sin(y)**2, 7]]))
+    )
+    assert c.cse() == CodeBlock(
+        Assignment(x0, sin(y)),
+        Assignment(A22, Matrix([[x, x0],[3, 4]])),
+        Assignment(B22, Matrix([[x0, 2*x0], [x0**2, 7]]))
+    )
 
 def test_For():
     f = For(n, Range(0, 3), (Assignment(A[n, 0], x + n), aug_assign(x, '+', y)))
@@ -171,14 +244,55 @@ def test_For():
     raises(TypeError, lambda: For(n, x, (x + y,)))
 
 
+def test_none():
+    assert none.is_Atom
+    assert none == none
+    class Foo(Token):
+        pass
+    foo = Foo()
+    assert foo != none
+    assert none == None
+    assert none == NoneToken()
+    assert none.func(*none.args) == none
+
+
+def test_String():
+    st = String('foobar')
+    assert st.is_Atom
+    assert st == String('foobar')
+    assert st.text == 'foobar'
+    assert st.func(**st.kwargs()) == st
+
+
+    class Signifier(String):
+        pass
+
+    si = Signifier('foobar')
+    assert si != st
+    assert si.text == st.text
+    s = String('foo')
+    assert str(s) == 'foo'
+    assert repr(s) == "String('foo')"
+
+def test_Comment():
+    c = Comment('foobar')
+    assert c.text == 'foobar'
+    assert str(c) == 'foobar'
+
+def test_Node():
+    n = Node()
+    assert n == Node()
+    assert n.func(*n.args) == n
+
+
 def test_Type():
     t = Type('MyType')
-    assert t.name == 'MyType'
+    assert len(t.args) == 1
+    assert t.name == String('MyType')
     assert str(t) == 'MyType'
-    assert repr(t) == "Type(name=MyType)"
-
-
-def test_Type_eq():
+    assert repr(t) == "Type(String('MyType'))"
+    assert Type(t) == t
+    assert t.func(*t.args) == t
     t1 = Type('t1')
     t2 = Type('t2')
     assert t1 != t2
@@ -217,76 +331,117 @@ def test_Type__cast_check__integers():
     raises(ValueError, lambda: uint8.cast_check(256.0))
     raises(ValueError, lambda: uint8.cast_check(-1))
 
+def test_Attribute():
+    noexcept = Attribute('noexcept')
+    assert noexcept == Attribute('noexcept')
+    alignas16 = Attribute('alignas', [16])
+    alignas32 = Attribute('alignas', [32])
+    assert alignas16 != alignas32
+    assert alignas16.func(*alignas16.args) == alignas16
+
 
 def test_Variable():
-    v = Variable(x, type_=Type('real'))
+    v = Variable(x, type=real)
+    assert v == Variable(v)
+    assert v == Variable('x', type=real)
     assert v.symbol == x
     assert v.type == real
-    assert v.value_const == False
-    w = Variable(y, {value_const}, f32)
+    assert value_const not in v.attrs
+    assert v.func(*v.args) == v
+    assert str(v) == 'Variable(x, type=real)'
+
+    w = Variable(y, f32, attrs={value_const})
     assert w.symbol == y
     assert w.type == f32
-    assert w.value_const
-    v_n = Variable(n, type_=Type.from_expr(n))
+    assert value_const in w.attrs
+    assert w.func(*w.args) == w
+
+    v_n = Variable(n, type=Type.from_expr(n))
     assert v_n.type == integer
-    v_i = Variable(i, type_=Type.from_expr(n))
+    assert v_n.func(*v_n.args) == v_n
+    v_i = Variable(i, type=Type.from_expr(n))
     assert v_i.type == integer
+    assert v_i != v_n
 
     a_i = Variable.deduced(i)
     assert a_i.type == integer
+    assert Variable.deduced(Symbol('x', real=True)).type == real
+    assert a_i.func(*a_i.args) == a_i
 
+    v_n2 = Variable.deduced(n, value=3.5, cast_check=False)
+    assert v_n2.func(*v_n2.args) == v_n2
+    assert abs(v_n2.value - 3.5) < 1e-15
+    raises(ValueError, lambda: Variable.deduced(n, value=3.5, cast_check=True))
 
-def test_Variable__deduced():
-    v_i = Variable.deduced(i)
-    assert v_i.type == integer
+    v_n3 = Variable.deduced(n)
+    assert v_n3.type == integer
+    assert str(v_n3) == 'Variable(n, type=integer)'
+    assert Variable.deduced(z, value=3).type == integer
+    assert Variable.deduced(z, value=3.0).type == real
+    assert Variable.deduced(z, value=3.0+1j).type == complex_
+
 
 
 def test_Pointer():
     p = Pointer(x)
     assert p.symbol == x
-    assert p.type == None
-    assert not p.value_const
-    assert not p.pointer_const
+    assert p.type == untyped
+    assert value_const not in p.attrs
+    assert pointer_const not in p.attrs
+    assert p.func(*p.args) == p
+
     u = symbols('u', real=True)
-    py = Pointer(u, {value_const, pointer_const}, Type.from_expr(u))
-    assert py.symbol is u
-    assert py.type == real
-    assert py.value_const
-    assert py.pointer_const
+    pu = Pointer(u, type=Type.from_expr(u), attrs={value_const, pointer_const})
+    assert pu.symbol is u
+    assert pu.type == real
+    assert value_const in pu.attrs
+    assert pointer_const in pu.attrs
+    assert pu.func(*pu.args) == pu
+
+    i = symbols('i', integer=True)
+    deref = pu[i]
+    assert deref.indices == (i,)
 
 
 def test_Declaration():
     u = symbols('u', real=True)
-    vu = Variable(u, type_=Type.from_expr(u))
+    vu = Variable(u, type=Type.from_expr(u))
     assert Declaration(vu).variable.type == real
-    vn = Variable(n, type_=Type.from_expr(n))
+    vn = Variable(n, type=Type.from_expr(n))
     assert Declaration(vn).variable.type == integer
 
-    vuc = Variable(u, {value_const}, Type.from_expr(u))
-    decl = Declaration(vuc, 3.0)
+    lt = StrictLessThan(vu, vn)
+    assert isinstance(lt, StrictLessThan)
+
+    vuc = Variable(u, Type.from_expr(u), value=3.0, attrs={value_const})
+    assert value_const in vuc.attrs
+    assert pointer_const not in vuc.attrs
+    decl = Declaration(vuc)
     assert decl.variable == vuc
-    assert isinstance(decl.value, Float)
-    assert decl.value == 3.0
+    assert isinstance(decl.variable.value, Float)
+    assert decl.variable.value == 3.0
+    assert decl.func(*decl.args) == decl
+    assert vuc.as_Declaration() == decl
+    assert vuc.as_Declaration(value=None, attrs=None) == Declaration(vu)
 
-    vy = Variable(y, type_=integer)
-    decl2 = Declaration(vy, 3)
+    vy = Variable(y, type=integer, value=3)
+    decl2 = Declaration(vy)
     assert decl2.variable == vy
-    assert decl2.value is Integer(3)
+    assert decl2.variable.value == Integer(3)
 
-    vi = Variable(i, type_=Type.from_expr(i))
-    decl3 = Declaration(vi, 3.0)
+    vi = Variable(i, type=Type.from_expr(i), value=3.0)
+    decl3 = Declaration(vi)
     assert decl3.variable.type == integer
-    assert decl3.value == 3.0
+    assert decl3.variable.value == 3.0
 
-    decl4 = raises(ValueError, lambda: Declaration.deduced(n, 3.5, cast=True))
+    raises(ValueError, lambda: Declaration(vi, 42))
 
 
 
-def test_Declaration__deduced():
-    assert Declaration.deduced(n).variable.type == integer
-    assert Declaration.deduced(z, 3).variable.type == integer
-    assert Declaration.deduced(z, 3.0).variable.type == real
-    assert Declaration.deduced(z, 3.0+1j).variable.type == complex_
+def test_IntBaseType():
+    assert intc.name == String('intc')
+    assert intc.args == (intc.name,)
+    assert str(IntBaseType('a').name) == 'a'
 
 
 def test_FloatType():
@@ -333,6 +488,18 @@ def test_FloatType():
     assert abs(f80.tiny / Float('3.36210314311209350626e-4932', precision=80) - 1) < 0.1*10**-f80.dig
     assert abs(f128.tiny / Float('3.3621031431120935062626778173217526e-4932', precision=128) - 1) < 0.1*10**-f128.dig
 
+    assert f64.cast_check(0.5) == 0.5
+    assert abs(f64.cast_check(3.7) - 3.7) < 3e-17
+    assert isinstance(f64.cast_check(3), (Float, float))
+
+    assert f64.cast_nocheck(oo) == float('inf')
+    assert f64.cast_nocheck(-oo) == -float('inf')
+    assert f64.cast_nocheck(-oo) == -float('inf')
+    assert math.isnan(f64.cast_nocheck(nan))
+
+    assert f32 != f64
+    assert f64 == f64.func(*f64.args)
+
 
 def test_Type__cast_check__floating_point():
     raises(ValueError, lambda: f32.cast_check(123.45678949))
@@ -364,3 +531,116 @@ def test_Type__cast_check__complex_floating_point():
     assert abs(dcm21 - c128.cast_check(dcm21) - 4.99e-19) < 1e-19
     v19 = Float('0.1234567890123456749') + 1j*Float('0.1234567890123456749')
     raises(ValueError, lambda: c128.cast_check(v19))
+
+
+def test_While():
+    xpp = AddAugmentedAssignment(x, 1)
+    whl1 = While(x < 2, [xpp])
+    assert whl1.condition.args[0] == x
+    assert whl1.condition.args[1] == 2
+    assert whl1.condition == Lt(x, 2, evaluate=False)
+    assert whl1.body.args == (xpp,)
+    assert whl1.func(*whl1.args) == whl1
+
+    cblk = CodeBlock(AddAugmentedAssignment(x, 1))
+    whl2 = While(x < 2, cblk)
+    assert whl1 == whl2
+    assert whl1 != While(x < 3, [xpp])
+
+
+
+def test_Scope():
+    assign = Assignment(x, y)
+    incr = AddAugmentedAssignment(x, 1)
+    scp = Scope([assign, incr])
+    cblk = CodeBlock(assign, incr)
+    assert scp.body == cblk
+    assert scp == Scope(cblk)
+    assert scp != Scope([incr, assign])
+    assert scp.func(*scp.args) == scp
+
+
+def test_Print():
+    fmt = "%d %.3f"
+    ps = Print([n, x], fmt)
+    assert str(ps.format_string) == fmt
+    assert ps.print_args == Tuple(n, x)
+    assert ps.args == (Tuple(n, x), QuotedString(fmt), none)
+    assert ps == Print((n, x), fmt)
+    assert ps != Print([x, n], fmt)
+    assert ps.func(*ps.args) == ps
+
+    ps2 = Print([n, x])
+    assert ps2 == Print([n, x])
+    assert ps2 != ps
+    assert ps2.format_string == None
+
+
+def test_FunctionPrototype_and_FunctionDefinition():
+    vx = Variable(x, type=real)
+    vn = Variable(n, type=integer)
+    fp1 = FunctionPrototype(real, 'power', [vx, vn])
+    assert fp1.return_type == real
+    assert fp1.name == String('power')
+    assert fp1.parameters == Tuple(vx, vn)
+    assert fp1 == FunctionPrototype(real, 'power', [vx, vn])
+    assert fp1 != FunctionPrototype(real, 'power', [vn, vx])
+    assert fp1.func(*fp1.args) == fp1
+
+
+    body = [Assignment(x, x**n), Return(x)]
+    fd1 = FunctionDefinition(real, 'power', [vx, vn], body)
+    assert fd1.return_type == real
+    assert str(fd1.name) == 'power'
+    assert fd1.parameters == Tuple(vx, vn)
+    assert fd1.body == CodeBlock(*body)
+    assert fd1 == FunctionDefinition(real, 'power', [vx, vn], body)
+    assert fd1 != FunctionDefinition(real, 'power', [vx, vn], body[::-1])
+    assert fd1.func(*fd1.args) == fd1
+
+    fp2 = FunctionPrototype.from_FunctionDefinition(fd1)
+    assert fp2 == fp1
+
+    fd2 = FunctionDefinition.from_FunctionPrototype(fp1, body)
+    assert fd2 == fd1
+
+
+def test_Return():
+    rs = Return(x)
+    assert rs.args == (x,)
+    assert rs == Return(x)
+    assert rs != Return(y)
+    assert rs.func(*rs.args) == rs
+
+
+def test_FunctionCall():
+    fc = FunctionCall('power', (x, 3))
+    assert fc.function_args[0] == x
+    assert fc.function_args[1] == 3
+    assert isinstance(fc.function_args[1], Integer)
+    assert fc == FunctionCall('power', (x, 3))
+    assert fc != FunctionCall('power', (3, x))
+    assert fc != FunctionCall('Power', (x, 3))
+    assert fc.func(*fc.args) == fc
+
+
+def test_ast_replace():
+    x = Variable('x', real)
+    y = Variable('y', real)
+    n = Variable('n', integer)
+
+    pwer = FunctionDefinition(real, 'pwer', [x, n], [pow(x.symbol, n.symbol)])
+    pname = pwer.name
+    pcall = FunctionCall('pwer', [y, 3])
+
+    tree1 = CodeBlock(pwer, pcall)
+    assert str(tree1.args[0].name) == 'pwer'
+    assert str(tree1.args[1].name) == 'pwer'
+    for a, b in zip(tree1, [pwer, pcall]):
+        assert a == b
+
+    tree2 = tree1.replace(pname, String('power'))
+    assert str(tree1.args[0].name) == 'pwer'
+    assert str(tree1.args[1].name) == 'pwer'
+    assert str(tree2.args[0].name) == 'power'
+    assert str(tree2.args[1].name) == 'power'

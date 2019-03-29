@@ -1,18 +1,18 @@
 from __future__ import print_function, division
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
+from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
+from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
+from sympy.core.relational import Eq
+from sympy.functions.elementary.exponential import exp, exp_polar, log
+from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.core.expr import Expr
-from sympy.core.relational import Eq
-from sympy.core.logic import fuzzy_not
-from sympy.functions.elementary.exponential import exp, exp_polar, log
 from sympy.functions.elementary.trigonometric import atan, atan2
-from sympy.functions.elementary.integers import ceiling
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -103,11 +103,15 @@ class re(Function):
             return -S.ImaginaryUnit \
                 * im(Derivative(self.args[0], x, evaluate=True))
 
-    def _eval_rewrite_as_im(self, arg):
+    def _eval_rewrite_as_im(self, arg, **kwargs):
         return self.args[0] - S.ImaginaryUnit*im(self.args[0])
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
+
+    def _eval_is_zero(self):
+        # is_imaginary implies nonzero
+        return fuzzy_or([self.args[0].is_imaginary, self.args[0].is_zero])
 
     def _sage_(self):
         import sage.all as sage
@@ -210,12 +214,14 @@ class im(Function):
         import sage.all as sage
         return sage.imag_part(self.args[0]._sage_())
 
-    def _eval_rewrite_as_re(self, arg):
+    def _eval_rewrite_as_re(self, arg, **kwargs):
         return -S.ImaginaryUnit*(self.args[0] - re(self.args[0]))
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
 
+    def _eval_is_zero(self):
+        return self.args[0].is_real
 
 ###############################################################################
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
@@ -363,16 +369,16 @@ class sign(Function):
         import sage.all as sage
         return sage.sgn(self.args[0]._sage_())
 
-    def _eval_rewrite_as_Piecewise(self, arg):
+    def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
         if arg.is_real:
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
-    def _eval_rewrite_as_Heaviside(self, arg):
+    def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         from sympy.functions.special.delta_functions import Heaviside
         if arg.is_real:
             return Heaviside(arg)*2-1
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         return self.func(self.args[0].factor())
 
 
@@ -571,22 +577,23 @@ class Abs(Function):
         if self.args[0].is_real or self.args[0].is_imaginary:
             return Derivative(self.args[0], x, evaluate=True) \
                 * sign(conjugate(self.args[0]))
-        return (re(self.args[0]) * Derivative(re(self.args[0]), x,
+        rv = (re(self.args[0]) * Derivative(re(self.args[0]), x,
             evaluate=True) + im(self.args[0]) * Derivative(im(self.args[0]),
                 x, evaluate=True)) / Abs(self.args[0])
+        return rv.rewrite(sign)
 
-    def _eval_rewrite_as_Heaviside(self, arg):
+    def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         # Note this only holds for real arg (since Heaviside is not defined
         # for complex arguments).
         from sympy.functions.special.delta_functions import Heaviside
         if arg.is_real:
             return arg*(Heaviside(arg) - Heaviside(-arg))
 
-    def _eval_rewrite_as_Piecewise(self, arg):
+    def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
         if arg.is_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
 
-    def _eval_rewrite_as_sign(self, arg):
+    def _eval_rewrite_as_sign(self, arg, **kwargs):
         return arg/sign(arg)
 
 
@@ -638,7 +645,7 @@ class arg(Function):
         return (x * Derivative(y, t, evaluate=True) - y *
                     Derivative(x, t, evaluate=True)) / (x**2 + y**2)
 
-    def _eval_rewrite_as_atan2(self, arg):
+    def _eval_rewrite_as_atan2(self, arg, **kwargs):
         x, y = self.args[0].as_real_imag()
         return atan2(y, x)
 
@@ -669,7 +676,7 @@ class conjugate(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Complex_conjugation
+    .. [1] https://en.wikipedia.org/wiki/Complex_conjugation
     """
 
     @classmethod

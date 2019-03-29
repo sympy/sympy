@@ -2,15 +2,14 @@ from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log,
                    oo, LambertW, I, meijerg, exp_polar, Max, Piecewise, And)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
-from sympy.plotting.plot import unset_show
+from sympy.plotting.plot import unset_show, plot_contour
 from sympy.utilities import lambdify as lambdify_
-from sympy.utilities.pytest import skip, raises
+from sympy.utilities.pytest import skip, raises, warns
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
 
 from tempfile import NamedTemporaryFile
 import os
-import warnings
 
 unset_show()
 
@@ -29,9 +28,14 @@ class TmpFileManager:
 
     @classmethod
     def cleanup(cls):
-        map(os.remove, cls.tmp_files)
+        for file in cls.tmp_files:
+            try:
+                os.remove(file)
+            except OSError:
+                # If the file doesn't exist, for instance, if the test failed.
+                pass
 
-def plot_and_save(name):
+def plot_and_save_1(name):
     tmp_file = TmpFileManager.tmp_file
 
     x = Symbol('x')
@@ -100,6 +104,13 @@ def plot_and_save(name):
     p = plot(f, (x, -3, 3))
     p.save(tmp_file('%s_plot_piecewise_3' % name))
     p._backend.close()
+
+def plot_and_save_2(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
 
     #parametric 2d plots.
     #Single plot with default range.
@@ -172,6 +183,28 @@ def plot_and_save(name):
     p.save(tmp_file('%s_parametric_surface' % name))
     p._backend.close()
 
+    # Single Contour plot.
+    p = plot_contour(sin(x)*sin(y), (x, -5, 5), (y, -5, 5))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+
+    # Multiple Contour plots with same range.
+    p = plot_contour(x**2 + y**2, x**3 + y**3, (x, -5, 5), (y, -5, 5))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+
+    # Multiple Contour plots with different range.
+    p = plot_contour((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x**3 + y**3, (x, -3, 3), (y, -3, 3)))
+    p.save(tmp_file('%s_contour_plot' % name))
+    p._backend.close()
+
+def plot_and_save_3(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+
     ###
     # Examples from the 'colors' notebook
     ###
@@ -228,6 +261,13 @@ def plot_and_save(name):
     p.save(tmp_file('%s_colors_param_surf_arity3' % name))
     p._backend.close()
 
+def plot_and_save_4(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+
     ###
     # Examples from the 'advanced' notebook
     ###
@@ -238,15 +278,18 @@ def plot_and_save(name):
     # is the only way to evaluate the integral. We should perhaps just remove
     # that warning.
 
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning, match="The evaluation of the expression is problematic"):
         i = Integral(log((sin(x)**2 + 1)*sqrt(x**2 + 1)), (x, 0, y))
         p = plot(i, (y, 1, 5))
         p.save(tmp_file('%s_advanced_integral' % name))
         p._backend.close()
-        # Make sure no other warnings were raised
-        for i in w:
-            assert issubclass(i.category, UserWarning)
-            assert "The evaluation of the expression is problematic" in str(i.message)
+
+def plot_and_save_5(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
 
     s = Sum(1/x**y, (x, 1, oo))
     p = plot(s, (y, 2, 10))
@@ -258,6 +301,13 @@ def plot_and_save(name):
     p[0].steps = True
     p.save(tmp_file('%s_advanced_fin_sum' % name))
     p._backend.close()
+
+def plot_and_save_6(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
 
     ###
     # Test expressions that can not be translated to np and generate complex
@@ -273,12 +323,72 @@ def plot_and_save(name):
             + meijerg(((1/2,), ()), ((5, 0, 1/2), ()),
                 5*x**2 * exp_polar(I*pi)/2)) / (48 * pi), (x, 1e-6, 1e-2)).save(tmp_file())
 
-def test_matplotlib():
+def test_matplotlib_1():
 
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
         try:
-            plot_and_save('test')
+            plot_and_save_1('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_2():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_2('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_3():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_3('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_4():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_4('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_5():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_5('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
+def test_matplotlib_6():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plot_and_save_6('test')
         finally:
             # clean up
             TmpFileManager.cleanup()
@@ -319,3 +429,38 @@ def test_append_issue_7140():
 
     with raises(TypeError):
         p1.append(p2._series)
+
+def test_issue_15265():
+    from sympy.core.sympify import sympify
+    from sympy.core.singleton import S
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+    eqn = sin(x)
+
+    p = plot(eqn, xlim=(-S.Pi, S.Pi), ylim=(-1, 1))
+    p._backend.close()
+
+    p = plot(eqn, xlim=(-1, 1), ylim=(-S.Pi, S.Pi))
+    p._backend.close()
+
+    p = plot(eqn, xlim=(-1, 1), ylim=(sympify('-3.14'), sympify('3.14')))
+    p._backend.close()
+
+    p = plot(eqn, xlim=(sympify('-3.14'), sympify('3.14')), ylim=(-1, 1))
+    p._backend.close()
+
+    raises(ValueError,
+        lambda: plot(eqn, xlim=(-S.ImaginaryUnit, 1), ylim=(-1, 1)))
+
+    raises(ValueError,
+        lambda: plot(eqn, xlim=(-1, 1), ylim=(-1, S.ImaginaryUnit)))
+
+    raises(ValueError,
+        lambda: plot(eqn, xlim=(-S.Infinity, 1), ylim=(-1, 1)))
+
+    raises(ValueError,
+        lambda: plot(eqn, xlim=(-1, 1), ylim=(-1, S.Infinity)))

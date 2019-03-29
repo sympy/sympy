@@ -1,4 +1,4 @@
-from sympy import I, symbols, Matrix, eye
+from sympy import I, symbols, Matrix, eye, Mod, floor
 from sympy.matrices import ShapeError, MatrixSymbol, Identity
 from sympy.matrices.expressions import det, trace
 
@@ -10,7 +10,7 @@ from sympy.core.trace import Tr
 mat1 = Matrix([[1, 2 * I], [1 + I, 3]])
 mat2 = Matrix([[2 * I, 3], [4 * I, 2]])
 
-n, m, k, x = symbols('n,m,k,x')
+i, j, k, n, m, o, p, x = symbols('i,j,k,n,m,o,p,x')
 Z = MatrixSymbol('Z', n, n)
 W = MatrixSymbol('W', m, m)
 A = MatrixSymbol('A', n, m)
@@ -136,3 +136,9 @@ def test_KroneckerProduct_expand():
     assert KroneckerProduct(X + Y, Y + Z).expand(kroneckerproduct=True) == \
         KroneckerProduct(X, Y) + KroneckerProduct(X, Z) + \
         KroneckerProduct(Y, Y) + KroneckerProduct(Y, Z)
+
+def test_KroneckerProduct_entry():
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', o, p)
+
+    assert KroneckerProduct(A, B)._entry(i, j) == A[Mod(floor(i/o), n), Mod(floor(j/p), m)]*B[Mod(i, o), Mod(j, p)]

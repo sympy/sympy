@@ -5,35 +5,23 @@ from __future__ import print_function, division
 from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
-
-from sympy.core.mul import _keep_coeff
-from sympy.core.symbol import Symbol
 from sympy.core.basic import preorder_traversal
-from sympy.core.relational import Relational
-from sympy.core.sympify import sympify
+from sympy.core.compatibility import iterable, range, ordered
 from sympy.core.decorators import _sympifyit
 from sympy.core.function import Derivative
-
+from sympy.core.mul import _keep_coeff
+from sympy.core.relational import Relational
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.logic.boolalg import BooleanAtom
-
-from sympy.polys.polyclasses import DMP
-
-from sympy.polys.polyutils import (
-    basic_from_dict,
-    _sort_gens,
-    _unify_gens,
-    _dict_reorder,
-    _dict_from_expr,
-    _parallel_dict_from_expr,
-)
-
-from sympy.polys.rationaltools import together
-from sympy.polys.rootisolation import dup_isolate_real_roots_list
-from sympy.polys.groebnertools import groebner as _groebner
+from sympy.polys import polyoptions as options
+from sympy.polys.constructor import construct_domain
+from sympy.polys.domains import FF, QQ, ZZ
 from sympy.polys.fglmtools import matrix_fglm
+from sympy.polys.groebnertools import groebner as _groebner
 from sympy.polys.monomials import Monomial
 from sympy.polys.orderings import monomial_key
-
+from sympy.polys.polyclasses import DMP
 from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
@@ -44,19 +32,26 @@ from sympy.polys.polyerrors import (
     ComputationFailed,
     GeneratorsError,
 )
-
+from sympy.polys.polyutils import (
+    basic_from_dict,
+    _sort_gens,
+    _unify_gens,
+    _dict_reorder,
+    _dict_from_expr,
+    _parallel_dict_from_expr,
+)
+from sympy.polys.rationaltools import together
+from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, sift, public, filldedent
 
+# Required to avoid errors
 import sympy.polys
+
 import mpmath
 from mpmath.libmp.libhyper import NoConvergence
 
-from sympy.polys.domains import FF, QQ, ZZ
-from sympy.polys.constructor import construct_domain
 
-from sympy.polys import polyoptions as options
 
-from sympy.core.compatibility import iterable, range, ordered
 
 @public
 class Poly(Expr):
@@ -98,6 +93,7 @@ class Poly(Expr):
 
     See Also
     ========
+
     sympy.core.expr.Expr
 
     """
@@ -552,7 +548,8 @@ class Poly(Expr):
 
         return f.per(new, gens=gens)
 
-    def replace(f, x, y=None):
+    def replace(f, x, y=None, *_ignore):
+        # XXX this does not match Basic's signature
         """
         Replace ``x`` with ``y`` in generators list.
 
@@ -573,7 +570,7 @@ class Poly(Expr):
                 raise PolynomialError(
                     "syntax supported only in univariate case")
 
-        if x == y:
+        if x == y or x not in f.gens:
             return f
 
         if x in f.gens and y not in f.gens:
@@ -1117,7 +1114,7 @@ class Poly(Expr):
         if not dom.is_Numerical:
             raise DomainError("can't eject generators over %s" % dom)
 
-        n, k = len(f.gens), len(gens)
+        k = len(gens)
 
         if f.gens[:k] == gens:
             _gens, front = f.gens[k:], True
@@ -2300,7 +2297,6 @@ class Poly(Expr):
             raise OperationNotSupported(f, 'diff')
 
     _eval_derivative = diff
-    _eval_diff = diff
 
     def eval(self, x, a=None, auto=True):
         """
@@ -3282,13 +3278,13 @@ class Poly(Expr):
 
         For real roots the Vincent-Akritas-Strzebonski (VAS) continued fractions method is used.
 
-        References:
-        ===========
-           1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root
-           Isolation Methods . Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
-           2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the
-           Performance of the Continued Fractions Method Using new Bounds of Positive Roots. Nonlinear
-           Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
+        References
+        ==========
+        .. [#] Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root
+            Isolation Methods . Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
+        .. [#] Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the
+            Performance of the Continued Fractions Method Using new Bounds of Positive Roots. Nonlinear
+            Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
 
         Examples
         ========
@@ -4445,18 +4441,22 @@ def degree(f, gen=0):
     """
 
     f = sympify(f, strict=True)
+    gen_is_Num = sympify(gen, strict=True).is_Number
     if f.is_Poly:
         p = f
         isNum = p.as_expr().is_Number
     else:
         isNum = f.is_Number
         if not isNum:
-            p, _ = poly_from_expr(f)
+            if gen_is_Num:
+                p, _ = poly_from_expr(f)
+            else:
+                p, _ = poly_from_expr(f, gen)
 
     if isNum:
         return S.Zero if f else S.NegativeInfinity
 
-    if not sympify(gen, strict=True).is_Number:
+    if not gen_is_Num:
         if f.is_Poly and gen not in p.gens:
             # try recast without explicit gens
             p, _ = poly_from_expr(f.as_expr())
@@ -4904,7 +4904,7 @@ def half_gcdex(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> half_gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
-    (-x/5 + 3/5, x + 1)
+    (3/5 - x/5, x + 1)
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -4943,7 +4943,7 @@ def gcdex(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
-    (-x/5 + 3/5, x**2/5 - 6*x/5 + 2, x + 1)
+    (3/5 - x/5, x**2/5 - 6*x/5 + 2, x + 1)
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -5961,7 +5961,7 @@ def _symbolic_factor(expr, opt, method):
     if isinstance(expr, Expr) and not expr.is_Relational:
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
-        coeff, factors = _symbolic_factor_list(together(expr), opt, method)
+        coeff, factors = _symbolic_factor_list(together(expr, fraction=opt['fraction']), opt, method)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
         return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
@@ -6014,8 +6014,10 @@ def _generic_factor_list(expr, gens, args, method):
 
 def _generic_factor(expr, gens, args, method):
     """Helper function for :func:`sqf` and :func:`factor`. """
+    fraction = args.pop('fraction', True)
     options.allowed_flags(args, [])
     opt = options.build_options(gens, args)
+    opt['fraction'] = fraction
     return _symbolic_factor(sympify(expr), opt, method)
 
 
@@ -6049,7 +6051,7 @@ def to_rational_coeffs(f):
     >>> p = Poly(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}), x, domain='EX')
     >>> lc, r, _, g = to_rational_coeffs(p)
     >>> lc, r
-    (7 + 5*sqrt(2), -2*sqrt(2) + 2)
+    (7 + 5*sqrt(2), 2 - 2*sqrt(2))
     >>> g
     Poly(x**3 + x**2 - 1/4*x - 1/4, x, domain='QQ')
     >>> r1 = simplify(1/r)
@@ -6274,7 +6276,7 @@ def factor(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import factor, sqrt
+    >>> from sympy import factor, sqrt, exp
     >>> from sympy.abc import x, y
 
     >>> factor(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
@@ -6307,6 +6309,14 @@ def factor(f, *gens, **args):
     >>> factor(eq, deep=True)
     2**((x + 1)**2)
 
+    If the ``fraction`` flag is False then rational expressions
+    won't be combined. By default it is True.
+
+    >>> factor(5*x + 3*exp(2 - 7*x), deep=True)
+    (5*x*exp(7*x) + 3*exp(2))*exp(-7*x)
+    >>> factor(5*x + 3*exp(2 - 7*x), deep=True, fraction=False)
+    5*x + 3*exp(2)*exp(-7*x)
+
     See Also
     ========
     sympy.ntheory.factor_.factorint
@@ -6314,6 +6324,19 @@ def factor(f, *gens, **args):
     """
     f = sympify(f)
     if args.pop('deep', False):
+        from sympy.simplify.simplify import bottom_up
+        def _try_factor(expr):
+            """
+            Factor, but avoid changing the expression when unable to.
+            """
+            fac = factor(expr, *gens, **args)
+            if fac.is_Mul or fac.is_Pow:
+                return fac
+            return expr
+
+        f = bottom_up(f, _try_factor)
+        # clean up any subexpressions that may have been expanded
+        # while factoring out a larger expression
         partials = {}
         muladd = f.atoms(Mul, Add)
         for p in muladd:
@@ -6910,9 +6933,9 @@ class GroebnerBasis(Basic):
         References
         ==========
 
-        J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
-        Computation of Zero-dimensional Groebner Bases by Change of
-        Ordering
+        .. [1] J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
+               Computation of Zero-dimensional Groebner Bases by Change of
+               Ordering
 
         """
         opt = self._options

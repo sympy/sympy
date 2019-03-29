@@ -62,8 +62,8 @@ md5 sums of the release files are the same as what are printed.
 
 Once you have made the final release files that you plan to upload, be sure
 that everything is committed, and that the most recent git HEAD is indeed the
-same one that was used to build the files (you can always do `fab vagrant
-release` again if you are not sure). Then tag the release with the command
+same one that was used to build the files (you can always run the release
+script again if you are not sure). Then tag the release with the command
 
     git tag sympy-VERSION -a
 

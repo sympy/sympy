@@ -6,7 +6,7 @@ on the example of Schwarzschild solution.
 
 If you want to derive this by hand, follow the wiki page here:
 
-http://en.wikipedia.org/wiki/Deriving_the_Schwarzschild_solution
+https://en.wikipedia.org/wiki/Deriving_the_Schwarzschild_solution
 
 Also read the above wiki and follow the references from there if
 something is not clear, like what the Ricci tensor is, etc.

@@ -7,7 +7,7 @@ except ImportError:
 
 from pyglet.gl import *
 from sympy.core import S
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, string_types
 
 
 def get_model_matrix(array_type=c_float, glGetMethod=glGetFloatv):
@@ -164,7 +164,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
 
 
 def parse_option_string(s):
-    if not isinstance(s, str):
+    if not isinstance(s, string_types):
         return None
     options = {}
     for token in s.split(';'):

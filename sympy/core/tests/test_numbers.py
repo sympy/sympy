@@ -1,13 +1,14 @@
 import decimal
-from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
-                   S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
+from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
+                   Integer, S, factorial, Catalan, EulerGamma, GoldenRatio,
+                   TribonacciConstant, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
                    AlgebraicNumber, simplify, sin, fibonacci, RealField,
                    sympify, srepr)
 from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
+from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
 from sympy.core.mod import Mod
 from sympy.polys.domains.groundtypes import PythonRational
@@ -26,28 +27,6 @@ t = Symbol('t', real=False)
 def same_and_same_prec(a, b):
     # stricter matching for Floats
     return a == b and a._prec == b._prec
-
-
-def test_integers_cache():
-    python_int = 2**65 + 3175259
-
-    while python_int in _intcache or hash(python_int) in _intcache:
-        python_int += 1
-
-    sympy_int = Integer(python_int)
-
-    assert python_int in _intcache
-    assert hash(python_int) not in _intcache
-
-    sympy_int_int = Integer(sympy_int)
-
-    assert python_int in _intcache
-    assert hash(python_int) not in _intcache
-
-    sympy_hash_int = Integer(hash(python_int))
-
-    assert python_int in _intcache
-    assert hash(python_int) in _intcache
 
 
 def test_seterr():
@@ -190,6 +169,9 @@ def test_divmod():
     assert divmod(S(-3), S(2)) == (-2, 1)
     assert divmod(S(-3), 2) == (-2, 1)
 
+    assert divmod(S(4), S(-3.1)) == Tuple(-2, -2.2)
+    assert divmod(S(4), S(-2.1)) == divmod(4, -2.1)
+    assert divmod(S(-8), S(-2.5) ) == Tuple(3 , -0.5)
 
 def test_igcd():
     assert igcd(0, 0) == 0
@@ -230,7 +212,8 @@ def test_igcd_lehmer():
     assert igcd_lehmer(a*c, b*c) == c
     # big divisor
     assert igcd_lehmer(a, 10**1000) == 1
-
+    # swapping argmument
+    assert igcd_lehmer(1, 2) == igcd_lehmer(2, 1)
 
 def test_igcd2():
     # short loop
@@ -251,12 +234,15 @@ def test_ilcm():
     assert ilcm(*[10, 20, 30]) == 60
     raises(ValueError, lambda: ilcm(8.1, 7))
     raises(ValueError, lambda: ilcm(8, 7.1))
+    raises(TypeError, lambda: ilcm(8))
 
 
 def test_igcdex():
     assert igcdex(2, 3) == (-1, 1, 1)
     assert igcdex(10, 12) == (-1, 1, 2)
     assert igcdex(100, 2004) == (-20, 1, 4)
+    assert igcdex(0, 0) == (0, 1, 0)
+    assert igcdex(1, 0) == (1, 0, 1)
 
 
 def _strictly_equal(a, b):
@@ -359,6 +345,23 @@ def test_Number_new():
     raises(TypeError, lambda: Number(cos))
     a = Rational(3, 5)
     assert Number(a) is a  # Check idempotence on Numbers
+
+
+def test_Number_cmp():
+    n1 = Number(1)
+    n2 = Number(2)
+    n3 = Number(-3)
+
+    assert n1 < n2
+    assert n1 <= n2
+    assert n3 < n1
+    assert n2 > n3
+    assert n2 >= n3
+
+    raises(TypeError, lambda: n1 < S.NaN)
+    raises(TypeError, lambda: n1 <= S.NaN)
+    raises(TypeError, lambda: n1 > S.NaN)
+    raises(TypeError, lambda: n1 >= S.NaN)
 
 
 def test_Rational_cmp():
@@ -483,6 +486,16 @@ def test_Float():
     Integer('123 456') == Integer('123456')
     Rational('123 456.123 456') == Rational('123456.123456')
     assert Float(' .3e2') == Float('0.3e2')
+
+    # allow underscore
+    assert Float('1_23.4_56') == Float('123.456')
+    assert Float('1_23.4_5_6', 12) == Float('123.456', 12)
+    # ...but not in all cases (per Py 3.6)
+    raises(ValueError, lambda: Float('_1'))
+    raises(ValueError, lambda: Float('1_'))
+    raises(ValueError, lambda: Float('1_.'))
+    raises(ValueError, lambda: Float('1._'))
+    raises(ValueError, lambda: Float('1__2'))
 
     # allow auto precision detection
     assert Float('.1', '') == Float(.1, 1)
@@ -1182,6 +1195,7 @@ def test_int():
     assert int(pi) == 3
     assert int(E) == 2
     assert int(GoldenRatio) == 1
+    assert int(TribonacciConstant) == 2
     # issue 10368
     a = S(32442016954)/78058255275
     assert type(int(a)) is type(int(-a)) is int
@@ -1197,6 +1211,8 @@ def test_long():
     assert long(pi) == 3
     assert long(E) == 2
     assert long(GoldenRatio) == 1
+    assert long(TribonacciConstant) == 2
+
 
 def test_real_bug():
     x = Symbol("x")
@@ -1397,12 +1413,16 @@ def test_issue_4611():
     assert abs(Catalan._evalf(50) - 0.915965594177219) < 1e-10
     assert abs(EulerGamma._evalf(50) - 0.577215664901533) < 1e-10
     assert abs(GoldenRatio._evalf(50) - 1.61803398874989) < 1e-10
+    assert abs(TribonacciConstant._evalf(50) - 1.83928675521416) < 1e-10
+
     x = Symbol("x")
     assert (pi + x).evalf() == pi.evalf() + x
     assert (E + x).evalf() == E.evalf() + x
     assert (Catalan + x).evalf() == Catalan.evalf() + x
     assert (EulerGamma + x).evalf() == EulerGamma.evalf() + x
     assert (GoldenRatio + x).evalf() == GoldenRatio.evalf() + x
+    assert (TribonacciConstant + x).evalf() == TribonacciConstant.evalf() + x
+
 
 @conserve_mpmath_dps
 def test_conversion_to_mpmath():
@@ -1541,6 +1561,11 @@ def test_GoldenRatio_expand():
     assert GoldenRatio.expand(func=True) == S.Half + sqrt(5)/2
 
 
+def test_TribonacciConstant_expand():
+        assert TribonacciConstant.expand(func=True) == \
+          (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
+
+
 def test_as_content_primitive():
     assert S.Zero.as_content_primitive() == (1, 0)
     assert S.Half.as_content_primitive() == (S.Half, 1)
@@ -1629,11 +1654,12 @@ def test_latex():
     assert latex(pi) == r"\pi"
     assert latex(E) == r"e"
     assert latex(GoldenRatio) == r"\phi"
+    assert latex(TribonacciConstant) == r"\text{TribonacciConstant}"
     assert latex(EulerGamma) == r"\gamma"
     assert latex(oo) == r"\infty"
     assert latex(-oo) == r"-\infty"
     assert latex(zoo) == r"\tilde{\infty}"
-    assert latex(nan) == r"\mathrm{NaN}"
+    assert latex(nan) == r"\text{NaN}"
     assert latex(I) == r"i"
 
 
@@ -1700,9 +1726,9 @@ def test_issue_10020():
 def test_invert_numbers():
     assert S(2).invert(5) == 3
     assert S(2).invert(S(5)/2) == S.Half
-    assert S(2).invert(5.) == 3
+    assert S(2).invert(5.) == 0.5
     assert S(2).invert(S(5)) == 3
-    assert S(2.).invert(5) == 3
+    assert S(2.).invert(5) == 0.5
     assert S(sqrt(2)).invert(5) == 1/sqrt(2)
     assert S(sqrt(2)).invert(sqrt(3)) == 1/sqrt(2)
 
@@ -1729,6 +1755,12 @@ def test_mod_inverse():
 
 def test_golden_ratio_rewrite_as_sqrt():
     assert GoldenRatio.rewrite(sqrt) == S.Half + sqrt(5)*S.Half
+
+
+def test_tribonacci_constant_rewrite_as_sqrt():
+    assert TribonacciConstant.rewrite(sqrt) == \
+      (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
+
 
 def test_comparisons_with_unknown_type():
     class Foo(object):
@@ -1835,9 +1867,9 @@ def test_numpy_to_float():
         y = Float(ratval, precision=prec)
         assert abs((x - y)/y) < 2**(-(prec + 1))
 
-    check_prec_and_relerr(np.float16(2/3), S(2)/3)
-    check_prec_and_relerr(np.float32(2/3), S(2)/3)
-    check_prec_and_relerr(np.float64(2/3), S(2)/3)
+    check_prec_and_relerr(np.float16(2.0/3), S(2)/3)
+    check_prec_and_relerr(np.float32(2.0/3), S(2)/3)
+    check_prec_and_relerr(np.float64(2.0/3), S(2)/3)
     # extended precision, on some arch/compilers:
     x = np.longdouble(2)/3
     check_prec_and_relerr(x, S(2)/3)
@@ -1846,3 +1878,37 @@ def test_numpy_to_float():
 
     raises(TypeError, lambda: Float(np.complex64(1+2j)))
     raises(TypeError, lambda: Float(np.complex128(1+2j)))
+
+def test_Integer_ceiling_floor():
+    a = Integer(4)
+
+    assert(a.floor() == a)
+    assert(a.ceiling() == a)
+
+def test_ComplexInfinity():
+    assert((zoo).floor() == zoo)
+    assert((zoo).ceiling() == zoo)
+    assert(zoo**zoo == S.NaN)
+
+def test_Infinity_floor_ceiling_power():
+    assert((oo).floor() == oo)
+    assert((oo).ceiling() == oo)
+    assert((oo)**S.NaN == S.NaN)
+    assert((oo)**zoo == S.NaN)
+
+def test_One_power():
+    assert((S.One)**12 == S.One)
+    assert((S.NegativeOne)**S.NaN == S.NaN)
+
+def test_NegativeInfinity():
+    assert((-oo).floor() == -oo)
+    assert((-oo).ceiling() == -oo)
+    assert((-oo)**11 == -oo)
+    assert((-oo)**12 == oo)
+
+def test_issue_6133():
+    raises(TypeError, lambda: (-oo < None))
+    raises(TypeError, lambda: (S(-2) < None))
+    raises(TypeError, lambda: (oo < None))
+    raises(TypeError, lambda: (oo > None))
+    raises(TypeError, lambda: (S(2) < None))

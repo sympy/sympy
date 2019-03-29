@@ -2,11 +2,11 @@ import string
 
 from sympy import (
     Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
-    expand_func, diff, EulerGamma, cancel, re, im, Product)
+    expand_func, diff, EulerGamma, cancel, re, im, Product, carmichael)
 from sympy.functions import (
-    bernoulli, harmonic, bell, fibonacci, lucas, euler, catalan, genocchi, partition,
-    binomial, gamma, sqrt, hyper, log, digamma, trigamma, polygamma, factorial,
-    sin, cos, cot, zeta)
+    bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
+    genocchi, partition, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    trigamma, polygamma, factorial, sin, cos, cot, zeta)
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
@@ -14,6 +14,19 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.numbers import GoldenRatio
 
 x = Symbol('x')
+
+
+def test_carmichael():
+    assert carmichael.find_carmichael_numbers_in_range(0, 561) == []
+    assert carmichael.find_carmichael_numbers_in_range(561, 562) == [561]
+    assert carmichael.find_carmichael_numbers_in_range(561, 1105) == carmichael.find_carmichael_numbers_in_range(561,
+                                                                                                                 562)
+    assert carmichael.find_first_n_carmichaels(5) == [561, 1105, 1729, 2465, 2821]
+    assert carmichael.is_prime(2821) == False
+    assert carmichael.is_prime(2465) == False
+    assert carmichael.is_prime(1729) == False
+    assert carmichael.is_prime(1105) == False
+    assert carmichael.is_prime(561) == False
 
 
 def test_bernoulli():
@@ -75,6 +88,34 @@ def test_fibonacci():
     assert lucas(n).rewrite(sqrt) == \
         (fibonacci(n-1).rewrite(sqrt) + fibonacci(n+1).rewrite(sqrt)).simplify()
     assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
+
+
+def test_tribonacci():
+    assert [tribonacci(n) for n in range(8)] == [0, 1, 1, 2, 4, 7, 13, 24]
+    assert tribonacci(100) == 98079530178586034536500564
+
+    assert tribonacci(0, x) == 0
+    assert tribonacci(1, x) == 1
+    assert tribonacci(2, x) == x**2
+    assert tribonacci(3, x) == x**4 + x
+    assert tribonacci(4, x) == x**6 + 2*x**3 + 1
+    assert tribonacci(5, x) == x**8 + 3*x**5 + 3*x**2
+
+    n = Dummy('n')
+    assert tribonacci(n).limit(n, S.Infinity) == S.Infinity
+
+    w = (-1 + S.ImaginaryUnit * sqrt(3)) / 2
+    a = (1 + cbrt(19 + 3*sqrt(33)) + cbrt(19 - 3*sqrt(33))) / 3
+    b = (1 + w*cbrt(19 + 3*sqrt(33)) + w**2*cbrt(19 - 3*sqrt(33))) / 3
+    c = (1 + w**2*cbrt(19 + 3*sqrt(33)) + w*cbrt(19 - 3*sqrt(33))) / 3
+    assert tribonacci(n).rewrite(sqrt) == \
+      (a**(n + 1)/((a - b)*(a - c))
+      + b**(n + 1)/((b - a)*(b - c))
+      + c**(n + 1)/((c - a)*(c - b)))
+    assert tribonacci(n).rewrite(sqrt).subs(n, 4).simplify() == tribonacci(4)
+    assert tribonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
+        tribonacci(10)
+    raises(ValueError, lambda: tribonacci(-1, x))
 
 
 def test_bell():
@@ -516,7 +557,7 @@ def test_nC_nP_nT():
             1, 720, -1764, 1624, -735, 175, -21,
             1, -5040, 13068, -13132, 6769, -1960, 322, -28,
             1, 40320, -109584, 118124, -67284, 22449, -4536, 546, -36, 1]
-    # http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
+    # https://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
     assert  [stirling(n, k, kind=1)
         for n in range(10) for k in range(n+1)] == [
             1,
@@ -529,7 +570,7 @@ def test_nC_nP_nT():
             0, 720, 1764, 1624, 735, 175, 21, 1,
             0, 5040, 13068, 13132, 6769, 1960, 322, 28, 1,
             0, 40320, 109584, 118124, 67284, 22449, 4536, 546, 36, 1]
-    # http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
+    # https://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
     assert [stirling(n, k, kind=2)
         for n in range(10) for k in range(n+1)] == [
             1,

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """Distutils based setup script for SymPy.
 
-This uses Distutils (http://python.org/sigs/distutils-sig/) the standard
+This uses Distutils (https://python.org/sigs/distutils-sig/) the standard
 python mechanism for installing packages. Optionally, you can use
-Setuptools (http://pythonhosted.org/setuptools/setuptools.html)
+Setuptools (https://setuptools.readthedocs.io/en/latest/)
 to automatically handle dependencies. For the easiest installation
 just type the command (you'll probably need root privileges for that):
 
@@ -105,6 +105,7 @@ modules = [
     'sympy.integrals.benchmarks',
     'sympy.integrals.rubi',
     'sympy.integrals.rubi.parsetools',
+    'sympy.integrals.rubi.rubi_tests',
     'sympy.integrals.rubi.rules',
     'sympy.interactive',
     'sympy.liealgebras',
@@ -117,6 +118,10 @@ modules = [
     'sympy.multipledispatch',
     'sympy.ntheory',
     'sympy.parsing',
+    'sympy.parsing.autolev',
+    'sympy.parsing.autolev._antlr',
+    'sympy.parsing.autolev.test-examples',
+    'sympy.parsing.autolev.test-examples.pydy-example-repo',
     'sympy.parsing.latex',
     'sympy.parsing.latex._antlr',
     'sympy.physics',
@@ -152,10 +157,10 @@ modules = [
     'sympy.tensor.array',
     'sympy.unify',
     'sympy.utilities',
+    'sympy.utilities._compilation',
     'sympy.utilities.mathml',
     'sympy.vector',
 ]
-
 
 class audit(Command):
     """Audits SymPy's source code for following issues:
@@ -321,6 +326,7 @@ tests = [
     'sympy.geometry.tests',
     'sympy.holonomic.tests',
     'sympy.integrals.rubi.parsetools.tests',
+    'sympy.integrals.rubi.rubi_tests.tests',
     'sympy.integrals.rubi.tests',
     'sympy.integrals.tests',
     'sympy.interactive.tests',
@@ -358,6 +364,7 @@ tests = [
     'sympy.tensor.array.tests',
     'sympy.tensor.tests',
     'sympy.unify.tests',
+    'sympy.utilities._compilation.tests',
     'sympy.utilities.tests',
     'sympy.vector.tests',
 ]
@@ -383,15 +390,18 @@ if __name__ == '__main__':
           author_email='sympy@googlegroups.com',
           license='BSD',
           keywords="Math CAS",
-          url='http://sympy.org',
+          url='https://sympy.org',
           py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],
           package_data={
               'sympy.utilities.mathml': ['data/*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
+              'sympy.parsing.autolev': ['*.g4'],
+              'sympy.parsing.autolev.test-examples': ['*.al'],
+              'sympy.parsing.autolev.test-examples.pydy-example-repo': ['*.al'],
               'sympy.parsing.latex': ['*.txt', '*.g4'],
-              'sympy.parsing.latex._antlr': ['*.interp', '*.tokens'],
+              'sympy.integrals.rubi.parsetools': ['header.py.txt'],
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,

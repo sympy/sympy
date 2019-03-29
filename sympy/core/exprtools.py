@@ -119,14 +119,14 @@ def _monotonic_sign(self):
             if x0 is not None:
                 d = self.diff(x)
                 if d.is_number:
-                    roots = []
+                    currentroots = []
                 else:
                     try:
-                        roots = real_roots(d)
+                        currentroots = real_roots(d)
                     except (PolynomialError, NotImplementedError):
-                        roots = [r for r in roots(d, x) if r.is_real]
+                        currentroots = [r for r in roots(d, x) if r.is_real]
                 y = self.subs(x, x0)
-                if x.is_nonnegative and all(r <= x0 for r in roots):
+                if x.is_nonnegative and all(r <= x0 for r in currentroots):
                     if y.is_nonnegative and d.is_positive:
                         if y:
                             return y if y.is_positive else Dummy('pos', positive=True)
@@ -137,7 +137,7 @@ def _monotonic_sign(self):
                             return y if y.is_negative else Dummy('neg', negative=True)
                         else:
                             return Dummy('npos', nonpositive=True)
-                elif x.is_nonpositive and all(r >= x0 for r in roots):
+                elif x.is_nonpositive and all(r >= x0 for r in currentroots):
                     if y.is_nonnegative and d.is_negative:
                         if y:
                             return Dummy('pos', positive=True)
@@ -393,10 +393,10 @@ class Factors(object):
                             raise ValueError('unexpected factor in i1: %s' % a)
 
         self.factors = factors
-        try:
-            self.gens = frozenset(factors.keys())
-        except AttributeError:
+        keys = getattr(factors, 'keys', None)
+        if keys is None:
             raise TypeError('expecting Expr or dictionary')
+        self.gens = frozenset(keys())
 
     def __hash__(self):  # Factors
         keys = tuple(ordered(self.factors.keys()))
@@ -1040,11 +1040,11 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         reps = []
         for i, (c, nc) in enumerate(args):
             if nc:
-                nc = Mul._from_args(nc)
+                nc = Mul(*nc)
                 d = Dummy()
                 reps.append((d, nc))
                 c.append(d)
-                args[i] = Mul._from_args(c)
+                args[i] = Mul(*c)
             else:
                 args[i] = c
         return args, dict(reps)
@@ -1176,7 +1176,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
         if p.is_Add:
             list_args = [do(a) for a in Add.make_args(p)]
             # get a common negative (if there) which gcd_terms does not remove
-            if all(a.as_coeff_Mul()[0] < 0 for a in list_args):
+            if all(a.as_coeff_Mul()[0].extract_multiplicatively(-1) is not None
+                   for a in list_args):
                 cont = -cont
                 list_args = [-a for a in list_args]
             # watch out for exp(-(x+2)) which gcd_terms will change to exp(-x-2)
@@ -1209,7 +1210,7 @@ def _mask_nc(eq, name=None):
     and cannot be made commutative. The third value returned is a list
     of any non-commutative symbols that appear in the returned equation.
 
-    ``name``, if given, is the name that will be used with numered Dummy
+    ``name``, if given, is the name that will be used with numbered Dummy
     variables that will replace the non-commutative objects and is mainly
     used for doctesting purposes.
 
@@ -1242,7 +1243,7 @@ def _mask_nc(eq, name=None):
     Multiple nc-symbols:
 
     >>> _mask_nc(A**2 - B**2, 'd')
-    (A**2 - B**2, None, [A, B])
+    (A**2 - B**2, {}, [A, B])
 
     An nc-object with nc-symbols but no others outside of it:
 
@@ -1308,13 +1309,11 @@ def _mask_nc(eq, name=None):
         if any(a == r[0] for r in rep):
             pot.skip()
         elif not a.is_commutative:
-            if a.is_Symbol:
+            if a.is_symbol:
                 nc_syms.add(a)
+                pot.skip()
             elif not (a.is_Add or a.is_Mul or a.is_Pow):
-                if all(s.is_commutative for s in a.free_symbols):
-                    rep.append((a, Dummy()))
-                else:
-                    nc_obj.add(a)
+                nc_obj.add(a)
                 pot.skip()
 
     # If there is only one nc symbol or object, it can be factored regularly
@@ -1335,7 +1334,7 @@ def _mask_nc(eq, name=None):
 
     nc_syms = list(nc_syms)
     nc_syms.sort(key=default_sort_key)
-    return expr, {v: k for k, v in rep} or None, nc_syms
+    return expr, {v: k for k, v in rep}, nc_syms
 
 
 def factor_nc(expr):

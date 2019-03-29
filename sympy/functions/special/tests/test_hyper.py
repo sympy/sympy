@@ -1,5 +1,5 @@
 from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
-                   cos, sqrt, symbols, oo, Derivative, gamma, O)
+                   cos, sqrt, symbols, oo, Derivative, gamma, O, appellf1)
 from sympy.series.limits import limit
 from sympy.abc import x, z, k
 from sympy.utilities.pytest import raises, slow
@@ -343,3 +343,17 @@ def test_limits():
            O(k**6) # issue 6350
     assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
             meijerg(((), ()), ((1,), (0,)), 0) # issue 6052
+
+def test_appellf1():
+    a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
+    assert appellf1(a, b2, b1, c, y, x) == appellf1(a, b1, b2, c, x, y)
+    assert appellf1(a, b1, b1, c, y, x) == appellf1(a, b1, b1, c, x, y)
+    assert appellf1(a, b1, b2, c, S(0), S(0)) == S(1)
+
+def test_derivative_appellf1():
+    from sympy import diff
+    a, b1, b2, c, x, y, z = symbols('a b1 b2 c x y z')
+    assert diff(appellf1(a, b1, b2, c, x, y), x) == a*b1*appellf1(a + 1, b2, b1 + 1, c + 1, y, x)/c
+    assert diff(appellf1(a, b1, b2, c, x, y), y) == a*b2*appellf1(a + 1, b1, b2 + 1, c + 1, x, y)/c
+    assert diff(appellf1(a, b1, b2, c, x, y), z) == 0
+    assert diff(appellf1(a, b1, b2, c, x, y), a) ==  Derivative(appellf1(a, b1, b2, c, x, y), a)

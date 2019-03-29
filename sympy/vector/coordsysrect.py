@@ -1,6 +1,6 @@
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
-from sympy.core.compatibility import string_types, range
+from sympy.core.compatibility import string_types, range, Callable
 from sympy.core.cache import cacheit
 from sympy.core import S, Dummy, Lambda
 from sympy import symbols, MatrixBase, ImmutableDenseMatrix
@@ -11,7 +11,6 @@ from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos,\
 import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-import collections
 
 
 def CoordSysCartesian(*args, **kwargs):
@@ -84,7 +83,7 @@ class CoordSys3D(Basic):
                 else:
                     transformation = Lambda(transformation[0],
                                             transformation[1])
-            elif isinstance(transformation, collections.Callable):
+            elif isinstance(transformation, Callable):
                 x1, x2, x3 = symbols('x1 x2 x3', cls=Dummy)
                 transformation = Lambda((x1, x2, x3),
                                         transformation(x1, x2, x3))
@@ -201,7 +200,7 @@ class CoordSys3D(Basic):
         vector_names = list(vector_names)
         latex_vects = [(r'\mathbf{\hat{%s}_{%s}}' % (x, name)) for
                            x in vector_names]
-        pretty_vects = [(name + '_' + x) for x in vector_names]
+        pretty_vects = ['%s_%s' % (x, name) for x in vector_names]
 
         obj._vector_names = vector_names
 
@@ -217,7 +216,7 @@ class CoordSys3D(Basic):
         variable_names = list(variable_names)
         latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
                          x in variable_names]
-        pretty_scalars = [(name + '_' + x) for x in variable_names]
+        pretty_scalars = ['%s_%s' % (x, name) for x in variable_names]
 
         obj._variable_names = variable_names
         obj._vector_names = vector_names
@@ -803,7 +802,7 @@ class CoordSys3D(Basic):
         successive simple rotations.
 
         Body fixed rotations include both Euler Angles and
-        Tait-Bryan Angles, see http://en.wikipedia.org/wiki/Euler_angles.
+        Tait-Bryan Angles, see https://en.wikipedia.org/wiki/Euler_angles.
 
         Parameters
         ==========

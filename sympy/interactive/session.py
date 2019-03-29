@@ -19,7 +19,7 @@ init_printing()
 verbose_message = """\
 These commands were executed:
 %(source)s
-Documentation can be found at http://docs.sympy.org/%(version)s
+Documentation can be found at https://docs.sympy.org/%(version)s
 """
 
 no_ipython = """\

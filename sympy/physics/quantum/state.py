@@ -388,7 +388,7 @@ class Ket(State, KetBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Bra-ket_notation
+    .. [1] https://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
     @classmethod
@@ -449,7 +449,7 @@ class Bra(State, BraBase):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Bra-ket_notation
+    .. [1] https://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
     @classmethod
@@ -715,7 +715,7 @@ class Wavefunction(Function):
                 new_args[ct] = arg
             ct += 1
 
-        return super(Function, cls).__new__(cls, *new_args, **options)
+        return super(Wavefunction, cls).__new__(cls, *new_args, **options)
 
     def __call__(self, *args, **options):
         var = self.variables

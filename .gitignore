@@ -70,7 +70,7 @@ sample.tex
 .ipynb_checkpoints/
 
 # pytest cache folder
-.cache
+.*cache
 
 # pytest related data file for slow tests
 .ci/durations.log

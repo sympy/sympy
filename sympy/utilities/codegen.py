@@ -85,10 +85,10 @@ import os
 import textwrap
 
 from sympy import __version__ as sympy_version
-from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
+from sympy.core import Symbol, S, Tuple, Equality, Function, Basic
 from sympy.core.compatibility import is_sequence, StringIO, string_types
-from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import c_code_printers
+from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fcode import FCodePrinter
 from sympy.printing.julia import JuliaCodePrinter
 from sympy.printing.octave import OctaveCodePrinter
@@ -576,7 +576,6 @@ class CodeGen(object):
                 for e in expr:
                     if not e.is_Equality:
                         raise CodeGenError("Lists of expressions must all be Equalities. {} is not.".format(e))
-                lhs = [e.lhs for e in expr]
 
                 # create a list of right hand sides and simplify them
                 rhs = [e.rhs for e in expr]
@@ -876,7 +875,7 @@ class CCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         if len(routine.results) > 1:
@@ -1183,7 +1182,7 @@ class FCodeGen(CodeGen):
         If the routine has multiple result objects, a CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         prototype = [ "interface\n" ]
@@ -1204,7 +1203,7 @@ class FCodeGen(CodeGen):
                 assign_to = result.result_var
 
             constants, not_fortran, f_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False, source_format='free'),
+                'doprint', dict(human=False, source_format='free', standard=95),
                 result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
@@ -1814,7 +1813,7 @@ class RustCodeGen(CodeGen):
                 raise CodeGenArgumentListError(msg, missing)
 
             # create redundant arguments to produce the requested sequence
-            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            name_arg_dict = {x.name: x for x in arg_list}
             new_args = []
             for symbol in argument_sequence:
                 try:
@@ -1843,7 +1842,7 @@ class RustCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         results = [i.get_datatype('Rust') for i in routine.results]

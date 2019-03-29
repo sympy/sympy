@@ -47,15 +47,18 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfi, erfc, I, hyper, uppergamma,
-                   sinh, Ne)
+                   Lambda, Basic, lowergamma, erf, erfi, I, hyper, uppergamma,
+                   sinh, Ne, expint)
 
 from sympy import beta as beta_fn
-from sympy import cos, sin, exp, besseli, besselj
+from sympy import cos, sin, exp, besseli, besselj, besselk
+from sympy.external import import_module
+from sympy.matrices import MatrixBase
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
-from sympy.stats.rv import _value_check
-from sympy.external import import_module
+from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
+from sympy.stats.joint_rv_types import multivariate_rv
+from sympy.stats.rv import _value_check, RandomSymbol
 import random
 
 oo = S.Infinity
@@ -105,7 +108,7 @@ __all__ = ['ContinuousRV',
 
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
-    Create a Continuous Random Variable given the following:
+    Creates a Continuous Random Variable given the following:
 
     -- a symbol
     -- a probability density function
@@ -114,7 +117,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     Returns a RandomSymbol.
 
     Many common continuous random variable types are already implemented.
-    This function should be necessary only very rarely.
+    This function should be needed very rarely.
 
     Examples
     ========
@@ -132,7 +135,8 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     >>> P(X>0)
     1/2
     """
-    pdf = Lambda(symbol, density)
+    pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
+    pdf = Lambda(symbol, pdf)
     dist = ContinuousDistributionHandmade(pdf, set)
     return SingleContinuousPSpace(symbol, dist).value
 
@@ -141,7 +145,10 @@ def rv(symbol, cls, args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
-    return SingleContinuousPSpace(symbol, dist).value
+    pspace = SingleContinuousPSpace(symbol, dist)
+    if any(isinstance(arg, RandomSymbol) for arg in args):
+        pspace = JointPSpace(symbol, CompoundDistribution(dist))
+    return pspace.value
 
 ########################################
 # Continuous Probability Distributions #
@@ -168,14 +175,14 @@ class ArcsinDistribution(SingleContinuousDistribution):
 
 def Arcsin(name, a=0, b=1):
     r"""
-    Create a Continuous Random Variable with an arcsin distribution.
+    Creates a Continuous Random Variable with Arcsine distribution.
 
-    The density of the arcsin distribution is given by
+    The density of the Arcsine distribution is given by
 
     .. math::
         f(x) := \frac{1}{\pi\sqrt{(x-a)(b-x)}}
 
-    with :math:`x \in [a,b]`. It must hold that :math:`-\infty < a < b < \infty`.
+    with :math:`x \in (a,b)`. It must hold that :math:`-\infty < a < b < \infty`.
 
     Parameters
     ==========
@@ -212,7 +219,8 @@ def Arcsin(name, a=0, b=1):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Arcsine_distribution
+    .. [1] https://en.wikipedia.org/wiki/Arcsine_distribution
+
     """
 
     return rv(name, ArcsinDistribution, (a, b))
@@ -224,6 +232,12 @@ def Arcsin(name, a=0, b=1):
 class BeniniDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'beta', 'sigma')
 
+    @staticmethod
+    def check(alpha, beta, sigma):
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
+        _value_check(sigma > 0, "Scale parameter Sigma must be positive.")
+
     @property
     def set(self):
         return Interval(self.sigma, oo)
@@ -233,10 +247,13 @@ class BeniniDistribution(SingleContinuousDistribution):
         return (exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2)
                *(alpha/x + 2*beta*log(x/sigma)/x))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('The moment generating function of the '
+                                  'Benini distribution does not exist.')
 
 def Benini(name, alpha, beta, sigma):
     r"""
-    Create a Continuous Random Variable with a Benini distribution.
+    Creates a Continuous Random Variable with Benini distribution.
 
     The density of the Benini distribution is given by
 
@@ -263,7 +280,7 @@ def Benini(name, alpha, beta, sigma):
     Examples
     ========
 
-    >>> from sympy.stats import Benini, density
+    >>> from sympy.stats import Benini, density, cdf
     >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
@@ -281,11 +298,17 @@ def Benini(name, alpha, beta, sigma):
     |----- + -----------------|*e
     \  z             z        /
 
+    >>> cdf(X)(z)
+    Piecewise((1 - exp(-alpha*log(z/sigma) - beta*log(z/sigma)**2), sigma <= z),
+            (0, True))
+
+
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Benini_distribution
+    .. [1] https://en.wikipedia.org/wiki/Benini_distribution
     .. [2] http://reference.wolfram.com/legacy/v8/ref/BeniniDistribution.html
+
     """
 
     return rv(name, BeniniDistribution, (alpha, beta, sigma))
@@ -301,8 +324,8 @@ class BetaDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(alpha, beta):
-        _value_check(alpha > 0, "Alpha must be positive")
-        _value_check(beta > 0, "Beta must be positive")
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
 
     def pdf(self, x):
         alpha, beta = self.alpha, self.beta
@@ -314,10 +337,12 @@ class BetaDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
 
+    def _moment_generating_function(self, t):
+        return hyper((self.alpha,), (self.alpha + self.beta,), t)
 
 def Beta(name, alpha, beta):
     r"""
-    Create a Continuous Random Variable with a Beta distribution.
+    Creates a Continuous Random Variable with Beta distribution.
 
     The density of the Beta distribution is given by
 
@@ -341,7 +366,7 @@ def Beta(name, alpha, beta):
     ========
 
     >>> from sympy.stats import Beta, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint, expand_func
+    >>> from sympy import Symbol, simplify, pprint, factor
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
@@ -351,22 +376,23 @@ def Beta(name, alpha, beta):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-     alpha - 1         beta - 1
-    z         *(-z + 1)
-    ---------------------------
-           B(alpha, beta)
+     alpha - 1        beta - 1
+    z         *(1 - z)
+    --------------------------
+          B(alpha, beta)
 
-    >>> expand_func(simplify(E(X, meijerg=True)))
+    >>> simplify(E(X))
     alpha/(alpha + beta)
 
-    >>> simplify(variance(X, meijerg=True))  #doctest: +SKIP
+    >>> factor(simplify(variance(X)))  #doctest: +SKIP
     alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Beta_distribution
+    .. [1] https://en.wikipedia.org/wiki/Beta_distribution
     .. [2] http://mathworld.wolfram.com/BetaDistribution.html
+
     """
 
     return rv(name, BetaDistribution, (alpha, beta))
@@ -378,16 +404,20 @@ def Beta(name, alpha, beta):
 class BetaPrimeDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'beta')
 
+    @staticmethod
+    def check(alpha, beta):
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
+
     set = Interval(0, oo)
 
     def pdf(self, x):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
 
-
 def BetaPrime(name, alpha, beta):
     r"""
-    Create a continuous random variable with a Beta prime distribution.
+    Creates a Continuous Random Variable with Beta prime distribution.
 
     The density of the Beta prime distribution is given by
 
@@ -429,8 +459,9 @@ def BetaPrime(name, alpha, beta):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
+    .. [1] https://en.wikipedia.org/wiki/Beta_prime_distribution
     .. [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
+
     """
 
     return rv(name, BetaPrimeDistribution, (alpha, beta))
@@ -442,25 +473,34 @@ def BetaPrime(name, alpha, beta):
 class CauchyDistribution(SingleContinuousDistribution):
     _argnames = ('x0', 'gamma')
 
+    @staticmethod
+    def check(x0, gamma):
+        _value_check(gamma > 0, "Scale parameter Gamma must be positive.")
+
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
+    def _characteristic_function(self, t):
+        return exp(self.x0 * I * t -  self.gamma * Abs(t))
+
+    def _moment_generating_function(self, t):
+        raise NotImplementedError("The moment generating function for the "
+                                  "Cauchy distribution does not exist.")
 
 def Cauchy(name, x0, gamma):
     r"""
-    Create a continuous random variable with a Cauchy distribution.
+    Creates a Continuous Random Variable with Cauchy distribution.
 
     The density of the Cauchy distribution is given by
 
     .. math::
-        f(x) := \frac{1}{\pi} \arctan\left(\frac{x-x_0}{\gamma}\right)
-                +\frac{1}{2}
+        f(x) := \frac{1}{\pi \gamma [1 + {(\frac{x-x_0}{\gamma})}^2]}
 
     Parameters
     ==========
 
     x0 : Real number, the location
-    gamma : Real number, `\gamma > 0`, the scale
+    gamma : Real number, `\gamma > 0`, a scale
 
     Returns
     =======
@@ -485,8 +525,9 @@ def Cauchy(name, x0, gamma):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Cauchy_distribution
+    .. [1] https://en.wikipedia.org/wiki/Cauchy_distribution
     .. [2] http://mathworld.wolfram.com/CauchyDistribution.html
+
     """
 
     return rv(name, CauchyDistribution, (x0, gamma))
@@ -497,6 +538,11 @@ def Cauchy(name, x0, gamma):
 
 class ChiDistribution(SingleContinuousDistribution):
     _argnames = ('k',)
+
+    @staticmethod
+    def check(k):
+        _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
 
     set = Interval(0, oo)
 
@@ -511,9 +557,17 @@ class ChiDistribution(SingleContinuousDistribution):
         part_3 = hyper(((k+1)/2,), (S(3)/2,), -t**2/2)
         return part_1 + part_2*part_3
 
+    def _moment_generating_function(self, t):
+        k = self.k
+
+        part_1 = hyper((k / 2,), (S(1) / 2,), t ** 2 / 2)
+        part_2 = t * sqrt(2) * gamma((k + 1) / 2) / gamma(k / 2)
+        part_3 = hyper(((k + 1) / 2,), (S(3) / 2,), t ** 2 / 2)
+        return part_1 + part_2 * part_3
+
 def Chi(name, k):
     r"""
-    Create a continuous random variable with a Chi distribution.
+    Creates a Continuous Random Variable with Chi distribution.
 
     The density of the Chi distribution is given by
 
@@ -525,7 +579,7 @@ def Chi(name, k):
     Parameters
     ==========
 
-    k : A positive Integer, `k > 0`, the number of degrees of freedom
+    k : Positive integer, The number of degrees of freedom
 
     Returns
     =======
@@ -535,7 +589,7 @@ def Chi(name, k):
     Examples
     ========
 
-    >>> from sympy.stats import Chi, density, E, std
+    >>> from sympy.stats import Chi, density, E
     >>> from sympy import Symbol, simplify
 
     >>> k = Symbol("k", integer=True)
@@ -544,13 +598,17 @@ def Chi(name, k):
     >>> X = Chi("x", k)
 
     >>> density(X)(z)
-    2**(-k/2 + 1)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
+    2**(1 - k/2)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
+
+    >>> simplify(E(X))
+    sqrt(2)*gamma(k/2 + 1/2)/gamma(k/2)
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Chi_distribution
+    .. [1] https://en.wikipedia.org/wiki/Chi_distribution
     .. [2] http://mathworld.wolfram.com/ChiDistribution.html
+
     """
 
     return rv(name, ChiDistribution, (k,))
@@ -562,18 +620,23 @@ def Chi(name, k):
 class ChiNoncentralDistribution(SingleContinuousDistribution):
     _argnames = ('k', 'l')
 
+    @staticmethod
+    def check(k, l):
+        _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
+        _value_check(l > 0, "Shift parameter Lambda must be positive.")
+
     set = Interval(0, oo)
 
     def pdf(self, x):
         k, l = self.k, self.l
         return exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
 
-
 def ChiNoncentral(name, k, l):
     r"""
-    Create a continuous random variable with a non-central Chi distribution.
+    Creates a Continuous Random Variable with Non-central Chi distribution.
 
-    The density of the non-central Chi distribution is given by
+    The density of the Non-central Chi distribution is given by
 
     .. math::
         f(x) := \frac{e^{-(x^2+\lambda^2)/2} x^k\lambda}
@@ -586,7 +649,7 @@ def ChiNoncentral(name, k, l):
     ==========
 
     k : A positive Integer, `k > 0`, the number of degrees of freedom
-    l : Shift parameter
+    lambda : Real number, `\lambda > 0`, Shift parameter
 
     Returns
     =======
@@ -596,8 +659,8 @@ def ChiNoncentral(name, k, l):
     Examples
     ========
 
-    >>> from sympy.stats import ChiNoncentral, density, E, std
-    >>> from sympy import Symbol, simplify
+    >>> from sympy.stats import ChiNoncentral, density
+    >>> from sympy import Symbol
 
     >>> k = Symbol("k", integer=True)
     >>> l = Symbol("l")
@@ -611,7 +674,7 @@ def ChiNoncentral(name, k, l):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Noncentral_chi_distribution
+    .. [1] https://en.wikipedia.org/wiki/Noncentral_chi_distribution
     """
 
     return rv(name, ChiNoncentralDistribution, (k, l))
@@ -622,6 +685,11 @@ def ChiNoncentral(name, k, l):
 
 class ChiSquaredDistribution(SingleContinuousDistribution):
     _argnames = ('k',)
+
+    @staticmethod
+    def check(k):
+        _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
 
     set = Interval(0, oo)
 
@@ -639,9 +707,12 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         return (1 - 2*I*t)**(-self.k/2)
 
+    def  _moment_generating_function(self, t):
+        return (1 - 2*t)**(-self.k/2)
+
 def ChiSquared(name, k):
     r"""
-    Create a continuous random variable with a Chi-squared distribution.
+    Creates a Continuous Random Variable with Chi-squared distribution.
 
     The density of the Chi-squared distribution is given by
 
@@ -654,7 +725,7 @@ def ChiSquared(name, k):
     Parameters
     ==========
 
-    k : A positive Integer, `k > 0`, the number of degrees of freedom
+    k : Positive integer, The number of degrees of freedom
 
     Returns
     =======
@@ -664,8 +735,8 @@ def ChiSquared(name, k):
     Examples
     ========
 
-    >>> from sympy.stats import ChiSquared, density, E, variance
-    >>> from sympy import Symbol, simplify, gammasimp, expand_func
+    >>> from sympy.stats import ChiSquared, density, E, variance, moment
+    >>> from sympy import Symbol
 
     >>> k = Symbol("k", integer=True, positive=True)
     >>> z = Symbol("z")
@@ -675,16 +746,19 @@ def ChiSquared(name, k):
     >>> density(X)(z)
     2**(-k/2)*z**(k/2 - 1)*exp(-z/2)/gamma(k/2)
 
-    >>> gammasimp(E(X))
+    >>> E(X)
     k
 
-    >>> simplify(expand_func(variance(X)))
+    >>> variance(X)
     2*k
+
+    >>> moment(X, 3)
+    k**3 + 6*k**2 + 8*k
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Chi_squared_distribution
+    .. [1] https://en.wikipedia.org/wiki/Chi_squared_distribution
     .. [2] http://mathworld.wolfram.com/Chi-SquaredDistribution.html
     """
 
@@ -697,6 +771,12 @@ def ChiSquared(name, k):
 class DagumDistribution(SingleContinuousDistribution):
     _argnames = ('p', 'a', 'b')
 
+    @staticmethod
+    def check(p, a, b):
+        _value_check(p > 0, "Shape parameter p must be positive.")
+        _value_check(a > 0, "Shape parameter a must be positive.")
+        _value_check(b > 0, "Scale parameter b must be positive.")
+
     def pdf(self, x):
         p, a, b = self.p, self.a, self.b
         return a*p/x*((x/b)**(a*p)/(((x/b)**a + 1)**(p + 1)))
@@ -706,10 +786,9 @@ class DagumDistribution(SingleContinuousDistribution):
         return Piecewise(((S.One + (S(x)/b)**-a)**-p, x>=0),
                     (S.Zero, True))
 
-
 def Dagum(name, p, a, b):
     r"""
-    Create a continuous random variable with a Dagum distribution.
+    Creates a Continuous Random Variable with Dagum distribution.
 
     The density of the Dagum distribution is given by
 
@@ -735,11 +814,11 @@ def Dagum(name, p, a, b):
     ========
 
     >>> from sympy.stats import Dagum, density, cdf
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol
 
     >>> p = Symbol("p", positive=True)
-    >>> b = Symbol("b", positive=True)
     >>> a = Symbol("a", positive=True)
+    >>> b = Symbol("b", positive=True)
     >>> z = Symbol("z")
 
     >>> X = Dagum("x", p, a, b)
@@ -754,7 +833,8 @@ def Dagum(name, p, a, b):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Dagum_distribution
+    .. [1] https://en.wikipedia.org/wiki/Dagum_distribution
+
     """
 
     return rv(name, DagumDistribution, (p, a, b))
@@ -765,7 +845,7 @@ def Dagum(name, p, a, b):
 
 def Erlang(name, k, l):
     r"""
-    Create a continuous random variable with an Erlang distribution.
+    Creates a Continuous Random Variable with Erlang distribution.
 
     The density of the Erlang distribution is given by
 
@@ -777,7 +857,7 @@ def Erlang(name, k, l):
     Parameters
     ==========
 
-    k : Integer
+    k : Positive integer
     l : Real number, `\lambda > 0`, the rate
 
     Returns
@@ -804,17 +884,16 @@ def Erlang(name, k, l):
     ---------------
         Gamma(k)
 
-    >>> C = cdf(X, meijerg=True)(z)
+    >>> C = cdf(X)(z)
     >>> pprint(C, use_unicode=False)
-    /   -2*I*pi*k
-    |k*e         *lowergamma(k, l*z)
-    |-------------------------------  for z >= 0
-    <          Gamma(k + 1)
+    /lowergamma(k, l*z)
+    |------------------  for z > 0
+    <     Gamma(k)
     |
-    |               0                 otherwise
-    \
+    \        0           otherwise
 
-    >>> simplify(E(X))
+
+    >>> E(X)
     k/l
 
     >>> simplify(variance(X))
@@ -823,8 +902,9 @@ def Erlang(name, k, l):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Erlang_distribution
+    .. [1] https://en.wikipedia.org/wiki/Erlang_distribution
     .. [2] http://mathworld.wolfram.com/ErlangDistribution.html
+
     """
 
     return rv(name, GammaDistribution, (k, S.One/l))
@@ -857,6 +937,10 @@ class ExponentialDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         rate = self.rate
         return rate / (rate - I*t)
+
+    def _moment_generating_function(self, t):
+        rate = self.rate
+        return rate / (rate - t)
 
 def Exponential(name, rate):
     r"""
@@ -920,8 +1004,9 @@ def Exponential(name, rate):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Exponential_distribution
+    .. [1] https://en.wikipedia.org/wiki/Exponential_distribution
     .. [2] http://mathworld.wolfram.com/ExponentialDistribution.html
+
     """
 
     return rv(name, ExponentialDistribution, (rate, ))
@@ -935,11 +1020,21 @@ class FDistributionDistribution(SingleContinuousDistribution):
 
     set = Interval(0, oo)
 
+    @staticmethod
+    def check(d1, d2):
+        _value_check(d1 > 0 and d1.is_integer, \
+            "Degrees of freedom d1 must be positive integer.")
+        _value_check(d2 > 0 and d2.is_integer, \
+            "Degrees of freedom d2 must be positive integer.")
+
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
         return (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
                / (x * beta_fn(d1/2, d2/2)))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('The moment generating function for the '
+                                  'F-distribution does not exist.')
 
 def FDistribution(name, d1, d2):
     r"""
@@ -991,8 +1086,9 @@ def FDistribution(name, d1, d2):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/F-distribution
+    .. [1] https://en.wikipedia.org/wiki/F-distribution
     .. [2] http://mathworld.wolfram.com/F-Distribution.html
+
     """
 
     return rv(name, FDistributionDistribution, (d1, d2))
@@ -1059,8 +1155,9 @@ def FisherZ(name, d1, d2):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Fisher%27s_z-distribution
+    .. [1] https://en.wikipedia.org/wiki/Fisher%27s_z-distribution
     .. [2] http://mathworld.wolfram.com/Fishersz-Distribution.html
+
     """
 
     return rv(name, FisherZDistribution, (d1, d2))
@@ -1132,7 +1229,8 @@ def Frechet(name, a, s=1, m=0):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
+    .. [1] https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
+
     """
 
     return rv(name, FrechetDistribution, (a, s, m))
@@ -1164,6 +1262,11 @@ class GammaDistribution(SingleContinuousDistribution):
                     (lowergamma(k, S(x)/theta)/gamma(k), x > 0),
                     (S.Zero, True))
 
+    def _characteristic_function(self, t):
+        return (1 - self.theta*I*t)**(-self.k)
+
+    def _moment_generating_function(self, t):
+        return (1- self.theta*t)**(-self.k)
 
 def Gamma(name, k, theta):
     r"""
@@ -1219,7 +1322,7 @@ def Gamma(name, k, theta):
     \          0             otherwise
 
     >>> E(X)
-    theta*gamma(k + 1)/gamma(k)
+    k*theta
 
     >>> V = simplify(variance(X))
     >>> pprint(V, use_unicode=False)
@@ -1230,8 +1333,9 @@ def Gamma(name, k, theta):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gamma_distribution
+    .. [1] https://en.wikipedia.org/wiki/Gamma_distribution
     .. [2] http://mathworld.wolfram.com/GammaDistribution.html
+
     """
 
     return rv(name, GammaDistribution, (k, theta))
@@ -1266,6 +1370,14 @@ class GammaInverseDistribution(SingleContinuousDistribution):
             return invgamma.rvs(float(self.a), 0, float(self.b))
         else:
             raise NotImplementedError('Sampling the inverse Gamma Distribution requires Scipy.')
+
+    def _characteristic_function(self, t):
+        a, b = self.a, self.b
+        return 2 * (-I*b*t)**(a/2) * besselk(sqrt(-4*I*b*t)) / gamma(a)
+
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('The moment generating function for the '
+                                  'gamma inverse distribution does not exist.')
 
 def GammaInverse(name, a, b):
     r"""
@@ -1318,7 +1430,8 @@ def GammaInverse(name, a, b):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Inverse-gamma_distribution
+    .. [1] https://en.wikipedia.org/wiki/Inverse-gamma_distribution
+
     """
 
     return rv(name, GammaInverseDistribution, (a, b))
@@ -1335,6 +1448,12 @@ class GumbelDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         beta, mu = self.beta, self.mu
         return (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
+
+    def _characteristic_function(self, t):
+        return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
+
+    def _moment_generating_function(self, t):
+        return gamma(1 - self.beta*t) * exp(I*self.mu*t)
 
 def Gumbel(name, beta, mu):
     r"""
@@ -1395,6 +1514,9 @@ class GompertzDistribution(SingleContinuousDistribution):
         eta, b = self.eta, self.b
         return b*eta*exp(b*x)*exp(eta)*exp(-eta*exp(b*x))
 
+    def _moment_generating_function(self, t):
+        eta, b = self.eta, self.b
+        return eta * exp(eta) * expint(t/b, eta)
 
 def Gompertz(name, b, eta):
     r"""
@@ -1466,7 +1588,6 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
             (1 - (1 - x**a)**b, x <= S.One),
             (S.One, True))
 
-
 def Kumaraswamy(name, a, b):
     r"""
     Create a Continuous Random Variable with a Kumaraswamy distribution.
@@ -1503,19 +1624,18 @@ def Kumaraswamy(name, a, b):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                         b - 1
-         a - 1 /   a    \
-    a*b*z     *\- z  + 1/
+                       b - 1
+         a - 1 /     a\
+    a*b*z     *\1 - z /
 
     >>> cdf(X)(z)
-    Piecewise((0, z < 0),
-            (-(-z**a + 1)**b + 1, z <= 1),
-            (1, True))
+    Piecewise((0, z < 0), (1 - (1 - z**a)**b, z <= 1), (1, True))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Kumaraswamy_distribution
+    .. [1] https://en.wikipedia.org/wiki/Kumaraswamy_distribution
+
     """
 
     return rv(name, KumaraswamyDistribution, (a, b))
@@ -1538,6 +1658,11 @@ class LaplaceDistribution(SingleContinuousDistribution):
                     (S.One - S.Half*exp(-(x - mu)/b), x >= mu)
                         )
 
+    def _characteristic_function(self, t):
+        return exp(self.mu*I*t) / (1 + self.b**2*t**2)
+
+    def _moment_generating_function(self, t):
+        return exp(self.mu*t) / (1 - self.b**2*t**2)
 
 def Laplace(name, mu, b):
     r"""
@@ -1551,8 +1676,10 @@ def Laplace(name, mu, b):
     Parameters
     ==========
 
-    mu : Real number, the location (mean)
-    b : Real number, `b > 0`, a scale
+    mu : Real number or a list/matrix, the location (mean) or the
+        location vector
+    b : Real number or a positive definite matrix, representing a scale
+        or the covariance matrix.
 
     Returns
     =======
@@ -1563,7 +1690,7 @@ def Laplace(name, mu, b):
     ========
 
     >>> from sympy.stats import Laplace, density, cdf
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu")
     >>> b = Symbol("b", positive=True)
@@ -1575,15 +1702,28 @@ def Laplace(name, mu, b):
     exp(-Abs(mu - z)/b)/(2*b)
 
     >>> cdf(X)(z)
-    Piecewise((exp((-mu + z)/b)/2, mu > z),
-            (-exp((mu - z)/b)/2 + 1, True))
+    Piecewise((exp((-mu + z)/b)/2, mu > z), (1 - exp((mu - z)/b)/2, True))
+
+    >>> L = Laplace('L', [1, 2], [[1, 0], [0, 1]])
+    >>> pprint(density(L)(1, 2), use_unicode=False)
+     5        /     ____\
+    e *besselk\0, \/ 35 /
+    ---------------------
+              pi
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Laplace_distribution
+    .. [1] https://en.wikipedia.org/wiki/Laplace_distribution
     .. [2] http://mathworld.wolfram.com/LaplaceDistribution.html
+
     """
+
+    if isinstance(mu, (list, MatrixBase)) and\
+        isinstance(b, (list, MatrixBase)):
+        from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution
+        return multivariate_rv(
+            MultivariateLaplaceDistribution, name, mu, b)
 
     return rv(name, LaplaceDistribution, (mu, b))
 
@@ -1604,6 +1744,9 @@ class LogisticDistribution(SingleContinuousDistribution):
 
     def _characteristic_function(self, t):
         return Piecewise((exp(I*t*self.mu) * pi*self.s*t / sinh(pi*self.s*t), Ne(t, 0)), (S.One, True))
+
+    def _moment_generating_function(self, t):
+        return exp(self.mu*t) * Beta(1 - self.s*t, 1 + self.s*t)
 
 def Logistic(name, mu, s):
     r"""
@@ -1646,8 +1789,9 @@ def Logistic(name, mu, s):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Logistic_distribution
+    .. [1] https://en.wikipedia.org/wiki/Logistic_distribution
     .. [2] http://mathworld.wolfram.com/LogisticDistribution.html
+
     """
 
     return rv(name, LogisticDistribution, (mu, s))
@@ -1675,6 +1819,8 @@ class LogNormalDistribution(SingleContinuousDistribution):
                 (S.Zero, True)
         )
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('Moment generating function of the log-normal distribution is not defined.')
 
 def LogNormal(name, mean, std):
     r"""
@@ -1732,8 +1878,9 @@ def LogNormal(name, mean, std):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Lognormal
+    .. [1] https://en.wikipedia.org/wiki/Lognormal
     .. [2] http://mathworld.wolfram.com/LogNormalDistribution.html
+
     """
 
     return rv(name, LogNormalDistribution, (mean, std))
@@ -1750,7 +1897,6 @@ class MaxwellDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
-
 
 def Maxwell(name, a):
     r"""
@@ -1798,8 +1944,9 @@ def Maxwell(name, a):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Maxwell_distribution
+    .. [1] https://en.wikipedia.org/wiki/Maxwell_distribution
     .. [2] http://mathworld.wolfram.com/MaxwellDistribution.html
+
     """
 
     return rv(name, MaxwellDistribution, (a, ))
@@ -1822,7 +1969,6 @@ class NakagamiDistribution(SingleContinuousDistribution):
         return Piecewise(
                     (lowergamma(mu, (mu/omega)*x**2)/gamma(mu), x > 0),
                     (S.Zero, True))
-
 
 def Nakagami(name, mu, omega):
     r"""
@@ -1869,10 +2015,10 @@ def Nakagami(name, mu, omega):
     ----------------------------------
                 Gamma(mu)
 
-    >>> simplify(E(X, meijerg=True))
+    >>> simplify(E(X))
     sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
 
-    >>> V = simplify(variance(X, meijerg=True))
+    >>> V = simplify(variance(X))
     >>> pprint(V, use_unicode=False)
                         2
              omega*Gamma (mu + 1/2)
@@ -1887,7 +2033,8 @@ def Nakagami(name, mu, omega):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Nakagami_distribution
+    .. [1] https://en.wikipedia.org/wiki/Nakagami_distribution
+
     """
 
     return rv(name, NakagamiDistribution, (mu, omega))
@@ -1917,6 +2064,10 @@ class NormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return exp(I*mean*t - std**2*t**2/2)
 
+    def _moment_generating_function(self, t):
+        mean, std = self.mean, self.std
+        return exp(mean*t + std**2*t**2/2)
+
 def Normal(name, mean, std):
     r"""
     Create a continuous random variable with a Normal distribution.
@@ -1929,8 +2080,9 @@ def Normal(name, mean, std):
     Parameters
     ==========
 
-    mu : Real number, the mean
-    sigma : Real number, :math:`\sigma^2 > 0` the variance
+    mu : Real number or a list representing the mean or the mean vector
+    sigma : Real number or a positive definite sqaure matrix,
+         :math:`\sigma^2 > 0` the variance
 
     Returns
     =======
@@ -1946,7 +2098,7 @@ def Normal(name, mean, std):
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
     >>> z = Symbol("z")
-
+    >>> y = Symbol("y")
     >>> X = Normal("x", mu, sigma)
 
     >>> density(X)(z)
@@ -1974,13 +2126,33 @@ def Normal(name, mean, std):
     >>> simplify(std(2*X + 1))
     2
 
+    >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
+    >>> from sympy.stats.joint_rv import marginal_distribution
+    >>> pprint(density(m)(y, z))
+           /1   y\ /2*y   z\   /    z\ /  y   2*z    \
+           |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
+      ___  \2   2/ \ 3    3/   \    2/ \  3    3     /
+    \/ 3 *e
+    --------------------------------------------------
+                           6*pi
+
+    >>> marginal_distribution(m, m[0])(1)
+     1/(2*sqrt(pi))
+
+
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Normal_distribution
+    .. [1] https://en.wikipedia.org/wiki/Normal_distribution
     .. [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
+
     """
 
+    if isinstance(mean, (list, MatrixBase)) and\
+        isinstance(std, (list, MatrixBase)):
+        from sympy.stats.joint_rv_types import MultivariateNormalDistribution
+        return multivariate_rv(
+            MultivariateNormalDistribution, name, mean, std)
     return rv(name, NormalDistribution, (mean, std))
 
 #-------------------------------------------------------------------------------
@@ -2012,6 +2184,14 @@ class ParetoDistribution(SingleContinuousDistribution):
                 (S.One - xm**alpha/x**alpha, x>=xm),
                 (0, True),
         )
+
+    def _moment_generating_function(self, t):
+        xm, alpha = self.xm, self.alpha
+        return alpha * (-xm*t)**alpha * uppergamma(-alpha, -xm*t)
+
+    def _characteristic_function(self, t):
+        xm, alpha = self.xm, self.alpha
+        return alpha * (-I * xm * t) ** alpha * uppergamma(-alpha, -I * xm * t)
 
 
 def Pareto(name, xm, alpha):
@@ -2054,8 +2234,9 @@ def Pareto(name, xm, alpha):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Pareto_distribution
+    .. [1] https://en.wikipedia.org/wiki/Pareto_distribution
     .. [2] http://mathworld.wolfram.com/ParetoDistribution.html
+
     """
 
     return rv(name, ParetoDistribution, (xm, alpha))
@@ -2078,6 +2259,17 @@ class QuadraticUDistribution(SingleContinuousDistribution):
         return Piecewise(
                   (alpha * (x-beta)**2, And(a<=x, x<=b)),
                   (S.Zero, True))
+
+    def _moment_generating_function(self, t):
+        a, b = self.a, self.b
+
+        return -3 * (exp(a*t) * (4  + (a**2 + 2*a*(-2 + b) + b**2) * t) - exp(b*t) * (4 + (-4*b + (a + b)**2) * t)) / ((a-b)**3 * t**2)
+
+    def _characteristic_function(self, t):
+        def _moment_generating_function(self, t):
+            a, b = self.a, self.b
+
+            return -3*I*(exp(I*a*t*exp(I*b*t)) * (4*I - (-4*b + (a+b)**2)*t)) / ((a-b)**3 * t**2)
 
 
 def QuadraticU(name, a, b):
@@ -2129,7 +2321,8 @@ def QuadraticU(name, a, b):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/U-quadratic_distribution
+    .. [1] https://en.wikipedia.org/wiki/U-quadratic_distribution
+
     """
 
     return rv(name, QuadraticUDistribution, (a, b))
@@ -2161,6 +2354,9 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
                          (exp(I*pi*mu/s)/2, Eq(t, pi/s)),
                          (pi**2*sin(s*t)*exp(I*mu*t) / (s*t*(pi**2 - s**2*t**2)), True))
 
+    def _moment_generating_function(self, t):
+        mu, s = self.mu, self.s
+        return pi**2 * sinh(s*t) * exp(mu*t) /  (s*t*(pi**2 + s**2*t**2))
 
 def RaisedCosine(name, mu, s):
     r"""
@@ -2209,7 +2405,8 @@ def RaisedCosine(name, mu, s):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Raised_cosine_distribution
+    .. [1] https://en.wikipedia.org/wiki/Raised_cosine_distribution
+
     """
 
     return rv(name, RaisedCosineDistribution, (mu, s))
@@ -2230,6 +2427,10 @@ class RayleighDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         sigma = self.sigma
         return 1 - sigma*t*exp(-sigma**2*t**2/2) * sqrt(pi/2) * (erfi(sigma*t/sqrt(2)) - I)
+
+    def _moment_generating_function(self, t):
+        sigma = self.sigma
+        return 1 + sigma*t*exp(sigma**2*t**2/2) * sqrt(pi/2) * (erf(sigma*t/sqrt(2)) + 1)
 
 
 def Rayleigh(name, sigma):
@@ -2276,8 +2477,9 @@ def Rayleigh(name, sigma):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
+    .. [1] https://en.wikipedia.org/wiki/Rayleigh_distribution
     .. [2] http://mathworld.wolfram.com/RayleighDistribution.html
+
     """
 
     return rv(name, RayleighDistribution, (sigma, ))
@@ -2299,7 +2501,6 @@ class ShiftedGompertzDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         b, eta = self.b, self.eta
         return b*exp(-b*x)*exp(-eta*exp(-b*x))*(1+eta*(1-exp(-b*x)))
-
 
 def ShiftedGompertz(name, b, eta):
     r"""
@@ -2361,6 +2562,8 @@ class StudentTDistribution(SingleContinuousDistribution):
         return S.Half + x*gamma((nu+1)/2)*hyper((S.Half, (nu+1)/2),
                                 (S(3)/2,), -x**2/nu)/(sqrt(pi*nu)*gamma(nu/2))
 
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('The moment generating function for the Student-T distribution is undefined.')
 
 def StudentT(name, nu):
     r"""
@@ -2416,8 +2619,9 @@ def StudentT(name, nu):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Student_t-distribution
+    .. [1] https://en.wikipedia.org/wiki/Student_t-distribution
     .. [2] http://mathworld.wolfram.com/Studentst-Distribution.html
+
     """
 
     return rv(name, StudentTDistribution, (nu, ))
@@ -2436,7 +2640,6 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
             (2 / (d+c-a-b), And(b <= x, x < c)),
             (2*(d-x) / ((d-c)*(d+c-a-b)), And(c <= x, x <= d)),
             (S.Zero, True))
-
 
 def Trapezoidal(name, a, b, c, d):
     r"""
@@ -2498,7 +2701,8 @@ def Trapezoidal(name, a, b, c, d):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trapezoidal_distribution
+    .. [1] https://en.wikipedia.org/wiki/Trapezoidal_distribution
+
     """
     return rv(name, TrapezoidalDistribution, (a, b, c, d))
 
@@ -2516,6 +2720,15 @@ class TriangularDistribution(SingleContinuousDistribution):
             (2/(b - a), Eq(x, c)),
             (2*(b - x)/((b - a)*(b - c)), And(c < x, x <= b)),
             (S.Zero, True))
+
+    def _characteristic_function(self, t):
+        a, b, c = self.a, self.b, self.c
+        return -2 *((b-c) * exp(I*a*t) - (b-a) * exp(I*c*t) + (c-a) * exp(I*b*t)) / ((b-a)*(c-a)*(b-c)*t**2)
+
+    def _moment_generating_function(self, t):
+        a, b, c = self.a, self.b, self.c
+        return 2 * ((b - c) * exp(a * t) - (b - a) * exp(c * t) + (c + a) * exp(b * t)) / (
+        (b - a) * (c - a) * (b - c) * t ** 2)
 
 
 def Triangular(name, a, b, c):
@@ -2576,8 +2789,9 @@ def Triangular(name, a, b, c):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Triangular_distribution
+    .. [1] https://en.wikipedia.org/wiki/Triangular_distribution
     .. [2] http://mathworld.wolfram.com/TriangularDistribution.html
+
     """
 
     return rv(name, TriangularDistribution, (a, b, c))
@@ -2607,6 +2821,11 @@ class UniformDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         left, right = self.left, self.right
         return Piecewise(((exp(I*t*right) - exp(I*t*left)) / (I*t*(right - left)), Ne(t, 0)),
+                         (S.One, True))
+
+    def _moment_generating_function(self, t):
+        left, right = self.left, self.right
+        return Piecewise(((exp(t*right) - exp(t*left)) / (t * (right - left)), Ne(t, 0)),
                          (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
@@ -2673,8 +2892,9 @@ def Uniform(name, left, right):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
+    .. [1] https://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
     .. [2] http://mathworld.wolfram.com/UniformDistribution.html
+
     """
 
     return rv(name, UniformDistribution, (left, right))
@@ -2704,6 +2924,12 @@ class UniformSumDistribution(SingleContinuousDistribution):
                         (k, 0, floor(x))), x <= n),
                         (S.One, True))
 
+    def _characteristic_function(self, t):
+        return ((exp(I*t) - 1) / (I*t))**self.n
+
+    def _moment_generating_function(self, t):
+        return ((exp(t) - 1) / t)**self.n
+
 def UniformSum(name, n):
     r"""
     Create a continuous random variable with an Irwin-Hall distribution.
@@ -2714,7 +2940,7 @@ def UniformSum(name, n):
     The density of the Irwin-Hall distribution is given by
 
     .. math ::
-        f(x) := \frac{1}{(n-1)!}\sum_{k=0}^{\lfloor x\rfloor}(-1)^k
+        f(x) := \frac{1}{(n-1)!}\sum_{k=0}^{\left\lfloor x\right\rfloor}(-1)^k
                 \binom{n}{k}(x-k)^{n-1}
 
     Parameters
@@ -2766,8 +2992,9 @@ def UniformSum(name, n):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
+    .. [1] https://en.wikipedia.org/wiki/Uniform_sum_distribution
     .. [2] http://mathworld.wolfram.com/UniformSumDistribution.html
+
     """
 
     return rv(name, UniformSumDistribution, (n, ))
@@ -2788,7 +3015,6 @@ class VonMisesDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         mu, k = self.mu, self.k
         return exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
-
 
 def VonMises(name, mu, k):
     r"""
@@ -2835,8 +3061,9 @@ def VonMises(name, mu, k):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Von_Mises_distribution
+    .. [1] https://en.wikipedia.org/wiki/Von_Mises_distribution
     .. [2] http://mathworld.wolfram.com/vonMisesDistribution.html
+
     """
 
     return rv(name, VonMisesDistribution, (mu, k))
@@ -2861,7 +3088,6 @@ class WeibullDistribution(SingleContinuousDistribution):
 
     def sample(self):
         return random.weibullvariate(self.alpha, self.beta)
-
 
 def Weibull(name, alpha, beta):
     r"""
@@ -2911,7 +3137,7 @@ def Weibull(name, alpha, beta):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Weibull_distribution
+    .. [1] https://en.wikipedia.org/wiki/Weibull_distribution
     .. [2] http://mathworld.wolfram.com/WeibullDistribution.html
 
     """
@@ -2935,6 +3161,10 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
 
     def _characteristic_function(self, t):
         return Piecewise((2 * besselj(1, self.R*t) / (self.R*t), Ne(t, 0)),
+                         (S.One, True))
+
+    def _moment_generating_function(self, t):
+        return Piecewise((2 * besseli(1, self.R*t) / (self.R*t), Ne(t, 0)),
                          (S.One, True))
 
 def WignerSemicircle(name, R):
@@ -2978,8 +3208,9 @@ def WignerSemicircle(name, R):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
+    .. [1] https://en.wikipedia.org/wiki/Wigner_semicircle_distribution
     .. [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
+
     """
 
     return rv(name, WignerSemicircleDistribution, (R,))

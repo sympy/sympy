@@ -1,5 +1,5 @@
 from sympy import (Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise,
-    symbols, Float, I)
+    symbols, Float, I, Rational)
 from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
@@ -120,3 +120,15 @@ def test_nsolve_dict_kwarg():
     # two variables
     assert nsolve([x**2 + y**2 - 5, x**2 - y**2 + 1], [x, y], [1, 1], dict = True) == \
         [{x: sqrt(2.), y: sqrt(3.)}]
+
+def test_nsolve_rational():
+    x = symbols('x')
+    assert nsolve(x - Rational(1, 3), 0, prec=100) == Rational(1, 3).evalf(100)
+
+
+def test_issue_14950():
+    x = Matrix(symbols('t s'))
+    x0 = Matrix([17, 23])
+    eqn = x + x0
+    assert nsolve(eqn, x, x0) == -x0
+    assert nsolve(eqn.T, x.T, x0.T) == -x0

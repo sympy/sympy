@@ -13,6 +13,7 @@ from sympy.abc import x, y
 
 
 def test_singularities():
+    x = Symbol('x')
     assert singularities(x**2, x) == S.EmptySet
     assert singularities(x/(x**2 + 3*x + 2), x) == FiniteSet(-2, -1)
     assert singularities(1/(x**2 + 1), x) == FiniteSet(I, -I)
@@ -20,6 +21,9 @@ def test_singularities():
         FiniteSet(-1, (1 - sqrt(3) * I) / 2, (1 + sqrt(3) * I) / 2)
     assert singularities(1/(y**2 + 2*I*y + 1), y) == \
         FiniteSet(-I + sqrt(2)*I, -I - sqrt(2)*I)
+
+    x = Symbol('x', real=True)
+    assert singularities(1/(x**2 + 1), x) == S.EmptySet
 
 
 @XFAIL

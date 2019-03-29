@@ -6,6 +6,7 @@ from __future__ import print_function, division
 
 import warnings
 
+from sympy.core.compatibility import string_types
 from sympy.utilities.misc import filldedent
 
 
@@ -134,6 +135,10 @@ class SymPyDeprecationWarning(DeprecationWarning):
 
     def __init__(self, value=None, feature=None, last_supported_version=None,
                  useinstead=None, issue=None, deprecated_since_version=None):
+
+        self.args = (value, feature, last_supported_version, useinstead,
+                issue, deprecated_since_version)
+
         self.fullMessage = ""
 
         if not feature:
@@ -163,7 +168,7 @@ https://github.com/sympy/sympy/wiki/Deprecating-policy.\
             "info. ") % issue
 
         if value:
-            if not isinstance(value, str):
+            if not isinstance(value, string_types):
                 value = "(%s)" % repr(value)
             value = " " + value
         else:

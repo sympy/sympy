@@ -17,6 +17,13 @@ if not ipython:
     #bin/test will not execute any tests now
     disabled = True
 
+# WARNING: These tests will modify the existing IPython environment. IPython
+# uses a single instance for its interpreter, so there is no way to isolate
+# the test from another IPython session. It also means that if this test is
+# run twice in the same Python session it will fail. This isn't usually a
+# problem because the test suite is run in a subprocess by default, but if the
+# tests are run with subprocess=False it can pollute the current IPython
+# session. See the discussion in issue #15149.
 
 def test_automatic_symbols():
     # NOTE: Because of the way the hook works, you have to use run_cell(code,

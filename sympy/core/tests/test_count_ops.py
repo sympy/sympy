@@ -34,7 +34,7 @@ def test_count_ops_visual():
         'Add Mul Pow sin cos exp And Derivative Integral'.upper())
     DIV, SUB, NEG = symbols('DIV SUB NEG')
     LT, LE, GT, GE, EQ, NE = symbols('LT LE GT GE EQ NE')
-    NOT, OR, AND, XOR, IMPLIES, EQUIVALENT, ITE, BASIC, TUPLE = symbols(
+    NOT, OR, AND, XOR, IMPLIES, EQUIVALENT, _ITE, BASIC, TUPLE = symbols(
         'Not Or And Xor Implies Equivalent ITE Basic Tuple'.upper())
 
     def count(val):
@@ -107,7 +107,7 @@ def test_count_ops_visual():
     assert count(Xor(x, y)) == XOR
     assert count(Implies(x, y)) == IMPLIES
     assert count(Equivalent(x, y)) == EQUIVALENT
-    assert count(ITE(x, y, z)) == ITE
+    assert count(ITE(x, y, z)) == _ITE
     assert count([Or(x, y), And(x, y), Basic(x + y)]
         ) == ADD + AND + BASIC + OR
 

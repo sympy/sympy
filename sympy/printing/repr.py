@@ -9,9 +9,8 @@ from __future__ import print_function, division
 
 from sympy.core.function import AppliedUndef
 from .printer import Printer
-import mpmath.libmp as mlib
-from mpmath.libmp import repr_dps
-from sympy.core.compatibility import range
+from mpmath.libmp import repr_dps, to_str as mlib_to_str
+from sympy.core.compatibility import range, string_types
 
 
 class ReprPrinter(Printer):
@@ -31,7 +30,7 @@ class ReprPrinter(Printer):
         """
         The fallback printer.
         """
-        if isinstance(expr, str):
+        if isinstance(expr, string_types):
             return expr
         elif hasattr(expr, "__srepr__"):
             return expr.__srepr__()
@@ -47,7 +46,10 @@ class ReprPrinter(Printer):
 
     def _print_Add(self, expr, order=None):
         args = self._as_ordered_terms(expr, order=order)
+        nargs = len(args)
         args = map(self._print, args)
+        if nargs > 255:  # Issue #10259, Python < 3.7
+            return "Add(*[%s])" % ", ".join(args)
         return "Add(%s)" % ", ".join(args)
 
     def _print_Cycle(self, expr):
@@ -79,6 +81,18 @@ class ReprPrinter(Printer):
     def _print_Integer(self, expr):
         return 'Integer(%i)' % expr.p
 
+    def _print_Integers(self, expr):
+        return 'Integers'
+
+    def _print_Naturals(self, expr):
+        return 'Naturals'
+
+    def _print_Naturals0(self, expr):
+        return 'Naturals0'
+
+    def _print_Reals(self, expr):
+        return 'Reals'
+
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
 
@@ -107,10 +121,10 @@ class ReprPrinter(Printer):
         _print_MatrixBase
 
     def _print_BooleanTrue(self, expr):
-        return "S.true"
+        return "true"
 
     def _print_BooleanFalse(self, expr):
-        return "S.false"
+        return "false"
 
     def _print_NaN(self, expr):
         return "nan"
@@ -122,7 +136,10 @@ class ReprPrinter(Printer):
         else:
             args = terms
 
+        nargs = len(args)
         args = map(self._print, args)
+        if nargs > 255:  # Issue #10259, Python < 3.7
+            return "Mul(*[%s])" % ", ".join(args)
         return "Mul(%s)" % ", ".join(args)
 
     def _print_Rational(self, expr):
@@ -135,7 +152,7 @@ class ReprPrinter(Printer):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
 
     def _print_Float(self, expr):
-        r = mlib.to_str(expr._mpf_, repr_dps(expr._prec))
+        r = mlib_to_str(expr._mpf_, repr_dps(expr._prec))
         return "%s('%s', precision=%i)" % (expr.__class__.__name__, r, expr._prec)
 
     def _print_Sum2(self, expr):

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import sys
 
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
@@ -9,7 +11,8 @@ from sympy.utilities.pytest import raises, skip
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
-    split_symbols, implicit_multiplication, convert_equals_signs,
+    split_symbols, implicit_multiplication, convert_equals_signs, convert_xor,
+    function_exponentiation,
 )
 
 
@@ -97,6 +100,22 @@ def test_local_dict():
         assert parse_expr(text, local_dict=local_dict) == result
 
 
+def test_local_dict_split_implmult():
+    t = standard_transformations + (split_symbols, implicit_multiplication,)
+    w = Symbol('w', real=True)
+    y = Symbol('y')
+    assert parse_expr('yx', local_dict={'x':w}, transformations=t) == y*w
+
+
+def test_local_dict_symbol_to_fcn():
+    x = Symbol('x')
+    d = {'foo': Function('bar')}
+    assert parse_expr('foo(x)', local_dict=d) == d['foo'](x)
+    # XXX: bit odd, but would be error if parser left the Symbol
+    d = {'foo': Symbol('baz')}
+    assert parse_expr('foo(x)', local_dict=d) == Function('baz')(x)
+
+
 def test_global_dict():
     global_dict = {
         'Symbol': Symbol
@@ -158,6 +177,20 @@ def test_split_symbols_function():
     assert parse_expr("af(x+1)", transformations=transformations,
                       local_dict={'f':f}) == a*f(x+1)
 
+
+def test_functional_exponent():
+    t = standard_transformations + (convert_xor, function_exponentiation)
+    x = Symbol('x')
+    y = Symbol('y')
+    a = Symbol('a')
+    yfcn = Function('y')
+    assert parse_expr("sin^2(x)", transformations=t) == (sin(x))**2
+    assert parse_expr("sin^y(x)", transformations=t) == (sin(x))**y
+    assert parse_expr("exp^y(x)", transformations=t) == (exp(x))**y
+    assert parse_expr("E^y(x)", transformations=t) == exp(yfcn(x))
+    assert parse_expr("a^y(x)", transformations=t) == a**(yfcn(x))
+
+
 def test_match_parentheses_implicit_multiplication():
     transformations = standard_transformations + \
                       (implicit_multiplication,)
@@ -172,6 +205,13 @@ def test_convert_equals_signs():
     assert parse_expr("y = x", transformations=transformations) == Eq(y, x)
     assert parse_expr("(2*y = x) = False",
         transformations=transformations) == Eq(Eq(2*y, x), False)
+
+
+def test_parse_function_issue_3539():
+    x = Symbol('x')
+    f = Function('f')
+    assert parse_expr('f(x)') == f(x)
+
 
 def test_unicode_names():
     if not PY3:

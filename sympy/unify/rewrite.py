@@ -2,17 +2,19 @@
 
 from __future__ import print_function, division
 
-from sympy.unify.usympy import unify
-from sympy.unify.usympy import rebuild
-from sympy.strategies.tools import subs
 from sympy import Expr
 from sympy.assumptions import ask
+from sympy.strategies.tools import subs
+from sympy.unify.usympy import rebuild, unify
 
 def rewriterule(source, target, variables=(), condition=None, assume=None):
     """ Rewrite rule
 
     Transform expressions that match source into expressions that match target
     treating all `variables` as wilds.
+
+    Examples
+    ========
 
     >>> from sympy.abc import w, x, y, z
     >>> from sympy.unify.rewrite import rewriterule

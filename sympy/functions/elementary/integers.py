@@ -1,9 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core.singleton import S
-from sympy.core.function import Function
-from sympy.core import Add
+from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
+from sympy.core.function import Function
 from sympy.core.numbers import Integer
 from sympy.core.relational import Gt, Lt, Ge, Le
 from sympy.core.symbol import Symbol
@@ -141,10 +140,10 @@ class floor(RoundFunction):
         else:
             return r
 
-    def _eval_rewrite_as_ceiling(self, arg):
+    def _eval_rewrite_as_ceiling(self, arg, **kwargs):
         return -ceiling(-arg)
 
-    def _eval_rewrite_as_frac(self, arg):
+    def _eval_rewrite_as_frac(self, arg, **kwargs):
         return arg - frac(arg)
 
     def _eval_Eq(self, other):
@@ -225,10 +224,10 @@ class ceiling(RoundFunction):
         else:
             return r
 
-    def _eval_rewrite_as_floor(self, arg):
+    def _eval_rewrite_as_floor(self, arg, **kwargs):
         return -floor(-arg)
 
-    def _eval_rewrite_as_frac(self, arg):
+    def _eval_rewrite_as_frac(self, arg, **kwargs):
         return arg + frac(-arg)
 
     def _eval_Eq(self, other):
@@ -254,7 +253,7 @@ class frac(Function):
     For real numbers it is defined [1]_ as
 
     .. math::
-        x - \lfloor{x}\rfloor
+        x - \left\lfloor{x}\right\rfloor
 
     Examples
     ========
@@ -293,7 +292,7 @@ class frac(Function):
     References
     ===========
 
-    .. [1] http://en.wikipedia.org/wiki/Fractional_part
+    .. [1] https://en.wikipedia.org/wiki/Fractional_part
     .. [2] http://mathworld.wolfram.com/FractionalPart.html
 
     """
@@ -333,10 +332,10 @@ class frac(Function):
         imag = _eval(imag)
         return real + S.ImaginaryUnit*imag
 
-    def _eval_rewrite_as_floor(self, arg):
+    def _eval_rewrite_as_floor(self, arg, **kwargs):
         return arg - floor(arg)
 
-    def _eval_rewrite_as_ceiling(self, arg):
+    def _eval_rewrite_as_ceiling(self, arg, **kwargs):
         return arg + ceiling(-arg)
 
     def _eval_Eq(self, other):

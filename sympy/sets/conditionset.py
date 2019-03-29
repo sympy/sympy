@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy import S
-from sympy.sets.contains import Contains
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -9,11 +8,10 @@ from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_bool
 from sympy.core.symbol import Symbol, Dummy
 from sympy.logic.boolalg import And, as_Boolean
-from sympy.sets.sets import (Set, Interval, Intersection, EmptySet, Union,
-                             FiniteSet)
+from sympy.sets.contains import Contains
+from sympy.sets.sets import Set, EmptySet, Union, FiniteSet
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
-from sympy.multipledispatch import dispatch
 
 
 class ConditionSet(Set):
@@ -91,7 +89,7 @@ class ConditionSet(Set):
     is not found in the condition:
 
     >>> ConditionSet(x + 1, x + 1 < 1, S.Integers)
-    ConditionSet(x + 1, x + 1 < 1, S.Integers)
+    ConditionSet(x + 1, x + 1 < 1, Integers)
 
     >>> ConditionSet(x + 1, x < 1, S.Integers)
     Traceback (most recent call last):
@@ -104,13 +102,13 @@ class ConditionSet(Set):
     of the base set appears as a free symbol in the condition:
 
     >>> ConditionSet(x, x < y, ConditionSet(y, x + y < 2, S.Integers))
-    ConditionSet(lambda, (lambda < y) & (lambda + x < 2), S.Integers)
+    ConditionSet(lambda, (lambda < y) & (lambda + x < 2), Integers)
 
     The best way to do anything with the dummy symbol is to access
     it with the sym property.
 
     >>> _.subs(_.sym, Symbol('_x'))
-    ConditionSet(_x, (_x < y) & (_x + x < 2), S.Integers)
+    ConditionSet(_x, (_x < y) & (_x + x < 2), Integers)
     """
     def __new__(cls, sym, condition, base_set=S.UniversalSet):
         # nonlinsolve uses ConditionSet to return an unsolved system

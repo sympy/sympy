@@ -93,6 +93,12 @@ if PY3:
     exec_=getattr(builtins, "exec")
 
     range=range
+
+    from collections.abc import (Mapping, Callable, MutableMapping,
+        MutableSet, Iterable, Hashable)
+
+    from inspect import unwrap
+    from itertools import accumulate
 else:
     import codecs
     import types
@@ -137,6 +143,49 @@ else:
         exec("exec _code_ in _globs_, _locs_")
     range=xrange
 
+    from collections import (Mapping, Callable, MutableMapping,
+        MutableSet, Iterable, Hashable)
+
+    def unwrap(func, stop=None):
+        """Get the object wrapped by *func*.
+
+       Follows the chain of :attr:`__wrapped__` attributes returning the last
+       object in the chain.
+
+       *stop* is an optional callback accepting an object in the wrapper chain
+       as its sole argument that allows the unwrapping to be terminated early if
+       the callback returns a true value. If the callback never returns a true
+       value, the last object in the chain is returned as usual. For example,
+       :func:`signature` uses this to stop unwrapping if any object in the
+       chain has a ``__signature__`` attribute defined.
+
+       :exc:`ValueError` is raised if a cycle is encountered.
+
+        """
+        if stop is None:
+            def _is_wrapper(f):
+                return hasattr(f, '__wrapped__')
+        else:
+            def _is_wrapper(f):
+                return hasattr(f, '__wrapped__') and not stop(f)
+        f = func  # remember the original func for error reporting
+        memo = {id(f)} # Memoise by id to tolerate non-hashable objects
+        while _is_wrapper(func):
+            func = func.__wrapped__
+            id_func = id(func)
+            if id_func in memo:
+                raise ValueError('wrapper loop when unwrapping {!r}'.format(f))
+            memo.add(id_func)
+        return func
+
+    def accumulate(iterable, func=operator.add):
+        state = iterable[0]
+        yield state
+        for i in iterable[1:]:
+            state = func(state, i)
+            yield state
+
+
 def with_metaclass(meta, *bases):
     """
     Create a base class with a metaclass.
@@ -167,9 +216,9 @@ def with_metaclass(meta, *bases):
     may omit it.
 
     >>> MyClass.__mro__
-    (<class 'MyClass'>, <... 'object'>)
+    (<class '...MyClass'>, <... 'object'>)
     >>> type(MyClass)
-    <class 'Meta'>
+    <class '...Meta'>
 
     """
     # This requires a bit of explanation: the basic idea is to make a dummy
@@ -305,37 +354,66 @@ except ImportError:
     maketrans = str.maketrans
 
 
-def as_int(n):
+def as_int(n, strict=True):
     """
     Convert the argument to a builtin integer.
 
-    The return value is guaranteed to be equal to the input. ValueError is
-    raised if the input has a non-integral value.
+    The return value is guaranteed to be equal to the input. ValueError
+    is raised if the input has a non-integral value. When ``strict`` is
+    False, non-integer input that compares equal to the integer value
+    will not raise an error.
+
 
     Examples
     ========
 
     >>> from sympy.core.compatibility import as_int
-    >>> from sympy import sqrt
-    >>> 3.0
-    3.0
-    >>> as_int(3.0) # convert to int and test for equality
+    >>> from sympy import sqrt, S
+
+    The function is primarily concerned with sanitizing input for
+    functions that need to work with builtin integers, so anything that
+    is unambiguously an integer should be returned as an int:
+
+    >>> as_int(S(3))
     3
-    >>> int(sqrt(10))
-    3
-    >>> as_int(sqrt(10))
+
+    Floats, being of limited precision, are not assumed to be exact and
+    will raise an error unless the ``strict`` flag is False. This
+    precision issue becomes apparent for large floating point numbers:
+
+    >>> big = 1e23
+    >>> type(big) is float
+    True
+    >>> big == int(big)
+    True
+    >>> as_int(big)
     Traceback (most recent call last):
     ...
     ValueError: ... is not an integer
+    >>> as_int(big, strict=False)
+    99999999999999991611392
 
+    Input that might be a complex representation of an integer value is
+    also rejected by default:
+
+    >>> one = sqrt(3 + 2*sqrt(2)) - sqrt(2)
+    >>> int(one) == 1
+    True
+    >>> as_int(one)
+    Traceback (most recent call last):
+    ...
+    ValueError: ... is not an integer
     """
+    from sympy.core.numbers import Integer
     try:
+        if strict and not isinstance(n, SYMPY_INTS + (Integer,)):
+            raise TypeError
         result = int(n)
         if result != n:
             raise TypeError
+        return result
     except TypeError:
         raise ValueError('%s is not an integer' % (n,))
-    return result
 
 
 def default_sort_key(item, order=None):
@@ -686,7 +764,7 @@ if GROUND_TYPES == 'gmpy':
 
 
 # lru_cache compatible with py2.7 copied directly from
-#   http://code.activestate.com/
+#   https://code.activestate.com/
 #   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
 from collections import namedtuple
 from functools import update_wrapper
@@ -739,7 +817,7 @@ def lru_cache(maxsize=100, typed=False):
     f.cache_info().  Clear the cache and statistics with f.cache_clear().
     Access the underlying function with f.__wrapped__.
 
-    See:  http://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
+    See:  https://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
 
     """
 

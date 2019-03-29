@@ -34,7 +34,7 @@ If you wish to contribute to SymPy or like to get the latest updates as they
 come, install SymPy from git. To download the repository, execute the
 following from the command line::
 
-    git clone git://github.com/sympy/sympy.git
+    git clone https://github.com/sympy/sympy.git
 
 To update to the latest version, go into your repository and execute::
 
@@ -43,7 +43,7 @@ To update to the latest version, go into your repository and execute::
 If you want to install SymPy, but still want to use the git version, you can run
 from your repository::
 
-    setupegg.py develop
+    python setupegg.py develop
 
 This will cause the installed version to always point to the version in the git
 directory.
@@ -51,8 +51,14 @@ directory.
 Other Methods
 =============
 
-Various Linux distributions have SymPy available as a package. You may also
-install SymPy from source or using pip.
+You may also install SymPy using pip or from source. In addition, most Linux
+and Python distributions have some SymPy version available to install using
+their package manager. Here is a list of several such Python distributions:
+
+* `Anaconda <https://www.anaconda.com/download/>`_
+* `Enthought Canopy <https://www.enthought.com/product/canopy/>`_
+* `ActivePython <https://www.activestate.com/activepython>`_
+* `Spack <https://spack.io/>`_
 
 Run SymPy
 =========

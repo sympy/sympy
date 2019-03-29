@@ -1,3 +1,5 @@
+.. _solveset:
+
 Solveset
 ========
 
@@ -589,6 +591,20 @@ nonlinsolve
 -----------
 
 .. autofunction:: sympy.solvers.solveset.nonlinsolve
+
+
+transolve
+---------
+
+.. autofunction:: sympy.solvers.solveset._transolve
+
+.. autofunction:: sympy.solvers.solveset._is_exponential
+
+.. autofunction:: sympy.solvers.solveset._solve_exponential
+
+.. autofunction:: sympy.solvers.solveset._solve_logarithm
+
+.. autofunction:: sympy.solvers.solveset._is_logarithmic
 
 
 Diophantine Equations (DEs)

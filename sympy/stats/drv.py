@@ -1,27 +1,30 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, And, Mul)
+                   Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
+                   series, factorial, And)
+
+from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
-        random_symbols, PSpace, ConditionalDomain, RandomDomain,
-        ProductDomain, ProductPSpace)
+                            random_symbols, PSpace, ConditionalDomain, RandomDomain,
+                            ProductDomain)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
-from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
 import random
 
+
 class DiscreteDistribution(Basic):
     def __call__(self, *args):
         return self.pdf(*args)
 
 
-class SingleDiscreteDistribution(Basic, NamedArgsMixin):
+class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     """ Discrete distribution of a single variable
 
     Serves as superclass for PoissonDistribution etc....
@@ -85,8 +88,15 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
+    def _cdf(self, x):
+        return None
+
     def cdf(self, x, **kwargs):
         """ Cumulative density function """
+        if not kwargs:
+            cdf = self._cdf(x)
+            if cdf is not None:
+                return cdf
         return self.compute_cdf(**kwargs)(x)
 
     @cacheit
@@ -100,16 +110,57 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         cf = summation(exp(I*t*x)*pdf, (x, self.set.inf, self.set.sup))
         return Lambda(t, cf)
 
+    def _characteristic_function(self, t):
+        return None
+
     def characteristic_function(self, t, **kwargs):
         """ Characteristic function """
+        if not kwargs:
+            cf = self._characteristic_function(t)
+            if cf is not None:
+                return cf
         return self.compute_characteristic_function(**kwargs)(t)
+
+    @cacheit
+    def compute_moment_generating_function(self, **kwargs):
+        x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
+        pdf = self.pdf(x)
+        mgf = summation(exp(t*x)*pdf, (x, self.set.inf, self.set.sup))
+        return Lambda(t, mgf)
+
+    def _moment_generating_function(self, t):
+        return None
+
+    def moment_generating_function(self, t, **kwargs):
+        if not kwargs:
+            mgf = self._moment_generating_function(t)
+            if mgf is not None:
+                return mgf
+        return self.compute_moment_generating_function(**kwargs)(t)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
         # TODO: support discrete sets with non integer stepsizes
+
         if evaluate:
-            return summation(expr * self.pdf(var),
-                         (var, self.set.inf, self.set.sup), **kwargs)
+            try:
+                p = poly(expr, var)
+
+                t = Dummy('t', real=True)
+
+                mgf = self.moment_generating_function(t)
+                deg = p.degree()
+                taylor = poly(series(mgf, t, 0, deg + 1).removeO(), t)
+                result = 0
+                for k in range(deg+1):
+                    result += p.coeff_monomial(var ** k) * taylor.coeff_monomial(t ** k) * factorial(k)
+
+                return result
+
+            except PolynomialError:
+                return summation(expr * self.pdf(var),
+                                 (var, self.set.inf, self.set.sup), **kwargs)
+
         else:
             return Sum(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
@@ -167,7 +218,7 @@ class DiscretePSpace(PSpace):
     def where(self, condition):
         rvs = random_symbols(condition)
         assert all(r.symbol in self.symbols for r in rvs)
-        if (len(rvs) > 1):
+        if len(rvs) > 1:
             raise NotImplementedError(filldedent('''Multivariate discrete
             random variables are not yet supported.'''))
         conditional_domain = reduce_rational_inequalities_wrap(condition,
@@ -195,7 +246,7 @@ class DiscretePSpace(PSpace):
             z = Dummy('z', real = True)
             space = SingleDiscretePSpace(z, dens)
             prob = space.probability(condition.__class__(space.value, 0))
-        if (prob == None):
+        if prob is None:
             prob = Probability(condition)
         return prob if not complement else S.One - prob
 
@@ -247,7 +298,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
         """
         return {self.value: self.distribution.sample()}
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=True, **kwargs):
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
@@ -256,7 +307,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
 
         x = self.value.symbol
         try:
-            return self.distribution.expectation(expr, x, evaluate=False,
+            return self.distribution.expectation(expr, x, evaluate=evaluate,
                     **kwargs)
         except NotImplementedError:
             return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
@@ -264,7 +315,8 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:
-            return self.distribution.compute_cdf(**kwargs)
+            x = symbols("x", real=True, cls=Dummy)
+            return Lambda(x, self.distribution.cdf(x, **kwargs))
         else:
             raise NotImplementedError()
 
@@ -275,6 +327,14 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
 
     def compute_characteristic_function(self, expr, **kwargs):
         if expr == self.value:
-            return self.distribution.compute_characteristic_function(**kwargs)
+            t = symbols("t", real=True, cls=Dummy)
+            return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
+        else:
+            raise NotImplementedError()
+
+    def compute_moment_generating_function(self, expr, **kwargs):
+        if expr == self.value:
+            t = symbols("t", real=True, cls=Dummy)
+            return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))
         else:
             raise NotImplementedError()

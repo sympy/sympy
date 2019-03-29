@@ -10,6 +10,7 @@ from sympy.utilities import sift
 from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matadd import MatAdd
+from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose, transpose
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.determinant import det, Determinant
@@ -41,7 +42,7 @@ class BlockMatrix(MatrixExpr):
     Matrix([[I, Z]])
 
     >>> print(block_collapse(C*B))
-    Matrix([[X, Z*Y + Z]])
+    Matrix([[X, Z + Z*Y]])
 
     """
     def __new__(cls, *args):
@@ -282,20 +283,22 @@ def block_collapse(expr):
     Matrix([[I, Z]])
 
     >>> print(block_collapse(C*B))
-    Matrix([[X, Z*Y + Z]])
+    Matrix([[X, Z + Z*Y]])
     """
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
     rule = exhaust(
         bottom_up(exhaust(condition(hasbm, typed(
             {MatAdd: do_one(bc_matadd, bc_block_plus_ident),
              MatMul: do_one(bc_matmul, bc_dist),
+             MatPow: bc_matmul,
              Transpose: bc_transpose,
              Inverse: bc_inverse,
              BlockMatrix: do_one(bc_unpack, deblock)})))))
     result = rule(expr)
-    try:
-        return result.doit()
-    except AttributeError:
+    doit = getattr(result, 'doit', None)
+    if doit is not None:
+        return doit()
+    else:
         return result
 
 def bc_unpack(expr):
@@ -343,7 +346,13 @@ def bc_dist(expr):
 
 
 def bc_matmul(expr):
-    factor, matrices = expr.as_coeff_matrices()
+    if isinstance(expr, MatPow):
+        if expr.args[1].is_Integer:
+            factor, matrices = (1, [expr.args[0]]*expr.args[1])
+        else:
+            return expr
+    else:
+        factor, matrices = expr.as_coeff_matrices()
 
     i = 0
     while (i+1 < len(matrices)):

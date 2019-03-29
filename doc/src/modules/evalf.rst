@@ -69,7 +69,7 @@ This shows digits 999,951 through 1,000,000 of pi:
 
 
 High-precision calculations can be slow. It is recommended (but entirely
-optional) to install gmpy (http://code.google.com/p/gmpy/), which will
+optional) to install gmpy (https://code.google.com/p/gmpy/), which will
 significantly speed up computations such as the one above.
 
 Floating-point numbers
@@ -286,7 +286,7 @@ Oscillatory quadrature requires an integrand containing a factor cos(ax+b) or
 sin(ax+b). Note that many other oscillatory integrals can be transformed to
 this form with a change of variables:
 
-    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
+    >>> init_printing(use_unicode=False, wrap_line=False)
     >>> intgrl = Integral(sin(1/x), (x, 0, 1)).transform(x, 1/x)
     >>> intgrl
      oo

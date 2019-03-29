@@ -20,12 +20,12 @@ class Contains(BooleanFunction):
     False
     >>> i = Symbol('i', integer=True)
     >>> Contains(i, S.Naturals)
-    Contains(i, S.Naturals)
+    Contains(i, Naturals)
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Element_%28mathematics%29
+    .. [1] https://en.wikipedia.org/wiki/Element_%28mathematics%29
     """
     @classmethod
     def eval(cls, x, s):

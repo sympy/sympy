@@ -1,5 +1,6 @@
 from sympy.multipledispatch import dispatch
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.multipledispatch.conflict import AmbiguityWarning
+from sympy.utilities.pytest import raises, XFAIL, warns
 from functools import partial
 
 test_namespace = dict()
@@ -105,13 +106,17 @@ def test_competing_multiple():
 
 
 def test_competing_ambiguous():
+    test_namespace = dict()
+    dispatch = partial(orig_dispatch, namespace=test_namespace)
+
     @dispatch(A, C)
     def f(x, y):
         return 2
 
-    @dispatch(C, A)
-    def f(x, y):
-        return 2
+    with warns(AmbiguityWarning):
+        @dispatch(C, A)
+        def f(x, y):
+            return 2
 
     assert f(A(), C()) == f(C(), A()) == 2
     # assert raises(Warning, lambda : f(C(), C()))

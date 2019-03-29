@@ -6,14 +6,56 @@ Primality testing
 from __future__ import print_function, division
 
 from sympy.core.compatibility import range, as_int
-from sympy.core.numbers import Float
 
 from mpmath.libmp import bitcount as _bitlength
 
 
-
 def _int_tuple(*i):
     return tuple(int(_) for _ in i)
+
+
+def is_euler_pseudoprime(n, b):
+    """Returns True if n is prime or an Euler pseudoprime to base b, else False.
+
+    Euler Pseudoprime : In arithmetic, an odd composite integer n is called an
+    euler pseudoprime to base a, if a and n are coprime and satisfy the modular
+    arithmetic congruence relation :
+
+    a ^ (n-1)/2 = + 1(mod n) or
+    a ^ (n-1)/2 = - 1(mod n)
+
+    (where mod refers to the modulo operation).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_euler_pseudoprime
+    >>> is_euler_pseudoprime(2, 5)
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler_pseudoprime
+    """
+    from sympy.ntheory.factor_ import trailing
+
+    if not mr(n, [b]):
+        return False
+
+    n = as_int(n)
+    r = n - 1
+    c = pow(b, r >> trailing(r), n)
+
+    if c == 1:
+        return True
+
+    while True:
+        if c == n - 1:
+            return True
+        c = pow(c, 2, n)
+        if c == 1:
+            return False
 
 
 def is_square(n, prep=True):
@@ -78,7 +120,7 @@ def mr(n, bases):
       A Computational Perspective", Springer, 2nd edition, 135-138
 
     A list of thresholds and the bases they require are here:
-    http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
+    https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
 
     Examples
     ========
@@ -445,7 +487,37 @@ def isprime(n):
     >>> from sympy.ntheory import isprime
     >>> isprime(13)
     True
+    >>> isprime(13.0)  # limited precision
+    False
     >>> isprime(15)
+    False
+
+    Notes
+    =====
+
+    This routine is intended only for integer input, not numerical
+    expressions which may represent numbers. Floats are also
+    rejected as input because they represent numbers of limited
+    precision. While it is tempting to permit 7.0 to represent an
+    integer there are errors that may "pass silently" if this is
+    allowed:
+
+    >>> from sympy import Float, S
+    >>> int(1e3) == 1e3 == 10**3
+    True
+    >>> int(1e23) == 1e23
+    True
+    >>> int(1e23) == 10**23
+    False
+
+    >>> near_int = 1 + S(1)/10**19
+    >>> near_int == int(near_int)
+    False
+    >>> n = Float(near_int, 10)  # truncated by precision
+    >>> n == int(n)
+    True
+    >>> n = Float(near_int, 20)
+    >>> n == int(n)
     False
 
     See Also
@@ -457,14 +529,15 @@ def isprime(n):
 
     References
     ==========
-    - http://en.wikipedia.org/wiki/Strong_pseudoprime
+    - https://en.wikipedia.org/wiki/Strong_pseudoprime
     - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
       http://mpqs.free.fr/LucasPseudoprimes.pdf
     - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
-    if isinstance(n, (Float, float)):
+    try:
+        n = as_int(n)
+    except ValueError:
         return False
-    n = int(n)
 
     # Step 1, do quick composite testing via trial division.  The individual
     # modulo tests benchmark faster than one or two primorial igcds for me.

@@ -1,10 +1,9 @@
 from __future__ import print_function, division
 
-from sympy.core import Mul, Pow
+from sympy.core import Mul
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import count_ops
-from sympy.functions.combinatorial.factorials import (binomial,
-    CombinatorialFunction, factorial)
+from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions import gamma
 from sympy.simplify.gammasimp import gammasimp, _gammasimp
 

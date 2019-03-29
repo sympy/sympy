@@ -2,13 +2,13 @@ from __future__ import print_function, division
 
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
         characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
-        sampling_density)
+        sampling_density, moment_generating_function)
 from sympy import sqrt
 
 __all__ = ['P', 'E', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'covariance',
         'dependent', 'independent', 'random_symbols', 'correlation',
-        'moment', 'cmoment', 'sampling_density']
+        'moment', 'cmoment', 'sampling_density', 'moment_generating_function']
 
 
 
@@ -52,7 +52,7 @@ def variance(X, condition=None, **kwargs):
     35/3
 
     >>> simplify(variance(B))
-    p*(-p + 1)
+    p*(1 - p)
     """
     return cmoment(X, 2, condition, **kwargs)
 
@@ -73,7 +73,7 @@ def standard_deviation(X, condition=None, **kwargs):
     >>> B = Bernoulli('B', p, 1, 0)
 
     >>> simplify(std(B))
-    sqrt(p*(-p + 1))
+    sqrt(p*(1 - p))
     """
     return sqrt(variance(X, condition, **kwargs))
 std = standard_deviation

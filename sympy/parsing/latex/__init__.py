@@ -10,10 +10,13 @@ def parse_latex(s):
     ==========
 
     s : str
-    The LaTeX string to parse. In Python source containing LaTeX, *raw strings*
-    (denoted with `r''`, like this one) are preferred, as LaTeX makes liberal
-    use of the ``\`` character, which would trigger escaping in normal Python
-    strings.
+        The LaTeX string to parse. In Python source containing LaTeX,
+        *raw strings* (denoted with ``r"``, like this one) are preferred,
+        as LaTeX makes liberal use of the ``\`` character, which would
+        trigger escaping in normal Python strings.
+
+    Examples
+    ========
 
     >>> from sympy.parsing.latex import parse_latex  # doctest: +SKIP
     >>> expr = parse_latex(r"\frac {1 + \sqrt {\a}} {\b}")  # doctest: +SKIP
