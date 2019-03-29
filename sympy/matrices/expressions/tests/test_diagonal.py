@@ -1,5 +1,5 @@
 from sympy.matrices.expressions import MatrixSymbol
-from sympy.matrices.expressions.diagonal import DiagonalMatrix, DiagonalOf
+from sympy.matrices.expressions.diagonal import DiagonalMatrix, DiagonalOf, DiagonalizeVector, diagonalize_vector
 from sympy import Symbol, ask, Q, KroneckerDelta
 from sympy.utilities.pytest import raises
 
@@ -84,3 +84,16 @@ def test_DiagonalOf():
     x = MatrixSymbol('x', n, m)
     assert [DiagonalOf(x)[i] for i in range(4)] ==[
         x[0, 0], x[1, 1], x[2, 2], x[3, 3]]
+
+
+def test_DiagonalizeVector():
+    x = MatrixSymbol('x', n, 1)
+    d = DiagonalizeVector(x)
+    assert d.shape == (n, n)
+    assert d[0, 1] == 0
+    assert d[0, 0] == x[0, 0]
+
+    a = MatrixSymbol('a', 1, 1)
+    d = diagonalize_vector(a)
+    assert isinstance(d, MatrixSymbol)
+    assert a == d

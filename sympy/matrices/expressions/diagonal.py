@@ -151,3 +151,31 @@ class DiagonalOf(MatrixExpr):
 
     def _entry(self, i, j):
         return self.arg[i, i]
+
+
+class DiagonalizeVector(MatrixExpr):
+    """
+    Turn a vector into a diagonal matrix.
+    """
+    def __new__(cls, vector):
+        obj = MatrixExpr.__new__(cls, vector)
+        shape = vector.shape
+        dim = shape[1] if shape[0] == 1 else shape[0]
+        obj._shape = (dim, dim)
+        obj._vector = vector
+        return obj
+
+    @property
+    def shape(self):
+        return self._shape
+
+    def _entry(self, i, j, **kwargs):
+        if i != j:
+            return S.Zero
+        return self._vector[i]
+
+
+def diagonalize_vector(vector):
+    if vector.shape == (1, 1):
+        return vector
+    return DiagonalizeVector(vector)

@@ -343,6 +343,12 @@ class StrPrinter(Printer):
             self.parenthesize(expr.exp, PREC)
         ])
 
+    def _print_ElementwiseApplyFunction(self, expr):
+        return "{0}({1}...)".format(
+            expr.function,
+            self._print(expr.expr),
+        )
+
     def _print_NaN(self, expr):
         return 'nan'
 
