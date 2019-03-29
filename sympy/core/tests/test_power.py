@@ -464,10 +464,9 @@ def test_idempotence():
     assert x**n     == x
     assert x**(n+1) == x
 
-    # not-necessarily-positive powers are left untouched
-    assert x**(-1)  != x
-    assert x**(-12) != x
-    assert x**y     != x
-
     # empty product
     assert x**0     == 1
+
+    # not-necessarily-positive powers are left untouched
+    assert x**y     != x
+
