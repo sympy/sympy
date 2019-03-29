@@ -270,6 +270,9 @@ def test_creation():
         Matrix((1, 2))[3] = 5
 
     assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
+    # anything can go into a matrix (laplace_transform uses tuples)
+    assert Matrix([[[], ()]]).tolist() == [[[], ()]]
+    assert Matrix([[[], ()]]).T.tolist() == [[[]], [()]]
 
     a = Matrix([[x, 0], [0, 0]])
     m = a
