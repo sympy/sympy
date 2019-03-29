@@ -726,8 +726,11 @@ def probability(condition, given_condition=None, numsamples=None,
     given_condition = sympify(given_condition)
 
     if isinstance(given_condition, RandomSymbol):
-        from sympy.stats.symbolic_probability import Probability
-        return Probability(condition, given_condition)
+        if any([dependent(rv, given_condition) for rv in random_symbols(condition)]):
+            from sympy.stats.symbolic_probability import Probability
+            return Probability(condition, given_condition)
+        else:
+            return probability(condition)
 
     if given_condition is not None and \
             not isinstance(given_condition, (Relational, Boolean)):
