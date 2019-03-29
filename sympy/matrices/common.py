@@ -514,6 +514,10 @@ class MatrixShaping(MatrixRequired):
 
         >>> Matrix.diag(1, 2, 3).diagonal()[1]  # instead of [0, 1]
         2
+
+        See Also
+        ========
+        diag - to create a diagonal matrix
         """
         rv = []
         k = as_int(k)
@@ -776,7 +780,14 @@ class MatrixSpecial(MatrixRequired):
         Matrix([
         [0, 0, 1, 0],
         [0, 0, 0, 2]])
-        """
+
+        See Also
+        ========
+        eye
+        diagonal - to extract a diagonal
+        .dense.diag
+        .expressions.blockmatrix.BlockMatrix
+       """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
         klass = kwargs.get('cls', kls)

@@ -1129,8 +1129,10 @@ def diag(*values, **kwargs):
 
     See Also
     ========
-    eye
-    sympy.matrices.common.diag
+    .common.MatrixCommon.eye
+    .common.MatrixCommon.diagonal - to extract a diagonal
+    .common.MatrixCommon.diag
+    .expressions.blockmatrix.BlockMatrix
     """
     # Extract any setting so we don't duplicate keywords sent
     # as named parameters:
