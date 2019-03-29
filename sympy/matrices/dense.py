@@ -1131,9 +1131,9 @@ def diag(*values, **kwargs):
 
     See Also
     ========
-    .common.eye
-    .common.diagonal - to extract a diagonal
-    .common.diag
+    .common.MatrixCommon.eye
+    .common.MatrixCommon.diagonal - to extract a diagonal
+    .common.MatrixCommon.diag
     .expressions.blockmatrix.BlockMatrix
     """
     from .dense import Matrix
