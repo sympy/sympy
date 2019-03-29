@@ -126,8 +126,11 @@ class AskIdempotentHandler(CommonHandler):
                 nccount += 1
                 if nccount > 1:
                     break
-        else:
+
+        if result:
             return result
+        else:
+            return None
 
 
 class AskRationalHandler(CommonHandler):
