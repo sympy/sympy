@@ -107,14 +107,14 @@ class AskIdempotentHandler(CommonHandler):
     @staticmethod
     def Add(expr, assumptions):
         """
-        Idempotent + Idempotent not necessarily Idempotent
+        Idempotent + Idempotent generally not Idempotent
         """
         return None
 
     @staticmethod
     def Mul(expr, assumptions):
         """
-        As long as there is at most only one noncommutative term:
+        As long as there is at most one noncommutative term:
         Idempotent*Idempotent -> Idempotent
         """
         nccount = 0
