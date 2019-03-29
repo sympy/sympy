@@ -101,6 +101,10 @@ class AskIdempotentHandler(CommonHandler):
     """
 
     @staticmethod
+    def Symbol(expr, assumptions):
+        return expr.is_idempotent
+
+    @staticmethod
     def Add(expr, assumptions):
         """
         Idempotent + Idempotent not necessarily Idempotent
