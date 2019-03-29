@@ -2251,3 +2251,14 @@ def test_autosimp_used_to_fail():
     assert ask(Q.imaginary(0**(-I))) is False
     assert ask(Q.real(0**I)) is False
     assert ask(Q.real(0**(-I))) is False
+
+def test_idempotence():
+    t = symbols('x', idempotent=True)
+    s = symbols('s')
+    
+    assert ask(Q.idempotent(t)) is True
+    assert ask(Q.idempotent(s)) is None
+
+    assert ask(Q.idempotent(x+y), Q.idempotent(x) & Q.idempotent(y)) is None
+    assert ask(Q.idempotent(x*y), Q.idempotent(x) & Q.idempotent(y)) is True
+    assert ask(Q.idempotent(x*z), Q.idempotent(x)) is None
