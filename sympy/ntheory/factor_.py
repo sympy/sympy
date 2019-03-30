@@ -2250,7 +2250,7 @@ def persistence(n,operation='*'):
     sum or product of its digits until one reaches a single digit.
     Examples
     ========
-    
+
     >>> from sympy.ntheory.factor_ import persistence, eva
     >>> persistence(9876, '+')
         9876 -> 30 -> 3
@@ -2271,11 +2271,12 @@ def persistence(n,operation='*'):
     if n < 10:
         return count
     while 1:
-        s = s  + ' -> ' + str(n)         
+        s = s  + ' -> ' + str(n)
         n = eva(n, operation)
         count = count + 1
         if n <10:
-            s = s + ' -> ' + str(n) 
+            s = s + ' -> ' + str(n)
             break
     print(s[3:])
     return count
+
