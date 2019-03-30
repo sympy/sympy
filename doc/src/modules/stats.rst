@@ -1,8 +1,5 @@
 Stats
 ===========
-SymPy statistics module
-
-Introduces a random variable type into the SymPy language.
 
 Included in this module are the following types :
 
