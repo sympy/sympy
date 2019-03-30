@@ -47,7 +47,8 @@ PRECEDENCE_VALUES = {
     "KroneckerProduct": PRECEDENCE["Mul"],
     "Equality": PRECEDENCE["Mul"],
     "Unequality": PRECEDENCE["Mul"],
-    "Adjoint": PRECEDENCE["Pow"]
+    "Adjoint": PRECEDENCE["Pow"],
+    "Transpose": PRECEDENCE["Pow"]
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a

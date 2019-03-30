@@ -1579,8 +1579,23 @@ def test_Adjoint():
     assert latex(Adjoint(Transpose(X))) == r'\left(X^{T}\right)^{\dagger}'
     assert latex(Transpose(Adjoint(X))) == r'\left(X^{\dagger}\right)^{T}'
     assert latex(Transpose(Adjoint(X) + Y)) == r'\left(X^{\dagger} + Y\right)^{T}'
+
+
+def test_Transpose():
+    from sympy.matrices import Transpose, MatPow, HadamardPower
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
     assert latex(Transpose(X)) == r'X^{T}'
     assert latex(Transpose(X + Y)) == r'\left(X + Y\right)^{T}'
+
+    assert latex(Transpose(HadamardPower(X, 2))) == \
+        r'\left(X^{\circ {2}}\right)^{T}'
+    assert latex(HadamardPower(Transpose(X), 2)) == \
+        r'\left(X^{T}\right)^{\circ {2}}'
+    assert latex(Transpose(MatPow(X, 2))) == \
+        r'\left(X^{2}\right)^{T}'
+    assert latex(MatPow(Transpose(X), 2)) == \
+        r'\left(X^{T}\right)^{2}'
 
 
 def test_Hadamard():
