@@ -14,7 +14,8 @@ from sympy.ntheory import (isprime, n_order, is_primitive_root,
 from sympy.ntheory.factor_ import (smoothness, smoothness_p,
     antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
     udivisor_count, primenu, primeomega, small_trailing, mersenne_prime_exponent,
-    is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable)
+    is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable,
+    eva, persistence)
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.multinomial import (
     multinomial_coefficients, multinomial_coefficients_iterator)
@@ -612,3 +613,10 @@ def test_is_amicable():
     assert is_amicable(173, 129) is False
     assert is_amicable(220, 284) is True
     assert is_amicable(8756, 8756) is False
+    
+def test_persistence():
+    assert persistence(12743, '*') == 4
+    assert persistence(99999994, '+') == 3
+    assert persistence(26888999) == 9
+
+    
