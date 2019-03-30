@@ -1166,7 +1166,9 @@ class Mul(Expr, AssocOp):
         zero = False
         t_not_re_im = None
 
-        for t in self.args:
+        args = list(self.args)
+
+        for n, t in enumerate(args):
             if t.is_complex is False:
                 return False
             elif t.is_imaginary:  # I
@@ -1180,17 +1182,20 @@ class Mul(Expr, AssocOp):
                         if all(a.is_finite for a in self.args):
                             return True
                         return
-            elif t.is_real is False:
+            elif t.is_real is False or t.is_imaginary is False:
                 # symbolic or literal like `2 + I` or symbolic imaginary
                 if t_not_re_im:
                     return  # complex terms might cancel
                 t_not_re_im = t
-            elif t.is_imaginary is False:  # symbolic like `2` or `2 + I`
-                if t_not_re_im:
-                    return  # complex terms might cancel
-                t_not_re_im = t
             else:
-                return
+                ct = t.conjugate()
+                # Find conjugate pair... (2-I) and (2+I)
+                for m in range(n+1, len(args)):
+                    if ct == args[m]:
+                        args.pop(m)
+                        break
+                else:
+                    return None
 
         if t_not_re_im:
             if t_not_re_im.is_real is False:
