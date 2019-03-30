@@ -2123,8 +2123,7 @@ class TensExpr(Expr):
             dictionary containing the replacement rules for tensors.
         indices
             the index order with respect to which the array is read. The
-            original index order will be used if the default value '[]' is
-            passed.
+            original index order will be used if no value is passed.
 
         Examples
         ========
