@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import pi, oo, Wild, Basic
+from sympy import pi, oo, Wild
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.compatibility import is_sequence
@@ -14,7 +14,7 @@ from sympy.functions.elementary.trigonometric import sin, cos, sinc
 from sympy.series.series_class import SeriesBase
 from sympy.series.sequences import SeqFormula
 from sympy.sets.sets import Interval
-from sympy.simplify.fu import TR8, TR2, TR1, TR10, sincos_to_sum
+from sympy.simplify.fu import TR2, TR1, TR10, sincos_to_sum
 
 
 def fourier_cos_seq(func, limits, n):

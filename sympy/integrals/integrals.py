@@ -3,31 +3,31 @@ from __future__ import print_function, division
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, range
+from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
-from sympy.integrals.manualintegrate import manualintegrate
-from sympy.integrals.trigonometry import trigintegrate
-from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
-from sympy.matrices import MatrixBase
-from sympy.utilities.misc import filldedent
-from sympy.polys import Poly, PolynomialError
-from sympy.functions import Piecewise, sqrt, sign, piecewise_fold, tan, cot, atan
+from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.integrals.manualintegrate import manualintegrate
+from sympy.integrals.trigonometry import trigintegrate
+from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
+from sympy.matrices import MatrixBase
+from sympy.polys import Poly, PolynomialError
 from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
+from sympy.utilities.misc import filldedent
 
 
 class Integral(AddWithLimits):
