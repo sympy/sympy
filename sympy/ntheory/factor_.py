@@ -2281,4 +2281,3 @@ def persistence(n,operation='*'):
             break
     print(s[3:])
     return count
-
