@@ -615,6 +615,6 @@ def test_is_amicable():
     assert is_amicable(8756, 8756) is False
 
 def test_persistence():
-    assert persistence(12743, '*') == 4
-    assert persistence(99999994, '+') == 3
-    assert persistence(26888999) == 9
+    assert persistence(12743, '*') == '12743 -> 168 -> 48 -> 32 -> 6   ::   Multiplicative Persistence = 4'
+    assert persistence(99999994, '+') == '99999994 -> 67 -> 13 -> 4   ::   Additive Persistence = 3'
+    assert persistence(77) == '77 -> 49 -> 36 -> 18 -> 8   ::   Multiplicative Persistence = 4'

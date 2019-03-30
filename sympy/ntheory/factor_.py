@@ -2255,19 +2255,23 @@ def persistence(n,operation='*'):
 
     >>> from sympy.ntheory.factor_ import persistence, eva
     >>> persistence(9876, '+')
-        9876 -> 30 -> 3
-        2
-    >>> persistence(277777788888899, '*')
-        277777788888899 -> 4996238671872 -> 438939648 -> 4478976 -> 338688 -> \
-        27648 -> 2688 -> 768 -> 336 -> 54 -> 20 -> 0
-        11
+        9876 -> 30 -> 3   ::   Additive Persistence = 2
+
+    >>> persistence(68889, '*')
+        679 -> 378 -> 168 -> 48 -> 32 -> 6   ::   Multiplicative Persistence = 5
+
     >>> persistence(2677889)
-        2677889 -> 338688 -> 27648 -> 2688 -> 768 -> 336 -> 54 -> 20 -> 0
-        8
+        2677889 -> 338688 -> 27648 -> 2688 -> 768 -> 336 -> 54 -> 20 -> 0 \
+        ::   Multiplicative Persistence = 8
     """
     operation =  operation.strip()
     if operation != '+' and operation != '*':
         raise ValueError('The operation is INVALID')
+    op = ''
+    if operation == '+':
+        op = 'Additive'
+    else:
+        op = 'Multiplicative'
     count = 0;
     s = ''
     if n < 10:
@@ -2279,5 +2283,5 @@ def persistence(n,operation='*'):
         if n < 10:
             s = s + ' -> ' + str(n)
             break
-    print(s[3:])
-    return count
+    s = s[4:] + '   ::   ' + op + ' Persistence = ' + str(count)
+    return s
