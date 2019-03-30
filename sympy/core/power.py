@@ -476,21 +476,38 @@ class Pow(Expr):
                 return False
 
     def _eval_is_zero(self):
+        from sympy import arg
+        from sympy.series.order import Order
+
         b = self.base
         e = self.exp
 
+        # abs(O(x**2)) fails. Should open an issue...
+        if b.has(Order) or e.has(Order):
+            return None
+
+        if not (b.is_real and e.is_real):
+            from sympy.functions.elementary.exponential import exp
+            ree, ime = e.as_real_imag()
+            if b is S.Zero:
+                argb = 0
+            elif b is S.ComplexInfinity:
+                argb = Dummy('argzoo', nonnegative=True, finite=True)
+            else:
+                argb = arg(b)
+            return (abs(b)**ree * exp(-argb*ime)).is_zero
+
         if b.is_zero:
             # This is needed because zoo.is_positive is False
-            if e is S.ComplexInfinity:
-                return None
-            return e.is_positive
+            if arg(e).is_zero:
+                return True
         elif b.is_infinite:
             # This is needed because zoo.is_negative is False
             if e is S.ComplexInfinity:
                 return None
             else:
                 return e.is_negative
-        elif b.is_finite:
+        elif b.is_finite and e.is_negative:
             if e.is_finite:
                 if b.is_zero is False and e.is_negative:
                     return False
@@ -513,7 +530,7 @@ class Pow(Expr):
                 return None
             elif e.is_infinite:
                 assert False
-        elif e.is_negative and e.is_finite and b.is_finite:
+        elif e.is_negative and b.is_finite and e.is_finite:
             return False
         elif e.is_finite and b.is_zero is False and b.is_finite:
             return False
@@ -560,7 +577,10 @@ class Pow(Expr):
                     if self.exp.is_Rational:
                         return False
         if real_e and self.exp.is_negative:
-            return Pow(self.base, -self.exp).is_real
+            if self.base.is_infinite:
+                return True # 0 is real
+            elif self.base.is_finite:
+                return Pow(self.base, -self.exp).is_real
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary
         if im_b:
@@ -588,7 +608,7 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
-        if real_b is False:  # we already know it's not imag
+        if real_b is False and self.exp.is_finite:  # we already know it's not imag
             i = arg(self.base)*self.exp/S.Pi
             return i.is_integer
 

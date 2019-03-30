@@ -279,18 +279,32 @@ def test_pow_iszero():
     # (+-1)**(-oo) give nan. is_zero gives False here.
     # Returning None leads to False down the line though...
 
+    # When we have complex to the complex z**w it is
+    # (r*exp(I*theta))**(x+I*y)
+    #           = r**x * exp(-theta*y) * exp(I*(y*log(r) + x*theta))
+    # Whether this is zero depends only on whether
+    #  r**x * exp(-theta*y) is zero where
+    # r = abs(z)
+    # theta = arg(z)
+    # x = re(w)
+    # y = im(w)
+
     pow_iszero = [
-        ['**', -oo, -2, -1, -h,  0,  h,  1,  2, oo, zoo],
-        [ -oo,   T,  T,  T,  T,  F,  F,  F,  F,  F,  N],
-        [  -2,   T,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [  -1,   F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [  -h,   F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
-        [   0,   F,  F,  F,  F,  F,  T,  T,  T,  T,  N],
-        [   h,   F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
-        [   1,   F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [   2,   T,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [  oo,   T,  T,  T,  T,  F,  F,  F,  F,  F,  N],
-        [ zoo,   T,  T,  T,  T,  F,  F,  F,  F,  F,  N],
+        ['**', -oo, -2,-2*I,-1, -h,-I/2, 0,  h,I/2,  1,  2,1+I, oo, zoo],
+        [ -oo,   T,  T,  F,  T,  T,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [  -2,   T,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [-2*I,   T,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [  -1,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [  -h,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
+        [-I/2,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
+        [   0,   F,  F,  F,  F,  F,  F,  F,  T,  F,  T,  T,  T,  T,  N],
+        [   h,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
+        [ I/2,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
+        [   1,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [   2,   T,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [ 1+I,   T,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [  oo,   T,  T,  F,  T,  T,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [ zoo,   T,  T,  F,  T,  T,  F,  F,  F,  F,  F,  F,  F,  F,  N],
     ]
 
     def test_table(table):
