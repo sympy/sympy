@@ -2257,7 +2257,7 @@ def persistence(n,operation='*'):
     >>> persistence(9876, '+')
         9876 -> 30 -> 3   ::   Additive Persistence = 2
 
-    >>> persistence(68889, '*')
+    >>> persistence(679, '*')
         679 -> 378 -> 168 -> 48 -> 32 -> 6   ::   Multiplicative Persistence = 5
 
     >>> persistence(2677889)
