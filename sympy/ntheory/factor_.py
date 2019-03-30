@@ -2230,16 +2230,18 @@ def is_amicable(m, n):
 def eva(number, operation):
     """Generates digits of a number."""
     if operation == '*':
-        next_num = 1 
+        next_num = 1
     else:
         next_num = 0
     while number > 0:
         if operation == '*':
-            next_num = next_num * (number % 10) 
+            next_num = next_num * (number % 10)
         else:
-            next_num = next_num + (number % 10) 
+            next_num = next_num + (number % 10)
         number = int(number / 10)
-    return next_num 
+    return next_num
+
+
 def persistence(n,operation='*'):
     """
     The persistence of a number is the number of times one must apply
