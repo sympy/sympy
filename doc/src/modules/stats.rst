@@ -1,5 +1,72 @@
 Stats
 ===========
+SymPy statistics module
+
+Introduces a random variable type into the SymPy language.
+
+Included in this module are the following types :
+
+Finite Types
+
+ * DiscreteUniform
+ * Die
+ * Bernoulli
+ * Coin
+ * Binomial
+ * Hypergeometric
+ * FiniteRV
+ * Rademacher
+ 
+Discrete Types
+
+ * Geometric
+ * Poisson
+ * Logarithmic
+ * NegativeBinomial
+ * YuleSimon
+ * Zeta
+ 
+Continuous Types
+
+ * Arcsin
+ * Benini
+ * Beta
+ * BetaPrime
+ * Cauchy
+ * Chi
+ * ChiNoncentral
+ * ChiSquared
+ * Dagum
+ * Erlang
+ * Exponential
+ * FDistribution
+ * FisherZ
+ * Frechet
+ * Gamma
+ * GammaInverse
+ * Gumbel
+ * Gompertz
+ * Kumaraswamy
+ * Laplace
+ * Logistic
+ * LogNormal
+ * Maxwell
+ * Nakagami
+ * Normal
+ * Pareto
+ * QuadraticU
+ * RaisedCosine
+ * Rayleigh
+ * ShiftedGompertz
+ * StudentT
+ * Trapezoidal
+ * Triangular
+ * Uniform
+ * UniformSum
+ * VonMises
+ * Weibull
+ * WignerSemicircle
+ * ContinuousRV
 
 .. automodule:: sympy.stats
 
