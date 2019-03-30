@@ -1897,7 +1897,6 @@ def test_tensor_replacement():
     repl = {H(i,-j): [[1,2],[3,4]], L: diag(1, -1)}
     assert expr._extract_data(repl) == ([i, j], Array([[1, -2], [3, -4]]))
 
-    assert expr.replace_with_arrays(repl) == Array([[1, -2], [3, -4]])
     assert expr.replace_with_arrays(repl, [i, j]) == Array([[1, -2], [3, -4]])
     assert expr.replace_with_arrays(repl, [i, -j]) == Array([[1, 2], [3, 4]])
     assert expr.replace_with_arrays(repl, [-i, j]) == Array([[1, -2], [-3, 4]])
@@ -1911,7 +1910,6 @@ def test_tensor_replacement():
     repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
     assert expr._extract_data(repl) == ([i, j], Array([[1, 2], [3, 4]]))
 
-    assert expr.replace_with_arrays(repl) == Array([[1, 2], [3, 4]])
     assert expr.replace_with_arrays(repl, [i, j]) == Array([[1, 2], [3, 4]])
     assert expr.replace_with_arrays(repl, [i, -j]) == Array([[1, -2], [3, -4]])
     assert expr.replace_with_arrays(repl, [-i, j]) == Array([[1, 2], [-3, -4]])

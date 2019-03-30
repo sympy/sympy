@@ -2110,7 +2110,7 @@ class TensExpr(Expr):
 
         return free_ind2, array
 
-    def replace_with_arrays(self, replacement_dict, indices=[]):
+    def replace_with_arrays(self, replacement_dict, indices):
         """
         Replace the tensorial expressions with arrays. The final array will
         correspond to the N-dimensional array with indices arranged according
@@ -2122,8 +2122,7 @@ class TensExpr(Expr):
         replacement_dict
             dictionary containing the replacement rules for tensors.
         indices
-            the index order with respect to which the array is read. The
-            original index order will be used if no value is passed.
+            the index order with respect to which the array is read.
 
         Examples
         ========
