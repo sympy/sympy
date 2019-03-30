@@ -2255,13 +2255,13 @@ def persistence(n,operation='*'):
 
     >>> from sympy.ntheory.factor_ import persistence, eva
     >>> persistence(9876, '+')
-        9876 -> 30 -> 3   ::   Additive Persistence = 2
+    9876 -> 30 -> 3   ::   Additive Persistence = 2
 
     >>> persistence(679, '*')
-        679 -> 378 -> 168 -> 48 -> 32 -> 6   ::   Multiplicative Persistence = 5
+    679 -> 378 -> 168 -> 48 -> 32 -> 6   ::   Multiplicative Persistence = 5
 
     >>> persistence(2677889)
-        '2677889 -> 338688 -> 27648 -> 2688 -> 768 -> 336 -> 54 -> 20 -> 0   ::   Multiplicative Persistence = 8'
+    2677889 -> 338688 -> 27648 -> 2688 -> 768 -> 336 -> 54 -> 20 -> 0   ::   Multiplicative Persistence = 8
     """
     operation =  operation.strip()
     if operation != '+' and operation != '*':
