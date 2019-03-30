@@ -2265,7 +2265,7 @@ def persistence(n,operation='*'):
         2677889 -> 338688 -> 27648 -> 2688 -> 768 -> 336 -> 54 -> 20 -> 0
         8
     """
-    operation =  operation.strip()  
+    operation =  operation.strip()
     if operation != '+' and operation != '*':
         raise ValueError('The operation is INVALID')
     count = 0;
