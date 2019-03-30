@@ -486,7 +486,7 @@ class Pow(Expr):
         if b.has(Order) or e.has(Order):
             return None
 
-        if not (b.is_real and e.is_real):
+        if b.is_real is False or e.is_real is False:
             from sympy.functions.elementary.exponential import exp
             ree, ime = e.as_real_imag()
             if b is S.Zero:
