@@ -710,9 +710,10 @@ def is_convex(f, *syms, **kwargs):
     return True
 
 
-def stationary_points(f, symbol, domain = S.Reals):
+def stationary_points(f, symbol, domain=S.Reals):
     """
-    Returns the stationary points of a function in the given domain.
+    Returns the stationary points of a function (where derivative of the
+    function is 0) in the given domain.
 
     Parameters
     ==========
@@ -728,9 +729,8 @@ def stationary_points(f, symbol, domain = S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, log, pi, pprint
+    >>> from sympy import Symbol, S, sin, log, pi, pprint, stationary_points
     >>> from sympy.sets import Interval
-    >>> from sympy.calculus.util import stationary_points
     >>> x = Symbol('x')
 
     >>> stationary_points(1/x, x, S.Reals)
@@ -750,13 +750,13 @@ def stationary_points(f, symbol, domain = S.Reals):
     if isinstance(domain, EmptySet):
         return S.EmptySet
 
-    #domain = continuous_domain(f, symbol, domain)
+    domain = continuous_domain(f, symbol, domain)
     set = solveset(diff(f, symbol), symbol, domain)
 
     return set
 
 
-def maximize(f, symbol, domain = S.Reals):
+def maximize(f, symbol, domain=S.Reals):
     """
     Returns the maximum value of a function in the given domain.
 
@@ -774,9 +774,8 @@ def maximize(f, symbol, domain = S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, cos, pi
+    >>> from sympy import Symbol, S, sin, cos, pi, maximize
     >>> from sympy.sets import Interval
-    >>> from sympy.calculus.util import maximize
     >>> x = Symbol('x')
 
     >>> f = -x**2 + 2*x + 5
@@ -796,7 +795,7 @@ def maximize(f, symbol, domain = S.Reals):
     return function_range(f, symbol, domain).sup
 
 
-def minimize(f, symbol, domain = S.Reals):
+def minimize(f, symbol, domain=S.Reals):
     """
     Returns the minimum value of a function in the given domain.
 
@@ -814,9 +813,8 @@ def minimize(f, symbol, domain = S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, cos
+    >>> from sympy import Symbol, S, sin, cos, minimize
     >>> from sympy.sets import Interval
-    >>> from sympy.calculus.util import minimize
     >>> x = Symbol('x')
 
     >>> f = x**2 + 2*x + 5

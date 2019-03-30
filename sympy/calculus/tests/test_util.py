@@ -1,9 +1,12 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc, Abs, symbols, I, re)
+                   cot, sec, csc, Abs, symbols, I, re, Lambda, simplify,
+                   ImageSet)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
-                                 periodicity, lcim, AccumBounds, is_convex)
+                                 periodicity, lcim, AccumBounds, is_convex,
+                                 stationary_points, minimize, maximize)
 from sympy.core import Add, Mul, Pow
-from sympy.sets.sets import Interval, FiniteSet, Complement, Union
+from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
+                            Union, Intersection)
 from sympy.utilities.pytest import raises
 from sympy.abc import x
 
@@ -179,6 +182,79 @@ def test_is_convex():
     assert is_convex(1/x, x, domain=Interval(-oo, 0)) == False
     assert is_convex(x**2, x, domain=Interval(0, oo)) == True
     assert is_convex(log(x), x) == False
+
+def test_stationary_points():
+    x, y = symbols('x y')
+
+    assert stationary_points(sin(x), x, Interval(-pi/2, pi/2)
+        ) == {-pi/2, pi/2}
+    assert  stationary_points(sin(x), x, Interval.Ropen(0, pi/4)
+        ) == EmptySet()
+    assert stationary_points(tan(x), x,
+        ) == EmptySet()
+    assert stationary_points(sin(x)*cos(x), x, Interval(0, pi)
+        ) == {pi/4, 3*pi/4}
+    assert stationary_points(sec(x), x, Interval(0, pi)
+        ) == {0, pi}
+    assert stationary_points((x+3)*(x-2), x
+        ) == FiniteSet(-S.Half)
+    assert stationary_points((x + 3)/(x - 2), x, Interval(-5, 5)
+        ) == EmptySet()
+    assert stationary_points((x**2+3)/(x-2), x
+        ) == {2 - sqrt(7), 2 + sqrt(7)}
+    assert stationary_points((x**2+3)/(x-2), x, Interval(0, 5)
+        ) == {2 + sqrt(7)}
+    assert stationary_points(x**4 + x**3 - 5*x**2, x, S.Reals
+        ) == FiniteSet(-2, 0, S(5)/4)
+    assert stationary_points(exp(x), x
+        ) == EmptySet()
+    assert stationary_points(log(x) - x, x, S.Reals
+        ) == {1}
+    assert stationary_points(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
+        ) == {0, -pi, pi}
+    assert stationary_points(y, x, S.Reals
+        ) == S.Reals
+
+def test_maximize():
+    x, y = symbols('x y')
+    assert maximize(sin(x), x) == 1
+    assert maximize(sin(x), x, Interval(0, 1)) == sin(1)
+    assert maximize(tan(x), x) == oo
+    assert maximize(tan(x), x, Interval(-pi/4, pi/4)) == 1
+    assert maximize(sin(x)*cos(x), x, S.Reals) == 1/2
+    assert simplify(maximize(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
+        ) == sqrt(2)/4
+    assert maximize((x+3)*(x-2), x) == oo
+    assert maximize((x+3)*(x-2), x, Interval(-5, 0)) == 14
+    assert maximize((x+3)/(x-2), x, Interval(-5, 0)) == 2/7
+    assert simplify(maximize(-x**4-x**3+x**2+10, x)
+        ) == 41*sqrt(41)/512 + 5419/512
+    assert maximize(exp(x), x, Interval(-oo, 2)) == exp(2)
+    assert maximize(log(x) - x, x, S.Reals) == -1
+    assert maximize(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
+        ) == 1
+    assert maximize(cos(x)-sin(x), x, S.Reals) == sqrt(2)
+    assert maximize(y, x, S.Reals) == y
+
+def test_minimize():
+    x, y = symbols('x y')
+
+    assert minimize(sin(x), x) == -1
+    assert minimize(sin(x), x, Interval(1, 4)) == sin(4)
+    assert minimize(tan(x), x) == -oo
+    assert minimize(tan(x), x, Interval(-pi/4, pi/4)) == -1
+    assert minimize(sin(x)*cos(x), x, S.Reals) == -1/2
+    assert simplify(minimize(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
+        ) == -sqrt(2)/4
+    assert minimize((x+3)*(x-2), x) == -25/4
+    assert minimize((x+3)/(x-2), x, Interval(-5, 0)) == -3/2
+    assert minimize(x**4-x**3+x**2+10, x) == 10
+    assert minimize(exp(x), x, Interval(-2, oo)) == exp(-2)
+    assert minimize(log(x) - x, x, S.Reals) == -oo
+    assert minimize(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
+        ) == -1
+    assert minimize(cos(x)-sin(x), x, S.Reals) == -sqrt(2)
+    assert minimize(y, x, S.Reals) == y
 
 def test_AccumBounds():
     assert AccumBounds(1, 2).args == (1, 2)
