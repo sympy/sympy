@@ -28,7 +28,7 @@ __all__ = ['refraction_angle',
            ]
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin,\
-cos, sin, tan, I, cancel
+cos, sin, tan, I, cancel, pi
 from sympy.core.compatibility import is_sequence
 from sympy.geometry.line import Ray3D, Point3D
 from sympy.geometry.util import intersection
@@ -93,7 +93,41 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     >>> refraction_angle(r1, n1, n2, plane=P)
     Ray3D(Point3D(0, 0, 0), Point3D(n1/n2, n1/n2, -sqrt(3)*sqrt(-2*n1**2/(3*n2**2) + 1)))
 
-    """
+    """ 
+    n1, n2 = None, None
+
+    if isinstance(medium1, Medium):
+        n1 = medium1.refractive_index
+    else:
+        n1 = sympify(medium1)
+
+    if isinstance(medium2, Medium):
+        n2 = medium2.refractive_index
+    else:
+        n2 = sympify(medium2)
+    
+    # check if an incidence angle was supplied instead of a ray
+    try:
+        angle_of_incidence = float(incident)
+    except TypeError as e:
+        angle_of_incidence = None
+    
+    try:
+        critical_angle_ = critical_angle(medium1, medium2)
+    except ValueError as e:
+        critical_angle_ = None
+    
+    if angle_of_incidence is not None:
+        if not 0.0 <= angle_of_incidence < pi*0.5:
+            raise ValueError('Angle of incidence not in range [0:pi/2)')
+
+        if critical_angle_ and angle_of_incidence > critical_angle_:
+            raise ValueError('Ray undergoes total internal reflection')
+        return asin(n1*sin(angle_of_incidence)/n2)
+
+    if angle_of_incidence and not 0 <= angle_of_incidence < pi*0.5:
+        raise ValueError
+ 
     # A flag to check whether to return Ray3D or not
     return_ray = False
 
@@ -142,18 +176,6 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
                     "Normal should be a Matrix, Ray3D, or sequence")
         else:
             _normal = normal
-
-    n1, n2 = None, None
-
-    if isinstance(medium1, Medium):
-        n1 = medium1.refractive_index
-    else:
-        n1 = sympify(medium1)
-
-    if isinstance(medium2, Medium):
-        n2 = medium2.refractive_index
-    else:
-        n2 = sympify(medium2)
 
     eta = n1/n2  # Relative index of refraction
     # Calculating magnitude of the vectors
@@ -221,7 +243,9 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     ==========
 
     https://en.wikipedia.org/wiki/Fresnel_equations
-    """
+    """ 
+    if not 0.0 <= angle_of_incidence < pi*0.5:
+        raise ValueError('Angle of incidence not in range [0:pi/2)')
 
     if isinstance(medium1, Medium):
         n1 = medium1.refractive_index
