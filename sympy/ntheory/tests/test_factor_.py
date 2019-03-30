@@ -613,10 +613,8 @@ def test_is_amicable():
     assert is_amicable(173, 129) is False
     assert is_amicable(220, 284) is True
     assert is_amicable(8756, 8756) is False
-    
+
 def test_persistence():
     assert persistence(12743, '*') == 4
     assert persistence(99999994, '+') == 3
     assert persistence(26888999) == 9
-
-    

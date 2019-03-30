@@ -2276,7 +2276,7 @@ def persistence(n,operation='*'):
         s = s  + ' -> ' + str(n)
         n = eva(n, operation)
         count = count + 1
-        if n <10:
+        if n < 10:
             s = s + ' -> ' + str(n)
             break
     print(s[3:])
