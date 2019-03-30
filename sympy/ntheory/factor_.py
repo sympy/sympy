@@ -2261,8 +2261,7 @@ def persistence(n,operation='*'):
         679 -> 378 -> 168 -> 48 -> 32 -> 6   ::   Multiplicative Persistence = 5
 
     >>> persistence(2677889)
-        2677889 -> 338688 -> 27648 -> 2688 -> 768 -> 336 -> 54 -> 20 -> 0 \
-        ::   Multiplicative Persistence = 8
+        '2677889 -> 338688 -> 27648 -> 2688 -> 768 -> 336 -> 54 -> 20 -> 0   ::   Multiplicative Persistence = 8'
     """
     operation =  operation.strip()
     if operation != '+' and operation != '*':
