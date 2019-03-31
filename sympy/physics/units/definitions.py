@@ -16,7 +16,7 @@ One = S.One
 
 # Dimensionless:
 
-percent = percents = Quantity("percent", latex_repr="\%")
+percent = percents = Quantity("percent", latex_repr=r"\%")
 percent.set_dimension(One)
 percent.set_scale_factor(Rational(1, 100))
 
