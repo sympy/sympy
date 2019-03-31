@@ -2024,6 +2024,11 @@ class motzkin(Function):
     """
     @staticmethod
     def is_motzkin(n):
+        try:
+            n = as_int(n)
+        except:
+            raise ValueError('The provided number must be a positive integer')
+            return False
         if n > 0:
              if n == 1:
                  return True
@@ -2041,7 +2046,7 @@ class motzkin(Function):
                  i = i + 1
 
         else:
-            raise ValueError('The provided number must be greater than 0')
+            raise ValueError('The provided number must be an positive integer')
 
     @staticmethod
     def find_motzkin_numbers_in_range(x, y):
@@ -2070,6 +2075,11 @@ class motzkin(Function):
 
     @staticmethod
     def find_first_n_motzkin(n):
+        try:
+            n = as_int(n)
+        except:
+            raise ValueError('The provided number must be a positive integer')
+            return False
         n = n - 1
         i = 0
         motzkin = list()
@@ -2091,7 +2101,11 @@ class motzkin(Function):
 
     @staticmethod
     def motzkin(n):
-        n = as_int(n)
+        try:
+            n = as_int(n)
+        except:
+            raise ValueError('The provided number must be a positive integer')
+            return False
         if n < 0:
              raise ValueError('The number must be positive.')
         if n == 1 or n == 2:
