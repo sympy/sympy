@@ -338,25 +338,22 @@ def real_root(arg, n=None, evaluate=None):
 
 class MinMaxBase(Expr, LatticeOp):
     def __new__(cls, *args, **assumptions):
-        evaluate = assumptions.pop('evaluate', True)
+
         args = (sympify(arg) for arg in args)
 
         # first standard filter, for cls.zero and cls.identity
         # also reshape Max(a, Max(b, c)) to Max(a, b, c)
+        try:
+            args = frozenset(cls._new_args_filter(args))
+        except ShortCircuit:
+            return cls.zero
 
-        if evaluate:
-            try:
-                args = frozenset(cls._new_args_filter(args))
-            except ShortCircuit:
-                return cls.zero
-        else:
-            args = frozenset(args)
-
-        if evaluate:
+        if assumptions.pop('evaluate', True):
             # remove redundant args that are easily identified
             args = cls._collapse_arguments(args, **assumptions)
-            # find local zeros
-            args = cls._find_localzeros(args, **assumptions)
+
+        # find local zeros
+        args = cls._find_localzeros(args, **assumptions)
 
         if not args:
             return cls.identity
@@ -540,23 +537,44 @@ class MinMaxBase(Expr, LatticeOp):
         replaces that member; if this is never true, then the value is simply
         appended to the localzeros.
         """
-        localzeros = set()
-        for v in values:
-            is_newzero = True
-            localzeros_ = list(localzeros)
-            for z in localzeros_:
-                if id(v) == id(z):
-                    is_newzero = False
-                else:
-                    con = cls._is_connected(v, z)
-                    if con:
+        generator_values = list(values)
+        if str(type(generator_values[0])) == "<class 'sympy.core.symbol.Symbol'>":
+            localzeros = set()
+            for v in generator_values:
+                is_newzero = True
+                localzeros_ = list(localzeros)
+                for z in localzeros_:
+                    if id(v) == id(z):
                         is_newzero = False
-                        if con is True or con == cls:
-                            localzeros.remove(z)
-                            localzeros.update([v])
-            if is_newzero:
-                localzeros.update([v])
-        return localzeros
+                    else:
+                        con = cls._is_connected(v, z)
+                        if con:
+                            is_newzero = False
+                            if con is True or con == cls:
+                                localzeros.remove(z)
+                                localzeros.update([v])
+                if is_newzero:
+                    localzeros.update([v])
+            return localzeros
+        else:
+            values_ = sorted(generator_values)
+            min_val = values_[0]
+            max_val = values_[len(values_)-1]
+            index_begin = 0
+            while(1):
+                if values_[index_begin] == min_val:
+                    del values_[index_begin]
+                else:
+                    break
+            index_last = len(values_)-1
+            while(1):
+                if values_[index_last] == max_val:
+                    del values_[index_last]
+                    index_last -= 1
+                else:
+                    break
+            localzeros = set(values_)
+            return(localzeros)
 
     @classmethod
     def _is_connected(cls, x, y):
@@ -747,7 +765,9 @@ class Max(MinMaxBase, Application):
                 for j in args])
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        return _minmax_as_Piecewise('>=', *args)
+        is_real = all(i.is_real for i in args)
+        if is_real:
+            return _minmax_as_Piecewise('>=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_or(a.is_positive for a in self.args)
@@ -810,7 +830,9 @@ class Min(MinMaxBase, Application):
                 for j in args])
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        return _minmax_as_Piecewise('<=', *args)
+        is_real = all(i.is_real for i in args)
+        if is_real:
+            return _minmax_as_Piecewise('<=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_and(a.is_positive for a in self.args)
