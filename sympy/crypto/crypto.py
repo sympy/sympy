@@ -261,7 +261,7 @@ def decipher_shift(msg, key, symbols=None):
 
 def encipher_rot13(msg, symbols=None):
 	"""
-	Performs the ROT13 encryption on a given plaintext msg.
+	Performs the ROT13 encryption on a given plaintext ```msg```.
 	
 	Notes
 	=====
@@ -272,12 +272,16 @@ def encipher_rot13(msg, symbols=None):
 	
 	Equivalently, it is just a Caeser (shift) cipher with a shift
 	key of 13 (midway point of the alphabet).
+	
+	See Also
+	========
+	decipher_rot13
 	"""
 	return encipher_shift(msg, 13, symbols)
 
 def decipher_rot13(msg, symbols=None):
 	"""
-	Performs the ROT13 decryption on a given plaintext msg.
+	Performs the ROT13 decryption on a given plaintext ```msg```.
 	
 	Notes
 	=====
@@ -288,7 +292,7 @@ def decipher_rot13(msg, symbols=None):
 	decipher_rot13 has been explicitly defined here for ease of use.
 	
 	Examples
-	=========
+	========
 	>>> from sympy.crypto.crypto import encipher_rot13, decipher_rot13
 	>>> msg = 'GONAVYBEATARMY'
 	>>> ciphertext = encipher_rot13(msg);ciphertext
@@ -390,7 +394,49 @@ def decipher_affine(msg, key, symbols=None):
 
     """
     return encipher_affine(msg, key, symbols, _inverse=True)
-
+	
+def encipher_atbash(msg, symbols=None):
+	r"""
+	Enciphers a given ```msg``` into its Atbash ciphertext and returns it.
+	
+	Notes
+	=====
+	Atbash is a substitution cipher originally used to encrypt the Hebrew 
+	alphabet. Atbash works on the principle of mapping each alphabet to its
+	reverse / counterpart (i.e. a would map to z, b to y etc.)
+	
+	Atbash is functionally equivalent to the affine cipher with ```a = 25```
+	and ```b = 25```
+	
+	See Also
+	========
+	decipher_atbash
+	"""
+	return encipher_affine(msg, (25,25), symbols)
+	
+def decipher_atbash(msg, symbols=None):
+	r"""
+	Deciphers a given ```msg``` using Atbash cipher and returns it.
+	
+	Notes
+	=====
+	decipher_atbash is functionally equivalent to encipher_atbash.
+	However, it has still been added as a separate to avoid inconsistency
+	
+	Examples
+	========
+	>>> from sympy.crypto.crypto import encipher_atbash, decipher_atbash
+	>>> msg = 'GONAVYBEATARMY'
+	>>> encipher_atbash(msg)
+	'TLMZEBYVZGZINB'
+	>>> decipher_atbash(msg)
+	'TLMZEBYVZGZINB'
+	>>> encipher_atbash(msg) == decipher_atbash(msg)
+	True
+	>>> msg == encipher_atbash(encipher_atbash(msg))
+	True
+	"""
+	return decipher_affine(msg, (25,25), symbols)
 
 #################### substitution cipher ###########################
 
