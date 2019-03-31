@@ -3,7 +3,7 @@ from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    ImageSet)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
-                                 stationary_points, minimize, maximize)
+                                 stationary_points, minimum, maximum)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union, Intersection)
@@ -215,46 +215,46 @@ def test_stationary_points():
     assert stationary_points(y, x, S.Reals
         ) == S.Reals
 
-def test_maximize():
+def test_maximum():
     x, y = symbols('x y')
-    assert maximize(sin(x), x) == S.One
-    assert maximize(sin(x), x, Interval(0, 1)) == sin(1)
-    assert maximize(tan(x), x) == oo
-    assert maximize(tan(x), x, Interval(-pi/4, pi/4)) == S.One
-    assert maximize(sin(x)*cos(x), x, S.Reals) == S.Half
-    assert simplify(maximize(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
+    assert maximum(sin(x), x) == S.One
+    assert maximum(sin(x), x, Interval(0, 1)) == sin(1)
+    assert maximum(tan(x), x) == oo
+    assert maximum(tan(x), x, Interval(-pi/4, pi/4)) == S.One
+    assert maximum(sin(x)*cos(x), x, S.Reals) == S.Half
+    assert simplify(maximum(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
         ) == sqrt(2)/4
-    assert maximize((x+3)*(x-2), x) == oo
-    assert maximize((x+3)*(x-2), x, Interval(-5, 0)) == S(14)
-    assert maximize((x+3)/(x-2), x, Interval(-5, 0)) == S(2)/7
-    assert simplify(maximize(-x**4-x**3+x**2+10, x)
+    assert maximum((x+3)*(x-2), x) == oo
+    assert maximum((x+3)*(x-2), x, Interval(-5, 0)) == S(14)
+    assert maximum((x+3)/(x-2), x, Interval(-5, 0)) == S(2)/7
+    assert simplify(maximum(-x**4-x**3+x**2+10, x)
         ) == 41*sqrt(41)/512 + S(5419)/512
-    assert maximize(exp(x), x, Interval(-oo, 2)) == exp(2)
-    assert maximize(log(x) - x, x, S.Reals) == -S.One
-    assert maximize(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
+    assert maximum(exp(x), x, Interval(-oo, 2)) == exp(2)
+    assert maximum(log(x) - x, x, S.Reals) == -S.One
+    assert maximum(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
         ) == S.One
-    assert maximize(cos(x)-sin(x), x, S.Reals) == sqrt(2)
-    assert maximize(y, x, S.Reals) == y
+    assert maximum(cos(x)-sin(x), x, S.Reals) == sqrt(2)
+    assert maximum(y, x, S.Reals) == y
 
-def test_minimize():
+def test_minimum():
     x, y = symbols('x y')
 
-    assert minimize(sin(x), x) == -S.One
-    assert minimize(sin(x), x, Interval(1, 4)) == sin(4)
-    assert minimize(tan(x), x) == -oo
-    assert minimize(tan(x), x, Interval(-pi/4, pi/4)) == -S.One
-    assert minimize(sin(x)*cos(x), x, S.Reals) == -S.Half
-    assert simplify(minimize(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
+    assert minimum(sin(x), x) == -S.One
+    assert minimum(sin(x), x, Interval(1, 4)) == sin(4)
+    assert minimum(tan(x), x) == -oo
+    assert minimum(tan(x), x, Interval(-pi/4, pi/4)) == -S.One
+    assert minimum(sin(x)*cos(x), x, S.Reals) == -S.Half
+    assert simplify(minimum(sin(x)*cos(x), x, Interval(3*pi/8, 5*pi/8))
         ) == -sqrt(2)/4
-    assert minimize((x+3)*(x-2), x) == -S(25)/4
-    assert minimize((x+3)/(x-2), x, Interval(-5, 0)) == -S(3)/2
-    assert minimize(x**4-x**3+x**2+10, x) == S(10)
-    assert minimize(exp(x), x, Interval(-2, oo)) == exp(-2)
-    assert minimize(log(x) - x, x, S.Reals) == -oo
-    assert minimize(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
+    assert minimum((x+3)*(x-2), x) == -S(25)/4
+    assert minimum((x+3)/(x-2), x, Interval(-5, 0)) == -S(3)/2
+    assert minimum(x**4-x**3+x**2+10, x) == S(10)
+    assert minimum(exp(x), x, Interval(-2, oo)) == exp(-2)
+    assert minimum(log(x) - x, x, S.Reals) == -oo
+    assert minimum(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))
         ) == -S.One
-    assert minimize(cos(x)-sin(x), x, S.Reals) == -sqrt(2)
-    assert minimize(y, x, S.Reals) == y
+    assert minimum(cos(x)-sin(x), x, S.Reals) == -sqrt(2)
+    assert minimum(y, x, S.Reals) == y
 
 def test_AccumBounds():
     assert AccumBounds(1, 2).args == (1, 2)

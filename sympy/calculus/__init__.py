@@ -6,7 +6,7 @@ from .singularities import (singularities, is_increasing,
                             is_strictly_decreasing, is_monotonic)
 from .finite_diff import finite_diff_weights, apply_finite_diff, as_finite_diff, differentiate_finite
 from .util import (periodicity, not_empty_in, AccumBounds, is_convex,
-                   stationary_points, minimize, maximize)
+                   stationary_points, minimum, maximum)
 
 __all__ = [
 'euler_equations',
@@ -18,5 +18,5 @@ __all__ = [
 'finite_diff_weights', 'apply_finite_diff', 'as_finite_diff', 'differentiate_finite',
 
 'periodicity', 'not_empty_in', 'AccumBounds', 'is_convex', 'stationary_points',
-'minimize', 'maximize'
+'minimum', 'maximum'
 ]

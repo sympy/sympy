@@ -756,7 +756,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     return set
 
 
-def maximize(f, symbol, domain=S.Reals):
+def maximum(f, symbol, domain=S.Reals):
     """
     Returns the maximum value of a function in the given domain.
 
@@ -774,18 +774,18 @@ def maximize(f, symbol, domain=S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, cos, pi, maximize
+    >>> from sympy import Symbol, S, sin, cos, pi, maximum
     >>> from sympy.sets import Interval
     >>> x = Symbol('x')
 
     >>> f = -x**2 + 2*x + 5
-    >>> maximize(f, x, S.Reals)
+    >>> maximum(f, x, S.Reals)
     6
 
-    >>> maximize(sin(x), x, Interval(-pi, pi/4))
+    >>> maximum(sin(x), x, Interval(-pi, pi/4))
     sqrt(2)/2
 
-    >>> maximize(sin(x)*cos(x), x)
+    >>> maximum(sin(x)*cos(x), x)
     1/2
 
     """
@@ -795,7 +795,7 @@ def maximize(f, symbol, domain=S.Reals):
     return function_range(f, symbol, domain).sup
 
 
-def minimize(f, symbol, domain=S.Reals):
+def minimum(f, symbol, domain=S.Reals):
     """
     Returns the minimum value of a function in the given domain.
 
@@ -813,18 +813,18 @@ def minimize(f, symbol, domain=S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, cos, minimize
+    >>> from sympy import Symbol, S, sin, cos, minimum
     >>> from sympy.sets import Interval
     >>> x = Symbol('x')
 
     >>> f = x**2 + 2*x + 5
-    >>> minimize(f, x, S.Reals)
+    >>> minimum(f, x, S.Reals)
     4
 
-    >>> minimize(sin(x), x, Interval(2, 3))
+    >>> minimum(sin(x), x, Interval(2, 3))
     sin(3)
 
-    >>> minimize(sin(x)*cos(x), x)
+    >>> minimum(sin(x)*cos(x), x)
     -1/2
 
     """
