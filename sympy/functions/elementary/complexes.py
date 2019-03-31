@@ -715,6 +715,9 @@ class conjugate(Function):
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
 
+    def _eval_as_leading_term(self, n):
+        return self.args[0]._eval_as_leading_term(n)
+
 
 class transpose(Function):
     """
