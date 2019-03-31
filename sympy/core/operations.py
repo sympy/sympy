@@ -123,7 +123,7 @@ class AssocOp(Basic):
         # apply associativity, no commutativity property is used
         new_seq = []
         while seq:
-            o = seq.pop()
+            o = seq.pop(0)
             if o.__class__ is cls:  # classes must match exactly
                 seq.extend(o.args)
             else:
