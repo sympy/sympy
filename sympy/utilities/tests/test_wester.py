@@ -53,7 +53,7 @@ from sympy.core.compatibility import range, PY3
 from itertools import islice, takewhile
 from sympy.series.formal import fps
 from sympy.series.fourier import fourier_series
-from sympy.calculus.util import minimize
+from sympy.calculus.util import minimum
 
 
 R = Rational
