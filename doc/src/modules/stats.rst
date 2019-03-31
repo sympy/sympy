@@ -3,10 +3,6 @@ Stats
 
 .. automodule:: sympy.stats
 
-.. automodule:: sympy.stats.drv_types
-.. automodule:: sympy.stats.frv_types
-.. automodule:: sympy.stats.crv_types
-
 Random Variable Types
 ^^^^^^^^^^^^^^^^^^^^^
 
