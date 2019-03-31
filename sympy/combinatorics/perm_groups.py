@@ -2,6 +2,8 @@ from __future__ import print_function, division
 
 from random import randrange, choice
 from math import log
+from sympy.ntheory import primefactors
+from sympy.polys import lcm
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -1872,6 +1874,8 @@ class PermutationGroup(Basic):
         d_gr = gr.degree
         if self.is_trivial and (d_self == d_gr or not strict):
             return True
+        if self._is_abelian:
+            return True
         new_self = self.copy()
         if not strict and d_self != d_gr:
             if d_self < d_gr:
@@ -2649,6 +2653,56 @@ class PermutationGroup(Basic):
             m *= len(x)
         self._order = m
         return m
+
+    def index(self, H):
+        """
+        Returns the index of a permutation group.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation(1,2,3)
+        >>> b =Permutation(3)
+        >>> G = PermutationGroup([a])
+        >>> H = PermutationGroup([b])
+        >>> G.index(H)
+        3
+
+        """
+        if H.is_subgroup(self):
+            return self.order()//H.order()
+
+    def is_cyclic(self):
+        """
+        Return ``True`` if the group is Cyclic.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import AbelianGroup
+        >>> G = AbelianGroup(3, 4)
+        >>> G.is_cyclic()
+        True
+        >>> G = AbelianGroup(4, 4)
+        >>> G.is_cyclic()
+        False
+
+        """
+        if len(self.generators) == 1:
+            return True
+        if not self._is_abelian:
+            return False
+        for p in primefactors(self.order()):
+            pgens = []
+            for g in self.generators:
+                pgens.append(g**p)
+            if self.index(self.subgroup(pgens)) != p:
+                return False
+            else:
+                continue
+        return True
 
     def pointwise_stabilizer(self, points, incremental=True):
         r"""Return the pointwise stabilizer for a set of points.
@@ -3890,6 +3944,28 @@ class PermutationGroup(Basic):
             C = C_h
 
         return C.sylow_subgroup(p)
+
+    def exponent(self):
+        """
+        Return the exponent of a group ``G``, which is the lcm of the
+        orders of its elements.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation(1, 2, 3)
+        >>> b = Permutation(1, 2)
+        >>> G = PermutationGroup([a, b])
+        >>> G.exponent()
+        6
+
+        """
+        exp = 1
+        for g in self.generators:
+            exp = lcm(exp, g.order())
+        return exp
 
     def _block_verify(H, L, alpha):
         delta = sorted(list(H.orbit(alpha)))

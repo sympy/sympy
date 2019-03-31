@@ -1,6 +1,7 @@
 """Finitely Presented Groups and its algorithms. """
 
 from __future__ import print_function, division
+from sympy.ntheory import primefactors
 from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
                                                 free_group)
 from sympy.combinatorics.rewritingsystem import RewritingSystem
@@ -360,6 +361,38 @@ class FpGroup(DefaultPrinting):
             C = self.coset_enumeration(H, strategy)
             return len(C.table)
 
+    def is_cyclic(self):
+        """
+        Return ``True`` if the group is Cyclic.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics.fp_groups import FpGroup
+        >>> F, x, y = free_group("x, y")
+        >>> f = FpGroup(F, [x*y*x**-1*y**-1, y**5, x**4])
+        >>> f.is_cyclic()
+        True
+        >>> f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
+        >>> f.is_cyclic()
+        False
+
+        """
+        if len(self.generators) == 1:
+            return True
+        if not self.is_abelian:
+            return False
+        for p in primefactors(self.order()):
+            pgens = []
+            for g in self.generators:
+                pgens.append(g**p)
+            K, T = self.subgroup(pgens, homomorphism=True)
+            if self.index(T(K.generators)) != p:
+                return False
+            else:
+                continue
+        return True
 
     def __str__(self):
         if self.free_group.rank > 30:
