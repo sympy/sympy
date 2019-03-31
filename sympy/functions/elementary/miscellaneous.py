@@ -566,7 +566,6 @@ class MinMaxBase(Expr, LatticeOp):
                 if is_newzero:
                     localzeros.update([v])
             return localzeros
-        
     @classmethod
     def _is_connected(cls, x, y):
         """
