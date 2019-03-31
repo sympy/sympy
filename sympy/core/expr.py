@@ -3420,6 +3420,10 @@ class Expr(Basic, EvalfMixin):
                 allow += 1
             return Float(rv, allow)
 
+    def _eval_derivative_matrix_lines(self, x):
+        from sympy.matrices.expressions.matexpr import _LeftRightArgs
+        return [_LeftRightArgs(S.One, S.One, higher=self._eval_derivative(x))]
+
 
 class AtomicExpr(Atom, Expr):
     """
@@ -3440,9 +3444,9 @@ class AtomicExpr(Atom, Expr):
 
     def _eval_derivative_n_times(self, s, n):
         from sympy import Piecewise, Eq
-        from sympy import Tuple
+        from sympy import Tuple, MatrixExpr
         from sympy.matrices.common import MatrixCommon
-        if isinstance(s, (MatrixCommon, Tuple, Iterable)):
+        if isinstance(s, (MatrixCommon, Tuple, Iterable, MatrixExpr)):
             return super(AtomicExpr, self)._eval_derivative_n_times(s, n)
         if self == s:
             return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))

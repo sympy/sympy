@@ -60,9 +60,9 @@ script can take about an hour or so to run (depending on how long the tests
 take). Every time you re-run the script, it pulls from the branch and runs
 everything from scratch.
 
-At the end it will print two things, the list of authors, and the md5 sums.
+At the end it will print two things, the list of authors, and the sha256 sums.
 Copy the list of authors into the release notes. You should verify that the
-md5 sums of the release files are the same as what are printed.
+sha256 sums of the release files are the same as what are printed.
 
 # Tagging the release
 
@@ -144,3 +144,9 @@ Once you have it working, push the changes up to Dockerhub
     docker push sympy/sympy-release
 
 You'll need access to the sympy org, ask Aaron or Ondřej if you need it.
+
+It is usually not necessary to rebuild the Docker container. The container
+first pulls the latest version of the release branch before running rever
+(see `pull_and_run_rever.sh`), so unless you modify that script, or change the
+packages that are installed in the container, it should not be necessary to
+rebuild it.

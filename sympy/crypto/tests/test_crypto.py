@@ -20,7 +20,6 @@ from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
 from sympy.utilities.pytest import raises, slow, warns_deprecated_sympy
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from random import randrange
 
@@ -152,7 +151,6 @@ def test_rsa_public_key():
     assert rsa_public_key(5, 3, 3) == (15, 3)
     assert rsa_public_key(8, 8, 8) is False
 
-    raises(SymPyDeprecationWarning, lambda: rsa_public_key(2, 2, 1))
     with warns_deprecated_sympy():
         assert rsa_public_key(2, 2, 1) == (4, 1)
 
@@ -163,7 +161,6 @@ def test_rsa_private_key():
     assert rsa_private_key(23,29,5) == (667,493)
     assert rsa_private_key(8, 8, 8) is False
 
-    raises(SymPyDeprecationWarning, lambda: rsa_private_key(2, 2, 1))
     with warns_deprecated_sympy():
         assert rsa_private_key(2, 2, 1) == (4, 1)
 
