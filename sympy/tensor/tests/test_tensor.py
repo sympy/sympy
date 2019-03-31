@@ -1906,6 +1906,8 @@ def test_tensor_replacement():
     assert expr.replace_with_arrays(repl, [j, -i]) == Array([[1, -3], [-2, 4]])
     assert expr.replace_with_arrays(repl, [-j, i]) == Array([[1, 3], [2, 4]])
     assert expr.replace_with_arrays(repl, [-j, -i]) == Array([[1, -3], [2, -4]])
+    # Test stability of optional parameter 'indices'
+    assert expr.replace_with_arrays(repl) == Array([[1, -2], [3, -4]])
 
     expr = H(i,j)
     repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
