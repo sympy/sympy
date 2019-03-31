@@ -37,6 +37,9 @@ from .medium import Medium
 
 
 def refractive_index_of_medium(medium):
+    """
+    Helper function that return refractive index, given a medium
+    """
     if isinstance(medium, Medium):
         n = medium.refractive_index
     else:
@@ -63,7 +66,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     Parameters
     ==========
 
-    incident : Matrix, Ray3D, sequence or float
+    incident : Matrix, Ray3D, sequence or a number
         Incident vector or angle of incidence
     medium1 : sympy.physics.optics.medium.Medium or sympifiable
         Medium 1 or its refractive index
@@ -73,6 +76,8 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         Normal vector
     plane : Plane
         Plane of separation of the two media.
+
+    Returns an angle of refraction or a refracted ray depending on inputs.
 
     Examples
     ========
@@ -121,6 +126,9 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         critical_angle_ = None
 
     if angle_of_incidence is not None:
+        if normal is not None or plane is not None:
+            raise ValueError('Normal/plane not allowed if incident is an angle')
+
         if not 0.0 <= angle_of_incidence < pi*0.5:
             raise ValueError('Angle of incidence not in range [0:pi/2)')
 
@@ -131,6 +139,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     if angle_of_incidence and not 0 <= angle_of_incidence < pi*0.5:
         raise ValueError
 
+    # Treat the incident as ray below
     # A flag to check whether to return Ray3D or not
     return_ray = False
 
@@ -302,6 +311,8 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
         Normal vector
     plane : Plane
         Plane of separation of the two media.
+
+    Returns angular deviation between incident and refracted rays
 
     Examples
     ========
