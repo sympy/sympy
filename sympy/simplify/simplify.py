@@ -49,7 +49,7 @@ def separable(expr, symbols=[]):
     >>> from sympy.abc import x, y
     >>> eq = cos(x + y) + cos(x - y)
     >>> separable(eq)
-    {x, y}, {}
+    ({x, y}, set())
     """
     s = []
     u = set()
