@@ -5,30 +5,29 @@ various operations on them.
 
 from __future__ import print_function, division
 
-from sympy import (Symbol, diff, S, Dummy, Order, rf, meijerint, I,
+from sympy import (Symbol, S, Dummy, Order, rf, meijerint, I,
     solve, limit, Float, nsimplify, gamma)
-from sympy.printing import sstr
-from sympy.core.compatibility import range, ordered
-from sympy.functions.combinatorial.factorials import binomial, factorial
-from sympy.core.sympify import sympify
-from sympy.simplify.hyperexpand import hyperexpand
-from sympy.functions.special.hyper import hyper, meijerg
+from sympy.core.compatibility import range, ordered, string_types
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
-from sympy.matrices import Matrix
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import exp_polar, exp
+from sympy.functions.special.hyper import hyper, meijerg
+from sympy.matrices import Matrix
+from sympy.polys.rings import PolyElement
+from sympy.polys.fields import FracElement
+from sympy.polys.domains import QQ, RR
+from sympy.polys.polyclasses import DMF
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import Poly
+from sympy.printing import sstr
+from sympy.simplify.hyperexpand import hyperexpand
 
 from .linearsolver import NewMatrix
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
 from .holonomicerrors import (NotPowerSeriesError, NotHyperSeriesError,
     SingularityError, NotHolonomicError)
 
-from sympy.polys.rings import PolyElement
-from sympy.polys.fields import FracElement
-from sympy.polys.domains import QQ, ZZ, RR
-from sympy.polys.domains.pythonrational import PythonRational
-from sympy.polys.polyclasses import DMF
-from sympy.polys.polyroots import roots
-from sympy.polys.polytools import Poly
 
 
 def DifferentialOperators(base, generator):
@@ -114,7 +113,7 @@ class DifferentialOperatorAlgebra(object):
         if generator is None:
             self.gen_symbol = Symbol('Dx', commutative=False)
         else:
-            if isinstance(generator, str):
+            if isinstance(generator, string_types):
                 self.gen_symbol = Symbol(generator, commutative=False)
             elif isinstance(generator, Symbol):
                 self.gen_symbol = generator
@@ -356,7 +355,7 @@ class DifferentialOperator(object):
                 return False
         else:
             if self.listofpoly[0] == other:
-                for i in listofpoly[1:]:
+                for i in self.listofpoly[1:]:
                     if i is not self.parent.base.zero:
                         return False
                 return True
@@ -867,7 +866,6 @@ class HolonomicFunction(object):
                 return sol
 
         ann = self.annihilator
-        dx = ann.parent.derivative_operator
 
         # if the function is constant.
         if ann.listofpoly[0] == ann.parent.base.zero and ann.order == 1:
@@ -1312,7 +1310,6 @@ class HolonomicFunction(object):
 
                 if (i - k, k) in dict1:
                     dict1[(i - k, k)] += (dom.to_sympy(coeff) * rf(n - k + 1, i))
-
                 else:
                     dict1[(i - k, k)] = (dom.to_sympy(coeff) * rf(n - k + 1, i))
 
@@ -1443,8 +1440,6 @@ class HolonomicFunction(object):
         compl.sort(key=lambda x : x[2])
         reals.sort()
 
-        x = self.x
-
         # grouping the roots, roots differ by an integer are put in the same group.
         grp = []
 
@@ -1524,7 +1519,6 @@ class HolonomicFunction(object):
 
                     if (i - k, k - i) in dict1:
                         dict1[(i - k, k - i)] += (dom.to_sympy(coeff) * rf(n - k + 1 + p, i))
-
                     else:
                         dict1[(i - k, k - i)] = (dom.to_sympy(coeff) * rf(n - k + 1 + p, i))
 
@@ -1668,7 +1662,7 @@ class HolonomicFunction(object):
         HolonomicFunction.to_sequence()
         """
 
-        if _recur == None:
+        if _recur is None:
             recurrence = self.to_sequence()
         else:
             recurrence = _recur
@@ -1906,7 +1900,7 @@ class HolonomicFunction(object):
         from_hyper, from_meijerg
         """
 
-        if _recur == None:
+        if _recur is None:
             recurrence = self.to_sequence()
         else:
             recurrence = _recur
@@ -2095,7 +2089,7 @@ class HolonomicFunction(object):
 
         symbolic = True
 
-        if lenics == None and len(self.y0) > self.annihilator.order:
+        if lenics is None and len(self.y0) > self.annihilator.order:
             lenics = len(self.y0)
         dom = self.annihilator.parent.base.domain
 
@@ -2189,7 +2183,7 @@ def from_hyper(func, x0=0, evalf=False):
             else:
                 val = simp.subs(x, x0)
             # return None if it is Infinite or NaN
-            if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
+            if val.is_finite is False or isinstance(val, NaN):
                 return None
             y0.append(val)
             simp = simp.diff(x)
@@ -2274,7 +2268,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
                 val = simp.subs(x, x0).evalf()
             else:
                 val = simp.subs(x, x0)
-            if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
+            if val.is_finite is False or isinstance(val, NaN):
                 return None
             y0.append(val)
             simp = simp.diff(x)
@@ -2361,7 +2355,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
 
     extra_syms = list(syms)
 
-    if domain == None:
+    if domain is None:
         if func.has(Float):
             domain = RR
         else:
@@ -2556,9 +2550,6 @@ def _hyper_to_meijerg(func):
     ap = func.ap
     bq = func.bq
 
-    p = len(ap)
-    q = len(bq)
-
     ispoly = any(i <= 0 and int(i) == i for i in ap)
     if ispoly:
         return hyperexpand(func)
@@ -2604,7 +2595,6 @@ def _extend_y0(Holonomic, n):
 
     annihilator = Holonomic.annihilator
     a = annihilator.order
-    x = Holonomic.x
 
     listofpoly = []
 
@@ -2629,11 +2619,8 @@ def _extend_y0(Holonomic, n):
             sol = 0
             for a, b in zip(y1, list_red):
                 r = DMFsubs(b, Holonomic.x0)
-                try:
-                    if not r.is_finite:
-                        return y0
-                except AttributeError:
-                    pass
+                if not getattr(r, 'is_finite', True):
+                    return y0
                 if isinstance(r, (PolyElement, FracElement)):
                     r = r.as_expr()
                 sol += a * r
@@ -2727,7 +2714,7 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
         is_singular = sol.is_singular(x0)
 
         # try to compute the conditions for singular points
-        if y0 == None and x0 == 0 and is_singular:
+        if y0 is None and x0 == 0 and is_singular:
             rep = R.from_sympy(func).rep
             for i, j in enumerate(reversed(rep)):
                 if j == 0:
@@ -2742,7 +2729,6 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
             y0 = {indicial: S(coeff)}
 
     elif israt:
-        order = 1
         p, q = func.as_numer_denom()
         # differential equation satisfied by rational
         sol = p * q * Dx + p * q.diff(x) - q * p.diff(x)
@@ -2754,8 +2740,8 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
         is_singular = sol.is_singular(x0)
 
         # try to compute the conditions for singular points
-        if y0 == None and x0 == 0 and is_singular and \
-            (lenics == None or lenics <= 1):
+        if y0 is None and x0 == 0 and is_singular and \
+            (lenics is None or lenics <= 1):
             rep = R.from_sympy(basepoly).rep
             for i, j in enumerate(reversed(rep)):
                 if j == 0:
@@ -2887,7 +2873,7 @@ def _find_conditions(func, x, x0, order):
         val = func.subs(x, x0)
         if isinstance(val, NaN):
             val = limit(func, x, x0)
-        if (val.is_finite is not None and not val.is_finite) or isinstance(val, NaN):
+        if val.is_finite is False or isinstance(val, NaN):
             return None
         y0.append(val)
         func = func.diff(x)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import Rational, S
@@ -53,7 +52,7 @@ def test_print_unit_base():
 
     mksa = UnitSystem((m, kg, s, A), (Js,))
     with warns_deprecated_sympy():
-        assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
+        assert mksa.print_unit_base(Js) == m**2*kg*s**-1
 
 
 def test_extend():

@@ -1,16 +1,14 @@
-from sympy.core.compatibility import range
 from sympy import (FiniteSet, S, Symbol, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        cancel, KroneckerDelta, exp, I)
-from sympy.concrete.expr_with_limits import AddWithLimits
+        cancel, exp, I)
+from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
     Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
     density, where, FiniteRV, pspace, cdf,
     correlation, moment, cmoment, smoment, characteristic_function, moment_generating_function)
 from sympy.stats.frv_types import DieDistribution
-from sympy.utilities.pytest import raises, slow
-from sympy.abc import p, x, i
+from sympy.utilities.pytest import raises
 
 oo = S.Infinity
 
@@ -166,6 +164,9 @@ def test_bernoulli():
     assert E(a*X + b) == a*E(X) + b
     assert simplify(variance(a*X + b)) == simplify(a**2 * variance(X))
 
+    raises(ValueError, lambda: Bernoulli('B', 1.5))
+    raises(ValueError, lambda: Bernoulli('B', -0.5))
+
 def test_cdf():
     D = Die('D', 6)
     o = S.One
@@ -265,7 +266,12 @@ def test_FiniteRV():
     assert pspace(F).domain.as_boolean() == Or(
         *[Eq(F.symbol, i) for i in [1, 2, 3]])
 
+    raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S.Half, 3: S.Half}))
+    raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S(-1)/2, 3: S.One}))
+    raises(ValueError, lambda: FiniteRV('F', {1: S.One, 2: S(3)/2, 3: S.Zero, 4: S(-1)/2, 5: S(-3)/4, 6: S(-1)/4}))
+
 def test_density_call():
+    from sympy.abc import p
     x = Bernoulli('x', p)
     d = density(x)
     assert d(0) == 1 - p
@@ -278,6 +284,7 @@ def test_density_call():
 
 
 def test_DieDistribution():
+    from sympy.abc import x
     X = DieDistribution(6)
     assert X.pdf(S(1)/2) == S.Zero
     assert X.pdf(x).subs({x: 1}).doit() == S(1)/6

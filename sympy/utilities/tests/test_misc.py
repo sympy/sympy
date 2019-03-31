@@ -1,5 +1,6 @@
-from sympy.core.compatibility import unichr
-from sympy.utilities.misc import translate, replace, ordinal
+from textwrap import dedent
+from sympy.core.compatibility import range, unichr
+from sympy.utilities.misc import translate, replace, ordinal, rawlines, strlines
 
 def test_translate():
     abc = 'abc'
@@ -35,3 +36,51 @@ def test_ordinal():
     assert ordinal(103) == '103rd'
     assert ordinal(104) == '104th'
     assert ordinal(200) == '200th'
+    assert all(ordinal(i) == str(i) + 'th' for i in range(-220, -203))
+
+
+def test_rawlines():
+    assert rawlines('a a\na') == "dedent('''\\\n    a a\n    a''')"
+    assert rawlines('a a') == "'a a'"
+    assert rawlines(strlines('\\le"ft')) == (
+        '(\n'
+        "    '(\\n'\n"
+        '    \'r\\\'\\\\le"ft\\\'\\n\'\n'
+        "    ')'\n"
+        ')')
+
+
+def test_strlines():
+    q = 'this quote (") is in the middle'
+    # the following assert rhs was prepared with
+    # print(rawlines(strlines(q, 10)))
+    assert strlines(q, 10) == dedent('''\
+        (
+        'this quo'
+        'te (") i'
+        's in the'
+        ' middle'
+        )''')
+    assert q == (
+        'this quo'
+        'te (") i'
+        's in the'
+        ' middle'
+        )
+    q = "this quote (') is in the middle"
+    assert strlines(q, 20) == dedent('''\
+        (
+        "this quote (') is "
+        "in the middle"
+        )''')
+    assert strlines('\\left') == (
+        '(\n'
+        "r'\\left'\n"
+        ')')
+    assert strlines('\\left', short=True) == r"r'\left'"
+    assert strlines('\\le"ft') == (
+        '(\n'
+        'r\'\\le"ft\'\n'
+        ')')
+    q = 'this\nother line'
+    assert strlines(q) == rawlines(q)

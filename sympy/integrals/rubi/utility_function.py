@@ -660,7 +660,7 @@ def EllipticF(Phi, m):
     return elliptic_f(Phi, m)
 
 def ArcTan(a, b = None):
-    if b == None:
+    if b is None:
         return atan(a)
     else:
         return atan2(a, b)
@@ -1115,7 +1115,7 @@ def PowerOfLinearQ(expr, x):
 
 def Exponent(expr, x, h = None):
     expr = Expand(S(expr))
-    if h == None:
+    if h is None:
         if S(expr).is_number or (not expr.has(x)):
             return 0
         if PolynomialQ(expr, x):
@@ -1560,7 +1560,7 @@ def NonnumericFactors(u):
 def MakeAssocList(u, x, alst=None):
     # (* MakeAssocList[u,x,alst] returns an association list of gensymed symbols with the nonatomic
     # parameters of a u that are not integer powers, products or sums. *)
-    if alst == None:
+    if alst is None:
         alst = []
     u = replace_pow_exp(u)
     x = replace_pow_exp(x)
@@ -1588,7 +1588,7 @@ def MakeAssocList(u, x, alst=None):
 
 def GensymSubst(u, x, alst=None):
     # (* GensymSubst[u,x,alst] returns u with the kernels in alst free of x replaced by gensymed names. *)
-    if alst == None:
+    if alst is None:
         alst =[]
     u = replace_pow_exp(u)
     x = replace_pow_exp(x)
@@ -2294,7 +2294,7 @@ def RationalFunctionExpand(expr, x):
 
 def ExpandIntegrand(expr, x, extra=None):
     expr = replace_pow_exp(expr)
-    if not extra == None:
+    if not extra is None:
         extra, x = x, extra
         w = ExpandIntegrand(extra, x)
         r = NonfreeTerms(w, x)
@@ -2507,7 +2507,7 @@ def SimplerIntegrandQ(u, v, x):
     v1 = lst[1]
     if Head(u1) == Head(v1) and Length(u1) == 1 and Length(v1) == 1:
         return SimplerIntegrandQ(u1.args[0], v1.args[0], x)
-    if LeafCount(u1)<3/4*LeafCount(v1):
+    if 4*LeafCount(u1) < 3*LeafCount(v1):
         return True
     if RationalFunctionQ(u1, x):
         if RationalFunctionQ(v1, x):
@@ -2563,7 +2563,7 @@ def GeneralizedTrinomialParts(expr, x):
 def MonomialQ(u, x):
     # If u is of the form a*x^n where n!=0 and a!=0, MonomialQ[u,x] returns True; else False
     if isinstance(u, list):
-        return all(MonomialQ(i) for i in u)
+        return all(MonomialQ(i, x) for i in u)
     else:
         a = Wild('a', exclude=[x])
         b = Wild('b', exclude=[x])
@@ -3190,7 +3190,7 @@ def FactorOrder(u, v):
     return Order(u, v)
 
 def Smallest(num1, num2=None):
-    if num2 == None:
+    if num2 is None:
         lst = num1
         num = lst[0]
         for i in Rest(lst):
@@ -3365,7 +3365,7 @@ def FunctionOfPower(*args):
         return S(1)
     elif PowerQ(u):
         if u.base == x and IntegerQ(u.exp):
-            if n == None:
+            if n is None:
                 return u.exp
             return GCD(n, u.exp)
     tmp = n
@@ -3644,7 +3644,7 @@ def NormalizePowerOfLinear(u, x):
 
 def SimplifyIntegrand(u, x):
     v = NormalizeLeadTermSigns(NormalizeIntegrandAux(Simplify(u), x))
-    if LeafCount(v) < 4/5*LeafCount(u):
+    if 5*LeafCount(v) < 4*LeafCount(u):
         return v
     if v != NormalizeLeadTermSigns(u):
         return v
@@ -3770,7 +3770,7 @@ def FunctionOfInverseLinear(*args):
         tmp = Drop(QuotientOfLinearsParts(u, x), 2)
         if tmp[1] == 0:
             return False
-        elif lst == None:
+        elif lst is None:
             return tmp
         elif ZeroQ(lst[0]*tmp[1] - lst[1]*tmp[0]):
             return lst
@@ -4621,7 +4621,7 @@ def FunctionOfTrig(u, *args):
             else:
                 return v
         if TrigQ(u) and LinearQ(u.args[0], x):
-            if v == None:
+            if v is None:
                 return u.args[0]
             else:
                 a = Coefficient(v, x, 0)
@@ -4633,7 +4633,7 @@ def FunctionOfTrig(u, *args):
                 else:
                     return False
         if HyperbolicQ(u) and LinearQ(u.args[0], x):
-            if v == None:
+            if v is None:
                 return I*u.args[0]
             a = Coefficient(v, x, 0)
             b = Coefficient(v, x, 1)
@@ -4690,7 +4690,7 @@ def FunctionOfHyperbolic(u, *x):
                 return False
             return v
         if HyperbolicQ(u) and LinearQ(u.args[0], x):
-            if v == None:
+            if v is None:
                 return u.args[0]
             a = Coefficient(v, x, 0)
             b = Coefficient(v, x, 1)
@@ -5275,7 +5275,7 @@ def Rt(u, n):
     return RtAux(TogetherSimplify(u), n)
 
 def NthRoot(u, n):
-    return nsimplify(u**(1/n))
+    return nsimplify(u**(S(1)/n))
 
 def AtomBaseQ(u):
     # If u is an atom or an atom raised to an odd degree,  AtomBaseQ(u) returns True; else it returns False
@@ -5605,7 +5605,7 @@ def FunctionOfExponentialTest(u, x):
 
 def FunctionOfExponentialTestAux(base, expon, x):
     global SbaseS, SexponS, SexponFlagS
-    if SbaseS == None:
+    if SbaseS is None:
         SbaseS = base
         SexponS = expon
         return True

@@ -1,29 +1,54 @@
 language: python
 sudo: false
+stages:
+- quality
+- baseline
+- test
 env:
   matrix:
+  - SPLIT="1/2" TEST_SYMPY="true"
+  - SPLIT="2/2" TEST_SYMPY="true"
   - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
-  - SPLIT="1/4" TEST_SYMPY="true"
-  - SPLIT="2/4" TEST_SYMPY="true"
-  - SPLIT="3/4" TEST_SYMPY="true"
-  - SPLIT="4/4" TEST_SYMPY="true"
   global:
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
 dist: trusty
 
 python:
   - 2.7
-  - 3.4
   - 3.5
-  - 3.6
 
 matrix:
   include:
-    - python: 2.7
+    - stage: quality
+      python: 3.7
+      dist: xenial
+      sudo: true
+      script: bin/test quality
+      env:
+
+    - stage: baseline
+      python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="1/2" TEST_SYMPY="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="2/2" TEST_SYMPY="true"
+
+    - stage: test
+      python: 2.7
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7"
       addons:
         apt:
           packages:
@@ -33,6 +58,9 @@ matrix:
             - liblapack-dev
             - gfortran
     - python: 3.6
+      # This is actually 3.7 (once all the dependencies support it). We use
+      # python: 3.6 here because 3.7 requires the slower xenial/sudo: true container,
+      # and we aren't actually using the Travis Python anyway.
       env:
         - TEST_ASCII="true"
         - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle"
@@ -47,7 +75,9 @@ matrix:
             - gfortran
             - python-scipy
 
-    - python: 3.6
+    - python: 3.7
+      dist: xenial
+      sudo: true
       env:
         - TEST_SPHINX="true"
         - FASTCACHE="false"
@@ -69,27 +99,53 @@ matrix:
     - python: 2.7
       env:
         - TEST_SLOW="true"
-        - SPLIT="1/3"
+        - SPLIT="1/2"
     - python: 2.7
       env:
         - TEST_SLOW="true"
-        - SPLIT="2/3"
-    - python: 2.7
+        - SPLIT="2/2"
+    - python: 3.7
+      dist: xenial
+      sudo: true
       env:
         - TEST_SLOW="true"
-        - SPLIT="3/3"
+        - SPLIT="1/2"
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SLOW="true"
+        - SPLIT="2/2"
+
+    # Code coverage tests
     - python: 3.6
+      dist: xenial
+      sudo: true
       env:
-        - TEST_SLOW="true"
-        - SPLIT="1/3"
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="1/4"
     - python: 3.6
+      dist: xenial
+      sudo: true
       env:
-        - TEST_SLOW="true"
-        - SPLIT="2/3"
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="2/4"
     - python: 3.6
+      dist: xenial
+      sudo: true
       env:
-        - TEST_SLOW="true"
-        - SPLIT="3/3"
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="3/4"
+    - python: 3.6
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="4/4"
 
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
@@ -106,7 +162,7 @@ matrix:
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
-        - SPLIT="1/4"
+        - SPLIT="1/2"
         - FASTCACHE="false"
       addons:
         apt:
@@ -117,7 +173,7 @@ matrix:
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
-        - SPLIT="2/4"
+        - SPLIT="2/2"
         - FASTCACHE="false"
       addons:
         apt:
@@ -125,28 +181,8 @@ matrix:
             - pypy
           packages:
             - pypy
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="3/4"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="4/4"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy
+
+  fast_finish: true
 
   allow_failures:
     # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
@@ -163,7 +199,7 @@ matrix:
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
-        - SPLIT="1/4"
+        - SPLIT="1/2"
         - FASTCACHE="false"
       addons:
         apt:
@@ -174,29 +210,7 @@ matrix:
     - python: "pypy"
       env:
         - TEST_SYMPY="true"
-        - SPLIT="2/4"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="3/4"
-        - FASTCACHE="false"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="4/4"
+        - SPLIT="2/2"
         - FASTCACHE="false"
       addons:
         apt:
@@ -210,6 +224,10 @@ before_install:
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
+    fi
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+      pip install coverage;
+      coverage debug sys;
     fi
   - |
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
@@ -229,7 +247,7 @@ before_install:
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
 
         conda info -a;
-        conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION ${TEST_OPT_DEPENDENCY};
+        conda create -q -n test-environment ${TEST_OPT_DEPENDENCY};
         source activate test-environment;
         export CPATH=$CONDA_PREFIX/include;
         export LIBRARY_PATH=$CONDA_PREFIX/lib;
@@ -238,7 +256,7 @@ before_install:
         conda clean --all;
         if [[ "$TEST_SAGE" == "true" ]]; then
             # Use a separate environment because sage downgrades matplotlib
-            conda create -n sage sagelib mpmath "ipython>=5.5.0,<6";
+            conda create -c conda-forge/label/cf201901 -n sage sagelib mpmath "ipython>=5.5.0,<6";
             conda clean --all;
         fi
         if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
@@ -272,7 +290,7 @@ install:
       ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
       ~/.venv-no-setuptools/bin/python -We:invalid setup.py -q install;
     fi
-    python -We:invalid -m compileall -f sympy/;
+    python -We:invalid -m compileall -f -q sympy/;
     python -We:invalid setup.py -q install;
     pip list --format=columns;
 
@@ -282,6 +300,9 @@ script:
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
+    fi
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+        bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports";
     fi
 notifications:
   email: false

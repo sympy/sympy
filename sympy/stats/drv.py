@@ -1,15 +1,15 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-                   Piecewise, S, cacheit, Sum, exp, I, oo, Ne, Eq, poly,
-                   Symbol, series, factorial, And, Mul)
+                   Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
+                   series, factorial, And)
 
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
                             random_symbols, PSpace, ConditionalDomain, RandomDomain,
-                            ProductDomain, ProductPSpace)
+                            ProductDomain)
 from sympy.stats.symbolic_probability import Probability
 from sympy.functions.elementary.integers import floor
 from sympy.sets.fancysets import Range, FiniteSet
@@ -218,7 +218,7 @@ class DiscretePSpace(PSpace):
     def where(self, condition):
         rvs = random_symbols(condition)
         assert all(r.symbol in self.symbols for r in rvs)
-        if (len(rvs) > 1):
+        if len(rvs) > 1:
             raise NotImplementedError(filldedent('''Multivariate discrete
             random variables are not yet supported.'''))
         conditional_domain = reduce_rational_inequalities_wrap(condition,
@@ -246,7 +246,7 @@ class DiscretePSpace(PSpace):
             z = Dummy('z', real = True)
             space = SingleDiscretePSpace(z, dens)
             prob = space.probability(condition.__class__(space.value, 0))
-        if (prob == None):
+        if prob is None:
             prob = Probability(condition)
         return prob if not complement else S.One - prob
 

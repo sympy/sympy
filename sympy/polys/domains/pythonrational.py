@@ -4,12 +4,11 @@ from __future__ import print_function, division
 
 import operator
 
+from sympy.core.compatibility import integer_types
+from sympy.core.numbers import Rational, Integer
+from sympy.core.sympify import converter
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.domains.domainelement import DomainElement
-
-from sympy.core.compatibility import integer_types
-from sympy.core.sympify import converter
-from sympy.core.numbers import Rational, Integer
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 

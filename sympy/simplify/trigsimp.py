@@ -2,25 +2,22 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from sympy.core.cache import cacheit
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
     Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
+from sympy.core.cache import cacheit
 from sympy.core.compatibility import reduce, iterable, SYMPY_INTS
-from sympy.core.numbers import I, Integer
 from sympy.core.function import count_ops, _mexpand
-from sympy.functions.elementary.trigonometric import TrigonometricFunction
-from sympy.functions.elementary.hyperbolic import HyperbolicFunction
+from sympy.core.numbers import I, Integer
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
-
-from sympy.strategies.core import identity
-from sympy.strategies.tree import greedy
-
-from sympy.polys import Poly
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
+from sympy.polys import Poly, factor, cancel, parallel_poly_from_expr
+from sympy.polys.domains import ZZ
 from sympy.polys.polyerrors import PolificationFailed
 from sympy.polys.polytools import groebner
-from sympy.polys.domains import ZZ
-from sympy.polys import factor, cancel, parallel_poly_from_expr
-
+from sympy.simplify.cse_main import cse
+from sympy.strategies.core import identity
+from sympy.strategies.tree import greedy
 from sympy.utilities.misc import debug
 
 
@@ -100,7 +97,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     ``2*x``.
 
     The tangent function is also supported. You can either pass ``tan`` in the
-    hints, to indicate that than should be tried whenever cosine or sine are,
+    hints, to indicate that tan should be tried whenever cosine or sine are,
     or you can pass a specific generator:
 
     >>> trigsimp_groebner(sin(x)/cos(x), hints=[tan])
@@ -230,7 +227,6 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         to appear in terms. Similarly for hyperbolic functions. For tan(n*x),
         sin(n*x) and cos(n*x) are guaranteed.
         """
-        gens = []
         I = []
         y = Dummy('y')
         for fn, coeff in terms:
@@ -475,15 +471,14 @@ def trigsimp(expr, **opts):
 
     expr = sympify(expr)
 
-    try:
-        return expr._eval_trigsimp(**opts)
-    except AttributeError:
-        pass
+    _eval_trigsimp = getattr(expr, '_eval_trigsimp', None)
+    if _eval_trigsimp is not None:
+        return _eval_trigsimp(**opts)
 
     old = opts.pop('old', False)
     if not old:
         opts.pop('deep', None)
-        recursive = opts.pop('recursive', None)
+        opts.pop('recursive', None)
         method = opts.pop('method', 'matching')
     else:
         method = 'old'
@@ -544,6 +539,12 @@ def exptrigsimp(expr):
     def f(rv):
         if not rv.is_Mul:
             return rv
+        commutative_part, noncommutative_part = rv.args_cnc()
+        # Since as_powers_dict loses order information,
+        # if there is more than one noncommutative factor,
+        # it should only be used to simplify the commutative part.
+        if (len(noncommutative_part) > 1):
+            return f(Mul(*commutative_part))*Mul(*noncommutative_part)
         rvd = rv.as_powers_dict()
         newd = rvd.copy()
 
@@ -652,7 +653,7 @@ def trigsimp_old(expr, **opts):
 
     >>> e = (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
     >>> trigsimp(e, old=True)
-    (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
+    (1 - sin(x))/cos(x) + cos(x)/(1 - sin(x))
     >>> trigsimp(e, method="groebner", old=True)
     2/cos(x)
 
@@ -669,6 +670,8 @@ def trigsimp_old(expr, **opts):
 
         trigsyms = set().union(*[t.free_symbols for t in expr.atoms(*_trigs)])
         if len(trigsyms) > 1:
+            from sympy.simplify.simplify import separatevars
+
             d = separatevars(expr)
             if d.is_Mul:
                 d = separatevars(d, dict=True) or d

@@ -1,4 +1,5 @@
 from __future__ import division, absolute_import, print_function
+from sympy.core.compatibility import string_types
 
 import sys
 import re
@@ -194,7 +195,7 @@ class SphinxDocString(NumpyDocString):
         out = []
         if self['References']:
             out += self._str_header('References')
-            if isinstance(self['References'], str):
+            if isinstance(self['References'], string_types):
                 self['References'] = [self['References']]
             out.extend(self['References'])
             out += ['']
@@ -238,12 +239,10 @@ class SphinxDocString(NumpyDocString):
         for param_list in ('Other Parameters', 'Raises', 'Warns'):
             out += self._str_param_list(param_list)
         out += self._str_warnings()
-        out += self._str_see_also(func_role)
-        out += self._str_section('Notes')
-        out += self._str_references()
-        out += self._str_examples()
         for s in self._other_keys:
             out += self._str_section(s)
+        out += self._str_see_also(func_role)
+        out += self._str_references()
         out += self._str_member_list('Attributes')
         out = self._str_indent(out, indent)
         return '\n'.join(out)

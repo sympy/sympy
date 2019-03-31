@@ -327,10 +327,9 @@ class ManagedProperties(BasicMeta):
 
         defs = {}
         for base in reversed(cls.__bases__):
-            try:
-                defs.update(base._explicit_class_assumptions)
-            except AttributeError:
-                pass
+            assumptions = getattr(base, '_explicit_class_assumptions', None)
+            if assumptions is not None:
+                defs.update(assumptions)
         defs.update(local_defs)
 
         cls._explicit_class_assumptions = defs
@@ -338,10 +337,9 @@ class ManagedProperties(BasicMeta):
 
         cls._prop_handler = {}
         for k in _assume_defined:
-            try:
-                cls._prop_handler[k] = getattr(cls, '_eval_is_%s' % k)
-            except AttributeError:
-                pass
+            eval_is_meth = getattr(cls, '_eval_is_%s' % k, None)
+            if eval_is_meth is not None:
+                cls._prop_handler[k] = eval_is_meth
 
         # Put definite results directly into the class dict, for speed
         for k, v in cls.default_assumptions.items():
@@ -350,10 +348,11 @@ class ManagedProperties(BasicMeta):
         # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
         derived_from_bases = set()
         for base in cls.__bases__:
-            try:
-                derived_from_bases |= set(base.default_assumptions)
-            except AttributeError:
-                continue  # not an assumption-aware class
+            default_assumptions = getattr(base, 'default_assumptions', None)
+            # is an assumption-aware class
+            if default_assumptions is not None:
+                derived_from_bases.update(default_assumptions)
+
         for fact in derived_from_bases - set(cls.default_assumptions):
             pname = as_property(fact)
             if pname not in cls.__dict__:

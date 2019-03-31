@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import range
+from sympy.core.containers import Tuple
 
 from types import FunctionType
 
@@ -121,7 +121,6 @@ class TableForm(object):
         # We only support 2D data. Check the consistency:
         if isinstance(data, Matrix):
             data = data.tolist()
-        _w = len(data[0])
         _h = len(data)
 
         # fill out any short lines

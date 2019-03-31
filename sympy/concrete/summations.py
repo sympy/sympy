@@ -1,16 +1,17 @@
 from __future__ import print_function, division
 
+from sympy.calculus.singularities import is_decreasing
+from sympy.calculus.util import AccumulationBounds
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.core.function import Derivative, Function
+from sympy.concrete.gosper import gosper_sum
+from sympy.core.add import Add
+from sympy.core.compatibility import range
+from sympy.core.function import Derivative
+from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
-from sympy.core.mul import Mul
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.calculus.singularities import is_decreasing
-from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
@@ -18,13 +19,11 @@ from sympy.polys import apart, PolynomialError, together
 from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
 from sympy.sets.sets import FiniteSet
+from sympy.simplify import denom
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
-from sympy.core.compatibility import range
-from sympy.simplify import denom
-from sympy.calculus.util import AccumulationBounds
 import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -95,7 +94,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     >>> Sum(x**k, (k, 0, oo))
     Sum(x**k, (k, 0, oo))
     >>> Sum(x**k, (k, 0, oo)).doit()
-    Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
+    Piecewise((1/(1 - x), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
     >>> Sum(x**k/factorial(k), (k, 0, oo)).doit()
     exp(x)
 
@@ -379,10 +378,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ========
 
         Sum.is_absolutely_convergent()
-
         Product.is_convergent()
         """
-        from sympy import Interval, Integral, Limit, log, symbols, Ge, Gt, simplify
+        from sympy import Interval, Integral, log, symbols, simplify
         p, q, r = symbols('p q r', cls=Wild)
 
         sym = self.limits[0][0]
@@ -1137,7 +1135,7 @@ def _eval_sum_hyper(f, i, a):
     bq = params[1]
     x = ab[0]/ab[1]
     h = hyper(ap, bq, x)
-
+    f = combsimp(f)
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
 
 
@@ -1176,7 +1174,7 @@ def eval_sum_hyper(f, i_a_b):
         res1, cond1 = res1
         res2, cond2 = res2
         cond = And(cond1, cond2)
-        if cond == False:
+        if cond == False or cond.as_set() == S.EmptySet:
             return None
         return Piecewise((res1 + res2, cond), (old_sum, True))
 

@@ -1,14 +1,9 @@
 from __future__ import print_function, division
-from distutils.version import LooseVersion as V
-
-from .str import StrPrinter
 from .pycode import (
     PythonCodePrinter,
     MpmathPrinter,  # MpmathPrinter is imported for backward compatibility
     NumPyPrinter  # NumPyPrinter is imported for backward compatibility
 )
-from sympy.core.basic import Basic
-from sympy.external import import_module
 from sympy.utilities import default_sort_key
 
 

@@ -1,24 +1,24 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.mul import Mul
-from sympy.core.singleton import S, Singleton
-from sympy.core.symbol import Dummy, Symbol, Wild
-from sympy.core.function import UndefinedFunction
+from sympy.core.cache import cacheit
 from sympy.core.compatibility import (range, integer_types, with_metaclass,
                                       is_sequence, iterable, ordered)
-from sympy.core.decorators import call_highest_priority
-from sympy.core.cache import cacheit
-from sympy.core.sympify import sympify
 from sympy.core.containers import Tuple
+from sympy.core.decorators import call_highest_priority
 from sympy.core.evaluate import global_evaluate
+from sympy.core.function import UndefinedFunction
+from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.relational import Eq
+from sympy.core.singleton import S, Singleton
+from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.sympify import sympify
 from sympy.polys import lcm, factor
 from sympy.sets.sets import Interval, Intersection
-from sympy.utilities.iterables import flatten
-from sympy.tensor.indexed import Idx
 from sympy.simplify import simplify
+from sympy.tensor.indexed import Idx
+from sympy.utilities.iterables import flatten
 from sympy import expand
 
 
@@ -326,14 +326,14 @@ class SeqBase(Basic):
         >>> sequence(x+y*(-2)**(-n), (n, 0, oo)).find_linear_recurrence(30)
         [1/2, 1/2]
         >>> sequence(3*5**n + 12).find_linear_recurrence(20,gfvar=x)
-        ([6, -5], 3*(-21*x + 5)/((x - 1)*(5*x - 1)))
+        ([6, -5], 3*(5 - 21*x)/((x - 1)*(5*x - 1)))
         >>> sequence(lucas(n)).find_linear_recurrence(15,gfvar=x)
         ([1, 1], (x - 2)/(x**2 + x - 1))
         """
         from sympy.matrices import Matrix
         x = [simplify(expand(t)) for t in self[:n]]
         lx = len(x)
-        if d == None:
+        if d is None:
             r = lx//2
         else:
             r = min(d,lx//2)
@@ -356,7 +356,7 @@ class SeqBase(Basic):
                 if m*y == Matrix(x[l2:]):
                     coeffs = flatten(y[::-1])
                     break
-        if gfvar == None:
+        if gfvar is None:
             return coeffs
         else:
             l = len(coeffs)
@@ -647,9 +647,9 @@ class SeqFormula(SeqExpr):
 
         def _find_x(formula):
             free = formula.free_symbols
-            if len(formula.free_symbols) == 1:
+            if len(free) == 1:
                 return free.pop()
-            elif len(formula.free_symbols) == 0:
+            elif not free:
                 return Dummy('k')
             else:
                 raise ValueError(
@@ -672,7 +672,7 @@ class SeqFormula(SeqExpr):
             raise ValueError('Invalid limits given: %s' % str(limits))
 
         if start is S.NegativeInfinity and stop is S.Infinity:
-                raise ValueError("Both the start and end value"
+                raise ValueError("Both the start and end value "
                                  "cannot be unbounded")
         limits = sympify((x, start, stop))
 
@@ -713,6 +713,8 @@ class SeqFormula(SeqExpr):
         formula = self.formula * coeff
         return SeqFormula(formula, self.args[1])
 
+    def expand(self, *args, **kwargs):
+        return SeqFormula(expand(self.formula, *args, **kwargs), self.args[1])
 
 class RecursiveSeq(SeqBase):
     """A finite degree recursive sequence.
@@ -953,7 +955,7 @@ class SeqExprOp(SeqBase):
         """Sequence is defined on the intersection
         of all the intervals of respective sequences
         """
-        return Intersection(a.interval for a in self.args)
+        return Intersection(*(a.interval for a in self.args))
 
     @property
     def start(self):
@@ -1027,7 +1029,7 @@ class SeqAdd(SeqExprOp):
         if not args:
             return S.EmptySequence
 
-        if Intersection(a.interval for a in args) is S.EmptySet:
+        if Intersection(*(a.interval for a in args)) is S.EmptySet:
             return S.EmptySequence
 
         # reduce using known rules
@@ -1052,7 +1054,7 @@ class SeqAdd(SeqExprOp):
 
         """
         new_args = True
-        while(new_args):
+        while new_args:
             for id1, s in enumerate(args):
                 new_args = False
                 for id2, t in enumerate(args):
@@ -1134,7 +1136,7 @@ class SeqMul(SeqExprOp):
         if not args:
             return S.EmptySequence
 
-        if Intersection(a.interval for a in args) is S.EmptySet:
+        if Intersection(*(a.interval for a in args)) is S.EmptySet:
             return S.EmptySequence
 
         # reduce using known rules
@@ -1159,7 +1161,7 @@ class SeqMul(SeqExprOp):
 
         """
         new_args = True
-        while(new_args):
+        while new_args:
             for id1, s in enumerate(args):
                 new_args = False
                 for id2, t in enumerate(args):

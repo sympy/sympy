@@ -1,11 +1,10 @@
 from __future__ import print_function, division
 
 from .matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
-from .transpose import Transpose
-from sympy.core.sympify import _sympify
+from sympy.core import S
 from sympy.core.compatibility import range
+from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
-from sympy.core import S, Basic
 
 
 class MatPow(MatrixExpr):
@@ -87,3 +86,19 @@ class MatPow(MatrixExpr):
     def _eval_transpose(self):
         base, exp = self.args
         return MatPow(base.T, exp)
+
+    def _eval_derivative_matrix_lines(self, x):
+        from .matmul import MatMul
+        from .inverse import Inverse
+        exp = self.exp
+        if (exp > 0) == True:
+            newexpr = MatMul.fromiter([self.base for i in range(exp)])
+        elif (exp == -1) == True:
+            return Inverse(self.base)._eval_derivative_matrix_lines(x)
+        elif (exp < 0) == True:
+            newexpr = MatMul.fromiter([Inverse(self.base) for i in range(-exp)])
+        elif (exp == 0) == True:
+            return self.doit()._eval_derivative_matrix_lines(x)
+        else:
+            raise NotImplementedError("cannot evaluate %s derived by %s" % (self, x))
+        return newexpr._eval_derivative_matrix_lines(x)

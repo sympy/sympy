@@ -8,12 +8,14 @@ import os
 import contextlib
 import warnings
 
-from sympy.core.compatibility import get_function_name
+from sympy.core.compatibility import get_function_name, string_types
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 try:
     import py
-    from py.test import skip, raises, warns
+    from _pytest.python_api import raises
+    from _pytest.recwarn import warns
+    from _pytest.outcomes import skip, Failed
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False
@@ -44,7 +46,7 @@ if not USE_PYTEST:
         >>> raises(ZeroDivisionError, lambda: 1/2)
         Traceback (most recent call last):
         ...
-        AssertionError: DID NOT RAISE
+        Failed: DID NOT RAISE
 
         >>> with raises(ZeroDivisionError):
         ...     n = 1/0
@@ -52,7 +54,7 @@ if not USE_PYTEST:
         ...     n = 1/2
         Traceback (most recent call last):
         ...
-        AssertionError: DID NOT RAISE
+        Failed: DID NOT RAISE
 
         Note that you cannot test multiple statements via
         ``with raises``:
@@ -81,8 +83,8 @@ if not USE_PYTEST:
                 code()
             except expectedException:
                 return
-            raise AssertionError("DID NOT RAISE")
-        elif isinstance(code, str):
+            raise Failed("DID NOT RAISE")
+        elif isinstance(code, string_types):
             raise TypeError(
                 '\'raises(xxx, "code")\' has been phased out; '
                 'change \'raises(xxx, "expression")\' '
@@ -102,7 +104,7 @@ if not USE_PYTEST:
 
         def __exit__(self, exc_type, exc_value, traceback):
             if exc_type is None:
-                raise AssertionError("DID NOT RAISE")
+                raise Failed("DID NOT RAISE")
             return issubclass(exc_type, self.expectedException)
 
     class XFail(Exception):
@@ -112,6 +114,9 @@ if not USE_PYTEST:
         pass
 
     class Skipped(Exception):
+        pass
+
+    class Failed(Exception):
         pass
 
     def XFAIL(func):
@@ -167,7 +172,7 @@ if not USE_PYTEST:
         ...     pass
         Traceback (most recent call last):
         ...
-        AssertionError: Failed: DID NOT WARN. No warnings of type UserWarning\
+        Failed: DID NOT WARN. No warnings of type UserWarning\
         was emitted. The list of emitted warnings is: [].
         '''
         match = kwargs.pop('match', '')
@@ -188,7 +193,7 @@ if not USE_PYTEST:
                    ' No warnings of type %s was emitted.'
                    ' The list of emitted warnings is: %s.'
                    ) % (warningcls, [w.message for w in warnrec])
-            raise AssertionError(msg)
+            raise Failed(msg)
 
 
 else:
@@ -226,7 +231,7 @@ def warns_deprecated_sympy():
     ...     pass
     Traceback (most recent call last):
     ...
-    AssertionError: Failed: DID NOT WARN. No warnings of type \
+    Failed: DID NOT WARN. No warnings of type \
     SymPyDeprecationWarning was emitted. The list of emitted warnings is: [].
     '''
     with warns(SymPyDeprecationWarning):

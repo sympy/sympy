@@ -1,3 +1,5 @@
+.. _calculus:
+
 ==========
  Calculus
 ==========
@@ -209,7 +211,7 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⌡
     0
     >>> integ.doit()
-    ⎧ Γ(y + 1)    for -re(y) < 1
+    ⎧ Γ(y + 1)    for re(y) > -1
     ⎪
     ⎪∞
     ⎪⌠
@@ -291,7 +293,7 @@ which case the defaults ``x0=0`` and ``n=6`` will be used.
     1 + x + ── + O⎝x ⎠
             2
 
-The `O\left (x^4\right )` term at the end represents the Landau order term at
+The `O\left(x^4\right)` term at the end represents the Landau order term at
 `x=0` (not to be confused with big O notation used in computer science, which
 generally represents the Landau order term at `x=\infty`).  It means that all
 x terms with power greater than or equal to `x^4` are omitted.  Order terms

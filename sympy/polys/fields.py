@@ -12,15 +12,15 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
 from sympy.functions.elementary.exponential import ExpBase
-from sympy.polys.rings import PolyElement
+from sympy.polys.domains.domainelement import DomainElement
+from sympy.polys.domains.fractionfield import FractionField
+from sympy.polys.domains.polynomialring import PolynomialRing
+from sympy.polys.constructor import construct_domain
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyutils import _parallel_dict_from_expr
-from sympy.polys.domains.domainelement import DomainElement
-from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.domains.fractionfield import FractionField
-from sympy.polys.constructor import construct_domain
+from sympy.polys.rings import PolyElement
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
@@ -50,7 +50,8 @@ def sfield(exprs, *symbols, **options):
     from options and input expressions.
 
     Parameters
-    ----------
+    ==========
+
     exprs : :class:`Expr` or sequence of :class:`Expr` (sympifiable)
     symbols : sequence of :class:`Symbol`/:class:`Expr`
     options : keyword arguments understood by :class:`Options`

@@ -7,7 +7,7 @@ from sympy import (
 from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL
 
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
+from sympy.abc import x, y
 
 
 
@@ -410,6 +410,12 @@ def test_exptrigsimp():
         assert s == exptrigsimp(e)
         assert valid(s, 2*sinh(a))
 
+def test_exptrigsimp_noncommutative():
+    a,b = symbols('a b', commutative=False)
+    x = Symbol('x', commutative=True)
+    assert exp(a + x) == exptrigsimp(exp(a)*exp(x))
+    p = exp(a)*exp(b) - exp(b)*exp(a)
+    assert p == exptrigsimp(p) != 0
 
 def test_powsimp_on_numbers():
     assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
@@ -437,3 +443,41 @@ def test_Piecewise():
     # trigsimp tries not to touch non-trig containing args
     assert trigsimp(Piecewise((e1, e3 < e2), (e3, True))) == \
         Piecewise((e1, e3 < s2), (e3, True))
+
+def test_trigsimp_old():
+    x, y = symbols('x,y')
+
+    assert trigsimp(1 - sin(x)**2, old=True) == cos(x)**2
+    assert trigsimp(1 - cos(x)**2, old=True) == sin(x)**2
+    assert trigsimp(sin(x)**2 + cos(x)**2, old=True) == 1
+    assert trigsimp(1 + tan(x)**2, old=True) == 1/cos(x)**2
+    assert trigsimp(1/cos(x)**2 - 1, old=True) == tan(x)**2
+    assert trigsimp(1/cos(x)**2 - tan(x)**2, old=True) == 1
+    assert trigsimp(1 + cot(x)**2, old=True) == 1/sin(x)**2
+    assert trigsimp(1/sin(x)**2 - cot(x)**2, old=True) == 1
+
+    assert trigsimp(5*cos(x)**2 + 5*sin(x)**2, old=True) == 5
+
+    assert trigsimp(sin(x)/cos(x), old=True) == tan(x)
+    assert trigsimp(2*tan(x)*cos(x), old=True) == 2*sin(x)
+    assert trigsimp(cot(x)**3*sin(x)**3, old=True) == cos(x)**3
+    assert trigsimp(y*tan(x)**2/sin(x)**2, old=True) == y/cos(x)**2
+    assert trigsimp(cot(x)/cos(x), old=True) == 1/sin(x)
+
+    assert trigsimp(sin(x + y) + sin(x - y), old=True) == 2*sin(x)*cos(y)
+    assert trigsimp(sin(x + y) - sin(x - y), old=True) == 2*sin(y)*cos(x)
+    assert trigsimp(cos(x + y) + cos(x - y), old=True) == 2*cos(x)*cos(y)
+    assert trigsimp(cos(x + y) - cos(x - y), old=True) == -2*sin(x)*sin(y)
+
+    assert trigsimp(sinh(x + y) + sinh(x - y), old=True) == 2*sinh(x)*cosh(y)
+    assert trigsimp(sinh(x + y) - sinh(x - y), old=True) == 2*sinh(y)*cosh(x)
+    assert trigsimp(cosh(x + y) + cosh(x - y), old=True) == 2*cosh(x)*cosh(y)
+    assert trigsimp(cosh(x + y) - cosh(x - y), old=True) == 2*sinh(x)*sinh(y)
+
+    assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2, old=True) == 1
+
+    assert trigsimp(sin(x)/cos(x), old=True, method='combined') == tan(x)
+    assert trigsimp(sin(x)/cos(x), old=True, method='groebner') == sin(x)/cos(x)
+    assert trigsimp(sin(x)/cos(x), old=True, method='groebner', hints=[tan]) == tan(x)
+
+    assert trigsimp(1-sin(sin(x)**2+cos(x)**2)**2, old=True, deep=True) == cos(1)**2

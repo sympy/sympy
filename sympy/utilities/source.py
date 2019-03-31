@@ -4,6 +4,7 @@ This module adds several functions for interactive source code inspection.
 
 from __future__ import print_function, division
 from sympy.core.decorators import deprecated
+from sympy.core.compatibility import string_types
 
 import inspect
 
@@ -23,7 +24,7 @@ def get_class(lookup_view):
     For example, get_class('sympy.core.Basic') will return
     class Basic located in module sympy.core
     """
-    if isinstance(lookup_view, str):
+    if isinstance(lookup_view, string_types):
         mod_name, func_name = get_mod_func(lookup_view)
         if func_name != '':
             lookup_view = getattr(
@@ -37,11 +38,14 @@ def get_class(lookup_view):
 def get_mod_func(callback):
     """
     splits the string path to a class into a string path to the module
-    and the name of the class. For example:
+    and the name of the class.
 
-        >>> from sympy.utilities.source import get_mod_func
-        >>> get_mod_func('sympy.core.basic.Basic')
-        ('sympy.core.basic', 'Basic')
+    Examples
+    ========
+
+    >>> from sympy.utilities.source import get_mod_func
+    >>> get_mod_func('sympy.core.basic.Basic')
+    ('sympy.core.basic', 'Basic')
 
     """
     dot = callback.rfind('.')

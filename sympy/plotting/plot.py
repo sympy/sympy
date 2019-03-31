@@ -24,12 +24,11 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 
 from __future__ import print_function, division
 
-import inspect
 import warnings
-import sys
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
+from sympy.core.function import arity
 from sympy.core.compatibility import range, Callable
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
@@ -56,16 +55,6 @@ def unset_show():
 ##############################################################################
 # The public interface
 ##############################################################################
-
-def _arity(f):
-    """
-    Python 2 and 3 compatible version that do not raise a Deprecation warning.
-    """
-    if sys.version_info < (3,):
-        return len(inspect.getargspec(f)[0])
-    else:
-       param = inspect.signature(f).parameters.values()
-       return len([p for p in param if p.kind == p.POSITIONAL_OR_KEYWORD])
 
 
 class Plot(object):
@@ -183,6 +172,7 @@ class Plot(object):
         # in self._backend which is tightly coupled to the Plot instance
         # (thanks to the parent attribute of the backend).
         self.backend = DefaultBackend
+
 
         # The keyword arguments should only contain options for the plot.
         for key, val in kwargs.items():
@@ -405,15 +395,15 @@ class Line2DBaseSeries(BaseSeries):
         c = self.line_color
         if hasattr(c, '__call__'):
             f = np.vectorize(c)
-            arity = _arity(c)
-            if arity == 1 and self.is_parametric:
+            nargs = arity(c)
+            if nargs == 1 and self.is_parametric:
                 x = self.get_parameter_points()
                 return f(centers_of_segments(x))
             else:
                 variables = list(map(centers_of_segments, self.get_points()))
-                if arity == 1:
+                if nargs == 1:
                     return f(variables[0])
-                elif arity == 2:
+                elif nargs == 2:
                     return f(*variables[:2])
                 else:  # only if the line is 3D (otherwise raises an error)
                     return f(*variables)
@@ -452,6 +442,12 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.adaptive = kwargs.get('adaptive', True)
         self.depth = kwargs.get('depth', 12)
         self.line_color = kwargs.get('line_color', None)
+        self.xscale=kwargs.get('xscale','linear')
+        self.flag=0
+
+
+
+
 
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
@@ -471,12 +467,13 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             Luiz Henrique de Figueiredo.
 
         """
+
         if self.only_integers or not self.adaptive:
             return super(LineOver1DRangeSeries, self).get_segments()
         else:
             f = lambdify([self.var], self.expr)
             list_segments = []
-
+            np=import_module('numpy')
             def sample(p, q, depth):
                 """ Samples recursively if three points are almost collinear.
                 For depth < 6, points are added irrespective of whether they
@@ -490,8 +487,13 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 ynew = f(xnew)
                 new_point = np.array([xnew, ynew])
 
+                if self.flag==1:
+                    return
                 #Maximum depth
                 if depth > self.depth:
+                    if p[1] is None or q[1] is None:
+                        self.flag=1
+                        return
                     list_segments.append([p, q])
 
                 #Sample irrespective of whether the line is flat till the
@@ -504,7 +506,10 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 #at both ends. If there is a real value in between, then
                 #sample those points further.
                 elif p[1] is None and q[1] is None:
-                    xarray = np.linspace(p[0], q[0], 10)
+                    if self.xscale is 'log':
+                        xarray = np.logspace(p[0],q[0], 10)
+                    else:
+                        xarray = np.linspace(p[0], q[0], 10)
                     yarray = list(map(f, xarray))
                     if any(y is not None for y in yarray):
                         for i in range(len(yarray) - 1):
@@ -521,18 +526,30 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 else:
                     list_segments.append([p, q])
 
+            if self.xscale is 'log':
+                self.start=np.log10(self.start)
+                self.end=np.log10(self.end)
+
             f_start = f(self.start)
             f_end = f(self.end)
             sample([self.start, f_start], [self.end, f_end], 0)
+
             return list_segments
 
     def get_points(self):
         np = import_module('numpy')
         if self.only_integers is True:
-            list_x = np.linspace(int(self.start), int(self.end),
+            if self.xscale is 'log':
+                list_x = np.logspace(int(self.start), int(self.end),
+                        num=int(self.end) - int(self.start) + 1)
+            else:
+                list_x = np.linspace(int(self.start), int(self.end),
                     num=int(self.end) - int(self.start) + 1)
         else:
-            list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
+            if self.xscale is 'log':
+                list_x = np.logspace(self.start, self.end, num=self.nb_of_points)
+            else:
+                list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
         f = vectorized_lambdify([self.var], self.expr)
         list_y = f(list_x)
         return (list_x, list_y)
@@ -722,17 +739,17 @@ class SurfaceBaseSeries(BaseSeries):
         c = self.surface_color
         if isinstance(c, Callable):
             f = np.vectorize(c)
-            arity = _arity(c)
+            nargs = arity(c)
             if self.is_parametric:
                 variables = list(map(centers_of_faces, self.get_parameter_meshes()))
-                if arity == 1:
+                if nargs == 1:
                     return f(variables[0])
-                elif arity == 2:
+                elif nargs == 2:
                     return f(*variables)
             variables = list(map(centers_of_faces, self.get_meshes()))
-            if arity == 1:
+            if nargs == 1:
                 return f(variables[0])
-            elif arity == 2:
+            elif nargs == 2:
                 return f(*variables[:2])
             else:
                 return f(*variables)

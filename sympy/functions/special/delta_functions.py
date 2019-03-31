@@ -1,13 +1,13 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify, diff, oo
-from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.relational import Eq
-from sympy.core.logic import fuzzy_not
-from sympy.polys.polyerrors import PolynomialError
-from sympy.functions.elementary.complexes import im, sign, Abs
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core import S, sympify, diff
 from sympy.core.decorators import deprecated
+from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.logic import fuzzy_not
+from sympy.core.relational import Eq
+from sympy.functions.elementary.complexes import im, sign
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.polys.polyerrors import PolynomialError
 from sympy.utilities import filldedent
 
 

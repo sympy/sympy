@@ -97,10 +97,13 @@ def conjugate_row(row, K):
     """
     result = []
     for r in row:
-        try:
-            result.append(r.conjugate())
-        except AttributeError:
-            result.append(r)
+        conj = getattr(r, 'conjugate', None)
+        if conj is not None:
+            conjrow = conj()
+        else:
+            conjrow = r
+        result.append(conjrow)
+
     return result
 
 

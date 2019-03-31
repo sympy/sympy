@@ -4,8 +4,8 @@ from __future__ import print_function, division
 
 from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
 from sympy.core.function import Function, Derivative, ArgumentIndexError
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import reduce, range
+from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.symbol import Dummy
 
@@ -160,7 +160,7 @@ class hyper(TupleParametersBase):
 
     >>> from sympy.abc import a
     >>> hyperexpand(hyper([-a], [], x))
-    (-x + 1)**a
+    (1 - x)**a
 
     See Also
     ========
@@ -621,7 +621,6 @@ class meijerg(TupleParametersBase):
         from sympy.functions import exp_polar, ceiling
         from sympy import Expr
         import mpmath
-        z = self.argument
         znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):
             znum, branch = znum.as_coeff_mul(exp_polar)

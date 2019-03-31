@@ -229,7 +229,7 @@ For purposes of this section, assume the following initializations-
   (sin(a) + cos(a))*M.i + (-sin(a) + cos(a))*M.j + M.k
   >>> v2 = N.i + M.j
   >>> express(v2, N)
-  (-sin(a) + 1)*N.i + (cos(a))*N.j
+  (1 - sin(a))*N.i + (cos(a))*N.j
 
 Apart from ``Vector`` instances, ``express`` also supports
 reexpression of scalars (general SymPy ``Expr``) and

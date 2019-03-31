@@ -2,15 +2,14 @@ from __future__ import print_function, division
 
 from itertools import permutations
 
-from sympy.matrices import Matrix
-from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
-from sympy.core.compatibility import range
-from sympy.core.numbers import Zero
-from sympy.solvers import solve
-from sympy.functions import factorial
-from sympy.simplify import simplify
-from sympy.core.compatibility import reduce
 from sympy.combinatorics import Permutation
+from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
+from sympy.core.compatibility import range, reduce
+from sympy.core.numbers import Zero
+from sympy.functions import factorial
+from sympy.matrices import Matrix
+from sympy.simplify import simplify
+from sympy.solvers import solve
 
 
 # TODO you are a bit excessive in the use of Dummies
@@ -40,7 +39,7 @@ class Manifold(Basic):
         return obj
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}' % self.name
+        return r'\text{%s}' % self.name
 
 
 class Patch(Basic):
@@ -84,7 +83,7 @@ class Patch(Basic):
         return self.manifold.dim
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}_{%s}' % (self.name, self.manifold._latex(printer, *args))
+        return r'\text{%s}_{%s}' % (self.name, self.manifold._latex(printer, *args))
 
 
 class CoordSystem(Basic):
@@ -342,7 +341,7 @@ class CoordSystem(Basic):
     ##########################################################################
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}^{\mathrm{%s}}_{%s}' % (
+        return r'\text{%s}^{\text{%s}}_{%s}' % (
             self.name, self.patch.name, self.patch.manifold._latex(printer, *args))
 
 

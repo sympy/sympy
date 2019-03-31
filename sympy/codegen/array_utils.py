@@ -1,16 +1,17 @@
 import itertools
 from functools import reduce
 from collections import defaultdict
+
 from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer
-from sympy.core.basic import Basic
-from sympy.core.sympify import _sympify
-from sympy.core.mul import Mul
-from sympy.core.compatibility import accumulate, default_sort_key
 from sympy.combinatorics import Permutation
+from sympy.core.basic import Basic
+from sympy.core.compatibility import accumulate, default_sort_key
+from sympy.core.mul import Mul
+from sympy.core.sympify import _sympify
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions import (MatAdd, MatMul, Trace, Transpose,
         MatrixSymbol)
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
-from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.tensor.array import NDimArray
 
 
@@ -206,8 +207,6 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         expr = self.expr
         if not isinstance(expr, CodegenArrayTensorProduct):
             raise NotImplementedError("only for contractions of tensor products")
-        contraction_indices = self.contraction_indices
-        args = expr.args
         ranks = expr.subranks
         mapping = {}
         counter = 0
@@ -482,7 +481,6 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
             return CodegenArrayTensorProduct(*args)
         elif isinstance(expr, CodegenArrayContraction):
             # Invert tree hierarchy: put the contraction above.
-            shifts = expr._get_index_shifts(expr)
             cycles = self.permutation.cyclic_form
             newcycles = CodegenArrayContraction._convert_outer_indices_to_inner_indices(expr, *cycles)
             newpermutation = Permutation(newcycles)
@@ -691,9 +689,7 @@ def _codegen_array_parse(expr):
                 subexpr = CodegenArrayDiagonal(subexpr.expr, *diagonal_indices)
             else:
                 subexpr = subexpr.expr
-        else:
-            function_args = [subexpr]
-            subindices = subindices
+
         axes_contraction = defaultdict(list)
         for i, ind in enumerate(subindices):
             if ind in summation_indices:
@@ -804,7 +800,7 @@ def _parse_matrix_expression(expr):
         return expr
 
 
-def parse_indexed_expression(expr, first_indices=[]):
+def parse_indexed_expression(expr, first_indices=None):
     r"""
     Parse indexed expression into a form useful for code generation.
 
@@ -953,8 +949,6 @@ def _support_function_tp1_recognize(contraction_indices, args):
             starting_pos = 0
         current_argind, current_pos = starting_argind, starting_pos
         matmul_args = []
-        prev_argind = None
-        prev_pos = None
         last_index = None
         while True:
             elem = args[current_argind]
@@ -973,8 +967,6 @@ def _support_function_tp1_recognize(contraction_indices, args):
                 break
             if len(link_dict) > 2:
                 raise NotImplementedError("not a matrix multiplication line")
-            prev_argind = current_argind
-            prev_pos = current_pos
             # Get the last element of `link_dict` as the next link. The last
             # element is the correct start for trace expressions:
             current_argind, current_pos = link_dict[other_pos]
@@ -1097,7 +1089,6 @@ def _recognize_matrix_expression(expr):
             return _RecognizeMatOp(Transpose, [_recognize_matrix_expression(expr.expr)])
         elif isinstance(expr.expr, CodegenArrayTensorProduct):
             ranks = expr.expr.subranks
-            intrange = list(range(sum(ranks)))
             newrange = [expr.permutation(i) for i in range(sum(ranks))]
             newpos = []
             counter = 0

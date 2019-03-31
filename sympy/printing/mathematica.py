@@ -4,7 +4,6 @@ Mathematica code printer
 
 from __future__ import print_function, division
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 
 # Used in MCodePrinter._print_Function(self)
@@ -41,6 +40,7 @@ class MCodePrinter(CodePrinter):
     strings of the Wolfram's Mathematica code
     """
     printmethod = "_mcode"
+    language = "Wolfram Language"
 
     _default_settings = {
         'order': None,
@@ -58,13 +58,14 @@ class MCodePrinter(CodePrinter):
         """Register function mappings supplied by user"""
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
-        userfuncs = settings.get('user_functions', {})
+        userfuncs = settings.get('user_functions', {}).copy()
         for k, v in userfuncs.items():
             if not isinstance(v, list):
                 userfuncs[k] = [(lambda *x: True, v)]
-                self.known_functions.update(userfuncs)
+        self.known_functions.update(userfuncs)
 
-    doprint = StrPrinter.doprint
+    def _format_code(self, lines):
+        return lines
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
@@ -80,19 +81,132 @@ class MCodePrinter(CodePrinter):
             res += '**'.join(self.parenthesize(a, PREC) for a in nc)
         return res
 
-    def _print_Pi(self, expr):
-        return 'Pi'
 
+    # Primitive numbers
+    def _print_Zero(self, expr):
+        return '0'
+
+    def _print_One(self, expr):
+        return '1'
+
+    def _print_NegativeOne(self, expr):
+        return '-1'
+
+    def _print_half(self, expr):
+        return '1/2'
+
+    def _print_ImaginaryUnit(self, expr):
+        return 'I'
+
+
+    # Infinity and invalid numbers
     def _print_Infinity(self, expr):
         return 'Infinity'
 
     def _print_NegativeInfinity(self, expr):
         return '-Infinity'
 
+    def _print_ComplexInfinity(self, expr):
+        return 'ComplexInfinity'
+
+    def _print_NaN(self, expr):
+        return 'Indeterminate'
+
+
+    # Mathematical constants
+    def _print_Exp1(self, expr):
+        return 'E'
+
+    def _print_Pi(self, expr):
+        return 'Pi'
+
+    def _print_GoldenRatio(self, expr):
+        return 'GoldenRatio'
+
+    def _print_TribonacciConstant(self, expr):
+        return self.doprint(expr._eval_expand_func())
+
+    def _print_EulerGamma(self, expr):
+        return 'EulerGamma'
+
+    def _print_Catalan(self, expr):
+        return 'Catalan'
+
+
     def _print_list(self, expr):
         return '{' + ', '.join(self.doprint(a) for a in expr) + '}'
     _print_tuple = _print_list
     _print_Tuple = _print_list
+
+    def _print_ImmutableDenseMatrix(self, expr):
+        return self.doprint(expr.tolist())
+
+    def _print_ImmutableSparseMatrix(self, expr):
+        from sympy.core.compatibility import default_sort_key
+
+        def print_rule(pos, val):
+            return '{} -> {}'.format(
+            self.doprint((pos[0]+1, pos[1]+1)), self.doprint(val))
+
+        def print_data():
+            items = sorted(expr._smat.items(), key=default_sort_key)
+            return '{' + \
+                ', '.join(print_rule(k, v) for k, v in items) + \
+                '}'
+
+        def print_dims():
+            return self.doprint(expr.shape)
+
+        return 'SparseArray[{}, {}]'.format(print_data(), print_dims())
+
+    def _print_ImmutableDenseNDimArray(self, expr):
+        return self.doprint(expr.tolist())
+
+    def _print_ImmutableSparseNDimArray(self, expr):
+        def print_string_list(string_list):
+            return '{' + ', '.join(a for a in string_list) + '}'
+
+        def to_mathematica_index(*args):
+            """Helper function to change Python style indexing to
+            Pathematica indexing.
+
+            Python indexing (0, 1 ... n-1)
+            -> Mathematica indexing (1, 2 ... n)
+            """
+            return tuple(i + 1 for i in args)
+
+        def print_rule(pos, val):
+            """Helper function to print a rule of Mathematica"""
+            return '{} -> {}'.format(self.doprint(pos), self.doprint(val))
+
+        def print_data():
+            """Helper function to print data part of Mathematica
+            sparse array.
+
+            It uses the fourth notation ``SparseArray[data,{d1,d2,...}]``
+            from
+            https://reference.wolfram.com/language/ref/SparseArray.html
+
+            ``data`` must be formatted with rule.
+            """
+            return print_string_list(
+                [print_rule(
+                    to_mathematica_index(*(expr._get_tuple_index(key))),
+                    value)
+                for key, value in sorted(expr._sparse_array.items())]
+            )
+
+        def print_dims():
+            """Helper function to print dimensions part of Mathematica
+            sparse array.
+
+            It uses the fourth notation ``SparseArray[data,{d1,d2,...}]``
+            from
+            https://reference.wolfram.com/language/ref/SparseArray.html
+            """
+            return self.doprint(expr.shape)
+
+        return 'SparseArray[{}, {}]'.format(print_data(), print_dims())
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
@@ -118,6 +232,10 @@ class MCodePrinter(CodePrinter):
         dexpr = expr.expr
         dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
         return "Hold[D[" + ', '.join(self.doprint(a) for a in [dexpr] + dvars) + "]]"
+
+
+    def _get_comment(self, text):
+        return "(* {} *)".format(text)
 
 
 def mathematica_code(expr, **settings):

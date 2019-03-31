@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, sympify
+from sympy.core import Function, S, sympify
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
@@ -15,9 +15,8 @@ from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
-from sympy.core.compatibility import as_int, with_metaclass, range
+from sympy.core.compatibility import with_metaclass, range
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
-from sympy.functions.elementary.integers import floor
 from sympy.logic.boolalg import And, Or
 
 def _minmax_as_Piecewise(op, *args):
@@ -339,24 +338,25 @@ def real_root(arg, n=None, evaluate=None):
 
 class MinMaxBase(Expr, LatticeOp):
     def __new__(cls, *args, **assumptions):
-        if not args:
-            raise ValueError("The Max/Min functions must have arguments.")
-
+        evaluate = assumptions.pop('evaluate', True)
         args = (sympify(arg) for arg in args)
 
         # first standard filter, for cls.zero and cls.identity
         # also reshape Max(a, Max(b, c)) to Max(a, b, c)
-        try:
-            args = frozenset(cls._new_args_filter(args))
-        except ShortCircuit:
-            return cls.zero
 
-        if assumptions.pop('evaluate', True):
+        if evaluate:
+            try:
+                args = frozenset(cls._new_args_filter(args))
+            except ShortCircuit:
+                return cls.zero
+        else:
+            args = frozenset(args)
+
+        if evaluate:
             # remove redundant args that are easily identified
             args = cls._collapse_arguments(args, **assumptions)
-
-        # find local zeros
-        args = cls._find_localzeros(args, **assumptions)
+            # find local zeros
+            args = cls._find_localzeros(args, **assumptions)
 
         if not args:
             return cls.identity
@@ -396,7 +396,6 @@ class MinMaxBase(Expr, LatticeOp):
 
         """
         from sympy.utilities.iterables import ordered
-        from sympy.utilities.iterables import sift
         from sympy.simplify.simplify import walk
 
         if not args:
@@ -748,9 +747,7 @@ class Max(MinMaxBase, Application):
                 for j in args])
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        is_real = all(i.is_real for i in args)
-        if is_real:
-            return _minmax_as_Piecewise('>=', *args)
+        return _minmax_as_Piecewise('>=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_or(a.is_positive for a in self.args)
@@ -813,9 +810,7 @@ class Min(MinMaxBase, Application):
                 for j in args])
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        is_real = all(i.is_real for i in args)
-        if is_real:
-            return _minmax_as_Piecewise('<=', *args)
+        return _minmax_as_Piecewise('<=', *args)
 
     def _eval_is_positive(self):
         return fuzzy_and(a.is_positive for a in self.args)
