@@ -2110,7 +2110,7 @@ class TensExpr(Expr):
 
         return free_ind2, array
 
-    def replace_with_arrays(self, replacement_dict, indices=[]):
+    def replace_with_arrays(self, replacement_dict, indices=None):
         """
         Replace the tensorial expressions with arrays. The final array will
         correspond to the N-dimensional array with indices arranged according
@@ -2171,6 +2171,7 @@ class TensExpr(Expr):
         """
         from .array import Array
 
+        indices = indices or []
         replacement_dict = {tensor: Array(array) for tensor, array in replacement_dict.items()}
 
         # Check dimensions of replaced arrays:
