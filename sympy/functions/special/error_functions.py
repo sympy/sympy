@@ -258,7 +258,7 @@ class erfc(Function):
     It also follows
 
     >>> erfc(-z)
-    -erfc(z) + 2
+    2 - erfc(z)
 
     We can numerically evaluate the complementary error function to arbitrary precision
     on the whole complex plane:
@@ -600,7 +600,7 @@ class erf2(Function):
     >>> erf2(x, x)
     0
     >>> erf2(x, oo)
-    -erf(x) + 1
+    1 - erf(x)
     >>> erf2(x, -oo)
     -erf(x) - 1
     >>> erf2(oo, y)
@@ -1142,7 +1142,7 @@ class expint(Function):
     Differentiation with respect to nu has no classical expression:
 
     >>> expint(nu, z).diff(nu)
-    -z**(nu - 1)*meijerg(((), (1, 1)), ((0, 0, -nu + 1), ()), z)
+    -z**(nu - 1)*meijerg(((), (1, 1)), ((0, 0, 1 - nu), ()), z)
 
     At non-postive integer orders, the exponential integral reduces to the
     exponential function:
@@ -1169,7 +1169,7 @@ class expint(Function):
 
     >>> from sympy import uppergamma
     >>> expint(nu, z).rewrite(uppergamma)
-    z**(nu - 1)*uppergamma(-nu + 1, z)
+    z**(nu - 1)*uppergamma(1 - nu, z)
 
     As such it is branched at the origin:
 
@@ -1177,7 +1177,7 @@ class expint(Function):
     >>> expint(4, z*exp_polar(2*pi*I))
     I*pi*z**3/3 + expint(4, z)
     >>> expint(nu, z*exp_polar(2*pi*I))
-    z**(nu - 1)*(exp(2*I*pi*nu) - 1)*gamma(-nu + 1) + expint(nu, z)
+    z**(nu - 1)*(exp(2*I*pi*nu) - 1)*gamma(1 - nu) + expint(nu, z)
 
     See Also
     ========
@@ -1218,7 +1218,7 @@ class expint(Function):
         if n == 0:
             return
         if nu.is_integer:
-            if (nu > 0) != True:
+            if not nu > 0:
                 return
             return expint(nu, z) \
                 - 2*pi*I*n*(-1)**(nu - 1)/factorial(nu - 1)*unpolarify(z)**(nu - 1)

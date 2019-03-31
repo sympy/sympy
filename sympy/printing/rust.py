@@ -300,7 +300,7 @@ class RustCodePrinter(CodePrinter):
             cond_func = self.known_functions[expr.func.__name__]
             func = None
             style = 1
-            if isinstance(cond_func, str):
+            if isinstance(cond_func, string_types):
                 func = cond_func
             else:
                 for cond, func, style in cond_func:

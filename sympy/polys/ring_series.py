@@ -49,7 +49,7 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
-from sympy.core.compatibility import as_int, range
+from sympy.core.compatibility import as_int, range, string_types
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from mpmath.libmp.libintmath import giant_steps
 import math
@@ -316,7 +316,6 @@ def rs_pow(p1, n, x, prec):
     6*x**2 + 4*x + 1
     """
     R = p1.ring
-    p = R.zero
     if isinstance(n, Rational):
         np = int(n.p)
         nq = int(n.q)
@@ -686,7 +685,6 @@ def rs_series_from_list(p, c, x, prec, concur=1):
     if r:
         K += 1
     ax = [R(1)]
-    b = 1
     q = R(1)
     if len(p) < 20:
         for i in range(1, J):
@@ -834,7 +832,7 @@ def rs_fun(p, f, *args):
     else:
         x1 = _x
         p1 = p
-    if isinstance(f, str):
+    if isinstance(f, string_types):
         q = getattr(x1, f)(*args1)
     else:
         q = f(x1, *args1)
@@ -1146,7 +1144,6 @@ def rs_exp(p, x, prec):
         return _exp1(p, x, prec)
     one = R(1)
     n = 1
-    k = 1
     c = []
     for k in range(prec):
         c.append(one/n)

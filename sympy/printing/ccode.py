@@ -417,20 +417,28 @@ class C89CodePrinter(CodePrinter):
     def _print_Max(self, expr):
         if "Max" in self.known_functions:
             return self._print_Function(expr)
-        from sympy import Max
-        if len(expr.args) == 1:
-            return self._print(expr.args[0])
-        return "((%(a)s > %(b)s) ? %(a)s : %(b)s)" % {
-            'a': expr.args[0], 'b': self._print(Max(*expr.args[1:]))}
+        def inner_print_max(args): # The more natural abstraction of creating
+            if len(args) == 1:     # and printing smaller Max objects is slow
+                return self._print(args[0]) # when there are many arguments.
+            half = len(args) // 2
+            return "((%(a)s > %(b)s) ? %(a)s : %(b)s)" % {
+                'a': inner_print_max(args[:half]),
+                'b': inner_print_max(args[half:])
+            }
+        return inner_print_max(expr.args)
 
     def _print_Min(self, expr):
         if "Min" in self.known_functions:
             return self._print_Function(expr)
-        from sympy import Min
-        if len(expr.args) == 1:
-            return self._print(expr.args[0])
-        return "((%(a)s < %(b)s) ? %(a)s : %(b)s)" % {
-            'a': expr.args[0], 'b': self._print(Min(*expr.args[1:]))}
+        def inner_print_min(args): # The more natural abstraction of creating
+            if len(args) == 1:     # and printing smaller Min objects is slow
+                return self._print(args[0]) # when there are many arguments.
+            half = len(args) // 2
+            return "((%(a)s < %(b)s) ? %(a)s : %(b)s)" % {
+                'a': inner_print_min(args[:half]),
+                'b': inner_print_min(args[half:])
+            }
+        return inner_print_min(expr.args)
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
@@ -498,7 +506,7 @@ class C89CodePrinter(CodePrinter):
             )
         else:
             raise NotImplementedError("Unknown type of var: %s" % type(var))
-        if val != None:
+        if val != None: # Must be "!= None", cannot be "is not None"
             result += ' = %s' % self._print(val)
         return result
 
@@ -524,14 +532,14 @@ class C89CodePrinter(CodePrinter):
         return 'false'
 
     def _print_Element(self, elem):
-        if elem.strides == None:
-            if elem.offset != None:
+        if elem.strides == None: # Must be "== None", cannot be "is None"
+            if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 raise ValueError("Expected strides when offset is given")
             idxs = ']['.join(map(lambda arg: self._print(arg),
                                  elem.indices))
         else:
             global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
-            if elem.offset != None:
+            if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 global_idx += elem.offset
             idxs = self._print(global_idx)
 
@@ -696,7 +704,19 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
         if nest:
             args = self._print(expr.args[0])
             if len(expr.args) > 1:
-                args += ', %s' % self._print(expr.func(*expr.args[1:]))
+                paren_pile = ''
+                for curr_arg in expr.args[1:-1]:
+                    paren_pile += ')'
+                    args += ', {ns}{name}{suffix}({next}'.format(
+                        ns=self._ns,
+                        name=known,
+                        suffix=suffix,
+                        next = self._print(curr_arg)
+                    )
+                args += ', %s%s' % (
+                    self._print(expr.func(expr.args[-1])),
+                    paren_pile
+                )
         else:
             args = ', '.join(map(lambda arg: self._print(arg), expr.args))
         return '{ns}{name}{suffix}({args})'.format(

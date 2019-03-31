@@ -3,6 +3,7 @@ from sympy.core.backend import (diff, expand, sin, cos, sympify,
 from sympy import (trigsimp, solve, Symbol, Dummy)
 from sympy.core.compatibility import string_types, range
 from sympy.physics.vector.vector import Vector, _check_vector
+from sympy.utilities.misc import translate
 
 __all__ = ['CoordinateSym', 'ReferenceFrame']
 
@@ -210,7 +211,7 @@ class ReferenceFrame(object):
         If the index is a number, returns the coordinate variable correspon-
         -ding to that index.
         """
-        if not isinstance(ind, str):
+        if not isinstance(ind, string_types):
             if ind < 3:
                 return self.varlist[ind]
             else:
@@ -437,7 +438,7 @@ class ReferenceFrame(object):
             The quantities that the orientation matrix will be defined by.
             In case of rot_type='DCM', value must be a
             sympy.matrices.MatrixBase object (or subclasses of it).
-        rot_order : str
+        rot_order : str or int
             If applicable, the order of a series of rotations.
 
         Examples
@@ -455,7 +456,7 @@ class ReferenceFrame(object):
         3, expressed in XYZ or 123, and cannot have a rotation about about an
         axis twice in a row.
 
-        >>> B.orient(N, 'Body', [q1, q2, q3], '123')
+        >>> B.orient(N, 'Body', [q1, q2, q3], 123)
         >>> B.orient(N, 'Body', [q1, q2, 0], 'ZXZ')
         >>> B.orient(N, 'Body', [0, 0, 0], 'XYX')
 
@@ -522,13 +523,9 @@ class ReferenceFrame(object):
 
         approved_orders = ('123', '231', '312', '132', '213', '321', '121',
                            '131', '212', '232', '313', '323', '')
-        rot_order = str(
-            rot_order).upper()  # Now we need to make sure XYZ = 123
+        # make sure XYZ => 123 and rot_type is in upper case
+        rot_order = translate(str(rot_order), 'XYZxyz', '123123')
         rot_type = rot_type.upper()
-        rot_order = [i.replace('X', '1') for i in rot_order]
-        rot_order = [i.replace('Y', '2') for i in rot_order]
-        rot_order = [i.replace('Z', '3') for i in rot_order]
-        rot_order = ''.join(rot_order)
         if not rot_order in approved_orders:
             raise TypeError('The supplied order is not an approved type')
         parent_orient = []

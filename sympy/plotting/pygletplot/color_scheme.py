@@ -1,8 +1,8 @@
 from __future__ import print_function, division
 
 from sympy import Basic, Symbol, symbols, lambdify
-from sympy.core.compatibility import range
-from sympy.plotting.pygletplot.util import interpolate, rinterpolate, create_bounds, update_bounds
+from sympy.core.compatibility import range, string_types
+from .util import interpolate, rinterpolate, create_bounds, update_bounds
 from sympy.utilities.iterables import sift
 
 
@@ -54,7 +54,7 @@ class ColorScheme(object):
 
         if len(args) == 1 and not isinstance(args[0], Basic) and callable(args[0]):
             self.f = args[0]
-        elif len(args) == 1 and isinstance(args[0], str):
+        elif len(args) == 1 and isinstance(args[0], string_types):
             if args[0] in default_color_schemes:
                 cs = default_color_schemes[args[0]]
                 self.f, self.gradient = cs.f, cs.gradient.copy()

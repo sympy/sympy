@@ -7,7 +7,7 @@ from sympy.core.mul import _unevaluated_Mul as umul
 from sympy.simplify.radsimp import _unevaluated_Add, collect_sqrt, fraction_expand
 from sympy.utilities.pytest import XFAIL, raises
 
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
+from sympy.abc import x, y, z, a, b, c, d
 
 
 def test_radsimp():
@@ -290,15 +290,12 @@ def test_rcollect():
     assert rcollect(sqrt(-((x + 1)*(y + 1))), z) == sqrt(-((x + 1)*(y + 1)))
 
 
-@XFAIL
 def test_collect_D_0():
     D = Derivative
     f = Function('f')
     x, a, b = symbols('x,a,b')
     fxx = D(f(x), x, x)
 
-    # collect does not distinguish nested derivatives, so it returns
-    #                                           -- (a + b)*D(D(f, x), x)
     assert collect(a*fxx + b*fxx, fxx) == (a + b)*fxx
 
 

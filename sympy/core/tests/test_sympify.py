@@ -596,17 +596,14 @@ def test_sympify_numpy():
     assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
     assert equal(sympify(np.longcomplex(1 + 2j)), S(1.0 + 2.0*I))
 
-    try:
+    #float96 does not exist on all platforms
+    if hasattr(np, 'float96'):
         assert equal(sympify(np.float96(1.123456789)),
                     Float(1.123456789, precision=80))
-    except AttributeError:  #float96 does not exist on all platforms
-        pass
-
-    try:
+    #float128 does not exist on all platforms
+    if hasattr(np, 'float128'):
         assert equal(sympify(np.float128(1.123456789123)),
                     Float(1.123456789123, precision=80))
-    except AttributeError:  #float128 does not exist on all platforms
-        pass
 
 
 @XFAIL
@@ -660,3 +657,9 @@ def test_numpy_sympify_args():
     a = sympify(numpy.str_('x + x'), evaluate=False)
     assert isinstance(a, Add)
     assert a == Add(x, x, evaluate=False)
+
+
+def test_issue_5939():
+     a = Symbol('a')
+     b = Symbol('b')
+     assert sympify('''a+\nb''') == a + b

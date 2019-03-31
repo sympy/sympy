@@ -36,10 +36,11 @@ class Transpose(MatrixExpr):
         arg = self.arg
         if hints.get('deep', True) and isinstance(arg, Basic):
             arg = arg.doit(**hints)
-        try:
-            result = arg._eval_transpose()
+        _eval_transpose = getattr(arg, '_eval_transpose', None)
+        if _eval_transpose is not None:
+            result = _eval_transpose()
             return result if result is not None else Transpose(arg)
-        except AttributeError:
+        else:
             return Transpose(arg)
 
     @property

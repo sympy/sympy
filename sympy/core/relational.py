@@ -22,12 +22,10 @@ __all__ = (
 
 def _canonical(cond):
     # return a condition in which all relationals are canonical
-    try:
-        reps = dict([(r, r.canonical)
-            for r in cond.atoms(Relational)])
-        return cond.xreplace(reps)
-    except AttributeError:
-        return cond
+    reps = {r: r.canonical for r in cond.atoms(Relational)}
+    return cond.xreplace(reps)
+    # XXX: AttributeError was being caught here but it wasn't triggered by any of
+    # the tests so I've removed it...
 
 
 class Relational(Boolean, Expr, EvalfMixin):
@@ -104,7 +102,7 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     @property
     def reversed(self):
-        """Return the relationship with sides (and sign) reversed.
+        """Return the relationship with sides reversed.
 
         Examples
         ========
@@ -120,9 +118,34 @@ class Relational(Boolean, Expr, EvalfMixin):
         >>> _.reversed
         1 > x
         """
-        ops = {Gt: Lt, Ge: Le, Lt: Gt, Le: Ge}
+        ops = {Eq: Eq, Gt: Lt, Ge: Le, Lt: Gt, Le: Ge, Ne: Ne}
         a, b = self.args
         return Relational.__new__(ops.get(self.func, self.func), b, a)
+
+    @property
+    def reversedsign(self):
+        """Return the relationship with signs reversed.
+
+        Examples
+        ========
+
+        >>> from sympy import Eq
+        >>> from sympy.abc import x
+        >>> Eq(x, 1)
+        Eq(x, 1)
+        >>> _.reversedsign
+        Eq(-x, -1)
+        >>> x < 1
+        x < 1
+        >>> _.reversedsign
+        -x > -1
+        """
+        a, b = self.args
+        if not (isinstance(a, BooleanAtom) or isinstance(b, BooleanAtom)):
+            ops = {Eq: Eq, Gt: Lt, Ge: Le, Lt: Gt, Le: Ge, Ne: Ne}
+            return Relational.__new__(ops.get(self.func, self.func), -a, -b)
+        else:
+            return self
 
     @property
     def negated(self):
@@ -152,8 +175,10 @@ class Relational(Boolean, Expr, EvalfMixin):
 
         """
         ops = {Eq: Ne, Ge: Lt, Gt: Le, Le: Gt, Lt: Ge, Ne: Eq}
-        # If there ever will be new Relational subclasses, the following line will work until it is properly sorted out
-        # return ops.get(self.func, lambda a, b, evaluate=False: ~(self.func(a, b, evaluate=evaluate)))(*self.args, evaluate=False)
+        # If there ever will be new Relational subclasses, the following line
+        # will work until it is properly sorted out
+        # return ops.get(self.func, lambda a, b, evaluate=False: ~(self.func(a,
+        #      b, evaluate=evaluate)))(*self.args, evaluate=False)
         return Relational.__new__(ops.get(self.func), *self.args)
 
     def _eval_evalf(self, prec):
@@ -162,8 +187,9 @@ class Relational(Boolean, Expr, EvalfMixin):
     @property
     def canonical(self):
         """Return a canonical form of the relational by putting a
-        Number on the rhs else ordering the args. No other
-        simplification is attempted.
+        Number on the rhs else ordering the args. The relation is also changed
+        so that the left-hand side expression does not start with a `-`.
+        No other simplification is attempted.
 
         Examples
         ========
@@ -180,13 +206,27 @@ class Relational(Boolean, Expr, EvalfMixin):
         """
         args = self.args
         r = self
-        if r.rhs.is_Number:
-            if r.lhs.is_Number and r.lhs > r.rhs:
+        if r.rhs.is_number:
+            if r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
                 r = r.reversed
-        elif r.lhs.is_Number:
+        elif r.lhs.is_number:
             r = r.reversed
         elif tuple(ordered(args)) != args:
             r = r.reversed
+
+        # Check if first value has negative sign
+        if not isinstance(r.lhs, BooleanAtom) and \
+                r.lhs.could_extract_minus_sign():
+            r = r.reversedsign
+        elif not isinstance(r.rhs, BooleanAtom) and not r.rhs.is_number and \
+                r.rhs.could_extract_minus_sign():
+            # Right hand side has a minus, but not lhs.
+            # How does the expression with reversed signs behave?
+            # This is so that expressions of the type Eq(x, -y) and Eq(-x, y)
+            # have the same canonical representation
+            expr1, _ = ordered([r.lhs, -r.rhs])
+            if expr1 != r.lhs:
+                r = r.reversed.reversedsign
         return r
 
     def equals(self, other, failing_expression=False):
@@ -201,19 +241,20 @@ class Relational(Boolean, Expr, EvalfMixin):
             if a.func in (Eq, Ne) or b.func in (Eq, Ne):
                 if a.func != b.func:
                     return False
-                l, r = [i.equals(j, failing_expression=failing_expression)
-                    for i, j in zip(a.args, b.args)]
-                if l is True:
-                    return r
-                if r is True:
-                    return l
+                left, right = [i.equals(j,
+                                        failing_expression=failing_expression)
+                               for i, j in zip(a.args, b.args)]
+                if left is True:
+                    return right
+                if right is True:
+                    return left
                 lr, rl = [i.equals(j, failing_expression=failing_expression)
-                    for i, j in zip(a.args, b.reversed.args)]
+                          for i, j in zip(a.args, b.reversed.args)]
                 if lr is True:
                     return rl
                 if rl is True:
                     return lr
-                e = (l, r, lr, rl)
+                e = (left, right, lr, rl)
                 if all(i is False for i in e):
                     return False
                 for i in e:
@@ -224,20 +265,23 @@ class Relational(Boolean, Expr, EvalfMixin):
                     b = b.reversed
                 if a.func != b.func:
                     return False
-                l = a.lhs.equals(b.lhs, failing_expression=failing_expression)
-                if l is False:
+                left = a.lhs.equals(b.lhs,
+                                    failing_expression=failing_expression)
+                if left is False:
                     return False
-                r = a.rhs.equals(b.rhs, failing_expression=failing_expression)
-                if r is False:
+                right = a.rhs.equals(b.rhs,
+                                     failing_expression=failing_expression)
+                if right is False:
                     return False
-                if l is True:
-                    return r
-                return l
+                if left is True:
+                    return right
+                return left
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
         r = self
-        r = r.func(*[i.simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
-            for i in r.args])
+        r = r.func(*[i.simplify(ratio=ratio, measure=measure,
+                                rational=rational, inverse=inverse)
+                     for i in r.args])
         if r.is_Relational:
             dif = r.lhs - r.rhs
             # replace dif with a valid Number that will
@@ -273,6 +317,7 @@ class Relational(Boolean, Expr, EvalfMixin):
     def binary_symbols(self):
         # override where necessary
         return set()
+
 
 Rel = Relational
 
@@ -403,15 +448,17 @@ class Equality(Relational):
                     elif n.is_zero is False:
                         rv = d.is_infinite
                         if rv is None:
-                            # if the condition that makes the denominator infinite does not
-                            # make the original expression True then False can be returned
+                            # if the condition that makes the denominator
+                            # infinite does not make the original expression
+                            # True then False can be returned
                             l, r = clear_coefficients(d, S.Infinity)
                             args = [_.subs(l, r) for _ in (lhs, rhs)]
                             if args != [lhs, rhs]:
                                 rv = fuzzy_bool(Eq(*args))
                                 if rv is True:
                                     rv = None
-                elif any(a.is_infinite for a in Add.make_args(n)):  # (inf or nan)/x != 0
+                elif any(a.is_infinite for a in Add.make_args(n)):
+                    # (inf or nan)/x != 0
                     rv = S.false
                 if rv is not None:
                     return _sympify(rv)
@@ -486,6 +533,7 @@ class Equality(Relational):
                 pass
         return e.canonical
 
+
 Eq = Equality
 
 
@@ -558,6 +606,7 @@ class Unequality(Relational):
             return self.func(*eq.args)
         return eq.negated  # result of Ne is the negated Eq
 
+
 Ne = Unequality
 
 
@@ -599,8 +648,8 @@ class _Inequality(Relational):
 class _Greater(_Inequality):
     """Not intended for general use
 
-    _Greater is only used so that GreaterThan and StrictGreaterThan may subclass
-    it for the .gts and .lts properties.
+    _Greater is only used so that GreaterThan and StrictGreaterThan may
+    subclass it for the .gts and .lts properties.
 
     """
     __slots__ = ()
@@ -708,8 +757,8 @@ class GreaterThan(_Greater):
     x < 2
 
     Another option is to use the Python inequality operators (>=, >, <=, <)
-    directly.  Their main advantage over the Ge, Gt, Le, and Lt counterparts, is
-    that one can write a more "mathematical looking" statement rather than
+    directly.  Their main advantage over the Ge, Gt, Le, and Lt counterparts,
+    is that one can write a more "mathematical looking" statement rather than
     littering the math with oddball function calls.  However there are certain
     (minor) caveats of which to be aware (search for 'gotcha', below).
 
@@ -866,6 +915,7 @@ class GreaterThan(_Greater):
         # We don't use the op symbol here: workaround issue #7951
         return _sympify(lhs.__ge__(rhs))
 
+
 Ge = GreaterThan
 
 
@@ -879,6 +929,7 @@ class LessThan(_Less):
     def _eval_relation(cls, lhs, rhs):
         # We don't use the op symbol here: workaround issue #7951
         return _sympify(lhs.__le__(rhs))
+
 
 Le = LessThan
 
@@ -894,6 +945,7 @@ class StrictGreaterThan(_Greater):
         # We don't use the op symbol here: workaround issue #7951
         return _sympify(lhs.__gt__(rhs))
 
+
 Gt = StrictGreaterThan
 
 
@@ -908,12 +960,13 @@ class StrictLessThan(_Less):
         # We don't use the op symbol here: workaround issue #7951
         return _sympify(lhs.__lt__(rhs))
 
+
 Lt = StrictLessThan
 
 
-# A class-specific (not object-specific) data item used for a minor speedup.  It
-# is defined here, rather than directly in the class, because the classes that
-# it references have not been defined until now (e.g. StrictLessThan).
+# A class-specific (not object-specific) data item used for a minor speedup.
+# It is defined here, rather than directly in the class, because the classes
+# that it references have not been defined until now (e.g. StrictLessThan).
 Relational.ValidRelationOperator = {
     None: Equality,
     '==': Equality,

@@ -1678,6 +1678,31 @@ class PermutationGroup(Basic):
                     return False
         return True
 
+    def is_elementary(self, p):
+        """Return ``True`` if the group is elementary abelian. An elementary
+        abelian group is a finite abelian group, where every nontrivial
+        element has order `p`, where `p` is a prime.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation([0, 2, 1])
+        >>> G = PermutationGroup([a])
+        >>> G.is_elementary(2)
+        True
+        >>> a = Permutation([0, 2, 1, 3])
+        >>> b = Permutation([3, 1, 2, 0])
+        >>> G = PermutationGroup([a, b])
+        >>> G.is_elementary(2)
+        True
+        >>> G.is_elementary(3)
+        False
+
+        """
+        return self.is_abelian and all(g.order() == p for g in self.generators)
+
     def is_alt_sym(self, eps=0.05, _random_prec=None):
         r"""Monte Carlo test for the symmetric/alternating group for degrees
         >= 8.
@@ -2072,6 +2097,25 @@ class PermutationGroup(Basic):
         else:
             return False
         return all(G.contains(g, strict=strict) for g in gens)
+
+    @property
+    def is_polycyclic(self):
+        """Return ``True`` if a group is polycyclic. A group is polycyclic if
+        it has a subnormal series with cyclic factors. For finite groups,
+        this is the same as if the group is solvable.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
+        >>> a = Permutation([0, 2, 1, 3])
+        >>> b = Permutation([2, 0, 1, 3])
+        >>> G = PermutationGroup([a, b])
+        >>> G.is_polycyclic
+        True
+
+        """
+        return self.is_solvable
 
     def is_transitive(self, strict=True):
         """Test if the group is transitive.
@@ -2564,7 +2608,7 @@ class PermutationGroup(Basic):
         degree
 
         """
-        if self._order != None:
+        if self._order is not None:
             return self._order
         if self._is_sym:
             n = self._degree
