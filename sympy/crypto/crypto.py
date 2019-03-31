@@ -259,6 +259,48 @@ def decipher_shift(msg, key, symbols=None):
     """
     return encipher_shift(msg, -key, symbols)
 
+def encipher_rot13(msg, symbols=None):
+	"""
+	Performs the ROT13 encryption on a given plaintext msg.
+	
+	Notes
+	=====
+	
+	ROT13 is a substitution cipher which substitutes each letter
+	in the plaintext message for the letter furthest away from it
+	in the English alphabet.
+	
+	Equivalently, it is just a Caeser (shift) cipher with a shift
+	key of 13 (midway point of the alphabet).
+	"""
+	return encipher_shift(msg, 13, symbols)
+
+def decipher_rot13(msg, symbols=None):
+	"""
+	Performs the ROT13 decryption on a given plaintext msg.
+	
+	Notes
+	=====
+	
+	decipher_rot13 is equivalent to encipher_rot13 as both
+	decipher_shift with a key of 13 and encipher key with a
+	key of 13 will return the same results. Nonetheless,
+	decipher_rot13 has been explicitly defined here for ease of use.
+	
+	Examples
+	=========
+	>>> from sympy.crypto.crypto import encipher_rot13, decipher_rot13
+	>>> msg = 'GONAVYBEATARMY'
+	>>> ciphertext = encipher_rot13(msg);ciphertext
+	'TBANILORNGNEZL'
+	>>> decipher_rot13(ciphertext)
+	'GONAVYBEATARMY'
+	>>> encipher_rot13(msg) == decipher_rot13(msg)
+	True
+	>>> msg == decipher_rot13(ciphertext)
+	True
+	"""
+	return decipher_shift(msg, 13, symbols)
 
 ######## affine cipher examples ############
 
