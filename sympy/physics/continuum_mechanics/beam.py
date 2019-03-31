@@ -1266,7 +1266,7 @@ class Beam(object):
             :context: close-figs
             :format: doctest
             :include-source: True
-            
+
             >>> from sympy.physics.continuum_mechanics.beam import Beam
             >>> from sympy import symbols
             >>> R1, R2 = symbols('R1, R2')
