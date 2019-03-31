@@ -1447,7 +1447,8 @@ class GumbelDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         beta, mu = self.beta, self.mu
-        return (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
+        z = (x-mu)/beta
+        return (1/beta)*exp(-(z+exp(-z)))
 
     def _cdf(self, x):
         beta, mu = self.beta, self.mu
@@ -1490,7 +1491,7 @@ def Gumbel(name, beta, mu):
     >>> beta = Symbol("beta", positive=True)
     >>> X = Gumbel("x", beta, mu)
     >>> density(X)(x)
-    exp(exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
+    exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
     >>> cdf(X)(x)
     exp(-exp((mu - x)/beta))
 
