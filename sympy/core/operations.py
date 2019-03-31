@@ -125,7 +125,7 @@ class AssocOp(Basic):
         while seq:
             o = seq.pop(0)
             if o.__class__ is cls:  # classes must match exactly
-                seq.extend(o.args)
+                seq = list(o.args) + seq
             else:
                 new_seq.append(o)
         # c_part, nc_part, order_symbols
