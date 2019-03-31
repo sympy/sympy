@@ -1467,9 +1467,10 @@ def Gumbel(name, beta, mu):
     The density of the Gumbel distribution is given by
 
     .. math::
-        f(x) := \exp \left( -exp \left( x + \exp \left( -x \right) \right) \right)
+        f(x) := \dfrac{1}{\beta} \exp \left( -\dfrac{x-\mu}{\beta}
+                - \exp \left( -\dfrac{x - \mu}{\beta} \right) \right)
 
-    with ::math 'x \in [ - \inf, \inf ]'.
+    with :math:`x \in [ - \infty, \infty ]`.
 
     Parameters
     ==========
