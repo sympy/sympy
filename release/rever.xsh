@@ -41,7 +41,7 @@ $ACTIVITIES = [
     'test_tarball36',
     'test_tarball37',
     'print_authors',
-    'md5',
+    'sha256',
     # 'tag',
 ]
 
@@ -69,8 +69,8 @@ def mailmap_update():
 @activity
 def test_sympy():
     with run_in_conda_env(['mpmath', 'matplotlib>=2.2', 'numpy', 'scipy', 'theano',
-        'ipython', 'gmpy2', 'fastcache', 'symengine', 'libgfortran', 'libgcc',
-        'gcc', 'cython', 'tensorflow', 'llvmlite', 'wurlitzer', 'autowrap',
+        'ipython', 'gmpy2', 'fastcache', 'symengine', 'libgfortran', 'cython',
+        'tensorflow', 'llvmlite', 'wurlitzer', 'autowrap',
         'python-symengine=0.3.*', 'numexpr', 'antlr-python-runtime>=4.7,<4.8',
         'antlr>=4.7,<4.8'], 'sympy-tests'):
 
@@ -84,7 +84,7 @@ def source_tarball():
 
 @activity(deps={'_version'})
 def build_docs():
-    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath'],
+    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath', 'matplotlib'],
         envname='sympy-release-docs'):
 
         cd doc
@@ -196,17 +196,17 @@ Thanks to everyone who contributed to this release!
     print()
 
 @activity(deps={'source_tarball', 'build_docs'})
-def md5():
+def sha256():
     """
-    Print the md5 sums of the release files
+    Print the sha256 sums of the release files
     """
-    _md5(print_=True)
+    _sha256(print_=True)
 
-def _md5(print_=True, local=False):
+def _sha256(print_=True, local=False):
     if local:
-        out = $(md5sum @(release_files()))
+        out = $(shasum -a 256 @(release_files()))
     else:
-        out = $(md5sum /root/release/*)
+        out = $(shasum -a 256 /root/release/*)
     # Remove the release/ part for printing. Useful for copy-pasting into the
     # release notes.
     out = [i.split() for i in out.strip().split('\n')]
@@ -215,7 +215,7 @@ def _md5(print_=True, local=False):
         print(out)
     return out
 
-@activity(deps={'mailmap_update', 'md5', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball35', 'test_tarball36', 'test_sympy'})
+@activity(deps={'mailmap_update', 'sha256', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball34', 'test_tarball35', 'test_tarball36', 'test_sympy'})
 def release():
     pass
 
@@ -254,10 +254,10 @@ def test_tarball(py_version):
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
-        cp @('/root/release/{source}'.format(**tarball_format)) @("releasetar.tar".format(**tarball_format))
-        tar xvf releasetar.tar
+        cp @('/root/release/{source}'.format(**tarball_format)) @("releasetar.tar.gz".format(**tarball_format))
+        tar xvf releasetar.tar.gz
 
-        cd @("/root/{source-orig-notar}".format(**tarball_format))
+        cd @("{source-orig-notar}".format(**tarball_format))
         python setup.py install
         python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
         python -m isympy --help
@@ -536,7 +536,7 @@ def _GitHub_release(username=None, user='sympy', token=None,
 
         print(green("Done"))
 
-    # TODO: download the files and check that they have the right md5 sum
+    # TODO: download the files and check that they have the right sha256 sum
 
 def _size(print_=True):
     """
@@ -560,8 +560,8 @@ def table():
 
     tarball_formatter_dict['version'] = shortversion
 
-    md5s = [i.split('\t') for i in _md5(print_=False, local=True).split('\n')]
-    md5s_dict = {name: md5 for md5, name in md5s}
+    sha256s = [i.split('\t') for i in _sha256(print_=False, local=True).split('\n')]
+    sha256s_dict = {name: sha256 for sha256, name in sha256s}
 
     sizes = [i.split('\t') for i in _size(print_=False).split('\n')]
     sizes_dict = {name: size for size, name in sizes}
@@ -584,7 +584,7 @@ def table():
 
     with tag('table'):
         with tag('tr'):
-            for headname in ["Filename", "Description", "size", "md5"]:
+            for headname in ["Filename", "Description", "size", "sha256"]:
                 with tag("th"):
                     table.append(headname)
 
@@ -600,7 +600,7 @@ def table():
                 with tag('td'):
                     table.append(sizes_dict[name])
                 with tag('td'):
-                    table.append(md5s_dict[name])
+                    table.append(sha256s_dict[name])
 
     out = ' '.join(table)
     return out
@@ -975,13 +975,16 @@ git_whitelist = {
     '.gitattributes',
     '.gitignore',
     '.mailmap',
-    # Travis
+    # Travis and CI
     '.travis.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
     '.ci/blacklisted.json',
     '.editorconfig',
+    '.coveragerc',
+    'codecov.yml',
+    'pytest.ini',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Pull request template

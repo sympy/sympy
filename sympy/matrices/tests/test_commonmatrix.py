@@ -25,7 +25,6 @@ from sympy.matrices import (Matrix, diag, eye,
 from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.pytest import (raises, XFAIL, slow, skip,
     warns_deprecated_sympy)
@@ -1282,11 +1281,13 @@ def test_jordan_block():
         eigenvalue=2, eigenval=4))
 
     # Deprecated feature
-    raises(SymPyDeprecationWarning,
-    lambda: SpecialOnlyMatrix.jordan_block(cols=3, eigenvalue=2))
+    with warns_deprecated_sympy():
+        assert (SpecialOnlyMatrix.jordan_block(cols=3, eigenvalue=2) ==
+                SpecialOnlyMatrix(3, 3, (2, 1, 0, 0, 2, 1, 0, 0, 2)))
 
-    raises(SymPyDeprecationWarning,
-    lambda: SpecialOnlyMatrix.jordan_block(rows=3, eigenvalue=2))
+    with warns_deprecated_sympy():
+        assert (SpecialOnlyMatrix.jordan_block(rows=3, eigenvalue=2) ==
+                SpecialOnlyMatrix(3, 3, (2, 1, 0, 0, 2, 1, 0, 0, 2)))
 
     with warns_deprecated_sympy():
         assert SpecialOnlyMatrix.jordan_block(3, 2) == \

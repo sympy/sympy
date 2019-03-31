@@ -989,20 +989,12 @@ class _LeftRightArgs(object):
     def matrix_form(self):
         if self.first != 1 and self.higher != 1:
             raise ValueError("higher dimensional array cannot be represented")
-
-        def _get_shape(elem):
-            if isinstance(elem, MatrixExpr):
-                return elem.shape
-            return (None, None)
-
-        if _get_shape(self.first)[1] != _get_shape(self.second)[1]:
-            # Remove one-dimensional identity matrices:
-            # (this is needed by `a.diff(a)` where `a` is a vector)
-            if _get_shape(self.second) == (1, 1):
-                return self.first*self.second[0, 0]
-            if _get_shape(self.first) == (1, 1):
-                return self.first[1, 1]*self.second.T
-            raise ValueError("incompatible shapes")
+        # Remove one-dimensional identity matrices:
+        # (this is needed by `a.diff(a)` where `a` is a vector)
+        if self.first == Identity(1):
+            return self.second.T
+        if self.second == Identity(1):
+            return self.first
         if self.first != 1:
             return self.first*self.second.T
         else:

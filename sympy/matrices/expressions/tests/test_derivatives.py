@@ -271,25 +271,3 @@ def test_mixed_deriv_mixed_expressions():
 
     expr = Trace(Trace(Trace(A)*A)*A)
     assert expr.diff(A) == (3*Trace(A)**2)*Identity(k)
-
-
-def test_derivatives_elementwise_applyfunc():
-    from sympy.matrices.expressions.diagonal import DiagonalizeVector
-
-    expr = x.applyfunc(tan)
-    assert expr.diff(x) == DiagonalizeVector(x.applyfunc(lambda x: tan(x)**2 + 1))
-
-    expr = A*x.applyfunc(exp)
-    assert expr.diff(x) == DiagonalizeVector(x.applyfunc(exp))*A.T
-
-    expr = x.T*A*x + k*y.applyfunc(sin).T*x
-    assert expr.diff(x) == A.T*x + A*x + k*y.applyfunc(sin)
-
-    expr = x.applyfunc(sin).T*y
-    assert expr.diff(x) == DiagonalizeVector(x.applyfunc(cos))*y
-
-    expr = (a.T * X * b).applyfunc(sin)
-    assert expr.diff(X) == a*(a.T*X*b).applyfunc(cos)*b.T
-
-    expr = a.T * X.applyfunc(sin) * b
-    # assert expr.diff(X) = ...
