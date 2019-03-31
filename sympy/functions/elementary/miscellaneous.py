@@ -557,25 +557,15 @@ class MinMaxBase(Expr, LatticeOp):
                     localzeros.update([v])
             return localzeros
         else:
+            localzeros = set()
             values_ = sorted(generator_values)
             min_val = values_[0]
             max_val = values_[len(values_)-1]
-            index_begin = 0
-            while(1):
-                if values_[index_begin] == min_val:
-                    del values_[index_begin]
-                else:
-                    break
-            index_last = len(values_)-1
-            while(1):
-                if values_[index_last] == max_val:
-                    del values_[index_last]
-                    index_last -= 1
-                else:
-                    break
-            localzeros = set(values_)
+            if cls == Min:
+                localzeros.add(min_val)
+            if cls == Max:
+                localzeros.add(max_val)
             return(localzeros)
-
     @classmethod
     def _is_connected(cls, x, y):
         """
