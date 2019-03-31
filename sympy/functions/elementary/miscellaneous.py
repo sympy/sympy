@@ -538,7 +538,7 @@ class MinMaxBase(Expr, LatticeOp):
         appended to the localzeros.
         """
         generator_values = list(values)
-        if len(generator_values)!=0 and all((str(type(generator_values[i])) != "<class 'sympy.core.symbol.Symbol'>") for i in range(len(generator_values))):
+        if len(generator_values)!=0 and all((str(type(generator_values[i])) == "<class 'sympy.core.numbers.Integer'>") for i in range(len(generator_values))):
             localzeros = set()
             values_ = sorted(generator_values)
             min_val = values_[0]
