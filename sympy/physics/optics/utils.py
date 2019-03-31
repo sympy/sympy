@@ -36,10 +36,20 @@ from sympy.geometry.plane import Plane
 from .medium import Medium
 
 
+def refractive_index_of_medium(medium):
+    if isinstance(medium, Medium):
+        n = medium.refractive_index
+    else:
+        n = sympify(medium)
+    return n
+
+
 def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     """
     This function calculates transmitted vector after refraction at planar
     surface. `medium1` and `medium2` can be `Medium` or any sympifiable object.
+    If incident is a number then treated as angle of incidence in which case
+    refraction angle is returned.
 
     If `incident` is an object of `Ray3D`, `normal` also has to be an instance
     of `Ray3D` in order to get the output as a `Ray3D`. Please note that if
@@ -53,8 +63,8 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     Parameters
     ==========
 
-    incident : Matrix, Ray3D, or sequence
-        Incident vector
+    incident : Matrix, Ray3D, sequence or float
+        Incident vector or angle of incidence
     medium1 : sympy.physics.optics.medium.Medium or sympifiable
         Medium 1 or its refractive index
     medium2 : sympy.physics.optics.medium.Medium or sympifiable
@@ -92,31 +102,24 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     [-sqrt(3)*sqrt(-2*n1**2/(3*n2**2) + 1)]])
     >>> refraction_angle(r1, n1, n2, plane=P)
     Ray3D(Point3D(0, 0, 0), Point3D(n1/n2, n1/n2, -sqrt(3)*sqrt(-2*n1**2/(3*n2**2) + 1)))
+    >>> round(refraction_angle(0.1, 1.2, 1.5), 5)
+    0.07995
+    """
 
-    """ 
-    n1, n2 = None, None
+    n1 = refractive_index_of_medium(medium1)
+    n2 = refractive_index_of_medium(medium2)
 
-    if isinstance(medium1, Medium):
-        n1 = medium1.refractive_index
-    else:
-        n1 = sympify(medium1)
-
-    if isinstance(medium2, Medium):
-        n2 = medium2.refractive_index
-    else:
-        n2 = sympify(medium2)
-    
     # check if an incidence angle was supplied instead of a ray
     try:
         angle_of_incidence = float(incident)
     except TypeError as e:
         angle_of_incidence = None
-    
+
     try:
         critical_angle_ = critical_angle(medium1, medium2)
-    except ValueError as e:
+    except (ValueError, TypeError) as e:
         critical_angle_ = None
-    
+
     if angle_of_incidence is not None:
         if not 0.0 <= angle_of_incidence < pi*0.5:
             raise ValueError('Angle of incidence not in range [0:pi/2)')
@@ -127,7 +130,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
 
     if angle_of_incidence and not 0 <= angle_of_incidence < pi*0.5:
         raise ValueError
- 
+
     # A flag to check whether to return Ray3D or not
     return_ray = False
 
@@ -243,19 +246,12 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     ==========
 
     https://en.wikipedia.org/wiki/Fresnel_equations
-    """ 
+    """
     if not 0.0 <= angle_of_incidence < pi*0.5:
         raise ValueError('Angle of incidence not in range [0:pi/2)')
 
-    if isinstance(medium1, Medium):
-        n1 = medium1.refractive_index
-    else:
-        n1 = sympify(medium1)
-
-    if isinstance(medium2, Medium):
-        n2 = medium2.refractive_index
-    else:
-        n2 = sympify(medium2)
+    n1 = refractive_index_of_medium(medium1)
+    n2 = refractive_index_of_medium(medium2)
 
     angle_of_refraction = asin(n1*sin(angle_of_incidence)/n2)
     try:
@@ -296,8 +292,8 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
     Parameters
     ==========
 
-    incident : Matrix, Ray3D, or sequence
-        Incident vector
+    incident : Matrix, Ray3D, sequence or float
+        Incident vector or angle of incidence
     medium1 : sympy.physics.optics.medium.Medium or sympifiable
         Medium 1 or its refractive index
     medium2 : sympy.physics.optics.medium.Medium or sympifiable
@@ -322,13 +318,22 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
     0
     >>> deviation(r1, n1, n2, plane=P)
     -acos(-sqrt(-2*n1**2/(3*n2**2) + 1)) + acos(-sqrt(3)/3)
-
+    >>> round(deviation(0.1, 1.2, 1.5), 5)
+    -0.02005
     """
     refracted = refraction_angle(incident,
                                  medium1,
                                  medium2,
                                  normal=normal,
                                  plane=plane)
+    try:
+        angle_of_incidence = float(incident)
+    except TypeError as e:
+        angle_of_incidence = None
+
+    if angle_of_incidence is not None:
+        return float(refracted) - angle_of_incidence
+
     if refracted != 0:
         if isinstance(refracted, Ray3D):
             refracted = Matrix(refracted.direction_ratio)
@@ -390,17 +395,8 @@ def brewster_angle(medium1, medium2):
     0.926093295503462
 
     """
-    n1, n2 = None, None
-
-    if isinstance(medium1, Medium):
-        n1 = medium1.refractive_index
-    else:
-        n1 = sympify(medium1)
-
-    if isinstance(medium2, Medium):
-        n2 = medium2.refractive_index
-    else:
-        n2 = sympify(medium2)
+    n1 = refractive_index_of_medium(medium1)
+    n2 = refractive_index_of_medium(medium2)
 
     return atan2(n2, n1)
 
@@ -425,17 +421,8 @@ def critical_angle(medium1, medium2):
     0.850908514477849
 
     """
-    n1, n2 = None, None
-
-    if isinstance(medium1, Medium):
-        n1 = medium1.refractive_index
-    else:
-        n1 = sympify(medium1)
-
-    if isinstance(medium2, Medium):
-        n2 = medium2.refractive_index
-    else:
-        n2 = sympify(medium2)
+    n1 = refractive_index_of_medium(medium1)
+    n2 = refractive_index_of_medium(medium2)
 
     if n2 > n1:
         raise ValueError('Total internal reflection impossible for n1 < n2')
