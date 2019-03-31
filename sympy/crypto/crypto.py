@@ -286,13 +286,15 @@ def decipher_rot13(msg, symbols=None):
 	Notes
 	=====
 	
-	decipher_rot13 is equivalent to encipher_rot13 as both
-	decipher_shift with a key of 13 and encipher key with a
+	```decipher_rot13``` is equivalent to ```encipher_rot13``` as both
+	```decipher_shift``` with a key of 13 and ```encipher_shift``` key with a
 	key of 13 will return the same results. Nonetheless,
-	decipher_rot13 has been explicitly defined here for ease of use.
+	```decipher_rot13``` has nonetheless been explicitly defined here for
+	consistency.
 	
 	Examples
 	========
+	
 	>>> from sympy.crypto.crypto import encipher_rot13, decipher_rot13
 	>>> msg = 'GONAVYBEATARMY'
 	>>> ciphertext = encipher_rot13(msg);ciphertext
@@ -420,8 +422,9 @@ def decipher_atbash(msg, symbols=None):
 	
 	Notes
 	=====
-	decipher_atbash is functionally equivalent to encipher_atbash.
-	However, it has still been added as a separate to avoid inconsistency
+	```decipher_atbash``` is functionally equivalent to ```encipher_atbash```.
+	However, it has still been added as a separate function to maintain
+	consistency.
 	
 	Examples
 	========
