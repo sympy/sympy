@@ -2570,6 +2570,66 @@ def test_sympy__logic__boolalg__Xnor():
     assert _test_args(Xnor(x, y, 2))
 
 
+@SKIP("abstract class")
+def test_sympy__logic__FOL__FOL():
+    pass
+
+
+@SKIP("abstract class")
+def test_sympy__logic__FOL__Callable():
+    pass
+
+
+@SKIP("abstract class")
+def test_sympy__logic__FOL__Applied():
+    pass
+
+
+def test_sympy__logic__FOL__Predicate():
+    from sympy.logic.FOL import Predicate
+    assert _test_args(Predicate('P'))
+
+
+def test_sympy__logic__FOL__AppliedPredicate():
+    from sympy.logic.FOL import Predicate
+    P = Predicate('P')
+    assert _test_args(P(x, y))
+
+
+def test_sympy__logic__FOL__Function():
+    from sympy.logic.FOL import Function
+    assert _test_args(Function('f'))
+
+
+def test_sympy__logic__FOL__AppliedFunction():
+    from sympy.logic.FOL import Function
+    f = Function('f')
+    assert _test_args(f(x, y))
+
+
+def test_sympy__logic__FOL__Constant():
+    from sympy.logic.FOL import Constant
+
+
+@SKIP("abstract class")
+def test_sympy__logic__FOL__Quantifier():
+    pass
+
+
+def test_sympy__logic__FOL__ForAll():
+    from sympy.logic.FOL import ForAll, Predicate
+    P = Predicate('P')
+    Q = Predicate('Q')
+    assert _test_args(ForAll(x, ForAll(y, P(x, y) >> Q(x, y))))
+
+
+def test_sympy__logic__FOL__Exists():
+    from sympy.logic.FOL import Exists, Predicate
+    P = Predicate('P')
+    Q = Predicate('Q')
+    assert _test_args(Exists(x, Exists(y, P(x, y) >> Q(x, y))))
+
+
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
     assert _test_args(DeferredVector("X"))
