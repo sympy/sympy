@@ -4,7 +4,7 @@ from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
                    Eq, sqrt, Poly)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, slow
 
 #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
 
@@ -321,7 +321,7 @@ def test_factorial2_rewrite():
         2**(n/2)*Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2)/sqrt(pi), Eq(Mod(n, 2), 1)))*gamma(n/2 + 1)
     assert factorial2(2*n).rewrite(gamma) == 2**n*gamma(n + 1)
     assert factorial2(2*n + 1).rewrite(gamma) == \
-        sqrt(2)*2**(n + 1/2)*gamma(n + 3/2)/sqrt(pi)
+        sqrt(2)*2**(n + S(1)/2)*gamma(n + S(3)/2)/sqrt(pi)
 
 
 def test_binomial():
@@ -434,6 +434,7 @@ def test_binomial():
     assert isinstance(binomial(I, n), binomial)
 
 
+@slow
 def test_binomial_Mod():
     p, q = 10**5 + 3, 10**9 + 33 # prime modulo
     r, s = 10**7 + 5, 33333333 # composite modulo

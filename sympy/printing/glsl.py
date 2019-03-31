@@ -1,10 +1,9 @@
-from sympy import Basic, Function, Symbol
-from sympy.printing.codeprinter import CodePrinter
-from sympy.core.function import _coeff_isneg
-from sympy.printing.precedence import precedence
-from sympy.core.compatibility import string_types, range
-from sympy.core import S
 from sympy.codegen.ast import Assignment
+from sympy.core import S
+from sympy.core.compatibility import string_types, range
+from sympy.core.function import _coeff_isneg, Lambda
+from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.precedence import precedence
 from functools import reduce
 
 known_functions = {
@@ -50,6 +49,7 @@ class GLSLPrinter(CodePrinter):
         'precision': 9,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
         'contract': True,
         'error_on_reserved': False,
         'reserved_word_suffix': '_'
@@ -194,11 +194,11 @@ class GLSLPrinter(CodePrinter):
         if func in self.known_functions:
             cond_func = self.known_functions[func]
             func = None
-            if isinstance(cond_func, str):
+            if isinstance(cond_func, string_types):
                 func = cond_func
             else:
                 for cond, func in cond_func:
-                    if cond(args):
+                    if cond(func_args):
                         break
             if func is not None:
                 try:
@@ -282,7 +282,7 @@ class GLSLPrinter(CodePrinter):
         return "%s.0/%s.0" % (expr.p, expr.q)
 
     def _print_Add(self, expr, order=None):
-        if(self._settings['use_operators']):
+        if self._settings['use_operators']:
             return CodePrinter._print_Add(self, expr, order=order)
 
         terms = expr.as_ordered_terms()
@@ -294,7 +294,7 @@ class GLSLPrinter(CodePrinter):
             # return self.known_functions['add']+'(%s, %s)' % (a,b)
         neg, pos = partition(lambda arg: _coeff_isneg(arg), terms)
         s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
-        if(len(neg) > 0):
+        if neg:
             # sum the absolute values of the negative terms
             neg = reduce(lambda a,b: add(a,b), map(lambda n: self._print(-n),neg))
             # then subtract them from the positive terms
@@ -303,7 +303,7 @@ class GLSLPrinter(CodePrinter):
         return s
 
     def _print_Mul(self, expr, **kwargs):
-        if(self._settings['use_operators']):
+        if self._settings['use_operators']:
             return CodePrinter._print_Mul(self, expr, **kwargs)
         terms = expr.as_ordered_factors()
         def mul(a,b):

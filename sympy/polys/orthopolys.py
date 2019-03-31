@@ -3,20 +3,15 @@
 from __future__ import print_function, division
 
 from sympy import Dummy
-
-from sympy.utilities import public
-
+from sympy.core.compatibility import range
 from sympy.polys.constructor import construct_domain
-from sympy.polys.polytools import Poly, PurePoly
-from sympy.polys.polyclasses import DMP
-
 from sympy.polys.densearith import (
     dup_mul, dup_mul_ground, dup_lshift, dup_sub, dup_add
 )
-
 from sympy.polys.domains import ZZ, QQ
-
-from sympy.core.compatibility import range
+from sympy.polys.polyclasses import DMP
+from sympy.polys.polytools import Poly, PurePoly
+from sympy.utilities import public
 
 
 def dup_jacobi(n, a, b, K):
@@ -41,7 +36,8 @@ def jacobi_poly(n, a, b, x=None, polys=False):
     """Generates Jacobi polynomial of degree `n` in `x`.
 
     Parameters
-    ----------
+    ==========
+
     n : int
         `n` decides the degree of polynomial
     a
@@ -87,7 +83,8 @@ def gegenbauer_poly(n, a, x=None, polys=False):
     """Generates Gegenbauer polynomial of degree `n` in `x`.
 
     Parameters
-    ----------
+    ==========
+
     n : int
         `n` decides the degree of polynomial
     x : optional
@@ -129,7 +126,8 @@ def chebyshevt_poly(n, x=None, polys=False):
     """Generates Chebyshev polynomial of the first kind of degree `n` in `x`.
 
     Parameters
-    ----------
+    ==========
+
     n : int
         `n` decides the degree of polynomial
     x : optional
@@ -167,7 +165,8 @@ def chebyshevu_poly(n, x=None, polys=False):
     """Generates Chebyshev polynomial of the second kind of degree `n` in `x`.
 
     Parameters
-    ----------
+    ==========
+
     n : int
         `n` decides the degree of polynomial
     x : optional
@@ -209,7 +208,8 @@ def hermite_poly(n, x=None, polys=False):
     """Generates Hermite polynomial of degree `n` in `x`.
 
     Parameters
-    ----------
+    ==========
+
     n : int
         `n` decides the degree of polynomial
     x : optional
@@ -248,7 +248,8 @@ def legendre_poly(n, x=None, polys=False):
     """Generates Legendre polynomial of degree `n` in `x`.
 
     Parameters
-    ----------
+    ==========
+
     n : int
         `n` decides the degree of polynomial
     x : optional
@@ -287,7 +288,8 @@ def laguerre_poly(n, x=None, alpha=None, polys=False):
     """Generates Laguerre polynomial of degree `n` in `x`.
 
     Parameters
-    ----------
+    ==========
+
     n : int
         `n` decides the degree of polynomial
     x : optional
@@ -352,7 +354,8 @@ def spherical_bessel_fn(n, x=None, polys=False):
     fn(n-1, z) + fn(n+1, z) == (2*n+1)/z * fn(n, z)
 
     Parameters
-    ----------
+    ==========
+
     n : int
         `n` decides the degree of polynomial
     x : optional

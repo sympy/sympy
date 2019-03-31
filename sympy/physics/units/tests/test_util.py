@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import division
-
-import warnings
-
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import (Add, Mul, Pow, Tuple, pi, sin, sqrt, sstr, sympify,
     symbols)
@@ -28,41 +22,40 @@ T = time
 
 
 def test_dim_simplify_add():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         assert dim_simplify(Add(L, L)) == L
+    with warns_deprecated_sympy():
         assert dim_simplify(L + L) == L
 
 
 def test_dim_simplify_mul():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         assert dim_simplify(Mul(L, T)) == L*T
+    with warns_deprecated_sympy():
         assert dim_simplify(L*T) == L*T
 
 
 def test_dim_simplify_pow():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         assert dim_simplify(Pow(L, 2)) == L**2
+    with warns_deprecated_sympy():
         assert dim_simplify(L**2) == L**2
 
 
 def test_dim_simplify_rec():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         assert dim_simplify(Mul(Add(L, L), T)) == L*T
+    with warns_deprecated_sympy():
         assert dim_simplify((L + L) * T) == L*T
 
 
 def test_dim_simplify_dimless():
     # TODO: this should be somehow simplified on its own,
     # without the need of calling `dim_simplify`:
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
+    with warns_deprecated_sympy():
         assert dim_simplify(sin(L*L**-1)**2*L).get_dimensional_dependencies()\
                == dimsys_default.get_dimensional_dependencies(L)
+    with warns_deprecated_sympy():
         assert dim_simplify(sin(L * L**(-1))**2 * L).get_dimensional_dependencies()\
                == dimsys_default.get_dimensional_dependencies(L)
 

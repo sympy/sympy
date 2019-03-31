@@ -92,6 +92,10 @@ try:
     # this will fail if the .mailmap is not right
     assert 'Sergey B Kirpichev' == author_name(git_people.pop(226)
         ), 'Sergey B Kirpichev was not found at line 226.'
+    assert 'azure-pipelines[bot]' == \
+        author_name(git_people.pop(751)), 'azure-pipelines[bot] was not found at line 751'
+    assert 'whitesource-bolt-for-github[bot]' == \
+        author_name(git_people.pop(792)), 'whitesource-bolt-for-github[bot] not found at line 792'
 except AssertionError as msg:
     print(red(msg))
     sys.exit(1)
@@ -150,3 +154,5 @@ if new_authors:
     print()
     for i in sorted(new_authors, key=lambda x: x.lower()):
         print('\t%s' % i)
+else:
+    print(yellow("The AUTHORS file was updated."))

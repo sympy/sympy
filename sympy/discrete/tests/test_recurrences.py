@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import sqrt, Rational, fibonacci
 from sympy.core import S, symbols, I
 from sympy.core.compatibility import range

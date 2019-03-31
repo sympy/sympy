@@ -22,7 +22,7 @@ from re import search
 known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "asin", "acos", "atan", "acot", "asec", "acsc",
                    "sinh", "cosh", "tanh", "coth", "sech", "csch",
-                   "asinh", "acosh", "atanh", "acoth", "asech", "acsch"
+                   "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
                    "sinc", "atan2", "sign", "floor", "log", "exp",
                    "cbrt", "sqrt", "erf", "erfc", "erfi",
                    "factorial", "gamma", "digamma", "trigamma",
@@ -62,6 +62,7 @@ class JuliaCodePrinter(CodePrinter):
         'precision': 17,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
     }
@@ -179,7 +180,7 @@ class JuliaCodePrinter(CodePrinter):
                 r = r + mulsym + a_str[i]
             return r
 
-        if len(b) == 0:
+        if not b:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
             divsym = '/' if b[0].is_number else './'

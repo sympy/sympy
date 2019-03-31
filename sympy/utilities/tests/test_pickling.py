@@ -2,7 +2,6 @@ import sys
 import inspect
 import copy
 import pickle
-import warnings
 
 from sympy.physics.units import meter
 
@@ -26,13 +25,18 @@ from sympy.core.multidimensional import vectorize
 
 from sympy.core.compatibility import HAS_GMPY
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import ignore_warnings
 
 from sympy import symbols, S
 
 from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
 
-excluded_attrs = set(['_assumptions', '_mhash'])
+excluded_attrs = set(
+    ['_assumptions', '_mhash', 'message',
+    # XXX Remove these after deprecation is done for issue #15887
+    '_cache_eigenvects', '_cache_is_diagonalizable']
+    )
 
 
 def check(a, exclude=[], check_attr=True):
@@ -68,14 +72,19 @@ def check(a, exclude=[], check_attr=True):
 
         def c(a, b, d):
             for i in d:
-                if not hasattr(a, i) or i in excluded_attrs:
+                if i in excluded_attrs:
+                    continue
+                if not hasattr(a, i):
                     continue
                 attr = getattr(a, i)
                 if not hasattr(attr, "__call__"):
                     assert hasattr(b, i), i
                     assert getattr(b, i) == attr, "%s != %s, protocol: %s" % (getattr(b, i), attr, protocol)
+
         c(a, b, d1)
         c(b, a, d2)
+
+
 
 #================== core =========================
 
@@ -148,9 +157,9 @@ def test_core_undefinedfunctions():
     f = Function("f")
     # Full XFAILed test below
     exclude = list(range(5))
-    if sys.version_info < (3,):
-        # https://github.com/cloudpipe/cloudpickle/issues/65
-        exclude.append(cloudpickle)
+    # https://github.com/cloudpipe/cloudpickle/issues/65
+    # https://github.com/cloudpipe/cloudpickle/issues/190
+    exclude.append(cloudpickle)
     check(f, exclude=exclude)
 
 @XFAIL
@@ -674,3 +683,7 @@ def test_concrete():
     x = Symbol("x")
     for c in (Product, Product(x, (x, 2, 4)), Sum, Sum(x, (x, 2, 4))):
         check(c)
+
+def test_deprecation_warning():
+    w = SymPyDeprecationWarning('value', 'feature', issue=12345, deprecated_since_version='1.0')
+    check(w)

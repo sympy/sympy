@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import
 
 from sympy.codegen import Assignment
+from sympy.codegen.ast import none
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
 from sympy.core.numbers import pi
-from sympy.codegen.ast import none
-from sympy.external import import_module
-from sympy.logic import And, Or
 from sympy.functions import acos, Piecewise, sign
-from sympy.matrices import SparseMatrix
+from sympy.logic import And, Or
+from sympy.matrices import SparseMatrix, MatrixSymbol
 from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter
 )
@@ -45,6 +44,9 @@ def test_MpmathPrinter():
 def test_NumPyPrinter():
     p = NumPyPrinter()
     assert p.doprint(sign(x)) == 'numpy.sign(x)'
+    A = MatrixSymbol("A", 2, 2)
+    assert p.doprint(A**(-1)) == "numpy.linalg.inv(A)"
+    assert p.doprint(A**5) == "numpy.linalg.matrix_power(A, 5)"
 
 
 def test_SciPyPrinter():
@@ -89,3 +91,8 @@ def test_issue_14283():
 
     assert prntr.doprint(zoo) == "float('nan')"
     assert prntr.doprint(-oo) == "float('-inf')"
+
+def test_NumPyPrinter_print_seq():
+    n = NumPyPrinter()
+
+    assert n._print_seq(range(2)) == '(0, 1,)'

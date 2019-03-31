@@ -11,10 +11,10 @@ complete source code files.
 """
 
 from __future__ import print_function, division
+from sympy.codegen.ast import Assignment
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
-from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
@@ -27,15 +27,18 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
                    "erfc", "erfi", "erf", "erfinv", "erfcinv",
                    "besseli", "besselj", "besselk", "bessely",
-                   "euler", "exp", "factorial", "floor", "fresnelc",
-                   "fresnels", "gamma", "log", "polylog", "sign", "zeta"]
+                   "bernoulli", "beta", "euler", "exp", "factorial", "floor",
+                   "fresnelc", "fresnels", "gamma", "harmonic", "log",
+                   "polylog", "sign", "zeta"]
 
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
 known_fcns_src2 = {
     "Abs": "abs",
-    "arg": "angle",
+    "arg": "angle",  # arg/angle ok in Octave but only angle in Matlab
     "ceiling": "ceil",
+    "chebyshevu": "chebyshevU",
+    "chebyshevt": "chebyshevT",
     "Chi": "coshint",
     "Ci": "cosint",
     "conjugate": "conj",
@@ -43,12 +46,14 @@ known_fcns_src2 = {
     "Heaviside": "heaviside",
     "im": "imag",
     "laguerre": "laguerreL",
+    "LambertW": "lambertw",
     "li": "logint",
     "loggamma": "gammaln",
     "Max": "max",
     "Min": "min",
     "polygamma": "psi",
     "re": "real",
+    "RisingFactorial": "pochhammer",
     "Shi": "sinhint",
     "Si": "sinint",
 }
@@ -192,7 +197,7 @@ class OctaveCodePrinter(CodePrinter):
                 r = r + mulsym + a_str[i]
             return r
 
-        if len(b) == 0:
+        if not b:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
             divsym = '/' if b[0].is_number else './'
@@ -382,8 +387,18 @@ class OctaveCodePrinter(CodePrinter):
         return self._print(expr.label)
 
 
+    def _print_KroneckerDelta(self, expr):
+        prec = PRECEDENCE["Pow"]
+        return "double(%s == %s)" % tuple(self.parenthesize(x, prec)
+                                          for x in expr.args)
+
+
     def _print_Identity(self, expr):
-        return "eye(%s)" % self._print(expr.shape[0])
+        shape = expr.shape
+        if len(shape) == 2 and shape[0] == shape[1]:
+            shape = [shape[0]]
+        s = ", ".join(self._print(n) for n in shape)
+        return "eye(" + s + ")"
 
 
     def _print_uppergamma(self, expr):
@@ -442,10 +457,22 @@ class OctaveCodePrinter(CodePrinter):
         return "airy(3, %s)" % self._print(expr.args[0])
 
 
-    def _print_LambertW(self, expr):
-        # argument order is reversed
-        args = ", ".join([self._print(x) for x in reversed(expr.args)])
-        return "lambertw(" + args + ")"
+    def _print_expint(self, expr):
+        mu, x = expr.args
+        if mu != 1:
+            return self._print_not_supported(expr)
+        return "expint(%s)" % self._print(x)
+
+
+    def _one_or_two_reversed_args(self, expr):
+        assert len(expr.args) <= 2
+        return '{name}({args})'.format(
+            name=self.known_functions[expr.__class__.__name__],
+            args=", ".join([self._print(x) for x in reversed(expr.args)])
+        )
+
+
+    _print_DiracDelta = _print_LambertW = _one_or_two_reversed_args
 
 
     def _nested_binary_math_func(self, expr):

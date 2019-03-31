@@ -13,7 +13,7 @@ from sympy.functions.special.error_functions import _erfs, _eis
 
 from sympy.core.function import ArgumentIndexError
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
@@ -563,6 +563,7 @@ def test_ci():
     assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma
 
 
+@slow
 def test_fresnel():
     assert fresnels(0) == 0
     assert fresnels(oo) == S.Half
@@ -629,19 +630,19 @@ def test_fresnel():
     assert fresnelc(z).series(z, n=15) == \
         z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)
 
-    # issue 6510
-    assert fresnels(z).series(z, S.Infinity) == \
-        (-1/(pi**2*z**3) + O(z**(-6), (z, oo)))*sin(pi*z**2/2) + \
-        (3/(pi**3*z**5) - 1/(pi*z) + O(z**(-6), (z, oo)))*cos(pi*z**2/2) + S.Half
-    assert fresnelc(z).series(z, S.Infinity) == \
-        (-1/(pi**2*z**3) + O(z**(-6), (z, oo)))*cos(pi*z**2/2) + \
-        (-3/(pi**3*z**5) + 1/(pi*z) + O(z**(-6), (z, oo)))*sin(pi*z**2/2) + S.Half
-    assert fresnels(1/z).series(z) == \
-        (-z**3/pi**2 + O(z**6))*sin(pi/(2*z**2)) + (-z/pi + 3*z**5/pi**3 + \
-        O(z**6))*cos(pi/(2*z**2)) + S.Half
-    assert fresnelc(1/z).series(z) == \
-        (-z**3/pi**2 + O(z**6))*cos(pi/(2*z**2)) + (z/pi - 3*z**5/pi**3 + \
-        O(z**6))*sin(pi/(2*z**2)) + S.Half
+    # issues 6510, 10102
+    fs = (S.Half - sin(pi*z**2/2)/(pi**2*z**3)
+        + (-1/(pi*z) + 3/(pi**3*z**5))*cos(pi*z**2/2))
+    fc = (S.Half - cos(pi*z**2/2)/(pi**2*z**3)
+        + (1/(pi*z) - 3/(pi**3*z**5))*sin(pi*z**2/2))
+    assert fresnels(z).series(z, oo) == fs + O(z**(-6), (z, oo))
+    assert fresnelc(z).series(z, oo) == fc + O(z**(-6), (z, oo))
+    assert (fresnels(z).series(z, -oo) + fs.subs(z, -z)).expand().is_Order
+    assert (fresnelc(z).series(z, -oo) + fc.subs(z, -z)).expand().is_Order
+    assert (fresnels(1/z).series(z) - fs.subs(z, 1/z)).expand().is_Order
+    assert (fresnelc(1/z).series(z) - fc.subs(z, 1/z)).expand().is_Order
+    assert ((2*fresnels(3*z)).series(z, oo) - 2*fs.subs(z, 3*z)).expand().is_Order
+    assert ((3*fresnelc(2*z)).series(z, oo) - 3*fc.subs(z, 2*z)).expand().is_Order
 
     assert fresnelc(w).is_real is True
 

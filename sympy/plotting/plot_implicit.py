@@ -79,6 +79,9 @@ class ImplicitSeries(BaseSeries):
         try:
             temp = func(xinterval, yinterval)
         except AttributeError:
+            # XXX: AttributeError("'list' object has no attribute 'is_real'")
+            # That needs fixing somehow - we shouldn't be catching
+            # AttributeError here.
             if self.use_interval_math:
                 warnings.warn("Adaptive meshing could not be applied to the"
                             " expression. Using uniform meshing.")
@@ -200,7 +203,8 @@ class ImplicitSeries(BaseSeries):
 
 
 @doctest_depends_on(modules=('matplotlib',))
-def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
+def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
+                  points=300, line_color="blue", show=True, **kwargs):
     """A plot function to plot implicit equations / inequalities.
 
     Arguments
@@ -217,16 +221,19 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
 
     The following keyword arguments can also be used:
 
-    - ``adaptive``. Boolean. The default value is set to True. It has to be
+    - ``adaptive`` Boolean. The default value is set to True. It has to be
         set to False if you want to use a mesh grid.
 
     - ``depth`` integer. The depth of recursion for adaptive mesh grid.
         Default value is 0. Takes value in the range (0, 4).
 
     - ``points`` integer. The number of points if adaptive mesh grid is not
-        used. Default value is 200.
+        used. Default value is 300.
 
-    - ``title`` string .The title for the plot.
+    - ``show`` Boolean. Default value is True. If set to False, the plot will
+        not be shown. See ``Plot`` for further information.
+
+    - ``title`` string. The title for the plot.
 
     - ``xlabel`` string. The label for the x-axis
 
@@ -236,6 +243,7 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
 
     - ``line_color``: float or string. Specifies the color for the plot.
         See ``Plot`` to see how to set color for the plots.
+        Default value is "Blue"
 
     plot_implicit, by default, uses interval arithmetic to plot functions. If
     the expression cannot be plotted using interval arithmetic, it defaults to
@@ -348,10 +356,6 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
             xyvar.append(undeclared.pop())
     var_start_end_y = _range_tuple(xyvar[1])
 
-    use_interval = kwargs.pop('adaptive', True)
-    nb_of_points = kwargs.pop('points', 300)
-    depth = kwargs.pop('depth', 0)
-    line_color = kwargs.pop('line_color', "blue")
     #Check whether the depth is greater than 4 or less than 0.
     if depth > 4:
         depth = 4
@@ -359,9 +363,8 @@ def plot_implicit(expr, x_var=None, y_var=None, **kwargs):
         depth = 0
 
     series_argument = ImplicitSeries(expr, var_start_end_x, var_start_end_y,
-                                    has_equality, use_interval, depth,
-                                    nb_of_points, line_color)
-    show = kwargs.pop('show', True)
+                                    has_equality, adaptive, depth,
+                                    points, line_color)
 
     #set the x and y limits
     kwargs['xlim'] = tuple(float(x) for x in var_start_end_x[1:])

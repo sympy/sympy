@@ -37,7 +37,6 @@ $ACTIVITIES = [
     'copy_release_files',
     'compare_tar_against_git',
     'test_tarball27',
-    'test_tarball34',
     'test_tarball35',
     'test_tarball36',
     'test_tarball37',
@@ -116,10 +115,6 @@ def copy_release_files():
 @activity(deps={'source_tarball'})
 def test_tarball27():
     test_tarball('2.7')
-
-@activity(deps={'source_tarball'})
-def test_tarball34():
-    test_tarball('3.4')
 
 @activity(deps={'source_tarball'})
 def test_tarball35():
@@ -220,7 +215,7 @@ def _md5(print_=True, local=False):
         print(out)
     return out
 
-@activity(deps={'mailmap_update', 'md5', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball34', 'test_tarball35', 'test_tarball36', 'test_sympy'})
+@activity(deps={'mailmap_update', 'md5', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball35', 'test_tarball36', 'test_sympy'})
 def release():
     pass
 
@@ -254,8 +249,8 @@ def test_tarball(py_version):
     Test that the tarball can be unpacked and installed, and that sympy
     imports in the install.
     """
-    if py_version not in {'2.7', '3.4', '3.5', '3.6', '3.7'}: # TODO: Add win32
-        raise ValueError("release must be one of 2.7, 3.4, 3.5, 3.6, or 3.7 not %s" % py_version)
+    if py_version not in {'2.7', '3.5', '3.6', '3.7'}: # TODO: Add win32
+        raise ValueError("release must be one of 2.7, 3.5, 3.6, or 3.7 not %s" % py_version)
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
@@ -372,7 +367,7 @@ def full_path_split(path):
     """
     Function to do a full split on a path.
     """
-    # Based on http://stackoverflow.com/a/13505966/161801
+    # Based on https://stackoverflow.com/a/13505966/161801
     rest, tail = os.path.split(path)
     if not rest or rest == os.path.sep:
         return (tail,)
@@ -499,7 +494,7 @@ def _GitHub_release(username=None, user='sympy', token=None,
     if not check_tag_exists():
         sys.exit(red("The tag for this version has not been pushed yet. Cannot upload the release."))
 
-    # See http://developer.github.com/v3/repos/releases/#create-a-release
+    # See https://developer.github.com/v3/repos/releases/#create-a-release
     # First, create the release
     post = {}
     post['tag_name'] = tag
@@ -573,7 +568,7 @@ def table():
 
     table = []
 
-    # http://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
+    # https://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
     # recommended as a real way to generate html, but it works better than
     # anything else I've tried.
     @contextmanager
@@ -830,8 +825,8 @@ def check_tag_exists():
 descriptions = OrderedDict([
     ('source', "The SymPy source installer.",),
     ('html', '''Html documentation. This is the same as
-the <a href="http://docs.sympy.org/latest/index.html">online documentation</a>.''',),
-    ('pdf', '''Pdf version of the <a href="http://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
+the <a href="https://docs.sympy.org/latest/index.html">online documentation</a>.''',),
+    ('pdf', '''Pdf version of the <a href="https://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
     ])
 
 def get_location(location):
@@ -1016,6 +1011,7 @@ git_whitelist = {
     'bin/sympy_time_cache.py',
     'bin/test',
     'bin/test_external_imports.py',
+    'bin/test_executable.py',
     'bin/test_import',
     'bin/test_import.py',
     'bin/test_isolated',

@@ -14,17 +14,18 @@ from __future__ import print_function, division
 # __all__ = ['marginal_distribution']
 
 from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
- Dummy, Mul)
+ Dummy)
 from sympy.concrete.summations import Sum, summation
+from sympy.core.compatibility import string_types
+from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
-from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-     ProductDomain, RandomSymbol, random_symbols, SingleDomain)
+from sympy.matrices import ImmutableMatrix
 from sympy.stats.crv import (ContinuousDistribution,
     SingleContinuousDistribution, SingleContinuousPSpace)
 from sympy.stats.drv import (DiscreteDistribution,
     SingleDiscreteDistribution, SingleDiscretePSpace)
-from sympy.matrices import ImmutableMatrix
-from sympy.core.containers import Tuple
+from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
+     ProductDomain, RandomSymbol, random_symbols, SingleDomain)
 from sympy.utilities.misc import filldedent
 
 
@@ -34,11 +35,14 @@ class JointPSpace(ProductPSpace):
     each component and a distribution.
     """
     def __new__(cls, sym, dist):
-        sym = sympify(sym)
         if isinstance(dist, SingleContinuousDistribution):
             return SingleContinuousPSpace(sym, dist)
         if isinstance(dist, SingleDiscreteDistribution):
             return SingleDiscretePSpace(sym, dist)
+        if isinstance(sym, string_types):
+            sym = Symbol(sym)
+        if not isinstance(sym, Symbol):
+            raise TypeError("s should have been string or Symbol")
         return Basic.__new__(cls, sym, dist)
 
     @property
@@ -101,6 +105,25 @@ class JointPSpace(ProductPSpace):
             f = Lambda(sym, summation(self.distribution(all_syms), limits))
         return f.xreplace(replace_dict)
 
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
+        syms = tuple(self.value[i] for i in range(self.component_count))
+        rvs = rvs or syms
+        if not any([i in rvs for i in syms]):
+            return expr
+        expr = expr*self.pdf
+        for rv in rvs:
+            if isinstance(rv, Indexed):
+                expr = expr.xreplace({rv: Indexed(str(rv.base), rv.args[1])})
+            elif isinstance(rv, RandomSymbol):
+                expr = expr.xreplace({rv: rv.symbol})
+        if self.value in random_symbols(expr):
+            raise NotImplementedError(filldedent('''
+            Expectations of expression with unindexed joint random symbols
+            cannot be calculated yet.'''))
+        limits = tuple((Indexed(str(rv.base),rv.args[1]),
+            self.distribution.set.args[rv.args[1]]) for rv in syms)
+        return Integral(expr, *limits)
+
     def where(self, condition):
         raise NotImplementedError()
 
@@ -141,7 +164,7 @@ class JointDistribution(Basic, NamedArgsMixin):
         rvs = other.keys()
         _set = self.domain.set
         expr = self.pdf(tuple(i.args[0] for i in self.symbols))
-        for i in len(other):
+        for i in range(len(other)):
             if rvs[i].is_Continuous:
                 density = Integral(expr, (rvs[i], _set[i].inf,
                     other[rvs[i]]))
@@ -159,8 +182,10 @@ class JointRandomSymbol(RandomSymbol):
     to allow indexing."
     """
     def __getitem__(self, key):
-        from sympy.stats.joint_rv import JointPSpace
         if isinstance(self.pspace, JointPSpace):
+            if self.pspace.component_count <= key:
+                raise ValueError("Index keys for %s can only up to %s." %
+                    (self.name, self.pspace.component_count - 1))
             return Indexed(self, key)
 
 class JointDistributionHandmade(JointDistribution, NamedArgsMixin):
@@ -185,10 +210,12 @@ def marginal_distribution(rv, *indices):
 
     Returns
     =======
+
     A Lambda expression n `sym`.
 
     Examples
     ========
+
     >>> from sympy.stats.crv_types import Normal
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
@@ -255,7 +282,7 @@ class MarginalDistribution(Basic):
     distribution.
     """
 
-    def __new__(cls,dist, rvs):
+    def __new__(cls, dist, rvs):
         if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
             raise ValueError(filldedent('''Marginal distribution can be
              intitialised only in terms of random variables or indexed random

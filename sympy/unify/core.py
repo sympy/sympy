@@ -18,8 +18,8 @@ http://aima.cs.berkeley.edu/python/logic.html
 
 from __future__ import print_function, division
 
-from sympy.utilities.iterables import kbins
 from sympy.core.compatibility import range
+from sympy.utilities.iterables import kbins
 
 class Compound(object):
     """ A little class to represent an interior node in the tree
@@ -78,10 +78,15 @@ class CondVariable(object):
 def unify(x, y, s=None, **fns):
     """ Unify two expressions
 
-    inputs:
+    Parameters
+    ==========
+
         x, y - expression trees containing leaves, Compounds and Variables
         s    - a mapping of variables to subtrees
-    outputs:
+
+    Returns
+    =======
+
         lazy sequence of mappings {Variable: subtree}
 
     Examples
@@ -176,6 +181,9 @@ def allcombinations(A, B, ordered):
     A and B can be rearranged so that the larger of the two lists is
     reorganized into smaller sublists.
 
+    Examples
+    ========
+
     >>> from sympy.unify.core import allcombinations
     >>> for x in allcombinations((1, 2, 3), (5, 6), 'associative'): print(x)
     (((1,), (2, 3)), ((5,), (6,)))
@@ -210,6 +218,9 @@ def allcombinations(A, B, ordered):
 def partition(it, part):
     """ Partition a tuple/list into pieces defined by indices
 
+    Examples
+    ========
+
     >>> from sympy.unify.core import partition
     >>> partition((10, 20, 30, 40), [[0, 1, 2], [3]])
     ((10, 20, 30), (40,))
@@ -218,6 +229,9 @@ def partition(it, part):
 
 def index(it, ind):
     """ Fancy indexing into an indexable iterable (tuple, list)
+
+    Examples
+    ========
 
     >>> from sympy.unify.core import index
     >>> index([10, 20, 30], (1, 2, 0))

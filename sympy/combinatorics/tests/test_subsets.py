@@ -1,4 +1,5 @@
-from sympy.combinatorics import Subset
+from sympy.combinatorics.subsets import Subset, ksubsets
+from sympy.utilities.pytest import raises
 
 
 def test_subset():
@@ -13,6 +14,8 @@ def test_subset():
     assert a.rank_lexicographic == 14
     assert a.rank_gray == 2
     assert a.cardinality == 16
+    assert a.size == 2
+    assert Subset.bitlist_from_subset(a, ['a', 'b', 'c', 'd']) == '0011'
 
     a = Subset([2, 5, 7], [1, 2, 3, 4, 5, 6, 7])
     assert a.next_binary() == Subset([2, 5, 6], [1, 2, 3, 4, 5, 6, 7])
@@ -46,3 +49,13 @@ def test_subset():
         a = a.prev_lexicographic()
         i = i + 1
     assert i == 16
+
+    raises(ValueError, lambda: Subset(['a', 'b'], ['a']))
+    raises(ValueError, lambda: Subset(['a'], ['b', 'c']))
+    raises(ValueError, lambda: Subset.subset_from_bitlist(['a', 'b'], '010'))
+
+
+def test_ksubsets():
+    assert list(ksubsets([1, 2, 3], 2)) == [(1, 2), (1, 3), (2, 3)]
+    assert list(ksubsets([1, 2, 3, 4, 5], 2)) == [(1, 2), (1, 3), (1, 4),
+               (1, 5), (2, 3), (2, 4), (2, 5), (3, 4), (3, 5), (4, 5)]

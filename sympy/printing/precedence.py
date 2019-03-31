@@ -38,9 +38,12 @@ PRECEDENCE_VALUES = {
     "Function" : PRECEDENCE["Func"],
     "NegativeInfinity": PRECEDENCE["Add"],
     "MatAdd": PRECEDENCE["Add"],
-    "MatMul": PRECEDENCE["Mul"],
     "MatPow": PRECEDENCE["Pow"],
+    "TensAdd": PRECEDENCE["Add"],
+    # As soon as `TensMul` is a subclass of `Mul`, remove this:
+    "TensMul": PRECEDENCE["Mul"],
     "HadamardProduct": PRECEDENCE["Mul"],
+    "HadamardPower": PRECEDENCE["Pow"],
     "KroneckerProduct": PRECEDENCE["Mul"],
     "Equality": PRECEDENCE["Mul"],
     "Unequality": PRECEDENCE["Mul"],
@@ -143,7 +146,8 @@ def precedence_traditional(item):
 
     if isinstance(item, (Integral, Sum, Product, Limit, Derivative, TensorProduct)):
         return PRECEDENCE["Mul"]
-    if (item.__class__.__name__ in ("Dot", "Cross", "Gradient", "Divergence", "Curl")):
+    if (item.__class__.__name__ in ("Dot", "Cross", "Gradient", "Divergence",
+                                    "Curl", "Laplacian")):
         return PRECEDENCE["Mul"]-1
     elif isinstance(item, UnevaluatedExpr):
         return precedence_traditional(item.args[0])

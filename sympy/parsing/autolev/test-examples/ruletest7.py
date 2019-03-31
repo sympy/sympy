@@ -19,8 +19,8 @@ fm = sm.Matrix([i.collect(x)for i in sm.Matrix([e1,e2]).reshape(1, 2)]).reshape(
 f = (e1).collect(y)
 g = (e1).subs({x:2*x})
 gm = sm.Matrix([i.subs({x:3}) for i in sm.Matrix([e1,e2]).reshape(2, 1)]).reshape((sm.Matrix([e1,e2]).reshape(2, 1)).shape[0], (sm.Matrix([e1,e2]).reshape(2, 1)).shape[1])
-frame_a=me.ReferenceFrame('a')
-frame_b=me.ReferenceFrame('b')
+frame_a = me.ReferenceFrame('a')
+frame_b = me.ReferenceFrame('b')
 theta = me.dynamicsymbols('theta')
 frame_b.orient(frame_a, 'Axis', [theta, frame_a.z])
 v1=2*frame_a.x-3*frame_a.y+frame_a.z

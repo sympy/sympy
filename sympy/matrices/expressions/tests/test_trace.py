@@ -43,6 +43,7 @@ def test_Trace():
 
     assert str(trace(A)) == str(Trace(A).doit())
 
+    assert Trace(A).is_commutative is True
 
 def test_Trace_A_plus_B():
     assert trace(A + B) == Trace(A) + Trace(B)
@@ -90,6 +91,5 @@ def test_trace_constant_factor():
     assert trace(MatMul(2, X)) == 10
 
 
-@XFAIL
 def test_rewrite():
     assert isinstance(trace(A).rewrite(Sum), Sum)

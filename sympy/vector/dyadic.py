@@ -13,7 +13,7 @@ class Dyadic(BasisDependent):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Dyadic_tensor
+    .. [1] https://en.wikipedia.org/wiki/Dyadic_tensor
     .. [2] Kane, T., Levinson, D. Dynamics Theory and Applications. 1985
            McGraw-Hill
 

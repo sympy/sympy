@@ -25,7 +25,7 @@ class Contains(BooleanFunction):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Element_%28mathematics%29
+    .. [1] https://en.wikipedia.org/wiki/Element_%28mathematics%29
     """
     @classmethod
     def eval(cls, x, s):
