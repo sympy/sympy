@@ -54,4 +54,8 @@ def test_AssocOp_flatten():
     class MyAssoc(AssocOp):
         identity = S(1)
 
-    assert MyAssoc(a, b, c).args == (a, b, c)
+    assert MyAssoc(a, MyAssoc(b, c)).args == \
+        MyAssoc(MyAssoc(a, b), c).args == \
+        MyAssoc(MyAssoc(a, b, c)).args == \
+        MyAssoc(a, b, c).args == \
+        (a, b, c)
