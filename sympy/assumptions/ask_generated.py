@@ -7,9 +7,7 @@ Instead, run ./bin/ask_update.py.
 """
 
 from sympy.core.cache import cacheit
-# Both Not and Or must be imported although they are not used
-# They must be imported in exactly this order or tests will fail
-from sympy.logic.boolalg import And, Not, Or
+from sympy.logic.boolalg import And
 from sympy.assumptions.ask import Q
 
 # -{ Known facts in Conjunctive Normal Form }-
