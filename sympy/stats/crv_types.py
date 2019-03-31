@@ -1447,8 +1447,8 @@ class GumbelDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         beta, mu = self.beta, self.mu
-        z = (x-mu)/beta
-        return (1/beta)*exp(-(z+exp(-z)))
+        z = (x - mu)/beta
+        return (1/beta)*exp(-(z + exp(-z)))
 
     def _cdf(self, x):
         beta, mu = self.beta, self.mu
