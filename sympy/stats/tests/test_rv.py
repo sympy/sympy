@@ -232,7 +232,7 @@ def test_issue_8129():
 def test_issue_12237():
     X = Normal('X', 0, 1)
     Y = Normal('Y', 0, 1)
-    Y = P(X > 0, X)
-    Z = P(Y < 0, X)
-    assert Y == Probability(X > 0, X)
-    assert Z == 1/2
+    U = P(X > 0, X)
+    V = P(Y < 0, X)
+    assert U == Probability(X > 0, X)
+    assert V == 1/2
