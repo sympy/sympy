@@ -16,6 +16,7 @@ from sympy.plotting import plot
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy import lambdify
+from sympy.core.compatibility import iterable
 
 matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
 numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
@@ -1683,9 +1684,9 @@ class Beam3D(Beam):
         >>> b.polar_moment()
         24
         """
-        if not hasattr(self.second_moment, '__iter__'):
+        if not iterable(self.second_moment):
             return 2*self.second_moment
-        return self.second_moment[0] + self.second_moment[1]
+        return sum(self.second_moment)
 
     def apply_load(self, value, start, order, dir="y"):
         """
