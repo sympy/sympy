@@ -11,10 +11,6 @@ from sympy.stats.rv import RandomSymbol, probability, expectation
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
 
-# the following line is added for avoiding
-# repetiion of the code in this file
- _eval_rewrite_as_Integral = _eval_rewrite_as_Sum
-
 class Probability(Expr):
     """
     Symbolic expression for the probability.
@@ -51,6 +47,8 @@ class Probability(Expr):
 
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
         return probability(arg, condition, evaluate=False)
+
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -163,6 +161,8 @@ class Expectation(Expr):
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
         return expectation(arg, condition=condition, evaluate=False)
 
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
+
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
 
@@ -269,6 +269,8 @@ class Variance(Expr):
 
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
         return variance(self.args[0], self._condition, evaluate=False)
+
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -399,6 +401,8 @@ class Covariance(Expr):
 
     def _eval_rewrite_as_Integral(self, arg1, arg2, condition=None, **kwargs):
         return covariance(self.args[0], self.args[1], self._condition, evaluate=False)
+
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
