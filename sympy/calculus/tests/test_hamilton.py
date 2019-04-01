@@ -14,6 +14,34 @@ def test_hamilton_error1():
     raises(TypeError, lambda: hamilton(h2, x(t), p(t), t))
 
 
+def test_hamilton_error2():
+    x = Function('x')
+    p = Function('p')
+    t = Symbol('t')
+    h = x(t) ** 2 / 2 + p(t) ** 2 / 2
+    # Giving function instead of symbol as time
+    raises(TypeError, lambda: hamilton(h, [x(t)], [p(t)], x(t)))
+
+
+def test_hamilton_error3():
+    x = Function('x')
+    p = Function('p')
+    k = Symbol('k')
+    t = Symbol('t')
+    h = x(k) ** 2 / 2 + p(k) ** 2 / 2
+    # Giving function instead of symbol as time
+    raises(ValueError, lambda: hamilton(h, [x(k)], [p(k)], t))
+
+
+def test_hamilton_error4():
+    x = Symbol('x')
+    p = Symbol('p')
+    t = Symbol('t')
+    h1 = x ** 2 / 2 + p ** 2 / 2
+    # Giving symbol instead of function as the Hamiltonian
+    raises(TypeError, lambda: hamilton(h1, [x], [p], t))
+
+
 def test_hamilton_shm1():
     # Test by solving for SHM in 1-Dimension
     x = Function('x')
