@@ -443,13 +443,8 @@ def test_gumbel():
     mu = Symbol("mu")
     x = Symbol("x")
     X = Gumbel("x", beta, mu)
-<<<<<<< HEAD
     assert density(X)(x) == exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
     assert cdf(X)(x) == exp(-exp((mu - x)/beta))
-=======
-    assert simplify(density(X)(x)) == exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
-    assert simplify(cdf(X)(x)) == exp(-exp((mu - x)/beta))
->>>>>>> 6ed7957737496f4a87f39136c6d79c3088522266
 
 
 def test_kumaraswamy():
