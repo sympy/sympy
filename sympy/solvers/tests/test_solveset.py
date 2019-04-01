@@ -593,9 +593,13 @@ def test_solve_abs():
             ImageSet(Lambda(n, n*pi - (-1)**(-n)*pi/2), S.Integers)))
 
 
-
 def test_issue_9565():
-    assert solveset_real(Abs((x - 1)/(x - 5)) <= S(1)/3, x) == Interval(-1, 2)
+    # Result below was succeeding because
+    #   Eq((x - 1)/Abs(x - 5) + zoo, 0) with real x simplified to False
+    # However that isn't valid given that x=5 turns that into Eq(zoo+zoo, 0)
+    #assert solveset_real(Abs((x - 1)/(x - 5)) <= S(1)/3, x) == Interval(-1, 2)
+    assert solveset_real(Abs((x - 1)/(x - 5)) <= S(1)/3, x) ==\
+            ConditionSet(x, Abs(x - 1)/Abs(x - 5) <= S(1)/3, S.Reals)
 
 
 def test_issue_10069():
