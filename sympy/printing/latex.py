@@ -18,8 +18,7 @@ from sympy.logic.boolalg import true
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer
 from sympy.printing.conventions import split_super_sub, requires_partial
-from sympy.printing.precedence import (
-    precedence, PRECEDENCE, PRECEDENCE_VALUES)
+from sympy.printing.precedence import precedence, PRECEDENCE
 
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
@@ -1560,7 +1559,7 @@ class LatexPrinter(Printer):
 
     def _print_HadamardProduct(self, expr):
         args = expr.args
-        prec = PRECEDENCE_VALUES['HadamardProduct']
+        prec = PRECEDENCE['Pow']
         parens = self.parenthesize
 
         return r' \circ '.join(
@@ -1568,7 +1567,7 @@ class LatexPrinter(Printer):
 
     def _print_HadamardPower(self, expr):
         base, exp = expr.base, expr.exp
-        prec = PRECEDENCE_VALUES['HadamardPower']
+        prec = PRECEDENCE['Pow']
         parens = self.parenthesize
 
         def parens_exp(exp, prec, strict=True):
@@ -1583,7 +1582,7 @@ class LatexPrinter(Printer):
 
     def _print_KroneckerProduct(self, expr):
         args = expr.args
-        prec = PRECEDENCE_VALUES['KroneckerProduct']
+        prec = PRECEDENCE['Pow']
         parens = self.parenthesize
 
         return r' \otimes '.join(
@@ -1591,7 +1590,7 @@ class LatexPrinter(Printer):
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
-        prec = PRECEDENCE_VALUES['MatPow']
+        prec = PRECEDENCE['Pow']
         parens = self.parenthesize
 
         def parens_exp(exp, prec, strict=True):
