@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
                    Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
                    series, factorial, And)
+
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.stats.crv import reduce_rational_inequalities_wrap
