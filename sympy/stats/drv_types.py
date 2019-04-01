@@ -1,10 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta, hyper, binomial,
-                   Piecewise, floor, pi, O)
-from sympy.stats.rv import _value_check, RandomSymbol
-from sympy.stats.joint_rv_types import JointRV
-from sympy.stats.joint_rv import MarginalDistribution, JointPSpace, CompoundDistribution
+                   Piecewise)
 from sympy.stats import density
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
@@ -45,7 +42,6 @@ class GeometricDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         p = self.p
         return p * exp(t) / (1 - (1 - p) * exp(t))
-
 
 def Geometric(name, p):
     r"""

@@ -137,7 +137,6 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
                 return mgf
         return self.compute_moment_generating_function(**kwargs)(t)
 
-
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
         # TODO: support discrete sets with non integer stepsizes

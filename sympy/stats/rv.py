@@ -921,7 +921,6 @@ def moment_generating_function(expr, condition=None, evaluate=True, **kwargs):
     else:
         return result
 
-
 def where(condition, given_condition=None, **kwargs):
     """
     Returns the domain where a condition is True.

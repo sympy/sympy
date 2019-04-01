@@ -12,14 +12,12 @@ from __future__ import print_function, division
 from itertools import product
 
 from sympy import (Basic, Symbol, cacheit, sympify, Mul,
-        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, log)
+        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy)
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
         sumsets, rv_subs, NamedArgsMixin)
 from sympy.core.containers import Dict
-from sympy.core.relational import Relational
-from sympy.logic.boolalg import Boolean
 import random
 
 class FiniteDensity(dict):
