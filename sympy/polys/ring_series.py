@@ -1268,6 +1268,21 @@ def rs_asin(p, x, prec):
     else:
         raise NotImplementedError
 
+def rs_acos(p,x,prec):
+    if rs_is_puiseux(p, x):
+        return rs_puiseux(rs_asin, p, x, prec)
+    if _has_constant_term(p, x):
+        raise NotImplementedError("Polynomial must not have constant term in "
+                                  "series variables")
+    R = p.ring
+    if x in R.gens:
+        dp = rs_diff(p, x)
+        p1 = 1 - rs_square(p, x, prec - 1)
+        p1 = rs_nth_root(p1, -2, x, prec - 1)
+        p1 = rs_mul(dp, p1, x, prec - 1)
+        p1 = p1*(-1)
+        return rs_integrate(p1, x)
+
 def _tan1(p, x, prec):
     r"""
     Helper function of `rs\_tan`.
