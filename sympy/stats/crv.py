@@ -12,8 +12,7 @@ from __future__ import print_function, division
 
 from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial, log,
-        simplify)
+        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
@@ -269,7 +268,6 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
                 return None
         return self.compute_moment_generating_function(**kwargs)(t)
 
-
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
         if evaluate:
@@ -515,7 +513,6 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         fx = self.compute_density(self.value)
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
         return Lambda(y, fy)
-
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:

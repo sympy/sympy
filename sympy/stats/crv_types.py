@@ -48,7 +48,7 @@ from __future__ import print_function, division
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfi, I, hyper, uppergamma,
-                   sinh, Ne, expint, digamma, EulerGamma, harmonic, E)
+                   sinh, Ne, expint)
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, exp, besseli, besselj, besselk
@@ -978,6 +978,7 @@ def Exponential(name, rate):
 #-------------------------------------------------------------------------------
 # F distribution ---------------------------------------------------------------
 
+
 class FDistributionDistribution(SingleContinuousDistribution):
     _argnames = ('d1', 'd2')
 
@@ -991,7 +992,6 @@ class FDistributionDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the '
                                   'F-distribution does not exist.')
-
 
 def FDistribution(name, d1, d2):
     r"""

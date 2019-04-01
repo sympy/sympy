@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
         DiracDelta, Lambda, log, pi)
-from sympy.stats import (Die, Normal, Geometric, Exponential, FiniteRV, P, E, H, variance, covariance,
+from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
