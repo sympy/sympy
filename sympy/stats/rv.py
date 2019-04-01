@@ -921,49 +921,6 @@ def moment_generating_function(expr, condition=None, evaluate=True, **kwargs):
     else:
         return result
 
-def entropy(expr, condition=None, evaluate=True, **kwargs):
-    """
-    Calculuates entropy of a probability distribution
-
-    Parameters
-    ==========
-
-    expr : the distribution whose entropy is to be calculated
-    condition : optional, to specify conditions on entropy
-
-    Retruns
-    =======
-
-    result : A constant
-
-    Examples
-    ========
-
-    >>> from sympy.stats import Normal, Die, entropy
-    >>> X = Normal('X', 0, 1)
-    >>> entropy(X)
-    log(2*E*pi)/2
-
-    >>> D = Die('D', 4)
-    >>> entropy(D)
-    log(4)
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Entropy_(information_theory)
-    .. [2] https://www.crmarsh.com/static/pdf/Charles_Marsh_Continuous_Entropy.pdf
-    .. [3] http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
-    """
-    if condition is not None:
-        return entropy(given(expr, condition, **kwargs), **kwargs)
-
-    result = pspace(expr).compute_entropy(expr, **kwargs)
-
-    if evaluate and hasattr(result, 'doit'):
-        return result.doit()
-    else:
-        return result
 
 def where(condition, given_condition=None, **kwargs):
     """

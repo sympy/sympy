@@ -13,7 +13,7 @@ from __future__ import print_function, division
 from sympy import (Interval, Intersection, symbols, sympify, Dummy,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial, log,
-        simplify)
+        simplify, DiracDelta)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
@@ -267,19 +267,6 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
                 return None
         return self.compute_moment_generating_function(**kwargs)(t)
 
-    def _entropy(self):
-        return None
-
-    def entropy(self, **kwargs):
-        """ Entropy """
-        if len(kwargs) == 0:
-            try:
-                h = self._entropy()
-                if h is not None:
-                    return h
-            except NotImplementedError:
-                return None
-        return self.compute_entropy(**kwargs)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
@@ -527,11 +514,6 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
         return Lambda(y, fy)
 
-    def compute_entropy(self, expr, **kwargs):
-        # Definition - http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
-        if expr == self.value:
-            return self.distribution.entropy(**kwargs)
-        return ContinuousPSpace.compute_expectation(self, -log(expr), **kwargs)
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:

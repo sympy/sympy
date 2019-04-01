@@ -2,8 +2,8 @@ from __future__ import print_function, division
 
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
         characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
-        sampling_density, moment_generating_function, entropy)
-from sympy import sqrt
+        sampling_density, moment_generating_function)
+from sympy import sqrt, log, Piecewise, Symbol, Eq, Lambda
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'covariance',
@@ -78,6 +78,50 @@ def standard_deviation(X, condition=None, **kwargs):
     return sqrt(variance(X, condition, **kwargs))
 std = standard_deviation
 
+def entropy(expr, condition=None, **kwargs):
+    """
+    Calculuates entropy of a probability distribution
+
+    Parameters
+    ==========
+
+    expression : the random expression whose entropy is to be calculated
+    condition : optional, to specify conditions on random expression
+
+    Retruns
+    =======
+
+    result : A constant
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Normal, Die, entropy
+    >>> X = Normal('X', 0, 1)
+    >>> entropy(X)
+    log(2*E*pi)/2
+
+    >>> D = Die('D', 4)
+    >>> entropy(D)
+    log(4)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Entropy_(information_theory)
+    .. [2] https://www.crmarsh.com/static/pdf/Charles_Marsh_Continuous_Entropy.pdf
+    .. [3] http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
+    """
+    """
+    Z = random_symbols(expr)
+    if len(Z) > 1:
+        raise NotImplementedError("Entropy for random expressions "
+        "containing more than one random variable isn't implemented yet.")
+    """
+    pdf = density(expr, condition, **kwargs)
+    if isinstance(pdf, dict):
+            return sum([-prob*log(prob) for prob in pdf.values()]) 
+    return expectation(-log(pdf(expr)))
 
 def covariance(X, Y, condition=None, **kwargs):
     """

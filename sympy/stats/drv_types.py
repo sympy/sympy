@@ -46,8 +46,6 @@ class GeometricDistribution(SingleDiscreteDistribution):
         p = self.p
         return p * exp(t) / (1 - (1 - p) * exp(t))
 
-    def _entropy(self):
-        return -(self.p * log(self.p) + (1 - self.p) * log(1 - self.p))/self.p
 
 def Geometric(name, p):
     r"""

@@ -137,21 +137,6 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
                 return mgf
         return self.compute_moment_generating_function(**kwargs)(t)
 
-    def compute_entropy(self, **kwargs):
-        x = symbols('x', real = True, cls = Dummy)
-        pdf = self.pdf(x)
-        h = summation(-pdf * log(pdf), (x, self.set.inf, self.set.sup))
-        return h
-
-    def _entropy(self, t):
-        return None
-
-    def entropy(self, **kwargs):
-        if not kwargs:
-            h = self._entropy()
-            if h is not None:
-                return h
-        return self.compute_entropy(**kwargs)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
@@ -351,11 +336,5 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
         if expr == self.value:
             t = symbols("t", real=True, cls=Dummy)
             return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))
-        else:
-            raise NotImplementedError()
-
-    def compute_entropy(self, expr, **kwargs):
-        if expr == self.value:
-            return self.distribution.entropy(**kwargs)
         else:
             raise NotImplementedError()

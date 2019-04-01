@@ -108,13 +108,10 @@ def test_E():
     assert E(5) == 5
 
 def test_H():
-    p = symbols('p')
-    L = Geometric('L', p)
     X = Normal('X', 0, 1)
     D = Die('D', sides = 4)
-    assert H(X, X > 0) == -log(2)/2 + 1/2 + log(pi)/2
-    assert simplify(H(L) - (-p*log(p) - (-p + 1)*log(-p + 1))/p) == 0
-    assert H(D > 2) == log(4)/2
+    assert simplify(H(X, X > 0)) == -log(2)/2 + 1/2 + log(pi)/2
+    assert simplify(H(D, D > 2)) == log(2)
 
 def test_Sample():
     X = Die('X', 6)

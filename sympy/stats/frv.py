@@ -310,12 +310,6 @@ class FinitePSpace(PSpace):
         return sum([expr.xreplace(dict(elem)) * self.prob_of(elem)
                 for elem in self.domain])
 
-    def compute_entropy(self, expr):
-        if isinstance(expr, (Relational, Boolean)):
-            domain = self.where(expr)
-        else:
-            domain = self.domain
-        return sum([-self.prob_of(elem)*log(self.prob_of(elem)) for elem in domain])
 
     def probability(self, condition):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
