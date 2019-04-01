@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 from sympy.ntheory import primefactors
+from sympy import S
 from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
                                                 free_group)
 from sympy.combinatorics.rewritingsystem import RewritingSystem
@@ -379,6 +380,9 @@ class FpGroup(DefaultPrinting):
         False
 
         """
+        if self.order() == S.Infinity:
+            raise NotImplementedError("Check for cyclic group is not implemented"
+                                                       "for infinite order group")
         if len(self.generators) == 1:
             return True
         if not self.is_abelian:
@@ -416,7 +420,6 @@ class FpGroup(DefaultPrinting):
         '''
         from sympy.combinatorics import Permutation, PermutationGroup
         from sympy.combinatorics.homomorphisms import homomorphism
-        from sympy import S
         if self.order() == S.Infinity:
             raise NotImplementedError("Permutation presentation of infinite "
                                                   "groups is not implemented")
