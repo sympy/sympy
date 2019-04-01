@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Number
-from sympy.core import Mul, Basic, sympify, Add
+from sympy.core import Mul, Basic, sympify
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
 from sympy.matrices.expressions.transpose import transpose
@@ -12,7 +12,7 @@ from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.matrices import MatrixBase
 
-
+# XXX: MatMul should perhaps not subclass directly from Mul
 class MatMul(MatrixExpr, Mul):
     """
     A product of matrix expressions

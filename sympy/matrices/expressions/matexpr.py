@@ -5,8 +5,8 @@ import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq, Mul, Add
 from sympy.core.decorators import call_highest_priority
-from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key
-from sympy.core.sympify import SympifyError, sympify
+from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key, string_types
+from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices import ShapeError
@@ -20,7 +20,7 @@ def _sympifyit(arg, retval=None):
         @wraps(func)
         def __sympifyit_wrapper(a, b):
             try:
-                b = sympify(b, strict=True)
+                b = _sympify(b)
                 return func(a, b)
             except SympifyError:
                 return retval
@@ -71,7 +71,7 @@ class MatrixExpr(Expr):
     is_symbol = False
 
     def __new__(cls, *args, **kwargs):
-        args = map(sympify, args)
+        args = map(_sympify, args)
         return Basic.__new__(cls, *args, **kwargs)
 
     # The following is adapted from the core Expr object
@@ -265,7 +265,7 @@ class MatrixExpr(Expr):
             if isinstance(i, slice) or isinstance(j, slice):
                 from sympy.matrices.expressions.slice import MatrixSlice
                 return MatrixSlice(self, i, j)
-            i, j = sympify(i), sympify(j)
+            i, j = _sympify(i), _sympify(j)
             if self.valid_index(i, j) != False:
                 return self._entry(i, j)
             else:
@@ -278,7 +278,7 @@ class MatrixExpr(Expr):
                 raise IndexError(filldedent('''
                     Single indexing is only supported when the number
                     of columns is known.'''))
-            key = sympify(key)
+            key = _sympify(key)
             i = key // cols
             j = key % cols
             if self.valid_index(i, j) != False:
@@ -640,12 +640,14 @@ class MatrixElement(Expr):
     is_commutative = True
 
     def __new__(cls, name, n, m):
-        n, m = map(sympify, (n, m))
+        n, m = map(_sympify, (n, m))
         from sympy import MatrixBase
         if isinstance(name, (MatrixBase,)):
             if n.is_Integer and m.is_Integer:
                 return name[n, m]
-        name = sympify(name)
+        if isinstance(name, string_types):
+            name = Symbol(name)
+        name = _sympify(name)
         obj = Expr.__new__(cls, name, n, m)
         return obj
 
@@ -710,7 +712,9 @@ class MatrixSymbol(MatrixExpr):
     _diff_wrt = True
 
     def __new__(cls, name, n, m):
-        n, m = sympify(n), sympify(m)
+        n, m = _sympify(n), _sympify(m)
+        if isinstance(name, string_types):
+            name = Symbol(name)
         obj = Basic.__new__(cls, name, n, m)
         return obj
 
@@ -723,7 +727,7 @@ class MatrixSymbol(MatrixExpr):
 
     @property
     def name(self):
-        return self.args[0]
+        return self.args[0].name
 
     def _eval_subs(self, old, new):
         # only do substitutions in shape
@@ -783,7 +787,7 @@ class Identity(MatrixExpr):
     is_Identity = True
 
     def __new__(cls, n):
-        return super(Identity, cls).__new__(cls, sympify(n))
+        return super(Identity, cls).__new__(cls, _sympify(n))
 
     @property
     def rows(self):
