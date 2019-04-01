@@ -36,7 +36,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
 from sympy.physics.quantum import Commutator, Operator
-from sympy.physics.units import degree, radian, kg, meter
+from sympy.physics.units import degree, radian, kg, meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
 from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Cycle, Permutation
@@ -2175,3 +2175,9 @@ def test_DiffGeomMethods():
     s_field = g(R2.x, R2.y)
     assert latex(Differential(s_field)) == \
         r'\operatorname{d}\left(g{\left(\mathbf{x},\mathbf{y} \right)}\right)'
+
+
+def test_unit_ptinting():
+    assert latex(5*meter) == r'5 \text{m}'
+    assert latex(3*gibibyte) == r'3 \text{gibibyte}'
+    assert latex(4*microgram/second) == r'\frac{4 \mu\text{g}}{\text{s}}'
