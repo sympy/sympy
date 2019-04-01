@@ -1440,7 +1440,12 @@ class GumbelDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         beta, mu = self.beta, self.mu
-        return (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
+        z = (x - mu)/beta
+        return (1/beta)*exp(-(z + exp(-z)))
+
+    def _cdf(self, x):
+        beta, mu = self.beta, self.mu
+        return exp(-exp((mu - x)/beta))
 
     def _characteristic_function(self, t):
         return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
@@ -1455,9 +1460,10 @@ def Gumbel(name, beta, mu):
     The density of the Gumbel distribution is given by
 
     .. math::
-        f(x) := \exp \left( -exp \left( x + \exp \left( -x \right) \right) \right)
+        f(x) := \dfrac{1}{\beta} \exp \left( -\dfrac{x-\mu}{\beta}
+                - \exp \left( -\dfrac{x - \mu}{\beta} \right) \right)
 
-    with ::math 'x \in [ - \inf, \inf ]'.
+    with :math:`x \in [ - \infty, \infty ]`.
 
     Parameters
     ==========
@@ -1472,14 +1478,16 @@ def Gumbel(name, beta, mu):
 
     Examples
     ==========
-    >>> from sympy.stats import Gumbel, density, E, variance
+    >>> from sympy.stats import Gumbel, density, E, variance, cdf
     >>> from sympy import Symbol, simplify, pprint
     >>> x = Symbol("x")
     >>> mu = Symbol("mu")
     >>> beta = Symbol("beta", positive=True)
     >>> X = Gumbel("x", beta, mu)
     >>> density(X)(x)
-    exp(exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
+    exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
+    >>> cdf(X)(x)
+    exp(-exp((mu - x)/beta))
 
     References
     ==========
