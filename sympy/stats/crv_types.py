@@ -1498,7 +1498,6 @@ def Gumbel(name, beta, mu):
     """
     return rv(name, GumbelDistribution, (beta, mu))
 
-
 #-------------------------------------------------------------------------------
 # Gompertz distribution --------------------------------------------------------
 
