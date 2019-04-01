@@ -53,7 +53,7 @@ from sympy.core.compatibility import as_int, range, string_types
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from mpmath.libmp.libintmath import giant_steps
 import math
-
+import mpmath as mp
 
 def _invert_monoms(p1):
     """
@@ -1281,7 +1281,7 @@ def rs_acos(p,x,prec):
         p1 = rs_nth_root(p1, -2, x, prec - 1)
         p1 = rs_mul(dp, p1, x, prec - 1)
         p1 = p1*(-1)
-        return rs_integrate(p1, x)
+        return rs_integrate(p1, x) + mp.pi/2
 
 def _tan1(p, x, prec):
     r"""

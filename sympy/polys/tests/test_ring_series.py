@@ -3,7 +3,7 @@ from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
-    rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
+    rs_compose_add, rs_asin, rs_acos, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
     rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
     rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
 from sympy.utilities.pytest import raises
@@ -12,8 +12,8 @@ from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, atan, asin, atanh,
     tanh, log, sqrt)
 from sympy.core.numbers import Rational
-from sympy.core import expand, S
-
+from sympy.core import expand, S, evalf
+import mpmath as mp
 def is_close(a, b):
     tol = 10**(-10)
     assert abs(a - b) < tol
@@ -278,6 +278,10 @@ def test_asin():
         x**3/6 + x*y + x
     assert rs_asin(x*y + x**2*y**3, x, 6) == x**5*y**7/2 + 3*x**5*y**5/40 + \
         x**4*y**5/2 + x**3*y**3/6 + x**2*y**3 + x*y
+
+def test_acos():
+    R, x = ring('x', QQ)
+    assert rs_acos(x**2,x,2) == mp.pi/2 - x**2 - x**6/6 
 
 def test_tan():
     R, x, y = ring('x, y', QQ)
