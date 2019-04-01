@@ -1567,18 +1567,14 @@ class LatexPrinter(Printer):
 
     def _print_HadamardPower(self, expr):
         base, exp = expr.base, expr.exp
-        prec = PRECEDENCE['Pow']
-        parens = self.parenthesize
-
-        def parens_exp(exp, prec, strict=True):
-            if exp.is_Integer:
-                return self._print(exp)
-            else:
-                return parens(exp, prec, strict=strict)
-
-        return r'{}^{{\circ {{{}}}}}'.format(
-            parens(base, prec, strict=False),
-            parens_exp(exp, prec, strict=False))
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(base, MatrixSymbol):
+            return r'{}^{{\circ {{{}}}}}'.format(
+                r"\left({}\right)".format(self._print(base)),
+                self._print(exp))
+        else:
+            return r'{}^{{\circ {{{}}}}}'.format(
+                self._print(base), self._print(exp))
 
     def _print_KroneckerProduct(self, expr):
         args = expr.args
@@ -1590,18 +1586,12 @@ class LatexPrinter(Printer):
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
-        prec = PRECEDENCE['Pow']
-        parens = self.parenthesize
-
-        def parens_exp(exp, prec, strict=True):
-            if exp.is_Integer:
-                return self._print(exp)
-            else:
-                return parens(exp, prec, strict=strict)
-
-        return "%s^{%s}" % (
-            parens(base, prec, strict=False),
-            parens_exp(exp, prec, strict=False))
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(base, MatrixSymbol):
+            return "\\left(%s\\right)^{%s}" % (self._print(base),
+                                              self._print(exp))
+        else:
+            return "%s^{%s}" % (self._print(base), self._print(exp))
 
     def _print_ZeroMatrix(self, Z):
         return r"\mathbb{0}"
