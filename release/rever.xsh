@@ -33,6 +33,7 @@ $ACTIVITIES = [
     'mailmap_update',
     'test_sympy',
     'source_tarball',
+    'wheel',
     'build_docs',
     'copy_release_files',
     'compare_tar_against_git',
@@ -41,6 +42,11 @@ $ACTIVITIES = [
     'test_tarball35',
     'test_tarball36',
     'test_tarball37',
+    'test_wheel27',
+    'test_wheel34',
+    'test_wheel35',
+    'test_wheel36',
+    'test_wheel37',
     'print_authors',
     'sha256',
     # 'tag',
@@ -83,6 +89,13 @@ def source_tarball():
         # Assumes this is run in Docker and git is already clean
         ./setup.py sdist --keep-temp
 
+
+@activity(deps={'_version', 'mailmap_update', 'test_sympy'})
+def wheel():
+    with run_in_conda_env(['mpmath', 'python=3.6', 'setuptools', 'pip'], 'sympy-release'):
+        # Assumes this is run in Docker and git is already clean
+        ./setup.py bdist_wheel --universal --keep-temp
+
 @activity(deps={'_version'})
 def build_docs():
     with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath', 'matplotlib'],
@@ -108,7 +121,7 @@ def build_docs():
         cd ../../../
 
 
-@activity(deps={'source_tarball', 'build_docs'})
+@activity(deps={'source_tarball', 'wheel', 'build_docs'})
 def copy_release_files():
     ls dist
     cp dist/* /root/release/
@@ -132,6 +145,26 @@ def test_tarball36():
 @activity(deps={'source_tarball'})
 def test_tarball37():
     test_tarball('3.7')
+
+@activity(deps={'wheel'})
+def test_wheel27():
+    test_wheel('2.7')
+
+@activity(deps={'wheel'})
+def test_wheel34():
+    test_wheel('3.4')
+
+@activity(deps={'wheel'})
+def test_wheel35():
+    test_wheel('3.5')
+
+@activity(deps={'wheel'})
+def test_wheel36():
+    test_wheel('3.6')
+
+@activity(deps={'wheel'})
+def test_wheel37():
+    test_wheel('3.7')
 
 @activity(deps={'source_tarball'})
 def compare_tar_against_git():
@@ -176,7 +209,7 @@ def compare_tar_against_git():
     if fail:
         sys.exit(red("Non-whitelisted files found or not found in the tarball"))
 
-@activity(deps={'source_tarball'})
+@activity(deps={'source_tarball', 'wheel'})
 def print_authors():
     """
     Print authors text to put at the bottom of the release notes
@@ -200,7 +233,7 @@ Thanks to everyone who contributed to this release!
         print("- " + name)
     print()
 
-@activity(deps={'source_tarball', 'build_docs'})
+@activity(deps={'source_tarball', 'wheel', 'build_docs'})
 def sha256():
     """
     Print the sha256 sums of the release files
@@ -220,7 +253,12 @@ def _sha256(print_=True, local=False):
         print(out)
     return out
 
-@activity(deps={'mailmap_update', 'sha256', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball34', 'test_tarball35', 'test_tarball36', 'test_sympy'})
+@activity(deps={'mailmap_update', 'sha256', 'print_authors',
+                'source_tarball', 'wheel', 'build_docs',
+                'compare_tar_against_git', 'test_tarball27', 'test_tarball34',
+                'test_tarball35', 'test_tarball36', 'test_wheel27',
+                'test_wheel34', 'test_wheel35', 'test_wheel36',
+                'test_wheel37', 'test_sympy'})
 def release():
     pass
 
@@ -268,6 +306,22 @@ def test_tarball(py_version):
         python -m isympy --help
         isympy --help
 
+def test_wheel(py_version):
+    """
+    Test that the wheel can be installed, and that sympy imports in the install.
+    """
+    if py_version not in {'2.7', '3.4', '3.5', '3.6', '3.7'}: # TODO: Add win32
+        raise ValueError("release must be one of 2.7, 3.4, 3.5, 3.6, or 3.7 not %s" % py_version)
+
+
+    with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
+        cp @('/root/release/{wheel}'.format(**tarball_format)) @("{wheel}".format(**tarball_format))
+        pip install @("{wheel}".format(**tarball_format)
+
+        python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
+        python -m isympy --help
+        isympy --help
+
 def get_tarball_name(file):
     """
     Get the name of a tarball
@@ -277,6 +331,7 @@ def get_tarball_name(file):
     source-orig:       The original name of the source tarball
     source-orig-notar: The name of the untarred directory
     source:            The source tarball (after renaming)
+    wheel:             The wheel
     html:              The name of the html zip
     html-nozip:        The name of the html, without ".zip"
     pdf-orig:          The original name of the pdf file
@@ -298,6 +353,8 @@ def get_tarball_name(file):
             name += ".{extension}"
     elif file == 'pdf-orig':
         name = "sympy-{version}.pdf"
+    elif file == 'wheel':
+        name = 'sympy-{version}-py2.py3-none-any.whl'
     else:
         raise ValueError(file + " is not a recognized argument")
 
@@ -309,6 +366,7 @@ tarball_name_types = {
     'source-orig',
     'source-orig-notar',
     'source',
+    'wheel',
     'html',
     'html-nozip',
     'pdf-orig',
@@ -829,6 +887,7 @@ def check_tag_exists():
 
 descriptions = OrderedDict([
     ('source', "The SymPy source installer.",),
+    ('wheel', "A wheel of the package.",),
     ('html', '''Html documentation. This is the same as
 the <a href="https://docs.sympy.org/latest/index.html">online documentation</a>.''',),
     ('pdf', '''Pdf version of the <a href="https://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
