@@ -266,39 +266,36 @@ class factorial(CombinatorialFunction):
         x = self.args[0]
         if x.is_nonnegative or x.is_noninteger:
             return True
-class FactorialApproximation:
-    '''
-    The approxiamate value of a factorial can be found out in finite polynomial time using the following methods.   
-    '''
-    def stirling(n):
-        """
-        The Stirling's approximation approximates the value of factorials in polynomial time developed by Abraham De Moivre and James Stirling.
-        It is typically writtern as:
-        
-        .. math:: ln(n!) = n ln(n) - n + O(ln(n))
 
-        It can be approximated to:
+def stirling(n):
+    """
+    The Stirling's approximation approximates the value of factorials in polynomial time developed by Abraham De Moivre and James Stirling.
+    It is typically writtern as:
+     
+    .. math:: ln(n!) = n ln(n) - n + O(ln(n))
+
+    It can be approximated to:
    
-        .. math:: n! ~ sqrt(2*pi*n) pow(n/E,n)
+    .. math:: n! ~ sqrt(2*pi*n) pow(n/E,n)
 
-        The error in  approximation increases as n reach large values.
+    The error in  approximation increases as n reach large values.
 
-        References
-        ==========
+    References
+    ==========
 
-        .. [1] https://en.wikipedia.org/wiki/Stirling%27s_approximation
-        .. [2] https://ocw.mit.edu/courses/mathematics/18-104-seminar-in-analysis-applications-to-number-theory-fall-2006/projects/talk_gilbertson.pdf
+    .. [1] https://en.wikipedia.org/wiki/Stirling%27s_approximation
+    .. [2] https://ocw.mit.edu/courses/mathematics/18-104-seminar-in-analysis-applications-to-number-theory-fall-2006/projects/talk_gilbertson.pdf
 
-        Examples
-        ========
+    Examples
+    ========
 
-        >>>from sympy import FactorialApproximation
-        >>>FactorialApproximation.stirling(5)
-        >>>118.01916795759008
+    >>>from sympy import FactorialApproximation
+    >>>FactorialApproximation.stirling(5)
+    >>>118.01916795759008
         
-        """
-        f = float(_sqrt(2*pi*n)*(n/E)**n)
-        return f
+    """
+    f = float(_sqrt(2*pi*n)*(n/E)**n)
+    return f
 class MultiFactorial(CombinatorialFunction):
     pass
 
