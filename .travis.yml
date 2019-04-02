@@ -260,7 +260,8 @@ before_install:
             conda clean --all;
         fi
         if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-            conda install matchpy;
+            # Change this back to conda once matchpy 0.5.0 gets updated on conda-forge
+            pip install matchpy;
         fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list | grep "numpy" && pip uninstall -y numpy;
