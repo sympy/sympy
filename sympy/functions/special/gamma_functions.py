@@ -5,8 +5,10 @@ from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.functions.special.zeta_functions import zeta
-from sympy.functions.special.error_functions import erf, erfc
+#from sympy.functions.special.zeta_functions import zeta
+#from sympy.functions.special.error_functions import erf, erfc
+from .zeta_functions import zeta
+from .error_functions import erf, erfc
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
