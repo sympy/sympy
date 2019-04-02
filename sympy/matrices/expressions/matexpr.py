@@ -780,14 +780,12 @@ class MatrixSymbol(MatrixExpr):
             second = ZeroMatrix(x.shape[1], self.shape[1]) if self.shape[1] != 1 else S.Zero
             return [_LeftRightArgs(
                 [first, second],
-                transposed=False,
             )]
         else:
             first = Identity(self.shape[0]) if self.shape[0] != 1 else S.One
             second = Identity(self.shape[1]) if self.shape[1] != 1 else S.One
             return [_LeftRightArgs(
                 [first, second],
-                transposed=False,
             )]
 
 
@@ -991,14 +989,13 @@ class _LeftRightArgs(object):
     The trace connects the end of the two lines.
     """
 
-    def __init__(self, lines, higher=S.One, transposed=False):
+    def __init__(self, lines, higher=S.One):
         self._lines = [i for i in lines]
         self._first_pointer_parent = self._lines
         self._first_pointer_index = 0
         self._second_pointer_parent = self._lines
         self._second_pointer_index = 1
         self.higher = higher
-        self.transposed = transposed
 
     @property
     def first_pointer(self):
@@ -1021,10 +1018,9 @@ class _LeftRightArgs(object):
             built = [self._build(i) for i in self._lines]
         except Exception:
             built = self._lines
-        return "_LeftRightArgs(lines=%s, higher=%s, transposed=%s)" % (
+        return "_LeftRightArgs(lines=%s, higher=%s)" % (
             built,
             self.higher,
-            self.transposed,
         )
 
     def transpose(self):
@@ -1095,12 +1091,12 @@ class _LeftRightArgs(object):
         self.second_pointer *= other
 
     def __hash__(self):
-        return hash((self.first, self.second, self.transposed))
+        return hash((self.first, self.second))
 
     def __eq__(self, other):
         if not isinstance(other, _LeftRightArgs):
             return False
-        return (self.first == other.first) and (self.second == other.second) and (self.transposed == other.transposed)
+        return (self.first == other.first) and (self.second == other.second)
 
 
 from .matmul import MatMul
