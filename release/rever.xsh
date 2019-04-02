@@ -316,7 +316,7 @@ def test_wheel(py_version):
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
         cp @('/root/release/{wheel}'.format(**tarball_format)) @("{wheel}".format(**tarball_format))
-        pip install @("{wheel}".format(**tarball_format)
+        pip install @("{wheel}".format(**tarball_format))
 
         python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
         python -m isympy --help
