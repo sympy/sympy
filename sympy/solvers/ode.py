@@ -235,7 +235,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import islice
 
-from sympy.core import Add, S, Mul, Pow, oo
+from sympy.core import Add, S, Mul, Pow, oo, Rational
 from sympy.core.compatibility import ordered, iterable, is_sequence, range, string_types
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
@@ -251,7 +251,7 @@ from sympy.core.sympify import sympify
 from sympy.logic.boolalg import (BooleanAtom, And, Not, BooleanTrue,
                                 BooleanFalse)
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
-    atan2, conjugate, Piecewise
+    atan2, conjugate, Piecewise, cbrt
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
@@ -308,6 +308,8 @@ allhints = (
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
     "Liouville",
     "order_reducible",
+    "2nd_linear_airy",
+    "2nd_linear_bessel",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
     "nth_algebraic_Integral",
@@ -1351,6 +1353,33 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             not check.has(zoo) and not check.has(-oo):
                             coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                             matching_hints["2nd_power_series_regular"] = coeff_dict
+
+                            # If the ODE has regular singular point at x0 and is of the form
+                            # Eq((x)**2*Derivative(y(x),x,x)+x*Derivative(y(x),x)+(a4**2*x**2-n**2)*y(x) thus Bessel's equation
+                            if (p.is_constant(x) and p != 0) and r[c3] != 0:
+                                a4 = Wild('a4', exclude=[x,f(x),df])
+                                b4 = Wild('b4', exclude=[x,f(x),df])
+                                c4 = Wild('b4', exclude=[x,f(x),df])
+                                rn = r[c3].match(a4*a4*x**2-b4*b4)
+                                if check==0: # if r[c3] becomes zero at x0
+                                    rn = r[c3].match(a4*a4*x**2)
+                                    if rn:
+                                        rn[b4] = 0
+                                if rn and r[b3] != 0:
+                                    rn = {'n':rn[b4], 'a4':rn[a4]}
+                                    rn['c4'] = r[b3].match(c4*x)[b4]
+                                    matching_hints["2nd_linear_bessel"] = rn
+
+                #If the ODE is ordinary and is of the form of Airy's Equation
+                #Eq(x**2*Derivative(y(x),x,x)-(ax+b)*y(x))
+
+                if p.is_zero:
+                    a4 = Wild('a4', exclude=[x,f(x),df])
+                    b4 = Wild('b4', exclude=[x,f(x),df])
+                    rn = q.match(a4+b4*x)
+                    if rn and rn[b4] != 0:
+                        rn = {'b':rn[a4],'m':rn[b4]}
+                        matching_hints["2nd_linear_airy"] = rn
 
 
     if order > 0:
@@ -3623,6 +3652,43 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     mu = sqrt(4*d2*b2 - (a2 - c2)**2)
     return Eq(f(x), (a2 - c2 - mu*tan(mu/(2*a2)*log(x) + C1))/(2*b2*x))
 
+def ode_2nd_linear_airy(eq, func, order, match):
+    r"""
+    Gives solution of the Airy differential equation
+    .. math :: \frac{d^2y}{dx^2} + (a + b x) y(x) = 0
+    in terms of Airy special functions airyai and airybi.
+    """
+    x = func.args[0]
+    f = func.func
+    C0, C1 = get_numbered_constants(eq, num=2)
+    b = match['b']
+    m = match['m']
+    if m.is_positive:
+        arg = - b/cbrt(m)**2 - cbrt(m)*x
+    elif m.is_negative:
+        arg = - b/cbrt(-m)**2 + cbrt(-m)*x
+    else:
+        arg = - b/cbrt(-m)**2 + cbrt(-m)*x
+    from sympy.functions import airyai, airybi
+    return Eq(f(x), C0*airyai(arg) + C1*airybi(arg))
+
+def ode_2nd_linear_bessel(eq, func, order, match):
+    r"""
+    Gives solution of the Bessel differential equation
+    .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) + (x**2-n**2)*y(x)
+       if n is integer then the solution is of the form Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x)) as both the solutions are linearly independant
+       else if n is a fraction then the solution is of the form Eq(f(x), C0*besselj(n,x) + C1*besselj(-n,x)) which can also transform into Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x)).
+    https://www.math24.net/bessel-differential-equation/
+    """
+    x = func.args[0]
+    f = func.func
+    C0, C1 = get_numbered_constants(eq, num=2)
+    n = match['n']
+    a4 = match['a4']
+    c4 = match['c4']
+    n = sqrt(n**2 + Rational(1, 4)*(c4 - 1)**2)
+    from sympy.functions import besselj, bessely
+    return (Eq(f(x), (x**(Rational(1-c4,2)))*(C0*besselj(n,x) + C1*bessely(n,x)).subs(x,a4*x)))
 
 def ode_Liouville(eq, func, order, match):
     r"""

@@ -8,6 +8,7 @@ from sympy.solvers.ode import (_undetermined_coefficients_match,
     checksysodesol, solve_ics, dsolve, get_numbered_constants)
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
+from sympy.functions import airyai, airybi, besselj, bessely
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 u, x, y, z = symbols('u,x:z', real=True)
@@ -3029,8 +3030,7 @@ def test_2nd_power_series_regular():
         + O(x**6))
 
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - S(1)/4)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*(x**4/24 - x**2/2 + 1)/sqrt(x) +
-        C2*sqrt(x)*(x**4/120 - x**2/6 + 1) + O(x**6))
+    assert dsolve(eq) == Eq(f(x), C1*besselj(1/2, x) + C2*bessely(1/2, x))
 
     eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
     assert dsolve(eq) == Eq(f(x), C2*(-x**4/2 + 1) + C1*x**2 + O(x**6))
@@ -3414,3 +3414,25 @@ def test_issue_15913():
 def test_issue_16146():
     raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x), g(x), h(x)]))
     raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x)]))
+
+def test_Airy_equation():
+    C1, C2 = symbols("C1 C2")
+    from sympy.functions import airyai, airybi
+    eq = f(x).diff(x, 2) - x*f(x)
+    assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
+    assert dsolve(eq) == Eq(f(x), C1*airyai(x) + C2*airybi(x))
+    eq = f(x).diff(x, 2) + 2*x*f(x)
+    assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
+    assert str(dsolve(eq)) == "Eq(f(x), C1*airyai(-2**(1/3)*x) + C2*airybi(-2**(1/3)*x))"
+
+def test_2nd_linear_bessel_equation():
+    C1, C2 = symbols("C1 C2")
+    from sympy.functions import besselj, bessely
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 4)*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 +25)*f(x)
+    assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2)*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*besselj(0, x) + C2*bessely(0, x))
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (81*x**2 -S(1)/9)*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*besselj(1/3, 9*x) + C2*bessely(1/3, 9*x))
