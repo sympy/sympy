@@ -9,6 +9,7 @@ from sympy.core.numbers import Integer, pi
 from sympy.core.relational import Eq
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
+from sympy import sqrt, pi, E
 
 from math import sqrt as _sqrt
 
@@ -172,6 +173,7 @@ class factorial(CombinatorialFunction):
 
                     return Integer(result)
 
+
     def _facmod(self, n, q):
         res, N = 1, int(_sqrt(n))
 
@@ -264,6 +266,42 @@ class factorial(CombinatorialFunction):
         x = self.args[0]
         if x.is_nonnegative or x.is_noninteger:
             return True
+
+        
+class FactorialApproximation:
+    """
+    The approxiamate value of a factorial can be found out in finite polynomial time using the following methods.   
+    """
+    def stirling(n):
+        """
+        The Stirling's approximation approximates the value of factorials in polynomial time developed by Abraham De Moivre and James Stirling.
+        It is typically writtern as:
+        
+        .. math:: ln(n!) = n ln(n) - n + O(ln(n))
+
+        It can be approximated to:
+   
+        .. math:: n! ~ sqrt(2*pi*n) pow(n/E,n)
+
+        The error in  approximation increases as n reach large values.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Stirling%27s_approximation
+        .. [2] https://ocw.mit.edu/courses/mathematics/18-104-seminar-in-analysis-applications-to-number-theory-fall-2006/projects/talk_gilbertson.pdf
+
+        Examples
+        ========
+
+        >>>from sympy import FactorialApproximation
+        >>>FactorialApproximation.stirling(5)
+        >>>118.01916795759008
+        
+        """
+        f = float(sqrt(2*pi*n)*(n/E)**n)
+        return f
+
 
 class MultiFactorial(CombinatorialFunction):
     pass
@@ -1027,3 +1065,5 @@ class binomial(CombinatorialFunction):
                 return True
             elif k.is_even is False:
                 return  False
+
+
