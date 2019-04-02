@@ -266,8 +266,6 @@ class factorial(CombinatorialFunction):
         x = self.args[0]
         if x.is_nonnegative or x.is_noninteger:
             return True
-
-        
 class FactorialApproximation:
     """
     The approxiamate value of a factorial can be found out in finite polynomial time using the following methods.   
