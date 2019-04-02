@@ -5,8 +5,8 @@ from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from .zeta_functions import zeta
-from .error_functions import erf, erfc
+from sympy.functions.special.zeta_functions import zeta
+from sympy.functions.special.error_functions import erf, erfc
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -1009,3 +1009,32 @@ def trigamma(x):
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
     return polygamma(1, x)
+
+
+class applications:
+    """
+    These methods are used to implement gamma function and related functions in real world conditions
+    """
+    def hypersphere_volume(n, r):
+        """
+        The volume of a hypersphere in n dimensional Euclidean space is given by V(n,r) = pi^{n/2}r^{n}/gamma(n/2 + 1)
+
+        Examples
+        ========
+
+        >>>from sympy import applications
+        >>>applications.hypersphere_volume(2,1)
+        >>>3.141592653589793
+
+        References
+        ==========
+        
+        ..[1] https://en.wikipedia.org/wiki/Volume_of_an_n-ball
+        ..[2] https://sites.math.washington.edu/~morrow/336_10/papers/joel.pdf
+        ..[3] https://www.mathpages.com/home/kmath163/kmath163.htm
+        ..[4] http://mathworld.wolfram.com/Hypersphere.html
+        """
+        vol = float((Pow(pi,n/2)*Pow(r,n))/gamma((n/2)+1))
+        return vol
+    
+    
