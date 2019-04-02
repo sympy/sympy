@@ -267,6 +267,7 @@ class factorial(CombinatorialFunction):
         if x.is_nonnegative or x.is_noninteger:
             return True
 class stirling(CombinatorialFunction):
+    @classmethod
     def approx(n):
         """
         The Stirling's approximation approximates the value of factorials in polynomial time developed by Abraham De Moivre and James Stirling.
