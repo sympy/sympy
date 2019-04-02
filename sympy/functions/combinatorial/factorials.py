@@ -292,12 +292,11 @@ class stirling(CombinatorialFunction):
         >>>FactorialApproximation.stirling(5)
         >>>118.01916795759008
         
-    """
-    @classmethod
-    def approx(n):
-       
-        f = float(_sqrt(2*pi*n)*(n/E)**n)
-        return f
+     """
+     @classmethod
+     def approx(n):
+            f = float(_sqrt(2*pi*n)*(n/E)**n)
+            return f
 class MultiFactorial(CombinatorialFunction):
     pass
 
