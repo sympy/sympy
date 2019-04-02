@@ -1446,7 +1446,7 @@ class GumbelDistributionMaximum(SingleContinuousDistribution):
     set = Interval(-oo, oo)
 
     @staticmethod
-    def check(beta):
+    def check(beta, mu):
         _value_check(beta > 0, "beta must be positive")
 
     def pdf(self, x):
@@ -1469,6 +1469,10 @@ class GumbelDistributionMinimum(SingleContinuousDistribution):
     _argnames = ('beta', 'mu')
 
     set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(beta, mu):
+        _value_check(beta > 0, "beta must be positive")
 
     def pdf(self, x):
         beta, mu = self.beta, self.mu
