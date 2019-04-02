@@ -447,7 +447,7 @@ def test_gumbel():
     Y = Gumbel("y", beta, mu, for_min=True)
     assert str(density(X)(x)) == 'exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta'
     assert str(density(Y)(y)) == 'exp(-exp((-mu + y)/beta) + (-mu + y)/beta)/beta'
-    assert cdf(X)(x) == exp(-exp((mu - x)/beta))
+    assert str(cdf(X)(x)) == 'exp(-exp(-(-mu + x)/beta))'
 
 
 def test_kumaraswamy():
