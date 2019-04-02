@@ -380,11 +380,11 @@ class FpGroup(DefaultPrinting):
         False
 
         """
+        if len(self.generators) == 0 or len(self.generators) == 1:
+            return True
         if self.order() == S.Infinity:
             raise NotImplementedError("Check for cyclic group is not implemented"
                                                        "for infinite order group")
-        if len(self.generators) == 0 or len(self.generators) == 1:
-            return True
         if not self.is_abelian:
             return False
         for p in primefactors(self.order()):
