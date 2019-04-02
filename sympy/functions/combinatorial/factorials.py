@@ -299,8 +299,6 @@ class FactorialApproximation:
         """
         f = float(_sqrt(2*pi*n)*(n/E)**n)
         return f
-
-
 class MultiFactorial(CombinatorialFunction):
     pass
 
