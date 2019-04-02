@@ -9,7 +9,7 @@ from sympy.core.numbers import Integer, pi
 from sympy.core.relational import Eq
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
-from sympy import sqrt, pi, E
+from sympy import pi, E
 
 from math import sqrt as _sqrt
 
@@ -299,7 +299,7 @@ class FactorialApproximation:
         >>>118.01916795759008
         
         """
-        f = float(sqrt(2*pi*n)*(n/E)**n)
+        f = float(_sqrt(2*pi*n)*(n/E)**n)
         return f
 
 
