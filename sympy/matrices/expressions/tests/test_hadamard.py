@@ -1,3 +1,4 @@
+from sympy import Identity
 from sympy.core import symbols
 from sympy.utilities.pytest import raises
 
@@ -48,6 +49,8 @@ def test_hadamard():
     A = MatrixSymbol('A', m, n)
     B = MatrixSymbol('B', m, n)
     C = MatrixSymbol('C', m, p)
+    X = MatrixSymbol('X', m, m)
+    I = Identity(m)
     with raises(TypeError):
         hadamard_product()
     assert hadamard_product(A) == A
@@ -55,6 +58,9 @@ def test_hadamard():
     assert hadamard_product(A, B).doit() == hadamard_product(A, B)
     with raises(ShapeError):
         hadamard_product(A, C)
+        hadamard_product(A, I)
+    assert hadamard_product(X, I) == X
+    assert isinstance(hadamard_product(X, I), MatrixSymbol)
 
 
 def test_hadamard_power():

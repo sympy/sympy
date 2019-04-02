@@ -3422,7 +3422,7 @@ class Expr(Basic, EvalfMixin):
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.matrices.expressions.matexpr import _LeftRightArgs
-        return [_LeftRightArgs(S.One, S.One, higher=self._eval_derivative(x))]
+        return [_LeftRightArgs([S.One, S.One], higher=self._eval_derivative(x))]
 
 
 class AtomicExpr(Atom, Expr):
@@ -3560,6 +3560,57 @@ def unchanged(func, *args):
     """
     f = func(*args)
     return f.func == func and f.args == tuple([sympify(a) for a in args])
+
+
+class ExprBuilder(object):
+    def __init__(self, op, args=[], validator=None, check=True):
+        if not hasattr(op, "__call__"):
+            raise TypeError("op {} needs to be callable".format(op))
+        self.op = op
+        self.args = args
+        self.validator = validator
+        if (validator is not None) and check:
+            self.validate()
+
+    @staticmethod
+    def _build_args(args):
+        return [i.build() if isinstance(i, ExprBuilder) else i for i in args]
+
+    def validate(self):
+        if self.validator is None:
+            return
+        args = self._build_args(self.args)
+        self.validator(*args)
+
+    def build(self, check=True):
+        args = self._build_args(self.args)
+        if self.validator and check:
+            self.validator(*args)
+        return self.op(*args)
+
+    def append_argument(self, arg, check=True):
+        self.args.append(arg)
+        if self.validator and check:
+            self.validate(*self.args)
+
+    def __getitem__(self, item):
+        if item == 0:
+            return self.op
+        else:
+            return self.args[item-1]
+
+    def __repr__(self):
+        return str(self.build())
+
+    def search_element(self, elem):
+        for i, arg in enumerate(self.args):
+            if isinstance(arg, ExprBuilder):
+                ret = arg.search_index(elem)
+                if ret is not None:
+                    return (i,) + ret
+            elif id(arg) == id(elem):
+                return (i,)
+        return None
 
 
 from .mul import Mul

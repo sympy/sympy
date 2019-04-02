@@ -621,12 +621,36 @@ def _matrix_derivative(expr, x):
     from sympy import Derivative
     lines = expr._eval_derivative_matrix_lines(x)
 
-    ranks = [i.rank() for i in lines]
-    assert len(set(ranks)) == 1
+    parts = [i.build() for i in lines]
+
+    def _get_shape(elem):
+        if isinstance(elem, MatrixExpr):
+            return elem.shape
+        return (1, 1)
+
+    def get_rank(parts):
+        return sum([j not in (1, None) for i in parts for j in _get_shape(i)])
+
+    ranks = [get_rank(i) for i in parts]
     rank = ranks[0]
 
+    def contract_one_dims(parts):
+        if len(parts) == 1:
+            return parts[0]
+        else:
+            p1, p2 = parts[:2]
+            if p2.is_Matrix:
+                p2 = p2.T
+            pbase = p1*p2
+            if len(parts) == 2:
+                return pbase
+            else:  # len(parts) > 2
+                if pbase.is_Matrix:
+                    raise ValueError("")
+                return pbase*Mul.fromiter(parts[2:])
+
     if rank <= 2:
-        return Add.fromiter([i.matrix_form() for i in lines])
+        return Add.fromiter([contract_one_dims(i) for i in parts])
 
     return Derivative(expr, x)
 
@@ -752,17 +776,17 @@ class MatrixSymbol(MatrixExpr):
 
     def _eval_derivative_matrix_lines(self, x):
         if self != x:
+            first = ZeroMatrix(x.shape[0], self.shape[0]) if self.shape[0] != 1 else S.Zero
+            second = ZeroMatrix(x.shape[1], self.shape[1]) if self.shape[1] != 1 else S.Zero
             return [_LeftRightArgs(
-                ZeroMatrix(x.shape[0], self.shape[0]),
-                ZeroMatrix(x.shape[1], self.shape[1]),
+                [first, second],
                 transposed=False,
             )]
         else:
-            first = Identity(self.shape[0])
-            second = Identity(self.shape[1])
+            first = Identity(self.shape[0]) if self.shape[0] != 1 else S.One
+            second = Identity(self.shape[1]) if self.shape[1] != 1 else S.One
             return [_LeftRightArgs(
-                first=first,
-                second=second,
+                [first, second],
                 transposed=False,
             )]
 
@@ -945,7 +969,6 @@ class GenericZeroMatrix(ZeroMatrix):
     def __ne__(self, other):
         return not (self == other)
 
-
     def __hash__(self):
         return super(GenericZeroMatrix, self).__hash__()
 
@@ -968,23 +991,66 @@ class _LeftRightArgs(object):
     The trace connects the end of the two lines.
     """
 
-    def __init__(self, first, second, higher=S.One, transposed=False):
-        self.first = first
-        self.second = second
+    def __init__(self, lines, higher=S.One, transposed=False):
+        self._lines = [i for i in lines]
+        self._first_pointer_parent = self._lines
+        self._first_pointer_index = 0
+        self._second_pointer_parent = self._lines
+        self._second_pointer_index = 1
         self.higher = higher
         self.transposed = transposed
 
+    @property
+    def first_pointer(self):
+       return self._first_pointer_parent[self._first_pointer_index]
+
+    @first_pointer.setter
+    def first_pointer(self, value):
+        self._first_pointer_parent[self._first_pointer_index] = value
+
+    @property
+    def second_pointer(self):
+        return self._second_pointer_parent[self._second_pointer_index]
+
+    @second_pointer.setter
+    def second_pointer(self, value):
+        self._second_pointer_parent[self._second_pointer_index] = value
+
     def __repr__(self):
-        return "_LeftRightArgs(first=%s[%s], second=%s[%s], higher=%s, transposed=%s)" % (
-            self.first, self.first.shape if isinstance(self.first, MatrixExpr) else None,
-            self.second, self.second.shape if isinstance(self.second, MatrixExpr) else None,
+        try:
+            built = [self._build(i) for i in self._lines]
+        except Exception:
+            built = self._lines
+        return "_LeftRightArgs(lines=%s, higher=%s, transposed=%s)" % (
+            built,
             self.higher,
             self.transposed,
         )
 
     def transpose(self):
-        self.transposed = not self.transposed
+        self._first_pointer_parent, self._second_pointer_parent = self._second_pointer_parent, self._first_pointer_parent
+        self._first_pointer_index, self._second_pointer_index = self._second_pointer_index, self._first_pointer_index
         return self
+
+    @staticmethod
+    def _build(expr):
+        from sympy.core.expr import ExprBuilder
+        if isinstance(expr, ExprBuilder):
+            return expr.build()
+        if isinstance(expr, list):
+            if len(expr) == 1:
+                return expr[0]
+            else:
+                return expr[0](*[_LeftRightArgs._build(i) for i in expr[1]])
+        else:
+            return expr
+
+    def build(self):
+        data = [self._build(i) for i in self._lines]
+        if self.higher != 1:
+            data += [self._build(self.higher)]
+        data = [i.doit() for i in data]
+        return data
 
     def matrix_form(self):
         if self.first != 1 and self.higher != 1:
@@ -1023,10 +1089,10 @@ class _LeftRightArgs(object):
         return rank
 
     def append_first(self, other):
-        self.first *= other
+        self.first_pointer *= other
 
     def append_second(self, other):
-        self.second *= other
+        self.second_pointer *= other
 
     def __hash__(self):
         return hash((self.first, self.second, self.transposed))

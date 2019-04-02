@@ -75,3 +75,22 @@ def test_applyfunc_matrix():
     expr1 = ElementwiseApplyFunction(lambda x: x+1, Xk)
     expr2 = ElementwiseApplyFunction(lambda x: x, Xk)
     assert expr1 != expr2
+
+
+def test_applyfunc_entry():
+
+    af = X.applyfunc(sin)
+    assert af[0, 0] == sin(X[0, 0])
+
+    af = Xd.applyfunc(sin)
+    assert af[0, 0] == sin(X[0, 0])
+
+
+def test_applyfunc_as_explicit():
+
+    af = X.applyfunc(sin)
+    assert af.as_explicit() == Matrix([
+        [sin(X[0, 0]), sin(X[0, 1]), sin(X[0, 2])],
+        [sin(X[1, 0]), sin(X[1, 1]), sin(X[1, 2])],
+        [sin(X[2, 0]), sin(X[2, 1]), sin(X[2, 2])],
+    ])
