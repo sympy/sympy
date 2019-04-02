@@ -4,6 +4,7 @@ from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne
                    floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
 from sympy.core.compatibility import range
 from sympy.external import import_module
+from sympy.sets.sets import Intersection, FiniteSet
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, characteristic_function, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy,
@@ -15,7 +16,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
-                         moment, cmoment, smoment)
+                         moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
@@ -72,6 +73,7 @@ def test_ContinuousDomain():
 @slow
 def test_multiple_normal():
     X, Y = Normal('x', 0, 1), Normal('y', 0, 1)
+    p = Symbol("p", positive=True)
 
     assert E(X + Y) == 0
     assert variance(X + Y) == 2
@@ -90,6 +92,7 @@ def test_multiple_normal():
     assert smoment(X + Y, 3) == skewness(X + Y)
     assert E(X, Eq(X + Y, 0)) == 0
     assert variance(X, Eq(X + Y, 0)) == S.Half
+    assert quantile(X, p) == Intersection(S.Reals, FiniteSet(sqrt(2)*erfinv(2*p - 1)))
 
 
 def test_symbolic():
@@ -341,6 +344,7 @@ def test_erlang():
 def test_exponential():
     rate = Symbol('lambda', positive=True, real=True, finite=True)
     X = Exponential('x', rate)
+    p = Symbol("p", positive=True)
 
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
@@ -351,6 +355,7 @@ def test_exponential():
     assert P(X > 0) == S(1)
     assert P(X > 1) == exp(-rate)
     assert P(X > 10) == exp(-10*rate)
+    assert quantile(X, p) == Intersection(Interval(0, oo), FiniteSet(-log(1 - p)/rate))
 
     assert where(X <= 1).set == Interval(0, 1)
 
@@ -455,10 +460,12 @@ def test_laplace():
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
+    p = Symbol("p", positive=True)
 
     X = Logistic('x', mu, s)
     assert density(X)(x) == exp((-x + mu)/s)/(s*(exp((-x + mu)/s) + 1)**2)
     assert cdf(X)(x) == 1/(exp((mu - x)/s) + 1)
+    assert quantile(X, p) == Intersection(S.Reals, FiniteSet(mu - s*log(-1 + 1/p)))
 
 
 def test_lognormal():
