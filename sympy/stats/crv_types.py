@@ -1437,13 +1437,17 @@ def GammaInverse(name, a, b):
     return rv(name, GammaInverseDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
-# Gumbel distribution --------------------------------------------------------
+# Gumbel distribution (Maximum and Minimum)--------------------------------------------------------
 
 
-class GumbelDistribution(SingleContinuousDistribution):
+class GumbelDistributionMaximum(SingleContinuousDistribution):
     _argnames = ('beta', 'mu')
 
     set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(beta):
+        _value_check(beta > 0, "beta must be positive")
 
     def pdf(self, x):
         beta, mu = self.beta, self.mu
@@ -1452,7 +1456,8 @@ class GumbelDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         beta, mu = self.beta, self.mu
-        return exp(-exp((mu - x)/beta))
+        z = (x - mu)/beta
+        return exp(-exp(-z))
 
     def _characteristic_function(self, t):
         return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
@@ -1460,15 +1465,38 @@ class GumbelDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return gamma(1 - self.beta*t) * exp(I*self.mu*t)
 
-def Gumbel(name, beta, mu):
+class GumbelDistributionMinimum(SingleContinuousDistribution):
+    _argnames = ('beta', 'mu')
+
+    set = Interval(-oo, oo)
+
+    def pdf(self, x):
+        beta, mu = self.beta, self.mu
+        z = (x - mu)/beta
+        return (1/beta)*exp(z - exp(z))
+
+    def _cdf(self, x):
+        beta, mu = self.beta, self.mu
+        z = (x - mu)/beta
+        return 1 - exp(-exp(z))
+
+def Gumbel(name, beta, mu, **kwargs):
     r"""
     Create a Continuous Random Variable with Gumbel distribution.
 
-    The density of the Gumbel distribution is given by
+    The density of the Gumbel distribution is given by,
 
+    For Maximum
     .. math::
         f(x) := \dfrac{1}{\beta} \exp \left( -\dfrac{x-\mu}{\beta}
                 - \exp \left( -\dfrac{x - \mu}{\beta} \right) \right)
+
+    with :math:`x \in [ - \infty, \infty ]`.
+
+    For Minimum
+    .. math::
+        f(x) := \frac{e^{- e^{\frac{- \mu + x}{\beta}}
+                + \frac{- \mu + x}{\beta}}}{\beta}
 
     with :math:`x \in [ - \infty, \infty ]`.
 
@@ -1477,6 +1505,8 @@ def Gumbel(name, beta, mu):
 
     mu: Real number, 'mu' is a location
     beta: Real number, 'beta > 0' is a scale
+    for_min: Boolean, optional, False, by default
+             For enabling the minimum distribution
 
     Returns
     ==========
@@ -1488,22 +1518,30 @@ def Gumbel(name, beta, mu):
     >>> from sympy.stats import Gumbel, density, E, variance, cdf
     >>> from sympy import Symbol, simplify, pprint
     >>> x = Symbol("x")
+    >>> y = Symbol("y")
     >>> mu = Symbol("mu")
     >>> beta = Symbol("beta", positive=True)
     >>> X = Gumbel("x", beta, mu)
+    >>> Y = Gumbel("y", beta, mu, for_min=True)
     >>> density(X)(x)
     exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
     >>> cdf(X)(x)
     exp(-exp((mu - x)/beta))
+    >>> density(Y)(y)
+    exp(-exp((-mu + y)/beta) + (-mu + y)/beta)/beta
 
     References
     ==========
 
     .. [1] http://mathworld.wolfram.com/GumbelDistribution.html
     .. [2] https://en.wikipedia.org/wiki/Gumbel_distribution
+    .. [3] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_max.html
+    .. [4] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_min.html
 
     """
-    return rv(name, GumbelDistribution, (beta, mu))
+    if kwargs.get('for_min', False):
+        return rv(name, GumbelDistributionMinimum, (beta, mu))
+    return rv(name, GumbelDistributionMaximum, (beta, mu))
 
 #-------------------------------------------------------------------------------
 # Gompertz distribution --------------------------------------------------------

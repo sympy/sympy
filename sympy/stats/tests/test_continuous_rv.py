@@ -442,8 +442,11 @@ def test_gumbel():
     beta = Symbol("beta", positive=True)
     mu = Symbol("mu")
     x = Symbol("x")
+    y = Symbol("y")
     X = Gumbel("x", beta, mu)
+    Y = Gumbel("y", beta, mu, for_min=True)
     assert str(density(X)(x)) == 'exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta'
+    assert str(density(Y)(y)) == 'exp(-exp((-mu + y)/beta) + (-mu + y)/beta)/beta'
     assert cdf(X)(x) == exp(-exp((mu - x)/beta))
 
 
