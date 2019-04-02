@@ -108,7 +108,7 @@ __all__ = ['ContinuousRV',
 
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
-    Creates a Continuous Random Variable given the following:
+    Create a Continuous Random Variable given the following:
 
     -- a symbol
     -- a probability density function
@@ -117,7 +117,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     Returns a RandomSymbol.
 
     Many common continuous random variable types are already implemented.
-    This function should be needed very rarely.
+    This function should be necessary only very rarely.
 
     Examples
     ========
@@ -175,9 +175,9 @@ class ArcsinDistribution(SingleContinuousDistribution):
 
 def Arcsin(name, a=0, b=1):
     r"""
-    Creates a Continuous Random Variable with Arcsine distribution.
+    Create a Continuous Random Variable with an arcsin distribution.
 
-    The density of the Arcsine distribution is given by
+    The density of the arcsin distribution is given by
 
     .. math::
         f(x) := \frac{1}{\pi\sqrt{(x-a)(b-x)}}
@@ -253,7 +253,7 @@ class BeniniDistribution(SingleContinuousDistribution):
 
 def Benini(name, alpha, beta, sigma):
     r"""
-    Creates a Continuous Random Variable with Benini distribution.
+    Create a Continuous Random Variable with a Benini distribution.
 
     The density of the Benini distribution is given by
 
@@ -342,7 +342,7 @@ class BetaDistribution(SingleContinuousDistribution):
 
 def Beta(name, alpha, beta):
     r"""
-    Creates a Continuous Random Variable with Beta distribution.
+    Create a Continuous Random Variable with a Beta distribution.
 
     The density of the Beta distribution is given by
 
@@ -417,7 +417,7 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
 
 def BetaPrime(name, alpha, beta):
     r"""
-    Creates a Continuous Random Variable with Beta prime distribution.
+    Create a continuous random variable with a Beta prime distribution.
 
     The density of the Beta prime distribution is given by
 
@@ -489,7 +489,7 @@ class CauchyDistribution(SingleContinuousDistribution):
 
 def Cauchy(name, x0, gamma):
     r"""
-    Creates a Continuous Random Variable with Cauchy distribution.
+    Create a continuous random variable with a Cauchy distribution.
 
     The density of the Cauchy distribution is given by
 
@@ -567,7 +567,7 @@ class ChiDistribution(SingleContinuousDistribution):
 
 def Chi(name, k):
     r"""
-    Creates a Continuous Random Variable with Chi distribution.
+    Create a continuous random variable with a Chi distribution.
 
     The density of the Chi distribution is given by
 
@@ -634,9 +634,9 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
 
 def ChiNoncentral(name, k, l):
     r"""
-    Creates a Continuous Random Variable with Non-central Chi distribution.
+    Create a continuous random variable with a non-central Chi distribution.
 
-    The density of the Non-central Chi distribution is given by
+    The density of the non-central Chi distribution is given by
 
     .. math::
         f(x) := \frac{e^{-(x^2+\lambda^2)/2} x^k\lambda}
@@ -712,7 +712,7 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
 
 def ChiSquared(name, k):
     r"""
-    Creates a Continuous Random Variable with Chi-squared distribution.
+    Create a continuous random variable with a Chi-squared distribution.
 
     The density of the Chi-squared distribution is given by
 
@@ -788,7 +788,7 @@ class DagumDistribution(SingleContinuousDistribution):
 
 def Dagum(name, p, a, b):
     r"""
-    Creates a Continuous Random Variable with Dagum distribution.
+    Create a continuous random variable with a Dagum distribution.
 
     The density of the Dagum distribution is given by
 
@@ -845,7 +845,7 @@ def Dagum(name, p, a, b):
 
 def Erlang(name, k, l):
     r"""
-    Creates a Continuous Random Variable with Erlang distribution.
+    Create a continuous random variable with an Erlang distribution.
 
     The density of the Erlang distribution is given by
 

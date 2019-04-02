@@ -21,12 +21,12 @@ from sympy.core.sympify import sympify
 from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
     Pow, Unequality)
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
+from sympy.core.function import (expand_mul, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
                           Function, expand_power_exp, Lambda, _mexpand, expand)
 from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float, Rational
-from sympy.core.relational import Relational, Ge, _canonical
+from sympy.core.relational import Relational, Ge
 from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.core.power import integer_log
 from sympy.logic.boolalg import And, Or, BooleanAtom
@@ -41,7 +41,7 @@ from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, factor, Poly, together, degree
+from sympy.polys import roots, cancel, factor, Poly, degree
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 

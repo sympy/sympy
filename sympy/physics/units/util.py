@@ -6,11 +6,11 @@ from __future__ import division
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy import Add, Function, Mul, Pow, Rational, Tuple, sympify
+from sympy import Add, Mul, Pow, Tuple, sympify
 from sympy.core.compatibility import reduce, Iterable, ordered
 from sympy.physics.units.dimensions import Dimension, dimsys_default
-from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.prefixes import Prefix
+from sympy.physics.units.quantities import Quantity
 from sympy.utilities.iterables import sift
 
 

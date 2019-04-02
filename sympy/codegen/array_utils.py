@@ -800,7 +800,7 @@ def _parse_matrix_expression(expr):
         return expr
 
 
-def parse_indexed_expression(expr, first_indices=[]):
+def parse_indexed_expression(expr, first_indices=None):
     r"""
     Parse indexed expression into a form useful for code generation.
 

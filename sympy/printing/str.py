@@ -233,8 +233,7 @@ class StrPrinter(Printer):
 
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)
-    _print_SparseMatrix = \
-        _print_MutableSparseMatrix = \
+    _print_MutableSparseMatrix = \
         _print_ImmutableSparseMatrix = \
         _print_Matrix = \
         _print_DenseMatrix = \

@@ -16,7 +16,6 @@ import collections
 
 from sympy import Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict, default_sort_key
 from sympy.core.compatibility import reduce, string_types
-from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
