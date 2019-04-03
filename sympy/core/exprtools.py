@@ -356,9 +356,10 @@ class Factors(object):
             factors = dict(Mul._from_args(c).as_powers_dict())
             # Handle all rational Coefficients
             for f in list(factors.keys()):
-                if type(f) is Rational or type(f) is Half:
-                    factors[f.p] = (factors[f.p] if f.p in factors else 0) + factors[f]
-                    factors[f.q] = (factors[f.q] if f.q in factors else 0) - factors[f]
+                if isinstance(f, Rational):
+                    p, q = Integer(f.p), Integer(f.q)
+                    factors[p] = (factors[p] if p in factors else 0) + factors[f]
+                    factors[q] = (factors[q] if q in factors else 0) - factors[f]
                     factors.pop(f)
             if i:
                 factors[I] = S.One*i
