@@ -191,11 +191,17 @@ class DiagonalizeVector(MatrixExpr):
         from sympy import diag
         return diag(*list(self._vector.as_explicit()))
 
+    def _eval_transpose(self):
+        return self
+
 
 def diagonalize_vector(vector):
+    from sympy import Transpose
     vector = _sympify(vector)
     if vector.shape == (1, 1):
         return vector
     if vector.is_Identity:
         return vector
+    if isinstance(vector, Transpose):
+        vector = vector.arg
     return DiagonalizeVector(vector)

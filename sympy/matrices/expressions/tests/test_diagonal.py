@@ -102,6 +102,7 @@ def test_DiagonalizeVector():
 
     # A diagonal matrix is equal to its transpose:
     assert DiagonalizeVector(x).T == DiagonalizeVector(x)
+    assert diagonalize_vector(x.T) == DiagonalizeVector(x)
 
     dx = DiagonalizeVector(x)
     assert dx[0, 0] == x[0, 0]

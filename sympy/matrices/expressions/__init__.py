@@ -14,6 +14,6 @@ from .determinant import Determinant, det
 from .transpose import Transpose
 from .adjoint import Adjoint
 from .hadamard import hadamard_product, HadamardProduct, hadamard_power, HadamardPower
-from .diagonal import DiagonalMatrix, DiagonalOf
+from .diagonal import DiagonalMatrix, DiagonalOf, DiagonalizeVector, diagonalize_vector
 from .dotproduct import DotProduct
 from .kronecker import kronecker_product, KroneckerProduct, combine_kronecker
