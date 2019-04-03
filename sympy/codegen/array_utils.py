@@ -293,7 +293,8 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         `(2, 0)` respectively. `(0, 1)` is the index slot 1 (the 2nd) of
         argument in position 0 (that is, `A_{\ldot j}`), and so on.
         """
-        return _get_contraction_links(self.subranks, *self.contraction_indices)
+        args, dlinks = _get_contraction_links([self], self.subranks, *self.contraction_indices)
+        return dlinks
 
     @staticmethod
     def from_MatMul(expr):
