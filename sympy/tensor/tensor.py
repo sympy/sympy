@@ -2137,15 +2137,22 @@ class TensExpr(Expr):
         >>> A = tensorhead("A", [L], [[1]])
         >>> A(i).replace_with_arrays({A(i): [1, 2]}, [i])
         [1, 2]
+
+        Since 'indices' is optional, we can also call replace_with_arrays by
+        this way if no specific index order is needed:
+
+        >>> A(i).replace_with_arrays({A(i): [1, 2]})
+        [1, 2]
+
         >>> expr = A(i)*A(j)
-        >>> expr.replace_with_arrays({A(i): [1, 2]}, [i, j])
+        >>> expr.replace_with_arrays({A(i): [1, 2]})
         [[1, 2], [2, 4]]
 
         For contractions, specify the metric of the ``TensorIndexType``, which
         in this case is ``L``, in its covariant form:
 
         >>> expr = A(i)*A(-i)
-        >>> expr.replace_with_arrays({A(i): [1, 2], L: diag(1, -1)}, [])
+        >>> expr.replace_with_arrays({A(i): [1, 2], L: diag(1, -1)})
         -3
 
         Symmetrization of an array:
@@ -2153,14 +2160,14 @@ class TensExpr(Expr):
         >>> H = tensorhead("H", [L, L], [[1], [1]])
         >>> a, b, c, d = symbols("a b c d")
         >>> expr = H(i, j)/2 + H(j, i)/2
-        >>> expr.replace_with_arrays({H(i, j): [[a, b], [c, d]]}, [i, j])
+        >>> expr.replace_with_arrays({H(i, j): [[a, b], [c, d]]})
         [[a, b/2 + c/2], [b/2 + c/2, d]]
 
         Anti-symmetrization of an array:
 
         >>> expr = H(i, j)/2 - H(j, i)/2
         >>> repl = {H(i, j): [[a, b], [c, d]]}
-        >>> expr.replace_with_arrays(repl, [i, j])
+        >>> expr.replace_with_arrays(repl)
         [[0, b/2 - c/2], [-b/2 + c/2, 0]]
 
         The same expression can be read as the transpose by inverting ``i`` and
