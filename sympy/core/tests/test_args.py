@@ -1341,9 +1341,13 @@ def test_sympy__stats__crv_types__GammaDistribution():
     from sympy.stats.crv_types import GammaDistribution
     assert _test_args(GammaDistribution(1, 1))
 
-def test_sympy__stats__crv_types__GumbelDistribution():
-    from sympy.stats.crv_types import GumbelDistribution
-    assert _test_args(GumbelDistribution(1, 1))
+def test_sympy__stats__crv_types__GumbelDistributionMinimum():
+    from sympy.stats.crv_types import GumbelDistributionMinimum
+    assert _test_args(GumbelDistributionMinimum(1, 1))
+
+def test_sympy__stats__crv_types__GumbelDistributionMaximum():
+    from sympy.stats.crv_types import GumbelDistributionMaximum
+    assert _test_args(GumbelDistributionMaximum(1, 1))
 
 def test_sympy__stats__crv_types__GompertzDistribution():
     from sympy.stats.crv_types import GompertzDistribution
