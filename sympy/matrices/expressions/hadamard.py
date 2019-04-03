@@ -28,6 +28,7 @@ def hadamard_product(*matrices):
     if len(matrices) == 1:
         return matrices[0]
     else:
+        matrices = [i for i in matrices if not i.is_Identity]
         return HadamardProduct(*matrices).doit()
 
 
@@ -49,7 +50,7 @@ class HadamardProduct(MatrixExpr):
 
     def __new__(cls, *args, **kwargs):
         args = list(map(sympify, args))
-        check = kwargs.get('check'   , True)
+        check = kwargs.get('check', True)
         if check:
             validate(*args)
         return super(HadamardProduct, cls).__new__(cls, *args)

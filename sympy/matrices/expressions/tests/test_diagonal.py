@@ -1,6 +1,6 @@
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.matrices.expressions.diagonal import DiagonalMatrix, DiagonalOf, DiagonalizeVector, diagonalize_vector
-from sympy import Symbol, ask, Q, KroneckerDelta
+from sympy import Symbol, ask, Q, KroneckerDelta, Identity, Matrix
 from sympy.utilities.pytest import raises
 
 
@@ -97,3 +97,37 @@ def test_DiagonalizeVector():
     d = diagonalize_vector(a)
     assert isinstance(d, MatrixSymbol)
     assert a == d
+    assert diagonalize_vector(Identity(3)) == Identity(3)
+    assert isinstance(DiagonalizeVector(Identity(3)), DiagonalizeVector)
+
+    # A diagonal matrix is equal to its transpose:
+    assert DiagonalizeVector(x).T == DiagonalizeVector(x)
+
+    dx = DiagonalizeVector(x)
+    assert dx[0, 0] == x[0, 0]
+    assert dx[1, 1] == x[1, 0]
+    assert dx[0, 1] == 0
+    assert dx[0, m] == x[0, 0]*KroneckerDelta(0, m)
+
+    z = MatrixSymbol('z', 1, n)
+    dz = DiagonalizeVector(z)
+    assert dz[0, 0] == z[0, 0]
+    assert dz[1, 1] == z[0, 1]
+    assert dz[0, 1] == 0
+    assert dz[0, m] == z[0, m]*KroneckerDelta(0, m)
+
+    v = MatrixSymbol('v', 3, 1)
+    dv = DiagonalizeVector(v)
+    assert dv.as_explicit() == Matrix([
+        [v[0, 0], 0, 0],
+        [0, v[1, 0], 0],
+        [0, 0, v[2, 0]],
+    ])
+
+    v = MatrixSymbol('v', 1, 3)
+    dv = DiagonalizeVector(v)
+    assert dv.as_explicit() == Matrix([
+        [v[0, 0], 0, 0],
+        [0, v[0, 1], 0],
+        [0, 0, v[0, 2]],
+    ])

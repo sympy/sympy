@@ -157,12 +157,8 @@ class MatMul(MatrixExpr, Mul):
 
             d = self.args[ind]._eval_derivative_matrix_lines(x)
             for i in d:
-                if i.transposed:
-                    i.append_first(right_mat)
-                    i.append_second(left_rev)
-                else:
-                    i.append_first(left_rev)
-                    i.append_second(right_mat)
+                i.append_first(left_rev)
+                i.append_second(right_mat)
                 lines.append(i)
 
         return lines
