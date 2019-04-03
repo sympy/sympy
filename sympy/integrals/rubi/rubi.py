@@ -84,8 +84,8 @@ def process_final_integral(expr):
     '''
     When there is recursion for more than 10 rules or in total 20 rules have been applied
     rubi returns `Integrate` in order to stop any further matching. After complete integration,
-    Integrate needs to be replaced back to Integral. Also rubi's `exp` need to be replaced back
-    to sympy's general `exp`.
+    Integrate needs to be replaced back to Integral. Also rubi's `rubi_exp`
+     need to be replaced back to sympy's general `exp`.
 
     Examples
     ========
@@ -147,7 +147,7 @@ def rubi_integrate(expr, var, showsteps=False):
 
     Returns Integral object if unable to integrate.
     '''
-    expr = expr.replace(sym_exp, exp)
+    expr = expr.replace(sym_exp, rubi_exp)
     rules_applied[:] = []
     expr = process_trig(expr)
     expr = rubi_powsimp(expr)
@@ -167,7 +167,7 @@ def rubi_integrate(expr, var, showsteps=False):
 @doctest_depends_on(modules=('matchpy',))
 def util_rubi_integrate(expr, var, showsteps=False):
     expr = process_trig(expr)
-    expr = expr.replace(sym_exp, exp)
+    expr = expr.replace(sym_exp, rubi_exp)
     if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
         return S(expr)*var
     if isinstance(expr, Add):
