@@ -151,6 +151,11 @@ def test_characteristic_function():
     assert cf(0) == 1
     assert simplify(cf(1)) == S(25)/26 + 5*I/26
 
+    L = Levy('x', 0, 1)
+    cf = characteristic_function(L)
+    assert cf(0) == 1
+    assert cf(1) == exp(-sqrt(2)*sqrt(-I))
+
 
 def test_sample_continuous():
     z = Symbol('z')
@@ -471,6 +476,7 @@ def test_levy():
     c = Symbol("b", positive=True)
 
     X = Levy('x', mu, c)
+    X.pspace.domain.set == Interval(mu, oo)
     assert density(X)(x) == sqrt(c/(2*pi))*exp(-c/(2*(x - mu)))/((x - mu)**(S.One + S.Half))
     assert cdf(X)(x) == erfc(sqrt(c/(2*(x - mu))))
 
