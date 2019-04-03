@@ -191,9 +191,6 @@ class DiagonalizeVector(MatrixExpr):
         from sympy import diag
         return diag(*list(self._vector.as_explicit()))
 
-    def _eval_transpose(self):
-        return self
-
 
 def diagonalize_vector(vector):
     from sympy import Transpose
