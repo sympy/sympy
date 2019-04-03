@@ -250,7 +250,7 @@ def quantile(X, p):
     _value_check(p > 0, "The order p must be positive.")
     _value_check(p < 1, "The order p must be less than 1.")
 
-    if pspace(X).is_Continuous:
+    if pspace(X).is_Continuous or pspace(X).is_Discrete:
         x = Symbol("x")
         return solveset(cdf(X)(x) - p, x, S.Reals)
     else:
