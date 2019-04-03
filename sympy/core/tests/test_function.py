@@ -600,8 +600,8 @@ def test_diff_wrt():
     assert diff(f(g(x), h(y)), x) == \
         Derivative(g(x), x)*Derivative(f(g(x), h(y)), g(x))
     assert diff(f(g(x), h(x)), x) == (
-        Subs(Derivative(f(y, h(x)), y), y, g(x))*Derivative(g(x), x) +
-        Subs(Derivative(f(g(x), y), y), y, h(x))*Derivative(h(x), x))
+        Derivative(f(g(x), h(x)), g(x))*Derivative(g(x), x)  +
+        Derivative(f(g(x), h(x)), h(x))*Derivative(h(x), x))
     assert f(
         sin(x)).diff(x) == cos(x)*Subs(Derivative(f(x), x), x, sin(x))
 
