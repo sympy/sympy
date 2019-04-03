@@ -468,4 +468,5 @@ def test_idempotence():
     assert x**0     == 1
 
     # not-necessarily-positive powers are left untouched
+    assert x**y     == Pow(x, y, evaluate=False)
     assert x**y     != x
