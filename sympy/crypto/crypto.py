@@ -275,6 +275,7 @@ def encipher_rot13(msg, symbols=None):
 
     See Also
     ========
+	
     decipher_rot13
     """
     return encipher_shift(msg, 13, symbols)
@@ -403,6 +404,7 @@ def encipher_atbash(msg, symbols=None):
 
     Notes
     =====
+	
     Atbash is a substitution cipher originally used to encrypt the Hebrew
     alphabet. Atbash works on the principle of mapping each alphabet to its
     reverse / counterpart (i.e. a would map to z, b to y etc.)
@@ -412,6 +414,7 @@ def encipher_atbash(msg, symbols=None):
 
     See Also
     ========
+	
     decipher_atbash
     """
     return encipher_affine(msg, (25,25), symbols)
@@ -422,12 +425,14 @@ def decipher_atbash(msg, symbols=None):
 
     Notes
     =====
+	
     ```decipher_atbash``` is functionally equivalent to ```encipher_atbash```.
     However, it has still been added as a separate function to maintain
     consistency.
 
     Examples
     ========
+	
     >>> from sympy.crypto.crypto import encipher_atbash, decipher_atbash
     >>> msg = 'GONAVYBEATARMY'
     >>> encipher_atbash(msg)
