@@ -3,7 +3,7 @@ from __future__ import print_function, division
 
 from sympy.core.backend import sympify
 from sympy.core.compatibility import string_types
-from sympy.physics.vector import Point, ReferenceFrame, Dyadic
+from sympy.physics.vector import Point, ReferenceFrame, Dyadic, dot
 
 __all__ = ['RigidBody']
 
@@ -239,7 +239,7 @@ class RigidBody(object):
 
         """
 
-        return (self.frame.ang_vel_in(frame) & (self.central_inertia &
+        return dot(self.frame.ang_vel_in(frame), dot(self.central_inertia,
                 self.frame.ang_vel_in(frame)) / sympify(2))
 
     def translational_kinetic_energy(self, frame):
@@ -280,8 +280,7 @@ class RigidBody(object):
 
         """
 
-        return (self.mass * (self.masscenter.vel(frame) &
-            self.masscenter.vel(frame)) / sympify(2))
+        return (self.mass * dot(self.masscenter.vel(frame), self.masscenter.vel(frame)) / sympify(2))
 
     def kinetic_energy(self, frame):
         """Kinetic energy of the rigid body

@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.backend import sympify
 from sympy.core.compatibility import string_types
-from sympy.physics.vector import Point
+from sympy.physics.vector import Point, dot
 
 __all__ = ['Particle']
 
@@ -178,7 +178,7 @@ class Particle(object):
 
         """
 
-        return (self.mass / sympify(2) * self.point.vel(frame) &
+        return dot(self.mass / sympify(2) * self.point.vel(frame),
                 self.point.vel(frame))
 
     @property
