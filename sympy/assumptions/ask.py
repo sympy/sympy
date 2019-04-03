@@ -81,7 +81,6 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Idempotence
 
         """
-        # TODO: Add examples
         return Predicate('idempotent')
 
     @predicate_memo
