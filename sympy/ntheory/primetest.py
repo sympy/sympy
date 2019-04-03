@@ -547,6 +547,9 @@ def isprime(n):
         return True
     if n < 2 or (n % 2) == 0 or (n % 3) == 0 or (n % 5) == 0:
         return False
+    d= 1 + (n - 1) % 9 
+    if d in (3, 6, 9, 0):
+        return False
     if n < 49:
         return True
     if (n %  7) == 0 or (n % 11) == 0 or (n % 13) == 0 or (n % 17) == 0 or \
