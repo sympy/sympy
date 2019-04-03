@@ -1,5 +1,5 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
-from sympy.core.compatibility import unicode
+from sympy.core.compatibility import unicode, iterable
 from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
                        VectorStrPrinter)
 
@@ -534,9 +534,12 @@ class Dyadic(object):
         2*(N.x|N.x)
 
         """
-
-        return sum([Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
-                    for v in self.args], Dyadic(0))
+        if iterable(args):
+            return sum([Dyadic([(v[0].subs(*list(args), **kwargs), v[1], v[2])])
+                        for v in self.args], Dyadic(0))
+        else:
+            return sum([Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
+                        for v in self.args], Dyadic(0))
 
     def applyfunc(self, f):
         """Apply a function to each component of a Dyadic."""

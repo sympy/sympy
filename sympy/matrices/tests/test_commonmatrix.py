@@ -1524,4 +1524,4 @@ def test___eq__():
 
 def test_issue_10589():
     vect = Matrix([x,y])
-    assert vect.subs(zip([x,y] , [1,1])) == Matrix([[1],[1]])
+    assert vect.subs(zip([x,y] , [1,1])) == Matrix([[1], [1]])

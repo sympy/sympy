@@ -1,7 +1,7 @@
 from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
     ImmutableMatrix as Matrix)
 from sympy import trigsimp
-from sympy.core.compatibility import unicode
+from sympy.core.compatibility import unicode, iterable
 from sympy.utilities.misc import filldedent
 
 __all__ = ['Vector']
@@ -696,7 +696,10 @@ class Vector(object):
 
         d = {}
         for v in self.args:
-            d[v[1]] = v[0].subs(*args, **kwargs)
+            if iterable(args):
+                d[v[1]] = v[0].subs(*list(args), **kwargs)
+            else:
+                d[v[1]] = v[0].subs(*args, **kwargs)
         return Vector(d)
 
     def magnitude(self):

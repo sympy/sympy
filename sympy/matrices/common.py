@@ -12,7 +12,7 @@ from inspect import isfunction
 from sympy.assumptions.refine import refine
 from sympy.core.basic import Atom
 from sympy.core.compatibility import (
-    Iterable, as_int, is_sequence, range, reduce)
+    Iterable, iterable,  as_int, is_sequence, range, reduce)
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
@@ -1886,12 +1886,10 @@ class MatrixOperations(MatrixRequired):
         >>> Matrix(_).subs(y, x)
         Matrix([[x]])
         """
-        try:
-            iter(args)
-        except TypeError:
-            return self.applyfunc(lambda x: x.subs(*args, **kwargs))
+        if iterable(args):
+            return self.applyfunc(lambda x: x.subs(*list(args), **kwargs))
         else:
-            return self.applyfunc(lambda x: x.subs(list(args) , **kwargs))
+            return self.applyfunc(lambda x: x.subs(*args, **kwargs))
 
     def trace(self):
         """
