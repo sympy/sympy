@@ -262,8 +262,8 @@ class Dimension(Expr):
         for dpow in dim_sys.get_dimensional_dependencies(self).values():
             if not isinstance(dpow, (int, Integer)):
                 return False
-        else:
-            return True
+
+        return True
 
 
 # base dimensions (MKS)

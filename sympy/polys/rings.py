@@ -694,8 +694,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             for k in p1.keys():
                 if not almosteq(p1[k], p2[k], tolerance):
                     return False
-            else:
-                return True
+            return True
         elif len(p1) > 1:
             return False
         else:
