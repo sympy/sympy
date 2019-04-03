@@ -48,7 +48,7 @@ from __future__ import print_function, division
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfi, I, hyper, uppergamma,
-                   sinh, Ne, expint)
+                   sinh, atan, Ne, expint)
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, exp, besseli, besselj, besselk
@@ -479,6 +479,10 @@ class CauchyDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
+
+    def _cdf(self, x):
+        x0, gamma = self.x0, self.gamma
+        return (1/pi)*atan((x - x0)/gamma) + S.Half
 
     def _characteristic_function(self, t):
         return exp(self.x0 * I * t -  self.gamma * Abs(t))
@@ -1514,6 +1518,10 @@ class GompertzDistribution(SingleContinuousDistribution):
         eta, b = self.eta, self.b
         return b*eta*exp(b*x)*exp(eta)*exp(-eta*exp(b*x))
 
+    def _cdf(self, x):
+        eta, b = self.eta, self.b
+        return 1 - exp(eta)*exp(-eta*exp(b*x))
+
     def _moment_generating_function(self, t):
         eta, b = self.eta, self.b
         return eta * exp(eta) * expint(t/b, eta)
@@ -1897,6 +1905,10 @@ class MaxwellDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
+
+    def _cdf(self, x):
+        a = self.a
+        return erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
 
 def Maxwell(name, a):
     r"""
@@ -2423,6 +2435,10 @@ class RayleighDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         sigma = self.sigma
         return x/sigma**2*exp(-x**2/(2*sigma**2))
+
+    def _cdf(self, x):
+        sigma = self.sigma
+        return 1 - exp(-(x**2/(2*sigma**2)))
 
     def _characteristic_function(self, t):
         sigma = self.sigma
