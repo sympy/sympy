@@ -158,6 +158,7 @@ class PermutationGroup(Basic):
         obj._transitivity_degree = None
         obj._max_div = None
         obj._is_perfect = None
+        obj._is_cyclic = None
         obj._r = len(obj._generators)
         obj._degree = obj._generators[0].size
 
@@ -2674,6 +2675,7 @@ class PermutationGroup(Basic):
         if H.is_subgroup(self):
             return self.order()//H.order()
 
+    @property
     def is_cyclic(self):
         """
         Return ``True`` if the group is Cyclic.
@@ -2683,13 +2685,15 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics.named_groups import AbelianGroup
         >>> G = AbelianGroup(3, 4)
-        >>> G.is_cyclic()
+        >>> G.is_cyclic
         True
         >>> G = AbelianGroup(4, 4)
-        >>> G.is_cyclic()
+        >>> G.is_cyclic
         False
 
         """
+        if self._is_cyclic is not None:
+            return self._is_cyclic
         if len(self.generators) == 1:
             return True
         if not self._is_abelian:

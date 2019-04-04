@@ -513,15 +513,20 @@ class FpGroup(DefaultPrinting):
         P, T = self._to_perm_group()
         return T.invert(P._elements)
 
+    @property
     def is_cyclic(self):
         """
         Return ``True`` if group is Cyclic.
 
         """
-        if len(self.generators) == 0 or len(self.generators) == 1:
+        if len(self.generators) <= 1:
             return True
-        P, T = self._to_perm_group()
-        return P.is_cyclic()
+        try:
+            P, T = self._to_perm_group()
+        except NotImplementedError:
+            raise NotImplementedError("Check for infinite Cyclic group "
+                                      "is not implemented")
+        return P.is_cyclic
 
 
 class FpSubgroup(DefaultPrinting):

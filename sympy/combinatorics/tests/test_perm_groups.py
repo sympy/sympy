@@ -948,12 +948,12 @@ def test_index():
 
 def test_cyclic():
     G = SymmetricGroup(2)
-    assert G.is_cyclic()
+    assert G.is_cyclic
     G = AbelianGroup(3, 7)
-    assert G.is_cyclic()
+    assert G.is_cyclic
     G = AbelianGroup(7, 7)
-    assert not G.is_cyclic()
+    assert not G.is_cyclic
     G = AlternatingGroup(3)
-    assert G.is_cyclic()
+    assert G.is_cyclic
     G = AlternatingGroup(4)
-    assert not G.is_cyclic()
+    assert not G.is_cyclic
