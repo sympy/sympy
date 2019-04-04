@@ -137,3 +137,21 @@ def test_transpose_power():
 
     assert ((D*C)**-5).T**-5 == ((D*C)**25).T
     assert (((D*C)**l).T**k).T == (D*C)**(l*k)
+
+
+def test_idempotence():
+
+    F = MatrixSymbol('F', n, n, idempotent=True)
+    t = symbols('t', positive=True)
+
+    # positive powers equal the element
+    assert F**2     == F
+    assert F**125   == F
+    assert F**t     == F
+    assert F**(t+1) == F
+
+    # empty product
+    assert type(F**0) is Identity
+
+    # not-necessarily-positive powers are left untouched
+    assert F**m     != F
