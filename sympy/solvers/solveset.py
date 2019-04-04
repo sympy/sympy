@@ -34,7 +34,7 @@ from sympy.functions.elementary.miscellaneous import real_root
 from sympy.logic.boolalg import And
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
-from sympy.sets.sets import Set
+from sympy.sets.sets import Set, EmptySet
 from sympy.matrices import Matrix, MatrixBase
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)

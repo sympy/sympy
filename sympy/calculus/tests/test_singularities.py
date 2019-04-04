@@ -10,7 +10,7 @@ from sympy.calculus.singularities import (
 from sympy.sets import Interval, FiniteSet
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y
-
+from sympy.sets.sets import EmptySet
 
 def test_singularities():
     x = Symbol('x')
