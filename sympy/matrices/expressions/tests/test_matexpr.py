@@ -504,3 +504,14 @@ def test_simplify_matrix_expressions():
     a = gcd_terms(2*C*D + 4*D*C)
     assert type(a) == MatMul
     assert a.args == (2, (C*D + 2*D*C))
+
+def test_assumptions():
+
+    T = MatrixSymbol('T', n, n, idempotent=True)
+    assert T.is_idempotent
+
+    K = MatrixSymbol('K', n, n, hermitian=True)
+    assert K.is_hermitian
+
+    M = MatrixSymbol('M', n, n, antihermitian=True)
+    assert M.is_antihermitian
