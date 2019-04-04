@@ -13,6 +13,7 @@ from sympy.functions import (sin, cos, exp, tan, cot, atan, asin, atanh,
     tanh, log, sqrt)
 from sympy.core.numbers import Rational
 from sympy.core import expand, S
+from sympy.utilities.pytest import XFAIL
 
 def is_close(a, b):
     tol = 10**(-10)
@@ -271,6 +272,16 @@ def test_atan():
         *x**3*y + EX((3*a**2 - 1)/(3*a**6 + 9*a**4 + 9*a**2 + 3))*x**3 + \
         EX(1/(a**2 + 1))*x**2*y - EX(a/(a**4 + 2*a**2 + 1))*x**2 + EX(1/(a**2 \
         + 1))*x + EX(atan(a))
+    # Complex numbers not in ring_series
+    R, x = ring('x', EX)
+    assert rs_atan(x + I,x,3) == EX(I/16)*x**2 + EX(1/4)*x + EX(zoo + oo*I)
+    assert rs_atan(x*I,x,3) == EX(I)*x
+
+    @XFAIL
+    R, x = ring('x', EX)
+    assert rs_atan(I,x,5) == EX(atan(I))
+    assert rs_atan(I + a,x,3) == EX(atan(I +a))
+    assert rs_atan(I*a,x,3) == EX(atan(I*a))
 
 def test_asin():
     R, x, y = ring('x, y', QQ)
