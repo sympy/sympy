@@ -920,6 +920,8 @@ class Basic(with_metaclass(ManagedProperties)):
         from sympy.utilities import default_sort_key
         from sympy import Dummy, Symbol
 
+        if iterable(args):
+           args=list(args)
         unordered = False
         if len(args) == 1:
             sequence = args[0]

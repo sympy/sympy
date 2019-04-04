@@ -534,11 +534,7 @@ class Dyadic(object):
         2*(N.x|N.x)
 
         """
-        if iterable(args):
-            return sum([Dyadic([(v[0].subs(*list(args), **kwargs), v[1], v[2])])
-                        for v in self.args], Dyadic(0))
-        else:
-            return sum([Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
+        return sum([Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
                         for v in self.args], Dyadic(0))
 
     def applyfunc(self, f):

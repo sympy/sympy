@@ -696,10 +696,7 @@ class Vector(object):
 
         d = {}
         for v in self.args:
-            if iterable(args):
-                d[v[1]] = v[0].subs(*list(args), **kwargs)
-            else:
-                d[v[1]] = v[0].subs(*args, **kwargs)
+            d[v[1]] = v[0].subs(*args, **kwargs)
         return Vector(d)
 
     def magnitude(self):
