@@ -789,10 +789,13 @@ def maximum(f, symbol, domain=S.Reals):
     1/2
 
     """
-    if isinstance(domain, EmptySet):
-        return S.EmptySet
+    if type(symbol) == Symbol:
+        if isinstance(domain, EmptySet):
+            raise ValueError("Maximum value not defined for empty domain.")
 
-    return function_range(f, symbol, domain).sup
+        return function_range(f, symbol, domain).sup
+    else:
+        raise ValueError("%s is not a valid symbol." % symbol)
 
 
 def minimum(f, symbol, domain=S.Reals):
@@ -828,10 +831,13 @@ def minimum(f, symbol, domain=S.Reals):
     -1/2
 
     """
-    if isinstance(domain, EmptySet):
-        return S.EmptySet
+    if type(symbol) == Symbol:
+        if isinstance(domain, EmptySet):
+            raise ValueError("Minimum value not defined for empty domain.")
 
-    return function_range(f, symbol, domain).inf
+        return function_range(f, symbol, domain).inf
+    else:
+        raise ValueError("%s is not a valid symbol." % symbol)
 
 
 class AccumulationBounds(AtomicExpr):

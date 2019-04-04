@@ -236,6 +236,13 @@ def test_maximum():
     assert maximum(cos(x)-sin(x), x, S.Reals) == sqrt(2)
     assert maximum(y, x, S.Reals) == y
 
+    raises(ValueError, lambda : maximum(sin(x), x, S.EmptySet))
+    raises(ValueError, lambda : maximum(log(cos(x)), x, S.EmptySet))
+    raises(ValueError, lambda : maximum(1/(x**2 + y**2 + 1), x, S.EmptySet))
+    raises(ValueError, lambda : maximum(sin(x), sin(x)))
+    raises(ValueError, lambda : maximum(sin(x), x*y, S.EmptySet))
+    raises(ValueError, lambda : maximum(sin(x), S(1)))
+
 def test_minimum():
     x, y = symbols('x y')
 
@@ -255,6 +262,13 @@ def test_minimum():
         ) == -S.One
     assert minimum(cos(x)-sin(x), x, S.Reals) == -sqrt(2)
     assert minimum(y, x, S.Reals) == y
+
+    raises(ValueError, lambda : minimum(sin(x), x, S.EmptySet))
+    raises(ValueError, lambda : minimum(log(cos(x)), x, S.EmptySet))
+    raises(ValueError, lambda : minimum(1/(x**2 + y**2 + 1), x, S.EmptySet))
+    raises(ValueError, lambda : minimum(sin(x), sin(x)))
+    raises(ValueError, lambda : minimum(sin(x), x*y, S.EmptySet))
+    raises(ValueError, lambda : minimum(sin(x), S(1)))
 
 def test_AccumBounds():
     assert AccumBounds(1, 2).args == (1, 2)
