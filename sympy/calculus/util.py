@@ -789,7 +789,7 @@ def maximum(f, symbol, domain=S.Reals):
     1/2
 
     """
-    if isinstance(symbol, Symbol):
+    if symbol.is_Symbol:
         if isinstance(domain, EmptySet):
             raise ValueError("Maximum value not defined for empty domain.")
 
@@ -831,7 +831,7 @@ def minimum(f, symbol, domain=S.Reals):
     -1/2
 
     """
-    if isinstance(symbol, Symbol):
+    if symbol.is_Symbol:
         if isinstance(domain, EmptySet):
             raise ValueError("Minimum value not defined for empty domain.")
 
