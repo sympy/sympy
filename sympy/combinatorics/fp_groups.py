@@ -362,42 +362,6 @@ class FpGroup(DefaultPrinting):
             C = self.coset_enumeration(H, strategy)
             return len(C.table)
 
-    def is_cyclic(self):
-        """
-        Return ``True`` if the group is Cyclic.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics.free_groups import free_group
-        >>> from sympy.combinatorics.fp_groups import FpGroup
-        >>> F, x, y = free_group("x, y")
-        >>> f = FpGroup(F, [x*y*x**-1*y**-1, y**5, x**4])
-        >>> f.is_cyclic()
-        True
-        >>> f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
-        >>> f.is_cyclic()
-        False
-
-        """
-        if len(self.generators) == 0 or len(self.generators) == 1:
-            return True
-        if self.order() == S.Infinity:
-            raise NotImplementedError("Check for cyclic group is not implemented"
-                                                       "for infinite order group")
-        if not self.is_abelian:
-            return False
-        for p in primefactors(self.order()):
-            pgens = []
-            for g in self.generators:
-                pgens.append(g**p)
-            K, T = self.subgroup(pgens, homomorphism=True)
-            if self.index(T(K.generators)) != p:
-                return False
-            else:
-                continue
-        return True
-
     def __str__(self):
         if self.free_group.rank > 30:
             str_form = "<fp group with %s generators>" % self.free_group.rank
@@ -548,6 +512,16 @@ class FpGroup(DefaultPrinting):
         '''
         P, T = self._to_perm_group()
         return T.invert(P._elements)
+
+    def is_cyclic(self):
+        """
+        Return ``True`` if group is Cyclic.
+
+        """
+        if len(self.generators) == 0 or len(self.generators) == 1:
+            return True
+        P, T = self._to_perm_group()
+        return P.is_cyclic()
 
 
 class FpSubgroup(DefaultPrinting):
