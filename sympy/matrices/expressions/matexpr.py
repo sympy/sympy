@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from functools import wraps, reduce
 import collections
 
+from sympy.core.assumptions import StdFactKB
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq, Mul, Add
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key
@@ -12,6 +13,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
+from sympy.core.logic import fuzzy_bool
 
 
 def _sympifyit(arg, retval=None):
@@ -709,9 +711,41 @@ class MatrixSymbol(MatrixExpr):
     is_symbol = True
     _diff_wrt = True
 
-    def __new__(cls, name, n, m):
+    @staticmethod
+    def _sanitize(assumptions, obj=None):
+        """Remove None, convert values to bool
+        """
+
+        # sanitize assumptions so 1 -> True and 0 -> False
+        for key in list(assumptions.keys()):
+            from collections import defaultdict
+            from sympy.utilities.exceptions import SymPyDeprecationWarning
+            keymap = defaultdict(lambda: None)
+            keymap.update({'bounded': 'finite', 'unbounded': 'infinite', 'infinitesimal': 'zero'})
+            if keymap[key]:
+                SymPyDeprecationWarning(
+                    feature="%s assumption" % key,
+                    useinstead="%s" % keymap[key],
+                    issue=8071,
+                    deprecated_since_version="0.7.6").warn()
+                assumptions[keymap[key]] = assumptions[key]
+                assumptions.pop(key)
+                key = keymap[key]
+
+            v = assumptions[key]
+            if v is None:
+                assumptions.pop(key)
+                continue
+            assumptions[key] = bool(v)
+
+    def __new__(cls, name, n, m, **assumptions):
         n, m = sympify(n), sympify(m)
+        cls._sanitize(assumptions, cls)
         obj = Basic.__new__(cls, name, n, m)
+
+        tmp_asm_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
         return obj
 
     def _hashable_content(self):

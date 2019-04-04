@@ -13,6 +13,12 @@ class MatPow(MatrixExpr):
         base = _sympify(base)
         if not base.is_Matrix:
             raise TypeError("Function parameter should be a matrix")
+        if base.is_idempotent:
+            if exp.is_positive:
+                return b
+            elif exp.is_negative:
+                raise ValueError('idempotent elements are non-invertible')
+
         exp = _sympify(exp)
         return super(MatPow, cls).__new__(cls, base, exp)
 
