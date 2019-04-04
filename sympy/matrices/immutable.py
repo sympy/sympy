@@ -114,7 +114,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
         return tuple(int(i) for i in self.args[:2])
 
     def is_diagonalizable(self, reals_only=False, **kwargs):
-        return super(DenseMatrix, self).is_diagonalizable(
+        return super(ImmutableDenseMatrix, self).is_diagonalizable(
             reals_only=reals_only, **kwargs)
     is_diagonalizable.__doc__ = DenseMatrix.is_diagonalizable.__doc__
     is_diagonalizable = cacheit(is_diagonalizable)
@@ -179,7 +179,7 @@ class ImmutableSparseMatrix(SparseMatrix, Basic):
     _eval_Eq = ImmutableDenseMatrix._eval_Eq
 
     def is_diagonalizable(self, reals_only=False, **kwargs):
-        return super(SparseMatrix, self).is_diagonalizable(
+        return super(ImmutableSparseMatrix, self).is_diagonalizable(
             reals_only=reals_only, **kwargs)
     is_diagonalizable.__doc__ = SparseMatrix.is_diagonalizable.__doc__
     is_diagonalizable = cacheit(is_diagonalizable)

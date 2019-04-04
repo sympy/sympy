@@ -89,6 +89,8 @@ class MatMul(MatrixExpr, Mul):
         scalars = [x for x in self.args if not x.is_Matrix]
         matrices = [x for x in self.args if x.is_Matrix]
         coeff = Mul(*scalars)
+        if coeff.is_commutative is False:
+            raise NotImplementedError("noncommutative scalars in MatMul are not supported.")
 
         return coeff, matrices
 
@@ -138,12 +140,9 @@ class MatMul(MatrixExpr, Mul):
 
     # Needed for partial compatibility with Mul
     def args_cnc(self, **kwargs):
-        coeff, matrices = self.as_coeff_matrices()
-        # I don't know how coeff could have noncommutative factors, but this
-        # handles it.
-        coeff_c, coeff_nc = coeff.args_cnc(**kwargs)
-
-        return coeff_c, coeff_nc + matrices
+        coeff_c = [x for x in self.args if x.is_commutative]
+        coeff_nc = [x for x in self.args if not x.is_commutative]
+        return [coeff_c, coeff_nc]
 
     def _eval_derivative_matrix_lines(self, x):
         from .transpose import Transpose
@@ -154,18 +153,12 @@ class MatMul(MatrixExpr, Mul):
             right_args = self.args[ind+1:]
 
             right_mat = MatMul.fromiter(right_args)
-            right_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(right_args)])
-            left_mat = MatMul.fromiter(left_args)
-            left_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(left_args)])
+            left_rev = MatMul.fromiter([Transpose(i).doit() if i.is_Matrix else i for i in reversed(left_args)])
 
             d = self.args[ind]._eval_derivative_matrix_lines(x)
             for i in d:
-                if i.transposed:
-                    i.append_first(right_mat)
-                    i.append_second(left_rev)
-                else:
-                    i.append_first(left_rev)
-                    i.append_second(right_mat)
+                i.append_first(left_rev)
+                i.append_second(right_mat)
                 lines.append(i)
 
         return lines

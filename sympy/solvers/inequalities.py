@@ -5,10 +5,9 @@ from __future__ import print_function, division
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Eq, Ge, Lt, Ne
+from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets import Interval
 from sympy.sets.sets import FiniteSet, Union, EmptySet, Intersection
-from sympy.sets.fancysets import ImageSet
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
 
@@ -126,7 +125,7 @@ def solve_poly_inequalities(polys):
     Union(Interval.open(-oo, -sqrt(3)), Interval.open(-1, 1), Interval.open(sqrt(3), oo))
     """
     from sympy import Union
-    return Union(*[solve_poly_inequality(*p) for p in polys])
+    return Union(*[s for p in polys for s in solve_poly_inequality(*p)])
 
 
 def solve_rational_inequalities(eqs):

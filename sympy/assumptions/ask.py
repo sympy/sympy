@@ -1386,7 +1386,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
 
     from sympy.core.cache import cacheit
-    from sympy.logic.boolalg import And, Not, Or
+    from sympy.logic.boolalg import And
     from sympy.assumptions.ask import Q
 
     # -{ Known facts in Conjunctive Normal Form }-

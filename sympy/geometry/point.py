@@ -22,19 +22,16 @@ from __future__ import division, print_function
 import warnings
 
 from sympy.core import S, sympify, Expr
-from sympy.core.numbers import Number
-from sympy.core.compatibility import iterable, is_sequence, as_int
+from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.simplify import nsimplify, simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im
 from sympy.matrices import Matrix
-from sympy.core.relational import Eq
 from sympy.core.numbers import Float
 from sympy.core.evaluate import global_evaluate
 from sympy.core.add import Add
-from sympy.sets import FiniteSet
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent, func_name, Undecidable
 
@@ -419,12 +416,12 @@ class Point(GeometryEntity):
         sqrt(x**2 + y**2)
 
         """
-        if not isinstance(other , GeometryEntity) :
-            try :
+        if not isinstance(other, GeometryEntity):
+            try:
                 other = Point(other, dim=self.ambient_dimension)
-            except TypeError :
+            except TypeError:
                 raise TypeError("not recognized as a GeometricEntity: %s" % type(other))
-        if isinstance(other , Point) :
+        if isinstance(other, Point):
             s, p = Point._normalize_dimension(self, Point(other))
             return sqrt(Add(*((a - b)**2 for a, b in zip(s, p))))
         distance = getattr(other, 'distance', None)
@@ -443,7 +440,7 @@ class Point(GeometryEntity):
         # a point is equal to another point if all its components are equal
         if not isinstance(other, Point) or len(self) != len(other):
             return False
-        return all(a.equals(b) for a,b in zip(self, other))
+        return all(a.equals(b) for a, b in zip(self, other))
 
     def evalf(self, prec=None, **options):
         """Evaluate the coordinates of the point.
@@ -816,11 +813,6 @@ class Point(GeometryEntity):
         canberra_distance : The weighted sum of horizontal and vertical
         distances to point p. The weight used is the sum of absolute values
         of the coordinates.
-
-        See Also
-        ========
-
-        sympy.geometry.point.Point.distance
 
         Examples
         ========

@@ -12,7 +12,6 @@ from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
     ZeroMatrix, GenericZeroMatrix)
 from sympy.utilities import default_sort_key, sift
-from sympy.core.operations import AssocOp
 
 
 class MatAdd(MatrixExpr, Add):

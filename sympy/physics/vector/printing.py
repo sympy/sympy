@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from sympy import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol

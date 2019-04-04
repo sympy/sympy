@@ -25,9 +25,10 @@ from sympy.simplify import nsimplify
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, numbered_symbols
+from sympy.utilities.misc import filldedent
 
 from .common import (
-    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError, a2idx)
+    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError)
 
 
 def _iszero(x):
@@ -1036,10 +1037,33 @@ class MatrixSubspaces(MatrixReductions):
             vectors to be made orthogonal
 
         normalize : bool
-            If true, return an orthonormal basis.
-        """
+            If ``True``, return an orthonormal basis.
 
+        rankcheck : bool
+            If ``True``, the computation does not stop when encountering
+            linearly dependent vectors.
+
+            If ``False``, it will raise ``ValueError`` when any zero
+            or linearly dependent vectors are found.
+
+        Returns
+        =======
+
+        list
+            List of orthogonal (or orthonormal) basis vectors.
+
+        See Also
+        ========
+
+        MatrixBase.QRdecomposition
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+        """
         normalize = kwargs.get('normalize', False)
+        rankcheck = kwargs.get('rankcheck', False)
 
         def project(a, b):
             return b * (a.dot(b) / b.dot(b))
@@ -1056,12 +1080,19 @@ class MatrixSubspaces(MatrixReductions):
         # make sure we start with a non-zero vector
         vecs = list(vecs)
         while len(vecs) > 0 and vecs[0].is_zero:
-            del vecs[0]
+            if rankcheck is False:
+                del vecs[0]
+            else:
+                raise ValueError(
+                    "GramSchmidt: vector set not linearly independent")
 
         for vec in vecs:
             perp = perp_to_subspace(vec, ret)
             if not perp.is_zero:
                 ret.append(perp)
+            elif rankcheck is True:
+                raise ValueError(
+                    "GramSchmidt: vector set not linearly independent")
 
         if normalize:
             ret = [vec / vec.norm() for vec in ret]
@@ -2305,21 +2336,34 @@ class MatrixBase(MatrixDeprecated,
                         try:
                             ncol.add(len(row))
                         except TypeError:
-                            ncol.add(1)
+                            ncol.add(-1)
                 if len(ncol) > 1:
-                    raise ValueError("Got rows of variable lengths: %s" %
-                                     sorted(list(ncol)))
+                    nolen = False
+                    if -1 in ncol:
+                        ncol.remove(-1)
+                        nolen = True
+                    nums = ', '.join(sorted([str(i) for i in ncol]))
+                    if nolen:
+                        nums  = 'none, ' + nums
+                    raise ValueError(
+                        "Got rows of variable lengths: %s" % nums)
+                if -1 in ncol:
+                    ncol = [1]
                 cols = ncol.pop() if ncol else 0
                 rows = len(in_mat) if cols else 0
-                if rows:
-                    if not is_sequence(in_mat[0]):
+                if not rows:
+                    flat_list = []
+                else:
+                    # how many of the rows are sequences? All or none are ok.
+                    nseq = sum([is_sequence(i) for i in in_mat])
+                    if not nseq:
                         cols = 1
                         flat_list = [cls._sympify(i) for i in in_mat]
-                        return rows, cols, flat_list
-                flat_list = []
-                for j in range(rows):
-                    for i in range(cols):
-                        flat_list.append(cls._sympify(in_mat[j][i]))
+                    elif nseq == rows:
+                        flat_list = [cls._sympify(in_mat[j][i]) for
+                                     j in range(rows) for i in range(cols)]
+                    else:
+                        pass  # flat_list is still None; error raised below
 
         elif len(args) == 3:
             rows = as_int(args[0])
@@ -2354,7 +2398,9 @@ class MatrixBase(MatrixDeprecated,
             flat_list = []
 
         if flat_list is None:
-            raise TypeError("Data type not understood")
+            raise TypeError(filldedent('''
+                Data type not understood; expecting list of lists
+                or lists of values.'''))
 
         return rows, cols, flat_list
 

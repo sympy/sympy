@@ -1,19 +1,18 @@
-from sympy import Order, S, log, limit, lcm_list, pi, Abs, im, re, Symbol, Dummy
-from sympy.core.basic import Basic
+from sympy import Order, S, log, limit, lcm_list, Abs, im, re, Dummy
 from sympy.core import Add, Mul, Pow
-from sympy.logic.boolalg import And
+from sympy.core.basic import Basic
+from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
+from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.logic.boolalg import And
+from sympy.polys.rationaltools import together
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
-from sympy.sets.conditionset import ConditionSet
-from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.utilities import filldedent
 from sympy.simplify.radsimp import denom
-from sympy.polys.rationaltools import together
-from sympy.core.compatibility import iterable
 from sympy.solvers.inequalities import solve_univariate_inequality
+from sympy.utilities import filldedent
 
 def continuous_domain(f, symbol, domain):
     """
@@ -56,6 +55,7 @@ def continuous_domain(f, symbol, domain):
 
     Raises
     ======
+
     NotImplementedError
         If the method to determine continuity of such a function
         has not yet been developed.
@@ -68,7 +68,6 @@ def continuous_domain(f, symbol, domain):
         constrained_interval = domain
         for atom in f.atoms(Pow):
             predicate, denomin = _has_rational_power(atom, symbol)
-            constraint = S.EmptySet
             if predicate and denomin == 2:
                 constraint = solve_univariate_inequality(atom.base >= 0,
                                                          symbol).as_set()
@@ -84,7 +83,6 @@ def continuous_domain(f, symbol, domain):
         domain = constrained_interval
 
     try:
-        sings = S.EmptySet
         if f.has(Abs):
             sings = solveset(1/f, symbol, domain) + \
                 solveset(denom(together(f)), symbol, domain)
@@ -100,11 +98,8 @@ def continuous_domain(f, symbol, domain):
                     solveset(denom(together(f)), symbol, domain)
 
     except NotImplementedError:
-        import sys
-        raise (NotImplementedError("Methods for determining the continuous domains"
-                                   " of this function have not been developed."),
-               None,
-               sys.exc_info()[2])
+        raise NotImplementedError("Methods for determining the continuous domains"
+                                  " of this function have not been developed.")
 
     return domain - sings
 
@@ -149,10 +144,12 @@ def function_range(f, symbol, domain):
     =======
 
     Interval
-        Union of all ranges for all intervals under domain where function is continuous.
+        Union of all ranges for all intervals under domain where function is
+        continuous.
 
     Raises
     ======
+
     NotImplementedError
         If any of the intervals, in the given domain, for which function
         is continuous are not finite or real,

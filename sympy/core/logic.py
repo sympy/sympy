@@ -357,8 +357,7 @@ class And(AndOr_Base):
                 res = Or(*orterms)
                 return res
 
-        else:
-            return self
+        return self
 
 
 class Or(AndOr_Base):

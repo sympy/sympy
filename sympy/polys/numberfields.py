@@ -995,9 +995,9 @@ def field_isomorphism_factor(a, b):
                 return coeffs
 
             if (a.root + root).evalf(chop=True) == 0:
-                return [ -c for c in coeffs ]
-    else:
-        return None
+                return [-c for c in coeffs]
+
+    return None
 
 
 @public
