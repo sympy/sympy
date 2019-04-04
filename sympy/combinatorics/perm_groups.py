@@ -2694,15 +2694,19 @@ class PermutationGroup(Basic):
         """
         if self._is_cyclic is not None:
             return self._is_cyclic
+        self._is_cyclic = True
+
         if len(self.generators) == 1:
             return True
         if not self._is_abelian:
+            self._is_cyclic = False
             return False
         for p in primefactors(self.order()):
             pgens = []
             for g in self.generators:
                 pgens.append(g**p)
             if self.index(self.subgroup(pgens)) != p:
+                self._is_cyclic = False
                 return False
             else:
                 continue
