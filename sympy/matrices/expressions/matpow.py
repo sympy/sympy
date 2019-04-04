@@ -15,7 +15,7 @@ class MatPow(MatrixExpr):
             raise TypeError("Function parameter should be a matrix")
         if base.is_idempotent:
             if exp.is_positive:
-                return b
+                return base
             elif exp.is_negative:
                 raise ValueError('idempotent elements are non-invertible')
 
