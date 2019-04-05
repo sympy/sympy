@@ -290,21 +290,21 @@ def test_pow_iszero():
     # y = im(w)
 
     pow_iszero = [
-        ['**', -oo, -2,-2*I,-1, -h,-I/2, 0,  h,I/2,  1,  2,1+I, oo, zoo],
-        [ -oo,   T,  T,  F,  T,  T,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [  -2,   T,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [-2*I,   T,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [  -1,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [  -h,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
-        [-I/2,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
-        [   0,   F,  F,  F,  F,  F,  F,  F,  T,  F,  T,  T,  N,  T,  N],
-        [   h,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
-        [ I/2,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
-        [   1,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [   2,   T,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [ 1+I,   T,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [  oo,   T,  T,  F,  T,  T,  F,  F,  F,  F,  F,  F,  F,  F,  N],
-        [ zoo,   T,  T,  F,  T,  T,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        ['**',  0,  h,  1,  2, -h, -1,-2,-2*I,-I/2,I/2,1+I,oo,-oo,zoo],
+        [   0,  F,  T,  T,  T,  F,  F,  F,  F,  F,  F,  N,  T,  F,  N],
+        [ 1/2,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  F,  N],
+        [   1,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [   2,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
+        [-1/2,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  F,  N],
+        [  -1,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
+        [  -2,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
+        [-2*I,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
+        [-I/2,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  F,  N],
+        [ I/2,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  F,  N],
+        [ 1+I,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
+        [  oo,  F,  F,  F,  F,  T,  T,  T,  F,  F,  F,  F,  F,  T,  N],
+        [ -oo,  F,  F,  F,  F,  T,  T,  T,  F,  F,  F,  F,  F,  T,  N],
+        [ zoo,  F,  F,  F,  F,  T,  T,  T,  F,  F,  F,  F,  F,  T,  N]
     ]
 
     def test_table(table):
