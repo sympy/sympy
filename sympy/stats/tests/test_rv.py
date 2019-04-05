@@ -235,4 +235,4 @@ def test_issue_12237():
     U = P(X > 0, X)
     V = P(Y < 0, X)
     assert U == Probability(X > 0, X)
-    assert V == 1/2
+    assert str(V) == '1/2'
