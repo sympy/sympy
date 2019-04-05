@@ -40,7 +40,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
     variables, assuming that exponents and all of coefficients are 32-bit long
     and stored in an array we would need almost 80 GiB of memory! Fortunately
     most polynomials, that we will encounter, are sparse.
-    
+
     Examples
     ========
 
