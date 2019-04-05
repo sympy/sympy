@@ -99,7 +99,7 @@ def entropy(expr, condition=None, **kwargs):
     >>> from sympy.stats import Normal, Die, entropy
     >>> X = Normal('X', 0, 1)
     >>> entropy(X)
-    log(2*E*pi)/2
+    log(2)/2 + 1/2 + log(pi)/2
 
     >>> D = Die('D', 4)
     >>> entropy(D)
@@ -111,12 +111,6 @@ def entropy(expr, condition=None, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Entropy_(information_theory)
     .. [2] https://www.crmarsh.com/static/pdf/Charles_Marsh_Continuous_Entropy.pdf
     .. [3] http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
-    """
-    """
-    Z = random_symbols(expr)
-    if len(Z) > 1:
-        raise NotImplementedError("Entropy for random expressions "
-        "containing more than one random variable isn't implemented yet.")
     """
     pdf = density(expr, condition, **kwargs)
     if isinstance(pdf, dict):
