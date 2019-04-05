@@ -520,11 +520,11 @@ def orthogonalize(*vlist, **kwargs):
 
 def lineintegral(l,field,coord_sys, start,end ):
     """
-    Computes line integral.A line integral is an integral where the function 
-    to be integrated is evaluated along a curve.. The line integral finds the 
+    Computes line integral.A line integral is an integral where the function
+    to be integrated is evaluated along a curve.. The line integral finds the
     work done on an object moving through an electric or gravitational field.
     Parameters
-    ========== 
+    ==========
     l: The equation of the line in parametric form
     field: The equation of the feild on which we are calculating the line integral
     coord_sys: Represent the coordinate system we are using
@@ -533,10 +533,10 @@ def lineintegral(l,field,coord_sys, start,end ):
 
     Examples
     ========
-    
+
     >>> from sympy import diff,integrate, symbols, pi, sin, cos
     >>> from sympy.vector.coordsysrect import CoordSys3D
-    >>> from sympy.vector.functions import lineintegral 
+    >>> from sympy.vector.functions import lineintegral
     >>> x, y, z, t = symbols('x, y, z, t')
     >>> R=CoordSys3D('R')
     >>> l1 = 2*t*R.j
@@ -548,13 +548,12 @@ def lineintegral(l,field,coord_sys, start,end ):
     -8/3
     >>> l3 = cos(t)*R.j  + sin(t)*R.i
     >>> v= x*R.j
-    >>> lineintegral(l3, v, R, 0, pi/2) 
+    >>> lineintegral(l3, v, R, 0, pi/2)
     -pi/4
-    
+
     """
     x, y, z, t = symbols('x,y,z,t')
     a,b,c = (l.dot(coord_sys.i), l.dot(coord_sys.j), l.dot(coord_sys.k))
     m = field.subs({x: a, y:  b, z: c })
     dl =  diff(l, t)
     return  integrate(m.dot(dl), (t, start, end ))
-
