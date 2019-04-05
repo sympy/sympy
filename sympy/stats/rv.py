@@ -594,7 +594,6 @@ def given(expr, condition=None, **kwargs):
     ------------------
              ____
          2*\/ pi
-
     """
 
     if not random_symbols(condition) or pspace_independent(expr, condition):
