@@ -194,7 +194,6 @@ def test_get_diag_blocks2():
     assert C.get_diag_blocks() == [a, c, b]
     assert D.get_diag_blocks() == [c, c, b]
 
-
 def test_shape():
     m = ShapingOnlyMatrix(1, 2, [0, 0])
     m.shape == (1, 2)
@@ -1519,5 +1518,3 @@ def test___eq__():
         [[0, 1, 1],
         [1, 0, 0],
         [1, 1, 1]]) == {}) is False
-
-
