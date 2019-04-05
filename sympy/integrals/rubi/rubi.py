@@ -125,7 +125,7 @@ def rubi_powsimp(expr):
     lst_non_pow = []
     if isinstance(expr, Mul):
         for i in expr.args:
-            if isinstance(i, (Pow, exp, sym_exp)):
+            if isinstance(i, (Pow, rubi_exp, sym_exp)):
                 lst_pow.append(i)
             else:
                 lst_non_pow.append(i)
