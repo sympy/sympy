@@ -3953,28 +3953,6 @@ class PermutationGroup(Basic):
 
         return C.sylow_subgroup(p)
 
-    def exponent(self):
-        """
-        Return the exponent of a group ``G``, which is the lcm of the
-        orders of its elements.
-
-        Examples
-        ========
-
-        >>> from sympy.combinatorics import Permutation
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> a = Permutation(1, 2, 3)
-        >>> b = Permutation(1, 2)
-        >>> G = PermutationGroup([a, b])
-        >>> G.exponent()
-        6
-
-        """
-        exp = 1
-        for g in self.generators:
-            exp = lcm(exp, g.order())
-        return exp
-
     def _block_verify(H, L, alpha):
         delta = sorted(list(H.orbit(alpha)))
         H_gens = H.generators
