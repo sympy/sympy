@@ -1,3 +1,4 @@
+from sympy import I
 from sympy.polys.domains import QQ, EX, RR
 from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
@@ -277,7 +278,8 @@ def test_atan():
     assert rs_atan(x + I,x,3) == EX(I/16)*x**2 + EX(1/4)*x + EX(zoo + oo*I)
     assert rs_atan(x*I,x,3) == EX(I)*x
 
-    @XFAIL
+@XFAIL
+def test_atan2():
     R, x = ring('x', EX)
     assert rs_atan(I,x,5) == EX(atan(I))
     assert rs_atan(I + a,x,3) == EX(atan(I +a))

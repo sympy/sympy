@@ -1469,7 +1469,6 @@ def test_singular_values():
     assert A.T.singular_values() == \
         [sqrt(sqrt(221) + 15), sqrt(15 - sqrt(221)), 0, 0]
 
-
 # CalculusOnlyMatrix tests
 @XFAIL
 def test_diff():
