@@ -104,19 +104,6 @@ class MultivariateNormalDistribution(JointDistribution):
             -S(1)/2*(_mu - sym).transpose()*(_sigma.inv()*\
                 (_mu - sym)))[0])
 
-    def entropy(self):
-        sigma = self.sigma
-        return log(2*pi*E*det(sigma))/2
-
-    def mgf(self, *args):
-        mu, sigma = self.mu, self.sigma
-        t = ImmutableMatrix(args)
-        return exp(mu.transpose()*t + t.transpose()*(sigma*t)/2)
-
-    def cf(self, *args):
-        mu, sigma = self.mu, self.sigma
-        t = ImmutableMatrix(args)
-        return exp(I*(mu.transpose()*t) - t.transpose()*(sigma*t)/2)
 
 #-------------------------------------------------------------------------------
 # Multivariate Laplace distribution ---------------------------------------------------------

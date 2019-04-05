@@ -11,6 +11,7 @@ from sympy.stats.rv import RandomSymbol, probability, expectation
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
 
+
 class Probability(Expr):
     """
     Symbolic expression for the probability.
