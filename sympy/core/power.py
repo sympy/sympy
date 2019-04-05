@@ -482,7 +482,7 @@ class Pow(Expr):
         b = self.base
         e = self.exp
 
-        # abs(O(x**2)) fails. Should open an issue...
+        # https://github.com/sympy/sympy/issues/16507
         if b.has(Order) or e.has(Order):
             return None
 
@@ -498,11 +498,10 @@ class Pow(Expr):
             return (abs(b)**ree * exp(-argb*ime)).is_zero
 
         if b.is_zero:
-            # This is needed because zoo.is_positive is False
             if arg(e).is_zero:
                 return True
         elif b.is_infinite:
-            # This is needed because zoo.is_negative is False
+            # https://github.com/sympy/sympy/issues/16415
             if e is S.ComplexInfinity:
                 return None
             else:
