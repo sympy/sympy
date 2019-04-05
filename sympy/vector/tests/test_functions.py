@@ -12,7 +12,7 @@ C = B.orient_new_axis('C', q3, B.j)
 x, y, z, t = symbols('x, y, z, t')
 R=CoordSys3D('R')
 
-def text_lineintegral():
+def _text_lineintegral():
     l1 = sqrt(1 - t**2)*R.i + t*R.j
     f = x*R.j
     assert lineintegral(l1, f, R, 0, pi/2) == pi/4
