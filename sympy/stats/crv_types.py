@@ -1510,7 +1510,7 @@ def Gumbel(name, beta, mu, **kwargs):
     mu: Real number, 'mu' is a location
     beta: Real number, 'beta > 0' is a scale
     for_min: Boolean, optional, False, by default
-             For enabling the minimum distribution
+        For enabling the minimum distribution
 
     Returns
     ==========
