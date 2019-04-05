@@ -297,7 +297,7 @@ def test_pow_iszero():
         [  -1,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
         [  -h,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
         [-I/2,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
-        [   0,   F,  F,  F,  F,  F,  F,  F,  T,  F,  T,  T,  T,  T,  N],
+        [   0,   F,  F,  F,  F,  F,  F,  F,  T,  F,  T,  T,  N,  T,  N],
         [   h,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
         [ I/2,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
         [   1,   F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],

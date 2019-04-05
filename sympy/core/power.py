@@ -490,6 +490,8 @@ class Pow(Expr):
             from sympy.functions.elementary.exponential import exp
             ree, ime = e.as_real_imag()
             if b is S.Zero:
+                if not ime.is_zero:
+                    return None
                 argb = 0
             elif b is S.ComplexInfinity:
                 argb = Dummy('argzoo', nonnegative=True, finite=True)
