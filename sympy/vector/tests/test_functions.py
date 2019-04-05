@@ -1,7 +1,7 @@
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.functions import express, matrix_to_vector, orthogonalize
-from sympy import symbols, S, sqrt, sin, cos, ImmutableMatrix as Matrix
+from sympy.vector.functions import express, matrix_to_vector, orthogonalize, lineintegral
+from sympy import symbols, S, sqrt, sin, pi, cos, ImmutableMatrix as Matrix
 from sympy.utilities.pytest import raises
 
 N = CoordSys3D('N')
@@ -9,8 +9,13 @@ q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 A = N.orient_new_axis('A', q1, N.k)
 B = A.orient_new_axis('B', q2, A.i)
 C = B.orient_new_axis('C', q3, B.j)
+x, y, z, t = symbols('x, y, z, t')
+R=CoordSys3D('R')
 
-
+def text_lineintegral():
+    l1 = sqrt(1 - t**2)*R.i + t*R.j
+    f = x*R.j
+    assert lineintegral(l1, f, R, 0, pi/2) == pi/4
 def test_express():
     assert express(Vector.zero, N) == Vector.zero
     assert express(S(0), N) == S(0)
