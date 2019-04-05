@@ -71,11 +71,11 @@ class Medium(Symbol):
         obj._permeability = sympify(permeability)
         obj._n = sympify(n)
         if n is not None:
-            if permittivity != None and permeability == None:
+            if permittivity is not None and permeability is None:
                 obj._permeability = n**2/(c**2*obj._permittivity)
-            if permeability != None and permittivity == None:
+            if permeability is not None and permittivity is None:
                 obj._permittivity = n**2/(c**2*obj._permeability)
-            if permittivity != None and permittivity != None:
+            if permittivity is not None and permittivity is not None:
                 if abs(n - c*sqrt(obj._permittivity*obj._permeability)) > 1e-6:
                    raise ValueError("Values are not consistent.")
         elif permittivity is not None and permeability is not None:

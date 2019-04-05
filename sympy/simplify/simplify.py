@@ -251,8 +251,8 @@ def posify(eq):
             eq[i] = e.subs(reps)
         return f(eq), {r: s for s, r in reps.items()}
 
-    reps = dict([(s, Dummy(s.name, positive=True))
-                 for s in eq.free_symbols if s.is_positive is None])
+    reps = {s: Dummy(s.name, positive=True, **s.assumptions0)
+                 for s in eq.free_symbols if s.is_positive is None}
     eq = eq.subs(reps)
     return eq, {r: s for s, r in reps.items()}
 
@@ -461,7 +461,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     >>> g = log(a) + log(b) + log(a)*log(1/b)
     >>> h = simplify(g)
     >>> h
-    log(a*b**(-log(a) + 1))
+    log(a*b**(1 - log(a)))
     >>> count_ops(g)
     8
     >>> count_ops(h)
@@ -513,10 +513,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     """
     expr = sympify(expr)
 
-    try:
-        return expr._eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
-    except AttributeError:
-        pass
+    _eval_simplify = getattr(expr, '_eval_simplify', None)
+    if _eval_simplify is not None:
+        return _eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
 
     original_expr = expr = signsimp(expr)
 
@@ -556,7 +555,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         floats = True
         expr = nsimplify(expr, rational=True)
 
-    expr = bottom_up(expr, lambda w: w.normal())
+    expr = bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
     expr = Mul(*powsimp(expr).as_content_primitive())
     _e = cancel(expr)
     expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
@@ -967,6 +966,10 @@ def logcombine(expr, force=False):
                 else:
                     other.append(a)
 
+        # if there is only one log in other, put it with the
+        # good logs
+        if len(other) == 1 and isinstance(other[0], log):
+            log1[()].append(([], other.pop()))
         # if there is only one log at each coefficient and none have
         # an exponent to place inside the log then there is nothing to do
         if not logs and all(len(log1[k]) == 1 and log1[k][0] == [] for k in log1):
@@ -1079,16 +1082,16 @@ def bottom_up(rv, F, atoms=False, nonbasic=False):
     bottom up. If ``atoms`` is True, apply ``F`` even if there are no args;
     if ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
     """
-    try:
-        if rv.args:
-            args = tuple([bottom_up(a, F, atoms, nonbasic)
-                for a in rv.args])
+    args = getattr(rv, 'args', None)
+    if args is not None:
+        if args:
+            args = tuple([bottom_up(a, F, atoms, nonbasic) for a in args])
             if args != rv.args:
                 rv = rv.func(*args)
             rv = F(rv)
         elif atoms:
             rv = F(rv)
-    except AttributeError:
+    else:
         if nonbasic:
             try:
                 rv = F(rv)

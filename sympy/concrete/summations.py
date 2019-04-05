@@ -94,7 +94,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     >>> Sum(x**k, (k, 0, oo))
     Sum(x**k, (k, 0, oo))
     >>> Sum(x**k, (k, 0, oo)).doit()
-    Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
+    Piecewise((1/(1 - x), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
     >>> Sum(x**k/factorial(k), (k, 0, oo)).doit()
     exp(x)
 
@@ -1174,7 +1174,7 @@ def eval_sum_hyper(f, i_a_b):
         res1, cond1 = res1
         res2, cond2 = res2
         cond = And(cond1, cond2)
-        if cond == False:
+        if cond == False or cond.as_set() == S.EmptySet:
             return None
         return Piecewise((res1 + res2, cond), (old_sum, True))
 

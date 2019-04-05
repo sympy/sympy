@@ -117,9 +117,11 @@ class FCodePrinter(CodePrinter):
         '!=': '/=',
     }
 
-    def __init__(self, settings={}):
-        self.mangled_symbols = {}         ## Dict showing mapping of all words
-        self.used_name= []
+    def __init__(self, settings=None):
+        if not settings:
+            settings = {}
+        self.mangled_symbols = {}         # Dict showing mapping of all words
+        self.used_name = []
         self.type_aliases = dict(chain(self.type_aliases.items(),
                                        settings.pop('type_aliases', {}).items()))
         self.type_mappings = dict(chain(self.type_mappings.items(),
@@ -268,8 +270,8 @@ class FCodePrinter(CodePrinter):
                 pure_imaginary.append(arg)
             else:
                 mixed.append(arg)
-        if len(pure_imaginary) > 0:
-            if len(mixed) > 0:
+        if pure_imaginary:
+            if mixed:
                 PREC = precedence(expr)
                 term = Add(*mixed)
                 t = self._print(term)
@@ -379,9 +381,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_sum_(self, sm):
         params = self._print(sm.array)
-        if sm.dim != None:
+        if sm.dim != None: # Must use '!= None', cannot use 'is not None'
             params += ', ' + self._print(sm.dim)
-        if sm.mask != None:
+        if sm.mask != None: # Must use '!= None', cannot use 'is not None'
             params += ', mask=' + self._print(sm.mask)
         return '%s(%s)' % (sm.__class__.__name__.rstrip('_'), params)
 
@@ -472,7 +474,7 @@ class FCodePrinter(CodePrinter):
                 alloc=', allocatable' if allocatable in var.attrs else '',
                 s=self._print(var.symbol)
             )
-            if val != None:
+            if val != None: # Must be "!= None", cannot be "is not None"
                 result += ' = %s' % self._print(val)
         else:
             if value_const in var.attrs or val:
@@ -547,7 +549,7 @@ class FCodePrinter(CodePrinter):
                     hunk = line[:pos]
                     line = line[pos:].lstrip()
                     result.append(hunk)
-                    while len(line) > 0:
+                    while line:
                         pos = line.rfind(" ", 0, 66)
                         if pos == -1 or len(line) < 66:
                             pos = 66
@@ -564,7 +566,7 @@ class FCodePrinter(CodePrinter):
                 if line:
                     hunk += trailing
                 result.append(hunk)
-                while len(line) > 0:
+                while line:
                     pos = split_pos_code(line, 65)
                     hunk = line[:pos].rstrip()
                     line = line[pos:].lstrip()
@@ -665,7 +667,7 @@ class FCodePrinter(CodePrinter):
                 return strm.name
 
     def _print_Print(self, ps):
-        if ps.format_string != None:
+        if ps.format_string != None: # Must be '!= None', cannot be 'is not None'
             fmt = self._print(ps.format_string)
         else:
             fmt = "*"
@@ -755,9 +757,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_use(self, use):
         result = 'use %s' % self._print(use.namespace)
-        if use.rename != None:
+        if use.rename != None: # Must be '!= None', cannot be 'is not None'
             result += ', ' + ', '.join([self._print(rnm) for rnm in use.rename])
-        if use.only != None:
+        if use.only != None: # Must be '!= None', cannot be 'is not None'
             result += ', only: ' + ', '.join([self._print(nly) for nly in use.only])
         return result
 

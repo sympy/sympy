@@ -1,4 +1,4 @@
-from sympy import symbols, IndexedBase
+from sympy import symbols, IndexedBase, HadamardProduct
 from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayTensorProduct, CodegenArrayDiagonal,
         CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
@@ -9,6 +9,7 @@ from sympy.codegen.array_utils import (CodegenArrayContraction,
 from sympy import (MatrixSymbol, Sum)
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.expressions.diagonal import DiagonalizeVector
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices import (Trace, MatAdd, MatMul, Transpose)
 from sympy.utilities.pytest import raises, XFAIL
@@ -342,3 +343,23 @@ def test_special_matrices():
     cg = parse_indexed_expression(elem)
     assert cg == CodegenArrayContraction(CodegenArrayTensorProduct(a, b), (0, 2))
     assert recognize_matrix_expression(cg) == a.T*b
+
+
+def test_recognize_diagonalized_vectors():
+
+    a = MatrixSymbol("a", k, 1)
+    b = MatrixSymbol("b", k, 1)
+    A = MatrixSymbol("A", k, k)
+    B = MatrixSymbol("B", k, k)
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a), (1, 2))
+    assert recognize_matrix_expression(cg) == A*a
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a, B), (1, 2, 4))
+    assert recognize_matrix_expression(cg) == A*DiagonalizeVector(a)*B
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a, B), (0, 2, 4))
+    assert recognize_matrix_expression(cg) == A.T*DiagonalizeVector(a)*B
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a, b, a.T, B), (0, 2, 4, 7, 9))
+    assert recognize_matrix_expression(cg).doit() == A.T*DiagonalizeVector(a)*DiagonalizeVector(b)*DiagonalizeVector(a)*B.T

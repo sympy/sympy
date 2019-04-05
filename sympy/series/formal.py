@@ -208,8 +208,6 @@ def simpleDE(f, x, g, order=4):
         DE = g(x).diff(x, k) + Add(*[a[i]*g(x).diff(x, i) for i in range(0, k)])
         return eq, DE
 
-    eq, DE = _makeDE(order)
-
     found = False
     for k in range(1, order + 1):
         eq, DE = _makeDE(k)
@@ -1083,7 +1081,7 @@ class FormalPowerSeries(SeriesBase):
         >>> f.integrate(x).truncate()
         -1 + x**2/2 - x**4/24 + O(x**6)
         >>> integrate(f, (x, 0, 1))
-        -cos(1) + 1
+        1 - cos(1)
         """
         from sympy.integrals import integrate
 

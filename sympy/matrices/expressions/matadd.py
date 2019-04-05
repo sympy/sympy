@@ -8,10 +8,10 @@ from sympy.functions import adjoint
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
-        exhaust, do_one, glom)
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
+    exhaust, do_one, glom)
+from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
+    ZeroMatrix, GenericZeroMatrix)
 from sympy.utilities import default_sort_key, sift
-from sympy.core.operations import AssocOp
 
 
 class MatAdd(MatrixExpr, Add):
@@ -32,6 +32,12 @@ class MatAdd(MatrixExpr, Add):
     is_MatAdd = True
 
     def __new__(cls, *args, **kwargs):
+        if not args:
+            return GenericZeroMatrix()
+
+        # This must be removed aggressively in the constructor to avoid
+        # TypeErrors from GenericZeroMatrix().shape
+        args = filter(lambda i: GenericZeroMatrix() != i, args)
         args = list(map(sympify, args))
         check = kwargs.get('check', False)
 

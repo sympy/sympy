@@ -46,13 +46,11 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
-from sympy.core.compatibility import string_types, with_metaclass, range
+from sympy.core.compatibility import string_types, with_metaclass, PY3, range
 from sympy.utilities import default_sort_key
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import has_dups
+from sympy.utilities.iterables import has_dups, sift
 from sympy.core.evaluate import global_evaluate
-
-import sys
 
 import mpmath
 import mpmath.libmp as mlib
@@ -103,41 +101,50 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                (self.args[1], self.args[0]))
 
-def _getnargs(cls):
-    if hasattr(cls, 'eval'):
-        if sys.version_info < (3, ):
-            return _getnargs_old(cls.eval)
+
+# Python 2/3 version that does not raise a Deprecation warning
+def arity(cls):
+    """Return the arity of the function if it is known, else None.
+
+    When default values are specified for some arguments, they are
+    optional and the arity is reported as a tuple of possible values.
+
+    Examples
+    ========
+
+    >>> from sympy.core.function import arity
+    >>> from sympy import log
+    >>> arity(lambda x: x)
+    1
+    >>> arity(log)
+    (1, 2)
+    >>> arity(lambda *x: sum(x)) is None
+    True
+    """
+    eval_ = getattr(cls, 'eval', cls)
+    if PY3:
+        parameters = inspect.signature(eval_).parameters.items()
+        if [p for _, p in parameters if p.kind == p.VAR_POSITIONAL]:
+            return
+        p_or_k = [p for _, p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
+        # how many have no default and how many have a default value
+        no, yes = map(len, sift(p_or_k,
+            lambda p:p.default == p.empty, binary=True))
+        return no if not yes else tuple(range(no, no + yes + 1))
+    else:
+        cls_ = int(hasattr(cls, 'eval'))  # correction for cls arguments
+        evalargspec = inspect.getargspec(eval_)
+        if evalargspec.varargs:
+            return
         else:
-            return _getnargs_new(cls.eval)
-    else:
-        return None
-
-def _getnargs_old(eval_):
-    evalargspec = inspect.getargspec(eval_)
-    if evalargspec.varargs:
-        return None
-    else:
-        evalargs = len(evalargspec.args) - 1  # subtract 1 for cls
-        if evalargspec.defaults:
-            # if there are default args then they are optional; the
-            # fewest args will occur when all defaults are used and
-            # the most when none are used (i.e. all args are given)
-            return tuple(range(
-                evalargs - len(evalargspec.defaults), evalargs + 1))
-
-        return evalargs
-
-def _getnargs_new(eval_):
-    parameters = inspect.signature(eval_).parameters.items()
-    if [p for n,p in parameters if p.kind == p.VAR_POSITIONAL]:
-        return None
-    else:
-        p_or_k = [p for n,p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
-        num_no_default = len(list(filter(lambda p:p.default == p.empty, p_or_k)))
-        num_with_default = len(list(filter(lambda p:p.default != p.empty, p_or_k)))
-        if not num_with_default:
-            return num_no_default
-        return tuple(range(num_no_default, num_no_default+num_with_default+1))
+            evalargs = len(evalargspec.args) - cls_
+            if evalargspec.defaults:
+                # if there are default args then they are optional; the
+                # fewest args will occur when all defaults are used and
+                # the most when none are used (i.e. all args are given)
+                fewest = evalargs - len(evalargspec.defaults)
+                return tuple(range(fewest, evalargs + 1))
+            return evalargs
 
 
 class FunctionClass(ManagedProperties):
@@ -152,7 +159,7 @@ class FunctionClass(ManagedProperties):
     def __init__(cls, *args, **kwargs):
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
-        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', _getnargs(cls)))
+        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', arity(cls)))
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
@@ -274,19 +281,21 @@ class Application(with_metaclass(FunctionClass, Basic)):
         obj = super(Application, cls).__new__(cls, *args, **options)
 
         # make nargs uniform here
-        try:
+        sentinel = object()
+        objnargs = getattr(obj, "nargs", sentinel)
+        if objnargs is not sentinel:
             # things passing through here:
             #  - functions subclassed from Function (e.g. myfunc(1).nargs)
             #  - functions like cos(1).nargs
             #  - AppliedUndef with given nargs like Function('f', nargs=1)(1).nargs
             # Canonicalize nargs here
-            if is_sequence(obj.nargs):
-                nargs = tuple(ordered(set(obj.nargs)))
-            elif obj.nargs is not None:
-                nargs = (as_int(obj.nargs),)
+            if is_sequence(objnargs):
+                nargs = tuple(ordered(set(objnargs)))
+            elif objnargs is not None:
+                nargs = (as_int(objnargs),)
             else:
                 nargs = None
-        except AttributeError:
+        else:
             # things passing through here:
             #  - WildFunction('f').nargs
             #  - AppliedUndef with no nargs like Function('f')(1).nargs
@@ -517,21 +526,31 @@ class Function(Application, Expr):
             return False
 
     def _eval_evalf(self, prec):
-        # Lookup mpmath function based on name
-        try:
+
+        def _get_mpmath_func(fname):
+            """Lookup mpmath function based on name"""
             if isinstance(self, AppliedUndef):
                 # Shouldn't lookup in mpmath but might have ._imp_
-                raise AttributeError
-            fname = self.func.__name__
+                return None
+
             if not hasattr(mpmath, fname):
                 from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
-                fname = MPMATH_TRANSLATIONS[fname]
-            func = getattr(mpmath, fname)
-        except (AttributeError, KeyError):
+                fname = MPMATH_TRANSLATIONS.get(fname, None)
+                if fname is None:
+                    return None
+            return getattr(mpmath, fname)
+
+        func = _get_mpmath_func(self.func.__name__)
+
+        # Fall-back evaluation
+        if func is None:
+            imp = getattr(self, '_imp_', None)
+            if imp is None:
+                return None
             try:
-                return Float(self._imp_(*[i.evalf(prec) for i in self.args]), prec)
-            except (AttributeError, TypeError, ValueError):
-                return
+                return Float(imp(*[i.evalf(prec) for i in self.args]), prec)
+            except (TypeError, ValueError) as e:
+                return None
 
         # Convert all args to mpf or mpc
         # Convert the arguments to *higher* precision than requested for the
@@ -651,7 +670,7 @@ class Function(Application, Expr):
             # where 'logx' is given in the argument
             a = [t._eval_nseries(x, n, logx) for t in args]
             z = [r - r0 for (r, r0) in zip(a, a0)]
-            p = [Dummy() for t in z]
+            p = [Dummy() for _ in z]
             q = []
             v = None
             for ai, zi, pi in zip(a0, z, p):
@@ -777,13 +796,13 @@ class Function(Application, Expr):
     def _sage_(self):
         import sage.all as sage
         fname = self.func.__name__
-        func = getattr(sage, fname,None)
+        func = getattr(sage, fname, None)
         args = [arg._sage_() for arg in self.args]
 
         # In the case the function is not known in sage:
         if func is None:
             import sympy
-            if getattr(sympy, fname,None) is None:
+            if getattr(sympy, fname, None) is None:
                 # abstract function
                 return sage.function(fname)(*args)
 
@@ -1165,15 +1184,14 @@ class Derivative(Expr):
     def __new__(cls, expr, *variables, **kwargs):
 
         from sympy.matrices.common import MatrixCommon
-        from sympy import Integer
-        from sympy.tensor.array import Array, NDimArray
+        from sympy import Integer, MatrixExpr
+        from sympy.tensor.array import Array, NDimArray, derive_by_array
         from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
-        try:
-            has_symbol_set = isinstance(expr.free_symbols, set)
-        except AttributeError:
-            has_symbol_set = False
+        symbols_or_none = getattr(expr, "free_symbols", None)
+        has_symbol_set = isinstance(symbols_or_none, set)
+
         if not has_symbol_set:
             raise ValueError(filldedent('''
                 Since there are no variables in the expression %s,
@@ -1299,6 +1317,9 @@ class Derivative(Expr):
                         if not expr.xreplace({v: D}).has(D):
                             zero = True
                             break
+                    elif isinstance(v, MatrixExpr):
+                        zero = False
+                        break
                     elif isinstance(v, Symbol) and v not in free:
                         zero = True
                         break
@@ -1378,9 +1399,8 @@ class Derivative(Expr):
                 if obj is not None:
                     # remove the dummy that was used
                     obj = obj.subs(v, old_v)
-                # restore expr and v
+                # restore expr
                 expr = old_expr
-                v = old_v
 
             if obj is None:
                 # we've already checked for quick-exit conditions
@@ -1540,7 +1560,10 @@ class Derivative(Expr):
         if hints.get('deep', True):
             expr = expr.doit(**hints)
         hints['evaluate'] = True
-        return self.func(expr, *self.variable_count, **hints)
+        rv = self.func(expr, *self.variable_count, **hints)
+        if rv!= self and rv.has(Derivative):
+            rv =  rv.doit(**hints)
+        return rv
 
     @_sympifyit('z0', NotImplementedError)
     def doit_numerically(self, z0):
@@ -1550,8 +1573,6 @@ class Derivative(Expr):
         When we can represent derivatives at a point, this should be folded
         into the normal evalf. For now, we need a special method.
         """
-        import mpmath
-        from sympy.core.expr import Expr
         if len(self.free_symbols) != 1 or len(self.variables) != 1:
             raise NotImplementedError('partials and higher order derivatives')
         z = list(self.free_symbols)[0]
@@ -1606,6 +1627,11 @@ class Derivative(Expr):
         # Derivative(expr, vars) for a variety of reasons
         # as handled below.
         if old in self._wrt_variables:
+            # first handle the counts
+            expr = self.func(self.expr, *[(v, c.subs(old, new))
+                for v, c in self.variable_count])
+            if expr != self:
+                return expr._eval_subs(old, new)
             # quick exit case
             if not getattr(new, '_diff_wrt', False):
                 # case (0): new is not a valid variable of
@@ -1656,7 +1682,7 @@ class Derivative(Expr):
             if (nfree - ofree) & forbidden:
                 return Subs(self, old, new)
 
-        viter = ((i, j) for ((i,_), (j,_)) in zip(newargs[1:], args[1:]))
+        viter = ((i, j) for ((i, _), (j, _)) in zip(newargs[1:], args[1:]))
         if any(i != j for i, j in viter):  # a wrt-variable change
             # case (2) can't change vars by introducing a variable
             # that is contained in expr, e.g.

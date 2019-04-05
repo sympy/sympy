@@ -48,7 +48,7 @@ from __future__ import print_function, division
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfi, I, hyper, uppergamma,
-                   sinh, Ne, expint)
+                   sinh, atan, Ne, expint)
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, exp, besseli, besselj, besselk
@@ -182,7 +182,7 @@ def Arcsin(name, a=0, b=1):
     .. math::
         f(x) := \frac{1}{\pi\sqrt{(x-a)(b-x)}}
 
-    with :math:`x \in [a,b]`. It must hold that :math:`-\infty < a < b < \infty`.
+    with :math:`x \in (a,b)`. It must hold that :math:`-\infty < a < b < \infty`.
 
     Parameters
     ==========
@@ -232,6 +232,12 @@ def Arcsin(name, a=0, b=1):
 class BeniniDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'beta', 'sigma')
 
+    @staticmethod
+    def check(alpha, beta, sigma):
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
+        _value_check(sigma > 0, "Scale parameter Sigma must be positive.")
+
     @property
     def set(self):
         return Interval(self.sigma, oo)
@@ -274,7 +280,7 @@ def Benini(name, alpha, beta, sigma):
     Examples
     ========
 
-    >>> from sympy.stats import Benini, density
+    >>> from sympy.stats import Benini, density, cdf
     >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
@@ -291,6 +297,11 @@ def Benini(name, alpha, beta, sigma):
     |alpha             \sigma/|             \sigma/             \sigma/
     |----- + -----------------|*e
     \  z             z        /
+
+    >>> cdf(X)(z)
+    Piecewise((1 - exp(-alpha*log(z/sigma) - beta*log(z/sigma)**2), sigma <= z),
+            (0, True))
+
 
     References
     ==========
@@ -313,8 +324,8 @@ class BetaDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(alpha, beta):
-        _value_check(alpha > 0, "Alpha must be positive")
-        _value_check(beta > 0, "Beta must be positive")
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
 
     def pdf(self, x):
         alpha, beta = self.alpha, self.beta
@@ -343,10 +354,8 @@ def Beta(name, alpha, beta):
     Parameters
     ==========
 
-    alpha : real positive
-        A shape
-    beta : real positive
-        A shape
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
 
     Returns
     =======
@@ -357,7 +366,7 @@ def Beta(name, alpha, beta):
     ========
 
     >>> from sympy.stats import Beta, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint, expand_func
+    >>> from sympy import Symbol, simplify, pprint, factor
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
@@ -367,15 +376,15 @@ def Beta(name, alpha, beta):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-     alpha - 1         beta - 1
-    z         *(-z + 1)
-    ---------------------------
-           B(alpha, beta)
+     alpha - 1        beta - 1
+    z         *(1 - z)
+    --------------------------
+          B(alpha, beta)
 
-    >>> expand_func(simplify(E(X, meijerg=True)))
+    >>> simplify(E(X))
     alpha/(alpha + beta)
 
-    >>> simplify(variance(X, meijerg=True))  #doctest: +SKIP
+    >>> factor(simplify(variance(X)))  #doctest: +SKIP
     alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
 
     References
@@ -394,6 +403,11 @@ def Beta(name, alpha, beta):
 
 class BetaPrimeDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'beta')
+
+    @staticmethod
+    def check(alpha, beta):
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
 
     set = Interval(0, oo)
 
@@ -459,8 +473,16 @@ def BetaPrime(name, alpha, beta):
 class CauchyDistribution(SingleContinuousDistribution):
     _argnames = ('x0', 'gamma')
 
+    @staticmethod
+    def check(x0, gamma):
+        _value_check(gamma > 0, "Scale parameter Gamma must be positive.")
+
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
+
+    def _cdf(self, x):
+        x0, gamma = self.x0, self.gamma
+        return (1/pi)*atan((x - x0)/gamma) + S.Half
 
     def _characteristic_function(self, t):
         return exp(self.x0 * I * t -  self.gamma * Abs(t))
@@ -476,16 +498,13 @@ def Cauchy(name, x0, gamma):
     The density of the Cauchy distribution is given by
 
     .. math::
-        f(x) := \frac{1}{\pi} \arctan\left(\frac{x-x_0}{\gamma}\right)
-                +\frac{1}{2}
+        f(x) := \frac{1}{\pi \gamma [1 + {(\frac{x-x_0}{\gamma})}^2]}
 
     Parameters
     ==========
 
-    x0 : real
-        The location
-    gamma : real positive
-        The scale
+    x0 : Real number, the location
+    gamma : Real number, `\gamma > 0`, a scale
 
     Returns
     =======
@@ -524,6 +543,11 @@ def Cauchy(name, x0, gamma):
 class ChiDistribution(SingleContinuousDistribution):
     _argnames = ('k',)
 
+    @staticmethod
+    def check(k):
+        _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
+
     set = Interval(0, oo)
 
     def pdf(self, x):
@@ -559,8 +583,7 @@ def Chi(name, k):
     Parameters
     ==========
 
-    k : positive integer
-        The number of degrees of freedom
+    k : Positive integer, The number of degrees of freedom
 
     Returns
     =======
@@ -570,7 +593,7 @@ def Chi(name, k):
     Examples
     ========
 
-    >>> from sympy.stats import Chi, density, E, std
+    >>> from sympy.stats import Chi, density, E
     >>> from sympy import Symbol, simplify
 
     >>> k = Symbol("k", integer=True)
@@ -579,7 +602,10 @@ def Chi(name, k):
     >>> X = Chi("x", k)
 
     >>> density(X)(z)
-    2**(-k/2 + 1)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
+    2**(1 - k/2)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
+
+    >>> simplify(E(X))
+    sqrt(2)*gamma(k/2 + 1/2)/gamma(k/2)
 
     References
     ==========
@@ -597,6 +623,12 @@ def Chi(name, k):
 
 class ChiNoncentralDistribution(SingleContinuousDistribution):
     _argnames = ('k', 'l')
+
+    @staticmethod
+    def check(k, l):
+        _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
+        _value_check(l > 0, "Shift parameter Lambda must be positive.")
 
     set = Interval(0, oo)
 
@@ -621,7 +653,7 @@ def ChiNoncentral(name, k, l):
     ==========
 
     k : A positive Integer, `k > 0`, the number of degrees of freedom
-    l : Shift parameter
+    lambda : Real number, `\lambda > 0`, Shift parameter
 
     Returns
     =======
@@ -631,8 +663,8 @@ def ChiNoncentral(name, k, l):
     Examples
     ========
 
-    >>> from sympy.stats import ChiNoncentral, density, E, std
-    >>> from sympy import Symbol, simplify
+    >>> from sympy.stats import ChiNoncentral, density
+    >>> from sympy import Symbol
 
     >>> k = Symbol("k", integer=True)
     >>> l = Symbol("l")
@@ -657,6 +689,11 @@ def ChiNoncentral(name, k, l):
 
 class ChiSquaredDistribution(SingleContinuousDistribution):
     _argnames = ('k',)
+
+    @staticmethod
+    def check(k):
+        _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
+        _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
 
     set = Interval(0, oo)
 
@@ -692,8 +729,7 @@ def ChiSquared(name, k):
     Parameters
     ==========
 
-    k : positive integer
-        The number of degrees of freedom
+    k : Positive integer, The number of degrees of freedom
 
     Returns
     =======
@@ -703,8 +739,8 @@ def ChiSquared(name, k):
     Examples
     ========
 
-    >>> from sympy.stats import ChiSquared, density, E, variance
-    >>> from sympy import Symbol, simplify, gammasimp, expand_func
+    >>> from sympy.stats import ChiSquared, density, E, variance, moment
+    >>> from sympy import Symbol
 
     >>> k = Symbol("k", integer=True, positive=True)
     >>> z = Symbol("z")
@@ -714,11 +750,14 @@ def ChiSquared(name, k):
     >>> density(X)(z)
     2**(-k/2)*z**(k/2 - 1)*exp(-z/2)/gamma(k/2)
 
-    >>> gammasimp(E(X))
+    >>> E(X)
     k
 
-    >>> simplify(expand_func(variance(X)))
+    >>> variance(X)
     2*k
+
+    >>> moment(X, 3)
+    k**3 + 6*k**2 + 8*k
 
     References
     ==========
@@ -735,6 +774,12 @@ def ChiSquared(name, k):
 
 class DagumDistribution(SingleContinuousDistribution):
     _argnames = ('p', 'a', 'b')
+
+    @staticmethod
+    def check(p, a, b):
+        _value_check(p > 0, "Shape parameter p must be positive.")
+        _value_check(a > 0, "Shape parameter a must be positive.")
+        _value_check(b > 0, "Scale parameter b must be positive.")
 
     def pdf(self, x):
         p, a, b = self.p, self.a, self.b
@@ -773,11 +818,11 @@ def Dagum(name, p, a, b):
     ========
 
     >>> from sympy.stats import Dagum, density, cdf
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol
 
     >>> p = Symbol("p", positive=True)
-    >>> b = Symbol("b", positive=True)
     >>> a = Symbol("a", positive=True)
+    >>> b = Symbol("b", positive=True)
     >>> z = Symbol("z")
 
     >>> X = Dagum("x", p, a, b)
@@ -816,7 +861,7 @@ def Erlang(name, k, l):
     Parameters
     ==========
 
-    k : Integer
+    k : Positive integer
     l : Real number, `\lambda > 0`, the rate
 
     Returns
@@ -843,17 +888,16 @@ def Erlang(name, k, l):
     ---------------
         Gamma(k)
 
-    >>> C = cdf(X, meijerg=True)(z)
+    >>> C = cdf(X)(z)
     >>> pprint(C, use_unicode=False)
-    /   -2*I*pi*k
-    |k*e         *lowergamma(k, l*z)
-    |-------------------------------  for z >= 0
-    <          Gamma(k + 1)
+    /lowergamma(k, l*z)
+    |------------------  for z > 0
+    <     Gamma(k)
     |
-    |               0                 otherwise
-    \
+    \        0           otherwise
 
-    >>> simplify(E(X))
+
+    >>> E(X)
     k/l
 
     >>> simplify(variance(X))
@@ -979,6 +1023,13 @@ class FDistributionDistribution(SingleContinuousDistribution):
     _argnames = ('d1', 'd2')
 
     set = Interval(0, oo)
+
+    @staticmethod
+    def check(d1, d2):
+        _value_check(d1 > 0 and d1.is_integer, \
+            "Degrees of freedom d1 must be positive integer.")
+        _value_check(d2 > 0 and d2.is_integer, \
+            "Degrees of freedom d2 must be positive integer.")
 
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
@@ -1467,6 +1518,10 @@ class GompertzDistribution(SingleContinuousDistribution):
         eta, b = self.eta, self.b
         return b*eta*exp(b*x)*exp(eta)*exp(-eta*exp(b*x))
 
+    def _cdf(self, x):
+        eta, b = self.eta, self.b
+        return 1 - exp(eta)*exp(-eta*exp(b*x))
+
     def _moment_generating_function(self, t):
         eta, b = self.eta, self.b
         return eta * exp(eta) * expint(t/b, eta)
@@ -1577,14 +1632,12 @@ def Kumaraswamy(name, a, b):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                         b - 1
-         a - 1 /   a    \
-    a*b*z     *\- z  + 1/
+                       b - 1
+         a - 1 /     a\
+    a*b*z     *\1 - z /
 
     >>> cdf(X)(z)
-    Piecewise((0, z < 0),
-            (-(-z**a + 1)**b + 1, z <= 1),
-            (1, True))
+    Piecewise((0, z < 0), (1 - (1 - z**a)**b, z <= 1), (1, True))
 
     References
     ==========
@@ -1657,8 +1710,7 @@ def Laplace(name, mu, b):
     exp(-Abs(mu - z)/b)/(2*b)
 
     >>> cdf(X)(z)
-    Piecewise((exp((-mu + z)/b)/2, mu > z),
-            (-exp((mu - z)/b)/2 + 1, True))
+    Piecewise((exp((-mu + z)/b)/2, mu > z), (1 - exp((mu - z)/b)/2, True))
 
     >>> L = Laplace('L', [1, 2], [[1, 0], [0, 1]])
     >>> pprint(density(L)(1, 2), use_unicode=False)
@@ -1853,6 +1905,10 @@ class MaxwellDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
+
+    def _cdf(self, x):
+        a = self.a
+        return erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
 
 def Maxwell(name, a):
     r"""
@@ -2085,12 +2141,12 @@ def Normal(name, mean, std):
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> pprint(density(m)(y, z))
-           /  y   1\ /2*y   z\   /  z    \ /  y   2*z    \
-           |- - + -|*|--- - -| + |- - + 1|*|- - + --- - 1|
-      ___  \  2   2/ \ 3    3/   \  2    / \  3    3     /
+           /1   y\ /2*y   z\   /    z\ /  y   2*z    \
+           |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
+      ___  \2   2/ \ 3    3/   \    2/ \  3    3     /
     \/ 3 *e
-    ------------------------------------------------------
-                             6*pi
+    --------------------------------------------------
+                           6*pi
 
     >>> marginal_distribution(m, m[0])(1)
      1/(2*sqrt(pi))
@@ -2379,6 +2435,10 @@ class RayleighDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         sigma = self.sigma
         return x/sigma**2*exp(-x**2/(2*sigma**2))
+
+    def _cdf(self, x):
+        sigma = self.sigma
+        return 1 - exp(-(x**2/(2*sigma**2)))
 
     def _characteristic_function(self, t):
         sigma = self.sigma

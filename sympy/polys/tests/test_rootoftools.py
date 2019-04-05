@@ -12,10 +12,11 @@ from sympy.polys.polyerrors import (
 
 from sympy import (
     S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
-    solve, legendre_poly
+    solve, legendre_poly, Integral
 )
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
+from sympy.core.expr import unchanged
 from sympy.core.compatibility import range
 
 from sympy.abc import a, b, x, y, z, r
@@ -138,12 +139,11 @@ def test_CRootOf___eval_Eq__():
     r1 = rootof(eq, 1)
     assert Eq(r, r1) is S.false
     assert Eq(r, r) is S.true
-    assert Eq(r, x) is S.false
+    assert unchanged(Eq, r, x)
     assert Eq(r, 0) is S.false
     assert Eq(r, S.Infinity) is S.false
     assert Eq(r, I) is S.false
-    assert Eq(r, f(0)) is S.false
-    assert Eq(r, f(0)) is S.false
+    assert unchanged(Eq, r, f(0))
     sol = solve(eq)
     for s in sol:
         if s.is_real:
@@ -178,6 +178,7 @@ def test_CRootOf_diff():
     assert rootof(x**3 + x + 1, 0).diff(y) == 0
 
 
+@slow
 def test_CRootOf_evalf():
     real = rootof(x**3 + x + 3, 0).evalf(n=20)
 
@@ -517,6 +518,7 @@ def test_pure_key_dict():
     raises(ValueError, lambda: dont(1))
 
 
+@slow
 def test_eval_approx_relative():
     CRootOf.clear_cache()
     t = [CRootOf(x**3 + 10*x + 1, i) for i in range(3)]
@@ -566,3 +568,9 @@ def test_eval_approx_relative():
     assert [str(i) for i in a] == [
         '-0.10', '0.05 - 3.2*I', '0.05 + 3.2*I']
     assert all(abs(((a[i] - t[i])/t[i]).n()) < 1e-2 for i in range(len(a)))
+
+
+def test_issue_15920():
+    r = rootof(x**5 - x + 1, 0)
+    p = Integral(x, (x, 1, y))
+    assert unchanged(Eq, r, p)

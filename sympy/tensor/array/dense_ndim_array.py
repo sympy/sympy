@@ -1,11 +1,8 @@
 from __future__ import print_function, division
 import functools
 
-import itertools
-
-from sympy.core.sympify import _sympify
-
 from sympy import Basic, Tuple, S
+from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
 

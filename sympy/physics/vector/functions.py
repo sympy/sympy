@@ -9,6 +9,7 @@ from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
 from .printing import vprint, vsprint, vpprint, vlatex, init_vprinting
 from sympy.utilities.iterables import iterable
+from sympy.utilities.misc import translate
 
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
@@ -237,7 +238,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     rot_type : str
         The type of rotation used to create the equations. Body, Space, or
         Quaternion only
-    rot_order : str
+    rot_order : str or int
         If applicable, the order of a series of rotations.
 
     Examples
@@ -256,12 +257,9 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     # Code below is checking and sanitizing input
     approved_orders = ('123', '231', '312', '132', '213', '321', '121', '131',
                        '212', '232', '313', '323', '1', '2', '3', '')
-    rot_order = str(rot_order).upper()  # Now we need to make sure XYZ = 123
-    rot_type = rot_type.upper()
-    rot_order = [i.replace('X', '1') for i in rot_order]
-    rot_order = [i.replace('Y', '2') for i in rot_order]
-    rot_order = [i.replace('Z', '3') for i in rot_order]
-    rot_order = ''.join(rot_order)
+    # make sure XYZ => 123 and rot_type is in lower case
+    rot_order = translate(str(rot_order), 'XYZxyz', '123123')
+    rot_type = rot_type.lower()
 
     if not isinstance(speeds, (list, tuple)):
         raise TypeError('Need to supply speeds in a list')
@@ -269,7 +267,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         raise TypeError('Need to supply 3 body-fixed speeds')
     if not isinstance(coords, (list, tuple)):
         raise TypeError('Need to supply coordinates in a list')
-    if rot_type.lower() in ['body', 'space']:
+    if rot_type in ['body', 'space']:
         if rot_order not in approved_orders:
             raise ValueError('Not an acceptable rotation order')
         if len(coords) != 3:
@@ -282,7 +280,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         q1d, q2d, q3d = [diff(i, dynamicsymbols._t) for i in coords]
         s1, s2, s3 = [sin(q1), sin(q2), sin(q3)]
         c1, c2, c3 = [cos(q1), cos(q2), cos(q3)]
-        if rot_type.lower() == 'body':
+        if rot_type == 'body':
             if rot_order == '123':
                 return [q1d - (w1 * c3 - w2 * s3) / c2, q2d - w1 * s3 - w2 *
                         c3, q3d - (-w1 * c3 + w2 * s3) * s2 / c2 - w3]
@@ -319,7 +317,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
             if rot_order == '323':
                 return [q1d - (-w1 * c3 + w2 * s3) / s2, q2d - w1 * s3 - w2 *
                         c3, q3d - (w1 * c3 - w2 * s3) * c2 / s2 - w3]
-        if rot_type.lower() == 'space':
+        if rot_type == 'space':
             if rot_order == '123':
                 return [q1d - w1 - (w2 * s1 + w3 * c1) * s2 / c2, q2d - w2 *
                         c1 + w3 * s1, q3d - (w2 * s1 + w3 * c1) / c2]
@@ -356,7 +354,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
             if rot_order == '323':
                 return [q1d - (w1 * c1 - w2 * s1) * c2 / s2 - w3, q2d - w1 *
                         s1 - w2 * c1, q3d - (-w1 * c1 + w2 * s1) / s2]
-    elif rot_type.lower() == 'quaternion':
+    elif rot_type == 'quaternion':
         if rot_order != '':
             raise ValueError('Cannot have rotation order for quaternion')
         if len(coords) != 4:

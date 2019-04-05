@@ -406,6 +406,7 @@ def brewster_angle(medium1, medium2):
     0.926093295503462
 
     """
+
     n1 = refractive_index_of_medium(medium1)
     n2 = refractive_index_of_medium(medium2)
 
@@ -432,6 +433,7 @@ def critical_angle(medium1, medium2):
     0.850908514477849
 
     """
+
     n1 = refractive_index_of_medium(medium1)
     n2 = refractive_index_of_medium(medium2)
 

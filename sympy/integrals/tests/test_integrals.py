@@ -1301,6 +1301,8 @@ def test_issue_8901():
     assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
 
+
+@slow
 def test_issue_8945():
     assert integrate(sin(x)**3/x, (x, 0, 1)) == -Si(3)/4 + 3*Si(1)/4
     assert integrate(sin(x)**3/x, (x, 0, oo)) == pi/4
@@ -1474,7 +1476,7 @@ def test_issue_15509():
         (-sin(a*x_1 + b)/a + sin(a*x_2 + b)/a, (a > -oo) & (a < oo) & Ne(a, 0)), \
             (-x_1*cos(b) + x_2*cos(b), True))
 
-
+@slow
 def test_issue_4311():
     x = symbols('x')
     assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)

@@ -72,6 +72,14 @@ def test_ccode_Max():
     assert ccode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
 
 
+def test_ccode_Min_performance():
+    #Shouldn't take more than a few seconds
+    big_min = Min(*symbols('a[0:50]'))
+    for curr_standard in ('c89', 'c99', 'c11'):
+        output = ccode(big_min, standard=curr_standard)
+        assert output.count('(') == output.count(')')
+
+
 def test_ccode_constants_mathh():
     assert ccode(exp(1)) == "M_E"
     assert ccode(pi) == "M_PI"

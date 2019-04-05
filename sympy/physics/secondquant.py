@@ -126,24 +126,22 @@ class Dagger(Expr):
         The eval() method is called automatically.
 
         """
-        try:
-            d = arg._dagger_()
-        except AttributeError:
-            if isinstance(arg, Basic):
-                if arg.is_Add:
-                    return Add(*tuple(map(Dagger, arg.args)))
-                if arg.is_Mul:
-                    return Mul(*tuple(map(Dagger, reversed(arg.args))))
-                if arg.is_Number:
-                    return arg
-                if arg.is_Pow:
-                    return Pow(Dagger(arg.args[0]), arg.args[1])
-                if arg == I:
-                    return -arg
-            else:
-                return None
+        dagger = getattr(arg, '_dagger_', None)
+        if dagger is not None:
+            return dagger()
+        if isinstance(arg, Basic):
+            if arg.is_Add:
+                return Add(*tuple(map(Dagger, arg.args)))
+            if arg.is_Mul:
+                return Mul(*tuple(map(Dagger, reversed(arg.args))))
+            if arg.is_Number:
+                return arg
+            if arg.is_Pow:
+                return Pow(Dagger(arg.args[0]), arg.args[1])
+            if arg == I:
+                return -arg
         else:
-            return d
+            return None
 
     def _dagger_(self):
         return self.args[0]
