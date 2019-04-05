@@ -3,7 +3,7 @@ from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
-from sympy import diff, integrate, S, simplify
+from sympy import diff, integrate, S, simplify, symbols
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
 
@@ -517,3 +517,44 @@ def orthogonalize(*vlist, **kwargs):
         ortho_vlist = [vec.normalize() for vec in ortho_vlist]
 
     return ortho_vlist
+
+def lineintegral(l,field,coord_sys, start,end ):
+    """
+    Computes line integral.A line integral is an integral where the function 
+    to be integrated is evaluated along a curve.. The line integral finds the 
+    work done on an object moving through an electric or gravitational field.
+    Parameters
+    ========== 
+    l: The equation of the line in parametric form
+    field: The equation of the feild on which we are calculating the line integral
+    coord_sys: Represent the coordinate system we are using
+    Start: Represent the staarting of the line on which we are calculating
+    End: Represent the end of the line on which we are calculating
+
+    Examples
+    ========
+    
+    >>> from sympy import diff,integrate, symbols, pi, sin, cos
+    >>> from sympy.vector.coordsysrect import CoordSys3D
+    >>> from sympy.vector.functions import lineintegral 
+    >>> x, y, z, t = symbols('x, y, z, t')
+    >>> R=CoordSys3D('R')
+    >>> l1 = 2*t*R.j
+    >>> f = x*y*R.i + 2*y*z*R.j + 3*x*z*R.k
+    >>> lineintegral(l1, f, R, 0, 1)
+    0
+    >>> l2 = 2*(1 - t)*R.j + 2*t*R.k
+    >>> lineintegral(l2, f, R, 0, 1)
+    -8/3
+    >>> l3 = cos(t)*R.j  + sin(t)*R.i
+    >>> v= x*R.j
+    >>> lineintegral(l3, v, R, 0, pi/2) 
+    -pi/4
+    
+    """
+    x, y, z, t = symbols('x,y,z,t')
+    a,b,c = (l.dot(coord_sys.i), l.dot(coord_sys.j), l.dot(coord_sys.k))
+    m = field.subs({x: a, y:  b, z: c })
+    dl =  diff(l, t)
+    return  integrate(m.dot(dl), (t, start, end ))
+
