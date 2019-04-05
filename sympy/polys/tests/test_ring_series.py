@@ -1,4 +1,4 @@
-from sympy import I
+from sympy import I, zoo, oo
 from sympy.polys.domains import QQ, EX, RR
 from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
