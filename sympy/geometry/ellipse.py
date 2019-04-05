@@ -1031,7 +1031,7 @@ class Ellipse(GeometrySet):
             A director circle returned as a geometric object.
         Examples
         ========
-        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> from sympy import Circle, Ellipse, Point, symbols, sqrt
         >>> c = Point(3,8)
         >>> Ellipse(c, 7, 9).director_circle()
         Circle(Point2D(3, 8), sqrt(130))
