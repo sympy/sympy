@@ -279,16 +279,6 @@ def test_pow_iszero():
     # (+-1)**(-oo) give nan. is_zero gives False here.
     # Returning None leads to False down the line though...
 
-    # When we have complex to the complex z**w it is
-    # (r*exp(I*theta))**(x+I*y)
-    #           = r**x * exp(-theta*y) * exp(I*(y*log(r) + x*theta))
-    # Whether this is zero depends only on whether
-    #  r**x * exp(-theta*y) is zero where
-    # r = abs(z)
-    # theta = arg(z)
-    # x = re(w)
-    # y = im(w)
-
     pow_iszero = [
         ['**',  0,  h,  1,  2, -h, -1,-2,-2*I,-I/2,I/2,1+I,oo,-oo,zoo],
         [   0,  F,  T,  T,  T,  F,  F,  F,  F,  F,  F,  N,  T,  F,  N],
@@ -320,62 +310,70 @@ def test_pow_iszero():
     test_table(pow_iszero)
 
     # A zero symbol...
-    zo = Symbol('zo', zero=True)
+    zo, zo2 = symbols('zo, zo2', zero=True)
 
     # All combinations of finite symbols
-    zf = Symbol('zf', finite=True)
-    wf = Symbol('wf', nonzero=True, finite=True)
-    xf = Symbol('xf', real=True, finite=True)
-    yf = Symbol('yf', nonzero=True, real=True, finite=True)
-    af = Symbol('af', positive=True, finite=True)
-    bf = Symbol('bf', nonnegative=True, finite=True)
-    cf = Symbol('cf', negative=True, finite=True)
-    df = Symbol('df', nonpositive=True, finite=True)
+    zf, zf2 = symbols('zf, zf2', finite=True)
+    wf, wf2 = symbols('wf, wf2', nonzero=True, finite=True)
+    xf, xf2 = symbols('xf, xf2', real=True, finite=True)
+    yf, yf2 = symbols('yf, yf2', nonzero=True, real=True, finite=True)
+    af, af2 = symbols('af, af2', positive=True, finite=True)
+    bf, bf2 = symbols('bf, bf2', nonnegative=True, finite=True)
+    cf, cf2 = symbols('cf, cf2', negative=True, finite=True)
+    df, df2 = symbols('df, df2', nonpositive=True, finite=True)
 
     # Without finiteness:
-    zi = Symbol('zi')
-    wi = Symbol('wi', nonzero=True)
-    xi = Symbol('xi', real=True)
-    yi = Symbol('yi', nonzero=True, real=True)
-    ai = Symbol('ai', positive=True)
-    bi = Symbol('bi', nonnegative=True)
-    ci = Symbol('ci', negative=True)
-    di = Symbol('di', nonpositive=True)
+    zi, zi2 = symbols('zi, zi2')
+    wi, wi2 = symbols('wi, wi2', nonzero=True)
+    xi, xi2 = symbols('xi, xi2', real=True)
+    yi, yi2 = symbols('yi, yi2', nonzero=True, real=True)
+    ai, ai2 = symbols('ai, ai2', positive=True)
+    bi, bi2 = symbols('bi, bi2', nonnegative=True)
+    ci, ci2 = symbols('ci, ci2', negative=True)
+    di, di2 = symbols('di, di2', nonpositive=True)
 
     pow_iszero_sym = [
         ['**',zo,wf,yf,af,cf,zf,xf,bf,df,zi,wi,xi,yi,ai,bi,ci,di],
-        [  zo, F, N, N, T, F, N, N, N, F, N, N, N, N, T, N, F, F],
-        [  wf, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
-        [  yf, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
-        [  af, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
-        [  cf, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
-        [  zf, F, N, N, N, F, N, N, N, N, N, N, N, N, N, N, N, N],
-        [  xf, F, N, N, N, F, N, N, N, N, N, N, N, N, N, N, N, N],
-        [  bf, F, N, N, N, F, N, N, F, N, N, N, N, N, N, N, N, N],
-        [  df, F, N, N, N, F, N, N, N, N, N, N, N, N, N, N, N, N],
-        [  zi, F, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
-        [  wi, F, N, N, F, N, N, N, F, N, N, N, N, N, N, N, N, N],
-        [  xi, F, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
-        [  yi, F, N, N, F, N, N, N, F, N, N, N, N, N, N, N, N, N],
-        [  ai, F, N, N, F, N, N, N, F, N, N, N, N, N, F, N, N, N],
-        [  bi, F, N, N, N, N, N, N, N, N, N, N, N, N, N, F, N, N],
-        [  ci, F, N, N, F, N, N, N, F, N, N, N, N, N, N, N, N, N],
-        [  di, F, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N]
+        [ zo2, F, N, N, T, F, N, N, N, F, N, N, N, N, T, N, F, F],
+        [ wf2, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
+        [ yf2, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
+        [ af2, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
+        [ cf2, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
+        [ zf2, F, N, N, N, F, N, N, N, N, N, N, N, N, N, N, N, N],
+        [ xf2, F, N, N, N, F, N, N, N, N, N, N, N, N, N, N, N, N],
+        [ bf2, F, N, N, N, F, N, N, N, N, N, N, N, N, N, N, N, N],
+        [ df2, F, N, N, N, F, N, N, N, N, N, N, N, N, N, N, N, N],
+        [ zi2, F, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
+        [ wi2, F, N, N, F, N, N, N, F, N, N, N, N, N, N, N, N, N],
+        [ xi2, F, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
+        [ yi2, F, N, N, F, N, N, N, F, N, N, N, N, N, N, N, N, N],
+        [ ai2, F, N, N, F, N, N, N, F, N, N, N, N, N, N, N, N, N],
+        [ bi2, F, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
+        [ ci2, F, N, N, F, N, N, N, F, N, N, N, N, N, N, N, N, N],
+        [ di2, F, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N]
     ]
 
     test_table(pow_iszero_sym)
 
-    # bf**bf cannot be zero but b1**b2 with same assumptions can...
-    # bi**bi and ai**ai same...
-    bf1, bf2 = symbols('bf1 bf2', nonnegative=True, finite=True)
-    bi1, bi2 = symbols('bi1 bi2', nonnegative=True)
-    ai1, ai2 = symbols('ai1 ai2', positive=True)
-    assert (bf1**bf1).is_zero is False
-    assert (bf1**bf2).is_zero is None
-    assert (bi1**bi1).is_zero is False
-    assert (bi1**bi2).is_zero is None
-    assert (ai1**ai1).is_zero is False
-    assert (ai1**ai2).is_zero is None
+    # In some cases (x**x).is_zero is different from (x**y).is_zero even if y
+    # has the same assumptions as x.
+    assert (zo ** zo).is_zero is False
+    assert (wf ** wf).is_zero is False
+    assert (yf ** yf).is_zero is False
+    assert (af ** af).is_zero is False
+    assert (cf ** cf).is_zero is False
+    assert (zf ** zf).is_zero is None
+    assert (xf ** xf).is_zero is None
+    assert (bf ** bf).is_zero is False # None in table
+    assert (df ** df).is_zero is None
+    assert (zi ** zi).is_zero is None
+    assert (wi ** wi).is_zero is None
+    assert (xi ** xi).is_zero is None
+    assert (yi ** yi).is_zero is None
+    assert (ai ** ai).is_zero is False # None in table
+    assert (bi ** bi).is_zero is False # None in table
+    assert (ci ** ci).is_zero is None
+    assert (di ** di).is_zero is None
 
 
 def test_issue_6100_12942():
