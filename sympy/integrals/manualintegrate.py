@@ -679,10 +679,11 @@ def trig_rule(integral):
 
         return TrigRule(func, arg, integrand, symbol)
 
-    if integrand == sympy.sec(symbol)**2:
-        return TrigRule('sec**2', symbol, integrand, symbol)
-    elif integrand == sympy.csc(symbol)**2:
-        return TrigRule('csc**2', symbol, integrand, symbol)
+    sym = integrand.args[0].args[0]
+    if integrand == sympy.sec(sym)**2:
+        return TrigRule('sec**2', sym, integrand, symbol)
+    elif integrand == sympy.csc(sym)**2:
+        return TrigRule('csc**2', sym, integrand, symbol)
 
     if isinstance(integrand, sympy.tan):
         rewritten = sympy.sin(*integrand.args) / sympy.cos(*integrand.args)
@@ -1320,9 +1321,9 @@ def eval_trig(func, arg, integrand, symbol):
     elif func == 'csc*cot':
         return sympy.csc(arg)
     elif func == 'sec**2':
-        return sympy.tan(arg)
+        return sympy.tan(arg)/arg.diff(symbol)
     elif func == 'csc**2':
-        return -sympy.cot(arg)
+        return -sympy.cot(arg)/arg.diff(symbol)
 
 @evaluates(ArctanRule)
 def eval_arctan(a, b, c, integrand, symbol):
