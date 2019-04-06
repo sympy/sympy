@@ -1023,7 +1023,8 @@ class Ellipse(GeometrySet):
         return Circle(self.center, Max(self.hradius, self.vradius))
 
     def director_circle(self):
-        """Returns a Circle consisting of all points where two perpendicular
+        """
+        Returns a Circle consisting of all points where two perpendicular
         tangent lines to the ellipse cross each other.
 
         Returns
