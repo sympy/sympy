@@ -1,7 +1,7 @@
-from sympy import (Interval, Intersection, Set,
+from sympy import (Interval, Intersection, Set, EmptySet, 
                    FiniteSet, Union, ComplexRegion, ProductSet)
 from sympy.sets.fancysets import Integers, Naturals, Reals
-from sympy.sets.sets import UniversalSet, EmptySet
+from sympy.sets.sets import UniversalSet
 from sympy import S, sympify
 from sympy.multipledispatch import dispatch
 
