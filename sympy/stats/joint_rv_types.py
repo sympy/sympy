@@ -1,10 +1,12 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
-    IndexedBase)
+    IndexedBase, Mul, Add)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
     JointDistributionHandmade, MarginalDistribution)
 from sympy.stats.rv import _value_check, random_symbols
+from sympy.sets.sets import Interval
+from sympy.functions.special.gamma_functions import gamma
 
 # __all__ = ['MultivariateNormal',
 # 'MultivariateLaplace',
@@ -205,7 +207,6 @@ class NormalGammaDistribution(JointDistribution):
 
     @property
     def set(self):
-        from sympy.sets.sets import Interval
         return S.Reals*Interval(0, S.Infinity)
 
     def pdf(self, x, tau):
@@ -218,7 +219,6 @@ class NormalGammaDistribution(JointDistribution):
         exp(-1*(lamda*tau*(x - mu)**2)/S(2))
 
     def marginal_distribution(self, indices, *sym):
-        from sympy.functions.special.gamma_functions import gamma
         if len(indices) == 2:
             return self.pdf(*sym)
         if indices[0] == 0:
@@ -253,3 +253,27 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     A random symbol
     """
     return multivariate_rv(NormalGammaDistribution, syms, mu, lamda, alpha, beta)
+
+class MultivariateBetaDistribution(JointDistribution):
+
+    _argnames = ['alpha']
+    is_Continuous = True
+
+    def check(self, alpha):
+        _value_check(len(alpha) >= 2, "At least two categories should be passed.")
+        _value_check(all([a_k > 0 for a_k in alpha]), "Each concentration parameter"
+                                                        " should be positive")
+
+    @property
+    def set(self):
+        k = len(self.alpha)
+        return Interval(0, 1)**k
+
+    def pdf(self, *syms):
+        alpha = self.alpha
+        B = Mul(*[gamma(a_k) for a_k in alpha])/gamma(Add(*[a_k for a_k in alpha]))
+        return Mul(*[sym**(a_k) for a_k, sym in zip(alpha, syms)])/B
+
+def MultivariateBeta(syms, alpha):
+
+    return multivariate_rv(MultivariateBetaDistribution, syms, alpha)
