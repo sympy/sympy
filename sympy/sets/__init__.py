@@ -1,4 +1,4 @@
-from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
+from .sets import (Set, Interval, Union, FiniteSet, ProductSet,
         Intersection, imageset, Complement, SymmetricDifference)
 from .fancysets import ImageSet, Range, ComplexRegion, Reals
 from .contains import Contains
@@ -9,5 +9,6 @@ Reals = S.Reals
 Naturals = S.Naturals
 Naturals0 = S.Naturals0
 UniversalSet = S.UniversalSet
+EmptySet = S.EmptySet
 Integers = S.Integers
 del S
