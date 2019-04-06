@@ -296,53 +296,73 @@ class PlotGrid(object):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.plotting.plot import plot, plot3d, PlotGrid
-    >>> x, y = symbols('x, y')
-    >>> p1 = plot(x, x**2, x**3, (x, -5, 5))
-    >>> p2 = plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
-    >>> p3 = plot(x**3, (x, -5, 5))
-    >>> p4 = plot3d(x*y, (x, -5, 5), (y, -5, 5))
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
 
-    Plotting vertically in a single line
+        >>> from sympy import symbols
+        >>> from sympy.plotting import plot, plot3d, PlotGrid
+        >>> x, y = symbols('x, y')
+        >>> p1 = plot(x, x**2, x**3, (x, -5, 5))
+        >>> p2 = plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
+        >>> p3 = plot(x**3, (x, -5, 5))
+        >>> p4 = plot3d(x*y, (x, -5, 5), (y, -5, 5))
 
-    >>> PlotGrid(2, 1 , p1, p2)
-    PlotGrid object containing:
-    Plot[0]:Plot object containing:
-    [0]: cartesian line: x for x over (-5.0, 5.0)
-    [1]: cartesian line: x**2 for x over (-5.0, 5.0)
-    [2]: cartesian line: x**3 for x over (-5.0, 5.0)
-    Plot[1]:Plot object containing:
-    [0]: cartesian line: x**2 for x over (-6.0, 6.0)
-    [1]: cartesian line: x for x over (-5.0, 5.0)
+    Plotting vertically in a single line:
 
-    Plotting horizontally in a single line
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
 
-    >>> PlotGrid(1, 3 , p2, p3, p4)
-    PlotGrid object containing:
-    Plot[0]:Plot object containing:
-    [0]: cartesian line: x**2 for x over (-6.0, 6.0)
-    [1]: cartesian line: x for x over (-5.0, 5.0)
-    Plot[1]:Plot object containing:
-    [0]: cartesian line: x**3 for x over (-5.0, 5.0)
-    Plot[2]:Plot object containing:
-    [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+        >>> PlotGrid(2, 1 , p1, p2)
+        PlotGrid object containing:
+        Plot[0]:Plot object containing:
+        [0]: cartesian line: x for x over (-5.0, 5.0)
+        [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+        [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[1]:Plot object containing:
+        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+        [1]: cartesian line: x for x over (-5.0, 5.0)
 
-    Plotting in a grid form
+    Plotting horizontally in a single line:
 
-    >>> PlotGrid(2, 2, p1, p2 ,p3, p4)
-    PlotGrid object containing:
-    Plot[0]:Plot object containing:
-    [0]: cartesian line: x for x over (-5.0, 5.0)
-    [1]: cartesian line: x**2 for x over (-5.0, 5.0)
-    [2]: cartesian line: x**3 for x over (-5.0, 5.0)
-    Plot[1]:Plot object containing:
-    [0]: cartesian line: x**2 for x over (-6.0, 6.0)
-    [1]: cartesian line: x for x over (-5.0, 5.0)
-    Plot[2]:Plot object containing:
-    [0]: cartesian line: x**3 for x over (-5.0, 5.0)
-    Plot[3]:Plot object containing:
-    [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> PlotGrid(1, 3 , p2, p3, p4)
+        PlotGrid object containing:
+        Plot[0]:Plot object containing:
+        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+        [1]: cartesian line: x for x over (-5.0, 5.0)
+        Plot[1]:Plot object containing:
+        [0]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[2]:Plot object containing:
+        [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+
+    Plotting in a grid form:
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> PlotGrid(2, 2, p1, p2 ,p3, p4)
+        PlotGrid object containing:
+        Plot[0]:Plot object containing:
+        [0]: cartesian line: x for x over (-5.0, 5.0)
+        [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+        [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[1]:Plot object containing:
+        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+        [1]: cartesian line: x for x over (-5.0, 5.0)
+        Plot[2]:Plot object containing:
+        [0]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[3]:Plot object containing:
+        [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
 
     """
     def __init__(self, nrows, ncolumns, *args, **kwargs):
