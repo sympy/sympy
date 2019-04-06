@@ -177,6 +177,13 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
     if shared:
         if '-shared' not in flags:
             flags.append('-shared')
+
+        # mimic GNU linker behavior on OS X when using -shared
+        # (otherwise likely Undefined symbol errors)
+        dl_flag = '-undefined dynamic_lookup'
+        if sys.platform == 'darwin' and dl_flag not in flags:
+            flags.append(dl_flag)
+
     run_linker = kwargs.pop('run_linker', True)
     if not run_linker:
         raise ValueError("run_linker was set to False (nonsensical).")
@@ -231,15 +238,19 @@ def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
         # Don't use the default code below
         pass
     else:
-        from distutils import sysconfig
-        if sysconfig.get_config_var('Py_ENABLE_SHARED'):
-            ABIFLAGS = sysconfig.get_config_var('ABIFLAGS')
-            pythonlib = 'python{}.{}{}'.format(
-                sys.hexversion >> 24, (sys.hexversion >> 16) & 0xff,
-                ABIFLAGS or '')
-            libraries += [pythonlib]
+        # LIBDIR/INSTSONAME should always points to libpython (dynamic or static)
+        pylib = os.path.join(get_config_var('LIBDIR'), get_config_var('INSTSONAME'))
+        if os.path.exists(pylib):
+            libraries.append(pylib)
         else:
-            pass
+            if get_config_var('Py_ENABLE_SHARED'):
+                ABIFLAGS = get_config_var('ABIFLAGS')
+                pythonlib = 'python{}.{}{}'.format(
+                    sys.hexversion >> 24, (sys.hexversion >> 16) & 0xff,
+                    ABIFLAGS or '')
+                libraries += [pythonlib]
+            else:
+                pass
 
     flags = kwargs.pop('flags', [])
     needed_flags = ('-pthread',)

@@ -147,7 +147,7 @@ class CompilerRunner(object):
         )
         if self.run_linker:
             cmd += (['-L'+x for x in self.library_dirs] +
-                    ['-l'+x for x in self.libraries] +
+                    [(x if os.path.exists(x) else '-l'+x) for x in self.libraries] +
                     self.linkline)
         counted = []
         for envvar in re.findall(r'\$\{(\w+)\}', ' '.join(cmd)):
