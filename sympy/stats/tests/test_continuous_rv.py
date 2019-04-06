@@ -254,6 +254,7 @@ def test_cauchy():
     assert diff(cdf(X)(x), x) == density(X)(x)
 
     gamma = Symbol("gamma", positive=False)
+    x0 = Symbol("x0", real=False)
     raises(ValueError, lambda: Cauchy('x', x0, gamma))
 
 
@@ -387,6 +388,14 @@ def test_fisher_z():
     assert density(X)(x) == (2*d1**(d1/2)*d2**(d2/2)*(d1*exp(2*x) + d2)
                              **(-d1/2 - d2/2)*exp(d1*x)/beta(d1/2, d2/2))
 
+    d1 = Symbol("d1", positive=False)
+    raises(ValueError, lambda: FisherZ('x', d1, d1))
+
+    d1 = Symbol("d1", positive=True)
+    d2 = Symbol("d2", positive=False)
+    raises(ValueError, lambda: FisherZ('x', d1, d2))
+
+
 def test_frechet():
     a = Symbol("a", positive=True)
     s = Symbol("s", positive=True)
@@ -470,6 +479,12 @@ def test_laplace():
     assert cdf(X)(x) == Piecewise((exp((-mu + x)/b)/2, mu > x),
                             (-exp((mu - x)/b)/2 + 1, True))
 
+    mu_f = Symbol("mu_f", real=False)
+    b_f = Symbol("b_f", positive=False)
+    raises(ValueError, lambda: Laplace('x', mu, b_f))
+    raises(ValueError, lambda: Laplace('x', mu_f, b))
+    raises(ValueError, lambda: Laplace('x', mu_f, b_f))
+
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
@@ -477,6 +492,12 @@ def test_logistic():
     X = Logistic('x', mu, s)
     assert density(X)(x) == exp((-x + mu)/s)/(s*(exp((-x + mu)/s) + 1)**2)
     assert cdf(X)(x) == 1/(exp((mu - x)/s) + 1)
+
+    mu_f = Symbol("mu_f", real=False)
+    s_f = Symbol("s_f", positive=False)
+    raises(ValueError, lambda: Logistic('x', mu, s_f))
+    raises(ValueError, lambda: Logistic('x', mu_f, s))
+    raises(ValueError, lambda: Logistic('x', mu_f, s_f))
 
 
 def test_lognormal():
@@ -492,8 +513,6 @@ def test_lognormal():
     for i in range(3):
         X = LogNormal('x', i, 0)
         assert S(sample(X)) == N(exp(i))
-    # The sympy integrator can't do this too well
-    #assert E(X) ==
 
     mu = Symbol("mu", real=True)
     sigma = Symbol("sigma", positive=True)
@@ -504,6 +523,12 @@ def test_lognormal():
 
     X = LogNormal('x', 0, 1)  # Mean 0, standard deviation 1
     assert density(X)(x) == sqrt(2)*exp(-log(x)**2/2)/(2*x*sqrt(pi))
+
+    mu_f = Symbol("mu_f", real=False)
+    sigma_f = Symbol("b_f", negative=True)
+    raises(ValueError, lambda: LogNormal('x', mu, sigma_f))
+    raises(ValueError, lambda: LogNormal('x', mu_f, sigma))
+    raises(ValueError, lambda: LogNormal('x', mu_f, sigma_f))
 
 
 def test_maxwell():

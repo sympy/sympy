@@ -1840,7 +1840,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(mu, std):
         _value_check(mu.is_real, "mu, location must be real.")
-        _value_check(std > 0, "s, scale must be positive")
+        _value_check(std >= 0, "s, stdandard deviation must be positive")
 
     def pdf(self, x):
         mean, std = self.mean, self.std
