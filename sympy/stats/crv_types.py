@@ -475,6 +475,7 @@ class CauchyDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(x0, gamma):
+        _value_check(x0.is_real, "Location should be real.")
         _value_check(gamma > 0, "Scale parameter Gamma must be positive.")
 
     def pdf(self, x):
@@ -1027,9 +1028,9 @@ class FDistributionDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(d1, d2):
         _value_check(d1 > 0 and d1.is_integer, \
-            "Degrees of freedom d1 must be positive integer.")
+            "Degrees of freedom d1 must be a positive integer.")
         _value_check(d2 > 0 and d2.is_integer, \
-            "Degrees of freedom d2 must be positive integer.")
+            "Degrees of freedom d2 must be a positive integer.")
 
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
@@ -1102,6 +1103,15 @@ def FDistribution(name, d1, d2):
 
 class FisherZDistribution(SingleContinuousDistribution):
     _argnames = ('d1', 'd2')
+
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(d1, d2):
+        _value_check(d1 > 0, \
+            "Degrees of freedom d1 must be positive.")
+        _value_check(d2 > 0, \
+            "Degrees of freedom d2 must be positive.")
 
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
@@ -1655,6 +1665,13 @@ def Kumaraswamy(name, a, b):
 class LaplaceDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 'b')
 
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(mu, b):
+        _value_check(mu.is_real, "mu, location must be real.")
+        _value_check(b > 0, "b, scale must be positive")
+
     def pdf(self, x):
         mu, b = self.mu, self.b
         return 1/(2*b)*exp(-Abs(x - mu)/b)
@@ -1742,6 +1759,13 @@ def Laplace(name, mu, b):
 class LogisticDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 's')
 
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(mu, s):
+        _value_check(mu.is_real, "mu, location must be real.")
+        _value_check(s > 0, "s, scale must be positive")
+
     def pdf(self, x):
         mu, s = self.mu, self.s
         return exp(-(x - mu)/s)/(s*(1 + exp(-(x - mu)/s))**2)
@@ -1812,6 +1836,11 @@ class LogNormalDistribution(SingleContinuousDistribution):
     _argnames = ('mean', 'std')
 
     set = Interval(0, oo)
+
+    @staticmethod
+    def check(mu, std):
+        _value_check(mu.is_real, "mu, location must be real.")
+        _value_check(std > 0, "s, scale must be positive")
 
     def pdf(self, x):
         mean, std = self.mean, self.std
