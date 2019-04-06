@@ -4588,7 +4588,7 @@ def ode_almost_linear(eq, func, order, match):
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, y, n
         >>> f, g, k, l = map(Function, ['f', 'g', 'k', 'l'])
-        >>> genform = Eq(f(x)*(l(y).diff(y)) + k(x)*l(y) + g(x))
+        >>> genform = Eq(f(x)*(l(y).diff(y)) + k(x)*l(y) + g(x), 0)
         >>> pprint(genform)
              d
         f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
