@@ -254,6 +254,10 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     """
     return multivariate_rv(NormalGammaDistribution, syms, mu, lamda, alpha, beta)
 
+
+#-------------------------------------------------------------------------------
+# Multivariate Beta distribution ---------------------------------------------------------
+
 class MultivariateBetaDistribution(JointDistribution):
 
     _argnames = ['alpha']
