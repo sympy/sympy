@@ -1376,6 +1376,29 @@ def test_print_matrix_symbol():
     assert mathml(A, mat_symbol_style="bold") == '<ci>A</ci>'
 
 
+def test_print_hadamard():
+    from sympy.matrices.expressions import HadamardProduct
+
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+
+    assert mathml(HadamardProduct(X, Y*Y), printer="presentation") == \
+        '<mrow>' \
+        '<mi>X</mi>' \
+        '<mo>&#x2218;</mo>' \
+        '<msup><mi>Y</mi><mn>2</mn></msup>' \
+        '</mrow>'
+
+    assert mathml(HadamardProduct(X, Y)*Y, printer="presentation") == \
+        '<mrow>' \
+        '<mfenced>' \
+        '<mrow><mi>X</mi><mo>&#x2218;</mo><mi>Y</mi></mrow>' \
+        '</mfenced>' \
+        '<mo>&InvisibleTimes;</mo><mi>Y</mi>' \
+        '</mrow>'
+
+
+
 def test_print_random_symbol():
     R = RandomSymbol(Symbol('R'))
     assert mpp.doprint(R) == '<mi>R</mi>'
