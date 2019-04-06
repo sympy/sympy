@@ -319,6 +319,9 @@ def test_pow_iszero():
 
     test_table(pow_iszero)
 
+    # A zero symbol...
+    zo = Symbol('zo', zero=True)
+
     # All combinations of finite symbols
     zf = Symbol('zf', finite=True)
     wf = Symbol('wf', nonzero=True, finite=True)
@@ -340,23 +343,24 @@ def test_pow_iszero():
     di = Symbol('di', nonpositive=True)
 
     pow_iszero_sym = [
-        ['**',zf,wf,xf,yf,af,bf,cf,df,zi,wi,xi,yi,ai,bi,ci,di],
-        [  zf, N, N, N, N, N, N, F, N, N, N, N, N, N, N, N, N],
-        [  wf, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
-        [  xf, N, N, N, N, N, N, F, N, N, N, N, N, N, N, N, N],
-        [  yf, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
-        [  af, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
-        [  bf, N, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N],
-        [  cf, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
-        [  df, N, N, N, N, N, N, F, N, N, N, N, N, N, N, N, N],
-        [  zi, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
-        [  wi, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
-        [  xi, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
-        [  yi, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
-        [  ai, N, N, N, N, F, F, N, N, N, N, N, N, F, N, N, N],
-        [  bi, N, N, N, N, N, N, N, N, N, N, N, N, N, F, N, N],
-        [  ci, N, N, N, N, F, F, N, N, N, N, N, N, N, N, N, N],
-        [  di, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
+        ['**',zo,wf,yf,af,cf,zf,xf,bf,df,zi,wi,xi,yi,ai,bi,ci,di],
+        [  zo, F, N, N, T, F, N, N, N, F, N, N, N, N, T, N, F, F],
+        [  wf, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
+        [  yf, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
+        [  af, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
+        [  cf, F, F, F, F, F, F, F, F, F, N, N, N, N, N, N, N, N],
+        [  zf, F, N, N, N, F, N, N, N, N, N, N, N, N, N, N, N, N],
+        [  xf, F, N, N, N, F, N, N, N, N, N, N, N, N, N, N, N, N],
+        [  bf, F, N, N, N, F, N, N, F, N, N, N, N, N, N, N, N, N],
+        [  df, F, N, N, N, F, N, N, N, N, N, N, N, N, N, N, N, N],
+        [  zi, F, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
+        [  wi, F, N, N, F, N, N, N, F, N, N, N, N, N, N, N, N, N],
+        [  xi, F, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N],
+        [  yi, F, N, N, F, N, N, N, F, N, N, N, N, N, N, N, N, N],
+        [  ai, F, N, N, F, N, N, N, F, N, N, N, N, N, F, N, N, N],
+        [  bi, F, N, N, N, N, N, N, N, N, N, N, N, N, N, F, N, N],
+        [  ci, F, N, N, F, N, N, N, F, N, N, N, N, N, N, N, N, N],
+        [  di, F, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N]
     ]
 
     test_table(pow_iszero_sym)

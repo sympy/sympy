@@ -500,6 +500,8 @@ class Pow(Expr):
             return (abs(b)**ree * exp(-argb*ime)).is_zero
 
         if b.is_zero:
+            if e.is_nonpositive:
+                return False
             if arg(e).is_zero:
                 return True
         elif b.is_infinite:
