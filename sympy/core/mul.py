@@ -1188,6 +1188,8 @@ class Mul(Expr, AssocOp):
                     return  # complex terms might cancel
                 t_not_re_im = t
             else:
+                # https://github.com/sympy/sympy/issues/16507
+                # https://github.com/sympy/sympy/issues/16511
                 from sympy.series import Order
                 from sympy.polys.rootoftools import CRootOf
                 if t.has(Order, CRootOf):
