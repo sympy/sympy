@@ -261,7 +261,7 @@ def decipher_shift(msg, key, symbols=None):
 
 def encipher_rot13(msg, symbols=None):
     """
-    Performs the ROT13 encryption on a given plaintext ```msg```.
+    Performs the ROT13 encryption on a given plaintext ``msg``.
 
     Notes
     =====
@@ -282,15 +282,15 @@ def encipher_rot13(msg, symbols=None):
 
 def decipher_rot13(msg, symbols=None):
     """
-    Performs the ROT13 decryption on a given plaintext ```msg```.
+    Performs the ROT13 decryption on a given plaintext ``msg``.
 
     Notes
     =====
 
-    ```decipher_rot13``` is equivalent to ```encipher_rot13``` as both
-    ```decipher_shift``` with a key of 13 and ```encipher_shift``` key with a
+    ``decipher_rot13`` is equivalent to ``encipher_rot13`` as both
+    ``decipher_shift`` with a key of 13 and ``encipher_shift`` key with a
     key of 13 will return the same results. Nonetheless,
-    ```decipher_rot13``` has nonetheless been explicitly defined here for
+    ``decipher_rot13`` has nonetheless been explicitly defined here for
     consistency.
 
     Examples
@@ -400,7 +400,7 @@ def decipher_affine(msg, key, symbols=None):
 
 def encipher_atbash(msg, symbols=None):
     r"""
-    Enciphers a given ```msg``` into its Atbash ciphertext and returns it.
+    Enciphers a given ``msg`` into its Atbash ciphertext and returns it.
 
     Notes
     =====
@@ -409,8 +409,8 @@ def encipher_atbash(msg, symbols=None):
     alphabet. Atbash works on the principle of mapping each alphabet to its
     reverse / counterpart (i.e. a would map to z, b to y etc.)
 
-    Atbash is functionally equivalent to the affine cipher with ```a = 25```
-    and ```b = 25```
+    Atbash is functionally equivalent to the affine cipher with ``a = 25``
+    and ``b = 25``
 
     See Also
     ========
@@ -421,12 +421,12 @@ def encipher_atbash(msg, symbols=None):
 
 def decipher_atbash(msg, symbols=None):
     r"""
-    Deciphers a given ```msg``` using Atbash cipher and returns it.
+    Deciphers a given ``msg`` using Atbash cipher and returns it.
 
     Notes
     =====
 
-    ```decipher_atbash``` is functionally equivalent to ```encipher_atbash```.
+    ``decipher_atbash`` is functionally equivalent to ``encipher_atbash``.
     However, it has still been added as a separate function to maintain
     consistency.
 
