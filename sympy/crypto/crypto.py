@@ -261,7 +261,7 @@ def decipher_shift(msg, key, symbols=None):
 
 def encipher_rot13(msg, symbols=None):
     """
-    Performs the ROT13 encryption on a given plaintext ```msg```.
+    Performs the ROT13 encryption on a given plaintext ``msg``.
 
     Notes
     =====
@@ -282,7 +282,7 @@ def encipher_rot13(msg, symbols=None):
 
 def decipher_rot13(msg, symbols=None):
     """
-    Performs the ROT13 decryption on a given plaintext ```msg```.
+    Performs the ROT13 decryption on a given plaintext ``msg``.
 
     Notes
     =====
@@ -400,7 +400,7 @@ def decipher_affine(msg, key, symbols=None):
 
 def encipher_atbash(msg, symbols=None):
     r"""
-    Enciphers a given ```msg``` into its Atbash ciphertext and returns it.
+    Enciphers a given ``msg`` into its Atbash ciphertext and returns it.
 
     Notes
     =====
