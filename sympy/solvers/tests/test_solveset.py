@@ -1060,6 +1060,11 @@ def test_linear_eq_to_matrix():
         Matrix([[1]]), Matrix([[-1]]))
 
 
+def test_issue_16577():
+    assert linear_eq_to_matrix(Eq(a*(2*x + 3*y) + 4*y, 5), x, y) == (
+        Matrix([[2*a, 3*a + 4]]), Matrix([[5]]))
+
+
 def test_linsolve():
     x, y, z, u, v, w = symbols("x, y, z, u, v, w")
     x1, x2, x3, x4 = symbols('x1, x2, x3, x4')
@@ -2025,3 +2030,4 @@ def test_linear_coeffs():
         linear_coeffs(x + 2*x**2 + x**3, x, x**2))
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
+    assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
