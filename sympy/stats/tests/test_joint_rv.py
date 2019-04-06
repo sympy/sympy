@@ -61,7 +61,7 @@ def test_JointPSpace_margial_distribution():
         8*polar_lift(x**2/2 + 1)**(S(5)/2))
     assert integrate(marginal_distribution(T, 1)(x), (x, -oo, oo)) == 1
     t = MultivariateT('T', [0, 0, 0], [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 3)
-    assert marginal_distribution(t, 0)(1).evalf() == 0.206748335783172
+    assert marginal_distribution(t, 0)(1).evalf().round(1) == 0.2
 
 
 def test_JointRV():
