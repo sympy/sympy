@@ -53,6 +53,17 @@ def test_NormalGamma():
         3*sqrt(10)*gamma(S(7)/4)/(10*sqrt(pi)*gamma(S(5)/4))
     assert marginal_distribution(ng, y)(1) == exp(-S(1)/4)/128
 
+def test_MultivariateBeta():
+    from sympy.stats.joint_rv_types import MultivariateBeta
+    from sympy import gamma
+    mb = MultivariateBeta('B', [1, 2])
+    assert density(mb)(1, 2) == 8
+    assert marginal_distribution(mb, 0)(3) == 2
+    raises(ValueError, lambda: MultivariateBeta('b1', [1, -2]))
+    raises(ValueError, lambda: MultivariateBeta('b2', [0, 2]))
+    raises(ValueError, lambda: MultivariateBeta('b3', [0, 0]))
+    raises(ValueError, lambda: MultivariateBeta('b4', [-1, -2]))
+
 def test_JointPSpace_margial_distribution():
     from sympy.stats.joint_rv_types import MultivariateT
     from sympy import polar_lift

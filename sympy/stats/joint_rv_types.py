@@ -275,5 +275,45 @@ class MultivariateBetaDistribution(JointDistribution):
         return Mul(*[sym**(a_k) for a_k, sym in zip(alpha, syms)])/B
 
 def MultivariateBeta(syms, alpha):
+    """
+    Creates a continuous random variable with Dirichlet/Multivariate Beta
+    Distribution.
 
+    The density of the dirichlet distribution can be found at [1].
+
+    Parameters
+    ==========
+
+    alpha: List of positive real numbers signifying concentration numbers.
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv import marginal_distribution
+    >>> from sympy.stats.joint_rv_types import MultivariateBeta
+    >>> from sympy import Symbol
+    >>> a1 = Symbol('a1', positive=True, real=True)
+    >>> a2 = Symbol('a2', positive=True, real=True)
+    >>> B = MultivariateBeta('B', [a1, a2])
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> density(B)(x, y)
+    x**a1*y**a2*gamma(a1 + a2)/(gamma(a1)*gamma(a2))
+    >>> marginal_distribution(B, B[0])(x)
+    x**a1*gamma(a1 + a2)/((a2 + 1)*gamma(a1)*gamma(a2))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Dirichlet_distribution
+
+    """
     return multivariate_rv(MultivariateBetaDistribution, syms, alpha)
+
+Dirichlet = MultivariateBeta

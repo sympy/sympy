@@ -98,7 +98,6 @@ class JointPSpace(ProductPSpace):
                 limits[index].append(self.distribution.set.args[i])
                 limits[index] = tuple(limits[index])
                 index += 1
-        print(self.distribution(*all_syms))
         if self.distribution.is_Continuous:
             f = Lambda(sym, integrate(self.distribution(*all_syms), *limits))
         elif self.distribution.is_Discrete:
