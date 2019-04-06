@@ -1,7 +1,6 @@
 """Finitely Presented Groups and its algorithms. """
 
 from __future__ import print_function, division
-from sympy.ntheory import primefactors
 from sympy import S
 from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
                                                 free_group)
