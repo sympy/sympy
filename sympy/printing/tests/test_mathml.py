@@ -1378,6 +1378,7 @@ def test_print_matrix_symbol():
 
 def test_print_hadamard():
     from sympy.matrices.expressions import HadamardProduct
+    from sympy.matrices.expressions import Transpose
 
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
@@ -1397,6 +1398,21 @@ def test_print_hadamard():
         '<mo>&InvisibleTimes;</mo><mi>Y</mi>' \
         '</mrow>'
 
+    assert mathml(HadamardProduct(X, Y, Y), printer="presentation") == \
+        '<mrow>' \
+        '<mi>X</mi><mo>&#x2218;</mo>' \
+        '<mi>Y</mi><mo>&#x2218;</mo>' \
+        '<mi>Y</mi>' \
+        '</mrow>'
+
+    assert mathml(
+        Transpose(HadamardProduct(X, Y)), printer="presentation") == \
+            '<msup>' \
+            '<mfenced>' \
+            '<mrow><mi>X</mi><mo>&#x2218;</mo><mi>Y</mi></mrow>' \
+            '</mfenced>' \
+            '<mo>T</mo>' \
+            '</msup>'
 
 
 def test_print_random_symbol():
