@@ -387,7 +387,7 @@ class Equality(Relational):
         from sympy.core.expr import _n2
         from sympy.simplify.simplify import clear_coefficients
 
-        if rhs == None:
+        if rhs is None:
             raise ValueError("rhs must be provided")
 
         lhs = _sympify(lhs)

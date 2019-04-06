@@ -184,6 +184,16 @@ def test_doit():
 def test_new_relational():
     x = Symbol('x')
 
+    assert Eq(x, 0) == Relational(x, 0)       # None ==> Equality
+    assert Eq(x, 0) == Relational(x, 0, '==')
+    assert Eq(x, 0) == Relational(x, 0, 'eq')
+    assert Eq(x, 0) == Equality(x, 0)
+
+    assert Eq(x, 0) != Relational(x, 1)       # None ==> Equality
+    assert Eq(x, 0) != Relational(x, 1, '==')
+    assert Eq(x, 0) != Relational(x, 1, 'eq')
+    assert Eq(x, 0) != Equality(x, 1)
+
     assert Eq(x, -1) == Relational(x, -1)       # None ==> Equality
     assert Eq(x, -1) == Relational(x, -1, '==')
     assert Eq(x, -1) == Relational(x, -1, 'eq')
