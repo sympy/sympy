@@ -1858,8 +1858,8 @@ def linear_coeffs(eq, *syms, **_kw):
         elif f.is_Add:
             d1 = linear_coeffs(f, *syms, **{'dict': True})
             d[0].append(m*d1.pop(0))
-            xf, vf = list(d1.items())[0]
-            d[xf].append(m*vf)
+            for xf, vf in d1.items():
+                d[xf].append(m*vf)
         else:
             break
     else:
