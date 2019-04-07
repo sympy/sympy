@@ -343,7 +343,7 @@ def test_collect_const():
         2*sqrt(sqrt(2) + 3)*(sqrt(5)*x + y) + 2
 
     # issue 16296
-    assert collect_const(a + b + x/2 + y/2) != a + b + (x/2 + y/2)
+    assert collect_const(a + b + x/2 + y/2) == a + b + Mul(S.Half, x + y, evaluate=False)
 
 
 def test_issue_13143():

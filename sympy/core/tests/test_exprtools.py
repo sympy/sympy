@@ -128,7 +128,7 @@ def test_Factors():
         (Factors({x: x}), Factors({x: y + 1}))
 
     assert Factors(3 * x / 2) == Factors({3: 1, 2: -1, x: 1})
-    assert Factors(x * x / y) == Factors({x: 2, y: 1})
+    assert Factors(x * x / y) == Factors({x: 2, y: -1})
     assert Factors(27 * x / y**9) == Factors({27: 1, x: 1, y: -9})
 
 
