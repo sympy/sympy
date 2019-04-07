@@ -39,7 +39,6 @@ def _product(a, b):
 
 # Dummy symbol used for computing polynomial sequences
 _sym = Symbol('x')
-_symbols = Function('x')
 
 
 #----------------------------------------------------------------------------#
@@ -1311,7 +1310,7 @@ class genocchi(Function):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-
+_npartition = [1, 1]
 class partition(Function):
     r"""
     Partition numbers
@@ -1347,29 +1346,28 @@ class partition(Function):
     """
 
     @staticmethod
-    @recurrence_memo([1, 1])
-    def _partition(n, prev):
-        if type(n) is tuple:  # called from _nT
-            n, k = n
-            if not (0 < k <= n//2):
-                raise ValueError('k is not in range (0, %s]' % (n//2))
-        else:
-            k = None
-        v, g, i = 0, 0, 0
-        while 1:
-            s = 0
-            i += 1
-            g = i * (3*i - 1) // 2
-            if n >= g:
-                s += prev[n - g]
-            g = i * (3*i + 1) // 2
-            if n >= g:
-                s += prev[n - g]
-            if s == 0:
-                break
-            else:
-                v += s if i%2 == 1 else -s
-        return v if k is None else v - sum(prev[:n - k])
+    def _partition(n):
+        L = len(_npartition)
+        if n < L:
+            return _npartition[n]
+        # lengthen cache
+        for _n in range(L, n + 1):
+            v, p, i = 0, 0, 0
+            while 1:
+                s = 0
+                p += 3*i + 1  # p = pentagonal number: 1, 5, 12, ...
+                if _n >= p:
+                    s += _npartition[_n - p]
+                i += 1
+                gp = p + i  # gp = generalized pentagonal: 2, 7, 15, ...
+                if _n >= gp:
+                    s += _npartition[_n - gp]
+                if s == 0:
+                    break
+                else:
+                    v += s if i%2 == 1 else -s
+            _npartition.append(v)
+        return v
 
     @classmethod
     def eval(cls, n):
@@ -1865,32 +1863,40 @@ def stirling(n, k, d=None, kind=2, signed=False):
 def _nT(n, k):
     """Return the partitions of ``n`` items into ``k`` parts. This
     is used by ``nT`` for the case when ``n`` is an integer."""
+    # really quick exits
     if k > n or k < 0:
         return 0
     if k == n or k == 1:
         return 1
     if k == 0:
         return 0
-    # quick exits
+    # exits that could be done below but this is quicker
     if k == 2:
         return n//2
     d = n - k
     if d <= 3:
         return d
-    try:
-        # if 2*k >= d (i.e. 3*k >= n) then we can
-        # use values in the cache
-        return partition._partition((d, k))
-    except ValueError:
-        p = [1]*d
-        for i in range(2, k + 1):
-            for m  in range(i + 1, d):
-                p[m] += p[m - i]
-            d -= 1
+    # quick exit
+    if 2*k >= d:
+        # update cache and get partition(d)
+        tot = partition._partition(d)
+        # correct for values not needed
+        if d - k > 0:
+            tot -= sum(_npartition[:d - k])
+        return tot
+    # regular exit
+    # nT(n, k) = Sum(nT(n - k, m), (m, 1, k));
+    # calculate needed nT(i, j) values
+    p = [1]*d
+    for i in range(2, k + 1):
+        for m  in range(i + 1, d):
+            p[m] += p[m - i]
+        d -= 1
     # if p[0] were appended to the end of p then the last
-    # k values of p are the nT(n, j) values for 0 < j < k in reverse order
-    # p[-1] = nT(n, 1), p[-2] = nT(n, 2), etc.... Instead of putting the 1
-    # from p[0] there, however, it is simply added to the sum below.
+    # k values of p are the nT(n, j) values for 0 < j < k in reverse
+    # order p[-1] = nT(n, 1), p[-2] = nT(n, 2), etc.... Instead of
+    # putting the 1 from p[0] there, however, it is simply added to
+    # the sum below.
     return (1 + sum(p[1 - k:])) # ok for 1 < k <= n//2
 
 
@@ -1951,10 +1957,11 @@ def nT(n, k=None):
     >>> nT('1'*4)
     5
 
-    The partition of an integer `n` into `k` parts is equivalent to the
-    sum of the partitions of `n - k` into `k` or fewer parts:
+    The partition of an integer ``n`` into ``k`` parts is
+    equivalent to the sum of the partitions of ``n - k``
+    into ``k`` or fewer parts:
 
-    >>> nT(6, 2) == nT(4, 1) + nT(4, 2)
+    >>> nT(7, 3) == nT(4, 1) + nT(4, 2) + nT(4, 3)
     True
 
     See Also
@@ -1972,13 +1979,13 @@ def nT(n, k=None):
     from sympy.utilities.enumerative import MultisetPartitionTraverser
 
     if isinstance(n, SYMPY_INTS):
-        # assert n >= 0
-        # all the same
+        # n identical items
         if k is None:
             return partition(n)
-        elif n == 0:
-            return S.One if k == 0 else S.Zero
-        return _nT(n, k)
+        if isinstance(k, SYMPY_INTS):
+            n = as_int(n)
+            k = as_int(k)
+            return Integer(_nT(n, k))
     if not isinstance(n, _MultisetHistogram):
         try:
             # if n contains hashable items there is some
