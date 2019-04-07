@@ -798,6 +798,8 @@ def test_separable_issue_16291():
     eq1 = exp(x**2 +y**2) * (cos(x+y) - cos(x-y))
     eq2 = sin(x+y) + sin(x-y)
     eq3 = sin(x) + cos(y)
+    eq4 = x+y
     assert separable(eq1, [x, y]) == ({x, y}, set())
     assert separable(eq2 ,[x, y, z]) == ({x, y}, set())
     assert separable(eq3, [x, y]) == (set(), {x, y})
+    assert separable(eq4, [x, y]) == (set(), set())

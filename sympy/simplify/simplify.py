@@ -51,20 +51,24 @@ def separable(expr, symbols=[]):
     >>> separable(eq)
     ({x, y}, set())
     """
-    s = []
+    s = set()
     u = set()
     free = expr.free_symbols
-    symbols = set(symbols) or free
-    present = free & set(symbols)
+    symbols = set(symbols)
+    present = set(free)
+    if len(present) == 1:
+        return present.intersection(symbols), set()
+    if symbols:
+        present = present.intersection(symbols)
     for x in present:
         free.remove(x)
-        separable = (expr.diff(x)/expr).is_constant(*free, **dict(simplify=True))
+        separable = (expr.diff(x)/expr).is_constant(*free, simplify=True)
         if separable:
-            s.append(x)
+            s.add(x)
         elif separable is not False:
             u.add(x)
         free.add(x)
-    return set(s), set(u)
+    return s, u
 
 def separatevars(expr, symbols=[], dict=False, force=False):
     """
