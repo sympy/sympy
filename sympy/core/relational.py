@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .add import _unevaluated_Add, Add
 from .basic import S
 from .compatibility import ordered
@@ -388,7 +389,13 @@ class Equality(Relational):
         from sympy.simplify.simplify import clear_coefficients
 
         if rhs is None:
-            raise ValueError("rhs must be provided")
+            SymPyDeprecationWarning(
+                feature="Eq(expr) with rhs default to 0",
+                useinstead="Eq(expr, 0)",
+                issue=16587,
+                deprecated_since_version="1.5"
+            ).warn()
+            rhs = 0
 
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
