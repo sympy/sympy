@@ -1,5 +1,4 @@
-from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
     log, cos, sin, Add, floor, ceiling)
@@ -91,8 +90,8 @@ def test_Eq():
 
     assert Eq(x, x)  # issue 5719
 
-    with raises(SymPyDeprecationWarning):
-        Eq(x) == Eq(x, 0)
+    with warns_deprecated_sympy():
+        assert Eq(x) == Eq(x, 0)
 
     # issue 6116
     p = Symbol('p', positive=True)
