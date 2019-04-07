@@ -72,16 +72,19 @@ class AskNegativeHandler(CommonHandler):
         for arg in args:
             n  = ask(Q.negative(arg), assumptions)
             np = ask(Q.nonpositive(arg), assumptions)
-
-            finite = ask(Q.finite(arg), assumptions)
-            if finite is not True:
-                inf = True
-                k = fuzzy_or((n, np))
+            k = fuzzy_or((n, np))
+            infinite = ask(Q.infinite(arg), assumptions)
+            if infinite is not False:
+                if infinite:
+                    inf = True
                 if k is True:
-                    neg_inf = True
+                    if infinite and n :  # arg can be zero
+                        neg_inf = True
+                    neg = True
                 elif k is False:
                     pos_inf = True
-                else:
+                    nneg = True
+                elif infinite:
                     return None
             if pos_inf and neg_inf:
                 return None
@@ -100,9 +103,9 @@ class AskNegativeHandler(CommonHandler):
                     continue
                 else:
                     return None  # Unknown symbol
-        if pos_inf:
+        if inf and pos_inf:
             return False
-        elif neg_inf:
+        elif inf and neg_inf:
             return True
         elif neg and not npos and not nneg:
             return True
@@ -383,16 +386,19 @@ class AskPositiveHandler(CommonHandler):
         for arg in args:
             p  = ask(Q.positive(arg), assumptions)
             nn = ask(Q.nonnegative(arg), assumptions)
-
-            finite = ask(Q.finite(arg), assumptions)
-            if finite is not True:
-                inf = True
-                k = fuzzy_or((p, nn))
+            k = fuzzy_or((p, nn))
+            infinite = ask(Q.infinite(arg), assumptions)
+            if infinite is not False:
+                if infinite:
+                    inf = True
                 if k is True:
-                    pos_inf = True
+                    if infinite or p:  # arg can be 0
+                        pos_inf = True
+                    pos = True
                 elif k is False:
                     neg_inf = True
-                else:
+                    npos = True
+                elif infinite:
                     return None
             if pos_inf and neg_inf:
                 return None
@@ -412,9 +418,9 @@ class AskPositiveHandler(CommonHandler):
                 else:
                     return None  # Unknown symbol
 
-        if pos_inf:
+        if inf and pos_inf:
             return True
-        elif neg_inf:
+        elif inf and neg_inf:
             return False
         elif pos and not npos and not nneg:
             return True
