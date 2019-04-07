@@ -4,6 +4,7 @@ from .rv import (probability, expectation, density, where, given, pspace, cdf,
         characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
         sampling_density, moment_generating_function, _value_check)
 from sympy import Piecewise, sqrt, solveset, Symbol, S
+from sympy.solvers.inequalities import reduce_inequalities
 
 __all__ = ['P', 'E', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'covariance',
@@ -250,9 +251,13 @@ def quantile(X, p):
     _value_check(p > 0, "The order p must be positive.")
     _value_check(p < 1, "The order p must be less than 1.")
 
-    if pspace(X).is_Continuous or pspace(X).is_Discrete:
+    if pspace(X).is_Continuous:
         x = Symbol("x")
         return solveset(cdf(X)(x) - p, x, S.Reals)
+    elif pspace(X).is_Discrete:
+        x = Symbol("x", Integer = True, Positive = True)
+        set = ((x, p <= summation(density(X)(x), (x, S(1), x))), )
+        return Piecewise(*set)
     else:
         set = tuple()
         for key, value in cdf(X).items():
