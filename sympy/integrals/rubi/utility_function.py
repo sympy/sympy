@@ -86,22 +86,21 @@ class rubi_log(Function):
             return sym_log(args[0])
 
 if matchpy:
-    from matchpy import Arity, Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer
-    from matchpy.expressions.functions import op_iter, create_operation_expression, op_len
+    from matchpy import Arity, Operation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer
     from sympy.integrals.rubi.symbol import WC
     from matchpy import is_match, replace_all
-    from sympy.utilities.matchpy_connector import Operation
 
     class UtilityOperator(Operation):
         name = 'UtilityOperator'
         arity = Arity.variadic
-        commutative=False
-        associative=True
+        commutative = False
+        associative = True
 
     Operation.register(rubi_log)
     Operation.register(rubi_exp)
 
-    A_, B_, C_, F_, G_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, z_ = [WC(i) for i in 'ABCFGabcdefghijklmnpqrtuvswxz']
+    A_, B_, C_, F_, G_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, \
+    n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, z_ = [WC(i) for i in 'ABCFGabcdefghijklmnpqrtuvswxz']
     a, b, c, d, e = symbols('a b c d e')
 
 
@@ -599,7 +598,7 @@ def LessEqual(*args):
         try:
             if args[i] > args[i + 1]:
                 return False
-        except:
+        except IndexError, NotImplementedError:
             return False
     return True
 
@@ -608,7 +607,7 @@ def Less(*args):
         try:
             if args[i] >= args[i + 1]:
                 return False
-        except:
+        except IndexError, NotImplementedError:
             return False
     return True
 
@@ -617,7 +616,7 @@ def Greater(*args):
         try:
             if args[i] <= args[i + 1]:
                 return False
-        except:
+        except IndexError, NotImplementedError:
             return False
     return True
 
@@ -626,7 +625,7 @@ def GreaterEqual(*args):
         try:
             if args[i] < args[i + 1]:
                 return False
-        except:
+        except IndexError, NotImplementedError:
             return False
     return True
 
@@ -645,7 +644,7 @@ def FractionQ(*args):
     True
 
     """
-    return all(i.is_Rational for i in args) and all(Denominator(i)!= S(1) for i in args)
+    return all(i.is_Rational for i in args) and all(Denominator(i) != S(1) for i in args)
 
 def IntLinearcQ(a, b, c, d, m, n, x):
     # returns True iff (a+b*x)^m*(c+d*x)^n is integrable wrt x in terms of non-hypergeometric functions.
@@ -959,7 +958,6 @@ def PolynomialQ(u, x = None):
                 else:
                     return False
 
-                return u.is_polynomial(x)
             else:
                 return False
 
@@ -994,42 +992,42 @@ def PowerOfLinearQ(expr, x):
     else:
         return False
 
-def Exponent(expr, x, h = None):
+def Exponent(expr, x):
     expr = Expand(S(expr))
-    if h is None:
-        if S(expr).is_number or (not expr.has(x)):
-            return 0
-        if PolynomialQ(expr, x):
-            if isinstance(x, Rational):
-                return degree(Poly(expr, x), x)
-            return degree(expr, gen = x)
-        else:
-            return 0
+    if S(expr).is_number or (not expr.has(x)):
+        return 0
+    if PolynomialQ(expr, x):
+        if isinstance(x, Rational):
+            return degree(Poly(expr, x), x)
+        return degree(expr, gen = x)
     else:
-        if S(expr).is_number or (not expr.has(x)):
-            res = [0]
-        if expr.is_Add:
-            expr = collect(expr, x)
-            lst = []
-            k = 1
-            for t in expr.args:
-                if t.has(x):
-                    if isinstance(x, Rational):
-                        lst += [degree(Poly(t, x), x)]
-                    else:
-                        lst += [degree(t, gen = x)]
+        return 0
+
+def ExponentList(expr, x):
+    expr = Expand(S(expr))
+    if S(expr).is_number or (not expr.has(x)):
+        return [0]
+    if expr.is_Add:
+        expr = collect(expr, x)
+        lst = []
+        k = 1
+        for t in expr.args:
+            if t.has(x):
+                if isinstance(x, Rational):
+                    lst += [degree(Poly(t, x), x)]
                 else:
-                    if k == 1:
-                        lst += [0]
-                        k += 1
-            lst.sort()
-            res = lst
-        else:
-            if isinstance(x, Rational):
-                res = [degree(Poly(expr, x), x)]
+                    lst += [degree(t, gen = x)]
             else:
-                res = [degree(expr, gen = x)]
-        return h(*res)
+                if k == 1:
+                    lst += [0]
+                    k += 1
+        lst.sort()
+        return lst
+    else:
+        if isinstance(x, Rational):
+            return [degree(Poly(expr, x), x)]
+        else:
+            return [degree(expr, gen = x)]
 
 def QuadraticQ(u, x):
     # QuadraticQ(u, x) returns True iff u is a polynomial of degree 2 and not a monomial of the form a x^2
@@ -1048,9 +1046,9 @@ def LinearPairQ(u, v, x):
 def BinomialParts(u, x):
     if PolynomialQ(u, x):
         if Exponent(u, x) > 0:
-            lst = Exponent(u, x, List)
+            lst = ExponentList(u, x)
             if len(lst)==1:
-                return [0, Coefficient(u, x, Exponent(u, x)), Exponent(u,x)]
+                return [0, Coefficient(u, x, Exponent(u, x)), Exponent(u, x)]
             elif len(lst) == 2 and lst[0] == 0:
                 return [Coefficient(u, x, 0), Coefficient(u, x, Exponent(u, x)), Exponent(u, x)]
             else:
@@ -1852,11 +1850,8 @@ def Denom(u):
 def hypergeom(n, d, z):
     return hyper(n, d, z)
 
-def Expon(expr, form, h=None):
-    if h:
-        return Exponent(Together(expr), form, h)
-    else:
-        return Exponent(Together(expr), form)
+def Expon(expr, form):
+    return Exponent(Together(expr), form)
 
 def MergeMonomials(expr, x):
     u_ = Wild('u')
@@ -1902,17 +1897,17 @@ def PolynomialDivide(u, v, x):
     quo = PolynomialQuotient(u, v, x)
     rem = PolynomialRemainder(u, v, x)
     s = 0
-    for i in Exponent(quo, x, List):
+    for i in ExponentList(quo, x):
         s += Simp(Together(Coefficient(quo, x, i)*x**i), x)
     quo = s
     rem = Together(rem)
     free = FreeFactors(rem, x)
     rem = NonfreeFactors(rem, x)
-    monomial = x**Exponent(rem, x, Min)
+    monomial = x**Min(ExponentList(rem, x))
     if NegQ(Coefficient(rem, x, 0)):
         monomial = -monomial
     s = 0
-    for i in Exponent(rem, x, List):
+    for i in ExponentList(rem, x):
         s += Simp(Together(Coefficient(rem, x, i)*x**i/monomial), x)
     rem = s
     if BinomialQ(v, x):
@@ -3438,13 +3433,13 @@ def NormalizeIntegrandFactorBase(expr, x):
         for i in expr.args:
             l *= NormalizeIntegrandFactor(i, x)
         return l
-    elif PolynomialQ(expr, x) and Exponent(expr, x)<=4:
+    elif PolynomialQ(expr, x) and Exponent(expr, x) <= 4:
         return ExpandToSum(expr, x)
     elif SumQ(expr):
         w = Wild('w')
         m = Wild('m', exclude=[x])
         v = TogetherSimplify(expr)
-        if SumQ(v) or v.match(x**m*w) and SumQ(w) or LeafCount(v)>LeafCount(expr)+2:
+        if SumQ(v) or v.match(x**m*w) and SumQ(w) or LeafCount(v) > LeafCount(expr) + 2:
             return UnifySum(expr, x)
         else:
             return NormalizeIntegrandFactorBase(v, x)
@@ -3570,7 +3565,7 @@ def ExpandToSum(u, *x):
         x = x[0]
         expr = 0
         if PolyQ(S(u), x):
-            for t in Exponent(u, x, List):
+            for t in ExponentList(u, x):
                 expr += Coeff(u, x, t)*x**t
             return expr
         if BinomialQ(u, x):
@@ -4373,7 +4368,7 @@ def NormalizeTrig(v, x):
     F = Wild('F')
     expr = a*F**n
     M = v.match(expr)
-    if M and len(M[F].args) == 1 and PolynomialQ(M[F].args[0], x) and Exponent(M[F].args[0], x)>0:
+    if M and len(M[F].args) == 1 and PolynomialQ(M[F].args[0], x) and Exponent(M[F].args[0], x) > 0:
         u = M[F].args[0]
         return M[a]*M[F].xreplace({u: ExpandToSum(u, x)})**M[n]
     else:
@@ -4876,7 +4871,7 @@ def FunctionOfDensePolynomialsQ(u, x):
     if FreeQ(u, x):
         return True
     if PolynomialQ(u, x):
-        return Length(Exponent(u,x,List))>1
+        return Length(ExponentList(u, x)) > 1
     return all(FunctionOfDensePolynomialsQ(i, x) for i in u.args)
 
 def FunctionOfLog(u, *args):
@@ -5032,7 +5027,7 @@ def FunctionOfSquareRootOfQuadratic(u, *args):
             return [v]
         if PowerQ(u):
             if FreeQ(u.exp, x):
-                if FractionQ(u.exp) and Denominator(u.exp)==2 and PolynomialQ(u.base, x) and Exponent(u.base, x)==2:
+                if FractionQ(u.exp) and Denominator(u.exp) == 2 and PolynomialQ(u.base, x) and Exponent(u.base, x) == 2:
                     if FalseQ(v) or u.base == v:
                         return [u.base]
                     else:
@@ -5088,7 +5083,7 @@ def DerivativeDivides(y, u, x):
     pattern0 = Pattern(Mul(a , b_), CustomConstraint(lambda a, b : FreeQ(a, b)))
     def f1(y, u, x):
         if PolynomialQ(y, x):
-            return PolynomialQ(u, x) and Exponent(u, x)==Exponent(y, x)-1
+            return PolynomialQ(u, x) and Exponent(u, x) == Exponent(y, x) - 1
         else:
             return EasyDQ(y, x)
 
@@ -5791,7 +5786,7 @@ def SimpHelp(u, x):
                 m = True
         if m:
             return u
-        elif PolynomialQ(u, x) and Exponent(u, x)<=0:
+        elif PolynomialQ(u, x) and Exponent(u, x) <= 0:
             return SimpHelp(Coefficient(u, x, 0), x)
         elif PolynomialQ(u, x) and Exponent(u, x) == 1 and Coefficient(u, x, 0) == 0:
             return SimpHelp(Coefficient(u, x, 1), x)*x

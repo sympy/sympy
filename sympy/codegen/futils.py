@@ -38,4 +38,3 @@ def render_as_module(definitions, name, declarations=(), printer_settings=None):
     module_use_str += '   private\n'
     module_use_str += '   public %s\n' % ', '.join([str(node.name) for node in definitions if getattr(node, 'name', None)])
     return fstr.replace(printer.doprint(dummy), module_use_str)
-    return fstr
