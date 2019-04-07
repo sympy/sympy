@@ -70,6 +70,8 @@ def test_manualintegrate_trigonometry():
 
     assert manualintegrate(sec(x), x) == log(sec(x) + tan(x))
     assert manualintegrate(csc(x), x) == -log(csc(x) + cot(x))
+    #Test for Issue#12558
+    assert manualintegrate(sec(4*x)**2, x) == tan(4*x)/4
 
     assert manualintegrate(sin(x) * cos(x), x) in [sin(x) ** 2 / 2, -cos(x)**2 / 2]
     assert manualintegrate(-sec(x) * tan(x), x) == -sec(x)
