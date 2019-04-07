@@ -1096,7 +1096,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     This form can be easily handed by ``solveset``.
     """
-    unsolved_result = ConditionSet(symbol, Eq(lhs - rhs), domain)
+    unsolved_result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
     newlhs = powdenest(lhs)
     if lhs != newlhs:
         # it may also be advantageous to factor the new expr

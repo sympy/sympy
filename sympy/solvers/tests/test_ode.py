@@ -641,9 +641,9 @@ def test_checkodesol():
     assert checkodesol(diff(sol1.lhs, x, 3), Eq(f(x), x*log(x))) == \
         (False, 60*x**4*((log(x) + 1)**2 + log(x))*(
         log(x) + 1)*log(x)**2 - 5*x**4*log(x)**4 - 9)
-    assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x)) == \
+    assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x, 0)) == \
         (True, 0)
-    assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x),
+    assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x, 0),
         solve_for_func=False) == (True, 0)
     assert checkodesol(f(x).diff(x, 2), [Eq(f(x), C1 + C2*x),
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)]) == \
@@ -3155,7 +3155,7 @@ def test_sysode_linear_neq_order1():
 def test_order_reducible():
     from sympy.solvers.ode import _order_reducible_match
 
-    eqn = Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2))
+    eqn = Eq(x*Derivative(f(x), x)**2 + Derivative(f(x), x, 2), 0)
     sol = Eq(f(x),
              C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
     assert checkodesol(eqn, sol, order=2, solve_for_func=False) == (True, 0)
