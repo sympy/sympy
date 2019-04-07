@@ -678,25 +678,26 @@ def trig_rule(integral):
             func = 'cos'
 
         return TrigRule(func, arg, integrand, symbol)
+    if (len(integrand.args) <= 2 and isinstance(integrand.args[0], (sympy.sec, sympy.csc)) or isinstance(integrand, (sympy.sec, sympy.csc))):
+        if isinstance(integrand, sympy.sec):
+            return TrigRule('sec', integrand.args[0], integrand, symbol)
+        elif isinstance(integrand, sympy.csc):
+            return TrigRule('csc', integrand.args[0], integrand, symbol)
 
-    sym = integrand.args[0].args[0]
-    if integrand == sympy.sec(sym)**2:
-        return TrigRule('sec**2', sym, integrand, symbol)
-    elif integrand == sympy.csc(sym)**2:
-        return TrigRule('csc**2', sym, integrand, symbol)
+        if (integrand.args[0] == symbol):
+            if integrand == sympy.sec(symbol)**2:
+                return TrigRule('sec**2', symbol, integrand, symbol)
+            elif integrand == sympy.csc(symbol)**2:
+                return TrigRule('csc**2', symbol, integrand, symbol)
+        else:
+            sym = integrand.args[0].args[0]
+            if integrand == sympy.sec(sym)**2:
+                return TrigRule('sec**2', sym, integrand, symbol)
+            elif integrand == sympy.csc(sym)**2:
+                return TrigRule('csc**2', sym, integrand, symbol)
 
     if isinstance(integrand, sympy.tan):
         rewritten = sympy.sin(*integrand.args) / sympy.cos(*integrand.args)
-    elif isinstance(integrand, sympy.cot):
-        rewritten = sympy.cos(*integrand.args) / sympy.sin(*integrand.args)
-    elif isinstance(integrand, sympy.sec):
-        arg = integrand.args[0]
-        rewritten = ((sympy.sec(arg)**2 + sympy.tan(arg) * sympy.sec(arg)) /
-                     (sympy.sec(arg) + sympy.tan(arg)))
-    elif isinstance(integrand, sympy.csc):
-        arg = integrand.args[0]
-        rewritten = ((sympy.csc(arg)**2 + sympy.cot(arg) * sympy.csc(arg)) /
-                     (sympy.csc(arg) + sympy.cot(arg)))
     else:
         return
 
@@ -928,7 +929,6 @@ def trig_cotcsc_rule(integral):
         match = integrand.match(pattern)
         if not match:
             return
-
         return multiplexer({
             cotcsc_cotodd_condition: cotcsc_cotodd,
             cotcsc_csceven_condition: cotcsc_csceven
@@ -1320,10 +1320,14 @@ def eval_trig(func, arg, integrand, symbol):
         return sympy.sec(arg)
     elif func == 'csc*cot':
         return sympy.csc(arg)
+    elif func == 'sec':
+        return sympy.log(sympy.sec(arg) + sympy.tan(arg)) / arg.diff(symbol)
+    elif func == 'csc':
+        return -sympy.log(sympy.csc(arg) + sympy.cot(arg)) / arg.diff(symbol)
     elif func == 'sec**2':
-        return sympy.tan(arg)/arg.diff(symbol)
+        return sympy.tan(arg) / arg.diff(symbol)
     elif func == 'csc**2':
-        return -sympy.cot(arg)/arg.diff(symbol)
+        return -sympy.cot(arg) / arg.diff(symbol)
 
 @evaluates(ArctanRule)
 def eval_arctan(a, b, c, integrand, symbol):
