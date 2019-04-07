@@ -235,7 +235,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 from itertools import islice
 
-from sympy.core import Add, S, Mul, Pow, oo
+from sympy.core import Add, S, Mul, Pow, oo, Rational
 from sympy.core.compatibility import ordered, iterable, is_sequence, range, string_types
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
@@ -1354,15 +1354,18 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             matching_hints["2nd_power_series_regular"] = coeff_dict
                             # If the ODE has regular singular point at x0 and is of the form
                             # Eq((x)**2*Derivative(y(x),x,x)+x*Derivative(y(x),x)+(a4**2*x**2-n**2)*y(x) thus Bessel's equation
-                            if p==1:
+                            if (p.is_constant(x) and p != 0) and r[c3] != 0:
                                 a4 = Wild('a4', exclude=[x,f(x),df])
                                 b4 = Wild('b4', exclude=[x,f(x),df])
+                                c4 = Wild('b4', exclude=[x,f(x),df])
                                 rn = r[c3].match(a4*a4*x**2-b4*b4)
                                 if check==0: # if r[c3] becomes zero at x0
                                     rn = r[c3].match(a4*a4*x**2)
-                                    rn[b4]=0
-                                if rn:
-                                    rn = {'n':rn[b4],'a4':rn[a4]}
+                                    if rn:
+                                        rn[b4] = 0
+                                if rn and r[b3] != 0:
+                                    rn = {'n':rn[b4], 'a4':rn[a4]}
+                                    rn['c4'] = r[b3].match(c4*x)[b4]
                                     matching_hints["2nd_linear_bessel"] = rn
 
                 #If the ODE is ordinary and is of the form of Airy's Equation
@@ -4010,23 +4013,20 @@ def ode_2nd_power_series_regular(eq, func, order, match):
 def ode_2nd_linear_bessel(eq, func, order, match):
     r"""
     Gives solution of the Bessel differential equation
-
     .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) + (x**2-n**2)*y(x)
-
        if n is integer then the solution is of the form Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x)) as both the solutions are linearly independant
-       else if n is a fraction then the solution is of the form Eq(f(x), C0*besselj(n,x) + C1*besselj(-n,x))
+       else if n is a fraction then the solution is of the form Eq(f(x), C0*besselj(n,x) + C1*besselj(-n,x)) which can also transform into Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x)).
+    https://www.math24.net/bessel-differential-equation/
     """
     x = func.args[0]
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
     n = match['n']
-    a4= match['a4']
-    if n%1==0:
-        from sympy.functions import besselj, bessely
-        return (Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x))).subs(x,a4*x)
-    else:
-        from sympy.functions import besselj
-        return Eq(f(x), C0*besselj(n,x) + C1*besselj(-n,x)).subs(x,a4*x)
+    a4 = match['a4']
+    c4 = match['c4']
+    n = sqrt(n**2 + Rational(1, 4)*(c4 - 1)**2)
+    from sympy.functions import besselj, bessely
+    return (Eq(f(x), (x**(Rational(1-c4,2)))*(C0*besselj(n,x) + C1*bessely(n,x)).subs(x,a4*x)))
 
 def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     r"""
