@@ -535,17 +535,17 @@ class BaseVectorField(AtomicExpr):
 
     >>> v = BaseVectorField(R2_r, 1)
     >>> pprint(v(s_field))
-    /  d              \|
-    |-----(g(x, xi_2))||
-    \dxi_2            /|xi_2=y
+    / d           \|
+    |---(g(x, xi))||
+    \dx           /|xi=y
     >>> pprint(v(s_field).rcall(point_r).doit())
      d
     ---(g(x0, y0))
     dy0
     >>> pprint(v(s_field).rcall(point_p))
-    /  d                           \|
-    |-----(g(r0*cos(theta0), xi_2))||
-    \dxi_2                         /|xi_2=r0*sin(theta0)
+    / d                        \|
+    |---(g(r0*cos(theta0), xi))||
+    \dx                        /|xi=r0*sin(theta0)
 
     """
 
@@ -704,13 +704,13 @@ class Differential(Expr):
     >>> dg
     d(g(x, y))
     >>> pprint(dg(e_x))
-    /  d              \|
-    |-----(g(xi_1, y))||
-    \dxi_1            /|xi_1=x
+    / d           \|
+    |---(g(xi, y))||
+    \dxi          /|xi=x
     >>> pprint(dg(e_y))
-    /  d              \|
-    |-----(g(x, xi_2))||
-    \dxi_2            /|xi_2=y
+    / d           \|
+    |---(g(x, xi))||
+    \dx           /|xi=y
 
     Applying the exterior derivative operator twice always results in:
 
