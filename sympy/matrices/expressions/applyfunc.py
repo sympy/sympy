@@ -68,8 +68,16 @@ class ElementwiseApplyFunction(MatrixExpr):
     def shape(self):
         return self.expr.shape
 
-    def func(self, expr):
-        return ElementwiseApplyFunction(self.function, expr)
+    @property
+    def func(self):
+        # This strange construction is required by the assumptions:
+        # (.func needs to be a class)
+
+        class ElementwiseApplyFunction2(ElementwiseApplyFunction):
+            def __new__(obj, expr):
+                return ElementwiseApplyFunction(self.function, expr)
+
+        return ElementwiseApplyFunction2
 
     def doit(self, **kwargs):
         deep = kwargs.get("deep", True)
@@ -106,11 +114,11 @@ class ElementwiseApplyFunction(MatrixExpr):
             # TODO: check which axis is not 1
             for i in lr:
                 if iscolumn:
-                    ptr1 = [i.first_pointer]
-                    ptr2 = [Identity(ewdiff.shape[0])]
+                    ptr1 = i.first_pointer
+                    ptr2 = Identity(ewdiff.shape[0])
                 else:
-                    ptr1 = [Identity(ewdiff.shape[1])]
-                    ptr2 = [i.second_pointer]
+                    ptr1 = Identity(ewdiff.shape[1])
+                    ptr2 = i.second_pointer
 
                 # TODO: check if pointers point to two different lines:
 
@@ -126,7 +134,7 @@ class ElementwiseApplyFunction(MatrixExpr):
                         return MatMul(arg2.T, arg1).doit()
                     raise NotImplementedError
 
-                i._lines = [[hadamard_or_mul, [[mul, [ewdiff, ptr1[0]]], ptr2[0]]]]
+                i._lines = [[hadamard_or_mul, [[mul, [ewdiff, ptr1]], ptr2]]]
                 i._first_pointer_parent = i._lines[0][1][0][1]
                 i._first_pointer_index = 1
                 i._second_pointer_parent = i._lines[0][1]
@@ -135,13 +143,13 @@ class ElementwiseApplyFunction(MatrixExpr):
         else:
             # Matrix case:
             for i in lr:
-                ptr1 = [i.first_pointer]
-                ptr2 = [i.second_pointer]
-                newptr1 = Identity(ptr1[0].shape[1])
-                newptr2 = Identity(ptr2[0].shape[1])
+                ptr1 = i.first_pointer
+                ptr2 = i.second_pointer
+                newptr1 = Identity(ptr1.shape[1])
+                newptr2 = Identity(ptr2.shape[1])
                 subexpr1 = ExprBuilder(
                     MatMul,
-                    [ptr1[0], ExprBuilder(diagonalize_vector, [newptr1])],
+                    [ptr1, ExprBuilder(diagonalize_vector, [newptr1])],
                     validator=matmul_validate,
                 )
                 subexpr2 = ExprBuilder(
@@ -149,13 +157,19 @@ class ElementwiseApplyFunction(MatrixExpr):
                     [ExprBuilder(
                         MatMul,
                         [
-                            ptr2[0],
+                            ptr2,
                             ExprBuilder(diagonalize_vector, [newptr2])
                             ,
                         ],
                     )],
                     validator=matmul_validate,
                 )
+                # TODO: replace the expressions above with the following:
+                # subexpr = ExprBuilder(
+                    # get_recognize([(1, 2, 8), (5, 6, 9)]),
+                    # [ptr1, newptr1, ptr2, newptr2, ewdiff]
+                # )
+                # ... = recognize_matrix_expression(subexpr.build()).doit()
                 i.first_pointer = subexpr1
                 i.second_pointer = subexpr2
                 i._first_pointer_parent = subexpr1.args[1].args

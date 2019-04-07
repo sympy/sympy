@@ -88,6 +88,83 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         obj._shape = shape
         return obj
 
+    def split_multiple_contractions(self):
+        """
+        Recognize multiple contractions and attempt at rewriting them as paired-contractions.
+        """
+        from sympy import ask, Q
+
+        contraction_indices = self.contraction_indices
+        if isinstance(self.expr, CodegenArrayTensorProduct):
+            args = list(self.expr.args)
+        else:
+            args = [self.expr]
+        # TODO: unify API
+        subranks = [get_rank(i) for i in args]
+        # TODO: unify API
+        mapping = _get_mapping_from_subranks(subranks)
+        reverse_mapping = {v:k for k, v in mapping.items()}
+        new_contraction_indices = []
+        for indl, links in enumerate(contraction_indices):
+            if len(links) <= 2:
+                new_contraction_indices.append(links)
+                continue
+
+            # Check multiple contractions:
+            #
+            # Examples:
+            #
+            # * `A_ij b_j0 C_jk` ===> `A*DiagonalizeVector(b)*C`
+            #
+            # Care for:
+            # - matrix being diagonalized (i.e. `A_ii`)
+            # - vectors being diagonalized (i.e. `a_i0`)
+
+            # Also consider the case of diagonal matrices being contracted:
+            current_dimension = self.expr.shape[links[0]]
+
+            tuple_links = [mapping[i] for i in links]
+            arg_indices, arg_positions = zip(*tuple_links)
+            if len(arg_indices) != len(set(arg_indices)):
+                # Maybe trace should be supported?
+                raise NotImplementedError
+            not_vectors = []
+            vectors = []
+            for arg_ind, arg_pos in tuple_links:
+                mat = args[arg_ind]
+                other_arg_pos = 1-arg_pos
+                other_arg_abs = reverse_mapping[arg_ind, other_arg_pos]
+                if (((1 not in mat.shape) and (not ask(Q.diagonal(mat)))) or
+                    ((current_dimension == 1) is True and mat.shape != (1, 1)) or
+                    any([other_arg_abs in l for li, l in enumerate(contraction_indices) if li != indl])
+                ):
+                    not_vectors.append((arg_ind, arg_pos))
+                    continue
+                args[arg_ind] = diagonalize_vector(mat)
+                vectors.append((arg_ind, arg_pos))
+                vectors.append((arg_ind, 1-arg_pos))
+            if len(not_vectors) > 2:
+                raise ValueError("cannot recognize matrix expression")
+            if len(not_vectors) == 0:
+                new_sequence = vectors[:1] + vectors[2:]
+            elif len(not_vectors) == 1:
+                new_sequence = not_vectors[:1] + vectors[:-1]
+            else:
+                new_sequence = not_vectors[:1] + vectors + not_vectors[1:]
+            for i in range(0, len(new_sequence) - 1, 2):
+                arg1, pos1 = new_sequence[i]
+                arg2, pos2 = new_sequence[i+1]
+                if arg1 == arg2:
+                    raise NotImplementedError
+                    continue
+                abspos1 = reverse_mapping[arg1, pos1]
+                abspos2 = reverse_mapping[arg2, pos2]
+                new_contraction_indices.append((abspos1, abspos2))
+        return CodegenArrayContraction(
+            CodegenArrayTensorProduct(*args),
+            *new_contraction_indices
+        )
+
     @staticmethod
     def _get_free_indices_to_position_map(free_indices, contraction_indices):
         free_indices_to_position = {}
@@ -625,45 +702,12 @@ def _get_contraction_links(args, subranks, *contraction_indices):
             dlinks[arg2][pos2] = (arg1, pos1)
             continue
 
-        # Check multiple contractions:
-        #
-        # Examples:
-        #
-        # * `A_ij b_j0 C_jk` ===> `A*DiagonalizeVector(b)*C`
-        #
-        # Care for:
-        # - matrix being diagonalized (i.e. `A_ii`)
-        # - vectors being diagonalized (i.e. `a_i0`)
-
-        arg_indices, arg_positions = zip(*links)
-        if len(arg_indices) != len(set(arg_indices)):
-            raise NotImplementedError
-        not_vectors = []
-        vectors = []
-        for arg_ind, arg_pos in links:
-            mat = args[arg_ind]
-            if 1 not in mat.shape:
-                not_vectors.append((arg_ind, arg_pos))
-                continue
-            if mat.shape[arg_pos] == 1:
-                raise ValueError("contracting on unit dimension")
-            args[arg_ind] = diagonalize_vector(mat)
-            vectors.append((arg_ind, arg_pos))
-            vectors.append((arg_ind, 1-arg_pos))
-        if len(not_vectors) > 2:
-            raise ValueError("cannot recognize matrix expression")
-        new_sequence = not_vectors[:1] + vectors + not_vectors[1:]
-        for i in range(0, len(new_sequence)-1):
-            arg1, pos1 = new_sequence[i]
-            arg2, pos2 = new_sequence[i+1]
-            dlinks[arg1][pos1] = (arg2, pos2)
-            dlinks[arg2][pos2] = (arg1, pos1)
     return args, dict(dlinks)
 
 
 def _sort_contraction_indices(pairing_indices):
     pairing_indices = [Tuple(*sorted(i)) for i in pairing_indices]
-    pairing_indices.sort(key=lambda x: min(x))
+    pairing_indices.sort(key=lambda x: min(x, default=-1))
     return pairing_indices
 
 
@@ -1010,7 +1054,7 @@ def _support_function_tp1_recognize(contraction_indices, args):
                 # This is a trace:
                 if len(matmul_args) > 1:
                     matmul_args = [_RecognizeMatOp(Trace, [_RecognizeMatOp(MatMul, matmul_args)])]
-                else:
+                elif args[current_argind].shape != (1, 1):
                     matmul_args = [_RecognizeMatOp(Trace, matmul_args)]
                 break
         dlinks.pop(starting_argind, None)
@@ -1103,6 +1147,8 @@ def recognize_matrix_expression(expr):
 
 def _recognize_matrix_expression(expr):
     if isinstance(expr, CodegenArrayContraction):
+        # Apply some transformations:
+        expr = expr.split_multiple_contractions()
         args = _recognize_matrix_expression(expr.expr)
         contraction_indices = expr.contraction_indices
         if isinstance(args, _RecognizeMatOp) and args.operator == MatAdd:
