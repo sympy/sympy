@@ -394,5 +394,4 @@ def test_recognize_diagonalized_vectors():
     raises(ValueError, lambda: cg.split_multiple_contractions())
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(a, b, A), (0, 2, 4), (1, 3))
-    #assert cg.split_multiple_contractions() == CodegenArrayContraction(CodegenArrayTensorProduct())
     raises(ValueError, lambda: cg.split_multiple_contractions())
