@@ -356,7 +356,7 @@ class Factors(object):
             factors = dict(Mul._from_args(c).as_powers_dict())
             # Handle all rational Coefficients
             for f in list(factors.keys()):
-                if isinstance(f, Rational):
+                if isinstance(f, Rational) and not isinstance(f, Integer):
                     p, q = Integer(f.p), Integer(f.q)
                     factors[p] = (factors[p] if p in factors else 0) + factors[f]
                     factors[q] = (factors[q] if q in factors else 0) - factors[f]
