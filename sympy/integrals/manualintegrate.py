@@ -679,7 +679,6 @@ def trig_rule(integral):
 
         return TrigRule(func, arg, integrand, symbol)
     if (len(integrand.args) <= 2 and isinstance(integrand.args[0], (sympy.sec, sympy.csc))):
-
         if (integrand.args[0] == symbol):
             if integrand == sympy.sec(symbol)**2:
                 return TrigRule('sec**2', symbol, integrand, symbol)
@@ -698,8 +697,7 @@ def trig_rule(integral):
         rewritten = sympy.cos(*integrand.args) / sympy.sin(*integrand.args)
     elif isinstance(integrand, sympy.sec):
         arg = integrand.args[0]
-        rewritten = ((sympy.sec(arg)**2 + sympy.tan(arg) * sympy.sec(arg)) /
-                     (sympy.sec(arg) + sympy.tan(arg)))
+        rewritten = ((sympy.sec(arg)**2 + sympy.tan(arg) * sympy.sec(arg)) / (sympy.sec(arg) + sympy.tan(arg)))
     elif isinstance(integrand, sympy.csc):
         arg = integrand.args[0]
         rewritten = ((sympy.csc(arg)**2 + sympy.cot(arg) * sympy.csc(arg)) / (sympy.csc(arg) + sympy.cot(arg)))    
