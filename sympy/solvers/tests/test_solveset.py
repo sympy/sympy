@@ -2028,6 +2028,12 @@ def test_linear_coeffs():
         linear_coeffs(1/x*(x - 1) + 1/x, x))
 
 def test_solve_modular():
+    x = Symbol('x')
+    n = Dummy('n', real=True)
+    assert solveset(3-Mod(x,5), x) == ImageSet(Lambda(n, 5*n + 3), S.Integers)
+    assert solveset(3-Mod(x + 2, 5), x) == ImageSet(Lambda(n, 5*n + 1), S.Integers)
+    assert solveset(3-Mod(5*x + 2, 7), x) == ImageSet(Lambda(n, 7*n + 3), S.Integers)
+    assert solveset(3-Mod(5*x,7), x) == ImageSet(Lambda(n, 7*n + 2), S.Integers)
     n = symbols('n', integer=True)
     a = 742938285
     z = 1898888478

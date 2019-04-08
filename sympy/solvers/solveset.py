@@ -930,8 +930,7 @@ def _solveset(f, symbol, domain, _check=False):
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result
-
-    elif f.has(Mod) and not f.has(TrigonometricFunction):
+    elif f.has(Mod) and list(f.atoms(Mod))[0].has(symbol) and len(list(f.atoms(Mod))) == 1:
         modterm = list(f.atoms(Mod))[0]
         t = Dummy('t', integer=True)
         f = f.xreplace({modterm: t})
@@ -1009,16 +1008,33 @@ def _solveset(f, symbol, domain, _check=False):
 
 def _solve_modular(modterm, rhs, symbol, domain):
     "Helper function to solve modular equations"
-    #It is incomplete needs to be completed
+    #Documentation to be added
     a, m = modterm.args
+    n = Dummy('n', real=True)
+
     if a is symbol:
-        return FiniteSet(rhs)
+        return ImageSet(Lambda(n, m*n + rhs%m), S.Integers)
+    if a.is_Add:
+        g, h = a.as_independent(symbol)
+        u = Dummy('u', integer=True)
+        sol_set = _solveset(u - rhs + Mod(g, m) , u, domain)
+        result = EmptySet()
+        if isinstance(sol_set, FiniteSet):
+            for s in sol_set:
+                result += _solveset(Mod(h, m) - s, symbol, domain)
+        elif isinstance(sol_set, ImageSet):
+            soln = _solveset(Mod(h, m) - sol_set.lamda.expr, symbol, S.Integers)
+        else:
+            result = ConditionSet(symbol, Eq(modterm - rhs, 0), domain)
+        return result
     if a.is_Mul:
         g, h = a.as_independent(symbol)
         return _solveset(Mod(h, m) - rhs*invert(g, m), symbol, domain)
     if a.is_Pow:
         if a.exp is symbol:
-            return _solveset(Mod(a.exp, m) - discrete_log(m, rhs, a.base), symbol, domain)
+            return _solveset(a.exp - discrete_log(m, rhs, a.base), symbol, domain)
+    return ConditionSet(symbol, Eq(modterm - rhs, 0), domain)
+
 def _term_factors(f):
     """
     Iterator to get the factors of all terms present
