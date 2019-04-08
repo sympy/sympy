@@ -701,7 +701,8 @@ def trig_rule(integral):
                      (sympy.sec(arg) + sympy.tan(arg)))
     elif isinstance(integrand, sympy.csc):
         arg = integrand.args[0]
-        rewritten = ((sympy.csc(arg)**2 + sympy.cot(arg) * sympy.csc(arg)) / (sympy.csc(arg) + sympy.cot(arg)))    
+        rewritten = ((sympy.csc(arg)**2 + sympy.cot(arg) * sympy.csc(arg)) / 
+                     (sympy.csc(arg) + sympy.cot(arg)))    
     else:
         return
 
