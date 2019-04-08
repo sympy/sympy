@@ -69,6 +69,7 @@ class MatrixExpr(Expr):
     is_commutative = False
     is_number = False
     is_symbol = False
+    is_scalar = False
 
     def __new__(cls, *args, **kwargs):
         args = map(sympify, args)
