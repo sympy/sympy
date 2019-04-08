@@ -386,7 +386,7 @@ def test_imaginary_compare_raises_TypeError():
 def test_complex_compare_not_real():
     # two cases which are not real
     y = Symbol('y', imaginary=True)
-    z = Symbol('z', complex=True, real=False)
+    z = Symbol('z', complex=True, extended_real=False)
     for w in (y, z):
         assert_all_ineq_raise_TypeError(2, w)
     # some cases which should remain un-evaluated
