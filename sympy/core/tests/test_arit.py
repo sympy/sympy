@@ -378,7 +378,7 @@ def test_Add_Mul_is_integer():
 
 
 def test_Add_Mul_is_finite():
-    x = Symbol('x', real=True, finite=False)
+    x = Symbol('x', extended_real=True, finite=False)
 
     assert sin(x).is_finite is True
     assert (x*sin(x)).is_finite is False
@@ -554,7 +554,7 @@ def test_Add_is_even_odd():
 
 def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
-    y = Symbol('y', real=False, complex=True)
+    y = Symbol('y', extended_real=False, complex=True)
     z = Symbol('z', zero=True)
 
     e = 2*z
@@ -999,28 +999,28 @@ def test_Pow_is_real():
 
     i = Symbol('i', imaginary=True)
     assert (i**i).is_real is None
-    assert (I**i).is_real is True
-    assert ((-I)**i).is_real is True
+    assert (I**i).is_extended_real is True
+    assert ((-I)**i).is_extended_real is True
     assert (2**i).is_real is None  # (2**(pi/log(2) * I)) is real, 2**I is not
     assert (2**I).is_real is False
     assert (2**-I).is_real is False
-    assert (i**2).is_real is True
-    assert (i**3).is_real is False
+    assert (i**2).is_extended_real is True
+    assert (i**3).is_extended_real is False
     assert (i**x).is_real is None  # could be (-I)**(2/3)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
     k = Symbol('k', integer=True)
-    assert (i**e).is_real is True
-    assert (i**o).is_real is False
+    assert (i**e).is_extended_real is True
+    assert (i**o).is_extended_real is False
     assert (i**k).is_real is None
-    assert (i**(4*k)).is_real is True
+    assert (i**(4*k)).is_extended_real is True
 
-    x = Symbol("x", nonnegative=True)
-    y = Symbol("y", nonnegative=True)
+    x = Symbol("x", nonnegative=True, finite=True)
+    y = Symbol("y", nonnegative=True, finite=True)
     assert im(x**y).expand(complex=True) is S.Zero
     assert (x**y).is_real is True
     i = Symbol('i', imaginary=True)
-    assert (exp(i)**I).is_real is True
+    assert (exp(i)**I).is_extended_real is True
     assert log(exp(i)).is_imaginary is None  # i could be 2*pi*I
     c = Symbol('c', complex=True)
     assert log(c).is_real is None  # c could be 0 or 2, too
@@ -1039,7 +1039,7 @@ def test_real_Pow():
 
 
 def test_Pow_is_finite():
-    x = Symbol('x', real=True)
+    x = Symbol('x', extended_real=True)
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
 
@@ -1208,7 +1208,7 @@ def test_Pow_is_nonpositive_nonnegative():
 
 
     assert (x**2).is_nonnegative is True
-    i = symbols('i', imaginary=True)
+    i = symbols('i', imaginary=True, finite=True)
     assert (i**2).is_nonpositive is True
     assert (i**4).is_nonpositive is False
     assert (i**3).is_nonpositive is False
@@ -1250,7 +1250,7 @@ def test_Mul_is_imaginary_real():
     assert (e**-1).is_real is False
     assert (e**2).is_real is False
     assert (e**3).is_real is False
-    assert (e**4).is_real
+    assert (e**4).is_extended_real is True
     assert (e**5).is_real is False
     assert (e**3).is_complex
 
@@ -1261,7 +1261,7 @@ def test_Mul_is_imaginary_real():
     assert (x*i).is_real is None
 
     assert (i*ii).is_imaginary is False
-    assert (i*ii).is_real is True
+    assert (i*ii).is_extended_real is True
 
     assert (r*i*ii).is_imaginary is False
     assert (r*i*ii).is_real is True
@@ -1919,17 +1919,17 @@ def test_mul_zero_detection():
     # real is True
     def test(z, b, e):
         if z.is_zero and not b.is_finite:
-            assert e.is_real is None
+            assert e.is_extended_real is None
         else:
-            assert e.is_real
+            assert e.is_extended_real is True
 
     for iz, ib in cartes(*[[True, False, None]]*2):
-        z = Dummy('z', nonzero=iz, real=True)
-        b = Dummy('b', finite=ib, real=True)
+        z = Dummy('z', nonzero=iz, extended_real=True)
+        b = Dummy('b', finite=ib, extended_real=True)
         e = Mul(z, b, evaluate=False)
         test(z, b, e)
-        z = Dummy('z', nonzero=iz, real=True)
-        b = Dummy('b', finite=ib, real=True)
+        z = Dummy('z', nonzero=iz, extended_real=True)
+        b = Dummy('b', finite=ib, extended_real=True)
         e = Mul(b, z, evaluate=False)
         test(z, b, e)
 

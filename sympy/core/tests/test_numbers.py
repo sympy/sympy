@@ -1488,7 +1488,7 @@ def test_zoo():
             assert (zoo + i) is S.NaN
             assert (zoo - i) is S.NaN
 
-        if fuzzy_not(i.is_zero) and (i.is_real or i.is_imaginary):
+        if fuzzy_not(i.is_zero) and (i.is_extended_real or i.is_imaginary):
             assert i*zoo is zoo
             assert zoo*i is zoo
         elif i.is_zero:
