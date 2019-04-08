@@ -185,8 +185,8 @@ _assume_rules = FactRules([
     'positive       ==  nonnegative & nonzero',
     'zero           ==  nonnegative & nonpositive',
 
-    'nonpositive    ==  real & !positive',
-    'nonnegative    ==  real & !negative',
+    'nonpositive    ==  extended_real & !positive',
+    'nonnegative    ==  extended_real & !negative',
 
     'zero           ->  even & finite',
 
