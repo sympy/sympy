@@ -163,10 +163,12 @@ from random import shuffle
 _assume_rules = FactRules([
 
     'integer        ->  rational',
-    'rational       ->  real & finite',
+    'rational       ->  real',
     'rational       ->  algebraic',
     'algebraic      ->  complex & finite',
-    'real           ->  complex',
+    'extended_real  ->  complex',
+    'real           ->  extended_real & finite',
+    'extended_real  ->  real | infinite',
     'real           ->  hermitian',
     'imaginary      ->  complex',
     'imaginary      ->  antihermitian',
@@ -175,15 +177,15 @@ _assume_rules = FactRules([
     'odd            ==  integer & !even',
     'even           ==  integer & !odd',
 
-    'real           ==  negative | zero | positive',
+    'extended_real  ==  negative | zero | positive',
     'transcendental ==  complex & !algebraic & finite',
 
     'negative       ==  nonpositive & nonzero',
     'positive       ==  nonnegative & nonzero',
     'zero           ==  nonnegative & nonpositive',
 
-    'nonpositive    ==  real & !positive',
-    'nonnegative    ==  real & !negative',
+    'nonpositive    ==  extended_real & !positive',
+    'nonnegative    ==  extended_real & !negative',
 
     'zero           ->  even & finite',
 
@@ -191,13 +193,13 @@ _assume_rules = FactRules([
     'composite      ->  integer & positive & !prime',
     '!composite     ->  !positive | !even | prime',
 
-    'irrational     ==  real & !rational & finite',
+    'irrational     ==  real & !rational',
 
-    'imaginary      ->  !real',
+    'imaginary      ->  !extended_real',
 
     'infinite       ->  !finite',
-    'noninteger     ==  real & !integer',
-    'nonzero        ==  real & !zero',
+    'noninteger     ==  extended_real & !integer',
+    'nonzero        ==  extended_real & !zero',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
