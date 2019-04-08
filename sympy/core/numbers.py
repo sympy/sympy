@@ -2656,7 +2656,7 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     is_extended_real = True
     is_commutative = True
-    is_positive = True
+    is_positive = False
     is_infinite = True
     is_number = True
     is_prime = False
@@ -2814,6 +2814,7 @@ class Infinity(with_metaclass(Singleton, Number)):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         if other.is_extended_real:
             return S.false
+        import pdb; pdb.set_trace()
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -2880,7 +2881,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     """
 
     is_commutative = True
-    is_negative = True
+    is_negative = False
     is_infinite = True
     is_number = True
 
