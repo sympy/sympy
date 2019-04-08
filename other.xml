@@ -1,0 +1,20 @@
+<application>
+  <component name="PyTestFrameworkService">
+    <option name="SDK_TO_PYTEST">
+      <map>
+        <entry key="C:\Users\Prionti\AppData\Local\Programs\Python\Python36-32\python.exe" value="true" />
+        <entry key="C:\Users\Prionti\PycharmProjects\Scrapeit\venv\Scripts\python.exe" value="false" />
+      </map>
+    </option>
+    <option name="SDK_TO_NOSETEST">
+      <map>
+        <entry key="C:\Users\Prionti\AppData\Local\Programs\Python\Python36-32\python.exe" value="false" />
+      </map>
+    </option>
+    <option name="SDK_TO_TRIALTEST">
+      <map>
+        <entry key="C:\Users\Prionti\AppData\Local\Programs\Python\Python36-32\python.exe" value="false" />
+      </map>
+    </option>
+  </component>
+</application>
