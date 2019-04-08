@@ -19,7 +19,7 @@ def multivariate_rv(cls, sym, *args):
     dist.check(*args)
     return JointPSpace(sym, dist).value
 
-def JointRV(symbol, pdf, _set=None):
+def JointRV(symbol, pdf, sym, _set=None):
     """
     Create a Joint Random Variable where each of its component is continuous,
     given the following:
@@ -45,11 +45,12 @@ def JointRV(symbol, pdf, _set=None):
     >>> density(N1)(1, 2)
     exp(-2)/(2*pi)
     """
-    #TODO: Add support for sets provided by the user
     symbol = sympify(symbol)
-    syms = list(i for i in pdf.free_symbols if isinstance(i, Indexed)
-        and i.base == IndexedBase(symbol))
-    syms.sort(key = lambda index: index.args[1])
+    if sym == None:
+        syms = list(i for i in pdf.free_symbols)
+        syms.sort(key = lambda index: index.args[1])
+    else:
+        syms = list(sym)
     if _set == None:
         _set = S.Reals**len(syms)
     if len(_set.args) != len(syms):
