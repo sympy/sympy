@@ -10,7 +10,7 @@ import re
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
 
-def process_split(session, config, items):
+def process_split(config, items):
     split = config.getoption("--split")
     if not split:
         return
