@@ -154,7 +154,12 @@ class Boolean(Basic):
                         as_set is not implemented for relationals
                         with periodic solutions
                         '''))
-            return self.subs(reps)._eval_as_set()
+            selfsubs = self.subs(reps)
+            if selfsubs is S.false:
+                selfset = S.EmptySet
+            else:
+                selfset = selfsubs._eval_as_set()
+            return selfset
         else:
             raise NotImplementedError("Sorry, as_set has not yet been"
                                       " implemented for multivariate"
