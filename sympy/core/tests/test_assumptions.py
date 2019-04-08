@@ -1062,3 +1062,10 @@ def test_issue_16313():
     assert (l*x).is_real is False
     assert (l*x*x).is_real is None  # since x*x can be a real number
     assert (-x).is_positive is False
+
+def test_issue_16579():
+    x = Symbol('x', complex=True, finite=False)
+    y = Symbol('x', real=True, infinite=False)
+
+    assert x.is_infinite
+    assert y.is_finite
