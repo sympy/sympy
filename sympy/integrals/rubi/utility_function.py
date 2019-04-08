@@ -5,28 +5,30 @@ See: http://www.apmaths.uwo.ca/~arich/IntegrationRules/PortableDocumentFiles/Int
 '''
 from sympy.external import import_module
 matchpy = import_module("matchpy")
-from sympy.utilities.decorator import doctest_depends_on
-from sympy.functions.elementary.integers import floor, frac
-from sympy.functions import (log as sym_log , sin, cos, tan, cot, csc, sec, sqrt, erf, gamma, uppergamma, polygamma, digamma,
-    loggamma, factorial, zeta, LambertW)
+from sympy import (Basic, E, polylog, N, Wild, WildFunction, factor, gcd, Sum,
+    S, I, Mul, Integer, Float, Dict, Symbol, Rational, Add, hyper, symbols,
+    sqf_list, sqf, Max, factorint, factorrat, Min, sign, E, Function, collect,
+    FiniteSet, nsimplify, expand_trig, expand, poly, apart, lcm, And, Pow, pi,
+    zoo, oo, Integral, UnevaluatedExpr, PolynomialError, Dummy, exp as sym_exp,
+    powdenest, PolynomialDivisionFailed, discriminant, UnificationFailed, appellf1)
+from sympy.core.exprtools import factor_terms
+from sympy.core.sympify import sympify
+from sympy.functions import (log as sym_log, sin, cos, tan, cot, csc, sec,
+                             sqrt, erf, gamma, uppergamma, polygamma, digamma,
+                             loggamma, factorial, zeta, LambertW)
+from sympy.functions.elementary.complexes import im, re, Abs
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
+from sympy.functions.elementary.integers import floor, frac
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec, atan2
+from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
+from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei, expint, li, Si, Ci, Shi, Chi
+from sympy.functions.special.hyper import TupleArg
+from sympy.logic.boolalg import Or
 from sympy.polys.polytools import Poly, quo, rem, total_degree, degree
 from sympy.simplify.simplify import fraction, simplify, cancel, powsimp
-from sympy.core.sympify import sympify
-from sympy.utilities.iterables import postorder_traversal
-from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei, expint, li, Si, Ci, Shi, Chi
-from sympy.functions.elementary.complexes import im, re, Abs
-from sympy.core.exprtools import factor_terms
-from sympy import (Basic, E, polylog, N, Wild, WildFunction, factor, gcd, Sum, S, I, Mul, Integer, Float, Dict, Symbol, Rational,
-    Add, hyper, symbols, sqf_list, sqf, Max, factorint, factorrat, Min, sign, E, Function, collect, FiniteSet, nsimplify,
-    expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr, PolynomialError, Dummy, exp as sym_exp,
-    powdenest, PolynomialDivisionFailed, discriminant, UnificationFailed, appellf1)
-from sympy.functions.special.hyper import TupleArg
-from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
-from sympy.utilities.iterables import flatten
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import flatten, postorder_traversal
 from random import randint
-from sympy.logic.boolalg import Or
 
 
 class rubi_unevaluated_expr(UnevaluatedExpr):
@@ -1233,7 +1235,7 @@ def PolyQ(u, x, n=None):
     if ListQ(u):
         return all(PolyQ(i, x) for i in u)
 
-    if n==None:
+    if n is None:
         if u == x:
             return False
         elif isinstance(x, Pow):
@@ -4553,7 +4555,7 @@ def FunctionOfHyperbolic(u, *x):
     if len(x) == 1:
         x = x[0]
         v = FunctionOfHyperbolic(u, None, x)
-        if v==None:
+        if v is None:
             return False
         else:
             return v
@@ -5488,24 +5490,17 @@ def FunctionOfExponentialTestAux(base, expon, x):
     if Not(RationalQ(tmp)):
         return False
     elif ZeroQ(Coefficient(SexponS, x, 0)) or NonzeroQ(tmp - FullSimplify(Log(base)*Coefficient(expon, x, 0)/(Log(SbaseS)*Coefficient(SexponS, x, 0)))):
-        if PositiveIntegerQ(base, SbaseS) and base<SbaseS:
+        if PositiveIntegerQ(base, SbaseS) and base < SbaseS:
             SbaseS = base
             SexponS = expon
             tmp = 1/tmp
         SexponS = Coefficient(SexponS, x, 1)*x/Denominator(tmp)
         if tmp < 0 and NegQ(Coefficient(SexponS, x, 1)):
             SexponS = -SexponS
-            return True
-        else:
-            return True
-        if PositiveIntegerQ(base, SbaseS) and base < SbaseS:
-            SbaseS = base
-            SexponS = expon
-            tmp = 1/tmp
+        return True
     SexponS = SexponS/Denominator(tmp)
     if tmp < 0 and NegQ(Coefficient(SexponS, x, 1)):
         SexponS = -SexponS
-        return True
     return True
 
 def stdev(lst):
@@ -7135,8 +7130,6 @@ def _ExpandIntegrand():
     rule14 = ReplacementRule(pattern14, replacement14)
 
     def With15(b, a, x, u, m):
-        tmp1 = Symbol('tmp1')
-        tmp2 = Symbol('tmp2')
         tmp1 = ExpandLinearProduct((a + b*x)**m, u, a, b, x)
         if not IntegerQ(m):
             return tmp1
