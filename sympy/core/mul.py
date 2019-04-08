@@ -581,9 +581,9 @@ class Mul(Expr, AssocOp):
             #   infinite_real + infinite_im
             # and non-zero real or imaginary will not change that status.
             c_part = [c for c in c_part if not (fuzzy_not(c.is_zero) and
-                                                c.is_real is not None)]
+                                                c.is_extended_real is not None)]
             nc_part = [c for c in nc_part if not (fuzzy_not(c.is_zero) and
-                                                  c.is_real is not None)]
+                                                  c.is_extended_real is not None)]
 
         # 0
         elif coeff is S.Zero:
@@ -1159,7 +1159,7 @@ class Mul(Expr, AssocOp):
         return has_polar and \
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         return self._eval_real_imag(True)
 
     def _eval_real_imag(self, real):
@@ -1171,7 +1171,7 @@ class Mul(Expr, AssocOp):
                 return False
             elif t.is_imaginary:  # I
                 real = not real
-            elif t.is_real:  # 2
+            elif t.is_extended_real:  # 2
                 if not zero:
                     z = t.is_zero
                     if not z and zero is False:
@@ -1180,7 +1180,7 @@ class Mul(Expr, AssocOp):
                         if all(a.is_finite for a in self.args):
                             return True
                         return
-            elif t.is_real is False:
+            elif t.is_extended_real is False:
                 # symbolic or literal like `2 + I` or symbolic imaginary
                 if t_not_re_im:
                     return  # complex terms might cancel
@@ -1193,7 +1193,7 @@ class Mul(Expr, AssocOp):
                 return
 
         if t_not_re_im:
-            if t_not_re_im.is_real is False:
+            if t_not_re_im.is_extended_real is False:
                 if real:  # like 3
                     return zero  # 3*(smthng like 2 + I or i) is not real
             if t_not_re_im.is_imaginary is False:  # symbolic 2 or 2 + I
