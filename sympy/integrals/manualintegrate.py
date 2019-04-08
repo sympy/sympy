@@ -697,10 +697,12 @@ def trig_rule(integral):
         rewritten = sympy.cos(*integrand.args) / sympy.sin(*integrand.args)
     elif isinstance(integrand, sympy.sec):
         arg = integrand.args[0]
-        rewritten = ((sympy.sec(arg)**2 + sympy.tan(arg) * sympy.sec(arg)) / (sympy.sec(arg) + sympy.tan(arg)))
+        rewritten = ((sympy.sec(arg)**2 + sympy.tan(arg) * sympy.sec(arg)) / 
+                     (sympy.sec(arg) + sympy.tan(arg)))
     elif isinstance(integrand, sympy.csc):
         arg = integrand.args[0]
-        rewritten = ((sympy.csc(arg)**2 + sympy.cot(arg) * sympy.csc(arg)) / (sympy.csc(arg) + sympy.cot(arg)))    
+        rewritten = ((sympy.csc(arg)**2 + sympy.cot(arg) * sympy.csc(arg)) / 
+                     (sympy.csc(arg) + sympy.cot(arg)))    
     else:
         return
 
