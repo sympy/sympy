@@ -21,15 +21,13 @@ def multivariate_rv(cls, sym, *args):
 
 def JointRV(symbol, pdf, _set=None):
     """
-    Create a Joint Random Variable where each of its component is conitinuous,
+    Create a Joint Random Variable where each of its component is continuous,
     given the following:
 
     -- a symbol
     -- a PDF in terms of indexed symbols of the symbol given
      as the first argument
-
-    NOTE: As of now, the set for each component for a `JointRV` is
-    equal to the set of all integers, which can not be changed.
+    -- Set in which pdf is not defined. Default is Reals
 
     Returns a RandomSymbol.
 
@@ -52,7 +50,10 @@ def JointRV(symbol, pdf, _set=None):
     syms = list(i for i in pdf.free_symbols if isinstance(i, Indexed)
         and i.base == IndexedBase(symbol))
     syms.sort(key = lambda index: index.args[1])
-    _set = S.Reals**len(syms)
+    if _set == None:
+        _set = S.Reals**len(syms)
+    if len(_set.args) != len(syms):
+        raise ValueError("Dimensional inconsistency.")
     pdf = Lambda(syms, pdf)
     dist = JointDistributionHandmade(pdf, _set)
     jrv = JointPSpace(symbol, dist).value
