@@ -102,7 +102,8 @@ def test_infinity():
     assert oo.is_rational is False
     assert oo.is_algebraic is False
     assert oo.is_transcendental is False
-    assert oo.is_real is True
+    assert oo.is_extended_real is True
+    assert oo.is_real is False
     assert oo.is_complex is True
     assert oo.is_noninteger is True
     assert oo.is_irrational is False
@@ -129,7 +130,8 @@ def test_neg_infinity():
     assert mm.is_rational is False
     assert mm.is_algebraic is False
     assert mm.is_transcendental is False
-    assert mm.is_real is True
+    assert mm.is_extended_real is True
+    assert mm.is_real is False
     assert mm.is_complex is True
     assert mm.is_noninteger is True
     assert mm.is_irrational is False
@@ -708,7 +710,7 @@ def test_Add_is_pos_neg():
     nn = Symbol('n', nonnegative=True, infinite=True)
     np = Symbol('n', nonpositive=True, infinite=True)
     p = Symbol('p', positive=True, infinite=True)
-    r = Dummy(real=True, finite=False)
+    r = Dummy(extended_real=True, finite=False)
     x = Symbol('x')
     xf = Symbol('xb', finite=True)
     assert (n + p).is_positive is None
