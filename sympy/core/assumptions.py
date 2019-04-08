@@ -163,7 +163,7 @@ from random import shuffle
 _assume_rules = FactRules([
 
     'integer        ->  rational',
-    'rational       ->  real',
+    'rational       ->  real & finite',
     'rational       ->  algebraic',
     'algebraic      ->  complex',
     'real           ->  complex',
