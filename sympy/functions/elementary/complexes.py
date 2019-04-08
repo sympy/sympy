@@ -421,7 +421,7 @@ class Abs(Function):
     """
 
     is_extended_real = True
-    is_negative = False
+    is_nonnegative = True
     unbranched = True
 
     def fdiff(self, argindex=1):
