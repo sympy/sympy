@@ -309,8 +309,8 @@ allhints = (
     "Liouville",
     "order_reducible",
     "2nd_linear_airy",
-    "2nd_power_series_ordinary",
     "2nd_linear_bessel",
+    "2nd_power_series_ordinary",
     "2nd_power_series_regular",
     "nth_algebraic_Integral",
     "separable_Integral",
@@ -1358,6 +1358,13 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                                 a4 = Wild('a4', exclude=[x,f(x),df])
                                 b4 = Wild('b4', exclude=[x,f(x),df])
                                 c4 = Wild('b4', exclude=[x,f(x),df])
+                                coeff = r[a3].match(a4*x**2)
+                                if coeff:
+                                    coeff = coeff[a4]
+                                    if not coeff.has(x):
+                                        r[c3] = r[c3]/coeff
+                                        r[b3] = r[b3]/coeff
+                                        r[a3] = r[a3]/coeff
                                 rn = r[c3].match(a4*a4*x**2-b4*b4)
                                 if check==0: # if r[c3] becomes zero at x0
                                     rn = r[c3].match(a4*a4*x**2)
@@ -3872,6 +3879,16 @@ def ode_2nd_linear_airy(eq, func, order, match):
     .. math :: \frac{d^2y}{dx^2} + (a + b x) y(x) = 0
 
     in terms of Airy special functions airyai and airybi.
+
+    Examples
+    ========
+
+    >>> from sympy import dsolve, Function, pprint
+    >>> from sympy.abc import x
+    >>> f = Function("f")
+    >>> eq = f(x).diff(x, 2) - x*f(x)
+    >>> dsolve(eq)
+    Eq(f(x), C1*airyai(x) + C2*airybi(x))
     """
     x = func.args[0]
     f = func.func
@@ -4013,10 +4030,27 @@ def ode_2nd_power_series_regular(eq, func, order, match):
 def ode_2nd_linear_bessel(eq, func, order, match):
     r"""
     Gives solution of the Bessel differential equation
+
     .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) + (x**2-n**2)*y(x)
-       if n is integer then the solution is of the form Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x)) as both the solutions are linearly independant
-       else if n is a fraction then the solution is of the form Eq(f(x), C0*besselj(n,x) + C1*besselj(-n,x)) which can also transform into Eq(f(x), C0*besselj(n,x) + C1*bessely(n,x)).
+
+    if n is integer then the solution is of the form Eq(f(x), C0*besselj(n,x)
+    + C1*bessely(n,x)) as both the solutions are linearly independant else if
+    n is a fraction then the solution is of the form Eq(f(x), C0*besselj(n,x)
+    + C1*besselj(-n,x)) which can also transform into Eq(f(x), C0*besselj(n,x)
+    + C1*bessely(n,x)).
+
+    >>> from sympy.abc import x, y, a, v
+    >>> from sympy.solvers.ode import dsolve, checkodesol
+    >>> from sympy import pprint, Function
+    >>> f = Function('f')
+    >>> y = f(x)
+    >>> genform = x**2*y.diff(x, 2) + x*y.diff(x) + (x**2 - v**2)*y
+    >>> dsolve(genform)
+    Eq(f(x), C1*besselj(sqrt(v**2), x) + C2*bessely(sqrt(v**2), x))
+
+
     https://www.math24.net/bessel-differential-equation/
+
     """
     x = func.args[0]
     f = func.func

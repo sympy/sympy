@@ -256,9 +256,14 @@ def test_linear_2eq_order2():
     # FIXME: assert checksysodesol(eq7, sol7) == (True, [0, 0])
 
     eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
-    sol8 = "[Eq(x(t), -sqrt(133)*(-4*C1*airyai(t*(-1 + sqrt(133))**(1/3)) + 4*C1*airyai(-t*(1 + sqrt(133))**(1/3)) - 4*C2*airybi(t*(-1 + sqrt(133))**(1/3)) + 4*C2*airybi(-t*(1 + sqrt(133))**(1/3)) + (-sqrt(133) - 1)*(C1*airyai(t*(-1 + sqrt(133))**(1/3)) + C2*airybi(t*(-1 + sqrt(133))**(1/3))) - (-1 + sqrt(133))*(C1*airyai(-t*(1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 + sqrt(133))**(1/3))))/3192), Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 + sqrt(133))**(1/3)) + C1*airyai(-t*(1 + sqrt(133))**(1/3)) - C2*airybi(t*(-1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 + sqrt(133))**(1/3)))/266)]"
-    assert str(dsolve(eq8)) == sol8
-    # FIXME: assert checksysodesol(eq8, sol8) == (True, [0, 0])
+    sol8 = [Eq(x(t), -sqrt(133)*(-4*C1*airyai(t*(-1 + sqrt(133))**(1/3)) + 4*C1*airyai(-t*(1 + \
+    sqrt(133))**(1/3)) - 4*C2*airybi(t*(-1 + sqrt(133))**(1/3)) + 4*C2*airybi(-t*(1 + sqrt(133))**(1/3)) +\
+    (-sqrt(133) - 1)*(C1*airyai(t*(-1 + sqrt(133))**(1/3)) + C2*airybi(t*(-1 + sqrt(133))**(1/3))) - (-1 +\
+    sqrt(133))*(C1*airyai(-t*(1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 + sqrt(133))**(1/3))))/3192), \
+    Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 + sqrt(133))**(1/3)) + C1*airyai(-t*(1 + sqrt(133))**(1/3)) -\
+    C2*airybi(t*(-1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 + sqrt(133))**(1/3)))/266)]
+    assert dsolve(eq8) == sol8
+    assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
     eq9 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
     sol9 = [Eq(x(t), -sqrt(133)*(4*C1*Integral(exp((-sqrt(133) - 1)*Integral(t, t)), t) + 4*C2 - \
@@ -2971,6 +2976,15 @@ def test_2nd_power_series_ordinary():
     # FIXME: Maybe there should be a way to check series solutions
     # checkodesol doesn't work with them.
     C1, C2 = symbols("C1 C2")
+    eq = f(x).diff(x, 2) - x*f(x)
+    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary')
+    assert dsolve(eq, hint='2nd_power_series_ordinary') == Eq(f(x),
+        C2*(x**3/6 + 1) + C1*x*(x**3/12 + 1) + O(x**6))
+    assert dsolve(eq, x0=-2, hint='2nd_power_series_ordinary') == Eq(f(x),
+        C2*((x + 2)**4/6 + (x + 2)**3/6 - (x + 2)**2 + 1)
+        + C1*(x + (x + 2)**4/12 - (x + 2)**3/3 + S(2))
+        + O(x**6))
+    assert dsolve(eq, n=2) == Eq(f(x), C2*x + C1 + O(x**2))
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
     assert dsolve(eq) == Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x
@@ -2987,6 +3001,11 @@ def test_2nd_power_series_ordinary():
         -x**4/24 + x**3/6 + 1) + C1*x*(x**3/24 + x**2/6 - x/2
         + 1) + O(x**6))
 
+    eq = f(x).diff(x, 2) + x*f(x)
+    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary')
+    assert dsolve(eq, n=7, hint='2nd_power_series_ordinary') == Eq(f(x), C2*(
+        x**6/180 - x**3/6 + 1) + C1*x*(-x**3/12 + 1) + O(x**7))
+
 def test_Airy_equation():
     C1, C2 = symbols("C1 C2")
     from sympy.functions import airyai, airybi
@@ -2995,7 +3014,7 @@ def test_Airy_equation():
     assert dsolve(eq) == Eq(f(x), C1*airyai(x) + C2*airybi(x))
     eq = f(x).diff(x, 2) + 2*x*f(x)
     assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
-    assert str(dsolve(eq)) == "Eq(f(x), C1*airyai(-2**(1/3)*x) + C2*airybi(-2**(1/3)*x))"
+    assert dsolve(eq) == Eq(f(x), C1*airyai(-2**(S(1)/3)*x) + C2*airybi(-2**(S(1)/3)*x))
 
 
 
@@ -3017,6 +3036,10 @@ def test_2nd_power_series_regular():
     assert dsolve(eq) == Eq(f(x), C1*(-x**6/720 - 3*x**5/80 - x**4/8 +
         x**2/2 + x/2 + 1)/x + C2*x**2*(-x**3/60 + x**2/20 + x/2 + 1)
         + O(x**6))
+
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - S(1)/4)*f(x)
+    assert dsolve(eq, hint='2nd_power_series_regular') == Eq(f(x), C1*(x**4/24 - x**2/2 + 1)/sqrt(x) +
+        C2*sqrt(x)*(x**4/120 - x**2/6 + 1) + O(x**6))
 
     eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
     assert dsolve(eq) == Eq(f(x), C2*(-x**4/2 + 1) + C1*x**2 + O(x**6))
