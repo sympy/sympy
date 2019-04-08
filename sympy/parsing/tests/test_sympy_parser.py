@@ -55,6 +55,8 @@ def test_sympy_parser():
     # issue 16591
     t = standard_transformations + (implicit_multiplication_application,)
     raises(SyntaxError, lambda: parse_expr('2**x3**x', transformations=t))
+    # not sure that it's possible to make '3' become a Symbol
+    assert parse_expr('2**x3**x', {'3': 3}, transformations=t) == 6**x
     raises(TypeError, lambda:
         parse_expr('x', standard_transformations))
     raises(TypeError, lambda:

@@ -987,23 +987,19 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         code = compile(evaluateFalse(code), '<string>', 'eval')
 
     rv = eval_expr(code, local_dict, global_dict)
-    known = set(local_dict.keys()) | set(global_dict.keys())
     def check(e):
         if type(e) in (list, tuple, set):
             for i in e:
                 check(i)
         elif isinstance(e, Basic):
             for i in e.atoms(Symbol):
-                if i.name not in known and \
-                        i.name[0] in string.digits and \
+                if i.name[0] in string.digits and \
                         S(i.name).is_Number:
                     raise SyntaxError(filldedent('''
                         %s was parsed as a Symbol; space may be needed
-                        to disambiguate a symbol from this number.'''
+                        to disambiguate this number from a preceeding
+                        Symbol.'''
                         % i.name))
-        else:
-            raise NotImplementedError(
-                'expected list, set, tuple or Basic, not %s' % e)
     check(rv)
     return rv
 
