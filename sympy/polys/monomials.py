@@ -109,9 +109,9 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         total_degree = True
     if total_degree:
         if max_degree < 0 or min_degree > max_degree:
-            return set()
+            yield set()
         if not variables or max_degree == 0:
-            return {S(1)}
+            yield {S(1)}
         # Force to list in case of passed tuple or other incompatible collection
         variables = list(variables) + [S(1)]
         if all(variable.is_commutative for variable in variables):
@@ -125,7 +125,8 @@ def itermonomials(variables, max_degrees, min_degrees=None):
                         powers[variable] += 1
                 if max(powers.values()) >= min_degree:
                     monomials_list_comm.append(Mul(*item))
-            return (mon for mon in set(monomials_list_comm))
+            for mon in set(monomials_list_comm):
+                yield mon
         else:
             monomials_list_non_comm = []
             for item in product(variables, repeat=max_degree):
@@ -137,14 +138,16 @@ def itermonomials(variables, max_degrees, min_degrees=None):
                         powers[variable] += 1
                 if max(powers.values()) >= min_degree:
                     monomials_list_non_comm.append(Mul(*item))
-            return (mon for mon in set(monomials_list_non_comm))
+            for mon in set(monomials_list_non_comm):
+                yield mon
     else:
         if any(min_degrees[i] > max_degrees[i] for i in range(n)):
             raise ValueError('min_degrees[i] must be <= max_degrees[i] for all i')
         power_lists = []
         for var, min_d, max_d in zip(variables,min_degrees,max_degrees):
-            power_lists.append([var**i for i in range(min_d, max_d + 1)])
-        return (Mul(*powers) for powers in product(*power_lists))
+            power_lists.append([var**i for i in range(min_d, max_d + 1)])        
+        for powers in product(*power_lists):
+            yield Mul(*powers)
 
 def monomial_count(V, N):
     r"""
