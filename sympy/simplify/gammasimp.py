@@ -2,10 +2,8 @@ from __future__ import print_function, division
 
 from sympy.core import Function, S, Mul, Pow, Add
 from sympy.core.compatibility import ordered, default_sort_key
-from sympy.core.basic import preorder_traversal
 from sympy.core.function import count_ops, expand_func
-from sympy.functions.combinatorial.factorials import (binomial,
-    CombinatorialFunction, factorial)
+from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions import gamma, sqrt, sin
 from sympy.polys import factor, cancel
 

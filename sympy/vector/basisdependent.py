@@ -72,7 +72,7 @@ class BasisDependent(Expr):
 
     n = evalf
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         """
         Implements the SymPy simplify routine for this quantity.
 
@@ -80,7 +80,8 @@ class BasisDependent(Expr):
         ========================
 
         """
-        simp_components = [simp(v, ratio, measure) * k for
+        simp_components = [simp(v, ratio=ratio, measure=measure,
+                           rational=rational, inverse=inverse) * k for
                            k, v in self.components.items()]
         return self._add_func(*simp_components)
 
@@ -100,8 +101,8 @@ class BasisDependent(Expr):
 
     trigsimp.__doc__ += tsimp.__doc__
 
-    def _eval_simplify(self, ratio, measure):
-        return self.simplify(ratio, measure)
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        return self.simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
 
     def _eval_trigsimp(self, **opts):
         return self.trigsimp(**opts)
@@ -114,9 +115,6 @@ class BasisDependent(Expr):
                                for k, v in self.components.items()]
         return self._add_func(*integral_components)
 
-    def _eval_diff(self, *args, **kwargs):
-        return self.diff(*args, **kwargs)
-
     def as_numer_denom(self):
         """
         Returns the expression as a tuple wrt the following
@@ -125,7 +123,7 @@ class BasisDependent(Expr):
         expression -> a/b -> a, b
 
         """
-        return self, 1
+        return self, S.One
 
     def factor(self, *args, **kwargs):
         """

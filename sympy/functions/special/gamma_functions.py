@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
 from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
+from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.compatibility import range
 from .zeta_functions import zeta
 from .error_functions import erf, erfc
 from sympy.functions.elementary.exponential import exp, log
@@ -86,7 +86,7 @@ class gamma(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Gamma_function
     .. [2] http://dlmf.nist.gov/5
     .. [3] http://mathworld.wolfram.com/GammaFunction.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma/
@@ -169,10 +169,10 @@ class gamma(Function):
         elif x.is_noninteger:
             return floor(x).is_even
 
-    def _eval_rewrite_as_tractable(self, z):
+    def _eval_rewrite_as_tractable(self, z, **kwargs):
         return exp(loggamma(z))
 
-    def _eval_rewrite_as_factorial(self, z):
+    def _eval_rewrite_as_factorial(self, z, **kwargs):
         return factorial(z - 1)
 
     def _eval_nseries(self, x, n, logx):
@@ -181,6 +181,10 @@ class gamma(Function):
             return super(gamma, self)._eval_nseries(x, n, logx)
         t = self.args[0] - x0
         return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.gamma(self.args[0]._sage_())
 
 
 ###############################################################################
@@ -229,7 +233,7 @@ class lowergamma(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Incomplete_gamma_function#Lower_incomplete_Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Lower_incomplete_Gamma_function
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
            Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical Tables
     .. [3] http://dlmf.nist.gov/8
@@ -316,10 +320,10 @@ class lowergamma(Function):
         if not z in (S.Zero, S.NegativeInfinity):
             return self.func(self.args[0].conjugate(), z.conjugate())
 
-    def _eval_rewrite_as_uppergamma(self, s, x):
+    def _eval_rewrite_as_uppergamma(self, s, x, **kwargs):
         return gamma(s) - uppergamma(s, x)
 
-    def _eval_rewrite_as_expint(self, s, x):
+    def _eval_rewrite_as_expint(self, s, x, **kwargs):
         from sympy import expint
         if s.is_integer and s.is_nonpositive:
             return self
@@ -377,13 +381,13 @@ class uppergamma(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Incomplete_gamma_function#Upper_incomplete_Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Upper_incomplete_Gamma_function
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
            Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical Tables
     .. [3] http://dlmf.nist.gov/8
     .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma2/
     .. [5] http://functions.wolfram.com/GammaBetaErf/Gamma3/
-    .. [6] http://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
+    .. [6] https://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
     """
 
 
@@ -457,12 +461,16 @@ class uppergamma(Function):
         if not z in (S.Zero, S.NegativeInfinity):
             return self.func(self.args[0].conjugate(), z.conjugate())
 
-    def _eval_rewrite_as_lowergamma(self, s, x):
+    def _eval_rewrite_as_lowergamma(self, s, x, **kwargs):
         return gamma(s) - lowergamma(s, x)
 
-    def _eval_rewrite_as_expint(self, s, x):
+    def _eval_rewrite_as_expint(self, s, x, **kwargs):
         from sympy import expint
         return expint(1 - s, x)*x**s
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.gamma(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 ###############################################################################
@@ -494,9 +502,9 @@ class polygamma(Function):
     >>> polygamma(0, 1/S(4))
     -pi/2 - log(4) - log(2) - EulerGamma
     >>> polygamma(0, 2)
-    -EulerGamma + 1
+    1 - EulerGamma
     >>> polygamma(0, 23)
-    -EulerGamma + 19093197/5173168
+    19093197/5173168 - EulerGamma
 
     >>> from sympy import oo, I
     >>> polygamma(0, oo)
@@ -558,7 +566,7 @@ class polygamma(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Polygamma_function
+    .. [1] https://en.wikipedia.org/wiki/Polygamma_function
     .. [2] http://mathworld.wolfram.com/PolygammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma/
     .. [4] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
@@ -722,13 +730,13 @@ class polygamma(Function):
 
         return polygamma(n, z)
 
-    def _eval_rewrite_as_zeta(self, n, z):
+    def _eval_rewrite_as_zeta(self, n, z, **kwargs):
         if n >= S.One:
             return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
         else:
             return self
 
-    def _eval_rewrite_as_harmonic(self, n, z):
+    def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
         if n.is_integer:
             if n == S.Zero:
                 return harmonic(z - 1) - S.EulerGamma
@@ -783,7 +791,7 @@ class loggamma(Function):
     >>> loggamma(S(5)/2)
     log(3*sqrt(pi)/4)
     >>> loggamma(n/2)
-    log(2**(-n + 1)*sqrt(pi)*gamma(n)/gamma(n/2 + 1/2))
+    log(2**(1 - n)*sqrt(pi)*gamma(n)/gamma(n/2 + 1/2))
 
     and general rational arguments:
 
@@ -849,7 +857,7 @@ class loggamma(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Gamma_function
     .. [2] http://dlmf.nist.gov/5
     .. [3] http://mathworld.wolfram.com/LogGammaFunction.html
     .. [4] http://functions.wolfram.com/GammaBetaErf/LogGamma/
@@ -920,7 +928,7 @@ class loggamma(Function):
         # It is very inefficient to first add the order and then do the nseries
         return (r + Add(*l))._eval_nseries(x, n, logx) + o
 
-    def _eval_rewrite_as_intractable(self, z):
+    def _eval_rewrite_as_intractable(self, z, **kwargs):
         return log(gamma(z))
 
     def _eval_is_real(self):
@@ -966,7 +974,7 @@ def digamma(x):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Digamma_function
+    .. [1] https://en.wikipedia.org/wiki/Digamma_function
     .. [2] http://mathworld.wolfram.com/DigammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
@@ -996,7 +1004,7 @@ def trigamma(x):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Trigamma_function
+    .. [1] https://en.wikipedia.org/wiki/Trigamma_function
     .. [2] http://mathworld.wolfram.com/TrigammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """

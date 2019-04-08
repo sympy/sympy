@@ -1,7 +1,5 @@
 # A collection of failing integrals from the issues.
 
-from __future__ import division
-
 from sympy import (
     integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos,
     tan, S, log, gamma, sinh,
@@ -35,18 +33,11 @@ def test_issue_4491():
 
 
 @XFAIL
-@slow
 def test_issue_4511():
     # This works, but gives a complicated answer.  The correct answer is x - cos(x).
     # The last one is what Maple gives.  It is also quite slow.
     assert integrate(cos(x)**2 / (1 - sin(x))) in [x - cos(x), 1 - cos(x) + x,
             -2/(tan((S(1)/2)*x)**2 + 1) + x]
-
-
-@XFAIL
-def test_issue_4514():
-    # The correct answer is 2*sin(x)
-    assert not integrate(sin(2*x)/ sin(x)).has(Integral)
 
 
 @XFAIL

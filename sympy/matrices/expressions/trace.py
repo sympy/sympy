@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy import Basic, Expr, sympify
+from sympy import Basic, Expr, sympify, S
 from sympy.matrices.matrices import MatrixBase
 from .matexpr import ShapeError
 
@@ -10,15 +10,16 @@ class Trace(Expr):
 
     Represents the trace of a matrix expression.
 
+    Examples
+    ========
+
     >>> from sympy import MatrixSymbol, Trace, eye
     >>> A = MatrixSymbol('A', 3, 3)
     >>> Trace(A)
     Trace(A)
-
-    See Also:
-        trace
     """
     is_Trace = True
+    is_commutative = True
 
     def __new__(cls, mat):
         mat = sympify(mat)
@@ -35,17 +36,23 @@ class Trace(Expr):
         return self
 
     def _eval_derivative(self, v):
-        from sympy import Dummy, MatrixExpr, Sum
-        if not isinstance(v, MatrixExpr):
-            return None
+        from sympy.matrices.expressions.matexpr import _matrix_derivative
+        return _matrix_derivative(self, v)
 
-        t1 = Dummy("t_1")
-        m = Dummy("m")
-        n = Dummy("n")
-        return MatrixExpr.from_index_summation(
-                Sum(self.args[0][t1, t1].diff(v[m, n]), (t1, 0, self.args[0].shape[0]-1)),
-                m
-            )
+    def _eval_derivative_matrix_lines(self, x):
+        r = self.args[0]._eval_derivative_matrix_lines(x)
+        for lr in r:
+            if lr.higher == 1:
+                lr.higher *= lr._lines[0] * lr._lines[1].T
+            else:
+                # This is not a matrix line:
+                lr.higher *= Trace(lr._lines[0] * lr._lines[1].T)
+            lr._lines = [S.One, S.One]
+            lr._first_pointer_parent = lr._lines
+            lr._second_pointer_parent = lr._lines
+            lr._first_pointer_index = 0
+            lr._second_pointer_index = 1
+        return r
 
     @property
     def arg(self):
@@ -65,26 +72,24 @@ class Trace(Expr):
             else:
                 return Trace(self.arg)
 
-
-    def _eval_rewrite_as_Sum(self):
+    def _eval_rewrite_as_Sum(self, expr, **kwargs):
         from sympy import Sum, Dummy
         i = Dummy('i')
         return Sum(self.arg[i, i], (i, 0, self.arg.rows-1)).doit()
 
 
 def trace(expr):
-    """ Trace of a Matrix.  Sum of the diagonal elements
+    """Trace of a Matrix.  Sum of the diagonal elements.
+
+    Examples
+    ========
 
     >>> from sympy import trace, Symbol, MatrixSymbol, pprint, eye
     >>> n = Symbol('n')
     >>> X = MatrixSymbol('X', n, n)  # A square matrix
     >>> trace(2*X)
     2*Trace(X)
-
     >>> trace(eye(3))
     3
-
-    See Also:
-        Trace
     """
     return Trace(expr).doit()

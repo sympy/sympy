@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import print_function, division
 
 from sympy.core.compatibility import range

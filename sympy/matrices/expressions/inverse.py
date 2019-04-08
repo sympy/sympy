@@ -22,25 +22,27 @@ class Inverse(MatPow):
     >>> A = MatrixSymbol('A', 3, 3)
     >>> B = MatrixSymbol('B', 3, 3)
     >>> Inverse(A)
-    A^-1
+    A**(-1)
     >>> A.inverse() == Inverse(A)
     True
     >>> (A*B).inverse()
-    B^-1*A^-1
+    B**(-1)*A**(-1)
     >>> Inverse(A*B)
-    (A*B)^-1
+    (A*B)**(-1)
 
     """
     is_Inverse = True
     exp = S(-1)
 
-    def __new__(cls, mat):
+    def __new__(cls, mat, exp=S(-1)):
+        # exp is there to make it consistent with
+        # inverse.func(*inverse.args) == inverse
         mat = _sympify(mat)
         if not mat.is_Matrix:
             raise TypeError("mat should be a matrix")
         if not mat.is_square:
             raise ShapeError("Inverse of non-square matrix %s" % mat)
-        return Basic.__new__(cls, mat)
+        return Basic.__new__(cls, mat, exp)
 
     @property
     def arg(self):
@@ -58,10 +60,20 @@ class Inverse(MatPow):
         return 1/det(self.arg)
 
     def doit(self, **hints):
+        if 'inv_expand' in hints and hints['inv_expand'] == False:
+            return self
         if hints.get('deep', True):
             return self.arg.doit(**hints).inverse()
         else:
             return self.arg.inverse()
+
+    def _eval_derivative_matrix_lines(self, x):
+        arg = self.args[0]
+        lines = arg._eval_derivative_matrix_lines(x)
+        for line in lines:
+            line.first_pointer *= -self.T
+            line.second_pointer *= self
+        return lines
 
 
 from sympy.assumptions.ask import ask, Q
@@ -73,7 +85,7 @@ def refine_Inverse(expr, assumptions):
     >>> from sympy import MatrixSymbol, Q, assuming, refine
     >>> X = MatrixSymbol('X', 2, 2)
     >>> X.I
-    X^-1
+    X**(-1)
     >>> with assuming(Q.orthogonal(X)):
     ...     print(refine(X.I))
     X.T

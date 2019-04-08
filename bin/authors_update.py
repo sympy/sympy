@@ -20,7 +20,7 @@ if sys.version_info < (3, 6):
 
 from subprocess import run, PIPE
 from distutils.version import LooseVersion
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 
 def red(text):
     return "\033[31m%s\033[0m" % text
@@ -46,8 +46,6 @@ minimal = '1.8.4.2'
 git_ver = run(['git', '--version'], stdout=PIPE, encoding='utf-8').stdout[12:]
 if LooseVersion(git_ver) < LooseVersion(minimal):
     print(yellow("Please use a git version >= %s" % minimal))
-
-from sympy.utilities.misc import filldedent
 
 def author_name(line):
     assert line.count("<") == line.count(">") == 1
@@ -92,6 +90,10 @@ try:
     # this will fail if the .mailmap is not right
     assert 'Sergey B Kirpichev' == author_name(git_people.pop(226)
         ), 'Sergey B Kirpichev was not found at line 226.'
+    assert 'azure-pipelines[bot]' == \
+        author_name(git_people.pop(751)), 'azure-pipelines[bot] was not found at line 751'
+    assert 'whitesource-bolt-for-github[bot]' == \
+        author_name(git_people.pop(792)), 'whitesource-bolt-for-github[bot] not found at line 792'
 except AssertionError as msg:
     print(red(msg))
     sys.exit(1)
@@ -150,3 +152,5 @@ if new_authors:
     print()
     for i in sorted(new_authors, key=lambda x: x.lower()):
         print('\t%s' % i)
+else:
+    print(yellow("The AUTHORS file was updated."))

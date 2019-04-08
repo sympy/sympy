@@ -3,16 +3,16 @@
 from __future__ import print_function, division
 
 from tokenize import (generate_tokens, untokenize, TokenError,
-    NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN)
+    NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN, NEWLINE)
 
 from keyword import iskeyword
 
 import ast
 import unicodedata
 
-import sympy
 from sympy.core.compatibility import exec_, StringIO
 from sympy.core.basic import Basic
+from sympy.core import Symbol
 
 def _token_splittable(token):
     """
@@ -44,7 +44,7 @@ def _token_callable(token, local_dict, global_dict, nextToken=None):
     func = local_dict.get(token[1])
     if not func:
         func = global_dict.get(token[1])
-    return callable(func) and not isinstance(func, sympy.Symbol)
+    return callable(func) and not isinstance(func, Symbol)
 
 
 def _add_factorial_tokens(name, result):
@@ -213,6 +213,8 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
         elif (isinstance(tok, AppliedFunction) and
               nextTok[0] == OP and nextTok[1] == '('):
             # Applied function followed by an open parenthesis
+            if tok.function[1] == "Function":
+                result[-1].function = (result[-1].function[0], 'Symbol')
             result.append((OP, '*'))
         elif (tok[0] == OP and tok[1] == ')' and
               isinstance(nextTok, AppliedFunction)):
@@ -260,9 +262,7 @@ def _implicit_application(tokens, local_dict, global_dict):
                           # work with function exponentiation
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
-        if (tok[0] == NAME and
-              nextTok[0] != OP and
-              nextTok[0] != ENDMARKER):
+        if (tok[0] == NAME and nextTok[0] not in [OP, ENDMARKER, NEWLINE]):
             if _token_callable(tok, local_dict, global_dict, nextTok):
                 result.append((OP, '('))
                 appendParen += 1
@@ -324,6 +324,8 @@ def function_exponentiation(tokens, local_dict, global_dict):
             if _token_callable(tok, local_dict, global_dict):
                 consuming_exponent = True
         elif consuming_exponent:
+            if tok[0] == NAME and tok[1] == 'Function':
+                tok = (NAME, 'Symbol')
             exponent.append(tok)
 
             # only want to stop after hitting )
@@ -385,25 +387,28 @@ def split_symbols_custom(predicate):
                 split_previous=False
                 continue
             split_previous=False
-            if tok[0] == NAME and tok[1] == 'Symbol':
+            if tok[0] == NAME and tok[1] in ['Symbol', 'Function']:
                 split = True
             elif split and tok[0] == NAME:
                 symbol = tok[1][1:-1]
                 if predicate(symbol):
-                    for char in symbol:
+                    tok_type = result[-2][1]  # Symbol or Function
+                    del result[-2:]  # Get rid of the call to Symbol
+                    for char in symbol[:-1]:
                         if char in local_dict or char in global_dict:
-                            # Get rid of the call to Symbol
-                            del result[-2:]
-                            result.extend([(NAME, "%s" % char),
-                                           (NAME, 'Symbol'), (OP, '(')])
+                            result.extend([(NAME, "%s" % char)])
                         else:
-                            result.extend([(NAME, "'%s'" % char), (OP, ')'),
-                                           (NAME, 'Symbol'), (OP, '(')])
-                    # Delete the last two tokens: get rid of the extraneous
-                    # Symbol( we just added
-                    # Also, set split_previous=True so will skip
+                            result.extend([(NAME, 'Symbol'), (OP, '('),
+                                           (NAME, "'%s'" % char), (OP, ')')])
+                    char = symbol[-1]
+                    if char in local_dict or char in global_dict:
+                        result.extend([(NAME, "%s" % char)])
+                    else:
+                        result.extend([(NAME, tok_type), (OP, '('),
+                                       (NAME, "'%s'" % char), (OP, ')')])
+
+                    # Set split_previous=True so will skip
                     # the closing parenthesis of the original Symbol
-                    del result[-2:]
                     split = False
                     split_previous = True
                     continue
@@ -504,7 +509,7 @@ def implicit_multiplication_application(result, local_dict, global_dict):
 
 
 def auto_symbol(tokens, local_dict, global_dict):
-    """Inserts calls to ``Symbol`` for undefined variables."""
+    """Inserts calls to ``Symbol``/``Function`` for undefined variables."""
     result = []
     prevTok = (None, None)
 
@@ -517,13 +522,21 @@ def auto_symbol(tokens, local_dict, global_dict):
 
             if (name in ['True', 'False', 'None']
                 or iskeyword(name)
-                or name in local_dict
                 # Don't convert attribute access
                 or (prevTok[0] == OP and prevTok[1] == '.')
                 # Don't convert keyword arguments
                 or (prevTok[0] == OP and prevTok[1] in ('(', ',')
                     and nextTokNum == OP and nextTokVal == '=')):
                 result.append((NAME, name))
+                continue
+            elif name in local_dict:
+                if isinstance(local_dict[name], Symbol) and nextTokVal == '(':
+                    result.extend([(NAME, 'Function'),
+                                   (OP, '('),
+                                   (NAME, repr(str(local_dict[name]))),
+                                   (OP, ')')])
+                else:
+                    result.append((NAME, name))
                 continue
             elif name in global_dict:
                 obj = global_dict[name]
@@ -532,7 +545,7 @@ def auto_symbol(tokens, local_dict, global_dict):
                     continue
 
             result.extend([
-                (NAME, 'Symbol'),
+                (NAME, 'Symbol' if nextTokVal != '(' else 'Function'),
                 (OP, '('),
                 (NAME, repr(str(name))),
                 (OP, ')'),
@@ -555,8 +568,11 @@ def lambda_notation(tokens, local_dict, global_dict):
     flag = False
     toknum, tokval = tokens[0]
     tokLen = len(tokens)
+
     if toknum == NAME and tokval == 'lambda':
-        if tokLen == 2:
+        if tokLen == 2 or tokLen == 3 and tokens[1][0] == NEWLINE:
+            # In Python 3.6.7+, inputs without a newline get NEWLINE added to
+            # the tokens
             result.extend(tokens)
         elif tokLen > 2:
             result.extend([
@@ -806,8 +822,8 @@ def convert_equals_signs(result, local_dict, global_dict):
     ========
     convert_equality_operators
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, convert_equals_signs)

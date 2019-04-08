@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 A tool to help keep .mailmap up-to-date with the
 current git authors.

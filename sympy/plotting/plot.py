@@ -24,14 +24,12 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 
 from __future__ import print_function, division
 
-import inspect
 import warnings
-import sys
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
+from sympy.core.function import arity
 from sympy.core.compatibility import range, Callable
-from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
@@ -57,16 +55,6 @@ def unset_show():
 ##############################################################################
 # The public interface
 ##############################################################################
-
-def _arity(f):
-    """
-    Python 2 and 3 compatible version that do not raise a Deprecation warning.
-    """
-    if sys.version_info < (3,):
-        return len(inspect.getargspec(f)[0])
-    else:
-       param = inspect.signature(f).parameters.values()
-       return len([p for p in param if p.kind == p.POSITIONAL_OR_KEYWORD])
 
 
 class Plot(object):
@@ -185,6 +173,7 @@ class Plot(object):
         # (thanks to the parent attribute of the backend).
         self.backend = DefaultBackend
 
+
         # The keyword arguments should only contain options for the plot.
         for key, val in kwargs.items():
             if hasattr(self, key):
@@ -218,7 +207,6 @@ class Plot(object):
     def __delitem__(self, index):
         del self._series[index]
 
-    @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def append(self, arg):
         """Adds an element from a plot's series to an existing plot.
 
@@ -229,16 +217,21 @@ class Plot(object):
         second plot's first series object to the first, use the
         ``append`` method, like so:
 
-        >>> from sympy import symbols
-        >>> from sympy.plotting import plot
-        >>> x = symbols('x')
-        >>> p1 = plot(x*x)
-        >>> p2 = plot(x)
-        >>> p1.append(p2[0])
-        >>> p1
-        Plot object containing:
-        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
-        [1]: cartesian line: x for x over (-10.0, 10.0)
+        .. plot::
+           :format: doctest
+           :include-source: True
+
+           >>> from sympy import symbols
+           >>> from sympy.plotting import plot
+           >>> x = symbols('x')
+           >>> p1 = plot(x*x, show=False)
+           >>> p2 = plot(x, show=False)
+           >>> p1.append(p2[0])
+           >>> p1
+           Plot object containing:
+           [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+           [1]: cartesian line: x for x over (-10.0, 10.0)
+           >>> p1.show()
 
         See Also
         ========
@@ -250,7 +243,6 @@ class Plot(object):
         else:
             raise TypeError('Must specify element of plot to append.')
 
-    @doctest_depends_on(modules=('numpy', 'matplotlib',))
     def extend(self, arg):
         """Adds all series from another plot.
 
@@ -260,16 +252,22 @@ class Plot(object):
         Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
         second plot to the first, use the ``extend`` method, like so:
 
-        >>> from sympy import symbols
-        >>> from sympy.plotting import plot
-        >>> x = symbols('x')
-        >>> p1 = plot(x*x)
-        >>> p2 = plot(x)
-        >>> p1.extend(p2)
-        >>> p1
-        Plot object containing:
-        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
-        [1]: cartesian line: x for x over (-10.0, 10.0)
+        .. plot::
+           :format: doctest
+           :include-source: True
+
+           >>> from sympy import symbols
+           >>> from sympy.plotting import plot
+           >>> x = symbols('x')
+           >>> p1 = plot(x**2, show=False)
+           >>> p2 = plot(x, -x, show=False)
+           >>> p1.extend(p2)
+           >>> p1
+           Plot object containing:
+           [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+           [1]: cartesian line: x for x over (-10.0, 10.0)
+           [2]: cartesian line: -x for x over (-10.0, 10.0)
+           >>> p1.show()
 
         """
         if isinstance(arg, Plot):
@@ -278,6 +276,141 @@ class Plot(object):
             self._series.extend(arg)
         else:
             raise TypeError('Expecting Plot or sequence of BaseSeries')
+
+
+class PlotGrid(object):
+    """This class helps to plot subplots from already created sympy plots
+    in a single figure.
+
+    Examples
+    ========
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> from sympy import symbols
+        >>> from sympy.plotting import plot, plot3d, PlotGrid
+        >>> x, y = symbols('x, y')
+        >>> p1 = plot(x, x**2, x**3, (x, -5, 5))
+        >>> p2 = plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
+        >>> p3 = plot(x**3, (x, -5, 5))
+        >>> p4 = plot3d(x*y, (x, -5, 5), (y, -5, 5))
+
+    Plotting vertically in a single line:
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> PlotGrid(2, 1 , p1, p2)
+        PlotGrid object containing:
+        Plot[0]:Plot object containing:
+        [0]: cartesian line: x for x over (-5.0, 5.0)
+        [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+        [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[1]:Plot object containing:
+        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+        [1]: cartesian line: x for x over (-5.0, 5.0)
+
+    Plotting horizontally in a single line:
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> PlotGrid(1, 3 , p2, p3, p4)
+        PlotGrid object containing:
+        Plot[0]:Plot object containing:
+        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+        [1]: cartesian line: x for x over (-5.0, 5.0)
+        Plot[1]:Plot object containing:
+        [0]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[2]:Plot object containing:
+        [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+
+    Plotting in a grid form:
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> PlotGrid(2, 2, p1, p2 ,p3, p4)
+        PlotGrid object containing:
+        Plot[0]:Plot object containing:
+        [0]: cartesian line: x for x over (-5.0, 5.0)
+        [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+        [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[1]:Plot object containing:
+        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+        [1]: cartesian line: x for x over (-5.0, 5.0)
+        Plot[2]:Plot object containing:
+        [0]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[3]:Plot object containing:
+        [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+
+    """
+    def __init__(self, nrows, ncolumns, *args, **kwargs):
+        """
+        Parameters
+        ==========
+
+        nrows : The number of rows that should be in the grid of the
+                required subplot
+        ncolumns : The number of columns that should be in the grid
+                   of the required subplot
+
+        nrows and ncolumns together define the required grid
+
+        Arguments
+        =========
+
+        A list of predefined plot objects entered in a row-wise sequence
+        i.e. plot objects which are to be in the top row of the required
+        grid are written first, then the second row objects and so on
+
+        Keyword arguments
+        =================
+
+        show : Boolean
+               The default value is set to ``True``. Set show to ``False`` and
+               the function will not display the subplot. The returned instance
+               of the ``PlotGrid`` class can then be used to save or display the
+               plot by calling the ``save()`` and ``show()`` methods
+               respectively.
+        """
+        self.nrows = nrows
+        self.ncolumns = ncolumns
+        self._series = []
+        self.args = args
+        for arg in args:
+            self._series.append(arg._series)
+        self.backend = DefaultBackend
+        show = kwargs.pop('show', True)
+        if show:
+            self.show()
+
+    def show(self):
+        if hasattr(self, '_backend'):
+            self._backend.close()
+        self._backend = self.backend(self)
+        self._backend.show()
+
+    def save(self, path):
+        if hasattr(self, '_backend'):
+            self._backend.close()
+        self._backend = self.backend(self)
+        self._backend.save(path)
+
+    def __str__(self):
+        plot_strs = [('Plot[%d]:' % i) + str(plot)
+                      for i, plot in enumerate(self.args)]
+
+        return 'PlotGrid object containing:\n' + '\n'.join(plot_strs)
 
 
 ##############################################################################
@@ -397,15 +530,15 @@ class Line2DBaseSeries(BaseSeries):
         c = self.line_color
         if hasattr(c, '__call__'):
             f = np.vectorize(c)
-            arity = _arity(c)
-            if arity == 1 and self.is_parametric:
+            nargs = arity(c)
+            if nargs == 1 and self.is_parametric:
                 x = self.get_parameter_points()
                 return f(centers_of_segments(x))
             else:
                 variables = list(map(centers_of_segments, self.get_points()))
-                if arity == 1:
+                if nargs == 1:
                     return f(variables[0])
-                elif arity == 2:
+                elif nargs == 2:
                     return f(*variables[:2])
                 else:  # only if the line is 3D (otherwise raises an error)
                     return f(*variables)
@@ -444,6 +577,12 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.adaptive = kwargs.get('adaptive', True)
         self.depth = kwargs.get('depth', 12)
         self.line_color = kwargs.get('line_color', None)
+        self.xscale=kwargs.get('xscale','linear')
+        self.flag=0
+
+
+
+
 
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
@@ -463,12 +602,13 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             Luiz Henrique de Figueiredo.
 
         """
+
         if self.only_integers or not self.adaptive:
             return super(LineOver1DRangeSeries, self).get_segments()
         else:
             f = lambdify([self.var], self.expr)
             list_segments = []
-
+            np=import_module('numpy')
             def sample(p, q, depth):
                 """ Samples recursively if three points are almost collinear.
                 For depth < 6, points are added irrespective of whether they
@@ -482,8 +622,13 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 ynew = f(xnew)
                 new_point = np.array([xnew, ynew])
 
+                if self.flag==1:
+                    return
                 #Maximum depth
                 if depth > self.depth:
+                    if p[1] is None or q[1] is None:
+                        self.flag=1
+                        return
                     list_segments.append([p, q])
 
                 #Sample irrespective of whether the line is flat till the
@@ -496,7 +641,10 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 #at both ends. If there is a real value in between, then
                 #sample those points further.
                 elif p[1] is None and q[1] is None:
-                    xarray = np.linspace(p[0], q[0], 10)
+                    if self.xscale is 'log':
+                        xarray = np.logspace(p[0],q[0], 10)
+                    else:
+                        xarray = np.linspace(p[0], q[0], 10)
                     yarray = list(map(f, xarray))
                     if any(y is not None for y in yarray):
                         for i in range(len(yarray) - 1):
@@ -513,18 +661,30 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 else:
                     list_segments.append([p, q])
 
+            if self.xscale is 'log':
+                self.start=np.log10(self.start)
+                self.end=np.log10(self.end)
+
             f_start = f(self.start)
             f_end = f(self.end)
             sample([self.start, f_start], [self.end, f_end], 0)
+
             return list_segments
 
     def get_points(self):
         np = import_module('numpy')
         if self.only_integers is True:
-            list_x = np.linspace(int(self.start), int(self.end),
+            if self.xscale is 'log':
+                list_x = np.logspace(int(self.start), int(self.end),
+                        num=int(self.end) - int(self.start) + 1)
+            else:
+                list_x = np.linspace(int(self.start), int(self.end),
                     num=int(self.end) - int(self.start) + 1)
         else:
-            list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
+            if self.xscale is 'log':
+                list_x = np.logspace(self.start, self.end, num=self.nb_of_points)
+            else:
+                list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
         f = vectorized_lambdify([self.var], self.expr)
         list_y = f(list_x)
         return (list_x, list_y)
@@ -714,17 +874,17 @@ class SurfaceBaseSeries(BaseSeries):
         c = self.surface_color
         if isinstance(c, Callable):
             f = np.vectorize(c)
-            arity = _arity(c)
+            nargs = arity(c)
             if self.is_parametric:
                 variables = list(map(centers_of_faces, self.get_parameter_meshes()))
-                if arity == 1:
+                if nargs == 1:
                     return f(variables[0])
-                elif arity == 2:
+                elif nargs == 2:
                     return f(*variables)
             variables = list(map(centers_of_faces, self.get_meshes()))
-            if arity == 1:
+            if nargs == 1:
                 return f(variables[0])
-            elif arity == 2:
+            elif nargs == 2:
                 return f(*variables[:2])
             else:
                 return f(*variables)
@@ -872,80 +1032,90 @@ class BaseBackend(object):
 class MatplotlibBackend(BaseBackend):
     def __init__(self, parent):
         super(MatplotlibBackend, self).__init__(parent)
-        are_3D = [s.is_3D for s in self.parent._series]
         self.matplotlib = import_module('matplotlib',
             __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
             min_module_version='1.1.0', catch=(RuntimeError,))
         self.plt = self.matplotlib.pyplot
         self.cm = self.matplotlib.cm
         self.LineCollection = self.matplotlib.collections.LineCollection
-        if any(are_3D) and not all(are_3D):
-            raise ValueError('The matplotlib backend can not mix 2D and 3D.')
-        elif not any(are_3D):
-            self.fig = self.plt.figure()
-            self.ax = self.fig.add_subplot(111)
-            self.ax.spines['left'].set_position('zero')
-            self.ax.spines['right'].set_color('none')
-            self.ax.spines['bottom'].set_position('zero')
-            self.ax.spines['top'].set_color('none')
-            self.ax.spines['left'].set_smart_bounds(True)
-            self.ax.spines['bottom'].set_smart_bounds(False)
-            self.ax.xaxis.set_ticks_position('bottom')
-            self.ax.yaxis.set_ticks_position('left')
-        elif all(are_3D):
-            ## mpl_toolkits.mplot3d is necessary for
-            ##      projection='3d'
-            mpl_toolkits = import_module('mpl_toolkits',
+
+        if isinstance(self.parent, Plot):
+            nrows, ncolumns = 1, 1
+            series_list = [self.parent._series]
+        elif isinstance(self.parent, PlotGrid):
+            nrows, ncolumns = self.parent.nrows, self.parent.ncolumns
+            series_list = self.parent._series
+
+        self.ax = []
+        self.fig = self.plt.figure()
+
+        for i, series in enumerate(series_list):
+            are_3D = [s.is_3D for s in series]
+
+            if any(are_3D) and not all(are_3D):
+                raise ValueError('The matplotlib backend can not mix 2D and 3D.')
+            elif all(are_3D):
+                # mpl_toolkits.mplot3d is necessary for
+                # projection='3d'
+                mpl_toolkits = import_module('mpl_toolkits',
                                      __import__kwargs={'fromlist': ['mplot3d']})
-            self.fig = self.plt.figure()
-            self.ax = self.fig.add_subplot(111, projection='3d')
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d'))
 
-    def process_series(self):
-        parent = self.parent
+            elif not any(are_3D):
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1))
+                self.ax[i].spines['left'].set_position('zero')
+                self.ax[i].spines['right'].set_color('none')
+                self.ax[i].spines['bottom'].set_position('zero')
+                self.ax[i].spines['top'].set_color('none')
+                self.ax[i].spines['left'].set_smart_bounds(True)
+                self.ax[i].spines['bottom'].set_smart_bounds(False)
+                self.ax[i].xaxis.set_ticks_position('bottom')
+                self.ax[i].yaxis.set_ticks_position('left')
 
-        for s in self.parent._series:
+    def _process_series(self, series, ax, parent):
+        for s in series:
             # Create the collections
             if s.is_2Dline:
                 collection = self.LineCollection(s.get_segments())
-                self.ax.add_collection(collection)
+                ax.add_collection(collection)
             elif s.is_contour:
-                self.ax.contour(*s.get_meshes())
+                ax.contour(*s.get_meshes())
             elif s.is_3Dline:
                 # TODO too complicated, I blame matplotlib
                 mpl_toolkits = import_module('mpl_toolkits',
                     __import__kwargs={'fromlist': ['mplot3d']})
                 art3d = mpl_toolkits.mplot3d.art3d
                 collection = art3d.Line3DCollection(s.get_segments())
-                self.ax.add_collection(collection)
+                ax.add_collection(collection)
                 x, y, z = s.get_points()
-                self.ax.set_xlim((min(x), max(x)))
-                self.ax.set_ylim((min(y), max(y)))
-                self.ax.set_zlim((min(z), max(z)))
+                ax.set_xlim((min(x), max(x)))
+                ax.set_ylim((min(y), max(y)))
+                ax.set_zlim((min(z), max(z)))
             elif s.is_3Dsurface:
                 x, y, z = s.get_meshes()
-                collection = self.ax.plot_surface(x, y, z,
+                collection = ax.plot_surface(x, y, z,
                     cmap=getattr(self.cm, 'viridis', self.cm.jet),
                     rstride=1, cstride=1, linewidth=0.1)
             elif s.is_implicit:
-                #Smart bounds have to be set to False for implicit plots.
-                self.ax.spines['left'].set_smart_bounds(False)
-                self.ax.spines['bottom'].set_smart_bounds(False)
+                # Smart bounds have to be set to False for implicit plots.
+                ax.spines['left'].set_smart_bounds(False)
+                ax.spines['bottom'].set_smart_bounds(False)
                 points = s.get_raster()
                 if len(points) == 2:
-                    #interval math plotting
+                    # interval math plotting
                     x, y = _matplotlib_list(points[0])
-                    self.ax.fill(x, y, facecolor=s.line_color, edgecolor='None')
+                    ax.fill(x, y, facecolor=s.line_color, edgecolor='None')
                 else:
                     # use contourf or contour depending on whether it is
                     # an inequality or equality.
-                    #XXX: ``contour`` plots multiple lines. Should be fixed.
+                    # XXX: ``contour`` plots multiple lines. Should be fixed.
                     ListedColormap = self.matplotlib.colors.ListedColormap
                     colormap = ListedColormap(["white", s.line_color])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
-                        self.ax.contour(xarray, yarray, zarray, cmap=colormap)
+                        ax.contour(xarray, yarray, zarray, cmap=colormap)
                     else:
-                        self.ax.contourf(xarray, yarray, zarray, cmap=colormap)
+                        ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
                 raise ValueError('The matplotlib backend supports only '
                                  'is_2Dline, is_3Dline, is_3Dsurface and '
@@ -974,56 +1144,89 @@ class MatplotlibBackend(BaseBackend):
         # Set global options.
         # TODO The 3D stuff
         # XXX The order of those is important.
-
         mpl_toolkits = import_module('mpl_toolkits',
             __import__kwargs={'fromlist': ['mplot3d']})
         Axes3D = mpl_toolkits.mplot3d.Axes3D
-        if parent.xscale and not isinstance(self.ax, Axes3D):
-            self.ax.set_xscale(parent.xscale)
-        if parent.yscale and not isinstance(self.ax, Axes3D):
-            self.ax.set_yscale(parent.yscale)
+        if parent.xscale and not isinstance(ax, Axes3D):
+            ax.set_xscale(parent.xscale)
+        if parent.yscale and not isinstance(ax, Axes3D):
+            ax.set_yscale(parent.yscale)
         if parent.xlim:
-            self.ax.set_xlim(parent.xlim)
+            from sympy.core.basic import Basic
+            xlim = parent.xlim
+            if any(isinstance(i,Basic) and not i.is_real for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be real".format(xlim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in xlim):
+                raise ValueError(
+                "All numbers from xlim={} must be finite".format(xlim))
+            xlim = (float(i) for i in xlim)
+            ax.set_xlim(xlim)
         else:
             if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
                 starts = [s.start for s in parent._series]
                 ends = [s.end for s in parent._series]
-                self.ax.set_xlim(min(starts), max(ends))
+                ax.set_xlim(min(starts), max(ends))
         if parent.ylim:
-            self.ax.set_ylim(parent.ylim)
-        if not isinstance(self.ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
-            self.ax.set_autoscale_on(parent.autoscale)
+            from sympy.core.basic import Basic
+            ylim = parent.ylim
+            if any(isinstance(i,Basic) and not i.is_real for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be real".format(ylim))
+            if any(isinstance(i,Basic) and not i.is_finite for i in ylim):
+                raise ValueError(
+                "All numbers from ylim={} must be finite".format(ylim))
+            ylim = (float(i) for i in ylim)
+            ax.set_ylim(ylim)
+        if not isinstance(ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
+            ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
             val = parent.axis_center
-            if isinstance(self.ax, Axes3D):
+            if isinstance(ax, Axes3D):
                 pass
             elif val == 'center':
-                self.ax.spines['left'].set_position('center')
-                self.ax.spines['bottom'].set_position('center')
+                ax.spines['left'].set_position('center')
+                ax.spines['bottom'].set_position('center')
             elif val == 'auto':
-                xl, xh = self.ax.get_xlim()
-                yl, yh = self.ax.get_ylim()
+                xl, xh = ax.get_xlim()
+                yl, yh = ax.get_ylim()
                 pos_left = ('data', 0) if xl*xh <= 0 else 'center'
                 pos_bottom = ('data', 0) if yl*yh <= 0 else 'center'
-                self.ax.spines['left'].set_position(pos_left)
-                self.ax.spines['bottom'].set_position(pos_bottom)
+                ax.spines['left'].set_position(pos_left)
+                ax.spines['bottom'].set_position(pos_bottom)
             else:
-                self.ax.spines['left'].set_position(('data', val[0]))
-                self.ax.spines['bottom'].set_position(('data', val[1]))
+                ax.spines['left'].set_position(('data', val[0]))
+                ax.spines['bottom'].set_position(('data', val[1]))
         if not parent.axis:
-            self.ax.set_axis_off()
+            ax.set_axis_off()
         if parent.legend:
-            if self.ax.legend():
-                self.ax.legend_.set_visible(parent.legend)
+            if ax.legend():
+                ax.legend_.set_visible(parent.legend)
         if parent.margin:
-            self.ax.set_xmargin(parent.margin)
-            self.ax.set_ymargin(parent.margin)
+            ax.set_xmargin(parent.margin)
+            ax.set_ymargin(parent.margin)
         if parent.title:
-            self.ax.set_title(parent.title)
+            ax.set_title(parent.title)
         if parent.xlabel:
-            self.ax.set_xlabel(parent.xlabel, position=(1, 0))
+            ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
-            self.ax.set_ylabel(parent.ylabel, position=(0, 1))
+            ax.set_ylabel(parent.ylabel, position=(0, 1))
+
+    def process_series(self):
+        """
+        Iterates over every ``Plot`` object and further calls
+        _process_series()
+        """
+        parent = self.parent
+        if isinstance(parent, Plot):
+            series_list = [parent._series]
+        else:
+            series_list = parent._series
+
+        for i, (series, ax) in enumerate(zip(series_list, self.ax)):
+            if isinstance(self.parent, PlotGrid):
+                parent = self.parent.args[i]
+            self._process_series(series, ax, parent)
 
     def show(self):
         self.process_series()
@@ -1031,6 +1234,7 @@ class MatplotlibBackend(BaseBackend):
         # you can uncomment the next line and remove the pyplot.show() call
         #self.fig.show()
         if _show:
+            self.fig.tight_layout()
             self.plt.show()
         else:
             self.close()
@@ -1048,6 +1252,8 @@ class TextBackend(BaseBackend):
         super(TextBackend, self).__init__(parent)
 
     def show(self):
+        if not _show:
+            return
         if len(self.parent._series) != 1:
             raise ValueError(
                 'The TextBackend supports only one graph per Plot.')
@@ -1140,7 +1346,6 @@ def _matplotlib_list(interval_list):
 # TODO: Add more plotting options for 3d plots.
 # TODO: Adaptive sampling for 3D plots.
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot(*args, **kwargs):
     """
     Plots a function of a single variable and returns an instance of
@@ -1237,37 +1442,61 @@ def plot(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.plotting import plot
-    >>> x = symbols('x')
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import symbols
+       >>> from sympy.plotting import plot
+       >>> x = symbols('x')
 
     Single Plot
 
-    >>> plot(x**2, (x, -5, 5))
-    Plot object containing:
-    [0]: cartesian line: x**2 for x over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot(x**2, (x, -5, 5))
+       Plot object containing:
+       [0]: cartesian line: x**2 for x over (-5.0, 5.0)
 
     Multiple plots with single range.
 
-    >>> plot(x, x**2, x**3, (x, -5, 5))
-    Plot object containing:
-    [0]: cartesian line: x for x over (-5.0, 5.0)
-    [1]: cartesian line: x**2 for x over (-5.0, 5.0)
-    [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
 
+       >>> plot(x, x**2, x**3, (x, -5, 5))
+       Plot object containing:
+       [0]: cartesian line: x for x over (-5.0, 5.0)
+       [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+       [2]: cartesian line: x**3 for x over (-5.0, 5.0)
 
     Multiple plots with different ranges.
 
-    >>> plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
-    Plot object containing:
-    [0]: cartesian line: x**2 for x over (-6.0, 6.0)
-    [1]: cartesian line: x for x over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
+       Plot object containing:
+       [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+       [1]: cartesian line: x for x over (-5.0, 5.0)
 
     No adaptive sampling.
 
-    >>> plot(x**2, adaptive=False, nb_of_points=400)
-    Plot object containing:
-    [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot(x**2, adaptive=False, nb_of_points=400)
+       Plot object containing:
+       [0]: cartesian line: x**2 for x over (-10.0, 10.0)
 
     See Also
     ========
@@ -1298,7 +1527,6 @@ def plot(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot_parametric(*args, **kwargs):
     """
     Plots a 2D parametric plot.
@@ -1386,31 +1614,51 @@ def plot_parametric(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols, cos, sin
-    >>> from sympy.plotting import plot_parametric
-    >>> u = symbols('u')
+    .. plot::
+       :context: reset
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import symbols, cos, sin
+       >>> from sympy.plotting import plot_parametric
+       >>> u = symbols('u')
 
     Single Parametric plot
 
-    >>> plot_parametric(cos(u), sin(u), (u, -5, 5))
-    Plot object containing:
-    [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot_parametric(cos(u), sin(u), (u, -5, 5))
+       Plot object containing:
+       [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
 
 
     Multiple parametric plot with single range.
 
-    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))
-    Plot object containing:
-    [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-10.0, 10.0)
-    [1]: parametric cartesian line: (u, cos(u)) for u over (-10.0, 10.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))
+       Plot object containing:
+       [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-10.0, 10.0)
+       [1]: parametric cartesian line: (u, cos(u)) for u over (-10.0, 10.0)
 
     Multiple parametric plots.
 
-    >>> plot_parametric((cos(u), sin(u), (u, -5, 5)),
-    ...     (cos(u), u, (u, -5, 5)))
-    Plot object containing:
-    [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
-    [1]: parametric cartesian line: (cos(u), u) for u over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot_parametric((cos(u), sin(u), (u, -5, 5)),
+       ...     (cos(u), u, (u, -5, 5)))
+       Plot object containing:
+       [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
+       [1]: parametric cartesian line: (cos(u), u) for u over (-5.0, 5.0)
 
 
     See Also
@@ -1429,7 +1677,6 @@ def plot_parametric(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot3d_parametric_line(*args, **kwargs):
     """
     Plots a 3D parametric line plot.
@@ -1488,24 +1735,39 @@ def plot3d_parametric_line(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols, cos, sin
-    >>> from sympy.plotting import plot3d_parametric_line
-    >>> u = symbols('u')
+    .. plot::
+       :context: reset
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import symbols, cos, sin
+       >>> from sympy.plotting import plot3d_parametric_line
+       >>> u = symbols('u')
 
     Single plot.
 
-    >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))
-    Plot object containing:
-    [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))
+       Plot object containing:
+       [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
 
 
     Multiple plots.
 
-    >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)),
-    ...     (sin(u), u**2, u, (u, -5, 5)))
-    Plot object containing:
-    [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
-    [1]: 3D parametric cartesian line: (sin(u), u**2, u) for u over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)),
+       ...     (sin(u), u**2, u, (u, -5, 5)))
+       Plot object containing:
+       [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
+       [1]: 3D parametric cartesian line: (sin(u), u**2, u) for u over (-5.0, 5.0)
 
 
     See Also
@@ -1525,7 +1787,6 @@ def plot3d_parametric_line(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot3d(*args, **kwargs):
     """
     Plots a 3D surface plot.
@@ -1592,32 +1853,52 @@ def plot3d(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.plotting import plot3d
-    >>> x, y = symbols('x y')
+    .. plot::
+       :context: reset
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import symbols
+       >>> from sympy.plotting import plot3d
+       >>> x, y = symbols('x y')
 
     Single plot
 
-    >>> plot3d(x*y, (x, -5, 5), (y, -5, 5))
-    Plot object containing:
-    [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d(x*y, (x, -5, 5), (y, -5, 5))
+       Plot object containing:
+       [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
 
 
     Multiple plots with same range
 
-    >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))
-    Plot object containing:
-    [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
-    [1]: cartesian surface: -x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))
+       Plot object containing:
+       [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+       [1]: cartesian surface: -x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
 
 
     Multiple plots with different ranges.
 
-    >>> plot3d((x**2 + y**2, (x, -5, 5), (y, -5, 5)),
-    ...     (x*y, (x, -3, 3), (y, -3, 3)))
-    Plot object containing:
-    [0]: cartesian surface: x**2 + y**2 for x over (-5.0, 5.0) and y over (-5.0, 5.0)
-    [1]: cartesian surface: x*y for x over (-3.0, 3.0) and y over (-3.0, 3.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d((x**2 + y**2, (x, -5, 5), (y, -5, 5)),
+       ...     (x*y, (x, -3, 3), (y, -3, 3)))
+       Plot object containing:
+       [0]: cartesian surface: x**2 + y**2 for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+       [1]: cartesian surface: x*y for x over (-3.0, 3.0) and y over (-3.0, 3.0)
 
 
     See Also
@@ -1637,7 +1918,6 @@ def plot3d(*args, **kwargs):
     return plots
 
 
-@doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot3d_parametric_surface(*args, **kwargs):
     """
     Plots a 3D parametric surface plot.
@@ -1703,16 +1983,26 @@ def plot3d_parametric_surface(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy import symbols, cos, sin
-    >>> from sympy.plotting import plot3d_parametric_surface
-    >>> u, v = symbols('u v')
+    .. plot::
+       :context: reset
+       :format: doctest
+       :include-source: True
+
+       >>> from sympy import symbols, cos, sin
+       >>> from sympy.plotting import plot3d_parametric_surface
+       >>> u, v = symbols('u v')
 
     Single plot.
 
-    >>> plot3d_parametric_surface(cos(u + v), sin(u - v), u - v,
-    ...     (u, -5, 5), (v, -5, 5))
-    Plot object containing:
-    [0]: parametric cartesian surface: (cos(u + v), sin(u - v), u - v) for u over (-5.0, 5.0) and v over (-5.0, 5.0)
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+       >>> plot3d_parametric_surface(cos(u + v), sin(u - v), u - v,
+       ...     (u, -5, 5), (v, -5, 5))
+       Plot object containing:
+       [0]: parametric cartesian surface: (cos(u + v), sin(u - v), u - v) for u over (-5.0, 5.0) and v over (-5.0, 5.0)
 
 
     See Also
@@ -1818,14 +2108,19 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
     Examples
     ========
 
-    >>> from sympy import plot, cos, sin, symbols
-    >>> from sympy.plotting.plot import check_arguments
-    >>> x = symbols('x')
-    >>> check_arguments([cos(x), sin(x)], 2, 1)
-        [(cos(x), sin(x), (x, -10, 10))]
+    .. plot::
+       :context: reset
+       :format: doctest
+       :include-source: True
 
-    >>> check_arguments([x, x**2], 1, 1)
-        [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
+       >>> from sympy import plot, cos, sin, symbols
+       >>> from sympy.plotting.plot import check_arguments
+       >>> x = symbols('x')
+       >>> check_arguments([cos(x), sin(x)], 2, 1)
+           [(cos(x), sin(x), (x, -10, 10))]
+
+       >>> check_arguments([x, x**2], 1, 1)
+           [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
     """
     if expr_len > 1 and isinstance(args[0], Expr):
         # Multiple expressions same range.

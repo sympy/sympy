@@ -66,19 +66,13 @@ special cases of the other prints in SymPy (str printer, pretty printer, etc.).
 An important distinction is that the code printer has to deal with assignments
 (using the :class:`sympy.codegen.ast.Assignment` object). This serves as
 building blocks for the code printers and hence the ``codegen`` module.  An
-example that shows the use of ``Assignment``::
+example that shows the use of ``Assignment`` in C code::
 
     >>> from sympy.codegen.ast import Assignment
-    >>> mat = Matrix([x, y, z]).T
-    >>> known_mat = MatrixSymbol('K', 1, 3)
-    >>> Assignment(known_mat, mat)
-    K := [x  y  z]
-    >>> Assignment(known_mat, mat).lhs
-    K
-    >>> Assignment(known_mat, mat).rhs
-    [x  y  z]
+    >>> print(ccode(Assignment(x, y + 1)))
+    x = y + 1;
 
-Here is a simple example of printing a C version of a SymPy expression::
+Here is another simple example of printing a C version of a SymPy expression::
 
     >>> expr = (Rational(-1, 2) * Z * k * (e**2) / r)
     >>> expr
@@ -295,12 +289,12 @@ For example::
     >>> [arg.result_var for arg in routine.results]   # doctest: +SKIP
     [result₅₁₄₂₃₄₁₆₈₁₃₉₇₇₁₉₄₂₈]
     >>> [arg.expr for arg in routine.results]
-    ⎡                ___________                                           ⎤
-    ⎢          y    ╱ (-y + 2)!   -2⋅x                                     ⎥
-    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ───────── ⋅ℯ    ⋅assoc_laguerre(-y + 2, 2⋅y + 1, 4⋅x)⎥
-    ⎢            ╲╱    (y + 3)!                                            ⎥
-    ⎢──────────────────────────────────────────────────────────────────────⎥
-    ⎣                                  3                                   ⎦
+    ⎡                __________                                          ⎤
+    ⎢          y    ╱ (2 - y)!   -2⋅x                                    ⎥
+    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ──────── ⋅ℯ    ⋅assoc_laguerre(2 - y, 2⋅y + 1, 4⋅x)⎥
+    ⎢            ╲╱   (y + 3)!                                           ⎥
+    ⎢────────────────────────────────────────────────────────────────────⎥
+    ⎣                                 3                                  ⎦
     >>> [arg.name for arg in routine.arguments]
     [x, y]
 
@@ -492,7 +486,7 @@ implies 'Universal functions' and follows an ideology set by NumPy. The main
 point of ufuncify as compared to autowrap is that it allows arrays as arguments
 and can operate in an element-by-element fashion. The core operation done
 element-wise is in accordance to Numpy's array broadcasting rules. See `this
-<http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_ for more.
+<https://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_ for more.
 
     >>> from sympy import *
     >>> from sympy.abc import x
@@ -504,16 +498,16 @@ element-wise is in accordance to Numpy's array broadcasting rules. See `this
 This function ``f`` consumes and returns a NumPy array. Generally ``ufuncify``
 performs at least as well as ``lambdify``. If the expression is complicated
 then ``ufuncify`` often significantly outperforms the NumPy backed solution.
-Jensen has a good `blog post <http://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/>`_ on this topic.
+Jensen has a good `blog post <https://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/>`_ on this topic.
 
 Let us see an example for some quantitative analysis::
 
     >>> from sympy.physics.hydrogen import R_nl
     >>> expr = R_nl(3, 1, x, 6)
     >>> expr
-                    -2⋅x
-    8⋅x⋅(-4⋅x + 4)⋅ℯ
-    ────────────────────
+                   -2⋅x
+    8⋅x⋅(4 - 4⋅x)⋅ℯ
+    ───────────────────
              3
 
 The lambdify function translates SymPy expressions into Python functions,

@@ -1,8 +1,15 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
-from sympy.functions import (Piecewise, sqrt, ceiling, exp, sin, cos, LambertW,
-                             sinc, Max, Min, arg, im, re)
+from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
+                             chebyshevt, conjugate, DiracDelta, exp, expint,
+                             factorial, floor, harmonic, Heaviside, im,
+                             laguerre, LambertW, log, Max, Min, Piecewise,
+                             polylog, re, RisingFactorial, sign, sinc, sqrt,
+                             zeta)
+from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
+                             atan, asec, acsc, sinh, cosh, tanh, coth, csch,
+                             sech, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -10,7 +17,12 @@ from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
 from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
                                             besselk, hankel1, hankel2, airyai,
                                             airybi, airyaiprime, airybiprime)
-from sympy.functions.special.gamma_functions import (lowergamma, uppergamma)
+from sympy.functions.special.gamma_functions import (gamma, lowergamma,
+                                                     uppergamma, loggamma,
+                                                     polygamma)
+from sympy.functions.special.error_functions import (Chi, Ci, erf, erfc, erfi,
+                                                     erfcinv, erfinv, fresnelc,
+                                                     fresnels, li, Shi, Si)
 from sympy.utilities.pytest import XFAIL
 from sympy.core.compatibility import range
 
@@ -36,11 +48,44 @@ def test_Rational():
 
 def test_Function():
     assert mcode(sin(x) ** cos(x)) == "sin(x).^cos(x)"
+    assert mcode(sign(x)) == "sign(x)"
+    assert mcode(exp(x)) == "exp(x)"
+    assert mcode(log(x)) == "log(x)"
+    assert mcode(factorial(x)) == "factorial(x)"
+    assert mcode(floor(x)) == "floor(x)"
+    assert mcode(atan2(y, x)) == "atan2(y, x)"
+    assert mcode(beta(x, y)) == 'beta(x, y)'
+    assert mcode(polylog(x, y)) == 'polylog(x, y)'
+    assert mcode(harmonic(x)) == 'harmonic(x)'
+    assert mcode(bernoulli(x)) == "bernoulli(x)"
+    assert mcode(bernoulli(x, y)) == "bernoulli(x, y)"
+
+
+def test_Function_change_name():
     assert mcode(abs(x)) == "abs(x)"
     assert mcode(ceiling(x)) == "ceil(x)"
     assert mcode(arg(x)) == "angle(x)"
     assert mcode(im(x)) == "imag(x)"
     assert mcode(re(x)) == "real(x)"
+    assert mcode(conjugate(x)) == "conj(x)"
+    assert mcode(chebyshevt(y, x)) == "chebyshevT(y, x)"
+    assert mcode(chebyshevu(y, x)) == "chebyshevU(y, x)"
+    assert mcode(laguerre(x, y)) == "laguerreL(x, y)"
+    assert mcode(Chi(x)) == "coshint(x)"
+    assert mcode(Shi(x)) ==  "sinhint(x)"
+    assert mcode(Ci(x)) == "cosint(x)"
+    assert mcode(Si(x)) ==  "sinint(x)"
+    assert mcode(li(x)) ==  "logint(x)"
+    assert mcode(loggamma(x)) ==  "gammaln(x)"
+    assert mcode(polygamma(x, y)) == "psi(x, y)"
+    assert mcode(RisingFactorial(x, y)) == "pochhammer(x, y)"
+    assert mcode(DiracDelta(x)) == "dirac(x)"
+    assert mcode(DiracDelta(x, 3)) == "dirac(3, x)"
+    assert mcode(Heaviside(x)) == "heaviside(x)"
+    assert mcode(Heaviside(x, y)) == "heaviside(x, y)"
+
+
+def test_minmax():
     assert mcode(Max(x, y) + Min(x, y)) == "max(x, y) + min(x, y)"
     assert mcode(Max(x, y, z)) == "max(x, max(y, z))"
     assert mcode(Min(x, y, z)) == "min(x, min(y, z))"
@@ -148,6 +193,13 @@ def test_boolean():
     assert mcode(x | y | z) == "x | y | z"
     assert mcode((x & y) | z) == "z | x & y"
     assert mcode((x | y) & z) == "z & (x | y)"
+
+
+def test_KroneckerDelta():
+    from sympy.functions import KroneckerDelta
+    assert mcode(KroneckerDelta(x, y)) == "double(x == y)"
+    assert mcode(KroneckerDelta(x, y + 1)) == "double(x == (y + 1))"
+    assert mcode(KroneckerDelta(2**x, y)) == "double((2.^x) == y)"
 
 
 def test_Matrices():
@@ -322,6 +374,29 @@ def test_octave_not_supported():
     )
 
 
+def test_octave_not_supported_not_on_whitelist():
+    from sympy import assoc_laguerre
+    assert mcode(assoc_laguerre(x, y, z)) == (
+        "% Not supported in Octave:\n"
+        "% assoc_laguerre\n"
+        "assoc_laguerre(x, y, z)"
+    )
+
+
+def test_octave_expint():
+    assert mcode(expint(1, x)) == "expint(x)"
+    assert mcode(expint(2, x)) == (
+        "% Not supported in Octave:\n"
+        "% expint\n"
+        "expint(2, x)"
+    )
+    assert mcode(expint(y, x)) == (
+        "% Not supported in Octave:\n"
+        "% expint\n"
+        "expint(y, x)"
+    )
+
+
 def test_trick_indent_with_end_else_words():
     # words starting with "end" or "else" do not confuse the indenter
     t1 = S('endless');
@@ -369,10 +444,19 @@ def test_sinc():
     assert mcode(sinc(pi*(x + 3))) == 'sinc(x + 3)'
 
 
+def test_trigfun():
+    for f in (sin, cos, tan, cot, sec, csc, asin, acos, acot, atan, asec, acsc,
+              sinh, cosh, tanh, coth, csch, sech, asinh, acosh, atanh, acoth,
+              asech, acsch):
+        assert octave_code(f(x) == f.__name__ + '(x)')
+
+
 def test_specfun():
     n = Symbol('n')
     for f in [besselj, bessely, besseli, besselk]:
         assert octave_code(f(n, x)) == f.__name__ + '(n, x)'
+    for f in (erfc, erfi, erf, erfinv, erfcinv, fresnelc, fresnels, gamma):
+        assert octave_code(f(x)) == f.__name__ + '(x)'
     assert octave_code(hankel1(n, x)) == 'besselh(n, 1, x)'
     assert octave_code(hankel2(n, x)) == 'besselh(n, 2, x)'
     assert octave_code(airyai(x)) == 'airy(0, x)'
@@ -397,4 +481,9 @@ def test_MatrixElement_printing():
     assert mcode(3 * A[0, 0]) == "3*A(1, 1)"
 
     F = C[0, 0].subs(C, A - B)
-    assert mcode(F) == "(-B + A)(1, 1)"
+    assert mcode(F) == "(A - B)(1, 1)"
+
+
+def test_zeta_printing_issue_14820():
+    assert octave_code(zeta(x)) == 'zeta(x)'
+    assert octave_code(zeta(x, y)) == '% Not supported in Octave:\n% zeta\nzeta(x, y)'

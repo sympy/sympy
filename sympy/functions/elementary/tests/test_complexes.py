@@ -3,8 +3,9 @@ from sympy import (
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
     Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
-    ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda)
+    ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda, Derivative)
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.core.expr import unchanged
 
 
 def N_equals(a, b):
@@ -32,7 +33,7 @@ def test_re():
     assert re(E) == E
     assert re(-E) == -E
 
-    assert re(x) == re(x)
+    assert unchanged(re, x)
     assert re(x*I) == -im(x)
     assert re(r*I) == 0
     assert re(r) == r
@@ -128,7 +129,7 @@ def test_im():
     assert im(E*I) == E
     assert im(-E*I) == -E
 
-    assert im(x) == im(x)
+    assert unchanged(im, x)
     assert im(x*I) == re(x)
     assert im(r*I) == r
     assert im(r) == 0
@@ -892,3 +893,24 @@ def test_issue_14238():
     # doesn't cause recursion error
     r = Symbol('r', real=True)
     assert Abs(r + Piecewise((0, r > 0), (1 - r, True)))
+
+def test_zero_assumptions():
+    nr = Symbol('nonreal', real=False)
+    ni = Symbol('nonimaginary', imaginary=False)
+    # imaginary implies not zero
+    nzni = Symbol('nonzerononimaginary', zero=False, imaginary=False)
+
+    assert re(nr).is_zero is None
+    assert im(nr).is_zero is False
+
+    assert re(ni).is_zero is None
+    assert im(ni).is_zero is None
+
+    assert re(nzni).is_zero is False
+    assert im(nzni).is_zero is None
+
+def test_issue_15893():
+    f = Function('f', real=True)
+    x = Symbol('x', real=True)
+    eq = Derivative(Abs(f(x)), f(x))
+    assert eq.doit() == sign(f(x))

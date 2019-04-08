@@ -1,10 +1,10 @@
-from sympy import (S, Symbol, symbols, factorial, factorial2, binomial,
+from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func, Product, Mul, Piecewise, Mod,
                    Eq, sqrt, Poly)
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, slow
 
 #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
 
@@ -60,6 +60,13 @@ def test_rf_eval_apply():
     assert rf(x, k).rewrite(binomial) == factorial(k)*binomial(x + k - 1, k)
     assert rf(n, k).rewrite(factorial) == \
         factorial(n + k - 1) / factorial(n - 1)
+
+    import random
+    from mpmath import rf as mpmath_rf
+    for i in range(100):
+        x = -500 + 500 * random.random()
+        k = -500 + 500 * random.random()
+        assert (abs(mpmath_rf(x, k) - rf(x, k)) < 10**(-15))
 
 
 def test_ff_eval_apply():
@@ -118,6 +125,36 @@ def test_ff_eval_apply():
     assert ff(x, k).rewrite(gamma) == (-1)**k*gamma(k - x) / gamma(-x)
     assert ff(n, k).rewrite(factorial) == factorial(n) / factorial(n - k)
     assert ff(x, k).rewrite(binomial) == factorial(k) * binomial(x, k)
+
+    import random
+    from mpmath import ff as mpmath_ff
+    for i in range(100):
+        x = -500 + 500 * random.random()
+        k = -500 + 500 * random.random()
+        assert (abs(mpmath_ff(x, k) - ff(x, k)) < 10**(-15))
+
+
+def test_rf_ff_eval_hiprec():
+    maple = Float('6.9109401292234329956525265438452')
+    us = ff(18, S(2)/3).evalf(32)
+    assert abs(us - maple)/us < 1e-31
+
+    maple = Float('6.8261540131125511557924466355367')
+    us = rf(18, S(2)/3).evalf(32)
+    assert abs(us - maple)/us < 1e-31
+
+    maple = Float('34.007346127440197150854651814225')
+    us = rf(Float('4.4', 32), Float('2.2', 32));
+    assert abs(us - maple)/us < 1e-31
+
+
+def test_rf_lambdify_mpmath():
+    from sympy import lambdify
+    x, y = symbols('x,y')
+    f = lambdify((x,y), rf(x, y), 'mpmath')
+    maple = Float('34.007346127440197')
+    us = f(4.4, 2.2)
+    assert abs(us - maple)/us < 1e-15
 
 
 def test_factorial():
@@ -284,7 +321,7 @@ def test_factorial2_rewrite():
         2**(n/2)*Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2)/sqrt(pi), Eq(Mod(n, 2), 1)))*gamma(n/2 + 1)
     assert factorial2(2*n).rewrite(gamma) == 2**n*gamma(n + 1)
     assert factorial2(2*n + 1).rewrite(gamma) == \
-        sqrt(2)*2**(n + 1/2)*gamma(n + 3/2)/sqrt(pi)
+        sqrt(2)*2**(n + S(1)/2)*gamma(n + S(3)/2)/sqrt(pi)
 
 
 def test_binomial():
@@ -397,6 +434,7 @@ def test_binomial():
     assert isinstance(binomial(I, n), binomial)
 
 
+@slow
 def test_binomial_Mod():
     p, q = 10**5 + 3, 10**9 + 33 # prime modulo
     r, s = 10**7 + 5, 33333333 # composite modulo

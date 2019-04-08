@@ -3,9 +3,7 @@ from __future__ import print_function, division
 import decimal
 import fractions
 import math
-import warnings
 import re as regex
-from collections import defaultdict
 
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError, _convert_numpy_types
@@ -17,6 +15,7 @@ from .logic import fuzzy_not
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
+from sympy.core.cache import lru_cache
 
 import mpmath
 import mpmath.libmp as mlib
@@ -148,17 +147,16 @@ def _decimal_to_Rational_prec(dec):
     return rv, prec
 
 
+_floatpat = regex.compile(r"[-+]?((\d*\.\d+)|(\d+\.?))")
 def _literal_float(f):
-    """Return True if n can be interpreted as a floating point number."""
-    pat = r"[-+]?((\d*\.\d+)|(\d+\.?))(eE[-+]?\d+)?"
-    return bool(regex.match(pat, f))
+    """Return True if n starts like a floating point number."""
+    return bool(_floatpat.match(f))
 
 # (a,b) -> gcd(a,b)
-_gcdcache = {}
 
 # TODO caching with decorator, but not to degrade performance
 
-
+@lru_cache(1024)
 def igcd(*args):
     """Computes nonnegative integer greatest common divisor.
 
@@ -178,33 +176,12 @@ def igcd(*args):
     if len(args) < 2:
         raise TypeError(
             'igcd() takes at least 2 arguments (%s given)' % len(args))
-    if 1 in args:
-        a = 1
-        k = 0
-    else:
-        a = abs(as_int(args[0]))
-        k = 1
-    if a != 1:
-        while k < len(args):
-            b = args[k]
-            k += 1
-            try:
-                a = _gcdcache[(a, b)]
-            except KeyError:
-                b = as_int(b)
-                if not b:
-                    continue
-                if b == 1:
-                    a = 1
-                    break
-                if b < 0:
-                    b = -b
-                t = a, b
-                a = igcd2(a, b)
-                _gcdcache[t] = _gcdcache[t[1], t[0]] = a
-    while k < len(args):
-        ok = as_int(args[k])
-        k += 1
+    args_temp = [abs(as_int(i)) for i in args]
+    if 1 in args_temp:
+        return 1
+    a = args_temp.pop()
+    for b in args_temp:
+        a = igcd2(a, b) if b else a
     return a
 
 
@@ -567,7 +544,6 @@ class Number(AtomicExpr):
 
     def __divmod__(self, other):
         from .containers import Tuple
-        from sympy.functions.elementary.complexes import sign
 
         try:
             other = Number(other)
@@ -580,7 +556,7 @@ class Number(AtomicExpr):
             return Tuple(*divmod(self.p, other.p))
         else:
             rat = self/other
-        w = sign(rat)*int(abs(rat))  # = rat.floor()
+        w = int(rat) if rat > 0 else int(rat) - 1
         r = self - other*w
         return Tuple(w, r)
 
@@ -830,10 +806,10 @@ class Float(Number):
     100.0
 
     Float can automatically count significant figures if a null string
-    is sent for the precision; space are also allowed in the string. (Auto-
+    is sent for the precision; spaces or underscores are also allowed. (Auto-
     counting is only allowed for strings, ints and longs).
 
-    >>> Float('123 456 789 . 123 456', '')
+    >>> Float('123 456 789.123_456', '')
     123456789.123456
     >>> Float('12e-3', '')
     0.012
@@ -967,7 +943,16 @@ class Float(Number):
                              'Supply only one. ')
 
         if isinstance(num, string_types):
+            # Float already accepts spaces as digit separators; in Py 3.6
+            # underscores are allowed. In anticipation of that, we ignore
+            # legally placed underscores
             num = num.replace(' ', '')
+            if '_' in num:
+                if num.startswith('_') or num.endswith('_') or any(
+                        i in num for i in ('__', '_.', '._')):
+                    # copy Py 3.6 error
+                    raise ValueError("could not convert string to float: '%s'" % num)
+                num = num.replace('_', '')
             if num.startswith('.') and len(num) > 1:
                 num = '0' + num
             elif num.startswith('-.') and len(num) > 2:
@@ -1904,65 +1889,6 @@ class Rational(Number):
         return self, S.Zero
 
 
-# int -> Integer
-_intcache = {}
-
-
-# TODO move this tracing facility to sympy/core/trace.py  ?
-def _intcache_printinfo():
-    ints = sorted(_intcache.keys())
-    nhit = _intcache_hits
-    nmiss = _intcache_misses
-
-    if nhit == 0 and nmiss == 0:
-        print()
-        print('Integer cache statistic was not collected')
-        return
-
-    miss_ratio = float(nmiss) / (nhit + nmiss)
-
-    print()
-    print('Integer cache statistic')
-    print('-----------------------')
-    print()
-    print('#items: %i' % len(ints))
-    print()
-    print(' #hit   #miss               #total')
-    print()
-    print('%5i   %5i (%7.5f %%)   %5i' % (
-        nhit, nmiss, miss_ratio*100, nhit + nmiss)
-    )
-    print()
-    print(ints)
-
-_intcache_hits = 0
-_intcache_misses = 0
-
-
-def int_trace(f):
-    import os
-    if os.getenv('SYMPY_TRACE_INT', 'no').lower() != 'yes':
-        return f
-
-    def Integer_tracer(cls, i):
-        global _intcache_hits, _intcache_misses
-
-        try:
-            _intcache_hits += 1
-            return _intcache[i]
-        except KeyError:
-            _intcache_hits -= 1
-            _intcache_misses += 1
-
-            return f(cls, i)
-
-    # also we want to hook our _intcache_printinfo into sys.atexit
-    import atexit
-    atexit.register(_intcache_printinfo)
-
-    return Integer_tracer
-
-
 class Integer(Rational):
     """Represents integer numbers of any size.
 
@@ -2004,8 +1930,7 @@ class Integer(Rational):
     def _mpmath_(self, prec, rnd):
         return mpmath.make_mpf(self._as_mpf_val(prec))
 
-    # TODO caching with decorator, but not to degrade performance
-    @int_trace
+    @cacheit
     def __new__(cls, i):
         if isinstance(i, string_types):
             i = i.replace(' ', '')
@@ -2020,16 +1945,17 @@ class Integer(Rational):
         except TypeError:
             raise TypeError(
                 "Argument of Integer should be of numeric type, got %s." % i)
-        try:
-            return _intcache[ival]
-        except KeyError:
-            # We only work with well-behaved integer types. This converts, for
-            # example, numpy.int32 instances.
-            obj = Expr.__new__(cls)
-            obj.p = ival
-
-            _intcache[ival] = obj
-            return obj
+        # We only work with well-behaved integer types. This converts, for
+        # example, numpy.int32 instances.
+        if ival == 1:
+            return S.One
+        if ival == -1:
+            return S.NegativeOne
+        if ival == 0:
+            return S.Zero
+        obj = Expr.__new__(cls)
+        obj.p = ival
+        return obj
 
     def __getnewargs__(self):
         return (self.p,)
@@ -2455,7 +2381,7 @@ class AlgebraicNumber(Expr):
 
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         from sympy.polys import CRootOf, minpoly
 
         for r in [r for r in self.minpoly.all_roots() if r.func != CRootOf]:
@@ -2503,7 +2429,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Zero
+    .. [1] https://en.wikipedia.org/wiki/Zero
     """
 
     p = 0
@@ -2568,7 +2494,7 @@ class One(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/1_%28number%29
+    .. [1] https://en.wikipedia.org/wiki/1_%28number%29
     """
     is_number = True
 
@@ -2620,7 +2546,7 @@ class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/%E2%88%921_%28number%29
+    .. [1] https://en.wikipedia.org/wiki/%E2%88%921_%28number%29
 
     """
     is_number = True
@@ -2676,7 +2602,7 @@ class Half(with_metaclass(Singleton, RationalConstant)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/One_half
+    .. [1] https://en.wikipedia.org/wiki/One_half
     """
     is_number = True
 
@@ -2725,7 +2651,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Infinity
+    .. [1] https://en.wikipedia.org/wiki/Infinity
     """
 
     is_commutative = True
@@ -3201,7 +3127,7 @@ class NaN(with_metaclass(Singleton, Number)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/NaN
+    .. [1] https://en.wikipedia.org/wiki/NaN
 
     """
     is_commutative = True
@@ -3224,7 +3150,7 @@ class NaN(with_metaclass(Singleton, Number)):
         return AtomicExpr.__new__(cls)
 
     def _latex(self, printer):
-        return r"\mathrm{NaN}"
+        return r"\text{NaN}"
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -3439,7 +3365,7 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/E_%28mathematical_constant%29
+    .. [1] https://en.wikipedia.org/wiki/E_%28mathematical_constant%29
     """
 
     is_real = True
@@ -3475,12 +3401,12 @@ class Exp1(with_metaclass(Singleton, NumberSymbol)):
         from sympy import exp
         return exp(expt)
 
-    def _eval_rewrite_as_sin(self):
+    def _eval_rewrite_as_sin(self, **kwargs):
         from sympy import sin
         I = S.ImaginaryUnit
         return sin(I + S.Pi/2) - I*sin(I)
 
-    def _eval_rewrite_as_cos(self):
+    def _eval_rewrite_as_cos(self, **kwargs):
         from sympy import cos
         I = S.ImaginaryUnit
         return cos(I) + I*cos(I + S.Pi/2)
@@ -3521,7 +3447,7 @@ class Pi(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Pi
+    .. [1] https://en.wikipedia.org/wiki/Pi
     """
 
     is_real = True
@@ -3582,7 +3508,7 @@ class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Golden_ratio
+    .. [1] https://en.wikipedia.org/wiki/Golden_ratio
     """
 
     is_real = True
@@ -3645,7 +3571,7 @@ class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
     >>> S.TribonacciConstant > 1
     True
     >>> S.TribonacciConstant.expand(func=True)
-    1/3 + (-3*sqrt(33) + 19)**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
+    1/3 + (19 - 3*sqrt(33))**(1/3)/3 + (3*sqrt(33) + 19)**(1/3)/3
     >>> S.TribonacciConstant.is_irrational
     True
     >>> S.TribonacciConstant.n(20)
@@ -3668,7 +3594,7 @@ class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
     __slots__ = []
 
     def _latex(self, printer):
-        return r"\mathrm{TribonacciConstant}"
+        return r"\text{TribonacciConstant}"
 
     def __int__(self):
         return 2
@@ -3716,7 +3642,7 @@ class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
+    .. [1] https://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
     """
 
     is_real = True
@@ -3772,7 +3698,7 @@ class Catalan(with_metaclass(Singleton, NumberSymbol)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Catalan%27s_constant
+    .. [1] https://en.wikipedia.org/wiki/Catalan%27s_constant
     """
 
     is_real = True
@@ -3823,7 +3749,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Imaginary_unit
+    .. [1] https://en.wikipedia.org/wiki/Imaginary_unit
     """
 
     is_commutative = True
@@ -3836,7 +3762,7 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     __slots__ = []
 
     def _latex(self, printer):
-        return r"i"
+        return printer._settings['imaginary_unit_latex']
 
     @staticmethod
     def __abs__():
@@ -3870,7 +3796,6 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
                 if expt == 2:
                     return -S.One
                 return -S.ImaginaryUnit
-            return (S.NegativeOne)**(expt*S.Half)
         return
 
     def as_base_exp(self):
@@ -3930,10 +3855,6 @@ def sympify_complex(a):
     return real + S.ImaginaryUnit*imag
 
 converter[complex] = sympify_complex
-
-_intcache[0] = S.Zero
-_intcache[1] = S.One
-_intcache[-1] = S.NegativeOne
 
 from .power import Pow, integer_nthroot
 from .mul import Mul

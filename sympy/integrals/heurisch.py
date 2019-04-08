@@ -57,7 +57,7 @@ def components(f, x):
     result = set()
 
     if x in f.free_symbols:
-        if f.is_Symbol:
+        if f.is_symbol and f.is_commutative:
             result.add(f)
         elif f.is_Function or f.is_Derivative:
             for g in f.args:
@@ -450,7 +450,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     rev_mapping = {v: k for k, v in mapping}                            #
     if mappings is None:                                                #
         # optimizing the number of permutations of mapping              #
-        assert mapping[-1][0] == x  # if not, find it and correct this comment
+        assert mapping[-1][0] == x # if not, find it and correct this comment
         unnecessary_permutations = [mapping.pop(-1)]
         mappings = permutations(mapping)
     else:
@@ -488,8 +488,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             if _derivation(p) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
                 return _deflation(c)*gcd(q, q.diff(y)).as_expr()
-        else:
-            return p
+
+        return p
 
     def _splitter(p):
         for y in V:
@@ -512,8 +512,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 q_split = _splitter(cancel(q / s))
 
                 return (c_split[0]*q_split[0]*s, c_split[1]*q_split[1])
-        else:
-            return (S.One, p)
+
+        return (S.One, p)
 
     special = {}
 

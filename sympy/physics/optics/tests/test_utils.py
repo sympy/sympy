@@ -1,8 +1,7 @@
-from __future__ import division
-
-from sympy.physics.optics.utils import (refraction_angle, deviation,
-    brewster_angle, lens_makers_formula, mirror_formula, lens_formula,
-    hyperfocal_distance, transverse_magnification)
+from sympy.physics.optics.utils import (refraction_angle, fresnel_coefficients,
+        deviation, brewster_angle, critical_angle, lens_makers_formula,
+        mirror_formula, lens_formula, hyperfocal_distance,
+        transverse_magnification)
 from sympy.physics.optics.medium import Medium
 from sympy.physics.units import e0
 
@@ -10,6 +9,10 @@ from sympy import symbols, sqrt, Matrix, oo
 from sympy.geometry.point import Point3D
 from sympy.geometry.line import Ray3D
 from sympy.geometry.plane import Plane
+
+from sympy.core import S
+
+from sympy.utilities.pytest import raises
 
 
 def test_refraction_angle():
@@ -52,7 +55,7 @@ def test_refraction_angle():
     assert refraction_angle(r1, 1, 1, plane=P) == \
         Ray3D(Point3D(0, 0, 0), Point3D(1, 1, -1))
     assert refraction_angle(r1, m1, 1.33, plane=P) == \
-        Ray3D(Point3D(0, 0, 0), Point3D(100/133, 100/133, -789378201649271*sqrt(3)/1000000000000000))
+        Ray3D(Point3D(0, 0, 0), Point3D(S(100)/133, S(100)/133, -789378201649271*sqrt(3)/1000000000000000))
     assert refraction_angle(r1, 1, m2, plane=P) == \
         Ray3D(Point3D(0, 0, 0), Point3D(1, 1, -1))
     assert refraction_angle(r1, n1, n2, plane=P) == \
@@ -60,12 +63,28 @@ def test_refraction_angle():
     assert refraction_angle(r1, 1.33, 1, plane=P) == 0  # TIR
     assert refraction_angle(r1, 1, 1, normal_ray) == \
         Ray3D(Point3D(0, 0, 0), direction_ratio=[1, 1, -1])
+    raises(ValueError, lambda: refraction_angle(r1, m1, m2, normal_ray, P))
+    raises(TypeError, lambda: refraction_angle(m1, m1, m2)) # can add other values for arg[0]
+    raises(TypeError, lambda: refraction_angle(r1, m1, m2, None, i))
+    raises(TypeError, lambda: refraction_angle(r1, m1, m2, m2))
+
+
+def test_fresnel_coefficients():
+    assert list(round(i, 5) for i in fresnel_coefficients(0.5, 1, 1.33)) == \
+        [0.11163, -0.17138, 0.83581, 0.82862]
+    assert list(round(i, 5) for i in fresnel_coefficients(0.5, 1.33, 1)) == \
+            [-0.07726, 0.20482, 1.22724, 1.20482]
+    m1 = Medium('m1')
+    m2 = Medium('m2', n=2)
+    assert list(round(i, 5) for i in fresnel_coefficients(0.3, m1, m2)) == \
+        [0.31784, -0.34865, 0.65892, 0.65135]
+    assert list(list(round(j, 5) for j in i.as_real_imag()) for i in \
+            fresnel_coefficients(0.6, m2, m1)) == \
+        [[-0.23563, -0.97184], [0.81648, -0.57738]]
 
 
 def test_deviation():
     n1, n2 = symbols('n1, n2')
-    m1 = Medium('m1')
-    m2 = Medium('m2')
     r1 = Ray3D(Point3D(-1, -1, 1), Point3D(0, 0, 0))
     n = Matrix([0, 0, 1])
     i = Matrix([-1, -1, -1])
@@ -81,9 +100,19 @@ def test_deviation():
 
 
 def test_brewster_angle():
+    m1 = Medium('m1', n=1)
+    m2 = Medium('m2', n=1.33)
+    assert round(brewster_angle(m1, m2), 2) == 0.93
     m1 = Medium('m1', permittivity=e0, n=1)
     m2 = Medium('m2', permittivity=e0, n=1.33)
     assert round(brewster_angle(m1, m2), 2) == 0.93
+    assert round(brewster_angle(1, 1.33), 2) == 0.93
+
+
+def test_critical_angle():
+    m1 = Medium('m1', n=1)
+    m2 = Medium('m2', n=1.33)
+    assert round(critical_angle(m2, m1), 2) == 0.85
 
 
 def test_lens_makers_formula():
@@ -102,6 +131,15 @@ def test_mirror_formula():
     assert mirror_formula(u=u, v=v) == u*v/(u + v)
     assert mirror_formula(u=oo, v=v) == v
     assert mirror_formula(u=oo, v=oo) == oo
+    assert mirror_formula(focal_length=oo, u=u) == -u
+    assert mirror_formula(u=u, v=oo) == u
+    assert mirror_formula(focal_length=oo, v=oo) == oo
+    assert mirror_formula(focal_length=f, v=oo) == f
+    assert mirror_formula(focal_length=oo, v=v) == -v
+    assert mirror_formula(focal_length=oo, u=oo) == oo
+    assert mirror_formula(focal_length=f, u=oo) == f
+    assert mirror_formula(focal_length=oo, u=u) == -u
+    raises(ValueError, lambda: mirror_formula(focal_length=f, u=u, v=v))
 
 
 def test_lens_formula():
@@ -111,6 +149,15 @@ def test_lens_formula():
     assert lens_formula(u=u, v=v) == u*v/(u - v)
     assert lens_formula(u=oo, v=v) == v
     assert lens_formula(u=oo, v=oo) == oo
+    assert lens_formula(focal_length=oo, u=u) == u
+    assert lens_formula(u=u, v=oo) == -u
+    assert lens_formula(focal_length=oo, v=oo) == -oo
+    assert lens_formula(focal_length=oo, v=v) == v
+    assert lens_formula(focal_length=f, v=oo) == -f
+    assert lens_formula(focal_length=oo, u=oo) == oo
+    assert lens_formula(focal_length=oo, u=u) == u
+    assert lens_formula(focal_length=f, u=oo) == f
+    raises(ValueError, lambda: lens_formula(focal_length=f, u=u, v=v))
 
 def test_hyperfocal_distance():
     f, N, c = symbols('f, N, c')

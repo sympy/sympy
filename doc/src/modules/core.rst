@@ -15,7 +15,7 @@ assumptions
 .. automodule:: sympy.core.assumptions
 
 cache
--------
+-----
 .. module:: sympy.core.cache
 
 cacheit

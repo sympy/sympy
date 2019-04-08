@@ -377,4 +377,4 @@ def test_MatrixElement_printing():
     assert(julia_code(3 * A[0, 0]) == "3*A[1,1]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(julia_code(F) == "(-B + A)[1,1]")
+    assert(julia_code(F) == "(A - B)[1,1]")

@@ -1,5 +1,4 @@
 import itertools as it
-import warnings
 
 from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
@@ -14,7 +13,7 @@ from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.special.delta_functions import Heaviside
 
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.pytest import raises, skip
+from sympy.utilities.pytest import raises, skip, warns
 from sympy.external import import_module
 
 def test_Min():
@@ -86,7 +85,8 @@ def test_Min():
     assert Min(p, p_).func is Min
 
     # lists
-    raises(ValueError, lambda: Min())
+    assert Min() == S.Infinity
+    assert Min(x) == x
     assert Min(x, y) == Min(y, x)
     assert Min(x, y, z) == Min(z, y, x)
     assert Min(x, Min(y, z)) == Min(z, y, x)
@@ -157,7 +157,8 @@ def test_Max():
 
     # lists
 
-    raises(ValueError, lambda: Max())
+    assert Max() == S.NegativeInfinity
+    assert Max(x) == x
     assert Max(x, y) == Max(y, x)
     assert Max(x, y, z) == Max(z, y, x)
     assert Max(x, Max(y, z)) == Max(z, y, x)
@@ -348,8 +349,7 @@ def test_issue_11463():
     # numpy.select evaluates all options before considering conditions,
     # so it raises a warning about root of negative number which does
     # not affect the outcome. This warning is suppressed here
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warns(RuntimeWarning):
         assert f(numpy.array(-1)) < -1
 
 
@@ -384,9 +384,9 @@ def test_rewrite_MaxMin_as_Piecewise():
     assert Min(x,  y, a, b).rewrite(Piecewise) ==  Piecewise((a, (a <= b) & (a <= x) & (a <= y)),
         (b, (b <= x) & (b <= y)), (x, x <= y), (y, True))
 
-    # Piecewise rewriting of Min/Max does not takes place for non-real arguments
-    assert Max(vx, vy).rewrite(Piecewise) == Max(vx, vy)
-    assert Min(va, vx, vy).rewrite(Piecewise) == Min(va, vx, vy)
+    # Piecewise rewriting of Min/Max does also takes place for not explicitly real arguments
+    assert Max(vx, vy).rewrite(Piecewise) == Piecewise((vx, vx >= vy), (vy, True))
+    assert Min(va, vx, vy).rewrite(Piecewise) == Piecewise((va, (va <= vx) & (va <= vy)), (vx, vx <= vy), (vy, True))
 
 
 def test_issue_11099():

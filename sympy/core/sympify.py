@@ -51,14 +51,16 @@ class CantSympify(object):
     pass
 
 
-def _convert_numpy_types(a):
+def _convert_numpy_types(a, **sympify_args):
     """
     Converts a numpy datatype input to an appropriate sympy type.
     """
     import numpy as np
     if not isinstance(a, np.floating):
-        func = converter[complex] if np.iscomplex(a) else sympify
-        return func(np.asscalar(a))
+        if np.iscomplex(a):
+            return converter[complex](a.item())
+        else:
+            return sympify(a.item(), **sympify_args)
     else:
         try:
             from sympy.core.numbers import Float
@@ -267,10 +269,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             return a
     except TypeError: # Type of a is unhashable
         pass
-    try:
-        cls = a.__class__
-    except AttributeError:  # a is probably an old-style class object
-        cls = type(a)
+    cls = getattr(a, "__class__", None)
+    if cls is None:
+        cls = type(a) # Probably an old-style class
     if cls in sympy_classes:
         return a
     if cls is type(None):
@@ -284,7 +285,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if type(a).__module__ == 'numpy':
         import numpy as np
         if np.isscalar(a):
-            return _convert_numpy_types(a)
+            return _convert_numpy_types(a, locals=locals,
+                convert_xor=convert_xor, strict=strict, rational=rational,
+                evaluate=evaluate)
 
     try:
         return converter[cls](a)
@@ -298,25 +301,38 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if isinstance(a, CantSympify):
         raise SympifyError(a)
 
-    try:
-        return a._sympy_()
-    except AttributeError:
-        pass
+    _sympy_ = getattr(a, "_sympy_", None)
+    if _sympy_ is not None:
+        try:
+            return a._sympy_()
+        # XXX: Catches AttributeError: 'SympyConverter' object has no
+        # attribute 'tuple'
+        # This is probably a bug somewhere but for now we catch it here.
+        except AttributeError:
+            pass
 
     if not strict:
         # Put numpy array conversion _before_ float/int, see
         # <https://github.com/sympy/sympy/issues/13924>.
-        try:
-            from ..tensor.array import Array
-            return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
-        except AttributeError:
-            pass
+        flat = getattr(a, "flat", None)
+        if flat is not None:
+            shape = getattr(a, "shape", None)
+            if shape is not None:
+                from ..tensor.array import Array
+                return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
             try:
-                return sympify(coerce(a))
-            except (TypeError, ValueError, AttributeError, SympifyError):
+                coerced = coerce(a)
+            except (TypeError, ValueError):
+                continue
+            # XXX: AttributeError only needed here for Py2
+            except AttributeError:
+                continue
+            try:
+                return sympify(coerced)
+            except SympifyError:
                 continue
 
     if strict:
@@ -402,8 +418,8 @@ def _sympify(a):
 
 
 def kernS(s):
-    """Use a hack to try keep autosimplification from joining Integer or
-    minus sign into an Add of a Mul; this modification doesn't
+    """Use a hack to try keep autosimplification from distributing a
+    a number into an Add; this modification doesn't
     prevent the 2-arg Mul from becoming an Add, however.
 
     Examples
@@ -412,48 +428,54 @@ def kernS(s):
     >>> from sympy.core.sympify import kernS
     >>> from sympy.abc import x, y, z
 
-    The 2-arg Mul allows a leading Integer to be distributed but kernS will
-    prevent that:
+    The 2-arg Mul distributes a number (or minus sign) across the terms
+    of an expression, but kernS will prevent that:
 
-    >>> 2*(x + y)
-    2*x + 2*y
+    >>> 2*(x + y), -(x + 1)
+    (2*x + 2*y, -x - 1)
     >>> kernS('2*(x + y)')
     2*(x + y)
+    >>> kernS('-(x + 1)')
+    -(x + 1)
 
     If use of the hack fails, the un-hacked string will be passed to sympify...
     and you get what you get.
 
     XXX This hack should not be necessary once issue 4596 has been resolved.
     """
-    import re
+    import string
+    from random import choice
     from sympy.core.symbol import Symbol
-
     hit = False
-    if '(' in s:
+    quoted = '"' in s or "'" in s
+    if '(' in s and not quoted:
         if s.count('(') != s.count(")"):
             raise SympifyError('unmatched left parenthesis')
 
-        kern = '_kern'
-        while kern in s:
-            kern += "_"
+        # strip all space from s
+        s = ''.join(s.split())
         olds = s
-        # digits*( -> digits*kern*(
-        s = re.sub(r'(\d+)( *\* *)\(', r'\1*%s\2(' % kern, s)
-        # negated parenthetical
-        kern2 = kern + "2"
-        while kern2 in s:
-            kern2 += "_"
-        # step 1:  -(...)  -->  kern-kern*(...)
-        target = r'%s-%s*(' % (kern, kern)
-        s = re.sub(r'- *\(', target, s)
-        # step 2: double the matching closing parenthesis
-        # kern-kern*(...)  -->  kern-kern*(...)kern2
+        # now use space to represent a symbol that
+        # will
+        # step 1. turn potential 2-arg Muls into 3-arg versions
+        # 1a. *( -> * *(
+        s = s.replace('*(', '* *(')
+        # 1b. close up exponentials
+        s = s.replace('** *', '**')
+        # 2. handle the implied multiplication of a negated
+        # parenthesized expression in two steps
+        # 2a:  -(...)  -->  -( *(...)
+        target = '-( *('
+        s = s.replace('-(', target)
+        # 2b: double the matching closing parenthesis
+        # -( *(...)  -->  -( *(...))
         i = nest = 0
+        assert target.endswith('(')  # assumption below
         while True:
             j = s.find(target, i)
             if j == -1:
                 break
-            j = s.find('(')
+            j += len(target) - 1
             for j in range(j, len(s)):
                 if s[j] == "(":
                     nest += 1
@@ -461,12 +483,14 @@ def kernS(s):
                     nest -= 1
                 if nest == 0:
                     break
-            s = s[:j] + kern2 + s[j:]
-            i = j
-        # step 3: put in the parentheses
-        # kern-kern*(...)kern2  -->  (-kern*(...))
-        s = s.replace(target, target.replace(kern, "(", 1))
-        s = s.replace(kern2, ')')
+            s = s[:j] + ")" + s[j:]
+            i = j + 2  # the first char after 2nd )
+        if ' ' in s:
+            # get a unique kern
+            kern = '_'
+            while kern in s:
+                kern += choice(string.ascii_letters + string.digits)
+            s = s.replace(' ', kern)
         hit = kern in s
 
     for i in range(2):

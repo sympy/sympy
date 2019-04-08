@@ -28,7 +28,8 @@ from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import filldedent, translate
 from sympy.utilities.iterables import uniq
-from sympy.utilities.randtest import _randrange
+from sympy.utilities.randtest import _randrange, _randint
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def AZ(s=None):
@@ -258,6 +259,55 @@ def decipher_shift(msg, key, symbols=None):
     """
     return encipher_shift(msg, -key, symbols)
 
+def encipher_rot13(msg, symbols=None):
+    """
+    Performs the ROT13 encryption on a given plaintext ``msg``.
+
+    Notes
+    =====
+
+    ROT13 is a substitution cipher which substitutes each letter
+    in the plaintext message for the letter furthest away from it
+    in the English alphabet.
+
+    Equivalently, it is just a Caeser (shift) cipher with a shift
+    key of 13 (midway point of the alphabet).
+
+    See Also
+    ========
+
+    decipher_rot13
+    """
+    return encipher_shift(msg, 13, symbols)
+
+def decipher_rot13(msg, symbols=None):
+    """
+    Performs the ROT13 decryption on a given plaintext ``msg``.
+
+    Notes
+    =====
+
+    ``decipher_rot13`` is equivalent to ``encipher_rot13`` as both
+    ``decipher_shift`` with a key of 13 and ``encipher_shift`` key with a
+    key of 13 will return the same results. Nonetheless,
+    ``decipher_rot13`` has nonetheless been explicitly defined here for
+    consistency.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_rot13, decipher_rot13
+    >>> msg = 'GONAVYBEATARMY'
+    >>> ciphertext = encipher_rot13(msg);ciphertext
+    'TBANILORNGNEZL'
+    >>> decipher_rot13(ciphertext)
+    'GONAVYBEATARMY'
+    >>> encipher_rot13(msg) == decipher_rot13(msg)
+    True
+    >>> msg == decipher_rot13(ciphertext)
+    True
+    """
+    return decipher_shift(msg, 13, symbols)
 
 ######## affine cipher examples ############
 
@@ -348,6 +398,53 @@ def decipher_affine(msg, key, symbols=None):
     """
     return encipher_affine(msg, key, symbols, _inverse=True)
 
+def encipher_atbash(msg, symbols=None):
+    r"""
+    Enciphers a given ``msg`` into its Atbash ciphertext and returns it.
+
+    Notes
+    =====
+
+    Atbash is a substitution cipher originally used to encrypt the Hebrew
+    alphabet. Atbash works on the principle of mapping each alphabet to its
+    reverse / counterpart (i.e. a would map to z, b to y etc.)
+
+    Atbash is functionally equivalent to the affine cipher with ``a = 25``
+    and ``b = 25``
+
+    See Also
+    ========
+
+    decipher_atbash
+    """
+    return encipher_affine(msg, (25,25), symbols)
+
+def decipher_atbash(msg, symbols=None):
+    r"""
+    Deciphers a given ``msg`` using Atbash cipher and returns it.
+
+    Notes
+    =====
+
+    ``decipher_atbash`` is functionally equivalent to ``encipher_atbash``.
+    However, it has still been added as a separate function to maintain
+    consistency.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_atbash, decipher_atbash
+    >>> msg = 'GONAVYBEATARMY'
+    >>> encipher_atbash(msg)
+    'TLMZEBYVZGZINB'
+    >>> decipher_atbash(msg)
+    'TLMZEBYVZGZINB'
+    >>> encipher_atbash(msg) == decipher_atbash(msg)
+    True
+    >>> msg == encipher_atbash(encipher_atbash(msg))
+    True
+    """
+    return decipher_affine(msg, (25,25), symbols)
 
 #################### substitution cipher ###########################
 
@@ -559,7 +656,7 @@ def encipher_vigenere(msg, key, symbols=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Vigenere_cipher
+    .. [1] https://en.wikipedia.org/wiki/Vigenere_cipher
     .. [2] http://web.archive.org/web/20071116100808/
        http://filebox.vt.edu/users/batman/kryptos.html
        (short URL: https://goo.gl/ijr22d)
@@ -795,8 +892,7 @@ def encipher_bifid(msg, key, symbols=None):
       long_key = list(long_key) + [x for x in A if x not in long_key]
 
     # the fractionalization
-    row_col = dict([(ch, divmod(i, N))
-        for i, ch in enumerate(long_key)])
+    row_col = {ch: divmod(i, N) for i, ch in enumerate(long_key)}
     r, c = zip(*[row_col[x] for x in msg])
     rc = r + c
     ch = {i: ch for ch, i in row_col.items()}
@@ -1215,7 +1311,15 @@ def rsa_public_key(p, q, e):
     """
     n = p*q
     if isprime(p) and isprime(q):
-        phi = totient(n)
+        if p == q:
+            SymPyDeprecationWarning(
+                feature="Using non-distinct primes for rsa_public_key",
+                useinstead="distinct primes",
+                issue=16162,
+                deprecated_since_version="1.4").warn()
+            phi = p * (p - 1)
+        else:
+            phi = (p - 1) * (q - 1)
         if gcd(e, phi) == 1:
             return n, e
     return False
@@ -1237,11 +1341,18 @@ def rsa_private_key(p, q, e):
     (15, 7)
     >>> rsa_private_key(p, q, 30)
     False
-
     """
     n = p*q
     if isprime(p) and isprime(q):
-        phi = totient(n)
+        if p == q:
+            SymPyDeprecationWarning(
+                feature="Using non-distinct primes for rsa_public_key",
+                useinstead="distinct primes",
+                issue=16162,
+                deprecated_since_version="1.4").warn()
+            phi = p * (p - 1)
+        else:
+            phi = (p - 1) * (q - 1)
         if gcd(e, phi) == 1:
             d = mod_inverse(e, phi)
             return n, d
@@ -1433,7 +1544,7 @@ def encode_morse(msg, sep='|', mapping=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Morse_code
+    .. [1] https://en.wikipedia.org/wiki/Morse_code
 
     Examples
     ========
@@ -1481,7 +1592,7 @@ def decode_morse(msg, sep='|', mapping=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Morse_code
+    .. [1] https://en.wikipedia.org/wiki/Morse_code
 
     Examples
     ========
@@ -1707,7 +1818,6 @@ def lfsr_connection_polynomial(s):
     """
     # Initialization:
     p = s[0].mod
-    F = FF(p)
     x = Symbol("x")
     C = 1*x**0
     B = 1*x**0
@@ -2246,3 +2356,172 @@ def decipher_gm(message, key):
         m <<= 1
         m += not b
     return m
+
+################ Blum–Goldwasser cryptosystem  #########################
+
+def bg_private_key(p, q):
+    """
+    Check if p and q can be used as private keys for
+    the Blum–Goldwasser cryptosystem.
+
+    The three necessary checks for p and q to pass
+    so that they can be used as private keys:
+
+        1. p and q must both be prime
+        2. p and q must be distinct
+        3. p and q must be congruent to 3 mod 4
+
+    Parameters
+    ==========
+
+    p, q : the keys to be checked
+
+    Returns
+    =======
+
+    p, q : input values
+
+    Raises
+    ======
+
+    ValueError : if p and q do not pass the above conditions
+
+    """
+
+    if not isprime(p) or not isprime(q):
+        raise ValueError("the two arguments must be prime, "
+                         "got %i and %i" %(p, q))
+    elif p == q:
+        raise ValueError("the two arguments must be distinct, "
+                         "got two copies of %i. " %p)
+    elif (p - 3) % 4 != 0 or (q - 3) % 4 != 0:
+        raise ValueError("the two arguments must be congruent to 3 mod 4, "
+                         "got %i and %i" %(p, q))
+    return p, q
+
+def bg_public_key(p, q):
+    """
+    Calculates public keys from private keys.
+
+    The function first checks the validity of
+    private keys passed as arguments and
+    then returns their product.
+
+    Parameters
+    ==========
+
+    p, q : the private keys
+
+    Returns
+    =======
+
+    N : the public key
+    """
+    p, q = bg_private_key(p, q)
+    N = p * q
+    return N
+
+def encipher_bg(i, key, seed=None):
+    """
+    Encrypts the message using public key and seed.
+
+    ALGORITHM:
+        1. Encodes i as a string of L bits, m.
+        2. Select a random element r, where 1 < r < key, and computes
+           x = r^2 mod key.
+        3. Use BBS pseudo-random number generator to generate L random bits, b,
+        using the initial seed as x.
+        4. Encrypted message, c_i = m_i XOR b_i, 1 <= i <= L.
+        5. x_L = x^(2^L) mod key.
+        6. Return (c, x_L)
+
+    Parameters
+    ==========
+
+    i : message, a non-negative integer
+    key : the public key
+
+    Returns
+    =======
+
+    (encrypted_message, x_L) : Tuple
+
+    Raises
+    ======
+
+    ValueError : if i is negative
+    """
+
+    if i < 0:
+        raise ValueError(
+            "message must be a non-negative "
+            "integer: got %d instead" % i)
+
+    enc_msg = []
+    while i > 0:
+        enc_msg.append(i % 2)
+        i //= 2
+    enc_msg.reverse()
+    L = len(enc_msg)
+
+    r = _randint(seed)(2, key - 1)
+    x = r**2 % key
+    x_L = pow(int(x), int(2**L), int(key))
+
+    rand_bits = []
+    for k in range(L):
+        rand_bits.append(x % 2)
+        x = x**2 % key
+
+    encrypt_msg = [m ^ b for (m, b) in zip(enc_msg, rand_bits)]
+
+    return (encrypt_msg, x_L)
+
+def decipher_bg(message, key):
+    """
+    Decrypts the message using private keys.
+
+    ALGORITHM:
+        1. Let, c be the encrypted message, y the second number received,
+        and p and q be the private keys.
+        2. Compute, r_p = y^((p+1)/4 ^ L) mod p and
+        r_q = y^((q+1)/4 ^ L) mod q.
+        3. Compute x_0 = (q(q^-1 mod p)r_p + p(p^-1 mod q)r_q) mod N.
+        4. From, recompute the bits using the BBS generator, as in the
+        encryption algorithm.
+        5. Compute original message by XORing c and b.
+
+    Parameters
+    ==========
+
+    message : Tuple of encrypted message and a non-negative integer.
+    key : Tuple of private keys
+
+    Returns
+    =======
+
+    orig_msg : The original message
+    """
+
+    p, q = key
+    encrypt_msg, y = message
+    public_key = p * q
+    L = len(encrypt_msg)
+    p_t = ((p + 1)/4)**L
+    q_t = ((q + 1)/4)**L
+    r_p = pow(int(y), int(p_t), int(p))
+    r_q = pow(int(y), int(q_t), int(q))
+
+    x = (q * mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
+
+    orig_bits = []
+    for k in range(L):
+        orig_bits.append(x % 2)
+        x = x**2 % public_key
+
+    orig_msg = 0
+    for (m, b) in zip(encrypt_msg, orig_bits):
+        orig_msg = orig_msg * 2
+        orig_msg += (m ^ b)
+
+    return orig_msg

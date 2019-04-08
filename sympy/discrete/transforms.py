@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 Discrete Fourier Transform, Number Theoretic Transform,
 Walsh Hadamard Transform, Mobius Transform
@@ -21,7 +22,7 @@ from sympy.utilities.iterables import ibin
 #----------------------------------------------------------------------------#
 
 def _fourier_transform(seq, dps, inverse=False):
-    """Utility function for the Discrete Fourier Transform (DFT)"""
+    """Utility function for the Discrete Fourier Transform"""
 
     if not iterable(seq):
         raise TypeError("Expected a sequence of numeric coefficients "
@@ -71,16 +72,19 @@ def _fourier_transform(seq, dps, inverse=False):
 
 def fft(seq, dps=None):
     r"""
-    Performs the Discrete Fourier Transform (DFT) in the complex domain.
+    Performs the Discrete Fourier Transform (**DFT**) in the complex domain.
 
     The sequence is automatically padded to the right with zeros, as the
-    radix 2 FFT requires the number of sample points to be a power of 2.
+    *radix-2 FFT* requires the number of sample points to be a power of 2.
+
+    This method should be used with default arguments only for short sequences
+    as the complexity of expressions increases with the size of the sequence.
 
     Parameters
     ==========
 
     seq : iterable
-        The sequence on which DFT is to be applied.
+        The sequence on which **DFT** is to be applied.
     dps : Integer
         Specifies the number of decimal digits for precision.
 
@@ -103,11 +107,6 @@ def fft(seq, dps=None):
     [3.75, -0.5 - 0.75*I, -1.75, -0.5 + 0.75*I]
     >>> fft(_)
     [1.0, 7.0, 3.0, 4.0]
-
-    >>> fft([5])
-    [5]
-    >>> ifft([7])
-    [7]
 
     References
     ==========
@@ -133,14 +132,14 @@ ifft.__doc__ = fft.__doc__
 #----------------------------------------------------------------------------#
 
 def _number_theoretic_transform(seq, prime, inverse=False):
-    """Utility function for the Number Theoretic transform (NTT)"""
+    """Utility function for the Number Theoretic Transform"""
 
     if not iterable(seq):
         raise TypeError("Expected a sequence of integer coefficients "
                         "for Number Theoretic Transform")
 
     p = as_int(prime)
-    if isprime(p) == False:
+    if not isprime(p):
         raise ValueError("Expected prime modulus for "
                         "Number Theoretic Transform")
 
@@ -192,22 +191,21 @@ def _number_theoretic_transform(seq, prime, inverse=False):
 
 def ntt(seq, prime):
     r"""
-    Performs the Number Theoretic Transform (NTT), which specializes the
-    Discrete Fourier Transform (DFT) over quotient ring Z/pZ for prime p
-    instead of complex numbers C.
-
+    Performs the Number Theoretic Transform (**NTT**), which specializes the
+    Discrete Fourier Transform (**DFT**) over quotient ring `Z/pZ` for prime
+    `p` instead of complex numbers `C`.
 
     The sequence is automatically padded to the right with zeros, as the
-    radix 2 NTT requires the number of sample points to be a power of 2.
+    *radix-2 NTT* requires the number of sample points to be a power of 2.
 
     Parameters
     ==========
 
     seq : iterable
-        The sequence on which DFT is to be applied.
+        The sequence on which **DFT** is to be applied.
     prime : Integer
-        Prime modulus of the form (m*2**k + 1) to be used for performing
-        NTT on the sequence.
+        Prime modulus of the form `(m 2^k + 1)` to be used for performing
+        **NTT** on the sequence.
 
     Examples
     ========
@@ -227,7 +225,7 @@ def ntt(seq, prime):
 
     .. [1] http://www.apfloat.org/ntt.html
     .. [2] http://mathworld.wolfram.com/NumberTheoreticTransform.html
-    .. [3] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general)
+    .. [3] https://en.wikipedia.org/wiki/Discrete_Fourier_transform_(general%29
 
     """
 
@@ -247,7 +245,7 @@ intt.__doc__ = ntt.__doc__
 #----------------------------------------------------------------------------#
 
 def _walsh_hadamard_transform(seq, inverse=False):
-    """Utility function for the Walsh Hadamard transform (WHT)"""
+    """Utility function for the Walsh Hadamard Transform"""
 
     if not iterable(seq):
         raise TypeError("Expected a sequence of coefficients "
@@ -279,11 +277,11 @@ def _walsh_hadamard_transform(seq, inverse=False):
 
 def fwht(seq):
     r"""
-    Performs the Walsh Hadamard Transform (WHT), and uses Hadamard
+    Performs the Walsh Hadamard Transform (**WHT**), and uses Hadamard
     ordering for the sequence.
 
     The sequence is automatically padded to the right with zeros, as the
-    radix 2 FWHT requires the number of sample points to be a power of 2.
+    *radix-2 FWHT* requires the number of sample points to be a power of 2.
 
     Parameters
     ==========
@@ -324,13 +322,13 @@ ifwht.__doc__ = fwht.__doc__
 
 #----------------------------------------------------------------------------#
 #                                                                            #
-#                    Mobius Transform for Subset Lattice                     #
+#                    Möbius Transform for Subset Lattice                     #
 #                                                                            #
 #----------------------------------------------------------------------------#
 
 def _mobius_transform(seq, sgn, subset):
     r"""Utility function for performing Möbius Transform using
-    Yate's Dynamic Programming (DP)"""
+    Yate's Dynamic Programming method"""
 
     if not iterable(seq):
         raise TypeError("Expected a sequence of coefficients")
@@ -416,7 +414,7 @@ def mobius_transform(seq, subset=True):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Möbius_inversion_formula
+    .. [1] https://en.wikipedia.org/wiki/M%C3%B6bius_inversion_formula
     .. [2] https://people.csail.mit.edu/rrw/presentations/subset-conv.pdf
     .. [3] https://arxiv.org/pdf/1211.0189.pdf
 

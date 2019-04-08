@@ -4,7 +4,7 @@ from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, Float, sec, zoo)
+    binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -113,10 +113,6 @@ def test_basic5():
 
 def test_issue_3885():
     assert limit(x*y + x*z, z, 2) == x*y + 2*x
-
-def test_issue_10382():
-    n = Symbol('n', integer=True)
-    assert limit(fibonacci(n+1)/fibonacci(n), n, oo) == S.GoldenRatio
 
 
 def test_Limit():
@@ -414,7 +410,7 @@ def test_factorial():
     assert limit(f, x, oo) == oo
     assert limit(x/f, x, oo) == 0
     # see Stirling's approximation:
-    # http://en.wikipedia.org/wiki/Stirling's_approximation
+    # https://en.wikipedia.org/wiki/Stirling's_approximation
     assert limit(f/(sqrt(2*pi*x)*(x/E)**x), x, oo) == 1
     assert limit(f, x, -oo) == factorial(-oo)
     assert limit(f, x, x**2) == factorial(x**2)
@@ -484,15 +480,6 @@ def test_issue_9205():
     assert Limit(-x**2 + y, x**2, a).free_symbols == {y, a}
 
 
-def test_limit_seq():
-    assert limit(Sum(1/x, (x, 1, y)) - log(y), y, oo) == EulerGamma
-    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == S.Infinity
-    assert (limit(binomial(2*x, x) / Sum(binomial(2*y, y), (y, 1, x)), x, oo) ==
-            S(3) / 4)
-    assert (limit(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
-                  (2**x*x), x, oo) == 4)
-
-
 def test_issue_11879():
     assert simplify(limit(((x+y)**n-x**n)/y, y, 0)) == n*x**(n-1)
 
@@ -532,3 +519,24 @@ def test_issue_14456():
 
 def test_issue_14411():
     assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2)) == -oo
+
+
+def test_issue_14574():
+    assert limit(sqrt(x)*cos(x - x**2) / (x + 1), x, oo) == 0
+
+
+def test_issue_10102():
+    assert limit(fresnels(x), x, oo) == S.Half
+    assert limit(3 + fresnels(x), x, oo) == 3 + S.Half
+    assert limit(5*fresnels(x), x, oo) == 5*S.Half
+    assert limit(fresnelc(x), x, oo) == S.Half
+    assert limit(fresnels(x), x, -oo) == -S.Half
+    assert limit(4*fresnelc(x), x, -oo) == -2
+
+
+def test_issue_14377():
+    raises(NotImplementedError, lambda: limit(exp(I*x)*sin(pi*x), x, oo))
+
+
+def test_issue_15984():
+    assert limit((-x + log(exp(x) + 1))/x, x, oo, dir='-').doit() == 0

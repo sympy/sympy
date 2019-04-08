@@ -1,16 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """
 Physical quantities.
 """
 
 from __future__ import division
 
-from sympy import (Abs, Add, AtomicExpr, Basic, Derivative, Function, Mul,
+from sympy import (Abs, Add, AtomicExpr, Derivative, Function, Mul,
     Pow, S, Symbol, sympify)
 from sympy.core.compatibility import string_types
 from sympy.physics.units import Dimension, dimensions
-from sympy.physics.units.dimensions import dimsys_default, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -247,28 +244,3 @@ class Quantity(AtomicExpr):
     def free_symbols(self):
         """Return free symbols from quantity."""
         return self.scale_factor.free_symbols
-
-
-def _Quantity_constructor_postprocessor_Add(expr):
-    # Construction postprocessor for the addition,
-    # checks for dimension mismatches of the addends, thus preventing
-    # expressions like `meter + second` to be created.
-
-    deset = {
-        tuple(sorted(dimsys_default.get_dimensional_dependencies(
-            Dimension(Quantity.get_dimensional_expr(i) if not i.is_number else 1
-        )).items()))
-        for i in expr.args
-        if i.free_symbols == set()  # do not raise if there are symbols
-                    # (free symbols could contain the units corrections)
-    }
-    # If `deset` has more than one element, then some dimensions do not
-    # match in the sum:
-    if len(deset) > 1:
-        raise ValueError("summation of quantities of incompatible dimensions")
-    return expr
-
-
-Basic._constructor_postprocessor_mapping[Quantity] = {
-    "Add" : [_Quantity_constructor_postprocessor_Add],
-}

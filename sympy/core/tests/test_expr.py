@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, I,
                    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
                    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
@@ -8,11 +6,11 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
                    integrate, gammasimp)
+from sympy.core.expr import ExprBuilder
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
-from sympy.series.formal import FormalPowerSeries
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -267,6 +265,7 @@ def test_as_leading_term():
     assert (x**2).as_leading_term(x) == x**2
     assert (x + oo).as_leading_term(x) == oo
 
+    raises(ValueError, lambda: (x + 1).as_leading_term(1))
 
 def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
@@ -676,9 +675,11 @@ def test_replace():
         sin(a), lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
     # test exact
     assert (2*x).replace(a*x + b, b - a, exact=True) == 2*x
-    assert (2*x).replace(a*x + b, b - a) == 2/x
+    assert (2*x).replace(a*x + b, b - a) == 2*x
+    assert (2*x).replace(a*x + b, b - a, exact=False) == 2/x
     assert (2*x).replace(a*x + b, lambda a, b: b - a, exact=True) == 2*x
-    assert (2*x).replace(a*x + b, lambda a, b: b - a) == 2/x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a) == 2*x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a, exact=False) == 2/x
 
     g = 2*sin(x**3)
 
@@ -762,6 +763,11 @@ def test_count():
     assert expr.count(sin) == 1
     assert expr.count(sin(a)) == 1
     assert expr.count(lambda u: type(u) is sin) == 1
+
+    f = Function('f')
+    assert f(x).count(f(x)) == 1
+    assert f(x).diff(x).count(f(x)) == 1
+    assert f(x).diff(x).count(x) == 2
 
 
 def test_has_basics():
@@ -1035,6 +1041,9 @@ def test_extractions():
     assert (-2*x*y - 4*x**2*y).extract_multiplicatively(-2*y) == 2*x**2 + x
     assert (2*x*y + 4*x**2*y).extract_multiplicatively(2*y) == 2*x**2 + x
     assert (-4*y**2*x).extract_multiplicatively(-3*y) is None
+    assert (2*x).extract_multiplicatively(1) == 2*x
+    assert (-oo).extract_multiplicatively(5) == -oo
+    assert (oo).extract_multiplicatively(5) == oo
 
     assert ((x*y)**3).extract_additively(1) is None
     assert (x + 1).extract_additively(x) == 1
@@ -1466,6 +1475,8 @@ def test_as_ordered_terms():
     assert f.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
     assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
+    k = symbols('k')
+    assert k.as_ordered_terms(data=True) == ([(k, ((1.0, 0.0), (1,), ()))], [k])
 
 def test_sort_key_atomic_expr():
     from sympy.physics.units import m, s
@@ -1542,7 +1553,6 @@ def test_is_constant():
     assert f(1).is_constant
     assert checksol(x, x, f(x)) is False
 
-    p = symbols('p', positive=True)
     assert Pow(x, S(0), evaluate=False).is_constant() is True  # == 1
     assert Pow(S(0), x, evaluate=False).is_constant() is False  # == 0 or 1
     assert (2**x).is_constant() is False
@@ -1734,6 +1744,9 @@ def test_held_expression_UnevaluatedExpr():
     assert isinstance(e1, Mul)
     assert e1.args == (x, he)
     assert e1.doit() == 1
+    assert UnevaluatedExpr(Derivative(x, x)).doit(deep=False
+        ) == Derivative(x, x)
+    assert UnevaluatedExpr(Derivative(x, x)).doit() == 1
 
     xx = Mul(x, x, evaluate=False)
     assert xx != x**2
@@ -1820,3 +1833,9 @@ def test_normal():
     x = symbols('x')
     e = Mul(S.Half, 1 + x, evaluate=False)
     assert e.normal() == e
+
+
+def test_ExprBuilder():
+    eb = ExprBuilder(Mul)
+    eb.args.extend([x, x])
+    assert eb.build() == x**2

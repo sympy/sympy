@@ -1,4 +1,4 @@
-Copyright (c) 2006-2018 SymPy Development Team
+Copyright (c) 2006-2019 SymPy Development Team
 
 All rights reserved.
 
@@ -29,7 +29,7 @@ DAMAGE.
 
 --------------------------------------------------------------------------------
 
-Patches taken from the Diofant project (https://github.com/diofant/diofant)
+Patches that were taken from the Diofant project (https://github.com/diofant/diofant)
 are licensed as:
 
 Copyright (c) 2006-2017 SymPy Development Team,
@@ -45,7 +45,7 @@ modification, are permitted provided that the following conditions are met:
   b. Redistributions in binary form must reproduce the above copyright
      notice, this list of conditions and the following disclaimer in the
      documentation and/or other materials provided with the distribution.
-  c. Neither the name of Diofant, or SymPy nor the names of its contributors
+  c. Neither the name of Diofant or SymPy nor the names of its contributors
      may be used to endorse or promote products derived from this software
      without specific prior written permission.
 
@@ -64,7 +64,7 @@ DAMAGE.
 
 --------------------------------------------------------------------------------
 
-Submodule taken from the multipledispatch project (https://github.com/mrocklin/multipledispatch)
+Submodules taken from the multipledispatch project (https://github.com/mrocklin/multipledispatch)
 are licensed as:
 
 Copyright (c) 2014 Matthew Rocklin

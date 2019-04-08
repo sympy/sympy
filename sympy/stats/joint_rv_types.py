@@ -1,8 +1,10 @@
-from sympy import sympify, S, pi, sqrt, exp, Lambda, Indexed, Symbol, Gt
-from sympy.stats.rv import _value_check
-from sympy.stats.joint_rv import JointDistribution, JointPSpace
+from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
+    IndexedBase)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
+from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
+    JointDistributionHandmade, MarginalDistribution)
+from sympy.stats.rv import _value_check, random_symbols
 
 # __all__ = ['MultivariateNormal',
 # 'MultivariateLaplace',
@@ -11,12 +13,54 @@ from sympy.matrices.expressions.determinant import det
 # ]
 
 def multivariate_rv(cls, sym, *args):
-    sym = sympify(sym)
     args = list(map(sympify, args))
     dist = cls(*args)
     args = dist.args
     dist.check(*args)
     return JointPSpace(sym, dist).value
+
+def JointRV(symbol, pdf, _set=None):
+    """
+    Create a Joint Random Variable where each of its component is conitinuous,
+    given the following:
+
+    -- a symbol
+    -- a PDF in terms of indexed symbols of the symbol given
+     as the first argument
+
+    NOTE: As of now, the set for each component for a `JointRV` is
+    equal to the set of all integers, which can not be changed.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, exp, pi, Indexed, S
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv_types import JointRV
+
+    >>> x1, x2 = (Indexed('x', i) for i in (1, 2))
+    >>> pdf = exp(-x1**2/2 + x1 - x2**2/2 - S(1)/2)/(2*pi)
+
+    >>> N1 = JointRV('x', pdf) #Multivariate Normal distribution
+    >>> density(N1)(1, 2)
+    exp(-2)/(2*pi)
+    """
+    #TODO: Add support for sets provided by the user
+    symbol = sympify(symbol)
+    syms = list(i for i in pdf.free_symbols if isinstance(i, Indexed)
+        and i.base == IndexedBase(symbol))
+    syms.sort(key = lambda index: index.args[1])
+    _set = S.Reals**len(syms)
+    pdf = Lambda(syms, pdf)
+    dist = JointDistributionHandmade(pdf, _set)
+    jrv = JointPSpace(symbol, dist).value
+    rvs = random_symbols(pdf)
+    if len(rvs) != 0:
+        dist = MarginalDistribution(dist, (jrv,))
+        return JointPSpace(symbol, dist).value
+    return jrv
 
 #-------------------------------------------------------------------------------
 # Multivariate Normal distribution ---------------------------------------------------------
@@ -48,7 +92,7 @@ class MultivariateNormalDistribution(JointDistribution):
                 x))[0]
 
     def marginal_distribution(self, indices, sym):
-        sym = ImmutableMatrix([Symbol(str(Indexed(sym, i))) for i in indices])
+        sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
         _mu, _sigma = self.mu, self.sigma
         k = len(self.mu)
         for i in range(k):
@@ -129,7 +173,7 @@ def MultivariateT(syms, mu, sigma, v):
     """
     Creates a joint random variable with multivariate T-distribution.
 
-    Parameters:
+    Parameters
     ==========
 
     syms: list/tuple/set of symbols for identifying each component
@@ -137,7 +181,7 @@ def MultivariateT(syms, mu, sigma, v):
         dimensional location vector
     sigma: The shape matrix for the distribution
 
-    Returns:
+    Returns
     =======
 
     A random symbol
@@ -194,7 +238,7 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     Creates a bivariate joint random variable with multivariate Normal gamma
     distribution.
 
-    Parameters:
+    Parameters
     ==========
 
     syms: list/tuple/set of two symbols for identifying each component
@@ -203,7 +247,7 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     beta: a positive integer
     lamda: a positive integer
 
-    Returns:
+    Returns
     =======
 
     A random symbol

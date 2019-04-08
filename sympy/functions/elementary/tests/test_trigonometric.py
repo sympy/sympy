@@ -904,7 +904,9 @@ def test_atan2():
     assert atan2(y, -oo)==  2*pi*Heaviside(re(y)) - pi
 
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
-    assert atan2(y, x).rewrite(atan) == 2*atan(y/(x + sqrt(x**2 + y**2)))
+    assert atan2(0, 0).rewrite(atan) == S.NaN
+    w = Symbol('w')
+    assert atan2(0, w).rewrite(atan) == Piecewise((pi, w < 0), (0, w > 0), (S.NaN, True))
 
     ex = atan2(y, x) - arg(x + I*y)
     assert ex.subs({x:2, y:3}).rewrite(arg) == 0
@@ -1611,3 +1613,6 @@ def test_issue_14543():
     assert sec(pi/2 + x) == -csc(x)
     assert sec(3*pi/2 + x) == csc(x)
     assert sec(3*pi/2 - x) == -csc(x)
+
+def test_issue_15959():
+    assert tan(3*pi/8) == 1 + sqrt(2)

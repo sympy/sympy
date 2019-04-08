@@ -55,7 +55,7 @@ def superposition_basis(nqubits):
     """
 
     amp = 1/sqrt(2**nqubits)
-    return sum([amp*IntQubit(n, nqubits) for n in range(2**nqubits)])
+    return sum([amp*IntQubit(n, nqubits=nqubits) for n in range(2**nqubits)])
 
 
 class OracleGate(Gate):
@@ -176,7 +176,7 @@ class OracleGate(Gate):
         matrixOracle = eye(nbasis)
         # Flip the sign given the output of the oracle function
         for i in range(nbasis):
-            if self.search_function(IntQubit(i, self.nqubits)):
+            if self.search_function(IntQubit(i, nqubits=self.nqubits)):
                 matrixOracle[i, i] = NegativeOne()
         return matrixOracle
 

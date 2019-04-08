@@ -4,8 +4,8 @@ from __future__ import print_function, division
 
 from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
 from sympy.core.function import Function, Derivative, ArgumentIndexError
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import reduce, range
+from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.symbol import Dummy
 
@@ -160,7 +160,7 @@ class hyper(TupleParametersBase):
 
     >>> from sympy.abc import a
     >>> hyperexpand(hyper([-a], [], x))
-    (-x + 1)**a
+    (1 - x)**a
 
     See Also
     ========
@@ -174,7 +174,7 @@ class hyper(TupleParametersBase):
 
     .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
            Volume 1
-    .. [2] http://en.wikipedia.org/wiki/Generalized_hypergeometric_function
+    .. [2] https://en.wikipedia.org/wiki/Generalized_hypergeometric_function
     """
 
 
@@ -206,7 +206,7 @@ class hyper(TupleParametersBase):
             return gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
         return hyperexpand(self)
 
-    def _eval_rewrite_as_Sum(self, ap, bq, z):
+    def _eval_rewrite_as_Sum(self, ap, bq, z, **kwargs):
         from sympy.functions import factorial, RisingFactorial, Piecewise
         from sympy import Sum
         n = Dummy("n", integer=True)
@@ -302,7 +302,7 @@ class hyper(TupleParametersBase):
         c3 = And(re(e) >= 1, abs(z) < 1)
         return Or(c1, c2, c3)
 
-    def _eval_simplify(self, ratio, measure):
+    def _eval_simplify(self, ratio, measure, rational, inverse):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
 
@@ -437,7 +437,7 @@ class meijerg(TupleParametersBase):
 
     .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,
            Volume 1
-    .. [2] http://en.wikipedia.org/wiki/Meijer_G-function
+    .. [2] https://en.wikipedia.org/wiki/Meijer_G-function
 
     """
 
@@ -621,7 +621,6 @@ class meijerg(TupleParametersBase):
         from sympy.functions import exp_polar, ceiling
         from sympy import Expr
         import mpmath
-        z = self.argument
         znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):
             znum, branch = znum.as_coeff_mul(exp_polar)
@@ -754,7 +753,7 @@ class HyperRep(Function):
         """ An expression for F(exp_polar(2*I*pi*n + pi*I)*x), |x| > 1. """
         raise NotImplementedError
 
-    def _eval_rewrite_as_nonrep(self, *args):
+    def _eval_rewrite_as_nonrep(self, *args, **kwargs):
         from sympy import Piecewise
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
         minus = False
@@ -774,7 +773,7 @@ class HyperRep(Function):
             return small
         return Piecewise((big, abs(x) > 1), (small, True))
 
-    def _eval_rewrite_as_nonrepsmall(self, *args):
+    def _eval_rewrite_as_nonrepsmall(self, *args, **kwargs):
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
         args = self.args[:-1] + (x,)
         if not n.is_Integer:

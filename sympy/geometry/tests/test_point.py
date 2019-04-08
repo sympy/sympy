@@ -1,23 +1,12 @@
-from __future__ import division
-
 from sympy import I, Rational, Symbol, pi, sqrt
 from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.matrices import Matrix
 from sympy.utilities.iterables import subsets, permutations, cartes
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, warns
 
 import traceback
-import warnings
 import sys
-
-# make warnings show tracebacks
-def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
-    traceback.print_stack()
-    log = file if hasattr(file,'write') else sys.stderr
-    log.write(warnings.formatwarning(message, category, filename, lineno, line))
-warnings.showwarning = warn_with_traceback
-warnings.simplefilter('always', UserWarning)     # make sure to show warnings every time they occur
 
 
 def test_point():
@@ -33,6 +22,7 @@ def test_point():
     p3 = Point(0, 0)
     p4 = Point(1, 1)
     p5 = Point(0, 1)
+    line = Line(Point(1,0), slope = 1)
 
     assert p1 in p1
     assert p1 not in p2
@@ -55,6 +45,10 @@ def test_point():
     assert Point.distance(p1, p1) == 0
     assert Point.distance(p3, p2) == sqrt(p2.x**2 + p2.y**2)
 
+    # distance should be symmetric
+    assert p1.distance(line) == line.distance(p1)
+    assert p4.distance(line) == line.distance(p4)
+
     assert Point.taxicab_distance(p4, p3) == 2
 
     assert Point.canberra_distance(p4, p5) == 1
@@ -64,15 +58,14 @@ def test_point():
     p1_3 = Point(x1 + 1, x1)
     assert Point.is_collinear(p3)
 
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert Point.is_collinear(p3, Point(p3, dim=4))
-        assert len(w) == 1
     assert p3.is_collinear()
     assert Point.is_collinear(p3, p4)
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
     assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
     assert Point.is_collinear(p3, p3, p4, p5) is False
-    line = Line(Point(1,0), slope = 1)
+
     raises(TypeError, lambda: Point.is_collinear(line))
     raises(TypeError, lambda: p1_1.is_collinear(line))
 
@@ -215,7 +208,7 @@ def test_point3D():
     assert Point.are_coplanar()
     assert Point.are_coplanar((1, 2, 0), (1, 2, 0), (1, 3, 0))
     assert Point.are_coplanar((1, 2, 0), (1, 2, 3))
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         raises(ValueError, lambda: Point2D.are_coplanar((1, 2), (1, 2, 3)))
     assert Point3D.are_coplanar((1, 2, 0), (1, 2, 3))
     assert Point.are_coplanar((0, 0, 0), (1, 1, 0), (1, 1, 1), (1, 2, 1)) is False
@@ -254,13 +247,11 @@ def test_point3D():
 
     # Test __sub__
     p_4d = Point(0, 0, 0, 1)
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert p - p_4d == Point(1, 1, 1, -1)
-        assert len(w) == 1
     p_4d3d = Point(0, 0, 1, 0)
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert p - p_4d3d == Point(1, 1, 0, 0)
-        assert len(w) == 1
 
 
 def test_Point2D():
@@ -285,9 +276,8 @@ def test_issue_11617():
     p1 = Point3D(1,0,2)
     p2 = Point2D(2,0)
 
-    with warnings.catch_warnings(record=True) as w:
+    with warns(UserWarning):
         assert p1.distance(p2) == sqrt(5)
-        assert len(w) == 1
 
 
 def test_transform():

@@ -1,9 +1,8 @@
-import warnings
+from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros)
 from sympy import simplify
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot)
@@ -27,8 +26,7 @@ def test_one_dof():
     KM = KanesMethod(N, [q], [u], kd)
     # The old input format raises a deprecation warning, so catch it here so
     # it doesn't cause py.test to fail.
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         KM.kanes_equations(FL, BL)
 
     MM = KM.mass_matrix
@@ -71,8 +69,7 @@ def test_two_dof():
     KM = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kd)
     # The old input format raises a deprecation warning, so catch it here so
     # it doesn't cause py.test to fail.
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         KM.kanes_equations(FL, BL)
     MM = KM.mass_matrix
     forcing = KM.forcing
@@ -99,8 +96,7 @@ def test_pend():
     BL = [pa]
 
     KM = KanesMethod(N, [q], [u], kd)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         KM.kanes_equations(FL, BL)
     MM = KM.mass_matrix
     forcing = KM.forcing
@@ -164,8 +160,7 @@ def test_rolling_disc():
     # terms, then solve for the u dots (time derivatives of the generalized
     # speeds).
     KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         KM.kanes_equations(ForceList, BodyList)
     MM = KM.mass_matrix
     forcing = KM.forcing
@@ -222,16 +217,14 @@ def test_aux():
 
     KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3, u4, u5],
                      kd_eqs=kd)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
     fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
     frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
     KM2 = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
                       u_auxiliary=[u4, u5])
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         (fr2, frstar2) = KM2.kanes_equations(ForceList, BodyList)
     fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
     frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
@@ -295,8 +288,7 @@ def test_parallel_axis():
                  (C, N.x * F)]
 
     km = KanesMethod(N, [q1, q2], [u1, u2], kindiffs)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         (fr, frstar) = km.kanes_equations(forceList, bodyList)
     mm = km.mass_matrix_full
     assert mm[3, 3] == Iz

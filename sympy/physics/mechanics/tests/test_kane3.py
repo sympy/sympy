@@ -1,11 +1,8 @@
-import warnings
-
 from sympy.core.compatibility import range
 from sympy import evalf, symbols, pi, sin, cos, sqrt, acos, Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
                                      KanesMethod, RigidBody, Point, dot, msubs)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.pytest import slow, ON_TRAVIS, skip
+from sympy.utilities.pytest import slow, ON_TRAVIS, skip, warns_deprecated_sympy
 
 
 @slow
@@ -175,8 +172,7 @@ def test_bicycle():
             u_ind=[u2, u3, u5],
             u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,
             kd_eqs=kd)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    with warns_deprecated_sympy():
         (fr, frstar) = KM.kanes_equations(FL, BL)
 
     # This is the start of entering in the numerical values from the benchmark
@@ -258,9 +254,7 @@ def test_bicycle():
     # many rows as *total* coordinates and speeds, but only as many columns as
     # independent coordinates and speeds.
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        forcing_lin = KM.linearize()[0]
+    forcing_lin = KM.linearize()[0]
 
     # As mentioned above, the size of the linearized forcing terms is expanded
     # to include both q's and u's, so the mass matrix must have this done as

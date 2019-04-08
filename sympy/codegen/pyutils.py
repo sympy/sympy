@@ -1,5 +1,3 @@
-from itertools import chain
-from sympy.core.symbol import Dummy
 from sympy.printing.pycode import PythonCodePrinter
 
 """ This module collects utilities for rendering Python code. """

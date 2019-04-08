@@ -1,9 +1,8 @@
 from sympy.multipledispatch import dispatch
 from sympy.multipledispatch.conflict import AmbiguityWarning
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, XFAIL, warns
 from functools import partial
 
-import warnings
 test_namespace = dict()
 
 orig_dispatch = dispatch
@@ -110,18 +109,17 @@ def test_competing_ambiguous():
     test_namespace = dict()
     dispatch = partial(orig_dispatch, namespace=test_namespace)
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', category=AmbiguityWarning)
-        @dispatch(A, C)
-        def f(x, y):
-            return 2
+    @dispatch(A, C)
+    def f(x, y):
+        return 2
 
+    with warns(AmbiguityWarning):
         @dispatch(C, A)
         def f(x, y):
             return 2
 
-        assert f(A(), C()) == f(C(), A()) == 2
-        # assert raises(Warning, lambda : f(C(), C()))
+    assert f(A(), C()) == f(C(), A()) == 2
+    # assert raises(Warning, lambda : f(C(), C()))
 
 
 def test_caching_correct_behavior():

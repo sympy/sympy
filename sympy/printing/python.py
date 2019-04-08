@@ -16,8 +16,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
 
     def __init__(self, settings=None):
-        ReprPrinter.__init__(self)
-        StrPrinter.__init__(self, settings)
+        super(PythonPrinter, self).__init__(settings)
         self.symbols = []
         self.functions = []
 
@@ -81,7 +80,7 @@ def python(expr, **settings):
                     break
         result += newfunctionname + ' = Function(\'' + functionname + '\')\n'
 
-    if not len(renamings) == 0:
+    if renamings:
         exprp = expr.subs(renamings)
     result += 'e = ' + printer._str(exprp)
     return result
