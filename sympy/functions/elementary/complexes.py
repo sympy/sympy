@@ -46,7 +46,7 @@ class re(Function):
     im
     """
 
-    is_real = True
+    is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
 
     @classmethod
@@ -55,9 +55,9 @@ class re(Function):
             return S.NaN
         elif arg is S.ComplexInfinity:
             return S.NaN
-        elif arg.is_real:
+        elif arg.is_extended_real:
             return arg
-        elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
+        elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_extended_real:
             return S.Zero
         elif arg.is_Matrix:
             return arg.as_real_imag()[0]
@@ -71,9 +71,9 @@ class re(Function):
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
                 if coeff is not None:
-                    if not coeff.is_real:
+                    if not coeff.is_extended_real:
                         reverted.append(coeff)
-                elif not term.has(S.ImaginaryUnit) and term.is_real:
+                elif not term.has(S.ImaginaryUnit) and term.is_extended_real:
                     excluded.append(term)
                 else:
                     # Try to do some advanced expansion.  If
@@ -97,7 +97,7 @@ class re(Function):
         return (self, S.Zero)
 
     def _eval_derivative(self, x):
-        if x.is_real or self.args[0].is_real:
+        if x.is_extended_real or self.args[0].is_extended_real:
             return re(Derivative(self.args[0], x, evaluate=True))
         if x.is_imaginary or self.args[0].is_imaginary:
             return -S.ImaginaryUnit \
@@ -146,7 +146,7 @@ class im(Function):
     re
     """
 
-    is_real = True
+    is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
 
     @classmethod
@@ -155,9 +155,9 @@ class im(Function):
             return S.NaN
         elif arg is S.ComplexInfinity:
             return S.NaN
-        elif arg.is_real:
+        elif arg.is_extended_real:
             return S.Zero
-        elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
+        elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_extended_real:
             return -S.ImaginaryUnit * arg
         elif arg.is_Matrix:
             return arg.as_real_imag()[1]
@@ -170,11 +170,11 @@ class im(Function):
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
                 if coeff is not None:
-                    if not coeff.is_real:
+                    if not coeff.is_extended_real:
                         reverted.append(coeff)
                     else:
                         excluded.append(coeff)
-                elif term.has(S.ImaginaryUnit) or not term.is_real:
+                elif term.has(S.ImaginaryUnit) or not term.is_extended_real:
                     # Try to do some advanced expansion.  If
                     # impossible, don't try to do im(arg) again
                     # (because this is what we are trying to do now).
@@ -204,7 +204,7 @@ class im(Function):
         return (self, S.Zero)
 
     def _eval_derivative(self, x):
-        if x.is_real or self.args[0].is_real:
+        if x.is_extended_real or self.args[0].is_extended_real:
             return im(Derivative(self.args[0], x, evaluate=True))
         if x.is_imaginary or self.args[0].is_imaginary:
             return -S.ImaginaryUnit \
@@ -221,7 +221,7 @@ class im(Function):
         return self.args[0].is_algebraic
 
     def _eval_is_zero(self):
-        return self.args[0].is_real
+        return self.args[0].is_extended_real
 
 ###############################################################################
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
@@ -331,7 +331,7 @@ class sign(Function):
         return sign(conjugate(self.args[0]))
 
     def _eval_derivative(self, x):
-        if self.args[0].is_real:
+        if self.args[0].is_extended_real:
             from sympy.functions.special.delta_functions import DiracDelta
             return 2 * Derivative(self.args[0], x, evaluate=True) \
                 * DiracDelta(self.args[0])
@@ -352,7 +352,7 @@ class sign(Function):
         return self.args[0].is_imaginary
 
     def _eval_is_integer(self):
-        return self.args[0].is_real
+        return self.args[0].is_extended_real
 
     def _eval_is_zero(self):
         return self.args[0].is_zero
@@ -370,12 +370,12 @@ class sign(Function):
         return sage.sgn(self.args[0]._sage_())
 
     def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
-        if arg.is_real:
+        if arg.is_extended_real:
             return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
     def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         from sympy.functions.special.delta_functions import Heaviside
-        if arg.is_real:
+        if arg.is_extended_real:
             return Heaviside(arg)*2-1
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
@@ -420,7 +420,7 @@ class Abs(Function):
     sign, conjugate
     """
 
-    is_real = True
+    is_extended_real = True
     is_negative = False
     unbranched = True
 
@@ -472,7 +472,7 @@ class Abs(Function):
             return S.Infinity
         if arg.is_Pow:
             base, exponent = arg.as_base_exp()
-            if base.is_real:
+            if base.is_extended_real:
                 if exponent.is_integer:
                     if exponent.is_even:
                         return arg
@@ -518,12 +518,12 @@ class Abs(Function):
         if arg != conj and arg != -conj:
             ignore = arg.atoms(Abs)
             abs_free_arg = arg.xreplace({i: Dummy(real=True) for i in ignore})
-            unk = [a for a in abs_free_arg.free_symbols if a.is_real is None]
+            unk = [a for a in abs_free_arg.free_symbols if a.is_extended_real is None]
             if not unk or not all(conj.has(conjugate(u)) for u in unk):
                 return sqrt(expand_mul(arg*conj))
 
     def _eval_is_integer(self):
-        if self.args[0].is_real:
+        if self.args[0].is_extended_real:
             return self.args[0].is_integer
 
     def _eval_is_nonzero(self):
@@ -538,22 +538,22 @@ class Abs(Function):
             return not is_z
 
     def _eval_is_rational(self):
-        if self.args[0].is_real:
+        if self.args[0].is_extended_real:
             return self.args[0].is_rational
 
     def _eval_is_even(self):
-        if self.args[0].is_real:
+        if self.args[0].is_extended_real:
             return self.args[0].is_even
 
     def _eval_is_odd(self):
-        if self.args[0].is_real:
+        if self.args[0].is_extended_real:
             return self.args[0].is_odd
 
     def _eval_is_algebraic(self):
         return self.args[0].is_algebraic
 
     def _eval_power(self, exponent):
-        if self.args[0].is_real and exponent.is_integer:
+        if self.args[0].is_extended_real and exponent.is_integer:
             if exponent.is_even:
                 return self.args[0]**exponent
             elif exponent is not S.NegativeOne and exponent.is_Integer:
@@ -574,7 +574,7 @@ class Abs(Function):
         return sage.abs_symbolic(self.args[0]._sage_())
 
     def _eval_derivative(self, x):
-        if self.args[0].is_real or self.args[0].is_imaginary:
+        if self.args[0].is_extended_real or self.args[0].is_imaginary:
             return Derivative(self.args[0], x, evaluate=True) \
                 * sign(conjugate(self.args[0]))
         rv = (re(self.args[0]) * Derivative(re(self.args[0]), x,
@@ -586,11 +586,11 @@ class Abs(Function):
         # Note this only holds for real arg (since Heaviside is not defined
         # for complex arguments).
         from sympy.functions.special.delta_functions import Heaviside
-        if arg.is_real:
+        if arg.is_extended_real:
             return arg*(Heaviside(arg) - Heaviside(-arg))
 
     def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
-        if arg.is_real:
+        if arg.is_extended_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
 
     def _eval_rewrite_as_sign(self, arg, **kwargs):
@@ -616,7 +616,7 @@ class arg(Function):
 
     """
 
-    is_real = True
+    is_extended_real = True
     is_finite = True
 
     @classmethod
@@ -695,7 +695,7 @@ class conjugate(Function):
         return self.args[0]
 
     def _eval_derivative(self, x):
-        if x.is_real:
+        if x.is_extended_real:
             return conjugate(Derivative(self.args[0], x, evaluate=True))
         elif x.is_imaginary:
             return -conjugate(Derivative(self.args[0], x, evaluate=True))
