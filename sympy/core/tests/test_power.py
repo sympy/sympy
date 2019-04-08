@@ -282,10 +282,10 @@ def test_pow_iszero():
     pow_iszero = [
         ['**',  0,  h,  1,  2, -h, -1,-2,-2*I,-I/2,I/2,1+I,oo,-oo,zoo],
         [   0,  F,  T,  T,  T,  F,  F,  F,  F,  F,  F,  N,  T,  F,  N],
-        [ 1/2,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  F,  N],
+        [   h,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  F,  N],
         [   1,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
         [   2,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
-        [-1/2,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  F,  N],
+        [  -h,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  F,  N],
         [  -1,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  N],
         [  -2,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
         [-2*I,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  F,  T,  N],
