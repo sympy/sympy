@@ -1877,10 +1877,13 @@ def _nT(n, k):
     if d <= 3:
         return d
     # quick exit
-    if 2*k >= d:
-        # update cache and get partition(d)
+    if 3*k >= n:  # or, equivalently, 2*k >= d
+        # all the information needed in this case
+        # will be in the cache needed to calculate
+        # partition(d), so...
+        # update cache
         tot = partition._partition(d)
-        # correct for values not needed
+        # and correct for values not needed
         if d - k > 0:
             tot -= sum(_npartition[:d - k])
         return tot
@@ -1896,8 +1899,8 @@ def _nT(n, k):
     # k values of p are the nT(n, j) values for 0 < j < k in reverse
     # order p[-1] = nT(n, 1), p[-2] = nT(n, 2), etc.... Instead of
     # putting the 1 from p[0] there, however, it is simply added to
-    # the sum below.
-    return (1 + sum(p[1 - k:])) # ok for 1 < k <= n//2
+    # the sum below which is valid for 1 < k <= n//2
+    return (1 + sum(p[1 - k:]))
 
 
 def nT(n, k=None):
@@ -1956,13 +1959,6 @@ def nT(n, k=None):
     5
     >>> nT('1'*4)
     5
-
-    The partition of an integer ``n`` into ``k`` parts is
-    equivalent to the sum of the partitions of ``n - k``
-    into ``k`` or fewer parts:
-
-    >>> nT(7, 3) == nT(4, 1) + nT(4, 2) + nT(4, 3)
-    True
 
     See Also
     ========
