@@ -1180,6 +1180,12 @@ class Pow(Expr):
             return True
 
     def _eval_is_rational(self):
+        # The evaluation of self.func below can be very expensive in the case
+        # of integer**integer if the exponent is large.  We should try to exit
+        # before that if possible:
+        if (self.exp.is_integer and self.exp.is_nonnegative
+                and self.base.is_rational):
+            return True
         p = self.func(*self.as_base_exp())  # in case it's unevaluated
         if not p.is_Pow:
             return p.is_rational
