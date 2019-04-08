@@ -234,11 +234,11 @@ class Add(Expr, AssocOp):
         # oo, -oo
         if coeff is S.Infinity:
             newseq = [f for f in newseq if not
-                      (f.is_nonnegative or f.is_real and f.is_finite)]
+                      (f.is_nonnegative or f.is_extended_real and f.is_finite)]
 
         elif coeff is S.NegativeInfinity:
             newseq = [f for f in newseq if not
-                      (f.is_nonpositive or f.is_real and f.is_finite)]
+                      (f.is_nonpositive or f.is_extended_real and f.is_finite)]
 
         if coeff is S.ComplexInfinity:
             # zoo might be
@@ -250,7 +250,7 @@ class Add(Expr, AssocOp):
             # in a NaN condition if it had sign opposite of the infinite
             # portion of zoo, e.g., infinite_real - infinite_real.
             newseq = [c for c in newseq if not (c.is_finite and
-                                                c.is_real is not None)]
+                                                c.is_extended_real is not None)]
 
         # process O(x)
         if order_factors:
@@ -493,8 +493,8 @@ class Add(Expr, AssocOp):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
     # assumption methods
-    _eval_is_real = lambda self: _fuzzy_group(
-        (a.is_real for a in self.args), quick_exit=True)
+    _eval_is_extended_real = lambda self: _fuzzy_group(
+        (a.is_extended_real for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: _fuzzy_group(
         (a.is_complex for a in self.args), quick_exit=True)
     _eval_is_antihermitian = lambda self: _fuzzy_group(
@@ -516,7 +516,7 @@ class Add(Expr, AssocOp):
         nz = []
         im_I = []
         for a in self.args:
-            if a.is_real:
+            if a.is_extended_real:
                 if a.is_zero:
                     pass
                 elif a.is_zero is False:
@@ -525,7 +525,7 @@ class Add(Expr, AssocOp):
                     return
             elif a.is_imaginary:
                 im_I.append(a*S.ImaginaryUnit)
-            elif (S.ImaginaryUnit*a).is_real:
+            elif (S.ImaginaryUnit*a).is_extended_real:
                 im_I.append(a*S.ImaginaryUnit)
             else:
                 return
@@ -545,7 +545,7 @@ class Add(Expr, AssocOp):
         im_or_z = False
         im = False
         for a in self.args:
-            if a.is_real:
+            if a.is_extended_real:
                 if a.is_zero:
                     z += 1
                 elif a.is_zero is False:
@@ -554,7 +554,7 @@ class Add(Expr, AssocOp):
                     return
             elif a.is_imaginary:
                 im = True
-            elif (S.ImaginaryUnit*a).is_real:
+            elif (S.ImaginaryUnit*a).is_extended_real:
                 im_or_z = True
             else:
                 return
