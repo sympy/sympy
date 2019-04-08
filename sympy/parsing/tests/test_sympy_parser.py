@@ -12,7 +12,7 @@ from sympy.utilities.pytest import raises, skip
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
     split_symbols, implicit_multiplication, convert_equals_signs, convert_xor,
-    function_exponentiation,
+    function_exponentiation, implicit_multiplication_application,
 )
 
 
@@ -51,6 +51,20 @@ def test_sympy_parser():
     }
     for text, result in inputs.items():
         assert parse_expr(text) == result
+
+    # issue 16591
+    t = standard_transformations + (implicit_multiplication_application,)
+    raises(SyntaxError, lambda: parse_expr('2**x3**x', transformations=t))
+    raises(TypeError, lambda:
+        parse_expr('x', standard_transformations))
+    raises(TypeError, lambda:
+        parse_expr('x', transformations=lambda x,y: 1))
+    raises(TypeError, lambda:
+        parse_expr('x', transformations=(lambda x,y: 1,)))
+    raises(TypeError, lambda: parse_expr('x', transformations=((),)))
+    raises(TypeError, lambda: parse_expr('x', {}, [], []))
+    raises(TypeError, lambda: parse_expr('x', [], [], {}))
+    raises(TypeError, lambda: parse_expr('x', [], [], {}))
 
 
 def test_rationalize():

@@ -9,10 +9,15 @@ from keyword import iskeyword
 
 import ast
 import unicodedata
+import string
 
-from sympy.core.compatibility import exec_, StringIO
+from sympy.core.compatibility import exec_, StringIO, iterable
 from sympy.core.basic import Basic
+from sympy.core.function import arity
+from sympy.core.singleton import S
 from sympy.core import Symbol
+from sympy.utilities.misc import filldedent, func_name
+
 
 def _token_splittable(token):
     """
@@ -953,17 +958,54 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     if local_dict is None:
         local_dict = {}
+    elif not isinstance(local_dict, dict):
+        raise TypeError('expecting local_dict to be a dict')
 
     if global_dict is None:
         global_dict = {}
         exec_('from sympy import *', global_dict)
+    elif not isinstance(global_dict, dict):
+        raise TypeError('expecting global_dict to be a dict')
 
+    transformations = transformations or ()
+    if transformations:
+        if not iterable(transformations):
+            raise TypeError(
+                '`transformations` should be a list of functions.')
+        for _ in transformations:
+            if not callable(_):
+                raise TypeError(filldedent('''
+                    expected a function in transformations,
+                    not %s''' % func_name(_)))
+            if arity(_) != 3:
+                raise TypeError(filldedent('''
+                    transformations should be functions that
+                    takes 3 arguments.'''))
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
 
-    return eval_expr(code, local_dict, global_dict)
+    rv = eval_expr(code, local_dict, global_dict)
+    known = set(local_dict.keys()) | set(global_dict.keys())
+    def check(e):
+        if type(e) in (list, tuple, set):
+            for i in e:
+                check(i)
+        elif isinstance(e, Basic):
+            for i in e.atoms(Symbol):
+                if i.name not in known and \
+                        i.name[0] in string.digits and \
+                        S(i.name).is_Number:
+                    raise SyntaxError(filldedent('''
+                        %s was parsed as a Symbol; space may be needed
+                        to disambiguate a symbol from this number.'''
+                        % i.name))
+        else:
+            raise NotImplementedError(
+                'expected list, set, tuple or Basic, not %s' % e)
+    check(rv)
+    return rv
 
 
 def evaluateFalse(s):
