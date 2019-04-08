@@ -676,8 +676,8 @@ class Basic(with_metaclass(ManagedProperties)):
         1
 
         """
-        is_real = self.is_real
-        if is_real is False:
+        is_extended_real = self.is_extended_real
+        if is_extended_real is False:
             return False
         if not self.is_number:
             return False
