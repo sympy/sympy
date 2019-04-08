@@ -600,7 +600,7 @@ def LessEqual(*args):
         try:
             if args[i] > args[i + 1]:
                 return False
-        except IndexError, NotImplementedError:
+        except (IndexError, NotImplementedError):
             return False
     return True
 
@@ -609,7 +609,7 @@ def Less(*args):
         try:
             if args[i] >= args[i + 1]:
                 return False
-        except IndexError, NotImplementedError:
+        except (IndexError, NotImplementedError):
             return False
     return True
 
@@ -618,7 +618,7 @@ def Greater(*args):
         try:
             if args[i] <= args[i + 1]:
                 return False
-        except IndexError, NotImplementedError:
+        except (IndexError, NotImplementedError):
             return False
     return True
 
@@ -627,7 +627,7 @@ def GreaterEqual(*args):
         try:
             if args[i] < args[i + 1]:
                 return False
-        except IndexError, NotImplementedError:
+        except (IndexError, NotImplementedError):
             return False
     return True
 
