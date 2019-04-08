@@ -1,18 +1,22 @@
 from sympy import Rational, oo, sqrt, S
 from sympy import Line, Point, Point2D, Parabola, Segment2D, Ray2D
-from sympy import Circle, Ellipse
+from sympy import Circle, Ellipse, symbols
 from sympy.utilities.pytest import raises
 
 
 def test_parabola_geom():
+    a, b = symbols('a b')
     p1 = Point(0, 0)
     p2 = Point(3, 7)
     p3 = Point(0, 4)
     p4 = Point(6, 0)
+    p5 = Point(a, a)
     d1 = Line(Point(4, 0), Point(4, 9))
     d2 = Line(Point(7, 6), Point(3, 6))
     d3 = Line(Point(4, 0), slope=oo)
     d4 = Line(Point(7, 6), slope=0)
+    d5 = Line(Point(b, a), slope=oo)
+    d6 = Line(Point(a, b), slope=0)
 
     half = Rational(1, 2)
 
@@ -25,6 +29,8 @@ def test_parabola_geom():
     pa7 = Parabola(p2, d1)
     pa8 = Parabola(p4, d1)
     pa9 = Parabola(p4, d3)
+    pa10 = Parabola(p5, d5)
+    pa11 = Parabola(p5, d6)
 
     raises(ValueError, lambda:
            Parabola(Point(7, 8, 9), Line(Point(6, 7), Point(7, 7))))
@@ -62,6 +68,9 @@ def test_parabola_geom():
     assert pa8.p_parameter == pa9.p_parameter
     assert pa8.vertex == pa9.vertex
     assert pa8.equation() == pa9.equation()
+    assert pa10.focal_length == sqrt((a - b) ** 2) / 2 # if a, b real == abs(a - b)/2
+    assert pa10.focal_length == pa11.focal_length
+    assert Point2D(*pa10.vertex[::-1]) == pa11.vertex # change axis x->y, y->x on pa10
 
 
 def test_parabola_intersection():

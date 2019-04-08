@@ -368,7 +368,7 @@ class Parabola(GeometrySet):
         -4
 
         """
-        if (self.axis_of_symmetry.slope == 0):
+        if self.axis_of_symmetry.slope == 0:
             x = self.directrix.coefficients[2]
             p = sign(self.focus.args[0] + x)
         else:
