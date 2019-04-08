@@ -15,6 +15,7 @@ from sympy.geometry.point import Point, Point2D
 from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
 from sympy.geometry.ellipse import Ellipse
 
+from sympy import Abs, sqrt
 
 class Parabola(GeometrySet):
     """A parabolic GeometryEntity.
@@ -407,9 +408,10 @@ class Parabola(GeometrySet):
 
         """
         focus = self.focus
-        if (self.axis_of_symmetry.slope == 0):
-            vertex = Point(focus.args[0] - self.p_parameter, focus.args[1])
+
+        if(self.axis_of_symmetry.slope == 0):
+            vertex = Point((focus.args[0] + self.directrix.p1[0])/2, focus.args[1])
         else:
-            vertex = Point(focus.args[0], focus.args[1] - self.p_parameter)
+            vertex = Point(focus.args[0], (focus.args[1] + self.directrix.p1[1])/2)
 
         return vertex

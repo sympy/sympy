@@ -3968,6 +3968,15 @@ def test_sympy__geometry__parabola__Parabola():
     assert _test_args(Parabola((0, 0), Line((2, 3), (4, 3))))
 
 
+def test_sympy__geometry__shape__Shape():
+    from sympy.geometry.shape import Shape
+    from sympy.geometry.line import Line
+    from sympy.geometry.ellipse import Ellipse, Circle
+    e = Ellipse((0, 0), 4, 2)
+    l = Line((0, 0), (0, 2))
+    assert _test_args(Shape(e, l))
+
+
 @SKIP("abstract class")
 def test_sympy__geometry__line__LinearEntity():
     pass

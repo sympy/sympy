@@ -21,3 +21,4 @@ from sympy.geometry.util import are_similar, centroid, convex_hull, idiff, \
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.curve import Curve
 from sympy.geometry.parabola import Parabola
+from sympy.geometry.shape import Shape
