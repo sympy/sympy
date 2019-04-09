@@ -554,16 +554,16 @@ class Heaviside(Function):
         >>> from sympy import Heaviside, Symbol, sign
         >>> x = Symbol('x', real=True)
 
-        >>> Heaviside(x).rewrite(sign)
+        >>> Heaviside(x, H0=S.Half).rewrite(sign)
         sign(x)/2 + 1/2
 
         >>> Heaviside(x, 0).rewrite(sign)
         Heaviside(x, 0)
 
-        >>> Heaviside(x - 2).rewrite(sign)
+        >>> Heaviside(x - 2, H0=S.Half).rewrite(sign)
         sign(x - 2)/2 + 1/2
 
-        >>> Heaviside(x**2 - 2*x + 1).rewrite(sign)
+        >>> Heaviside(x**2 - 2*x + 1, H0=S.Half).rewrite(sign)
         sign(x**2 - 2*x + 1)/2 + 1/2
 
         >>> y = Symbol('y')
