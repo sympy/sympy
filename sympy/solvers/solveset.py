@@ -930,7 +930,7 @@ def _solveset(f, symbol, domain, _check=False):
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result
-    elif f.has(Mod) and list(f.atoms(Mod))[0].has(symbol) and len(list(f.atoms(Mod))) == 1:
+    elif f.has(Mod) and is_modular(f, symbol):
         modterm = list(f.atoms(Mod))[0]
         t = Dummy('t', integer=True)
         f = f.xreplace({modterm: t})
@@ -1006,9 +1006,44 @@ def _solveset(f, symbol, domain, _check=False):
 
     return result
 
+def is_modular(f, symbol):
+    "Helper function to check solvable modular equations"
+    mt = list(f.atoms(Mod))
+    return mt[0].has(symbol) and len(mt) == 1 and mt[0].args[1].is_Integer
+
 def _solve_modular(modterm, rhs, symbol, domain):
-    "Helper function to solve modular equations"
-    #Documentation to be added
+    r"""
+    Helper function for solving modular equations.
+
+    Parameters
+    ==========
+
+    modterm, rhs : Expr
+        The modular equation to be solved, `modterm = rhs`
+
+    symbol : Symbol
+        The variable in which the equation is solved
+
+    domain : Set
+        A set over which the equation is solved.
+
+    Returns
+    =======
+
+    A set of solutions satisfying the given equation.
+    A ``ConditionSet`` if the equation is unsolvable.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import _solve_modular as solve_modulo
+    >>> from sympy import S, Symbol
+    >>> from sympy.core.mod import Mod
+    >>> x = Symbol('x')
+    >>> solve_modulo(Mod(5*x - 8, 7), 3, x, S.Reals)
+    ImageSet(Lambda(_n, 7*_n + 5), Integers)
+
+    """
     a, m = modterm.args
     n = Dummy('n', real=True)
 
@@ -1031,8 +1066,17 @@ def _solve_modular(modterm, rhs, symbol, domain):
         g, h = a.as_independent(symbol)
         return _solveset(Mod(h, m) - rhs*invert(g, m), symbol, domain)
     if a.is_Pow:
-        if a.exp is symbol:
-            return _solveset(a.exp - discrete_log(m, rhs, a.base), symbol, domain)
+        base, expo = a.args
+        result = EmptySet()
+        if expo.has(symbol):
+            u = Dummy('u')
+            sol_set = _solveset(u - discrete_log(m, rhs, a.base), u, domain)
+            if isinstance(sol_set, FiniteSet):
+                for s in sol_set:
+                    result += _solveset(expo - s, symbol, domain)
+        else:
+            result = ConditionSet(symbol, Eq(modterm - rhs, 0), domain)
+        return result
     return ConditionSet(symbol, Eq(modterm - rhs, 0), domain)
 
 def _term_factors(f):

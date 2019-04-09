@@ -2033,6 +2033,7 @@ def test_solve_modular():
     assert solveset(3-Mod(x,5), x) == ImageSet(Lambda(n, 5*n + 3), S.Integers)
     assert solveset(3-Mod(x + 2, 5), x) == ImageSet(Lambda(n, 5*n + 1), S.Integers)
     assert solveset(3-Mod(5*x + 2, 7), x) == ImageSet(Lambda(n, 7*n + 3), S.Integers)
+    assert solveset(3-Mod(5*x - 8, 7), x) == ImageSet(Lambda(n, 7*n + 5), S.Integers)
     assert solveset(3-Mod(5*x,7), x) == ImageSet(Lambda(n, 7*n + 2), S.Integers)
     n = symbols('n', integer=True)
     a = 742938285
@@ -2040,3 +2041,7 @@ def test_solve_modular():
     m = 2**31 - 1
     x = 20170816
     assert solveset(x - Mod(a**n*z, m), n, S.Integers) == FiniteSet(100)
+    assert solveset(x - Mod(a**(2*n)*z, m), n) == FiniteSet(50)
+    assert solveset(x - Mod(a**(2*n + 7)*z, m), n) == FiniteSet(S(93)/2)
+    assert solveset(x - Mod(a**(n - 4)*z, m), n) == FiniteSet(104)
+    assert solveset(x - Mod(a**(n**2 + 1)*z, m), n) == FiniteSet(-3*sqrt(11), 3*sqrt(11))
