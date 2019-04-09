@@ -230,7 +230,8 @@ def test_polygon():
     assert t1.is_similar(t2) is False
 
     # Bisectors
-    assert t1.bisectors()[p1] == Segment(
+    bisectors = t1.bisectors()
+    assert bisectors[p1] == Segment(
         p1, Point(Rational(5, 2), Rational(5, 2)))
     assert t2.bisectors()[p2] == Segment(
         Point(5, 0), Point(Rational(5, 4), 5*sqrt(3)/4))
