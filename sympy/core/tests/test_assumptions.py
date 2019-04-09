@@ -1094,7 +1094,7 @@ def test_complex_reciprocal_imaginary():
     assert (1 / (4 + 3*I)).is_imaginary is False
 
 def test_issue_16313():
-    x = Symbol('x', real=False)
+    x = Symbol('x', extended_real=False)
     k = Symbol('k', real=True)
     l = Symbol('l', real=True, zero=False)
     assert (-x).is_real is False
