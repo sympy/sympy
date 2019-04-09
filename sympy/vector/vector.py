@@ -17,6 +17,7 @@ class Vector(BasisDependent):
     """
 
     is_Vector = True
+    is_scalar = False
     _op_priority = 12.0
 
     @property
