@@ -56,10 +56,10 @@ def pytest_addoption(parser):
         help="split tests")
 
 
-def pytest_collection_modifyitems(session, config, items):
+def pytest_collection_modifyitems(config, items):
     """ pytest hook. """
     # handle splits
-    process_split(session, config, items)
+    process_split(config, items)
 
 
 @pytest.fixture(autouse=True, scope='module')
