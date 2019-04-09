@@ -33,7 +33,7 @@ from sympy.utilities.iterables import has_variety
 import mpmath
 
 
-def separable(expr, symbols=None):
+def separable(expr, symbols=set()):
     """Return the set of symbols that are separable and the set of symbols
     that cannot be determined as either separable or unseparable
 
