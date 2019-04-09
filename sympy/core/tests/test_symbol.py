@@ -169,7 +169,7 @@ def test_Wild_properties():
     integerp = lambda k: k.is_integer
     positivep = lambda k: k.is_positive
     symbolp = lambda k: k.is_Symbol
-    realp = lambda k: k.is_real
+    realp = lambda k: k.is_extended_real
 
     S = Wild("S", properties=[symbolp])
     R = Wild("R", properties=[realp])
