@@ -473,19 +473,19 @@ def test_Abs_real():
 
 def test_Abs_properties():
     x = Symbol('x')
-    assert Abs(x).is_real is True
+    assert Abs(x).is_extended_real is True
     assert Abs(x).is_rational is None
     assert Abs(x).is_positive is None
     assert Abs(x).is_nonnegative is True
 
     z = Symbol('z', complex=True, zero=False)
-    assert Abs(z).is_real is True
+    assert Abs(z).is_extended_real is True
     assert Abs(z).is_rational is None
     assert Abs(z).is_positive is True
     assert Abs(z).is_zero is False
 
     p = Symbol('p', positive=True)
-    assert Abs(p).is_real is True
+    assert Abs(p).is_extended_real is True
     assert Abs(p).is_rational is None
     assert Abs(p).is_positive is True
     assert Abs(p).is_zero is False
@@ -536,7 +536,7 @@ def test_arg():
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 
-    p = Symbol('p', positive=True)
+    p = Symbol('p', positive=True, finite=True)
     assert arg(p) == 0
 
     n = Symbol('n', negative=True)
@@ -895,7 +895,7 @@ def test_issue_14238():
     assert Abs(r + Piecewise((0, r > 0), (1 - r, True)))
 
 def test_zero_assumptions():
-    nr = Symbol('nonreal', real=False)
+    nr = Symbol('nonreal', real=False, finite=True)
     ni = Symbol('nonimaginary', imaginary=False)
     # imaginary implies not zero
     nzni = Symbol('nonzerononimaginary', zero=False, imaginary=False)
