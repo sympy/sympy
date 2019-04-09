@@ -104,14 +104,13 @@ def test_reshape():
 
 
 def test_iterator():
+    j=0
     array = ImmutableDenseNDimArray(range(4), (2, 2))
-    j = 0
     for i in array:
         assert i == j
         j += 1
 
     array = array.reshape(4)
-    j = 0
     for i in array:
         assert i == j
         j += 1
