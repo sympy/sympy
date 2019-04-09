@@ -2006,7 +2006,7 @@ class NakagamiDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(mu, sigma):
+    def check(mu, omega):
         _value_check(mu >= 0.5, "mu, shape parameter should be real.")
         _value_check(omega > 0, "omega, spread parameter should be real.")
 
