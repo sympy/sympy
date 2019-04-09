@@ -2888,10 +2888,6 @@ def Triangular(name, a, b, c):
 class UniformDistribution(SingleContinuousDistribution):
     _argnames = ('left', 'right')
 
-    @property
-    def set(self):
-        return Interval(self.left, self.right)
-
     @staticmethod
     def check(left, right):
         _value_check(left.is_real, "left, should be real.")
