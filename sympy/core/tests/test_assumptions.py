@@ -105,7 +105,7 @@ def test_infinity():
     assert oo.is_real is True
     assert oo.is_complex is True
     assert oo.is_noninteger is True
-    assert oo.is_irrational is True
+    assert oo.is_irrational is False
     assert oo.is_imaginary is False
     assert oo.is_positive is True
     assert oo.is_negative is False
@@ -132,7 +132,7 @@ def test_neg_infinity():
     assert mm.is_real is True
     assert mm.is_complex is True
     assert mm.is_noninteger is True
-    assert mm.is_irrational is True
+    assert mm.is_irrational is False
     assert mm.is_imaginary is False
     assert mm.is_positive is False
     assert mm.is_negative is True
@@ -627,7 +627,7 @@ def test_other_symbol():
 
     x = Symbol('x', irrational=True)
     assert x.is_real is True
-    assert x.is_finite is None
+    assert x.is_finite is True
 
     x = Symbol('x', irrational=False)
     assert x.is_real is None
