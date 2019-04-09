@@ -2704,7 +2704,9 @@ def StudentT(name, nu):
 class TrapezoidalDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b', 'c', 'd')
 
-    set = Interval(self.a, self.d)
+    @property
+    def set(self):
+        return Interval(self.a, self.d)
 
     def pdf(self, x):
         a, b, c, d = self.a, self.b, self.c, self.d
@@ -2786,7 +2788,9 @@ def Trapezoidal(name, a, b, c, d):
 class TriangularDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b', 'c')
 
-    set = Interval(self.a, self.b)
+    @property
+    def set(self):
+        return Interval(self.a, self.b)
 
     @staticmethod
     def check(a, b, c):
@@ -2884,7 +2888,9 @@ def Triangular(name, a, b, c):
 class UniformDistribution(SingleContinuousDistribution):
     _argnames = ('left', 'right')
 
-    set = Interval(self.a, self.b)
+    @property
+    def set(self):
+        return Interval(self.a, self.b)
 
     @staticmethod
     def check(a, b):
