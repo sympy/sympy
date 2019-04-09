@@ -122,7 +122,7 @@ def test_rewrite():
     assert Heaviside(x, 1).rewrite(Piecewise) == (
         Piecewise((0, x < 0), (1, x >= 0)))
 
-    assert Heaviside(x).rewrite(sign) == (sign(x)+1)/2
+    assert Heaviside(x).rewrite(sign) == Heaviside(x)
     assert Heaviside(y).rewrite(sign) == Heaviside(y)
     assert Heaviside(x, S.Half).rewrite(sign) == (sign(x)+1)/2
     assert Heaviside(x, y).rewrite(sign) == Heaviside(x, y)
