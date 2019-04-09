@@ -504,7 +504,7 @@ def test_Mul_is_rational():
     # issue 8008
     z = Symbol('z', zero=True)
     i = Symbol('i', imaginary=True)
-    assert (z*i).is_rational is None
+    assert (z*i).is_rational is True
     bi = Symbol('i', imaginary=True, finite=True)
     assert (z*bi).is_zero is True
 
