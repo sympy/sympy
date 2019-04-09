@@ -6,6 +6,9 @@ from sympy.solvers.ode import (_undetermined_coefficients_match,
     checkodesol, classify_ode, classify_sysode, constant_renumber,
     constantsimp, homogeneous_order, infinitesimals, checkinfsol,
     checksysodesol, solve_ics, dsolve, get_numbered_constants)
+
+from sympy.functions import airyai, airybi, besselj, bessely
+
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
 
@@ -2495,7 +2498,6 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     assert our_hint in classify_ode(eq, f(x))
     assert dsolve(eq, f(x), hint=our_hint).rhs.expand() in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
-
     eq = Eq(x**2*diff(f(x), x, x) + 3*x*diff(f(x), x) - 8*f(x), log(x)**3 - log(x))
     sol = C1/x**4 + C2*x**2 - Rational(1,8)*log(x)**3 - Rational(3,32)*log(x)**2 - Rational(1,64)*log(x) - Rational(7, 256)
     sols = constant_renumber(sol)
@@ -2984,7 +2986,7 @@ def test_2nd_power_series_ordinary():
         C2*((x + 2)**4/6 + (x + 2)**3/6 - (x + 2)**2 + 1)
         + C1*(x + (x + 2)**4/12 - (x + 2)**3/3 + S(2))
         + O(x**6))
-    assert dsolve(eq, n=2) == Eq(f(x), C2*x + C1 + O(x**2))
+    assert dsolve(eq, n=2, hint='2nd_power_series_ordinary') == Eq(f(x), C2*x + C1 + O(x**2))
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
     assert dsolve(eq) == Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x
@@ -3008,7 +3010,6 @@ def test_2nd_power_series_ordinary():
 
 def test_Airy_equation():
     C1, C2 = symbols("C1 C2")
-    from sympy.functions import airyai, airybi
     eq = f(x).diff(x, 2) - x*f(x)
     assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
     assert dsolve(eq) == Eq(f(x), C1*airyai(x) + C2*airybi(x))
@@ -3046,7 +3047,6 @@ def test_2nd_power_series_regular():
 
 def test_2nd_linear_bessel_equation():
     C1, C2 = symbols("C1 C2")
-    from sympy.functions import besselj, bessely
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 4)*f(x)
     assert dsolve(eq) == Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 +25)*f(x)
