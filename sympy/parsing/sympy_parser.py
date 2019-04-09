@@ -9,14 +9,27 @@ from keyword import iskeyword
 
 import ast
 import unicodedata
+import re
 import string
 
-from sympy.core.compatibility import exec_, StringIO, iterable
+from sympy.core.compatibility import (exec_, StringIO, iterable, PY3,
+    string_types)
 from sympy.core.basic import Basic
 from sympy.core.function import arity
 from sympy.core.singleton import S
 from sympy.core import Symbol
 from sympy.utilities.misc import filldedent, func_name
+
+
+_py2name = re.compile(r'^[a-zA-Z_]\w*$')
+def valid_name(name):
+    if not isinstance(name, string_types):
+        return False
+    if iskeyword(name):
+        return False
+    if PY3:
+        return name.isidentifier()
+    return _py2name.match(name)
 
 
 def _token_splittable(token):
@@ -988,18 +1001,15 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     rv = eval_expr(code, local_dict, global_dict)
     def check(e):
+        # check to see that all symbols have valid names;
+        # if they don't this might represent a parsing issue
         if iterable(e):
             for i in e:
                 check(i)
         elif isinstance(e, Basic):
-            for i in e.atoms(Symbol):
-                if i.name[0] in string.digits and \
-                        S(i.name).is_Number:
-                    raise SyntaxError(filldedent('''
-                        %s was parsed as a Symbol; space may be needed
-                        to disambiguate this number from a preceeding
-                        Symbol.'''
-                        % i.name))
+            for i in e.free_symbols:
+                if not valid_name(i.name):
+                    raise SyntaxError('invalid name: %s' % i.name)
     check(rv)
     return rv
 
