@@ -845,6 +845,7 @@ def roots(f, *gens, **flags):
 
     """
     from sympy.polys.polytools import to_rational_coeffs
+    from sympy.solvers.solvers import solve
     flags = dict(flags)
 
     auto = flags.pop('auto', True)
@@ -871,6 +872,8 @@ def roots(f, *gens, **flags):
     else:
         try:
             f = Poly(f, *gens, **flags)
+            if f.is_multivariate:
+                return solve(f)
             if f.length == 2 and f.degree() != 1:
                 # check for foo**n factors in the constant
                 n = f.degree()
