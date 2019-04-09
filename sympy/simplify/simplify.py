@@ -34,9 +34,8 @@ import mpmath
 
 
 def separable(expr, symbols=[]):
-    """Return the subset of symbols which appear in expr that
-    test as being positively separable from other symbols in expr
-    and those that do not test as being unseparable.
+    """Return the set of symbols that are separable and the set of symbols
+    that cannot be determined as either separable or unseparable
 
     If `f(x, y)` is separable in `x` then `f(x, y).diff(x)/f(x, y)`
     should be constant wrt y.
