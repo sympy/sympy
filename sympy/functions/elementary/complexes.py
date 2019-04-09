@@ -534,6 +534,10 @@ class Abs(Function):
             if not unk or not all(conj.has(conjugate(u)) for u in unk):
                 return sqrt(expand_mul(arg*conj))
 
+    def _eval_is_real(self):
+        if self.args[0].is_finite:
+            return True
+
     def _eval_is_integer(self):
         if self.args[0].is_extended_real:
             return self.args[0].is_integer
