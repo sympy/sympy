@@ -2654,10 +2654,11 @@ class Infinity(with_metaclass(Singleton, Number)):
     .. [1] https://en.wikipedia.org/wiki/Infinity
     """
 
-    is_extended_real = True
     is_commutative = True
-    is_infinite = True
     is_number = True
+    is_extended_real = True
+    is_infinite = True
+    is_positive = True
     is_prime = False
 
     __slots__ = []
