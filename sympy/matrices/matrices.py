@@ -1779,7 +1779,7 @@ class MatrixEigen(MatrixSubspaces):
 
         return vals
 
-
+#https://docs.sympy.org/latest/modules/matrices/matrices.html#basic-manipulation more detail about MatrixCalculus
 
 class MatrixCalculus(MatrixCommon):
     """Provides calculus-related matrix operations."""
