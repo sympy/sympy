@@ -483,7 +483,10 @@ class Pow(Expr):
                 return False
         elif self.base.is_zero is False:
             if self.exp.is_finite:
-                return False
+                if self.exp.is_negative:
+                    return self.base.is_infinite
+                elif self.exp.is_nonnegative:
+                    return False
             elif self.exp.is_infinite:
                 if (1 - abs(self.base)).is_positive:
                     return self.exp.is_positive

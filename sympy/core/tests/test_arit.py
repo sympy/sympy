@@ -1222,8 +1222,8 @@ def test_Pow_is_nonpositive_nonnegative():
 def test_Mul_is_imaginary_real():
     r = Symbol('r', real=True)
     p = Symbol('p', positive=True)
-    i = Symbol('i', imaginary=True)
-    ii = Symbol('ii', imaginary=True)
+    i = Symbol('i', imaginary=True, finite=True)
+    ii = Symbol('ii', imaginary=True, finite=True)
     x = Symbol('x')
 
     assert I.is_imaginary is True
@@ -1267,7 +1267,7 @@ def test_Mul_is_imaginary_real():
     assert (r*i*ii).is_real is True
 
     # Github's issue 5874:
-    nr = Symbol('nr', real=False, complex=True)  # e.g. I or 1 + I
+    nr = Symbol('nr', real=False, complex=True, finite=True)  # e.g. I or 1 + I
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
     assert (i*nr).is_real is None
