@@ -543,6 +543,9 @@ def test_maxwell():
     assert cdf(X)(x) == erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
     assert diff(cdf(X)(x), x) == density(X)(x)
 
+    a = Symbol("a", positive=False)
+    raises(ValueError, lambda: Maxwell('y', a))
+
 
 def test_nakagami():
     mu = Symbol("mu", positive=True)
@@ -559,6 +562,11 @@ def test_nakagami():
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
 
+    omega_f = Symbol("omega", positive=False)
+    raises(ValueError, lambda: Nakagami('y', mu, omega_f))
+    raises(ValueError, lambda: Nakagami('y', 0.2, omega))
+    raises(ValueError, lambda: Nakagami('y', -3, omega_f))
+
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True, finite=True)
@@ -570,6 +578,12 @@ def test_pareto():
     assert dens(x) == x**(-(alpha + 1))*xm**(alpha)*(alpha)
 
     assert simplify(E(X)) == alpha*xm/(alpha-1)
+
+    xm_f, alpha_f = symbols('xm, alpha_f', positive=False)
+    raises(ValueError, lambda: Pareto('y', xm, alpha_f))
+    raises(ValueError, lambda: Pareto('y', xm_f, alpha))
+    raises(ValueError, lambda: Pareto('y', xm_f, alpha_f))
+
 
     # computation of taylor series for MGF still too slow
     #assert simplify(variance(X)) == xm**2*alpha / ((alpha-1)**2*(alpha-2))
