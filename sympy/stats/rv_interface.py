@@ -246,7 +246,7 @@ def quantile(X, p):
     |
     |5  for p <= 5/6
     |
-    \6   for p < 1
+    \6   for p <= 1
     """
     _value_check(p >= 0, "The order p must be greater than or equal to 0.")
     _value_check(p <= 1, "The order p must be less than or equal to 1.")
@@ -261,10 +261,7 @@ def quantile(X, p):
     else:
         set = tuple()
         for key, value in cdf(X).items():
-            if value == S.One:
-                set = set + ((key, p < value), )
-            else:
-                set = set + ((key, p <= value), )
+            set = set + ((key, p <= value), )
         return Piecewise(*set)
 
 
