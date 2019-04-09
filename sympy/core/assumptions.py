@@ -172,6 +172,7 @@ _assume_rules = FactRules([
     'real           ->  hermitian',
     'imaginary      ->  complex',
     'imaginary      ->  antihermitian',
+    'extended_real  ->  commutative',
     'complex        ->  commutative',
 
     'odd            ==  integer & !even',
