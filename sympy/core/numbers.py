@@ -2656,6 +2656,7 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     is_commutative = True
     is_number = True
+    is_complex = False
     is_extended_real = True
     is_infinite = True
     is_positive = True
@@ -2884,6 +2885,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     """
 
     is_extended_real = True
+    is_complex = False
     is_commutative = True
     is_infinite = True
     is_number = True
