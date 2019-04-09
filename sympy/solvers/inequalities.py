@@ -298,7 +298,7 @@ def reduce_abs_inequality(expr, rel, gen):
 
     reduce_abs_inequalities
     """
-    if gen.is_real is False:
+    if gen.is_extended_real is False:
          raise TypeError(filldedent('''
             can't solve inequalities with absolute values containing
             non-real variables.
@@ -456,11 +456,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     # real.
     _gen = gen
     _domain = domain
-    if gen.is_real is False:
+    if gen.is_extended_real is False:
         rv = S.EmptySet
         return rv if not relational else rv.as_relational(_gen)
-    elif gen.is_real is None:
-        gen = Dummy('gen', real=True)
+    elif gen.is_extended_real is None:
+        gen = Dummy('gen', extended_real=True)
         try:
             expr = expr.xreplace({_gen: gen})
         except TypeError:
@@ -544,7 +544,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     r = S.false
                 if r in (S.true, S.false):
                     return r
-                if v.is_real is False:
+                if v.is_extended_real is False:
                     return S.false
                 else:
                     v = v.n(2)
@@ -573,7 +573,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 if all(r.is_number for r in critical_points):
                     reals = _nsort(critical_points, separated=True)[0]
                 else:
-                    sifted = sift(critical_points, lambda x: x.is_real)
+                    sifted = sift(critical_points, lambda x: x.is_extended_real)
                     if sifted[None]:
                         # there were some roots that weren't known
                         # to be real
@@ -597,7 +597,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     a = solveset(im(expanded_e), gen, domain)
                     if not isinstance(a, Interval):
                         for z in a:
-                            if z not in singularities and valid(z) and z.is_real:
+                            if z not in singularities and valid(z) and z.is_extended_real:
                                 im_sol += FiniteSet(z)
                     else:
                         start, end = a.inf, a.sup
@@ -606,7 +606,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                             if start != end:
                                 valid_z = valid(z)
                                 pt = _pt(start, z)
-                                if pt not in singularities and pt.is_real and valid(pt):
+                                if pt not in singularities and pt.is_extended_real and valid(pt):
                                     if valid_start and valid_z:
                                         im_sol += Interval(start, z)
                                     elif valid_start:
@@ -953,14 +953,14 @@ def reduce_inequalities(inequalities, symbols=[]):
     if not iterable(symbols):
         symbols = [symbols]
     symbols = (set(symbols) or gens) & gens
-    if any(i.is_real is False for i in symbols):
+    if any(i.is_extended_real is False for i in symbols):
         raise TypeError(filldedent('''
             inequalities cannot contain symbols that are not real.
             '''))
 
     # make vanilla symbol real
-    recast = {i: Dummy(i.name, real=True)
-        for i in gens if i.is_real is None}
+    recast = {i: Dummy(i.name, extended_real=True)
+        for i in gens if i.is_extended_real is None}
     inequalities = [i.xreplace(recast) for i in inequalities]
     symbols = {i.xreplace(recast) for i in symbols}
 
