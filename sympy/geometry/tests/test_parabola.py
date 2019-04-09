@@ -1,6 +1,6 @@
 from sympy import Rational, oo, sqrt, S
 from sympy import Line, Point, Point2D, Parabola, Segment2D, Ray2D
-from sympy import Circle, Ellipse, symbols
+from sympy import Circle, Ellipse, symbols, sign
 from sympy.utilities.pytest import raises
 
 
@@ -68,9 +68,8 @@ def test_parabola_geom():
     assert pa8.p_parameter == pa9.p_parameter
     assert pa8.vertex == pa9.vertex
     assert pa8.equation() == pa9.equation()
-    assert pa10.focal_length == sqrt((a - b) ** 2) / 2 # if a, b real == abs(a - b)/2
-    assert pa10.focal_length == pa11.focal_length
-    assert pa11.vertex == Point(*pa10.vertex[::-1]) == Point(a, 
+    assert pa10.focal_length == pa11.focal_length == sqrt((a - b) ** 2) / 2 # if a, b real == abs(a - b)/2
+    assert pa11.vertex == Point(*pa10.vertex[::-1]) == Point(a,
                             a - sqrt((a - b)**2)*sign(a - b)/2) # change axis x->y, y->x on pa10
 
 
