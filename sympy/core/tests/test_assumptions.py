@@ -104,7 +104,7 @@ def test_infinity():
     assert oo.is_transcendental is False
     assert oo.is_extended_real is True
     assert oo.is_real is False
-    assert oo.is_complex is True
+    assert oo.is_complex is False
     assert oo.is_noninteger is True
     assert oo.is_irrational is False
     assert oo.is_imaginary is False
@@ -132,7 +132,7 @@ def test_neg_infinity():
     assert mm.is_transcendental is False
     assert mm.is_extended_real is True
     assert mm.is_real is False
-    assert mm.is_complex is True
+    assert mm.is_complex is False
     assert mm.is_noninteger is True
     assert mm.is_irrational is False
     assert mm.is_imaginary is False

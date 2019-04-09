@@ -1221,7 +1221,7 @@ def test_Pow_is_nonpositive_nonnegative():
 
 def test_Mul_is_imaginary_real():
     r = Symbol('r', real=True)
-    p = Symbol('p', positive=True)
+    p = Symbol('p', positive=True, finite=True)
     i = Symbol('i', imaginary=True, finite=True)
     ii = Symbol('ii', imaginary=True, finite=True)
     x = Symbol('x')
