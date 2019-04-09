@@ -308,7 +308,7 @@ def test_vstack():
 # PropertiesOnlyMatrix tests
 def test_atoms():
     m = PropertiesOnlyMatrix(2, 2, [1, 2, x, 1 - 1/x])
-    assert m.atoms() == {S(1),S(2),S(-1), x}
+    assert m.atoms() == {S(1), S(2), S(-1), x}
     assert m.atoms(Symbol) == {x}
 
 
@@ -423,8 +423,8 @@ def test_is_lower():
 
 
 def test_is_square():
-    m = PropertiesOnlyMatrix([[1],[1]])
-    m2 = PropertiesOnlyMatrix([[2,2],[2,2]])
+    m = PropertiesOnlyMatrix([[1], [1]])
+    m2 = PropertiesOnlyMatrix([[2, 2], [2, 2]])
     assert not m.is_square
     assert m2.is_square
 
@@ -461,9 +461,11 @@ def test_is_zero():
 
 
 def test_values():
-    assert set(PropertiesOnlyMatrix(2,2,[0,1,2,3]).values()) == set([1,2,3])
+    assert set(PropertiesOnlyMatrix(2, 2, [0, 1, 2, 3]
+        ).values()) == set([1, 2, 3])
     x = Symbol('x', real=True)
-    assert set(PropertiesOnlyMatrix(2,2,[x,0,0,1]).values()) == set([x,1])
+    assert set(PropertiesOnlyMatrix(2, 2, [x, 0, 0, 1]
+        ).values()) == set([x, 1])
 
 
 # OperationsOnlyMatrix tests
@@ -481,10 +483,12 @@ def test_adjoint():
 
 
 def test_as_real_imag():
-    m1 = OperationsOnlyMatrix(2,2,[1,2,3,4])
-    m3 = OperationsOnlyMatrix(2,2,[1+S.ImaginaryUnit,2+2*S.ImaginaryUnit,3+3*S.ImaginaryUnit,4+4*S.ImaginaryUnit])
+    m1 = OperationsOnlyMatrix(2, 2, [1, 2, 3, 4])
+    m3 = OperationsOnlyMatrix(2, 2,
+        [1 + S.ImaginaryUnit, 2 + 2*S.ImaginaryUnit,
+        3 + 3*S.ImaginaryUnit, 4 + 4*S.ImaginaryUnit])
 
-    a,b = m3.as_real_imag()
+    a, b = m3.as_real_imag()
     assert a == m1
     assert b == m1
 
@@ -508,7 +512,7 @@ def test_conjugate():
 
 
 def test_doit():
-    a = OperationsOnlyMatrix([[Add(x,x, evaluate=False)]])
+    a = OperationsOnlyMatrix([[Add(x, x, evaluate=False)]])
     assert a[0] != 2*x
     assert a.doit() == Matrix([[2*x]])
 
@@ -606,7 +610,7 @@ def test_xreplace():
 def test_permute():
     a = OperationsOnlyMatrix(3, 4, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
-    raises(IndexError, lambda: a.permute([[0,5]]))
+    raises(IndexError, lambda: a.permute([[0, 5]]))
     b = a.permute_rows([[0, 2], [0, 1]])
     assert a.permute([[0, 2], [0, 1]]) == b == Matrix([
                                             [5,  6,  7,  8],
@@ -781,7 +785,7 @@ def test_div():
 
 # DeterminantOnlyMatrix tests
 def test_det():
-    a = DeterminantOnlyMatrix(2,3,[1,2,3,4,5,6])
+    a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
     raises(NonSquareMatrixError, lambda: a.det())
 
     z = zeros_Determinant(2)
@@ -790,11 +794,12 @@ def test_det():
     assert ey.det() == 1
 
     x = Symbol('x')
-    a = DeterminantOnlyMatrix(0,0,[])
-    b = DeterminantOnlyMatrix(1,1,[5])
-    c = DeterminantOnlyMatrix(2,2,[1,2,3,4])
-    d = DeterminantOnlyMatrix(3,3,[1,2,3,4,5,6,7,8,8])
-    e = DeterminantOnlyMatrix(4,4,[x,1,2,3,4,5,6,7,2,9,10,11,12,13,14,14])
+    a = DeterminantOnlyMatrix(0, 0, [])
+    b = DeterminantOnlyMatrix(1, 1, [5])
+    c = DeterminantOnlyMatrix(2, 2, [1, 2, 3, 4])
+    d = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8])
+    e = DeterminantOnlyMatrix(4, 4,
+        [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
 
     # the method keyword for `det` doesn't kick in until 4x4 matrices,
     # so there is no need to test all methods on smaller ones
@@ -811,7 +816,8 @@ def test_det():
 
 def test_adjugate():
     x = Symbol('x')
-    e = DeterminantOnlyMatrix(4,4,[x,1,2,3,4,5,6,7,2,9,10,11,12,13,14,14])
+    e = DeterminantOnlyMatrix(4, 4,
+        [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
 
     adj = Matrix([
         [   4,         -8,         4,         0],
@@ -822,13 +828,14 @@ def test_adjugate():
     assert e.adjugate(method='bareiss') == adj
     assert e.adjugate(method='berkowitz') == adj
 
-    a = DeterminantOnlyMatrix(2,3,[1,2,3,4,5,6])
+    a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
     raises(NonSquareMatrixError, lambda: a.adjugate())
 
 
 def test_cofactor_and_minors():
     x = Symbol('x')
-    e = DeterminantOnlyMatrix(4,4,[x,1,2,3,4,5,6,7,2,9,10,11,12,13,14,14])
+    e = DeterminantOnlyMatrix(4, 4,
+        [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
 
     m = Matrix([
         [ x,  1,  3],
@@ -844,31 +851,32 @@ def test_cofactor_and_minors():
             [4, 5,  6],
             [2, 9, 10]])
 
-    assert e.minor_submatrix(1,2) == m
-    assert e.minor_submatrix(-1,-1) == sub
-    assert e.minor(1,2) == -17*x - 142
-    assert e.cofactor(1,2) == 17*x + 142
+    assert e.minor_submatrix(1, 2) == m
+    assert e.minor_submatrix(-1, -1) == sub
+    assert e.minor(1, 2) == -17*x - 142
+    assert e.cofactor(1, 2) == 17*x + 142
     assert e.cofactor_matrix() == cm
     assert e.cofactor_matrix(method="bareiss") == cm
     assert e.cofactor_matrix(method="berkowitz") == cm
 
-    raises(ValueError, lambda: e.cofactor(4,5))
-    raises(ValueError, lambda: e.minor(4,5))
-    raises(ValueError, lambda: e.minor_submatrix(4,5))
+    raises(ValueError, lambda: e.cofactor(4, 5))
+    raises(ValueError, lambda: e.minor(4, 5))
+    raises(ValueError, lambda: e.minor_submatrix(4, 5))
 
-    a = DeterminantOnlyMatrix(2,3,[1,2,3,4,5,6])
-    assert a.minor_submatrix(0,0) == Matrix([[5, 6]])
+    a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
+    assert a.minor_submatrix(0, 0) == Matrix([[5, 6]])
 
-    raises(ValueError, lambda: DeterminantOnlyMatrix(0,0,[]).minor_submatrix(0,0))
-    raises(NonSquareMatrixError, lambda: a.cofactor(0,0))
-    raises(NonSquareMatrixError, lambda: a.minor(0,0))
+    raises(ValueError, lambda:
+        DeterminantOnlyMatrix(0, 0, []).minor_submatrix(0, 0))
+    raises(NonSquareMatrixError, lambda: a.cofactor(0, 0))
+    raises(NonSquareMatrixError, lambda: a.minor(0, 0))
     raises(NonSquareMatrixError, lambda: a.cofactor_matrix())
 
 
 def test_charpoly():
     x, y = Symbol('x'), Symbol('y')
 
-    m = DeterminantOnlyMatrix(3,3,[1,2,3,4,5,6,7,8,9])
+    m = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
 
     assert eye_Determinant(3).charpoly(x) == Poly((x - 1)**3, x)
     assert eye_Determinant(3).charpoly(y) == Poly((y - 1)**3, y)
@@ -1007,7 +1015,7 @@ def test_echelon_form():
                      [ 1],
                      [-2],
                      [ 1]])]
-    rows = [a[i,:] for i in range(a.rows)]
+    rows = [a[i, :] for i in range(a.rows)]
     a_echelon = a.echelon_form()
     assert a_echelon.is_echelon
     verify_row_null_space(a, rows, nulls)
@@ -1015,7 +1023,7 @@ def test_echelon_form():
 
     a = ReductionsOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8])
     nulls = []
-    rows = [a[i,:] for i in range(a.rows)]
+    rows = [a[i, :] for i in range(a.rows)]
     a_echelon = a.echelon_form()
     assert a_echelon.is_echelon
     verify_row_null_space(a, rows, nulls)
@@ -1029,7 +1037,7 @@ def test_echelon_form():
              [-S(3)/2],
              [   0],
              [   1]])]
-    rows = [a[i,:] for i in range(a.rows)]
+    rows = [a[i, :] for i in range(a.rows)]
     a_echelon = a.echelon_form()
     assert a_echelon.is_echelon
     verify_row_null_space(a, rows, nulls)
@@ -1040,7 +1048,7 @@ def test_echelon_form():
              [   0],
              [  -3],
              [   1]])]
-    rows = [a[i,:] for i in range(a.rows)]
+    rows = [a[i, :] for i in range(a.rows)]
     a_echelon = a.echelon_form()
     assert a_echelon.is_echelon
     verify_row_null_space(a, rows, nulls)
@@ -1054,7 +1062,7 @@ def test_echelon_form():
              [ 0],
              [-1],
              [ 1]])]
-    rows = [a[i,:] for i in range(a.rows)]
+    rows = [a[i, :] for i in range(a.rows)]
     a_echelon = a.echelon_form()
     assert a_echelon.is_echelon
     verify_row_null_space(a, rows, nulls)
@@ -1064,7 +1072,7 @@ def test_echelon_form():
              [-1],
              [1],
              [0]])]
-    rows = [a[i,:] for i in range(a.rows)]
+    rows = [a[i, :] for i in range(a.rows)]
     a_echelon = a.echelon_form()
     assert a_echelon.is_echelon
     verify_row_null_space(a, rows, nulls)
@@ -1137,24 +1145,24 @@ def test_rref():
 
 # SpecialOnlyMatrix tests
 def test_eye():
-    assert list(SpecialOnlyMatrix.eye(2,2)) == [1, 0, 0, 1]
+    assert list(SpecialOnlyMatrix.eye(2, 2)) == [1, 0, 0, 1]
     assert list(SpecialOnlyMatrix.eye(2)) == [1, 0, 0, 1]
     assert type(SpecialOnlyMatrix.eye(2)) == SpecialOnlyMatrix
     assert type(SpecialOnlyMatrix.eye(2, cls=Matrix)) == Matrix
 
 
 def test_ones():
-    assert list(SpecialOnlyMatrix.ones(2,2)) == [1, 1, 1, 1]
+    assert list(SpecialOnlyMatrix.ones(2, 2)) == [1, 1, 1, 1]
     assert list(SpecialOnlyMatrix.ones(2)) == [1, 1, 1, 1]
-    assert SpecialOnlyMatrix.ones(2,3) == Matrix([[1, 1, 1], [1, 1, 1]])
+    assert SpecialOnlyMatrix.ones(2, 3) == Matrix([[1, 1, 1], [1, 1, 1]])
     assert type(SpecialOnlyMatrix.ones(2)) == SpecialOnlyMatrix
     assert type(SpecialOnlyMatrix.ones(2, cls=Matrix)) == Matrix
 
 
 def test_zeros():
-    assert list(SpecialOnlyMatrix.zeros(2,2)) == [0, 0, 0, 0]
+    assert list(SpecialOnlyMatrix.zeros(2, 2)) == [0, 0, 0, 0]
     assert list(SpecialOnlyMatrix.zeros(2)) == [0, 0, 0, 0]
-    assert SpecialOnlyMatrix.zeros(2,3) == Matrix([[0, 0, 0], [0, 0, 0]])
+    assert SpecialOnlyMatrix.zeros(2, 3) == Matrix([[0, 0, 0], [0, 0, 0]])
     assert type(SpecialOnlyMatrix.zeros(2)) == SpecialOnlyMatrix
     assert type(SpecialOnlyMatrix.zeros(2, cls=Matrix)) == Matrix
 
@@ -1464,8 +1472,10 @@ def test_jordan_form():
     P, J = A.jordan_form()
     assert simplify(P*J*P.inv()) == A
 
-    assert EigenOnlyMatrix(1,1,[1]).jordan_form() == (Matrix([1]), Matrix([1]))
-    assert EigenOnlyMatrix(1,1,[1]).jordan_form(calc_transform=False) == Matrix([1])
+    assert EigenOnlyMatrix(1, 1, [1]).jordan_form() == (
+        Matrix([1]), Matrix([1]))
+    assert EigenOnlyMatrix(1, 1, [1]).jordan_form(
+        calc_transform=False) == Matrix([1])
 
     # make sure if we cannot factor the characteristic polynomial, we raise an error
     m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
@@ -1538,7 +1548,7 @@ def test_jacobian2():
 
     m = CalculusOnlyMatrix(2, 2, [1, 2, 3, 4])
     m2 = CalculusOnlyMatrix(4, 1, [1, 2, 3, 4])
-    raises(TypeError, lambda: m.jacobian(Matrix([1,2])))
+    raises(TypeError, lambda: m.jacobian(Matrix([1, 2])))
     raises(TypeError, lambda: m2.jacobian(m))
 
 
@@ -1550,7 +1560,7 @@ def test_limit():
 
 def test_issue_13774():
     M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    v = [1,1,1]
+    v = [1, 1, 1]
     raises(TypeError, lambda: M*v)
     raises(TypeError, lambda: v*M)
 
