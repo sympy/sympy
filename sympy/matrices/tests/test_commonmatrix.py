@@ -1577,8 +1577,8 @@ def test_banded():
     assert isinstance(banded(2, 4, {}), SparseMatrix)
     assert banded(2, 4, {}) == zeros(2, 4)
     assert banded({0: 0, 1: 0}) == zeros(0)
-    assert banded({0: [1, 2]}) == Matrix([1, 2])
-    assert banded({1: (1, 2, 3, 0), -1: (4, 5, 6)}) == \
+    assert banded({0: Matrix([1, 2])}) == Matrix([1, 2])
+    assert banded({1: [1, 2, 3, 0], -1: [4, 5, 6]}) == \
         banded({1: (1, 2, 3), -1: (4, 5, 6)}) == \
         Matrix([
         [0, 1, 0, 0],
@@ -1606,7 +1606,7 @@ def test_banded():
         Matrix([
         [1, 0, 0],
         [0, 1, 0]])
-    vert = [1, 2, 3]
+    vert = Matrix([1, 2, 3])
     assert banded({0: vert}, cols=3) == \
         Matrix([
         [1, 0, 0],

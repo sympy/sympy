@@ -789,47 +789,47 @@ class MatrixSpecial(MatrixRequired):
 
         # fill a default dict with the diagonal entries
         diag_entries = defaultdict(int)
-        R = C = 0  # keep track of the biggest index seen
+        rmax = cmax = 0  # keep track of the biggest index seen
         for m in args:
             if isinstance(m, list):
-                if not strict:
-                    m = SparseMatrix(m)
-                    for (i, j), mij in m._smat.items():
-                        diag_entries[(i + R, j + C)] = mij
-                    r, c = m.shape
-                    m = []  # to skip process below
-                else:
+                if strict:
                     # if malformed, Matrix will raise an error
                     _ = Matrix(m)
                     r, c = _.shape
                     m = _.tolist()
+                else:
+                    m = SparseMatrix(m)
+                    for (i, j), _ in m._smat.items():
+                        diag_entries[(i + rmax, j + cmax)] = _
+                    r, c = m.shape
+                    m = []  # to skip process below
             elif hasattr(m, 'shape'):  # a Matrix
                 # convert to list of lists
                 r, c = m.shape
                 m = m.tolist()
             else:  # in this case, we're a single value
-                diag_entries[(R, C)] = m
-                R += 1
-                C += 1
+                diag_entries[(rmax, cmax)] = m
+                rmax += 1
+                cmax += 1
                 continue
             # process list of lists
             for i in range(len(m)):
-                for j, mij in enumerate(m[i]):
-                    diag_entries[(i + R, j + C)] = mij
-            R += r
-            C += c
+                for j, _ in enumerate(m[i]):
+                    diag_entries[(i + rmax, j + cmax)] = _
+            rmax += r
+            cmax += c
         rows = kwargs.get('rows', None)
         cols = kwargs.get('cols', None)
         if rows is None:
             rows, cols = cols, rows
         if rows is None:
-            rows, cols = R, C
+            rows, cols = rmax, cmax
         else:
             cols = rows if cols is None else cols
-        if rows < R or cols < C:
+        if rows < rmax or cols < cmax:
             raise ValueError(filldedent('''
                 The constructed matrix is {} x {} but a size of {} x {}
-                was specified.'''.format(R, C, rows, cols)))
+                was specified.'''.format(rmax, cmax, rows, cols)))
         return klass._eval_diag(rows, cols, diag_entries)
 
     @classmethod
@@ -2543,10 +2543,10 @@ def banded(*args, **kwargs):
     [0, 2, 0, 16,  0],
     [0, 0, 2,  0, 25]])
 
-    Matrices (or lists which are interpreted as the same) fill
-    with their diagonal on the indicated diagonal:
+    The diagonal of matrices placed on a diagonal will coincide
+    with the indicated diagonal:
 
-    >>> vert = [1, 2, 3]
+    >>> vert = Matrix([1, 2, 3])
     >>> banded({0: vert}, cols=3)
     Matrix([
     [1, 0, 0],
@@ -2611,7 +2611,7 @@ def banded(*args, **kwargs):
     >>> u2 = Matrix([
     ... [1, 1],
     ... [0, 1]])
-    >>> banded({0: (2,)*5, 1: (u2,)*3})
+    >>> banded({0: [2]*5, 1: [u2]*3})
     Matrix([
     [2, 1, 1, 0, 0, 0, 0],
     [0, 2, 1, 0, 0, 0, 0],
@@ -2650,17 +2650,17 @@ def banded(*args, **kwargs):
     # first handle objects with size
     for d, v in args[-1].items():
         r, c = rc(d)
-        # note: only tuple is being recognized since this
+        # note: only lits and tuple are recognized since this
         # will allow other Basic objects like Tuple
         # into the matrix if so desired
-        if isinstance(v, tuple):
-            xtra = 0
+        if isinstance(v, (list, tuple)):
+            extra = 0
             for i, vi in enumerate(v):
-                i += xtra
+                i += extra
                 if is_sequence(vi):
                     vi = SparseMatrix(vi)
                     smat[r + i, c + i] = vi
-                    xtra += min(vi.shape) - 1
+                    extra += min(vi.shape) - 1
                 else:
                     smat[r + i, c + i] = vi
         elif is_sequence(v):
