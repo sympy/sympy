@@ -100,8 +100,8 @@ def test_infinity():
     assert oo.is_commutative is True
     assert oo.is_integer is False
     assert oo.is_rational is False
-    assert oo.is_algebraic is None
-    assert oo.is_transcendental is None
+    assert oo.is_algebraic is False
+    assert oo.is_transcendental is False
     assert oo.is_real is True
     assert oo.is_complex is True
     assert oo.is_noninteger is True
@@ -127,8 +127,8 @@ def test_neg_infinity():
     assert mm.is_commutative is True
     assert mm.is_integer is False
     assert mm.is_rational is False
-    assert mm.is_algebraic is None
-    assert mm.is_transcendental is None
+    assert mm.is_algebraic is False
+    assert mm.is_transcendental is False
     assert mm.is_real is True
     assert mm.is_complex is True
     assert mm.is_noninteger is True

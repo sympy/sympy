@@ -165,7 +165,7 @@ _assume_rules = FactRules([
     'integer        ->  rational',
     'rational       ->  real & finite',
     'rational       ->  algebraic',
-    'algebraic      ->  complex',
+    'algebraic      ->  complex & finite',
     'real           ->  complex',
     'real           ->  hermitian',
     'imaginary      ->  complex',
@@ -176,7 +176,7 @@ _assume_rules = FactRules([
     'even           ==  integer & !odd',
 
     'real           ==  negative | zero | positive',
-    'transcendental ==  complex & !algebraic',
+    'transcendental ==  complex & !algebraic & finite',
 
     'negative       ==  nonpositive & nonzero',
     'positive       ==  nonnegative & nonzero',
