@@ -750,8 +750,9 @@ class MatrixSpecial(MatrixRequired):
         [3, 0, 0],
         [0, 4, 5]])
 
-        Elements within a list need not all be of the same length unless
-        `strict` is set to True:
+        When `unpack` is False, elements within a list need not all be
+        of the same length. Setting `strict` to True would raise a
+        ValueError for the following:
 
         >>> Matrix.diag([[1, 2, 3], [4, 5], [6]], unpack=False)
         Matrix([
@@ -2511,6 +2512,15 @@ def banded(*args, **kwargs):
     Unless dimensions are given, the size of the returned matrix will
     be large enough to contain the largest non-zero value provided.
 
+    kwargs
+    ======
+
+    rows : rows of the resulting matrix; computed if
+           not given.
+
+    cols : columns of the resulting matrix; computed if
+           not given.
+
     Examples
     ========
 
@@ -2629,6 +2639,10 @@ def banded(*args, **kwargs):
         if len(args) == 1:
             rows = kwargs.get('rows', None)
             cols = kwargs.get('cols', None)
+            if rows is not None:
+                rows = as_int(rows)
+            if cols is not None:
+                cols = as_int(cols)
         elif len(args) == 2:
             rows = cols = as_int(args[0])
         else:
@@ -2650,7 +2664,7 @@ def banded(*args, **kwargs):
     # first handle objects with size
     for d, v in args[-1].items():
         r, c = rc(d)
-        # note: only lits and tuple are recognized since this
+        # note: only list and tuple are recognized since this
         # will allow other Basic objects like Tuple
         # into the matrix if so desired
         if isinstance(v, (list, tuple)):
@@ -2697,8 +2711,13 @@ def banded(*args, **kwargs):
         raise ValueError('Designated rows %s < needed %s' % (rows, s.rows))
     if cols is not None and cols < s.cols:
         raise ValueError('Designated cols %s < needed %s' % (cols, s.cols))
-    rows = rows or s.rows
-    cols = cols or s.cols
+    if rows is cols is None:
+        rows = s.rows
+        cols = s.cols
+    elif rows is not None and cols is None:
+        cols = max(rows, s.cols)
+    elif cols is not None and rows is None:
+        rows = max(cols, s.rows)
     def update(i, j, v):
         # update smat and make sure there are
         # no collisions

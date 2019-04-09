@@ -1568,11 +1568,11 @@ def test_banded():
     raises(TypeError, lambda: banded(1, 2))
     raises(TypeError, lambda: banded(1, 2, 3))
     raises(TypeError, lambda: banded(1, 2, 3, 4))
-    raises(ValueError, lambda: banded({0: (1,2)}, rows=1))
-    raises(ValueError, lambda: banded({0: (1,2)}, cols=1))
-    raises(ValueError, lambda: banded(1, {0: (1,2)}))
-    raises(ValueError, lambda: banded(2, 1, {0: (1,2)}))
-    raises(ValueError, lambda: banded(1, 2, {0: (1,2)}))
+    raises(ValueError, lambda: banded({0: (1, 2)}, rows=1))
+    raises(ValueError, lambda: banded({0: (1, 2)}, cols=1))
+    raises(ValueError, lambda: banded(1, {0: (1, 2)}))
+    raises(ValueError, lambda: banded(2, 1, {0: (1, 2)}))
+    raises(ValueError, lambda: banded(1, 2, {0: (1, 2)}))
 
     assert isinstance(banded(2, 4, {}), SparseMatrix)
     assert banded(2, 4, {}) == zeros(2, 4)
@@ -1639,9 +1639,14 @@ def test_banded():
         [0, 0, 0, 2, 1, 0, 0],
         [0, 0, 0, 0, 2, 1, 1],
         [0, 0, 0, 0, 0, 0, 1]])
-    assert banded({0:(0,ones(2)),2:2}) == \
+    assert banded({0:(0, ones(2)), 2: 2}) == \
         Matrix([
         [0, 0, 2],
         [0, 1, 1],
         [0, 1, 1]])
     raises(ValueError, lambda: banded({0: (0, ones(2)), 1: 2}))
+    assert banded({0: 1}, cols=3) == banded({0: 1}, rows=3) == eye(3)
+    assert banded({1: 1}, rows=3) == Matrix([
+        [0, 1, 0],
+        [0, 0, 1],
+        [0, 0, 0]])
