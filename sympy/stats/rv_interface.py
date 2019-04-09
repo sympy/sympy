@@ -248,8 +248,8 @@ def quantile(X, p):
     |
     \6   for p < 1
     """
-    _value_check(p > 0, "The order p must be positive.")
-    _value_check(p < 1, "The order p must be less than 1.")
+    _value_check(p >= 0, "The order p must be positive.")
+    _value_check(p <= 1, "The order p must be less than 1.")
 
     if pspace(X).is_Continuous:
         x = Symbol("x")
