@@ -88,6 +88,7 @@ def test_rationalize():
 def test_factorial_fail():
     inputs = ['x!!!', 'x!!!!', '(!)']
 
+
     for text in inputs:
         try:
             parse_expr(text)
@@ -100,17 +101,21 @@ def test_repeated_fail():
     inputs = ['1[1]', '.1e1[1]', '0x1[1]', '1.1j[1]', '1.1[1 + 1]',
         '0.1[[1]]', '0x1.1[1]']
 
+
     # All are valid Python, so only raise TypeError for invalid indexing
     for text in inputs:
         raises(TypeError, lambda: parse_expr(text))
+
 
     inputs = ['0.1[', '0.1[1', '0.1[]']
     for text in inputs:
         raises((TokenError, SyntaxError), lambda: parse_expr(text))
 
+
 def test_repeated_dot_only():
     assert parse_expr('.[1]') == Rational(1, 9)
     assert parse_expr('1 + .[1]') == Rational(10, 9)
+
 
 def test_local_dict():
     local_dict = {
@@ -160,6 +165,7 @@ def test_issue_7663():
     e = '2*(x+1)'
     assert parse_expr(e, evaluate=0) == parse_expr(e, evaluate=False)
 
+
 def test_issue_10560():
     inputs = {
         '4*-3' : '(-3)*4',
@@ -167,6 +173,7 @@ def test_issue_10560():
     }
     for text, result in inputs.items():
         assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
+
 
 def test_issue_10773():
     inputs = {
@@ -184,6 +191,7 @@ def test_split_symbols():
     y = Symbol('y')
     xy = Symbol('xy')
 
+
     assert parse_expr("xy") == xy
     assert parse_expr("xy", transformations=transformations) == x*y
 
@@ -195,6 +203,7 @@ def test_split_symbols_function():
     y = Symbol('y')
     a = Symbol('a')
     f = Function('f')
+
 
     assert parse_expr("ay(x+1)", transformations=transformations) == a*y*(x+1)
     assert parse_expr("af(x+1)", transformations=transformations,
@@ -219,6 +228,7 @@ def test_match_parentheses_implicit_multiplication():
                       (implicit_multiplication,)
     raises(TokenError, lambda: parse_expr('(1,2),(3,4]',transformations=transformations))
 
+
 def test_convert_equals_signs():
     transformations = standard_transformations + \
                         (convert_equals_signs, )
@@ -240,12 +250,15 @@ def test_unicode_names():
     if not PY3:
         skip("test_unicode_names can only pass in Python 3")
 
+
     assert parse_expr(u'α') == Symbol(u'α')
+
 
 def test_python3_features():
     # Make sure the tokenizer can handle Python 3-only features
     if sys.version_info < (3, 6):
         skip("test_python3_features requires Python 3.6 or newer")
+
 
     assert parse_expr("123_456") == 123456
     assert parse_expr("1.2[3_4]") == parse_expr("1.2[34]") == Rational(611, 495)
