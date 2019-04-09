@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (https://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   width="750"
+   height="750"
+   id="svg_SympyLogo">
+   <title>SymPy Logo, with tail.</title>
+   <desc>
+I created this logo and permit its free use on the same terms as the rest of Sympy's code and documentation.
+
+Fredrik Johansson
+   </desc>
+  <defs >
+    <linearGradient
+       id="linearGradient51087">
+      <stop
+         offset="0"
+         id="stop51089"
+         style="stop-color:#ffffff;stop-opacity:1;" />
+      <stop
+         offset="1"
+         id="stop51091"
+         style="stop-color:#ffffff;stop-opacity:0;" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient56927"
+       x1="123.53376"
+       y1="182.21277"
+       x2="43.33"
+       gradientUnits="userSpaceOnUse"
+       xlink:href="#linearGradient51087"
+       y2="182.21277" />
+
+     <mask id="Mask" maskUnits="userSpaceOnUse"
+          x="0" y="0" width="800.202515" height="800.81773">
+
+      <rect x="43.331245" y="182.21277" width="81.202515" height="185.81773" fill="url(#linearGradient56927)"  />
+      <rect x="123.53376" y="0" width="800" height="800" fill="white"  />
+    </mask>
+  </defs>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+
+<g id="SympyLogo" transform="translate(-7,10)">
+
+    <!--
+
+    text "Sympy"
+
+    -->
+    <g id="SymPy_text">
+      <text
+         style="font-family:FreeSerif;font-size:160px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stroke:#7d7d7d;stroke-width:1.99999976;">
+         <tspan x="380" y="635" text-anchor="middle">SymPy</tspan>
+      </text>
+    </g>
+
+    <!-- The tail -->
+    <g id="SnakeTail" mask="url(#Mask)">
+        <g id="layer1" style="opacity:1;display:inline">
+            <!-- black box around the tail -->
+            <path d="M 170.92127,334.28345 C 170.92127,334.28345 153.25437,324.04868 130.84114,318.30722 C 108.42791,312.56576 103.94526,314.06354 81.268342,311.31762 C 58.591424,308.57171 40.133468,307.32356 40.133468,307.32356 L 39.078727,228.44091 C 39.078727,228.44091 72.158862,232.18533 98.52737,236.42902 C 124.89588,240.67271 126.45428,240.92234 144.55276,245.41566 C 162.65124,249.90898 170.92127,254.40229 170.92127,254.40229 L 170.92127,334.28345 z "
+               style="opacity:1;fill:#72ba45;fill-opacity:1;fill-rule:evenodd;stroke:#293720;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+        </g>
+        <!-- snake's highlight (tail) -->
+        <path d="M 162.55026,277.04847 C 162.55026,277.04847 139.80026,266.78289 107.55026,261.28413 C 75.300252,255.78538 32.550252,253.05346 32.550252,253.05346 L 32.050252,243.19061 C 32.050252,243.19061 76.550252,245.27291 109.55026,250.22178 C 142.55026,255.17066 162.55026,262.98613 162.55026,262.98613 L 162.55026,277.04847 z "
+           style="fill:#c7e06d;fill-opacity:1;fill-rule:evenodd;stroke:#c7e06d;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.53947371"/>
+        <!-- snake's shadow on himself (tail) -->
+        <path d="M 167.58579,331.03375 C 167.58579,331.03375 154.33579,321.63018 122.08579,314.99935 C 89.835786,308.36852 37.171572,306.61019 37.171572,306.61019 L 37.585786,276.51904 C 37.585786,276.51904 81.585786,277.43576 114.58579,283.4035 C 147.58579,289.37125 167.08579,297.31737 167.08579,297.31737 L 167.58579,331.03375 z "
+           style="opacity:1;fill:#2e642c;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+        <!-- snake's light shadow on himself (tail) -->
+        <path d="M 167.20711,314.61954 C 167.20711,314.61954 153.95711,304.3209 121.70711,299.87948 C 89.45711,295.43805 36.792891,294.2603 36.792891,294.2603 L 37.207105,274.10483 C 37.207105,274.10483 81.20711,277.71886 114.20711,281.71614 C 147.20711,285.71342 166.70711,296.03584 166.70711,296.03584 L 167.20711,314.61954 z "
+           style="opacity:1;fill:#4f873b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+
+        <g id="TailSpots" style="opacity:0.647343">
+            <!-- snake's spot 17 -->
+            <path
+               id="path5172"
+               transform="translate(6.1263726,4.9387864)"
+               d="M 151.32084 278.78738 A 16.970562 18.384775 0 1 1  117.37972,278.78738 A 16.970562 18.384775 0 1 1  151.32084 278.78738 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 18 -->
+            <path
+               id="path5174"
+               transform="translate(6.1263726,4.9387864)"
+               d="M 83.438599 268.88788 A 20.506096 21.213203 0 1 1  42.426407,268.88788 A 20.506096 21.213203 0 1 1  83.438599 268.88788 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+        </g>
+    </g>
+
+
+    <!--
+
+    The cube
+
+    -->
+    <g id="Cube">
+      <!-- cube left edge -->
+      <path
+         d="M 172.63069,123.73147 L 372.63069,183.73147 L 372.63069,453.73147 L 172.63069,393.73147 L 172.63069,123.73147 z "
+         style="fill:#decd85;fill-opacity:1;fill-rule:evenodd;stroke:#505050;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.61842108" />
+      <!-- cube right edge -->
+      <path
+         d="M 572.63069,123.73147 L 372.63069,183.73147 L 372.63069,453.73147 L 572.63069,393.73147 L 572.63069,123.73147 z "
+         style="fill:#b9b083;fill-opacity:1;fill-rule:evenodd;stroke:#505050;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none" />
+      <!-- cube top edge -->
+      <path
+         d="M 172.6305,123.73168 L 372.6305,183.73168 L 572.6305,123.73168 L 372.6305,53.731683 L 172.6305,123.73168 z "
+         style="fill:#eee5bd;fill-opacity:1;fill-rule:evenodd;stroke:#505050;stroke-width:8;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.65789473" />
+      <!-- text "∫" on the right edge -->
+      <g>
+      <text
+         transform="matrix(0.9140294,-0.3682282,-3.9409227e-2,1.1099332,0,0)"
+         style="font-size:180px;font-style:normal;font-weight:normal;fill:#897751;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:LMRoman10, FreeSerif, times">
+         <tspan x="480" y="500" style="font-family:LMRoman10, FreeSerif, times;font-size:180px;fill:#9a8354;fill-opacity:1" text-anchor="middle">∫</tspan>
+      </text>
+      </g>
+      <!-- text "dx" on the right edge of cube-->
+      <g>
+        <text
+           transform="matrix(0.8246541,-0.2574405,0,1.2126296,0,0)"
+           style="font-size:110px;font-style:normal;font-weight:normal;fill:#897751;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:LMRoman10, Times, FreeSerif">
+           <tspan x="555" y="400"
+             style="font-family:LMRoman10, Times, FreeSerif;font-size:110px;fill:#897751;fill-opacity:1">d<tspan style="font-size:110px;font-style:italic;">x</tspan></tspan>
+        </text>
+      </g>
+      <!-- text "Σ" on the left edge -->
+      <g>
+      <text
+         transform="matrix(0.8385983,0.2552685,0,1.192466,0,0)"
+         style="font-size:244px;font-style:normal;font-weight:normal;fill:#897751;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:LMRoman10, Times, FreeSerif">
+         <tspan x="240.909" y="258.98959" style="font-family:LMRoman10, Times, FreeSerif;font-size:244px;fill:#9a8354;fill-opacity:1" >Σ</tspan>
+      </text>
+      </g>
+        <!-- texts "1 0" and "0 1" at the top edge-->
+      <g>
+        <text
+           style="font-size:50px;font-style:normal;font-weight:normal;opacity:1;fill:#9a8354;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;display:inline;font-family:LMRoman10, Times, FreeSerif"
+           transform="matrix(1.4265625,-0.3736626,1.32988,0.3526474,0,0)">
+            <tspan y="292" x="-65" style="font-family:LMRoman10, Times, FreeSerif;font-size:50px;font-style:normal;font-weight:bold">1 0</tspan>
+            <tspan y="366" x="-65" style="font-family:LMRoman10, Times, FreeSerif;font-size:50px;font-style:normal;font-weight:bold">0 1</tspan>
+        </text>
+      </g>
+        <!--  brackets "[", "]" at the top edge-->
+        <g
+           style="opacity:1;display:inline"
+           transform="matrix(0.7152743,-0.2134016,0.6667979,0.2013996,-410.97556,263.60616)">
+          <text
+             transform="matrix(0.6991488,8.0592938e-3,1.4509379e-2,1.4304778,0,0)"
+             style="font-size:160px;font-style:normal;font-weight:bold;fill:#9a8354;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:font-family:LMRoman10, Times, FreeSerif;">
+             <tspan x="1090" y="200" style="font-family:LMRoman10, Times, FreeSerif;font-size:160px;font-weight:bold;fill:#9a8354;fill-opacity:1">
+                [</tspan>
+             <tspan x="1368" y="200" style="font-family:LMRoman10, Times, FreeSerif;font-size:160px;font-weight:bold;fill:#9a8354;fill-opacity:1">
+                ]</tspan>
+          </text>
+        </g>
+    </g>
+
+    <!--
+
+    Snake
+
+    -->
+    <g is="SnakeGroup">
+        <!-- Snake's shadow on cube -->
+        <g id="SnakeShadowOnCube">
+            <!-- Shadow of snake middle down to right edge of cube-->
+            <path
+               d="M 361,258.36218 C 344.25,244.36218 423.75,261.61218 451,270.36218 C 478.25,279.11218 494.25,287.36218 511,301.36218 C 522.33477,310.83602 535.42395,333.13864 537.49137,346.44412 C 538.47909,352.80087 542.80986,407.19103 534,404.36218 C 532.93047,404.01875 503.41992,414.81265 519.02041,408.47313 C 553.73372,394.36679 377.09258,271.8127 361,258.36218 z "
+               style="opacity:0.5;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
+            <!-- Shadow of snake middle down to left edge  of cube-->
+            <path
+               d="M 238.15783,193.79605 C 233.48673,235.57569 261.36868,272.73975 291.77914,295.08527 C 315.71476,312.84952 341.9809,330.54764 371.51347,333.75305 C 394.14313,331.7525 423.12336,328.86954 435.78973,353.57083 C 454.28966,367.76387 470.51944,336.32412 457.95302,320.83992 C 437.44727,289.67892 404.02676,272.59327 374.24581,253.51284 C 328.66259,226.83539 292.81911,186.69507 246.40013,161.81326 C 242.21568,167.22616 239.94805,179.98893 238.15783,193.79605 z "
+               style="opacity:0.5;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.08229625px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
+
+          <!-- shadow of the snake at the top edge  of cube -->
+            <path
+               d="M 532,109.36218 C 477.56207,107.16109 421.29815,105.4627 369.28644,124.36919 C 345.20915,131.96086 323.11617,153.36073 322.11152,179.68431 C 323.11059,190.48267 325.10346,200.79526 326.94371,211.46103 C 330.1646,224.25914 338.0251,235.76337 339.49837,248.96231 C 333.81456,254.25603 321.78124,244.39266 313.58655,243.5577 C 305.3758,238.89162 289.16165,239.4029 286.3125,231.26843 C 289.54166,199.29968 292.77084,167.33093 296,135.36218 C 329.66667,120.02885 363.33333,104.69552 397,89.362183 C 442,96.028851 487,102.69552 532,109.36218 z "
+               style="opacity:0.5;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+        </g>
+
+        <g id="SnakeBody">
+            <!-- Snake's body: contour -->
+            <path
+               d="M 248.76738,444.18516 C 243.63791,439.78633 231.07259,423.05209 226.51288,417.55292 C 216.65486,405.66381 231.95442,414.20912 245.32093,417.37787 C 283.63317,427.89897 327.40576,441.48989 365.6756,451.99274 C 387.06885,450.24202 412.39819,445.59032 429.76058,431.69931 C 448.16386,407.57456 452.59555,372.25162 439.86586,344.6263 C 420.83061,319.74212 387.17541,314.99618 358.92892,306.53097 C 324.80897,298.78823 294.78247,279.48262 270.2428,254.97193 C 239.02158,229.57945 238.89599,183.26989 252.84352,148.64219 C 260.99879,120.89553 280.85239,96.598844 308.63057,87.028872 C 352.65442,67.62918 401.39897,64.779372 448.80714,67.42593 C 494.45364,69.470678 539.97805,77.732378 582.20853,95.559865 C 601.73518,103.4313 617.72142,103.70347 639.08498,100.01689 C 649.94206,103.86786 662.38708,109.72219 668.86803,116.20788 C 680.61087,127.95931 686.90237,149.0547 697.53659,161.43339 C 717.6682,184.28402 687.18183,212.12601 662.94389,198.2573 C 638.43087,190.82942 603.66412,197.31944 591.82538,168.16152 C 586.17349,152.21717 573.37927,147.83876 573.99304,127.56434 C 558.43948,112.7444 531.07132,110.37993 510.8154,106.98341 C 450.82155,97.981471 383.95417,95.342512 330.43997,128.94197 C 307.88788,142.7927 294.37228,175.72748 309.80358,199.24027 C 329.4332,218.57717 359.51455,219.21382 384.56416,227.24836 C 433.13795,238.32667 485.80838,256.05817 513.16249,301.04628 C 527.44914,324.16664 527.23321,352.78779 529.06675,379.10258 C 530.16492,420.86377 518.05827,459.11626 473.18076,487.01459 C 426.24824,507.15582 386.14228,503.77763 342.64452,493.71224 C 304.79605,484.66473 278.74078,472.90801 248.76738,444.18516 z "
+               style="fill:#72ba45;fill-opacity:1;fill-rule:evenodd;stroke:#344829;stroke-width:8;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+
+            <!-- snake's right eye (lower)-->
+            <path
+               transform="translate(-3.5147186,12.242641)"
+               d="M 646.2956 162.82185 A 6.3639612 5.6568542 0 1 1  633.56768,162.82185 A 6.3639612 5.6568542 0 1 1  646.2956 162.82185 z"
+               style="opacity:0.5;fill:#000000;fill-opacity:1;stroke:#505050;stroke-width:6;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+            <!-- snake's left eye (upper)-->
+            <path
+               transform="translate(-7.7573593,6.5857864)"
+               d="M 674.57984 131.00204 A 6.3639612 6.3639612 0 1 1  661.85192,131.00204 A 6.3639612 6.3639612 0 1 1  674.57984 131.00204 z"
+               style="opacity:0.5;fill:#000000;fill-opacity:1;stroke:#505050;stroke-width:6;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+            <!-- snake's tongue (main part)-->
+            <path d="M 699.68521,195.61348 C 704.09243,200.85819 706.3328,206.92719 716.65577,206.92719 C 717.49956,211.14613 716.65577,216.66588 716.65577,221.06933"
+               style="fill:none;fill-rule:evenodd;stroke:#9d2020;stroke-width:6;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+            <!-- snake's tongue (left trailer)-->
+            <path d="M 716.49156,206.93455 C 716.50983,207.02592 728.47926,206.93455 733.46212,206.93455"
+               style="fill:none;fill-rule:evenodd;stroke:#9d2020;stroke-width:6;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+
+        <!-- Snake's shadows on himself -->
+        <g id="SnakeShadowsOnHimself">
+            <!-- snake's shadow on himself (in the middle, lefter) -->
+            <path
+               d="M 247.06512,201.86764 C 248.30064,216.74684 250.91685,229.20306 259.47664,240.55481 C 274.92211,261.03814 294.9141,276.60273 318.40601,289.05106 C 327.94129,294.10379 340.27792,298.36716 350.5694,301.21173 C 379.8897,310.06758 414.16073,316.65409 437.51349,338.76155 C 454.21105,358.36309 436.30047,321.48787 420.92286,309.83336 C 378.05452,277.34396 315.11824,283.41279 275.49867,244.2179 C 264.20088,232.16364 253.33027,217.04286 247.06512,201.86764 z "
+               style="fill:#2e642c;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+            <!-- snake's shadow on himself (in the bottom, right) -->
+            <path
+               d="M 523.94862,350.50954 C 522.02811,386.62931 514.62527,432.10082 489.997,458.3339 C 447.59776,488.24238 378.68563,490.2755 330.79072,473.48468 C 304.74219,465.39953 284.62232,453.57607 260.88687,440.1649 C 251.6006,434.89753 239.73585,422.0169 235.85537,420.61941 C 230.42706,418.6645 241.34186,435.73648 247.5668,442.21138 C 276.35005,475.1286 313.52343,484.83774 363.94728,496.58493 C 407.82884,502.33331 438.28223,505.84996 482.94534,478.82941 C 514.64777,454.60509 519.60377,434.61918 524.5784,411.00399 C 528.5741,374.32825 525.73381,376.38504 523.94862,350.50954 z "
+               style="fill:#2e642c;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+            <!-- snake's shadow on himself (in the top, right) -->
+            <path
+               d="M 307.358,201.83211 C 297.77513,174.4511 301.51384,150.87957 318.72151,136.15035 C 340.17032,117.79085 355.50681,112.08948 386.60178,102.68824 C 420.16081,99.837877 434.8296,100.16127 509.69277,104.29703 C 452.34365,94.026522 376.25927,84.401355 323.07428,113.07803 C 292.19608,130.89779 278.58954,172.27544 307.358,201.83211 z "
+               style="fill:#2e642c;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+            <!-- snake's shadow on himself (head) -->
+            <path d="M 576,122.86218 C 577.30319,124.00801 577.69415,130.59655 582.25532,137.75801 C 586.81649,144.91947 590.3351,144.77624 594.24468,151.50801 C 598.15426,158.23978 596.3298,158.09657 597.89363,164.68511 C 599.45746,171.27365 601.80319,178.57833 600.5,177.86218 C 599.19681,177.14603 597.24202,169.26843 592.68085,161.82051 C 588.11968,154.37259 586.1649,155.23197 582.25532,148.07051 C 578.34574,140.90905 578.60638,139.47676 577.04255,133.17468 C 575.47872,126.8726 574.69681,121.71635 576,122.86218 z "
+               style="fill:#2e642c;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+            <!-- snake's light shadow on himself (bottom) -->
+            <path d="M 522.64319,350.78705 C 519.21973,373.16777 512.35206,401.61123 501.59601,419.66249 C 482.94544,443.7239 474.81419,449.18002 450.36156,461.15873 C 411.34001,473.17157 360.64292,477.7804 314.76449,460.13943 C 290.53853,451.76006 265.36844,443.954 245.10431,426.57177 C 242.35009,421.13666 228.11149,413.47047 236.05709,425.05691 C 255.12468,458.0839 290.33319,473.36398 323.47205,482.37113 C 358.69754,491.98369 396.47937,498.88566 432.2069,488.2232 C 468.60263,481.61023 497.05438,462.51445 515.72147,424.97199 C 521.23604,412.10998 524.72504,381.33436 523.49152,367.18619 C 523.54439,361.6166 522.09703,356.3245 522.64319,350.78705 z "
+               style="opacity:1;fill:#4f873b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+            <!-- snake's light shadow on himself (middle) -->
+            <path d="M 247.42428,191.09585 C 248.6598,205.97505 251.27601,218.43127 259.8358,229.78302 C 275.28127,250.26635 295.27326,265.83094 318.76517,278.27927 C 328.30045,283.332 340.63708,287.59537 350.92856,290.43994 C 380.24886,299.29579 413.01989,309.3823 436.37265,331.48976 C 444.57021,338.5913 435.65963,319.71608 420.28202,308.06157 C 377.41368,275.57217 311.4774,279.641 271.85783,240.44611 C 260.56004,228.39185 253.68943,206.27107 247.42428,191.09585 z "
+               style="opacity:1;fill:#4f873b;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+
+        </g>
+
+        <!-- Snake's highlight -->
+        <g id="SnakeHighlight">
+            <!-- snake's highlight (central part) -->
+            <path
+               d="M 489.7672,394.90659 C 489.47029,366.86538 484.29786,317.36949 453.76189,293.93209 C 417.83458,257.90693 352.11793,267.23145 310.33529,241.15298 C 293.14393,225.57296 339.54721,236.84395 378.13739,246.5358 C 417.40648,255.67942 464.36477,264.27814 487.97958,298.55712 C 507.10485,331.10103 510.70558,373.27255 489.7672,394.90659 z "
+               style="fill:#c7e06d;fill-opacity:1;fill-rule:evenodd;stroke:#c7e06d;stroke-width:13.42280579;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.52631579"/>
+            <!-- snake's highlight (upper part) -->
+            <path
+               d="M 263.1579,189.5392 C 258.40845,162.2143 266.11039,131.92418 287.76286,113.55714 C 319.78301,85.432685 363.61159,76.515385 405.12245,75.703719 C 462.34797,72.956017 519.95279,81.54926 573.88726,100.87038 C 587.27572,105.54022 600.6462,110.35362 613.54214,116.27096 C 570.72057,107.99733 529.35869,92.62505 485.81319,87.823289 C 450.41521,83.52823 414.48796,82.240549 378.94965,84.996639 C 348.2552,89.096432 314.90705,95.439681 293.09992,119.48168 C 280.33821,129.92559 271.34887,144.80513 270.32156,161.50061 C 266.33567,180.32912 272.35978,201.56656 286.02551,214.42113 C 301.2713,225.04486 300.69317,225.71538 312.27967,230.26758 C 319.33961,233.04135 319.40182,234.13527 320.89344,238.26262 C 321.64662,240.34669 320.48756,242.50581 322.24015,244.26422 C 315.18468,243.03453 309.76089,242.60689 303.79104,239.77729 C 297.31223,236.70645 292.80789,233.57214 283.29803,225.64977 C 273.1104,215.2277 265.01053,204.99266 263.1579,189.5392 z "
+               style="fill:#c7e06d;fill-opacity:1;fill-rule:evenodd;stroke:#c7e06d;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.51315792"/>
+            <!-- snake's highlight (head, upper) -->
+            <path style="opacity:0.5;fill:#c7e06d;fill-opacity:1;stroke:#650606;stroke-width:0;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+               d="M 660.49999,124.8622 C 661.14879,128.1062 655.64658,120.34714 652.99999,118.3622 C 650.2621,116.30879 647.29128,116.00785 644.99999,114.8622 C 642.26316,113.49379 641.76881,112.63103 639.49999,110.3622 C 635.4879,106.35011 642.97627,108.8622 646.49999,108.8622 C 648.3767,108.8622 653.28316,112.75379 655.49999,113.8622 C 658.11385,115.16913 661.03485,116.88835 662.99999,118.3622 C 665.05465,119.90319 665.14667,122.15556 665.99999,123.8622 C 666.83332,125.52887 662.26775,124.27294 660.49999,124.8622 z "/>
+            <!-- snake's highlight (head, near the mouth) -->
+            <path
+               style="opacity:0.5;fill:#c7e06d;fill-opacity:1;stroke:#650606;stroke-width:0;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+               d="M 685.49999,192.3622 C 683.11398,195.54354 690.35517,188.15183 692.49999,183.8622 C 693.53206,181.79804 692.53382,174.99755 691.99999,172.8622 C 691.16759,169.53262 689.44972,167.46185 687.49999,164.8622 C 685.88444,162.70813 692.59167,166.65804 694.99999,167.8622 C 696.58264,168.65353 696.99999,171.88622 696.99999,174.3622 C 696.99999,176.8622 696.99999,179.3622 696.99999,181.8622 C 696.99999,184.55491 695.93159,187.49899 694.99999,189.3622 C 694.28995,190.78228 692.04938,190.3622 690.49999,190.3622"/>
+            <!-- snake's highlight (crown of the head) -->
+            <path
+               style="opacity:0.5;fill:#c7e06d;fill-opacity:1;stroke:#650606;stroke-width:0;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+               d="M 613.76867,167.06451 C 617.72427,159.83074 623.36507,157.16502 633.56766,157.16502 C 644.83988,157.16502 649.9638,157.43037 644.88137,147.26552 C 641.05944,139.62167 636.0229,136.6982 640.63873,127.46653 C 646.79773,115.14853 631.46916,124.44421 629.32502,126.05232 C 621.43458,131.97015 617.1194,131.70917 606.69761,131.70917 C 600.66508,131.70917 602.45497,134.87467 602.45497,140.19445"/>
+
+        </g>
+        <!-- Snake's Spots -->
+        <g  id="Spots" style="opacity:0.647343;display:inline">
+            <!-- snake's spot 1 -->
+            <path
+               id="path5123"
+               transform="translate(2.978574,-1.5883554)"
+               d="M 576.99911 108.37466 A 4.2426405 4.9497476 0 1 1  568.51383,108.37466 A 4.2426405 4.9497476 0 1 1  576.99911 108.37466 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 2 -->
+            <path
+               id="path5125"
+               transform="translate(-5.021426,-2.5883554)"
+               d="M 544.47224 97.060944 A 6.3639607 4.9497476 0 1 1  531.74432,97.060944 A 6.3639607 4.9497476 0 1 1  544.47224 97.060944 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 3 -->
+            <path
+               id="path5129"
+               transform="matrix(0.8536968,0,0,0.6741498,75.153544,26.774045)"
+               d="M 493.56051 88.575668 A 7.0710678 7.7781744 0 1 1  479.41837,88.575668 A 7.0710678 7.7781744 0 1 1  493.56051 88.575668 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 4 -->
+            <path
+               id="path5131"
+               transform="translate(0.978574,-3.5883554)"
+               d="M 452.54832 86.454346 A 7.7781744 5.6568542 0 1 1  436.99197,86.454346 A 7.7781744 5.6568542 0 1 1  452.54832 86.454346 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 5 -->
+            <path
+               id="path5133"
+               transform="translate(-2.142598e-2,-4.5883554)"
+               d="M 403.05086 89.282776 A 8.485281 7.0710678 0 1 1  386.0803,89.282776 A 8.485281 7.0710678 0 1 1  403.05086 89.282776 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 6 -->
+            <path
+               id="path5135"
+               transform="translate(-2.142598e-2,-5.5883554)"
+               d="M 357.79601 101.30359 A 9.8994951 7.7781744 0 1 1  337.99702,101.30359 A 9.8994951 7.7781744 0 1 1  357.79601 101.30359 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 7 -->
+            <path
+               id="path5137"
+               transform="translate(2.978574,-1.5883554)"
+               d="M 315.36963 122.51679 A 12.020815 10.606602 0 1 1  291.328,122.51679 A 12.020815 10.606602 0 1 1  315.36963 122.51679 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 8 -->
+            <path
+               id="path5141"
+               transform="translate(2.978574,-0.5883554)"
+               d="M 288.49956 167.77162 A 12.727921 12.020815 0 1 1  263.04372,167.77162 A 12.727921 12.020815 0 1 1  288.49956 167.77162 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 9 -->
+            <path
+               id="path5144"
+               transform="matrix(1.1968479,0,0,1.1614925,-61.374176,-37.616965)"
+               d="M 318.19804 229.28992 A 14.142136 14.142136 0 1 1  289.91377,229.28992 A 14.142136 14.142136 0 1 1  318.19804 229.28992 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:6.7851944;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 10 -->
+            <path
+               id="path5148"
+               transform="translate(2.978574,-1.5883554)"
+               d="M 400.22243 268.88788 A 20.506096 18.384775 0 1 1  359.21024,268.88788 A 20.506096 18.384775 0 1 1  400.22243 268.88788 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 11 -->
+            <path
+               id="path5150"
+               transform="translate(2.978574,-1.5883554)"
+               d="M 473.76152 306.36456 A 16.970562 17.67767 0 1 1  439.82039,306.36456 A 16.970562 17.67767 0 1 1  473.76152 306.36456 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 12 -->
+            <path
+               id="path5152"
+               transform="translate(2.978574,-1.5883554)"
+               d="M 504.87422 375.66101 A 15.556349 19.091883 0 1 1  473.76152,375.66101 A 15.556349 19.091883 0 1 1  504.87422 375.66101 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 13 -->
+            <path
+               id="path5154"
+               transform="translate(2.978574,-1.5883554)"
+               d="M 489.31787 434.35086 A 14.849242 15.556349 0 1 1  459.61939,434.35086 A 14.849242 15.556349 0 1 1  489.31787 434.35086 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:8;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 14 -->
+            <path
+               id="path5158"
+               transform="matrix(1.5743387,0,0,1.2018184,-254.19056,-88.883685)"
+               d="M 446.89147 469.70621 A 11.313708 9.8994951 0 1 1  424.26405,469.70621 A 11.313708 9.8994951 0 1 1  446.89147 469.70621 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:5.81596088;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 15 -->
+            <path
+               id="path5168"
+               transform="matrix(1.4431355,0,0,1.5520942,-175.51534,-257.01053)"
+               d="M 376.1808 470.41333 A 11.313708 6.3639607 0 1 1  353.55339,470.41333 A 11.313708 6.3639607 0 1 1  376.1808 470.41333 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:5.34536552;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+            <!-- snake's spot 16 -->
+            <path
+               id="path5170"
+               transform="matrix(1.3927047,0,0,1.7695104,-111.40259,-342.37397)"
+               d="M 301.22748 447.78589 A 12.020815 3.5355339 0 1 1  277.18585,447.78589 A 12.020815 3.5355339 0 1 1  301.22748 447.78589 z"
+               style="opacity:0.5;fill:#3b4f87;fill-opacity:1;stroke:#066506;stroke-width:5.09605265;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;display:inline"/>
+        </g>
+        <!-- cube's shadow down to snake -->
+        <g
+         style="opacity:0.50724637;display:inline">
+            <path
+               id="path38439"
+               d="M 228.40187,414.05208 C 276.49398,426.49419 324.58611,438.9363 372.67824,451.37841 C 376.92166,450.04533 381.1651,448.71224 385.40852,447.37916 C 381.57248,451.89249 377.70773,456.42438 372.99043,460.13461 C 368.52208,465.19644 371.53675,472.11508 371.03051,478.02898 C 371.74624,483.25966 369.0207,490.20439 362.17985,488.94887 C 352.40202,488.45566 343.60074,483.7526 334.17842,481.63457 C 312.96053,476.26325 291.30588,469.92662 272.9578,459.04366 C 256.37135,449.20559 243.0181,434.60379 228.04825,422.38386 C 228.16612,419.6066 228.28399,416.82934 228.40187,414.05208 z "
+               style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.97098225px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"/>
+        </g>
+    </g> <!-- of SnakeGroup -->
+</g> <!-- of mask -->
+</svg>
+
