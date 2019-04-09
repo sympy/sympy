@@ -170,7 +170,7 @@ _assume_rules = FactRules([
     'real           ==  extended_real & finite',
     'extended_real  ->  real | infinite',
     'real           ->  hermitian',
-    'imaginary      ->  complex',
+    'imaginary      ->  complex & finite',
     'imaginary      ->  antihermitian',
     'extended_real  ->  commutative',
     'complex        ->  commutative',
