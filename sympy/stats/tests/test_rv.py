@@ -110,7 +110,7 @@ def test_E():
 def test_H():
     X = Normal('X', 0, 1)
     D = Die('D', sides = 4)
-    assert simplify(H(X, X > 0)) == -log(2)/2 + 1/2 + log(pi)/2
+    assert str(H(X, X > 0)) == '-log(2)/2 + 1/2 + log(pi)/2'
     assert simplify(H(D, D > 2)) == log(2)
 
 def test_Sample():
