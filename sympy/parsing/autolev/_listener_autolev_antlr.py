@@ -37,11 +37,11 @@ def declare_phy_entities(self, ctx, phy_type, i, j=None):
 def declare_frames(self, ctx, i, j=None):
     if "{" in ctx.getText():
         if j:
-            name1 = ctx.ID().getText().lower() + str(i) + str(j)
+            name1 = ctx.ID().getText() + str(i) + str(j)
         else:
-            name1 = ctx.ID().getText().lower() + str(i)
+            name1 = ctx.ID().getText() + str(i)
     else:
-        name1 = ctx.ID().getText().lower()
+        name1 = ctx.ID().getText()
     name2 = "frame_" + name1
     if self.getValue(ctx.parentCtx.varType()) == "newtonian":
         self.newtonian = name2
@@ -58,11 +58,11 @@ def declare_frames(self, ctx, i, j=None):
 def declare_points(self, ctx, i, j=None):
     if "{" in ctx.getText():
         if j:
-            name1 = ctx.ID().getText().lower() + str(i) + str(j)
+            name1 = ctx.ID().getText() + str(i) + str(j)
         else:
-            name1 = ctx.ID().getText().lower() + str(i)
+            name1 = ctx.ID().getText() + str(i)
     else:
-        name1 = ctx.ID().getText().lower()
+        name1 = ctx.ID().getText()
 
     name2 = "point_" + name1
 
@@ -73,11 +73,11 @@ def declare_points(self, ctx, i, j=None):
 def declare_particles(self, ctx, i, j=None):
     if "{" in ctx.getText():
         if j:
-            name1 = ctx.ID().getText().lower() + str(i) + str(j)
+            name1 = ctx.ID().getText() + str(i) + str(j)
         else:
-            name1 = ctx.ID().getText().lower() + str(i)
+            name1 = ctx.ID().getText() + str(i)
     else:
-        name1 = ctx.ID().getText().lower()
+        name1 = ctx.ID().getText()
 
     name2 = "particle_" + name1
 
@@ -90,11 +90,11 @@ def declare_particles(self, ctx, i, j=None):
 def declare_bodies(self, ctx, i, j=None):
     if "{" in ctx.getText():
         if j:
-            name1 = ctx.ID().getText().lower() + str(i) + str(j)
+            name1 = ctx.ID().getText() + str(i) + str(j)
         else:
-            name1 = ctx.ID().getText().lower() + str(i)
+            name1 = ctx.ID().getText() + str(i)
     else:
-        name1 = ctx.ID().getText().lower()
+        name1 = ctx.ID().getText()
 
     name2 = "body_" + name1
     self.bodies.update({name1: name2})
@@ -596,7 +596,7 @@ if AutolevListener:
 
                     self.setValue(ctx, e1 + ".dcm(" + e2 + ")")
                 except Exception:
-                    self.setValue(ctx, ctx.ID().getText().lower())
+                    self.setValue(ctx, ctx.ID().getText())
             else:
                 # Reserved constant Pi
                 if ctx.ID().getText().lower() == "pi":
@@ -617,7 +617,7 @@ if AutolevListener:
                         try:
                             self.setValue(ctx, self.symbol_table[idText])
                         except Exception:
-                            self.setValue(ctx, idText.lower())
+                            self.setValue(ctx, idText)
                     else:
                         try:
                             self.setValue(ctx, self.symbol_table[idText])
@@ -753,7 +753,7 @@ if AutolevListener:
                                   expr + "])" + ".reshape((" + expr + ").shape[0], " + "(" + expr + ").shape[1])")
                 else:
                     if ch.getChildCount() == 8:
-                        frame = self.symbol_table2[ch.expr(2).getText().lower()]
+                        frame = self.symbol_table2[ch.expr(2).getText()]
                         self.setValue(ctx, "(" + expr + ")" + "." + "diff(" + self.getValue(ch.expr(1)) +
                                       ", " + frame + ")")
                     else:
@@ -774,7 +774,7 @@ if AutolevListener:
                                   ".reshape((" + expr + ").shape[0], " + "(" + expr + ").shape[1])")
                 else:
                     if ch.getChildCount() == 6:
-                        frame = self.symbol_table2[ch.expr(1).getText().lower()]
+                        frame = self.symbol_table2[ch.expr(1).getText()]
                         self.setValue(ctx, "(" + expr + ")" + "." + "dt(" +
                                       frame + ")")
                     else:
@@ -1072,7 +1072,7 @@ if AutolevListener:
                 elif self.type2[ch.expr(0).getText().lower()] == "bodies":
                     text = "_f"
                 self.setValue(ctx, "(" + self.getValue(ch.expr(1)) + ")" + ".to_matrix(" +
-                              self.symbol_table2[ch.expr(0).getText().lower()] + text + ")")
+                              self.symbol_table2[ch.expr(0).getText()] + text + ")")
 
             # VECTOR(A, ROWS(EIGVECS,1))
             elif func_name == "vector":
@@ -1081,7 +1081,7 @@ if AutolevListener:
                 elif self.type2[ch.expr(0).getText().lower()] == "bodies":
                     text = "_f"
                 v = self.getValue(ch.expr(1))
-                f = self.symbol_table2[ch.expr(0).getText().lower()] + text
+                f = self.symbol_table2[ch.expr(0).getText()] + text
                 self.setValue(ctx, v + "[0]*" + f + ".x +" + v + "[1]*" + f + ".y +" +
                               v + "[2]*" + f + ".z")
 
@@ -1091,16 +1091,16 @@ if AutolevListener:
             elif func_name == "express":
                 self.vector_expr.append(ctx)
                 if self.type2[ch.expr(1).getText().lower()] == "frame":
-                    frame = self.symbol_table2[ch.expr(1).getText().lower()]
+                    frame = self.symbol_table2[ch.expr(1).getText()]
                 else:
-                    frame = self.symbol_table2[ch.expr(1).getText().lower()] + "_f"
+                    frame = self.symbol_table2[ch.expr(1).getText()] + "_f"
                 if ch.expr(0).getText().lower() == "1>>":
                     self.setValue(ctx, "me.inertia(" + frame + ", 1, 1, 1)")
 
                 elif '_' in ch.expr(0).getText().lower() and ch.expr(0).getText().lower().count('_') == 2\
                 and ch.expr(0).getText().lower()[0] == "i" and ch.expr(0).getText().lower()[-2:] == ">>":
-                    v1 = ch.expr(0).getText().lower()[:-2].split('_')[1]
-                    v2 = ch.expr(0).getText().lower()[:-2].split('_')[2]
+                    v1 = ch.expr(0).getText()[:-2].split('_')[1]
+                    v2 = ch.expr(0).getText()[:-2].split('_')[2]
                     l = []
                     inertia_func(self, v1, v2, l, frame)
                     self.setValue(ctx, " + ".join(l))
@@ -1108,7 +1108,7 @@ if AutolevListener:
                 elif ch.expr(0).getChild(0).getChild(0).getText().lower() == "inertia":
                     if ch.expr(0).getChild(0).getChildCount() == 4:
                         l = []
-                        v2 = ch.expr(0).getChild(0).ID(0).getText().lower()
+                        v2 = ch.expr(0).getChild(0).ID(0).getText()
                         for v1 in self.bodies:
                             inertia_func(self, v1, v2, l, frame)
                         self.setValue(ctx, " + ".join(l))
@@ -1116,16 +1116,16 @@ if AutolevListener:
                     else:
                         l = []
                         l2 = []
-                        v2 = ch.expr(0).getChild(0).ID(0).getText().lower()
+                        v2 = ch.expr(0).getChild(0).ID(0).getText()
                         for i in range(1, (ch.expr(0).getChild(0).getChildCount()-2)//2):
-                            l2.append(ch.expr(0).getChild(0).ID(i).getText().lower())
+                            l2.append(ch.expr(0).getChild(0).ID(i).getText())
                         for v1 in l2:
                             inertia_func(self, v1, v2, l, frame)
                         self.setValue(ctx, " + ".join(l))
 
                 else:
                     self.setValue(ctx, "(" + self.getValue(ch.expr(0)) + ")" + ".express(" +
-                                  self.symbol_table2[ch.expr(1).getText().lower()] + ")")
+                                  self.symbol_table2[ch.expr(1).getText()] + ")")
             # CM(P)
             elif func_name == "cm":
                 if self.type2[ch.expr(0).getText().lower()] == "point":
@@ -1133,13 +1133,13 @@ if AutolevListener:
                 else:
                     text = ".point"
                 if ch.getChildCount() == 4:
-                    self.setValue(ctx, "me.functions.center_of_mass(" + self.symbol_table2[ch.expr(0).getText().lower()] +
+                    self.setValue(ctx, "me.functions.center_of_mass(" + self.symbol_table2[ch.expr(0).getText()] +
                                   text + "," + ", ".join(self.bodies.values()) + ")")
                 else:
                     bodies = []
                     for i in range(1, (ch.getChildCount()-1)//2):
-                        bodies.append(self.symbol_table2[ch.expr(i).getText().lower()])
-                    self.setValue(ctx, "me.functions.center_of_mass(" + self.symbol_table2[ch.expr(0).getText().lower()] +
+                        bodies.append(self.symbol_table2[ch.expr(i).getText()])
+                    self.setValue(ctx, "me.functions.center_of_mass(" + self.symbol_table2[ch.expr(0).getText()] +
                                   text + "," + ", ".join(bodies) + ")")
 
             # PARTIALS(V_P1_E>,U1)
@@ -1147,10 +1147,10 @@ if AutolevListener:
                 speeds = []
                 for i in range(1, (ch.getChildCount()-1)//2):
                     if self.kd_equivalents2:
-                        speeds.append(self.kd_equivalents2[self.symbol_table[ch.expr(i).getText().lower()]])
+                        speeds.append(self.kd_equivalents2[self.symbol_table[ch.expr(i).getText()]])
                     else:
-                        speeds.append(self.symbol_table[ch.expr(i).getText().lower()])
-                v1, v2, v3 = ch.expr(0).getText().lower().replace(">","").split('_')
+                        speeds.append(self.symbol_table[ch.expr(i).getText()])
+                v1, v2, v3 = ch.expr(0).getText().replace(">","").split('_')
                 if self.type2[v2] == "point":
                     point = self.symbol_table2[v2]
                 elif self.type2[v2] == "particle":
@@ -1173,9 +1173,9 @@ if AutolevListener:
             elif func_name == "mass":
                 l = []
                 try:
-                    a = ch.ID(0).getText().lower()
+                    a = ch.ID(0).getText()
                     for i in range((ch.getChildCount()-1)//2):
-                        l.append(self.symbol_table2[ch.ID(i).getText().lower()] + ".mass")
+                        l.append(self.symbol_table2[ch.ID(i).getText()] + ".mass")
                     self.setValue(ctx, "+".join(l))
                 except Exception:
                     for i in self.bodies.keys():
@@ -1202,17 +1202,17 @@ if AutolevListener:
                         for i in self.type.keys():
                             if self.type[i] == "motionvariable":
                                 if self.sign[self.symbol_table[i.lower()]] == 0:
-                                    self.q_ind.append(self.symbol_table[i.lower()])
+                                    self.q_ind.append(self.symbol_table[i])
                                 elif self.sign[self.symbol_table[i.lower()]] == 1:
-                                    name = "u_" + self.symbol_table[i.lower()]
+                                    name = "u_" + self.symbol_table[i]
                                     self.symbol_table.update({name: name})
                                     self.write(name + " = " + "me.dynamicsymbols('" + name + "')\n")
                                     if self.symbol_table[i.lower()] not in self.dependent_variables:
                                         self.u_ind.append(name)
-                                        self.kd_equivalents.update({name: self.symbol_table[i.lower()]})
+                                        self.kd_equivalents.update({name: self.symbol_table[i]})
                                     else:
                                         self.u_dep.append(name)
-                                        self.kd_equivalents.update({name: self.symbol_table[i.lower()]})
+                                        self.kd_equivalents.update({name: self.symbol_table[i]})
 
                         for i in self.kd_equivalents.keys():
                             self.kd_eqs.append(self.kd_equivalents[i] + "-" + i)
@@ -1287,9 +1287,9 @@ if AutolevListener:
                         try:
                             l.append(self.getValue(child))
                         except Exception:
-                            l.append(self.symbol_table[child.getText().lower()])
+                            l.append(self.symbol_table[child.getText()])
                     except Exception:
-                        l.append(child.getText().lower())
+                        l.append(child.getText())
             num_of_rows = semicolon_count + 1
             num_of_cols = (comma_count//num_of_rows) + 1
 
@@ -1354,7 +1354,7 @@ if AutolevListener:
                     self.setValue(ctx, vec_text.replace(">", ""))
 
             else:
-                vec_text = ch.getText().lower()
+                vec_text = ch.getText()
                 name = self.symbol_table[vec_text]
                 self.setValue(ctx, name)
 
@@ -1364,7 +1364,7 @@ if AutolevListener:
                     int_text = str(int(self.getValue(ctx.getChild(2))) - 1)
                 except Exception:
                     int_text = self.getValue(ctx.getChild(2)) + " - 1"
-                self.setValue(ctx, ctx.ID().getText().lower() + "[" + int_text + "]")
+                self.setValue(ctx, ctx.ID().getText() + "[" + int_text + "]")
             elif ctx.getChildCount() == 6:
                 try:
                     int_text1 = str(int(self.getValue(ctx.getChild(2))) - 1)
@@ -1374,7 +1374,7 @@ if AutolevListener:
                     int_text2 = str(int(self.getValue(ctx.getChild(4))) - 1)
                 except Exception:
                     int_text2 = self.getValue(ctx.getChild(2)) + " - 1"
-                self.setValue(ctx, ctx.ID().getText().lower() + "[" + int_text1 + ", " + int_text2 + "]")
+                self.setValue(ctx, ctx.ID().getText() + "[" + int_text1 + ", " + int_text2 + "]")
 
 
         # ================== Subrules of parser rule expr (End) ====================== #
@@ -1475,7 +1475,7 @@ if AutolevListener:
                         l.append(str(int(self.getValue(ctx.index().getChild(2)))-1))
                     except Exception:
                         l.append(self.getValue(ctx.index().getChild(2)) + "-1")
-                    self.write(self.symbol_table[ctx.ID().getText().lower()] +
+                    self.write(self.symbol_table[ctx.ID().getText()] +
                                "[" + "".join(l) + "]" + equals + self.getValue(ctx.expr()) + "\n")
 
         def exitVecAssign(self, ctx):
@@ -1534,11 +1534,11 @@ if AutolevListener:
                             ", " + self.symbol_table2[v3] + ")\n")
                             self.inertia_point.update({v2: v3})
                         elif v2 in self.type2.keys() and self.type2[v2] == "particle":
-                            self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
+                            self.write(ch.ID().getText() + " = " + self.getValue(ctx.expr()) + "\n")
                         else:
-                            self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
+                            self.write(ch.ID().getText() + " = " + self.getValue(ctx.expr()) + "\n")
                     else:
-                        self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
+                        self.write(ch.ID().getText() + " = " + self.getValue(ctx.expr()) + "\n")
 
                 elif num == 1:
                     v1, v2 = ch.ID().getText().lower().split('_')
@@ -1554,12 +1554,12 @@ if AutolevListener:
                             self.forces[e2] = self.forces[e2] + " + " + self.getValue(ctx.expr())
                         else:
                             self.forces.update({e2: self.getValue(ctx.expr())})
-                        self.write(ch.ID().getText().lower() + " = " + self.forces[e2] + "\n")
+                        self.write(ch.ID().getText() + " = " + self.forces[e2] + "\n")
 
                     else:
                         name = ch.ID().getText().lower()
                         self.symbol_table.update({vec_text: name})
-                        self.write(ch.ID().getText().lower() + " = " + self.getValue(ctx.expr()) + "\n")
+                        self.write(ch.ID().getText() + " = " + self.getValue(ctx.expr()) + "\n")
                 else:
                     name = ch.ID().getText().lower()
                     self.symbol_table.update({vec_text: name})
@@ -1748,12 +1748,12 @@ if AutolevListener:
 
             # Checks if the function is a statement on its own
             if ctx.parentCtx.getRuleIndex() == AutolevParser.RULE_stat:
-                func_name = ctx.getChild(0).getText().lower()
+                func_name = ctx.getChild(0).getText()
                 # Expand(E, n:m) *
                 if func_name == "expand":
                     # If the first argument is a pre declared variable.
                     expr = self.getValue(ctx.expr(0))
-                    symbol = self.symbol_table[ctx.expr(0).getText().lower()]
+                    symbol = self.symbol_table[ctx.expr(0).getText()]
                     if ctx.expr(0) in self.matrix_expr or (expr in self.type.keys() and self.type[expr] == "matrix"):
                         self.write(symbol + " = " + "sm.Matrix([i.expand() for i in " + expr + "])" +
                                    ".reshape((" + expr + ").shape[0], " + "(" + expr + ").shape[1])\n")
@@ -1814,11 +1814,11 @@ if AutolevListener:
                     self.symbol_table.update({ctx.expr(1).getText().lower(): ctx.expr(1).getText().lower()})
                     self.symbol_table.update({ctx.expr(2).getText().lower(): ctx.expr(2).getText().lower()})
                     # sm.Matrix([i.evalf() for i in (i_s_so).eigenvals().keys()])
-                    self.write(ctx.expr(1).getText().lower() + " = " +
+                    self.write(ctx.expr(1).getText() + " = " +
                                "sm.Matrix([i.evalf() for i in " +
                                "(" + self.getValue(ctx.expr(0)) + ")" + ".eigenvals().keys()])\n")
                     # sm.Matrix([i[2][0].evalf() for i in (i_s_o).eigenvects()]).reshape(i_s_o.shape[0], i_s_o.shape[1])
-                    self.write(ctx.expr(2).getText().lower() + " = " +
+                    self.write(ctx.expr(2).getText() + " = " +
                                "sm.Matrix([i[2][0].evalf() for i in " + "(" + self.getValue(ctx.expr(0)) + ")" +
                                ".eigenvects()]).reshape(" + self.getValue(ctx.expr(0)) + ".shape[0], " +
                                self.getValue(ctx.expr(0)) + ".shape[1])\n")
@@ -1871,24 +1871,24 @@ if AutolevListener:
                         v2 = self.symbol_table2[vec[2]]
                         if vec[0] == "p":
                             self.write(v2 + ".set_pos(" + v1 + ", " + "(" + self.getValue(ctx.expr(0)) +
-                                    ")" + ".express(" + self.symbol_table2[ctx.expr(1).getText().lower()] + f + "))\n")
+                                    ")" + ".express(" + self.symbol_table2[ctx.expr(1).getText()] + f + "))\n")
                         elif vec[0] == "v":
                             self.write(v1 + ".set_vel(" + v2 + ", " + "(" + self.getValue(ctx.expr(0)) +
-                                    ")" + ".express(" + self.symbol_table2[ctx.expr(1).getText().lower()] + f + "))\n")
+                                    ")" + ".express(" + self.symbol_table2[ctx.expr(1).getText()] + f + "))\n")
                         elif vec[0] == "a":
                             self.write(v1 + ".set_acc(" + v2 + ", " + "(" + self.getValue(ctx.expr(0)) +
-                                    ")" + ".express(" + self.symbol_table2[ctx.expr(1).getText().lower()] + f + "))\n")
+                                    ")" + ".express(" + self.symbol_table2[ctx.expr(1).getText()] + f + "))\n")
                         else:
                             self.write(self.getValue(ctx.expr(0)) + " = " + "(" + self.getValue(ctx.expr(0)) + ")" + ".express(" +
-                                        self.symbol_table2[ctx.expr(1).getText().lower()] + f + ")\n")
+                                        self.symbol_table2[ctx.expr(1).getText()] + f + ")\n")
                     else:
                         self.write(self.getValue(ctx.expr(0)) + " = " + "(" + self.getValue(ctx.expr(0)) + ")" + ".express(" +
-                                    self.symbol_table2[ctx.expr(1).getText().lower()] + f + ")\n")
+                                    self.symbol_table2[ctx.expr(1).getText()] + f + ")\n")
 
                 # Angvel(A, B)
                 elif func_name == "angvel":
-                    self.write("print(" + self.symbol_table2[ctx.expr(1).getText().lower()] +
-                               ".ang_vel_in(" + self.symbol_table2[ctx.expr(0).getText().lower()] + "))\n")
+                    self.write("print(" + self.symbol_table2[ctx.expr(1).getText()] +
+                               ".ang_vel_in(" + self.symbol_table2[ctx.expr(0).getText()] + "))\n")
 
                 # v2pts(N, A, O, P)
                 elif func_name in ("v2pts", "a2pts", "v2pt", "a1pt"):
@@ -1912,7 +1912,7 @@ if AutolevListener:
                             expr_list.append(self.symbol_table2[ctx.expr(i).getText().lower()] + ".point")
 
                     self.write(expr_list[1] + text + expr_list[0] +
-                               "," + self.symbol_table2[ctx.expr(0).getText().lower()] + "," +
+                               "," + self.symbol_table2[ctx.expr(0).getText()] + "," +
                                frame + ")\n")
 
                 # Gravity(g*N1>)
@@ -2057,7 +2057,7 @@ if AutolevListener:
                     else:
                         inertia_list.append(self.getValue(ctx.expr(i)))
                 except Exception:
-                    a_text = ctx.expr(i).getText().lower()
+                    a_text = ctx.expr(i).getText()
                     self.symbol_table.update({a_text: a_text})
                     self.type.update({a_text: "constants"})
                     self.write(a_text + " = " + "sm.symbols('" + a_text + "')\n")
@@ -2068,17 +2068,17 @@ if AutolevListener:
                     inertia_list.append("0")
             # body_a.inertia = (me.inertia(body_a, I1, I2, I3, 0, 0, 0), body_a_cm)
             try:
-                frame = self.symbol_table2[ctx.ID(1).getText().lower()]
-                point = self.symbol_table2[ctx.ID(0).getText().lower().split('_')[1]]
-                body = self.symbol_table2[ctx.ID(0).getText().lower().split('_')[0]]
-                self.inertia_point.update({ctx.ID(0).getText().lower().split('_')[0]
-                                          : ctx.ID(0).getText().lower().split('_')[1]})
+                frame = self.symbol_table2[ctx.ID(1).getText()]
+                point = self.symbol_table2[ctx.ID(0).getText().split('_')[1]]
+                body = self.symbol_table2[ctx.ID(0).getText().split('_')[0]]
+                self.inertia_point.update({ctx.ID(0).getText().split('_')[0]
+                                          : ctx.ID(0).getText().split('_')[1]})
                 self.write(body + ".inertia" + " = " + "(me.inertia(" + frame + ", " +
                            ", ".join(inertia_list) + "), " + point + ")\n")
 
             except Exception:
-                body_name = self.symbol_table2[ctx.ID(0).getText().lower()]
+                body_name = self.symbol_table2[ctx.ID(0).getText()]
                 body_name_cm = body_name + "_cm"
-                self.inertia_point.update({ctx.ID(0).getText().lower(): ctx.ID(0).getText().lower() + "o"})
+                self.inertia_point.update({ctx.ID(0).getText(): ctx.ID(0).getText() + "o"})
                 self.write(body_name + ".inertia" + " = " + "(me.inertia(" + body_name + "_f" + ", " +
                            ", ".join(inertia_list) + "), " + body_name_cm + ")\n")

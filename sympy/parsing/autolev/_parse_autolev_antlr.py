@@ -14,7 +14,7 @@ AutolevLexer = getattr(autolevlexer, 'AutolevLexer', None)
 AutolevListener = getattr(autolevlistener, 'AutolevListener', None)
 
 
-def parse_autolev(autolev_code, include_numeric):
+def parse_autolev(autolev_code, include_numeric, lower_case):
     antlr4 = import_module('antlr4', warn_not_installed=True)
     if not antlr4:
         raise ImportError("Autolev parsing requires the antlr4 python package,"
