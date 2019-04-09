@@ -231,8 +231,13 @@ def test_polygon():
 
     # Bisectors
     bisectors = t1.bisectors()
-    assert bisectors[p1] == Segment(p1, Point(Rational(5, 2), Rational(5, 2)))
-    ic = (250 - 125*sqrt(2)) / 50
+    assert bisectors[p1] == Segment(
+        p1, Point(Rational(5, 2), Rational(5, 2)))
+    assert t2.bisectors()[p2] == Segment(
+        Point(5, 0), Point(Rational(5, 4), 5*sqrt(3)/4))
+    p4 = Point(0, x1)
+    assert t3.bisectors()[p4] == Segment(p4, Point(x1*(sqrt(2) - 1), 0))
+    ic = (250 - 125*sqrt(2))/50
     assert t1.incenter == Point(ic, ic)
 
     # Inradius
