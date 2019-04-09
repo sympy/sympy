@@ -2890,12 +2890,12 @@ class UniformDistribution(SingleContinuousDistribution):
 
     @property
     def set(self):
-        return Interval(self.a, self.b)
+        return Interval(self.left, self.right)
 
     @staticmethod
-    def check(a, b):
-        _value_check(a.is_real, "a, should be real.")
-        _value_check(b.is_real, "b, should be real.")
+    def check(left, right):
+        _value_check(left.is_real, "left, should be real.")
+        _value_check(right.is_real, "right, should be real.")
 
     def pdf(self, x):
         left, right = self.left, self.right
