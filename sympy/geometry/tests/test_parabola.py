@@ -70,7 +70,8 @@ def test_parabola_geom():
     assert pa8.equation() == pa9.equation()
     assert pa10.focal_length == sqrt((a - b) ** 2) / 2 # if a, b real == abs(a - b)/2
     assert pa10.focal_length == pa11.focal_length
-    assert Point2D(*pa10.vertex[::-1]) == pa11.vertex # change axis x->y, y->x on pa10
+    assert pa11.vertex == Point(*pa10.vertex[::-1]) == Point(a, 
+                            a - sqrt((a - b)**2)*sign(a - b)/2) # change axis x->y, y->x on pa10
 
 
 def test_parabola_intersection():
