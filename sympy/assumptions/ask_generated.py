@@ -25,6 +25,7 @@ def get_known_facts_cnf():
         Q.even | ~Q.zero,
         Q.extended_real | ~Q.infinite,
         Q.extended_real | ~Q.real,
+        Q.finite | ~Q.irrational,
         Q.finite | ~Q.rational,
         Q.fullrank | ~Q.invertible,
         Q.hermitian | ~Q.real,
@@ -74,7 +75,6 @@ def get_known_facts_cnf():
         Q.algebraic | Q.transcendental | ~Q.complex,
         Q.even | Q.odd | ~Q.integer,
         Q.infinite | Q.real | ~Q.extended_real,
-        Q.irrational | Q.rational | ~Q.real,
         Q.lower_triangular | Q.upper_triangular | ~Q.triangular,
         Q.negative | Q.positive | ~Q.nonzero,
         Q.negative | Q.zero | ~Q.nonpositive,
@@ -83,7 +83,8 @@ def get_known_facts_cnf():
         Q.invertible | ~Q.fullrank | ~Q.square,
         Q.orthogonal | ~Q.real | ~Q.unitary,
         Q.negative | Q.positive | Q.zero | ~Q.real,
-        Q.composite | Q.prime | ~Q.integer | ~Q.positive
+        Q.composite | Q.prime | ~Q.integer | ~Q.positive,
+        Q.irrational | Q.rational | ~Q.finite | ~Q.real
     )
 
 # -{ Known facts in compressed sets }-
@@ -111,7 +112,7 @@ def get_known_facts_dict():
         Q.integer_elements: set([Q.complex_elements, Q.integer_elements,
         Q.real_elements]),
         Q.invertible: set([Q.fullrank, Q.invertible, Q.square]),
-        Q.irrational: set([Q.complex, Q.extended_real, Q.hermitian,
+        Q.irrational: set([Q.complex, Q.extended_real, Q.finite, Q.hermitian,
         Q.irrational, Q.nonzero, Q.real]),
         Q.is_true: set([Q.is_true]),
         Q.lower_triangular: set([Q.lower_triangular, Q.triangular]),
