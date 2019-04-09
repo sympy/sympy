@@ -1931,6 +1931,10 @@ class MaxwellDistribution(SingleContinuousDistribution):
 
     set = Interval(0, oo)
 
+    @staticmethod
+    def check(a):
+        _value_check(a > 0, "a, scale parameter should be positive.")
+
     def pdf(self, x):
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
@@ -2000,6 +2004,11 @@ class NakagamiDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 'omega')
 
     set = Interval(0, oo)
+
+    @staticmethod
+    def check(mu, sigma):
+        _value_check(mu >= 0.5, "mu, shape parameter should be real.")
+        _value_check(omega > 0, "omega, spread parameter should be real.")
 
     def pdf(self, x):
         mu, omega = self.mu, self.omega
@@ -2089,6 +2098,7 @@ class NormalDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(mean, std):
+        _value_check(mean.is_real, "Location or mean should be real.")
         _value_check(std > 0, "Standard deviation must be positive")
 
     def pdf(self, x):
@@ -2293,6 +2303,11 @@ class QuadraticUDistribution(SingleContinuousDistribution):
     def set(self):
         return Interval(self.a, self.b)
 
+    @staticmethod
+    def check(a, b):
+        _value_check(a.is_real, "a, should be real.")
+        _value_check(b.is_real, "b, should be real.")
+
     def pdf(self, x):
         a, b = self.a, self.b
         alpha = 12 / (b-a)**3
@@ -2381,6 +2396,7 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(mu, s):
+        _value_check(mu.is_real, "mu must be real.")
         _value_check(s > 0, "s must be positive")
 
     def pdf(self, x):
@@ -2460,6 +2476,10 @@ class RayleighDistribution(SingleContinuousDistribution):
     _argnames = ('sigma',)
 
     set = Interval(0, oo)
+
+    @staticmethod
+    def check(sigma):
+        _value_check(sigma > 0, "sigma, scale should be positive.")
 
     def pdf(self, x):
         sigma = self.sigma
@@ -2598,6 +2618,12 @@ def ShiftedGompertz(name, b, eta):
 class StudentTDistribution(SingleContinuousDistribution):
     _argnames = ('nu',)
 
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(nu):
+        _value_check(nu > 0, "degrees of freedom must be positive.")
+
     def pdf(self, x):
         nu = self.nu
         return 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
@@ -2678,6 +2704,8 @@ def StudentT(name, nu):
 class TrapezoidalDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b', 'c', 'd')
 
+    set = Interval(self.a, self.d)
+
     def pdf(self, x):
         a, b, c, d = self.a, self.b, self.c, self.d
         return Piecewise(
@@ -2757,6 +2785,14 @@ def Trapezoidal(name, a, b, c, d):
 
 class TriangularDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b', 'c')
+
+    set = Interval(self.a, self.b)
+
+    @staticmethod
+    def check(a, b, c):
+        _value_check(a.is_real, "a, should be real.")
+        _value_check(b.is_real, "b, should be real.")
+        _value_check(c.is_real, "c, should be real.")
 
     def pdf(self, x):
         a, b, c = self.a, self.b, self.c
@@ -2847,6 +2883,13 @@ def Triangular(name, a, b, c):
 
 class UniformDistribution(SingleContinuousDistribution):
     _argnames = ('left', 'right')
+
+    set = Interval(self.a, self.b)
+
+    @staticmethod
+    def check(a, b):
+        _value_check(a.is_real, "a, should be real.")
+        _value_check(b.is_real, "b, should be real.")
 
     def pdf(self, x):
         left, right = self.left, self.right
@@ -2954,6 +2997,10 @@ class UniformSumDistribution(SingleContinuousDistribution):
     @property
     def set(self):
         return Interval(0, self.n)
+
+    @staticmethod
+    def check(n):
+        _value_check(n.is_positive and n.is_integer, "n must be natural number.")
 
     def pdf(self, x):
         n = self.n
@@ -3199,6 +3246,10 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
     @property
     def set(self):
         return Interval(-self.R, self.R)
+
+    @staticmethod
+    def check(R):
+        _value_check(R > 0, "R, radius must be positive.")
 
     def pdf(self, x):
         R = self.R
