@@ -25,8 +25,10 @@ def get_known_facts_cnf():
         Q.even | ~Q.zero,
         Q.extended_real | ~Q.infinite,
         Q.extended_real | ~Q.real,
+        Q.finite | ~Q.algebraic,
         Q.finite | ~Q.irrational,
         Q.finite | ~Q.rational,
+        Q.finite | ~Q.transcendental,
         Q.fullrank | ~Q.invertible,
         Q.hermitian | ~Q.real,
         Q.integer | ~Q.even,
@@ -72,7 +74,6 @@ def get_known_facts_cnf():
         ~Q.negative | ~Q.positive,
         ~Q.negative | ~Q.zero,
         ~Q.positive | ~Q.zero,
-        Q.algebraic | Q.transcendental | ~Q.complex,
         Q.even | Q.odd | ~Q.integer,
         Q.infinite | Q.real | ~Q.extended_real,
         Q.lower_triangular | Q.upper_triangular | ~Q.triangular,
@@ -83,6 +84,7 @@ def get_known_facts_cnf():
         Q.invertible | ~Q.fullrank | ~Q.square,
         Q.orthogonal | ~Q.real | ~Q.unitary,
         Q.negative | Q.positive | Q.zero | ~Q.real,
+        Q.algebraic | Q.transcendental | ~Q.complex | ~Q.finite,
         Q.composite | Q.prime | ~Q.integer | ~Q.positive,
         Q.irrational | Q.rational | ~Q.finite | ~Q.real
     )
@@ -91,7 +93,7 @@ def get_known_facts_cnf():
 @cacheit
 def get_known_facts_dict():
     return {
-        Q.algebraic: set([Q.algebraic, Q.complex]),
+        Q.algebraic: set([Q.algebraic, Q.complex, Q.finite]),
         Q.antihermitian: set([Q.antihermitian]),
         Q.commutative: set([Q.commutative]),
         Q.complex: set([Q.complex]),
@@ -143,7 +145,7 @@ def get_known_facts_dict():
         Q.singular: set([Q.singular]),
         Q.square: set([Q.square]),
         Q.symmetric: set([Q.square, Q.symmetric]),
-        Q.transcendental: set([Q.complex, Q.transcendental]),
+        Q.transcendental: set([Q.complex, Q.finite, Q.transcendental]),
         Q.triangular: set([Q.triangular]),
         Q.unit_triangular: set([Q.triangular, Q.unit_triangular]),
         Q.unitary: set([Q.fullrank, Q.invertible, Q.normal, Q.square,
