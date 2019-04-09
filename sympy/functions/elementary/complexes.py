@@ -113,6 +113,12 @@ class re(Function):
         # is_imaginary implies nonzero
         return fuzzy_or([self.args[0].is_imaginary, self.args[0].is_zero])
 
+    def _eval_is_complex(self):
+        if self.args[0].is_finite:
+            return True
+        else:
+            return None
+
     def _sage_(self):
         import sage.all as sage
         return sage.real_part(self.args[0]._sage_())
@@ -222,6 +228,12 @@ class im(Function):
 
     def _eval_is_zero(self):
         return self.args[0].is_extended_real
+
+    def _eval_is_complex(self):
+        if self.args[0].is_finite:
+            return True
+        else:
+            return None
 
 ###############################################################################
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
