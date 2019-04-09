@@ -471,7 +471,7 @@ def test_tan():
 
     assert tan(k*pi*I) == tanh(k*pi)*I
 
-    assert tan(r).is_real is True
+    assert tan(r).is_extended_real is True
 
     assert tan(0, evaluate=False).is_algebraic
     assert tan(a).is_algebraic is None
@@ -613,7 +613,7 @@ def test_cot():
     assert cot(x*I) == -coth(x)*I
     assert cot(k*pi*I) == -coth(k*pi)*I
 
-    assert cot(r).is_real is True
+    assert cot(r).is_extended_real is True
 
     assert cot(a).is_algebraic is None
     assert cot(na).is_algebraic is False
@@ -849,7 +849,7 @@ def test_atan():
     assert atan(oo) == pi/2
     assert atan(x).diff(x) == 1/(1 + x**2)
 
-    assert atan(r).is_real is True
+    assert atan(r).is_extended_real is True
 
     assert atan(-2*I) == -I*atanh(2)
     assert atan(p).is_positive is True
@@ -944,7 +944,7 @@ def test_acot():
     assert acot(-1/sqrt(3)) == -pi/3
     assert acot(x).diff(x) == -1/(1 + x**2)
 
-    assert acot(r).is_real is True
+    assert acot(r).is_extended_real is True
 
     assert acot(I*pi) == -I*acoth(pi)
     assert acot(-2*I) == I*acoth(2)
@@ -1344,7 +1344,7 @@ def test_sec():
     assert sec(x).expand(trig=True) == 1/cos(x)
     assert sec(2*x).expand(trig=True) == 1/(2*cos(x)**2 - 1)
 
-    assert sec(x).is_real == True
+    assert sec(x).is_extended_real == True
     assert sec(z).is_real == None
 
     assert sec(a).is_algebraic is None
@@ -1426,7 +1426,7 @@ def test_csc():
     assert csc(x).expand(trig=True) == 1/sin(x)
     assert csc(2*x).expand(trig=True) == 1/(2*sin(x)*cos(x))
 
-    assert csc(x).is_real == True
+    assert csc(x).is_extended_real == True
     assert csc(z).is_real == None
 
     assert csc(a).is_algebraic is None
@@ -1474,10 +1474,10 @@ def test_asec():
 def test_asec_is_real():
     assert asec(S(1)/2).is_real is False
     n = Symbol('n', positive=True, integer=True)
-    assert asec(n).is_real is True
+    assert asec(n).is_extended_real is True
     assert asec(x).is_real is None
     assert asec(r).is_real is None
-    t = Symbol('t', real=False)
+    t = Symbol('t', real=False, finite=True)
     assert asec(t).is_real is False
 
 
@@ -1554,7 +1554,7 @@ def test_issue_11864():
     assert F.rewrite(sinc) == soln
 
 def test_real_assumptions():
-    z = Symbol('z', real=False)
+    z = Symbol('z', real=False, finite=True)
     assert sin(z).is_real is None
     assert cos(z).is_real is None
     assert tan(z).is_real is False

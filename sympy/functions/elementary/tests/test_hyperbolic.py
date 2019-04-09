@@ -338,7 +338,7 @@ def test_csch():
 
     assert csch(k*pi*I/2) == -1/sin(k*pi/2)*I
 
-    assert csch(n).is_real is True
+    assert csch(n).is_extended_real is True
 
 
 def test_csch_series():
@@ -401,7 +401,7 @@ def test_sech():
     assert sech(k*pi*I) == 1/cos(k*pi)
     assert sech(17*k*pi*I) == 1/cos(17*k*pi)
 
-    assert sech(n).is_real is True
+    assert sech(n).is_extended_real is True
 
 
 def test_sech_series():
