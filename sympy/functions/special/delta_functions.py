@@ -551,7 +551,7 @@ class Heaviside(Function):
         Examples
         ========
 
-         >>> from sympy import Heaviside, Symbol, sign, S
+        >>> from sympy import Heaviside, Symbol, sign, S
         >>> x = Symbol('x', real=True)
 
         >>> Heaviside(x, H0=S.Half).rewrite(sign)
