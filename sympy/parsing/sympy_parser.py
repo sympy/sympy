@@ -988,7 +988,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     rv = eval_expr(code, local_dict, global_dict)
     def check(e):
-        if type(e) in (list, tuple, set):
+        if iterable(e):
             for i in e:
                 check(i)
         elif isinstance(e, Basic):

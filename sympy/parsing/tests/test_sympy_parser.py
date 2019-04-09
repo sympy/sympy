@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
+
 import sys
+
 
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
 from sympy.core.compatibility import PY3
 from sympy.functions import exp, factorial, factorial2, sin
 from sympy.logic import And
 from sympy.series import Limit
-from sympy.utilities.pytest import raises, skip
+from sympy.utilities.pytest import raises, skip, XFAIL
+
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
@@ -48,15 +51,11 @@ def test_sympy_parser():
             evaluate=False),
         'Limit(sin(x), x, 0, dir="-")': Limit(sin(x), x, 0, dir='-'),
 
+
     }
     for text, result in inputs.items():
         assert parse_expr(text) == result
 
-    # issue 16591
-    t = standard_transformations + (implicit_multiplication_application,)
-    raises(SyntaxError, lambda: parse_expr('2**x3**x', transformations=t))
-    # not sure that it's possible to make '3' become a Symbol
-    assert parse_expr('2**x3**x', {'3': 3}, transformations=t) == 6**x
     raises(TypeError, lambda:
         parse_expr('x', standard_transformations))
     raises(TypeError, lambda:
@@ -67,6 +66,14 @@ def test_sympy_parser():
     raises(TypeError, lambda: parse_expr('x', {}, [], []))
     raises(TypeError, lambda: parse_expr('x', [], [], {}))
     raises(TypeError, lambda: parse_expr('x', [], [], {}))
+
+
+@XFAIL  # raises SyntaxError
+def test_issue_16591():
+    x = Symbol('x')
+    x3 = Symbol('x3')
+    t = standard_transformations + (implicit_multiplication_application,)
+    assert parse_expr('2**x3**x', transformations=t) == 2**(x3**x)
 
 
 def test_rationalize():
