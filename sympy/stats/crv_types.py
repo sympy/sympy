@@ -1947,7 +1947,7 @@ def Maxwell(name, a):
     >>> from sympy.stats import Maxwell, density, E, variance
     >>> from sympy import Symbol, simplify
 
-    >>> a = Symbol("a", positive=True)
+    >>> a = Symbol("a", positive=True, finite=True)
     >>> z = Symbol("z")
 
     >>> X = Maxwell("x", a)
@@ -2020,7 +2020,7 @@ def Nakagami(name, mu, omega):
     >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu", positive=True)
-    >>> omega = Symbol("omega", positive=True)
+    >>> omega = Symbol("omega", positive=True, finite=True)
     >>> z = Symbol("z")
 
     >>> X = Nakagami("x", mu, omega)
