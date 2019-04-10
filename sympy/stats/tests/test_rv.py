@@ -110,8 +110,11 @@ def test_E():
 def test_H():
     X = Normal('X', 0, 1)
     D = Die('D', sides = 4)
+    G = Geometric('G', 0.5)
     assert str(H(X, X > 0)) == '-log(2)/2 + 1/2 + log(pi)/2'
     assert simplify(H(D, D > 2)) == log(2)
+    assert H(G).evalf().round(2) == 1.39
+
 
 def test_Sample():
     X = Die('X', 6)

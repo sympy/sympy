@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
         characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
         sampling_density, moment_generating_function)
-from sympy import sqrt, log, Piecewise, Symbol, Eq, Lambda
+from sympy import sqrt, log, Piecewise, Symbol, Eq, Lambda, exp
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'covariance',
@@ -87,11 +87,13 @@ def entropy(expr, condition=None, **kwargs):
 
     expression : the random expression whose entropy is to be calculated
     condition : optional, to specify conditions on random expression
+    b: base of the logarithm, optional
+       By default, it is taken as Euler's number
 
     Retruns
     =======
 
-    result : A constant
+    result : Entropy of the expression, a constant
 
     Examples
     ========
@@ -113,9 +115,10 @@ def entropy(expr, condition=None, **kwargs):
     .. [3] http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
     """
     pdf = density(expr, condition, **kwargs)
+    base = kwargs.get('b', exp(1))
     if isinstance(pdf, dict):
-            return sum([-prob*log(prob) for prob in pdf.values()])
-    return expectation(-log(pdf(expr)))
+            return sum([-prob*log(prob, base) for prob in pdf.values()])
+    return expectation(-log(pdf(expr), base))
 
 def covariance(X, Y, condition=None, **kwargs):
     """
