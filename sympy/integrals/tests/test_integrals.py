@@ -593,7 +593,7 @@ def test_integrate_max_min():
     assert integrate(Min(exp(x), exp(-x))**2, x) == Piecewise( \
         (exp(2*x)/2, x <= 0), (1 - exp(-2*x)/2, True))
     # issue 7907
-    c = symbols('c', real=True)
+    c = symbols('c', extended_real=True)
     int1 = integrate(Max(c, x)*exp(-x**2), (x, -oo, oo))
     int2 = integrate(c*exp(-x**2), (x, -oo, c))
     int3 = integrate(x*exp(-x**2), (x, c, oo))
