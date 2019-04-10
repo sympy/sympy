@@ -1902,7 +1902,7 @@ def test_expo_conditionset():
 
 
 def test_exponential_symbols():
-    x, y, z = symbols('x y z', positive=True)
+    x, y, z = symbols('x y z', positive=True, finite=True)
     from sympy import simplify
 
     assert solveset(z**x - y, x, S.Reals) == Intersection(
