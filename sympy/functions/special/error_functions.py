@@ -156,7 +156,7 @@ class erf(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_is_extended_real(self):
+    def _eval_is_real(self):
         return self.args[0].is_extended_real
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
@@ -345,7 +345,7 @@ class erfc(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_is_extended_real(self):
+    def _eval_is_real(self):
         return self.args[0].is_extended_real
 
     def _eval_rewrite_as_tractable(self, z, **kwargs):
