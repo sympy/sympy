@@ -159,6 +159,12 @@ class erf(Function):
     def _eval_is_real(self):
         return self.args[0].is_extended_real
 
+    def _eval_is_finite(self):
+        if self.args[0].is_finite:
+            return True
+        else:
+            return self.args[0].is_extended_real
+
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy import uppergamma
         return sqrt(z**2)/z*(S.One - uppergamma(S.Half, z**2)/sqrt(S.Pi))
