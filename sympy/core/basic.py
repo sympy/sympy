@@ -921,7 +921,7 @@ class Basic(with_metaclass(ManagedProperties)):
         from sympy import Dummy, Symbol
 
         if iterable(args):
-           args=list(args)
+           args = list(args)
         unordered = False
         if len(args) == 1:
             sequence = args[0]
@@ -1000,6 +1000,8 @@ class Basic(with_metaclass(ManagedProperties)):
                 if not isinstance(rv, Basic):
                     break
             return rv
+
+
 
     @cacheit
     def _subs(self, old, new, **hints):

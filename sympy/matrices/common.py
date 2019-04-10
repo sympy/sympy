@@ -1886,6 +1886,8 @@ class MatrixOperations(MatrixRequired):
         >>> Matrix(_).subs(y, x)
         Matrix([[x]])
         """
+        if iterable(args):
+            args = list(args)
         return self.applyfunc(lambda x: x.subs(*args, **kwargs))
 
 
