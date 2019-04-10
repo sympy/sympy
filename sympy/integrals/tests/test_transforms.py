@@ -90,7 +90,7 @@ def test_mellin_transform():
     from sympy import Max, Min
     MT = mellin_transform
 
-    bpos = symbols('b', positive=True)
+    bpos = symbols('b', positive=True, finite=True)
 
     # 8.4.2
     assert MT(x**nu*Heaviside(x - 1), x, s) == \
@@ -607,7 +607,7 @@ def test_inverse_laplace_transform_delta_cond():
     assert ILT(exp(z*s), s, t, noconds=False) == \
         (DiracDelta(t + z), Eq(im(z), 0))
     # inversion does not exist: verify it doesn't evaluate to DiracDelta
-    for z in (Symbol('z', real=False),
+    for z in (Symbol('z', extended_real=False),
               Symbol('z', imaginary=True, zero=False)):
         f = ILT(exp(z*s), s, t, noconds=False)
         f = f[0] if isinstance(f, tuple) else f
@@ -630,7 +630,7 @@ def test_fourier_transform():
     f = Function("f")
 
     # TODO for this to work with real a, need to expand abs(a*x) to abs(a)*abs(x)
-    a = symbols('a', positive=True)
+    a = symbols('a', positive=True, finite=True)
     b = symbols('b', positive=True)
 
     posk = symbols('posk', positive=True)
@@ -838,6 +838,6 @@ def test_issue_12591():
 
 
 def test_issue_14692():
-    b = Symbol('b', negative=True)
+    b = Symbol('b', negative=True, finite=True)
     assert laplace_transform(1/(I*x - b), x, s) == \
         (-I*exp(I*b*s)*expint(1, b*s*exp_polar(I*pi/2)), 0, True)
