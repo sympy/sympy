@@ -147,10 +147,10 @@ def _decimal_to_Rational_prec(dec):
     return rv, prec
 
 
+_floatpat = regex.compile(r"[-+]?((\d*\.\d+)|(\d+\.?))")
 def _literal_float(f):
-    """Return True if n can be interpreted as a floating point number."""
-    pat = r"[-+]?((\d*\.\d+)|(\d+\.?))(eE[-+]?\d+)?"
-    return bool(regex.match(pat, f))
+    """Return True if n starts like a floating point number."""
+    return bool(_floatpat.match(f))
 
 # (a,b) -> gcd(a,b)
 
@@ -806,10 +806,10 @@ class Float(Number):
     100.0
 
     Float can automatically count significant figures if a null string
-    is sent for the precision; space are also allowed in the string. (Auto-
+    is sent for the precision; spaces or underscores are also allowed. (Auto-
     counting is only allowed for strings, ints and longs).
 
-    >>> Float('123 456 789 . 123 456', '')
+    >>> Float('123 456 789.123_456', '')
     123456789.123456
     >>> Float('12e-3', '')
     0.012
@@ -943,7 +943,16 @@ class Float(Number):
                              'Supply only one. ')
 
         if isinstance(num, string_types):
+            # Float already accepts spaces as digit separators; in Py 3.6
+            # underscores are allowed. In anticipation of that, we ignore
+            # legally placed underscores
             num = num.replace(' ', '')
+            if '_' in num:
+                if num.startswith('_') or num.endswith('_') or any(
+                        i in num for i in ('__', '_.', '._')):
+                    # copy Py 3.6 error
+                    raise ValueError("could not convert string to float: '%s'" % num)
+                num = num.replace('_', '')
             if num.startswith('.') and len(num) > 1:
                 num = '0' + num
             elif num.startswith('-.') and len(num) > 2:
@@ -1880,65 +1889,6 @@ class Rational(Number):
         return self, S.Zero
 
 
-# int -> Integer
-_intcache = {}
-
-
-# TODO move this tracing facility to sympy/core/trace.py  ?
-def _intcache_printinfo():
-    ints = sorted(_intcache.keys())
-    nhit = _intcache_hits
-    nmiss = _intcache_misses
-
-    if nhit == 0 and nmiss == 0:
-        print()
-        print('Integer cache statistic was not collected')
-        return
-
-    miss_ratio = float(nmiss) / (nhit + nmiss)
-
-    print()
-    print('Integer cache statistic')
-    print('-----------------------')
-    print()
-    print('#items: %i' % len(ints))
-    print()
-    print(' #hit   #miss               #total')
-    print()
-    print('%5i   %5i (%7.5f %%)   %5i' % (
-        nhit, nmiss, miss_ratio*100, nhit + nmiss)
-    )
-    print()
-    print(ints)
-
-_intcache_hits = 0
-_intcache_misses = 0
-
-
-def int_trace(f):
-    import os
-    if os.getenv('SYMPY_TRACE_INT', 'no').lower() != 'yes':
-        return f
-
-    def Integer_tracer(cls, i):
-        global _intcache_hits, _intcache_misses
-
-        try:
-            _intcache_hits += 1
-            return _intcache[i]
-        except KeyError:
-            _intcache_hits -= 1
-            _intcache_misses += 1
-
-            return f(cls, i)
-
-    # also we want to hook our _intcache_printinfo into sys.atexit
-    import atexit
-    atexit.register(_intcache_printinfo)
-
-    return Integer_tracer
-
-
 class Integer(Rational):
     """Represents integer numbers of any size.
 
@@ -1980,8 +1930,7 @@ class Integer(Rational):
     def _mpmath_(self, prec, rnd):
         return mpmath.make_mpf(self._as_mpf_val(prec))
 
-    # TODO caching with decorator, but not to degrade performance
-    @int_trace
+    @cacheit
     def __new__(cls, i):
         if isinstance(i, string_types):
             i = i.replace(' ', '')
@@ -1996,16 +1945,17 @@ class Integer(Rational):
         except TypeError:
             raise TypeError(
                 "Argument of Integer should be of numeric type, got %s." % i)
-        try:
-            return _intcache[ival]
-        except KeyError:
-            # We only work with well-behaved integer types. This converts, for
-            # example, numpy.int32 instances.
-            obj = Expr.__new__(cls)
-            obj.p = ival
-
-            _intcache[ival] = obj
-            return obj
+        # We only work with well-behaved integer types. This converts, for
+        # example, numpy.int32 instances.
+        if ival == 1:
+            return S.One
+        if ival == -1:
+            return S.NegativeOne
+        if ival == 0:
+            return S.Zero
+        obj = Expr.__new__(cls)
+        obj.p = ival
+        return obj
 
     def __getnewargs__(self):
         return (self.p,)
@@ -3200,7 +3150,7 @@ class NaN(with_metaclass(Singleton, Number)):
         return AtomicExpr.__new__(cls)
 
     def _latex(self, printer):
-        return r"\mathrm{NaN}"
+        return r"\text{NaN}"
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -3644,7 +3594,7 @@ class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
     __slots__ = []
 
     def _latex(self, printer):
-        return r"\mathrm{TribonacciConstant}"
+        return r"\text{TribonacciConstant}"
 
     def __int__(self):
         return 2
@@ -3905,10 +3855,6 @@ def sympify_complex(a):
     return real + S.ImaginaryUnit*imag
 
 converter[complex] = sympify_complex
-
-_intcache[0] = S.Zero
-_intcache[1] = S.One
-_intcache[-1] = S.NegativeOne
 
 from .power import Pow, integer_nthroot
 from .mul import Mul

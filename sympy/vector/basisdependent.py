@@ -123,7 +123,7 @@ class BasisDependent(Expr):
         expression -> a/b -> a, b
 
         """
-        return self, 1
+        return self, S.One
 
     def factor(self, *args, **kwargs):
         """

@@ -8,7 +8,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
 from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
+from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
 from sympy.core.mod import Mod
 from sympy.polys.domains.groundtypes import PythonRational
@@ -27,28 +27,6 @@ t = Symbol('t', real=False)
 def same_and_same_prec(a, b):
     # stricter matching for Floats
     return a == b and a._prec == b._prec
-
-
-def test_integers_cache():
-    python_int = 2**65 + 3175259
-
-    while python_int in _intcache or hash(python_int) in _intcache:
-        python_int += 1
-
-    sympy_int = Integer(python_int)
-
-    assert python_int in _intcache
-    assert hash(python_int) not in _intcache
-
-    sympy_int_int = Integer(sympy_int)
-
-    assert python_int in _intcache
-    assert hash(python_int) not in _intcache
-
-    sympy_hash_int = Integer(hash(python_int))
-
-    assert python_int in _intcache
-    assert hash(python_int) in _intcache
 
 
 def test_seterr():
@@ -508,6 +486,16 @@ def test_Float():
     Integer('123 456') == Integer('123456')
     Rational('123 456.123 456') == Rational('123456.123456')
     assert Float(' .3e2') == Float('0.3e2')
+
+    # allow underscore
+    assert Float('1_23.4_56') == Float('123.456')
+    assert Float('1_23.4_5_6', 12) == Float('123.456', 12)
+    # ...but not in all cases (per Py 3.6)
+    raises(ValueError, lambda: Float('_1'))
+    raises(ValueError, lambda: Float('1_'))
+    raises(ValueError, lambda: Float('1_.'))
+    raises(ValueError, lambda: Float('1._'))
+    raises(ValueError, lambda: Float('1__2'))
 
     # allow auto precision detection
     assert Float('.1', '') == Float(.1, 1)
@@ -1666,12 +1654,12 @@ def test_latex():
     assert latex(pi) == r"\pi"
     assert latex(E) == r"e"
     assert latex(GoldenRatio) == r"\phi"
-    assert latex(TribonacciConstant) == r"\mathrm{TribonacciConstant}"
+    assert latex(TribonacciConstant) == r"\text{TribonacciConstant}"
     assert latex(EulerGamma) == r"\gamma"
     assert latex(oo) == r"\infty"
     assert latex(-oo) == r"-\infty"
     assert latex(zoo) == r"\tilde{\infty}"
-    assert latex(nan) == r"\mathrm{NaN}"
+    assert latex(nan) == r"\text{NaN}"
     assert latex(I) == r"i"
 
 
@@ -1738,9 +1726,9 @@ def test_issue_10020():
 def test_invert_numbers():
     assert S(2).invert(5) == 3
     assert S(2).invert(S(5)/2) == S.Half
-    assert S(2).invert(5.) == 3
+    assert S(2).invert(5.) == 0.5
     assert S(2).invert(S(5)) == 3
-    assert S(2.).invert(5) == 3
+    assert S(2.).invert(5) == 0.5
     assert S(sqrt(2)).invert(5) == 1/sqrt(2)
     assert S(sqrt(2)).invert(sqrt(3)) == 1/sqrt(2)
 
@@ -1879,9 +1867,9 @@ def test_numpy_to_float():
         y = Float(ratval, precision=prec)
         assert abs((x - y)/y) < 2**(-(prec + 1))
 
-    check_prec_and_relerr(np.float16(2/3), S(2)/3)
-    check_prec_and_relerr(np.float32(2/3), S(2)/3)
-    check_prec_and_relerr(np.float64(2/3), S(2)/3)
+    check_prec_and_relerr(np.float16(2.0/3), S(2)/3)
+    check_prec_and_relerr(np.float32(2.0/3), S(2)/3)
+    check_prec_and_relerr(np.float64(2.0/3), S(2)/3)
     # extended precision, on some arch/compilers:
     x = np.longdouble(2)/3
     check_prec_and_relerr(x, S(2)/3)

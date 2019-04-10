@@ -777,17 +777,22 @@ class Expr(Basic, EvalfMixin):
         if self.is_number:
             if self.is_real is False:
                 return False
+
+            # check to see that we can get a value
             try:
-                # check to see that we can get a value
                 n2 = self._eval_evalf(2)
-                if n2 is None:
-                    raise AttributeError
-                if n2._prec == 1:  # no significance
-                    raise AttributeError
-                if n2 == S.NaN:
-                    raise AttributeError
-            except (AttributeError, ValueError):
+            # XXX: This shouldn't be caught here
+            # Catches ValueError: hypsum() failed to converge to the requested
+            # 34 bits of accuracy
+            except ValueError:
                 return None
+            if n2 is None:
+                return None
+            if getattr(n2, '_prec', 1) == 1:  # no significance
+                return None
+            if n2 == S.NaN:
+                return None
+
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
@@ -807,17 +812,22 @@ class Expr(Basic, EvalfMixin):
         if self.is_number:
             if self.is_real is False:
                 return False
+
+            # check to see that we can get a value
             try:
-                # check to see that we can get a value
                 n2 = self._eval_evalf(2)
-                if n2 is None:
-                    raise AttributeError
-                if n2._prec == 1:  # no significance
-                    raise AttributeError
-                if n2 == S.NaN:
-                    raise AttributeError
-            except (AttributeError, ValueError):
+            # XXX: This shouldn't be caught here
+            # Catches ValueError: hypsum() failed to converge to the requested
+            # 34 bits of accuracy
+            except ValueError:
                 return None
+            if n2 is None:
+                return None
+            if getattr(n2, '_prec', 1) == 1:  # no significance
+                return None
+            if n2 == S.NaN:
+                return None
+
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
                 return False
@@ -967,11 +977,11 @@ class Expr(Basic, EvalfMixin):
         """Parse and configure the ordering of terms. """
         from sympy.polys.orderings import monomial_key
 
-        try:
-            reverse = order.startswith('rev-')
-        except AttributeError:
+        startswith = getattr(order, "startswith", None)
+        if startswith is None:
             reverse = False
         else:
+            reverse = startswith('rev-')
             if reverse:
                 order = order[4:]
 
@@ -3410,6 +3420,10 @@ class Expr(Basic, EvalfMixin):
                 allow += 1
             return Float(rv, allow)
 
+    def _eval_derivative_matrix_lines(self, x):
+        from sympy.matrices.expressions.matexpr import _LeftRightArgs
+        return [_LeftRightArgs([S.One, S.One], higher=self._eval_derivative(x))]
+
 
 class AtomicExpr(Atom, Expr):
     """
@@ -3430,9 +3444,9 @@ class AtomicExpr(Atom, Expr):
 
     def _eval_derivative_n_times(self, s, n):
         from sympy import Piecewise, Eq
-        from sympy import Tuple
+        from sympy import Tuple, MatrixExpr
         from sympy.matrices.common import MatrixCommon
-        if isinstance(s, (MatrixCommon, Tuple, Iterable)):
+        if isinstance(s, (MatrixCommon, Tuple, Iterable, MatrixExpr)):
             return super(AtomicExpr, self)._eval_derivative_n_times(s, n)
         if self == s:
             return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
@@ -3525,6 +3539,78 @@ def _n2(a, b):
         dif = (a - b).evalf(2)
         if dif.is_comparable:
             return dif
+
+
+def unchanged(func, *args):
+    """Return True if `func` applied to the `args` is unchanged.
+    Can be used instead of `assert foo == foo`.
+
+    Examples
+    ========
+
+    >>> from sympy.core.expr import unchanged
+    >>> from sympy.functions.elementary.trigonometric import cos
+    >>> from sympy.core.numbers import pi
+
+    >>> unchanged(cos, 1)  # instead of assert cos(1) == cos(1)
+    True
+
+    >>> unchanged(cos, pi)
+    False
+    """
+    f = func(*args)
+    return f.func == func and f.args == tuple([sympify(a) for a in args])
+
+
+class ExprBuilder(object):
+    def __init__(self, op, args=[], validator=None, check=True):
+        if not hasattr(op, "__call__"):
+            raise TypeError("op {} needs to be callable".format(op))
+        self.op = op
+        self.args = args
+        self.validator = validator
+        if (validator is not None) and check:
+            self.validate()
+
+    @staticmethod
+    def _build_args(args):
+        return [i.build() if isinstance(i, ExprBuilder) else i for i in args]
+
+    def validate(self):
+        if self.validator is None:
+            return
+        args = self._build_args(self.args)
+        self.validator(*args)
+
+    def build(self, check=True):
+        args = self._build_args(self.args)
+        if self.validator and check:
+            self.validator(*args)
+        return self.op(*args)
+
+    def append_argument(self, arg, check=True):
+        self.args.append(arg)
+        if self.validator and check:
+            self.validate(*self.args)
+
+    def __getitem__(self, item):
+        if item == 0:
+            return self.op
+        else:
+            return self.args[item-1]
+
+    def __repr__(self):
+        return str(self.build())
+
+    def search_element(self, elem):
+        for i, arg in enumerate(self.args):
+            if isinstance(arg, ExprBuilder):
+                ret = arg.search_index(elem)
+                if ret is not None:
+                    return (i,) + ret
+            elif id(arg) == id(elem):
+                return (i,)
+        return None
 
 
 from .mul import Mul

@@ -5,7 +5,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Matrix, Basic)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.basic import _aresame
-from sympy.core.function import PoleError, _mexpand
+from sympy.core.function import PoleError, _mexpand, arity
 from sympy.core.sympify import sympify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
@@ -158,6 +158,16 @@ def test_nargs():
     raises(ValueError, lambda: Function('f', nargs=()))
 
 
+def test_arity():
+    f = lambda x, y: 1
+    assert arity(f) == 2
+    def f(x, y, z=None):
+        pass
+    assert arity(f) == (2, 3)
+    assert arity(lambda *x: x) is None
+    assert arity(log) == (1, 2)
+
+
 def test_Lambda():
     e = Lambda(x, x**2)
     assert e(4) == 16
@@ -301,11 +311,9 @@ def test_Subs():
         ).doit() == 2*exp(x)
     assert Subs(Derivative(g(x)**2, g(x), x), g(x), exp(x)
         ).doit(deep=False) == 2*Derivative(exp(x), x)
-
-    assert Derivative(f(x, g(x)), x).doit() == Derivative(g(x), x
-        )*Subs(Derivative(f(x, y), y), y, g(x)
-        ) + Subs(Derivative(f(y, g(x)), y), y, x)
-
+    assert Derivative(f(x, g(x)), x).doit() == Derivative(
+        f(x, g(x)), g(x))*Derivative(g(x), x) + Subs(Derivative(
+        f(y, g(x)), y), y, x)
 
 def test_doitdoit():
     done = Derivative(f(x, g(x)), x, g(x)).doit()
@@ -1129,7 +1137,7 @@ def test_issue_15241():
     assert (y*G + y*Gy*G).diff(y, G) == y*Gy.diff(y) + Gy + 1
 
 
-def test_issue_15266():
+def test_issue_15226():
     assert Subs(Derivative(f(y), x, y), y, g(x)).doit() != 0
 
 

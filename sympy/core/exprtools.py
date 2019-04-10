@@ -393,10 +393,10 @@ class Factors(object):
                             raise ValueError('unexpected factor in i1: %s' % a)
 
         self.factors = factors
-        try:
-            self.gens = frozenset(factors.keys())
-        except AttributeError:
+        keys = getattr(factors, 'keys', None)
+        if keys is None:
             raise TypeError('expecting Expr or dictionary')
+        self.gens = frozenset(keys())
 
     def __hash__(self):  # Factors
         keys = tuple(ordered(self.factors.keys()))
@@ -1040,11 +1040,11 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         reps = []
         for i, (c, nc) in enumerate(args):
             if nc:
-                nc = Mul._from_args(nc)
+                nc = Mul(*nc)
                 d = Dummy()
                 reps.append((d, nc))
                 c.append(d)
-                args[i] = Mul._from_args(c)
+                args[i] = Mul(*c)
             else:
                 args[i] = c
         return args, dict(reps)
@@ -1260,7 +1260,7 @@ def _mask_nc(eq, name=None):
     and cannot be made commutative. The third value returned is a list
     of any non-commutative symbols that appear in the returned equation.
 
-    ``name``, if given, is the name that will be used with numered Dummy
+    ``name``, if given, is the name that will be used with numbered Dummy
     variables that will replace the non-commutative objects and is mainly
     used for doctesting purposes.
 
@@ -1468,8 +1468,8 @@ def factor_nc(expr):
                         ok = hit = True
                         l = b**e
                         il = b**-e
-                        for i, a in enumerate(args):
-                            args[i][1][0] = il*args[i][1][0]
+                        for _ in args:
+                            _[1][0] = il*_[1][0]
                         break
                 if not ok:
                     break
@@ -1477,8 +1477,8 @@ def factor_nc(expr):
             hit = True
             lenn = len(n)
             l = Mul(*n)
-            for i, a in enumerate(args):
-                args[i][1] = args[i][1][lenn:]
+            for _ in args:
+                _[1] = _[1][lenn:]
         # find any noncommutative common suffix
         for i, a in enumerate(args):
             if i == 0:
@@ -1504,8 +1504,8 @@ def factor_nc(expr):
                         ok = hit = True
                         r = b**e
                         il = b**-e
-                        for i, a in enumerate(args):
-                            args[i][1][-1] = args[i][1][-1]*il
+                        for _ in args:
+                            _[1][-1] = _[1][-1]*il
                         break
                 if not ok:
                     break
@@ -1513,8 +1513,8 @@ def factor_nc(expr):
             hit = True
             lenn = len(n)
             r = Mul(*n)
-            for i, a in enumerate(args):
-                args[i][1] = a[1][:len(a[1]) - lenn]
+            for _ in args:
+                _[1] = _[1][:len(_[1]) - lenn]
         if hit:
             mid = Add(*[Mul(*cc)*Mul(*nc) for cc, nc in args])
         else:

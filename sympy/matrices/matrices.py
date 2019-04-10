@@ -1,44 +1,39 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
+
+from types import FunctionType
 
 from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
+from sympy.core.compatibility import (
+    Callable, NotIterable, as_int, default_sort_key, is_sequence, range,
+    reduce, string_types)
+from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
+from sympy.core.numbers import Float, Integer, mod_inverse
 from sympy.core.power import Pow
-from sympy.core.symbol import (Symbol, Dummy, symbols,
-    _uniquely_named_symbol)
-from sympy.core.numbers import Integer, mod_inverse, Float
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol, symbols
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
-from sympy.polys import PurePoly, roots, cancel
+from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
+from sympy.polys import PurePoly, cancel, roots
 from sympy.printing import sstr
-from sympy.simplify import simplify as _simplify, nsimplify
-from sympy.core.compatibility import reduce, as_int, string_types, Callable
-
-from sympy.utilities.iterables import flatten, numbered_symbols
-from sympy.core.compatibility import (is_sequence, default_sort_key, range,
-    NotIterable)
-
+from sympy.simplify import nsimplify
+from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import flatten, numbered_symbols
+from sympy.utilities.misc import filldedent
 
-from types import FunctionType
-
-from .common import (a2idx, MatrixError, ShapeError,
-        NonSquareMatrixError, MatrixCommon)
-
-from sympy.core.decorators import deprecated
+from .common import (
+    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError)
 
 
 def _iszero(x):
     """Returns True if x is zero."""
-    try:
-        return x.is_zero
-    except AttributeError:
-        return None
+    return getattr(x, 'is_zero', None)
 
 
 def _is_zero_after_expand_mul(x):
@@ -1042,10 +1037,33 @@ class MatrixSubspaces(MatrixReductions):
             vectors to be made orthogonal
 
         normalize : bool
-            If true, return an orthonormal basis.
-        """
+            If ``True``, return an orthonormal basis.
 
+        rankcheck : bool
+            If ``True``, the computation does not stop when encountering
+            linearly dependent vectors.
+
+            If ``False``, it will raise ``ValueError`` when any zero
+            or linearly dependent vectors are found.
+
+        Returns
+        =======
+
+        list
+            List of orthogonal (or orthonormal) basis vectors.
+
+        See Also
+        ========
+
+        MatrixBase.QRdecomposition
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+        """
         normalize = kwargs.get('normalize', False)
+        rankcheck = kwargs.get('rankcheck', False)
 
         def project(a, b):
             return b * (a.dot(b) / b.dot(b))
@@ -1060,13 +1078,21 @@ class MatrixSubspaces(MatrixReductions):
 
         ret = []
         # make sure we start with a non-zero vector
+        vecs = list(vecs)
         while len(vecs) > 0 and vecs[0].is_zero:
-            del vecs[0]
+            if rankcheck is False:
+                del vecs[0]
+            else:
+                raise ValueError(
+                    "GramSchmidt: vector set not linearly independent")
 
         for vec in vecs:
             perp = perp_to_subspace(vec, ret)
             if not perp.is_zero:
                 ret.append(perp)
+            elif rankcheck is True:
+                raise ValueError(
+                    "GramSchmidt: vector set not linearly independent")
 
         if normalize:
             ret = [vec / vec.norm() for vec in ret]
@@ -1078,8 +1104,23 @@ class MatrixEigen(MatrixSubspaces):
     """Provides basic matrix eigenvalue/vector operations.
     Should not be instantiated directly."""
 
-    _cache_is_diagonalizable = None
-    _cache_eigenvects = None
+    @property
+    def _cache_is_diagonalizable(self):
+        SymPyDeprecationWarning(
+            feature='_cache_is_diagonalizable',
+            deprecated_since_version="1.4",
+            issue=15887
+            ).warn()
+        return None
+
+    @property
+    def _cache_eigenvects(self):
+        SymPyDeprecationWarning(
+            feature='_cache_eigenvects',
+            deprecated_since_version="1.4",
+            issue=15887
+            ).warn()
+        return None
 
     def diagonalize(self, reals_only=False, sort=False, normalize=False):
         """
@@ -1134,12 +1175,10 @@ class MatrixEigen(MatrixSubspaces):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        if not self.is_diagonalizable(reals_only=reals_only, clear_cache=False):
+        if not self.is_diagonalizable(reals_only=reals_only):
             raise MatrixError("Matrix is not diagonalizable")
 
-        eigenvecs = self._cache_eigenvects
-        if eigenvecs is None:
-            eigenvecs = self.eigenvects(simplify=True)
+        eigenvecs = self.eigenvects(simplify=True)
 
         if sort:
             eigenvecs = sorted(eigenvecs, key=default_sort_key)
@@ -1219,13 +1258,15 @@ class MatrixEigen(MatrixSubspaces):
         """
         simplify = flags.get('simplify', False) # Collect simplify flag before popped up, to reuse later in the routine.
         multiple = flags.get('multiple', False) # Collect multiple flag to decide whether return as a dict or list.
+        rational = flags.pop('rational', True)
 
         mat = self
         if not mat:
             return {}
-        if flags.pop('rational', True):
-            if mat.has(Float):
-                mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
+        if rational:
+            mat = mat.applyfunc(
+                lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
 
         if mat.is_upper or mat.is_lower:
             if not self.is_square:
@@ -1422,43 +1463,36 @@ class MatrixEigen(MatrixSubspaces):
         is_diagonal
         diagonalize
         """
-
-        clear_cache = kwargs.get('clear_cache', True)
+        if 'clear_cache' in kwargs:
+            SymPyDeprecationWarning(
+                feature='clear_cache',
+                deprecated_since_version=1.4,
+                issue=15887
+            ).warn()
         if 'clear_subproducts' in kwargs:
-            clear_cache = kwargs.get('clear_subproducts')
-
-        def cleanup():
-            """Clears any cached values if requested"""
-            if clear_cache:
-                self._cache_eigenvects = None
-                self._cache_is_diagonalizable = None
+            SymPyDeprecationWarning(
+                feature='clear_subproducts',
+                deprecated_since_version=1.4,
+                issue=15887
+            ).warn()
 
         if not self.is_square:
-            cleanup()
             return False
-
-        # use the cached value if we have it
-        if self._cache_is_diagonalizable is not None:
-            ret = self._cache_is_diagonalizable
-            cleanup()
-            return ret
 
         if all(e.is_real for e in self) and self.is_symmetric():
             # every real symmetric matrix is real diagonalizable
-            self._cache_is_diagonalizable = True
-            cleanup()
             return True
 
-        self._cache_eigenvects = self.eigenvects(simplify=True)
+        eigenvecs = self.eigenvects(simplify=True)
+
         ret = True
-        for val, mult, basis in self._cache_eigenvects:
+        for val, mult, basis in eigenvecs:
             # if we have a complex eigenvalue
             if reals_only and not val.is_real:
                 ret = False
             # if the geometric multiplicity doesn't equal the algebraic
             if mult != len(basis):
                 ret = False
-        cleanup()
         return ret
 
     def jordan_form(self, calc_transform=True, **kwargs):
@@ -1538,7 +1572,7 @@ class MatrixEigen(MatrixSubspaces):
             return mat_cache[(val, pow)]
 
         # helper functions
-        def nullity_chain(val):
+        def nullity_chain(val, algebraic_multiplicity):
             """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
             until it is constant where ``E = self - val*I``"""
             # mat.rank() is faster than computing the null space,
@@ -1549,8 +1583,20 @@ class MatrixEigen(MatrixSubspaces):
             i = 2
             while nullity != ret[-1]:
                 ret.append(nullity)
+                if nullity == algebraic_multiplicity:
+                    break
                 nullity = cols - eig_mat(val, i).rank()
                 i += 1
+
+                # Due to issues like #7146 and #15872, SymPy sometimes
+                # gives the wrong rank. In this case, raise an error
+                # instead of returning an incorrect matrix
+                if nullity < ret[-1] or nullity > algebraic_multiplicity:
+                    raise MatrixError(
+                        "SymPy had encountered an inconsistent "
+                        "result while computing Jordan block: "
+                        "{}".format(self))
+
             return ret
 
         def blocks_from_nullity_chain(d):
@@ -1602,7 +1648,8 @@ class MatrixEigen(MatrixSubspaces):
 
         block_structure = []
         for eig in sorted(eigs.keys(), key=default_sort_key):
-            chain = nullity_chain(eig)
+            algebraic_multiplicity = eigs[eig]
+            chain = nullity_chain(eig, algebraic_multiplicity)
             block_sizes = blocks_from_nullity_chain(chain)
             # if block_sizes == [a, b, c, ...], then the number of
             # Jordan blocks of size 1 is a, of size 2 is b, etc.
@@ -1614,6 +1661,14 @@ class MatrixEigen(MatrixSubspaces):
 
             block_structure.extend(
                 (eig, size) for size, num in size_nums for _ in range(num))
+
+        jordan_form_size = sum(size for eig, size in block_structure)
+
+        if jordan_form_size != self.rows:
+            raise MatrixError(
+                "SymPy had encountered an inconsistent result while "
+                "computing Jordan block. : {}".format(self))
+
         blocks = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
         jordan_mat = mat.diag(*blocks)
 
@@ -1704,13 +1759,21 @@ class MatrixEigen(MatrixSubspaces):
         condition_number
         """
         mat = self
-        # Compute eigenvalues of A.H A
-        valmultpairs = (mat.H * mat).eigenvals()
+        if self.rows >= self.cols:
+            valmultpairs = (mat.H * mat).eigenvals()
+        else:
+            valmultpairs = (mat * mat.H).eigenvals()
 
         # Expands result from eigenvals into a simple list
         vals = []
         for k, v in valmultpairs.items():
             vals += [sqrt(k)] * v  # dangerous! same k in several spots!
+
+        # Pad with zeros if singular values are computed in reverse way,
+        # to give consistent format.
+        if len(vals) < self.cols:
+            vals += [S.Zero] * (self.cols - len(vals))
+
         # sort them in descending order
         vals.sort(reverse=True, key=default_sort_key)
 
@@ -2179,6 +2242,49 @@ class MatrixBase(MatrixDeprecated,
         return "Matrix([\n%s])" % self.table(printer, rowsep=',\n')
 
     @classmethod
+    def irregular(cls, ntop, *matrices, **kwargs):
+      """Return a matrix filled by the given matrices which
+      are listed in order of appearance from left to right, top to
+      bottom as they first appear in the matrix. They must fill the
+      matrix completely.
+
+      Examples
+      ========
+
+      >>> from sympy import ones, Matrix
+      >>> Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
+      ...   ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7)
+      Matrix([
+        [1, 2, 2, 2, 3, 3],
+        [1, 2, 2, 2, 3, 3],
+        [4, 2, 2, 2, 5, 5],
+        [6, 6, 7, 7, 5, 5]])
+      """
+      from sympy.core.compatibility import as_int
+      ntop = as_int(ntop)
+      # make sure we are working with explicit matrices
+      b = [i.as_explicit() if hasattr(i, 'as_explicit') else i
+          for i in matrices]
+      q = list(range(len(b)))
+      dat = [i.rows for i in b]
+      active = [q.pop(0) for _ in range(ntop)]
+      cols = sum([b[i].cols for i in active])
+      rows = []
+      while any(dat):
+          r = []
+          for a, j in enumerate(active):
+              r.extend(b[j][-dat[j], :])
+              dat[j] -= 1
+              if dat[j] == 0 and q:
+                  active[a] = q.pop(0)
+          if len(r) != cols:
+            raise ValueError(filldedent('''
+                Matrices provided do not appear to fill
+                the space completely.'''))
+          rows.append(r)
+      return cls._new(rows)
+
+    @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
         """Return the number of rows, cols and flat matrix elements.
 
@@ -2220,8 +2326,14 @@ class MatrixBase(MatrixDeprecated,
         [0,   0],
         [1, 1/2]])
 
+        See Also
+        ========
+        irregular - filling a matrix with irregular blocks
         """
         from sympy.matrices.sparse import SparseMatrix
+        from sympy.matrices.expressions.matexpr import MatrixSymbol
+        from sympy.matrices.expressions.blockmatrix import BlockMatrix
+        from sympy.utilities.iterables import reshape
 
         flat_list = None
 
@@ -2261,33 +2373,98 @@ class MatrixBase(MatrixDeprecated,
             # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
             elif is_sequence(args[0]) \
                     and not isinstance(args[0], DeferredVector):
-                in_mat = []
-                ncol = set()
-                for row in args[0]:
-                    if isinstance(row, MatrixBase):
-                        in_mat.extend(row.tolist())
-                        if row.cols or row.rows:  # only pay attention if it's not 0x0
-                            ncol.add(row.cols)
+                dat = list(args[0])
+                ismat = lambda i: isinstance(i, MatrixBase) and (
+                    evaluate or
+                    isinstance(i, BlockMatrix) or
+                    isinstance(i, MatrixSymbol))
+                raw = lambda i: is_sequence(i) and not ismat(i)
+                evaluate = kwargs.get('evaluate', True)
+                if evaluate:
+                    def do(x):
+                        # make Block and Symbol explicit
+                        if isinstance(x, (list, tuple)):
+                            return type(x)([do(i) for i in x])
+                        if isinstance(x, BlockMatrix) or \
+                                isinstance(x, MatrixSymbol) and \
+                                all(_.is_Integer for _ in x.shape):
+                            return x.as_explicit()
+                        return x
+                    dat = do(dat)
+
+                if dat == [] or dat == [[]]:
+                    rows = cols = 0
+                    flat_list = []
+                elif not any(raw(i) or ismat(i) for i in dat):
+                    # a column as a list of values
+                    flat_list = [cls._sympify(i) for i in dat]
+                    rows = len(flat_list)
+                    cols = 1 if rows else 0
+                elif evaluate and all(ismat(i) for i in dat):
+                    # a column as a list of matrices
+                    ncol = set(i.cols for i in dat if any(i.shape))
+                    if ncol:
+                        if len(ncol) != 1:
+                            raise ValueError('mismatched dimensions')
+                        flat_list = [_ for i in dat for r in i.tolist() for _ in r]
+                        cols = ncol.pop()
+                        rows = len(flat_list)//cols
                     else:
-                        in_mat.append(row)
-                        try:
-                            ncol.add(len(row))
-                        except TypeError:
+                        rows = cols = 0
+                        flat_list = []
+                elif evaluate and any(ismat(i) for i in dat):
+                    ncol = set()
+                    flat_list = []
+                    for i in dat:
+                        if ismat(i):
+                            flat_list.extend(
+                                [k for j in i.tolist() for k in j])
+                            if any(i.shape):
+                                ncol.add(i.cols)
+                        elif raw(i):
+                            if i:
+                                ncol.add(len(i))
+                                flat_list.extend(i)
+                        else:
                             ncol.add(1)
-                if len(ncol) > 1:
-                    raise ValueError("Got rows of variable lengths: %s" %
-                                     sorted(list(ncol)))
-                cols = ncol.pop() if ncol else 0
-                rows = len(in_mat) if cols else 0
-                if rows:
-                    if not is_sequence(in_mat[0]):
-                        cols = 1
-                        flat_list = [cls._sympify(i) for i in in_mat]
-                        return rows, cols, flat_list
-                flat_list = []
-                for j in range(rows):
-                    for i in range(cols):
-                        flat_list.append(cls._sympify(in_mat[j][i]))
+                            flat_list.append(i)
+                        if len(ncol) > 1:
+                            raise ValueError('mismatched dimensions')
+                    cols = ncol.pop()
+                    rows = len(flat_list)//cols
+                else:
+                    # list of lists; each sublist is a logical row
+                    # which might consist of many rows if the values in
+                    # the row are matrices
+                    flat_list = []
+                    ncol = set()
+                    rows = cols = 0
+                    for row in dat:
+                        if not is_sequence(row) and \
+                                not getattr(row, 'is_Matrix', False):
+                            raise ValueError('expecting list of lists')
+                        if not row:
+                            continue
+                        if evaluate and all(ismat(i) for i in row):
+                            r, c, flatT = cls._handle_creation_inputs(
+                                [i.T for i in row])
+                            T = reshape(flatT, [c])
+                            flat = [T[i][j] for j in range(c) for i in range(r)]
+                            r, c = c, r
+                        else:
+                            r = 1
+                            if getattr(row, 'is_Matrix', False):
+                                c = 1
+                                flat = [row]
+                            else:
+                                c = len(row)
+                                flat = [cls._sympify(i) for i in row]
+                        ncol.add(c)
+                        if len(ncol) > 1:
+                            raise ValueError('mismatched dimensions')
+                        flat_list.extend(flat)
+                        rows += r
+                    cols = ncol.pop() if ncol else 0
 
         elif len(args) == 3:
             rows = as_int(args[0])
@@ -2322,7 +2499,9 @@ class MatrixBase(MatrixDeprecated,
             flat_list = []
 
         if flat_list is None:
-            raise TypeError("Data type not understood")
+            raise TypeError(filldedent('''
+                Data type not understood; expecting list of lists
+                or lists of values.'''))
 
         return rows, cols, flat_list
 
@@ -2641,7 +2820,7 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if not self.is_diagonal:
+        if not self.is_diagonal():
             raise TypeError("Matrix should be diagonal")
         if rhs.rows != self.rows:
             raise TypeError("Size mis-match")
@@ -4236,6 +4415,100 @@ class MatrixBase(MatrixDeprecated,
                 tmp -= R[j, k] * x[n - 1 - k]
             x.append(tmp / R[j, j])
         return self._new([row._mat for row in reversed(x)])
+
+    def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
+        r"""Returns a pair of matrices (`C`, `F`) with matching rank
+        such that `A = C F`.
+
+        Parameters
+        ==========
+
+        iszerofunc : Function, optional
+            A function used for detecting whether an element can
+            act as a pivot.  ``lambda x: x.is_zero`` is used by default.
+
+        simplify : Bool or Function, optional
+            A function used to simplify elements when looking for a
+            pivot. By default SymPy's ``simplify`` is used.
+
+        Returns
+        =======
+
+        (C, F) : Matrices
+            `C` and `F` are full-rank matrices with rank as same as `A`,
+            whose product gives `A`.
+
+            See Notes for additional mathematical details.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([
+        ...     [1, 3, 1, 4],
+        ...     [2, 7, 3, 9],
+        ...     [1, 5, 3, 1],
+        ...     [1, 2, 0, 8]
+        ... ])
+        >>> C, F = A.rank_decomposition()
+        >>> C
+        Matrix([
+        [1, 3, 4],
+        [2, 7, 9],
+        [1, 5, 1],
+        [1, 2, 8]])
+        >>> F
+        Matrix([
+        [1, 0, -2, 0],
+        [0, 1,  1, 0],
+        [0, 0,  0, 1]])
+        >>> C * F == A
+        True
+
+        Notes
+        =====
+
+        Obtaining `F`, an RREF of `A`, is equivalent to creating a
+        product
+
+        .. math::
+            E_n E_{n-1} ... E_1 A = F
+
+        where `E_n, E_{n-1}, ... , E_1` are the elimination matrices or
+        permutation matrices equivalent to each row-reduction step.
+
+        The inverse of the same product of elimination matrices gives
+        `C`:
+
+        .. math::
+            C = (E_n E_{n-1} ... E_1)^{-1}
+
+        It is not necessary, however, to actually compute the inverse:
+        the columns of `C` are those from the original matrix with the
+        same column indices as the indices of the pivot columns of `F`.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Rank_factorization
+
+        .. [2] Piziak, R.; Odell, P. L. (1 June 1999).
+            "Full Rank Factorization of Matrices".
+            Mathematics Magazine. 72 (3): 193. doi:10.2307/2690882
+
+        See Also
+        ========
+
+        rref
+        """
+        (F, pivot_cols) = self.rref(
+            simplify=simplify, iszerofunc=iszerofunc, pivots=True)
+        rank = len(pivot_cols)
+
+        C = self.extract(range(self.rows), pivot_cols)
+        F = F[:rank, :]
+
+        return (C, F)
 
     def solve_least_squares(self, rhs, method='CH'):
         """Return the least-square fit to the data.

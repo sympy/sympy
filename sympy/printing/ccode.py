@@ -62,7 +62,6 @@ known_functions = _known_functions_C9X
 known_functions_C99 = dict(_known_functions_C9X, **{
     'exp2': 'exp2',
     'expm1': 'expm1',
-    'expm1': 'expm1',
     'log10': 'log10',
     'log2': 'log2',
     'log1p': 'log1p',
@@ -221,7 +220,8 @@ class C89CodePrinter(CodePrinter):
     _ns = ''  # namespace, C++ uses 'std::'
     _kf = known_functions_C89  # known_functions-dict to copy
 
-    def __init__(self, settings={}):
+    def __init__(self, settings=None):
+        settings = settings or {}
         if self.math_macros is None:
             self.math_macros = settings.pop('math_macros', get_math_macros())
         self.type_aliases = dict(chain(self.type_aliases.items(),
@@ -417,20 +417,28 @@ class C89CodePrinter(CodePrinter):
     def _print_Max(self, expr):
         if "Max" in self.known_functions:
             return self._print_Function(expr)
-        from sympy import Max
-        if len(expr.args) == 1:
-            return self._print(expr.args[0])
-        return "((%(a)s > %(b)s) ? %(a)s : %(b)s)" % {
-            'a': expr.args[0], 'b': self._print(Max(*expr.args[1:]))}
+        def inner_print_max(args): # The more natural abstraction of creating
+            if len(args) == 1:     # and printing smaller Max objects is slow
+                return self._print(args[0]) # when there are many arguments.
+            half = len(args) // 2
+            return "((%(a)s > %(b)s) ? %(a)s : %(b)s)" % {
+                'a': inner_print_max(args[:half]),
+                'b': inner_print_max(args[half:])
+            }
+        return inner_print_max(expr.args)
 
     def _print_Min(self, expr):
         if "Min" in self.known_functions:
             return self._print_Function(expr)
-        from sympy import Min
-        if len(expr.args) == 1:
-            return self._print(expr.args[0])
-        return "((%(a)s < %(b)s) ? %(a)s : %(b)s)" % {
-            'a': expr.args[0], 'b': self._print(Min(*expr.args[1:]))}
+        def inner_print_min(args): # The more natural abstraction of creating
+            if len(args) == 1:     # and printing smaller Min objects is slow
+                return self._print(args[0]) # when there are many arguments.
+            half = len(args) // 2
+            return "((%(a)s < %(b)s) ? %(a)s : %(b)s)" % {
+                'a': inner_print_min(args[:half]),
+                'b': inner_print_min(args[half:])
+            }
+        return inner_print_min(expr.args)
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
@@ -696,7 +704,19 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
         if nest:
             args = self._print(expr.args[0])
             if len(expr.args) > 1:
-                args += ', %s' % self._print(expr.func(*expr.args[1:]))
+                paren_pile = ''
+                for curr_arg in expr.args[1:-1]:
+                    paren_pile += ')'
+                    args += ', {ns}{name}{suffix}({next}'.format(
+                        ns=self._ns,
+                        name=known,
+                        suffix=suffix,
+                        next = self._print(curr_arg)
+                    )
+                args += ', %s%s' % (
+                    self._print(expr.func(expr.args[-1])),
+                    paren_pile
+                )
         else:
             args = ', '.join(map(lambda arg: self._print(arg), expr.args))
         return '{ns}{name}{suffix}({args})'.format(

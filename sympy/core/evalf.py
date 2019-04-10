@@ -367,12 +367,14 @@ def get_integer_part(expr, no, options, return_ints=False):
             if s:
                 doit = True
                 from sympy.core.compatibility import as_int
+                # use strict=False with as_int because we take
+                # 2.0 == 2
                 for v in s.values():
                     try:
-                        as_int(v)
+                        as_int(v, strict=False)
                     except ValueError:
                         try:
-                            [as_int(i) for i in v.as_real_imag()]
+                            [as_int(i, strict=False) for i in v.as_real_imag()]
                             continue
                         except (ValueError, AttributeError):
                             doit = False
@@ -1184,7 +1186,7 @@ def evalf_sum(expr, prec, options):
     if len(limits) != 1 or len(limits[0]) != 3:
         raise NotImplementedError
     if func is S.Zero:
-        return mpf(0), None, None, None
+        return None, None, prec, None
     prec2 = prec + 10
     try:
         n, a, b = limits[0]
@@ -1306,33 +1308,36 @@ def evalf(x, prec, options):
         rf = evalf_table[x.func]
         r = rf(x, prec, options)
     except KeyError:
-        try:
-            # Fall back to ordinary evalf if possible
-            if 'subs' in options:
-                x = x.subs(evalf_subs(prec, options['subs']))
-            xe = x._eval_evalf(prec)
-            re, im = xe.as_real_imag()
-            if re.has(re_) or im.has(im_):
-                raise NotImplementedError
-            if re == 0:
-                re = None
-                reprec = None
-            elif re.is_number:
-                re = re._to_mpmath(prec, allow_ints=False)._mpf_
-                reprec = prec
-            else:
-                raise NotImplementedError
-            if im == 0:
-                im = None
-                imprec = None
-            elif im.is_number:
-                im = im._to_mpmath(prec, allow_ints=False)._mpf_
-                imprec = prec
-            else:
-                raise NotImplementedError
-            r = re, im, reprec, imprec
-        except AttributeError:
+        # Fall back to ordinary evalf if possible
+        if 'subs' in options:
+            x = x.subs(evalf_subs(prec, options['subs']))
+        xe = x._eval_evalf(prec)
+        if xe is None:
             raise NotImplementedError
+        as_real_imag = getattr(xe, "as_real_imag", None)
+        if as_real_imag is None:
+            raise NotImplementedError # e.g. FiniteSet(-1.0, 1.0).evalf()
+        re, im = as_real_imag()
+        if re.has(re_) or im.has(im_):
+            raise NotImplementedError
+        if re == 0:
+            re = None
+            reprec = None
+        elif re.is_number:
+            re = re._to_mpmath(prec, allow_ints=False)._mpf_
+            reprec = prec
+        else:
+            raise NotImplementedError
+        if im == 0:
+            im = None
+            imprec = None
+        elif im.is_number:
+            im = im._to_mpmath(prec, allow_ints=False)._mpf_
+            imprec = prec
+        else:
+            raise NotImplementedError
+        r = re, im, reprec, imprec
+
     if options.get("verbose"):
         print("### input", x)
         print("### output", to_str(r[0] or fzero, 50))

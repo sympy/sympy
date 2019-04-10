@@ -7,7 +7,7 @@ import random
 import math
 
 from sympy.core import sympify
-from sympy.core.compatibility import as_int, SYMPY_INTS, range
+from sympy.core.compatibility import as_int, SYMPY_INTS, range, string_types
 from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
 from sympy.core.function import Function
@@ -18,6 +18,14 @@ from sympy.core.power import integer_nthroot, Pow
 from sympy.core.singleton import S
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
+
+
+# Note: This list should be updated whenever new Mersenne primes are found.
+# Refer: https://www.mersenne.org/
+MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203,
+ 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049,
+ 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583,
+ 25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933)
 
 small_trailing = [0] * 256
 for j in range(1,8):
@@ -121,7 +129,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     elif visual not in (True, False):
         visual = None
 
-    if type(n) is str:
+    if isinstance(n, string_types):
         if visual:
             return n
         d = {}
@@ -225,25 +233,22 @@ def multiplicity(p, n):
         p, n = as_int(p), as_int(n)
     except ValueError:
         if all(isinstance(i, (SYMPY_INTS, Rational)) for i in (p, n)):
-            try:
-                p = Rational(p)
-                n = Rational(n)
-                if p.q == 1:
-                    if n.p == 1:
-                        return -multiplicity(p.p, n.q)
-                    return multiplicity(p.p, n.p) - multiplicity(p.p, n.q)
-                elif p.p == 1:
-                    return multiplicity(p.q, n.q)
-                else:
-                    like = min(
-                        multiplicity(p.p, n.p),
-                        multiplicity(p.q, n.q))
-                    cross = min(
-                        multiplicity(p.q, n.p),
-                        multiplicity(p.p, n.q))
-                    return like - cross
-            except AttributeError:
-                pass
+            p = Rational(p)
+            n = Rational(n)
+            if p.q == 1:
+                if n.p == 1:
+                    return -multiplicity(p.p, n.q)
+                return multiplicity(p.p, n.p) - multiplicity(p.p, n.q)
+            elif p.p == 1:
+                return multiplicity(p.q, n.q)
+            else:
+                like = min(
+                    multiplicity(p.p, n.p),
+                    multiplicity(p.q, n.q))
+                cross = min(
+                    multiplicity(p.q, n.p),
+                    multiplicity(p.p, n.q))
+                return like - cross
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
 
     if n == 0:
@@ -377,8 +382,8 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 if m is not False:
                     r, e = m[0], e*m[1]
             return int(r), e
-    else:
-        return False
+
+    return False
 
 
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
@@ -982,17 +987,17 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                use_rho=use_rho, use_pm1=use_pm1,
                                verbose=verbose, visual=False)
     elif isinstance(n, Mul):
-        factordict = dict([(int(k), int(v)) for k, v in
-                           list(n.as_powers_dict().items())])
+        factordict = {int(k): int(v) for k, v in
+            n.as_powers_dict().items()}
     elif isinstance(n, dict):
         factordict = n
     if factordict and (isinstance(n, Mul) or isinstance(n, dict)):
         # check it
-        for k in list(factordict.keys()):
-            if isprime(k):
+        for key in list(factordict.keys()):
+            if isprime(key):
                 continue
-            e = factordict.pop(k)
-            d = factorint(k, limit=limit, use_trial=use_trial, use_rho=use_rho,
+            e = factordict.pop(key)
+            d = factorint(key, limit=limit, use_trial=use_trial, use_rho=use_rho,
                           use_pm1=use_pm1, verbose=verbose, visual=False)
             for k, v in d.items():
                 if k in factordict:
@@ -2040,3 +2045,183 @@ class primeomega(Function):
                 raise ValueError("n must be a positive integer")
             else:
                 return sum(factorint(n).values())
+
+
+def mersenne_prime_exponent(nth):
+    """Returns the exponent ``i`` for the nth Mersenne prime (which
+    has the form `2^i - 1`).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import mersenne_prime_exponent
+    >>> mersenne_prime_exponent(1)
+    2
+    >>> mersenne_prime_exponent(20)
+    4423
+    """
+    n = as_int(nth)
+    if n < 1:
+        raise ValueError("nth must be a positive integer; mersenne_prime_exponent(1) == 2")
+    if n > 51:
+        raise ValueError("There are only 51 perfect numbers; nth must be less than or equal to 51")
+    return MERSENNE_PRIME_EXPONENTS[n - 1]
+
+
+def is_perfect(n):
+    """Returns True if ``n`` is a perfect number, else False.
+
+    A perfect number is equal to the sum of its positive, proper divisors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_perfect, divisors
+    >>> is_perfect(20)
+    False
+    >>> is_perfect(6)
+    True
+    >>> sum(divisors(6)[:-1])
+    6
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PerfectNumber.html
+
+    """
+    from sympy.core.power import integer_log
+
+    r, b = integer_nthroot(1 + 8*n, 2)
+    if not b:
+        return False
+    n, x = divmod(1 + r, 4)
+    if x:
+        return False
+    e, b = integer_log(n, 2)
+    return b and (e + 1) in MERSENNE_PRIME_EXPONENTS
+
+
+def is_mersenne_prime(n):
+    """Returns True if  ``n`` is a Mersenne prime, else False.
+
+    A Mersenne prime is a prime number having the form `2^i - 1`.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_mersenne_prime
+    >>> is_mersenne_prime(6)
+    False
+    >>> is_mersenne_prime(127)
+    True
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/MersennePrime.html
+
+    """
+    from sympy.core.power import integer_log
+
+    r, b = integer_log(n + 1, 2)
+    return b and r in MERSENNE_PRIME_EXPONENTS
+
+
+def abundance(n):
+    """Returns the difference between the sum of the positive
+    proper divisors of a number and the number.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import abundance, is_perfect, is_abundant
+    >>> abundance(6)
+    0
+    >>> is_perfect(6)
+    True
+    >>> abundance(10)
+    -2
+    >>> is_abundant(10)
+    False
+    """
+    return divisor_sigma(n, 1) - 2 * n
+
+
+def is_abundant(n):
+    """Returns True if ``n`` is an abundant number, else False.
+
+    A abundant number is smaller than the sum of its positive proper divisors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_abundant
+    >>> is_abundant(20)
+    True
+    >>> is_abundant(15)
+    False
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/AbundantNumber.html
+
+    """
+    n = as_int(n)
+    if is_perfect(n):
+        return False
+    return n % 6 == 0 or bool(abundance(n) > 0)
+
+
+def is_deficient(n):
+    """Returns True if ``n`` is a deficient number, else False.
+
+    A deficient number is greater than the sum of its positive proper divisors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_deficient
+    >>> is_deficient(20)
+    False
+    >>> is_deficient(15)
+    True
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/DeficientNumber.html
+
+    """
+    n = as_int(n)
+    if is_perfect(n):
+        return False
+    return bool(abundance(n) < 0)
+
+
+def is_amicable(m, n):
+    """Returns True if the numbers `m` and `n` are "amicable", else False.
+
+    Amicable numbers are two different numbers so related that the sum
+    of the proper divisors of each is equal to that of the other.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_amicable, divisor_sigma
+    >>> is_amicable(220, 284)
+    True
+    >>> divisor_sigma(220) == divisor_sigma(284)
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Amicable_numbers
+
+    """
+    if m == n:
+        return False
+    a, b = map(lambda i: divisor_sigma(i), (m, n))
+    return a == b == (m + n)

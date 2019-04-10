@@ -198,6 +198,7 @@ def laplacian(expr):
     2*R.i + 6*R.y*R.j + 12*R.z**2*R.k
 
     """
+
     delop = Del()
     if expr.is_Vector:
         return (gradient(divergence(expr)) - curl(curl(expr))).doit()

@@ -15,7 +15,7 @@ from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import ordered
 from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
-from sympy.simplify import simplify, trigsimp, nsimplify
+from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.elliptic_integrals import elliptic_e
@@ -29,7 +29,7 @@ from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point2D, Point3D
-from .line import Line, LinearEntity, Segment
+from .line import Line, Segment
 from .util import idiff
 
 import random
@@ -1454,11 +1454,11 @@ class Circle(Ellipse):
                 # Assume (center, radius) pair
                 c = Point(args[0], dim=2, evaluate=evaluate)
                 r = args[1]
-                # TODO: use this instead of the 'if evaluate' block below, but
                 # this will prohibit imaginary radius
-                # r = Point(r, 0, evaluate=evaluate).x  # convert via Point as necessary
-                if evaluate:
-                    r = simplify(nsimplify(r, rational=True))
+                try:
+                    r = Point(r, 0, evaluate=evaluate).x
+                except:
+                    raise GeometryError("Circle with imaginary radius is not permitted")
 
             if not (c is None or r is None):
                 if r == 0:

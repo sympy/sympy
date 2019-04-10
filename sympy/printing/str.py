@@ -6,6 +6,7 @@ from __future__ import print_function, division
 
 from sympy.core import S, Rational, Pow, Basic, Mul
 from sympy.core.mul import _keep_coeff
+from sympy.core.compatibility import string_types
 from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -35,7 +36,7 @@ class StrPrinter(Printer):
         return sep.join([self.parenthesize(item, level) for item in args])
 
     def emptyPrinter(self, expr):
-        if isinstance(expr, str):
+        if isinstance(expr, string_types):
             return expr
         elif isinstance(expr, Basic):
             return repr(expr)
@@ -232,8 +233,7 @@ class StrPrinter(Printer):
 
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)
-    _print_SparseMatrix = \
-        _print_MutableSparseMatrix = \
+    _print_MutableSparseMatrix = \
         _print_ImmutableSparseMatrix = \
         _print_Matrix = \
         _print_DenseMatrix = \
@@ -334,6 +334,19 @@ class StrPrinter(Printer):
     def _print_HadamardProduct(self, expr):
         return '.*'.join([self.parenthesize(arg, precedence(expr))
             for arg in expr.args])
+
+    def _print_HadamardPower(self, expr):
+        PREC = precedence(expr)
+        return '.**'.join([
+            self.parenthesize(expr.base, PREC),
+            self.parenthesize(expr.exp, PREC)
+        ])
+
+    def _print_ElementwiseApplyFunction(self, expr):
+        return "{0}({1}...)".format(
+            expr.function,
+            self._print(expr.expr),
+        )
 
     def _print_NaN(self, expr):
         return 'nan'

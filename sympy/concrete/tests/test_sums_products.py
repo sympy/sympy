@@ -6,6 +6,7 @@ from sympy import (
     Indexed, Idx, IndexedBase, prod, Dummy, lowergamma)
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic
+from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.matrices import Matrix
 from sympy.core.mod import Mod
@@ -625,6 +626,7 @@ def test_diff():
     assert e.diff(a) == Derivative(e, a)
     assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y).doit() == \
         Sum(x*y, (x, 1, 3), (a, 2, 5)).doit().diff(y) == 24
+    assert Sum(x, (x, 1, 2)).diff(y) == 0
 
 
 def test_hypersum():
@@ -987,6 +989,9 @@ def test_is_convergent():
     # (1.2, 0.43), (3.0, -0.25) and (6.8, 0.050)
     eq = (x - 2)*(x**2 - 6*x + 4)*exp(-x)
     assert Sum(eq, (x, 1, oo)).is_convergent() is S.true
+    assert Sum(eq, (x, 1, 2)).is_convergent() is S.true
+    assert Sum(1/(x**3), (x, 1, oo)).is_convergent() is S.true
+    assert Sum(1/(x**(S(1)/2)), (x, 1, oo)).is_convergent() is S.false
 
 
 def test_is_absolutely_convergent():
@@ -1086,3 +1091,20 @@ def test_Sum_dummy_eq():
     assert Sum(x, (x, a, c)).dummy_eq(Sum(y, (y, a, c)))
     assert Sum(x, (x, a, d)).dummy_eq(Sum(y, (y, a, c)), c)
     assert not Sum(x, (x, a, d)).dummy_eq(Sum(y, (y, a, c)))
+
+
+def test_issue_15852():
+    assert summation(x**y*y, (y, -oo, oo)).doit() == Sum(x**y*y, (y, -oo, oo))
+
+
+def test_exceptions():
+    S = Sum(x, (x, a, b))
+    raises(ValueError, lambda: S.change_index(x, x**2, y))
+    S = Sum(x, (x, a, b), (x, 1, 4))
+    raises(ValueError, lambda: S.index(x))
+    S = Sum(x, (x, a, b), (y, 1, 4))
+    raises(ValueError, lambda: S.reorder([x]))
+    S = Sum(x, (x, y, b), (y, 1, 4))
+    raises(ReorderError, lambda: S.reorder_limit(0, 1))
+    S = Sum(x*y, (x, a, b), (y, 1, 4))
+    raises(NotImplementedError, lambda: S.is_convergent())

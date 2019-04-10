@@ -1,25 +1,23 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 import random
-from sympy import Derivative
 
 from sympy.core import SympifyError
 from sympy.core.basic import Basic
+from sympy.core.compatibility import is_sequence, range, reduce
 from sympy.core.expr import Expr
-from sympy.core.compatibility import is_sequence, as_int, range, reduce
 from sympy.core.function import count_ops, expand_mul
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.simplify import simplify as _simplify
-from sympy.utilities.misc import filldedent
-from sympy.utilities.decorator import doctest_depends_on
-
-from sympy.matrices.matrices import MatrixBase, ShapeError
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import a2idx, classof
+from sympy.matrices.matrices import MatrixBase, ShapeError
+from sympy.simplify import simplify as _simplify
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.misc import filldedent
+
 
 def _iszero(x):
     """Returns True if x is zero."""
@@ -45,16 +43,17 @@ class DenseMatrix(MatrixBase):
     _class_priority = 4
 
     def __eq__(self, other):
-        try:
-            other = sympify(other)
-            if self.shape != other.shape:
-                return False
-            if isinstance(other, Matrix):
-                return _compare_sequence(self._mat,  other._mat)
-            elif isinstance(other, MatrixBase):
-                return _compare_sequence(self._mat, Matrix(other)._mat)
-        except AttributeError:
+        other = sympify(other)
+        self_shape = getattr(self, 'shape', None)
+        other_shape = getattr(other, 'shape', None)
+        if None in (self_shape, other_shape):
             return False
+        if self_shape != other_shape:
+            return False
+        if isinstance(other, Matrix):
+            return _compare_sequence(self._mat,  other._mat)
+        elif isinstance(other, MatrixBase):
+            return _compare_sequence(self._mat, Matrix(other)._mat)
 
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
@@ -398,20 +397,21 @@ class DenseMatrix(MatrixBase):
         ========
         sympy.core.expr.equals
         """
-        try:
-            if self.shape != other.shape:
-                return False
-            rv = True
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    ans = self[i, j].equals(other[i, j], failing_expression)
-                    if ans is False:
-                        return False
-                    elif ans is not True and rv is True:
-                        rv = ans
-            return rv
-        except AttributeError:
+        self_shape = getattr(self, 'shape', None)
+        other_shape = getattr(other, 'shape', None)
+        if None in (self_shape, other_shape):
             return False
+        if self_shape != other_shape:
+            return False
+        rv = True
+        for i in range(self.rows):
+            for j in range(self.cols):
+                ans = self[i, j].equals(other[i, j], failing_expression)
+                if ans is False:
+                    return False
+                elif ans is not True and rv is True:
+                    rv = ans
+        return rv
 
 
 def _force_mutable(x):
@@ -1073,7 +1073,6 @@ def casoratian(seqs, n, zero=True):
        True
 
     """
-    from .dense import Matrix
 
     seqs = list(map(sympify, seqs))
 
@@ -1097,131 +1096,91 @@ def eye(*args, **kwargs):
     zeros
     ones
     """
-    from .dense import Matrix
 
     return Matrix.eye(*args, **kwargs)
 
 
 def diag(*values, **kwargs):
-    """Create a sparse, diagonal matrix from a list of diagonal values.
-
-    Notes
-    =====
-
-    When arguments are matrices they are fitted in resultant matrix.
-
-    The returned matrix is a mutable, dense matrix. To make it a different
-    type, send the desired class for keyword ``cls``.
+    """Returns a matrix with the provided values placed on the
+    diagonal. If non-square matrices are included, they will
+    produce a block-diagonal matrix.
 
     Examples
     ========
 
-    >>> from sympy.matrices import diag, Matrix, ones
-    >>> diag(1, 2, 3)
+    This version of diag is a thin wrapper to Matrix.diag that differs
+    in that it treats all lists like matrices -- even when a single list
+    is given. If this is not desired, either put a `*` before the list or
+    set `unpack=True`.
+
+    >>> from sympy import diag
+
+    >>> diag([1, 2, 3], unpack=True)  # = diag(1,2,3) or diag(*[1,2,3])
     Matrix([
     [1, 0, 0],
     [0, 2, 0],
     [0, 0, 3]])
-    >>> diag(*[1, 2, 3])
+
+    >>> diag([1, 2, 3])  # a column vector
     Matrix([
-    [1, 0, 0],
-    [0, 2, 0],
-    [0, 0, 3]])
+    [1],
+    [2],
+    [3]])
 
-    The diagonal elements can be matrices; diagonal filling will
-    continue on the diagonal from the last element of the matrix:
-
-    >>> from sympy.abc import x, y, z
-    >>> a = Matrix([x, y, z])
-    >>> b = Matrix([[1, 2], [3, 4]])
-    >>> c = Matrix([[5, 6]])
-    >>> diag(a, 7, b, c)
-    Matrix([
-    [x, 0, 0, 0, 0, 0],
-    [y, 0, 0, 0, 0, 0],
-    [z, 0, 0, 0, 0, 0],
-    [0, 7, 0, 0, 0, 0],
-    [0, 0, 1, 2, 0, 0],
-    [0, 0, 3, 4, 0, 0],
-    [0, 0, 0, 0, 5, 6]])
-
-    When diagonal elements are lists, they will be treated as arguments
-    to Matrix:
-
-    >>> diag([1, 2, 3], 4)
-    Matrix([
-    [1, 0],
-    [2, 0],
-    [3, 0],
-    [0, 4]])
-    >>> diag([[1, 2, 3]], 4)
-    Matrix([
-    [1, 2, 3, 0],
-    [0, 0, 0, 4]])
-
-    A given band off the diagonal can be made by padding with a
-    vertical or horizontal "kerning" vector:
-
-    >>> hpad = ones(0, 2)
-    >>> vpad = ones(2, 0)
-    >>> diag(vpad, 1, 2, 3, hpad) + diag(hpad, 4, 5, 6, vpad)
-    Matrix([
-    [0, 0, 4, 0, 0],
-    [0, 0, 0, 5, 0],
-    [1, 0, 0, 0, 6],
-    [0, 2, 0, 0, 0],
-    [0, 0, 3, 0, 0]])
+    See Also
+    ========
+    .common.MatrixCommon.eye
+    .common.MatrixCommon.diagonal - to extract a diagonal
+    .common.MatrixCommon.diag
+    .expressions.blockmatrix.BlockMatrix
+    """
+    # Extract any setting so we don't duplicate keywords sent
+    # as named parameters:
+    kw = kwargs.copy()
+    strict = kw.pop('strict', True)  # lists will be converted to Matrices
+    unpack = kw.pop('unpack', False)
+    return Matrix.diag(*values, strict=strict, unpack=unpack, **kw)
 
 
+def GramSchmidt(vlist, orthonormal=False):
+    """Apply the Gram-Schmidt process to a set of vectors.
 
-    The type is mutable by default but can be made immutable by setting
-    the ``mutable`` flag to False:
+    Parameters
+    ==========
 
-    >>> type(diag(1))
-    <class 'sympy.matrices.dense.MutableDenseMatrix'>
-    >>> from sympy.matrices import ImmutableMatrix
-    >>> type(diag(1, cls=ImmutableMatrix))
-    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
+    vlist : List of Matrix
+        Vectors to be orthogonalized for.
+
+    orthonormal : Bool, optional
+        If true, return an orthonormal basis.
+
+    Returns
+    =======
+
+    vlist : List of Matrix
+        Orthogonalized vectors
+
+    Notes
+    =====
+
+    This routine is mostly duplicate from ``Matrix.orthogonalize``,
+    except for some difference that this always raises error when
+    linearly dependent vectors are found, and the keyword ``normalize``
+    has been named as ``orthonormal`` in this function.
 
     See Also
     ========
 
-    eye
+    .matrices.MatrixSubspaces.orthogonalize
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
-
-    from .dense import Matrix
-
-    # diag assumes any lists passed in are to be interpreted
-    # as arguments to Matrix, so apply Matrix to any list arguments
-    def normalize(m):
-        if is_sequence(m) and not isinstance(m, MatrixBase):
-            return Matrix(m)
-        return m
-    values = (normalize(m) for m in values)
-
-    return Matrix.diag(*values, **kwargs)
-
-
-def GramSchmidt(vlist, orthonormal=False):
-    """
-    Apply the Gram-Schmidt process to a set of vectors.
-
-    see: https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
-    """
-    out = []
-    m = len(vlist)
-    for i in range(m):
-        tmp = vlist[i]
-        for j in range(i):
-            tmp -= vlist[i].project(out[j])
-        if not tmp.values():
-            raise ValueError(
-                "GramSchmidt: vector set not linearly independent")
-        out.append(tmp)
-    if orthonormal:
-        for i in range(len(out)):
-            out[i] = out[i].normalized()
-    return out
+    return MutableDenseMatrix.orthogonalize(
+        *vlist, normalize=orthonormal, rankcheck=True
+    )
 
 
 def hessian(f, varlist, constraints=[]):
@@ -1317,7 +1276,6 @@ def jordan_cell(eigenval, n):
     [0, 0, x, 1],
     [0, 0, 0, x]])
     """
-    from .dense import Matrix
 
     return Matrix.jordan_block(size=n, eigenvalue=eigenval)
 
@@ -1356,7 +1314,6 @@ def ones(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-    from .dense import Matrix
 
     return Matrix.ones(*args, **kwargs)
 
@@ -1460,7 +1417,6 @@ def wronskian(functions, var, method='bareiss'):
     sympy.matrices.mutable.Matrix.jacobian
     hessian
     """
-    from .dense import Matrix
 
     for index in range(0, len(functions)):
         functions[index] = sympify(functions[index])
@@ -1485,7 +1441,5 @@ def zeros(*args, **kwargs):
 
     if 'c' in kwargs:
         kwargs['cols'] = kwargs.pop('c')
-
-    from .dense import Matrix
 
     return Matrix.zeros(*args, **kwargs)

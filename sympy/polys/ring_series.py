@@ -49,7 +49,7 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
-from sympy.core.compatibility import as_int, range
+from sympy.core.compatibility import as_int, range, string_types
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from mpmath.libmp.libintmath import giant_steps
 import math
@@ -316,7 +316,6 @@ def rs_pow(p1, n, x, prec):
     6*x**2 + 4*x + 1
     """
     R = p1.ring
-    p = R.zero
     if isinstance(n, Rational):
         np = int(n.p)
         nq = int(n.q)
@@ -457,7 +456,6 @@ def _get_constant_term(p, x):
     generators.
     """
     R = p.ring
-    zm = R.zero_monom
     i = R.gens.index(x)
     zm = R.zero_monom
     a = [0]*R.ngens
@@ -686,7 +684,6 @@ def rs_series_from_list(p, c, x, prec, concur=1):
     if r:
         K += 1
     ax = [R(1)]
-    b = 1
     q = R(1)
     if len(p) < 20:
         for i in range(1, J):
@@ -834,7 +831,7 @@ def rs_fun(p, f, *args):
     else:
         x1 = _x
         p1 = p
-    if isinstance(f, str):
+    if isinstance(f, string_types):
         q = getattr(x1, f)(*args1)
     else:
         q = f(x1, *args1)
@@ -959,7 +956,6 @@ def rs_nth_root(p, n, x, prec):
     if n == 1:
         return rs_trunc(p, x, prec)
     R = p.ring
-    zm = R.zero_monom
     index = R.gens.index(x)
     m = min(p, key=lambda k: k[index])[index]
     p = mul_xin(p, index, -m)
@@ -1146,7 +1142,6 @@ def rs_exp(p, x, prec):
         return _exp1(p, x, prec)
     one = R(1)
     n = 1
-    k = 1
     c = []
     for k in range(prec):
         c.append(one/n)
@@ -1488,11 +1483,11 @@ def rs_cos(p, x, prec):
     if c:
         if R.domain is EX:
             c_expr = c.as_expr()
-            t1, t2 = sin(c_expr), cos(c_expr)
+            _, _ = sin(c_expr), cos(c_expr)
         elif isinstance(c, PolyElement):
             try:
                 c_expr = c.as_expr()
-                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+                _, _ = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
                 R = R.add_gens([sin(c_expr), cos(c_expr)])
                 p = p.set_ring(R)
@@ -1500,7 +1495,7 @@ def rs_cos(p, x, prec):
                 c = c.set_ring(R)
         else:
             try:
-                t1, t2 = R(sin(c)), R(cos(c))
+                _, _ = R(sin(c)), R(cos(c))
             except ValueError:
                 raise DomainError("The given series can't be expanded in "
                     "this domain.")

@@ -1,23 +1,33 @@
 language: python
 sudo: false
+stages:
+- quality
+- baseline
+- test
 env:
   matrix:
-  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
   - SPLIT="1/2" TEST_SYMPY="true"
   - SPLIT="2/2" TEST_SYMPY="true"
+  - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
   global:
     - secure: "YIEZal9EBTL+fg2YmoZoS8Bvt3eAVUOZjb38CtqpzR2CCSXWoUk35KG23m2NknlY1iKfYJyt7XWBszT/VKOQEbWQq7PIakV4vIByrWacgBxy1x3WC+rZoW7TX+JJiL+y942qIYbMoNMMB8xFpE5RDLSjSecMpFhJJXoafVTvju8="
 dist: trusty
 
 python:
   - 2.7
-  - 3.4
   - 3.5
-  - 3.6
 
 matrix:
   include:
-    - python: 3.7
+    - stage: quality
+      python: 3.7
+      dist: xenial
+      sudo: true
+      script: bin/test quality
+      env:
+
+    - stage: baseline
+      python: 3.7
       dist: xenial
       sudo: true
       env:
@@ -33,11 +43,12 @@ matrix:
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
 
-    - python: 2.7
+    - stage: test
+      python: 2.7
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib>=2.2 theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle python=2.7 pyglet"
       addons:
         apt:
           packages:
@@ -52,7 +63,7 @@ matrix:
       # and we aren't actually using the Travis Python anyway.
       env:
         - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle"
+        - TEST_OPT_DEPENDENCY="numpy scipy gmpy2 matplotlib theano llvmlite autowrap cython wurlitzer python-symengine=0.3.* tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet"
         - TEST_SAGE="true"
       addons:
         apt:
@@ -106,6 +117,36 @@ matrix:
         - TEST_SLOW="true"
         - SPLIT="2/2"
 
+    # Code coverage tests
+    - python: 3.6
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="1/4"
+    - python: 3.6
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="2/4"
+    - python: 3.6
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="3/4"
+    - python: 3.6
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_SYMPY="true"
+        - TEST_COVERAGE="true"
+        - SPLIT="4/4"
+
     # Everything here and below is in the allow_failures. The need to be
     # duplicated here and in that section below.
     - python: "pypy"
@@ -140,6 +181,8 @@ matrix:
             - pypy
           packages:
             - pypy
+
+  fast_finish: true
 
   allow_failures:
     # PyPy randomly fails because of some PyPy bugs (Fatal RPython error: AssertionError)
@@ -182,6 +225,10 @@ before_install:
   - if [[ "${FASTCACHE}" != "false" ]]; then
       pip install fastcache;
     fi
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+      pip install coverage;
+      coverage debug sys;
+    fi
   - |
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     # We do this conditionally because it saves us some downloading if the
@@ -213,7 +260,8 @@ before_install:
             conda clean --all;
         fi
         if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-            conda install matchpy;
+            # Change this back to conda once matchpy 0.5.0 gets updated on conda-forge
+            pip install matchpy;
         fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
         pip list | grep "numpy" && pip uninstall -y numpy;
@@ -243,7 +291,7 @@ install:
       ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
       ~/.venv-no-setuptools/bin/python -We:invalid setup.py -q install;
     fi
-    python -We:invalid -m compileall -f sympy/;
+    python -We:invalid -m compileall -f -q sympy/;
     python -We:invalid setup.py -q install;
     pip list --format=columns;
 
@@ -253,6 +301,9 @@ script:
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
         doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
+    fi
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+        bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports";
     fi
 notifications:
   email: false

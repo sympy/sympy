@@ -501,7 +501,7 @@ def _test(*paths, **kwargs):
     tb = kwargs.get("tb", "short")
     kw = kwargs.get("kw", None) or ()
     # ensure that kw is a tuple
-    if isinstance(kw, str):
+    if isinstance(kw, string_types):
         kw = (kw, )
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
@@ -521,6 +521,9 @@ def _test(*paths, **kwargs):
     split = kwargs.get('split', None)
     time_balance = kwargs.get('time_balance', True)
     blacklist = kwargs.get('blacklist', ['sympy/integrals/rubi/rubi_tests/tests'])
+    if ON_TRAVIS:
+        # pyglet does not work on Travis
+        blacklist.extend('sympy/plotting/pygletplot/tests')
     blacklist = convert_to_native_paths(blacklist)
     fast_threshold = kwargs.get('fast_threshold', None)
     slow_threshold = kwargs.get('slow_threshold', None)
@@ -695,8 +698,7 @@ def _get_doctest_blacklist():
             import matplotlib
             matplotlib.use('Agg')
 
-
-    if import_module('pyglet') is None:
+    if ON_TRAVIS or import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
     if import_module('theano') is None:
@@ -1190,7 +1192,7 @@ class SymPyTests(object):
                     except ImportError:
                         pass
 
-                code = compile(source, filename, "exec")
+                code = compile(source, filename, "exec", flags=0, dont_inherit=True)
                 exec_(code, gl)
             except (SystemExit, KeyboardInterrupt):
                 raise
