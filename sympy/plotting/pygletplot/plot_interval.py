@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
-from sympy import Symbol, Integer, sympify
+from sympy import Symbol, sympify
 from sympy.core.compatibility import range, string_types
+from sympy.core.numbers import Integer
 
 
 class PlotInterval(object):
