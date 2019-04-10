@@ -459,7 +459,7 @@ class Pow(Expr):
                 return True
             if self.exp.is_even:
                 return False
-        elif self.base.is_positive and self.base.is_finite:
+        elif self.base.is_positive:
             if self.exp.is_extended_real:
                 return False
         elif self.base.is_zero:
@@ -623,7 +623,7 @@ class Pow(Expr):
         if self.exp.is_negative:
             if self.base.is_zero:
                 return False
-            if self.base.is_infinite:
+            if self.base.is_infinite or self.base.is_nonzero:
                 return True
         c1 = self.base.is_finite
         if c1 is None:
