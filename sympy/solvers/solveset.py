@@ -2914,7 +2914,7 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import pprint
     >>> from sympy.polys.polytools import is_zero_dimensional
-    >>> a, b, c, d = symbols('a, b, c, d', real=True)
+    >>> a, b, c, d = symbols('a, b, c, d', extended_real=True)
     >>> eq1 =  a + b + c + d
     >>> eq2 = a*b + b*c + c*d + d*a
     >>> eq3 = a*b*c + b*c*d + c*d*a + d*a*b
