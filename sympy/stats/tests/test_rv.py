@@ -4,7 +4,7 @@ from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         DiracDelta, Lambda, log, pi)
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
-        random_symbols, sample)
+        random_symbols, sample, Geometric)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, PSpace)
 from sympy.utilities.pytest import raises, XFAIL
