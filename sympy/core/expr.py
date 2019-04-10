@@ -7,6 +7,7 @@ from .evalf import EvalfMixin, pure_complex
 from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, range, Iterable
+from sympy.utilities.misc import func_name
 from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
@@ -3325,7 +3326,7 @@ class Expr(Basic, EvalfMixin):
             return mod_inverse(self, g)
         return invert(self, g, *gens, **args)
 
-    def round(self, p=0):
+    def round(self, n=None):
         """Return x rounded to the given decimal place.
 
         If a complex number would results, apply round to the real
@@ -3335,90 +3336,117 @@ class Expr(Basic, EvalfMixin):
         ========
 
         >>> from sympy import pi, E, I, S, Add, Mul, Number
-        >>> S(10.5).round()
-        11.
         >>> pi.round()
-        3.
+        3
         >>> pi.round(2)
         3.14
         >>> (2*pi + E*I).round()
-        6. + 3.*I
+        6 + 3*I
 
         The round method has a chopping effect:
 
         >>> (2*pi + I/10).round()
-        6.
+        6
         >>> (pi/10 + 2*I).round()
-        2.*I
+        2*I
         >>> (pi/10 + E*I).round(2)
         0.31 + 2.72*I
 
         Notes
         =====
 
-        Do not confuse the Python builtin function, round, with the
-        SymPy method of the same name. The former always returns a float
-        (or raises an error if applied to a complex value) while the
-        latter returns either a Number or a complex number:
+        The Python builtin function, round, always returns a
+        float in Python 2 while the SymPy round method (and
+        round with a Number argument in Python 3) returns a
+        Number.
 
+        >>> from sympy.core.compatibility import PY3
+        >>> isinstance(round(S(123), -2), Number if PY3 else float)
+        True
+
+        For a consistent behavior, and Python 3 rounding
+        rules, import `round` from sympy.core.compatibility.
+
+        >>> from sympy.core.compatibility import round
         >>> isinstance(round(S(123), -2), Number)
-        False
-        >>> isinstance(S(123).round(-2), Number)
         True
-        >>> isinstance((3*I).round(), Mul)
-        True
-        >>> isinstance((1 + 3*I).round(), Add)
-        True
-
         """
-        from sympy import Float
+        from sympy.core.power import integer_log
+        from sympy.core.numbers import Float
+
         x = self
+
         if not x.is_number:
             raise TypeError("can't round symbolic expression")
         if not x.is_Atom:
-            xn = x.n(2)
-            if not pure_complex(xn, or_real=True):
-                raise TypeError('Expected a number but got %s:' %
-                    getattr(getattr(x,'func', x), '__name__', type(x)))
+            if not pure_complex(x.n(2), or_real=True):
+                raise TypeError(
+                    'Expected a number but got %s:' % func_name(x))
         elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
             return x
         if not x.is_real:
             i, r = x.as_real_imag()
-            return i.round(p) + S.ImaginaryUnit*r.round(p)
+            return i.round(n) + S.ImaginaryUnit*r.round(n)
         if not x:
-            return x
-        p = int(p)
+            return S.Zero if n is None else x
 
+
+        p = as_int(n or 0)
+
+        if x.is_Integer:
+            # XXX return Integer(round(int(x), p)) when Py2 is dropped
+            if p >= 0:
+                return x
+            m = 10**-p
+            i, r = divmod(abs(x), m)
+            if i%2 and 2*r == m:
+              i += 1
+            elif 2*r > m:
+                i += 1
+            if x < 0:
+                i *= -1
+            return i*m
+
+        digits_to_decimal = _mag(x)
+        allow = digits_needed = digits_to_decimal + p
         precs = [f._prec for f in x.atoms(Float)]
         dps = prec_to_dps(max(precs)) if precs else None
-
-        mag_first_dig = _mag(x)
-        allow = digits_needed = mag_first_dig + p
-        if dps is not None and allow > dps:
-            allow = dps
-        mag = Pow(10, p)  # magnitude needed to bring digit p to units place
-        xwas = x
-        x += 1/(2*mag)  # add the half for rounding
-        i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
-        if i10.is_negative:
-            x = xwas - 1/(2*mag)  # should have gone the other way
-            i10 = 10*mag*x.n((dps if dps is not None else digits_needed) + 1)
-            rv = -(Integer(-i10)//10)
+        if dps is None:
+            # assume everything is exact so use the Python
+            # float default or whatever was requested
+            dps = max(15, allow)
         else:
-            rv = Integer(i10)//10
-        q = 1
-        if p > 0:
-            q = mag
-        elif p < 0:
-            rv /= mag
-        rv = Rational(rv, q)
+            allow = min(allow, dps)
+        # this will shift all digits to right of decimal
+        # and give us dps + 1 to work with as an int
+        work = -digits_to_decimal + dps + 1
+        # since we have arbitrary precision we add a 5 to
+        # the digit past the last "known" digit to round the
+        # number to nearest when applicable so 0.575 goes
+        # from  0.57499999999999996
+        # up by 0.00000000000000005
+        # to    0.57500000000000051
+        sign = S.One if x > 0 else S.NegativeOne
+        bump = sign*5/Pow(10, max(dps, p) - digits_to_decimal + 1)
+        xi = Integer(((x + bump)*Pow(10, work - 1)).n(dps + 1))*10
+        # shift p to the new position
+        ip = p - work
+        # let Python handle the int rounding then rescale
+        xr = xi.round(ip) # when Py2 is drop make this round(xi.p, ip)
+        # restore scale
+        rv = Rational(xr, Pow(10, work))
+        # return Float or Integer
         if rv.is_Integer:
+            if n is None:  # the single-arg case
+                return rv
             # use str or else it won't be a float
             return Float(str(rv), digits_needed)
         else:
             if not allow and rv > self:
                 allow += 1
             return Float(rv, allow)
+
+    __round__ = round
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.matrices.expressions.matexpr import _LeftRightArgs

@@ -90,9 +90,10 @@ if PY3:
     from io import StringIO
     cStringIO = StringIO
 
-    exec_=getattr(builtins, "exec")
+    exec_ = getattr(builtins, "exec")
 
-    range=range
+    range = range
+    round = round
 
     from collections.abc import (Mapping, Callable, MutableMapping,
         MutableSet, Iterable, Hashable)
@@ -141,7 +142,14 @@ else:
         elif _locs_ is None:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
-    range=xrange
+
+    range = xrange
+    _round = round
+    def round(x, *args):
+        try:
+            return x.__round__(*args)
+        except (AttributeError, TypeError):
+            return _round(x, *args)
 
     from collections import (Mapping, Callable, MutableMapping,
         MutableSet, Iterable, Hashable)
