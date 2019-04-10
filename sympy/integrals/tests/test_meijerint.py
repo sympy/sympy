@@ -309,7 +309,7 @@ def test_inversion_conditional_output():
 def test_inversion_exp_real_nonreal_shift():
     from sympy import Symbol, DiracDelta
     r = Symbol('r', real=True)
-    c = Symbol('c', real=False)
+    c = Symbol('c', extended_real=False)
     a = 1 + 2*I
     z = Symbol('z')
     assert not meijerint_inversion(exp(r*s), s, t).is_Piecewise
