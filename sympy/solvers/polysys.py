@@ -162,7 +162,7 @@ def solve_generic(polys, opt):
     def _is_univariate(f):
         """Returns True if 'f' is univariate in its last variable. """
         for monom in f.monoms():
-            if any(m for m in monom[:-1]):
+            if any(monom[:-1]):
                 return False
 
         return True
