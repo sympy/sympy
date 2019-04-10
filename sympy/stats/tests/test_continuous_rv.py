@@ -508,7 +508,7 @@ def test_lognormal():
 
 
 def test_maxwell():
-    a = Symbol("a", positive=True)
+    a = Symbol("a", positive=True, finite=True)
 
     X = Maxwell('x', a)
 
@@ -522,7 +522,7 @@ def test_maxwell():
 
 def test_nakagami():
     mu = Symbol("mu", positive=True)
-    omega = Symbol("omega", positive=True)
+    omega = Symbol("omega", positive=True, finite=True)
 
     X = Nakagami('x', mu, omega)
     assert density(X)(x) == (2*x**(2*mu - 1)*mu**mu*omega**(-mu)
