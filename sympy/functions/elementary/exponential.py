@@ -880,6 +880,9 @@ class LambertW(Function):
             if x.is_extended_real:
                 return False
 
+    def _eval_is_finite(self):
+        return self.args[0].is_finite
+
     def _eval_is_algebraic(self):
         s = self.func(*self.args)
         if s.func == self.func:
