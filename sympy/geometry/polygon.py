@@ -2199,7 +2199,10 @@ class Triangle(Polygon):
         True
 
         """
-        s = self.sides
+        # use lines containing sides so containment check during
+        # intersection calculation can be avoided
+        # This would reduce the processing time for calculating the bisectors
+        s = [Line(l) for l in self.sides]
         v = self.vertices
         c = self.incenter
         l1 = Segment(v[0], Line(v[0], c).intersection(s[1])[0])

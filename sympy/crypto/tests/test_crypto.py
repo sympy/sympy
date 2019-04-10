@@ -14,7 +14,8 @@ from sympy.crypto.crypto import (cycle_list,
       dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
       decipher_bifid, bifid_square, padded_key, uniq, decipher_gm,
       encipher_gm, gm_public_key, gm_private_key, encipher_bg, decipher_bg,
-      bg_private_key, bg_public_key)
+      bg_private_key, bg_public_key, encipher_rot13, decipher_rot13,
+      encipher_atbash, decipher_atbash)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -36,6 +37,12 @@ def test_encipher_shift():
     assert encipher_shift("ABC", -1) == "ZAB"
     assert decipher_shift("ZAB", -1) == "ABC"
 
+def test_encipher_rot13():
+    assert encipher_rot13("ABC") == "NOP"
+    assert encipher_rot13("NOP") == "ABC"
+    assert decipher_rot13("ABC") == "NOP"
+    assert decipher_rot13("NOP") == "ABC"
+
 
 def test_encipher_affine():
     assert encipher_affine("ABC", (1, 0)) == "ABC"
@@ -46,6 +53,11 @@ def test_encipher_affine():
     assert encipher_affine("ABC", (3, 16)) == "QTW"
     assert decipher_affine("QTW", (3, 16)) == "ABC"
 
+def test_encipher_atbash():
+    assert encipher_atbash("ABC") == "ZYX"
+    assert encipher_atbash("ZYX") == "ABC"
+    assert decipher_atbash("ABC") == "ZYX"
+    assert decipher_atbash("ZYX") == "ABC"
 
 def test_encipher_substitution():
     assert encipher_substitution("ABC", "BAC", "ABC") == "BAC"

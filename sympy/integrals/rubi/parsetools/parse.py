@@ -32,7 +32,7 @@ import os
 import inspect
 from sympy import sympify, Function, Set, Symbol
 from sympy.core.compatibility import string_types
-from sympy.printing import sstr, StrPrinter
+from sympy.printing import StrPrinter
 from sympy.utilities.misc import debug
 
 class RubiStrPrinter(StrPrinter):
@@ -327,10 +327,11 @@ def generate_sympy_from_parsed(parsed, wild=False, symbols=[], replace_Int=False
 
     return out
 
-def get_free_symbols(s, symbols, free_symbols=[]):
+def get_free_symbols(s, symbols, free_symbols=None):
     '''
     Returns free_symbols present in `s`.
     '''
+    free_symbols = free_symbols or []
     if not isinstance(s, list):
         if s in symbols:
             free_symbols.append(s)

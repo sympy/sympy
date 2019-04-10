@@ -1004,6 +1004,8 @@ class PrettyPrinter(Printer):
 
         level_str = [[]] + [[] for i in range(expr.rank())]
         shape_ranges = [list(range(i)) for i in expr.shape]
+        # leave eventual matrix elements unflattened
+        mat = lambda x: ImmutableMatrix(x, evaluate=False)
         for outer_i in itertools.product(*shape_ranges):
             level_str[-1].append(expr[outer_i])
             even = True
@@ -1013,15 +1015,17 @@ class PrettyPrinter(Printer):
                 if even:
                     level_str[back_outer_i].append(level_str[back_outer_i+1])
                 else:
-                    level_str[back_outer_i].append(ImmutableMatrix(level_str[back_outer_i+1]))
+                    level_str[back_outer_i].append(mat(
+                        level_str[back_outer_i+1]))
                     if len(level_str[back_outer_i + 1]) == 1:
-                        level_str[back_outer_i][-1] = ImmutableMatrix([[level_str[back_outer_i][-1]]])
+                        level_str[back_outer_i][-1] = mat(
+                            [[level_str[back_outer_i][-1]]])
                 even = not even
                 level_str[back_outer_i+1] = []
 
         out_expr = level_str[0][0]
         if expr.rank() % 2 == 1:
-            out_expr = ImmutableMatrix([out_expr])
+            out_expr = mat([out_expr])
 
         return self._print(out_expr)
 

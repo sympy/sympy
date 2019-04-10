@@ -1,10 +1,11 @@
-from sympy import I, Mul
+from sympy import I, Mul, latex, Matrix
 from sympy.physics.quantum import (Dagger, Commutator, AntiCommutator, qapply,
-                                   Operator)
+                                   Operator, represent)
 from sympy.physics.quantum.pauli import (SigmaOpBase, SigmaX, SigmaY, SigmaZ,
                                          SigmaMinus, SigmaPlus,
                                          qsimplify_pauli)
 from sympy.physics.quantum.pauli import SigmaZKet, SigmaZBra
+from sympy.utilities.pytest import raises
 
 
 sx, sy, sz = SigmaX(), SigmaY(), SigmaZ()
@@ -12,6 +13,7 @@ sx1, sy1, sz1 = SigmaX(1), SigmaY(1), SigmaZ(1)
 sx2, sy2, sz2 = SigmaX(2), SigmaY(2), SigmaZ(2)
 
 sm, sp = SigmaMinus(), SigmaPlus()
+sm1, sp1 = SigmaMinus(1), SigmaPlus(1)
 A, B = Operator("A"), Operator("B")
 
 
@@ -122,3 +124,33 @@ def test_pauli_states():
 
     assert Dagger(SigmaZKet(0)) == SigmaZBra(0)
     assert Dagger(SigmaZBra(1)) == SigmaZKet(1)
+    raises(ValueError, lambda: SigmaZBra(2))
+    raises(ValueError, lambda: SigmaZKet(2))
+
+
+def test_use_name():
+    assert sm.use_name is False
+    assert sm1.use_name is True
+    assert sx.use_name is False
+    assert sx1.use_name is True
+
+
+def test_printing():
+    assert latex(sx) == r'{\sigma_x}'
+    assert latex(sx1) == r'{\sigma_x^{(1)}}'
+    assert latex(sy) == r'{\sigma_y}'
+    assert latex(sy1) == r'{\sigma_y^{(1)}}'
+    assert latex(sz) == r'{\sigma_z}'
+    assert latex(sz1) == r'{\sigma_z^{(1)}}'
+    assert latex(sm) == r'{\sigma_-}'
+    assert latex(sm1) == r'{\sigma_-^{(1)}}'
+    assert latex(sp) == r'{\sigma_+}'
+    assert latex(sp1) == r'{\sigma_+^{(1)}}'
+
+
+def test_represent():
+    represent(sx) == Matrix([[0, 1], [1, 0]])
+    represent(sy) == Matrix([[0, -I], [I, 0]])
+    represent(sz) == Matrix([[1, 0], [0, -1]])
+    represent(sm) == Matrix([[0, 0], [1, 0]])
+    represent(sp) == Matrix([[0, 1], [0, 0]])

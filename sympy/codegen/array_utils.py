@@ -2,7 +2,7 @@ import itertools
 from functools import reduce
 from collections import defaultdict
 
-from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer
+from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector
 from sympy.combinatorics import Permutation
 from sympy.core.basic import Basic
 from sympy.core.compatibility import accumulate, default_sort_key
@@ -293,7 +293,8 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         `(2, 0)` respectively. `(0, 1)` is the index slot 1 (the 2nd) of
         argument in position 0 (that is, `A_{\ldot j}`), and so on.
         """
-        return _get_contraction_links(self.subranks, *self.contraction_indices)
+        args, dlinks = _get_contraction_links([self], self.subranks, *self.contraction_indices)
+        return dlinks
 
     @staticmethod
     def from_MatMul(expr):
@@ -612,17 +613,52 @@ def _get_mapping_from_subranks(subranks):
             counter += 1
     return mapping
 
-def _get_contraction_links(subranks, *contraction_indices):
+
+def _get_contraction_links(args, subranks, *contraction_indices):
     mapping = _get_mapping_from_subranks(subranks)
     contraction_tuples = [[mapping[j] for j in i] for i in contraction_indices]
     dlinks = defaultdict(dict)
     for links in contraction_tuples:
-        if len(links) > 2:
-            raise NotImplementedError("three or more axes contracted at the same time")
-        (arg1, pos1), (arg2, pos2) = links
-        dlinks[arg1][pos1] = (arg2, pos2)
-        dlinks[arg2][pos2] = (arg1, pos1)
-    return dict(dlinks)
+        if len(links) == 2:
+            (arg1, pos1), (arg2, pos2) = links
+            dlinks[arg1][pos1] = (arg2, pos2)
+            dlinks[arg2][pos2] = (arg1, pos1)
+            continue
+
+        # Check multiple contractions:
+        #
+        # Examples:
+        #
+        # * `A_ij b_j0 C_jk` ===> `A*DiagonalizeVector(b)*C`
+        #
+        # Care for:
+        # - matrix being diagonalized (i.e. `A_ii`)
+        # - vectors being diagonalized (i.e. `a_i0`)
+
+        arg_indices, arg_positions = zip(*links)
+        if len(arg_indices) != len(set(arg_indices)):
+            raise NotImplementedError
+        not_vectors = []
+        vectors = []
+        for arg_ind, arg_pos in links:
+            mat = args[arg_ind]
+            if 1 not in mat.shape:
+                not_vectors.append((arg_ind, arg_pos))
+                continue
+            if mat.shape[arg_pos] == 1:
+                raise ValueError("contracting on unit dimension")
+            args[arg_ind] = diagonalize_vector(mat)
+            vectors.append((arg_ind, arg_pos))
+            vectors.append((arg_ind, 1-arg_pos))
+        if len(not_vectors) > 2:
+            raise ValueError("cannot recognize matrix expression")
+        new_sequence = not_vectors[:1] + vectors + not_vectors[1:]
+        for i in range(0, len(new_sequence)-1):
+            arg1, pos1 = new_sequence[i]
+            arg2, pos2 = new_sequence[i+1]
+            dlinks[arg1][pos1] = (arg2, pos2)
+            dlinks[arg2][pos2] = (arg1, pos1)
+    return args, dict(dlinks)
 
 
 def _sort_contraction_indices(pairing_indices):
@@ -800,7 +836,7 @@ def _parse_matrix_expression(expr):
         return expr
 
 
-def parse_indexed_expression(expr, first_indices=[]):
+def parse_indexed_expression(expr, first_indices=None):
     r"""
     Parse indexed expression into a form useful for code generation.
 
@@ -931,7 +967,7 @@ def _support_function_tp1_recognize(contraction_indices, args):
     subranks = [get_rank(i) for i in args]
     coeff = reduce(lambda x, y: x*y, [arg for arg, srank in zip(args, subranks) if srank == 0], S.One)
     mapping = _get_mapping_from_subranks(subranks)
-    dlinks = _get_contraction_links(subranks, *contraction_indices)
+    args, dlinks = _get_contraction_links(args, subranks, *contraction_indices)
     flatten_contractions = [j for i in contraction_indices for j in i]
     total_rank = sum(subranks)
     # TODO: turn `free_indices` into a list?

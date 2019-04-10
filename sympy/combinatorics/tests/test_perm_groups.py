@@ -346,11 +346,15 @@ def test_is_solvable():
     b = Permutation([1, 0, 2])
     G = PermutationGroup([a, b])
     assert G.is_solvable
+    G = PermutationGroup([a])
+    assert G.is_solvable
     a = Permutation([1, 2, 3, 4, 0])
     b = Permutation([1, 0, 2, 3, 4])
     G = PermutationGroup([a, b])
     assert not G.is_solvable
-
+    P = SymmetricGroup(10)
+    S = P.sylow_subgroup(3)
+    assert S.is_solvable
 
 def test_rubik1():
     gens = rubik_cube_generators()
@@ -927,3 +931,29 @@ def test_elementary():
     assert G.is_elementary(2) == False
     H = AlternatingGroup(4).sylow_subgroup(2)
     assert H.is_elementary(2) == True
+
+
+def test_perfect():
+    G = AlternatingGroup(3)
+    assert G.is_perfect == False
+    G = AlternatingGroup(5)
+    assert G.is_perfect == True
+
+
+def test_index():
+    G = PermutationGroup(Permutation(0,1,2), Permutation(0,2,3))
+    H = G.subgroup([Permutation(0,1,3)])
+    assert G.index(H) == 4
+
+
+def test_cyclic():
+    G = SymmetricGroup(2)
+    assert G.is_cyclic
+    G = AbelianGroup(3, 7)
+    assert G.is_cyclic
+    G = AbelianGroup(7, 7)
+    assert not G.is_cyclic
+    G = AlternatingGroup(3)
+    assert G.is_cyclic
+    G = AlternatingGroup(4)
+    assert not G.is_cyclic

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from sympy.utilities.pytest import warns_deprecated_sympy
 
 from sympy import (Add, Mul, Pow, Tuple, pi, sin, sqrt, sstr, sympify,
