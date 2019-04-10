@@ -250,7 +250,7 @@ def test_exp_assumptions():
         assert e(i).is_imaginary is None
         assert e(r).is_real is True
         assert e(r).is_imaginary is False
-        assert e(re(x)).is_real is True
+        assert e(re(x)).is_extended_real is True
         assert e(re(x)).is_imaginary is False
 
     assert exp(0, evaluate=False).is_algebraic
