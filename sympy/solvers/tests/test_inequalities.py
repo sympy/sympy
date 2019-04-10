@@ -299,7 +299,7 @@ def test_solve_univariate_inequality():
 
     n = Dummy('n')
     raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
-    c1 = Dummy("c1", positive=True)
+    c1 = Dummy("c1", positive=True, finite=True)
     raises(NotImplementedError, lambda: isolve(n/c1 < 0, c1))
     n = Dummy('n', negative=True)
     assert isolve(n/c1 > -2, c1) == (-n/2 < c1)
@@ -312,7 +312,7 @@ def test_solve_univariate_inequality():
         x**2 < zero*I, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
-    raises(TypeError, lambda: isolve(x - I < 0, x))
+    raises(ValueError, lambda: isolve(x - I < 0, x))
 
     zero = x**2 + x - x*(x + 1)
     assert isolve(zero < 0, x, relational=False) is S.EmptySet
