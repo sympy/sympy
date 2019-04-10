@@ -373,9 +373,13 @@ def test_issue_7842():
     B = ZeroMatrix(2, 3)
     assert Eq(A, B) == True
 
+
 def test_issue_16510():
     A = MatrixSymbol('A', 3, 1)
+    B = MatrixSymbol('B', 1, 1)
+
     assert A.is_scalar == False
+    assert B.is_scalar == False
 
 
 def test_generic_zero_matrix():
