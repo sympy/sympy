@@ -41,6 +41,7 @@ Look at rs_sin and rs_series for further reference.
 
 """
 
+from sympy import I
 from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import PolyElement, ring, sring
 from sympy.polys.polyerrors import DomainError
@@ -1190,6 +1191,8 @@ def rs_atan(p, x, prec):
 
     atan
     """
+    if p == I or p == -I:
+        raise NotImplementedError
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_atan, p, x, prec)
     R = p.ring

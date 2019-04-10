@@ -281,7 +281,7 @@ def test_atan():
 @XFAIL
 def test_atan2():
     R, x = ring('x', EX)
-    assert rs_atan(I,x,5) == EX(atan(I))
+    assert rs_atan(I,x,5) == NotImplementedError
     assert rs_atan(I + a,x,3) == EX(atan(I +a))
     assert rs_atan(I*a,x,3) == EX(atan(I*a))
 
