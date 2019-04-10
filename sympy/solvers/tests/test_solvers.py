@@ -1339,7 +1339,8 @@ def test_failing_assumptions():
     assert failing_assumptions(6*x + y, **x.assumptions0) == \
     {'real': None, 'imaginary': None, 'complex': None, 'hermitian': None,
     'positive': None, 'nonpositive': None, 'nonnegative': None, 'nonzero': None,
-    'negative': None, 'zero': None}
+    'negative': None, 'zero': None, 'extended_real': None, 'finite': None,
+    'infinite': None}
 
 def test_issue_6056():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
