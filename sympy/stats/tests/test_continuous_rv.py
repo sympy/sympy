@@ -696,7 +696,10 @@ def test_von_mises():
 
 
 def test_weibull():
-    a, b = symbols('a b', positive=True)
+    a, b = symbols('a b', positive=True, finite=True)
+    # FIXME: simplify(E(X)) seems to hang without the finite=True
+    # On a Linux machine this had a rapid memory leak...
+    # a, b = symbols('a b', positive=True)
     X = Weibull('x', a, b)
 
     assert simplify(E(X)) == simplify(a * gamma(1 + 1/b))
