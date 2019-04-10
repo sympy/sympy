@@ -712,7 +712,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
         assumes x to be real and positive. """
     from sympy import (expand, expand_mul, hyperexpand, meijerg,
                        arg, pi, re, factor, Heaviside, gamma, Add)
-    x = _dummy('t', 'inverse-mellin-transform', F, positive=True)
+    x = _dummy('t', 'inverse-mellin-transform', F, positive=True, finite=True)
     # Actually, we won't try integration at all. Instead we use the definition
     # of the Meijer G function as a fairly general inverse mellin transform.
     F = F.rewrite(gamma)
