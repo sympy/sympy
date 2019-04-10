@@ -564,7 +564,7 @@ class PrettyPrinter(Printer):
                 for i in reversed(range(1, d)):
                     lines.append('%s/%s' % (' '*i, ' '*(w - i)))
                 lines.append("/" + "_"*(w - 1) + ',')
-                return d, h + more, lines, 0
+                return d, h + more, lines, more
             else:
                 w = w + more
                 d = d + more
@@ -619,7 +619,7 @@ class PrettyPrinter(Printer):
             if first:
                 # change F baseline so it centers on the sign
                 prettyF.baseline -= d - (prettyF.height()//2 -
-                                         prettyF.baseline) - adjustment
+                                         prettyF.baseline)
                 first = False
 
             # put padding to the right
@@ -629,7 +629,11 @@ class PrettyPrinter(Printer):
             # put the present prettyF to the right
             prettyF = prettyForm(*prettySign.right(prettyF))
 
-        prettyF.baseline = max_upper + sign_height//2
+        # adjust baseline of ascii mode sigma with an odd height so that it is
+        # exactly through the center
+        ascii_adjustment = ascii_mode if not adjustment else 0
+        prettyF.baseline = max_upper + sign_height//2 + ascii_adjustment
+
         prettyF.binding = prettyForm.MUL
         return prettyF
 
