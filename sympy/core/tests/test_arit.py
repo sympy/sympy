@@ -1774,7 +1774,11 @@ def test_add_flatten():
     b = oo - I*oo
     assert a + b == nan
     assert a - b == nan
-    assert (1/a).simplify() == (1/b).simplify() == 0
+    # This evaluates as:
+    #   >>> 1/a
+    #   0*(oo + oo*I)
+    # which should not simplify to 0...
+    #assert (1/a).simplify() == (1/b).simplify() == 0
 
     a = Pow(2, 3, evaluate=False)
     assert a + a == 16
