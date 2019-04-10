@@ -424,8 +424,8 @@ def test_issue_6560():
 
 
 def test_issue_5172():
-    n = Symbol('n')
-    r = Symbol('r', positive=True)
+    n = Symbol('n', finite=True)
+    r = Symbol('r', positive=True, finite=True)
     c = Symbol('c')
     p = Symbol('p', positive=True)
     m = Symbol('m', negative=True)
