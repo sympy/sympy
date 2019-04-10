@@ -6629,7 +6629,7 @@ def cancel(f, *gens, **args):
                 x.is_commutative is True and not x.has(Piecewise),
                 binary=True)
             nc = [cancel(i) for i in nc]
-            return f.func(cancel(f.func._from_args(c)), *nc)
+            return f.func(cancel(f.func(*c)), *nc)
         else:
             reps = []
             pot = preorder_traversal(f)
