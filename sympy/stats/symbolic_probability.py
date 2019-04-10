@@ -63,7 +63,7 @@ class Expectation(Expr):
     >>> from sympy.stats import Expectation, Normal, Probability
     >>> from sympy import symbols, Integral
     >>> mu = symbols("mu")
-    >>> sigma = symbols("sigma", positive=True)
+    >>> sigma = symbols("sigma", positive=True, finite=True)
     >>> X = Normal("X", mu, sigma)
     >>> Expectation(X)
     Expectation(X)
@@ -176,7 +176,7 @@ class Variance(Expr):
     >>> from sympy import symbols, Integral
     >>> from sympy.stats import Normal, Expectation, Variance, Probability
     >>> mu = symbols("mu", positive=True)
-    >>> sigma = symbols("sigma", positive=True)
+    >>> sigma = symbols("sigma", positive=True, finite=True)
     >>> X = Normal("X", mu, sigma)
     >>> Variance(X)
     Variance(X)

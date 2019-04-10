@@ -668,7 +668,7 @@ class Wavefunction(Function):
         >>> from sympy import symbols, pi, diff
         >>> from sympy.functions import sqrt, sin
         >>> from sympy.physics.quantum.state import Wavefunction
-        >>> x, L = symbols('x,L', positive=True)
+        >>> x, L = symbols('x,L', positive=True, finite=True)
         >>> n = symbols('n', integer=True, positive=True)
         >>> g = sqrt(2/L)*sin(n*pi*x/L)
         >>> f = Wavefunction(g, (x, 0, L))
@@ -858,7 +858,7 @@ class Wavefunction(Function):
             >>> from sympy import symbols, pi
             >>> from sympy.functions import sqrt, sin
             >>> from sympy.physics.quantum.state import Wavefunction
-            >>> x, L = symbols('x,L', positive=True)
+            >>> x, L = symbols('x,L', positive=True, finite=True)
             >>> n = symbols('n', integer=True, positive=True)
             >>> g = sqrt(2/L)*sin(n*pi*x/L)
             >>> f = Wavefunction(g, (x, 0, L))
@@ -884,7 +884,7 @@ class Wavefunction(Function):
             >>> from sympy import symbols, pi
             >>> from sympy.functions import sqrt, sin
             >>> from sympy.physics.quantum.state import Wavefunction
-            >>> x, L = symbols('x,L', positive=True)
+            >>> x, L = symbols('x,L', positive=True, finite=True)
             >>> n = symbols('n', integer=True, positive=True)
             >>> g = sqrt(2/L)*sin(n*pi*x/L)
             >>> f = Wavefunction(g, (x, 0, L))
@@ -918,7 +918,7 @@ class Wavefunction(Function):
             >>> from sympy.functions import sqrt, sin
             >>> from sympy.physics.quantum.state import Wavefunction
             >>> x = symbols('x', real=True)
-            >>> L = symbols('L', positive=True)
+            >>> L = symbols('L', positive=True, finite=True)
             >>> n = symbols('n', integer=True, positive=True)
             >>> g = sin(n*pi*x/L)
             >>> f = Wavefunction(g, (x, 0, L))
