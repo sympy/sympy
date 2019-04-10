@@ -841,7 +841,7 @@ def test_principal_branch():
     from sympy import principal_branch, polar_lift, exp_polar
     p = Symbol('p', positive=True)
     x = Symbol('x')
-    neg = Symbol('x', negative=True)
+    neg = Symbol('x', negative=True, finite=True)
 
     assert principal_branch(polar_lift(x), p) == principal_branch(x, p)
     assert principal_branch(polar_lift(2 + I), p) == principal_branch(2 + I, p)
