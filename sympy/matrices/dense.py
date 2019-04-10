@@ -41,7 +41,6 @@ class DenseMatrix(MatrixBase):
 
     _op_priority = 10.01
     _class_priority = 4
-    is_scalar = False
 
     def __eq__(self, other):
         other = sympify(other)
