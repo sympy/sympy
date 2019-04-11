@@ -21,7 +21,7 @@ from sympy.matrices.common import (ShapeError, MatrixError, NonSquareMatrixError
 from sympy.matrices.matrices import (MatrixDeterminant,
     MatrixReductions, MatrixSubspaces, MatrixEigen, MatrixCalculus)
 from sympy.matrices import (Matrix, diag, eye,
-    matrix_multiply_elementwise, ones, zeros, SparseMatrix)
+    matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded)
 from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
@@ -1260,6 +1260,9 @@ def test_diagonal():
     raises(ValueError, lambda: m.diagonal(3))
     raises(ValueError, lambda: m.diagonal(-3))
     raises(ValueError, lambda: m.diagonal(pi))
+    M = ones(2, 3)
+    assert banded({i: list(M.diagonal(i))
+        for i in range(1-M.rows, M.cols)}) == M
 
 
 def test_jordan_block():

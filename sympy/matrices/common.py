@@ -523,8 +523,12 @@ class MatrixShaping(MatrixRequired):
         k = as_int(k)
         r = 0 if k > 0 else -k
         c = 0 if r else k
-        for i in range(min(self.shape) - max(r, c)):
-            rv.append(self[r + i, c + i])
+        while True:
+            if r == self.rows or c == self.cols:
+                break
+            rv.append(self[r, c])
+            r += 1
+            c += 1
         if not rv:
             raise ValueError(filldedent('''
             The %s diagonal is out of range [%s, %s]''' % (
