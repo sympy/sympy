@@ -152,8 +152,14 @@ class MatMul(MatrixExpr, Mul):
             left_args = self.args[:ind]
             right_args = self.args[ind+1:]
 
-            right_mat = MatMul.fromiter(right_args)
-            left_rev = MatMul.fromiter([Transpose(i).doit() if i.is_Matrix else i for i in reversed(left_args)])
+            if right_args:
+                right_mat = MatMul.fromiter(right_args)
+            else:
+                right_mat = Identity(self.shape[1])
+            if left_args:
+                left_rev = MatMul.fromiter([Transpose(i).doit() if i.is_Matrix else i for i in reversed(left_args)])
+            else:
+                left_rev = Identity(self.shape[0])
 
             d = self.args[ind]._eval_derivative_matrix_lines(x)
             for i in d:

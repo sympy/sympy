@@ -611,6 +611,7 @@ def get_postprocessor(cls):
         return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
     return _postprocessor
 
+
 Basic._constructor_postprocessor_mapping[MatrixExpr] = {
     "Mul": [get_postprocessor(Mul)],
     "Add": [get_postprocessor(Add)],
@@ -622,6 +623,10 @@ def _matrix_derivative(expr, x):
     lines = expr._eval_derivative_matrix_lines(x)
 
     parts = [i.build() for i in lines]
+
+    from sympy.codegen.array_utils import recognize_matrix_expression
+
+    parts = [[recognize_matrix_expression(j).doit() for j in i] for i in parts]
 
     def _get_shape(elem):
         if isinstance(elem, MatrixExpr):
@@ -1088,11 +1093,44 @@ class _LeftRightArgs(object):
             rank += 2
         return rank
 
+    def _multiply_pointer(self, other, pointer):
+        from sympy.core.expr import ExprBuilder
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+
+        subexpr = ExprBuilder(
+            CodegenArrayContraction,
+            [
+                ExprBuilder(
+                    CodegenArrayTensorProduct,
+                    [
+                        pointer,
+                        other
+                    ]
+                ),
+                (1, 2)
+            ],
+            validator=CodegenArrayContraction._validate
+        )
+
+        return subexpr
+
     def append_first(self, other):
-        self.first_pointer *= other
+        if not (isinstance(other, MatrixExpr) and isinstance(self.first_pointer, MatrixExpr)):
+            self.first_pointer *= other
+        else:
+            subexpr = self._multiply_pointer(other, self.first_pointer)
+            self.first_pointer = subexpr
+            self._first_pointer_parent = subexpr.args[0].args
+            self._first_pointer_index = 1
 
     def append_second(self, other):
-        self.second_pointer *= other
+        if not (isinstance(other, MatrixExpr) and isinstance(self.second_pointer, MatrixExpr)):
+            self.second_pointer *= other
+        else:
+            subexpr = self._multiply_pointer(other, self.second_pointer)
+            self.second_pointer = subexpr
+            self._second_pointer_parent = subexpr.args[0].args
+            self._second_pointer_index = 1
 
     def __hash__(self):
         return hash((self.first, self.second))
