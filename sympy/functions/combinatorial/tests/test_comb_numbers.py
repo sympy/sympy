@@ -7,6 +7,7 @@ from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, zeta)
+from sympy.functions.combinatorial.numbers import _nT
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
@@ -459,6 +460,18 @@ def test_partition():
     raises(ValueError, lambda: partition(S(5)/4))
 
 
+def test__nT():
+       assert [_nT(i, j) for i in range(5) for j in range(i + 2)] == [
+    1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 2, 1, 1, 0]
+       check = [_nT(10, i) for i in range(11)]
+       assert check == [0, 1, 5, 8, 9, 7, 5, 3, 2, 1, 1]
+       assert all(type(i) is int for i in check)
+       assert _nT(10, 5) == 7
+       assert _nT(100, 98) == 2
+       assert _nT(100, 100) == 1
+       assert _nT(10, 3) == 8
+
+
 def test_nC_nP_nT():
     from sympy.utilities.iterables import (
         multiset_permutations, multiset_combinations, multiset_partitions,
@@ -508,6 +521,7 @@ def test_nC_nP_nT():
         tot = 0
         for j in range(1, i + 2):
             check = nT(i, j)
+            assert check.is_Integer
             tot += check
             assert sum(1 for p in partitions(i, j, size=True) if p[0] == j) == check
         assert nT(i) == tot

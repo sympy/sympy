@@ -1,5 +1,6 @@
-from sympy.matrices.sparsetools import _doktocsr, _csrtodok
-from sympy import SparseMatrix
+from sympy.matrices.sparsetools import _doktocsr, _csrtodok, banded
+from sympy import eye, ones, zeros, Matrix, SparseMatrix
+from sympy.utilities.pytest import raises
 
 
 def test_doktocsr():
@@ -36,3 +37,93 @@ def test_csrtodok():
     assert _csrtodok(j) == SparseMatrix(5, 8,
         {(0, 2): 11, (2, 4): 15, (3, 1): 12, (4, 2): 15})
     assert _csrtodok(k) == SparseMatrix(3, 3, {(0, 2): 1, (2, 1): 3})
+
+
+def test_banded():
+    raises(TypeError, lambda: banded())
+    raises(TypeError, lambda: banded(1))
+    raises(TypeError, lambda: banded(1, 2))
+    raises(TypeError, lambda: banded(1, 2, 3))
+    raises(TypeError, lambda: banded(1, 2, 3, 4))
+    raises(ValueError, lambda: banded({0: (1, 2)}, rows=1))
+    raises(ValueError, lambda: banded({0: (1, 2)}, cols=1))
+    raises(ValueError, lambda: banded(1, {0: (1, 2)}))
+    raises(ValueError, lambda: banded(2, 1, {0: (1, 2)}))
+    raises(ValueError, lambda: banded(1, 2, {0: (1, 2)}))
+
+    assert isinstance(banded(2, 4, {}), SparseMatrix)
+    assert banded(2, 4, {}) == zeros(2, 4)
+    assert banded({0: 0, 1: 0}) == zeros(0)
+    assert banded({0: Matrix([1, 2])}) == Matrix([1, 2])
+    assert banded({1: [1, 2, 3, 0], -1: [4, 5, 6]}) == \
+        banded({1: (1, 2, 3), -1: (4, 5, 6)}) == \
+        Matrix([
+        [0, 1, 0, 0],
+        [4, 0, 2, 0],
+        [0, 5, 0, 3],
+        [0, 0, 6, 0]])
+    assert banded(3, 4, {-1: 1, 0: 2, 1: 3}) == \
+        Matrix([
+        [2, 3, 0, 0],
+        [1, 2, 3, 0],
+        [0, 1, 2, 3]])
+    s = lambda d: (1 + d)**2
+    assert banded(5, {0: s, 2: s}) == \
+        Matrix([
+        [1, 0, 1,  0,  0],
+        [0, 4, 0,  4,  0],
+        [0, 0, 9,  0,  9],
+        [0, 0, 0, 16,  0],
+        [0, 0, 0,  0, 25]])
+    assert banded(2, {0: 1}) == \
+        Matrix([
+        [1, 0],
+        [0, 1]])
+    assert banded(2, 3, {0: 1}) == \
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0]])
+    vert = Matrix([1, 2, 3])
+    assert banded({0: vert}, cols=3) == \
+        Matrix([
+        [1, 0, 0],
+        [2, 1, 0],
+        [3, 2, 1],
+        [0, 3, 2],
+        [0, 0, 3]])
+    assert banded(4, {0: ones(2)}) == \
+        Matrix([
+        [1, 1, 0, 0],
+        [1, 1, 0, 0],
+        [0, 0, 1, 1],
+        [0, 0, 1, 1]])
+    raises(ValueError, lambda: banded({0: 2, 1: ones(2)}, rows=5))
+    assert banded({0: 2, 2: (ones(2),)*3}) == \
+        Matrix([
+        [2, 0, 1, 1, 0, 0, 0, 0],
+        [0, 2, 1, 1, 0, 0, 0, 0],
+        [0, 0, 2, 0, 1, 1, 0, 0],
+        [0, 0, 0, 2, 1, 1, 0, 0],
+        [0, 0, 0, 0, 2, 0, 1, 1],
+        [0, 0, 0, 0, 0, 2, 1, 1]])
+    raises(ValueError, lambda: banded({0: (2,)*5, 1: (ones(2),)*3}))
+    u2 = Matrix([[1, 1], [0, 1]])
+    assert banded({0: (2,)*5, 1: (u2,)*3}) == \
+        Matrix([
+        [2, 1, 1, 0, 0, 0, 0],
+        [0, 2, 1, 0, 0, 0, 0],
+        [0, 0, 2, 1, 1, 0, 0],
+        [0, 0, 0, 2, 1, 0, 0],
+        [0, 0, 0, 0, 2, 1, 1],
+        [0, 0, 0, 0, 0, 0, 1]])
+    assert banded({0:(0, ones(2)), 2: 2}) == \
+        Matrix([
+        [0, 0, 2],
+        [0, 1, 1],
+        [0, 1, 1]])
+    raises(ValueError, lambda: banded({0: (0, ones(2)), 1: 2}))
+    assert banded({0: 1}, cols=3) == banded({0: 1}, rows=3) == eye(3)
+    assert banded({1: 1}, rows=3) == Matrix([
+        [0, 1, 0],
+        [0, 0, 1],
+        [0, 0, 0]])
