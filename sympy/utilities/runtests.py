@@ -523,7 +523,7 @@ def _test(*paths, **kwargs):
     blacklist = kwargs.get('blacklist', ['sympy/integrals/rubi/rubi_tests/tests'])
     if ON_TRAVIS:
         # pyglet does not work on Travis
-        blacklist.extend('sympy/plotting/pygletplot/tests')
+        blacklist.extend(['sympy/plotting/pygletplot/tests'])
     blacklist = convert_to_native_paths(blacklist)
     fast_threshold = kwargs.get('fast_threshold', None)
     slow_threshold = kwargs.get('slow_threshold', None)
