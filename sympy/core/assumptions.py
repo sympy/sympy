@@ -163,9 +163,9 @@ from random import shuffle
 _assume_rules = FactRules([
 
     'integer        ->  rational',
-    'rational       ->  real',
+    'rational       ->  real & finite',
     'rational       ->  algebraic',
-    'algebraic      ->  complex',
+    'algebraic      ->  complex & finite',
     'real           ->  complex',
     'real           ->  hermitian',
     'imaginary      ->  complex',
@@ -176,7 +176,7 @@ _assume_rules = FactRules([
     'even           ==  integer & !odd',
 
     'real           ==  negative | zero | positive',
-    'transcendental ==  complex & !algebraic',
+    'transcendental ==  complex & !algebraic & finite',
 
     'negative       ==  nonpositive & nonzero',
     'positive       ==  nonnegative & nonzero',
@@ -191,7 +191,7 @@ _assume_rules = FactRules([
     'composite      ->  integer & positive & !prime',
     '!composite     ->  !positive | !even | prime',
 
-    'irrational     ==  real & !rational',
+    'irrational     ==  real & !rational & finite',
 
     'imaginary      ->  !real',
 

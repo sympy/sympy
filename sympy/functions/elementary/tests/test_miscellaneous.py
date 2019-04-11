@@ -216,7 +216,7 @@ def test_minmax_assumptions():
     a = Symbol('a', real=True, algebraic=True)
     t = Symbol('t', real=True, transcendental=True)
     q = Symbol('q', rational=True)
-    p = Symbol('p', real=True, rational=False)
+    p = Symbol('p', irrational=True)
     n = Symbol('n', rational=True, integer=False)
     i = Symbol('i', integer=True)
     o = Symbol('o', odd=True)
