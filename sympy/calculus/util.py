@@ -889,7 +889,8 @@ class AccumulationBounds(AtomicExpr):
     _op_priority = 11.0
 
     def _eval_is_real(self):
-        return fuzzy_and([a.is_real for a in self.args])
+        if self.min.is_real and self.max.is_real:
+            return True
 
     @property
     def min(self):
