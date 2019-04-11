@@ -9,7 +9,7 @@ from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, Integer, Number, I, Half
+from sympy.core.numbers import Rational, Integer, Number, I
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
