@@ -259,12 +259,12 @@ def test_linear_2eq_order2():
     # FIXME: assert checksysodesol(eq7, sol7) == (True, [0, 0])
 
     eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
-    sol8 = [Eq(x(t), -sqrt(133)*(-4*C1*airyai(t*(-1 + sqrt(133))**(1/3)) + 4*C1*airyai(-t*(1 + \
-    sqrt(133))**(1/3)) - 4*C2*airybi(t*(-1 + sqrt(133))**(1/3)) + 4*C2*airybi(-t*(1 + sqrt(133))**(1/3)) +\
-    (-sqrt(133) - 1)*(C1*airyai(t*(-1 + sqrt(133))**(1/3)) + C2*airybi(t*(-1 + sqrt(133))**(1/3))) - (-1 +\
-    sqrt(133))*(C1*airyai(-t*(1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 + sqrt(133))**(1/3))))/3192), \
-    Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 + sqrt(133))**(1/3)) + C1*airyai(-t*(1 + sqrt(133))**(1/3)) -\
-    C2*airybi(t*(-1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 + sqrt(133))**(1/3)))/266)]
+    sol8 = [Eq(x(t), -sqrt(133)*(-4*C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + 4*C1*airyai(-t*(1 + \
+    sqrt(133))**(S(1)/3)) - 4*C2*airybi(t*(-1 + sqrt(133))**(S(1)/3)) + 4*C2*airybi(-t*(1 + sqrt(133))**(S(1)/3)) +\
+    (-sqrt(133) - 1)*(C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + C2*airybi(t*(-1 + sqrt(133))**(S(1)/3))) - (-1 +\
+    sqrt(133))*(C1*airyai(-t*(1 + sqrt(133))**(S(1)/3)) + C2*airybi(-t*(1 + sqrt(133))**(S(1)/3))))/3192), \
+    Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + C1*airyai(-t*(1 + sqrt(133))**(S(1)/3)) -\
+    C2*airybi(t*(-1 + sqrt(133))**(S(1)/3)) + C2*airybi(-t*(1 + sqrt(133))**(S(1)/3)))/266)]
     assert dsolve(eq8) == sol8
     # FIXME: assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
