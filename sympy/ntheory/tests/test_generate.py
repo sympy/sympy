@@ -22,6 +22,9 @@ def test_prime():
     sieve.extend(3000)
     assert prime(401) == 2749
 
+    x = Symbol('x')
+    assert prime(x).subs(x, 4) == 7
+
 
 def test_primepi():
     assert primepi(-1) == 0

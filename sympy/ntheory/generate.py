@@ -14,6 +14,8 @@ from array import array as _array
 from sympy import Function, S
 from sympy.core.compatibility import as_int
 from .primetest import isprime
+from sympy.core.function import Function
+from sympy.core.numbers import Integer
 
 
 def _azeros(n):
@@ -332,9 +334,10 @@ class Sieve:
 sieve = Sieve()
 
 
-def prime(nth):
-    """ Return the nth prime, with the primes indexed as prime(1) = 2,
-        prime(2) = 3, etc.... The nth prime is approximately n*log(n).
+class prime(Function):
+    """ Represents the function prime(n) which returns the nth prime, with the
+        primes indexed as prime(1) = 2,prime(2) = 3, etc....
+        The nth prime is approximately n*log(n).
 
         Logarithmic integral of x is a pretty nice approximation for number of
         primes <= x, i.e.
@@ -381,30 +384,34 @@ def prime(nth):
         .. [2] https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
         .. [3] https://en.wikipedia.org/wiki/Skewes%27_number
     """
-    n = as_int(nth)
-    if n < 1:
-        raise ValueError("nth must be a positive integer; prime(1) == 2")
-    if n <= len(sieve._list):
-        return sieve[n]
+    @classmethod
+    def eval(cls, nth):
+        if(not isinstance(nth, Integer)):
+            return None
+        n = as_int(nth)
+        if n < 1:
+            raise ValueError("nth must be a positive integer; prime(1) == 2")
+        if n <= len(sieve._list):
+            return sieve[n]
 
-    from sympy.functions.special.error_functions import li
-    from sympy.functions.elementary.exponential import log
+        from sympy.functions.special.error_functions import li
+        from sympy.functions.elementary.exponential import log
 
-    a = 2 # Lower bound for binary search
-    b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
+        a = 2 # Lower bound for binary search
+        b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
 
-    while a < b:
-        mid = (a + b) >> 1
-        if li(mid) > n:
-            b = mid
-        else:
-            a = mid + 1
-    n_primes = primepi(a - 1)
-    while n_primes < n:
-        if isprime(a):
-            n_primes += 1
-        a += 1
-    return a - 1
+        while a < b:
+            mid = (a + b) >> 1
+            if li(mid) > n:
+                b = mid
+            else:
+                a = mid + 1
+        n_primes = primepi(a - 1)
+        while n_primes < n:
+            if isprime(a):
+                n_primes += 1
+            a += 1
+        return a - 1
 
 
 class primepi(Function):
