@@ -521,11 +521,13 @@ def test_probability():
     # higher moments oo
 
     # log-logistic
+    alpha, beta = symbols('alpha beta', positive=True, finite=True)
     distn = (beta/alpha)*x**(beta - 1)/alpha**(beta - 1)/ \
         (1 + x**beta/alpha**beta)**2
-    # FIXME: Seems to hang. The line below commented out in
+    # FIXME: If alpha, beta are not declared as finite the line below hangs
+    # after the changes in:
     #    https://github.com/sympy/sympy/pull/16603
-    #assert simplify(integrate(distn, (x, 0, oo))) == 1
+    assert simplify(integrate(distn, (x, 0, oo))) == 1
     # NOTE the conditions are a mess, but correctly state beta > 1
     assert simplify(integrate(x*distn, (x, 0, oo), conds='none')) == \
         pi*alpha/beta/sin(pi/beta)
