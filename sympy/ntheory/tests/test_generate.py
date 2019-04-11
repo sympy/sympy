@@ -117,6 +117,9 @@ def test_generate():
     assert prevprime(19) == 17
     assert prevprime(20) == 19
 
+    x = Symbol('x')
+    assert nextprime(x).subs(x, 15) == 17
+    assert prevprime(x).subs(x, 6) == 5
     sieve.extend_to_no(9)
     assert sieve._list[-1] == 23
 

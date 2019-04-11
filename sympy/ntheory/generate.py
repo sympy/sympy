@@ -528,8 +528,8 @@ class primepi(Function):
         return S(arr2[1])
 
 
-def nextprime(n, ith=1):
-    """ Return the ith prime greater than n.
+class nextprime(Function):
+    """ Represents the function which returns the ith prime greater than n.
 
         i must be an integer.
 
@@ -552,52 +552,56 @@ def nextprime(n, ith=1):
         primerange : Generate all primes in a given range
 
     """
-    n = int(n)
-    i = as_int(ith)
-    if i > 1:
-        pr = n
-        j = 1
-        while 1:
-            pr = nextprime(pr)
-            j += 1
-            if j > i:
-                break
-        return pr
+    @classmethod
+    def eval(cls, n, ith=1):
+        if(not isinstance(n, Integer)):
+            return None
+        n = int(n)
+        i = as_int(ith)
+        if i > 1:
+            pr = n
+            j = 1
+            while 1:
+                pr = nextprime(pr)
+                j += 1
+                if j > i:
+                    break
+            return pr
 
-    if n < 2:
-        return 2
-    if n < 7:
-        return {2: 3, 3: 5, 4: 5, 5: 7, 6: 7}[n]
-    if n <= sieve._list[-2]:
-        l, u = sieve.search(n)
-        if l == u:
-            return sieve[u + 1]
+        if n < 2:
+            return 2
+        if n < 7:
+            return {2: 3, 3: 5, 4: 5, 5: 7, 6: 7}[n]
+        if n <= sieve._list[-2]:
+            l, u = sieve.search(n)
+            if l == u:
+                return sieve[u + 1]
+            else:
+                return sieve[u]
+        nn = 6*(n//6)
+        if nn == n:
+            n += 1
+            if isprime(n):
+                return n
+            n += 4
+        elif n - nn == 5:
+            n += 2
+            if isprime(n):
+                return n
+            n += 4
         else:
-            return sieve[u]
-    nn = 6*(n//6)
-    if nn == n:
-        n += 1
-        if isprime(n):
-            return n
-        n += 4
-    elif n - nn == 5:
-        n += 2
-        if isprime(n):
-            return n
-        n += 4
-    else:
-        n = nn + 5
-    while 1:
-        if isprime(n):
-            return n
-        n += 2
-        if isprime(n):
-            return n
-        n += 4
+            n = nn + 5
+        while 1:
+            if isprime(n):
+                return n
+            n += 2
+            if isprime(n):
+                return n
+            n += 4
 
 
-def prevprime(n):
-    """ Return the largest prime smaller than n.
+class prevprime(Function):
+    """ Reprents the function which returns the largest prime smaller than n.
 
         Notes
         =====
@@ -615,36 +619,41 @@ def prevprime(n):
         nextprime : Return the ith prime greater than n
         primerange : Generates all primes in a given range
     """
-    from sympy.functions.elementary.integers import ceiling
+    @classmethod
+    def eval(cls, n):
+        from sympy.functions.elementary.integers import ceiling
 
-    # wrapping ceiling in as_int will raise an error if there was a problem
-    # determining whether the expression was exactly an integer or not
-    n = as_int(ceiling(n))
-    if n < 3:
-        raise ValueError("no preceding primes")
-    if n < 8:
-        return {3: 2, 4: 3, 5: 3, 6: 5, 7: 5}[n]
-    if n <= sieve._list[-1]:
-        l, u = sieve.search(n)
-        if l == u:
-            return sieve[l-1]
+        # wrapping ceiling in as_int will raise an error if there was a problem
+        # determining whether the expression was exactly an integer or not
+        if(not isinstance(n, Integer)):
+            return None
+
+        n = as_int(ceiling(n))
+        if n < 3:
+            raise ValueError("no preceding primes")
+        if n < 8:
+            return {3: 2, 4: 3, 5: 3, 6: 5, 7: 5}[n]
+        if n <= sieve._list[-1]:
+            l, u = sieve.search(n)
+            if l == u:
+                return sieve[l-1]
+            else:
+                return sieve[l]
+        nn = 6*(n//6)
+        if n - nn <= 1:
+            n = nn - 1
+            if isprime(n):
+                return n
+            n -= 4
         else:
-            return sieve[l]
-    nn = 6*(n//6)
-    if n - nn <= 1:
-        n = nn - 1
-        if isprime(n):
-            return n
-        n -= 4
-    else:
-        n = nn + 1
-    while 1:
-        if isprime(n):
-            return n
-        n -= 2
-        if isprime(n):
-            return n
-        n -= 4
+            n = nn + 1
+        while 1:
+            if isprime(n):
+                return n
+            n -= 2
+            if isprime(n):
+                return n
+            n -= 4
 
 
 def primerange(a, b):
