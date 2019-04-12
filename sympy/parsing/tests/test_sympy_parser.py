@@ -9,13 +9,13 @@ from sympy.core.compatibility import PY3
 from sympy.functions import exp, factorial, factorial2, sin
 from sympy.logic import And
 from sympy.series import Limit
-from sympy.utilities.pytest import raises, skip, XFAIL
+from sympy.utilities.pytest import raises, skip
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
     split_symbols, implicit_multiplication, convert_equals_signs,
     convert_xor, function_exponentiation,
-    implicit_multiplication_application, valid_name,
+    implicit_multiplication_application,
     )
 
 
@@ -66,14 +66,6 @@ def test_sympy_parser():
     raises(TypeError, lambda: parse_expr('x', {}, [], []))
     raises(TypeError, lambda: parse_expr('x', [], [], {}))
     raises(TypeError, lambda: parse_expr('x', [], [], {}))
-
-
-@XFAIL  # raises SyntaxError
-def test_issue_16591():
-    x = Symbol('x')
-    x3 = Symbol('x3')
-    t = standard_transformations + (implicit_multiplication_application,)
-    assert parse_expr('2**x3**x', transformations=t) == 2**(x3**x)
 
 
 def test_rationalize():
@@ -266,12 +258,3 @@ def test_python3_features():
     assert parse_expr('.[3_4]') == parse_expr('.[34]') == Rational(34, 99)
     assert parse_expr('.1[3_4]') == parse_expr('.1[34]') == Rational(133, 990)
     assert parse_expr('123_123.123_123[3_4]') == parse_expr('123123.123123[34]') == Rational(12189189189211, 99000000)
-
-
-def test_valid_name():
-    assert not valid_name(3)
-    assert not valid_name('3')
-    assert not valid_name(' x')
-    assert not valid_name('a=b')
-    assert not valid_name('for')
-    assert valid_name('_ok2')
