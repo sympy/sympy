@@ -9,27 +9,12 @@ from keyword import iskeyword
 
 import ast
 import unicodedata
-import re
-import string
 
-from sympy.core.compatibility import (exec_, StringIO, iterable, PY3,
-    string_types)
+from sympy.core.compatibility import exec_, StringIO, iterable
 from sympy.core.basic import Basic
-from sympy.core.function import arity
-from sympy.core.singleton import S
 from sympy.core import Symbol
 from sympy.utilities.misc import filldedent, func_name
 
-
-_py2name = re.compile(r'^[a-zA-Z_]\w*$')
-def valid_name(name):
-    if not isinstance(name, string_types):
-        return False
-    if iskeyword(name):
-        return False
-    if PY3:
-        return name.isidentifier()
-    return _py2name.match(name)
 
 
 def _token_splittable(token):
@@ -988,30 +973,18 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         for _ in transformations:
             if not callable(_):
                 raise TypeError(filldedent('''
-                    expected a function in transformations,
+                    expected a function in `transformations`,
                     not %s''' % func_name(_)))
             if arity(_) != 3:
                 raise TypeError(filldedent('''
-                    transformations should be functions that
-                    takes 3 arguments.'''))
+                    a transformation should be function that
+                    takes 3 arguments'''))
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
 
-    rv = eval_expr(code, local_dict, global_dict)
-    def check(e):
-        # check to see that all symbols have valid names;
-        # if they don't this might represent a parsing issue
-        if iterable(e):
-            for i in e:
-                check(i)
-        elif isinstance(e, Basic):
-            for i in e.free_symbols:
-                if not valid_name(i.name):
-                    raise SyntaxError('invalid name: %s' % i.name)
-    check(rv)
-    return rv
+    return eval_expr(code, local_dict, global_dict)
 
 
 def evaluateFalse(s):
