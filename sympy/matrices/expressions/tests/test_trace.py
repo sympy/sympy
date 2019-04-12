@@ -43,6 +43,7 @@ def test_Trace():
 
     assert str(trace(A)) == str(Trace(A).doit())
 
+    assert Trace(A).is_commutative is True
 
 def test_Trace_A_plus_B():
     assert trace(A + B) == Trace(A) + Trace(B)

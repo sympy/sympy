@@ -128,9 +128,20 @@ class no_attrs_in_subclass(object):
         raise AttributeError
 
 
-def doctest_depends_on(exe=None, modules=None, disable_viewers=None):
-    """Adds metadata about the dependencies which need to be met for doctesting
-    the docstrings of the decorated objects."""
+def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_version=None):
+    """
+    Adds metadata about the dependencies which need to be met for doctesting
+    the docstrings of the decorated objects.
+
+    exe should be a list of executables
+
+    modules should be a list of modules
+
+    disable_viewers should be a list of viewers for preview() to disable
+
+    python_version should be the minimum Python version required, as a tuple
+    (like (3, 0))
+    """
 
     dependencies = {}
     if exe is not None:
@@ -139,6 +150,8 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None):
         dependencies['modules'] = modules
     if disable_viewers is not None:
         dependencies['disable_viewers'] = disable_viewers
+    if python_version is not None:
+        dependencies['python_version'] = python_version
 
     def skiptests():
         r = PyTestReporter()

@@ -694,7 +694,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> from sympy.abc import a, b, c
 
     >>> radsimp(1/(2 + sqrt(2)))
-    (-sqrt(2) + 2)/2
+    (2 - sqrt(2))/2
     >>> x,y = map(Symbol, 'xy')
     >>> e = ((2 + 2*sqrt(2))*x + (2 + sqrt(8))*y)/(2 + sqrt(2))
     >>> radsimp(e)

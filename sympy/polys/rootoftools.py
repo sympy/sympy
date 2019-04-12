@@ -6,7 +6,6 @@ from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import range, ordered
-from sympy.core.function import AppliedUndef
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -961,8 +960,8 @@ class ComplexRootOf(RootOf):
         # is_real value of the CRootOf instance.
         if type(self) == type(other):
             return sympify(self == other)
-        if not (other.is_number and not other.has(AppliedUndef)):
-            return S.false
+        if not other.is_number:
+            return None
         if not other.is_finite:
             return S.false
         z = self.expr.subs(self.expr.free_symbols.pop(), other).is_zero
@@ -1007,10 +1006,7 @@ class RootSum(Expr):
         if func is None:
             func = Lambda(poly.gen, poly.gen)
         else:
-            try:
-                is_func = func.is_Function
-            except AttributeError:
-                is_func = False
+            is_func = getattr(func, 'is_Function', False)
 
             if is_func and 1 in func.nargs:
                 if not isinstance(func, Lambda):

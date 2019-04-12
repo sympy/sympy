@@ -218,7 +218,7 @@ class DiscretePSpace(PSpace):
     def where(self, condition):
         rvs = random_symbols(condition)
         assert all(r.symbol in self.symbols for r in rvs)
-        if (len(rvs) > 1):
+        if len(rvs) > 1:
             raise NotImplementedError(filldedent('''Multivariate discrete
             random variables are not yet supported.'''))
         conditional_domain = reduce_rational_inequalities_wrap(condition,
@@ -246,7 +246,7 @@ class DiscretePSpace(PSpace):
             z = Dummy('z', real = True)
             space = SingleDiscretePSpace(z, dens)
             prob = space.probability(condition.__class__(space.value, 0))
-        if (prob == None):
+        if prob is None:
             prob = Probability(condition)
         return prob if not complement else S.One - prob
 

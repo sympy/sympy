@@ -16,7 +16,7 @@ from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
 from sympy.integrals.integrals import Integral
 
-x, y, a, t, x_1, x_2, z, s = symbols('x y a t x_1 x_2 z s')
+x, y, a, t, x_1, x_2, z, s, b= symbols('x y a t x_1 x_2 z s b')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -1262,6 +1262,13 @@ def test_issue_2708():
         NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
                                   (z, 0, x))
 
+
+def test_issue_2884():
+    f = (4.000002016020*x + 4.000002016020*y + 4.000006024032)*exp(10.0*x)
+    e = integrate(f, (x, 0.1, 0.2))
+    assert str(e) == '1.86831064982608*y + 2.16387491480008'
+
+
 def test_issue_8368():
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
         Piecewise(
@@ -1301,6 +1308,8 @@ def test_issue_8901():
     assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
 
+
+@slow
 def test_issue_8945():
     assert integrate(sin(x)**3/x, (x, 0, 1)) == -Si(3)/4 + 3*Si(1)/4
     assert integrate(sin(x)**3/x, (x, 0, oo)) == pi/4
@@ -1466,7 +1475,15 @@ def test_issue_15640_log_substitutions():
     F = -sqrt(pi)*erfc(sqrt(log(x)))/2 - sqrt(log(x))/x
     assert integrate(f, x) == F and F.diff(x) == f
 
+def test_issue_15509():
+    from sympy.vector import CoordSys3D
+    N = CoordSys3D('N')
+    x = N.x
+    assert integrate(cos(a*x + b), (x, x_1, x_2), heurisch=True) == Piecewise(
+        (-sin(a*x_1 + b)/a + sin(a*x_2 + b)/a, (a > -oo) & (a < oo) & Ne(a, 0)), \
+            (-x_1*cos(b) + x_2*cos(b), True))
 
+@slow
 def test_issue_4311():
     x = symbols('x')
     assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)

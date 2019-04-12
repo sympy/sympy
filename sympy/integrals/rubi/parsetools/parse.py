@@ -31,7 +31,8 @@ import re
 import os
 import inspect
 from sympy import sympify, Function, Set, Symbol
-from sympy.printing import sstr, StrPrinter
+from sympy.core.compatibility import string_types
+from sympy.printing import StrPrinter
 from sympy.utilities.misc import debug
 
 class RubiStrPrinter(StrPrinter):
@@ -241,7 +242,7 @@ def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
     res = []
     cons = ''
     for i in l:
-        if isinstance(i, str):
+        if isinstance(i, string_types):
             r = '        return FreeQ({}, {})'.format(i, x)
             # First it checks if a constraint is already present in `cons_dict`, If yes, use it else create a new one.
             if r not in cons_dict.values():
@@ -326,10 +327,11 @@ def generate_sympy_from_parsed(parsed, wild=False, symbols=[], replace_Int=False
 
     return out
 
-def get_free_symbols(s, symbols, free_symbols=[]):
+def get_free_symbols(s, symbols, free_symbols=None):
     '''
     Returns free_symbols present in `s`.
     '''
+    free_symbols = free_symbols or []
     if not isinstance(s, list):
         if s in symbols:
             free_symbols.append(s)
@@ -346,7 +348,7 @@ def set_matchq_in_constraint(a, cons_index):
     '''
     lst = []
     res = ''
-    if(isinstance(a, list)):
+    if isinstance(a, list):
         if a[0] == 'MatchQ':
             s = a
             optional = get_default_values(s, {})
@@ -666,7 +668,7 @@ def rubi_rule_parser(fullform, header=None, module_name='rubi_object'):
     [3] https://gist.github.com/Upabjojr/bc07c49262944f9c1eb0
     '''
 
-    if header == None:  # use default header values
+    if header is None:  # use default header values
         path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         header = open(os.path.join(path_header, "header.py.txt"), "r").read()
         header = header.format(module_name)

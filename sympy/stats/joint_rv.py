@@ -98,11 +98,10 @@ class JointPSpace(ProductPSpace):
                 limits[index].append(self.distribution.set.args[i])
                 limits[index] = tuple(limits[index])
                 index += 1
-        limits = tuple(limits)
         if self.distribution.is_Continuous:
-            f = Lambda(sym, integrate(self.distribution(*all_syms), limits))
+            f = Lambda(sym, integrate(self.distribution(*all_syms), *limits))
         elif self.distribution.is_Discrete:
-            f = Lambda(sym, summation(self.distribution(all_syms), limits))
+            f = Lambda(sym, summation(self.distribution(*all_syms), *limits))
         return f.xreplace(replace_dict)
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
@@ -182,7 +181,6 @@ class JointRandomSymbol(RandomSymbol):
     to allow indexing."
     """
     def __getitem__(self, key):
-        from sympy.stats.joint_rv import JointPSpace
         if isinstance(self.pspace, JointPSpace):
             if self.pspace.component_count <= key:
                 raise ValueError("Index keys for %s can only up to %s." %

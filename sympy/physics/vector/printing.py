@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from sympy import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol
@@ -7,7 +5,7 @@ from sympy.interactive.printing import init_printing
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter, translate
 from sympy.printing.pretty.pretty import PrettyPrinter
-from sympy.printing.pretty.pretty_symbology import put_accent_in_middle_of_string
+from sympy.printing.pretty.pretty_symbology import center_accent
 from sympy.printing.str import StrPrinter
 
 __all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex',
@@ -92,7 +90,7 @@ class VectorLatexPrinter(LatexPrinter):
             # If the function is an inverse trig function, handle the style
             if func in inv_trig_table:
                 if inv_trig_style == "abbreviated":
-                    func = func
+                    pass
                 elif inv_trig_style == "full":
                     func = "arc" + func[1:]
                 elif inv_trig_style == "power":
@@ -197,10 +195,15 @@ class VectorPrettyPrinter(PrettyPrinter):
                 4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
-
-        d['picture'] = [put_accent_in_middle_of_string(d['picture'][0], dots[dot_i])]
-        d['unicode'] =  put_accent_in_middle_of_string(d['unicode'], dots[dot_i])
-
+        #if unicode is false then calculate number of apostrophes needed and add to output
+        if not self._use_unicode:
+            apostrophes = ""
+            for i in range(0, dot_i):
+                apostrophes += "'"
+            d['picture'][0] += apostrophes + "(t)"
+        else:
+            d['picture'] = [center_accent(d['picture'][0], dots[dot_i])]
+        d['unicode'] =  center_accent(d['unicode'], dots[dot_i])
         return pform
 
     def _print_Function(self, e):

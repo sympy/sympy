@@ -473,9 +473,9 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    unsolved_object = ConditionSet(q, Eq(sqrt((m - q)**2 + (-m/(2*q) + 1/2)**2) -
-        sqrt((-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2 + (m**2/2 - m -
-        sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2), 0), S.Reals)
+    unsolved_object = ConditionSet(q, Eq(sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) -
+        sqrt((-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m -
+        sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2), 0), S.Reals)
     assert solveset_real(eq, q) == unsolved_object
 
 
@@ -1012,7 +1012,6 @@ def test_solvify():
     raises(NotImplementedError, lambda: solvify(sin(exp(x)), x, S.Complexes))
 
 
-@XFAIL
 def test_abs_invert_solvify():
     assert solvify(sin(Abs(x)), x, S.Reals) is None
 
@@ -1059,6 +1058,11 @@ def test_linear_eq_to_matrix():
     # issue 15312
     assert linear_eq_to_matrix(Eq(x + 2, 1), x) == (
         Matrix([[1]]), Matrix([[-1]]))
+
+
+def test_issue_16577():
+    assert linear_eq_to_matrix(Eq(a*(2*x + 3*y) + 4*y, 5), x, y) == (
+        Matrix([[2*a, 3*a + 4]]), Matrix([[5]]))
 
 
 def test_linsolve():
@@ -1224,7 +1228,7 @@ def test_nonlinsolve_abs():
 def test_raise_exception_nonlinsolve():
     raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
-    raises(NotImplementedError, lambda: nonlinsolve([(x+y)**2 - 9, x**2 - y**2 -3/4], (x, y)))
+    raises(NotImplementedError, lambda: nonlinsolve([(x+y)**2 - 9, x**2 - y**2 - 0.75], (x, y)))
 
 
 def test_trig_system():
@@ -1415,7 +1419,7 @@ def test_issue_6752():
 
 
 @SKIP("slow")
-def test_issue_5114():
+def test_issue_5114_solveset():
     # slow testcase
     a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r = symbols('a:r')
 
@@ -2026,6 +2030,7 @@ def test_linear_coeffs():
         linear_coeffs(x + 2*x**2 + x**3, x, x**2))
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
+    assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
 
 def test_solve_modular():
     x = Symbol('x')

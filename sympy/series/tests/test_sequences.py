@@ -1,8 +1,8 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
                    SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx, sqrt,
-                   fibonacci, tribonacci)
+                   fibonacci, tribonacci, sin, cos, exp)
 from sympy.series.sequences import SeqExpr, SeqExprOp
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 x, y, z = symbols('x y z')
 n, m = symbols('n m')
@@ -75,6 +75,16 @@ def test_SeqFormula():
     raises(ValueError, lambda: SeqFormula(n**2, (n, -oo, oo)))
     raises(ValueError, lambda: SeqFormula(m*n**2, (0, oo)))
 
+    seq = SeqFormula(x*(y**2 + z), (z, 1, 100))
+    assert seq.expand() == SeqFormula(x*y**2 + x*z, (z, 1, 100))
+    seq = SeqFormula(sin(x*(y**2 + z)),(z, 1, 100))
+    assert seq.expand(trig=True) == SeqFormula(sin(x*y**2)*cos(x*z) + sin(x*z)*cos(x*y**2), (z, 1, 100))
+    assert seq.expand() == SeqFormula(sin(x*y**2 + x*z), (z, 1, 100))
+    assert seq.expand(trig=False) == SeqFormula(sin(x*y**2 + x*z), (z, 1, 100))
+    seq = SeqFormula(exp(x*(y**2 + z)), (z, 1, 100))
+    assert seq.expand() == SeqFormula(exp(x*y**2)*exp(x*z), (z, 1, 100))
+    assert seq.expand(power_exp=False) == SeqFormula(exp(x*y**2 + x*z), (z, 1, 100))
+    assert seq.expand(mul=False, power_exp=False) == SeqFormula(exp(x*(y**2 + z)), (z, 1, 100))
 
 def test_sequence():
     form = SeqFormula(n**2, (n, 0, 5))
@@ -256,6 +266,8 @@ def test_Idx_limits():
     assert SeqFormula(r, (i, 0, 5))[:] == [r.subs(i, j) for j in range(6)]
     assert SeqPer((1, 2), (i, 0, 5))[:] == [1, 2, 1, 2, 1, 2]
 
+
+@slow
 def test_find_linear_recurrence():
     assert sequence((0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55), \
     (n, 0, 10)).find_linear_recurrence(11) == [1, 1]

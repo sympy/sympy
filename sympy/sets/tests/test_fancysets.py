@@ -1,14 +1,14 @@
 from sympy.core.compatibility import range, PY3
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
-from sympy.sets.sets import (FiniteSet, Interval, imageset, EmptySet, Union,
+from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
                              Intersection)
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.abc import x, y, z, t
+from sympy.abc import x, y, t
 
 import itertools
 

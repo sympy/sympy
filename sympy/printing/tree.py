@@ -27,7 +27,7 @@ def pprint_nodes(subtrees):
             else:
                 r += "  %s\n" % a
         return r
-    if len(subtrees) == 0:
+    if not subtrees:
         return ""
     f = ""
     for a in subtrees[:-1]:
@@ -44,7 +44,7 @@ def print_node(node):
     """
     s = "%s: %s\n" % (node.__class__.__name__, str(node))
     d = node._assumptions
-    if len(d) > 0:
+    if d:
         for a in sorted(d):
             v = d[a]
             if v is None:
@@ -90,8 +90,10 @@ def print_tree(node):
     | commutative: True
     | complex: True
     | even: True
+    | finite: True
     | hermitian: True
     | imaginary: False
+    | infinite: False
     | integer: True
     | irrational: False
     | noninteger: False
@@ -104,8 +106,10 @@ def print_tree(node):
       commutative: True
       complex: True
       even: False
+      finite: True
       hermitian: True
       imaginary: False
+      infinite: False
       integer: True
       irrational: False
       noninteger: False

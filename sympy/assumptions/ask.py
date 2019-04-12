@@ -1207,7 +1207,7 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
         args = [x for x in args if x is not None]
         if args:
             return expr.func(*args)
-    if args and all(x != None for x in args):
+    if args and all(x is not None for x in args):
         return expr.func(*args)
 
 
@@ -1340,9 +1340,10 @@ def register_handler(key, handler):
     """
     if type(key) is Predicate:
         key = key.name
-    try:
-        getattr(Q, key).add_handler(handler)
-    except AttributeError:
+    Qkey = getattr(Q, key, None)
+    if Qkey is not None:
+        Qkey.add_handler(handler)
+    else:
         setattr(Q, key, Predicate(key, handlers=[handler]))
 
 
@@ -1385,7 +1386,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
 
     from sympy.core.cache import cacheit
-    from sympy.logic.boolalg import And, Not, Or
+    from sympy.logic.boolalg import And
     from sympy.assumptions.ask import Q
 
     # -{ Known facts in Conjunctive Normal Form }-
@@ -1483,13 +1484,16 @@ def get_known_facts():
         Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
         Implies(Q.integer, Q.rational),
         Implies(Q.rational, Q.algebraic),
+        Implies(Q.irrational, Q.finite),
         Implies(Q.algebraic, Q.complex),
-        Equivalent(Q.transcendental | Q.algebraic, Q.complex),
+        Implies(Q.algebraic, Q.finite),
+        Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),
         Implies(Q.transcendental, ~Q.algebraic),
+        Implies(Q.transcendental, Q.finite),
         Implies(Q.imaginary, Q.complex & ~Q.real),
         Implies(Q.imaginary, Q.antihermitian),
         Implies(Q.antihermitian, ~Q.hermitian),
-        Equivalent(Q.irrational | Q.rational, Q.real),
+        Equivalent(Q.irrational | Q.rational, Q.real & Q.finite),
         Implies(Q.irrational, ~Q.rational),
         Implies(Q.zero, Q.even),
 

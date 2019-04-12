@@ -102,7 +102,7 @@ class CodePrinter(StrPrinter):
         # format the output
         if self._settings["human"]:
             frontlines = []
-            if len(self._not_supported) > 0:
+            if self._not_supported:
                 frontlines.append(self._get_comment(
                         "Not supported in {0}:".format(self.language)))
                 for expr in sorted(self._not_supported, key=str):
@@ -364,7 +364,7 @@ class CodePrinter(StrPrinter):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
             func = None
-            if isinstance(cond_func, str):
+            if isinstance(cond_func, string_types):
                 func = cond_func
             else:
                 for cond, func in cond_func:
@@ -480,7 +480,7 @@ class CodePrinter(StrPrinter):
             if item.base in b:
                 b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
 
-        if len(b) == 0:
+        if not b:
             return sign + '*'.join(a_str)
         elif len(b) == 1:
             return sign + '*'.join(a_str) + "/" + b_str[0]

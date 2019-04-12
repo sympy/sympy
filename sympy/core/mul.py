@@ -273,13 +273,6 @@ class Mul(Expr, AssocOp):
                 coeff = o.__mul__(coeff)
                 continue
 
-            elif isinstance(o, MatrixExpr):
-                if isinstance(coeff, MatrixExpr):
-                    coeff *= o
-                else:
-                    coeff = o.__mul__(coeff)
-                continue
-
             elif o is S.ComplexInfinity:
                 if not coeff:
                     # 0 * zoo = NaN
@@ -595,7 +588,9 @@ class Mul(Expr, AssocOp):
         # 0
         elif coeff is S.Zero:
             # we know for sure the result will be 0 except the multiplicand
-            # is infinity
+            # is infinity or a matrix
+            if any(isinstance(c, MatrixExpr) for c in nc_part):
+                return [coeff], nc_part, order_symbols
             if any(c.is_finite == False for c in c_part):
                 return [S.NaN], [], order_symbols
             return [coeff], [], order_symbols
@@ -902,7 +897,7 @@ class Mul(Expr, AssocOp):
                 # Note: reduce is used in step of Mul as Mul is unable to
                 # handle subtypes and operation priority:
                 terms.append(reduce(lambda x, y: x*y, (args[:i] + [d] + args[i + 1:]), S.One))
-        return reduce(lambda x, y: x+y, terms, S.Zero)
+        return Add.fromiter(terms)
 
     @cacheit
     def _eval_derivative_n_times(self, s, n):
@@ -1172,8 +1167,8 @@ class Mul(Expr, AssocOp):
         t_not_re_im = None
 
         for t in self.args:
-            if not t.is_complex:
-                return t.is_complex
+            if t.is_complex is False:
+                return False
             elif t.is_imaginary:  # I
                 real = not real
             elif t.is_real:  # 2
@@ -1672,7 +1667,7 @@ class Mul(Expr, AssocOp):
 
         >>> from sympy import sqrt
         >>> (-3*sqrt(2)*(2 - 2*sqrt(2))).as_content_primitive()
-        (6, -sqrt(2)*(-sqrt(2) + 1))
+        (6, -sqrt(2)*(1 - sqrt(2)))
 
         See docstring of Expr.as_content_primitive for more examples.
         """
@@ -1782,7 +1777,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
                 r = c/q
                 if r == int(r):
                     return coeff*factors
-        return Mul._from_args((coeff, factors))
+        return Mul(coeff, factors, evaluate=False)
     elif factors.is_Mul:
         margs = list(factors.args)
         if margs[0].is_Number:

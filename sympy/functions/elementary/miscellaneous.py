@@ -338,22 +338,25 @@ def real_root(arg, n=None, evaluate=None):
 
 class MinMaxBase(Expr, LatticeOp):
     def __new__(cls, *args, **assumptions):
-
+        evaluate = assumptions.pop('evaluate', True)
         args = (sympify(arg) for arg in args)
 
         # first standard filter, for cls.zero and cls.identity
         # also reshape Max(a, Max(b, c)) to Max(a, b, c)
-        try:
-            args = frozenset(cls._new_args_filter(args))
-        except ShortCircuit:
-            return cls.zero
 
-        if assumptions.pop('evaluate', True):
+        if evaluate:
+            try:
+                args = frozenset(cls._new_args_filter(args))
+            except ShortCircuit:
+                return cls.zero
+        else:
+            args = frozenset(args)
+
+        if evaluate:
             # remove redundant args that are easily identified
             args = cls._collapse_arguments(args, **assumptions)
-
-        # find local zeros
-        args = cls._find_localzeros(args, **assumptions)
+            # find local zeros
+            args = cls._find_localzeros(args, **assumptions)
 
         if not args:
             return cls.identity

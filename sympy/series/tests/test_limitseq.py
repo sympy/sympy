@@ -91,7 +91,7 @@ def test_alternating_sign():
     assert limit_seq(sin(pi*n), n) == 0
     assert limit_seq(cos(2*pi*n), n) == 1
     assert limit_seq((S(-1)/5)**n, n) == 0
-    assert limit_seq((-1/5)**n, n) == 0
+    assert limit_seq((-S(1)/5)**n, n) == 0
     assert limit_seq((I/3)**n, n) == 0
     assert limit_seq(sqrt(n)*(I/2)**n, n) == 0
     assert limit_seq(n**7*(I/3)**n, n) == 0

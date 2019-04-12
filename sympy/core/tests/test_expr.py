@@ -6,6 +6,7 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
                    integrate, gammasimp)
+from sympy.core.expr import ExprBuilder
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -674,9 +675,11 @@ def test_replace():
         sin(a), lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
     # test exact
     assert (2*x).replace(a*x + b, b - a, exact=True) == 2*x
-    assert (2*x).replace(a*x + b, b - a) == 2/x
+    assert (2*x).replace(a*x + b, b - a) == 2*x
+    assert (2*x).replace(a*x + b, b - a, exact=False) == 2/x
     assert (2*x).replace(a*x + b, lambda a, b: b - a, exact=True) == 2*x
-    assert (2*x).replace(a*x + b, lambda a, b: b - a) == 2/x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a) == 2*x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a, exact=False) == 2/x
 
     g = 2*sin(x**3)
 
@@ -1830,3 +1833,9 @@ def test_normal():
     x = symbols('x')
     e = Mul(S.Half, 1 + x, evaluate=False)
     assert e.normal() == e
+
+
+def test_ExprBuilder():
+    eb = ExprBuilder(Mul)
+    eb.args.extend([x, x])
+    assert eb.build() == x**2

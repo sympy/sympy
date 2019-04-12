@@ -872,8 +872,8 @@ class FormulaCollection(object):
                     f.C.subs(repl), f.M.subs(repl))
             if not any(e.has(S.NaN, oo, -oo, zoo) for e in [f2.B, f2.M, f2.C]):
                 return f2
-        else:
-            return None
+
+        return None
 
 
 class MeijerFormula(object):
