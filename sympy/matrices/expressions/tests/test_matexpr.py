@@ -1,9 +1,9 @@
 from sympy import (KroneckerDelta, diff, Piecewise, Sum, Dummy, factor,
                    expand, zeros, gcd_terms, Eq)
 
-from sympy.core import S, symbols, Add, Mul
+from sympy.core import S, symbols, Add, Mul, SympifyError
 from sympy.core.compatibility import long
-from sympy.functions import transpose, sin, cos, sqrt, cbrt
+from sympy.functions import transpose, sin, cos, sqrt, cbrt, exp
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
@@ -504,3 +504,16 @@ def test_simplify_matrix_expressions():
     a = gcd_terms(2*C*D + 4*D*C)
     assert type(a) == MatMul
     assert a.args == (2, (C*D + 2*D*C))
+
+def test_exp():
+    A = MatrixSymbol('A', 2, 2)
+    B = MatrixSymbol('B', 2, 2)
+    expr1 = exp(A)*exp(B)
+    expr2 = exp(B)*exp(A)
+    assert expr1 != expr2
+    assert expr1 - expr2 != 0
+    assert not isinstance(expr1, exp)
+    assert not isinstance(expr2, exp)
+
+def test_invalid_args():
+    raises(SympifyError, lambda: MatrixSymbol(1, 2, 'A'))

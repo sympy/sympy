@@ -12,7 +12,7 @@ from sympy.physics.secondquant import (AntiSymmetricTensor, wicks,
         F, Fd, NO, evaluate_deltas, substitute_dummies, Commutator,
         simplify_index_permutations, PermutationOperator)
 from sympy import (
-    symbols, expand, pprint, Rational, latex, Dummy
+    symbols, Rational, latex, Dummy
 )
 
 pretty_dummies_dict = {

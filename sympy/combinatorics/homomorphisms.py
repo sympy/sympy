@@ -353,7 +353,7 @@ def _check_homomorphism(domain, codomain, images):
                 # truth of equality otherwise
                 success = codomain.make_confluent()
                 s = codomain.equals(_image(r), identity)
-                if s in None and not success:
+                if s is None and not success:
                     raise RuntimeError("Can't determine if the images "
                         "define a homomorphism. Try increasing "
                         "the maximum number of rewriting rules "

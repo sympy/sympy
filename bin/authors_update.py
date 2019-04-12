@@ -20,7 +20,7 @@ if sys.version_info < (3, 6):
 
 from subprocess import run, PIPE
 from distutils.version import LooseVersion
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 
 def red(text):
     return "\033[31m%s\033[0m" % text
@@ -46,8 +46,6 @@ minimal = '1.8.4.2'
 git_ver = run(['git', '--version'], stdout=PIPE, encoding='utf-8').stdout[12:]
 if LooseVersion(git_ver) < LooseVersion(minimal):
     print(yellow("Please use a git version >= %s" % minimal))
-
-from sympy.utilities.misc import filldedent
 
 def author_name(line):
     assert line.count("<") == line.count(">") == 1

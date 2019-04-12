@@ -10,5 +10,8 @@ Calculus
 .. automodule:: sympy.calculus.singularities
     :members:
 
-.. automodule :: sympy.calculus.finite_diff
+.. automodule:: sympy.calculus.finite_diff
+    :members:
+
+.. automodule:: sympy.calculus.util
     :members:

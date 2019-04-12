@@ -5,6 +5,7 @@ from sympy.functions import adjoint, conjugate
 
 from sympy.matrices.expressions.matexpr import MatrixExpr
 
+
 class Transpose(MatrixExpr):
     """
     The transpose of a matrix expression.

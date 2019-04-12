@@ -15,6 +15,7 @@ from .matrices import DeferredVector, MatrixBase
 Matrix = MutableMatrix = MutableDenseMatrix
 
 from .sparse import MutableSparseMatrix
+from .sparsetools import banded
 from .immutable import ImmutableDenseMatrix, ImmutableSparseMatrix
 
 ImmutableMatrix = ImmutableDenseMatrix
@@ -25,5 +26,5 @@ from .expressions import (
     Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol, Trace,
     Transpose, ZeroMatrix, blockcut, block_collapse, matrix_symbols, Adjoint,
     hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
-    DiagonalMatrix, DiagonalOf, trace, DotProduct, kronecker_product,
-    KroneckerProduct)
+    diagonalize_vector, DiagonalizeVector, DiagonalMatrix, DiagonalOf, trace,
+    DotProduct, kronecker_product, KroneckerProduct)

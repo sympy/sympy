@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from sympy.core.sympify import _sympify
+
 from sympy.matrices.expressions import MatrixExpr
 from sympy.core import S, Eq, Ge
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -161,6 +163,10 @@ class DiagonalizeVector(MatrixExpr):
         obj = MatrixExpr.__new__(cls, vector)
         shape = vector.shape
         dim = shape[1] if shape[0] == 1 else shape[0]
+        if vector.shape[0] != 1:
+            obj._iscolumn = True
+        else:
+            obj._iscolumn = False
         obj._shape = (dim, dim)
         obj._vector = vector
         return obj
@@ -170,12 +176,29 @@ class DiagonalizeVector(MatrixExpr):
         return self._shape
 
     def _entry(self, i, j, **kwargs):
+        if self._iscolumn:
+            result = self._vector._entry(i, 0)
+        else:
+            result = self._vector._entry(0, j)
         if i != j:
-            return S.Zero
-        return self._vector[i]
+            result *= KroneckerDelta(i, j)
+        return result
+
+    def _eval_transpose(self):
+        return self
+
+    def as_explicit(self):
+        from sympy import diag
+        return diag(*list(self._vector.as_explicit()))
 
 
 def diagonalize_vector(vector):
+    from sympy import Transpose
+    vector = _sympify(vector)
     if vector.shape == (1, 1):
         return vector
+    if vector.is_Identity:
+        return vector
+    if isinstance(vector, Transpose):
+        vector = vector.arg
     return DiagonalizeVector(vector)
