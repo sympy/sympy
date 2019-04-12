@@ -396,12 +396,10 @@ def split_symbols_custom(predicate):
                 symbol = tok[1][1:-1]
 
                 if predicate(symbol):
-
                     tok_type = result[-2][1]  # Symbol or Function
                     del result[-2:]  # Get rid of the call to Symbol
 
                     for char in symbol[:-1]:
-
                         if char in local_dict or char in global_dict:
                             result.extend([(NAME, "%s" % char)])
                         elif char in '0123456789':
