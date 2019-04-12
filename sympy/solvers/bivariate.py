@@ -206,8 +206,8 @@ def _solve_lambert(f, symbol, gens):
         raise NotImplementedError()
 
     if lhs.is_Mul:
-        lhs = expand_log(log(lhs))
-        rhs = log(rhs)
+        lhs = expand_log(log(abs(lhs)))
+        rhs = log(abs(rhs))
 
     lhs = factor(lhs, deep=True)
     # make sure we have inverted as completely as possible
@@ -235,16 +235,16 @@ def _solve_lambert(f, symbol, gens):
         mainlog = _mostfunc(lhs, log, symbol)
         if mainlog:
             if lhs.is_Mul and rhs != 0:
-                soln = _lambert(log(lhs) - log(rhs), symbol)
+                soln = _lambert(log(abs(lhs)) - log(abs(rhs)), symbol)
             elif lhs.is_Add:
                 other = lhs.subs(mainlog, 0)
                 if other and not other.is_Add and [
                         tmp for tmp in other.atoms(Pow)
                         if symbol in tmp.free_symbols]:
                     if not rhs:
-                        diff = log(other) - log(other - lhs)
+                        diff = log(abs(other)) - log(abs(other - lhs))
                     else:
-                        diff = log(lhs - other) - log(rhs - other)
+                        diff = log(abs(lhs - other)) - log(abs(rhs - other))
                     soln = _lambert(expand_log(diff), symbol)
                 else:
                     #it's ready to go
@@ -267,7 +267,7 @@ def _solve_lambert(f, symbol, gens):
         if mainexp:
             lhs = collect(lhs, mainexp)
             if lhs.is_Mul and rhs != 0:
-                soln = _lambert(expand_log(log(lhs) - log(rhs)), symbol)
+                soln = _lambert(expand_log(log(abs(lhs)) - log(abs(rhs))), symbol)
             elif lhs.is_Add:
                 # move all but mainexp-containing term to rhs
                 other = lhs.subs(mainexp, 0)
@@ -277,7 +277,7 @@ def _solve_lambert(f, symbol, gens):
                     rhs.could_extract_minus_sign()):
                     mainterm *= -1
                     rhs *= -1
-                diff = log(mainterm) - log(rhs)
+                diff = log(abs(mainterm)) - log(abs(rhs))
                 soln = _lambert(expand_log(diff), symbol)
 
     # 3) d*p**(a*B + b) + c*B = R
@@ -289,13 +289,13 @@ def _solve_lambert(f, symbol, gens):
         if mainpow and symbol in mainpow.exp.free_symbols:
             lhs = collect(lhs, mainpow)
             if lhs.is_Mul and rhs != 0:
-                soln = _lambert(expand_log(log(lhs) - log(rhs)), symbol)
+                soln = _lambert(expand_log(log(abs(lhs)) - log(abs(rhs))), symbol)
             elif lhs.is_Add:
                 # move all but mainpow-containing term to rhs
                 other = lhs.subs(mainpow, 0)
                 mainterm = lhs - other
                 rhs = rhs - other
-                diff = log(mainterm) - log(rhs)
+                diff = log(abs(mainterm)) - log(abs(rhs))
                 soln = _lambert(expand_log(diff), symbol)
 
     if not soln:
