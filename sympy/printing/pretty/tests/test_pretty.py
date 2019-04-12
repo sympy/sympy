@@ -4174,6 +4174,11 @@ GroebnerBasis⎝⎣2⋅x - y  - y + 1, y  + 2⋅y  - 3⋅y  - 16⋅y + 7⎦, x, 
     assert upretty(expr) == ucode_str
 
 
+def test_pretty_UniversalSet():
+    assert pretty(S.UniversalSet) == "UniversalSet"
+    assert upretty(S.UniversalSet) == u"UniversalSet"
+
+
 def test_pretty_Boolean():
     expr = Not(x, evaluate=False)
 

@@ -813,6 +813,10 @@ def test_latex_emptyset():
     assert latex(S.EmptySet) == r"\emptyset"
 
 
+def test_latex_universalset():
+    assert latex(S.UniversalSet) == r"\text{UniversalSet}"
+
+
 def test_latex_commutator():
     A = Operator('A')
     B = Operator('B')

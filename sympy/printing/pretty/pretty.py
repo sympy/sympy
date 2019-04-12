@@ -2104,6 +2104,9 @@ class PrettyPrinter(Printer):
         pretty = prettyForm(*stringPict.next(type(s).__name__, pretty))
         return pretty
 
+    def _print_UniversalSet(self, s):
+        return prettyForm('UniversalSet')
+
     def _print_PolyRing(self, ring):
         return prettyForm(sstr(ring))
 
