@@ -504,9 +504,9 @@ class Heaviside(Function):
         """
         H0 = sympify(H0)
         arg = sympify(arg)
-        if arg.is_negative:
+        if arg.is_negative or arg is S.NegativeInfinity:
             return S.Zero
-        elif arg.is_positive:
+        elif arg.is_positive or arg is S.Infinity:
             return S.One
         elif arg.is_zero:
             return H0
