@@ -224,6 +224,10 @@ def test_split_symbols_numeric():
 
     assert expr1 == expr2
 
+    n = Symbol('n')
+    expr1 = parse_expr('n12n34', transformations=transformations)
+    assert expr1 == 24*n**2
+
 
 def test_unicode_names():
     if not PY3:
