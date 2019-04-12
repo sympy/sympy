@@ -11,8 +11,9 @@ from sympy.utilities.pytest import raises, skip
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
-    split_symbols, implicit_multiplication, convert_equals_signs, convert_xor,
-    function_exponentiation,
+    split_symbols, implicit_multiplication,
+    implicit_multiplication_application,
+    convert_equals_signs, convert_xor, function_exponentiation,
 )
 
 
@@ -211,6 +212,17 @@ def test_parse_function_issue_3539():
     x = Symbol('x')
     f = Function('f')
     assert parse_expr('f(x)') == f(x)
+
+
+def test_split_symbols_numeric():
+    transformations = (
+        standard_transformations +
+        (implicit_multiplication_application,))
+
+    expr1 = parse_expr('2**n * 3**n')
+    expr2 = parse_expr('2**n3**n', transformations=transformations)
+
+    assert expr1 == expr2
 
 
 def test_unicode_names():
