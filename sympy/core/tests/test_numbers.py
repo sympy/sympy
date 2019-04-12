@@ -1538,7 +1538,7 @@ def test_zoo():
 
 def test_issue_4122():
     x = Symbol('x', nonpositive=True)
-    assert (oo + x).is_Add
+    assert (oo + x) == oo
     x = Symbol('x', finite=True)
     assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', nonnegative=True)
@@ -1548,7 +1548,7 @@ def test_issue_4122():
 
     # similarly for negative infinity
     x = Symbol('x', nonnegative=True)
-    assert (-oo + x).is_Add
+    assert (-oo + x) == -oo
     x = Symbol('x', finite=True)
     assert (-oo + x).is_Add
     x = Symbol('x', nonpositive=True)

@@ -1670,7 +1670,7 @@ class Rational(Number):
         if isinstance(expt, Number):
             if isinstance(expt, Float):
                 return self._eval_evalf(expt._prec)**expt
-            if expt.is_negative:
+            if expt.is_negative or expt is S.NegativeInfinity:
                 # (3/4)**-2 -> (4/3)**2
                 ne = -expt
                 if (ne is S.One):
@@ -2654,13 +2654,10 @@ class Infinity(with_metaclass(Singleton, Number)):
     .. [1] https://en.wikipedia.org/wiki/Infinity
     """
 
-    is_commutative = True
     is_number = True
     is_complex = False
     is_extended_real = True
     is_infinite = True
-    is_positive = True
-    is_prime = False
 
     __slots__ = []
 
