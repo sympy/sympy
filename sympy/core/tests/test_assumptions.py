@@ -105,13 +105,13 @@ def test_infinity():
     assert oo.is_extended_real is True
     assert oo.is_real is False
     assert oo.is_complex is False
-    assert oo.is_noninteger is True
+    assert oo.is_noninteger is False
     assert oo.is_irrational is False
     assert oo.is_imaginary is False
-    assert oo.is_positive is True
+    assert oo.is_positive is False
     assert oo.is_negative is False
     assert oo.is_nonpositive is False
-    assert oo.is_nonnegative is True
+    assert oo.is_nonnegative is False
     assert oo.is_even is False
     assert oo.is_odd is False
     assert oo.is_finite is False
@@ -133,12 +133,12 @@ def test_neg_infinity():
     assert mm.is_extended_real is True
     assert mm.is_real is False
     assert mm.is_complex is False
-    assert mm.is_noninteger is True
+    assert mm.is_noninteger is False
     assert mm.is_irrational is False
     assert mm.is_imaginary is False
     assert mm.is_positive is False
-    assert mm.is_negative is True
-    assert mm.is_nonpositive is True
+    assert mm.is_negative is False
+    assert mm.is_nonpositive is False
     assert mm.is_nonnegative is False
     assert mm.is_even is False
     assert mm.is_odd is False
@@ -329,10 +329,10 @@ def test_symbol_real_false():
 
     assert a.is_real is False
     assert a.is_integer is False
-    assert a.is_negative is None
-    assert a.is_positive is None
-    assert a.is_nonnegative is None
-    assert a.is_nonpositive is None
+    assert a.is_negative is False
+    assert a.is_positive is False
+    assert a.is_nonnegative is False
+    assert a.is_nonpositive is False
     assert a.is_zero is False
 
 
