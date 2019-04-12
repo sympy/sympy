@@ -381,28 +381,43 @@ def split_symbols_custom(predicate):
         result = []
         split = False
         split_previous=False
+
         for tok in tokens:
             if split_previous:
                 # throw out closing parenthesis of Symbol that was split
                 split_previous=False
                 continue
             split_previous=False
+
             if tok[0] == NAME and tok[1] in ['Symbol', 'Function']:
                 split = True
+
             elif split and tok[0] == NAME:
                 symbol = tok[1][1:-1]
+
                 if predicate(symbol):
+
                     tok_type = result[-2][1]  # Symbol or Function
                     del result[-2:]  # Get rid of the call to Symbol
+
                     for char in symbol[:-1]:
+
                         if char in local_dict or char in global_dict:
                             result.extend([(NAME, "%s" % char)])
+                        elif char in '0123456789':
+                            result.extend([(NAME, 'Number'), (OP, '('),
+                                           (NAME, "'%s'" % char), (OP, ')')])
                         else:
                             result.extend([(NAME, 'Symbol'), (OP, '('),
                                            (NAME, "'%s'" % char), (OP, ')')])
+
                     char = symbol[-1]
+
                     if char in local_dict or char in global_dict:
                         result.extend([(NAME, "%s" % char)])
+                    elif char in '0123456789':
+                        result.extend([(NAME, 'Number'), (OP, '('),
+                                       (NAME, "'%s'" % char), (OP, ')')])
                     else:
                         result.extend([(NAME, tok_type), (OP, '('),
                                        (NAME, "'%s'" % char), (OP, ')')])
@@ -412,10 +427,14 @@ def split_symbols_custom(predicate):
                     split = False
                     split_previous = True
                     continue
+
                 else:
                     split = False
+
             result.append(tok)
+
         return result
+
     return _split_symbols
 
 
