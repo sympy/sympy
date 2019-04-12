@@ -398,8 +398,8 @@ class exp(ExpBase):
             return s.is_algebraic
 
     def _eval_is_positive(self):
-        if self.args[0].is_extended_real:
-            return not self.args[0] is S.NegativeInfinity
+        if self.args[0].is_real:
+            return self.args[0] is not S.NegativeInfinity
         elif self.args[0].is_imaginary:
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
