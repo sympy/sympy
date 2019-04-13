@@ -71,7 +71,7 @@ class ExpBase(Function):
         """
         Returns the 2-tuple (base, exponent).
         """
-        return self.func(1), Mul(*self.args)
+        return S.Exp1, Mul(*self.args)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -180,7 +180,7 @@ class exp_polar(ExpBase):
     def as_base_exp(self):
         # XXX exp_polar(0) is special!
         if self.args[0] == 0:
-            return self, S(1)
+            return S.Exp1, 0
         return ExpBase.as_base_exp(self)
 
 
