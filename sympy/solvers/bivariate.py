@@ -6,6 +6,7 @@ from sympy.core.function import expand_log
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
+from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polytools import Poly, factor
@@ -142,9 +143,15 @@ def _lambert(eq, x):
         return []  # violated assumptions
     logarg = mainlog.args[0]
     b, c, X1 = _linab(logarg, x)
+    check_abs = False
+    if X1 == abs(x):
+        X1 = x
+        check_abs = True
+    if X2 == abs(x) or X2 == re(x):
+        X2 = x
+        check_abs = True
     if X1 != X2:
-        return []  # violated assumptions
-
+        return [] # violated assumptions
     u = Dummy('rhs')
     sol = []
     # check only real solutions:
@@ -160,6 +167,13 @@ def _lambert(eq, x):
         for i, tmp in enumerate(solns):
             solns[i] = tmp.subs(u, rhs)
             sol.append(solns[i])
+
+        if check_abs:
+            l = LambertW(-d/(a*b)*exp(c*d/a/b)*exp(-f/a), k)
+            rhs = -c/b + (a/d)*l
+            solns2 = solve(X1 - u, x)
+            solns2[i] = tmp.subs(u, rhs)
+            sol.append(solns2[i])
     return sol
 
 

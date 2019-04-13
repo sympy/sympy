@@ -290,7 +290,8 @@ def test_solve_rational():
 
 def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y, dict=True) == [{x: -y}, {x: y}]
-    assert solve(x**2 - y**2/exp(x), x, y, dict=True) == [{x: 2*LambertW(y/2)}]
+    assert solve(x**2 - y**2/exp(x), x, y, dict=True) == \
+                    [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
     assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: -x*sqrt(exp(x))},
                                                           {y: x*sqrt(exp(x))}]
 
@@ -683,7 +684,8 @@ def test_issue_5197():
     y = Symbol('y', positive=True)
     # The solution following should not contain {y: -x*exp(x/2)}
     assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: x*exp(x/2)}]
-    assert solve(x**2 - y**2/exp(x), x, y, dict=True) == [{x: 2*LambertW(y/2)}]
+    assert solve(x**2 - y**2/exp(x), x, y, dict=True) == \
+                    [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
     x, y, z = symbols('x y z', positive=True)
     assert solve(z**2*x**2 - z**2*y**2/exp(x), y, x, z, dict=True) == [{y: x*exp(x/2)}]
 
@@ -1141,12 +1143,14 @@ def test__invert():
 
 def test_issue_4463():
     assert solve(-a*x + 2*x*log(x), x) == [exp(a/2)]
-    assert solve(a/x + exp(x/2), x) == [2*LambertW(-a/2)]
+    assert solve(a/x + exp(x/2), x) == [2*LambertW(-Abs(a)/2),\
+                                        2*LambertW(Abs(a)/2)]
     assert solve(x**x) == []
     assert solve(x**x - 2) == [exp(LambertW(log(2)))]
     assert solve(((x - 3)*(x - 2))**((x - 3)*(x - 4))) == [2]
     assert solve(
-        (a/x + exp(x/2)).diff(x), x) == [4*LambertW(sqrt(2)*sqrt(a)/4)]
+        (a/x + exp(x/2)).diff(x), x) == [4*LambertW(-sqrt(2)*sqrt(a)/4),\
+                                        4*LambertW(sqrt(2)*sqrt(a)/4)]
 
 @slow
 def test_issue_5114_solvers():
