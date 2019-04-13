@@ -2537,9 +2537,6 @@ def test_W22():
         (-sin(Min(1, u)) + sin(Min(2, u)), True))
 
 
-# The test below was XFAILED in:
-#    https://github.com/sympy/sympy/pull/16603
-@XFAIL
 @slow
 def test_W23():
     a, b = symbols('a b', real=True, positive=True)
