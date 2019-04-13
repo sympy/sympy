@@ -657,6 +657,7 @@ def convert_xor(tokens, local_dict, global_dict):
 
     return result
 
+
 def repeated_decimals(tokens, local_dict, global_dict):
     """
     Allows 0.2[1] notation to represent the repeated decimal 0.2111... (19/90)
@@ -747,6 +748,7 @@ def repeated_decimals(tokens, local_dict, global_dict):
 
     return result
 
+
 def auto_number(tokens, local_dict, global_dict):
     """
     Converts numeric literals to use SymPy equivalents.
@@ -779,6 +781,7 @@ def auto_number(tokens, local_dict, global_dict):
             result.append((toknum, tokval))
 
     return result
+
 
 def rationalize(tokens, local_dict, global_dict):
     """Converts floats into ``Rational``. Run AFTER ``auto_number``."""
