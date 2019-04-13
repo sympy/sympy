@@ -69,8 +69,8 @@ def test_issue_9849():
 
 def test_simplified_FiniteSet_in_CondSet():
     assert ConditionSet(x, And(x < 1, x > -3), FiniteSet(0, 1, 2)) == FiniteSet(0)
-    assert ConditionSet(x, x < 0, FiniteSet(0, 1, 2)) == EmptySet()
-    assert ConditionSet(x, And(x < -3), EmptySet()) == EmptySet()
+    assert ConditionSet(x, x < 0, FiniteSet(0, 1, 2)) == EmptySet.__class__()
+    assert ConditionSet(x, And(x < -3), EmptySet.__class__()) == EmptySet.__class__()
     y = Symbol('y')
     assert (ConditionSet(x, And(x > 0), FiniteSet(-1, 0, 1, y)) ==
         Union(FiniteSet(1), ConditionSet(x, And(x > 0), FiniteSet(y))))

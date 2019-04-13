@@ -238,10 +238,18 @@ def intersection_sets(self, other):
         if gm is not None:
             fn = self.lamda.expr
             n = self.lamda.variables[0]
-            solns = list(diophantine(fn - gm, syms=(n, m)))
-            if len(solns) == 0:
-                return EmptySet()
-            elif len(solns) != 1:
+            # Diophantine sorts the solutions according to the alphabetic
+            # order of the variable names, since the result should not depend
+            # on the variable name, they are replaced by the dummy variables
+            # below
+            a, b = Dummy('a'), Dummy('b')
+            f, g = f.subs(n, a), g.subs(m, b)
+            solns_set = diophantine(f - g)
+            if solns_set == set():
+                return EmptySet
+            solns = list(diophantine(f - g))
+
+            if len(solns) != 1:
                 return
             else:
                 soln, solm = solns[0]
@@ -395,7 +403,7 @@ def intersection_sets(a, b):
 
     return Interval(start, end, left_open, right_open)
 
-@dispatch(EmptySet, Set)
+@dispatch(EmptySet.__class__, Set)
 def intersection_sets(a, b):
     return S.EmptySet
 
