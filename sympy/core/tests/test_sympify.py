@@ -556,7 +556,7 @@ def test_Range():
 def test_sympify_set():
     n = Symbol('n')
     assert sympify({n}) == FiniteSet(n)
-    assert sympify(set()) == EmptySet()
+    assert sympify(set()) == EmptySet.__class__()
 
 
 def test_sympify_numpy():

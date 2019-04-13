@@ -833,7 +833,7 @@ def solve_decomposition(f, symbol, domain):
             elif isinstance(y_s, Union):
                 iter_iset = y_s.args
 
-            elif isinstance(y_s, EmptySet):
+            elif isinstance(y_s, EmptySet.__class__):
                 # y_s is not in the range of g in g_s, so no solution exists
                 #in the given domain
                 return y_s
@@ -883,12 +883,12 @@ def _solveset(f, symbol, domain, _check=False):
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
     inverter = lambda f, rhs, symbol: _invert(f, rhs, symbol, domain)
 
-    result = EmptySet()
+    result = EmptySet.__class__()
 
     if f.expand().is_zero:
         return domain
     elif not f.has(symbol):
-        return EmptySet()
+        return EmptySet.__class__()
     elif f.is_Mul and all(_is_finite_with_finite_vars(m, domain)
             for m in f.args):
         # if f(x) and g(x) are both finite we can say that the solution of
@@ -905,7 +905,7 @@ def _solveset(f, symbol, domain, _check=False):
         a = f.args[0]
         result = solveset_real(a > 0, symbol)
     elif f.is_Piecewise:
-        result = EmptySet()
+        result = EmptySet.__class__()
         expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
             if in_set.is_Relational:
@@ -3051,7 +3051,7 @@ def nonlinsolve(system, *symbols):
 
         # positive dimensional system
         res = _handle_positive_dimensional(polys, symbols, denominators)
-        if isinstance(res, EmptySet) and any(not p.domain.is_Exact for p in polys):
+        if isinstance(res, EmptySet.__class__) and any(not p.domain.is_Exact for p in polys):
             raise NotImplementedError("Equation not in exact domain. Try converting to rational")
         else:
             return res

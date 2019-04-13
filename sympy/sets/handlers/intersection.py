@@ -243,7 +243,7 @@ def intersection_sets(self, other):
             f, g = f.subs(n, a), g.subs(m, b)
             solns_set = diophantine(f - g)
             if solns_set == set():
-                return EmptySet()
+                return EmptySet.__class__()
             solns = list(diophantine(f - g))
 
             if len(solns) != 1:
@@ -389,7 +389,7 @@ def intersection_sets(a, b):
 
     return Interval(start, end, left_open, right_open)
 
-@dispatch(EmptySet, Set)
+@dispatch(EmptySet.__class__, Set)
 def intersection_sets(a, b):
     return S.EmptySet
 
