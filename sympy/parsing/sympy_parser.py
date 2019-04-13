@@ -10,9 +10,13 @@ from keyword import iskeyword
 import ast
 import unicodedata
 
-from sympy.core.compatibility import exec_, StringIO
+from sympy.core.compatibility import exec_, StringIO, iterable
 from sympy.core.basic import Basic
 from sympy.core import Symbol
+from sympy.core.function import arity
+from sympy.utilities.misc import filldedent, func_name
+
+
 
 def _token_splittable(token):
     """
@@ -971,11 +975,29 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     if local_dict is None:
         local_dict = {}
+    elif not isinstance(local_dict, dict):
+        raise TypeError('expecting local_dict to be a dict')
 
     if global_dict is None:
         global_dict = {}
         exec_('from sympy import *', global_dict)
+    elif not isinstance(global_dict, dict):
+        raise TypeError('expecting global_dict to be a dict')
 
+    transformations = transformations or ()
+    if transformations:
+        if not iterable(transformations):
+            raise TypeError(
+                '`transformations` should be a list of functions.')
+        for _ in transformations:
+            if not callable(_):
+                raise TypeError(filldedent('''
+                    expected a function in `transformations`,
+                    not %s''' % func_name(_)))
+            if arity(_) != 3:
+                raise TypeError(filldedent('''
+                    a transformation should be function that
+                    takes 3 arguments'''))
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
     if not evaluate:
