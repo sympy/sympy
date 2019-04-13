@@ -10,9 +10,13 @@ from keyword import iskeyword
 import ast
 import unicodedata
 
-from sympy.core.compatibility import exec_, StringIO
+from sympy.core.compatibility import exec_, StringIO, iterable
 from sympy.core.basic import Basic
 from sympy.core import Symbol
+from sympy.core.function import arity
+from sympy.utilities.misc import filldedent, func_name
+
+
 
 def _token_splittable(token):
     """
@@ -399,26 +403,27 @@ def split_symbols_custom(predicate):
                     tok_type = result[-2][1]  # Symbol or Function
                     del result[-2:]  # Get rid of the call to Symbol
 
-                    for char in symbol[:-1]:
+                    i = 0
+                    while i < len(symbol):
+                        char = symbol[i]
                         if char in local_dict or char in global_dict:
                             result.extend([(NAME, "%s" % char)])
-                        elif char in '0123456789':
+                        elif char.isdigit():
+                            char = [char]
+                            iwas = i
+                            for i in range(i + 1, len(symbol)):
+                                if not symbol[i].isdigit():
+                                  i -= 1
+                                  break
+                                char.append(symbol[i])
+                            char = ''.join(char)
                             result.extend([(NAME, 'Number'), (OP, '('),
-                                           (NAME, "'%s'" % char), (OP, ')')])
+                                            (NAME, "'%s'" % char), (OP, ')')])
                         else:
-                            result.extend([(NAME, 'Symbol'), (OP, '('),
-                                           (NAME, "'%s'" % char), (OP, ')')])
-
-                    char = symbol[-1]
-
-                    if char in local_dict or char in global_dict:
-                        result.extend([(NAME, "%s" % char)])
-                    elif char in '0123456789':
-                        result.extend([(NAME, 'Number'), (OP, '('),
-                                       (NAME, "'%s'" % char), (OP, ')')])
-                    else:
-                        result.extend([(NAME, tok_type), (OP, '('),
-                                       (NAME, "'%s'" % char), (OP, ')')])
+                            use = tok_type if i == len(symbol) else 'Symbol'
+                            result.extend([(NAME, use), (OP, '('),
+                                (NAME, "'%s'" % char), (OP, ')')])
+                        i += 1
 
                     # Set split_previous=True so will skip
                     # the closing parenthesis of the original Symbol
@@ -970,11 +975,29 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     if local_dict is None:
         local_dict = {}
+    elif not isinstance(local_dict, dict):
+        raise TypeError('expecting local_dict to be a dict')
 
     if global_dict is None:
         global_dict = {}
         exec_('from sympy import *', global_dict)
+    elif not isinstance(global_dict, dict):
+        raise TypeError('expecting global_dict to be a dict')
 
+    transformations = transformations or ()
+    if transformations:
+        if not iterable(transformations):
+            raise TypeError(
+                '`transformations` should be a list of functions.')
+        for _ in transformations:
+            if not callable(_):
+                raise TypeError(filldedent('''
+                    expected a function in `transformations`,
+                    not %s''' % func_name(_)))
+            if arity(_) != 3:
+                raise TypeError(filldedent('''
+                    a transformation should be function that
+                    takes 3 arguments'''))
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
     if not evaluate:
