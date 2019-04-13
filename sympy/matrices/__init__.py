@@ -15,6 +15,7 @@ from .matrices import DeferredVector, MatrixBase
 Matrix = MutableMatrix = MutableDenseMatrix
 
 from .sparse import MutableSparseMatrix
+from .sparsetools import banded
 from .immutable import ImmutableDenseMatrix, ImmutableSparseMatrix
 
 ImmutableMatrix = ImmutableDenseMatrix

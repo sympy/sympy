@@ -149,7 +149,7 @@ class Point(GeometryEntity):
                 raise ValueError(filldedent('''
                         on_morph value should be 'error',
                         'warn' or 'ignore'.'''))
-        if any(i for i in coords[dim:]):
+        if any(coords[dim:]):
             raise ValueError('Nonzero coordinates cannot be removed.')
         if any(a.is_number and im(a) for a in coords):
             raise ValueError('Imaginary coordinates are not permitted.')

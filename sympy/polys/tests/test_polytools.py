@@ -1732,6 +1732,12 @@ def test_div():
     assert q.get_domain().is_Frac and r.get_domain().is_Frac
 
 
+def test_issue_7864():
+    q, r = div(a, .408248290463863*a)
+    assert abs(q - 2.44948974278318) < 1e-14
+    assert r == 0
+
+
 def test_gcdex():
     f, g = 2*x, x**2 - 16
     s, t, h = x/32, -Rational(1, 16), 1

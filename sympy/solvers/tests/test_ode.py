@@ -3411,6 +3411,18 @@ def test_factoring_ode():
     assert soln == dsolve(eqn, f(x))
 
 
+def test_issue_11542():
+    m = 96
+    g = 9.8
+    k = .2
+    f1 = g * m
+    t = Symbol('t')
+    v = Function('v')
+    v_equation = dsolve(f1 - k * (v(t) ** 2) - m * Derivative(v(t)), 0)
+    assert str(v_equation) == \
+        'Eq(v(t), -68.585712797929/tanh(C1 - 0.142886901662352*t))'
+
+
 def test_issue_15913():
     eq = -C1/x - 2*x*f(x) - f(x) + Derivative(f(x), x)
     sol = C2*exp(x**2 + x) + exp(x**2 + x)*Integral(C1*exp(-x**2 - x)/x, x)

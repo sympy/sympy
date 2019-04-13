@@ -1,4 +1,4 @@
-from sympy import symbols, IndexedBase, HadamardProduct
+from sympy import symbols, IndexedBase, HadamardProduct, Identity, cos
 from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayTensorProduct, CodegenArrayDiagonal,
         CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
@@ -351,15 +351,47 @@ def test_recognize_diagonalized_vectors():
     b = MatrixSymbol("b", k, 1)
     A = MatrixSymbol("A", k, k)
     B = MatrixSymbol("B", k, k)
+    C = MatrixSymbol("C", k, k)
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a), (1, 2))
+    assert cg.split_multiple_contractions() == cg
     assert recognize_matrix_expression(cg) == A*a
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a, B), (1, 2, 4))
+    assert cg.split_multiple_contractions() == CodegenArrayContraction(CodegenArrayTensorProduct(A, DiagonalizeVector(a), B), (1, 2), (3, 4))
     assert recognize_matrix_expression(cg) == A*DiagonalizeVector(a)*B
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a, B), (0, 2, 4))
+    assert cg.split_multiple_contractions() == CodegenArrayContraction(CodegenArrayTensorProduct(A, DiagonalizeVector(a), B), (0, 2), (3, 4))
     assert recognize_matrix_expression(cg) == A.T*DiagonalizeVector(a)*B
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a, b, a.T, B), (0, 2, 4, 7, 9))
+    assert cg.split_multiple_contractions() == CodegenArrayContraction(CodegenArrayTensorProduct(A, DiagonalizeVector(a), DiagonalizeVector(b),
+                                                                                                 DiagonalizeVector(a), B),
+                                                                       (0, 2), (3, 4), (5, 7), (6, 9))
     assert recognize_matrix_expression(cg).doit() == A.T*DiagonalizeVector(a)*DiagonalizeVector(b)*DiagonalizeVector(a)*B.T
+
+    I1 = Identity(1)
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(I1, I1, I1), (1, 2, 4))
+    assert cg.split_multiple_contractions() == CodegenArrayContraction(CodegenArrayTensorProduct(I1, I1, I1), (1, 2), (3, 4))
+    assert recognize_matrix_expression(cg).doit() == Identity(1)
+
+    I = Identity(k)
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(I, I, I, I, A), (1, 2, 8), (5, 6, 9))
+    assert recognize_matrix_expression(cg.split_multiple_contractions()).doit() == A
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a, C, a, B), (1, 2, 4), (5, 6, 8))
+    assert cg.split_multiple_contractions() == CodegenArrayContraction(CodegenArrayTensorProduct(A, DiagonalizeVector(a), C, DiagonalizeVector(a), B), (1, 2), (3, 4), (5, 6), (7, 8))
+    assert recognize_matrix_expression(cg) == A*DiagonalizeVector(a)*C*DiagonalizeVector(a)*B
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
+    assert cg.split_multiple_contractions() == CodegenArrayContraction(CodegenArrayTensorProduct(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2), (3, 8), (5, 6), (7, 9))
+    assert recognize_matrix_expression(cg) == MatMul(a, I1, (a.T*b).applyfunc(cos), Transpose(I1), b.T)
+
+    # Check no overlap of lines:
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a, C, a, B), (1, 2, 4), (5, 6, 8), (3, 7))
+    raises(ValueError, lambda: cg.split_multiple_contractions())
+
+    cg = CodegenArrayContraction(CodegenArrayTensorProduct(a, b, A), (0, 2, 4), (1, 3))
+    raises(ValueError, lambda: cg.split_multiple_contractions())
