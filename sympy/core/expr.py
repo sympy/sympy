@@ -299,6 +299,10 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 >= 0)
         if self.is_extended_real or other.is_extended_real:
+            if other is S.NegativeInfinity:
+                return True
+            elif other is S.Infinity:
+                return self is S.Infinity
             dif = self - other
             if dif.is_nonnegative is not None and \
                     dif.is_nonnegative is not dif.is_negative:
@@ -320,6 +324,10 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 <= 0)
         if self.is_extended_real or other.is_extended_real:
+            if other is S.Infinity:
+                return True
+            elif other is S.NegativeInfinity:
+                return self is S.NegativeInfinity
             dif = self - other
             if dif.is_nonpositive is not None and \
                     dif.is_nonpositive is not dif.is_positive:
@@ -341,6 +349,10 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 > 0)
         if self.is_extended_real or other.is_extended_real:
+            if self is not S.NegativeInfinity and other is S.NegativeInfinity:
+                return True
+            elif self is not S.Infinity and other is S.Infinity:
+                return False
             dif = self - other
             if dif.is_positive is not None and \
                     dif.is_positive is not dif.is_nonpositive:
@@ -362,6 +374,10 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 < 0)
         if self.is_extended_real or other.is_extended_real:
+            if self is not S.NegativeInfinity and other is S.NegativeInfinity:
+                return False
+            elif self is not S.Infinity and other is S.Infinity:
+                return True
             dif = self - other
             if dif.is_negative is not None and \
                     dif.is_negative is not dif.is_nonnegative:
