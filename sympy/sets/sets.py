@@ -1482,7 +1482,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     @property
     def _boundary(self):
-        return EmptySet.__class__()
+        return EmptySet()
 
 
 class FiniteSet(Set, EvalfMixin):
