@@ -410,7 +410,6 @@ def split_symbols_custom(predicate):
                             result.extend([(NAME, "%s" % char)])
                         elif char.isdigit():
                             char = [char]
-                            iwas = i
                             for i in range(i + 1, len(symbol)):
                                 if not symbol[i].isdigit():
                                   i -= 1
@@ -418,11 +417,11 @@ def split_symbols_custom(predicate):
                                 char.append(symbol[i])
                             char = ''.join(char)
                             result.extend([(NAME, 'Number'), (OP, '('),
-                                            (NAME, "'%s'" % char), (OP, ')')])
+                                           (NAME, "'%s'" % char), (OP, ')')])
                         else:
                             use = tok_type if i == len(symbol) else 'Symbol'
                             result.extend([(NAME, use), (OP, '('),
-                                (NAME, "'%s'" % char), (OP, ')')])
+                                           (NAME, "'%s'" % char), (OP, ')')])
                         i += 1
 
                     # Set split_previous=True so will skip
