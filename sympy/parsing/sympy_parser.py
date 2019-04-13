@@ -399,26 +399,27 @@ def split_symbols_custom(predicate):
                     tok_type = result[-2][1]  # Symbol or Function
                     del result[-2:]  # Get rid of the call to Symbol
 
-                    for char in symbol[:-1]:
+                    i = 0
+                    while i < len(symbol):
+                        char = symbol[i]
                         if char in local_dict or char in global_dict:
                             result.extend([(NAME, "%s" % char)])
-                        elif char in '0123456789':
+                        elif char.isdigit():
+                            char = [char]
+                            iwas = i
+                            for i in range(i + 1, len(symbol)):
+                                if not symbol[i].isdigit():
+                                  i -= 1
+                                  break
+                                char.append(symbol[i])
+                            char = ''.join(char)
                             result.extend([(NAME, 'Number'), (OP, '('),
-                                           (NAME, "'%s'" % char), (OP, ')')])
+                                            (NAME, "'%s'" % char), (OP, ')')])
                         else:
-                            result.extend([(NAME, 'Symbol'), (OP, '('),
-                                           (NAME, "'%s'" % char), (OP, ')')])
-
-                    char = symbol[-1]
-
-                    if char in local_dict or char in global_dict:
-                        result.extend([(NAME, "%s" % char)])
-                    elif char in '0123456789':
-                        result.extend([(NAME, 'Number'), (OP, '('),
-                                       (NAME, "'%s'" % char), (OP, ')')])
-                    else:
-                        result.extend([(NAME, tok_type), (OP, '('),
-                                       (NAME, "'%s'" % char), (OP, ')')])
+                            use = tok_type if i == len(symbol) else 'Symbol'
+                            result.extend([(NAME, use), (OP, '('),
+                                (NAME, "'%s'" % char), (OP, ')')])
+                        i += 1
 
                     # Set split_previous=True so will skip
                     # the closing parenthesis of the original Symbol

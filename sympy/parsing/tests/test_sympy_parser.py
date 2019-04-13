@@ -219,14 +219,13 @@ def test_split_symbols_numeric():
         standard_transformations +
         (implicit_multiplication_application,))
 
+    n = Symbol('n')
     expr1 = parse_expr('2**n * 3**n')
     expr2 = parse_expr('2**n3**n', transformations=transformations)
+    assert expr1 == expr2 == 2**n*3**n
 
-    assert expr1 == expr2
-
-    n = Symbol('n')
     expr1 = parse_expr('n12n34', transformations=transformations)
-    assert expr1 == 24*n**2
+    assert expr1 == n*12*n*34
 
 
 def test_unicode_names():
