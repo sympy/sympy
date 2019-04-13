@@ -210,7 +210,7 @@ class Set(Basic):
         Union(Interval.open(-oo, 1), Interval.open(10, oo))
 
         >>> from sympy import S, EmptySet
-        >>> S.Reals.symmetric_difference(EmptySet())
+        >>> S.Reals.symmetric_difference(EmptySet.__class__())
         Reals
 
         References
@@ -389,12 +389,12 @@ class Set(Basic):
         ========
 
         >>> from sympy import FiniteSet, EmptySet
-        >>> A = EmptySet()
+        >>> A = EmptySet.__class__()
         >>> A.powerset()
         {EmptySet()}
         >>> A = FiniteSet(1, 2)
         >>> a, b, c = FiniteSet(1), FiniteSet(2), FiniteSet(1, 2)
-        >>> A.powerset() == FiniteSet(a, b, c, EmptySet())
+        >>> A.powerset() == FiniteSet(a, b, c, EmptySet.__class__())
         True
 
         References
@@ -1482,7 +1482,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     @property
     def _boundary(self):
-        return EmptySet()
+        return EmptySet.__class__()
 
 
 class FiniteSet(Set, EvalfMixin):
