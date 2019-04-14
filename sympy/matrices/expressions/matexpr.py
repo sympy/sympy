@@ -611,6 +611,7 @@ def get_postprocessor(cls):
         return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
     return _postprocessor
 
+
 Basic._constructor_postprocessor_mapping[MatrixExpr] = {
     "Mul": [get_postprocessor(Mul)],
     "Add": [get_postprocessor(Add)],
@@ -622,6 +623,10 @@ def _matrix_derivative(expr, x):
     lines = expr._eval_derivative_matrix_lines(x)
 
     parts = [i.build() for i in lines]
+
+    from sympy.codegen.array_utils import recognize_matrix_expression
+
+    parts = [[recognize_matrix_expression(j).doit() for j in i] for i in parts]
 
     def _get_shape(elem):
         if isinstance(elem, MatrixExpr):
@@ -1087,6 +1092,27 @@ class _LeftRightArgs(object):
         if self.higher != 1:
             rank += 2
         return rank
+
+    def _multiply_pointer(self, pointer, other):
+        from sympy.core.expr import ExprBuilder
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+
+        subexpr = ExprBuilder(
+            CodegenArrayContraction,
+            [
+                ExprBuilder(
+                    CodegenArrayTensorProduct,
+                    [
+                        pointer,
+                        other
+                    ]
+                ),
+                (1, 2)
+            ],
+            validator=CodegenArrayContraction._validate
+        )
+
+        return subexpr
 
     def append_first(self, other):
         self.first_pointer *= other
