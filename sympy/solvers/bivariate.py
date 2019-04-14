@@ -6,7 +6,6 @@ from sympy.core.function import expand_log
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
-from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polytools import Poly, factor
@@ -143,7 +142,6 @@ def _lambert(eq, x):
         return []  # violated assumptions
     logarg = mainlog.args[0]
     b, c, X1 = _linab(logarg, x)
-
     if X1 != X2:
         return [] # violated assumptions
     u = Dummy('rhs')
