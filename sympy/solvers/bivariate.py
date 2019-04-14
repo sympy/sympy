@@ -149,23 +149,21 @@ def _lambert(eq, x):
     # check only real solutions:
     from sympy.solvers.solveset import solvify
     for k in [-1, 0]:
-        l = LambertW(d/(a*b)*exp(c*d/a/b)*exp(-f/a), k)
+        l = d/(a*b)*exp(c*d/a/b)*exp(-f/a)
         # if W's arg is between -1/e and 0 there is
         # a -1 branch real solution, too.
 
-        rhs = -c/b + (a/d)*l
-
+        rhs_1 = -c/b + (a/d)*LambertW(l, k)
+        rhs_2 = -c/b + (a/d)*LambertW(-l, k)
         solns = solvify(X1 - u, x, S.Complexes)
+        solns2 = list(solns)
         for i, tmp in enumerate(solns):
-            solns[i] = tmp.subs(u, rhs)
+            solns[i] = tmp.subs(u, rhs_1)
             if solns[i].is_real is not False:
                 sol.append(solns[i])
 
-        l = LambertW(-d/(a*b)*exp(c*d/a/b)*exp(-f/a), k)
-        rhs = -c/b + (a/d)*l
-        solns2 = solvify(X1 - u, x, S.Complexes)
         for i, tmp in enumerate(solns2):
-            solns2[i] = tmp.subs(u, rhs)
+            solns2[i] = tmp.subs(u, rhs_2)
             if solns2[i].is_real is not False:
                 sol.append(solns2[i])
     return sol
