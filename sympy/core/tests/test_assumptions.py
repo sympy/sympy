@@ -718,31 +718,8 @@ def test_hash_vs_eq():
 
 
 def test_Add_is_pos_neg():
-    # these cover lines not covered by the rest of tests in core
-    n = Symbol('n', negative=True, infinite=True)
-    nn = Symbol('n', nonnegative=True, infinite=True)
-    np = Symbol('n', nonpositive=True, infinite=True)
-    p = Symbol('p', positive=True, infinite=True)
-    r = Dummy(extended_real=True, finite=False)
     x = Symbol('x')
-    xf = Symbol('xb', finite=True)
-    assert (n + p).is_positive is None
-    assert (n + x).is_positive is None
-    assert (p + x).is_positive is None
-    assert (n + p).is_negative is None
-    assert (n + x).is_negative is None
-    assert (p + x).is_negative is None
-
-    assert (n + xf).is_positive is False
-    assert (p + xf).is_positive is True
-    assert (n + xf).is_negative is True
-    assert (p + xf).is_negative is False
-
     assert (x - S.Infinity).is_negative is None  # issue 7798
-    # issue 8046, 16.2
-    assert (p + nn).is_positive
-    assert (n + np).is_negative
-    assert (p + r).is_positive is None
 
 
 def test_Add_is_imaginary():
@@ -875,13 +852,13 @@ def test_Mul_is_infinite():
     from sympy import Mul
     assert (x*f).is_finite is None
     assert (x*i).is_finite is None
-    assert (f*i).is_finite is False
+    assert (f*i).is_finite is None
     assert (x*f*i).is_finite is None
-    assert (z*i).is_finite is False
+    assert (z*i).is_finite is None
     assert (nzf*i).is_finite is False
     assert (z*f).is_finite is True
     assert Mul(0, f, evaluate=False).is_finite is True
-    assert Mul(0, i, evaluate=False).is_finite is False
+    assert Mul(0, i, evaluate=False).is_finite is None
 
     assert (x*f).is_infinite is None
     assert (x*i).is_infinite is None
