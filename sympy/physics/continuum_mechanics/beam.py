@@ -13,16 +13,6 @@ from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
-from sympy.external import import_module
-from sympy.utilities.decorator import doctest_depends_on
-from sympy import lambdify
-
-matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
-numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
-
-
-__doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
-
 
 class Beam(object):
     """
@@ -1473,15 +1463,18 @@ class Beam(object):
         else:
             length = self.length
 
-        shear = self.shear_force().subs(subs).rewrite(Piecewise)
-        moment = self.bending_moment().subs(subs).rewrite(Piecewise)
-        slope = self.slope().subs(subs).rewrite(Piecewise)
-        deflection = self.deflection().subs(subs).rewrite(Piecewise)
-
-        ax1 = plot(shear, (variable, 0, length), title="Shear Force", xlabel='position', ylabel='Value', line_color='g', show=False)
-        ax2 = plot(moment, (variable, 0, length), title="Bending Moment", xlabel='position', ylabel='Value', line_color='b', show=False)
-        ax3 = plot(slope, (variable, 0, length), title="Slope", xlabel='position', ylabel='Value', line_color='m', show=False)
-        ax4 = plot(deflection, (variable, 0, length), title="Deflection", xlabel='position', ylabel='Value', line_color='r', show=False)
+        ax1 = plot(self.shear_force().subs(subs), (variable, 0, length),
+                   title="Shear Force", xlabel='position', ylabel='Value',
+                   line_color='g', show=False)
+        ax2 = plot(self.bending_moment().subs(subs), (variable, 0, length),
+                   title="Bending Moment", xlabel='positionqw', ylabel='Value',
+                   line_color='b', show=False)
+        ax3 = plot(self.slope().subs(subs), (variable, 0, length),
+                   title="Slope", xlabel='position', ylabel='Value',
+                   line_color='m', show=False)
+        ax4 = plot(self.deflection().subs(subs), (variable, 0, length),
+                   title="Deflection", xlabel='position', ylabel='Value',
+                   line_color='r', show=False)
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
