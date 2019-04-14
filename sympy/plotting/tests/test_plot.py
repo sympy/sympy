@@ -2,7 +2,7 @@ from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log,
                    oo, LambertW, I, meijerg, exp_polar, Max, Piecewise, And)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
-from sympy.plotting.plot import unset_show, plot_contour
+from sympy.plotting.plot import unset_show, plot_contour, PlotGrid
 from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.pytest import skip, raises, warns
 from sympy.plotting.experimental_lambdify import lambdify
@@ -323,6 +323,37 @@ def plot_and_save_6(name):
             + meijerg(((1/2,), ()), ((5, 0, 1/2), ()),
                 5*x**2 * exp_polar(I*pi)/2)) / (48 * pi), (x, 1e-6, 1e-2)).save(tmp_file())
 
+
+def plotgrid_and_save(name):
+    tmp_file = TmpFileManager.tmp_file
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    p1 = plot(x)
+    p2 = plot_parametric((sin(x), cos(x)), (x, sin(x)), show=False)
+    p3 = plot_parametric(cos(x), sin(x), adaptive=False, nb_of_points=500, show=False)
+    p4 = plot3d_parametric_line(sin(x), cos(x), x, show=False)
+    # symmetric grid
+    p = PlotGrid(2, 2, p1, p2, p3, p4)
+    p.save(tmp_file('%s_grid1' % name))
+    p._backend.close()
+
+    # grid size greater than the number of subplots
+    p = PlotGrid(3, 4, p1, p2, p3, p4)
+    p.save(tmp_file('%s_grid2' % name))
+    p._backend.close()
+
+    p5 = plot(cos(x),(x, -pi, pi), show=False)
+    p5[0].line_color = lambda a: a
+    p6 = plot(Piecewise((1, x > 0), (0, True)), (x, -1, 1), show=False)
+    p7 = plot_contour((x**2 + y**2, (x, -5, 5), (y, -5, 5)), (x**3 + y**3, (x, -3, 3), (y, -3, 3)), show=False)
+    # unsymmetric grid (subplots in one line)
+    p = PlotGrid(1, 3, p5, p6, p7)
+    p.save(tmp_file('%s_grid3' % name))
+    p._backend.close()
+
+
 def test_matplotlib_1():
 
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
@@ -394,6 +425,20 @@ def test_matplotlib_6():
             TmpFileManager.cleanup()
     else:
         skip("Matplotlib not the default backend")
+
+
+def test_matplotlib_7():
+
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if matplotlib:
+        try:
+            plotgrid_and_save('test')
+        finally:
+            # clean up
+            TmpFileManager.cleanup()
+    else:
+        skip("Matplotlib not the default backend")
+
 
 # Tests for exception handling in experimental_lambdify
 def test_experimental_lambify():

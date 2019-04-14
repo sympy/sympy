@@ -1,5 +1,6 @@
-from sympy import Abs, S, Symbol, I, Rational, PurePoly
-from sympy.matrices import Matrix, SparseMatrix, eye, zeros, ShapeError
+from sympy import Abs, S, Symbol, I, Rational, PurePoly, Float
+from sympy.matrices import (Matrix, SparseMatrix, eye, ones, zeros,
+    ShapeError)
 from sympy.utilities.pytest import raises
 
 def test_sparse_matrix():
@@ -154,6 +155,29 @@ def test_sparse_matrix():
     assert a == SparseMatrix(0, 2, [])
     b.col_del(1)
     assert b == SparseMatrix(1, 1, [1])
+
+    assert SparseMatrix([[1, 2, 3], [1, 2], [1]]) == Matrix([
+        [1, 2, 3],
+        [1, 2, 0],
+        [1, 0, 0]])
+    assert SparseMatrix(4, 4, {(1, 1): sparse_eye(2)}) == Matrix([
+        [0, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 0]])
+    raises(ValueError, lambda: SparseMatrix(1, 1, {(1, 1): 1}))
+    assert SparseMatrix(1, 2, [1, 2]).tolist() == [[1, 2]]
+    assert SparseMatrix(2, 2, [1, [2, 3]]).tolist() == [[1, 0], [2, 3]]
+    raises(ValueError, lambda: SparseMatrix(2, 2, [1]))
+    raises(ValueError, lambda: SparseMatrix(1, 1, [[1, 2]]))
+    assert SparseMatrix([.1]).has(Float)
+    # autosizing
+    assert SparseMatrix(None, {(0, 1): 0}).shape == (0, 0)
+    assert SparseMatrix(None, {(0, 1): 1}).shape == (1, 2)
+    assert SparseMatrix(None, None, {(0, 1): 1}).shape == (1, 2)
+    raises(ValueError, lambda: SparseMatrix(None, 1, [[1, 2]]))
+    raises(ValueError, lambda: SparseMatrix(1, None, [[1, 2]]))
+    raises(ValueError, lambda: SparseMatrix(3, 3, {(0, 0): ones(2), (1, 1): 2}))
 
     # test_determinant
     x, y = Symbol('x'), Symbol('y')

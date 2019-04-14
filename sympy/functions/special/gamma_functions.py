@@ -182,6 +182,10 @@ class gamma(Function):
         t = self.args[0] - x0
         return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.gamma(self.args[0]._sage_())
+
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
@@ -463,6 +467,10 @@ class uppergamma(Function):
     def _eval_rewrite_as_expint(self, s, x, **kwargs):
         from sympy import expint
         return expint(1 - s, x)*x**s
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.gamma(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 ###############################################################################

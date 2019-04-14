@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Classes and functions useful for rewriting expressions for optimized code
 generation. Some languages (or standards thereof), e.g. C99, offer specialized

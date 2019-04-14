@@ -251,8 +251,8 @@ def posify(eq):
             eq[i] = e.subs(reps)
         return f(eq), {r: s for s, r in reps.items()}
 
-    reps = dict([(s, Dummy(s.name, positive=True))
-                 for s in eq.free_symbols if s.is_positive is None])
+    reps = {s: Dummy(s.name, positive=True, **s.assumptions0)
+                 for s in eq.free_symbols if s.is_positive is None}
     eq = eq.subs(reps)
     return eq, {r: s for s, r in reps.items()}
 
@@ -966,6 +966,10 @@ def logcombine(expr, force=False):
                 else:
                     other.append(a)
 
+        # if there is only one log in other, put it with the
+        # good logs
+        if len(other) == 1 and isinstance(other[0], log):
+            log1[()].append(([], other.pop()))
         # if there is only one log at each coefficient and none have
         # an exponent to place inside the log then there is nothing to do
         if not logs and all(len(log1[k]) == 1 and log1[k][0] == [] for k in log1):

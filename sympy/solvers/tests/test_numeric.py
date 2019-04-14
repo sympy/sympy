@@ -58,7 +58,7 @@ def test_nsolve():
         return root
     assert list(map(round, getroot((1, 1, 1)))) == [2.0, 1.0, 0.0]
     assert nsolve([Eq(
-        f1), Eq(f2), Eq(f3)], [x, y, z], (1, 1, 1))  # just see that it works
+        f1, 0), Eq(f2, 0), Eq(f3, 0)], [x, y, z], (1, 1, 1))  # just see that it works
     a = Symbol('a')
     assert abs(nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3) -
         mpf('0.31883011387318591')) < 1e-15

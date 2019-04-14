@@ -5,7 +5,7 @@ from sympy.polys.monomials import (
     monomial_mul, monomial_div,
     monomial_gcd, monomial_lcm,
     monomial_max, monomial_min,
-    monomial_divides,
+    monomial_divides, monomial_pow,
     Monomial,
 )
 
@@ -83,6 +83,9 @@ def test_monomial_lcm():
 def test_monomial_max():
     assert monomial_max((3, 4, 5), (0, 5, 1), (6, 3, 9)) == (6, 5, 9)
 
+def test_monomial_pow():
+    assert monomial_pow((1, 2, 3), 3) == (3, 6, 9)
+
 def test_monomial_min():
     assert monomial_min((3, 4, 5), (0, 5, 1), (6, 3, 9)) == (0, 3, 1)
 
@@ -110,6 +113,7 @@ def test_Monomial():
     assert n != (3, 4, 1)
     assert m != (1, 2, 0)
     assert n == (1, 2, 0)
+    assert (m == 1) is False
 
     assert m[0] == m[-3] == 3
     assert m[1] == m[-2] == 4
@@ -140,3 +144,13 @@ def test_Monomial():
     assert m**3 == Monomial((9, 12, 3))
 
     raises(ExactQuotientFailed, lambda: m/Monomial((5, 2, 0)))
+
+    mm = Monomial((1, 2, 3))
+    raises(ValueError, lambda: mm.as_expr())
+    assert str(mm) == 'Monomial((1, 2, 3))'
+    assert str(m) == 'x**3*y**4*z**1'
+    raises(NotImplementedError, lambda: m*1)
+    raises(NotImplementedError, lambda: m/1)
+    raises(ValueError, lambda: m**-1)
+    raises(TypeError, lambda: m.gcd(3))
+    raises(TypeError, lambda: m.lcm(3))

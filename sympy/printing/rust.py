@@ -33,10 +33,9 @@ complete source code files.
 
 from __future__ import print_function, division
 
-from sympy.core import S, numbers, Rational, Float, Lambda
+from sympy.core import S, Rational, Float, Lambda
 from sympy.core.compatibility import string_types, range
-from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.printing.precedence import precedence
+from sympy.printing.codeprinter import CodePrinter
 
 # Rust's methods for integer and float can be found at here :
 #

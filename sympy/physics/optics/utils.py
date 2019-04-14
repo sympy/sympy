@@ -366,7 +366,6 @@ def brewster_angle(medium1, medium2):
     0.926093295503462
 
     """
-    n1, n2 = None, None
 
     if isinstance(medium1, Medium):
         n1 = medium1.refractive_index
@@ -401,7 +400,6 @@ def critical_angle(medium1, medium2):
     0.850908514477849
 
     """
-    n1, n2 = None, None
 
     if isinstance(medium1, Medium):
         n1 = medium1.refractive_index

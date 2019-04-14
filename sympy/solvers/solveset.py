@@ -129,7 +129,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     >>> invert_complex(exp(x), y, x)
     (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers))
     >>> invert_real(exp(x), y, x)
-    (x, Intersection(Reals, {log(y)}))
+    (x, Intersection({log(y)}, Reals))
 
     When does exp(x) == 1?
 
@@ -1096,7 +1096,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     This form can be easily handed by ``solveset``.
     """
-    unsolved_result = ConditionSet(symbol, Eq(lhs - rhs), domain)
+    unsolved_result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
     newlhs = powdenest(lhs)
     if lhs != newlhs:
         # it may also be advantageous to factor the new expr
@@ -1858,8 +1858,8 @@ def linear_coeffs(eq, *syms, **_kw):
         elif f.is_Add:
             d1 = linear_coeffs(f, *syms, **{'dict': True})
             d[0].append(m*d1.pop(0))
-            xf, vf = list(d1.items())[0]
-            d[xf].append(m*vf)
+            for xf, vf in d1.items():
+                d[xf].append(m*vf)
         else:
             break
     else:

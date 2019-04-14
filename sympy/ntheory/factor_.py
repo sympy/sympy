@@ -382,8 +382,8 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 if m is not False:
                     r, e = m[0], e*m[1]
             return int(r), e
-    else:
-        return False
+
+    return False
 
 
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
@@ -987,17 +987,17 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                use_rho=use_rho, use_pm1=use_pm1,
                                verbose=verbose, visual=False)
     elif isinstance(n, Mul):
-        factordict = dict([(int(k), int(v)) for k, v in
-                           list(n.as_powers_dict().items())])
+        factordict = {int(k): int(v) for k, v in
+            n.as_powers_dict().items()}
     elif isinstance(n, dict):
         factordict = n
     if factordict and (isinstance(n, Mul) or isinstance(n, dict)):
         # check it
-        for k in list(factordict.keys()):
-            if isprime(k):
+        for key in list(factordict.keys()):
+            if isprime(key):
                 continue
-            e = factordict.pop(k)
-            d = factorint(k, limit=limit, use_trial=use_trial, use_rho=use_rho,
+            e = factordict.pop(key)
+            d = factorint(key, limit=limit, use_trial=use_trial, use_rho=use_rho,
                           use_pm1=use_pm1, verbose=verbose, visual=False)
             for k, v in d.items():
                 if k in factordict:
