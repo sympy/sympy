@@ -2271,8 +2271,14 @@ class atan(InverseTrigonometricFunction):
     def _eval_is_positive(self):
         return self.args[0].is_positive
 
+    def _eval_is_negative(self):
+        return self.args[0].is_negative
+
     def _eval_is_nonnegative(self):
         return self.args[0].is_nonnegative
+
+    def _eval_is_nonpositive(self):
+        return self.args[0].is_nonpositive
 
     @classmethod
     def eval(cls, arg):
