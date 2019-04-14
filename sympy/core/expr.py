@@ -286,6 +286,8 @@ class Expr(Basic, EvalfMixin):
 
     def __ge__(self, other):
         from sympy import GreaterThan
+        from sympy.functions.elementary.complexes import arg
+        from sympy.core.numbers import pi
         try:
             other = _sympify(other)
         except SympifyError:
@@ -299,18 +301,17 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 >= 0)
         if self.is_extended_real or other.is_extended_real:
-            if other is S.NegativeInfinity:
-                return True
-            elif other is S.Infinity:
-                return self is S.Infinity
             dif = self - other
-            if dif.is_nonnegative is not None and \
-                    dif.is_nonnegative is not dif.is_negative:
-                return sympify(dif.is_nonnegative)
+            if dif.is_nonnegative or arg(dif).is_zero:
+                return S.true
+            elif dif.is_negative or (arg(dif)-pi).is_zero:
+                return S.false
         return GreaterThan(self, other, evaluate=False)
 
     def __le__(self, other):
         from sympy import LessThan
+        from sympy.functions.elementary.complexes import arg
+        from sympy.core.numbers import pi
         try:
             other = _sympify(other)
         except SympifyError:
@@ -324,18 +325,17 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 <= 0)
         if self.is_extended_real or other.is_extended_real:
-            if other is S.Infinity:
-                return True
-            elif other is S.NegativeInfinity:
-                return self is S.NegativeInfinity
             dif = self - other
-            if dif.is_nonpositive is not None and \
-                    dif.is_nonpositive is not dif.is_positive:
-                return sympify(dif.is_nonpositive)
+            if dif.is_nonpositive or (arg(dif)-pi).is_zero:
+                return S.true
+            elif dif.is_positive or arg(dif).is_zero:
+                return S.false
         return LessThan(self, other, evaluate=False)
 
     def __gt__(self, other):
         from sympy import StrictGreaterThan
+        from sympy.functions.elementary.complexes import arg
+        from sympy.core.numbers import pi
         try:
             other = _sympify(other)
         except SympifyError:
@@ -349,18 +349,17 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 > 0)
         if self.is_extended_real or other.is_extended_real:
-            if self is not S.NegativeInfinity and other is S.NegativeInfinity:
-                return True
-            elif self is not S.Infinity and other is S.Infinity:
-                return False
             dif = self - other
-            if dif.is_positive is not None and \
-                    dif.is_positive is not dif.is_nonpositive:
-                return sympify(dif.is_positive)
+            if dif.is_positive or arg(dif).is_zero:
+                return S.true
+            elif dif.is_nonpositive or (arg(dif)-pi).is_zero:
+                return S.false
         return StrictGreaterThan(self, other, evaluate=False)
 
     def __lt__(self, other):
         from sympy import StrictLessThan
+        from sympy.functions.elementary.complexes import arg
+        from sympy.core.numbers import pi
         try:
             other = _sympify(other)
         except SympifyError:
@@ -374,14 +373,11 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 < 0)
         if self.is_extended_real or other.is_extended_real:
-            if self is not S.NegativeInfinity and other is S.NegativeInfinity:
-                return False
-            elif self is not S.Infinity and other is S.Infinity:
-                return True
             dif = self - other
-            if dif.is_negative is not None and \
-                    dif.is_negative is not dif.is_nonnegative:
-                return sympify(dif.is_negative)
+            if dif.is_negative or (arg(dif)-pi).is_zero:
+                return S.true
+            elif dif.is_nonnegative or arg(dif).is_zero:
+                return S.false
         return StrictLessThan(self, other, evaluate=False)
 
     def __trunc__(self):

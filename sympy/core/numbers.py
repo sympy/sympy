@@ -2942,7 +2942,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 else:
                     return Float('inf')
             else:
-                if other.is_positive:
+                if other > 0:
                     return S.NegativeInfinity
                 else:
                     return S.Infinity
