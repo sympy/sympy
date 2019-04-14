@@ -70,7 +70,7 @@ class DiagonalMatrix(MatrixExpr):
                 m = None
         return m
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         if self.diagonal_length is not None:
             if Ge(i, self.diagonal_length) is S.true:
                 return S.Zero
@@ -151,8 +151,8 @@ class DiagonalOf(MatrixExpr):
     def diagonal_length(self):
         return self.shape[0]
 
-    def _entry(self, i, j):
-        return self.arg[i, i]
+    def _entry(self, i, j, **kwargs):
+        return self.arg._entry(i, i, **kwargs)
 
 
 class DiagonalizeVector(MatrixExpr):
@@ -177,9 +177,9 @@ class DiagonalizeVector(MatrixExpr):
 
     def _entry(self, i, j, **kwargs):
         if self._iscolumn:
-            result = self._vector._entry(i, 0)
+            result = self._vector._entry(i, 0, **kwargs)
         else:
-            result = self._vector._entry(0, j)
+            result = self._vector._entry(0, j, **kwargs)
         if i != j:
             result *= KroneckerDelta(i, j)
         return result

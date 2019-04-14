@@ -59,8 +59,8 @@ class HadamardProduct(MatrixExpr):
     def shape(self):
         return self.args[0].shape
 
-    def _entry(self, i, j):
-        return Mul(*[arg._entry(i, j) for arg in self.args])
+    def _entry(self, i, j, **kwargs):
+        return Mul(*[arg._entry(i, j, **kwargs) for arg in self.args])
 
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose
@@ -120,7 +120,7 @@ class HadamardPower(MatrixExpr):
         return self.base.shape
 
     def _entry(self, i, j, **kwargs):
-        return self.base[i, j]**self.exp
+        return self.base._entry(i, j, **kwargs)**self.exp
 
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose

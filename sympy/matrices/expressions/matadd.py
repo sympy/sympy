@@ -52,8 +52,8 @@ class MatAdd(MatrixExpr, Add):
     def shape(self):
         return self.args[0].shape
 
-    def _entry(self, i, j, expand=None):
-        return Add(*[arg._entry(i, j) for arg in self.args])
+    def _entry(self, i, j, **kwargs):
+        return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])
 
     def _eval_transpose(self):
         return MatAdd(*[transpose(arg) for arg in self.args]).doit()
