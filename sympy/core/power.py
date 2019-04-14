@@ -429,8 +429,8 @@ class Pow(Expr):
         if self.base == self.exp:
             if self.base.is_nonnegative:
                 return True
-        elif self.base.is_positive and self.base.is_finite:
-            if self.exp.is_extended_real:
+        elif self.base.is_positive:
+            if self.exp.is_real:
                 return True
         elif self.base.is_negative:
             if self.exp.is_even:
@@ -493,7 +493,7 @@ class Pow(Expr):
                 if (1 - abs(self.base)).is_positive:
                     return arg(self.exp).is_zero
                 elif (1 - abs(self.base)).is_negative:
-                    return arg(self.exp - pi).is_zero
+                    return (arg(self.exp) - pi).is_zero
         else:
             # when self.base.is_zero is None
             return None
