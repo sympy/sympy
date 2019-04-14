@@ -755,7 +755,7 @@ class Mul(Expr, AssocOp):
         if args[0].is_Number:
             if not rational or args[0].is_Rational:
                 return args[0], args[1:]
-            elif args[0].is_negative:
+            elif args[0].is_negative or args[0] is S.NegativeInfinity:
                 return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
@@ -769,7 +769,7 @@ class Mul(Expr, AssocOp):
                     return coeff, args[0]
                 else:
                     return coeff, self._new_rawargs(*args)
-            elif coeff.is_negative:
+            elif coeff.is_negative or coeff is S.NegativeInfinity:
                 return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
         return S.One, self
 

@@ -2452,7 +2452,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     def _eval_power(self, expt):
         if expt.is_positive:
             return self
-        if expt.is_negative:
+        if expt.is_negative or expt is S.NegativeInfinity:
             return S.ComplexInfinity
         if expt.is_extended_real is False:
             return S.NaN

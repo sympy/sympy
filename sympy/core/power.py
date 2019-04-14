@@ -476,6 +476,8 @@ class Pow(Expr):
                 return False
 
     def _eval_is_zero(self):
+        from sympy.functions.elementary.complexes import arg
+        from sympy.core.numbers import pi
         if self.base.is_zero:
             if self.exp.is_positive:
                 return True
@@ -489,9 +491,9 @@ class Pow(Expr):
                     return False
             elif self.exp.is_infinite:
                 if (1 - abs(self.base)).is_positive:
-                    return self.exp.is_positive
+                    return arg(self.exp).is_zero
                 elif (1 - abs(self.base)).is_negative:
-                    return self.exp.is_negative
+                    return arg(self.exp - pi).is_zero
         else:
             # when self.base.is_zero is None
             return None
@@ -620,7 +622,7 @@ class Pow(Expr):
                 return True
 
     def _eval_is_finite(self):
-        if self.exp.is_negative:
+        if self.exp.is_negative or self.exp is S.NegativeInfinity:
             if self.base.is_zero:
                 return False
             if self.base.is_infinite or self.base.is_nonzero:
@@ -1214,7 +1216,7 @@ class Pow(Expr):
                 # when the operation is not allowed
                 return False
 
-        if self.base.is_zero or _is_one(self.base):
+        if self.base.is_zero or _is_one(self.base) and self.exp.is_finite:
             return True
         elif self.exp.is_rational:
             if self.base.is_algebraic is False:
