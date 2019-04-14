@@ -148,9 +148,9 @@ infinitely many solutions is said to be positive-dimensional):
    ``solve`` can be used for such cases:
 
    >>> solve([x**2 - y**2/exp(x)], [x, y], dict=True)
-   ⎡⎧             ⎛y⎞⎫⎤
-   ⎢⎨x: 2⋅LambertW⎜─⎟⎬⎥
-   ⎣⎩             ⎝2⎠⎭⎦
+   ⎡⎧             ⎛-y ⎞⎫  ⎧             ⎛y⎞⎫⎤
+   ⎢⎨x: 2⋅LambertW⎜───⎟⎬, ⎨x: 2⋅LambertW⎜─⎟⎬⎥
+   ⎣⎩             ⎝ 2 ⎠⎭  ⎩             ⎝2⎠⎭⎦
 
    3. Currently ``nonlinsolve`` is not properly capable of solving the system of equations
    having trigonometric functions.
