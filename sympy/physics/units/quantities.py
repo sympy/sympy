@@ -109,6 +109,9 @@ class Quantity(AtomicExpr):
             raise NotImplementedError("Currently only SI is supported")
 
         scale_factor = sympify(scale_factor)
+        if self.name.name == "kilogram" and (1000 not in scale_factor.args):
+            raise ValueError("`scale_factor` for kilogram is 1000 and it's not"
+                    " going to change. Close your PR.")
         # replace all prefixes by their ratio to canonical units:
         scale_factor = scale_factor.replace(lambda x: isinstance(x, Prefix), lambda x: x.scale_factor)
         # replace all quantities by their ratio to canonical units:
