@@ -1093,7 +1093,7 @@ class _LeftRightArgs(object):
             rank += 2
         return rank
 
-    def _multiply_pointer(self, other, pointer):
+    def _multiply_pointer(self, pointer, other):
         from sympy.core.expr import ExprBuilder
         from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
 
@@ -1115,22 +1115,10 @@ class _LeftRightArgs(object):
         return subexpr
 
     def append_first(self, other):
-        if not (isinstance(other, MatrixExpr) and isinstance(self.first_pointer, MatrixExpr)):
-            self.first_pointer *= other
-        else:
-            subexpr = self._multiply_pointer(other, self.first_pointer)
-            self.first_pointer = subexpr
-            self._first_pointer_parent = subexpr.args[0].args
-            self._first_pointer_index = 1
+        self.first_pointer *= other
 
     def append_second(self, other):
-        if not (isinstance(other, MatrixExpr) and isinstance(self.second_pointer, MatrixExpr)):
-            self.second_pointer *= other
-        else:
-            subexpr = self._multiply_pointer(other, self.second_pointer)
-            self.second_pointer = subexpr
-            self._second_pointer_parent = subexpr.args[0].args
-            self._second_pointer_index = 1
+        self.second_pointer *= other
 
     def __hash__(self):
         return hash((self.first, self.second))

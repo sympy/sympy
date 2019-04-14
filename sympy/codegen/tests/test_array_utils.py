@@ -349,6 +349,25 @@ def test_special_matrices():
     assert recognize_matrix_expression(cg) == a.T*b
 
 
+def test_push_indices_up_and_down():
+
+    indices = list(range(10))
+
+    contraction_indices = [(0, 6), (2, 8)]
+    assert CodegenArrayContraction._push_indices_down(contraction_indices, indices) == (1, 3, 4, 5, 7, 9, 10, 11, 12, 13)
+    assert CodegenArrayContraction._push_indices_up(contraction_indices, indices) == (None, 0, None, 1, 2, 3, None, 4, None, 5)
+
+    assert CodegenArrayDiagonal._push_indices_down(contraction_indices, indices) == (0, 1, 2, 3, 4, 5, 7, 9, 10, 11)
+    assert CodegenArrayDiagonal._push_indices_up(contraction_indices, indices) == (0, 1, 2, 3, 4, 5, None, 6, None, 7)
+
+    contraction_indices = [(1, 2), (7, 8)]
+    assert CodegenArrayContraction._push_indices_down(contraction_indices, indices) == (0, 3, 4, 5, 6, 9, 10, 11, 12, 13)
+    assert CodegenArrayContraction._push_indices_up(contraction_indices, indices) == (0, None, None, 1, 2, 3, 4, None, None, 5)
+
+    assert CodegenArrayContraction._push_indices_down(contraction_indices, indices) == (0, 3, 4, 5, 6, 9, 10, 11, 12, 13)
+    assert CodegenArrayDiagonal._push_indices_up(contraction_indices, indices) == (0, 1, None, 2, 3, 4, 5, 6, None, 7)
+
+
 def test_recognize_diagonalized_vectors():
 
     a = MatrixSymbol("a", k, 1)
@@ -361,8 +380,32 @@ def test_recognize_diagonalized_vectors():
     I1 = Identity(1)
     I = Identity(k)
 
+    # Check matrix recognition over trivial dimensions:
+
+    cg = CodegenArrayTensorProduct(a, b)
+    assert recognize_matrix_expression(cg) == a*b.T
+
+    cg = CodegenArrayTensorProduct(I1, a, b)
+    assert recognize_matrix_expression(cg) == a*I1*b.T
+
+    # Recognize trace inside a tensor product:
+
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, B, C), (0, 3), (1, 2))
     assert recognize_matrix_expression(cg) == Trace(A*B)*C
+
+    # Transform diagonal operator to contraction:
+
+    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(A, a), (1, 2))
+    assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(A, DiagonalizeVector(a)), (1, 2))
+    assert recognize_matrix_expression(cg) == A*DiagonalizeVector(a)
+
+    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(a, b), (0, 2))
+    assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(DiagonalizeVector(a), b), (0, 2))
+    assert recognize_matrix_expression(cg).doit() == DiagonalizeVector(a)*b
+
+    cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(A, a), (0, 2))
+    assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(A, DiagonalizeVector(a)), (0, 2))
+    assert recognize_matrix_expression(cg) == A.T*DiagonalizeVector(a)
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(I, x, I1), (0, 2), (3, 5))
     assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(I, DiagonalizeVector(x), I1), (0, 2))
@@ -371,7 +414,8 @@ def test_recognize_diagonalized_vectors():
     assert cg.transform_to_product() == CodegenArrayDiagonal(CodegenArrayContraction(CodegenArrayTensorProduct(I, DiagonalizeVector(x), A, B), (1, 2)), (3, 4))
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(x, I1), (1, 2))
-    assert cg == CodegenArrayTensorProduct(x, I1)
+    assert isinstance(cg, CodegenArrayDiagonal)
+    assert cg.diagonal_indices == ((1, 2),)
     assert recognize_matrix_expression(cg) == x
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(x, I), (0, 2))
@@ -381,6 +425,8 @@ def test_recognize_diagonalized_vectors():
     cg = CodegenArrayDiagonal(x, (1,))
     assert cg == x
 
+    # Ignore identity matrices with contractions:
+
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(I, A, I, I), (0, 2), (1, 3), (5, 7))
     assert cg.split_multiple_contractions() == cg
     assert recognize_matrix_expression(cg) == Trace(A)*I
@@ -388,6 +434,8 @@ def test_recognize_diagonalized_vectors():
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(Trace(A) * I, I, I), (1, 5), (3, 4))
     assert cg.split_multiple_contractions() == cg
     assert recognize_matrix_expression(cg).doit() == Trace(A)*I
+
+    # Add DiagonalizeVector when required:
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(A, a), (1, 2))
     assert cg.split_multiple_contractions() == cg

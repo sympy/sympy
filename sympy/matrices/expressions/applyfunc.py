@@ -93,9 +93,7 @@ class ElementwiseApplyFunction(MatrixExpr):
         return self.function(self.expr._entry(i, j, **kwargs))
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy import HadamardProduct, hadamard_product, Mul, MatMul, Identity, Transpose
-        from sympy.matrices.expressions.diagonal import diagonalize_vector
-        from sympy.matrices.expressions.matmul import validate as matmul_validate
+        from sympy import Identity
         from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal
         from sympy.core.expr import ExprBuilder
 
@@ -114,9 +112,9 @@ class ElementwiseApplyFunction(MatrixExpr):
             for i in lr:
                 if iscolumn:
                     ptr1 = i.first_pointer
-                    ptr2 = Identity(ewdiff.shape[1])
+                    ptr2 = Identity(self.shape[1])
                 else:
-                    ptr1 = Identity(ewdiff.shape[0])
+                    ptr1 = Identity(self.shape[0])
                     ptr2 = i.second_pointer
 
                 subexpr = ExprBuilder(
@@ -125,18 +123,18 @@ class ElementwiseApplyFunction(MatrixExpr):
                         ExprBuilder(
                             CodegenArrayTensorProduct,
                             [
-                                ptr1,
                                 ewdiff,
-                                ptr2
+                                ptr1,
+                                ptr2,
                             ]
                         ),
-                        (0, 2), (3, 5)
+                        (0, 2) if iscolumn else (1, 4)
                     ],
                     validator=CodegenArrayDiagonal._validate
                 )
                 i._lines = [subexpr]
                 i._first_pointer_parent = subexpr.args[0].args
-                i._first_pointer_index = 0
+                i._first_pointer_index = 1
                 i._second_pointer_parent = subexpr.args[0].args
                 i._second_pointer_index = 2
         else:
@@ -151,16 +149,16 @@ class ElementwiseApplyFunction(MatrixExpr):
                     [
                         ExprBuilder(
                             CodegenArrayTensorProduct,
-                            [ptr1, newptr1, ptr2, newptr2, ewdiff]
+                            [ptr1, newptr1, ewdiff, ptr2, newptr2]
                         ),
-                        (1, 2, 8),
-                        (5, 6, 9),
+                        (1, 2, 4),
+                        (5, 7, 8),
                     ],
                     validator=CodegenArrayContraction._validate
                 )
                 i._first_pointer_parent = subexpr.args[0].args
                 i._first_pointer_index = 1
                 i._second_pointer_parent = subexpr.args[0].args
-                i._second_pointer_index = 3
+                i._second_pointer_index = 4
                 i._lines = [subexpr]
         return lr

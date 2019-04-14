@@ -1,3 +1,4 @@
+import bisect
 import itertools
 from functools import reduce
 from collections import defaultdict
@@ -93,10 +94,22 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
         # Check that no contraction happens when the shape is mismatched:
         for i in contraction_indices:
-            if any(j >= len(shape) for j in i):
-                print("ctest")
             if len(set(shape[j] for j in i if shape[j] != -1)) != 1:
                 raise ValueError("contracting indices of different dimensions")
+
+    @classmethod
+    def _push_indices_down(cls, contraction_indices, indices):
+        flattened_contraction_indices = [j for i in contraction_indices for j in i]
+        flattened_contraction_indices.sort()
+        transform = _build_push_indices_down_func_transformation(flattened_contraction_indices)
+        return _apply_recursively_over_nested_lists(transform, indices)
+
+    @classmethod
+    def _push_indices_up(cls, contraction_indices, indices):
+        flattened_contraction_indices = [j for i in contraction_indices for j in i]
+        flattened_contraction_indices.sort()
+        transform = _build_push_indices_up_func_transformation(flattened_contraction_indices)
+        return _apply_recursively_over_nested_lists(transform, indices)
 
     def split_multiple_contractions(self):
         """
@@ -109,7 +122,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
             args = list(self.expr.args)
         else:
             args = [self.expr]
-        # TODO: unify API
+        # TODO: unify API, best location in CodegenArrayTensorProduct
         subranks = [get_rank(i) for i in args]
         # TODO: unify API
         mapping = _get_mapping_from_subranks(subranks)
@@ -135,6 +148,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
             tuple_links = [mapping[i] for i in links]
             arg_indices, arg_positions = zip(*tuple_links)
+            args_updates = {}
             if len(arg_indices) != len(set(arg_indices)):
                 # Maybe trace should be supported?
                 raise NotImplementedError
@@ -150,7 +164,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
                 ):
                     not_vectors.append((arg_ind, arg_pos))
                     continue
-                args[arg_ind] = diagonalize_vector(mat)
+                args_updates[arg_ind] = diagonalize_vector(mat)
                 vectors.append((arg_ind, arg_pos))
                 vectors.append((arg_ind, 1-arg_pos))
             if len(not_vectors) > 2:
@@ -171,8 +185,33 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
                 abspos1 = reverse_mapping[arg1, pos1]
                 abspos2 = reverse_mapping[arg2, pos2]
                 new_contraction_indices.append((abspos1, abspos2))
+            for ind, newarg in args_updates.items():
+                args[ind] = newarg
         return CodegenArrayContraction(
             CodegenArrayTensorProduct(*args),
+            *new_contraction_indices
+        )
+
+    def flatten_contraction_of_diagonal(self):
+        if not isinstance(self.expr, CodegenArrayDiagonal):
+            return self
+        contraction_down = self.expr._push_indices_down(self.expr.diagonal_indices, self.contraction_indices)
+        new_contraction_indices = []
+        diagonal_indices = self.expr.diagonal_indices[:]
+        for i in contraction_down:
+            contraction_group = list(i)
+            for j in i:
+                diagonal_with = [k for k in diagonal_indices if j in k]
+                contraction_group.extend([l for k in diagonal_with for l in k])
+                diagonal_indices = [k for k in diagonal_indices if k not in diagonal_with]
+            new_contraction_indices.append(sorted(set(contraction_group)))
+
+        new_contraction_indices = CodegenArrayDiagonal._push_indices_up(diagonal_indices, new_contraction_indices)
+        return CodegenArrayContraction(
+            CodegenArrayDiagonal(
+                self.expr.expr,
+                *diagonal_indices
+            ),
             *new_contraction_indices
         )
 
@@ -617,8 +656,9 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
             return cls._flatten(expr, *diagonal_indices)
         shape = expr.shape
         if shape is not None:
+            diagonal_indices = [i for i in diagonal_indices if len(i) > 1]
             cls._validate(expr, *diagonal_indices)
-            diagonal_indices = cls._remove_trivial_dimensions(shape, *diagonal_indices)
+            #diagonal_indices = cls._remove_trivial_dimensions(shape, *diagonal_indices)
             # Get new shape:
             shp1 = tuple(shp for i,shp in enumerate(shape) if not any(i in j for j in diagonal_indices))
             shp2 = tuple(shape[i[0]] for i in diagonal_indices)
@@ -637,7 +677,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         shape = expr.shape
         for i in diagonal_indices:
             if len(set(shape[j] for j in i)) != 1:
-                raise ValueError("contracting indices of different dimensions")
+                raise ValueError("diagonalizing indices of different dimensions")
 
     @staticmethod
     def _remove_trivial_dimensions(shape, *diagonal_indices):
@@ -673,10 +713,42 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         diagonal_indices = inner_diagonal_indices + outer_diagonal_indices
         return CodegenArrayDiagonal(expr.expr, *diagonal_indices)
 
+    @classmethod
+    def _push_indices_down(cls, diagonal_indices, indices):
+        flattened_contraction_indices = [j for i in diagonal_indices for j in i[1:]]
+        flattened_contraction_indices.sort()
+        transform = _build_push_indices_down_func_transformation(flattened_contraction_indices)
+        return _apply_recursively_over_nested_lists(transform, indices)
+
+    @classmethod
+    def _push_indices_up(cls, diagonal_indices, indices):
+        flattened_contraction_indices = [j for i in diagonal_indices for j in i[1:]]
+        flattened_contraction_indices.sort()
+        transform = _build_push_indices_up_func_transformation(flattened_contraction_indices)
+        return _apply_recursively_over_nested_lists(transform, indices)
+
     def transform_to_product(self):
         from sympy import ask, Q
 
         diagonal_indices = self.diagonal_indices
+        if isinstance(self.expr, CodegenArrayContraction):
+            # invert Diagonal and Contraction:
+            diagonal_down = CodegenArrayContraction._push_indices_down(
+                self.expr.contraction_indices,
+                diagonal_indices
+            )
+            newexpr = CodegenArrayDiagonal(
+                self.expr.expr,
+                *diagonal_down
+            ).transform_to_product()
+            contraction_up = newexpr._push_indices_up(
+                diagonal_down,
+                self.expr.contraction_indices
+            )
+            return CodegenArrayContraction(
+                newexpr,
+                *contraction_up
+            )
         if not isinstance(self.expr, CodegenArrayTensorProduct):
             return self
         args = list(self.expr.args)
@@ -705,27 +777,36 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
                 raise NotImplementedError
 
             args_updates = {}
-            interrupt = False
+            count_nondiagonal = 0
+            last = None
+            expression_is_square = False
             # Check that all args are vectors:
             for arg_ind, arg_pos in tuple_links:
                 mat = args[arg_ind]
                 if 1 in mat.shape and mat.shape != (1, 1):
                     args_updates[arg_ind] = DiagonalizeVector(mat)
-                elif not ask(Q.diagonal(mat)):
-                    interrupt = True
-                    break
-            if interrupt:
+                    last = arg_ind
+                else:
+                    expression_is_square = True
+                    if not ask(Q.diagonal(mat)):
+                        count_nondiagonal += 1
+                        if count_nondiagonal > 1:
+                            break
+            if count_nondiagonal > 1:
                 continue
+            # TODO: if count_nondiagonal == 0 then the sub-expression can be recognized as HadamardProduct.
             for arg_ind, newmat in args_updates.items():
+                if not expression_is_square and arg_ind == last:
+                    continue
+                    #pass
                 args[arg_ind] = newmat
             drop_diagonal_indices.append(indl)
             new_contraction_indices.append(links)
 
-        flattened_contraction_indices = [j for i in new_contraction_indices for j in i]
-        flattened_contraction_indices.sort()
-
-        new_diagonal_indices = [[j - sum([1 for k in flattened_contraction_indices if k <= j]) for j in e] for i, e in
-            enumerate(diagonal_indices) if i not in drop_diagonal_indices]
+        new_diagonal_indices = CodegenArrayContraction._push_indices_up(
+            new_contraction_indices,
+            [e for i, e in enumerate(diagonal_indices) if i not in drop_diagonal_indices]
+        )
 
         return CodegenArrayDiagonal(
             CodegenArrayContraction(
@@ -1235,6 +1316,7 @@ def recognize_matrix_expression(expr):
 def _recognize_matrix_expression(expr):
     if isinstance(expr, CodegenArrayContraction):
         # Apply some transformations:
+        expr = expr.flatten_contraction_of_diagonal()
         expr = expr.split_multiple_contractions()
         args = _recognize_matrix_expression(expr.expr)
         contraction_indices = expr.contraction_indices
@@ -1281,9 +1363,10 @@ def _recognize_matrix_expression(expr):
         args = [_recognize_matrix_expression(arg) for arg in expr.args]
         multiple_lines = [_has_multiple_lines(arg) for arg in args]
         if any(multiple_lines):
-            if any(a.operator != MatAdd for i, a in enumerate(args) if multiple_lines[i]):
+            if any(a.operator != MatAdd for i, a in enumerate(args) if multiple_lines[i] and isinstance(a, _RecognizeMatOp)):
                 raise NotImplementedError
-            expand_args = [arg.args if multiple_lines[i] else [arg] for i, arg in enumerate(args)]
+            getargs = lambda x: x.args if isinstance(x, _RecognizeMatOp) else list(x)
+            expand_args = [getargs(arg) if multiple_lines[i] else [arg] for i, arg in enumerate(args)]
             it = itertools.product(*expand_args)
             ret = _RecognizeMatOp(MatAdd, [_RecognizeMatMulLines([k for j in i for k in (j if isinstance(j, _RecognizeMatMulLines) else [j])]) for i in it])
             return ret
@@ -1300,21 +1383,98 @@ def _recognize_matrix_expression(expr):
     return expr
 
 
+def _suppress_trivial_dims_in_tensor_product(mat_list):
+    # Recognize expressions like [x, y] with shape (k, 1, k, 1) as `x*y.T`.
+    # The matrix expression has to be equivalent to the tensor product of the matrices, with trivial dimensions (i.e. dim=1) dropped.
+    # That is, add contractions over trivial dimensions:
+    mat_11 = []
+    mat_k1 = []
+    last_dim = mat_list[0].shape[0]
+    for mat in mat_list:
+        if mat.shape == (1, 1):
+            mat_11.append(mat)
+        elif 1 in mat.shape:
+            if mat.shape[0] == 1:
+                mat_k1.append(mat.T)
+            else:
+                mat_k1.append(mat)
+        else:
+            return mat_list
+    if len(mat_k1) > 2:
+        return mat_list
+    a = MatMul.fromiter(mat_k1[:1])
+    b = MatMul.fromiter(mat_k1[1:])
+    x = MatMul.fromiter(mat_11)
+    return a*x*b.T
+
+
 def _unfold_recognized_expr(expr):
     if isinstance(expr, _RecognizeMatOp):
         return expr.operator(*[_unfold_recognized_expr(i) for i in expr.args])
     elif isinstance(expr, _RecognizeMatMulLines):
         unfolded = [_unfold_recognized_expr(i) for i in expr]
-        mat_list = [i for i in unfolded if isinstance(i, MatrixExpr) and (i.shape != (1, 1))]
+        mat_list = [i for i in unfolded if isinstance(i, MatrixExpr)]
         scalar_list = [i for i in unfolded if i not in mat_list]
         scalar = Mul.fromiter(scalar_list)
+        mat_list = [i.doit() for i in mat_list]
+        mat_list = [i for i in mat_list if not (i.shape == (1, 1) and i.is_Identity)]
         if mat_list:
             mat_list[0] *= scalar
             if len(mat_list) == 1:
                 return mat_list[0].doit()
             else:
-                return mat_list
+                return _suppress_trivial_dims_in_tensor_product(mat_list)
         else:
             return scalar
     else:
         return expr
+
+
+def _apply_recursively_over_nested_lists(func, arr):
+    if isinstance(arr, (tuple, list, Tuple)):
+        return tuple(_apply_recursively_over_nested_lists(func, i) for i in arr)
+    elif isinstance(arr, Tuple):
+        return Tuple.fromiter(_apply_recursively_over_nested_lists(func, i) for i in arr)
+    else:
+        return func(arr)
+
+
+def _build_push_indices_up_func_transformation(flattened_contraction_indices):
+    shifts = {0: 0}
+    i = 0
+    cumulative = 0
+    while i < len(flattened_contraction_indices):
+        j = 1
+        while i+j < len(flattened_contraction_indices):
+            if flattened_contraction_indices[i] + j != flattened_contraction_indices[i+j]:
+                break
+            j += 1
+        cumulative += j
+        shifts[flattened_contraction_indices[i]] = cumulative
+        i += j
+    shift_keys = sorted(shifts.keys())
+
+    def func(idx):
+        return shifts[shift_keys[bisect.bisect_right(shift_keys, idx)-1]]
+
+    def transform(j):
+        if j in flattened_contraction_indices:
+            return None
+        else:
+            return j - func(j)
+
+    return transform
+
+
+def _build_push_indices_down_func_transformation(flattened_contraction_indices):
+    N = flattened_contraction_indices[-1]+2
+
+    shifts = [i for i in range(N) if i not in flattened_contraction_indices]
+
+    def transform(j):
+        if j < len(shifts):
+            return shifts[j]
+        else:
+            return j + shifts[-1] - len(shifts) + 1
+
+    return transform
