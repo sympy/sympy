@@ -850,7 +850,7 @@ def test_holes():
     # this also tests that the integrate method is used on non-Piecwise
     # arguments in _eval_integral
     A, B = symbols("A B")
-    a, b = symbols('a b', finite=True)
+    a, b = symbols('a b', real=True)
     assert Piecewise((A, And(x < 0, a < 1)), (B, Or(x < 1, a > 2))
         ).integrate(x) == Piecewise(
         (B*x, a > 2),
