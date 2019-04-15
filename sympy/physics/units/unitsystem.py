@@ -71,25 +71,6 @@ class UnitSystem(object):
 
         return UnitSystem(base, units, name, description)
 
-    def print_unit_base(self, unit):
-        """
-        Useless method.
-
-        DO NOT USE, use instead ``convert_to``.
-
-        Give the string expression of a unit in term of the basis.
-
-        Units are displayed by decreasing power.
-        """
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.2",
-            issue=13336,
-            feature="print_unit_base",
-            useinstead="convert_to",
-        ).warn()
-        from sympy.physics.units import convert_to
-        return convert_to(unit, self._base_units)
-
     @property
     def dim(self):
         """

@@ -8,7 +8,7 @@ from sympy.physics.units import (
     planck_length, planck_mass, planck_temperature, planck_time, radians,
     second, speed_of_light, steradian, time, km)
 from sympy.physics.units.dimensions import dimsys_default
-from sympy.physics.units.unitsystems import MKS
+from sympy.physics.units.systems.mks import MKS
 from sympy.physics.units.util import convert_to, dim_simplify, check_dimensions
 from sympy.utilities.pytest import raises
 

@@ -5,6 +5,7 @@ from sympy.physics.units.definitions import c, kg, m, s
 from sympy.physics.units.dimensions import (
     Dimension, DimensionSystem, action, current, length, mass, time, velocity)
 from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.util import convert_to
 from sympy.physics.units.unitsystem import UnitSystem
 from sympy.utilities.pytest import raises
 
@@ -41,7 +42,7 @@ def test_str_repr():
     assert repr(UnitSystem((m, s))) == "<UnitSystem: (%s, %s)>" % (m, s)
 
 
-def test_print_unit_base():
+def test_convert_to():
     A = Quantity("A")
     A.set_dimension(current)
     A.set_scale_factor(S.One)
@@ -51,8 +52,7 @@ def test_print_unit_base():
     Js.set_scale_factor(S.One)
 
     mksa = UnitSystem((m, kg, s, A), (Js,))
-    with warns_deprecated_sympy():
-        assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
+    assert convert_to(Js, mksa) == kg*m**2/(1000*s)
 
 
 def test_extend():

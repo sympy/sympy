@@ -29,8 +29,8 @@ def dim_simplify(expr):
         deprecated_since_version="1.2",
         feature="dimensional simplification function",
         issue=13336,
-        useinstead="don't use",
-    ).warn()
+        useinstead=("something else (or this beta-function which will "
+            "probably be removed in the future)."),).warn()
     _, expr = Quantity._collect_factor_and_dimension(expr)
     return expr
 
