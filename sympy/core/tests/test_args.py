@@ -4542,6 +4542,48 @@ def test_sympy__ntheory__residue_ntheory__mobius():
     assert _test_args(mobius(2))
 
 
+def test_sympy__ntheory__generate__composite():
+    from sympy.ntheory import composite
+    n = symbols('n')
+    t = composite(n)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__generate__compositepi():
+    from sympy.ntheory import compositepi
+    n = symbols('n')
+    t = compositepi(n)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__generate__nextprime():
+    from sympy.ntheory import nextprime
+    n = symbols('n')
+    t = nextprime(n)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__generate__prevprime():
+    from sympy.ntheory import prevprime
+    n = symbols('n')
+    t = prevprime(n)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__generate__primorial():
+    from sympy.ntheory import primorial
+    n = symbols('n')
+    t = primorial(n)
+    assert _test_args(t)
+
+
+def test_sympy__ntheory__generate__prime():
+    from sympy.ntheory import prime
+    n = symbols('n')
+    t = prime(n)
+    assert _test_args(t)
+
+
 def test_sympy__ntheory__generate__primepi():
     from sympy.ntheory import primepi
     n = symbols('n')

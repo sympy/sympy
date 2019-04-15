@@ -14,7 +14,6 @@ from array import array as _array
 from sympy import Function, S
 from sympy.core.compatibility import as_int
 from .primetest import isprime
-from sympy.core.function import Function
 from sympy.core.numbers import Integer
 
 
@@ -776,10 +775,11 @@ def randprime(a, b):
     return p
 
 
-def primorial(n, nth=True):
+class primorial(Function):
     """
-    Returns the product of the first n primes (default) or
-    the primes less than or equal to n (when ``nth=False``).
+    Represents the function which returns the product of
+    the first n primes (default) or the primes less than
+    or equal to n (when ``nth=False``).
 
     Examples
     ========
@@ -826,20 +826,25 @@ def primorial(n, nth=True):
     primerange : Generate all primes in a given range
 
     """
-    if nth:
-        n = as_int(n)
-    else:
-        n = int(n)
-    if n < 1:
-        raise ValueError("primorial argument must be >= 1")
-    p = 1
-    if nth:
-        for i in range(1, n + 1):
-            p *= prime(i)
-    else:
-        for i in primerange(2, n + 1):
-            p *= i
-    return p
+    @classmethod
+    def eval(cls, n, nth=True):
+        if(not isinstance(n, Integer)):
+            return None
+
+        if nth:
+            n = as_int(n)
+        else:
+            n = int(n)
+        if n < 1:
+            raise ValueError("primorial argument must be >= 1")
+        p = 1
+        if nth:
+            for i in range(1, n + 1):
+                p *= prime(i)
+        else:
+            for i in primerange(2, n + 1):
+                p *= i
+        return p
 
 
 def cycle_length(f, x0, nmax=None, values=False):
@@ -931,8 +936,9 @@ def cycle_length(f, x0, nmax=None, values=False):
         yield lam, mu
 
 
-def composite(nth):
-    """ Return the nth composite number, with the composite numbers indexed as
+class composite(Function):
+    """ Represents the function which returns the nth composite number,
+        with the composite numbers indexed as
         composite(1) = 4, composite(2) = 6, etc....
 
         Examples
@@ -955,50 +961,56 @@ def composite(nth):
         prime : Return the nth prime
         compositepi : Return the number of positive composite numbers less than or equal to n
     """
-    n = as_int(nth)
-    if n < 1:
-        raise ValueError("nth must be a positive integer; composite(1) == 4")
-    composite_arr = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18]
-    if n <= 10:
-        return composite_arr[n - 1]
+    @classmethod
+    def eval(cls, nth):
+        if(not isinstance(nth, Integer)):
+            return None
 
-    a, b = 4, sieve._list[-1]
-    if n <= b - primepi(b) - 1:
-        while a < b - 1:
+        n = as_int(nth)
+        if n < 1:
+            raise ValueError("nth must be a positive integer; composite(1) == 4")
+        composite_arr = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18]
+        if n <= 10:
+            return composite_arr[n - 1]
+
+        a, b = 4, sieve._list[-1]
+        if n <= b - primepi(b) - 1:
+            while a < b - 1:
+                mid = (a + b) >> 1
+                if mid - primepi(mid) - 1 > n:
+                    b = mid
+                else:
+                    a = mid
+            if isprime(a):
+                a -= 1
+            return a
+
+        from sympy.functions.special.error_functions import li
+        from sympy.functions.elementary.exponential import log
+
+        a = 4 # Lower bound for binary search
+        b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
+
+        while a < b:
             mid = (a + b) >> 1
-            if mid - primepi(mid) - 1 > n:
+            if mid - li(mid) - 1 > n:
                 b = mid
             else:
-                a = mid
+                a = mid + 1
+
+        n_composites = a - primepi(a) - 1
+        while n_composites > n:
+            if not isprime(a):
+                n_composites -= 1
+            a -= 1
         if isprime(a):
             a -= 1
         return a
 
-    from sympy.functions.special.error_functions import li
-    from sympy.functions.elementary.exponential import log
 
-    a = 4 # Lower bound for binary search
-    b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
-
-    while a < b:
-        mid = (a + b) >> 1
-        if mid - li(mid) - 1 > n:
-            b = mid
-        else:
-            a = mid + 1
-
-    n_composites = a - primepi(a) - 1
-    while n_composites > n:
-        if not isprime(a):
-            n_composites -= 1
-        a -= 1
-    if isprime(a):
-        a -= 1
-    return a
-
-
-def compositepi(n):
-    """ Return the number of positive composite numbers less than or equal to n.
+class compositepi(Function):
+    """ Represents the function which returns the number of
+        positive composite numbers less than or equal to n.
         The first positive composite is 4, i.e. compositepi(4) = 1.
 
         Examples
@@ -1019,7 +1031,12 @@ def compositepi(n):
         primepi : Return the number of primes less than or equal to n
         composite : Return the nth composite number
     """
-    n = int(n)
-    if n < 4:
-        return 0
-    return n - primepi(n) - 1
+    @classmethod
+    def eval(cls, n):
+        if(not isinstance(n, Integer)):
+            return None
+
+        n = int(n)
+        if n < 4:
+            return 0
+        return n - primepi(n) - 1

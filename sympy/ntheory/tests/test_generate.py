@@ -6,6 +6,8 @@ from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
 from sympy.testing.pytest import raises
 
+x = Symbol('x')
+
 def test_prime():
     assert prime(1) == 2
     assert prime(2) == 3
@@ -22,7 +24,6 @@ def test_prime():
     sieve.extend(3000)
     assert prime(401) == 2749
 
-    x = Symbol('x')
     assert prime(x).subs(x, 4) == 7
 
 
@@ -84,6 +85,8 @@ def test_composite():
     assert composite(2568) == 2998
     raises(ValueError, lambda: composite(0))
 
+    assert composite(x).subs(x, 2) == 6
+
 
 def test_compositepi():
     assert compositepi(1) == 0
@@ -102,6 +105,8 @@ def test_compositepi():
     assert compositepi(8769575643) == 8368111320
     sieve.extend(3000)
     assert compositepi(2321) == 1976
+
+    assert compositepi(x).subs(x, 5) == 1
 
 
 def test_generate():
@@ -205,6 +210,8 @@ def test_primorial():
     assert primorial(2) == 6
     assert primorial(2, nth=0) == 2
     assert primorial(4, nth=0) == 6
+
+    assert primorial(x).subs(x, 2) == 6
 
 
 def test_search():
