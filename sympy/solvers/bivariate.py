@@ -142,6 +142,7 @@ def _lambert(eq, x):
         return []  # violated assumptions
     logarg = mainlog.args[0]
     b, c, X1 = _linab(logarg, x)
+    
     if X1 != X2:
         return [] # violated assumptions
     u = Dummy('rhs')
@@ -154,14 +155,14 @@ def _lambert(eq, x):
         # a -1 branch real solution, too.
 
         rhs_1 = -c/b + (a/d)*LambertW(l, k)
-        rhs_2 = -c/b + (a/d)*LambertW(-l, k)
         solns = solvify(X1 - u, x, S.Complexes)
-        solns2 = list(solns)
         for i, tmp in enumerate(solns):
             solns[i] = tmp.subs(u, rhs_1)
             if solns[i].is_real is not False:
                 sol.append(solns[i])
 
+        rhs_2 = -c/b + (a/d)*LambertW(-l, k)
+        solns2 = solvify(X1 - u, x, S.Complexes)
         for i, tmp in enumerate(solns2):
             solns2[i] = tmp.subs(u, rhs_2)
             if solns2[i].is_real is not False:
