@@ -1376,8 +1376,7 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.min >= other.max:
                 return False
-        elif not(other.is_extended_real or other is S.Infinity or
-               other is S.NegativeInfinity):
+        elif not other.is_extended_real:
             raise TypeError(
                 "Invalid comparison of %s %s" %
                 (type(other), other))
@@ -1414,8 +1413,7 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.min > other.max:
                 return False
-        elif not(other.is_extended_real or other is S.Infinity or
-               other is S.NegativeInfinity):
+        elif not other.is_extended_real:
             raise TypeError(
                 "Invalid comparison of %s %s" %
                 (type(other), other))
@@ -1452,8 +1450,7 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max <= other.min:
                 return False
-        elif not(other.is_extended_real or other is S.Infinity or
-               other is S.NegativeInfinity):
+        elif not other.is_extended_real:
             raise TypeError(
                 "Invalid comparison of %s %s" %
                 (type(other), other))
@@ -1490,8 +1487,7 @@ class AccumulationBounds(AtomicExpr):
                 return True
             if self.max < other.min:
                 return False
-        elif not(other.is_extended_real or other is S.Infinity or
-               other is S.NegativeInfinity):
+        elif not other.is_extended_real:
             raise TypeError(
                 "Invalid comparison of %s %s" %
                 (type(other), other))
