@@ -137,7 +137,7 @@ class Point(GeometryEntity):
                 Point requires 2 or more coordinates or
                 keyword `dim` > 1.'''))
         if len(coords) != dim:
-            message = ("Dimension of {} needs to be changed"
+            message = ("Dimension of {} needs to be changed "
                        "from {} to {}.").format(coords, len(coords), dim)
             if on_morph == 'ignore':
                 pass
