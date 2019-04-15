@@ -142,7 +142,6 @@ def _lambert(eq, x):
         return []  # violated assumptions
     logarg = mainlog.args[0]
     b, c, X1 = _linab(logarg, x)
-    
     if X1 != X2:
         return [] # violated assumptions
     u = Dummy('rhs')
