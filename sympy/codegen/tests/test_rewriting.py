@@ -162,6 +162,7 @@ def test_create_expand_pow_optimization():
     x = Symbol('x')
 
     assert ccode(optimize(x**4, [my_opt])) == 'x*x*x*x'
+    assert ccode(optimize((x**4 + x**2), [my_opt])) == 'x*x + x*x*x*x'
 
     x5x4 = x**5 + x**4
     assert ccode(optimize(x5x4, [my_opt])) == 'pow(x, 5) + x*x*x*x'
@@ -169,4 +170,13 @@ def test_create_expand_pow_optimization():
     sin4x = sin(x)**4
     assert ccode(optimize(sin4x, [my_opt])) == 'pow(sin(x), 4)'
 
-    assert ccode(optimize((x**(-4)), [my_opt])) == 'pow(x, -4)'
+    assert ccode(optimize((x**(-4)), [my_opt])) == '1.0/(x*x*x*x)'  # gh-15335
+    assert ccode(optimize((x**(-5)), [my_opt])) == 'pow(x, -5)'     # gh-15335
+
+
+@XFAIL
+def test_create_expand_pow_optimization__TODO():
+    opt4 = create_expand_pow_optimization(4)
+    x = Symbol('x')
+    assert ccode(optimize(-x**4, [opt4])) == '-x*x*x*x'              # gh-15335
+    assert ccode(optimize((x**4 - x**2), [opt4])) == 'x*x*x*x - x*x' # gh-15335

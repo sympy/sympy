@@ -35,6 +35,7 @@ from itertools import chain
 from sympy import log, exp, Max, Min, Wild, expand_log, Dummy
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
 from sympy.core.mul import Mul
+from sympy.core.power import Pow
 from sympy.utilities.iterables import sift
 
 
@@ -220,8 +221,11 @@ def create_expand_pow_optimization(limit):
 
     """
     return ReplaceOptim(
-        lambda e: e.is_Pow and e.base.is_symbol and e.exp.is_integer and e.exp.is_nonnegative and e.exp <= limit,
-        lambda p: Mul(*([p.base]*p.exp), evaluate=False)
+        lambda e: e.is_Pow and e.base.is_symbol and e.exp.is_integer and abs(e.exp) <= limit,
+        lambda p: (
+            Mul(*([p.base]*p.exp), evaluate=False) if p.exp.is_nonnegative else
+            Pow(Mul(*([p.base]*-p.exp), evaluate=False), -1, evaluate=False)
+        )
     )
 
 # Collections of optimizations:
