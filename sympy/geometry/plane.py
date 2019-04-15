@@ -16,7 +16,7 @@ from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
 from sympy.solvers import solve, linsolve
 from sympy.utilities.iterables import uniq
-from sympy.utilities.misc import filldedent, func_name
+from sympy.utilities.misc import filldedent, func_name, Undecidable
 
 from .entity import GeometryEntity
 from .point import Point, Point3D
@@ -387,16 +387,17 @@ class Plane(GeometryEntity):
             else:
                 return []
         if isinstance(o, (LinearEntity, LinearEntity3D)):
+            # recast to 3D
+            p1, p2 = o.p1, o.p2
+            if isinstance(o, Segment):
+                o = Segment3D(p1, p2)
+            elif isinstance(o, Ray):
+                o = Ray3D(p1, p2)
+            elif isinstance(o, Line):
+                o = Line3D(p1, p2)
+            else:
+                raise ValueError('unhandled linear entity: %s' % o.func)
             if o in self:
-                p1, p2 = o.p1, o.p2
-                if isinstance(o, Segment):
-                    o = Segment3D(p1, p2)
-                elif isinstance(o, Ray):
-                    o = Ray3D(p1, p2)
-                elif isinstance(o, Line):
-                    o = Line3D(p1, p2)
-                else:
-                    raise ValueError('unhandled linear entity: %s' % o.func)
                 return [o]
             else:
                 t = Dummy()  # unnamed else it may clash with a symbol in o
@@ -408,6 +409,11 @@ class Plane(GeometryEntity):
                 if not c:
                     return []
                 else:
+                    c = [i for i in c if i.is_real is not False]
+                    if len(c) > 1:
+                        c = [i for i in c if i.is_real]
+                    if len(c) != 1:
+                        raise Undecidable("not sure which point is real")
                     p = a.subs(t, c[0])
                     if p not in o:
                         return []  # e.g. a segment might not intersect a plane
