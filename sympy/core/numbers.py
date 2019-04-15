@@ -1861,10 +1861,10 @@ class Rational(with_metaclass(ManagedABCMetaclass, Number, numbers.Rational)):
                       verbose=verbose).copy()
 
     def numerator(self):
-        return self.p #@CHECK
+        return self.p
 
     def denominator(self):
-        return self.q #@CHECK
+        return self.q
 
     @_sympifyit('other', NotImplemented)
     def gcd(self, other):
