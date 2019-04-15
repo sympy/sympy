@@ -8,6 +8,7 @@ from sympy.physics.units import (
     planck_length, planck_mass, planck_temperature, planck_time, radians,
     second, speed_of_light, steradian, time, km)
 from sympy.physics.units.dimensions import dimsys_default
+from sympy.physics.units.unitsystems import MKS
 from sympy.physics.units.util import convert_to, dim_simplify, check_dimensions
 from sympy.utilities.pytest import raises
 
@@ -88,6 +89,8 @@ def test_convert_to_quantities():
     assert convert_to(radians, [meter, degree]) == 180*degree/pi
     assert convert_to(pi*radians, degree) == 180*degree
     assert convert_to(pi, degree) == 180*degree
+
+    assert convert_to(inch, MKS) == 127*meter/5000
 
 
 def test_convert_to_tuples_of_quantities():

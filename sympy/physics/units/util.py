@@ -100,6 +100,10 @@ def convert_to(expr, target_units):
     7.62950196312651e-20*gravitational_constant**(-0.5)*hbar**0.5*speed_of_light**0.5
 
     """
+    from sympy.physics.units import UnitSystem
+    if isinstance(target_units, UnitSystem):
+        target_units = target_units._base_units
+
     if not isinstance(target_units, (Iterable, Tuple)):
         target_units = [target_units]
 
