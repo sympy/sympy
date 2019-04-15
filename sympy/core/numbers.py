@@ -1141,14 +1141,14 @@ class Float(Number):
     def _eval_is_integer(self):
         return self._mpf_ == _mpf_zero
 
-    def _eval_is_negative(self):
+    def _eval_is_extended_negative(self):
         if self._mpf_ == _mpf_ninf:
             return True
         if self._mpf_ == _mpf_inf:
             return False
         return self.num < 0
 
-    def _eval_is_positive(self):
+    def _eval_is_extended_positive(self):
         if self._mpf_ == _mpf_inf:
             return True
         if self._mpf_ == _mpf_ninf:
@@ -1683,7 +1683,7 @@ class Rational(Number):
         if isinstance(expt, Number):
             if isinstance(expt, Float):
                 return self._eval_evalf(expt._prec)**expt
-            if expt.is_negative:
+            if expt.is_extended_negative:
                 # (3/4)**-2 -> (4/3)**2
                 ne = -expt
                 if (ne is S.One):
@@ -1712,7 +1712,7 @@ class Rational(Number):
                 expt.p*(expt.q - 1), expt.q) / \
                     Integer(self.q)**Integer(expt.p)
 
-        if self.is_negative and expt.is_even:
+        if self.is_extended_negative and expt.is_even:
             return (-self)**expt
 
         return
@@ -2672,7 +2672,7 @@ class Infinity(with_metaclass(Singleton, Number)):
     is_complex = False
     is_extended_real = True
     is_infinite = True
-    is_positive = True
+    is_extended_positive = True
     is_prime = False
 
     __slots__ = []
@@ -2813,9 +2813,9 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.true
             elif other.is_finite or other is S.NegativeInfinity:
                 return S.false
-            elif other.is_nonpositive:
+            elif other.is_extended_nonpositive:
                 return S.false
-            elif other.is_infinite and other.is_positive:
+            elif other.is_infinite and other.is_extended_positive:
                 return S.true
         return Expr.__le__(self, other)
 
@@ -2829,9 +2829,9 @@ class Infinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other.is_finite or other is S.NegativeInfinity:
                 return S.true
-            elif other.is_nonpositive:
+            elif other.is_extended_nonpositive:
                 return S.true
-            elif other.is_infinite and other.is_positive:
+            elif other.is_infinite and other.is_extended_positive:
                 return S.false
         return Expr.__gt__(self, other)
 
@@ -2874,6 +2874,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     is_complex = False
     is_commutative = True
     is_infinite = True
+    is_extended_negative = True
     is_number = True
     is_prime = False
 
@@ -2915,7 +2916,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         if isinstance(other, Number):
             if other.is_zero or other is S.NaN:
                 return S.NaN
-            if other.is_positive:
+            if other.is_extended_positive:
                 return self
             return S.Infinity
         return NotImplemented
@@ -2928,7 +2929,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 other is S.NegativeInfinity or \
                     other is S.NaN:
                 return S.NaN
-            if other.is_nonnegative:
+            if other.is_extended_nonnegative:
                 return self
             return S.Infinity
         return NotImplemented
@@ -2969,7 +2970,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                     expt is S.NegativeInfinity:
                 return S.NaN
 
-            if isinstance(expt, Integer) and expt.is_positive:
+            if isinstance(expt, Integer) and expt.is_extended_positive:
                 if expt.is_odd:
                     return S.NegativeInfinity
                 else:
@@ -3003,9 +3004,9 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.false
             elif other.is_finite or other is S.Infinity:
                 return S.true
-            elif other.is_nonnegative:
+            elif other.is_extended_nonnegative:
                 return S.true
-            elif other.is_infinite and other.is_negative:
+            elif other.is_infinite and other.is_extended_negative:
                 return S.false
         return Expr.__lt__(self, other)
 
@@ -3037,9 +3038,9 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 return S.true
             if other.is_finite or other is S.Infinity:
                 return S.false
-            elif other.is_nonnegative:
+            elif other.is_extended_nonnegative:
                 return S.false
-            elif other.is_infinite and other.is_negative:
+            elif other.is_infinite and other.is_extended_negative:
                 return S.true
         return Expr.__ge__(self, other)
 

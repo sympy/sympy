@@ -562,9 +562,9 @@ class Mul(Expr, AssocOp):
             def _handle_for_oo(c_part, coeff_sign):
                 new_c_part = []
                 for t in c_part:
-                    if t.is_positive:
+                    if t.is_extended_positive:
                         continue
-                    if t.is_negative:
+                    if t.is_extended_negative:
                         coeff_sign *= -1
                         continue
                     new_c_part.append(t)
@@ -755,7 +755,7 @@ class Mul(Expr, AssocOp):
         if args[0].is_Number:
             if not rational or args[0].is_Rational:
                 return args[0], args[1:]
-            elif args[0].is_negative:
+            elif args[0].is_extended_negative:
                 return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
@@ -769,7 +769,7 @@ class Mul(Expr, AssocOp):
                     return coeff, args[0]
                 else:
                     return coeff, self._new_rawargs(*args)
-            elif coeff.is_negative:
+            elif coeff.is_extended_negative:
                 return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
         return S.One, self
 
@@ -1267,7 +1267,7 @@ class Mul(Expr, AssocOp):
                 return
         return False
 
-    def _eval_is_positive(self):
+    def _eval_is_extended_positive(self):
         """Return True if self is positive, False if not, and None if it
         cannot be determined.
 
@@ -1285,25 +1285,25 @@ class Mul(Expr, AssocOp):
     def _eval_pos_neg(self, sign):
         saw_NON = saw_NOT = False
         for t in self.args:
-            if t.is_positive:
+            if t.is_extended_positive:
                 continue
-            elif t.is_negative:
+            elif t.is_extended_negative:
                 sign = -sign
             elif t.is_zero:
                 if all(a.is_finite for a in self.args):
                     return False
                 return
-            elif t.is_nonpositive:
+            elif t.is_extended_nonpositive:
                 sign = -sign
                 saw_NON = True
-            elif t.is_nonnegative:
+            elif t.is_extended_nonnegative:
                 saw_NON = True
-            elif t.is_positive is False:
+            elif t.is_extended_positive is False:
                 sign = -sign
                 if saw_NOT:
                     return
                 saw_NOT = True
-            elif t.is_negative is False:
+            elif t.is_extended_negative is False:
                 if saw_NOT:
                     return
                 saw_NOT = True
@@ -1314,9 +1314,9 @@ class Mul(Expr, AssocOp):
         if sign < 0:
             return False
 
-    def _eval_is_negative(self):
+    def _eval_is_extended_negative(self):
         if self.args[0] == -1:
-            return (-self).is_positive  # remove -1
+            return (-self).is_extended_positive  # remove -1
         return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):

@@ -1844,7 +1844,7 @@ def test_issue_7426():
 
 
 def test_issue_1112():
-    x = Symbol('x', positive=False)
+    x = Symbol('x', extended_positive=False)
     assert (x > 0) is S.false
 
 

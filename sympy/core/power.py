@@ -424,15 +424,15 @@ class Pow(Expr):
         if self.exp.is_integer and self.exp.is_positive:
             return self.base.is_even
 
-    def _eval_is_positive(self):
+    def _eval_is_extended_positive(self):
         from sympy import log
         if self.base == self.exp:
-            if self.base.is_nonnegative:
+            if self.base.is_extended_nonnegative:
                 return True
-        elif self.base.is_positive and self.base.is_finite:
+        elif self.base.is_positive:
             if self.exp.is_extended_real:
                 return True
-        elif self.base.is_negative:
+        elif self.base.is_extended_negative:
             if self.exp.is_even:
                 return True
             if self.exp.is_odd:
@@ -440,7 +440,7 @@ class Pow(Expr):
         elif self.base.is_zero:
             if self.exp.is_extended_real:
                 return self.exp.is_zero
-        elif self.base.is_nonpositive:
+        elif self.base.is_extended_nonpositive:
             if self.exp.is_odd:
                 return False
         elif self.base.is_imaginary:
@@ -453,22 +453,22 @@ class Pow(Expr):
             if self.exp.is_imaginary:
                 return log(self.base).is_imaginary
 
-    def _eval_is_negative(self):
-        if self.base.is_negative:
+    def _eval_is_extended_negative(self):
+        if self.base.is_extended_negative:
             if self.exp.is_odd and self.base.is_finite:
                 return True
             if self.exp.is_even:
                 return False
-        elif self.base.is_positive:
+        elif self.base.is_extended_positive:
             if self.exp.is_extended_real:
                 return False
         elif self.base.is_zero:
             if self.exp.is_extended_real:
                 return False
-        elif self.base.is_nonnegative:
-            if self.exp.is_nonnegative:
+        elif self.base.is_extended_nonnegative:
+            if self.exp.is_extended_nonnegative:
                 return False
-        elif self.base.is_nonpositive:
+        elif self.base.is_extended_nonpositive:
             if self.exp.is_even:
                 return False
         elif self.base.is_extended_real:
@@ -477,21 +477,20 @@ class Pow(Expr):
 
     def _eval_is_zero(self):
         if self.base.is_zero:
-            if self.exp.is_positive:
+            if self.exp.is_extended_positive:
                 return True
-            elif self.exp.is_nonpositive:
+            elif self.exp.is_extended_nonpositive:
                 return False
         elif self.base.is_zero is False:
-            if self.exp.is_finite:
-                if self.exp.is_negative:
-                    return self.base.is_infinite
-                elif self.exp.is_nonnegative:
-                    return False
+            if self.exp.is_negative:
+                return self.base.is_infinite
+            elif self.exp.is_nonnegative:
+                return False
             elif self.exp.is_infinite:
-                if (1 - abs(self.base)).is_positive:
-                    return self.exp.is_positive
-                elif (1 - abs(self.base)).is_negative:
-                    return self.exp.is_negative
+                if (1 - abs(self.base)).is_extended_positive:
+                    return self.exp.is_extended_positive
+                elif (1 - abs(self.base)).is_extended_negative:
+                    return self.exp.is_extended_negative
         else:
             # when self.base.is_zero is None
             return None
@@ -524,18 +523,18 @@ class Pow(Expr):
         if real_e is None:
             return
         if real_b and real_e:
-            if self.base.is_positive:
+            if self.base.is_extended_positive:
                 return True
-            elif self.base.is_nonnegative:
-                if self.exp.is_nonnegative:
+            elif self.base.is_extended_nonnegative:
+                if self.exp.is_extended_nonnegative:
                     return True
             else:
                 if self.exp.is_integer:
                     return True
-                elif self.base.is_negative:
+                elif self.base.is_extended_negative:
                     if self.exp.is_Rational:
                         return False
-        if real_e and self.exp.is_negative:
+        if real_e and self.exp.is_extended_negative:
             return Pow(self.base, -self.exp).is_extended_real
         im_b = self.base.is_imaginary
         im_e = self.exp.is_imaginary

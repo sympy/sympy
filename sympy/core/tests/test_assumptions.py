@@ -108,10 +108,16 @@ def test_infinity():
     assert oo.is_noninteger is True
     assert oo.is_irrational is False
     assert oo.is_imaginary is False
-    assert oo.is_positive is True
+    assert oo.is_nonzero is False
+    assert oo.is_positive is False
     assert oo.is_negative is False
     assert oo.is_nonpositive is False
-    assert oo.is_nonnegative is True
+    assert oo.is_nonnegative is False
+    assert oo.is_extended_nonzero is True
+    assert oo.is_extended_positive is True
+    assert oo.is_extended_negative is False
+    assert oo.is_extended_nonpositive is False
+    assert oo.is_extended_nonnegative is True
     assert oo.is_even is False
     assert oo.is_odd is False
     assert oo.is_finite is False
@@ -136,10 +142,16 @@ def test_neg_infinity():
     assert mm.is_noninteger is True
     assert mm.is_irrational is False
     assert mm.is_imaginary is False
+    assert mm.is_nonzero is False
     assert mm.is_positive is False
-    assert mm.is_negative is True
-    assert mm.is_nonpositive is True
+    assert mm.is_negative is False
+    assert mm.is_nonpositive is False
     assert mm.is_nonnegative is False
+    assert mm.is_extended_nonzero is True
+    assert mm.is_extended_positive is False
+    assert mm.is_extended_negative is True
+    assert mm.is_extended_nonpositive is True
+    assert mm.is_extended_nonnegative is False
     assert mm.is_even is False
     assert mm.is_odd is False
     assert mm.is_finite is False
@@ -719,10 +731,10 @@ def test_hash_vs_eq():
 
 def test_Add_is_pos_neg():
     # these cover lines not covered by the rest of tests in core
-    n = Symbol('n', negative=True, infinite=True)
-    nn = Symbol('n', nonnegative=True, infinite=True)
-    np = Symbol('n', nonpositive=True, infinite=True)
-    p = Symbol('p', positive=True, infinite=True)
+    n = Symbol('n', extended_negative=True, infinite=True)
+    nn = Symbol('n', extended_nonnegative=True, infinite=True)
+    np = Symbol('n', extended_nonpositive=True, infinite=True)
+    p = Symbol('p', extended_positive=True, infinite=True)
     r = Dummy(extended_real=True, finite=False)
     x = Symbol('x')
     xf = Symbol('xb', finite=True)

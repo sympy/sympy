@@ -94,14 +94,14 @@ def _monotonic_sign(self):
                 return S.One
             else:
                 return _eps
-        elif s.is_negative:
+        elif s.is_extended_negative:
             if s.is_even:
                 return S(-2)
             elif s.is_integer:
                 return S.NegativeOne
             else:
                 return -_eps
-        if s.is_zero or s.is_nonpositive or s.is_nonnegative:
+        if s.is_zero or s.is_extended_nonpositive or s.is_extended_nonnegative:
             return S.Zero
         return None
 

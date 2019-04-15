@@ -301,9 +301,9 @@ class Expr(Basic, EvalfMixin):
             return _sympify(n2 >= 0)
         if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_nonnegative is not None and \
-                    dif.is_nonnegative is not dif.is_negative:
-                return sympify(dif.is_nonnegative)
+            if dif.is_extended_nonnegative is not None and \
+                    dif.is_extended_nonnegative is not dif.is_extended_negative:
+                return sympify(dif.is_extended_nonnegative)
         return GreaterThan(self, other, evaluate=False)
 
     def __le__(self, other):
@@ -322,9 +322,9 @@ class Expr(Basic, EvalfMixin):
             return _sympify(n2 <= 0)
         if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_nonpositive is not None and \
-                    dif.is_nonpositive is not dif.is_positive:
-                return sympify(dif.is_nonpositive)
+            if dif.is_extended_nonpositive is not None and \
+                    dif.is_extended_nonpositive is not dif.is_extended_positive:
+                return sympify(dif.is_extended_nonpositive)
         return LessThan(self, other, evaluate=False)
 
     def __gt__(self, other):
@@ -343,9 +343,9 @@ class Expr(Basic, EvalfMixin):
             return _sympify(n2 > 0)
         if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_positive is not None and \
-                    dif.is_positive is not dif.is_nonpositive:
-                return sympify(dif.is_positive)
+            if dif.is_extended_positive is not None and \
+                    dif.is_extended_positive is not dif.is_extended_nonpositive:
+                return sympify(dif.is_extended_positive)
         return StrictGreaterThan(self, other, evaluate=False)
 
     def __lt__(self, other):
@@ -364,9 +364,9 @@ class Expr(Basic, EvalfMixin):
             return _sympify(n2 < 0)
         if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_negative is not None and \
-                    dif.is_negative is not dif.is_nonnegative:
-                return sympify(dif.is_negative)
+            if dif.is_extended_negative is not None and \
+                    dif.is_extended_negative is not dif.is_extended_nonnegative:
+                return sympify(dif.is_extended_negative)
         return StrictLessThan(self, other, evaluate=False)
 
     def __trunc__(self):
@@ -1228,7 +1228,7 @@ class Expr(Basic, EvalfMixin):
 
         if c and split_1 and (
             c[0].is_Number and
-            c[0].is_negative and
+            c[0].is_extended_negative and
                 c[0] is not S.NegativeOne):
             c[:1] = [S.NegativeOne, -c[0]]
 

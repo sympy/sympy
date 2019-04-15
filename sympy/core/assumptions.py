@@ -178,16 +178,22 @@ _assume_rules = FactRules([
     'odd            ==  integer & !even',
     'even           ==  integer & !odd',
 
-    'extended_real  ==  negative | zero | positive',
-    'complex        ->  infinite | finite',
+    'extended_real  ==  extended_negative | zero | extended_positive',
+    'real           ==  negative | zero | positive',
     'transcendental ==  complex & !algebraic & finite',
 
-    'negative       ==  nonpositive & nonzero',
-    'positive       ==  nonnegative & nonzero',
-    'zero           ==  nonnegative & nonpositive',
+    'extended_negative ==  extended_nonpositive & extended_nonzero',
+    'extended_positive ==  extended_nonnegative & extended_nonzero',
+    'zero              ==  extended_nonnegative & extended_nonpositive',
 
-    'nonpositive    ==  extended_real & !positive',
-    'nonnegative    ==  extended_real & !negative',
+    'extended_nonpositive ==  extended_real & !extended_positive',
+    'extended_nonnegative ==  extended_real & !extended_negative',
+
+    'positive       ==  extended_positive & finite',
+    'negative       ==  extended_negative & finite',
+    'nonpositive    ==  extended_nonpositive & finite',
+    'nonnegative    ==  extended_nonnegative & finite',
+    'nonzero        ==  extended_nonzero & finite',
 
     'zero           ->  even & finite',
 
@@ -201,7 +207,7 @@ _assume_rules = FactRules([
 
     'infinite       ->  !finite',
     'noninteger     ==  extended_real & !integer',
-    'nonzero        ==  extended_real & !zero',
+    'extended_nonzero == extended_real & !zero',
 ])
 
 _assume_defined = _assume_rules.defined_facts.copy()
