@@ -1855,10 +1855,28 @@ class Lambda(Expr):
     >>> f(*p)
     x + y*z
 
+    For having a function as its parameter:
+
+    >>> f = Lambda(lambda x, y: (x + y)**2)
+    >>> print(f)
+    Lambda((x, y), (x + y)**2)
+    >>> f(2,3)
+    25
+
     """
     is_Function = True
 
-    def __new__(cls, variables, expr):
+    def __new__(cls, *args):
+        if len(args) != 1:
+            variables, expr = args
+        else:
+            func = args[0]
+            if not callable(func):
+                raise ValueError('when passing 1 argument, it should be callable')
+            from .symbol import Symbol
+            variables = [Symbol(i) for i in func.__code__.co_varnames]
+            expr = func(*variables)
+
         from sympy.sets.sets import FiniteSet
         v = list(variables) if iterable(variables) else [variables]
         for i in v:
