@@ -129,7 +129,7 @@ def _set_function(f, x):
     else:
         return ImageSet(Lambda(_x, f(_x)), x)
 
-@dispatch(FunctionUnion, EmptySet.__class__)
+@dispatch(FunctionUnion, type(EmptySet))
 def _set_function(f, x):
     return x
 

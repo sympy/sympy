@@ -179,8 +179,8 @@ def test_Complement():
     assert -1 in Complement(S.Reals, S.Naturals, evaluate=False)
     assert not 1 in Complement(S.Reals, S.Naturals, evaluate=False)
 
-    assert Complement(S.Integers, S.UniversalSet) == EmptySet.__class__()
-    assert S.UniversalSet.complement(S.Integers) == EmptySet.__class__()
+    assert Complement(S.Integers, S.UniversalSet) == EmptySet
+    assert S.UniversalSet.complement(S.Integers) == EmptySet
 
     assert (not 0 in S.Reals.intersect(S.Integers - FiniteSet(0)))
 
@@ -329,7 +329,7 @@ def test_issue_9623():
     c = FiniteSet(n)
 
     assert Intersection(a, b, c) == Intersection(b, c)
-    assert Intersection(Interval(1, 2), Interval(3, 4), FiniteSet(n)) == EmptySet.__class__()
+    assert Intersection(Interval(1, 2), Interval(3, 4), FiniteSet(n)) == EmptySet
 
 
 def test_is_disjoint():
@@ -1004,7 +1004,7 @@ def test_issue_10337():
 
 def test_issue_10326():
     bad = [
-        EmptySet.__class__(),
+        EmptySet,
         FiniteSet(1),
         Interval(1, 2),
         S.ComplexInfinity,
@@ -1053,8 +1053,8 @@ def test_issue_8257():
 
 
 def test_issue_10931():
-    assert S.Integers - S.Integers == EmptySet.__class__()
-    assert S.Integers - S.Reals == EmptySet.__class__()
+    assert S.Integers - S.Integers == EmptySet
+    assert S.Integers - S.Reals == EmptySet
 
 
 def test_issue_11174():

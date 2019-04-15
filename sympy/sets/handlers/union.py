@@ -29,7 +29,7 @@ def union_sets(a, b):
             return ComplexRegion(Union(a.sets, b.sets), polar=True)
     return None
 
-@dispatch(EmptySet.__class__, Set)
+@dispatch(type(EmptySet), Set)
 def union_sets(a, b):
     return b
 

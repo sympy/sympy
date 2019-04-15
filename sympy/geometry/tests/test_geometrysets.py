@@ -20,7 +20,7 @@ def test_booleans():
     assert Intersection(l1, l2).equals(l1)
     assert Intersection(l1, l4) == FiniteSet(Point(1,1))
     assert Intersection(Union(l1, l4), l3) == FiniteSet(Point(-S(1)/3, -S(1)/3), Point(5, 1))
-    assert Intersection(l1, FiniteSet(Point(7,-7))) == EmptySet.__class__()
+    assert Intersection(l1, FiniteSet(Point(7,-7))) == EmptySet
     assert Intersection(Circle(Point(0,0), 3), Line(p1,p2)) == FiniteSet(Point(-3,0), Point(3,0))
     assert Intersection(l1, FiniteSet(p1)) == FiniteSet(p1)
     assert Union(l1, FiniteSet(p1)) == l1

@@ -444,7 +444,7 @@ class Category(Basic):
     ========
     Diagram
     """
-    def __new__(cls, name, objects=EmptySet.__class__(), commutative_diagrams=EmptySet.__class__()):
+    def __new__(cls, name, objects=EmptySet, commutative_diagrams=EmptySet):
         if not name:
             raise ValueError("A Category cannot have an empty name.")
 
@@ -615,7 +615,7 @@ class Diagram(Basic):
                 return
 
             if add_identities:
-                empty = EmptySet.__class__()
+                empty = EmptySet
 
                 id_dom = IdentityMorphism(morphism.domain)
                 id_cod = IdentityMorphism(morphism.codomain)
@@ -635,7 +635,7 @@ class Diagram(Basic):
             if isinstance(morphism, CompositeMorphism) and recurse_composites:
                 # This is a composite morphism, add its components as
                 # well.
-                empty = EmptySet.__class__()
+                empty = EmptySet
                 for component in morphism.components:
                     Diagram._add_morphism_closure(morphisms, component, empty,
                                                   add_identities)
@@ -685,7 +685,7 @@ class Diagram(Basic):
 
         # Here we will keep track of the objects which appear in the
         # premises.
-        objects = EmptySet.__class__()
+        objects = EmptySet
 
         if len(args) >= 1:
             # We've got some premises in the arguments.
@@ -694,7 +694,7 @@ class Diagram(Basic):
             if isinstance(premises_arg, list):
                 # The user has supplied a list of morphisms, none of
                 # which have any attributes.
-                empty = EmptySet.__class__()
+                empty = EmptySet
 
                 for morphism in premises_arg:
                     objects |= FiniteSet(morphism.domain, morphism.codomain)
@@ -714,7 +714,7 @@ class Diagram(Basic):
             if isinstance(conclusions_arg, list):
                 # The user has supplied a list of morphisms, none of
                 # which have any attributes.
-                empty = EmptySet.__class__()
+                empty = EmptySet
 
                 for morphism in conclusions_arg:
                     # Check that no new objects appear in conclusions.
@@ -838,8 +838,8 @@ class Diagram(Basic):
         ========
         Object, Morphism
         """
-        premises = EmptySet.__class__()
-        conclusions = EmptySet.__class__()
+        premises = EmptySet
+        conclusions = EmptySet
 
         for morphism in self.premises.keys():
             if (morphism.domain == A) and (morphism.codomain == B):
