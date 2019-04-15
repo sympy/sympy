@@ -37,7 +37,7 @@ class UnitSystem(object):
         # this is possible since we have already verified that the base units
         # form a coherent system
         base_dict = dict((u.dimension, u) for u in base)
-        # order the base units in the same order than the dimensions in the
+        # order the base units in the same order as the dimensions in the
         # associated system, in order to ensure that we get always the same
         self._base_units = tuple(base_dict[d] for d in self._system.base_dims)
 

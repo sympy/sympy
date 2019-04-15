@@ -52,7 +52,7 @@ def test_convert_to():
     Js.set_scale_factor(S.One)
 
     mksa = UnitSystem((m, kg, s, A), (Js,))
-    assert convert_to(Js, mksa) == kg*m**2/(1000*s)
+    assert convert_to(Js, mksa) == kg*m**2/s
 
 
 def test_extend():

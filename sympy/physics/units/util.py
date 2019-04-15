@@ -129,7 +129,9 @@ def convert_to(expr, target_units):
         return expr
 
     expr_scale_factor = get_total_scale_factor(expr)
-    return expr_scale_factor * Mul.fromiter((1/get_total_scale_factor(u) * u) ** p for u, p in zip(target_units, depmat))
+    scale = Mul.fromiter((u/get_total_scale_factor(u))**p
+        for u, p in zip(target_units, depmat))
+    return expr_scale_factor * scale
 
 
 def quantity_simplify(expr):
