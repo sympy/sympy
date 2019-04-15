@@ -19,7 +19,7 @@ from sympy.core.cache import lru_cache
 
 import mpmath
 import mpmath.libmp as mlib
-import numbers
+import numbers as nums
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp import mpnumeric
@@ -489,7 +489,7 @@ class ManagedABCMetaclass(ManagedProperties, ABCMeta):
 class ManagedABCSingletonMetaclass(ManagedABCMetaclass, Singleton):
     pass
 
-class Number(with_metaclass(ManagedABCMetaclass, AtomicExpr, numbers.Number)):
+class Number(with_metaclass(ManagedABCMetaclass, AtomicExpr, nums.Number)):
     """Represents atomic numbers in SymPy.
 
     Floating point numbers are represented by the Float class.
@@ -773,7 +773,7 @@ class Number(with_metaclass(ManagedABCMetaclass, AtomicExpr, numbers.Number)):
         from sympy.polys import cofactors
         return cofactors(self, other)
 
-class Float(with_metaclass(ManagedABCMetaclass, Number, numbers.Real)):
+class Float(with_metaclass(ManagedABCMetaclass, Number, nums.Real)):
     """Represent a floating-point number of arbitrary precision.
 
     Examples
@@ -1389,7 +1389,7 @@ converter[float] = converter[decimal.Decimal] = Float
 RealNumber = Float
 
 
-class Rational(with_metaclass(ManagedABCMetaclass, Number, numbers.Rational)):
+class Rational(with_metaclass(ManagedABCMetaclass, Number, nums.Rational)):
     """Represents rational numbers (p/q) of any size.
 
     Examples
