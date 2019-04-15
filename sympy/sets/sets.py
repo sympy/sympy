@@ -240,7 +240,7 @@ class Set(Basic):
         Union(Interval.open(-oo, 1), Interval.open(10, oo))
 
         >>> from sympy import S, EmptySet
-        >>> S.Reals.symmetric_difference(EmptySet.__class__())
+        >>> S.Reals.symmetric_difference(EmptySet)
         Reals
 
         References
@@ -475,7 +475,7 @@ class Set(Basic):
 
         >>> A = FiniteSet(1, 2)
         >>> a, b, c = FiniteSet(1), FiniteSet(2), FiniteSet(1, 2)
-        >>> A.powerset() == FiniteSet(a, b, c, EmptySet.__class__())
+        >>> A.powerset() == FiniteSet(a, b, c, EmptySet)
         True
 
         A power set of an interval:

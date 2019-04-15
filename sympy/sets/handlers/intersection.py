@@ -403,7 +403,7 @@ def intersection_sets(a, b):
 
     return Interval(start, end, left_open, right_open)
 
-@dispatch(EmptySet.__class__, Set)
+@dispatch(type(EmptySet), Set)
 def intersection_sets(a, b):
     return S.EmptySet
 
