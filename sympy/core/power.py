@@ -1127,9 +1127,9 @@ class Pow(Expr):
             re, im = self.base.as_real_imag(deep=deep)
 
             if im.is_zero and self.exp is S.Half:
-                if re.is_nonnegative:
+                if re.is_extended_nonnegative:
                     return self, S.Zero
-                if re.is_nonpositive:
+                if re.is_extended_nonpositive:
                     return S.Zero, (-self.base)**self.exp
 
             # XXX: This is not totally correct since for x**(p/q) with
