@@ -3,7 +3,7 @@ from sympy import Mul, Basic, Q, Expr, And, symbols, Equivalent, Implies, Or
 from sympy.assumptions.sathandlers import (ClassFactRegistry, AllArgs,
     UnevaluatedOnFree, AnyArgs, CheckOldAssump, ExactlyOneArg)
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 
 x, y, z = symbols('x y z')
@@ -67,6 +67,7 @@ def test_AnyArgs():
     assert b.rcall(x*y) == Or(Q.positive(x) & Q.negative(x), Q.positive(y) & Q.negative(y))
 
 
+@XFAIL
 def test_CheckOldAssump():
     # TODO: Make these tests more complete
 

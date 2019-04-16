@@ -2088,6 +2088,7 @@ def test_T5():
                   + 2*exp(exp(3*x**3*log(x))))), x, oo) == Rational(1, 3)
 
 
+@XFAIL
 def test_T6():
     assert limit(1/n * factorial(n)**(1/n), n, oo) == exp(-1)
 
