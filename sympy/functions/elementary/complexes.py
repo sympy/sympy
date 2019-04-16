@@ -296,15 +296,15 @@ class sign(Function):
             unk = []
             s = sign(c)
             for a in args:
-                if a.is_negative:
+                if a.is_extended_negative:
                     s = -s
-                elif a.is_positive:
+                elif a.is_extended_positive:
                     pass
                 else:
                     ai = im(a)
                     if a.is_imaginary and ai.is_comparable:  # i.e. a = I*real
                         s *= S.ImaginaryUnit
-                        if ai.is_negative:
+                        if ai.is_extended_negative:
                             # can't use sign(ai) here since ai might not be
                             # a Number
                             s = -s
@@ -317,9 +317,9 @@ class sign(Function):
             return S.NaN
         if arg.is_zero:  # it may be an Expr that is zero
             return S.Zero
-        if arg.is_positive:
+        if arg.is_extended_positive:
             return S.One
-        if arg.is_negative:
+        if arg.is_extended_negative:
             return S.NegativeOne
         if arg.is_Function:
             if isinstance(arg, sign):
@@ -330,9 +330,9 @@ class sign(Function):
                 # e.g. sqrt(1-sqrt(2)) --x-->  to I*sqrt(sqrt(2) - 1)
                 return S.ImaginaryUnit
             arg2 = -S.ImaginaryUnit * arg
-            if arg2.is_positive:
+            if arg2.is_extended_positive:
                 return S.ImaginaryUnit
-            if arg2.is_negative:
+            if arg2.is_extended_negative:
                 return -S.ImaginaryUnit
 
     def _eval_Abs(self):
