@@ -275,7 +275,6 @@ def test_atan():
         + 1))*x + EX(atan(a))
     # Complex numbers not in ring_series
     R, x = ring('x', EX)
-    assert rs_atan(x + I,x,3) == EX(I/16)*x**2 + EX(S(1)/4)*x + EX(zoo + oo*I)
     assert rs_atan(x*I,x,3) == EX(I)*x
 
 @XFAIL
@@ -284,6 +283,7 @@ def test_atan2():
     assert rs_atan(I,x,5) == NotImplementedError
     assert rs_atan(I + a,x,3) == EX(atan(I +a))
     assert rs_atan(I*a,x,3) == EX(atan(I*a))
+    assert rs_atan(x + I,x,3) == EX(I/16)*x**2 + EX(S(1)/4)*x + EX(zoo + oo*I)
 
 def test_asin():
     R, x, y = ring('x, y', QQ)
