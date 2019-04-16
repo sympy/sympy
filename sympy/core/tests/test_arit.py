@@ -1,6 +1,6 @@
-from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
-        sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, zoo, Integer,
-        sign, im, nan, Dummy, factorial, comp, refine
+from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
+        Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
+        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, refine
 )
 from sympy.core.compatibility import long, range
 from sympy.core.expr import unchanged
@@ -381,11 +381,12 @@ def test_Add_Mul_is_finite():
     x = Symbol('x', extended_real=True, finite=False)
 
     assert sin(x).is_finite is True
-    assert (x*sin(x)).is_finite is False
+    assert (x*sin(x)).is_finite is None
+    assert (x*atan(x)).is_finite is False
     assert (1024*sin(x)).is_finite is True
-    assert (sin(x)*exp(x)).is_finite is not True
+    assert (sin(x)*exp(x)).is_finite is None
     assert (sin(x)*cos(x)).is_finite is True
-    assert (x*sin(x)*exp(x)).is_finite is not True
+    assert (x*sin(x)*exp(x)).is_finite is None
 
     assert (sin(x) - 67).is_finite is True
     assert (sin(x) + exp(x)).is_finite is not True

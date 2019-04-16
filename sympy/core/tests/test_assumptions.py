@@ -737,24 +737,24 @@ def test_Add_is_pos_neg():
     p = Symbol('p', extended_positive=True, infinite=True)
     r = Dummy(extended_real=True, finite=False)
     x = Symbol('x')
-    xf = Symbol('xb', finite=True)
-    assert (n + p).is_positive is None
-    assert (n + x).is_positive is None
-    assert (p + x).is_positive is None
-    assert (n + p).is_negative is None
-    assert (n + x).is_negative is None
-    assert (p + x).is_negative is None
+    xf = Symbol('xf', finite=True)
+    assert (n + p).is_extended_positive is None
+    assert (n + x).is_extended_positive is None
+    assert (p + x).is_extended_positive is None
+    assert (n + p).is_extended_negative is None
+    assert (n + x).is_extended_negative is None
+    assert (p + x).is_extended_negative is None
 
-    assert (n + xf).is_positive is False
-    assert (p + xf).is_positive is True
-    assert (n + xf).is_negative is True
-    assert (p + xf).is_negative is False
+    assert (n + xf).is_extended_positive is False
+    assert (p + xf).is_extended_positive is True
+    assert (n + xf).is_extended_negative is True
+    assert (p + xf).is_extended_negative is False
 
-    assert (x - S.Infinity).is_negative is None  # issue 7798
+    assert (x - S.Infinity).is_extended_negative is None  # issue 7798
     # issue 8046, 16.2
-    assert (p + nn).is_positive
-    assert (n + np).is_negative
-    assert (p + r).is_positive is None
+    assert (p + nn).is_extended_positive
+    assert (n + np).is_extended_negative
+    assert (p + r).is_extended_positive is None
 
 
 def test_Add_is_imaginary():
@@ -887,13 +887,13 @@ def test_Mul_is_infinite():
     from sympy import Mul
     assert (x*f).is_finite is None
     assert (x*i).is_finite is None
-    assert (f*i).is_finite is False
+    assert (f*i).is_finite is None
     assert (x*f*i).is_finite is None
-    assert (z*i).is_finite is False
+    assert (z*i).is_finite is None
     assert (nzf*i).is_finite is False
     assert (z*f).is_finite is True
     assert Mul(0, f, evaluate=False).is_finite is True
-    assert Mul(0, i, evaluate=False).is_finite is False
+    assert Mul(0, i, evaluate=False).is_finite is None
 
     assert (x*f).is_infinite is None
     assert (x*i).is_infinite is None
