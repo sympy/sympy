@@ -1169,11 +1169,11 @@ class AccumulationBounds(AtomicExpr):
                     if self.min is S.NegativeInfinity:
                         return AccumBounds(-oo, 0)
                     return S.Zero
-                if other.is_positive:
+                if other.is_extended_positive:
                     return AccumBounds(
                         Mul(self.min, other),
                         Mul(self.max, other))
-                elif other.is_negative:
+                elif other.is_extended_negative:
                     return AccumBounds(
                         Mul(self.max, other),
                         Mul(self.min, other))
@@ -1198,30 +1198,30 @@ class AccumulationBounds(AtomicExpr):
                         return AccumBounds(-oo, 0)
                     return AccumBounds(-oo, oo)
 
-                if self.max.is_negative:
-                    if other.min.is_negative:
+                if self.max.is_extended_negative:
+                    if other.min.is_extended_negative:
                         if other.max.is_zero:
                             return AccumBounds(self.max / other.min, oo)
-                        if other.max.is_positive:
+                        if other.max.is_extended_positive:
                             # the actual answer is a Union of AccumBounds,
                             # Union(AccumBounds(-oo, self.max/other.max),
                             #       AccumBounds(self.max/other.min, oo))
                             return AccumBounds(-oo, oo)
 
-                    if other.min.is_zero and other.max.is_positive:
+                    if other.min.is_zero and other.max.is_extended_positive:
                         return AccumBounds(-oo, self.max / other.max)
 
-                if self.min.is_positive:
-                    if other.min.is_negative:
+                if self.min.is_extended_positive:
+                    if other.min.is_extended_negative:
                         if other.max.is_zero:
                             return AccumBounds(-oo, self.min / other.min)
-                        if other.max.is_positive:
+                        if other.max.is_extended_positive:
                             # the actual answer is a Union of AccumBounds,
                             # Union(AccumBounds(-oo, self.min/other.min),
                             #       AccumBounds(self.min/other.max, oo))
                             return AccumBounds(-oo, oo)
 
-                    if other.min.is_zero and other.max.is_positive:
+                    if other.min.is_zero and other.max.is_extended_positive:
                         return AccumBounds(self.min / other.max, oo)
 
             elif other.is_extended_real:
@@ -1232,9 +1232,9 @@ class AccumulationBounds(AtomicExpr):
                         return AccumBounds(Min(0, other), Max(0, other))
                     if self.min is S.NegativeInfinity:
                         return AccumBounds(Min(0, -other), Max(0, -other))
-                if other.is_positive:
+                if other.is_extended_positive:
                     return AccumBounds(self.min / other, self.max / other)
-                elif other.is_negative:
+                elif other.is_extended_negative:
                     return AccumBounds(self.max / other, self.min / other)
             return Mul(self, 1 / other, evaluate=False)
 
@@ -1250,14 +1250,14 @@ class AccumulationBounds(AtomicExpr):
                     return S.Zero
                 if S.Zero in self:
                     if self.min == S.Zero:
-                        if other.is_positive:
+                        if other.is_extended_positive:
                             return AccumBounds(Mul(other, 1 / self.max), oo)
-                        if other.is_negative:
+                        if other.is_extended_negative:
                             return AccumBounds(-oo, Mul(other, 1 / self.max))
                     if self.max == S.Zero:
-                        if other.is_positive:
+                        if other.is_extended_positive:
                             return AccumBounds(-oo, Mul(other, 1 / self.min))
-                        if other.is_negative:
+                        if other.is_extended_negative:
                             return AccumBounds(Mul(other, 1 / self.min), oo)
                     return AccumBounds(-oo, oo)
                 else:
@@ -1274,13 +1274,13 @@ class AccumulationBounds(AtomicExpr):
         from sympy.functions.elementary.miscellaneous import real_root
         if isinstance(other, Expr):
             if other is S.Infinity:
-                if self.min.is_nonnegative:
+                if self.min.is_extended_nonnegative:
                     if self.max < 1:
                         return S.Zero
                     if self.min > 1:
                         return S.Infinity
                     return AccumBounds(0, oo)
-                elif self.max.is_negative:
+                elif self.max.is_extended_negative:
                     if self.min > -1:
                         return S.Zero
                     if self.max < -1:
@@ -1301,17 +1301,17 @@ class AccumulationBounds(AtomicExpr):
                     return S.One
 
                 if other.is_Integer:
-                    if self.min.is_positive:
+                    if self.min.is_extended_positive:
                         return AccumBounds(
                             Min(self.min ** other, self.max ** other),
                             Max(self.min ** other, self.max ** other))
-                    elif self.max.is_negative:
+                    elif self.max.is_extended_negative:
                         return AccumBounds(
                             Min(self.max ** other, self.min ** other),
                             Max(self.max ** other, self.min ** other))
 
                     if other % 2 == 0:
-                        if other.is_negative:
+                        if other.is_extended_negative:
                             if self.min.is_zero:
                                 return AccumBounds(self.max**other, oo)
                             if self.max.is_zero:
@@ -1320,7 +1320,7 @@ class AccumulationBounds(AtomicExpr):
                         return AccumBounds(
                             S.Zero, Max(self.min**other, self.max**other))
                     else:
-                        if other.is_negative:
+                        if other.is_extended_negative:
                             if self.min.is_zero:
                                 return AccumBounds(self.max**other, oo)
                             if self.max.is_zero:
@@ -1332,7 +1332,7 @@ class AccumulationBounds(AtomicExpr):
                 if num == S(1):
                     if den % 2 == 0:
                         if S.Zero in self:
-                            if self.min.is_negative:
+                            if self.min.is_extended_negative:
                                 return AccumBounds(0, real_root(self.max, den))
                     return AccumBounds(real_root(self.min, den),
                                        real_root(self.max, den))
@@ -1343,9 +1343,9 @@ class AccumulationBounds(AtomicExpr):
         return NotImplemented
 
     def __abs__(self):
-        if self.max.is_negative:
+        if self.max.is_extended_negative:
             return self.__neg__()
-        elif self.min.is_negative:
+        elif self.min.is_extended_negative:
             return AccumBounds(S.Zero, Max(abs(self.min), self.max))
         else:
             return self
