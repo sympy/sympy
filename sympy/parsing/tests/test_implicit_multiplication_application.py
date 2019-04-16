@@ -182,4 +182,4 @@ def test_all_implicit_steps():
     for case in cases:
         implicit = parse_expr(case, transformations=transformations2)
         normal = parse_expr(cases[case], transformations=transformations)
-        assert(implicit == normal)
+        assert implicit == normal

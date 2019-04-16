@@ -8,12 +8,16 @@ from tokenize import (generate_tokens, untokenize, TokenError,
 from keyword import iskeyword
 
 import ast
+import re as regex
+import string
 import unicodedata
 
-from sympy.core.compatibility import exec_, StringIO, iterable
+from sympy.core.compatibility import (exec_, StringIO, iterable, PY3,
+    string_types)
 from sympy.core.basic import Basic
 from sympy.core import Symbol
 from sympy.core.function import arity
+from sympy.logic.boolalg import Xor
 from sympy.utilities.misc import filldedent, func_name
 
 
@@ -905,8 +909,110 @@ def eval_expr(code, local_dict, global_dict):
     return expr
 
 
+_py2name = regex.compile(r'^[a-zA-Z_]\w*$')
+def valid_name(name):
+    if not isinstance(name, string_types):
+        return False
+    if iskeyword(name):
+        return False
+    if PY3:
+        return name.isidentifier()
+    return _py2name.match(name)
+
+
+_refloat = regex.compile(r"(((\d*\.\d+)|(\d+\.?\d?))([eE][-+]?\d+)?)")
+_re_num = regex.compile(r"(\d)_(\d)")
+_decdig = string.digits + '.'
+def _number_kern(s):
+    """return s with space between a number and any surrounding text
+    with which it cannot be joined without disturbing space already
+    present.
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.sympy_parser import _number_kern as kern
+    >>> kern('x3y')
+    'x3 y'
+    >>> kern('x3j')
+    'x 3j'
+    >>> kern('x3.2y')
+    'x 3.2 y'
+    """
+    # join underscore separated numbers
+    s = regex.sub(r'(\d+)_(\d+)', r'\1\2', s)
+    # split on numbers
+    g = _refloat.split(s)
+    if len(g) == 1:
+        # it didn't split
+        return s
+    # join up re patterns
+    nums = set()
+    i = 0
+    while i < len(g):
+        if g[i] is None:
+            if g[i + 1] is None:
+                # n n n None None
+                #       i
+                g[i - 3: i + 2] = [g[i - 3]]
+                i -= 2
+            elif g[i + 2: i + 3] == [None]:
+                # n n None n None
+                #     i
+                g[i - 2: i + 3] = [g[i - 2]]
+                i -= 1
+            elif i + 1 < len(g) and g[i - 3].endswith(g[i + 1]):
+                # n n n None e
+                #       i
+                g[i - 3: i + 2] = [g[i - 3]]
+                i -= 2
+            else:
+                # n n None n e
+                #     i
+                g[i - 2: i + 3] = [g[i - 2]]
+                i -= 1
+            nums.add(g[i - 1])
+        else:
+            i += 1
+    g = list(filter(None, g))
+    p = []  # processed pieces
+    i = 0
+    while i < len(g):
+        if not p:
+            p.append(g[i])
+            i += 1
+        elif g[i][0] in _decdig:
+            num = g[i]
+            if valid_name(p[-1][-1]) and num.isdigit() and \
+                    g[i + 1: i + 2] != ['j']:
+                # x 3 -> x3 but
+                p[-1] += num
+            else:
+                # x 3. -x-> x3.
+                # x 3 j -x-> x3 j
+                p.append(num)
+            i += 1
+        elif p[-1] in nums and g[i] == 'j':
+            # *3 j -> *3j
+            p[-1] += g[i]
+            i += 1
+        elif p[-1].isdigit() and not valid_name(g[i]):
+            # 3 not_name -> 3notname
+            # (same as above but separate for coverage tests)
+            p[-1] += g[i]
+            i += 1
+        elif not valid_name(p[-1]) and not valid_name(g[i]):
+            p[-1] += g[i]
+            i += 1
+        else:
+            p.append(g[i])
+            i += 1
+    return ' '.join(p)
+
+
+_kern = _number_kern
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True):
+               global_dict=None, evaluate=True, _number_kern=True):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -929,6 +1035,11 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         convert numeric literals into their SymPy equivalents, convert
         undefined variables into SymPy symbols, and allow the use of standard
         mathematical factorial notation (e.g. ``x!``).
+
+    _number_kern : bool, optional
+        When True (default) numbers will be set off from surrounding
+        symbols with space. This option will be removed when it is no
+        longer necessary.
 
     evaluate : bool, optional
         When False, the order of the arguments will remain as they were in the
@@ -1000,6 +1111,8 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
                 raise TypeError(filldedent('''
                     a transformation should be function that
                     takes 3 arguments'''))
+
+    s = _kern(s) if _number_kern else s
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
     if not evaluate:

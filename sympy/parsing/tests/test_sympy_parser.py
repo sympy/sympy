@@ -4,9 +4,14 @@
 import sys
 
 
-from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational)
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.compatibility import PY3
-from sympy.functions import exp, factorial, factorial2, sin
+from sympy.functions import exp, factorial, factorial2, sin, log
 from sympy.logic import And
 from sympy.series import Limit
 from sympy.utilities.pytest import raises, skip
@@ -15,7 +20,7 @@ from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
     split_symbols, implicit_multiplication, convert_equals_signs,
     convert_xor, function_exponentiation,
-    implicit_multiplication_application,
+    implicit_multiplication_application, valid_name,
     )
 
 
@@ -91,17 +96,9 @@ def test_factorial_fail():
 
 def test_repeated_fail():
     inputs = ['1[1]', '.1e1[1]', '0x1[1]', '1.1j[1]', '1.1[1 + 1]',
-        '0.1[[1]]', '0x1.1[1]']
-
-
-    # All are valid Python, so only raise TypeError for invalid indexing
+        '0.1[[1]]', '0x1.1[1]', '0.1[', '0.1[1', '0.1[]']
     for text in inputs:
-        raises(TypeError, lambda: parse_expr(text))
-
-
-    inputs = ['0.1[', '0.1[1', '0.1[]']
-    for text in inputs:
-        raises((TokenError, SyntaxError), lambda: parse_expr(text))
+        raises((IndexError, TypeError, TokenError, SyntaxError), lambda: parse_expr(text))
 
 
 def test_repeated_dot_only():
@@ -239,17 +236,28 @@ def test_parse_function_issue_3539():
 
 
 def test_split_symbols_numeric():
-    transformations = (
-        standard_transformations +
-        (implicit_multiplication_application,))
+    T = standard_transformations + (
+        implicit_multiplication_application,)
+    do = lambda x: parse_expr(x, transformations=T)
 
     n = Symbol('n')
-    expr1 = parse_expr('2**n * 3**n')
-    expr2 = parse_expr('2**n3**n', transformations=transformations)
-    assert expr1 == expr2 == 2**n*3**n
+    assert parse_expr('2**n * 3**n') == do('2**n3**n') == 2**n*3**n
+    assert do('n12n34') == n*12*n*34
 
-    expr1 = parse_expr('n12n34', transformations=transformations)
-    assert expr1 == n*12*n*34
+    # issue 16632
+    x, y, z, x_, x_3 = symbols('x y z x_ x_3')
+    assert do('3e4') == 30000.0
+    assert do('x3y') == x*3*y
+    assert do('x3j') == x*3*I
+    assert do('x3.j') == x*3.0*I
+    assert do('x_3e4yz') == 30000.0*x_*y*z
+    assert do('x_3.e4yz') == 30000.0*x_*y*z
+    assert do('x_.3e4yz') == 3000.0*x_*y*z
+    assert do('x_3.3e4yz') == 33000.0*x_*y*z
+    assert do('x_3yz') == x_3*y*z
+    assert do('n1.1n22') == n*1.1*n*22
+    assert parse_expr('log10(3.2x)', dict(log10=log),
+        transformations=T) == log(3.2*x)
 
 
 def test_unicode_names():
@@ -272,3 +280,12 @@ def test_python3_features():
     assert parse_expr('.[3_4]') == parse_expr('.[34]') == Rational(34, 99)
     assert parse_expr('.1[3_4]') == parse_expr('.1[34]') == Rational(133, 990)
     assert parse_expr('123_123.123_123[3_4]') == parse_expr('123123.123123[34]') == Rational(12189189189211, 99000000)
+
+
+def test_valid_name():
+    assert not valid_name(3)
+    assert not valid_name('3')
+    assert not valid_name(' x')
+    assert not valid_name('a=b')
+    assert not valid_name('for')
+    assert valid_name('_ok2')
