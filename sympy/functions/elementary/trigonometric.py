@@ -1192,6 +1192,11 @@ class tan(TrigonometricFunction):
     def _eval_is_extended_real(self):
         return self.args[0].is_extended_real
 
+    def _eval_is_real(self):
+        arg = self.args[0]
+        if arg.is_real and (arg / pi - S.Half).is_integer is False:
+            return True
+
     def _eval_is_finite(self):
         arg = self.args[0]
 
@@ -2357,7 +2362,7 @@ class atan(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
-    def _eval_is_extended_real(self):
+    def _eval_is_real(self):
         return self.args[0].is_extended_real
 
     def _eval_rewrite_as_log(self, x, **kwargs):
