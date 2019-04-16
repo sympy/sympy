@@ -493,9 +493,9 @@ class Abs(Function):
                     if isinstance(base, cls) and exponent is S.NegativeOne:
                         return arg
                     return Abs(base)**exponent
-                if base.is_nonnegative:
+                if base.is_extended_nonnegative:
                     return base**re(exponent)
-                if base.is_negative:
+                if base.is_extended_negative:
                     return (-base)**re(exponent)*exp(-S.Pi*im(exponent))
                 return
             elif not base.has(Symbol): # complex base
@@ -513,13 +513,13 @@ class Abs(Function):
                 return S.Infinity
         if arg.is_zero:
             return S.Zero
-        if arg.is_nonnegative:
+        if arg.is_extended_nonnegative:
             return arg
-        if arg.is_nonpositive:
+        if arg.is_extended_nonpositive:
             return -arg
         if arg.is_imaginary:
             arg2 = -S.ImaginaryUnit * arg
-            if arg2.is_nonnegative:
+            if arg2.is_extended_nonnegative:
                 return arg2
         # reject result if all new conjugates are just wrappers around
         # an expression that was already in the arg
