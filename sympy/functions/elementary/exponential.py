@@ -725,7 +725,7 @@ class log(Function):
             return s.is_algebraic
 
     def _eval_is_extended_real(self):
-        return self.args[0].is_positive
+        return self.args[0].is_extended_positive
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -733,14 +733,14 @@ class log(Function):
             return False
         return arg.is_finite
 
-    def _eval_is_positive(self):
-        return (self.args[0] - 1).is_positive
+    def _eval_is_extended_positive(self):
+        return (self.args[0] - 1).is_extended_positive
 
     def _eval_is_zero(self):
         return (self.args[0] - 1).is_zero
 
-    def _eval_is_nonnegative(self):
-        return (self.args[0] - 1).is_nonnegative
+    def _eval_is_extended_nonnegative(self):
+        return (self.args[0] - 1).is_extended_nonnegative
 
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
