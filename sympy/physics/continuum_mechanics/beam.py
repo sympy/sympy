@@ -1228,7 +1228,7 @@ class Beam(object):
         else:
             length = self.length
         return plot(shear_force.subs(subs), (self.variable, 0, length), title='Shear Force',
-                xlabel='position', ylabel='Value', line_color='g')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$', line_color='g')
 
     def plot_bending_moment(self, subs=None):
         """
@@ -1286,7 +1286,7 @@ class Beam(object):
         else:
             length = self.length
         return plot(bending_moment.subs(subs), (self.variable, 0, length), title='Bending Moment',
-                xlabel='position', ylabel='Value', line_color='b')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$', line_color='b')
 
     def plot_slope(self, subs=None):
         """
@@ -1344,7 +1344,7 @@ class Beam(object):
         else:
             length = self.length
         return plot(slope.subs(subs), (self.variable, 0, length), title='Slope',
-                xlabel='position', ylabel='Value', line_color='m')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$', line_color='m')
 
     def plot_deflection(self, subs=None):
         """
@@ -1403,7 +1403,7 @@ class Beam(object):
         else:
             length = self.length
         return plot(deflection.subs(subs), (self.variable, 0, length),
-                    title='Deflection', xlabel='position', ylabel='Value',
+                    title='Deflection', xlabel=r'$\mathrm{x}$', ylabel=r'$\delta$',
                     line_color='r')
 
 
@@ -1464,16 +1464,16 @@ class Beam(object):
             length = self.length
 
         ax1 = plot(self.shear_force().subs(subs), (variable, 0, length),
-                   title="Shear Force", xlabel='position', ylabel='Value',
+                   title="Shear Force", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$',
                    line_color='g', show=False)
         ax2 = plot(self.bending_moment().subs(subs), (variable, 0, length),
-                   title="Bending Moment", xlabel='positionqw', ylabel='Value',
+                   title="Bending Moment", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$',
                    line_color='b', show=False)
         ax3 = plot(self.slope().subs(subs), (variable, 0, length),
-                   title="Slope", xlabel='position', ylabel='Value',
+                   title="Slope", xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$',
                    line_color='m', show=False)
         ax4 = plot(self.deflection().subs(subs), (variable, 0, length),
-                   title="Deflection", xlabel='position', ylabel='Value',
+                   title="Deflection", xlabel=r'$\mathrm{x}$', ylabel=r'$\delta$',
                    line_color='r', show=False)
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
