@@ -194,17 +194,17 @@ def test_benini():
     assert density(X)(x) == ((alpha/x + 2*beta*log(x/sigma)/x)
                           *exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
 
-    alpha = Symbol("alpha", positive=False)
+    alpha = Symbol("alpha", nonpositive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
-    beta = Symbol("beta", positive=False)
+    beta = Symbol("beta", nonpositive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
     alpha = Symbol("alpha", positive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
     beta = Symbol("beta", positive=True)
-    sigma = Symbol("sigma", positive=False)
+    sigma = Symbol("sigma", nonpositive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
 
@@ -236,11 +236,11 @@ def test_betaprime():
     X = BetaPrime('x', alpha, betap)
     assert density(X)(x) == x**(alpha - 1)*(x + 1)**(-alpha - betap)/beta(alpha, betap)
 
-    alpha = Symbol("alpha", positive=False)
+    alpha = Symbol("alpha", nonpositive=True)
     raises(ValueError, lambda: BetaPrime('x', alpha, betap))
 
     alpha = Symbol("alpha", positive=True)
-    betap = Symbol("beta", positive=False)
+    betap = Symbol("beta", nonpositive=True)
     raises(ValueError, lambda: BetaPrime('x', alpha, betap))
 
 
@@ -253,7 +253,7 @@ def test_cauchy():
     assert cdf(X)(x) == atan((x - x0)/gamma)/pi + S.Half
     assert diff(cdf(X)(x), x) == density(X)(x)
 
-    gamma = Symbol("gamma", positive=False)
+    gamma = Symbol("gamma", nonpositive=True)
     raises(ValueError, lambda: Cauchy('x', x0, gamma))
 
 
@@ -281,7 +281,7 @@ def test_chi_noncentral():
     raises(ValueError, lambda: ChiNoncentral('x', k, l))
 
     k = Symbol("k", integer=True, positive=True)
-    l = Symbol("l", positive=False)
+    l = Symbol("l", nonpositive=True)
     raises(ValueError, lambda: ChiNoncentral('x', k, l))
 
     k = Symbol("k", integer=False)
@@ -318,15 +318,15 @@ def test_dagum():
     assert cdf(X)(x) == Piecewise(((1 + (x/b)**(-a))**(-p), x >= 0),
                                     (0, True))
 
-    p = Symbol("p", positive=False)
+    p = Symbol("p", nonpositive=True)
     raises(ValueError, lambda: Dagum('x', p, a, b))
 
     p = Symbol("p", positive=True)
-    b = Symbol("b", positive=False)
+    b = Symbol("b", nonpositive=True)
     raises(ValueError, lambda: Dagum('x', p, a, b))
 
     b = Symbol("b", positive=True)
-    a = Symbol("a", positive=False)
+    a = Symbol("a", nonpositive=True)
     raises(ValueError, lambda: Dagum('x', p, a, b))
 
 
@@ -365,14 +365,14 @@ def test_f_distribution():
     assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
                              /(x*beta(d1/2, d2/2)))
 
-    d1 = Symbol("d1", positive=False)
+    d1 = Symbol("d1", nonpositive=True)
     raises(ValueError, lambda: FDistribution('x', d1, d1))
 
     d1 = Symbol("d1", positive=True, integer=False)
     raises(ValueError, lambda: FDistribution('x', d1, d1))
 
     d1 = Symbol("d1", positive=True)
-    d2 = Symbol("d2", positive=False)
+    d2 = Symbol("d2", nonpositive=True)
     raises(ValueError, lambda: FDistribution('x', d1, d2))
 
     d2 = Symbol("d2", positive=True, integer=False)
