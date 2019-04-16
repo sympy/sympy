@@ -166,9 +166,7 @@ _assume_rules = FactRules([
     'rational       ->  real',
     'rational       ->  algebraic',
     'algebraic      ->  complex & finite',
-    'real           ->  complex',
-    'real           ==  extended_real & finite',
-    'extended_real  ->  real | infinite',
+    'transcendental ==  complex & !algebraic & finite',
     'real           ->  hermitian',
     'imaginary      ->  complex & finite',
     'imaginary      ->  antihermitian',
@@ -178,16 +176,23 @@ _assume_rules = FactRules([
     'odd            ==  integer & !even',
     'even           ==  integer & !odd',
 
-    'extended_real  ==  extended_negative | zero | extended_positive',
-    'real           ==  negative | zero | positive',
-    'transcendental ==  complex & !algebraic & finite',
+    'real           ->  complex',
+    'extended_real  ->  real | infinite',
+    'real           ==  extended_real & finite',
 
-    'extended_negative ==  extended_nonpositive & extended_nonzero',
-    'extended_positive ==  extended_nonnegative & extended_nonzero',
-    'zero              ==  extended_nonnegative & extended_nonpositive',
+    'extended_real        ==  extended_negative | zero | extended_positive',
+    'extended_negative    ==  extended_nonpositive & extended_nonzero',
+    'extended_positive    ==  extended_nonnegative & extended_nonzero',
 
     'extended_nonpositive ==  extended_real & !extended_positive',
     'extended_nonnegative ==  extended_real & !extended_negative',
+
+    'real           ==  negative | zero | positive',
+    'negative       ==  nonpositive & nonzero',
+    'positive       ==  nonnegative & nonzero',
+
+    'nonpositive    ==  real & !positive',
+    'nonnegative    ==  real & !negative',
 
     'positive       ==  extended_positive & finite',
     'negative       ==  extended_negative & finite',
@@ -196,6 +201,8 @@ _assume_rules = FactRules([
     'nonzero        ==  extended_nonzero & finite',
 
     'zero           ->  even & finite',
+    'zero           ==  extended_nonnegative & extended_nonpositive',
+    'zero           ==  nonnegative & nonpositive',
 
     'prime          ->  integer & positive',
     'composite      ->  integer & positive & !prime',

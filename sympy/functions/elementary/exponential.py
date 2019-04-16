@@ -397,7 +397,7 @@ class exp(ExpBase):
         else:
             return s.is_algebraic
 
-    def _eval_is_positive(self):
+    def _eval_is_extended_positive(self):
         if self.args[0].is_extended_real:
             return not self.args[0] is S.NegativeInfinity
         elif self.args[0].is_imaginary:
