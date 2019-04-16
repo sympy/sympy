@@ -174,7 +174,8 @@ def test_infinity():
     assert ask(Q.complex(oo)) is False
     assert ask(Q.irrational(oo)) is False
     assert ask(Q.imaginary(oo)) is False
-    assert ask(Q.positive(oo)) is True
+    assert ask(Q.positive(oo)) is False
+    #assert ask(Q.extended_positive(oo)) is True
     assert ask(Q.negative(oo)) is False
     assert ask(Q.even(oo)) is False
     assert ask(Q.odd(oo)) is False
@@ -197,7 +198,8 @@ def test_neg_infinity():
     assert ask(Q.irrational(mm)) is False
     assert ask(Q.imaginary(mm)) is False
     assert ask(Q.positive(mm)) is False
-    assert ask(Q.negative(mm)) is True
+    assert ask(Q.negative(mm)) is False
+    #assert ask(Q.extended_negative(mm)) is True
     assert ask(Q.even(mm)) is False
     assert ask(Q.odd(mm)) is False
     assert ask(Q.finite(mm)) is False
