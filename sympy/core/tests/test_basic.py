@@ -11,7 +11,7 @@ from sympy.core.symbol import symbols, Symbol
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
-from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum
+from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum, Derivative
 from sympy.functions.elementary.exponential import exp
 from sympy.utilities.pytest import raises
 from sympy.core import I, pi
@@ -99,6 +99,9 @@ def test_has():
 
 
 def test_subs():
+    bar, spam, repl = symbols('bar spam repl')
+    e = Symbol("spam") | Symbol("foo")
+    x, y = symbols('x y')
     assert b21.subs(b2, b1) == Basic(b1, b1)
     assert b21.subs(b2, b21) == Basic(b21, b1)
     assert b3.subs(b2, b1) == b2
@@ -119,6 +122,11 @@ def test_subs():
 
     assert Symbol(u"text").subs({u"text": b1}) == b1
     assert Symbol(u"s").subs({u"s": 1}) == 1
+
+    assert e.subs("foo", "bar", simultaneous=True) == bar | spam
+    assert e.subs({"foo":"bar", "spam": "repl"}) == bar | repl
+    assert e.subs({"foo":"bar", "spam": "repl"}, simultaneous = True) == bar | repl
+    assert Derivative(((x + y)/y), x).subs({y: x, x: y}, simultaneous = True) == Derivative((x + y)/x, y)
 
 
 def test_subs_with_unicode_symbols():

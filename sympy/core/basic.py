@@ -14,9 +14,12 @@ from inspect import getmro
 
 
 def as_Basic(expr):
-    """Return expr as a Basic instance using strict sympify
+    """
+    Return expr as a Basic instance using strict sympify
     or raise a TypeError; this is just a wrapper to _sympify,
-    raising a TypeError instead of a SympifyError."""
+    raising a TypeError instead of a SympifyError.
+
+    """
     from sympy.utilities.misc import func_name
     try:
         return _sympify(expr)
@@ -94,6 +97,7 @@ class Basic(with_metaclass(ManagedProperties)):
     is_MatMul = False
 
     def __new__(cls, *args):
+        """Create new object for the Base class"""
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
         obj._mhash = None  # will be set by __hash__ method.
@@ -102,6 +106,7 @@ class Basic(with_metaclass(ManagedProperties)):
         return obj
 
     def copy(self):
+        """Reurns a copy of the object it is called by"""
         return self.func(*self.args)
 
     def __reduce_ex__(self, proto):
@@ -109,12 +114,15 @@ class Basic(with_metaclass(ManagedProperties)):
         return type(self), self.__getnewargs__(), self.__getstate__()
 
     def __getnewargs__(self):
+        """get Arguments of the object"""
         return self.args
 
     def __getstate__(self):
+        """Return the state of the object"""
         return {}
 
     def __setstate__(self, state):
+        """Set the state for the object"""
         for k, v in state.items():
             setattr(self, k, v)
 
@@ -128,13 +136,16 @@ class Basic(with_metaclass(ManagedProperties)):
         return h
 
     def _hashable_content(self):
-        """Return a tuple of information about self that can be used to
+        """
+        Return a tuple of information about self that can be used to
         compute the hash. If a class defines additional attributes,
         like ``name`` in Symbol, then this method should be updated
         accordingly to return such relevant attributes.
 
         Defining more than _hashable_content is necessary if __eq__ has
-        been defined by a class. See note about this in Basic.__eq__."""
+        been defined by a class. See note about this in Basic.__eq__.
+
+        """
         return self._args
 
     @property
@@ -157,6 +168,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy.abc import x
         >>> x.assumptions0
         {'commutative': True}
+
         >>> x = Symbol("x", positive=True)
         >>> x.assumptions0
         {'commutative': True, 'complex': True, 'hermitian': True,
@@ -181,8 +193,10 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy.abc import x, y
         >>> x.compare(y)
         -1
+
         >>> x.compare(x)
         0
+
         >>> y.compare(x)
         1
 
@@ -260,7 +274,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @classmethod
     def class_key(cls):
-        """Nice order of classes. """
+        """Nice order of classes."""
         return 5, 0, cls.__name__
 
     @cacheit
@@ -278,6 +292,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
         [x, 1/x, x**(-2), x**2, sqrt(x), x**(1/4), x**(3/2)]
+
         >>> sorted(_, key=lambda x: x.sort_key())
         [x**(-2), 1/x, x**(1/4), sqrt(x), x, x**(3/2), x**2]
 
@@ -295,7 +310,8 @@ class Basic(with_metaclass(ManagedProperties)):
         return self.class_key(), args, S.One.sort_key(), S.One
 
     def __eq__(self, other):
-        """Return a boolean indicating whether a == b on the basis of
+        """
+        Return a boolean indicating whether a == b on the basis of
         their symbolic trees.
 
         This is the same as a.compare(b) == 0 but faster.
@@ -314,6 +330,7 @@ class Basic(with_metaclass(ManagedProperties)):
         ==========
 
         from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
+
         """
         if self is other:
             return True
@@ -341,13 +358,16 @@ class Basic(with_metaclass(ManagedProperties)):
         return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
-        """a != b  -> Compare two symbolic trees and see whether they are different
+        """
+        Return a boolean indicating whether a != b on the basis of
+        their symbolic trees
 
-           this is the same as:
+        this is the same as:
 
-             a.compare(b) != 0
+        a.compare(b) != 0
 
-           but faster
+        but faster
+
         """
         return not self == other
 
@@ -362,14 +382,15 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy.abc import x, y
 
         >>> u = Dummy('u')
-
         >>> (u**2 + 1).dummy_eq(x**2 + 1)
         True
+
         >>> (u**2 + 1) == (x**2 + 1)
         False
 
         >>> (u**2 + y).dummy_eq(x**2 + y, x)
         True
+
         >>> (u**2 + y).dummy_eq(x**2 + y, y)
         False
 
@@ -400,8 +421,14 @@ class Basic(with_metaclass(ManagedProperties)):
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
     # regardless of the global setting.  See issue 5487.
     def __repr__(self):
-        """Method to return the string representation.
-        Return the expression as a string.
+        """
+        Method to return the string representation.
+
+        Returns
+        =======
+
+        the expression as a string.
+
         """
         from sympy.printing import sstr
         return sstr(self, order=None)
@@ -422,6 +449,7 @@ class Basic(with_metaclass(ManagedProperties)):
         use init_printing(). init_printing() will also enable LaTeX printing
         for built in numeric types like ints and container types that contain
         SymPy objects, like lists and dictionaries of expressions.
+
         """
         from sympy.printing.latex import latex
         s = latex(self, mode='plain')
@@ -430,7 +458,8 @@ class Basic(with_metaclass(ManagedProperties)):
     _repr_latex_orig = _repr_latex_
 
     def atoms(self, *types):
-        """Returns the atoms that form the current object.
+        """
+        Returns the atoms that form the current object.
 
            By default, only objects that are truly atomic and can't
            be divided into smaller pieces are returned: symbols, numbers,
@@ -491,6 +520,7 @@ class Basic(with_metaclass(ManagedProperties)):
            >>> f = Function('f')
            >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(Function)
            {f(x), sin(y + I*pi)}
+
            >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(AppliedUndef)
            {f(x)}
 
@@ -511,7 +541,8 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @property
     def free_symbols(self):
-        """Return from the atoms of self those which are free symbols.
+        """
+        Return from the atoms of self those which are free symbols.
 
         For most expressions, all symbols are free symbols. For some classes
         this is not true. e.g. Integrals use Symbols for the dummy variables
@@ -521,7 +552,9 @@ class Basic(with_metaclass(ManagedProperties)):
         bound variables, too, so it has its own free_symbols method.
 
         Any other method that uses bound variables should implement a
-        free_symbols method."""
+        free_symbols method.
+
+        """
         return set().union(*[a.free_symbols for a in self.args])
 
     @property
@@ -529,7 +562,8 @@ class Basic(with_metaclass(ManagedProperties)):
         return set([])
 
     def as_dummy(self):
-        """Return the expression with any objects having structurally
+        """
+        Return the expression with any objects having structurally
         bound symbols replaced with unique, canonical symbols within
         the object in which they appear and having only the default
         assumption for commutativity being True.
@@ -542,6 +576,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> r = Symbol('r', real=True)
         >>> Integral(r, (r, x)).as_dummy()
         Integral(_0, (_0, x))
+
         >>> _.variables[0].is_real is None
         True
 
@@ -559,6 +594,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy import Lambda
         >>> Lambda(x, x + 1) == Lambda(y, y + 1)
         True
+
         """
         def can(x):
             d = {i: i.as_dummy() for i in x.bound_symbols}
@@ -576,7 +612,8 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @property
     def canonical_variables(self):
-        """Return a dictionary mapping any variable defined in
+        """
+        Return a dictionary mapping any variable defined in
         ``self.bound_symbols`` to Symbols that do not clash
         with any existing symbol in the expression.
 
@@ -587,6 +624,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy.abc import x
         >>> Lambda(x, 2*x).canonical_variables
         {x: _0}
+
         """
         from sympy.core.symbol import Symbol
         from sympy.utilities.iterables import numbered_symbols
@@ -607,7 +645,8 @@ class Basic(with_metaclass(ManagedProperties)):
         return reps
 
     def rcall(self, *args):
-        """Apply on the argument recursively through the expression tree.
+        """
+        Apply on the argument recursively through the expression tree.
 
         This method is used to simulate a common abuse of notation for
         operators. For instance in SymPy the the following will not work:
@@ -620,6 +659,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy.abc import x, y, z
         >>> (x + Lambda(y, 2*y)).rcall(z)
         x + 2*z
+
         """
         return Basic._recursive_call(self, args)
 
@@ -651,7 +691,8 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @property
     def is_comparable(self):
-        """Return True if self can be computed to a real number
+        """
+        Return True if self can be computed to a real number
         (or already is a real number) with precision, else False.
 
         Examples
@@ -660,6 +701,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy import exp_polar, pi, I
         >>> (I*exp_polar(I*pi/2)).is_comparable
         True
+
         >>> (I*exp_polar(I*pi*2)).is_comparable
         False
 
@@ -672,6 +714,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> dif = e - e.expand()
         >>> dif.is_comparable
         False
+
         >>> dif.n(2)._prec
         1
 
@@ -712,10 +755,13 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> a = 2*x
         >>> a.func
         <class 'sympy.core.mul.Mul'>
+
         >>> a.args
         (2, x)
+
         >>> a.func(*a.args)
         2*x
+
         >>> a == a.func(*a.args)
         True
 
@@ -751,6 +797,7 @@ class Basic(with_metaclass(ManagedProperties)):
         Only use _args in __new__ when creating a new function.
         Don't override .args() from Basic (so that it's easy to
         change the interface in the future if needed).
+
         """
         return self._args
 
@@ -760,24 +807,25 @@ class Basic(with_metaclass(ManagedProperties)):
         The same as ``args``.  Derived classes which don't fix an
         order on their arguments should override this method to
         produce the sorted representation.
+
         """
         return self.args
 
 
     def as_poly(self, *gens, **args):
-        """Converts ``self`` to a polynomial or returns ``None``.
+        """
+        Converts ``self`` to a polynomial or returns ``None``.
 
-           >>> from sympy import sin
-           >>> from sympy.abc import x, y
+        >>> from sympy import sin
+        >>> from sympy.abc import x, y
+        >>> print((x**2 + x*y).as_poly())
+        Poly(x**2 + x*y, x, y, domain='ZZ')
 
-           >>> print((x**2 + x*y).as_poly())
-           Poly(x**2 + x*y, x, y, domain='ZZ')
+        >>> print((x**2 + x*y).as_poly(x, y))
+        Poly(x**2 + x*y, x, y, domain='ZZ')
 
-           >>> print((x**2 + x*y).as_poly(x, y))
-           Poly(x**2 + x*y, x, y, domain='ZZ')
-
-           >>> print((x**2 + sin(y)).as_poly(x, y))
-           None
+        >>> print((x**2 + sin(y)).as_poly(x, y))
+        None
 
         """
         from sympy.polys import Poly, PolynomialError
@@ -793,13 +841,15 @@ class Basic(with_metaclass(ManagedProperties)):
             return None
 
     def as_content_primitive(self, radical=False, clear=True):
-        """A stub to allow Basic args (like Tuple) to be skipped when computing
+        """
+        A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
 
         See Also
         ========
 
         sympy.core.expr.Expr.as_content_primitive
+
         """
         return S.One, self
 
@@ -829,13 +879,17 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy.abc import x, y
         >>> (1 + x*y).subs(x, pi)
         pi*y + 1
+
         >>> (1 + x*y).subs({x:pi, y:2})
         1 + 2*pi
+
         >>> (1 + x*y).subs([(x, pi), (y, 2)])
         1 + 2*pi
+
         >>> reps = [(y, x**2), (x, 2)]
         >>> (x + y).subs(reps)
         6
+
         >>> (x + y).subs(reversed(reps))
         x**2 + 2
 
@@ -852,6 +906,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         >>> (x/y).subs([(x, 0), (y, 0)])
         0
+
         >>> (x/y).subs([(x, 0), (y, 0)], simultaneous=True)
         nan
 
@@ -860,6 +915,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         >>> ((x + y)/y).subs({x + y: y, y: x + y})
         1
+
         >>> ((x + y)/y).subs({x + y: y, y: x + y}, simultaneous=True)
         y/(x + y)
 
@@ -878,7 +934,6 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> E = (exp(x), e)
 
         >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
-
         >>> expr.subs(dict([A, B, C, D, E]))
         a*c*sin(d*e) + b
 
@@ -909,6 +964,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         See Also
         ========
+
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
         xreplace: exact node replacement in expr tree; also capable of
@@ -1001,7 +1057,8 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @cacheit
     def _subs(self, old, new, **hints):
-        """Substitutes an expression old -> new.
+        """
+        Substitutes an expression old -> new.
 
         If self is not equal to old then _eval_subs is called.
         If _eval_subs doesn't want to make any special replacement
@@ -1069,12 +1126,11 @@ class Basic(with_metaclass(ManagedProperties)):
               substitution of old -> new is attempted.) Sum's _eval_subs
               routine uses this strategy when a substitution is attempted
               on any of its summation variables.
+
         """
 
         def fallback(self, old, new):
-            """
-            Try to replace old with new in any of self's arguments.
-            """
+            """Try to replace old with new in any of self's arguments"""
             hit = False
             args = list(self.args)
             for i, arg in enumerate(args):
@@ -1112,10 +1168,15 @@ class Basic(with_metaclass(ManagedProperties)):
         return rv
 
     def _eval_subs(self, old, new):
-        """Override this stub if you want to do anything more than
+        """
+        Override this stub if you want to do anything more than
         attempt a replacement of old with new in the arguments of self.
 
-        See also: _subs
+        See also
+        ========
+
+         _subs
+
         """
         return None
 
@@ -1125,11 +1186,13 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Parameters
         ==========
+
         rule : dict-like
             Expresses a replacement rule
 
         Returns
         =======
+
         xreplace : the result of the replacement
 
         Examples
@@ -1139,6 +1202,7 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> x, y, z = symbols('x y z')
         >>> (1 + x*y).xreplace({x: pi})
         pi*y + 1
+
         >>> (1 + x*y).xreplace({x: pi, y: 2})
         1 + 2*pi
 
@@ -1147,14 +1211,19 @@ class Basic(with_metaclass(ManagedProperties)):
 
         >>> (x*y + z).xreplace({x*y: pi})
         z + pi
+
         >>> (x*y*z).xreplace({x*y: pi})
         x*y*z
+
         >>> (2*x).xreplace({2*x: y, x: z})
         y
+
         >>> (2*2*x).xreplace({2*x: y, x: z})
         4*z
+
         >>> (x + y + 2).xreplace({x + y: 2})
         x + y + 2
+
         >>> (x + 2 + exp(x + 2)).xreplace({x + 2: y})
         x + exp(y) + 2
 
@@ -1173,6 +1242,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         See Also
         ========
+
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
         subs: substitution of subexpressions as defined by the objects
@@ -1183,9 +1253,7 @@ class Basic(with_metaclass(ManagedProperties)):
         return value
 
     def _xreplace(self, rule):
-        """
-        Helper for xreplace. Tracks whether a replacement actually occurred.
-        """
+        """Helper for xreplace. Tracks if a replacement actually occurred."""
         if self in rule:
             return rule[self], True
         elif rule:
@@ -1227,10 +1295,13 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> from sympy.sets import Interval
         >>> i = Interval.Lopen(0, 5); i
         Interval.Lopen(0, 5)
+
         >>> i.args
         (0, 5, True, False)
+
         >>> i.has(4)  # there is no "4" in the arguments
         False
+
         >>> i.has(0)  # there *is* a "0" in the arguments
         True
 
@@ -1239,6 +1310,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         >>> i.contains(4)
         True
+
         >>> i.contains(0)
         False
 
@@ -1316,8 +1388,10 @@ class Basic(with_metaclass(ManagedProperties)):
 
             >>> f.replace(sin, cos)
             log(cos(x)) + tan(cos(x**2))
+
             >>> sin(x).replace(sin, cos, map=True)
             (cos(x), {sin(x): cos(x)})
+
             >>> (x*y).replace(Mul, Add)
             x + y
 
@@ -1330,6 +1404,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
             >>> f.replace(sin, lambda arg: sin(2*arg))
             log(sin(2*x)) + tan(sin(2*x**2))
+
             >>> (x*y).replace(Mul, lambda *args: sin(2*Mul(*args)))
             sin(2*x*y)
 
@@ -1342,10 +1417,13 @@ class Basic(with_metaclass(ManagedProperties)):
             >>> a, b = map(Wild, 'ab')
             >>> f.replace(sin(a), tan(a))
             log(tan(x)) + tan(tan(x**2))
+
             >>> f.replace(sin(a), tan(a/2))
             log(tan(x/2)) + tan(tan(x**2/2))
+
             >>> f.replace(sin(a), a)
             log(x) + tan(x**2)
+
             >>> (x*y).replace(a*x, a)
             y
 
@@ -1355,6 +1433,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
             >>> (2*x + y).replace(a*x + b, b - a)
             y - 2
+
             >>> (2*x).replace(a*x + b, b - a)
             2*x
 
@@ -1391,6 +1470,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         See Also
         ========
+
         subs: substitution of subexpressions as defined by the objects
               themselves.
         xreplace: exact node replacement in expr tree; also capable of
@@ -1519,7 +1599,7 @@ class Basic(with_metaclass(ManagedProperties)):
             return groups
 
     def count(self, query):
-        """Count the number of matching subexpressions. """
+        """Count the number of matching subexpressions"""
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in preorder_traversal(self))
 
@@ -1536,8 +1616,10 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> x = Wild('x')
         >>> Basic(a + x, x).matches(Basic(a + b, c)) is None
         True
+
         >>> Basic(a + x, x).matches(Basic(a + b + c, b + c))
         {x_: b + c}
+
         """
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
@@ -1580,11 +1662,14 @@ class Basic(with_metaclass(ManagedProperties)):
         >>> e = (x+y)**(x+y)
         >>> e.match(p**p)
         {p_: x + y}
+
         >>> e.match(p**q)
         {p_: x + y, q_: x + y}
+
         >>> e = (2*x)**2
         >>> e.match(p*q**r)
         {p_: 4, q_: x, r_: 2}
+
         >>> (p*q**r).xreplace(e.match(p*q**r))
         4*x**2
 
@@ -1594,6 +1679,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         >>> (x - 2).match(p - x, old=True)
         {p_: 2*x - 2}
+
         >>> (2/x).match(p*x, old=True)
         {p_: 2/x**2}
 
@@ -1602,27 +1688,28 @@ class Basic(with_metaclass(ManagedProperties)):
         return pattern.matches(self, old=old)
 
     def count_ops(self, visual=None):
-        """wrapper for count_ops that returns the operation count."""
+        """wrapper for count_ops that returns the operation count"""
         from sympy import count_ops
         return count_ops(self, visual)
 
     def doit(self, **hints):
-        """Evaluate objects that are not evaluated by default like limits,
-           integrals, sums and products. All objects of this kind will be
-           evaluated recursively, unless some species were excluded via 'hints'
-           or unless the 'deep' hint was set to 'False'.
+        """
+        Evaluate objects that are not evaluated by default like limits,
+        integrals, sums and products. All objects of this kind will be
+        evaluated recursively, unless some species were excluded via 'hints'
+        or unless the 'deep' hint was set to 'False'.
 
-           >>> from sympy import Integral
-           >>> from sympy.abc import x
+        >>> from sympy import Integral
+        >>> from sympy.abc import x
 
-           >>> 2*Integral(x, x)
-           2*Integral(x, x)
+        >>> 2*Integral(x, x)
+        2*Integral(x, x)
 
-           >>> (2*Integral(x, x)).doit()
-           x**2
+        >>> (2*Integral(x, x)).doit()
+        x**2
 
-           >>> (2*Integral(x, x)).doit(deep=False)
-           2*Integral(x, x)
+        >>> (2*Integral(x, x)).doit(deep=False)
+        2*Integral(x, x)
 
         """
         if hints.get('deep', True):
@@ -1688,7 +1775,8 @@ class Basic(with_metaclass(ManagedProperties)):
             return None
 
     def rewrite(self, *args, **hints):
-        """ Rewrite functions in terms of other functions.
+        """
+        Rewrite functions in terms of other functions.
 
         Rewrites expression containing applications of functions
         of one kind in terms of functions of different kind. For
@@ -1793,6 +1881,7 @@ class Atom(Basic):
 
     Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
+
     """
 
     is_Atom = True
@@ -1831,7 +1920,8 @@ class Atom(Basic):
 
 
 def _aresame(a, b):
-    """Return True if a and b are structurally the same, else False.
+    """
+    Return True if a and b are structurally the same, else False.
 
     Examples
     ========
@@ -1863,7 +1953,8 @@ def _aresame(a, b):
 
 
 def _atomic(e, recursive=False):
-    """Return atom-like quantities as far as substitution is
+    """
+    Return atom-like quantities as far as substitution is
     concerned: Derivatives, Functions and Symbols. Don't
     return any 'atoms' that are inside such quantities unless
     they also appear outside, too, unless `recursive` is True.
@@ -1877,8 +1968,10 @@ def _atomic(e, recursive=False):
     >>> f = Function('f')
     >>> _atomic(x + y)
     {x, y}
+
     >>> _atomic(x + f(y))
     {x, f(y)}
+
     >>> _atomic(Derivative(f(x), x) + cos(x) + y)
     {y, cos(x), Derivative(f(x), x)}
 
@@ -1922,6 +2015,7 @@ class preorder_traversal(Iterator):
 
     Parameters
     ==========
+
     node : sympy expression
         The expression to traverse.
     keys : (default None) sort key(s)
@@ -1933,6 +2027,7 @@ class preorder_traversal(Iterator):
 
     Yields
     ======
+
     subtree : sympy expression
         All of the subtrees in the tree.
 
@@ -2000,6 +2095,7 @@ class preorder_traversal(Iterator):
         z*(x + y*z)
         z
         x + y*z
+
         """
         self._skip_flag = True
 
