@@ -917,7 +917,7 @@ class periodic_argument(Function):
         # logarithm, and then reduce.
         # NOTE evidently this means it is a rather bad idea to use this with
         # period != 2*pi and non-polar numbers.
-        if not period.is_positive:
+        if not period.is_extended_positive:
             return None
         if period == oo and isinstance(ar, principal_branch):
             return periodic_argument(*ar.args)
