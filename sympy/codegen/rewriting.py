@@ -218,7 +218,7 @@ def create_expand_pow_optimization(limit):
     >>> expand_opt(x**5 + x**3)
     x**5 + x*x*x
     >>> expand_opt(x**5 + x**3 + sin(x)**3)
-    x**5 + x*x*x + sin(x)**3
+    x**5 + sin(x)**3 + x*x*x
 
     """
     return ReplaceOptim(
