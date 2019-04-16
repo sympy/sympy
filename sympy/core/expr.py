@@ -772,7 +772,7 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
-    def _eval_is_positive(self):
+    def _eval_is_extended_positive(self):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
@@ -807,7 +807,7 @@ class Expr(Basic, EvalfMixin):
                 except (NotAlgebraic, NotImplementedError):
                     pass
 
-    def _eval_is_negative(self):
+    def _eval_is_extended_negative(self):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
