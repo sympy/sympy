@@ -884,7 +884,7 @@ class Pow(Expr):
             if polar:
                 return True
             if polar is None:
-                return fuzzy_bool(x.is_nonnegative)
+                return fuzzy_bool(x.is_extended_nonnegative)
         sifted = sift(maybe_real, pred)
         nonneg = sifted[True]
         other += sifted[None]
