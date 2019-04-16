@@ -589,20 +589,20 @@ class Add(Expr, AssocOp):
                 return
         return False
 
-    def _eval_is_positive(self):
+    def _eval_is_extended_positive(self):
         from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
-            return super(Add, self)._eval_is_positive()
+            return super(Add, self)._eval_is_extended_positive()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s != self and s.is_positive and a.is_nonnegative:
+                if s != self and s.is_extended_positive and a.is_extended_nonnegative:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)
-                    if v is not None and v != self and v.is_positive:
+                    if v is not None and v != self and v.is_extended_positive:
                         return True
         pos = nonneg = nonpos = unknown_sign = False
         saw_INF = set()
@@ -610,19 +610,19 @@ class Add(Expr, AssocOp):
         if not args:
             return False
         for a in args:
-            ispos = a.is_positive
+            ispos = a.is_extended_positive
             infinite = a.is_infinite
             if infinite:
-                saw_INF.add(fuzzy_or((ispos, a.is_nonnegative)))
+                saw_INF.add(fuzzy_or((ispos, a.is_extended_nonnegative)))
                 if True in saw_INF and False in saw_INF:
                     return
             if ispos:
                 pos = True
                 continue
-            elif a.is_nonnegative:
+            elif a.is_extended_nonnegative:
                 nonneg = True
                 continue
-            elif a.is_nonpositive:
+            elif a.is_extended_nonpositive:
                 nonpos = True
                 continue
 
@@ -643,50 +643,50 @@ class Add(Expr, AssocOp):
         elif not pos and not nonneg:
             return False
 
-    def _eval_is_nonnegative(self):
+    def _eval_is_extended_nonnegative(self):
         from sympy.core.exprtools import _monotonic_sign
         if not self.is_number:
             c, a = self.as_coeff_Add()
-            if not c.is_zero and a.is_nonnegative:
+            if not c.is_zero and a.is_extended_nonnegative:
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s != self and s.is_nonnegative:
+                    if s != self and s.is_extended_nonnegative:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
-                        if v is not None and v != self and v.is_nonnegative:
+                        if v is not None and v != self and v.is_extended_nonnegative:
                             return True
 
-    def _eval_is_nonpositive(self):
+    def _eval_is_extended_nonpositive(self):
         from sympy.core.exprtools import _monotonic_sign
         if not self.is_number:
             c, a = self.as_coeff_Add()
-            if not c.is_zero and a.is_nonpositive:
+            if not c.is_zero and a.is_extended_nonpositive:
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
-                    if s != self and s.is_nonpositive:
+                    if s != self and s.is_extended_nonpositive:
                         return True
                     if len(self.free_symbols) == 1:
                         v = _monotonic_sign(self)
-                        if v is not None and v != self and v.is_nonpositive:
+                        if v is not None and v != self and v.is_extended_nonpositive:
                             return True
 
-    def _eval_is_negative(self):
+    def _eval_is_extended_negative(self):
         from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
-            return super(Add, self)._eval_is_negative()
+            return super(Add, self)._eval_is_extended_negative()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
-                if s != self and s.is_negative and a.is_nonpositive:
+                if s != self and s.is_extended_negative and a.is_extended_nonpositive:
                     return True
                 if len(self.free_symbols) == 1:
                     v = _monotonic_sign(self)
-                    if v is not None and v != self and v.is_negative:
+                    if v is not None and v != self and v.is_extended_negative:
                         return True
         neg = nonpos = nonneg = unknown_sign = False
         saw_INF = set()
@@ -694,19 +694,19 @@ class Add(Expr, AssocOp):
         if not args:
             return False
         for a in args:
-            isneg = a.is_negative
+            isneg = a.is_extended_negative
             infinite = a.is_infinite
             if infinite:
-                saw_INF.add(fuzzy_or((isneg, a.is_nonpositive)))
+                saw_INF.add(fuzzy_or((isneg, a.is_extended_nonpositive)))
                 if True in saw_INF and False in saw_INF:
                     return
             if isneg:
                 neg = True
                 continue
-            elif a.is_nonpositive:
+            elif a.is_extended_nonpositive:
                 nonpos = True
                 continue
-            elif a.is_nonnegative:
+            elif a.is_extended_nonnegative:
                 nonneg = True
                 continue
 
