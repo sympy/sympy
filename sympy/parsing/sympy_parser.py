@@ -556,10 +556,9 @@ def auto_symbol(tokens, local_dict, global_dict):
                 continue
             elif name in local_dict:
                 if isinstance(local_dict[name], Symbol) and nextTokVal == '(':
-                    result.extend([(NAME, 'Function'),
-                                   (OP, '('),
-                                   (NAME, repr(str(local_dict[name]))),
-                                   (OP, ')')])
+                    s = local_dict[name]
+                    raise TypeError(
+                        "Symbol('%s') object is not callable" % s)
                 else:
                     result.append((NAME, name))
                 continue

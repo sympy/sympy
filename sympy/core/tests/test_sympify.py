@@ -499,8 +499,7 @@ def test_issue_6540_6552():
 
 def test_issue_6046():
     assert str(S("Q & C", locals=_clash1)) == 'C & Q'
-    assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
-    assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
+    raises(TypeError, lambda: S('pi(x)', locals=_clash2))
     locals = {}
     exec_("from sympy.abc import Q, C", locals)
     assert str(S('C&Q', locals)) == 'C & Q'

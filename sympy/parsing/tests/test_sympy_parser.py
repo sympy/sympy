@@ -128,9 +128,8 @@ def test_local_dict_symbol_to_fcn():
     x = Symbol('x')
     d = {'foo': Function('bar')}
     assert parse_expr('foo(x)', local_dict=d) == d['foo'](x)
-    # XXX: bit odd, but would be error if parser left the Symbol
     d = {'foo': Symbol('baz')}
-    assert parse_expr('foo(x)', local_dict=d) == Function('baz')(x)
+    raises(TypeError, lambda: parse_expr('foo(x)', local_dict=d))
 
 
 def test_global_dict():
