@@ -517,7 +517,9 @@ def test_posify():
     assert eq.assumptions0 == {'positive': True, 'zero': False, 'imaginary': False,
      'nonpositive': False, 'commutative': True, 'hermitian': True, 'real': True, 'nonzero': True,
      'nonnegative': True, 'negative': False, 'complex': True, 'finite': True,
-     'infinite': False, 'extended_real':True}
+     'infinite': False, 'extended_real':True, 'extended_negative': False,
+     'extended_nonnegative': True, 'extended_nonpositive': False,
+     'extended_nonzero': True, 'extended_positive': True}
 
 
 def test_issue_4194():
