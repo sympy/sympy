@@ -107,6 +107,7 @@ def print_tree(node):
       commutative: True
       complex: True
       even: False
+      extended_nonzero: True
       extended_real: True
       finite: True
       hermitian: True
