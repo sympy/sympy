@@ -2759,9 +2759,9 @@ class Infinity(with_metaclass(Singleton, Number)):
         """
         from sympy.functions import re
 
-        if expt.is_positive:
+        if expt.is_extended_positive:
             return S.Infinity
-        if expt.is_negative:
+        if expt.is_extended_negative:
             return S.Zero
         if expt is S.NaN:
             return S.NaN
