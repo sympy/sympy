@@ -1129,6 +1129,13 @@ class _LeftRightArgs(object):
         return (self.first == other.first) and (self.second == other.second)
 
 
+def _make_matrix(x):
+    from sympy import ImmutableDenseMatrix
+    if isinstance(x, MatrixExpr):
+        return x
+    return ImmutableDenseMatrix([[x]])
+
+
 from .matmul import MatMul
 from .matadd import MatAdd
 from .matpow import MatPow

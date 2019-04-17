@@ -3,8 +3,10 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
-from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative, sin, exp, cos, tan, log, Lambda
+from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative, sin, exp, cos, tan, log, Lambda, \
+    hadamard_product, DiagonalizeVector, S
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
+from sympy.matrices.expressions import hadamard_power
 
 k = symbols("k")
 
@@ -334,3 +336,30 @@ def test_derivatives_elementwise_applyfunc():
     expr = a.T * (X.applyfunc(sin)).applyfunc(log) * b
     # TODO: wrong
     # assert expr.diff(X) == DiagonalizeVector(a)*X.applyfunc(sin).applyfunc(Lambda(k, 1/k))*DiagonalizeVector(b)
+
+
+def test_derivatives_of_hadamard_expressions():
+
+    # Hadamard Product
+
+    expr = hadamard_product(a, x, b)
+    assert expr.diff(x) == DiagonalizeVector(hadamard_product(b, a))
+
+    expr = a.T*hadamard_product(A, X, B)*b
+    assert expr.diff(X) == DiagonalizeVector(a)*hadamard_product(B, A)*DiagonalizeVector(b)
+
+    # Hadamard Power
+
+    expr = hadamard_power(x, 2)
+    assert expr.diff(x).doit() == 2*DiagonalizeVector(x)
+
+    assert expr.diff(x).doit() == 2*DiagonalizeVector(x)
+
+    expr = hadamard_power(x, S.Half)
+    assert expr.diff(x) == S.Half*DiagonalizeVector(hadamard_power(x, -S.Half))
+
+    expr = hadamard_power(a.T*X*b, 2)
+    assert expr.diff(X) == 2*a*a.T*X*b*b.T
+
+    expr = hadamard_power(a.T*X*b, S.Half)
+    assert expr.diff(X) == a/2*hadamard_power(a.T*X*b, -S.Half)*b.T
