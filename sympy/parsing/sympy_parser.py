@@ -1011,7 +1011,7 @@ def _number_kern(s):
 
 _kern = _number_kern
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True, _number_kern=True):
+               global_dict=None, evaluate=True, _number_kern=None):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -1036,9 +1036,11 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         mathematical factorial notation (e.g. ``x!``).
 
     _number_kern : bool, optional
-        When True (default) numbers will be set off from surrounding
-        symbols with space. This option will be removed when it is no
-        longer necessary.
+        When True, numbers will be set off from surrounding
+        symbols with space and the `implicit_multiplication`
+        transformation will be used. This option will
+        be removed when it is no longer necessary. It is only when
+        True or when a parsing fails unless it is set to False.
 
     evaluate : bool, optional
         When False, the order of the arguments will remain as they were in the
@@ -1111,13 +1113,39 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
                     a transformation should be function that
                     takes 3 arguments'''))
 
-    s = _kern(s) if _number_kern else s
+    if _number_kern:
+        old = s
+        s = _kern(s)
+        if s != old and implicit_multiplication not in transformations:
+            transformations += (implicit_multiplication,)
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
-    if not evaluate:
-        code = compile(evaluateFalse(code), '<string>', 'eval')
+    def do(code):
+        if not evaluate:
+            code = compile(evaluateFalse(code), '<string>', 'eval')
 
-    return eval_expr(code, local_dict, global_dict)
+        return eval_expr(code, local_dict, global_dict)
+
+    try:
+        return do(code)
+    except (AttributeError, SyntaxError):
+        if _number_kern is not None:
+            # let it raise
+            do(code)
+        ks = _kern(s)
+        transformations += (implicit_multiplication,)
+        kcode = stringify_expr(ks, local_dict, global_dict, transformations)
+        try:
+            k = do(kcode)
+        except:
+            # let it raise the original error
+            do(code)
+        raise SyntaxError(filldedent('''
+            This expression was successfully parsed using the
+            _number_kern option.
+            Retry the parsing with _number_kern=True or edit
+            your input expression if this is the expression
+            you wanted: %s''' % k))
 
 
 def evaluateFalse(s):

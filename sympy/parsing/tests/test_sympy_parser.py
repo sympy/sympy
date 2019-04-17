@@ -235,9 +235,9 @@ def test_parse_function_issue_3539():
 
 
 def test_split_symbols_numeric():
-    T = standard_transformations + (
+    SI = standard_transformations + (
         implicit_multiplication_application,)
-    do = lambda x: parse_expr(x, transformations=T)
+    do = lambda x: parse_expr(x, transformations=SI, _number_kern=True)
 
     n = Symbol('n')
     assert parse_expr('2**n * 3**n') == do('2**n3**n') == 2**n*3**n
@@ -256,7 +256,20 @@ def test_split_symbols_numeric():
     assert do('x_3yz') == x_3*y*z
     assert do('n1.1n22') == n*1.1*n*22
     assert parse_expr('log10(3.2x)', dict(log10=log),
-        transformations=T) == log(3.2*x)
+        transformations=SI) == log(3.2*x)
+    assert parse_expr('x3y',
+        transformations=standard_transformations) == Symbol('x3y')
+    assert do('x3y') == 3*x*y
+    # a helpful error message is raised when the _number_kern
+    # option succeeds
+    try:
+        parse_expr('3.2*x*y')
+    except SyntaxError as e:
+        assert '3.2*x*y' in e
+    try:
+        parse_expr('3.2*x*y', _number_kern=False)
+    except SyntaxError as e:
+        assert '3.2*x*y' not in e
 
 
 def test_unicode_names():
