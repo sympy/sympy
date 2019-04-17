@@ -273,12 +273,10 @@ def test_atan():
         *x**3*y + EX((3*a**2 - 1)/(3*a**6 + 9*a**4 + 9*a**2 + 3))*x**3 + \
         EX(1/(a**2 + 1))*x**2*y - EX(a/(a**4 + 2*a**2 + 1))*x**2 + EX(1/(a**2 \
         + 1))*x + EX(atan(a))
-    # Complex numbers not in ring_series
-    R, x = ring('x', EX)
-    assert rs_atan(x*I,x,3) == EX(I)*x
 
 @XFAIL
 def test_atan2():
+    # Complex numbers in series
     R, x = ring('x', EX)
     assert rs_atan(I,x,5) == NotImplementedError
     assert rs_atan(I + a,x,3) == EX(atan(I +a))
