@@ -772,11 +772,23 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
+    def _eval_is_extended_negative(self):
+        if self.is_extended_real is False:
+            return False
+        if Expr._eval_is_negative(self):
+            return True
+
     def _eval_is_extended_positive(self):
+        if self.is_extended_real is False:
+            return False
+        if Expr._eval_is_positive(self):
+            return True
+
+    def _eval_is_positive(self):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
-            if self.is_extended_real is False:
+            if self.is_real is False:
                 return False
 
             # check to see that we can get a value
@@ -807,11 +819,11 @@ class Expr(Basic, EvalfMixin):
                 except (NotAlgebraic, NotImplementedError):
                     pass
 
-    def _eval_is_extended_negative(self):
+    def _eval_is_negative(self):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
-            if self.is_extended_real is False:
+            if self.is_real is False:
                 return False
 
             # check to see that we can get a value
