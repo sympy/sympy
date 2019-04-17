@@ -1191,7 +1191,8 @@ def rs_atan(p, x, prec):
 
     atan
     """
-    if _get_constant_term(p, x) == I:
+    k = _get_constant_term(p, x)
+    if k == I or k == -I:
         raise NotImplementedError
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_atan, p, x, prec)
