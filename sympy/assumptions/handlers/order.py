@@ -70,44 +70,40 @@ class AskNegativeHandler(CommonHandler):
         inf = neg_inf = pos_inf = neg = npos = nneg = False
 
         for arg in args:
-            n  = ask(Q.negative(arg), assumptions)
-            np = ask(Q.nonpositive(arg), assumptions)
-            k = fuzzy_or((n, np))
-            infinite = ask(Q.infinite(arg), assumptions)
-            if infinite is not False:
-                if infinite:
-                    inf = True
-                if k is True:
-                    if infinite and n :  # arg can be zero
-                        neg_inf = True
-                    neg = True
-                elif k is False:
-                    pos_inf = True
-                    nneg = True
-                elif infinite:
-                    return None
             if pos_inf and neg_inf:
                 return None
-            elif pos_inf or neg_inf:
+
+            _inf = ask(Q.infinite(arg), assumptions)
+            if _inf:
+                inf = True
+
+            n = ask(Q.negative(arg), assumptions)
+            if n:
+                if _inf is not False:
+                    neg_inf = True
+                neg = True
+                continue
+
+            np = ask(Q.nonpositive(arg), assumptions)
+            if np:
+                if _inf is True:
+                    neg_inf = True
+                npos = True
+                continue
+
+            nn = ask(Q.nonnegative(arg), assumptions)
+            if nn:
+                if _inf or (_inf is None and nn is False):
+                    pos_inf = True
+                nneg = True
                 continue
             else:
-                nn = ask(Q.nonnegative(arg), assumptions)
-                if n:
-                    neg = True
-                    continue
-                elif np:
-                    npos = True
-                    continue
-                elif nn:
-                    nneg = True
-                    continue
-                else:
-                    return None  # Unknown symbol
-        if inf and pos_inf:
+                return None
+        if pos_inf and neg_inf:
+            return None
+        elif inf and pos_inf:
             return False
         elif inf and neg_inf:
-            return True
-        elif neg and not npos and not nneg:
             return True
         elif neg and not nneg:
             return True
@@ -384,46 +380,41 @@ class AskPositiveHandler(CommonHandler):
         inf = neg_inf = pos_inf = pos = npos = nneg = False
 
         for arg in args:
-            p  = ask(Q.positive(arg), assumptions)
-            nn = ask(Q.nonnegative(arg), assumptions)
-            k = fuzzy_or((p, nn))
-            infinite = ask(Q.infinite(arg), assumptions)
-            if infinite is not False:
-                if infinite:
-                    inf = True
-                if k is True:
-                    if infinite or p:  # arg can be 0
-                        pos_inf = True
-                    pos = True
-                elif k is False:
-                    neg_inf = True
-                    npos = True
-                elif infinite:
-                    return None
             if pos_inf and neg_inf:
                 return None
-            elif pos_inf or neg_inf:
+
+            _inf = ask(Q.infinite(arg), assumptions)
+            if _inf:
+                inf = True
+
+            p = ask(Q.positive(arg), assumptions)
+            if p:
+                if _inf is not False:
+                    pos_inf = True
+                pos = True
+                continue
+
+            nn = ask(Q.nonnegative(arg), assumptions)
+            if nn:
+                if _inf is True:
+                    pos_inf = True
+                nneg = True
+                continue
+
+            np = ask(Q.nonpositive(arg), assumptions)
+            if np:
+                if _inf or (_inf is None and np is False):
+                    neg_inf = True
+                npos = True
                 continue
             else:
-                np = ask(Q.nonpositive(arg), assumptions)
-                if p :
-                    pos  = True
-                    continue
-                elif nn:
-                    nneg = True
-                    continue
-                elif np:
-                    npos = True
-                    continue
-                else:
-                    return None  # Unknown symbol
-
-        if inf and pos_inf:
+                return None
+        if pos_inf and neg_inf:
+            return None
+        elif inf and pos_inf:
             return True
         elif inf and neg_inf:
             return False
-        elif pos and not npos and not nneg:
-            return True
         elif pos and not npos:
             return True
         elif not pos and not nneg:

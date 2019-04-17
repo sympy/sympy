@@ -1586,6 +1586,22 @@ def test_negative():
 
     assert ask(Q.negative(Abs(x))) is False
 
+    #
+    assert ask(Q.negative(x+y), ~Q.real(x) & Q.real(y)) is False
+    assert ask(Q.negative(x+y), Q.zero(x) & Q.zero(y)) is False
+    assert ask(Q.negative(x+y), Q.infinite(x) & Q.negative(y)) is None
+    assert ask(Q.negative(x + y), Q.infinite(x) & Q.positive(x)
+               & Q.infinite(y) & Q.negative(y)) is None
+    assert ask(Q.negative(x + y), Q.infinite(x) & Q.positive(x)
+               & Q.negative(y) & ~Q.infinite(y)) is False
+    assert ask(Q.negative(x + y), Q.infinite(x) & Q.negative(x)
+               & Q.negative(y) & ~Q.infinite(y)) is True
+    assum = ~Q.infinite(x) & ~Q.infinite(y) & ~Q.infinite(z) # finite values
+    assert ask(Q.negative(x + y), assum & Q.positive(x) & Q.negative(y)) is None
+    assert ask(Q.negative(x + y + z), assum & Q.negative(x) & Q.nonnegative(y)
+               & Q.nonpositive(z)) is None
+    assert ask(Q.negative(x + y), assum & Q.negative(x)) is None
+
 
 def test_nonzero():
     assert ask(Q.nonzero(x)) is None
@@ -1817,6 +1833,23 @@ def test_positive():
     #absolute value
     assert ask(Q.positive(Abs(x))) is None  # Abs(0) = 0
     assert ask(Q.positive(Abs(x)), Q.positive(x)) is True
+
+    #
+    assert ask(Q.positive(x+y), ~Q.real(x) & Q.real(y)) is False
+    assert ask(Q.positive(x+y), Q.zero(x) & Q.zero(y)) is False
+    assert ask(Q.positive(x+y), Q.infinite(x) & Q.positive(y)) is None
+    assert ask(Q.positive(x+y), Q.infinite(x) & Q.positive(x)
+               & Q.infinite(y) & Q.negative(y)) is None
+    assert ask(Q.positive(x + y), Q.infinite(x) & Q.positive(x)
+               & Q.negative(y) & ~Q.infinite(y)) is True
+    assert ask(Q.positive(x + y), Q.infinite(x) & Q.negative(x)
+               & Q.negative(y) & ~Q.infinite(y)) is False
+    assum = ~Q.infinite(x) & ~Q.infinite(y) & ~Q.infinite(z) # finite values
+    assert ask(Q.positive(x+y), assum & Q.positive(x) & Q.negative(y)) is None
+    assert ask(Q.positive(x+y+z), assum & Q.positive(x) & Q.nonnegative(y)
+               & Q.nonpositive(z)) is None
+    assert ask(Q.positive(x+y), assum & Q.positive(x)) is None
+
 
 
 def test_nonpositive():
