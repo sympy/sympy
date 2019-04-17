@@ -66,7 +66,7 @@ def test_implicit_application():
     multiplication = ['x y', 'x sin x', '2x']
     for case in multiplication:
         raises(SyntaxError,
-               lambda: parse_expr(case, transformations=transformations2))
+               lambda: parse_expr(case, transformations=transformations2, default=''))
     raises(TypeError,
            lambda: parse_expr('sin**2(x)', transformations=transformations2))
 
@@ -89,7 +89,7 @@ def test_function_exponentiation():
                       'cos 2*x', 'sin cos x']
     for case in other_implicit:
         raises(SyntaxError,
-               lambda: parse_expr(case, transformations=transformations2))
+               lambda: parse_expr(case, transformations=transformations2, default=''))
 
     assert parse_expr('x**2', local_dict={ 'x': sympy.Symbol('x') },
                       transformations=transformations2) == parse_expr('x**2')
@@ -182,4 +182,4 @@ def test_all_implicit_steps():
     for case in cases:
         implicit = parse_expr(case, transformations=transformations2)
         normal = parse_expr(cases[case], transformations=transformations)
-        assert implicit == normal
+        assert implicit == normal, (implicit, normal)

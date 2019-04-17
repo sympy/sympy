@@ -59,7 +59,7 @@ def test_sympy_parser():
 
     }
     for text, result in inputs.items():
-        assert parse_expr(text) == result
+        assert parse_expr(text) == result, (text, result)
 
     raises(TypeError, lambda:
         parse_expr('x', standard_transformations))
@@ -98,7 +98,7 @@ def test_repeated_fail():
     inputs = ['1[1]', '.1e1[1]', '0x1[1]', '1.1j[1]', '1.1[1 + 1]',
         '0.1[[1]]', '0x1.1[1]', '0.1[', '0.1[1', '0.1[]']
     for text in inputs:
-        raises((IndexError, TypeError, TokenError, SyntaxError), lambda: parse_expr(text))
+        raises((IndexError, TypeError, TokenError, SyntaxError), lambda: parse_expr(text, strict=True))
 
 
 def test_repeated_dot_only():
@@ -237,39 +237,32 @@ def test_parse_function_issue_3539():
 def test_split_symbols_numeric():
     SI = standard_transformations + (
         implicit_multiplication_application,)
-    do = lambda x: parse_expr(x, transformations=SI, _number_kern=True)
+    do = lambda x: parse_expr(x, transformations=SI)
 
     n = Symbol('n')
     assert parse_expr('2**n * 3**n') == do('2**n3**n') == 2**n*3**n
     assert do('n12n34') == n*12*n*34
 
     # issue 16632
-    x, y, z, x_, x_3 = symbols('x y z x_ x_3')
+    x, y, z, x_, x_3, j = symbols('x y z x_ x_3 j')
     assert do('3e4') == 30000.0
     assert do('x3y') == x*3*y
-    assert do('x3j') == x*3*I
-    assert do('x3.j') == x*3.0*I
-    assert do('x_3e4yz') == 30000.0*x_*y*z
+    assert do('x3y') == 3*x*y
+    assert do('x3j') == 3*j*x
+    assert do('x3.j') == x*3.0*j, do('x3.j')
+    assert parse_expr('x3.j', extra='j') == 3.0*I*x
+    assert parse_expr('x3.jy', extra='j') == 3.0*I*x*y
+    assert do('x_3e4yz') == Symbol('x_3e4yz')
     assert do('x_3.e4yz') == 30000.0*x_*y*z
     assert do('x_.3e4yz') == 3000.0*x_*y*z
     assert do('x_3.3e4yz') == 33000.0*x_*y*z
-    assert do('x_3yz') == x_3*y*z
+    assert do('x_3yz') == Symbol('x_3yz')
     assert do('n1.1n22') == n*1.1*n*22
     assert parse_expr('log10(3.2x)', dict(log10=log),
         transformations=SI) == log(3.2*x)
     assert parse_expr('x3y',
         transformations=standard_transformations) == Symbol('x3y')
-    assert do('x3y') == 3*x*y
-    # a helpful error message is raised when the _number_kern
-    # option succeeds
-    try:
-        parse_expr('3.2*x*y')
-    except SyntaxError as e:
-        assert '3.2*x*y' in e
-    try:
-        parse_expr('3.2*x*y', _number_kern=False)
-    except SyntaxError as e:
-        assert '3.2*x*y' not in e
+    assert parse_expr('2x1e2y', extra='e') == 200.0*x*y
 
 
 def test_unicode_names():

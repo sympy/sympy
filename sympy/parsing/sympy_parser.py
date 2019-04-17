@@ -908,6 +908,8 @@ def eval_expr(code, local_dict, global_dict):
     return expr
 
 
+_refloat = regex.compile(r"(((\d*\.\d+)|(\d+\.?\d?))([eE][-+]?\d+)?)")
+_num_underscores = regex.compile(r'(\d+)_(\d+)')
 _py2name = regex.compile(r'^[a-zA-Z_]\w*$')
 def valid_name(name):
     if not isinstance(name, string_types):
@@ -919,99 +921,8 @@ def valid_name(name):
     return _py2name.match(name)
 
 
-_refloat = regex.compile(r"(((\d*\.\d+)|(\d+\.?\d?))([eE][-+]?\d+)?)")
-_re_num = regex.compile(r"(\d)_(\d)")
-_decdig = string.digits + '.'
-def _number_kern(s):
-    """return s with space between a number and any surrounding text
-    with which it cannot be joined without disturbing space already
-    present.
-
-    Examples
-    ========
-
-    >>> from sympy.parsing.sympy_parser import _number_kern as kern
-    >>> kern('x3y')
-    'x3 y'
-    >>> kern('x3j')
-    'x 3j'
-    >>> kern('x3.2y')
-    'x 3.2 y'
-    """
-    # join underscore separated numbers
-    s = regex.sub(r'(\d+)_(\d+)', r'\1\2', s)
-    # split on numbers
-    g = _refloat.split(s)
-    if len(g) == 1:
-        # it didn't split
-        return s
-    # join up re patterns
-    nums = set()
-    i = 0
-    while i < len(g):
-        if g[i] is None:
-            if g[i + 1] is None:
-                # n n n None None
-                #       i
-                g[i - 3: i + 2] = [g[i - 3]]
-                i -= 2
-            elif g[i + 2: i + 3] == [None]:
-                # n n None n None
-                #     i
-                g[i - 2: i + 3] = [g[i - 2]]
-                i -= 1
-            elif i + 1 < len(g) and g[i - 3].endswith(g[i + 1]):
-                # n n n None e
-                #       i
-                g[i - 3: i + 2] = [g[i - 3]]
-                i -= 2
-            else:
-                # n n None n e
-                #     i
-                g[i - 2: i + 3] = [g[i - 2]]
-                i -= 1
-            nums.add(g[i - 1])
-        else:
-            i += 1
-    g = list(filter(None, g))
-    p = []  # processed pieces
-    i = 0
-    while i < len(g):
-        if not p:
-            p.append(g[i])
-            i += 1
-        elif g[i][0] in _decdig:
-            num = g[i]
-            if valid_name(p[-1][-1]) and num.isdigit() and \
-                    g[i + 1: i + 2] != ['j']:
-                # x 3 -> x3 but
-                p[-1] += num
-            else:
-                # x 3. -x-> x3.
-                # x 3 j -x-> x3 j
-                p.append(num)
-            i += 1
-        elif p[-1] in nums and g[i] == 'j':
-            # *3 j -> *3j
-            p[-1] += g[i]
-            i += 1
-        elif p[-1].isdigit() and not valid_name(g[i]):
-            # 3 not_name -> 3notname
-            # (same as above but separate for coverage tests)
-            p[-1] += g[i]
-            i += 1
-        elif not valid_name(p[-1]) and not valid_name(g[i]):
-            p[-1] += g[i]
-            i += 1
-        else:
-            p.append(g[i])
-            i += 1
-    return ' '.join(p)
-
-
-_kern = _number_kern
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True, _number_kern=None):
+               global_dict=None, evaluate=True, default='uld', extra=''):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -1035,17 +946,22 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         undefined variables into SymPy symbols, and allow the use of standard
         mathematical factorial notation (e.g. ``x!``).
 
-    _number_kern : bool, optional
-        When True, numbers will be set off from surrounding
-        symbols with space and the `implicit_multiplication`
-        transformation will be used. This option will
-        be removed when it is no longer necessary. It is only when
-        True or when a parsing fails unless it is set to False.
-
     evaluate : bool, optional
         When False, the order of the arguments will remain as they were in the
         string and automatic simplification that would normally occur is
         suppressed. (see examples)
+
+    default and extra: strings, optional of 'ludefj'
+        The default preprocessing handles:
+            underscores between digits ('u'),
+            leading numbers ('l'), and
+            floats with decimals ('d').
+        Additionally,
+            exponentials without decimals ('e') and
+            Python complex `j` ('j') can be recognized, too.
+            For floating point numbers (exponential and decimals)
+            the letter 'f' can be used.
+        No preprocessing is done if both strings are null.
 
     Examples
     ========
@@ -1053,14 +969,39 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     >>> from sympy.parsing.sympy_parser import parse_expr
     >>> parse_expr("1/2")
     1/2
-    >>> type(_)
-    <class 'sympy.core.numbers.Half'>
-    >>> from sympy.parsing.sympy_parser import standard_transformations,\\
-    ... implicit_multiplication_application
-    >>> transformations = (standard_transformations +
-    ...     (implicit_multiplication_application,))
-    >>> parse_expr("2x", transformations=transformations)
+
+    Leading numbers and numbers with explicit decimal points
+    are automatically identified and separated out since
+    otherwise an error would be raised:
+
+    >>> parse_expr('2x')
     2*x
+    >>> parse_expr('2x3.4y')
+    6.8*x*y
+    >>> parse_expr('2x3e4y')
+    2*x3e4y
+
+    If 'e' is included in the `extra` string then exponentials
+    will be identified, too:
+
+    >>> parse_expr('2x1e2y', extra='e')
+    200.0*x*y
+
+    If default='' then such expression can only be
+    parsed with transformations:
+
+    >>> from sympy.parsing.sympy_parser import (
+    ... standard_transformations,
+    ... implicit_multiplication_application)
+    >>> SI = (standard_transformations +
+    ...     (implicit_multiplication_application,))
+    >>> parse_expr("2x", transformations=SI, default='')
+    2*x
+
+    And sometimes you may not get what you expected:
+
+    >>> parse_expr("x2.3", transformations=SI, default='')
+    0.6*x
 
     When evaluate=False, some automatic simplifications will not occur:
 
@@ -1113,39 +1054,62 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
                     a transformation should be function that
                     takes 3 arguments'''))
 
-    if _number_kern:
-        old = s
-        s = _kern(s)
-        if s != old and implicit_multiplication not in transformations:
-            transformations += (implicit_multiplication,)
+    preprocess = (default + extra).lower()
+    # join underscore separated numbers
+    if 'u' in preprocess:
+        s = _num_underscores.sub(r'\1\2', s)
+    strict = True
+    pyj = False
+    if 'f' in preprocess or 'd' in preprocess and 'e' in preprocess:
+        strict = False
+    elif 'd' in preprocess:
+        strict = None
+    if 'j' in preprocess:
+        pyj = True
+    if not strict:
+        # identify numbers
+        ss = []
+        while True:
+            split = _refloat.split(s, maxsplit=1)
+            if len(split) == 1:
+                break
+            pre, n, _, _, _, _, s = split
+            ss.extend([pre, n])
+        ss.append(s)
+        # put operators around numbers as needed for strict/j preference
+        for i in range(len(ss) - 2, 0, -2):
+            L, n, R = ss[i - 1: i + 2]
+            if strict is None and 'e' in n.lower():
+                # treat e in exponential notation like a symbol
+                ix = n.lower().index('e')
+                e = n[ix]
+                n, tail = n.split(e)
+                if '.' in n and L and valid_name(L[-1]):
+                    n = '*' + n
+                ss[i] = ''.join([n, e + tail])
+            else:
+                # decimal or exponential split out
+                leading_num = i == 1 and not ss[0]
+                if leading_num or '.' in n or 'e' in n.lower():
+                    if not strict and L and valid_name(L[-1]):
+                        ss[i] = '*' + ss[i]
+                    if R and valid_name(R[0]):
+                        if pyj and R.startswith('j'):
+                            ss[i] += '*I'
+                            if i + 2 < len(ss) or len(R) > 1:
+                                ss[i] += '*'
+                            ss[i + 1] = ss[i + 1][1:]
+                        else:  # not strict so
+                            ss[i] += '*'
+        ss = list(filter(None, ss))
+        s = ''.join(ss)
+
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
-    def do(code):
-        if not evaluate:
-            code = compile(evaluateFalse(code), '<string>', 'eval')
+    if not evaluate:
+        code = compile(evaluateFalse(code), '<string>', 'eval')
 
-        return eval_expr(code, local_dict, global_dict)
-
-    try:
-        return do(code)
-    except (AttributeError, SyntaxError):
-        if _number_kern is not None:
-            # let it raise
-            do(code)
-        ks = _kern(s)
-        transformations += (implicit_multiplication,)
-        kcode = stringify_expr(ks, local_dict, global_dict, transformations)
-        try:
-            k = do(kcode)
-        except:
-            # let it raise the original error
-            do(code)
-        raise SyntaxError(filldedent('''
-            This expression was successfully parsed using the
-            _number_kern option.
-            Retry the parsing with _number_kern=True or edit
-            your input expression if this is the expression
-            you wanted: %s''' % k))
+    return eval_expr(code, local_dict, global_dict)
 
 
 def evaluateFalse(s):
