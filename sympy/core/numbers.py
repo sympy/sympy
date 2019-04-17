@@ -19,7 +19,8 @@ from sympy.core.cache import lru_cache
 
 import mpmath
 import mpmath.libmp as mlib
-import numbers as nums
+from sympy.external import import_module
+nums = import_module('numbers')
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp import mpnumeric
