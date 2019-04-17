@@ -143,13 +143,15 @@ def precedence_traditional(item):
     """
     # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
     # the precedence of Atom for other printers:
-    from sympy import Integral, Sum, Product, Limit, Derivative
+    from sympy import Integral, Sum, Product, Limit, Derivative, Transpose, Adjoint
     from sympy.core.expr import UnevaluatedExpr
     from sympy.tensor.functions import TensorProduct
 
     if isinstance(item, (Integral, Sum, Product, Limit, Derivative, TensorProduct)):
         return PRECEDENCE["Mul"]
-    if (item.__class__.__name__ in ("Dot", "Cross", "Gradient", "Divergence",
+    elif isinstance(item, (Transpose, Adjoint)):
+        return PRECEDENCE["Pow"]
+    elif (item.__class__.__name__ in ("Dot", "Cross", "Gradient", "Divergence",
                                     "Curl", "Laplacian")):
         return PRECEDENCE["Mul"]-1
     elif isinstance(item, UnevaluatedExpr):
