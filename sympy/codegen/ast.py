@@ -383,7 +383,7 @@ class NoneToken(Token):
         return ()
 
     def __hash__(self):
-        return super(Token, self).__hash__()
+        return super(NoneToken, self).__hash__()
 
 
 none = NoneToken()

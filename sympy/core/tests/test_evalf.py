@@ -1,15 +1,15 @@
-from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp,
+from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
     integrate, log, Mul, N, oo, pi, Pow, product, Product,
-    Rational, S, Sum, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
+    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
-    scaled_zero, get_integer_part, as_mpmath)
+    scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
 from sympy.core.compatibility import long, range
 from sympy.utilities.pytest import raises, XFAIL
-
 from sympy.abc import n, x, y
+
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
@@ -535,3 +535,19 @@ def test_issue_14601():
     e2 = e.evalf(subs=subst)
     assert float(e2) == 0.0
     assert float((x + x*(x**2 + x)).evalf(subs={x: 0.0})) == 0.0
+
+
+def test_issue_11151():
+    z = S.Zero
+    e = Sum(z, (x, 1, 2))
+    assert e != z  # it shouldn't evaluate
+    # when it does evaluate, this is what it should give
+    assert evalf(e, 15, {}) == \
+        evalf(z, 15, {}) == (None, None, 15, None)
+    # so this shouldn't fail
+    assert (e/2).n() == 0
+    # this was where the issue appeared
+    expr0 = Sum(x**2 + x, (x, 1, 2))
+    expr1 = Sum(0, (x, 1, 2))
+    expr2 = expr1/expr0
+    assert simplify(factor(expr2) - expr2) == 0

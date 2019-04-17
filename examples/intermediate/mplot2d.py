@@ -9,7 +9,7 @@ import sys
 
 from sample import sample
 
-from sympy import log, pi, sqrt, sin, Symbol
+from sympy import sqrt, Symbol
 from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 

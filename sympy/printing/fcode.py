@@ -117,9 +117,11 @@ class FCodePrinter(CodePrinter):
         '!=': '/=',
     }
 
-    def __init__(self, settings={}):
-        self.mangled_symbols = {}         ## Dict showing mapping of all words
-        self.used_name= []
+    def __init__(self, settings=None):
+        if not settings:
+            settings = {}
+        self.mangled_symbols = {}         # Dict showing mapping of all words
+        self.used_name = []
         self.type_aliases = dict(chain(self.type_aliases.items(),
                                        settings.pop('type_aliases', {}).items()))
         self.type_mappings = dict(chain(self.type_mappings.items(),

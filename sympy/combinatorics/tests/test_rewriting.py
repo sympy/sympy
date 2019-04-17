@@ -1,5 +1,7 @@
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.free_groups import free_group
+from sympy.utilities.pytest import raises
+
 
 def test_rewriting():
     F, a, b = free_group("a, b")
@@ -38,3 +40,10 @@ def test_rewriting():
     R.add_rule(a**2, b)
     assert R.reduce_using_automaton(a**2*b**-2*a**2*b) == b**-1
     assert R.reduce_using_automaton(a**4*b**-2*a**2*b**3) == b
+
+    R.set_max(15)
+    raises(RuntimeError, lambda:  R.add_rule(a**-3, b))
+    R.set_max(20)
+    R.add_rule(a**-3, b)
+
+    assert R.add_rule(a, a) == set()

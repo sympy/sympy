@@ -25,9 +25,10 @@ from sympy.simplify import nsimplify
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, numbered_symbols
+from sympy.utilities.misc import filldedent
 
 from .common import (
-    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError, a2idx)
+    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError)
 
 
 def _iszero(x):
@@ -1036,10 +1037,33 @@ class MatrixSubspaces(MatrixReductions):
             vectors to be made orthogonal
 
         normalize : bool
-            If true, return an orthonormal basis.
-        """
+            If ``True``, return an orthonormal basis.
 
+        rankcheck : bool
+            If ``True``, the computation does not stop when encountering
+            linearly dependent vectors.
+
+            If ``False``, it will raise ``ValueError`` when any zero
+            or linearly dependent vectors are found.
+
+        Returns
+        =======
+
+        list
+            List of orthogonal (or orthonormal) basis vectors.
+
+        See Also
+        ========
+
+        MatrixBase.QRdecomposition
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+        """
         normalize = kwargs.get('normalize', False)
+        rankcheck = kwargs.get('rankcheck', False)
 
         def project(a, b):
             return b * (a.dot(b) / b.dot(b))
@@ -1054,13 +1078,21 @@ class MatrixSubspaces(MatrixReductions):
 
         ret = []
         # make sure we start with a non-zero vector
+        vecs = list(vecs)
         while len(vecs) > 0 and vecs[0].is_zero:
-            del vecs[0]
+            if rankcheck is False:
+                del vecs[0]
+            else:
+                raise ValueError(
+                    "GramSchmidt: vector set not linearly independent")
 
         for vec in vecs:
             perp = perp_to_subspace(vec, ret)
             if not perp.is_zero:
                 ret.append(perp)
+            elif rankcheck is True:
+                raise ValueError(
+                    "GramSchmidt: vector set not linearly independent")
 
         if normalize:
             ret = [vec / vec.norm() for vec in ret]
@@ -2210,6 +2242,49 @@ class MatrixBase(MatrixDeprecated,
         return "Matrix([\n%s])" % self.table(printer, rowsep=',\n')
 
     @classmethod
+    def irregular(cls, ntop, *matrices, **kwargs):
+      """Return a matrix filled by the given matrices which
+      are listed in order of appearance from left to right, top to
+      bottom as they first appear in the matrix. They must fill the
+      matrix completely.
+
+      Examples
+      ========
+
+      >>> from sympy import ones, Matrix
+      >>> Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
+      ...   ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7)
+      Matrix([
+        [1, 2, 2, 2, 3, 3],
+        [1, 2, 2, 2, 3, 3],
+        [4, 2, 2, 2, 5, 5],
+        [6, 6, 7, 7, 5, 5]])
+      """
+      from sympy.core.compatibility import as_int
+      ntop = as_int(ntop)
+      # make sure we are working with explicit matrices
+      b = [i.as_explicit() if hasattr(i, 'as_explicit') else i
+          for i in matrices]
+      q = list(range(len(b)))
+      dat = [i.rows for i in b]
+      active = [q.pop(0) for _ in range(ntop)]
+      cols = sum([b[i].cols for i in active])
+      rows = []
+      while any(dat):
+          r = []
+          for a, j in enumerate(active):
+              r.extend(b[j][-dat[j], :])
+              dat[j] -= 1
+              if dat[j] == 0 and q:
+                  active[a] = q.pop(0)
+          if len(r) != cols:
+            raise ValueError(filldedent('''
+                Matrices provided do not appear to fill
+                the space completely.'''))
+          rows.append(r)
+      return cls._new(rows)
+
+    @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
         """Return the number of rows, cols and flat matrix elements.
 
@@ -2251,8 +2326,14 @@ class MatrixBase(MatrixDeprecated,
         [0,   0],
         [1, 1/2]])
 
+        See Also
+        ========
+        irregular - filling a matrix with irregular blocks
         """
         from sympy.matrices.sparse import SparseMatrix
+        from sympy.matrices.expressions.matexpr import MatrixSymbol
+        from sympy.matrices.expressions.blockmatrix import BlockMatrix
+        from sympy.utilities.iterables import reshape
 
         flat_list = None
 
@@ -2292,33 +2373,98 @@ class MatrixBase(MatrixDeprecated,
             # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
             elif is_sequence(args[0]) \
                     and not isinstance(args[0], DeferredVector):
-                in_mat = []
-                ncol = set()
-                for row in args[0]:
-                    if isinstance(row, MatrixBase):
-                        in_mat.extend(row.tolist())
-                        if row.cols or row.rows:  # only pay attention if it's not 0x0
-                            ncol.add(row.cols)
+                dat = list(args[0])
+                ismat = lambda i: isinstance(i, MatrixBase) and (
+                    evaluate or
+                    isinstance(i, BlockMatrix) or
+                    isinstance(i, MatrixSymbol))
+                raw = lambda i: is_sequence(i) and not ismat(i)
+                evaluate = kwargs.get('evaluate', True)
+                if evaluate:
+                    def do(x):
+                        # make Block and Symbol explicit
+                        if isinstance(x, (list, tuple)):
+                            return type(x)([do(i) for i in x])
+                        if isinstance(x, BlockMatrix) or \
+                                isinstance(x, MatrixSymbol) and \
+                                all(_.is_Integer for _ in x.shape):
+                            return x.as_explicit()
+                        return x
+                    dat = do(dat)
+
+                if dat == [] or dat == [[]]:
+                    rows = cols = 0
+                    flat_list = []
+                elif not any(raw(i) or ismat(i) for i in dat):
+                    # a column as a list of values
+                    flat_list = [cls._sympify(i) for i in dat]
+                    rows = len(flat_list)
+                    cols = 1 if rows else 0
+                elif evaluate and all(ismat(i) for i in dat):
+                    # a column as a list of matrices
+                    ncol = set(i.cols for i in dat if any(i.shape))
+                    if ncol:
+                        if len(ncol) != 1:
+                            raise ValueError('mismatched dimensions')
+                        flat_list = [_ for i in dat for r in i.tolist() for _ in r]
+                        cols = ncol.pop()
+                        rows = len(flat_list)//cols
                     else:
-                        in_mat.append(row)
-                        try:
-                            ncol.add(len(row))
-                        except TypeError:
+                        rows = cols = 0
+                        flat_list = []
+                elif evaluate and any(ismat(i) for i in dat):
+                    ncol = set()
+                    flat_list = []
+                    for i in dat:
+                        if ismat(i):
+                            flat_list.extend(
+                                [k for j in i.tolist() for k in j])
+                            if any(i.shape):
+                                ncol.add(i.cols)
+                        elif raw(i):
+                            if i:
+                                ncol.add(len(i))
+                                flat_list.extend(i)
+                        else:
                             ncol.add(1)
-                if len(ncol) > 1:
-                    raise ValueError("Got rows of variable lengths: %s" %
-                                     sorted(list(ncol)))
-                cols = ncol.pop() if ncol else 0
-                rows = len(in_mat) if cols else 0
-                if rows:
-                    if not is_sequence(in_mat[0]):
-                        cols = 1
-                        flat_list = [cls._sympify(i) for i in in_mat]
-                        return rows, cols, flat_list
-                flat_list = []
-                for j in range(rows):
-                    for i in range(cols):
-                        flat_list.append(cls._sympify(in_mat[j][i]))
+                            flat_list.append(i)
+                        if len(ncol) > 1:
+                            raise ValueError('mismatched dimensions')
+                    cols = ncol.pop()
+                    rows = len(flat_list)//cols
+                else:
+                    # list of lists; each sublist is a logical row
+                    # which might consist of many rows if the values in
+                    # the row are matrices
+                    flat_list = []
+                    ncol = set()
+                    rows = cols = 0
+                    for row in dat:
+                        if not is_sequence(row) and \
+                                not getattr(row, 'is_Matrix', False):
+                            raise ValueError('expecting list of lists')
+                        if not row:
+                            continue
+                        if evaluate and all(ismat(i) for i in row):
+                            r, c, flatT = cls._handle_creation_inputs(
+                                [i.T for i in row])
+                            T = reshape(flatT, [c])
+                            flat = [T[i][j] for j in range(c) for i in range(r)]
+                            r, c = c, r
+                        else:
+                            r = 1
+                            if getattr(row, 'is_Matrix', False):
+                                c = 1
+                                flat = [row]
+                            else:
+                                c = len(row)
+                                flat = [cls._sympify(i) for i in row]
+                        ncol.add(c)
+                        if len(ncol) > 1:
+                            raise ValueError('mismatched dimensions')
+                        flat_list.extend(flat)
+                        rows += r
+                    cols = ncol.pop() if ncol else 0
 
         elif len(args) == 3:
             rows = as_int(args[0])
@@ -2353,7 +2499,9 @@ class MatrixBase(MatrixDeprecated,
             flat_list = []
 
         if flat_list is None:
-            raise TypeError("Data type not understood")
+            raise TypeError(filldedent('''
+                Data type not understood; expecting list of lists
+                or lists of values.'''))
 
         return rows, cols, flat_list
 
@@ -2672,7 +2820,7 @@ class MatrixBase(MatrixDeprecated,
         QRsolve
         pinv_solve
         """
-        if not self.is_diagonal:
+        if not self.is_diagonal():
             raise TypeError("Matrix should be diagonal")
         if rhs.rows != self.rows:
             raise TypeError("Size mis-match")

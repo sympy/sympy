@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
 from __future__ import print_function, division, absolute_import
 
 from collections import OrderedDict
+from distutils.errors import CompileError
 import os
 import re
 import subprocess
 import sys
 
 from .util import (
-    get_abspath, FileNotFoundError,
-    find_binary_of_command, unique_list,
-    CompileError
+    find_binary_of_command, unique_list
 )
 from sympy.core.compatibility import string_types
 

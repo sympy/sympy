@@ -3,7 +3,7 @@ Recurrences
 """
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol, sympify
+from sympy.core import S, sympify
 from sympy.core.compatibility import as_int, range, iterable
 
 def linrec(coeffs, init, n):

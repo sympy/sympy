@@ -265,7 +265,7 @@ class Lambdifier(object):
             raise ValueError('The arguments must be Symbols.')
         # - use numbered symbols
         syms = numbered_symbols(exclude=expr.free_symbols)
-        newargs = [next(syms) for i in args]
+        newargs = [next(syms) for _ in args]
         expr = expr.xreplace(dict(zip(args, newargs)))
         argstr = ', '.join([str(a) for a in newargs])
         del syms, newargs, args

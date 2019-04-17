@@ -278,12 +278,12 @@ def find_executable(executable, path=None):
                 f = os.path.join(p, execname)
                 if os.path.isfile(f):
                     return f
-    else:
-        return None
+
+    return None
 
 
 def func_name(x, short=False):
-    '''Return function name of `x` (if defined) else the `type(x)`.
+    """Return function name of `x` (if defined) else the `type(x)`.
     If short is True and there is a shorter alias for the result,
     return the alias.
 
@@ -291,7 +291,10 @@ def func_name(x, short=False):
     ========
 
     >>> from sympy.utilities.misc import func_name
+    >>> from sympy import Matrix
     >>> from sympy.abc import x
+    >>> func_name(Matrix.eye(3))
+    'MutableDenseMatrix'
     >>> func_name(x < 1)
     'StrictLessThan'
     >>> func_name(x < 1, short=True)
@@ -300,7 +303,7 @@ def func_name(x, short=False):
     See Also
     ========
     sympy.core.compatibility get_function_name
-    '''
+    """
     alias = {
     'GreaterThan': 'Ge',
     'StrictGreaterThan': 'Gt',
@@ -315,6 +318,8 @@ def func_name(x, short=False):
     elif str(typ).startswith("<class '"):
         typ = str(typ).split("'")[1].split("'")[0]
     rv = getattr(getattr(x, 'func', x), '__name__', typ)
+    if '.' in rv:
+        rv = rv.split('.')[-1]
     if short:
         rv = alias.get(rv, rv)
     return rv

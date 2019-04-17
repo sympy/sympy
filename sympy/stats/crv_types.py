@@ -47,8 +47,8 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfi, erfinv, I, hyper,
-                   uppergamma, sinh, Ne, expint)
+                   Lambda, Basic, lowergamma, erf, erfi,  erfinv, I, hyper,
+                   uppergamma, sinh, atan, Ne, expint)
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
@@ -108,7 +108,7 @@ __all__ = ['ContinuousRV',
 
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
-    Creates a Continuous Random Variable given the following:
+    Create a Continuous Random Variable given the following:
 
     -- a symbol
     -- a probability density function
@@ -117,7 +117,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     Returns a RandomSymbol.
 
     Many common continuous random variable types are already implemented.
-    This function should be needed very rarely.
+    This function should be necessary only very rarely.
 
     Examples
     ========
@@ -175,9 +175,9 @@ class ArcsinDistribution(SingleContinuousDistribution):
 
 def Arcsin(name, a=0, b=1):
     r"""
-    Creates a Continuous Random Variable with Arcsine distribution.
+    Create a Continuous Random Variable with an arcsin distribution.
 
-    The density of the Arcsine distribution is given by
+    The density of the arcsin distribution is given by
 
     .. math::
         f(x) := \frac{1}{\pi\sqrt{(x-a)(b-x)}}
@@ -253,7 +253,7 @@ class BeniniDistribution(SingleContinuousDistribution):
 
 def Benini(name, alpha, beta, sigma):
     r"""
-    Creates a Continuous Random Variable with Benini distribution.
+    Create a Continuous Random Variable with a Benini distribution.
 
     The density of the Benini distribution is given by
 
@@ -342,7 +342,7 @@ class BetaDistribution(SingleContinuousDistribution):
 
 def Beta(name, alpha, beta):
     r"""
-    Creates a Continuous Random Variable with Beta distribution.
+    Create a Continuous Random Variable with a Beta distribution.
 
     The density of the Beta distribution is given by
 
@@ -417,7 +417,7 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
 
 def BetaPrime(name, alpha, beta):
     r"""
-    Creates a Continuous Random Variable with Beta prime distribution.
+    Create a continuous random variable with a Beta prime distribution.
 
     The density of the Beta prime distribution is given by
 
@@ -480,8 +480,8 @@ class CauchyDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
-    def _cdf(self, x):
-        return atan((x - self.x0)/self.gamma)/pi + S.Half
+        x0, gamma = self.x0, self.gamma
+        return (1/pi)*atan((x - x0)/gamma) + S.Half
 
     def _characteristic_function(self, t):
         return exp(self.x0 * I * t -  self.gamma * Abs(t))
@@ -495,7 +495,7 @@ class CauchyDistribution(SingleContinuousDistribution):
 
 def Cauchy(name, x0, gamma):
     r"""
-    Creates a Continuous Random Variable with Cauchy distribution.
+    Create a continuous random variable with a Cauchy distribution.
 
     The density of the Cauchy distribution is given by
 
@@ -573,7 +573,7 @@ class ChiDistribution(SingleContinuousDistribution):
 
 def Chi(name, k):
     r"""
-    Creates a Continuous Random Variable with Chi distribution.
+    Create a continuous random variable with a Chi distribution.
 
     The density of the Chi distribution is given by
 
@@ -640,9 +640,9 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
 
 def ChiNoncentral(name, k, l):
     r"""
-    Creates a Continuous Random Variable with Non-central Chi distribution.
+    Create a continuous random variable with a non-central Chi distribution.
 
-    The density of the Non-central Chi distribution is given by
+    The density of the non-central Chi distribution is given by
 
     .. math::
         f(x) := \frac{e^{-(x^2+\lambda^2)/2} x^k\lambda}
@@ -718,7 +718,7 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
 
 def ChiSquared(name, k):
     r"""
-    Creates a Continuous Random Variable with Chi-squared distribution.
+    Create a continuous random variable with a Chi-squared distribution.
 
     The density of the Chi-squared distribution is given by
 
@@ -794,7 +794,7 @@ class DagumDistribution(SingleContinuousDistribution):
 
 def Dagum(name, p, a, b):
     r"""
-    Creates a Continuous Random Variable with Dagum distribution.
+    Create a continuous random variable with a Dagum distribution.
 
     The density of the Dagum distribution is given by
 
@@ -851,7 +851,7 @@ def Dagum(name, p, a, b):
 
 def Erlang(name, k, l):
     r"""
-    Creates a Continuous Random Variable with Erlang distribution.
+    Create a continuous random variable with an Erlang distribution.
 
     The density of the Erlang distribution is given by
 
@@ -1031,6 +1031,13 @@ class FDistributionDistribution(SingleContinuousDistribution):
     _argnames = ('d1', 'd2')
 
     set = Interval(0, oo)
+
+    @staticmethod
+    def check(d1, d2):
+        _value_check(d1 > 0 and d1.is_integer, \
+            "Degrees of freedom d1 must be positive integer.")
+        _value_check(d2 > 0 and d2.is_integer, \
+            "Degrees of freedom d2 must be positive integer.")
 
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
@@ -1452,7 +1459,12 @@ class GumbelDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         beta, mu = self.beta, self.mu
-        return (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
+        z = (x - mu)/beta
+        return (1/beta)*exp(-(z + exp(-z)))
+
+    def _cdf(self, x):
+        beta, mu = self.beta, self.mu
+        return exp(-exp((mu - x)/beta))
 
     def _characteristic_function(self, t):
         return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
@@ -1467,9 +1479,10 @@ def Gumbel(name, beta, mu):
     The density of the Gumbel distribution is given by
 
     .. math::
-        f(x) := \exp \left( -exp \left( x + \exp \left( -x \right) \right) \right)
+        f(x) := \dfrac{1}{\beta} \exp \left( -\dfrac{x-\mu}{\beta}
+                - \exp \left( -\dfrac{x - \mu}{\beta} \right) \right)
 
-    with ::math 'x \in [ - \inf, \inf ]'.
+    with :math:`x \in [ - \infty, \infty ]`.
 
     Parameters
     ==========
@@ -1484,14 +1497,16 @@ def Gumbel(name, beta, mu):
 
     Examples
     ==========
-    >>> from sympy.stats import Gumbel, density, E, variance
+    >>> from sympy.stats import Gumbel, density, E, variance, cdf
     >>> from sympy import Symbol, simplify, pprint
     >>> x = Symbol("x")
     >>> mu = Symbol("mu")
     >>> beta = Symbol("beta", positive=True)
     >>> X = Gumbel("x", beta, mu)
     >>> density(X)(x)
-    exp(exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
+    exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
+    >>> cdf(X)(x)
+    exp(-exp((mu - x)/beta))
 
     References
     ==========
@@ -1518,6 +1533,10 @@ class GompertzDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         eta, b = self.eta, self.b
         return b*eta*exp(b*x)*exp(eta)*exp(-eta*exp(b*x))
+
+    def _cdf(self, x):
+        eta, b = self.eta, self.b
+        return 1 - exp(eta)*exp(-eta*exp(b*x))
 
     def _moment_generating_function(self, t):
         eta, b = self.eta, self.b
@@ -1905,6 +1924,10 @@ class MaxwellDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
+
+    def _cdf(self, x):
+        a = self.a
+        return erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
 
 def Maxwell(name, a):
     r"""
@@ -2439,6 +2462,10 @@ class RayleighDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         sigma = self.sigma
         return x/sigma**2*exp(-x**2/(2*sigma**2))
+
+    def _cdf(self, x):
+        sigma = self.sigma
+        return 1 - exp(-(x**2/(2*sigma**2)))
 
     def _characteristic_function(self, t):
         sigma = self.sigma

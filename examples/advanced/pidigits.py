@@ -7,7 +7,6 @@ computation of the digits of pi.
 """
 
 from mpmath import libmp, pi
-from mpmath import functions as mpf_funs
 
 import math
 from time import clock
@@ -70,9 +69,9 @@ def calculateit(func, base, n, tofile):
 def interactive():
     """Simple function to interact with user"""
     print("Compute digits of pi with SymPy\n")
-    base = input("Which base? (2-36, 10 for decimal) \n> ")
-    digits = input("How many digits? (enter a big number, say, 10000)\n> ")
-    tofile = raw_input("Output to file? (enter a filename, or just press enter\nto print directly to the screen) \n> ")
+    base = int(input("Which base? (2-36, 10 for decimal) \n> "))
+    digits = int(input("How many digits? (enter a big number, say, 10000)\n> "))
+    tofile = input("Output to file? (enter a filename, or just press enter\nto print directly to the screen) \n> ")
     if tofile:
         tofile = open(tofile, "w")
     calculateit(pi, base, digits, tofile)

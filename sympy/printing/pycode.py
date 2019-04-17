@@ -7,7 +7,7 @@ This module contains python code printers for plain python as well as NumPy & Sc
 
 from collections import defaultdict
 from itertools import chain
-from sympy.core import S, Number, Symbol, Mul, Add
+from sympy.core import S
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
@@ -736,10 +736,10 @@ for k in SciPyPrinter._kc:
 
 class SymPyPrinter(PythonCodePrinter):
 
-    _kf = dict([(k, 'sympy.' + v) for k, v in chain(
+    _kf = {k: 'sympy.' + v for k, v in chain(
         _known_functions.items(),
         _known_functions_math.items()
-    )])
+    )}
 
     def _print_Function(self, expr):
         mod = expr.func.__module__ or ''

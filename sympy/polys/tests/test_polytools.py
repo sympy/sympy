@@ -1732,6 +1732,12 @@ def test_div():
     assert q.get_domain().is_Frac and r.get_domain().is_Frac
 
 
+def test_issue_7864():
+    q, r = div(a, .408248290463863*a)
+    assert abs(q - 2.44948974278318) < 1e-14
+    assert r == 0
+
+
 def test_gcdex():
     f, g = 2*x, x**2 - 16
     s, t, h = x/32, -Rational(1, 16), 1
@@ -2475,6 +2481,11 @@ def test_factor():
     assert factor(eq, x) == (x + 3)*(x + 4)*(y**2 + 11*y + 30)
     assert factor(eq, x, deep=True) == (x + 3)*(x + 4)*(y**2 + 11*y + 30)
     assert factor(eq, y, deep=True) == (y + 5)*(y + 6)*(x**2 + 7*x + 12)
+
+    # fraction option
+    f = 5*x + 3*exp(2 - 7*x)
+    assert factor(f, deep=True) == factor(f, deep=True, fraction=True)
+    assert factor(f, deep=True, fraction=False) == 5*x + 3*exp(2)*exp(-7*x)
 
 
 def test_factor_large():

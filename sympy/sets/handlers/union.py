@@ -1,9 +1,8 @@
-from sympy import (Interval, Intersection, Set, EmptySet,
-        FiniteSet, Union, ComplexRegion, ProductSet)
-from sympy.sets.fancysets import Integers, Naturals, Reals
-from sympy.sets.sets import UniversalSet
-from sympy import S, sympify
+from sympy import (Interval, Intersection, Set, EmptySet, S, sympify,
+                   FiniteSet, Union, ComplexRegion, ProductSet)
 from sympy.multipledispatch import dispatch
+from sympy.sets.fancysets import Integers
+from sympy.sets.sets import UniversalSet
 
 
 @dispatch(Integers, Set)

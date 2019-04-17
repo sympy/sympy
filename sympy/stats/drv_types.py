@@ -1,15 +1,17 @@
 """
-Discrete Random Variables - Prebuilt Variables
 
 Contains
 ========
 Geometric
+Poisson
 Logarithmic
 NegativeBinomial
 Poisson
 YuleSimon
 Zeta
 """
+
+
 from __future__ import print_function, division
 
 from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta,

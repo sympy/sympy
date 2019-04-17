@@ -3,13 +3,14 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
-from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative
+from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative, sin, exp, cos, tan, log, Lambda
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
 
 k = symbols("k")
 
 X = MatrixSymbol("X", k, k)
 x = MatrixSymbol("x", k, 1)
+y = MatrixSymbol("y", k, 1)
 
 A = MatrixSymbol("A", k, k)
 B = MatrixSymbol("B", k, k)
@@ -20,6 +21,21 @@ a = MatrixSymbol("a", k, 1)
 b = MatrixSymbol("b", k, 1)
 c = MatrixSymbol("c", k, 1)
 d = MatrixSymbol("d", k, 1)
+
+
+def _check_derivative_with_explicit_matrix(expr, x, diffexpr, dim=2):
+    # TODO: this is commented because it slows down the tests.
+    return
+
+    expr = expr.xreplace({k: dim})
+    x = x.xreplace({k: dim})
+    diffexpr = diffexpr.xreplace({k: dim})
+
+    expr = expr.as_explicit()
+    x = x.as_explicit()
+    diffexpr = diffexpr.as_explicit()
+
+    assert expr.diff(x).reshape(*diffexpr.shape).tomatrix() == diffexpr
 
 
 def test_matrix_derivative_non_matrix_result():
@@ -33,7 +49,8 @@ def test_matrix_derivative_non_matrix_result():
 
 def test_matrix_derivative_trivial_cases():
     # Cookbook example 33:
-    assert X.diff(A) == 0
+    # TODO: find a way to represent a four-dimensional zero-array:
+    assert X.diff(A) == Derivative(X, A)
 
 
 def test_matrix_derivative_with_inverse():
@@ -57,6 +74,9 @@ def test_matrix_derivative_with_inverse():
 
 
 def test_matrix_derivative_vectors_and_scalars():
+
+    assert x.diff(x) == Identity(k)
+    assert x.T.diff(x) == Identity(k)
 
     # Cookbook example 69:
     expr = x.T*a
@@ -101,6 +121,9 @@ def test_matrix_derivative_vectors_and_scalars():
 
 def test_matrix_derivatives_of_traces():
 
+    expr = Trace(A)*A
+    assert expr.diff(A) == Derivative(Trace(A)*A, A)
+
     ## First order:
 
     # Cookbook example 99:
@@ -140,8 +163,7 @@ def test_matrix_derivatives_of_traces():
 
     # Cookbook example 107:
     expr = Trace(X**2*B)
-    # TODO: wrong result
-    #assert expr.diff(X) == (X*B + B*X).T
+    assert expr.diff(X) == (X*B + B*X).T
     expr = Trace(MatMul(X, X, B))
     assert expr.diff(X) == (X*B + B*X).T
 
@@ -244,9 +266,71 @@ def test_derivatives_of_complicated_matrix_expr():
 
 def test_mixed_deriv_mixed_expressions():
 
+    expr = 3*Trace(A)
+    assert expr.diff(A) == 3*Identity(k)
+
+    expr = k
+    deriv = expr.diff(A)
+    assert isinstance(deriv, ZeroMatrix)
+    assert deriv == ZeroMatrix(k, k)
+
+    expr = Trace(A)**2
+    assert expr.diff(A) == (2*Trace(A))*Identity(k)
+
     expr = Trace(A)*A
     # TODO: this is not yet supported:
     assert expr.diff(A) == Derivative(expr, A)
 
     expr = Trace(Trace(A)*A)
     assert expr.diff(A) == (2*Trace(A))*Identity(k)
+
+    expr = Trace(Trace(Trace(A)*A)*A)
+    assert expr.diff(A) == (3*Trace(A)**2)*Identity(k)
+
+
+def test_derivatives_elementwise_applyfunc():
+    from sympy.matrices.expressions.diagonal import DiagonalizeVector
+
+    expr = x.applyfunc(tan)
+    assert expr.diff(x) == DiagonalizeVector(x.applyfunc(lambda x: tan(x)**2 + 1))
+    _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
+
+    expr = A*x.applyfunc(exp)
+    assert expr.diff(x) == DiagonalizeVector(x.applyfunc(exp))*A.T
+    _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
+
+    expr = x.T*A*x + k*y.applyfunc(sin).T*x
+    assert expr.diff(x) == A.T*x + A*x + k*y.applyfunc(sin)
+    _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
+
+    expr = x.applyfunc(sin).T*y
+    assert expr.diff(x) == DiagonalizeVector(x.applyfunc(cos))*y
+    _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
+
+    expr = (a.T * X * b).applyfunc(sin)
+    assert expr.diff(X) == a*(a.T*X*b).applyfunc(cos)*b.T
+    _check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
+
+    expr = a.T * X.applyfunc(sin) * b
+    assert expr.diff(X) == DiagonalizeVector(a)*X.applyfunc(cos)*DiagonalizeVector(b)
+    _check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
+
+    expr = a.T * (A*X*B).applyfunc(sin) * b
+    assert expr.diff(X) == A.T*DiagonalizeVector(a)*(A*X*B).applyfunc(cos)*DiagonalizeVector(b)*B.T
+    _check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
+
+    expr = a.T * (A*X*b).applyfunc(sin) * b.T
+    # TODO: not implemented
+    #assert expr.diff(X) == ...
+    #_check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
+
+    expr = a.T*A*X.applyfunc(sin)*B*b
+    assert expr.diff(X) == DiagonalizeVector(A.T*a)*X.applyfunc(cos)*DiagonalizeVector(B*b)
+
+    expr = a.T * (A*X.applyfunc(sin)*B).applyfunc(log) * b
+    # TODO: wrong
+    # assert expr.diff(X) == A.T*DiagonalizeVector(a)*(A*X.applyfunc(sin)*B).applyfunc(Lambda(k, 1/k))*DiagonalizeVector(b)*B.T
+
+    expr = a.T * (X.applyfunc(sin)).applyfunc(log) * b
+    # TODO: wrong
+    # assert expr.diff(X) == DiagonalizeVector(a)*X.applyfunc(sin).applyfunc(Lambda(k, 1/k))*DiagonalizeVector(b)

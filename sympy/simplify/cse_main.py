@@ -362,7 +362,6 @@ def match_common_args(func_class, funcs, opt_subs):
                 # do not compare equal to the evaluated equivalent. So
                 # tree_cse() won't mark funcs[i] as a CSE if we use an
                 # unevaluated version.
-                com_func = funcs[i]
                 com_func_number = arg_tracker.get_or_add_value_number(funcs[i])
 
             diff_j = arg_tracker.func_to_argset[j].difference(com_args)
