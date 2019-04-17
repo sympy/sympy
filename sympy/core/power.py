@@ -424,6 +424,20 @@ class Pow(Expr):
         if self.exp.is_integer and self.exp.is_positive:
             return self.base.is_even
 
+    def _eval_is_negative(self):
+        ext_neg = Pow._eval_is_extended_negative(self)
+        if ext_neg is True:
+            return self.is_finite
+        elif ext_neg is False:
+            return False
+
+    def _eval_is_positive(self):
+        ext_neg = Pow._eval_is_extended_positive(self)
+        if ext_neg is True:
+            return self.is_finite
+        elif ext_neg is False:
+            return False
+
     def _eval_is_extended_positive(self):
         from sympy import log
         if self.base == self.exp:
