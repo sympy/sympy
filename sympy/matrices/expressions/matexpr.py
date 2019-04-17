@@ -980,6 +980,45 @@ class GenericZeroMatrix(ZeroMatrix):
         return super(GenericZeroMatrix, self).__hash__()
 
 
+class OneMatrix(MatrixExpr):
+    """
+    Matrix whose all entries are ones.
+    """
+    def __new__(cls, m, n):
+        obj = super(OneMatrix, cls).__new__(cls, m, n)
+        return obj
+
+    @property
+    def shape(self):
+        return self._args
+
+    def as_explicit(self):
+        from sympy import ImmutableDenseMatrix
+        return ImmutableDenseMatrix.ones(*self.shape)
+
+    def _eval_transpose(self):
+        return OneMatrix(self.cols, self.rows)
+
+    def _eval_trace(self):
+        return S.One*self.rows
+
+    def _eval_determinant(self):
+        condition = Eq(self.shape[0], 1) & Eq(self.shape[1], 1)
+        if condition == True:
+            return S.One
+        elif condition == False:
+            return S.Zero
+        else:
+            from sympy import Determinant
+            return Determinant(self)
+
+    def conjugate(self):
+        return self
+
+    def _entry(self, i, j, **kwargs):
+        return S.One
+
+
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
 
