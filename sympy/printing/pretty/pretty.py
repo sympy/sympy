@@ -1353,8 +1353,9 @@ class PrettyPrinter(Printer):
     def _print_Function(self, e, sort=False, func_name=None):
         # optional argument func_name for supplying custom names
         # XXX works only for applied functions
-        func = e.func
-        args = e.args
+        return self._helper_print_function(e.func, e.args, sort=sort, func_name=func_name)
+
+    def _helper_print_function(self, func, args, sort=False, func_name=None, delimiter=', '):
         if sort:
             args = sorted(args, key=default_sort_key)
 
@@ -1362,7 +1363,7 @@ class PrettyPrinter(Printer):
             func_name = func.__name__
 
         prettyFunc = self._print(Symbol(func_name))
-        prettyArgs = prettyForm(*self._print_seq(args).parens())
+        prettyArgs = prettyForm(*self._print_seq(args, delimiter=delimiter).parens())
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -1372,6 +1373,12 @@ class PrettyPrinter(Printer):
         pform.prettyArgs = prettyArgs
 
         return pform
+
+    def _print_ElementwiseApplyFunction(self, e):
+        func = e.function
+        arg = e.expr
+        args = [arg, "..."]
+        return self._helper_print_function(func, args, delimiter="")
 
     @property
     def _special_function_classes(self):

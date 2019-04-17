@@ -1619,6 +1619,13 @@ def test_Hadamard():
         r'\left(X^{\circ {-1}}\right)^{-1}'
 
 
+def test_ElementwiseApplyFunction():
+    from sympy.matrices import MatrixSymbol
+    X = MatrixSymbol('X', 2, 2)
+    expr = (X.T*X).applyfunc(sin)
+    assert latex(expr) == r"\sin\left({X^{T} X}\ldots\right)"
+
+
 def test_ZeroMatrix():
     from sympy import ZeroMatrix
     assert latex(ZeroMatrix(1, 1)) == r"\mathbb{0}"
