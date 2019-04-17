@@ -160,6 +160,7 @@ class DiagonalizeVector(MatrixExpr):
     Turn a vector into a diagonal matrix.
     """
     def __new__(cls, vector):
+        vector = _sympify(vector)
         obj = MatrixExpr.__new__(cls, vector)
         shape = vector.shape
         dim = shape[1] if shape[0] == 1 else shape[0]
@@ -191,14 +192,22 @@ class DiagonalizeVector(MatrixExpr):
         from sympy import diag
         return diag(*list(self._vector.as_explicit()))
 
+    def doit(self, **hints):
+        from sympy.assumptions import ask, Q
+        from sympy import Transpose, Mul, MatMul
+        vector = self._vector
+        # This accounts for shape (1, 1) and identity matrices, among others:
+        if ask(Q.diagonal(vector)):
+            return vector
+        if vector.is_MatMul:
+            matrices = [arg for arg in vector.args if arg.is_Matrix]
+            scalars = [arg for arg in vector.args if arg not in matrices]
+            if scalars:
+                return Mul.fromiter(scalars)*DiagonalizeVector(MatMul.fromiter(matrices).doit()).doit()
+        if isinstance(vector, Transpose):
+            vector = vector.arg
+        return DiagonalizeVector(vector)
+
 
 def diagonalize_vector(vector):
-    from sympy import Transpose
-    vector = _sympify(vector)
-    if vector.shape == (1, 1):
-        return vector
-    if vector.is_Identity:
-        return vector
-    if isinstance(vector, Transpose):
-        vector = vector.arg
-    return DiagonalizeVector(vector)
+    return DiagonalizeVector(vector).doit()
