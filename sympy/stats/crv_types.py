@@ -480,6 +480,7 @@ class CauchyDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
+    def _cdf(self, x):
         x0, gamma = self.x0, self.gamma
         return (1/pi)*atan((x - x0)/gamma) + S.Half
 
