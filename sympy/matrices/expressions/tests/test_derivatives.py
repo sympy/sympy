@@ -3,8 +3,9 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
-from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative, sin, exp, cos, tan, log, Lambda, \
-    hadamard_product, DiagonalizeVector, S
+from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
+                  Derivative, sin, exp, cos, tan, log, Lambda, S, sqrt,
+                  hadamard_product, DiagonalizeVector)
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
 from sympy.matrices.expressions import hadamard_power
 
@@ -288,6 +289,30 @@ def test_mixed_deriv_mixed_expressions():
 
     expr = Trace(Trace(Trace(A)*A)*A)
     assert expr.diff(A) == (3*Trace(A)**2)*Identity(k)
+
+
+def test_derivatives_matrix_norms():
+
+    expr = x.T*y
+    assert expr.diff(x) == y
+
+    expr = (x.T*y)**S.Half
+    assert expr.diff(x) == y/(2*sqrt(x.T*y))
+
+    expr = (x.T*x)**S.Half
+    assert expr.diff(x) == x*(x.T*x)**(-S.Half)
+
+    expr = (c.T*a*x.T*b)**S.Half
+    assert expr.diff(x) == b/(2*sqrt(c.T*a*x.T*b))*c.T*a
+
+    expr = (c.T*a*x.T*b)**(S.One/3)
+    assert expr.diff(x) == b*(c.T*a*x.T*b)**(-2*S.One/3)*c.T*a/3
+
+    expr = (a.T*X*b)**S.Half
+    assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T
+
+    expr = d.T*x*(a.T*X*b)**S.Half*y.T*c
+    assert expr.diff(X) == a*x.T*d/(2*sqrt(a.T*X*b))*y.T*c*b.T
 
 
 def test_derivatives_elementwise_applyfunc():

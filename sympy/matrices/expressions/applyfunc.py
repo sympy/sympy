@@ -99,7 +99,7 @@ class ElementwiseApplyFunction(MatrixExpr):
 
         d = Dummy("d")
         function = self.function(d)
-        fdiff = function.fdiff()
+        fdiff = function.diff(d)
         if isinstance(fdiff, Function):
             fdiff = type(fdiff)
         else:
