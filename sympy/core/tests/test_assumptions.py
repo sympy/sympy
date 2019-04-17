@@ -1089,6 +1089,8 @@ def test_issue_16313():
     assert (-x).is_positive is False
 
 def test_issue_16579():
+    # complex -> finite | infinite
+    # with work on PR 16603 it may be changed in future to complex -> finite
     x = Symbol('x', complex=True, finite=False)
     y = Symbol('x', real=True, infinite=False)
 
