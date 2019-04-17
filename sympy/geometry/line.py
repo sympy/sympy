@@ -1591,7 +1591,7 @@ class Segment(LinearEntity):
                 if isinstance(self, Segment2D):
                     # if it is collinear and is in the bounding box of the
                     # segment then it must be on the segment
-                    vert = self.slope.equals(S.Infinity)
+                    vert = (1/self.slope).equals(0)
                     if vert is False:
                         isin = (self.p1.x - other.x)*(self.p2.x - other.x) <= 0
                         if isin in (True, False):
