@@ -1,19 +1,18 @@
-from sympy import Order, S, log, limit, lcm_list, pi, Abs, im, re, Symbol, Dummy
-from sympy.core.basic import Basic
+from sympy import Order, S, log, limit, lcm_list, Abs, im, re, Dummy
 from sympy.core import Add, Mul, Pow
-from sympy.logic.boolalg import And
+from sympy.core.basic import Basic
+from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
+from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.logic.boolalg import And
+from sympy.polys.rationaltools import together
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
-from sympy.sets.conditionset import ConditionSet
-from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.utilities import filldedent
 from sympy.simplify.radsimp import denom
-from sympy.polys.rationaltools import together
-from sympy.core.compatibility import iterable
 from sympy.solvers.inequalities import solve_univariate_inequality
+from sympy.utilities import filldedent
 
 def continuous_domain(f, symbol, domain):
     """
@@ -56,6 +55,7 @@ def continuous_domain(f, symbol, domain):
 
     Raises
     ======
+
     NotImplementedError
         If the method to determine continuity of such a function
         has not yet been developed.
@@ -98,11 +98,8 @@ def continuous_domain(f, symbol, domain):
                     solveset(denom(together(f)), symbol, domain)
 
     except NotImplementedError:
-        import sys
-        raise (NotImplementedError("Methods for determining the continuous domains"
-                                   " of this function have not been developed."),
-               None,
-               sys.exc_info()[2])
+        raise NotImplementedError("Methods for determining the continuous domains"
+                                  " of this function have not been developed.")
 
     return domain - sings
 
@@ -147,10 +144,12 @@ def function_range(f, symbol, domain):
     =======
 
     Interval
-        Union of all ranges for all intervals under domain where function is continuous.
+        Union of all ranges for all intervals under domain where function is
+        continuous.
 
     Raises
     ======
+
     NotImplementedError
         If any of the intervals, in the given domain, for which function
         is continuous are not finite or real,
@@ -706,6 +705,141 @@ def is_convex(f, *syms, **kwargs):
     if solve_univariate_inequality(condition, var, False, domain):
         return False
     return True
+
+
+def stationary_points(f, symbol, domain=S.Reals):
+    """
+    Returns the stationary points of a function (where derivative of the
+    function is 0) in the given domain.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for which the stationary points are to be determined.
+    domain : Interval
+        The domain over which the stationary points have to be checked.
+        If unspecified, S.Reals will be the default domain.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, S, sin, log, pi, pprint, stationary_points
+    >>> from sympy.sets import Interval
+    >>> x = Symbol('x')
+
+    >>> stationary_points(1/x, x, S.Reals)
+    EmptySet()
+
+    >>> pprint(stationary_points(sin(x), x), use_unicode=False)
+              pi                              3*pi
+    {2*n*pi + -- | n in Integers} U {2*n*pi + ---- | n in Integers}
+              2                                2
+
+    >>> stationary_points(sin(x),x, Interval(0, 4*pi))
+    {pi/2, 3*pi/2, 5*pi/2, 7*pi/2}
+
+    """
+    from sympy import solveset, diff
+
+    if isinstance(domain, EmptySet):
+        return S.EmptySet
+
+    domain = continuous_domain(f, symbol, domain)
+    set = solveset(diff(f, symbol), symbol, domain)
+
+    return set
+
+
+def maximum(f, symbol, domain=S.Reals):
+    """
+    Returns the maximum value of a function in the given domain.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for maximum value needs to be determined.
+    domain : Interval
+        The domain over which the maximum have to be checked.
+        If unspecified, then Global maximum is returned.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, S, sin, cos, pi, maximum
+    >>> from sympy.sets import Interval
+    >>> x = Symbol('x')
+
+    >>> f = -x**2 + 2*x + 5
+    >>> maximum(f, x, S.Reals)
+    6
+
+    >>> maximum(sin(x), x, Interval(-pi, pi/4))
+    sqrt(2)/2
+
+    >>> maximum(sin(x)*cos(x), x)
+    1/2
+
+    """
+    from sympy import Symbol
+
+    if isinstance(symbol, Symbol):
+        if isinstance(domain, EmptySet):
+            raise ValueError("Maximum value not defined for empty domain.")
+
+        return function_range(f, symbol, domain).sup
+    else:
+        raise ValueError("%s is not a valid symbol." % symbol)
+
+
+def minimum(f, symbol, domain=S.Reals):
+    """
+    Returns the minimum value of a function in the given domain.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for minimum value needs to be determined.
+    domain : Interval
+        The domain over which the minimum have to be checked.
+        If unspecified, then Global minimum is returned.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, S, sin, cos, minimum
+    >>> from sympy.sets import Interval
+    >>> x = Symbol('x')
+
+    >>> f = x**2 + 2*x + 5
+    >>> minimum(f, x, S.Reals)
+    4
+
+    >>> minimum(sin(x), x, Interval(2, 3))
+    sin(3)
+
+    >>> minimum(sin(x)*cos(x), x)
+    -1/2
+
+    """
+    from sympy import Symbol
+
+    if isinstance(symbol, Symbol):
+        if isinstance(domain, EmptySet):
+            raise ValueError("Minimum value not defined for empty domain.")
+
+        return function_range(f, symbol, domain).inf
+    else:
+        raise ValueError("%s is not a valid symbol." % symbol)
+
 
 class AccumulationBounds(AtomicExpr):
     r"""

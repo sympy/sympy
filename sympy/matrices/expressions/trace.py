@@ -40,15 +40,46 @@ class Trace(Expr):
         return _matrix_derivative(self, v)
 
     def _eval_derivative_matrix_lines(self, x):
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+        from sympy.core.expr import ExprBuilder
         r = self.args[0]._eval_derivative_matrix_lines(x)
         for lr in r:
             if lr.higher == 1:
-                lr.higher *= lr.first * lr.second.T
+                lr.higher = ExprBuilder(
+                    CodegenArrayContraction,
+                    [
+                        ExprBuilder(
+                            CodegenArrayTensorProduct,
+                            [
+                                lr._lines[0],
+                                lr._lines[1],
+                            ]
+                        ),
+                        (1, 3),
+                    ],
+                    validator=CodegenArrayContraction._validate
+                )
             else:
                 # This is not a matrix line:
-                lr.higher *= Trace(lr.first * lr.second.T)
-            lr.first = S.One
-            lr.second = S.One
+                lr.higher = ExprBuilder(
+                    CodegenArrayContraction,
+                    [
+                        ExprBuilder(
+                            CodegenArrayTensorProduct,
+                            [
+                                lr._lines[0],
+                                lr._lines[1],
+                                lr.higher,
+                            ]
+                        ),
+                        (1, 3), (0, 2)
+                    ]
+                )
+            lr._lines = [S.One, S.One]
+            lr._first_pointer_parent = lr._lines
+            lr._second_pointer_parent = lr._lines
+            lr._first_pointer_index = 0
+            lr._second_pointer_index = 1
         return r
 
     @property

@@ -102,7 +102,7 @@ class ArgumentIndexError(ValueError):
                (self.args[1], self.args[0]))
 
 
-# Python 2 and 3 compatible version that do not raise a Deprecation warning.
+# Python 2/3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
 
@@ -2945,10 +2945,6 @@ def count_ops(expr, visual=False):
         while args:
             a = args.pop()
 
-            # XXX: This is a hack to support non-Basic args
-            if isinstance(a, string_types):
-                continue
-
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:
@@ -3035,10 +3031,6 @@ def count_ops(expr, visual=False):
             args = [expr]
             while args:
                 a = args.pop()
-
-                # XXX: This is a hack to support non-Basic args
-                if isinstance(a, string_types):
-                    continue
 
                 if a.args:
                     o = Symbol(a.func.__name__.upper())

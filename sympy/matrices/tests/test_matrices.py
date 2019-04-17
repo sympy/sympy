@@ -270,6 +270,9 @@ def test_creation():
         Matrix((1, 2))[3] = 5
 
     assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
+    # anything can go into a matrix (laplace_transform uses tuples)
+    assert Matrix([[[], ()]]).tolist() == [[[], ()]]
+    assert Matrix([[[], ()]]).T.tolist() == [[[]], [()]]
 
     a = Matrix([[x, 0], [0, 0]])
     m = a
@@ -287,13 +290,9 @@ def test_creation():
 
     assert Matrix(b) == b
 
-    c = Matrix((
-        Matrix((
-            (1, 2, 3),
-            (4, 5, 6)
-        )),
-        (7, 8, 9)
-    ))
+    c23 = Matrix(2, 3, range(1, 7))
+    c13 = Matrix(1, 3, range(7, 10))
+    c = Matrix([c23, c13])
     assert c.cols == 3
     assert c.rows == 3
     assert c[:] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -304,6 +303,40 @@ def test_creation():
     assert Matrix(ImmutableMatrix(c)) == ImmutableMatrix(c).as_mutable()
 
     assert c is not Matrix(c)
+
+    dat = [[ones(3,2), ones(3,3)*2], [ones(2,3)*3, ones(2,2)*4]]
+    M = Matrix(dat)
+    assert M == Matrix([
+        [1, 1, 2, 2, 2],
+        [1, 1, 2, 2, 2],
+        [1, 1, 2, 2, 2],
+        [3, 3, 3, 4, 4],
+        [3, 3, 3, 4, 4]])
+    assert M.tolist() != dat
+    # keep block form if evaluate=False
+    assert Matrix(dat, evaluate=False).tolist() == dat
+    A = MatrixSymbol("A", 2, 2)
+    dat = [ones(2), A]
+    assert Matrix(dat) == Matrix([
+    [      1,       1],
+    [      1,       1],
+    [A[0, 0], A[0, 1]],
+    [A[1, 0], A[1, 1]]])
+    assert Matrix(dat, evaluate=False).tolist() == [[i] for i in dat]
+
+    # 0-dim tolerance
+    assert Matrix([ones(2), ones(0)]) == Matrix([ones(2)])
+    raises(ValueError, lambda: Matrix([ones(2), ones(0, 3)]))
+    raises(ValueError, lambda: Matrix([ones(2), ones(3, 0)]))
+
+
+def test_irregular_block():
+    assert Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
+        ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7) == Matrix([
+        [1, 2, 2, 2, 3, 3],
+        [1, 2, 2, 2, 3, 3],
+        [4, 2, 2, 2, 5, 5],
+        [6, 6, 7, 7, 5, 5]])
 
 
 def test_tolist():
@@ -1522,52 +1555,11 @@ def test_vech_errors():
 
 
 def test_diag():
-    a = Matrix([[1, 2], [2, 3]])
-    b = Matrix([[3, x], [y, 3]])
-    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
-    assert diag(a, b, b) == Matrix([
-        [1, 2, 0, 0, 0, 0],
-        [2, 3, 0, 0, 0, 0],
-        [0, 0, 3, x, 0, 0],
-        [0, 0, y, 3, 0, 0],
-        [0, 0, 0, 0, 3, x],
-        [0, 0, 0, 0, y, 3],
-    ])
-    assert diag(a, b, c) == Matrix([
-        [1, 2, 0, 0, 0, 0, 0],
-        [2, 3, 0, 0, 0, 0, 0],
-        [0, 0, 3, x, 0, 0, 0],
-        [0, 0, y, 3, 0, 0, 0],
-        [0, 0, 0, 0, 3, x, 3],
-        [0, 0, 0, 0, y, 3, z],
-        [0, 0, 0, 0, x, y, z],
-    ])
-    assert diag(a, c, b) == Matrix([
-        [1, 2, 0, 0, 0, 0, 0],
-        [2, 3, 0, 0, 0, 0, 0],
-        [0, 0, 3, x, 3, 0, 0],
-        [0, 0, y, 3, z, 0, 0],
-        [0, 0, x, y, z, 0, 0],
-        [0, 0, 0, 0, 0, 3, x],
-        [0, 0, 0, 0, 0, y, 3],
-    ])
-    a = Matrix([x, y, z])
-    b = Matrix([[1, 2], [3, 4]])
-    c = Matrix([[5, 6]])
-    assert diag(a, 7, b, c) == Matrix([
-        [x, 0, 0, 0, 0, 0],
-        [y, 0, 0, 0, 0, 0],
-        [z, 0, 0, 0, 0, 0],
-        [0, 7, 0, 0, 0, 0],
-        [0, 0, 1, 2, 0, 0],
-        [0, 0, 3, 4, 0, 0],
-        [0, 0, 0, 0, 5, 6],
-    ])
-    assert diag(1, [2, 3], [[4, 5]]) == Matrix([
-        [1, 0, 0, 0],
-        [0, 2, 0, 0],
-        [0, 3, 0, 0],
-        [0, 0, 4, 5]])
+    # mostly tested in testcommonmatrix.py
+    assert diag([1, 2, 3]) == Matrix([1, 2, 3])
+    m = [1, 2, [3]]
+    raises(ValueError, lambda: diag(m))
+    assert diag(m, strict=False) == Matrix([1, 2, 3])
 
 
 def test_get_diag_blocks1():
@@ -1623,6 +1615,7 @@ def test_creation_args():
     assert ones(long(3), Integer(4)) == ones(3, 4)
     raises(TypeError, lambda: Matrix(5))
     raises(TypeError, lambda: Matrix(1, 2))
+    raises(ValueError, lambda: Matrix([1, [2]]))
 
 
 def test_diagonal_symmetrical():
@@ -2689,7 +2682,6 @@ def test_invertible_check():
     raises(ValueError, lambda: m.inv(method="LU"))
 
 
-@XFAIL
 def test_issue_3959():
     x, y = symbols('x, y')
     e = x*y
@@ -3003,7 +2995,7 @@ def test_pinv_rank_deficient():
 @XFAIL
 def test_pinv_rank_deficient_when_diagonalization_fails():
     # Test the four properties of the pseudoinverse for matrices when
-    # diagonalization of A.H*A fails.'
+    # diagonalization of A.H*A fails.
     As = [Matrix([
         [61, 89, 55, 20, 71, 0],
         [62, 96, 85, 85, 16, 0],

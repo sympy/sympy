@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 from sympy import MatrixBase, I, Expr, Integer
-from sympy.core.compatibility import range
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
 

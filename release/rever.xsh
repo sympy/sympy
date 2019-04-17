@@ -33,16 +33,20 @@ $ACTIVITIES = [
     'mailmap_update',
     'test_sympy',
     'source_tarball',
+    'wheel',
     'build_docs',
     'copy_release_files',
     'compare_tar_against_git',
     'test_tarball27',
-    'test_tarball34',
     'test_tarball35',
     'test_tarball36',
     'test_tarball37',
+    'test_wheel27',
+    'test_wheel35',
+    'test_wheel36',
+    'test_wheel37',
     'print_authors',
-    'md5',
+    'sha256',
     # 'tag',
 ]
 
@@ -70,8 +74,8 @@ def mailmap_update():
 @activity
 def test_sympy():
     with run_in_conda_env(['mpmath', 'matplotlib>=2.2', 'numpy', 'scipy', 'theano',
-        'ipython', 'gmpy2', 'fastcache', 'symengine', 'libgfortran', 'libgcc',
-        'gcc', 'cython', 'tensorflow', 'llvmlite', 'wurlitzer', 'autowrap',
+        'ipython', 'gmpy2', 'fastcache', 'symengine', 'libgfortran', 'cython',
+        'tensorflow', 'llvmlite', 'wurlitzer', 'autowrap',
         'python-symengine=0.3.*', 'numexpr', 'antlr-python-runtime>=4.7,<4.8',
         'antlr>=4.7,<4.8'], 'sympy-tests'):
 
@@ -83,9 +87,16 @@ def source_tarball():
         # Assumes this is run in Docker and git is already clean
         ./setup.py sdist --keep-temp
 
+
+@activity(deps={'_version', 'mailmap_update', 'test_sympy'})
+def wheel():
+    with run_in_conda_env(['mpmath', 'python=3.6', 'setuptools', 'pip', 'wheel'], 'sympy-release'):
+        # Assumes this is run in Docker and git is already clean
+        ./setup.py bdist_wheel --universal --keep-temp
+
 @activity(deps={'_version'})
 def build_docs():
-    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath'],
+    with run_in_conda_env(['sphinx', 'docutils', 'numpy', 'mpmath', 'matplotlib'],
         envname='sympy-release-docs'):
 
         cd doc
@@ -108,7 +119,7 @@ def build_docs():
         cd ../../../
 
 
-@activity(deps={'source_tarball', 'build_docs'})
+@activity(deps={'source_tarball', 'wheel', 'build_docs'})
 def copy_release_files():
     ls dist
     cp dist/* /root/release/
@@ -116,10 +127,6 @@ def copy_release_files():
 @activity(deps={'source_tarball'})
 def test_tarball27():
     test_tarball('2.7')
-
-@activity(deps={'source_tarball'})
-def test_tarball34():
-    test_tarball('3.4')
 
 @activity(deps={'source_tarball'})
 def test_tarball35():
@@ -132,6 +139,22 @@ def test_tarball36():
 @activity(deps={'source_tarball'})
 def test_tarball37():
     test_tarball('3.7')
+
+@activity(deps={'wheel'})
+def test_wheel27():
+    test_wheel('2.7')
+
+@activity(deps={'wheel'})
+def test_wheel35():
+    test_wheel('3.5')
+
+@activity(deps={'wheel'})
+def test_wheel36():
+    test_wheel('3.6')
+
+@activity(deps={'wheel'})
+def test_wheel37():
+    test_wheel('3.7')
 
 @activity(deps={'source_tarball'})
 def compare_tar_against_git():
@@ -176,7 +199,7 @@ def compare_tar_against_git():
     if fail:
         sys.exit(red("Non-whitelisted files found or not found in the tarball"))
 
-@activity(deps={'source_tarball'})
+@activity(deps={'source_tarball', 'wheel'})
 def print_authors():
     """
     Print authors text to put at the bottom of the release notes
@@ -200,18 +223,18 @@ Thanks to everyone who contributed to this release!
         print("- " + name)
     print()
 
-@activity(deps={'source_tarball', 'build_docs'})
-def md5():
+@activity(deps={'source_tarball', 'wheel', 'build_docs'})
+def sha256():
     """
-    Print the md5 sums of the release files
+    Print the sha256 sums of the release files
     """
-    _md5(print_=True)
+    _sha256(print_=True)
 
-def _md5(print_=True, local=False):
+def _sha256(print_=True, local=False):
     if local:
-        out = $(md5sum @(release_files()))
+        out = $(shasum -a 256 @(release_files()))
     else:
-        out = $(md5sum /root/release/*)
+        out = $(shasum -a 256 /root/release/*)
     # Remove the release/ part for printing. Useful for copy-pasting into the
     # release notes.
     out = [i.split() for i in out.strip().split('\n')]
@@ -220,7 +243,12 @@ def _md5(print_=True, local=False):
         print(out)
     return out
 
-@activity(deps={'mailmap_update', 'md5', 'print_authors', 'source_tarball', 'build_docs', 'compare_tar_against_git', 'test_tarball27', 'test_tarball34', 'test_tarball35', 'test_tarball36', 'test_sympy'})
+@activity(deps={'mailmap_update', 'sha256', 'print_authors',
+                'source_tarball', 'wheel', 'build_docs',
+                'compare_tar_against_git', 'test_tarball27',
+                'test_tarball35', 'test_tarball36', 'test_wheel27',
+                'test_wheel35', 'test_wheel36',
+                'test_wheel37', 'test_sympy'})
 def release():
     pass
 
@@ -254,16 +282,32 @@ def test_tarball(py_version):
     Test that the tarball can be unpacked and installed, and that sympy
     imports in the install.
     """
+    if py_version not in {'2.7', '3.5', '3.6', '3.7'}: # TODO: Add win32
+        raise ValueError("release must be one of 2.7, 3.5, 3.6, or 3.7 not %s" % py_version)
+
+
+    with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
+        cp @('/root/release/{source}'.format(**tarball_format)) @("releasetar.tar.gz".format(**tarball_format))
+        tar xvf releasetar.tar.gz
+
+        cd @("{source-orig-notar}".format(**tarball_format))
+        python setup.py install
+        python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
+        python -m isympy --help
+        isympy --help
+
+def test_wheel(py_version):
+    """
+    Test that the wheel can be installed, and that sympy imports in the install.
+    """
     if py_version not in {'2.7', '3.4', '3.5', '3.6', '3.7'}: # TODO: Add win32
         raise ValueError("release must be one of 2.7, 3.4, 3.5, 3.6, or 3.7 not %s" % py_version)
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
-        cp @('/root/release/{source}'.format(**tarball_format)) @("releasetar.tar".format(**tarball_format))
-        tar xvf releasetar.tar
+        cp @('/root/release/{wheel}'.format(**tarball_format)) @("{wheel}".format(**tarball_format))
+        pip install @("{wheel}".format(**tarball_format))
 
-        cd @("/root/{source-orig-notar}".format(**tarball_format))
-        python setup.py install
         python -c "import sympy; print(sympy.__version__); print('sympy installed successfully')"
         python -m isympy --help
         isympy --help
@@ -277,6 +321,7 @@ def get_tarball_name(file):
     source-orig:       The original name of the source tarball
     source-orig-notar: The name of the untarred directory
     source:            The source tarball (after renaming)
+    wheel:             The wheel
     html:              The name of the html zip
     html-nozip:        The name of the html, without ".zip"
     pdf-orig:          The original name of the pdf file
@@ -298,6 +343,8 @@ def get_tarball_name(file):
             name += ".{extension}"
     elif file == 'pdf-orig':
         name = "sympy-{version}.pdf"
+    elif file == 'wheel':
+        name = 'sympy-{version}-py2.py3-none-any.whl'
     else:
         raise ValueError(file + " is not a recognized argument")
 
@@ -309,6 +356,7 @@ tarball_name_types = {
     'source-orig',
     'source-orig-notar',
     'source',
+    'wheel',
     'html',
     'html-nozip',
     'pdf-orig',
@@ -541,7 +589,7 @@ def _GitHub_release(username=None, user='sympy', token=None,
 
         print(green("Done"))
 
-    # TODO: download the files and check that they have the right md5 sum
+    # TODO: download the files and check that they have the right sha256 sum
 
 def _size(print_=True):
     """
@@ -565,8 +613,8 @@ def table():
 
     tarball_formatter_dict['version'] = shortversion
 
-    md5s = [i.split('\t') for i in _md5(print_=False, local=True).split('\n')]
-    md5s_dict = {name: md5 for md5, name in md5s}
+    sha256s = [i.split('\t') for i in _sha256(print_=False, local=True).split('\n')]
+    sha256s_dict = {name: sha256 for sha256, name in sha256s}
 
     sizes = [i.split('\t') for i in _size(print_=False).split('\n')]
     sizes_dict = {name: size for size, name in sizes}
@@ -589,7 +637,7 @@ def table():
 
     with tag('table'):
         with tag('tr'):
-            for headname in ["Filename", "Description", "size", "md5"]:
+            for headname in ["Filename", "Description", "size", "sha256"]:
                 with tag("th"):
                     table.append(headname)
 
@@ -605,7 +653,7 @@ def table():
                 with tag('td'):
                     table.append(sizes_dict[name])
                 with tag('td'):
-                    table.append(md5s_dict[name])
+                    table.append(sha256s_dict[name])
 
     out = ' '.join(table)
     return out
@@ -622,7 +670,7 @@ See https://github.com/sympy/sympy/wiki/release-notes-for-{shortversion} for the
 {htmltable}
 
 **Note**: Do not download the **Source code (zip)** or the **Source code (tar.gz)**
-files above.
+files below.
 """
     out = out.format(shortversion=shortversion, htmltable=htmltable)
     print(blue("Here are the release notes to copy into the GitHub release "
@@ -829,6 +877,7 @@ def check_tag_exists():
 
 descriptions = OrderedDict([
     ('source', "The SymPy source installer.",),
+    ('wheel', "A wheel of the package.",),
     ('html', '''Html documentation. This is the same as
 the <a href="https://docs.sympy.org/latest/index.html">online documentation</a>.''',),
     ('pdf', '''Pdf version of the <a href="https://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
@@ -980,13 +1029,16 @@ git_whitelist = {
     '.gitattributes',
     '.gitignore',
     '.mailmap',
-    # Travis
+    # Travis and CI
     '.travis.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
     '.ci/blacklisted.json',
     '.editorconfig',
+    '.coveragerc',
+    'codecov.yml',
+    'pytest.ini',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Pull request template

@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from sympy.core.sympify import _sympify
+
 from sympy.matrices.expressions import MatrixExpr
 from sympy.core import S, Eq, Ge
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -68,7 +70,7 @@ class DiagonalMatrix(MatrixExpr):
                 m = None
         return m
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         if self.diagonal_length is not None:
             if Ge(i, self.diagonal_length) is S.true:
                 return S.Zero
@@ -149,5 +151,54 @@ class DiagonalOf(MatrixExpr):
     def diagonal_length(self):
         return self.shape[0]
 
-    def _entry(self, i, j):
-        return self.arg[i, i]
+    def _entry(self, i, j, **kwargs):
+        return self.arg._entry(i, i, **kwargs)
+
+
+class DiagonalizeVector(MatrixExpr):
+    """
+    Turn a vector into a diagonal matrix.
+    """
+    def __new__(cls, vector):
+        obj = MatrixExpr.__new__(cls, vector)
+        shape = vector.shape
+        dim = shape[1] if shape[0] == 1 else shape[0]
+        if vector.shape[0] != 1:
+            obj._iscolumn = True
+        else:
+            obj._iscolumn = False
+        obj._shape = (dim, dim)
+        obj._vector = vector
+        return obj
+
+    @property
+    def shape(self):
+        return self._shape
+
+    def _entry(self, i, j, **kwargs):
+        if self._iscolumn:
+            result = self._vector._entry(i, 0, **kwargs)
+        else:
+            result = self._vector._entry(0, j, **kwargs)
+        if i != j:
+            result *= KroneckerDelta(i, j)
+        return result
+
+    def _eval_transpose(self):
+        return self
+
+    def as_explicit(self):
+        from sympy import diag
+        return diag(*list(self._vector.as_explicit()))
+
+
+def diagonalize_vector(vector):
+    from sympy import Transpose
+    vector = _sympify(vector)
+    if vector.shape == (1, 1):
+        return vector
+    if vector.is_Identity:
+        return vector
+    if isinstance(vector, Transpose):
+        vector = vector.arg
+    return DiagonalizeVector(vector)

@@ -1368,23 +1368,23 @@ def _check_antecedents_inversion(g, x):
 
     # [L], section 5.10
     conds = []
-    # Theorem 1
-    conds += [And(1 <= n, p < q, 1 <= m, rho*pi - delta >= pi/2, delta > 0,
+    # Theorem 1 -- p < q from test above
+    conds += [And(1 <= n, 1 <= m, rho*pi - delta >= pi/2, delta > 0,
                   E(z*exp(I*pi*(nu + 1))))]
     # Theorem 2, statements (2) and (3)
     conds += [And(p + 1 <= m, m + 1 <= q, delta > 0, delta < pi/2, n == 0,
                   (m - p + 1)*pi - delta >= pi/2,
                   Hp(z*exp(I*pi*(q - m))), Hm(z*exp(-I*pi*(q - m))))]
-    # Theorem 2, statement (5)
-    conds += [And(p < q, m == q, n == 0, delta > 0,
+    # Theorem 2, statement (5)  -- p < q from test above
+    conds += [And(m == q, n == 0, delta > 0,
                   (sigma + epsilon)*pi - delta >= pi/2, H(z))]
     # Theorem 3, statements (6) and (7)
     conds += [And(Or(And(p <= q - 2, 1 <= tau, tau <= sigma/2),
                      And(p + 1 <= m + n, m + n <= (p + q)/2)),
                   delta > 0, delta < pi/2, (tau + 1)*pi - delta >= pi/2,
                   Hp(z*exp(I*pi*nu)), Hm(z*exp(-I*pi*nu)))]
-    # Theorem 4, statements (10) and (11)
-    conds += [And(p < q, 1 <= m, rho > 0, delta > 0, delta + rho*pi < pi/2,
+    # Theorem 4, statements (10) and (11)  -- p < q from test above
+    conds += [And(1 <= m, rho > 0, delta > 0, delta + rho*pi < pi/2,
                   (tau + epsilon)*pi - delta >= pi/2,
                   Hp(z*exp(I*pi*nu)), Hm(z*exp(-I*pi*nu)))]
     # Trivial case

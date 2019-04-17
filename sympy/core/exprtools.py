@@ -322,7 +322,6 @@ class Factors(object):
         """
         if isinstance(factors, (SYMPY_INTS, float)):
             factors = S(factors)
-
         if isinstance(factors, Factors):
             factors = factors.factors.copy()
         elif factors is None or factors is S.One:
@@ -355,6 +354,13 @@ class Factors(object):
             for _ in range(i):
                 c.remove(I)
             factors = dict(Mul._from_args(c).as_powers_dict())
+            # Handle all rational Coefficients
+            for f in list(factors.keys()):
+                if isinstance(f, Rational) and not isinstance(f, Integer):
+                    p, q = Integer(f.p), Integer(f.q)
+                    factors[p] = (factors[p] if p in factors else 0) + factors[f]
+                    factors[q] = (factors[q] if q in factors else 0) - factors[f]
+                    factors.pop(f)
             if i:
                 factors[I] = S.One*i
             if nc:
@@ -1418,8 +1424,8 @@ def factor_nc(expr):
                         ok = hit = True
                         l = b**e
                         il = b**-e
-                        for i, a in enumerate(args):
-                            args[i][1][0] = il*args[i][1][0]
+                        for _ in args:
+                            _[1][0] = il*_[1][0]
                         break
                 if not ok:
                     break
@@ -1427,8 +1433,8 @@ def factor_nc(expr):
             hit = True
             lenn = len(n)
             l = Mul(*n)
-            for i, a in enumerate(args):
-                args[i][1] = args[i][1][lenn:]
+            for _ in args:
+                _[1] = _[1][lenn:]
         # find any noncommutative common suffix
         for i, a in enumerate(args):
             if i == 0:
@@ -1454,8 +1460,8 @@ def factor_nc(expr):
                         ok = hit = True
                         r = b**e
                         il = b**-e
-                        for i, a in enumerate(args):
-                            args[i][1][-1] = args[i][1][-1]*il
+                        for _ in args:
+                            _[1][-1] = _[1][-1]*il
                         break
                 if not ok:
                     break
@@ -1463,8 +1469,8 @@ def factor_nc(expr):
             hit = True
             lenn = len(n)
             r = Mul(*n)
-            for i, a in enumerate(args):
-                args[i][1] = a[1][:len(a[1]) - lenn]
+            for _ in args:
+                _[1] = _[1][:len(_[1]) - lenn]
         if hit:
             mid = Add(*[Mul(*cc)*Mul(*nc) for cc, nc in args])
         else:

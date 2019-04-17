@@ -456,7 +456,6 @@ def _get_constant_term(p, x):
     generators.
     """
     R = p.ring
-    zm = R.zero_monom
     i = R.gens.index(x)
     zm = R.zero_monom
     a = [0]*R.ngens
@@ -957,7 +956,6 @@ def rs_nth_root(p, n, x, prec):
     if n == 1:
         return rs_trunc(p, x, prec)
     R = p.ring
-    zm = R.zero_monom
     index = R.gens.index(x)
     m = min(p, key=lambda k: k[index])[index]
     p = mul_xin(p, index, -m)
@@ -1485,11 +1483,11 @@ def rs_cos(p, x, prec):
     if c:
         if R.domain is EX:
             c_expr = c.as_expr()
-            t1, t2 = sin(c_expr), cos(c_expr)
+            _, _ = sin(c_expr), cos(c_expr)
         elif isinstance(c, PolyElement):
             try:
                 c_expr = c.as_expr()
-                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+                _, _ = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
                 R = R.add_gens([sin(c_expr), cos(c_expr)])
                 p = p.set_ring(R)
@@ -1497,7 +1495,7 @@ def rs_cos(p, x, prec):
                 c = c.set_ring(R)
         else:
             try:
-                t1, t2 = R(sin(c)), R(cos(c))
+                _, _ = R(sin(c)), R(cos(c))
             except ValueError:
                 raise DomainError("The given series can't be expanded in "
                     "this domain.")

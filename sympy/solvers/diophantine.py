@@ -1281,7 +1281,6 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
 
                         for i in pqa:
 
-                            a = i[2]
                             G.append(i[5])
                             B.append(i[4])
 
