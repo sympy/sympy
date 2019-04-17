@@ -979,17 +979,15 @@ class Basic(with_metaclass(ManagedProperties)):
             reps = {}
             rv = self
             kwargs['hack2'] = True
-            m = Dummy()
             for old, new in sequence:
                 d = Dummy(commutative=new.is_commutative)
-                # using d*m so Subs will be used on dummy variables
+                # using d so Subs will be used on dummy variables
                 # in things like Derivative(f(x, y), x) in which x
                 # is both free and bound
-                rv = rv._subs(old, d*m, **kwargs)
+                rv = rv._subs(old, d, **kwargs)
                 if not isinstance(rv, Basic):
                     break
                 reps[d] = new
-            reps[m] = S.One  # get rid of m
             return rv.xreplace(reps)
         else:
             rv = self
