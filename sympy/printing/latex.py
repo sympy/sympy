@@ -556,20 +556,22 @@ class LatexPrinter(Printer):
                 return self._print(expr.base, exp=self._print(expr.exp))
             else:
                 tex = r"%s^{%s}"
-                exp = self._print(expr.exp)
-                # issue #12886: add parentheses around superscripts raised
-                # to powers
-                base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
-                if '^' in base and expr.base.is_Symbol:
-                    base = r"\left(%s\right)" % base
-                elif (isinstance(expr.base, Derivative)
-                        and base.startswith(r'\left(')
-                        and re.match(r'\\left\(\\d?d?dot', base)
-                        and base.endswith(r'\right)')):
-                    # don't use parentheses around dotted derivative
-                    base = base[6: -7]  # remove outermost added parens
+                return self._helper_print_standard_power(expr, tex)
 
-                return tex % (base, exp)
+    def _helper_print_standard_power(self, expr, template):
+        exp = self._print(expr.exp)
+        # issue #12886: add parentheses around superscripts raised
+        # to powers
+        base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
+        if '^' in base and expr.base.is_Symbol:
+            base = r"\left(%s\right)" % base
+        elif (isinstance(expr.base, Derivative)
+            and base.startswith(r'\left(')
+            and re.match(r'\\left\(\\d?d?dot', base)
+            and base.endswith(r'\right)')):
+            # don't use parentheses around dotted derivative
+            base = base[6: -7]  # remove outermost added parens
+        return template % (base, exp)
 
     def _print_UnevaluatedExpr(self, expr):
         return self._print(expr.args[0])
@@ -1512,7 +1514,7 @@ class LatexPrinter(Printer):
         if not isinstance(mat, MatrixSymbol):
             return r"\left(%s\right)^{T}" % self._print(mat)
         else:
-            return "%s^{T}" % self._print(mat)
+            return "%s^{T}" % self.parenthesize(mat, precedence_traditional(expr), True)
 
     def _print_Trace(self, expr):
         mat = expr.arg
@@ -1558,28 +1560,30 @@ class LatexPrinter(Printer):
                                  self._print(expr.args[1]))
 
     def _print_HadamardProduct(self, expr):
-        from sympy import Add, MatAdd, MatMul
+        args = expr.args
+        prec = PRECEDENCE['Pow']
+        parens = self.parenthesize
 
-        def parens(x):
-            if isinstance(x, (Add, MatAdd, MatMul)):
-                return r"\left(%s\right)" % self._print(x)
-            return self._print(x)
-        return r' \circ '.join(map(parens, expr.args))
+        return r' \circ '.join(
+            map(lambda arg: parens(arg, prec, strict=True), args))
+
+    def _print_HadamardPower(self, expr):
+        template = r"%s^{\circ {%s}}"
+        return self._helper_print_standard_power(expr, template)
 
     def _print_KroneckerProduct(self, expr):
-        from sympy import Add, MatAdd, MatMul
+        args = expr.args
+        prec = PRECEDENCE['Pow']
+        parens = self.parenthesize
 
-        def parens(x):
-            if isinstance(x, (Add, MatAdd, MatMul)):
-                return r"\left(%s\right)" % self._print(x)
-            return self._print(x)
-        return r' \otimes '.join(map(parens, expr.args))
+        return r' \otimes '.join(
+            map(lambda arg: parens(arg, prec, strict=True), args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
         from sympy.matrices import MatrixSymbol
         if not isinstance(base, MatrixSymbol):
-            return r"\left(%s\right)^{%s}" % (self._print(base),
+            return "\\left(%s\\right)^{%s}" % (self._print(base),
                                               self._print(exp))
         else:
             return "%s^{%s}" % (self._print(base), self._print(exp))
