@@ -3,7 +3,7 @@ Main Random Variables Module
 
 Defines abstract random variable type.
 Contains interfaces for probability space object (PSpace) as well as standard
-operators, P, E, sample, density, where
+operators, P, E, sample, density, where, quantile
 
 See Also
 ========
@@ -1008,6 +1008,67 @@ def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
     # use subs when lambdify fails
     except TypeError:
         return sample_iter_subs(expr, condition, numsamples, **kwargs)
+
+def quantile(expr, evaluate=True, **kwargs):
+    r"""
+    Return the :math:`p^{th}` order quantile of a probability distribution.
+
+    Quantile is defined as the value at which the probability of the random
+    variable is less than or equal to the given probability.
+
+    ..math::
+        Q(p) = inf{x \in (-\infty, \infty) such that p < F(x)}
+
+    Examples
+    ========
+
+    >>> from sympy.stats import quantile, Die, Exponential
+    >>> from sympy import Symbol, pprint
+    >>> p = Symbol("p", positive=True)
+
+    >>> l = Symbol("lambda", positive=True)
+    >>> X = Exponential("x", l)
+    >>> pprint(quantile(X, p), use_unicode=False)
+               -log(1 - p)
+    [0, oo) n {------------}
+                  lambda
+
+    >>> D = Die("d", 6)
+    >>> pprint(quantile(D, p), use_unicode=False)
+    /1  for p <= 1/6
+    |
+    |2  for p <= 1/3
+    |
+    |3  for p <= 1/2
+    <
+    |4  for p <= 2/3
+    |
+    |5  for p <= 5/6
+    |
+    \6   for p <= 1
+    """
+    #_value_check(p >= 0, "The order p must be greater than or equal to 0.")
+    #_value_check(p <= 1, "The order p must be less than or equal to 1.")
+
+    result = pspace(expr).compute_quantile(expr, **kwargs)
+
+    if evaluate and hasattr(result, 'doit'):
+        return result.doit()
+    else:
+        return result
+
+    #if pspace(X).is_Continuous:
+    #    x = Symbol("x")
+    #    return solveset(cdf(X)(x) - p, x, S.Reals)
+    #elif pspace(X).is_Discrete:
+    #    x = Symbol("x", Integer = True, Positive = True)
+    #    set = ((x, p <= summation(density(X)(x), (x, S(1), x))), )
+    #    return Piecewise(*set)
+    #else:
+    #    set = tuple()
+    #    for key, value in cdf(X).items():
+    #        set = set + ((key, p <= value), )
+    #    return Piecewise(*set)
 
 
 def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):

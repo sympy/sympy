@@ -47,11 +47,11 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfi, I, hyper, uppergamma,
-                   sinh, Ne, expint)
+                   Lambda, Basic, lowergamma, erf, erfi, erfinv, I, hyper,
+                   uppergamma, sinh, Ne, expint)
 
 from sympy import beta as beta_fn
-from sympy import cos, sin, exp, besseli, besselj, besselk
+from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy.external import import_module
 from sympy.matrices import MatrixBase
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
@@ -480,12 +480,18 @@ class CauchyDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
+    def _cdf(self, x):
+        return atan((x - self.x0)/self.gamma)/pi + S.Half
+
     def _characteristic_function(self, t):
         return exp(self.x0 * I * t -  self.gamma * Abs(t))
 
     def _moment_generating_function(self, t):
         raise NotImplementedError("The moment generating function for the "
                                   "Cauchy distribution does not exist.")
+
+    def _quantile(self, p):
+        return self.x0 + self.gamma*tan(pi*(p - S.Half))
 
 def Cauchy(name, x0, gamma):
     r"""
@@ -941,6 +947,9 @@ class ExponentialDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         rate = self.rate
         return rate / (rate - t)
+
+    def _quantile(self, p):
+        return -log(1-p)/self.rate
 
 def Exponential(name, rate):
     r"""
@@ -2060,6 +2069,10 @@ class NormalDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         mean, std = self.mean, self.std
         return exp(mean*t + std**2*t**2/2)
+
+    def _quantile(self, p):
+        mean, std = self.mean, self.std
+        return mean + std*sqrt(2)*erfinv(2*p - 1)
 
 def Normal(name, mean, std):
     r"""
