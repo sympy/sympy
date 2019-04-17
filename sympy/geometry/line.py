@@ -533,7 +533,9 @@ class LinearEntity(GeometrySet):
                 if isinstance(self, Line) and isinstance(other, Line):
                     return [line_intersection]
 
-                if self.contains(line_intersection) and other.contains(line_intersection):
+                if ((isinstance(self, Line) or
+                        self.contains(line_intersection)) and
+                        other.contains(line_intersection)):
                     return [line_intersection]
                 return []
             else:
@@ -1586,6 +1588,19 @@ class Segment(LinearEntity):
             other = Point(other, dim=self.ambient_dimension)
         if isinstance(other, Point):
             if Point.is_collinear(other, self.p1, self.p2):
+                if isinstance(self, Segment2D):
+                    # if it is collinear and is in the bounding box of the
+                    # segment then it must be on the segment
+                    vert = self.slope.equals(S.Infinity)
+                    if vert is False:
+                        isin = (self.p1.x - other.x)*(self.p2.x - other.x) <= 0
+                        if isin in (True, False):
+                            return isin
+                    if vert is True:
+                        isin = (self.p1.y - other.y)*(self.p2.y - other.y) <= 0
+                        if isin in (True, False):
+                            return isin
+                # use the triangle inequality
                 d1, d2 = other - self.p1, other - self.p2
                 d = self.p2 - self.p1
                 # without the call to simplify, sympy cannot tell that an expression

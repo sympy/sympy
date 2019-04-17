@@ -2200,8 +2200,8 @@ class Triangle(Polygon):
 
         """
         # use lines containing sides so containment check during
-        # intersection calculation can be avoided
-        # This would reduce the processing time for calculating the bisectors
+        # intersection calculation can be avoided, thus reducing
+        # the processing time for calculating the bisectors
         s = [Line(l) for l in self.sides]
         v = self.vertices
         c = self.incenter
