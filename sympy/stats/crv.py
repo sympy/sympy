@@ -10,7 +10,7 @@ sympy.stats.frv
 
 from __future__ import print_function, division
 
-from sympy import (Interval, Intersection, symbols, sympify, Dummy,
+from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
 from sympy.functions.special.delta_functions import DiracDelta
@@ -301,7 +301,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         cdf = integrate(pdf, (x, left_bound, x), **kwargs)
 
         quantile = solveset(cdf - p, x, S.Reals)
-        return Piecewise((Lambda(p, quantile), (p >= 0) & (p <= 1) ), )
+        return Lambda(p, Piecewise((quantile, (p >= 0) & (p <= 1) ), (nan, True)))
 
     def _quantile(self, x):
         return None
@@ -411,7 +411,7 @@ class ContinuousPSpace(PSpace):
         x = symbols('x', real=True, finite=True, cls=Dummy)
         p = symbols('x', real=True, positive=True, finite=True, cls=Dummy)
 
-        quantile = solveset(d(x) - p, x, self.domain)
+        quantile = solveset(d(x) - p, x, self.set)
 
         return Lambda(p, quantile)
 

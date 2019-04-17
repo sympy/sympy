@@ -138,6 +138,31 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
                 return mgf
         return self.compute_moment_generating_function(**kwargs)(t)
 
+    @cacheit
+    def compute_quantile(self, **kwargs):
+        """ Compute the Quantile from the PDF
+
+        Returns a Lambda
+        """
+        x = symbols('x', integer=True, finite=True, cls=Dummy)
+        p = symbols('p', real=True, finite=True, cls=Dummy)
+        left_bound = self.set.inf
+        pdf = self.pdf(x)
+        cdf = summation(pdf, (x, left_bound, x), **kwargs)
+        set = ((x, p <= cdf), )
+        return Lambda(p, Piecewise(*set))
+
+    def _quantile(self, x):
+        return None
+
+    def quantile(self, x, **kwargs):
+        """ Cumulative density function """
+        if not kwargs:
+            quantile = self._quantile(x)
+            if quantile is not None:
+                return quantile
+        return self.compute_quantile(**kwargs)(x)
+
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
         # TODO: support discrete sets with non integer stepsizes
@@ -336,5 +361,12 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
         if expr == self.value:
             t = symbols("t", real=True, cls=Dummy)
             return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))
+        else:
+            raise NotImplementedError()
+
+    def compute_quantile(self, expr, **kwargs):
+        if expr == self.value:
+            p = symbols("p", real=True, finite=True, cls=Dummy)
+            return Lambda(p, self.distribution.quantile(p, **kwargs))
         else:
             raise NotImplementedError()

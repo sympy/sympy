@@ -1,4 +1,4 @@
-from sympy import (FiniteSet, S, Symbol, sqrt,
+from sympy import (FiniteSet, S, Symbol, sqrt, nan,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
         cancel, exp, I, Piecewise)
 from sympy.core.compatibility import range
@@ -77,8 +77,9 @@ def test_dice():
     assert E(X + Y, Eq(X, Y)) == E(2*X)
     assert moment(X, 0) == 1
     assert moment(5*X, 2) == 25*moment(X, 2)
-    assert quantile(X, p) == Piecewise((S(1), p <= S(1)/6), (S(2), p <= S(1)/3),\
-        (S(3), p <= S(1)/2), (S(4), p <= S(2)/3), (S(5), p <= S(5)/6), (S(6), p <= S(1)))
+    assert quantile(X)(p) == Piecewise((nan, (p > S.One) | (p < S(0))),\
+        (S.One, p <= S(1)/6), (S(2), p <= S(1)/3), (S(3), p <= S.Half),\
+        (S(4), p <= S(2)/3), (S(5), p <= S(5)/6), (S(6), p <= S.One))
 
     assert P(X > 3, X > 3) == S.One
     assert P(X > Y, Eq(Y, 6)) == S.Zero
@@ -167,7 +168,7 @@ def test_bernoulli():
     assert simplify(variance(X)) == p*(1 - p)
     assert E(a*X + b) == a*E(X) + b
     assert simplify(variance(a*X + b)) == simplify(a**2 * variance(X))
-    assert quantile(X, z) == Piecewise((0, z <= 1 - p), (1, z <= 1))
+    assert quantile(X)(z) == Piecewise((nan, (z > 1) | (z < 0)), (0, z <= 1 - p), (1, z <= 1))
 
     raises(ValueError, lambda: Bernoulli('B', 1.5))
     raises(ValueError, lambda: Bernoulli('B', -0.5))
@@ -217,12 +218,13 @@ def test_binomial_numeric():
 
 def test_binomial_quantile():
     X = Binomial('X', 50, S.Half)
-    assert quantile(X, 0.95) == 31
+    assert quantile(X)(0.95) == S(31)
 
     X = Binomial('X', 5, S(1)/2)
     p = Symbol("p", positive=True)
-    assert quantile(X, p) == Piecewise((S(0), p <= S(1)/32), (S(1), p <= S(3)/16),\
-        (S(2), p <= S(1)/2), (S(3), p <= S(13)/16), (S(4), p <= S(31)/32), (S(5), p <= S(1)))
+    assert quantile(X)(p) == Piecewise((nan, p > S(1)), (S(0), p <= S(1)/32),\
+        (S(1), p <= S(3)/16), (S(2), p <= S(1)/2), (S(3), p <= S(13)/16),\
+        (S(4), p <= S(31)/32), (S(5), p <= S(1)))
 
 
 
@@ -278,14 +280,16 @@ def test_FiniteRV():
 
     assert dict(density(F).items()) == {S(1): S.Half, S(2): S.One/4, S(3): S.One/4}
     assert P(F >= 2) == S.Half
-    assert quantile(F, p) == Piecewise((S(1), p <= S(1)/2), (S(2), p <= S(3)/4), (S(3), p <= S(1)))
+    assert quantile(F)(p) == Piecewise((nan, p > S.One), (S.One, p <= S.Half),\
+        (S(2), p <= S(3)/4),(S(3), True))
 
     assert pspace(F).domain.as_boolean() == Or(
         *[Eq(F.symbol, i) for i in [1, 2, 3]])
 
     raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S.Half, 3: S.Half}))
     raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S(-1)/2, 3: S.One}))
-    raises(ValueError, lambda: FiniteRV('F', {1: S.One, 2: S(3)/2, 3: S.Zero, 4: S(-1)/2, 5: S(-3)/4, 6: S(-1)/4}))
+    raises(ValueError, lambda: FiniteRV('F', {1: S.One, 2: S(3)/2, 3: S.Zero,\
+        4: S(-1)/2, 5: S(-3)/4, 6: S(-1)/4}))
 
 def test_density_call():
     from sympy.abc import p

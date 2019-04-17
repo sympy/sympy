@@ -1,6 +1,6 @@
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
+                   Piecewise, Integral, sin, cos, tan, atan, besseli, factorial, binomial,
                    floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
 from sympy.core.compatibility import range
 from sympy.external import import_module
@@ -42,7 +42,7 @@ def test_single_normal():
             2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
     assert P(X**2 < 1) == erf(2**S.Half/2)
-
+    assert quantile(Y)(x) == Intersection(S.Reals, FiniteSet(sqrt(2)*sigma*(sqrt(2)*mu/(2*sigma) + erfinv(2*x - 1))))
     assert E(X, Eq(X, mu)) == mu
 
 
@@ -93,8 +93,7 @@ def test_multiple_normal():
     assert smoment(X + Y, 3) == skewness(X + Y)
     assert E(X, Eq(X + Y, 0)) == 0
     assert variance(X, Eq(X + Y, 0)) == S.Half
-    assert quantile(X, p) == Intersection(S.Reals, FiniteSet(sqrt(2)*erfinv(2*p - 1)))
-
+    assert quantile(X)(p) == sqrt(2)*erfinv(2*p - S.One)
 
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, finite=True)
@@ -251,9 +250,12 @@ def test_betaprime():
 def test_cauchy():
     x0 = Symbol("x0")
     gamma = Symbol("gamma", positive=True)
+    p = Symbol("p", positive=True)
 
     X = Cauchy('x', x0, gamma)
     assert density(X)(x) == 1/(pi*gamma*(1 + (x - x0)**2/gamma**2))
+    assert cdf(X)(x) == atan((x - x0)/gamma)/pi + S.Half
+    assert quantile(X)(p) == gamma*tan(pi*(p - S.Half)) + x0
 
     gamma = Symbol("gamma", positive=False)
     raises(ValueError, lambda: Cauchy('x', x0, gamma))
@@ -345,7 +347,7 @@ def test_erlang():
 def test_exponential():
     rate = Symbol('lambda', positive=True, real=True, finite=True)
     X = Exponential('x', rate)
-    p = Symbol("p", positive=True)
+    p = Symbol("p", positive=True, real=True,finite=True)
 
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
@@ -356,7 +358,7 @@ def test_exponential():
     assert P(X > 0) == S(1)
     assert P(X > 1) == exp(-rate)
     assert P(X > 10) == exp(-10*rate)
-    assert quantile(X, p) == Intersection(Interval(0, oo), FiniteSet(-log(1 - p)/rate))
+    assert quantile(X)(p) == -log(1-p)/rate
 
     assert where(X <= 1).set == Interval(0, 1)
 
@@ -466,7 +468,7 @@ def test_logistic():
     X = Logistic('x', mu, s)
     assert density(X)(x) == exp((-x + mu)/s)/(s*(exp((-x + mu)/s) + 1)**2)
     assert cdf(X)(x) == 1/(exp((mu - x)/s) + 1)
-    assert quantile(X, p) == Intersection(S.Reals, FiniteSet(mu - s*log(-1 + 1/p)))
+    assert quantile(X)(p) == mu - s*log(-S(1) + 1/p)
 
 
 def test_lognormal():
