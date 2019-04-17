@@ -1003,10 +1003,8 @@ class AccumulationBounds(AtomicExpr):
         min = _sympify(min)
         max = _sympify(max)
 
-        inftys = [S.Infinity, S.NegativeInfinity]
         # Only allow real intervals (use symbols with 'is_extended_real=True').
-        if not (min.is_extended_real or min in inftys) \
-           or not (max.is_extended_real or max in inftys):
+        if not min.is_extended_real or not max.is_extended_real:
             raise ValueError("Only real AccumulationBounds are supported")
 
         # Make sure that the created AccumBounds object will be valid.
