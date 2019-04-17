@@ -1035,7 +1035,7 @@ class Basic(with_metaclass(ManagedProperties)):
             reps = {}
             rv = self
             kwargs['hack2'] = True
-            m = 1
+            m = Dummy()
             for old, new in sequence:
                 d = Dummy(commutative=new.is_commutative)
                 # using d*m so Subs will be used on dummy variables
