@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from random import randrange, choice
 from math import log
 from sympy.ntheory import primefactors
+from sympy import Integer, factorint
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -1701,6 +1702,65 @@ class PermutationGroup(Basic):
                     self._is_abelian = False
                     return False
         return True
+
+    def abelian_inv(self):
+        """
+        Returns the abelian invariants or primary decomposition
+        of the commutator factor group.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation([0, 2, 1])
+        >>> b = Permutation([1, 0, 2])
+        >>> G = PermutationGroup([a, b])
+        >>> G.abelian_inv()
+        [2]
+        >>> from sympy.combinatorics.named_groups import CyclicGroup
+        >>> G = CyclicGroup(7)
+        >>> G.abelian_inv()
+        [7]
+
+        """
+        if self.is_trivial:
+            return []
+        gns = self.generators
+        inv = []
+        der = self.derived_subgroup()
+
+        for p in primefactors(self.order()):
+            ranks = []
+            r = 2
+            while(r != 1):
+                H = der
+                for g in gns:
+                    elm = g**p
+                    if not H.contains(elm):
+                        for i in range(len(H)):
+                            H = PermutationGroup([H[i], elm])
+
+                r = self.order()/H.order()
+                self = H
+                gns = self.generators
+                f = 0
+                if Integer(r) != 1:
+                    for k, v in factorint(Integer(r)).items():
+                        f += v
+                    ranks.append(f)
+
+            if len(ranks):
+                l = []
+                for i in range(ranks[0]):
+                    l.append(1);
+
+                for i in ranks:
+                    for j in range(0, i):
+                        l[j] = l[j]*p
+                inv.extend(l)
+        inv.sort()
+        return inv
 
     def is_elementary(self, p):
         """Return ``True`` if the group is elementary abelian. An elementary
