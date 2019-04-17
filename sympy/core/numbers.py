@@ -1141,6 +1141,16 @@ class Float(Number):
     def _eval_is_integer(self):
         return self._mpf_ == _mpf_zero
 
+    def _eval_is_negative(self):
+        if self._mpf_ == _mpf_ninf or self._mpf_ == _mpf_inf:
+            return False
+        return self.num < 0
+
+    def _eval_is_positive(self):
+        if self._mpf_ == _mpf_ninf or self._mpf_ == _mpf_inf:
+            return False
+        return self.num > 0
+
     def _eval_is_extended_negative(self):
         if self._mpf_ == _mpf_ninf:
             return True
