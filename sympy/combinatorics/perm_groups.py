@@ -117,6 +117,8 @@ class PermutationGroup(Basic):
 
     .. [13] http://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
 
+    .. [14] https://webusers.imj-prg.fr/~jean.michel/gap3/htm/chap007.htm#SECT046
+
     """
     is_group = True
 
@@ -1723,14 +1725,20 @@ class PermutationGroup(Basic):
         >>> G.abelian_inv()
         [7]
 
+        References
+        ==========
+
+        .. [14] https://webusers.imj-prg.fr/~jean.michel/gap3/htm/chap007.htm#SECT046
+
         """
         if self.is_trivial:
             return []
         gns = self.generators
         inv = []
         der = self.derived_subgroup()
+        G = self
 
-        for p in primefactors(self.order()):
+        for p in primefactors(G.order()):
             ranks = []
             r = 2
             while(r != 1):
@@ -1741,9 +1749,9 @@ class PermutationGroup(Basic):
                         for i in range(len(H)):
                             H = PermutationGroup([H[i], elm])
 
-                r = self.order()/H.order()
-                self = H
-                gns = self.generators
+                r = G.order()/H.order()
+                G = H
+                gns = G.generators
                 f = 0
                 if Integer(r) != 1:
                     for k, v in factorint(Integer(r)).items():
