@@ -83,7 +83,7 @@ class HadamardProduct(MatrixExpr):
             d = self.args[ind]._eval_derivative_matrix_lines(x)
             hadam = hadamard_product(*(right_args + left_args))
             diagonal = [(0, 2), (3, 4)]
-            diagonal = [e for i, e in enumerate(diagonal) if self.shape[i] != 1]
+            diagonal = [e for j, e in enumerate(diagonal) if self.shape[j] != 1]
             for i in d:
                 ptr1 = i.first_pointer
                 ptr2 = i.second_pointer
@@ -98,8 +98,7 @@ class HadamardProduct(MatrixExpr):
                                 ExprBuilder(_make_matrix, [i._lines[1]]),
                             ]
                         ),
-                        *diagonal
-                    ],
+                    ] + diagonal,  # turn into *diagonal after dropping Python 2.7
 
                 )
                 i._first_pointer_parent = subexpr.args[0].args[0].args
@@ -180,7 +179,7 @@ class HadamardPower(MatrixExpr):
             ptr1 = i.first_pointer
             ptr2 = i.second_pointer
             diagonal = [(1, 2), (3, 4)]
-            diagonal = [e for i, e in enumerate(diagonal) if self.base.shape[i] != 1]
+            diagonal = [e for j, e in enumerate(diagonal) if self.base.shape[j] != 1]
             subexpr = ExprBuilder(
                 CodegenArrayDiagonal,
                 [
@@ -192,8 +191,7 @@ class HadamardPower(MatrixExpr):
                             ExprBuilder(_make_matrix, [ptr2]),
                         ]
                     ),
-                    *diagonal
-                ],
+                ] + diagonal,  # turn into *diagonal after dropping Python 2.7
                 validator=CodegenArrayDiagonal._validate
             )
             i._first_pointer_parent = subexpr.args[0].args[0].args
