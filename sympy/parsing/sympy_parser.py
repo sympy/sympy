@@ -3,7 +3,8 @@
 from __future__ import print_function, division
 
 from tokenize import (generate_tokens, untokenize, TokenError,
-    NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN, NEWLINE)
+    NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN, NEWLINE,
+    Floatnumber, Intnumber, group)
 
 from keyword import iskeyword
 
@@ -907,8 +908,8 @@ def eval_expr(code, local_dict, global_dict):
 
     return expr
 
-
-_refloat = regex.compile(r"(((\d*\.\d+)|(\d+\.?\d?))([eE][-+]?\d+)?)")
+_refloat = regex.compile(group(Floatnumber, Intnumber))
+del group
 _num_underscores = regex.compile(r'(\d+)_(\d+)')
 _py2name = regex.compile(r'^[a-zA-Z_]\w*$')
 def valid_name(name):
