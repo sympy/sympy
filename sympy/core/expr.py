@@ -773,11 +773,75 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
-    def _eval_is_negative(self):
-        return fuzzy_and([self.is_extended_negative, self.is_finite])
-
     def _eval_is_positive(self):
-        return fuzzy_and([self.is_extended_positive, self.is_finite])
+        from sympy.polys.numberfields import minimal_polynomial
+        from sympy.polys.polyerrors import NotAlgebraic
+        if self.is_number:
+            if self.is_real is False:
+                return False
+
+            # check to see that we can get a value
+            try:
+                n2 = self._eval_evalf(2)
+            # XXX: This shouldn't be caught here
+            # Catches ValueError: hypsum() failed to converge to the requested
+            # 34 bits of accuracy
+            except ValueError:
+                return None
+            if n2 is None:
+                return None
+            if getattr(n2, '_prec', 1) == 1:  # no significance
+                return None
+            if n2 == S.NaN:
+                return None
+
+            n, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not n.is_Number:
+                return False
+            if n._prec != 1 and i._prec != 1:
+                return bool(not i and n > 0)
+            elif n._prec == 1 and (not i or i._prec == 1) and \
+                    self.is_algebraic and not self.has(Function):
+                try:
+                    if minimal_polynomial(self).is_Symbol:
+                        return False
+                except (NotAlgebraic, NotImplementedError):
+                    pass
+
+    def _eval_is_negative(self):
+        from sympy.polys.numberfields import minimal_polynomial
+        from sympy.polys.polyerrors import NotAlgebraic
+        if self.is_number:
+            if self.is_real is False:
+                return False
+
+            # check to see that we can get a value
+            try:
+                n2 = self._eval_evalf(2)
+            # XXX: This shouldn't be caught here
+            # Catches ValueError: hypsum() failed to converge to the requested
+            # 34 bits of accuracy
+            except ValueError:
+                return None
+            if n2 is None:
+                return None
+            if getattr(n2, '_prec', 1) == 1:  # no significance
+                return None
+            if n2 == S.NaN:
+                return None
+
+            n, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not n.is_Number:
+                return False
+            if n._prec != 1 and i._prec != 1:
+                return bool(not i and n < 0)
+            elif n._prec == 1 and (not i or i._prec == 1) and \
+                    self.is_algebraic and not self.has(Function):
+                try:
+                    if minimal_polynomial(self).is_Symbol:
+                        return False
+                except (NotAlgebraic, NotImplementedError):
+                    pass
 
     def _eval_is_extended_positive(self):
         from sympy.polys.numberfields import minimal_polynomial

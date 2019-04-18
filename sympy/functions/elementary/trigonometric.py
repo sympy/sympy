@@ -2283,28 +2283,6 @@ class atan(InverseTrigonometricFunction):
         if self.args[0].is_extended_real:
             return True
 
-    # FIXME: The following bug means we need to add _eval_is_negative but it
-    # shouldn't be necessary.
-
-    # In [1]: n = Symbol('n', negative=True)
-    #
-    # In [2]: a = atan(n)
-    #
-    # In [3]: a
-    # Out[3]: atan(n)
-    #
-    # In [4]: a.is_negative
-    #
-    # In [5]: a.is_real
-    # Out[5]: True
-    #
-    # In [6]: a.is_negative
-    # Out[6]: True
-
-    def _eval_is_negative(self):
-        if self.args[0].is_negative:
-            return True
-
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
