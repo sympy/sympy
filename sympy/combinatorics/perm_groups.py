@@ -117,7 +117,7 @@ class PermutationGroup(Basic):
 
     .. [13] http://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
 
-    .. [14] https://webusers.imj-prg.fr/~jean.michel/gap3/htm/chap007.htm#SECT046
+    .. [14] https://www.gap-system.org/Manuals/doc/ref/manual.pdf
 
     """
     is_group = True
@@ -1707,8 +1707,10 @@ class PermutationGroup(Basic):
 
     def abelian_inv(self):
         """
-        Returns the abelian invariants or primary decomposition
-        of the commutator factor group.
+        Returns the abelian invariants or primary decomposition of the commutator
+        factor group of the given group ``G`` as suggested in ([14], p. 542).
+        These are given as a list of prime-powers or zeroes and describe the
+        structure of ``G/G'`` as a direct product of cyclic groups of prime power order.
 
         Examples
         ========
@@ -1724,11 +1726,6 @@ class PermutationGroup(Basic):
         >>> G = CyclicGroup(7)
         >>> G.abelian_inv()
         [7]
-
-        References
-        ==========
-
-        .. [14] https://webusers.imj-prg.fr/~jean.michel/gap3/htm/chap007.htm#SECT046
 
         """
         if self.is_trivial:
