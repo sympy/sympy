@@ -32,7 +32,7 @@ def condition(cond, rule):
         if cond(expr):
             return rule(expr)
         else:
-            return      expr
+            return expr
     return conditioned_rl
 
 def chain(*rules):
