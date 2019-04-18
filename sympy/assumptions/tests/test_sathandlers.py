@@ -67,22 +67,21 @@ def test_AnyArgs():
     assert b.rcall(x*y) == Or(Q.positive(x) & Q.negative(x), Q.positive(y) & Q.negative(y))
 
 
-@XFAIL
 def test_CheckOldAssump():
     # TODO: Make these tests more complete
 
     class Test1(Expr):
-        def _eval_is_positive(self):
+        def _eval_is_extended_positive(self):
             return True
-        def _eval_is_negative(self):
+        def _eval_is_extended_negative(self):
             return False
 
     class Test2(Expr):
         def _eval_is_finite(self):
             return True
-        def _eval_is_positive(self):
+        def _eval_is_extended_positive(self):
             return True
-        def _eval_is_negative(self):
+        def _eval_is_extended_negative(self):
             return False
 
     t1 = Test1()
