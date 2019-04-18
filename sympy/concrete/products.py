@@ -97,8 +97,8 @@ class Product(ExprWithIntLimits):
     >>> W2e
     2**(-2*n)*4**n*factorial(n)**2/(RisingFactorial(1/2, n)*RisingFactorial(3/2, n))
 
-    #>>> limit(W2e, n, oo)
-    #pi/2
+    >>> limit(W2e, n, oo)
+    pi/2
 
     By the same formula we can compute sin(pi/2):
 

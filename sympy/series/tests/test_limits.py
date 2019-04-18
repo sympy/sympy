@@ -404,7 +404,6 @@ def test_issue_6366():
     assert limit(r, x, 1).simplify() == n/2
 
 
-@XFAIL
 def test_factorial():
     from sympy import factorial, E
     f = factorial(x)
