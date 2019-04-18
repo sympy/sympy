@@ -113,6 +113,10 @@ class re(Function):
         # is_imaginary implies nonzero
         return fuzzy_or([self.args[0].is_imaginary, self.args[0].is_zero])
 
+    def _eval_is_finite(self):
+        if self.args[0].is_finite:
+            return True
+
     def _eval_is_complex(self):
         if self.args[0].is_finite:
             return True
@@ -228,6 +232,10 @@ class im(Function):
 
     def _eval_is_zero(self):
         return self.args[0].is_extended_real
+
+    def _eval_is_finite(self):
+        if self.args[0].is_finite:
+            return True
 
     def _eval_is_complex(self):
         if self.args[0].is_finite:
