@@ -82,11 +82,7 @@ def test_OneMatrix():
     U = OneMatrix(n, m)
 
     assert U.shape == (n, m)
-
     assert isinstance(A + U, Add)
-    # assert a*OneMatrix(n, 1) == a
-    # assert OneMatrix(n, 1)*a == a
-
     assert transpose(U) == OneMatrix(m, n)
     assert U.conjugate() == U
 
