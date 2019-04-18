@@ -95,8 +95,6 @@ def switch(key, ruledict):
         return rl(expr)
     return switch_rl
 
-identity = lambda x: x
-
 def minimize(*rules, **kwargs):
     """ Select result of rules that minimizes objective
 
