@@ -378,8 +378,6 @@ def test_derivatives_of_hadamard_expressions():
     expr = hadamard_power(x, 2)
     assert expr.diff(x).doit() == 2*DiagonalizeVector(x)
 
-    assert expr.diff(x).doit() == 2*DiagonalizeVector(x)
-
     expr = hadamard_power(x, S.Half)
     assert expr.diff(x) == S.Half*DiagonalizeVector(hadamard_power(x, -S.Half))
 
