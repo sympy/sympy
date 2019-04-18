@@ -2,6 +2,7 @@
 
 
 import sys
+from random import choice
 
 
 from sympy.core.function import Function
@@ -14,6 +15,7 @@ from sympy.core.compatibility import PY3
 from sympy.functions import exp, factorial, factorial2, sin, log
 from sympy.logic import And
 from sympy.series import Limit
+from sympy.utilities.iterables import subsets
 from sympy.utilities.pytest import raises, skip
 
 from sympy.parsing.sympy_parser import (
@@ -95,10 +97,19 @@ def test_factorial_fail():
 
 
 def test_repeated_fail():
+    # All are valid Python, so only raise TypeError for invalid indexing
     inputs = ['1[1]', '.1e1[1]', '0x1[1]', '1.1j[1]', '1.1[1 + 1]',
-        '0.1[[1]]', '0x1.1[1]', '0.1[', '0.1[1', '0.1[]']
+        '0.1[[1]]', '0x1.1[1]']
     for text in inputs:
-        raises((IndexError, TypeError, TokenError, SyntaxError), lambda: parse_expr(text, strict=True))
+        raises(TypeError, lambda: parse_expr(text, pre=''))
+    inputs = ['0.1[]']
+    for text in inputs:
+        raises(SyntaxError, lambda: parse_expr(text, pre=''))
+
+    # these are not valid Python
+    inputs = ['0.1[', '0.1[1']
+    for text in inputs:
+        raises(TokenError, lambda: parse_expr(text, pre=''))
 
 
 def test_repeated_dot_only():
@@ -237,22 +248,22 @@ def test_parse_function_issue_3539():
 def test_split_symbols_numeric():
     SI = standard_transformations + (
         implicit_multiplication_application,)
-    do = lambda x: parse_expr(x, transformations=SI)
+    do = lambda x: parse_expr(x, transformations=SI, pre='D')
 
     n = Symbol('n')
     assert parse_expr('2**n * 3**n') == do('2**n3**n') == 2**n*3**n
     assert do('n12n34') == n*12*n*34
 
     # issue 16632
-    x, y, z, x_, x_3, j = symbols('x y z x_ x_3 j')
-    assert do('3e4') == 30000.0
+    x, y, z, x_, x_3, j, jy, e4 = symbols('x y z x_ x_3 j jy e4')
     assert do('x3y') == x*3*y
     assert do('x3y') == 3*x*y
     assert do('x3j') == 3*j*x
     assert do('x3.j') == x*3.0*j, do('x3.j')
-    assert parse_expr('x3.j', extra='j') == 3.0*I*x
-    assert parse_expr('x3.jy', extra='j') == 3.0*I*x*y
-    assert do('x_3e4yz') == Symbol('x_3e4yz')
+    assert parse_expr('x3.j', j=I) == 3.0*I*x
+    assert do('x3.jy') == 3.0*x*j*y
+    assert parse_expr('x3.jy', transformations=SI, j=I) == 3.0*x*I*y
+    assert do('x_3e4yz') == Symbol('x_3e4yz'), do('x_3e4yz')
     assert do('x_3.e4yz') == 30000.0*x_*y*z
     assert do('x_.3e4yz') == 3000.0*x_*y*z
     assert do('x_3.3e4yz') == 33000.0*x_*y*z
@@ -262,7 +273,42 @@ def test_split_symbols_numeric():
         transformations=SI) == log(3.2*x)
     assert parse_expr('x3y',
         transformations=standard_transformations) == Symbol('x3y')
-    assert parse_expr('2x1e2y', extra='e') == 200.0*x*y
+    assert parse_expr('2x1e2y', pre='e') == 200.0*x*y
+    raises(SyntaxError, lambda: parse_expr('2x', pre=''))
+
+    # check pre values
+    # single number always recogized
+    assert parse_expr('2e4', pre='d') == 2e4
+    assert parse_expr('2e4', pre='D') == 2e4
+    assert parse_expr('2E4', pre='D') == 2e4
+    assert parse_expr('2e4', pre='e') == 2e4
+    assert parse_expr('2e4', pre='E') == 2e4
+    assert parse_expr('2e4', pre='') == 2e4
+    e4 = Symbol('e4')
+    E4 = Symbol('E4')
+    # check sign collapse
+    s = ''.join([choice('- +') for i in range(3)]) + '2'
+    ans = parse_expr(s)
+    assert ans == 2*(-1)**s.count('-'), '%s -> %s' % (s, ans)
+    raises(SyntaxError, lambda: do('--'))
+
+    assert parse_expr('3e4') == 3e4
+    assert parse_expr('3e1', pre='e') == 30.0
+    e1x = Symbol('e1x')
+    assert parse_expr('2x') == 2*x
+    assert parse_expr('2_3x') == 23*x
+    _x = Symbol('_x')
+    assert parse_expr('2_x') == 2*_x
+    assert parse_expr('2x') == 2*x
+    assert parse_expr('2e1x') == 2*e1x
+    assert parse_expr('2e1x', pre='e') == 20.0*x
+    assert parse_expr('2.e1x') == 2.0*e1x
+    assert parse_expr('2.e1x', pre='e') == 20.0*x
+    raises(SyntaxError, lambda: parse_expr('.e1x'))
+    raises(SyntaxError, lambda: parse_expr('.e1x', pre='e'))
+    E1x = Symbol('E1x')
+    assert parse_expr('2.E1x') == 2.0*E1x
+    assert parse_expr('2.E1x', pre='e') == 20.0*x
 
 
 def test_unicode_names():

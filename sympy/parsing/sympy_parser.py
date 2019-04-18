@@ -921,7 +921,7 @@ def valid_name(name):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True, default='ld', extra=''):
+               global_dict=None, evaluate=True, pre='D', **locals):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -950,16 +950,19 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         string and automatic simplification that would normally occur is
         suppressed. (see examples)
 
-    default and extra: strings, optional of 'ludefj'
-        The default preprocessing handles:
-            leading numbers ('l'), and
-            floats with decimals ('d').
-        Additionally,
-            exponentials without decimals ('e') and
-            Python complex `j` ('j') can be recognized, too.
-            For floating point numbers (exponential and decimals)
-            the letter 'f' can be used.
-        No preprocessing is done if both strings are null.
+    pre: strings, optional of 'DE'
+        Indicates which preprocessing to do. Default is 'D':
+            leading numbers (ints or decimals) and internal
+            numbers with decimal points, e.g. `2x`, `x3.4y`
+            or `2.x` but not `x3`.
+        Optionally, also recognize numbers in exponential format.
+        No preprocessing is done if `pre` is the null string, '';
+        leading integers or decimal numbers are always identified
+        unless `pre` is null.
+
+    locals: dict
+        items to be added to `local_dict`; restricted to any variable
+        not already appearing in the argument list of this function.
 
     Examples
     ========
@@ -968,38 +971,14 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     >>> parse_expr("1/2")
     1/2
 
-    Leading numbers and numbers with explicit decimal points
-    are automatically identified and separated out since
-    otherwise an error would be raised:
+    The `local_dict` (or `locals`) can be used to identify
+    values for symbols in the expression:
 
-    >>> parse_expr('2x')
-    2*x
-    >>> parse_expr('2x3.4y')
-    6.8*x*y
-    >>> parse_expr('2x3e4y')
-    2*x3e4y
-
-    If 'e' is included in the `extra` string then exponentials
-    will be identified, too:
-
-    >>> parse_expr('2x1e2y', extra='e')
-    200.0*x*y
-
-    If default='' then such expression can only be
-    parsed with transformations:
-
-    >>> from sympy.parsing.sympy_parser import (
-    ... standard_transformations,
-    ... implicit_multiplication_application)
-    >>> SI = (standard_transformations +
-    ...     (implicit_multiplication_application,))
-    >>> parse_expr("2x", transformations=SI, default='')
-    2*x
-
-    And sometimes you may not get what you expected:
-
-    >>> parse_expr("x2.3", transformations=SI, default='')
-    0.6*x
+    >>> from sympy import I
+    >>> parse_expr('3j')
+    3*j
+    >>> parse_expr('3j', j=I)
+    3*I
 
     When evaluate=False, some automatic simplifications will not occur:
 
@@ -1010,13 +989,46 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     This feature allows one to tell exactly how the expression was entered:
 
     >>> a = parse_expr('1 + x', evaluate=False)
-    >>> b = parse_expr('x + 1', evaluate=0)
+    >>> b = parse_expr('x + 1', evaluate=False)
     >>> a == b
     False
     >>> a.args
     (1, x)
     >>> b.args
     (x, 1)
+
+    Leading numbers and numbers with explicit decimal points
+    are automatically identified and separated out since
+    otherwise an error would be raised:
+
+    >>> parse_expr('2x')
+    2*x
+    >>> parse_expr('x3.4y')
+    3.4*x*y
+
+    If 'E' is included in the `pre` string then exponentials
+    will be identified, too:
+
+    >>> parse_expr('x1e2y')
+    x1e2y
+    >>> parse_expr('2x1e2y', pre='e')
+    200.0*x*y
+
+    If pre='' then such expressions can only be
+    parsed with transformations:
+
+    >>> from sympy.parsing.sympy_parser import (
+    ... standard_transformations,
+    ... implicit_multiplication_application)
+    >>> SI = (standard_transformations +
+    ...     (implicit_multiplication_application,))
+    >>> parse_expr("2x", transformations=SI, pre='')
+    2*x
+
+    And sometimes you may not get what you expected:
+
+    >>> parse_expr("x2.3", transformations=SI, pre='')
+    0.6*x
 
     See Also
     ========
@@ -1025,11 +1037,12 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     implicit_multiplication_application
 
     """
-
+    # do arg checking
     if local_dict is None:
         local_dict = {}
     elif not isinstance(local_dict, dict):
         raise TypeError('expecting local_dict to be a dict')
+    local_dict.update(locals)
 
     if global_dict is None:
         global_dict = {}
@@ -1052,25 +1065,62 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
                     a transformation should be function that
                     takes 3 arguments'''))
 
-    preprocess = (default + extra).lower()
+    s = precondition(s, pre)
+    code = stringify_expr(s, local_dict, global_dict, transformations)
+
+    if not evaluate:
+        code = compile(evaluateFalse(code), '<string>', 'eval')
+
+    return eval_expr(code, local_dict, global_dict)
+
+
+def precondition(s, pre):
+    """Return string s after processing: adding explicit multiplication
+    around numbers that are next to characterse that can act as valid
+    Python names.
+
+    Parameters
+    ==========
+
+    s : input string
+
+    pre : string (case insignificant)
+        'D': leading numbers (ints or decimals) and internal
+             numbers with decimal points, e.g. `2x`, `x3.4y`
+             or `2.x` but not `x3`, and any leading sign(s).
+        'E': in addition to 'D' processing, also recognize numbers
+             in exponential format.
+
+    No preprocessing is done if `pre` is the null string.
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.sympy_parser import precondition
+    >>> precondition('x3y', pre='D')
+    'x3y'
+    >>> precondition('x3.1y', pre='D')
+    'x*3.1*y'
+    >>> precondition('3.e1', pre='D')
+    '3.*e1'
+    >>> precondition('3e1', pre='E')
+    '3.e1'
+    """
+    preprocess = (pre or '').lower()
     strict = True
-    pyj = False
-    if 'f' in preprocess or 'd' in preprocess and 'e' in preprocess:
+    if 'f' in preprocess or 'e' in preprocess:
         strict = False
     elif 'd' in preprocess:
         strict = None
-    if 'j' in preprocess:
-        pyj = True
     if not strict:
-        # identify numbers
         ss = []
         while True:
             split = _refloat.split(s, maxsplit=1)
             if len(split) == 1:
                 break
             pre = split[0]
-            s = split[-1]
             n = split[1]
+            s = split[-1]
             ss.extend([pre, n])
         ss.append(s)
         # put operators around numbers as needed for strict/j preference
@@ -1081,39 +1131,67 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
                 ix = n.lower().index('e')
                 e = n[ix]
                 n, tail = n.split(e)
-                if '.' in n and L and valid_name(L[-1]):
-                    n = '*' + n
+                if '.' in n:
+                    if L and valid_name(L[-1]):
+                        n = '*' + n
+                    else:
+                        n += '*'
                 ss[i] = ''.join([n, e + tail])
-            else:
+            else:  # strict is False or '.' in n
                 # decimal or exponential split out
+                # add decimal if it's not there
+                if '.' not in ss[i]:
+                    e = ss[i][ss[i].lower().find('e')]
+                    ss[i] = ss[i].replace(e, '.' + e)
                 if L and valid_name(L[-1]):
                     ss[i] = '*' + ss[i]
                 if R and valid_name(R[0]):
-                    if pyj and R.startswith('j'):
-                        ss[i] += '*I'
-                        if i + 2 < len(ss) or len(R) > 1:
-                            ss[i] += '*'
-                        ss[i + 1] = ss[i + 1][1:]
-                    else:  # not strict so
-                        ss[i] += '*'
+                    ss[i] += '*'
         ss = list(filter(None, ss))
         s = ''.join(ss)
-        # split off the leading integer
-        if s and 'l' in preprocess and \
-                s[0].isdigit() and \
-                not _refloat.match(s):
-            i = 1
-            while i < len(s) and (s[i].isdigit() or s[i] == '_'):
-                i += 1
-            if valid_name(s[i: i + 1]):
+
+    # split off the leading integer
+    # first remove any signs
+    sign = ''
+    if s and preprocess:
+        for i in range(len(s)):
+            if s[i] not in '+ -':
+                break
+        sign, s = s[:i], s[i:]
+    # process leading numbers, float/exponentials
+    if s and preprocess and s[0].isdigit():
+        m = _refloat.match(s)
+        if m:  # a float w/ or w/o decimal here at start
+            m = m.groups()[0]
+            if strict is False:
+                # we did all floats so if one matches here
+                # at the start it was already handled
+                pass
+            else:  # strict is None
+                if '.' in m:
+                    # we did all numbers with decimals so if one
+                    # matches here at the start it was already handled
+                    pass
+                elif 'e' in m and m != s:
+                    # not a full match and we are not recognizing
+                    # exponentials so split it so 2e2x -> 2*e2x
+                    i = m.lower().index('e')
+                    s = '%s*%s' % (s[:i], s[i:])
+        else:  # not a float, might be int
+            for i in range(len(s)):
+                if s[i].isdigit() or s[i] == '_':
+                    continue
+                break
+            if s[i - 1] == '_':
+                # can't end with underscore
+                i -= 1
+            if i and valid_name(s[i: i + 1]):
                 s = '%s*%s' % (s[:i], s[i:])
 
-    code = stringify_expr(s, local_dict, global_dict, transformations)
-
-    if not evaluate:
-        code = compile(evaluateFalse(code), '<string>', 'eval')
-
-    return eval_expr(code, local_dict, global_dict)
+    # restore sign
+    if sign:
+        s = sign + s
+    return s
 
 
 def evaluateFalse(s):
