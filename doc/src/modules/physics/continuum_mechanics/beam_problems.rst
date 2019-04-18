@@ -5,7 +5,7 @@ Solving Beam Bending Problems using Singularity Functions
 To make this document easier to read, enable pretty printing:
 
 .. plot::
-   :context:
+   :context: reset
    :format: doctest
    :include-source: True
 
