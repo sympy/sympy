@@ -824,6 +824,12 @@ class LatexPrinter(Printer):
     def _print_UndefinedFunction(self, expr):
         return self._hprint_Function(str(expr))
 
+    def _print_ElementwiseApplyFunction(self, expr):
+        return r"%s\left({%s}\ldots\right)" % (
+            self._print(expr.function),
+            self._print(expr.expr),
+        )
+
     @property
     def _special_function_classes(self):
         from sympy.functions.special.tensor_functions import KroneckerDelta

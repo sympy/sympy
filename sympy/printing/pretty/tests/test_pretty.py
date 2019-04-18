@@ -3110,6 +3110,22 @@ def test_MatrixExpressions():
     assert pretty(Z) == ascii_str
     assert upretty(Z) == ucode_str
 
+    # Apply function elementwise:
+
+    expr = (X.T*X).applyfunc(sin)
+
+    ascii_str = """\
+   / T     \\\n\
+sin\\X *X.../\
+"""
+    ucode_str = u("""\
+   ⎛ T     ⎞\n\
+sin⎝X ⋅X...⎠\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+
 def test_pretty_dotproduct():
     from sympy.matrices import Matrix, MatrixSymbol
     from sympy.matrices.expressions.dotproduct import DotProduct
