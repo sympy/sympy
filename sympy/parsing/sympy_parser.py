@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 from tokenize import (generate_tokens, untokenize, TokenError,
     NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN, NEWLINE,
-    Floatnumber, Intnumber, group)
+    Floatnumber)
 
 from keyword import iskeyword
 
@@ -908,9 +908,7 @@ def eval_expr(code, local_dict, global_dict):
 
     return expr
 
-_refloat = regex.compile(group(Floatnumber, Intnumber))
-del group
-_num_underscores = regex.compile(r'(\d+)_(\d+)')
+_refloat = regex.compile(Floatnumber)
 _py2name = regex.compile(r'^[a-zA-Z_]\w*$')
 def valid_name(name):
     if not isinstance(name, string_types):
@@ -923,7 +921,7 @@ def valid_name(name):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True, default='uld', extra=''):
+               global_dict=None, evaluate=True, default='ld', extra=''):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -954,7 +952,6 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     default and extra: strings, optional of 'ludefj'
         The default preprocessing handles:
-            underscores between digits ('u'),
             leading numbers ('l'), and
             floats with decimals ('d').
         Additionally,
@@ -1056,9 +1053,6 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
                     takes 3 arguments'''))
 
     preprocess = (default + extra).lower()
-    # join underscore separated numbers
-    if 'u' in preprocess:
-        s = _num_underscores.sub(r'\1\2', s)
     strict = True
     pyj = False
     if 'f' in preprocess or 'd' in preprocess and 'e' in preprocess:
@@ -1074,7 +1068,9 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
             split = _refloat.split(s, maxsplit=1)
             if len(split) == 1:
                 break
-            pre, n, _, _, _, _, s = split
+            pre = split[0]
+            s = split[-1]
+            n = split[1]
             ss.extend([pre, n])
         ss.append(s)
         # put operators around numbers as needed for strict/j preference
@@ -1090,20 +1086,27 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
                 ss[i] = ''.join([n, e + tail])
             else:
                 # decimal or exponential split out
-                leading_num = i == 1 and not ss[0]
-                if leading_num or '.' in n or 'e' in n.lower():
-                    if not strict and L and valid_name(L[-1]):
-                        ss[i] = '*' + ss[i]
-                    if R and valid_name(R[0]):
-                        if pyj and R.startswith('j'):
-                            ss[i] += '*I'
-                            if i + 2 < len(ss) or len(R) > 1:
-                                ss[i] += '*'
-                            ss[i + 1] = ss[i + 1][1:]
-                        else:  # not strict so
+                if L and valid_name(L[-1]):
+                    ss[i] = '*' + ss[i]
+                if R and valid_name(R[0]):
+                    if pyj and R.startswith('j'):
+                        ss[i] += '*I'
+                        if i + 2 < len(ss) or len(R) > 1:
                             ss[i] += '*'
+                        ss[i + 1] = ss[i + 1][1:]
+                    else:  # not strict so
+                        ss[i] += '*'
         ss = list(filter(None, ss))
         s = ''.join(ss)
+        # split off the leading integer
+        if s and 'l' in preprocess and \
+                s[0].isdigit() and \
+                not _refloat.match(s):
+            i = 1
+            while i < len(s) and (s[i].isdigit() or s[i] == '_'):
+                i += 1
+            if valid_name(s[i: i + 1]):
+                s = '%s*%s' % (s[:i], s[i:])
 
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
