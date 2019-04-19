@@ -79,6 +79,7 @@ def make_report(source_dir, report_dir, use_cache=False, slow=False):
             sympy.test(source_dir, subprocess=False, slow=slow)
         #sympy.doctest()  # coverage doesn't play well with doctests
         cov.stop()
+        cov.save()
 
     covered_files = list(generate_covered_files(source_dir))
 
