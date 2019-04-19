@@ -909,6 +909,7 @@ def eval_expr(code, local_dict, global_dict):
     return expr
 
 _refloat = regex.compile(Floatnumber)
+_d_d = regex.compile(r'(\d+)_(\d+)')
 _py2name = regex.compile(r'^[a-zA-Z_]\w*$')
 def valid_name(name):
     if not isinstance(name, string_types):
@@ -921,7 +922,7 @@ def valid_name(name):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True, pre='D', **locals):
+               global_dict=None, evaluate=True, pre='d', **locals):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -950,12 +951,17 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         string and automatic simplification that would normally occur is
         suppressed. (see examples)
 
-    pre: strings, optional of 'DE'
-        Indicates which preprocessing to do. Default is 'D':
-            leading numbers (ints or decimals) and internal
-            numbers with decimal points, e.g. `2x`, `x3.4y`
-            or `2.x` but not `x3`.
-        Optionally, also recognize numbers in exponential format.
+    pre: strings, optional of 'dDE'
+        Indicates which preprocessing to do. Default is 'd':
+        leading numbers (ints or decimals) and internal
+        numbers with decimal points and underscores, e.g. `2x`,
+        `x3.4y`, '2_3',  or `2.x` but not `x3`. When 'D', this
+        is all that will be done. Otherwise if
+        1) the `auto_number` transformation is used or
+        2) the only use of 'e' or 'E' is in numbers that
+        are in exponential format, or
+        3) `pre` is 'E' then numbers in exponential format
+        will also be recognized.
         No preprocessing is done if `pre` is the null string, '';
         leading integers or decimal numbers are always identified
         unless `pre` is null.
@@ -1006,16 +1012,17 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     >>> parse_expr('x3.4y')
     3.4*x*y
 
-    If 'E' is included in the `pre` string then exponentials
-    will be identified, too:
+    The number preconditioning, by default, recognizes numbers in
+    exponential notation:
 
     >>> parse_expr('x1e2y')
-    x1e2y
-    >>> parse_expr('2x1e2y', pre='e')
-    200.0*x*y
+    100.0*x*y
 
-    If pre='' then such expressions can only be
-    parsed with transformations:
+    If pre='' then such expressions will return Symbols or will
+    require transformations:
+
+    >>> parse_expr('x1e2y', pre='')
+    x1e2y
 
     >>> from sympy.parsing.sympy_parser import (
     ... standard_transformations,
@@ -1025,7 +1032,8 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     >>> parse_expr("2x", transformations=SI, pre='')
     2*x
 
-    And sometimes you may not get what you expected:
+    And sometimes you may not get what you expected. Here, the
+    '2.3' is parsed as 2*.3:
 
     >>> parse_expr("x2.3", transformations=SI, pre='')
     0.6*x
@@ -1065,6 +1073,14 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
                     a transformation should be function that
                     takes 3 arguments'''))
 
+    if pre == 'd':
+        if auto_number in transformations:
+            pre = 'E'
+        else:
+            float2x = _refloat.sub('x', s).lower()
+            if 'e' not in float2x:
+                # parse any e as part of a number
+                pre = 'E'
     s = precondition(s, pre)
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
@@ -1107,12 +1123,15 @@ def precondition(s, pre):
     '3.e1'
     """
     preprocess = (pre or '').lower()
-    strict = True
-    if 'f' in preprocess or 'e' in preprocess:
+    if 'e' == preprocess:
         strict = False
-    elif 'd' in preprocess:
+    elif 'd' == preprocess:
         strict = None
+    else:
+        strict = True
     if not strict:
+        # handle underscores between digits
+        s = _d_d.sub(r'\1\2', s)
         ss = []
         while True:
             split = _refloat.split(s, maxsplit=1)
@@ -1175,16 +1194,14 @@ def precondition(s, pre):
                 elif 'e' in m and m != s:
                     # not a full match and we are not recognizing
                     # exponentials so split it so 2e2x -> 2*e2x
+                    # unless the whole expression is a number
                     i = m.lower().index('e')
                     s = '%s*%s' % (s[:i], s[i:])
         else:  # not a float, might be int
             for i in range(len(s)):
-                if s[i].isdigit() or s[i] == '_':
+                if s[i].isdigit():
                     continue
                 break
-            if s[i - 1] == '_':
-                # can't end with underscore
-                i -= 1
             if i and valid_name(s[i: i + 1]):
                 s = '%s*%s' % (s[:i], s[i:])
 

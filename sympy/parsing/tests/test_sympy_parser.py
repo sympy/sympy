@@ -293,22 +293,19 @@ def test_split_symbols_numeric():
     raises(SyntaxError, lambda: do('--'))
 
     assert parse_expr('3e4') == 3e4
-    assert parse_expr('3e1', pre='e') == 30.0
-    e1x = Symbol('e1x')
     assert parse_expr('2x') == 2*x
     assert parse_expr('2_3x') == 23*x
-    _x = Symbol('_x')
-    assert parse_expr('2_x') == 2*_x
+    assert parse_expr('_2') == Symbol('_2')
+    assert parse_expr('2_x') == 2*Symbol('_x')
     assert parse_expr('2x') == 2*x
-    assert parse_expr('2e1x') == 2*e1x
-    assert parse_expr('2e1x', pre='e') == 20.0*x
-    assert parse_expr('2.e1x') == 2.0*e1x
-    assert parse_expr('2.e1x', pre='e') == 20.0*x
+    assert parse_expr('x1e2', pre='') == Symbol('x1e2')
+    raises(SyntaxError, lambda: parse_expr('1e2x', pre=''))
+    assert parse_expr('2e1x') == 20.0*x
+    assert parse_expr('2.e1x', pre='D') == 2.0*Symbol('e1x')
+    assert parse_expr('2.e1x') == 20.0*x
     raises(SyntaxError, lambda: parse_expr('.e1x'))
-    raises(SyntaxError, lambda: parse_expr('.e1x', pre='e'))
-    E1x = Symbol('E1x')
-    assert parse_expr('2.E1x') == 2.0*E1x
-    assert parse_expr('2.E1x', pre='e') == 20.0*x
+    assert parse_expr('2.E1x', pre='D') == 2.0*Symbol('E1x')
+    assert parse_expr('2.E1x') == 20.0*x
 
 
 def test_unicode_names():
