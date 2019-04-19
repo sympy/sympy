@@ -1,8 +1,10 @@
 from __future__ import print_function, division
 
 from sympy.core import Mul, sympify
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, Identity
-from sympy.strategies import unpack, flatten, condition, exhaust, do_one
+from sympy.matrices.expressions.matexpr import \
+    MatrixExpr, ShapeError, Identity, OneMatrix, ZeroMatrix
+from sympy.strategies import \
+    unpack, flatten, condition, exhaust, do_one, rm_id, sort
 
 
 def hadamard_product(*matrices):
@@ -119,11 +121,105 @@ def validate(*args):
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
-rules = (unpack,
-         flatten)
+rules = (unpack, flatten)
 
-canonicalize = exhaust(condition(lambda x: isinstance(x, HadamardProduct),
-                                 do_one(*rules)))
+def canonicalize(x):
+    """Canonicalize the Hadamard product ``x`` with mathematical properties.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.expressions import MatrixSymbol, HadamardProduct
+    >>> from sympy.matrices.expressions import OneMatrix, ZeroMatrix
+    >>> from sympy.matrices.expressions.hadamard import canonicalize
+
+    >>> A = MatrixSymbol('A', 2, 2)
+    >>> B = MatrixSymbol('B', 2, 2)
+    >>> C = MatrixSymbol('C', 2, 2)
+    >>> Z = ZeroMatrix(2, 2)
+    >>> O = OneMatrix(2, 2)
+
+    Hadamard product associativity:
+
+    >>> X = HadamardProduct(A, HadamardProduct(B, C))
+    >>> canonicalize(X)
+    A.*B.*C
+
+    Hadamard product commutativity:
+
+    >>> X = HadamardProduct(A, B)
+    >>> Y = HadamardProduct(B, A)
+    >>> canonicalize(X) == canonicalize(Y)
+    True
+
+    Hadamard product identity:
+
+    >>> X = HadamardProduct(A, O)
+    >>> canonicalize(X) == A
+    True
+
+    Absorbing element of Hadamard product:
+
+    >>> X = HadamardProduct(A, Z)
+    >>> canonicalize(X) == Z
+    True
+
+    Notes
+    =====
+
+    As Hadamard product is associative, all the nested products can be
+    flattened to the level 1.
+
+    As Hadamard product is commutative, all the arguments can be sorted to
+    the canonical form.
+
+    Matrix of only ones is an identity for Hadamard product,
+    so every ``OneMatrix`` can be removed.
+
+    Matrix of only zeros will make Hadamard product zero.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Hadamard_product_(matrices)
+
+    .. [2] https://en.wikipedia.org/wiki/Multiplication
+    """
+    from sympy.core.compatibility import default_sort_key
+
+#    def absorb(x):
+#        if any(isinstance(c, ZeroMatrix) for c in x.args)
+#            return ZeroMatrix(*x.shape)
+#        else:
+#            return x
+
+#    rule = condition(
+#            lambda x: isinstance(x, HadamardProduct),
+#            absorb
+#        )
+#    fun = exhaust(rule)
+#    x = fun(x)
+
+    rule = condition(
+            lambda x: isinstance(x, HadamardProduct),
+            do_one(*rules)
+        )
+    fun = exhaust(rule)
+    x = fun(x)
+
+    fun = condition(
+            lambda x: isinstance(x, HadamardProduct),
+            rm_id(lambda x: isinstance(x, OneMatrix))
+        )
+    x = fun(x)
+
+    fun = condition(
+            lambda x: isinstance(x, HadamardProduct),
+            sort(default_sort_key)
+        )
+    x = fun(x)
+
+    return x
 
 
 def hadamard_power(base, exp):
