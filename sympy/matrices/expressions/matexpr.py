@@ -5,8 +5,8 @@ import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq, Mul, Add
 from sympy.core.decorators import call_highest_priority
-from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key
-from sympy.core.sympify import SympifyError, sympify
+from sympy.core.compatibility import range, SYMPY_INTS, default_sort_key, string_types
+from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices import ShapeError
@@ -20,7 +20,7 @@ def _sympifyit(arg, retval=None):
         @wraps(func)
         def __sympifyit_wrapper(a, b):
             try:
-                b = sympify(b, strict=True)
+                b = _sympify(b)
                 return func(a, b)
             except SympifyError:
                 return retval
@@ -71,7 +71,7 @@ class MatrixExpr(Expr):
     is_symbol = False
 
     def __new__(cls, *args, **kwargs):
-        args = map(sympify, args)
+        args = map(_sympify, args)
         return Basic.__new__(cls, *args, **kwargs)
 
     # The following is adapted from the core Expr object
@@ -265,7 +265,7 @@ class MatrixExpr(Expr):
             if isinstance(i, slice) or isinstance(j, slice):
                 from sympy.matrices.expressions.slice import MatrixSlice
                 return MatrixSlice(self, i, j)
-            i, j = sympify(i), sympify(j)
+            i, j = _sympify(i), _sympify(j)
             if self.valid_index(i, j) != False:
                 return self._entry(i, j)
             else:
@@ -278,7 +278,7 @@ class MatrixExpr(Expr):
                 raise IndexError(filldedent('''
                     Single indexing is only supported when the number
                     of columns is known.'''))
-            key = sympify(key)
+            key = _sympify(key)
             i = key // cols
             j = key % cols
             if self.valid_index(i, j) != False:
@@ -611,6 +611,7 @@ def get_postprocessor(cls):
         return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
     return _postprocessor
 
+
 Basic._constructor_postprocessor_mapping[MatrixExpr] = {
     "Mul": [get_postprocessor(Mul)],
     "Add": [get_postprocessor(Add)],
@@ -622,6 +623,10 @@ def _matrix_derivative(expr, x):
     lines = expr._eval_derivative_matrix_lines(x)
 
     parts = [i.build() for i in lines]
+
+    from sympy.codegen.array_utils import recognize_matrix_expression
+
+    parts = [[recognize_matrix_expression(j).doit() for j in i] for i in parts]
 
     def _get_shape(elem):
         if isinstance(elem, MatrixExpr):
@@ -664,12 +669,14 @@ class MatrixElement(Expr):
     is_commutative = True
 
     def __new__(cls, name, n, m):
-        n, m = map(sympify, (n, m))
+        n, m = map(_sympify, (n, m))
         from sympy import MatrixBase
         if isinstance(name, (MatrixBase,)):
             if n.is_Integer and m.is_Integer:
                 return name[n, m]
-        name = sympify(name)
+        if isinstance(name, string_types):
+            name = Symbol(name)
+        name = _sympify(name)
         obj = Expr.__new__(cls, name, n, m)
         return obj
 
@@ -734,7 +741,9 @@ class MatrixSymbol(MatrixExpr):
     _diff_wrt = True
 
     def __new__(cls, name, n, m):
-        n, m = sympify(n), sympify(m)
+        n, m = _sympify(n), _sympify(m)
+        if isinstance(name, string_types):
+            name = Symbol(name)
         obj = Basic.__new__(cls, name, n, m)
         return obj
 
@@ -747,7 +756,7 @@ class MatrixSymbol(MatrixExpr):
 
     @property
     def name(self):
-        return self.args[0]
+        return self.args[0].name
 
     def _eval_subs(self, old, new):
         # only do substitutions in shape
@@ -805,7 +814,7 @@ class Identity(MatrixExpr):
     is_Identity = True
 
     def __new__(cls, n):
-        return super(Identity, cls).__new__(cls, sympify(n))
+        return super(Identity, cls).__new__(cls, _sympify(n))
 
     @property
     def rows(self):
@@ -971,6 +980,45 @@ class GenericZeroMatrix(ZeroMatrix):
         return super(GenericZeroMatrix, self).__hash__()
 
 
+class OneMatrix(MatrixExpr):
+    """
+    Matrix whose all entries are ones.
+    """
+    def __new__(cls, m, n):
+        obj = super(OneMatrix, cls).__new__(cls, m, n)
+        return obj
+
+    @property
+    def shape(self):
+        return self._args
+
+    def as_explicit(self):
+        from sympy import ImmutableDenseMatrix
+        return ImmutableDenseMatrix.ones(*self.shape)
+
+    def _eval_transpose(self):
+        return OneMatrix(self.cols, self.rows)
+
+    def _eval_trace(self):
+        return S.One*self.rows
+
+    def _eval_determinant(self):
+        condition = Eq(self.shape[0], 1) & Eq(self.shape[1], 1)
+        if condition == True:
+            return S.One
+        elif condition == False:
+            return S.Zero
+        else:
+            from sympy import Determinant
+            return Determinant(self)
+
+    def conjugate(self):
+        return self
+
+    def _entry(self, i, j, **kwargs):
+        return S.One
+
+
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
 
@@ -1084,6 +1132,27 @@ class _LeftRightArgs(object):
             rank += 2
         return rank
 
+    def _multiply_pointer(self, pointer, other):
+        from sympy.core.expr import ExprBuilder
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+
+        subexpr = ExprBuilder(
+            CodegenArrayContraction,
+            [
+                ExprBuilder(
+                    CodegenArrayTensorProduct,
+                    [
+                        pointer,
+                        other
+                    ]
+                ),
+                (1, 2)
+            ],
+            validator=CodegenArrayContraction._validate
+        )
+
+        return subexpr
+
     def append_first(self, other):
         self.first_pointer *= other
 
@@ -1097,6 +1166,13 @@ class _LeftRightArgs(object):
         if not isinstance(other, _LeftRightArgs):
             return False
         return (self.first == other.first) and (self.second == other.second)
+
+
+def _make_matrix(x):
+    from sympy import ImmutableDenseMatrix
+    if isinstance(x, MatrixExpr):
+        return x
+    return ImmutableDenseMatrix([[x]])
 
 
 from .matmul import MatMul

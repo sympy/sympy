@@ -225,8 +225,19 @@ def test_permutation_methods():
     S = FpSubgroup(G, G.derived_subgroup())
     assert S.order() == 4
 
+
 def test_simplify_presentation():
     # ref #16083
     G = simplify_presentation(FpGroup(FreeGroup([]), []))
     assert not G.generators
     assert not G.relators
+
+
+def test_cyclic():
+    F, x, y = free_group("x, y")
+    f = FpGroup(F, [x*y, x**-1*y**-1*x*y*x])
+    assert f.is_cyclic
+    f = FpGroup(F, [x*y, x*y**-1])
+    assert f.is_cyclic
+    f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
+    assert not f.is_cyclic

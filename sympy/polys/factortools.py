@@ -80,7 +80,10 @@ from sympy.core.compatibility import range
 
 
 def dup_trial_division(f, factors, K):
-    """Determine multiplicities of factors using trial division. """
+    """
+    Determine multiplicities of factors for a univariate polynomial
+    using trial division.
+    """
     result = []
 
     for factor in factors:
@@ -100,7 +103,10 @@ def dup_trial_division(f, factors, K):
 
 
 def dmp_trial_division(f, factors, u, K):
-    """Determine multiplicities of factors using trial division. """
+    """
+    Determine multiplicities of factors for a multivariate polynomial
+    using trial division.
+    """
     result = []
 
     for factor in factors:
@@ -144,20 +150,20 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
     Given positive integer `m` and `Z[x]` polynomials `f`, `g`, `h`, `s`
     and `t` such that::
 
-        f == g*h (mod m)
-        s*g + t*h == 1 (mod m)
+        f = g*h (mod m)
+        s*g + t*h = 1 (mod m)
 
         lc(f) is not a zero divisor (mod m)
-        lc(h) == 1
+        lc(h) = 1
 
-        deg(f) == deg(g) + deg(h)
+        deg(f) = deg(g) + deg(h)
         deg(s) < deg(h)
         deg(t) < deg(g)
 
     returns polynomials `G`, `H`, `S` and `T`, such that::
 
-        f == G*H (mod m**2)
-        S*G + T**H == 1 (mod m**2)
+        f = G*H (mod m**2)
+        S*G + T*H = 1 (mod m**2)
 
     References
     ==========
@@ -378,7 +384,7 @@ def dup_zz_irreducible_p(f, K):
 
 def dup_cyclotomic_p(f, K, irreducible=False):
     """
-    Efficiently test if ``f`` is a cyclotomic polnomial.
+    Efficiently test if ``f`` is a cyclotomic polynomial.
 
     Examples
     ========
@@ -453,7 +459,7 @@ def dup_cyclotomic_p(f, K, irreducible=False):
 
 
 def dup_zz_cyclotomic_poly(n, K):
-    """Efficiently generate n-th cyclotomic polnomial. """
+    """Efficiently generate n-th cyclotomic polynomial. """
     h = [K.one, -K.one]
 
     for p, k in factorint(n).items():
@@ -485,7 +491,7 @@ def dup_zz_cyclotomic_factor(f, K):
     of `f`, provided that `f` is in the form `x**n - 1` or `x**n + 1` for
     `n >= 1`. Otherwise returns None.
 
-    Factorization is performed using using cyclotomic decomposition of `f`,
+    Factorization is performed using cyclotomic decomposition of `f`,
     which makes this method much faster that any other direct factorization
     approach (e.g. Zassenhaus's).
 
@@ -522,7 +528,7 @@ def dup_zz_cyclotomic_factor(f, K):
 
 
 def dup_zz_factor_sqf(f, K):
-    """Factor square-free (non-primitive) polyomials in `Z[x]`. """
+    """Factor square-free (non-primitive) polynomials in `Z[x]`. """
     cont, g = dup_primitive(f, K)
 
     n = dup_degree(g)
@@ -1179,7 +1185,7 @@ def dmp_gf_factor(f, u, K):
 
 
 def dup_factor_list(f, K0):
-    """Factor polynomials into irreducibles in `K[x]`. """
+    """Factor univariate polynomials into irreducibles in `K[x]`. """
     j, f = dup_terms_gcd(f, K0)
     cont, f = dup_primitive(f, K0)
 
@@ -1241,7 +1247,7 @@ def dup_factor_list(f, K0):
 
 
 def dup_factor_list_include(f, K):
-    """Factor polynomials into irreducibles in `K[x]`. """
+    """Factor univariate polynomials into irreducibles in `K[x]`. """
     coeff, factors = dup_factor_list(f, K)
 
     if not factors:
@@ -1252,7 +1258,7 @@ def dup_factor_list_include(f, K):
 
 
 def dmp_factor_list(f, u, K0):
-    """Factor polynomials into irreducibles in `K[X]`. """
+    """Factor multivariate polynomials into irreducibles in `K[X]`. """
     if not u:
         return dup_factor_list(f, K0)
 
@@ -1325,7 +1331,7 @@ def dmp_factor_list(f, u, K0):
 
 
 def dmp_factor_list_include(f, u, K):
-    """Factor polynomials into irreducibles in `K[X]`. """
+    """Factor multivariate polynomials into irreducibles in `K[X]`. """
     if not u:
         return dup_factor_list_include(f, K)
 
@@ -1339,12 +1345,18 @@ def dmp_factor_list_include(f, u, K):
 
 
 def dup_irreducible_p(f, K):
-    """Returns ``True`` if ``f`` has no factors over its domain. """
+    """
+    Returns ``True`` if a univariate polynomial ``f`` has no factors
+    over its domain.
+    """
     return dmp_irreducible_p(f, 0, K)
 
 
 def dmp_irreducible_p(f, u, K):
-    """Returns ``True`` if ``f`` has no factors over its domain. """
+    """
+    Returns ``True`` if a multivariate polynomial ``f`` has no factors
+    over its domain.
+    """
     _, factors = dmp_factor_list(f, u, K)
 
     if not factors:

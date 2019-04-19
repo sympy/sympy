@@ -564,7 +564,7 @@ class PrettyPrinter(Printer):
                 for i in reversed(range(1, d)):
                     lines.append('%s/%s' % (' '*i, ' '*(w - i)))
                 lines.append("/" + "_"*(w - 1) + ',')
-                return d, h + more, lines, 0
+                return d, h + more, lines, more
             else:
                 w = w + more
                 d = d + more
@@ -619,7 +619,7 @@ class PrettyPrinter(Printer):
             if first:
                 # change F baseline so it centers on the sign
                 prettyF.baseline -= d - (prettyF.height()//2 -
-                                         prettyF.baseline) - adjustment
+                                         prettyF.baseline)
                 first = False
 
             # put padding to the right
@@ -629,7 +629,11 @@ class PrettyPrinter(Printer):
             # put the present prettyF to the right
             prettyF = prettyForm(*prettySign.right(prettyF))
 
-        prettyF.baseline = max_upper + sign_height//2
+        # adjust baseline of ascii mode sigma with an odd height so that it is
+        # exactly through the center
+        ascii_adjustment = ascii_mode if not adjustment else 0
+        prettyF.baseline = max_upper + sign_height//2 + ascii_adjustment
+
         prettyF.binding = prettyForm.MUL
         return prettyF
 
@@ -1004,6 +1008,8 @@ class PrettyPrinter(Printer):
 
         level_str = [[]] + [[] for i in range(expr.rank())]
         shape_ranges = [list(range(i)) for i in expr.shape]
+        # leave eventual matrix elements unflattened
+        mat = lambda x: ImmutableMatrix(x, evaluate=False)
         for outer_i in itertools.product(*shape_ranges):
             level_str[-1].append(expr[outer_i])
             even = True
@@ -1013,15 +1019,17 @@ class PrettyPrinter(Printer):
                 if even:
                     level_str[back_outer_i].append(level_str[back_outer_i+1])
                 else:
-                    level_str[back_outer_i].append(ImmutableMatrix(level_str[back_outer_i+1]))
+                    level_str[back_outer_i].append(mat(
+                        level_str[back_outer_i+1]))
                     if len(level_str[back_outer_i + 1]) == 1:
-                        level_str[back_outer_i][-1] = ImmutableMatrix([[level_str[back_outer_i][-1]]])
+                        level_str[back_outer_i][-1] = mat(
+                            [[level_str[back_outer_i][-1]]])
                 even = not even
                 level_str[back_outer_i+1] = []
 
         out_expr = level_str[0][0]
         if expr.rank() % 2 == 1:
-            out_expr = ImmutableMatrix([out_expr])
+            out_expr = mat([out_expr])
 
         return self._print(out_expr)
 
@@ -1353,8 +1361,9 @@ class PrettyPrinter(Printer):
     def _print_Function(self, e, sort=False, func_name=None):
         # optional argument func_name for supplying custom names
         # XXX works only for applied functions
-        func = e.func
-        args = e.args
+        return self._helper_print_function(e.func, e.args, sort=sort, func_name=func_name)
+
+    def _helper_print_function(self, func, args, sort=False, func_name=None, delimiter=', '):
         if sort:
             args = sorted(args, key=default_sort_key)
 
@@ -1362,7 +1371,7 @@ class PrettyPrinter(Printer):
             func_name = func.__name__
 
         prettyFunc = self._print(Symbol(func_name))
-        prettyArgs = prettyForm(*self._print_seq(args).parens())
+        prettyArgs = prettyForm(*self._print_seq(args, delimiter=delimiter).parens())
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -1372,6 +1381,12 @@ class PrettyPrinter(Printer):
         pform.prettyArgs = prettyArgs
 
         return pform
+
+    def _print_ElementwiseApplyFunction(self, e):
+        func = e.function
+        arg = e.expr
+        args = [arg, "..."]
+        return self._helper_print_function(func, args, delimiter="")
 
     @property
     def _special_function_classes(self):

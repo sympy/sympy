@@ -322,7 +322,6 @@ class Factors(object):
         """
         if isinstance(factors, (SYMPY_INTS, float)):
             factors = S(factors)
-
         if isinstance(factors, Factors):
             factors = factors.factors.copy()
         elif factors is None or factors is S.One:
@@ -355,6 +354,13 @@ class Factors(object):
             for _ in range(i):
                 c.remove(I)
             factors = dict(Mul._from_args(c).as_powers_dict())
+            # Handle all rational Coefficients
+            for f in list(factors.keys()):
+                if isinstance(f, Rational) and not isinstance(f, Integer):
+                    p, q = Integer(f.p), Integer(f.q)
+                    factors[p] = (factors[p] if p in factors else 0) + factors[f]
+                    factors[q] = (factors[q] if q in factors else 0) - factors[f]
+                    factors.pop(f)
             if i:
                 factors[I] = S.One*i
             if nc:

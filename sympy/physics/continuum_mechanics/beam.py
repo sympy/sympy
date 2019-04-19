@@ -12,17 +12,7 @@ from sympy.functions import SingularityFunction, Piecewise, factorial
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
-from sympy.plotting import plot
-from sympy.external import import_module
-from sympy.utilities.decorator import doctest_depends_on
-from sympy import lambdify
-
-matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
-numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
-
-
-__doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
-
+from sympy.plotting import plot, PlotGrid
 
 class Beam(object):
     """
@@ -1238,7 +1228,7 @@ class Beam(object):
         else:
             length = self.length
         return plot(shear_force.subs(subs), (self.variable, 0, length), title='Shear Force',
-                xlabel='position', ylabel='Value', line_color='g')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$', line_color='g')
 
     def plot_bending_moment(self, subs=None):
         """
@@ -1296,7 +1286,7 @@ class Beam(object):
         else:
             length = self.length
         return plot(bending_moment.subs(subs), (self.variable, 0, length), title='Bending Moment',
-                xlabel='position', ylabel='Value', line_color='b')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$', line_color='b')
 
     def plot_slope(self, subs=None):
         """
@@ -1354,7 +1344,7 @@ class Beam(object):
         else:
             length = self.length
         return plot(slope.subs(subs), (self.variable, 0, length), title='Slope',
-                xlabel='position', ylabel='Value', line_color='m')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$', line_color='m')
 
     def plot_deflection(self, subs=None):
         """
@@ -1413,57 +1403,53 @@ class Beam(object):
         else:
             length = self.length
         return plot(deflection.subs(subs), (self.variable, 0, length),
-                    title='Deflection', xlabel='position', ylabel='Value',
+                    title='Deflection', xlabel=r'$\mathrm{x}$', ylabel=r'$\delta$',
                     line_color='r')
 
-    @doctest_depends_on(modules=('numpy', 'matplotlib',))
+
     def plot_loading_results(self, subs=None):
         """
-        Returns Axes object containing subplots of Shear Force, Bending Moment,
+        Returns a subplot of Shear Force, Bending Moment,
         Slope and Deflection of the Beam object.
 
         Parameters
         ==========
-        subs : dictionary
-            Python dictionary containing Symbols as key and their
-            corresponding values.
 
-        .. note::
-           This method only works if numpy and matplotlib libraries
-           are installed on the system.
+        subs : dictionary
+               Python dictionary containing Symbols as key and their
+               corresponding values.
 
         Examples
         ========
-        There is a beam of length 8 meters. A constant distributed load of 10
-        KN/m is applied from half of the beam till the end. There are two
-        simple supports below the beam, one at the starting point and another
-        at the ending point of the beam. A pointload of magnitude 5 KN is also
-        applied from top of the beam, at a distance of 4 meters from the
-        starting point.  Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
+        is applied from half of the beam till the end. There are two simple supports
+        below the beam, one at the starting point and another at the ending point
+        of the beam. A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
 
         Using the sign convention of downwards forces being positive.
 
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
-        >>> R1, R2 = symbols('R1, R2')
-        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
-        >>> b.apply_load(5000, 2, -1)
-        >>> b.apply_load(R1, 0, -1)
-        >>> b.apply_load(R2, 8, -1)
-        >>> b.apply_load(10000, 4, 0, end=8)
-        >>> b.bc_deflection = [(0, 0), (8, 0)]
-        >>> b.solve_for_reaction_loads(R1, R2)
-        >>> axes = b.plot_loading_results()
-        """
-        if matplotlib is None:
-            raise ImportError('Install matplotlib to use this method.')
-        else:
-            plt = matplotlib.pyplot
-        if numpy is None:
-            raise ImportError('Install numpy to use this method.')
-        else:
-            linspace = numpy.linspace
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
 
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> from sympy.plotting import PlotGrid
+            >>> R1, R2 = symbols('R1, R2')
+            >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+            >>> b.apply_load(5000, 2, -1)
+            >>> b.apply_load(R1, 0, -1)
+            >>> b.apply_load(R2, 8, -1)
+            >>> b.apply_load(10000, 4, 0, end=8)
+            >>> b.bc_deflection = [(0, 0), (8, 0)]
+            >>> b.solve_for_reaction_loads(R1, R2)
+            >>> axes = b.plot_loading_results()
+        """
+        length = self.length
         variable = self.variable
         if subs is None:
             subs = {}
@@ -1471,42 +1457,26 @@ class Beam(object):
             if sym == self.variable:
                 continue
             if sym not in subs:
-                raise ValueError('Value of %s was not passed.' % sym)
+                raise ValueError('Value of %s was not passed.' %sym)
         if self.length in subs:
             length = subs[self.length]
         else:
             length = self.length
 
-        # As we are using matplotlib directly in this method, we need to change
-        # SymPy methods to numpy functions.
-        shear = lambdify(variable,
-                         self.shear_force().subs(subs).rewrite(Piecewise),
-                         'numpy')
-        moment = lambdify(variable,
-                          self.bending_moment().subs(subs).rewrite(Piecewise),
-                          'numpy')
-        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise),
-                         'numpy')
-        deflection = lambdify(variable,
-                              self.deflection().subs(subs).rewrite(Piecewise),
-                              'numpy')
+        ax1 = plot(self.shear_force().subs(subs), (variable, 0, length),
+                   title="Shear Force", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$',
+                   line_color='g', show=False)
+        ax2 = plot(self.bending_moment().subs(subs), (variable, 0, length),
+                   title="Bending Moment", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$',
+                   line_color='b', show=False)
+        ax3 = plot(self.slope().subs(subs), (variable, 0, length),
+                   title="Slope", xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$',
+                   line_color='m', show=False)
+        ax4 = plot(self.deflection().subs(subs), (variable, 0, length),
+                   title="Deflection", xlabel=r'$\mathrm{x}$', ylabel=r'$\delta$',
+                   line_color='r', show=False)
 
-        points = linspace(0, float(length), num=100*length)
-
-        # Creating a grid for subplots with 2 rows and 2 columns
-        fig, axs = plt.subplots(4, 1)
-        # axs is a 2D-numpy array containing axes
-        axs[0].plot(points, shear(points))
-        axs[0].set_title("Shear Force")
-        axs[1].plot(points, moment(points))
-        axs[1].set_title("Bending Moment")
-        axs[2].plot(points, slope(points))
-        axs[2].set_title("Slope")
-        axs[3].plot(points, deflection(points))
-        axs[3].set_title("Deflection")
-
-        fig.tight_layout()    # For better spacing between subplots
-        return axs
+        return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
 
 class Beam3D(Beam):

@@ -68,8 +68,16 @@ class ElementwiseApplyFunction(MatrixExpr):
     def shape(self):
         return self.expr.shape
 
-    def func(self, expr):
-        return ElementwiseApplyFunction(self.function, expr)
+    @property
+    def func(self):
+        # This strange construction is required by the assumptions:
+        # (.func needs to be a class)
+
+        class ElementwiseApplyFunction2(ElementwiseApplyFunction):
+            def __new__(obj, expr):
+                return ElementwiseApplyFunction(self.function, expr)
+
+        return ElementwiseApplyFunction2
 
     def doit(self, **kwargs):
         deep = kwargs.get("deep", True)
@@ -85,14 +93,13 @@ class ElementwiseApplyFunction(MatrixExpr):
         return self.function(self.expr._entry(i, j, **kwargs))
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy import HadamardProduct, hadamard_product, Mul, MatMul, Identity, Transpose
-        from sympy.matrices.expressions.diagonal import diagonalize_vector
-        from sympy.matrices.expressions.matmul import validate as matmul_validate
+        from sympy import Identity
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct, CodegenArrayDiagonal
         from sympy.core.expr import ExprBuilder
 
         d = Dummy("d")
         function = self.function(d)
-        fdiff = function.fdiff()
+        fdiff = function.diff(d)
         if isinstance(fdiff, Function):
             fdiff = type(fdiff)
         else:
@@ -102,70 +109,56 @@ class ElementwiseApplyFunction(MatrixExpr):
         if 1 in x.shape:
             # Vector:
             iscolumn = self.shape[1] == 1
-            ewdiff = diagonalize_vector(ewdiff)
-            # TODO: check which axis is not 1
             for i in lr:
                 if iscolumn:
-                    ptr1 = [i.first_pointer]
-                    ptr2 = [Identity(ewdiff.shape[0])]
+                    ptr1 = i.first_pointer
+                    ptr2 = Identity(self.shape[1])
                 else:
-                    ptr1 = [Identity(ewdiff.shape[1])]
-                    ptr2 = [i.second_pointer]
+                    ptr1 = Identity(self.shape[0])
+                    ptr2 = i.second_pointer
 
-                # TODO: check if pointers point to two different lines:
-
-                def mul(*args):
-                    return Mul.fromiter(args)
-
-                def hadamard_or_mul(arg1, arg2):
-                    if arg1.shape == arg2.shape:
-                        return hadamard_product(arg1, arg2)
-                    elif arg1.shape[1] == arg2.shape[0]:
-                        return MatMul(arg1, arg2).doit()
-                    elif arg1.shape[0] == arg2.shape[0]:
-                        return MatMul(arg2.T, arg1).doit()
-                    raise NotImplementedError
-
-                i._lines = [[hadamard_or_mul, [[mul, [ewdiff, ptr1[0]]], ptr2[0]]]]
-                i._first_pointer_parent = i._lines[0][1][0][1]
+                subexpr = ExprBuilder(
+                    CodegenArrayDiagonal,
+                    [
+                        ExprBuilder(
+                            CodegenArrayTensorProduct,
+                            [
+                                ewdiff,
+                                ptr1,
+                                ptr2,
+                            ]
+                        ),
+                        (0, 2) if iscolumn else (1, 4)
+                    ],
+                    validator=CodegenArrayDiagonal._validate
+                )
+                i._lines = [subexpr]
+                i._first_pointer_parent = subexpr.args[0].args
                 i._first_pointer_index = 1
-                i._second_pointer_parent = i._lines[0][1]
-                i._second_pointer_index = 1
-
+                i._second_pointer_parent = subexpr.args[0].args
+                i._second_pointer_index = 2
         else:
             # Matrix case:
             for i in lr:
-                ptr1 = [i.first_pointer]
-                ptr2 = [i.second_pointer]
-                newptr1 = Identity(ptr1[0].shape[1])
-                newptr2 = Identity(ptr2[0].shape[1])
-                subexpr1 = ExprBuilder(
-                    MatMul,
-                    [ptr1[0], ExprBuilder(diagonalize_vector, [newptr1])],
-                    validator=matmul_validate,
+                ptr1 = i.first_pointer
+                ptr2 = i.second_pointer
+                newptr1 = Identity(ptr1.shape[1])
+                newptr2 = Identity(ptr2.shape[1])
+                subexpr = ExprBuilder(
+                    CodegenArrayContraction,
+                    [
+                        ExprBuilder(
+                            CodegenArrayTensorProduct,
+                            [ptr1, newptr1, ewdiff, ptr2, newptr2]
+                        ),
+                        (1, 2, 4),
+                        (5, 7, 8),
+                    ],
+                    validator=CodegenArrayContraction._validate
                 )
-                subexpr2 = ExprBuilder(
-                    Transpose,
-                    [ExprBuilder(
-                        MatMul,
-                        [
-                            ptr2[0],
-                            ExprBuilder(diagonalize_vector, [newptr2])
-                            ,
-                        ],
-                    )],
-                    validator=matmul_validate,
-                )
-                i.first_pointer = subexpr1
-                i.second_pointer = subexpr2
-                i._first_pointer_parent = subexpr1.args[1].args
-                i._first_pointer_index = 0
-                i._second_pointer_parent = subexpr2.args[0].args[1].args
-                i._second_pointer_index = 0
-                # TODO: check if pointers point to two different lines:
-
-                # Unify lines:
-                l = i._lines
-                # TODO: check nested fucntions, e.g. log(sin(...)), the second function should be a scalar one.
-                i._lines = [ExprBuilder(MatMul, [l[0], ewdiff, l[1]], validator=matmul_validate)]
+                i._first_pointer_parent = subexpr.args[0].args
+                i._first_pointer_index = 1
+                i._second_pointer_parent = subexpr.args[0].args
+                i._second_pointer_index = 4
+                i._lines = [subexpr]
         return lr

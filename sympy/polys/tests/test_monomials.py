@@ -63,6 +63,10 @@ def test_monomials():
                         x * j**2, i * j**2, j**2 * i, j*i*j,
                         x * i * j, x * j * i,
                     }
+    assert itermonomials([x, y], 3, 0) == {1, x, x**2, x**2*y, x**3, x*y, x*y**2, y, y**2, y**3}
+    assert itermonomials([x, y], 3, 1) == {x, x**2, x**2*y, x**3, x*y, x*y**2, y, y**2, y**3}
+    assert itermonomials([x, y], 3, 2) == {x**2, x**2*y, x**3, x*y**2, y**2, y**3, x*y}
+    assert itermonomials([x, y], 3, 3) == {x**3, y**3, x**2*y, x*y**2}
 
 def test_monomial_count():
     assert monomial_count(2, 2) == 6
