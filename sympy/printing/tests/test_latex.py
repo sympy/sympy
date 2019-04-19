@@ -1631,6 +1631,11 @@ def test_ZeroMatrix():
     assert latex(ZeroMatrix(1, 1)) == r"\mathbb{0}"
 
 
+def test_OneMatrix():
+    from sympy import OneMatrix
+    assert latex(OneMatrix(3, 4)) == r"{\mathbb{1}_{3, 4}}"
+
+
 def test_Identity():
     from sympy import Identity
     assert latex(Identity(1)) == r"\mathbb{I}"
