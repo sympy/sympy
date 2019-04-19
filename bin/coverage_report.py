@@ -27,7 +27,7 @@ from __future__ import print_function
 import os
 import re
 import sys
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 minver = '3.4'
 try:
@@ -89,26 +89,28 @@ def make_report(source_dir, report_dir, use_cache=False, slow=False):
 
     cov.html_report(morfs=covered_files, directory=report_dir)
 
+parser = ArgumentParser()
+parser.add_argument(
+    '-c', '--use-cache', action='store_true', default=False,
+    help='Use cached data.')
+parser.add_argument(
+    '-d', '--report-dir', default='covhtml',
+    help='Directory to put the generated report in.')
+parser.add_argument(
+    "--slow", action="store_true", dest="slow", default=False,
+    help="Run slow functions also.")
+options, args = parser.parse_known_args()
+
 if __name__ == '__main__':
-    parser = OptionParser()
-    parser.add_option('-c', '--use-cache', action='store_true', default=False,
-                      help='Use cached data.')
-    parser.add_option('-d', '--report-dir', default='covhtml',
-                      help='Directory to put the generated report in.',
-                      dest='report_dir')
-    parser.add_option("--slow", action="store_true", dest="slow",
-                      default=False, help="Run slow functions also.")
-
-    options, args = parser.parse_args()
-
     if args:
         source_dir = args[0]
     else:
         source_dir = 'sympy/'
 
-    make_report(source_dir, **options.__dict__)
-
     report_dir = options.report_dir
+    use_cache = options.use_cache
+    slow = options.slow
+    make_report(source_dir, report_dir, use_cache=use_cache, slow=slow)
 
     print("The generated coverage report is in covhtml directory.")
     print(
