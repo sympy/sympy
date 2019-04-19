@@ -814,7 +814,7 @@ def test_latex_emptyset():
 
 
 def test_latex_universalset():
-    assert latex(S.UniversalSet) == r"\text{UniversalSet}"
+    assert latex(S.UniversalSet) == r"\mathbb{U}"
 
 
 def test_latex_commutator():

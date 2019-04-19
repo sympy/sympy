@@ -529,6 +529,9 @@ class StrPrinter(Printer):
     def _print_ProductSet(self, p):
         return ' x '.join(self._print(set) for set in p.sets)
 
+    def _print_UniversalSet(self, p):
+        return 'UniversalSet'
+
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:
             return self._print(expr.as_poly().as_expr())

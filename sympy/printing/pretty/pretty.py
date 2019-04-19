@@ -2105,7 +2105,10 @@ class PrettyPrinter(Printer):
         return pretty
 
     def _print_UniversalSet(self, s):
-        return prettyForm('UniversalSet')
+        if self._use_unicode:
+            return prettyForm(u"\N{MATHEMATICAL DOUBLE-STRUCK CAPITAL U}")
+        else:
+            return prettyForm('UniversalSet')
 
     def _print_PolyRing(self, ring):
         return prettyForm(sstr(ring))

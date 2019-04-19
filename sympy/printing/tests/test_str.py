@@ -713,6 +713,10 @@ def test_FiniteSet():
     assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
 
 
+def test_UniversalSet():
+    assert str(S.UniversalSet) == 'UniversalSet'
+
+
 def test_PrettyPoly():
     from sympy.polys.domains import QQ
     F = QQ.frac_field(x, y)

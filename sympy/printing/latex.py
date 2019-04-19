@@ -1710,7 +1710,7 @@ class LatexPrinter(Printer):
         )
 
     def _print_UniversalSet(self, expr):
-        return r"\text{UniversalSet}"
+        return r"\mathbb{U}"
 
     def _print_tuple(self, expr):
         return r"\left( %s\right)" % \
