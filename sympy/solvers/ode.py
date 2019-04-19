@@ -251,7 +251,7 @@ from sympy.core.sympify import sympify
 from sympy.logic.boolalg import (BooleanAtom, And, Not, BooleanTrue,
                                 BooleanFalse)
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, \
-    atan2, conjugate, Piecewise, cbrt
+    atan2, conjugate, Piecewise, cbrt, besselj, bessely, airyai, airybi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian, Matrix, eye, zeros
@@ -3902,7 +3902,6 @@ def ode_2nd_linear_airy(eq, func, order, match):
         arg = - b/cbrt(-m)**2 + cbrt(-m)*x
     else:
         arg = - b/cbrt(-m)**2 + cbrt(-m)*x
-    from sympy.functions import airyai, airybi
     return Eq(f(x), C0*airyai(arg) + C1*airybi(arg))
 
 
@@ -4060,7 +4059,6 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     a4 = match['a4']
     c4 = match['c4']
     n = sqrt(n**2 + Rational(1, 4)*(c4 - 1)**2)
-    from sympy.functions import besselj, bessely
     return (Eq(f(x), (x**(Rational(1-c4,2)))*(C0*besselj(n,x) + C1*bessely(n,x)).subs(x,a4*x)))
 
 def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):

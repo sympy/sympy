@@ -3011,11 +3011,15 @@ def test_2nd_power_series_ordinary():
 def test_Airy_equation():
     C1, C2 = symbols("C1 C2")
     eq = f(x).diff(x, 2) - x*f(x)
+    sol = dsolve(eq)
     assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
-    assert dsolve(eq) == Eq(f(x), C1*airyai(x) + C2*airybi(x))
+    assert sol == Eq(f(x), C1*airyai(x) + C2*airybi(x))
+    assert checkodesol(eq, sol) == (True, 0)
     eq = f(x).diff(x, 2) + 2*x*f(x)
     assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
-    assert dsolve(eq) == Eq(f(x), C1*airyai(-2**(S(1)/3)*x) + C2*airybi(-2**(S(1)/3)*x))
+    sol = dsolve(eq)
+    assert sol == Eq(f(x), C1*airyai(-2**(S(1)/3)*x) + C2*airybi(-2**(S(1)/3)*x))
+    assert checkodesol(eq, sol) == (True, 0)
 
 
 
@@ -3048,13 +3052,25 @@ def test_2nd_power_series_regular():
 def test_2nd_linear_bessel_equation():
     C1, C2 = symbols("C1 C2")
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 4)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))
+    sol = dsolve(eq)
+    assert sol == Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))
+    assert checkodesol(eq, sol) == (True, 0)
+
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 +25)*f(x)
     assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
+    sol = dsolve(eq)
+    assert sol == Eq(f(x), C1*besselj(5*I, x) + C2*bessely(5*I, x))
+    #assert checkodesol(eq, sol) == (True, 0)
+
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*besselj(0, x) + C2*bessely(0, x))
+    sol = dsolve(eq)
+    assert sol == Eq(f(x), C1*besselj(0, x) + C2*bessely(0, x))
+    assert checkodesol(eq, sol) == (True, 0)
+
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (81*x**2 -S(1)/9)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*besselj(S(1)/3, 9*x) + C2*bessely(S(1)/3, 9*x))
+    sol = dsolve(eq)
+    assert sol == Eq(f(x), C1*besselj(S(1)/3, 9*x) + C2*bessely(S(1)/3, 9*x))
+    #assert checkodesol(eq, sol) == (True, 0)
 
 def test_issue_7093():
     x = Symbol("x") # assuming x is real leads to an error
