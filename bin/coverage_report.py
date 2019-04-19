@@ -60,11 +60,8 @@ def generate_covered_files(top_dir):
 
 def make_report(source_dir, report_dir, use_cache=False, slow=False):
     # code adapted from /bin/test
-    bin_dir = os.path.abspath(os.path.dirname(__file__))  # bin/
-    sympy_top = os.path.split(bin_dir)[0]  # ../
-    sympy_dir = os.path.join(sympy_top, 'sympy')  # ../sympy/
-    if os.path.isdir(sympy_dir):
-        sys.path.insert(0, sympy_top)
+    from get_sympy import path_hack
+    sympy_top = path_hack()
     os.chdir(sympy_top)
 
     cov = coverage.coverage()
