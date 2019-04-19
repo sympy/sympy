@@ -59,7 +59,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         [1, x, y, x**2, x*y, y**2, x**3, x**2*y, x*y**2, y**3]
 
         >>> a, b = symbols('a, b', commutative=False)
-        >>> itermonomials([a, b, x], 2)
+        >>> set(itermonomials([a, b, x], 2))
         {1, a, a**2, b, b**2, x, x**2, a*b, b*a, x*a, x*b}
 
         >>> sorted(itermonomials([x, y], 2, 1), key=monomial_key('grlex', [y, x]))
@@ -86,7 +86,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         >>> from sympy.core import Mul
         >>> from sympy.abc import x, y
 
-        >>> sorted(itermonomials([x, y], [2, 4], [1, 2]),
+        >>> sorted(itermonomials([x, y], [2, 4], [1, 2]), \
                     reverse=True, key=monomial_key('lex', [x, y]))
         [x**2*y**4, x**2*y**3, x**2*y**2, x*y**4, x*y**3, x*y**2]
     """
@@ -179,7 +179,7 @@ def monomial_count(V, N):
     >>> monomial_count(2, 2)
     6
 
-    >>> M = itermonomials([x, y], 2)
+    >>> M = list(itermonomials([x, y], 2))
 
     >>> sorted(M, key=monomial_key('grlex', [y, x]))
     [1, x, y, x**2, x*y, y**2]
