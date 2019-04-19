@@ -92,23 +92,31 @@ def itermonomials(variables, max_degrees, min_degrees=None):
     """
     n = len(variables)
     if is_sequence(max_degrees):
-         if len(max_degrees) != n:
-             raise ValueError('Argument sizes do not match')
-         if min_degrees is None:
-             min_degrees = [0]*n
-         elif (not is_sequence(min_degrees) or len(min_degrees) != n):
-             raise ValueError('min_degrees is not a list '
-             'or argument sizes do not match')
-         total_degree = False
+        if len(max_degrees) != n:
+            raise ValueError('Argument sizes do not match')
+        if min_degrees is None:
+            min_degrees = [0]*n
+        elif not is_sequence(min_degrees):
+            raise ValueError('min_degrees is not a list')
+        else:
+            if len(min_degrees) != n:
+                raise ValueError('Argument sizes do not match')
+            if any(i < 0 for i in min_degrees):
+                raise ValueError("min_degrees can't contain negative numbers")
+        total_degree = False
     else:
         max_degree = max_degrees
+        if max_degree < 0:
+            raise ValueError("max_degrees can't be negative")
         if min_degrees is None:
             min_degree = 0
         else:
+            if min_degrees < 0:
+                raise ValueError("min_degrees can't be negative")
             min_degree = min_degrees
         total_degree = True
     if total_degree:
-        if max_degree < 0 or min_degree > max_degree:
+        if min_degree > max_degree:
             yield set()
         if not variables or max_degree == 0:
             yield {S(1)}
