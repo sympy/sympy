@@ -41,8 +41,6 @@ except ImportError:
         "https://launchpad.net/ubuntu/+source/python-coverage/" % minver)
     sys.exit(-1)
 
-REPORT_DIR = "covhtml"
-REFRESH = False
 
 omit_dir_patterns = ['.*tests', 'benchmark', 'examples',
                      'pyglet', 'test_external']
