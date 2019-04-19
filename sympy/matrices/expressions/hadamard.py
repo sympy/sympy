@@ -38,15 +38,28 @@ class HadamardProduct(MatrixExpr):
     """
     Elementwise product of matrix expressions
 
-    This is a symbolic object that simply stores its argument without
-    evaluating it. To actually compute the product, use the function
-    ``hadamard_product()``.
+    Examples
+    ========
+
+    Hadamard product for matrix symbols:
 
     >>> from sympy.matrices import hadamard_product, HadamardProduct, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
     >>> isinstance(hadamard_product(A, B), HadamardProduct)
     True
+
+    Hadamard product with only one argument:
+
+    >>> HadamardProduct(A) == A
+    True
+
+    Notes
+    =====
+
+    This is a symbolic object that simply stores its argument without
+    evaluating it. To actually compute the product, use the function
+    ``hadamard_product()`` or ``HadamardProduct.doit``
     """
     is_HadamardProduct = True
 
@@ -55,7 +68,10 @@ class HadamardProduct(MatrixExpr):
         check = kwargs.get('check', True)
         if check:
             validate(*args)
-        return super(HadamardProduct, cls).__new__(cls, *args)
+        if len(args) == 1:
+            return args[0]
+        else:
+            return super(HadamardProduct, cls).__new__(cls, *args)
 
     @property
     def shape(self):
@@ -121,7 +137,6 @@ def validate(*args):
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
-rules = (unpack, flatten)
 
 def canonicalize(x):
     """Canonicalize the Hadamard product ``x`` with mathematical properties.
@@ -187,38 +202,43 @@ def canonicalize(x):
     """
     from sympy.core.compatibility import default_sort_key
 
-#    def absorb(x):
-#        if any(isinstance(c, ZeroMatrix) for c in x.args)
-#            return ZeroMatrix(*x.shape)
-#        else:
-#            return x
-
-#    rule = condition(
-#            lambda x: isinstance(x, HadamardProduct),
-#            absorb
-#        )
-#    fun = exhaust(rule)
-#    x = fun(x)
-
+    # Flattening
     rule = condition(
             lambda x: isinstance(x, HadamardProduct),
-            do_one(*rules)
+            flatten
         )
     fun = exhaust(rule)
     x = fun(x)
 
+    # Identity
     fun = condition(
             lambda x: isinstance(x, HadamardProduct),
             rm_id(lambda x: isinstance(x, OneMatrix))
         )
     x = fun(x)
 
+    # Commutativity
     fun = condition(
             lambda x: isinstance(x, HadamardProduct),
             sort(default_sort_key)
         )
     x = fun(x)
 
+    # Absorbing by Zero Matrix
+    def absorb(x):
+        if any(isinstance(c, ZeroMatrix) for c in x.args):
+            return ZeroMatrix(*x.shape)
+        else:
+            return x
+    rule = condition(
+            lambda x: isinstance(x, HadamardProduct),
+            absorb
+        )
+    fun = exhaust(rule)
+    x = fun(x)
+
+    # Unpacking
+    x = unpack(x)
     return x
 
 
