@@ -1743,8 +1743,7 @@ class PermutationGroup(Basic):
                 for g in gns:
                     elm = g**p
                     if not H.contains(elm):
-                        for i in range(len(H)):
-                            H = PermutationGroup([H[i], elm])
+                        H = PermutationGroup(H.generators + [elm])
 
                 r = G.order()/H.order()
                 G = H
