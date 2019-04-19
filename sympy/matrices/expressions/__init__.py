@@ -6,7 +6,7 @@ from .funcmatrix import FunctionMatrix
 from .inverse import Inverse
 from .matadd import MatAdd
 from .matexpr import (Identity, MatrixExpr, MatrixSymbol, ZeroMatrix,
-                      matrix_symbols)
+                      matrix_symbols, OneMatrix)
 from .matmul import MatMul
 from .matpow import MatPow
 from .trace import Trace, trace
