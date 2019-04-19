@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from random import randrange, choice
 from math import log
 from sympy.ntheory import primefactors
-from sympy import Integer, factorint
+from sympy import factorint
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -1745,12 +1745,12 @@ class PermutationGroup(Basic):
                     if not H.contains(elm):
                         H = PermutationGroup(H.generators + [elm])
 
-                r = G.order()/H.order()
+                r = G.order()//H.order()
                 G = H
                 gns = G.generators
                 f = 0
-                if Integer(r) != 1:
-                    for k, v in factorint(Integer(r)).items():
+                if r != 1:
+                    for k, v in factorint(r).items():
                         f += v
                     ranks.append(f)
 
