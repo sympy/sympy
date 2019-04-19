@@ -86,8 +86,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         >>> from sympy.core import Mul
         >>> from sympy.abc import x, y
 
-        >>> sorted(itermonomials([x, y], [2, 4], [1, 2]), \
-                    reverse=True, key=monomial_key('lex', [x, y]))
+        >>> sorted(itermonomials([x, y], [2, 4], [1, 2]), reverse=True, key=monomial_key('lex', [x, y]))
         [x**2*y**4, x**2*y**3, x**2*y**2, x*y**4, x*y**3, x*y**2]
     """
     n = len(variables)
