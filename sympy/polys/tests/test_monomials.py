@@ -17,32 +17,32 @@ from sympy.utilities.pytest import raises
 
 
 def test_monomials():
-    assert itermonomials([], -1) == set()
-    assert itermonomials([], 0) == {S(1)}
-    assert itermonomials([], 1) == {S(1)}
-    assert itermonomials([], 2) == {S(1)}
-    assert itermonomials([], 3) == {S(1)}
+    raises(ValueError, lambda: next(itermonomials([], -1)))
+    assert next(itermonomials([], 0)) == {S(1)}
+    assert next(itermonomials([], 1)) == {S(1)}
+    assert next(itermonomials([], 2)) == {S(1)}
+    assert next(itermonomials([], 3)) == {S(1)}
 
-    assert itermonomials([x], -1) == set()
-    assert itermonomials([x], 0) == {S(1)}
-    assert itermonomials([x], 1) == {S(1), x}
-    assert itermonomials([x], 2) == {S(1), x, x**2}
-    assert itermonomials([x], 3) == {S(1), x, x**2, x**3}
+    raises(ValueError, lambda: next(itermonomials([x], -1)))
+    assert next(itermonomials([x], 0)) == {S(1)}
+    assert set(itermonomials([x], 1)) == {S(1), x}
+    assert set(itermonomials([x], 2)) == {S(1), x, x**2}
+    assert set(itermonomials([x], 3)) == {S(1), x, x**2, x**3}
 
-    assert itermonomials([x, y], 0) == {S(1)}
-    assert itermonomials([x, y], 1) == {S(1), x, y}
-    assert itermonomials([x, y], 2) == {S(1), x, y, x**2, y**2, x*y}
-    assert itermonomials([x, y], 3) == \
+    assert next(itermonomials([x, y], 0)) == {S(1)}
+    assert set(itermonomials([x, y], 1)) == {S(1), x, y}
+    assert set(itermonomials([x, y], 2)) == {S(1), x, y, x**2, y**2, x*y}
+    assert set(itermonomials([x, y], 3)) == \
         {S(1), x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2}
 
 
     i, j, k = symbols('i j k', commutative=False)
-    assert itermonomials([i, j, k], 0) == {S(1)}
-    assert itermonomials([i, j, k], 1) == {S(1), i, j, k}
-    assert itermonomials([i, j, k], 2) == \
+    assert next(itermonomials([i, j, k], 0)) == {S(1)}
+    assert set(itermonomials([i, j, k], 1)) == {S(1), i, j, k}
+    assert set(itermonomials([i, j, k], 2)) == \
             {S(1), i, j, k, i**2, j**2, k**2, i*j, i*k, j*i, j*k, k*i, k*j}
 
-    assert itermonomials([i, j, k], 3) == \
+    assert set(itermonomials([i, j, k], 3)) == \
             {S(1), i, j, k, i**2, j**2, k**2, i*j, i*k, j*i, j*k, k*i, k*j,
                         i**3, j**3, k**3,
                         i**2 * j, i**2 * k, j * i**2, k * i**2,
@@ -52,10 +52,10 @@ def test_monomials():
                         i*j*k, i*k*j, j*i*k, j*k*i, k*i*j, k*j*i,
                     }
 
-    assert itermonomials([x, i, j], 0) == {S(1)}
-    assert itermonomials([x, i, j], 1) == {S(1), x, i, j}
-    assert itermonomials([x, i, j], 2) == {S(1), x, i, j, x*i, x*j, i*j, j*i, x**2, i**2, j**2}
-    assert itermonomials([x, i, j], 3) == \
+    assert next(itermonomials([x, i, j], 0)) == {S(1)}
+    assert set(itermonomials([x, i, j], 1)) == {S(1), x, i, j}
+    assert set(itermonomials([x, i, j], 2)) == {S(1), x, i, j, x*i, x*j, i*j, j*i, x**2, i**2, j**2}
+    assert set(itermonomials([x, i, j], 3)) == \
             {S(1), x, i, j, x*i, x*j, i*j, j*i, x**2, i**2, j**2,
                         x**3, i**3, j**3,
                         x**2 * i, x**2 * j,
