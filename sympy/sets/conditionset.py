@@ -82,7 +82,7 @@ class ConditionSet(Set):
     If no base set is specified, the universal set is implied:
 
     >>> ConditionSet(x, x < 1).base_set
-    UniversalSet()
+    UniversalSet
 
     Although expressions other than symbols may be used, this
     is discouraged and will raise an error if the expression
