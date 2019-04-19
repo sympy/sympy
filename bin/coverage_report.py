@@ -99,7 +99,8 @@ if __name__ == '__main__':
     parser.add_option('-c', '--use-cache', action='store_true', default=False,
                       help='Use cached data.')
     parser.add_option('-d', '--report-dir', default='covhtml',
-                      help='Directory to put the generated report in.')
+                      help='Directory to put the generated report in.',
+                      dest='report_dir')
     parser.add_option("--slow", action="store_true", dest="slow",
                       default=False, help="Run slow functions also.")
 
@@ -112,6 +113,10 @@ if __name__ == '__main__':
 
     make_report(source_dir, **options.__dict__)
 
+    report_dir = options.report_dir
+
     print("The generated coverage report is in covhtml directory.")
-    print("Open %s in your web browser to view the report" % os.sep.join(
-        'sympy covhtml index.html'.split()))
+    print(
+        "Open %s in your web browser to view the report" %
+        os.sep.join([report_dir, 'index.html'])
+    )
