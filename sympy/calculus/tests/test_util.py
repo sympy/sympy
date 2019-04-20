@@ -3,7 +3,7 @@ from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    ImageSet)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
-                                 stationary_points, minimum, maximum)
+                                 stationary_points, minimum, maximum, maxima, minima)
 from sympy.core import Add, Mul, Pow
 from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
                             Union, Intersection)
@@ -269,6 +269,52 @@ def test_minimum():
     raises(ValueError, lambda : minimum(sin(x), sin(x)))
     raises(ValueError, lambda : minimum(sin(x), x*y, S.EmptySet))
     raises(ValueError, lambda : minimum(sin(x), S(1)))
+
+def test_maxima():
+    from sympy import Integers
+    x, y, n = symbols('x y n')
+    assert maxima(sin(x), x) == ImageSet(Lambda(n, 2*pi*n + pi/2), Integers)
+    assert maxima(sin(x), x, Interval(0, 2*pi)) == {pi/2}
+    assert maxima(sin(x)-x, x) == EmptySet()
+    assert maxima(x - x**3, x, Interval(0, 2)) == {sqrt(3)/3} 
+    assert maxima(sin(x)**2, x, Interval(-2*pi, 2*pi)) == {-3*pi/2, -pi/2, pi/2, 3*pi/2}
+    assert maxima(sin(x)*cos(x), x, Interval(0,2*pi)) == {pi/4, 5*pi/4}
+    assert maxima((x+3)*(x-2), x) == EmptySet()
+    assert maxima((x+3)/(x-2), x) == EmptySet()
+    #assert maxima(x**5-3*x**3+2*x**2+6, x) == {-1/2 + sqrt(105)/10, -sqrt(105)/10 - 1/2}
+    assert maxima(exp(x), x) == EmptySet()
+    assert maxima(log(x) - x, x) == {1}
+    assert maxima(y, x) == EmptySet()
+
+    raises(ValueError, lambda : maxima(sin(x), x, S.EmptySet))
+    raises(ValueError, lambda : maxima(log(cos(x)), x, S.EmptySet))
+    raises(ValueError, lambda : maxima(1/(x**2 + y**2 + 1), x, S.EmptySet))
+    raises(ValueError, lambda : maxima(sin(x), sin(x)))
+    raises(ValueError, lambda : maxima(sin(x), x*y, S.EmptySet))
+    raises(ValueError, lambda : maxima(sin(x), S(1)))
+
+def test_minima():
+    from sympy import Integers
+    x, y, n = symbols('x y n')
+    assert minima(sin(x), x) == ImageSet(Lambda(n, 2*pi*n + 3*pi/2), Integers)
+    assert minima(sin(x), x, Interval(0, 2*pi)) == {3*pi/2}
+    assert minima(sin(x)-x, x) == EmptySet()
+    assert minima(x - x**3, x, Interval(-1, 2)) == {-sqrt(3)/3}
+    assert minima(sin(x)**2, x, Interval(-pi/2, pi/2)) == {0}
+    assert minima(sin(x)*cos(x), x, Interval(0,2*pi)) == {3*pi/4, 7*pi/4}
+    #assert minima((x+3)*(x-2), x) == {-1/2}
+    assert minima((x+3)/(x-2), x) == EmptySet()
+    assert minima(x**5-3*x**3+2*x**2+6, x) == {0, 1}
+    assert minima(exp(x), x) == EmptySet()
+    assert minima(log(x) - x, x) == EmptySet()
+    assert minima(y, x) == EmptySet()
+
+    raises(ValueError, lambda : maxima(sin(x), x, S.EmptySet))
+    raises(ValueError, lambda : maxima(log(cos(x)), x, S.EmptySet))
+    raises(ValueError, lambda : maxima(1/(x**2 + y**2 + 1), x, S.EmptySet))
+    raises(ValueError, lambda : maxima(sin(x), sin(x)))
+    raises(ValueError, lambda : maxima(sin(x), x*y, S.EmptySet))
+    raises(ValueError, lambda : maxima(sin(x), S(1)))
 
 def test_AccumBounds():
     assert AccumBounds(1, 2).args == (1, 2)

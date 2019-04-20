@@ -840,6 +840,131 @@ def minimum(f, symbol, domain=S.Reals):
     else:
         raise ValueError("%s is not a valid symbol." % symbol)
 
+def maxima(f, symbol, domain=S.Reals):
+    """
+    Returns the maxima of a function in the given domain.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for maxima needs to be determined.
+    domain : Interval
+        The domain over which the maxima have to be checked.
+        If unspecified, S.Reals will be the default domain.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, S, sin, cos, pi, maxima
+    >>> from sympy.sets import Interval
+    >>> x = Symbol('x')
+
+    >>> f = x**3 - x**2 + 1
+    >>> maxima(f, x)
+    {0}
+
+    >>> maxima(sin(x), x, Interval(-2*pi, 7*pi))
+    {-3*pi/2, pi/2, 5*pi/2, 9*pi/2, 13*pi/2}
+
+    >>> maxima(sin(x)*cos(x), x)
+    ImageSet(Lambda(n, pi*n + pi/4), Integers)
+
+    >>> maxima(sin(x)*cos(x) + x, x)
+    EmptySet()
+
+    """
+    from sympy import Symbol, diff
+    from sympy.solvers.solveset import solveset
+    from sympy.sets.sets import imageset
+
+    if isinstance(symbol, Symbol):
+        if isinstance(domain, EmptySet):
+            raise ValueError("Maxima not defined for empty domain.")
+        
+        diff1 = diff(f, symbol)
+        period = periodicity(diff1, symbol)
+        diff2 = diff(diff1, symbol)
+        if period is None or domain is not S.Reals:
+            stationary_points_set = solveset(diff1, symbol, domain)
+            return solveset(diff2 < 0, symbol, stationary_points_set)
+        else:
+            stationary_points_set = solveset(diff1, symbol, Interval(0, period))
+            maxima_in_one_period = solveset(diff2 < 0, symbol, stationary_points_set)
+            solution = EmptySet()
+            for x in maxima_in_one_period:
+                n = Symbol('n')
+                solution += imageset(n, n*period+x, S.Integers)
+            return solution
+        
+        
+    else:
+        raise ValueError("%s is not a valid symbol." % symbol)
+
+
+def minima(f, symbol, domain=S.Reals):
+    """
+    Returns the minima of a function in the given domain.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The concerned function.
+    symbol : Symbol
+        The variable for minima needs to be determined.
+    domain : Interval
+        The domain over which the minima have to be checked.
+        If unspecified, S.Reals will be the default domain.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, S, sin, cos, pi, minima
+    >>> from sympy.sets import Interval
+    >>> x = Symbol('x')
+
+    >>> f = x**3 - x**2 + 1
+    >>> minima(f, x)
+    {2/3}
+
+    >>> minima(sin(x), x, Interval(-2*pi, 7*pi))
+    {-pi/2, 3*pi/2, 7*pi/2, 11*pi/2}
+
+    >>> minima(sin(x)*cos(x), x)
+    ImageSet(Lambda(n, pi*n + 3*pi/4), Integers)
+
+    >>> minima(sin(x)*cos(x) + x, x)
+    EmptySet()
+
+    """
+    from sympy import Symbol, diff
+    from sympy.solvers.solveset import solveset
+    from sympy.sets.sets import imageset
+
+    if isinstance(symbol, Symbol):
+        if isinstance(domain, EmptySet):
+            raise ValueError("Minima not defined for empty domain.")
+        
+        diff1 = diff(f, symbol)
+        period = periodicity(diff1, symbol)
+        diff2 = diff(diff1, symbol)
+        if period is None or domain is not S.Reals:
+            stationary_points_set = solveset(diff1, symbol, domain)
+            return solveset(diff2 > 0, symbol, stationary_points_set)
+        else:
+            stationary_points_set = solveset(diff1, symbol, Interval(0, period))
+            maxima_in_one_period = solveset(diff2 > 0, symbol, stationary_points_set)
+            solution = EmptySet()
+            for x in maxima_in_one_period:
+                n = Symbol('n')
+                solution += imageset(n, n*period+x, S.Integers)
+            return solution
+        
+    else:
+        raise ValueError("%s is not a valid symbol." % symbol)
 
 class AccumulationBounds(AtomicExpr):
     r"""
