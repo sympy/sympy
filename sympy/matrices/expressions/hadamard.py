@@ -49,11 +49,6 @@ class HadamardProduct(MatrixExpr):
     >>> isinstance(hadamard_product(A, B), HadamardProduct)
     True
 
-    Hadamard product with only one argument:
-
-    >>> HadamardProduct(A) == A
-    True
-
     Notes
     =====
 
