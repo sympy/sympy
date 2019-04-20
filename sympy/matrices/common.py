@@ -2205,6 +2205,31 @@ class MatrixArithmetic(MatrixRequired):
     def __truediv__(self, other):
         return self.__div__(other)
 
+    def _smart_strassen(self, other):
+        """Helper function for applying strassen algorithm more
+        strategically.
+
+        Notes
+        =====
+
+        Strassen algorithm works ideally for square matrices with `2^n`
+        dimensions.
+
+        For other dimensions, zero padding must be done and
+        padding zeros and extracting may increase the actual overhead.
+        Especially when the padding is used in the mid-sequence
+
+        Also, for smaller sized matrices, the overhead of using
+        strassen may not be good than naive algorithm, for high-level
+        programming languages.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Strassen_algorithm#Implementation_considerations
+        """
+        raise NotImplementedError()
+
     def _eval_matrix_mul_strassen(self, other, breakpoint=(1, 1)):
         """Strassen subroutine for matrix multiplication.
 
