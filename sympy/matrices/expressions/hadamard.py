@@ -220,7 +220,7 @@ def canonicalize(x):
     # Absorbing by Zero Matrix
     def absorb(x):
         if any(isinstance(c, ZeroMatrix) for c in x.args):
-            return HadamardProduct(ZeroMatrix(*x.shape))
+            return ZeroMatrix(*x.shape)
         else:
             return x
     fun = condition(
@@ -243,7 +243,6 @@ def canonicalize(x):
             if exp == 1:
                 new_arg.append(base)
             else:
-                from .hadamard import HadamardPower
                 new_arg.append(HadamardPower(base, exp))
 
         from sympy.strategies.util import new
