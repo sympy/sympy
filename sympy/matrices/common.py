@@ -2296,7 +2296,7 @@ class MatrixArithmetic(MatrixRequired):
             and columns as same as `A` 's columns.
 
         method : String, optional
-            Specifies the method used for mathematrix multiplication
+            Specifies the method used for matrix multiplication
 
         See Also
         ========
