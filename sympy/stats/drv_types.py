@@ -1,3 +1,16 @@
+"""
+Discrete Random Variables - Prebuilt variable types
+
+Contains
+========
+Geometric
+Poisson
+Logarithmic
+NegativeBinomial
+YuleSimon
+Zeta
+"""
+
 from __future__ import print_function, division
 
 from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta, hyper, binomial,

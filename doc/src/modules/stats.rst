@@ -45,6 +45,8 @@ Continuous Types
 .. autofunction:: Frechet
 .. autofunction:: Gamma
 .. autofunction:: GammaInverse
+.. autofunction:: Gompertz
+.. autofunction:: Gumbel
 .. autofunction:: Kumaraswamy
 .. autofunction:: Laplace
 .. autofunction:: Logistic
@@ -57,6 +59,8 @@ Continuous Types
 .. autofunction:: RaisedCosine
 .. autofunction:: Rayleigh
 .. autofunction:: StudentT
+.. autofunction:: ShiftedGompertz
+.. autofunction:: Trapezoidal
 .. autofunction:: Triangular
 .. autofunction:: Uniform
 .. autofunction:: UniformSum

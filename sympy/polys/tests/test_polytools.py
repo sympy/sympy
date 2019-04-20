@@ -56,7 +56,7 @@ from sympy import (
     exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
 
 from sympy.core.basic import _aresame
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, PY3
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.simplify import simplify
@@ -1732,6 +1732,12 @@ def test_div():
     assert q.get_domain().is_Frac and r.get_domain().is_Frac
 
 
+def test_issue_7864():
+    q, r = div(a, .408248290463863*a)
+    assert abs(q - 2.44948974278318) < 1e-14
+    assert r == 0
+
+
 def test_gcdex():
     f, g = 2*x, x**2 - 16
     s, t, h = x/32, -Rational(1, 16), 1
@@ -2476,6 +2482,11 @@ def test_factor():
     assert factor(eq, x, deep=True) == (x + 3)*(x + 4)*(y**2 + 11*y + 30)
     assert factor(eq, y, deep=True) == (y + 5)*(y + 6)*(x**2 + 7*x + 12)
 
+    # fraction option
+    f = 5*x + 3*exp(2 - 7*x)
+    assert factor(f, deep=True) == factor(f, deep=True, fraction=True)
+    assert factor(f, deep=True, fraction=False) == 5*x + 3*exp(2)*exp(-7*x)
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
@@ -3214,12 +3225,17 @@ def test_keep_coeff():
     assert _keep_coeff(x + 1, S(2)) == u
 
 
-@XFAIL
+# @XFAIL
+# Seems to pass on Python 3.X, but not on Python 2.7
 def test_poly_matching_consistency():
     # Test for this issue:
     # https://github.com/sympy/sympy/issues/5514
     assert I * Poly(x, x) == Poly(I*x, x)
     assert Poly(x, x) * I == Poly(I*x, x)
+
+
+if not PY3:
+    test_poly_matching_consistency = XFAIL(test_poly_matching_consistency)
 
 
 @XFAIL

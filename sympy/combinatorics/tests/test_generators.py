@@ -1,6 +1,7 @@
-from sympy.combinatorics.generators import symmetric, cyclic, alternating, dihedral
+from sympy.combinatorics.generators import symmetric, cyclic, alternating, \
+    dihedral, rubik
 from sympy.combinatorics.permutations import Permutation
-
+from sympy.utilities.pytest import raises
 
 def test_generators():
 
@@ -100,3 +101,5 @@ def test_generators():
         Permutation([2, 1, 0, 4, 3]),
         Permutation([4, 0, 1, 2, 3]),
         Permutation([3, 2, 1, 0, 4])]
+
+    raises(ValueError, lambda: rubik(1))

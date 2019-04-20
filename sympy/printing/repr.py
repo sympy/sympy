@@ -48,9 +48,10 @@ class ReprPrinter(Printer):
         args = self._as_ordered_terms(expr, order=order)
         nargs = len(args)
         args = map(self._print, args)
+        clsname = type(expr).__name__
         if nargs > 255:  # Issue #10259, Python < 3.7
-            return "Add(*[%s])" % ", ".join(args)
-        return "Add(%s)" % ", ".join(args)
+            return clsname + "(*[%s])" % ", ".join(args)
+        return clsname + "(%s)" % ", ".join(args)
 
     def _print_Cycle(self, expr):
         return expr.__repr__()
@@ -138,9 +139,10 @@ class ReprPrinter(Printer):
 
         nargs = len(args)
         args = map(self._print, args)
+        clsname = type(expr).__name__
         if nargs > 255:  # Issue #10259, Python < 3.7
-            return "Mul(*[%s])" % ", ".join(args)
-        return "Mul(%s)" % ", ".join(args)
+            return clsname + "(*[%s])" % ", ".join(args)
+        return clsname + "(%s)" % ", ".join(args)
 
     def _print_Rational(self, expr):
         return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))

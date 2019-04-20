@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-        DiracDelta)
-from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, variance, covariance,
+        DiracDelta, Lambda, log, pi)
+from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
-        random_symbols, sample)
+        random_symbols, sample, Geometric)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, PSpace)
 from sympy.utilities.pytest import raises, XFAIL
@@ -106,6 +106,14 @@ def test_IndependentProductPSpace():
 
 def test_E():
     assert E(5) == 5
+
+def test_H():
+    X = Normal('X', 0, 1)
+    D = Die('D', sides = 4)
+    G = Geometric('G', 0.5)
+    assert H(X, X > 0) == -log(2)/2 + S(1)/2 + log(pi)/2
+    assert H(D, D > 2) == log(2)
+    assert H(G).evalf().round(2) == 1.39
 
 
 def test_Sample():
