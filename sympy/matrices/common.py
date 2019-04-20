@@ -2372,7 +2372,7 @@ class MatrixArithmetic(MatrixRequired):
         cross
         multiply_elementwise
         """
-        if not isinstance(other, Iterable):
+        if not other.is_Matrix:
             return self._eval_scalar_mul(other)
 
         if method == 'naive':
