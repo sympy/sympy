@@ -202,7 +202,7 @@ def canonicalize(x):
     """
     from sympy.core.compatibility import default_sort_key
 
-    # Flattening
+    # Associativity
     rule = condition(
             lambda x: isinstance(x, HadamardProduct),
             flatten
