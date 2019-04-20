@@ -1679,6 +1679,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('&#x1D7D8'))
         return x
 
+    def _print_OneMatrix(self, Z):
+        x = self.dom.createElement('mn')
+        x.appendChild(self.dom.createTextNode('&#x1D7D9'))
+        return x
+
     def _print_Identity(self, I):
         x = self.dom.createElement('mi')
         x.appendChild(self.dom.createTextNode('&#x1D540;'))
