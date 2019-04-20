@@ -1666,7 +1666,7 @@ class Basic(with_metaclass(ManagedProperties)):
         # Types are (base: array/matrix, self: scalar)
         # Base is some kind of array/matrix,
         # it should have `.applyfunc(lambda x: x.diff(self)` implemented:
-        return base._eval_derivative(self)
+        return base._eval_derivative_array(self)
 
     def _eval_derivative_n_times(self, s, n):
         # This is the default evaluator for derivatives (as called by `diff`

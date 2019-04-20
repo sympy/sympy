@@ -10,6 +10,7 @@ from sympy import MatAdd, Identity, MatMul, ZeroMatrix
 from sympy.matrices.expressions import hadamard_power
 
 k = symbols("k")
+i, j = symbols("i j")
 
 X = MatrixSymbol("X", k, k)
 x = MatrixSymbol("x", k, 1)
@@ -39,6 +40,13 @@ def _check_derivative_with_explicit_matrix(expr, x, diffexpr, dim=2):
     diffexpr = diffexpr.as_explicit()
 
     assert expr.diff(x).reshape(*diffexpr.shape).tomatrix() == diffexpr
+
+
+def test_matrix_derivative_by_scalar():
+    assert A.diff(i) == ZeroMatrix(k, k)
+    assert (A*(X + B)*c).diff(i) == ZeroMatrix(k, 1)
+    assert x.diff(i) == ZeroMatrix(k, 1)
+    assert (x.T*y).diff(i) == ZeroMatrix(1, 1)
 
 
 def test_matrix_derivative_non_matrix_result():
@@ -376,6 +384,9 @@ def test_derivatives_of_hadamard_expressions():
     # Hadamard Power
 
     expr = hadamard_power(x, 2)
+    assert expr.diff(x).doit() == 2*DiagonalizeVector(x)
+
+    expr = hadamard_power(x.T, 2)
     assert expr.diff(x).doit() == 2*DiagonalizeVector(x)
 
     expr = hadamard_power(x, S.Half)

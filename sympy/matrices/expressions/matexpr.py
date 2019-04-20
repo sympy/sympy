@@ -69,6 +69,7 @@ class MatrixExpr(Expr):
     is_commutative = False
     is_number = False
     is_symbol = False
+    is_scalar = False
 
     def __new__(cls, *args, **kwargs):
         args = map(_sympify, args)
@@ -197,7 +198,14 @@ class MatrixExpr(Expr):
         return Adjoint(self)
 
     def _eval_derivative(self, x):
-        return _matrix_derivative(self, x)
+        # x is a scalar:
+        return ZeroMatrix(self.shape[0], self.shape[1])
+
+    def _eval_derivative_array(self, x):
+        if isinstance(x, MatrixExpr):
+            return _matrix_derivative(self, x)
+        else:
+            return self._eval_derivative(x)
 
     def _eval_derivative_n_times(self, x, n):
         return Basic._eval_derivative_n_times(self, x, n)
@@ -1041,8 +1049,10 @@ class _LeftRightArgs(object):
         self._lines = [i for i in lines]
         self._first_pointer_parent = self._lines
         self._first_pointer_index = 0
+        self._first_line_index = 0
         self._second_pointer_parent = self._lines
         self._second_pointer_index = 1
+        self._second_line_index = 1
         self.higher = higher
 
     @property
@@ -1074,6 +1084,7 @@ class _LeftRightArgs(object):
     def transpose(self):
         self._first_pointer_parent, self._second_pointer_parent = self._second_pointer_parent, self._first_pointer_parent
         self._first_pointer_index, self._second_pointer_index = self._second_pointer_index, self._first_pointer_index
+        self._first_line_index, self._second_line_index = self._second_line_index, self._first_line_index
         return self
 
     @staticmethod
