@@ -2205,8 +2205,16 @@ class MatrixArithmetic(MatrixRequired):
     def __truediv__(self, other):
         return self.__div__(other)
 
-    def _eval_matrix_mul_strassen(self, other):
+    def _eval_matrix_mul_strassen(self, other, breakpoint=(1, 1)):
         """Strassen subroutine for matrix multiplication.
+
+        Parameters
+        ==========
+
+        breakpoint: tuple of two integers
+            If the matrix dimension is not greater than these
+            dimensions, it stops the recursion and uses the naive
+            matrix multiplication
 
         References
         ==========
@@ -2239,7 +2247,9 @@ class MatrixArithmetic(MatrixRequired):
 
         _strassen = MatrixArithmetic._eval_matrix_mul_strassen
 
-        if (a_rows, a_cols) == (1, 1) and (b_rows, b_cols) == (1, 1):
+        alpha, beta = breakpoint
+        if (a_rows <= alpha and a_cols <= beta and
+            b_rows <= beta and b_cols <= alpha):
             return self.multiply(other, method='naive')
 
         elif (a_rows.is_even and a_cols.is_even
