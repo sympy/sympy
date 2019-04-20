@@ -25,7 +25,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
     min_degrees[i] <= degree_list(monom)[i] <= max_degrees[i], for all i.
 
     Case I:: `max_degrees` and `min_degrees` are both integers.
-    ========
+    ===========================================================
     Given a set of variables `V` and a min_degree `N` and a max_degree `M`
     generate a set of monomials of degree less than or equal to `N` and greater
     than or equal to `M`. The total number of monomials in commutative
