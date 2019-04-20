@@ -68,10 +68,8 @@ class HadamardProduct(MatrixExpr):
         check = kwargs.get('check', True)
         if check:
             validate(*args)
-        if len(args) == 1:
-            return args[0]
-        else:
-            return super(HadamardProduct, cls).__new__(cls, *args)
+
+        return super(HadamardProduct, cls).__new__(cls, *args)
 
     @property
     def shape(self):
