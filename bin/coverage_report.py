@@ -59,7 +59,9 @@ def generate_covered_files(top_dir):
 
 
 def make_report(
-    source_dir, report_dir, test_args, use_cache=False, slow=False):
+    test_args, source_dir='sympy/', report_dir='covhtml', use_cache=False,
+    slow=False
+    ):
     # code adapted from /bin/test
     from get_sympy import path_hack
     sympy_top = path_hack()
@@ -90,10 +92,10 @@ def make_report(
 
     covered_files = list(generate_covered_files(source_dir))
 
-    if report_dir in os.listdir(os.curdir):
-        for f in os.listdir(report_dir):
-            if f.split('.')[-1] in ['html', 'css', 'js']:
-                os.remove(os.path.join(report_dir, f))
+    #if report_dir in os.listdir(os.curdir):
+    #    for f in os.listdir(report_dir):
+    #        if f.split('.')[-1] in ['html', 'css', 'js']:
+    #            os.remove(os.path.join(report_dir, f))
 
     cov.html_report(morfs=covered_files, directory=report_dir)
 
@@ -110,12 +112,11 @@ parser.add_argument(
 options, args = parser.parse_known_args()
 
 if __name__ == '__main__':
-    source_dir = 'sympy/'
     report_dir = options.report_dir
     use_cache = options.use_cache
     slow = options.slow
     make_report(
-        source_dir, report_dir, args, use_cache=use_cache, slow=slow)
+        args, report_dir=report_dir, use_cache=use_cache, slow=slow)
 
     print("The generated coverage report is in covhtml directory.")
     print(
