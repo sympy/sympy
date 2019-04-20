@@ -173,6 +173,8 @@ class Piecewise(Function):
 
         newargs = []  # the unevaluated conditions
         current_cond = set()  # the conditions up to a given e, c pair
+        existing_intervals = S.EmptySet  # keeps track of added intervals
+        
         # make conditions canonical
         args = []
         for e, c in _args:
@@ -275,6 +277,18 @@ class Piecewise(Function):
                     cond = S.true
 
             current_cond.add(cond)
+            
+            #   Does not add intervals which are already covered entirely by 
+            #   previous intervals (in terms of ordering of arguments)
+            #   Piecewise((0, t>=4), (0, t<3), (1, t<=2), (3, t<4))
+            #   >>> Piecewise((0, (t >= 4) | (t < 3)), (3, True))
+            from sympy import Intersection
+            cu_inter = cond.as_set()
+            inter = Intersection(existing_intervals, cu_inter)
+            if((cu_inter == inter)):
+                continue
+            else:
+                existing_intervals = existing_intervals.union(cu_inter)
 
             # collect successive e,c pairs when exprs or cond match
             if newargs:
