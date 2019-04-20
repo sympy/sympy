@@ -2237,7 +2237,7 @@ class MatrixArithmetic(MatrixRequired):
                 mat = cls.hstack(mat, cls.zeros(i_new, diff))
             return mat
 
-        _strasson = MatrixArithmetic._eval_matrix_mul_strassen
+        _strassen = MatrixArithmetic._eval_matrix_mul_strassen
 
         if (a_rows, a_cols) == (1, 1) and (b_rows, b_cols) == (1, 1):
             return self.multiply(other, method='naive')
@@ -2254,13 +2254,13 @@ class MatrixArithmetic(MatrixRequired):
             b21 = other[-b_rows//2:, :b_cols//2]
             b22 = other[-b_rows//2:, -b_cols//2:]
 
-            m1 = _strasson(a11 + a22, b11 + b22)
-            m2 = _strasson(a21 + a22, b11)
-            m3 = _strasson(a11, b12 - b22)
-            m4 = _strasson(a22, b21 - b11)
-            m5 = _strasson(a11 + a12, b22)
-            m6 = _strasson(a21 - a11, b11 + b12)
-            m7 = _strasson(a12 - a22, b21 + b22)
+            m1 = _strassen(a11 + a22, b11 + b22)
+            m2 = _strassen(a21 + a22, b11)
+            m3 = _strassen(a11, b12 - b22)
+            m4 = _strassen(a22, b21 - b11)
+            m5 = _strassen(a11 + a12, b22)
+            m6 = _strassen(a21 - a11, b11 + b12)
+            m7 = _strassen(a12 - a22, b21 + b22)
 
             c11 = m1 + m4 - m5 + m7
             c12 = m3 + m5
@@ -2279,7 +2279,7 @@ class MatrixArithmetic(MatrixRequired):
             a_new = _pad_zeros(self, a_rows, a_cols, a_rows_new, a_cols_new)
             b_new = _pad_zeros(other, b_rows, b_cols, b_rows_new, b_cols_new)
 
-            c_aug = _strasson(a_new, b_new)
+            c_aug = _strassen(a_new, b_new)
             return c_aug[:a_rows, :b_cols]
 
     def multiply(self, other, method='naive'):
