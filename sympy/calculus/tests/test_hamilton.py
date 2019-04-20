@@ -3,8 +3,11 @@ from sympy.utilities.pytest import raises
 from sympy.calculus.hamilton import hamilton_equations as hamilton
 
 
-def test_hamilton_error1():
+def test_hamilton_errors():
     # Test by giving the Hamiltonian Interface bad-functions
+    
+	# ERROR CASE: 1
+	# =============
     x = Function('x')
     p = Function('p')
     t = Symbol('t')
@@ -12,9 +15,9 @@ def test_hamilton_error1():
     h2 = x(p)**2 / 2 + p(t)**2 / 2
     raises(TypeError, lambda: hamilton(h1, x(t), p, t))
     raises(TypeError, lambda: hamilton(h2, x(t), p(t), t))
-
-
-def test_hamilton_error2():
+	
+	# ERROR CASE: 2
+	# =============
     x = Function('x')
     p = Function('p')
     t = Symbol('t')
@@ -22,8 +25,8 @@ def test_hamilton_error2():
     # Giving function instead of symbol as time
     raises(TypeError, lambda: hamilton(h, [x(t)], [p(t)], x(t)))
 
-
-def test_hamilton_error3():
+	# ERROR CASE: 3
+	# =============
     x = Function('x')
     p = Function('p')
     k = Symbol('k')
@@ -31,9 +34,9 @@ def test_hamilton_error3():
     h = x(k) ** 2 / 2 + p(k) ** 2 / 2
     # Giving function instead of symbol as time
     raises(ValueError, lambda: hamilton(h, [x(k)], [p(k)], t))
-
-
-def test_hamilton_error4():
+	
+	# ERROR CASE: 4
+	# =============
     x = Symbol('x')
     p = Symbol('p')
     t = Symbol('t')

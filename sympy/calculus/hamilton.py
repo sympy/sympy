@@ -8,7 +8,7 @@ from sympy.core.compatibility import (iterable, range)
 
 def hamilton_equations(H, coords, momenta, time):
     r"""
-    Find the Hamilton's equations [1]_ for a given Hamiltonian.
+    Find the Hamilton's equations for a given Hamiltonian.
 
     Parameters
     ==========
@@ -23,7 +23,7 @@ def hamilton_equations(H, coords, momenta, time):
         List of conjugate momentum coordinates that the Hamiltonian depends upon.
 
     time : Symbol
-        The Symbols used for time, here the only free variable in the equation.
+        The Symbol used for time, here the only free variable in the equation.
 
     Returns
     =======
@@ -68,8 +68,8 @@ def hamilton_equations(H, coords, momenta, time):
     funcs = list(zip(coords, momenta))
     for (coord, momentum) in funcs:
         eq = diff(H, coord) + diff(momentum, time)
-        equations.append(Eq(eq))
+        equations.append(Eq(eq, 0))
         eq = diff(H, momentum) - diff(coord, time)
-        equations.append(Eq(eq))
+        equations.append(Eq(eq, 0))
 
     return equations
