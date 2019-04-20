@@ -611,6 +611,7 @@ def get_postprocessor(cls):
         return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
     return _postprocessor
 
+
 Basic._constructor_postprocessor_mapping[MatrixExpr] = {
     "Mul": [get_postprocessor(Mul)],
     "Add": [get_postprocessor(Add)],
@@ -622,6 +623,10 @@ def _matrix_derivative(expr, x):
     lines = expr._eval_derivative_matrix_lines(x)
 
     parts = [i.build() for i in lines]
+
+    from sympy.codegen.array_utils import recognize_matrix_expression
+
+    parts = [[recognize_matrix_expression(j).doit() for j in i] for i in parts]
 
     def _get_shape(elem):
         if isinstance(elem, MatrixExpr):
@@ -975,6 +980,45 @@ class GenericZeroMatrix(ZeroMatrix):
         return super(GenericZeroMatrix, self).__hash__()
 
 
+class OneMatrix(MatrixExpr):
+    """
+    Matrix whose all entries are ones.
+    """
+    def __new__(cls, m, n):
+        obj = super(OneMatrix, cls).__new__(cls, m, n)
+        return obj
+
+    @property
+    def shape(self):
+        return self._args
+
+    def as_explicit(self):
+        from sympy import ImmutableDenseMatrix
+        return ImmutableDenseMatrix.ones(*self.shape)
+
+    def _eval_transpose(self):
+        return OneMatrix(self.cols, self.rows)
+
+    def _eval_trace(self):
+        return S.One*self.rows
+
+    def _eval_determinant(self):
+        condition = Eq(self.shape[0], 1) & Eq(self.shape[1], 1)
+        if condition == True:
+            return S.One
+        elif condition == False:
+            return S.Zero
+        else:
+            from sympy import Determinant
+            return Determinant(self)
+
+    def conjugate(self):
+        return self
+
+    def _entry(self, i, j, **kwargs):
+        return S.One
+
+
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
 
@@ -1088,6 +1132,27 @@ class _LeftRightArgs(object):
             rank += 2
         return rank
 
+    def _multiply_pointer(self, pointer, other):
+        from sympy.core.expr import ExprBuilder
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+
+        subexpr = ExprBuilder(
+            CodegenArrayContraction,
+            [
+                ExprBuilder(
+                    CodegenArrayTensorProduct,
+                    [
+                        pointer,
+                        other
+                    ]
+                ),
+                (1, 2)
+            ],
+            validator=CodegenArrayContraction._validate
+        )
+
+        return subexpr
+
     def append_first(self, other):
         self.first_pointer *= other
 
@@ -1101,6 +1166,13 @@ class _LeftRightArgs(object):
         if not isinstance(other, _LeftRightArgs):
             return False
         return (self.first == other.first) and (self.second == other.second)
+
+
+def _make_matrix(x):
+    from sympy import ImmutableDenseMatrix
+    if isinstance(x, MatrixExpr):
+        return x
+    return ImmutableDenseMatrix([[x]])
 
 
 from .matmul import MatMul

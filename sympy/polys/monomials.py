@@ -73,7 +73,7 @@ def itermonomials(variables, max_degree, min_degree = 0):
             for variable in item:
                 if variable != 1:
                     powers[variable] += 1
-            if max(powers.values()) >= min_degree:
+            if sum(powers.values()) >= min_degree:
                 monomials_list_comm.append(Mul(*item))
         return set(monomials_list_comm)
     else:
@@ -85,7 +85,7 @@ def itermonomials(variables, max_degree, min_degree = 0):
             for variable in item:
                 if variable != 1:
                     powers[variable] += 1
-            if max(powers.values()) >= min_degree:
+            if sum(powers.values()) >= min_degree:
                 monomials_list_non_comm.append(Mul(*item))
         return set(monomials_list_non_comm)
 

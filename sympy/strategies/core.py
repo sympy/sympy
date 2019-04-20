@@ -32,7 +32,7 @@ def condition(cond, rule):
         if cond(expr):
             return rule(expr)
         else:
-            return      expr
+            return expr
     return conditioned_rl
 
 def chain(*rules):
@@ -94,8 +94,6 @@ def switch(key, ruledict):
         rl = ruledict.get(key(expr), identity)
         return rl(expr)
     return switch_rl
-
-identity = lambda x: x
 
 def minimize(*rules, **kwargs):
     """ Select result of rules that minimizes objective

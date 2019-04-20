@@ -235,7 +235,7 @@ class BlockMatrix(MatrixExpr):
         """
         return self._eval_transpose()
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         # Find row entry
         for row_block, numrows in enumerate(self.rowblocksizes):
             if (i < numrows) != False:

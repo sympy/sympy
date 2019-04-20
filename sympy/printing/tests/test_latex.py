@@ -1579,21 +1579,61 @@ def test_Adjoint():
     assert latex(Adjoint(Transpose(X))) == r'\left(X^{T}\right)^{\dagger}'
     assert latex(Transpose(Adjoint(X))) == r'\left(X^{\dagger}\right)^{T}'
     assert latex(Transpose(Adjoint(X) + Y)) == r'\left(X^{\dagger} + Y\right)^{T}'
+
+
+def test_Transpose():
+    from sympy.matrices import Transpose, MatPow, HadamardPower
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
     assert latex(Transpose(X)) == r'X^{T}'
     assert latex(Transpose(X + Y)) == r'\left(X + Y\right)^{T}'
 
+    assert latex(Transpose(HadamardPower(X, 2))) == \
+        r'\left(X^{\circ {2}}\right)^{T}'
+    assert latex(HadamardPower(Transpose(X), 2)) == \
+        r'\left(X^{T}\right)^{\circ {2}}'
+    assert latex(Transpose(MatPow(X, 2))) == \
+        r'\left(X^{2}\right)^{T}'
+    assert latex(MatPow(Transpose(X), 2)) == \
+        r'\left(X^{T}\right)^{2}'
+
 
 def test_Hadamard():
-    from sympy.matrices import MatrixSymbol, HadamardProduct
+    from sympy.matrices import MatrixSymbol, HadamardProduct, HadamardPower
+    from sympy.matrices.expressions import MatAdd, MatMul, MatPow
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert latex(HadamardProduct(X, Y*Y)) == r'X \circ Y^{2}'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
 
+    assert latex(HadamardPower(X, 2)) == r'X^{\circ {2}}'
+    assert latex(HadamardPower(X, -1)) == r'X^{\circ {-1}}'
+    assert latex(HadamardPower(MatAdd(X, Y), 2)) == \
+        r'\left(X + Y\right)^{\circ {2}}'
+    assert latex(HadamardPower(MatMul(X, Y), 2)) == \
+        r'\left(X Y\right)^{\circ {2}}'
+
+    assert latex(HadamardPower(MatPow(X, -1), -1)) == \
+        r'\left(X^{-1}\right)^{\circ {-1}}'
+    assert latex(MatPow(HadamardPower(X, -1), -1)) == \
+        r'\left(X^{\circ {-1}}\right)^{-1}'
+
+
+def test_ElementwiseApplyFunction():
+    from sympy.matrices import MatrixSymbol
+    X = MatrixSymbol('X', 2, 2)
+    expr = (X.T*X).applyfunc(sin)
+    assert latex(expr) == r"\sin\left({X^{T} X}\ldots\right)"
+
 
 def test_ZeroMatrix():
     from sympy import ZeroMatrix
     assert latex(ZeroMatrix(1, 1)) == r"\mathbb{0}"
+
+
+def test_OneMatrix():
+    from sympy import OneMatrix
+    assert latex(OneMatrix(3, 4)) == r"\mathbb{1}"
 
 
 def test_Identity():

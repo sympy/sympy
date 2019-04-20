@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Mul, sympify
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
+from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, Identity
 from sympy.strategies import unpack, flatten, condition, exhaust, do_one
 
 
@@ -59,8 +59,8 @@ class HadamardProduct(MatrixExpr):
     def shape(self):
         return self.args[0].shape
 
-    def _entry(self, i, j):
-        return Mul(*[arg._entry(i, j) for arg in self.args])
+    def _entry(self, i, j, **kwargs):
+        return Mul(*[arg._entry(i, j, **kwargs) for arg in self.args])
 
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose
@@ -68,6 +68,48 @@ class HadamardProduct(MatrixExpr):
 
     def doit(self, **ignored):
         return canonicalize(self)
+
+    def _eval_derivative_matrix_lines(self, x):
+        from sympy.core.expr import ExprBuilder
+        from sympy.codegen.array_utils import CodegenArrayDiagonal, CodegenArrayTensorProduct
+        from sympy.matrices.expressions.matexpr import _make_matrix
+
+        with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
+        lines = []
+        for ind in with_x_ind:
+            left_args = self.args[:ind]
+            right_args = self.args[ind+1:]
+
+            d = self.args[ind]._eval_derivative_matrix_lines(x)
+            hadam = hadamard_product(*(right_args + left_args))
+            diagonal = [(0, 2), (3, 4)]
+            diagonal = [e for j, e in enumerate(diagonal) if self.shape[j] != 1]
+            for i in d:
+                ptr1 = i.first_pointer
+                ptr2 = i.second_pointer
+                subexpr = ExprBuilder(
+                    CodegenArrayDiagonal,
+                    [
+                        ExprBuilder(
+                            CodegenArrayTensorProduct,
+                            [
+                                ExprBuilder(_make_matrix, [i._lines[0]]),
+                                hadam,
+                                ExprBuilder(_make_matrix, [i._lines[1]]),
+                            ]
+                        ),
+                    ] + diagonal,  # turn into *diagonal after dropping Python 2.7
+
+                )
+                i._first_pointer_parent = subexpr.args[0].args[0].args
+                i._first_pointer_index = 0
+                i._second_pointer_parent = subexpr.args[0].args[2].args
+                i._second_pointer_index = 0
+                i._lines = [subexpr]
+                lines.append(i)
+
+        return lines
+
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
@@ -120,8 +162,41 @@ class HadamardPower(MatrixExpr):
         return self.base.shape
 
     def _entry(self, i, j, **kwargs):
-        return self.base[i, j]**self.exp
+        return self.base._entry(i, j, **kwargs)**self.exp
 
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose
         return HadamardPower(transpose(self.base), self.exp)
+
+    def _eval_derivative_matrix_lines(self, x):
+        from sympy.codegen.array_utils import CodegenArrayTensorProduct
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayDiagonal
+        from sympy.core.expr import ExprBuilder
+        from sympy.matrices.expressions.matexpr import _make_matrix
+
+        lr = self.base._eval_derivative_matrix_lines(x)
+        for i in lr:
+            ptr1 = i.first_pointer
+            ptr2 = i.second_pointer
+            diagonal = [(1, 2), (3, 4)]
+            diagonal = [e for j, e in enumerate(diagonal) if self.base.shape[j] != 1]
+            subexpr = ExprBuilder(
+                CodegenArrayDiagonal,
+                [
+                    ExprBuilder(
+                        CodegenArrayTensorProduct,
+                        [
+                            ExprBuilder(_make_matrix, [ptr1]),
+                            self.exp*hadamard_power(self.base, self.exp-1),
+                            ExprBuilder(_make_matrix, [ptr2]),
+                        ]
+                    ),
+                ] + diagonal,  # turn into *diagonal after dropping Python 2.7
+                validator=CodegenArrayDiagonal._validate
+            )
+            i._first_pointer_parent = subexpr.args[0].args[0].args
+            i._first_pointer_index = 0
+            i._second_pointer_parent = subexpr.args[0].args[2].args
+            i._second_pointer_index = 2
+            i._lines = [subexpr]
+        return lr
