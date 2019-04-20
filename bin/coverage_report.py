@@ -58,7 +58,8 @@ def generate_covered_files(top_dir):
                 yield os.path.join(dirpath, filename)
 
 
-def make_report(source_dir, report_dir, use_cache=False, slow=False):
+def make_report(
+    source_dir, report_dir, test_args, use_cache=False, slow=False):
     # code adapted from /bin/test
     from get_sympy import path_hack
     sympy_top = path_hack()
@@ -74,12 +75,18 @@ def make_report(source_dir, report_dir, use_cache=False, slow=False):
         cov.erase()
         cov.start()
         import sympy
-        sympy.test(source_dir, subprocess=False)
-        if slow:
-            sympy.test(source_dir, subprocess=False, slow=slow)
+        sympy.test(*test_args, subprocess=False, slow=slow)
         #sympy.doctest()  # coverage doesn't play well with doctests
         cov.stop()
-        cov.save()
+        try:
+            cov.save()
+        except PermissionError:
+            import warnings
+            warnings.warn(
+                "PermissionError has been raised while saving the " \
+                "coverage result.",
+                RuntimeWarning
+            )
 
     covered_files = list(generate_covered_files(source_dir))
 
@@ -103,15 +110,12 @@ parser.add_argument(
 options, args = parser.parse_known_args()
 
 if __name__ == '__main__':
-    if args:
-        source_dir = args[0]
-    else:
-        source_dir = 'sympy/'
-
+    source_dir = 'sympy/'
     report_dir = options.report_dir
     use_cache = options.use_cache
     slow = options.slow
-    make_report(source_dir, report_dir, use_cache=use_cache, slow=slow)
+    make_report(
+        source_dir, report_dir, args, use_cache=use_cache, slow=slow)
 
     print("The generated coverage report is in covhtml directory.")
     print(
