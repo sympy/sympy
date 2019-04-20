@@ -2228,7 +2228,39 @@ class MatrixArithmetic(MatrixRequired):
 
         .. [1] https://en.wikipedia.org/wiki/Strassen_algorithm#Implementation_considerations
         """
-        raise NotImplementedError()
+        a_rows, a_cols = sympify(self.shape)
+        b_rows, b_cols = sympify(other.shape)
+
+        def _find_new_dim(i):
+            """Helper function to find minimal 2^n that is greater than
+            the input integer, where n is a positive integer.
+            """
+            return ceiling(log(i, 2))
+
+        def _pad_zeros(mat, i_old, j_old, i_new, j_new):
+            """Helper function to pad zeros to the matrix
+            """
+            cls = mat.__class__
+            if i_new > i_old:
+                diff = i_new - i_old
+                mat = cls.vstack(mat, cls.zeros(diff, j_old))
+            if j_new > j_old:
+                diff = j_new - j_old
+                mat = cls.hstack(mat, cls.zeros(i_new, diff))
+            return mat
+
+        from sympy.functions.elementary.miscellaneous import Max
+        new_dim = Max(
+            map(_find_new_dim, [a_rows, a_cols, b_rows, b_cols])
+        )
+
+        A_aug = _pad_zeros(self, a_rows, new_dim, a_cols, new_dim)
+        B_aug = _pad_zeros(other, a_rows, new_dim, a_cols, new_dim)
+
+        _strassen = MatrixArithmetic._eval_matrix_mul_strassen
+        ret = _strassen(A_aug, B_aug)
+        return ret[:a_rows, :b_cols]
+
 
     def _eval_matrix_mul_strassen(self, other, breakpoint=(1, 1)):
         """Strassen subroutine for matrix multiplication.
