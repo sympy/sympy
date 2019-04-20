@@ -5,7 +5,7 @@ from sympy.calculus.hamilton import hamilton_equations as hamilton
 
 def test_hamilton_errors():
     # Test by giving the Hamiltonian Interface bad-functions
-    
+
 	# ERROR CASE: 1
 	# =============
     x = Function('x')
