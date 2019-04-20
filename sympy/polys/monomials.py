@@ -67,7 +67,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
 
 
     Case II:: `max_degrees` and `min_degrees` are both lists.
-    ========
+    =========================================================
     If max_degrees = [d_1, ..., d_n] and min_degrees = [e_1, ..., e_n],
     the number of monomials generated is:
 
