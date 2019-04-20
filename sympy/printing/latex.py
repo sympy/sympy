@@ -1598,7 +1598,7 @@ class LatexPrinter(Printer):
         return r"\mathbb{0}"
 
     def _print_OneMatrix(self, O):
-        return r"{\mathbb{1}_{%s, %s}}" % (O.rows, O.cols)
+        return r"\mathbb{1}"
 
     def _print_Identity(self, I):
         return r"\mathbb{I}"

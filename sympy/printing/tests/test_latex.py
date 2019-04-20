@@ -1633,7 +1633,7 @@ def test_ZeroMatrix():
 
 def test_OneMatrix():
     from sympy import OneMatrix
-    assert latex(OneMatrix(3, 4)) == r"{\mathbb{1}_{3, 4}}"
+    assert latex(OneMatrix(3, 4)) == r"\mathbb{1}"
 
 
 def test_Identity():
