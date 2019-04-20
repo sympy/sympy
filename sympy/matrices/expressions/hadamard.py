@@ -230,11 +230,10 @@ def canonicalize(x):
             return ZeroMatrix(*x.shape)
         else:
             return x
-    rule = condition(
+    fun = condition(
             lambda x: isinstance(x, HadamardProduct),
             absorb
         )
-    fun = exhaust(rule)
     x = fun(x)
 
     # Unpacking
