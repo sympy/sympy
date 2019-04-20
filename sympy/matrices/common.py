@@ -2305,8 +2305,11 @@ class MatrixArithmetic(MatrixRequired):
         cross
         multiply_elementwise
         """
+        if not isinstance(other, Iterable):
+            return self._eval_scalar_mul(other)
+
         if method == 'naive':
-            return self * other
+            return self._eval_matrix_mul(other)
         elif method == 'strassen':
             return self._eval_matrix_mul_strassen(other)
         else:
