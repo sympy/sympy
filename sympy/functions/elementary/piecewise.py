@@ -164,7 +164,7 @@ class Piecewise(Function):
         If there is a single arg with a True condition, its
         corresponding expression will be returned.
         """
-
+        from sympy import Intersection, EmptySet
         if not _args:
             return Undefined
 
@@ -174,10 +174,14 @@ class Piecewise(Function):
         newargs = []  # the unevaluated conditions
         current_cond = set()  # the conditions up to a given e, c pair
         existing_intervals = S.EmptySet  # keeps track of added intervals
-        
-        # make conditions canonical
+
+        # make conditions canonical and count the number of variables
         args = []
+        symbols = []
         for e, c in _args:
+            #Counts free symbols(variables)
+            if((c.free_symbols not in symbols) and (c.free_symbols) != set()):
+                symbols.append(c.free_symbols)
             if not c.is_Atom and not isinstance(c, Relational):
                 free = c.free_symbols
                 if len(free) == 1:
@@ -277,18 +281,23 @@ class Piecewise(Function):
                     cond = S.true
 
             current_cond.add(cond)
-            
-            #   Does not add intervals which are already covered entirely by 
+
+            #   Does not add intervals which are already covered entirely by
             #   previous intervals (in terms of ordering of arguments)
             #   Piecewise((0, t>=4), (0, t<3), (1, t<=2), (3, t<4))
             #   >>> Piecewise((0, (t >= 4) | (t < 3)), (3, True))
-            from sympy import Intersection
-            cu_inter = cond.as_set()
-            inter = Intersection(existing_intervals, cu_inter)
-            if((cu_inter == inter)):
-                continue
-            else:
-                existing_intervals = existing_intervals.union(cu_inter)
+            #   (Feature implemented for 1 variable Piecewise only)
+            if(len(symbols)<2):
+                try:
+                    cu_inter = cond.as_set()      #current condition
+                    if(cu_inter != EmptySet() and not(isinstance(cond, Symbol))):
+                        inter = Intersection(existing_intervals, cu_inter)
+                        if((cu_inter == inter)):
+                            continue
+                        else:
+                            existing_intervals = existing_intervals.union(cu_inter)
+                except:
+                    pass
 
             # collect successive e,c pairs when exprs or cond match
             if newargs:
