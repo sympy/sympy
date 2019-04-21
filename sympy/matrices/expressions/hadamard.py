@@ -131,6 +131,8 @@ def validate(*args):
             raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
 
+# TODO Implement algorithm for rewriting Hadamard product as diagonal matrix
+# if matmul identy matrix is multiplied.
 def canonicalize(x):
     """Canonicalize the Hadamard product ``x`` with mathematical properties.
 
