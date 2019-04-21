@@ -250,8 +250,7 @@ def canonicalize(x):
             else:
                 new_arg.append(HadamardPower(base, exp))
 
-        from sympy.strategies.util import new
-        x = new(x.__class__, *new_arg)
+        x = HadamardProduct(*new_arg)
 
     # Commutativity
     fun = condition(
