@@ -2302,7 +2302,9 @@ class MatrixArithmetic(MatrixRequired):
                 mat = cls.hstack(mat, cls.zeros(i_new, diff))
             return mat
 
-        _strassen = MatrixArithmetic._eval_matrix_mul_strassen
+        _strassen = \
+            lambda A, B: MatrixArithmetic._eval_matrix_mul_strassen(
+                A, B, breakpoint=breakpoint)
 
         alpha, beta = breakpoint
         if (a_rows <= alpha and a_cols <= beta and
