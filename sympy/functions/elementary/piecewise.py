@@ -282,7 +282,7 @@ class Piecewise(Function):
 
             current_cond.add(cond)
 
-            #   Does not add intervals which are already covered entirely by 
+            #   Does not add intervals which are already covered entirely by
             #   previous intervals (in terms of ordering of arguments)
             #   Piecewise((0, t>=4), (0, t<3), (1, t<=2), (3, t<4))
             #   >>> Piecewise((0, (t >= 4) | (t < 3)), (3, True))
