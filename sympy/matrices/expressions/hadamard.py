@@ -144,12 +144,12 @@ def canonicalize(x):
     >>> A = MatrixSymbol('A', 2, 2)
     >>> B = MatrixSymbol('B', 2, 2)
     >>> C = MatrixSymbol('C', 2, 2)
-    >>> Z = ZeroMatrix(2, 2)
-    >>> O = OneMatrix(2, 2)
 
     Hadamard product associativity:
 
     >>> X = HadamardProduct(A, HadamardProduct(B, C))
+    >>> X
+    A.*(B.*C)
     >>> canonicalize(X)
     A.*B.*C
 
@@ -162,15 +162,23 @@ def canonicalize(x):
 
     Hadamard product identity:
 
-    >>> X = HadamardProduct(A, O)
+    >>> X = HadamardProduct(A, OneMatrix(2, 2))
     >>> canonicalize(X) == A
     True
 
     Absorbing element of Hadamard product:
 
-    >>> X = HadamardProduct(A, Z)
-    >>> canonicalize(X) == Z
+    >>> X = HadamardProduct(A, ZeroMatrix(2, 2))
+    >>> canonicalize(X) == ZeroMatrix(2, 2)
     True
+
+    Rewriting to Hadamard Power
+
+    >>> X = HadamardProduct(A, A, A)
+    >>> X
+    A.*A.*A
+    >>> canonicalize(X)
+    A.**3
 
     Notes
     =====
