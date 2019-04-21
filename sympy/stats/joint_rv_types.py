@@ -31,7 +31,10 @@ def JointRV(symbol, pdf, _set=None):
     NOTE: As of now, the set for each component for a `JointRV` is
     equal to the set of all integers, which can not be changed.
 
-    Returns a RandomSymbol.
+    Returns
+    =======
+
+     A RandomSymbol.
 
     Examples
     ========
@@ -72,10 +75,16 @@ class MultivariateNormalDistribution(JointDistribution):
 
     @property
     def set(self):
+        """Return the set for Multivariate Normal Distribution"""
         k = len(self.mu)
         return S.Reals**k
 
     def check(self, mu, sigma):
+        """
+        Check the lengths of mu and sigma.col(0) are equal
+        and covariance matrix is positive definite
+
+        """
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the mean vector and covariance matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
@@ -83,6 +92,7 @@ class MultivariateNormalDistribution(JointDistribution):
             "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
+        """PDF for Multivariate Normal Distribution"""
         mu, sigma = self.mu, self.sigma
         k = len(mu)
         args = ImmutableMatrix(args)
@@ -92,6 +102,7 @@ class MultivariateNormalDistribution(JointDistribution):
                 x))[0]
 
     def marginal_distribution(self, indices, sym):
+        """Marginal Distribution for Multivariate Normal Distribution"""
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
         _mu, _sigma = self.mu, self.sigma
         k = len(self.mu)
@@ -113,10 +124,16 @@ class MultivariateLaplaceDistribution(JointDistribution):
 
     @property
     def set(self):
+        """Return the set for MultiVariate Laplace Distribution"""
         k = len(self.mu)
         return S.Reals**k
 
     def check(self, mu, sigma):
+        """
+        Check the length of mu and sigma.col(0) are equal
+        and covariance matrix is positive definite
+
+        """
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the mean vector and covariance matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
@@ -124,6 +141,17 @@ class MultivariateLaplaceDistribution(JointDistribution):
             "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
+        """
+        PDF for MultiVariate Laplace Distribution
+
+        Imports
+        =======
+        besselk from sympy.functions.special.bessel
+
+        Returns
+        =======
+        A PDF expression
+        """
         from sympy.functions.special.bessel import besselk
         mu, sigma = self.mu, self.sigma
         mu_T = mu.transpose()
@@ -148,10 +176,16 @@ class MultivariateTDistribution(JointDistribution):
 
     @property
     def set(self):
+        """Return the set for MultiVariate T Distribution"""
         k = len(self.mu)
         return S.Reals**k
 
     def check(self, mu, sigma, v):
+        """
+        Check the length of mu and sigma.col(0) are equal
+        and shape matrix is positive definite
+
+        """
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the location vector and shape matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
@@ -159,6 +193,17 @@ class MultivariateTDistribution(JointDistribution):
             "The shape matrix must be positive definite. ")
 
     def pdf(self, *args):
+        """
+        PDF for MultiVariate T Distribution
+
+        Imports
+        =======
+        gamma from sympy.functions.special.gamma_functions
+
+        Returns
+        =======
+        A PDF expression
+        """
         from sympy.functions.special.gamma_functions import gamma
         mu, sigma = self.mu, self.shape_mat
         v = S(self.dof)
@@ -171,15 +216,15 @@ class MultivariateTDistribution(JointDistribution):
 
 def MultivariateT(syms, mu, sigma, v):
     """
-    Creates a joint random variable with multivariate T-distribution.
+    Create a joint random variable with MultiVariate T Distribution.
 
     Parameters
     ==========
 
-    syms: list/tuple/set of symbols for identifying each component
-    mu: A list/tuple/set consisting of k means,represents a k
+    syms, list/tuple/set of symbols for identifying each component
+    mu, A list/tuple/set consisting of k means,represents a k
         dimensional location vector
-    sigma: The shape matrix for the distribution
+    sigma, The shape matrix for the distribution
 
     Returns
     =======
@@ -198,6 +243,7 @@ class NormalGammaDistribution(JointDistribution):
     is_Continuous=True
 
     def check(self, mu, lamda, alpha, beta):
+        """Check mu is real and lambda, alpha, beta are positive"""
         _value_check(mu.is_real, "Location must be real.")
         _value_check(lamda > 0, "Lambda must be positive")
         _value_check(alpha > 0, "alpha must be positive")
@@ -205,10 +251,31 @@ class NormalGammaDistribution(JointDistribution):
 
     @property
     def set(self):
+        """
+        Reutrn a set for Normal Gamma Distribution
+
+        Imports
+        =======
+
+        Interval from sympy.sets.sets
+        """
         from sympy.sets.sets import Interval
         return S.Reals*Interval(0, S.Infinity)
 
     def pdf(self, x, tau):
+        """
+        PDF for Normal Gamma Distribution
+
+        Imports
+        =======
+
+        gamma from sympy.functions.special.gamma_functions
+
+        Returns
+        =======
+
+        A PDF expression
+        """
         from sympy.functions.special.gamma_functions import gamma
         beta, alpha, lamda = self.beta, self.alpha, self.lamda
         mu = self.mu
@@ -218,6 +285,20 @@ class NormalGammaDistribution(JointDistribution):
         exp(-1*(lamda*tau*(x - mu)**2)/S(2))
 
     def marginal_distribution(self, indices, *sym):
+        """
+        Marginal distribution for Multivariate Normal Distribution
+
+        Imports
+        =======
+
+        gamma from sympy.functions.special.gamma_functions
+        GammaDistribution from sympy.stats.crv_types
+
+        Returns
+        =======
+
+        A Lambda with marginal distribution
+        """
         from sympy.functions.special.gamma_functions import gamma
         if len(indices) == 2:
             return self.pdf(*sym)
@@ -235,17 +316,17 @@ class NormalGammaDistribution(JointDistribution):
 
 def NormalGamma(syms, mu, lamda, alpha, beta):
     """
-    Creates a bivariate joint random variable with multivariate Normal gamma
-    distribution.
+    Creates a bivariate joint random variable with Multivariate Normal Gamma
+    Distribution.
 
     Parameters
     ==========
 
-    syms: list/tuple/set of two symbols for identifying each component
-    mu: A real number, as the mean of the normal distribution
-    alpha: a positive integer
-    beta: a positive integer
-    lamda: a positive integer
+    syms, list/tuple/set of two symbols for identifying each component
+    mu, A real number, as the mean of the normal distribution
+    alpha, a positive integer
+    beta, a positive integer
+    lamda, a positive integer
 
     Returns
     =======

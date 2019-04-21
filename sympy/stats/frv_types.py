@@ -3,6 +3,7 @@ Finite Discrete Random Variables - Prebuilt variable types
 
 Contains
 ========
+
 FiniteRV
 DiscreteUniform
 Die
@@ -35,6 +36,19 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
         return self.args[0]
 
     def __new__(cls, density):
+        """
+        Create new Object of class FiniteDistributionHandmade
+
+        Raises
+        ======
+
+        ValueError if sum(density.values) != 1
+
+        Returns
+        =======
+
+        A new class object
+        """
         density = Dict(density)
         for k in density.values():
             k_sym = sympify(k)
@@ -47,9 +61,12 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
 
 def FiniteRV(name, density):
     """
-    Create a Finite Random Variable given a dict representing the density.
+    Finite Random Variable given a dict representing the density.
 
     Returns a RandomSymbol.
+
+    Examples
+    ========
 
     >>> from sympy.stats import FiniteRV, P, E
 
@@ -78,6 +95,15 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
         return self.args
 
     def pdf(self, x):
+        """
+        Probability Density Function for Discrete Uniform Distribution
+
+        Returns
+        =======
+
+        A PDF expression if x in args
+        0 otherwise
+        """
         if x in self.args:
             return self.p
         else:
@@ -119,6 +145,19 @@ class DieDistribution(SingleFiniteDistribution):
     _argnames = ('sides',)
 
     def __new__(cls, sides):
+        """
+        Create new Object of class DieDistribution
+
+        Raises
+        ======
+
+        ValueError if sides is not a positive integer
+
+        Returns
+        =======
+
+        A new class object
+        """
         sides_sym = sympify(sides)
         if fuzzy_not(fuzzy_and((sides_sym.is_integer, sides_sym.is_positive))):
             raise ValueError("'sides' must be a positive integer.")
@@ -136,6 +175,20 @@ class DieDistribution(SingleFiniteDistribution):
         return list(map(Integer, list(range(1, self.sides + 1))))
 
     def pdf(self, x):
+        """
+        Probability Density Function for Die Distribution
+
+        Raises
+        ======
+
+        ValueError if x is Symbol
+
+        Returns
+        =======
+
+        A PDF expression if x is Integer
+        0 otherwise
+        """
         x = sympify(x)
         if x.is_number:
             if x.is_Integer and x >= 1 and x <= self.sides:
@@ -175,6 +228,19 @@ class BernoulliDistribution(SingleFiniteDistribution):
     _argnames = ('p', 'succ', 'fail')
 
     def __new__(cls, *args):
+        """
+        Create new Object of class BernoulliDistribution
+
+        Raises
+        ======
+
+        ValueError if p is not in range [0,1]
+
+        Returns
+        =======
+
+        A new class object
+        """
         p = args[BernoulliDistribution._argnames.index('p')]
         p_sym = sympify(p)
 
@@ -260,6 +326,19 @@ class BinomialDistribution(SingleFiniteDistribution):
     _argnames = ('n', 'p', 'succ', 'fail')
 
     def __new__(cls, *args):
+        """
+        Create new Object of class BinomialDistribution
+
+        Raises
+        ======
+
+        ValueError if n is not a positive integer or p is not between 0 and 1
+
+        Returns
+        =======
+
+        A new class object
+        """
         n = args[BinomialDistribution._argnames.index('n')]
         p = args[BinomialDistribution._argnames.index('p')]
         n_sym = sympify(n)
@@ -299,6 +378,7 @@ def Binomial(name, n, p, succ=1, fail=0):
 
     References
     ==========
+
 
     .. [1] https://en.wikipedia.org/wiki/Binomial_distribution
     .. [2] http://mathworld.wolfram.com/BinomialDistribution.html
@@ -373,7 +453,6 @@ def Rademacher(name):
 
     See Also
     ========
-
     sympy.stats.Bernoulli
 
     References

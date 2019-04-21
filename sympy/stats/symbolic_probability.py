@@ -35,6 +35,14 @@ class Probability(Expr):
     sqrt(2)*(-sqrt(2)*sqrt(pi)*erf(sqrt(2)/2) + sqrt(2)*sqrt(pi))/(4*sqrt(pi))
     """
     def __new__(cls, prob, condition=None, **kwargs):
+        """
+        Create a new object of the Probability class
+
+        Returns
+        =======
+
+        A new object
+        """
         prob = _sympify(prob)
         if condition is None:
             obj = Expr.__new__(cls, prob)
@@ -45,11 +53,13 @@ class Probability(Expr):
         return obj
 
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
+        """Return the expression in form of Integral"""
         return probability(arg, condition, evaluate=False)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
+        """Return the result after evaluating the integral"""
         return self.rewrite(Integral).doit()
 
 
@@ -100,6 +110,14 @@ class Expectation(Expr):
     """
 
     def __new__(cls, expr, condition=None, **kwargs):
+        """
+        Create a new object of the expectation class
+
+        Returns
+        =======
+
+        A new object
+        """
         expr = _sympify(expr)
         if condition is None:
             if not expr.has(RandomSymbol):
@@ -112,6 +130,7 @@ class Expectation(Expr):
         return obj
 
     def doit(self, **hints):
+        """Return the result after solving the expression"""
         expr = self.args[0]
         condition = self._condition
 
@@ -133,6 +152,20 @@ class Expectation(Expr):
         return self
 
     def _eval_rewrite_as_Probability(self, arg, condition=None, **kwargs):
+        """
+        Return the expression rewritten in form of probability function
+
+        Raises
+        ======
+
+        NotImplementedError if len(rvs) > 1
+        ValueError if pspace is None
+
+        Returns
+        =======
+
+        An expression in form of probability fuction
+        """
         rvs = arg.atoms(RandomSymbol)
         if len(rvs) > 1:
             raise NotImplementedError()
@@ -158,11 +191,13 @@ class Expectation(Expr):
                 return Sum(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.set.sup))
 
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
+        """Return the expresison in form of Integral"""
         return expectation(arg, condition=condition, evaluate=False)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
+        """Return the resut of evaluating integral expression"""
         return self.rewrite(Integral).doit()
 
 
@@ -216,6 +251,7 @@ class Variance(Expr):
 
     """
     def __new__(cls, arg, condition=None, **kwargs):
+        """Create a new object of the Variance class"""
         arg = _sympify(arg)
         if condition is None:
             obj = Expr.__new__(cls, arg)
@@ -226,6 +262,7 @@ class Variance(Expr):
         return obj
 
     def doit(self, **hints):
+        """Return the result after evaluating Variance"""
         arg = self.args[0]
         condition = self._condition
 
@@ -259,19 +296,23 @@ class Variance(Expr):
         return self
 
     def _eval_rewrite_as_Expectation(self, arg, condition=None, **kwargs):
-            e1 = Expectation(arg**2, condition)
-            e2 = Expectation(arg, condition)**2
-            return e1 - e2
+        """Return the expresison in form of Expectation Value function"""
+        e1 = Expectation(arg**2, condition)
+        e2 = Expectation(arg, condition)**2
+        return e1 - e2
 
     def _eval_rewrite_as_Probability(self, arg, condition=None, **kwargs):
+        """Return the expresison in form of probability function"""
         return self.rewrite(Expectation).rewrite(Probability)
 
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
+        """Return the expresison in form of Integral"""
         return variance(self.args[0], self._condition, evaluate=False)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
+        """Return the result after evaluating the integral expression"""
         return self.rewrite(Integral).doit()
 
 
@@ -321,6 +362,7 @@ class Covariance(Expr):
     """
 
     def __new__(cls, arg1, arg2, condition=None, **kwargs):
+        """Create a new object of the Covariance class"""
         arg1 = _sympify(arg1)
         arg2 = _sympify(arg2)
 
@@ -336,6 +378,7 @@ class Covariance(Expr):
         return obj
 
     def doit(self, **hints):
+        """Return the result after evaluating Covariance"""
         arg1 = self.args[0]
         arg2 = self.args[1]
         condition = self._condition
@@ -362,6 +405,14 @@ class Covariance(Expr):
 
     @classmethod
     def _expand_single_argument(cls, expr):
+        """
+        Expend a Single Argument
+
+        Returns
+        =======
+
+        Expended form of expression
+        """
         # return (coefficient, random_symbol) pairs:
         if isinstance(expr, RandomSymbol):
             return [(S.One, expr)]
@@ -391,17 +442,21 @@ class Covariance(Expr):
         return (Mul(*nonrv), Mul(*rv))
 
     def _eval_rewrite_as_Expectation(self, arg1, arg2, condition=None, **kwargs):
+        """Return the expresison in form of Expectation value function"""
         e1 = Expectation(arg1*arg2, condition)
         e2 = Expectation(arg1, condition)*Expectation(arg2, condition)
         return e1 - e2
 
     def _eval_rewrite_as_Probability(self, arg1, arg2, condition=None, **kwargs):
+        """Return the expresison in form of Probability function"""
         return self.rewrite(Expectation).rewrite(Probability)
 
     def _eval_rewrite_as_Integral(self, arg1, arg2, condition=None, **kwargs):
+        """Return the expresison in form of Integral"""
         return covariance(self.args[0], self.args[1], self._condition, evaluate=False)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
+        """Return the result after ealuating the integral expression"""
         return self.rewrite(Integral).doit()

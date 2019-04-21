@@ -33,8 +33,22 @@ class JointPSpace(ProductPSpace):
     """
     Represents a joint probability space. Represented using symbols for
     each component and a distribution.
+
     """
     def __new__(cls, sym, dist):
+        """
+        Returns a new object of the JointPSpace Class
+
+        Raises
+        ======
+
+        TypeError if sym is isinstance Symbol
+
+        Returns
+        =======
+
+        A new object
+        """
         if isinstance(dist, SingleContinuousDistribution):
             return SingleContinuousPSpace(sym, dist)
         if isinstance(dist, SingleDiscreteDistribution):
@@ -47,14 +61,17 @@ class JointPSpace(ProductPSpace):
 
     @property
     def set(self):
+        """Return the set of Joint Pspace"""
         return self.domain.set
 
     @property
     def symbol(self):
+        """Return a symbol for Joint Pspace"""
         return self.args[0]
 
     @property
     def distribution(self):
+        """Distribution of Joint Pspace"""
         return self.args[1]
 
     @property
@@ -63,29 +80,35 @@ class JointPSpace(ProductPSpace):
 
     @property
     def component_count(self):
+        """Return the count of components of Joint Pspace"""
         _set = self.distribution.set
         return len(_set.args) if isinstance(_set, ProductSet) else 1
 
     @property
     def pdf(self):
+        """PDF for Joint Pspace"""
         sym = [Indexed(self.symbol, i) for i in range(self.component_count)]
         return self.distribution(*sym)
 
     @property
     def domain(self):
+        """Return the domain of Joint Pspace"""
         rvs = random_symbols(self.distribution)
         if len(rvs) == 0:
             return SingleDomain(self.symbol, self.set)
         return ProductDomain(*[rv.pspace.domain for rv in rvs])
 
     def component_domain(self, index):
+        """Return the domain of the component at index"""
         return self.set.args[index]
 
     @property
     def symbols(self):
+        """Return the symbols used in Joint Pspace"""
         return self.domain.symbols
 
     def marginal_distribution(self, *indices):
+        """Marginal Distribution for Joint Probability Space"""
         count = self.component_count
         orig = [Indexed(self.symbol, i) for i in range(count)]
         all_syms = [Symbol(str(i)) for i in orig]
@@ -105,6 +128,20 @@ class JointPSpace(ProductPSpace):
         return f.xreplace(replace_dict)
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
+        """
+        Compute the Expectation Value
+        for the given Joint Pspace
+
+        Raises
+        ======
+
+        NotImplementedError if value in random_symbols(expr)
+
+        Returns
+        =======
+
+        A lambda with expectation value
+        """
         syms = tuple(self.value[i] for i in range(self.component_count))
         rvs = rvs or syms
         if not any([i in rvs for i in syms]):
@@ -123,6 +160,7 @@ class JointPSpace(ProductPSpace):
             self.distribution.set.args[rv.args[1]]) for rv in syms)
         return Integral(expr, *limits)
 
+    # All the following functions raise NotImplementedError
     def where(self, condition):
         raise NotImplementedError()
 
@@ -139,11 +177,12 @@ class JointDistribution(Basic, NamedArgsMixin):
     """
     Represented by the random variables part of the joint distribution.
     Contains methods for PDF, CDF, sampling, marginal densities, etc.
+
     """
 
     _argnames = ('pdf', )
-
     def __new__(cls, *args):
+        """Create new object for Joint Distribution"""
         args = list(map(sympify, args))
         for i in range(len(args)):
             if isinstance(args[i], list):
@@ -152,13 +191,16 @@ class JointDistribution(Basic, NamedArgsMixin):
 
     @property
     def domain(self):
+        """Return the domain of Joint Distribution"""
         return ProductDomain(self.symbols)
 
     @property
     def pdf(self, *args):
+        """PDF for Joint Distribution"""
         return self.density.args[1]
 
     def cdf(self, other):
+        """PDF for Joint Distribution"""
         assert isinstance(other, dict)
         rvs = other.keys()
         _set = self.domain.set
@@ -179,8 +221,22 @@ class JointRandomSymbol(RandomSymbol):
     """
     Representation of random symbols with joint probability distributions
     to allow indexing."
+
     """
     def __getitem__(self, key):
+        """
+        Get an item matching the key from the Joint Radom Symbol
+
+        Raises
+        ======
+
+        ValueError if pspace.component_count <= key
+
+        Returns
+        =======
+
+        Item with keyvalue equal to the key
+        """
         if isinstance(self.pspace, JointPSpace):
             if self.pspace.component_count <= key:
                 raise ValueError("Index keys for %s can only up to %s." %
@@ -194,6 +250,7 @@ class JointDistributionHandmade(JointDistribution, NamedArgsMixin):
 
     @property
     def set(self):
+        """Return the set of Joint Distribution Handmade"""
         return self.args[1]
 
 def marginal_distribution(rv, *indices):
@@ -206,6 +263,11 @@ def marginal_distribution(rv, *indices):
     rv: A random variable with a joint probability distribution.
     indices: component indices or the indexed random symbol
         for whom the joint distribution is to be calculated
+
+    Raises
+    ======
+
+    ValueError if indices == ()
 
     Returns
     =======
@@ -243,6 +305,19 @@ class CompoundDistribution(Basic, NamedArgsMixin):
     distributed according to some given distribution.
     """
     def __new__(cls, dist):
+        """
+        Create a new object for Compound Distribution
+
+        Raises
+        ======
+
+        ValueError when dist not isinstance (ContinuousDistribution, DiscreteDistribution)
+
+        Returns
+        =======
+
+        A new object
+        """
         if not isinstance(dist, (ContinuousDistribution, DiscreteDistribution)):
             raise ValueError(filldedent('''CompoundDistribution can only be
              initialized from ContinuousDistribution or DiscreteDistribution
@@ -257,6 +332,7 @@ class CompoundDistribution(Basic, NamedArgsMixin):
         return random_symbols(self.args[0])
 
     def pdf(self, *x):
+        """PDF for Compound Distribution"""
         dist = self.args[0]
         z = Dummy('z')
         if isinstance(dist, ContinuousDistribution):
@@ -266,6 +342,7 @@ class CompoundDistribution(Basic, NamedArgsMixin):
         return MarginalDistribution(self, (rv,)).pdf(*x)
 
     def set(self):
+        """Return the set of the Compound Distribution"""
         return self.args[0].set
 
     def __call__(self, *args):
@@ -282,6 +359,19 @@ class MarginalDistribution(Basic):
     """
 
     def __new__(cls, dist, rvs):
+        """
+        Returns a new object of the Marginal Distribution
+
+        Raises
+        ======
+
+        ValueError if not all rv isinstance (Indexed,RandomSymbol())
+
+        Returns
+        =======
+
+        A new object
+        """
         if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
             raise ValueError(filldedent('''Marginal distribution can be
              intitialised only in terms of random variables or indexed random
@@ -296,6 +386,7 @@ class MarginalDistribution(Basic):
 
     @property
     def set(self):
+        """Return the set of Marginal Distribution"""
         rvs = [i for i in random_symbols(self.args[1])]
         marginalise_out = [i for i in random_symbols(self.args[1]) \
          if i not in self.args[1]]
@@ -306,10 +397,12 @@ class MarginalDistribution(Basic):
 
     @property
     def symbols(self):
+        """Return a set of symbols used in Marginal Distribution"""
         rvs = self.args[1]
         return set([rv.pspace.symbol for rv in rvs])
 
     def pdf(self, *x):
+        """PDF for Marginal Distribution"""
         expr, rvs = self.args[0], self.args[1]
         marginalise_out = [i for i in random_symbols(expr) if i not in self.args[1]]
         syms = [i.pspace.symbol for i in self.args[1]]
@@ -328,6 +421,7 @@ class MarginalDistribution(Basic):
         return Lambda(syms, self.compute_pdf(expr, marginalise_out))(*x)
 
     def compute_pdf(self, expr, rvs):
+        """PDF for provided expr in Marginal Distribution"""
         for rv in rvs:
             lpdf = 1
             if isinstance(rv, RandomSymbol):
@@ -336,6 +430,19 @@ class MarginalDistribution(Basic):
         return expr
 
     def marginalise_out(self, expr, rv):
+        """
+        Marginalize out the given distribution
+
+        Imports
+        =======
+
+        Sum from sympy.concrete.summations
+
+        Returns
+        =======
+
+        Marginalized expression
+        """
         from sympy.concrete.summations import Sum
         if isinstance(rv, RandomSymbol):
             dom = rv.pspace.set

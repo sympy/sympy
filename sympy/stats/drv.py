@@ -20,18 +20,28 @@ import random
 
 
 class DiscreteDistribution(Basic):
+    """
+    A discrete distribution is a statistical distribution
+    with finite value outcome probabilities.
+
+    Superclass for SingleDiscreteDistribution.
+
+    """
     def __call__(self, *args):
         return self.pdf(*args)
 
 
 class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
-    """ Discrete distribution of a single variable
+    """
+    Discrete distribution of a single variable
 
     Serves as superclass for PoissonDistribution etc....
 
     Provides methods for pdf, cdf, and sampling
 
-    See Also:
+    See Also
+    ========
+
         sympy.stats.crv_types.*
     """
 
@@ -46,7 +56,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         pass
 
     def sample(self):
-        """ A random realization from the distribution """
+        """A random realization from the distribution"""
         icdf = self._inverse_cdf_expression()
         while True:
             sample_ = floor(list(icdf(random.uniform(0, 1)))[0])
@@ -55,10 +65,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     @cacheit
     def _inverse_cdf_expression(self):
-        """ Inverse of the CDF
-
-        Used by sample
-        """
+        """Inverse CDF for Single Discrete Distribution"""
         x = symbols('x', positive=True,
          integer=True, cls=Dummy)
         z = symbols('z', positive=True, cls=Dummy)
@@ -74,10 +81,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_cdf(self, **kwargs):
-        """ Compute the CDF from the PDF
-
-        Returns a Lambda
-        """
+        """CDF from the PDF for Single Discrete Distribution"""
         x, z = symbols('x, z', integer=True, finite=True, cls=Dummy)
         left_bound = self.set.inf
 
@@ -92,7 +96,15 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         return None
 
     def cdf(self, x, **kwargs):
-        """ Cumulative density function """
+        """
+        CDF for Single Discrete Distribution
+
+        Returns
+        =======
+
+        None if arguments not provided
+        cdf Otherwise
+        """
         if not kwargs:
             cdf = self._cdf(x)
             if cdf is not None:
@@ -101,10 +113,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_characteristic_function(self, **kwargs):
-        """ Compute the characteristic function from the PDF
-
-        Returns a Lambda
-        """
+        """CDF  from PDF forSingle Discrete Distribution"""
         x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
         pdf = self.pdf(x)
         cf = summation(exp(I*t*x)*pdf, (x, self.set.inf, self.set.sup))
@@ -114,8 +123,9 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         return None
 
     def characteristic_function(self, t, **kwargs):
-        """ Characteristic function """
+        """Characteristic function for Single Discrete Distribution"""
         if not kwargs:
+
             cf = self._characteristic_function(t)
             if cf is not None:
                 return cf
@@ -123,6 +133,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_moment_generating_function(self, **kwargs):
+        """Moment function from PDF for Single Discrete Distribution"""
         x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
         pdf = self.pdf(x)
         mgf = summation(exp(t*x)*pdf, (x, self.set.inf, self.set.sup))
@@ -132,6 +143,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         return None
 
     def moment_generating_function(self, t, **kwargs):
+        """Moment function for Single Discrete Distribution"""
         if not kwargs:
             mgf = self._moment_generating_function(t)
             if mgf is not None:
@@ -139,7 +151,23 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         return self.compute_moment_generating_function(**kwargs)(t)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
-        """ Expectation of expression over distribution """
+        """
+        Expectation Value for Single Discrete Distribution
+
+        Parameters
+        ==========
+
+        self,
+        Expression, whose expectation value to be calculated
+        variable, whose expectation value is to be calculated
+
+        Returns
+        =======
+
+        result, with the value of expectation
+        summation of  expr * pdf,   when PolynomialError and if evaluate == 0
+
+        """
         # TODO: support discrete sets with non integer stepsizes
 
         if evaluate:
@@ -183,6 +211,10 @@ class DiscreteDomain(RandomDomain):
     """
     A domain with discrete support with step size one.
     Represented using symbols and Range.
+
+    Superclass  for ProductDiscreteDomain, SingleDiscreteDomain,
+                    ConditionalDiscreteDomain etc..
+
     """
     is_Discrete = True
 
@@ -195,9 +227,23 @@ class ConditionalDiscreteDomain(DiscreteDomain, ConditionalDomain):
     """
     Domain with discrete support of step size one, that is restricted by
     some condition.
+
     """
     @property
     def set(self):
+        """
+        Set for the Conditional Discrete Domain
+
+        Raises
+        ======
+
+        NotImplimentedError if len(symbols) > 1
+
+        Returns
+        =======
+
+        Set  with interval of the domain
+        """
         rv = self.symbols
         if len(self.symbols) > 1:
             raise NotImplementedError(filldedent('''
@@ -208,14 +254,30 @@ class ConditionalDiscreteDomain(DiscreteDomain, ConditionalDomain):
 
 
 class DiscretePSpace(PSpace):
+    """Discrete Probability Space"""
     is_real = True
     is_Discrete = True
 
     @property
     def pdf(self):
+        """PDF for Discrete Probability Space"""
         return self.density(*self.symbols)
 
     def where(self, condition):
+        """
+        Position of condition in Discrete Probability Space
+
+        Raises
+        ======
+
+        NotImplementedError  when random variable symbols > 1
+
+        Returns
+        =======
+
+        SingleDiscreteDomain
+
+        """
         rvs = random_symbols(condition)
         assert all(r.symbol in self.symbols for r in rvs)
         if len(rvs) > 1:
@@ -227,6 +289,28 @@ class DiscretePSpace(PSpace):
         return SingleDiscreteDomain(rvs[0].symbol, conditional_domain)
 
     def probability(self, condition):
+        """
+        Probability for Discrete Probability Space
+
+        This function Calculates the probability of the condition
+        inside the probility space
+
+        Parameters
+        ==========
+
+        condition, inside which Probability is to be calculated.
+        expr, expression representing thwe given condition.
+        dens, density of probability space in expression.
+        prob, the probability to be calculated.
+
+        Returns
+        =======
+
+        0, if the condition is always False.
+        1, if the conditionis always True.
+        prob, having the required Probability.
+
+        """
         complement = isinstance(condition, Ne)
         if complement:
             condition = Eq(condition.args[0], condition.args[1])
@@ -251,6 +335,22 @@ class DiscretePSpace(PSpace):
         return prob if not complement else S.One - prob
 
     def eval_prob(self, _domain):
+        """
+        Porbability using PDF for Discrete Probability Space
+
+        This functiomn is used to evaluate probabilty of a PDF in the given domain.
+
+        Parameters
+        ==========
+
+        _domain, Domain inside which probability is to be evaluated.
+        self
+
+        Returns
+        =======
+
+        rv, probability of random variable with the given PDF.
+        """
         sym = list(self.symbols)[0]
         if isinstance(_domain, Range):
             n = symbols('n', integer=True, finite=True)
@@ -269,6 +369,7 @@ class DiscretePSpace(PSpace):
             return rv
 
     def conditional_space(self, condition):
+        """Conditional Space for Discrete Probability Space"""
         density = Lambda(self.symbols, self.pdf/self.probability(condition))
         condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
         domain = ConditionalDiscreteDomain(self.domain, condition)
@@ -279,26 +380,50 @@ class ProductDiscreteDomain(ProductDomain, DiscreteDomain):
         return And(*[domain.as_boolean for domain in self.domains])
 
 class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
-    """ Discrete probability space over a single univariate variable """
+    """Discrete probability space over a single univariate variable"""
     is_real = True
 
     @property
     def set(self):
+        """Set of Single Discrete Probability Space"""
         return self.distribution.set
 
     @property
     def domain(self):
+        """Domain of Single Discrete Probability Space"""
         return SingleDiscreteDomain(self.symbol, self.set)
 
     def sample(self):
         """
-        Internal sample method
+        Internal sample method for Single Discrete Probability Space
 
-        Returns dictionary mapping RandomSymbol to realization value.
+        Returns
+        =======
+
+        dictionary mapping RandomSymbol to realization value.
         """
         return {self.value: self.distribution.sample()}
 
     def compute_expectation(self, expr, rvs=None, evaluate=True, **kwargs):
+        """
+        Expectation Value for Single Discrete Probability Space
+
+        Parameters
+        ==========
+
+        self,
+        expr, the given probability function expression
+        rvs, ramdom variable
+        evaluate, boolean value
+        kwargs, string of arguments
+
+        Returns
+        =======
+
+        E[X]
+        sum of expr * pdf   when NotImplementedError.
+
+        """
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
@@ -314,6 +439,20 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
                     **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
+        """
+        CDF of Single Discrete Probability Space
+
+        Raises
+        ======
+
+        NotImplementedError   when  expr != self.value
+
+        Reurns
+        ======
+
+        A Lambda woth cdf of the given distribution
+
+        """
         if expr == self.value:
             x = symbols("x", real=True, cls=Dummy)
             return Lambda(x, self.distribution.cdf(x, **kwargs))
@@ -321,11 +460,33 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
             raise NotImplementedError()
 
     def compute_density(self, expr, **kwargs):
+        """
+        Probability Density for Single Discrete Probability Space
+
+        Raises
+        ======
+
+        NotImplementedError  when expr != self.value
+        """
         if expr == self.value:
             return self.distribution
         raise NotImplementedError()
 
     def compute_characteristic_function(self, expr, **kwargs):
+        """
+        Characteristic Function for Single Discrete Probability Space
+
+        Raises
+        ======
+
+        NotImplementedError  when expr != self.value
+
+        Returns
+        ========
+
+        A lambda with the characteristic function
+
+        """
         if expr == self.value:
             t = symbols("t", real=True, cls=Dummy)
             return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
@@ -333,6 +494,14 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
             raise NotImplementedError()
 
     def compute_moment_generating_function(self, expr, **kwargs):
+        """
+        Moment for Single Discrete Probability Space
+
+        Raises
+        =======
+
+        NonImplementedError  when  expr != self.value
+        """
         if expr == self.value:
             t = symbols("t", real=True, cls=Dummy)
             return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))

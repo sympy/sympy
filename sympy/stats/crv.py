@@ -31,6 +31,14 @@ class ContinuousDomain(RandomDomain):
     is_Continuous = True
 
     def as_boolean(self):
+        """
+        Return as is_Boolean
+
+        Raises
+        ========
+
+        NotImplementedError
+        """
         raise NotImplementedError("Not Implemented for generic Domains")
 
 
@@ -41,6 +49,27 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
     Represented using a single symbol and interval.
     """
     def compute_expectation(self, expr, variables=None, **kwargs):
+        """
+        Computes the expectation in Given Domain
+
+        Parameters
+        ==========
+
+        self,
+        expr, contating the expression
+        variables, (optional) default is None
+        kwargs, Arguments (if any)
+
+        Raises
+        ======
+
+        ValueError  if  frozenset(variables) != frozenset(self.symbols)
+
+        Returns
+        =======
+
+        Intergral of expression over self.symbol in  self.set
+        """
         if variables is None:
             variables = self.symbols
         if not variables:
@@ -55,11 +84,25 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
 
 
 class ProductContinuousDomain(ProductDomain, ContinuousDomain):
-    """
-    A collection of independent domains with continuous support
-    """
+    """A collection of independent domains with continuous support"""
 
     def compute_expectation(self, expr, variables=None, **kwargs):
+        """
+        Compute Expectation Value in given Domain
+
+        Parameters
+        ==========
+
+        self,
+        expr, contatning the expression
+        variables, (optional) default is None
+        kwargs, Arguments
+
+        Returns
+        =======
+
+        An expression with the expectation value of the given expressioon in given domain
+        """
         if variables is None:
             variables = self.symbols
         for domain in self.domains:
@@ -79,6 +122,28 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     """
 
     def compute_expectation(self, expr, variables=None, **kwargs):
+        """
+        Compute Expectation value for the given conditional continuous domains
+
+        Parameters
+        ==========
+
+        self,
+        expr, having expression whose expectation value to be calculated
+        variables, (optional), default is None
+        kwargs, Arguments if any
+
+        Raises
+        ======
+
+        NotImplementedError when len(symbols) > 1
+        TypeError when condition not Boolean,relational
+
+        Returns
+        =======
+
+        An expectation value expression
+        """
         if variables is None:
             variables = self.symbols
         if not variables:
@@ -130,6 +195,19 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
 
     @property
     def set(self):
+        """
+        Give the set in the domain
+
+        Raises
+        ======
+
+        NotImplementedError if len(symbols) != 1
+
+        Returns
+        =======
+
+        Interval where the Domain exists
+        """
         if len(self.symbols) == 1:
             return (self.fulldomain.set & reduce_rational_inequalities_wrap(
                 self.condition, tuple(self.symbols)[0]))
@@ -144,7 +222,8 @@ class ContinuousDistribution(Basic):
 
 
 class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
-    """ Continuous distribution of a single variable
+    """
+    Continuous distribution of a single variable
 
     Serves as superclass for Normal/Exponential/UniformDistribution etc....
 
@@ -162,6 +241,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     set = Interval(-oo, oo)
 
     def __new__(cls, *args):
+        """Create a new object of SingleContinuousDistribution"""
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
 
@@ -170,15 +250,26 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         pass
 
     def sample(self):
-        """ A random realization from the distribution """
+        """Sampling for Single Continuous Distribution"""
         icdf = self._inverse_cdf_expression()
         return icdf(random.uniform(0, 1))
 
     @cacheit
     def _inverse_cdf_expression(self):
-        """ Inverse of the CDF
+        """
+        Inverse of the CDF
 
         Used by sample
+
+        Raises
+        ======
+
+        NotImplementedError when not inverse_cdf or len(inverse_cdf) != 1
+
+        Returns
+        =======
+
+        A lambda with invesr cdf function
         """
         x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
         # Invert CDF
@@ -195,9 +286,13 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_cdf(self, **kwargs):
-        """ Compute the CDF from the PDF
+        """
+        Compute the Cummulative Distribution Function from the PDF
 
-        Returns a Lambda
+        Returns
+        =======
+
+        A Lambda with the  cdf function
         """
         x, z = symbols('x, z', real=True, finite=True, cls=Dummy)
         left_bound = self.set.start
@@ -213,7 +308,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         return None
 
     def cdf(self, x, **kwargs):
-        """ Cumulative density function """
+        """CDF for SingleContinuousDistribution"""
         if len(kwargs) == 0:
             cdf = self._cdf(x)
             if cdf is not None:
@@ -222,10 +317,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_characteristic_function(self, **kwargs):
-        """ Compute the characteristic function from the PDF
-
-        Returns a Lambda
-        """
+        """Characterisitc function for SingleContinuousDistribution from PDF"""
         x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
         pdf = self.pdf(x)
         cf = integrate(exp(I*t*x)*pdf, (x, -oo, oo))
@@ -235,7 +327,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         return None
 
     def characteristic_function(self, t, **kwargs):
-        """ Characteristic function """
+        """Characteristic function for SingleContinuousDistribution"""
         if len(kwargs) == 0:
             cf = self._characteristic_function(t)
             if cf is not None:
@@ -244,10 +336,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_moment_generating_function(self, **kwargs):
-        """ Compute the moment generating function from the PDF
-
-        Returns a Lambda
-        """
+        """Moment function from PDF for SingleContinuousDistribution"""
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
         mgf = integrate(exp(t * x) * pdf, (x, -oo, oo))
@@ -257,7 +346,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         return None
 
     def moment_generating_function(self, t, **kwargs):
-        """ Moment generating function """
+        """Moment generating function for SingleContinuousDistribution"""
         if len(kwargs) == 0:
 
             try:
@@ -269,7 +358,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         return self.compute_moment_generating_function(**kwargs)(t)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
-        """ Expectation of expression over distribution """
+        """Expectation value for SingleContinuousDistribution"""
         if evaluate:
             try:
                 p = poly(expr, var)
@@ -300,7 +389,8 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
 
 
 class ContinuousPSpace(PSpace):
-    """ Continuous Probability Space
+    """
+    Continuous Probability Space
 
     Represents the likelihood of an event space defined over a continuum.
 
@@ -315,6 +405,7 @@ class ContinuousPSpace(PSpace):
         return self.density(*self.domain.symbols)
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
+        """Compute Expectation value for Continuous Pspace"""
         if rvs is None:
             rvs = self.values
         else:
@@ -328,6 +419,7 @@ class ContinuousPSpace(PSpace):
                 domain_symbols, **kwargs)
 
     def compute_density(self, expr, **kwargs):
+        """Probability Density of Continuous Pspace"""
         # Common case Density(X) where X in self.values
         if expr in self.values:
             # Marginalize all other random symbols out of the density
@@ -341,6 +433,19 @@ class ContinuousPSpace(PSpace):
 
     @cacheit
     def compute_cdf(self, expr, **kwargs):
+        """
+        Cummulative Distribution Function for Continuous Pspace
+
+        Raises
+        ======
+
+        ValueError if not domain.set.is_Interval
+
+        Returns
+        =======
+
+        A Lambda with the CDF
+        """
         if not self.domain.set.is_Interval:
             raise ValueError(
                 "CDF not well defined on multivariate expressions")
@@ -357,6 +462,19 @@ class ContinuousPSpace(PSpace):
 
     @cacheit
     def compute_characteristic_function(self, expr, **kwargs):
+        """
+        Compute Characteristic function for Continuous Pspace
+
+        Raises
+        ======
+
+        NotImplementedError if not domain.set.is_Interval
+
+        Returns
+        =======
+
+        A Lambda with characteristic function
+        """
         if not self.domain.set.is_Interval:
             raise NotImplementedError("Characteristic function of multivariate expressions not implemented")
 
@@ -367,6 +485,19 @@ class ContinuousPSpace(PSpace):
 
     @cacheit
     def compute_moment_generating_function(self, expr, **kwargs):
+        """
+        Compute Moment function for Continuous Pspace
+
+        Raises
+        ======
+
+        NotImplementedError if not domain.set.is_Interval
+
+        Returns
+        =======
+
+        A Lambda with moment functions
+        """
         if not self.domain.set.is_Interval:
             raise NotImplementedError("Moment generating function of multivariate expressions not implemented")
 
@@ -376,6 +507,7 @@ class ContinuousPSpace(PSpace):
         return Lambda(t, mgf)
 
     def probability(self, condition, **kwargs):
+        """Probability of given condition in Continuous Pspace"""
         z = Dummy('z', real=True, finite=True)
         cond_inv = False
         if isinstance(condition, Ne):
@@ -411,6 +543,19 @@ class ContinuousPSpace(PSpace):
             return result if not cond_inv else S.One - result
 
     def where(self, condition):
+        """
+        Position where condition holds True in Continuous Pspace
+
+        Raises
+        ======
+
+        NotImplementedError if len(symbols) != 1 and rvs is subset values
+
+        Returns
+        =======
+
+        SingleContinuousDomain with interval following the given condition
+        """
         rvs = frozenset(random_symbols(condition))
         if not (len(rvs) == 1 and rvs.issubset(self.values)):
             raise NotImplementedError(
@@ -421,6 +566,7 @@ class ContinuousPSpace(PSpace):
         return SingleContinuousDomain(rv.symbol, interval)
 
     def conditional_space(self, condition, normalize=True, **kwargs):
+        """Create Conditional Space for Continuous Pspace"""
         condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
         domain = ConditionalContinuousDomain(self.domain, condition)
         if normalize:
@@ -457,13 +603,17 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
     def sample(self):
         """
-        Internal sample method
+        Internal sample method for SingleContinuousPSpace
 
-        Returns dictionary mapping RandomSymbol to realization value.
+        Returns
+        =======
+
+        Dictionary mapping RandomSymbol to realization value.
         """
         return {self.value: self.distribution.sample()}
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
+        """Expectation Value for SingleContinuousPSpace"""
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
@@ -477,6 +627,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             return Integral(expr * self.pdf, (x, self.set), **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
+        """Cummulative Distribution Function for SingleContinuousPSpace"""
         if expr == self.value:
             z = symbols("z", real=True, finite=True, cls=Dummy)
             return Lambda(z, self.distribution.cdf(z, **kwargs))
@@ -484,6 +635,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
 
     def compute_characteristic_function(self, expr, **kwargs):
+        """Characteristics Function for SingleContinuousPSpace"""
         if expr == self.value:
             t = symbols("t", real=True, cls=Dummy)
             return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
@@ -491,6 +643,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             return ContinuousPSpace.compute_characteristic_function(self, expr, **kwargs)
 
     def compute_moment_generating_function(self, expr, **kwargs):
+        """Moment Function for SingleContinuousPSpace"""
         if expr == self.value:
             t = symbols("t", real=True, cls=Dummy)
             return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))
@@ -498,6 +651,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             return ContinuousPSpace.compute_moment_generating_function(self, expr, **kwargs)
 
     def compute_density(self, expr, **kwargs):
+        """Probability Density for SingleContinuousPSpace"""
         # https://en.wikipedia.org/wiki/Random_variable#Functions_of_random_variables
         if expr == self.value:
             return self.density
@@ -515,6 +669,14 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         return Lambda(y, fy)
 
 def _reduce_inequalities(conditions, var, **kwargs):
+    """
+    Reduce inequalities
+
+    Raises
+    ======
+
+    ValueError if PolynomialError
+    """
     try:
         return reduce_rational_inequalities(conditions, var, **kwargs)
     except PolynomialError:

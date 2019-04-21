@@ -43,16 +43,20 @@ class GeometricDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
+        """Check the value of p is between 0 and 1"""
         _value_check(And(0 < p, p <= 1), "p must be between 0 and 1")
 
     def pdf(self, k):
+        """PDF of Geometric Distribution"""
         return (1 - self.p)**(k - 1) * self.p
 
     def _characteristic_function(self, t):
+        """Characteristic function for Geometric Distribution"""
         p = self.p
         return p * exp(I*t) / (1 - (1 - p)*exp(I*t))
 
     def _moment_generating_function(self, t):
+        """Moment generating function for Geometric Distribution"""
         p = self.p
         return p * exp(t) / (1 - (1 - p) * exp(t))
 
@@ -115,23 +119,35 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
+        """check the value of p is between 0 and 1"""
         _value_check(And(p > 0, p < 1), "p should be between 0 and 1")
 
     def pdf(self, k):
+        """PDF for Logarithmic Distribution"""
         p = self.p
         return (-1) * p**k / (k * log(1 - p))
 
     def _characteristic_function(self, t):
+        """Characteristic function for Logarithmic Distribution"""
         p = self.p
         return log(1 - p * exp(I*t)) / log(1 - p)
 
     def _moment_generating_function(self, t):
+        """Moment generating function for Logarithmic Distribution"""
         p = self.p
         return log(1 - p * exp(t)) / log(1 - p)
 
     def sample(self):
+        """
+        Sampling for Logarithmic Distribution
+
+        Raises
+        ======
+
+        NotImplimentedError
+        """
         ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
+        raise NotImplementedError("Sampling of %s is not implemented")
 
 
 def Logarithmic(name, p):
@@ -192,30 +208,42 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(r, p):
+        """Check the value of p is between 0 and 1 and r is positive"""
         _value_check(r > 0, 'r should be positive')
         _value_check(And(p > 0, p < 1), 'p should be between 0 and 1')
 
     def pdf(self, k):
+        """PDF of Logarithmic Distribution"""
         r = self.r
         p = self.p
 
         return binomial(k + r - 1, k) * (1 - p)**r * p**k
 
     def _characteristic_function(self, t):
+        """Characteristic function for Logarithmic Distribution"""
         r = self.r
         p = self.p
 
         return ((1 - p) / (1 - p * exp(I*t)))**r
 
     def _moment_generating_function(self, t):
+        """Moment generating function for Logarithmic Distribution"""
         r = self.r
         p = self.p
 
         return ((1 - p) / (1 - p * exp(t)))**r
 
     def sample(self):
+        """
+        Sampling for Negative Binomial Distribution
+
+        Raises
+        ======
+
+        NotImplimentedError
+        """
         ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
+        raise NotImplementedError("Sampling of %s is not implemented")
 
 
 def NegativeBinomial(name, r, p):
@@ -279,12 +307,23 @@ class PoissonDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(lamda):
+        """Check the value of lambda is positive"""
         _value_check(lamda > 0, "Lambda must be positive")
 
     def pdf(self, k):
+        """PDF of Poisson Distribution"""
         return self.lamda**k / factorial(k) * exp(-self.lamda)
 
     def sample(self):
+        """
+        Sampling for Poisson Distribution
+
+        Returns
+        =======
+
+        0 if u <= cdf(zero)
+        search(n,2n,u) otherwise
+        """
         def search(x, y, u):
             while x < y:
                 mid = (x + y)//2
@@ -305,9 +344,11 @@ class PoissonDistribution(SingleDiscreteDistribution):
                 return search(n, 2*n, u)
 
     def _characteristic_function(self, t):
+        """Characteristic function for Poisson Distribution"""
         return exp(self.lamda * (exp(I*t) - 1))
 
     def _moment_generating_function(self, t):
+        """Moment generating function for Poisson Distribution"""
         return exp(self.lamda * (exp(t) - 1))
 
 
@@ -369,26 +410,39 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(rho):
+        """Check the value of rho is positive"""
         _value_check(rho > 0, 'rho should be positive')
 
     def pdf(self, k):
+        """PDF for Yule-Simon Distribution"""
         rho = self.rho
         return rho * beta(k, rho + 1)
 
     def _cdf(self, x):
+        """CDF for Yule-Simon Distribution"""
         return Piecewise((1 - floor(x) * beta(floor(x), self.rho + 1), x >= 1), (0, True))
 
     def _characteristic_function(self, t):
+        """Characteristic function for Yule-Simon Distribution"""
         rho = self.rho
         return rho * hyper((1, 1), (rho + 2,), exp(I*t)) * exp(I*t) / (rho + 1)
 
     def _moment_generating_function(self, t):
+        """Moment generating function for Yule-Simon Distribution"""
         rho = self.rho
         return rho * hyper((1, 1), (rho + 2,), exp(t)) * exp(t) / (rho + 1)
 
     def sample(self):
+        """
+        Sampling for Yule-Simon Distribution
+
+        Raises
+        ======
+
+        NotImplementedError
+        """
         ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
+        raise NotImplementedError("Sampling of %s is not implemented")
 
 
 def YuleSimon(name, rho):
@@ -448,21 +502,33 @@ class ZetaDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(s):
+        """Check the value of s is greater than 1"""
         _value_check(s > 1, 's should be greater than 1')
 
     def pdf(self, k):
+        """PDF for Zeta Distribution"""
         s = self.s
         return 1 / (k**s * zeta(s))
 
     def _characteristic_function(self, t):
+        """Characteristic function for Zeta Distribution"""
         return polylog(self.s, exp(I*t)) / zeta(self.s)
 
     def _moment_generating_function(self, t):
+        """Moment generating function for Zeta Distribution"""
         return polylog(self.s, exp(t)) / zeta(self.s)
 
     def sample(self):
+        """
+        Sampling for Zeta distribution
+
+        Raises
+        ======
+
+        NotImplementedError
+        """
         ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
+        raise NotImplementedError("Sampling of %s is not implemented")
 
 
 def Zeta(name, s):

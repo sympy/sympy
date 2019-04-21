@@ -3,6 +3,7 @@ Continuous Random Variables - Prebuilt variables
 
 Contains
 ========
+
 Arcsin
 Benini
 Beta
@@ -110,11 +111,14 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     Create a Continuous Random Variable given the following:
 
-    -- a symbol
-    -- a probability density function
-    -- set on which the pdf is valid (defaults to entire real line)
+    -- A symbol
+    -- A probability density function
+    -- A set on which the pdf is valid (defaults to entire real line)
 
-    Returns a RandomSymbol.
+    Returns
+    =======
+
+    A RandomSymbol.
 
     Many common continuous random variable types are already implemented.
     This function should be necessary only very rarely.
@@ -162,9 +166,24 @@ class ArcsinDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
     def pdf(self, x):
+        """PDF for ArcSin Distribution"""
         return 1/(pi*sqrt((x - self.a)*(self.b - x)))
 
     def _cdf(self, x):
+        """
+        Calculate the Cumulative Distribution Function
+        for the given ArcSin Distribution
+
+        Imports
+        =======
+
+        asin, from sympy
+
+        Returns
+        =======
+
+        A CDF Expression
+        """
         from sympy import asin
         a, b = self.a, self.b
         return Piecewise(
@@ -234,20 +253,38 @@ class BeniniDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(alpha, beta, sigma):
+        """Check the values of alpha, beta and sigma are positive"""
         _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
         _value_check(beta > 0, "Shape parameter Beta must be positive.")
         _value_check(sigma > 0, "Scale parameter Sigma must be positive.")
 
     @property
     def set(self):
+        """
+        A set for which the Benini Distribution is valid
+
+        Returns
+        =======
+
+        Interval of the distibution: [sigma,oo(Infinity)]
+        """
         return Interval(self.sigma, oo)
 
     def pdf(self, x):
+        """PDF for Benini Distribution"""
         alpha, beta, sigma = self.alpha, self.beta, self.sigma
         return (exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2)
                *(alpha/x + 2*beta*log(x/sigma)/x))
 
     def _moment_generating_function(self, t):
+        """
+        Calculate the moment function for the given Benini Distributions
+
+        Raises
+        ======
+
+        NotImplementedError
+        """
         raise NotImplementedError('The moment generating function of the '
                                   'Benini distribution does not exist.')
 
@@ -306,6 +343,7 @@ def Benini(name, alpha, beta, sigma):
     References
     ==========
 
+
     .. [1] https://en.wikipedia.org/wiki/Benini_distribution
     .. [2] http://reference.wolfram.com/legacy/v8/ref/BeniniDistribution.html
 
@@ -316,7 +354,6 @@ def Benini(name, alpha, beta, sigma):
 #-------------------------------------------------------------------------------
 # Beta distribution ------------------------------------------------------------
 
-
 class BetaDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'beta')
 
@@ -324,20 +361,25 @@ class BetaDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(alpha, beta):
+        """Check values of alpha and beta are positive"""
         _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
         _value_check(beta > 0, "Shape parameter Beta must be positive.")
 
     def pdf(self, x):
+        """PDF for Beta Distribution"""
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1) * (1 - x)**(beta - 1) / beta_fn(alpha, beta)
 
     def sample(self):
+        """Sampling for Beta Distribution"""
         return random.betavariate(self.alpha, self.beta)
 
     def _characteristic_function(self, t):
+        """Characteristic function for Beta Distribution"""
         return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
 
     def _moment_generating_function(self, t):
+        """Moment function for Beta Distribution"""
         return hyper((self.alpha,), (self.alpha + self.beta,), t)
 
 def Beta(name, alpha, beta):
@@ -406,12 +448,14 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(alpha, beta):
+        """Check the value of alpha and beta are positive"""
         _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
         _value_check(beta > 0, "Shape parameter Beta must be positive.")
 
     set = Interval(0, oo)
 
     def pdf(self, x):
+        """PDF for Beta Prime distribution"""
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
 
@@ -475,19 +519,30 @@ class CauchyDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(x0, gamma):
+        """Check value of gamma is positive"""
         _value_check(gamma > 0, "Scale parameter Gamma must be positive.")
 
     def pdf(self, x):
+        """PDF for Cauchy Distribution"""
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
     def _cdf(self, x):
+        """CDF for Cauchy Distribution"""
         x0, gamma = self.x0, self.gamma
         return (1/pi)*atan((x - x0)/gamma) + S.Half
 
     def _characteristic_function(self, t):
+        """Characteristic function for Cauchy Distribution"""
         return exp(self.x0 * I * t -  self.gamma * Abs(t))
 
     def _moment_generating_function(self, t):
+        """
+        Moment Generating Function for given Cauchy Distribution.
+
+        Raises
+        ======
+        NotImplementedError
+        """
         raise NotImplementedError("The moment generating function for the "
                                   "Cauchy distribution does not exist.")
 
@@ -545,15 +600,18 @@ class ChiDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(k):
+        """Check the value of k is positive and it is an integer"""
         _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
         _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
 
     set = Interval(0, oo)
 
     def pdf(self, x):
+        """PDF for Chi Distribution"""
         return 2**(1 - self.k/2)*x**(self.k - 1)*exp(-x**2/2)/gamma(self.k/2)
 
     def _characteristic_function(self, t):
+        """Characteristic function for Chi Distribution"""
         k = self.k
 
         part_1 = hyper((k/2,), (S(1)/2,), -t**2/2)
@@ -562,6 +620,7 @@ class ChiDistribution(SingleContinuousDistribution):
         return part_1 + part_2*part_3
 
     def _moment_generating_function(self, t):
+        """Moment function for Chi Distribution"""
         k = self.k
 
         part_1 = hyper((k / 2,), (S(1) / 2,), t ** 2 / 2)
@@ -624,15 +683,17 @@ def Chi(name, k):
 class ChiNoncentralDistribution(SingleContinuousDistribution):
     _argnames = ('k', 'l')
 
+    set = Interval(0, oo)
     @staticmethod
     def check(k, l):
+        """Check the value of k and l are positive and k is an integer"""
         _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
         _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
         _value_check(l > 0, "Shift parameter Lambda must be positive.")
 
-    set = Interval(0, oo)
 
     def pdf(self, x):
+        """PDF for Chi Chi Noncentral Distribution"""
         k, l = self.k, self.l
         return exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
 
@@ -692,16 +753,19 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(k):
+        """Checks that k is a positive integer"""
         _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
         _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
 
     set = Interval(0, oo)
 
     def pdf(self, x):
+        """PDF for Chi Squared Distribution"""
         k = self.k
         return 1/(2**(k/2)*gamma(k/2))*x**(k/2 - 1)*exp(-x/2)
 
     def _cdf(self, x):
+        """CDF for Chi Squared Distribution"""
         k = self.k
         return Piecewise(
                 (S.One/gamma(k/2)*lowergamma(k/2, x/2), x >= 0),
@@ -709,9 +773,11 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
         )
 
     def _characteristic_function(self, t):
+        """Characteristic function for Chi Squared Distribution"""
         return (1 - 2*I*t)**(-self.k/2)
 
     def  _moment_generating_function(self, t):
+        """Moment function for Chi Squared Distribution"""
         return (1 - 2*t)**(-self.k/2)
 
 def ChiSquared(name, k):
@@ -777,15 +843,18 @@ class DagumDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(p, a, b):
+        """Check the values of p, a and b are positive"""
         _value_check(p > 0, "Shape parameter p must be positive.")
         _value_check(a > 0, "Shape parameter a must be positive.")
         _value_check(b > 0, "Scale parameter b must be positive.")
 
     def pdf(self, x):
+        """PDF for Dagum Distribution"""
         p, a, b = self.p, self.a, self.b
         return a*p/x*((x/b)**(a*p)/(((x/b)**a + 1)**(p + 1)))
 
     def _cdf(self, x):
+        """CDF for Dagum Distribution"""
         p, a, b = self.p, self.a, self.b
         return Piecewise(((S.One + (S(x)/b)**-a)**-p, x>=0),
                     (S.Zero, True))
@@ -924,25 +993,31 @@ class ExponentialDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(rate):
+        """Check the value of rate is positive"""
         _value_check(rate > 0, "Rate must be positive.")
 
     def pdf(self, x):
+        """PDF for Exponential Distribution"""
         return self.rate * exp(-self.rate*x)
 
     def sample(self):
+        """Sampling for Exponential Distribution"""
         return random.expovariate(self.rate)
 
     def _cdf(self, x):
+        """CDF for Exponential Distribution"""
         return Piecewise(
                 (S.One - exp(-self.rate*x), x >= 0),
                 (0, True),
         )
 
     def _characteristic_function(self, t):
+        """Characterisitic Function for Exponential Distribution"""
         rate = self.rate
         return rate / (rate - I*t)
 
     def _moment_generating_function(self, t):
+        """Moment Function for Exponential Function"""
         rate = self.rate
         return rate / (rate - t)
 
@@ -1026,17 +1101,27 @@ class FDistributionDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(d1, d2):
+        """Check the values of d1 and d2 are positive"""
         _value_check(d1 > 0 and d1.is_integer, \
             "Degrees of freedom d1 must be positive integer.")
         _value_check(d2 > 0 and d2.is_integer, \
             "Degrees of freedom d2 must be positive integer.")
 
     def pdf(self, x):
+        """PDF for F Distribution"""
         d1, d2 = self.d1, self.d2
         return (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
                / (x * beta_fn(d1/2, d2/2)))
 
     def _moment_generating_function(self, t):
+        """
+        Moment Generating Function for F Distribution.
+
+        Raises
+        ======
+
+        NotImplementedError
+        """
         raise NotImplementedError('The moment generating function for the '
                                   'F-distribution does not exist.')
 
@@ -1104,6 +1189,7 @@ class FisherZDistribution(SingleContinuousDistribution):
     _argnames = ('d1', 'd2')
 
     def pdf(self, x):
+        """PDF for Fisher Z Distribution"""
         d1, d2 = self.d1, self.d2
         return (2*d1**(d1/2)*d2**(d2/2) / beta_fn(d1/2, d2/2) *
                exp(d1*x) / (d1*exp(2*x)+d2)**((d1+d2)/2))
@@ -1175,14 +1261,32 @@ class FrechetDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     def __new__(cls, a, s=1, m=0):
+        """
+        Fuction to  create new object for FrechetDistribution
+
+        Parameters
+        ==========
+
+        cls,
+        a,
+        s, (optional) default is 1
+        m, (optional) default is 0
+
+        Returns
+        =======
+
+        A new Frechet Distribution object
+        """
         a, s, m = list(map(sympify, (a, s, m)))
         return Basic.__new__(cls, a, s, m)
 
     def pdf(self, x):
+        """PDF for Frechet Distribution"""
         a, s, m = self.a, self.s, self.m
         return a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)**(-a))
 
     def _cdf(self, x):
+        """CDF for Frechet Distribution"""
         a, s, m = self.a, self.s, self.m
         return Piecewise((exp(-((x-m)/s)**(-a)), x >= m),
                         (S.Zero, True))
@@ -1250,26 +1354,32 @@ class GammaDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(k, theta):
+        """Check the values of k and theta are positive"""
         _value_check(k > 0, "k must be positive")
         _value_check(theta > 0, "Theta must be positive")
 
     def pdf(self, x):
+        """PDF for Gamma Distribution"""
         k, theta = self.k, self.theta
         return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
 
     def sample(self):
+        """Sampling for Gamma Distribution"""
         return random.gammavariate(self.k, self.theta)
 
     def _cdf(self, x):
+        """CDF for Gamma Distribution"""
         k, theta = self.k, self.theta
         return Piecewise(
                     (lowergamma(k, S(x)/theta)/gamma(k), x > 0),
                     (S.Zero, True))
 
     def _characteristic_function(self, t):
+        """characteristic function for Gamma Distribution"""
         return (1 - self.theta*I*t)**(-self.k)
 
     def _moment_generating_function(self, t):
+        """Moment function for Gamma Distribution"""
         return (1- self.theta*t)**(-self.k)
 
 def Gamma(name, k, theta):
@@ -1355,19 +1465,35 @@ class GammaInverseDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(a, b):
+        """Check the values of a and b are positive"""
         _value_check(a > 0, "alpha must be positive")
         _value_check(b > 0, "beta must be positive")
 
     def pdf(self, x):
+        """PDF for Inverse Gamma Distribution"""
         a, b = self.a, self.b
         return b**a/gamma(a) * x**(-a-1) * exp(-b/x)
 
     def _cdf(self, x):
+        """CDF for Inverse Gamma Distribution"""
         a, b = self.a, self.b
         return Piecewise((uppergamma(a,b/x)/gamma(a), x > 0),
                         (S.Zero, True))
 
     def sample(self):
+        """
+        Sampling for Inverse Gamma Distribution
+
+        Raises
+        ======
+
+        NonImplementedError if scipy not imported
+
+        Returns
+        =======
+
+        A sample of the Invese gamma distibution if sympy is imported
+        """
         scipy = import_module('scipy')
         if scipy:
             from scipy.stats import invgamma
@@ -1376,10 +1502,18 @@ class GammaInverseDistribution(SingleContinuousDistribution):
             raise NotImplementedError('Sampling the inverse Gamma Distribution requires Scipy.')
 
     def _characteristic_function(self, t):
+        """Characteristic function for Inverse Gamma Distribution"""
         a, b = self.a, self.b
         return 2 * (-I*b*t)**(a/2) * besselk(sqrt(-4*I*b*t)) / gamma(a)
 
     def _moment_generating_function(self, t):
+        """
+        Moment Generating Function for Gamma Inverse Distribution.
+
+        Raises
+        ======
+        NotImplementedError
+        """
         raise NotImplementedError('The moment generating function for the '
                                   'gamma inverse distribution does not exist.')
 
@@ -1450,6 +1584,7 @@ class GumbelDistribution(SingleContinuousDistribution):
     set = Interval(-oo, oo)
 
     def pdf(self, x):
+        """PDF for Gumbel Distribution"""
         beta, mu = self.beta, self.mu
         z = (x - mu)/beta
         return (1/beta)*exp(-(z + exp(-z)))
@@ -1459,9 +1594,11 @@ class GumbelDistribution(SingleContinuousDistribution):
         return exp(-exp((mu - x)/beta))
 
     def _characteristic_function(self, t):
+        """Characteristic function for Gumbel Distribution"""
         return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
 
     def _moment_generating_function(self, t):
+        """Moment Function for Gumbel Distribution"""
         return gamma(1 - self.beta*t) * exp(I*self.mu*t)
 
 def Gumbel(name, beta, mu):
@@ -1483,12 +1620,12 @@ def Gumbel(name, beta, mu):
     beta: Real number, 'beta > 0' is a scale
 
     Returns
-    ==========
+    =======
 
     A RandomSymbol
 
     Examples
-    ==========
+
     >>> from sympy.stats import Gumbel, density, E, variance, cdf
     >>> from sympy import Symbol, simplify, pprint
     >>> x = Symbol("x")
@@ -1519,26 +1656,30 @@ class GompertzDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(b, eta):
+        """Check the value of a and eta are positive"""
         _value_check(b > 0, "b must be positive")
         _value_check(eta > 0, "eta must be positive")
 
     def pdf(self, x):
+        """PDF for Gompertz Distribution"""
         eta, b = self.eta, self.b
         return b*eta*exp(b*x)*exp(eta)*exp(-eta*exp(b*x))
 
     def _cdf(self, x):
+        """CDF for Gompertz Distribution"""
         eta, b = self.eta, self.b
         return 1 - exp(eta)*exp(-eta*exp(b*x))
 
     def _moment_generating_function(self, t):
+        """Moment function for Gompertz Distribution"""
         eta, b = self.eta, self.b
         return eta * exp(eta) * expint(t/b, eta)
 
 def Gompertz(name, b, eta):
     r"""
     Create a Continuous Random Variable with Gompertz distribution.
-
     The density of the Gompertz distribution is given by
+
 
     .. math::
         f(x) := b \eta e^{b x} e^{\eta} \exp \left(-\eta e^{bx} \right)
@@ -1590,14 +1731,17 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(a, b):
+        """Check the value of a and b are positive"""
         _value_check(a > 0, "a must be positive")
         _value_check(b > 0, "b must be positive")
 
     def pdf(self, x):
+        """PDF for Kumaraswamy Distribution"""
         a, b = self.a, self.b
         return a * b * x**(a-1) * (1-x**a)**(b-1)
 
     def _cdf(self, x):
+        """CDF for Kumaraswamy Distribution"""
         a, b = self.a, self.b
         return Piecewise(
             (S.Zero, x < S.Zero),
@@ -1664,10 +1808,12 @@ class LaplaceDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 'b')
 
     def pdf(self, x):
+        """PDF for Laplace Distribution"""
         mu, b = self.mu, self.b
         return 1/(2*b)*exp(-Abs(x - mu)/b)
 
     def _cdf(self, x):
+        """CDF for Laplace Distribution"""
         mu, b = self.mu, self.b
         return Piecewise(
                     (S.Half*exp((x - mu)/b), x < mu),
@@ -1675,9 +1821,11 @@ class LaplaceDistribution(SingleContinuousDistribution):
                         )
 
     def _characteristic_function(self, t):
+        """Characteristic function for Laplace Distribution"""
         return exp(self.mu*I*t) / (1 + self.b**2*t**2)
 
     def _moment_generating_function(self, t):
+        """Moment function for Laplace Distributions"""
         return exp(self.mu*t) / (1 - self.b**2*t**2)
 
 def Laplace(name, mu, b):
@@ -1751,17 +1899,21 @@ class LogisticDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 's')
 
     def pdf(self, x):
+        """PDF for Logistic Distribution"""
         mu, s = self.mu, self.s
         return exp(-(x - mu)/s)/(s*(1 + exp(-(x - mu)/s))**2)
 
     def _cdf(self, x):
+        """CDF for Logistic Distribution"""
         mu, s = self.mu, self.s
         return S.One/(1 + exp(-(x - mu)/s))
 
     def _characteristic_function(self, t):
+        """Characteristic function for Logistic Distribution"""
         return Piecewise((exp(I*t*self.mu) * pi*self.s*t / sinh(pi*self.s*t), Ne(t, 0)), (S.One, True))
 
     def _moment_generating_function(self, t):
+        """Moment function for Logistic Distribution"""
         return exp(self.mu*t) * Beta(1 - self.s*t, 1 + self.s*t)
 
 def Logistic(name, mu, s):
@@ -1822,13 +1974,16 @@ class LogNormalDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     def pdf(self, x):
+        """PDF for Log Normal Distributon"""
         mean, std = self.mean, self.std
         return exp(-(log(x) - mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
 
     def sample(self):
+        """Sampling for Log Normal Distributon"""
         return random.lognormvariate(self.mean, self.std)
 
     def _cdf(self, x):
+        """CDF for Log Normal Distribution"""
         mean, std = self.mean, self.std
         return Piecewise(
                 (S.Half + S.Half*erf((log(x) - mean)/sqrt(2)/std), x > 0),
@@ -1836,6 +1991,14 @@ class LogNormalDistribution(SingleContinuousDistribution):
         )
 
     def _moment_generating_function(self, t):
+        """
+        Moment function for Log Normal Distributon
+
+        Raises
+        ======
+
+        NotImplementedError
+        """
         raise NotImplementedError('Moment generating function of the log-normal distribution is not defined.')
 
 def LogNormal(name, mean, std):
@@ -1911,10 +2074,12 @@ class MaxwellDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     def pdf(self, x):
+        """PDF for Maxwell Distribution"""
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
 
     def _cdf(self, x):
+        """CDF for Maxwell Distribution"""
         a = self.a
         return erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
 
@@ -1981,10 +2146,12 @@ class NakagamiDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     def pdf(self, x):
+        """PDF for Nakagami Distribution"""
         mu, omega = self.mu, self.omega
         return 2*mu**mu/(gamma(mu)*omega**mu)*x**(2*mu - 1)*exp(-mu/omega*x**2)
 
     def _cdf(self, x):
+        """CDF for Nakagami Distribution"""
         mu, omega = self.mu, self.omega
         return Piecewise(
                     (lowergamma(mu, (mu/omega)*x**2)/gamma(mu), x > 0),
@@ -2068,23 +2235,29 @@ class NormalDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(mean, std):
+        """Checks the value of std is positive"""
         _value_check(std > 0, "Standard deviation must be positive")
 
     def pdf(self, x):
+        """PDF for Normal Distribution"""
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
     def sample(self):
+        """Sampling for Normal Distribution"""
         return random.normalvariate(self.mean, self.std)
 
     def _cdf(self, x):
+        """CDF for Normal Distribution"""
         mean, std = self.mean, self.std
         return erf(sqrt(2)*(-mean + x)/(2*std))/2 + S.Half
 
     def _characteristic_function(self, t):
+        """Characteristic function for Normal Distribution"""
         mean, std = self.mean, self.std
         return exp(I*mean*t - std**2*t**2/2)
 
     def _moment_generating_function(self, t):
+        """Moment function for Normal Distribution"""
         mean, std = self.mean, self.std
         return exp(mean*t + std**2*t**2/2)
 
@@ -2184,21 +2357,32 @@ class ParetoDistribution(SingleContinuousDistribution):
 
     @property
     def set(self):
+        """
+        Get the set in which the given Pareto Distribution is valid
+
+        Returns
+        =======
+        Interval of the distribution: [xm,oo]
+        """
         return Interval(self.xm, oo)
 
     @staticmethod
     def check(xm, alpha):
+        """Checks the values of xm and alpha are positive"""
         _value_check(xm > 0, "Xm must be positive")
         _value_check(alpha > 0, "Alpha must be positive")
 
     def pdf(self, x):
+        """PDF for Pareto Distribution"""
         xm, alpha = self.xm, self.alpha
         return alpha * xm**alpha / x**(alpha + 1)
 
     def sample(self):
+        """Sampling for Pareto Distribution"""
         return random.paretovariate(self.alpha)
 
     def _cdf(self, x):
+        """CDF for Pareto Distribution"""
         xm, alpha = self.xm, self.alpha
         return Piecewise(
                 (S.One - xm**alpha/x**alpha, x>=xm),
@@ -2206,10 +2390,12 @@ class ParetoDistribution(SingleContinuousDistribution):
         )
 
     def _moment_generating_function(self, t):
+        """Moment function for Pareto Distribution"""
         xm, alpha = self.xm, self.alpha
         return alpha * (-xm*t)**alpha * uppergamma(-alpha, -xm*t)
 
     def _characteristic_function(self, t):
+        """Characteristic function for Pareto Distribution"""
         xm, alpha = self.xm, self.alpha
         return alpha * (-I * xm * t) ** alpha * uppergamma(-alpha, -I * xm * t)
 
@@ -2270,9 +2456,18 @@ class QuadraticUDistribution(SingleContinuousDistribution):
 
     @property
     def set(self):
+        """
+        Get the set in which given QuadraticU Distribution is valid
+
+        Returns
+        =======
+
+        Inteval of the distribution: [a,b]
+        """
         return Interval(self.a, self.b)
 
     def pdf(self, x):
+        """PDF for QuadraticU Distribution"""
         a, b = self.a, self.b
         alpha = 12 / (b-a)**3
         beta = (a+b) / 2
@@ -2281,11 +2476,13 @@ class QuadraticUDistribution(SingleContinuousDistribution):
                   (S.Zero, True))
 
     def _moment_generating_function(self, t):
+        """Moment function for QuadraticU Distribution"""
         a, b = self.a, self.b
 
         return -3 * (exp(a*t) * (4  + (a**2 + 2*a*(-2 + b) + b**2) * t) - exp(b*t) * (4 + (-4*b + (a + b)**2) * t)) / ((a-b)**3 * t**2)
 
     def _characteristic_function(self, t):
+        """Characteristic function for QuadraticU Distribution"""
         def _moment_generating_function(self, t):
             a, b = self.a, self.b
 
@@ -2356,25 +2553,37 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
 
     @property
     def set(self):
+        """
+        Get the set in which the given RaisedCosine Distribution is valid
+
+        Returns
+        =======
+
+        interval of the distribution: [mu - s, mu + s]
+        """
         return Interval(self.mu - self.s, self.mu + self.s)
 
     @staticmethod
     def check(mu, s):
+        """Check the value of s is positive"""
         _value_check(s > 0, "s must be positive")
 
     def pdf(self, x):
+        """PDF for Raised Cosine Distribution"""
         mu, s = self.mu, self.s
         return Piecewise(
                 ((1+cos(pi*(x-mu)/s)) / (2*s), And(mu-s<=x, x<=mu+s)),
                 (S.Zero, True))
 
     def _characteristic_function(self, t):
+        """Characteristic function for Raised Cosine Distribution"""
         mu, s = self.mu, self.s
         return Piecewise((exp(-I*pi*mu/s)/2, Eq(t, -pi/s)),
                          (exp(I*pi*mu/s)/2, Eq(t, pi/s)),
                          (pi**2*sin(s*t)*exp(I*mu*t) / (s*t*(pi**2 - s**2*t**2)), True))
 
     def _moment_generating_function(self, t):
+        """Moment function for Raised Cosine Distribution"""
         mu, s = self.mu, self.s
         return pi**2 * sinh(s*t) * exp(mu*t) /  (s*t*(pi**2 + s**2*t**2))
 
@@ -2441,18 +2650,22 @@ class RayleighDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     def pdf(self, x):
+        """PDF for Rayleigh Distribution"""
         sigma = self.sigma
         return x/sigma**2*exp(-x**2/(2*sigma**2))
 
     def _cdf(self, x):
+        """CDF for Rayleigh Distribution"""
         sigma = self.sigma
         return 1 - exp(-(x**2/(2*sigma**2)))
 
     def _characteristic_function(self, t):
+        """CDF for Rayleigh Distribution"""
         sigma = self.sigma
         return 1 - sigma*t*exp(-sigma**2*t**2/2) * sqrt(pi/2) * (erfi(sigma*t/sqrt(2)) - I)
 
     def _moment_generating_function(self, t):
+        """Moment function for Rayleigh Distribution"""
         sigma = self.sigma
         return 1 + sigma*t*exp(sigma**2*t**2/2) * sqrt(pi/2) * (erf(sigma*t/sqrt(2)) + 1)
 
@@ -2519,10 +2732,12 @@ class ShiftedGompertzDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(b, eta):
+        """Check the value of b and eta are positive"""
         _value_check(b > 0, "b must be positive")
         _value_check(eta > 0, "eta must be positive")
 
     def pdf(self, x):
+        """PDF for Shifted Gompertz Distribution"""
         b, eta = self.b, self.eta
         return b*exp(-b*x)*exp(-eta*exp(-b*x))*(1+eta*(1-exp(-b*x)))
 
@@ -2578,15 +2793,25 @@ class StudentTDistribution(SingleContinuousDistribution):
     _argnames = ('nu',)
 
     def pdf(self, x):
+        """PDF for StudentT Distribution"""
         nu = self.nu
         return 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
 
     def _cdf(self, x):
+        """CDF for StudentT Distribution"""
         nu = self.nu
         return S.Half + x*gamma((nu+1)/2)*hyper((S.Half, (nu+1)/2),
                                 (S(3)/2,), -x**2/nu)/(sqrt(pi*nu)*gamma(nu/2))
 
     def _moment_generating_function(self, t):
+        """
+        Moment Generating Function for StudentT Distribution.
+
+        Raises
+        ========
+
+        NotImplementedError
+        """
         raise NotImplementedError('The moment generating function for the Student-T distribution is undefined.')
 
 def StudentT(name, nu):
@@ -2658,6 +2883,7 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b', 'c', 'd')
 
     def pdf(self, x):
+        """PDF for Trapezoidal Distribution"""
         a, b, c, d = self.a, self.b, self.c, self.d
         return Piecewise(
             (2*(x-a) / ((b-a)*(d+c-a-b)), And(a <= x, x < b)),
@@ -2738,6 +2964,7 @@ class TriangularDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b', 'c')
 
     def pdf(self, x):
+        """PDF for Triangular Distribution"""
         a, b, c = self.a, self.b, self.c
         return Piecewise(
             (2*(x - a)/((b - a)*(c - a)), And(a <= x, x < c)),
@@ -2746,10 +2973,12 @@ class TriangularDistribution(SingleContinuousDistribution):
             (S.Zero, True))
 
     def _characteristic_function(self, t):
+        """Characteristic function for Triangular Distribution"""
         a, b, c = self.a, self.b, self.c
         return -2 *((b-c) * exp(I*a*t) - (b-a) * exp(I*c*t) + (c-a) * exp(I*b*t)) / ((b-a)*(c-a)*(b-c)*t**2)
 
     def _moment_generating_function(self, t):
+        """Moment function for Triangular Distribution"""
         a, b, c = self.a, self.b, self.c
         return 2 * ((b - c) * exp(a * t) - (b - a) * exp(c * t) + (c + a) * exp(b * t)) / (
         (b - a) * (c - a) * (b - c) * t ** 2)
@@ -2828,6 +3057,7 @@ class UniformDistribution(SingleContinuousDistribution):
     _argnames = ('left', 'right')
 
     def pdf(self, x):
+        """PDF for Uniform Distribution"""
         left, right = self.left, self.right
         return Piecewise(
             (S.One/(right - left), And(left <= x, x <= right)),
@@ -2835,6 +3065,7 @@ class UniformDistribution(SingleContinuousDistribution):
         )
 
     def _cdf(self, x):
+        """CDF for Uniform Distribution"""
         left, right = self.left, self.right
         return Piecewise(
             (S.Zero, x < left),
@@ -2843,16 +3074,19 @@ class UniformDistribution(SingleContinuousDistribution):
         )
 
     def _characteristic_function(self, t):
+        """Characterisitc function for Uniform Distribution"""
         left, right = self.left, self.right
         return Piecewise(((exp(I*t*right) - exp(I*t*left)) / (I*t*(right - left)), Ne(t, 0)),
                          (S.One, True))
 
     def _moment_generating_function(self, t):
+        """Moment function for Uniform Distribution"""
         left, right = self.left, self.right
         return Piecewise(((exp(t*right) - exp(t*left)) / (t * (right - left)), Ne(t, 0)),
                          (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
+        """Expectation Value function for Uniform Distribution"""
         from sympy import Max, Min
         kwargs['evaluate'] = True
         result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
@@ -2861,6 +3095,7 @@ class UniformDistribution(SingleContinuousDistribution):
         return result
 
     def sample(self):
+        """Sampling for Uniform Distribution"""
         return random.uniform(self.left, self.right)
 
 
@@ -2932,15 +3167,25 @@ class UniformSumDistribution(SingleContinuousDistribution):
 
     @property
     def set(self):
+        """
+        Get the set in which the given UniformSum Distribution is valid
+
+        Returns
+        =======
+
+        Interval for the Distribution: [0,n]
+        """
         return Interval(0, self.n)
 
     def pdf(self, x):
+        """PDF for UniformSum Distribution"""
         n = self.n
         k = Dummy("k")
         return 1/factorial(
             n - 1)*Sum((-1)**k*binomial(n, k)*(x - k)**(n - 1), (k, 0, floor(x)))
 
     def _cdf(self, x):
+        """CDF for UniformSum Distribution"""
         n = self.n
         k = Dummy("k")
         return Piecewise((S.Zero, x < 0),
@@ -2949,9 +3194,11 @@ class UniformSumDistribution(SingleContinuousDistribution):
                         (S.One, True))
 
     def _characteristic_function(self, t):
+        """Characteristic function UniformSum Distribution"""
         return ((exp(I*t) - 1) / (I*t))**self.n
 
     def _moment_generating_function(self, t):
+        """Moment function for UniformSum Distribution"""
         return ((exp(t) - 1) / t)**self.n
 
 def UniformSum(name, n):
@@ -3034,9 +3281,11 @@ class VonMisesDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(mu, k):
+        """Check the value of k is positive"""
         _value_check(k > 0, "k must be positive")
 
     def pdf(self, x):
+        """PDF for VonMises Distribution"""
         mu, k = self.mu, self.k
         return exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
 
@@ -3103,14 +3352,17 @@ class WeibullDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(alpha, beta):
+        """Check the value of alpha and beta are positive"""
         _value_check(alpha > 0, "Alpha must be positive")
         _value_check(beta > 0, "Beta must be positive")
 
     def pdf(self, x):
+        """PDF for Weibull Distribution"""
         alpha, beta = self.alpha, self.beta
         return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
 
     def sample(self):
+        """Sampling for Weibull Distribution"""
         return random.weibullvariate(self.alpha, self.beta)
 
 def Weibull(name, alpha, beta):
@@ -3177,17 +3429,28 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
 
     @property
     def set(self):
+        """
+        Get the set in which the given Wigner Semicircle Distribution is valid.
+
+        Returns
+        =======
+
+        Interval of the Distribution: [-R,R]
+        """
         return Interval(-self.R, self.R)
 
     def pdf(self, x):
+        """PDF for Wigner Semicircle Distribution"""
         R = self.R
         return 2/(pi*R**2)*sqrt(R**2 - x**2)
 
     def _characteristic_function(self, t):
+        """Characteristic function for Wigner Semicircle Distribution"""
         return Piecewise((2 * besselj(1, self.R*t) / (self.R*t), Ne(t, 0)),
                          (S.One, True))
 
     def _moment_generating_function(self, t):
+        """Moment function for Wigner Semicircle Distribution"""
         return Piecewise((2 * besseli(1, self.R*t) / (self.R*t), Ne(t, 0)),
                          (S.One, True))
 
