@@ -1,15 +1,15 @@
-from sympy import S, Sum, I, lambdify, re, im, log, simplify, zeta, pi
+from sympy import S, Sum, I, lambdify, re, im, log, simplify, zeta, pi, erf, sqrt, Piecewise, beta, floor
 from sympy.abc import x
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
 from sympy.sets.fancysets import Range
 from sympy.stats import (P, E, variance, density, characteristic_function,
-        where, moment_generating_function)
+        where, moment_generating_function, cdf)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
         Poisson, Geometric, Logarithmic, NegativeBinomial, YuleSimon, Zeta)
 from sympy.stats.rv import sample
-from sympy.utilities.pytest import slow
+from sympy.utilities.pytest import slow, raises
 
 def test_PoissonDistribution():
     l = 3
@@ -52,11 +52,14 @@ def test_negative_binomial():
     assert isinstance(E(x, evaluate=False), Sum)
 
 def test_yule_simon():
+    from sympy import S
     rho = S(3)
     x = YuleSimon('x', rho)
     assert simplify(E(x)) == rho / (rho - 1)
     assert simplify(variance(x)) == rho**2 / ((rho - 1)**2 * (rho - 2))
     assert isinstance(E(x, evaluate=False), Sum)
+    # To test the cdf function
+    assert cdf(x)(x) == Piecewise((-beta(floor(x), 4)*floor(x) + 1, x >= 1), (0, True))
 
 def test_zeta():
     s = S(5)

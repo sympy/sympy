@@ -1,8 +1,8 @@
-from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum
+from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum, sqrt, pi, exp
 from sympy.stats import Normal, Poisson, variance
 from sympy.stats.rv import probability, expectation
 from sympy.stats import Covariance, Variance, Probability, Expectation
-
+from sympy.utilities.pytest import raises
 
 def test_literal_probability():
     X = Normal('X', 2, 3)
@@ -65,6 +65,7 @@ def test_literal_probability():
     assert Covariance(X, X**2).doit() == Covariance(X, X**2)
     assert Covariance(X, sin(X)).doit() == Covariance(sin(X), X)
     assert Covariance(X**2, sin(X)*Y).doit() == Covariance(sin(X)*Y, X**2)
+    assert Covariance(w, X).evaluate_integral() == 0
 
 
 def test_probability_rewrite():
@@ -93,6 +94,16 @@ def test_probability_rewrite():
     assert Expectation(Z).rewrite(Probability) == Sum(z*pz, (z, 0, oo))
     assert Variance(X).rewrite(Probability) == Integral(x**2*px, (x, -oo, oo)) - Integral(x*px, (x, -oo, oo))**2
     assert Variance(Z).rewrite(Probability) == Sum(z**2*pz, (z, 0, oo)) - Sum(z*pz, (z, 0, oo))**2
+    assert Covariance(w, X).rewrite(Probability) == \
+           -w*Integral(x*Probability(Eq(X, x)), (x, -oo, oo)) + Integral(w*x*Probability(Eq(X, x)), (x, -oo, oo))
+
+    # To test rewrite as sum function
+    assert Variance(X).rewrite(Sum) == Variance(X).rewrite(Integral)
+    assert Expectation(X).rewrite(Sum) == Expectation(X).rewrite(Integral)
+
+    assert Covariance(w, X).rewrite(Sum) == 0
+
+    assert Covariance(w, X).rewrite(Integral) == 0
 
     assert Variance(X, condition=Y).rewrite(Probability) == Integral(x**2*Probability(Eq(X, x), Y), (x, -oo, oo)) - \
                                                             Integral(x*Probability(Eq(X, x), Y), (x, -oo, oo))**2

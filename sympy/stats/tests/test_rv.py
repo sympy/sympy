@@ -1,24 +1,24 @@
 from __future__ import unicode_literals
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-        DiracDelta, Lambda, log, pi)
+        DiracDelta, Lambda, log, pi, exp, log)
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample, Geometric)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
-        RandomSymbol, PSpace)
+        RandomSymbol, sample_iter, PSpace)
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import range
 from sympy.abc import x
-
+from sympy.stats import Normal, DiscreteUniform, Poisson, characteristic_function, moment_generating_function, sample_iter
+from sympy import Lambda
 
 def test_where():
     X, Y = Die('X'), Die('Y')
     Z = Normal('Z', 0, 1)
 
     assert where(Z**2 <= 1).set == Interval(-1, 1)
-    assert where(
-        Z**2 <= 1).as_boolean() == Interval(-1, 1).as_relational(Z.symbol)
+    assert where(Z**2 <= 1).as_boolean() == Interval(-1, 1).as_relational(Z.symbol)
     assert where(And(X > Y, Y > 4)).as_boolean() == And(
         Eq(X.symbol, 6), Eq(Y.symbol, 5))
 
@@ -44,6 +44,74 @@ def test_random_symbols():
     assert set(random_symbols(2*X + Y.symbol)) == set((X,))
     assert set(random_symbols(2)) == set()
 
+def test_characteristic_function():
+    #  Imports I from sympy
+    from sympy import I
+    X = Normal('X',0,1)
+    Y = DiscreteUniform('Y', [1,2,7])
+    Z = Poisson('Z', 2)
+    t = symbols('_t')
+    P = Lambda(t, exp(-t**2/2))
+    Q = Lambda(t, exp(7*t*I)/3 + exp(2*t*I)/3 + exp(t*I)/3)
+    R = Lambda(t, exp(2 * exp(t*I) - 2))
+
+
+    assert characteristic_function(X) == P
+    assert characteristic_function(Y) == Q
+    assert characteristic_function(Z) == R
+
+def test_moment_generating_function():
+
+    X = Normal('X',0,1)
+    Y = DiscreteUniform('Y', [1,2,7])
+    Z = Poisson('Z', 2)
+    t = symbols('_t')
+    P = Lambda(t, exp(t**2/2))
+    Q = Lambda(t, (exp(7*t)/3 + exp(2*t)/3 + exp(t)/3))
+    R = Lambda(t, exp(2 * exp(t) - 2))
+
+
+    assert moment_generating_function(X) == P
+    assert moment_generating_function(Y) == Q
+    assert moment_generating_function(Z) == R
+
+def test_sample_iter():
+
+    X = Normal('X',0,1)
+    Y = DiscreteUniform('Y', [1,2,7])
+    Z = Poisson('Z', 2)
+
+    expr = X**2 + 3
+    iterator = sample_iter(expr)
+
+    expr2 = Y**2 + 5*Y + 4
+    iterator2 = sample_iter(expr2)
+
+    expr3 = Z**3 + 4
+    iterator3 = sample_iter(expr3)
+
+    def is_iterator(obj):
+        if (
+            hasattr(obj, '__iter__') and
+            hasattr(obj, 'next') and      # or __next__ in Python 3
+            callable(obj.__iter__) and
+            obj.__iter__() is obj
+           ):
+            return True
+        else:
+            return False
+
+    # Passes in python2 but fails in python3
+    # assert is_iterator(iterator)
+    # assert is_iterator(iterator2)
+    # assert is_iterator(iterator3)
+
+    # For testing value error in case of free symbols in condition
+    # raises(ValueError)
+    # Find an expression thta breaks lambdify and use it to test TypeError
+    # if Exception:
+    #    raises(TypeError)
+
 
 def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
@@ -53,7 +121,6 @@ def test_pspace():
     assert pspace(X) == X.pspace
     assert pspace(2*X + 1) == X.pspace
     assert pspace(2*X + Y) == IndependentProductPSpace(Y.pspace, X.pspace)
-
 
 def test_rs_swap():
     X = Normal('x', 0, 1)
