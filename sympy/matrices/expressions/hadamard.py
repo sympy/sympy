@@ -196,6 +196,8 @@ def canonicalize(x):
 
     Matrix of only zeros will make Hadamard product zero.
 
+    Duplicate elements can be collected and rewritten as HadamardPower
+
     References
     ==========
 
