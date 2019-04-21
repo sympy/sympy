@@ -159,20 +159,30 @@ def canonicalize(x):
 
     >>> X = HadamardProduct(A, B)
     >>> Y = HadamardProduct(B, A)
-    >>> canonicalize(X) == canonicalize(Y)
-    True
+    >>> X
+    A.*B
+    >>> Y
+    B.*A
+    >>> canonicalize(X)
+    A.*B
+    >>> canonicalize(Y)
+    A.*B
 
     Hadamard product identity:
 
     >>> X = HadamardProduct(A, OneMatrix(2, 2))
-    >>> canonicalize(X) == A
-    True
+    >>> X
+    A.*OneMatrix(2, 2)
+    >>> canonicalize(X)
+    A
 
     Absorbing element of Hadamard product:
 
     >>> X = HadamardProduct(A, ZeroMatrix(2, 2))
-    >>> canonicalize(X) == ZeroMatrix(2, 2)
-    True
+    >>> X
+    A.*0
+    >>> canonicalize(X)
+    0
 
     Rewriting to Hadamard Power
 
