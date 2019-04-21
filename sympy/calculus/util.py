@@ -883,7 +883,7 @@ def maxima(f, symbol, domain=S.Reals):
     if isinstance(symbol, Symbol):
         if isinstance(domain, EmptySet):
             raise ValueError("Maxima not defined for empty domain.")
-        
+
         diff1 = diff(f, symbol)
         period = periodicity(diff1, symbol)
         diff2 = diff(diff1, symbol)
@@ -898,8 +898,7 @@ def maxima(f, symbol, domain=S.Reals):
                 n = Symbol('n')
                 solution += imageset(n, n*period+x, S.Integers)
             return solution
-        
-        
+
     else:
         raise ValueError("%s is not a valid symbol." % symbol)
 
@@ -947,7 +946,7 @@ def minima(f, symbol, domain=S.Reals):
     if isinstance(symbol, Symbol):
         if isinstance(domain, EmptySet):
             raise ValueError("Minima not defined for empty domain.")
-        
+
         diff1 = diff(f, symbol)
         period = periodicity(diff1, symbol)
         diff2 = diff(diff1, symbol)
@@ -962,7 +961,7 @@ def minima(f, symbol, domain=S.Reals):
                 n = Symbol('n')
                 solution += imageset(n, n*period+x, S.Integers)
             return solution
-        
+
     else:
         raise ValueError("%s is not a valid symbol." % symbol)
 
