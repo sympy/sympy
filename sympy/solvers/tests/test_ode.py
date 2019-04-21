@@ -266,7 +266,7 @@ def test_linear_2eq_order2():
     Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + C1*airyai(-t*(1 + sqrt(133))**(S(1)/3)) -\
     C2*airybi(t*(-1 + sqrt(133))**(S(1)/3)) + C2*airybi(-t*(1 + sqrt(133))**(S(1)/3)))/266)]
     assert dsolve(eq8) == sol8
-    # FIXME: assert checksysodesol(eq8, sol8) == (True, [0, 0])
+    assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
     eq9 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
     sol9 = [Eq(x(t), -sqrt(133)*(4*C1*Integral(exp((-sqrt(133) - 1)*Integral(t, t)), t) + 4*C2 - \
@@ -3009,31 +3009,32 @@ def test_2nd_power_series_ordinary():
         x**6/180 - x**3/6 + 1) + C1*x*(-x**3/12 + 1) + O(x**7))
 
 def test_Airy_equation():
-    C1, C2 = symbols("C1 C2")
     eq = f(x).diff(x, 2) - x*f(x)
-    sol = dsolve(eq)
+    sol = Eq(f(x), C1*airyai(x) + C2*airybi(x))
+    sols = constant_renumber(sol)
     assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
-    assert sol == Eq(f(x), C1*airyai(x) + C2*airybi(x))
     assert checkodesol(eq, sol) == (True, 0)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_airy') in (sol, sols)
+
     eq = f(x).diff(x, 2) + 2*x*f(x)
+    sol = Eq(f(x), C1*airyai(-2**(S(1)/3)*x) + C2*airybi(-2**(S(1)/3)*x))
+    sols = constant_renumber(sol)
     assert classify_ode(eq) == ("2nd_linear_airy",'2nd_power_series_ordinary')
-    sol = dsolve(eq)
-    assert sol == Eq(f(x), C1*airyai(-2**(S(1)/3)*x) + C2*airybi(-2**(S(1)/3)*x))
     assert checkodesol(eq, sol) == (True, 0)
-
-
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_airy') in (sol, sols)
 
 def test_2nd_power_series_regular():
     # FIXME: Maybe there should be a way to check series solutions
     # checkodesol doesn't work with them.
-    C1, C2 = symbols("C1 C2")
     eq = x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*x**2*(-16*x**3/9 +
+    assert dsolve(eq, hint='2nd_power_series_regular') == Eq(f(x), C1*x**2*(-16*x**3/9 +
         4*x**2 - 4*x + 1) + O(x**6))
 
     eq = 4*x**2*(f(x).diff(x, 2)) -8*x**2*(f(x).diff(x)) + (4*x**2 +
         1)*f(x)
-    assert dsolve(eq) == Eq(f(x), C1*sqrt(x)*(
+    assert dsolve(eq, hint='2nd_power_series_regular') == Eq(f(x), C1*sqrt(x)*(
         x**4/24 + x**3/6 + x**2/2 + x + 1) + O(x**6))
 
     eq = x**2*(f(x).diff(x, 2)) - x**2*(f(x).diff(x)) + (
@@ -3050,27 +3051,53 @@ def test_2nd_power_series_regular():
     assert dsolve(eq) == Eq(f(x), C2*(-x**4/2 + 1) + C1*x**2 + O(x**6))
 
 def test_2nd_linear_bessel_equation():
-    C1, C2 = symbols("C1 C2")
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 4)*f(x)
-    sol = dsolve(eq)
-    assert sol == Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))
-    assert checkodesol(eq, sol) == (True, 0)
+    sol = Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))
+    sols = constant_renumber(sol)
+    assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 +25)*f(x)
+    sol = Eq(f(x), C1*besselj(5*I, x) + C2*bessely(5*I, x))
+    sols = constant_renumber(sol)
     assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
-    sol = dsolve(eq)
-    assert sol == Eq(f(x), C1*besselj(5*I, x) + C2*bessely(5*I, x))
-    #assert checkodesol(eq, sol) == (True, 0)
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    # FIXME: assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2)*f(x)
-    sol = dsolve(eq)
-    assert sol == Eq(f(x), C1*besselj(0, x) + C2*bessely(0, x))
-    assert checkodesol(eq, sol) == (True, 0)
+    sol = Eq(f(x), C1*besselj(0, x) + C2*bessely(0, x))
+    sols = constant_renumber(sol)
+    assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (81*x**2 -S(1)/9)*f(x)
-    sol = dsolve(eq)
-    assert sol == Eq(f(x), C1*besselj(S(1)/3, 9*x) + C2*bessely(S(1)/3, 9*x))
-    #assert checkodesol(eq, sol) == (True, 0)
+    sol = Eq(f(x), C1*besselj(S(1)/3, 9*x) + C2*bessely(S(1)/3, 9*x))
+    sols = constant_renumber(sol)
+    assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    # FIXME: assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**4 - 4)*f(x)
+    sol = Eq(f(x), C1*besselj(1, x**2/2) + C2*bessely(1, x**2/2))
+    sols = constant_renumber(sol)
+    assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
+
+    eq = x**2*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) + (x**4 - 4)*f(x)
+    sol = Eq(f(x), (C1*besselj(sqrt(17)/4, x**2/2) + C2*bessely(sqrt(17)/4, x**2/2))/sqrt(x))
+    sols = constant_renumber(sol)
+    assert classify_ode(eq) == ('2nd_linear_bessel', '2nd_power_series_regular')
+    assert dsolve(eq, f(x)) in (sol, sols)
+    assert dsolve(eq, f(x), hint='2nd_linear_bessel') in (sol, sols)
+     # FIXME: assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
 def test_issue_7093():
     x = Symbol("x") # assuming x is real leads to an error

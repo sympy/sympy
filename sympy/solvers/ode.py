@@ -307,7 +307,6 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
     "Liouville",
-    "order_reducible",
     "2nd_linear_airy",
     "2nd_linear_bessel",
     "nth_order_reducible",
@@ -1358,7 +1357,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                             if (p.is_constant(x) and p != 0) and r[c3] != 0:
                                 a4 = Wild('a4', exclude=[x,f(x),df])
                                 b4 = Wild('b4', exclude=[x,f(x),df])
-                                c4 = Wild('b4', exclude=[x,f(x),df])
+                                c4 = Wild('c4', exclude=[x,f(x),df])
+                                d4 = Wild('d4', exclude=[x,f(x),df])
                                 coeff = r[a3].match(a4*x**2)
                                 if coeff:
                                     coeff = coeff[a4]
@@ -1366,15 +1366,15 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                                         r[c3] = r[c3]/coeff
                                         r[b3] = r[b3]/coeff
                                         r[a3] = r[a3]/coeff
-                                rn = r[c3].match(a4*a4*x**2-b4*b4)
-                                if check==0: # if r[c3] becomes zero at x0
-                                    rn = r[c3].match(a4*a4*x**2)
-                                    if rn:
-                                        rn[b4] = 0
-                                if rn and r[b3] != 0:
-                                    rn = {'n':rn[b4], 'a4':rn[a4]}
-                                    rn['c4'] = r[b3].match(c4*x)[b4]
-                                    matching_hints["2nd_linear_bessel"] = rn
+                                    rn = r[c3].match(a4*a4*x**(2*d4)-b4*b4)
+                                    if check==0: # if r[c3] becomes zero at x0
+                                        rn = r[c3].match(a4*a4*x**(2*d4))
+                                        if rn:
+                                            rn[b4] = 0
+                                    if rn and r[b3] != 0:
+                                        rn = {'n':rn[b4], 'a4':rn[a4], 'd4':rn[d4]}
+                                        rn['c4'] = r[b3].match(c4*x)[c4]
+                                        matching_hints["2nd_linear_bessel"] = rn
 
                 #If the ODE is ordinary and is of the form of Airy's Equation
                 #Eq(x**2*Derivative(y(x),x,x)-(ax+b)*y(x))
@@ -4058,8 +4058,9 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     n = match['n']
     a4 = match['a4']
     c4 = match['c4']
+    d4 = match['d4']
     n = sqrt(n**2 + Rational(1, 4)*(c4 - 1)**2)
-    return (Eq(f(x), (x**(Rational(1-c4,2)))*(C0*besselj(n,x) + C1*bessely(n,x)).subs(x,a4*x)))
+    return (Eq(f(x), (x**(Rational(1-c4,2)))*(C0*besselj(S(n)/d4,x**d4/S(d4)) + C1*bessely(S(n)/d4,x**d4/S(d4))).subs(x,a4*x)))
 
 def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     r"""
