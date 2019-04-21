@@ -289,7 +289,9 @@ class Piecewise(Function):
             #   (Feature implemented for 1 variable Piecewise only)
             if(len(symbols)<2):
                 try:
-                    cu_inter = cond.as_set()      #current condition
+                    cu_inter = cond.as_set()      # current condition
+                    # Makes sure that x**2<-1 like conditions are not taken as EmptySet()
+                    # Makes sure that symbols are not treated as True for the UniversalSet()
                     if(cu_inter != EmptySet() and not(isinstance(cond, Symbol))):
                         inter = Intersection(existing_intervals, cu_inter)
                         if((cu_inter == inter)):
