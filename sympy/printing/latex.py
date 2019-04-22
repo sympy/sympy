@@ -140,6 +140,7 @@ class LatexPrinter(Printer):
         "mat_symbol_style": "plain",
         "imaginary_unit": "i",
         "gothic_re_im": False,
+        "decimal_separator": "period",
     }
 
     def __init__(self, settings=None):
@@ -377,6 +378,8 @@ class LatexPrinter(Printer):
 
             if exp[0] == '+':
                 exp = exp[1:]
+            if self._settings['decimal_separator'] == 'comma':
+                mant = mant.replace('.','{,}')
 
             return r"%s%s10^{%s}" % (mant, separator, exp)
         elif str_real == "+inf":
@@ -384,6 +387,8 @@ class LatexPrinter(Printer):
         elif str_real == "-inf":
             return r"- \infty"
         else:
+            if self._settings['decimal_separator'] == 'comma':
+                str_real = str_real.replace('.','{,}')
             return str_real
 
     def _print_Cross(self, expr):
@@ -1710,8 +1715,12 @@ class LatexPrinter(Printer):
         )
 
     def _print_tuple(self, expr):
-        return r"\left( %s\right)" % \
-            r", \  ".join([self._print(i) for i in expr])
+        if self._settings['decimal_separator'] =='comma':
+            return r"\left( %s\right)" % \
+                r"; \  ".join([self._print(i) for i in expr])
+        else:
+            return r"\left( %s\right)" % \
+                r", \  ".join([self._print(i) for i in expr])
 
     def _print_TensorProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
@@ -1725,8 +1734,12 @@ class LatexPrinter(Printer):
         return self._print_tuple(expr)
 
     def _print_list(self, expr):
-        return r"\left[ %s\right]" % \
-            r", \  ".join([self._print(i) for i in expr])
+        if self._settings['decimal_separator'] == 'comma':
+            return r"\left[ %s\right]" % \
+                r"; \  ".join([self._print(i) for i in expr])
+        else:
+            return r"\left[ %s\right]" % \
+                r", \  ".join([self._print(i) for i in expr])
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -1807,7 +1820,10 @@ class LatexPrinter(Printer):
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
-        items = ", ".join(map(self._print, items))
+        if self._settings['decimal_separator'] == 'comma':
+            items = "; ".join(map(self._print, items))
+        else:
+            items = ", ".join(map(self._print, items))
         return r"\left\{%s\right\}" % items
 
     _print_frozenset = _print_set
@@ -2367,7 +2383,8 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
           itex=False, ln_notation=False, long_frac_ratio=None,
           mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
           order=None, symbol_names=None, root_notation=True,
-          mat_symbol_style="plain", imaginary_unit="i", gothic_re_im=False):
+          mat_symbol_style="plain", imaginary_unit="i", gothic_re_im=False,
+          decimal_separator = "period" ):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2433,6 +2450,12 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
     gothic_re_im : boolean, optional
         If set to ``True``, `\Re` and `\Im` is used for ``re`` and ``im``, respectively.
         The default is ``False`` leading to `\operatorname{re}` and `\operatorname{im}`.
+    decimal_separator : string, optional
+        Specifies how to print decimal values using the right separator. The separator
+        is the symbol that separates the whole number part and the fractional parts of
+        the decimal. decimal_separator is either ``comma`` or ``period`` (which is
+        the default). If ``comma`` is specified, the decimals will be printed like 2{,}5.
+        If ``period`` is specified, the decimal is printed like 2.5( the standard in python).
 
     Notes
     =====
@@ -2561,6 +2584,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         'mat_symbol_style': mat_symbol_style,
         'imaginary_unit': imaginary_unit,
         'gothic_re_im': gothic_re_im,
+        'decimal_separator': decimal_separator,
     }
 
     return LatexPrinter(settings).doprint(expr)

@@ -285,7 +285,13 @@ class Printer(object):
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
                     return getattr(self, printmethod)(expr, **kwargs)
-            # Unknown object, fall back to the emptyPrinter.
+            # Unknown object, fall back to the emptyPrinter. Checks what type of
+            # decimal separator to print.
+            if ('decimal_separator' in self._settings):
+                if (self._settings['decimal_separator'] == 'comma') & \
+                    (self.emptyPrinter == str):
+                    expr = str(expr)
+                    expr = expr.replace('.','{,}')
             return self.emptyPrinter(expr)
         finally:
             self._print_level -= 1
