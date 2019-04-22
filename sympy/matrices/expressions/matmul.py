@@ -144,7 +144,6 @@ class MatMul(MatrixExpr, Mul):
         else:
             args = self.args
         # treat scalar*MatrixSymbol or scalar*MatPow separately
-        mats = [arg for arg in self.args if arg.is_Matrix]
         expr = canonicalize(MatMul(*args))
         return expr
 
