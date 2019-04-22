@@ -1331,7 +1331,7 @@ class Derivative(Expr):
             if zero:
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
-                else:
+                elif expr.is_scalar:
                     return S.Zero
 
             # make the order of symbols canonical

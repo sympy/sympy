@@ -1,10 +1,12 @@
 from __future__ import print_function, division
 
 from sympy.core import Mul, sympify
-from sympy.matrices.expressions.matexpr import \
+from sympy.matrices.expressions.matexpr import (
     MatrixExpr, ShapeError, Identity, OneMatrix, ZeroMatrix
-from sympy.strategies import \
+)
+from sympy.strategies import (
     unpack, flatten, condition, exhaust, do_one, rm_id, sort
+)
 
 
 def hadamard_product(*matrices):
@@ -96,17 +98,17 @@ class HadamardProduct(MatrixExpr):
             diagonal = [(0, 2), (3, 4)]
             diagonal = [e for j, e in enumerate(diagonal) if self.shape[j] != 1]
             for i in d:
-                ptr1 = i.first_pointer
-                ptr2 = i.second_pointer
+                l1 = i._lines[i._first_line_index]
+                l2 = i._lines[i._second_line_index]
                 subexpr = ExprBuilder(
                     CodegenArrayDiagonal,
                     [
                         ExprBuilder(
                             CodegenArrayTensorProduct,
                             [
-                                ExprBuilder(_make_matrix, [i._lines[0]]),
+                                ExprBuilder(_make_matrix, [l1]),
                                 hadam,
-                                ExprBuilder(_make_matrix, [i._lines[1]]),
+                                ExprBuilder(_make_matrix, [l2]),
                             ]
                         ),
                     ] + diagonal,  # turn into *diagonal after dropping Python 2.7
@@ -324,19 +326,19 @@ class HadamardPower(MatrixExpr):
 
         lr = self.base._eval_derivative_matrix_lines(x)
         for i in lr:
-            ptr1 = i.first_pointer
-            ptr2 = i.second_pointer
             diagonal = [(1, 2), (3, 4)]
             diagonal = [e for j, e in enumerate(diagonal) if self.base.shape[j] != 1]
+            l1 = i._lines[i._first_line_index]
+            l2 = i._lines[i._second_line_index]
             subexpr = ExprBuilder(
                 CodegenArrayDiagonal,
                 [
                     ExprBuilder(
                         CodegenArrayTensorProduct,
                         [
-                            ExprBuilder(_make_matrix, [ptr1]),
+                            ExprBuilder(_make_matrix, [l1]),
                             self.exp*hadamard_power(self.base, self.exp-1),
-                            ExprBuilder(_make_matrix, [ptr2]),
+                            ExprBuilder(_make_matrix, [l2]),
                         ]
                     ),
                 ] + diagonal,  # turn into *diagonal after dropping Python 2.7
@@ -344,7 +346,9 @@ class HadamardPower(MatrixExpr):
             )
             i._first_pointer_parent = subexpr.args[0].args[0].args
             i._first_pointer_index = 0
+            i._first_line_index = 0
             i._second_pointer_parent = subexpr.args[0].args[2].args
-            i._second_pointer_index = 2
+            i._second_pointer_index = 0
+            i._second_line_index = 0
             i._lines = [subexpr]
         return lr
