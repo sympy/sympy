@@ -274,15 +274,17 @@ def test_atan():
         EX(1/(a**2 + 1))*x**2*y - EX(a/(a**4 + 2*a**2 + 1))*x**2 + EX(1/(a**2 \
         + 1))*x + EX(atan(a))
 
+@XFAIL
 def test_atan1():
     # Complex numbers in series
     R, x = ring('x', EX)
-    assert rs_atan(x + I,x,3) == NotImplementedError
+    rs_atan(x + I,x,3).raises(NotImplementedError)
 
+@XFAIL
 def test_atan2():
     # Complex numbers in series
     R, x = ring('x', EX)
-    assert rs_atan(R(I),x,5) == NotImplementedError
+    rs_atan(R(I),x,5).raises(NotImplementedError)
 
 def test_asin():
     R, x, y = ring('x, y', QQ)
