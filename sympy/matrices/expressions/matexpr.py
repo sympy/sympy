@@ -508,7 +508,6 @@ class MatrixExpr(Expr):
                             lines[(index1, index2)] = cur_line
                             break
                         cur_ind_pos = next_ind_pos
-                ret_indices = list(j for i in lines for j in i)
                 lines = {k: MatMul.fromiter(v) if len(v) != 1 else v[0] for k, v in lines.items()}
                 return [(Mul.fromiter(nonmatargs), None)] + [
                     (MatrixElement(a, i, j), (i, j)) for (i, j), a in lines.items()

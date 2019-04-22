@@ -1,6 +1,5 @@
 from sympy.matrices.expressions import MatrixExpr
 from sympy import MatrixBase, Dummy, Lambda, Function, FunctionClass
-from sympy.matrices.expressions.diagonal import diagonalize_vector
 
 
 class ElementwiseApplyFunction(MatrixExpr):
