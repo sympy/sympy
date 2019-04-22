@@ -287,14 +287,14 @@ class Piecewise(Function):
             #   Piecewise((0, t>=4), (0, t<3), (1, t<=2), (3, t<4))
             #   >>> Piecewise((0, (t >= 4) | (t < 3)), (3, True))
             #   (Feature implemented for 1 variable Piecewise only)
-            if(len(symbols)<2):
+            if(len(symbols[0])<2):
                 try:
                     cu_inter = cond.as_set()      # current condition
                     # Makes sure that x**2<-1 like conditions are not taken as EmptySet()
                     # Makes sure that symbols are not treated as True for the UniversalSet()
                     if(cu_inter != EmptySet() and not(isinstance(cond, Symbol))):
                         inter = Intersection(existing_intervals, cu_inter)
-                        if((cu_inter == inter)):
+                        if(cu_inter == inter):
                             continue
                         else:
                             existing_intervals = existing_intervals.union(cu_inter)
