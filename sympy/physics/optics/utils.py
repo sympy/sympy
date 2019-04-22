@@ -28,7 +28,7 @@ __all__ = ['refraction_angle',
            ]
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin,\
-cos, sin, tan, I, cancel, pi
+cos, sin, tan, I, cancel, pi, Float
 from sympy.core.compatibility import is_sequence
 from sympy.geometry.line import Ray3D, Point3D
 from sympy.geometry.util import intersection
@@ -38,7 +38,7 @@ from .medium import Medium
 
 def refractive_index_of_medium(medium):
     """
-    Helper function that return refractive index, given a medium
+    Helper function that returns refractive index, given a medium
     """
     if isinstance(medium, Medium):
         n = medium.refractive_index
@@ -51,8 +51,8 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     """
     This function calculates transmitted vector after refraction at planar
     surface. `medium1` and `medium2` can be `Medium` or any sympifiable object.
-    If incident is a number then treated as angle of incidence in which case
-    refraction angle is returned.
+    If `incident` is a number then treated as angle of incidence (in radians)
+    in which case refraction angle is returned.
 
     If `incident` is an object of `Ray3D`, `normal` also has to be an instance
     of `Ray3D` in order to get the output as a `Ray3D`. Please note that if
@@ -85,7 +85,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     >>> from sympy.physics.optics import refraction_angle
     >>> from sympy.geometry import Point3D, Ray3D, Plane
     >>> from sympy.matrices import Matrix
-    >>> from sympy import symbols
+    >>> from sympy import symbols, pi
     >>> n = Matrix([0, 0, 1])
     >>> P = Plane(Point3D(0, 0, 0), normal_vector=[0, 0, 1])
     >>> r1 = Ray3D(Point3D(-1, -1, 1), Point3D(0, 0, 0))
@@ -107,8 +107,8 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     [-sqrt(3)*sqrt(-2*n1**2/(3*n2**2) + 1)]])
     >>> refraction_angle(r1, n1, n2, plane=P)
     Ray3D(Point3D(0, 0, 0), Point3D(n1/n2, n1/n2, -sqrt(3)*sqrt(-2*n1**2/(3*n2**2) + 1)))
-    >>> round(refraction_angle(0.1, 1.2, 1.5), 5)
-    0.07995
+    >>> round(refraction_angle(pi/6, 1.2, 1.5), 5)
+    0.41152
     """
 
     n1 = refractive_index_of_medium(medium1)
@@ -256,7 +256,7 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
 
     https://en.wikipedia.org/wiki/Fresnel_equations
     """
-    if not 0.0 <= angle_of_incidence < pi*0.5:
+    if not 0 <= 2*angle_of_incidence < pi:
         raise ValueError('Angle of incidence not in range [0:pi/2)')
 
     n1 = refractive_index_of_medium(medium1)
@@ -338,7 +338,7 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
                                  normal=normal,
                                  plane=plane)
     try:
-        angle_of_incidence = float(incident)
+        angle_of_incidence = Float(incident)
     except TypeError as e:
         angle_of_incidence = None
 
