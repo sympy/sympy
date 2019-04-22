@@ -91,12 +91,6 @@ def make_report(
             )
 
     covered_files = list(generate_covered_files(source_dir))
-
-    #if report_dir in os.listdir(os.curdir):
-    #    for f in os.listdir(report_dir):
-    #        if f.split('.')[-1] in ['html', 'css', 'js']:
-    #            os.remove(os.path.join(report_dir, f))
-
     cov.html_report(morfs=covered_files, directory=report_dir)
 
 parser = ArgumentParser()
