@@ -995,7 +995,7 @@ def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
     See Also
     ========
 
-    Sample
+    sample
     sampling_P
     sampling_E
     sample_iter_lambdify

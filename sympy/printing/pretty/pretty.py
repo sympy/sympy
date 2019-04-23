@@ -385,23 +385,6 @@ class PrettyPrinter(Printer):
             cyc = prettyForm(*cyc.right(l))
         return cyc
 
-    def _print_PDF(self, pdf):
-        lim = self._print(pdf.pdf.args[0])
-        lim = prettyForm(*lim.right(', '))
-        lim = prettyForm(*lim.right(self._print(pdf.domain[0])))
-        lim = prettyForm(*lim.right(', '))
-        lim = prettyForm(*lim.right(self._print(pdf.domain[1])))
-        lim = prettyForm(*lim.parens())
-
-        f = self._print(pdf.pdf.args[1])
-        f = prettyForm(*f.right(', '))
-        f = prettyForm(*f.right(lim))
-        f = prettyForm(*f.parens())
-
-        pform = prettyForm('PDF')
-        pform = prettyForm(*pform.right(f))
-        return pform
-
     def _print_Integral(self, integral):
         f = integral.function
 

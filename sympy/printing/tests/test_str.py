@@ -4,7 +4,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, log, MatrixSymbol)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -15,8 +15,6 @@ from sympy.core.compatibility import range
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
-from sympy import MatrixSymbol
-from sympy import factorial, log, integrate
 
 x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')
