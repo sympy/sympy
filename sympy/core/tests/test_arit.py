@@ -1795,7 +1795,7 @@ def test_issue_5160_6087_6089_6090():
     assert (-2*x*y*A*B)**2 == 4*x**2*y**2*(A*B)**2
 
 
-def test_float_int():
+def test_float_int_round():
     assert int(float(sqrt(10))) == int(sqrt(10))
     assert int(pi**1000) % 10 == 2
     assert int(Float('1.123456789012345678901234567890e20', '')) == \
