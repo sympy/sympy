@@ -1737,11 +1737,11 @@ class PermutationGroup(Basic):
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a, b])
-        >>> G.abelian_inv()
+        >>> G.abelian_invariants()
         [2]
         >>> from sympy.combinatorics.named_groups import CyclicGroup
         >>> G = CyclicGroup(7)
-        >>> G.abelian_inv()
+        >>> G.abelian_invariants()
         [7]
 
         """
