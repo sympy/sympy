@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from random import randrange, choice
 from math import log
 from sympy.ntheory import primefactors
-from sympy import factorint
+from sympy import multiplicity
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -1705,12 +1705,29 @@ class PermutationGroup(Basic):
                     return False
         return True
 
-    def abelian_inv(self):
+    def abelian_invariants(self):
         """
-        Returns the abelian invariants or primary decomposition of the commutator
-        factor group of the given group ``G`` as suggested in ([14], p. 542).
-        These are given as a list of prime-powers or zeroes and describe the
-        structure of ``G/G'`` as a direct product of cyclic groups of prime power order.
+        Returns the abelian invariants for the given group.
+        Let ``G`` be a nontrivial finite abelian group. Then G is isomorphic to
+        the direct product of finitely many nontrivial cyclic groups of
+        prime-power order.
+
+        The prime-powers that occur as the orders of the factors are uniquely
+        determined by G. More precisely, the primes that occur in the orders of the
+        factors in any such decomposition of ``G`` are exactly the primes that divide
+        ``|G|`` and for any such prime ``p``, if the orders of the factors that are
+        p-groups in one such decomposition of ``G`` are ``p^{t_1} >= p^{t_2} >= ... p^{t_r}``,
+        then the orders of the factors that are p-groups in any such decomposition of ``G``
+        are ``p^{t_1} >= p^{t_2} >= ... p^{t_r}``.
+
+        The uniquely determined integers ``p^{t_1} >= p^{t_2} >= ... p^{t_r}``, taken
+        for all primes that divide ``|G|`` are called the invariants of the nontrivial
+        group ``G`` as suggested in ([14], p. 542).
+
+        Notes
+        =====
+
+        We adopt the convention that the invariants of a trivial group are [].
 
         Examples
         ========
@@ -1738,7 +1755,7 @@ class PermutationGroup(Basic):
         for p in primefactors(G.order()):
             ranks = []
             r = 2
-            while(r != 1):
+            while r > 1:
                 H = der
                 for g in gns:
                     elm = g**p
@@ -1748,17 +1765,11 @@ class PermutationGroup(Basic):
                 r = G.order()//H.order()
                 G = H
                 gns = G.generators
-                f = 0
                 if r != 1:
-                    for k, v in factorint(r).items():
-                        f += v
-                    ranks.append(f)
+                    ranks.append(multiplicity(p, r))
 
-            if len(ranks):
-                l = []
-                for i in range(ranks[0]):
-                    l.append(1);
-
+            if ranks:
+                l = [1]*ranks[0]
                 for i in ranks:
                     for j in range(0, i):
                         l[j] = l[j]*p

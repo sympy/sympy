@@ -527,7 +527,7 @@ class FpGroup(DefaultPrinting):
                                       "is not implemented")
         return P.is_cyclic
 
-    def abelian_inv(self):
+    def abelian_invariants(self):
         """
         Returns Abelian Invariants of a group.
         """
@@ -536,7 +536,7 @@ class FpGroup(DefaultPrinting):
         except NotImplementedError:
             raise NotImplementedError("abelian invariants is not implemented"
                                       "for infinite group")
-        return P.abelian_inv()
+        return P.abelian_invariants()
 
 
 class FpSubgroup(DefaultPrinting):

@@ -243,11 +243,11 @@ def test_cyclic():
     assert not f.is_cyclic
 
 
-def test_abelian_inv():
+def test_abelian_invariants():
     F, x, y = free_group("x, y")
     f = FpGroup(F, [x*y, x**-1*y**-1*x*y*x])
-    assert f.abelian_inv() == []
+    assert f.abelian_invariants() == []
     f = FpGroup(F, [x*y, x*y**-1])
-    assert f.abelian_inv() == [2]
+    assert f.abelian_invariants() == [2]
     f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
-    assert f.abelian_inv() == [2, 4]
+    assert f.abelian_invariants() == [2, 4]

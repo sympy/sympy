@@ -959,14 +959,20 @@ def test_cyclic():
     assert not G.is_cyclic
 
 
-def test_abelian_inv():
+def test_abelian_invariants():
     G = AbelianGroup(2,3,4)
-    assert G.abelian_inv() == [2, 3, 4]
+    assert G.abelian_invariants() == [2, 3, 4]
     G=PermutationGroup([Permutation(1,2,3,4), Permutation(1,2), Permutation(5,6)])
-    assert G.abelian_inv() == [2, 2]
+    assert G.abelian_invariants() == [2, 2]
     G = AlternatingGroup(7)
-    assert G.abelian_inv() == []
+    assert G.abelian_invariants() == []
     G = AlternatingGroup(4)
-    assert G.abelian_inv() == [3]
+    assert G.abelian_invariants() == [3]
     G = DihedralGroup(4)
-    assert G.abelian_inv() == [2, 2]
+    assert G.abelian_invariants() == [2, 2]
+
+    G = PermutationGroup([Permutation(1,2,3,4,5,6,7)])
+    assert G.abelian_invariants() == [7]
+    G = DihedralGroup(12)
+    S = G.sylow_subgroup(3)
+    assert S.abelian_invariants() == [3]
