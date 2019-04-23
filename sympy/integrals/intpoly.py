@@ -51,7 +51,7 @@ def polytope_integrate(poly, expr=None, **kwargs):
     >>> from sympy.geometry.polygon import Polygon
     >>> from sympy.geometry.point import Point
     >>> from sympy.integrals.intpoly import polytope_integrate
-    >>> polygon = Polygon(Point(0,0), Point(0,1), Point(1,1), Point(1,0))
+    >>> polygon = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
     >>> polys = [1, x, y, x*y, x**2*y, x*y**2]
     >>> expr = x*y
     >>> polytope_integrate(polygon, expr)

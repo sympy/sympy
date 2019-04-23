@@ -5,7 +5,7 @@ Solving Beam Bending Problems using Singularity Functions
 To make this document easier to read, enable pretty printing:
 
 .. plot::
-   :context:
+   :context: reset
    :format: doctest
    :include-source: True
 
@@ -866,7 +866,7 @@ from the top at a distance of ``2*l`` from starting point.
                         E⋅I                                               E⋅I                                                                             E⋅I
 
 Example 11
-==========
+----------
 
 Any type of load defined by a polynomial can be applied to the beam. This
 allows approximation of arbitrary load distributions. The following example

@@ -635,7 +635,7 @@ class Poly(Expr):
 
         for monom, coeff in rep.items():
 
-            if any(i for i in monom[:j]):
+            if any(monom[:j]):
                 # some generator is used in the portion to be trimmed
                 raise PolynomialError("can't left trim %s" % f)
 
@@ -5961,7 +5961,7 @@ def _symbolic_factor(expr, opt, method):
     if isinstance(expr, Expr) and not expr.is_Relational:
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
-        coeff, factors = _symbolic_factor_list(together(expr), opt, method)
+        coeff, factors = _symbolic_factor_list(together(expr, fraction=opt['fraction']), opt, method)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
         return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
@@ -6014,8 +6014,10 @@ def _generic_factor_list(expr, gens, args, method):
 
 def _generic_factor(expr, gens, args, method):
     """Helper function for :func:`sqf` and :func:`factor`. """
+    fraction = args.pop('fraction', True)
     options.allowed_flags(args, [])
     opt = options.build_options(gens, args)
+    opt['fraction'] = fraction
     return _symbolic_factor(sympify(expr), opt, method)
 
 
@@ -6274,7 +6276,7 @@ def factor(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import factor, sqrt
+    >>> from sympy import factor, sqrt, exp
     >>> from sympy.abc import x, y
 
     >>> factor(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
@@ -6307,6 +6309,14 @@ def factor(f, *gens, **args):
     >>> factor(eq, deep=True)
     2**((x + 1)**2)
 
+    If the ``fraction`` flag is False then rational expressions
+    won't be combined. By default it is True.
+
+    >>> factor(5*x + 3*exp(2 - 7*x), deep=True)
+    (5*x*exp(7*x) + 3*exp(2))*exp(-7*x)
+    >>> factor(5*x + 3*exp(2 - 7*x), deep=True, fraction=False)
+    5*x + 3*exp(2)*exp(-7*x)
+
     See Also
     ========
     sympy.ntheory.factor_.factorint
@@ -6319,7 +6329,7 @@ def factor(f, *gens, **args):
             """
             Factor, but avoid changing the expression when unable to.
             """
-            fac = factor(expr)
+            fac = factor(expr, *gens, **args)
             if fac.is_Mul or fac.is_Pow:
                 return fac
             return expr
@@ -6619,7 +6629,7 @@ def cancel(f, *gens, **args):
                 x.is_commutative is True and not x.has(Piecewise),
                 binary=True)
             nc = [cancel(i) for i in nc]
-            return f.func(cancel(f.func._from_args(c)), *nc)
+            return f.func(cancel(f.func(*c)), *nc)
         else:
             reps = []
             pot = preorder_traversal(f)

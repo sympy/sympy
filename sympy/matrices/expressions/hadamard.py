@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
 from sympy.core import Mul, sympify
+from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
 from sympy.strategies import unpack, flatten, condition, exhaust, do_one
 
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
 
 def hadamard_product(*matrices):
     """
@@ -28,6 +28,7 @@ def hadamard_product(*matrices):
     if len(matrices) == 1:
         return matrices[0]
     else:
+        matrices = [i for i in matrices if not i.is_Identity]
         return HadamardProduct(*matrices).doit()
 
 
@@ -49,7 +50,7 @@ class HadamardProduct(MatrixExpr):
 
     def __new__(cls, *args, **kwargs):
         args = list(map(sympify, args))
-        check = kwargs.get('check'   , True)
+        check = kwargs.get('check', True)
         if check:
             validate(*args)
         return super(HadamardProduct, cls).__new__(cls, *args)
@@ -58,8 +59,8 @@ class HadamardProduct(MatrixExpr):
     def shape(self):
         return self.args[0].shape
 
-    def _entry(self, i, j):
-        return Mul(*[arg._entry(i, j) for arg in self.args])
+    def _entry(self, i, j, **kwargs):
+        return Mul(*[arg._entry(i, j, **kwargs) for arg in self.args])
 
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose
@@ -67,6 +68,48 @@ class HadamardProduct(MatrixExpr):
 
     def doit(self, **ignored):
         return canonicalize(self)
+
+    def _eval_derivative_matrix_lines(self, x):
+        from sympy.core.expr import ExprBuilder
+        from sympy.codegen.array_utils import CodegenArrayDiagonal, CodegenArrayTensorProduct
+        from sympy.matrices.expressions.matexpr import _make_matrix
+
+        with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
+        lines = []
+        for ind in with_x_ind:
+            left_args = self.args[:ind]
+            right_args = self.args[ind+1:]
+
+            d = self.args[ind]._eval_derivative_matrix_lines(x)
+            hadam = hadamard_product(*(right_args + left_args))
+            diagonal = [(0, 2), (3, 4)]
+            diagonal = [e for j, e in enumerate(diagonal) if self.shape[j] != 1]
+            for i in d:
+                l1 = i._lines[i._first_line_index]
+                l2 = i._lines[i._second_line_index]
+                subexpr = ExprBuilder(
+                    CodegenArrayDiagonal,
+                    [
+                        ExprBuilder(
+                            CodegenArrayTensorProduct,
+                            [
+                                ExprBuilder(_make_matrix, [l1]),
+                                hadam,
+                                ExprBuilder(_make_matrix, [l2]),
+                            ]
+                        ),
+                    ] + diagonal,  # turn into *diagonal after dropping Python 2.7
+
+                )
+                i._first_pointer_parent = subexpr.args[0].args[0].args
+                i._first_pointer_index = 0
+                i._second_pointer_parent = subexpr.args[0].args[2].args
+                i._second_pointer_index = 0
+                i._lines = [subexpr]
+                lines.append(i)
+
+        return lines
+
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
@@ -81,3 +124,81 @@ rules = (unpack,
 
 canonicalize = exhaust(condition(lambda x: isinstance(x, HadamardProduct),
                                  do_one(*rules)))
+
+
+def hadamard_power(base, exp):
+    base = sympify(base)
+    exp = sympify(exp)
+    if exp == 1:
+        return base
+    if not base.is_Matrix:
+        return base**exp
+    if exp.is_Matrix:
+        raise ValueError("cannot raise expression to a matrix")
+    return HadamardPower(base, exp)
+
+
+class HadamardPower(MatrixExpr):
+    """
+    Elementwise power of matrix expressions
+    """
+
+    def __new__(cls, base, exp):
+        base = sympify(base)
+        exp = sympify(exp)
+        obj = super(HadamardPower, cls).__new__(cls, base, exp)
+        return obj
+
+    @property
+    def base(self):
+        return self._args[0]
+
+    @property
+    def exp(self):
+        return self._args[1]
+
+    @property
+    def shape(self):
+        return self.base.shape
+
+    def _entry(self, i, j, **kwargs):
+        return self.base._entry(i, j, **kwargs)**self.exp
+
+    def _eval_transpose(self):
+        from sympy.matrices.expressions.transpose import transpose
+        return HadamardPower(transpose(self.base), self.exp)
+
+    def _eval_derivative_matrix_lines(self, x):
+        from sympy.codegen.array_utils import CodegenArrayTensorProduct
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayDiagonal
+        from sympy.core.expr import ExprBuilder
+        from sympy.matrices.expressions.matexpr import _make_matrix
+
+        lr = self.base._eval_derivative_matrix_lines(x)
+        for i in lr:
+            diagonal = [(1, 2), (3, 4)]
+            diagonal = [e for j, e in enumerate(diagonal) if self.base.shape[j] != 1]
+            l1 = i._lines[i._first_line_index]
+            l2 = i._lines[i._second_line_index]
+            subexpr = ExprBuilder(
+                CodegenArrayDiagonal,
+                [
+                    ExprBuilder(
+                        CodegenArrayTensorProduct,
+                        [
+                            ExprBuilder(_make_matrix, [l1]),
+                            self.exp*hadamard_power(self.base, self.exp-1),
+                            ExprBuilder(_make_matrix, [l2]),
+                        ]
+                    ),
+                ] + diagonal,  # turn into *diagonal after dropping Python 2.7
+                validator=CodegenArrayDiagonal._validate
+            )
+            i._first_pointer_parent = subexpr.args[0].args[0].args
+            i._first_pointer_index = 0
+            i._first_line_index = 0
+            i._second_pointer_parent = subexpr.args[0].args[2].args
+            i._second_pointer_index = 0
+            i._second_line_index = 0
+            i._lines = [subexpr]
+        return lr

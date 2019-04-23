@@ -3,9 +3,9 @@ from sympy import (
     Integer, Eq, symbols, Add, I, Float, log, Rational,
     Lambda, atan2, cse, cot, tan, S, Tuple, Basic, Dict,
     Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
-    AccumBounds, Matrix, zeros)
+    AccumBounds, Matrix, zeros, ZeroMatrix)
 from sympy.core.basic import _aresame
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import a, x, y, z
 
 
@@ -23,11 +23,17 @@ def test_subs():
 
 def test_subs_Matrix():
     z = zeros(2)
-    assert (x*y).subs({x:z, y:0}) == z
+    z1 = ZeroMatrix(2, 2)
+    assert (x*y).subs({x:z, y:0}) in [z, z1]
     assert (x*y).subs({y:z, x:0}) == 0
-    assert (x*y).subs({y:z, x:0}, simultaneous=True) == z
-    assert (x + y).subs({x: z, y: z}) == z
+    assert (x*y).subs({y:z, x:0}, simultaneous=True) in [z, z1]
+    assert (x + y).subs({x: z, y: z}, simultaneous=True) in [z, z1]
+    assert (x + y).subs({x: z, y: z}) in [z, z1]
 
+    # Issue #15528
+    assert Mul(Matrix([[3]]), x).subs(x, 2.0) == Matrix([[6.0]])
+    # Does not raise a TypeError, see comment on the MatAdd postprocessor
+    assert Add(Matrix([[3]]), x).subs(x, 2.0) == Add(Matrix([[3]]), 2.0)
 
 def test_subs_AccumBounds():
     e = x

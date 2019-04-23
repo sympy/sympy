@@ -1262,6 +1262,13 @@ def test_issue_2708():
         NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
                                   (z, 0, x))
 
+
+def test_issue_2884():
+    f = (4.000002016020*x + 4.000002016020*y + 4.000006024032)*exp(10.0*x)
+    e = integrate(f, (x, 0.1, 0.2))
+    assert str(e) == '1.86831064982608*y + 2.16387491480008'
+
+
 def test_issue_8368():
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
         Piecewise(
@@ -1476,7 +1483,7 @@ def test_issue_15509():
         (-sin(a*x_1 + b)/a + sin(a*x_2 + b)/a, (a > -oo) & (a < oo) & Ne(a, 0)), \
             (-x_1*cos(b) + x_2*cos(b), True))
 
-
+@slow
 def test_issue_4311():
     x = symbols('x')
     assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)

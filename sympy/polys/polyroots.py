@@ -982,7 +982,8 @@ def roots(f, *gens, **flags):
     result = {}
 
     if not f.is_ground:
-        if not f.get_domain().is_Exact:
+        dom = f.get_domain()
+        if not dom.is_Exact and dom.is_Numerical:
             for r in f.nroots():
                 _update_dict(result, r, 1)
         elif f.degree() == 1:

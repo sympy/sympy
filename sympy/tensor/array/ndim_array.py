@@ -246,6 +246,9 @@ class NDimArray(object):
         return Basic._eval_derivative_n_times(self, s, n)
 
     def _eval_derivative(self, arg):
+        return self.applyfunc(lambda x: x.diff(arg))
+
+    def _eval_derivative_array(self, arg):
         from sympy import derive_by_array
         from sympy import Tuple
         from sympy.matrices.common import MatrixCommon

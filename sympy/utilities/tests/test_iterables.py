@@ -8,14 +8,15 @@ from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.core.compatibility import range
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
-    cartes, common_prefix, common_suffix, dict_merge, filter_symbols,
-    flatten, generate_bell, generate_derangements, generate_involutions,
-    generate_oriented_forest, group, has_dups, kbins, minlex, multiset,
-    multiset_combinations, multiset_partitions,
+    cartes, common_prefix, common_suffix, connected_components, dict_merge,
+    filter_symbols, flatten, generate_bell, generate_derangements,
+    generate_involutions, generate_oriented_forest, group, has_dups, ibin,
+    kbins, minlex, multiset, multiset_combinations, multiset_partitions,
     multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
     permutations, postfixes, postorder_traversal, prefixes, reshape,
-    rotate_left, rotate_right, runs, sift, subsets, take, topological_sort,
-    unflatten, uniq, variations, ordered_partitions, rotations)
+    rotate_left, rotate_right, runs, sift, strongly_connected_components,
+    subsets, take, topological_sort, unflatten, uniq, variations,
+    ordered_partitions, rotations)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -239,6 +240,40 @@ def test_topological_sort():
         [7, 5, 11, 3, 10, 8, 9, 2]
 
     raises(ValueError, lambda: topological_sort((V, E + [(10, 7)])))
+
+
+def test_strongly_connected_components():
+    assert strongly_connected_components(([], [])) == []
+    assert strongly_connected_components(([1, 2, 3], [])) == [[1], [2], [3]]
+
+    V = [1, 2, 3]
+    E = [(1, 2), (1, 3), (2, 1), (2, 3), (3, 1)]
+    assert strongly_connected_components((V, E)) == [[1, 2, 3]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (2, 3), (3, 2), (3, 4)]
+    assert strongly_connected_components((V, E)) == [[4], [2, 3], [1]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (2, 1), (3, 4), (4, 3)]
+    assert strongly_connected_components((V, E)) == [[1, 2], [3, 4]]
+
+
+def test_connected_components():
+    assert connected_components(([], [])) == []
+    assert connected_components(([1, 2, 3], [])) == [[1], [2], [3]]
+
+    V = [1, 2, 3]
+    E = [(1, 2), (1, 3), (2, 1), (2, 3), (3, 1)]
+    assert connected_components((V, E)) == [[1, 2, 3]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (2, 3), (3, 2), (3, 4)]
+    assert connected_components((V, E)) == [[1, 2, 3, 4]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (3, 4)]
+    assert connected_components((V, E)) == [[1, 2], [3, 4]]
 
 
 def test_rotate():
@@ -613,7 +648,8 @@ def test_reshape():
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
     assert reshape(list(range(12)), [2, [3], {2}, (1, (3,), 1)]) == \
         [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
-
+    raises(ValueError, lambda: reshape([0, 1], [-1]))
+    raises(ValueError, lambda: reshape([0, 1], [3]))
 
 def test_uniq():
     assert list(uniq(p.copy() for p in partitions(4))) == \
@@ -738,3 +774,12 @@ def test_rotations():
     assert list(rotations('ab')) == [['a', 'b'], ['b', 'a']]
     assert list(rotations(range(3))) == [[0, 1, 2], [1, 2, 0], [2, 0, 1]]
     assert list(rotations(range(3), dir=-1)) == [[0, 1, 2], [2, 0, 1], [1, 2, 0]]
+
+
+def test_ibin():
+    assert ibin(3) == [1, 1]
+    assert ibin(3, 3) == [0, 1, 1]
+    assert ibin(3, str=True) == '11'
+    assert ibin(3, 3, str=True) == '011'
+    assert list(ibin(2, 'all')) == [(0, 0), (0, 1), (1, 0), (1, 1)]
+    assert list(ibin(2, 'all', str=True)) == ['00', '01', '10', '11']

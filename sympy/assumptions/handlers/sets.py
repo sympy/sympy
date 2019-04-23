@@ -67,8 +67,8 @@ class AskIntegerHandler(CommonHandler):
                         return
                 else:
                     return
-        else:
-            return _output
+
+        return _output
 
     Pow = Add
 

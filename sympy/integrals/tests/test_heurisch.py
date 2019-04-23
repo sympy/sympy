@@ -244,6 +244,7 @@ def test_pmint_logexp():
 
     assert ratsimp(heurisch(f, x)) == g
 
+
 @XFAIL  # there's a hash dependent failure lurking here
 def test_pmint_erf():
     f = exp(-x**2)*erf(x)/(erf(x)**3 - erf(x)**2 - erf(x) + 1)

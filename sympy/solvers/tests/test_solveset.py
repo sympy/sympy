@@ -473,9 +473,9 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    unsolved_object = ConditionSet(q, Eq(sqrt((m - q)**2 + (-m/(2*q) + 1/2)**2) -
-        sqrt((-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2 + (m**2/2 - m -
-        sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2), 0), S.Reals)
+    unsolved_object = ConditionSet(q, Eq(sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) -
+        sqrt((-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m -
+        sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2), 0), S.Reals)
     assert solveset_real(eq, q) == unsolved_object
 
 
@@ -1060,6 +1060,11 @@ def test_linear_eq_to_matrix():
         Matrix([[1]]), Matrix([[-1]]))
 
 
+def test_issue_16577():
+    assert linear_eq_to_matrix(Eq(a*(2*x + 3*y) + 4*y, 5), x, y) == (
+        Matrix([[2*a, 3*a + 4]]), Matrix([[5]]))
+
+
 def test_linsolve():
     x, y, z, u, v, w = symbols("x, y, z, u, v, w")
     x1, x2, x3, x4 = symbols('x1, x2, x3, x4')
@@ -1223,7 +1228,7 @@ def test_nonlinsolve_abs():
 def test_raise_exception_nonlinsolve():
     raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
-    raises(NotImplementedError, lambda: nonlinsolve([(x+y)**2 - 9, x**2 - y**2 -3/4], (x, y)))
+    raises(NotImplementedError, lambda: nonlinsolve([(x+y)**2 - 9, x**2 - y**2 - 0.75], (x, y)))
 
 
 def test_trig_system():
@@ -2025,3 +2030,4 @@ def test_linear_coeffs():
         linear_coeffs(x + 2*x**2 + x**3, x, x**2))
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
+    assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]

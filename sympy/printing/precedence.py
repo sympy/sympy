@@ -24,6 +24,7 @@ PRECEDENCE = {
 # A dictionary assigning precedence values to certain classes. These values are
 # treated like they were inherited, so not every single class has to be named
 # here.
+# Do not use this with printers other than StrPrinter
 PRECEDENCE_VALUES = {
     "Equivalent": PRECEDENCE["Xor"],
     "Xor": PRECEDENCE["Xor"],
@@ -43,6 +44,7 @@ PRECEDENCE_VALUES = {
     # As soon as `TensMul` is a subclass of `Mul`, remove this:
     "TensMul": PRECEDENCE["Mul"],
     "HadamardProduct": PRECEDENCE["Mul"],
+    "HadamardPower": PRECEDENCE["Pow"],
     "KroneckerProduct": PRECEDENCE["Mul"],
     "Equality": PRECEDENCE["Mul"],
     "Unequality": PRECEDENCE["Mul"],
@@ -114,8 +116,9 @@ PRECEDENCE_FUNCTIONS = {
 
 
 def precedence(item):
-    """
-    Returns the precedence of a given object.
+    """Returns the precedence of a given object.
+
+    This is the precedence for StrPrinter.
     """
     if hasattr(item, "precedence"):
         return item.precedence
@@ -133,19 +136,23 @@ def precedence(item):
 
 
 def precedence_traditional(item):
-    """
-    Returns the precedence of a given object according to the traditional rules
-    of mathematics. This is the precedence for the LaTeX and pretty printer.
+    """Returns the precedence of a given object according to the
+    traditional rules of mathematics.
+
+    This is the precedence for the LaTeX and pretty printer.
     """
     # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
     # the precedence of Atom for other printers:
-    from sympy import Integral, Sum, Product, Limit, Derivative
+    from sympy import Integral, Sum, Product, Limit, Derivative, Transpose, Adjoint
     from sympy.core.expr import UnevaluatedExpr
     from sympy.tensor.functions import TensorProduct
 
     if isinstance(item, (Integral, Sum, Product, Limit, Derivative, TensorProduct)):
         return PRECEDENCE["Mul"]
-    if (item.__class__.__name__ in ("Dot", "Cross", "Gradient", "Divergence", "Curl")):
+    elif isinstance(item, (Transpose, Adjoint)):
+        return PRECEDENCE["Pow"]
+    elif (item.__class__.__name__ in ("Dot", "Cross", "Gradient", "Divergence",
+                                    "Curl", "Laplacian")):
         return PRECEDENCE["Mul"]-1
     elif isinstance(item, UnevaluatedExpr):
         return precedence_traditional(item.args[0])

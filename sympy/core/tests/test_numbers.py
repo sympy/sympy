@@ -487,6 +487,16 @@ def test_Float():
     Rational('123 456.123 456') == Rational('123456.123456')
     assert Float(' .3e2') == Float('0.3e2')
 
+    # allow underscore
+    assert Float('1_23.4_56') == Float('123.456')
+    assert Float('1_23.4_5_6', 12) == Float('123.456', 12)
+    # ...but not in all cases (per Py 3.6)
+    raises(ValueError, lambda: Float('_1'))
+    raises(ValueError, lambda: Float('1_'))
+    raises(ValueError, lambda: Float('1_.'))
+    raises(ValueError, lambda: Float('1._'))
+    raises(ValueError, lambda: Float('1__2'))
+
     # allow auto precision detection
     assert Float('.1', '') == Float(.1, 1)
     assert Float('.125', '') == Float(.125, 3)
@@ -1644,12 +1654,12 @@ def test_latex():
     assert latex(pi) == r"\pi"
     assert latex(E) == r"e"
     assert latex(GoldenRatio) == r"\phi"
-    assert latex(TribonacciConstant) == r"\mathrm{TribonacciConstant}"
+    assert latex(TribonacciConstant) == r"\text{TribonacciConstant}"
     assert latex(EulerGamma) == r"\gamma"
     assert latex(oo) == r"\infty"
     assert latex(-oo) == r"-\infty"
     assert latex(zoo) == r"\tilde{\infty}"
-    assert latex(nan) == r"\mathrm{NaN}"
+    assert latex(nan) == r"\text{NaN}"
     assert latex(I) == r"i"
 
 
@@ -1857,9 +1867,9 @@ def test_numpy_to_float():
         y = Float(ratval, precision=prec)
         assert abs((x - y)/y) < 2**(-(prec + 1))
 
-    check_prec_and_relerr(np.float16(2/3), S(2)/3)
-    check_prec_and_relerr(np.float32(2/3), S(2)/3)
-    check_prec_and_relerr(np.float64(2/3), S(2)/3)
+    check_prec_and_relerr(np.float16(2.0/3), S(2)/3)
+    check_prec_and_relerr(np.float32(2.0/3), S(2)/3)
+    check_prec_and_relerr(np.float64(2.0/3), S(2)/3)
     # extended precision, on some arch/compilers:
     x = np.longdouble(2)/3
     check_prec_and_relerr(x, S(2)/3)

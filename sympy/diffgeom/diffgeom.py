@@ -39,7 +39,7 @@ class Manifold(Basic):
         return obj
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}' % self.name
+        return r'\text{%s}' % self.name
 
 
 class Patch(Basic):
@@ -83,7 +83,7 @@ class Patch(Basic):
         return self.manifold.dim
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}_{%s}' % (self.name, self.manifold._latex(printer, *args))
+        return r'\text{%s}_{%s}' % (self.name, self.manifold._latex(printer, *args))
 
 
 class CoordSystem(Basic):
@@ -341,7 +341,7 @@ class CoordSystem(Basic):
     ##########################################################################
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}^{\mathrm{%s}}_{%s}' % (
+        return r'\text{%s}^{\text{%s}}_{%s}' % (
             self.name, self.patch.name, self.patch.manifold._latex(printer, *args))
 
 

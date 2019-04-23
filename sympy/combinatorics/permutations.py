@@ -1000,7 +1000,6 @@ class Permutation(Basic):
         return self._array_form[:]
 
     def __repr__(self):
-        from sympy.combinatorics.permutations import Permutation, Cycle
         if Permutation.print_cyclic:
             if not self.size:
                 return 'Permutation()'

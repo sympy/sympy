@@ -73,7 +73,7 @@ def itermonomials(variables, max_degree, min_degree = 0):
             for variable in item:
                 if variable != 1:
                     powers[variable] += 1
-            if max(powers.values()) >= min_degree:
+            if sum(powers.values()) >= min_degree:
                 monomials_list_comm.append(Mul(*item))
         return set(monomials_list_comm)
     else:
@@ -85,7 +85,7 @@ def itermonomials(variables, max_degree, min_degree = 0):
             for variable in item:
                 if variable != 1:
                     powers[variable] += 1
-            if max(powers.values()) >= min_degree:
+            if sum(powers.values()) >= min_degree:
                 monomials_list_non_comm.append(Mul(*item))
         return set(monomials_list_non_comm)
 
@@ -458,7 +458,7 @@ class Monomial(PicklableWithSlots):
             if len(rep) == 1 and list(rep.values())[0] == 1:
                 monom = list(rep.keys())[0]
             else:
-                raise ValueError("Expected a monomial got %s" % monom)
+                raise ValueError("Expected a monomial got {}".format(monom))
 
         self.exponents = tuple(map(int, monom))
         self.gens = gens
@@ -513,7 +513,7 @@ class Monomial(PicklableWithSlots):
         elif isinstance(other, (tuple, Tuple)):
             exponents = other
         else:
-            return NotImplementedError
+            raise NotImplementedError
 
         return self.rebuild(monomial_mul(self.exponents, exponents))
 
@@ -523,7 +523,7 @@ class Monomial(PicklableWithSlots):
         elif isinstance(other, (tuple, Tuple)):
             exponents = other
         else:
-            return NotImplementedError
+            raise NotImplementedError
 
         result = monomial_div(self.exponents, exponents)
 

@@ -40,7 +40,7 @@ class FunctionMatrix(MatrixExpr):
     def lamda(self):
         return self.args[2]
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         return self.lamda(i, j)
 
     def _eval_trace(self):
