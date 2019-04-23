@@ -1722,6 +1722,9 @@ class LatexPrinter(Printer):
             self._print(expr.args[0])
         )
 
+    def _print_UniversalSet(self, expr):
+        return r"\mathbb{U}"
+
     def _print_tuple(self, expr):
         return r"\left( %s\right)" % \
             r", \  ".join([self._print(i) for i in expr])

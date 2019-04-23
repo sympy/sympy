@@ -153,7 +153,7 @@ class Set(Basic):
         Union(Interval.open(-oo, 0), Interval.open(1, oo))
 
         >>> Interval(0, 1).complement(S.UniversalSet)
-        UniversalSet() \ Interval(0, 1)
+        UniversalSet \ Interval(0, 1)
 
         """
         return Complement(universe, self)
@@ -1454,7 +1454,7 @@ class UniversalSet(with_metaclass(Singleton, Set)):
 
     >>> from sympy import S, Interval
     >>> S.UniversalSet
-    UniversalSet()
+    UniversalSet
 
     >>> Interval(1, 2).intersect(S.UniversalSet)
     Interval(1, 2)

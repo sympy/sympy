@@ -1137,6 +1137,10 @@ def test_print_EmptySet():
     assert mpp.doprint(EmptySet()) == '<mo>&#x2205;</mo>'
 
 
+def test_print_UniversalSet():
+    assert mpp.doprint(S.UniversalSet) == '<mo>&#x1D54C;</mo>'
+
+
 def test_print_SetOp():
     f1 = FiniteSet(x, 1, 3)
     f2 = FiniteSet(y, 2, 4)
