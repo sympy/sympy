@@ -164,7 +164,6 @@ class Piecewise(Function):
         If there is a single arg with a True condition, its
         corresponding expression will be returned.
         """
-        from sympy import Intersection, EmptySet
         if not _args:
             return Undefined
 
@@ -177,11 +176,7 @@ class Piecewise(Function):
 
         # make conditions canonical and count the number of variables
         args = []
-        symbols = []
         for e, c in _args:
-            #Counts free symbols(variables)
-            if((c.free_symbols not in symbols) and (c.free_symbols) != set()):
-                symbols.append(c.free_symbols)
             if not c.is_Atom and not isinstance(c, Relational):
                 free = c.free_symbols
                 if len(free) == 1:
@@ -281,25 +276,6 @@ class Piecewise(Function):
                     cond = S.true
 
             current_cond.add(cond)
-
-            #   Does not add intervals which are already covered entirely by
-            #   previous intervals (in terms of ordering of arguments)
-            #   Piecewise((0, t>=4), (0, t<3), (1, t<=2), (3, t<4))
-            #   >>> Piecewise((0, (t >= 4) | (t < 3)), (3, True))
-            #   (Feature implemented for 1 variable Piecewise only)
-            if(len(symbols)<2):
-                try:
-                    cu_inter = cond.as_set()      # current condition
-                    # Makes sure that x**2<-1 like conditions are not taken as EmptySet()
-                    # Makes sure that symbols are not treated as True for the UniversalSet()
-                    if(cu_inter != EmptySet() and not(isinstance(cond, Symbol))):
-                        inter = Intersection(existing_intervals, cu_inter)
-                        if((cu_inter == inter)):
-                            continue
-                        else:
-                            existing_intervals = existing_intervals.union(cu_inter)
-                except:
-                    pass
 
             # collect successive e,c pairs when exprs or cond match
             if newargs:
@@ -1043,6 +1019,58 @@ class Piecewise(Function):
         for a, c in reversed(args[:i]):
             last = ITE(c, a, last)
         return _canonical(last)
+
+    def as_non_overlapping(self, var):
+        # Returns Piecewise function with arguments which are non overlapping
+        # Can be used for multivariable as well (as long it can be simplified)
+        # Examples:
+        # >> a = Piecewise((2, x<1-y), (4, x<-1-y),(3, True))
+        # >> a.as_non_overlapping(x+y)
+        #  Piecewise((2, x + y < 1), (3, True))
+        # >> a = Piecewise((2, x>1), (4, x>3),(3, True))
+        # >> a.as_non_overlapping(x)
+        #  Piecewise((2, x > 1), (3, True))
+        from sympy import Intersection, UniversalSet, oo
+
+        newargs = []
+        existing_interval = S.EmptySet
+        _d = Dummy('d')
+        for expr,cond in self.args:
+            # Bring the expression to a single side
+            # x>1-y+z to x-1+y-z>0
+            try:
+                rearrangecond = cond.subs([(cond.rhs, 0),
+                                           (cond.lhs, cond.lhs-cond.rhs)])
+            except:
+                rearrangecond = cond
+
+            # Simplify expression to a single dummy varible
+            dummycond = rearrangecond.subs(var, _d)
+            if((len(dummycond.free_symbols) > 1 or (dummycond.free_symbols != {_d}))
+                and len(dummycond.free_symbols) != 0):
+                raise ValueError('Sorry expression cannot be simplified')
+            else:
+                # Add intervals to the existing interval (non-overlapping)
+                cu_interval = dummycond.as_set()
+                inter = Intersection(existing_interval, cu_interval)
+                if(inter != cu_interval):
+                    if(cu_interval == UniversalSet):
+                        newcond = True
+                    else:
+                        newcond = cu_interval.as_relational(_d)
+                        # Cleaner looking conditions (may be excluded)
+                        newcond = newcond.subs([(-oo<_d, True), (_d<oo, True)])
+                        newcond = newcond.subs(_d, var)
+                    newargs.append(ExprCondPair(expr,newcond))
+                    existing_interval = existing_interval.union(cu_interval)
+                else:
+                    continue
+                if(existing_interval == UniversalSet):
+                    break
+
+        return Piecewise(*newargs)
+
+
 
 
 def piecewise_fold(expr):
