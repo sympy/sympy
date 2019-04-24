@@ -172,7 +172,6 @@ class Piecewise(Function):
 
         newargs = []  # the unevaluated conditions
         current_cond = set()  # the conditions up to a given e, c pair
-        existing_intervals = S.EmptySet  # keeps track of added intervals
 
         # make conditions canonical and count the number of variables
         args = []
