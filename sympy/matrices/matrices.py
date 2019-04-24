@@ -2640,7 +2640,7 @@ class MatrixBase(MatrixDeprecated,
                 flat_list = []
                 for i in range(rows):
                     flat_list.extend(
-                        [cls._sympify(op(cls._sympify(i), cls._sympify(j)))
+                        [cls._sympify(op(i, j))
                          for j in range(cols)])
 
             # Matrix(2, 2, [1, 2, 3, 4])
