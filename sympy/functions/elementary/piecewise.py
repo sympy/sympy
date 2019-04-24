@@ -173,7 +173,7 @@ class Piecewise(Function):
         newargs = []  # the unevaluated conditions
         current_cond = set()  # the conditions up to a given e, c pair
 
-        # make conditions canonical and count the number of variables
+        # make conditions canonical
         args = []
         for e, c in _args:
             if not c.is_Atom and not isinstance(c, Relational):
