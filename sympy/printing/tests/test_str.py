@@ -514,8 +514,6 @@ def test_Float():
                                      '5028841971693993751058209749445923')
     assert str(pi.round(-1)) == '0.'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
-    assert str(Float(S.Infinity)) == 'inf'
-    assert str(Float(S.NegativeInfinity)) == '-inf'
 
 
 def test_Relational():

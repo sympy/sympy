@@ -493,8 +493,9 @@ def test_FloatType():
     assert isinstance(f64.cast_check(3), (Float, float))
 
     assert f64.cast_nocheck(oo) == float('inf')
-    assert f64.cast_nocheck(-oo) == -float('inf')
-    assert f64.cast_nocheck(-oo) == -float('inf')
+    assert f64.cast_nocheck(-oo) == float('-inf')
+    assert f64.cast_nocheck(float(oo)) == float('inf')
+    assert f64.cast_nocheck(float(-oo)) == float('-inf')
     assert math.isnan(f64.cast_nocheck(nan))
 
     assert f32 != f64
