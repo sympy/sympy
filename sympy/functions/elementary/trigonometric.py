@@ -363,9 +363,10 @@ class sin(TrigonometricFunction):
             x = arg.args[0]
             return sqrt(1 - 1 / x**2)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(sin, self).taylor_term(n, x, *previous_terms)
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -666,9 +667,10 @@ class cos(TrigonometricFunction):
             x = arg.args[0]
             return 1 / x
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(cos, self).taylor_term(n, x, *previous_terms)
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
@@ -1071,9 +1073,10 @@ class tan(TrigonometricFunction):
             x = arg.args[0]
             return sqrt(1 - 1 / x**2) * x
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(tan, self).taylor_term(n, x, *previous_terms)
         from sympy import bernoulli
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -1356,9 +1359,10 @@ class cot(TrigonometricFunction):
             x = arg.args[0]
             return 1 / (sqrt(1 - 1 / x**2) * x)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(cot, self).taylor_term(n, x, *previous_terms)
         from sympy import bernoulli
         if n == 0:
             return 1 / sympify(x)
@@ -1674,9 +1678,10 @@ class sec(ReciprocalTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(sec, self).taylor_term(n, x, *previous_terms)
         # Reference Formula:
         # http://functions.wolfram.com/ElementaryFunctions/Sec/06/01/02/01/
         from sympy.functions.combinatorial.numbers import euler
@@ -1754,9 +1759,10 @@ class csc(ReciprocalTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(csc, self).taylor_term(n, x, *previous_terms)
         from sympy import bernoulli
         if n == 0:
             return 1/sympify(x)
@@ -1990,9 +1996,10 @@ class asin(InverseTrigonometricFunction):
             if ang.is_comparable:
                 return pi/2 - acos(arg)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(asin, self).taylor_term(n, x, *previous_terms)
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -2146,9 +2153,10 @@ class acos(InverseTrigonometricFunction):
             if ang.is_comparable:
                 return pi/2 - asin(arg)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(acos, self).taylor_term(n, x, *previous_terms)
         if n == 0:
             return S.Pi / 2
         elif n < 0 or n % 2 == 0:
@@ -2339,9 +2347,10 @@ class atan(InverseTrigonometricFunction):
                     ang -= pi
                 return ang
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(atan, self).taylor_term(n, x, *previous_terms)
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -2502,9 +2511,10 @@ class acot(InverseTrigonometricFunction):
                     ang -= pi
                 return ang
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if self.args[0] != x:
+            return super(acot, self).taylor_term(n, x, *previous_terms)
         if n == 0:
             return S.Pi / 2  # FIX THIS
         elif n < 0 or n % 2 == 0:
