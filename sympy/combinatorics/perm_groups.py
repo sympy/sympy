@@ -1757,11 +1757,12 @@ class PermutationGroup(Basic):
             r = 2
             while r > 1:
                 H = der
+                l = []
                 for g in gns:
                     elm = g**p
                     if not H.contains(elm):
-                        H = PermutationGroup(H.generators + [elm])
-
+                        l.append(elm)
+                H = PermutationGroup(H.generators + l)
                 r = G.order()//H.order()
                 G = H
                 gns = G.generators
