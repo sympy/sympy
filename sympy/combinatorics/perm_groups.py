@@ -1765,7 +1765,7 @@ class PermutationGroup(Basic):
                 H = PermutationGroup(H.generators + l)
                 r = G.order()//H.order()
                 G = H
-                gns = G.generators
+                gns = l
                 if r != 1:
                     ranks.append(multiplicity(p, r))
 
