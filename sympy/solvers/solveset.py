@@ -38,6 +38,7 @@ from sympy.sets.sets import Set
 from sympy.matrices import Matrix, MatrixBase
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -506,6 +507,9 @@ def _solve_as_rational(f, symbol, domain):
             # coefficients in a ring over which finding roots
             # isn't implemented yet, e.g. ZZ[a] for some symbol a
             return ConditionSet(symbol, Eq(f, 0), domain)
+        except CoercionFailed:
+            # contained oo, zoo or nan
+            return S.EmptySet
     else:
         valid_solns = _solveset(g, symbol, domain)
         invalid_solns = _solveset(h, symbol, domain)
