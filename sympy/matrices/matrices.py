@@ -2638,10 +2638,11 @@ class MatrixBase(MatrixDeprecated,
             if len(args) == 3 and isinstance(args[2], Callable):
                 op = args[2]
                 flat_list = []
-                for i in range(rows):
+                rows_range = [cls._sympify(i) for i in range(rows)]
+                cols_range = [cls._sympify(j) for j in range(cols)]
+                for i in rows_range:
                     flat_list.extend(
-                        [cls._sympify(op(i, j))
-                         for j in range(cols)])
+                        [cls._sympify(op(i, j)) for j in cols_range])
 
             # Matrix(2, 2, [1, 2, 3, 4])
             elif len(args) == 3 and is_sequence(args[2]):
