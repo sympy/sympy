@@ -792,14 +792,6 @@ def test_Infinity_2():
 
 
 def test_Mul_Infinity_Zero():
-    assert 0*inf == nan
-    assert 0*ninf == nan
-    assert 0*inf == nan
-    assert 0*ninf == nan
-    assert inf*0 == nan
-    assert ninf*0 == nan
-    assert inf*0 == nan
-    assert ninf*0 == nan
     assert Float(0)*inf == nan
     assert Float(0)*ninf == nan
     assert Float(0)*inf == nan
