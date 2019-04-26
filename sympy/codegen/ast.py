@@ -136,9 +136,6 @@ from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import iterable
 
 
-inf = float(oo)
-noo = -oo
-ninf = float(noo)
 
 def _mk_Tuple(args):
     """
@@ -1253,10 +1250,10 @@ class FloatType(FloatBaseType):
 
     def cast_nocheck(self, value):
         """ Casts without checking if out of bounds or subnormal. """
-        if value == inf or value is oo:
-            return inf
-        elif value == ninf or value is noo:
-            return ninf
+        if value == oo:  # float(oo) or oo
+            return float(oo)
+        elif value == -oo:  # float(-oo) or -oo
+            return float(-oo)
         return Float(str(sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
 
     def _check(self, value):

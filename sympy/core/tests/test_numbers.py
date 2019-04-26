@@ -24,8 +24,8 @@ import mpmath
 
 t = Symbol('t', real=False)
 
-ninf = float(-oo)
-inf = float(oo)
+_ninf = float(-oo)
+_inf = float(oo)
 
 def same_and_same_prec(a, b):
     # stricter matching for Floats
@@ -431,8 +431,8 @@ def test_Float():
     assert Float((0, long(0), -123, -1)) is S.NaN
     assert Float((0, long(0), -456, -2)) is S.Infinity
     assert Float((1, long(0), -789, -3)) is S.NegativeInfinity
-    assert Float(oo) is Float('+inf') is S.Infinity
-    assert Float(-oo) is Float('-inf') is S.NegativeInfinity
+    assert Float(oo) is Float('+_inf') is S.Infinity
+    assert Float(-oo) is Float('-_inf') is S.NegativeInfinity
 
     raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
 
@@ -687,24 +687,24 @@ def test_Infinity():
     assert S(2) - oo == -oo
     assert oo/I == -oo*I
     assert -oo/I == oo*I
-    assert oo*float(1) == inf and (oo*float(1)) is oo
-    assert -oo*float(1) == ninf and (-oo*float(1)) is -oo
-    assert oo/float(1) == inf and (oo/float(1)) is oo
-    assert -oo/float(1) == ninf and (-oo/float(1)) is -oo
-    assert oo*float(-1) == ninf and (oo*float(-1)) is -oo
-    assert -oo*float(-1) == inf and (-oo*float(-1)) is oo
-    assert oo/float(-1) == ninf and (oo/float(-1)) is -oo
-    assert -oo/float(-1) == inf and (-oo/float(-1)) is oo
-    assert oo + float(1) == inf and (oo + float(1)) is oo
-    assert -oo + float(1) == ninf and (-oo + float(1)) is -oo
-    assert oo - float(1) == inf and (oo - float(1)) is oo
-    assert -oo - float(1) == ninf and (-oo - float(1)) is -oo
-    assert float(1)*oo == inf and (float(1)*oo) is oo
-    assert float(1)*-oo == ninf and (float(1)*-oo) is -oo
+    assert oo*float(1) == _inf and (oo*float(1)) is oo
+    assert -oo*float(1) == _ninf and (-oo*float(1)) is -oo
+    assert oo/float(1) == _inf and (oo/float(1)) is oo
+    assert -oo/float(1) == _ninf and (-oo/float(1)) is -oo
+    assert oo*float(-1) == _ninf and (oo*float(-1)) is -oo
+    assert -oo*float(-1) == _inf and (-oo*float(-1)) is oo
+    assert oo/float(-1) == _ninf and (oo/float(-1)) is -oo
+    assert -oo/float(-1) == _inf and (-oo/float(-1)) is oo
+    assert oo + float(1) == _inf and (oo + float(1)) is oo
+    assert -oo + float(1) == _ninf and (-oo + float(1)) is -oo
+    assert oo - float(1) == _inf and (oo - float(1)) is oo
+    assert -oo - float(1) == _ninf and (-oo - float(1)) is -oo
+    assert float(1)*oo == _inf and (float(1)*oo) is oo
+    assert float(1)*-oo == _ninf and (float(1)*-oo) is -oo
     assert float(1)/oo == 0
     assert float(1)/-oo == 0
-    assert float(-1)*oo == ninf and (float(-1)*oo) is -oo
-    assert float(-1)*-oo == inf and (float(-1)*-oo) is oo
+    assert float(-1)*oo == _ninf and (float(-1)*oo) is -oo
+    assert float(-1)*-oo == _inf and (float(-1)*-oo) is oo
     assert float(-1)/oo == 0
     assert float(-1)/-oo == 0
     assert float(1) + oo is oo
@@ -771,18 +771,18 @@ def test_Infinity_2():
     assert (-oo)*(1 - pi) == oo
 
     assert (-1)**S.NaN is S.NaN
-    assert oo - inf is S.NaN
-    assert oo + ninf is S.NaN
+    assert oo - _inf is S.NaN
+    assert oo + _ninf is S.NaN
     assert oo*0 is S.NaN
-    assert oo/inf is S.NaN
-    assert oo/ninf is S.NaN
+    assert oo/_inf is S.NaN
+    assert oo/_ninf is S.NaN
     assert oo**S.NaN is S.NaN
-    assert -oo + inf is S.NaN
-    assert -oo - ninf is S.NaN
+    assert -oo + _inf is S.NaN
+    assert -oo - _ninf is S.NaN
     assert -oo*S.NaN is S.NaN
     assert -oo*0 is S.NaN
-    assert -oo/inf is S.NaN
-    assert -oo/ninf is S.NaN
+    assert -oo/_inf is S.NaN
+    assert -oo/_ninf is S.NaN
     assert -oo/S.NaN is S.NaN
     assert abs(-oo) == oo
     assert all((-oo)**i is S.NaN for i in (oo, -oo, S.NaN))
@@ -792,25 +792,25 @@ def test_Infinity_2():
 
 
 def test_Mul_Infinity_Zero():
-    assert Float(0)*inf == nan
-    assert Float(0)*ninf == nan
-    assert Float(0)*inf == nan
-    assert Float(0)*ninf == nan
-    assert inf*Float(0) == nan
-    assert ninf*Float(0) == nan
-    assert inf*Float(0) == nan
-    assert ninf*Float(0) == nan
+    assert Float(0)*_inf == nan
+    assert Float(0)*_ninf == nan
+    assert Float(0)*_inf == nan
+    assert Float(0)*_ninf == nan
+    assert _inf*Float(0) == nan
+    assert _ninf*Float(0) == nan
+    assert _inf*Float(0) == nan
+    assert _ninf*Float(0) == nan
 
 
 def test_Div_By_Zero():
     assert 1/S(0) == zoo
-    assert 1/Float(0) == inf
+    assert 1/Float(0) == _inf
     assert 0/S(0) == nan
     assert 0/Float(0) == nan
     assert S(0)/0 == nan
     assert Float(0)/0 == nan
     assert -1/S(0) == zoo
-    assert -1/Float(0) == ninf
+    assert -1/Float(0) == _ninf
 
 
 def test_Infinity_inequations():
@@ -818,9 +818,9 @@ def test_Infinity_inequations():
     assert not (oo < pi)
     assert exp(-3) < oo
 
-    assert inf > pi
-    assert not (inf < pi)
-    assert exp(-3) < inf
+    assert _inf > pi
+    assert not (_inf < pi)
+    assert exp(-3) < _inf
 
     raises(TypeError, lambda: oo < I)
     raises(TypeError, lambda: oo <= I)
@@ -849,10 +849,10 @@ def test_Infinity_inequations():
     assert (oo > oo) == False
     assert (-oo > -oo) == False and (-oo < -oo) == False
     assert oo >= oo and oo <= oo and -oo >= -oo and -oo <= -oo
-    assert (-oo < -inf) ==  False
-    assert (oo > inf) == False
-    assert -oo >= -inf
-    assert oo <= inf
+    assert (-oo < -_inf) ==  False
+    assert (oo > _inf) == False
+    assert -oo >= -_inf
+    assert oo <= _inf
 
     x = Symbol('x')
     b = Symbol('b', finite=True, real=True)

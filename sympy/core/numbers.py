@@ -960,9 +960,9 @@ class Float(Number):
                 return S.NegativeInfinity
         elif isinstance(num, float) and num == 0:
             num = '0'
-        elif isinstance(num, float) and num == inf:
+        elif isinstance(num, float) and num == _inf:
             return S.Infinity
-        elif isinstance(num, float) and num == ninf:
+        elif isinstance(num, float) and num == _ninf:
             return S.NegativeInfinity
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)  # faster than mlib.from_int
@@ -2818,10 +2818,10 @@ class Infinity(with_metaclass(Singleton, Number)):
         return super(Infinity, self).__hash__()
 
     def __eq__(self, other):
-        return other is S.Infinity or other == inf
+        return other is S.Infinity or other == _inf
 
     def __ne__(self, other):
-        return other is not S.Infinity and other != inf
+        return other is not S.Infinity and other != _inf
 
     def __lt__(self, other):
         try:
@@ -2881,8 +2881,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         return self
 
 oo = S.Infinity
-inf = float(oo)
-ninf = -inf
+_inf = float(oo)
 
 
 class NegativeInfinity(with_metaclass(Singleton, Number)):
@@ -3045,10 +3044,10 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         return super(NegativeInfinity, self).__hash__()
 
     def __eq__(self, other):
-        return other is S.NegativeInfinity or other == ninf
+        return other is S.NegativeInfinity or other == _ninf
 
     def __ne__(self, other):
-        return other is not S.NegativeInfinity and other != ninf
+        return other is not S.NegativeInfinity and other != _ninf
 
     def __lt__(self, other):
         try:
@@ -3106,6 +3105,8 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     def ceiling(self):
         return self
+
+_ninf = float(-oo)
 
 
 class NaN(with_metaclass(Singleton, Number)):
