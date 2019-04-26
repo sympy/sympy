@@ -565,6 +565,9 @@ if __name__ == "__main__":
     if os.path.isdir(sympy_dir):
         sys.path.insert(0, sympy_top)
 
+    # No paths are skipped, however this is included in coverage tests
+    skip_paths = []
+
     usage = "usage: ./bin/doctest_coverage.py PATHS"
 
     parser = ArgumentParser(
