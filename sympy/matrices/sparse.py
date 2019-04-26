@@ -128,8 +128,8 @@ class SparseMatrix(MatrixBase):
 
             if isinstance(args[2], Callable):
                 op = args[2]
-                rows_range = [cls._sympify(i) for i in range(rows)]
-                cols_range = [cls._sympify(j) for j in range(cols)]
+                rows_range = [cls._sympify(i) for i in range(self.rows)]
+                cols_range = [cls._sympify(j) for j in range(self.cols)]
                 for i in rows_range:
                     for j in cols_range:
                         value = self._sympify(op(i, j))
