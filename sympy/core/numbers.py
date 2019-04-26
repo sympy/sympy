@@ -2716,7 +2716,7 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
-        return (-self).__sub__(other)
+        return (-self).__add__(other)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
@@ -2945,7 +2945,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
-        return (-self).__sub__(other)
+        return (-self).__add__(other)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
