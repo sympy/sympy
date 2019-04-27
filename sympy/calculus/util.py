@@ -3,7 +3,6 @@ from sympy.core import Add, Mul, Pow
 from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import _sympifyit, oo
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
@@ -1588,6 +1587,7 @@ class AccumulationBounds(AtomicExpr):
 
         if other.min <= self.min and other.max >= self.min:
             return AccumBounds(other.min, Max(self.max, other.max))
+
 
 # setting an alias for AccumulationBounds
 AccumBounds = AccumulationBounds

@@ -3,7 +3,7 @@ from sympy import Mul, Basic, Q, Expr, And, symbols, Equivalent, Implies, Or
 from sympy.assumptions.sathandlers import (ClassFactRegistry, AllArgs,
     UnevaluatedOnFree, AnyArgs, CheckOldAssump, ExactlyOneArg)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 
 x, y, z = symbols('x y z')
