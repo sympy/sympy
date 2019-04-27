@@ -960,16 +960,16 @@ class Float(Number):
                 return S.NegativeInfinity
         elif isinstance(num, float) and num == 0:
             num = '0'
-        elif isinstance(num, float) and num == _inf:
+        elif isinstance(num, float) and num == float('inf'):
             return S.Infinity
-        elif isinstance(num, float) and num == _ninf:
+        elif isinstance(num, float) and num == float('-inf'):
             return S.NegativeInfinity
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)  # faster than mlib.from_int
         elif num is S.Infinity:
-            return num  # num = '+inf'
+            return num
         elif num is S.NegativeInfinity:
-            return num  # num = '-inf'
+            return num
         elif type(num).__module__ == 'numpy': # support for numpy datatypes
             num = _convert_numpy_types(num)
         elif isinstance(num, mpmath.mpf):
@@ -1231,7 +1231,7 @@ class Float(Number):
             if expt.is_positive:
                 return S.Zero
             if expt.is_negative:
-                return Float('inf')
+                return S.Infinity
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
                 prec = self._prec
@@ -2690,13 +2690,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         if isinstance(other, Number):
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
-            elif other.is_Float:
-                if other == Float('-inf'):
-                    return S.NaN
-                else:
-                    return Float('inf')
-            else:
-                return S.Infinity
+            return self
         return NotImplemented
     __radd__ = __add__
 
@@ -2705,13 +2699,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         if isinstance(other, Number):
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
-            elif other.is_Float:
-                if other == Float('inf'):
-                    return S.NaN
-                else:
-                    return Float('inf')
-            else:
-                return S.Infinity
+            return self
         return NotImplemented
 
     @_sympifyit('other', NotImplemented)
@@ -2721,20 +2709,11 @@ class Infinity(with_metaclass(Singleton, Number)):
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if isinstance(other, Number):
-            if other is S.Zero or other is S.NaN:
+            if other.is_zero or other is S.NaN:
                 return S.NaN
-            elif other.is_Float:
-                if other == 0:
-                    return S.NaN
-                if other > 0:
-                    return Float('inf')
-                else:
-                    return Float('-inf')
-            else:
-                if other > 0:
-                    return S.Infinity
-                else:
-                    return S.NegativeInfinity
+            if other.is_positive:
+                return self
+            return S.NegativeInfinity
         return NotImplemented
     __rmul__ = __mul__
 
@@ -2745,19 +2724,9 @@ class Infinity(with_metaclass(Singleton, Number)):
                 other is S.NegativeInfinity or \
                     other is S.NaN:
                 return S.NaN
-            elif other.is_Float:
-                if other == Float('-inf') or \
-                        other == Float('inf'):
-                    return S.NaN
-                elif other.is_nonnegative:
-                    return Float('inf')
-                else:
-                    return Float('-inf')
-            else:
-                if other >= 0:
-                    return S.Infinity
-                else:
-                    return S.NegativeInfinity
+            if other.is_nonnegative:
+                return self
+            return S.NegativeInfinity
         return NotImplemented
 
     __truediv__ = __div__
@@ -2918,13 +2887,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         if isinstance(other, Number):
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
-            elif other.is_Float:
-                if other == Float('inf'):
-                    return S.NaN
-                else:
-                    return Float('-inf')
-            else:
-                return S.NegativeInfinity
+            return self
         return NotImplemented
     __radd__ = __add__
 
@@ -2933,13 +2896,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         if isinstance(other, Number):
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
-            elif other.is_Float:
-                if other == Float('-inf'):
-                    return S.NaN
-                else:
-                    return Float('-inf')
-            else:
-                return S.NegativeInfinity
+            return self
         return NotImplemented
 
     @_sympifyit('other', NotImplemented)
@@ -2949,20 +2906,11 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if isinstance(other, Number):
-            if other is S.Zero or other is S.NaN:
+            if other.is_zero or other is S.NaN:
                 return S.NaN
-            elif other.is_Float:
-                if other is S.NaN or other.is_zero:
-                    return S.NaN
-                elif other.is_positive:
-                    return Float('-inf')
-                else:
-                    return Float('inf')
-            else:
-                if other.is_positive:
-                    return S.NegativeInfinity
-                else:
-                    return S.Infinity
+            if other.is_positive:
+                return self
+            return S.Infinity
         return NotImplemented
     __rmul__ = __mul__
 
@@ -2973,20 +2921,9 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 other is S.NegativeInfinity or \
                     other is S.NaN:
                 return S.NaN
-            elif other.is_Float:
-                if other == Float('-inf') or \
-                    other == Float('inf') or \
-                        other is S.NaN:
-                    return S.NaN
-                elif other.is_nonnegative:
-                    return Float('-inf')
-                else:
-                    return Float('inf')
-            else:
-                if other >= 0:
-                    return S.NegativeInfinity
-                else:
-                    return S.Infinity
+            if other.is_nonnegative:
+                return self
+            return S.Infinity
         return NotImplemented
 
     __truediv__ = __div__
@@ -3044,10 +2981,10 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         return super(NegativeInfinity, self).__hash__()
 
     def __eq__(self, other):
-        return other is S.NegativeInfinity or other == _ninf
+        return other is S.NegativeInfinity or other == float('-inf')
 
     def __ne__(self, other):
-        return other is not S.NegativeInfinity and other != _ninf
+        return other is not S.NegativeInfinity and other != float('-inf')
 
     def __lt__(self, other):
         try:
@@ -3105,8 +3042,6 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     def ceiling(self):
         return self
-
-_ninf = float(-oo)
 
 
 class NaN(with_metaclass(Singleton, Number)):
