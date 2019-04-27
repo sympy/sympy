@@ -544,14 +544,15 @@ class log(Function):
             elif arg is S.Infinity:
                 return S.Infinity
             elif arg is S.NegativeInfinity:
-                return S.Infinity
+                return S.Infinity + S.Pi*S.ImaginaryUnit
             elif arg is S.NaN:
                 return S.NaN
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
         if arg is S.ComplexInfinity:
-                return S.ComplexInfinity
+            return S.ComplexInfinity
+
         if isinstance(arg, exp) and arg.args[0].is_real:
             return arg.args[0]
         elif isinstance(arg, exp_polar):
@@ -563,12 +564,9 @@ class log(Function):
                 return
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
-
-        if arg.is_number:
+        elif arg.is_number:
             if arg.is_negative:
-                return S.Pi * S.ImaginaryUnit + cls(-arg)
-            elif arg is S.ComplexInfinity:
-                return S.ComplexInfinity
+                return S.Pi*S.ImaginaryUnit + cls(-arg)
             elif arg is S.Exp1:
                 return S.One
 
