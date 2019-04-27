@@ -3419,7 +3419,7 @@ def homogeneous_order(eq, *symbols):
             eq.args[0], *tuple(symset)) != 0 else S.Zero
 
     # make the replacement of x with x*t and see if t can be factored out
-    t = Dummy('t', positive=True, finite=True)  # It is sufficient that t > 0
+    t = Dummy('t', positive=True)  # It is sufficient that t > 0
     eqs = separatevars(eq.subs([(i, t*i) for i in symset]), [t], dict=True)[t]
     if eqs is S.One:
         return S.Zero  # there was no term with only t
