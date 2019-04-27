@@ -147,9 +147,13 @@ def test_exp_MatrixSymbol():
 
 def test_log_values():
     assert log(nan) == nan
+    assert log(float('nan')) == nan
 
     assert log(oo) == oo
-    assert log(-oo) == oo
+    assert log(float('inf')) == oo
+
+    assert log(-oo) == oo + I*pi
+    assert log(float('-inf')) == oo + I*pi
 
     assert log(zoo) == zoo
     assert log(-zoo) == zoo
