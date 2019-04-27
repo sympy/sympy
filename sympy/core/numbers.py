@@ -2723,7 +2723,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         if isinstance(other, Number):
             if other.is_zero or other is S.NaN:
                 return S.NaN
-            if other.is_positive:
+            if other.is_extended_positive:
                 return self
             return S.NegativeInfinity
         return NotImplemented
@@ -2736,7 +2736,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 other is S.NegativeInfinity or \
                     other is S.NaN:
                 return S.NaN
-            if other.is_nonnegative:
+            if other.is_extended_nonnegative:
                 return self
             return S.NegativeInfinity
         return NotImplemented
