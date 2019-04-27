@@ -457,7 +457,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     For example:
 
     >>> from sympy import symbols, log
-    >>> a, b = symbols('a b', positive=True, finite=True)
+    >>> a, b = symbols('a b', positive=True)
     >>> g = log(a) + log(b) + log(a)*log(1/b)
     >>> h = simplify(g)
     >>> h
