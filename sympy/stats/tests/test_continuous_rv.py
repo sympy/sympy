@@ -20,6 +20,7 @@ from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.randtest import verify_numerically as tn
+import random
 
 oo = S.Infinity
 
@@ -509,10 +510,12 @@ def test_lognormal():
     #assert variance(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
     # Right now, only density function and sampling works
-    # Test sampling: Only e^mean in sample std of 0
+    # Test sampling: seed for same output in every build
+    random.seed(2)
+    samples = [1.52, 3.21, 40.10]
     for i in range(3):
-        X = LogNormal('x', i, 0)
-        assert S(sample(X)) == N(exp(i))
+        X = LogNormal('x', i, 1)
+        assert S(sample(X)).round(2) == samples[i]
 
     mu = Symbol("mu", real=True)
     sigma = Symbol("sigma", positive=True)
