@@ -616,7 +616,7 @@ def test_rewrite_trigh():
 
 
 def test_real_imag_splitting():
-    a, b = symbols('a b', real=True, finite=True)
+    a, b = symbols('a b', real=True)
     assert solveset_real(sqrt(a**2 - b**2) - 3, a) == \
         FiniteSet(-sqrt(b**2 + 9), sqrt(b**2 + 9))
     assert solveset_real(sqrt(a**2 + b**2) - 3, a) != \
@@ -628,7 +628,7 @@ def test_units():
 
 
 def test_solve_only_exp_1():
-    y = Symbol('y', positive=True, finite=True)
+    y = Symbol('y', positive=True)
     assert solveset_real(exp(x) - y, x) == FiniteSet(log(y))
     assert solveset_real(exp(x) + exp(-x) - 4, x) == \
         FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
@@ -1902,7 +1902,7 @@ def test_expo_conditionset():
 
 
 def test_exponential_symbols():
-    x, y, z = symbols('x y z', positive=True, finite=True)
+    x, y, z = symbols('x y z', positive=True)
     from sympy import simplify
 
     assert solveset(z**x - y, x, S.Reals) == Intersection(

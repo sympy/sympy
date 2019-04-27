@@ -1607,7 +1607,7 @@ def test_1st_homogeneous_coeff_corner_case():
 def test_nth_linear_constant_coeff_homogeneous():
     # From Exercise 20, in Ordinary Differential Equations,
     #                      Tenenbaum and Pollard, pg. 220
-    a = Symbol('a', positive=True, finite=True)
+    a = Symbol('a', positive=True)
     k = Symbol('k', real=True)
     eq1 = f(x).diff(x, 2) + 2*f(x).diff(x)
     eq2 = f(x).diff(x, 2) - 3*f(x).diff(x) + 2*f(x)
