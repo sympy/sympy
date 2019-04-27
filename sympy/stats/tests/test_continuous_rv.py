@@ -27,8 +27,8 @@ x, y, z = map(Symbol, 'xyz')
 
 
 def test_single_normal():
-    mu = Symbol('mu', real=True, finite=True)
-    sigma = Symbol('sigma', real=True, positive=True, finite=True)
+    mu = Symbol('mu', real=True)
+    sigma = Symbol('sigma', positive=True)
     X = Normal('x', 0, 1)
     Y = X*sigma + mu
 
@@ -93,13 +93,13 @@ def test_multiple_normal():
 
 
 def test_symbolic():
-    mu1, mu2 = symbols('mu1 mu2', real=True, finite=True)
-    s1, s2 = symbols('sigma1 sigma2', real=True, finite=True, positive=True)
-    rate = Symbol('lambda', real=True, positive=True, finite=True)
+    mu1, mu2 = symbols('mu1 mu2', real=True)
+    s1, s2 = symbols('sigma1 sigma2', positive=True)
+    rate = Symbol('lambda', positive=True)
     X = Normal('x', mu1, s1)
     Y = Normal('y', mu2, s2)
     Z = Exponential('z', rate)
-    a, b, c = symbols('a b c', real=True, finite=True)
+    a, b, c = symbols('a b c', real=True)
 
     assert E(X) == mu1
     assert E(X + Y) == mu1 + mu2
@@ -341,7 +341,7 @@ def test_erlang():
 
 
 def test_exponential():
-    rate = Symbol('lambda', positive=True, real=True, finite=True)
+    rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
 
     assert E(X) == 1/rate
@@ -410,7 +410,7 @@ def test_gamma():
     # assert simplify(variance(X)) == k*theta**2  # handled numerically below
     assert E(X) == moment(X, 1)
 
-    k, theta = symbols('k theta', real=True, finite=True, positive=True)
+    k, theta = symbols('k theta', positive=True)
     X = Gamma('x', k, theta)
     assert E(X) == k*theta
     assert variance(X) == k*theta**2
@@ -481,8 +481,8 @@ def test_logistic():
 
 
 def test_lognormal():
-    mean = Symbol('mu', real=True, finite=True)
-    std = Symbol('sigma', positive=True, real=True, finite=True)
+    mean = Symbol('mu', real=True)
+    std = Symbol('sigma', positive=True)
     X = LogNormal('x', mean, std)
     # The sympy integrator can't do this too well
     #assert E(X) == exp(mean+std**2/2)
@@ -508,7 +508,7 @@ def test_lognormal():
 
 
 def test_maxwell():
-    a = Symbol("a", positive=True, finite=True)
+    a = Symbol("a", positive=True)
 
     X = Maxwell('x', a)
 
@@ -522,7 +522,7 @@ def test_maxwell():
 
 def test_nakagami():
     mu = Symbol("mu", positive=True)
-    omega = Symbol("omega", positive=True, finite=True)
+    omega = Symbol("omega", positive=True)
 
     X = Nakagami('x', mu, omega)
     assert density(X)(x) == (2*x**(2*mu - 1)*mu**mu*omega**(-mu)
@@ -537,7 +537,7 @@ def test_nakagami():
 
 
 def test_pareto():
-    xm, beta = symbols('xm beta', positive=True, finite=True)
+    xm, beta = symbols('xm beta', positive=True)
     alpha = beta + 5
     X = Pareto('x', xm, alpha)
 
@@ -638,8 +638,8 @@ def test_quadratic_u():
 
 
 def test_uniform():
-    l = Symbol('l', real=True, finite=True)
-    w = Symbol('w', positive=True, finite=True)
+    l = Symbol('l', real=True)
+    w = Symbol('w', positive=True)
     X = Uniform('x', l, l + w)
 
     assert simplify(E(X)) == l + w/2
@@ -671,8 +671,8 @@ def test_uniform_P():
     I decided to regress on this class for general cleanliness (and I suspect
     speed) of the algorithm.
     """
-    l = Symbol('l', real=True, finite=True)
-    w = Symbol('w', positive=True, finite=True)
+    l = Symbol('l', real=True)
+    w = Symbol('w', positive=True)
     X = Uniform('x', l, l + w)
     assert P(X < l) == 0 and P(X > l + w) == 0
 
@@ -696,8 +696,8 @@ def test_von_mises():
 
 
 def test_weibull():
-    a, b = symbols('a b', positive=True, finite=True)
-    # FIXME: simplify(E(X)) seems to hang without the finite=True
+    a, b = symbols('a b', positive=True)
+    # FIXME: simplify(E(X)) seems to hang without extended_positive=True
     # On a Linux machine this had a rapid memory leak...
     # a, b = symbols('a b', positive=True)
     X = Weibull('x', a, b)
@@ -839,10 +839,10 @@ def test_issue_10003():
 
 @slow
 def test_precomputed_cdf():
-    x = symbols("x", real=True, finite=True)
-    mu = symbols("mu", real=True, finite=True)
-    sigma, xm, alpha = symbols("sigma xm alpha", positive=True, finite=True)
-    n = symbols("n", integer=True, positive=True, finite=True)
+    x = symbols("x", real=True)
+    mu = symbols("mu", real=True)
+    sigma, xm, alpha = symbols("sigma xm alpha", positive=True)
+    n = symbols("n", integer=True, positive=True)
     distribs = [
             Normal("X", mu, sigma),
             Pareto("P", xm, alpha),
@@ -893,7 +893,7 @@ def test_precomputed_characteristic_functions():
 
 
 def test_long_precomputed_cdf():
-    x = symbols("x", real=True, finite=True)
+    x = symbols("x", real=True)
     distribs = [
             Arcsin("A", -5, 9),
             Dagum("D", 4, 10, 3),
