@@ -386,7 +386,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
         upper_limit = self.limits[0][2]
-        sequence_term = self.function
+        sequence_term = simplify(self.function)
 
         if len(sequence_term.free_symbols) > 1:
             raise NotImplementedError("convergence checking for more than one symbol "

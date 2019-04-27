@@ -1001,6 +1001,10 @@ def test_convergent_failing():
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
 
 
+def test_issue_16699():
+    assert Sum(factorial(n) / factorial(n+2), (n, 1, oo)).is_convergent() is S.true
+
+
 def test_issue_6966():
     i, k, m = symbols('i k m', integer=True)
     z_i, q_i = symbols('z_i q_i')
