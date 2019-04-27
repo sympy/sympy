@@ -120,8 +120,6 @@ class re(Function):
     def _eval_is_complex(self):
         if self.args[0].is_finite:
             return True
-        else:
-            return None
 
     def _sage_(self):
         import sage.all as sage
@@ -240,8 +238,6 @@ class im(Function):
     def _eval_is_complex(self):
         if self.args[0].is_finite:
             return True
-        else:
-            return None
 
 ###############################################################################
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
@@ -441,7 +437,8 @@ class Abs(Function):
     """
 
     is_extended_real = True
-    is_nonnegative = True
+    is_extended_negative = False
+    is_extended_nonnegative = True
     unbranched = True
 
     def fdiff(self, argindex=1):
@@ -550,13 +547,13 @@ class Abs(Function):
         if self.args[0].is_extended_real:
             return self.args[0].is_integer
 
-    def _eval_is_nonzero(self):
+    def _eval_is_extended_nonzero(self):
         return fuzzy_not(self._args[0].is_zero)
 
     def _eval_is_zero(self):
         return self._args[0].is_zero
 
-    def _eval_is_positive(self):
+    def _eval_is_extended_positive(self):
         is_z = self.is_zero
         if is_z is not None:
             return not is_z
@@ -641,6 +638,7 @@ class arg(Function):
     """
 
     is_extended_real = True
+    is_real = True
     is_finite = True
 
     @classmethod
@@ -719,7 +717,7 @@ class conjugate(Function):
         return self.args[0]
 
     def _eval_derivative(self, x):
-        if x.is_extended_real:
+        if x.is_real:
             return conjugate(Derivative(self.args[0], x, evaluate=True))
         elif x.is_imaginary:
             return -conjugate(Derivative(self.args[0], x, evaluate=True))
