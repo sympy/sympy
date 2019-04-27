@@ -365,9 +365,9 @@ class Pow(Expr):
 
                 if (abs(e) < 1) == True or e == 1:
                     s = 1  # floor = 0
-                elif b.is_nonnegative:
+                elif b.is_extended_nonnegative:
                     s = 1  # floor = 0
-                elif re(b).is_nonnegative and (abs(e) < 2) == True:
+                elif re(b).is_extended_nonnegative and (abs(e) < 2) == True:
                     s = 1  # floor = 0
                 elif fuzzy_not(im(b).is_zero) and abs(e) == 2:
                     s = 1  # floor = 0
