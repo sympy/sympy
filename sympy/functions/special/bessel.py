@@ -65,16 +65,16 @@ class BesselBase(Function):
 
     def _eval_conjugate(self):
         z = self.argument
-        if (z.is_extended_real and z.is_negative) is False:
+        if z.is_extended_negative is False:
             return self.__class__(self.order.conjugate(), z.conjugate())
 
     def _eval_expand_func(self, **hints):
         nu, z, f = self.order, self.argument, self.__class__
         if nu.is_extended_real:
-            if (nu - 1).is_positive:
+            if (nu - 1).is_extended_positive:
                 return (-self._a*self._b*f(nu - 2, z)._eval_expand_func() +
                         2*self._a*(nu - 1)*f(nu - 1, z)._eval_expand_func()/z)
-            elif (nu + 1).is_negative:
+            elif (nu + 1).is_extended_negative:
                 return (2*self._b*(nu + 1)*f(nu + 1, z)._eval_expand_func()/z -
                         self._a*self._b*f(nu + 2, z)._eval_expand_func())
         return self
@@ -512,7 +512,7 @@ class hankel1(BesselBase):
 
     def _eval_conjugate(self):
         z = self.argument
-        if (z.is_extended_real and z.is_negative) is False:
+        if z.is_extended_negative is False:
             return hankel2(self.order.conjugate(), z.conjugate())
 
 
@@ -556,7 +556,7 @@ class hankel2(BesselBase):
 
     def _eval_conjugate(self):
         z = self.argument
-        if (z.is_extended_real and z.is_negative) is False:
+        if z.is_extended_negative is False:
             return hankel1(self.order.conjugate(), z.conjugate())
 
 

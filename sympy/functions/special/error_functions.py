@@ -1415,7 +1415,7 @@ class li(Function):
     def _eval_conjugate(self):
         z = self.args[0]
         # Exclude values on the branch cut (-oo, 0)
-        if not (z.is_extended_real and z.is_negative):
+        if not z.is_negative:
             return self.func(z.conjugate())
 
     def _eval_rewrite_as_Li(self, z, **kwargs):

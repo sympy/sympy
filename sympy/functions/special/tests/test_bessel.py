@@ -192,12 +192,12 @@ def test_expand():
     i = Symbol('i', integer=True)
 
     for besselx in [besselj, bessely, besseli, besselk]:
-        assert besselx(i, p).is_extended_real
+        assert besselx(i, p).is_extended_real is True
         assert besselx(i, x).is_extended_real is None
         assert besselx(x, z).is_extended_real is None
 
     for besselx in [besselj, besseli]:
-        assert besselx(i, r).is_extended_real
+        assert besselx(i, r).is_extended_real is True
     for besselx in [bessely, besselk]:
         assert besselx(i, r).is_extended_real is None
 
