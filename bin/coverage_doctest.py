@@ -30,6 +30,9 @@ except ImportError:
     # It's html.parser in Python 3
     from html.parser import HTMLParser
 
+from sympy.utilities.misc import filldedent
+
+
 # Load color templates, used from sympy/utilities/runtests.py
 color_templates = (
     ("Black", "0;30"),
@@ -310,14 +313,21 @@ def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt,
     if name.startswith('_'):
         f_sk.append(full_name)
     else:
-        if not obj.__doc__:
-            add_md = True
-        elif not '>>>' in obj.__doc__:
-            add_mdt = True
-        elif _is_indirect(name, obj.__doc__):
-            add_idt = True
-        else:
+        doc = obj.__doc__
+        if type(doc) is str:
+            if not doc:
+                add_md = True
+            elif not '>>>' in doc:
+                add_mdt = True
+            elif _is_indirect(name, doc):
+                add_idt = True
+            else:
+                f_doctest = True
+        elif doc is None:
+            # this was a function defined in the docstring
             f_doctest = True
+        else:
+            assert None, type(doc)
 
         function = True
 
@@ -370,15 +380,23 @@ def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest,
 
     c = True
     full_name = "LINE %d: %s" % (line_no, c_name)
-    if not obj.__doc__:
-        c_md.append(full_name)
-    elif not '>>>' in obj.__doc__:
-        c_mdt.append(full_name)
-    elif _is_indirect(c_name, obj.__doc__):
-        c_idt.append(full_name)
-    else:
+    doc = obj.__doc__
+    if type(doc) is str:
+        if not doc:
+            c_md.append(full_name)
+        elif not '>>>' in doc:
+            c_mdt.append(full_name)
+        elif _is_indirect(c_name, doc):
+            c_idt.append(full_name)
+        else:
+            c_dt = True
+            c_has_doctest.append(full_name)
+    elif doc is None:
+        # this was a class defined in the docstring
         c_dt = True
         c_has_doctest.append(full_name)
+    else:
+        assert None, type(doc)
 
     in_sphinx = False
     if sphinx:
@@ -435,7 +453,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
         if member in skip_members:
             continue
 
-        # Identify if the member (class/def) a part of this module
+        # Identify if the member (class/def) is a part of this module
         obj = getattr(m, member)
         obj_mod = inspect.getmodule(obj)
 
@@ -534,6 +552,10 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
 
 
 def go(sympy_top, file, verbose=False, no_color=False, exact=True, sphinx=True):
+
+    # file names containing any string in skip_paths will be skipped,
+    skip_paths = []
+
     if os.path.isdir(file):
         doctests, total_sphinx, num_functions = 0, 0, 0
         for F in os.listdir(file):
@@ -565,9 +587,6 @@ if __name__ == "__main__":
     if os.path.isdir(sympy_dir):
         sys.path.insert(0, sympy_top)
 
-    # No paths are skipped, however this is included in coverage tests
-    skip_paths = []
-
     usage = "usage: ./bin/doctest_coverage.py PATHS"
 
     parser = ArgumentParser(
@@ -587,10 +606,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.sphinx and not os.path.exists(os.path.join(sympy_top, 'doc', '_build', 'html')):
-        print("""
-Cannot check Sphinx coverage without a documentation build. To build the
-docs, run "cd doc; make html".  To skip checking Sphinx coverage, pass --no-sphinx.
-""")
+        print(filldedent("""
+            Cannot check Sphinx coverage without a documentation build.
+            To build the docs, run "cd doc; make html".  To skip
+            checking Sphinx coverage, pass --no-sphinx.
+            """))
         sys.exit(1)
 
     full_coverage = True
