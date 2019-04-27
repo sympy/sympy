@@ -343,7 +343,7 @@ def test_issue_6746():
         Piecewise((atan(x/sqrt(a/b))/(b*sqrt(a/b)), a/b > 0), \
         (-acoth(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 > -a/b)), \
         (-atanh(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 < -a/b)))
-    b = Symbol('b', negative=True, finite=True)
+    b = Symbol('b', negative=True)
     assert manualintegrate(1/(a + b*x**2), x) == \
         atan(x/(sqrt(-a)*sqrt(-1/b)))/(b*sqrt(-a)*sqrt(-1/b))
     assert manualintegrate(1/((x**a + y**b + 4)*sqrt(a*x**2 + 1)), x) == \

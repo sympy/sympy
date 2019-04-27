@@ -90,7 +90,7 @@ def test_mellin_transform():
     from sympy import Max, Min
     MT = mellin_transform
 
-    bpos = symbols('b', positive=True, finite=True)
+    bpos = symbols('b', positive=True)
 
     # 8.4.2
     assert MT(x**nu*Heaviside(x - 1), x, s) == \
@@ -350,7 +350,7 @@ def test_inverse_mellin_transform():
     # Now test the inverses of all direct transforms tested above
 
     # Section 8.4.2
-    nu = symbols('nu', real=True, finite=True)
+    nu = symbols('nu', real=True)
     assert IMT(-1/(nu + s), s, x, (-oo, None)) == x**nu*Heaviside(x - 1)
     assert IMT(1/(nu + s), s, x, (None, oo)) == x**nu*Heaviside(1 - x)
     assert simp_pows(IMT(gamma(beta)*gamma(s)/gamma(s + beta), s, x, (0, oo))) \
@@ -453,7 +453,7 @@ def test_inverse_mellin_transform():
 def test_laplace_transform():
     from sympy import fresnels, fresnelc
     LT = laplace_transform
-    a, b, c, = symbols('a b c', positive=True, finite=True)
+    a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
     w = Symbol("w")
     f = Function("f")
@@ -538,7 +538,7 @@ def test_issue_8368_7173():
 def test_inverse_laplace_transform():
     from sympy import sinh, cosh, besselj, besseli, simplify, factor_terms
     ILT = inverse_laplace_transform
-    a, b, c, = symbols('a b c', positive=True, finite=True)
+    a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
 
     def simp_hyp(expr):
@@ -630,7 +630,7 @@ def test_fourier_transform():
     f = Function("f")
 
     # TODO for this to work with real a, need to expand abs(a*x) to abs(a)*abs(x)
-    a = symbols('a', positive=True, finite=True)
+    a = symbols('a', positive=True)
     b = symbols('b', positive=True)
 
     posk = symbols('posk', positive=True)
@@ -838,6 +838,6 @@ def test_issue_12591():
 
 
 def test_issue_14692():
-    b = Symbol('b', negative=True, finite=True)
+    b = Symbol('b', negative=True)
     assert laplace_transform(1/(I*x - b), x, s) == \
         (-I*exp(I*b*s)*expint(1, b*s*exp_polar(I*pi/2)), 0, True)

@@ -144,7 +144,7 @@ def test_meijerint():
     meijerint_definite((x + 1)**3*exp(-x), x, 0, oo) == (16, True)
 
     # Again, how about simplifications?
-    sigma, mu = symbols('sigma mu', positive=True, finite=True)
+    sigma, mu = symbols('sigma mu', positive=True)
     i, c = meijerint_definite(exp(-((x - mu)/(2*sigma))**2), x, 0, oo)
     assert simplify(i) == sqrt(pi)*sigma*(2 - erfc(mu/(2*sigma)))
     assert c == True
@@ -211,7 +211,7 @@ def test_meijerint():
         lowergamma(n + 1, x)
 
     # Test a bug with argument 1/x
-    alpha = symbols('alpha', positive=True, finite=True)
+    alpha = symbols('alpha', positive=True)
     assert meijerint_definite((2 - x)**alpha*sin(alpha/x), x, 0, 2) == \
         (sqrt(pi)*alpha*gamma(alpha + 1)*meijerg(((), (alpha/2 + S(1)/2,
         alpha/2 + 1)), ((0, 0, S(1)/2), (-S(1)/2,)), alpha**S(2)/16)/4, True)
@@ -374,10 +374,9 @@ def test_probability():
     # various integrals from probability theory
     from sympy.abc import x, y
     from sympy import symbols, Symbol, Abs, expand_mul, gammasimp, powsimp, sin
-    mu1, mu2 = symbols('mu1 mu2', real=True, nonzero=True, finite=True)
-    sigma1, sigma2 = symbols('sigma1 sigma2', real=True, nonzero=True,
-                             finite=True, positive=True)
-    rate = Symbol('lambda', real=True, positive=True, finite=True)
+    mu1, mu2 = symbols('mu1 mu2', nonzero=True)
+    sigma1, sigma2 = symbols('sigma1 sigma2', positive=True)
+    rate = Symbol('lambda', positive=True)
 
     def normal(x, mu, sigma):
         return 1/sqrt(2*pi*sigma**2)*exp(-(x - mu)**2/2/sigma**2)
@@ -479,7 +478,7 @@ def test_probability():
                     meijerg=True)) == 2*sqrt(2)/sqrt(k)
 
     # Dagum distribution
-    a, b, p = symbols('a b p', positive=True, finite=True)
+    a, b, p = symbols('a b p', positive=True)
     # XXX (x/b)**a does not work
     dagum = a*p/x*(x/b)**(a*p)/(1 + x**a/b**a)**(p + 1)
     assert simplify(integrate(dagum, (x, 0, oo), meijerg=True)) == 1
@@ -493,7 +492,7 @@ def test_probability():
                     (a*p + 2)*gamma(p))
 
     # F-distribution
-    d1, d2 = symbols('d1 d2', positive=True, finite=True)
+    d1, d2 = symbols('d1 d2', positive=True)
     f = sqrt(((d1*x)**d1 * d2**d2)/(d1*x + d2)**(d1 + d2))/x \
         /gamma(d1/2)/gamma(d2/2)*gamma((d1 + d2)/2)
     assert simplify(integrate(f, (x, 0, oo), meijerg=True)) == 1
@@ -506,7 +505,7 @@ def test_probability():
     # TODO gamma, rayleigh
 
     # inverse gaussian
-    lamda, mu = symbols('lamda mu', positive=True, finite=True)
+    lamda, mu = symbols('lamda mu', positive=True)
     dist = sqrt(lamda/2/pi)*x**(-S(3)/2)*exp(-lamda*(x - mu)**2/x/2/mu**2)
     mysimp = lambda expr: simplify(expr.rewrite(exp))
     assert mysimp(integrate(dist, (x, 0, oo))) == 1
@@ -521,7 +520,7 @@ def test_probability():
     # higher moments oo
 
     # log-logistic
-    alpha, beta = symbols('alpha beta', positive=True, finite=True)
+    alpha, beta = symbols('alpha beta', positive=True)
     distn = (beta/alpha)*x**(beta - 1)/alpha**(beta - 1)/ \
         (1 + x**beta/alpha**beta)**2
     # FIXME: If alpha, beta are not declared as finite the line below hangs
@@ -545,14 +544,14 @@ def test_probability():
 
     # rice distribution
     from sympy import besseli
-    nu, sigma = symbols('nu sigma', positive=True, finite=True)
+    nu, sigma = symbols('nu sigma', positive=True)
     rice = x/sigma**2*exp(-(x**2 + nu**2)/2/sigma**2)*besseli(0, x*nu/sigma**2)
     assert integrate(rice, (x, 0, oo), meijerg=True) == 1
     # can someone verify higher moments?
 
     # Laplace distribution
     mu = Symbol('mu', real=True)
-    b = Symbol('b', positive=True, finite=True)
+    b = Symbol('b', positive=True)
     laplace = exp(-abs(x - mu)/b)/2/b
     assert integrate(laplace, (x, -oo, oo), meijerg=True) == 1
     assert integrate(x*laplace, (x, -oo, oo), meijerg=True) == mu
@@ -586,7 +585,7 @@ def test_expint():
                      conds='none').rewrite(expint).expand() == \
         expint(3, z).rewrite(Ei).rewrite(expint).expand()
 
-    t = Symbol('t', positive=True, finite=True)
+    t = Symbol('t', positive=True)
     assert integrate(-cos(x)/x, (x, t, oo), meijerg=True).expand() == Ci(t)
     assert integrate(-sin(x)/x, (x, t, oo), meijerg=True).expand() == \
         Si(t) - pi/2
