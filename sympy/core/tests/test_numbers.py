@@ -176,6 +176,7 @@ def test_divmod():
     assert divmod(S(4), S(-2.1)) == divmod(4, -2.1)
     assert divmod(S(-8), S(-2.5) ) == Tuple(3 , -0.5)
 
+
 def test_igcd():
     assert igcd(0, 0) == 0
     assert igcd(0, 1) == 1
@@ -218,12 +219,14 @@ def test_igcd_lehmer():
     # swapping argmument
     assert igcd_lehmer(1, 2) == igcd_lehmer(2, 1)
 
+
 def test_igcd2():
     # short loop
     assert igcd2(2**100 - 1, 2**99 - 1) == 1
     # Lehmer's algorithm
     a, b = int(fibonacci(10001)), int(fibonacci(10000))
     assert igcd2(a, b) == 1
+
 
 def test_ilcm():
     assert ilcm(0, 0) == 0
@@ -271,6 +274,12 @@ def _test_rational_new(cls):
     assert _strictly_equal(i, cls(i))
 
     raises(TypeError, lambda: cls(Symbol('x')))
+    raises(TypeError, lambda: cls(float('nan')))
+    raises(TypeError, lambda: cls(float('inf')))
+    raises(TypeError, lambda: cls(float('-inf')))
+    raises(TypeError, lambda: cls(S.NaN))
+    raises(TypeError, lambda: cls(oo))
+    raises(TypeError, lambda: cls(-oo))
 
 
 def test_Integer_new():
@@ -281,7 +290,7 @@ def test_Integer_new():
 
     assert _strictly_equal(Integer(0.9), S.Zero)
     assert _strictly_equal(Integer(10.5), Integer(10))
-    raises(ValueError, lambda: Integer("10.5"))
+    raises(TypeError, lambda: Integer("10.5"))  # as_int will raise ValueError
     assert Integer(Rational('1.' + '9'*20)) == 1
 
 
