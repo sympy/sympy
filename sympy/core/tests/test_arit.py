@@ -1040,20 +1040,44 @@ def test_real_Pow():
 
 
 def test_Pow_is_finite():
-    x = Symbol('x', extended_real=True)
+    xe = Symbol('xe', extended_real=True)
+    xr = Symbol('xr', real=True)
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
 
-    assert (x**2).is_finite is None  # x could be oo
-    assert (x**x).is_finite is None  # ditto
-    assert (p**x).is_finite is None  # ditto
-    assert (n**x).is_finite is None  # ditto
-    assert (1/S.Pi).is_finite
-    assert (sin(x)**2).is_finite is True
-    assert (sin(x)**x).is_finite is None
-    assert (sin(x)**exp(x)).is_finite is None
-    assert (1/sin(x)).is_finite is None  # if zero, no, otherwise yes
-    assert (1/exp(x)).is_finite is None  # x could be -oo
+    assert (xe**2).is_finite is None  # xe could be oo
+    assert (xr**2).is_finite is True
+
+    assert (xe**xe).is_finite is None
+    assert (xr**xe).is_finite is None
+    assert (xe**xr).is_finite is None
+    # FIXME: The line below should be True rather than None
+    # assert (xr**xr).is_finite is True
+    assert (xr**xr).is_finite is None
+
+    assert (p**xe).is_finite is None
+    assert (p**xr).is_finite is True
+
+    assert (n**xe).is_finite is None
+    assert (n**xr).is_finite is True
+
+    assert (sin(xe)**2).is_finite is True
+    assert (sin(xr)**2).is_finite is True
+
+    assert (sin(xe)**xe).is_finite is None  # xe, xr could be -pi
+    assert (sin(xr)**xr).is_finite is None
+
+    # FIXME: Should the line below be True rather than None?
+    assert (sin(xe)**exp(xe)).is_finite is None
+    assert (sin(xr)**exp(xr)).is_finite is True
+
+    assert (1/sin(xe)).is_finite is None  # if zero, no, otherwise yes
+    assert (1/sin(xr)).is_finite is None
+
+    assert (1/exp(xe)).is_finite is None  # xe could be -oo
+    assert (1/exp(xr)).is_finite is True
+
+    assert (1/S.Pi).is_finite is True
 
 
 def test_Pow_is_even_odd():
@@ -1209,7 +1233,7 @@ def test_Pow_is_nonpositive_nonnegative():
 
 
     assert (x**2).is_nonnegative is True
-    i = symbols('i', imaginary=True, finite=True)
+    i = symbols('i', imaginary=True)
     assert (i**2).is_nonpositive is True
     assert (i**4).is_nonpositive is False
     assert (i**3).is_nonpositive is False
@@ -1222,9 +1246,9 @@ def test_Pow_is_nonpositive_nonnegative():
 
 def test_Mul_is_imaginary_real():
     r = Symbol('r', real=True)
-    p = Symbol('p', positive=True, finite=True)
-    i = Symbol('i', imaginary=True, finite=True)
-    ii = Symbol('ii', imaginary=True, finite=True)
+    p = Symbol('p', positive=True)
+    i1 = Symbol('i1', imaginary=True)
+    i2 = Symbol('i2', imaginary=True)
     x = Symbol('x')
 
     assert I.is_imaginary is True
@@ -1251,34 +1275,34 @@ def test_Mul_is_imaginary_real():
     assert (e**-1).is_real is False
     assert (e**2).is_real is False
     assert (e**3).is_real is False
-    assert (e**4).is_extended_real is True
+    assert (e**4).is_real is True
     assert (e**5).is_real is False
     assert (e**3).is_complex
 
-    assert (r*i).is_imaginary is None
-    assert (r*i).is_real is None
+    assert (r*i1).is_imaginary is None
+    assert (r*i1).is_real is None
 
-    assert (x*i).is_imaginary is None
-    assert (x*i).is_real is None
+    assert (x*i1).is_imaginary is None
+    assert (x*i1).is_real is None
 
-    assert (i*ii).is_imaginary is False
-    assert (i*ii).is_extended_real is True
+    assert (i1*i2).is_imaginary is False
+    assert (i1*i2).is_real is True
 
-    assert (r*i*ii).is_imaginary is False
-    assert (r*i*ii).is_real is True
+    assert (r*i1*i2).is_imaginary is False
+    assert (r*i1*i2).is_real is True
 
     # Github's issue 5874:
     nr = Symbol('nr', real=False, complex=True, finite=True)  # e.g. I or 1 + I
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
-    assert (i*nr).is_real is None
+    assert (i1*nr).is_real is None
     assert (a*nr).is_real is False
     assert (b*nr).is_real is None
 
     ni = Symbol('ni', imaginary=False, complex=True)  # e.g. 2 or 1 + I
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
-    assert (i*ni).is_real is False
+    assert (i1*ni).is_real is False
     assert (a*ni).is_real is None
     assert (b*ni).is_real is None
 
@@ -1775,10 +1799,10 @@ def test_add_flatten():
     b = oo - I*oo
     assert a + b == nan
     assert a - b == nan
-    # This evaluates as:
+    # FIXME: This evaluates as:
     #   >>> 1/a
     #   0*(oo + oo*I)
-    # which should not simplify to 0...
+    # which should not simplify to 0. Should be fixed in Pow.eval
     #assert (1/a).simplify() == (1/b).simplify() == 0
 
     a = Pow(2, 3, evaluate=False)
