@@ -2787,10 +2787,10 @@ class Infinity(with_metaclass(Singleton, Number)):
         return super(Infinity, self).__hash__()
 
     def __eq__(self, other):
-        return other is S.Infinity or other == _inf
+        return other is S.Infinity or other == float('inf')
 
     def __ne__(self, other):
-        return other is not S.Infinity and other != _inf
+        return other is not S.Infinity and other != float('inf')
 
     def __lt__(self, other):
         try:
@@ -2850,7 +2850,6 @@ class Infinity(with_metaclass(Singleton, Number)):
         return self
 
 oo = S.Infinity
-_inf = float(oo)
 
 
 class NegativeInfinity(with_metaclass(Singleton, Number)):
