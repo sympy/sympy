@@ -2274,14 +2274,16 @@ class atan(InverseTrigonometricFunction):
             return s.is_rational
 
     def _eval_is_positive(self):
-        return self.args[0].is_positive
+        return self.args[0].is_extended_positive
 
     def _eval_is_nonnegative(self):
-        return self.args[0].is_nonnegative
+        return self.args[0].is_extended_nonnegative
+
+    def _eval_is_zero(self):
+        return self.args[0].is_zero
 
     def _eval_is_real(self):
-        if self.args[0].is_extended_real:
-            return True
+        return self.args[0].is_extended_real
 
     @classmethod
     def eval(cls, arg):
@@ -2365,9 +2367,6 @@ class atan(InverseTrigonometricFunction):
             return arg
         else:
             return self.func(arg)
-
-    def _eval_is_real(self):
-        return self.args[0].is_extended_real
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return S.ImaginaryUnit/2 * (log(S(1) - S.ImaginaryUnit * x)

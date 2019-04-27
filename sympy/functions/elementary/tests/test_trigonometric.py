@@ -14,6 +14,14 @@ r = Symbol('r', real=True)
 k = Symbol('k', integer=True)
 p = Symbol('p', positive=True)
 n = Symbol('n', negative=True)
+np = Symbol('p', nonpositive=True)
+nn = Symbol('n', nonnegative=True)
+nz = Symbol('nz', nonzero=True)
+ep = Symbol('ep', extended_positive=True)
+en = Symbol('en', extended_negative=True)
+enp = Symbol('ep', extended_nonpositive=True)
+enn = Symbol('en', extended_nonnegative=True)
+enz = Symbol('enz', extended_nonzero=True)
 a = Symbol('a', algebraic=True)
 na = Symbol('na', nonzero=True, algebraic=True)
 
@@ -471,6 +479,7 @@ def test_tan():
 
     assert tan(k*pi*I) == tanh(k*pi)*I
 
+    assert tan(r).is_real is None
     assert tan(r).is_extended_real is True
 
     assert tan(0, evaluate=False).is_algebraic
@@ -613,6 +622,7 @@ def test_cot():
     assert cot(x*I) == -coth(x)*I
     assert cot(k*pi*I) == -coth(k*pi)*I
 
+    assert cot(r).is_real is None
     assert cot(r).is_extended_real is True
 
     assert cot(a).is_algebraic is None
@@ -849,12 +859,28 @@ def test_atan():
     assert atan(oo) == pi/2
     assert atan(x).diff(x) == 1/(1 + x**2)
 
-    assert atan(r).is_extended_real is True
+    assert atan(r).is_real is True
 
     assert atan(-2*I) == -I*atanh(2)
-    assert atan(p).is_positive is True
-    assert atan(n).is_positive is False
-    assert atan(x).is_positive is None
+
+    for s in (x, p, n, np, nn, nz, ep, en, enp, enn, enz):
+        if s.is_real or s.is_extended_real is None:
+            assert s.is_nonzero is atan(s).is_nonzero
+            assert s.is_positive is atan(s).is_positive
+            assert s.is_negative is atan(s).is_negative
+            assert s.is_nonpositive is atan(s).is_nonpositive
+            assert s.is_nonnegative is atan(s).is_nonnegative
+        else:
+            assert s.is_extended_nonzero is atan(s).is_nonzero
+            assert s.is_extended_positive is atan(s).is_positive
+            assert s.is_extended_negative is atan(s).is_negative
+            assert s.is_extended_nonpositive is atan(s).is_nonpositive
+            assert s.is_extended_nonnegative is atan(s).is_nonnegative
+        assert s.is_extended_nonzero is atan(s).is_extended_nonzero
+        assert s.is_extended_positive is atan(s).is_extended_positive
+        assert s.is_extended_negative is atan(s).is_extended_negative
+        assert s.is_extended_nonpositive is atan(s).is_extended_nonpositive
+        assert s.is_extended_nonnegative is atan(s).is_extended_nonnegative
 
 
 def test_atan_rewrite():
