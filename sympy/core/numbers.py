@@ -1477,6 +1477,7 @@ class Rational(Number):
 
     @cacheit
     def __new__(cls, p, q=None, gcd=None):
+        from sympy.polys.polyutils import _not_a_coeff
         if q is None:
             if isinstance(p, Rational):
                 return p
@@ -1484,10 +1485,11 @@ class Rational(Number):
             if isinstance(p, SYMPY_INTS):
                 pass
             else:
-                if isinstance(p, (float, Float)):
+                if _not_a_coeff(p):  # nan, oo, -oo
+                    pass  # error will raise below
+                elif isinstance(p, (float, Float)):
                     return Rational(*_as_integer_ratio(p))
-
-                if not isinstance(p, string_types):
+                elif not isinstance(p, string_types):
                     try:
                         p = sympify(p)
                     except (SympifyError, SyntaxError):
