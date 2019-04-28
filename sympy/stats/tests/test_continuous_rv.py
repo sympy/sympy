@@ -185,6 +185,10 @@ def test_arcsin():
                             (2*asin(sqrt((-a + x)/(-a + b)))/pi, b >= x),
                             (1, True))
 
+    a = Symbol("a", real=False)
+    b = Symbol("b", real=False)
+    raises(ValueError, lambda: Arcsin('x', a, b))
+
 
 def test_benini():
     alpha = Symbol("alpha", positive=True)
@@ -228,6 +232,14 @@ def test_beta():
     B = Beta('x', a, b)
     assert expand_func(E(B)) == a / S(a + b)
     assert expand_func(variance(B)) == (a*b) / S((a + b)**2 * (a + b + 1))
+
+    alpha = Symbol("alpha", positive=True)
+    bet = Symbol("beta", positive=False)
+    raises(ValueError, lambda: Beta('x', alpha, bet))
+
+    alpha = Symbol("alpha", positive=False)
+    bet = Symbol("beta", positive=True)
+    raises(ValueError, lambda: Beta('x', alpha, bet))
 
 
 def test_betaprime():
@@ -358,6 +370,9 @@ def test_exponential():
 
     assert where(X <= 1).set == Interval(0, 1)
 
+    r = Symbol("r", positive=False)
+    raises(ValueError, lambda: Exponential('x', r))
+
 
 def test_f_distribution():
     d1 = Symbol("d1", positive=True)
@@ -406,6 +421,13 @@ def test_frechet():
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
     assert cdf(X)(x) == Piecewise((exp(-((-m + x)/s)**(-a)), m <= x), (0, True))
 
+    a_fail = Symbol("b", positive=False)
+    s_fail = Symbol("a", positive=False)
+    m_fail = Symbol("c", real=False)
+    raises(ValueError, lambda: Frechet('x', a_fail, s, m))
+    raises(ValueError, lambda: Frechet('x', a, s_fail, m))
+    raises(ValueError, lambda: Frechet('x', a, s, m_fail))
+
 
 def test_gamma():
     k = Symbol("k", positive=True)
@@ -426,6 +448,10 @@ def test_gamma():
     assert variance(X) == k*theta**2
     assert simplify(skewness(X)) == 2/sqrt(k)
 
+    k_fail, theta_fail = symbols('k_f theta_f', positive=False)
+    raises(ValueError, lambda: Gamma('x', k_fail, theta))
+    raises(ValueError, lambda: Gamma('x', k, theta_fail))
+
 
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
@@ -434,6 +460,10 @@ def test_gamma_inverse():
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
+
+    a_fail, b_fail = symbols('a_f b_f', positive=False)
+    raises(ValueError, lambda: GammaInverse('x', a_fail, b))
+    raises(ValueError, lambda: GammaInverse('x', a, b_fail))
 
 def test_sampling_gamma_inverse():
     scipy = import_module('scipy')
@@ -450,6 +480,10 @@ def test_gompertz():
     assert density(X)(x) == b*eta*exp(eta)*exp(b*x)*exp(-eta*exp(b*x))
     assert cdf(X)(x) == 1 - exp(eta)*exp(-eta*exp(b*x))
     assert diff(cdf(X)(x), x) == density(X)(x)
+
+    b_fail, eta_fail = symbols('b_f eta_f', positive=False)
+    raises(ValueError, lambda: Gompertz('x', b_fail, eta))
+    raises(ValueError, lambda: Gompertz('x', b, eta_fail))
 
 
 def test_gumbel():
@@ -469,6 +503,10 @@ def test_kumaraswamy():
     assert cdf(X)(x) == Piecewise((0, x < 0),
                                 (-(-x**a + 1)**b + 1, x <= 1),
                                 (1, True))
+
+    a_fail, b_fail = symbols('a_f b_f', positive=False)
+    raises(ValueError, lambda: Kumaraswamy('x', a_fail, b))
+    raises(ValueError, lambda: Kumaraswamy('x', a, b_fail))
 
 
 def test_laplace():
@@ -610,6 +648,11 @@ def test_raised_cosine():
     assert density(X)(x) == (Piecewise(((cos(pi*(x - mu)/s) + 1)/(2*s),
                           And(x <= mu + s, mu - s <= x)), (0, True)))
 
+    mu_f = Symbol("mu_f", real=False)
+    s_f = Symbol("s_f", positive=False)
+    raises(ValueError, lambda: RaisedCosine('x', mu_f, s))
+    raises(ValueError, lambda: RaisedCosine('x', mu, s_f))
+
 
 def test_rayleigh():
     sigma = Symbol("sigma", positive=True)
@@ -621,12 +664,21 @@ def test_rayleigh():
     assert cdf(X)(x) == 1 - exp(-x**2/(2*sigma**2))
     assert diff(cdf(X)(x), x) == density(X)(x)
 
+    sigma_f = Symbol("sigma_f", positive=False)
+    raises(ValueError, lambda: Rayleigh('x', sigma_f))
+
 
 def test_shiftedgompertz():
     b = Symbol("b", positive=True)
     eta = Symbol("eta", positive=True)
     X = ShiftedGompertz("x", b, eta)
     assert density(X)(x) == b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
+
+    b_f = Symbol("b_f", positive=False)
+    eta_f = Symbol("eta_f", positive=False)
+    raises(ValueError, lambda: ShiftedGompertz('x', b_f, eta))
+    raises(ValueError, lambda: ShiftedGompertz('x', b, eta_f))
+
 
 
 def test_studentt():
@@ -636,6 +688,9 @@ def test_studentt():
     assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - S(1)/2)/(sqrt(nu)*beta(S(1)/2, nu/2))
     assert cdf(X)(x) == S(1)/2 + x*gamma(nu/2 + S(1)/2)*hyper((S(1)/2, nu/2 + S(1)/2),
                                 (S(3)/2,), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
+
+    nu_f = Symbol("nu_f", positive=False)
+    raises(ValueError, lambda: StudentT('x', nu_f))
 
 
 def test_trapezoidal():
@@ -702,6 +757,11 @@ def test_uniform():
     assert c(S(7)/2) == S(1)/4
     assert c(5) == 1 and c(6) == 1
 
+    l_f = Symbol("l_f", real=False)
+    r_f = Symbol("r_f", real=False)
+    raises(ValueError, lambda: Uniform('x', l, r_f))
+    raises(ValueError, lambda: Uniform('x', l_f, w))
+
 
 def test_uniform_P():
     """ This stopped working because SingleContinuousPSpace.compute_density no
@@ -735,6 +795,9 @@ def test_von_mises():
     X = VonMises("x", mu, k)
     assert density(X)(x) == exp(k*cos(x - mu))/(2*pi*besseli(0, k))
 
+    k_f = Symbol("k_f", positive=False)
+    raises(ValueError, lambda: RaisedCosine('x', mu, k_f))
+
 
 def test_weibull():
     a, b = symbols('a b', positive=True)
@@ -743,6 +806,11 @@ def test_weibull():
     assert simplify(E(X)) == simplify(a * gamma(1 + 1/b))
     assert simplify(variance(X)) == simplify(a**2 * gamma(1 + 2/b) - E(X)**2)
     assert simplify(skewness(X)) == (2*gamma(1 + 1/b)**3 - 3*gamma(1 + 1/b)*gamma(1 + 2/b) + gamma(1 + 3/b))/(-gamma(1 + 1/b)**2 + gamma(1 + 2/b))**(S(3)/2)
+
+    a_f, b_f = symbols('a_f b_f', positive=False)
+    raises(ValueError, lambda: Weibull('x', a_f, b))
+    raises(ValueError, lambda: Weibull('x', a, b_f))
+
 
 def test_weibull_numeric():
     # Test for integers and rationals
@@ -762,6 +830,9 @@ def test_wignersemicircle():
     X = WignerSemicircle('x', R)
     assert density(X)(x) == 2*sqrt(-x**2 + R**2)/(pi*R**2)
     assert E(X) == 0
+
+    R_f = Symbol("R_f", positive=False)
+    raises(ValueError, lambda: WignerSemicircle('x', R_f))
 
 
 def test_prefab_sampling():
@@ -834,6 +905,9 @@ def test_NormalDistribution():
     assert nd.expectation(1, x) == 1
     assert nd.expectation(x, x) == 0
     assert nd.expectation(x**2, x) == 1
+
+    raises(ValueError, lambda: Normal('x', sqrt(-1), 1))
+    raises(ValueError, lambda: Normal('x', 1, 0))
 
 
 def test_random_parameters():

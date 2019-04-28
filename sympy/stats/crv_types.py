@@ -161,6 +161,14 @@ def rv(symbol, cls, args):
 class ArcsinDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
+    @staticmethod
+    def check(a, b):
+        _value_check(a.is_real and b.is_real, "Parameters should be real.")
+
+    @property
+    def set(self):
+        return Interval.closed(self.a, self.b)
+
     def pdf(self, x):
         return 1/(pi*sqrt((x - self.a)*(self.b - x)))
 
@@ -473,6 +481,8 @@ def BetaPrime(name, alpha, beta):
 class CauchyDistribution(SingleContinuousDistribution):
     _argnames = ('x0', 'gamma')
 
+    set = Interval(-oo, oo)
+
     @staticmethod
     def check(x0, gamma):
         _value_check(x0.is_real, "Location should be real.")
@@ -781,6 +791,8 @@ class DagumDistribution(SingleContinuousDistribution):
         _value_check(p > 0, "Shape parameter p must be positive.")
         _value_check(a > 0, "Shape parameter a must be positive.")
         _value_check(b > 0, "Scale parameter b must be positive.")
+
+    set = Interval.open(0, oo)
 
     def pdf(self, x):
         p, a, b = self.p, self.a, self.b
@@ -1180,7 +1192,15 @@ def FisherZ(name, d1, d2):
 class FrechetDistribution(SingleContinuousDistribution):
     _argnames = ('a', 's', 'm')
 
-    set = Interval(0, oo)
+    @staticmethod
+    def check(a, s, m):
+        _value_check(a > 0, "a must be positive")
+        _value_check(s > 0, "s must be positive")
+        _value_check(m.is_real, "m must be real")
+
+    @property
+    def set(self):
+        return Interval(self.m, oo)
 
     def __new__(cls, a, s=1, m=0):
         a, s, m = list(map(sympify, (a, s, m)))
@@ -2093,6 +2113,8 @@ def Nakagami(name, mu, omega):
 
 class NormalDistribution(SingleContinuousDistribution):
     _argnames = ('mean', 'std')
+
+    set = Interval.open(-oo, oo)
 
     @staticmethod
     def check(mean, std):
