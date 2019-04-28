@@ -1,13 +1,11 @@
-<!-- Your title above should be a short description of what
-is the issue. Do not include the pull request number in the title. -->
+<!-- The title above should be a short description of the issue. -->
 
-#### References
+#### What is the problem?
 
-#### Brief description of the issue
+### Example of problem
+'''
+replace_this_with_code
+'''
 
-#### Reproducible code example
-
-#### Other comments
-
-
+#### Other comments/references
 
