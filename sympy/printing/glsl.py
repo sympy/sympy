@@ -40,6 +40,7 @@ class GLSLPrinter(CodePrinter):
 
     _default_settings = {
         'use_operators': True,
+        'zero': 0,
         'mat_nested': False,
         'mat_separator': ',\n',
         'mat_transpose': False,
@@ -136,7 +137,7 @@ class GLSLPrinter(CodePrinter):
                     A.rows, A.cols
                 )
         elif self._settings['mat_nested']:
-            return 'float[%s][%s](\n%s\n)' % (A.rows, A.cols, 
+            return 'float[%s][%s](\n%s\n)' % (A.rows, A.cols,
                 A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')')
             )
 
@@ -307,7 +308,11 @@ class GLSLPrinter(CodePrinter):
             return self._print_Function_with_args('add', (a, b))
             # return self.known_functions['add']+'(%s, %s)' % (a,b)
         neg, pos = partition(lambda arg: _coeff_isneg(arg), terms)
-        s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
+        try:
+            s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
+        except TypeError:
+            s = pos = self._print(self._settings['zero'])
+
         if neg:
             # sum the absolute values of the negative terms
             neg = reduce(lambda a,b: add(a,b), map(lambda n: self._print(-n),neg))
@@ -337,7 +342,7 @@ def glsl_code(expr,assign_to=None,**settings):
         A sympy expression to be converted.
     assign_to : optional
         When given, the argument is used for naming the variable or variables
-        to which the expression is assigned. Can be a string, ``Symbol``, 
+        to which the expression is assigned. Can be a string, ``Symbol``,
         ``MatrixSymbol`` or ``Indexed`` type object. In cases where ``expr``
         would be printed as an array, a list of string or ``Symbol`` objects
         can also be passed.
@@ -369,8 +374,8 @@ def glsl_code(expr,assign_to=None,**settings):
         ``True`` transposes all matrix output.
         [default=False]
     array_constructor: str, optional
-        By default, any object printed as an n-dimensional GLSL array will be 
-        printed using the GLSL ``float[n]`` constructor. To modify this, you can 
+        By default, any object printed as an n-dimensional GLSL array will be
+        printed using the GLSL ``float[n]`` constructor. To modify this, you can
         pass a template string with a single argument, ``${size}``, for the size
         of the array.
         [default='float[${size}]']
@@ -427,7 +432,7 @@ def glsl_code(expr,assign_to=None,**settings):
     parameter:
     >>> int_constructor = 'int[${size}]'
     >>> glsl_code(Matrix([1,2,3,4,5]), array_constructor=int_constructor)
-    int[5](1, 2, 3, 4, 5)
+    'int[5](1, 2, 3, 4, 5)'
 
     Passing a list of strings or ``symbols`` to the ``assign_to`` parameter will yield
     a multi-line assignment for each item in an array-like expression:
@@ -464,7 +469,6 @@ def glsl_code(expr,assign_to=None,**settings):
        float[]( 9, 10, 11),
        float[](12, 13, 14)
     )
-    
 
 
 

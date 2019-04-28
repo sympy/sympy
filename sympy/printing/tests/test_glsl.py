@@ -22,6 +22,7 @@ def test_print_without_operators():
     assert glsl_code(x*(y+z),use_operators = False) == 'mul(x, add(y, z))'
     assert glsl_code(x*(y+z),use_operators = False) == 'mul(x, add(y, z))'
     assert glsl_code(x*(y+z**y**0.5),use_operators = False) == 'mul(x, add(y, pow(z, sqrt(y))))'
+    assert glsl_code(-x-y, use_operators=False, zero='zero()') == 'sub(zero(), add(x, y))'
 
 def test_glsl_code_sqrt():
     assert glsl_code(sqrt(x)) == "sqrt(x)"

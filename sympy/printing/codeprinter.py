@@ -77,10 +77,9 @@ class CodePrinter(StrPrinter):
             The expression to be printed.
 
         assign_to : Symbol, string, MatrixSymbol, list of strings or Symbols (optional)
-            If provided, the printed code will set the expression to a variable or multiple variables.
-            variable with name ``assign_to``.
+            If provided, the printed code will set the expression to a variable or multiple variables
+            with the name or names given in ``assign_to``.
         """
-        from sympy.codegen.ast import Assignment
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.codegen.ast import CodeBlock, Assignment
 
