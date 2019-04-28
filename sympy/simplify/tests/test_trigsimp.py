@@ -1,5 +1,5 @@
 from sympy import (
-    symbols, sin, simplify, cos, trigsimp, rad, tan, exptrigsimp,sinh,
+    symbols, sin, simplify, cos, trigsimp, rad, tan, exptrigsimp, sinh,
     cosh, diff, cot, Subs, exp, tanh, exp, S, integrate, I,Matrix,
     Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise , Rational
     )
@@ -358,6 +358,7 @@ def test_issue_2827_trigsimp_methods():
     eq = 1/sqrt(E) + E
     assert exptrigsimp(eq) == eq
 
+
 def test_issue_15129_trigsimp_methods():
     t1 = Matrix([sin(Rational(1, 50)), cos(Rational(1, 50)), 0])
     t2 = Matrix([sin(Rational(1, 25)), cos(Rational(1, 25)), 0])
@@ -366,6 +367,7 @@ def test_issue_15129_trigsimp_methods():
     r2 = t1.dot(t3)
     assert trigsimp(r1) == cos(S(1)/50)
     assert trigsimp(r2) == sin(S(3)/50)
+
 
 def test_exptrigsimp():
     def valid(a, b):
@@ -410,12 +412,16 @@ def test_exptrigsimp():
         assert s == exptrigsimp(e)
         assert valid(s, 2*sinh(a))
 
+    assert exptrigsimp(log(3) - 2*atanh(3)) == I*pi
+
+
 def test_exptrigsimp_noncommutative():
     a,b = symbols('a b', commutative=False)
     x = Symbol('x', commutative=True)
     assert exp(a + x) == exptrigsimp(exp(a)*exp(x))
     p = exp(a)*exp(b) - exp(b)*exp(a)
     assert p == exptrigsimp(p) != 0
+
 
 def test_powsimp_on_numbers():
     assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
