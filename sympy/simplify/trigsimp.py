@@ -515,7 +515,7 @@ def exptrigsimp(expr):
     Examples
     ========
 
-    >>> from sympy import exptrigsimp, exp, cosh, sinh, atanh
+    >>> from sympy import exptrigsimp, exp, cosh, sinh, atanh, log
     >>> from sympy.abc import z
 
     >>> exptrigsimp(exp(z) + exp(-z))
