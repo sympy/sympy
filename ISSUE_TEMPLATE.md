@@ -1,8 +1,8 @@
 <!-- The title above should be a short description of the issue. -->
 
-#### Brief description of the problem
+#### What is the problem?
 
-#### Example of problem
+#### The code to reproduce the problem
 
 ```
 replace_this_with_code
