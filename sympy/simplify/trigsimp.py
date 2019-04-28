@@ -430,20 +430,21 @@ def trigsimp(expr, **opts):
 
     method:
     - Determine the method to use. Valid choices are 'matching' (default),
-    'groebner', 'combined', and 'fu'. If 'matching', simplify the
+    'groebner', 'combined', 'exp' and 'fu'. If 'matching', simplify the
     expression recursively by targeting common patterns. If 'groebner', apply
     an experimental groebner basis algorithm. In this case further options
     are forwarded to ``trigsimp_groebner``, please refer to its docstring.
     If 'combined', first run the groebner basis algorithm with small
-    default parameters, then run the 'matching' algorithm. 'fu' runs the
-    collection of trigonometric transformations described by Fu, et al.
-    (see the `fu` docstring).
+    default parameters, then run the 'matching' algorithm. If 'exp', rewriting
+    as ``exp``, ``log`` and ``cos`` will be attempted as appropriate. 'fu'
+    runs the  collection of trigonometric transformations described by Fu,
+    et al.
 
 
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log
+    >>> from sympy import trigsimp, sin, cos, log, atanh
     >>> from sympy.abc import x, y
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
@@ -466,6 +467,18 @@ def trigsimp(expr, **opts):
     >>> trigsimp(t)
     tanh(x)**7
 
+    Rewriting functions in terms of a common function can improve
+    the simplifications. For example, hyperbolics can be rewritten
+    in terms of ``log`` and the `exp` keyword can be used to enable
+    that:
+
+    >>> trigsimp(log(3) - 2*atanh(3), method='rewrite')
+    I*pi
+
+
+    See Also
+    ========
+    exptrigsimp, fu, groebner, trigsimp_groebner
     """
     from sympy.simplify.fu import fu
 
@@ -499,6 +512,7 @@ def trigsimp(expr, **opts):
     trigsimpfunc = {
         'fu': (lambda x: fu(x, **opts)),
         'matching': (lambda x: futrig(x)),
+        'exp': (lambda x: exptrigsimp(x)),
         'groebner': (lambda x: groebnersimp(x, **opts)),
         'combined': (lambda x: futrig(groebnersimp(x,
                                polynomial=True, hints=[2, tan]))),
@@ -603,7 +617,7 @@ def exptrigsimp(expr):
 
     # can we ever generate an I where there was none previously?
     # yes, if there are hyperbolics and logs
-    if not (newexpr.has(I) and not expr.has(I)) or not (
+    if not (newexpr.has(I) and not expr.has(I)) or (
             expr.has(log) and expr.has(HyperbolicFunction)):
         expr = newexpr
     return expr
