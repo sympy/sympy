@@ -8,7 +8,7 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import reduce, iterable, SYMPY_INTS
 from sympy.core.function import count_ops, _mexpand
 from sympy.core.numbers import I, Integer
-from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
+from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth, log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.polys import Poly, factor, cancel, parallel_poly_from_expr
@@ -510,18 +510,20 @@ def trigsimp(expr, **opts):
 
 def exptrigsimp(expr):
     """
-    Simplifies exponential / trigonometric / hyperbolic functions.
+    Simplifies logarithmic / exponential / trigonometric / hyperbolic functions.
 
     Examples
     ========
 
-    >>> from sympy import exptrigsimp, exp, cosh, sinh
+    >>> from sympy import exptrigsimp, exp, cosh, sinh, atanh
     >>> from sympy.abc import z
 
     >>> exptrigsimp(exp(z) + exp(-z))
     2*cosh(z)
     >>> exptrigsimp(cosh(z) - sinh(z))
     exp(-z)
+    >>> exptrigsimp(log(3) - 2*atanh(3))
+    I*pi
     """
     from sympy.simplify.fu import hyper_as_trig, TR2i
     from sympy.simplify.simplify import bottom_up
@@ -532,6 +534,8 @@ def exptrigsimp(expr):
         choices = [e]
         if e.has(*_trigs):
             choices.append(e.rewrite(exp))
+            if e.has(log) and e.has(HyperbolicFunction):
+                choices.append(e.rewrite(log))
         choices.append(e.rewrite(cos))
         return min(*choices, key=count_ops)
     newexpr = bottom_up(expr, exp_trig)
@@ -598,7 +602,9 @@ def exptrigsimp(expr):
         newexpr = TR2i(newexpr)
 
     # can we ever generate an I where there was none previously?
-    if not (newexpr.has(I) and not expr.has(I)):
+    # yes, if there are hyperbolics and logs
+    if not (newexpr.has(I) and not expr.has(I)) or not (
+            expr.has(log) and expr.has(HyperbolicFunction)):
         expr = newexpr
     return expr
 
