@@ -472,7 +472,7 @@ def trigsimp(expr, **opts):
     in terms of ``log`` and the `exp` keyword can be used to enable
     that:
 
-    >>> trigsimp(log(3) - 2*atanh(3), method='rewrite')
+    >>> trigsimp(log(3) - 2*atanh(3), method='exp')
     I*pi
 
 
