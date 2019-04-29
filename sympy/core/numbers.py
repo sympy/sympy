@@ -2451,6 +2451,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     is_negative = False
     is_zero = True
     is_number = True
+    is_imaginary = True
 
     __slots__ = []
 

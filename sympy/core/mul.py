@@ -1207,7 +1207,7 @@ class Mul(Expr, AssocOp):
     def _eval_is_imaginary(self):
         z = self.is_zero
         if z:
-            return False
+            return True
         elif z is False:
             return self._eval_real_imag(False)
 
