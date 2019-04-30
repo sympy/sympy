@@ -197,16 +197,15 @@ def canonicalize(x):
     Notes
     =====
 
-    As Hadamard product is associative, all the nested products can be
-    flattened to the level 1.
+    As the Hadamard product is associative, nested products can be flattened.
 
-    As Hadamard product is commutative, all the arguments can be sorted to
-    the canonical form.
+    The Hadamard product is commutative so that factors can be sorted for
+    canonical form.
 
-    Matrix of only ones is an identity for Hadamard product,
-    so every ``OneMatrix`` can be removed.
+    A matrix of only ones is an identity for Hadamard product,
+    so every matrices of only ones can be removed.
 
-    Matrix of only zeros will make Hadamard product zero.
+    Any zero matrix will make the whole product a zero matrix.
 
     Duplicate elements can be collected and rewritten as HadamardPower
 
@@ -214,8 +213,6 @@ def canonicalize(x):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hadamard_product_(matrices)
-
-    .. [2] https://en.wikipedia.org/wiki/Multiplication
     """
     from sympy.core.compatibility import default_sort_key
 
