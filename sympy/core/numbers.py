@@ -16,7 +16,8 @@ from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
 from sympy.core.cache import lru_cache
-import numbers as nums
+from sympy.external import import_module
+nums = import_module('numbers')
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp.backend import MPZ
