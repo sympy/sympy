@@ -16,11 +16,9 @@ from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
 from sympy.core.cache import lru_cache
-
+import numbers as nums
 import mpmath
 import mpmath.libmp as mlib
-from sympy.external import import_module
-nums = import_module('numbers')
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp import mpnumeric
@@ -32,8 +30,6 @@ from sympy.utilities.misc import debug, filldedent
 from .evaluate import global_evaluate
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.assumptions import ManagedProperties
-from abc import ABCMeta
 
 rnd = mlib.round_nearest
 
@@ -484,13 +480,8 @@ def mod_inverse(a, m):
         raise ValueError('inverse of %s (mod %s) does not exist' % (a, m))
     return c
 
-class ManagedABCMetaclass(ManagedProperties, ABCMeta):
-    pass
 
-class ManagedABCSingletonMetaclass(ManagedABCMetaclass, Singleton):
-    pass
-
-class Number(with_metaclass(ManagedABCMetaclass, AtomicExpr, nums.Number)):
+class Number(AtomicExpr):
     """Represents atomic numbers in SymPy.
 
     Floating point numbers are represented by the Float class.
@@ -774,7 +765,8 @@ class Number(with_metaclass(ManagedABCMetaclass, AtomicExpr, nums.Number)):
         from sympy.polys import cofactors
         return cofactors(self, other)
 
-class Float(with_metaclass(ManagedABCMetaclass, Number, nums.Real)):
+
+class Float(Number):
     """Represent a floating-point number of arbitrary precision.
 
     Examples
@@ -1122,6 +1114,7 @@ class Float(with_metaclass(ManagedABCMetaclass, Number, nums.Real)):
     def __ceil__(self):
         return self.ceiling()
 
+
     @property
     def num(self):
         return mpmath.mpf(self._mpf_)
@@ -1390,7 +1383,7 @@ converter[float] = converter[decimal.Decimal] = Float
 RealNumber = Float
 
 
-class Rational(with_metaclass(ManagedABCMetaclass, Number, nums.Rational)):
+class Rational(Number):
     """Represents rational numbers (p/q) of any size.
 
     Examples
@@ -1921,7 +1914,7 @@ class Rational(with_metaclass(ManagedABCMetaclass, Number, nums.Rational)):
         return self, S.Zero
 
 
-class Integer(with_metaclass(ManagedABCMetaclass, Rational)):
+class Integer(Rational):
     """Represents integer numbers of any size.
 
     Examples
@@ -2450,7 +2443,7 @@ class IntegerConstant(Integer):
         return AtomicExpr.__new__(cls)
 
 
-class Zero(with_metaclass(ManagedABCSingletonMetaclass, IntegerConstant)):
+class Zero(with_metaclass(Singleton, IntegerConstant)):
     """The number zero.
 
     Zero is a singleton, and can be accessed by ``S.Zero``
@@ -2517,7 +2510,7 @@ class Zero(with_metaclass(ManagedABCSingletonMetaclass, IntegerConstant)):
         return S.One, self
 
 
-class One(with_metaclass(ManagedABCSingletonMetaclass, IntegerConstant)):
+class One(with_metaclass(Singleton, IntegerConstant)):
     """The number one.
 
     One is a singleton, and can be accessed by ``S.One``.
@@ -2564,7 +2557,7 @@ class One(with_metaclass(ManagedABCSingletonMetaclass, IntegerConstant)):
             return {}
 
 
-class NegativeOne(with_metaclass(ManagedABCSingletonMetaclass, IntegerConstant)):
+class NegativeOne(with_metaclass(Singleton, IntegerConstant)):
     """The number negative one.
 
     NegativeOne is a singleton, and can be accessed by ``S.NegativeOne``.
@@ -2625,7 +2618,7 @@ class NegativeOne(with_metaclass(ManagedABCSingletonMetaclass, IntegerConstant))
         return
 
 
-class Half(with_metaclass(ManagedABCSingletonMetaclass, RationalConstant)):
+class Half(with_metaclass(Singleton, RationalConstant)):
     """The rational number 1/2.
 
     Half is a singleton, and can be accessed by ``S.Half``.
@@ -2654,7 +2647,7 @@ class Half(with_metaclass(ManagedABCSingletonMetaclass, RationalConstant)):
         return S.Half
 
 
-class Infinity(with_metaclass(ManagedABCSingletonMetaclass, Number)):
+class Infinity(with_metaclass(Singleton, Number)):
     r"""Positive infinite quantity.
 
     In real analysis the symbol `\infty` denotes an unbounded
@@ -2904,7 +2897,7 @@ class Infinity(with_metaclass(ManagedABCSingletonMetaclass, Number)):
 oo = S.Infinity
 
 
-class NegativeInfinity(with_metaclass(ManagedABCSingletonMetaclass, Number)):
+class NegativeInfinity(with_metaclass(Singleton, Number)):
     """Negative infinite quantity.
 
     NegativeInfinity is a singleton, and can be accessed
@@ -3123,7 +3116,7 @@ class NegativeInfinity(with_metaclass(ManagedABCSingletonMetaclass, Number)):
         return self
 
 
-class NaN(with_metaclass(ManagedABCSingletonMetaclass, Number)):
+class NaN(with_metaclass(Singleton, Number)):
     """
     Not a Number.
 
@@ -3244,7 +3237,7 @@ class NaN(with_metaclass(ManagedABCSingletonMetaclass, Number)):
 nan = S.NaN
 
 
-class ComplexInfinity(with_metaclass(ManagedABCSingletonMetaclass, AtomicExpr)):
+class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     r"""Complex infinity.
 
     In complex analysis the symbol `\tilde\infty`, called "complex
@@ -3381,7 +3374,7 @@ class NumberSymbol(AtomicExpr):
         return super(NumberSymbol, self).__hash__()
 
 
-class Exp1(with_metaclass(ManagedABCSingletonMetaclass, NumberSymbol)):
+class Exp1(with_metaclass(Singleton, NumberSymbol)):
     r"""The `e` constant.
 
     The transcendental number `e = 2.718281828\ldots` is the base of the
@@ -3455,7 +3448,7 @@ class Exp1(with_metaclass(ManagedABCSingletonMetaclass, NumberSymbol)):
 E = S.Exp1
 
 
-class Pi(with_metaclass(ManagedABCSingletonMetaclass, NumberSymbol)):
+class Pi(with_metaclass(Singleton, NumberSymbol)):
     r"""The `\pi` constant.
 
     The transcendental number `\pi = 3.141592654\ldots` represents the ratio
@@ -3523,7 +3516,7 @@ class Pi(with_metaclass(ManagedABCSingletonMetaclass, NumberSymbol)):
 pi = S.Pi
 
 
-class GoldenRatio(with_metaclass(ManagedABCSingletonMetaclass, NumberSymbol)):
+class GoldenRatio(with_metaclass(Singleton, NumberSymbol)):
     r"""The golden ratio, `\phi`.
 
     `\phi = \frac{1 + \sqrt{5}}{2}` is algebraic number.  Two quantities
@@ -3587,7 +3580,7 @@ class GoldenRatio(with_metaclass(ManagedABCSingletonMetaclass, NumberSymbol)):
     _eval_rewrite_as_sqrt = _eval_expand_func
 
 
-class TribonacciConstant(with_metaclass(ManagedABCSingletonMetaclass, NumberSymbol)):
+class TribonacciConstant(with_metaclass(Singleton, NumberSymbol)):
     r"""The tribonacci constant.
 
     The tribonacci numbers are like the Fibonacci numbers, but instead
@@ -3654,7 +3647,7 @@ class TribonacciConstant(with_metaclass(ManagedABCSingletonMetaclass, NumberSymb
     _eval_rewrite_as_sqrt = _eval_expand_func
 
 
-class EulerGamma(with_metaclass(ManagedABCSingletonMetaclass, NumberSymbol)):
+class EulerGamma(with_metaclass(Singleton, NumberSymbol)):
     r"""The Euler-Mascheroni constant.
 
     `\gamma = 0.5772157\ldots` (also called Euler's constant) is a mathematical
@@ -3714,7 +3707,7 @@ class EulerGamma(with_metaclass(ManagedABCSingletonMetaclass, NumberSymbol)):
         return sage.euler_gamma
 
 
-class Catalan(with_metaclass(ManagedABCSingletonMetaclass, NumberSymbol)):
+class Catalan(with_metaclass(Singleton, NumberSymbol)):
     r"""Catalan's constant.
 
     `K = 0.91596559\ldots` is given by the infinite series
@@ -3767,7 +3760,7 @@ class Catalan(with_metaclass(ManagedABCSingletonMetaclass, NumberSymbol)):
         return sage.catalan
 
 
-class ImaginaryUnit(with_metaclass(ManagedABCSingletonMetaclass, AtomicExpr)):
+class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     r"""The imaginary unit, `i = \sqrt{-1}`.
 
     I is a singleton, and can be accessed by ``S.I``, or can be
@@ -3899,3 +3892,11 @@ from .mul import Mul
 Mul.identity = One()
 from .add import Add
 Add.identity = Zero()
+
+def _register_classes():
+    nums.Number.register(Number)
+    nums.Real.register(Float)
+    nums.Rational.register(Rational)
+    nums.Rational.register(Integer)
+
+_register_classes();
