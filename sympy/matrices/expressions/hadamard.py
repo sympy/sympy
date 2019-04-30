@@ -245,12 +245,8 @@ def canonicalize(x):
 
     # Rewriting with HadamardPower
     if isinstance(x, HadamardProduct):
-        tally = dict()
-        for arg in x.args:
-            if arg in tally:
-                tally[arg] += 1
-            else:
-                tally[arg] = 1
+        from collections import Counter
+        tally = Counter(x.args)
 
         new_arg = []
         for base, exp in tally.items():
