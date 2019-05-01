@@ -15,7 +15,7 @@ from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import ordered
 from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
-from sympy.simplify import simplify, trigsimp, nsimplify
+from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.elliptic_integrals import elliptic_e
@@ -29,7 +29,7 @@ from sympy.utilities.misc import filldedent, func_name
 
 from .entity import GeometryEntity, GeometrySet
 from .point import Point, Point2D, Point3D
-from .line import Line, LinearEntity, Segment
+from .line import Line, Segment
 from .util import idiff
 
 import random
@@ -1021,6 +1021,36 @@ class Ellipse(GeometrySet):
         Circle(Point2D(1, 2), Max(a, b))
         """
         return Circle(self.center, Max(self.hradius, self.vradius))
+
+    def director_circle(self):
+        """
+        Returns a Circle consisting of all points where two perpendicular
+        tangent lines to the ellipse cross each other.
+
+        Returns
+        =======
+
+        Circle
+            A director circle returned as a geometric object.
+
+        Examples
+        ========
+
+        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> c = Point(3,8)
+        >>> Ellipse(c, 7, 9).director_circle()
+        Circle(Point2D(3, 8), sqrt(130))
+        >>> a, b = symbols('a b')
+        >>> Ellipse(c, a, b).director_circle()
+        Circle(Point2D(3, 8), sqrt(a**2 + b**2))
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Director_circle
+
+        """
+        return Circle(self.center, sqrt(self.hradius**2 + self.vradius**2))
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.

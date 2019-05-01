@@ -6,7 +6,7 @@ from sympy.core import S
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyerrors import (ComputationFailed,
-    PolificationFailed, CoercionFailed, PolynomialError)
+    PolificationFailed, CoercionFailed)
 from sympy.simplify import rcollect
 from sympy.utilities import default_sort_key, postfixes
 from sympy.utilities.misc import filldedent
@@ -84,7 +84,7 @@ def solve_biquadratic(f, g, opt):
         raise SolveFailed
 
     p = Poly(p, x, expand=False)
-    p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]
+    p_roots = [rcollect(expr, y) for expr in roots(p).keys()]
 
     q = q.ltrim(-1)
     q_roots = list(roots(q).keys())
@@ -162,7 +162,7 @@ def solve_generic(polys, opt):
     def _is_univariate(f):
         """Returns True if 'f' is univariate in its last variable. """
         for monom in f.monoms():
-            if any(m for m in monom[:-1]):
+            if any(monom[:-1]):
                 return False
 
         return True
@@ -180,7 +180,7 @@ def solve_generic(polys, opt):
         """Recursively solves reduced polynomial systems. """
         if len(system) == len(gens) == 1:
             zeros = list(roots(system[0], gens[-1]).keys())
-            return [ (zero,) for zero in zeros ]
+            return [(zero,) for zero in zeros]
 
         basis = groebner(system, gens, polys=True)
 
@@ -209,7 +209,7 @@ def solve_generic(polys, opt):
             return []
 
         if len(basis) == 1:
-            return [ (zero,) for zero in zeros ]
+            return [(zero,) for zero in zeros]
 
         solutions = []
 

@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .add import _unevaluated_Add, Add
 from .basic import S
 from .compatibility import ordered
@@ -381,11 +382,20 @@ class Equality(Relational):
 
     is_Equality = True
 
-    def __new__(cls, lhs, rhs=0, **options):
+    def __new__(cls, lhs, rhs=None, **options):
         from sympy.core.add import Add
         from sympy.core.logic import fuzzy_bool
         from sympy.core.expr import _n2
         from sympy.simplify.simplify import clear_coefficients
+
+        if rhs is None:
+            SymPyDeprecationWarning(
+                feature="Eq(expr) with rhs default to 0",
+                useinstead="Eq(expr, 0)",
+                issue=16587,
+                deprecated_since_version="1.5"
+            ).warn()
+            rhs = 0
 
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)

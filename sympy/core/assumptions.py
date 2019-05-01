@@ -163,9 +163,9 @@ from random import shuffle
 _assume_rules = FactRules([
 
     'integer        ->  rational',
-    'rational       ->  real',
+    'rational       ->  real & finite',
     'rational       ->  algebraic',
-    'algebraic      ->  complex',
+    'algebraic      ->  complex & finite',
     'real           ->  complex',
     'real           ->  hermitian',
     'imaginary      ->  complex',
@@ -176,7 +176,8 @@ _assume_rules = FactRules([
     'even           ==  integer & !odd',
 
     'real           ==  negative | zero | positive',
-    'transcendental ==  complex & !algebraic',
+    'complex        ->  infinite | finite',
+    'transcendental ==  complex & !algebraic & finite',
 
     'negative       ==  nonpositive & nonzero',
     'positive       ==  nonnegative & nonzero',
@@ -191,7 +192,7 @@ _assume_rules = FactRules([
     'composite      ->  integer & positive & !prime',
     '!composite     ->  !positive | !even | prime',
 
-    'irrational     ==  real & !rational',
+    'irrational     ==  real & !rational & finite',
 
     'imaginary      ->  !real',
 
@@ -210,9 +211,8 @@ class StdFactKB(FactKB):
 
     This is the only kind of FactKB that Basic objects should use.
     """
-    rules = _assume_rules
-
     def __init__(self, facts=None):
+        super(StdFactKB, self).__init__(_assume_rules)
         # save a copy of the facts dict
         if not facts:
             self._generator = {}

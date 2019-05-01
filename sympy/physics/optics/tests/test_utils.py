@@ -63,6 +63,8 @@ def test_refraction_angle():
     assert refraction_angle(r1, 1.33, 1, plane=P) == 0  # TIR
     assert refraction_angle(r1, 1, 1, normal_ray) == \
         Ray3D(Point3D(0, 0, 0), direction_ratio=[1, 1, -1])
+    assert round(refraction_angle(0.5, 1, 2), 5) == 0.24207
+    assert round(refraction_angle(0.5, 2, 1), 5) == 1.28293
     raises(ValueError, lambda: refraction_angle(r1, m1, m2, normal_ray, P))
     raises(TypeError, lambda: refraction_angle(m1, m1, m2)) # can add other values for arg[0]
     raises(TypeError, lambda: refraction_angle(r1, m1, m2, None, i))
@@ -97,6 +99,8 @@ def test_deviation():
     assert deviation(r1, 1.33, 1, plane=P) is None  # TIR
     assert deviation(r1, 1, 1, normal=[0, 0, 1]) == 0
     assert deviation([-1, -1, -1], 1, 1, normal=[0, 0, 1]) == 0
+    assert round(deviation(0.5, 1, 2), 5) == -0.25793
+    assert round(deviation(0.5, 2, 1), 5) == 0.78293
 
 
 def test_brewster_angle():

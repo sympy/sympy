@@ -82,8 +82,8 @@ def test_invertible():
     A = MatrixSymbol('A', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     assert satask(Q.invertible(A*B), Q.invertible(A) & Q.invertible(B)) is True
-    assert satask(Q.invertible(A), Q.invertible(A*B))
-    assert satask(Q.invertible(A) & Q.invertible(B), Q.invertible(A*B))
+    assert satask(Q.invertible(A), Q.invertible(A*B)) is True
+    assert satask(Q.invertible(A) & Q.invertible(B), Q.invertible(A*B)) is True
 
 
 def test_prime():

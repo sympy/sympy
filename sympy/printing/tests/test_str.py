@@ -4,7 +4,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, log, MatrixSymbol)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -15,8 +15,6 @@ from sympy.core.compatibility import range
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
-from sympy import MatrixSymbol
-from sympy import factorial, log, integrate
 
 x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')
@@ -516,8 +514,6 @@ def test_Float():
                                      '5028841971693993751058209749445923')
     assert str(pi.round(-1)) == '0.'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
-    assert str(Float(S.Infinity)) == 'inf'
-    assert str(Float(S.NegativeInfinity)) == '-inf'
 
 
 def test_Relational():
@@ -711,6 +707,10 @@ def test_RandomDomain():
 def test_FiniteSet():
     assert str(FiniteSet(*range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
     assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
+
+
+def test_UniversalSet():
+    assert str(S.UniversalSet) == 'UniversalSet'
 
 
 def test_PrettyPoly():

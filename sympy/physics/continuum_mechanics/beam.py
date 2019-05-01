@@ -12,17 +12,7 @@ from sympy.functions import SingularityFunction, Piecewise, factorial
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
-from sympy.plotting import plot
-from sympy.external import import_module
-from sympy.utilities.decorator import doctest_depends_on
-from sympy import lambdify
-
-matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
-numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
-
-
-__doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
-
+from sympy.plotting import plot, PlotGrid
 
 class Beam(object):
     """
@@ -1003,7 +993,6 @@ class Beam(object):
         if isinstance(I, Piecewise) and self._composite_type == "fixed":
             args = I.args
             slope = 0
-            conditions = []
             prev_slope = 0
             prev_end = 0
             for i in range(len(args)):
@@ -1069,7 +1058,6 @@ class Beam(object):
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
             if isinstance(I, Piecewise) and self._composite_type == "fixed":
                 args = I.args
-                conditions = []
                 prev_slope = 0
                 prev_def = 0
                 prev_end = 0
@@ -1098,7 +1086,6 @@ class Beam(object):
         elif not self._boundary_conditions['slope'] and self._boundary_conditions['deflection']:
             if isinstance(I, Piecewise) and self._composite_type == "fixed":
                 args = I.args
-                conditions = []
                 prev_slope = 0
                 prev_def = 0
                 prev_end = 0
@@ -1131,7 +1118,6 @@ class Beam(object):
 
         if isinstance(I, Piecewise) and self._composite_type == "fixed":
             args = I.args
-            conditions = []
             prev_slope = 0
             prev_def = 0
             prev_end = 0
@@ -1188,6 +1174,7 @@ class Beam(object):
 
     def plot_shear_force(self, subs=None):
         """
+
         Returns a plot for Shear force present in the Beam object.
 
         Parameters
@@ -1207,21 +1194,26 @@ class Beam(object):
 
         Using the sign convention of downwards forces being positive.
 
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
-        >>> R1, R2 = symbols('R1, R2')
-        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
-        >>> b.apply_load(5000, 2, -1)
-        >>> b.apply_load(R1, 0, -1)
-        >>> b.apply_load(R2, 8, -1)
-        >>> b.apply_load(10000, 4, 0, end=8)
-        >>> b.bc_deflection = [(0, 0), (8, 0)]
-        >>> b.solve_for_reaction_loads(R1, R2)
-        >>> b.plot_shear_force()
-        Plot object containing:
-        [0]: cartesian line: -13750*SingularityFunction(x, 0, 0) + 5000*SingularityFunction(x, 2, 0)
-        + 10000*SingularityFunction(x, 4, 1) - 31250*SingularityFunction(x, 8, 0)
-        - 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> R1, R2 = symbols('R1, R2')
+            >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+            >>> b.apply_load(5000, 2, -1)
+            >>> b.apply_load(R1, 0, -1)
+            >>> b.apply_load(R2, 8, -1)
+            >>> b.apply_load(10000, 4, 0, end=8)
+            >>> b.bc_deflection = [(0, 0), (8, 0)]
+            >>> b.solve_for_reaction_loads(R1, R2)
+            >>> b.plot_shear_force()
+            Plot object containing:
+            [0]: cartesian line: -13750*SingularityFunction(x, 0, 0) + 5000*SingularityFunction(x, 2, 0)
+            + 10000*SingularityFunction(x, 4, 1) - 31250*SingularityFunction(x, 8, 0)
+            - 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
         """
         shear_force = self.shear_force()
         if subs is None:
@@ -1236,10 +1228,11 @@ class Beam(object):
         else:
             length = self.length
         return plot(shear_force.subs(subs), (self.variable, 0, length), title='Shear Force',
-                xlabel='position', ylabel='Value', line_color='g')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$', line_color='g')
 
     def plot_bending_moment(self, subs=None):
         """
+
         Returns a plot for Bending moment present in the Beam object.
 
         Parameters
@@ -1259,21 +1252,26 @@ class Beam(object):
 
         Using the sign convention of downwards forces being positive.
 
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
-        >>> R1, R2 = symbols('R1, R2')
-        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
-        >>> b.apply_load(5000, 2, -1)
-        >>> b.apply_load(R1, 0, -1)
-        >>> b.apply_load(R2, 8, -1)
-        >>> b.apply_load(10000, 4, 0, end=8)
-        >>> b.bc_deflection = [(0, 0), (8, 0)]
-        >>> b.solve_for_reaction_loads(R1, R2)
-        >>> b.plot_bending_moment()
-        Plot object containing:
-        [0]: cartesian line: -13750*SingularityFunction(x, 0, 1) + 5000*SingularityFunction(x, 2, 1)
-        + 5000*SingularityFunction(x, 4, 2) - 31250*SingularityFunction(x, 8, 1)
-        - 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> R1, R2 = symbols('R1, R2')
+            >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+            >>> b.apply_load(5000, 2, -1)
+            >>> b.apply_load(R1, 0, -1)
+            >>> b.apply_load(R2, 8, -1)
+            >>> b.apply_load(10000, 4, 0, end=8)
+            >>> b.bc_deflection = [(0, 0), (8, 0)]
+            >>> b.solve_for_reaction_loads(R1, R2)
+            >>> b.plot_bending_moment()
+            Plot object containing:
+            [0]: cartesian line: -13750*SingularityFunction(x, 0, 1) + 5000*SingularityFunction(x, 2, 1)
+            + 5000*SingularityFunction(x, 4, 2) - 31250*SingularityFunction(x, 8, 1)
+            - 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
         """
         bending_moment = self.bending_moment()
         if subs is None:
@@ -1288,10 +1286,11 @@ class Beam(object):
         else:
             length = self.length
         return plot(bending_moment.subs(subs), (self.variable, 0, length), title='Bending Moment',
-                xlabel='position', ylabel='Value', line_color='b')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$', line_color='b')
 
     def plot_slope(self, subs=None):
         """
+
         Returns a plot for slope of deflection curve of the Beam object.
 
         Parameters
@@ -1311,21 +1310,26 @@ class Beam(object):
 
         Using the sign convention of downwards forces being positive.
 
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
-        >>> R1, R2 = symbols('R1, R2')
-        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
-        >>> b.apply_load(5000, 2, -1)
-        >>> b.apply_load(R1, 0, -1)
-        >>> b.apply_load(R2, 8, -1)
-        >>> b.apply_load(10000, 4, 0, end=8)
-        >>> b.bc_deflection = [(0, 0), (8, 0)]
-        >>> b.solve_for_reaction_loads(R1, R2)
-        >>> b.plot_slope()
-        Plot object containing:
-        [0]: cartesian line: -8.59375e-5*SingularityFunction(x, 0, 2) + 3.125e-5*SingularityFunction(x, 2, 2)
-        + 2.08333333333333e-5*SingularityFunction(x, 4, 3) - 0.0001953125*SingularityFunction(x, 8, 2)
-        - 2.08333333333333e-5*SingularityFunction(x, 8, 3) + 0.00138541666666667 for x over (0.0, 8.0)
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> R1, R2 = symbols('R1, R2')
+            >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+            >>> b.apply_load(5000, 2, -1)
+            >>> b.apply_load(R1, 0, -1)
+            >>> b.apply_load(R2, 8, -1)
+            >>> b.apply_load(10000, 4, 0, end=8)
+            >>> b.bc_deflection = [(0, 0), (8, 0)]
+            >>> b.solve_for_reaction_loads(R1, R2)
+            >>> b.plot_slope()
+            Plot object containing:
+            [0]: cartesian line: -8.59375e-5*SingularityFunction(x, 0, 2) + 3.125e-5*SingularityFunction(x, 2, 2)
+            + 2.08333333333333e-5*SingularityFunction(x, 4, 3) - 0.0001953125*SingularityFunction(x, 8, 2)
+            - 2.08333333333333e-5*SingularityFunction(x, 8, 3) + 0.00138541666666667 for x over (0.0, 8.0)
         """
         slope = self.slope()
         if subs is None:
@@ -1340,10 +1344,11 @@ class Beam(object):
         else:
             length = self.length
         return plot(slope.subs(subs), (self.variable, 0, length), title='Slope',
-                xlabel='position', ylabel='Value', line_color='m')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$', line_color='m')
 
     def plot_deflection(self, subs=None):
         """
+
         Returns a plot for deflection curve of the Beam object.
 
         Parameters
@@ -1363,22 +1368,27 @@ class Beam(object):
 
         Using the sign convention of downwards forces being positive.
 
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
-        >>> R1, R2 = symbols('R1, R2')
-        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
-        >>> b.apply_load(5000, 2, -1)
-        >>> b.apply_load(R1, 0, -1)
-        >>> b.apply_load(R2, 8, -1)
-        >>> b.apply_load(10000, 4, 0, end=8)
-        >>> b.bc_deflection = [(0, 0), (8, 0)]
-        >>> b.solve_for_reaction_loads(R1, R2)
-        >>> b.plot_deflection()
-        Plot object containing:
-        [0]: cartesian line: 0.00138541666666667*x - 2.86458333333333e-5*SingularityFunction(x, 0, 3)
-        + 1.04166666666667e-5*SingularityFunction(x, 2, 3) + 5.20833333333333e-6*SingularityFunction(x, 4, 4)
-        - 6.51041666666667e-5*SingularityFunction(x, 8, 3) - 5.20833333333333e-6*SingularityFunction(x, 8, 4)
-        for x over (0.0, 8.0)
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> R1, R2 = symbols('R1, R2')
+            >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+            >>> b.apply_load(5000, 2, -1)
+            >>> b.apply_load(R1, 0, -1)
+            >>> b.apply_load(R2, 8, -1)
+            >>> b.apply_load(10000, 4, 0, end=8)
+            >>> b.bc_deflection = [(0, 0), (8, 0)]
+            >>> b.solve_for_reaction_loads(R1, R2)
+            >>> b.plot_deflection()
+            Plot object containing:
+            [0]: cartesian line: 0.00138541666666667*x - 2.86458333333333e-5*SingularityFunction(x, 0, 3)
+            + 1.04166666666667e-5*SingularityFunction(x, 2, 3) + 5.20833333333333e-6*SingularityFunction(x, 4, 4)
+            - 6.51041666666667e-5*SingularityFunction(x, 8, 3) - 5.20833333333333e-6*SingularityFunction(x, 8, 4)
+            for x over (0.0, 8.0)
         """
         deflection = self.deflection()
         if subs is None:
@@ -1393,57 +1403,52 @@ class Beam(object):
         else:
             length = self.length
         return plot(deflection.subs(subs), (self.variable, 0, length),
-                    title='Deflection', xlabel='position', ylabel='Value',
+                    title='Deflection', xlabel=r'$\mathrm{x}$', ylabel=r'$\delta$',
                     line_color='r')
 
-    @doctest_depends_on(modules=('numpy', 'matplotlib',))
+
     def plot_loading_results(self, subs=None):
         """
-        Returns Axes object containing subplots of Shear Force, Bending Moment,
+        Returns a subplot of Shear Force, Bending Moment,
         Slope and Deflection of the Beam object.
 
         Parameters
         ==========
-        subs : dictionary
-            Python dictionary containing Symbols as key and their
-            corresponding values.
 
-        .. note::
-           This method only works if numpy and matplotlib libraries
-           are installed on the system.
+        subs : dictionary
+               Python dictionary containing Symbols as key and their
+               corresponding values.
 
         Examples
         ========
-        There is a beam of length 8 meters. A constant distributed load of 10
-        KN/m is applied from half of the beam till the end. There are two
-        simple supports below the beam, one at the starting point and another
-        at the ending point of the beam. A pointload of magnitude 5 KN is also
-        applied from top of the beam, at a distance of 4 meters from the
-        starting point.  Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
+        is applied from half of the beam till the end. There are two simple supports
+        below the beam, one at the starting point and another at the ending point
+        of the beam. A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
 
         Using the sign convention of downwards forces being positive.
 
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
-        >>> R1, R2 = symbols('R1, R2')
-        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
-        >>> b.apply_load(5000, 2, -1)
-        >>> b.apply_load(R1, 0, -1)
-        >>> b.apply_load(R2, 8, -1)
-        >>> b.apply_load(10000, 4, 0, end=8)
-        >>> b.bc_deflection = [(0, 0), (8, 0)]
-        >>> b.solve_for_reaction_loads(R1, R2)
-        >>> axes = b.plot_loading_results()
-        """
-        if matplotlib is None:
-            raise ImportError('Install matplotlib to use this method.')
-        else:
-            plt = matplotlib.pyplot
-        if numpy is None:
-            raise ImportError('Install numpy to use this method.')
-        else:
-            linspace = numpy.linspace
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
 
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> from sympy.plotting import PlotGrid
+            >>> R1, R2 = symbols('R1, R2')
+            >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+            >>> b.apply_load(5000, 2, -1)
+            >>> b.apply_load(R1, 0, -1)
+            >>> b.apply_load(R2, 8, -1)
+            >>> b.apply_load(10000, 4, 0, end=8)
+            >>> b.bc_deflection = [(0, 0), (8, 0)]
+            >>> b.solve_for_reaction_loads(R1, R2)
+            >>> axes = b.plot_loading_results()
+        """
         length = self.length
         variable = self.variable
         if subs is None:
@@ -1452,42 +1457,26 @@ class Beam(object):
             if sym == self.variable:
                 continue
             if sym not in subs:
-                raise ValueError('Value of %s was not passed.' % sym)
+                raise ValueError('Value of %s was not passed.' %sym)
         if self.length in subs:
             length = subs[self.length]
         else:
             length = self.length
 
-        # As we are using matplotlib directly in this method, we need to change
-        # SymPy methods to numpy functions.
-        shear = lambdify(variable,
-                         self.shear_force().subs(subs).rewrite(Piecewise),
-                         'numpy')
-        moment = lambdify(variable,
-                          self.bending_moment().subs(subs).rewrite(Piecewise),
-                          'numpy')
-        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise),
-                         'numpy')
-        deflection = lambdify(variable,
-                              self.deflection().subs(subs).rewrite(Piecewise),
-                              'numpy')
+        ax1 = plot(self.shear_force().subs(subs), (variable, 0, length),
+                   title="Shear Force", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$',
+                   line_color='g', show=False)
+        ax2 = plot(self.bending_moment().subs(subs), (variable, 0, length),
+                   title="Bending Moment", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$',
+                   line_color='b', show=False)
+        ax3 = plot(self.slope().subs(subs), (variable, 0, length),
+                   title="Slope", xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$',
+                   line_color='m', show=False)
+        ax4 = plot(self.deflection().subs(subs), (variable, 0, length),
+                   title="Deflection", xlabel=r'$\mathrm{x}$', ylabel=r'$\delta$',
+                   line_color='r', show=False)
 
-        points = linspace(0, float(length), num=100*length)
-
-        # Creating a grid for subplots with 2 rows and 2 columns
-        fig, axs = plt.subplots(4, 1)
-        # axs is a 2D-numpy array containing axes
-        axs[0].plot(points, shear(points))
-        axs[0].set_title("Shear Force")
-        axs[1].plot(points, moment(points))
-        axs[1].set_title("Bending Moment")
-        axs[2].plot(points, slope(points))
-        axs[2].set_title("Slope")
-        axs[3].plot(points, deflection(points))
-        axs[3].set_title("Deflection")
-
-        fig.tight_layout()    # For better spacing between subplots
-        return axs
+        return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
 
 class Beam3D(Beam):
@@ -1511,7 +1500,7 @@ class Beam3D(Beam):
     is restricted.
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam3D
-    >>> from sympy import symbols, simplify
+    >>> from sympy import symbols, simplify, collect
     >>> l, E, G, I, A = symbols('l, E, G, I, A')
     >>> b = Beam3D(l, E, G, I, A)
     >>> x, q, m = symbols('x, q, m')
@@ -1526,20 +1515,17 @@ class Beam3D(Beam):
     >>> b.solve_slope_deflection()
     >>> b.slope()
     [0, 0, l*x*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
-    + q*x**3/(6*E*I) + x**2*(-l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I))
-    - m)/(2*E*I)]
+        + x**2*(-3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - 3*m + q*x)/(6*E*I)]
     >>> dx, dy, dz = b.deflection()
-    >>> dx
-    0
-    >>> dz
-    0
-    >>> expectedy = (
-    ... -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
-    ... + l*m*x**2/(4*E*I) - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
-    ... + q*x**4/(24*E*I) + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G)
-    ... )
-    >>> simplify(dy - expectedy)
-    0
+    >>> dy = collect(simplify(dy), x)
+    >>> dx == dz == 0
+    True
+    >>> dy == (x*(12*A*E*G*I*l**3*q - 24*A*E*G*I*l**2*m + 144*E**2*I**2*l*q +
+    ...           x**3*(A**2*G**2*l**2*q + 12*A*E*G*I*q) +
+    ...           x**2*(-2*A**2*G**2*l**3*q - 24*A*E*G*I*l*q - 48*A*E*G*I*m) +
+    ...           x*(A**2*G**2*l**4*q + 72*A*E*G*I*l*m - 144*E**2*I**2*q)
+    ...           )/(24*A*E*G*I*(A*G*l**2 + 12*E*I)))
+    True
 
     References
     ==========
@@ -1574,17 +1560,12 @@ class Beam3D(Beam):
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
         """
-        self.length = length
-        self.elastic_modulus = elastic_modulus
+        super(Beam3D, self).__init__(length, elastic_modulus, second_moment, variable)
         self.shear_modulus = shear_modulus
-        self.second_moment = second_moment
         self.area = area
-        self.variable = variable
-        self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load_vector = [0, 0, 0]
         self._moment_load_vector = [0, 0, 0]
         self._load_Singularity = [0, 0, 0]
-        self._reaction_loads = {}
         self._slope = [0, 0, 0]
         self._deflection = [0, 0, 0]
 
@@ -1778,9 +1759,8 @@ class Beam3D(Beam):
         {R1: -120, R2: -120, R3: -1350, R4: -2700}
         """
         x = self.variable
-        l=self.length
+        l = self.length
         q = self._load_Singularity
-        m = self._moment_load_vector
         shear_curves = [integrate(load, x) for load in q]
         moment_curves = [integrate(shear, x) for shear in shear_curves]
         for i in range(3):
@@ -1806,7 +1786,6 @@ class Beam3D(Beam):
         """
         x = self.variable
         q = self._load_vector
-        m = self._moment_load_vector
         return [integrate(-q[0], x), integrate(-q[1], x), integrate(-q[2], x)]
 
     def axial_force(self):
@@ -1821,14 +1800,13 @@ class Beam3D(Beam):
         curve of the Beam object along all three axes.
         """
         x = self.variable
-        q = self._load_vector
         m = self._moment_load_vector
         shear = self.shear_force()
 
         return [integrate(-m[0], x), integrate(-m[1] + shear[2], x),
                 integrate(-m[2] - shear[1], x) ]
 
-    def torsional_moment():
+    def torsional_moment(self):
         """
         Returns expression of Torsional moment present inside the Beam object.
         """

@@ -1576,6 +1576,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('&#x2205;'))
         return x
 
+    def _print_UniversalSet(self, e):
+        x = self.dom.createElement('mo')
+        x.appendChild(self.dom.createTextNode('&#x1D54C;'))
+        return x
+
     def _print_Adjoint(self, expr):
         from sympy.matrices import MatrixSymbol
         mat = expr.arg
@@ -1660,6 +1665,19 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             sup.appendChild(self._print(base))
         sup.appendChild(self._print(exp))
         return sup
+
+    def _print_HadamardProduct(self, expr):
+        x = self.dom.createElement('mrow')
+        args = expr.args
+        for arg in args[:-1]:
+            x.appendChild(
+                self.parenthesize(arg, precedence_traditional(expr), False))
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode('&#x2218;'))
+            x.appendChild(mo)
+        x.appendChild(
+            self.parenthesize(args[-1], precedence_traditional(expr), False))
+        return x
 
     def _print_ZeroMatrix(self, Z):
         x = self.dom.createElement('mn')

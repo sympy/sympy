@@ -24,9 +24,7 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 
 from __future__ import print_function, division
 
-import inspect
 import warnings
-import sys
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
@@ -278,6 +276,141 @@ class Plot(object):
             self._series.extend(arg)
         else:
             raise TypeError('Expecting Plot or sequence of BaseSeries')
+
+
+class PlotGrid(object):
+    """This class helps to plot subplots from already created sympy plots
+    in a single figure.
+
+    Examples
+    ========
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> from sympy import symbols
+        >>> from sympy.plotting import plot, plot3d, PlotGrid
+        >>> x, y = symbols('x, y')
+        >>> p1 = plot(x, x**2, x**3, (x, -5, 5))
+        >>> p2 = plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
+        >>> p3 = plot(x**3, (x, -5, 5))
+        >>> p4 = plot3d(x*y, (x, -5, 5), (y, -5, 5))
+
+    Plotting vertically in a single line:
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> PlotGrid(2, 1 , p1, p2)
+        PlotGrid object containing:
+        Plot[0]:Plot object containing:
+        [0]: cartesian line: x for x over (-5.0, 5.0)
+        [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+        [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[1]:Plot object containing:
+        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+        [1]: cartesian line: x for x over (-5.0, 5.0)
+
+    Plotting horizontally in a single line:
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> PlotGrid(1, 3 , p2, p3, p4)
+        PlotGrid object containing:
+        Plot[0]:Plot object containing:
+        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+        [1]: cartesian line: x for x over (-5.0, 5.0)
+        Plot[1]:Plot object containing:
+        [0]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[2]:Plot object containing:
+        [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+
+    Plotting in a grid form:
+
+    .. plot::
+       :context: close-figs
+       :format: doctest
+       :include-source: True
+
+        >>> PlotGrid(2, 2, p1, p2 ,p3, p4)
+        PlotGrid object containing:
+        Plot[0]:Plot object containing:
+        [0]: cartesian line: x for x over (-5.0, 5.0)
+        [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+        [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[1]:Plot object containing:
+        [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+        [1]: cartesian line: x for x over (-5.0, 5.0)
+        Plot[2]:Plot object containing:
+        [0]: cartesian line: x**3 for x over (-5.0, 5.0)
+        Plot[3]:Plot object containing:
+        [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+
+    """
+    def __init__(self, nrows, ncolumns, *args, **kwargs):
+        """
+        Parameters
+        ==========
+
+        nrows : The number of rows that should be in the grid of the
+                required subplot
+        ncolumns : The number of columns that should be in the grid
+                   of the required subplot
+
+        nrows and ncolumns together define the required grid
+
+        Arguments
+        =========
+
+        A list of predefined plot objects entered in a row-wise sequence
+        i.e. plot objects which are to be in the top row of the required
+        grid are written first, then the second row objects and so on
+
+        Keyword arguments
+        =================
+
+        show : Boolean
+               The default value is set to ``True``. Set show to ``False`` and
+               the function will not display the subplot. The returned instance
+               of the ``PlotGrid`` class can then be used to save or display the
+               plot by calling the ``save()`` and ``show()`` methods
+               respectively.
+        """
+        self.nrows = nrows
+        self.ncolumns = ncolumns
+        self._series = []
+        self.args = args
+        for arg in args:
+            self._series.append(arg._series)
+        self.backend = DefaultBackend
+        show = kwargs.pop('show', True)
+        if show:
+            self.show()
+
+    def show(self):
+        if hasattr(self, '_backend'):
+            self._backend.close()
+        self._backend = self.backend(self)
+        self._backend.show()
+
+    def save(self, path):
+        if hasattr(self, '_backend'):
+            self._backend.close()
+        self._backend = self.backend(self)
+        self._backend.save(path)
+
+    def __str__(self):
+        plot_strs = [('Plot[%d]:' % i) + str(plot)
+                      for i, plot in enumerate(self.args)]
+
+        return 'PlotGrid object containing:\n' + '\n'.join(plot_strs)
 
 
 ##############################################################################
@@ -899,80 +1032,90 @@ class BaseBackend(object):
 class MatplotlibBackend(BaseBackend):
     def __init__(self, parent):
         super(MatplotlibBackend, self).__init__(parent)
-        are_3D = [s.is_3D for s in self.parent._series]
         self.matplotlib = import_module('matplotlib',
             __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
             min_module_version='1.1.0', catch=(RuntimeError,))
         self.plt = self.matplotlib.pyplot
         self.cm = self.matplotlib.cm
         self.LineCollection = self.matplotlib.collections.LineCollection
-        if any(are_3D) and not all(are_3D):
-            raise ValueError('The matplotlib backend can not mix 2D and 3D.')
-        elif not any(are_3D):
-            self.fig = self.plt.figure()
-            self.ax = self.fig.add_subplot(111)
-            self.ax.spines['left'].set_position('zero')
-            self.ax.spines['right'].set_color('none')
-            self.ax.spines['bottom'].set_position('zero')
-            self.ax.spines['top'].set_color('none')
-            self.ax.spines['left'].set_smart_bounds(True)
-            self.ax.spines['bottom'].set_smart_bounds(False)
-            self.ax.xaxis.set_ticks_position('bottom')
-            self.ax.yaxis.set_ticks_position('left')
-        elif all(are_3D):
-            ## mpl_toolkits.mplot3d is necessary for
-            ##      projection='3d'
-            mpl_toolkits = import_module('mpl_toolkits',
+
+        if isinstance(self.parent, Plot):
+            nrows, ncolumns = 1, 1
+            series_list = [self.parent._series]
+        elif isinstance(self.parent, PlotGrid):
+            nrows, ncolumns = self.parent.nrows, self.parent.ncolumns
+            series_list = self.parent._series
+
+        self.ax = []
+        self.fig = self.plt.figure()
+
+        for i, series in enumerate(series_list):
+            are_3D = [s.is_3D for s in series]
+
+            if any(are_3D) and not all(are_3D):
+                raise ValueError('The matplotlib backend can not mix 2D and 3D.')
+            elif all(are_3D):
+                # mpl_toolkits.mplot3d is necessary for
+                # projection='3d'
+                mpl_toolkits = import_module('mpl_toolkits',
                                      __import__kwargs={'fromlist': ['mplot3d']})
-            self.fig = self.plt.figure()
-            self.ax = self.fig.add_subplot(111, projection='3d')
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d'))
 
-    def process_series(self):
-        parent = self.parent
+            elif not any(are_3D):
+                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1))
+                self.ax[i].spines['left'].set_position('zero')
+                self.ax[i].spines['right'].set_color('none')
+                self.ax[i].spines['bottom'].set_position('zero')
+                self.ax[i].spines['top'].set_color('none')
+                self.ax[i].spines['left'].set_smart_bounds(True)
+                self.ax[i].spines['bottom'].set_smart_bounds(False)
+                self.ax[i].xaxis.set_ticks_position('bottom')
+                self.ax[i].yaxis.set_ticks_position('left')
 
-        for s in self.parent._series:
+    def _process_series(self, series, ax, parent):
+        for s in series:
             # Create the collections
             if s.is_2Dline:
                 collection = self.LineCollection(s.get_segments())
-                self.ax.add_collection(collection)
+                ax.add_collection(collection)
             elif s.is_contour:
-                self.ax.contour(*s.get_meshes())
+                ax.contour(*s.get_meshes())
             elif s.is_3Dline:
                 # TODO too complicated, I blame matplotlib
                 mpl_toolkits = import_module('mpl_toolkits',
                     __import__kwargs={'fromlist': ['mplot3d']})
                 art3d = mpl_toolkits.mplot3d.art3d
                 collection = art3d.Line3DCollection(s.get_segments())
-                self.ax.add_collection(collection)
+                ax.add_collection(collection)
                 x, y, z = s.get_points()
-                self.ax.set_xlim((min(x), max(x)))
-                self.ax.set_ylim((min(y), max(y)))
-                self.ax.set_zlim((min(z), max(z)))
+                ax.set_xlim((min(x), max(x)))
+                ax.set_ylim((min(y), max(y)))
+                ax.set_zlim((min(z), max(z)))
             elif s.is_3Dsurface:
                 x, y, z = s.get_meshes()
-                collection = self.ax.plot_surface(x, y, z,
+                collection = ax.plot_surface(x, y, z,
                     cmap=getattr(self.cm, 'viridis', self.cm.jet),
                     rstride=1, cstride=1, linewidth=0.1)
             elif s.is_implicit:
-                #Smart bounds have to be set to False for implicit plots.
-                self.ax.spines['left'].set_smart_bounds(False)
-                self.ax.spines['bottom'].set_smart_bounds(False)
+                # Smart bounds have to be set to False for implicit plots.
+                ax.spines['left'].set_smart_bounds(False)
+                ax.spines['bottom'].set_smart_bounds(False)
                 points = s.get_raster()
                 if len(points) == 2:
-                    #interval math plotting
+                    # interval math plotting
                     x, y = _matplotlib_list(points[0])
-                    self.ax.fill(x, y, facecolor=s.line_color, edgecolor='None')
+                    ax.fill(x, y, facecolor=s.line_color, edgecolor='None')
                 else:
                     # use contourf or contour depending on whether it is
                     # an inequality or equality.
-                    #XXX: ``contour`` plots multiple lines. Should be fixed.
+                    # XXX: ``contour`` plots multiple lines. Should be fixed.
                     ListedColormap = self.matplotlib.colors.ListedColormap
                     colormap = ListedColormap(["white", s.line_color])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
-                        self.ax.contour(xarray, yarray, zarray, cmap=colormap)
+                        ax.contour(xarray, yarray, zarray, cmap=colormap)
                     else:
-                        self.ax.contourf(xarray, yarray, zarray, cmap=colormap)
+                        ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
                 raise ValueError('The matplotlib backend supports only '
                                  'is_2Dline, is_3Dline, is_3Dsurface and '
@@ -1001,14 +1144,13 @@ class MatplotlibBackend(BaseBackend):
         # Set global options.
         # TODO The 3D stuff
         # XXX The order of those is important.
-
         mpl_toolkits = import_module('mpl_toolkits',
             __import__kwargs={'fromlist': ['mplot3d']})
         Axes3D = mpl_toolkits.mplot3d.Axes3D
-        if parent.xscale and not isinstance(self.ax, Axes3D):
-            self.ax.set_xscale(parent.xscale)
-        if parent.yscale and not isinstance(self.ax, Axes3D):
-            self.ax.set_yscale(parent.yscale)
+        if parent.xscale and not isinstance(ax, Axes3D):
+            ax.set_xscale(parent.xscale)
+        if parent.yscale and not isinstance(ax, Axes3D):
+            ax.set_yscale(parent.yscale)
         if parent.xlim:
             from sympy.core.basic import Basic
             xlim = parent.xlim
@@ -1019,12 +1161,12 @@ class MatplotlibBackend(BaseBackend):
                 raise ValueError(
                 "All numbers from xlim={} must be finite".format(xlim))
             xlim = (float(i) for i in xlim)
-            self.ax.set_xlim(xlim)
+            ax.set_xlim(xlim)
         else:
             if all(isinstance(s, LineOver1DRangeSeries) for s in parent._series):
                 starts = [s.start for s in parent._series]
                 ends = [s.end for s in parent._series]
-                self.ax.set_xlim(min(starts), max(ends))
+                ax.set_xlim(min(starts), max(ends))
         if parent.ylim:
             from sympy.core.basic import Basic
             ylim = parent.ylim
@@ -1035,40 +1177,56 @@ class MatplotlibBackend(BaseBackend):
                 raise ValueError(
                 "All numbers from ylim={} must be finite".format(ylim))
             ylim = (float(i) for i in ylim)
-            self.ax.set_ylim(ylim)
-        if not isinstance(self.ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
-            self.ax.set_autoscale_on(parent.autoscale)
+            ax.set_ylim(ylim)
+        if not isinstance(ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
+            ax.set_autoscale_on(parent.autoscale)
         if parent.axis_center:
             val = parent.axis_center
-            if isinstance(self.ax, Axes3D):
+            if isinstance(ax, Axes3D):
                 pass
             elif val == 'center':
-                self.ax.spines['left'].set_position('center')
-                self.ax.spines['bottom'].set_position('center')
+                ax.spines['left'].set_position('center')
+                ax.spines['bottom'].set_position('center')
             elif val == 'auto':
-                xl, xh = self.ax.get_xlim()
-                yl, yh = self.ax.get_ylim()
+                xl, xh = ax.get_xlim()
+                yl, yh = ax.get_ylim()
                 pos_left = ('data', 0) if xl*xh <= 0 else 'center'
                 pos_bottom = ('data', 0) if yl*yh <= 0 else 'center'
-                self.ax.spines['left'].set_position(pos_left)
-                self.ax.spines['bottom'].set_position(pos_bottom)
+                ax.spines['left'].set_position(pos_left)
+                ax.spines['bottom'].set_position(pos_bottom)
             else:
-                self.ax.spines['left'].set_position(('data', val[0]))
-                self.ax.spines['bottom'].set_position(('data', val[1]))
+                ax.spines['left'].set_position(('data', val[0]))
+                ax.spines['bottom'].set_position(('data', val[1]))
         if not parent.axis:
-            self.ax.set_axis_off()
+            ax.set_axis_off()
         if parent.legend:
-            if self.ax.legend():
-                self.ax.legend_.set_visible(parent.legend)
+            if ax.legend():
+                ax.legend_.set_visible(parent.legend)
         if parent.margin:
-            self.ax.set_xmargin(parent.margin)
-            self.ax.set_ymargin(parent.margin)
+            ax.set_xmargin(parent.margin)
+            ax.set_ymargin(parent.margin)
         if parent.title:
-            self.ax.set_title(parent.title)
+            ax.set_title(parent.title)
         if parent.xlabel:
-            self.ax.set_xlabel(parent.xlabel, position=(1, 0))
+            ax.set_xlabel(parent.xlabel, position=(1, 0))
         if parent.ylabel:
-            self.ax.set_ylabel(parent.ylabel, position=(0, 1))
+            ax.set_ylabel(parent.ylabel, position=(0, 1))
+
+    def process_series(self):
+        """
+        Iterates over every ``Plot`` object and further calls
+        _process_series()
+        """
+        parent = self.parent
+        if isinstance(parent, Plot):
+            series_list = [parent._series]
+        else:
+            series_list = parent._series
+
+        for i, (series, ax) in enumerate(zip(series_list, self.ax)):
+            if isinstance(self.parent, PlotGrid):
+                parent = self.parent.args[i]
+            self._process_series(series, ax, parent)
 
     def show(self):
         self.process_series()
@@ -1076,6 +1234,7 @@ class MatplotlibBackend(BaseBackend):
         # you can uncomment the next line and remove the pyplot.show() call
         #self.fig.show()
         if _show:
+            self.fig.tight_layout()
             self.plt.show()
         else:
             self.close()

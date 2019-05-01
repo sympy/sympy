@@ -52,8 +52,6 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import has_dups, sift
 from sympy.core.evaluate import global_evaluate
 
-import sys
-
 import mpmath
 import mpmath.libmp as mlib
 
@@ -104,7 +102,7 @@ class ArgumentIndexError(ValueError):
                (self.args[1], self.args[0]))
 
 
-# Python 2 and 3 compatible version that do not raise a Deprecation warning.
+# Python 2/3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
 
@@ -672,7 +670,7 @@ class Function(Application, Expr):
             # where 'logx' is given in the argument
             a = [t._eval_nseries(x, n, logx) for t in args]
             z = [r - r0 for (r, r0) in zip(a, a0)]
-            p = [Dummy() for t in z]
+            p = [Dummy() for _ in z]
             q = []
             v = None
             for ai, zi, pi in zip(a0, z, p):
@@ -798,13 +796,13 @@ class Function(Application, Expr):
     def _sage_(self):
         import sage.all as sage
         fname = self.func.__name__
-        func = getattr(sage, fname,None)
+        func = getattr(sage, fname, None)
         args = [arg._sage_() for arg in self.args]
 
         # In the case the function is not known in sage:
         if func is None:
             import sympy
-            if getattr(sympy, fname,None) is None:
+            if getattr(sympy, fname, None) is None:
                 # abstract function
                 return sage.function(fname)(*args)
 
@@ -1186,8 +1184,8 @@ class Derivative(Expr):
     def __new__(cls, expr, *variables, **kwargs):
 
         from sympy.matrices.common import MatrixCommon
-        from sympy import Integer
-        from sympy.tensor.array import Array, NDimArray
+        from sympy import Integer, MatrixExpr
+        from sympy.tensor.array import Array, NDimArray, derive_by_array
         from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
@@ -1319,6 +1317,9 @@ class Derivative(Expr):
                         if not expr.xreplace({v: D}).has(D):
                             zero = True
                             break
+                    elif isinstance(v, MatrixExpr):
+                        zero = False
+                        break
                     elif isinstance(v, Symbol) and v not in free:
                         zero = True
                         break
@@ -1330,7 +1331,7 @@ class Derivative(Expr):
             if zero:
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
-                else:
+                elif expr.is_scalar:
                     return S.Zero
 
             # make the order of symbols canonical
@@ -1398,9 +1399,8 @@ class Derivative(Expr):
                 if obj is not None:
                     # remove the dummy that was used
                     obj = obj.subs(v, old_v)
-                # restore expr and v
+                # restore expr
                 expr = old_expr
-                v = old_v
 
             if obj is None:
                 # we've already checked for quick-exit conditions
@@ -1573,8 +1573,6 @@ class Derivative(Expr):
         When we can represent derivatives at a point, this should be folded
         into the normal evalf. For now, we need a special method.
         """
-        import mpmath
-        from sympy.core.expr import Expr
         if len(self.free_symbols) != 1 or len(self.variables) != 1:
             raise NotImplementedError('partials and higher order derivatives')
         z = list(self.free_symbols)[0]
@@ -1684,7 +1682,7 @@ class Derivative(Expr):
             if (nfree - ofree) & forbidden:
                 return Subs(self, old, new)
 
-        viter = ((i, j) for ((i,_), (j,_)) in zip(newargs[1:], args[1:]))
+        viter = ((i, j) for ((i, _), (j, _)) in zip(newargs[1:], args[1:]))
         if any(i != j for i, j in viter):  # a wrt-variable change
             # case (2) can't change vars by introducing a variable
             # that is contained in expr, e.g.
@@ -2947,10 +2945,6 @@ def count_ops(expr, visual=False):
         while args:
             a = args.pop()
 
-            # XXX: This is a hack to support non-Basic args
-            if isinstance(a, string_types):
-                continue
-
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:
@@ -3037,10 +3031,6 @@ def count_ops(expr, visual=False):
             args = [expr]
             while args:
                 a = args.pop()
-
-                # XXX: This is a hack to support non-Basic args
-                if isinstance(a, string_types):
-                    continue
 
                 if a.args:
                     o = Symbol(a.func.__name__.upper())

@@ -494,6 +494,51 @@ def test_intersection_2d():
     assert s1.intersection(s2) == [s2]
     assert s2.intersection(s1) == [s2]
 
+    assert asa(120, 8, 52) == \
+           Triangle(
+               Point(0, 0),
+               Point(8, 0),
+               Point(-4 * cos(19 * pi / 90) / sin(2 * pi / 45),
+                     4 * sqrt(3) * cos(19 * pi / 90) / sin(2 * pi / 45)))
+    assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Ray((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Ray((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == [Point(1, 1)]
+    assert Ray((0, 0), (10, 10)).contains(Segment((1, 1), (2, 2))) is True
+    assert Segment((1, 1), (2, 2)) in Line((0, 0), (10, 10))
+
+    # 16628 - this should be fast
+    p0 = Point2D(S(249)/5, S(497999)/10000)
+    p1 = Point2D((-58977084786*sqrt(405639795226) + 2030690077184193 +
+        20112207807*sqrt(630547164901) + 99600*sqrt(255775022850776494562626))
+        /(2000*sqrt(255775022850776494562626) + 1991998000*sqrt(405639795226)
+        + 1991998000*sqrt(630547164901) + 1622561172902000),
+        (-498000*sqrt(255775022850776494562626) - 995999*sqrt(630547164901) +
+        90004251917891999 +
+        496005510002*sqrt(405639795226))/(10000*sqrt(255775022850776494562626)
+        + 9959990000*sqrt(405639795226) + 9959990000*sqrt(630547164901) +
+        8112805864510000))
+    p2 = Point2D(S(497)/10, -S(497)/10)
+    p3 = Point2D(-S(497)/10, -S(497)/10)
+    l = Line(p0, p1)
+    s = Segment(p2, p3)
+    n = (-52673223862*sqrt(405639795226) - 15764156209307469 -
+        9803028531*sqrt(630547164901) +
+        33200*sqrt(255775022850776494562626))
+    d = sqrt(405639795226) + 315274080450 + 498000*sqrt(
+        630547164901) + sqrt(255775022850776494562626)
+    assert intersection(l, s) == [
+        Point2D(n/d*S(3)/2000, -S(497)/10)]
+
+
+@slow
+def test_line_intersection():
+    x0 = tan(13*pi/45)
+    x1 = sqrt(3)
+    x2 = x0**2
+    x, y = [8*x0/(x0 + x1), (24*x0 - 8*x1*x2)/(x2 - 3)]
+    assert Line(Point(0, 0), Point(1, -sqrt(3))).contains(Point(x, y)) is True
+
 
 def test_intersection_3d():
     p1 = Point3D(0, 0, 0)
@@ -586,25 +631,6 @@ def test_is_similar():
     assert s1.is_similar(r2) is False
     assert r1.is_similar(Line3D(Point3D(1, 1, 1), Point3D(1, 0, 0))) is True
     assert r1.is_similar(Line3D(Point3D(0, 0, 0), Point3D(0, 1, 0))) is False
-
-
-@slow
-def test_line_intersection():
-    assert asa(120, 8, 52) == \
-           Triangle(
-               Point(0, 0),
-               Point(8, 0),
-               Point(-4 * cos(19 * pi / 90) / sin(2 * pi / 45),
-                     4 * sqrt(3) * cos(19 * pi / 90) / sin(2 * pi / 45)))
-    assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == [Point(1, 1)]
-    assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == [Point(1, 1)]
-    assert Ray((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == [Point(1, 1)]
-    assert Ray((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == [Point(1, 1)]
-    assert Ray((0, 0), (10, 10)).contains(Segment((1, 1), (2, 2))) is True
-    assert Segment((1, 1), (2, 2)) in Line((0, 0), (10, 10))
-    x = 8 * tan(13 * pi / 45) / (tan(13 * pi / 45) + sqrt(3))
-    y = (-8 * sqrt(3) * tan(13 * pi / 45) ** 2 + 24 * tan(13 * pi / 45)) / (-3 + tan(13 * pi / 45) ** 2)
-    assert Line(Point(0, 0), Point(1, -sqrt(3))).contains(Point(x, y)) is True
 
 
 def test_length():

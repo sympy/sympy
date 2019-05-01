@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from random import randrange, choice
 from math import log
+from sympy.ntheory import primefactors
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -155,6 +156,8 @@ class PermutationGroup(Basic):
         obj._is_trivial = None
         obj._transitivity_degree = None
         obj._max_div = None
+        obj._is_perfect = None
+        obj._is_cyclic = None
         obj._r = len(obj._generators)
         obj._degree = obj._generators[0].size
 
@@ -1644,6 +1647,27 @@ class PermutationGroup(Basic):
         return bool(self.coset_factor(g.array_form, True))
 
     @property
+    def is_perfect(self):
+        """Return ``True`` if the group is perfect.
+        A group is perfect if it equals to its derived subgroup.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation(1,2,3)(4,5)
+        >>> b = Permutation(1,2,3,4,5)
+        >>> G = PermutationGroup([a, b])
+        >>> G.is_perfect
+        False
+
+        """
+        if self._is_perfect is None:
+            self._is_perfect = self == self.derived_subgroup()
+        return self._is_perfect
+
+    @property
     def is_abelian(self):
         """Test if the group is Abelian.
 
@@ -1850,6 +1874,8 @@ class PermutationGroup(Basic):
         d_gr = gr.degree
         if self.is_trivial and (d_self == d_gr or not strict):
             return True
+        if self._is_abelian:
+            return True
         new_self = self.copy()
         if not strict and d_self != d_gr:
             if d_self < d_gr:
@@ -2027,6 +2053,8 @@ class PermutationGroup(Basic):
 
         """
         if self._is_solvable is None:
+            if self.order() % 2 != 0:
+                return True
             ds = self.derived_series()
             terminator = ds[len(ds) - 1]
             gens = terminator.generators
@@ -2625,6 +2653,63 @@ class PermutationGroup(Basic):
             m *= len(x)
         self._order = m
         return m
+
+    def index(self, H):
+        """
+        Returns the index of a permutation group.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation(1,2,3)
+        >>> b =Permutation(3)
+        >>> G = PermutationGroup([a])
+        >>> H = PermutationGroup([b])
+        >>> G.index(H)
+        3
+
+        """
+        if H.is_subgroup(self):
+            return self.order()//H.order()
+
+    @property
+    def is_cyclic(self):
+        """
+        Return ``True`` if the group is Cyclic.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import AbelianGroup
+        >>> G = AbelianGroup(3, 4)
+        >>> G.is_cyclic
+        True
+        >>> G = AbelianGroup(4, 4)
+        >>> G.is_cyclic
+        False
+
+        """
+        if self._is_cyclic is not None:
+            return self._is_cyclic
+        self._is_cyclic = True
+
+        if len(self.generators) == 1:
+            return True
+        if not self._is_abelian:
+            self._is_cyclic = False
+            return False
+        for p in primefactors(self.order()):
+            pgens = []
+            for g in self.generators:
+                pgens.append(g**p)
+            if self.index(self.subgroup(pgens)) != p:
+                self._is_cyclic = False
+                return False
+            else:
+                continue
+        return True
 
     def pointwise_stabilizer(self, points, incremental=True):
         r"""Return the pointwise stabilizer for a set of points.
