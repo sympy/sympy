@@ -2,7 +2,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
-        Matrix, Basic)
+        Matrix, Basic, Dict)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.basic import _aresame
 from sympy.core.function import PoleError, _mexpand, arity
@@ -837,6 +837,21 @@ def test_nfloat():
     # issue 7122
     eq = cos(3*x**4 + y)*rootof(x**5 + 3*x**3 + 1, 0)
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
+
+    # issue 10933
+    assert _aresame(list(nfloat({x: S.Half}).values()).pop(), Float(.5))
+    d = Dict({x: S.Half})
+    n = nfloat(d)
+    assert isinstance(n, Dict)
+    assert _aresame(list(n.values()).pop(), Float(.5))
+    d = [S.Half]
+    n = nfloat(d)
+    assert type(n) is list
+    assert _aresame(n[0], Float(.5))
+    assert _aresame(nfloat(Eq(x, S.Half)).rhs, Float(.5))
+    assert _aresame(nfloat(S(True)), S(True))
+    assert _aresame(nfloat(Tuple(S.Half))[0], Float(.5))
+    assert nfloat(Eq((3 - I)**2/2 + I, 0)) == S.false
 
 
 def test_issue_7068():
