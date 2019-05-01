@@ -191,6 +191,10 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
 
+    @staticmethod
+    def check(*args):
+        pass
+
     @property
     @cacheit
     def dict(self):
