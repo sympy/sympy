@@ -1445,6 +1445,8 @@ class EvalfMixin(object):
             v = self._eval_evalf(prec)
             if v is None:
                 return self
+            elif not v.is_number:
+                return v
             try:
                 # If the result is numerical, normalize it
                 result = evalf(v, prec, options)
