@@ -4132,11 +4132,14 @@ def _nth_algebraic_match(eq, func):
     var = func.args[0]
     subs_eqn = replace(eq, var)
     try:
-        solns = solve(subs_eqn, func)
+        # turn off simplification to protect Integrals that have
+        # _t instead of fx in them and would otherwise factor
+        # as t_*Integral(1, x)
+        solns = solve(subs_eqn, func, simplify=False)
     except NotImplementedError:
         solns = []
 
-    solns = [unreplace(soln, var) for soln in solns]
+    solns = [simplify(unreplace(soln, var)) for soln in solns]
     solns = [Equality(func, soln) for soln in solns]
     return {'var':var, 'solutions':solns}
 
