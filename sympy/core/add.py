@@ -388,6 +388,18 @@ class Add(Expr, AssocOp):
                     return _unevaluated_Mul(
                         r - i*S.ImaginaryUnit,
                         1/(r**2 + i**2))
+        elif e.is_Number and abs(e) != 1:
+          c, m = zip(*[i.as_coeff_Mul() for i in self.args])
+          big = 0
+          float = False
+          for i in c:
+              float = float or i.is_Float
+              if abs(i) > big:
+                  big = 1.0*abs(i)
+                  s = -1 if i < 0 else 1
+          if float and big and big != 1:
+              addpow = Add(*[(s if abs(c[i]) == big else c[i]/big)*m[i] for i in range(len(c))])**e
+              return big**e*addpow
 
     @cacheit
     def _eval_derivative(self, s):
