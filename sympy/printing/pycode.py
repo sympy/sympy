@@ -357,6 +357,10 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         PREC = precedence(expr)
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
+    def _print_Indexed(self, expr):
+        base, *index = expr.args
+        return "{}[{}]".format(str(base), ", ".join([self._print(ind) for ind in index]))
+
 
 for k in PythonCodePrinter._kf:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
