@@ -12,7 +12,7 @@ take a look at the following points:
 
 1. Please give a short descriptive title relevant to your issue.
 2. If you are facing problem with a particular functionality of SymPy
-   then please include the code that reproduces the probelem with the
+   then please include the code that reproduces the problem with the
    output.
 3. Please provide references, if any, associated with the issue.
 
