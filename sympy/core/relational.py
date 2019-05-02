@@ -559,6 +559,22 @@ class Equality(Relational):
                 pass
         return e.canonical
 
+    def add_sides(self, arg):
+        if isinstance(arg, Equality):
+            return self.func(self.lhs + arg.lhs, self.rhs + arg.rhs)
+        elif not getattr(arg, 'is_Relational', None):
+            return self.func(self.lhs + arg, self.rhs + arg)
+        else:
+            raise NotImplementedError()
+
+    def subtract_sides(self, arg):
+        if isinstance(arg, Equality):
+            return self.func(self.lhs - arg.lhs, self.rhs - arg.rhs)
+        elif not getattr(arg, 'is_Relational', None):
+            return self.func(self.lhs - arg, self.rhs - arg)
+        else:
+            raise NotImplementedError()
+
     def multiply_sides(self, arg):
         """Returns a new relational with ``arg`` multiplied to LHS and RHS"""
         from sympy.functions.elementary.piecewise import Piecewise
