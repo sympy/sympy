@@ -1100,7 +1100,6 @@ class Float(Number):
 
         obj = Expr.__new__(cls)
         obj._mpf_ = mpf_norm(_mpf_, _prec)
-        # XXX: Should this be obj._prec = obj._mpf_[3]?
         obj._prec = _prec
         return obj
 
@@ -1294,7 +1293,11 @@ class Float(Number):
                 return False
             return other.__eq__(self)
         if other.is_Float:
+            # precision is ignored so Float(.1) == Float(.1, 100)
+            # and Float(.1, 100) == Float(.1)
             return bool(mlib.mpf_eq(self._mpf_, other._mpf_))
+        if other.is_Rational:
+            return other.__eq__(self)
         if other.is_Number:
             # numbers should compare at the same precision;
             # all _as_mpf_val routines should be sure to abide
@@ -1761,21 +1764,42 @@ class Rational(Number):
         return self.ceiling()
 
     def __eq__(self, other):
+        from sympy.core.power import integer_log
         try:
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
+        if other.is_zero:
+            return self.is_zero
+        if self.is_zero:
+            return other.is_zero
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
             return other.__eq__(self)
-        if other.is_Number:
-            if other.is_Rational:
-                # a Rational is always in reduced form so will never be 2/4
-                # so we can just check equivalence of args
-                return self.p == other.p and self.q == other.q
-            if other.is_Float:
-                return mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_)
+        if other.is_Rational:
+            # a Rational is always in reduced form so will never be 2/4
+            # so we can just check equivalence of args
+            return self.p == other.p and self.q == other.q
+        if other.is_Float:
+            s, m, t = other._mpf_[:3]
+            if s:
+                m = -m
+            if not t:
+                # other is an odd integer
+                if not self.is_Integer or self.is_even:
+                    return False
+                return m == self.p
+            if t > 0:
+                # other is an even integer
+                if not self.is_Integer:
+                    return False
+                # does m*2**t == self.p
+                return not self.p % m and integer_log(self.p//m, 2) == (t, True)
+            # does non-integer s*m/2**-t = p/q?
+            if self.is_Integer:
+                return False
+            return m == self.p and integer_log(self.q, 2) == (-t, True)
         return False
 
     def __ne__(self, other):

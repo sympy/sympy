@@ -3407,7 +3407,7 @@ class Expr(Basic, EvalfMixin):
                 i *= -1
             return i*m
 
-        digits_to_decimal = _mag(x)
+        digits_to_decimal = _mag(x)  # _mag(12) = 2, _mag(.012) = -1
         allow = digits_needed = digits_to_decimal + p
         precs = [f._prec for f in x.atoms(Float)]
         dps = prec_to_dps(max(precs)) if precs else None
@@ -3491,7 +3491,7 @@ class Expr(Basic, EvalfMixin):
             if n is None:  # the single-arg case
                 return rv
             # use str or else it won't be a float
-            return Float(str(rv), digits_needed)
+            return Float(str(rv), dps)  # keep same precision
         else:
             if not allow and rv > self:
                 allow += 1

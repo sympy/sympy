@@ -131,7 +131,7 @@ def test_divmod():
     assert divmod(0.3, S("2")) == Tuple(S("0"), S("0.3"))
     assert divmod(S("3/2"), S("3.5")) == Tuple(S("0"), S("3/2"))
     assert divmod(S("3.5"), S("3/2")) == Tuple(S("2"), S("0.5"))
-    assert divmod(S("3/2"), S("1/3")) == Tuple(S("4"), Float("1/6"))
+    assert divmod(S("3/2"), S("1/3")) == Tuple(S("4"), S("1/6"))
     assert divmod(S("1/3"), S("3/2")) == Tuple(S("0"), S("1/3"))
     assert divmod(S("3/2"), S("0.1")) == Tuple(S("15"), S("0"))
     assert divmod(S("0.1"), S("3/2")) == Tuple(S("0"), S("0.1"))
@@ -1608,6 +1608,31 @@ def test_Float_eq():
     assert Float(.12, 3) == .12
     assert 0.12 == Float(.12, 3)
     assert Float('.12', 22) != .12
+    # issue 11707
+    assert Float('1.1') != Rational(11, 10)
+    assert Rational(11, 10) != Float('1.1')
+    # to precision 10 and 11, the float value of
+    # 1.1 is not the same
+    assert Float(1.1, 10) != Float(1.1, 11)
+    # all .5 values are the same
+    assert Float(.5, 10) == Float(.5, 11) == Float(.5, 1)
+    # coverage
+    assert not Float(3) == 2
+    assert not Float(2**2) == S.Half
+    assert Float(2**2) == 4
+    assert not Float(2**-2) == 1
+    assert Float(2**-1) == S.Half
+    assert not Float(2*3) == 3
+    assert not Float(2*3) == S.Half
+    assert Float(2*3) == 6
+    assert not Float(2*3) == 8
+    assert Float(.75) == S(3)/4
+    assert Float(5/18) == 5/18
+    # 4473
+    assert t**2 == t**2.0
+    assert Float(2.) != 3
+    assert Float((0,1,-3)) == S(1)/8
+    assert Float((0,1,-3)) != S(1)/9
 
 
 def test_int_NumberSymbols():
