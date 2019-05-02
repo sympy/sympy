@@ -319,6 +319,26 @@ class Relational(Boolean, Expr, EvalfMixin):
         # override where necessary
         return set()
 
+    def add_sides(self, arg):
+        """Returns a new relational with ``arg`` added to LHS and RHS"""
+        return self.func(self.lhs + arg, self.rhs + arg)
+
+    def subtract_sides(self, arg):
+        """Returns a new relational with ``arg`` subtracted to LHS and RHS"""
+        return self.func(self.lhs - arg, self.rhs - arg)
+
+    def multiply_sides(self, arg):
+        """Returns a new relational with ``arg`` multiplied to LHS and RHS"""
+        return self.func(self.lhs * arg, self.rhs * arg)
+
+    def divide_sides(self, arg):
+        """Returns a new relational with ``arg`` divided to LHS and RHS"""
+        return self.func(self.lhs / arg, self.rhs / arg)
+
+    def apply_sides(self, func):
+        """Returns a new relational with ``func`` applied to LHS and RHS"""
+        return self.func(func(self.lhs), func(self.rhs))
+
 
 Rel = Relational
 
