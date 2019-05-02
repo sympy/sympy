@@ -320,18 +320,10 @@ class Relational(Boolean, Expr, EvalfMixin):
         return set()
 
     def add_sides(self, arg):
-        """Returns a new relational with ``arg`` added to LHS and RHS"""
-        if self.__class__ == other.__class__:
-            return self.func(self.lhs + arg.lhs, self.rhs + arg.rhs)
-        else:
-            return self.func(self.lhs + arg, self.rhs + arg)
+        raise NotImplementedError()
 
     def subtract_sides(self, arg):
-        """Returns a new relational with ``arg`` subtracted to LHS and RHS"""
-        if self.__class__ == other.__class__:
-            return self.func(self.lhs - arg.lhs, self.rhs - arg.rhs)
-        else:
-            return self.func(self.lhs - arg, self.rhs - arg)
+        raise NotImplementedError()
 
     def multiply_sides(self, arg):
         raise NotImplementedError()
