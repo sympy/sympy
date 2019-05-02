@@ -328,12 +328,10 @@ class Relational(Boolean, Expr, EvalfMixin):
         return self.func(self.lhs - arg, self.rhs - arg)
 
     def multiply_sides(self, arg):
-        """Returns a new relational with ``arg`` multiplied to LHS and RHS"""
-        return self.func(self.lhs * arg, self.rhs * arg)
+        raise NotImplementedError()
 
     def divide_sides(self, arg):
-        """Returns a new relational with ``arg`` divided to LHS and RHS"""
-        return self.func(self.lhs / arg, self.rhs / arg)
+        raise NotImplementedError()
 
     def apply_sides(self, func):
         """Returns a new relational with ``func`` applied to LHS and RHS"""
