@@ -5,6 +5,7 @@ from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
     JointDistributionHandmade, MarginalDistribution)
 from sympy.stats.rv import _value_check, random_symbols
+from sympy.utilities import default_sort_key
 
 # __all__ = ['MultivariateNormal',
 # 'MultivariateLaplace',
@@ -19,7 +20,7 @@ def multivariate_rv(cls, sym, *args):
     dist.check(*args)
     return JointPSpace(sym, dist).value
 
-def JointRV(symbol, pdf, sym, _set=None):
+def JointRV(symbol, pdf, sym=None, _set=None):
     """
     Create a Joint Random Variable where each of its component is continuous,
     given the following:
@@ -38,7 +39,7 @@ def JointRV(symbol, pdf, sym, _set=None):
     >>> from sympy.stats import density
     >>> from sympy.stats.joint_rv_types import JointRV
 
-    >>> x1, x2 = (Indexed('x', i) for i in (1, 2))
+    >>> x1, x2 = symbols('x1 x2')
     >>> pdf = exp(-x1**2/2 + x1 - x2**2/2 - S(1)/2)/(2*pi)
 
     >>> N1 = JointRV('x', pdf) #Multivariate Normal distribution
@@ -48,7 +49,7 @@ def JointRV(symbol, pdf, sym, _set=None):
     symbol = sympify(symbol)
     if sym == None:
         syms = list(i for i in pdf.free_symbols)
-        syms.sort(key = lambda index: index.args[1])
+        syms.sort(key = default_sort_key)
     else:
         syms = list(sym)
     if _set == None:

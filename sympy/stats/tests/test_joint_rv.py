@@ -63,7 +63,7 @@ def test_JointPSpace_margial_distribution():
 
 def test_JointRV():
     from sympy.stats.joint_rv import JointDistributionHandmade
-    x1, x2 = (Indexed('x', i) for i in (1, 2))
+    x1, x2 = symbols('x1 x2')
     pdf = exp(-x1**2/2 + x1 - x2**2/2 - S(1)/2)/(2*pi)
     X = JointRV('x', pdf)
     assert density(X)(1, 2) == exp(-2)/(2*pi)
