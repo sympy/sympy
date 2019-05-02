@@ -321,11 +321,17 @@ class Relational(Boolean, Expr, EvalfMixin):
 
     def add_sides(self, arg):
         """Returns a new relational with ``arg`` added to LHS and RHS"""
-        return self.func(self.lhs + arg, self.rhs + arg)
+        if self.__class__ == other.__class__:
+            return self.func(self.lhs + arg.lhs, self.rhs + arg.rhs)
+        else:
+            return self.func(self.lhs + arg, self.rhs + arg)
 
     def subtract_sides(self, arg):
         """Returns a new relational with ``arg`` subtracted to LHS and RHS"""
-        return self.func(self.lhs - arg, self.rhs - arg)
+        if self.__class__ == other.__class__:
+            return self.func(self.lhs - arg.lhs, self.rhs - arg.rhs)
+        else:
+            return self.func(self.lhs - arg, self.rhs - arg)
 
     def multiply_sides(self, arg):
         raise NotImplementedError()
@@ -560,6 +566,22 @@ class Equality(Relational):
             except ValueError:
                 pass
         return e.canonical
+
+    def multiply_sides(self, arg):
+        """Returns a new relational with ``arg`` multiplied to LHS and RHS"""
+        from sympy.functions.elementary.piecewise import Piecewise
+
+        return Piecewise(
+            (self.func(self.lhs * arg, self.rhs * arg), Ne(arg, 0))
+        )
+
+    def divide_sides(self, arg):
+        """Returns a new relational with ``arg`` divided to LHS and RHS"""
+        from sympy.functions.elementary.piecewise import Piecewise
+
+        return Piecewise(
+            (self.func(self.lhs / arg, self.rhs / arg), Ne(arg, 0))
+        )
 
 
 Eq = Equality
