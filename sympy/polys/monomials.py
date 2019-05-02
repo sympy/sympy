@@ -152,7 +152,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         if any(min_degrees[i] > max_degrees[i] for i in range(n)):
             raise ValueError('min_degrees[i] must be <= max_degrees[i] for all i')
         power_lists = []
-        for var, min_d, max_d in zip(variables,min_degrees,max_degrees):
+        for var, min_d, max_d in zip(variables, min_degrees, max_degrees):
             power_lists.append([var**i for i in range(min_d, max_d + 1)])
         for powers in product(*power_lists):
             yield Mul(*powers)
