@@ -35,7 +35,7 @@ def test_PythonCodePrinter():
                         (3, Gt(x, 0)), evaluate=False)) == '((2) if (x <= 0) else'\
                                                         ' (3) if (x > 0) else None)'
     assert prntr.doprint(sign(x)) == '(0.0 if x == 0 else math.copysign(1, x))'
-    assert prntr.doprint(p[0]) == 'p[0]'
+    assert prntr.doprint(p[0, 1]) == 'p[0, 1]'
 
 
 def test_MpmathPrinter():

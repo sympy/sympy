@@ -358,7 +358,8 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
     def _print_Indexed(self, expr):
-        base, *index = expr.args
+        base = expr.args[0]
+        index = expr.args[1:]
         return "{}[{}]".format(str(base), ", ".join([self._print(ind) for ind in index]))
 
 
