@@ -987,12 +987,14 @@ def test_integer_log():
     assert integer_log(-49, 7) == (0, False)
     assert integer_log(-49, -7) == (2, False)
 
+
 def test_isqrt():
     from math import sqrt as _sqrt
     limit = 17984395633462800708566937239551
     assert int(_sqrt(limit)) == integer_nthroot(limit, 2)[0]
     assert int(_sqrt(limit + 1)) != integer_nthroot(limit + 1, 2)[0]
     assert isqrt(limit + 1) == integer_nthroot(limit + 1, 2)[0]
+    assert isqrt(limit + 1 - S.Half) == integer_nthroot(limit + 1, 2)[0]
     assert isqrt(limit + 1 + S.Half) == integer_nthroot(limit + 1, 2)[0]
 
 
@@ -1838,22 +1840,10 @@ def test_comparisons_with_unknown_type():
         raises(TypeError, lambda: bar <= n)
 
 def test_NumberSymbol_comparison():
+    from sympy.core.tests.test_relational import rel_check
     rpi = Rational('905502432259640373/288230376151711744')
     fpi = Float(float(pi))
-
-    assert (rpi == pi) == (pi == rpi)
-    assert (rpi != pi) == (pi != rpi)
-    assert (rpi < pi) == (pi > rpi)
-    assert (rpi <= pi) == (pi >= rpi)
-    assert (rpi > pi) == (pi < rpi)
-    assert (rpi >= pi) == (pi <= rpi)
-
-    assert (fpi == pi) == (pi == fpi)
-    assert (fpi != pi) == (pi != fpi)
-    assert (fpi < pi) == (pi > fpi)
-    assert (fpi <= pi) == (pi >= fpi)
-    assert (fpi > pi) == (pi < fpi)
-    assert (fpi >= pi) == (pi <= fpi)
+    assert rel_check(rpi, fpi)
 
 def test_Integer_precision():
     # Make sure Integer inputs for keyword args work

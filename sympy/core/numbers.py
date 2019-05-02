@@ -1311,73 +1311,60 @@ class Float(Number):
     def __ne__(self, other):
         return not self == other
 
-    def __gt__(self, other):
+    def _Frel(self, other, op):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         if other.is_NumberSymbol:
-            return other.__lt__(self)
-        if other.is_Rational and not other.is_Integer:
-            self *= other.q
-            other = _sympify(other.p)
-        elif other.is_comparable:
-            other = other.evalf()
-        if other.is_Number and other is not S.NaN:
+            return other
+        elif other.is_Rational:
+            # if you don't use self._prec here, the Rational
+            # will be choppped to default precision
+            other = Float(other, self._prec)
             return _sympify(bool(
-                mlib.mpf_gt(self._mpf_, other._as_mpf_val(self._prec))))
-        return Expr.__gt__(self, other)
+                        op(self._mpf_, other._mpf_)))
+        elif other.is_Float:
+            return _sympify(bool(
+                        op(self._mpf_, other._mpf_)))
+        elif other.is_comparable:
+            other = Float(other, self._prec)
+            if other._prec > 1:
+                if other.is_Number and other is not S.NaN:
+                    return _sympify(bool(
+                        op(self._mpf_, other._as_mpf_val(self._prec))))
+
+    def __gt__(self, other):
+        rv = self._Frel(other, mlib.mpf_gt)
+        if rv is None:
+            return Expr.__gt__(self, other)
+        if rv.is_NumberSymbol:
+            return rv.__lt__(self)
+        return rv
 
     def __ge__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if other.is_NumberSymbol:
-            return other.__le__(self)
-        if other.is_Rational and not other.is_Integer:
-            self *= other.q
-            other = _sympify(other.p)
-        elif other.is_comparable:
-            other = other.evalf()
-        if other.is_Number and other is not S.NaN:
-            return _sympify(bool(
-                mlib.mpf_ge(self._mpf_, other._as_mpf_val(self._prec))))
-        return Expr.__ge__(self, other)
+        rv = self._Frel(other, mlib.mpf_ge)
+        if rv is None:
+            return Expr.__ge__(self, other)
+        if rv.is_NumberSymbol:
+            return rv.__le__(self)
+        return rv
 
     def __lt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if other.is_NumberSymbol:
-            return other.__gt__(self)
-        if other.is_Rational and not other.is_Integer:
-            self *= other.q
-            other = _sympify(other.p)
-        elif other.is_comparable:
-            other = other.evalf()
-        if other.is_Number and other is not S.NaN:
-            return _sympify(bool(
-                mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec))))
-        return Expr.__lt__(self, other)
+        rv = self._Frel(other, mlib.mpf_lt)
+        if rv is None:
+            return Expr.__lt__(self, other)
+        if rv.is_NumberSymbol:
+            return rv.__gt__(self)
+        return rv
 
     def __le__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if other.is_NumberSymbol:
-            return other.__ge__(self)
-        if other.is_Rational and not other.is_Integer:
-            self *= other.q
-            other = _sympify(other.p)
-        elif other.is_comparable:
-            other = other.evalf()
-        if other.is_Number and other is not S.NaN:
-            return _sympify(bool(
-                mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec))))
-        return Expr.__le__(self, other)
+        rv = self._Frel(other, mlib.mpf_le)
+        if rv is None:
+            return Expr.__le__(self, other)
+        if rv.is_NumberSymbol:
+            return rv.__ge__(self)
+        return rv
 
     def __hash__(self):
         return super(Float, self).__hash__()
@@ -1805,77 +1792,58 @@ class Rational(Number):
     def __ne__(self, other):
         return not self == other
 
-    def __gt__(self, other):
+    def _Rrel(self, other, attr):
+        # if you want self < other, pass self, other, __gt__
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if other.is_NumberSymbol:
-            return other.__lt__(self)
-        expr = self
         if other.is_Number:
-            if other.is_Rational:
-                return _sympify(bool(self.p*other.q > self.q*other.p))
-            if other.is_Float:
-                return _sympify(bool(mlib.mpf_gt(
-                    self._as_mpf_val(other._prec), other._mpf_)))
-        elif other.is_number and other.is_real:
-            expr, other = Integer(self.p), self.q*other
-        return Expr.__gt__(expr, other)
+            op = None
+            if other.is_NumberSymbol:
+                op = getattr(other, attr)
+            elif other.is_Float:
+                op = getattr(other, attr)
+            elif other.is_Rational:
+                self, other = self.p*other.q, self.q*other.p
+                other = _sympify(other)
+                op = getattr(other, attr)
+            if op:
+                return op(self)
+            if other.is_number and other.is_real:
+                return Integer(self.p), self.q*other
+
+    def __gt__(self, other):
+        rv = self._Rrel(other, '__lt__')
+        if rv is None:
+            rv = self, other
+        elif not type(rv) is tuple:
+            return rv
+        return Expr.__gt__(*rv)
 
     def __ge__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if other.is_NumberSymbol:
-            return other.__le__(self)
-        expr = self
-        if other.is_Number:
-            if other.is_Rational:
-                 return _sympify(bool(self.p*other.q >= self.q*other.p))
-            if other.is_Float:
-                return _sympify(bool(mlib.mpf_ge(
-                    self._as_mpf_val(other._prec), other._mpf_)))
-        elif other.is_number and other.is_real:
-            expr, other = Integer(self.p), self.q*other
-        return Expr.__ge__(expr, other)
+        rv = self._Rrel(other, '__le__')
+        if rv is None:
+            rv = self, other
+        elif not type(rv) is tuple:
+            return rv
+        return Expr.__ge__(*rv)
 
     def __lt__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if other.is_NumberSymbol:
-            return other.__gt__(self)
-        expr = self
-        if other.is_Number:
-            if other.is_Rational:
-                return _sympify(bool(self.p*other.q < self.q*other.p))
-            if other.is_Float:
-                return _sympify(bool(mlib.mpf_lt(
-                    self._as_mpf_val(other._prec), other._mpf_)))
-        elif other.is_number and other.is_real:
-            expr, other = Integer(self.p), self.q*other
-        return Expr.__lt__(expr, other)
+        rv = self._Rrel(other, '__gt__')
+        if rv is None:
+            rv = self, other
+        elif not type(rv) is tuple:
+            return rv
+        return Expr.__lt__(*rv)
 
     def __le__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        expr = self
-        if other.is_NumberSymbol:
-            return other.__ge__(self)
-        elif other.is_Number:
-            if other.is_Rational:
-                return _sympify(bool(self.p*other.q <= self.q*other.p))
-            if other.is_Float:
-                return _sympify(bool(mlib.mpf_le(
-                    self._as_mpf_val(other._prec), other._mpf_)))
-        elif other.is_number and other.is_real:
-            expr, other = Integer(self.p), self.q*other
-        return Expr.__le__(expr, other)
+        rv = self._Rrel(other, '__ge__')
+        if rv is None:
+            rv = self, other
+        elif not type(rv) is tuple:
+            return rv
+        return Expr.__le__(*rv)
 
     def __hash__(self):
         return super(Rational, self).__hash__()

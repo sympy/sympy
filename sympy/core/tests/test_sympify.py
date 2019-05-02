@@ -161,9 +161,17 @@ def test_sympify_bool():
 def test_sympyify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(['.3', '.2'], rational=True) == ans
-    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
     assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
     assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
+
+
+@XFAIL
+def test_issue_16772():
+    # because there is a converter for tuple, the
+    # args are only sympified without the flags being passed
+    # along; list, on the other hand, is not converted
+    # with a converter so its args are traversed later
+    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
 
 
 def test_sympify4():
