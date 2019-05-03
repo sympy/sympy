@@ -2135,7 +2135,23 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             i = len(args) + 1
 
         exprs = Tuple(*args[:i])
-        free_symbols = list(set().union(*[e.free_symbols for e in exprs]))
+        free_symbols = list(set().union(*[e.free_symbols for e in exprs])) # sum(args[:expr_len]).free_symbols 
+
+        #Warn: Dimension
+        variables = set(free_symbols)
+        specify_symbols = set([s[0] for s in args[expr_len:]])
+        all_symbols = variables | specify_symbols
+        if len(all_symbols) > len(variables):
+            msj = "Dimension Error: there be a variable ranged that ins´t part of any ecuation!"
+            raise Exception(msj)
+        if len(all_symbols) > nb_of_free_symbols:
+            if specify_symbols == set():
+                msj =  "\nYou should be use ONLY %s (%s) parameters from %s"%("one" if nb_of_free_symbols is 1 else "two" if nb_of_free_symbols is 2 else "", nb_of_free_symbols, all_symbols)
+                raise Exception(msj)
+            msj = "\nYou should be use ONLY %s (%s) parameters, but was given %s.  %s!"%("one" if nb_of_free_symbols is 1 else "two" if nb_of_free_symbols is 2 else "", nb_of_free_symbols, all_symbols, (",  {} = range(*)"*len(specify_symbols)).format(*specify_symbols)[3:])
+            raise Exception(msj)
+        #specify_symbols | set(tuple(variables-specify_symbols)[:nb_of_free_symbols-len(specify_symbols)])
+        #end
         if len(args) == expr_len + nb_of_free_symbols:
             #Ranges given
             plots = [exprs + Tuple(*args[expr_len:])]
@@ -2192,7 +2208,15 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
 
     elif isinstance(args[0], Tuple) and len(args[0]) == expr_len + nb_of_free_symbols:
         #Multiple plots with different ranges.
+        lst = []
         for arg in args:
+            #Warn: Dimension
+            sbls = sum(arg[:expr_len]).free_symbols
+            specify_symbols = set([s[0] for s in arg[expr_len:]])
+            if len(sbls) != nb_of_free_symbols or specify_symbols-sbls:
+                lst.append((sbls, specify_symbols))#ranged_symbols = sum([])
+                continue
+            #end
             for i in range(expr_len):
                 if not isinstance(arg[i], Expr):
                     raise ValueError("Expected an expression, given %s" %
@@ -2201,4 +2225,9 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
                 if not len(arg[i + expr_len]) == 3:
                     raise ValueError("The ranges should be a tuple of "
                                      "length 3, got %s" % str(arg[i + expr_len]))
+
+        if lst:
+            msj = "\nYou should be use ONLY %s (%s) parameters, but was given %s.  %s!"%("one" if nb_of_free_symbols is 1 else "two" if nb_of_free_symbols is 2 else "", nb_of_free_symbols, all_symbols, (",  {} = range(*)"*len(specify_symbols)).format(*specify_symbols)[3:])
+            raise Exception(msj)
+
         return args
