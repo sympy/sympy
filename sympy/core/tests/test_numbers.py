@@ -19,9 +19,9 @@ from sympy.utilities.pytest import XFAIL, raises
 from mpmath import mpf
 from mpmath.rational import mpq
 import mpmath
-
-
-
+from sympy.external import import_module
+nums = import_module('numbers')
+from sympy import numbers
 t = Symbol('t', real=False)
 
 def same_and_same_prec(a, b):
@@ -1912,3 +1912,16 @@ def test_issue_6133():
     raises(TypeError, lambda: (oo < None))
     raises(TypeError, lambda: (oo > None))
     raises(TypeError, lambda: (S(2) < None))
+
+def test_abc():
+    x = numbers.Float(5)
+    assert(isinstance(x, nums.Number))
+    assert(isinstance(x, numbers.Number))
+    assert(isinstance(x, nums.Real))
+    y = numbers.Rational(1, 3)
+    assert(isinstance(y, nums.Number))
+    assert(y.numerator() == 1)
+    assert(y.denominator() == 3)
+    assert(isinstance(y, nums.Rational))
+    z = numbers.Integer(3)
+    assert(isinstance(z, nums.Number))
