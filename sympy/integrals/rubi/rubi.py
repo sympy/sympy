@@ -85,7 +85,7 @@ def process_final_integral(expr):
     When there is recursion for more than 10 rules or in total 20 rules have been applied
     rubi returns `Integrate` in order to stop any further matching. After complete integration,
     Integrate needs to be replaced back to Integral. Also rubi's `rubi_exp`
-     need to be replaced back to sympy's general `exp`.
+    need to be replaced back to sympy's general `exp`.
 
     Examples
     ========
