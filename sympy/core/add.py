@@ -389,6 +389,12 @@ class Add(Expr, AssocOp):
                         r - i*S.ImaginaryUnit,
                         1/(r**2 + i**2))
         elif e.is_Number and abs(e) != 1:
+          c, p = self.as_content_primitive()
+          if c != 1:
+                # handle the Rational case:
+                # (3/2 + 6*x)**e -> (3/2)**e*(1 + 4*x)**e
+                return c**e*p**e
+          # handle the Float case: (2.0 + 4*x)**e -> 2.**e*(1 + 2.0*x)**e
           c, m = zip(*[i.as_coeff_Mul() for i in self.args])
           big = 0
           float = False
@@ -398,7 +404,8 @@ class Add(Expr, AssocOp):
                   big = 1.0*abs(i)
                   s = -1 if i < 0 else 1
           if float and big and big != 1:
-              addpow = Add(*[(s if abs(c[i]) == big else c[i]/big)*m[i] for i in range(len(c))])**e
+              addpow = Add(*[(s if abs(c[i]) == big else c[i]/big)*m[i]
+                             for i in range(len(c))])**e
               return big**e*addpow
 
     @cacheit
