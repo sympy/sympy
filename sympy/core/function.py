@@ -3056,9 +3056,10 @@ def count_ops(expr, visual=False):
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
 
-def nfloat(expr, n=15, exponent=False):
+def nfloat(expr, n=15, exponent=False, dkeys=False):
     """Make all Rationals in expr Floats except those in exponents
-    (unless the exponents flag is set to True).
+    (unless the exponents flag is set to True). When processing
+    dictionaries, don't modify the keys unless ``dkeys=True``.
 
     Examples
     ========
@@ -3071,22 +3072,31 @@ def nfloat(expr, n=15, exponent=False):
     >>> nfloat(x**4 + sqrt(y), exponent=True)
     x**4.0 + y**0.5
 
+    Container types are not modified:
+
+    >>> type(nfloat((1, 2))) is tuple
+    True
     """
     from sympy.core.power import Pow
     from sympy.polys.rootoftools import RootOf
 
-    # special handling
-    # (note: Relationals might evaluate during this process
-    # and a change has been made to evalf to detect this; another
-    # possibility is to treat them as a special case here and
-    # iterate over their arguments
+    kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+    # handling of iterable containers
     if iterable(expr, exclude=string_types):
-        if isinstance(expr, Basic):
-            return type(expr)(*[nfloat(a, n, exponent) for a in expr.args])
-        if isinstance(expr, dict):
-            return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
-                               expr.items()])
-        return type(expr)([nfloat(a, n, exponent) for a in expr])
+        if isinstance(expr, (dict, Dict)):
+            if dkeys:
+                args = [tuple(map(lambda i: nfloat(i, **kw), a))
+                    for a in expr.items()]
+            else:
+                args = [(k, nfloat(v, **kw)) for k, v in expr.items()]
+            if isinstance(expr, dict):
+                return type(expr)(args)
+            else:
+                return expr.func(*args)
+        elif isinstance(expr, Basic):
+            return expr.func(*[nfloat(a, **kw) for a in expr.args])
+        return type(expr)([nfloat(a, **kw) for a in expr])
+
     rv = sympify(expr)
 
     if rv.is_Number:

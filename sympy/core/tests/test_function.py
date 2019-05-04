@@ -822,8 +822,6 @@ def test_nfloat():
     assert _aresame(nfloat(big), Float_big)
     assert _aresame(nfloat(big*x), Float_big*x)
     assert _aresame(nfloat(x**big, exponent=True), x**Float_big)
-    assert nfloat({x: sqrt(2)}) == {x: nfloat(sqrt(2))}
-    assert nfloat({sqrt(2): x}) == {sqrt(2): x}
     assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
 
     # issue 6342
@@ -839,11 +837,16 @@ def test_nfloat():
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
 
     # issue 10933
-    assert _aresame(list(nfloat({x: S.Half}).values()).pop(), Float(.5))
-    d = Dict({x: S.Half})
-    n = nfloat(d)
-    assert isinstance(n, Dict)
-    assert _aresame(list(n.values()).pop(), Float(.5))
+    for t in (dict, Dict):
+        d = t({S.Half: S.Half})
+        n = nfloat(d)
+        assert isinstance(n, t)
+        assert _aresame(list(n.items()).pop(), (S.Half, Float(.5)))
+    for t in (dict, Dict):
+        d = t({S.Half: S.Half})
+        n = nfloat(d, dkeys=True)
+        assert isinstance(n, t)
+        assert _aresame(list(n.items()).pop(), (Float(.5), Float(.5)))
     d = [S.Half]
     n = nfloat(d)
     assert type(n) is list
@@ -852,6 +855,8 @@ def test_nfloat():
     assert _aresame(nfloat(S(True)), S(True))
     assert _aresame(nfloat(Tuple(S.Half))[0], Float(.5))
     assert nfloat(Eq((3 - I)**2/2 + I, 0)) == S.false
+    # pass along kwargs
+    assert nfloat([{S.Half: x}], dkeys=True) == [{Float(0.5): x}]
 
 
 def test_issue_7068():
