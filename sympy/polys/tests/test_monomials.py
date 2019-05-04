@@ -80,7 +80,7 @@ def test_monomials():
 
     # degree_list tests
     assert set(itermonomials([], [])) == {S(1)}
-    
+
     raises(ValueError, lambda: set(itermonomials([], [0])))
     raises(ValueError, lambda: set(itermonomials([], [1])))
     raises(ValueError, lambda: set(itermonomials([], [2])))
