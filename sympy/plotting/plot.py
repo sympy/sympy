@@ -2138,8 +2138,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         free_symbols = list(set().union(*[e.free_symbols for e in exprs])) # sum(args[:expr_len]).free_symbols 
 
         #Warn: Dimension
-        variables = set(free_symbols)
-        specify_symbols = set([s[0] for s in args[expr_len:]])
+        variables = set(free_symbols) # get all variables
+        specify_symbols = set([s[0] for s in args[expr_len:]]) # get symbols from all ranges
         all_symbols = variables | specify_symbols
         if len(all_symbols) > len(variables):
             msj = "Dimension Error: there be a variable ranged that ins´t part of any ecuation!"
@@ -2150,7 +2150,6 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
                 raise Exception(msj)
             msj = "\nYou should be use ONLY %s (%s) parameters, but was given %s.  %s!"%("one" if nb_of_free_symbols is 1 else "two" if nb_of_free_symbols is 2 else "", nb_of_free_symbols, all_symbols, (",  {} = range(*)"*len(specify_symbols)).format(*specify_symbols)[3:])
             raise Exception(msj)
-        #specify_symbols | set(tuple(variables-specify_symbols)[:nb_of_free_symbols-len(specify_symbols)])
         #end
         if len(args) == expr_len + nb_of_free_symbols:
             #Ranges given
@@ -2211,10 +2210,10 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         lst = []
         for arg in args:
             #Warn: Dimension
-            sbls = sum(arg[:expr_len]).free_symbols
-            specify_symbols = set([s[0] for s in arg[expr_len:]])
+            sbls = sum(arg[:expr_len]).free_symbols # get all variables
+            specify_symbols = set([s[0] for s in arg[expr_len:]]) # get symbols from all ranges
             if len(sbls) != nb_of_free_symbols or specify_symbols-sbls:
-                lst.append((sbls, specify_symbols))#ranged_symbols = sum([])
+                lst.append((sbls, specify_symbols))
                 continue
             #end
             for i in range(expr_len):
