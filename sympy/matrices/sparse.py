@@ -22,6 +22,21 @@ class SparseMatrix(MatrixBase):
     """
     A sparse matrix (a matrix with a large number of zero elements).
 
+    Parameters
+    ==========
+
+    callback_sympy_indices : Boolean, optional
+        If ``True``, it passes SymPy ``Integer`` type as arguments for
+        the callback function.
+
+        If ``False``, it passes python's ``int`` type as arguments for
+        the callback function.
+
+        It only affects the creation of a matrix from the 3 arguments,
+        specified as ``rows, cols, func``.
+
+        Default is ``True``
+
     Examples
     ========
 
@@ -130,7 +145,17 @@ class SparseMatrix(MatrixBase):
                 op = args[2]
                 rows = self.rows
                 cols = self.cols
-                rows_range = cols_range = [cls._sympify(i) for i in range(max(rows, cols))]
+
+                callback_sympy_indices = \
+                    kwargs.get('callback_sympy_indices', True)
+
+                if callback_sympy_indices:
+                    rows_range = cols_range = \
+                        [cls._sympify(i) for i in range(max(rows, cols))]
+                else:
+                    rows_range = cols_range = \
+                        [i for i in range(max(rows, cols))]
+
                 if rows < cols:
                     rows_range = rows_range[:rows]
                 elif cols < rows:

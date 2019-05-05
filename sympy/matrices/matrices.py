@@ -2448,6 +2448,21 @@ class MatrixBase(MatrixDeprecated,
     def _handle_creation_inputs(cls, *args, **kwargs):
         """Return the number of rows, cols and flat matrix elements.
 
+        Parameters
+        ==========
+
+        callback_sympy_indices : Boolean, optional
+            If ``True``, it passes SymPy ``Integer`` type as arguments
+            for the callback function.
+
+            If ``False``, it passes python's ``int`` type as arguments
+            for the callback function.
+
+            It only affects the creation of a matrix from the 3
+            arguments, specified as ``rows, cols, func``.
+
+            Default is ``True``
+
         Examples
         ========
 
@@ -2636,9 +2651,19 @@ class MatrixBase(MatrixDeprecated,
 
             # Matrix(2, 2, lambda i, j: i+j)
             if len(args) == 3 and isinstance(args[2], Callable):
+                callback_sympy_indices = \
+                    kwargs.get('callback_sympy_indices', True)
+
                 op = args[2]
                 flat_list = []
-                rows_range = cols_range = [cls._sympify(i) for i in range(max(rows, cols))]
+
+                if callback_sympy_indices:
+                    rows_range = cols_range = \
+                        [cls._sympify(i) for i in range(max(rows, cols))]
+                else:
+                    rows_range = cols_range = \
+                        [i for i in range(max(rows, cols))]
+
                 if rows < cols:
                     rows_range = rows_range[:rows]
                 elif cols < rows:
