@@ -2638,8 +2638,11 @@ class MatrixBase(MatrixDeprecated,
             if len(args) == 3 and isinstance(args[2], Callable):
                 op = args[2]
                 flat_list = []
-                rows_range = [cls._sympify(i) for i in range(rows)]
-                cols_range = [cls._sympify(j) for j in range(cols)]
+                rows_range = cols_range = [cls._sympify(i) for i in range(max(rows, cols))]
+                if rows < cols:
+                    rows_range = rows_range[:rows]
+                elif cols < rows:
+                    cols_range = cols_range[:cols]
                 for i in rows_range:
                     flat_list.extend(
                         [cls._sympify(op(i, j)) for j in cols_range])
