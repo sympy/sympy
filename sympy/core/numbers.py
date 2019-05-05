@@ -920,6 +920,7 @@ class Float(Number):
     is_irrational = None
     is_number = True
 
+    is_real = True
     is_extended_real = True
 
     is_Float = True
