@@ -414,27 +414,27 @@ def test_Float():
     a = Float(2) ** Float(4)
     assert eq(a.evalf(), Float(16))
     assert (S(.3) == S(.5)) is False
-    x_str = Float((0, '13333333333333', -52, 53))
-    x2_str = Float((0, '26666666666666', -53, 53))
+    mpf = (0, 5404319552844595, -52, 53)
+    x_str =  Float((0, '13333333333333', -52, 53))
+    x2_str = Float((0, '26666666666666', -53, 54))
     x_hex = Float((0, long(0x13333333333333), -52, 53))
-    x_dec = Float((0, 5404319552844595, -52, 53))
+    x_dec = Float(mpf)
     assert x_str == x_hex == x_dec == Float(1.2)
-    # This looses a binary digit of precision, so it isn't equal to the above,
-    # but check that it normalizes correctly
-    x2_hex = Float((0, long(0x13333333333333)*2, -53, 53))
-    assert x2_hex._mpf_ == (0, 5404319552844595, -52, 52)
-    # XXX: Should this test also hold?
-    # assert x2_hex._prec == 52
-
-    # x2_str and 1.2 are superficially the same
-    assert str(x2_str) == str(Float(1.2))
-    # but are different at the mpf level
-    assert Float(1.2)._mpf_ == (0, long(5404319552844595), -52, 53)
-    assert x2_str._mpf_ == (0, long(10808639105689190), -53, 53)
+    # x2_str was entered slightly malformed in that the mantissa
+    # was even -- it should be odd and the even part should be
+    # included with the exponent, but this is resolved by normalization
+    # ONLY IF REQUIREMENTS of mpf_norm are met: the bitcount must
+    # be exact: double the mantissa ==> increase bc by 1
+    assert Float(1.2)._mpf_ == mpf
+    assert x2_str._mpf_ == mpf
 
     assert Float((0, long(0), -123, -1)) is S.NaN
     assert Float((0, long(0), -456, -2)) is S.Infinity
     assert Float((1, long(0), -789, -3)) is S.NegativeInfinity
+    # if you don't give the full signature, it's not special
+    assert Float((0, long(0), -123)) == Float(0)
+    assert Float((0, long(0), -456)) == Float(0)
+    assert Float((1, long(0), -789)) == Float(0)
 
     raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
 

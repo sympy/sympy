@@ -1096,12 +1096,6 @@ class Float(Number):
                         assert all(type(i) is int for i in num)
                     except AssertionError:
                         raise ValueError('malformed mpf: %s' % num)
-                    if num == _mpf_nan[:3]:
-                       return S.NaN
-                    elif num == _mpf_inf[:3]:
-                        return S.Infinity
-                    elif num == _mpf_ninf[:3]:
-                        return S.NegativeInfinity
                     else:
                         # don't compute number or else it may
                         # over/underflow
