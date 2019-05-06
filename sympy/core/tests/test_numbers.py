@@ -348,8 +348,8 @@ def test_Number_new():
     raises(TypeError, lambda: Number(cos))
     a = Rational(3, 5)
     assert Number(a) is a  # Check idempotence on Numbers
-    u = '-inf', 'inf', '+inf', 'nan', 'Inf'  # etc...
-    v = [Float(i) for i in u]
+    u = ['inf', '-inf', 'nan', 'iNF', '+inf']
+    v = [oo, -oo, nan, oo, oo]
     for i, a in zip(u, v):
         assert Number(i) is a, (i, Number(i), a)
 
@@ -435,8 +435,6 @@ def test_Float():
     assert Float((0, long(0), -123, -1)) is S.NaN
     assert Float((0, long(0), -456, -2)) is S.Infinity
     assert Float((1, long(0), -789, -3)) is S.NegativeInfinity
-    assert Float(oo) is Float('+_inf') is S.Infinity
-    assert Float(-oo) is Float('-_inf') is S.NegativeInfinity
 
     raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
 
@@ -493,6 +491,7 @@ def test_Float():
     raises(ValueError, lambda: Float('1_.'))
     raises(ValueError, lambda: Float('1._'))
     raises(ValueError, lambda: Float('1__2'))
+    raises(ValueError, lambda: Float('_inf'))
 
     # allow auto precision detection
     assert Float('.1', '') == Float(.1, 1)
@@ -551,6 +550,13 @@ def test_Float():
     # from NumberSymbol
     assert same_and_same_prec(Float(pi, 32), pi.evalf(32))
     assert same_and_same_prec(Float(Catalan), Catalan.evalf())
+
+    # oo and nan
+    u = ['inf', '-inf', 'nan', 'iNF', '+inf']
+    v = [oo, -oo, nan, oo, oo]
+    for i, a in zip(u, v):
+        assert Float(i) is a
+
 
 
 @conserve_mpmath_dps

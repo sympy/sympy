@@ -20,6 +20,7 @@ from sympy.core.cache import lru_cache
 
 import mpmath
 import mpmath.libmp as mlib
+from mpmath.libmp import bitcount
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp import mpnumeric
@@ -927,6 +928,14 @@ class Float(Number):
     precision. The mpf tuple and the precision are two separate quantities
     that Float tracks.
 
+    In SymPy, a Float is a number that can be computed with arbitrary
+    precision. Although floating point 'inf' and 'nan' are not such
+    numbers, Float can create these numbers:
+
+    >>> Float('-inf')
+    -oo
+    >>> _.is_Float
+    False
     """
     __slots__ = ['_mpf_', '_prec']
 
@@ -956,21 +965,26 @@ class Float(Number):
                              'Supply only one. ')
 
         if isinstance(num, string_types):
-            # Float already accepts spaces as digit separators; in Py 3.6
+            # Float accepts spaces as digit separators
+            num = num.replace(' ', '').lower()
+            # in Py 3.6
             # underscores are allowed. In anticipation of that, we ignore
             # legally placed underscores
-            num = num.replace(' ', '')
             if '_' in num:
-                if num.startswith('_') or num.endswith('_') or any(
-                        i in num for i in ('__', '_.', '._')):
+                parts = num.split('_')
+                if not (all(parts) and
+                        all(parts[i][-1].isdigit()
+                            for i in range(0, len(parts), 2)) and
+                        all(parts[i][0].isdigit()
+                            for i in range(1, len(parts), 2))):
                     # copy Py 3.6 error
                     raise ValueError("could not convert string to float: '%s'" % num)
-                num = num.replace('_', '')
+                num = ''.join(parts)
             if num.startswith('.') and len(num) > 1:
                 num = '0' + num
             elif num.startswith('-.') and len(num) > 2:
                 num = '-0.' + num[2:]
-            elif num == 'inf' or num == '+inf':
+            elif num in ('inf', '+inf'):
                 return S.Infinity
             elif num == '-inf':
                 return S.NegativeInfinity
@@ -980,11 +994,15 @@ class Float(Number):
             return S.Infinity
         elif isinstance(num, float) and num == float('-inf'):
             return S.NegativeInfinity
+        elif isinstance(num, float) and num == float('nan'):
+            return S.NaN
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)  # faster than mlib.from_int
         elif num is S.Infinity:
             return num
         elif num is S.NegativeInfinity:
+            return num
+        elif num is S.NaN:
             return num
         elif type(num).__module__ == 'numpy': # support for numpy datatypes
             num = _convert_numpy_types(num)
@@ -1052,8 +1070,7 @@ class Float(Number):
             elif num.is_infinite():
                 if num > 0:
                     return S.Infinity
-                else:
-                    return S.NegativeInfinity
+                return S.NegativeInfinity
             else:
                 raise ValueError("unexpected decimal value %s" % str(num))
         elif isinstance(num, tuple) and len(num) in (3, 4):
@@ -1073,33 +1090,37 @@ class Float(Number):
                     # handle normalization hack
                     return Float._new(num, precision)
                 else:
-                    return (S.NegativeOne**num[0]*num[1]*S(2)**num[2]).evalf(precision)
+                    try:
+                        assert num[0] in (0, 1)
+                        assert num[1] >= 0
+                        assert all(type(i) is int for i in num)
+                    except AssertionError:
+                        raise ValueError('malformed mpf: %s' % num)
+                    if num == _mpf_nan[:3]:
+                       return S.NaN
+                    elif num == _mpf_inf[:3]:
+                        return S.Infinity
+                    elif num == _mpf_ninf[:3]:
+                        return S.NegativeInfinity
+                    else:
+                        # don't compute number or else it may
+                        # over/underflow
+                        return Float._new(
+                            (num[0], num[1], num[2], bitcount(num[1])),
+                            precision)
         else:
             try:
                 _mpf_ = num._as_mpf_val(precision)
             except (NotImplementedError, AttributeError):
                 _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
 
-        # special cases
-        if _mpf_ == _mpf_zero:
-            pass  # we want a Float
-        elif _mpf_ == _mpf_nan:
-            return S.NaN
-        elif _mpf_ == _mpf_inf:
-            return S.Infinity
-        elif _mpf_ == _mpf_ninf:
-            return S.NegativeInfinity
-
-        obj = Expr.__new__(cls)
-        obj._mpf_ = _mpf_
-        obj._prec = precision
-        return obj
+        return cls._new(_mpf_, precision, zero=False)
 
     @classmethod
-    def _new(cls, _mpf_, _prec):
+    def _new(cls, _mpf_, _prec, zero=True):
         # special cases
-        if _mpf_ == _mpf_zero:
-            return S.Zero  # XXX this is different from Float which gives 0.0
+        if zero and _mpf_ == _mpf_zero:
+            return S.Zero  # Float(0) -> 0.0; Float._new((0,0,0,0)) -> 0
         elif _mpf_ == _mpf_nan:
             return S.NaN
         elif _mpf_ == _mpf_inf:
