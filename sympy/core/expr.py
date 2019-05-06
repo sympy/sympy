@@ -725,7 +725,7 @@ class Expr(Basic, EvalfMixin):
         # to be zero -- we try to prove it via minimal_polynomial.
         if diff.is_number:
             approx = diff.nsimplify()
-            if not approx:
+            if not approx or approx == diff:
                 # try to prove via self-consistency
                 surds = [s for s in diff.atoms(Pow) if s.args[0].is_Integer]
                 # it seems to work better to try big ones first

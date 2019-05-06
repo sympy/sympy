@@ -677,7 +677,7 @@ class Pow(Expr):
                     # Allow fractional powers for commutative objects
                     pow = coeff1/coeff2
                     try:
-                        pow = as_int(pow, strict=False)
+                        as_int(pow, strict=False)
                         combines = True
                     except ValueError:
                         combines = isinstance(Pow._eval_power(
