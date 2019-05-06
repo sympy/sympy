@@ -15,6 +15,7 @@ from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.external import import_module
 
+from collections import defaultdict
 import mpmath
 from mpmath.rational import mpq
 
@@ -153,17 +154,50 @@ def test_sympify_float():
     assert sympify("1e-20000") != 0
 
 
-def test_sympify_bool():
+def test_sympify_bool_none_float_int():
+    assert sympify(None) is None
+    raises(SympifyError, lambda: sympify(None, strict=True))
     assert sympify(True) is true
     assert sympify(False) is false
+    assert sympify(.1) == Float(.1)
+    assert sympify(.1, rational=True) == Rational(.1)
+    assert sympify(1) is S.One
+    assert sympify(1, rational=True) is S.One
 
 
 def test_sympyify_iterables():
-    ans = [Rational(3, 10), Rational(1, 5)]
-    assert sympify(['.3', '.2'], rational=True) == ans
-    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
-    assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
-    assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
+    L = sympify(['.5'])
+    assert isinstance(L, list) and L[0] is not S.Half
+    T = sympify(tuple(['.5']))
+    assert isinstance(T, Tuple) and T[0] is not S.Half
+    D = sympify({1: .5})
+    assert D[1] is not S.Half and list(D.keys())[0] is S.One
+    D = sympify(defaultdict(int, {1: .5}))
+    assert list(D.keys())[0] is S.One
+    assert list(D.values())[0] is not S.Half
+    L = sympify(['1', '2', ['3', '.5']])
+    assert L == [S(1), S(2), [S(3), 0.5]] and L[-1][-1] is not S.Half
+    ans = [.5]
+    F = sympify(set(ans))
+    assert isinstance(F, FiniteSet)
+    assert list(F).pop() is not S.Half
+
+    L = sympify(['.5'], rational=True)
+    assert isinstance(L, list) and L[0] is S.Half
+    T = sympify(tuple(['.5']), rational=True)
+    assert isinstance(T, Tuple) and T[0] is S.Half
+    D = sympify({1: .5}, rational=True)
+    assert D[1] is S.Half and list(D.keys())[0] is S.One
+    D = sympify(defaultdict(int, {1: .5}), rational=True)
+    assert list(D.keys())[0] is S.One
+    assert list(D.values())[0] is S.Half
+    L = sympify(['1', '2', ['3', '.5']], rational=True)
+    assert L == [S(1), S(2), [S(3), S.Half]] and L[-1][-1] is S.Half
+    ans = [.5]
+    F = sympify(set(ans), rational=True)
+    assert isinstance(F, FiniteSet)
+    assert list(F).pop() is S.Half
+
 
 
 def test_sympify4():
@@ -604,12 +638,6 @@ def test_sympify_numpy():
     if hasattr(np, 'float128'):
         assert equal(sympify(np.float128(1.123456789123)),
                     Float(1.123456789123, precision=80))
-
-
-@XFAIL
-def test_sympify_rational_numbers_set():
-    ans = [Rational(3, 10), Rational(1, 5)]
-    assert sympify({'.3', '.2'}, rational=True) == FiniteSet(*ans)
 
 
 def test_issue_13924():

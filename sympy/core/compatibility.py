@@ -42,7 +42,7 @@ Moved modules:
     * `reduce()`
     * `StringIO()`
     * `cStringIO()` (same as `StingIO()` in Python 3)
-    * Python 2 `__builtins__`, access with Python 3 name, `builtins`
+    * Python 2 `__builtin__`, access with Python 3 name, `builtins`
 
 Iterator/list changes:
     * `xrange` renamed as `range` in Python 3, import `range` for Python 2/3

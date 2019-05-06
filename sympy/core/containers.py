@@ -268,6 +268,8 @@ class Dict(Basic):
         from sympy.utilities import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
+converter[dict] = lambda d: Dict(*d.items())
+
 
 class OrderedSet(MutableSet):
     def __init__(self, iterable=None):

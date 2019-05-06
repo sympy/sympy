@@ -3,6 +3,7 @@
 from __future__ import print_function, division
 
 from inspect import getmro
+from collections import defaultdict
 
 from .core import all_classes as sympy_classes
 from .compatibility import iterable, string_types, range
@@ -259,11 +260,34 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
 
     """
-    if evaluate is None:
-        if global_evaluate[0] is False:
-            evaluate = global_evaluate[0]
+    from .basic import Basic
+    from .numbers import Integer, Rational, Float
+
+    # don't do it
+    if isinstance(a, CantSympify):
+        raise SympifyError(a)
+
+    # let `a` do it
+    _sympy_ = getattr(a, "_sympy_", None)
+    if _sympy_ is not None:
+        return a._sympy_()
+
+    # True/False/None/float/int quick exits
+    if a is None:
+        if strict:
+            raise SympifyError(a)
         else:
-            evaluate = True
+            return a
+    if a is True or a is False:
+        return converter[bool](a)
+    if type(a) is float:
+        if rational:
+            return Rational(*a.as_integer_ratio())
+        return Float(a)
+    elif type(a) is int:
+        return Integer(a)
+
+    # SymPy class already
     try:
         if a in sympy_classes:
             return a
@@ -274,22 +298,52 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         cls = type(a) # Probably an old-style class
     if cls in sympy_classes:
         return a
-    if cls is type(None):
-        if strict:
-            raise SympifyError(a)
+
+    # kwargs
+    if evaluate is None:
+        if global_evaluate[0] is False:
+            evaluate = global_evaluate[0]
         else:
-            return a
+            evaluate = True
+    kw = dict(
+        locals=locals,
+        convert_xor=convert_xor,
+        strict=strict,
+        rational=rational,
+        evaluate=evaluate)
 
     # Support for basic numpy datatypes
     # Note that this check exists to avoid importing NumPy when not necessary
     if type(a).__module__ == 'numpy':
         import numpy as np
         if np.isscalar(a):
-            return _convert_numpy_types(a, locals=locals,
-                convert_xor=convert_xor, strict=strict, rational=rational,
-                evaluate=evaluate)
+            return _convert_numpy_types(a, **kw)
 
     try:
+        # need to handle these before allowing converter to wrap them;
+        # list isn't going to return but it gets handled like the
+        # others
+        if isinstance(a, (set, tuple)) or \
+                not strict and isinstance(a, list):
+            new = []
+            for i in a:
+                try:
+                    new.append(sympify(i, **kw))
+                except SympifyError:
+                    new.append(i)
+            a = type(a)(new)
+        elif not strict and isinstance(a, defaultdict):
+            kv = zip(
+                sympify(list(a.keys()), **kw),
+                sympify(list(a.values()), **kw))
+            a.clear()
+            a.update(list(kv))
+        elif isinstance(a, dict):
+            # send keys and values as tuple in case
+            # strict is enforced
+            a = dict(zip(
+                sympify(tuple(a.keys()), **kw),
+                sympify(tuple(a.values()), **kw)))
         return converter[cls](a)
     except KeyError:
         for superclass in getmro(cls):
@@ -297,19 +351,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 return converter[superclass](a)
             except KeyError:
                 continue
-
-    if isinstance(a, CantSympify):
-        raise SympifyError(a)
-
-    _sympy_ = getattr(a, "_sympy_", None)
-    if _sympy_ is not None:
-        try:
-            return a._sympy_()
-        # XXX: Catches AttributeError: 'SympyConverter' object has no
-        # attribute 'tuple'
-        # This is probably a bug somewhere but for now we catch it here.
-        except AttributeError:
-            pass
 
     if not strict:
         # Put numpy array conversion _before_ float/int, see
@@ -338,20 +379,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if strict:
         raise SympifyError(a)
 
-    if iterable(a):
-        try:
-            return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a])
-        except TypeError:
-            # Not all iterables are rebuildable with their type.
-            pass
-    if isinstance(a, dict):
-        try:
-            return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-                rational=rational) for x in a.items()])
-        except TypeError:
-            # Not all iterables are rebuildable with their type.
-            pass
+    # not supported via converter but ok if
+    # not strict
+    if isinstance(a, (list, defaultdict)):
+        return a
 
     # At this point we were given an arbitrary expression
     # which does not inherit from Basic and doesn't implement
@@ -360,7 +391,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     #
     # As a last chance, we try to take "a"'s normal form via unicode()
     # and try to parse it. If it fails, then we have no luck and
-    # return an exception
+    # return an exception.
     try:
         from .compatibility import unicode
         a = unicode(a)
@@ -369,15 +400,15 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     from sympy.parsing.sympy_parser import (parse_expr, TokenError,
                                             standard_transformations)
-    from sympy.parsing.sympy_parser import convert_xor as t_convert_xor
-    from sympy.parsing.sympy_parser import rationalize as t_rationalize
+    from sympy.parsing.sympy_parser import convert_xor as _convert_xor
+    from sympy.parsing.sympy_parser import rationalize as _rationalize
 
     transformations = standard_transformations
 
     if rational:
-        transformations += (t_rationalize,)
+        transformations += (_rationalize,)
     if convert_xor:
-        transformations += (t_convert_xor,)
+        transformations += (_convert_xor,)
 
     try:
         a = a.replace('\n', '')
