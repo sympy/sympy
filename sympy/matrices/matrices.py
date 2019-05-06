@@ -2468,8 +2468,12 @@ class MatrixBase(MatrixDeprecated,
 
             If ``False``, it skips the process.
 
-            This flag is unsafe for use if the input is not guaranteed
-            to be sanitized.
+            This flag is unsafe for use if the callabck returns python
+            ``int``, or ``float`` other than SymPy's ``Integer`` or
+            ``Float``, or any other SymPy's native types.
+
+            It only affects the creation of a matrix from the 3
+            arguments, specified as ``rows, cols, func``.
 
             Default is ``True``.
 
