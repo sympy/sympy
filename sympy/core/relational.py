@@ -543,6 +543,49 @@ class Equality(Relational):
                 pass
         return e.canonical
 
+    def subs(self, *args, **kwargs):  # should mirror sympy.core.basic.subs
+        r"""Return a new equation with subs applied to both sides.
+
+        **Examples:**
+
+        >>> from sympy import Eq, symbols
+        >>> a, b, c, x, y, z = symbols('a b c x y z')
+        >>> eq1 = Eq(y, a ** 3 + b ** 2 + c)
+        >>> eq_a = Eq(a, x / 2)
+        >>> eq_b = Eq(b, 2 * x)
+        >>> eq_c = Eq(c, x + 2)
+        >>> eq1.subs({a: eq_a.rhs, b: eq_b.rhs, c: eq_c.rhs})
+        Eq(y, x**3/8 + 4*x**2 + x + 2)
+        >>> eq1.subs({a: eq_a.rhs, b: eq_b.rhs})
+        Eq(y, c + x**3/8 + 4*x**2)
+        >>> eq1.subs(a, eq_a.rhs)
+        Eq(y, b**2 + c + x**3/8)
+        >>> eq1.subs(eq_a, eq_b, eq_c)
+        Eq(y, x**3/8 + 4*x**2 + x + 2)
+        >>> eq1.subs(eq_a, eq_b)
+        Eq(y, c + x**3/8 + 4*x**2)
+        >>> eq1.subs(eq_a)
+        Eq(y, b**2 + c + x**3/8)        
+
+        """
+        sequence = args
+        only_eqs = all(isinstance(arg, Eq) for arg in args)
+
+        if len(args) == 1:
+            if isinstance(args[0], Eq):
+                sequence = ({args[0].lhs: args[0].rhs}, )
+        elif len(args) == 2 and not only_eqs:
+                sequence = ({args[0]: args[1]}, )
+        elif args and only_eqs:
+            sub_eqs = {}
+            for arg in args:
+                sub_eqs[arg.lhs] = arg.rhs
+            sequence = (sub_eqs, )
+
+        return Eq(
+            self.lhs.subs(*sequence, **kwargs),
+            self.rhs.subs(*sequence, **kwargs),
+        )
 
 Eq = Equality
 
