@@ -25,17 +25,27 @@ class SparseMatrix(MatrixBase):
     Parameters
     ==========
 
-    callback_sympy_indices : Boolean, optional
-        If ``True``, it passes SymPy ``Integer`` type as arguments for
-        the callback function.
+    sympify_callback_arguments : Boolean, optional
+        If ``True``, it passes SymPy ``Integer`` type as arguments
+        for the callback function.
 
-        If ``False``, it passes python's ``int`` type as arguments for
-        the callback function.
+        If ``False``, it passes python's ``int`` type as arguments
+        for the callback function.
 
-        It only affects the creation of a matrix from the 3 arguments,
-        specified as ``rows, cols, func``.
+        It only affects the creation of a matrix from the 3
+        arguments, specified as ``rows, cols, func``.
 
-        Default is ``True``
+        Default is ``True``.
+
+    sympify_callback_return : Boolean, optional
+        If ``True``, it sympifies the return from the callback.
+
+        If ``False``, it skips the process.
+
+        This flag is unsafe for use if the input is not guaranteed
+        to be sanitized.
+
+        Default is ``True``.
 
     Examples
     ========
@@ -146,10 +156,12 @@ class SparseMatrix(MatrixBase):
                 rows = self.rows
                 cols = self.cols
 
-                callback_sympy_indices = \
-                    kwargs.get('callback_sympy_indices', True)
+                sympify_callback_arguments = \
+                    kwargs.get('sympify_callback_arguments', True)
+                sympify_callback_return = \
+                    kwargs.get('sympify_callback_return', True)
 
-                if callback_sympy_indices:
+                if sympify_callback_arguments:
                     rows_range = cols_range = \
                         [cls._sympify(i) for i in range(max(rows, cols))]
                 else:
@@ -160,11 +172,20 @@ class SparseMatrix(MatrixBase):
                     rows_range = rows_range[:rows]
                 elif cols < rows:
                     cols_range = cols_range[:cols]
-                for i in rows_range:
-                    for j in cols_range:
-                        value = self._sympify(op(i, j))
-                        if value:
-                            self._smat[i, j] = value
+
+                if sympify_callback_return:
+                    for i in rows_range:
+                        for j in cols_range:
+                            value = self._sympify(op(i, j))
+                            if value:
+                                self._smat[i, j] = value
+                else:
+                    for i in rows_range:
+                        for j in cols_range:
+                            value = op(i, j)
+                            if value:
+                                self._smat[i, j] = value
+
             elif isinstance(args[2], (dict, Dict)):
                 def update(i, j, v):
                     # update self._smat and make sure there are
