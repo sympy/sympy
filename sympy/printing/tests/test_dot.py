@@ -1,7 +1,8 @@
 from sympy.printing.dot import (purestr, styleof, attrprint, dotnode,
         dotedges, dotprint)
-from sympy import Symbol, Integer, Basic, Expr, srepr, Float
+from sympy import Symbol, Integer, Basic, Expr, srepr, Float, symbols
 from sympy.abc import x
+
 
 def test_purestr():
     assert purestr(Symbol('x')) == "Symbol('x')"
@@ -15,6 +16,7 @@ def test_styleof():
     assert styleof(Basic(1), styles) == {'color': 'blue', 'shape': 'ellipse'}
 
     assert styleof(x + 1, styles) == {'color': 'black', 'shape': 'ellipse'}
+
 
 def test_attrprint():
     assert attrprint({'color': 'blue', 'shape': 'ellipse'}) == \
@@ -75,3 +77,9 @@ def test_labelfunc():
     text = dotprint(x + 2, labelfunc=srepr)
     assert "Symbol('x')" in text
     assert "Integer(2)" in text
+
+
+def test_commutative():
+    x, y = symbols('x y', commutative=False)
+    assert dotprint(x + y) == dotprint(y + x)
+    assert dotprint(x*y) != dotprint(y*x)

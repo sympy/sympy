@@ -15,7 +15,6 @@ default_styles = ((Basic, {'color': 'blue', 'shape': 'ellipse'}),
           (Expr,  {'color': 'black'}))
 
 
-sort_classes = (Add, Mul)
 slotClasses = (Symbol, Integer, Rational, Float)
 def purestr(x, with_args=False):
     """ A string that follows obj = type(obj)(*obj.args) exactly """
@@ -26,7 +25,8 @@ def purestr(x, with_args=False):
         rv = srepr(x)
     else:
         args = x.args
-        if type(x) in sort_classes:
+        if isinstance(x, Add) or \
+                isinstance(x, Mul) and x.is_commutative:
             args = sorted(args, key=default_sort_key)
         sargs = tuple(map(purestr, args))
         rv = "%s(%s)"%(type(x).__name__, ', '.join(sargs))
