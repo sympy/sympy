@@ -221,70 +221,47 @@ imported from ``sympy.printing.mathml``.
 ``print_mathml()`` prints the output.  If you want the string, use the
 function ``mathml()``.
 
+.. graphviz::
+
 Dot
 ---
 
 The ``dotprint()`` function in ``sympy.printing.dot`` prints output to dot
-format, which can be rendered with Graphviz. `source <http://docs.sympy.org/0.7.5/_modules/sympy/printing/dot.html#dotprint>`_.
+format, which can be rendered with Graphviz.  See the
+:ref:`tutorial-manipulation` section for some examples of the output of this
+printer.
+
+Here is an example of the raw ouput of the ``dotprint()`` function
 
     >>> from sympy.printing.dot import dotprint
     >>> from sympy.abc import x
-    >>> print(dotprint(5*x**3 + sin(x)))
-.. graphviz::
-
+    >>> print(dotprint(x+2))
     digraph{
-
+    <BLANKLINE>
     # Graph style
     "ordering"="out"
     "rankdir"="TD"
-
+    <BLANKLINE>
     #########
     # Nodes #
     #########
-
-    "Add(Mul(Integer(5), Pow(Symbol(x), Integer(3))), sin(Symbol(x)))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
-    "Mul(Integer(5), Pow(Symbol(x), Integer(3)))_(0,)" ["color"="black", "label"="Mul", "shape"="ellipse"];
-    "Integer(5)_(0, 0)" ["color"="black", "label"="5", "shape"="ellipse"];
-    "Pow(Symbol(x), Integer(3))_(0, 1)" ["color"="black", "label"="Pow", "shape"="ellipse"];
-    "Symbol(x)_(0, 1, 0)" ["color"="black", "label"="x", "shape"="ellipse"];
-    "Integer(3)_(0, 1, 1)" ["color"="black", "label"="3", "shape"="ellipse"];
-    "sin(Symbol(x))_(1,)" ["color"="black", "label"="sin", "shape"="ellipse"];
-    "Symbol(x)_(1, 0)" ["color"="black", "label"="x", "shape"="ellipse"];
-
-    #########
-    # Edges #
-    ######### 
-
-    "Add(Mul(Integer(5), Pow(Symbol(x), Integer(3))), sin(Symbol(x)))_()" -> "Mul(Integer(5), Pow(Symbol(x), Integer(3)))_(0,)";
-    "Add(Mul(Integer(5), Pow(Symbol(x), Integer(3))), sin(Symbol(x)))_()" -> "sin(Symbol(x))_(1,)";
-    "Mul(Integer(5), Pow(Symbol(x), Integer(3)))_(0,)" -> "Integer(5)_(0, 0)";
-    "Mul(Integer(5), Pow(Symbol(x), Integer(3)))_(0,)" -> "Pow(Symbol(x), Integer(3))_(0, 1)";
-    "Pow(Symbol(x), Integer(3))_(0, 1)" -> "Symbol(x)_(0, 1, 0)";
-    "Pow(Symbol(x), Integer(3))_(0, 1)" -> "Integer(3)_(0, 1, 1)";
-    "sin(Symbol(x))_(1,)" -> "Symbol(x)_(1, 0)";
-    }
-
-    >>> from sympy.printing.dot import dotprint
-    >>> from sympy.abc import x
-    >>> print(dotprint(x+2)) 
-    digraph{
-    # Graph style
-    "ordering"="out"
-    "rankdir"="TD"
-    #########
-    # Nodes #
-    #########
-    "Add(Integer(2), Symbol(x))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    <BLANKLINE>
+    "Add(Integer(2), Symbol('x'))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
     "Integer(2)_(0,)" ["color"="black", "label"="2", "shape"="ellipse"];
-    "Symbol(x)_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
+    "Symbol('x')_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
+    <BLANKLINE>
     #########
     # Edges #
     #########
-    "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
-    "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
+    <BLANKLINE>
+    "Add(Integer(2), Symbol('x'))_()" -> "Integer(2)_(0,)";
+    "Add(Integer(2), Symbol('x'))_()" -> "Symbol('x')_(1,)";
     }
-
 
 .. rubric:: Footnotes
 
-.. [#srepr-fn] SymPy does not use the Python builtin ``repr()`` function for repr printing, because in Python ``str(list)`` calls ``repr()`` on the elements of the list, and some SymPy functions return lists (such as ``solve()``).  Since ``srepr()`` is so verbose, it is unlikely that anyone would want it called by default on the output of ``solve()``.
+.. [#srepr-fn] SymPy does not use the Python builtin ``repr()`` function for
+   repr printing, because in Python ``str(list)`` calls ``repr()`` on the
+   elements of the list, and some SymPy functions return lists (such as
+   ``solve()``).  Since ``srepr()`` is so verbose, it is unlikely that anyone
+   would want it called by default on the output of ``solve()``.
