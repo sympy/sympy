@@ -330,6 +330,65 @@ def test_creation():
     raises(ValueError, lambda: Matrix([ones(2), ones(3, 0)]))
 
 
+def test_creation_16723():
+    # Tests for callback input and output sanitization
+    assert Matrix(
+            2, 2, lambda i, j: i + j,
+            sympify_callback_arguments=True,
+            sympify_callback_return=True
+            ).tolist() == \
+                [[S(0), S(1)], [S(1), S(2)]]
+
+    assert Matrix(
+            2, 2, lambda i, j: i + j,
+            sympify_callback_arguments=True,
+            sympify_callback_return=False
+            ).tolist() == \
+                [[S(0), S(1)], [S(1), S(2)]]
+
+    assert Matrix(
+            2, 2, lambda i, j: i + j,
+            sympify_callback_arguments=False,
+            sympify_callback_return=True
+            ).tolist() == \
+                [[S(0), S(1)], [S(1), S(2)]]
+
+    assert Matrix(
+            2, 2, lambda i, j: i + j,
+            sympify_callback_arguments=False,
+            sympify_callback_return=False
+            ).tolist() == \
+                [[0, 1], [1, 2]]
+
+    assert Matrix(
+            2, 2, lambda i, j: 1 / (i + j + 1),
+            sympify_callback_arguments=True,
+            sympify_callback_return=True
+            ).tolist() == \
+                [[S(1), S(1)/2], [S(1)/2, S(1)/3]]
+
+    assert Matrix(
+            2, 2, lambda i, j: 1 / (i + j + 1),
+            sympify_callback_arguments=True,
+            sympify_callback_return=False
+            ).tolist() == \
+                [[S(1), S(1)/2], [S(1)/2, S(1)/3]]
+
+    assert Matrix(
+            2, 2, lambda i, j: 1 / (i + j + 1),
+            sympify_callback_arguments=False,
+            sympify_callback_return=True
+            ).tolist() == \
+                [[S(1), S(1)/2], [S(1)/2, S(1)/3]]
+
+    assert Matrix(
+            2, 2, lambda i, j: 1 / (i + j + 1),
+            sympify_callback_arguments=False,
+            sympify_callback_return=False
+            ).tolist() == \
+                [[1, 1/2], [1/2, 1/3]]
+
+
 def test_irregular_block():
     assert Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
         ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7) == Matrix([
