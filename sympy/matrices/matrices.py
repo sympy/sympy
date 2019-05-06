@@ -2451,7 +2451,7 @@ class MatrixBase(MatrixDeprecated,
         Parameters
         ==========
 
-        callback_sympy_indices : Boolean, optional
+        sympify_callback_arguments : Boolean, optional
             If ``True``, it passes SymPy ``Integer`` type as arguments
             for the callback function.
 
@@ -2461,7 +2461,17 @@ class MatrixBase(MatrixDeprecated,
             It only affects the creation of a matrix from the 3
             arguments, specified as ``rows, cols, func``.
 
-            Default is ``True``
+            Default is ``True``.
+
+        sympify_callback_return : Boolean, optional
+            If ``True``, it sympifies the return from the callback.
+
+            If ``False``, it skips the process.
+
+            This flag is unsafe for use if the input is not guaranteed
+            to be sanitized.
+
+            Default is ``True``.
 
         Examples
         ========
@@ -2651,13 +2661,15 @@ class MatrixBase(MatrixDeprecated,
 
             # Matrix(2, 2, lambda i, j: i+j)
             if len(args) == 3 and isinstance(args[2], Callable):
-                callback_sympy_indices = \
-                    kwargs.get('callback_sympy_indices', True)
+                sympify_callback_arguments = \
+                    kwargs.get('sympify_callback_arguments', True)
+                sympify_callback_return = \
+                    kwargs.get('sympify_callback_return', True)
 
                 op = args[2]
                 flat_list = []
 
-                if callback_sympy_indices:
+                if  sympify_callback_arguments:
                     rows_range = cols_range = \
                         [cls._sympify(i) for i in range(max(rows, cols))]
                 else:
@@ -2668,9 +2680,15 @@ class MatrixBase(MatrixDeprecated,
                     rows_range = rows_range[:rows]
                 elif cols < rows:
                     cols_range = cols_range[:cols]
-                for i in rows_range:
-                    flat_list.extend(
-                        [cls._sympify(op(i, j)) for j in cols_range])
+
+                if sympify_callback_return:
+                    for i in rows_range:
+                        flat_list.extend(
+                            [cls._sympify(op(i, j)) for j in cols_range])
+                else:
+                    for i in rows_range:
+                        flat_list.extend(
+                            [op(i, j) for j in cols_range])
 
             # Matrix(2, 2, [1, 2, 3, 4])
             elif len(args) == 3 and is_sequence(args[2]):
