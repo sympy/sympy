@@ -22,8 +22,15 @@ from sympy.core.compatibility import as_int, range
 from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
 
-__all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
-        'Binomial', 'Hypergeometric']
+__all__ = ['FiniteRV',
+'DiscreteUniform',
+'Die',
+'Bernoulli',
+'Coin',
+'Binomial',
+'Hypergeometric',
+'Rademacher'
+]
 
 def rv(name, cls, *args):
     density = cls(*args)

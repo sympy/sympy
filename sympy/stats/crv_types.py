@@ -47,11 +47,11 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfi, I, hyper, uppergamma,
-                   sinh, atan, Ne, expint)
+                   Lambda, Basic, lowergamma, erf, erfi,  erfinv, I, hyper,
+                   uppergamma, sinh, atan, Ne, expint)
 
 from sympy import beta as beta_fn
-from sympy import cos, sin, exp, besseli, besselj, besselk
+from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy.external import import_module
 from sympy.matrices import MatrixBase
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
@@ -490,6 +490,9 @@ class CauchyDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError("The moment generating function for the "
                                   "Cauchy distribution does not exist.")
+
+    def _quantile(self, p):
+        return self.x0 + self.gamma*tan(pi*(p - S.Half))
 
 def Cauchy(name, x0, gamma):
     r"""
@@ -946,6 +949,9 @@ class ExponentialDistribution(SingleContinuousDistribution):
         rate = self.rate
         return rate / (rate - t)
 
+    def _quantile(self, p):
+        return -log(1-p)/self.rate
+
 def Exponential(name, rate):
     r"""
     Create a continuous random variable with an Exponential distribution.
@@ -971,12 +977,12 @@ def Exponential(name, rate):
     ========
 
     >>> from sympy.stats import Exponential, density, cdf, E
-    >>> from sympy.stats import variance, std, skewness
-    >>> from sympy import Symbol
+    >>> from sympy.stats import variance, std, skewness, quantile
+    >>> from sympy import Symbol, symbols
 
     >>> l = Symbol("lambda", positive=True)
     >>> z = Symbol("z")
-
+    >>> p = Symbol("p")
     >>> X = Exponential("x", l)
 
     >>> density(X)(z)
@@ -984,6 +990,9 @@ def Exponential(name, rate):
 
     >>> cdf(X)(z)
     Piecewise((1 - exp(-lambda*z), z >= 0), (0, True))
+
+    >>> quantile(X)(p)
+    -log(1 - p)/lambda
 
     >>> E(X)
     1/lambda
@@ -1764,6 +1773,9 @@ class LogisticDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return exp(self.mu*t) * Beta(1 - self.s*t, 1 + self.s*t)
 
+    def _quantile(self, p):
+        return self.mu - self.s*log(-S.One + S.One/p)
+
 def Logistic(name, mu, s):
     r"""
     Create a continuous random variable with a logistic distribution.
@@ -2088,6 +2100,10 @@ class NormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return exp(mean*t + std**2*t**2/2)
 
+    def _quantile(self, p):
+        mean, std = self.mean, self.std
+        return mean + std*sqrt(2)*erfinv(2*p - 1)
+
 def Normal(name, mean, std):
     r"""
     Create a continuous random variable with a Normal distribution.
@@ -2112,13 +2128,14 @@ def Normal(name, mean, std):
     Examples
     ========
 
-    >>> from sympy.stats import Normal, density, E, std, cdf, skewness
+    >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile
     >>> from sympy import Symbol, simplify, pprint, factor, together, factor_terms
 
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
     >>> z = Symbol("z")
     >>> y = Symbol("y")
+    >>> p = Symbol("p")
     >>> X = Normal("x", mu, sigma)
 
     >>> density(X)(z)
@@ -2132,6 +2149,9 @@ def Normal(name, mean, std):
        \    2*sigma    /   1
     -------------------- + -
              2             2
+
+    >>> quantile(X)(p)
+    mu + sqrt(2)*sigma*erfinv(2*p - 1)
 
     >>> simplify(skewness(X))
     0
