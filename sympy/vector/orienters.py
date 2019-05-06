@@ -53,16 +53,16 @@ class AxisOrienter(Orienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
         >>> from sympy.vector import AxisOrienter
         >>> orienter = AxisOrienter(q1, N.i + 2 * N.j)
         >>> B = N.orient_new('B', (orienter, ))
 
         """
-        #Dummy initializer for docstrings
+        # Dummy initializer for docstrings
         pass
 
     @cacheit
@@ -74,7 +74,7 @@ class AxisOrienter(Orienter):
         Parameters
         ==========
 
-        system : CoordSysCartesian
+        system : CoordSys3D
             The coordinate system wrt which the rotation matrix
             is to be computed
         """
@@ -83,9 +83,9 @@ class AxisOrienter(Orienter):
         axis = axis.to_matrix(system)
         theta = self.angle
         parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
-                Matrix([[0, -axis[2], axis[1]],
-                        [axis[2], 0, -axis[0]],
-                    [-axis[1], axis[0], 0]]) * sin(theta) +
+                         Matrix([[0, -axis[2], axis[1]],
+                                 [axis[2], 0, -axis[0]],
+                                 [-axis[1], axis[0], 0]]) * sin(theta) +
                          axis * axis.T)
         parent_orient = parent_orient.T
         return parent_orient
@@ -116,7 +116,7 @@ class ThreeAngleOrienter(Orienter):
         rot_order = [i.replace('Y', '2') for i in rot_order]
         rot_order = [i.replace('Z', '3') for i in rot_order]
         rot_order = ''.join(rot_order)
-        if not rot_order in approved_orders:
+        if rot_order not in approved_orders:
             raise TypeError('Invalid rot_type parameter')
         a1 = int(rot_order[0])
         a2 = int(rot_order[1])
@@ -179,7 +179,7 @@ class BodyOrienter(ThreeAngleOrienter):
         successive simple rotations.
 
         Body fixed rotations include both Euler Angles and
-        Tait-Bryan Angles, see http://en.wikipedia.org/wiki/Euler_angles.
+        Tait-Bryan Angles, see https://en.wikipedia.org/wiki/Euler_angles.
 
         Parameters
         ==========
@@ -193,10 +193,10 @@ class BodyOrienter(ThreeAngleOrienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian, BodyOrienter
+        >>> from sympy.vector import CoordSys3D, BodyOrienter
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
 
         A 'Body' fixed rotation is described by three angles and
         three body-fixed rotation axes. To orient a coordinate system D
@@ -227,7 +227,7 @@ class BodyOrienter(ThreeAngleOrienter):
         >>> body_orienter3 = BodyOrienter(0, 0, 0, 'XYX')
 
         """
-        #Dummy initializer for docstrings
+        # Dummy initializer for docstrings
         pass
 
 
@@ -265,10 +265,10 @@ class SpaceOrienter(ThreeAngleOrienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian, SpaceOrienter
+        >>> from sympy.vector import CoordSys3D, SpaceOrienter
         >>> from sympy import symbols
         >>> q1, q2, q3 = symbols('q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
 
         To orient a coordinate system D with respect to N, each
         sequential rotation is always about N's orthogonal unit vectors.
@@ -290,7 +290,7 @@ class SpaceOrienter(ThreeAngleOrienter):
         >>> D = C.orient_new('C', (axis_orienter3, ))
 
         """
-        #Dummy initializer for docstrings
+        # Dummy initializer for docstrings
         pass
 
 
@@ -329,7 +329,7 @@ class QuaternionOrienter(Orienter):
 
     def __init__(self, angle1, angle2, angle3, rot_order):
         """
-        Quaternion orientation orients the new CoordSysCartesian with
+        Quaternion orientation orients the new CoordSys3D with
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
 
@@ -354,16 +354,16 @@ class QuaternionOrienter(Orienter):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSys3D
         >>> from sympy import symbols
         >>> q0, q1, q2, q3 = symbols('q0 q1 q2 q3')
-        >>> N = CoordSysCartesian('N')
+        >>> N = CoordSys3D('N')
         >>> from sympy.vector import QuaternionOrienter
         >>> q_orienter = QuaternionOrienter(q0, q1, q2, q3)
         >>> B = N.orient_new('B', (q_orienter, ))
 
         """
-        #Dummy initializer for docstrings
+        # Dummy initializer for docstrings
         pass
 
     @property

@@ -1,11 +1,13 @@
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
-                   exp_polar, polar_lift, O, stieltjes)
+                   exp_polar, polar_lift, O, stieltjes, Abs, Sum)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically as tn)
+from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
 
 x = Symbol('x')
 a = Symbol('a')
+b = Symbol('b', negative=True)
 z = Symbol('z')
 s = Symbol('s')
 
@@ -17,6 +19,7 @@ def test_zeta_eval():
 
     assert zeta(0) == Rational(-1, 2)
     assert zeta(0, x) == Rational(1, 2) - x
+    assert zeta(0, b) == Rational(1, 2) - b
 
     assert zeta(1) == zoo
     assert zeta(1, 2) == zoo
@@ -52,10 +55,10 @@ def test_zeta_eval():
     assert zeta(-4, -8) == 8772
 
     assert zeta(0, 1) == -Rational(1, 2)
-    assert zeta(0, -1) == Rational(1, 2)
+    assert zeta(0, -1) == Rational(3, 2)
 
     assert zeta(0, 2) == -Rational(3, 2)
-    assert zeta(0, -2) == Rational(3, 2)
+    assert zeta(0, -2) == Rational(5, 2)
 
     assert zeta(
         3).evalf(20).epsilon_eq(Float("1.2020569031595942854", 20), 1e-19)
@@ -124,12 +127,36 @@ def test_polylog_expansion():
     from sympy import log
     assert polylog(s, 0) == 0
     assert polylog(s, 1) == zeta(s)
-    assert polylog(s, -1) == dirichlet_eta(s)
+    assert polylog(s, -1) == -dirichlet_eta(s)
+    assert polylog(s, exp_polar(4*I*pi/3)) == polylog(s, exp(4*I*pi/3))
+    assert polylog(s, exp_polar(I*pi)/3) == polylog(s, exp(I*pi)/3)
 
-    assert myexpand(polylog(1, z), -log(1 + exp_polar(-I*pi)*z))
+    assert myexpand(polylog(1, z), -log(1 - z))
     assert myexpand(polylog(0, z), z/(1 - z))
-    assert myexpand(polylog(-1, z), z**2/(1 - z)**2 + z/(1 - z))
+    assert myexpand(polylog(-1, z), z/(1 - z)**2)
+    assert ((1-z)**3 * expand_func(polylog(-2, z))).simplify() == z*(1 + z)
     assert myexpand(polylog(-5, z), None)
+
+
+def test_issue_8404():
+    i = Symbol('i', integer=True)
+    assert Abs(Sum(1/(3*i + 1)**2, (i, 0, S.Infinity)).doit().n(4)
+        - 1.122) < 0.001
+
+
+def test_polylog_values():
+    from sympy.utilities.randtest import verify_numerically as tn
+    assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
+    assert polylog(2, S.Half) == pi**2/12 - log(2)**2/2
+    for z in [S.Half, 2, (sqrt(5)-1)/2, -(sqrt(5)-1)/2, -(sqrt(5)+1)/2, (3-sqrt(5))/2]:
+        assert Abs(polylog(2, z).evalf() - polylog(2, z, evaluate=False).evalf()) < 1e-15
+    z = Symbol("z")
+    for s in [-1, 0]:
+        for _ in range(10):
+            assert tn(polylog(s, z), polylog(s, z, evaluate=False), z,
+                a=-3, b=-2, c=S.Half, d=2)
+            assert tn(polylog(s, z), polylog(s, z, evaluate=False), z,
+                a=2, b=-2, c=5, d=2)
 
 
 def test_lerchphi_expansion():
@@ -178,3 +205,32 @@ def test_stieltjes_evalf():
     assert abs(stieltjes(0).evalf() - 0.577215664) < 1E-9
     assert abs(stieltjes(0, 0.5).evalf() - 1.963510026) < 1E-9
     assert abs(stieltjes(1, 2).evalf() + 0.072815845 ) < 1E-9
+
+
+def test_issue_10475():
+    a = Symbol('a', real=True)
+    b = Symbol('b', positive=True)
+    s = Symbol('s', zero=False)
+
+    assert zeta(2 + I).is_finite
+    assert zeta(1).is_finite is False
+    assert zeta(x).is_finite is None
+    assert zeta(x + I).is_finite is None
+    assert zeta(a).is_finite is None
+    assert zeta(b).is_finite is None
+    assert zeta(-b).is_finite is True
+    assert zeta(b**2 - 2*b + 1).is_finite is None
+    assert zeta(a + I).is_finite is True
+    assert zeta(b + 1).is_finite is True
+    assert zeta(s + 1).is_finite is True
+
+
+def test_issue_14177():
+    n = Symbol('n', positive=True, integer=True)
+
+    assert zeta(2*n) == (-1)**(n + 1)*2**(2*n - 1)*pi**(2*n)*bernoulli(2*n)/factorial(2*n)
+    assert zeta(-n) == (-1)**(-n)*bernoulli(n + 1)/(n + 1)
+
+    n = Symbol('n')
+
+    assert zeta(2*n) == zeta(2*n) # As sign of z (= 2*n) is not determined

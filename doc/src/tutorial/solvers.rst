@@ -42,7 +42,7 @@ The syntax for ``solveset`` is ``solveset(equation, variable=None, domain=S.Comp
 Where ``equations`` may be in the form of ``Eq`` instances or expressions
 that are assumed to be equal to zero.
 
-Please note that there is an another function called as ``solve`` which
+Please note that there is another function called ``solve`` which
 can also be used to solve equations. The syntax is ``solve(equations, variables)``
 However, it is recommended to use ``solveset`` instead.
 
@@ -70,7 +70,7 @@ is not able to find solutions then a ``ConditionSet`` is returned.
 
 In the ``solveset`` module, the linear system of equations is solved using ``linsolve``.
 In future we would be able to use linsolve directly from ``solveset``. Following
-is an example of the syntax of ``linsolve``. 
+is an example of the syntax of ``linsolve``.
 
 * List of Equations Form:
 
@@ -93,6 +93,76 @@ is an example of the syntax of ``linsolve``.
 
    The order of solution corresponds the order of given symbols.
 
+
+In the ``solveset`` module, the non linear system of equations is solved using
+``nonlinsolve``. Following are examples of ``nonlinsolve``.
+
+1. When only real solution is present:
+
+	>>> a, b, c, d = symbols('a, b, c, d', real=True)
+	>>> nonlinsolve([a**2 + a, a - b], [a, b])
+	{(-1, -1), (0, 0)}
+	>>> nonlinsolve([x*y - 1, x - 2], x, y)
+	{(2, 1/2)}
+
+2. When only complex solution is present:
+
+	>>> nonlinsolve([x**2 + 1, y**2 + 1], [x, y])
+	{(-ⅈ, -ⅈ), (-ⅈ, ⅈ), (ⅈ, -ⅈ), (ⅈ, ⅈ)}
+
+3. When both real and complex solution is present:
+
+	>>> from sympy import sqrt
+	>>> system = [x**2 - 2*y**2 -2, x*y - 2]
+	>>> vars = [x, y]
+	>>> nonlinsolve(system, vars)
+	{(-2, -1), (2, 1), (-√2⋅ⅈ, √2⋅ⅈ), (√2⋅ⅈ, -√2⋅ⅈ)}
+
+	>>> n = Dummy('n')
+	>>> system = [exp(x) - sin(y), 1/y - 3]
+	>>> real_soln = (log(sin(S(1)/3)), S(1)/3)
+	>>> img_lamda = Lambda(n, 2*n*I*pi + Mod(log(sin(S(1)/3)), 2*I*pi))
+	>>> complex_soln = (ImageSet(img_lamda, S.Integers), S(1)/3)
+	>>> soln = FiniteSet(real_soln, complex_soln)
+	>>> nonlinsolve(system, [x, y]) == soln
+	True
+
+4. If non linear system of equations is Positive dimensional system (A system with
+infinitely many solutions is said to be positive-dimensional):
+
+	>>> nonlinsolve([x*y, x*y - x], [x, y])
+	{(0, y)}
+
+	>>> system = [a**2 + a*c, a - b]
+	>>> nonlinsolve(system, [a, b])
+	{(0, 0), (-c, -c)}
+
+
+.. note::
+
+   1. The order of solution corresponds the order of given symbols.
+
+   2. Currently ``nonlinsolve`` doesn't return solution in form of ``LambertW`` (if there
+   is solution present in the form of ``LambertW``).
+
+   ``solve`` can be used for such cases:
+
+   >>> solve([x**2 - y**2/exp(x)], [x, y], dict=True)
+   ⎡⎧             ⎛y⎞⎫⎤
+   ⎢⎨x: 2⋅LambertW⎜─⎟⎬⎥
+   ⎣⎩             ⎝2⎠⎭⎦
+
+   3. Currently ``nonlinsolve`` is not properly capable of solving the system of equations
+   having trigonometric functions.
+
+   ``solve`` can be used for such cases(not all solution):
+
+   >>> solve([sin(x + y), cos(x - y)], [x, y])
+   ⎡⎛-3⋅π   3⋅π⎞  ⎛-π   π⎞  ⎛π  3⋅π⎞  ⎛3⋅π  π⎞⎤
+   ⎢⎜─────, ───⎟, ⎜───, ─⎟, ⎜─, ───⎟, ⎜───, ─⎟⎥
+   ⎣⎝  4     4 ⎠  ⎝ 4   4⎠  ⎝4   4 ⎠  ⎝ 4   4⎠⎦
+
+
 .. _tutorial-roots:
 
 ``solveset`` reports each solution only once.  To get the solutions of a
@@ -110,13 +180,10 @@ multiplicity 1 and ``3`` is a root of multiplicity 2.
 
    Currently ``solveset`` is not capable of solving the following types of equations:
 
-   * Non-linear multivariate system
    * Equations solvable by LambertW (Transcendental equation solver).
 
    ``solve`` can be used for such cases:
 
-   >>> solve([x*y - 1, x - 2], x, y)
-   [(2, 1/2)]
    >>> solve(x*exp(x) - 1, x )
    [LambertW(1)]
 
@@ -170,8 +237,8 @@ To solve the ODE, pass it and the function to solve for to ``dsolve``.
 solutions to differential equations cannot be solved explicitly for the
 function.
 
-    >>> dsolve(f(x).diff(x)*(1 - sin(f(x))), f(x))
-    f(x) + cos(f(x)) = C₁
+    >>> dsolve(f(x).diff(x)*(1 - sin(f(x))) - 1, f(x))
+    -x + f(x) + cos(f(x)) = C₁
 
 The arbitrary constants in the solutions from dsolve are symbols of the form
 ``C1``, ``C2``, ``C3``, and so on.

@@ -1,14 +1,15 @@
 from __future__ import print_function, division
 
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
-        sample, sample_iter, random_symbols, independent, dependent,
-        sampling_density)
-from sympy import sqrt
+        characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
+        sampling_density, moment_generating_function, _value_check, quantile)
+from sympy import Piecewise, sqrt, solveset, Symbol, S, log, Eq, Lambda, exp
+from sympy.solvers.inequalities import reduce_inequalities
 
-__all__ = ['P', 'E', 'density', 'where', 'given', 'sample', 'cdf', 'pspace',
+__all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'covariance',
         'dependent', 'independent', 'random_symbols', 'correlation',
-        'moment', 'cmoment', 'sampling_density']
+        'moment', 'cmoment', 'sampling_density', 'moment_generating_function', 'quantile']
 
 
 
@@ -52,7 +53,7 @@ def variance(X, condition=None, **kwargs):
     35/3
 
     >>> simplify(variance(B))
-    p*(-p + 1)
+    p*(1 - p)
     """
     return cmoment(X, 2, condition, **kwargs)
 
@@ -73,11 +74,52 @@ def standard_deviation(X, condition=None, **kwargs):
     >>> B = Bernoulli('B', p, 1, 0)
 
     >>> simplify(std(B))
-    sqrt(p*(-p + 1))
+    sqrt(p*(1 - p))
     """
     return sqrt(variance(X, condition, **kwargs))
 std = standard_deviation
 
+def entropy(expr, condition=None, **kwargs):
+    """
+    Calculuates entropy of a probability distribution
+
+    Parameters
+    ==========
+
+    expression : the random expression whose entropy is to be calculated
+    condition : optional, to specify conditions on random expression
+    b: base of the logarithm, optional
+       By default, it is taken as Euler's number
+
+    Retruns
+    =======
+
+    result : Entropy of the expression, a constant
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Normal, Die, entropy
+    >>> X = Normal('X', 0, 1)
+    >>> entropy(X)
+    log(2)/2 + 1/2 + log(pi)/2
+
+    >>> D = Die('D', 4)
+    >>> entropy(D)
+    log(4)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Entropy_(information_theory)
+    .. [2] https://www.crmarsh.com/static/pdf/Charles_Marsh_Continuous_Entropy.pdf
+    .. [3] http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
+    """
+    pdf = density(expr, condition, **kwargs)
+    base = kwargs.get('b', exp(1))
+    if isinstance(pdf, dict):
+            return sum([-prob*log(prob, base) for prob in pdf.values()])
+    return expectation(-log(pdf(expr), base))
 
 def covariance(X, Y, condition=None, **kwargs):
     """
@@ -209,5 +251,8 @@ def skewness(X, condition=None, **kwargs):
     return smoment(X, 3, condition, **kwargs)
 
 
+
+
 P = probability
 E = expectation
+H = entropy

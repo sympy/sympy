@@ -1,5 +1,5 @@
 from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
-                   Function, Product, Rational, Sum, oo, exp, log, S)
+                   Function, Product, Rational, Sum, oo, exp, log, S, pi)
 from sympy.utilities.pytest import raises
 from sympy import simplify
 
@@ -346,6 +346,25 @@ def test_reverse_order():
            Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
     assert Product(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x) == \
            Product(x*y, (x, b + 1, a - 1), (y, 6, 1))
+
+
+def test_issue_9983():
+    n = Symbol('n', integer=True, positive=True)
+    p = Product(1 + 1/n**(S(2)/3), (n, 1, oo))
+    assert p.is_convergent() is S.false
+    assert product(1 + 1/n**(S(2)/3), (n, 1, oo)) == p.doit()
+
+
+def test_issue_13546():
+    n = Symbol('n')
+    k = Symbol('k')
+    p = Product(n + 1 / 2**k, (k, 0, n-1)).doit()
+    assert p.subs(n, 2).doit() == S(15)/2
+
+
+def test_issue_14036():
+    a, n = symbols('a n')
+    assert product(1 - a**2 / (n*pi)**2, [n, 1, oo]) != 0
 
 
 def test_rewrite_Sum():

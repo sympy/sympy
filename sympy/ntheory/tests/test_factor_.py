@@ -1,14 +1,28 @@
-from sympy import Mul, S, Pow, Symbol, summation, factorial as fac
+from sympy import (Sieve, binomial_coefficients, binomial_coefficients_list,
+    Mul, S, Pow, sieve, Symbol, summation, Dummy,
+    factorial as fac)
+from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 from sympy.core.compatibility import long, range
 
-from sympy.ntheory import totient, factorint, primefactors, divisors, nextprime, pollard_rho, \
-    perfect_power, multiplicity, trailing, divisor_count, primorial, pollard_pm1, divisor_sigma
+from sympy.ntheory import (isprime, n_order, is_primitive_root,
+    is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient,
+    factorint, primefactors, divisors, randprime, nextprime, prevprime,
+    primerange, primepi, prime, pollard_rho, perfect_power, multiplicity,
+    trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
+    factorrat, reduced_totient)
+from sympy.ntheory.factor_ import (smoothness, smoothness_p,
+    antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
+    udivisor_count, primenu, primeomega, small_trailing, mersenne_prime_exponent,
+    is_perfect, is_mersenne_prime, is_abundant, is_deficient, is_amicable)
+from sympy.ntheory.generate import cycle_length
+from sympy.ntheory.multinomial import (
+    multinomial_coefficients, multinomial_coefficients_iterator)
+from sympy.ntheory.bbp_pi import pi_hex_digits
+from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 
-from sympy.ntheory.factor_ import smoothness, smoothness_p, \
-    antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma, \
-    udivisor_count
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
+
 from sympy.utilities.iterables import capture
 
 
@@ -54,7 +68,7 @@ def multiproduct(seq=(), start=1):
     return units * multiproduct(multi)**2
 
 
-def test_trailing():
+def test_trailing_bitcount():
     assert trailing(0) == 0
     assert trailing(1) == 0
     assert trailing(-1) == 0
@@ -66,6 +80,10 @@ def test_trailing():
         assert trailing((1 << i) * 31337) == i
     assert trailing((1 << 1000001)) == 1000001
     assert trailing((1 << 273956)*7**37) == 273956
+    # issue 12709
+    big = small_trailing[-1]*2
+    assert trailing(-big) == trailing(big)
+    assert bitcount(-big) == bitcount(big)
 
 
 def test_multiplicity():
@@ -86,7 +104,7 @@ def test_multiplicity():
     raises(ValueError, lambda: multiplicity(1.3, 0))
 
     # handles Rationals
-    assert multiplicity(10, Rational(30, 7)) == 0
+    assert multiplicity(10, Rational(30, 7)) == 1
     assert multiplicity(Rational(2, 7), Rational(4, 7)) == 1
     assert multiplicity(Rational(1, 7), Rational(3, 49)) == 2
     assert multiplicity(Rational(2, 7), Rational(7, 2)) == -1
@@ -142,14 +160,41 @@ def test_factorint():
     assert factorint(5951757) == {3: 1, 7: 1, 29: 2, 337: 1}
     assert factorint(64015937) == {7993: 1, 8009: 1}
     assert factorint(2**(2**6) + 1) == {274177: 1, 67280421310721: 1}
+
+    assert factorint(0, multiple=True) == [0]
+    assert factorint(1, multiple=True) == []
+    assert factorint(-1, multiple=True) == [-1]
+    assert factorint(-2, multiple=True) == [-1, 2]
+    assert factorint(-16, multiple=True) == [-1, 2, 2, 2, 2]
+    assert factorint(2, multiple=True) == [2]
+    assert factorint(24, multiple=True) == [2, 2, 2, 3]
+    assert factorint(126, multiple=True) == [2, 3, 3, 7]
+    assert factorint(123456, multiple=True) == [2, 2, 2, 2, 2, 2, 3, 643]
+    assert factorint(5951757, multiple=True) == [3, 7, 29, 29, 337]
+    assert factorint(64015937, multiple=True) == [7993, 8009]
+    assert factorint(2**(2**6) + 1, multiple=True) == [274177, 67280421310721]
+
+    assert factorint(fac(1, evaluate=False)) == {}
+    assert factorint(fac(7, evaluate=False)) == {2: 4, 3: 2, 5: 1, 7: 1}
+    assert factorint(fac(15, evaluate=False)) == \
+        {2: 11, 3: 6, 5: 3, 7: 2, 11: 1, 13: 1}
+    assert factorint(fac(20, evaluate=False)) == \
+        {2: 18, 3: 8, 5: 4, 7: 2, 11: 1, 13: 1, 17: 1, 19: 1}
+    assert factorint(fac(23, evaluate=False)) == \
+        {2: 19, 3: 9, 5: 4, 7: 3, 11: 2, 13: 1, 17: 1, 19: 1, 23: 1}
+
     assert multiproduct(factorint(fac(200))) == fac(200)
+    assert multiproduct(factorint(fac(200, evaluate=False))) == fac(200)
     for b, e in factorint(fac(150)).items():
+        assert e == fac_multiplicity(150, b)
+    for b, e in factorint(fac(150, evaluate=False)).items():
         assert e == fac_multiplicity(150, b)
     assert factorint(103005006059**7) == {103005006059: 7}
     assert factorint(31337**191) == {31337: 191}
     assert factorint(2**1000 * 3**500 * 257**127 * 383**60) == \
         {2: 1000, 3: 500, 257: 127, 383: 60}
     assert len(factorint(fac(10000))) == 1229
+    assert len(factorint(fac(10000, evaluate=False))) == 1229
     assert factorint(12932983746293756928584532764589230) == \
         {2: 1, 5: 1, 73: 1, 727719592270351: 1, 63564265087747: 1, 383: 1}
     assert factorint(727719592270351) == {727719592270351: 1}
@@ -264,7 +309,7 @@ def test_udivisors_and_udivisor_count():
 
 def test_issue_6981():
     S = set(divisors(4)).union(set(divisors(Integer(2))))
-    assert S == set([1,2,4])
+    assert S == {1,2,4}
 
 
 def test_totient():
@@ -275,6 +320,9 @@ def test_totient():
     assert totient(5009) == 5008
     assert totient(2**100) == 2**99
 
+    raises(ValueError, lambda: totient(30.1))
+    raises(ValueError, lambda: totient(20.001))
+
     m = Symbol("m", integer=True)
     assert totient(m)
     assert totient(m).subs(m, 3**10) == 3**10 - 3**9
@@ -282,6 +330,32 @@ def test_totient():
 
     n = Symbol("n", integer=True, positive=True)
     assert totient(n).is_integer
+
+    x=Symbol("x", integer=False)
+    raises(ValueError, lambda: totient(x))
+
+    y=Symbol("y", positive=False)
+    raises(ValueError, lambda: totient(y))
+
+    z=Symbol("z", positive=True, integer=True)
+    raises(ValueError, lambda: totient(2**(-z)))
+
+
+def test_reduced_totient():
+    assert [reduced_totient(k) for k in range(1, 16)] == \
+        [1, 1, 2, 2, 4, 2, 6, 2, 6, 4, 10, 2, 12, 6, 4]
+    assert reduced_totient(5005) == 60
+    assert reduced_totient(5006) == 2502
+    assert reduced_totient(5009) == 5008
+    assert reduced_totient(2**100) == 2**98
+
+    m = Symbol("m", integer=True)
+    assert reduced_totient(m)
+    assert reduced_totient(m).subs(m, 2**3*3**10) == 3**10 - 3**9
+    assert summation(reduced_totient(m), (m, 1, 16)) == 68
+
+    n = Symbol("n", integer=True, positive=True)
+    assert reduced_totient(n).is_integer
 
 
 def test_divisor_sigma():
@@ -390,6 +464,20 @@ def test_visual_factorint():
     assert -1 in factorint(-42, visual=True).args
 
 
+def test_factorrat():
+    assert str(factorrat(S(12)/1, visual=True)) == '2**2*3**1'
+    assert str(factorrat(S(1)/1, visual=True)) == '1'
+    assert str(factorrat(S(25)/14, visual=True)) == '5**2/(2*7)'
+    assert str(factorrat(S(-25)/14/9, visual=True)) == '-5**2/(2*3**2*7)'
+
+    assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
+    assert factorrat(S(1)/1, multiple=True) == []
+    assert factorrat(S(25)/14, multiple=True) == [S(1)/7, S(1)/2, 5, 5]
+    assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
+    assert factorrat(S(-25)/14/9, multiple=True) == \
+        [-1, S(1)/7, S(1)/3, S(1)/3, S(1)/2, 5, 5]
+
+
 def test_visual_io():
     sm = smoothness_p
     fi = factorint
@@ -447,3 +535,80 @@ def test_digits():
     assert digits(384753, 71) == [71, 1, 5, 23, 4]
     assert digits(93409) == [10, 9, 3, 4, 0, 9]
     assert digits(-92838, 11) == [-11, 6, 3, 8, 2, 9]
+
+
+def test_primenu():
+    assert primenu(2) == 1
+    assert primenu(2 * 3) == 2
+    assert primenu(2 * 3 * 5) == 3
+    assert primenu(3 * 25) == primenu(3) + primenu(25)
+    assert [primenu(p) for p in primerange(1, 10)] == [1, 1, 1, 1]
+    assert primenu(fac(50)) == 15
+    assert primenu(2 ** 9941 - 1) == 1
+    n = Symbol('n', integer=True)
+    assert primenu(n)
+    assert primenu(n).subs(n, 2 ** 31 - 1) == 1
+    assert summation(primenu(n), (n, 2, 30)) == 43
+
+
+def test_primeomega():
+    assert primeomega(2) == 1
+    assert primeomega(2 * 2) == 2
+    assert primeomega(2 * 2 * 3) == 3
+    assert primeomega(3 * 25) == primeomega(3) + primeomega(25)
+    assert [primeomega(p) for p in primerange(1, 10)] == [1, 1, 1, 1]
+    assert primeomega(fac(50)) == 108
+    assert primeomega(2 ** 9941 - 1) == 1
+    n = Symbol('n', integer=True)
+    assert primeomega(n)
+    assert primeomega(n).subs(n, 2 ** 31 - 1) == 1
+    assert summation(primeomega(n), (n, 2, 30)) == 59
+
+
+def test_mersenne_prime_exponent():
+    assert mersenne_prime_exponent(1) == 2
+    assert mersenne_prime_exponent(4) == 7
+    assert mersenne_prime_exponent(10) == 89
+    assert mersenne_prime_exponent(25) == 21701
+    raises(ValueError, lambda: mersenne_prime_exponent(52))
+    raises(ValueError, lambda: mersenne_prime_exponent(0))
+
+
+def test_is_perfect():
+    assert is_perfect(6) is True
+    assert is_perfect(15) is False
+    assert is_perfect(28) is True
+    assert is_perfect(400) is False
+    assert is_perfect(496) is True
+    assert is_perfect(8128) is True
+    assert is_perfect(10000) is False
+
+
+def test_is_mersenne_prime():
+    assert is_mersenne_prime(10) is False
+    assert is_mersenne_prime(127) is True
+    assert is_mersenne_prime(511) is False
+    assert is_mersenne_prime(131071) is True
+    assert is_mersenne_prime(2147483647) is True
+
+
+def test_is_abundant():
+    assert is_abundant(10) is False
+    assert is_abundant(12) is True
+    assert is_abundant(18) is True
+    assert is_abundant(21) is False
+    assert is_abundant(945) is True
+
+
+def test_is_deficient():
+    assert is_deficient(10) is True
+    assert is_deficient(22) is True
+    assert is_deficient(56) is False
+    assert is_deficient(20) is False
+    assert is_deficient(36) is False
+
+
+def test_is_amicable():
+    assert is_amicable(173, 129) is False
+    assert is_amicable(220, 284) is True
+    assert is_amicable(8756, 8756) is False

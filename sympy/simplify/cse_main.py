@@ -2,13 +2,14 @@
 """
 from __future__ import print_function, division
 
-from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol, Tuple
-from sympy.core.singleton import S
-from sympy.core.function import _coeff_isneg
-from sympy.core.exprtools import factor_terms
+from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
 from sympy.core.compatibility import iterable, range
-from sympy.utilities.iterables import filter_symbols, \
-    numbered_symbols, sift, topological_sort, ordered
+from sympy.core.containers import Tuple, OrderedSet
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import _coeff_isneg
+from sympy.core.singleton import S
+from sympy.utilities.iterables import numbered_symbols, sift, \
+        topological_sort, ordered
 
 from . import cse_opts
 
@@ -95,14 +96,16 @@ def preprocess_for_cse(expr, optimizations):
     elimination.
 
     Parameters
-    ----------
+    ==========
+
     expr : sympy expression
         The target expression to optimize.
     optimizations : list of (callable, callable) pairs
         The (preprocessor, postprocessor) pairs.
 
     Returns
-    -------
+    =======
+
     expr : sympy expression
         The transformed expression.
     """
@@ -117,7 +120,8 @@ def postprocess_for_cse(expr, optimizations):
     return the expression to canonical sympy form.
 
     Parameters
-    ----------
+    ==========
+
     expr : sympy expression
         The target expression to transform.
     optimizations : list of (callable, callable) pairs, optional
@@ -126,7 +130,8 @@ def postprocess_for_cse(expr, optimizations):
         correctly.
 
     Returns
-    -------
+    =======
+
     expr : sympy expression
         The transformed expression.
     """
@@ -136,12 +141,254 @@ def postprocess_for_cse(expr, optimizations):
     return expr
 
 
+class FuncArgTracker(object):
+    """
+    A class which manages a mapping from functions to arguments and an inverse
+    mapping from arguments to functions.
+    """
+
+    def __init__(self, funcs):
+        # To minimize the number of symbolic comparisons, all function arguments
+        # get assigned a value number.
+        self.value_numbers = {}
+        self.value_number_to_value = []
+
+        # Both of these maps use integer indices for arguments / functions.
+        self.arg_to_funcset = []
+        self.func_to_argset = []
+
+        for func_i, func in enumerate(funcs):
+            func_argset = OrderedSet()
+
+            for func_arg in func.args:
+                arg_number = self.get_or_add_value_number(func_arg)
+                func_argset.add(arg_number)
+                self.arg_to_funcset[arg_number].add(func_i)
+
+            self.func_to_argset.append(func_argset)
+
+    def get_args_in_value_order(self, argset):
+        """
+        Return the list of arguments in sorted order according to their value
+        numbers.
+        """
+        return [self.value_number_to_value[argn] for argn in sorted(argset)]
+
+    def get_or_add_value_number(self, value):
+        """
+        Return the value number for the given argument.
+        """
+        nvalues = len(self.value_numbers)
+        value_number = self.value_numbers.setdefault(value, nvalues)
+        if value_number == nvalues:
+            self.value_number_to_value.append(value)
+            self.arg_to_funcset.append(OrderedSet())
+        return value_number
+
+    def stop_arg_tracking(self, func_i):
+        """
+        Remove the function func_i from the argument to function mapping.
+        """
+        for arg in self.func_to_argset[func_i]:
+            self.arg_to_funcset[arg].remove(func_i)
+
+
+    def get_common_arg_candidates(self, argset, min_func_i=0):
+        """Return a dict whose keys are function numbers. The entries of the dict are
+        the number of arguments said function has in common with
+        `argset`. Entries have at least 2 items in common.  All keys have
+        value at least `min_func_i`.
+        """
+        from collections import defaultdict
+        count_map = defaultdict(lambda: 0)
+
+        funcsets = [self.arg_to_funcset[arg] for arg in argset]
+        # As an optimization below, we handle the largest funcset separately from
+        # the others.
+        largest_funcset = max(funcsets, key=len)
+
+        for funcset in funcsets:
+            if largest_funcset is funcset:
+                continue
+            for func_i in funcset:
+                if func_i >= min_func_i:
+                    count_map[func_i] += 1
+
+        # We pick the smaller of the two containers (count_map, largest_funcset)
+        # to iterate over to reduce the number of iterations needed.
+        (smaller_funcs_container,
+         larger_funcs_container) = sorted(
+                 [largest_funcset, count_map],
+                 key=len)
+
+        for func_i in smaller_funcs_container:
+            # Not already in count_map? It can't possibly be in the output, so
+            # skip it.
+            if count_map[func_i] < 1:
+                continue
+
+            if func_i in larger_funcs_container:
+                count_map[func_i] += 1
+
+        return dict((k, v) for k, v in count_map.items() if v >= 2)
+
+    def get_subset_candidates(self, argset, restrict_to_funcset=None):
+        """
+        Return a set of functions each of which whose argument list contains
+        ``argset``, optionally filtered only to contain functions in
+        ``restrict_to_funcset``.
+        """
+        iarg = iter(argset)
+
+        indices = OrderedSet(
+            fi for fi in self.arg_to_funcset[next(iarg)])
+
+        if restrict_to_funcset is not None:
+            indices &= restrict_to_funcset
+
+        for arg in iarg:
+            indices &= self.arg_to_funcset[arg]
+
+        return indices
+
+    def update_func_argset(self, func_i, new_argset):
+        """
+        Update a function with a new set of arguments.
+        """
+        new_args = OrderedSet(new_argset)
+        old_args = self.func_to_argset[func_i]
+
+        for deleted_arg in old_args - new_args:
+            self.arg_to_funcset[deleted_arg].remove(func_i)
+        for added_arg in new_args - old_args:
+            self.arg_to_funcset[added_arg].add(func_i)
+
+        self.func_to_argset[func_i].clear()
+        self.func_to_argset[func_i].update(new_args)
+
+
+class Unevaluated(object):
+
+    def __init__(self, func, args):
+        self.func = func
+        self.args = args
+
+    def __str__(self):
+        return "Uneval<{}>({})".format(
+                self.func, ", ".join(str(a) for a in self.args))
+
+    def as_unevaluated_basic(self):
+        return self.func(*self.args, evaluate=False)
+
+    @property
+    def free_symbols(self):
+        return set().union(*[a.free_symbols for a in self.args])
+
+    __repr__ = __str__
+
+
+def match_common_args(func_class, funcs, opt_subs):
+    """
+    Recognize and extract common subexpressions of function arguments within a
+    set of function calls. For instance, for the following function calls::
+
+        x + z + y
+        sin(x + y)
+
+    this will extract a common subexpression of `x + y`::
+
+        w = x + y
+        w + z
+        sin(w)
+
+    The function we work with is assumed to be associative and commutative.
+
+    Parameters
+    ==========
+
+    func_class: class
+        The function class (e.g. Add, Mul)
+    funcs: list of functions
+        A list of function calls
+    opt_subs: dict
+        A dictionary of substitutions which this function may update
+    """
+
+    # Sort to ensure that whole-function subexpressions come before the items
+    # that use them.
+    funcs = sorted(funcs, key=lambda f: len(f.args))
+    arg_tracker = FuncArgTracker(funcs)
+
+    changed = OrderedSet()
+
+    for i in range(len(funcs)):
+        common_arg_candidates_counts = arg_tracker.get_common_arg_candidates(
+                arg_tracker.func_to_argset[i], min_func_i=i + 1)
+
+        # Sort the candidates in order of match size.
+        # This makes us try combining smaller matches first.
+        common_arg_candidates = OrderedSet(sorted(
+                common_arg_candidates_counts.keys(),
+                key=lambda k: (common_arg_candidates_counts[k], k)))
+
+        while common_arg_candidates:
+            j = common_arg_candidates.pop(last=False)
+
+            com_args = arg_tracker.func_to_argset[i].intersection(
+                    arg_tracker.func_to_argset[j])
+
+            if len(com_args) <= 1:
+                # This may happen if a set of common arguments was already
+                # combined in a previous iteration.
+                continue
+
+            # For all sets, replace the common symbols by the function
+            # over them, to allow recursive matches.
+
+            diff_i = arg_tracker.func_to_argset[i].difference(com_args)
+            if diff_i:
+                # com_func needs to be unevaluated to allow for recursive matches.
+                com_func = Unevaluated(
+                        func_class, arg_tracker.get_args_in_value_order(com_args))
+                com_func_number = arg_tracker.get_or_add_value_number(com_func)
+                arg_tracker.update_func_argset(i, diff_i | OrderedSet([com_func_number]))
+                changed.add(i)
+            else:
+                # Treat the whole expression as a CSE.
+                #
+                # The reason this needs to be done is somewhat subtle. Within
+                # tree_cse(), to_eliminate only contains expressions that are
+                # seen more than once. The problem is unevaluated expressions
+                # do not compare equal to the evaluated equivalent. So
+                # tree_cse() won't mark funcs[i] as a CSE if we use an
+                # unevaluated version.
+                com_func_number = arg_tracker.get_or_add_value_number(funcs[i])
+
+            diff_j = arg_tracker.func_to_argset[j].difference(com_args)
+            arg_tracker.update_func_argset(j, diff_j | OrderedSet([com_func_number]))
+            changed.add(j)
+
+            for k in arg_tracker.get_subset_candidates(
+                    com_args, common_arg_candidates):
+                diff_k = arg_tracker.func_to_argset[k].difference(com_args)
+                arg_tracker.update_func_argset(k, diff_k | OrderedSet([com_func_number]))
+                changed.add(k)
+
+        if i in changed:
+            opt_subs[funcs[i]] = Unevaluated(func_class,
+                arg_tracker.get_args_in_value_order(arg_tracker.func_to_argset[i]))
+
+        arg_tracker.stop_arg_tracking(i)
+
+
+
 def opt_cse(exprs, order='canonical'):
     """Find optimization opportunities in Adds, Muls, Pows and negative
     coefficient Muls
 
     Parameters
-    ----------
+    ==========
+
     exprs : list of sympy expressions
         The expressions to optimize.
     order : string, 'none' or 'canonical'
@@ -149,7 +396,8 @@ def opt_cse(exprs, order='canonical'):
         expressions where speed is a concern, use the setting order='none'.
 
     Returns
-    -------
+    =======
+
     opt_subs : dictionary of expression substitutions
         The expression substitutions which can be useful to optimize CSE.
 
@@ -159,20 +407,21 @@ def opt_cse(exprs, order='canonical'):
     >>> from sympy.simplify.cse_main import opt_cse
     >>> from sympy.abc import x
     >>> opt_subs = opt_cse([x**-2])
-    >>> print(opt_subs)
-    {x**(-2): 1/(x**2)}
+    >>> k, v = list(opt_subs.keys())[0], list(opt_subs.values())[0]
+    >>> print((k, v.as_unevaluated_basic()))
+    (x**(-2), 1/(x**2))
     """
     from sympy.matrices.expressions import MatAdd, MatMul, MatPow
     opt_subs = dict()
 
-    adds = set()
-    muls = set()
+    adds = OrderedSet()
+    muls = OrderedSet()
 
     seen_subexp = set()
 
     def _find_opts(expr):
 
-        if not isinstance(expr, Basic):
+        if not isinstance(expr, (Basic, Unevaluated)):
             return
 
         if expr.is_Atom or expr.is_Order:
@@ -191,7 +440,7 @@ def opt_cse(exprs, order='canonical'):
         if _coeff_isneg(expr):
             neg_expr = -expr
             if not neg_expr.is_Atom:
-                opt_subs[expr] = Mul(S.NegativeOne, neg_expr, evaluate=False)
+                opt_subs[expr] = Unevaluated(Mul, (S.NegativeOne, neg_expr))
                 seen_subexp.add(neg_expr)
                 expr = neg_expr
 
@@ -202,54 +451,18 @@ def opt_cse(exprs, order='canonical'):
             adds.add(expr)
 
         elif isinstance(expr, (Pow, MatPow)):
-            if _coeff_isneg(expr.exp):
-                opt_subs[expr] = Pow(Pow(expr.base, -expr.exp), S.NegativeOne,
-                                     evaluate=False)
+            base, exp = expr.base, expr.exp
+            if _coeff_isneg(exp):
+                opt_subs[expr] = Unevaluated(Pow, (Pow(base, -exp), -1))
 
     for e in exprs:
-        if isinstance(e, Basic):
+        if isinstance(e, (Basic, Unevaluated)):
             _find_opts(e)
 
-    ## Process Adds and commutative Muls
-
-    def _match_common_args(Func, funcs):
-        if order != 'none':
-            funcs = list(ordered(funcs))
-        else:
-            funcs = sorted(funcs, key=lambda x: len(x.args))
-
-        func_args = [set(e.args) for e in funcs]
-        for i in range(len(func_args)):
-            for j in range(i + 1, len(func_args)):
-                com_args = func_args[i].intersection(func_args[j])
-                if len(com_args) > 1:
-                    com_func = Func(*com_args)
-
-                    # for all sets, replace the common symbols by the function
-                    # over them, to allow recursive matches
-
-                    diff_i = func_args[i].difference(com_args)
-                    func_args[i] = diff_i | set([com_func])
-                    if diff_i:
-                        opt_subs[funcs[i]] = Func(Func(*diff_i), com_func,
-                                                  evaluate=False)
-
-                    diff_j = func_args[j].difference(com_args)
-                    func_args[j] = diff_j | set([com_func])
-                    opt_subs[funcs[j]] = Func(Func(*diff_j), com_func,
-                                              evaluate=False)
-
-                    for k in range(j + 1, len(func_args)):
-                        if not com_args.difference(func_args[k]):
-                            diff_k = func_args[k].difference(com_args)
-                            func_args[k] = diff_k | set([com_func])
-                            opt_subs[funcs[k]] = Func(Func(*diff_k), com_func,
-                                                      evaluate=False)
-
     # split muls into commutative
-    comutative_muls = set()
+    commutative_muls = OrderedSet()
     for m in muls:
-        c, nc = m.args_cnc(cset=True)
+        c, nc = m.args_cnc(cset=False)
         if c:
             c_mul = m.func(*c)
             if nc:
@@ -259,15 +472,15 @@ def opt_cse(exprs, order='canonical'):
                     new_obj = m.func(c_mul, m.func(*nc), evaluate=False)
                 opt_subs[m] = new_obj
             if len(c) > 1:
-                comutative_muls.add(c_mul)
+                commutative_muls.add(c_mul)
 
-    _match_common_args(Add, adds)
-    _match_common_args(Mul, comutative_muls)
+    match_common_args(Add, adds, opt_subs)
+    match_common_args(Mul, commutative_muls, opt_subs)
 
     return opt_subs
 
 
-def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
+def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
     """Perform raw CSE on expression tree, taking opt_subs into account.
 
     Parameters
@@ -283,6 +496,8 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
     order : string, 'none' or 'canonical'
         The order by which Mul and Add arguments are processed. For large
         expressions where speed is a concern, use the setting order='none'.
+    ignore : iterable of Symbols
+        Substitutions containing any Symbol from ``ignore`` will be ignored.
     """
     from sympy.matrices.expressions import MatrixExpr, MatrixSymbol, MatMul, MatAdd
 
@@ -294,12 +509,15 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
     to_eliminate = set()
 
     seen_subexp = set()
+    excluded_symbols = set()
 
     def _find_repeated(expr):
-        if not isinstance(expr, Basic):
+        if not isinstance(expr, (Basic, Unevaluated)):
             return
 
-        if expr.is_Atom or expr.is_Order:
+        if isinstance(expr, Basic) and (expr.is_Atom or expr.is_Order):
+            if expr.is_Symbol:
+                excluded_symbols.add(expr)
             return
 
         if iterable(expr):
@@ -307,8 +525,12 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
 
         else:
             if expr in seen_subexp:
-                to_eliminate.add(expr)
-                return
+                for ign in ignore:
+                    if ign in expr.free_symbols:
+                        break
+                else:
+                    to_eliminate.add(expr)
+                    return
 
             seen_subexp.add(expr)
 
@@ -325,12 +547,15 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
 
     ## Rebuild tree
 
+    # Remove symbols from the generator that conflict with names in the expressions.
+    symbols = (symbol for symbol in symbols if symbol not in excluded_symbols)
+
     replacements = []
 
     subs = dict()
 
     def _rebuild(expr):
-        if not isinstance(expr, Basic):
+        if not isinstance(expr, (Basic, Unevaluated)):
             return expr
 
         if not expr.args:
@@ -364,7 +589,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
             args = expr.args
 
         new_args = list(map(_rebuild, args))
-        if new_args != args:
+        if isinstance(expr, Unevaluated) or new_args != args:
             new_expr = expr.func(*new_args)
         else:
             new_expr = expr
@@ -393,12 +618,11 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
         else:
             reduced_e = e
         reduced_exprs.append(reduced_e)
-
     return replacements, reduced_exprs
 
 
 def cse(exprs, symbols=None, optimizations=None, postprocess=None,
-        order='canonical'):
+        order='canonical', ignore=()):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -427,6 +651,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         ordering will be faster but dependent on expressions hashes, thus
         machine dependent and variable. For large expressions where speed is a
         concern, use the setting order='none'.
+    ignore : iterable of Symbols
+        Substitutions containing any Symbol from ``ignore`` will be ignored.
 
     Returns
     =======
@@ -463,9 +689,18 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     >>> isinstance(_[1][-1], SparseMatrix)
     True
+
+    The user may disallow substitutions containing certain symbols:
+
+    >>> cse([y**2*(x + 1), 3*y**2*(x + 1)], ignore=(y,))
+    ([(x0, x + 1)], [x0*y**2, 3*x0*y**2])
+
     """
     from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                                 SparseMatrix, ImmutableSparseMatrix)
+
+    if isinstance(exprs, (int, float)):
+        exprs = sympify(exprs)
 
     # Handle the case if just one expression was passed.
     if isinstance(exprs, (Basic, MatrixBase)):
@@ -491,24 +726,19 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     # Preprocess the expressions to give us better optimization opportunities.
     reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
 
-    excluded_symbols = set().union(*[expr.atoms(Symbol)
-                                   for expr in reduced_exprs])
-
     if symbols is None:
-        symbols = numbered_symbols()
+        symbols = numbered_symbols(cls=Symbol)
     else:
         # In case we get passed an iterable with an __iter__ method instead of
         # an actual iterator.
         symbols = iter(symbols)
-
-    symbols = filter_symbols(symbols, excluded_symbols)
 
     # Find other optimization opportunities.
     opt_subs = opt_cse(reduced_exprs, order)
 
     # Main CSE algorithm.
     replacements, reduced_exprs = tree_cse(reduced_exprs, symbols, opt_subs,
-                                           order)
+                                           order, ignore)
 
     # Postprocess the expressions to return the expressions to canonical form.
     exprs = copy

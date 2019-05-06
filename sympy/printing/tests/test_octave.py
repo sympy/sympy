@@ -1,7 +1,15 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
-from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda
-from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
+from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
+from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
+                             chebyshevt, conjugate, DiracDelta, exp, expint,
+                             factorial, floor, harmonic, Heaviside, im,
+                             laguerre, LambertW, log, Max, Min, Piecewise,
+                             polylog, re, RisingFactorial, sign, sinc, sqrt,
+                             zeta)
+from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
+                             atan, asec, acsc, sinh, cosh, tanh, coth, csch,
+                             sech, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -9,6 +17,12 @@ from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
 from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
                                             besselk, hankel1, hankel2, airyai,
                                             airybi, airyaiprime, airybiprime)
+from sympy.functions.special.gamma_functions import (gamma, lowergamma,
+                                                     uppergamma, loggamma,
+                                                     polygamma)
+from sympy.functions.special.error_functions import (Chi, Ci, erf, erfc, erfi,
+                                                     erfcinv, erfinv, fresnelc,
+                                                     fresnels, li, Shi, Si)
 from sympy.utilities.pytest import XFAIL
 from sympy.core.compatibility import range
 
@@ -34,8 +48,47 @@ def test_Rational():
 
 def test_Function():
     assert mcode(sin(x) ** cos(x)) == "sin(x).^cos(x)"
+    assert mcode(sign(x)) == "sign(x)"
+    assert mcode(exp(x)) == "exp(x)"
+    assert mcode(log(x)) == "log(x)"
+    assert mcode(factorial(x)) == "factorial(x)"
+    assert mcode(floor(x)) == "floor(x)"
+    assert mcode(atan2(y, x)) == "atan2(y, x)"
+    assert mcode(beta(x, y)) == 'beta(x, y)'
+    assert mcode(polylog(x, y)) == 'polylog(x, y)'
+    assert mcode(harmonic(x)) == 'harmonic(x)'
+    assert mcode(bernoulli(x)) == "bernoulli(x)"
+    assert mcode(bernoulli(x, y)) == "bernoulli(x, y)"
+
+
+def test_Function_change_name():
     assert mcode(abs(x)) == "abs(x)"
     assert mcode(ceiling(x)) == "ceil(x)"
+    assert mcode(arg(x)) == "angle(x)"
+    assert mcode(im(x)) == "imag(x)"
+    assert mcode(re(x)) == "real(x)"
+    assert mcode(conjugate(x)) == "conj(x)"
+    assert mcode(chebyshevt(y, x)) == "chebyshevT(y, x)"
+    assert mcode(chebyshevu(y, x)) == "chebyshevU(y, x)"
+    assert mcode(laguerre(x, y)) == "laguerreL(x, y)"
+    assert mcode(Chi(x)) == "coshint(x)"
+    assert mcode(Shi(x)) ==  "sinhint(x)"
+    assert mcode(Ci(x)) == "cosint(x)"
+    assert mcode(Si(x)) ==  "sinint(x)"
+    assert mcode(li(x)) ==  "logint(x)"
+    assert mcode(loggamma(x)) ==  "gammaln(x)"
+    assert mcode(polygamma(x, y)) == "psi(x, y)"
+    assert mcode(RisingFactorial(x, y)) == "pochhammer(x, y)"
+    assert mcode(DiracDelta(x)) == "dirac(x)"
+    assert mcode(DiracDelta(x, 3)) == "dirac(3, x)"
+    assert mcode(Heaviside(x)) == "heaviside(x)"
+    assert mcode(Heaviside(x, y)) == "heaviside(x, y)"
+
+
+def test_minmax():
+    assert mcode(Max(x, y) + Min(x, y)) == "max(x, y) + min(x, y)"
+    assert mcode(Max(x, y, z)) == "max(x, max(y, z))"
+    assert mcode(Min(x, y, z)) == "min(x, min(y, z))"
 
 
 def test_Pow():
@@ -45,6 +98,9 @@ def test_Pow():
     g = implemented_function('g', Lambda(x, 2*x))
     assert mcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "(3.5*2*x).^(-x + y.^x)./(x.^2 + y)"
+    # For issue 14160
+    assert mcode(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
+                                                evaluate=False)) == '-2*x./(y.*y)'
 
 
 def test_basic_ops():
@@ -90,7 +146,7 @@ def test_mix_number_mult_symbols():
     assert mcode(x/y/z) == "x./(y.*z)"
     assert mcode((x+y)/z) == "(x + y)./z"
     assert mcode((x+y)/(z+x)) == "(x + y)./(x + z)"
-    assert mcode((x+y)/EulerGamma) == "(x + y)/0.5772156649015329"
+    assert mcode((x+y)/EulerGamma) == "(x + y)/%s" % EulerGamma.evalf(17)
     assert mcode(x/3/pi) == "x/(3*pi)"
     assert mcode(S(3)/5*x*y/pi) == "3*x.*y/(5*pi)"
 
@@ -110,6 +166,7 @@ def test_imag():
     assert mcode(5*I) == "5i"
     assert mcode((S(3)/2)*I) == "3*1i/2"
     assert mcode(3+4*I) == "3 + 4i"
+    assert mcode(sqrt(3)*I) == "sqrt(3)*1i"
 
 
 def test_constants():
@@ -124,8 +181,8 @@ def test_constants():
 
 def test_constants_other():
     assert mcode(2*GoldenRatio) == "2*(1+sqrt(5))/2"
-    assert mcode(2*Catalan) == "2*0.915965594177219"
-    assert mcode(2*EulerGamma) == "2*0.5772156649015329"
+    assert mcode(2*Catalan) == "2*%s" % Catalan.evalf(17)
+    assert mcode(2*EulerGamma) == "2*%s" % EulerGamma.evalf(17)
 
 
 def test_boolean():
@@ -138,14 +195,19 @@ def test_boolean():
     assert mcode((x | y) & z) == "z & (x | y)"
 
 
+def test_KroneckerDelta():
+    from sympy.functions import KroneckerDelta
+    assert mcode(KroneckerDelta(x, y)) == "double(x == y)"
+    assert mcode(KroneckerDelta(x, y + 1)) == "double(x == (y + 1))"
+    assert mcode(KroneckerDelta(2**x, y)) == "double((2.^x) == y)"
+
+
 def test_Matrices():
     assert mcode(Matrix(1, 1, [10])) == "10"
     A = Matrix([[1, sin(x/2), abs(x)],
                 [0, 1, pi],
                 [0, exp(1), ceiling(x)]]);
-    expected = ("[1 sin(x/2)  abs(x);\n"
-                "0        1      pi;\n"
-                "0   exp(1) ceil(x)]")
+    expected = "[1 sin(x/2) abs(x); 0 1 pi; 0 exp(1) ceil(x)]"
     assert mcode(A) == expected
     # row and columns
     assert mcode(A[:,0]) == "[1; 0; 0]"
@@ -202,15 +264,15 @@ def test_containers():
     assert mcode(Tuple(*[1, 2, 3])) == "{1, 2, 3}"
     assert mcode((1, x*y, (3, x**2))) == "{1, x.*y, {3, x.^2}}"
     # scalar, matrix, empty matrix and empty list
-    assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "{1, [1 0 0;\n0 1 0;\n0 0 1], [], {}}"
+    assert mcode((1, eye(3), Matrix(0, 0, []), [])) == "{1, [1 0 0; 0 1 0; 0 0 1], [], {}}"
 
 
 def test_octave_noninline():
     source = mcode((x+y)/Catalan, assign_to='me', inline=False)
     expected = (
-        "Catalan = 0.915965594177219;\n"
+        "Catalan = %s;\n"
         "me = (x + y)/Catalan;"
-    )
+    ) % Catalan.evalf(17)
     assert source == expected
 
 
@@ -258,7 +320,7 @@ def test_octave_matrix_assign_to():
     A = Matrix([[1, 2, 3]])
     assert mcode(A, assign_to='a') == "a = [1 2 3];"
     A = Matrix([[1, 2], [3, 4]])
-    assert mcode(A, assign_to='A') == "A = [1 2;\n3 4];"
+    assert mcode(A, assign_to='A') == "A = [1 2; 3 4];"
 
 
 def test_octave_matrix_assign_to_more():
@@ -286,7 +348,7 @@ def test_octave_matrix_elements():
     assert mcode(A[0, 0]**2 + A[0, 1] + A[0, 2]) == "x.^2 + x.*y + 2"
     A = MatrixSymbol('AA', 1, 3)
     assert mcode(A) == "AA"
-    assert mcode(A[0,0]**2 + sin(A[0,1]) + A[0,2]) == \
+    assert mcode(A[0, 0]**2 + sin(A[0,1]) + A[0,2]) == \
            "sin(AA(1, 2)) + AA(1, 1).^2 + AA(1, 3)"
     assert mcode(sum(A)) == "AA(1, 1) + AA(1, 2) + AA(1, 3)"
 
@@ -309,6 +371,29 @@ def test_octave_not_supported():
         "% Not supported in Octave:\n"
         "% Derivative\n"
         "Derivative(f(x), x)"
+    )
+
+
+def test_octave_not_supported_not_on_whitelist():
+    from sympy import assoc_laguerre
+    assert mcode(assoc_laguerre(x, y, z)) == (
+        "% Not supported in Octave:\n"
+        "% assoc_laguerre\n"
+        "assoc_laguerre(x, y, z)"
+    )
+
+
+def test_octave_expint():
+    assert mcode(expint(1, x)) == "expint(x)"
+    assert mcode(expint(2, x)) == (
+        "% Not supported in Octave:\n"
+        "% expint\n"
+        "expint(2, x)"
+    )
+    assert mcode(expint(y, x)) == (
+        "% Not supported in Octave:\n"
+        "% expint\n"
+        "expint(y, x)"
     )
 
 
@@ -353,15 +438,53 @@ def test_sparse():
     )
 
 
+def test_sinc():
+    assert mcode(sinc(x)) == 'sinc(x/pi)'
+    assert mcode(sinc((x + 3))) == 'sinc((x + 3)/pi)'
+    assert mcode(sinc(pi*(x + 3))) == 'sinc(x + 3)'
+
+
+def test_trigfun():
+    for f in (sin, cos, tan, cot, sec, csc, asin, acos, acot, atan, asec, acsc,
+              sinh, cosh, tanh, coth, csch, sech, asinh, acosh, atanh, acoth,
+              asech, acsch):
+        assert octave_code(f(x) == f.__name__ + '(x)')
+
+
 def test_specfun():
     n = Symbol('n')
     for f in [besselj, bessely, besseli, besselk]:
         assert octave_code(f(n, x)) == f.__name__ + '(n, x)'
+    for f in (erfc, erfi, erf, erfinv, erfcinv, fresnelc, fresnels, gamma):
+        assert octave_code(f(x)) == f.__name__ + '(x)'
     assert octave_code(hankel1(n, x)) == 'besselh(n, 1, x)'
     assert octave_code(hankel2(n, x)) == 'besselh(n, 2, x)'
     assert octave_code(airyai(x)) == 'airy(0, x)'
     assert octave_code(airyaiprime(x)) == 'airy(1, x)'
     assert octave_code(airybi(x)) == 'airy(2, x)'
     assert octave_code(airybiprime(x)) == 'airy(3, x)'
+    assert octave_code(uppergamma(n, x)) == '(gammainc(x, n, \'upper\').*gamma(n))'
+    assert octave_code(lowergamma(n, x)) == '(gammainc(x, n).*gamma(n))'
+    assert octave_code(z**lowergamma(n, x)) == 'z.^(gammainc(x, n).*gamma(n))'
     assert octave_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*besselj(n + 1/2, x)/2'
     assert octave_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
+    assert octave_code(LambertW(x)) == 'lambertw(x)'
+    assert octave_code(LambertW(x, n)) == 'lambertw(n, x)'
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert mcode(A[0, 0]) == "A(1, 1)"
+    assert mcode(3 * A[0, 0]) == "3*A(1, 1)"
+
+    F = C[0, 0].subs(C, A - B)
+    assert mcode(F) == "(A - B)(1, 1)"
+
+
+def test_zeta_printing_issue_14820():
+    assert octave_code(zeta(x)) == 'zeta(x)'
+    assert octave_code(zeta(x, y)) == '% Not supported in Octave:\n% zeta\nzeta(x, y)'

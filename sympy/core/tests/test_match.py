@@ -134,7 +134,7 @@ def test_mul():
     assert e.match(x**p*exp(x*q)) == {p: 0, q: 1}
 
     e = I*Poly(x, x)
-    assert e.match(I*p) == {p: Poly(x, x)}
+    assert e.match(I*p) == {p: x}
 
 
 def test_mul_noncommutative():
@@ -396,7 +396,7 @@ def test_match_wild_wild():
     assert p.match(q*r) is None
 
 
-def test_combine_inverse():
+def test__combine_inverse():
     x, y = symbols("x y")
     assert Mul._combine_inverse(x*I*y, x*I) == y
     assert Mul._combine_inverse(x*I*y, y*I) == x
@@ -404,6 +404,9 @@ def test_combine_inverse():
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
     assert Add._combine_inverse(oo, oo) == S(0)
     assert Add._combine_inverse(oo*I, oo*I) == S(0)
+    assert Add._combine_inverse(x*oo, x*oo) == S(0)
+    assert Add._combine_inverse(-x*oo, -x*oo) == S(0)
+    assert Add._combine_inverse((x - oo)*(x + oo), -oo)
 
 
 def test_issue_3773():
@@ -568,7 +571,7 @@ def test_issue_4319():
     x, y = symbols('x y')
 
     p = -x*(S(1)/8 - y)
-    ans = set([S.Zero, y - S(1)/8])
+    ans = {S.Zero, y - S(1)/8}
 
     def ok(pat):
         assert set(p.match(pat).values()) == ans
@@ -612,5 +615,5 @@ def test_gh_issue_2711():
     assert f.find(a) == set([(S.Zero,), ((), ()), ((S.Zero,), ()), x, S.Zero,
                              (), meijerg(((), ()), ((S.Zero,), ()), x)])
     assert f.find(a + b) == \
-        set([meijerg(((), ()), ((S.Zero,), ()), x), x, S.Zero])
-    assert f.find(a**2) == set([meijerg(((), ()), ((S.Zero,), ()), x), x])
+        {meijerg(((), ()), ((S.Zero,), ()), x), x, S.Zero}
+    assert f.find(a**2) == {meijerg(((), ()), ((S.Zero,), ()), x), x}

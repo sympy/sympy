@@ -1,9 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.core import S, Add, Expr, Basic
+from sympy.core import S, Add, Expr, Basic, Mul
 from sympy.assumptions import Q, ask
-from sympy.core.logic import fuzzy_not
-
 
 def refine(expr, assumptions=True):
     """
@@ -16,12 +14,11 @@ def refine(expr, assumptions=True):
     Examples
     ========
 
-        >>> from sympy import Symbol, refine, sqrt, Q
-        >>> x = Symbol('x', real=True)
-        >>> refine(sqrt(x**2))
+        >>> from sympy import refine, sqrt, Q
+        >>> from sympy.abc import x
+        >>> refine(sqrt(x**2), Q.real(x))
         Abs(x)
-        >>> x = Symbol('x', positive=True)
-        >>> refine(sqrt(x**2))
+        >>> refine(sqrt(x**2), Q.positive(x))
         x
 
     """
@@ -32,7 +29,7 @@ def refine(expr, assumptions=True):
         # TODO: this will probably not work with Integral or Polynomial
         expr = expr.func(*args)
     if hasattr(expr, '_eval_refine'):
-        ref_expr = expr._eval_refine()
+        ref_expr = expr._eval_refine(assumptions)
         if ref_expr is not None:
             return ref_expr
     name = expr.__class__.__name__
@@ -45,6 +42,45 @@ def refine(expr, assumptions=True):
     if not isinstance(new_expr, Expr):
         return new_expr
     return refine(new_expr, assumptions)
+
+
+def refine_abs(expr, assumptions):
+    """
+    Handler for the absolute value.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Q, refine, Abs
+    >>> from sympy.assumptions.refine import refine_abs
+    >>> from sympy.abc import x
+    >>> refine_abs(Abs(x), Q.real(x))
+    >>> refine_abs(Abs(x), Q.positive(x))
+    x
+    >>> refine_abs(Abs(x), Q.negative(x))
+    -x
+
+    """
+    from sympy.core.logic import fuzzy_not
+    from sympy import Abs
+    arg = expr.args[0]
+    if ask(Q.real(arg), assumptions) and \
+            fuzzy_not(ask(Q.negative(arg), assumptions)):
+        # if it's nonnegative
+        return arg
+    if ask(Q.negative(arg), assumptions):
+        return -arg
+    # arg is Mul
+    if isinstance(arg, Mul):
+        r = [refine(abs(a), assumptions) for a in arg.args]
+        non_abs = []
+        in_abs = []
+        for i in r:
+            if isinstance(i, Abs):
+                in_abs.append(i.args[0])
+            else:
+                non_abs.append(i)
+        return Mul(*non_abs) * Abs(Mul(*in_abs))
 
 
 def refine_Pow(expr, assumptions):
@@ -205,6 +241,7 @@ def refine_Relational(expr, assumptions):
 
 
 handlers_dict = {
+    'Abs': refine_abs,
     'Pow': refine_Pow,
     'atan2': refine_atan2,
     'Equality': refine_Relational,

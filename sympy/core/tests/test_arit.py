@@ -1,10 +1,9 @@
-from __future__ import division
-
 from sympy import (Basic, Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
-        sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, Integer,
+        sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, zoo, Integer,
         sign, im, nan, Dummy, factorial, comp, refine
 )
 from sympy.core.compatibility import long, range
+from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import verify_numerically
@@ -187,6 +186,19 @@ def test_pow3():
     assert sqrt(2)**3 == sqrt(8)
 
 
+def test_mod_pow():
+    for s, t, u, v in [(4, 13, 497, 445), (4, -3, 497, 365),
+            (3.2, 2.1, 1.9, 0.1031015682350942), (S(3)/2, 5, S(5)/6, S(3)/32)]:
+        assert pow(S(s), t, u) == v
+        assert pow(S(s), S(t), u) == v
+        assert pow(S(s), t, S(u)) == v
+        assert pow(S(s), S(t), S(u)) == v
+    assert pow(S(2), S(10000000000), S(3)) == 1
+    assert pow(x, y, z) == x**y%z
+    raises(TypeError, lambda: pow(S(4), "13", 497))
+    raises(TypeError, lambda: pow(S(4), 13, "497"))
+
+
 def test_pow_E():
     assert 2**(y/log(2)) == S.Exp1**y
     assert 2**(y/log(2)/3) == S.Exp1**(y/3)
@@ -255,12 +267,12 @@ def test_pow_im():
     assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     assert Mul(Pow(-1, Rational(3, 2), evaluate=False), I, I) == I
-    assert Mul(I*Pow(I, S.Half, evaluate=False)) == (-1)**Rational(3, 4)
+    assert Mul(I*Pow(I, S.Half, evaluate=False)) == sqrt(I)*I
 
 
 def test_real_mul():
     assert Float(0) * pi * x == Float(0)
-    assert set((Float(1) * pi * x).args) == set([Float(1), pi, x])
+    assert set((Float(1) * pi * x).args) == {Float(1), pi, x}
 
 
 def test_ncmul():
@@ -288,7 +300,7 @@ def test_ncmul():
     assert A/(1 + A) == A/(1 + A)
 
     assert set((A + B + 2*(A + B)).args) == \
-        set([A, B, 2*(A + B)])
+        {A, B, 2*(A + B)}
 
 
 def test_ncpow():
@@ -334,8 +346,8 @@ def test_powerbug():
 def test_Mul_doesnt_expand_exp():
     x = Symbol('x')
     y = Symbol('y')
-    assert exp(x)*exp(y) == exp(x)*exp(y)
-    assert 2**x*2**y == 2**x*2**y
+    assert unchanged(Mul, exp(x), exp(y))
+    assert unchanged(Mul, 2**x, 2**y)
     assert x**2*x**3 == x**5
     assert 2**x*3**x == 6**x
     assert x**(y)*x**(2*y) == x**(3*y)
@@ -1255,12 +1267,19 @@ def test_Mul_is_imaginary_real():
     assert (r*i*ii).is_real is True
 
     # Github's issue 5874:
-    nr = Symbol('nr', real=False, complex=True)
+    nr = Symbol('nr', real=False, complex=True)  # e.g. I or 1 + I
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
     assert (i*nr).is_real is None
     assert (a*nr).is_real is False
     assert (b*nr).is_real is None
+
+    ni = Symbol('ni', imaginary=False, complex=True)  # e.g. 2 or 1 + I
+    a = Symbol('a', real=True, nonzero=True)
+    b = Symbol('b', real=True)
+    assert (i*ni).is_real is False
+    assert (a*ni).is_real is None
+    assert (b*ni).is_real is None
 
 
 def test_Mul_hermitian_antihermitian():
@@ -1506,6 +1525,17 @@ def test_Mod():
     assert Mod(1, nan) == nan
     assert Mod(nan, nan) == nan
 
+    Mod(0, x) == 0
+    with raises(ZeroDivisionError):
+        Mod(x, 0)
+
+    k = Symbol('k', integer=True)
+    m = Symbol('m', integer=True, positive=True)
+    assert (x**m % x).func is Mod
+    assert (k**(-m) % k).func is Mod
+    assert k**m % k == 0
+    assert (-2*k)**m % k == 0
+
     # Float handling
     point3 = Float(3.3) % 1
     assert (x - 3.3) % 1 == Mod(1.*x + 1 - point3, 1)
@@ -1534,22 +1564,31 @@ def test_Mod():
             assert Mod(3*x + y, 9).subs(reps) == (3*_x + _y) % 9
 
     # denesting
-    #   easy case
-    assert Mod(Mod(x, y), y) == Mod(x, y)
-    #   in case someone attempts more denesting
-    for i in [-3, -2, 2, 3]:
-        for j in [-3, -2, 2, 3]:
-            for k in range(3):
-                assert Mod(Mod(k, i), j) == (k % i) % j
+    t = Symbol('t', real=True)
+    assert Mod(Mod(x, t), t) == Mod(x, t)
+    assert Mod(-Mod(x, t), t) == Mod(-x, t)
+    assert Mod(Mod(x, 2*t), t) == Mod(x, t)
+    assert Mod(-Mod(x, 2*t), t) == Mod(-x, t)
+    assert Mod(Mod(x, t), 2*t) == Mod(x, t)
+    assert Mod(-Mod(x, t), -2*t) == -Mod(x, t)
+    for i in [-4, -2, 2, 4]:
+        for j in [-4, -2, 2, 4]:
+            for k in range(4):
+                assert Mod(Mod(x, i), j).subs({x: k}) == (k % i) % j
+                assert Mod(-Mod(x, i), j).subs({x: k}) == -(k % i) % j
 
     # known difference
     assert Mod(5*sqrt(2), sqrt(5)) == 5*sqrt(2) - 3*sqrt(5)
     p = symbols('p', positive=True)
-    assert Mod(p + 1, p + 3) == p + 1
-    n = symbols('n', negative=True)
-    assert Mod(n - 3, n - 1) == -2
-    assert Mod(n - 2*p, n - p) == -p
-    assert Mod(p - 2*n, p - n) == -n
+    assert Mod(2, p + 3) == 2
+    assert Mod(-2, p + 3) == p + 1
+    assert Mod(2, -p - 3) == -p - 1
+    assert Mod(-2, -p - 3) == -2
+    assert Mod(p + 5, p + 3) == 2
+    assert Mod(-p - 5, p + 3) == p + 1
+    assert Mod(p + 5, -p - 3) == -p - 1
+    assert Mod(-p - 5, -p - 3) == -2
+    assert Mod(p + 1, p - 1).func is Mod
 
     # handling sums
     assert (x + 3) % 1 == Mod(x, 1)
@@ -1589,13 +1628,46 @@ def test_Mod():
 
     # issue 8677
     n = Symbol('n', integer=True, positive=True)
-    assert (factorial(n) % n).equals(0) is not False
+    assert factorial(n) % n == 0
+    assert factorial(n + 2) % n == 0
+    assert (factorial(n + 4) % (n + 5)).func is Mod
+
+    # modular exponentiation
+    assert Mod(Pow(4, 13, evaluate=False), 497) == Mod(Pow(4, 13), 497)
+    assert Mod(Pow(2, 10000000000, evaluate=False), 3) == 1
+    assert Mod(Pow(32131231232, 9**10**6, evaluate=False),10**12) == pow(32131231232,9**10**6,10**12)
+    assert Mod(Pow(33284959323, 123**999, evaluate=False),11**13) == pow(33284959323,123**999,11**13)
+    assert Mod(Pow(78789849597, 333**555, evaluate=False),12**9) == pow(78789849597,333**555,12**9)
+
+    # Wilson's theorem
+    factorial(18042, evaluate=False) % 18043 == 18042
+    p = Symbol('n', prime=True)
+    factorial(p - 1) % p == p - 1
+    factorial(p - 1) % -p == -1
+    (factorial(3, evaluate=False) % 4).doit() == 2
+    n = Symbol('n', composite=True, odd=True)
+    factorial(n - 1) % n == 0
 
     # symbolic with known parity
     n = Symbol('n', even=True)
     assert Mod(n, 2) == 0
     n = Symbol('n', odd=True)
     assert Mod(n, 2) == 1
+
+    # issue 10963
+    assert (x**6000%400).args[1] == 400
+
+    #issue 13543
+    assert Mod(Mod(x + 1, 2) + 1 , 2) == Mod(x,2)
+
+    assert Mod(Mod(x + 2, 4)*(x + 4), 4) == Mod(x*(x + 2), 4)
+    assert Mod(Mod(x + 2, 4)*4, 4) == 0
+
+    # issue 15493
+    i, j = symbols('i j', integer=True, positive=True)
+    assert Mod(3*i, 2) == Mod(i, 2)
+    assert Mod(8*i/j, 4) == 4*Mod(2*i/j, 1)
+    assert Mod(8*i, 4) == 0
 
 
 def test_Mod_is_integer():
@@ -1704,6 +1776,9 @@ def test_add_flatten():
     assert a - b == nan
     assert (1/a).simplify() == (1/b).simplify() == 0
 
+    a = Pow(2, 3, evaluate=False)
+    assert a + a == 16
+
 
 def test_issue_5160_6087_6089_6090():
     # issue 6087
@@ -1720,7 +1795,7 @@ def test_issue_5160_6087_6089_6090():
     assert (-2*x*y*A*B)**2 == 4*x**2*y**2*(A*B)**2
 
 
-def test_float_int():
+def test_float_int_round():
     assert int(float(sqrt(10))) == int(sqrt(10))
     assert int(pi**1000) % 10 == 2
     assert int(Float('1.123456789012345678901234567890e20', '')) == \
@@ -1870,6 +1945,25 @@ def test_Mul_with_zero_infinite():
     assert e.is_positive is None
     assert e.is_hermitian is None
 
+def test_Mul_does_not_cancel_infinities():
+    a, b = symbols('a b')
+    assert ((zoo + 3*a)/(3*a + zoo)) is nan
+    assert ((b - oo)/(b - oo)) is nan
+    # issue 13904
+    expr = (1/(a+b) + 1/(a-b))/(1/(a+b) - 1/(a-b))
+    assert expr.subs(b, a) is nan
+
+
+def test_Mul_does_not_distribute_infinity():
+    a, b = symbols('a b')
+    assert ((1 + I)*oo).is_Mul
+    assert ((a + b)*(-oo)).is_Mul
+    assert ((a + 1)*zoo).is_Mul
+    assert ((1 + I)*oo).is_finite is False
+    z = (1 + I)*oo
+    assert ((1 - I)*z).expand() is oo
+
+
 def test_issue_8247_8354():
     from sympy import tan
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
@@ -1887,3 +1981,22 @@ def test_issue_8247_8354():
         1566)*((3*sqrt(93) + 29)**(1/3)*(-2**(2/3)*(3*sqrt(93) + 29)**(1/3) -
         2) - 2*2**(1/3))**2''')
     assert z.is_positive is False  # it's 0 (and a single _mexpand isn't enough)
+
+
+def test_Add_is_zero():
+    x, y = symbols('x y', zero=True)
+    assert (x + y).is_zero
+
+    # Issue 15873
+    e = -2*I + (1 + I)**2
+    assert e.is_zero is None
+
+
+def test_issue_14392():
+    assert (sin(zoo)**2).as_real_imag() == (nan, nan)
+
+
+def test_divmod():
+    assert divmod(x, y) == (x//y, x % y)
+    assert divmod(x, 3) == (x//3, x % 3)
+    assert divmod(3, x) == (3//x, 3 % x)

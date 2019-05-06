@@ -17,7 +17,7 @@ Todo:
 from __future__ import print_function, division
 
 from sympy import Mul
-from sympy.core.compatibility import u, range
+from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.physics.quantum.gate import Gate, OneQubitGate, CGate, CGateS
 from sympy.core.core import BasicMeta
@@ -311,14 +311,14 @@ def render_label(label, inits={}):
 
     >>> from sympy.physics.quantum.circuitplot import render_label
     >>> render_label('q0')
-    '$|q0\\\\rangle$'
+    '$\\\\left|q0\\\\right\\\\rangle$'
     >>> render_label('q0', {'q0':'0'})
-    '$|q0\\\\rangle=|0\\\\rangle$'
+    '$\\\\left|q0\\\\right\\\\rangle=\\\\left|0\\\\right\\\\rangle$'
     """
     init = inits.get(label)
     if init:
-        return r'$|%s\rangle=|%s\rangle$' % (label, init)
-    return r'$|%s\rangle$' % label
+        return r'$\left|%s\right\rangle=\left|%s\right\rangle$' % (label, init)
+    return r'$\left|%s\right\rangle$' % label
 
 def labeller(n, symbol='q'):
     """Autogenerate labels for wires of quantum circuits.
@@ -346,7 +346,7 @@ class Mz(OneQubitGate):
     """
     measurement = True
     gate_name='Mz'
-    gate_name_latex=u('M_z')
+    gate_name_latex=u'M_z'
 
 class Mx(OneQubitGate):
     """Mock-up of an x measurement gate.
@@ -356,7 +356,7 @@ class Mx(OneQubitGate):
     """
     measurement = True
     gate_name='Mx'
-    gate_name_latex=u('M_x')
+    gate_name_latex=u'M_x'
 
 class CreateOneQubitGate(ManagedProperties):
     def __new__(mcl, name, latexname=None):

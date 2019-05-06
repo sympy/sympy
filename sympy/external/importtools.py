@@ -1,8 +1,8 @@
 """Tools to assist importing optional external modules."""
 
 from __future__ import print_function, division
-
 import sys
+from distutils.version import LooseVersion
 
 # Override these in the module to change the default warning behavior.
 # For example, you might set both to False before running the tests so that
@@ -122,7 +122,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
                 warnings.warn("Python version is too old to use %s "
                     "(%s or newer required)" % (
                         module, '.'.join(map(str, min_python_version))),
-                    UserWarning)
+                    UserWarning, stacklevel=2)
             return
 
     # PyPy 1.6 has rudimentary NumPy support and importing it produces errors, so skip it
@@ -142,22 +142,25 @@ def import_module(module, min_module_version=None, min_python_version=None,
                 __import__(module + '.' + submod)
     except ImportError:
         if warn_not_installed:
-            warnings.warn("%s module is not installed" % module, UserWarning)
+            warnings.warn("%s module is not installed" % module, UserWarning,
+                    stacklevel=2)
         return
     except catch as e:
         if warn_not_installed:
             warnings.warn(
-                "%s module could not be used (%s)" % (module, repr(e)))
+                "%s module could not be used (%s)" % (module, repr(e)),
+                stacklevel=2)
         return
 
     if min_module_version:
         modversion = getattr(mod, module_version_attr)
         if module_version_attr_call_args is not None:
             modversion = modversion(*module_version_attr_call_args)
-        if modversion < min_module_version:
+        if LooseVersion(modversion) < LooseVersion(min_module_version):
             if warn_old_version:
                 # Attempt to create a pretty string version of the version
-                if isinstance(min_module_version, basestring):
+                from ..core.compatibility import string_types
+                if isinstance(min_module_version, string_types):
                     verstr = min_module_version
                 elif isinstance(min_module_version, (tuple, list)):
                     verstr = '.'.join(map(str, min_module_version))
@@ -167,7 +170,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
                     verstr = str(min_module_version)
                 warnings.warn("%s version is too old to use "
                     "(%s or newer required)" % (module, verstr),
-                    UserWarning)
+                    UserWarning, stacklevel=2)
             return
 
     return mod

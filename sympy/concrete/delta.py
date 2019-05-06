@@ -1,5 +1,13 @@
-from __future__ import print_function, division
+"""
+This module implements sums and products containing the Kronecker Delta function.
 
+References
+==========
+
+- http://mathworld.wolfram.com/KroneckerDelta.html
+
+"""
+from __future__ import print_function, division
 from sympy.core import Add, Mul, S, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import default_sort_key, range
@@ -266,9 +274,9 @@ def deltasummation(f, limit, no_piecewise=False):
     >>> deltasummation(KroneckerDelta(i, k), (k, -oo, oo))
     1
     >>> deltasummation(KroneckerDelta(i, k), (k, 0, oo))
-    Piecewise((1, 0 <= i), (0, True))
+    Piecewise((1, i >= 0), (0, True))
     >>> deltasummation(KroneckerDelta(i, k), (k, 1, 3))
-    Piecewise((1, And(1 <= i, i <= 3)), (0, True))
+    Piecewise((1, (i >= 1) & (i <= 3)), (0, True))
     >>> deltasummation(k*KroneckerDelta(i, j)*KroneckerDelta(j, k), (k, -oo, oo))
     j*KroneckerDelta(i, j)
     >>> deltasummation(j*KroneckerDelta(i, j), (j, -oo, oo))
@@ -309,6 +317,7 @@ def deltasummation(f, limit, no_piecewise=False):
     if len(solns) == 0:
         return S.Zero
     elif len(solns) != 1:
+        from sympy.concrete.summations import Sum
         return Sum(f, limit)
     value = solns[0]
     if no_piecewise:

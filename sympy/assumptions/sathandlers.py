@@ -1,20 +1,19 @@
 from __future__ import print_function, division
 
-from collections import MutableMapping, defaultdict
-
-from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
-from sympy.core.numbers import ImaginaryUnit
-from sympy.core.sympify import _sympify
-from sympy.core.rules import Transform
-from sympy.core.logic import fuzzy_or, fuzzy_and
-from sympy.matrices.expressions import MatMul
-
-from sympy.functions.elementary.complexes import Abs
+from collections import defaultdict
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
+from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
+from sympy.core.compatibility import MutableMapping
+from sympy.core.numbers import ImaginaryUnit
+from sympy.core.logic import fuzzy_or, fuzzy_and
+from sympy.core.rules import Transform
+from sympy.core.sympify import _sympify
+from sympy.functions.elementary.complexes import Abs
 from sympy.logic.boolalg import (Equivalent, Implies, And, Or,
     BooleanFunction, Not)
+from sympy.matrices.expressions import MatMul
 
 # APIs here may be subject to change
 
@@ -62,7 +61,7 @@ class UnevaluatedOnFree(BooleanFunction):
             obj.pred = arg
             obj.expr = None
             return obj
-        predicate_args = set([pred.args[0] for pred in applied_predicates])
+        predicate_args = {pred.args[0] for pred in applied_predicates}
         if len(predicate_args) > 1:
             raise ValueError("The AppliedPredicates in arg must be applied to a single expression.")
         obj = BooleanFunction.__new__(cls, arg)
@@ -96,9 +95,9 @@ class AllArgs(UnevaluatedOnFree):
     >>> x, y = symbols('x y')
     >>> a = AllArgs(Q.positive | Q.negative)
     >>> a
-    AllArgs(Or(Q.negative, Q.positive))
+    AllArgs(Q.negative | Q.positive)
     >>> a.rcall(x*y)
-    And(Or(Q.negative(x), Q.positive(x)), Or(Q.negative(y), Q.positive(y)))
+    (Q.negative(x) | Q.positive(x)) & (Q.negative(y) | Q.positive(y))
     """
 
     def apply(self):
@@ -123,9 +122,9 @@ class AnyArgs(UnevaluatedOnFree):
     >>> x, y = symbols('x y')
     >>> a = AnyArgs(Q.positive & Q.negative)
     >>> a
-    AnyArgs(And(Q.negative, Q.positive))
+    AnyArgs(Q.negative & Q.positive)
     >>> a.rcall(x*y)
-    Or(And(Q.negative(x), Q.positive(x)), And(Q.negative(y), Q.positive(y)))
+    (Q.negative(x) & Q.positive(x)) | (Q.negative(y) & Q.positive(y))
     """
 
     def apply(self):
@@ -153,7 +152,7 @@ class ExactlyOneArg(UnevaluatedOnFree):
     >>> a
     ExactlyOneArg(Q.positive)
     >>> a.rcall(x*y)
-    Or(And(Not(Q.positive(x)), Q.positive(y)), And(Not(Q.positive(y)), Q.positive(x)))
+    (Q.positive(x) & ~Q.positive(y)) | (Q.positive(y) & ~Q.positive(x))
     """
     def apply(self):
         expr = self.expr
@@ -293,7 +292,7 @@ fact_registry = ClassFactRegistry()
 
 
 def register_fact(klass, fact, registry=fact_registry):
-    registry[klass] |= set([fact])
+    registry[klass] |= {fact}
 
 
 for klass, fact in [
@@ -304,6 +303,12 @@ for klass, fact in [
     (Mul, Implies(AllArgs(Q.positive), Q.positive)),
     (Mul, Implies(AllArgs(Q.commutative), Q.commutative)),
     (Mul, Implies(AllArgs(Q.real), Q.commutative)),
+
+    (Pow, CustomLambda(lambda power: Implies(Q.real(power.base) &
+    Q.even(power.exp) & Q.nonnegative(power.exp), Q.nonnegative(power)))),
+    (Pow, CustomLambda(lambda power: Implies(Q.nonnegative(power.base) & Q.odd(power.exp) & Q.nonnegative(power.exp), Q.nonnegative(power)))),
+    (Pow, CustomLambda(lambda power: Implies(Q.nonpositive(power.base) & Q.odd(power.exp) & Q.nonnegative(power.exp), Q.nonpositive(power)))),
+
     # This one can still be made easier to read. I think we need basic pattern
     # matching, so that we can just write Equivalent(Q.zero(x**y), Q.zero(x) & Q.positive(y))
     (Pow, CustomLambda(lambda power: Equivalent(Q.zero(power), Q.zero(power.base) & Q.positive(power.exp)))),
@@ -316,7 +321,7 @@ for klass, fact in [
     (Mul, Implies(AllArgs(Q.imaginary | Q.real), Implies(ExactlyOneArg(Q.imaginary), Q.imaginary))),
     (Mul, Implies(AllArgs(Q.real), Q.real)),
     (Add, Implies(AllArgs(Q.real), Q.real)),
-    #General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
+    # General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
     (Mul, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
         Q.irrational))),
     (Add, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),

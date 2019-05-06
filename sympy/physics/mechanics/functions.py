@@ -8,9 +8,9 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify, Matrix, Derivative, sin, cos, tan, simplify, Mul
-from sympy.core.function import AppliedUndef
-from sympy.core.basic import S
+from sympy import simplify
+from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
+                                tan, AppliedUndef, S)
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -37,6 +37,10 @@ mlatex = vlatex
 
 
 def mechanics_printing(**kwargs):
+    """
+    Initializes time derivative printing for all SymPy objects in
+    mechanics module.
+    """
 
     init_vprinting(**kwargs)
 
@@ -47,7 +51,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     """Simple way to create inertia Dyadic object.
 
     If you don't know what a Dyadic is, just treat this like the inertia
-    tensor.  Then, do the easy thing and define it in a body-fixed frame.
+    tensor. Then, do the easy thing and define it in a body-fixed frame.
 
     Parameters
     ==========
@@ -338,6 +342,94 @@ def potential_energy(*body):
     return pe_sys
 
 
+def gravity(acceleration, *bodies):
+    """
+    Returns a list of gravity forces given the acceleration
+    due to gravity and any number of particles or rigidbodies.
+
+    Example
+    =======
+
+    >>> from sympy.physics.mechanics import ReferenceFrame, Point, Particle, outer, RigidBody
+    >>> from sympy.physics.mechanics.functions import gravity
+    >>> from sympy import symbols
+    >>> N = ReferenceFrame('N')
+    >>> m, M, g = symbols('m M g')
+    >>> F1, F2 = symbols('F1 F2')
+    >>> po = Point('po')
+    >>> pa = Particle('pa', po, m)
+    >>> A = ReferenceFrame('A')
+    >>> P = Point('P')
+    >>> I = outer(A.x, A.x)
+    >>> B = RigidBody('B', P, A, M, (I, P))
+    >>> forceList = [(po, F1), (P, F2)]
+    >>> forceList.extend(gravity(g*N.y, pa, B))
+    >>> forceList
+    [(po, F1), (P, F2), (po, g*m*N.y), (P, M*g*N.y)]
+    """
+
+    gravity_force = []
+    if not bodies:
+        raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
+
+    for e in bodies:
+        point = getattr(e, 'masscenter', None)
+        if point is None:
+            point = e.point
+
+        gravity_force.append((point, e.mass*acceleration))
+
+    return gravity_force
+
+
+def center_of_mass(point, *bodies):
+    """
+    Returns the position vector from the given point to the center of mass
+    of the given bodies(particles or rigidbodies).
+
+    Example
+    =======
+
+    >>> from sympy import symbols, S
+    >>> from sympy.physics.vector import Point
+    >>> from sympy.physics.mechanics import Particle, ReferenceFrame, RigidBody, outer
+    >>> from sympy.physics.mechanics.functions import center_of_mass
+    >>> a = ReferenceFrame('a')
+    >>> m = symbols('m', real=True)
+    >>> p1 = Particle('p1', Point('p1_pt'), S(1))
+    >>> p2 = Particle('p2', Point('p2_pt'), S(2))
+    >>> p3 = Particle('p3', Point('p3_pt'), S(3))
+    >>> p4 = Particle('p4', Point('p4_pt'), m)
+    >>> b_f = ReferenceFrame('b_f')
+    >>> b_cm = Point('b_cm')
+    >>> mb = symbols('mb')
+    >>> b = RigidBody('b', b_cm, b_f, mb, (outer(b_f.x, b_f.x), b_cm))
+    >>> p2.point.set_pos(p1.point, a.x)
+    >>> p3.point.set_pos(p1.point, a.x + a.y)
+    >>> p4.point.set_pos(p1.point, a.y)
+    >>> b.masscenter.set_pos(p1.point, a.y + a.z)
+    >>> point_o=Point('o')
+    >>> point_o.set_pos(p1.point, center_of_mass(p1.point, p1, p2, p3, p4, b))
+    >>> expr = 5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
+    >>> point_o.pos_from(p1.point)
+    5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
+    """
+    if not bodies:
+        raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
+
+    total_mass = 0
+    vec = Vector(0)
+    for i in bodies:
+        total_mass += i.mass
+
+        masscenter = getattr(i, 'masscenter', None)
+        if masscenter is None:
+            masscenter = i.point
+        vec += i.mass*masscenter.pos_from(point)
+
+    return vec/total_mass
+
+
 def Lagrangian(frame, *body):
     """Lagrangian of a multibody system.
 
@@ -395,22 +487,46 @@ def Lagrangian(frame, *body):
     return kinetic_energy(frame, *body) - potential_energy(*body)
 
 
-def find_dynamicsymbols(expression, exclude=None):
+def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     """Find all dynamicsymbols in expression.
-
-    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
-    >>> x, y = dynamicsymbols('x, y')
-    >>> expr = x + x.diff()*y
-    >>> find_dynamicsymbols(expr)
-    set([x(t), y(t), Derivative(x(t), t)])
 
     If the optional ``exclude`` kwarg is used, only dynamicsymbols
     not in the iterable ``exclude`` are returned.
+    If we intend to apply this function on a vector, the optional
+    ''reference_frame'' is also used to inform about the corresponding frame
+    with respect to which the dynamic symbols of the given vector is to be
+    determined.
 
-    >>> find_dynamicsymbols(expr, [x, y])
-    set([Derivative(x(t), t)])
+    Parameters
+    ==========
+
+    expression : sympy expression
+
+    exclude : iterable of dynamicsymbols, optional
+
+    reference_frame : ReferenceFrame, optional
+        The frame with respect to which the dynamic symbols of the
+        given vector is to be determined.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import dynamicsymbols, find_dynamicsymbols
+    >>> from sympy.physics.mechanics import ReferenceFrame
+    >>> x, y = dynamicsymbols('x, y')
+    >>> expr = x + x.diff()*y
+    >>> find_dynamicsymbols(expr)
+    {x(t), y(t), Derivative(x(t), t)}
+    >>> find_dynamicsymbols(expr, exclude=[x, y])
+    {Derivative(x(t), t)}
+    >>> a, b, c = dynamicsymbols('a, b, c')
+    >>> A = ReferenceFrame('A')
+    >>> v = a * A.x + b * A.y + c * A.z
+    >>> find_dynamicsymbols(v, reference_frame=A)
+    {a(t), b(t), c(t)}
+
     """
-    t_set = set([dynamicsymbols._t])
+    t_set = {dynamicsymbols._t}
     if exclude:
         if iterable(exclude):
             exclude_set = set(exclude)
@@ -418,6 +534,12 @@ def find_dynamicsymbols(expression, exclude=None):
             raise TypeError("exclude kwarg must be iterable")
     else:
         exclude_set = set()
+    if isinstance(expression, Vector):
+        if reference_frame is None:
+            raise ValueError("You must provide reference_frame when passing a "
+                             "vector expression, got %s." % reference_frame)
+        else:
+            expression = expression.to_matrix(reference_frame)
     return set([i for i in expression.atoms(AppliedUndef, Derivative) if
             i.free_symbols == t_set]) - exclude_set
 
@@ -455,12 +577,16 @@ def msubs(expr, *sub_dicts, **kwargs):
     the denominator. If this results in 0, simplification of the entire
     fraction is attempted. Using this selective simplification, only
     subexpressions that result in 1/0 are targeted, resulting in faster
-    performance."""
+    performance.
+
+    """
 
     sub_dict = dict_merge(*sub_dicts)
     smart = kwargs.pop('smart', False)
     if smart:
         func = _smart_subs
+    elif hasattr(expr, 'msubs'):
+        return expr.msubs(sub_dict)
     else:
         func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
     if isinstance(expr, (Matrix, Vector, Dyadic)):
@@ -507,6 +633,7 @@ def _smart_subs(expr, sub_dict):
         If so, attempt to simplify it out. Then if node is in sub_dict,
         sub in the corresponding value."""
     expr = _crawl(expr, _tan_repl_func)
+
     def _recurser(expr, sub_dict):
         # Decompose the expression into num, den
         num, den = _fraction_decomp(expr)
@@ -552,14 +679,15 @@ def _f_list_parser(fl, ref_frame):
     """Parses the provided forcelist composed of items
     of the form (obj, force).
     Returns a tuple containing:
-        vlist: The velocity (ang_vel for Frames, vel for Points) in
+        vel_list: The velocity (ang_vel for Frames, vel for Points) in
                 the provided reference frame.
-        flist: The forces.
+        f_list: The forces.
 
     Used internally in the KanesMethod and LagrangesMethod classes.
     """
     def flist_iter():
-        for obj, force in fl:
+        for pair in fl:
+            obj, force = pair
             if isinstance(obj, ReferenceFrame):
                 yield obj.ang_vel_in(ref_frame), force
             elif isinstance(obj, Point):
@@ -567,6 +695,10 @@ def _f_list_parser(fl, ref_frame):
             else:
                 raise TypeError('First entry in each forcelist pair must '
                                 'be a point or frame.')
-    unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
-    vel_list, f_list = unzip(list(flist_iter()))
+
+    if not fl:
+        vel_list, f_list = (), ()
+    else:
+        unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
+        vel_list, f_list = unzip(list(flist_iter()))
     return vel_list, f_list

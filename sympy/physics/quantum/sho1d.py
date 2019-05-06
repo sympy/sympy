@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy import sqrt, I, Symbol, Integer, S
-from sympy.core.compatibility import u, range
+from sympy.core.compatibility import range
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.state import Bra, Ket, State
@@ -12,7 +12,6 @@ from sympy.physics.quantum.cartesian import X, Px
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.matrixutils import matrix_zeros
-from sympy.physics.quantum.represent import represent
 
 #------------------------------------------------------------------------------
 
@@ -104,7 +103,7 @@ class RaisingOp(SHOOp):
 
     """
 
-    def _eval_rewrite_as_xp(self, *args):
+    def _eval_rewrite_as_xp(self, *args, **kwargs):
         return (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(
             Integer(-1)*I*Px + m*omega*X)
 
@@ -157,12 +156,12 @@ class RaisingOp(SHOOp):
     def _print_contents_pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
-        pform = pform**prettyForm(u('\N{DAGGER}'))
+        pform = pform**prettyForm(u'\N{DAGGER}')
         return pform
 
     def _print_contents_latex(self, printer, *args):
         arg = printer._print(self.args[0])
-        return '%s^{\\dag}' % arg
+        return '%s^{\\dagger}' % arg
 
 class LoweringOp(SHOOp):
     """The Lowering Operator or 'a'.
@@ -243,7 +242,7 @@ class LoweringOp(SHOOp):
 
     """
 
-    def _eval_rewrite_as_xp(self, *args):
+    def _eval_rewrite_as_xp(self, *args, **kwargs):
         return (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(
             I*Px + m*omega*X)
 
@@ -362,14 +361,14 @@ class NumberOp(SHOOp):
 
     """
 
-    def _eval_rewrite_as_a(self, *args):
+    def _eval_rewrite_as_a(self, *args, **kwargs):
         return ad*a
 
-    def _eval_rewrite_as_xp(self, *args):
+    def _eval_rewrite_as_xp(self, *args, **kwargs):
         return (Integer(1)/(Integer(2)*m*hbar*omega))*(Px**2 + (
             m*omega*X)**2) - Integer(1)/Integer(2)
 
-    def _eval_rewrite_as_H(self, *args):
+    def _eval_rewrite_as_H(self, *args, **kwargs):
         return H/(hbar*omega) - Integer(1)/Integer(2)
 
     def _apply_operator_SHOKet(self, ket):
@@ -476,13 +475,13 @@ class Hamiltonian(SHOOp):
 
     """
 
-    def _eval_rewrite_as_a(self, *args):
+    def _eval_rewrite_as_a(self, *args, **kwargs):
         return hbar*omega*(ad*a + Integer(1)/Integer(2))
 
-    def _eval_rewrite_as_xp(self, *args):
+    def _eval_rewrite_as_xp(self, *args, **kwargs):
         return (Integer(1)/(Integer(2)*m))*(Px**2 + (m*omega*X)**2)
 
-    def _eval_rewrite_as_N(self, *args):
+    def _eval_rewrite_as_N(self, *args, **kwargs):
         return hbar*omega*(N + Integer(1)/Integer(2))
 
     def _apply_operator_SHOKet(self, ket):

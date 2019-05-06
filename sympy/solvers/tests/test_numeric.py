@@ -1,9 +1,27 @@
-from sympy import Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise, symbols
+from sympy import (Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise,
+    symbols, Float, I, Rational)
 from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.decorator import conserve_mpmath_dps
 
+@XFAIL
+def test_nsolve_fail():
+    x = symbols('x')
+    # Sometimes it is better to use the numerator (issue 4829)
+    # but sometimes it is not (issue 11768) so leave this to
+    # the discretion of the user
+    ans = nsolve(x**2/(1 - x)/(1 - 2*x)**2 - 100, x, 0)
+    assert ans > 0.46 and ans < 0.47
+
+
+def test_nsolve_denominator():
+    x = symbols('x')
+    # Test that nsolve uses the full expression (numerator and denominator).
+    ans = nsolve((x**2 + 3*x + 2)/(x + 2), -2.1)
+    # The root -2 was divided out, so make sure we don't find it.
+    assert ans == -1.0
 
 def test_nsolve():
     # onedimensional
@@ -13,8 +31,6 @@ def test_nsolve():
     # Testing checks on number of inputs
     raises(TypeError, lambda: nsolve(Eq(2*x, 2)))
     raises(TypeError, lambda: nsolve(Eq(2*x, 2), x, 1, 2))
-    # issue 4829
-    assert nsolve(x**2/(1 - x)/(1 - 2*x)**2 - 100, x, 0)  # doesn't fail
     # multidimensional
     x1 = Symbol('x1')
     x2 = Symbol('x2')
@@ -42,10 +58,11 @@ def test_nsolve():
         return root
     assert list(map(round, getroot((1, 1, 1)))) == [2.0, 1.0, 0.0]
     assert nsolve([Eq(
-        f1), Eq(f2), Eq(f3)], [x, y, z], (1, 1, 1))  # just see that it works
+        f1, 0), Eq(f2, 0), Eq(f3, 0)], [x, y, z], (1, 1, 1))  # just see that it works
     a = Symbol('a')
-    assert nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3).ae(
-        mpf('0.31883011387318591'))
+    assert abs(nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3) -
+        mpf('0.31883011387318591')) < 1e-15
+
 
 
 def test_issue_6408():
@@ -57,3 +74,61 @@ def test_issue_6408():
 def test_issue_6408_fail():
     x, y = symbols('x y')
     assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0
+
+
+@conserve_mpmath_dps
+def test_increased_dps():
+    # Issue 8564
+    import mpmath
+    mpmath.mp.dps = 128
+    x = Symbol('x')
+    e1 = x**2 - pi
+    q = nsolve(e1, x, 3.0)
+
+    assert abs(sqrt(pi).evalf(128) - q) < 1e-128
+
+def test_nsolve_precision():
+    x, y = symbols('x y')
+    sol = nsolve(x**2 - pi, x, 3, prec=128)
+    assert abs(sqrt(pi).evalf(128) - sol) < 1e-128
+    assert isinstance(sol, Float)
+
+    sols = nsolve((y**2 - x, x**2 - pi), (x, y), (3, 3), prec=128)
+    assert isinstance(sols, Matrix)
+    assert sols.shape == (2, 1)
+    assert abs(sqrt(pi).evalf(128) - sols[0]) < 1e-128
+    assert abs(sqrt(sqrt(pi)).evalf(128) - sols[1]) < 1e-128
+    assert all(isinstance(i, Float) for i in sols)
+
+def test_nsolve_complex():
+    x, y = symbols('x y')
+
+    assert nsolve(x**2 + 2, 1j) == sqrt(2.)*I
+    assert nsolve(x**2 + 2, I) == sqrt(2.)*I
+
+    assert nsolve([x**2 + 2, y**2 + 2], [x, y], [I, I]) == Matrix([sqrt(2.)*I, sqrt(2.)*I])
+    assert nsolve([x**2 + 2, y**2 + 2], [x, y], [I, I]) == Matrix([sqrt(2.)*I, sqrt(2.)*I])
+
+def test_nsolve_dict_kwarg():
+    x, y = symbols('x y')
+    # one variable
+    assert nsolve(x**2 - 2, 1, dict = True) == \
+        [{x: sqrt(2.)}]
+    # one variable with complex solution
+    assert nsolve(x**2 + 2, I, dict = True) == \
+        [{x: sqrt(2.)*I}]
+    # two variables
+    assert nsolve([x**2 + y**2 - 5, x**2 - y**2 + 1], [x, y], [1, 1], dict = True) == \
+        [{x: sqrt(2.), y: sqrt(3.)}]
+
+def test_nsolve_rational():
+    x = symbols('x')
+    assert nsolve(x - Rational(1, 3), 0, prec=100) == Rational(1, 3).evalf(100)
+
+
+def test_issue_14950():
+    x = Matrix(symbols('t s'))
+    x0 = Matrix([17, 23])
+    eqn = x + x0
+    assert nsolve(eqn, x, x0) == -x0
+    assert nsolve(eqn.T, x.T, x0.T) == -x0

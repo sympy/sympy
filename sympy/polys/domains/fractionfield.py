@@ -2,9 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
-
+from sympy.polys.domains.field import Field
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 from sympy.utilities import public
 
@@ -51,16 +50,24 @@ class FractionField(Field, CompositeDomain):
     def order(self):
         return self.field.order
 
+    @property
+    def is_Exact(self):
+        return self.domain.is_Exact
+
+    def get_exact(self):
+        return FractionField(self.domain.get_exact(), self.symbols)
+
     def __str__(self):
         return str(self.domain) + '(' + ','.join(map(str, self.symbols)) + ')'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype, self.domain, self.symbols))
+        return hash((self.__class__.__name__, self.dtype.field, self.domain, self.symbols))
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
         return isinstance(other, FractionField) and \
-            self.dtype == other.dtype and self.field == other.field
+            (self.dtype.field, self.domain, self.symbols) ==\
+            (other.dtype.field, other.domain, other.symbols)
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """

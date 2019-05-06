@@ -8,7 +8,7 @@ def test_complex():
     b = Symbol("b", real=True)
     e = (a + I*b)*(a - I*b)
     assert e.expand() == a**2 + b**2
-    assert sqrt(I) == (-1)**Rational(1, 4)
+    assert sqrt(I) == sqrt(I)
 
 
 def test_conjugate():
@@ -210,3 +210,11 @@ def test_issue_5429():
 def test_issue_4124():
     from sympy import oo
     assert expand_complex(I*oo) == oo*I
+
+def test_issue_11518():
+    x = Symbol("x", real=True)
+    y = Symbol("y", real=True)
+    r = sqrt(x**2 + y**2)
+    assert conjugate(r) == r
+    s = abs(x + I * y)
+    assert conjugate(s) == r

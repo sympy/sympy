@@ -1,5 +1,7 @@
-from sympy.core import Function, Pow, sympify
+from sympy.core import (Function, Pow, sympify, Expr)
+from sympy.core.relational import Relational
 from sympy.polys import Poly, decompose
+from sympy.utilities.misc import func_name
 
 
 def decompogen(f, symbol):
@@ -31,6 +33,11 @@ def decompogen(f, symbol):
 
     """
     f = sympify(f)
+    if not isinstance(f, Expr) or isinstance(f, Relational):
+        raise TypeError('expecting Expr but got: `%s`' % func_name(f))
+    if symbol not in f.free_symbols:
+        return [f]
+
     result = []
 
     # ===== Simple Functions ===== #
@@ -42,7 +49,7 @@ def decompogen(f, symbol):
 
     # ===== Convert to Polynomial ===== #
     fp = Poly(f)
-    gens = fp.gens
+    gens = list(filter(lambda x: symbol in x.free_symbols , fp.gens))
 
     if len(gens) == 1 and gens[0] != symbol:
         f1 = f.subs(gens[0], symbol)
@@ -56,3 +63,41 @@ def decompogen(f, symbol):
         return result
     except ValueError:
         return [f]
+
+
+def compogen(g_s, symbol):
+    """
+    Returns the composition of functions.
+    Given a list of functions ``g_s``, returns their composition ``f``,
+    where:
+        f = g_1 o g_2 o .. o g_n
+
+    Note: This is a General composition function. It also composes Polynomials.
+    For only Polynomial composition see ``compose`` in polys.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.decompogen import compogen
+    >>> from sympy.abc import x
+    >>> from sympy import sqrt, sin, cos
+    >>> compogen([sin(x), cos(x)], x)
+    sin(cos(x))
+    >>> compogen([x**2 + x + 1, sin(x)], x)
+    sin(x)**2 + sin(x) + 1
+    >>> compogen([sqrt(x), 6*x**2 - 5], x)
+    sqrt(6*x**2 - 5)
+    >>> compogen([sin(x), sqrt(x), cos(x), x**2 + 1], x)
+    sin(sqrt(cos(x**2 + 1)))
+    >>> compogen([x**2 - x - 1, x**2 + x], x)
+    -x**2 - x + (x**2 + x)**2 - 1
+    """
+    if len(g_s) == 1:
+        return g_s[0]
+
+    foo = g_s[0].subs(symbol, g_s[1])
+
+    if len(g_s) == 2:
+        return foo
+
+    return compogen([foo] + g_s[2:], symbol)

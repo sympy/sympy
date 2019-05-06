@@ -11,7 +11,7 @@ Todo:
 from __future__ import print_function, division
 
 from sympy import floor, pi, sqrt, sympify, eye
-from sympy.core.compatibility import u, range
+from sympy.core.compatibility import range
 from sympy.core.numbers import NegativeOne
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError
@@ -55,7 +55,7 @@ def superposition_basis(nqubits):
     """
 
     amp = 1/sqrt(2**nqubits)
-    return sum([amp*IntQubit(n, nqubits) for n in range(2**nqubits)])
+    return sum([amp*IntQubit(n, nqubits=nqubits) for n in range(2**nqubits)])
 
 
 class OracleGate(Gate):
@@ -90,8 +90,8 @@ class OracleGate(Gate):
         |3>
     """
 
-    gate_name = u('V')
-    gate_name_latex = u('V')
+    gate_name = u'V'
+    gate_name_latex = u'V'
 
     #-------------------------------------------------------------------------
     # Initialization/creation
@@ -176,7 +176,7 @@ class OracleGate(Gate):
         matrixOracle = eye(nbasis)
         # Flip the sign given the output of the oracle function
         for i in range(nbasis):
-            if self.search_function(IntQubit(i, self.nqubits)):
+            if self.search_function(IntQubit(i, nqubits=self.nqubits)):
                 matrixOracle[i, i] = NegativeOne()
         return matrixOracle
 
@@ -195,8 +195,8 @@ class WGate(Gate):
 
     """
 
-    gate_name = u('W')
-    gate_name_latex = u('W')
+    gate_name = u'W'
+    gate_name_latex = u'W'
 
     @classmethod
     def _eval_args(cls, args):

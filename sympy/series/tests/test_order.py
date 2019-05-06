@@ -1,6 +1,6 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
-    Function)
+    Function, Add)
 from sympy.utilities.pytest import raises
 from sympy.abc import w, x, y, z
 
@@ -15,10 +15,10 @@ def test_caching_bug():
 
 def test_free_symbols():
     assert Order(1).free_symbols == set()
-    assert Order(x).free_symbols == set([x])
-    assert Order(1, x).free_symbols == set([x])
-    assert Order(x*y).free_symbols == set([x, y])
-    assert Order(x, x, y).free_symbols == set([x, y])
+    assert Order(x).free_symbols == {x}
+    assert Order(1, x).free_symbols == {x}
+    assert Order(x*y).free_symbols == {x, y}
+    assert Order(x, x, y).free_symbols == {x, y}
 
 
 def test_simple_1():
@@ -407,6 +407,31 @@ def test_order_subs_limits():
     assert Order(10*x**2, (x, 2)).subs(x, y - 1) == Order(1, (y, 3))
 
 
+def test_issue_9351():
+    assert exp(x).series(x, 10, 1) == exp(10) + Order(x - 10, (x, 10))
+
+
 def test_issue_9192():
     assert O(1)*O(1) == O(1)
     assert O(1)**O(1) == O(1)
+
+def test_performance_of_adding_order():
+    l = list(x**i for i in range(1000))
+    l.append(O(x**1001))
+    assert Add(*l).subs(x,1) == O(1)
+
+def test_issue_14622():
+    assert (x**(-4) + x**(-3) + x**(-1) + O(x**(-6), (x, oo))).as_numer_denom() == (
+        x**4 + x**5 + x**7 + O(x**2, (x, oo)), x**8)
+    assert (x**3 + O(x**2, (x, oo))).is_Add
+    assert O(x**2, (x, oo)).contains(x**3) is False
+    assert O(x, (x, oo)).contains(O(x, (x, 0))) is None
+    assert O(x, (x, 0)).contains(O(x, (x, oo))) is None
+    raises(NotImplementedError, lambda: O(x**3).contains(x**w))
+
+
+def test_issue_15539():
+    assert O(1/x**2 + 1/x**4, (x, -oo)) == O(1/x**2, (x, -oo))
+    assert O(1/x**4 + exp(x), (x, -oo)) == O(1/x**4, (x, -oo))
+    assert O(1/x**4 + exp(-x), (x, -oo)) == O(exp(-x), (x, -oo))
+    assert O(1/x, (x, oo)).subs(x, -x) == O(-1/x, (x, -oo))

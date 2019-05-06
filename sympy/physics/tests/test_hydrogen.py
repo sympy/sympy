@@ -1,6 +1,6 @@
-from sympy import exp, integrate, oo, S, simplify, sqrt, symbols
+from sympy import exp, integrate, oo, S, simplify, sqrt, symbols, pi, sin, cos, I
 from sympy.core.compatibility import range
-from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac
+from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac, Psi_nlm
 from sympy.utilities.pytest import raises
 
 n, r, Z = symbols('n r Z')
@@ -50,6 +50,16 @@ def test_norm():
         for l in range(n):
             assert integrate(R_nl(n, l, r)**2 * r**2, (r, 0, oo)) == 1
 
+def test_psi_nlm():
+    r=S('r')
+    phi=S('phi')
+    theta=S('theta')
+    assert (Psi_nlm(1, 0, 0, r, phi, theta) == exp(-r) / sqrt(pi))
+    assert (Psi_nlm(2, 1, -1, r, phi, theta)) == S(1) / 2 * exp(-r / (2)) * r \
+        * (sin(theta) * exp(-I * phi) / (4 * sqrt(pi)))
+    assert (Psi_nlm(3, 2, 1, r, phi, theta, 2) == -sqrt(2) * sin(theta) \
+         * exp(I * phi) * cos(theta) / (4 * sqrt(pi)) * S(2) / 81 \
+        * sqrt(2 * 2 ** 3) * exp(-2 * r / (3)) * (r * 2) ** 2)
 
 def test_hydrogen_energies():
     assert E_nl(n, Z) == -Z**2/(2*n**2)

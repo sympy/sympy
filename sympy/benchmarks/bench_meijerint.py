@@ -10,7 +10,7 @@ IFT = inverse_fourier_transform
 ILT = inverse_laplace_transform
 IMT = inverse_mellin_transform
 
-from sympy.abc import t, x, y
+from sympy.abc import a, b, s, t, x, y, z
 nu, beta, rho = symbols('nu beta rho')
 
 apos, bpos, cpos, dpos, posk, p = symbols('a b c d k p', positive=True)
@@ -189,7 +189,7 @@ bench = [
     'integrate(besselj(a,x)*besselj(b,x)/x, (x,0,oo), meijerg=True)',
 
     'hyperexpand(meijerg((-s - a/2 + 1, -s + a/2 + 1), (-a/2 - S(1)/2, -s + a/2 + S(3)/2), (a/2, -a/2), (-a/2 - S(1)/2, -s + a/2 + S(3)/2), 1))',
-    "combsimp(S('2**(2*s)*(-pi*gamma(-a + 1)*gamma(a + 1)*gamma(-a - s + 1)*gamma(-a + s - 1/2)*gamma(a - s + 3/2)*gamma(a + s + 1)/(a*(a + s)) - gamma(-a - 1/2)*gamma(-a + 1)*gamma(a + 1)*gamma(a + 3/2)*gamma(-s + 3/2)*gamma(s - 1/2)*gamma(-a + s + 1)*gamma(a - s + 1)/(a*(-a + s)))*gamma(-2*s + 1)*gamma(s + 1)/(pi*s*gamma(-a - 1/2)*gamma(a + 3/2)*gamma(-s + 1)*gamma(-s + 3/2)*gamma(s - 1/2)*gamma(-a - s + 1)*gamma(-a + s - 1/2)*gamma(a - s + 1)*gamma(a - s + 3/2))'))",
+    "gammasimp(S('2**(2*s)*(-pi*gamma(-a + 1)*gamma(a + 1)*gamma(-a - s + 1)*gamma(-a + s - 1/2)*gamma(a - s + 3/2)*gamma(a + s + 1)/(a*(a + s)) - gamma(-a - 1/2)*gamma(-a + 1)*gamma(a + 1)*gamma(a + 3/2)*gamma(-s + 3/2)*gamma(s - 1/2)*gamma(-a + s + 1)*gamma(a - s + 1)/(a*(-a + s)))*gamma(-2*s + 1)*gamma(s + 1)/(pi*s*gamma(-a - 1/2)*gamma(a + 3/2)*gamma(-s + 1)*gamma(-s + 3/2)*gamma(s - 1/2)*gamma(-a - s + 1)*gamma(-a + s - 1/2)*gamma(a - s + 1)*gamma(a - s + 3/2))'))",
 
     'mellin_transform(E1(x), x, s)',
     'inverse_mellin_transform(gamma(s)/s, s, x, (0, oo))',
@@ -224,7 +224,7 @@ bench = [
     'integrate(Si(x), x, meijerg=True)',
     'integrate(Ci(u), u, meijerg=True)',
     'integrate(Shi(x), x, meijerg=True)',
-    'integrate(cosint(u), u, meijerg=True)',
+    'integrate(Chi(u), u, meijerg=True)',
     'integrate(Si(x)*exp(-x), (x, 0, oo), meijerg=True)',
     'integrate(expint(1, x)*sin(x), (x, 0, oo), meijerg=True)'
 ]

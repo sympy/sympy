@@ -1,15 +1,13 @@
-from __future__ import division
-
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
-    factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
-    Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow, Rational, Float, Rel,
-    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
-    WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
+    factorial, factorial2, Function, GoldenRatio, TribonacciConstant, I,
+    Integer, Integral, Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow,
+    Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
+    symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds)
-from sympy.core import Expr
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, log, MatrixSymbol)
+from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
-from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
+from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
 
 from sympy.utilities.pytest import raises
@@ -18,7 +16,7 @@ from sympy.core.compatibility import range
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
 
-x, y, z, w = symbols('x,y,z,w')
+x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')
 
 
@@ -48,7 +46,7 @@ def test_Add():
     assert str(1 + x + x**2/2 + x**3/3) == "x**3/3 + x**2/2 + x + 1"
     assert str(2*x - 7*x**2 + 2 + 3*y) == "-7*x**2 + 2*x + 3*y + 2"
     assert str(x - y) == "x - y"
-    assert str(2 - x) == "-x + 2"
+    assert str(2 - x) == "2 - x"
     assert str(x - 2) == "x - 2"
     assert str(x - y - z - w) == "-w + x - y - z"
     assert str(x - z*y**2*z*w) == "-w*y**2*z**2 + x"
@@ -132,6 +130,10 @@ def test_GoldenRatio():
     assert str(GoldenRatio) == "GoldenRatio"
 
 
+def test_TribonacciConstant():
+    assert str(TribonacciConstant) == "TribonacciConstant"
+
+
 def test_ImaginaryUnit():
     assert str(I) == "I"
 
@@ -155,18 +157,19 @@ def test_Integral():
 
 
 def test_Interval():
-    a = Symbol('a', real=True)
-    assert str(Interval(0, a)) == "[0, a]"
-    assert str(Interval(0, a, False, False)) == "[0, a]"
-    assert str(Interval(0, a, True, False)) == "(0, a]"
-    assert str(Interval(0, a, False, True)) == "[0, a)"
-    assert str(Interval(0, a, True, True)) == "(0, a)"
+    n = (S.NegativeInfinity, 1, 2, S.Infinity)
+    for i in range(len(n)):
+        for j in range(i + 1, len(n)):
+            for l in (True, False):
+                for r in (True, False):
+                    ival = Interval(n[i], n[j], l, r)
+                    assert S(str(ival)) == ival
 
 
 def test_AccumBounds():
     a = Symbol('a', real=True)
-    assert str(AccumBounds(0, a)) == "<0, a>"
-    assert str(AccumBounds(0, 1)) == "<0, 1>"
+    assert str(AccumBounds(0, a)) == "AccumBounds(0, a)"
+    assert str(AccumBounds(0, 1)) == "AccumBounds(0, 1)"
 
 
 def test_Lambda():
@@ -212,6 +215,10 @@ def test_Mul():
     assert str(-2*x/3) == '-2*x/3'
     assert str(-1.0*x) == '-1.0*x'
     assert str(1.0*x) == '1.0*x'
+    # For issue 14160
+    assert str(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
+                                                evaluate=False)) == '-2*x/(y*y)'
+
 
     class CustomClass1(Expr):
         is_commutative = True
@@ -327,6 +334,15 @@ def test_Poly():
     assert str(Poly(-2*x - 1, x)) == "Poly(-2*x - 1, x, domain='ZZ')"
 
     assert str(Poly(x - 1, x)) == "Poly(x - 1, x, domain='ZZ')"
+    assert str(Poly(2*x + x**5, x)) == "Poly(x**5 + 2*x, x, domain='ZZ')"
+
+    assert str(Poly(3**(2*x), 3**x)) == "Poly((3**x)**2, 3**x, domain='ZZ')"
+    assert str(Poly((x**2)**x)) == "Poly(((x**2)**x), (x**2)**x, domain='ZZ')"
+
+    assert str(Poly((x + y)**3, (x + y), expand=False)
+                ) == "Poly((x + y)**3, x + y, domain='ZZ')"
+    assert str(Poly((x - 1)**2, (x - 1), expand=False)
+                ) == "Poly((x - 1)**2, x - 1, domain='ZZ')"
 
     assert str(
         Poly(x**2 + 1 + y, x)) == "Poly(x**2 + y + 1, x, domain='ZZ[y]')"
@@ -425,8 +441,8 @@ def test_sqrt():
     assert str(1/sqrt(x)) == "1/sqrt(x)"
     assert str(1/sqrt(x**2)) == "1/sqrt(x**2)"
     assert str(y/sqrt(x)) == "y/sqrt(x)"
-    assert str(x**(1/2)) == "x**0.5"
-    assert str(1/x**(1/2)) == "x**(-0.5)"
+    assert str(x**0.5) == "x**0.5"
+    assert str(1/x**0.5) == "x**(-0.5)"
 
 
 def test_Rational():
@@ -478,13 +494,20 @@ def test_Rational():
     assert str(sqrt(-4)) == str(2*I)
     assert str(2**Rational(1, 10**10)) == "2**(1/10000000000)"
 
+    assert sstr(Rational(2, 3), sympy_integers=True) == "S(2)/3"
+    x = Symbol("x")
+    assert sstr(x**Rational(2, 3), sympy_integers=True) == "x**(S(2)/3)"
+    assert sstr(Eq(x, Rational(2, 3)), sympy_integers=True) == "Eq(x, S(2)/3)"
+    assert sstr(Limit(x, x, Rational(7, 2)), sympy_integers=True) == \
+        "Limit(x, x, S(7)/2)"
+
 
 def test_Float():
-    # NOTE prec is the whole number of decimal digits
-    assert str(Float('1.23', prec=1 + 2)) == '1.23'
-    assert str(Float('1.23456789', prec=1 + 8)) == '1.23456789'
+    # NOTE dps is the whole number of decimal digits
+    assert str(Float('1.23', dps=1 + 2)) == '1.23'
+    assert str(Float('1.23456789', dps=1 + 8)) == '1.23456789'
     assert str(
-        Float('1.234567890123456789', prec=1 + 18)) == '1.234567890123456789'
+        Float('1.234567890123456789', dps=1 + 18)) == '1.234567890123456789'
     assert str(pi.evalf(1 + 2)) == '3.14'
     assert str(pi.evalf(1 + 14)) == '3.14159265358979'
     assert str(pi.evalf(1 + 64)) == ('3.141592653589793238462643383279'
@@ -497,10 +520,12 @@ def test_Relational():
     assert str(Rel(x, y, "<")) == "x < y"
     assert str(Rel(x + y, y, "==")) == "Eq(x + y, y)"
     assert str(Rel(x, y, "!=")) == "Ne(x, y)"
-    assert str(Rel(x, y, ':=')) == "Assignment(x, y)"
+    assert str(Eq(x, 1) | Eq(x, 2)) == "Eq(x, 1) | Eq(x, 2)"
+    assert str(Ne(x, 1) & Ne(x, 2)) == "Ne(x, 1) & Ne(x, 2)"
 
-def test_RootOf():
-    assert str(RootOf(x**5 + 2*x - 1, 0)) == "RootOf(x**5 + 2*x - 1, 0)"
+
+def test_CRootOf():
+    assert str(rootof(x**5 + 2*x - 1, 0)) == "CRootOf(x**5 + 2*x - 1, 0)"
 
 
 def test_RootSum():
@@ -527,9 +552,15 @@ def test_set():
     assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
 
-    assert sstr(set([1, 2, 3])) == 'set([1, 2, 3])'
+    assert sstr(set([1])) == '{1}'
+    assert sstr(frozenset([1])) == 'frozenset({1})'
+    assert sstr(set([1, 2, 3])) == '{1, 2, 3}'
+    assert sstr(frozenset([1, 2, 3])) == 'frozenset({1, 2, 3})'
+
     assert sstr(
-        set([1, x, x**2, x**3, x**4])) == 'set([1, x, x**2, x**3, x**4])'
+        set([1, x, x**2, x**3, x**4])) == '{1, x, x**2, x**3, x**4}'
+    assert sstr(
+        frozenset([1, x, x**2, x**3, x**4])) == 'frozenset({1, x, x**2, x**3, x**4})'
 
 
 def test_SparseMatrix():
@@ -557,9 +588,21 @@ def test_tuple():
     assert str((x + y, (
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
-def test_Unit():
-    assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2"  # issue 5560
+
+def test_Quaternion_str_printer():
+    q = Quaternion(x, y, z, t)
+    assert str(q) == "x + y*i + z*j + t*k"
+    q = Quaternion(x,y,z,x*t)
+    assert str(q) == "x + y*i + z*j + t*x*k"
+    q = Quaternion(x,y,z,x+t)
+    assert str(q) == "x + y*i + z*j + (t + x)*k"
+
+
+def test_Quantity_str():
+    assert sstr(second, abbrev=True) == "s"
+    assert sstr(joule, abbrev=True) == "J"
+    assert str(second) == "second"
+    assert str(joule) == "joule"
 
 
 def test_wild_str():
@@ -570,7 +613,7 @@ def test_wild_str():
     assert str(3*w + 1) == '3*x_ + 1'
     assert str(1/w + 1) == '1 + 1/x_'
     assert str(w**2 + 1) == 'x_**2 + 1'
-    assert str(1/(1 - w)) == '1/(-x_ + 1)'
+    assert str(1/(1 - w)) == '1/(1 - x_)'
 
 
 def test_zeta():
@@ -651,19 +694,23 @@ def test_settings():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert str(where(X > 0)) == "Domain: And(0 < x1, x1 < oo)"
+    assert str(where(X > 0)) == "Domain: (0 < x1) & (x1 < oo)"
 
     D = Die('d1', 6)
-    assert str(where(D > 4)) == "Domain: Or(Eq(d1, 5), Eq(d1, 6))"
+    assert str(where(D > 4)) == "Domain: Eq(d1, 5) | Eq(d1, 6)"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b, a < oo, b < oo)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: (0 <= a) & (0 <= b) & (a < oo) & (b < oo)"
 
 
 def test_FiniteSet():
     assert str(FiniteSet(*range(1, 51))) == '{1, 2, 3, ..., 48, 49, 50}'
     assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
+
+
+def test_UniversalSet():
+    assert str(S.UniversalSet) == 'UniversalSet'
 
 
 def test_PrettyPoly():
@@ -724,8 +771,48 @@ def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
 
 def test_Complement():
-    assert str(Complement(S.Reals, S.Naturals)) == '(-oo, oo) \ Naturals()'
+    assert str(Complement(S.Reals, S.Naturals)) == 'Reals \\ Naturals'
 
 def test_SymmetricDifference():
-    assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
-           'SymmetricDifference([2, 3], [3, 4])'
+    assert str(SymmetricDifference(Interval(2, 3), Interval(3, 4),evaluate=False)) == \
+           'SymmetricDifference(Interval(2, 3), Interval(3, 4))'
+
+
+def test_UnevaluatedExpr():
+    a, b = symbols("a b")
+    expr1 = 2*UnevaluatedExpr(a+b)
+    assert str(expr1) == "2*(a + b)"
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert(str(A[0, 0]) == "A[0, 0]")
+    assert(str(3 * A[0, 0]) == "3*A[0, 0]")
+
+    F = C[0, 0].subs(C, A - B)
+    assert str(F) == "(A - B)[0, 0]"
+
+
+def test_MatrixSymbol_printing():
+    A = MatrixSymbol("A", 3, 3)
+    B = MatrixSymbol("B", 3, 3)
+
+    assert str(A - A*B - B) == "A - A*B - B"
+    assert str(A*B - (A+B)) == "-(A + B) + A*B"
+    assert str(A**(-1)) == "A**(-1)"
+    assert str(A**3) == "A**3"
+
+
+def test_Subs_printing():
+    assert str(Subs(x, (x,), (1,))) == 'Subs(x, x, 1)'
+    assert str(Subs(x + y, (x, y), (1, 2))) == 'Subs(x + y, (x, y), (1, 2))'
+
+def test_issue_15716():
+    x = Symbol('x')
+    e = -3**x*exp(-3)*log(3**x*exp(-3)/factorial(x))/factorial(x)
+    assert str(Integral(e, (x, -oo, oo)).doit()) ==  '-(Integral(-3*3**x/factorial(x), (x, -oo, oo))' \
+    ' + Integral(3**x*log(3**x/factorial(x))/factorial(x), (x, -oo, oo)))*exp(-3)'

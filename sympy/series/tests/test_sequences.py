@@ -1,7 +1,8 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
-                   SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx)
+                   SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx, sqrt,
+                   fibonacci, tribonacci, sin, cos, exp)
 from sympy.series.sequences import SeqExpr, SeqExprOp
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 x, y, z = symbols('x y z')
 n, m = symbols('n m')
@@ -37,7 +38,7 @@ def test_SeqPer():
     assert s.periodical == Tuple(1, n, 3)
     assert s.period == 3
     assert s.coeff(3) == 1
-    assert s.free_symbols == set([n])
+    assert s.free_symbols == {n}
 
     assert list(s) == [1, n, 3, 1, n, 3]
     assert s[:] == [1, n, 3, 1, n, 3]
@@ -74,6 +75,16 @@ def test_SeqFormula():
     raises(ValueError, lambda: SeqFormula(n**2, (n, -oo, oo)))
     raises(ValueError, lambda: SeqFormula(m*n**2, (0, oo)))
 
+    seq = SeqFormula(x*(y**2 + z), (z, 1, 100))
+    assert seq.expand() == SeqFormula(x*y**2 + x*z, (z, 1, 100))
+    seq = SeqFormula(sin(x*(y**2 + z)),(z, 1, 100))
+    assert seq.expand(trig=True) == SeqFormula(sin(x*y**2)*cos(x*z) + sin(x*z)*cos(x*y**2), (z, 1, 100))
+    assert seq.expand() == SeqFormula(sin(x*y**2 + x*z), (z, 1, 100))
+    assert seq.expand(trig=False) == SeqFormula(sin(x*y**2 + x*z), (z, 1, 100))
+    seq = SeqFormula(exp(x*(y**2 + z)), (z, 1, 100))
+    assert seq.expand() == SeqFormula(exp(x*y**2)*exp(x*z), (z, 1, 100))
+    assert seq.expand(power_exp=False) == SeqFormula(exp(x*y**2 + x*z), (z, 1, 100))
+    assert seq.expand(mul=False, power_exp=False) == SeqFormula(exp(x*(y**2 + z)), (z, 1, 100))
 
 def test_sequence():
     form = SeqFormula(n**2, (n, 0, 5))
@@ -254,3 +265,28 @@ def test_Idx_limits():
 
     assert SeqFormula(r, (i, 0, 5))[:] == [r.subs(i, j) for j in range(6)]
     assert SeqPer((1, 2), (i, 0, 5))[:] == [1, 2, 1, 2, 1, 2]
+
+
+@slow
+def test_find_linear_recurrence():
+    assert sequence((0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55), \
+    (n, 0, 10)).find_linear_recurrence(11) == [1, 1]
+    assert sequence((1, 2, 4, 7, 28, 128, 582, 2745, 13021, 61699, 292521, \
+    1387138), (n, 0, 11)).find_linear_recurrence(12) == [5, -2, 6, -11]
+    assert sequence(x*n**3+y*n, (n, 0, oo)).find_linear_recurrence(10) \
+    == [4, -6, 4, -1]
+    assert sequence(x**n, (n,0,20)).find_linear_recurrence(21) == [x]
+    assert sequence((1,2,3)).find_linear_recurrence(10, 5) == [0, 0, 1]
+    assert sequence(((1 + sqrt(5))/2)**n + \
+    (-(1 + sqrt(5))/2)**(-n)).find_linear_recurrence(10) == [1, 1]
+    assert sequence(x*((1 + sqrt(5))/2)**n + y*(-(1 + sqrt(5))/2)**(-n), \
+    (n,0,oo)).find_linear_recurrence(10) == [1, 1]
+    assert sequence((1,2,3,4,6),(n, 0, 4)).find_linear_recurrence(5) == []
+    assert sequence((2,3,4,5,6,79),(n, 0, 5)).find_linear_recurrence(6,gfvar=x) \
+    == ([], None)
+    assert sequence((2,3,4,5,8,30),(n, 0, 5)).find_linear_recurrence(6,gfvar=x) \
+    == ([S(19)/2, -20, S(27)/2], (-31*x**2 + 32*x - 4)/(27*x**3 - 40*x**2 + 19*x -2))
+    assert sequence(fibonacci(n)).find_linear_recurrence(30,gfvar=x) \
+    == ([1, 1], -x/(x**2 + x - 1))
+    assert sequence(tribonacci(n)).find_linear_recurrence(30,gfvar=x) \
+    ==  ([1, 1, 1], -x/(x**3 + x**2 + x - 1))

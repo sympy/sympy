@@ -2,60 +2,66 @@ import warnings
 from sympy import (plot_implicit, cos, Symbol, symbols, Eq, sin, re, And, Or, exp, I,
                    tan, pi)
 from sympy.plotting.plot import unset_show
-from tempfile import NamedTemporaryFile
-from sympy.utilities.pytest import skip
+from tempfile import NamedTemporaryFile, mkdtemp
+from sympy.utilities.pytest import skip, warns
 from sympy.external import import_module
+from sympy.utilities.tmpfiles import TmpFileManager, cleanup_tmp_files
 
 #Set plots not to show
 unset_show()
 
+def tmp_file(dir=None, name=''):
+    return NamedTemporaryFile(
+    suffix='.png', dir=dir, delete=False).name
 
-def tmp_file(name=''):
-    return NamedTemporaryFile(suffix='.png').name
+def plot_and_save(expr, *args, **kwargs):
+    name = kwargs.pop('name', '')
+    dir = kwargs.pop('dir', None)
+    p = plot_implicit(expr, *args, **kwargs)
+    p.save(tmp_file(dir=dir, name=name))
+    # Close the plot to avoid a warning from matplotlib
+    p._backend.close()
 
-
-def plot_and_save(name):
+def plot_implicit_tests(name):
+    temp_dir = mkdtemp()
+    TmpFileManager.tmp_folder(temp_dir)
     x = Symbol('x')
     y = Symbol('y')
     z = Symbol('z')
     #implicit plot tests
-    plot_implicit(Eq(y, cos(x)), (x, -5, 5), (y, -2, 2)).save(tmp_file(name))
-    plot_implicit(Eq(y**2, x**3 - x), (x, -5, 5),
-            (y, -4, 4)).save(tmp_file(name))
-    plot_implicit(y > 1 / x, (x, -5, 5),
-            (y, -2, 2)).save(tmp_file(name))
-    plot_implicit(y < 1 / tan(x), (x, -5, 5),
-            (y, -2, 2)).save(tmp_file(name))
-    plot_implicit(y >= 2 * sin(x) * cos(x), (x, -5, 5),
-            (y, -2, 2)).save(tmp_file(name))
-    plot_implicit(y <= x**2, (x, -3, 3),
-            (y, -1, 5)).save(tmp_file(name))
+    plot_and_save(Eq(y, cos(x)), (x, -5, 5), (y, -2, 2), name=name, dir=temp_dir)
+    plot_and_save(Eq(y**2, x**3 - x), (x, -5, 5),
+            (y, -4, 4), name=name, dir=temp_dir)
+    plot_and_save(y > 1 / x, (x, -5, 5),
+            (y, -2, 2), name=name, dir=temp_dir)
+    plot_and_save(y < 1 / tan(x), (x, -5, 5),
+            (y, -2, 2), name=name, dir=temp_dir)
+    plot_and_save(y >= 2 * sin(x) * cos(x), (x, -5, 5),
+            (y, -2, 2), name=name, dir=temp_dir)
+    plot_and_save(y <= x**2, (x, -3, 3),
+            (y, -1, 5), name=name, dir=temp_dir)
 
     #Test all input args for plot_implicit
-    plot_implicit(Eq(y**2, x**3 - x)).save(tmp_file())
-    plot_implicit(Eq(y**2, x**3 - x), adaptive=False).save(tmp_file())
-    plot_implicit(Eq(y**2, x**3 - x), adaptive=False, points=500).save(tmp_file())
-    plot_implicit(y > x, (x, -5, 5)).save(tmp_file())
-    plot_implicit(And(y > exp(x), y > x + 2)).save(tmp_file())
-    plot_implicit(Or(y > x, y > -x)).save(tmp_file())
-    plot_implicit(x**2 - 1, (x, -5, 5)).save(tmp_file())
-    plot_implicit(x**2 - 1).save(tmp_file())
-    plot_implicit(y > x, depth=-5).save(tmp_file())
-    plot_implicit(y > x, depth=5).save(tmp_file())
-    plot_implicit(y > cos(x), adaptive=False).save(tmp_file())
-    plot_implicit(y < cos(x), adaptive=False).save(tmp_file())
-    plot_implicit(And(y > cos(x), Or(y > x, Eq(y, x)))).save(tmp_file())
-    plot_implicit(y - cos(pi / x)).save(tmp_file())
+    plot_and_save(Eq(y**2, x**3 - x), dir=temp_dir)
+    plot_and_save(Eq(y**2, x**3 - x), adaptive=False, dir=temp_dir)
+    plot_and_save(Eq(y**2, x**3 - x), adaptive=False, points=500, dir=temp_dir)
+    plot_and_save(y > x, (x, -5, 5), dir=temp_dir)
+    plot_and_save(And(y > exp(x), y > x + 2), dir=temp_dir)
+    plot_and_save(Or(y > x, y > -x), dir=temp_dir)
+    plot_and_save(x**2 - 1, (x, -5, 5), dir=temp_dir)
+    plot_and_save(x**2 - 1, dir=temp_dir)
+    plot_and_save(y > x, depth=-5, dir=temp_dir)
+    plot_and_save(y > x, depth=5, dir=temp_dir)
+    plot_and_save(y > cos(x), adaptive=False, dir=temp_dir)
+    plot_and_save(y < cos(x), adaptive=False, dir=temp_dir)
+    plot_and_save(And(y > cos(x), Or(y > x, Eq(y, x))), dir=temp_dir)
+    plot_and_save(y - cos(pi / x), dir=temp_dir)
 
     #Test plots which cannot be rendered using the adaptive algorithm
-    #TODO: catch the warning.
-    plot_implicit(Eq(y, re(cos(x) + I*sin(x)))).save(tmp_file(name))
+    with warns(UserWarning, match="Adaptive meshing could not be applied"):
+        plot_and_save(Eq(y, re(cos(x) + I*sin(x))), name=name, dir=temp_dir)
 
-    with warnings.catch_warnings(record=True) as w:
-        plot_implicit(x**2 - 1, legend='An implicit plot').save(tmp_file())
-        assert len(w) == 1
-        assert issubclass(w[-1].category, UserWarning)
-        assert 'No labeled objects found' in str(w[0].message)
+    plot_and_save(x**2 - 1, title='An implicit plot', dir=temp_dir)
 
 def test_line_color():
     x, y = symbols('x, y')
@@ -67,7 +73,10 @@ def test_line_color():
 def test_matplotlib():
     matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
-        plot_and_save('test')
-        test_line_color()
+        try:
+            plot_implicit_tests('test')
+            test_line_color()
+        finally:
+            TmpFileManager.cleanup()
     else:
         skip("Matplotlib not the default backend")

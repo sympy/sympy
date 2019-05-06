@@ -67,11 +67,12 @@ class BasisDependent(Expr):
         for k, v in self.components.items():
             vec += v.evalf(prec, **options) * k
         return vec
+
     evalf.__doc__ += Expr.evalf.__doc__
 
     n = evalf
 
-    def simplify(self, ratio=1.7, measure=count_ops):
+    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
         """
         Implements the SymPy simplify routine for this quantity.
 
@@ -79,9 +80,11 @@ class BasisDependent(Expr):
         ========================
 
         """
-        simp_components = [simp(v, ratio, measure) * k for
+        simp_components = [simp(v, ratio=ratio, measure=measure,
+                           rational=rational, inverse=inverse) * k for
                            k, v in self.components.items()]
         return self._add_func(*simp_components)
+
     simplify.__doc__ += simp.__doc__
 
     def trigsimp(self, **opts):
@@ -95,10 +98,11 @@ class BasisDependent(Expr):
         trig_components = [tsimp(v, **opts) * k for
                            k, v in self.components.items()]
         return self._add_func(*trig_components)
+
     trigsimp.__doc__ += tsimp.__doc__
 
-    def _eval_simplify(self, ratio, measure):
-        return self.simplify(ratio, measure)
+    def _eval_simplify(self, ratio, measure, rational, inverse):
+        return self.simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
 
     def _eval_trigsimp(self, **opts):
         return self.trigsimp(**opts)
@@ -111,9 +115,6 @@ class BasisDependent(Expr):
                                for k, v in self.components.items()]
         return self._add_func(*integral_components)
 
-    def _eval_diff(self, *args, **kwargs):
-        return self.diff(*args, **kwargs)
-
     def as_numer_denom(self):
         """
         Returns the expression as a tuple wrt the following
@@ -122,7 +123,7 @@ class BasisDependent(Expr):
         expression -> a/b -> a, b
 
         """
-        return (self, 1)
+        return self, S.One
 
     def factor(self, *args, **kwargs):
         """
@@ -136,6 +137,7 @@ class BasisDependent(Expr):
         fctr_components = [fctr(v, *args, **kwargs) * k for
                            k, v in self.components.items()]
         return self._add_func(*fctr_components)
+
     factor.__doc__ += fctr.__doc__
 
     def as_coeff_Mul(self, rational=False):
@@ -145,7 +147,7 @@ class BasisDependent(Expr):
     def as_coeff_add(self, *deps):
         """Efficiently extract the coefficient of a summation. """
         l = [x * self.components[x] for x in self.components]
-        return (0, tuple(l))
+        return 0, tuple(l)
 
     def diff(self, *args, **kwargs):
         """
@@ -161,6 +163,7 @@ class BasisDependent(Expr):
         diff_components = [df(v, *args, **kwargs) * k for
                            k, v in self.components.items()]
         return self._add_func(*diff_components)
+
     diff.__doc__ += df.__doc__
 
     def doit(self, **hints):
@@ -179,7 +182,7 @@ class BasisDependentAdd(BasisDependent, Add):
     def __new__(cls, *args, **options):
         components = {}
 
-        #Check each arg and simultaneously learn the components
+        # Check each arg and simultaneously learn the components
         for i, arg in enumerate(args):
             if not isinstance(arg, cls._expr_type):
                 if isinstance(arg, Mul):
@@ -189,30 +192,30 @@ class BasisDependentAdd(BasisDependent, Add):
                 else:
                     raise TypeError(str(arg) +
                                     " cannot be interpreted correctly")
-            #If argument is zero, ignore
+            # If argument is zero, ignore
             if arg == cls.zero:
                 continue
-            #Else, update components accordingly
-            for x in arg.components:
-                components[x] = components.get(x, 0) + arg.components[x]
+            # Else, update components accordingly
+            if hasattr(arg, "components"):
+                for x in arg.components:
+                    components[x] = components.get(x, 0) + arg.components[x]
 
         temp = list(components.keys())
         for x in temp:
             if components[x] == 0:
                 del components[x]
 
-        #Handle case of zero vector
+        # Handle case of zero vector
         if len(components) == 0:
             return cls.zero
 
-        #Build object
-        newargs = [x*components[x] for x in components]
+        # Build object
+        newargs = [x * components[x] for x in components]
         obj = super(BasisDependentAdd, cls).__new__(cls,
                                                     *newargs, **options)
         if isinstance(obj, Mul):
             return cls._mul_func(*obj.args)
-        assumptions = {}
-        assumptions['commutative'] = True
+        assumptions = {'commutative': True}
         obj._assumptions = StdFactKB(assumptions)
         obj._components = components
         obj._sys = (list(components.keys()))[0]._sys
@@ -228,13 +231,15 @@ class BasisDependentMul(BasisDependent, Mul):
     """
 
     def __new__(cls, *args, **options):
+        from sympy.vector import Cross, Dot, Curl, Gradient
         count = 0
         measure_number = S(1)
         zeroflag = False
+        extra_args = []
 
-        #Determine the component and check arguments
-        #Also keep a count to ensure two vectors aren't
-        #being multipled
+        # Determine the component and check arguments
+        # Also keep a count to ensure two vectors aren't
+        # being multiplied
         for arg in args:
             if isinstance(arg, cls._zero_func):
                 count += 1
@@ -248,19 +253,21 @@ class BasisDependentMul(BasisDependent, Mul):
             elif isinstance(arg, cls._add_func):
                 count += 1
                 expr = arg
+            elif isinstance(arg, (Cross, Dot, Curl, Gradient)):
+                extra_args.append(arg)
             else:
                 measure_number *= arg
-        #Make sure incompatible types weren't multipled
+        # Make sure incompatible types weren't multiplied
         if count > 1:
             raise ValueError("Invalid multiplication")
         elif count == 0:
             return Mul(*args, **options)
-        #Handle zero vector case
+        # Handle zero vector case
         if zeroflag:
             return cls.zero
 
-        #If one of the args was a VectorAdd, return an
-        #appropriate VectorAdd instance
+        # If one of the args was a VectorAdd, return an
+        # appropriate VectorAdd instance
         if isinstance(expr, cls._add_func):
             newargs = [cls._mul_func(measure_number, x) for
                        x in expr.args]
@@ -268,15 +275,15 @@ class BasisDependentMul(BasisDependent, Mul):
 
         obj = super(BasisDependentMul, cls).__new__(cls, measure_number,
                                                     expr._base_instance,
+                                                    *extra_args,
                                                     **options)
         if isinstance(obj, Add):
             return cls._add_func(*obj.args)
         obj._base_instance = expr._base_instance
         obj._measure_number = measure_number
-        assumptions = {}
-        assumptions['commutative'] = True
+        assumptions = {'commutative': True}
         obj._assumptions = StdFactKB(assumptions)
-        obj._components = {expr._base_instance : measure_number}
+        obj._components = {expr._base_instance: measure_number}
         obj._sys = expr._base_instance._sys
 
         return obj
@@ -302,8 +309,8 @@ class BasisDependentZero(BasisDependent):
 
     def __new__(cls):
         obj = super(BasisDependentZero, cls).__new__(cls)
-        #Pre-compute a specific hash value for the zero vector
-        #Use the same one always
+        # Pre-compute a specific hash value for the zero vector
+        # Use the same one always
         obj._hash = tuple([S(0), cls]).__hash__()
         return obj
 
@@ -355,5 +362,6 @@ class BasisDependentZero(BasisDependent):
 
     def __str__(self, printer=None):
         return '0'
+
     __repr__ = __str__
     _sympystr = __str__

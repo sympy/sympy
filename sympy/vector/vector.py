@@ -1,13 +1,12 @@
 from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow, Symbol, Basic
-from sympy.core.expr import AtomicExpr
-from sympy.core.compatibility import range
-from sympy import diff as df, sqrt, ImmutableMatrix as Matrix
-from sympy.vector.coordsysrect import CoordSysCartesian
-from sympy.vector.basisdependent import BasisDependent, \
-     BasisDependentAdd, BasisDependentMul, BasisDependentZero
+from sympy.core import S, Pow, sympify
+from sympy.core.expr import AtomicExpr, Expr
+from sympy.core.compatibility import range, default_sort_key
+from sympy import sqrt, ImmutableMatrix as Matrix, Add
+from sympy.vector.coordsysrect import CoordSys3D
+from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
+                                         BasisDependentMul, BasisDependentZero)
 from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
-from sympy.core.compatibility import u
 
 
 class Vector(BasisDependent):
@@ -30,15 +29,15 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D
+        >>> C = CoordSys3D('C')
         >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v.components
         {C.i: 3, C.j: 4, C.k: 5}
 
         """
-        #The '_components' attribute is defined according to the
-        #subclass of Vector the instance belongs to.
+        # The '_components' attribute is defined according to the
+        # subclass of Vector the instance belongs to.
         return self._components
 
     def magnitude(self):
@@ -61,7 +60,7 @@ class Vector(BasisDependent):
         expression).
         If 'other' is a Dyadic, the dot product is returned as a Vector.
         If 'other' is an instance of Del, returns the directional
-        derivate operator as a Python function. If this function is
+        derivative operator as a Python function. If this function is
         applied to a scalar expression, it returns the directional
         derivative of the scalar field wrt this Vector.
 
@@ -74,8 +73,9 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D, Del
+        >>> C = CoordSys3D('C')
+        >>> delop = Del()
         >>> C.i.dot(C.j)
         0
         >>> C.i & C.i
@@ -83,7 +83,7 @@ class Vector(BasisDependent):
         >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v.dot(C.k)
         5
-        >>> (C.i & C.delop)(C.x*C.y*C.z)
+        >>> (C.i & delop)(C.x*C.y*C.z)
         C.y*C.z
         >>> d = C.i.outer(C.i)
         >>> C.i.dot(d)
@@ -91,8 +91,7 @@ class Vector(BasisDependent):
 
         """
 
-        from sympy.vector.functions import express
-        #Check special cases
+        # Check special cases
         if isinstance(other, Dyadic):
             if isinstance(self, VectorZero):
                 return Vector.zero
@@ -106,32 +105,18 @@ class Vector(BasisDependent):
             raise TypeError(str(other) + " is not a vector, dyadic or " +
                             "del operator")
 
-        #Check if the other is a del operator
+        # Check if the other is a del operator
         if isinstance(other, Del):
             def directional_derivative(field):
-                field = express(field, other.system, variables = True)
-                out = self.dot(other._i) * df(field, other._x)
-                out += self.dot(other._j) * df(field, other._y)
-                out += self.dot(other._k) * df(field, other._z)
-                if out == 0 and isinstance(field, Vector):
-                    out = Vector.zero
-                return out
+                from sympy.vector.functions import directional_derivative
+                return directional_derivative(field, self)
             return directional_derivative
 
-        if isinstance(self, VectorZero) or isinstance(other, VectorZero):
-            return S(0)
-
-        v1 = express(self, other._sys)
-        v2 = express(other, other._sys)
-        dotproduct = S(0)
-        for x in other._sys.base_vectors():
-            dotproduct += (v1.components.get(x, 0) *
-                           v2.components.get(x, 0))
-
-        return dotproduct
+        return dot(self, other)
 
     def __and__(self, other):
         return self.dot(other)
+
     __and__.__doc__ = dot.__doc__
 
     def cross(self, other):
@@ -150,8 +135,8 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D
+        >>> C = CoordSys3D('C')
         >>> C.i.cross(C.j)
         C.k
         >>> C.i ^ C.i
@@ -165,7 +150,7 @@ class Vector(BasisDependent):
 
         """
 
-        #Check special cases
+        # Check special cases
         if isinstance(other, Dyadic):
             if isinstance(self, VectorZero):
                 return Dyadic.zero
@@ -175,41 +160,12 @@ class Vector(BasisDependent):
                 outer = cross_product.outer(k.args[1])
                 outdyad += v * outer
             return outdyad
-        elif not isinstance(other, Vector):
-            raise TypeError(str(other) + " is not a vector")
-        elif (isinstance(self, VectorZero) or
-              isinstance(other, VectorZero)):
-            return Vector.zero
 
-        #Compute cross product
-        def _det(mat):
-            """This is needed as a little method for to find the determinant
-            of a list in python.
-            SymPy's Matrix won't take in Vector, so need a custom function.
-            The user shouldn't be calling this.
-
-            """
-
-            return (mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] *
-                                 mat[2][1])
-                    + mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] *
-                    mat[2][2]) + mat[0][2] * (mat[1][0] * mat[2][1] -
-                    mat[1][1] * mat[2][0]))
-
-        outvec = Vector.zero
-        for system, vect in other.separate().items():
-            tempi = system.i
-            tempj = system.j
-            tempk = system.k
-            tempm = [[tempi, tempj, tempk],
-                     [self & tempi, self & tempj, self & tempk],
-                     [vect & tempi, vect & tempj, vect & tempk]]
-            outvec += _det(tempm)
-
-        return outvec
+        return cross(self, other)
 
     def __xor__(self, other):
         return self.cross(other)
+
     __xor__.__doc__ = cross.__doc__
 
     def outer(self, other):
@@ -227,31 +183,87 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> N.i.outer(N.j)
         (N.i|N.j)
 
         """
 
-        #Handle the special cases
+        # Handle the special cases
         if not isinstance(other, Vector):
             raise TypeError("Invalid operand for outer product")
         elif (isinstance(self, VectorZero) or
-              isinstance(other, VectorZero)):
+                isinstance(other, VectorZero)):
             return Dyadic.zero
 
-        #Iterate over components of both the vectors to generate
-        #the required Dyadic instance
+        # Iterate over components of both the vectors to generate
+        # the required Dyadic instance
         args = []
         for k1, v1 in self.components.items():
             for k2, v2 in other.components.items():
-                args.append((v1*v2) * BaseDyadic(k1, k2))
+                args.append((v1 * v2) * BaseDyadic(k1, k2))
 
         return DyadicAdd(*args)
 
+    def projection(self, other, scalar=False):
+        """
+        Returns the vector or scalar projection of the 'other' on 'self'.
+
+        Examples
+        ========
+
+        >>> from sympy.vector.coordsysrect import CoordSys3D
+        >>> from sympy.vector.vector import Vector, BaseVector
+        >>> C = CoordSys3D('C')
+        >>> i, j, k = C.base_vectors()
+        >>> v1 = i + j + k
+        >>> v2 = 3*i + 4*j
+        >>> v1.projection(v2)
+        7/3*C.i + 7/3*C.j + 7/3*C.k
+        >>> v1.projection(v2, scalar=True)
+        7/3
+
+        """
+        if self.equals(Vector.zero):
+            return S.zero if scalar else Vector.zero
+
+        if scalar:
+            return self.dot(other) / self.dot(self)
+        else:
+            return self.dot(other) / self.dot(self) * self
+
+    @property
+    def _projections(self):
+        """
+        Returns the components of this vector but the output includes
+        also zero values components.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D, Vector
+        >>> C = CoordSys3D('C')
+        >>> v1 = 3*C.i + 4*C.j + 5*C.k
+        >>> v1._projections
+        (3, 4, 5)
+        >>> v2 = C.x*C.y*C.z*C.i
+        >>> v2._projections
+        (C.x*C.y*C.z, 0, 0)
+        >>> v3 = Vector.zero
+        >>> v3._projections
+        (0, 0, 0)
+        """
+
+        from sympy.vector.operators import _get_coord_sys_from_expr
+        if isinstance(self, VectorZero):
+            return (S(0), S(0), S(0))
+        base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
+        return tuple([self.dot(i) for i in base_vec])
+
     def __or__(self, other):
         return self.outer(other)
+
     __or__.__doc__ = outer.__doc__
 
     def to_matrix(self, system):
@@ -262,14 +274,14 @@ class Vector(BasisDependent):
         Parameters
         ==========
 
-        system : CoordSysCartesian
+        system : CoordSys3D
             The system wrt which the matrix form is to be computed
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> C = CoordSysCartesian('C')
+        >>> from sympy.vector import CoordSys3D
+        >>> C = CoordSys3D('C')
         >>> from sympy.abc import a, b, c
         >>> v = a*C.i + b*C.j + c*C.k
         >>> v.to_matrix(C)
@@ -288,15 +300,15 @@ class Vector(BasisDependent):
         The constituents of this vector in different coordinate systems,
         as per its definition.
 
-        Returns a dict mapping each CoordSysCartesian to the corresponding
+        Returns a dict mapping each CoordSys3D to the corresponding
         constituent Vector.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> R1 = CoordSysCartesian('R1')
-        >>> R2 = CoordSysCartesian('R2')
+        >>> from sympy.vector import CoordSys3D
+        >>> R1 = CoordSys3D('R1')
+        >>> R2 = CoordSys3D('R2')
         >>> v = R1.i + R2.i
         >>> v.separate() == {R1: R1.i, R2: R2.i}
         True
@@ -306,44 +318,49 @@ class Vector(BasisDependent):
         parts = {}
         for vect, measure in self.components.items():
             parts[vect.system] = (parts.get(vect.system, Vector.zero) +
-                                  vect*measure)
+                                  vect * measure)
         return parts
 
 
 class BaseVector(Vector, AtomicExpr):
     """
     Class to denote a base vector.
+
+    Unicode pretty forms in Python 2 should use the prefix ``u``.
+
     """
 
-    def __new__(cls, name, index, system, pretty_str, latex_str):
-        name = str(name)
+    def __new__(cls, index, system, pretty_str=None, latex_str=None):
+        if pretty_str is None:
+            pretty_str = "x{0}".format(index)
+        if latex_str is None:
+            latex_str = "x_{0}".format(index)
         pretty_str = str(pretty_str)
         latex_str = str(latex_str)
-        #Verify arguments
-        if not index in range(0, 3):
+        # Verify arguments
+        if index not in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
-        if not isinstance(system, CoordSysCartesian):
-            raise TypeError("system should be a CoordSysCartesian")
-        #Initialize an object
-        obj = super(BaseVector, cls).__new__(cls, Symbol(name), S(index),
-                                             system, Symbol(pretty_str),
-                                             Symbol(latex_str))
-        #Assign important attributes
+        if not isinstance(system, CoordSys3D):
+            raise TypeError("system should be a CoordSys3D")
+        name = system._vector_names[index]
+        # Initialize an object
+        obj = super(BaseVector, cls).__new__(cls, S(index), system)
+        # Assign important attributes
         obj._base_instance = obj
         obj._components = {obj: S(1)}
         obj._measure_number = S(1)
-        obj._name = name
-        obj._pretty_form = u(pretty_str)
+        obj._name = system._name + '.' + name
+        obj._pretty_form = u'' + pretty_str
         obj._latex_form = latex_str
         obj._system = system
-
-        assumptions = {}
-        assumptions['commutative'] = True
+        # The _id is used for printing purposes
+        obj._id = (index, system)
+        assumptions = {'commutative': True}
         obj._assumptions = StdFactKB(assumptions)
 
-        #This attr is used for re-expression to one of the systems
-        #involved in the definition of the Vector. Applies to
-        #VectorMul and VectorAdd too.
+        # This attr is used for re-expression to one of the systems
+        # involved in the definition of the Vector. Applies to
+        # VectorMul and VectorAdd too.
         obj._sys = system
 
         return obj
@@ -357,7 +374,7 @@ class BaseVector(Vector, AtomicExpr):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
     __repr__ = __str__
     _sympystr = __str__
@@ -375,12 +392,12 @@ class VectorAdd(BasisDependentAdd, Vector):
     def __str__(self, printer=None):
         ret_str = ''
         items = list(self.separate().items())
-        items.sort(key = lambda x: x[0].__str__())
+        items.sort(key=lambda x: x[0].__str__())
         for system, vect in items:
             base_vects = system.base_vectors()
             for x in base_vects:
                 if x in vect.components:
-                    temp_vect = self.components[x]*x
+                    temp_vect = self.components[x] * x
                     ret_str += temp_vect.__str__(printer) + " + "
         return ret_str[:-3]
 
@@ -404,7 +421,7 @@ class VectorMul(BasisDependentMul, Vector):
 
     @property
     def measure_number(self):
-        """ The scalar expression involved in the defition of
+        """ The scalar expression involved in the definition of
         this VectorMul.
         """
         return self._measure_number
@@ -416,12 +433,163 @@ class VectorZero(BasisDependentZero, Vector):
     """
 
     _op_priority = 12.1
-    _pretty_form = u('0')
-    _latex_form = '\mathbf{\hat{0}}'
+    _pretty_form = u'0'
+    _latex_form = r'\mathbf{\hat{0}}'
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)
         return obj
+
+
+class Cross(Vector):
+    """
+    Represents unevaluated Cross product.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D, Cross
+    >>> R = CoordSys3D('R')
+    >>> v1 = R.i + R.j + R.k
+    >>> v2 = R.x * R.i + R.y * R.j + R.z * R.k
+    >>> Cross(v1, v2)
+    Cross(R.i + R.j + R.k, R.x*R.i + R.y*R.j + R.z*R.k)
+    >>> Cross(v1, v2).doit()
+    (-R.y + R.z)*R.i + (R.x - R.z)*R.j + (-R.x + R.y)*R.k
+
+    """
+
+    def __new__(cls, expr1, expr2):
+        expr1 = sympify(expr1)
+        expr2 = sympify(expr2)
+        if default_sort_key(expr1) > default_sort_key(expr2):
+            return -Cross(expr2, expr1)
+        obj = Expr.__new__(cls, expr1, expr2)
+        obj._expr1 = expr1
+        obj._expr2 = expr2
+        return obj
+
+    def doit(self, **kwargs):
+        return cross(self._expr1, self._expr2)
+
+
+class Dot(Expr):
+    """
+    Represents unevaluated Dot product.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D, Dot
+    >>> from sympy import symbols
+    >>> R = CoordSys3D('R')
+    >>> a, b, c = symbols('a b c')
+    >>> v1 = R.i + R.j + R.k
+    >>> v2 = a * R.i + b * R.j + c * R.k
+    >>> Dot(v1, v2)
+    Dot(R.i + R.j + R.k, a*R.i + b*R.j + c*R.k)
+    >>> Dot(v1, v2).doit()
+    a + b + c
+
+    """
+
+    def __new__(cls, expr1, expr2):
+        expr1 = sympify(expr1)
+        expr2 = sympify(expr2)
+        expr1, expr2 = sorted([expr1, expr2], key=default_sort_key)
+        obj = Expr.__new__(cls, expr1, expr2)
+        obj._expr1 = expr1
+        obj._expr2 = expr2
+        return obj
+
+    def doit(self, **kwargs):
+        return dot(self._expr1, self._expr2)
+
+
+def cross(vect1, vect2):
+    """
+    Returns cross product of two vectors.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D
+    >>> from sympy.vector.vector import cross
+    >>> R = CoordSys3D('R')
+    >>> v1 = R.i + R.j + R.k
+    >>> v2 = R.x * R.i + R.y * R.j + R.z * R.k
+    >>> cross(v1, v2)
+    (-R.y + R.z)*R.i + (R.x - R.z)*R.j + (-R.x + R.y)*R.k
+
+    """
+    if isinstance(vect1, Add):
+        return VectorAdd.fromiter(cross(i, vect2) for i in vect1.args)
+    if isinstance(vect2, Add):
+        return VectorAdd.fromiter(cross(vect1, i) for i in vect2.args)
+    if isinstance(vect1, BaseVector) and isinstance(vect2, BaseVector):
+        if vect1._sys == vect2._sys:
+            n1 = vect1.args[0]
+            n2 = vect2.args[0]
+            if n1 == n2:
+                return Vector.zero
+            n3 = ({0,1,2}.difference({n1, n2})).pop()
+            sign = 1 if ((n1 + 1) % 3 == n2) else -1
+            return sign*vect1._sys.base_vectors()[n3]
+        try:
+            from .functions import express
+            return cross(express(vect1, vect2._sys), vect2)
+        except:
+            return Cross(vect1, vect2)
+    if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
+        return Vector.zero
+    if isinstance(vect1, VectorMul):
+        v1, m1 = next(iter(vect1.components.items()))
+        return m1*cross(v1, vect2)
+    if isinstance(vect2, VectorMul):
+        v2, m2 = next(iter(vect2.components.items()))
+        return m2*cross(vect1, v2)
+
+    return Cross(vect1, vect2)
+
+
+def dot(vect1, vect2):
+    """
+    Returns dot product of two vectors.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D
+    >>> from sympy.vector.vector import dot
+    >>> R = CoordSys3D('R')
+    >>> v1 = R.i + R.j + R.k
+    >>> v2 = R.x * R.i + R.y * R.j + R.z * R.k
+    >>> dot(v1, v2)
+    R.x + R.y + R.z
+
+    """
+    if isinstance(vect1, Add):
+        return Add.fromiter(dot(i, vect2) for i in vect1.args)
+    if isinstance(vect2, Add):
+        return Add.fromiter(dot(vect1, i) for i in vect2.args)
+    if isinstance(vect1, BaseVector) and isinstance(vect2, BaseVector):
+        if vect1._sys == vect2._sys:
+            return S.One if vect1 == vect2 else S.Zero
+        try:
+            from .functions import express
+            return dot(vect1, express(vect2, vect1._sys))
+        except:
+            return Dot(vect1, vect2)
+    if isinstance(vect1, VectorZero) or isinstance(vect2, VectorZero):
+        return S.Zero
+    if isinstance(vect1, VectorMul):
+        v1, m1 = next(iter(vect1.components.items()))
+        return m1*dot(v1, vect2)
+    if isinstance(vect2, VectorMul):
+        v2, m2 = next(iter(vect2.components.items()))
+        return m2*dot(vect1, v2)
+
+    return Dot(vect1, vect2)
 
 
 def _vect_div(one, other):

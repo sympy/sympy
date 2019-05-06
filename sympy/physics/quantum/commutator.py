@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 from sympy import S, Expr, Mul, Add
-from sympy.core.compatibility import u
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.dagger import Dagger
@@ -26,7 +25,7 @@ class Commutator(Expr):
     class returns the commutator in an unevaluated form. To evaluate the
     commutator, use the ``.doit()`` method.
 
-    Cannonical ordering of a commutator is ``[A, B]`` for ``A < B``. The
+    Canonical ordering of a commutator is ``[A, B]`` for ``A < B``. The
     arguments of the commutator are put into canonical order using ``__cmp__``.
     If ``B < A``, then ``[B, A]`` is returned as ``-[A, B]``.
 
@@ -86,7 +85,7 @@ class Commutator(Expr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Commutator
+    .. [1] https://en.wikipedia.org/wiki/Commutator
     """
     is_commutative = False
 
@@ -202,7 +201,7 @@ class Commutator(Expr):
 
     def _pretty(self, printer, *args):
         pform = printer._print(self.args[0], *args)
-        pform = prettyForm(*pform.right((prettyForm(u(',')))))
+        pform = prettyForm(*pform.right((prettyForm(u','))))
         pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))
         pform = prettyForm(*pform.parens(left='[', right=']'))
         return pform

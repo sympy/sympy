@@ -5,25 +5,26 @@ Basic Implementation details
 Coordinate Systems and Vectors
 ==============================
 
-As of now, :mod:`sympy.vector` only deals with the Cartesian (also called 
-rectangular) coordinate systems. A 3D Cartesian coordinate system can
-be initialized in :mod:`sympy.vector` as
+Currently, :mod:`sympy.vector` is able to deal with the Cartesian (also called
+rectangular), spherical and other curvilinear coordinate systems.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> N = CoordSysCartesian('N')
+A 3D Cartesian coordinate system can be initialized in :mod:`sympy.vector` as
+
+  >>> from sympy.vector import CoordSys3D
+  >>> N = CoordSys3D('N')
 
 The string parameter to the constructor denotes the name assigned to the
 system, and will primarily be used for printing purposes.
 
-Once a coordinate system (in essence, a ``CoordSysCartesian`` instance)
-has been defined, we can access the orthonormal unit vectors (i.e. the 
-:math:`\mathbf{\hat{i}}`, :math:`\mathbf{\hat{j}}` and 
-:math:`\mathbf{\hat{k}}` vectors) and coordinate variables/base 
-scalars (i.e. the :math:`\mathbf{x}`, :math:`\mathbf{y}` and 
+Once a coordinate system (in essence, a ``CoordSys3D`` instance)
+has been defined, we can access the orthonormal unit vectors (i.e. the
+:math:`\mathbf{\hat{i}}`, :math:`\mathbf{\hat{j}}` and
+:math:`\mathbf{\hat{k}}` vectors) and coordinate variables/base
+scalars (i.e. the :math:`\mathbf{x}`, :math:`\mathbf{y}` and
 :math:`\mathbf{z}` variables) corresponding to it. We will talk
 about coordinate variables in the later sections.
 
-The basis vectors for the :math:`X`, :math:`Y` and :math:`Z` 
+The basis vectors for the :math:`X`, :math:`Y` and :math:`Z`
 axes can be accessed using the ``i``, ``j`` and ``k``
 properties respectively.
 
@@ -32,7 +33,7 @@ properties respectively.
   >>> type(N.i)
   <class 'sympy.vector.vector.BaseVector'>
 
-As seen above, the basis vectors are all instances of a class called 
+As seen above, the basis vectors are all instances of a class called
 ``BaseVector``.
 
 When a ``BaseVector`` is multiplied by a scalar (essentially any
@@ -57,7 +58,7 @@ formation of ``VectorAdd`` - except for special cases, ofcourse.
 
 What about a zero vector? It can be accessed using the ``zero``
 attribute assigned to class ``Vector``. Since the notion of a zero
-vector remains the same regardless of the coordinate system in 
+vector remains the same regardless of the coordinate system in
 consideration, we use ``Vector.zero`` wherever such a quantity is
 required.
 
@@ -71,12 +72,12 @@ required.
   >>> Vector.zero == 2*Vector.zero
   True
 
-All the classes shown above - ``BaseVector``, ``VectorMul``, 
+All the classes shown above - ``BaseVector``, ``VectorMul``,
 ``VectorAdd`` and ``VectorZero`` are subclasses of ``Vector``.
 
 You should never have to instantiate objects of any of the
 subclasses of ``Vector``. Using the ``BaseVector`` instances assigned to a
-``CoordSysCartesian`` instance and (if needed) ``Vector.zero``
+``CoordSys3D`` instance and (if needed) ``Vector.zero``
 as building blocks, any sort of vectorial expression can be constructed
 with the basic mathematical operators ``+``, ``-``, ``*``.
 and ``/``.
@@ -92,8 +93,8 @@ and ``/``.
   4/3*N.i + (-8/3)*N.j
 
 
-In addition to the elementary mathematical operations, the vector 
-operations of ``dot`` and ``cross`` can also be performed on 
+In addition to the elementary mathematical operations, the vector
+operations of ``dot`` and ``cross`` can also be performed on
 ``Vector``.
 
   >>> v1 = 2*N.i + 3*N.j - N.k
@@ -127,7 +128,7 @@ SymPy operations on Vectors
 The SymPy operations of ``simplify``, ``trigsimp``, ``diff``,
 and ``factor`` work on ``Vector`` objects, with the standard SymPy API.
 
-In essence, the methods work on the measure numbers(The coefficients 
+In essence, the methods work on the measure numbers(The coefficients
 of the basis vectors) present in the provided vectorial expression.
 
   >>> from sympy.abc import a, b, c
@@ -164,18 +165,18 @@ point. Points, in general, have been implemented in :mod:`sympy.vector` in the
 form of the ``Point`` class.
 
 To access the origin of system, use the ``origin`` property of the
-``CoordSysCartesian`` class.
+``CoordSys3D`` class.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> N = CoordSysCartesian('N')
+  >>> from sympy.vector import CoordSys3D
+  >>> N = CoordSys3D('N')
   >>> N.origin
   N.origin
   >>> type(N.origin)
   <class 'sympy.vector.point.Point'>
 
-You can instantiate new points in space using the ``locate_new`` 
-method of ``Point``. The arguments include the name(string) of the 
-new ``Point``, and its position vector with respect to the 
+You can instantiate new points in space using the ``locate_new``
+method of ``Point``. The arguments include the name(string) of the
+new ``Point``, and its position vector with respect to the
 'parent' ``Point``.
 
   >>> from sympy.abc import a, b, c
@@ -183,9 +184,9 @@ new ``Point``, and its position vector with respect to the
   >>> Q = P.locate_new('Q', -b*N.j)
 
 Like ``Vector``, a user never has to expressly instantiate an object of
-``Point``. This is because any location in space (albeit relative) can be 
-pointed at by using the ``origin`` of a ``CoordSysCartesian`` as the 
-reference, and then using ``locate_new`` on it and subsequent 
+``Point``. This is because any location in space (albeit relative) can be
+pointed at by using the ``origin`` of a ``CoordSys3D`` as the
+reference, and then using ``locate_new`` on it and subsequent
 ``Point`` instances.
 
 The position vector of a ``Point`` with respect to another ``Point`` can
@@ -197,7 +198,7 @@ be computed using the ``position_wrt`` method.
   a*N.i + c*N.k
 
 Additionally, it is possible to obtain the :math:`X`, :math:`Y` and :math:`Z`
-coordinates of a ``Point`` with respect to a ``CoordSysCartesian``
+coordinates of a ``Point`` with respect to a ``CoordSys3D``
 in the form of a tuple. This is done using the ``express_coordinates``
 method.
 
@@ -208,9 +209,9 @@ method.
 Dyadics
 =======
 
-A dyadic, or dyadic tensor, is a second-order tensor formed by the 
+A dyadic, or dyadic tensor, is a second-order tensor formed by the
 juxtaposition of pairs of vectors. Therefore, the outer products of vectors
-give rise to the formation of dyadics. Dyadic tensors have been implemented 
+give rise to the formation of dyadics. Dyadic tensors have been implemented
 in :mod:`sympy.vector` in the ``Dyadic`` class.
 
 Once again, you never have to instantiate objects of ``Dyadic``.
@@ -218,8 +219,8 @@ The outer products of vectors can be computed using the ``outer``
 method of ``Vector``. The ``|`` operator has been overloaded for
 ``outer``.
 
-  >>> from sympy.vector import CoordSysCartesian
-  >>> N = CoordSysCartesian('N')
+  >>> from sympy.vector import CoordSys3D
+  >>> N = CoordSys3D('N')
   >>> N.i.outer(N.j)
   (N.i|N.j)
   >>> N.i|N.j

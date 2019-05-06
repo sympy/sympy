@@ -11,29 +11,51 @@ complete source code files.
 """
 
 from __future__ import print_function, division
+from sympy.codegen.ast import Assignment
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
-from sympy.printing.codeprinter import CodePrinter, Assignment
-from sympy.printing.precedence import precedence
+from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
 
 # List of known functions.  First, those that have the same name in
 # SymPy and Octave.   This is almost certainly incomplete!
-known_fcns_src1 = ["sin", "cos", "tan", "asin", "acos", "atan", "atan2",
-                   "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
-                   "log", "exp", "erf", "gamma", "sign", "floor", "csc",
-                   "sec", "cot", "coth", "acot", "acoth", "erfc",
-                   "besselj", "bessely", "besseli", "besselk",
-                   "erfinv", "erfcinv", "factorial" ]
+known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
+                   "asin", "acos", "acot", "atan", "atan2", "asec", "acsc",
+                   "sinh", "cosh", "tanh", "coth", "csch", "sech",
+                   "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
+                   "erfc", "erfi", "erf", "erfinv", "erfcinv",
+                   "besseli", "besselj", "besselk", "bessely",
+                   "bernoulli", "beta", "euler", "exp", "factorial", "floor",
+                   "fresnelc", "fresnels", "gamma", "harmonic", "log",
+                   "polylog", "sign", "zeta"]
+
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
 known_fcns_src2 = {
     "Abs": "abs",
+    "arg": "angle",  # arg/angle ok in Octave but only angle in Matlab
     "ceiling": "ceil",
+    "chebyshevu": "chebyshevU",
+    "chebyshevt": "chebyshevT",
+    "Chi": "coshint",
+    "Ci": "cosint",
     "conjugate": "conj",
     "DiracDelta": "dirac",
     "Heaviside": "heaviside",
+    "im": "imag",
+    "laguerre": "laguerreL",
+    "LambertW": "lambertw",
+    "li": "logint",
+    "loggamma": "gammaln",
+    "Max": "max",
+    "Min": "min",
+    "polygamma": "psi",
+    "re": "real",
+    "RisingFactorial": "pochhammer",
+    "Shi": "sinhint",
+    "Si": "sinint",
 }
 
 
@@ -53,15 +75,17 @@ class OctaveCodePrinter(CodePrinter):
     _default_settings = {
         'order': None,
         'full_prec': 'auto',
-        'precision': 16,
+        'precision': 17,
         'user_functions': {},
         'human': True,
+        'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
     }
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Octave.
+
 
     def __init__(self, settings={}):
         super(OctaveCodePrinter, self).__init__(settings)
@@ -112,7 +136,7 @@ class OctaveCodePrinter(CodePrinter):
     def _print_Mul(self, expr):
         # print complex numbers nicely in Octave
         if (expr.is_number and expr.is_imaginary and
-                expr.as_coeff_Mul()[0].is_integer):
+                (S.ImaginaryUnit*expr).is_Integer):
             return "%si" % self._print(-S.ImaginaryUnit*expr)
 
         # cribbed from str.py
@@ -128,6 +152,8 @@ class OctaveCodePrinter(CodePrinter):
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
+        pow_paren = []  # Will collect all pow with more than one base element and exp = -1
+
         if self.order not in ('old', 'none'):
             args = expr.as_ordered_factors()
         else:
@@ -141,6 +167,8 @@ class OctaveCodePrinter(CodePrinter):
                 if item.exp != -1:
                     b.append(Pow(item.base, -item.exp, evaluate=False))
                 else:
+                    if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
+                        pow_paren.append(item)
                     b.append(Pow(item.base, -item.exp))
             elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
@@ -155,6 +183,11 @@ class OctaveCodePrinter(CodePrinter):
         a_str = [self.parenthesize(x, prec) for x in a]
         b_str = [self.parenthesize(x, prec) for x in b]
 
+        # To parenthesize Pow with exp = -1 and having more than one Symbol
+        for item in pow_paren:
+            if item.base in b:
+                b_str[b.index(item.base)] = "(%s)" % b_str[b.index(item.base)]
+
         # from here it differs from str.py to deal with "*" and ".*"
         def multjoin(a, a_str):
             # here we probably are assuming the constants will come first
@@ -164,7 +197,7 @@ class OctaveCodePrinter(CodePrinter):
                 r = r + mulsym + a_str[i]
             return r
 
-        if len(b) == 0:
+        if not b:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
             divsym = '/' if b[0].is_number else './'
@@ -217,14 +250,6 @@ class OctaveCodePrinter(CodePrinter):
         # FIXME: how to do better, e.g., for octave_code(2*GoldenRatio)?
         #return self._print((1+sqrt(S(5)))/2)
         return "(1+sqrt(5))/2"
-
-
-    def _print_NumberSymbol(self, expr):
-        if self._settings["inline"]:
-            return self._print(expr.evalf(self._settings["precision"]))
-        else:
-            # assign to a variable, perhaps more readable for longer program
-            return super(OctaveCodePrinter, self)._print_NumberSymbol(expr)
 
 
     def _print_Assignment(self, expr):
@@ -298,13 +323,8 @@ class OctaveCodePrinter(CodePrinter):
         elif (A.rows, A.cols) == (1, 1):
             # Octave does not distinguish between scalars and 1x1 matrices
             return self._print(A[0, 0])
-        elif A.rows == 1:
-            return "[%s]" % A.table(self, rowstart='', rowend='', colsep=' ')
-        elif A.cols == 1:
-            # note .table would unnecessarily equispace the rows
-            return "[%s]" % "; ".join([self._print(a) for a in A])
-        return "[%s]" % A.table(self, rowstart='', rowend='',
-                                rowsep=';\n', colsep=' ')
+        return "[%s]" % "; ".join(" ".join([self._print(a) for a in A[r, :]])
+                                  for r in range(A.rows))
 
 
     def _print_SparseMatrix(self, A):
@@ -333,7 +353,8 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '(%s, %s)'%(expr.i+1, expr.j+1)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
+            + '(%s, %s)' % (expr.i + 1, expr.j + 1)
 
 
     def _print_MatrixSlice(self, expr):
@@ -366,8 +387,34 @@ class OctaveCodePrinter(CodePrinter):
         return self._print(expr.label)
 
 
+    def _print_KroneckerDelta(self, expr):
+        prec = PRECEDENCE["Pow"]
+        return "double(%s == %s)" % tuple(self.parenthesize(x, prec)
+                                          for x in expr.args)
+
+
     def _print_Identity(self, expr):
-        return "eye(%s)" % self._print(expr.shape[0])
+        shape = expr.shape
+        if len(shape) == 2 and shape[0] == shape[1]:
+            shape = [shape[0]]
+        s = ", ".join(self._print(n) for n in shape)
+        return "eye(" + s + ")"
+
+
+    def _print_lowergamma(self, expr):
+        # Octave implements regularized incomplete gamma function
+        return "(gammainc({1}, {0}).*gamma({0}))".format(
+            self._print(expr.args[0]), self._print(expr.args[1]))
+
+
+    def _print_uppergamma(self, expr):
+        return "(gammainc({1}, {0}, 'upper').*gamma({0}))".format(
+            self._print(expr.args[0]), self._print(expr.args[1]))
+
+
+    def _print_sinc(self, expr):
+        #Note: Divide by pi because Octave implements normalized sinc function.
+        return "sinc(%s)" % self._print(expr.args[0]/S.Pi)
 
 
     def _print_hankel1(self, expr):
@@ -411,6 +458,34 @@ class OctaveCodePrinter(CodePrinter):
         return "airy(3, %s)" % self._print(expr.args[0])
 
 
+    def _print_expint(self, expr):
+        mu, x = expr.args
+        if mu != 1:
+            return self._print_not_supported(expr)
+        return "expint(%s)" % self._print(x)
+
+
+    def _one_or_two_reversed_args(self, expr):
+        assert len(expr.args) <= 2
+        return '{name}({args})'.format(
+            name=self.known_functions[expr.__class__.__name__],
+            args=", ".join([self._print(x) for x in reversed(expr.args)])
+        )
+
+
+    _print_DiracDelta = _print_LambertW = _one_or_two_reversed_args
+
+
+    def _nested_binary_math_func(self, expr):
+        return '{name}({arg1}, {arg2})'.format(
+            name=self.known_functions[expr.__class__.__name__],
+            arg1=self._print(expr.args[0]),
+            arg2=self._print(expr.func(*expr.args[1:]))
+            )
+
+    _print_Max = _print_Min = _nested_binary_math_func
+
+
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
@@ -446,6 +521,14 @@ class OctaveCodePrinter(CodePrinter):
                 if i == len(expr.args) - 1:
                     lines.append("end")
             return "\n".join(lines)
+
+
+    def _print_zeta(self, expr):
+        if len(expr.args) == 1:
+            return "zeta(%s)" % self._print(expr.args[0])
+        else:
+            # Matlab two argument zeta is not equivalent to SymPy's
+            return self._print_not_supported(expr)
 
 
     def indent_code(self, code):
@@ -559,7 +642,7 @@ def octave_code(expr, assign_to=None, **settings):
 
     Matrices are supported using Octave inline notation.  When using
     ``assign_to`` with matrices, the name can be specified either as a string
-    or as a ``MatrixSymbol``.  The dimenions must align in the latter case.
+    or as a ``MatrixSymbol``.  The dimensions must align in the latter case.
 
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([[x**2, sin(x), ceiling(x)]])

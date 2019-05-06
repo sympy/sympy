@@ -1,25 +1,27 @@
 from __future__ import print_function, division
 
 from sympy import ask, Q
-from sympy.core import Basic, Add, sympify
+from sympy.core import Basic, Add
 from sympy.core.compatibility import range
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
+from sympy.utilities.misc import filldedent
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matadd import MatAdd
+from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose, transpose
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices import Matrix, ShapeError
-
+from sympy.functions.elementary.complexes import re, im
 
 class BlockMatrix(MatrixExpr):
-    """A BlockMatrix is a Matrix composed of other smaller, submatrices
+    """A BlockMatrix is a Matrix comprised of other matrices.
 
     The submatrices are stored in a SymPy Matrix object but accessed as part of
     a Matrix Expression
@@ -41,14 +43,90 @@ class BlockMatrix(MatrixExpr):
     Matrix([[I, Z]])
 
     >>> print(block_collapse(C*B))
-    Matrix([[X, Z*Y + Z]])
+    Matrix([[X, Z + Z*Y]])
 
+    Some matrices might be comprised of rows of blocks with
+    the matrices in each row having the same height and the
+    rows all having the same total number of columns but
+    not having the same number of columns for each matrix
+    in each row. In this case, the matrix is not a block
+    matrix and should be instantiated by Matrix.
+
+    >>> from sympy import ones, Matrix
+    >>> dat = [
+    ... [ones(3,2), ones(3,3)*2],
+    ... [ones(2,3)*3, ones(2,2)*4]]
+    ...
+    >>> BlockMatrix(dat)
+    Traceback (most recent call last):
+    ...
+    ValueError:
+    Although this matrix is comprised of blocks, the blocks do not fill
+    the matrix in a size-symmetric fashion. To create a full matrix from
+    these arguments, pass them directly to Matrix.
+    >>> Matrix(dat)
+    Matrix([
+    [1, 1, 2, 2, 2],
+    [1, 1, 2, 2, 2],
+    [1, 1, 2, 2, 2],
+    [3, 3, 3, 4, 4],
+    [3, 3, 3, 4, 4]])
+
+    See Also
+    ========
+    sympy.matrices.matrices.MatrixBase.irregular
     """
-    def __new__(cls, *args):
-        from sympy.matrices.immutable import ImmutableMatrix
-        args = map(sympify, args)
-        mat = ImmutableMatrix(*args)
-
+    def __new__(cls, *args, **kwargs):
+        from sympy.matrices.immutable import ImmutableDenseMatrix
+        from sympy.matrices import zeros
+        from sympy.matrices.matrices import MatrixBase
+        from sympy.utilities.iterables import is_sequence
+        isMat = lambda i: getattr(i, 'is_Matrix', False)
+        if len(args) != 1 or \
+                not is_sequence(args[0]) or \
+                len(set([isMat(r) for r in args[0]])) != 1:
+            raise ValueError(filldedent('''
+                expecting a sequence of 1 or more rows
+                containing Matrices.'''))
+        rows = args[0] if args else []
+        if not isMat(rows):
+            if rows and isMat(rows[0]):
+                rows = [rows]  # rows is not list of lists or []
+            # regularity check
+            # same number of matrices in each row
+            blocky = ok = len(set([len(r) for r in rows])) == 1
+            if ok:
+                # same number of rows for each matrix in a row
+                for r in rows:
+                    ok = len(set([i.rows for i in r])) == 1
+                    if not ok:
+                        break
+                blocky = ok
+                # same number of cols for each matrix in each col
+                for c in range(len(rows[0])):
+                    ok = len(set([rows[i][c].cols
+                        for i in range(len(rows))])) == 1
+                    if not ok:
+                        break
+            if not ok:
+                # same total cols in each row
+                ok = len(set([
+                    sum([i.cols for i in r]) for r in rows])) == 1
+                if blocky and ok:
+                    raise ValueError(filldedent('''
+                        Although this matrix is comprised of blocks,
+                        the blocks do not fill the matrix in a
+                        size-symmetric fashion. To create a full matrix
+                        from these arguments, pass them directly to
+                        Matrix.'''))
+                raise ValueError(filldedent('''
+                    When there are not the same number of rows in each
+                    row's matrices or there are not the same number of
+                    total columns in each row, the matrix is not a
+                    block matrix. If this matrix is known to consist of
+                    blocks fully filling a 2-D space then see
+                    Matrix.irregular.'''))
+        mat = ImmutableDenseMatrix(rows, evaluate=False)
         obj = Basic.__new__(cls, mat)
         return obj
 
@@ -125,6 +203,15 @@ class BlockMatrix(MatrixExpr):
                 return det(D)*det(A - B*D.I*C)
         return Determinant(self)
 
+    def as_real_imag(self):
+        real_matrices = [re(matrix) for matrix in self.blocks]
+        real_matrices = Matrix(self.blockshape[0], self.blockshape[1], real_matrices)
+
+        im_matrices = [im(matrix) for matrix in self.blocks]
+        im_matrices = Matrix(self.blockshape[0], self.blockshape[1], im_matrices)
+
+        return (real_matrices, im_matrices)
+
     def transpose(self):
         """Return transpose of matrix.
 
@@ -139,8 +226,8 @@ class BlockMatrix(MatrixExpr):
         >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
         >>> B.transpose()
         Matrix([
-        [X',  0],
-        [Z', Y']])
+        [X.T,  0],
+        [Z.T, Y.T]])
         >>> _.transpose()
         Matrix([
         [X, Z],
@@ -148,7 +235,7 @@ class BlockMatrix(MatrixExpr):
         """
         return self._eval_transpose()
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         # Find row entry
         for row_block, numrows in enumerate(self.rowblocksizes):
             if (i < numrows) != False:
@@ -185,12 +272,13 @@ class BlockMatrix(MatrixExpr):
             return True
         return super(BlockMatrix, self).equals(other)
 
+
 class BlockDiagMatrix(BlockMatrix):
     """
     A BlockDiagMatrix is a BlockMatrix with matrices only along the diagonal
 
     >>> from sympy import MatrixSymbol, BlockDiagMatrix, symbols, Identity
-    >>> n,m,l = symbols('n m l')
+    >>> n, m, l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> BlockDiagMatrix(X, Y)
@@ -198,6 +286,9 @@ class BlockDiagMatrix(BlockMatrix):
     [X, 0],
     [0, Y]])
 
+    See Also
+    ========
+    sympy.matrices.common.diag
     """
     def __new__(cls, *mats):
         return Basic.__new__(BlockDiagMatrix, *mats)
@@ -208,12 +299,12 @@ class BlockDiagMatrix(BlockMatrix):
 
     @property
     def blocks(self):
-        from sympy.matrices.immutable import ImmutableMatrix
+        from sympy.matrices.immutable import ImmutableDenseMatrix
         mats = self.args
         data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
                         for j in range(len(mats))]
                         for i in range(len(mats))]
-        return ImmutableMatrix(data)
+        return ImmutableDenseMatrix(data)
 
     @property
     def shape(self):
@@ -273,20 +364,22 @@ def block_collapse(expr):
     Matrix([[I, Z]])
 
     >>> print(block_collapse(C*B))
-    Matrix([[X, Z*Y + Z]])
+    Matrix([[X, Z + Z*Y]])
     """
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
     rule = exhaust(
         bottom_up(exhaust(condition(hasbm, typed(
             {MatAdd: do_one(bc_matadd, bc_block_plus_ident),
              MatMul: do_one(bc_matmul, bc_dist),
+             MatPow: bc_matmul,
              Transpose: bc_transpose,
              Inverse: bc_inverse,
              BlockMatrix: do_one(bc_unpack, deblock)})))))
     result = rule(expr)
-    try:
-        return result.doit()
-    except AttributeError:
+    doit = getattr(result, 'doit', None)
+    if doit is not None:
+        return doit()
+    else:
         return result
 
 def bc_unpack(expr):
@@ -334,7 +427,13 @@ def bc_dist(expr):
 
 
 def bc_matmul(expr):
-    factor, matrices = expr.as_coeff_matrices()
+    if isinstance(expr, MatPow):
+        if expr.args[1].is_Integer:
+            factor, matrices = (1, [expr.args[0]]*expr.args[1])
+        else:
+            return expr
+    else:
+        factor, matrices = expr.as_coeff_matrices()
 
     i = 0
     while (i+1 < len(matrices)):

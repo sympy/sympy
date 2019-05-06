@@ -1,5 +1,7 @@
-from sympy.core import pi, oo, symbols, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
-from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
+from sympy.core import (pi, oo, symbols, Rational, Integer, GoldenRatio,
+                        EulerGamma, Catalan, Lambda, Dummy, S)
+from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
+                             sinh, cosh, tanh, asin, acos, acosh, Max, Min)
 from sympy.utilities.pytest import raises
 from sympy.printing.jscode import JavascriptCodePrinter
 from sympy.utilities.lambdify import implemented_function
@@ -18,7 +20,7 @@ def test_printmethod():
 def test_jscode_sqrt():
     assert jscode(sqrt(x)) == "Math.sqrt(x)"
     assert jscode(x**0.5) == "Math.sqrt(x)"
-    assert jscode(sqrt(x)) == "Math.sqrt(x)"
+    assert jscode(x**(S(1)/3)) == "Math.cbrt(x)"
 
 
 def test_jscode_Pow():
@@ -39,10 +41,10 @@ def test_jscode_constants_mathh():
 
 def test_jscode_constants_other():
     assert jscode(
-        2*GoldenRatio) == "var GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
-    assert jscode(2*Catalan) == "var Catalan = 0.915965594177219;\n2*Catalan"
+        2*GoldenRatio) == "var GoldenRatio = %s;\n2*GoldenRatio" % GoldenRatio.evalf(17)
+    assert jscode(2*Catalan) == "var Catalan = %s;\n2*Catalan" % Catalan.evalf(17)
     assert jscode(
-        2*EulerGamma) == "var EulerGamma = 0.577215664901533;\n2*EulerGamma"
+        2*EulerGamma) == "var EulerGamma = %s;\n2*EulerGamma" % EulerGamma.evalf(17)
 
 
 def test_jscode_Rational():
@@ -59,6 +61,10 @@ def test_jscode_Integer():
 
 def test_jscode_functions():
     assert jscode(sin(x) ** cos(x)) == "Math.pow(Math.sin(x), Math.cos(x))"
+    assert jscode(sinh(x) * cosh(x)) == "Math.sinh(x)*Math.cosh(x)"
+    assert jscode(Max(x, y) + Min(x, y)) == "Math.max(x, y) + Math.min(x, y)"
+    assert jscode(tanh(x)*acosh(y)) == "Math.tanh(x)*Math.acosh(y)"
+    assert jscode(asin(x)-acos(y)) == "-Math.acos(y) + Math.asin(x)"
 
 
 def test_jscode_inline_function():
@@ -66,7 +72,7 @@ def test_jscode_inline_function():
     g = implemented_function('g', Lambda(x, 2*x))
     assert jscode(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
-    assert jscode(g(x)) == "var Catalan = %s;\n2*x/Catalan" % Catalan.n()
+    assert jscode(g(x)) == "var Catalan = %s;\n2*x/Catalan" % Catalan.evalf(17)
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
@@ -167,7 +173,7 @@ def test_jscode_loops_matrix_vector():
         '}\n'
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
-        '      y[i] = x[j]*A[n*i + j] + y[i];\n'
+        '      y[i] = A[n*i + j]*x[j] + y[i];\n'
         '   }\n'
         '}'
     )
@@ -207,7 +213,7 @@ def test_jscode_loops_add():
         '}\n'
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
-        '      y[i] = x[j]*A[n*i + j] + y[i];\n'
+        '      y[i] = A[n*i + j]*x[j] + y[i];\n'
         '   }\n'
         '}'
     )
@@ -235,7 +241,7 @@ def test_jscode_loops_multiple_contractions():
         '   for (var j=0; j<n; j++){\n'
         '      for (var k=0; k<o; k++){\n'
         '         for (var l=0; l<p; l++){\n'
-        '            y[i] = y[i] + b[%s]*a[%s];\n' % (j*o*p + k*p + l, i*n*o*p + j*o*p + k*p + l) +\
+        '            y[i] = a[%s]*b[%s] + y[i];\n' % (i*n*o*p + j*o*p + k*p + l, j*o*p + k*p + l) +\
         '         }\n'
         '      }\n'
         '   }\n'
@@ -305,14 +311,14 @@ def test_jscode_loops_multiple_terms():
     s2 = (
         'for (var i=0; i<m; i++){\n'
         '   for (var k=0; k<o; k++){\n'
-        '      y[i] = b[k]*a[%s] + y[i];\n' % (i*o + k) +\
+        '      y[i] = a[%s]*b[k] + y[i];\n' % (i*o + k) +\
         '   }\n'
         '}\n'
     )
     s3 = (
         'for (var i=0; i<m; i++){\n'
         '   for (var j=0; j<n; j++){\n'
-        '      y[i] = b[j]*a[%s] + y[i];\n' % (i*n + j) +\
+        '      y[i] = a[%s]*b[j] + y[i];\n' % (i*n + j) +\
         '   }\n'
         '}\n'
     )
@@ -361,6 +367,19 @@ def test_Matrix_printing():
         "M[3] = q[1] + q[2];\n"
         "M[4] = q[3];\n"
         "M[5] = 5;\n"
-        "M[6] = 2*q[4]*1/q[1];\n"
-        "M[7] = 4 + Math.sqrt(q[0]);\n"
+        "M[6] = 2*q[4]/q[1];\n"
+        "M[7] = Math.sqrt(q[0]) + 4;\n"
         "M[8] = 0;")
+
+
+def test_MatrixElement_printing():
+    # test cases for issue #11821
+    A = MatrixSymbol("A", 1, 3)
+    B = MatrixSymbol("B", 1, 3)
+    C = MatrixSymbol("C", 1, 3)
+
+    assert(jscode(A[0, 0]) == "A[0]")
+    assert(jscode(3 * A[0, 0]) == "3*A[0]")
+
+    F = C[0, 0].subs(C, A - B)
+    assert(jscode(F) == "(A - B)[0]")

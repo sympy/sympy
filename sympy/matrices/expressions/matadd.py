@@ -8,15 +8,19 @@ from sympy.functions import adjoint
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
-        exhaust, do_one, glom)
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
+    exhaust, do_one, glom)
+from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
+    ZeroMatrix, GenericZeroMatrix)
 from sympy.utilities import default_sort_key, sift
 
-
-class MatAdd(MatrixExpr):
+# XXX: MatAdd should perhaps not subclass directly from Add
+class MatAdd(MatrixExpr, Add):
     """A Sum of Matrix Expressions
 
     MatAdd inherits from and operates like SymPy Add
+
+    Examples
+    ========
 
     >>> from sympy import MatAdd, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
@@ -28,11 +32,19 @@ class MatAdd(MatrixExpr):
     is_MatAdd = True
 
     def __new__(cls, *args, **kwargs):
+        if not args:
+            return GenericZeroMatrix()
+
+        # This must be removed aggressively in the constructor to avoid
+        # TypeErrors from GenericZeroMatrix().shape
+        args = filter(lambda i: GenericZeroMatrix() != i, args)
         args = list(map(sympify, args))
-        check = kwargs.get('check', True)
+        check = kwargs.get('check', False)
 
         obj = Basic.__new__(cls, *args)
         if check:
+            if all(not isinstance(i, MatrixExpr) for i in args):
+                return Add.fromiter(args)
             validate(*args)
         return obj
 
@@ -40,8 +52,8 @@ class MatAdd(MatrixExpr):
     def shape(self):
         return self.args[0].shape
 
-    def _entry(self, i, j):
-        return Add(*[arg._entry(i, j) for arg in self.args])
+    def _entry(self, i, j, **kwargs):
+        return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])
 
     def _eval_transpose(self):
         return MatAdd(*[transpose(arg) for arg in self.args]).doit()
@@ -60,6 +72,11 @@ class MatAdd(MatrixExpr):
         else:
             args = self.args
         return canonicalize(MatAdd(*args))
+
+    def _eval_derivative_matrix_lines(self, x):
+        add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
+        return [j for i in add_lines for j in i]
+
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
@@ -82,6 +99,9 @@ def combine(cnt, mat):
 def merge_explicit(matadd):
     """ Merge explicit MatrixBase arguments
 
+    Examples
+    ========
+
     >>> from sympy import MatrixSymbol, eye, Matrix, MatAdd, pprint
     >>> from sympy.matrices.expressions.matadd import merge_explicit
     >>> A = MatrixSymbol('A', 2, 2)
@@ -89,12 +109,12 @@ def merge_explicit(matadd):
     >>> C = Matrix([[1, 2], [3, 4]])
     >>> X = MatAdd(A, B, C)
     >>> pprint(X)
-    A + [1  0] + [1  2]
-        [    ]   [    ]
+        [1  0]   [1  2]
+    A + [    ] + [    ]
         [0  1]   [3  4]
     >>> pprint(merge_explicit(X))
-    A + [2  2]
-        [    ]
+        [2  2]
+    A + [    ]
         [3  5]
     """
     groups = sift(matadd.args, lambda arg: isinstance(arg, MatrixBase))

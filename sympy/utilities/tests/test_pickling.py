@@ -1,6 +1,10 @@
+import sys
+import inspect
 import copy
 import pickle
-import warnings
+
+from sympy.physics.units import meter
+
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
@@ -19,24 +23,32 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
 from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
 
-from sympy.core.compatibility import HAS_GMPY, PY3
+from sympy.core.compatibility import HAS_GMPY
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.pytest import ignore_warnings
 
 from sympy import symbols, S
 
-excluded_attrs = set(['_assumptions', '_mhash'])
+from sympy.external import import_module
+cloudpickle = import_module('cloudpickle')
+
+excluded_attrs = set(
+    ['_assumptions', '_mhash', 'message',
+    # XXX Remove these after deprecation is done for issue #15887
+    '_cache_eigenvects', '_cache_is_diagonalizable']
+    )
 
 
 def check(a, exclude=[], check_attr=True):
     """ Check that pickling and copying round-trips.
     """
-    # Python 2.6+ warns about BasicException.message, for example.
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-
     protocols = [0, 1, 2, copy.copy, copy.deepcopy]
     # Python 2.x doesn't support the third pickling protocol
-    if PY3:
-        protocols.extend([3])
+    if sys.version_info >= (3,):
+        protocols.extend([3, 4])
+    if cloudpickle:
+        protocols.extend([cloudpickle])
+
     for protocol in protocols:
         if protocol in exclude:
             continue
@@ -44,8 +56,10 @@ def check(a, exclude=[], check_attr=True):
         if callable(protocol):
             if isinstance(a, BasicMeta):
                 # Classes can't be copied, but that's okay.
-                return
+                continue
             b = protocol(a)
+        elif inspect.ismodule(protocol):
+            b = protocol.loads(protocol.dumps(a))
         else:
             b = pickle.loads(pickle.dumps(a, protocol))
 
@@ -58,18 +72,19 @@ def check(a, exclude=[], check_attr=True):
 
         def c(a, b, d):
             for i in d:
-                if not hasattr(a, i) or i in excluded_attrs:
+                if i in excluded_attrs:
+                    continue
+                if not hasattr(a, i):
                     continue
                 attr = getattr(a, i)
                 if not hasattr(attr, "__call__"):
                     assert hasattr(b, i), i
-                    assert getattr(b, i) == attr, "%s != %s" % (getattr(b, i), attr)
+                    assert getattr(b, i) == attr, "%s != %s, protocol: %s" % (getattr(b, i), attr, protocol)
+
         c(a, b, d1)
         c(b, a, d2)
 
-    # reset filters
-    warnings.simplefilter("default", category=DeprecationWarning)
-    warnings.simplefilter("error", category=SymPyDeprecationWarning)
+
 
 #================== core =========================
 
@@ -79,7 +94,7 @@ def test_core_basic():
               Basic, Basic(),
               # XXX: dynamically created types are not picklable
               # BasicMeta, BasicMeta("test", (), {}),
-              SingletonRegistry, SingletonRegistry()):
+              SingletonRegistry, S):
         check(c)
 
 
@@ -95,6 +110,12 @@ def test_core_symbol():
 def test_core_numbers():
     for c in (Integer(2), Rational(2, 3), Float("1.2")):
         check(c)
+
+
+def test_core_float_copy():
+    # See gh-7457
+    y = Symbol("x") + 1.0
+    check(y)  # does not raise TypeError ("argument is not an mpz")
 
 
 def test_core_relational():
@@ -132,8 +153,17 @@ def test_core_function():
         check(f)
 
 
+def test_core_undefinedfunctions():
+    f = Function("f")
+    # Full XFAILed test below
+    exclude = list(range(5))
+    # https://github.com/cloudpipe/cloudpickle/issues/65
+    # https://github.com/cloudpipe/cloudpickle/issues/190
+    exclude.append(cloudpickle)
+    check(f, exclude=exclude)
+
 @XFAIL
-def test_core_dynamicfunctions():
+def test_core_undefinedfunctions_fail():
     # This fails because f is assumed to be a class at sympy.basic.function.f
     f = Function("f")
     check(f)
@@ -151,15 +181,17 @@ def test_core_multidimensional():
 
 def test_Singletons():
     protocols = [0, 1, 2]
-    if PY3:
-        protocols.extend([3])
+    if sys.version_info >= (3,):
+        protocols.extend([3, 4])
     copiers = [copy.copy, copy.deepcopy]
     copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
             for proto in protocols]
+    if cloudpickle:
+        copiers += [lambda x: cloudpickle.loads(cloudpickle.dumps(x))]
 
     for obj in (Integer(-1), Integer(0), Integer(1), Rational(1, 2), pi, E, I,
-            oo, -oo, zoo, nan, S.GoldenRatio, S.EulerGamma, S.Catalan,
-            S.EmptySet, S.IdentityFunction):
+            oo, -oo, zoo, nan, S.GoldenRatio, S.TribonacciConstant,
+            S.EulerGamma, S.Catalan, S.EmptySet, S.IdentityFunction):
         for func in copiers:
             assert func(obj) is obj
 
@@ -172,7 +204,7 @@ from sympy.functions import (Piecewise, lowergamma, acosh,
         cos, cot, acos, acot, gamma, bell, hermite, harmonic,
         LambertW, zeta, log, factorial, asinh, acoth, Znm,
         cosh, dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
-        conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
+        tribonacci, conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
         RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
         polygamma, exp)
 
@@ -182,7 +214,7 @@ def test_functions():
             sign, arg, asin, DiracDelta, re, Abs, sinh, cos, cot, acos, acot,
             gamma, bell, harmonic, LambertW, zeta, log, factorial, asinh,
             acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,
-            conjugate, tan, floor, atanh, sin, atan, lucas, exp)
+            tribonacci, conjugate, tan, floor, atanh, sin, atan, lucas, exp)
     two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial,
             atan2, polygamma, hermite, legendre, uppergamma)
     x, y, z = symbols("x,y,z")
@@ -260,7 +292,7 @@ from sympy.physics.units import Unit
 
 
 def test_physics():
-    for c in (Unit, Unit("meter", "m"), Pauli, Pauli(1)):
+    for c in (Unit, meter, Pauli, Pauli(1)):
         check(c)
 
 #================== plotting ====================
@@ -406,10 +438,10 @@ def test_pickling_polys_domains():
     #     check(c)
 
     for c in (PythonIntegerRing, PythonIntegerRing()):
-        check(c)
+        check(c, check_attr=False)
 
     for c in (PythonRationalField, PythonRationalField()):
-        check(c)
+        check(c, check_attr=False)
 
     if HAS_GMPY:
         from sympy.polys.domains.gmpyfinitefield import GMPYFiniteField
@@ -421,10 +453,10 @@ def test_pickling_polys_domains():
         #     check(c)
 
         for c in (GMPYIntegerRing, GMPYIntegerRing()):
-            check(c)
+            check(c, check_attr=False)
 
         for c in (GMPYRationalField, GMPYRationalField()):
-            check(c)
+            check(c, check_attr=False)
 
     from sympy.polys.domains.realfield import RealField
     from sympy.polys.domains.complexfield import ComplexField
@@ -442,7 +474,7 @@ def test_pickling_polys_domains():
     #     check(c)
 
     for c in (AlgebraicField, AlgebraicField(QQ, sqrt(3))):
-        check(c)
+        check(c, check_attr=False)
 
     # TODO: AssertionError
     # for c in (PolynomialRing, PolynomialRing(ZZ, "x,y,z")):
@@ -453,13 +485,13 @@ def test_pickling_polys_domains():
     #     check(c)
 
     for c in (ExpressionDomain, ExpressionDomain()):
-        check(c)
+        check(c, check_attr=False)
 
 def test_pickling_polys_numberfields():
     from sympy.polys.numberfields import AlgebraicNumber
 
     for c in (AlgebraicNumber, AlgebraicNumber(sqrt(3))):
-        check(c)
+        check(c, check_attr=False)
 
 def test_pickling_polys_orderings():
     from sympy.polys.orderings import (LexOrder, GradedLexOrder,
@@ -589,12 +621,12 @@ def test_pickling_polys_options():
 #    ComplexInterval
 
 def test_pickling_polys_rootoftools():
-    from sympy.polys.rootoftools import RootOf, RootSum
+    from sympy.polys.rootoftools import CRootOf, RootSum
 
     x = Symbol('x')
     f = x**3 + x + 3
 
-    for c in (RootOf, RootOf(f, 0)):
+    for c in (CRootOf, CRootOf(f, 0)):
         check(c)
 
     for c in (RootSum, RootSum(f, exp)):
@@ -602,7 +634,7 @@ def test_pickling_polys_rootoftools():
 
 #================== printing ====================
 from sympy.printing.latex import LatexPrinter
-from sympy.printing.mathml import MathMLPrinter
+from sympy.printing.mathml import MathMLContentPrinter, MathMLPresentationPrinter
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.printer import Printer
@@ -610,19 +642,25 @@ from sympy.printing.python import PythonPrinter
 
 
 def test_printing():
-    for c in (LatexPrinter, LatexPrinter(), MathMLPrinter,
-              PrettyPrinter, prettyForm, stringPict, stringPict("a"),
-              Printer, Printer(), PythonPrinter, PythonPrinter()):
+    for c in (LatexPrinter, LatexPrinter(), MathMLContentPrinter,
+              MathMLPresentationPrinter, PrettyPrinter, prettyForm, stringPict,
+              stringPict("a"), Printer, Printer(), PythonPrinter,
+              PythonPrinter()):
         check(c)
 
 
 @XFAIL
 def test_printing1():
-    check(MathMLPrinter())
+    check(MathMLContentPrinter())
 
 
 @XFAIL
 def test_printing2():
+    check(MathMLPresentationPrinter())
+
+
+@XFAIL
+def test_printing3():
     check(PrettyPrinter())
 
 #================== series ======================
@@ -645,3 +683,7 @@ def test_concrete():
     x = Symbol("x")
     for c in (Product, Product(x, (x, 2, 4)), Sum, Sum(x, (x, 2, 4))):
         check(c)
+
+def test_deprecation_warning():
+    w = SymPyDeprecationWarning('value', 'feature', issue=12345, deprecated_since_version='1.0')
+    check(w)

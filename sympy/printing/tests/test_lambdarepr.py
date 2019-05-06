@@ -1,7 +1,9 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify
+from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify,Expr
 from sympy.utilities.pytest import raises
 
-from sympy.printing.lambdarepr import lambdarepr
+from sympy.printing.tensorflow import TensorflowPrinter
+from sympy.printing.lambdarepr import lambdarepr, LambdaPrinter, NumExprPrinter
+
 
 x, y, z = symbols("x,y,z")
 i, a, b = symbols("i,a,b")
@@ -16,13 +18,12 @@ def test_basic():
 
 def test_matrix():
     A = Matrix([[x, y], [y*x, z**2]])
-    assert lambdarepr(A) == "MutableDenseMatrix([[x, y], [x*y, z**2]])"
-
+    # assert lambdarepr(A) == "ImmutableDenseMatrix([[x, y], [x*y, z**2]])"
     # Test printing a Matrix that has an element that is printed differently
     # with the LambdaPrinter than in the StrPrinter.
     p = Piecewise((x, True), evaluate=False)
     A = Matrix([p])
-    assert lambdarepr(A) == "MutableDenseMatrix([[((x) if (True) else None)]])"
+    assert lambdarepr(A) == "ImmutableDenseMatrix([[((x))]])"
 
 
 def test_piecewise():
@@ -34,7 +35,7 @@ def test_piecewise():
     p = Piecewise((x, True), evaluate=False)
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((x) if (True) else None)"
+    assert l == "((x))"
 
     p = Piecewise((x, x < 0))
     l = lambdarepr(p)
@@ -48,8 +49,7 @@ def test_piecewise():
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((1) if (x < 1) else (((2) if (x < 2) else " \
-        "(((0) if (True) else None)))))"
+    assert l == "((1) if (x < 1) else (2) if (x < 2) else (0))"
 
     p = Piecewise(
         (1, x < 1),
@@ -57,7 +57,7 @@ def test_piecewise():
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((1) if (x < 1) else (((2) if (x < 2) else None)))"
+    assert l == "((1) if (x < 1) else (2) if (x < 2) else None)"
 
     p = Piecewise(
         (x, x < 1),
@@ -66,29 +66,28 @@ def test_piecewise():
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((x) if (x < 1) else (((x**2) if (((x <= 4) and " \
-        "(x > 3))) else (((0) if (True) else None)))))"
+    assert l == "((x) if (x < 1) else (x**2) if (((x <= 4)) and ((x > 3))) else (0))"
 
     p = Piecewise(
         (x**2, x < 0),
-        (x, Interval(0, 1, False, True).contains(x)),
+        (x, x < 1),
         (2 - x, x >= 1),
-        (0, True)
+        (0, True), evaluate=False
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((x**2) if (x < 0) else (((x) if (((x >= 0) and (x < 1))) " \
-        "else (((-x + 2) if (x >= 1) else (((0) if (True) else None)))))))"
+    assert l == "((x**2) if (x < 0) else (x) if (x < 1)"\
+                                " else (2 - x) if (x >= 1) else (0))"
 
     p = Piecewise(
         (x**2, x < 0),
-        (x, Interval(0, 1, False, True).contains(x)),
-        (2 - x, x >= 1),
+        (x, x < 1),
+        (2 - x, x >= 1), evaluate=False
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((x**2) if (x < 0) else (((x) if (((x >= 0) and " \
-        "(x < 1))) else (((-x + 2) if (x >= 1) else None)))))"
+    assert l == "((x**2) if (x < 0) else (x) if (x < 1)"\
+                    " else (2 - x) if (x >= 1) else None)"
 
     p = Piecewise(
         (1, x >= 1),
@@ -100,9 +99,8 @@ def test_piecewise():
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == ("((1) if (x >= 1) else (((2) if (x >= 2) else (((3) if "
-        "(x >= 3) else (((4) if (x >= 4) else (((5) if (x >= 5) else (((6) if "
-        "(True) else None)))))))))))")
+    assert l == "((1) if (x >= 1) else (2) if (x >= 2) else (3) if (x >= 3)"\
+                        " else (4) if (x >= 4) else (5) if (x >= 5) else (6))"
 
     p = Piecewise(
         (1, x <= 1),
@@ -114,9 +112,8 @@ def test_piecewise():
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((1) if (x <= 1) else (((2) if (x <= 2) else (((3) if " \
-        "(x <= 3) else (((4) if (x <= 4) else (((5) if (x <= 5) else (((6) if " \
-        "(True) else None)))))))))))"
+    assert l == "((1) if (x <= 1) else (2) if (x <= 2) else (3) if (x <= 3)"\
+                            " else (4) if (x <= 4) else (5) if (x <= 5) else (6))"
 
     p = Piecewise(
         (1, x > 1),
@@ -128,9 +125,8 @@ def test_piecewise():
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == ("((1) if (x > 1) else (((2) if (x > 2) else (((3) if "
-        "(x > 3) else (((4) if (x > 4) else (((5) if (x > 5) else (((6) if "
-        "(True) else None)))))))))))")
+    assert l =="((1) if (x > 1) else (2) if (x > 2) else (3) if (x > 3)"\
+                            " else (4) if (x > 4) else (5) if (x > 5) else (6))"
 
     p = Piecewise(
         (1, x < 1),
@@ -142,30 +138,42 @@ def test_piecewise():
     )
     l = lambdarepr(p)
     eval(h + l)
-    assert l == "((1) if (x < 1) else (((2) if (x < 2) else (((3) if " \
-        "(x < 3) else (((4) if (x < 4) else (((5) if (x < 5) else (((6) if " \
-        "(True) else None)))))))))))"
+    assert l == "((1) if (x < 1) else (2) if (x < 2) else (3) if (x < 3)"\
+                            " else (4) if (x < 4) else (5) if (x < 5) else (6))"
+
+    p = Piecewise(
+        (Piecewise(
+            (1, x > 0),
+            (2, True)
+        ), y > 0),
+        (3, True)
+    )
+    l = lambdarepr(p)
+    eval(h + l)
+    assert l == "((((1) if (x > 0) else (2))) if (y > 0) else (3))"
 
 
-def test_sum():
+def test_sum__1():
     # In each case, test eval() the lambdarepr() to make sure that
     # it evaluates to the same results as the symbolic expression
-
     s = Sum(x ** i, (i, a, b))
-
     l = lambdarepr(s)
     assert l == "(builtins.sum(x**i for i in range(a, b+1)))"
 
-    assert (lambdify((x, a, b), s)(2, 3, 8) ==
-            s.subs([(x, 2), (a, 3), (b, 8)]).doit())
+    args = x, a, b
+    f = lambdify(args, s)
+    v = 2, 3, 8
+    assert f(*v) == s.subs(zip(args, v)).doit()
 
+def test_sum__2():
     s = Sum(i * x, (i, a, b))
-
     l = lambdarepr(s)
     assert l == "(builtins.sum(i*x for i in range(a, b+1)))"
 
-    assert (lambdify((x, a, b), s)(2, 3, 8) ==
-            s.subs([(x, 2), (a, 3), (b, 8)]).doit())
+    args = x, a, b
+    f = lambdify(args, s)
+    v = 2, 3, 8
+    assert f(*v) == s.subs(zip(args, v)).doit()
 
 
 def test_multiple_sums():
@@ -174,8 +182,40 @@ def test_multiple_sums():
     l = lambdarepr(s)
     assert l == "(builtins.sum(i*x + j for i in range(a, b+1) for j in range(c, d+1)))"
 
-    assert (lambdify((x, a, b, c, d), s)(2, 3, 4, 5, 6) ==
-            s.subs([(x, 2), (a, 3), (b, 4), (c, 5), (d, 6)]).doit())
+    args = x, a, b, c, d
+    f = lambdify(args, s)
+    vals = 2, 3, 4, 5, 6
+    f_ref = s.subs(zip(args, vals)).doit()
+    f_res = f(*vals)
+    assert f_res == f_ref
+
 
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
+
+
+class CustomPrintedObject(Expr):
+    def _lambdacode(self, printer):
+        return 'lambda'
+
+    def _tensorflowcode(self, printer):
+        return 'tensorflow'
+
+    def _numpycode(self, printer):
+        return 'numpy'
+
+    def _numexprcode(self, printer):
+        return 'numexpr'
+
+    def _mpmathcode(self, printer):
+        return 'mpmath'
+
+
+def test_printmethod():
+    # In each case, printmethod is called to test
+    # its working
+
+    obj = CustomPrintedObject()
+    assert LambdaPrinter().doprint(obj) == 'lambda'
+    assert TensorflowPrinter().doprint(obj) == 'tensorflow'
+    assert NumExprPrinter().doprint(obj) == "evaluate('numexpr', truediv=True)"

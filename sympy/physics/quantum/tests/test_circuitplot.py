@@ -7,8 +7,8 @@ from sympy.utilities.pytest import skip
 mpl = import_module('matplotlib')
 
 def test_render_label():
-    assert render_label('q0') == r'$|q0\rangle$'
-    assert render_label('q0', {'q0': '0'}) == r'$|q0\rangle=|0\rangle$'
+    assert render_label('q0') == r'$\left|q0\right\rangle$'
+    assert render_label('q0', {'q0': '0'}) == r'$\left|q0\right\rangle=\left|0\right\rangle$'
 
 def test_Mz():
     assert str(Mz(0)) == 'Mz(0)'

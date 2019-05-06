@@ -22,3 +22,4 @@ Contents
    group_constructs.rst
    testutil.rst
    tensor_can.rst
+   fp_groups.rst

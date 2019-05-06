@@ -1,9 +1,8 @@
-from sympy.vector.basisdependent import BasisDependent, \
-     BasisDependentAdd, BasisDependentMul, BasisDependentZero
+from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
+                                         BasisDependentMul, BasisDependentZero)
 from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy import ImmutableMatrix as Matrix
-from sympy.core.compatibility import u
 import sympy.vector
 
 
@@ -14,8 +13,9 @@ class Dyadic(BasisDependent):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Dyadic_tensor
-    .. [2] Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
+    .. [1] https://en.wikipedia.org/wiki/Dyadic_tensor
+    .. [2] Kane, T., Levinson, D. Dynamics Theory and Applications. 1985
+           McGraw-Hill
 
     """
 
@@ -29,8 +29,8 @@ class Dyadic(BasisDependent):
         corresponding measure numbers.
 
         """
-        #The '_components' attribute is defined according to the
-        #subclass of Dyadic the instance belongs to.
+        # The '_components' attribute is defined according to the
+        # subclass of Dyadic the instance belongs to.
         return self._components
 
     def dot(self, other):
@@ -49,8 +49,8 @@ class Dyadic(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> D1 = N.i.outer(N.j)
         >>> D2 = N.j.outer(N.j)
         >>> D1.dot(D2)
@@ -83,6 +83,7 @@ class Dyadic(BasisDependent):
 
     def __and__(self, other):
         return self.dot(other)
+
     __and__.__doc__ = dot.__doc__
 
     def cross(self, other):
@@ -99,8 +100,8 @@ class Dyadic(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> d = N.i.outer(N.i)
         >>> d.cross(N.j)
         (N.i|N.k)
@@ -123,6 +124,7 @@ class Dyadic(BasisDependent):
 
     def __xor__(self, other):
         return self.cross(other)
+
     __xor__.__doc__ = cross.__doc__
 
     def to_matrix(self, system, second_system=None):
@@ -133,19 +135,19 @@ class Dyadic(BasisDependent):
         Parameters
         ==========
 
-        system : CoordSysCartesian
+        system : CoordSys3D
             The coordinate system that the rows and columns of the matrix
             correspond to. If a second system is provided, this
             only corresponds to the rows of the matrix.
-        second_system : CoordSysCartesian, optional, default=None
+        second_system : CoordSys3D, optional, default=None
             The coordinate system that the columns of the matrix correspond
             to.
 
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
-        >>> N = CoordSysCartesian('N')
+        >>> from sympy.vector import CoordSys3D
+        >>> N = CoordSys3D('N')
         >>> v = N.i + 2*N.j
         >>> d = v.outer(N.i)
         >>> d.to_matrix(N)
@@ -168,32 +170,33 @@ class Dyadic(BasisDependent):
             second_system = system
 
         return Matrix([i.dot(self).dot(j) for i in system for j in
-                      second_system]).reshape(3, 3)
+                       second_system]).reshape(3, 3)
 
 
 class BaseDyadic(Dyadic, AtomicExpr):
     """
     Class to denote a base dyadic tensor component.
     """
+
     def __new__(cls, vector1, vector2):
         Vector = sympy.vector.Vector
         BaseVector = sympy.vector.BaseVector
         VectorZero = sympy.vector.VectorZero
-        #Verify arguments
+        # Verify arguments
         if not isinstance(vector1, (BaseVector, VectorZero)) or \
-               not isinstance(vector2, (BaseVector, VectorZero)):
-            raise TypeError("BaseDyadic cannot be composed of non-base "+
+                not isinstance(vector2, (BaseVector, VectorZero)):
+            raise TypeError("BaseDyadic cannot be composed of non-base " +
                             "vectors")
-        #Handle special case of zero vector
+        # Handle special case of zero vector
         elif vector1 == Vector.zero or vector2 == Vector.zero:
             return Dyadic.zero
-        #Initialize instance
+        # Initialize instance
         obj = super(BaseDyadic, cls).__new__(cls, vector1, vector2)
         obj._base_instance = obj
         obj._measure_number = 1
         obj._components = {obj: S(1)}
         obj._sys = vector1._sys
-        obj._pretty_form = u('(' + vector1._pretty_form + '|' +
+        obj._pretty_form = (u'(' + vector1._pretty_form + '|' +
                              vector2._pretty_form + ')')
         obj._latex_form = ('(' + vector1._latex_form + "{|}" +
                            vector2._latex_form + ')')
@@ -237,7 +240,7 @@ class DyadicAdd(BasisDependentAdd, Dyadic):
     def __str__(self, printer=None):
         ret_str = ''
         items = list(self.components.items())
-        items.sort(key = lambda x: x[0].__str__())
+        items.sort(key=lambda x: x[0].__str__())
         for k, v in items:
             temp_dyad = k * v
             ret_str += temp_dyad.__str__(printer) + " + "
@@ -253,8 +256,8 @@ class DyadicZero(BasisDependentZero, Dyadic):
     """
 
     _op_priority = 13.1
-    _pretty_form = u('(0|0)')
-    _latex_form = '(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
+    _pretty_form = u'(0|0)'
+    _latex_form = r'(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
 
     def __new__(cls):
         obj = BasisDependentZero.__new__(cls)
@@ -269,6 +272,7 @@ def _dyad_div(one, other):
         return DyadicMul(one, Pow(other, S.NegativeOne))
     else:
         raise TypeError("Cannot divide by a dyadic")
+
 
 Dyadic._expr_type = Dyadic
 Dyadic._mul_func = DyadicMul

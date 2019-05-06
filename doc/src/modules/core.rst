@@ -15,7 +15,7 @@ assumptions
 .. automodule:: sympy.core.assumptions
 
 cache
--------
+-----
 .. module:: sympy.core.cache
 
 cacheit
@@ -46,7 +46,7 @@ singleton
 
 S
 ^
-.. autoclass:: S
+.. autoclass:: sympy.core.singleton.SingletonRegistry
    :members:
 
 expr
@@ -56,6 +56,11 @@ expr
 Expr
 ----
 .. autoclass:: Expr
+   :members:
+
+UnevaluatedExpr
+---------------
+.. autoclass:: UnevaluatedExpr
    :members:
 
 AtomicExpr
@@ -218,6 +223,12 @@ GoldenRatio
 ^^^^^^^^^^^
 
 .. autoclass:: GoldenRatio
+   :members:
+
+TribonacciConstant
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: TribonacciConstant
    :members:
 
 power
@@ -392,14 +403,14 @@ Function
 
    >>> e = (f(x) + cos(x) + 2)
    >>> e.atoms(Function)
-   set([f(x), cos(x)])
+   {f(x), cos(x)}
 
    If you just want the function you defined, not SymPy functions, the
    thing to search for is AppliedUndef:
 
    >>> from sympy.core.function import AppliedUndef
    >>> e.atoms(AppliedUndef)
-   set([f(x)])
+   {f(x)}
 
 Subs
 ^^^^

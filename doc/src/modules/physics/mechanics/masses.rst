@@ -1,3 +1,5 @@
+.. _masses:
+
 =================================================================
 Masses, Inertias, Particles and Rigid Bodies in Physics/Mechanics
 =================================================================
@@ -224,7 +226,7 @@ the reference frame is created and the kinematics are done. ::
   >> from sympy import symbols
   >> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
   >> from sympy.physics.mechanics import RigidBody, Particle, Point, outer
-  >> from symp.physics.mechanics import linear_momentum, angular_momentum
+  >> from sympy.physics.mechanics import linear_momentum, angular_momentum
   >> m, M, l1 = symbols('m M l1')
   >> q1d = dynamicsymbols('q1d')
   >> N = ReferenceFrame('N')
@@ -244,7 +246,7 @@ system consists of a particle Pa and a RigidBody A. ::
   >> I = outer(N.z, N.z)
   >> A = RigidBody('A', Ac, a, M, (I, Ac))
 
-Then one can either choose to evaluate the the momenta of individual components
+Then one can either choose to evaluate the momenta of individual components
 of the system or of the entire system itself. ::
 
   >> linear_momentum(N,A)

@@ -4,33 +4,39 @@ SymPy's printing system works the following way: Any expression can be
 passed to a designated Printer who then is responsible to return an
 adequate representation of that expression.
 
-The basic concept is the following:
+**The basic concept is the following:**
   1. Let the object print itself if it knows how.
   2. Take the best fitting method defined in the printer.
   3. As fall-back use the emptyPrinter method for the printer.
 
-Some more information how the single concepts work and who should use which:
+Which Method is Responsible for Printing?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. The object prints itself
+The whole printing process is started by calling ``.doprint(expr)`` on the printer
+which you want to use. This method looks for an appropriate method which can
+print the given expression in the given style that the printer defines.
+While looking for the method, it follows these steps:
+
+1. **Let the object print itself if it knows how.**
+
+    The printer looks for a specific method in every object. The name of that method
+    depends on the specific printer and is defined under ``Printer.printmethod``.
+    For example, StrPrinter calls ``_sympystr`` and LatexPrinter calls ``_latex``.
+    Look at the documentation of the printer that you want to use.
+    The name of the method is specified there.
 
     This was the original way of doing printing in sympy. Every class had
     its own latex, mathml, str and repr methods, but it turned out that it
     is hard to produce a high quality printer, if all the methods are spread
-    out that far. Therefor all printing code was combined into the different
+    out that far. Therefore all printing code was combined into the different
     printers, which works great for built-in sympy objects, but not that
     good for user defined classes where it is inconvenient to patch the
     printers.
 
-    Nevertheless, to get a fitting representation, the printers look for a
-    specific method in every object, that will be called if it's available
-    and is then responsible for the representation. The name of that method
-    depends on the specific printer and is defined under
-    Printer.printmethod.
-
-2. Take the best fitting method defined in the printer.
+2. **Take the best fitting method defined in the printer.**
 
     The printer loops through expr classes (class + its bases), and tries
-    to dispatch the work to _print_<EXPR_CLASS>
+    to dispatch the work to ``_print_<EXPR_CLASS>``
 
     e.g., suppose we have the following class hierarchy::
 
@@ -42,8 +48,8 @@ Some more information how the single concepts work and who should use which:
             |
         Rational
 
-    then, for expr=Rational(...), in order to dispatch, we will try
-    calling printer methods as shown in the figure below::
+    then, for ``expr=Rational(...)``, the Printer will try
+    to call printer methods in the order as shown in the figure below::
 
         p._print(expr)
         |
@@ -55,135 +61,144 @@ Some more information how the single concepts work and who should use which:
         |
         `-- p._print_Basic(expr)
 
-    if ._print_Rational method exists in the printer, then it is called,
-    and the result is returned back.
+    if ``._print_Rational`` method exists in the printer, then it is called,
+    and the result is returned back. Otherwise, the printer tries to call
+    ``._print_Number`` and so on.
 
-    otherwise, we proceed with trying Rational bases in the inheritance
-    order.
+3. **As a fall-back use the emptyPrinter method for the printer.**
 
-3. As fall-back use the emptyPrinter method for the printer.
+    As fall-back ``self.emptyPrinter`` will be called with the expression. If
+    not defined in the Printer subclass this will be the same as ``str(expr)``.
 
-    As fall-back self.emptyPrinter will be called with the expression. If
-    not defined in the Printer subclass this will be the same as str(expr).
+Example of Custom Printer
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _printer_example:
+
+In the example below, we have a printer which prints the derivative of a function
+in a shorter form.
+
+.. code-block:: python
+
+    from sympy import Symbol
+    from sympy.printing.latex import LatexPrinter, print_latex
+    from sympy.core.function import UndefinedFunction, Function
+
+
+    class MyLatexPrinter(LatexPrinter):
+        \"\"\"Print derivative of a function of symbols in a shorter form.
+        \"\"\"
+        def _print_Derivative(self, expr):
+            function, *vars = expr.args
+            if not isinstance(type(function), UndefinedFunction) or \\
+               not all(isinstance(i, Symbol) for i in vars):
+                return super()._print_Derivative(expr)
+
+            # If you want the printer to work correctly for nested
+            # expressions then use self._print() instead of str() or latex().
+            # See the example of nested modulo below in the custom printing
+            # method section.
+            return "{}_{{{}}}".format(
+                self._print(Symbol(function.func.__name__)),
+                            ''.join(self._print(i) for i in vars))
+
+
+    def print_my_latex(expr):
+        \"\"\" Most of the printers define their own wrappers for print().
+        These wrappers usually take printer settings. Our printer does not have
+        any settings.
+        \"\"\"
+        print(MyLatexPrinter().doprint(expr))
+
+
+    y = Symbol("y")
+    x = Symbol("x")
+    f = Function("f")
+    expr = f(x, y).diff(x, y)
+
+    # Print the expression using the normal latex printer and our custom
+    # printer.
+    print_latex(expr)
+    print_my_latex(expr)
+
+The output of the code above is::
+
+    \\frac{\\partial^{2}}{\\partial x\\partial y}  f{\\left(x,y \\right)}
+    f_{xy}
+
+Example of Custom Printing Method
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In the example below, the latex printing of the modulo operator is modified.
+This is done by overriding the method ``_latex`` of ``Mod``.
+
+.. code-block:: python
+
+    from sympy import Symbol, Mod, Integer
+    from sympy.printing.latex import print_latex
+
+
+    class ModOp(Mod):
+        def _latex(self, printer=None):
+            # Always use printer.doprint() otherwise nested expressions won't
+            # work. See the example of ModOpWrong.
+            a, b = [printer.doprint(i) for i in self.args]
+            return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+
+
+    class ModOpWrong(Mod):
+        def _latex(self, printer=None):
+            a, b = [str(i) for i in self.args]
+            return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+
+
+    x = Symbol('x')
+    m = Symbol('m')
+
+    print_latex(ModOp(x, m))
+    print_latex(Mod(x, m))
+
+    # Nested modulo.
+    print_latex(ModOp(ModOp(x, m), Integer(7)))
+    print_latex(ModOpWrong(ModOpWrong(x, m), Integer(7)))
+
+The output of the code above is::
+
+    \\operatorname{Mod}{\\left( x,m \\right)}
+    x\\bmod{m}
+    \\operatorname{Mod}{\\left( \\operatorname{Mod}{\\left( x,m \\right)},7 \\right)}
+    \\operatorname{Mod}{\\left( ModOpWrong(x, m),7 \\right)}
 """
 
 from __future__ import print_function, division
 
+from contextlib import contextmanager
+
 from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
+from sympy.core.function import AppliedUndef, UndefinedFunction, Function
 
-from sympy.core.compatibility import cmp_to_key
+from functools import cmp_to_key
+
+
+@contextmanager
+def printer_context(printer, **kwargs):
+    original = printer._context.copy()
+    try:
+        printer._context.update(kwargs)
+        yield
+    finally:
+        printer._context = original
 
 
 class Printer(object):
-    """Generic printer
+    """ Generic printer
 
     Its job is to provide infrastructure for implementing new printers easily.
 
-    Basically, if you want to implement a printer, all you have to do is:
-
-    1. Subclass Printer.
-
-    2. Define Printer.printmethod in your subclass.
-       If a object has a method with that name, this method will be used
-       for printing.
-
-    3. In your subclass, define ``_print_<CLASS>`` methods
-
-       For each class you want to provide printing to, define an appropriate
-       method how to do it. For example if you want a class FOO to be printed in
-       its own way, define _print_FOO::
-
-           def _print_FOO(self, e):
-               ...
-
-       this should return how FOO instance e is printed
-
-       Also, if ``BAR`` is a subclass of ``FOO``, ``_print_FOO(bar)`` will
-       be called for instance of ``BAR``, if no ``_print_BAR`` is provided.
-       Thus, usually, we don't need to provide printing routines for every
-       class we want to support -- only generic routine has to be provided
-       for a set of classes.
-
-       A good example for this are functions - for example ``PrettyPrinter``
-       only defines ``_print_Function``, and there is no ``_print_sin``,
-       ``_print_tan``, etc...
-
-       On the other hand, a good printer will probably have to define
-       separate routines for ``Symbol``, ``Atom``, ``Number``, ``Integral``,
-       ``Limit``, etc...
-
-    4. If convenient, override ``self.emptyPrinter``
-
-       This callable will be called to obtain printing result as a last resort,
-       that is when no appropriate print method was found for an expression.
-
-    Examples of overloading StrPrinter::
-
-        from sympy import Basic, Function, Symbol
-        from sympy.printing.str import StrPrinter
-
-        class CustomStrPrinter(StrPrinter):
-            \"\"\"
-            Examples of how to customize the StrPrinter for both a SymPy class and a
-            user defined class subclassed from the SymPy Basic class.
-            \"\"\"
-
-            def _print_Derivative(self, expr):
-                \"\"\"
-                Custom printing of the SymPy Derivative class.
-
-                Instead of:
-
-                D(x(t), t) or D(x(t), t, t)
-
-                We will print:
-
-                x'     or     x''
-
-                In this example, expr.args == (x(t), t), and expr.args[0] == x(t), and
-                expr.args[0].func == x
-                \"\"\"
-                return str(expr.args[0].func) + "'"*len(expr.args[1:])
-
-            def _print_MyClass(self, expr):
-                \"\"\"
-                Print the characters of MyClass.s alternatively lower case and upper
-                case
-                \"\"\"
-                s = ""
-                i = 0
-                for char in expr.s:
-                    if i % 2 == 0:
-                        s += char.lower()
-                    else:
-                        s += char.upper()
-                    i += 1
-                return s
-
-        # Override the __str__ method of to use CustromStrPrinter
-        Basic.__str__ = lambda self: CustomStrPrinter().doprint(self)
-        # Demonstration of CustomStrPrinter:
-        t = Symbol('t')
-        x = Function('x')(t)
-        dxdt = x.diff(t)            # dxdt is a Derivative instance
-        d2xdt2 = dxdt.diff(t)       # dxdt2 is a Derivative instance
-        ex = MyClass('I like both lowercase and upper case')
-
-        print dxdt
-        print d2xdt2
-        print ex
-
-    The output of the above code is::
-
-        x'
-        x''
-        i lIkE BoTh lOwErCaSe aNd uPpEr cAsE
-
-    By overriding Basic.__str__, we can customize the printing of anything that
-    is subclassed from Basic.
-
+    If you want to define your custom Printer or your custom printing method
+    for your custom class then see the example above: printer_example_ .
     """
 
     _global_settings = {}
@@ -197,6 +212,7 @@ class Printer(object):
         self._str = str
 
         self._settings = self._default_settings.copy()
+        self._context = dict()  # mutable during printing
 
         for key, val in self._global_settings.items():
             if key in self._default_settings:
@@ -232,7 +248,7 @@ class Printer(object):
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
 
-    def _print(self, expr, *args, **kwargs):
+    def _print(self, expr, **kwargs):
         """Internal dispatcher
 
         Tries the following concepts to print an expression:
@@ -247,15 +263,28 @@ class Printer(object):
             # should be printed, use that method.
             if (self.printmethod and hasattr(expr, self.printmethod)
                     and not isinstance(expr, BasicMeta)):
-                return getattr(expr, self.printmethod)(self, *args, **kwargs)
+                return getattr(expr, self.printmethod)(self, **kwargs)
 
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
-            for cls in type(expr).__mro__:
+            # Exception: ignore the subclasses of Undefined, so that, e.g.,
+            # Function('gamma') does not get dispatched to _print_gamma
+            classes = type(expr).__mro__
+            if AppliedUndef in classes:
+                classes = classes[classes.index(AppliedUndef):]
+            if UndefinedFunction in classes:
+                classes = classes[classes.index(UndefinedFunction):]
+            # Another exception: if someone subclasses a known function, e.g.,
+            # gamma, and changes the name, then ignore _print_gamma
+            if Function in classes:
+                i = classes.index(Function)
+                classes = tuple(c for c in classes[:i] if \
+                    c.__name__ == classes[0].__name__ or \
+                    c.__name__.endswith("Base")) + classes[i:]
+            for cls in classes:
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
-                    return getattr(self, printmethod)(expr, *args, **kwargs)
-
+                    return getattr(self, printmethod)(expr, **kwargs)
             # Unknown object, fall back to the emptyPrinter.
             return self.emptyPrinter(expr)
         finally:

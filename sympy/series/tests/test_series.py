@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols
+    Function, log, sqrt, Symbol, Subs, pi, symbols, IndexedBase, atan
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
@@ -52,7 +52,7 @@ def test_issue_5223():
     assert D(x**2 + x**3*y**2, x, 2, y, 1).series(x).doit() == 12*x*y
     assert next(D(cos(x), x).lseries()) == D(1, x)
     assert D(
-        exp(x), x).series(n=3) == D(1, x) + D(x, x) + D(x**2/2, x) + O(x**3)
+        exp(x), x).series(n=3) == D(1, x) + D(x, x) + D(x**2/2, x) + D(x**3/6, x) + O(x**3)
 
     assert Integral(x, (x, 1, 3), (y, 1, x)).series(x) == -4 + 4*x
 
@@ -79,25 +79,68 @@ def test_issue_5223():
 
     assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2*log(x)**2)
 
+
+def test_issue_11313():
+    assert Integral(cos(x), x).series(x) == sin(x).series(x)
+    assert Derivative(sin(x), x).series(x, n=3).doit() == cos(x).series(x, n=3)
+
+    assert Derivative(x**3, x).as_leading_term(x) == 3*x**2
+    assert Derivative(x**3, y).as_leading_term(x) == 0
+    assert Derivative(sin(x), x).as_leading_term(x) == 1
+    assert Derivative(cos(x), x).as_leading_term(x) == -x
+
+    # This result is equivalent to zero, zero is not return because
+    # `Expr.series` doesn't currently detect an `x` in its `free_symbol`s.
+    assert Derivative(1, x).as_leading_term(x) == Derivative(1, x)
+
+    assert Derivative(exp(x), x).series(x).doit() == exp(x).series(x)
+    assert 1 + Integral(exp(x), x).series(x) == exp(x).series(x)
+
+    assert Derivative(log(x), x).series(x).doit() == (1/x).series(x)
+    assert Integral(log(x), x).series(x) == Integral(log(x), x).doit().series(x)
+
+
+def test_series_of_Subs():
+    from sympy.abc import x, y, z
+
+    subs1 = Subs(sin(x), x, y)
+    subs2 = Subs(sin(x) * cos(z), x, y)
+    subs3 = Subs(sin(x * z), (x, z), (y, x))
+
+    assert subs1.series(x) == subs1
+    subs1_series = (Subs(x, x, y) + Subs(-x**3/6, x, y) +
+        Subs(x**5/120, x, y) + O(y**6))
+    assert subs1.series() == subs1_series
+    assert subs1.series(y) == subs1_series
+    assert subs1.series(z) == subs1
+    assert subs2.series(z) == (Subs(z**4*sin(x)/24, x, y) +
+        Subs(-z**2*sin(x)/2, x, y) + Subs(sin(x), x, y) + O(z**6))
+    assert subs3.series(x).doit() == subs3.doit().series(x)
+    assert subs3.series(z).doit() == sin(x*y)
+
+    raises(ValueError, lambda: Subs(x + 2*y, y, z).series())
+    assert Subs(x + y, y, z).series(x).doit() == x + z
+
+
 def test_issue_3978():
     f = Function('f')
     assert f(x).series(x, 0, 3, dir='-') == \
-            f(0) + x*Subs(Derivative(f(x), x), (x,), (0,)) + \
-            x**2*Subs(Derivative(f(x), x, x), (x,), (0,))/2 + O(x**3)
+            f(0) + x*Subs(Derivative(f(x), x), x, 0) + \
+            x**2*Subs(Derivative(f(x), x, x), x, 0)/2 + O(x**3)
     assert f(x).series(x, 0, 3) == \
-            f(0) + x*Subs(Derivative(f(x), x), (x,), (0,)) + \
-            x**2*Subs(Derivative(f(x), x, x), (x,), (0,))/2 + O(x**3)
+            f(0) + x*Subs(Derivative(f(x), x), x, 0) + \
+            x**2*Subs(Derivative(f(x), x, x), x, 0)/2 + O(x**3)
     assert f(x**2).series(x, 0, 3) == \
-            f(0) + x**2*Subs(Derivative(f(x), x), (x,), (0,)) + O(x**3)
+            f(0) + x**2*Subs(Derivative(f(x), x), x, 0) + O(x**3)
     assert f(x**2+1).series(x, 0, 3) == \
-            f(1) + x**2*Subs(Derivative(f(x), x), (x,), (1,)) + O(x**3)
+            f(1) + x**2*Subs(Derivative(f(x), x), x, 1) + O(x**3)
 
     class TestF(Function):
         pass
 
     assert TestF(x).series(x, 0, 3) ==  TestF(0) + \
-            x*Subs(Derivative(TestF(x), x), (x,), (0,)) + \
-            x**2*Subs(Derivative(TestF(x), x, x), (x,), (0,))/2 + O(x**3)
+            x*Subs(Derivative(TestF(x), x), x, 0) + \
+            x**2*Subs(Derivative(TestF(x), x, x), x, 0)/2 + O(x**3)
 
 from sympy.series.acceleration import richardson, shanks
 from sympy import Sum, Integer
@@ -153,3 +196,20 @@ def test_exp_product_positive_factors():
 
 def test_issue_8805():
     assert series(1, n=8) == 1
+
+
+def test_issue_10761():
+    assert series(1/(x**-2 + x**-3), x, 0) == x**3 - x**4 + x**5 + O(x**6)
+
+
+def test_issue_14885():
+    assert series(x**(-S(3)/2)*exp(x), x, 0) == (x**(-S(3)/2) + 1/sqrt(x) +
+        sqrt(x)/2 + x**(S(3)/2)/6 + x**(S(5)/2)/24 + x**(S(7)/2)/120 +
+        x**(S(9)/2)/720 + x**(S(11)/2)/5040 + O(x**6))
+
+
+def test_issue_15539():
+    assert series(atan(x), x, -oo) == (-1/(5*x**5) + 1/(3*x**3) - 1/x - pi/2
+        + O(x**(-6), (x, -oo)))
+    assert series(atan(x), x, oo) == (-1/(5*x**5) + 1/(3*x**3) - 1/x + pi/2
+        + O(x**(-6), (x, oo)))

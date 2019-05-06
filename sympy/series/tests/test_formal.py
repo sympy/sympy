@@ -1,6 +1,7 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai, acos, acosh, gamma, erf, asech, Add, Integral, Mul)
+                   airyai, acos, acosh, gamma, erf, asech, Add, Integral, Mul,
+                   integrate)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  rational_independent, simpleDE, exp_re,
                                  hyper_re)
@@ -174,6 +175,7 @@ def test_fps():
     raises(ValueError, lambda: fps(x, dir=0))
 
 
+@slow
 def test_fps__rational():
     assert fps(1/x) == (1/x)
     assert fps((x**2 + x + 1) / x**3, dir=-1) == (x**2 + x + 1) / x**3
@@ -225,6 +227,7 @@ def test_fps__rational():
     assert fps(f, x, full=True).truncate(n=10) == 2*x**3/3 + 2*x**7/7 + O(x**10)
 
 
+@slow
 def test_fps__hyper():
     f = sin(x)
     assert fps(f, x).truncate() == x - x**3/6 + x**5/120 + O(x**6)
@@ -408,7 +411,6 @@ def test_fps__symbolic():
          O(x**(n - 6), (x, oo)))
 
 
-@slow
 def test_fps__slow():
     f = x*exp(x)*sin(2*x)  # TODO: rsolve needs improvement
     assert fps(f, x).truncate() == 2*x**2 + 2*x**3 - x**4/3 - x**5 + O(x**6)
@@ -485,11 +487,12 @@ def test_fps__operations():
          O(x**6))
 
     assert f1.integrate((x, 0, 1)) == -cos(1) + 1
+    assert integrate(f1, (x, 0, 1)) == -cos(1) + 1
 
-    fi = f1.integrate(x)
+    fi = integrate(f1, x)
     assert fi.function == -cos(x)
     assert fi.truncate() == -1 + x**2/2 - x**4/24 + O(x**6)
 
-    fi = f2.integrate()
+    fi = f2.integrate(x)
     assert fi.function == sin(x)
     assert fi.truncate() == x - x**3/6 + x**5/120 + O(x**6)

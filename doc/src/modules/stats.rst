@@ -15,11 +15,16 @@ Finite Types
 .. autofunction:: Binomial
 .. autofunction:: Hypergeometric
 .. autofunction:: FiniteRV
+.. autofunction:: Rademacher
 
 Discrete Types
 -----------------
 .. autofunction:: Geometric
 .. autofunction:: Poisson
+.. autofunction:: Logarithmic
+.. autofunction:: NegativeBinomial
+.. autofunction:: YuleSimon
+.. autofunction:: Zeta
 
 Continuous Types
 -------------------
@@ -40,6 +45,8 @@ Continuous Types
 .. autofunction:: Frechet
 .. autofunction:: Gamma
 .. autofunction:: GammaInverse
+.. autofunction:: Gompertz
+.. autofunction:: Gumbel
 .. autofunction:: Kumaraswamy
 .. autofunction:: Laplace
 .. autofunction:: Logistic
@@ -52,6 +59,8 @@ Continuous Types
 .. autofunction:: RaisedCosine
 .. autofunction:: Rayleigh
 .. autofunction:: StudentT
+.. autofunction:: ShiftedGompertz
+.. autofunction:: Trapezoidal
 .. autofunction:: Triangular
 .. autofunction:: Uniform
 .. autofunction:: UniformSum
@@ -64,11 +73,16 @@ Interface
 ^^^^^^^^^
 
 .. autofunction:: P
+.. autoclass:: Probability
 .. autofunction:: E
+.. autoclass:: Expectation
 .. autofunction:: density
 .. autofunction:: given
 .. autofunction:: where
 .. autofunction:: variance
+.. autoclass:: Variance
+.. autofunction:: covariance
+.. autoclass:: Covariance
 .. autofunction:: std
 .. autofunction:: sample
 .. autofunction:: sample_iter
@@ -79,15 +93,16 @@ Mechanics
 
 SymPy Stats employs a relatively complex class hierarchy.
 
-``RandomDomain``\s are a mapping of variables to possible values. For example we
-might say that the symbol ``Symbol('x')`` can take on the values
-`\{1,2,3,4,5,6\}`.
+``RandomDomain``\s are a mapping of variables to possible values.
+For example, we might say that the symbol ``Symbol('x')`` can
+take on the values `\{1,2,3,4,5,6\}`.
 
 .. class:: RandomDomain
 
-A ``PSpace``, or Probability Space, combines a ``RandomDomain`` with a density to
-provide probabilistic information. For example the above domain could be
-enhanced by a finite density ``{1:1/6, 2:1/6, 3:1/6, 4:1/6, 5:1/6, 6:1/6}`` to
+A ``PSpace``, or Probability Space, combines a ``RandomDomain``
+with a density to provide probabilistic information. For example
+the above domain could be enhanced by a finite density
+``{1:1/6, 2:1/6, 3:1/6, 4:1/6, 5:1/6, 6:1/6}`` to
 fully define the roll of a fair die named ``x``.
 
 .. class:: PSpace

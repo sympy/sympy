@@ -1,18 +1,17 @@
 from __future__ import print_function, division
 
 from sympy.core import S, sympify, cacheit
+from sympy.core.add import Add
 from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
-
-from sympy.functions.elementary.miscellaneous import sqrt
-
-from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 def _rewrite_hyperbolics_as_exp(expr):
     expr = sympify(expr)
-    return expr.xreplace(dict([(h, h.rewrite(exp))
-        for h in expr.atoms(HyperbolicFunction)]))
+    return expr.xreplace({h: h.rewrite(exp)
+        for h in expr.atoms(HyperbolicFunction)})
 
 
 ###############################################################################
@@ -31,6 +30,39 @@ class HyperbolicFunction(Function):
     """
 
     unbranched = True
+
+
+def _peeloff_ipi(arg):
+    """
+    Split ARG into two parts, a "rest" and a multiple of I*pi/2.
+    This assumes ARG to be an Add.
+    The multiple of I*pi returned in the second position is always a Rational.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.elementary.hyperbolic import _peeloff_ipi as peel
+    >>> from sympy import pi, I
+    >>> from sympy.abc import x, y
+    >>> peel(x + I*pi/2)
+    (x, I*pi/2)
+    >>> peel(x + I*2*pi/3 + I*pi*y)
+    (x + I*pi*y + I*pi/6, I*pi/2)
+    """
+    for a in Add.make_args(arg):
+        if a == S.Pi*S.ImaginaryUnit:
+            K = S.One
+            break
+        elif a.is_Mul:
+            K, p = a.as_two_terms()
+            if p == S.Pi*S.ImaginaryUnit and K.is_Rational:
+                break
+    else:
+        return arg, S.Zero
+
+    m1 = (K % S.Half)*S.Pi*S.ImaginaryUnit
+    m2 = K*S.Pi*S.ImaginaryUnit - m1
+    return arg - m2, m2
 
 
 class sinh(HyperbolicFunction):
@@ -88,6 +120,11 @@ class sinh(HyperbolicFunction):
             else:
                 if _coeff_isneg(arg):
                     return -cls(-arg)
+
+            if arg.is_Add:
+                x, m = _peeloff_ipi(arg)
+                if m:
+                    return sinh(m)*cosh(x) + cosh(m)*sinh(x)
 
             if arg.func == asinh:
                 return arg.args[0]
@@ -162,20 +199,20 @@ class sinh(HyperbolicFunction):
             return (sinh(x)*cosh(y) + sinh(y)*cosh(x)).expand(trig=True)
         return sinh(arg)
 
-    def _eval_rewrite_as_tractable(self, arg):
+    def _eval_rewrite_as_tractable(self, arg, **kwargs):
         return (exp(arg) - exp(-arg)) / 2
 
-    def _eval_rewrite_as_exp(self, arg):
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
         return (exp(arg) - exp(-arg)) / 2
 
-    def _eval_rewrite_as_cosh(self, arg):
+    def _eval_rewrite_as_cosh(self, arg, **kwargs):
         return -S.ImaginaryUnit*cosh(arg + S.Pi*S.ImaginaryUnit/2)
 
-    def _eval_rewrite_as_tanh(self, arg):
+    def _eval_rewrite_as_tanh(self, arg, **kwargs):
         tanh_half = tanh(S.Half*arg)
         return 2*tanh_half/(1 - tanh_half**2)
 
-    def _eval_rewrite_as_coth(self, arg):
+    def _eval_rewrite_as_coth(self, arg, **kwargs):
         coth_half = coth(S.Half*arg)
         return 2*coth_half/(coth_half**2 - 1)
 
@@ -189,7 +226,16 @@ class sinh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        if self.args[0].is_real:
+            return True
+
+    def _eval_is_positive(self):
+        if self.args[0].is_real:
+            return self.args[0].is_positive
+
+    def _eval_is_negative(self):
+        if self.args[0].is_real:
+            return self.args[0].is_negative
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -242,6 +288,11 @@ class cosh(HyperbolicFunction):
             else:
                 if _coeff_isneg(arg):
                     return cls(-arg)
+
+            if arg.is_Add:
+                x, m = _peeloff_ipi(arg)
+                if m:
+                    return cosh(m)*cosh(x) + sinh(m)*sinh(x)
 
             if arg.func == asinh:
                 return sqrt(1 + arg.args[0]**2)
@@ -309,20 +360,20 @@ class cosh(HyperbolicFunction):
             return (cosh(x)*cosh(y) + sinh(x)*sinh(y)).expand(trig=True)
         return cosh(arg)
 
-    def _eval_rewrite_as_tractable(self, arg):
+    def _eval_rewrite_as_tractable(self, arg, **kwargs):
         return (exp(arg) + exp(-arg)) / 2
 
-    def _eval_rewrite_as_exp(self, arg):
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
         return (exp(arg) + exp(-arg)) / 2
 
-    def _eval_rewrite_as_sinh(self, arg):
+    def _eval_rewrite_as_sinh(self, arg, **kwargs):
         return -S.ImaginaryUnit*sinh(arg + S.Pi*S.ImaginaryUnit/2)
 
-    def _eval_rewrite_as_tanh(self, arg):
+    def _eval_rewrite_as_tanh(self, arg, **kwargs):
         tanh_half = tanh(S.Half*arg)**2
         return (1 + tanh_half)/(1 - tanh_half)
 
-    def _eval_rewrite_as_coth(self, arg):
+    def _eval_rewrite_as_coth(self, arg, **kwargs):
         coth_half = coth(S.Half*arg)**2
         return (coth_half + 1)/(coth_half - 1)
 
@@ -335,8 +386,9 @@ class cosh(HyperbolicFunction):
         else:
             return self.func(arg)
 
-    def _eval_is_real(self):
-        return self.args[0].is_real
+    def _eval_is_positive(self):
+        if self.args[0].is_real:
+            return True
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -398,6 +450,15 @@ class tanh(HyperbolicFunction):
                 if _coeff_isneg(arg):
                     return -cls(-arg)
 
+            if arg.is_Add:
+                x, m = _peeloff_ipi(arg)
+                if m:
+                    tanhm = tanh(m)
+                    if tanhm is S.ComplexInfinity:
+                        return coth(x)
+                    else: # tanhm == 0
+                        return tanh(x)
+
             if arg.func == asinh:
                 x = arg.args[0]
                 return x/sqrt(1 + x**2)
@@ -446,21 +507,21 @@ class tanh(HyperbolicFunction):
         denom = sinh(re)**2 + cos(im)**2
         return (sinh(re)*cosh(re)/denom, sin(im)*cos(im)/denom)
 
-    def _eval_rewrite_as_tractable(self, arg):
+    def _eval_rewrite_as_tractable(self, arg, **kwargs):
         neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)
 
-    def _eval_rewrite_as_exp(self, arg):
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
         neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)
 
-    def _eval_rewrite_as_sinh(self, arg):
+    def _eval_rewrite_as_sinh(self, arg, **kwargs):
         return S.ImaginaryUnit*sinh(arg)/sinh(S.Pi*S.ImaginaryUnit/2 - arg)
 
-    def _eval_rewrite_as_cosh(self, arg):
+    def _eval_rewrite_as_cosh(self, arg, **kwargs):
         return S.ImaginaryUnit*cosh(S.Pi*S.ImaginaryUnit/2 - arg)/cosh(arg)
 
-    def _eval_rewrite_as_coth(self, arg):
+    def _eval_rewrite_as_coth(self, arg, **kwargs):
         return 1/coth(arg)
 
     def _eval_as_leading_term(self, x):
@@ -473,7 +534,16 @@ class tanh(HyperbolicFunction):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        if self.args[0].is_real:
+            return True
+
+    def _eval_is_positive(self):
+        if self.args[0].is_real:
+            return self.args[0].is_positive
+
+    def _eval_is_negative(self):
+        if self.args[0].is_real:
+            return self.args[0].is_negative
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -530,6 +600,15 @@ class coth(HyperbolicFunction):
                 if _coeff_isneg(arg):
                     return -cls(-arg)
 
+            if arg.is_Add:
+                x, m = _peeloff_ipi(arg)
+                if m:
+                    cothm = coth(m)
+                    if cothm is S.ComplexInfinity:
+                        return coth(x)
+                    else: # cothm == 0
+                        return tanh(x)
+
             if arg.func == asinh:
                 x = arg.args[0]
                 return sqrt(1 + x**2)/x
@@ -578,22 +657,30 @@ class coth(HyperbolicFunction):
         denom = sinh(re)**2 + sin(im)**2
         return (sinh(re)*cosh(re)/denom, -sin(im)*cos(im)/denom)
 
-    def _eval_rewrite_as_tractable(self, arg):
+    def _eval_rewrite_as_tractable(self, arg, **kwargs):
         neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp + neg_exp)/(pos_exp - neg_exp)
 
-    def _eval_rewrite_as_exp(self, arg):
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
         neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp + neg_exp)/(pos_exp - neg_exp)
 
-    def _eval_rewrite_as_sinh(self, arg):
+    def _eval_rewrite_as_sinh(self, arg, **kwargs):
         return -S.ImaginaryUnit*sinh(S.Pi*S.ImaginaryUnit/2 - arg)/sinh(arg)
 
-    def _eval_rewrite_as_cosh(self, arg):
+    def _eval_rewrite_as_cosh(self, arg, **kwargs):
         return -S.ImaginaryUnit*cosh(arg)/cosh(S.Pi*S.ImaginaryUnit/2 - arg)
 
-    def _eval_rewrite_as_tanh(self, arg):
+    def _eval_rewrite_as_tanh(self, arg, **kwargs):
         return 1/tanh(arg)
+
+    def _eval_is_positive(self):
+        if self.args[0].is_real:
+            return self.args[0].is_positive
+
+    def _eval_is_negative(self):
+        if self.args[0].is_real:
+            return self.args[0].is_negative
 
     def _eval_as_leading_term(self, x):
         from sympy import Order
@@ -624,7 +711,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
         t = cls._reciprocal_of.eval(arg)
         if hasattr(arg, 'inverse') and arg.inverse() == cls:
             return arg.args[0]
-        return 1/t if t != None else t
+        return 1/t if t is not None else t
 
     def _call_reciprocal(self, method_name, *args, **kwargs):
         # Calls method_name on _reciprocal_of
@@ -635,25 +722,25 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
         # If calling method_name on _reciprocal_of returns a value != None
         # then return the reciprocal of that value
         t = self._call_reciprocal(method_name, *args, **kwargs)
-        return 1/t if t != None else t
+        return 1/t if t is not None else t
 
     def _rewrite_reciprocal(self, method_name, arg):
         # Special handling for rewrite functions. If reciprocal rewrite returns
         # unmodified expression, then return None
         t = self._call_reciprocal(method_name, arg)
-        if t != None and t != self._reciprocal_of(arg):
+        if t is not None and t != self._reciprocal_of(arg):
             return 1/t
 
-    def _eval_rewrite_as_exp(self, arg):
+    def _eval_rewrite_as_exp(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_exp", arg)
 
-    def _eval_rewrite_as_tractable(self, arg):
+    def _eval_rewrite_as_tractable(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_tractable", arg)
 
-    def _eval_rewrite_as_tanh(self, arg):
+    def _eval_rewrite_as_tanh(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_tanh", arg)
 
-    def _eval_rewrite_as_coth(self, arg):
+    def _eval_rewrite_as_coth(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_coth", arg)
 
     def as_real_imag(self, deep = True, **hints):
@@ -719,8 +806,16 @@ class csch(ReciprocalHyperbolicFunction):
 
             return 2 * (1 - 2**n) * B/F * x**n
 
-    def _eval_rewrite_as_cosh(self, arg):
+    def _eval_rewrite_as_cosh(self, arg, **kwargs):
         return S.ImaginaryUnit / cosh(arg + S.ImaginaryUnit * S.Pi / 2)
+
+    def _eval_is_positive(self):
+        if self.args[0].is_real:
+            return self.args[0].is_positive
+
+    def _eval_is_negative(self):
+        if self.args[0].is_real:
+            return self.args[0].is_negative
 
     def _sage_(self):
         import sage.all as sage
@@ -758,8 +853,12 @@ class sech(ReciprocalHyperbolicFunction):
             x = sympify(x)
             return euler(n) / factorial(n) * x**(n)
 
-    def _eval_rewrite_as_sinh(self, arg):
+    def _eval_rewrite_as_sinh(self, arg, **kwargs):
         return S.ImaginaryUnit / sinh(arg + S.ImaginaryUnit * S.Pi /2)
+
+    def _eval_is_positive(self):
+        if self.args[0].is_real:
+            return True
 
     def _sage_(self):
         import sage.all as sage
@@ -771,7 +870,13 @@ class sech(ReciprocalHyperbolicFunction):
 ############################# HYPERBOLIC INVERSES #############################
 ###############################################################################
 
-class asinh(Function):
+class InverseHyperbolicFunction(Function):
+    """Base class for inverse hyperbolic functions."""
+
+    pass
+
+
+class asinh(InverseHyperbolicFunction):
     """
     The inverse hyperbolic sine function.
 
@@ -846,6 +951,9 @@ class asinh(Function):
         else:
             return self.func(arg)
 
+    def _eval_rewrite_as_log(self, x, **kwargs):
+        return log(x + sqrt(x**2 + 1))
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -853,7 +961,7 @@ class asinh(Function):
         return sinh
 
 
-class acosh(Function):
+class acosh(InverseHyperbolicFunction):
     """
     The inverse hyperbolic cosine function.
 
@@ -873,7 +981,6 @@ class acosh(Function):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import acos
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -919,8 +1026,12 @@ class acosh(Function):
                     return cst_table[arg]*S.ImaginaryUnit
                 return cst_table[arg]
 
-        if arg.is_infinite:
-            return S.Infinity
+        if arg is S.ComplexInfinity:
+            return S.ComplexInfinity
+        if arg == S.ImaginaryUnit*S.Infinity:
+            return S.Infinity + S.ImaginaryUnit*S.Pi/2
+        if arg == -S.ImaginaryUnit*S.Infinity:
+            return S.Infinity - S.ImaginaryUnit*S.Pi/2
 
     @staticmethod
     @cacheit
@@ -949,6 +1060,9 @@ class acosh(Function):
         else:
             return self.func(arg)
 
+    def _eval_rewrite_as_log(self, x, **kwargs):
+        return log(x + sqrt(x + 1) * sqrt(x - 1))
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -956,7 +1070,7 @@ class acosh(Function):
         return cosh
 
 
-class atanh(Function):
+class atanh(InverseHyperbolicFunction):
     """
     The inverse hyperbolic tangent function.
 
@@ -996,7 +1110,8 @@ class atanh(Function):
                 return -cls(-arg)
         else:
             if arg is S.ComplexInfinity:
-                return S.NaN
+                from sympy.calculus.util import AccumBounds
+                return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
 
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -1024,6 +1139,9 @@ class atanh(Function):
         else:
             return self.func(arg)
 
+    def _eval_rewrite_as_log(self, x, **kwargs):
+        return (log(1 + x) - log(1 - x)) / 2
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -1031,7 +1149,7 @@ class atanh(Function):
         return tanh
 
 
-class acoth(Function):
+class acoth(InverseHyperbolicFunction):
     """
     The inverse hyperbolic cotangent function.
 
@@ -1066,7 +1184,7 @@ class acoth(Function):
                 return -cls(-arg)
         else:
             if arg is S.ComplexInfinity:
-                return 0
+                return S.Zero
 
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -1096,6 +1214,9 @@ class acoth(Function):
         else:
             return self.func(arg)
 
+    def _eval_rewrite_as_log(self, x, **kwargs):
+        return (log(1 + 1/x) - log(1 - 1/x)) / 2
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -1103,7 +1224,7 @@ class acoth(Function):
         return coth
 
 
-class asech(Function):
+class asech(InverseHyperbolicFunction):
     """
     The inverse hyperbolic secant function.
 
@@ -1115,7 +1236,7 @@ class asech(Function):
     >>> from sympy import asech, sqrt, S
     >>> from sympy.abc import x
     >>> asech(x).diff(x)
-    -1/(x*sqrt(-x**2 + 1))
+    -1/(x*sqrt(1 - x**2))
     >>> asech(1).diff(x)
     0
     >>> asech(1)
@@ -1135,7 +1256,7 @@ class asech(Function):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hyperbolic_function
+    .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
     .. [2] http://dlmf.nist.gov/4.37
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSech/
 
@@ -1150,7 +1271,6 @@ class asech(Function):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import asec
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -1201,12 +1321,126 @@ class asech(Function):
                 return cst_table[arg]
 
         if arg is S.ComplexInfinity:
-            return S.NaN
+            from sympy.calculus.util import AccumBounds
+            return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
 
-    # TODO def taylor_term(n, x, *previous_terms)
+    @staticmethod
+    @cacheit
+    def expansion_term(n, x, *previous_terms):
+        if n == 0:
+            return log(2 / x)
+        elif n < 0 or n % 2 == 1:
+            return S.Zero
+        else:
+            x = sympify(x)
+            if len(previous_terms) > 2 and n > 2:
+                p = previous_terms[-2]
+                return p * (n - 1)**2 // (n // 2)**2 * x**2 / 4
+            else:
+                k = n // 2
+                R = RisingFactorial(S.Half , k) *  n
+                F = factorial(k) * n // 2 * n // 2
+                return -1 * R / F * x**n / 4
 
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
         """
         return sech
+
+    def _eval_rewrite_as_log(self, arg, **kwargs):
+        return log(1/arg + sqrt(1/arg - 1) * sqrt(1/arg + 1))
+
+
+class acsch(InverseHyperbolicFunction):
+    """
+    The inverse hyperbolic cosecant function.
+
+    * acsch(x) -> Returns the inverse hyperbolic cosecant of x
+
+    Examples
+    ========
+
+    >>> from sympy import acsch, sqrt, S
+    >>> from sympy.abc import x
+    >>> acsch(x).diff(x)
+    -1/(x**2*sqrt(1 + x**(-2)))
+    >>> acsch(1).diff(x)
+    0
+    >>> acsch(1)
+    log(1 + sqrt(2))
+    >>> acsch(S.ImaginaryUnit)
+    -I*pi/2
+    >>> acsch(-2*S.ImaginaryUnit)
+    I*pi/6
+    >>> acsch(S.ImaginaryUnit*(sqrt(6) - sqrt(2)))
+    -5*I*pi/12
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
+    .. [2] http://dlmf.nist.gov/4.37
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCsch/
+
+    """
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            z = self.args[0]
+            return -1/(z**2*sqrt(1 + 1/z**2))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, arg):
+        arg = sympify(arg)
+
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Zero
+            elif arg is S.NegativeInfinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return S.ComplexInfinity
+            elif arg is S.One:
+                return log(1 + sqrt(2))
+            elif arg is S.NegativeOne:
+                return - log(1 + sqrt(2))
+
+        if arg.is_number:
+            cst_table = {
+                S.ImaginaryUnit: -S.Pi / 2,
+                S.ImaginaryUnit*(sqrt(2) + sqrt(6)): -S.Pi / 12,
+                S.ImaginaryUnit*(1 + sqrt(5)): -S.Pi / 10,
+                S.ImaginaryUnit*2 / sqrt(2 - sqrt(2)): -S.Pi / 8,
+                S.ImaginaryUnit*2: -S.Pi / 6,
+                S.ImaginaryUnit*sqrt(2 + 2/sqrt(5)): -S.Pi / 5,
+                S.ImaginaryUnit*sqrt(2): -S.Pi / 4,
+                S.ImaginaryUnit*(sqrt(5)-1): -3*S.Pi / 10,
+                S.ImaginaryUnit*2 / sqrt(3): -S.Pi / 3,
+                S.ImaginaryUnit*2 / sqrt(2 + sqrt(2)): -3*S.Pi / 8,
+                S.ImaginaryUnit*sqrt(2 - 2/sqrt(5)): -2*S.Pi / 5,
+                S.ImaginaryUnit*(sqrt(6) - sqrt(2)): -5*S.Pi / 12,
+                S(2): -S.ImaginaryUnit*log((1+sqrt(5))/2),
+            }
+
+            if arg in cst_table:
+                return cst_table[arg]*S.ImaginaryUnit
+
+        if arg is S.ComplexInfinity:
+            return S.Zero
+
+        if _coeff_isneg(arg):
+            return -cls(-arg)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return csch
+
+    def _eval_rewrite_as_log(self, arg, **kwargs):
+        return log(1/arg + sqrt(1/arg**2 + 1))

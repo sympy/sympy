@@ -1,11 +1,13 @@
 from sympy import (Derivative as D, Eq, exp, sin,
     Function, Symbol, symbols, cos, log)
 from sympy.core import S
-from sympy.solvers.pde import (pde_separate_add, pde_separate_mul,
+from sympy.solvers.pde import (pde_separate, pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
 from sympy.utilities.pytest import raises
 
+
 a, b, c, x, y = symbols('a b c x y')
+
 def test_pde_separate_add():
     x, y, z, t = symbols("x,y,z,t")
     F, T, X, Y, Z, u = map(Function, 'FTXYZu')
@@ -13,6 +15,14 @@ def test_pde_separate_add():
     eq = Eq(D(u(x, t), x), D(u(x, t), t)*exp(u(x, t)))
     res = pde_separate_add(eq, u(x, t), [X(x), T(t)])
     assert res == [D(X(x), x)*exp(-X(x)), D(T(t), t)*exp(T(t))]
+
+
+def test_pde_separate():
+    x, y, z, t = symbols("x,y,z,t")
+    F, T, X, Y, Z, u = map(Function, 'FTXYZu')
+
+    eq = Eq(D(u(x, t), x), D(u(x, t), t)*exp(u(x, t)))
+    raises(ValueError, lambda: pde_separate(eq, u(x, t), [X(x), T(t)], 'div'))
 
 
 def test_pde_separate_mul():
@@ -23,7 +33,7 @@ def test_pde_separate_mul():
     r, theta, z = symbols('r,theta,z')
 
     # Something simple :)
-    eq = Eq(D(F(x, y, z), x) + D(F(x, y, z), y) + D(F(x, y, z), z))
+    eq = Eq(D(F(x, y, z), x) + D(F(x, y, z), y) + D(F(x, y, z), z), 0)
 
     # Duplicate arguments in functions
     raises(
@@ -46,7 +56,7 @@ def test_pde_separate_mul():
 
     # Laplace equation in cylindrical coords
     eq = Eq(1/r * D(Phi(r, theta, z), r) + D(Phi(r, theta, z), r, 2) +
-            1/r**2 * D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2))
+            1/r**2 * D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2), 0)
     # Separate z
     res = pde_separate_mul(eq, Phi(r, theta, z), [Z(z), u(theta, r)])
     assert res == [D(Z(z), z, z)/Z(z),
@@ -63,6 +73,18 @@ def test_pde_separate_mul():
     res = pde_separate_mul(eq, u(theta, r), [R(r), T(theta)])
     assert res == [r*D(R(r), r)/R(r) + r**2*D(R(r), r, r)/R(r) + c*r**2,
             -D(T(theta), theta, theta)/T(theta)]
+
+
+def test_issue_11726():
+    x, t = symbols("x t")
+    f  = symbols("f", cls=Function)
+    X, T = symbols("X T", cls=Function)
+
+    u = f(x, t)
+    eq = u.diff(x, 2) - u.diff(t, 2)
+    res = pde_separate(eq, u, [T(x), X(t)])
+    assert res == [D(T(x), x, x)/T(x),D(X(t), t, t)/X(t)]
+
 
 def test_pde_classify():
     # When more number of hints are added, add tests for classifying here.
@@ -94,6 +116,11 @@ def test_checkpdesol():
          (False, (x - 1)*F(3*x - y)*exp(-x/S(10) - 3*y/S(10)))]
     for eq in [eq4, eq5, eq6]:
         assert checkpdesol(eq, pdsolve(eq))[0]
+    sol = pdsolve(eq4)
+    sol4 = Eq(sol.lhs - sol.rhs, 0)
+    raises(NotImplementedError, lambda:
+        checkpdesol(eq4, sol4, solve_for_func=False))
+
 
 def test_solvefun():
     f, F, G, H = map(Function, ['f', 'F', 'G', 'H'])

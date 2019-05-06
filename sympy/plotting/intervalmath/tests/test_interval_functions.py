@@ -1,5 +1,3 @@
-from __future__ import division
-
 from sympy.external import import_module
 from sympy.plotting.intervalmath import (
     Abs, acos, acosh, And, asin, asinh, atan, atanh, ceil, cos, cosh,
@@ -24,15 +22,15 @@ def test_interval_pow():
     assert a.is_valid is None
     a = interval(-2, -1) ** interval(1, 2)
     assert a.is_valid is False
-    a = interval(-2, -1) ** (1 / 2)
+    a = interval(-2, -1) ** (1.0 / 2)
     assert a.is_valid is False
-    a = interval(-1, 1)**(1 / 2)
+    a = interval(-1, 1)**(1.0 / 2)
     assert a.is_valid is None
-    a = interval(-1, 1)**(1 / 3) == interval(-1, 1)
+    a = interval(-1, 1)**(1.0 / 3) == interval(-1, 1)
     assert a == (True, True)
     a = interval(-1, 1)**2 == interval(0, 1)
     assert a == (True, True)
-    a = interval(-1, 1) ** (1 / 29) == interval(-1, 1)
+    a = interval(-1, 1) ** (1.0 / 29) == interval(-1, 1)
     assert a == (True, True)
     a = -2**interval(1, 1) == interval(-2, -2)
     assert a == (True, True)
@@ -46,10 +44,10 @@ def test_interval_pow():
     assert a.is_valid is False
     assert ((-3)**interval(1, 1) == interval(-3, -3)) == (True, True)
 
-    a = interval(8, 64)**(2 / 3)
+    a = interval(8, 64)**(2.0 / 3)
     assert abs(a.start - 4) < 1e-10  # eps
     assert abs(a.end - 16) < 1e-10
-    a = interval(-8, 64)**(2 / 3)
+    a = interval(-8, 64)**(2.0 / 3)
     assert abs(a.start - 4) < 1e-10  # eps
     assert abs(a.end - 16) < 1e-10
 
@@ -170,7 +168,8 @@ def test_cos():
 def test_tan():
     a = tan(interval(0, np.pi / 4))
     assert a.start == 0
-    assert a.end == np.tan(np.pi / 4)
+    # must match lib_interval definition of tan:
+    assert a.end == np.sin(np.pi / 4)/np.cos(np.pi / 4)
 
     a = tan(interval(np.pi / 4, 3 * np.pi / 4))
     #discontinuity

@@ -1,9 +1,9 @@
-from __future__ import division
-
-from sympy import Symbol, pi, sqrt
-from sympy.geometry import Circle, Ellipse, Line, Point, Polygon, Ray, RegularPolygon, Segment, Triangle
+from sympy import Symbol, pi, sqrt, Rational
+from sympy.geometry import Circle, Ellipse, Line, Point, Polygon, Ray, RegularPolygon, Segment, Triangle, Parabola
 from sympy.geometry.entity import scale
 from sympy.utilities.pytest import raises
+
+from random import random
 
 
 def test_subs():
@@ -26,7 +26,7 @@ def test_subs():
     assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
     assert Point(1, 2).subs((1, 2), Point(3, 4)) == Point(3, 4)
     assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
-    assert Point(1, 2).subs(set([(1, 2)])) == Point(2, 2)
+    assert Point(1, 2).subs({(1, 2)}) == Point(2, 2)
     raises(ValueError, lambda: Point(1, 2).subs(1))
     raises(ValueError, lambda: Point(1, 1).subs((Point(1, 1), Point(1,
            2)), 1, 2))
@@ -51,11 +51,16 @@ def test_reflect_entity_overrides():
     assert c.area == -cr.area
 
     pent = RegularPolygon((1, 2), 1, 5)
-    l = Line((0, pi), slope=sqrt(2))
+    l = Line(pent.vertices[1],
+        slope=Rational(random() - .5, random() - .5))
     rpent = pent.reflect(l)
     assert rpent.center == pent.center.reflect(l)
-    assert str([w.n(3) for w in rpent.vertices]) == (
-        '[Point2D(-0.586, 4.27), Point2D(-1.69, 4.66), '
-        'Point2D(-2.41, 3.73), Point2D(-1.74, 2.76), '
-        'Point2D(-0.616, 3.10)]')
+    rvert = [i.reflect(l) for i in pent.vertices]
+    for v in rpent.vertices:
+        for i in range(len(rvert)):
+            ri = rvert[i]
+            if ri.equals(v):
+                rvert.remove(ri)
+                break
+    assert not rvert
     assert pent.area.equals(-rpent.area)

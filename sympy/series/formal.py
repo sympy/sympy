@@ -5,25 +5,25 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy import oo, zoo, nan
-from sympy.core.expr import Expr
 from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core.function import Derivative, Function
-from sympy.core.singleton import S
-from sympy.core.sympify import sympify
-from sympy.core.symbol import Wild, Dummy, symbols, Symbol
-from sympy.core.relational import Eq
-from sympy.core.numbers import Rational
 from sympy.core.compatibility import iterable
+from sympy.core.expr import Expr
+from sympy.core.function import Derivative, Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import Rational
+from sympy.core.relational import Eq
 from sympy.sets.sets import Interval
+from sympy.core.singleton import S
+from sympy.core.symbol import Wild, Dummy, symbols, Symbol
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
-from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.integers import floor, frac, ceiling
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.series.limits import Limit
+from sympy.series.order import Order
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
-from sympy.series.order import Order
-from sympy.series.limits import Limit
 
 
 def rational_algorithm(f, x, k, order=4, full=False):
@@ -40,7 +40,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     instead.
 
     Looks for derivative of a function up to 4'th order (by default).
-    This can be overriden using order option.
+    This can be overridden using order option.
 
     Returns
     =======
@@ -70,7 +70,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
 
     By setting ``full=True``, range of admissible functions to be solved using
     ``rational_algorithm`` can be increased. This option should be used
-    carefully as it can signifcantly slow down the computation as ``doit`` is
+    carefully as it can significantly slow down the computation as ``doit`` is
     performed on the :class:`RootSum` object returned by the ``apart`` function.
     Use ``full=False`` whenever possible.
 
@@ -184,7 +184,7 @@ def rational_independent(terms, x):
 
 
 def simpleDE(f, x, g, order=4):
-    """Generates simple DE.
+    r"""Generates simple DE.
 
     DE is of the form
 
@@ -207,8 +207,6 @@ def simpleDE(f, x, g, order=4):
         eq = f.diff(x, k) + Add(*[a[i]*f.diff(x, i) for i in range(0, k)])
         DE = g(x).diff(x, k) + Add(*[a[i]*g(x).diff(x, i) for i in range(0, k)])
         return eq, DE
-
-    eq, DE = _makeDE(order)
 
     found = False
     for k in range(1, order + 1):
@@ -246,7 +244,7 @@ def exp_re(DE, r, k):
 
     >>> exp_re(-f(x) + Derivative(f(x)), r, k)
     -r(k) + r(k + 1)
-    >>> exp_re(Derivative(f(x), x) + Derivative(f(x), x, x), r, k)
+    >>> exp_re(Derivative(f(x), x) + Derivative(f(x), (x, 2)), r, k)
     r(k) + r(k + 1)
 
     See Also
@@ -262,7 +260,7 @@ def exp_re(DE, r, k):
     for t in Add.make_args(DE):
         coeff, d = t.as_independent(g)
         if isinstance(d, Derivative):
-            j = len(d.args) - 1
+            j = d.derivative_count
         else:
             j = 0
         if mini is None or j < mini:
@@ -293,7 +291,7 @@ def hyper_re(DE, r, k):
 
     >>> hyper_re(-f(x) + Derivative(f(x)), r, k)
     (k + 1)*r(k + 1) - r(k)
-    >>> hyper_re(-x*f(x) + Derivative(f(x), x, x), r, k)
+    >>> hyper_re(-x*f(x) + Derivative(f(x), (x, 2)), r, k)
     (k + 2)*(k + 3)*r(k + 3) - r(k)
 
     See Also
@@ -312,7 +310,7 @@ def hyper_re(DE, r, k):
         c, v = coeff.as_independent(x)
         l = v.as_coeff_exponent(x)[1]
         if isinstance(d, Derivative):
-            j = len(d.args[1:])
+            j = d.derivative_count
         else:
             j = 0
         RE += c * rf(k + 1 - l, j) * r(k + j - l)
@@ -366,6 +364,8 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
 
     sol = []
     for i in range(k_max + 1, k_max + m + 1):
+        if (i < 0) == True:
+            continue
         r = f.diff(x, i).limit(x, 0) / factorial(i)
         if r is S.Zero:
             continue
@@ -401,7 +401,7 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
     from sympy.polys import lcm, roots
     from sympy.integrals import integrate
 
-    # tranformation - c
+    # transformation - c
     proots, qroots = roots(P, k), roots(Q, k)
     all_roots = dict(proots)
     all_roots.update(qroots)
@@ -489,7 +489,7 @@ def rsolve_hypergeometric(f, x, P, Q, k, m):
     >>> from sympy.abc import x, k
 
     >>> rh(exp(x), x, -S.One, (k + 1), k, 1)
-    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
+    (Piecewise((1/factorial(k), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
 
     >>> rh(ln(1 + x), x, k**2, k*(k + 1), k, 1)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
@@ -666,26 +666,27 @@ def solve_de(f, x, DE, order, g, k):
     Examples
     ========
 
-    >>> from sympy import Derivative as D
+    >>> from sympy import Derivative as D, Function
     >>> from sympy import exp, ln
     >>> from sympy.series.formal import solve_de
-    >>> from sympy.abc import x, k, f
+    >>> from sympy.abc import x, k
+    >>> f = Function('f')
 
     >>> solve_de(exp(x), x, D(f(x), x) - f(x), 1, f, k)
-    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
+    (Piecewise((1/factorial(k), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
 
     >>> solve_de(ln(1 + x), x, (x + 1)*D(f(x), x, 2) + D(f(x)), 2, f, k)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
      Eq(Mod(k, 1), 0)), (0, True)), x, 2)
     """
     sol = None
-    syms = DE.free_symbols.difference(set([g, x]))
+    syms = DE.free_symbols.difference({g, x})
 
     if syms:
         RE = _transform_DE_RE(DE, g, k, order, syms)
     else:
         RE = hyper_re(DE, g, k)
-    if not RE.free_symbols.difference(set([k])):
+    if not RE.free_symbols.difference({k}):
         sol = _solve_hyper_RE(f, x, RE, g, k)
 
     if sol:
@@ -693,7 +694,7 @@ def solve_de(f, x, DE, order, g, k):
 
     if syms:
         DE = _transform_explike_DE(DE, g, x, order, syms)
-    if not DE.free_symbols.difference(set([x])):
+    if not DE.free_symbols.difference({x}):
         sol = _solve_explike_DE(f, x, DE, g, k)
 
     if sol:
@@ -717,7 +718,7 @@ def hyper_algorithm(f, x, k, order=4):
     >>> from sympy.abc import x, k
 
     >>> hyper_algorithm(exp(x), x, k)
-    (Piecewise((1/(factorial(k)), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
+    (Piecewise((1/factorial(k), Eq(Mod(k, 1), 0)), (0, True)), 1, 1)
 
     >>> hyper_algorithm(ln(1 + x), x, k)
     (Piecewise(((-1)**(k - 1)*factorial(k - 1)/RisingFactorial(2, k - 1),
@@ -738,7 +739,7 @@ def hyper_algorithm(f, x, k, order=4):
             sol = solve_de(f, x, DE, i, g, k)
         if sol:
             return sol
-        if not DE.free_symbols.difference(set([x])):
+        if not DE.free_symbols.difference({x}):
             des.append(DE)
 
     # If nothing works
@@ -1068,19 +1069,19 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
-    def integrate(self, x=None):
+    def integrate(self, x=None, **kwargs):
         """Integrate Formal Power Series.
 
         Examples
         ========
 
-        >>> from sympy import fps, sin
+        >>> from sympy import fps, sin, integrate
         >>> from sympy.abc import x
         >>> f = fps(sin(x))
         >>> f.integrate(x).truncate()
         -1 + x**2/2 - x**4/24 + O(x**6)
-        >>> f.integrate((x, 0, 1))
-        -cos(1) + 1
+        >>> integrate(f, (x, 0, 1))
+        1 - cos(1)
         """
         from sympy.integrals import integrate
 

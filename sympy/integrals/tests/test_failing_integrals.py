@@ -1,7 +1,5 @@
 # A collection of failing integrals from the issues.
 
-from __future__ import division
-
 from sympy import (
     integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos,
     tan, S, log, gamma, sinh,
@@ -10,25 +8,6 @@ from sympy import (
 from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 
 from sympy.abc import x, k, c, y, R, b, h, a, m
-
-import signal
-
-
-class TimeOutError(Exception):
-    pass
-
-
-def timeout(signum, frame, time):
-    raise TimeOutError("Timed out after %d seconds" % time)
-
-
-def run_with_timeout(test, time):
-    # Set the signal handler and a 5-second alarm
-    signal.signal(signal.SIGALRM, lambda s, f: timeout(s, f, time))
-    signal.alarm(time)
-    r = eval(test)
-    signal.alarm(0)          # Disable the alarm
-    return r
 
 
 @SKIP("Too slow for @slow")
@@ -54,18 +33,11 @@ def test_issue_4491():
 
 
 @XFAIL
-@slow
 def test_issue_4511():
     # This works, but gives a complicated answer.  The correct answer is x - cos(x).
     # The last one is what Maple gives.  It is also quite slow.
     assert integrate(cos(x)**2 / (1 - sin(x))) in [x - cos(x), 1 - cos(x) + x,
             -2/(tan((S(1)/2)*x)**2 + 1) + x]
-
-
-@XFAIL
-def test_issue_4514():
-    # The correct answer is 2*sin(x)
-    assert not integrate(sin(2*x)/ sin(x)).has(Integral)
 
 
 @XFAIL

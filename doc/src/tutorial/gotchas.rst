@@ -183,7 +183,7 @@ not the same symbolically. One is the power of an addition of two terms, and
 the other is the addition of three terms.
 
 It turns out that when using SymPy as a library, having ``==`` test for exact
-symbolic equality is far more useful than having it represent symbolic
+structural equality is far more useful than having it represent symbolic
 equality, or having it test for mathematical equality.  However, as a new
 user, you will probably care more about the latter two.  We have already seen
 an alternative to representing equalities symbolically, ``Eq``.  To test if
@@ -192,7 +192,7 @@ then `a - b = 0`.  Thus, the best way to check if `a = b` is to take `a - b`
 and simplify it, and see if it goes to 0.  We will learn :ref:`later
 <tutorial-simplify>` that the function to do this is called ``simplify``. This
 method is not infallible---in fact, it can be `theoretically proven
-<http://en.wikipedia.org/wiki/Richardson%27s_theorem>`_ that it is impossible
+<https://en.wikipedia.org/wiki/Richardson%27s_theorem>`_ that it is impossible
 to determine if two symbolic expressions are identically equal in
 general---but for most common expressions, it works quite well.
 
@@ -211,6 +211,9 @@ equal by evaluating them numerically at random points.
     >>> b = cos(2*x)
     >>> a.equals(b)
     True
+
+
+.. _tutorial-gotchas-final-notes:
 
 Two Final Notes: ``^`` and ``/``
 ================================
@@ -244,6 +247,11 @@ object.
     >>> type(1 + 1)
     <... 'int'>
 
+.. note::
+
+   On running the example above in SymPy Live, (1+1) is wrapped
+   by Integer, so it does not show the correct output.
+
 This is usually not a big deal. Python ints work much the same as SymPy
 Integers, but there is one important exception:  division.  In SymPy, the
 division of two Integers gives a Rational:
@@ -261,6 +269,11 @@ on whether or not you have run ``from __future__ import division``:
     >>> 1/2 #doctest: +SKIP
     0.5
 
+.. note::
+
+   On running the example above in SymPy Live, (1/2) is wrapped
+   by Integer, so it does not show the correct output.
+
 To avoid this, we can construct the rational object explicitly
 
     >>> Rational(1, 2)
@@ -271,6 +284,11 @@ This problem also comes up whenever we have a larger symbolic expression with
 
     >>> x + 1/2 #doctest: +SKIP
     x + 0.5
+
+.. note::
+
+   On running the example above in SymPy Live, (1/2) is wrapped
+   by Integer, so it does not show the correct output.
 
 This happens because Python first evaluates ``1/2`` into ``0.5``, and then
 that is cast into a SymPy type when it is added to ``x``.  Again, we can get

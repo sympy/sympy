@@ -1,6 +1,7 @@
 from sympy.combinatorics.graycode import (GrayCode, bin_to_gray,
-    random_bitstring, get_subset_from_bitstring, graycode_subsets)
-
+    random_bitstring, get_subset_from_bitstring, graycode_subsets,
+    gray_to_bin)
+from sympy.utilities.pytest import raises
 
 def test_graycode():
     g = GrayCode(2)
@@ -54,4 +55,18 @@ def test_graycode():
     assert get_subset_from_bitstring('abcd', '1001') == ['a', 'd']
     assert list(graycode_subsets(['a', 'b', 'c'])) == \
         [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'],
-    ['a', 'c'], ['a']]
+         ['a', 'c'], ['a']]
+
+    raises(ValueError, lambda: GrayCode(0))
+    raises(ValueError, lambda: GrayCode(2.2))
+    raises(ValueError, lambda: GrayCode(2, start=[1, 1, 0]))
+    raises(ValueError, lambda: GrayCode(2, rank=2.5))
+    raises(ValueError, lambda: get_subset_from_bitstring(['c', 'a', 'c'], '1100'))
+    raises(ValueError, lambda: list(GrayCode(3).generate_gray(start="1111")))
+
+
+def test_live_issue_117():
+    assert bin_to_gray('0100') == '0110'
+    assert bin_to_gray('0101') == '0111'
+    for bits in ('0100', '0101'):
+        assert gray_to_bin(bin_to_gray(bits)) == bits

@@ -1,15 +1,15 @@
 """Module for querying SymPy objects about assumptions."""
 from __future__ import print_function, division
 
+from sympy.assumptions.assume import (global_assumptions, Predicate,
+        AppliedPredicate)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
+from sympy.core.decorators import deprecated
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
     BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
-from sympy.assumptions.assume import (global_assumptions, Predicate,
-        AppliedPredicate)
-from sympy.core.decorators import deprecated
 from sympy.utilities.decorator import memoize_property
 
 
@@ -228,7 +228,7 @@ class AssumptionKeys(object):
         References
         ==========
 
-        .. [1] http://en.wikipedia.org/wiki/Algebraic_number
+        .. [1] https://en.wikipedia.org/wiki/Algebraic_number
         """
         return Predicate('algebraic')
 
@@ -357,7 +357,7 @@ class AssumptionKeys(object):
         return Predicate('finite')
 
     @predicate_memo
-    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="1.0")
     def bounded(self):
         """
         See documentation of ``Q.finite``.
@@ -377,7 +377,7 @@ class AssumptionKeys(object):
         return Predicate('infinite')
 
     @predicate_memo
-    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="1.0")
     def infinity(self):
         """
         See documentation of ``Q.infinite``.
@@ -385,7 +385,7 @@ class AssumptionKeys(object):
         return Predicate('infinite')
 
     @predicate_memo
-    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="0.7.7")
+    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="1.0")
     def infinitesimal(self):
         """
         See documentation of ``Q.zero``.
@@ -1207,7 +1207,7 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
         args = [x for x in args if x is not None]
         if args:
             return expr.func(*args)
-    if args and all(x != None for x in args):
+    if args and all(x is not None for x in args):
         return expr.func(*args)
 
 
@@ -1232,7 +1232,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     False
     >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
     True
-    >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
+    >>> ask(Q.prime(4*x), Q.integer(x))
     False
 
     **Remarks**
@@ -1283,7 +1283,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return True
         if Not(key) in known_facts_dict[local_facts]:
             return False
-    elif (local_facts.func is And and
+    elif (isinstance(local_facts, And) and
             all(k in known_facts_dict for k in local_facts.args)):
         for assum in local_facts.args:
             if assum.is_Atom:
@@ -1291,13 +1291,13 @@ def ask(proposition, assumptions=True, context=global_assumptions):
                     return True
                 if Not(key) in known_facts_dict[assum]:
                     return False
-            elif assum.func is Not and assum.args[0].is_Atom:
+            elif isinstance(assum, Not) and assum.args[0].is_Atom:
                 if key in known_facts_dict[assum]:
                     return False
                 if Not(key) in known_facts_dict[assum]:
                     return True
     elif (isinstance(key, Predicate) and
-            local_facts.func is Not and local_facts.args[0].is_Atom):
+            isinstance(local_facts, Not) and local_facts.args[0].is_Atom):
         if local_facts.args[0] in known_facts_dict[key]:
             return False
 
@@ -1328,7 +1328,7 @@ def register_handler(key, handler):
         >>> from sympy.assumptions import register_handler, ask, Q
         >>> from sympy.assumptions.handlers import AskHandler
         >>> class MersenneHandler(AskHandler):
-        ...     # Mersenne numbers are in the form 2**n + 1, n integer
+        ...     # Mersenne numbers are in the form 2**n - 1, n integer
         ...     @staticmethod
         ...     def Integer(expr, assumptions):
         ...         from sympy import log
@@ -1340,9 +1340,10 @@ def register_handler(key, handler):
     """
     if type(key) is Predicate:
         key = key.name
-    try:
-        getattr(Q, key).add_handler(handler)
-    except AttributeError:
+    Qkey = getattr(Q, key, None)
+    if Qkey is not None:
+        Qkey.add_handler(handler)
+    else:
         setattr(Q, key, Predicate(key, handlers=[handler]))
 
 
@@ -1357,7 +1358,7 @@ def single_fact_lookup(known_facts_keys, known_facts_cnf):
     # Compute the quick lookup for single facts
     mapping = {}
     for key in known_facts_keys:
-        mapping[key] = set([key])
+        mapping[key] = {key}
         for other_key in known_facts_keys:
             if other_key != key:
                 if ask_full_inference(other_key, key, known_facts_cnf):
@@ -1385,7 +1386,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
 
     from sympy.core.cache import cacheit
-    from sympy.logic.boolalg import And, Not, Or
+    from sympy.logic.boolalg import And
     from sympy.assumptions.ask import Q
 
     # -{ Known facts in Conjunctive Normal Form }-
@@ -1483,13 +1484,16 @@ def get_known_facts():
         Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
         Implies(Q.integer, Q.rational),
         Implies(Q.rational, Q.algebraic),
+        Implies(Q.irrational, Q.finite),
         Implies(Q.algebraic, Q.complex),
-        Equivalent(Q.transcendental | Q.algebraic, Q.complex),
+        Implies(Q.algebraic, Q.finite),
+        Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),
         Implies(Q.transcendental, ~Q.algebraic),
+        Implies(Q.transcendental, Q.finite),
         Implies(Q.imaginary, Q.complex & ~Q.real),
         Implies(Q.imaginary, Q.antihermitian),
         Implies(Q.antihermitian, ~Q.hermitian),
-        Equivalent(Q.irrational | Q.rational, Q.real),
+        Equivalent(Q.irrational | Q.rational, Q.real & Q.finite),
         Implies(Q.irrational, ~Q.rational),
         Implies(Q.zero, Q.even),
 

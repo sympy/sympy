@@ -1,22 +1,25 @@
-from __future__ import division
-
-from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
-    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
-    WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
-    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
-    simplify, together, collect, factorial, apart, combsimp, factor, refine,
-    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, expand, diff, O, Heaviside, Si, Max)
+from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, I,
+                   sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
+                   WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
+                   Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
+                   simplify, together, collect, factorial, apart, combsimp, factor, refine,
+                   cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
+                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
+                   integrate, gammasimp)
+from sympy.core.expr import ExprBuilder
 from sympy.core.function import AppliedUndef
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, round, PY3
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
-from sympy.series.formal import FormalPowerSeries
 
 from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
+
+# replace 3 instances with int when PY2 is dropped and
+# delete this line
+_rint = int if PY3 else float
 
 class DummyNumber(object):
     """
@@ -266,6 +269,7 @@ def test_as_leading_term():
     assert (x**2).as_leading_term(x) == x**2
     assert (x + oo).as_leading_term(x) == oo
 
+    raises(ValueError, lambda: (x + 1).as_leading_term(1))
 
 def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
@@ -303,50 +307,62 @@ def test_as_leading_term_stub():
     raises(NotImplementedError, lambda: foo(x).as_leading_term(x))
 
 
+def test_as_leading_term_deriv_integral():
+    # related to issue 11313
+    assert Derivative(x ** 3, x).as_leading_term(x) == 3*x**2
+    assert Derivative(x ** 3, y).as_leading_term(x) == 0
+
+    assert Integral(x ** 3, x).as_leading_term(x) == x**4/4
+    assert Integral(x ** 3, y).as_leading_term(x) == y*x**3
+
+    assert Derivative(exp(x), x).as_leading_term(x) == 1
+    assert Derivative(log(x), x).as_leading_term(x) == (1/x).as_leading_term(x)
+
+
 def test_atoms():
-    assert x.atoms() == set([x])
-    assert (1 + x).atoms() == set([x, S(1)])
+    assert x.atoms() == {x}
+    assert (1 + x).atoms() == {x, S(1)}
 
-    assert (1 + 2*cos(x)).atoms(Symbol) == set([x])
-    assert (1 + 2*cos(x)).atoms(Symbol, Number) == set([S(1), S(2), x])
+    assert (1 + 2*cos(x)).atoms(Symbol) == {x}
+    assert (1 + 2*cos(x)).atoms(Symbol, Number) == {S(1), S(2), x}
 
-    assert (2*(x**(y**x))).atoms() == set([S(2), x, y])
+    assert (2*(x**(y**x))).atoms() == {S(2), x, y}
 
-    assert Rational(1, 2).atoms() == set([S.Half])
+    assert Rational(1, 2).atoms() == {S.Half}
     assert Rational(1, 2).atoms(Symbol) == set([])
 
     assert sin(oo).atoms(oo) == set()
 
-    assert Poly(0, x).atoms() == set([S.Zero])
-    assert Poly(1, x).atoms() == set([S.One])
+    assert Poly(0, x).atoms() == {S.Zero}
+    assert Poly(1, x).atoms() == {S.One}
 
-    assert Poly(x, x).atoms() == set([x])
-    assert Poly(x, x, y).atoms() == set([x])
-    assert Poly(x + y, x, y).atoms() == set([x, y])
-    assert Poly(x + y, x, y, z).atoms() == set([x, y])
-    assert Poly(x + y*t, x, y, z).atoms() == set([t, x, y])
+    assert Poly(x, x).atoms() == {x}
+    assert Poly(x, x, y).atoms() == {x}
+    assert Poly(x + y, x, y).atoms() == {x, y}
+    assert Poly(x + y, x, y, z).atoms() == {x, y}
+    assert Poly(x + y*t, x, y, z).atoms() == {t, x, y}
 
-    assert (I*pi).atoms(NumberSymbol) == set([pi])
+    assert (I*pi).atoms(NumberSymbol) == {pi}
     assert (I*pi).atoms(NumberSymbol, I) == \
-        (I*pi).atoms(I, NumberSymbol) == set([pi, I])
+        (I*pi).atoms(I, NumberSymbol) == {pi, I}
 
-    assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
+    assert exp(exp(x)).atoms(exp) == {exp(exp(x)), exp(x)}
     assert (1 + x*(2 + y) + exp(3 + z)).atoms(Add) == \
-        set([1 + x*(2 + y) + exp(3 + z), 2 + y, 3 + z])
+        {1 + x*(2 + y) + exp(3 + z), 2 + y, 3 + z}
 
     # issue 6132
     f = Function('f')
     e = (f(x) + sin(x) + 2)
     assert e.atoms(AppliedUndef) == \
-        set([f(x)])
+        {f(x)}
     assert e.atoms(AppliedUndef, Function) == \
-        set([f(x), sin(x)])
+        {f(x), sin(x)}
     assert e.atoms(Function) == \
-        set([f(x), sin(x)])
+        {f(x), sin(x)}
     assert e.atoms(AppliedUndef, Number) == \
-        set([f(x), S(2)])
+        {f(x), S(2)}
     assert e.atoms(Function, Number) == \
-        set([S(2), sin(x), f(x)])
+        {S(2), sin(x), f(x)}
 
 
 def test_is_polynomial():
@@ -441,6 +457,7 @@ def test_is_algebraic_expr():
     assert (cos(y)/sqrt(x)).is_algebraic_expr(x) is True
     assert (cos(y)/sqrt(x)).is_algebraic_expr(y) is False
     assert (cos(y)/sqrt(x)).is_algebraic_expr(x, y) is False
+
 
 def test_SAGE1():
     #see https://github.com/sympy/sympy/issues/3346
@@ -566,7 +583,26 @@ def test_as_numer_denom():
     assert ((A*B*C)**-1/x).as_numer_denom() == ((A*B*C)**-1, x)
 
 
+def test_trunc():
+    import math
+    x, y = symbols('x y')
+    assert math.trunc(2) == 2
+    assert math.trunc(4.57) == 4
+    assert math.trunc(-5.79) == -5
+    assert math.trunc(pi) == 3
+    assert math.trunc(log(7)) == 1
+    assert math.trunc(exp(5)) == 148
+    assert math.trunc(cos(pi)) == -1
+    assert math.trunc(sin(5)) == 0
+
+    raises(TypeError, lambda: math.trunc(x))
+    raises(TypeError, lambda: math.trunc(x + y**2))
+    raises(TypeError, lambda: math.trunc(oo))
+
+
 def test_as_independent():
+    assert S.Zero.as_independent(x, as_Add=True) == (0, 0)
+    assert S.Zero.as_independent(x, as_Add=False) == (0, 0)
     assert (2*x*sin(x) + y + x).as_independent(x) == (y, x + 2*x*sin(x))
     assert (2*x*sin(x) + y + x).as_independent(y) == (x + 2*x*sin(x), y)
 
@@ -614,6 +650,12 @@ def test_as_independent():
     assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
            (Integral(x, (x, 1, 2)), x)
 
+    eq = Add(x, -x, 2, -3, evaluate=False)
+    assert eq.as_independent(x) == (-1, Add(x, -x, evaluate=False))
+    eq = Mul(x, 1/x, 2, -3, evaluate=False)
+    eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
+
+    assert (x*y).as_independent(z, as_Add=True) == (x*y, 0)
 
 @XFAIL
 def test_call_2():
@@ -637,9 +679,11 @@ def test_replace():
         sin(a), lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
     # test exact
     assert (2*x).replace(a*x + b, b - a, exact=True) == 2*x
-    assert (2*x).replace(a*x + b, b - a) == 2/x
+    assert (2*x).replace(a*x + b, b - a) == 2*x
+    assert (2*x).replace(a*x + b, b - a, exact=False) == 2/x
     assert (2*x).replace(a*x + b, lambda a, b: b - a, exact=True) == 2*x
-    assert (2*x).replace(a*x + b, lambda a, b: b - a) == 2/x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a) == 2*x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a, exact=False) == 2/x
 
     g = 2*sin(x**3)
 
@@ -681,14 +725,14 @@ def test_replace():
 def test_find():
     expr = (x + y + 2 + sin(3*x))
 
-    assert expr.find(lambda u: u.is_Integer) == set([S(2), S(3)])
-    assert expr.find(lambda u: u.is_Symbol) == set([x, y])
+    assert expr.find(lambda u: u.is_Integer) == {S(2), S(3)}
+    assert expr.find(lambda u: u.is_Symbol) == {x, y}
 
     assert expr.find(lambda u: u.is_Integer, group=True) == {S(2): 1, S(3): 1}
     assert expr.find(lambda u: u.is_Symbol, group=True) == {x: 2, y: 1}
 
-    assert expr.find(Integer) == set([S(2), S(3)])
-    assert expr.find(Symbol) == set([x, y])
+    assert expr.find(Integer) == {S(2), S(3)}
+    assert expr.find(Symbol) == {x, y}
 
     assert expr.find(Integer, group=True) == {S(2): 1, S(3): 1}
     assert expr.find(Symbol, group=True) == {x: 2, y: 1}
@@ -697,14 +741,14 @@ def test_find():
 
     expr = sin(sin(x)) + sin(x) + cos(x) + x
 
-    assert expr.find(lambda u: type(u) is sin) == set([sin(x), sin(sin(x))])
+    assert expr.find(lambda u: type(u) is sin) == {sin(x), sin(sin(x))}
     assert expr.find(
         lambda u: type(u) is sin, group=True) == {sin(x): 2, sin(sin(x)): 1}
 
-    assert expr.find(sin(a)) == set([sin(x), sin(sin(x))])
+    assert expr.find(sin(a)) == {sin(x), sin(sin(x))}
     assert expr.find(sin(a), group=True) == {sin(x): 2, sin(sin(x)): 1}
 
-    assert expr.find(sin) == set([sin(x), sin(sin(x))])
+    assert expr.find(sin) == {sin(x), sin(sin(x))}
     assert expr.find(sin, group=True) == {sin(x): 2, sin(sin(x)): 1}
 
 
@@ -723,6 +767,11 @@ def test_count():
     assert expr.count(sin) == 1
     assert expr.count(sin(a)) == 1
     assert expr.count(lambda u: type(u) is sin) == 1
+
+    f = Function('f')
+    assert f(x).count(f(x)) == 1
+    assert f(x).diff(x).count(f(x)) == 1
+    assert f(x).diff(x).count(x) == 2
 
 
 def test_has_basics():
@@ -990,6 +1039,15 @@ def test_extractions():
     assert (sqrt(x)).extract_multiplicatively(x) is None
     assert (sqrt(x)).extract_multiplicatively(1/x) is None
     assert x.extract_multiplicatively(-x) is None
+    assert (-2 - 4*I).extract_multiplicatively(-2) == 1 + 2*I
+    assert (-2 - 4*I).extract_multiplicatively(3) is None
+    assert (-2*x - 4*y - 8).extract_multiplicatively(-2) == x + 2*y + 4
+    assert (-2*x*y - 4*x**2*y).extract_multiplicatively(-2*y) == 2*x**2 + x
+    assert (2*x*y + 4*x**2*y).extract_multiplicatively(2*y) == 2*x**2 + x
+    assert (-4*y**2*x).extract_multiplicatively(-3*y) is None
+    assert (2*x).extract_multiplicatively(1) == 2*x
+    assert (-oo).extract_multiplicatively(5) == -oo
+    assert (oo).extract_multiplicatively(5) == oo
 
     assert ((x*y)**3).extract_additively(1) is None
     assert (x + 1).extract_additively(x) == 1
@@ -1037,6 +1095,14 @@ def test_extractions():
     assert ((x + x*y)/y).could_extract_minus_sign() is False
     assert (x*(-x - x**3)).could_extract_minus_sign() is True
     assert ((-x - y)/(x + y)).could_extract_minus_sign() is True
+
+    class sign_invariant(Function, Expr):
+        nargs = 1
+        def __neg__(self):
+            return self
+    foo = sign_invariant(x)
+    assert foo == -foo
+    assert foo.could_extract_minus_sign() is False
     # The results of each of these will vary on different machines, e.g.
     # the first one might be False and the other (then) is true or vice versa,
     # so both are included.
@@ -1126,6 +1192,7 @@ def test_coeff():
     assert (n*m + o*m*n).coeff(m*n, right=1) == 1
     assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
 
+    assert (x*y).coeff(z, 0) == x*y
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')
@@ -1178,14 +1245,18 @@ def test_action_verbs():
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
     assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep=True)
     assert radsimp(1/(2 + sqrt(2))) == (1/(2 + sqrt(2))).radsimp()
+    assert radsimp(1/(a + b*sqrt(c)), symbolic=False) == \
+        (1/(a + b*sqrt(c))).radsimp(symbolic=False)
     assert powsimp(x**y*x**z*y**z, combine='all') == \
         (x**y*x**z*y**z).powsimp(combine='all')
+    assert (x**t*y**t).powsimp(force=True) == (x*y)**t
     assert simplify(x**y*x**z*y**z) == (x**y*x**z*y**z).simplify()
     assert together(1/x + 1/y) == (1/x + 1/y).together()
     assert collect(a*x**2 + b*x**2 + a*x - b*x + c, x) == \
         (a*x**2 + b*x**2 + a*x - b*x + c).collect(x)
     assert apart(y/(y + 2)/(y + 1), y) == (y/(y + 2)/(y + 1)).apart(y)
     assert combsimp(y/(x + 2)/(x + 1)) == (y/(x + 2)/(x + 1)).combsimp()
+    assert gammasimp(gamma(x)/gamma(x-5)) == (gamma(x)/gamma(x-5)).gammasimp()
     assert factor(x**2 + 5*x + 6) == (x**2 + 5*x + 6).factor()
     assert refine(sqrt(x**2)) == sqrt(x**2).refine()
     assert cancel((x**2 + 5*x + 6)/(x + 2)) == ((x**2 + 5*x + 6)/(x + 2)).cancel()
@@ -1203,9 +1274,13 @@ def test_as_coefficients_dict():
     check = [S(1), x, y, x*y, 1]
     assert [Add(3*x, 2*x, y, 3).as_coefficients_dict()[i] for i in check] == \
         [3, 5, 1, 0, 3]
+    assert [Add(3*x, 2*x, y, 3, evaluate=False).as_coefficients_dict()[i]
+            for i in check] == [3, 5, 1, 0, 3]
     assert [(3*x*y).as_coefficients_dict()[i] for i in check] == \
         [0, 0, 0, 3, 0]
-    assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 1
+    assert [(3.0*x*y).as_coefficients_dict()[i] for i in check] == \
+        [0, 0, 0, 3.0, 0]
+    assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 0
 
 
 def test_args_cnc():
@@ -1217,11 +1292,11 @@ def test_args_cnc():
     assert (x*a).args_cnc() == \
         [[a, x], []]
     assert (x*y*A*(A + 1)).args_cnc(cset=True) == \
-        [set([x, y]), [A, 1 + A]]
+        [{x, y}, [A, 1 + A]]
     assert Mul(x, x, evaluate=False).args_cnc(cset=True, warn=False) == \
-        [set([x]), []]
+        [{x}, []]
     assert Mul(x, x**2, evaluate=False).args_cnc(cset=True, warn=False) == \
-        [set([x, x**2]), []]
+        [{x, x**2}, []]
     raises(ValueError, lambda: Mul(x, x, evaluate=False).args_cnc(cset=True))
     assert Mul(x, y, x, evaluate=False).args_cnc() == \
         [[x, y, x], []]
@@ -1258,19 +1333,24 @@ def test_issue_5226():
 def test_free_symbols():
     # free_symbols should return the free symbols of an object
     assert S(1).free_symbols == set()
-    assert (x).free_symbols == set([x])
-    assert Integral(x, (x, 1, y)).free_symbols == set([y])
-    assert (-Integral(x, (x, 1, y))).free_symbols == set([y])
+    assert (x).free_symbols == {x}
+    assert Integral(x, (x, 1, y)).free_symbols == {y}
+    assert (-Integral(x, (x, 1, y))).free_symbols == {y}
     assert meter.free_symbols == set()
-    assert (meter**x).free_symbols == set([x])
+    assert (meter**x).free_symbols == {x}
 
 
 def test_issue_5300():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
 
+def test_floordiv():
+    from sympy.functions.elementary.integers import floor
+    assert x // y == floor(x / y)
+
 
 def test_as_coeff_Mul():
+    assert S(0).as_coeff_Mul() == (S.One, S.Zero)
     assert Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
     assert Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
     assert Float(5.0).as_coeff_Mul() == (Float(5.0), Integer(1))
@@ -1296,6 +1376,7 @@ def test_as_coeff_Add():
     assert (Integer(3) + x).as_coeff_Add() == (Integer(3), x)
     assert (Rational(3, 4) + x).as_coeff_Add() == (Rational(3, 4), x)
     assert (Float(5.0) + x).as_coeff_Add() == (Float(5.0), x)
+    assert (Float(5.0) + x).as_coeff_Add(rational=True) == (0, Float(5.0) + x)
 
     assert (Integer(3) + x + y).as_coeff_Add() == (Integer(3), x + y)
     assert (Rational(3, 4) + x + y).as_coeff_Add() == (Rational(3, 4), x + y)
@@ -1342,7 +1423,7 @@ def test_expr_sorting():
     exprs = [{x: -y}, {x: y}]
     assert sorted(exprs, key=default_sort_key) == exprs
 
-    exprs = [set([1]), set([1, 2])]
+    exprs = [{1}, {1, 2}]
     assert sorted(exprs, key=default_sort_key) == exprs
 
     a, b = exprs = [Dummy('x'), Dummy('x')]
@@ -1398,29 +1479,36 @@ def test_as_ordered_terms():
     assert f.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
     assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
+    k = symbols('k')
+    assert k.as_ordered_terms(data=True) == ([(k, ((1.0, 0.0), (1,), ()))], [k])
 
 def test_sort_key_atomic_expr():
     from sympy.physics.units import m, s
     assert sorted([-m, s], key=lambda arg: arg.sort_key()) == [-m, s]
 
 
-def test_issue_4199():
+def test_eval_interval():
+    assert exp(x)._eval_interval(*Tuple(x, 0, 1)) == exp(1) - exp(0)
+
+    # issue 4199
     # first subs and limit gives NaN
     a = x/y
-    assert a._eval_interval(x, 0, oo)._eval_interval(y, oo, 0) is S.NaN
+    assert a._eval_interval(x, S(0), oo)._eval_interval(y, oo, S(0)) is S.NaN
     # second subs and limit gives NaN
-    assert a._eval_interval(x, 0, oo)._eval_interval(y, 0, oo) is S.NaN
+    assert a._eval_interval(x, S(0), oo)._eval_interval(y, S(0), oo) is S.NaN
     # difference gives S.NaN
     a = x - y
-    assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
+    assert a._eval_interval(x, S(1), oo)._eval_interval(y, oo, S(1)) is S.NaN
     raises(ValueError, lambda: x._eval_interval(x, None, None))
     a = -y*Heaviside(x - y)
     assert a._eval_interval(x, -oo, oo) == -y
     assert a._eval_interval(x, oo, -oo) == y
 
+
 def test_eval_interval_zoo():
     # Test that limit is used when zoo is returned
-    assert Si(1/x)._eval_interval(x, 0, 1) == -pi/2 + Si(1)
+    assert Si(1/x)._eval_interval(x, S(0), S(1)) == -pi/2 + Si(1)
+
 
 def test_primitive():
     assert (3*(x + 1)**2).primitive() == (3, (x + 1)**2)
@@ -1466,9 +1554,9 @@ def test_is_constant():
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
     f = Function('f')
+    assert f(1).is_constant
     assert checksol(x, x, f(x)) is False
 
-    p = symbols('p', positive=True)
     assert Pow(x, S(0), evaluate=False).is_constant() is True  # == 1
     assert Pow(S(0), x, evaluate=False).is_constant() is False  # == 0 or 1
     assert (2**x).is_constant() is False
@@ -1480,6 +1568,8 @@ def test_is_constant():
     assert meter.is_constant() is True
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
+
+    assert Poly(3,x).is_constant() is True
 
 
 def test_equals():
@@ -1560,25 +1650,25 @@ def test_round():
     assert Float('0.1249999').round(2) == 0.12
     d20 = 12345678901234567890
     ans = S(d20).round(2)
-    assert ans.is_Float and ans == d20
+    assert ans.is_Integer and ans == d20
     ans = S(d20).round(-2)
-    assert ans.is_Float and ans == 12345678901234567900
+    assert ans.is_Integer and ans == 12345678901234567900
     assert S('1/7').round(4) == 0.1429
     assert S('.[12345]').round(4) == 0.1235
     assert S('.1349').round(2) == 0.13
     n = S(12345)
     ans = n.round()
-    assert ans.is_Float
+    assert ans.is_Integer
     assert ans == n
     ans = n.round(1)
-    assert ans.is_Float
+    assert ans.is_Integer
     assert ans == n
     ans = n.round(4)
-    assert ans.is_Float
+    assert ans.is_Integer
     assert ans == n
-    assert n.round(-1) == 12350
+    assert n.round(-1) == 12340
 
-    r = n.round(-4)
+    r = Float(str(n)).round(-4)
     assert r == 10000
     # in fact, it should equal many values since __eq__
     # compares at equal precision
@@ -1590,15 +1680,32 @@ def test_round():
     assert (10*(pi + sqrt(2))).round(-1) == 50
     raises(TypeError, lambda: round(x + 2, 2))
     assert S(2.3).round(1) == 2.3
-    e = S(12.345).round(2)
-    assert e == round(12.345, 2)
-    assert type(e) is Float
+    # rounding in SymPy (as in Decimal) should be
+    # exact for the given precision; we check here
+    # that when a 5 follows the last digit that
+    # the rounded digit will be even.
+    for i in range(-99, 100):
+        # construct a decimal that ends in 5, e.g. 123 -> 0.1235
+        s = str(abs(i))
+        p = len(s)  # we are going to round to the last digit of i
+        n = '0.%s5' % s  # put a 5 after i's digits
+        j = p + 2  # 2 for '0.'
+        if i < 0:  # 1 for '-'
+            j += 1
+            n = '-' + n
+        v = str(Float(n).round(p))[:j]  # pertinent digits
+        if v.endswith('.'):
+          continue  # it ends with 0 which is even
+        L = int(v[-1])  # last digit
+        assert L % 2 == 0, (n, '->', v)
 
     assert (Float(.3, 3) + 2*pi).round() == 7
     assert (Float(.3, 3) + 2*pi*100).round() == 629
-    assert (Float(.03, 3) + 2*pi/100).round(5) == 0.09283
-    assert (Float(.03, 3) + 2*pi/100).round(4) == 0.0928
     assert (pi + 2*E*I).round() == 3 + 5*I
+    # don't let request for extra precision give more than
+    # what is known (in this case, only 3 digits)
+    assert (Float(.03, 3) + 2*pi/100).round(5) == 0.0928
+    assert (Float(.03, 3) + 2*pi/100).round(4) == 0.0928
 
     assert S.Zero.round() == 0
 
@@ -1610,10 +1717,12 @@ def test_round():
     assert a.round(30) == Float('2.999999999999999999999999999', '')
 
     raises(TypeError, lambda: x.round())
+    f = Function('f')
+    raises(TypeError, lambda: f(1).round())
 
     # exact magnitude of 10
-    assert str(S(1).round()) == '1.'
-    assert str(S(100).round()) == '100.'
+    assert str(S(1).round()) == '1'
+    assert str(S(100).round()) == '100'
 
     # applied to real and imaginary portions
     assert (2*pi + E*I).round() == 6 + 3*I
@@ -1632,10 +1741,10 @@ def test_round():
     assert (I**(I + 3)).round(3) == Float('-0.208', '')*I
 
     # issue 8720
-    assert S(-123.6).round() == -124.
-    assert S(-1.5).round() == -2.
-    assert S(-100.5).round() == -101.
-    assert S(-1.5 - 10.5*I).round() == -2.0 - 11.0*I
+    assert S(-123.6).round() == -124
+    assert S(-1.5).round() == -2
+    assert S(-100.5).round() == -100
+    assert S(-1.5 - 10.5*I).round() == -2 - 10*I
 
     # issue 7961
     assert str(S(0.006).round(2)) == '0.01'
@@ -1646,6 +1755,46 @@ def test_round():
     assert S.Infinity.round() == S.Infinity
     assert S.NegativeInfinity.round() == S.NegativeInfinity
     assert S.ComplexInfinity.round() == S.ComplexInfinity
+
+    # check that types match
+    for i in range(2):
+        f = float(i)
+        # 2 args
+        assert all(type(round(i, p)) is _rint for p in (-1, 0, 1))
+        assert all(S(i).round(p).is_Integer for p in (-1, 0, 1))
+        assert all(type(round(f, p)) is float for p in (-1, 0, 1))
+        assert all(S(f).round(p).is_Float for p in (-1, 0, 1))
+        # 1 arg (p is None)
+        assert type(round(i)) is _rint
+        assert S(i).round().is_Integer
+        assert type(round(f)) is _rint
+        assert S(f).round().is_Integer
+
+
+def test_held_expression_UnevaluatedExpr():
+    x = symbols("x")
+    he = UnevaluatedExpr(1/x)
+    e1 = x*he
+
+    assert isinstance(e1, Mul)
+    assert e1.args == (x, he)
+    assert e1.doit() == 1
+    assert UnevaluatedExpr(Derivative(x, x)).doit(deep=False
+        ) == Derivative(x, x)
+    assert UnevaluatedExpr(Derivative(x, x)).doit() == 1
+
+    xx = Mul(x, x, evaluate=False)
+    assert xx != x**2
+
+    ue2 = UnevaluatedExpr(xx)
+    assert isinstance(ue2, UnevaluatedExpr)
+    assert ue2.args == (xx,)
+    assert ue2.doit() == x**2
+    assert ue2.doit(deep=False) == xx
+
+    x2 = UnevaluatedExpr(2)*2
+    assert type(x2) is Mul
+    assert x2.args == (2, UnevaluatedExpr(2))
 
 def test_round_exception_nostr():
     # Don't use the string form of the expression in the round exception, as
@@ -1658,6 +1807,7 @@ def test_round_exception_nostr():
     else:
         # Did not raise
         raise AssertionError("Did not raise")
+
 
 def test_extract_branch_factor():
     assert exp_polar(2.0*I*pi).extract_branch_factor() == (1, 1)
@@ -1690,9 +1840,37 @@ def test_issue_6325():
 def test_issue_7426():
     f1 = a % c
     f2 = x % z
-    assert f1.equals(f2) == False
+    assert f1.equals(f2) is None
+
+
+def test_issue_1112():
+    x = Symbol('x', positive=False)
+    assert (x > 0) is S.false
 
 
 def test_issue_10161():
     x = symbols('x', real=True)
     assert x*abs(x)*abs(x) == x**3
+
+
+def test_issue_10755():
+    x = symbols('x')
+    raises(TypeError, lambda: int(log(x)))
+    raises(TypeError, lambda: log(x).round(2))
+
+
+def test_issue_11877():
+    x = symbols('x')
+    assert integrate(log(S(1)/2 - x), (x, 0, S(1)/2)) == -S(1)/2 -log(2)/2
+
+
+def test_normal():
+    x = symbols('x')
+    e = Mul(S.Half, 1 + x, evaluate=False)
+    assert e.normal() == e
+
+
+def test_ExprBuilder():
+    eb = ExprBuilder(Mul)
+    eb.args.extend([x, x])
+    assert eb.build() == x**2

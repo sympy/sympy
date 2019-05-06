@@ -1,6 +1,7 @@
-from sympy import (S, sympify, trigsimp, expand, sqrt, Add, zeros,
-                   ImmutableMatrix as Matrix)
-from sympy.core.compatibility import u, unicode
+from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
+    ImmutableMatrix as Matrix)
+from sympy import trigsimp
+from sympy.core.compatibility import unicode
 from sympy.utilities.misc import filldedent
 
 __all__ = ['Vector']
@@ -37,31 +38,27 @@ class Vector(object):
         self.args = []
         if inlist == 0:
             inlist = []
-        while len(inlist) != 0:
-            added = 0
-            for i, v in enumerate(self.args):
-                if inlist[0][1] == self.args[i][1]:
-                    self.args[i] = (self.args[i][0] + inlist[0][0],
-                                    inlist[0][1])
-                    inlist.remove(inlist[0])
-                    added = 1
-                    break
-            if added != 1:
-                self.args.append(inlist[0])
-                inlist.remove(inlist[0])
-        i = 0
-        # This code is to remove empty frames from the list
-        while i < len(self.args):
-            if self.args[i][0] == Matrix([0, 0, 0]):
-                self.args.remove(self.args[i])
-                i -= 1
-            i += 1
+        if isinstance(inlist, dict):
+            d = inlist
+        else:
+            d = {}
+            for inp in inlist:
+                if inp[1] in d:
+                    d[inp[1]] += inp[0]
+                else:
+                    d[inp[1]] = inp[0]
+
+        for k, v in d.items():
+            if v != Matrix([0, 0, 0]):
+                self.args.append((v, k))
 
     def __hash__(self):
         return hash(tuple(self.args))
 
     def __add__(self, other):
         """The add operator for Vector. """
+        if other == 0:
+            return self
         other = _check_vector(other)
         return Vector(self.args + other.args)
 
@@ -128,7 +125,10 @@ class Vector(object):
 
         if other == 0:
             other = Vector(0)
-        other = _check_vector(other)
+        try:
+            other = _check_vector(other)
+        except TypeError:
+            return False
         if (self.args == []) and (other.args == []):
             return True
         elif (self.args == []) or (other.args == []):
@@ -168,7 +168,7 @@ class Vector(object):
         return Vector(newlist)
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def __neg__(self):
         return self * -1
@@ -252,10 +252,10 @@ class Vector(object):
     def _pretty(self, printer=None):
         """Pretty Printing method. """
         from sympy.physics.vector.printing import VectorPrettyPrinter
+        from sympy.printing.pretty.stringpict import prettyForm
         e = self
 
         class Fake(object):
-            baseline = 0
 
             def render(self, *args, **kwargs):
                 ar = e.args  # just to shorten things
@@ -263,38 +263,40 @@ class Vector(object):
                     return unicode(0)
                 settings = printer._settings if printer else {}
                 vp = printer if printer else VectorPrettyPrinter(settings)
-                ol = []  # output list, to be concatenated to a string
+                pforms = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     for j in 0, 1, 2:
                         # if the coef of the basis vector is 1, we skip the 1
                         if ar[i][0][j] == 1:
-                            ol.append(u(" + ") + ar[i][1].pretty_vecs[j])
+                            pform = vp._print(ar[i][1].pretty_vecs[j])
                         # if the coef of the basis vector is -1, we skip the 1
                         elif ar[i][0][j] == -1:
-                            ol.append(u(" - ") + ar[i][1].pretty_vecs[j])
+                            pform = vp._print(ar[i][1].pretty_vecs[j])
+                            pform = prettyForm(*pform.left(" - "))
+                            bin = prettyForm.NEG
+                            pform = prettyForm(binding=bin, *pform)
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
-                            if isinstance(ar[i][0][j], Add):
-                                arg_str = vp._print(
-                                    ar[i][0][j]).parens()[0]
-                            else:
-                                arg_str = (vp.doprint(
-                                    ar[i][0][j]))
+                            pform = vp._print(ar[i][0][j])
 
-                            if arg_str[0] == u("-"):
-                                arg_str = arg_str[1:]
-                                str_start = u(" - ")
-                            else:
-                                str_start = u(" + ")
-                            ol.append(str_start + arg_str + ' ' +
-                                      ar[i][1].pretty_vecs[j])
-                outstr = u("").join(ol)
-                if outstr.startswith(u(" + ")):
-                    outstr = outstr[3:]
-                elif outstr.startswith(" "):
-                    outstr = outstr[1:]
-                return outstr
+                            if isinstance(ar[i][0][j], Add):
+                                tmp = pform.parens()
+                                pform = prettyForm(tmp[0], tmp[1])
+
+                            pform = prettyForm(*pform.right(" ",
+                                                ar[i][1].pretty_vecs[j]))
+                        else:
+                            continue
+                        pforms.append(pform)
+
+                pform = prettyForm.__add__(*pforms)
+                kwargs["wrap_line"] = kwargs.get("wrap_line")
+                kwargs["num_columns"] = kwargs.get("num_columns")
+                out_str = pform.render(*args, **kwargs)
+                mlines = [line.rstrip() for line in out_str.split("\n")]
+                return "\n".join(mlines)
+
         return Fake()
 
     def __ror__(self, other):
@@ -340,12 +342,20 @@ class Vector(object):
     def __rsub__(self, other):
         return (-1 * self) + other
 
-    def __str__(self, printer=None):
+    def __str__(self, printer=None, order=True):
         """Printing method. """
         from sympy.physics.vector.printing import VectorStrPrinter
-        ar = self.args  # just to shorten things
-        if len(ar) == 0:
+
+        if not order or len(self.args) == 1:
+            ar = list(self.args)
+        elif len(self.args) == 0:
             return str(0)
+        else:
+            d = {v[1]: v[0] for v in self.args}
+            keys = sorted(d.keys(), key=lambda x: x.index)
+            ar = []
+            for key in keys:
+                ar.append((d[key], key))
         ol = []  # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             for j in 0, 1, 2:
@@ -426,7 +436,7 @@ class Vector(object):
                     mat[2][2]) + mat[0][2] * (mat[1][0] * mat[2][1] -
                     mat[1][1] * mat[2][0]))
 
-        outvec = Vector(0)
+        outlist = []
         ar = other.args  # For brevity
         for i, v in enumerate(ar):
             tempx = v[1].x
@@ -435,8 +445,28 @@ class Vector(object):
             tempm = ([[tempx, tempy, tempz], [self & tempx, self & tempy,
                 self & tempz], [Vector([ar[i]]) & tempx,
                 Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz]])
-            outvec += _det(tempm)
-        return outvec
+            outlist += _det(tempm).args
+        return Vector(outlist)
+
+
+    # We don't define _repr_png_ here because it would add a large amount of
+    # data to any notebook containing SymPy expressions, without adding
+    # anything useful to the notebook. It can still enabled manually, e.g.,
+    # for the qtconsole, with init_printing().
+    def _repr_latex_(self):
+        """
+        IPython/Jupyter LaTeX printing
+
+        To change the behavior of this (e.g., pass in some settings to LaTeX),
+        use init_printing(). init_printing() will also enable LaTeX printing
+        for built in numeric types like ints and container types that contain
+        SymPy objects, like lists and dictionaries of expressions.
+        """
+        from sympy.printing.latex import latex
+        s = latex(self, mode='plain')
+        return "$\\displaystyle %s$" % s
+
+    _repr_latex_orig = _repr_latex_
 
     _sympystr = __str__
     _sympyrepr = _sympystr
@@ -482,24 +512,30 @@ class Vector(object):
         return self | other
     outer.__doc__ = __or__.__doc__
 
-    def diff(self, wrt, otherframe):
-        """Takes the partial derivative, with respect to a value, in a frame.
-
-        Returns a Vector.
+    def diff(self, var, frame, var_in_dcm=True):
+        """Returns the partial derivative of the vector with respect to a
+        variable in the provided reference frame.
 
         Parameters
         ==========
-
-        wrt : Symbol
+        var : Symbol
             What the partial derivative is taken with respect to.
-        otherframe : ReferenceFrame
-            The ReferenceFrame that the partial derivative is taken in.
+        frame : ReferenceFrame
+            The reference frame that the partial derivative is taken in.
+        var_in_dcm : boolean
+            If true, the differentiation algorithm assumes that the variable
+            may be present in any of the direction cosine matrices that relate
+            the frame to the frames of any component of the vector. But if it
+            is known that the variable is not present in the direction cosine
+            matrices, false can be set to skip full reexpression in the desired
+            frame.
 
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols
         >>> from sympy import Symbol
+        >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.vector import Vector
         >>> Vector.simp = True
         >>> t = Symbol('t')
         >>> q1 = dynamicsymbols('q1')
@@ -507,24 +543,39 @@ class Vector(object):
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.diff(t, N)
         - q1'*A.z
+        >>> B = ReferenceFrame('B')
+        >>> u1, u2 = dynamicsymbols('u1, u2')
+        >>> v = u1 * A.x + u2 * B.y
+        >>> v.diff(u2, N, var_in_dcm=False)
+        B.y
 
         """
 
         from sympy.physics.vector.frame import _check_frame
-        wrt = sympify(wrt)
-        _check_frame(otherframe)
-        outvec = Vector(0)
-        for i, v in enumerate(self.args):
-            if v[1] == otherframe:
-                outvec += Vector([(v[0].diff(wrt), otherframe)])
+
+        var = sympify(var)
+        _check_frame(frame)
+
+        inlist = []
+
+        for vector_component in self.args:
+            measure_number = vector_component[0]
+            component_frame = vector_component[1]
+            if component_frame == frame:
+                inlist += [(measure_number.diff(var), frame)]
             else:
-                if otherframe.dcm(v[1]).diff(wrt) == zeros(3, 3):
-                    d = v[0].diff(wrt)
-                    outvec += Vector([(d, v[1])])
-                else:
-                    d = (Vector([v]).express(otherframe)).args[0][0].diff(wrt)
-                    outvec += Vector([(d, otherframe)]).express(v[1])
-        return outvec
+                # If the direction cosine matrix relating the component frame
+                # with the derivative frame does not contain the variable.
+                if not var_in_dcm or (frame.dcm(component_frame).diff(var) ==
+                                      zeros(3, 3)):
+                    inlist += [(measure_number.diff(var),
+                                        component_frame)]
+                else:  # else express in the frame
+                    reexp_vec_comp = Vector([vector_component]).express(frame)
+                    deriv = reexp_vec_comp.args[0][0].diff(var)
+                    inlist += Vector([(deriv, frame)]).express(component_frame).args
+
+        return Vector(inlist)
 
     def express(self, otherframe, variables=False):
         """
@@ -598,10 +649,10 @@ class Vector(object):
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Vector"""
-        ov = Vector(0)
-        for i, v in enumerate(self.args):
-            ov += Vector([(v[0].applyfunc(lambda x: x.doit(**hints)), v[1])])
-        return ov
+        d = {}
+        for v in self.args:
+            d[v[1]] = v[0].applyfunc(lambda x: x.doit(**hints))
+        return Vector(d)
 
     def dt(self, otherframe):
         """
@@ -622,13 +673,13 @@ class Vector(object):
 
     def simplify(self):
         """Returns a simplified Vector."""
-        outvec = Vector(0)
-        for i in self.args:
-            outvec += Vector([(i[0].simplify(), i[1])])
-        return outvec
+        d = {}
+        for v in self.args:
+            d[v[1]] = v[0].simplify()
+        return Vector(d)
 
     def subs(self, *args, **kwargs):
-        """Substituion on the Vector.
+        """Substitution on the Vector.
 
         Examples
         ========
@@ -643,10 +694,10 @@ class Vector(object):
 
         """
 
-        ov = Vector(0)
-        for i, v in enumerate(self.args):
-            ov += Vector([(v[0].subs(*args, **kwargs), v[1])])
-        return ov
+        d = {}
+        for v in self.args:
+            d[v[1]] = v[0].subs(*args, **kwargs)
+        return Vector(d)
 
     def magnitude(self):
         """Returns the magnitude (Euclidean norm) of self."""
@@ -661,10 +712,26 @@ class Vector(object):
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        ov = Vector(0)
+        d = {}
         for v in self.args:
-            ov += Vector([(v[0].applyfunc(f), v[1])])
-        return ov
+            d[v[1]] = v[0].applyfunc(f)
+        return Vector(d)
+
+    def free_symbols(self, reference_frame):
+        """
+        Returns the free symbols in the measure numbers of the vector
+        expressed in the given reference frame.
+
+        Parameter
+        =========
+
+        reference_frame : ReferenceFrame
+            The frame with respect to which the free symbols of the
+            given vector is to be determined.
+
+        """
+
+        return self.to_matrix(reference_frame).free_symbols
 
 
 class VectorTypeError(TypeError):

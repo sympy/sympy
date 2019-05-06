@@ -1,9 +1,14 @@
 from __future__ import print_function, division
 
-import sympy.polys
 from sympy import Integer
 from sympy.core.compatibility import range
-from fractions import gcd
+import sympy.polys
+
+import sys
+if sys.version_info < (3,5):
+    from fractions import gcd
+else:
+    from math import gcd
 
 
 def egyptian_fraction(r, algorithm="Greedy"):
@@ -97,9 +102,9 @@ def egyptian_fraction(r, algorithm="Greedy"):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Egyptian_fraction
+    .. [1] https://en.wikipedia.org/wiki/Egyptian_fraction
     .. [2] https://en.wikipedia.org/wiki/Greedy_algorithm_for_Egyptian_fractions
-    .. [3] http://www.ics.uci.edu/~eppstein/numth/egypt/conflict.html
+    .. [3] https://www.ics.uci.edu/~eppstein/numth/egypt/conflict.html
     .. [4] http://ami.ektf.hu/uploads/papers/finalpdf/AMI_42_from129to134.pdf
 
     """

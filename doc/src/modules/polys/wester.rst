@@ -22,7 +22,7 @@ computations were done using the following setup::
 
     >>> from sympy import *
 
-    >>> init_printing(use_unicode=True, wrap_line=False, no_global=True)
+    >>> init_printing(use_unicode=True, wrap_line=False)
 
     >>> var('x,y,z,s,c,n')
     (x, y, z, s, c, n)
@@ -225,7 +225,7 @@ Consider two univariate polynomials ``f`` and ``g``::
     >>> g = x**2 - 2
 
 We would like to reduce degrees of the numerator and the denominator of a
-rational function ``f/g``. Do do this we employ :func:`cancel` function::
+rational function ``f/g``. To do this we employ :func:`cancel` function::
 
     >>> cancel(f/g)
      3      2       2

@@ -2,20 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.densebasic import (
-    dup_strip, dmp_strip,
-    dup_convert, dmp_convert,
-    dup_degree, dmp_degree,
-    dmp_to_dict,
-    dmp_from_dict,
-    dup_LC, dmp_LC, dmp_ground_LC,
-    dup_TC, dmp_TC,
-    dmp_zero, dmp_ground,
-    dmp_zero_p,
-    dup_to_raw_dict, dup_from_raw_dict,
-    dmp_zeros
-)
-
+from sympy.core.compatibility import range
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
     dup_lshift,
@@ -30,16 +17,26 @@ from sympy.polys.densearith import (
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
 )
-
+from sympy.polys.densebasic import (
+    dup_strip, dmp_strip,
+    dup_convert, dmp_convert,
+    dup_degree, dmp_degree,
+    dmp_to_dict,
+    dmp_from_dict,
+    dup_LC, dmp_LC, dmp_ground_LC,
+    dup_TC, dmp_TC,
+    dmp_zero, dmp_ground,
+    dmp_zero_p,
+    dup_to_raw_dict, dup_from_raw_dict,
+    dmp_zeros
+)
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError
 )
-
 from sympy.utilities import variations
 
 from math import ceil as _ceil, log as _log
-from sympy.core.compatibility import range
 
 def dup_integrate(f, m, K):
     """
@@ -135,7 +132,7 @@ def dmp_integrate_in(f, m, j, u, K):
 
     """
     if j < 0 or j > u:
-        raise IndexError("0 <= j <= u expected, got %s" % (u, j))
+        raise IndexError("0 <= j <= u expected, got u = %d, j = %d" % (u, j))
 
     return _rec_integrate_in(f, m, u, 0, j, K)
 
@@ -1080,7 +1077,7 @@ def dup_decompose(f, K):
     References
     ==========
 
-    1. [Kozen89]_
+    .. [1] [Kozen89]_
 
     """
     F = []

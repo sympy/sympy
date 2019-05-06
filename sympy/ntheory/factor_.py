@@ -6,20 +6,30 @@ from __future__ import print_function, division
 import random
 import math
 
+from sympy.core import sympify
+from sympy.core.compatibility import as_int, SYMPY_INTS, range, string_types
+from sympy.core.evalf import bitcount
+from sympy.core.expr import Expr
+from sympy.core.function import Function
+from sympy.core.logic import fuzzy_and
+from sympy.core.mul import Mul
+from sympy.core.numbers import igcd, ilcm, Rational
+from sympy.core.power import integer_nthroot, Pow
+from sympy.core.singleton import S
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
-from sympy.core import sympify
-from sympy.core.evalf import bitcount
-from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import igcd, Rational
-from sympy.core.power import integer_nthroot, Pow
-from sympy.core.mul import Mul
-from sympy.core.compatibility import as_int, SYMPY_INTS, range
-from sympy.core.singleton import S
-from sympy.core.function import Function
 
-small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
-    for i in range(256)]
+
+# Note: This list should be updated whenever new Mersenne primes are found.
+# Refer: https://www.mersenne.org/
+MERSENNE_PRIME_EXPONENTS = (2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203,
+ 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049,
+ 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583,
+ 25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933)
+
+small_trailing = [0] * 256
+for j in range(1,8):
+    small_trailing[1<<j::1<<(j+1)] = [j] * (1<<(7-j))
 
 
 def smoothness(n):
@@ -28,6 +38,9 @@ def smoothness(n):
 
     The smoothness of n is the largest prime factor of n; the power-
     smoothness is the largest divisor raised to its multiplicity.
+
+    Examples
+    ========
 
     >>> from sympy.ntheory.factor_ import smoothness
     >>> smoothness(2**7*3**2)
@@ -116,7 +129,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     elif visual not in (True, False):
         visual = None
 
-    if type(n) is str:
+    if isinstance(n, string_types):
         if visual:
             return n
         d = {}
@@ -166,7 +179,7 @@ def trailing(n):
     >>> trailing(63)
     0
     """
-    n = int(n)
+    n = abs(int(n))
     if not n:
         return 0
     low_byte = n & 0xff
@@ -179,6 +192,17 @@ def trailing(n):
         if n == 1 << z:
             return z
 
+    if z < 300:
+        # fixed 8-byte reduction
+        t = 8
+        n >>= 8
+        while not n & 0xff:
+            n >>= 8
+            t += 8
+        return t + small_trailing[n & 0xff]
+
+    # binary reduction important when there might be a large
+    # number of trailing 0s
     t = 0
     p = 8
     while not n & 1:
@@ -209,25 +233,22 @@ def multiplicity(p, n):
         p, n = as_int(p), as_int(n)
     except ValueError:
         if all(isinstance(i, (SYMPY_INTS, Rational)) for i in (p, n)):
-            try:
-                p = Rational(p)
-                n = Rational(n)
-                if p.q == 1:
-                    if n.p == 1:
-                        return -multiplicity(p.p, n.q)
-                    return S.Zero
-                elif p.p == 1:
-                    return multiplicity(p.q, n.q)
-                else:
-                    like = min(
-                        multiplicity(p.p, n.p),
-                        multiplicity(p.q, n.q))
-                    cross = min(
-                        multiplicity(p.q, n.p),
-                        multiplicity(p.p, n.q))
-                    return like - cross
-            except AttributeError:
-                pass
+            p = Rational(p)
+            n = Rational(n)
+            if p.q == 1:
+                if n.p == 1:
+                    return -multiplicity(p.p, n.q)
+                return multiplicity(p.p, n.p) - multiplicity(p.p, n.q)
+            elif p.p == 1:
+                return multiplicity(p.q, n.q)
+            else:
+                like = min(
+                    multiplicity(p.p, n.p),
+                    multiplicity(p.q, n.q))
+                cross = min(
+                    multiplicity(p.q, n.p),
+                    multiplicity(p.p, n.q))
+                return like - cross
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
 
     if n == 0:
@@ -361,8 +382,8 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 if m is not False:
                     r, e = m[0], e*m[1]
             return int(r), e
-    else:
-        return False
+
+    return False
 
 
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
@@ -448,8 +469,8 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     References
     ==========
 
-    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-      A Computational Perspective", Springer, 2nd edition, 229-231
+    .. [1] Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+           A Computational Perspective", Springer, 2nd edition, 229-231
 
     """
     n = int(n)
@@ -495,7 +516,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     A search is made for factors next to even numbers having a power smoothness
     less than ``B``. Choosing a larger B increases the likelihood of finding a
     larger factor but takes longer. Whether a factor of n is found or not
-    depends on ``a`` and the power smoothness of the even mumber just less than
+    depends on ``a`` and the power smoothness of the even number just less than
     the factor p (hence the name p - 1).
 
     Although some discussion of what constitutes a good ``a`` some
@@ -536,7 +557,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         ...
         >>> set([igcd(pow(a, M, n) - 1, n) for a in range(2, 256) if
         ...      igcd(pow(a, M, n) - 1, n) != n])
-        set([1009])
+        {1009}
 
     But does aM % d for every divisor of n give 1?
 
@@ -605,10 +626,10 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     References
     ==========
 
-    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-      A Computational Perspective", Springer, 2nd edition, 236-238
-    - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html
-    - http://www.cs.toronto.edu/~yuvalf/Factorization.pdf
+    .. [1] Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+           A Computational Perspective", Springer, 2nd edition, 236-238
+    .. [2] http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html
+    .. [3] https://www.cs.toronto.edu/~yuvalf/Factorization.pdf
     """
 
     n = int(n)
@@ -796,14 +817,14 @@ def _factorint_small(factors, n, limit, fail_max):
             fails = 0
         else:
             fails += 1
-        # d = 6*(i+1) - 1
+        # d = 6*(i + 1) - 1
         d += 4
 
     return done(n, d)
 
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-              verbose=False, visual=None):
+              verbose=False, visual=None, multiple=False):
     r"""
     Given a positive integer ``n``, ``factorint(n)`` returns a dict containing
     the prime factors of ``n`` as keys and their respective multiplicities
@@ -849,6 +870,14 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     >>> factorint(3*101**7, limit=5)
     {3: 1, 101: 7}
+
+    List of Factors:
+
+    If ``multiple`` is set to ``True`` then a list containing the
+    prime factors including multiplicities is returned.
+
+    >>> factorint(24, multiple=True)
+    [2, 2, 2, 3]
 
     Visual Factorization:
 
@@ -933,6 +962,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     ``factorint`` also periodically checks if the remaining part is
     a prime number or a perfect power, and in those cases stops.
 
+    For unevaluated factorial, it uses Legendre's formula(theorem).
+
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
 
@@ -942,23 +973,31 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     smoothness, smoothness_p, divisors
 
     """
+    if multiple:
+        fac = factorint(n, limit=limit, use_trial=use_trial,
+                           use_rho=use_rho, use_pm1=use_pm1,
+                           verbose=verbose, visual=False, multiple=False)
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
+                               for p in sorted(fac)), [])
+        return factorlist
+
     factordict = {}
     if visual and not isinstance(n, Mul) and not isinstance(n, dict):
         factordict = factorint(n, limit=limit, use_trial=use_trial,
                                use_rho=use_rho, use_pm1=use_pm1,
                                verbose=verbose, visual=False)
     elif isinstance(n, Mul):
-        factordict = dict([(int(k), int(v)) for k, v in
-                           list(n.as_powers_dict().items())])
+        factordict = {int(k): int(v) for k, v in
+            n.as_powers_dict().items()}
     elif isinstance(n, dict):
         factordict = n
     if factordict and (isinstance(n, Mul) or isinstance(n, dict)):
         # check it
-        for k in list(factordict.keys()):
-            if isprime(k):
+        for key in list(factordict.keys()):
+            if isprime(key):
                 continue
-            e = factordict.pop(k)
-            d = factorint(k, limit=limit, use_trial=use_trial, use_rho=use_rho,
+            e = factordict.pop(key)
+            d = factorint(key, limit=limit, use_trial=use_trial, use_rho=use_rho,
                           use_pm1=use_pm1, verbose=verbose, visual=False)
             for k, v in d.items():
                 if k in factordict:
@@ -982,6 +1021,30 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         return factordict
 
     assert use_trial or use_rho or use_pm1
+
+    from sympy.functions.combinatorial.factorials import factorial
+    if isinstance(n, factorial):
+        x = as_int(n.args[0])
+        if x >= 20:
+            factors = {}
+            m = 2 # to initialize the if condition below
+            for p in sieve.primerange(2, x + 1):
+                if m > 1:
+                    m, q = 0, x // p
+                    while q != 0:
+                        m += q
+                        q //= p
+                factors[p] = m
+            if factors and verbose:
+                for k in sorted(factors):
+                    print(factor_msg % (k, factors[k]))
+            if verbose:
+                print(complete_msg)
+            return factors
+        else:
+            # if n < 20!, direct computation is faster
+            # since it uses a lookup table
+            n = n.func(x)
 
     n = as_int(n)
     if limit:
@@ -1067,7 +1130,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 b, fermat = integer_nthroot(b2, 2)
                 if fermat:
                     break
-                b2 += 2*a + 1  # equiv to (a+1)**2 - n
+                b2 += 2*a + 1  # equiv to (a + 1)**2 - n
                 a += 1
             if fermat:
                 if verbose:
@@ -1171,6 +1234,70 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         low, high = high, high*2
 
 
+def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
+              verbose=False, visual=None, multiple=False):
+    r"""
+    Given a Rational ``r``, ``factorrat(r)`` returns a dict containing
+    the prime factors of ``r`` as keys and their respective multiplicities
+    as values. For example:
+
+    >>> from sympy.ntheory import factorrat
+    >>> from sympy.core.symbol import S
+    >>> factorrat(S(8)/9)    # 8/9 = (2**3) * (3**-2)
+    {2: 3, 3: -2}
+    >>> factorrat(S(-1)/987)    # -1/789 = -1 * (3**-1) * (7**-1) * (47**-1)
+    {-1: 1, 3: -1, 7: -1, 47: -1}
+
+    Please see the docstring for ``factorint`` for detailed explanations
+    and examples of the following keywords:
+
+        - ``limit``: Integer limit up to which trial division is done
+        - ``use_trial``: Toggle use of trial division
+        - ``use_rho``: Toggle use of Pollard's rho method
+        - ``use_pm1``: Toggle use of Pollard's p-1 method
+        - ``verbose``: Toggle detailed printing of progress
+        - ``multiple``: Toggle returning a list of factors or dict
+        - ``visual``: Toggle product form of output
+    """
+    from collections import defaultdict
+    if multiple:
+        fac = factorrat(rat, limit=limit, use_trial=use_trial,
+                  use_rho=use_rho, use_pm1=use_pm1,
+                  verbose=verbose, visual=False, multiple=False)
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-fac[p])
+                               for p, _ in sorted(fac.items(),
+                                                        key=lambda elem: elem[0]
+                                                        if elem[1] > 0
+                                                        else 1/elem[0])), [])
+        return factorlist
+
+    f = factorint(rat.p, limit=limit, use_trial=use_trial,
+                  use_rho=use_rho, use_pm1=use_pm1,
+                  verbose=verbose).copy()
+    f = defaultdict(int, f)
+    for p, e in factorint(rat.q, limit=limit,
+                          use_trial=use_trial,
+                          use_rho=use_rho,
+                          use_pm1=use_pm1,
+                          verbose=verbose).items():
+        f[p] += -e
+
+    if len(f) > 1 and 1 in f:
+        del f[1]
+    if not visual:
+        return dict(f)
+    else:
+        if -1 in f:
+            f.pop(-1)
+            args = [S.NegativeOne]
+        else:
+            args = []
+        args.extend([Pow(*i, evaluate=False)
+                     for i in sorted(f.items())])
+        return Mul(*args, evaluate=False)
+
+
+
 def primefactors(n, limit=None, verbose=False):
     """Return a sorted list of n's prime factors, ignoring multiplicity
     and any composite factor that remains if the limit was set too low
@@ -1253,8 +1380,11 @@ def divisors(n, generator=False):
     >>> list(divisors(120, generator=True))
     [1, 2, 4, 8, 3, 6, 12, 24, 5, 10, 20, 40, 15, 30, 60, 120]
 
+    Notes
+    =====
+
     This is a slightly modified version of Tim Peters referenced at:
-    http://stackoverflow.com/questions/1010381/python-factorization
+    https://stackoverflow.com/questions/1010381/python-factorization
 
     See Also
     ========
@@ -1280,10 +1410,8 @@ def divisor_count(n, modulus=1):
     Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
     those that are divisible by ``modulus`` are counted.
 
-    References
-    ==========
-
-    - http://www.mayer.dial.pipex.com/maths/formulae.htm
+    Examples
+    ========
 
     >>> from sympy import divisor_count
     >>> divisor_count(6)
@@ -1293,6 +1421,7 @@ def divisor_count(n, modulus=1):
     ========
 
     factorint, divisors, totient
+
     """
 
     if not modulus:
@@ -1329,12 +1458,6 @@ def udivisors(n, generator=False):
     prime factors. If only the number of unitary divisors is desired use
     udivisor_count(n).
 
-    References
-    ==========
-
-    - http://en.wikipedia.org/wiki/Unitary_divisor
-    - http://mathworld.wolfram.com/UnitaryDivisor.html
-
     Examples
     ========
 
@@ -1351,6 +1474,13 @@ def udivisors(n, generator=False):
     ========
 
     primefactors, factorint, divisors, divisor_count, udivisor_count
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Unitary_divisor
+    .. [2] http://mathworld.wolfram.com/UnitaryDivisor.html
+
     """
 
     n = as_int(abs(n))
@@ -1370,10 +1500,13 @@ def udivisor_count(n):
     """
     Return the number of unitary divisors of ``n``.
 
-    References
+    Parameters
     ==========
 
-    - http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+    n : integer
+
+    Examples
+    ========
 
     >>> from sympy.ntheory.factor_ import udivisor_count
     >>> udivisor_count(120)
@@ -1383,6 +1516,12 @@ def udivisor_count(n):
     ========
 
     factorint, divisors, udivisors, divisor_count, totient
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+
     """
 
     if n == 0:
@@ -1412,11 +1551,6 @@ def antidivisors(n, generator=False):
     Antidivisors [1]_ of n are numbers that do not divide n by the largest
     possible margin.  If generator is True an unordered generator is returned.
 
-    References
-    ==========
-
-    .. [1] definition is described in http://oeis.org/A066272/a066272a.html
-
     Examples
     ========
 
@@ -1431,6 +1565,12 @@ def antidivisors(n, generator=False):
     ========
 
     primefactors, factorint, divisors, divisor_count, antidivisor_count
+
+    References
+    ==========
+
+    .. [1] definition is described in https://oeis.org/A066272/a066272a.html
+
     """
 
     n = as_int(abs(n))
@@ -1446,10 +1586,10 @@ def antidivisor_count(n):
     """
     Return the number of antidivisors [1]_ of ``n``.
 
-    References
+    Parameters
     ==========
 
-    .. [1] formula from https://oeis.org/A066272
+    n : integer
 
     Examples
     ========
@@ -1464,18 +1604,35 @@ def antidivisor_count(n):
     ========
 
     factorint, divisors, antidivisors, divisor_count, totient
+
+    References
+    ==========
+
+    .. [1] formula from https://oeis.org/A066272
+
     """
 
     n = as_int(abs(n))
     if n <= 2:
         return 0
-    return divisor_count(2*n-1) + divisor_count(2*n+1) + \
+    return divisor_count(2*n - 1) + divisor_count(2*n + 1) + \
         divisor_count(n) - divisor_count(n, 2) - 5
 
 
 class totient(Function):
-    """
+    r"""
     Calculate the Euler totient function phi(n)
+
+    ``totient(n)`` or `\phi(n)` is the number of positive integers `\leq` n
+    that are relatively prime to n.
+
+    Parameters
+    ==========
+
+    n : integer
+
+    Examples
+    ========
 
     >>> from sympy.ntheory import totient
     >>> totient(1)
@@ -1487,6 +1644,13 @@ class totient(Function):
     ========
 
     divisor_count
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler%27s_totient_function
+    .. [2] http://mathworld.wolfram.com/TotientFunction.html
+
     """
     @classmethod
     def eval(cls, n):
@@ -1499,13 +1663,64 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+        elif not isinstance(n, Expr) or (n.is_integer is False) or (n.is_positive is False):
+            raise ValueError("n must be a positive integer")
+
+    def _eval_is_integer(self):
+        return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
+
+
+class reduced_totient(Function):
+    r"""
+    Calculate the Carmichael reduced totient function lambda(n)
+
+    ``reduced_totient(n)`` or `\lambda(n)` is the smallest m > 0 such that
+    `k^m \equiv 1 \mod n` for all k relatively prime to n.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import reduced_totient
+    >>> reduced_totient(1)
+    1
+    >>> reduced_totient(8)
+    2
+    >>> reduced_totient(30)
+    4
+
+    See Also
+    ========
+
+    totient
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Carmichael_function
+    .. [2] http://mathworld.wolfram.com/CarmichaelFunction.html
+
+    """
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n < 1:
+                raise ValueError("n must be a positive integer")
+            factors = factorint(n)
+            t = 1
+            for p, k in factors.items():
+                if p == 2 and k > 2:
+                    t = ilcm(t, 2**(k - 2))
+                else:
+                    t = ilcm(t, (p - 1) * p**(k - 1))
+            return t
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
 
 
 class divisor_sigma(Function):
-    """
+    r"""
     Calculate the divisor function `\sigma_k(n)` for positive integer n
 
     ``divisor_sigma(n, k)`` is equal to ``sum([x**k for x in divisors(n)])``
@@ -1524,18 +1739,16 @@ class divisor_sigma(Function):
     Parameters
     ==========
 
-    k : power of divisors in the sum
+    n : integer
+
+    k : integer, optional
+        power of divisors in the sum
 
         for k = 0, 1:
         ``divisor_sigma(n, 0)`` is equal to ``divisor_count(n)``
         ``divisor_sigma(n, 1)`` is equal to ``sum(divisors(n))``
 
         Default for k is 1.
-
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Divisor_function
 
     Examples
     ========
@@ -1554,6 +1767,12 @@ class divisor_sigma(Function):
     ========
 
     divisor_count, totient, divisors, factorint
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Divisor_function
+
     """
 
     @classmethod
@@ -1571,8 +1790,8 @@ class divisor_sigma(Function):
 
 
 def core(n, t=2):
-    """
-    Calculate core(n,t) = `core_t(n)` of a positive integer n
+    r"""
+    Calculate core(n, t) = `core_t(n)` of a positive integer n
 
     ``core_2(n)`` is equal to the squarefree part of n
 
@@ -1589,17 +1808,15 @@ def core(n, t=2):
     Parameters
     ==========
 
-    t : core(n,t) calculates the t-th power free part of n
+    n : integer
+
+    t : integer
+        core(n, t) calculates the t-th power free part of n
 
         ``core(n, 2)`` is the squarefree part of ``n``
         ``core(n, 3)`` is the cubefree part of ``n``
 
         Default for t is 2.
-
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Square-free_integer#Squarefree_core
 
     Examples
     ========
@@ -1617,7 +1834,13 @@ def core(n, t=2):
     See Also
     ========
 
-    factorint
+    factorint, sympy.solvers.diophantine.square_factor
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Square-free_integer#Squarefree_core
+
     """
 
     n = as_int(n)
@@ -1668,7 +1891,7 @@ def digits(n, b=10):
 
 
 class udivisor_sigma(Function):
-    """
+    r"""
     Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
 
     ``udivisor_sigma(n, k)`` is equal to ``sum([x**k for x in udivisors(n)])``
@@ -1694,11 +1917,6 @@ class udivisor_sigma(Function):
 
         Default for k is 1.
 
-    References
-    ==========
-
-    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
-
     Examples
     ========
 
@@ -1717,6 +1935,12 @@ class udivisor_sigma(Function):
 
     divisor_count, totient, divisors, udivisors, udivisor_count, divisor_sigma,
     factorint
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+
     """
 
     @classmethod
@@ -1730,3 +1954,274 @@ class udivisor_sigma(Function):
                 raise ValueError("n must be a positive integer")
             else:
                 return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
+
+
+class primenu(Function):
+    r"""
+    Calculate the number of distinct prime factors for a positive integer n.
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^k p_i^{m_i},
+
+    then ``primenu(n)`` or `\nu(n)` is:
+
+    .. math ::
+        \nu(n) = k.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import primenu
+    >>> primenu(1)
+    0
+    >>> primenu(30)
+    3
+
+    See Also
+    ========
+
+    factorint
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+
+    """
+
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n <= 0:
+                raise ValueError("n must be a positive integer")
+            else:
+                return len(factorint(n).keys())
+
+
+class primeomega(Function):
+    r"""
+    Calculate the number of prime factors counting multiplicities for a
+    positive integer n.
+
+    If n's prime factorization is:
+
+    .. math ::
+        n = \prod_{i=1}^k p_i^{m_i},
+
+    then ``primeomega(n)``  or `\Omega(n)` is:
+
+    .. math ::
+        \Omega(n) = \sum_{i=1}^k m_i.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import primeomega
+    >>> primeomega(1)
+    0
+    >>> primeomega(20)
+    3
+
+    See Also
+    ========
+
+    factorint
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+
+    """
+
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n <= 0:
+                raise ValueError("n must be a positive integer")
+            else:
+                return sum(factorint(n).values())
+
+
+def mersenne_prime_exponent(nth):
+    """Returns the exponent ``i`` for the nth Mersenne prime (which
+    has the form `2^i - 1`).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import mersenne_prime_exponent
+    >>> mersenne_prime_exponent(1)
+    2
+    >>> mersenne_prime_exponent(20)
+    4423
+    """
+    n = as_int(nth)
+    if n < 1:
+        raise ValueError("nth must be a positive integer; mersenne_prime_exponent(1) == 2")
+    if n > 51:
+        raise ValueError("There are only 51 perfect numbers; nth must be less than or equal to 51")
+    return MERSENNE_PRIME_EXPONENTS[n - 1]
+
+
+def is_perfect(n):
+    """Returns True if ``n`` is a perfect number, else False.
+
+    A perfect number is equal to the sum of its positive, proper divisors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_perfect, divisors
+    >>> is_perfect(20)
+    False
+    >>> is_perfect(6)
+    True
+    >>> sum(divisors(6)[:-1])
+    6
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/PerfectNumber.html
+
+    """
+    from sympy.core.power import integer_log
+
+    r, b = integer_nthroot(1 + 8*n, 2)
+    if not b:
+        return False
+    n, x = divmod(1 + r, 4)
+    if x:
+        return False
+    e, b = integer_log(n, 2)
+    return b and (e + 1) in MERSENNE_PRIME_EXPONENTS
+
+
+def is_mersenne_prime(n):
+    """Returns True if  ``n`` is a Mersenne prime, else False.
+
+    A Mersenne prime is a prime number having the form `2^i - 1`.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_mersenne_prime
+    >>> is_mersenne_prime(6)
+    False
+    >>> is_mersenne_prime(127)
+    True
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/MersennePrime.html
+
+    """
+    from sympy.core.power import integer_log
+
+    r, b = integer_log(n + 1, 2)
+    return b and r in MERSENNE_PRIME_EXPONENTS
+
+
+def abundance(n):
+    """Returns the difference between the sum of the positive
+    proper divisors of a number and the number.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import abundance, is_perfect, is_abundant
+    >>> abundance(6)
+    0
+    >>> is_perfect(6)
+    True
+    >>> abundance(10)
+    -2
+    >>> is_abundant(10)
+    False
+    """
+    return divisor_sigma(n, 1) - 2 * n
+
+
+def is_abundant(n):
+    """Returns True if ``n`` is an abundant number, else False.
+
+    A abundant number is smaller than the sum of its positive proper divisors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_abundant
+    >>> is_abundant(20)
+    True
+    >>> is_abundant(15)
+    False
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/AbundantNumber.html
+
+    """
+    n = as_int(n)
+    if is_perfect(n):
+        return False
+    return n % 6 == 0 or bool(abundance(n) > 0)
+
+
+def is_deficient(n):
+    """Returns True if ``n`` is a deficient number, else False.
+
+    A deficient number is greater than the sum of its positive proper divisors.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_deficient
+    >>> is_deficient(20)
+    False
+    >>> is_deficient(15)
+    True
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/DeficientNumber.html
+
+    """
+    n = as_int(n)
+    if is_perfect(n):
+        return False
+    return bool(abundance(n) < 0)
+
+
+def is_amicable(m, n):
+    """Returns True if the numbers `m` and `n` are "amicable", else False.
+
+    Amicable numbers are two different numbers so related that the sum
+    of the proper divisors of each is equal to that of the other.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.factor_ import is_amicable, divisor_sigma
+    >>> is_amicable(220, 284)
+    True
+    >>> divisor_sigma(220) == divisor_sigma(284)
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Amicable_numbers
+
+    """
+    if m == n:
+        return False
+    a, b = map(lambda i: divisor_sigma(i), (m, n))
+    return a == b == (m + n)

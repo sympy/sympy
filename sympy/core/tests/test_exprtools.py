@@ -1,10 +1,10 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
-from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
+from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I, Function,
                    Interval, O, symbols, simplify, collect, Sum, Basic, Dict,
                    root, exp, cos, sin, oo, Dummy, log)
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
-                                  gcd_terms, factor_terms, factor_nc,
+                                  gcd_terms, factor_terms, factor_nc, _mask_nc,
                                   _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
@@ -127,6 +127,10 @@ def test_Factors():
     assert Factors(n).div(x**(y + 4)) == \
         (Factors({x: x}), Factors({x: y + 1}))
 
+    assert Factors(3 * x / 2) == Factors({3: 1, 2: -1, x: 1})
+    assert Factors(x * x / y) == Factors({x: 2, y: -1})
+    assert Factors(27 * x / y**9) == Factors({27: 1, x: 1, y: -9})
+
 
 def test_Term():
     a = Term(4*x*y**2/z/t**3)
@@ -215,6 +219,15 @@ def test_gcd_terms():
 
     eq = x/(x + 1/x)
     assert gcd_terms(eq, fraction=False) == eq
+    eq = x/2/y + 1/x/y
+    assert gcd_terms(eq, fraction=True, clear=True) == \
+        (x**2 + 2)/(2*x*y)
+    assert gcd_terms(eq, fraction=True, clear=False) == \
+        (x**2/2 + 1)/(x*y)
+    assert gcd_terms(eq, fraction=False, clear=True) == \
+        (x + 2/x)/(2*y)
+    assert gcd_terms(eq, fraction=False, clear=False) == \
+        (x/2 + 1/x)/y
 
 
 def test_factor_terms():
@@ -237,6 +250,12 @@ def test_factor_terms():
         x*(a + 2*b)*(y + 1)
     i = Integral(x, (x, 0, oo))
     assert factor_terms(i) == i
+
+    assert factor_terms(x/2 + y) == x/2 + y
+    # fraction doesn't apply to integer denominators
+    assert factor_terms(x/2 + y, fraction=True) == x/2 + y
+    # clear *does* apply to the integer denominators
+    assert factor_terms(x/2 + y, clear=True) == Mul(S.Half, x + 2*y, evaluate=False)
 
     # check radical extraction
     eq = sqrt(2) + sqrt(10)
@@ -272,6 +291,12 @@ def test_factor_terms():
     assert factor_terms(e) == exp(Mul(-1, x + 2, evaluate=False)) + x
     assert factor_terms(e, sign=False) == e
     assert factor_terms(exp(-4*x - 2) - x) == -x + exp(Mul(-2, 2*x + 1, evaluate=False))
+
+    # sum/integral tests
+    for F in (Sum, Integral):
+        assert factor_terms(F(x, (y, 1, 10))) == x * F(1, (y, 1, 10))
+        assert factor_terms(F(x, (y, 1, 10)) + x) == x * (1 + F(1, (y, 1, 10)))
+        assert factor_terms(F(x*y + x*y**2, (y, 1, 10))) == x*F(y*(y + 1), (y, 1, 10))
 
 
 def test_xreplace():
@@ -356,6 +381,13 @@ def test_issue_7903():
     t = exp(I*cos(a)) + exp(-I*sin(a))
     assert t.simplify()
 
+def test_issue_8263():
+    F, G = symbols('F, G', commutative=False, cls=Function)
+    x, y = symbols('x, y')
+    expr, dummies, _ = _mask_nc(F(x)*G(y) - G(y)*F(x))
+    for v in dummies.values():
+        assert not v.is_commutative
+    assert not expr.is_zero
 
 def test_monotonic_sign():
     F = _monotonic_sign
@@ -364,8 +396,11 @@ def test_monotonic_sign():
     assert F(-x) is None
     assert F(Dummy(prime=True)) == 2
     assert F(Dummy(prime=True, odd=True)) == 3
+    assert F(Dummy(composite=True)) == 4
+    assert F(Dummy(composite=True, odd=True)) == 9
     assert F(Dummy(positive=True, integer=True)) == 1
     assert F(Dummy(positive=True, even=True)) == 2
+    assert F(Dummy(positive=True, even=True, prime=False)) == 4
     assert F(Dummy(negative=True, integer=True)) == -1
     assert F(Dummy(negative=True, even=True)) == -2
     assert F(Dummy(zero=True)) == 0

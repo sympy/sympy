@@ -2,10 +2,9 @@
 
 from __future__ import print_function, division
 
+from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
-from sympy.polys.domains.characteristiczero import CharacteristicZero
-
 from sympy.utilities import public
 
 @public
@@ -21,7 +20,7 @@ class RationalField(Field, CharacteristicZero, SimpleDomain):
     has_assoc_Field = True
 
     def algebraic_field(self, *extension):
-        r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \dots)`. """
+        r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
         from sympy.polys.domains import AlgebraicField
         return AlgebraicField(self, *extension)
 

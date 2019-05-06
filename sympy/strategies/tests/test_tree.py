@@ -60,10 +60,10 @@ def test_allresults():
     double = lambda x: x*2
     square = lambda x: x**2
 
-    assert set(allresults(inc)(3)) == set([inc(3)])
-    assert set(allresults([inc, dec])(3)) == set([2, 4])
-    assert set(allresults((inc, dec))(3)) == set([3])
-    assert set(allresults([inc, (dec, double)])(4)) == set([5, 6])
+    assert set(allresults(inc)(3)) == {inc(3)}
+    assert set(allresults([inc, dec])(3)) == {2, 4}
+    assert set(allresults((inc, dec))(3)) == {3}
+    assert set(allresults([inc, (dec, double)])(4)) == {5, 6}
 
 def test_brute():
     inc = lambda x: x+1

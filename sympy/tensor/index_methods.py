@@ -12,42 +12,62 @@
 
 from __future__ import print_function, division
 
+from sympy.core.compatibility import reduce
 from sympy.core.function import Function
 from sympy.functions import exp, Piecewise
 from sympy.tensor.indexed import Idx, Indexed
+from sympy.utilities import sift
 
-
-from sympy.core.compatibility import reduce
-
+from collections import OrderedDict
 
 class IndexConformanceException(Exception):
     pass
 
+def _unique_and_repeated(inds):
+    """
+    Returns the unique and repeated indices. Also note, from the examples given below
+    that the order of indices is maintained as given in the input.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.index_methods import _unique_and_repeated
+    >>> _unique_and_repeated([2, 3, 1, 3, 0, 4, 0])
+    ([2, 1, 4], [3, 0])
+    """
+    uniq = OrderedDict()
+    for i in inds:
+        if i in uniq:
+            uniq[i] = 0
+        else:
+            uniq[i] = 1
+    return sift(uniq, lambda x: uniq[x], binary=True)
 
 def _remove_repeated(inds):
-    """Removes repeated objects from sequences
+    """
+    Removes repeated objects from sequences
 
     Returns a set of the unique objects and a tuple of all that have been
     removed.
 
+    Examples
+    ========
+
     >>> from sympy.tensor.index_methods import _remove_repeated
     >>> l1 = [1, 2, 3, 2]
     >>> _remove_repeated(l1)
-    (set([1, 3]), (2,))
+    ({1, 3}, (2,))
 
     """
-    sum_index = {}
-    for i in inds:
-        if i in sum_index:
-            sum_index[i] += 1
-        else:
-            sum_index[i] = 0
-    inds = [x for x in inds if not sum_index[x]]
-    return set(inds), tuple([ i for i in sum_index if sum_index[i] ])
+    u, r = _unique_and_repeated(inds)
+    return set(u), tuple(r)
 
 
 def _get_indices_Mul(expr, return_dummies=False):
     """Determine the outer indices of a Mul object.
+
+    Examples
+    ========
 
     >>> from sympy.tensor.index_methods import _get_indices_Mul
     >>> from sympy.tensor.indexed import IndexedBase, Idx
@@ -55,9 +75,9 @@ def _get_indices_Mul(expr, return_dummies=False):
     >>> x = IndexedBase('x')
     >>> y = IndexedBase('y')
     >>> _get_indices_Mul(x[i, k]*y[j, k])
-    (set([i, j]), {})
+    ({i, j}, {})
     >>> _get_indices_Mul(x[i, k]*y[j, k], return_dummies=True)
-    (set([i, j]), {}, (k,))
+    ({i, j}, {}, (k,))
 
     """
 
@@ -106,17 +126,20 @@ def _get_indices_Pow(expr):
     contractable with its own base.  Note however, that indices in the same
     exponent can be contracted with each other.
 
+    Examples
+    ========
+
     >>> from sympy.tensor.index_methods import _get_indices_Pow
     >>> from sympy import Pow, exp, IndexedBase, Idx
     >>> A = IndexedBase('A')
     >>> x = IndexedBase('x')
     >>> i, j, k = map(Idx, ['i', 'j', 'k'])
     >>> _get_indices_Pow(exp(A[i, j]*x[j]))
-    (set([i]), {})
+    ({i}, {})
     >>> _get_indices_Pow(Pow(x[i], x[i]))
-    (set([i]), {})
+    ({i}, {})
     >>> _get_indices_Pow(Pow(A[i, j]*x[j], x[i]))
-    (set([i]), {})
+    ({i}, {})
 
     """
     base, exp = expr.as_base_exp()
@@ -145,13 +168,16 @@ def _get_indices_Add(expr):
 
     FIXME: Add support for Numpy broadcasting
 
+    Examples
+    ========
+
     >>> from sympy.tensor.index_methods import _get_indices_Add
     >>> from sympy.tensor.indexed import IndexedBase, Idx
     >>> i, j, k = map(Idx, ['i', 'j', 'k'])
     >>> x = IndexedBase('x')
     >>> y = IndexedBase('y')
     >>> _get_indices_Add(x[i] + x[k]*y[i, k])
-    (set([i]), {})
+    ({i}, {})
 
     """
 
@@ -200,7 +226,7 @@ def get_indices(expr):
     outer indices.  Else an IndexConformanceException is raised.
 
     >>> get_indices(x[i] + A[i, j]*y[j])
-    (set([i]), {})
+    ({i}, {})
 
     :Exceptions:
 
@@ -216,7 +242,7 @@ def get_indices(expr):
        summed first, so that the following expression is handled gracefully:
 
        >>> get_indices((x[i] + A[i, j]*y[j])*x[j])
-       (set([i, j]), {})
+       ({i, j}, {})
 
        This is correct and may appear convenient, but you need to be careful
        with this as SymPy will happily .expand() the product, if requested.  The
@@ -235,10 +261,11 @@ def get_indices(expr):
         return inds, {}
     elif expr is None:
         return set(), {}
+    elif isinstance(expr, Idx):
+        return {expr}, {}
     elif expr.is_Atom:
         return set(), {}
-    elif isinstance(expr, Idx):
-        return set([expr]), {}
+
 
     # recurse via specialized functions
     else:
@@ -274,7 +301,7 @@ def get_contraction_structure(expr):
 
     By *dummy* we mean indices that are summation indices.
 
-    The stucture of the expression is determined and described as follows:
+    The structure of the expression is determined and described as follows:
 
     1) A conforming summation of Indexed objects is described with a dict where
        the keys are summation indices and the corresponding values are sets
@@ -288,7 +315,7 @@ def get_contraction_structure(expr):
        itself will be stored as a key in the dict.  For that key, the
        corresponding value is a list of dicts, each of which is the result of a
        recursive call to get_contraction_structure().  The list contains only
-       dicts for the non-trivial deeper contractions, ommitting dicts with None
+       dicts for the non-trivial deeper contractions, omitting dicts with None
        as the one and only key.
 
     .. Note:: The presence of expressions among the dictinary keys indicates
@@ -307,9 +334,9 @@ def get_contraction_structure(expr):
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, k, l = map(Idx, ['i', 'j', 'k', 'l'])
     >>> get_contraction_structure(x[i]*y[i] + A[j, j])
-    {(i,): set([x[i]*y[i]]), (j,): set([A[j, j]])}
+    {(i,): {x[i]*y[i]}, (j,): {A[j, j]}}
     >>> get_contraction_structure(x[i]*y[j])
-    {None: set([x[i]*y[j]])}
+    {None: {x[i]*y[j]}}
 
     A multiplication of contracted factors results in nested dicts representing
     the internal contractions.
@@ -321,12 +348,12 @@ def get_contraction_structure(expr):
     In this case, the product has no contractions:
 
     >>> d[None]
-    set([x[i, i]*y[j, j]])
+    {x[i, i]*y[j, j]}
 
     Factors are contracted "first":
 
     >>> sorted(d[x[i, i]*y[j, j]], key=default_sort_key)
-    [{(i,): set([x[i, i]])}, {(j,): set([y[j, j]])}]
+    [{(i,): {x[i, i]}}, {(j,): {y[j, j]}}]
 
     A parenthesized Add object is also returned as a nested dictionary.  The
     term containing the parenthesis is a Mul with a contraction among the
@@ -335,23 +362,23 @@ def get_contraction_structure(expr):
 
     >>> d = get_contraction_structure(x[i]*(y[i] + A[i, j]*x[j]))
     >>> sorted(d.keys(), key=default_sort_key)
-    [(x[j]*A[i, j] + y[i])*x[i], (i,)]
+    [(A[i, j]*x[j] + y[i])*x[i], (i,)]
     >>> d[(i,)]
-    set([(x[j]*A[i, j] + y[i])*x[i]])
+    {(A[i, j]*x[j] + y[i])*x[i]}
     >>> d[x[i]*(A[i, j]*x[j] + y[i])]
-    [{None: set([y[i]]), (j,): set([x[j]*A[i, j]])}]
+    [{None: {y[i]}, (j,): {A[i, j]*x[j]}}]
 
     Powers with contractions in either base or exponent will also be found as
     keys in the dictionary, mapping to a list of results from recursive calls:
 
     >>> d = get_contraction_structure(A[j, j]**A[i, i])
     >>> d[None]
-    set([A[j, j]**A[i, i]])
+    {A[j, j]**A[i, i]}
     >>> nested_contractions = d[A[j, j]**A[i, i]]
     >>> nested_contractions[0]
-    {(j,): set([A[j, j]])}
+    {(j,): {A[j, j]}}
     >>> nested_contractions[1]
-    {(i,): set([A[i, i]])}
+    {(i,): {A[i, i]}}
 
     The description of the contraction structure may appear complicated when
     represented with a string in the above examples, but it is easy to iterate
@@ -373,12 +400,12 @@ def get_contraction_structure(expr):
 
     if isinstance(expr, Indexed):
         junk, key = _remove_repeated(expr.indices)
-        return {key or None: set([expr])}
+        return {key or None: {expr}}
     elif expr.is_Atom:
-        return {None: set([expr])}
+        return {None: {expr}}
     elif expr.is_Mul:
         junk, junk, key = _get_indices_Mul(expr, return_dummies=True)
-        result = {key or None: set([expr])}
+        result = {key or None: {expr}}
         # recurse on every factor
         nested = []
         for fac in expr.args:
@@ -399,7 +426,7 @@ def get_contraction_structure(expr):
         for d in dbase, dexp:
             if not (None in d and len(d) == 1):
                 dicts.append(d)
-        result = {None: set([expr])}
+        result = {None: {expr}}
         if dicts:
             result[expr] = dicts
         return result
@@ -431,13 +458,13 @@ def get_contraction_structure(expr):
             deep = get_contraction_structure(arg)
             if not (None in deep and len(deep) == 1):
                 deeplist.append(deep)
-        d = {None: set([expr])}
+        d = {None: {expr}}
         if deeplist:
             d[expr] = deeplist
         return d
 
     # this test is expensive, so it should be at the end
     elif not expr.has(Indexed):
-        return {None: set([expr])}
+        return {None: {expr}}
     raise NotImplementedError(
         "FIXME: No specialized handling of type %s" % type(expr))

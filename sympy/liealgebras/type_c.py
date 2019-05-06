@@ -1,6 +1,6 @@
 from .cartan_type import Standard_Cartan
 from sympy.core.compatibility import range
-from sympy.matrices import eye
+from sympy.core.backend import eye
 
 class TypeC(Standard_Cartan):
 
@@ -25,7 +25,7 @@ class TypeC(Standard_Cartan):
         return n
 
     def basic_root(self, i, j):
-        """Generate roots with 1 in ith position and a -1 in jth postion
+        """Generate roots with 1 in ith position and a -1 in jth position
         """
         n = self.n
         root = [0]*n

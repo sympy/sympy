@@ -1,19 +1,22 @@
-from sympy.vector.coordsysrect import CoordSysCartesian
+from sympy.utilities.pytest import raises, warns_deprecated_sympy
+from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
 from sympy.vector.scalar import BaseScalar
-from sympy import sin, cos, pi, ImmutableMatrix as Matrix, \
-     symbols, simplify, zeros
+from sympy import sin, sinh, cos, cosh, sqrt, pi, ImmutableMatrix as Matrix, \
+     symbols, simplify, zeros, expand, acos, atan2
 from sympy.vector.functions import express
 from sympy.vector.point import Point
 from sympy.vector.vector import Vector
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 
+
+x, y, z = symbols('x y z')
 a, b, c, q = symbols('a b c q')
 q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
 
 
 def test_func_args():
-    A = CoordSysCartesian('A')
+    A = CoordSys3D('A')
     assert A.x.func(*A.x.args) == A.x
     expr = 3*A.x + 4*A.y
     assert expr.func(*expr.args) == expr
@@ -24,15 +27,15 @@ def test_func_args():
 
 
 def test_coordsyscartesian_equivalence():
-    A = CoordSysCartesian('A')
-    A1 = CoordSysCartesian('A')
+    A = CoordSys3D('A')
+    A1 = CoordSys3D('A')
     assert A1 == A
-    B = CoordSysCartesian('B')
+    B = CoordSys3D('B')
     assert A != B
 
 
 def test_orienters():
-    A = CoordSysCartesian('A')
+    A = CoordSys3D('A')
     axis_orienter = AxisOrienter(a, A.k)
     body_orienter = BodyOrienter(a, b, c, '123')
     space_orienter = SpaceOrienter(a, b, c, '123')
@@ -68,16 +71,19 @@ def test_coordinate_vars():
     Tests the coordinate variables functionality with respect to
     reorientation of coordinate systems.
     """
-    A = CoordSysCartesian('A')
-    assert BaseScalar('Ax', 0, A, ' ', ' ') == A.x
-    assert BaseScalar('Ay', 1, A, ' ', ' ') == A.y
-    assert BaseScalar('Az', 2, A, ' ', ' ') == A.z
-    assert BaseScalar('Ax', 0, A, ' ', ' ').__hash__() == A.x.__hash__()
+    A = CoordSys3D('A')
+    # Note that the name given on the lhs is different from A.x._name
+    assert BaseScalar(0, A, 'A_x', r'\mathbf{{x}_{A}}') == A.x
+    assert BaseScalar(1, A, 'A_y', r'\mathbf{{y}_{A}}') == A.y
+    assert BaseScalar(2, A, 'A_z', r'\mathbf{{z}_{A}}') == A.z
+    assert BaseScalar(0, A, 'A_x', r'\mathbf{{x}_{A}}').__hash__() == A.x.__hash__()
     assert isinstance(A.x, BaseScalar) and \
            isinstance(A.y, BaseScalar) and \
            isinstance(A.z, BaseScalar)
+    assert A.x*A.y == A.y*A.x
     assert A.scalar_map(A) == {A.x: A.x, A.y: A.y, A.z: A.z}
     assert A.x.system == A
+    assert A.x.diff(A.x) == 1
     B = A.orient_new_axis('B', q, A.k)
     assert B.scalar_map(A) == {B.z: A.z, B.y: -A.x*sin(q) + A.y*cos(q),
                                  B.x: A.x*cos(q) + A.y*sin(q)}
@@ -86,8 +92,8 @@ def test_coordinate_vars():
     assert express(B.x, A, variables=True) == A.x*cos(q) + A.y*sin(q)
     assert express(B.y, A, variables=True) == -A.x*sin(q) + A.y*cos(q)
     assert express(B.z, A, variables=True) == A.z
-    assert express(B.x*B.y*B.z, A, variables=True) == \
-           A.z*(-A.x*sin(q) + A.y*cos(q))*(A.x*cos(q) + A.y*sin(q))
+    assert expand(express(B.x*B.y*B.z, A, variables=True)) == \
+           expand(A.z*(-A.x*sin(q) + A.y*cos(q))*(A.x*cos(q) + A.y*sin(q)))
     assert express(B.x*B.i + B.y*B.j + B.z*B.k, A) == \
            (B.x*cos(q) - B.y*sin(q))*A.i + (B.x*sin(q) + \
            B.y*cos(q))*A.j + B.z*A.k
@@ -105,13 +111,13 @@ def test_coordinate_vars():
            {N.x: A.x, N.z: A.z, N.y: A.y}
     C = A.orient_new_axis('C', q, A.i + A.j + A.k)
     mapping = A.scalar_map(C)
-    assert mapping[A.x] == (C.x*(2*cos(q) + 1)/3 +
+    assert mapping[A.x].equals(C.x*(2*cos(q) + 1)/3 +
                             C.y*(-2*sin(q + pi/6) + 1)/3 +
                             C.z*(-2*cos(q + pi/3) + 1)/3)
-    assert mapping[A.y] == (C.x*(-2*cos(q + pi/3) + 1)/3 +
+    assert mapping[A.y].equals(C.x*(-2*cos(q + pi/3) + 1)/3 +
                             C.y*(2*cos(q) + 1)/3 +
                             C.z*(-2*sin(q + pi/6) + 1)/3)
-    assert mapping[A.z] == (C.x*(-2*sin(q + pi/6) + 1)/3 +
+    assert mapping[A.z].equals(C.x*(-2*sin(q + pi/6) + 1)/3 +
                             C.y*(-2*cos(q + pi/3) + 1)/3 +
                             C.z*(2*cos(q) + 1)/3)
     D = A.locate_new('D', a*A.i + b*A.j + c*A.k)
@@ -128,7 +134,7 @@ def test_coordinate_vars():
 
 
 def test_rotation_matrix():
-    N = CoordSysCartesian('N')
+    N = CoordSys3D('N')
     A = N.orient_new_axis('A', q1, N.k)
     B = A.orient_new_axis('B', q2, A.i)
     C = B.orient_new_axis('C', q3, B.j)
@@ -177,23 +183,23 @@ def test_rotation_matrix():
                 sin(q2), -sin(q1)*cos(q2), cos(q1)*cos(q2)]])
 
 
-def test_vector():
+def test_vector_with_orientation():
     """
     Tests the effects of orientation of coordinate systems on
     basic vector operations.
     """
-    N = CoordSysCartesian('N')
+    N = CoordSys3D('N')
     A = N.orient_new_axis('A', q1, N.k)
     B = A.orient_new_axis('B', q2, A.i)
     C = B.orient_new_axis('C', q3, B.j)
 
-    #Test to_matrix
+    # Test to_matrix
     v1 = a*N.i + b*N.j + c*N.k
     assert v1.to_matrix(A) == Matrix([[ a*cos(q1) + b*sin(q1)],
                                       [-a*sin(q1) + b*cos(q1)],
                                       [                     c]])
 
-    #Test dot
+    # Test dot
     assert N.i.dot(A.i) == cos(q1)
     assert N.i.dot(A.j) == -sin(q1)
     assert N.i.dot(A.k) == 0
@@ -217,7 +223,7 @@ def test_vector():
     assert A.k.dot(C.j) == sin(q2)
     assert A.k.dot(C.k) == cos(q2)*cos(q3)
 
-    #Test cross
+    # Test cross
     assert N.i.cross(A.i) == sin(q1)*A.k
     assert N.i.cross(A.j) == cos(q1)*A.k
     assert N.i.cross(A.k) == -sin(q1)*A.i - cos(q1)*A.j
@@ -241,8 +247,9 @@ def test_vector():
     assert C.j.cross(A.i) == (sin(q2))*A.j + (-cos(q2))*A.k
     assert express(C.k.cross(A.i), C).trigsimp() == cos(q3)*C.j
 
+
 def test_orient_new_methods():
-    N = CoordSysCartesian('N')
+    N = CoordSys3D('N')
     orienter1 = AxisOrienter(q4, N.j)
     orienter2 = SpaceOrienter(q1, q2, q3, '123')
     orienter3 = QuaternionOrienter(q1, q2, q3, q4)
@@ -261,7 +268,7 @@ def test_locatenew_point():
     """
     Tests Point class, and locate_new method in CoordSysCartesian.
     """
-    A = CoordSysCartesian('A')
+    A = CoordSys3D('A')
     assert isinstance(A.origin, Point)
     v = a*A.i + b*A.j + c*A.k
     C = A.locate_new('C', v)
@@ -284,8 +291,172 @@ def test_locatenew_point():
     assert p2.express_coordinates(C) == (-2*a + 1, -2*b, -2*c)
 
 
+def test_create_new():
+    a = CoordSys3D('a')
+    c = a.create_new('c', transformation='spherical')
+    assert c._parent == a
+    assert c.transformation_to_parent() == \
+           (c.r*sin(c.theta)*cos(c.phi), c.r*sin(c.theta)*sin(c.phi), c.r*cos(c.theta))
+    assert c.transformation_from_parent() == \
+           (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
+
+
 def test_evalf():
-    A = CoordSysCartesian('A')
+    A = CoordSys3D('A')
     v = 3*A.i + 4*A.j + a*A.k
     assert v.n() == v.evalf()
     assert v.evalf(subs={a:1}) == v.subs(a, 1).evalf()
+
+
+def test_lame_coefficients():
+    a = CoordSys3D('a', 'spherical')
+    assert a.lame_coefficients() == (1, a.r, sin(a.theta)*a.r)
+    a = CoordSys3D('a')
+    assert a.lame_coefficients() == (1, 1, 1)
+    a = CoordSys3D('a', 'cartesian')
+    assert a.lame_coefficients() == (1, 1, 1)
+    a = CoordSys3D('a', 'cylindrical')
+    assert a.lame_coefficients() == (1, a.r, 1)
+
+
+def test_transformation_equations():
+
+    x, y, z = symbols('x y z')
+    # Str
+    a = CoordSys3D('a', transformation='spherical',
+                   variable_names=["r", "theta", "phi"])
+    r, theta, phi = a.base_scalars()
+
+    assert r == a.r
+    assert theta == a.theta
+    assert phi == a.phi
+
+    raises(AttributeError, lambda: a.x)
+    raises(AttributeError, lambda: a.y)
+    raises(AttributeError, lambda: a.z)
+
+    assert a.transformation_to_parent() == (
+        r*sin(theta)*cos(phi),
+        r*sin(theta)*sin(phi),
+        r*cos(theta)
+    )
+    assert a.lame_coefficients() == (1, r, r*sin(theta))
+    assert a.transformation_from_parent_function()(x, y, z) == (
+        sqrt(x ** 2 + y ** 2 + z ** 2),
+        acos((z) / sqrt(x**2 + y**2 + z**2)),
+        atan2(y, x)
+    )
+    a = CoordSys3D('a', transformation='cylindrical',
+                   variable_names=["r", "theta", "z"])
+    r, theta, z = a.base_scalars()
+    assert a.transformation_to_parent() == (
+        r*cos(theta),
+        r*sin(theta),
+        z
+    )
+    assert a.lame_coefficients() == (1, a.r, 1)
+    assert a.transformation_from_parent_function()(x, y, z) == (sqrt(x**2 + y**2),
+                            atan2(y, x), z)
+
+    a = CoordSys3D('a', 'cartesian')
+    assert a.transformation_to_parent() == (a.x, a.y, a.z)
+    assert a.lame_coefficients() == (1, 1, 1)
+    assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
+
+    # Variables and expressions
+
+    # Cartesian with equation tuple:
+    x, y, z = symbols('x y z')
+    a = CoordSys3D('a', ((x, y, z), (x, y, z)))
+    a._calculate_inv_trans_equations()
+    assert a.transformation_to_parent() == (a.x1, a.x2, a.x3)
+    assert a.lame_coefficients() == (1, 1, 1)
+    assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
+    r, theta, z = symbols("r theta z")
+
+    # Cylindrical with equation tuple:
+    a = CoordSys3D('a', [(r, theta, z), (r*cos(theta), r*sin(theta), z)],
+                   variable_names=["r", "theta", "z"])
+    r, theta, z = a.base_scalars()
+    assert a.transformation_to_parent() == (
+        r*cos(theta), r*sin(theta), z
+    )
+    assert a.lame_coefficients() == (
+        sqrt(sin(theta)**2 + cos(theta)**2),
+        sqrt(r**2*sin(theta)**2 + r**2*cos(theta)**2),
+        1
+    )  # ==> this should simplify to (1, r, 1), tests are too slow with `simplify`.
+
+    # Definitions with `lambda`:
+
+    # Cartesian with `lambda`
+    a = CoordSys3D('a', lambda x, y, z: (x, y, z))
+    assert a.transformation_to_parent() == (a.x1, a.x2, a.x3)
+    assert a.lame_coefficients() == (1, 1, 1)
+    a._calculate_inv_trans_equations()
+    assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
+
+    # Spherical with `lambda`
+    a = CoordSys3D('a', lambda r, theta, phi: (r*sin(theta)*cos(phi), r*sin(theta)*sin(phi), r*cos(theta)),
+                   variable_names=["r", "theta", "phi"])
+    r, theta, phi = a.base_scalars()
+    assert a.transformation_to_parent() == (
+        r*sin(theta)*cos(phi), r*sin(phi)*sin(theta), r*cos(theta)
+    )
+    assert a.lame_coefficients() == (
+        sqrt(sin(phi)**2*sin(theta)**2 + sin(theta)**2*cos(phi)**2 + cos(theta)**2),
+        sqrt(r**2*sin(phi)**2*cos(theta)**2 + r**2*sin(theta)**2 + r**2*cos(phi)**2*cos(theta)**2),
+        sqrt(r**2*sin(phi)**2*sin(theta)**2 + r**2*sin(theta)**2*cos(phi)**2)
+    )  # ==> this should simplify to (1, r, sin(theta)*r), `simplify` is too slow.
+
+    # Cylindrical with `lambda`
+    a = CoordSys3D('a', lambda r, theta, z:
+        (r*cos(theta), r*sin(theta), z),
+        variable_names=["r", "theta", "z"]
+    )
+    r, theta, z = a.base_scalars()
+    assert a.transformation_to_parent() == (r*cos(theta), r*sin(theta), z)
+    assert a.lame_coefficients() == (
+        sqrt(sin(theta)**2 + cos(theta)**2),
+        sqrt(r**2*sin(theta)**2 + r**2*cos(theta)**2),
+        1
+    )  # ==> this should simplify to (1, a.x, 1)
+
+    raises(TypeError, lambda: CoordSys3D('a', transformation={
+        x: x*sin(y)*cos(z), y:x*sin(y)*sin(z), z:  x*cos(y)}))
+
+
+def test_check_orthogonality():
+    x, y, z = symbols('x y z')
+    u,v = symbols('u, v')
+    a = CoordSys3D('a', transformation=((x, y, z), (x*sin(y)*cos(z), x*sin(y)*sin(z), x*cos(y))))
+    assert a._check_orthogonality(a._transformation) is True
+    a = CoordSys3D('a', transformation=((x, y, z), (x * cos(y), x * sin(y), z)))
+    assert a._check_orthogonality(a._transformation) is True
+    a = CoordSys3D('a', transformation=((u, v, z), (cosh(u) * cos(v), sinh(u) * sin(v), z)))
+    assert a._check_orthogonality(a._transformation) is True
+
+    raises(ValueError, lambda: CoordSys3D('a', transformation=((x, x, z), (x, y, z))))
+    raises(ValueError, lambda: CoordSys3D('a', transformation=(
+        (x, y, z), (x*sin(y/2)*cos(z), x*sin(y)*sin(z), x*cos(y)))))
+
+
+def test_coordsys3d():
+    with warns_deprecated_sympy():
+        assert CoordSysCartesian("C") == CoordSys3D("C")
+
+
+def test_rotation_trans_equations():
+    a = CoordSys3D('a')
+    from sympy import symbols
+    q0 = symbols('q0')
+    assert a._rotation_trans_equations(a._parent_rotation_matrix, a.base_scalars()) == (a.x, a.y, a.z)
+    assert a._rotation_trans_equations(a._inverse_rotation_matrix(), a.base_scalars()) == (a.x, a.y, a.z)
+    b = a.orient_new_axis('b', 0, -a.k)
+    assert b._rotation_trans_equations(b._parent_rotation_matrix, b.base_scalars()) == (b.x, b.y, b.z)
+    assert b._rotation_trans_equations(b._inverse_rotation_matrix(), b.base_scalars()) == (b.x, b.y, b.z)
+    c = a.orient_new_axis('c', q0, -a.k)
+    assert c._rotation_trans_equations(c._parent_rotation_matrix, c.base_scalars()) == \
+           (-sin(q0) * c.y + cos(q0) * c.x, sin(q0) * c.x + cos(q0) * c.y, c.z)
+    assert c._rotation_trans_equations(c._inverse_rotation_matrix(), c.base_scalars()) == \
+           (sin(q0) * c.y + cos(q0) * c.x, -sin(q0) * c.x + cos(q0) * c.y, c.z)

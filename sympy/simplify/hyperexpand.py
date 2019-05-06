@@ -64,22 +64,22 @@ from itertools import product
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
     EulerGamma, oo, zoo, expand_func, Add, nan, Expr)
-from sympy.core.mod import Mod
 from sympy.core.compatibility import default_sort_key, range
-from sympy.utilities.iterables import sift
+from sympy.core.mod import Mod
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
         sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
         rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
+from sympy.functions.elementary.complexes import polarify, unpolarify
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
         HyperRep_cosasin, HyperRep_sinasin, meijerg)
-from sympy.simplify import simplify
-from sympy.functions.elementary.complexes import polarify, unpolarify
-from sympy.simplify.powsimp import powdenest
 from sympy.polys import poly, Poly
 from sympy.series import residue
+from sympy.simplify import simplify
+from sympy.simplify.powsimp import powdenest
+from sympy.utilities.iterables import sift
 
 # function to define "buckets"
 def _mod1(x):
@@ -462,6 +462,8 @@ def make_simp(z):
     def simp(expr):
         """ Efficiently simplify the rational function ``expr``. """
         numer, denom = expr.as_numer_denom()
+        numer = numer.expand()
+        # denom = denom.expand()  # is this needed?
         c, numer, denom = poly(numer, z).cancel(poly(denom, z))
         return c * numer.as_expr() / denom.as_expr()
 
@@ -522,6 +524,9 @@ class Hyper_Function(Expr):
 
         If the index pair contains parameters, then this is not truly an
         invariant, since the parameters cannot be sorted uniquely mod1.
+
+        Examples
+        ========
 
         >>> from sympy.simplify.hyperexpand import Hyper_Function
         >>> from sympy import S
@@ -672,6 +677,9 @@ class Formula(object):
     - func, the function
     - B, C, M (see _compute_basis)
 
+    Examples
+    ========
+
     >>> from sympy.abc import a, b, z
     >>> from sympy.simplify.hyperexpand import Formula, Hyper_Function
     >>> func = Hyper_Function((a/2, a/3 + b, (1+a)/2), (a, b, (a+b)/7))
@@ -819,6 +827,9 @@ class FormulaCollection(object):
         Given the suitable target ``func``, try to find an origin in our
         knowledge base.
 
+        Examples
+        ========
+
         >>> from sympy.simplify.hyperexpand import (FormulaCollection,
         ...     Hyper_Function)
         >>> f = FormulaCollection()
@@ -861,8 +872,8 @@ class FormulaCollection(object):
                     f.C.subs(repl), f.M.subs(repl))
             if not any(e.has(S.NaN, oo, -oo, zoo) for e in [f2.B, f2.M, f2.C]):
                 return f2
-        else:
-            return None
+
+        return None
 
 
 class MeijerFormula(object):
@@ -940,7 +951,7 @@ class Operator(object):
     *not* blindly differentiate but instead use a different representation
     of the z*d/dz operator (see make_derivative_operator).
 
-    To subclass from this, define a __init__ method that initalises a
+    To subclass from this, define a __init__ method that initializes a
     self._poly variable. This variable stores a polynomial. By convention
     the generator is z*d/dz, and acts to the right of all coefficients.
 
@@ -956,6 +967,9 @@ class Operator(object):
     def apply(self, obj, op):
         """
         Apply ``self`` to the object ``obj``, where the generator is ``op``.
+
+        Examples
+        ========
 
         >>> from sympy.simplify.hyperexpand import Operator
         >>> from sympy.polys.polytools import Poly
@@ -1339,7 +1353,7 @@ class ReduceOrder(Operator):
         n = ai - bj
         if not n.is_Integer or n < 0:
             return None
-        if bj.is_integer and bj <= 0 and bj + n - 1 >= 0:
+        if bj.is_integer and bj.is_nonpositive:
             return None
 
         expr = Operator.__new__(cls)
@@ -1499,6 +1513,9 @@ def devise_plan(target, origin, z):
     Devise a plan (consisting of shift and un-shift operators) to be applied
     to the hypergeometric function ``target`` to yield ``origin``.
     Returns a list of operators.
+
+    Examples
+    ========
 
     >>> from sympy.simplify.hyperexpand import devise_plan, Hyper_Function
     >>> from sympy.abc import z
@@ -1688,7 +1705,7 @@ def try_polynomial(func, z):
     al0 = [x for x in a0 if x <= 0]
     bl0 = [x for x in b0 if x <= 0]
 
-    if bl0:
+    if bl0 and all(a < bl0[-1] for a in al0):
         return oo
     if not al0:
         return None
@@ -2052,6 +2069,9 @@ def devise_plan_meijer(fro, to, z):
     determines is the order of shifts to apply, nothing clever will be tried.
     It is also assumed that fro is suitable.
 
+    Examples
+    ========
+
     >>> from sympy.simplify.hyperexpand import (devise_plan_meijer,
     ...                                         G_Function)
     >>> from sympy.abc import z
@@ -2173,13 +2193,16 @@ def devise_plan_meijer(fro, to, z):
 _meijercollection = None
 
 
-def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
+def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
+                   place=None):
     """
     Try to find an expression for the Meijer G function specified
     by the G_Function ``func``. If ``allow_hyper`` is True, then returning
     an expression in terms of hypergeometric functions is allowed.
 
-    Currently this just does slater's theorem.
+    Currently this just does Slater's theorem.
+    If expansions exist both at zero and at infinity, ``place``
+    can be set to ``0`` or ``zoo`` for the preferred choice.
     """
     global _meijercollection
     if _meijercollection is None:
@@ -2293,6 +2316,8 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
                 s = Dummy('s')
                 integrand = z**s
                 for b in bm:
+                    if not Mod(b, 1) and b.is_Number:
+                        b = int(round(b))
                     integrand *= gamma(b - s)
                 for a in an:
                     integrand *= gamma(1 - a + s)
@@ -2304,7 +2329,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
                 # Now sum the finitely many residues:
                 # XXX This speeds up some cases - is it a good idea?
                 integrand = expand_func(integrand)
-                for r in range(lu):
+                for r in range(int(round(lu))):
                     resid = residue(integrand, s, b_ + r)
                     resid = apply_operators(resid, ops, lambda f: z*f.diff(z))
                     res -= resid
@@ -2375,6 +2400,13 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
     else:
         slater2 = slater2.rewrite(rewrite or 'nonrepsmall')
 
+    if cond1 is not False and cond2 is not False:
+        # If one condition is False, there is no choice.
+        if place == 0:
+            cond2 = False
+        if place == zoo:
+            cond1 = False
+
     if not isinstance(cond1, bool):
         cond1 = cond1.subs(z, z0)
     if not isinstance(cond2, bool):
@@ -2417,11 +2449,15 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
     return func0(z0)
 
 
-def hyperexpand(f, allow_hyper=False, rewrite='default'):
+def hyperexpand(f, allow_hyper=False, rewrite='default', place=None):
     """
     Expand hypergeometric functions. If allow_hyper is True, allow partial
     simplification (that is a result different from input,
     but still containing hypergeometric functions).
+
+    If a G-function has expansions both at zero and at infinity,
+    ``place`` can be set to ``0`` or ``zoo`` to indicate the
+    preferred choice.
 
     Examples
     ========
@@ -2449,7 +2485,7 @@ def hyperexpand(f, allow_hyper=False, rewrite='default'):
 
     def do_meijer(ap, bq, z):
         r = _meijergexpand(G_Function(ap[0], ap[1], bq[0], bq[1]), z,
-                           allow_hyper, rewrite=rewrite)
+                   allow_hyper, rewrite=rewrite, place=place)
         if not r.has(nan, zoo, oo, -oo):
             return r
     return f.replace(hyper, do_replace).replace(meijerg, do_meijer)

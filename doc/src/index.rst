@@ -1,3 +1,5 @@
+.. _documentation:
+
 .. SymPy documentation master file, created by sphinx-quickstart.py on Sat Mar 22 19:34:32 2008.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -5,7 +7,9 @@
 Welcome to SymPy's documentation!
 =================================
 
-`SymPy <http://sympy.org>`_ is a Python library for symbolic mathematics.
+A PDF version of these docs can be found `here <https://github.com/sympy/sympy/releases>`_.
+
+`SymPy <https://sympy.org>`_ is a Python library for symbolic mathematics.
 If you are new to SymPy, start with the :ref:`Tutorial <tutorial>`.
 
 This is the central page for all of SymPy's documentation.
@@ -21,8 +25,8 @@ Contents:
    gotchas.rst
    guide.rst
    modules/index.rst
-   python-comparisons.rst
+   special_topics/index.rst
    wiki.rst
    outreach.rst
    aboutus.rst
-   special_topics/index.rst
+   citing.rst

@@ -45,8 +45,8 @@ Moved modules:
     * Python 2 `__builtins__`, access with Python 3 name, `builtins`
 
 Iterator/list changes:
-    * `xrange` removed in Python 3, import `xrange` for Python 2/3 compatible
-      iterator version of range
+    * `xrange` renamed as `range` in Python 3, import `range` for Python 2/3
+      compatible iterator version of range.
 
 exec:
     * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
@@ -69,12 +69,12 @@ if PY3:
     integer_types = (int,)
     string_types = (str,)
     long = int
+    int_info = sys.int_info
 
     # String / unicode compatibility
     unicode = str
     unichr = chr
-    def u(x):
-        return x
+
     def u_decode(x):
         return x
 
@@ -90,9 +90,16 @@ if PY3:
     from io import StringIO
     cStringIO = StringIO
 
-    exec_=getattr(builtins, "exec")
+    exec_ = getattr(builtins, "exec")
 
-    range=range
+    range = range
+    round = round
+
+    from collections.abc import (Mapping, Callable, MutableMapping,
+        MutableSet, Iterable, Hashable)
+
+    from inspect import unwrap
+    from itertools import accumulate
 else:
     import codecs
     import types
@@ -101,12 +108,12 @@ else:
     integer_types = (int, long)
     string_types = (str, unicode)
     long = long
+    int_info = sys.long_info
 
     # String / unicode compatibility
     unicode = unicode
     unichr = unichr
-    def u(x):
-        return codecs.unicode_escape_decode(x)[0]
+
     def u_decode(x):
         return x.decode('utf-8')
 
@@ -135,7 +142,57 @@ else:
         elif _locs_ is None:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
-    range=xrange
+
+    range = xrange
+    _round = round
+    def round(x, *args):
+        try:
+            return x.__round__(*args)
+        except (AttributeError, TypeError):
+            return _round(x, *args)
+
+    from collections import (Mapping, Callable, MutableMapping,
+        MutableSet, Iterable, Hashable)
+
+    def unwrap(func, stop=None):
+        """Get the object wrapped by *func*.
+
+       Follows the chain of :attr:`__wrapped__` attributes returning the last
+       object in the chain.
+
+       *stop* is an optional callback accepting an object in the wrapper chain
+       as its sole argument that allows the unwrapping to be terminated early if
+       the callback returns a true value. If the callback never returns a true
+       value, the last object in the chain is returned as usual. For example,
+       :func:`signature` uses this to stop unwrapping if any object in the
+       chain has a ``__signature__`` attribute defined.
+
+       :exc:`ValueError` is raised if a cycle is encountered.
+
+        """
+        if stop is None:
+            def _is_wrapper(f):
+                return hasattr(f, '__wrapped__')
+        else:
+            def _is_wrapper(f):
+                return hasattr(f, '__wrapped__') and not stop(f)
+        f = func  # remember the original func for error reporting
+        memo = {id(f)} # Memoise by id to tolerate non-hashable objects
+        while _is_wrapper(func):
+            func = func.__wrapped__
+            id_func = id(func)
+            if id_func in memo:
+                raise ValueError('wrapper loop when unwrapping {!r}'.format(f))
+            memo.add(id_func)
+        return func
+
+    def accumulate(iterable, func=operator.add):
+        state = iterable[0]
+        yield state
+        for i in iterable[1:]:
+            state = func(state, i)
+            yield state
+
 
 def with_metaclass(meta, *bases):
     """
@@ -167,9 +224,9 @@ def with_metaclass(meta, *bases):
     may omit it.
 
     >>> MyClass.__mro__
-    (<class 'MyClass'>, <... 'object'>)
+    (<class '...MyClass'>, <... 'object'>)
     >>> type(MyClass)
-    <class 'Meta'>
+    <class '...Meta'>
 
     """
     # This requires a bit of explanation: the basic idea is to make a dummy
@@ -189,16 +246,17 @@ def with_metaclass(meta, *bases):
 
 class NotIterable:
     """
-    Use this as mixin when creating a class which is not supposed to return
-    true when iterable() is called on its instances. I.e. avoid infinite loop
-    when calling e.g. list() on the instance
+    Use this as mixin when creating a class which is not supposed to
+    return true when iterable() is called on its instances because
+    calling list() on the instance, for example, would result in
+    an infinite loop.
     """
     pass
 
 def iterable(i, exclude=(string_types, dict, NotIterable)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
-    True also indicates that the iterator is finite, i.e. you e.g.
+    True also indicates that the iterator is finite, e.g. you can
     call list(...) on the instance.
 
     When SymPy is working with iterables, it is almost always assuming
@@ -293,111 +351,78 @@ def is_sequence(i, include=None):
             isinstance(i, include))
 
 try:
-    from functools import cmp_to_key
-except ImportError: # <= Python 2.6
-    def cmp_to_key(mycmp):
-        """
-        Convert a cmp= function into a key= function
-        """
-        class K(object):
-            def __init__(self, obj, *args):
-                self.obj = obj
-
-            def __lt__(self, other):
-                return mycmp(self.obj, other.obj) < 0
-
-            def __gt__(self, other):
-                return mycmp(self.obj, other.obj) > 0
-
-            def __eq__(self, other):
-                return mycmp(self.obj, other.obj) == 0
-
-            def __le__(self, other):
-                return mycmp(self.obj, other.obj) <= 0
-
-            def __ge__(self, other):
-                return mycmp(self.obj, other.obj) >= 0
-
-            def __ne__(self, other):
-                return mycmp(self.obj, other.obj) != 0
-        return K
-
-try:
     from itertools import zip_longest
-except ImportError: # <= Python 2.7
+except ImportError:  # Python 2.7
     from itertools import izip_longest as zip_longest
 
+
 try:
-    from itertools import combinations_with_replacement
-except ImportError:  # <= Python 2.6
-    def combinations_with_replacement(iterable, r):
-        """Return r length subsequences of elements from the input iterable
-        allowing individual elements to be repeated more than once.
-
-        Combinations are emitted in lexicographic sort order. So, if the
-        input iterable is sorted, the combination tuples will be produced
-        in sorted order.
-
-        Elements are treated as unique based on their position, not on their
-        value. So if the input elements are unique, the generated combinations
-        will also be unique.
-
-        See also: combinations
-
-        Examples
-        ========
-
-        >>> from sympy.core.compatibility import combinations_with_replacement
-        >>> list(combinations_with_replacement('AB', 2))
-        [('A', 'A'), ('A', 'B'), ('B', 'B')]
-        """
-        pool = tuple(iterable)
-        n = len(pool)
-        if not n and r:
-            return
-        indices = [0] * r
-        yield tuple(pool[i] for i in indices)
-        while True:
-            for i in reversed(range(r)):
-                if indices[i] != n - 1:
-                    break
-            else:
-                return
-            indices[i:] = [indices[i] + 1] * (r - i)
-            yield tuple(pool[i] for i in indices)
+    # Python 2.7
+    from string import maketrans
+except ImportError:
+    maketrans = str.maketrans
 
 
-def as_int(n):
+def as_int(n, strict=True):
     """
     Convert the argument to a builtin integer.
 
-    The return value is guaranteed to be equal to the input. ValueError is
-    raised if the input has a non-integral value.
+    The return value is guaranteed to be equal to the input. ValueError
+    is raised if the input has a non-integral value. When ``strict`` is
+    False, non-integer input that compares equal to the integer value
+    will not raise an error.
+
 
     Examples
     ========
 
     >>> from sympy.core.compatibility import as_int
-    >>> from sympy import sqrt
-    >>> 3.0
-    3.0
-    >>> as_int(3.0) # convert to int and test for equality
+    >>> from sympy import sqrt, S
+
+    The function is primarily concerned with sanitizing input for
+    functions that need to work with builtin integers, so anything that
+    is unambiguously an integer should be returned as an int:
+
+    >>> as_int(S(3))
     3
-    >>> int(sqrt(10))
-    3
-    >>> as_int(sqrt(10))
+
+    Floats, being of limited precision, are not assumed to be exact and
+    will raise an error unless the ``strict`` flag is False. This
+    precision issue becomes apparent for large floating point numbers:
+
+    >>> big = 1e23
+    >>> type(big) is float
+    True
+    >>> big == int(big)
+    True
+    >>> as_int(big)
     Traceback (most recent call last):
     ...
     ValueError: ... is not an integer
+    >>> as_int(big, strict=False)
+    99999999999999991611392
 
+    Input that might be a complex representation of an integer value is
+    also rejected by default:
+
+    >>> one = sqrt(3 + 2*sqrt(2)) - sqrt(2)
+    >>> int(one) == 1
+    True
+    >>> as_int(one)
+    Traceback (most recent call last):
+    ...
+    ValueError: ... is not an integer
     """
+    from sympy.core.numbers import Integer
     try:
+        if strict and not isinstance(n, SYMPY_INTS + (Integer,)):
+            raise TypeError
         result = int(n)
         if result != n:
             raise TypeError
+        return result
     except TypeError:
-        raise ValueError('%s is not an integer' % n)
-    return result
+        raise ValueError('%s is not an integer' % (n,))
 
 
 def default_sort_key(item, order=None):
@@ -515,9 +540,10 @@ def default_sort_key(item, order=None):
 
     """
 
-    from sympy.core import S, Basic
-    from sympy.core.sympify import sympify, SympifyError
-    from sympy.core.compatibility import iterable
+    from .singleton import S
+    from .basic import Basic
+    from .sympify import sympify, SympifyError
+    from .compatibility import iterable
 
     if isinstance(item, Basic):
         return item.sort_key(order=order)
@@ -745,29 +771,9 @@ SYMPY_INTS = integer_types
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
 
-# check_output() is new in Python 2.7
-import os
 
-try:
-    try:
-        from subprocess import check_output
-    except ImportError: # <= Python 2.6
-        from subprocess import CalledProcessError, check_call
-        def check_output(*args, **kwargs):
-            with open(os.devnull, 'w') as fh:
-                kwargs['stdout'] = fh
-                try:
-                    return check_call(*args, **kwargs)
-                except CalledProcessError as e:
-                    e.output = ("program output is not available for Python 2.6.x")
-                    raise e
-except ImportError:
-    # running on platform like App Engine, no subprocess at all
-    pass
-
-
-# lru_cache compatible with py2.6->py3.2 copied directly from
-#   http://code.activestate.com/
+# lru_cache compatible with py2.7 copied directly from
+#   https://code.activestate.com/
 #   recipes/578078-py26-and-py30-backport-of-python-33s-lru-cache/
 from collections import namedtuple
 from functools import update_wrapper
@@ -820,7 +826,7 @@ def lru_cache(maxsize=100, typed=False):
     f.cache_info().  Clear the cache and statistics with f.cache_clear().
     Access the underlying function with f.__wrapped__.
 
-    See:  http://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
+    See:  https://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
 
     """
 
@@ -942,3 +948,9 @@ def lru_cache(maxsize=100, typed=False):
 if sys.version_info[:2] >= (3, 3):
     # 3.2 has an lru_cache with an incompatible API
     from functools import lru_cache
+
+try:
+    from itertools import filterfalse
+except ImportError:  # Python 2.7
+    def filterfalse(pred, itr):
+        return filter(lambda x: not pred(x), itr)

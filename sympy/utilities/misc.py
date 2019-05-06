@@ -4,8 +4,18 @@ from __future__ import print_function, division
 
 import sys
 import os
+import re as _re
+import struct
 from textwrap import fill, dedent
-from sympy.core.compatibility import get_function_name, range
+from sympy.core.compatibility import (get_function_name, range, as_int,
+    string_types)
+
+
+
+class Undecidable(ValueError):
+    # an error to be raised when a decision cannot be made definitively
+    # where a definitive answer is needed
+    pass
 
 
 def filldedent(s, w=70):
@@ -15,13 +25,71 @@ def filldedent(s, w=70):
 
     Empty line stripping serves to deal with docstrings like this one that
     start with a newline after the initial triple quote, inserting an empty
-    line at the beginning of the string."""
+    line at the beginning of the string.
+
+    See Also
+    ========
+    strlines, rawlines
+    """
     return '\n' + fill(dedent(str(s)).strip('\n'), width=w)
+
+
+def strlines(s, c=64, short=False):
+    """Return a cut-and-pastable string that, when printed, is
+    equivalent to the input.  The lines will be surrounded by
+    parentheses and no line will be longer than c (default 64)
+    characters. If the line contains newlines characters, the
+    `rawlines` result will be returned.  If ``short`` is True
+    (default is False) then if there is one line it will be
+    returned without bounding parentheses.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.misc import strlines
+    >>> q = 'this is a long string that should be broken into shorter lines'
+    >>> print(strlines(q, 40))
+    (
+    'this is a long string that should be b'
+    'roken into shorter lines'
+    )
+    >>> q == (
+    ... 'this is a long string that should be b'
+    ... 'roken into shorter lines'
+    ... )
+    True
+
+    See Also
+    ========
+    filldedent, rawlines
+    """
+    if type(s) not in string_types:
+        raise ValueError('expecting string input')
+    if '\n' in s:
+        return rawlines(s)
+    q = '"' if repr(s).startswith('"') else "'"
+    q = (q,)*2
+    if '\\' in s:  # use r-string
+        m = '(\nr%s%%s%s\n)' % q
+        j = '%s\nr%s' % q
+        c -= 3
+    else:
+        m = '(\n%s%%s%s\n)' % q
+        j = '%s\n%s' % q
+        c -= 2
+    out = []
+    while s:
+        out.append(s[:c])
+        s=s[c:]
+    if short and len(out) == 1:
+        return (m % out[0]).splitlines()[1]  # strip bounding (\n...\n)
+    return m % j.join(out)
 
 
 def rawlines(s):
     """Return a cut-and-pastable string that, when printed, is equivalent
-    to the input. The string returned is formatted so it can be indented
+    to the input. Use this when there is more than one line in the
+    string. The string returned is formatted so it can be indented
     nicely within tests; in some cases it is wrapped in the dedent
     function which has to be imported from textwrap.
 
@@ -36,7 +104,7 @@ def rawlines(s):
     >>> from sympy.utilities.misc import rawlines
     >>> from sympy import TableForm
     >>> s = str(TableForm([[1, 10]], headings=(None, ['a', 'bee'])))
-    >>> print(rawlines(s)) # the \\ appears as \ when printed
+    >>> print(rawlines(s))
     (
         'a bee\\n'
         '-----\\n'
@@ -73,22 +141,26 @@ def rawlines(s):
         'that\\n'
         '    '
     )
+
+    See Also
+    ========
+    filldedent, strlines
     """
     lines = s.split('\n')
     if len(lines) == 1:
         return repr(lines[0])
     triple = ["'''" in s, '"""' in s]
     if any(li.endswith(' ') for li in lines) or '\\' in s or all(triple):
-        rv = ["("]
+        rv = []
         # add on the newlines
         trailing = s.endswith('\n')
         last = len(lines) - 1
         for i, li in enumerate(lines):
             if i != last or trailing:
-                rv.append(repr(li)[:-1] + '\\n\'')
+                rv.append(repr(li + '\n'))
             else:
                 rv.append(repr(li))
-        return '\n    '.join(rv) + '\n)'
+        return '(\n    %s\n)' % '\n    '.join(rv)
     else:
         rv = '\n    '.join(lines)
         if triple[0]:
@@ -96,13 +168,7 @@ def rawlines(s):
         else:
             return "dedent('''\\\n    %s''')" % rv
 
-size = getattr(sys, "maxint", None)
-if size is None:  # Python 3 doesn't have maxint
-    size = sys.maxsize
-if size > 2**32:
-    ARCH = "64-bit"
-else:
-    ARCH = "32-bit"
+ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
 
 # XXX: PyPy doesn't support hash randomization
@@ -212,5 +278,233 @@ def find_executable(executable, path=None):
                 f = os.path.join(p, execname)
                 if os.path.isfile(f):
                     return f
+
+    return None
+
+
+def func_name(x, short=False):
+    """Return function name of `x` (if defined) else the `type(x)`.
+    If short is True and there is a shorter alias for the result,
+    return the alias.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.misc import func_name
+    >>> from sympy import Matrix
+    >>> from sympy.abc import x
+    >>> func_name(Matrix.eye(3))
+    'MutableDenseMatrix'
+    >>> func_name(x < 1)
+    'StrictLessThan'
+    >>> func_name(x < 1, short=True)
+    'Lt'
+
+    See Also
+    ========
+    sympy.core.compatibility get_function_name
+    """
+    alias = {
+    'GreaterThan': 'Ge',
+    'StrictGreaterThan': 'Gt',
+    'LessThan': 'Le',
+    'StrictLessThan': 'Lt',
+    'Equality': 'Eq',
+    'Unequality': 'Ne',
+    }
+    typ = type(x)
+    if str(typ).startswith("<type '"):
+        typ = str(typ).split("'")[1].split("'")[0]
+    elif str(typ).startswith("<class '"):
+        typ = str(typ).split("'")[1].split("'")[0]
+    rv = getattr(getattr(x, 'func', x), '__name__', typ)
+    if '.' in rv:
+        rv = rv.split('.')[-1]
+    if short:
+        rv = alias.get(rv, rv)
+    return rv
+
+
+def _replace(reps):
+    """Return a function that can make the replacements, given in
+    ``reps``, on a string. The replacements should be given as mapping.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.misc import _replace
+    >>> f = _replace(dict(foo='bar', d='t'))
+    >>> f('food')
+    'bart'
+    >>> f = _replace({})
+    >>> f('food')
+    'food'
+    """
+    if not reps:
+        return lambda x: x
+    D = lambda match: reps[match.group(0)]
+    pattern = _re.compile("|".join(
+        [_re.escape(k) for k, v in reps.items()]), _re.M)
+    return lambda string: pattern.sub(D, string)
+
+
+def replace(string, *reps):
+    """Return ``string`` with all keys in ``reps`` replaced with
+    their corresponding values, longer strings first, irrespective
+    of the order they are given.  ``reps`` may be passed as tuples
+    or a single mapping.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.misc import replace
+    >>> replace('foo', {'oo': 'ar', 'f': 'b'})
+    'bar'
+    >>> replace("spamham sha", ("spam", "eggs"), ("sha","md5"))
+    'eggsham md5'
+
+    There is no guarantee that a unique answer will be
+    obtained if keys in a mapping overlap (i.e. are the same
+    length and have some identical sequence at the
+    beginning/end):
+
+    >>> reps = [
+    ...     ('ab', 'x'),
+    ...     ('bc', 'y')]
+    >>> replace('abc', *reps) in ('xc', 'ay')
+    True
+
+    References
+    ==========
+
+    .. [1] https://stackoverflow.com/questions/6116978/python-replace-multiple-strings
+    """
+    if len(reps) == 1:
+        kv = reps[0]
+        if type(kv) is dict:
+            reps = kv
+        else:
+            return string.replace(*kv)
     else:
-        return None
+        reps = dict(reps)
+    return _replace(reps)(string)
+
+
+def translate(s, a, b=None, c=None):
+    """Return ``s`` where characters have been replaced or deleted.
+
+    SYNTAX
+    ======
+
+    translate(s, None, deletechars):
+        all characters in ``deletechars`` are deleted
+    translate(s, map [,deletechars]):
+        all characters in ``deletechars`` (if provided) are deleted
+        then the replacements defined by map are made; if the keys
+        of map are strings then the longer ones are handled first.
+        Multicharacter deletions should have a value of ''.
+    translate(s, oldchars, newchars, deletechars)
+        all characters in ``deletechars`` are deleted
+        then each character in ``oldchars`` is replaced with the
+        corresponding character in ``newchars``
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.misc import translate
+    >>> from sympy.core.compatibility import unichr
+    >>> abc = 'abc'
+    >>> translate(abc, None, 'a')
+    'bc'
+    >>> translate(abc, {'a': 'x'}, 'c')
+    'xb'
+    >>> translate(abc, {'abc': 'x', 'a': 'y'})
+    'x'
+
+    >>> translate('abcd', 'ac', 'AC', 'd')
+    'AbC'
+
+    There is no guarantee that a unique answer will be
+    obtained if keys in a mapping overlap are the same
+    length and have some identical sequences at the
+    beginning/end:
+
+    >>> translate(abc, {'ab': 'x', 'bc': 'y'}) in ('xc', 'ay')
+    True
+    """
+    from sympy.core.compatibility import maketrans, PY3
+
+    mr = {}
+    if a is None:
+        assert c is None
+        if not b:
+            return s
+        c = b
+        a = b = ''
+    else:
+        if type(a) is dict:
+            short = {}
+            for k in list(a.keys()):
+                if len(k) == 1 and len(a[k]) == 1:
+                    short[k] = a.pop(k)
+            mr = a
+            c = b
+            if short:
+                a, b = [''.join(i) for i in list(zip(*short.items()))]
+            else:
+                a = b = ''
+        else:
+            assert len(a) == len(b)
+    if PY3:
+        if c:
+            s = s.translate(maketrans('', '', c))
+        s = replace(s, mr)
+        return s.translate(maketrans(a, b))
+    else:
+        # when support for Python 2 is dropped, this if-else-block
+        # can be replaced with the if-clause
+        if c:
+            c = list(c)
+            rem = {}
+            for i in range(-1, -1 - len(c), -1):
+                if ord(c[i]) > 255:
+                    rem[c[i]] = ''
+                    c.pop(i)
+            s = s.translate(None, ''.join(c))
+            s = replace(s, rem)
+            if a:
+                a = list(a)
+                b = list(b)
+                for i in range(-1, -1 - len(a), -1):
+                    if ord(a[i]) > 255 or ord(b[i]) > 255:
+                        mr[a.pop(i)] = b.pop(i)
+                a = ''.join(a)
+                b = ''.join(b)
+        s = replace(s, mr)
+        table = maketrans(a, b)
+        # s may have become unicode which uses the py3 syntax for translate
+        if isinstance(table, str) and isinstance(s, str):
+            s = s.translate(table)
+        else:
+            s = s.translate(dict(
+                [(i, ord(c)) for i, c in enumerate(table)]))
+        return s
+
+
+def ordinal(num):
+    """Return ordinal number string of num, e.g. 1 becomes 1st.
+    """
+    # modified from https://codereview.stackexchange.com/questions/41298/producing-ordinal-numbers
+    n = as_int(num)
+    k = abs(n) % 100
+    if 11 <= k <= 13:
+        suffix = 'th'
+    elif k % 10 == 1:
+        suffix = 'st'
+    elif k % 10 == 2:
+        suffix = 'nd'
+    elif k % 10 == 3:
+        suffix = 'rd'
+    else:
+        suffix = 'th'
+    return str(n) + suffix

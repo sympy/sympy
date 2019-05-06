@@ -5,7 +5,11 @@ recursive-include examples *.py README
 
 include sympy/utilities/mathml/data/*.xsl
 
+recursive-include sympy/parsing/latex *.g4 *.txt
+recursive-include sympy/parsing/autolev *.g4 *.al
+
 include LICENSE
 include TODO
 include AUTHORS
 include README.rst
+include bin/isympy

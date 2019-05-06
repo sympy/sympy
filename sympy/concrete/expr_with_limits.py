@@ -1,20 +1,70 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
+from sympy.core.compatibility import is_sequence
+from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
-from sympy.core.relational import Equality
-from sympy.sets.sets import Interval
+from sympy.core.relational import Equality, Relational
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, range
-from sympy.core.containers import Tuple
-from sympy.functions.elementary.piecewise import piecewise_fold
-from sympy.utilities import flatten
-from sympy.utilities.iterables import sift
+from sympy.functions.elementary.piecewise import (piecewise_fold,
+    Piecewise)
+from sympy.logic.boolalg import BooleanFunction
 from sympy.matrices import Matrix
 from sympy.tensor.indexed import Idx
+from sympy.sets.sets import Interval
+from sympy.utilities import flatten
+from sympy.utilities.iterables import sift
+
+
+def _common_new(cls, function, *symbols, **assumptions):
+    """Return either a special return value or the tuple,
+    (function, limits, orientation). This code is common to
+    both ExprWithLimits and AddWithLimits."""
+    function = sympify(function)
+
+    if hasattr(function, 'func') and isinstance(function, Equality):
+        lhs = function.lhs
+        rhs = function.rhs
+        return Equality(cls(lhs, *symbols, **assumptions), \
+                        cls(rhs, *symbols, **assumptions))
+
+    if function is S.NaN:
+        return S.NaN
+
+    if symbols:
+        limits, orientation = _process_limits(*symbols)
+    else:
+        # symbol not provided -- we can still try to compute a general form
+        free = function.free_symbols
+        if len(free) != 1:
+            raise ValueError(
+                "specify dummy variables for %s" % function)
+        limits, orientation = [Tuple(s) for s in free], 1
+
+    # denest any nested calls
+    while cls == type(function):
+        limits = list(function.limits) + limits
+        function = function.function
+
+    # Any embedded piecewise functions need to be brought out to the
+    # top level. We only fold Piecewise that contain the integration
+    # variable.
+    reps = {}
+    symbols_of_integration = set([i[0] for i in limits])
+    for p in function.atoms(Piecewise):
+        if not p.has(*symbols_of_integration):
+            reps[p] = Dummy()
+    # mask off those that don't
+    function = function.xreplace(reps)
+    # do the fold
+    function = piecewise_fold(function)
+    # remove the masking
+    function = function.xreplace({v: k for k, v in reps.items()})
+
+    return function, limits, orientation
 
 
 def _process_limits(*symbols):
@@ -26,18 +76,22 @@ def _process_limits(*symbols):
     limits = []
     orientation = 1
     for V in symbols:
-        if isinstance(V, Symbol):
-            limits.append(Tuple(V))
-            continue
-        elif isinstance(V, Idx):
-            if V.lower is None or V.upper is None:
-                limits.append(Tuple(V))
+        if isinstance(V, (Relational, BooleanFunction)):
+            variable = V.atoms(Symbol).pop()
+            V = (variable, V.as_set())
+
+        if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
+            if isinstance(V, Idx):
+                if V.lower is None or V.upper is None:
+                    limits.append(Tuple(V))
+                else:
+                    limits.append(Tuple(V, V.lower, V.upper))
             else:
-                limits.append(Tuple(V, V.lower, V.upper))
+                limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
             V = sympify(flatten(V))
-            if isinstance(V[0], (Symbol, Idx)):
+            if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
                 if len(V) == 2 and isinstance(V[1], Interval):
                     V[1:] = [V[1].start, V[1].end]
@@ -75,37 +129,14 @@ class ExprWithLimits(Expr):
     __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that integration can go into piecewise mode at the
-        # earliest possible moment.
-        function = sympify(function)
-        if hasattr(function, 'func') and function.func is Equality:
-            lhs = function.lhs
-            rhs = function.rhs
-            return Equality(cls(lhs, *symbols, **assumptions), \
-                cls(rhs, *symbols, **assumptions))
-        function = piecewise_fold(function)
-
-        if function is S.NaN:
-            return S.NaN
-
-        if symbols:
-            limits, orientation = _process_limits(*symbols)
+        pre = _common_new(cls, function, *symbols, **assumptions)
+        if type(pre) is tuple:
+            function, limits, _ = pre
         else:
-            # symbol not provided -- we can still try to compute a general form
-            free = function.free_symbols
-            if len(free) != 1:
-                raise ValueError(
-                    "specify dummy variables for %s" % function)
-            limits, orientation = [Tuple(s) for s in free], 1
+            return pre
 
-        # denest any nested calls
-        while cls == type(function):
-            limits = list(function.limits) + limits
-            function = function.function
-
-        # Only limits with lower and upper bounds are supported; the indefinite form
-        # is not supported
+        # limits must have upper and lower bounds; the indefinite form
+        # is not supported. This restriction does not apply to AddWithLimits
         if any(len(l) != 3 or None in l for l in limits):
             raise ValueError('ExprWithLimits requires values for lower and upper bounds.')
 
@@ -157,7 +188,7 @@ class ExprWithLimits(Expr):
 
     @property
     def variables(self):
-        """Return a list of the dummy variables
+        """Return a list of the limit variables.
 
         >>> from sympy import Sum
         >>> from sympy.abc import x, i
@@ -174,6 +205,27 @@ class ExprWithLimits(Expr):
         return [l[0] for l in self.limits]
 
     @property
+    def bound_symbols(self):
+        """Return only variables that are dummy variables.
+
+        Examples
+        ========
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, i, j, k
+        >>> Integral(x**i, (i, 1, 3), (j, 2), k).bound_symbols
+        [i, j]
+
+        See Also
+        ========
+
+        function, limits, free_symbols
+        as_dummy : Rename dummy variables
+        transform : Perform mapping on the dummy variable
+        """
+        return [l[0] for l in self.limits if len(l) != 1]
+
+    @property
     def free_symbols(self):
         """
         This method returns the symbols in the object, excluding those
@@ -185,7 +237,7 @@ class ExprWithLimits(Expr):
         >>> from sympy import Sum
         >>> from sympy.abc import x, y
         >>> Sum(x, (x, y, 1)).free_symbols
-        set([y])
+        {y}
         """
         # don't test for any special values -- nominal free symbols
         # should be returned, e.g. don't return set() if the
@@ -208,55 +260,6 @@ class ExprWithLimits(Expr):
     def is_number(self):
         """Return True if the Sum has no free symbols, else False."""
         return not self.free_symbols
-
-    def as_dummy(self):
-        """
-        Replace instances of the given dummy variables with explicit dummy
-        counterparts to make clear what are dummy variables and what
-        are real-world symbols in an object.
-
-        Examples
-        ========
-
-        >>> from sympy import Integral
-        >>> from sympy.abc import x, y
-        >>> Integral(x, (x, x, y), (y, x, y)).as_dummy()
-        Integral(_x, (_x, x, _y), (_y, x, y))
-
-        If the object supperts the "integral at" limit ``(x,)`` it
-        is not treated as a dummy, but the explicit form, ``(x, x)``
-        of length 2 does treat the variable as a dummy.
-
-        >>> Integral(x, x).as_dummy()
-        Integral(x, x)
-        >>> Integral(x, (x, x)).as_dummy()
-        Integral(_x, (_x, x))
-
-        If there were no dummies in the original expression, then the
-        the symbols which cannot be changed by subs() are clearly seen as
-        those with an underscore prefix.
-
-        See Also
-        ========
-
-        variables : Lists the integration variables
-        transform : Perform mapping on the integration variable
-        """
-        reps = {}
-        f = self.function
-        limits = list(self.limits)
-        for i in range(-1, -len(limits) - 1, -1):
-            xab = list(limits[i])
-            if len(xab) == 1:
-                continue
-            x = xab[0]
-            xab[0] = x.as_dummy()
-            for j in range(1, len(xab)):
-                xab[j] = xab[j].subs(reps)
-            reps[x] = xab[0]
-            limits[i] = xab
-        f = f.subs(reps)
-        return self.func(f, *limits)
 
     def _eval_interval(self, x, a, b):
         limits = [(i if i[0] != x else (x, a, b)) for i in self.limits]
@@ -286,7 +289,7 @@ class ExprWithLimits(Expr):
         ========
 
         variables : Lists the integration variables
-        transform : Perform mapping on the dummy variable for intgrals
+        transform : Perform mapping on the dummy variable for integrals
         change_index : Perform mapping on the sum and product dummy variables
 
         """
@@ -309,7 +312,10 @@ class ExprWithLimits(Expr):
             sub_into_func = True
             for i, xab in enumerate(limits):
                 if 1 == len(xab) and old == xab[0]:
-                    xab = (old, old)
+                    if new._diff_wrt:
+                        xab = (new,)
+                    else:
+                        xab = (old, old)
                 limits[i] = Tuple(xab[0], *[l._subs(old, new) for l in xab[1:]])
                 if len(xab[0].free_symbols.intersection(old.free_symbols)) != 0:
                     sub_into_func = False
@@ -347,43 +353,14 @@ class AddWithLimits(ExprWithLimits):
     """
 
     def __new__(cls, function, *symbols, **assumptions):
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that integration can go into piecewise mode at the
-        # earliest possible moment.
-        #
-        # This constructor only differs from ExprWithLimits
-        # in the application of the orientation variable.  Perhaps merge?
-        function = sympify(function)
-        if hasattr(function, 'func') and function.func is Equality:
-            lhs = function.lhs
-            rhs = function.rhs
-            return Equality(cls(lhs, *symbols, **assumptions), \
-                cls(rhs, *symbols, **assumptions))
-        function = piecewise_fold(function)
-
-        if function is S.NaN:
-            return S.NaN
-
-        if symbols:
-            limits, orientation = _process_limits(*symbols)
+        pre = _common_new(cls, function, *symbols, **assumptions)
+        if type(pre) is tuple:
+            function, limits, orientation = pre
         else:
-            # symbol not provided -- we can still try to compute a general form
-            free = function.free_symbols
-            if len(free) != 1:
-                raise ValueError(
-                    " specify dummy variables for %s. If the integrand contains"
-                    " more than one free symbol, an integration variable should"
-                    " be supplied explicitly e.g., integrate(f(x, y), x)"
-                    % function)
-            limits, orientation = [Tuple(s) for s in free], 1
-
-        # denest any nested calls
-        while cls == type(function):
-            limits = list(function.limits) + limits
-            function = function.function
+            return pre
 
         obj = Expr.__new__(cls, **assumptions)
-        arglist = [orientation*function]
+        arglist = [orientation*function]  # orientation not used in ExprWithLimits
         arglist.extend(limits)
         obj._args = tuple(arglist)
         obj.is_commutative = function.is_commutative  # limits already checked
@@ -414,7 +391,7 @@ class AddWithLimits(ExprWithLimits):
                 return Mul(*out[True])*self.func(Mul(*out[False]), \
                     *self.limits)
         else:
-            summand = self.func(self.function, self.limits[0:-1]).factor()
+            summand = self.func(self.function, *self.limits[0:-1]).factor()
             if not summand.has(self.variables[-1]):
                 return self.func(1, [self.limits[-1]]).doit()*summand
             elif isinstance(summand, Mul):

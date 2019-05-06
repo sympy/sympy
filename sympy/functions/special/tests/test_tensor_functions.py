@@ -2,7 +2,7 @@ from sympy import (
     adjoint, conjugate, Dummy, Eijk, KroneckerDelta, LeviCivita, Symbol,
     symbols, transpose,
 )
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, long
 from sympy.physics.secondquant import evaluate_deltas, F
 
 x, y = symbols('x y')
@@ -11,6 +11,7 @@ x, y = symbols('x y')
 def test_levicivita():
     assert Eijk(1, 2, 3) == LeviCivita(1, 2, 3)
     assert LeviCivita(1, 2, 3) == 1
+    assert LeviCivita(long(1), long(2), long(3)) == 1
     assert LeviCivita(1, 3, 2) == -1
     assert LeviCivita(1, 2, 2) == 0
     i, j, k = symbols('i j k')

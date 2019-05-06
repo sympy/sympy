@@ -18,10 +18,10 @@ Available Entities
 
 The following entities are currently available in the geometry module:
 
-* ``Point``
-* ``Line``, ``Ray``, ``Segment``
-* ``Ellipse``, ``Circle``
-* ``Polygon``, ``RegularPolygon``, ``Triangle``
+* :class:`~sympy.geometry.point.Point`
+* :class:`~sympy.geometry.line.Line`, :class:`~sympy.geometry.line.Segment`, :class:`~sympy.geometry.line.Ray`
+* :class:`~sympy.geometry.ellipse.Ellipse`, :class:`~sympy.geometry.ellipse.Circle`
+* :class:`~sympy.geometry.polygon.Polygon`, :class:`~sympy.geometry.polygon.RegularPolygon`, :class:`~sympy.geometry.polygon.Triangle`
 
 Most of the work one will do will be through the properties and methods of
 these entities, but several global methods exist:
@@ -53,9 +53,7 @@ geometry module.
     >>> t.area
     1/2
     >>> t.medians[x]
-    Segment(Point2D(0, 0), Point2D(1, 1/2))
-    >>> Segment(Point(1, S(1)/2), Point(0, 0))
-    Segment(Point2D(0, 0), Point2D(1, 1/2))
+    Segment2D(Point2D(0, 0), Point2D(1, 1/2))
     >>> m = t.medians
     >>> intersection(m[x], m[y], m[zp])
     [Point2D(2/3, 1/3)]
@@ -87,7 +85,7 @@ Intersection of medians
     a*b/2
 
     >>> t.medians[x]
-    Segment(Point2D(0, 0), Point2D(3*a/2, b/2))
+    Segment2D(Point2D(0, 0), Point2D(3*a/2, b/2))
 
     >>> intersection(t.medians[x], t.medians[y], t.medians[z])
     [Point2D(a, b/3)]
@@ -142,7 +140,7 @@ References
 
 .. [WikiPappus] "Pappus's Hexagon Theorem" Wikipedia, the Free Encyclopedia.
         Web. 26 Apr. 2013.
-        <http://en.wikipedia.org/wiki/Pappus's_hexagon_theorem>
+        <https://en.wikipedia.org/wiki/Pappus's_hexagon_theorem>
 
 Miscellaneous Notes
 -------------------
@@ -187,10 +185,10 @@ extensive amount of work.
 Three Dimensions and Beyond
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Currently there are no plans for extending the module to three dimensions, but
-it certainly would be a good addition. This would probably involve a fair
-amount of work since many of the algorithms used are specific to two
-dimensions.
+Currently a limited subset of the geometry module has been extended to
+three dimensions, but it certainly would be a good addition to extend
+more. This would probably involve a fair amount of work since many of
+the algorithms used are specific to two dimensions.
 
 Geometry Visualization
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -209,7 +207,6 @@ Submodules
     utils.rst
     points.rst
     lines.rst
-    line3d.rst
     curves.rst
     ellipses.rst
     polygons.rst

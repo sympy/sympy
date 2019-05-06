@@ -10,16 +10,15 @@ sympy.stats.frv
 
 from __future__ import print_function, division
 
-from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace,
-        NamedArgsMixin)
-from sympy.functions.special.delta_functions import DiracDelta
-from sympy import (Interval, Intersection, symbols, sympify, Dummy, Mul,
+from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S)
+        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
-from sympy.polys.polyerrors import PolynomialError
+from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
+        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 import random
 
 
@@ -41,7 +40,7 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
 
     Represented using a single symbol and interval.
     """
-    def integrate(self, expr, variables=None, **kwargs):
+    def compute_expectation(self, expr, variables=None, **kwargs):
         if variables is None:
             variables = self.symbols
         if not variables:
@@ -60,13 +59,13 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
     A collection of independent domains with continuous support
     """
 
-    def integrate(self, expr, variables=None, **kwargs):
+    def compute_expectation(self, expr, variables=None, **kwargs):
         if variables is None:
             variables = self.symbols
         for domain in self.domains:
             domain_vars = frozenset(variables) & frozenset(domain.symbols)
             if domain_vars:
-                expr = domain.integrate(expr, domain_vars, **kwargs)
+                expr = domain.compute_expectation(expr, domain_vars, **kwargs)
         return expr
 
     def as_boolean(self):
@@ -79,13 +78,13 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     condition such as x > 3
     """
 
-    def integrate(self, expr, variables=None, **kwargs):
+    def compute_expectation(self, expr, variables=None, **kwargs):
         if variables is None:
             variables = self.symbols
         if not variables:
             return expr
         # Extract the full integral
-        fullintgrl = self.fulldomain.integrate(expr, variables)
+        fullintgrl = self.fulldomain.compute_expectation(expr, variables)
         # separate into integrand and limits
         integrand, limits = fullintgrl.function, list(fullintgrl.limits)
 
@@ -154,8 +153,10 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     Provides methods for pdf, cdf, and sampling
 
-    See Also:
-        sympy.stats.crv_types.*
+    See Also
+    ========
+
+    sympy.stats.crv_types.*
     """
 
     set = Interval(-oo, oo)
@@ -208,14 +209,110 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
+    def _cdf(self, x):
+        return None
+
     def cdf(self, x, **kwargs):
         """ Cumulative density function """
+        if len(kwargs) == 0:
+            cdf = self._cdf(x)
+            if cdf is not None:
+                return cdf
         return self.compute_cdf(**kwargs)(x)
+
+    @cacheit
+    def compute_characteristic_function(self, **kwargs):
+        """ Compute the characteristic function from the PDF
+
+        Returns a Lambda
+        """
+        x, t = symbols('x, t', real=True, finite=True, cls=Dummy)
+        pdf = self.pdf(x)
+        cf = integrate(exp(I*t*x)*pdf, (x, -oo, oo))
+        return Lambda(t, cf)
+
+    def _characteristic_function(self, t):
+        return None
+
+    def characteristic_function(self, t, **kwargs):
+        """ Characteristic function """
+        if len(kwargs) == 0:
+            cf = self._characteristic_function(t)
+            if cf is not None:
+                return cf
+        return self.compute_characteristic_function(**kwargs)(t)
+
+    @cacheit
+    def compute_moment_generating_function(self, **kwargs):
+        """ Compute the moment generating function from the PDF
+
+        Returns a Lambda
+        """
+        x, t = symbols('x, t', real=True, cls=Dummy)
+        pdf = self.pdf(x)
+        mgf = integrate(exp(t * x) * pdf, (x, -oo, oo))
+        return Lambda(t, mgf)
+
+    def _moment_generating_function(self, t):
+        return None
+
+    def moment_generating_function(self, t, **kwargs):
+        """ Moment generating function """
+        if len(kwargs) == 0:
+
+            try:
+                mgf = self._moment_generating_function(t)
+                if mgf is not None:
+                    return mgf
+            except NotImplementedError:
+                return None
+        return self.compute_moment_generating_function(**kwargs)(t)
 
     def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
-        integral = Integral(expr * self.pdf(var), (var, self.set), **kwargs)
-        return integral.doit() if evaluate else integral
+        if evaluate:
+            try:
+                p = poly(expr, var)
+                t = Dummy('t', real=True)
+                mgf = self._moment_generating_function(t)
+                if mgf is None:
+                    return integrate(expr * self.pdf(var), (var, self.set), **kwargs)
+                deg = p.degree()
+                taylor = poly(series(mgf, t, 0, deg + 1).removeO(), t)
+                result = 0
+                for k in range(deg+1):
+                    result += p.coeff_monomial(var ** k) * taylor.coeff_monomial(t ** k) * factorial(k)
+                return result
+            except PolynomialError:
+                return integrate(expr * self.pdf(var), (var, self.set), **kwargs)
+        else:
+            return Integral(expr * self.pdf(var), (var, self.set), **kwargs)
+
+    @cacheit
+    def compute_quantile(self, **kwargs):
+        """ Compute the Quantile from the PDF
+
+        Returns a Lambda
+        """
+        x, p = symbols('x, p', real=True, finite=True, cls=Dummy)
+        left_bound = self.set.start
+
+        pdf = self.pdf(x)
+        cdf = integrate(pdf, (x, left_bound, x), **kwargs)
+
+        quantile = solveset(cdf - p, x, S.Reals)
+        return Lambda(p, Piecewise((quantile, (p >= 0) & (p <= 1) ), (nan, True)))
+
+    def _quantile(self, x):
+        return None
+
+    def quantile(self, x, **kwargs):
+        """ Cumulative density function """
+        if len(kwargs) == 0:
+            quantile = self._quantile(x)
+            if quantile is not None:
+                return quantile
+        return self.compute_quantile(**kwargs)(x)
 
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
@@ -240,18 +337,10 @@ class ContinuousPSpace(PSpace):
     is_real = True
 
     @property
-    def domain(self):
-        return self.args[0]
-
-    @property
-    def density(self):
-        return self.args[1]
-
-    @property
     def pdf(self):
         return self.density(*self.domain.symbols)
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         if rvs is None:
             rvs = self.values
         else:
@@ -261,7 +350,7 @@ class ContinuousPSpace(PSpace):
 
         domain_symbols = frozenset(rv.symbol for rv in rvs)
 
-        return self.domain.integrate(self.pdf * expr,
+        return self.domain.compute_expectation(self.pdf * expr,
                 domain_symbols, **kwargs)
 
     def compute_density(self, expr, **kwargs):
@@ -270,11 +359,11 @@ class ContinuousPSpace(PSpace):
             # Marginalize all other random symbols out of the density
             randomsymbols = tuple(set(self.values) - frozenset([expr]))
             symbols = tuple(rs.symbol for rs in randomsymbols)
-            pdf = self.domain.integrate(self.pdf, symbols, **kwargs)
+            pdf = self.domain.compute_expectation(self.pdf, symbols, **kwargs)
             return Lambda(expr.symbol, pdf)
 
         z = Dummy('z', real=True, finite=True)
-        return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
+        return Lambda(z, self.compute_expectation(DiracDelta(expr - z), **kwargs))
 
     @cacheit
     def compute_cdf(self, expr, **kwargs):
@@ -292,8 +381,46 @@ class ContinuousPSpace(PSpace):
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
+    @cacheit
+    def compute_characteristic_function(self, expr, **kwargs):
+        if not self.domain.set.is_Interval:
+            raise NotImplementedError("Characteristic function of multivariate expressions not implemented")
+
+        d = self.compute_density(expr, **kwargs)
+        x, t = symbols('x, t', real=True, cls=Dummy)
+        cf = integrate(exp(I*t*x)*d(x), (x, -oo, oo), **kwargs)
+        return Lambda(t, cf)
+
+    @cacheit
+    def compute_moment_generating_function(self, expr, **kwargs):
+        if not self.domain.set.is_Interval:
+            raise NotImplementedError("Moment generating function of multivariate expressions not implemented")
+
+        d = self.compute_density(expr, **kwargs)
+        x, t = symbols('x, t', real=True, cls=Dummy)
+        mgf = integrate(exp(t * x) * d(x), (x, -oo, oo), **kwargs)
+        return Lambda(t, mgf)
+
+    @cacheit
+    def compute_quantile(self, expr, **kwargs):
+        if not self.domain.set.is_Interval:
+            raise ValueError(
+                "Quantile not well defined on multivariate expressions")
+
+        d = self.compute_cdf(expr, **kwargs)
+        x = symbols('x', real=True, finite=True, cls=Dummy)
+        p = symbols('x', real=True, positive=True, finite=True, cls=Dummy)
+
+        quantile = solveset(d(x) - p, x, self.set)
+
+        return Lambda(p, quantile)
+
     def probability(self, condition, **kwargs):
         z = Dummy('z', real=True, finite=True)
+        cond_inv = False
+        if isinstance(condition, Ne):
+            condition = Eq(condition.args[0], condition.args[1])
+            cond_inv = True
         # Univariate case can be handled by where
         try:
             domain = self.where(condition)
@@ -301,8 +428,12 @@ class ContinuousPSpace(PSpace):
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
             # return S.Zero if `domain` is empty set
-            if domain.set is S.EmptySet:
-                return S.Zero
+            if domain.set is S.EmptySet or isinstance(domain.set, FiniteSet):
+                return S.Zero if not cond_inv else S.One
+            if isinstance(domain.set, Union):
+                return sum(
+                     Integral(pdf(z), (z, subset), **kwargs) for subset in
+                     domain.set.args if isinstance(subset, Interval))
             # Integrate out the last variable over the special domain
             return Integral(pdf(z), (z, domain.set), **kwargs)
 
@@ -316,7 +447,8 @@ class ContinuousPSpace(PSpace):
                 dens = ContinuousDistributionHandmade(dens)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, dens)
-            return space.probability(condition.__class__(space.value, 0))
+            result = space.probability(condition.__class__(space.value, 0))
+            return result if not cond_inv else S.One - result
 
     def where(self, condition):
         rvs = frozenset(random_symbols(condition))
@@ -329,12 +461,17 @@ class ContinuousPSpace(PSpace):
         return SingleContinuousDomain(rv.symbol, interval)
 
     def conditional_space(self, condition, normalize=True, **kwargs):
-
         condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
-
         domain = ConditionalContinuousDomain(self.domain, condition)
         if normalize:
-            pdf = self.pdf / domain.integrate(self.pdf, **kwargs)
+            # create a clone of the variable to
+            # make sure that variables in nested integrals are different
+            # from the variables outside the integral
+            # this makes sure that they are evaluated separately
+            # and in the correct order
+            replacement  = {rv: Dummy(str(rv)) for rv in self.symbols}
+            norm = domain.compute_expectation(self.pdf, **kwargs)
+            pdf = self.pdf / norm.xreplace(replacement)
             density = Lambda(domain.symbols, pdf)
 
         return ContinuousPSpace(domain, density)
@@ -366,7 +503,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         """
         return {self.value: self.distribution.sample()}
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
@@ -375,18 +512,33 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
         x = self.value.symbol
         try:
-            return self.distribution.expectation(expr, x, evaluate=False, **kwargs)
+            return self.distribution.expectation(expr, x, evaluate=evaluate, **kwargs)
         except Exception:
             return Integral(expr * self.pdf, (x, self.set), **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:
-            return self.distribution.compute_cdf(**kwargs)
+            z = symbols("z", real=True, finite=True, cls=Dummy)
+            return Lambda(z, self.distribution.cdf(z, **kwargs))
         else:
             return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
 
+    def compute_characteristic_function(self, expr, **kwargs):
+        if expr == self.value:
+            t = symbols("t", real=True, cls=Dummy)
+            return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
+        else:
+            return ContinuousPSpace.compute_characteristic_function(self, expr, **kwargs)
+
+    def compute_moment_generating_function(self, expr, **kwargs):
+        if expr == self.value:
+            t = symbols("t", real=True, cls=Dummy)
+            return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))
+        else:
+            return ContinuousPSpace.compute_moment_generating_function(self, expr, **kwargs)
+
     def compute_density(self, expr, **kwargs):
-        # http://en.wikipedia.org/wiki/Random_variable#Functions_of_random_variables
+        # https://en.wikipedia.org/wiki/Random_variable#Functions_of_random_variables
         if expr == self.value:
             return self.density
         y = Dummy('y')
@@ -402,15 +554,13 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
         return Lambda(y, fy)
 
+    def compute_quantile(self, expr, **kwargs):
 
-class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
-    """
-    A collection of independent continuous probability spaces
-    """
-    @property
-    def pdf(self):
-        p = Mul(*[space.pdf for space in self.spaces])
-        return p.subs(dict((rv, rv.symbol) for rv in self.values))
+        if expr == self.value:
+            p = symbols("p", real=True, cls=Dummy)
+            return Lambda(p, self.distribution.quantile(p, **kwargs))
+        else:
+            return ContinuousPSpace.compute_quantile(self, expr, **kwargs)
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:
@@ -422,10 +572,10 @@ def _reduce_inequalities(conditions, var, **kwargs):
 def reduce_rational_inequalities_wrap(condition, var):
     if condition.is_Relational:
         return _reduce_inequalities([[condition]], var, relational=False)
-    if condition.__class__ is Or:
-        return _reduce_inequalities([list(condition.args)],
-                var, relational=False)
-    if condition.__class__ is And:
+    if isinstance(condition, Or):
+        return Union(*[_reduce_inequalities([[arg]], var, relational=False)
+            for arg in condition.args])
+    if isinstance(condition, And):
         intervals = [_reduce_inequalities([[arg]], var, relational=False)
             for arg in condition.args]
         I = intervals[0]

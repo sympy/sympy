@@ -2,15 +2,15 @@
 
 from __future__ import print_function, division
 
-from sympy.polys import Poly, RootSum, cancel, factor
-from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.polys.polyoptions import allowed_flags, set_defaults
-from sympy.polys.polyerrors import PolynomialError
-
 from sympy.core import S, Add, sympify, Function, Lambda, Dummy
 from sympy.core.basic import preorder_traversal
-from sympy.utilities import numbered_symbols, take, xthreaded, public
 from sympy.core.compatibility import range
+from sympy.polys import Poly, RootSum, cancel, factor
+from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.polyoptions import allowed_flags, set_defaults
+from sympy.polys.polytools import parallel_poly_from_expr
+from sympy.utilities import numbered_symbols, take, xthreaded, public
+
 
 @xthreaded
 @public
@@ -204,7 +204,7 @@ def apart_full_decomposition(P, Q):
     References
     ==========
 
-    1. [Bronstein93]_
+    .. [1] [Bronstein93]_
 
     """
     return assemble_partfrac_list(apart_list(P/Q, P.gens[0]))
@@ -312,7 +312,7 @@ def apart_list(f, x=None, dummies=None, **options):
     References
     ==========
 
-    1. [Bronstein93]_
+    .. [1] [Bronstein93]_
 
     """
     allowed_flags(options, [])
@@ -367,7 +367,7 @@ def apart_list_full_decomposition(P, Q, dummygen):
     References
     ==========
 
-    1. [Bronstein93]_
+    .. [1] [Bronstein93]_
 
     """
     f, x, U = P/Q, P.gen, []
@@ -468,7 +468,7 @@ def assemble_partfrac_list(partial_list):
     >>> assemble_partfrac_list(pfd)
     -sqrt(2)/(2*(x + sqrt(2))) + sqrt(2)/(2*(x - sqrt(2)))
 
-    See also
+    See Also
     ========
 
     apart, apart_list
@@ -491,7 +491,7 @@ def assemble_partfrac_list(partial_list):
             func = Lambda(an, nu/de**ex)
             pfd += RootSum(r, func, auto=False, quadratic=False)
         else:
-            # Assemble in case the roots are given explicitely by a list of algebraic numbers
+            # Assemble in case the roots are given explicitly by a list of algebraic numbers
             for root in r:
                 pfd += nf(root)/df(root)**ex
 

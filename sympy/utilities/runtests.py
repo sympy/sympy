@@ -31,23 +31,51 @@ import random
 import subprocess
 import signal
 import stat
-from inspect import isgeneratorfunction
+import tempfile
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import exec_, PY3, string_types, range
+from sympy.core.compatibility import exec_, PY3, string_types, range, unwrap
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 IS_WINDOWS = (os.name == 'nt')
+ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 
+# emperically generated list of the proportion of time spent running
+# an even split of tests.  This should periodically be regenerated.
+# A list of [.6, .1, .3] would mean that if the tests are evenly split
+# into '1/3', '2/3', '3/3', the first split would take 60% of the time,
+# the second 10% and the third 30%.  These lists are normalized to sum
+# to 1, so [60, 10, 30] has the same behavior as [6, 1, 3] or [.6, .1, .3].
+#
+# This list can be generated with the code:
+#     from time import time
+#     import sympy
+#
+#     delays, num_splits = [], 30
+#     for i in range(1, num_splits + 1):
+#         tic = time()
+#         sympy.test(split='{}/{}'.format(i, num_splits), time_balance=False) # Add slow=True for slow tests
+#         delays.append(time() - tic)
+#     tot = sum(delays)
+#     print([round(x / tot, 4) for x in delays])
+SPLIT_DENSITY = [0.0801, 0.0099, 0.0429, 0.0103, 0.0122, 0.0055, 0.0533, 0.0191, 0.0977, 0.0878, 0.0026, 0.0028, 0.0147, 0.0118, 0.0358, 0.0063, 0.0026, 0.0351, 0.0084, 0.0027, 0.0158, 0.0156, 0.0024, 0.0416, 0.0566, 0.0425, 0.2123, 0.0042, 0.0099, 0.0576]
+SPLIT_DENSITY_SLOW = [0.1525, 0.0342, 0.0092, 0.0004, 0.0005, 0.0005, 0.0379, 0.0353, 0.0637, 0.0801, 0.0005, 0.0004, 0.0133, 0.0021, 0.0098, 0.0108, 0.0005, 0.0076, 0.0005, 0.0004, 0.0056, 0.0093, 0.0005, 0.0264, 0.0051, 0.0956, 0.2983, 0.0005, 0.0005, 0.0981]
 
 class Skipped(Exception):
     pass
 
-import __future__
+class TimeOutError(Exception):
+    pass
+
+class DependencyError(Exception):
+    pass
+
+
 # add more flags ??
-future_flags = __future__.division.compiler_flag
+future_flags = division.compiler_flag
+
 
 def _indent(s, indent=4):
     """
@@ -63,9 +91,10 @@ def _indent(s, indent=4):
     # This regexp matches the start of non-blank lines:
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
+
 pdoctest._indent = _indent
 
-# ovverride reporter to maintain windows and python3
+# override reporter to maintain windows and python3
 
 
 def _report_failure(self, out, test, example, got):
@@ -75,6 +104,7 @@ def _report_failure(self, out, test, example, got):
     s = self._checker.output_difference(example, got, self.optionflags)
     s = s.encode('raw_unicode_escape').decode('utf8', 'ignore')
     out(self._failure_header(test, example) + s)
+
 
 if PY3 and IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure
@@ -95,7 +125,7 @@ def convert_to_native_paths(lst):
             if pos != -1:
                 if rv[pos + 1] != '\\':
                     rv = rv[:pos + 1] + '\\' + rv[pos + 1:]
-        newlst.append(sys_normcase(rv))
+        newlst.append(os.path.normcase(rv))
     return newlst
 
 
@@ -104,35 +134,29 @@ def get_sympy_dir():
     Returns the root sympy directory and set the global value
     indicating whether the system is case sensitive or not.
     """
-    global sys_case_insensitive
-
     this_file = os.path.abspath(__file__)
     sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
     sympy_dir = os.path.normpath(sympy_dir)
-    sys_case_insensitive = (os.path.isdir(sympy_dir) and
-                        os.path.isdir(sympy_dir.lower()) and
-                        os.path.isdir(sympy_dir.upper()))
-    return sys_normcase(sympy_dir)
-
-
-def sys_normcase(f):
-    if sys_case_insensitive:  # global defined after call to get_sympy_dir()
-        return f.lower()
-    return f
+    return os.path.normcase(sympy_dir)
 
 
 def setup_pprint():
     from sympy import pprint_use_unicode, init_printing
+    import sympy.interactive.printing as interactive_printing
 
     # force pprint to be in ascii mode in doctests
-    pprint_use_unicode(False)
+    use_unicode_prev = pprint_use_unicode(False)
 
     # hook our nice, hash-stable strprinter
     init_printing(pretty_print=False)
 
+    # Prevent init_printing() in doctests from affecting other doctests
+    interactive_printing.NO_GLOBAL = True
+    return use_unicode_prev
 
-def run_in_subprocess_with_hash_randomization(function, function_args=(),
-    function_kwargs={}, command=sys.executable,
+def run_in_subprocess_with_hash_randomization(
+        function, function_args=(),
+        function_kwargs=None, command=sys.executable,
         module='sympy.utilities.runtests', force=False):
     """
     Run a function in a Python subprocess with hash randomization enabled.
@@ -198,10 +222,13 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     else:
         if not force:
             return False
+
+    function_kwargs = function_kwargs or {}
+
     # Now run the command
     commandstring = ("import sys; from %s import %s;sys.exit(%s(*%s, **%s))" %
                      (module, function, function, repr(function_args),
-                     repr(function_kwargs)))
+                      repr(function_kwargs)))
 
     try:
         p = subprocess.Popen([command, "-R", "-c", commandstring])
@@ -218,8 +245,9 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
         return p.returncode
 
 
-def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
-                  doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet': True}):
+def run_all_tests(test_args=(), test_kwargs=None,
+                  doctest_args=(), doctest_kwargs=None,
+                  examples_args=(), examples_kwargs=None):
     """
     Run all tests.
 
@@ -242,6 +270,10 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
     """
     tests_successful = True
 
+    test_kwargs = test_kwargs or {}
+    doctest_kwargs = doctest_kwargs or {}
+    examples_kwargs = examples_kwargs or {'quiet': True}
+
     try:
         # Regular tests
         if not test(*test_args, **test_kwargs):
@@ -262,13 +294,17 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Sage tests
-        if not (sys.platform == "win32" or PY3):
+        if sys.platform != "win32" and not PY3 and os.path.exists("bin/test"):
             # run Sage tests; Sage currently doesn't support Windows or Python 3
+            # Only run Sage tests if 'bin/test' is present (it is missing from
+            # our release because everything in the 'bin' directory gets
+            # installed).
             dev_null = open(os.devnull, 'w')
             if subprocess.call("sage -v", shell=True, stdout=dev_null,
                                stderr=dev_null) == 0:
                 if subprocess.call("sage -python bin/test "
-                                   "sympy/external/tests/test_sage.py", shell=True) != 0:
+                                   "sympy/external/tests/test_sage.py",
+                    shell=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) != 0:
                     tests_successful = False
 
         if tests_successful:
@@ -383,6 +419,13 @@ def test(*paths, **kwargs):
 
     >>> sympy.test(split='1/2')  # doctest: +SKIP
 
+    The ``time_balance`` option can be passed in conjunction with ``split``.
+    If ``time_balance=True`` (the default for ``sympy.test``), sympy will attempt
+    to split the tests such that each split takes equal time.  This heuristic
+    for balancing is based on pre-recorded test data.
+
+    >>> sympy.test(split='1/2', time_balance=True)  # doctest: +SKIP
+
     You can disable running the tests in a separate subprocess using
     ``subprocess=False``.  This is done to support seeding hash randomization,
     which is enabled by default in the Python versions where it is supported.
@@ -458,7 +501,7 @@ def _test(*paths, **kwargs):
     tb = kwargs.get("tb", "short")
     kw = kwargs.get("kw", None) or ()
     # ensure that kw is a tuple
-    if isinstance(kw, str):
+    if isinstance(kw, string_types):
         kw = (kw, )
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
@@ -468,10 +511,19 @@ def _test(*paths, **kwargs):
     if seed is None:
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
+    fail_on_timeout = kwargs.get("fail_on_timeout", False)
+    if ON_TRAVIS and timeout is False:
+        # Travis times out if no activity is seen for 10 minutes.
+        timeout = 595
+        fail_on_timeout = True
     slow = kwargs.get("slow", False)
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
-    blacklist = kwargs.get('blacklist', [])
+    time_balance = kwargs.get('time_balance', True)
+    blacklist = kwargs.get('blacklist', ['sympy/integrals/rubi/rubi_tests/tests'])
+    if ON_TRAVIS:
+        # pyglet does not work on Travis
+        blacklist.extend(['sympy/plotting/pygletplot/tests'])
     blacklist = convert_to_native_paths(blacklist)
     fast_threshold = kwargs.get('fast_threshold', None)
     slow_threshold = kwargs.get('slow_threshold', None)
@@ -481,14 +533,10 @@ def _test(*paths, **kwargs):
                    fast_threshold=fast_threshold,
                    slow_threshold=slow_threshold)
 
-    # Disable warnings for external modules
-    import sympy.external
-    sympy.external.importtools.WARN_OLD_VERSION = False
-    sympy.external.importtools.WARN_NOT_INSTALLED = False
-
     # Show deprecation warnings
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
+    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
     test_files = t.get_test_files('sympy')
 
@@ -507,22 +555,24 @@ def _test(*paths, **kwargs):
                     matched.append(f)
                     break
 
-    if slow:
-        # Seed to evenly shuffle slow tests among splits
-        random.seed(41992450)
-        random.shuffle(matched)
+    density = None
+    if time_balance:
+        if slow:
+            density = SPLIT_DENSITY_SLOW
+        else:
+            density = SPLIT_DENSITY
 
     if split:
-        matched = split_list(matched, split)
+        matched = split_list(matched, split, density=density)
 
     t._testfiles.extend(matched)
 
-    return int(not t.test(sort=sort, timeout=timeout,
-        slow=slow, enhance_asserts=enhance_asserts))
+    return int(not t.test(sort=sort, timeout=timeout, slow=slow,
+        enhance_asserts=enhance_asserts, fail_on_timeout=fail_on_timeout))
 
 
 def doctest(*paths, **kwargs):
-    """
+    r"""
     Runs doctests in all \*.py files in the sympy directory which match
     any of the given strings in ``paths`` or all tests if paths=[].
 
@@ -596,26 +646,35 @@ def doctest(*paths, **kwargs):
             return val
 
 
-def _doctest(*paths, **kwargs):
-    """
-    Internal function that actually runs the doctests.
+def _get_doctest_blacklist():
+    '''Get the default blacklist for the doctests'''
+    blacklist = []
 
-    All keyword arguments from ``doctest()`` are passed to this function
-    except for ``subprocess``.
-
-    Returns 0 if tests passed and 1 if they failed.  See the docstrings of
-    ``doctest()`` and ``test()`` for more information.
-    """
-    normal = kwargs.get("normal", False)
-    verbose = kwargs.get("verbose", False)
-    colors = kwargs.get("colors", True)
-    force_colors = kwargs.get("force_colors", False)
-    blacklist = kwargs.get("blacklist", [])
-    split  = kwargs.get('split', None)
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
+        "doc/src/modules/physics/mechanics/autolev_parser.rst",
         "sympy/physics/gaussopt.py", # raises deprecation warning
+        "sympy/galgebra.py", # raises ImportError
+        "sympy/this.py", # Prints text to the terminal
+        "sympy/matrices/densearith.py", # raises deprecation warning
+        "sympy/matrices/densesolve.py", # raises deprecation warning
+        "sympy/matrices/densetools.py", # raises deprecation warning
+        "sympy/physics/unitsystems.py", # raises deprecation warning
+        "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
+        "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
+        "sympy/parsing/latex/_antlr/latexparser.py", # generated code
+        "sympy/integrals/rubi/rubi.py"
     ])
+    # autolev parser tests
+    num = 12
+    for i in range (1, num+1):
+        blacklist.append("sympy/parsing/autolev/test-examples/ruletest" + str(i) + ".py")
+    blacklist.extend(["sympy/parsing/autolev/test-examples/pydy-example-repo/mass_spring_damper.py",
+                      "sympy/parsing/autolev/test-examples/pydy-example-repo/chaos_pendulum.py",
+                      "sympy/parsing/autolev/test-examples/pydy-example-repo/double_pendulum.py",
+                      "sympy/parsing/autolev/test-examples/pydy-example-repo/non_min_pendulum.py"])
 
     if import_module('numpy') is None:
         blacklist.extend([
@@ -635,15 +694,24 @@ def _doctest(*paths, **kwargs):
                 "examples/intermediate/mplot3d.py"
             ])
         else:
-            # don't display matplotlib windows
-            from sympy.plotting.plot import unset_show
-            unset_show()
+            # Use a non-windowed backend, so that the tests work on Travis
+            import matplotlib
+            matplotlib.use('Agg')
 
-    if import_module('pyglet') is None:
+    if ON_TRAVIS or import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
     if import_module('theano') is None:
-        blacklist.extend(["doc/src/modules/numeric-computation.rst"])
+        blacklist.extend([
+            "sympy/printing/theanocode.py",
+            "doc/src/modules/numeric-computation.rst",
+        ])
+
+    if import_module('antlr4') is None:
+        blacklist.extend([
+            "sympy/parsing/autolev/__init__.py",
+            "sympy/parsing/latex/_parse_latex_antlr.py",
+        ])
 
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
@@ -659,15 +727,48 @@ def _doctest(*paths, **kwargs):
     ])
 
     blacklist = convert_to_native_paths(blacklist)
+    return blacklist
+
+
+def _doctest(*paths, **kwargs):
+    """
+    Internal function that actually runs the doctests.
+
+    All keyword arguments from ``doctest()`` are passed to this function
+    except for ``subprocess``.
+
+    Returns 0 if tests passed and 1 if they failed.  See the docstrings of
+    ``doctest()`` and ``test()`` for more information.
+    """
+    from sympy import pprint_use_unicode
+
+    normal = kwargs.get("normal", False)
+    verbose = kwargs.get("verbose", False)
+    colors = kwargs.get("colors", True)
+    force_colors = kwargs.get("force_colors", False)
+    blacklist = kwargs.get("blacklist", [])
+    split  = kwargs.get('split', None)
+
+    blacklist.extend(_get_doctest_blacklist())
+
+    # Use a non-windowed backend, so that the tests work on Travis
+    if import_module('matplotlib') is not None:
+        import matplotlib
+        matplotlib.use('Agg')
 
     # Disable warnings for external modules
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
 
+    # Disable showing up of plots
+    from sympy.plotting.plot import unset_show
+    unset_show()
+
     # Show deprecation warnings
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
+    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
     r = PyTestReporter(verbose, split=split, colors=colors,\
                        force_colors=force_colors)
@@ -735,13 +836,13 @@ def _doctest(*paths, **kwargs):
     if split:
         matched = split_list(matched, split)
 
-    setup_pprint()
     first_report = True
     for rst_file in matched:
         if not os.path.isfile(rst_file):
             continue
         old_displayhook = sys.displayhook
         try:
+            use_unicode_prev = setup_pprint()
             out = sympytestfile(
                 rst_file, module_relative=False, encoding='utf-8',
                 optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
@@ -750,6 +851,11 @@ def _doctest(*paths, **kwargs):
             # make sure we return to the original displayhook in case some
             # doctest has changed that
             sys.displayhook = old_displayhook
+            # The NO_GLOBAL flag overrides the no_global flag to init_printing
+            # if True
+            import sympy.interactive.printing as interactive_printing
+            interactive_printing.NO_GLOBAL = False
+            pprint_use_unicode(use_unicode_prev)
 
         rstfailed, tested = out
         if tested:
@@ -784,7 +890,7 @@ def _doctest(*paths, **kwargs):
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
 
-def split_list(l, split):
+def split_list(l, split, density=None):
     """
     Splits a list into part a of b
 
@@ -793,6 +899,10 @@ def split_list(l, split):
 
     If the length of the list is not divisible by the number of splits, the
     last split will have more items.
+
+    `density` may be specified as a list.  If specified,
+    tests will be balanced so that each split has as equal-as-possible
+    amount of mass according to `density`.
 
     >>> from sympy.utilities.runtests import split_list
     >>> a = list(range(10))
@@ -807,8 +917,35 @@ def split_list(l, split):
     if not m:
         raise ValueError("split must be a string of the form a/b where a and b are ints")
     i, t = map(int, m.groups())
-    return l[(i - 1)*len(l)//t:i*len(l)//t]
 
+    if not density:
+        return l[(i - 1)*len(l)//t : i*len(l)//t]
+
+    # normalize density
+    tot = sum(density)
+    density = [x / tot for x in density]
+
+    def density_inv(x):
+        """Interpolate the inverse to the cumulative
+        distribution function given by density"""
+        if x <= 0:
+            return 0
+        if x >= sum(density):
+            return 1
+
+        # find the first time the cumulative sum surpasses x
+        # and linearly interpolate
+        cumm = 0
+        for i, d in enumerate(density):
+            cumm += d
+            if cumm >= x:
+                break
+        frac = (d - (cumm - x)) / d
+        return (i + frac) / len(density)
+
+    lower_frac = density_inv((i - 1) / t)
+    higher_frac = density_inv(i / t)
+    return l[int(lower_frac*len(l)) : int(higher_frac*len(l))]
 
 from collections import namedtuple
 SymPyTestResults = namedtuple('TestResults', 'failed attempted')
@@ -965,13 +1102,14 @@ class SymPyTests(object):
         if fast_threshold:
             self._fast_threshold = float(fast_threshold)
         else:
-            self._fast_threshold = 0.1
+            self._fast_threshold = 5
         if slow_threshold:
             self._slow_threshold = float(slow_threshold)
         else:
             self._slow_threshold = 10
 
-    def test(self, sort=False, timeout=False, slow=False, enhance_asserts=False):
+    def test(self, sort=False, timeout=False, slow=False,
+            enhance_asserts=False, fail_on_timeout=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
 
@@ -987,7 +1125,8 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f, sort, timeout, slow, enhance_asserts)
+                self.test_file(f, sort, timeout, slow,
+                    enhance_asserts, fail_on_timeout)
             except KeyboardInterrupt:
                 print(" interrupted by user")
                 self._reporter.finish()
@@ -1025,7 +1164,8 @@ class SymPyTests(object):
         new_tree = Transform().visit(tree)
         return fix_missing_locations(new_tree)
 
-    def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
+    def test_file(self, filename, sort=True, timeout=False, slow=False,
+            enhance_asserts=False, fail_on_timeout=False):
         reporter = self._reporter
         funcs = []
         try:
@@ -1052,39 +1192,42 @@ class SymPyTests(object):
                     except ImportError:
                         pass
 
-                code = compile(source, filename, "exec")
+                code = compile(source, filename, "exec", flags=0, dont_inherit=True)
                 exec_(code, gl)
             except (SystemExit, KeyboardInterrupt):
                 raise
             except ImportError:
                 reporter.import_error(filename, sys.exc_info())
                 return
+            except Exception:
+                reporter.test_exception(sys.exc_info())
+
             clear_cache()
             self._count += 1
             random.seed(self._seed)
-            pytestfile = ""
-            if "XFAIL" in gl:
-                pytestfile = inspect.getsourcefile(gl["XFAIL"])
-            pytestfile2 = ""
-            if "slow" in gl:
-                pytestfile2 = inspect.getsourcefile(gl["slow"])
             disabled = gl.get("disabled", False)
             if not disabled:
                 # we need to filter only those functions that begin with 'test_'
-                # that are defined in the testing file or in the file where
-                # is defined the XFAIL decorator
-                funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
-                    (inspect.isfunction(gl[f]) or inspect.ismethod(gl[f])) and
-                    (inspect.getsourcefile(gl[f]) == filename or
-                     inspect.getsourcefile(gl[f]) == pytestfile or
-                     inspect.getsourcefile(gl[f]) == pytestfile2)]
+                # We have to be careful about decorated functions. As long as
+                # the decorator uses functools.wraps, we can detect it.
+                funcs = []
+                for f in gl:
+                    if (f.startswith("test_") and (inspect.isfunction(gl[f])
+                        or inspect.ismethod(gl[f]))):
+                        func = gl[f]
+                        # Handle multiple decorators
+                        while hasattr(func, '__wrapped__'):
+                            func = func.__wrapped__
+
+                        if inspect.getsourcefile(func) == filename:
+                            funcs.append(gl[f])
                 if slow:
                     funcs = [f for f in funcs if getattr(f, '_slow', False)]
                 # Sorting of XFAILed functions isn't fixed yet :-(
                 funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
                 i = 0
                 while i < len(funcs):
-                    if isgeneratorfunction(funcs[i]):
+                    if inspect.isgeneratorfunction(funcs[i]):
                     # some tests can be generators, that return the actual
                     # test functions. We unpack it below:
                         f = funcs.pop(i)
@@ -1116,7 +1259,7 @@ class SymPyTests(object):
                 if getattr(f, '_slow', False) and not slow:
                     raise Skipped("Slow")
                 if timeout:
-                    self._timeout(f, timeout)
+                    self._timeout(f, timeout, fail_on_timeout)
                 else:
                     random.seed(self._seed)
                     f()
@@ -1153,10 +1296,13 @@ class SymPyTests(object):
                     reporter.fast_test_functions.append((f.__name__, taken))
         reporter.leaving_filename()
 
-    def _timeout(self, function, timeout):
+    def _timeout(self, function, timeout, fail_on_timeout):
         def callback(x, y):
             signal.alarm(0)
-            raise Skipped("Timeout")
+            if fail_on_timeout:
+                raise TimeOutError("Timed out after %d seconds" % timeout)
+            else:
+                raise Skipped("Timeout")
         signal.signal(signal.SIGALRM, callback)
         signal.alarm(timeout)  # Set an alarm with a given timeout
         function()
@@ -1186,7 +1332,7 @@ class SymPyTests(object):
         for path, folders, files in os.walk(dir):
             g.extend([os.path.join(path, f) for f in files if fnmatch(f, pat)])
 
-        return sorted([sys_normcase(gi) for gi in g])
+        return sorted([os.path.normcase(gi) for gi in g])
 
 
 class SymPyDocTests(object):
@@ -1218,6 +1364,8 @@ class SymPyDocTests(object):
         clear_cache()
 
         from sympy.core.compatibility import StringIO
+        import sympy.interactive.printing as interactive_printing
+        from sympy import pprint_use_unicode
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
@@ -1228,7 +1376,6 @@ class SymPyDocTests(object):
             # So we have to temporarily extend sys.path to import them
             sys.path.insert(0, dirname)
             module = file[:-3]  # remove ".py"
-        setup_pprint()
         try:
             module = pdoctest._normalize_module(module)
             tests = SymPyDocTestFinder().find(module)
@@ -1255,10 +1402,15 @@ class SymPyDocTests(object):
         for test in tests:
             assert len(test.examples) != 0
 
+            if self._reporter._verbose:
+                self._reporter.write("\n{} ".format(test.name))
+
             # check if there are external dependencies which need to be met
             if '_doctest_depends_on' in test.globs:
-                if not self._process_dependencies(test.globs['_doctest_depends_on']):
-                    self._reporter.test_skip()
+                try:
+                    self._check_dependencies(**test.globs['_doctest_depends_on'])
+                except DependencyError as e:
+                    self._reporter.test_skip(v=str(e))
                     continue
 
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
@@ -1280,6 +1432,10 @@ class SymPyDocTests(object):
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
             test.globs['print_function'] = print_function
+
+            old_displayhook = sys.displayhook
+            use_unicode_prev = setup_pprint()
+
             try:
                 f, t = runner.run(test, compileflags=future_flags,
                                   out=new.write, clear_globs=False)
@@ -1291,10 +1447,14 @@ class SymPyDocTests(object):
                 self._reporter.doctest_fail(test.name, new.getvalue())
             else:
                 self._reporter.test_pass()
+                sys.displayhook = old_displayhook
+                interactive_printing.NO_GLOBAL = False
+                pprint_use_unicode(use_unicode_prev)
+
         self._reporter.leaving_filename()
 
     def get_test_files(self, dir, pat='*.py', init_only=True):
-        """
+        r"""
         Returns the list of \*.py files (default) from which docstrings
         will be tested which are at or below directory ``dir``. By default,
         only those that have an __init__.py in their parent directory
@@ -1324,76 +1484,65 @@ class SymPyDocTests(object):
             # skip files that are not importable (i.e. missing __init__.py)
             g = [x for x in g if importable(x)]
 
-        return [sys_normcase(gi) for gi in g]
+        return [os.path.normcase(gi) for gi in g]
 
-    def _process_dependencies(self, deps):
+    def _check_dependencies(self,
+                            executables=(),
+                            modules=(),
+                            disable_viewers=(),
+                            python_version=(2,)):
         """
-        Returns ``False`` if some dependencies are not met and the test should be
-        skipped otherwise returns ``True``.
+        Checks if the dependencies for the test are installed.
+
+        Raises ``DependencyError`` it at least one dependency is not installed.
         """
-        executables = deps.get('exe', None)
-        moduledeps = deps.get('modules', None)
-        viewers = deps.get('disable_viewers', None)
-        pyglet = deps.get('pyglet', None)
 
-        # print deps
+        for executable in executables:
+            if not find_executable(executable):
+                raise DependencyError("Could not find %s" % executable)
 
-        if executables is not None:
-            for ex in executables:
-                found = find_executable(ex)
-                if found is None:
-                    return False
-        if moduledeps is not None:
-            for extmod in moduledeps:
-                if extmod == 'matplotlib':
-                    matplotlib = import_module(
-                        'matplotlib',
-                        __import__kwargs={'fromlist':
-                                          ['pyplot', 'cm', 'collections']},
-                        min_module_version='1.0.0', catch=(RuntimeError,))
-                    if matplotlib is not None:
-                        pass
-                    else:
-                        return False
-                else:
-                    # TODO min version support
-                    mod = import_module(extmod)
-                    if mod is not None:
-                        version = "unknown"
-                        if hasattr(mod, '__version__'):
-                            version = mod.__version__
-                    else:
-                        return False
-        if viewers is not None:
-            import tempfile
+        for module in modules:
+            if module == 'matplotlib':
+                matplotlib = import_module(
+                    'matplotlib',
+                    __import__kwargs={'fromlist':
+                                      ['pyplot', 'cm', 'collections']},
+                    min_module_version='1.0.0', catch=(RuntimeError,))
+                if matplotlib is None:
+                    raise DependencyError("Could not import matplotlib")
+            else:
+                if not import_module(module):
+                    raise DependencyError("Could not import %s" % module)
+
+        if disable_viewers:
             tempdir = tempfile.mkdtemp()
             os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
 
-            if PY3:
-                vw = '#!/usr/bin/env python3\n' \
-                     'import sys\n' \
-                     'if len(sys.argv) <= 1:\n' \
-                     '    exit("wrong number of args")\n'
-            else:
-                vw = '#!/usr/bin/env python\n' \
-                     'import sys\n' \
-                     'if len(sys.argv) <= 1:\n' \
-                     '    exit("wrong number of args")\n'
+            vw = ('#!/usr/bin/env {}\n'
+                  'import sys\n'
+                  'if len(sys.argv) <= 1:\n'
+                  '    exit("wrong number of args")\n').format(
+                      'python3' if PY3 else 'python')
 
-            for viewer in viewers:
+            for viewer in disable_viewers:
                 with open(os.path.join(tempdir, viewer), 'w') as fh:
                     fh.write(vw)
 
                 # make the file executable
                 os.chmod(os.path.join(tempdir, viewer),
                          stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR)
-        if pyglet:
+
+        if python_version:
+            if sys.version_info < python_version:
+                raise DependencyError("Requires Python >= " + '.'.join(map(str, python_version)))
+
+        if 'pyglet' in modules:
             # monkey-patch pyglet s.t. it does not open a window during
             # doctesting
             import pyglet
             class DummyWindow(object):
                 def __init__(self, *args, **kwargs):
-                    self.has_exit=True
+                    self.has_exit = True
                     self.width = 600
                     self.height = 400
 
@@ -1411,7 +1560,6 @@ class SymPyDocTests(object):
 
             pyglet.window.Window = DummyWindow
 
-        return True
 
 class SymPyDocTestFinder(DocTestFinder):
     """
@@ -1421,11 +1569,10 @@ class SymPyDocTestFinder(DocTestFinder):
     object types: modules, functions, classes, methods, staticmethods,
     classmethods, and properties.
 
-    Modified from doctest's version by looking harder for code in the
-    case that it looks like the the code comes from a different module.
-    In the case of decorated functions (e.g. @vectorize) they appear
-    to come from a different module (e.g. multidemensional) even though
-    their code is not there.
+    Modified from doctest's version to look harder for code that
+    appears comes from a different module. For example, the @vectorize
+    decorator makes it look like functions come from multidimensional.py
+    even though their code exists elsewhere.
     """
 
     def _find(self, tests, obj, name, module, source_lines, globs, seen):
@@ -1492,6 +1639,7 @@ class SymPyDocTestFinder(DocTestFinder):
                 self._find(tests, val, valname, module, source_lines,
                            globs, seen)
 
+
         # Look for tests in a class's contained objects.
         if inspect.isclass(obj):
             for valname, val in obj.__dict__.items():
@@ -1501,10 +1649,12 @@ class SymPyDocTestFinder(DocTestFinder):
                 if isinstance(val, classmethod):
                     val = getattr(obj, valname).__func__
 
+
                 # Recurse to methods, properties, and nested classes.
-                if (inspect.isfunction(val) or
+                if ((inspect.isfunction(unwrap(val)) or
                         inspect.isclass(val) or
-                        isinstance(val, property)):
+                        isinstance(val, property)) and
+                    self._from_module(module, val)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
                     if isinstance(val, property):
@@ -1541,7 +1691,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
             docstring = obj
 
-            matches = re.findall("line \d+", name)
+            matches = re.findall(r"line \d+", name)
             assert len(matches) == 1, \
                 "string '%s' does not contain lineno " % name
 
@@ -1572,6 +1722,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Find the docstring's location in the file.
         if lineno is None:
+            obj = unwrap(obj)
             # handling of properties is not implemented in _find_lineno so do
             # it here
             if hasattr(obj, 'func_closure') and obj.func_closure is not None:
@@ -1593,10 +1744,7 @@ class SymPyDocTestFinder(DocTestFinder):
             if filename[-4:] in (".pyc", ".pyo"):
                 filename = filename[:-1]
 
-        if hasattr(obj, '_doctest_depends_on'):
-            globs['_doctest_depends_on'] = obj._doctest_depends_on
-        else:
-            globs['_doctest_depends_on'] = {}
+        globs['_doctest_depends_on'] = getattr(obj, '_doctest_depends_on', {})
 
         return self._parser.get_doctest(docstring, globs, name,
                                         filename, lineno)
@@ -1681,7 +1829,7 @@ SymPyDocTestRunner._SymPyDocTestRunner__record_outcome = \
 class SymPyOutputChecker(pdoctest.OutputChecker):
     """
     Compared to the OutputChecker from the stdlib our OutputChecker class
-    supports numerical comparison of floats occuring in the output of the
+    supports numerical comparison of floats occurring in the output of the
     doctest examples
     """
 
@@ -1749,11 +1897,11 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         # blank line, unless the DONT_ACCEPT_BLANKLINE flag is used.
         if not (optionflags & pdoctest.DONT_ACCEPT_BLANKLINE):
             # Replace <BLANKLINE> in want with a blank line.
-            want = re.sub('(?m)^%s\s*?$' % re.escape(pdoctest.BLANKLINE_MARKER),
+            want = re.sub(r'(?m)^%s\s*?$' % re.escape(pdoctest.BLANKLINE_MARKER),
                           '', want)
             # If a line in got contains only spaces, then remove the
             # spaces.
-            got = re.sub('(?m)^\s*?$', '', got)
+            got = re.sub(r'(?m)^\s*?$', '', got)
             if got == want:
                 return True
 
@@ -1804,6 +1952,8 @@ class PyTestReporter(Reporter):
         self._terminal_width = None
         self._default_width = 80
         self._split = split
+        self._active_file = ''
+        self._active_f = None
 
         # TODO: Should these be protected?
         self.slow_test_functions = []
@@ -1985,12 +2135,9 @@ class PyTestReporter(Reporter):
         self.write(t + "\n")
 
     def write_exception(self, e, val, tb):
-        t = traceback.extract_tb(tb)
         # remove the first item, as that is always runtests.py
-        t = t[1:]
-        t = traceback.format_list(t)
-        self.write("".join(t))
-        t = traceback.format_exception_only(e, val)
+        tb = tb.tb_next
+        t = traceback.format_exception(e, val, tb)
         self.write("".join(t))
 
     def start(self, seed=None, msg="test process starts"):
@@ -2016,6 +2163,8 @@ class PyTestReporter(Reporter):
                 import gmpy2 as gmpy
             version = gmpy.version()
         self.write("ground types:       %s %s\n" % (GROUND_TYPES, version))
+        numpy = import_module('numpy')
+        self.write("numpy:              %s\n" % (None if not numpy else numpy.__version__))
         if seed is not None:
             self.write("random seed:        %d\n" % seed)
         from .misc import HASH_RANDOMIZATION
@@ -2175,15 +2324,19 @@ class PyTestReporter(Reporter):
                 char = "T"
             elif message == "Slow":
                 char = "w"
-        self.write(char, "Blue")
         if self._verbose:
-            self.write(" - ", "Blue")
             if v is not None:
-                self.write(message, "Blue")
+                self.write(message + ' ', "Blue")
+            else:
+                self.write(" - ", "Blue")
+        self.write(char, "Blue")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
-        self.write("E", "Red")
+        if exc_info[0] is TimeOutError:
+            self.write("T", "Red")
+        else:
+            self.write("E", "Red")
         self._active_file_error = True
 
     def import_error(self, filename, exc_info):

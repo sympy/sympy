@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
-from pyglet.gl import *
-from plot_mode_base import PlotModeBase
+import pyglet.gl as pgl
 from sympy.core import S
 from sympy.core.compatibility import range
+from sympy.plotting.pygletplot.plot_mode_base import PlotModeBase
 
 
 class PlotCurve(PlotModeBase):
@@ -66,20 +66,20 @@ class PlotCurve(PlotModeBase):
 
     def draw_verts(self, use_cverts):
         def f():
-            glBegin(GL_LINE_STRIP)
+            pgl.glBegin(pgl.GL_LINE_STRIP)
             for t in range(len(self.t_set)):
                 p = self.verts[t]
                 if p is None:
-                    glEnd()
-                    glBegin(GL_LINE_STRIP)
+                    pgl.glEnd()
+                    pgl.glBegin(pgl.GL_LINE_STRIP)
                     continue
                 if use_cverts:
                     c = self.cverts[t]
                     if c is None:
                         c = (0, 0, 0)
-                    glColor3f(*c)
+                    pgl.glColor3f(*c)
                 else:
-                    glColor3f(*self.default_wireframe_color)
-                glVertex3f(*p)
-            glEnd()
+                    pgl.glColor3f(*self.default_wireframe_color)
+                pgl.glVertex3f(*p)
+            pgl.glEnd()
         return f

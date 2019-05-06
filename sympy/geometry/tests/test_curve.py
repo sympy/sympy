@@ -1,8 +1,6 @@
-from __future__ import division
-
-from sympy import Symbol, pi, symbols, Tuple, S
+from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh
 from sympy.geometry import Curve, Line, Point, Ellipse, Ray, Segment, Circle, Polygon, RegularPolygon
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 
 def test_curve():
@@ -48,26 +46,27 @@ def test_curve():
     raises(ValueError, lambda: Curve((s, s + t), (t, 1, 2)).arbitrary_point(s))
 
 
+@slow
 def test_free_symbols():
     a, b, c, d, e, f, s = symbols('a:f,s')
-    assert Point(a, b).free_symbols == set([a, b])
-    assert Line((a, b), (c, d)).free_symbols == set([a, b, c, d])
-    assert Ray((a, b), (c, d)).free_symbols == set([a, b, c, d])
-    assert Ray((a, b), angle=c).free_symbols == set([a, b, c])
-    assert Segment((a, b), (c, d)).free_symbols == set([a, b, c, d])
-    assert Line((a, b), slope=c).free_symbols == set([a, b, c])
-    assert Curve((a*s, b*s), (s, c, d)).free_symbols == set([a, b, c, d])
-    assert Ellipse((a, b), c, d).free_symbols == set([a, b, c, d])
+    assert Point(a, b).free_symbols == {a, b}
+    assert Line((a, b), (c, d)).free_symbols == {a, b, c, d}
+    assert Ray((a, b), (c, d)).free_symbols == {a, b, c, d}
+    assert Ray((a, b), angle=c).free_symbols == {a, b, c}
+    assert Segment((a, b), (c, d)).free_symbols == {a, b, c, d}
+    assert Line((a, b), slope=c).free_symbols == {a, b, c}
+    assert Curve((a*s, b*s), (s, c, d)).free_symbols == {a, b, c, d}
+    assert Ellipse((a, b), c, d).free_symbols == {a, b, c, d}
     assert Ellipse((a, b), c, eccentricity=d).free_symbols == \
-        set([a, b, c, d])
+        {a, b, c, d}
     assert Ellipse((a, b), vradius=c, eccentricity=d).free_symbols == \
-        set([a, b, c, d])
-    assert Circle((a, b), c).free_symbols == set([a, b, c])
+        {a, b, c, d}
+    assert Circle((a, b), c).free_symbols == {a, b, c}
     assert Circle((a, b), (c, d), (e, f)).free_symbols == \
-        set([e, d, c, b, f, a])
+        {e, d, c, b, f, a}
     assert Polygon((a, b), (c, d), (e, f)).free_symbols == \
-        set([e, b, d, f, a, c])
-    assert RegularPolygon((a, b), c, d, e).free_symbols == set([e, a, b, c, d])
+        {e, b, d, f, a, c}
+    assert RegularPolygon((a, b), c, d, e).free_symbols == {e, a, b, c, d}
 
 
 def test_transform():
@@ -75,13 +74,33 @@ def test_transform():
     y = Symbol('y', real=True)
     c = Curve((x, x**2), (x, 0, 1))
     cout = Curve((2*x - 4, 3*x**2 - 10), (x, 0, 1))
-    pts = [Point(0, 0), Point(1/2, 1/4), Point(1, 1)]
-    pts_out = [Point(-4, -10), Point(-3, -37/4), Point(-2, -7)]
+    pts = [Point(0, 0), Point(S(1)/2, S(1)/4), Point(1, 1)]
+    pts_out = [Point(-4, -10), Point(-3, -S(37)/4), Point(-2, -7)]
 
     assert c.scale(2, 3, (4, 5)) == cout
     assert [c.subs(x, xi/2) for xi in Tuple(0, 1, 2)] == pts
     assert [cout.subs(x, xi/2) for xi in Tuple(0, 1, 2)] == pts_out
     assert Curve((x + y, 3*x), (x, 0, 1)).subs(y, S.Half) == \
-        Curve((x + 1/2, 3*x), (x, 0, 1))
+        Curve((x + S(1)/2, 3*x), (x, 0, 1))
     assert Curve((x, 3*x), (x, 0, 1)).translate(4, 5) == \
         Curve((x + 4, 3*x + 5), (x, 0, 1))
+
+
+def test_length():
+    t = Symbol('t', real=True)
+
+    c1 = Curve((t, 0), (t, 0, 1))
+    assert c1.length == 1
+
+    c2 = Curve((t, t), (t, 0, 1))
+    assert c2.length == sqrt(2)
+
+    c3 = Curve((t ** 2, t), (t, 2, 5))
+    assert c3.length == -sqrt(17) - asinh(4) / 4 + asinh(10) / 4 + 5 * sqrt(101) / 2
+
+
+def test_parameter_value():
+    t = Symbol('t')
+    C = Curve([2*t, t**2], (t, 0, 2))
+    assert C.parameter_value((2, 1), t) == {t: 1}
+    raises(ValueError, lambda: C.parameter_value((2, 0), t))

@@ -1,6 +1,10 @@
+"""
+This module implements a method to find
+Euler-Lagrange Equations for given Lagrangian.
+"""
+from itertools import combinations_with_replacement
 from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
-from sympy.core.compatibility import (
-    combinations_with_replacement, iterable, range)
+from sympy.core.compatibility import (iterable, range)
 
 
 def euler_equations(L, funcs=(), vars=()):
@@ -48,17 +52,17 @@ def euler_equations(L, funcs=(), vars=()):
     >>> t = Symbol('t')
     >>> L = (x(t).diff(t))**2/2 - x(t)**2/2
     >>> euler_equations(L, x(t), t)
-    [Eq(-x(t) - Derivative(x(t), t, t), 0)]
+    [Eq(-x(t) - Derivative(x(t), (t, 2)), 0)]
     >>> u = Function('u')
     >>> x = Symbol('x')
     >>> L = (u(t, x).diff(t))**2/2 - (u(t, x).diff(x))**2/2
     >>> euler_equations(L, u(t, x), [t, x])
-    [Eq(-Derivative(u(t, x), t, t) + Derivative(u(t, x), x, x), 0)]
+    [Eq(-Derivative(u(t, x), (t, 2)) + Derivative(u(t, x), (x, 2)), 0)]
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Euler%E2%80%93Lagrange_equation
+    .. [1] https://en.wikipedia.org/wiki/Euler%E2%80%93Lagrange_equation
 
     """
 
@@ -94,6 +98,6 @@ def euler_equations(L, funcs=(), vars=()):
         for i in range(1, order + 1):
             for p in combinations_with_replacement(vars, i):
                 eq = eq + S.NegativeOne**i*diff(L, diff(f, *p), *p)
-        eqns.append(Eq(eq))
+        eqns.append(Eq(eq, 0))
 
     return eqns

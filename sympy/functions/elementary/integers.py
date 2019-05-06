@@ -1,9 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core.singleton import S
-from sympy.core.function import Function
-from sympy.core import Add
+from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
+from sympy.core.function import Function
 from sympy.core.numbers import Integer
 from sympy.core.relational import Gt, Lt, Ge, Le
 from sympy.core.symbol import Symbol
@@ -20,7 +19,7 @@ class RoundFunction(Function):
     @classmethod
     def eval(cls, arg):
         from sympy import im
-        if arg.is_integer:
+        if arg.is_integer or arg.is_finite is False:
             return arg
         if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             i = im(arg)
@@ -83,13 +82,14 @@ class RoundFunction(Function):
 class floor(RoundFunction):
     """
     Floor is a univariate function which returns the largest integer
-    value not greater than its argument. However this implementation
-    generalizes floor to complex numbers.
+    value not greater than its argument. This implementation
+    generalizes floor to complex numbers by taking the floor of the
+    real and imaginary parts separately.
 
     Examples
     ========
 
-    >>> from sympy import floor, E, I, Float, Rational
+    >>> from sympy import floor, E, I, S, Float, Rational
     >>> floor(17)
     17
     >>> floor(Rational(23, 10))
@@ -100,6 +100,8 @@ class floor(RoundFunction):
     -1
     >>> floor(-I/2)
     -I
+    >>> floor(S(5)/2 + 5*I/2)
+    2 + 2*I
 
     See Also
     ========
@@ -118,12 +120,10 @@ class floor(RoundFunction):
     @classmethod
     def _eval_number(cls, arg):
         if arg.is_Number:
-            if arg.is_Rational:
-                return Integer(arg.p // arg.q)
-            elif arg.is_Float:
-                return Integer(int(arg.floor()))
-            else:
-                return arg
+            return arg.floor()
+        elif any(isinstance(i, j)
+                for i in (arg, -arg) for j in (floor, ceiling)):
+            return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[0]
 
@@ -140,6 +140,18 @@ class floor(RoundFunction):
         else:
             return r
 
+    def _eval_rewrite_as_ceiling(self, arg, **kwargs):
+        return -ceiling(-arg)
+
+    def _eval_rewrite_as_frac(self, arg, **kwargs):
+        return arg - frac(arg)
+
+    def _eval_Eq(self, other):
+        if isinstance(self, floor):
+            if (self.rewrite(ceiling) == other) or \
+                    (self.rewrite(frac) == other):
+                return S.true
+
     def __le__(self, other):
         if self.args[0] == other and other.is_real:
             return S.true
@@ -154,13 +166,14 @@ class floor(RoundFunction):
 class ceiling(RoundFunction):
     """
     Ceiling is a univariate function which returns the smallest integer
-    value not less than its argument. Ceiling function is generalized
-    in this implementation to complex numbers.
+    value not less than its argument. This implementation
+    generalizes ceiling to complex numbers by taking the ceiling of the
+    real and imaginary parts separately.
 
     Examples
     ========
 
-    >>> from sympy import ceiling, E, I, Float, Rational
+    >>> from sympy import ceiling, E, I, S, Float, Rational
     >>> ceiling(17)
     17
     >>> ceiling(Rational(23, 10))
@@ -171,6 +184,8 @@ class ceiling(RoundFunction):
     0
     >>> ceiling(I/2)
     I
+    >>> ceiling(S(5)/2 + 5*I/2)
+    3 + 3*I
 
     See Also
     ========
@@ -189,12 +204,10 @@ class ceiling(RoundFunction):
     @classmethod
     def _eval_number(cls, arg):
         if arg.is_Number:
-            if arg.is_Rational:
-                return -Integer(-arg.p // arg.q)
-            elif arg.is_Float:
-                return Integer(int(arg.ceiling()))
-            else:
-                return arg
+            return arg.ceiling()
+        elif any(isinstance(i, j)
+                for i in (arg, -arg) for j in (floor, ceiling)):
+            return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[1]
 
@@ -210,6 +223,18 @@ class ceiling(RoundFunction):
                 return r
         else:
             return r
+
+    def _eval_rewrite_as_floor(self, arg, **kwargs):
+        return -floor(-arg)
+
+    def _eval_rewrite_as_frac(self, arg, **kwargs):
+        return arg + frac(-arg)
+
+    def _eval_Eq(self, other):
+        if isinstance(self, ceiling):
+            if (self.rewrite(floor) == other) or \
+                    (self.rewrite(frac) == other):
+                return S.true
 
     def __lt__(self, other):
         if self.args[0] == other and other.is_real:
@@ -228,7 +253,7 @@ class frac(Function):
     For real numbers it is defined [1]_ as
 
     .. math::
-        x - \lfloor{x}\rfloor
+        x - \left\lfloor{x}\right\rfloor
 
     Examples
     ========
@@ -267,7 +292,7 @@ class frac(Function):
     References
     ===========
 
-    .. [1] http://en.wikipedia.org/wiki/Fractional_part
+    .. [1] https://en.wikipedia.org/wiki/Fractional_part
     .. [2] http://mathworld.wolfram.com/FractionalPart.html
 
     """
@@ -307,5 +332,14 @@ class frac(Function):
         imag = _eval(imag)
         return real + S.ImaginaryUnit*imag
 
-    def _eval_rewrite_as_floor(self, arg):
+    def _eval_rewrite_as_floor(self, arg, **kwargs):
         return arg - floor(arg)
+
+    def _eval_rewrite_as_ceiling(self, arg, **kwargs):
+        return arg + ceiling(-arg)
+
+    def _eval_Eq(self, other):
+        if isinstance(self, frac):
+            if (self.rewrite(floor) == other) or \
+                    (self.rewrite(ceiling) == other):
+                return S.true

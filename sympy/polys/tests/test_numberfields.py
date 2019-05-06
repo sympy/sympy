@@ -25,7 +25,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import rootof
 from sympy.polys.polytools import degree
 
 from sympy.abc import x, y, z
@@ -143,6 +143,14 @@ def test_minimal_polynomial():
     assert minimal_polynomial(sqrt(2)*I + I*(1 + sqrt(2)), x,
             compose=False) ==  x**4 + 18*x**2 + 49
 
+    # minimal polynomial of I
+    assert minimal_polynomial(I, x, domain=QQ.algebraic_field(I)) == x - I
+    K = QQ.algebraic_field(I*(sqrt(2) + 1))
+    assert minimal_polynomial(I, x, domain=K) == x - I
+    assert minimal_polynomial(I, x, domain=QQ) == x**2 + 1
+    assert minimal_polynomial(I, x, domain='QQ(y)') == x**2 + 1
+
+
 def test_minimal_polynomial_hi_prec():
     p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + S(1)/10**30)
     mp = minimal_polynomial(p, x)
@@ -209,7 +217,7 @@ def test_minpoly_compose():
     assert minimal_polynomial(sin(5*pi/14), x) == 8*x**3 - 4*x**2 - 4*x + 1
     assert minimal_polynomial(cos(pi/15), x) == 16*x**4 + 8*x**3 - 16*x**2 - 8*x + 1
 
-    ex = RootOf(x**3 +x*4 + 1, 0)
+    ex = rootof(x**3 +x*4 + 1, 0)
     mp = minimal_polynomial(ex, x)
     assert mp == x**3 + 4*x + 1
     mp = minimal_polynomial(ex + 1, x)
@@ -280,6 +288,9 @@ def test_primitive_element():
     raises(ValueError, lambda: primitive_element([], x, ex=False))
     raises(ValueError, lambda: primitive_element([], x, ex=True))
 
+    # Issue 14117
+    a, b = I*sqrt(2*sqrt(2) + 3), I*sqrt(-2*sqrt(2) + 3)
+    assert primitive_element([a, b, I], x) == (x**4 + 6*x**2 + 1, [1, 0, 0])
 
 def test_field_isomorphism_pslq():
     a = AlgebraicNumber(I)
@@ -591,7 +602,7 @@ def test_AlgebraicNumber():
     assert a.is_aliased is False
 
     assert AlgebraicNumber( sqrt(3)).rep == DMP([ QQ(1), QQ(0)], QQ)
-    assert AlgebraicNumber(-sqrt(3)).rep == DMP([-QQ(1), QQ(0)], QQ)
+    assert AlgebraicNumber(-sqrt(3)).rep == DMP([ QQ(1), QQ(0)], QQ)
 
     a = AlgebraicNumber(sqrt(2))
     b = AlgebraicNumber(sqrt(2))
@@ -740,3 +751,11 @@ def test_minpoly_domain():
         domain=QQ.algebraic_field(sqrt(2))) == 2*x**2 - 3
 
     raises(NotAlgebraic, lambda: minimal_polynomial(y, x, domain=QQ))
+
+
+def test_issue_14831():
+    a = -2*sqrt(2)*sqrt(12*sqrt(2) + 17)
+    assert minimal_polynomial(a, x) == x**2 + 16*x - 8
+    e = (-3*sqrt(12*sqrt(2) + 17) + 12*sqrt(2) +
+         17 - 2*sqrt(2)*sqrt(12*sqrt(2) + 17))
+    assert minimal_polynomial(e, x) == x

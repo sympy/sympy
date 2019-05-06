@@ -8,14 +8,15 @@ from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.core.compatibility import range
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
-    cartes, common_prefix, common_suffix, dict_merge, filter_symbols,
-    flatten, generate_bell, generate_derangements, generate_involutions,
-    generate_oriented_forest, group, has_dups, kbins, minlex, multiset,
-    multiset_combinations, multiset_partitions,
+    cartes, common_prefix, common_suffix, connected_components, dict_merge,
+    filter_symbols, flatten, generate_bell, generate_derangements,
+    generate_involutions, generate_oriented_forest, group, has_dups, ibin,
+    kbins, minlex, multiset, multiset_combinations, multiset_partitions,
     multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
     permutations, postfixes, postorder_traversal, prefixes, reshape,
-    rotate_left, rotate_right, runs, sift, subsets, take, topological_sort,
-    unflatten, uniq, variations)
+    rotate_left, rotate_right, runs, sift, strongly_connected_components,
+    subsets, take, topological_sort, unflatten, uniq, variations,
+    ordered_partitions, rotations)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -70,7 +71,7 @@ def test_flatten():
     assert flatten([MyOp(x, y), z]) == [MyOp(x, y), z]
     assert flatten([MyOp(x, y), z], cls=MyOp) == [x, y, z]
 
-    assert flatten(set([1, 11, 2])) == list(set([1, 11, 2]))
+    assert flatten({1, 11, 2}) == list({1, 11, 2})
 
 
 def test_group():
@@ -182,6 +183,12 @@ def test_sift():
     assert sift(list(range(5)), lambda _: _ % 2) == {1: [1, 3], 0: [0, 2, 4]}
     assert sift([x, y], lambda _: _.has(x)) == {False: [y], True: [x]}
     assert sift([S.One], lambda _: _.has(x)) == {False: [1]}
+    assert sift([0, 1, 2, 3], lambda x: x % 2, binary=True) == (
+        [1, 3], [0, 2])
+    assert sift([0, 1, 2, 3], lambda x: x % 3 == 1, binary=True) == (
+        [1], [0, 2, 3])
+    raises(ValueError, lambda:
+        sift([0, 1, 2, 3], lambda x: x % 3, binary=True))
 
 
 def test_take():
@@ -233,6 +240,40 @@ def test_topological_sort():
         [7, 5, 11, 3, 10, 8, 9, 2]
 
     raises(ValueError, lambda: topological_sort((V, E + [(10, 7)])))
+
+
+def test_strongly_connected_components():
+    assert strongly_connected_components(([], [])) == []
+    assert strongly_connected_components(([1, 2, 3], [])) == [[1], [2], [3]]
+
+    V = [1, 2, 3]
+    E = [(1, 2), (1, 3), (2, 1), (2, 3), (3, 1)]
+    assert strongly_connected_components((V, E)) == [[1, 2, 3]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (2, 3), (3, 2), (3, 4)]
+    assert strongly_connected_components((V, E)) == [[4], [2, 3], [1]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (2, 1), (3, 4), (4, 3)]
+    assert strongly_connected_components((V, E)) == [[1, 2], [3, 4]]
+
+
+def test_connected_components():
+    assert connected_components(([], [])) == []
+    assert connected_components(([1, 2, 3], [])) == [[1], [2], [3]]
+
+    V = [1, 2, 3]
+    E = [(1, 2), (1, 3), (2, 1), (2, 3), (3, 1)]
+    assert connected_components((V, E)) == [[1, 2, 3]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (2, 3), (3, 2), (3, 4)]
+    assert connected_components((V, E)) == [[1, 2, 3, 4]]
+
+    V = [1, 2, 3, 4]
+    E = [(1, 2), (3, 4)]
+    assert connected_components((V, E)) == [[1, 2], [3, 4]]
 
 
 def test_rotate():
@@ -390,14 +431,21 @@ def test_multiset_permutations():
 
 
 def test_partitions():
+    ans = [[{}], [(0, {})]]
+    for i in range(2):
+        assert list(partitions(0, size=i)) == ans[i]
+        assert list(partitions(1, 0, size=i)) == ans[i]
+        assert list(partitions(6, 2, 2, size=i)) == ans[i]
+        assert list(partitions(6, 2, None, size=i)) != ans[i]
+        assert list(partitions(6, None, 2, size=i)) != ans[i]
+        assert list(partitions(6, 2, 0, size=i)) == ans[i]
+
     assert [p.copy() for p in partitions(6, k=2)] == [
         {2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
 
     assert [p.copy() for p in partitions(6, k=3)] == [
         {3: 2}, {1: 1, 2: 1, 3: 1}, {1: 3, 3: 1}, {2: 3}, {1: 2, 2: 2},
         {1: 4, 2: 1}, {1: 6}]
-
-    assert [p.copy() for p in partitions(6, k=2, m=2)] == []
 
     assert [p.copy() for p in partitions(8, k=4, m=3)] == [
         {4: 2}, {1: 1, 3: 1, 4: 1}, {2: 2, 4: 1}, {2: 1, 3: 2}] == [
@@ -411,7 +459,6 @@ def test_partitions():
         {1: 1, 3: 1}, {2: 2}, {1: 2, 2: 1}, {1: 4}] == [
         i.copy() for i in partitions(4) if all(k <= 3 for k in i)]
 
-    raises(ValueError, lambda: list(partitions(3, 0)))
 
     # Consistency check on output of _partitions and RGS_unrank.
     # This provides a sanity test on both routines.  Also verifies that
@@ -422,7 +469,7 @@ def test_partitions():
         i  = 0
         for m, q  in _set_partitions(n):
             assert  q == RGS_unrank(i, n)
-            i = i+1
+            i += 1
         assert i == RGS_enum(n)
 
 def test_binary_partitions():
@@ -457,7 +504,7 @@ def test_involutions():
     for n, N in enumerate(lengths):
         i = list(generate_involutions(n + 1))
         assert len(i) == N
-        assert len(set([Permutation(j)**2 for j in i])) == 1
+        assert len({Permutation(j)**2 for j in i}) == 1
 
 
 def test_derangements():
@@ -599,9 +646,10 @@ def test_reshape():
         (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
     assert reshape(tuple(seq), ([1], 1, (2,))) == \
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
-    assert reshape(list(range(12)), [2, [3], set([2]), (1, (3,), 1)]) == \
-        [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
-
+    assert reshape(list(range(12)), [2, [3], {2}, (1, (3,), 1)]) == \
+        [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
+    raises(ValueError, lambda: reshape([0, 1], [-1]))
+    raises(ValueError, lambda: reshape([0, 1], [3]))
 
 def test_uniq():
     assert list(uniq(p.copy() for p in partitions(4))) == \
@@ -707,3 +755,31 @@ def test__partition():
         ['b', 'e'], ['a', 'c'], ['d']]
     output = (3, [1, 0, 1, 2, 0])
     assert _partition('abcde', *output) == [['b', 'e'], ['a', 'c'], ['d']]
+
+
+def test_ordered_partitions():
+    from sympy.functions.combinatorial.numbers import nT
+    f = ordered_partitions
+    assert list(f(0, 1)) == [[]]
+    assert list(f(1, 0)) == [[]]
+    for i in range(1, 7):
+        for j in [None] + list(range(1, i)):
+            assert (
+                sum(1 for p in f(i, j, 1)) ==
+                sum(1 for p in f(i, j, 0)) ==
+                nT(i, j))
+
+
+def test_rotations():
+    assert list(rotations('ab')) == [['a', 'b'], ['b', 'a']]
+    assert list(rotations(range(3))) == [[0, 1, 2], [1, 2, 0], [2, 0, 1]]
+    assert list(rotations(range(3), dir=-1)) == [[0, 1, 2], [2, 0, 1], [1, 2, 0]]
+
+
+def test_ibin():
+    assert ibin(3) == [1, 1]
+    assert ibin(3, 3) == [0, 1, 1]
+    assert ibin(3, str=True) == '11'
+    assert ibin(3, 3, str=True) == '011'
+    assert list(ibin(2, 'all')) == [(0, 0), (0, 1), (1, 0), (1, 1)]
+    assert list(ibin(2, 'all', str=True)) == ['00', '01', '10', '11']

@@ -2,29 +2,30 @@
 
 from __future__ import print_function, division
 
-from random import uniform
-import random
+from random import uniform, Random, randrange, randint
 
-from sympy.core.numbers import I
-from sympy.simplify.simplify import nsimplify
-from sympy.core.containers import Tuple
-from sympy.core.numbers import comp
-from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, as_int
+from sympy.core.containers import Tuple
+from sympy.core.numbers import comp, I
+from sympy.core.symbol import Symbol
+from sympy.simplify.simplify import nsimplify
 
 
-def random_complex_number(a=2, b=-1, c=3, d=1, rational=False):
+def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
     """
     Return a random complex number.
 
     To reduce chance of hitting branch cuts or anything, we guarantee
     b <= Im z <= d, a <= Re z <= c
+
+    When rational is True, a rational approximation to a random number
+    is obtained within specified tolerance, if any.
     """
     A, B = uniform(a, c), uniform(b, d)
     if not rational:
         return A + I*B
-    return nsimplify(A, rational=True) + I*nsimplify(B, rational=True)
+    return (nsimplify(A, rational=True, tolerance=tolerance) +
+        I*nsimplify(B, rational=True, tolerance=tolerance))
 
 
 def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
@@ -47,7 +48,7 @@ def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     """
     f, g, z = Tuple(f, g, z)
     z = [z] if isinstance(z, Symbol) else (f.free_symbols | g.free_symbols)
-    reps = list(zip(z, [random_complex_number(a, b, c, d) for zi in z]))
+    reps = list(zip(z, [random_complex_number(a, b, c, d) for _ in z]))
     z1 = f.subs(reps).n()
     z2 = g.subs(reps).n()
     return comp(z1, z2, tol)
@@ -100,9 +101,9 @@ def _randrange(seed=None):
     (0, 1)
     """
     if seed is None:
-        return random.randrange
+        return randrange
     elif isinstance(seed, int):
-        return random.Random(seed).randrange
+        return Random(seed).randrange
     elif is_sequence(seed):
         seed = list(seed)  # make a copy
         seed.reverse()
@@ -116,9 +117,7 @@ def _randrange(seed=None):
                 raise ValueError('_randrange got empty range')
             try:
                 x = seq.pop()
-            except AttributeError:
-                raise ValueError('_randrange expects a list-like sequence')
-            except IndexError:
+            except IndexError as e:
                 raise ValueError('_randrange sequence was too short')
             if a <= x < b:
                 return x
@@ -151,9 +150,9 @@ def _randint(seed=None):
     (1, 2)
     """
     if seed is None:
-        return random.randint
+        return randint
     elif isinstance(seed, int):
-        return random.Random(seed).randint
+        return Random(seed).randint
     elif is_sequence(seed):
         seed = list(seed)  # make a copy
         seed.reverse()
@@ -165,8 +164,6 @@ def _randint(seed=None):
                 raise ValueError('_randint got empty range')
             try:
                 x = seq.pop()
-            except AttributeError:
-                raise ValueError('_randint expects a list-like sequence')
             except IndexError:
                 raise ValueError('_randint sequence was too short')
             if a <= x <= b:

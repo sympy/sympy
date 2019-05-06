@@ -4,7 +4,6 @@ from sympy.core.compatibility import StringIO
 from sympy import erf, Integral, Piecewise
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.printing.codeprinter import Assignment
 from sympy.utilities.codegen import OctaveCodeGen, codegen, make_routine
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
@@ -74,9 +73,9 @@ def test_m_numbersymbol():
     source = result[1]
     expected = (
         "function out1 = test()\n"
-        "  out1 = pi^0.915965594177219;\n"
+        "  out1 = pi^%s;\n"
         "end\n"
-    )
+    ) % Catalan.evalf(17)
     assert source == expected
 
 
@@ -208,7 +207,7 @@ def test_m_output_arg_mixed_unordered():
 
 
 def test_m_piecewise_():
-    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True))
+    pw = Piecewise((0, x < -1), (x**2, x <= 1), (-x+2, x > 1), (1, True), evaluate=False)
     name_expr = ("pwtest", pw)
     result, = codegen(name_expr, "Octave", header=False, empty=False)
     source = result[1]
@@ -216,7 +215,7 @@ def test_m_piecewise_():
         "function out1 = pwtest(x)\n"
         "  out1 = ((x < -1).*(0) + (~(x < -1)).*( ...\n"
         "  (x <= 1).*(x.^2) + (~(x <= 1)).*( ...\n"
-        "  (x > 1).*(-x + 2) + (~(x > 1)).*(1))));\n"
+        "  (x > 1).*(2 - x) + (~(x > 1)).*(1))));\n"
         "end\n"
     )
     assert source == expected
@@ -348,8 +347,7 @@ def test_m_matrix_output_autoname_2():
         "  out1 = x + y;\n"
         "  out2 = [2*x 2*y 2*z];\n"
         "  out3 = [x; y; z];\n"
-        "  out4 = [x  y;\n"
-        "  z 16];\n"
+        "  out4 = [x y; z 16];\n"
         "end\n"
     )
     assert source == expected
@@ -502,7 +500,7 @@ def test_m_tensor_loops_multiple_contractions():
         '    for j = 1:n\n'
         '      for k = 1:o\n'
         '        for l = 1:p\n'
-        '          y(i) = y(i) + B(j, k, l).*A(i, j, k, l);\n'
+        '          y(i) = A(i, j, k, l).*B(j, k, l) + y(i);\n'
         '        end\n'
         '      end\n'
         '    end\n'

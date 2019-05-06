@@ -1,39 +1,60 @@
-from sympy.core.symbol import Symbol
-from sympy.core import S
-from sympy.core.compatibility import u, range
+from sympy.core import AtomicExpr, Symbol, S
+from sympy.core.sympify import _sympify
+from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm
+from sympy.printing.precedence import PRECEDENCE
 
 
-class BaseScalar(Symbol):
+class BaseScalar(AtomicExpr):
     """
     A coordinate symbol/base scalar.
 
     Ideally, users should not instantiate this class.
 
+    Unicode pretty forms in Python 2 should use the `u` prefix.
+
     """
 
-    def __new__(cls, name, index, system, pretty_str, latex_str):
-        name = str(name)
-        pretty_str = str(pretty_str)
-        latex_str = str(latex_str)
-        from sympy.vector.coordsysrect import CoordSysCartesian
-        obj = super(BaseScalar, cls).__new__(cls, name)
-        if not isinstance(system, CoordSysCartesian):
-            raise TypeError("system should be a CoordSysCartesian")
+    def __new__(cls, index, system, pretty_str=None, latex_str=None):
+        from sympy.vector.coordsysrect import CoordSys3D
+        if pretty_str is None:
+            pretty_str = "x{0}".format(index)
+        elif isinstance(pretty_str, Symbol):
+            pretty_str = pretty_str.name
+        if latex_str is None:
+            latex_str = "x_{0}".format(index)
+        elif isinstance(latex_str, Symbol):
+            latex_str = latex_str.name
+
+        index = _sympify(index)
+        system = _sympify(system)
+        obj = super(BaseScalar, cls).__new__(cls, index, system)
+        if not isinstance(system, CoordSys3D):
+            raise TypeError("system should be a CoordSys3D")
         if index not in range(0, 3):
             raise ValueError("Invalid index specified.")
         # The _id is used for equating purposes, and for hashing
         obj._id = (index, system)
-        obj._name = name
-        obj._pretty_form = u(pretty_str)
+        obj._name = obj.name = system._name + '.' + system._variable_names[index]
+        obj._pretty_form = u'' + pretty_str
         obj._latex_form = latex_str
         obj._system = system
 
-        #Change the args for the object
-        obj._args = tuple([Symbol(name), S(index), system,
-                           Symbol(pretty_str), Symbol(latex_str)])
-
         return obj
+
+    is_commutative = True
+    is_symbol = True
+
+    @property
+    def free_symbols(self):
+        return {self}
+
+    _diff_wrt = True
+
+    def _eval_derivative(self, s):
+        if self == s:
+            return S.One
+        return S.Zero
 
     def _latex(self, printer=None):
         return self._latex_form
@@ -41,30 +62,14 @@ class BaseScalar(Symbol):
     def _pretty(self, printer=None):
         return prettyForm(self._pretty_form)
 
+    precedence = PRECEDENCE['Atom']
+
     @property
     def system(self):
         return self._system
 
-    def __eq__(self, other):
-        # Check if the other object is a BaseScalar of same index
-        # and coordinate system
-        if isinstance(other, BaseScalar):
-            if other._id == self._id:
-                return True
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return self._id.__hash__()
-
     def __str__(self, printer=None):
         return self._name
-
-    @property
-    def free_symbols(self):
-        return set([self])
 
     __repr__ = __str__
     _sympystr = __str__

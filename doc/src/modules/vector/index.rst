@@ -2,9 +2,9 @@
 Vector Module
 =============
 
-The vector module provides tools for basic vector math 
-and differential calculus with respect to 3D Cartesian coordinate 
-systems. This documentation provides an overview of all the 
+The vector module provides tools for basic vector math
+and differential calculus with respect to 3D Cartesian coordinate
+systems. This documentation provides an overview of all the
 features offered, and relevant API.
 
 
@@ -31,8 +31,8 @@ Vector API
     api/vectorfunctions.rst
 
 References for Vector
-================================
+=====================
 
-.. [Dyadics] http://en.wikipedia.org/wiki/Dyadics
-.. [DyadicProducts] http://en.wikipedia.org/wiki/Dyadic_product
-.. [DelOperator] http://en.wikipedia.org/wiki/Del
+.. [Dyadics] https://en.wikipedia.org/wiki/Dyadics
+.. [DyadicProducts] https://en.wikipedia.org/wiki/Dyadic_product
+.. [DelOperator] https://en.wikipedia.org/wiki/Del

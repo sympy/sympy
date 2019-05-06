@@ -5,9 +5,9 @@ from sympy import (
 
 from sympy.core.mul import _unevaluated_Mul as umul
 from sympy.simplify.radsimp import _unevaluated_Add, collect_sqrt, fraction_expand
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
+from sympy.abc import x, y, z, a, b, c, d
 
 
 def test_radsimp():
@@ -158,6 +158,7 @@ def test_radsimp_issue_3214():
 def test_collect_1():
     """Collect with respect to a Symbol"""
     x, y, z, n = symbols('x,y,z,n')
+    assert collect(1, x) == 1
     assert collect( x + y*x, x ) == x * (1 + y)
     assert collect( x + x**2, x ) == x + x**2
     assert collect( x**2 + y*x**2, x ) == (x**2)*(1 + y)
@@ -238,6 +239,8 @@ def test_collect_D():
         (x*f(x) + f(x))*D(f(x), x) + f(x)
     assert collect(1/f(x) + 1/f(x)*diff(f(x), x) + x*diff(f(x), x)/f(x), f(x).diff(x), exact=True) == \
         (1/f(x) + x/f(x))*D(f(x), x) + 1/f(x)
+    e = (1 + x*fx + fx)/f(x)
+    assert collect(e.expand(), fx) == fx*(x/f(x) + 1/f(x)) + 1/f(x)
 
 
 def test_collect_func():
@@ -253,6 +256,10 @@ def test_collect_func():
         x: 3*a**2 + 6*a + 3, x**2: 3*a + 3,
         x**3: 1
     }
+
+    assert collect(f, x, factor, evaluate=False) == {
+        S.One: (a + 1)**3, x: 3*(a + 1)**2,
+        x**2: umul(S(3), a + 1), x**3: 1}
 
 
 def test_collect_order():
@@ -283,29 +290,12 @@ def test_rcollect():
     assert rcollect(sqrt(-((x + 1)*(y + 1))), z) == sqrt(-((x + 1)*(y + 1)))
 
 
-@XFAIL
-def test_collect_func_xfail():
-    # XXX: this test will pass when automatic constant distribution is removed (issue 4596)
-    assert collect(f, x, factor, evaluate=False) == {S.One: (a + 1)**3,
-                   x: 3*(a + 1)**2, x**2: 3*(a + 1), x**3: 1}
-
-
-@XFAIL
-def test_collect_issues():
-    D = Derivative
-    f = Function('f')
-    e = (1 + x*D(f(x), x) + D(f(x), x))/f(x)
-    assert collect(e.expand(), f(x).diff(x)) != e
-
-
 def test_collect_D_0():
     D = Derivative
     f = Function('f')
     x, a, b = symbols('x,a,b')
     fxx = D(f(x), x, x)
 
-    # collect does not distinguish nested derivatives, so it returns
-    #                                           -- (a + b)*D(D(f, x), x)
     assert collect(a*fxx + b*fxx, fxx) == (a + b)*fxx
 
 
@@ -352,6 +342,23 @@ def test_collect_const():
     assert collect_sqrt(eq + 2) == \
         2*sqrt(sqrt(2) + 3)*(sqrt(5)*x + y) + 2
 
+    # issue 16296
+    assert collect_const(a + b + x/2 + y/2) == a + b + Mul(S.Half, x + y, evaluate=False)
+
+
+def test_issue_13143():
+    f = Function('f')
+    fx = f(x).diff(x)
+    e = f(x) + fx + f(x)*fx
+    # collect function before derivative
+    assert collect(e, Wild('w')) == f(x)*(fx + 1) + fx
+    e = f(x) + f(x)*fx + x*fx*f(x)
+    assert collect(e, fx) == (x*f(x) + f(x))*fx + f(x)
+    assert collect(e, f(x)) == (x*fx + fx + 1)*f(x)
+    e = f(x) + fx + f(x)*fx
+    assert collect(e, [f(x), fx]) == f(x)*(1 + fx) + fx
+    assert collect(e, [fx, f(x)]) == fx*(1 + f(x)) + f(x)
+
 
 def test_issue_6097():
     assert collect(a*y**(2.0*x) + b*y**(2.0*x), y**x) == y**(2.0*x)*(a + b)
@@ -385,6 +392,7 @@ def test_fraction():
     assert fraction(x*(y + 1)/y**7) == (x*(y + 1), y**7)
 
     assert fraction(exp(-x), exact=True) == (exp(-x), 1)
+    assert fraction((1/(x + y))/2, exact=True) == (1, Mul(2,(x + y), evaluate=False))
 
     assert fraction(x*A/y) == (x*A, y)
     assert fraction(x*A**-1/y) == (x*A**-1, y)
@@ -393,6 +401,8 @@ def test_fraction():
     assert fraction(exp(n)) == (1, exp(-n))
     assert fraction(exp(-n)) == (exp(-n), 1)
 
+    p = symbols('p', positive=True)
+    assert fraction(exp(-p)*log(p), exact=True) == (exp(-p)*log(p), 1)
 
 def test_issue_5615():
     aA, Re, a, b, D = symbols('aA Re a b D')
@@ -405,3 +415,11 @@ def test_issue_5933():
     x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
     assert abs(denom(x).n()) > 1e-12
     assert abs(denom(radsimp(x))) > 1e-12  # in case simplify didn't handle it
+
+
+def test_issue_14608():
+    a, b = symbols('a b', commutative=False)
+    x, y = symbols('x y')
+    raises(AttributeError, lambda: collect(a*b + b*a, a))
+    assert collect(x*y + y*(x+1), a) == x*y + y*(x+1)
+    assert collect(x*y + y*(x+1) + a*b + b*a, y) == y*(2*x + 1) + a*b + b*a

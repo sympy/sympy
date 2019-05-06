@@ -2,7 +2,8 @@ from __future__ import print_function, division
 
 from .matexpr import MatrixExpr
 from sympy import Basic, sympify
-
+from sympy.matrices import Matrix
+from sympy.functions.elementary.complexes import re, im
 
 class FunctionMatrix(MatrixExpr):
     """
@@ -10,7 +11,7 @@ class FunctionMatrix(MatrixExpr):
 
     This class is an alternative to SparseMatrix
 
-    >>> from sympy import FunctionMatrix, symbols, Lambda, MatMul, Matrix
+    >>> from sympy import FunctionMatrix, symbols, Lambda, MatPow, Matrix
     >>> i, j = symbols('i,j')
     >>> X = FunctionMatrix(3, 3, Lambda((i, j), i + j))
     >>> Matrix(X)
@@ -21,7 +22,7 @@ class FunctionMatrix(MatrixExpr):
 
     >>> Y = FunctionMatrix(1000, 1000, Lambda((i, j), i + j))
 
-    >>> isinstance(Y*Y, MatMul) # this is an expression object
+    >>> isinstance(Y*Y, MatPow) # this is an expression object
     True
 
     >>> (Y**2)[10,10] # So this is evaluated lazily
@@ -39,9 +40,13 @@ class FunctionMatrix(MatrixExpr):
     def lamda(self):
         return self.args[2]
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         return self.lamda(i, j)
 
     def _eval_trace(self):
         from sympy.matrices.expressions.trace import Trace
-        return Trace._eval_rewrite_as_Sum(Trace(self)).doit()
+        from sympy import Sum
+        return Trace(self).rewrite(Sum).doit()
+
+    def as_real_imag(self):
+        return (re(Matrix(self)), im(Matrix(self)))

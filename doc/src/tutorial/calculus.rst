@@ -1,3 +1,5 @@
+.. _calculus:
+
 ==========
  Calculus
 ==========
@@ -81,6 +83,18 @@ know how to compute the derivative of an expression (for example, if it
 contains an undefined function, which are described in the :ref:`Solving
 Differential Equations <tutorial-dsolve>` section).
 
+Derivatives of unspecified order can be created using tuple ``(x, n)`` where
+``n`` is the order of the derivative with respect to ``x``.
+
+    >>> m, n, a, b = symbols('m n a b')
+    >>> expr = (a*x + b)**m
+    >>> expr.diff((x, n))
+      n
+     ∂ ⎛         m⎞
+    ───⎝(a⋅x + b) ⎠
+      n
+    ∂x
+
 Integrals
 =========
 
@@ -153,8 +167,8 @@ As with ``Derivative``, you can create an unevaluated integral using
 ``integrate`` uses powerful algorithms that are always improving to compute
 both definite and indefinite integrals, including heuristic pattern matching
 type algorithms, a partial implementation of the `Risch algorithm
-<http://en.wikipedia.org/wiki/Risch_algorithm>`_, and an algorithm using
-`Meijer G-functions <http://en.wikipedia.org/wiki/Meijer_g-function>`_ that is
+<https://en.wikipedia.org/wiki/Risch_algorithm>`_, and an algorithm using
+`Meijer G-functions <https://en.wikipedia.org/wiki/Meijer_g-function>`_ that is
 useful for computing integrals in terms of special functions, especially
 definite integrals.  Here is a sampling of some of the power of ``integrate``.
 
@@ -197,7 +211,7 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⌡
     0
     >>> integ.doit()
-    ⎧ Γ(y + 1)    for -re(y) < 1
+    ⎧ Γ(y + 1)    for re(y) > -1
     ⎪
     ⎪∞
     ⎪⌠
@@ -241,13 +255,13 @@ counterpart, ``Limit``.  To evaluate it, use ``doit``.
 
     >>> expr = Limit((cos(x) - 1)/x, x, 0)
     >>> expr
-         cos(x) - 1
-     lim ──────────
-    x─→0⁺    x
+         ⎛cos(x) - 1⎞
+     lim ⎜──────────⎟
+    x─→0⁺⎝    x     ⎠
     >>> expr.doit()
     0
 
-To evaluate a limit at one side only, pass ``'+'`` or ``'-'`` as a third
+To evaluate a limit at one side only, pass ``'+'`` or ``'-'`` as a fourth
 argument to ``limit``.  For example, to compute
 
 .. math::
@@ -279,7 +293,7 @@ which case the defaults ``x0=0`` and ``n=6`` will be used.
     1 + x + ── + O⎝x ⎠
             2
 
-The `O\left (x^4\right )` term at the end represents the Landau order term at
+The `O\left(x^4\right)` term at the end represents the Landau order term at
 `x=0` (not to be confused with big O notation used in computer science, which
 generally represents the Landau order term at `x=\infty`).  It means that all
 x terms with power greater than or equal to `x^4` are omitted.  Order terms
@@ -311,19 +325,35 @@ The ``O`` notation supports arbitrary limit points (other than 0):
 Finite differences
 ==================
 
-So far we have looked at expressions with analytical derivatives
+So far we have looked at expressions with analytic derivatives
 and primitive functions respectively. But what if we want to have an
 expression to estimate a derivative of a curve for which we lack a
 closed form representation, or for which we don't know the functional
 values for yet. One approach would be to use a finite difference
 approach.
 
-You can use the ``as_finite_diff`` method of on any ``Derivative``
-instance to generate approximations to derivatives of arbitrary order:
+The simplest way the differentiate using finite differences is to use
+the ``differentiate_finite`` function:
+
+    >>> f, g = symbols('f g', cls=Function)
+    >>> differentiate_finite(f(x)*g(x))
+    -f(x - 1/2)⋅g(x - 1/2) + f(x + 1/2)⋅g(x + 1/2)
+
+If we want to expand the intermediate derivative we may pass the
+flag ``evaluate=True``:
+
+    >>> differentiate_finite(f(x)*g(x), evaluate=True)
+    (-f(x - 1/2) + f(x + 1/2))⋅g(x) + (-g(x - 1/2) + g(x + 1/2))⋅f(x)
+
+This form however does not respect the product rule.
+
+If you already have a ``Derivative`` instance, you can use the
+``as_finite_difference`` method to generate approximations of the
+derivative to arbitrary order:
 
     >>> f = Function('f')
     >>> dfdx = f(x).diff(x)
-    >>> as_finite_diff(dfdx)
+    >>> dfdx.as_finite_difference()
     -f(x - 1/2) + f(x + 1/2)
 
 here the first order derivative was approximated around x using a
@@ -334,7 +364,7 @@ equidistantly using a step-size of 1. We can use arbitrary steps
     >>> f = Function('f')
     >>> d2fdx2 = f(x).diff(x, 2)
     >>> h = Symbol('h')
-    >>> as_finite_diff(d2fdx2, [-3*h,-h,2*h])
+    >>> d2fdx2.as_finite_difference([-3*h,-h,2*h])
     f(-3⋅h)   f(-h)   2⋅f(2⋅h)
     ─────── - ───── + ────────
          2        2        2
@@ -347,15 +377,15 @@ manually:
     [1/5, -1/3, 2/15]
 
 note that we only need the last element in the last sublist
-returned from finite_diff_weights. The reason for this is that
-finite_diff_weights also generates weights for lower derivatives and
+returned from ``finite_diff_weights``. The reason for this is that
+the function also generates weights for lower derivatives and
 using fewer points (see the documentation of ``finite_diff_weights``
 for more details).
 
-if using ``finite_diff_weights`` directly looks complicated and the
-``as_finite_diff`` function operating on ``Derivative`` instances
+If using ``finite_diff_weights`` directly looks complicated, and the
+``as_finite_difference`` method of ``Derivative`` instances
 is not flexible enough, you can use ``apply_finite_diff`` which
-takes order, x_list, y_list and x0 as parameters:
+takes ``order``, ``x_list``, ``y_list`` and ``x0`` as parameters:
 
     >>> x_list = [-3, 1, 2]
     >>> y_list = symbols('a b c')

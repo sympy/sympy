@@ -105,7 +105,7 @@ def valid(expr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Validity
+    .. [1] https://en.wikipedia.org/wiki/Validity
 
     """
     return not satisfiable(Not(expr))
@@ -203,7 +203,7 @@ def entails(expr, formula_set={}):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Logical_consequence
+    .. [1] https://en.wikipedia.org/wiki/Logical_consequence
 
     """
     formula_set = list(formula_set)
@@ -249,11 +249,11 @@ class PropKB(KB):
 
         >>> l.tell(x | y)
         >>> l.clauses
-        [Or(x, y)]
+        [x | y]
 
         >>> l.tell(y)
         >>> l.clauses
-        [y, Or(x, y)]
+        [y, x | y]
         """
         for c in conjuncts(to_cnf(sentence)):
             self.clauses_.add(c)
@@ -289,7 +289,7 @@ class PropKB(KB):
 
         >>> l.tell(x | y)
         >>> l.clauses
-        [Or(x, y)]
+        [x | y]
 
         >>> l.retract(x | y)
         >>> l.clauses
