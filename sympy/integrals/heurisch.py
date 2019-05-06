@@ -564,9 +564,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = itermonomials(V, A + B - 1 + degree_offset)
+        monoms = tuple(itermonomials(V, A + B - 1 + degree_offset))
     else:
-        monoms = itermonomials(V, A + B + degree_offset)
+        monoms = tuple(itermonomials(V, A + B + degree_offset))
 
     poly_coeffs = _symbols('A', len(monoms))
 
