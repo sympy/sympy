@@ -348,6 +348,10 @@ def test_Number_new():
     raises(TypeError, lambda: Number(cos))
     a = Rational(3, 5)
     assert Number(a) is a  # Check idempotence on Numbers
+    u = '-inf', 'inf', '+inf', 'nan', 'Inf'  # etc...
+    v = [Float(i) for i in u]
+    for i, a in zip(u, v):
+        assert Number(i) is a, (i, Number(i), a)
 
 
 def test_Number_cmp():

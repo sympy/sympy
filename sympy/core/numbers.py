@@ -529,6 +529,15 @@ class Number(AtomicExpr):
         if isinstance(obj, (float, mpmath.mpf, decimal.Decimal)):
             return Float(obj)
         if isinstance(obj, string_types):
+            _obj = obj.lower()  # float('INF') == float('inf')
+            if _obj == 'nan':
+                return S.NaN
+            elif _obj == 'inf':
+                return S.Infinity
+            elif _obj == '+inf':
+                return S.Infinity
+            elif _obj == '-inf':
+                return S.NegativeInfinity
             val = sympify(obj)
             if isinstance(val, Number):
                 return val
