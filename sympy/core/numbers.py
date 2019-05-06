@@ -2218,7 +2218,7 @@ class Integer(Rational):
         the argument which is not done here for sake of speed.
 
         """
-        from sympy import perfect_power
+        from sympy.ntheory.factor_ import perfect_power
 
         if expt is S.Infinity:
             if self.p > S.One:
