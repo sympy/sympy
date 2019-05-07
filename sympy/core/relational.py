@@ -566,7 +566,7 @@ class Equality(Relational):
         >>> eq1.subs(eq_a, eq_b)
         Eq(y, c + x**3/8 + 4*x**2)
         >>> eq1.subs(eq_a)
-        Eq(y, b**2 + c + x**3/8)        
+        Eq(y, b**2 + c + x**3/8)
 
         """
         sequence = args
