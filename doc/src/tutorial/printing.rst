@@ -221,7 +221,6 @@ imported from ``sympy.printing.mathml``.
 ``print_mathml()`` prints the output.  If you want the string, use the
 function ``mathml()``.
 
-.. graphviz::
 
 Dot
 ---
