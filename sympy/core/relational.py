@@ -546,7 +546,8 @@ class Equality(Relational):
     def subs(self, *args, **kwargs):  # should mirror sympy.core.basic.subs
         r"""Return a new equation with subs applied to both sides.
 
-        **Examples:**
+        Examples
+        ========
 
         >>> from sympy import Eq, symbols
         >>> a, b, c, x, y, z = symbols('a b c x y z')
