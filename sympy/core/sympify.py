@@ -6,7 +6,8 @@ from inspect import getmro
 from collections import defaultdict
 
 from .core import all_classes as sympy_classes
-from .compatibility import iterable, string_types, range
+from .compatibility import (iterable, string_types, range,
+    integer_types)
 from .evaluate import global_evaluate
 
 
@@ -86,11 +87,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     with SAGE.
 
     It currently accepts as arguments:
-       - any object defined in sympy
+       - any object defined in SymPy
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
        - booleans, including ``None`` (will leave ``None`` unchanged)
-       - lists, sets or tuples containing any of the above
+       - dict, lists, sets or tuples containing any of the above
 
     .. warning::
         Note that this function uses ``eval``, and thus shouldn't be used on
@@ -262,10 +263,68 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     """
     from .basic import Basic
     from .numbers import Integer, Rational, Float
+    from sympy.utilities.misc import filldedent
+
+    if rational == '':
+        rational == 'str'
+
+    # non-subclassed Python values
+    # True/False/None/float/int quick exits
+    if a is None:
+        if strict:
+            raise SympifyError(a)
+        else:
+            return a
+    if a is True or a is False:
+        return converter[bool](a)
+    if type(a) is float:
+        if rational:
+            if rational == 'str':
+                return Rational(str(a))
+            return Rational(*a.as_integer_ratio())
+        return Float(a)
+    elif type(a) in integer_types:
+        return Integer(a)
+
+    # SymPy class already; might be subclasssed from
+    # CantSympify but in that case we would just
+    # return the object rather than raising an error
+    # since it already *is* a SymPy object
+    done = None
+    try:
+        if a in sympy_classes:
+            done = a
+    except TypeError: # Type of a is unhashable
+        pass
+    if done is None:
+        cls = getattr(a, "__class__", None)
+        if cls is None:
+            cls = type(a) # Probably an old-style class
+        if cls in sympy_classes:
+            done = a
 
     # don't do it
     if isinstance(a, CantSympify):
-        raise SympifyError(a)
+        if rational and done:
+            raise SympifyError(filldedent('''
+                SymPy object %s cannot be modified.
+            ''' % done))
+        elif done is None:
+            raise SympifyError(a)
+    if done is not None:
+        # handle the rational flag as expediently as
+        # possible on this SymPy object
+        if rational:
+            f = done.atoms(Float)
+            r = list(f)
+            if rational == 'str':
+                r = map(str, r)
+            r = map(Rational, r)
+            return done.xreplace(dict(zip(f, r)))
+        # otherwise it was a SymPy object and
+        # we haven't made modifications so we
+        # didn't return a CantSympifyError
+        return done
 
     # let `a` do it
     _sympy_ = getattr(a, "_sympy_", None)
@@ -278,33 +337,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         # See commit message for full traceback.
         except AttributeError:
             pass
-
-    # True/False/None/float/int quick exits
-    if a is None:
-        if strict:
-            raise SympifyError(a)
-        else:
-            return a
-    if a is True or a is False:
-        return converter[bool](a)
-    if type(a) is float:
-        if rational:
-            return Rational(*a.as_integer_ratio())
-        return Float(a)
-    elif type(a) is int:
-        return Integer(a)
-
-    # SymPy class already
-    try:
-        if a in sympy_classes:
-            return a
-    except TypeError: # Type of a is unhashable
-        pass
-    cls = getattr(a, "__class__", None)
-    if cls is None:
-        cls = type(a) # Probably an old-style class
-    if cls in sympy_classes:
-        return a
 
     # kwargs
     if evaluate is None:
@@ -326,38 +358,41 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         if np.isscalar(a):
             return _convert_numpy_types(a, **kw)
 
-    try:
+    def wrapper(a):
+        try:
+            return converter[cls]
+        except KeyError:
+            for superclass in getmro(cls):
+                try:
+                    return converter[superclass]
+                except KeyError:
+                    continue
+
+    known = wrapper(a)
+    if not (strict and not known) and (rational or convert_xor
+        ) and iterable(a, exclude=(range, string_types)):
         # need to handle these before allowing converter to wrap them;
-        # list isn't going to return but it gets handled like the
-        # others
-        if isinstance(a, (set, tuple)) or \
-                not strict and isinstance(a, list):
+        # things like won't get converted but they need the same
+        # sort of handling if strict is not True
+        if isinstance(a, (set, tuple)) or isinstance(a, list):
             new = []
             for i in a:
-                try:
-                    new.append(sympify(i, **kw))
-                except SympifyError:
-                    new.append(i)
+                new.append(sympify(i, **kw))
             a = type(a)(new)
-        elif not strict and isinstance(a, defaultdict):
-            kv = zip(
-                sympify(list(a.keys()), **kw),
-                sympify(list(a.values()), **kw))
-            a.clear()
-            a.update(list(kv))
         elif isinstance(a, dict):
             # send keys and values as tuple in case
             # strict is enforced
-            a = dict(zip(
+            kv = zip(
                 sympify(tuple(a.keys()), **kw),
-                sympify(tuple(a.values()), **kw)))
-        return converter[cls](a)
-    except KeyError:
-        for superclass in getmro(cls):
-            try:
-                return converter[superclass](a)
-            except KeyError:
-                continue
+                sympify(tuple(a.values()), **kw))
+            if isinstance(a, defaultdict):
+                a.clear()
+                a.update(list(kv))
+            else:
+                a = dict(kv)
+
+    if known:
+        return known(a)
 
     if not strict:
         # Put numpy array conversion _before_ float/int, see

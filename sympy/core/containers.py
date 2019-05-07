@@ -8,7 +8,7 @@
 
 from __future__ import print_function, division
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, range, MutableSet
@@ -269,6 +269,12 @@ class Dict(Basic):
         return tuple(sorted(self.args, key=default_sort_key))
 
 converter[dict] = lambda d: Dict(*d.items())
+# a user can pass defaultdict to Dict but the
+# result is dict-like not defaultdict-like
+# so if strict is False we will process defaultdict
+# and return it as the same but if strict is True
+# an error will raise
+converter[defaultdict] = None
 
 
 class OrderedSet(MutableSet):

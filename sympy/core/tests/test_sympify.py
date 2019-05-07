@@ -1,25 +1,40 @@
-from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
-    Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
-    Pow, Or, true, false, Abs, pi, Range, Xor)
-from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
-from sympy.core.decorators import _sympifyit
-from sympy.external import import_module
-from sympy.utilities.pytest import raises, XFAIL, skip
-from sympy.utilities.decorator import conserve_mpmath_dps
-from sympy.geometry import Point, Line
-from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
+from sympy.core.add import Add
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
-from sympy.sets import FiniteSet, EmptySet
-from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+from sympy.core.containers import Tuple
+from sympy.core.decorators import _sympifyit
+from sympy.core.evalf import N
+from sympy.core.function import (Function, Lambda)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, pi)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.external import import_module
+from sympy.functions.combinatorial.factorials import factorial, factorial2
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.geometry import Point, Line
+from sympy.logic.boolalg import (false, Or, true, Xor)
+from sympy.matrices.dense import Matrix
+from sympy.polys.polytools import Poly
+from sympy.printing.repr import srepr
+from sympy.sets import FiniteSet, EmptySet
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import Interval
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.pytest import raises, XFAIL, skip
 
 from collections import defaultdict
 import mpmath
 from mpmath.rational import mpq
 
 
+from sympy.abc import x, y
 numpy = import_module('numpy')
 
 
@@ -73,6 +88,11 @@ def test_sympify1():
     # ... or from high precision reals
     assert sympify('.1234567890123456', rational=True) == \
         Rational(19290123283179, 156250000000000)
+
+    assert sympify(Tuple(.3), rational=True
+        )[0] == S(5404319552844595)/18014398509481984
+    assert sympify(Tuple(.3), rational='')[0] == S(3)/10
+    assert sympify(.3, rational='') == S(3)/10
 
 
 def test_sympify_Fraction():
@@ -161,11 +181,16 @@ def test_sympify_bool_none_float_int():
     assert sympify(False) is false
     assert sympify(.1) == Float(.1)
     assert sympify(.1, rational=True) == Rational(.1)
+    assert sympify(.1, rational='') == Rational(str(.1))
     assert sympify(1) is S.One
     assert sympify(1, rational=True) is S.One
 
 
 def test_sympyify_iterables():
+    # we can process but not convert when strict=True
+    raises(SympifyError, lambda: sympify([], strict=True))
+    raises(SympifyError, lambda: sympify(defaultdict(int, []), strict=True))
+
     L = sympify(['.5'])
     assert isinstance(L, list) and L[0] is not S.Half
     T = sympify(tuple(['.5']))
@@ -173,6 +198,7 @@ def test_sympyify_iterables():
     D = sympify({1: .5})
     assert D[1] is not S.Half and list(D.keys())[0] is S.One
     D = sympify(defaultdict(int, {1: .5}))
+    assert isinstance(D, defaultdict)
     assert list(D.keys())[0] is S.One
     assert list(D.values())[0] is not S.Half
     L = sympify(['1', '2', ['3', '.5']])
@@ -197,7 +223,6 @@ def test_sympyify_iterables():
     F = sympify(set(ans), rational=True)
     assert isinstance(F, FiniteSet)
     assert list(F).pop() is S.Half
-
 
 
 def test_sympify4():
@@ -691,3 +716,24 @@ def test_issue_5939():
      a = Symbol('a')
      b = Symbol('b')
      assert sympify('''a+\nb''') == a + b
+
+
+def test_CantSympify():
+    from sympy.core.sympify import CantSympify
+    from sympy import Dict
+    # to protect a SymPy class from changes, subclass
+    # it from CantSympify
+    class my(Dict, CantSympify):
+        # don't allow any modification of arguments
+        # in this Dict
+        pass
+    d = my({1: .5})
+    assert isinstance(d[1], Float)
+    assert isinstance(sympify(d)[1], Float)
+    raises(SympifyError, lambda: sympify(d, rational=True))
+    class my(list, CantSympify):
+        pass
+    m = my([1])
+    raises(SympifyError, lambda: sympify(m))
+    # error raises within container, too
+    raises(SympifyError, lambda: sympify([1, m]))
