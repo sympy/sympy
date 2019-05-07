@@ -9,7 +9,7 @@ from mpmath import mpi
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises, XFAIL
 
-from sympy.abc import x, y, z, m, n
+from sympy.abc import x, y, z, m, n, H, T
 
 
 def test_imageset():
@@ -655,7 +655,6 @@ def test_powerset():
 
 
 def test_product_basic():
-    H, T = 'H', 'T'
     unit_line = Interval(0, 1)
     d6 = FiniteSet(1, 2, 3, 4, 5, 6)
     d4 = FiniteSet(1, 2, 3, 4)
@@ -668,8 +667,7 @@ def test_product_basic():
     assert (H, T) in coin ** 2
     assert (.5, .5, .5) in square * unit_line
     assert (H, 3, 3) in coin * d6* d6
-    HH, TT = sympify(H), sympify(T)
-    assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
+    assert set(coin**2) == set(((H, H), (H, T), (T, H), (T, T)))
 
     assert (d4*d4).is_subset(d6*d6)
 
