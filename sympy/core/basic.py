@@ -1421,7 +1421,11 @@ class Basic(with_metaclass(ManagedProperties)):
                     "type or a callable")
         elif isinstance(query, Basic):
             _query = lambda expr: expr.match(query)
-            exact = len(query.atoms(Wild)) > 1 if exact is None else exact
+            nwild = len(query.atoms(Wild))
+            if exact and nwild == 1:
+                exact = False
+            elif exact is None and nwild > 1:
+                exact = True
 
             if isinstance(value, Basic):
                 if exact:
