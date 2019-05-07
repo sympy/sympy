@@ -2135,7 +2135,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             i = len(args) + 1
 
         exprs = Tuple(*args[:i])
-        free_symbols = list(set().union(*[e.free_symbols for e in exprs])) # sum(args[:expr_len]).free_symbols 
+        free_symbols = list(set().union(*[e.free_symbols for e in exprs])) # sum(args[:expr_len]).free_symbols
 
         #Warn: Dimension
         variables = set(free_symbols) # get all variables
