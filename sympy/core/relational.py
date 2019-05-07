@@ -544,7 +544,7 @@ class Equality(Relational):
         return e.canonical
 
     def subs(self, *args, **kwargs):  # should mirror sympy.core.basic.subs
-        r"""Return a new equation with subs applied to both sides.
+        r"""Allows substitution of several equalities into an equation with the same variables, assuming that lhs is substituted by rhs.
 
         Examples
         ========
