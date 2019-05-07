@@ -3010,7 +3010,7 @@ def count_ops(expr, visual=False):
             if not a.is_Symbol:
                 args.extend(a.args)
 
-    elif type(expr) is dict:
+    elif isinstance(expr, Dict):
         ops = [count_ops(k, visual=visual) +
                count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):

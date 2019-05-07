@@ -182,8 +182,9 @@ def test_IndexedBase_subs():
     A = IndexedBase(a)
     B = IndexedBase(b)
     C = IndexedBase(c)
+    D = {1: 2}
     assert A[i] == B[i].subs(b, a)
-    assert isinstance(C[1].subs(C, {1: 2}), type(A[1]))
+    assert D[1] == C[1].subs(C, D)
 
 
 def test_IndexedBase_shape():

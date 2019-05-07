@@ -148,7 +148,9 @@ class Indexed(Expr):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base, IndexedBase):
             raise TypeError(filldedent("""
-                Indexed expects string, Symbol, or IndexedBase as base."""))
+                The base can only be replaced with a string, Symbol,
+                IndexedBase or an object with a method for getting
+                items (i.e. a `__getitem__` method)."""))
         args = list(map(sympify, args))
         if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
             if len(args) == 1:
