@@ -1749,32 +1749,30 @@ class PermutationGroup(Basic):
             return []
         gns = self.generators
         inv = []
-        der = self.derived_subgroup()
         G = self
-
         for p in primefactors(G.order()):
             ranks = []
             r = 2
             while r > 1:
-                H = der
-                l = []
+                H = self.derived_subgroup()
+                pows = []
                 for g in gns:
                     elm = g**p
                     if not H.contains(elm):
-                        l.append(elm)
-                H = PermutationGroup(H.generators + l)
+                        pows.append(elm)
+                H = PermutationGroup(H.generators + pows) if pows else H
                 r = G.order()//H.order()
                 G = H
-                gns = l
+                gns = pows
                 if r != 1:
                     ranks.append(multiplicity(p, r))
 
             if ranks:
-                l = [1]*ranks[0]
+                pows = [1]*ranks[0]
                 for i in ranks:
                     for j in range(0, i):
-                        l[j] = l[j]*p
-                inv.extend(l)
+                        pows[j] = pows[j]*p
+                inv.extend(pows)
         inv.sort()
         return inv
 
