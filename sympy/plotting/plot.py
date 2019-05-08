@@ -2230,7 +2230,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             sbls = sum(arg[:expr_len]).free_symbols
             # get symbols from all ranges
             specify_symbols = set([s[0] for s in arg[expr_len:]])
-            if len(sbls) != nb_of_free_symbols or specify_symbols-sbls:
+            if len(sbls) != nb_of_free_symbols or bool(specify_symbols-sbls):
                 lst.append((sbls, specify_symbols))
                 continue
 
