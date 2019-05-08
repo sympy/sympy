@@ -175,7 +175,7 @@ class Reals(with_metaclass(Singleton, Interval)):
     ========
 
     ComplexRegion
-	"""
+    """
     def __new__(cls):
         return Interval.__new__(cls, -S.Infinity, S.Infinity)
 
