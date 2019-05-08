@@ -804,3 +804,5 @@ def test_iwalk():
     assert saw == [int, float, int]
     assert iwalk(input, sanitize=tup) == (3, (0.1, 2))
     assert iwalk(input, do=add, sanitize=tup) == (4, (0.1, 3))
+    assert iwalk({(1, 2): (3, 4)}, do=lambda i: i*10,
+        dkeys=False) == {(1, 2): (30, 40)}

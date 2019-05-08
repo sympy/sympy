@@ -2586,10 +2586,11 @@ def rotations(s, dir=1):
         seq = rotate_left(seq, dir)
 
 
-def iwalk(a, do=None, sanitize=None):
+def iwalk(a, do=None, sanitize=None, dkeys=True):
     """Return input after applying `do` to items in Python builtin
     containers. If ``sanitize`` is provided, apply that to a
-    container before applying ``do`` to its contents.
+    container before applying ``do`` to its contents. If ``dkeys``
+    is True (default) then process dictionary values and keys.
 
     Examples
     ========
@@ -2622,7 +2623,7 @@ def iwalk(a, do=None, sanitize=None):
     elif isinstance(a, dict):
         a = sanitize(a) if sanitize else a
         kv = [(
-            iwalk(k, do, sanitize),
+            iwalk(k, do, sanitize) if dkeys else k,
             iwalk(v, do, sanitize))
             for k, v in a.items()]
         if isinstance(a, defaultdict):
