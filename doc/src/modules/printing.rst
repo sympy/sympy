@@ -1,8 +1,7 @@
 Printing System
 ===============
 
-
-See the:ref: `tutorial-printing` section in tutorial for introduction into
+See the :ref:`tutorial-printing` section in tutorial for introduction into
 printing.
 
 This guide documents the printing system in SymPy and how it works
