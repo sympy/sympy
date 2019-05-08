@@ -243,7 +243,7 @@ class Qubit(QubitState, Ket):
         old_size = old_matrix.cols
         #we expect the old_size to be even
         new_size = old_size//2
-        new_matrix = Matrix().zeros(new_size)
+        new_matrix = Matrix().zeros(new_size).as_mutable()
 
         for i in range(new_size):
             for j in range(new_size):
@@ -252,7 +252,7 @@ class Qubit(QubitState, Ket):
                     row = find_index_that_is_projected(i, k, qubit)
                     new_matrix[i, j] += old_matrix[row, col]
 
-        return new_matrix
+        return new_matrix.as_immutable()
 
 
 class QubitBra(QubitState, Bra):
@@ -741,7 +741,7 @@ def _get_possible_outcomes(m, bits):
     # bit being true
     output_matrices = []
     for i in range(1 << len(bits)):
-        output_matrices.append(zeros(2**nqubits, 1))
+        output_matrices.append(zeros(2**nqubits, 1).as_mutable())
 
     # Bitmasks will help sort how to determine possible outcomes.
     # When the bit mask is and-ed with a matrix-index,
@@ -759,7 +759,7 @@ def _get_possible_outcomes(m, bits):
                 trueness += j + 1
         # Put the value in the correct output matrix
         output_matrices[trueness][i] = m[i]
-    return output_matrices
+    return [m.as_mutable() for m in output_matrices]
 
 
 def measure_all_oneshot(qubit, format='sympy'):

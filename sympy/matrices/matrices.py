@@ -3115,7 +3115,7 @@ class MatrixBase(MatrixDeprecated,
         .. [1] https://en.wikipedia.org/wiki/Gaussian_elimination
 
         """
-        from sympy.matrices import Matrix, zeros
+        from sympy.matrices import MutableMatrix, zeros
 
         aug = self.hstack(self.copy(), B.copy())
         B_cols = B.cols
@@ -3128,7 +3128,7 @@ class MatrixBase(MatrixDeprecated,
         rank = len(pivots)
 
         # Bring to block form
-        permutation = Matrix(range(col)).T
+        permutation = MutableMatrix(range(col)).T
 
         for i, c in enumerate(pivots):
             permutation.col_swap(i, c)
@@ -3148,20 +3148,21 @@ class MatrixBase(MatrixDeprecated,
         name = _uniquely_named_symbol('tau', aug,
             compare=lambda i: str(i).rstrip('1234567890')).name
         gen = numbered_symbols(name)
-        tau = Matrix([next(gen) for k in range((col - rank)*B_cols)]).reshape(
+        tau = MutableMatrix([next(gen) for k in range((col - rank)*B_cols)]).reshape(
             col - rank, B_cols)
 
         # Full parametric solution
-        V = A[:rank,:]
+        V = A[:rank,:].as_mutable()
         for c in reversed(pivots):
             V.col_del(c)
         vt = v[:rank, :]
         free_sol = tau.vstack(vt - V * tau, tau)
 
         # Undo permutation
-        sol = zeros(col, B_cols)
+        sol = zeros(col, B_cols).as_mutable()
         for k in range(col):
             sol[permutation[k], :] = free_sol[k,:]
+        sol = sol.as_immutable()
 
         if freevar:
             return sol, tau, free_var_index
@@ -4804,24 +4805,24 @@ class MatrixBase(MatrixDeprecated,
         if c != self.rows:
             raise ShapeError("Matrix must be square")
         if check_symmetry:
-            self.simplify()
+            self = self.as_immutable().simplify()
             if self != self.transpose():
                 raise ValueError(
                     "Matrix appears to be asymmetric; consider check_symmetry=False")
         count = 0
         if diagonal:
-            v = zeros(c * (c + 1) // 2, 1)
+            v = zeros(c * (c + 1) // 2, 1).as_mutable()
             for j in range(c):
                 for i in range(j, c):
                     v[count] = self[i, j]
                     count += 1
         else:
-            v = zeros(c * (c - 1) // 2, 1)
+            v = zeros(c * (c - 1) // 2, 1).as_mutable()
             for j in range(c):
                 for i in range(j + 1, c):
                     v[count] = self[i, j]
                     count += 1
-        return v
+        return v.as_immutable()
 
 @deprecated(
     issue=15109,

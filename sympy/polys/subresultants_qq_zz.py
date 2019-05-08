@@ -310,7 +310,7 @@ def sylvester(f, g, x, method = 1):
 
     # Sylvester's matrix of 1840 (default; a.k.a. sylvester1)
     if method <= 1:
-        M = zeros(m + n)
+        M = zeros(m + n).as_mutable()
         k = 0
         for i in range(n):
             j = k
@@ -325,7 +325,7 @@ def sylvester(f, g, x, method = 1):
                 M[i, j] = coeff
                 j = j + 1
             k = k + 1
-        return M
+        return M.as_immutable()
 
     # Sylvester's matrix of 1853 (a.k.a sylvester2)
     if method >= 2:
@@ -341,9 +341,9 @@ def sylvester(f, g, x, method = 1):
             gp[ : 0] = h
         mx = max(m, n)
         dim = 2*mx
-        M = zeros( dim )
+        M = zeros(dim).as_mutable()
         k = 0
-        for i in range( mx ):
+        for i in range(mx):
             j = k
             for coeff in fp:
                 M[2*i, j] = coeff
@@ -353,7 +353,7 @@ def sylvester(f, g, x, method = 1):
                 M[2*i + 1, j] = coeff
                 j = j + 1
             k = k + 1
-        return M
+        return M.as_immutable()
 
 def process_matrix_output(poly_seq, x):
     """
@@ -431,7 +431,7 @@ def subresultants_sylv(f, g, x):
     j = m - 1
 
     while j > 0:
-        Sp = S[:, :]  # copy of S
+        Sp = S[:, :].as_mutable()  # copy of S
         # delete last j rows of coeffs of g
         for ind in range(m + n - j, m + n):
             Sp.row_del(m + n - j)
@@ -497,7 +497,7 @@ def modified_subresultants_sylv(f, g, x):
     SR_L = [f, g]      # modified subresultant list
 
     # form matrix sylvester(f, g, x, 2)
-    S = sylvester(f, g, x, 2)
+    S = sylvester(f, g, x, 2).as_mutable()
 
     # pick appropriate submatrices of S
     # and form modified subresultant polys
@@ -683,14 +683,14 @@ def bezout(p, q, x, method='bz'):
     # the LC coefficient of each poly either in the first position
     # of each row (method='prs') or in the last (method='bz').
     mx = max(m, n)
-    B = zeros(mx)
+    B = zeros(mx).as_mutable()
     for i in range(mx):
         for j in range(mx):
             if method == 'prs':
                 B[mx - 1 - i, mx - 1 - j] = poly.nth(i, j)
             else:
                 B[i, j] = poly.nth(i, j)
-    return B
+    return B.as_immutable()
 
 def backward_eye(n):
     '''
@@ -700,12 +700,12 @@ def backward_eye(n):
     so that the leading coefficients are first.
     See docstring of the function bezout(p, q, x, method='bz').
     '''
-    M = eye(n)  # identity matrix of order n
+    M = eye(n).as_mutable()  # identity matrix of order n
 
     for i in range(int(M.rows / 2)):
         M.row_swap(0 + i, M.rows - 1 - i)
 
-    return M
+    return M.as_immutable()
 
 def subresultants_bezout(p, q, x):
     """
@@ -763,7 +763,7 @@ def subresultants_bezout(p, q, x):
     if degF == degG:
         j = 1
     while j <= degF:
-        M = B[0:j, :]
+        M = B[0:j, :].as_mutable()
         k, coeff_L = j - 1, []
         while k <= degF - 1:
             coeff_L.append(M[: ,0 : j].det())
@@ -838,7 +838,7 @@ def modified_subresultants_bezout(p, q, x):
     if degF == degG:
         j = 1
     while j <= degF:
-        M = B[0:j, :]
+        M = B[0:j, :].as_mutable()
         k, coeff_L = j - 1, []
         while k <= degF - 1:
             coeff_L.append(M[: ,0 : j].det())
@@ -2170,7 +2170,7 @@ def pivot(M, i, j):
     Serdica Journal of Computing, 7, No 4, 101–134, 2013.
 
     '''
-    ma = M[:, :] # copy of matrix M
+    ma = M[:, :].as_mutable() # copy of matrix M
     rs = ma.rows # No. of rows
     cs = ma.cols # No. of cols
     for r in range(i+1, rs):
@@ -2178,7 +2178,7 @@ def pivot(M, i, j):
             for c in range(j + 1, cs):
                 ma[r, c] = ma[i, j] * ma[r, c] - ma[i, c] * ma[r, j]
             ma[r, j] = 0
-    return ma
+    return ma.as_immutable()
 
 def rotate_r(L, k):
     '''
@@ -2246,13 +2246,13 @@ def create_ma(deg_f, deg_g, row1, row2, col_num):
         print('Reverse degrees')
         return
 
-    m = zeros(deg_f - deg_g + 2, col_num)
+    m = zeros(deg_f - deg_g + 2, col_num).as_mutable()
 
     for i in range(deg_f - deg_g + 1):
         m[i, :] = rotate_r(row1, i)
     m[deg_f - deg_g + 1, :] = row2
 
-    return m
+    return m.as_immutable()
 
 def find_degree(M, deg_f):
     '''
@@ -2363,7 +2363,7 @@ def subresultants_vv(p, q, x, method = 0):
 
     # initialize
     s1 = sylvester(f, g, x, 1)
-    s2 = sylvester(f, g, x, 2)
+    s2 = sylvester(f, g, x, 2).as_mutable()
     sr_list = [f, g]
     col_num = 2 * n         # columns in s2
 

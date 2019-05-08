@@ -11,6 +11,7 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
                                 tan, AppliedUndef, S)
+from sympy.matrices.dense import MutableMatrix
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -589,7 +590,7 @@ def msubs(expr, *sub_dicts, **kwargs):
         return expr.msubs(sub_dict)
     else:
         func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
-    if isinstance(expr, (Matrix, Vector, Dyadic)):
+    if isinstance(expr, (Matrix, MutableMatrix, Vector, Dyadic)):
         return expr.applyfunc(lambda x: func(x, sub_dict))
     else:
         return func(expr, sub_dict)

@@ -1,6 +1,6 @@
 from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
-    LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Ne,
+    LambertW, Lt, Matrix, MutableMatrix, Or, Poly, Q, Rational, S, Symbol, Ne,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
@@ -1699,7 +1699,7 @@ def test_issue_5114_6611():
 
 
 def test_det_quick():
-    m = Matrix(3, 3, symbols('a:9'))
+    m = MutableMatrix(3, 3, symbols('a:9'))
     assert m.det() == det_quick(m)  # calls det_perm
     m[0, 0] = 1
     assert m.det() == det_quick(m)  # calls det_minor

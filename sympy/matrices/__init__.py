@@ -9,11 +9,8 @@ from .dense import (
     list2numpy, matrix2numpy, matrix_multiply_elementwise, ones,
     randMatrix, rot_axis1, rot_axis2, rot_axis3, symarray, wronskian,
     zeros)
-from .dense import MutableDenseMatrix
+from .dense import MutableDenseMatrix, MutableMatrix, Matrix
 from .matrices import DeferredVector, MatrixBase
-
-Matrix = MutableMatrix = MutableDenseMatrix
-
 from .sparse import MutableSparseMatrix
 from .sparsetools import banded
 from .immutable import ImmutableDenseMatrix, ImmutableSparseMatrix

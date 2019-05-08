@@ -385,16 +385,16 @@ class Linearizer(object):
                 # Bmat = Matrix([]), so no need to sub
                 B_cont = Bmat_eq
             if simplify:
-                A_cont.simplify()
-                B_cont.simplify()
+                A_cont = A_cont.as_immutable().simplify()
+                B_cont = B_cont.as_immutable().simplify()
             return A_cont, B_cont
         # Otherwise return M, A, B for forming the equation
         # [M]dx = [A]x + [B]r, where x = [q, u]^T
         else:
             if simplify:
-                M_eq.simplify()
-                Amat_eq.simplify()
-                Bmat_eq.simplify()
+                M_eq = M_eq.as_immutable().simplify()
+                Amat_eq = Amat_eq.as_immutable().simplify()
+                Bmat_eq = Bmat_eq.as_immutable().simplify()
             return M_eq, Amat_eq, Bmat_eq
 
 
@@ -422,7 +422,7 @@ def permutation_matrix(orig_vec, per_vec):
         raise ValueError("orig_vec and per_vec must be the same length, " +
                 "and contain the same symbols.")
     ind_list = [orig_vec.index(i) for i in per_vec]
-    p_matrix = zeros(len(orig_vec))
+    p_matrix = zeros(len(orig_vec)).as_mutable()
     for i, j in enumerate(ind_list):
         p_matrix[i, j] = 1
-    return p_matrix
+    return p_matrix.as_immutable()

@@ -62,7 +62,7 @@ from sympy.simplify import simplify, hypersimp, hypersimilar
 from sympy.solvers import solve, solve_undetermined_coeffs
 from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
-from sympy.matrices import Matrix, casoratian
+from sympy.matrices import MutableMatrix, casoratian
 from sympy.concrete import product
 from sympy.core.compatibility import default_sort_key, range
 from sympy.utilities.iterables import numbered_symbols
@@ -248,7 +248,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
                     alpha[i] += I[k]*B*D
 
-        V = Matrix(U, A, lambda i, j: int(i == j))
+        V = MutableMatrix(U, A, lambda i, j: int(i == j))
 
         if homogeneous:
             for i in range(A, U):

@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import Tuple, Add, Mul, Matrix, log, expand, Rational
+from sympy import Tuple, Add, Mul, Matrix, MutableMatrix, ImmutableMatrix, log, expand, Rational
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
@@ -249,7 +249,7 @@ def entropy(density):
     if isinstance(density, scipy_sparse_matrix):
         density = to_numpy(density)
 
-    if isinstance(density, Matrix):
+    if isinstance(density, (ImmutableMatrix, MutableMatrix)):
         eigvals = density.eigenvals().keys()
         return expand(-sum(e*log(e) for e in eigvals))
     elif isinstance(density, numpy_ndarray):

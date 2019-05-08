@@ -90,7 +90,7 @@ def test_list():
 
 
 def test_Matrix():
-    for cls, name in [(Matrix, "MutableDenseMatrix"), (ImmutableDenseMatrix, "ImmutableDenseMatrix")]:
+    for cls, name in [(Matrix, "Matrix"), (ImmutableDenseMatrix, "ImmutableDenseMatrix")]:
         sT(cls([[x**+1, 1], [y, x + y]]),
            "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])" % name)
 
@@ -100,9 +100,9 @@ def test_Matrix():
 
 
 def test_empty_Matrix():
-    sT(ones(0, 3), "MutableDenseMatrix(0, 3, [])")
-    sT(ones(4, 0), "MutableDenseMatrix(4, 0, [])")
-    sT(ones(0, 0), "MutableDenseMatrix([])")
+    sT(ones(0, 3), "Matrix(0, 3, [])")
+    sT(ones(4, 0), "Matrix(4, 0, [])")
+    sT(ones(0, 0), "Matrix([])")
 
 
 def test_Rational():

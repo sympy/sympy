@@ -1735,7 +1735,7 @@ def try_lerchphi(func):
     # section 18.
     # We don't need to implement the reduction to polylog here, this
     # is handled by expand_func.
-    from sympy.matrices import Matrix, zeros
+    from sympy.matrices import Matrix, MutableMatrix, zeros
     from sympy.polys import apart
 
     # First we need to figure out if the summation coefficient is a rational
@@ -1847,13 +1847,15 @@ def try_lerchphi(func):
     basis = [expand_func(b) for (b, _) in sorted(list(trans.items()),
                                                  key=lambda x:x[1])]
     B = Matrix(basis)
-    C = Matrix([[0]*len(B)])
+    C = MutableMatrix([[0]*len(B)])
     for b, c in coeffs.items():
         C[trans[b]] = Add(*c)
-    M = zeros(len(B))
+    C = C.as_immutable()
+    M = zeros(len(B)).as_mutable()
     for b, l in deriv.items():
         for c, b2 in l:
             M[trans[b], trans[b2]] = c
+    M = M.as_immutable()
     return Formula(func, z, None, [], B, C, M)
 
 
@@ -1875,7 +1877,7 @@ def build_hypergeometric_formula(func):
         poly = Poly(expr, _x)
         n = poly.degree()
         basis = []
-        M = zeros(n)
+        M = zeros(n).as_mutable()
         for k in range(n):
             a = func.ap[0] + k
             basis += [hyper([a] + list(func.ap[1:]), func.bq, z)]
@@ -1895,6 +1897,7 @@ def build_hypergeometric_formula(func):
                 res[r] += c*d
         for k, c in enumerate(res):
             M[n - 1, k] = -c/derivs[n - 1][0, n - 1]/poly.all_coeffs()[0]
+        M = M.as_immutable()
         return Formula(func, z, None, [], B, C, M)
     else:
         # Since there are no `ap`, none of the `bq` can be non-positive
@@ -1908,11 +1911,12 @@ def build_hypergeometric_formula(func):
         B = Matrix(basis)
         n = len(B)
         C = Matrix([[1] + [0]*(n - 1)])
-        M = zeros(n)
+        M = zeros(n).as_mutable()
         M[0, n - 1] = z/Mul(*func.bq)
         for k in range(1, n):
             M[k, k - 1] = func.bq[k - 1]
             M[k, k] = -func.bq[k - 1]
+        M = M.as_immutable()
         return Formula(func, z, None, [], B, C, M)
 
 

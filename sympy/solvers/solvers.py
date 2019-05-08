@@ -1794,7 +1794,7 @@ def _solve_system(exprs, symbols, **flags):
     else:
         if all(p.is_linear for p in polys):
             n, m = len(polys), len(symbols)
-            matrix = zeros(n, m + 1)
+            matrix = zeros(n, m + 1).as_mutable()
 
             for i, poly in enumerate(polys):
                 for monom, coeff in poly.terms():
@@ -2281,7 +2281,7 @@ def solve_linear_system(system, *symbols, **flags):
         except ValueError:
             pass
 
-    matrix = system[:, :]
+    matrix = system[:, :].as_mutable()
     syms = list(symbols)
 
     i, m = 0, matrix.cols - 1  # don't count augmentation
@@ -2582,7 +2582,7 @@ def inv_quick(M):
     d = det(M)
     if d is S.Zero:
         raise ValueError("Matrix det == 0; not invertible.")
-    ret = zeros(n)
+    ret = zeros(n).as_mutable()
     s1 = -1
     for i in range(n):
         s = s1 = -s1
@@ -2590,7 +2590,7 @@ def inv_quick(M):
             di = det(M.minor_submatrix(i, j))
             ret[j, i] = s*di/d
             s = -s
-    return ret
+    return ret.as_immutable()
 
 
 # these are functions that have multiple inverse values per period

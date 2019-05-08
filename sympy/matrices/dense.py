@@ -366,7 +366,7 @@ class DenseMatrix(MatrixBase):
         [1, 2],
         [3, 5]])
         """
-        return Matrix(self)
+        return MutableMatrix(self)
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
@@ -496,7 +496,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
             self._mat[i*self.cols + j] = value
 
     def as_mutable(self):
-        return self.copy()
+        return MutableMatrix(self)
 
     def col_del(self, i):
         """Delete the given column.
@@ -798,7 +798,38 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
     # Utility functions
 
-MutableMatrix = Matrix = MutableDenseMatrix
+MutableMatrix = MutableDenseMatrix
+
+
+class DeprecatedError(Exception):
+    pass
+
+class Matrix(MutableDenseMatrix):
+    def __setitem__(self, key, value):
+        raise DeprecatedError('Matrix is immutable')
+    def col_del(self, i):
+        raise DeprecatedError('Matrix is immutable')
+    def col_op(self, j, f):
+        raise DeprecatedError('Matrix is immutable')
+    def col_swap(self, i, j):
+        raise DeprecatedError('Matrix is immutable')
+    def copyin_list(self, key, value):
+        raise DeprecatedError('Matrix is immutable')
+    def copyin_matrix(self, key, value):
+        raise DeprecatedError('Matrix is immutable')
+    def fill(self, value):
+        raise DeprecatedError('Matrix is immutable')
+    def row_del(self, i):
+        raise DeprecatedError('Matrix is immutable')
+    def row_op(self, i, f):
+        raise DeprecatedError('Matrix is immutable')
+    def row_swap(self, i, j):
+        raise DeprecatedError('Matrix is immutable')
+    def simplify(self, *args, **kwargs):
+        raise DeprecatedError('Matrix is immutable')
+    def zip_row_op(self, i, k, f):
+        raise DeprecatedError('Matrix is immutable')
+
 
 ###########
 # Numpy Utility Functions:
@@ -1244,7 +1275,7 @@ def hessian(f, varlist, constraints=[]):
         raise ValueError("Function `f` (%s) is not differentiable" % f)
     m = len(constraints)
     N = m + n
-    out = zeros(N)
+    out = zeros(N).as_mutable()
     for k, g in enumerate(constraints):
         if not getattr(g, 'diff'):
             # check differentiability
@@ -1257,7 +1288,7 @@ def hessian(f, varlist, constraints=[]):
     for i in range(N):
         for j in range(i + 1, N):
             out[j, i] = out[i, j]
-    return out
+    return out.as_immutable()
 
 
 def jordan_cell(eigenval, n):

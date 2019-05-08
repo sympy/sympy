@@ -283,10 +283,11 @@ class KanesMethod(object):
         # Fill Fr with dot product of partial velocities and forces
         o = len(self.u)
         b = len(f_list)
-        FR = zeros(o, 1)
+        FR = zeros(o, 1).as_mutable()
         partials = partial_velocity(vel_list, self.u, N)
         for i in range(o):
             FR[i] = sum(partials[j][i] & f_list[j] for j in range(b))
+        FR = FR.as_immutable()
 
         # In case there are dependent speeds
         if self._udep:
@@ -339,8 +340,8 @@ class KanesMethod(object):
         # Compute fr_star in two components:
         # fr_star = -(MM*u' + nonMM)
         o = len(self.u)
-        MM = zeros(o, o)
-        nonMM = zeros(o, 1)
+        MM = zeros(o, o).as_mutable()
+        nonMM = zeros(o, 1).as_mutable()
         zero_uaux = lambda expr: msubs(expr, uaux_zero)
         zero_udot_uaux = lambda expr: msubs(msubs(expr, udot_zero), uaux_zero)
         for i, body in enumerate(bl):
@@ -374,6 +375,8 @@ class KanesMethod(object):
                     for k in range(o):
                         MM[j, k] += M * (temp & partials[i][0][k])
                     nonMM[j] += inertial_force & partials[i][0][j]
+        MM = MM.as_immutable()
+        nonMM = nonMM.as_immutable()
         # Compose fr_star out of MM and nonMM
         MM = zero_uaux(msubs(MM, q_ddot_u_map))
         nonMM = msubs(msubs(nonMM, q_ddot_u_map),
@@ -576,7 +579,7 @@ class KanesMethod(object):
             :meth:`~sympy.matrices.matrices.MatrixBase.inv`
 
         """
-        rhs = zeros(len(self.q) + len(self.u), 1)
+        rhs = zeros(len(self.q) + len(self.u), 1).as_mutable()
         kdes = self.kindiffdict()
         for i, q_i in enumerate(self.q):
             rhs[i] = kdes[q_i.diff()]
@@ -588,7 +591,7 @@ class KanesMethod(object):
                                                          try_block_diag=True) *
                                     self.forcing)
 
-        return rhs
+        return rhs.as_immutable()
 
     def kindiffdict(self):
         """Returns a dictionary mapping q' to u."""

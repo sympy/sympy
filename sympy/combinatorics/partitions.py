@@ -595,7 +595,7 @@ def RGS_generalized(m):
     [ 52, 203,   0,  0,  0, 0, 0],
     [203,   0,   0,  0,  0, 0, 0]])
     """
-    d = zeros(m + 1)
+    d = zeros(m + 1).as_mutable()
     for i in range(0, m + 1):
         d[0, i] = 1
 
@@ -605,7 +605,7 @@ def RGS_generalized(m):
                 d[i, j] = j * d[i - 1, j] + d[i - 1, j + 1]
             else:
                 d[i, j] = 0
-    return d
+    return d.as_immutable()
 
 
 def RGS_enum(m):

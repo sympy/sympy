@@ -8,7 +8,7 @@ from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
     _simplify)
 from sympy.matrices import (
-    GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
+    GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix, MutableMatrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
@@ -265,9 +265,9 @@ def test_creation():
     raises(ValueError, lambda: Matrix(5, -1, []))
     raises(IndexError, lambda: Matrix((1, 2))[2])
     with raises(IndexError):
-        Matrix((1, 2))[1:2] = 5
+        MutableMatrix((1, 2))[1:2] = 5
     with raises(IndexError):
-        Matrix((1, 2))[3] = 5
+        MutableMatrix((1, 2))[3] = 5
 
     assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
     # anything can go into a matrix (laplace_transform uses tuples)
@@ -1209,14 +1209,15 @@ def test_simplify():
 
     M = Matrix([[            1/x + 1/y,                 (x + x*y) / x  ],
                 [ (f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n) / pi ]])
-    M.simplify()
+    M = M.as_immutable().simplify()
     assert M == Matrix([[ (x + y)/(x * y),                        1 + y ],
                         [           1 + y, 2*((1 - 1*cos(pi*n))/(pi*n)) ]])
     eq = (1 + x)**2
     M = Matrix([[eq]])
-    M.simplify()
+    M = M.as_immutable().simplify()
     assert M == Matrix([[eq]])
-    M.simplify(ratio=oo) == M
+    # What is the line below for...
+    M.as_immutable().simplify(ratio=oo) == M
     assert M == Matrix([[eq.simplify(ratio=oo)]])
 
 
@@ -1283,7 +1284,7 @@ def test_shape():
 
 
 def test_col_row_op():
-    M = Matrix([[x, 0, 0],
+    M = MutableMatrix([[x, 0, 0],
                 [0, y, 0]])
     M.row_op(1, lambda r, j: r + j + 1)
     assert M == Matrix([[x,     0, 0],
@@ -1312,7 +1313,7 @@ def test_col_row_op():
 
 
 def test_zip_row_op():
-    for cls in classes[:2]: # XXX: immutable matrices don't support row ops
+    for cls in (MutableMatrix, SparseMatrix): # XXX: immutable matrices don't support row ops
         M = cls.eye(3)
         M.zip_row_op(1, 0, lambda v, u: v + 2*u)
         assert M == cls([[1, 0, 0],
@@ -1348,14 +1349,14 @@ def test_issue_3981():
     index1 = Index1()
     index2 = Index2()
 
-    m = Matrix([1, 2, 3])
+    m = MutableMatrix([1, 2, 3])
 
     assert m[index2] == 3
 
     m[index2] = 5
     assert m[2] == 5
 
-    m = Matrix([[1, 2, 3], [4, 5, 6]])
+    m = MutableMatrix([[1, 2, 3], [4, 5, 6]])
     assert m[index1, index2] == 6
     assert m[1, index2] == 6
     assert m[index1, 2] == 6
@@ -2013,8 +2014,8 @@ def test_errors():
     raises(ValueError, lambda: randMatrix(3, c=4, symmetric=True))
     raises(ValueError, lambda: Matrix([1, 2]).reshape(4, 6))
     raises(ShapeError,
-        lambda: Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2])))
-    raises(TypeError, lambda: Matrix([[1, 2], [3, 4]]).copyin_list([0,
+        lambda: MutableMatrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2])))
+    raises(TypeError, lambda: MutableMatrix([[1, 2], [3, 4]]).copyin_list([0,
            1], set([])))
     raises(NonSquareMatrixError, lambda: Matrix([[1, 2, 3], [2, 3, 0]]).inv())
     raises(ShapeError,
@@ -2174,7 +2175,7 @@ def test_getattr():
 
 
 def test_hessenberg():
-    A = Matrix([[3, 4, 1], [2, 4, 5], [0, 1, 2]])
+    A = MutableMatrix([[3, 4, 1], [2, 4, 5], [0, 1, 2]])
     assert A.is_upper_hessenberg
     A = A.T
     assert A.is_lower_hessenberg
@@ -2749,7 +2750,7 @@ def test_dual():
 
 def test_anti_symmetric():
     assert Matrix([1, 2]).is_anti_symmetric() is False
-    m = Matrix(3, 3, [0, x**2 + 2*x + 1, y, -(x + 1)**2, 0, x*y, -y, -x*y, 0])
+    m = MutableMatrix(3, 3, [0, x**2 + 2*x + 1, y, -(x + 1)**2, 0, x*y, -y, -x*y, 0])
     assert m.is_anti_symmetric() is True
     assert m.is_anti_symmetric(simplify=False) is False
     assert m.is_anti_symmetric(simplify=lambda x: x) is False
@@ -3192,7 +3193,7 @@ def test_from_ndarray():
         [1, 2], [3, 4]], [[5, 6], [7, 8]]])))
 
 def test_hermitian():
-    a = Matrix([[1, I], [-I, 1]])
+    a = MutableMatrix([[1, I], [-I, 1]])
     assert a.is_hermitian
     a[0, 0] = 2*I
     assert a.is_hermitian is False
@@ -3208,30 +3209,30 @@ def test_doit():
 
 def test_issue_9457_9467_9876():
     # for row_del(index)
-    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M = MutableMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     M.row_del(1)
-    assert M == Matrix([[1, 2, 3], [3, 4, 5]])
-    N = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    assert M == MutableMatrix([[1, 2, 3], [3, 4, 5]])
+    N = MutableMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     N.row_del(-2)
-    assert N == Matrix([[1, 2, 3], [3, 4, 5]])
-    O = Matrix([[1, 2, 3], [5, 6, 7], [9, 10, 11]])
+    assert N == MutableMatrix([[1, 2, 3], [3, 4, 5]])
+    O = MutableMatrix([[1, 2, 3], [5, 6, 7], [9, 10, 11]])
     O.row_del(-1)
-    assert O == Matrix([[1, 2, 3], [5, 6, 7]])
-    P = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    assert O == MutableMatrix([[1, 2, 3], [5, 6, 7]])
+    P = MutableMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     raises(IndexError, lambda: P.row_del(10))
-    Q = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    Q = MutableMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     raises(IndexError, lambda: Q.row_del(-10))
 
     # for col_del(index)
-    M = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    M = MutableMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     M.col_del(1)
-    assert M == Matrix([[1, 3], [2, 4], [3, 5]])
-    N = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    assert M == MutableMatrix([[1, 3], [2, 4], [3, 5]])
+    N = MutableMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     N.col_del(-2)
-    assert N == Matrix([[1, 3], [2, 4], [3, 5]])
-    P = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    assert N == MutableMatrix([[1, 3], [2, 4], [3, 5]])
+    P = MutableMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     raises(IndexError, lambda: P.col_del(10))
-    Q = Matrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    Q = MutableMatrix([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
     raises(IndexError, lambda: Q.col_del(-10))
 
 def test_issue_9422():

@@ -90,12 +90,12 @@ class SpinOpBase(object):
     def _represent_base(self, basis, **options):
         j = options.get('j', Rational(1, 2))
         size, mvals = m_values(j)
-        result = zeros(size, size)
+        result = zeros(size, size).as_mutable()
         for p in range(size):
             for q in range(size):
                 me = self.matrix_element(j, mvals[p], j, mvals[q])
                 result[p, q] = me
-        return result
+        return result.as_immutable()
 
     def _apply_op(self, ket, orig_basis, **options):
         state = ket.rewrite(self.basis)
@@ -605,7 +605,7 @@ class Rotation(UnitaryOperator):
         # TODO: move evaluation up to represent function/implement elsewhere
         evaluate = sympify(options.get('doit'))
         size, mvals = m_values(j)
-        result = zeros(size, size)
+        result = zeros(size, size).as_mutable()
         for p in range(size):
             for q in range(size):
                 me = self.matrix_element(j, mvals[p], j, mvals[q])
@@ -613,7 +613,7 @@ class Rotation(UnitaryOperator):
                     result[p, q] = me.doit()
                 else:
                     result[p, q] = me
-        return result
+        return result.as_immutable()
 
     def _represent_default_basis(self, **options):
         return self._represent_JzOp(None, **options)
@@ -949,7 +949,7 @@ class SpinState(State):
         beta = sympify(options.get('beta', 0))
         gamma = sympify(options.get('gamma', 0))
         size, mvals = m_values(j)
-        result = zeros(size, 1)
+        result = zeros(size, 1).as_mutable()
         # TODO: Use KroneckerDelta if all Euler angles == 0
         # breaks finding angles on L930
         for p, mval in enumerate(mvals):
@@ -959,7 +959,7 @@ class SpinState(State):
             else:
                 result[p, 0] = Rotation.D(self.j, mval,
                                           self.m, alpha, beta, gamma)
-        return result
+        return result.as_immutable()
 
     def _eval_rewrite_as_Jx(self, *args, **options):
         if isinstance(self, Bra):
@@ -1486,14 +1486,14 @@ class CoupledSpinState(SpinState):
         if not self.hilbert_space.dimension.is_number:
             raise ValueError(
                 'State must not have symbolic j values to represent')
-        result = zeros(self.hilbert_space.dimension, 1)
+        result = zeros(self.hilbert_space.dimension, 1).as_mutable()
         if self.j == int(self.j):
             start = self.j**2
         else:
             start = (2*self.j - 1)*(1 + 2*self.j)/4
         result[start:start + 2*self.j + 1, 0] = evect(
             self.j, self.m)._represent_base(**options)
-        return result
+        return result.as_immutable()
 
     def _eval_rewrite_as_Jx(self, *args, **options):
         if isinstance(self, Bra):

@@ -205,11 +205,11 @@ def test_linearize_pendulum_kane_nonminimal():
     # Velocity constraint is that the velocity in the A.x direction is
     # always zero (the pendulum is never getting longer).
     f_v = Matrix([P.vel(N).express(A).dot(A.x)])
-    f_v.simplify()
+    f_v = f_v.as_immutable().simplify()
 
     # Acceleration constraints is the time derivative of the velocity constraint
     f_a = f_v.diff(t)
-    f_a.simplify()
+    f_a = f_a.as_immutable().simplify()
 
     # Input the force resultant at P
     R = m*g*N.x

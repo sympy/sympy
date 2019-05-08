@@ -173,12 +173,12 @@ class OracleGate(Gate):
         Represent the OracleGate in the computational basis.
         """
         nbasis = 2**self.nqubits  # compute it only once
-        matrixOracle = eye(nbasis)
+        matrixOracle = eye(nbasis).as_mutable()
         # Flip the sign given the output of the oracle function
         for i in range(nbasis):
             if self.search_function(IntQubit(i, nqubits=self.nqubits)):
                 matrixOracle[i, i] = NegativeOne()
-        return matrixOracle
+        return matrixOracle.as_immutable()
 
 
 class WGate(Gate):

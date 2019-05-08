@@ -37,13 +37,13 @@ def test_matrix_tensor_product():
     if not np:
         skip("numpy not installed.")
 
-    l1 = zeros(4)
+    l1 = zeros(4).as_mutable()
     for i in range(16):
         l1[i] = 2**i
-    l2 = zeros(4)
+    l2 = zeros(4).as_mutable()
     for i in range(16):
         l2[i] = i
-    l3 = zeros(2)
+    l3 = zeros(2).as_mutable()
     for i in range(4):
         l3[i] = i
     vec = Matrix([1, 2, 3])

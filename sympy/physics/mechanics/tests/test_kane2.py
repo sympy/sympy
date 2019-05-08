@@ -116,10 +116,11 @@ def test_aux_dep():
     #         taking u[3], u[4], u[5] as dependent,
     #         rearranging the matrix of M_v to be A_rs for u_dependent.
     # Third, u_aux ==0 for u_dep, and resulting dictionary of u_dep_dict.
-    M_v = zeros(3, 9)
+    M_v = zeros(3, 9).as_mutable()
     for i in range(3):
         for j, ui in enumerate(u + ua):
             M_v[i, j] = f_v[i].diff(ui)
+    M_v = M_v.as_immutable()
 
     M_v_i = M_v[:, :3]
     M_v_d = M_v[:, 3:6]

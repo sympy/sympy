@@ -31,7 +31,7 @@ from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow, SKIP, skip, ON_TRAVIS
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
-from sympy.matrices import Matrix, GramSchmidt, eye
+from sympy.matrices import Matrix, MutableMatrix, GramSchmidt, eye
 from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
 from sympy.physics.quantum import Commutator
@@ -1311,10 +1311,10 @@ def test_P1():
 
 
 def test_P2():
-    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    M = MutableMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     M.row_del(1)
     M.col_del(2)
-    assert M == Matrix([[1, 2],
+    assert M == MutableMatrix([[1, 2],
                         [7, 8]])
 
 

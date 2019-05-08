@@ -101,7 +101,7 @@ def test_pend():
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
-    rhs.simplify()
+    rhs = rhs.as_immutable().simplify()
     assert expand(rhs[0]) == expand(-g / l * sin(q))
     assert simplify(KM.rhs() -
                     KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
@@ -167,7 +167,7 @@ def test_rolling_disc():
     rhs = MM.inv() * forcing
     kdd = KM.kindiffdict()
     rhs = rhs.subs(kdd)
-    rhs.simplify()
+    rhs = rhs.as_immutable().simplify()
     assert rhs.expand() == Matrix([(6*u2*u3*r - u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
     assert simplify(KM.rhs() -
@@ -229,8 +229,8 @@ def test_aux():
     fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
     frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
-    frstar.simplify()
-    frstar2.simplify()
+    frstar = frstar.simplify()
+    frstar2 = frstar2.simplify()
 
     assert (fr - fr2).expand() == Matrix([0, 0, 0, 0, 0])
     assert (frstar - frstar2).expand() == Matrix([0, 0, 0, 0, 0])

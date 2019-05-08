@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.combinatorics.permutations import Permutation
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
-from sympy.matrices import Matrix
+from sympy.matrices import Matrix, MutableMatrix
 from sympy.utilities.iterables import variations, rotate_left
 
 
@@ -172,7 +172,7 @@ def rubik(n):
             for c in range(n):
                 for r in range(n - 1, -1, -1):
                     rv.append(face[r, c])
-            faces[F] = Matrix(n, n, rv)
+            faces[F] = MutableMatrix(n, n, rv)
 
     def ccw(F):
         cw(F, 3)
@@ -239,7 +239,7 @@ def rubik(n):
         for a in range(n**2):
             f.append(count)
             count += 1
-        faces[names[fi]] = Matrix(n, n, f)
+        faces[names[fi]] = MutableMatrix(n, n, f)
 
     # this will either return the value of the current permutation
     # (show != 1) or else append the permutation to the group, g
