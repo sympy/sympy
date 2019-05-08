@@ -737,3 +737,7 @@ def test_CantSympify():
     raises(SympifyError, lambda: sympify(m))
     # error raises within container, too
     raises(SympifyError, lambda: sympify([1, m]))
+    # and string
+    class my(str, CantSympify):
+        pass
+    raises(SympifyError, lambda: sympify(my(123)))

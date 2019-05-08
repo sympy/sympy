@@ -264,6 +264,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     from .basic import Basic
     from .numbers import Integer, Rational, Float
     from sympy.utilities.misc import filldedent
+    from sympy.utilities.iterables import iwalk
 
     if rational == '':
         rational == 'str'
@@ -303,14 +304,20 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         if cls in sympy_classes:
             done = a
 
-    # don't do it
-    if isinstance(a, CantSympify):
-        if rational and done:
-            raise SympifyError(filldedent('''
-                SymPy object %s cannot be modified.
-            ''' % done))
-        elif done is None:
-            raise SympifyError(a)
+    # see if we can't do it
+    def check(i):
+        if strict and isinstance(i, string_types):
+            raise SympifyError(i)
+        if isinstance(i, CantSympify):
+            if done is None:
+                raise SympifyError(i)
+            elif rational and i.atoms(Float):
+                raise SympifyError(filldedent('''
+                    SymPy object %s cannot be modified.
+                ''' % i))
+        return i
+    iwalk(a, do=check, sanitize=check)
+
     if done is not None:
         # handle the rational flag as expediently as
         # possible on this SymPy object
@@ -323,7 +330,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             return done.xreplace(dict(zip(f, r)))
         # otherwise it was a SymPy object and
         # we haven't made modifications so we
-        # didn't return a CantSympifyError
+        # don't raise a CantSympify error
         return done
 
     # let `a` do it
@@ -358,7 +365,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         if np.isscalar(a):
             return _convert_numpy_types(a, **kw)
 
-    def wrapper(a):
+    def _wrapper(a):
         try:
             return converter[cls]
         except KeyError:
@@ -368,31 +375,21 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 except KeyError:
                     continue
 
-    known = wrapper(a)
-    if not (strict and not known) and (rational or convert_xor
-        ) and iterable(a, exclude=(range, string_types)):
-        # need to handle these before allowing converter to wrap them;
-        # things like won't get converted but they need the same
-        # sort of handling if strict is not True
-        if isinstance(a, (set, tuple)) or isinstance(a, list):
-            new = []
-            for i in a:
-                new.append(sympify(i, **kw))
-            a = type(a)(new)
-        elif isinstance(a, dict):
-            # send keys and values as tuple in case
-            # strict is enforced
-            kv = zip(
-                sympify(tuple(a.keys()), **kw),
-                sympify(tuple(a.values()), **kw))
-            if isinstance(a, defaultdict):
-                a.clear()
-                a.update(list(kv))
-            else:
-                a = dict(kv)
-
-    if known:
-        return known(a)
+    known = _wrapper(a)
+    if not isinstance(a, string_types):
+        if not known and not strict and iterable(a, exclude=None):
+            return iwalk(a, lambda i: sympify(i, **kw))
+        elif known:
+            if not convert_xor:
+                def do(a):
+                    if isinstance(a, string_types):
+                        return _sympify_str(a, **kw)
+                    return a
+                a = iwalk(a, do)
+            rv = known(a)
+            if rational:
+                rv = sympify(rv, rational=True, strict=strict)
+            return rv
 
     if not strict:
         # Put numpy array conversion _before_ float/int, see
@@ -421,29 +418,27 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if strict:
         raise SympifyError(a)
 
-    # not supported via converter but ok if
-    # not strict
-    if isinstance(a, (list, defaultdict)):
-        return a
-
     # At this point we were given an arbitrary expression
     # which does not inherit from Basic and doesn't implement
     # _sympy_ (which is a canonical and robust way to convert
-    # anything to SymPy expression).
+    # anything to a SymPy expression).
     #
     # As a last chance, we try to take "a"'s normal form via unicode()
     # and try to parse it. If it fails, then we have no luck and
     # return an exception.
-    try:
-        from .compatibility import unicode
-        a = unicode(a)
-    except Exception as exc:
-        raise SympifyError(a, exc)
+    return _sympify_str(a, **kw)
 
+
+def _sympify_str(a, **kw):
     from sympy.parsing.sympy_parser import (parse_expr, TokenError,
                                             standard_transformations)
     from sympy.parsing.sympy_parser import convert_xor as _convert_xor
     from sympy.parsing.sympy_parser import rationalize as _rationalize
+
+    # all kw must be present; this is only intended to be called from
+    # within sympify
+    locals, convert_xor, rational, evaluate = [kw[i] for i in
+    'locals convert_xor rational evaluate'.split()]
 
     transformations = standard_transformations
 
@@ -452,6 +447,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if convert_xor:
         transformations += (_convert_xor,)
 
+    try:
+        from .compatibility import unicode
+        a = unicode(a)
+    except Exception as exc:
+        raise SympifyError(a, exc)
     try:
         a = a.replace('\n', '')
         expr = parse_expr(a, local_dict=locals, transformations=transformations, evaluate=evaluate)
