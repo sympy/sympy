@@ -155,20 +155,20 @@ class Reals(with_metaclass(Singleton, Interval)):
     This set is also available as the Singleton, S.Reals.
 
 
-	Examples
-	========
+    Examples
+    ========
 
-	>>> from sympy import S, Interval, Rational, pi, I, pprint
+    >>> from sympy import S, Interval, Rational, pi, I, pprint
     >>> pprint(5 in S.Reals)
-	True
+    True
     >>> pprint(Rational(-1, 2) in S.Reals)
-	True
+    True
     >>> pprint(pi in S.Reals)
-	True
+    True
     >>> pprint(3*I in S.Reals)
-	False
+    False
     >>> pprint(S.Reals.contains(pi))
-	True
+    True
 
 
     See Also
