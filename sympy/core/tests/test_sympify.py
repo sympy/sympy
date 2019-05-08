@@ -741,3 +741,7 @@ def test_CantSympify():
     class my(str, CantSympify):
         pass
     raises(SympifyError, lambda: sympify(my(123)))
+    class my(float):
+        def _sympy_(self):
+            return Float(self, 2)
+    assert str(sympify(my(1.2345))) == '1.2'

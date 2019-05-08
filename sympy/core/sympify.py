@@ -53,7 +53,7 @@ class CantSympify(object):
     pass
 
 
-def _convert_numpy_types(a, **sympify_args):
+def _convert_numpy_types(a):
     """
     Converts a numpy datatype input to an appropriate sympy type.
     """
@@ -62,7 +62,7 @@ def _convert_numpy_types(a, **sympify_args):
         if np.iscomplex(a):
             return converter[complex](a.item())
         else:
-            return sympify(a.item(), **sympify_args)
+            return a.item()
     else:
         try:
             from sympy.core.numbers import Float
@@ -269,24 +269,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if rational == '':
         rational == 'str'
 
-    # non-subclassed Python values
-    # True/False/None/float/int quick exits
-    if a is None:
-        if strict:
-            raise SympifyError(a)
-        else:
-            return a
-    if a is True or a is False:
-        return converter[bool](a)
-    if type(a) is float:
-        if rational:
-            if rational == 'str':
-                return Rational(str(a))
-            return Rational(*a.as_integer_ratio())
-        return Float(a)
-    elif type(a) in integer_types:
-        return Integer(a)
-
     # SymPy class already; might be subclasssed from
     # CantSympify but in that case we would just
     # return the object rather than raising an error
@@ -318,6 +300,43 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         return i
     iwalk(a, do=check, sanitize=check)
 
+    # let `a` do it
+    _sympy_ = getattr(a, "_sympy_", None)
+    if _sympy_ is not None:
+        try:
+            return a._sympy_()
+        # XXX: Catches AttributeError: 'SympyConverter' object has no
+        # attribute 'tuple'
+        # This is probably a bug somewhere but for now we catch it here.
+        # See commit message for full traceback.
+        except AttributeError:
+            pass
+
+    # Python primitives
+    # True/False/None/float/int quick exits
+    if a is None:
+        if strict:
+            raise SympifyError(a)
+        else:
+            return a
+    if a is True or a is False:
+        return converter[bool](a)
+    if type(a) is float:
+        if rational:
+            if rational == 'str':
+                return Rational(str(a))
+            return Rational(*a.as_integer_ratio())
+        return Float(a)
+    elif type(a) in integer_types:
+        return Integer(a)
+
+    # Support for basic numpy datatypes
+    # Note that this check exists to avoid importing NumPy when not necessary
+    if type(a).__module__ == 'numpy':
+        import numpy as np
+        if np.isscalar(a):
+            return sympify(_convert_numpy_types(a), **kw)
+
     if done is not None:
         # handle the rational flag as expediently as
         # possible on this SymPy object
@@ -333,18 +352,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         # don't raise a CantSympify error
         return done
 
-    # let `a` do it
-    _sympy_ = getattr(a, "_sympy_", None)
-    if _sympy_ is not None:
-        try:
-            return a._sympy_()
-        # XXX: Catches AttributeError: 'SympyConverter' object has no
-        # attribute 'tuple'
-        # This is probably a bug somewhere but for now we catch it here.
-        # See commit message for full traceback.
-        except AttributeError:
-            pass
-
     # kwargs
     if evaluate is None:
         if global_evaluate[0] is False:
@@ -357,13 +364,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         strict=strict,
         rational=rational,
         evaluate=evaluate)
-
-    # Support for basic numpy datatypes
-    # Note that this check exists to avoid importing NumPy when not necessary
-    if type(a).__module__ == 'numpy':
-        import numpy as np
-        if np.isscalar(a):
-            return _convert_numpy_types(a, **kw)
 
     def _wrapper(a):
         try:
