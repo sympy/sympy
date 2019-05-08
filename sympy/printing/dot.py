@@ -7,6 +7,7 @@ from sympy.core.numbers import Integer, Rational, Float
 from sympy.core.compatibility import default_sort_key
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.printing.repr import srepr
 
 __all__ = ['dotprint']
 
@@ -14,20 +15,24 @@ default_styles = ((Basic, {'color': 'blue', 'shape': 'ellipse'}),
           (Expr,  {'color': 'black'}))
 
 
-sort_classes = (Add, Mul)
 slotClasses = (Symbol, Integer, Rational, Float)
-# XXX: Why not just use srepr()?
-def purestr(x):
+def purestr(x, with_args=False):
     """ A string that follows obj = type(obj)(*obj.args) exactly """
+    sargs = ()
     if not isinstance(x, Basic):
-        return str(x)
-    if type(x) in slotClasses:
-        args = [getattr(x, slot) for slot in x.__slots__]
-    elif type(x) in sort_classes:
-        args = sorted(x.args, key=default_sort_key)
+        rv = str(x)
+    elif not x.args:
+        rv = srepr(x)
     else:
         args = x.args
-    return "%s(%s)"%(type(x).__name__, ', '.join(map(purestr, args)))
+        if isinstance(x, Add) or \
+                isinstance(x, Mul) and x.is_commutative:
+            args = sorted(args, key=default_sort_key)
+        sargs = tuple(map(purestr, args))
+        rv = "%s(%s)"%(type(x).__name__, ', '.join(sargs))
+    if with_args:
+        rv = rv, sargs
+    return rv
 
 
 def styleof(expr, styles=default_styles):
@@ -54,6 +59,7 @@ def styleof(expr, styles=default_styles):
             style.update(sty)
     return style
 
+
 def attrprint(d, delimiter=', '):
     """ Print a dictionary of attributes
 
@@ -66,6 +72,7 @@ def attrprint(d, delimiter=', '):
     """
     return delimiter.join('"%s"="%s"'%item for item in sorted(d.items()))
 
+
 def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
     """ String defining a node
 
@@ -75,7 +82,7 @@ def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
     >>> from sympy.printing.dot import dotnode
     >>> from sympy.abc import x
     >>> print(dotnode(x))
-    "Symbol(x)_()" ["color"="black", "label"="x", "shape"="ellipse"];
+    "Symbol('x')_()" ["color"="black", "label"="x", "shape"="ellipse"];
     """
     style = styleof(expr, styles)
 
@@ -102,20 +109,19 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True)
     >>> from sympy.abc import x
     >>> for e in dotedges(x+2):
     ...     print(e)
-    "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
-    "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
+    "Add(Integer(2), Symbol('x'))_()" -> "Integer(2)_(0,)";
+    "Add(Integer(2), Symbol('x'))_()" -> "Symbol('x')_(1,)";
     """
+    from sympy.utilities.misc import func_name
     if atom(expr):
         return []
     else:
-        # TODO: This is quadratic in complexity (purestr(expr) already
-        # contains [purestr(arg) for arg in expr.args]).
-        expr_str = purestr(expr)
-        arg_strs = [purestr(arg) for arg in expr.args]
+        expr_str, arg_strs = purestr(expr, with_args=True)
         if repeat:
             expr_str += '_%s' % str(pos)
-            arg_strs = [arg_str + '_%s' % str(pos + (i,)) for i, arg_str in enumerate(arg_strs)]
-        return ['"%s" -> "%s";' % (expr_str, arg_str) for arg_str in arg_strs]
+            arg_strs = ['%s_%s' % (a, str(pos + (i,)))
+                for i, a in enumerate(arg_strs)]
+        return ['"%s" -> "%s";' % (expr_str, a) for a in arg_strs]
 
 template = \
 """digraph{
@@ -161,7 +167,7 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
           ``repeat=True``, it will have two nodes for ``x`` and with
           ``repeat=False``, it will have one (warning: even if it appears
           twice in the same object, like Pow(x, x), it will still only appear
-          only once.  Hence, with repeat=False, the number of arrows out of an
+          once.  Hence, with repeat=False, the number of arrows out of an
           object might not equal the number of args it has).
 
     ``labelfunc``: How to label leaf nodes.  The default is ``str``.  Another
@@ -187,16 +193,16 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
     # Nodes #
     #########
     <BLANKLINE>
-    "Add(Integer(2), Symbol(x))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    "Add(Integer(2), Symbol('x'))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
     "Integer(2)_(0,)" ["color"="black", "label"="2", "shape"="ellipse"];
-    "Symbol(x)_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
+    "Symbol('x')_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
     <BLANKLINE>
     #########
     # Edges #
     #########
     <BLANKLINE>
-    "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
-    "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
+    "Add(Integer(2), Symbol('x'))_()" -> "Integer(2)_(0,)";
+    "Add(Integer(2), Symbol('x'))_()" -> "Symbol('x')_(1,)";
     }
 
     """
