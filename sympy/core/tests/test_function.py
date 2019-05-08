@@ -2,7 +2,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
-        Matrix, Basic, Dict)
+        Matrix, Basic, Dict, Line)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.basic import _aresame
 from sympy.core.function import PoleError, _mexpand, arity
@@ -857,6 +857,13 @@ def test_nfloat():
     assert nfloat(Eq((3 - I)**2/2 + I, 0)) == S.false
     # pass along kwargs
     assert nfloat([{S.Half: x}], dkeys=True) == [{Float(0.5): x}]
+    # handle all objects
+    assert str(nfloat(1 + pi, 2)) == '4.1'
+    line = Line((123456, 1.1234), (pi + sqrt(2), Rational(3, 12345)))
+    assert str(nfloat(line, 2)) == \
+        'Line2D(Point2D(1.2e+5, 1.1), Point2D(4.6, 0.00024))'
+    assert sstr(nfloat(Line((1, sqrt(2) + pi),(3, 4)), 2)) == \
+        'Line2D(Point2D(1.0, 4.6), Point2D(3.0, 4.0))'
 
 
 def test_issue_7068():

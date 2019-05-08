@@ -738,7 +738,13 @@ class Ellipse(GeometrySet):
             else:
                 return False
         elif isinstance(o, Line2D):
-            return len(self.intersection(o)) == 1
+            hits = self.intersection(o)
+            if not hits:
+                return False
+            if len(hits) == 1:
+                return True
+            assert len(hits) == 2
+            return hits[0].equals(hits[1])  # XXX should we raise Undecidable if None?
         elif isinstance(o, Ray2D):
             intersect = self.intersection(o)
             if len(intersect) == 1:
