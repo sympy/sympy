@@ -44,6 +44,9 @@ from sympy.plotting.textplot import textplot
 # Set to False when running tests / doctests so that the plots don't show.
 _show = True
 
+get_text = lambda used_symbols:   "one" if used_symbols is 1 else    \
+                                  "two" if used_symbols is 2 else ""
+
 
 def unset_show():
     """
@@ -2138,8 +2141,6 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         free_symbols = list(set().union(*[e.free_symbols for e in exprs]))
 
         #Warn: Dimension
-        get_text = lambda used_symbols:   "one" if used_symbols is 1 else    \
-                                          "two" if used_symbols is 2 else ""
         # get all variables
         variables = set(free_symbols)
         # check arguments
