@@ -2135,21 +2135,42 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             i = len(args) + 1
 
         exprs = Tuple(*args[:i])
-        free_symbols = list(set().union(*[e.free_symbols for e in exprs])) # sum(args[:expr_len]).free_symbols
+        free_symbols = list(set().union(*[e.free_symbols for e in exprs]))
 
         #Warn: Dimension
-        variables = set(free_symbols) # get all variables
-        specify_symbols = set([s[0] for s in args[expr_len:]]) # get symbols from all ranges
+        get_text = lambda used_symbols:   "one" if used_symbols is 1 else    \
+                                          "two" if used_symbols is 2 else ""
+        # get all variables
+        variables = set(free_symbols)
+        # check arguments
+        assert all([isinstance(rang, Tuple) for rang in args[expr_len:]]), \
+            "spected (symbol, a, b)"
+        # get symbols from all ranges
+        specify_symbols = set([s[0] for s in args[expr_len:]])
+        #
+        style_ranges = ",  {} = range(*)"*len(specify_symbols)
+        expr_ranges = style_ranges.format(*specify_symbols)[3:]
+        #
         all_symbols = variables | specify_symbols
         if len(all_symbols) > len(variables):
-            msj = "Dimension Error: there be a variable ranged that ins´t part of any ecuation!"
-            raise Exception(msj)
+            msj = "There be a variable ranged that ins´t part of any ecuation!"
+            raise NameError(msj)
+
         if len(all_symbols) > nb_of_free_symbols:
             if specify_symbols == set():
-                msj =  "\nYou should be use ONLY %s (%s) parameters from %s"%("one" if nb_of_free_symbols is 1 else "two" if nb_of_free_symbols is 2 else "", nb_of_free_symbols, all_symbols)
-                raise Exception(msj)
-            msj = "\nYou should be use ONLY %s (%s) parameters, but was given %s.  %s!"%("one" if nb_of_free_symbols is 1 else "two" if nb_of_free_symbols is 2 else "", nb_of_free_symbols, all_symbols, (",  {} = range(*)"*len(specify_symbols)).format(*specify_symbols)[3:])
-            raise Exception(msj)
+                msj =  "There must be  ONLY %s (%s) parameters from %s"%(\
+                    get_text(nb_of_free_symbols),                        \
+                    nb_of_free_symbols, all_symbols)
+
+                raise NameError(msj)
+
+            msj = "There must be  ONLY %s (%s) parameters, "       \
+                "but was given %s.  %s!"%(                         \
+                get_text(nb_of_free_symbols),                      \
+                nb_of_free_symbols, all_symbols, expr_ranges)
+
+            raise NameError(msj)
+
         #end
         if len(args) == expr_len + nb_of_free_symbols:
             #Ranges given
@@ -2210,8 +2231,10 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         lst = []
         for arg in args:
             #Warn: Dimension
-            sbls = sum(arg[:expr_len]).free_symbols # get all variables
-            specify_symbols = set([s[0] for s in arg[expr_len:]]) # get symbols from all ranges
+            # get all variables
+            sbls = sum(arg[:expr_len]).free_symbols
+            # get symbols from all ranges
+            specify_symbols = set([s[0] for s in arg[expr_len:]])
             if len(sbls) != nb_of_free_symbols or specify_symbols-sbls:
                 lst.append((sbls, specify_symbols))
                 continue
@@ -2226,7 +2249,11 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
                                      "length 3, got %s" % str(arg[i + expr_len]))
 
         if lst:
-            msj = "\nYou should be use ONLY %s (%s) parameters, but was given %s.  %s!"%("one" if nb_of_free_symbols is 1 else "two" if nb_of_free_symbols is 2 else "", nb_of_free_symbols, all_symbols, (",  {} = range(*)"*len(specify_symbols)).format(*specify_symbols)[3:])
-            raise Exception(msj)
+            msj = "There must be  ONLY %s (%s) parameters, "       \
+                "but was given %s.  %s!"%(                         \
+                get_text(nb_of_free_symbols), nb_of_free_symbols,  \
+                all_symbols, expr_ranges)
+
+            raise NameError(msj)
 
         return args
