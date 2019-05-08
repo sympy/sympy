@@ -35,7 +35,7 @@ from sympy.logic.boolalg import And
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set
-from sympy.matrices import Matrix, MatrixBase
+from sympy.matrices import Matrix, MatrixBase, MutableMatrix, ImmutableMatrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.polys.polyerrors import CoercionFailed
@@ -2157,15 +2157,16 @@ def linsolve(system, *symbols):
     syms_needed_msg = None
 
     # unpack system
+    matrix_types = (MutableMatrix, ImmutableMatrix)
 
     if hasattr(system, '__iter__'):
 
         # 1). (A, b)
-        if len(system) == 2 and isinstance(system[0], Matrix):
+        if len(system) == 2 and isinstance(system[0], matrix_types):
             A, b = system
 
         # 2). (eq1, eq2, ...)
-        if not isinstance(system[0], Matrix):
+        if not isinstance(system[0], matrix_types):
             if sym_gen or not symbols:
                 raise ValueError(filldedent('''
                     When passing a system of equations, the explicit
@@ -2179,9 +2180,9 @@ def linsolve(system, *symbols):
             A, b = linear_eq_to_matrix(system, symbols)
             syms_needed_msg = 'free symbols in the equations provided'
 
-    elif isinstance(system, Matrix) and not (
+    elif isinstance(system, matrix_types) and not (
             symbols and not isinstance(symbols, GeneratorType) and
-            isinstance(symbols[0], Matrix)):
+            isinstance(symbols[0], matrix_types)):
         # 3). A augmented with b
         A, b = system[:, :-1], system[:, -1:]
 

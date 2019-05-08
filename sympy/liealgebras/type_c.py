@@ -138,7 +138,7 @@ class TypeC(Standard_Cartan):
         """
 
         n = self.n
-        m = 2 * eye(n)
+        m = 2 * eye(n).as_mutable()
         i = 1
         while i < n-1:
            m[i, i+1] = -1
@@ -146,7 +146,7 @@ class TypeC(Standard_Cartan):
            i += 1
         m[0,1] = -1
         m[n-1, n-2] = -2
-        return m
+        return m.as_immutable()
 
 
     def basis(self):

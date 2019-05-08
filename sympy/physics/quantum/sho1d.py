@@ -135,7 +135,7 @@ class RaisingOp(SHOOp):
         ndim_info = options.get('ndim', 4)
         format = options.get('format','sympy')
         spmatrix = options.get('spmatrix', 'csr')
-        matrix = matrix_zeros(ndim_info, ndim_info, **options).as_mutable()
+        matrix = matrix_zeros(ndim_info, ndim_info, **options)
         for i in range(ndim_info - 1):
             value = sqrt(i + 1)
             if format == 'scipy.sparse':
@@ -143,7 +143,7 @@ class RaisingOp(SHOOp):
             matrix[i + 1, i] = value
         if format == 'scipy.sparse':
             matrix = matrix.tocsr()
-        return matrix.as_immutable()
+        return matrix
 
     #--------------------------------------------------------------------------
     # Printing Methods
@@ -277,7 +277,7 @@ class LoweringOp(SHOOp):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
         spmatrix = options.get('spmatrix', 'csr')
-        matrix = matrix_zeros(ndim_info, ndim_info, **options).as_mutable()
+        matrix = matrix_zeros(ndim_info, ndim_info, **options)
         for i in range(ndim_info - 1):
             value = sqrt(i + 1)
             if format == 'scipy.sparse':
@@ -285,7 +285,7 @@ class LoweringOp(SHOOp):
             matrix[i,i + 1] = value
         if format == 'scipy.sparse':
             matrix = matrix.tocsr()
-        return matrix.as_immutable()
+        return matrix
 
 
 class NumberOp(SHOOp):
@@ -398,7 +398,7 @@ class NumberOp(SHOOp):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
         spmatrix = options.get('spmatrix', 'csr')
-        matrix = matrix_zeros(ndim_info, ndim_info, **options).as_mutable()
+        matrix = matrix_zeros(ndim_info, ndim_info, **options)
         for i in range(ndim_info):
             value = i
             if format == 'scipy.sparse':
@@ -406,7 +406,7 @@ class NumberOp(SHOOp):
             matrix[i,i] = value
         if format == 'scipy.sparse':
             matrix = matrix.tocsr()
-        return matrix.as_immutable()
+        return matrix
 
 
 class Hamiltonian(SHOOp):
@@ -505,7 +505,7 @@ class Hamiltonian(SHOOp):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
         spmatrix = options.get('spmatrix', 'csr')
-        matrix = matrix_zeros(ndim_info, ndim_info, **options).as_mutable()
+        matrix = matrix_zeros(ndim_info, ndim_info, **options)
         for i in range(ndim_info):
             value = i + Integer(1)/Integer(2)
             if format == 'scipy.sparse':
@@ -513,7 +513,7 @@ class Hamiltonian(SHOOp):
             matrix[i,i] = value
         if format == 'scipy.sparse':
             matrix = matrix.tocsr()
-        return hbar*omega*matrix.as_immutable()
+        return hbar*omega*matrix
 
 #------------------------------------------------------------------------------
 
@@ -595,7 +595,7 @@ class SHOKet(SHOState, Ket):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
         options['spmatrix'] = 'lil'
-        vector = matrix_zeros(ndim_info, 1, **options).as_mutable()
+        vector = matrix_zeros(ndim_info, 1, **options)
         if isinstance(self.n, Integer):
             if self.n >= ndim_info:
                 return ValueError("N-Dimension too small")
@@ -607,7 +607,7 @@ class SHOKet(SHOState, Ket):
                 vector[int(self.n), 0] = 1.0
             else:
                 vector[self.n, 0] = Integer(1)
-            return vector.as_immutable()
+            return vector
         else:
             return ValueError("Not Numerical State")
 

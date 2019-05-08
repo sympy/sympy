@@ -236,7 +236,7 @@ def matrix_zeros(m, n, **options):
     dtype = options.get('dtype', 'float64')
     spmatrix = options.get('spmatrix', 'csr')
     if format == 'sympy':
-        return zeros(m, n)
+        return zeros(m, n).as_mutable()
     elif format == 'numpy':
         return _numpy_zeros(m, n, **options)
     elif format == 'scipy.sparse':

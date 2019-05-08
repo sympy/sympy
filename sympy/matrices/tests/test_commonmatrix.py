@@ -1512,7 +1512,7 @@ def test_singular_values():
     # if singular values can be sorted, they should be in decreasing order
     assert A.singular_values() == [2, 1]
 
-    A = eye(3)
+    A = eye(3).as_mutable()
     A[1, 1] = x
     A[2, 2] = 5
     vals = A.singular_values()

@@ -1424,11 +1424,11 @@ def matrix_rep(op, basis):
     [0, 0,       0,       0, 2],
     [0, 0,       0,       0, 0]])
     """
-    a = zeros(len(basis))
+    a = zeros(len(basis)).as_mutable()
     for i in range(len(basis)):
         for j in range(len(basis)):
             a[i, j] = apply_operators(Dagger(basis[i])*op*basis[j])
-    return a
+    return a.as_immutable()
 
 
 class BosonicBasis(object):

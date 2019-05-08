@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify
+from sympy import Expr, Add, Mul, MutableMatrix, ImmutableMatrix, Pow, sympify
 from sympy.core.compatibility import range
 from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
@@ -118,7 +118,7 @@ class TensorProduct(Expr):
     is_commutative = False
 
     def __new__(cls, *args):
-        if isinstance(args[0], (Matrix, numpy_ndarray, scipy_sparse_matrix)):
+        if isinstance(args[0], (MutableMatrix, ImmutableMatrix, numpy_ndarray, scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
         c_part, new_args = cls.flatten(sympify(args))
         c_part = Mul(*c_part)

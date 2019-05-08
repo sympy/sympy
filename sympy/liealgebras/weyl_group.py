@@ -241,22 +241,22 @@ class WeylGroup(Basic):
         reflections = elts[1::3]
         n = self.cartan_type.rank()
         if self.cartan_type.series == 'A':
-            matrixform = eye(n+1)
+            matrixform = eye(n+1).as_mutable()
             for elt in reflections:
                 a = int(elt)
-                mat = eye(n+1)
+                mat = eye(n+1).as_mutable()
                 mat[a-1, a-1] = 0
                 mat[a-1, a] = 1
                 mat[a, a-1] = 1
                 mat[a, a] = 0
                 matrixform *= mat
-            return matrixform
+            return matrixform.as_immutable()
 
         if self.cartan_type.series == 'D':
-            matrixform = eye(n)
+            matrixform = eye(n).as_mutable()
             for elt in reflections:
                 a = int(elt)
-                mat = eye(n)
+                mat = eye(n).as_mutable()
                 if a < n:
                     mat[a-1, a-1] = 0
                     mat[a-1, a] = 1
@@ -269,10 +269,10 @@ class WeylGroup(Basic):
                     mat[n-1, n-2] = -1
                     mat[n-1, n-1] = 0
                     matrixform *= mat
-            return matrixform
+            return matrixform.as_immutable()
 
         if self.cartan_type.series == 'G':
-            matrixform = eye(3)
+            matrixform = eye(3).as_mutable()
             for elt in reflections:
                 a = int(elt)
                 if a == 1:
@@ -283,10 +283,10 @@ class WeylGroup(Basic):
                         [Rational(2, 3), Rational(-1, 3), Rational(2, 3)], [Rational(-1, 3),
                             Rational(2, 3), Rational(2, 3)]])
                     matrixform *= gen2
-            return matrixform
+            return matrixform.as_immutable()
 
         if self.cartan_type.series == 'F':
-            matrixform = eye(4)
+            matrixform = eye(4).as_mutable()
             for elt in reflections:
                 a = int(elt)
                 if a == 1:
@@ -305,10 +305,10 @@ class WeylGroup(Basic):
                         [Rational(1, 2), Rational(-1, 2), Rational(1, 2), Rational(-1, 2)],
                         [Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]])
                     matrixform *= mat
-            return matrixform
+            return matrixform.as_immutable()
 
         if self.cartan_type.series == 'E':
-            matrixform = eye(8)
+            matrixform = eye(8).as_mutable()
             for elt in reflections:
                 a = int(elt)
                 if a == 1:
@@ -330,27 +330,27 @@ class WeylGroup(Basic):
                         Rational(-1, 4), Rational(-1, 4), Rational(-1, 4), Rational(3, 4)]])
                     matrixform *= mat
                 elif a == 2:
-                    mat = eye(8)
+                    mat = eye(8).as_mutable()
                     mat[0, 0] = 0
                     mat[0, 1] = -1
                     mat[1, 0] = -1
                     mat[1, 1] = 0
                     matrixform *= mat
                 else:
-                    mat = eye(8)
+                    mat = eye(8).as_mutable()
                     mat[a-3, a-3] = 0
                     mat[a-3, a-2] = 1
                     mat[a-2, a-3] = 1
                     mat[a-2, a-2] = 0
                     matrixform *= mat
-            return matrixform
+            return matrixform.as_immutable()
 
 
         if self.cartan_type.series == 'B' or self.cartan_type.series == 'C':
-            matrixform = eye(n)
+            matrixform = eye(n).as_mutable()
             for elt in reflections:
                 a = int(elt)
-                mat = eye(n)
+                mat = eye(n).as_mutable()
                 if a == 1:
                     mat[0, 0] = -1
                     matrixform *= mat
@@ -360,7 +360,7 @@ class WeylGroup(Basic):
                     mat[a - 1, a - 2] = 1
                     mat[a -1, a - 1] = 0
                     matrixform *= mat
-            return matrixform
+            return matrixform.as_immutable()
 
 
 

@@ -2538,12 +2538,12 @@ class Permutation(Basic):
 
         get_precedence_distance, get_adjacency_matrix, get_adjacency_distance
         """
-        m = zeros(self.size)
+        m = zeros(self.size).as_mutable()
         perm = self.array_form
         for i in range(m.rows):
             for j in range(i + 1, m.cols):
                 m[perm[i], perm[j]] = 1
-        return m
+        return m.as_immutable()
 
     def get_precedence_distance(self, other):
         """
@@ -2617,11 +2617,11 @@ class Permutation(Basic):
 
         get_precedence_matrix, get_precedence_distance, get_adjacency_distance
         """
-        m = zeros(self.size)
+        m = zeros(self.size).as_mutable()
         perm = self.array_form
         for i in range(self.size - 1):
             m[perm[i], perm[i + 1]] = 1
-        return m
+        return m.as_immutable()
 
     def get_adjacency_distance(self, other):
         """

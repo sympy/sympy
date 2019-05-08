@@ -2947,9 +2947,9 @@ class MatrixBase(MatrixDeprecated,
         from sympy.matrices import zeros
 
         M, n = self[:, :], self.rows
-        work = zeros(n)
+        work = zeros(n).as_mutable()
         if self.is_symmetric():
-            return work
+            return work.as_immutable()
 
         for i in range(1, n):
             for j in range(1, n):
@@ -2968,7 +2968,7 @@ class MatrixBase(MatrixDeprecated,
             work[0, l] = -acum
             work[l, 0] = acum
 
-        return work
+        return work.as_immutable()
 
     def exp(self):
         """Return the exponentiation of a square matrix."""

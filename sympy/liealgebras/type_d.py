@@ -138,7 +138,7 @@ class TypeD(Standard_Cartan):
         """
 
         n = self.n
-        m = 2*eye(n)
+        m = 2*eye(n).as_mutable()
         i = 1
         while i < n-2:
            m[i,i+1] = -1
@@ -148,7 +148,7 @@ class TypeD(Standard_Cartan):
         m[n-3, n-1] = -1
         m[n-1, n-3] = -1
         m[0, 1] = -1
-        return m
+        return m.as_immutable()
 
     def basis(self):
         """

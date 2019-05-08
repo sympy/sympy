@@ -473,7 +473,7 @@ def test_slicing():
 
 
 def test_submatrix_assignment():
-    m = zeros(4)
+    m = zeros(4).as_mutable()
     m[2:4, 2:4] = eye(2)
     assert m == Matrix(((0, 0, 0, 0),
                         (0, 0, 0, 0),
@@ -1421,7 +1421,7 @@ def test_is_nilpotent():
 def test_zeros_ones_fill():
     n, m = 3, 5
 
-    a = zeros(n, m)
+    a = zeros(n, m).as_mutable()
     a.fill( 5 )
 
     b = 5 * ones(n, m)
@@ -1464,8 +1464,9 @@ def test_issue_3749():
 
 
 def test_inv_iszerofunc():
-    A = eye(4)
+    A = eye(4).as_mutable()
     A.col_swap(0, 1)
+    A = A.as_immutable()
     for method in "GE", "LU":
         assert A.inv(method=method, iszerofunc=lambda x: x == 0) == \
             A.inv(method="ADJ")
@@ -2452,7 +2453,7 @@ def test_matrix_norm():
 
 def test_condition_number():
     x = Symbol('x', real=True)
-    A = eye(3)
+    A = eye(3).as_mutable()
     A[0, 0] = 10
     A[2, 2] = S(1)/10
     assert A.condition_number() == 100
@@ -2641,7 +2642,7 @@ def test_slice_issue_3401():
 
 
 def test_copyin():
-    s = zeros(3, 3)
+    s = zeros(3, 3).as_mutable()
     s[3] = 1
     assert s[:, 0] == Matrix([0, 1, 0])
     assert s[3] == 1

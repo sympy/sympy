@@ -590,19 +590,20 @@ def intersection_sets(self, o):
 
 def translate(x, y):
     """Return the matrix to translate a 2-D point by x and y."""
-    rv = eye(3)
+    rv = eye(3).as_mutable()
     rv[2, 0] = x
     rv[2, 1] = y
-    return rv
+    return rv.as_immutable()
 
 
 def scale(x, y, pt=None):
     """Return the matrix to multiply a 2-D point's coordinates by x and y.
 
     If pt is given, the scaling is done relative to that point."""
-    rv = eye(3)
+    rv = eye(3).as_mutable()
     rv[0, 0] = x
     rv[1, 1] = y
+    rv = rv.as_immutable()
     if pt:
         from sympy.geometry.point import Point
         pt = Point(pt, dim=2)
@@ -628,8 +629,8 @@ def rotate(th):
     Point2D(2, 0)
     """
     s = sin(th)
-    rv = eye(3)*cos(th)
+    rv = eye(3).as_mutable()*cos(th)
     rv[0, 1] = s
     rv[1, 0] = -s
     rv[2, 2] = 1
-    return rv
+    return rv.as_immutable()

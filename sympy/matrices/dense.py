@@ -136,7 +136,7 @@ class DenseMatrix(MatrixBase):
         Returns L such that L*L.H == self if hermitian flag is True,
         or L*L.T == self if hermitian is False.
         """
-        L = zeros(self.rows, self.rows)
+        L = zeros(self.rows, self.rows).as_mutable()
         if hermitian:
             for i in range(self.rows):
                 for j in range(i):
@@ -154,7 +154,7 @@ class DenseMatrix(MatrixBase):
                         sum(L[i, k]*L[j, k] for k in range(j)))
                 L[i, i] = sqrt(self[i, i] -
                     sum(L[i, k]**2 for k in range(i)))
-        return self._new(L)
+        return self._new(L.as_immutable())
 
     def _diagonal_solve(self, rhs):
         """Helper function of function diagonal_solve,
@@ -298,8 +298,8 @@ class DenseMatrix(MatrixBase):
         or L*D*L.T == self if hermitian is False.
         """
         # https://en.wikipedia.org/wiki/Cholesky_decomposition#LDL_decomposition_2
-        D = zeros(self.rows, self.rows)
-        L = eye(self.rows)
+        D = zeros(self.rows, self.rows).as_mutable()
+        L = eye(self.rows).as_mutable()
         if hermitian:
             for i in range(self.rows):
                 for j in range(i):
@@ -322,7 +322,7 @@ class DenseMatrix(MatrixBase):
         Without the error checks.
         To be used privately.
         """
-        X = zeros(self.rows, rhs.cols)
+        X = zeros(self.rows, rhs.cols).as_mutable()
         for j in range(rhs.cols):
             for i in range(self.rows):
                 if self[i, i] == 0:
@@ -334,7 +334,7 @@ class DenseMatrix(MatrixBase):
     def _upper_triangular_solve(self, rhs):
         """Helper function of function upper_triangular_solve.
         Without the error checks, to be used privately. """
-        X = zeros(self.rows, rhs.cols)
+        X = zeros(self.rows, rhs.cols).as_mutable()
         for j in range(rhs.cols):
             for i in reversed(range(self.rows)):
                 if self[i, i] == 0:
@@ -1415,7 +1415,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     # Symmetric case
     if r != c:
         raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
-    m = zeros(r)
+    m = zeros(r).as_mutable()
     ij = [(i, j) for i in range(r) for j in range(i, r)]
     if percent != 100:
         ij = prng.sample(ij, int(len(ij)*percent // 100))
@@ -1423,7 +1423,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     for i, j in ij:
         value = prng.randint(min, max)
         m[i, j] = m[j, i] = value
-    return m
+    return m.as_immutable()
 
 
 def wronskian(functions, var, method='bareiss'):
