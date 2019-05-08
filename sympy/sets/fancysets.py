@@ -148,8 +148,8 @@ class Integers(with_metaclass(Singleton, Set)):
 
 
 class Reals(with_metaclass(Singleton, Interval)):
-	"""
-	Represents all continuous numbers
+    """
+    Represents all continuous numbers
     from negative infinity to positive infinity,
     including all integer, rational and irrational numbers.
     This set is also available as the Singleton, S.Reals.
