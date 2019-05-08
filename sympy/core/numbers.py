@@ -3900,4 +3900,4 @@ def _register_classes():
     numbers.Rational.register(Rational)
     numbers.Rational.register(Integer)
 
-_register_classes();
+_register_classes()
