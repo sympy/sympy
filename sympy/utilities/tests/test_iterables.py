@@ -16,7 +16,7 @@ from sympy.utilities.iterables import (
     permutations, postfixes, postorder_traversal, prefixes, reshape,
     rotate_left, rotate_right, runs, sift, strongly_connected_components,
     subsets, take, topological_sort, unflatten, uniq, variations,
-    ordered_partitions, rotations)
+    ordered_partitions, rotations, iwalk)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -783,3 +783,24 @@ def test_ibin():
     assert ibin(3, 3, str=True) == '011'
     assert list(ibin(2, 'all')) == [(0, 0), (0, 1), (1, 0), (1, 1)]
     assert list(ibin(2, 'all', str=True)) == ['00', '01', '10', '11']
+
+
+def test_iwalk():
+    tup = lambda x: tuple(x) if type(x) is list else x
+    add = lambda x: x + 1 if isinstance(x, int) else x
+    input = [3, [.1, 2]]
+    x = iwalk(input, do=tup)
+    saw = []
+    def who(i, saw=saw):
+        saw.append(type(i))
+        return i
+    ok = iwalk(x, do=who, sanitize=who)
+    assert saw == [list, int, list, float, int]
+    saw[:] = []
+    ok = iwalk(x, sanitize=who)
+    assert saw == [list, list]
+    saw[:] = []
+    ok = iwalk(x, do=who)
+    assert saw == [int, float, int]
+    assert iwalk(input, sanitize=tup) == (3, (0.1, 2))
+    assert iwalk(input, do=add, sanitize=tup) == (4, (0.1, 3))

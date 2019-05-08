@@ -2584,3 +2584,52 @@ def rotations(s, dir=1):
     for i in range(len(seq)):
         yield seq
         seq = rotate_left(seq, dir)
+
+
+def iwalk(a, do=None, sanitize=None):
+    """Return input after applying `do` to items in Python builtin
+    containers. If ``sanitize`` is provided, apply that to a
+    container before applying ``do`` to its contents.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import iwalk
+    >>> tup = lambda x: tuple(x) if type(x) is list else x
+    >>> add = lambda x: x + 1 if isinstance(x, int) else x
+    >>> input = [3, (.1, 2)]
+
+    The ``do`` action only happens to contents of iterables:
+
+    >>> iwalk(input, do=tup)
+    [3, (0.1, 2)]
+
+    The ``sanitize`` action happens to the iterables, in
+    this case the lists become tuples:
+
+    >>> iwalk(input, sanitize=tup)
+    (3, (0.1, 2))
+
+    >>> iwalk(input, do=add, sanitize=tup)
+    (4, (0.1, 3))
+    """
+    if isinstance(a, (list, set, tuple, frozenset)):
+        a = sanitize(a) if sanitize else a
+        new = []
+        for i in a:
+            new.append(iwalk(i, do, sanitize))
+        a = type(a)(new)
+    elif isinstance(a, dict):
+        a = sanitize(a) if sanitize else a
+        kv = [(
+            iwalk(k, do, sanitize),
+            iwalk(v, do, sanitize))
+            for k, v in a.items()]
+        if isinstance(a, defaultdict):
+            a.clear()
+            a.update(list(kv))
+        else:
+            a = dict(kv)
+    else:
+        a = do(a) if do else a
+    return a
