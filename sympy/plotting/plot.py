@@ -2139,8 +2139,6 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
 
         exprs = Tuple(*args[:i])
         free_symbols = list(set().union(*[e.free_symbols for e in exprs]))
-
-        #Warn: Dimension
         # get all variables
         variables = set(free_symbols)
         # check arguments
@@ -2148,10 +2146,10 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             "spected (symbol, a, b)"
         # get symbols from all ranges
         specify_symbols = set([s[0] for s in args[expr_len:]])
-        #
+
         style_ranges = ",  {} = range(*)"*len(specify_symbols)
         expr_ranges = style_ranges.format(*specify_symbols)[3:]
-        #
+
         all_symbols = variables | specify_symbols
         if len(all_symbols) > len(variables):
             msj = "There be a variable ranged that ins´t part of any ecuation!"
@@ -2171,8 +2169,6 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
                 nb_of_free_symbols, all_symbols, expr_ranges)
 
             raise NameError(msj)
-
-        #end
         if len(args) == expr_len + nb_of_free_symbols:
             #Ranges given
             plots = [exprs + Tuple(*args[expr_len:])]
@@ -2231,7 +2227,6 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         #Multiple plots with different ranges.
         lst = []
         for arg in args:
-            #Warn: Dimension
             # get all variables
             sbls = sum(arg[:expr_len]).free_symbols
             # get symbols from all ranges
@@ -2239,7 +2234,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             if len(sbls) != nb_of_free_symbols or specify_symbols-sbls:
                 lst.append((sbls, specify_symbols))
                 continue
-            #end
+
             for i in range(expr_len):
                 if not isinstance(arg[i], Expr):
                     raise ValueError("Expected an expression, given %s" %
