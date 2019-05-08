@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+import numbers as nums
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
                    Integer, S, factorial, Catalan, EulerGamma, GoldenRatio,
@@ -19,8 +21,6 @@ from sympy.utilities.pytest import XFAIL, raises
 from mpmath import mpf
 from mpmath.rational import mpq
 import mpmath
-from sympy.external import import_module
-nums = import_module('numbers')
 from sympy import numbers
 t = Symbol('t', real=False)
 

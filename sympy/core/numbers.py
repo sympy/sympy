@@ -1,5 +1,6 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, print_function, division
 
+import numbers
 import decimal
 import fractions
 import math
@@ -16,8 +17,7 @@ from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
     SYMPY_INTS, int_info)
 from sympy.core.cache import lru_cache
-from sympy.external import import_module
-nums = import_module('numbers')
+
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp.backend import MPZ
@@ -3895,9 +3895,9 @@ from .add import Add
 Add.identity = Zero()
 
 def _register_classes():
-    nums.Number.register(Number)
-    nums.Real.register(Float)
-    nums.Rational.register(Rational)
-    nums.Rational.register(Integer)
+    numbers.Number.register(Number)
+    numbers.Real.register(Float)
+    numbers.Rational.register(Rational)
+    numbers.Rational.register(Integer)
 
 _register_classes();
