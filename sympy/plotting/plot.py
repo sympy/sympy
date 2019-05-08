@@ -2142,8 +2142,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         # get all variables
         variables = set(free_symbols)
         # check arguments
-        assert all([isinstance(rang, Tuple) for rang in args[expr_len:]]), \
-            "spected (symbol, a, b)"
+        assert all([isinstance(rang, Tuple) for rang in args[expr_len:]]),
+            "Ranges should be in the form (symbol, a, b)"
         # get symbols from all ranges
         specify_symbols = set([s[0] for s in args[expr_len:]])
 
@@ -2152,23 +2152,22 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
 
         all_symbols = variables | specify_symbols
         if len(all_symbols) > len(variables):
-            msj = "There be a variable ranged that ins´t part of any ecuation!"
-            raise NameError(msj)
+            msg = "There be a variable ranged that isn´t part of any ecuation!"
+            raise NameError(msg)
 
         if len(all_symbols) > nb_of_free_symbols:
             if specify_symbols == set():
-                msj =  "There must be  ONLY %s (%s) parameters from %s"%(\
-                    get_text(nb_of_free_symbols),                        \
+                msg =  "There must be  ONLY %s (%s) parameters from %s"%(
+                    get_text(nb_of_free_symbols),
                     nb_of_free_symbols, all_symbols)
+                raise NameError(msg)
 
-                raise NameError(msj)
-
-            msj = "There must be  ONLY %s (%s) parameters, "       \
-                "but was given %s.  %s!"%(                         \
-                get_text(nb_of_free_symbols),                      \
+            msg = "There must be  ONLY %s (%s) parameters, "       \
+                "but was given %s.  %s!"%(
+                get_text(nb_of_free_symbols),
                 nb_of_free_symbols, all_symbols, expr_ranges)
+            raise NameError(msg)
 
-            raise NameError(msj)
         if len(args) == expr_len + nb_of_free_symbols:
             #Ranges given
             plots = [exprs + Tuple(*args[expr_len:])]
@@ -2245,11 +2244,11 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
                                      "length 3, got %s" % str(arg[i + expr_len]))
 
         if lst:
-            msj = "There must be  ONLY %s (%s) parameters, "       \
-                "but was given %s.  %s!"%(                         \
-                get_text(nb_of_free_symbols), nb_of_free_symbols,  \
+            msg = "There must be  ONLY %s (%s) parameters, "       \
+                "but was given %s.  %s!"%(
+                get_text(nb_of_free_symbols), nb_of_free_symbols,
                 all_symbols, expr_ranges)
 
-            raise NameError(msj)
+            raise NameError(msg)
 
         return args
