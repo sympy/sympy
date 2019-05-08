@@ -88,6 +88,7 @@ Deleting and Inserting Rows and Columns
 To delete a row or column, use ``row_del`` or ``col_del``.  These operations
 will modify the Matrix **in place**.
 
+    >>> M = M.as_mutable()
     >>> M.col_del(0)
     >>> M
     ⎡2  3⎤

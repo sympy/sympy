@@ -1328,7 +1328,7 @@ class MatrixProperties(MatrixRequired):
         >>> from sympy.matrices import Matrix
         >>> from sympy import I
         >>> from sympy.abc import x
-        >>> a = Matrix([[1, I], [-I, 1]])
+        >>> a = Matrix([[1, I], [-I, 1]]).as_mutable()
         >>> a
         Matrix([
         [ 1, I],

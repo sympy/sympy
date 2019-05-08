@@ -58,7 +58,8 @@ represent the constraint forces in those directions. ::
   >>> rhs = MM.inv() * forcing
   >>> kdd = KM.kindiffdict()
   >>> rhs = rhs.subs(kdd)
-  >>> rhs.simplify()
+  >>> from sympy import simplify
+  >>> rhs = simplify(rhs)
   >>> mprint(rhs)
   Matrix([
   [(4*g*sin(q2) + 6*r*u2*u3 - r*u3**2*tan(q2))/(5*r)],

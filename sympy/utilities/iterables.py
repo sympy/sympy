@@ -2054,7 +2054,7 @@ def generate_bell(n):
     How the position of inversion varies across the elements can be seen
     by tracing out where the largest number appears in the permutations:
 
-    >>> m = zeros(4, 24)
+    >>> m = zeros(4, 24).as_mutable()
     >>> for i, p in enumerate(generate_bell(4)):
     ...     m[:, i] = Matrix([j - 3 for j in list(p)])  # make largest zero
     >>> m.print_nonzero('X')

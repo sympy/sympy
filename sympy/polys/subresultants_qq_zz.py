@@ -2064,15 +2064,15 @@ def correct_sign(deg_f, deg_g, s1, rdel, cdel):
 
     # eliminate rdel rows from the first deg_g rows
     for i in range(M.rows - deg_f - 1, M.rows - deg_f - rdel - 1, -1):
-        M.row_del(i)
+        M = M.row_del(i)
 
     # eliminate rdel rows from the last deg_f rows
     for i in range(M.rows - 1, M.rows - rdel - 1, -1):
-        M.row_del(i)
+        M = M.row_del(i)
 
     # eliminate cdel columns
     for i in range(cdel):
-        M.col_del(M.rows - 1)
+        M = M.col_del(M.rows - 1)
 
     # define submatrix
     Md = M[:, 0: M.rows]

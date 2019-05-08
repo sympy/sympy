@@ -381,12 +381,12 @@ class DenseMatrix(MatrixBase):
 
         >>> from sympy.matrices import Matrix
         >>> from sympy.abc import x
-        >>> from sympy import cos
+        >>> from sympy import cos, simplify
         >>> A = Matrix([x*(x - 1), 0])
         >>> B = Matrix([x**2 - x, 0])
         >>> A == B
         False
-        >>> A.simplify() == B.simplify()
+        >>> simplify(A) == simplify(B)
         True
         >>> A.equals(B)
         True
@@ -457,7 +457,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ========
 
         >>> from sympy import Matrix, I, zeros, ones
-        >>> m = Matrix(((1, 2+I), (3, 4)))
+        >>> m = Matrix(((1, 2+I), (3, 4))).as_mutable()
         >>> m
         Matrix([
         [1, 2 + I],
@@ -472,7 +472,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         To replace row r you assign to position r*m where m
         is the number of columns:
 
-        >>> M = zeros(4)
+        >>> M = zeros(4).as_mutable()
         >>> m = M.cols
         >>> M[3*m] = ones(1, m)*2; M
         Matrix([
@@ -505,7 +505,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ========
 
         >>> from sympy.matrices import eye
-        >>> M = eye(3)
+        >>> M = eye(3).as_mutable()
         >>> M.col_del(1)
         >>> M
         Matrix([
@@ -534,7 +534,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ========
 
         >>> from sympy.matrices import eye
-        >>> M = eye(3)
+        >>> M = eye(3).as_mutable()
         >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
         Matrix([
         [1, 2, 0],
@@ -555,7 +555,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ========
 
         >>> from sympy.matrices import Matrix
-        >>> M = Matrix([[1, 0], [1, 0]])
+        >>> M = Matrix([[1, 0], [1, 0]]).as_mutable()
         >>> M
         Matrix([
         [1, 0],
@@ -590,7 +590,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ========
 
         >>> from sympy.matrices import eye
-        >>> I = eye(3)
+        >>> I = eye(3).as_mutable()
         >>> I[:2, 0] = [1, 2] # col
         >>> I
         Matrix([
@@ -629,7 +629,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
         >>> from sympy.matrices import Matrix, eye
         >>> M = Matrix([[0, 1], [2, 3], [4, 5]])
-        >>> I = eye(3)
+        >>> I = eye(3).as_mutable()
         >>> I[:3, :2] = M
         >>> I
         Matrix([
@@ -678,7 +678,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ========
 
         >>> from sympy.matrices import eye
-        >>> M = eye(3)
+        >>> M = eye(3).as_mutable()
         >>> M.row_del(1)
         >>> M
         Matrix([
@@ -707,7 +707,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ========
 
         >>> from sympy.matrices import eye
-        >>> M = eye(3)
+        >>> M = eye(3).as_mutable()
         >>> M.row_op(1, lambda v, j: v + 2*M[0, j]); M
         Matrix([
         [1, 0, 0],
@@ -732,7 +732,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ========
 
         >>> from sympy.matrices import Matrix
-        >>> M = Matrix([[0, 1], [1, 0]])
+        >>> M = Matrix([[0, 1], [1, 0]]).as_mutable()
         >>> M
         Matrix([
         [0, 1],
@@ -774,7 +774,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ========
 
         >>> from sympy.matrices import eye
-        >>> M = eye(3)
+        >>> M = eye(3).as_mutable()
         >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
         Matrix([
         [1, 0, 0],

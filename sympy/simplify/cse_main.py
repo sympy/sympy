@@ -696,8 +696,9 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     ([(x0, x + 1)], [x0*y**2, 3*x0*y**2])
 
     """
-    from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
-                                SparseMatrix, ImmutableSparseMatrix)
+    from sympy.matrices import (MatrixBase, Matrix, MutableMatrix,
+                                ImmutableMatrix, SparseMatrix,
+                                ImmutableSparseMatrix)
 
     if isinstance(exprs, (int, float)):
         exprs = sympify(exprs)
@@ -709,7 +710,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     copy = exprs
     temp = []
     for e in exprs:
-        if isinstance(e, (Matrix, ImmutableMatrix)):
+        if isinstance(e, (Matrix, MutableMatrix, ImmutableMatrix)):
             temp.append(Tuple(*e._mat))
         elif isinstance(e, (SparseMatrix, ImmutableSparseMatrix)):
             temp.append(Tuple(*e._smat.items()))
@@ -750,7 +751,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     # Get the matrices back
     for i, e in enumerate(exprs):
-        if isinstance(e, (Matrix, ImmutableMatrix)):
+        if isinstance(e, (Matrix, MutableMatrix, ImmutableMatrix)):
             reduced_exprs[i] = Matrix(e.rows, e.cols, reduced_exprs[i])
             if isinstance(e, ImmutableMatrix):
                 reduced_exprs[i] = reduced_exprs[i].as_immutable()

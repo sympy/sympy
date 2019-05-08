@@ -1,6 +1,6 @@
 from random import randint
 
-from sympy import Matrix, zeros, ones, Integer
+from sympy import Matrix, MutableMatrix, zeros, ones, Integer
 
 from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse, matrix_tensor_product,
@@ -117,7 +117,7 @@ epsilon = .000001
 
 def test_matrix_zeros_sympy():
     sym = matrix_zeros(4, 4, format='sympy')
-    assert isinstance(sym, Matrix)
+    assert isinstance(sym, MutableMatrix)
 
 def test_matrix_zeros_numpy():
     if not np:

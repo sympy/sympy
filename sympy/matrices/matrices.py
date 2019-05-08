@@ -2512,7 +2512,7 @@ class MatrixBase(MatrixDeprecated,
         ========
 
         >>> from sympy import Matrix, I, zeros, ones
-        >>> m = Matrix(((1, 2+I), (3, 4)))
+        >>> m = Matrix(((1, 2+I), (3, 4))).as_mutable()
         >>> m
         Matrix([
         [1, 2 + I],
@@ -2527,7 +2527,7 @@ class MatrixBase(MatrixDeprecated,
         To replace row r you assign to position r*m where m
         is the number of columns:
 
-        >>> M = zeros(4)
+        >>> M = zeros(4).as_mutable()
         >>> m = M.cols
         >>> M[3*m] = ones(1, m)*2; M
         Matrix([
@@ -2763,7 +2763,7 @@ class MatrixBase(MatrixDeprecated,
         >>> m = Matrix((0, 1 + I, 2, 3))
         >>> m.D
         Matrix([[0, 1 - I, -2, -3]])
-        >>> m = (eye(4) + I*eye(4))
+        >>> m = (eye(4) + I*eye(4)).as_mutable()
         >>> m[0, 3] = 2
         >>> m.D
         Matrix([

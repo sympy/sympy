@@ -308,8 +308,8 @@ def fidelity(state1, state2):
     state1 = represent(state1) if isinstance(state1, Density) else state1
     state2 = represent(state2) if isinstance(state2, Density) else state2
 
-    if (not isinstance(state1, Matrix) or
-            not isinstance(state2, Matrix)):
+    if (not isinstance(state1, (Matrix, MutableMatrix, ImmutableMatrix)) or
+            not isinstance(state1, (Matrix, MutableMatrix, ImmutableMatrix))):
         raise ValueError("state1 and state2 must be of type Density or Matrix "
                          "received type=%s for state1 and type=%s for state2" %
                          (type(state1), type(state2)))

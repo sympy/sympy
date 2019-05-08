@@ -20,7 +20,7 @@ You can turn any Matrix-like object into an :class:`ImmutableMatrix` by calling
 the constructor
 
     >>> from sympy import Matrix, ImmutableMatrix
-    >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).as_mutable()
     >>> M[1, 1] = 0
     >>> IM = ImmutableMatrix(M)
     >>> IM

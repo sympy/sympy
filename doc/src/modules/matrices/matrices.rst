@@ -170,7 +170,7 @@ that has no size:
 Slicing gives a copy of what is sliced, so modifications of one object
 do not affect the other:
 
-    >>> M2 = M[:, :]
+    >>> M2 = M[:, :].as_mutable()
     >>> M2[0, 0] = 100
     >>> M[0, 0] == 100
     False
@@ -178,7 +178,7 @@ do not affect the other:
 Notice that changing ``M2`` didn't change ``M``. Since we can slice, we can also assign
 entries:
 
-    >>> M = Matrix(([1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]))
+    >>> M = Matrix(([1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16])).as_mutable()
     >>> M
     [1   2   3   4 ]
     [              ]
@@ -199,7 +199,7 @@ entries:
 
 as well as assign slices:
 
-    >>> M = Matrix(([1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]))
+    >>> M = Matrix(([1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16])).as_mutable()
     >>> M[2:,2:] = Matrix(2,2,lambda i,j: 0)
     >>> M
     [1   2   3  4]
@@ -247,6 +247,7 @@ All the standard arithmetic operations are supported:
 
 As well as some useful vector operations:
 
+    >>> M = M.as_mutable()
     >>> M.row_del(0)
     >>> M
     [4  5  6]

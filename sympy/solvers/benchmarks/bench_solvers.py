@@ -4,8 +4,9 @@ from sympy import zeros, eye, Symbol, solve_linear_system
 from sympy.core.compatibility import range
 
 N = 8
-M = zeros(N, N + 1)
+M = zeros(N, N + 1).as_mutable()
 M[:, :N] = eye(N)
+M = M.as_immutable()
 S = [Symbol('A%i' % i) for i in range(N)]
 
 
