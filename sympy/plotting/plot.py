@@ -2138,9 +2138,9 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             i = len(args) + 1
 
         exprs = Tuple(*args[:i])
-        free_symbols = list(set().union(*[e.free_symbols for e in exprs]))
         # get all variables
-        variables = set(free_symbols)
+        variables = set().union(*[e.free_symbols for e in exprs])
+        free_symbols = list(variables)
         # check arguments
         assert all([isinstance(rang, Tuple) for rang in args[expr_len:]]),
             "Ranges should be in the form (symbol, a, b)"
