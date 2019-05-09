@@ -706,9 +706,9 @@ class CodeGen(object):
 
         array_symbols = {}
         for array in expressions.atoms(Indexed) | local_expressions.atoms(Indexed):
-             array_symbols[array.base.label] = array
+            array_symbols[array.base.label] = array
         for array in expressions.atoms(MatrixSymbol) | local_expressions.atoms(MatrixSymbol):
-             array_symbols[array] = array
+            array_symbols[array] = array
 
         for symbol in sorted(symbols, key=str):
             if symbol in array_symbols:
