@@ -1,12 +1,7 @@
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
-<<<<<<< HEAD
-                   Piecewise, Integral, sin, cos, tan, atan, besseli, factorial, binomial,
-                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
-=======
-                   Piecewise, Integral, sin, cos, besseli, factorial, binomial, atan,
-                   floor, expand_func, Rational, hyper, I, re, im, lambdify, hyper, diff, Or, Mul, sinh, erfi, besselj)
->>>>>>> Improved Tests for stats module
+                   Piecewise, Integral, sin, cos, besseli, factorial, binomial, atan, tan
+                   floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul, sinh, erfi, besselj)
 from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
@@ -22,16 +17,11 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
-<<<<<<< HEAD
                          moment, cmoment, smoment, quantile)
-from sympy.stats.crv_types import NormalDistribution
-=======
-                         moment, cmoment, smoment)
 from sympy.stats.crv_types import NormalDistribution, GumbelDistribution, GompertzDistribution, LaplaceDistribution, \
                                   ParetoDistribution, RaisedCosineDistribution, BeniniDistribution, BetaDistribution, \
                                   CauchyDistribution, GammaInverseDistribution, LogNormalDistribution, StudentTDistribution, \
                                   QuadraticUDistribution, WignerSemicircleDistribution, ChiDistribution
->>>>>>> Improved Tests for stats module
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.randtest import verify_numerically as tn
@@ -264,11 +254,8 @@ def test_betaprime():
 def test_cauchy():
     x0 = Symbol("x0")
     gamma = Symbol("gamma", positive=True)
-<<<<<<< HEAD
-    p = Symbol("p", positive=True)
-=======
     t = Symbol('t')
->>>>>>> Improved Tests for stats module
+    p = Symbol("p", positive=True)
 
     X = Cauchy('x', x0, gamma)
     # Tests the characteristic function
@@ -536,11 +523,8 @@ def test_laplace():
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
-<<<<<<< HEAD
-    p = Symbol("p", positive=True)
-=======
     x = Symbol('x')
->>>>>>> Improved Tests for stats module
+    p = Symbol("p", positive=True)
 
     X = Logistic('x', mu, s)
 
