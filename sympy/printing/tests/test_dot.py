@@ -76,7 +76,31 @@ def test_dotprint_depth():
 def test_Matrix_and_non_basics():
     from sympy import MatrixSymbol
     n = Symbol('n')
-    assert dotprint(MatrixSymbol('X', n, n))
+    assert dotprint(MatrixSymbol('X', n, n)) == \
+"""digraph{
+
+# Graph style
+"ordering"="out"
+"rankdir"="TD"
+
+#########
+# Nodes #
+#########
+
+"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" ["color"="black", "label"="MatrixSymbol", "shape"="ellipse"];
+"Symbol('X')_(0,)" ["color"="black", "label"="X", "shape"="ellipse"];
+"Symbol('n')_(1,)" ["color"="black", "label"="n", "shape"="ellipse"];
+"Symbol('n')_(2,)" ["color"="black", "label"="n", "shape"="ellipse"];
+
+#########
+# Edges #
+#########
+
+"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('X')_(0,)";
+"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('n')_(1,)";
+"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('n')_(2,)";
+}"""
+
 
 def test_labelfunc():
     text = dotprint(x + 2, labelfunc=srepr)
