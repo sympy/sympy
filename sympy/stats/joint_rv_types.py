@@ -278,7 +278,7 @@ class MultivariateBetaDistribution(JointDistribution):
         B = Mul(*list(map(gamma, alpha)))/gamma(Add(*alpha))
         return Mul(*[sym**(a_k - 1) for a_k, sym in zip(alpha, syms)])/B
 
-def MultivariateBeta(syms, alpha):
+def MultivariateBeta(syms, *alpha):
     """
     Creates a continuous random variable with Dirichlet/Multivariate Beta
     Distribution.
@@ -288,7 +288,7 @@ def MultivariateBeta(syms, alpha):
     Parameters
     ==========
 
-    alpha: List of positive real numbers signifying concentration numbers.
+    alpha: positive real numbers signifying concentration numbers.
 
     Returns
     =======
@@ -305,12 +305,13 @@ def MultivariateBeta(syms, alpha):
     >>> a1 = Symbol('a1', positive=True)
     >>> a2 = Symbol('a2', positive=True)
     >>> B = MultivariateBeta('B', [a1, a2])
+    >>> C = MultivariateBeta('C', a1, a2)
     >>> x = Symbol('x')
     >>> y = Symbol('y')
     >>> density(B)(x, y)
-    x**a1*y**a2*gamma(a1 + a2)/(gamma(a1)*gamma(a2))
-    >>> marginal_distribution(B, B[0])(x)
-    x**a1*gamma(a1 + a2)/((a2 + 1)*gamma(a1)*gamma(a2))
+    x**(a1 - 1)*y**(a2 - 1)*gamma(a1 + a2)/(gamma(a1)*gamma(a2))
+    >>> marginal_distribution(C, C[0])(x)
+    x**(a1 - 1)*gamma(a1 + a2)/(a2*gamma(a1)*gamma(a2))
 
     References
     ==========
@@ -318,6 +319,8 @@ def MultivariateBeta(syms, alpha):
     .. [1] https://en.wikipedia.org/wiki/Dirichlet_distribution
 
     """
-    return multivariate_rv(MultivariateBetaDistribution, syms, alpha)
+    if not isinstance(alpha[0], list):
+        alpha = (list(alpha),)
+    return multivariate_rv(MultivariateBetaDistribution, syms, alpha[0])
 
 Dirichlet = MultivariateBeta
