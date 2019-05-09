@@ -18,7 +18,34 @@ default_styles = (
 
 slotClasses = (Symbol, Integer, Rational, Float)
 def purestr(x, with_args=False):
-    """ A string that follows obj = type(obj)(*obj.args) exactly """
+    """A string that follows ```obj = type(obj)(*obj.args)``` exactly.
+
+    Parameters
+    ==========
+
+    with_args : boolean, optional
+        If ``True``, there will be a second argument for the return value,
+        which the individual string representation for each subnodes
+        from the symbolic object tree accessed via ``.args``.
+
+        If ``False``, it will only return the string representation part,
+        described in the summary above.
+
+        Default is ``False``
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.printing.dot import purestr
+
+    >>> purestr(Symbol('x'))
+    "Symbol('x')"
+
+    >>> purestr(Float(2))
+    "Float('2.0', precision=53)"
+
+    """
     sargs = ()
     if not isinstance(x, Basic):
         rv = str(x)
@@ -153,11 +180,11 @@ def dotprint(expr,
     styles : list of lists composed of (Class, mapping), optional
         Styles for different classes.
 
-        The default is:
-        ``(
-            (Basic, {'color': 'blue', 'shape': 'ellipse'}),
-            (Expr,  {'color': 'black'})
-        )``
+        The default is .. code-block:: python
+            (
+                (Basic, {'color': 'blue', 'shape': 'ellipse'}),
+                (Expr,  {'color': 'black'})
+            )
 
     atom : function, optional
         Function used to determine if an arg is an atom.
@@ -169,7 +196,7 @@ def dotprint(expr,
     maxdepth : integer, optional
         The maximum depth.
 
-        The default is None, meaning no limit.
+        The default is ``None``, meaning no limit.
 
     repeat : boolean, optional
         Whether to different nodes for separate common subexpressions.
