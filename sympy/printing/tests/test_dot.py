@@ -29,21 +29,25 @@ def test_attrprint():
 
 def test_dotnode():
 
-    assert dotnode(x, repeat=False) ==\
-            '"Symbol(\'x\')" ["color"="black", "label"="x", "shape"="ellipse"];'
+    assert dotnode(x, repeat=False) == \
+        '"Symbol(\'x\')" ["color"="black", "label"="x", "shape"="ellipse"];'
     assert dotnode(x+2, repeat=False) == \
-            '"Add(Integer(2), Symbol(\'x\'))" ["color"="black", "label"="Add", "shape"="ellipse"];', dotnode(x+2,repeat=0)
+        '"Add(Integer(2), Symbol(\'x\'))" ' \
+        '["color"="black", "label"="Add", "shape"="ellipse"];', \
+        dotnode(x+2,repeat=0)
 
     assert dotnode(x + x**2, repeat=False) == \
-        '"Add(Symbol(\'x\'), Pow(Symbol(\'x\'), Integer(2)))" ["color"="black", "label"="Add", "shape"="ellipse"];'
+        '"Add(Symbol(\'x\'), Pow(Symbol(\'x\'), Integer(2)))" ' \
+        '["color"="black", "label"="Add", "shape"="ellipse"];'
     assert dotnode(x + x**2, repeat=True) == \
-        '"Add(Symbol(\'x\'), Pow(Symbol(\'x\'), Integer(2)))_()" ["color"="black", "label"="Add", "shape"="ellipse"];'
+        '"Add(Symbol(\'x\'), Pow(Symbol(\'x\'), Integer(2)))_()" ' \
+        '["color"="black", "label"="Add", "shape"="ellipse"];'
 
 def test_dotedges():
     assert sorted(dotedges(x+2, repeat=False)) == [
         '"Add(Integer(2), Symbol(\'x\'))" -> "Integer(2)";',
         '"Add(Integer(2), Symbol(\'x\'))" -> "Symbol(\'x\')";'
-        ]
+    ]
     assert sorted(dotedges(x + 2, repeat=True)) == [
         '"Add(Integer(2), Symbol(\'x\'))_()" -> "Integer(2)_(0,)";',
         '"Add(Integer(2), Symbol(\'x\'))_()" -> "Symbol(\'x\')_(1,)";'
@@ -52,18 +56,28 @@ def test_dotedges():
 def test_dotprint():
     text = dotprint(x+2, repeat=False)
     assert all(e in text for e in dotedges(x+2, repeat=False))
-    assert all(n in text for n in [dotnode(expr, repeat=False) for expr in (x, Integer(2), x+2)])
+    assert all(
+        n in text for n in [dotnode(expr, repeat=False)
+        for expr in (x, Integer(2), x+2)])
     assert 'digraph' in text
+
     text = dotprint(x+x**2, repeat=False)
     assert all(e in text for e in dotedges(x+x**2, repeat=False))
-    assert all(n in text for n in [dotnode(expr, repeat=False) for expr in (x, Integer(2), x**2)])
+    assert all(
+        n in text for n in [dotnode(expr, repeat=False)
+        for expr in (x, Integer(2), x**2)])
     assert 'digraph' in text
+
     text = dotprint(x+x**2, repeat=True)
     assert all(e in text for e in dotedges(x+x**2, repeat=True))
-    assert all(n in text for n in [dotnode(expr, pos=()) for expr in [x + x**2]])
+    assert all(
+        n in text for n in [dotnode(expr, pos=())
+        for expr in [x + x**2]])
+
     text = dotprint(x**x, repeat=True)
     assert all(e in text for e in dotedges(x**x, repeat=True))
-    assert all(n in text for n in [dotnode(x, pos=(0,)), dotnode(x, pos=(1,))])
+    assert all(
+        n in text for n in [dotnode(x, pos=(0,)), dotnode(x, pos=(1,))])
     assert 'digraph' in text
 
 def test_dotprint_depth():
