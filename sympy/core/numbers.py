@@ -1,5 +1,6 @@
-from __future__ import print_function, division
+from __future__ import absolute_import, print_function, division
 
+import numbers
 import decimal
 import fractions
 import math
@@ -591,6 +592,12 @@ class Number(AtomicExpr):
         raise NotImplementedError('%s needs .ceiling() method' %
             (self.__class__.__name__))
 
+    def __floor__(self):
+        return self.floor()
+
+    def __ceil__(self):
+        return self.ceiling()
+
     def _eval_conjugate(self):
         return self
 
@@ -1114,6 +1121,13 @@ class Float(Number):
     def ceiling(self):
         return Integer(int(mlib.to_int(
             mlib.mpf_ceil(self._mpf_, self._prec))))
+
+    def __floor__(self):
+        return self.floor()
+
+    def __ceil__(self):
+        return self.ceiling()
+
 
     @property
     def num(self):
@@ -1740,6 +1754,12 @@ class Rational(Number):
     def ceiling(self):
         return -Integer(-self.p // self.q)
 
+    def __floor__(self):
+        return self.floor()
+
+    def __ceil__(self):
+        return self.ceiling()
+
     def __eq__(self, other):
         try:
             other = _sympify(other)
@@ -1847,6 +1867,12 @@ class Rational(Number):
         return factorrat(self, limit=limit, use_trial=use_trial,
                       use_rho=use_rho, use_pm1=use_pm1,
                       verbose=verbose).copy()
+
+    def numerator(self):
+        return self.p
+
+    def denominator(self):
+        return self.q
 
     @_sympifyit('other', NotImplemented)
     def gcd(self, other):
@@ -1984,6 +2010,12 @@ class Integer(Rational):
 
     def ceiling(self):
         return Integer(self.p)
+
+    def __floor__(self):
+        return self.floor()
+
+    def __ceil__(self):
+        return self.ceiling()
 
     def __neg__(self):
         return Integer(-self.p)
@@ -3819,3 +3851,11 @@ from .mul import Mul
 Mul.identity = One()
 from .add import Add
 Add.identity = Zero()
+
+def _register_classes():
+    numbers.Number.register(Number)
+    numbers.Real.register(Float)
+    numbers.Rational.register(Rational)
+    numbers.Rational.register(Integer)
+
+_register_classes()
