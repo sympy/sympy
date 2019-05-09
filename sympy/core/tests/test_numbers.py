@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+import numbers as nums
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
                    Integer, S, factorial, Catalan, EulerGamma, GoldenRatio,
@@ -19,9 +21,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from mpmath import mpf
 from mpmath.rational import mpq
 import mpmath
-
-
-
+from sympy import numbers
 t = Symbol('t', real=False)
 
 _ninf = float(-oo)
@@ -1896,3 +1896,16 @@ def test_issue_6133():
     raises(TypeError, lambda: (oo < None))
     raises(TypeError, lambda: (oo > None))
     raises(TypeError, lambda: (S(2) < None))
+
+def test_abc():
+    x = numbers.Float(5)
+    assert(isinstance(x, nums.Number))
+    assert(isinstance(x, numbers.Number))
+    assert(isinstance(x, nums.Real))
+    y = numbers.Rational(1, 3)
+    assert(isinstance(y, nums.Number))
+    assert(y.numerator() == 1)
+    assert(y.denominator() == 3)
+    assert(isinstance(y, nums.Rational))
+    z = numbers.Integer(3)
+    assert(isinstance(z, nums.Number))
