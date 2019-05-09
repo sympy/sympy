@@ -11,9 +11,10 @@ from sympy.printing.repr import srepr
 
 __all__ = ['dotprint']
 
-default_styles = ((Basic, {'color': 'blue', 'shape': 'ellipse'}),
-          (Expr,  {'color': 'black'}))
-
+default_styles = (
+    (Basic, {'color': 'blue', 'shape': 'ellipse'}),
+    (Expr,  {'color': 'black'})
+)
 
 slotClasses = (Symbol, Integer, Rational, Float)
 def purestr(x, with_args=False):
@@ -141,38 +142,59 @@ template = \
 
 _graphstyle = {'rankdir': 'TD', 'ordering': 'out'}
 
-def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
-    Basic), maxdepth=None, repeat=True, labelfunc=str, **kwargs):
-    """
-    DOT description of a SymPy expression tree
+def dotprint(expr,
+    styles=default_styles, atom=lambda x: not isinstance(x, Basic),
+    maxdepth=None, repeat=True, labelfunc=str, **kwargs):
+    """DOT description of a SymPy expression tree
 
-    Options are
+    Parameters
+    ==========
 
-    ``styles``: Styles for different classes.  The default is::
+    styles : list of lists composed of (Class, mapping), optional
+        Styles for different classes.
 
-        [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
-        (Expr, {'color': 'black'})]``
+        The default is:
+        ``(
+            (Basic, {'color': 'blue', 'shape': 'ellipse'}),
+            (Expr,  {'color': 'black'})
+        )``
 
-    ``atom``: Function used to determine if an arg is an atom.  The default is
-          ``lambda x: not isinstance(x, Basic)``.  Another good choice is
-          ``lambda x: not x.args``.
+    atom : function, optional
+        Function used to determine if an arg is an atom.
 
-    ``maxdepth``: The maximum depth.  The default is None, meaning no limit.
+        A good choice is ``lambda x: not x.args``.
 
-    ``repeat``: Whether to different nodes for separate common subexpressions.
-          The default is True.  For example, for ``x + x*y`` with
-          ``repeat=True``, it will have two nodes for ``x`` and with
-          ``repeat=False``, it will have one (warning: even if it appears
-          twice in the same object, like Pow(x, x), it will still only appear
-          once.  Hence, with repeat=False, the number of arrows out of an
-          object might not equal the number of args it has).
+        The default is ``lambda x: not isinstance(x, Basic)``.
 
-    ``labelfunc``: How to label leaf nodes.  The default is ``str``.  Another
-          good option is ``srepr``. For example with ``str``, the leaf nodes
-          of ``x + 1`` are labeled, ``x`` and ``1``.  With ``srepr``, they
-          are labeled ``Symbol('x')`` and ``Integer(1)``.
+    maxdepth : integer, optional
+        The maximum depth.
 
-    Additional keyword arguments are included as styles for the graph.
+        The default is None, meaning no limit.
+
+    repeat : boolean, optional
+        Whether to different nodes for separate common subexpressions.
+
+        The default is ``True``.
+
+        For example, for ``x + x*y`` with ``repeat=True``, it will have two
+        nodes for ``x`` and with ``repeat=False``, it will have one
+        (warning: even if it appears twice in the same object, like Pow(x, x),
+        it will still only appear once.  Hence, with repeat=False, the number
+        of arrows out of an object might not equal the number of args it has).
+
+    labelfunc : function, optional
+        How to label leaf nodes.
+
+        The default is ``str``.
+
+        Another good option is ``srepr``.
+
+        For example with ``str``, the leaf nodes of ``x + 1`` are labeled,
+        ``x`` and ``1``.  With ``srepr``, they are labeled ``Symbol('x')``
+        and ``Integer(1)``.
+
+    **kwargs : optional
+        Additional keyword arguments are included as styles for the graph.
 
     Examples
     ========
