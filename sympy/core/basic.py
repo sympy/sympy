@@ -1290,11 +1290,15 @@ class Basic(with_metaclass(ManagedProperties)):
         subexpressions from the bottom to the top of the tree. The default
         approach is to do the replacement in a simultaneous fashion so
         changes made are targeted only once. If this is not desired or causes
-        problems, ``simultaneous`` can be set to False. In addition, if an
-        expression containing more than one Wild symbol is being used to match
-        subexpressions and  the ``exact`` flag is True, then the match will only
-        succeed if non-zero values are received for each Wild that appears in
-        the match pattern.
+        problems, ``simultaneous`` can be set to False.
+
+        In addition, if an expression containing more than one Wild symbol
+        is being used to match subexpressions and the ``exact`` flag is None
+        it will be set to True so the match will only succeed if all non-zero
+        values are received for each Wild that appears in the match pattern.
+        Setting this to False accepts a match of 0; while setting it True
+        accepts all matches that have a 0 in them. See example below for
+        cautions.
 
         The list of possible combinations of queries and replacement values
         is listed below:
@@ -1389,6 +1393,42 @@ class Basic(with_metaclass(ManagedProperties)):
             >>> e.replace(lambda x: x.is_Mul, lambda x: 2*x)
             2*x*(2*x*y + 1)
 
+        When matching a single symbol, `exact` will default to True, but
+        this may or may not be the behavior that is desired:
+
+        Here, we want `exact=False`:
+
+            >>> from sympy import Function
+            >>> f = Function('f')
+            >>> e = f(1) + f(0)
+            >>> q = f(a), lambda a: f(a + 1)
+            >>> e.replace(*q, exact=False)
+            f(1) + f(2)
+            >>> e.replace(*q, exact=True)
+            f(0) + f(2)
+
+        But here, the nature of matching makes selecting
+        the right setting tricky:
+
+            >>> e = x**(1 + y)
+            >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=False)
+            1
+            >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=True)
+            x**(-x - y + 1)
+            >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=False)
+            1
+            >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=True)
+            x**(1 - y)
+
+        It is probably better to use a different form of the query
+        that describes the target expression more precisely:
+
+            >>> (1 + x**(1 + y)).replace(
+            ... lambda x: x.is_Pow and x.exp.is_Add and x.exp.args[0] == 1,
+            ... lambda x: x.base**(1 - (x.exp - 1)))
+            ...
+            x**(1 - y) + 1
+
         See Also
         ========
         subs: substitution of subexpressions as defined by the objects
@@ -1421,7 +1461,8 @@ class Basic(with_metaclass(ManagedProperties)):
                     "type or a callable")
         elif isinstance(query, Basic):
             _query = lambda expr: expr.match(query)
-            exact = len(query.atoms(Wild)) > 1 if exact is None else exact
+            if exact is None:
+                exact = (len(query.atoms(Wild)) > 1)
 
             if isinstance(value, Basic):
                 if exact:

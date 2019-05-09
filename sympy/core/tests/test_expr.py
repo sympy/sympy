@@ -721,6 +721,11 @@ def test_replace():
     assert (n1*f(n2)).replace(f, lambda x: x) == n1*n2
     assert (n3*f(n2)).replace(f, lambda x: x) == n3*n2
 
+    # issue 16725
+    assert S(0).replace(Wild('x'), 1) == 1
+    # let the user override the default decision of False
+    assert S(0).replace(Wild('x'), 1, exact=True) == 0
+
 
 def test_find():
     expr = (x + y + 2 + sin(3*x))
