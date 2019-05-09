@@ -2142,7 +2142,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
         variables = set().union(*[e.free_symbols for e in exprs])
         free_symbols = list(variables)
         # check arguments
-        assert all([isinstance(rang, Tuple) for rang in args[expr_len:]]),
+        assert all([isinstance(rang, Tuple) for rang in args[expr_len:]]), \
             "Ranges should be in the form (symbol, a, b)"
         # get symbols from all ranges
         specify_symbols = set([s[0] for s in args[expr_len:]])
