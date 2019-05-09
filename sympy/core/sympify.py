@@ -330,12 +330,33 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     elif type(a) in integer_types:
         return Integer(a)
 
+    # kwargs
+    if evaluate is None:
+        if global_evaluate[0] is False:
+            evaluate = global_evaluate[0]
+        else:
+            evaluate = True
+    kw = dict(
+        locals=locals,
+        convert_xor=convert_xor,
+        strict=strict,
+        rational=rational,
+        evaluate=evaluate)
+
     # Support for basic numpy datatypes
     # Note that this check exists to avoid importing NumPy when not necessary
     if type(a).__module__ == 'numpy':
         import numpy as np
+        # handle this before the Array, see
+        # <https://github.com/sympy/sympy/issues/13924>.
         if np.isscalar(a):
-            return sympify(_convert_numpy_types(a), **kw)
+            n = _convert_numpy_types(a)
+            return sympify(n, **kw)
+        if not strict and getattr(a, "flat", None) and \
+                getattr(a, "shape", None):
+            from ..tensor.array import Array
+            dat = [sympify(i, **kw) for i in a.flat]
+            return Array(dat, a.shape)  # works with e.g. NumPy arrays
 
     if done is not None:
         # handle the rational flag as expediently as
@@ -351,19 +372,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         # we haven't made modifications so we
         # don't raise a CantSympify error
         return done
-
-    # kwargs
-    if evaluate is None:
-        if global_evaluate[0] is False:
-            evaluate = global_evaluate[0]
-        else:
-            evaluate = True
-    kw = dict(
-        locals=locals,
-        convert_xor=convert_xor,
-        strict=strict,
-        rational=rational,
-        evaluate=evaluate)
 
     def _wrapper(a):
         try:
@@ -390,16 +398,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             if rational:
                 rv = sympify(rv, rational=True, strict=strict)
             return rv
-
-    if not strict:
-        # Put numpy array conversion _before_ float/int, see
-        # <https://github.com/sympy/sympy/issues/13924>.
-        flat = getattr(a, "flat", None)
-        if flat is not None:
-            shape = getattr(a, "shape", None)
-            if shape is not None:
-                from ..tensor.array import Array
-                return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
     if not isinstance(a, string_types):
         for coerce in (float, int):
