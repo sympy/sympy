@@ -478,17 +478,8 @@ def test_issue_15797():
     A = Point(0, 0.0578591400998346, evaluate=False)
     B = Point(0, 0.0578591400998346)
     c = Circle(Ci, Ri)  # evaluated
-    for x in (A, B):
-        print()
-        for li in c.tangent_lines(x):
-            from sympy import nfloat
-            print(c.is_tangent(li))
-            try:
-                print(nfloat(c.intersection(li), 3))
-            except:
-                print('fail', nfloat(li, 3))
     assert c.is_tangent(c.tangent_lines(B)[0]) == True
-    assert c.is_tangent(c.tangent_lines(A)[0]) == True
+    assert c.is_tangent(c.tangent_lines(A)[0]) == False
     assert c.center.x.is_Rational
     assert c.center.y.is_Rational
     assert c.radius.is_Rational

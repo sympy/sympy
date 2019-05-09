@@ -862,7 +862,7 @@ def test_nfloat():
     line = Line((123456, 1.1234), (pi + sqrt(2), Rational(3, 12345)))
     assert str(nfloat(line, 2)) == \
         'Line2D(Point2D(1.2e+5, 1.1), Point2D(4.6, 0.00024))'
-    assert sstr(nfloat(Line((1, sqrt(2) + pi),(3, 4)), 2)) == \
+    assert str(nfloat(Line((1, sqrt(2) + pi),(3, 4)), 2)) == \
         'Line2D(Point2D(1.0, 4.6), Point2D(3.0, 4.0))'
 
 
