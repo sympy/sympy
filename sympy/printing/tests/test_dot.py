@@ -9,6 +9,11 @@ def test_purestr():
     assert purestr(Basic(1, 2)) == "Basic(1, 2)"
     assert purestr(Float(2)) == "Float('2.0', precision=53)"
 
+    assert purestr(Symbol('x'), with_args=True) == ("Symbol('x')", ())
+    assert purestr(Basic(1, 2), with_args=True) == ('Basic(1, 2)', ('1', '2'))
+    assert purestr(Float(2), with_args=True) == \
+        ("Float('2.0', precision=53)", ())
+
 
 def test_styleof():
     styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
