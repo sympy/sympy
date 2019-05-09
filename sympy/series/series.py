@@ -15,7 +15,7 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
        x    : Symbol
               It is the variable of the expression to be calculated.
 
-       x0   : Value
+       x0   : Number
               The value around which ``x`` is calculated. Can be any value
               from ``-oo`` to ``oo``.
 
