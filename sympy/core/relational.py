@@ -301,6 +301,10 @@ class Relational(Boolean, Expr, EvalfMixin):
         else:
             return self
 
+    def _eval_trigsimp(self, **opts):
+        from sympy.simplify import trigsimp
+        return self.func(trigsimp(self.lhs, **opts), trigsimp(self.rhs, **opts))
+
     def __nonzero__(self):
         raise TypeError("cannot determine truth value of Relational")
 
