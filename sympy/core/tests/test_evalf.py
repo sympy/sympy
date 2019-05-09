@@ -558,3 +558,8 @@ def test_issue_11151():
     expr1 = Sum(0, (x, 1, 2))
     expr2 = expr1/expr0
     assert simplify(factor(expr2) - expr2) == 0
+
+
+def test_issue_13425():
+    assert N('2**.5', 30) == N('sqrt(2)', 30)
+    assert N('x - x', 30) == 0

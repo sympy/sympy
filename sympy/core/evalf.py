@@ -1536,4 +1536,4 @@ def N(x, n=15, **options):
     1.291
 
     """
-    return sympify(x).evalf(n, **options)
+    return sympify(x, evaluate=False).evalf(n, **options)
