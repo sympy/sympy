@@ -25,9 +25,6 @@ def purestr(x, with_args=False):
         rv = srepr(x)
     else:
         args = x.args
-        if isinstance(x, Add) or \
-                isinstance(x, Mul) and x.is_commutative:
-            args = sorted(args, key=default_sort_key)
         sargs = tuple(map(purestr, args))
         rv = "%s(%s)"%(type(x).__name__, ', '.join(sargs))
     if with_args:
