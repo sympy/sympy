@@ -57,8 +57,8 @@ def test_MultivariateBeta():
     from sympy.stats.joint_rv_types import MultivariateBeta
     from sympy import gamma
     mb = MultivariateBeta('B', [1, 2])
-    assert density(mb)(1, 2) == 8
-    assert marginal_distribution(mb, 0)(3) == 2
+    assert density(mb)(1, 2) == 4
+    assert marginal_distribution(mb, 0)(3) == 1
     raises(ValueError, lambda: MultivariateBeta('b1', [1, -2]))
     raises(ValueError, lambda: MultivariateBeta('b2', [0, 2]))
     raises(ValueError, lambda: MultivariateBeta('b3', [0, 0]))

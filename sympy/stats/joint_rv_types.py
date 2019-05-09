@@ -275,8 +275,8 @@ class MultivariateBetaDistribution(JointDistribution):
 
     def pdf(self, *syms):
         alpha = self.alpha
-        B = Mul(*[gamma(a_k) for a_k in alpha])/gamma(Add(*[a_k for a_k in alpha]))
-        return Mul(*[sym**(a_k) for a_k, sym in zip(alpha, syms)])/B
+        B = Mul(*list(map(gamma, alpha)))/gamma(Add(*alpha))
+        return Mul(*[sym**(a_k - 1) for a_k, sym in zip(alpha, syms)])/B
 
 def MultivariateBeta(syms, alpha):
     """
@@ -302,8 +302,8 @@ def MultivariateBeta(syms, alpha):
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> from sympy.stats.joint_rv_types import MultivariateBeta
     >>> from sympy import Symbol
-    >>> a1 = Symbol('a1', positive=True, real=True)
-    >>> a2 = Symbol('a2', positive=True, real=True)
+    >>> a1 = Symbol('a1', positive=True)
+    >>> a2 = Symbol('a2', positive=True)
     >>> B = MultivariateBeta('B', [a1, a2])
     >>> x = Symbol('x')
     >>> y = Symbol('y')
