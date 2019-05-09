@@ -1888,7 +1888,6 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: x.subs(*args, **kwargs))
 
-
     def trace(self):
         """
         Returns the trace of a square matrix i.e. the sum of the

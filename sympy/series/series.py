@@ -4,9 +4,7 @@ from sympy.core.sympify import sympify
 
 
 def series(expr, x=None, x0=0, n=6, dir="+"):
-    """Returns
-       =======
-       Series expansion of expr around point `x = x0`.
+    """Series expansion of expr around point `x = x0`.
 
        Parameters
        ==========
@@ -18,10 +16,10 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
               It is the variable of the expression to be calculated.
 
        x0   : Value
-              The value around which ``x`` is calculated. Can be ``oo`` or
-              ``-oo``.
+              The value around which ``x`` is calculated. Can be any value
+              from ``-oo`` to ``oo``.
 
-       n    : Value
+       n    : Integer
               The number of terms upto which the series is to be expanded.
 
        dir  : String
@@ -52,6 +50,11 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
            ...
        sympy.core.function.PoleError: Asymptotic expansion of tan around [oo]
        is not implemented.
+
+       Returns
+       =======
+
+       Series expansion of the expression about x0
        See the docstring of Expr.series() for complete details of this wrapper.
     """
     expr = sympify(expr)
