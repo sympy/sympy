@@ -696,13 +696,9 @@ class CodeGen(object):
 
         # setup input argument list
 
-        # helper to add dimension data for array args
+        # helper to get dimensions for data for array-like args
         def dimensions(s):
-            dims = []
-            for dim in s.shape:
-                dims.append((S.Zero, dim - 1))
-
-            return dims
+            return [(S.Zero, dim - 1) for dim in s.shape]
 
         array_symbols = {}
         for array in expressions.atoms(Indexed) | local_expressions.atoms(Indexed):
@@ -746,7 +742,7 @@ class CodeGen(object):
                     new_args.append(name_arg_dict[symbol])
                 except KeyError:
                     if isinstance(symbol, (IndexedBase, MatrixSymbol)):
-                        metadata = {'dimensions':dimensions(symbol)}
+                        metadata = {'dimensions': dimensions(symbol)}
                     else:
                         metadata = {}
                     new_args.append(InputArgument(symbol, **metadata))

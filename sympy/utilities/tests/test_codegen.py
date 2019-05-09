@@ -589,6 +589,7 @@ def test_ccode_unused_array_arg():
     generator = CCodeGen()
     result = codegen(name_expr, code_gen=generator, header=False, empty=False, argument_sequence=(x,))
     source = result[0][1]
+    # note: x should appear as (double *)
     expected = (
         '#include "test.h"\n'
         '#include <math.h>\n'
