@@ -220,7 +220,7 @@ def dotprint(expr,
         The default is ``None``, meaning no limit.
 
     repeat : boolean, optional
-        Whether to different nodes for separate common subexpressions.
+        Whether to use different nodes for common subexpressions.
 
         The default is ``True``.
 
