@@ -26,7 +26,7 @@ def purestr(x, with_args=False):
     with_args : boolean, optional
         If ``True``, there will be a second argument for the return
         value, which is a tuple containing ``purestr`` applied to each
-        subnodes.
+        of the subnodes.
 
         If ``False``, there will not be a second argument for the
         return.
