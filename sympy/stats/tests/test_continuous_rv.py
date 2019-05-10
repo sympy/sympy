@@ -193,9 +193,6 @@ def test_benini():
     sigma = Symbol("sigma", positive=True)
     X = Benini('x', alpha, beta, sigma)
 
-    # Tests Exception error in _moments_generating_function()
-    # raises(NotImplementedError)
-
     assert density(X)(x) == ((alpha/x + 2*beta*log(x/sigma)/x)
                           *exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
 
@@ -254,8 +251,6 @@ def test_cauchy():
     X = Cauchy('x', x0, gamma)
     # Tests the characteristic function
     assert characteristic_function(X)(x) == exp(-gamma*Abs(x) + I*x*x0)
-    # Tests exception in _moments_generating_function
-    # raises(NotImplementedError)
 
     assert density(X)(x) == 1/(pi*gamma*(1 + (x - x0)**2/gamma**2))
     assert diff(cdf(X)(x), x) == density(X)(x)
@@ -385,9 +380,6 @@ def test_f_distribution():
 
     X = FDistribution("x", d1, d2)
 
-    # Tests exception for moment_generating_function
-    # raises(NotImplementedError)
-
     assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
                              /(x*beta(d1/2, d2/2)))
 
@@ -454,10 +446,6 @@ def test_gamma_inverse():
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
-
-
-    # Tests exception for moment_generating_function
-    # raises(NotImplementedError)
 
 def test_sampling_gamma_inverse():
     scipy = import_module('scipy')
@@ -535,9 +523,6 @@ def test_lognormal():
 
     # Right now, only density function and sampling works
     # Test sampling: Only e^mean in sample std of 0
-
-    #Tests exception for compute_moment_generating_function
-    # raises(NotImplementedError)
 
 
 
@@ -668,10 +653,6 @@ def test_studentt():
     assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - S(1)/2)/(sqrt(nu)*beta(S(1)/2, nu/2))
     assert cdf(X)(x) == S(1)/2 + x*gamma(nu/2 + S(1)/2)*hyper((S(1)/2, nu/2 + S(1)/2),
                                 (S(3)/2,), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
-
-    #tests excepton in moment_generating_function
-    # raises(NotImplementedError)
-
 
 def test_trapezoidal():
     a = Symbol("a", real=True)
