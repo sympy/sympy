@@ -225,7 +225,7 @@ def dotprint(expr,
         The default is ``True``.
 
         For example, for ``x + x*y`` with ``repeat=True``, it will have
-        two nodes for ``x`` and with ``repeat=False``, it will have one
+        two nodes for ``x``; with ``repeat=False``, it will have one
         node.
 
         .. warning::
