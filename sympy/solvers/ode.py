@@ -2192,14 +2192,14 @@ def odesimp(ode, eq, func, hint):
                            f(x)
                              /
                             |
-                            |   /        1   \
-                            |  -|u2 + -------|
-                            |   |        /1 \|
-                            |   |     sin|--||
-                            |   \        \u2//
-    log(f(x)) = log(C1) +   |  ---------------- d(u2)
-                            |          2
-                            |        u2
+                            |   /         1    \
+                            |  -|_u2 + --------|
+                            |   |         / 1 \|
+                            |   |      sin|---||
+                            |   \         \_u2//
+    log(f(x)) = log(C1) +   |  ------------------ d(_u2)
+                            |            2
+                            |         _u2
                             |
                            /
 
@@ -3185,9 +3185,9 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
                         x
                          /
                         |
-                        |       -h(u1)
-        log(x) = C1 +   |  ---------------- d(u1)
-                        |  u1*h(u1) + g(u1)
+                        |        -h(_u1)
+        log(x) = C1 +   |  ------------------- d(_u1)
+                        |  _u1*h(_u1) + g(_u1)
                         |
                        /
 
@@ -3278,9 +3278,9 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
                 f(x)
                   /
                  |
-                 |       -g(u2)
-                 |  ---------------- d(u2)
-                 |  u2*g(u2) + h(u2)
+                 |        -g(_u2)
+                 |  ------------------- d(_u2)
+                 |  _u2*g(_u2) + h(_u2)
                  |
                 /
     <BLANKLINE>
@@ -3533,11 +3533,11 @@ def ode_Bernoulli(eq, func, order, match):
     ... hint='separable_Integral'))
      f(x)
        /
-      |                /
-      |  1            |
-      |  - dy = C1 +  | (-P(x) + Q(x)) dx
-      |  y            |
-      |              /
+      |                    /
+      |  1                |
+      |  -- d(_y) = C1 +  | (-P(x) + Q(x)) dx
+      |  _y               |
+      |                  /
      /
 
 
@@ -3653,10 +3653,10 @@ def ode_Liouville(eq, func, order, match):
                  |                     |
                  |     /               |     /
                  |    |                |    |
-                 |  - | h(x) dx        |    | g(y) dy
+                 |  - | h(x) dx        |    | g(_y) d(_y)
                  |    |                |    |
                  |   /                 |   /
-        C1 + C2* | e            dx +   |  e           dy = 0
+        C1 + C2* | e            dx +   |  e              d(_y) = 0
                  |                     |
                 /                     /
 
@@ -4833,9 +4833,9 @@ def ode_separable_reduced(eq, func, order, match):
         x *f(x)
           /
          |
-         |         1
-         |    ------------ dy = C1 + log(x)
-         |    y*(n - g(y))
+         |          1
+         |    -------------- d(_y) = C1 + log(x)
+         |    _y*(n - g(_y))
          |
          /
 
@@ -5584,14 +5584,14 @@ def ode_separable(eq, func, order, match):
         a(x)*b(f(x))*--(f(x)) = c(x)*d(f(x))
                      dx
         >>> pprint(dsolve(genform, f(x), hint='separable_Integral'))
-             f(x)
-           /                  /
-          |                  |
-          |  b(y)            | c(x)
-          |  ---- dy = C1 +  | ---- dx
-          |  d(y)            | a(x)
-          |                  |
-         /                  /
+         f(x)
+           /                      /
+          |                      |
+          |  b(_y)               | c(x)
+          |  ----- d(_y) = C1 +  | ---- dx
+          |  d(_y)               | a(x)
+          |                      |
+         /                      /
 
     Examples
     ========

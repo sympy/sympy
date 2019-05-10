@@ -13,8 +13,8 @@ from sympy import (
     hyper, im, jacobi, laguerre, legendre, lerchphi, log,
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
+    elliptic_e, elliptic_pi, cos, tan, Wild, WildFunction, true, false, Equivalent, Not,
+    Contains, divisor_sigma, Dummy, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
     UnevaluatedExpr, Quaternion, I, KroneckerProduct, Intersection)
@@ -387,7 +387,7 @@ def test_latex_functions():
     assert latex(conjugate(x**2)) == r"\overline{x}^{2}"
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
     w = Wild('w')
-    assert latex(gamma(w)) == r"\Gamma\left(w\right)"
+    assert latex(gamma(w)) == r"\Gamma\left(w\_\right)"
     assert latex(Order(x)) == r"O\left(x\right)"
     assert latex(Order(x, x)) == r"O\left(x\right)"
     assert latex(Order(x, (x, 0))) == r"O\left(x\right)"
@@ -785,7 +785,7 @@ def test_latex_FourierSeries():
 
 
 def test_latex_FormalPowerSeries():
-    latex_str = r'\sum_{k=1}^{\infty} - \frac{\left(-1\right)^{- k} x^{k}}{k}'
+    latex_str = r'\sum_{\_k=1}^{\infty} - \frac{\left(-1\right)^{- \_k} x^{\_k}}{\_k}'
     assert latex(fps(log(1 + x))) == latex_str
 
 
@@ -891,10 +891,10 @@ def test_latex_ConditionSet():
 
 def test_latex_ComplexRegion():
     assert latex(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == \
-        r"\left\{x + y i\; |\; x, y \in \left[3, 5\right] \times \left[4, 6\right] \right\}"
+        r"\left\{\_x + \_y i\; |\; \_x, \_y \in \left[3, 5\right] \times \left[4, 6\right] \right\}"
     assert latex(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == \
-        r"\left\{r \left(i \sin{\left(\theta \right)} + \cos{\left(\theta "\
-        r"\right)}\right)\; |\; r, \theta \in \left[0, 1\right] \times \left[0, 2 \pi\right) \right\}"
+        r"\left\{\_r \left(i \sin{\left(\_\theta \right)} + \cos{\left(\_\theta "
+        r"\right)}\right)\; |\; \_r, \_\theta \in \left[0, 1\right] \times \left[0, 2 \pi\right) \right\}"
 
 
 def test_latex_Contains():
@@ -1967,8 +1967,7 @@ def test_MatrixElement_printing():
     i, j, k = symbols("i j k")
     M = MatrixSymbol("M", k, k)
     N = MatrixSymbol("N", k, k)
-    assert latex((M*N)[i, j]) == \
-        r'\sum_{i_{1}=0}^{k - 1} M_{i, i_{1}} N_{i_{1}, j}'
+    assert latex((M*N)[i, j]) == r'\sum_{\_i_{1}=0}^{k - 1} M_{i, \_i_{1}} N_{\_i_{1}, j}'
 
 
 def test_MatrixSymbol_printing():
@@ -2185,6 +2184,24 @@ def test_trace():
     A = MatrixSymbol("A", 2, 2)
     assert latex(trace(A)) == r"\operatorname{tr}\left(A \right)"
     assert latex(trace(A**2)) == r"\operatorname{tr}\left(A^{2} \right)"
+
+
+def test_issue_14718():
+    assert latex(Symbol('x_1')) == 'x_{1}'
+    assert latex(Symbol('x_1_')) == 'x_{1}\\_'
+    assert latex(Symbol('_x_1')) == '\\_x_{1}'
+    assert latex(Symbol('_x_1_')) == '\\_x_{1}\\_'
+    assert latex(Symbol('__x_1_')) == '\\_\\_x_{1}\\_'
+
+
+def test_issue_6498():
+    d = Dummy('d')
+    assert latex(d) == "\\_d"
+    assert latex(d + x) == "\\_d + x"
+
+    w = Wild('w')
+    assert latex(w) == "w\\_"
+    assert latex(w + x) == "x + w\\_"
 
 
 def test_print_basic():

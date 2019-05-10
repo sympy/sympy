@@ -54,9 +54,9 @@ an ``Interval`` or ``ImageSet`` of the solutions.
     >>> solveset(x - x, x, domain=S.Reals)
     ℝ
     >>> solveset(sin(x) - 1, x, domain=S.Reals)
-    ⎧        π        ⎫
-    ⎨2⋅n⋅π + ─ | n ∊ ℤ⎬
-    ⎩        2        ⎭
+    ⎧         π         ⎫
+    ⎨2⋅_n⋅π + ─ | _n ∊ ℤ⎬
+    ⎩         2         ⎭
 
 
 If there are no solutions, an ``EmptySet`` is returned and if it

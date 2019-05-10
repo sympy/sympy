@@ -2506,6 +2506,16 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
 
+    def _print_Dummy(self, expr):
+        pform = self._print('_')
+        pform = prettyForm(*pform.right(self._print_Symbol(expr)))
+        return pform
+
+    def _print_Wild(self, expr):
+        pform = self._print_Symbol(expr)
+        pform = prettyForm(*pform.right(self._print('_')))
+        return pform
+
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

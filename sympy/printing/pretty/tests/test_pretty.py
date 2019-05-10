@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from sympy import (
-    Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
+    Add, And, Basic, Derivative, Dict, Dummy, Eq, Equivalent, FF,
     FiniteSet, Function, Ge, Gt, I, Implies, Integral, SingularityFunction,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
-    Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
+    Segment, Subs, Sum, Symbol, Tuple, Trace, Wild, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
@@ -2191,8 +2191,8 @@ __________ __________      \n\
 def test_pretty_lambda():
     # S.IdentityFunction is a special case
     expr = Lambda(y, y)
-    assert pretty(expr) == "x -> x"
-    assert upretty(expr) == u"x ↦ x"
+    assert pretty(expr) == "_x -> _x"
+    assert upretty(expr) == u"_x ↦ _x"
 
     expr = Lambda(x, x+1)
     assert pretty(expr) == "x -> x + 1"
@@ -3752,10 +3752,10 @@ def test_pretty_ConditionSet():
 
 def test_pretty_ComplexRegion():
     from sympy import ComplexRegion
-    ucode_str = u'{x + y⋅ⅈ | x, y ∊ [3, 5] × [4, 6]}'
+    ucode_str = u'{_x + _y⋅ⅈ | _x, _y ∊ [3, 5] × [4, 6]}'
     assert upretty(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == ucode_str
 
-    ucode_str = u'{r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ [0, 1] × [0, 2⋅π)}'
+    ucode_str = u'{_r⋅(ⅈ⋅sin(_θ) + cos(_θ)) | _r, _θ ∊ [0, 1] × [0, 2⋅π)}'
     assert upretty(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == ucode_str
 
 def test_pretty_Union_issue_10414():
@@ -3906,29 +3906,29 @@ def test_pretty_FormalPowerSeries():
 
     ascii_str = \
 """\
-  oo             \n\
-____             \n\
-\\   `            \n\
- \\         -k  k \n\
-  \\   -(-1)  *x  \n\
-  /   -----------\n\
- /         k     \n\
-/___,            \n\
-k = 1            \
+  oo                \n\
+____                \n\
+\\   `               \n\
+ \\          -_k  _k \n\
+  \\    -(-1)   *x   \n\
+  /    -------------\n\
+ /           _k     \n\
+/___,               \n\
+_k = 1              \
 """
 
     ucode_str = \
 u("""\
-  ∞              \n\
- ____            \n\
- ╲               \n\
-  ╲        -k  k \n\
-   ╲  -(-1)  ⋅x  \n\
-   ╱  ───────────\n\
-  ╱        k     \n\
- ╱               \n\
- ‾‾‾‾            \n\
-k = 1            \
+  ∞                 \n\
+ ____               \n\
+ ╲                  \n\
+  ╲         -_k  _k \n\
+   ╲   -(-1)   ⋅x   \n\
+   ╱   ─────────────\n\
+  ╱          _k     \n\
+ ╱                  \n\
+ ‾‾‾‾               \n\
+_k = 1              \
 """)
 
     assert pretty(f) == ascii_str
@@ -6616,6 +6616,28 @@ def test_issue_15560():
     assert e == result
 
 
+def test_issue_14718():
+    assert upretty(Symbol('x_1')) == u'x₁'
+    assert upretty(Symbol('x_1_')) == u'x₁_'
+    assert upretty(Symbol('_x_1')) == u'_x₁'
+    assert upretty(Symbol('_x_1_')) == u'_x₁_'
+    assert upretty(Symbol('__x_1_')) == u'__x₁_'
+
+
+def test_issue_6498():
+    d = Dummy('d')
+    assert upretty(d) == "_d"
+    assert upretty(d + x) == "_d + x"
+    assert pretty(d) == "_d"
+    assert pretty(d + x) == "_d + x"
+
+    w = Wild('w')
+    assert upretty(w) == "w_"
+    assert upretty(w + x) == "x + w_"
+    assert pretty(w) == "w_"
+    assert pretty(w + x) == "x + w_"
+
+
 def test_print_lerchphi():
     # Part of issue 6013
     a = Symbol('a')
@@ -6624,6 +6646,7 @@ def test_print_lerchphi():
     aresult = 'lerchphi(a, 1, 2)'
     assert pretty(lerchphi(a, 1, 2)) == aresult
     assert upretty(lerchphi(a, 1, 2)) == uresult
+
 
 def test_issue_15583():
 

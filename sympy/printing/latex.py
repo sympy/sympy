@@ -17,7 +17,7 @@ from sympy.logic.boolalg import true
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer
-from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.conventions import split_super_sub, requires_partial, split_leading_trailing_underscore
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 import mpmath.libmp as mlib
@@ -1398,8 +1398,10 @@ class LatexPrinter(Printer):
         if expr in self._settings['symbol_names']:
             return self._settings['symbol_names'][expr]
 
-        result = self._deal_with_super_sub(expr.name) if \
-            '\\' not in expr.name else expr.name
+        leading, name, trailing = split_leading_trailing_underscore(expr.name)
+
+        result =  leading*r'\_' + self._deal_with_super_sub(name) + trailing*r'\_' if \
+            '\\' not in name else expr.name
 
         if style == 'bold':
             result = r"\mathbf{{{}}}".format(result)
@@ -1411,6 +1413,12 @@ class LatexPrinter(Printer):
     def _print_MatrixSymbol(self, expr):
         return self._print_Symbol(expr,
                                   style=self._settings['mat_symbol_style'])
+
+    def _print_Dummy(self, expr):
+        return '\\_' + self._print_Symbol(expr)
+
+    def _print_Wild(self, expr):
+        return self._print_Symbol(expr) + '\\_'
 
     def _deal_with_super_sub(self, string):
         if '{' in string:
