@@ -1,5 +1,5 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
-    IndexedBase, Mul, Add)
+    IndexedBase, Mul, Add, Product, Integer, factorial, Range)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -265,8 +265,9 @@ class MultivariateBetaDistribution(JointDistribution):
 
     def check(self, alpha):
         _value_check(len(alpha) >= 2, "At least two categories should be passed.")
-        _value_check(all([a_k > 0 for a_k in alpha]), "Each concentration parameter"
-                                                        " should be positive")
+        for a_k in alpha:
+            _value_check((a_k > 0) != False, "Each concentration parameter"
+                                            " should be positive.")
 
     @property
     def set(self):
@@ -275,8 +276,8 @@ class MultivariateBetaDistribution(JointDistribution):
 
     def pdf(self, *syms):
         alpha = self.alpha
-        B = Mul(*list(map(gamma, alpha)))/gamma(Add(*alpha))
-        return Mul(*[sym**(a_k - 1) for a_k, sym in zip(alpha, syms)])/B
+        B = Mul.fromiter(list(map(gamma, alpha)))/gamma(Add(*alpha))
+        return Mul.fromiter([sym**(a_k - 1) for a_k, sym in zip(alpha, syms)])/B
 
 def MultivariateBeta(syms, *alpha):
     """
@@ -317,6 +318,7 @@ def MultivariateBeta(syms, *alpha):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Dirichlet_distribution
+    .. [2] http://mathworld.wolfram.com/DirichletDistribution.html
 
     """
     if not isinstance(alpha[0], list):
@@ -324,3 +326,71 @@ def MultivariateBeta(syms, *alpha):
     return multivariate_rv(MultivariateBetaDistribution, syms, alpha[0])
 
 Dirichlet = MultivariateBeta
+
+class MultivariateEwensDistribution(JointDistribution):
+
+    _argnames = ['n', 'theta']
+    is_Discrete = True
+    is_Continuous = False
+
+    def check(self, n, theta):
+        _value_check(isinstance(n, Integer) and (n > 0) == True,
+                        "sample size should be positive integer.")
+        _value_check(theta.is_positive, "mutation rate should be positive.")
+
+    @property
+    def set(self):
+        prod_set = Range(0, self.n//1 + 1)
+        for i in range(2, self.n + 1):
+            prod_set *= Range(0, self.n//i + 1)
+        return prod_set
+
+    def pdf(self, *syms):
+        n, theta = self.n, self.theta
+        term_1 = factorial(n)/Mul.fromiter([theta + i for i in range(n)])
+        term_2 = Mul.fromiter([theta**syms[j]/((j+1)**syms[j]*factorial(syms[j]))
+                            for j in range(n)])
+        return term_1 * term_2
+
+def MultivariateEwens(syms, n, theta):
+    """
+    Creates a discrete random variable with Multivariate Ewens
+    Distribution.
+
+    The density of the said distribution can be found at [1].
+
+    Parameters
+    ==========
+
+    n: postive integer of class Integer,
+            size of the sample or the integer whose partitions are considered
+    theta: mutation rate, must be positive real number.
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv import marginal_distribution
+    >>> from sympy.stats.joint_rv_types import MultivariateEwens
+    >>> from sympy import Symbol
+    >>> a1 = Symbol('a1', positive = True)
+    >>> a2 = Symbol('a2', positive = True)
+    >>> ed = MultivariateEwens('E', 2, 1)
+    >>> density(ed)(a1, a2)
+    2**(-a2)/(factorial(a1)*factorial(a2))
+    >>> marginal_distribution(ed, ed[0])(a1)
+    3/(2*factorial(a1))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Ewens%27s_sampling_formula
+    .. [2] http://www.stat.rutgers.edu/home/hcrane/Papers/STS529.pdf
+
+    """
+    return multivariate_rv(MultivariateEwensDistribution, syms, n, theta)

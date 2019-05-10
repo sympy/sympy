@@ -1,4 +1,4 @@
-from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed
+from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Rational
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV
@@ -58,12 +58,26 @@ def test_MultivariateBeta():
     from sympy import gamma
     mb = MultivariateBeta('B', [1, 2])
     mb_c = MultivariateBeta('C', 1, 2)
+    a1_f, a2_f = symbols('a1, a2', positive = False)
     assert density(mb)(1, 2) == 4
     assert marginal_distribution(mb_c, 0)(3) == 1
     raises(ValueError, lambda: MultivariateBeta('b1', [1, -2]))
     raises(ValueError, lambda: MultivariateBeta('b2', [0, 2]))
     raises(ValueError, lambda: MultivariateBeta('b3', [0, 0]))
     raises(ValueError, lambda: MultivariateBeta('b4', [-1, -2]))
+    raises(ValueError, lambda: MultivariateBeta('b4', a1_f))
+    raises(ValueError, lambda: MultivariateBeta('b4', [a1_f, 2]))
+    raises(ValueError, lambda: MultivariateBeta('b4', [1, a2_f]))
+
+def test_MultivariateEwens():
+    from sympy.stats.joint_rv_types import MultivariateEwens
+    n, theta = symbols('n theta', positive = True)
+    theta_f = symbols('t_f', negative = True)
+    ed = MultivariateEwens('E', 3, 1)
+    assert density(ed)(0, 1, 2) == Rational(1, 36)
+    assert marginal_distribution(ed, ed[1])(1) == Rational(16, 9)
+    raises(ValueError, lambda: MultivariateEwens('e1', 5, theta_f))
+    raises(ValueError, lambda: MultivariateEwens('e1', n, theta))
 
 def test_JointPSpace_margial_distribution():
     from sympy.stats.joint_rv_types import MultivariateT
