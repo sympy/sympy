@@ -1,6 +1,6 @@
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, cos, besseli, factorial, binomial, atan, tan
+                   Piecewise, Integral, sin, cos, besseli, factorial, binomial, atan, tan,
                    floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul, sinh, erfi, besselj)
 from sympy.core.compatibility import range
 from sympy.external import import_module
@@ -40,7 +40,6 @@ def test_single_normal():
     assert simplify(E(Y)) == mu
     assert simplify(variance(Y)) == sigma**2
     pdf = density(Y)
-    x = Symbol('x')
     assert (pdf(x) ==
             2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
@@ -137,7 +136,6 @@ def test_cdf():
 
     Z = Exponential('z', 1)
     f = cdf(Z)
-    z = Symbol('z')
     assert f(z) == Piecewise((1 - exp(-z), z >= 0), (0, True))
 
 
@@ -159,7 +157,6 @@ def test_characteristic_function():
 
 
 def test_sample_continuous():
-    z = Symbol('z')
     Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
     assert sample(Z) in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
@@ -168,7 +165,6 @@ def test_sample_continuous():
 
 
 def test_ContinuousRV():
-    x = Symbol('x')
     pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))  # Normal distribution
     # X and Y should be equivalent
     X = ContinuousRV(x, pdf)
@@ -195,7 +191,6 @@ def test_benini():
     alpha = Symbol("alpha", positive=True)
     beta = Symbol("beta", positive=True)
     sigma = Symbol("sigma", positive=True)
-    x = Symbol('x')
     X = Benini('x', alpha, beta, sigma)
 
     # Tests Exception error in _moments_generating_function()
@@ -219,7 +214,6 @@ def test_benini():
 
 def test_beta():
     a, b = symbols('alpha beta', positive=True)
-    x = symbols('x')
     B = Beta('x', a, b)
 
     assert pspace(B).domain.set == Interval(0, 1)
@@ -274,7 +268,6 @@ def test_cauchy():
 def test_chi():
     from sympy import I
     k = Symbol("k", integer=True)
-    x = Symbol('x')
 
     X = Chi('x', k)
     assert density(X)(x) == 2**(-k/2 + 1)*x**(k - 1)*exp(-x**2/2)/gamma(k/2)
@@ -315,7 +308,6 @@ def test_chi_noncentral():
 
 def test_chi_squared():
     k = Symbol("k", integer=True)
-    x = Symbol('x')
     X = ChiSquared('x', k)
 
     # Tests the characteristic function
@@ -459,7 +451,6 @@ def test_gamma():
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
     b = Symbol("b", positive=True)
-    x = Symbol('x')
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
@@ -489,7 +480,6 @@ def test_gompertz():
 def test_gumbel():
     beta = Symbol("beta", positive=True)
     mu = Symbol("mu")
-    x = Symbol("x")
     X = Gumbel("x", beta, mu)
 
     assert str(density(X)(x)) == 'exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta'
@@ -509,7 +499,6 @@ def test_kumaraswamy():
 def test_laplace():
     mu = Symbol("mu")
     b = Symbol("b", positive=True)
-    x = Symbol('x')
 
     X = Laplace('x', mu, b)
 
@@ -523,7 +512,6 @@ def test_laplace():
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
-    x = Symbol('x')
     p = Symbol("p", positive=True)
 
     X = Logistic('x', mu, s)
@@ -540,7 +528,6 @@ def test_logistic():
 def test_lognormal():
     mean = Symbol('mu', real=True, finite=True)
     std = Symbol('sigma', positive=True, real=True, finite=True)
-    x = Symbol('x')
     X = LogNormal('x', mean, std)
     # The sympy integrator can't do this too well
     #assert E(X) == exp(mean+std**2/2)
@@ -611,7 +598,6 @@ def test_pareto():
     X = Pareto('x', xm, alpha)
 
     dens = density(X)
-    x = Symbol('x')
 
     #Tests cdf function
     assert cdf(X)(x) == \
@@ -709,7 +695,6 @@ def test_triangular():
     a = Symbol("a")
     b = Symbol("b")
     c = Symbol("c")
-    x = Symbol("x")
 
     X = Triangular('x', a, b, c)
     assert density(X)(x) == Piecewise(
@@ -907,7 +892,6 @@ def test_density_unevaluated():
 
 def test_NormalDistribution():
     nd = NormalDistribution(0, 1)
-    x = Symbol('x')
     assert nd.cdf(x) == erf(sqrt(2)*x/2)/2 + S.One/2
     assert isinstance(nd.sample(), float) or nd.sample().is_Number
     assert nd.expectation(1, x) == 1
@@ -980,7 +964,6 @@ def test_precomputed_characteristic_functions():
     def test_cf(dist, support_lower_limit, support_upper_limit):
         pdf = density(dist)
         t = Symbol('t')
-        x = Symbol('x')
 
         # first function is the hardcoded CF of the distribution
         cf1 = lambdify([t], characteristic_function(dist)(t), 'mpmath')
@@ -1040,7 +1023,6 @@ def test_issue_13324():
     assert E(X, X > 0) == Rational(1, 2)
 
 def test_FiniteSet_prob():
-    x = symbols('x')
     E = Exponential('E', 3)
     N = Normal('N', 5, 7)
     assert P(Eq(E, 1)) is S.Zero
@@ -1050,7 +1032,6 @@ def test_FiniteSet_prob():
 def test_prob_neq():
     E = Exponential('E', 4)
     X = ChiSquared('X', 4)
-    x = symbols('x')
     assert P(Ne(E, 2)) == 1
     assert P(Ne(X, 4)) == 1
     assert P(Ne(X, 4)) == 1
