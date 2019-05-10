@@ -56,7 +56,7 @@ def test_mod():
 
     a = Float(2.6)
 
-    assert (a % .2) == 0
+    assert (a % .2) == 0.0
     assert (a % 2).round(15) == 0.6
     assert (a % 0.5).round(15) == 0.1
 
@@ -83,7 +83,7 @@ def test_mod():
 
     s = S.Zero
 
-    assert s % float(1) == S.Zero
+    assert s % float(1) == 0.0
 
     # No rounding required since these numbers can be represented
     # exactly.
@@ -407,6 +407,13 @@ def test_Float():
     def eq(a, b):
         t = Float("1.0E-15")
         return (-t < a - b < t)
+
+    zeros = (0, S(0), 0., Float(0))
+    for i, j in permutations(zeros, 2):
+        assert i == j
+    for z in zeros:
+        assert z in zeros
+    assert S(0).is_zero
 
     a = Float(2) ** Float(3)
     assert eq(a.evalf(), Float(8))
@@ -814,13 +821,13 @@ def test_Mul_Infinity_Zero():
 
 def test_Div_By_Zero():
     assert 1/S(0) == zoo
-    assert 1/Float(0) == _inf
+    assert 1/Float(0) == zoo
     assert 0/S(0) == nan
     assert 0/Float(0) == nan
     assert S(0)/0 == nan
     assert Float(0)/0 == nan
     assert -1/S(0) == zoo
-    assert -1/Float(0) == _ninf
+    assert -1/Float(0) == zoo
 
 
 def test_Infinity_inequations():
@@ -1616,18 +1623,21 @@ def test_Catalan_EulerGamma_prec():
 
 
 def test_Float_eq():
-    assert Float(.12, 3) != Float(.12, 4)
-    assert Float(.12, 3) == .12
-    assert 0.12 == Float(.12, 3)
-    assert Float('.12', 22) != .12
-    # issue 11707
-    assert Float('1.1') != Rational(11, 10)
-    assert Rational(11, 10) != Float('1.1')
-    # to precision 10 and 11, the float value of
-    # 1.1 is not the same
-    assert Float(1.1, 10) != Float(1.1, 11)
     # all .5 values are the same
     assert Float(.5, 10) == Float(.5, 11) == Float(.5, 1)
+    # and even floats that aren't exact in base-2 still
+    # compare the same because they are compared at the
+    # same precision
+    assert Float(.12, 3) == Float(.12, 4)
+    assert Float(.12, 3) == .12
+    assert 0.12 == Float(.12, 3)
+    assert Float('.12', 22) == .12
+    # issue 11707
+    # but Float/Rational -- except for 0 --
+    # are exact so Rational(x) = Float(y) only if
+    # Rational(x) == Rational(Float(y))
+    assert Float('1.1') != Rational(11, 10)
+    assert Rational(11, 10) != Float('1.1')
     # coverage
     assert not Float(3) == 2
     assert not Float(2**2) == S.Half

@@ -1300,26 +1300,25 @@ class Float(Number):
     __long__ = __int__
 
     def __eq__(self, other):
-        if isinstance(other, float):
-            # coerce to Float at same precision
-            o = Float(other)
-            try:
-                ompf = o._as_mpf_val(self._prec)
-            except ValueError:
-                return False
-            return bool(mlib.mpf_eq(self._mpf_, ompf))
         try:
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
+        if not self:
+            return not other
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
             return other.__eq__(self)
         if other.is_Float:
-            # precision is ignored so Float(.1) == Float(.1, 100)
-            # and Float(.1, 100) == Float(.1)
-            return bool(mlib.mpf_eq(self._mpf_, other._mpf_))
+            # compare at the same precision
+            # so Float(.1, 3) == Float(.1, 33)
+            a, b = self._mpf_, other._mpf_
+            if self._prec != other._prec:
+                p = min(self._prec, other._prec)
+                a = mpf_norm(a, p)
+                b = mpf_norm(b, p)
+            return bool(mlib.mpf_eq(a, b))
         if other.is_Rational:
             return other.__eq__(self)
         if other.is_Number:
@@ -1336,6 +1335,8 @@ class Float(Number):
         return not self == other
 
     def _Frel(self, other, op):
+        from sympy.core.evalf import evalf
+        from sympy.core.numbers import prec_to_dps
         try:
             other = _sympify(other)
         except SympifyError:
@@ -1345,14 +1346,14 @@ class Float(Number):
         elif other.is_Rational:
             # if you don't use self._prec here, the Rational
             # will be choppped to default precision
-            other = Float(other, self._prec)
+            other = Float(other, precision=self._prec)
             return _sympify(bool(
                         op(self._mpf_, other._mpf_)))
         elif other.is_Float:
             return _sympify(bool(
                         op(self._mpf_, other._mpf_)))
         elif other.is_comparable:
-            other = Float(other, self._prec)
+            other = other.evalf(prec_to_dps(self._prec))
             if other._prec > 1:
                 if other.is_Number and other is not S.NaN:
                     return _sympify(bool(
@@ -1780,10 +1781,8 @@ class Rational(Number):
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
-        if other.is_zero:
-            return self.is_zero
-        if self.is_zero:
-            return other.is_zero
+        if not self:
+            return not other
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
@@ -1806,7 +1805,8 @@ class Rational(Number):
                 if not self.is_Integer:
                     return False
                 # does m*2**t == self.p
-                return not self.p % m and integer_log(self.p//m, 2) == (t, True)
+                return self.p and not self.p % m and \
+                    integer_log(self.p//m, 2) == (t, True)
             # does non-integer s*m/2**-t = p/q?
             if self.is_Integer:
                 return False
@@ -1824,18 +1824,18 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         if other.is_Number:
             op = None
+            s, o = self, other
             if other.is_NumberSymbol:
-                op = getattr(other, attr)
+                op = getattr(o, attr)
             elif other.is_Float:
-                op = getattr(other, attr)
+                op = getattr(o, attr)
             elif other.is_Rational:
-                self, other = self.p*other.q, self.q*other.p
-                other = _sympify(other)
-                op = getattr(other, attr)
+                s, o = Integer(s.p*o.q), Integer(s.q*o.p)
+                op = getattr(o, attr)
             if op:
-                return op(self)
-            if other.is_number and other.is_real:
-                return Integer(self.p), self.q*other
+                return op(s)
+            if o.is_number and o.is_real:
+                return Integer(s.p), s.q*o
 
     def __gt__(self, other):
         rv = self._Rrel(other, '__lt__')

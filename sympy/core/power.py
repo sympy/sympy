@@ -256,6 +256,8 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
+            elif e == -1 and not b:
+                return S.ComplexInfinity
             # Only perform autosimplification if exponent or base is a Symbol or number
             elif (b.is_Symbol or b.is_number) and (e.is_Symbol or e.is_number) and\
                 e.is_integer and _coeff_isneg(b):

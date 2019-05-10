@@ -29,15 +29,16 @@ def rel_check(a, b):
         else:
             E = [(a == b), (a != b)]
             assert len(set(E)) == 2
-            v = [(a < b), (a <= b), (a > b), (a >= b)]
+            v = [
+            (a < b), (a <= b), (a > b), (a >= b)]
             i = [
-            [True, True, False, False],
-            [False, True, False, True],
-            [False, False, True, True]].index(v)
-            if i != 1:
-                assert E[1]
+            [True,    True,     False,   False],
+            [False,   True,     False,   True], # <-- i == 1
+            [False,   False,    True,    True]].index(v)
+            if i == 1:
+                assert E[0] or (a.is_Float != b.is_Float) # ugh
             else:
-                assert E[0]
+                assert E[1]
         a, b = b, a
     return True
 

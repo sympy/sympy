@@ -70,7 +70,7 @@ def R_nl(n, l, r, Z=1):
 
     """
     # sympify arguments
-    n, l, r, Z = S(n), S(l), S(r), S(Z)
+    n, l, r, Z = map(S, [n, l, r, Z])
     # radial quantum number
     n_r = n - l - 1
     # rescaled "r"
@@ -82,6 +82,7 @@ def R_nl(n, l, r, Z=1):
     # some books. Both coefficients seem to be the same fast:
     # C =  S(2)/n**2 * sqrt(1/a**3 * factorial(n_r) / (factorial(n+l)))
     return C * r0**l * assoc_laguerre(n_r, 2*l + 1, r0).expand() * exp(-r0/2)
+
 
 def Psi_nlm(n, l, m, r, phi, theta, Z=1):
     """
@@ -129,17 +130,16 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
     """
 
     # sympify arguments
-    n, l, m, r, phi, theta, Z = S(n), S(l), S(m), S(r), S(phi), S(theta), S(Z)
+    n, l, m, r, phi, theta, Z = map(S, [n, l, m, r, phi, theta, Z])
     # check if values for n,l,m make physically sense
-    if n.is_integer and n<1:
+    if n.is_integer and n < 1:
         raise ValueError("'n' must be positive integer")
     if l.is_integer and not (n > l):
         raise ValueError("'n' must be greater than 'l'")
-    if m.is_integer and not (abs(m)<=l):
+    if m.is_integer and not (abs(m) <= l):
         raise ValueError("|'m'| must be less or equal 'l'")
     # return the hydrogen wave function
-    return R_nl(n, l, r, Z)*Ynm(l,m,theta,phi).expand(func=True)
-
+    return R_nl(n, l, r, Z)*Ynm(l, m, theta, phi).expand(func=True)
 
 
 def E_nl(n, Z=1):
@@ -217,6 +217,7 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     -0.0555558020932949
 
     """
+    n, l, Z, c = map(S, [n, l, Z, c])
     if not (l >= 0):
         raise ValueError("'l' must be positive or zero")
     if not (n > l):
@@ -228,6 +229,5 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
         skappa = -l - 1
     else:
         skappa = -l
-    c = S(c)
     beta = sqrt(skappa**2 - Z**2/c**2)
     return c**2/sqrt(1 + Z**2/(n + skappa + beta)**2/c**2) - c**2
