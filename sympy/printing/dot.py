@@ -24,27 +24,45 @@ def purestr(x, with_args=False):
     ==========
 
     with_args : boolean, optional
-        If ``True``, there will be a second argument for the return value,
-        which the individual string representation for each subnodes
-        from the symbolic object tree accessed via ``.args``.
+        If ``True``, there will be a second argument for the return
+        value, which is a tuple containing ``purestr`` applied to each
+        subnodes.
 
-        If ``False``, it will only return the string representation part,
-        described in the summary above.
+        If ``False``, there will not be a second argument for the
+        return.
 
         Default is ``False``
 
     Examples
     ========
 
-    >>> from sympy import Symbol
+    >>> from sympy import Integer, Float, Symbol, MatrixSymbol
     >>> from sympy.printing.dot import purestr
 
-    >>> purestr(Symbol('x'))
+    Applying ``purestr`` for basic symbolic object:
+    >>> code = purestr(Symbol('x'))
+    >>> code
     "Symbol('x')"
+    >>> eval(code) == Symbol('x')
+    True
 
+    For basic numeric object:
     >>> purestr(Float(2))
     "Float('2.0', precision=53)"
 
+    For matrix symbol:
+    >>> code = purestr(MatrixSymbol('x', 2, 2))
+    >>> code
+    "MatrixSymbol(Symbol('x'), Integer(2), Integer(2))"
+    >>> eval(code) == MatrixSymbol('x', 2, 2)
+    True
+
+    With ``with_args=True``:
+    >>> purestr(Float(2), with_args=True)
+    ("Float('2.0', precision=53)", ())
+    >>> purestr(MatrixSymbol('x', 2, 2), with_args=True)
+    ("MatrixSymbol(Symbol('x'), Integer(2), Integer(2))",
+     ("Symbol('x')", 'Integer(2)', 'Integer(2)'))
     """
     sargs = ()
     if not isinstance(x, Basic):
@@ -180,7 +198,8 @@ def dotprint(expr,
     styles : list of lists composed of (Class, mapping), optional
         Styles for different classes.
 
-        The default is .. code-block:: python
+        The default is
+        .. code-block:: python
             (
                 (Basic, {'color': 'blue', 'shape': 'ellipse'}),
                 (Expr,  {'color': 'black'})
@@ -203,11 +222,15 @@ def dotprint(expr,
 
         The default is ``True``.
 
-        For example, for ``x + x*y`` with ``repeat=True``, it will have two
-        nodes for ``x`` and with ``repeat=False``, it will have one
-        (warning: even if it appears twice in the same object, like Pow(x, x),
-        it will still only appear once.  Hence, with repeat=False, the number
-        of arrows out of an object might not equal the number of args it has).
+        For example, for ``x + x*y`` with ``repeat=True``, it will have
+        two nodes for ``x`` and with ``repeat=False``, it will have one
+        node.
+
+        .. warning::
+            Even if it appears twice in the same object, like Pow(x, x),
+            it will still only appear once.
+            Hence, with repeat=False, the number of arrows out of an
+            object might not equal the number of args it has.
 
     labelfunc : function, optional
         How to label leaf nodes.
