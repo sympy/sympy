@@ -199,7 +199,9 @@ def dotprint(expr,
         Styles for different classes.
 
         The default is
+
         .. code-block:: python
+
             (
                 (Basic, {'color': 'blue', 'shape': 'ellipse'}),
                 (Expr,  {'color': 'black'})
@@ -227,9 +229,9 @@ def dotprint(expr,
         node.
 
         .. warning::
-            Even if it appears twice in the same object, like Pow(x, x),
-            it will still only appear once.
-            Hence, with repeat=False, the number of arrows out of an
+            Even if it appears twice in the same object like
+            ``Pow(x, x)``, it will still only appear once.
+            Hence, with ``repeat=False``, the number of arrows out of an
             object might not equal the number of args it has.
 
     labelfunc : function, optional
