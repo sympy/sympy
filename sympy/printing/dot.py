@@ -229,7 +229,7 @@ def dotprint(expr,
         node.
 
         .. warning::
-            Even if it appears twice in the same object like
+            Even if a node appears twice in the same object like ``x`` in
             ``Pow(x, x)``, it will still only appear once.
             Hence, with ``repeat=False``, the number of arrows out of an
             object might not equal the number of args it has.
