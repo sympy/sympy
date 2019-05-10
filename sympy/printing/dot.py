@@ -235,7 +235,7 @@ def dotprint(expr,
             object might not equal the number of args it has.
 
     labelfunc : function, optional
-        How to label leaf nodes.
+        A function to create a label for a given leaf node.
 
         The default is ``str``.
 
