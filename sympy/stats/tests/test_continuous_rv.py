@@ -711,18 +711,15 @@ def test_triangular():
     (-2*(-a + b)*exp(c*x) + 2*(a + c)*exp(b*x) + 2*(b - c)*exp(a*x))/(x**2*(-a + b)*(-a + c)*(b - c))
 
 def test_quadratic_u():
-    from sympy import simplify
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
 
     X = QuadraticU("x", a, b)
-
-    # Tests characteristic_function
     Y = QuadraticU("x", 1, 2)
-    #assert simplify(characteristic_function(Y)(1)) == -(-12 + 21*I)*exp(I) + (12 + 21*I)*exp(2*I)
 
     # Tests _moment_generating_function
     assert moment_generating_function(Y)(1)  == -15*exp(2) + 27*exp(1)
+    assert moment_generating_function(Y)(2) == -9*exp(4)/2 + 21*exp(2)/2
 
     assert density(X)(x) == (Piecewise((12*(x - a/2 - b/2)**2/(-a + b)**3,
                           And(x <= b, a <= x)), (0, True)))
