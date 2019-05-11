@@ -38,7 +38,7 @@ def test_transpose():
 
 def test_transpose_MatAdd_MatMul():
     # Issue 16807
-    x = Symbol('x')
+    x = symbols('x')
     M = MatrixSymbol('M', 3, 3)
     N = MatrixSymbol('N', 3, 3)
 
