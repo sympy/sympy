@@ -87,7 +87,9 @@ def bspline_basis(d, knots, n, x):
         >>> d = 0
         >>> knots = tuple(range(5))
         >>> bspline_basis(d, knots, 0, x)
-        Piecewise((1, (x >= 0) & (x <= 1)), (0, True))
+        Piecewise(
+            (1, (x >= 0) & (x <= 1)),
+            (0, True))
 
     For a given ``(d, knots)`` there are ``len(knots)-d-1`` B-splines
     defined, that are indexed by ``n`` (starting at 0).
@@ -95,14 +97,12 @@ def bspline_basis(d, knots, n, x):
     Here is an example of a cubic B-spline:
 
         >>> bspline_basis(3, tuple(range(5)), 0, x)
-        Piecewise((x**3/6, (x >= 0) & (x <= 1)),
-                  (-x**3/2 + 2*x**2 - 2*x + 2/3,
-                  (x >= 1) & (x <= 2)),
-                  (x**3/2 - 4*x**2 + 10*x - 22/3,
-                  (x >= 2) & (x <= 3)),
-                  (-x**3/6 + 2*x**2 - 8*x + 32/3,
-                  (x >= 3) & (x <= 4)),
-                  (0, True))
+        Piecewise(
+            (x**3/6, (x >= 0) & (x <= 1)),
+            (-x**3/2 + 2*x**2 - 2*x + 2/3, (x >= 1) & (x <= 2)),
+            (x**3/2 - 4*x**2 + 10*x - 22/3, (x >= 2) & (x <= 3)),
+            (-x**3/6 + 2*x**2 - 8*x + 32/3, (x >= 3) & (x <= 4)),
+            (0, True))
 
     By repeating knot points, you can introduce discontinuities in the
     B-splines and their derivatives:
@@ -110,7 +110,9 @@ def bspline_basis(d, knots, n, x):
         >>> d = 1
         >>> knots = (0, 0, 2, 3, 4)
         >>> bspline_basis(d, knots, 0, x)
-        Piecewise((1 - x/2, (x >= 0) & (x <= 2)), (0, True))
+        Piecewise(
+            (1 - x/2, (x >= 0) & (x <= 2)),
+            (0, True))
 
     It is quite time consuming to construct and evaluate B-splines. If
     you need to evaluate a B-splines many times, it is best to
@@ -184,14 +186,16 @@ def bspline_basis_set(d, knots, x):
     >>> knots = range(5)
     >>> splines = bspline_basis_set(d, knots, x)
     >>> splines
-    [Piecewise((x**2/2, (x >= 0) & (x <= 1)),
-               (-x**2 + 3*x - 3/2, (x >= 1) & (x <= 2)),
-               (x**2/2 - 3*x + 9/2, (x >= 2) & (x <= 3)),
-               (0, True)),
-    Piecewise((x**2/2 - x + 1/2, (x >= 1) & (x <= 2)),
-              (-x**2 + 5*x - 11/2, (x >= 2) & (x <= 3)),
-              (x**2/2 - 4*x + 8, (x >= 3) & (x <= 4)),
-              (0, True))]
+    [Piecewise(
+        (x**2/2, (x >= 0) & (x <= 1)),
+        (-x**2 + 3*x - 3/2, (x >= 1) & (x <= 2)),
+        (x**2/2 - 3*x + 9/2, (x >= 2) & (x <= 3)),
+        (0, True)),
+    Piecewise(
+        (x**2/2 - x + 1/2, (x >= 1) & (x <= 2)),
+        (-x**2 + 5*x - 11/2, (x >= 2) & (x <= 3)),
+        (x**2/2 - 4*x + 8, (x >= 3) & (x <= 4)),
+        (0, True))]
 
     See Also
     ========
@@ -217,12 +221,14 @@ def interpolating_spline(d, x, X, Y):
     >>> from sympy import interpolating_spline
     >>> from sympy.abc import x
     >>> interpolating_spline(1, x, [1, 2, 4, 7], [3, 6, 5, 7])
-    Piecewise((3*x, (x >= 1) & (x <= 2)),
-            (7 - x/2, (x >= 2) & (x <= 4)),
-            (2*x/3 + 7/3, (x >= 4) & (x <= 7)))
+    Piecewise(
+        (3*x, (x >= 1) & (x <= 2)),
+        (7 - x/2, (x >= 2) & (x <= 4)),
+        (2*x/3 + 7/3, (x >= 4) & (x <= 7)))
     >>> interpolating_spline(3, x, [-2, 0, 1, 3, 4], [4, 2, 1, 1, 3])
-    Piecewise((7*x**3/117 + 7*x**2/117 - 131*x/117 + 2, (x >= -2) & (x <= 1)),
-            (10*x**3/117 - 2*x**2/117 - 122*x/117 + 77/39, (x >= 1) & (x <= 4)))
+    Piecewise(
+        (7*x**3/117 + 7*x**2/117 - 131*x/117 + 2, (x >= -2) & (x <= 1)),
+        (10*x**3/117 - 2*x**2/117 - 122*x/117 + 77/39, (x >= 1) & (x <= 4)))
 
     See Also
     ========

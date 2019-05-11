@@ -116,7 +116,9 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     >>> heurisch(cos(n*x), x)
     sin(n*x)/n
     >>> heurisch_wrapper(cos(n*x), x)
-    Piecewise((sin(n*x)/n, Ne(n, 0)), (x, True))
+    Piecewise(
+        (sin(n*x)/n, Ne(n, 0)),
+        (x, True))
 
     See Also
     ========

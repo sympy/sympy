@@ -95,13 +95,17 @@ class Piecewise(Function):
     Booleans can contain Piecewise elements:
 
     >>> cond = (x < y).subs(x, Piecewise((2, x < 0), (3, True))); cond
-    Piecewise((2, x < 0), (3, True)) < y
+    Piecewise(
+        (2, x < 0),
+        (3, True)) < y
 
     The folded version of this results in a Piecewise whose
     expressions are Booleans:
 
     >>> folded_cond = piecewise_fold(cond); folded_cond
-    Piecewise((2 < y, x < 0), (3 < y, True))
+    Piecewise(
+        (2 < y, x < 0),
+        (3 < y, True))
 
     When a Boolean containing Piecewise (like cond) or a Piecewise
     with Boolean expressions (like folded_cond) is used as a condition,
@@ -415,7 +419,10 @@ class Piecewise(Function):
         >>> from sympy.abc import x
         >>> p = Piecewise((0, x < 0), (1, x < 1), (2, True))
         >>> p.piecewise_integrate(x)
-        Piecewise((0, x < 0), (x, x < 1), (2*x, True))
+        Piecewise(
+            (0, x < 0),
+            (x, x < 1),
+            (2*x, True))
 
         Note that this does not give a continuous function, e.g.
         at x = 1 the 3rd condition applies and the antiderivative
@@ -429,7 +436,10 @@ class Piecewise(Function):
         the point of interest, however:
 
         >>> p.integrate(x)
-        Piecewise((0, x < 0), (x, x < 1), (2*x - 1, True))
+        Piecewise(
+            (0, x < 0),
+            (x, x < 1),
+            (2*x - 1, True))
         >>> _.subs(x, 1)
         1
 
@@ -535,9 +545,15 @@ class Piecewise(Function):
         >>> from sympy.abc import x
         >>> p = Piecewise((0, x < 0), (1, x < 1), (2, True))
         >>> p.integrate(x)
-        Piecewise((0, x < 0), (x, x < 1), (2*x - 1, True))
+        Piecewise(
+            (0, x < 0),
+            (x, x < 1),
+            (2*x - 1, True))
         >>> p.piecewise_integrate(x)
-        Piecewise((0, x < 0), (x, x < 1), (2*x, True))
+        Piecewise(
+            (0, x < 0),
+            (x, x < 1),
+            (2*x, True))
 
         See Also
         ========
@@ -1033,7 +1049,9 @@ def piecewise_fold(expr):
     >>> from sympy.abc import x
     >>> p = Piecewise((x, x < 1), (1, S(1) <= x))
     >>> piecewise_fold(x*p)
-    Piecewise((x**2, x < 1), (x, True))
+    Piecewise(
+        (x**2, x < 1),
+        (x, True))
 
     See Also
     ========

@@ -51,7 +51,9 @@ class SingularityFunction(Function):
     >>> diff(SingularityFunction(x, 4, 0), x, 2)
     SingularityFunction(x, 4, -2)
     >>> SingularityFunction(x, 4, 5).rewrite(Piecewise)
-    Piecewise(((x - 4)**5, x - 4 > 0), (0, True))
+    Piecewise(
+        ((x - 4)**5, x - 4 > 0),
+        (0, True))
     >>> expr = SingularityFunction(x, a, n)
     >>> y = Symbol('y', positive=True)
     >>> n = Symbol('n', nonnegative=True)

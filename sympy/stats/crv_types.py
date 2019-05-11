@@ -211,9 +211,10 @@ def Arcsin(name, a=0, b=1):
     1/(pi*sqrt((-a + z)*(b - z)))
 
     >>> cdf(X)(z)
-    Piecewise((0, a > z),
-            (2*asin(sqrt((-a + z)/(-a + b)))/pi, b >= z),
-            (1, True))
+    Piecewise(
+        (0, a > z),
+        (2*asin(sqrt((-a + z)/(-a + b)))/pi, b >= z),
+        (1, True))
 
 
     References
@@ -299,8 +300,9 @@ def Benini(name, alpha, beta, sigma):
     \  z             z        /
 
     >>> cdf(X)(z)
-    Piecewise((1 - exp(-alpha*log(z/sigma) - beta*log(z/sigma)**2), sigma <= z),
-            (0, True))
+    Piecewise(
+        (1 - exp(-alpha*log(z/sigma) - beta*log(z/sigma)**2), sigma <= z),
+        (0, True))
 
 
     References
@@ -834,7 +836,9 @@ def Dagum(name, p, a, b):
     a*p*(z/b)**(a*p)*((z/b)**a + 1)**(-p - 1)/z
 
     >>> cdf(X)(z)
-    Piecewise(((1 + (z/b)**(-a))**(-p), z >= 0), (0, True))
+    Piecewise(
+        ((1 + (z/b)**(-a))**(-p), z >= 0),
+        (0, True))
 
 
     References
@@ -989,7 +993,9 @@ def Exponential(name, rate):
     lambda*exp(-lambda*z)
 
     >>> cdf(X)(z)
-    Piecewise((1 - exp(-lambda*z), z >= 0), (0, True))
+    Piecewise(
+        (1 - exp(-lambda*z), z >= 0),
+        (0, True))
 
     >>> quantile(X)(p)
     -log(1 - p)/lambda
@@ -1237,7 +1243,9 @@ def Frechet(name, a, s=1, m=0):
     a*((-m + z)/s)**(-a - 1)*exp(-((-m + z)/s)**(-a))/s
 
     >>> cdf(X)(z)
-     Piecewise((exp(-((-m + z)/s)**(-a)), m <= z), (0, True))
+    Piecewise(
+        (exp(-((-m + z)/s)**(-a)), m <= z),
+        (0, True))
 
     References
     ==========
@@ -1437,7 +1445,9 @@ def GammaInverse(name, a, b):
        Gamma(a)
 
     >>> cdf(X)(z)
-    Piecewise((uppergamma(a, b/z)/gamma(a), z > 0), (0, True))
+    Piecewise(
+        (uppergamma(a, b/z)/gamma(a), z > 0),
+        (0, True))
 
 
     References
@@ -1654,7 +1664,10 @@ def Kumaraswamy(name, a, b):
     a*b*z     *\1 - z /
 
     >>> cdf(X)(z)
-    Piecewise((0, z < 0), (1 - (1 - z**a)**b, z <= 1), (1, True))
+    Piecewise(
+        (0, z < 0),
+        (1 - (1 - z**a)**b, z <= 1),
+        (1, True))
 
     References
     ==========
@@ -1727,7 +1740,9 @@ def Laplace(name, mu, b):
     exp(-Abs(mu - z)/b)/(2*b)
 
     >>> cdf(X)(z)
-    Piecewise((exp((-mu + z)/b)/2, mu > z), (1 - exp((mu - z)/b)/2, True))
+    Piecewise(
+        (exp((-mu + z)/b)/2, mu > z),
+        (1 - exp((mu - z)/b)/2, True))
 
     >>> L = Laplace('L', [1, 2], [[1, 0], [0, 1]])
     >>> pprint(density(L)(1, 2), use_unicode=False)
@@ -2058,8 +2073,9 @@ def Nakagami(name, mu, omega):
             Gamma(mu)*Gamma(mu + 1)
 
     >>> cdf(X)(z)
-    Piecewise((lowergamma(mu, mu*z**2/omega)/gamma(mu), z > 0),
-            (0, True))
+    Piecewise(
+        (lowergamma(mu, mu*z**2/omega)/gamma(mu), z > 0),
+        (0, True))
 
 
     References
@@ -2922,7 +2938,10 @@ def Uniform(name, left, right):
     >>> X = Uniform("x", a, b)
 
     >>> density(X)(z)
-    Piecewise((1/(-a + b), (b >= z) & (a <= z)), (0, True))
+    Piecewise(
+        (1/(-a + b),
+        (b >= z) & (a <= z)),
+        (0, True))
 
     >>> cdf(X)(z)  # doctest: +SKIP
     -a/(-a + b) + z/(-a + b)
@@ -3022,8 +3041,11 @@ def UniformSum(name, n):
                 (n - 1)!
 
     >>> cdf(X)(z)
-    Piecewise((0, z < 0), (Sum((-1)**_k*(-_k + z)**n*binomial(n, _k),
-                    (_k, 0, floor(z)))/factorial(n), n >= z), (1, True))
+    Piecewise(
+        (0, z < 0),
+        (Sum((-1)**_k*(-_k + z)**n*binomial(n, _k),
+        (_k, 0, floor(z)))/factorial(n), n >= z),
+        (1, True))
 
 
     Compute cdf with specific 'x' and 'n' values as follows :

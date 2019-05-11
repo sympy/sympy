@@ -366,8 +366,9 @@ class Integral(AddWithLimits):
         >>> from sympy import Integral
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).doit()
-        Piecewise((x**3/log(x) - x/log(x),
-            (x > 1) | ((x >= 0) & (x < 1))), (2, True))
+        Piecewise(
+            (x**3/log(x) - x/log(x), (x > 1) | ((x >= 0) & (x < 1))),
+            (2, True))
 
         See Also
         ========
@@ -1458,7 +1459,8 @@ def integrate(*args, **kwargs):
     in interactive sessions and should be avoided in library code.
 
     >>> integrate(x**a*exp(-x), (x, 0, oo)) # same as conds='piecewise'
-    Piecewise((gamma(a + 1), re(a) > -1),
+    Piecewise(
+        (gamma(a + 1), re(a) > -1),
         (Integral(x**a*exp(-x), (x, 0, oo)), True))
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='none')
