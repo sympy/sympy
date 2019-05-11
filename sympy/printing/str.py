@@ -394,6 +394,13 @@ class StrPrinter(Printer):
                 use = trim
             return 'Permutation(%s)' % use
 
+    def _print_Piecewise(self, obj):
+        if len(obj.args) == 1:
+            return "Piecewise(%s)" % ', '.join(
+                map(self._print, obj.args))
+        return "Piecewise(\n    %s)" % ',\n    '.join(
+            map(self._print, obj.args))
+
     def _print_Subs(self, obj):
         expr, old, new = obj.args
         if len(obj.point) == 1:
