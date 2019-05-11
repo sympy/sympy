@@ -341,11 +341,11 @@ class Basic(with_metaclass(ManagedProperties)):
         return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
-        """`a != b`  -> Compare two symbolic trees and see whether they are different
+        """``a != b``  -> Compare two symbolic trees and see whether they are different
 
         this is the same as:
 
-        `a.compare(b) != 0`
+        ``a.compare(b) != 0``
 
         but faster
         """
