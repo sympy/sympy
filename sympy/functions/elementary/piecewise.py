@@ -1165,10 +1165,13 @@ def _clip(A, B, k):
     if a != c:
         p.append((a, c, -1))
     else:
+        # match at start
         pass
     if c != d:
         p.append((c, d, k))
     else:
+        # point in B that is not in A
+        # and will be reported below
         pass
     if b != d:
         if d == c and p and p[-1][-1] == -1:
@@ -1176,6 +1179,7 @@ def _clip(A, B, k):
         else:
             p.append((d, b, -1))
     else:
+        # match at end
         pass
 
     return p
