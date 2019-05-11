@@ -37,6 +37,11 @@ def _common_new(cls, function, *symbols, **assumptions):
 
     if symbols:
         limits, orientation = _process_limits(*symbols)
+        for i, limit in enumerate(limits):
+            if len(limit) == 4:
+                function = function.subs(limit[0], limit[-1])
+                limits[i].pop()
+                limits[i] = tuple(limits[i])
     else:
         # symbol not provided -- we can still try to compute a general form
         free = function.free_symbols
@@ -91,15 +96,13 @@ def _process_limits(*symbols):
                 limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
-            new_V = V
-            if len(V) > 1:
-                if isinstance(V[1], Range):
-                    if V[1].step != 1:
-                        raise ValueError("The step of Range must be 1.")
-                    new_V = (V[0], V[1].inf, V[1].sup)
-            V = sympify(flatten(new_V))
+            V = sympify(flatten(V))
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
+                if len(V) == 4:
+                    x, lo, hi, d = V
+                    V[1:] = 0, (hi - lo)//d - 1, d*x + lo
+
                 if len(V) == 2 and isinstance(V[1], Interval):
                     V[1:] = [V[1].start, V[1].end]
 
@@ -125,6 +128,9 @@ def _process_limits(*symbols):
                     continue
                 elif len(V) == 2:
                     limits.append(Tuple(newsymbol, V[1]))
+                    continue
+                elif len(V) == 4:
+                    limits.append(V)
                     continue
 
         raise ValueError('Invalid limits given: %s' % str(symbols))
