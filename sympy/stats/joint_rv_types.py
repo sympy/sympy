@@ -256,7 +256,7 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
 
 
 #-------------------------------------------------------------------------------
-# Multivariate Beta distribution ---------------------------------------------------------
+# Multivariate Beta/Dirichlet distribution ---------------------------------------------------------
 
 class MultivariateBetaDistribution(JointDistribution):
 
@@ -326,6 +326,9 @@ def MultivariateBeta(syms, *alpha):
     return multivariate_rv(MultivariateBetaDistribution, syms, alpha[0])
 
 Dirichlet = MultivariateBeta
+
+#-------------------------------------------------------------------------------
+# Multivariate Ewens distribution ---------------------------------------------------------
 
 class MultivariateEwensDistribution(JointDistribution):
 
