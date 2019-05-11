@@ -1,8 +1,12 @@
 from __future__ import print_function, division
 
 from sympy.core import Mul, sympify
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
-from sympy.strategies import unpack, flatten, condition, exhaust, do_one
+from sympy.matrices.expressions.matexpr import (
+    MatrixExpr, ShapeError, Identity, OneMatrix, ZeroMatrix
+)
+from sympy.strategies import (
+    unpack, flatten, condition, exhaust, do_one, rm_id, sort
+)
 
 
 def hadamard_product(*matrices):
@@ -36,15 +40,23 @@ class HadamardProduct(MatrixExpr):
     """
     Elementwise product of matrix expressions
 
-    This is a symbolic object that simply stores its argument without
-    evaluating it. To actually compute the product, use the function
-    ``hadamard_product()``.
+    Examples
+    ========
+
+    Hadamard product for matrix symbols:
 
     >>> from sympy.matrices import hadamard_product, HadamardProduct, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
     >>> isinstance(hadamard_product(A, B), HadamardProduct)
     True
+
+    Notes
+    =====
+
+    This is a symbolic object that simply stores its argument without
+    evaluating it. To actually compute the product, use the function
+    ``hadamard_product()`` or ``HadamardProduct.doit``
     """
     is_HadamardProduct = True
 
@@ -53,6 +65,7 @@ class HadamardProduct(MatrixExpr):
         check = kwargs.get('check', True)
         if check:
             validate(*args)
+
         return super(HadamardProduct, cls).__new__(cls, *args)
 
     @property
@@ -119,11 +132,141 @@ def validate(*args):
         if A.shape != B.shape:
             raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
-rules = (unpack,
-         flatten)
 
-canonicalize = exhaust(condition(lambda x: isinstance(x, HadamardProduct),
-                                 do_one(*rules)))
+# TODO Implement algorithm for rewriting Hadamard product as diagonal matrix
+# if matmul identy matrix is multiplied.
+def canonicalize(x):
+    """Canonicalize the Hadamard product ``x`` with mathematical properties.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.expressions import MatrixSymbol, HadamardProduct
+    >>> from sympy.matrices.expressions import OneMatrix, ZeroMatrix
+    >>> from sympy.matrices.expressions.hadamard import canonicalize
+
+    >>> A = MatrixSymbol('A', 2, 2)
+    >>> B = MatrixSymbol('B', 2, 2)
+    >>> C = MatrixSymbol('C', 2, 2)
+
+    Hadamard product associativity:
+
+    >>> X = HadamardProduct(A, HadamardProduct(B, C))
+    >>> X
+    A.*(B.*C)
+    >>> canonicalize(X)
+    A.*B.*C
+
+    Hadamard product commutativity:
+
+    >>> X = HadamardProduct(A, B)
+    >>> Y = HadamardProduct(B, A)
+    >>> X
+    A.*B
+    >>> Y
+    B.*A
+    >>> canonicalize(X)
+    A.*B
+    >>> canonicalize(Y)
+    A.*B
+
+    Hadamard product identity:
+
+    >>> X = HadamardProduct(A, OneMatrix(2, 2))
+    >>> X
+    A.*OneMatrix(2, 2)
+    >>> canonicalize(X)
+    A
+
+    Absorbing element of Hadamard product:
+
+    >>> X = HadamardProduct(A, ZeroMatrix(2, 2))
+    >>> X
+    A.*0
+    >>> canonicalize(X)
+    0
+
+    Rewriting to Hadamard Power
+
+    >>> X = HadamardProduct(A, A, A)
+    >>> X
+    A.*A.*A
+    >>> canonicalize(X)
+    A.**3
+
+    Notes
+    =====
+
+    As the Hadamard product is associative, nested products can be flattened.
+
+    The Hadamard product is commutative so that factors can be sorted for
+    canonical form.
+
+    A matrix of only ones is an identity for Hadamard product,
+    so every matrices of only ones can be removed.
+
+    Any zero matrix will make the whole product a zero matrix.
+
+    Duplicate elements can be collected and rewritten as HadamardPower
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Hadamard_product_(matrices)
+    """
+    from sympy.core.compatibility import default_sort_key
+
+    # Associativity
+    rule = condition(
+            lambda x: isinstance(x, HadamardProduct),
+            flatten
+        )
+    fun = exhaust(rule)
+    x = fun(x)
+
+    # Identity
+    fun = condition(
+            lambda x: isinstance(x, HadamardProduct),
+            rm_id(lambda x: isinstance(x, OneMatrix))
+        )
+    x = fun(x)
+
+    # Absorbing by Zero Matrix
+    def absorb(x):
+        if any(isinstance(c, ZeroMatrix) for c in x.args):
+            return ZeroMatrix(*x.shape)
+        else:
+            return x
+    fun = condition(
+            lambda x: isinstance(x, HadamardProduct),
+            absorb
+        )
+    x = fun(x)
+
+    # Rewriting with HadamardPower
+    if isinstance(x, HadamardProduct):
+        from collections import Counter
+        tally = Counter(x.args)
+
+        new_arg = []
+        for base, exp in tally.items():
+            if exp == 1:
+                new_arg.append(base)
+            else:
+                new_arg.append(HadamardPower(base, exp))
+
+        x = HadamardProduct(*new_arg)
+
+    # Commutativity
+    fun = condition(
+            lambda x: isinstance(x, HadamardProduct),
+            sort(default_sort_key)
+        )
+    x = fun(x)
+
+    # Unpacking
+    x = unpack(x)
+    return x
 
 
 def hadamard_power(base, exp):
