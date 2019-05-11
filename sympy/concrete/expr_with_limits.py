@@ -15,6 +15,7 @@ from sympy.logic.boolalg import BooleanFunction
 from sympy.matrices import Matrix
 from sympy.tensor.indexed import Idx
 from sympy.sets.sets import Interval
+from sympy.sets.fancysets import Range
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 
@@ -90,7 +91,13 @@ def _process_limits(*symbols):
                 limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
-            V = sympify(flatten(V))
+            new_V = V
+            if len(V) > 1:
+                if isinstance(V[1], Range):
+                    if V[1].step != 1:
+                        raise ValueError("The step of Range must be 1.")
+                    new_V = (V[0], V[1].inf, V[1].sup)
+            V = sympify(flatten(new_V))
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
                 if len(V) == 2 and isinstance(V[1], Interval):
