@@ -82,12 +82,15 @@ def _sort_gens(gens, **args):
             except ValueError:
                 pass
 
-        name, index = _re_gen.match(gen).groups()
-
-        if index:
-            index = int(index)
+        if '\n' in gen:
+            # multiline string form (Matrix, Piecewise, ...)
+            name, index = gen, 0
         else:
-            index = 0
+            name, index = _re_gen.groups()
+            if index:
+                index = int(index)
+            else:
+                index = 0
 
         try:
             return ( gens_order[name], name, index)
