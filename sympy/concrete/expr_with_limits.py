@@ -15,7 +15,6 @@ from sympy.logic.boolalg import BooleanFunction
 from sympy.matrices import Matrix
 from sympy.tensor.indexed import Idx
 from sympy.sets.sets import Interval
-from sympy.sets.fancysets import Range
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 
