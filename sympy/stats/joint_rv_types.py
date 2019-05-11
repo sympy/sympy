@@ -263,7 +263,7 @@ class MultinomialDistribution(JointDistribution):
                         "number of trials must be a positve integer")
         for p_k in p:
             _value_check((p_k >= 0) != False,
-                        "probability must be at least positive symbol.")
+                        "probability must be at least a positive symbol.")
 
     @property
     def set(self):
@@ -315,3 +315,71 @@ def Multinomial(syms, n, *p):
     if not isinstance(p[0], list):
         p = (list(p), )
     return multivariate_rv(MultinomialDistribution, syms, n, p[0])
+
+#-------------------------------------------------------------------------------
+# Negative Multinomial Distribution ---------------------------------------------------------
+
+class NegativeMultinomialDistribution(JointDistribution):
+
+    _argnames = ['k0', 'p']
+    is_Continuous=False
+    is_Discrete = True
+
+    def check(self, k0, p):
+        _value_check(((k0 > 0) != False) and isinstance(k0, Integer),
+                        "number of failures must be a positve integer")
+        for p_k in p:
+            _value_check((p_k >= 0) != False,
+                        "probability must be at least a positive symbol.")
+
+    @property
+    def set(self):
+        return S.Naturals0**len(self.p)
+
+    def pdf(self, *k):
+        k0, p = self.k0, self.p
+        term_1 = (gamma(k0 + sum(k))*(1 - sum(p))**k0)/gamma(k0)
+        term_2 = Mul.fromiter([pi**ki/factorial(ki) for pi, ki in zip(p, k)])
+        return term_1*term_2
+
+def NegativeMultinomial(syms, k0, *p):
+    """
+    Creates a discrete random variable with Negative Multinomial Distribution.
+
+    The density of the said distribution can be found at [1].
+
+    Parameters
+    ==========
+    k0: postive integer of class Integer,
+        number of failures before the experiment is stopped
+    p: event probabilites, >= 0 and <= 1
+
+    Returns
+    =======
+    A RandomSymbol.
+
+    Examples
+    ========
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv import marginal_distribution
+    >>> from sympy.stats.joint_rv_types import NegativeMultinomial
+    >>> from sympy import symbols
+    >>> x1, x2, x3 = symbols('x1, x2, x3', nonnegative=True, integer=True)
+    >>> p1, p2, p3 = symbols('p1, p2, p3', positive=True)
+    >>> N = NegativeMultinomial('M', 3, p1, p2, p3)
+    >>> N_c = NegativeMultinomial('M', 3, 0.1, 0.1, 0.1)
+    >>> density(N)(x1, x2, x3)
+    p1**x1*p2**x2*p3**x3*(-p1 - p2 - p3 + 1)**3*gamma(x1 + x2 + x3 + 3)/
+    (2*factorial(x1)*factorial(x2)*factorial(x3))
+    >>> marginal_distribution(N_c, N_c[0])(1).evalf().round(2)
+    0.25
+
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Negative_multinomial_distribution
+    .. [2] http://mathworld.wolfram.com/NegativeBinomialDistribution.html
+    """
+    if not isinstance(p[0], list):
+        p = (list(p), )
+    return multivariate_rv(NegativeMultinomialDistribution, syms, k0, p[0])
