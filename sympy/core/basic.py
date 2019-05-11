@@ -341,11 +341,11 @@ class Basic(with_metaclass(ManagedProperties)):
         return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
-        """a != b  -> Compare two symbolic trees and see whether they are different
+        """`a != b`  -> Compare two symbolic trees and see whether they are different
 
         this is the same as:
 
-        a.compare(b) != 0
+        `a.compare(b) != 0`
 
         but faster
         """
@@ -1178,7 +1178,6 @@ class Basic(with_metaclass(ManagedProperties)):
 
         See Also
         ========
-
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
         subs: substitution of subexpressions as defined by the objects
@@ -1324,12 +1323,12 @@ class Basic(with_metaclass(ManagedProperties)):
             When object of type ``type`` is found, replace it with the
             result of passing its argument(s) to ``newtype``.
 
-        >>> f.replace(sin, cos)
-        log(cos(x)) + tan(cos(x**2))
-        >>> sin(x).replace(sin, cos, map=True)
-        (cos(x), {sin(x): cos(x)})
-        >>> (x*y).replace(Mul, Add)
-        x + y
+            >>> f.replace(sin, cos)
+            log(cos(x)) + tan(cos(x**2))
+            >>> sin(x).replace(sin, cos, map=True)
+            (cos(x), {sin(x): cos(x)})
+            >>> (x*y).replace(Mul, Add)
+            x + y
 
         1.2. type -> func
             obj.replace(type, func)
@@ -1338,10 +1337,10 @@ class Basic(with_metaclass(ManagedProperties)):
             argument(s). ``func`` must be written to handle the number
             of arguments of ``type``.
 
-        >>> f.replace(sin, lambda arg: sin(2*arg))
-        log(sin(2*x)) + tan(sin(2*x**2))
-        >>> (x*y).replace(Mul, lambda *args: sin(2*Mul(*args)))
-        sin(2*x*y)
+            >>> f.replace(sin, lambda arg: sin(2*arg))
+            log(sin(2*x)) + tan(sin(2*x**2))
+            >>> (x*y).replace(Mul, lambda *args: sin(2*Mul(*args)))
+            sin(2*x*y)
 
         2.1. pattern -> expr
             obj.replace(pattern(wild), expr(wild))
@@ -1349,29 +1348,29 @@ class Basic(with_metaclass(ManagedProperties)):
             Replace subexpressions matching ``pattern`` with the expression
             written in terms of the Wild symbols in ``pattern``.
 
-        >>> a, b = map(Wild, 'ab')
-        >>> f.replace(sin(a), tan(a))
-        log(tan(x)) + tan(tan(x**2))
-        >>> f.replace(sin(a), tan(a/2))
-        log(tan(x/2)) + tan(tan(x**2/2))
-        >>> f.replace(sin(a), a)
-        log(x) + tan(x**2)
-        >>> (x*y).replace(a*x, a)
-        y
+            >>> a, b = map(Wild, 'ab')
+            >>> f.replace(sin(a), tan(a))
+            log(tan(x)) + tan(tan(x**2))
+            >>> f.replace(sin(a), tan(a/2))
+            log(tan(x/2)) + tan(tan(x**2/2))
+            >>> f.replace(sin(a), a)
+            log(x) + tan(x**2)
+            >>> (x*y).replace(a*x, a)
+            y
 
             Matching is exact by default when more than one Wild symbol
             is used: matching fails unless the match gives non-zero
             values for all Wild symbols:
 
-        >>> (2*x + y).replace(a*x + b, b - a)
-        y - 2
-        >>> (2*x).replace(a*x + b, b - a)
-        2*x
+            >>> (2*x + y).replace(a*x + b, b - a)
+            y - 2
+            >>> (2*x).replace(a*x + b, b - a)
+            2*x
 
             When set to False, the results may be non-intuitive:
 
-        >>> (2*x).replace(a*x + b, b - a, exact=False)
-        2/x
+            >>> (2*x).replace(a*x + b, b - a, exact=False)
+            2/x
 
         2.2. pattern -> func
             obj.replace(pattern(wild), lambda wild: expr(wild))
@@ -1379,8 +1378,8 @@ class Basic(with_metaclass(ManagedProperties)):
             All behavior is the same as in 2.1 but now a function in terms of
             pattern variables is used rather than an expression:
 
-        >>> f.replace(sin(a), lambda a: sin(2*a))
-        log(sin(2*x)) + tan(sin(2*x**2))
+            >>> f.replace(sin(a), lambda a: sin(2*a))
+            log(sin(2*x)) + tan(sin(2*x**2))
 
         3.1. func -> func
             obj.replace(filter, func)
@@ -1388,16 +1387,16 @@ class Basic(with_metaclass(ManagedProperties)):
             Replace subexpression ``e`` with ``func(e)`` if ``filter(e)``
             is True.
 
-        >>> g = 2*sin(x**3)
-        >>> g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)
-        4*sin(x**9)
+            >>> g = 2*sin(x**3)
+            >>> g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)
+            4*sin(x**9)
 
         The expression itself is also targeted by the query but is done in
         such a fashion that changes are not made twice.
 
-        >>> e = x*(x*y + 1)
-        >>> e.replace(lambda x: x.is_Mul, lambda x: 2*x)
-        2*x*(2*x*y + 1)
+            >>> e = x*(x*y + 1)
+            >>> e.replace(lambda x: x.is_Mul, lambda x: 2*x)
+            2*x*(2*x*y + 1)
 
         When matching a single symbol, `exact` will default to True, but
         this may or may not be the behavior that is desired:
