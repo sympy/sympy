@@ -38,6 +38,8 @@ def test_transpose():
 
 def test_transpose_MatAdd_MatMul():
     # Issue 16807
+    from sympy.functions.elementary.trigonometric import cos
+
     x = symbols('x')
     M = MatrixSymbol('M', 3, 3)
     N = MatrixSymbol('N', 3, 3)
