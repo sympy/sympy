@@ -445,6 +445,14 @@ def test_piecewise_simplify():
     f = Function('f')
     assert Piecewise(*args).simplify() == ans
     assert Piecewise(*args.subs(x, f(x))).simplify() == ans.subs(x, f(x))
+    # 16804
+    # check that simplify doesn't fail and that it doesn't
+    # collapse to 0
+    assert Piecewise(
+        (0, (x > 3) | (x < 0) | ((x > 0) & (x < 3))),
+        (-1, Ne(x, 0)),
+        (0, Ne(x, 3)),
+        (-S(1)/2, True)).simplify().subs(x, 3) == -1
 
 
 def test_piecewise_solve():
