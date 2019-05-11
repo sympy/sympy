@@ -109,7 +109,8 @@ class MatMul(MatrixExpr, Mul):
         return coeff, MatMul(*matrices)
 
     def _eval_transpose(self):
-        return MatMul(*[transpose(arg) for arg in self.args[::-1]]).doit()
+        coeff, matrices = self.as_coeff_matrices()
+        return MatMul(coeff, *[transpose(arg) for arg in matrices]).doit()
 
     def _eval_adjoint(self):
         return MatMul(*[adjoint(arg) for arg in self.args[::-1]]).doit()
