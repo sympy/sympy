@@ -307,7 +307,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters",
     "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
     "Liouville",
-    "order_reducible",
+    "nth_order_reducible",
     "2nd_power_series_ordinary",
     "2nd_power_series_regular",
     "nth_algebraic_Integral",
@@ -1358,9 +1358,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         # repeated integration e.g.:
         # `d^2/dx^2(y) + x*d/dx(y) = constant
         #f'(x) must be finite for this to work
-        r = _order_reducible_match(reduced_eq, func)
+        r = _nth_order_reducible_match(reduced_eq, func)
         if r:
-            matching_hints['order_reducible'] = r
+            matching_hints['nth_order_reducible'] = r
 
         # Any ODE that can be solved with a combination of algebra and
         # integrals e.g.:
@@ -4016,7 +4016,7 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
     return frobdict
 
-def _order_reducible_match(eq, func):
+def _nth_order_reducible_match(eq, func):
     r"""
     Matches any differential equation that can be rewritten with a smaller
     order. Only derivatives of ``func`` alone, wrt a single variable,
@@ -4037,12 +4037,29 @@ def _order_reducible_match(eq, func):
         return
     return {'n': smallest}
 
-def ode_order_reducible(eq, func, order, match):
+def ode_nth_order_reducible(eq, func, order, match):
     r"""
-    Substitutes lowest order derivate in equation to function with order
-    of derivative as `f^(n)(x) = g(x)`, where `n` (`match['n']`)
-    is the least-order derivative. The solution for `f(x)` is the n-times
-    integrated value of `g(x)`.
+    Solves ODEs that only involve derivatives of the dependent variable using
+    a substitution of the form `f^n(x) = g(x)`.
+
+    For example any second order ODE of the form `f''(x) = h(f'(x), x)` can be
+    transformed into a pair of 1st order ODEs `g'(x) = h(g(x), x)` and
+    `f'(x) = g(x)`. Usually the 1st order ODE for `g` is easier to solve. If
+    that gives an explicit solution for `g` then `f` is found simply by
+    integration.
+
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2))
+    >>> dsolve(eq, f(x), hint='nth_order_reducible')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
+
     """
     x = func.args[0]
     f = func.func
@@ -4057,7 +4074,18 @@ def ode_order_reducible(eq, func, order, match):
     w = f(x).diff(x, n)
     geq = eq.subs(w, g(x))
     gsol = dsolve(geq, g(x))
-    fsol = dsolve(gsol.subs(g(x), w), f(x))  # or do integration n times
+
+    if not isinstance(gsol, list):
+        gsol = [gsol]
+
+    # Might be multiple solutions to the reduced ODE:
+    fsol = []
+    for gsoli in gsol:
+        fsoli = dsolve(gsoli.subs(g(x), w), f(x))  # or do integration n times
+        fsol.append(fsoli)
+
+    if len(fsol) == 1:
+        fsol = fsol[0]
 
     return fsol
 
@@ -4104,11 +4132,14 @@ def _nth_algebraic_match(eq, func):
     var = func.args[0]
     subs_eqn = replace(eq, var)
     try:
-        solns = solve(subs_eqn, func)
+        # turn off simplification to protect Integrals that have
+        # _t instead of fx in them and would otherwise factor
+        # as t_*Integral(1, x)
+        solns = solve(subs_eqn, func, simplify=False)
     except NotImplementedError:
         solns = []
 
-    solns = [unreplace(soln, var) for soln in solns]
+    solns = [simplify(unreplace(soln, var)) for soln in solns]
     solns = [Equality(func, soln) for soln in solns]
     return {'var':var, 'solutions':solns}
 
@@ -4588,7 +4619,7 @@ def ode_almost_linear(eq, func, order, match):
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, y, n
         >>> f, g, k, l = map(Function, ['f', 'g', 'k', 'l'])
-        >>> genform = Eq(f(x)*(l(y).diff(y)) + k(x)*l(y) + g(x))
+        >>> genform = Eq(f(x)*(l(y).diff(y)) + k(x)*l(y) + g(x), 0)
         >>> pprint(genform)
              d
         f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
@@ -6269,7 +6300,7 @@ def lie_heuristic_bivariate(match, comp=False):
                 soldict = solve(polyy.values(), *symset)
                 if isinstance(soldict, list):
                     soldict = soldict[0]
-                if any(x for x in soldict.values()):
+                if any(soldict.values()):
                     xired = xieq.subs(soldict)
                     etared = etaeq.subs(soldict)
                     # Scaling is done by substituting one for the parameters
@@ -6335,7 +6366,7 @@ def lie_heuristic_chi(match, comp=False):
                     soldict = solve(cpoly.values(), *solsyms)
                     if isinstance(soldict, list):
                         soldict = soldict[0]
-                    if any(x for x in soldict.values()):
+                    if any(soldict.values()):
                         chieq = chieq.subs(soldict)
                         dict_ = dict((sym, 1) for sym in solsyms)
                         chieq = chieq.subs(dict_)

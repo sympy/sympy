@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Number
-from sympy.core import Mul, Basic, sympify, Add
+from sympy.core import Mul, Basic, sympify
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
 from sympy.matrices.expressions.transpose import transpose
@@ -12,7 +12,7 @@ from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.matrices import MatrixBase
 
-
+# XXX: MatMul should perhaps not subclass directly from Mul
 class MatMul(MatrixExpr, Mul):
     """
     A product of matrix expressions
@@ -55,7 +55,7 @@ class MatMul(MatrixExpr, Mul):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
 
-    def _entry(self, i, j, expand=True):
+    def _entry(self, i, j, expand=True, **kwargs):
         from sympy import Dummy, Sum, Mul, ImmutableMatrix, Integer
 
         coeff, matrices = self.as_coeff_matrices()
@@ -67,11 +67,21 @@ class MatMul(MatrixExpr, Mul):
         ind_ranges = [None]*(len(matrices) - 1)
         indices[0] = i
         indices[-1] = j
+
+        def f():
+            counter = 1
+            while True:
+                yield Dummy("i_%i" % counter)
+                counter += 1
+
+        dummy_generator = kwargs.get("dummy_generator", f())
+
         for i in range(1, len(matrices)):
-            indices[i] = Dummy("i_%i" % i)
+            indices[i] = next(dummy_generator)
+
         for i, arg in enumerate(matrices[:-1]):
             ind_ranges[i] = arg.shape[1] - 1
-        matrices = [arg[indices[i], indices[i+1]] for i, arg in enumerate(matrices)]
+        matrices = [arg._entry(indices[i], indices[i+1], dummy_generator=dummy_generator) for i, arg in enumerate(matrices)]
         expr_in_sum = Mul.fromiter(matrices)
         if any(v.has(ImmutableMatrix) for v in matrices):
             expand = True
@@ -134,7 +144,6 @@ class MatMul(MatrixExpr, Mul):
         else:
             args = self.args
         # treat scalar*MatrixSymbol or scalar*MatPow separately
-        mats = [arg for arg in self.args if arg.is_Matrix]
         expr = canonicalize(MatMul(*args))
         return expr
 
@@ -152,8 +161,14 @@ class MatMul(MatrixExpr, Mul):
             left_args = self.args[:ind]
             right_args = self.args[ind+1:]
 
-            right_mat = MatMul.fromiter(right_args)
-            left_rev = MatMul.fromiter([Transpose(i).doit() if i.is_Matrix else i for i in reversed(left_args)])
+            if right_args:
+                right_mat = MatMul.fromiter(right_args)
+            else:
+                right_mat = Identity(self.shape[1])
+            if left_args:
+                left_rev = MatMul.fromiter([Transpose(i).doit() if i.is_Matrix else i for i in reversed(left_args)])
+            else:
+                left_rev = Identity(self.shape[0])
 
             d = self.args[ind]._eval_derivative_matrix_lines(x)
             for i in d:

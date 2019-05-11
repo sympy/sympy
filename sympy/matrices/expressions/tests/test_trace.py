@@ -6,6 +6,7 @@ from sympy.matrices.expressions import (
     Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Trace,
     ZeroMatrix, trace, MatPow, MatAdd, MatMul
 )
+from sympy.matrices.expressions.matexpr import OneMatrix
 from sympy.utilities.pytest import raises, XFAIL
 
 n = symbols('n', integer=True)
@@ -30,6 +31,9 @@ def test_Trace():
     # Some easy simplifications
     assert trace(Identity(5)) == 5
     assert trace(ZeroMatrix(5, 5)) == 0
+    assert trace(OneMatrix(1, 1)) == 1
+    assert trace(OneMatrix(2, 2)) == 2
+    assert trace(OneMatrix(n, n)) == n
     assert trace(2*A*B) == 2*Trace(A*B)
     assert trace(A.T) == trace(A)
 

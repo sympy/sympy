@@ -13,7 +13,7 @@ from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
     ZeroMatrix, GenericZeroMatrix)
 from sympy.utilities import default_sort_key, sift
 
-
+# XXX: MatAdd should perhaps not subclass directly from Add
 class MatAdd(MatrixExpr, Add):
     """A Sum of Matrix Expressions
 
@@ -52,8 +52,8 @@ class MatAdd(MatrixExpr, Add):
     def shape(self):
         return self.args[0].shape
 
-    def _entry(self, i, j, expand=None):
-        return Add(*[arg._entry(i, j) for arg in self.args])
+    def _entry(self, i, j, **kwargs):
+        return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])
 
     def _eval_transpose(self):
         return MatAdd(*[transpose(arg) for arg in self.args]).doit()

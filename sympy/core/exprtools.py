@@ -322,7 +322,6 @@ class Factors(object):
         """
         if isinstance(factors, (SYMPY_INTS, float)):
             factors = S(factors)
-
         if isinstance(factors, Factors):
             factors = factors.factors.copy()
         elif factors is None or factors is S.One:
@@ -355,6 +354,13 @@ class Factors(object):
             for _ in range(i):
                 c.remove(I)
             factors = dict(Mul._from_args(c).as_powers_dict())
+            # Handle all rational Coefficients
+            for f in list(factors.keys()):
+                if isinstance(f, Rational) and not isinstance(f, Integer):
+                    p, q = Integer(f.p), Integer(f.q)
+                    factors[p] = (factors[p] if p in factors else 0) + factors[f]
+                    factors[q] = (factors[q] if q in factors else 0) - factors[f]
+                    factors.pop(f)
             if i:
                 factors[I] = S.One*i
             if nc:
@@ -1098,6 +1104,54 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     return terms.func(*[handle(i) for i in terms.args])
 
 
+def _factor_sum_int(expr, **kwargs):
+    """Return Sum or Integral object with factors that are not
+    in the wrt variables removed. In cases where there are additive
+    terms in the function of the object that are independent, the
+    object will be separated into two objects.
+
+    Examples
+    ========
+
+    >>> from sympy import Sum, factor_terms
+    >>> from sympy.abc import x, y
+    >>> factor_terms(Sum(x + y, (x, 1, 3)))
+    y*Sum(1, (x, 1, 3)) + Sum(x, (x, 1, 3))
+    >>> factor_terms(Sum(x*y, (x, 1, 3)))
+    y*Sum(x, (x, 1, 3))
+
+    Notes
+    =====
+
+    If a function in the summand or integrand is replaced
+    with a symbol, then this simplification should not be
+    done or else an incorrect result will be obtained when
+    the symbol is replaced with an expression that depends
+    on the variables of summation/integration:
+
+    >>> eq = Sum(y, (x, 1, 3))
+    >>> factor_terms(eq).subs(y, x).doit()
+    3*x
+    >>> eq.subs(y, x).doit()
+    6
+    """
+    result = expr.function
+    if result == 0:
+        return S.Zero
+    limits = expr.limits
+
+    # get the wrt variables
+    wrt = set([i.args[0] for i in limits])
+
+    # factor out any common terms that are independent of wrt
+    f = factor_terms(result, **kwargs)
+    i, d = f.as_independent(*wrt)
+    if isinstance(f, Add):
+        return i * expr.func(1, *limits) + expr.func(d, *limits)
+    else:
+        return i * expr.func(d, *limits)
+
+
 def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
@@ -1153,7 +1207,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     """
     def do(expr):
         from sympy.concrete.summations import Sum
-        from sympy.simplify.simplify import factor_sum
+        from sympy.integrals.integrals import Integral
         is_iterable = iterable(expr)
 
         if not isinstance(expr, Basic) or expr.is_Atom:
@@ -1169,8 +1223,10 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
                 return expr
             return expr.func(*newargs)
 
-        if isinstance(expr, Sum):
-            return factor_sum(expr, radical=radical, clear=clear, fraction=fraction, sign=sign)
+        if isinstance(expr, (Sum, Integral)):
+            return _factor_sum_int(expr,
+                radical=radical, clear=clear,
+                fraction=fraction, sign=sign)
 
         cont, p = expr.as_content_primitive(radical=radical, clear=clear)
         if p.is_Add:

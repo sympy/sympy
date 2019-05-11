@@ -1,6 +1,7 @@
 import math
 from sympy import (
-    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Symbol, Tuple, Lt, nan, oo
+    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin,
+    symbols, Symbol, Tuple, Lt, nan, oo
 )
 from sympy.core.relational import StrictLessThan
 from sympy.utilities.pytest import raises, XFAIL
@@ -493,8 +494,9 @@ def test_FloatType():
     assert isinstance(f64.cast_check(3), (Float, float))
 
     assert f64.cast_nocheck(oo) == float('inf')
-    assert f64.cast_nocheck(-oo) == -float('inf')
-    assert f64.cast_nocheck(-oo) == -float('inf')
+    assert f64.cast_nocheck(-oo) == float('-inf')
+    assert f64.cast_nocheck(float(oo)) == float('inf')
+    assert f64.cast_nocheck(float(-oo)) == float('-inf')
     assert math.isnan(f64.cast_nocheck(nan))
 
     assert f32 != f64

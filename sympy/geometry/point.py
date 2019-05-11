@@ -137,7 +137,7 @@ class Point(GeometryEntity):
                 Point requires 2 or more coordinates or
                 keyword `dim` > 1.'''))
         if len(coords) != dim:
-            message = ("Dimension of {} needs to be changed"
+            message = ("Dimension of {} needs to be changed "
                        "from {} to {}.").format(coords, len(coords), dim)
             if on_morph == 'ignore':
                 pass
@@ -149,7 +149,7 @@ class Point(GeometryEntity):
                 raise ValueError(filldedent('''
                         on_morph value should be 'error',
                         'warn' or 'ignore'.'''))
-        if any(i for i in coords[dim:]):
+        if any(coords[dim:]):
             raise ValueError('Nonzero coordinates cannot be removed.')
         if any(a.is_number and im(a) for a in coords):
             raise ValueError('Imaginary coordinates are not permitted.')

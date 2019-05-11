@@ -1137,6 +1137,10 @@ def test_print_EmptySet():
     assert mpp.doprint(EmptySet()) == '<mo>&#x2205;</mo>'
 
 
+def test_print_UniversalSet():
+    assert mpp.doprint(S.UniversalSet) == '<mo>&#x1D54C;</mo>'
+
+
 def test_print_SetOp():
     f1 = FiniteSet(x, 1, 3)
     f2 = FiniteSet(y, 2, 4)
@@ -1374,6 +1378,45 @@ def test_print_matrix_symbol():
         '<mi mathvariant="bold">A</mi>'
     # No effect in content printer
     assert mathml(A, mat_symbol_style="bold") == '<ci>A</ci>'
+
+
+def test_print_hadamard():
+    from sympy.matrices.expressions import HadamardProduct
+    from sympy.matrices.expressions import Transpose
+
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+
+    assert mathml(HadamardProduct(X, Y*Y), printer="presentation") == \
+        '<mrow>' \
+        '<mi>X</mi>' \
+        '<mo>&#x2218;</mo>' \
+        '<msup><mi>Y</mi><mn>2</mn></msup>' \
+        '</mrow>'
+
+    assert mathml(HadamardProduct(X, Y)*Y, printer="presentation") == \
+        '<mrow>' \
+        '<mfenced>' \
+        '<mrow><mi>X</mi><mo>&#x2218;</mo><mi>Y</mi></mrow>' \
+        '</mfenced>' \
+        '<mo>&InvisibleTimes;</mo><mi>Y</mi>' \
+        '</mrow>'
+
+    assert mathml(HadamardProduct(X, Y, Y), printer="presentation") == \
+        '<mrow>' \
+        '<mi>X</mi><mo>&#x2218;</mo>' \
+        '<mi>Y</mi><mo>&#x2218;</mo>' \
+        '<mi>Y</mi>' \
+        '</mrow>'
+
+    assert mathml(
+        Transpose(HadamardProduct(X, Y)), printer="presentation") == \
+            '<msup>' \
+            '<mfenced>' \
+            '<mrow><mi>X</mi><mo>&#x2218;</mo><mi>Y</mi></mrow>' \
+            '</mfenced>' \
+            '<mo>T</mo>' \
+            '</msup>'
 
 
 def test_print_random_symbol():

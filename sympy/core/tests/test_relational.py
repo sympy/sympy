@@ -1,7 +1,7 @@
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
     Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
-    log, cos, sin, Add, floor, ceiling)
+    log, cos, sin, Add, floor, ceiling, trigsimp)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -87,10 +87,11 @@ def test_wrappers():
 
 
 def test_Eq():
-    assert Eq(x**2) == Eq(x**2, 0)
-    assert Eq(x**2) != Eq(x**2, 1)
 
     assert Eq(x, x)  # issue 5719
+
+    with warns_deprecated_sympy():
+        assert Eq(x) == Eq(x, 0)
 
     # issue 6116
     p = Symbol('p', positive=True)
@@ -183,18 +184,20 @@ def test_doit():
 def test_new_relational():
     x = Symbol('x')
 
-    assert Eq(x) == Relational(x, 0)       # None ==> Equality
-    assert Eq(x) == Relational(x, 0, '==')
-    assert Eq(x) == Relational(x, 0, 'eq')
-    assert Eq(x) == Equality(x, 0)
+    assert Eq(x, 0) == Relational(x, 0)       # None ==> Equality
+    assert Eq(x, 0) == Relational(x, 0, '==')
+    assert Eq(x, 0) == Relational(x, 0, 'eq')
+    assert Eq(x, 0) == Equality(x, 0)
+
+    assert Eq(x, 0) != Relational(x, 1)       # None ==> Equality
+    assert Eq(x, 0) != Relational(x, 1, '==')
+    assert Eq(x, 0) != Relational(x, 1, 'eq')
+    assert Eq(x, 0) != Equality(x, 1)
+
     assert Eq(x, -1) == Relational(x, -1)       # None ==> Equality
     assert Eq(x, -1) == Relational(x, -1, '==')
     assert Eq(x, -1) == Relational(x, -1, 'eq')
     assert Eq(x, -1) == Equality(x, -1)
-    assert Eq(x) != Relational(x, 1)       # None ==> Equality
-    assert Eq(x) != Relational(x, 1, '==')
-    assert Eq(x) != Relational(x, 1, 'eq')
-    assert Eq(x) != Equality(x, 1)
     assert Eq(x, -1) != Relational(x, 1)       # None ==> Equality
     assert Eq(x, -1) != Relational(x, 1, '==')
     assert Eq(x, -1) != Relational(x, 1, 'eq')
@@ -881,3 +884,17 @@ def test_improved_canonical():
     test_different_forms(generate_forms(pi - 5*y < -x + 2*y**2 - 7))
 
     assert (pi >= x).canonical == (x <= pi)
+
+
+def test_trigsimp():
+    # issue 16736
+    s, c = sin(2*x), cos(2*x)
+    eq = Eq(s, c)
+    assert trigsimp(eq) == eq  # no rearrangement of sides
+    # simplification of sides might result in
+    # an unevaluated Eq
+    changed = trigsimp(Eq(s + c, sqrt(2)))
+    assert isinstance(changed, Eq)
+    assert changed.subs(x, pi/8) is S.true
+    # or an evaluated one
+    assert trigsimp(Eq(cos(x)**2 + sin(x)**2, 1)) is S.true

@@ -62,7 +62,6 @@ known_functions = _known_functions_C9X
 known_functions_C99 = dict(_known_functions_C9X, **{
     'exp2': 'exp2',
     'expm1': 'expm1',
-    'expm1': 'expm1',
     'log10': 'log10',
     'log2': 'log2',
     'log1p': 'log1p',

@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+import numbers as nums
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
                    Integer, S, factorial, Catalan, EulerGamma, GoldenRatio,
@@ -19,10 +21,11 @@ from sympy.utilities.pytest import XFAIL, raises
 from mpmath import mpf
 from mpmath.rational import mpq
 import mpmath
-
-
-
+from sympy import numbers
 t = Symbol('t', real=False)
+
+_ninf = float(-oo)
+_inf = float(oo)
 
 def same_and_same_prec(a, b):
     # stricter matching for Floats
@@ -425,23 +428,13 @@ def test_Float():
     assert Float(1.2)._mpf_ == (0, long(5404319552844595), -52, 53)
     assert x2_str._mpf_ == (0, long(10808639105689190), -53, 53)
 
-    assert Float((0, long(0), -123, -1)) == Float('nan')
-    assert Float((0, long(0), -456, -2)) == Float('inf') == Float('+inf')
-    assert Float((1, long(0), -789, -3)) == Float('-inf')
+    assert Float((0, long(0), -123, -1)) is S.NaN
+    assert Float((0, long(0), -456, -2)) is S.Infinity
+    assert Float((1, long(0), -789, -3)) is S.NegativeInfinity
+    assert Float(oo) is Float('+_inf') is S.Infinity
+    assert Float(-oo) is Float('-_inf') is S.NegativeInfinity
 
     raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
-
-    assert Float('+inf').is_finite is False
-    assert Float('+inf').is_negative is False
-    assert Float('+inf').is_positive is True
-    assert Float('+inf').is_infinite is True
-    assert Float('+inf').is_zero is False
-
-    assert Float('-inf').is_finite is False
-    assert Float('-inf').is_negative is True
-    assert Float('-inf').is_positive is False
-    assert Float('-inf').is_infinite is True
-    assert Float('-inf').is_zero is False
 
     assert Float('0.0').is_finite is True
     assert Float('0.0').is_negative is False
@@ -528,9 +521,6 @@ def test_Float():
     assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
     assert '{0:.35f}'.format(Float(pi.n(40), 40)) == \
         '3.14159265358979323846264338327950288'
-
-    assert Float(oo) == Float('+inf')
-    assert Float(-oo) == Float('-inf')
 
     # unicode
     assert Float(u'0.73908513321516064100000000') == \
@@ -697,30 +687,36 @@ def test_Infinity():
     assert S(2) - oo == -oo
     assert oo/I == -oo*I
     assert -oo/I == oo*I
-    assert oo*float(1) == Float('inf') and (oo*float(1)).is_Float
-    assert -oo*float(1) == Float('-inf') and (-oo*float(1)).is_Float
-    assert oo/float(1) == Float('inf') and (oo/float(1)).is_Float
-    assert -oo/float(1) == Float('-inf') and (-oo/float(1)).is_Float
-    assert oo*float(-1) == Float('-inf') and (oo*float(-1)).is_Float
-    assert -oo*float(-1) == Float('inf') and (-oo*float(-1)).is_Float
-    assert oo/float(-1) == Float('-inf') and (oo/float(-1)).is_Float
-    assert -oo/float(-1) == Float('inf') and (-oo/float(-1)).is_Float
-    assert oo + float(1) == Float('inf') and (oo + float(1)).is_Float
-    assert -oo + float(1) == Float('-inf') and (-oo + float(1)).is_Float
-    assert oo - float(1) == Float('inf') and (oo - float(1)).is_Float
-    assert -oo - float(1) == Float('-inf') and (-oo - float(1)).is_Float
-    assert float(1)*oo == Float('inf') and (float(1)*oo).is_Float
-    assert float(1)*-oo == Float('-inf') and (float(1)*-oo).is_Float
+    assert oo*float(1) == _inf and (oo*float(1)) is oo
+    assert -oo*float(1) == _ninf and (-oo*float(1)) is -oo
+    assert oo/float(1) == _inf and (oo/float(1)) is oo
+    assert -oo/float(1) == _ninf and (-oo/float(1)) is -oo
+    assert oo*float(-1) == _ninf and (oo*float(-1)) is -oo
+    assert -oo*float(-1) == _inf and (-oo*float(-1)) is oo
+    assert oo/float(-1) == _ninf and (oo/float(-1)) is -oo
+    assert -oo/float(-1) == _inf and (-oo/float(-1)) is oo
+    assert oo + float(1) == _inf and (oo + float(1)) is oo
+    assert -oo + float(1) == _ninf and (-oo + float(1)) is -oo
+    assert oo - float(1) == _inf and (oo - float(1)) is oo
+    assert -oo - float(1) == _ninf and (-oo - float(1)) is -oo
+    assert float(1)*oo == _inf and (float(1)*oo) is oo
+    assert float(1)*-oo == _ninf and (float(1)*-oo) is -oo
     assert float(1)/oo == 0
     assert float(1)/-oo == 0
-    assert float(-1)*oo == Float('-inf') and (float(-1)*oo).is_Float
-    assert float(-1)*-oo == Float('inf') and (float(-1)*-oo).is_Float
+    assert float(-1)*oo == _ninf and (float(-1)*oo) is -oo
+    assert float(-1)*-oo == _inf and (float(-1)*-oo) is oo
     assert float(-1)/oo == 0
     assert float(-1)/-oo == 0
-    assert float(1) + oo == Float('inf')
-    assert float(1) + -oo == Float('-inf')
-    assert float(1) - oo == Float('-inf')
-    assert float(1) - -oo == Float('inf')
+    assert float(1) + oo is oo
+    assert float(1) + -oo is -oo
+    assert float(1) - oo is -oo
+    assert float(1) - -oo is oo
+    assert oo == float(oo)
+    assert (oo != float(oo)) is False
+    assert type(float(oo)) is float
+    assert -oo == float(-oo)
+    assert (-oo != float(-oo)) is False
+    assert type(float(-oo)) is float
 
     assert Float('nan') == nan
     assert nan*1.0 == nan
@@ -775,18 +771,18 @@ def test_Infinity_2():
     assert (-oo)*(1 - pi) == oo
 
     assert (-1)**S.NaN is S.NaN
-    assert oo - Float('inf') is S.NaN
-    assert oo + Float('-inf') is S.NaN
+    assert oo - _inf is S.NaN
+    assert oo + _ninf is S.NaN
     assert oo*0 is S.NaN
-    assert oo/Float('inf') is S.NaN
-    assert oo/Float('-inf') is S.NaN
+    assert oo/_inf is S.NaN
+    assert oo/_ninf is S.NaN
     assert oo**S.NaN is S.NaN
-    assert -oo + Float('inf') is S.NaN
-    assert -oo - Float('-inf') is S.NaN
+    assert -oo + _inf is S.NaN
+    assert -oo - _ninf is S.NaN
     assert -oo*S.NaN is S.NaN
     assert -oo*0 is S.NaN
-    assert -oo/Float('inf') is S.NaN
-    assert -oo/Float('-inf') is S.NaN
+    assert -oo/_inf is S.NaN
+    assert -oo/_ninf is S.NaN
     assert -oo/S.NaN is S.NaN
     assert abs(-oo) == oo
     assert all((-oo)**i is S.NaN for i in (oo, -oo, S.NaN))
@@ -796,33 +792,25 @@ def test_Infinity_2():
 
 
 def test_Mul_Infinity_Zero():
-    assert 0*Float('inf') == nan
-    assert 0*Float('-inf') == nan
-    assert 0*Float('inf') == nan
-    assert 0*Float('-inf') == nan
-    assert Float('inf')*0 == nan
-    assert Float('-inf')*0 == nan
-    assert Float('inf')*0 == nan
-    assert Float('-inf')*0 == nan
-    assert Float(0)*Float('inf') == nan
-    assert Float(0)*Float('-inf') == nan
-    assert Float(0)*Float('inf') == nan
-    assert Float(0)*Float('-inf') == nan
-    assert Float('inf')*Float(0) == nan
-    assert Float('-inf')*Float(0) == nan
-    assert Float('inf')*Float(0) == nan
-    assert Float('-inf')*Float(0) == nan
+    assert Float(0)*_inf == nan
+    assert Float(0)*_ninf == nan
+    assert Float(0)*_inf == nan
+    assert Float(0)*_ninf == nan
+    assert _inf*Float(0) == nan
+    assert _ninf*Float(0) == nan
+    assert _inf*Float(0) == nan
+    assert _ninf*Float(0) == nan
 
 
 def test_Div_By_Zero():
     assert 1/S(0) == zoo
-    assert 1/Float(0) == Float('inf')
+    assert 1/Float(0) == _inf
     assert 0/S(0) == nan
     assert 0/Float(0) == nan
     assert S(0)/0 == nan
     assert Float(0)/0 == nan
     assert -1/S(0) == zoo
-    assert -1/Float(0) == Float('-inf')
+    assert -1/Float(0) == _ninf
 
 
 def test_Infinity_inequations():
@@ -830,9 +818,9 @@ def test_Infinity_inequations():
     assert not (oo < pi)
     assert exp(-3) < oo
 
-    assert Float('+inf') > pi
-    assert not (Float('+inf') < pi)
-    assert exp(-3) < Float('+inf')
+    assert _inf > pi
+    assert not (_inf < pi)
+    assert exp(-3) < _inf
 
     raises(TypeError, lambda: oo < I)
     raises(TypeError, lambda: oo <= I)
@@ -861,10 +849,10 @@ def test_Infinity_inequations():
     assert (oo > oo) == False
     assert (-oo > -oo) == False and (-oo < -oo) == False
     assert oo >= oo and oo <= oo and -oo >= -oo and -oo <= -oo
-    assert (-oo < -Float('inf')) ==  False
-    assert (oo > Float('inf')) == False
-    assert -oo >= -Float('inf')
-    assert oo <= Float('inf')
+    assert (-oo < -_inf) ==  False
+    assert (oo > _inf) == False
+    assert -oo >= -_inf
+    assert oo <= _inf
 
     x = Symbol('x')
     b = Symbol('b', finite=True, real=True)
@@ -879,21 +867,18 @@ def test_Infinity_inequations():
 
 
 def test_NaN():
-    assert nan == nan
+    assert nan is nan
     assert nan != 1
-    assert 1*nan == nan
+    assert 1*nan is nan
     assert 1 != nan
-    assert nan == -nan
+    assert -nan is nan
     assert oo != Symbol("x")**3
-    assert nan + 1 == nan
-    assert 2 + nan == nan
-    assert 3*nan + 2 == nan
-    assert -nan*3 == nan
-    assert nan + nan == nan
-    assert -nan + nan*(-5) == nan
-    assert 1/nan == nan
-    assert 1/(-nan) == nan
-    assert 8/nan == nan
+    assert 2 + nan is nan
+    assert 3*nan + 2 is nan
+    assert -nan*3 is nan
+    assert nan + nan is nan
+    assert -nan + nan*(-5) is nan
+    assert 8/nan is nan
     raises(TypeError, lambda: nan > 0)
     raises(TypeError, lambda: nan < 0)
     raises(TypeError, lambda: nan >= 0)
@@ -902,18 +887,17 @@ def test_NaN():
     raises(TypeError, lambda: 0 > nan)
     raises(TypeError, lambda: 0 <= nan)
     raises(TypeError, lambda: 0 >= nan)
-    assert S.One + nan == nan
-    assert S.One - nan == nan
-    assert S.One*nan == nan
-    assert S.One/nan == nan
-    assert nan - S.One == nan
-    assert nan*S.One == nan
-    assert nan + S.One == nan
-    assert nan/S.One == nan
     assert nan**0 == 1  # as per IEEE 754
-    assert 1**nan == nan # IEEE 754 is not the best choice for symbolic work
+    assert 1**nan is nan # IEEE 754 is not the best choice for symbolic work
     # test Pow._eval_power's handling of NaN
     assert Pow(nan, 0, evaluate=False)**2 == 1
+    for n in (1, 1., S.One, S.NegativeOne, Float(1)):
+        assert n + nan is nan
+        assert n - nan is nan
+        assert nan + n is nan
+        assert nan - n is nan
+        assert n/nan is nan
+        assert nan/n is nan
 
 
 def test_special_numbers():
@@ -1580,7 +1564,7 @@ def test_hashing_sympy_integers():
     assert hash(Integer(4)) == hash(int(4))
 
 
-def test_issue_4172():
+def test_rounding_issue_4172():
     assert int((E**100).round()) == \
         26881171418161354484126255515800135873611119
     assert int((pi**100).round()) == \
@@ -1912,3 +1896,16 @@ def test_issue_6133():
     raises(TypeError, lambda: (oo < None))
     raises(TypeError, lambda: (oo > None))
     raises(TypeError, lambda: (S(2) < None))
+
+def test_abc():
+    x = numbers.Float(5)
+    assert(isinstance(x, nums.Number))
+    assert(isinstance(x, numbers.Number))
+    assert(isinstance(x, nums.Real))
+    y = numbers.Rational(1, 3)
+    assert(isinstance(y, nums.Number))
+    assert(y.numerator() == 1)
+    assert(y.denominator() == 3)
+    assert(isinstance(y, nums.Rational))
+    z = numbers.Integer(3)
+    assert(isinstance(z, nums.Number))

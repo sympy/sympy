@@ -148,7 +148,34 @@ class Integers(with_metaclass(Singleton, Set)):
 
 
 class Reals(with_metaclass(Singleton, Interval)):
+    """
+    Represents all real numbers
+    from negative infinity to positive infinity,
+    including all integer, rational and irrational numbers.
+    This set is also available as the Singleton, S.Reals.
 
+
+    Examples
+    ========
+
+    >>> from sympy import S, Interval, Rational, pi, I
+    >>> 5 in S.Reals
+    True
+    >>> Rational(-1, 2) in S.Reals
+    True
+    >>> pi in S.Reals
+    True
+    >>> 3*I in S.Reals
+    False
+    >>> S.Reals.contains(pi)
+    True
+
+
+    See Also
+    ========
+
+    ComplexRegion
+    """
     def __new__(cls):
         return Interval.__new__(cls, -S.Infinity, S.Infinity)
 

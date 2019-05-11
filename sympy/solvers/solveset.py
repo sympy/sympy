@@ -38,6 +38,7 @@ from sympy.sets.sets import Set
 from sympy.matrices import Matrix, MatrixBase
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -506,6 +507,9 @@ def _solve_as_rational(f, symbol, domain):
             # coefficients in a ring over which finding roots
             # isn't implemented yet, e.g. ZZ[a] for some symbol a
             return ConditionSet(symbol, Eq(f, 0), domain)
+        except CoercionFailed:
+            # contained oo, zoo or nan
+            return S.EmptySet
     else:
         valid_solns = _solveset(g, symbol, domain)
         invalid_solns = _solveset(h, symbol, domain)
@@ -1096,7 +1100,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     This form can be easily handed by ``solveset``.
     """
-    unsolved_result = ConditionSet(symbol, Eq(lhs - rhs), domain)
+    unsolved_result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
     newlhs = powdenest(lhs)
     if lhs != newlhs:
         # it may also be advantageous to factor the new expr
@@ -1858,8 +1862,8 @@ def linear_coeffs(eq, *syms, **_kw):
         elif f.is_Add:
             d1 = linear_coeffs(f, *syms, **{'dict': True})
             d[0].append(m*d1.pop(0))
-            xf, vf = list(d1.items())[0]
-            d[xf].append(m*vf)
+            for xf, vf in d1.items():
+                d[xf].append(m*vf)
         else:
             break
     else:
