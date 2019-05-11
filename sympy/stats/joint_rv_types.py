@@ -1,5 +1,5 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
-    IndexedBase)
+    IndexedBase, besselk, gamma, Interval, Range, factorial, Mul, Integer)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -124,7 +124,6 @@ class MultivariateLaplaceDistribution(JointDistribution):
             "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
-        from sympy.functions.special.bessel import besselk
         mu, sigma = self.mu, self.sigma
         mu_T = mu.transpose()
         k = S(len(mu))
@@ -159,7 +158,6 @@ class MultivariateTDistribution(JointDistribution):
             "The shape matrix must be positive definite. ")
 
     def pdf(self, *args):
-        from sympy.functions.special.gamma_functions import gamma
         mu, sigma = self.mu, self.shape_mat
         v = S(self.dof)
         k = S(len(mu))
@@ -205,11 +203,9 @@ class NormalGammaDistribution(JointDistribution):
 
     @property
     def set(self):
-        from sympy.sets.sets import Interval
         return S.Reals*Interval(0, S.Infinity)
 
     def pdf(self, x, tau):
-        from sympy.functions.special.gamma_functions import gamma
         beta, alpha, lamda = self.beta, self.alpha, self.lamda
         mu = self.mu
 
@@ -218,7 +214,6 @@ class NormalGammaDistribution(JointDistribution):
         exp(-1*(lamda*tau*(x - mu)**2)/S(2))
 
     def marginal_distribution(self, indices, *sym):
-        from sympy.functions.special.gamma_functions import gamma
         if len(indices) == 2:
             return self.pdf(*sym)
         if indices[0] == 0:
@@ -253,3 +248,70 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     A random symbol
     """
     return multivariate_rv(NormalGammaDistribution, syms, mu, lamda, alpha, beta)
+
+#-------------------------------------------------------------------------------
+# Multinomial distribution ---------------------------------------------------------
+
+class MultinomialDistribution(JointDistribution):
+
+    _argnames = ['n', 'p']
+    is_Continuous=False
+    is_Discrete = True
+
+    def check(self, n, p):
+        _value_check(((n > 0) != False) and isinstance(n, Integer),
+                        "number of trials must be a positve integer")
+        for p_k in p:
+            _value_check((p_k >= 0) != False,
+                        "probability must be at least positive symbol.")
+
+    @property
+    def set(self):
+        return Range(0, self.n)**len(self.p)
+
+    def pdf(self, *x):
+        n, p = self.n, self.p
+        term_1 = factorial(n)/Mul.fromiter([factorial(x_k) for x_k in x])
+        term_2 = Mul.fromiter([p_k**x_k for p_k, x_k in zip(p, x)])
+        return term_1*term_2
+
+def Multinomial(syms, n, *p):
+    """
+    Creates a discrete random variable with Multinomial Distribution.
+
+    The density of the said distribution can be found at [1].
+
+    Parameters
+    ==========
+    n: postive integer of class Integer,
+       number of trials
+    p: event probabilites, >= 0 and <= 1
+
+    Returns
+    =======
+    A RandomSymbol.
+
+    Examples
+    ========
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv import marginal_distribution
+    >>> from sympy.stats.joint_rv_types import Multinomial
+    >>> from sympy import Symbol
+    >>> from sympy import symbols
+    >>> x1, x2, x3 = symbols('x1, x2, x3', nonnegative=True, integer=True)
+    >>> p1, p2, p3 = symbols('p1, p2, p3', positive=True)
+    >>> M = Multinomial('M', 3, p1, p2, p3)
+    >>> density(M)(x1, x2, x3)
+    6*p1**x1*p2**x2*p3**x3/(factorial(x1)*factorial(x2)*factorial(x3))
+    >>> marginal_distribution(M, M[0])(x1).subs(x1, 1)
+    3*p1*p2**2*p3**2/2 + 3*p1*p2**2*p3 + 3*p1*p2**2 + 3*p1*p2*p3**2 +
+    6*p1*p2*p3 + 6*p1*p2 + 3*p1*p3**2 + 6*p1*p3 + 6*p1
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Multinomial_distribution
+    .. [2] http://mathworld.wolfram.com/MultinomialDistribution.html
+    """
+    if not isinstance(p[0], list):
+        p = (list(p), )
+    return multivariate_rv(MultinomialDistribution, syms, n, p[0])
