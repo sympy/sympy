@@ -1500,6 +1500,10 @@ def test_sympy__stats__joint_rv_types__MultivariateBetaDistribution():
     from sympy.stats.joint_rv_types import MultivariateBetaDistribution
     assert _test_args(MultivariateBetaDistribution([1, 2, 3]))
 
+def test_sympy__stats__joint_rv_types__MultivariateEwensDistribution():
+    from sympy.stats.joint_rv_types import MultivariateEwensDistribution
+    assert _test_args(MultivariateEwensDistribution(5, 1))
+
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
     assert _test_args(Dummy('t'))

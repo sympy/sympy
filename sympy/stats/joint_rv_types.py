@@ -276,7 +276,7 @@ class MultivariateBetaDistribution(JointDistribution):
 
     def pdf(self, *syms):
         alpha = self.alpha
-        B = Mul.fromiter(list(map(gamma, alpha)))/gamma(Add(*alpha))
+        B = Mul.fromiter(map(gamma, alpha))/gamma(Add(*alpha))
         return Mul.fromiter([sym**(a_k - 1) for a_k, sym in zip(alpha, syms)])/B
 
 def MultivariateBeta(syms, *alpha):
@@ -378,8 +378,8 @@ def MultivariateEwens(syms, n, theta):
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> from sympy.stats.joint_rv_types import MultivariateEwens
     >>> from sympy import Symbol
-    >>> a1 = Symbol('a1', positive = True)
-    >>> a2 = Symbol('a2', positive = True)
+    >>> a1 = Symbol('a1', positive=True)
+    >>> a2 = Symbol('a2', positive=True)
     >>> ed = MultivariateEwens('E', 2, 1)
     >>> density(ed)(a1, a2)
     2**(-a2)/(factorial(a1)*factorial(a2))

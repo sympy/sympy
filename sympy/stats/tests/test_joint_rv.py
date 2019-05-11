@@ -1,4 +1,4 @@
-from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Rational
+from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Rational, simplify
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV
@@ -56,18 +56,18 @@ def test_NormalGamma():
 def test_MultivariateBeta():
     from sympy.stats.joint_rv_types import MultivariateBeta
     from sympy import gamma
-    mb = MultivariateBeta('B', [1, 2])
-    mb_c = MultivariateBeta('C', 1, 2)
-    a1_f, a2_f = symbols('a1, a2', positive = False)
-    assert density(mb)(1, 2) == 4
-    assert marginal_distribution(mb_c, 0)(3) == 1
-    raises(ValueError, lambda: MultivariateBeta('b1', [1, -2]))
-    raises(ValueError, lambda: MultivariateBeta('b2', [0, 2]))
+    a1, a2 = symbols('a1, a2', positive=True)
+    a1_f, a2_f = symbols('a1, a2', positive=False)
+    mb = MultivariateBeta('B', [a1, a2])
+    mb_c = MultivariateBeta('C', a1, a2)
+    assert simplify(density(mb)(1, 2) -
+            S(2)**(a2 - 1)*gamma(a1 + a2)/(gamma(a1)*gamma(a2))) == S(0)
+    assert simplify(marginal_distribution(mb_c, 0)(3) -
+            S(3)**(a1 - 1)*gamma(a1 + a2)/(a2*gamma(a1)*gamma(a2))) == S(0)
+    raises(ValueError, lambda: MultivariateBeta('b1', [a1_f, a2]))
+    raises(ValueError, lambda: MultivariateBeta('b2', [a1, a2_f]))
     raises(ValueError, lambda: MultivariateBeta('b3', [0, 0]))
-    raises(ValueError, lambda: MultivariateBeta('b4', [-1, -2]))
-    raises(ValueError, lambda: MultivariateBeta('b4', a1_f))
-    raises(ValueError, lambda: MultivariateBeta('b4', [a1_f, 2]))
-    raises(ValueError, lambda: MultivariateBeta('b4', [1, a2_f]))
+    raises(ValueError, lambda: MultivariateBeta('b4', [a1_f, a2_f]))
 
 def test_MultivariateEwens():
     from sympy.stats.joint_rv_types import MultivariateEwens
