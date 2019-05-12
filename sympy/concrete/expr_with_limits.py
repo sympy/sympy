@@ -36,10 +36,10 @@ def _common_new(cls, function, *symbols, **assumptions):
 
     if symbols:
         limits, orientation = _process_limits(*symbols)
-        for i, limit in enumerate(limits):
-            if len(limit) == 4:
-                function = function.subs(limit[0], limit[-1])
-                limits[i] = tuple(limits[i][:-1])
+        for i, li in enumerate(limits):
+            if len(li) == 4:
+                function = function.subs(li[0], li[-1])
+                limits[i] = tuple(li[:-1])
     else:
         # symbol not provided -- we can still try to compute a general form
         free = function.free_symbols
@@ -94,7 +94,7 @@ def _process_limits(*symbols):
                 limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
-            V = flatten(V)  # a list
+            V = sympify(flatten(V))  # a list of sympified elements
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
                 if len(V) == 4:  # 4 -> 3
@@ -116,10 +116,10 @@ def _process_limits(*symbols):
                 if len(V) >= 3:
                     if isinstance(newsymbol, Idx):
                         lo, hi = newsymbol.lower, newsymbol.upper
-                        if lo is not None and not bool(lo <= nlim[0]):
-                            raise ValueError("Summation below Idx lower range.")
-                        if hi is not None and not bool(hi >= nlim[1]):
-                            raise ValueError("Summation exceeds Idx upper range.")
+                        if lo is not None and bool(lo < V[1]):
+                            raise ValueError("Summation below Idx lower value.")
+                        if hi is not None and bool(hi > V[2]):
+                            raise ValueError("Summation exceeds Idx upper value.")
                     limits.append(Tuple(*V))
                     continue
                 if isinstance(newsymbol, Idx):
