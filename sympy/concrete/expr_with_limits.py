@@ -110,24 +110,39 @@ def _process_limits(*symbols):
                     # general case
                     if V[2] is None and not V[1] is None:
                         orientation *= -1
-                    V = [newsymbol, *[i for i in V[1:] if i is not None]]
+                    V = [newsymbol, i for i in V[1:] if i is not None]
 
-                if len(V) >= 3:
-                    if isinstance(newsymbol, Idx):
-                        lo, hi = newsymbol.lower, newsymbol.upper
-                        if lo is not None and not bool(V[1] >= lo):
-                            raise ValueError("Summation below Idx lower value.")
-                        if hi is not None and not bool(V[2] <= hi):
-                            raise ValueError("Summation exceeds Idx upper value.")
-                    limits.append(Tuple(*V))
-                    continue
-                # XXX what happens when len(V) < 3 and V[0] is Idx?
-                if len(V) == 1 or (len(V) == 2 and V[1] is None):
-                    limits.append(Tuple(newsymbol))
-                    continue
-                elif len(V) == 2:
-                    limits.append(Tuple(newsymbol, V[1]))
-                    continue
+                if not isinstance(newsymbol, Idx) or len(V) == 3:
+                    if len(V) == 4:
+                        limits.append(Tuple(*V))
+                        continue
+                    if len(V) == 3:
+                        if isinstance(newsymbol, Idx):
+                            # Idx represents an integer which may have
+                            # specified values it can take on; if it is
+                            # given such a value, an error is raised here
+                            # if the summation would try to give it a larger
+                            # or smaller value than permitted. None and Symbolic
+                            # values will not raise an error.
+                            lo, hi = newsymbol.lower, newsymbol.upper
+                            try:
+                                if lo is not None and not bool(V[1] >= lo):
+                                    raise ValueError("Summation will set Idx value too low.")
+                            except TypeError:
+                                pass
+                            try:
+                                if hi is not None and not bool(V[2] <= hi):
+                                    raise ValueError("Summation will set Idx value too high.")
+                            except TypeError:
+                                pass
+                        limits.append(Tuple(*V))
+                        continue
+                    if len(V) == 1 or (len(V) == 2 and V[1] is None):
+                        limits.append(Tuple(newsymbol))
+                        continue
+                    elif len(V) == 2:
+                        limits.append(Tuple(newsymbol, V[1]))
+                        continue
 
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
