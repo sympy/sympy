@@ -1179,6 +1179,10 @@ def test_sympy__stats__frv_types__BinomialDistribution():
     from sympy.stats.frv_types import BinomialDistribution
     assert _test_args(BinomialDistribution(5, S.Half, 1, 0))
 
+def test_sympy__stats__frv_types__BetaBinomialDistribution():
+    from sympy.stats.frv_types import BetaBinomialDistribution
+    assert _test_args(BetaBinomialDistribution(5, 1, 1))
+
 
 def test_sympy__stats__frv_types__HypergeometricDistribution():
     from sympy.stats.frv_types import HypergeometricDistribution
