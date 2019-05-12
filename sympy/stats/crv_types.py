@@ -2281,8 +2281,8 @@ def NormalInverse(name, mean, shape):
     sqrt(2)*sqrt(lambda)*sqrt(z**(-3))*exp(-lambda*(-mu + z)**2/(2*mu**2*z))/(2*sqrt(pi))
 
     >>> simplify(cdf(X))(z)
-    (1 - erf(sqrt(2)*(sqrt(lambda)*(mu + z)*sqrt(1/z) + mu)/(2*mu)))*exp(2*lambda/mu)/2 +
-        erf(sqrt(2)*(sqrt(lambda)*(-mu + z)*sqrt(1/z) - mu)/(2*mu))/2 + 1/2
+    (1 - erf(sqrt(2)*(sqrt(lambda)*(mu + z)/sqrt(z) + mu)/(2*mu)))*exp(2*lambda/mu)/2 +
+         erf(sqrt(2)*(sqrt(lambda)*(-mu + z)/sqrt(z) - mu)/(2*mu))/2 + 1/2
 
     >>> simplify(skewness(X))
     3*sqrt(mu)/sqrt(lambda)
