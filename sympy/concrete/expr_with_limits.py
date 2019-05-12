@@ -15,6 +15,7 @@ from sympy.logic.boolalg import BooleanFunction
 from sympy.matrices import Matrix
 from sympy.tensor.indexed import Idx
 from sympy.sets.sets import Interval
+from sympy.sets.fancysets import Range
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 
@@ -94,17 +95,15 @@ def _process_limits(*symbols):
                 limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
+            if len(V) == 2 and isinstance(V[1], Range):
+                lo = V[1].inf
+                hi = V[1].sup
+                dx = abs(V[1].step)
+                V = [V[0]] + [0, (hi - lo)//dx, dx*V[0] + lo]
             V = sympify(flatten(V))  # a list of sympified elements
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
-                if len(V) == 4:  # 4 -> 3
-                    # Range
-                    _, lo, hi, d = V
-                    if d < 0:
-                        d = -d
-                        lo, hi = hi, lo
-                    V[1:] = [0, (hi - lo)//d - 1, d*newsymbol + lo]
-                elif len(V) == 2 and isinstance(V[1], Interval):  # 2 -> 3
+                if len(V) == 2 and isinstance(V[1], Interval):  # 2 -> 3
                     # Interval
                     V[1:] = [V[1].start, V[1].end]
                 elif len(V) == 3:
@@ -116,14 +115,13 @@ def _process_limits(*symbols):
                 if len(V) >= 3:
                     if isinstance(newsymbol, Idx):
                         lo, hi = newsymbol.lower, newsymbol.upper
-                        if lo is not None and bool(lo < V[1]):
+                        if lo is not None and not bool(V[1] >= lo):
                             raise ValueError("Summation below Idx lower value.")
-                        if hi is not None and bool(hi > V[2]):
+                        if hi is not None and not bool(V[2] <= hi):
                             raise ValueError("Summation exceeds Idx upper value.")
                     limits.append(Tuple(*V))
                     continue
-                if isinstance(newsymbol, Idx):
-                    raise NotImplementedError('Idx requires lower and upper limits.')
+                # XXX what happens when len(V) < 3 and V[0] is Idx?
                 if len(V) == 1 or (len(V) == 2 and V[1] is None):
                     limits.append(Tuple(newsymbol))
                     continue
