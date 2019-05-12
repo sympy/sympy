@@ -189,6 +189,7 @@ def test_arithmetic_sums():
     assert Sum(x, (n, 1, a)).doit() == a*x
     assert Sum(x, (x, Range(1, 11))).doit() == 55
     assert Sum(x, (x, Range(1, 11, 2))).doit() == 25
+    assert Sum(x, (x, Range(1, 10, 2))) == Sum(x, (x, Range(9, 0, -2)))
     lo, hi = 1, 2
     s1 = Sum(n, (n, lo, hi))
     s2 = Sum(n, (n, hi, lo))
