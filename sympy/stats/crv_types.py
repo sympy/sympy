@@ -2229,10 +2229,10 @@ class NormalInverseDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         mean, shape = self.mean, self.shape
-        
+
         first_term = self._standardNormal_cdf(sqrt(shape/x) * ((x/mean - S.One)))
         second_term = exp(2*shape/mean) * self._standardNormal_cdf(-sqrt(shape/x)*(x/mean + S.One))
-        
+
         return  first_term + second_term
 
     def _characteristic_function(self, t):
