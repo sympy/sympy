@@ -39,8 +39,7 @@ def _common_new(cls, function, *symbols, **assumptions):
         for i, limit in enumerate(limits):
             if len(limit) == 4:
                 function = function.subs(limit[0], limit[-1])
-                limits[i].pop()
-                limits[i] = tuple(limits[i])
+                limits[i] = tuple(limits[i][:-1])
     else:
         # symbol not provided -- we can still try to compute a general form
         free = function.free_symbols
@@ -95,14 +94,16 @@ def _process_limits(*symbols):
                 limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
-            V = sympify(flatten(V))
+            V = flatten(V)
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
-                if len(V) == 4:
-                    x, lo, hi, d = V
-                    V[1:] = 0, (hi - lo)//d - 1, d*x + lo
-
-                if len(V) == 2 and isinstance(V[1], Interval):
+                if len(V) == 4:  # 4 -> 3
+                    _, lo, hi, d = V
+                    if d < 0:
+                        d = -d
+                        lo, hi = hi, lo
+                    V[1:] = 0, (hi - lo)//d - 1, d*newsymbol + lo
+                elif len(V) == 2 and isinstance(V[1], Interval):  # 2 -> 3
                     V[1:] = [V[1].start, V[1].end]
 
                 if len(V) == 3:
@@ -116,21 +117,16 @@ def _process_limits(*symbols):
                     else:
                         nlim = V[1:]
                     limits.append(Tuple(newsymbol, *nlim))
-                    if isinstance(V[0], Idx):
-                        if V[0].lower is not None and not bool(nlim[0] >= V[0].lower):
+                    if isinstance(newsymbol, Idx):
+                        lo, hi = newsymbol.lower, newsymbol.upper
+                        if lo is not None and not bool(nlim[0] >= lo):
                             raise ValueError("Summation exceeds Idx lower range.")
-                        if V[0].upper is not None and not bool(nlim[1] <= V[0].upper):
+                        if hi is not None and not bool(nlim[1] <= hi):
                             raise ValueError("Summation exceeds Idx upper range.")
-                    continue
                 elif len(V) == 1 or (len(V) == 2 and V[1] is None):
                     limits.append(Tuple(newsymbol))
-                    continue
                 elif len(V) == 2:
                     limits.append(Tuple(newsymbol, V[1]))
-                    continue
-                elif len(V) == 4:
-                    limits.append(V)
-                    continue
 
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
