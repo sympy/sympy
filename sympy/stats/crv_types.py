@@ -89,6 +89,7 @@ __all__ = ['ContinuousRV',
 'Maxwell',
 'Nakagami',
 'Normal',
+'NormalInverse',
 'Pareto',
 'QuadraticU',
 'RaisedCosine',
@@ -1382,7 +1383,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
             from scipy.stats import invgamma
             return invgamma.rvs(float(self.a), 0, float(self.b))
         else:
-            raise NotImplementedError('Sampling the inverse Gamma Distribution requires Scipy.')
+            raise NotImplementedError('Sampling the Inverse Gamma Distribution requires Scipy.')
 
     def _characteristic_function(self, t):
         a, b = self.a, self.b
@@ -2194,6 +2195,110 @@ def Normal(name, mean, std):
         return multivariate_rv(
             MultivariateNormalDistribution, name, mean, std)
     return rv(name, NormalDistribution, (mean, std))
+
+
+#-------------------------------------------------------------------------------
+# Inverse Normal distribution ----------------------------------------------------------
+
+
+class NormalInverseDistribution(SingleContinuousDistribution):
+    _argnames = ('mean', 'shape')
+
+    @property
+    def set(self):
+        return Interval(0, oo)
+
+    @staticmethod
+    def check(mean, shape):
+        _value_check(shape > 0, "Shape parameter must be positive")
+        _value_check(mean > 0, "Mean must be positive")
+
+    def pdf(self, x):
+        return exp(-self.shape*(x - self.mean)**2 / (2*x*self.mean**2)) * sqrt(self.shape/((2*pi*x**3)))
+
+    def sample(self):
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import invgauss
+            return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape))
+        else:
+            raise NotImplementedError('Sampling the Inverse Normal Distribution requires Scipy.')
+
+    def _standardNormal_cdf(self, x):
+        return erf(sqrt(2)*(x - S.One)/2)/2 + S.Half
+
+    def _cdf(self, x):
+        mean, shape = self.mean, self.shape
+        return self._standardNormal_cdf(sqrt(shape/x) * ((x/mean - S.One))) + exp(2*shape/mean)*\
+            self._standardNormal_cdf(-sqrt(shape/x)*(x/mean + S.One))
+
+    def _characteristic_function(self, t):
+        mean, shape = self.mean, self.shape
+        return exp((shape/mean)*(1 - sqrt(1 - (2*mean**2*I*t)/shape)))
+
+    def _moment_generating_function(self, t):
+        mean, shape = self.mean, self.shape
+        return exp((shape/mean)*(1 - sqrt(1 - (2*mean**2*t)/shape)))
+
+
+def NormalInverse(name, mean, shape):
+    r"""
+    Create a continuous random variable with an Inverse Normal distribution.
+
+    The density of the Inverse Normal distribution is given by
+
+    .. math::
+        f(x) := \sqrt(\frac{\lambda}{2\pi x^3}) e^{-\frac{\lambda(x-\mu)^2}{2x\mu^2}}
+
+    Parameters
+    ==========
+
+    mu : Positive number representing the mean
+    lambda : Positive number representing the shape parameter,
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import NormalInverse, density, E, std, cdf, skewness
+    >>> from sympy import Symbol, simplify, factor, together, factor_terms
+
+    >>> mu = Symbol("mu", positive=True)
+    >>> l = Symbol("lambda", positive=True)
+    >>> z = Symbol("z")
+    >>> y = Symbol("y")
+    >>> p = Symbol("p")
+    >>> X = Normal("x", mu, sigma)
+
+    >>> density(X)(z)
+    sqrt(2)*sqrt(lambda)*sqrt(z**(-3))*exp(-lambda*(-mu + z)**2/(2*mu**2*z))/(2*sqrt(pi))
+
+    >>> simplify(cdf(X))(z)
+    (1 - erf(sqrt(2)*(sqrt(lambda)*(mu + z)*sqrt(1/z) + mu)/(2*mu)))*exp(2*lambda/mu)/2 + \
+        erf(sqrt(2)*(sqrt(lambda)*(-mu + z)*sqrt(1/z) - mu)/(2*mu))/2 + 1/2
+
+    >>> simplify(skewness(X))
+    3*sqrt(mu)/sqrt(lambda)
+
+    >>> E(X)
+    mu
+
+    >>> simplify(std(X))
+    mu**(3/2)/sqrt(lambda)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution
+    .. [2] http://mathworld.wolfram.com/InverseGaussianDistribution.html
+
+    """
+
+    return rv(name, NormalInverseDistribution, (mean, shape))
 
 #-------------------------------------------------------------------------------
 # Pareto distribution ----------------------------------------------------------
