@@ -2272,7 +2272,7 @@ def NormalInverse(name, mean, shape):
     >>> z = Symbol("z")
     >>> y = Symbol("y")
     >>> p = Symbol("p")
-    >>> X = Normal("x", mu, sigma)
+    >>> X = NormalInverse("x", mu, l)
 
     >>> density(X)(z)
     sqrt(2)*sqrt(lambda)*sqrt(z**(-3))*exp(-lambda*(-mu + z)**2/(2*mu**2*z))/(2*sqrt(pi))

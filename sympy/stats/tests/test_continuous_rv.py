@@ -13,7 +13,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
                          Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
-                         LogNormal, Maxwell, Nakagami, Normal, Pareto,
+                         LogNormal, Maxwell, Nakagami, Normal, NormalInverse, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
@@ -543,6 +543,16 @@ def test_nakagami():
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
 
+def test_normal_inverse():
+    a, b = symbols('a b', positive=True)
+    z = Symbol('z')
+
+    X = NormalInverse('x', a, b)
+    assert density(X)(z) == sqrt(2)*sqrt(b)*sqrt(z**(-3))*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
+    assert simplify(E(X)) == a
+    assert simplify(variance(X)) == a**3/b
+    assert simplify(cdf(X)(z)) == (1 - erf(sqrt(2)*(a + sqrt(b)*(a + z)*sqrt(1/z))/(2*a)))*\
+        exp(2*b/a)/2 - erf(sqrt(2)*(a + sqrt(b)*(a - z)*sqrt(1/z))/(2*a))/2 + 1/2
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True, finite=True)
