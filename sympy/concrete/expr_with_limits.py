@@ -94,37 +94,37 @@ def _process_limits(*symbols):
                 limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
-            V = flatten(V)
+            V = flatten(V)  # a list
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
                 if len(V) == 4:  # 4 -> 3
+                    # Range
                     _, lo, hi, d = V
                     if d < 0:
                         d = -d
                         lo, hi = hi, lo
-                    V[1:] = 0, (hi - lo)//d - 1, d*newsymbol + lo
+                    V[1:] = [0, (hi - lo)//d - 1, d*newsymbol + lo]
                 elif len(V) == 2 and isinstance(V[1], Interval):  # 2 -> 3
+                    # Interval
                     V[1:] = [V[1].start, V[1].end]
-
-                if len(V) == 3:
-                    if V[1] is None and V[2] is not None:
-                        nlim = [V[2]]
-                    elif V[1] is not None and V[2] is None:
+                elif len(V) == 3:
+                    # general case
+                    if V[2] is None:
                         orientation *= -1
-                        nlim = [V[1]]
-                    elif V[1] is None and V[2] is None:
-                        nlim = []
-                    else:
-                        nlim = V[1:]
-                    limits.append(Tuple(newsymbol, *nlim))
+                    V = [newsymbol, *[i for i in V[1:] if i is not None]]
+
+                if len(V) >= 3:
                     if isinstance(newsymbol, Idx):
                         lo, hi = newsymbol.lower, newsymbol.upper
-                        if lo is not None and not bool(nlim[0] >= lo):
-                            raise ValueError("Summation exceeds Idx lower range.")
-                        if hi is not None and not bool(nlim[1] <= hi):
+                        if lo is not None and not bool(lo <= nlim[0]):
+                            raise ValueError("Summation below Idx lower range.")
+                        if hi is not None and not bool(hi >= nlim[1]):
                             raise ValueError("Summation exceeds Idx upper range.")
+                    limits.append(Tuple(*V))
                     continue
-                elif len(V) == 1 or (len(V) == 2 and V[1] is None):
+                if isinstance(newsymbol, Idx):
+                    raise NotImplementedError('Idx requires lower and upper limits.')
+                if len(V) == 1 or (len(V) == 2 and V[1] is None):
                     limits.append(Tuple(newsymbol))
                     continue
                 elif len(V) == 2:
