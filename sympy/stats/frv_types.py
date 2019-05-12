@@ -9,6 +9,7 @@ Die
 Bernoulli
 Coin
 Binomial
+BetaBinomial
 Hypergeometric
 Rademacher
 """
@@ -17,6 +18,7 @@ from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
         Dict, Basic, KroneckerDelta, Dummy)
+from sympy import beta as beta_fn
 from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
 from sympy.core.logic import fuzzy_not, fuzzy_and
@@ -28,6 +30,7 @@ __all__ = ['FiniteRV',
 'Bernoulli',
 'Coin',
 'Binomial',
+'BetaBinomial',
 'Hypergeometric',
 'Rademacher'
 ]
@@ -313,6 +316,64 @@ def Binomial(name, n, p, succ=1, fail=0):
     """
 
     return rv(name, BinomialDistribution, n, p, succ, fail)
+
+#-------------------------------------------------------------------------------
+# Beta-binomial distribution ----------------------------------------------------------
+
+class BetaBinomialDistribution(SingleFiniteDistribution):
+    _argnames = ('n', 'alpha', 'beta')
+
+    def __new__(cls, *args):
+        n = args[BetaBinomialDistribution._argnames.index('n')]
+        alpha = args[BetaBinomialDistribution._argnames.index('alpha')]
+        beta = args[BetaBinomialDistribution._argnames.index('beta')]
+        n_sym = sympify(n)
+        alpha_sym = sympify(alpha)
+        beta_sym = sympify(beta)
+
+        if fuzzy_not(fuzzy_and((n_sym.is_integer, n_sym.is_nonnegative))):
+            raise ValueError("'n' must be positive integer. n = %s." % str(n))
+        elif (alpha_sym > 0) == False:
+            raise ValueError("'alpha' must be: alpha > 0 . alpha = %s" % str(alpha))
+        elif (beta_sym > 0) == False:
+            raise ValueError("'beta' must be: beta > 0 . beta = %s" % str(beta))
+        else:
+            return super(BetaBinomialDistribution, cls).__new__(cls, *args)
+
+    @property
+    @cacheit
+    def dict(self):
+        n, alpha, beta = self.n, self.alpha, self.beta
+        n = as_int(n)
+        return dict((k,
+                binomial(n, k) * beta_fn(k + alpha, n - k + beta) / beta_fn(alpha, beta)) for k in range(0, n + 1))
+
+
+def BetaBinomial(name, n, alpha, beta):
+    """
+    Create a Finite Random Variable representing a Beta-binomial distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import BetaBinomial, density
+    >>> from sympy import S
+
+    >>> X = BetaBinomial('X', 2, 1, 1)
+    >>> density(X).dict
+    {0: beta(1, 3)/beta(1, 1), 1: 2*beta(2, 2)/beta(1, 1), 2: beta(3, 1)/beta(1, 1)}
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Beta-binomial_distribution
+    .. [2] http://mathworld.wolfram.com/BetaBinomialDistribution.html
+
+    """
+
+    return rv(name, BetaBinomialDistribution, n, alpha, beta)
 
 
 class HypergeometricDistribution(SingleFiniteDistribution):
