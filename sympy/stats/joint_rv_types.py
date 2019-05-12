@@ -1,5 +1,5 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
-    IndexedBase, Mul, Add, Integer, factorial, Range)
+    IndexedBase, Mul, Add, Integer, factorial, Range, rf, Piecewise, Eq)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -350,10 +350,11 @@ class MultivariateEwensDistribution(JointDistribution):
 
     def pdf(self, *syms):
         n, theta = self.n, self.theta
-        term_1 = factorial(n)/Mul.fromiter([theta + i for i in range(n)])
+        term_1 = factorial(n)/rf(theta, n)
         term_2 = Mul.fromiter([theta**syms[j]/((j+1)**syms[j]*factorial(syms[j]))
                             for j in range(n)])
-        return term_1 * term_2
+        cond = Eq(sum([(k+1)*syms[k] for k in range(n)]), n)
+        return Piecewise((term_1 * term_2, cond), (0, True))
 
 def MultivariateEwens(syms, n, theta):
     """
@@ -385,9 +386,9 @@ def MultivariateEwens(syms, n, theta):
     >>> a2 = Symbol('a2', positive=True)
     >>> ed = MultivariateEwens('E', 2, 1)
     >>> density(ed)(a1, a2)
-    2**(-a2)/(factorial(a1)*factorial(a2))
+    Piecewise((2**(-a2)/(factorial(a1)*factorial(a2)), Eq(a1 + 2*a2, 2)), (0, True))
     >>> marginal_distribution(ed, ed[0])(a1)
-    3/(2*factorial(a1))
+    Piecewise((1/factorial(a1), Eq(a1, 2)), (0, True))
 
     References
     ==========

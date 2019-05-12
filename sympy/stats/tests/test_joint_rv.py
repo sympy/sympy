@@ -1,4 +1,5 @@
-from sympy import symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Rational, simplify
+from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Rational,
+                    simplify, Piecewise, factorial, Eq)
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV
@@ -60,10 +61,10 @@ def test_MultivariateBeta():
     a1_f, a2_f = symbols('a1, a2', positive=False)
     mb = MultivariateBeta('B', [a1, a2])
     mb_c = MultivariateBeta('C', a1, a2)
-    assert simplify(density(mb)(1, 2) -
-            S(2)**(a2 - 1)*gamma(a1 + a2)/(gamma(a1)*gamma(a2))) == S(0)
-    assert simplify(marginal_distribution(mb_c, 0)(3) -
-            S(3)**(a1 - 1)*gamma(a1 + a2)/(a2*gamma(a1)*gamma(a2))) == S(0)
+    assert density(mb)(1, 2) == S(2)**(a2 - 1)*gamma(a1 + a2)/\
+                                (gamma(a1)*gamma(a2))
+    assert marginal_distribution(mb_c, 0)(3) == S(3)**(a1 - 1)*gamma(a1 + a2)/\
+                                                (a2*gamma(a1)*gamma(a2))
     raises(ValueError, lambda: MultivariateBeta('b1', [a1_f, a2]))
     raises(ValueError, lambda: MultivariateBeta('b2', [a1, a2_f]))
     raises(ValueError, lambda: MultivariateBeta('b3', [0, 0]))
@@ -71,11 +72,20 @@ def test_MultivariateBeta():
 
 def test_MultivariateEwens():
     from sympy.stats.joint_rv_types import MultivariateEwens
-    n, theta = symbols('n theta', positive = True)
-    theta_f = symbols('t_f', negative = True)
-    ed = MultivariateEwens('E', 3, 1)
-    assert density(ed)(0, 1, 2) == Rational(1, 36)
-    assert marginal_distribution(ed, ed[1])(1) == Rational(16, 9)
+    n, theta = symbols('n theta', positive=True)
+    theta_f = symbols('t_f', negative=True)
+    a = symbols('a_1:4', positive = True, integer = True)
+    ed = MultivariateEwens('E', 3, theta)
+    assert density(ed)(a[0], a[1], a[2]) == Piecewise((6*2**(-a[1])*3**(-a[2])*
+                                            theta**a[0]*theta**a[1]*theta**a[2]/
+                                            (theta*(theta + 1)*(theta + 2)*
+                                            factorial(a[0])*factorial(a[1])*
+                                            factorial(a[2])), Eq(a[0] + 2*a[1] +
+                                            3*a[2], 3)), (0, True))
+    assert marginal_distribution(ed, ed[1])(a[1]) == Piecewise((6*2**(-a[1])*
+                                                    theta**a[1]/((theta + 1)*
+                                                    (theta + 2)*factorial(a[1])),
+                                                    Eq(2*a[1] + 1, 3)), (0, True))
     raises(ValueError, lambda: MultivariateEwens('e1', 5, theta_f))
     raises(ValueError, lambda: MultivariateEwens('e1', n, theta))
 
