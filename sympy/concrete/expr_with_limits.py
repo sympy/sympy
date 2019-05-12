@@ -123,10 +123,13 @@ def _process_limits(*symbols):
                             raise ValueError("Summation exceeds Idx lower range.")
                         if hi is not None and not bool(nlim[1] <= hi):
                             raise ValueError("Summation exceeds Idx upper range.")
+                    continue
                 elif len(V) == 1 or (len(V) == 2 and V[1] is None):
                     limits.append(Tuple(newsymbol))
+                    continue
                 elif len(V) == 2:
                     limits.append(Tuple(newsymbol, V[1]))
+                    continue
 
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
