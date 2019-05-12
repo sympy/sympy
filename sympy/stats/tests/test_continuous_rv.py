@@ -549,7 +549,7 @@ def test_normal_inverse():
 
     X = NormalInverse('x', a, b)
     assert density(X)(z) == sqrt(2)*sqrt(b)*sqrt(z**(-3))*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
-    assert simplify(E(X)) == a
+    assert E(X) == a
     assert simplify(variance(X)) == a**3/b
     assert simplify(cdf(X)(z)) == (1 - erf(sqrt(2)*(a + sqrt(b)*(a + z)*sqrt(1/z))/(2*a)))*\
         exp(2*b/a)/2 - erf(sqrt(2)*(a + sqrt(b)*(a - z)*sqrt(1/z))/(2*a))/2 + 1/2

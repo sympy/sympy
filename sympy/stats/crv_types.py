@@ -2229,8 +2229,11 @@ class NormalInverseDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         mean, shape = self.mean, self.shape
-        return self._standardNormal_cdf(sqrt(shape/x) * ((x/mean - S.One))) + exp(2*shape/mean)*\
-            self._standardNormal_cdf(-sqrt(shape/x)*(x/mean + S.One))
+        
+        first_term = self._standardNormal_cdf(sqrt(shape/x) * ((x/mean - S.One)))
+        second_term = exp(2*shape/mean) * self._standardNormal_cdf(-sqrt(shape/x)*(x/mean + S.One))
+        
+        return  first_term + second_term
 
     def _characteristic_function(self, t):
         mean, shape = self.mean, self.shape
@@ -2254,7 +2257,7 @@ def NormalInverse(name, mean, shape):
     ==========
 
     mu : Positive number representing the mean
-    lambda : Positive number representing the shape parameter,
+    lambda : Positive number representing the shape parameter
 
     Returns
     =======
@@ -2269,7 +2272,7 @@ def NormalInverse(name, mean, shape):
 
     >>> mu = Symbol("mu", positive=True)
     >>> l = Symbol("lambda", positive=True)
-    >>> z = Symbol("z")
+    >>> z = Symbol("z", positive=True)
     >>> y = Symbol("y")
     >>> p = Symbol("p")
     >>> X = NormalInverse("x", mu, l)
@@ -2278,7 +2281,7 @@ def NormalInverse(name, mean, shape):
     sqrt(2)*sqrt(lambda)*sqrt(z**(-3))*exp(-lambda*(-mu + z)**2/(2*mu**2*z))/(2*sqrt(pi))
 
     >>> simplify(cdf(X))(z)
-    (1 - erf(sqrt(2)*(sqrt(lambda)*(mu + z)*sqrt(1/z) + mu)/(2*mu)))*exp(2*lambda/mu)/2 + \
+    (1 - erf(sqrt(2)*(sqrt(lambda)*(mu + z)*sqrt(1/z) + mu)/(2*mu)))*exp(2*lambda/mu)/2 +
         erf(sqrt(2)*(sqrt(lambda)*(-mu + z)*sqrt(1/z) - mu)/(2*mu))/2 + 1/2
 
     >>> simplify(skewness(X))
