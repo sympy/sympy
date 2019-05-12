@@ -369,8 +369,8 @@ def NegativeMultinomial(syms, k0, *p):
     >>> N = NegativeMultinomial('M', 3, p1, p2, p3)
     >>> N_c = NegativeMultinomial('M', 3, 0.1, 0.1, 0.1)
     >>> density(N)(x1, x2, x3)
-    p1**x1*p2**x2*p3**x3*(-p1 - p2 - p3 + 1)**3*gamma(x1 + x2 + x3 + 3)/
-    (2*factorial(x1)*factorial(x2)*factorial(x3))
+    p1**x1*p2**x2*p3**x3*(-p1 - p2 - p3 + 1)**3*gamma(x1 + x2 +
+    x3 + 3)/(2*factorial(x1)*factorial(x2)*factorial(x3))
     >>> marginal_distribution(N_c, N_c[0])(1).evalf().round(2)
     0.25
 
