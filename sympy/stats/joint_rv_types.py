@@ -1,6 +1,6 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
-    IndexedBase)
-from sympy.matrices import ImmutableMatrix
+    IndexedBase, Sum, Symbol, Rational, Mul)
+from sympy.matrices import ImmutableMatrix, ones
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
     JointDistributionHandmade, MarginalDistribution)
@@ -253,3 +253,54 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     A random symbol
     """
     return multivariate_rv(NormalGammaDistribution, syms, mu, lamda, alpha, beta)
+
+#-------------------------------------------------------------------------------
+# Generalized Multivariate Log Gamma distribution ---------------------------------------------------------
+
+class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
+
+    _argnames = ['omega', 'v', 'l', 'mu']
+    is_Continuous=True
+
+    def check(self, omega, v, l, mu):
+        _value_check(omega.is_square, "the matrix must be square")
+        for val in omega.values():
+            _value_check((val >= 0) != False and (val <= 1) != False,
+                "all values in matrix must be between 0 and 1(both inclusive).")
+        _value_check(omega.diagonal().equals(ones(1, omega.shape[0])),
+                        "all the elements of diagonal should be 1.")
+        _value_check((v > 0) != False, "v must be positive")
+        for lk in l:
+            _value_check((lk > 0) != False, "lamda must be a positive vector.")
+        for muk in mu:
+            _value_check((muk > 0) != False, "mu must be a positive vector.")
+        _value_check(omega.shape == (len(l), len(mu)),
+                        "lamda, mu should be of same length and omega should "
+                        " be of shape (length of lamda, length of mu)")
+
+    @property
+    def set(self):
+        from sympy.sets.sets import Interval
+        return S.Reals**len(self.l)
+
+    def pdf(self, *y):
+        from sympy.functions.special.gamma_functions import gamma
+        omega, v, l, mu = self.omega, self.v, self.l, self.mu
+        n = Symbol('n', negative=False, integer=True)
+        k = len(l)
+        d = (omega.det())**(Rational(1, k - 1))
+        sterm1 = ((1 - d)**n)/((gamma(v + n)**(k - 1))*gamma(v)*gamma(n + 1))
+        sterm2 = Mul.fromiter([mui*li**(-v - n) for mui, li in zip(mu, l)])
+        term1 = sterm1 * sterm2
+        sterm3 = (v + n) * sum([mui * yi for mui, yi in zip(mu, y)])
+        sterm4 = sum([exp(mui * yi)/li for (mui, yi, li) in zip(mu, y, l)])
+        term2 = exp(sterm3 - sterm4)
+        return (d**v) * Sum(term1 * term2, (n, 0, S.Infinity))
+
+def GeneralizedMultivariateLogGamma(syms, omega, v, l, mu):
+    """
+    """
+    return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
+                            syms, omega, v, l, mu)
+
+GMVLG = GeneralizedMultivariateLogGamma
