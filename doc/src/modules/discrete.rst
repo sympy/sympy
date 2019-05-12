@@ -93,14 +93,3 @@ Intersecting Product
 ^^^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: intersecting_product
-
-
-Recurrences
------------
-
-.. module:: sympy.discrete.recurrences
-
-Linear Recurrences
-^^^^^^^^^^^^^^^^^^
-
-.. autofunction:: linrec
