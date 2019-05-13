@@ -2273,8 +2273,6 @@ def NormalInverse(name, mean, shape):
     >>> mu = Symbol("mu", positive=True)
     >>> l = Symbol("lambda", positive=True)
     >>> z = Symbol("z", positive=True)
-    >>> y = Symbol("y")
-    >>> p = Symbol("p")
     >>> X = NormalInverse("x", mu, l)
 
     >>> density(X)(z)
