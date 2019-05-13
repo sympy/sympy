@@ -1511,7 +1511,6 @@ class MatrixEigen(MatrixSubspaces):
         eigen = self.eigenvals()
         return all(x.is_nonnegative for x in eigen.keys())
 
-
     @property
     def is_negative_definite(self):
         if not self.is_hermitian:
