@@ -1016,7 +1016,7 @@ def multivariate_gamma(x, p):
 
     .. math::
         \Gamma_p(z) = \pi^{p(p-1)/4}\prod_{k=1}^p \Gamma[z + (1 - k)/2].
-    
+
     Special case, multivariate_gamma(x, 1) = gamma(x)
 
     Parameter
@@ -1028,7 +1028,7 @@ def multivariate_gamma(x, p):
 
     >>> from sympy import S, I, pi, oo, gamma, multivariate_gamma
     >>> from sympy.abc import x, p
-    
+
     >>> multivariate_gamma(x, p)
     pi**(p*(p - 1)/4)*Product(gamma(-k/2 + x + 1/2), (k, 1, p))
 
@@ -1065,6 +1065,9 @@ def multivariate_gamma(x, p):
 
     .. [1] https://en.wikipedia.org/wiki/Multivariate_gamma_function
     """
+    psym = sympify(p)
+    if not (psym.is_integer and psym.is_positive):
+        raise TypeError('p must be a positive integer')
     from sympy import Product
     from sympy.abc import k
-    return pi**(p*(p-1)/4)*Product(gamma(x + (1 - k)/2), (k, 1, p))
+    return pi**(psym*(psym-1)/4)*Product(gamma(x + (1 - k)/2), (k, 1, psym))
