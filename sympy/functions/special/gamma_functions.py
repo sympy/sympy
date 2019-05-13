@@ -5,15 +5,15 @@ from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from .zeta_functions import zeta
-from .error_functions import erf, erfc
+from sympy.core.logic import fuzzy_and, fuzzy_not
+from sympy.functions.special.zeta_functions import zeta
+from sympy.functions.special.error_functions import erf, erfc
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
-
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -1009,3 +1009,64 @@ def trigamma(x):
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
     return polygamma(1, x)
+
+def multivariate_gamma(x, p):
+    r"""
+    The multivariate gamma function is a generalization of the gamma function i.e,
+
+    .. math::
+        \Gamma_p(z) = \pi^{p(p-1)/4}\prod_{k=1}^p \Gamma[z + (1 - k)/2].
+
+    Special case, multivariate_gamma(x, 1) = gamma(x)
+
+    Parameters
+    ==========
+
+    p: order or dimension of the multivariate gamma function
+
+    Examples
+    ========
+
+    >>> from sympy import S, I, pi, oo, gamma, multivariate_gamma
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> p = Symbol('p', positive=True, integer=True)
+
+    >>> multivariate_gamma(x, p)
+    pi**(p*(p - 1)/4)*Product(gamma(-k/2 + x + 1/2), (k, 1, p))
+
+    Several special values are known:
+    >>> multivariate_gamma(1, 1).doit()
+    1
+    >>> multivariate_gamma(4, 1).doit()
+    6
+    >>> multivariate_gamma(S(3)/2, 1).doit()
+    sqrt(pi)/2
+
+    Writing multivariate_gamma in terms of gamma function
+    >>> multivariate_gamma(x, 1).doit()
+    gamma(x)
+
+    >>> multivariate_gamma(x, 2).doit()
+    sqrt(pi)*gamma(x)*gamma(x - 1/2)
+
+    >>> multivariate_gamma(x, 3).doit()
+    pi**(3/2)*gamma(x)*gamma(x - 1)*gamma(x - 1/2)
+
+    See Also
+    ========
+
+    gamma, lowergamma, uppergamma, polygamma, loggamma, digamma, trigamma
+    sympy.functions.special.beta_functions.beta
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Multivariate_gamma_function
+    """
+    psym = sympify(p)
+    if fuzzy_not(fuzzy_and([psym.is_integer, psym.is_positive])):
+        raise TypeError('p must be a positive integer')
+    from sympy import Product
+    from sympy.abc import k
+    return pi**(psym*(psym-1)/4)*Product(gamma(x + (1 - k)/2), (k, 1, psym))
