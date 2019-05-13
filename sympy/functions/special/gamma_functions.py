@@ -15,7 +15,6 @@ from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
 from sympy.utilities.misc import filldedent
 
-
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
 ###############################################################################
@@ -1016,42 +1015,37 @@ def multivariate_gamma(x, p):
     The multivariate gamma function is a generalization of the gamma function i.e,
 
     .. math::
-        \Gamma_p(z) = \pi^{p(p-1)/4}\prod_{j=1}^p \Gamma[z + (1 - j)/2].
+        \Gamma_p(z) = \pi^{p(p-1)/4}\prod_{k=1}^p \Gamma[z + (1 - k)/2].
     
     Special case, multivariate_gamma(x, 1) = gamma(x)
 
     Parameter
     =========
-    p: order or dimension of the multivariate gamma function, must be an integer
+    p: order or dimension of the multivariate gamma function
 
     Examples
     ========
 
     >>> from sympy import S, I, pi, oo, gamma, multivariate_gamma
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, p
+    
+    >>> multivariate_gamma(x, p)
+    pi**(p*(p - 1)/4)*Product(gamma(-k/2 + x + 1/2), (k, 1, p))
 
     Several special values are known:
-
-    >>> multivariate_gamma(1, 1)
+    >>> multivariate_gamma(1, 1).doit()
     1
-    >>> multivariate_gamma(4, 1)
+    >>> multivariate_gamma(4, 1).doit()
     6
-    >>> multivariate_gamma(S(3)/2, 1)
+    >>> multivariate_gamma(S(3)/2, 1).doit()
     sqrt(pi)/2
 
     Writing multivariate_gamma in terms of gamma function
-
-    >>> multivariate_gamma(10, 1) == gamma(10)
+    >>> multivariate_gamma(x, 1).doit() == gamma(x)
     True
-    >>> multivariate_gamma(10, 2) == pi**(0.5)*gamma(10)*gamma(10 - 0.5)
+    >>> multivariate_gamma(x, 2).doit() == pi**(0.5)*gamma(x)*gamma(x - 0.5)
     True
-    >>> multivariate_gamma(10, 3) == pi**(1.5)*gamma(10)*gamma(10 - 0.5)*gamma(10 - 1)
-    True
-
-    The Gamma function obeys the mirror symmetry:
-
-    >>> from sympy import conjugate
-    >>> conjugate(multivariate_gamma(x), 2) == multivariate_gamma(conjugate(x), 2)
+    >>> multivariate_gamma(x, 3).doit() == pi**(1.5)*gamma(x)*gamma(x - 0.5)*gamma(x - 1)
     True
 
     See Also
@@ -1071,11 +1065,6 @@ def multivariate_gamma(x, p):
 
     .. [1] https://en.wikipedia.org/wiki/Multivariate_gamma_function
     """
-    gamma_term = 1
-    try:
-        for j in range(1, p+1):
-            gamma_term = gamma_term * gamma(x + (1 - j)/2)
-    except TypeError:
-        raise TypeError(filldedent('''
-        p must be an 'int' object'''))
-    return pi**(p*(p-1)/4)*gamma_term
+    from sympy import Product
+    from sympy.abc import k
+    return pi**(p*(p-1)/4)*Product(gamma(x + (1 - k)/2), (k, 1, p))
