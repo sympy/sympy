@@ -12,23 +12,22 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
     expr : Expression
            The expression whose series is to be expanded.
 
-    x    : Symbol
-           It is the variable of the expression to be calculated.
+    x : Symbol
+        It is the variable of the expression to be calculated.
 
-    x0   : Value
-           The value around which ``x`` is calculated. Can be any value
-           from ``-oo`` to ``oo``.
+    x0 : Value
+         The value around which ``x`` is calculated. Can be any value
+         from ``-oo`` to ``oo``.
 
-    n    : Value
-           The number of terms upto which the series is to be expanded.
+    n : Value
+        The number of terms upto which the series is to be expanded.
 
-    dir  : String
-           Optional (default: "+")
-           The series-expansion can be bi-directional. If ``dir="+"``,
-           then (x->x0+). If ``dir="-", then (x->x0-). For infinite
-           ``x0`` (``oo`` or ``-oo``), the ``dir`` argument is determined
-           from the direction of the infinity (i.e., ``dir="-"`` for
-           ``oo``).
+    dir : String, optional
+          The series-expansion can be bi-directional. If ``dir="+"``,
+          then (x->x0+). If ``dir="-", then (x->x0-). For infinite
+          ``x0`` (``oo`` or ``-oo``), the ``dir`` argument is determined
+          from the direction of the infinity (i.e., ``dir="-"`` for
+          ``oo``).
 
     Examples
     ========
@@ -48,26 +47,27 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
 
     >>> series(f, x, 2, oo, "+")
     Traceback (most recent call last):
-      File "/opt/python/3.7.1/lib/python3.7/doctest.py", line 1329, in __run
-        compileflags, 1), test.globs)
-      File "<doctest sympy.series.series.series[5]>", line 1, in <module>
-        series(f, x, 2, oo, "+")
-      File "/home/travis/virtualenv/python3.7.1/lib/python3.7/site-packages/sympy-1.5.dev0-py3.7.egg/sympy/core/expr.py", line 2721, in series
+      File "pr.py", line 4, in <module>
+        print(series(f, x, 2, oo, "+"))
+      File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/series/series.py", line 12, in series
+        return expr.series(x, x0, n, dir)
+      File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/core/expr.py", line 2652, in series
         s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx)
-      File "/home/travis/virtualenv/python3.7.1/lib/python3.7/site-packages/sympy-1.5.dev0-py3.7.egg/sympy/core/expr.py", line 2731, in series
+      File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/core/expr.py", line 2662, in series
         rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
-      File "/home/travis/virtualenv/python3.7.1/lib/python3.7/site-packages/sympy-1.5.dev0-py3.7.egg/sympy/core/expr.py", line 2738, in series
+      File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/core/expr.py", line 2669, in series
         s1 = self._eval_nseries(x, n=n, logx=logx)
-      File "/home/travis/virtualenv/python3.7.1/lib/python3.7/site-packages/sympy-1.5.dev0-py3.7.egg/sympy/functions/elementary/trigonometric.py", line 1094, in _eval_nseries
+      File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/functions/elementary/trigonometric.py", line 1095, in _eval_nseries
         return Function._eval_nseries(self, x, n=n, logx=logx)
-      File "/home/travis/virtualenv/python3.7.1/lib/python3.7/site-packages/sympy-1.5.dev0-py3.7.egg/sympy/core/function.py", line 707, in _eval_nseries
+      File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/core/function.py", line 680, in _eval_nseries
         for i in range(n - 1):
     TypeError: 'Infinity' object cannot be interpreted as an integer
 
     Returns
     =======
 
-    Series expansion of the expression about x0
+    Expr
+        Series expansion of the expression about x0
 
     See Also
     ========
