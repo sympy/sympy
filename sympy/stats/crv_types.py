@@ -2277,11 +2277,7 @@ def NormalInverse(name, mean, shape):
 
     >>> density(X)(z)
     sqrt(2)*sqrt(lambda)*exp(-lambda*(-mu + z)**2/(2*mu**2*z))/(2*sqrt(pi)*z**(3/2))
-
-    >>> simplify(cdf(X))(z)
-    (1 - erf(sqrt(2)*(sqrt(lambda)*(mu + z) + mu*sqrt(z))/(2*mu*sqrt(z))))*exp(2*lambda/mu)/2 -
-         erf(sqrt(2)*(sqrt(lambda)*(mu - z) + mu*sqrt(z))/(2*mu*sqrt(z)))/2 + 1/2
-
+    
     >>> simplify(skewness(X))
     3*sqrt(mu)/sqrt(lambda)
 
