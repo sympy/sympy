@@ -1027,7 +1027,9 @@ def multivariate_gamma(x, p):
     ========
 
     >>> from sympy import S, I, pi, oo, gamma, multivariate_gamma
-    >>> from sympy.abc import x, p
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> p = Symbol('p', positive=True, integer=True)
 
     >>> multivariate_gamma(x, p)
     pi**(p*(p - 1)/4)*Product(gamma(-k/2 + x + 1/2), (k, 1, p))
