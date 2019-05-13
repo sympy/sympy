@@ -1501,11 +1501,17 @@ class MatrixEigen(MatrixSubspaces):
             eigen = self.eigenvals()
             return all(x.is_positive for x in eigen.keys())
 
+        elif self.is_square:
+            return ((self + self.H) / 2).is_positive_definite
+
     @property
     def is_positive_semidefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
             return all(x.is_nonnegative for x in eigen.keys())
+
+        elif self.is_square:
+            return ((self + self.H) / 2).is_positive_semidefinite
 
     @property
     def is_negative_definite(self):
@@ -1513,11 +1519,17 @@ class MatrixEigen(MatrixSubspaces):
             eigen = self.eigenvals()
             return all(x.is_negative for x in eigen.keys())
 
+        elif self.is_square:
+            return ((self + self.H) / 2).is_negative_definite
+
     @property
     def is_negative_semidefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
             return all(x.is_nonpositive for x in eigen.keys())
+
+        elif self.is_square:
+            return ((self + self.H) / 2).is_negative_semidefinite
 
     @property
     def is_indefinite(self):
@@ -1539,6 +1551,9 @@ class MatrixEigen(MatrixSubspaces):
                         any_negative = True
 
             return any_positive and any_negative
+
+        elif self.is_square:
+            return ((self + self.H) / 2).is_indefinite
 
     def jordan_form(self, calc_transform=True, **kwargs):
         """Return ``(P, J)`` where `J` is a Jordan block
