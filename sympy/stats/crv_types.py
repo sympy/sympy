@@ -2251,7 +2251,7 @@ def NormalInverse(name, mean, shape):
     The density of the Inverse Normal distribution is given by
 
     .. math::
-        f(x) := \sqrt(\frac{\lambda}{2\pi x^3}) e^{-\frac{\lambda(x-\mu)^2}{2x\mu^2}}
+        f(x) := \sqrt{\frac{\lambda}{2\pi x^3}} e^{-\frac{\lambda(x-\mu)^2}{2x\mu^2}}
 
     Parameters
     ==========
@@ -2267,7 +2267,7 @@ def NormalInverse(name, mean, shape):
     Examples
     ========
 
-    >>> from sympy.stats import NormalInverse, density, E, std, cdf, skewness
+    >>> from sympy.stats import NormalInverse, density, E, std, skewness
     >>> from sympy import Symbol, simplify
 
     >>> mu = Symbol("mu", positive=True)
@@ -2277,15 +2277,12 @@ def NormalInverse(name, mean, shape):
 
     >>> density(X)(z)
     sqrt(2)*sqrt(lambda)*exp(-lambda*(-mu + z)**2/(2*mu**2*z))/(2*sqrt(pi)*z**(3/2))
-    
-    >>> simplify(skewness(X))
-    3*sqrt(mu)/sqrt(lambda)
 
     >>> E(X)
     mu
 
-    >>> simplify(std(X))
-    mu**(3/2)/sqrt(lambda)
+    >>> std(X)
+    sqrt(-mu**2 + (lambda*mu**2 + mu**3)/lambda)
 
     References
     ==========
