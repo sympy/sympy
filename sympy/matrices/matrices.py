@@ -1538,7 +1538,7 @@ class MatrixEigen(MatrixSubspaces):
             any_positive = False
             any_negative = False
 
-            for x in eigenvals.keys():
+            for x in eigen.keys():
                 if any_positive and any_negative:
                     break
 
