@@ -2268,7 +2268,7 @@ def NormalInverse(name, mean, shape):
     ========
 
     >>> from sympy.stats import NormalInverse, density, E, std, cdf, skewness
-    >>> from sympy import Symbol, simplify, factor, together, factor_terms
+    >>> from sympy import Symbol, simplify
 
     >>> mu = Symbol("mu", positive=True)
     >>> l = Symbol("lambda", positive=True)
