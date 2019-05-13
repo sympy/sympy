@@ -6,6 +6,7 @@ Contains
 Arcsin
 Benini
 Beta
+BetaNoncentral
 BetaPrime
 Cauchy
 Chi
@@ -67,6 +68,7 @@ __all__ = ['ContinuousRV',
 'Arcsin',
 'Benini',
 'Beta',
+'BetaNoncentral'
 'BetaPrime',
 'Cauchy',
 'Chi',
@@ -396,6 +398,77 @@ def Beta(name, alpha, beta):
     """
 
     return rv(name, BetaDistribution, (alpha, beta))
+
+#-------------------------------------------------------------------------------
+# Noncentral Beta distribution ------------------------------------------------------------
+
+
+class BetaNoncentralDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta', 'lamda')
+
+    set = Interval(0, 1)
+
+    @staticmethod
+    def check(alpha, beta, lamda):
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
+        _value_check(lamda >= 0, "Noncentraility parameter Lambda must be positive")
+
+    def pdf(self, x):
+        alpha, beta, lamda = self.alpha, self.beta, self.lamda
+        k = Dummy("k")
+        return Sum(exp(-lamda/2)*(lamda/2)**k*x**(alpha+k-1)*(1-x)**(beta-1)/(factorial(k)*beta_fn(alpha+k, beta)),
+         (k, 0, oo))
+
+def BetaNoncentral(name, alpha, beta, lamda):
+    r"""
+    Create a Continuous Random Variable with a Noncentral Beta distribution.
+
+    The density of the Noncentral Beta distribution is given by
+
+    .. math::
+        f(x) := \sum_{k=0}^\infty e^{-\lambda/2}\frac{(\lambda/2)^k}{k!}\frac{x^{\alpha+k-1}(1-x)^{\beta-1}}{\mathrm{B}(\alpha+k,\beta)}
+
+    with :math:`x \in [0,1]`.
+
+    Parameters
+    ==========
+
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
+    lamda: Real number, `\lambda >= 0`, noncentraility parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Beta, density
+    >>> from sympy import Symbol
+
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> beta = Symbol("beta", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = Beta("x", alpha, beta)
+
+    >>> density(X)(z)
+    Sum(z**(_k + alpha - 1)*(lamda/2)**_k*(1 - z)**(beta - 1)*exp(-lamda/2)/(beta(_k + alpha, beta)*factorial(_k)),
+     (_k, 0, oo))                                        
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Noncentral_beta_distribution
+    .. [2] https://reference.wolfram.com/language/ref/NoncentralBetaDistribution.html
+
+    """
+
+    return rv(name, BetaNoncentralDistribution, (alpha, beta, lamda))
+
 
 #-------------------------------------------------------------------------------
 # Beta prime distribution ------------------------------------------------------
