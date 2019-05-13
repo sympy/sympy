@@ -259,8 +259,8 @@ def test_beta_binomial_numeric():
         for a in alphavals:
             for b in betavals:
                 X = BetaBinomial('X', n, a, b)
-                assert E(X).evalf() == n*a/(a + b)
-                assert variance(X).evalf() == n*a*b*(a + b + n)/((a + b)**2*(a + b + 1))
+                assert E(X) == moment(X, 1)
+                assert variance(X) == cmoment(X, 2)
 
 def test_beta_binomial_symbolic():
     n = 2 # Because we're using for loops, can't do symbolic n
