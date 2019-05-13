@@ -13,6 +13,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
+from sympy.utilities.misc import filldedent
 
 
 ###############################################################################
@@ -1009,3 +1010,72 @@ def trigamma(x):
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
     return polygamma(1, x)
+
+def multivariate_gamma(x, p):
+    r"""
+    The multivariate gamma function is a generalization of the gamma function i.e,
+
+    .. math::
+        \Gamma_p(z) = \pi^{p(p-1)/4}\prod_{j=1}^p \Gamma[z + (1 - j)/2].
+    
+    Special case, multivariate_gamma(x, 1) = gamma(x)
+
+    Parameter
+    =========
+    p: order or dimension of the multivariate gamma function, must be an integer
+
+    Examples
+    ========
+
+    >>> from sympy import S, I, pi, oo, gamma, multivariate_gamma
+    >>> from sympy.abc import x
+
+    Several special values are known:
+
+    >>> multivariate_gamma(1, 1)
+    1
+    >>> multivariate_gamma(4, 1)
+    6
+    >>> multivariate_gamma(S(3)/2, 1)
+    sqrt(pi)/2
+
+    Writing multivariate_gamma in terms of gamma function
+
+    >>> multivariate_gamma(10, 1) == gamma(10)
+    True
+    >>> multivariate_gamma(10, 2) == pi**(0.5)*gamma(10)*gamma(10 - 0.5)
+    True
+    >>> multivariate_gamma(10, 3) == pi**(1.5)*gamma(10)*gamma(10 - 0.5)*gamma(10 - 1)
+    True
+
+    The Gamma function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(multivariate_gamma(x), 2) == multivariate_gamma(conjugate(x), 2)
+    True
+
+    See Also
+    ========
+
+    gamma: Gamma function.
+    lowergamma: Lower incomplete gamma function.
+    uppergamma: Upper incomplete gamma function.
+    polygamma: Polygamma function.
+    loggamma: Log Gamma function.
+    digamma: Digamma function.
+    trigamma: Trigamma function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Multivariate_gamma_function
+    """
+    gamma_term = 1
+    try:
+        for j in range(1, p+1):
+            gamma_term = gamma_term * gamma(x + (1 - j)/2)
+    except TypeError:
+        raise TypeError(filldedent('''
+        p must be an 'int' object'''))
+    return pi**(p*(p-1)/4)*gamma_term
