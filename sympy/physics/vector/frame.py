@@ -259,15 +259,13 @@ class ReferenceFrame(object):
     def _w_diff_dcm(self, otherframe):
         """Angular velocity from time differentiating the DCM. """
         from sympy.physics.vector.functions import dynamicsymbols
-        dcm2diff = self.dcm(otherframe)
+        dcm2diff = otherframe.dcm(self)
         diffed = dcm2diff.diff(dynamicsymbols._t)
-        # angvelmat = diffed * dcm2diff.T
-        # This one seems to produce the correct result when I checked using Autolev.
-        angvelmat = dcm2diff*diffed.T
+        angvelmat = diffed * dcm2diff.T
         w1 = trigsimp(expand(angvelmat[7]), recursive=True)
         w2 = trigsimp(expand(angvelmat[2]), recursive=True)
         w3 = trigsimp(expand(angvelmat[3]), recursive=True)
-        return -Vector([(Matrix([w1, w2, w3]), self)])
+        return Vector([(Matrix([w1, w2, w3]), otherframe)])
 
     def variable_map(self, otherframe):
         """
