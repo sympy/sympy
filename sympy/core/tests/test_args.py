@@ -1512,7 +1512,7 @@ def test_sympy__stats__joint_rv_types__MultinomialDistribution():
 
 def test_sympy__stats__joint_rv_types__NegativeMultinomialDistribution():
     from sympy.stats.joint_rv_types import NegativeMultinomialDistribution
-    assert _test_args(NegativeMultinomialDistribution(5, [0.5, 0.1, 0.3])
+    assert _test_args(NegativeMultinomialDistribution(5, [0.5, 0.1, 0.3]))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy

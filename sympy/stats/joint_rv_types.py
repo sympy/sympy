@@ -1,5 +1,5 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
-    IndexedBase, Sum, Symbol, Rational, Mul, Pow, besselk, gamma, 
+    IndexedBase, Sum, Symbol, Rational, Mul, Pow, besselk, gamma,
     Interval, Range, factorial, Mul, Integer)
 from sympy.matrices import ImmutableMatrix, ones
 from sympy.matrices.expressions.determinant import det
