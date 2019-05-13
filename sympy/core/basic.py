@@ -34,26 +34,26 @@ class Basic(with_metaclass(ManagedProperties)):
 
     1) Always use ``.args``, when accessing parameters of some instance:
 
-        >>> from sympy import cot
-        >>> from sympy.abc import x, y
+    >>> from sympy import cot
+    >>> from sympy.abc import x, y
 
-        >>> cot(x).args
-        (x,)
+    >>> cot(x).args
+    (x,)
 
-        >>> cot(x).args[0]
-        x
+    >>> cot(x).args[0]
+    x
 
-        >>> (x*y).args
-        (x, y)
+    >>> (x*y).args
+    (x, y)
 
-        >>> (x*y).args[1]
-        y
+    >>> (x*y).args[1]
+    y
 
 
     2) Never use internal methods or variables (the ones prefixed with ``_``):
 
-        >>> cot(x)._args    # do not use this, use cot(x).args instead
-        (x,)
+    >>> cot(x)._args    # do not use this, use cot(x).args instead
+    (x,)
 
     """
     __slots__ = ['_mhash',              # hash value
@@ -341,13 +341,13 @@ class Basic(with_metaclass(ManagedProperties)):
         return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
-        """a != b  -> Compare two symbolic trees and see whether they are different
+        """``a != b``  -> Compare two symbolic trees and see whether they are different
 
-           this is the same as:
+        this is the same as:
 
-             a.compare(b) != 0
+        ``a.compare(b) != 0``
 
-           but faster
+        but faster
         """
         return not self == other
 
@@ -401,6 +401,7 @@ class Basic(with_metaclass(ManagedProperties)):
     # regardless of the global setting.  See issue 5487.
     def __repr__(self):
         """Method to return the string representation.
+
         Return the expression as a string.
         """
         from sympy.printing import sstr
@@ -432,70 +433,70 @@ class Basic(with_metaclass(ManagedProperties)):
     def atoms(self, *types):
         """Returns the atoms that form the current object.
 
-           By default, only objects that are truly atomic and can't
-           be divided into smaller pieces are returned: symbols, numbers,
-           and number symbols like I and pi. It is possible to request
-           atoms of any type, however, as demonstrated below.
+        By default, only objects that are truly atomic and can't
+        be divided into smaller pieces are returned: symbols, numbers,
+        and number symbols like I and pi. It is possible to request
+        atoms of any type, however, as demonstrated below.
 
-           Examples
-           ========
+        Examples
+        ========
 
-           >>> from sympy import I, pi, sin
-           >>> from sympy.abc import x, y
-           >>> (1 + x + 2*sin(y + I*pi)).atoms()
-           {1, 2, I, pi, x, y}
+        >>> from sympy import I, pi, sin
+        >>> from sympy.abc import x, y
+        >>> (1 + x + 2*sin(y + I*pi)).atoms()
+        {1, 2, I, pi, x, y}
 
-           If one or more types are given, the results will contain only
-           those types of atoms.
+        If one or more types are given, the results will contain only
+        those types of atoms.
 
-           >>> from sympy import Number, NumberSymbol, Symbol
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
-           {x, y}
+        >>> from sympy import Number, NumberSymbol, Symbol
+        >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
+        {x, y}
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Number)
-           {1, 2}
+        >>> (1 + x + 2*sin(y + I*pi)).atoms(Number)
+        {1, 2}
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol)
-           {1, 2, pi}
+        >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol)
+        {1, 2, pi}
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol, I)
-           {1, 2, I, pi}
+        >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol, I)
+        {1, 2, I, pi}
 
-           Note that I (imaginary unit) and zoo (complex infinity) are special
-           types of number symbols and are not part of the NumberSymbol class.
+        Note that I (imaginary unit) and zoo (complex infinity) are special
+        types of number symbols and are not part of the NumberSymbol class.
 
-           The type can be given implicitly, too:
+        The type can be given implicitly, too:
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol
-           {x, y}
+        >>> (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol
+        {x, y}
 
-           Be careful to check your assumptions when using the implicit option
-           since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type
-           of sympy atom, while ``type(S(2))`` is type ``Integer`` and will find all
-           integers in an expression:
+        Be careful to check your assumptions when using the implicit option
+        since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type
+        of sympy atom, while ``type(S(2))`` is type ``Integer`` and will find all
+        integers in an expression:
 
-           >>> from sympy import S
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(S(1))
-           {1}
+        >>> from sympy import S
+        >>> (1 + x + 2*sin(y + I*pi)).atoms(S(1))
+        {1}
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(S(2))
-           {1, 2}
+        >>> (1 + x + 2*sin(y + I*pi)).atoms(S(2))
+        {1, 2}
 
-           Finally, arguments to atoms() can select more than atomic atoms: any
-           sympy type (loaded in core/__init__.py) can be listed as an argument
-           and those types of "atoms" as found in scanning the arguments of the
-           expression recursively:
+        Finally, arguments to atoms() can select more than atomic atoms: any
+        sympy type (loaded in core/__init__.py) can be listed as an argument
+        and those types of "atoms" as found in scanning the arguments of the
+        expression recursively:
 
-           >>> from sympy import Function, Mul
-           >>> from sympy.core.function import AppliedUndef
-           >>> f = Function('f')
-           >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(Function)
-           {f(x), sin(y + I*pi)}
-           >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(AppliedUndef)
-           {f(x)}
+        >>> from sympy import Function, Mul
+        >>> from sympy.core.function import AppliedUndef
+        >>> f = Function('f')
+        >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(Function)
+        {f(x), sin(y + I*pi)}
+        >>> (1 + f(x) + 2*sin(y + I*pi)).atoms(AppliedUndef)
+        {f(x)}
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
-           {I*pi, 2*sin(y + I*pi)}
+        >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
+        {I*pi, 2*sin(y + I*pi)}
 
         """
         if types:
@@ -625,8 +626,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @staticmethod
     def _recursive_call(expr_to_call, on_args):
-        """Helper for rcall method.
-        """
+        """Helper for rcall method."""
         from sympy import Symbol
         def the_call_method_is_overridden(expr):
             for cls in getmro(type(expr)):
@@ -767,17 +767,17 @@ class Basic(with_metaclass(ManagedProperties)):
     def as_poly(self, *gens, **args):
         """Converts ``self`` to a polynomial or returns ``None``.
 
-           >>> from sympy import sin
-           >>> from sympy.abc import x, y
+        >>> from sympy import sin
+        >>> from sympy.abc import x, y
 
-           >>> print((x**2 + x*y).as_poly())
-           Poly(x**2 + x*y, x, y, domain='ZZ')
+        >>> print((x**2 + x*y).as_poly())
+        Poly(x**2 + x*y, x, y, domain='ZZ')
 
-           >>> print((x**2 + x*y).as_poly(x, y))
-           Poly(x**2 + x*y, x, y, domain='ZZ')
+        >>> print((x**2 + x*y).as_poly(x, y))
+        Poly(x**2 + x*y, x, y, domain='ZZ')
 
-           >>> print((x**2 + sin(y)).as_poly(x, y))
-           None
+        >>> print((x**2 + sin(y)).as_poly(x, y))
+        None
 
         """
         from sympy.polys import Poly, PolynomialError
@@ -1018,21 +1018,21 @@ class Basic(with_metaclass(ManagedProperties)):
         Add's _eval_subs knows how to target x + y in the following
         so it makes the change:
 
-            >>> (x + y + z).subs(x + y, 1)
-            z + 1
+        >>> (x + y + z).subs(x + y, 1)
+        z + 1
 
         Add's _eval_subs doesn't need to know how to find x + y in
         the following:
 
-            >>> Add._eval_subs(z*(x + y) + 3, x + y, 1) is None
-            True
+        >>> Add._eval_subs(z*(x + y) + 3, x + y, 1) is None
+        True
 
         The returned None will cause the fallback routine to traverse the args and
         pass the z*(x + y) arg to Mul where the change will take place and the
         substitution will succeed:
 
-            >>> (z*(x + y) + 3).subs(x + y, 1)
-            z + 3
+        >>> (z*(x + y) + 3).subs(x + y, 1)
+        z + 3
 
         ** Developers Notes **
 
@@ -1115,7 +1115,10 @@ class Basic(with_metaclass(ManagedProperties)):
         """Override this stub if you want to do anything more than
         attempt a replacement of old with new in the arguments of self.
 
-        See also: _subs
+        See also
+        ========
+
+        _subs
         """
         return None
 
@@ -1125,11 +1128,13 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Parameters
         ==========
+
         rule : dict-like
             Expresses a replacement rule
 
         Returns
         =======
+
         xreplace : the result of the replacement
 
         Examples
@@ -1308,9 +1313,9 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Initial setup
 
-            >>> from sympy import log, sin, cos, tan, Wild, Mul, Add
-            >>> from sympy.abc import x, y
-            >>> f = log(sin(x)) + tan(sin(x**2))
+        >>> from sympy import log, sin, cos, tan, Wild, Mul, Add
+        >>> from sympy.abc import x, y
+        >>> f = log(sin(x)) + tan(sin(x**2))
 
         1.1. type -> type
             obj.replace(type, newtype)
@@ -1398,39 +1403,40 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Here, we want `exact=False`:
 
-            >>> from sympy import Function
-            >>> f = Function('f')
-            >>> e = f(1) + f(0)
-            >>> q = f(a), lambda a: f(a + 1)
-            >>> e.replace(*q, exact=False)
-            f(1) + f(2)
-            >>> e.replace(*q, exact=True)
-            f(0) + f(2)
+        >>> from sympy import Function
+        >>> f = Function('f')
+        >>> e = f(1) + f(0)
+        >>> q = f(a), lambda a: f(a + 1)
+        >>> e.replace(*q, exact=False)
+        f(1) + f(2)
+        >>> e.replace(*q, exact=True)
+        f(0) + f(2)
 
         But here, the nature of matching makes selecting
         the right setting tricky:
 
-            >>> e = x**(1 + y)
-            >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=False)
-            1
-            >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=True)
-            x**(-x - y + 1)
-            >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=False)
-            1
-            >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=True)
-            x**(1 - y)
+        >>> e = x**(1 + y)
+        >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=False)
+        1
+        >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=True)
+        x**(-x - y + 1)
+        >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=False)
+        1
+        >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=True)
+        x**(1 - y)
 
         It is probably better to use a different form of the query
         that describes the target expression more precisely:
 
-            >>> (1 + x**(1 + y)).replace(
-            ... lambda x: x.is_Pow and x.exp.is_Add and x.exp.args[0] == 1,
-            ... lambda x: x.base**(1 - (x.exp - 1)))
-            ...
-            x**(1 - y) + 1
+        >>> (1 + x**(1 + y)).replace(
+        ... lambda x: x.is_Pow and x.exp.is_Add and x.exp.args[0] == 1,
+        ... lambda x: x.base**(1 - (x.exp - 1)))
+        ...
+        x**(1 - y) + 1
 
         See Also
         ========
+
         subs: substitution of subexpressions as defined by the objects
               themselves.
         xreplace: exact node replacement in expr tree; also capable of
@@ -1649,21 +1655,21 @@ class Basic(with_metaclass(ManagedProperties)):
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
-           integrals, sums and products. All objects of this kind will be
-           evaluated recursively, unless some species were excluded via 'hints'
-           or unless the 'deep' hint was set to 'False'.
+        integrals, sums and products. All objects of this kind will be
+        evaluated recursively, unless some species were excluded via 'hints'
+        or unless the 'deep' hint was set to 'False'.
 
-           >>> from sympy import Integral
-           >>> from sympy.abc import x
+        >>> from sympy import Integral
+        >>> from sympy.abc import x
 
-           >>> 2*Integral(x, x)
-           2*Integral(x, x)
+        >>> 2*Integral(x, x)
+        2*Integral(x, x)
 
-           >>> (2*Integral(x, x)).doit()
-           x**2
+        >>> (2*Integral(x, x)).doit()
+        x**2
 
-           >>> (2*Integral(x, x)).doit(deep=False)
-           2*Integral(x, x)
+        >>> (2*Integral(x, x)).doit(deep=False)
+        2*Integral(x, x)
 
         """
         if hints.get('deep', True):
