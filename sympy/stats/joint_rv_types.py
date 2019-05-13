@@ -303,12 +303,14 @@ def GeneralizedMultivariateLogGamma(syms, omega, v, l, mu):
     Creates a joint random variable with generalized multivariate log gamma
     distribution.
 
+    The joint pdf can be found at [1].
+
     Parameters
     ==========
 
     syms: list/tuple/set of symbols for identifying each component
     omega: A matrix
-           with each square root of absolute value of correlation cofficient
+           with each square root of absolute value of correlation
     v: positive real
     l: a list of positive reals
     mu: a list of positive reals
@@ -333,6 +335,12 @@ def GeneralizedMultivariateLogGamma(syms, omega, v, l, mu):
     >>> density(G)(y[0], y[1], y[2])
     sqrt(2)*Sum((1 - sqrt(2)/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) -
     exp(y_2) - exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Generalized_multivariate_log-gamma_distribution
+    .. [2] https://www.researchgate.net/publication/234137346_On_a_multivariate_log-gamma_distribution_and_the_use_of_the_distribution_in_the_Bayesian_analysis
 
     """
     return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
