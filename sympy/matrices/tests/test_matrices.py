@@ -1181,6 +1181,21 @@ def test_eigen():
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
 
+def test_definite():
+    m = Matrix([[1, 2], [2, 1]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == False
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == True
+
+    m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == True
+
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
     assert Matrix([[x, 2], [x + y, 4]]).subs([[x, -1], [y, -2]]) == \
