@@ -182,6 +182,7 @@ def test_Range_set():
     assert Range(oo, 1, -1)[-1] == 2
     assert Range(0, -oo, -2)[-1] == -oo
     assert Range(1, 10, 1)[-1] == 9
+    assert all(i.is_Integer for i in Range(0, -1, 1))
 
     it = iter(Range(-oo, 0, 2))
     raises(ValueError, lambda: next(it))
@@ -189,6 +190,7 @@ def test_Range_set():
     assert empty.intersect(S.Integers) == empty
     assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Naturals) == Range(1, 10, 1)
+
 
     # test slicing
     assert Range(1, 10, 1)[5] == 6
