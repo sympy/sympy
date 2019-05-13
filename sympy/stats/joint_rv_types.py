@@ -1,5 +1,5 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
-    IndexedBase, Sum, Symbol, Rational, Mul)
+    IndexedBase, Sum, Symbol, Rational, Mul, Pow)
 from sympy.matrices import ImmutableMatrix, ones
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -288,17 +288,52 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
         omega, v, l, mu = self.omega, self.v, self.l, self.mu
         n = Symbol('n', negative=False, integer=True)
         k = len(l)
-        d = (omega.det())**(Rational(1, k - 1))
-        sterm1 = ((1 - d)**n)/((gamma(v + n)**(k - 1))*gamma(v)*gamma(n + 1))
+        d = Pow(Rational(omega.det()), Rational(1, k - 1))
+        sterm1 = Pow((1 - d), n)/\
+                ((gamma(v + n)**(k - 1))*gamma(v)*gamma(n + 1))
         sterm2 = Mul.fromiter([mui*li**(-v - n) for mui, li in zip(mu, l)])
         term1 = sterm1 * sterm2
         sterm3 = (v + n) * sum([mui * yi for mui, yi in zip(mu, y)])
         sterm4 = sum([exp(mui * yi)/li for (mui, yi, li) in zip(mu, y, l)])
         term2 = exp(sterm3 - sterm4)
-        return (d**v) * Sum(term1 * term2, (n, 0, S.Infinity))
+        return Pow(d, v) * Sum(term1 * term2, (n, 0, S.Infinity))
 
 def GeneralizedMultivariateLogGamma(syms, omega, v, l, mu):
     """
+    Creates a joint random variable with generalized multivariate log gamma
+    distribution.
+
+    Parameters
+    ==========
+
+    syms: list/tuple/set of symbols for identifying each component
+    omega: A matrix
+           with each square root of absolute value of correlation cofficient
+    v: positive real
+    l: a list of positive reals
+    mu: a list of positive reals
+
+    Returns
+    =======
+
+    A Random Symbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv import marginal_distribution
+    >>> from sympy.stats.joint_rv_types import GMVLG
+    >>> from sympy import Matrix, symbols
+    >>> omega = Matrix([[1, 0.5, 0.5], [0.5, 1, 0.5], [0.5, 0.5, 1]])
+    >>> v = 1
+    >>> l, mu = [1, 1, 1], [1, 1, 1]
+    >>> G = GMVLG('G', omega, v, l, mu)
+    >>> y = symbols('y_1:4', positive=True)
+    >>> density(G)(y[0], y[1], y[2])
+    sqrt(2)*Sum((1 - sqrt(2)/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) -
+    exp(y_2) - exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
+
     """
     return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
                             syms, omega, v, l, mu)
