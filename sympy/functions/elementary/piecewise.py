@@ -2,13 +2,14 @@ from __future__ import print_function, division
 
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Symbol
 from sympy.core.basic import as_Basic
-from sympy.core.compatibility import range
-from sympy.core.numbers import Rational, NumberSymbol
+from sympy.core.compatibility import range, reduce
+from sympy.core.numbers import Rational, NumberSymbol, oo
 from sympy.core.relational import (Equality, Unequality, Relational,
     _canonical)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
     true, false, Or, ITE, simplify_logic)
+from sympy.sets.sets import Interval, Union, FiniteSet
 from sympy.utilities.iterables import uniq, ordered, product, sift
 from sympy.utilities.misc import filldedent, func_name
 
@@ -579,22 +580,8 @@ class Piecewise(Function):
             from sympy import Integral
             return Integral(self, x)  # unevaluated
 
-        pieces = [(a, b) for a, b, _, _ in abei]
         oo = S.Infinity
-        done = [(-oo, oo, -1)]
-        for k, p in enumerate(pieces):
-            if p == (-oo, oo):
-                # all undone intervals will get this key
-                for j, (a, b, i) in enumerate(done):
-                    if i == -1:
-                        done[j] = a, b, k
-                break  # nothing else to consider
-            N = len(done) - 1
-            for j, (a, b, i) in enumerate(reversed(done)):
-                if i == -1:
-                    j = N - j
-                    done[j: j + 1] = _clip(p, (a, b), k)
-        done = [(a, b, i) for a, b, i in done if a != b]
+        done = _clipped(abei, -oo, oo, keep_zero_width=False)
 
         # append an arg if there is a hole so a reference to
         # argument -1 will give Undefined
@@ -631,7 +618,6 @@ class Piecewise(Function):
         # following papers;
         #     http://portal.acm.org/citation.cfm?id=281649
         #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
-        from sympy.core.symbol import Dummy
 
         if a is None or b is None:
             # In this case, it is just simple substitution
@@ -721,22 +707,7 @@ class Piecewise(Function):
             # of f'(x) over the same range
             return Integral(self.diff(x), (x, lo, hi))  # unevaluated
 
-        pieces = [(a, b) for a, b, _, _ in abei]
-        done = [(lo, hi, -1)]
-        oo = S.Infinity
-        for k, p in enumerate(pieces):
-            if p[:2] == (-oo, oo):
-                # all undone intervals will get this key
-                for j, (a, b, i) in enumerate(done):
-                    if i == -1:
-                        done[j] = a, b, k
-                break  # nothing else to consider
-            N = len(done) - 1
-            for j, (a, b, i) in enumerate(reversed(done)):
-                if i == -1:
-                    j = N - j
-                    done[j: j + 1] = _clip(p, (a, b), k)
-        done = [(a, b, i) for a, b, i in done if a != b]
+        done = _clipped(abei, lo, hi, default=False, keep_zero_width=False)
 
         # return the sum of the intervals
         sum = S.Zero
@@ -751,7 +722,7 @@ class Piecewise(Function):
             upto = b
         return sum
 
-    def _intervals(self, sym):
+    def _intervals(self, sym=None):
         """Return a list of unique tuples, (a, b, e, i), where a and b
         are the lower and upper bounds in which the expression e of
         argument i in self is defined and a < b (when involving
@@ -770,7 +741,23 @@ class Piecewise(Function):
         from sympy.solvers.inequalities import _solve_inequality
         from sympy.logic.boolalg import to_cnf, distribute_or_over_and
 
-        assert isinstance(self, Piecewise)
+        if sym is None:
+            free = reduce(set.union,
+                [i.free_symbols for e, i in self.args], set())
+            sym = free.pop() if free else Dummy('x for intervals')
+            if free:
+                raise ValueError('must specify `sym` for multivariate conditions')
+
+        try:
+            iv = []
+            for a, b, e, i  in self._univariate_intervals():
+                if a != b:
+                    iv.append((a, b, e, i))
+                if (a, b) == (-oo, oo):
+                    break
+            return iv
+        except NotImplementedError:
+            pass
 
         def _solve_relational(r):
             if sym not in r.free_symbols:
@@ -809,7 +796,7 @@ class Piecewise(Function):
             (r, _solve_relational(r)) for r in self.atoms(Relational)])
         # process args individually so if any evaluate, their position
         # in the original Piecewise will be known
-        args = [i.xreplace(reps) for i in self.args]
+        args = [(e, c.xreplace(reps)) for (e, c) in self.args]
 
         # precondition args
         expr_cond = []
@@ -870,6 +857,52 @@ class Piecewise(Function):
                 (S.NegativeInfinity, S.Infinity, default, idefault))
 
         return list(uniq(int_expr))
+
+    def _univariate_intervals(self):
+        """Return a list of unique tuples, (a, b, e, i), where a and b
+        are the lower and upper bounds in which the expression e of
+        argument i in self is defined and a < b.
+
+        If there are any relationals not involving sym, or any
+        relational cannot be solved for sym, NotImplementedError is
+        raised. The calling routine should have removed such
+        relationals before calling this routine.
+
+        The evaluated conditions will be returned as ranges.
+        Discontinuous ranges will be returned separately with
+        identical expressions. The first condition that evaluates to
+        True will be returned as the last tuple with a, b = -oo, oo.
+        """
+        free = reduce(set.union,
+            [i.free_symbols for e, i in self.args], set())
+        sym = free.pop() if free else Dummy('x for univariate intervals')
+        if free:
+            raise NotImplementedError('not univariate')
+        abei = []
+        for i, (e, c) in enumerate(self.args):
+            iv = c.as_set()
+            if iv is S.EmptySet:
+                continue
+            if isinstance(iv, Union):
+                iv = iv.args
+                if not all(isinstance(i, (Interval, FiniteSet)) for i in iv):
+                    raise NotImplementedError('Unexpected Union arg')
+            elif isinstance(iv, FiniteSet):
+                iv = [iv]
+            elif isinstance(iv, Interval):
+                iv = [iv]
+            elif iv is S.UniversalSet or iv is S.Reals:
+                iv = [Interval(-oo, oo)]
+            else:
+                raise NotImplementedError('unanticipated set')
+            for s in iv:
+                if isinstance(s, FiniteSet):
+                    for a in s:
+                        abei.append((a, a, e, i))
+                else:
+                    a, b = s.args[:2]
+                    abei.append((a, b, e, i))
+        return abei
 
     def _eval_nseries(self, x, n, logx):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
@@ -1183,3 +1216,34 @@ def _clip(A, B, k):
         pass
 
     return p
+
+
+def _clipped(abei, lo, hi, default=True, keep_zero_width=False):
+    """helper that returns a list of ranges and the corrresponding
+    original interval from which they came by successively removing
+    from a range what is already covered in earlier ranges."""
+    #from sympy.functions.elementary.piecewise import _clip
+    pieces = [(a, b) for a, b, _, _ in abei]
+    oo = S.Infinity
+    done = [(lo, hi, -1)]
+    for k, p in enumerate(pieces):
+        if p == (-oo, oo):
+            # all undone intervals will get this key
+            for j, (a, b, i) in enumerate(done):
+                if i == -1:
+                    done[j] = a, b, k
+            break  # nothing else to consider
+        N = len(done) - 1
+        for j, (a, b, i) in enumerate(reversed(done)):
+            if i == -1:
+                j = N - j
+                done[j: j + 1] = _clip(p, (a, b), k)
+    if default:
+        # append an arg if there is a hole so a reference to
+        # argument -1 will give Undefined
+        if not done or done[-1][1] != oo or any(
+                i == -1 for (a, b, i) in done[:-1]):
+            done.append((-oo, oo, -1))
+    if keep_zero_width:
+        return done
+    return [(a, b, i) for a, b, i in done if a != b]

@@ -1035,10 +1035,19 @@ def test_issue_4313():
 
 def test__intervals():
     assert Piecewise((x + 2, Eq(x, 3)))._intervals(x) == []
-    assert Piecewise(
+    # univarariate will allow null-width results but when called
+    # from _intervals, these are filtered out
+    assert Piecewise((x + 2, Eq(x, 3)))._univariate_intervals() == [
+        (3, 3, x + 2, 0)]
+    one = symbols('1', positive=True)
+    p = Piecewise(
         (1, x > x + 1),
-        (Piecewise((1, x < x + 1)), 2*x < 2*x + 1),
-        (1, True))._intervals(x) == [(-oo, oo, 1, 1)]
+        (Piecewise((1, x < x + 1)), 2*x < 2*x + one),
+        (1, True))
+    # multivariate
+    assert p._intervals(x) == [(-oo, oo, Piecewise((1, x < x + 1)), 1)]
+    # univariate
+    assert p.subs(one, 1)._intervals(x) == [(-oo, oo, Piecewise((1, x < x + 1)), 1)]
     assert Piecewise((1, Ne(x, I)), (0, True))._intervals(x) == [
         (-oo, oo, 1, 0)]
     assert Piecewise((-cos(x), sin(x) >= 0), (cos(x), True)
