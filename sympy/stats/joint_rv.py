@@ -101,7 +101,6 @@ class JointPSpace(ProductPSpace):
         if self.distribution.is_Continuous:
             f = Lambda(sym, integrate(self.distribution(*all_syms), *limits))
         elif self.distribution.is_Discrete:
-            # limits = [(limit[0], limit[1].inf, limit[1].sup) for limit in limits]
             f = Lambda(sym, summation(self.distribution(*all_syms), *limits))
         return f.xreplace(replace_dict)
 
