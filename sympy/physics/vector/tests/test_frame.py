@@ -213,7 +213,13 @@ def test_w_diff_dcm2():
     # Frames D and C are the same ReferenceFrame,
     # since they have equal DCM respect to frame N.
     # Therefore, D and C should have same angle velocity in N.
-    assert D.dcm(N) == C.dcm(N)
+    assert D.dcm(N) == C.dcm(N) == Matrix([
+        [cos(q2)*cos(q3), sin(q1)*sin(q2)*cos(q3) +
+        sin(q3)*cos(q1), sin(q1)*sin(q3) -
+        sin(q2)*cos(q1)*cos(q3)], [-sin(q3)*cos(q2),
+        -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3),
+        sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1)],
+        [sin(q2), -sin(q1)*cos(q2), cos(q1)*cos(q2)]])
     assert (D.ang_vel_in(N) - C.ang_vel_in(N)).express(N).simplify() == 0
 
 def test_orientnew_respects_parent_class():
