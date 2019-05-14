@@ -163,13 +163,7 @@ def test_dcm():
         sin(q2)*cos(q1)*cos(q3), - sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),
          cos(q1)*cos(q2)]])
 
-
-# This test has been added to test the _w_diff_dcm() function
-# for which a test was previously not included.
-# Also note that the _w_diff_dcm() function was changed as part of
-# PR #14758 as it was observed to be giving incorrect results
-# when compared with Autolev results.
-def test_w_diff_dcm():
+def test_w_diff_dcm1():
     a = ReferenceFrame('a')
     b = ReferenceFrame('b')
     c11, c12, c13, c21, c22, c23, c31, c32, c33 = dynamicsymbols('c11 c12 c13 c21 c22 c23 c31 c32 c33')
@@ -184,6 +178,18 @@ def test_w_diff_dcm():
            (c11*c12d + c21*c22d + c31*c32d)*b.z)
     assert b.ang_vel_in(a) - expr == 0
 
+def test_w_diff_dcm2():
+    q1, q2, q3 = dynamicsymbols('q1:4')
+    N = ReferenceFrame('N')
+    A = N.orientnew('A', 'axis', [q1, N.x])
+    B = A.orientnew('B', 'axis', [q2, A.y])
+    C = B.orientnew('C', 'axis', [q3, B.z])
+
+    DCM = C.dcm(N).T
+    D = N.orientnew('D', 'DCM', DCM)
+
+    assert D.dcm(N) == C.dcm(N)
+    assert (D.ang_vel_in(N) - C.ang_vel_in(N)).simplify().express(N) == 0
 
 def test_orientnew_respects_parent_class():
     class MyReferenceFrame(ReferenceFrame):
