@@ -1,4 +1,4 @@
-from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt,
+from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, Eq, Piecewise,
     IndexedBase, besselk, gamma, Interval, Range, factorial, Mul, Integer)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
@@ -259,21 +259,23 @@ class MultinomialDistribution(JointDistribution):
     is_Discrete = True
 
     def check(self, n, p):
-        _value_check(((n > 0) != False) and isinstance(n, Integer),
+        _value_check(((n > 0) != False),
                         "number of trials must be a positve integer")
         for p_k in p:
-            _value_check((p_k >= 0) != False,
+            _value_check((p_k >= 0) != False and (p_k <= 1) != False,
                         "probability must be at least a positive symbol.")
+        _value_check(Eq(sum(p), 1) != False,
+                        "probabilities must sum to 1")
 
     @property
     def set(self):
-        return Range(0, self.n)**len(self.p)
+        return Interval(0, self.n)**len(self.p)
 
     def pdf(self, *x):
         n, p = self.n, self.p
         term_1 = factorial(n)/Mul.fromiter([factorial(x_k) for x_k in x])
         term_2 = Mul.fromiter([p_k**x_k for p_k, x_k in zip(p, x)])
-        return term_1*term_2
+        return Piecewise((term_1 * term_2, Eq(sum(x), n)), (0, True))
 
 def Multinomial(syms, n, *p):
     """
@@ -302,10 +304,10 @@ def Multinomial(syms, n, *p):
     >>> p1, p2, p3 = symbols('p1, p2, p3', positive=True)
     >>> M = Multinomial('M', 3, p1, p2, p3)
     >>> density(M)(x1, x2, x3)
-    6*p1**x1*p2**x2*p3**x3/(factorial(x1)*factorial(x2)*factorial(x3))
+    Piecewise((6*p1**x1*p2**x2*p3**x3/(factorial(x1)*factorial(x2)*factorial(x3)),
+    Eq(x1 + x2 + x3, 3)), (0, True))
     >>> marginal_distribution(M, M[0])(x1).subs(x1, 1)
-    3*p1*p2**2*p3**2/2 + 3*p1*p2**2*p3 + 3*p1*p2**2 + 3*p1*p2*p3**2 +
-    6*p1*p2*p3 + 6*p1*p2 + 3*p1*p3**2 + 6*p1*p3 + 6*p1
+    3*p1*p2**2 + 6*p1*p2*p3 + 3*p1*p3**2
 
     References
     ==========
@@ -326,21 +328,23 @@ class NegativeMultinomialDistribution(JointDistribution):
     is_Discrete = True
 
     def check(self, k0, p):
-        _value_check(((k0 > 0) != False) and isinstance(k0, Integer),
+        _value_check(((k0 > 0) != False),
                         "number of failures must be a positve integer")
         for p_k in p:
             _value_check((p_k >= 0) != False,
                         "probability must be at least a positive symbol.")
+        _value_check((sum(p) <= 1) != False,
+                        "success probabilities must not be greater than 1.")
 
     @property
     def set(self):
-        return S.Naturals0**len(self.p)
+        return Range(0, S.Infinity)**len(self.p)
 
     def pdf(self, *k):
         k0, p = self.k0, self.p
         term_1 = (gamma(k0 + sum(k))*(1 - sum(p))**k0)/gamma(k0)
         term_2 = Mul.fromiter([pi**ki/factorial(ki) for pi, ki in zip(p, k)])
-        return term_1*term_2
+        return term_1 * term_2
 
 def NegativeMultinomial(syms, k0, *p):
     """
