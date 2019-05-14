@@ -1194,7 +1194,7 @@ def test_definite():
     assert m.is_positive_semidefinite == True
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == True
+    assert m.is_indefinite == False
 
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
