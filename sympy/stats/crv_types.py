@@ -417,8 +417,8 @@ class BetaNoncentralDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         alpha, beta, lamda = self.alpha, self.beta, self.lamda
         k = Dummy("k")
-        return Sum(exp(-lamda/2)*(lamda/2)**k*x**(alpha+k-1)*(1-x)**(beta-1)/(factorial(k)*beta_fn(alpha+k, beta)),
-         (k, 0, oo))
+        return Sum(exp(-lamda / 2) * (lamda / 2)**k * x**(alpha + k - 1) * (1 - x)**(beta - 1) /\
+             (factorial(k) * beta_fn(alpha + k, beta)), (k, 0, oo))
 
 def BetaNoncentral(name, alpha, beta, lamda):
     r"""
@@ -446,18 +446,34 @@ def BetaNoncentral(name, alpha, beta, lamda):
     Examples
     ========
 
-    >>> from sympy.stats import Beta, density
-    >>> from sympy import Symbol
+    >>> from sympy.stats import BetaNoncentral, density
+    >>> from sympy import Symbol, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
+    >>> lamda = Symbol("lamda", nonnegative=True)
     >>> z = Symbol("z")
 
-    >>> X = Beta("x", alpha, beta)
+    >>> X = BetaNoncentral("x", alpha, beta)
 
     >>> density(X)(z)
-    Sum(z**(_k + alpha - 1)*(lamda/2)**_k*(1 - z)**(beta - 1)*exp(-lamda/2)/(beta(_k + alpha, beta)*factorial(_k)),
-     (_k, 0, oo))                                        
+    Sum(z**(_k + alpha - 1)*(lamda/2)**_k*(1 - z)**(beta - 1)*exp(-lamda/2)/(beta(_k + alpha, beta)*factorial(_k)) ,
+     (_k, 0, oo))
+
+    >>> pprint(density(X)(z), use_unicode=False)
+      oo
+    _____
+    \    `
+     \                                              -lamda
+      \                          k                  -------
+       \    k + alpha - 1 /lamda\         beta - 1     2
+        )  z             *|-----| *(1 - z)        *e
+       /                  \  2  /
+      /    ------------------------------------------------
+     /                  B(k + alpha, beta)*k!
+    /____,
+    k = 0
+
 
     References
     ==========
