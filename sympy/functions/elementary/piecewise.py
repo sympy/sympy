@@ -1069,6 +1069,106 @@ class Piecewise(Function):
         return _canonical(last)
 
 
+    def cascade(self, sym=None, compact=True):
+        """Return Piecewise with non-overlapping conditions in the provided
+        symbol (which is optional, unless the conditions are multivariate).
+
+        Examples
+        ========
+
+        >>> from sympy import Piecewise, And
+        >>> Piecewise((1, x < 3), (2, And(x > 2, x < 5), (3, True)).cascade()
+        Piecewise(
+            (1, x < 3),
+            (2, x < 5),
+            (3, True))
+        >>> pxy = Piecewise((1, x - y < 2),(2, x < y + 3), (3, True))
+        >>> pxy.cascade(x)
+        Piecewise(
+            (1, x < y + 2),
+            (2, x < y + 3),
+            (3, True))
+        >>> pxy.cascade(y)
+        Piecewise(
+            (3, y <= x - 3),
+            (2, y <= x - 2),
+            (1, True))
+        """
+        def freesym(a):
+            from sympy.core.compatibility import iterable
+            return reduce(set.union, [i.free_symbols for i in a], set())
+        # get the free symbols in the relationals (excluding Eq and Ne)
+        rfree = freesym([r for e, c in self.args
+            for r in c.atoms(Relational) if not isinstance(r, (
+            Equality, Unequality))])
+        if not rfree:
+            return self
+        # get the sym if not given
+        if not sym:
+            choices = list(rfree)
+            sym = choices.pop()
+            if choices:
+                raise ValueError('specify sym for multivariate case')
+        elif sym not in rfree:
+            return self
+        # make variables real and finite so comparisons with oo evaluate
+        reps = {i: Symbol(i.name, real=True, finite=True) for i in rfree
+                if (i.is_real is None) or (i.is_finite is None)}
+        if reps:
+            args = [(e, c.xreplace(reps)) for e, c in self.args]
+            r = reps[sym]
+            rv = Piecewise(*args).cascade(r)
+            unreps = {v:k for k,v in reps.items()}
+            rv = rv.xreplace(unreps)
+        # working with real/finite specified
+        x = sym
+        abei=self._intervals(x)
+        pieces = _clipped(abei, -oo, oo, keep_zero_width=True)
+        initial_pw_count = sum([e.count(self.func) for e, c in self.args])
+        # reconstruct the args
+        args = []
+        last = oo
+        for a, b, i in pieces:
+            assert a != b
+            e, iarg = abei[i][-2:]
+            if last != oo:
+                # this boundary was covered by last interval
+                pass
+            elif a > -oo:
+                eis = self.subs(x, a)
+                if eis == e:
+                    # this point is covered by this interval
+                    pass
+                else:
+                    args.append((eis, Eq(x, a)))
+            # now the right boundary
+            if b is S.Infinity:
+                cond = True
+            else:
+                valid = False  # if valid, <= or >= will be used
+                if self.args[iarg].cond.subs(x, b) == True:
+                    valid = True
+                elif self.subs(x, b) == e:
+                    valid = True
+                if not valid:
+                    cond = (x < b)
+                    last = oo
+                else:
+                    cond = (x <= b)
+                    last = b
+            args.append((e, cond))
+        post_pw_count = sum([e.count(self.func) for e, c in args])
+        if post_pw_count != initial_pw_count:
+            p = piecewise_fold(self.func(*args))
+            if not isinstance(p, self.func):
+                return p
+            args = list(p.args)
+        if compact and args[-1][1] == True and not any(
+                e == Undefined and not isinstance(c, Eq) for e, c in args):
+            args = [a for a in args if a[0] != args[-1][0]] + args[-1:]
+        return self.func(*args)
+
+
 def piecewise_fold(expr):
     """
     Takes an expression containing a piecewise function and returns the
@@ -1222,9 +1322,7 @@ def _clipped(abei, lo, hi, default=True, keep_zero_width=False):
     """helper that returns a list of ranges and the corrresponding
     original interval from which they came by successively removing
     from a range what is already covered in earlier ranges."""
-    #from sympy.functions.elementary.piecewise import _clip
     pieces = [(a, b) for a, b, _, _ in abei]
-    oo = S.Infinity
     done = [(lo, hi, -1)]
     for k, p in enumerate(pieces):
         if p == (-oo, oo):

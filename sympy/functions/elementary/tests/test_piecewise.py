@@ -1232,3 +1232,51 @@ def test_issue_8458():
     # Test for problem highlighted during review
     p3 = Piecewise((x+1, Eq(x, -1)), (4*x + (y-2)**4, Eq(x, 0) & Eq(x+y, 2)), (sin(x), True))
     assert p3.simplify() == Piecewise((0, Eq(x, -1)), (sin(x), True))
+
+
+def test_cascade():
+    nan = Undefined
+    assert Piecewise((1, (x <= 3) | (x > 4))).cascade() == Piecewise(
+        (nan, Eq(x, 4)),
+        (1, True))
+    assert Piecewise(
+        (0, (x > 3) | (x < 0) | ((x > 0) & (x < 3))),
+        (-1, Ne(x, 0)),
+        (0, Ne(x, 3)),
+        (-2, True)).cascade() == Piecewise(
+        (-1, Eq(x, 3)),
+        (0, True))
+    assert Piecewise(
+        (1, x <= 3),
+        (nan, x > 4)).cascade() == Piecewise(
+        (1, x <= 3),
+        (nan, True))
+    assert Piecewise(
+        (nan, x < 4),
+        (1, x <= 3),
+        (5, x > 4)).cascade() == Piecewise(
+        (nan, x <= 4),
+        (5, True))
+    assert Piecewise(
+        (5, x < 4),
+        (1, x <= 3),
+        (5, x > 4)).cascade() == Piecewise(
+        (nan, Eq(x, 4)),
+        (5, True))
+    assert Piecewise(
+        (4, x < 4),
+        (1, x <= 3),
+        (5, x > 4)).cascade() == Piecewise(
+        (4, x < 4),
+        (nan, Eq(x, 4)),
+        (5, True))
+    assert Piecewise(
+        (1, x < 3),
+        (2, And(x > 4, x < 5)),
+        (3, Eq(y, x)),
+        (6,True)).cascade(x) == Piecewise(
+        (1, x < 3),
+        (3, Eq(x, 3) & Eq(y, 3)),
+        (2, x < 5),
+        (3, Eq(x, 5) & Eq(y, 5)),
+        (6, True))
