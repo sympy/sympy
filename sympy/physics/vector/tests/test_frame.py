@@ -189,7 +189,7 @@ def test_w_diff_dcm2():
     D = N.orientnew('D', 'DCM', DCM)
 
     assert D.dcm(N) == C.dcm(N)
-    assert (D.ang_vel_in(N) - C.ang_vel_in(N)).simplify().express(N) == 0
+    assert (D.ang_vel_in(N) - C.ang_vel_in(N)).simplify() == 0
 
 def test_orientnew_respects_parent_class():
     class MyReferenceFrame(ReferenceFrame):
