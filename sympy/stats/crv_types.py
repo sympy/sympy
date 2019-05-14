@@ -417,8 +417,8 @@ class BetaNoncentralDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         alpha, beta, lamda = self.alpha, self.beta, self.lamda
         k = Dummy("k")
-        return Sum(exp(-lamda / 2) * (lamda / 2)**k * x**(alpha + k - 1) * (1 - x)**(beta - 1) /\
-             (factorial(k) * beta_fn(alpha + k, beta)), (k, 0, oo))
+        return Sum(exp(-lamda / 2) * (lamda / 2)**k * x**(alpha + k - 1) *\
+             (1 - x)**(beta - 1) / (factorial(k) * beta_fn(alpha + k, beta)), (k, 0, oo))
 
 def BetaNoncentral(name, alpha, beta, lamda):
     r"""
@@ -427,7 +427,8 @@ def BetaNoncentral(name, alpha, beta, lamda):
     The density of the Noncentral Beta distribution is given by
 
     .. math::
-        f(x) := \sum_{k=0}^\infty e^{-\lambda/2}\frac{(\lambda/2)^k}{k!}\frac{x^{\alpha+k-1}(1-x)^{\beta-1}}{\mathrm{B}(\alpha+k,\beta)}
+        f(x) := \sum_{k=0}^\infty e^{-\lambda/2}\frac{(\lambda/2)^k}{k!}
+                \frac{x^{\alpha+k-1}(1-x)^{\beta-1}}{\mathrm{B}(\alpha+k,\beta)}
 
     with :math:`x \in [0,1]`.
 
@@ -446,7 +447,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
     Examples
     ========
 
-    >>> from sympy.stats import BetaNoncentral, density
+    >>> from sympy.stats import BetaNoncentral, density, cdf
     >>> from sympy import Symbol, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
@@ -454,13 +455,10 @@ def BetaNoncentral(name, alpha, beta, lamda):
     >>> lamda = Symbol("lamda", nonnegative=True)
     >>> z = Symbol("z")
 
-    >>> X = BetaNoncentral("x", alpha, beta)
+    >>> X = BetaNoncentral("x", alpha, beta, lamda)
 
-    >>> density(X)(z)
-    Sum(z**(_k + alpha - 1)*(lamda/2)**_k*(1 - z)**(beta - 1)*exp(-lamda/2)/(beta(_k + alpha, beta)*factorial(_k)) ,
-     (_k, 0, oo))
-
-    >>> pprint(density(X)(z), use_unicode=False)
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
       oo
     _____
     \    `
@@ -474,6 +472,12 @@ def BetaNoncentral(name, alpha, beta, lamda):
     /____,
     k = 0
 
+    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
+    >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
+    exp(-1/2)*Integral(Sum(2**(-_k)*_x**_k/(beta(_k + 1, 1)*factorial(_k)), (_k, 0, oo)), (_x, 0, 2))
+
+    The argument evaluate=False prevents an attempt at evaluation
+    of the sum for general x, before the argument 2 is passed.
 
     References
     ==========
