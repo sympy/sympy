@@ -214,7 +214,7 @@ def test_w_diff_dcm2():
     # since they have equal DCM respect to frame N.
     # Therefore, D and C should have same angle velocity in N.
     assert D.dcm(N) == C.dcm(N)
-    assert (D.ang_vel_in(N) - C.ang_vel_in(N)).simplify() == 0
+    assert (D.ang_vel_in(N) - C.ang_vel_in(N)).express(N).simplify() == 0
 
 def test_orientnew_respects_parent_class():
     class MyReferenceFrame(ReferenceFrame):
