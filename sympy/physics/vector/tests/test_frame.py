@@ -196,8 +196,8 @@ def test_w_diff_dcm1():
 
     # Equation (2.1.21)
     expr = (  (c12*c13d + c22*c23d + c32*c33d)*B.x
-            + (c13*c11d + c23*c21d + c33*c31d)*B.y +
-              (c11*c12d + c21*c22d + c31*c32d)*B.z)
+            + (c13*c11d + c23*c21d + c33*c31d)*B.y
+            + (c11*c12d + c21*c22d + c31*c32d)*B.z)
     assert B.ang_vel_in(A) - expr == 0
 
 def test_w_diff_dcm2():
