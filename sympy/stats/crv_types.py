@@ -422,7 +422,7 @@ class BetaNoncentralDistribution(SingleContinuousDistribution):
 
 def BetaNoncentral(name, alpha, beta, lamda):
     r"""
-    Create a Continuous Random Variable with a Noncentral Beta distribution.
+    Create a Continuous Random Variable with a Type I Noncentral Beta distribution.
 
     The density of the Noncentral Beta distribution is given by
 
