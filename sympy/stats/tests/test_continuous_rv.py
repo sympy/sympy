@@ -246,6 +246,11 @@ def test_beta_noncentral():
     assert str(dens(z)) == 'Sum(z**(_k + a - 1)*(c/2)**_k*(1 - z)**(b - 1)*exp(-c/2)/\
 (beta(_k + a, b)*factorial(_k)), (_k, 0, oo))'
 
+    # BetaNoncentral must allow Symbolic parameters
+    # even when assumptions on symbols can be determined
+    a, b, c = symbols('a b c')
+    assert BetaNoncentral('x', a, b, c)
+
     a = Symbol('a', positive=False)
     raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
 
