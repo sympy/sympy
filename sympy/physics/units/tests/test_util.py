@@ -71,12 +71,12 @@ def test_convert_to_quantities():
     assert convert_to(2*speed_of_light, meter/second) == 599584916*meter/second
     assert convert_to(day, second) == 86400*second
     assert convert_to(2*hour, minute) == 120*minute
-    assert convert_to(mile, meter) == 1609.344*meter
+    assert convert_to(mile, meter) == 201168*meter/125
     assert convert_to(mile/hour, kilometer/hour) == 25146*kilometer/(15625*hour)
     assert convert_to(3*newton, meter/second) == 3*newton
     assert convert_to(3*newton, kilogram*meter/second**2) == 3*meter*kilogram/second**2
-    assert convert_to(kilometer + mile, meter) == 2609.344*meter
-    assert convert_to(2*kilometer + 3*mile, meter) == 6828.032*meter
+    assert convert_to(kilometer + mile, meter) == 326168*meter/125
+    assert convert_to(2*kilometer + 3*mile, meter) == 853504*meter/125
     assert convert_to(inch**2, meter**2) == 16129*meter**2/25000000
     assert convert_to(3*inch**2, meter) == 48387*meter**2/25000000
     assert convert_to(2*kilometer/hour + 3*mile/hour, meter/second) == 53344*meter/(28125*second)

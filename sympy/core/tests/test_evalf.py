@@ -2,6 +2,7 @@ from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
     integrate, log, Mul, N, oo, pi, Pow, product, Product,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
+from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf
@@ -301,7 +302,7 @@ def test_evalf_divergent_series():
 
 def test_evalf_product():
     assert Product(n, (n, 1, 10)).evalf() == 3628800.
-    assert Product(1 - S.Half**2/n**2, (n, 1, oo)).evalf(5)==0.63662
+    assert comp(Product(1 - S.Half**2/n**2, (n, 1, oo)), 0.63662, 10**-5)
     assert Product(n, (n, -1, 3)).evalf() == 0
 
 
