@@ -68,7 +68,7 @@ __all__ = ['ContinuousRV',
 'Arcsin',
 'Benini',
 'Beta',
-'BetaNoncentral'
+'BetaNoncentral',
 'BetaPrime',
 'Cauchy',
 'Chi',
@@ -412,7 +412,7 @@ class BetaNoncentralDistribution(SingleContinuousDistribution):
     def check(alpha, beta, lamda):
         _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
         _value_check(beta > 0, "Shape parameter Beta must be positive.")
-        _value_check(lamda >= 0, "Noncentraility parameter Lambda must be positive")
+        _value_check(lamda >= 0, "Noncentrality parameter Lambda must be positive")
 
     def pdf(self, x):
         alpha, beta, lamda = self.alpha, self.beta, self.lamda
@@ -437,7 +437,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
 
     alpha : Real number, `\alpha > 0`, a shape
     beta : Real number, `\beta > 0`, a shape
-    lamda: Real number, `\lambda >= 0`, noncentraility parameter
+    lamda: Real number, `\lambda >= 0`, noncentrality parameter
 
     Returns
     =======
