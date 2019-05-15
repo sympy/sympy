@@ -10,6 +10,7 @@ from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And
 from sympy.sets.sets import Set, Interval, Union, FiniteSet
 from sympy.utilities.misc import filldedent
+from sympy.core.numbers import Float
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -370,16 +371,26 @@ class ImageSet(Set):
 
 class Range(Set):
     """
-    Represents a range of integers. Can be called as Range(stop),
-    Range(start, stop), or Range(start, stop, step); when stop is
-    not given it defaults to 1.
+    Represents a discrete range of values with uniform spacing.
+    Can be called as Range(stop), Range(start, stop), or Range(start, stop, step);
+    when stop is not given it defaults to 1.
 
     `Range(stop)` is the same as `Range(0, stop, 1)` and the stop value
     (juse as for Python ranges) is not included in the Range values.
 
-        >>> from sympy import Range
+        >>> from sympy import Range, symbols
         >>> list(Range(3))
         [0, 1, 2]
+        >>> sr, sp, st = symbols('sr, sp, st', positive=True)
+        >>> R = Range(sr, sp, st)
+        >>> R
+        Range(sr, sp, st)
+        >>> R.subs(sr, 0)
+        Range(0, sp, st)
+        >>> R.subs(sp, 20)
+        Range(sr, 20, st)
+        >>> R.subs(st, 1)
+        Range(sr, sp, 1)
 
     The step can also be negative:
 
@@ -393,9 +404,8 @@ class Range(Set):
         Range(0, 12, 3)
 
     Infinite ranges are allowed. ``oo`` and ``-oo`` are never included in the
-    set (``Range`` is always a subset of ``Integers``). If the starting point
-    is infinite, then the final value is ``stop - step``. To iterate such a
-    range, it needs to be reversed:
+    set. If the starting point is infinite, then the final value is
+    ``stop - step``. To iterate such a range, it needs to be reversed:
 
         >>> from sympy import oo
         >>> r = Range(-oo, 1)
@@ -446,20 +456,16 @@ class Range(Set):
             raise ValueError("step cannot be 0")
 
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
-        try:
-            start, stop, step = [
-                w if w in [S.NegativeInfinity, S.Infinity]
-                else sympify(as_int(w))
-                for w in (start, stop, step)]
-        except ValueError:
-            raise ValueError(filldedent('''
-    Finite arguments to Range must be integers; `imageset` can define
-    other cases, e.g. use `imageset(i, i/10, Range(3))` to give
-    [0, 1/10, 1/5].'''))
 
-        if not step.is_Integer:
+        start, stop, step = map(_sympify, [start, stop, step])
+
+        tmp_obj = Basic(start, stop, step)
+        if tmp_obj.atoms(Float) and (not tmp_obj.atoms(Symbol)):
+            raise ValueError('Floats are not permitted in Range.')
+
+        if step.is_infinite:
             raise ValueError(filldedent('''
-    Ranges must have a literal integer step.'''))
+    Range cannot have an infinite step size.'''))
 
         if all(i.is_infinite for i in  (start, stop)):
             if start == stop:
@@ -472,14 +478,17 @@ class Range(Set):
         if start.is_infinite:
             end = stop
         else:
-            ref = start if start.is_finite else stop
-            n = ceiling((stop - ref)/step)
-            if n <= 0:
-                # null Range
-                start = end = S.Zero
-                step = S.One
+            if not all(w.is_number for w in [start, stop, step]):
+                end = stop
             else:
-                end = ref + n*step
+                ref = start if start.is_finite else stop
+                n = ceiling((stop - ref)/step)
+                if n <= 0:
+                    # null Range
+                    start = end = S.Zero
+                    step = S.One
+                else:
+                    end = ref + n*step
         return Basic.__new__(cls, start, end, step)
 
     start = property(lambda self: self.args[0])

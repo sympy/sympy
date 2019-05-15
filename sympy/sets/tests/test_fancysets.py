@@ -154,6 +154,9 @@ def test_Range_set():
     assert Range(15, 5, -1).inf == 6
     assert Range(10, 67, 10).sup == 60
     assert Range(60, 7, -10).inf == 10
+    n, m = symbols('n, m', positive=True)
+    assert Range(m, n + 2, 1).sup == n + 1
+    assert Range(m, n, 1).inf == m
 
     assert len(Range(10, 38, 10)) == 3
 
@@ -163,7 +166,6 @@ def test_Range_set():
     raises(ValueError, lambda: Range(-oo, oo))
     raises(ValueError, lambda: Range(oo, -oo, -1))
     raises(ValueError, lambda: Range(-oo, oo, 2))
-    raises(ValueError, lambda: Range(0, pi, 1))
     raises(ValueError, lambda: Range(1, 10, 0))
 
     assert 5 in Range(0, oo, 5)
