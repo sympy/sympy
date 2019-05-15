@@ -1909,3 +1909,8 @@ def test_abc():
     assert(isinstance(y, nums.Rational))
     z = numbers.Integer(3)
     assert(isinstance(z, nums.Number))
+
+
+def test_floordiv():
+    assert Float(3.5)//S.Half == 7
+    assert S('35/10')//S.Half == 7

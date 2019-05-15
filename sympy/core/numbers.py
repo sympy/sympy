@@ -2304,7 +2304,9 @@ class Integer(Rational):
         return self, S.One
 
     def __floordiv__(self, other):
-        return Integer(self.p // Integer(other).p)
+        if isinstance(other, Integer):
+            return Integer(self.p // other)
+        return Integer(divmod(self, other)[0])
 
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
