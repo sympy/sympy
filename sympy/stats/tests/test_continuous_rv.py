@@ -8,7 +8,7 @@ from sympy.functions.special.error_functions import erfinv
 from sympy.sets.sets import Intersection, FiniteSet
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, characteristic_function, ContinuousRV, sample,
-                         Arcsin, Benini, Beta, BetaPrime, Cauchy,
+                         Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy,
                          Chi, ChiSquared,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
@@ -231,6 +231,37 @@ def test_beta():
     assert expand_func(E(B)) == a / S(a + b)
     assert expand_func(variance(B)) == (a*b) / S((a + b)**2 * (a + b + 1))
 
+def test_beta_noncentral():
+    a, b = symbols('a b', positive=True)
+    c = Symbol('c', nonnegative=True)
+    _k = Symbol('k')
+
+    X = BetaNoncentral('x', a, b, c)
+
+    assert pspace(X).domain.set == Interval(0, 1)
+
+    dens = density(X)
+    z = Symbol('z')
+
+    assert str(dens(z)) == ("Sum(z**(_k + a - 1)*(c/2)**_k*(1 - z)**(b - 1)*exp(-c/2)/"
+    "(beta(_k + a, b)*factorial(_k)), (_k, 0, oo))")
+
+    # BetaCentral should not raise if the assumptions
+    # on the symbols can not be determined
+    a, b, c = symbols('a b c')
+    assert BetaNoncentral('x', a, b, c)
+
+    a = Symbol('a', positive=False)
+    raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
+
+    a = Symbol('a', positive=True)
+    b = Symbol('b', positive=False)
+    raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
+
+    a = Symbol('a', positive=True)
+    b = Symbol('b', positive=True)
+    c = Symbol('c', nonnegative=False)
+    raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
 
 def test_betaprime():
     alpha = Symbol("alpha", positive=True)
@@ -685,14 +716,14 @@ def test_uniform_P():
     assert P(X < l) == 0 and P(X > l + w) == 0
 
 
-@XFAIL
 def test_uniformsum():
     n = Symbol("n", integer=True)
     _k = Symbol("k")
+    x = Symbol("x")
 
     X = UniformSum('x', n)
-    assert density(X)(x) == (Sum((-1)**_k*(-_k + x)**(n - 1)
-                        *binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1))
+    assert str(density(X)(x)) == ("Sum((-1)**_k*(-_k + x)**(n - 1)"
+    "*binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1)")
 
 
 def test_von_mises():

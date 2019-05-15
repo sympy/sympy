@@ -10,6 +10,7 @@ from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArg
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import range
 from sympy.abc import x
+from sympy.stats.symbolic_probability import Probability
 
 
 def test_where():
@@ -235,3 +236,11 @@ def test_issue_8129():
     assert P(X >= X) == 1
     assert P(X > X) == 0
     assert P(X > X+1) == 0
+
+def test_issue_12237():
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 1)
+    U = P(X > 0, X)
+    V = P(Y < 0, X)
+    assert U == Probability(X > 0, X)
+    assert str(V) == '1/2'
