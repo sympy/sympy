@@ -2714,30 +2714,20 @@ class Expr(Basic, EvalfMixin):
         tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2))
         + O((x - 2)**3, (x, 2))
 
-        >>> f.series(x, 2, oo, "+")
-        Traceback (most recent call last):
-          File "pr.py", line 4, in <module>
-            print(series(f, x, 2, oo, "+"))
-          File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/series/series.py", line 12, in series
-            return expr.series(x, x0, n, dir)
-          File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/core/expr.py", line 2652, in series
-            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx)
-          File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/core/expr.py", line 2662, in series
-            rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
-          File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/core/expr.py", line 2669, in series
-            s1 = self._eval_nseries(x, n=n, logx=logx)
-          File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/functions/elementary/trigonometric.py", line 1095, in _eval_nseries
-            return Function._eval_nseries(self, x, n=n, logx=logx)
-          File "/home/chad7/anaconda3/lib/python3.7/site-packages/sympy/core/function.py", line 680, in _eval_nseries
-            for i in range(n - 1):
-        TypeError: 'Infinity' object cannot be interpreted as an integer
-
         Returns
         =======
 
-        Expr
+        Expr : Expression
             Series expansion of the expression about x0
 
+        Raises
+        ======
+
+        TypeError
+            If "n" and "x0" are infinity objects
+
+        PoleError
+            If "x0" is an infinity object
 
         """
         from sympy import collect, Dummy, Order, Rational, Symbol, ceiling
