@@ -459,18 +459,18 @@ def test_multivariate_gamma():
     assert multivariate_gamma(3, 3).doit() == 3*pi**2/2
 
     assert multivariate_gamma(x, 1).diff(x).doit() == gamma(x)*polygamma(0, x)
-    assert multivariate_gamma(x, 2).diff(x).doit() == sqrt(pi)*(gamma(x)*gamma(x - 1/2)*\
-        polygamma(0, x) + gamma(x)*gamma(x - 1/2)*polygamma(0, x - 1/2))
+    assert multivariate_gamma(x, 2).diff(x).doit() == sqrt(pi)*(gamma(x)*gamma(x - S.Half)*\
+        polygamma(0, x) + gamma(x)*gamma(x - S.Half)*polygamma(0, x - S.Half))
 
     assert multivariate_gamma(x - 1, 1).expand(func=True).doit() == gamma(x)/(x - 1)
     assert multivariate_gamma(x + 2, 1).expand(func=True, mul=False).doit() == x*(x + 1)*\
         gamma(x)
     assert multivariate_gamma(x - 1, 2).expand(func=True).doit() == sqrt(pi)*gamma(x)*\
-        gamma(x - 1/2)/((x - 3/2)*(x - 1))
+        gamma(x - S.Half)/((x - 3/2)*(x - 1))
     assert multivariate_gamma(x + 2, 2).expand(func=True, mul=False).doit() == sqrt(pi)*\
-        x*(x - 1/2)*(x + 1/2)*(x + 1)*gamma(x)*gamma(x - 1/2)
+        x*(x - S.Half)*(x + S.Half)*(x + 1)*gamma(x)*gamma(x - S.Half)
     assert multivariate_gamma(x - 1, 3).expand(func=True).doit() == pi**(3/2)*gamma(x)*\
-        gamma(x - 1)*gamma(x - 1/2)/((x - 2)*(x - 3/2)*(x - 1))
+        gamma(x - 1)*gamma(x - S.Half)/((x - 2)*(x - 3/2)*(x - 1))
 
     assert multivariate_gamma(n, 1).rewrite(factorial).doit() == factorial(n - 1)
     assert multivariate_gamma(n, 2).rewrite(factorial).doit() == sqrt(pi)*\
