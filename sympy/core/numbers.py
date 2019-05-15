@@ -555,8 +555,13 @@ class Number(AtomicExpr):
             raise ZeroDivisionError('modulo by zero')
         if self.is_Integer and other.is_Integer:
             return Tuple(*divmod(self.p, other.p))
+        elif other.is_infinite or other is S.NaN:
+            return Tuple(S.NaN, S.NaN)
         else:
-            rat = self/other
+            if isinstance(other, Float):
+                rat = self/Rational(other)
+            else:
+                rat = self/other
         w = int(rat) if rat > 0 else int(rat) - 1
         r = self - other*w
         return Tuple(w, r)
