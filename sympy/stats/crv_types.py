@@ -2169,7 +2169,7 @@ def Normal(name, mean, std):
 
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> pprint(density(m)(y, z))
+    >>> pprint(density(m)(y, z), use_unicode=False)
            /1   y\ /2*y   z\   /    z\ /  y   2*z    \
            |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
       ___  \2   2/ \ 3    3/   \    2/ \  3    3     /
@@ -2277,22 +2277,22 @@ def NormalInverse(name, mean, shape):
     >>> X = NormalInverse("x", mu, lamda)
 
     >>> D = density(X)(z)
-    >>> pprint(D)
-                                     2
-                     -lamda*(-mu + z)
-                     ------------------
-                              2
-      ___   _______       2*mu *z
-    \/ 2 *\/ lamda *e
-    -----------------------------------
-                   ____  3/2
-               2*\/ pi *z
-
+    >>> pprint(D, use_unicode=False)
+                                       2
+                      -lambda*(-mu + z)
+                      -------------------
+                                2
+      ___   ________        2*mu *z
+    \/ 2 *\/ lambda *e
+    -------------------------------------
+                    ____  3/2
+                2*\/ pi *z
+    
     >>> E(X)
     mu
 
-    >>> std(X)
-    mu**(3/2)/sqrt(lamda)
+    >>> std(X).expand()
+    mu**(3/2)/sqrt(lambda)
 
     References
     ==========
