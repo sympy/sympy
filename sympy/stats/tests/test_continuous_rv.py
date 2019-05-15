@@ -549,7 +549,7 @@ def test_normal_inverse():
     assert NormalInverse('x', a, b)
 
     # Inverse Normal distribution is also known as Wald distribution
-    # `NormalInverse` can also be referred by the name `Wald` 
+    # `NormalInverse` can also be referred by the name `Wald`
     a, b, z = symbols('a b z')
     X = Wald('x', a, b)
     assert density(X)(z) == sqrt(2)*sqrt(b/z**3)*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
