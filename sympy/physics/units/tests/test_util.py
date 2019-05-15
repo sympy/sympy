@@ -63,7 +63,7 @@ def test_dim_simplify_dimless():
 def test_convert_to_quantities():
     assert convert_to(3, meter) == 3
 
-    assert convert_to(mile, kilometer) == 1.609344*kilometer
+    assert convert_to(mile, kilometer) == 25146*kilometer/15625
     assert convert_to(meter/second, speed_of_light) == speed_of_light/299792458
     assert convert_to(299792458*meter/second, speed_of_light) == speed_of_light
     assert convert_to(2*299792458*meter/second, speed_of_light) == 2*speed_of_light
