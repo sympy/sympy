@@ -1,6 +1,6 @@
 from sympy import (
-    Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
-    polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
+    Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, multivariate_gamma,
+    log, polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
     cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic, zeta,conjugate)
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.randtest import (test_derivative_numerically as td,
@@ -439,3 +439,41 @@ def test_issue_14450():
 def test_issue_14528():
     k = Symbol('k', integer=True, nonpositive=True)
     assert isinstance(gamma(k), gamma)
+
+def test_multivariate_gamma():
+    assert multivariate_gamma(nan, 1) == nan
+    assert multivariate_gamma(oo, 1).doit() == oo
+
+    assert multivariate_gamma(1, 1).doit() == 1
+    assert multivariate_gamma(2, 1).doit() == 1
+    assert multivariate_gamma(3, 1).doit() == 2
+
+    assert multivariate_gamma(102, 1).doit() == factorial(101)
+    assert multivariate_gamma(Rational(1, 2), 1).doit() == sqrt(pi)
+
+    assert multivariate_gamma(1, 2).doit() == pi
+    assert multivariate_gamma(2, 2).doit() == pi/2
+
+    assert multivariate_gamma(1, 3).doit() == zoo
+    assert multivariate_gamma(2, 3).doit() == pi**2/2
+    assert multivariate_gamma(3, 3).doit() == 3*pi**2/2
+
+    assert multivariate_gamma(x, 1).diff(x).doit() == gamma(x)*polygamma(0, x)
+    assert multivariate_gamma(x, 2).diff(x).doit() == sqrt(pi)*(gamma(x)*gamma(x - 1/2)*\
+        polygamma(0, x) + gamma(x)*gamma(x - 1/2)*polygamma(0, x - 1/2))
+
+    assert multivariate_gamma(x - 1, 1).expand(func=True).doit() == gamma(x)/(x - 1)
+    assert multivariate_gamma(x + 2, 1).expand(func=True, mul=False).doit() == x*(x + 1)*\
+        gamma(x)
+    assert multivariate_gamma(x - 1, 2).expand(func=True).doit() == sqrt(pi)*gamma(x)*\
+        gamma(x - 1/2)/((x - 3/2)*(x - 1))
+    assert multivariate_gamma(x + 2, 2).expand(func=True, mul=False).doit() == sqrt(pi)*\
+        x*(x - 1/2)*(x + 1/2)*(x + 1)*gamma(x)*gamma(x - 1/2)
+    assert multivariate_gamma(x - 1, 3).expand(func=True).doit() == pi**(3/2)*gamma(x)*\
+        gamma(x - 1)*gamma(x - 1/2)/((x - 2)*(x - 3/2)*(x - 1))
+
+    assert multivariate_gamma(n, 1).rewrite(factorial).doit() == factorial(n - 1)
+    assert multivariate_gamma(n, 2).rewrite(factorial).doit() == sqrt(pi)*\
+        factorial(n - 3/2)*factorial(n - 1)
+    assert multivariate_gamma(n, 3).rewrite(factorial).doit() == pi**(3/2)*\
+        factorial(n - 2)*factorial(n - 3/2)*factorial(n - 1)
