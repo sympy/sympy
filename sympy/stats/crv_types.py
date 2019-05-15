@@ -2214,7 +2214,8 @@ class NormalInverseDistribution(SingleContinuousDistribution):
         _value_check(mean > 0, "Mean must be positive")
 
     def pdf(self, x):
-        return exp(-self.shape*(x - self.mean)**2 / (2*x*self.mean**2)) * sqrt(self.shape/((2*pi*x**3)))
+        mu, s = self.mean, self.shape
+        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/((2*pi*x**3)))
 
     def sample(self):
         scipy = import_module('scipy')
@@ -2222,26 +2223,29 @@ class NormalInverseDistribution(SingleContinuousDistribution):
             from scipy.stats import invgauss
             return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape))
         else:
-            raise NotImplementedError('Sampling the Inverse Normal Distribution requires Scipy.')
+            raise NotImplementedError(
+                'Sampling the Inverse Normal Distribution requires Scipy.')
 
     def _standardNormal_cdf(self, x):
         return erf(sqrt(2)*(x - S.One)/2)/2 + S.Half
 
     def _cdf(self, x):
-        mean, shape = self.mean, self.shape
+        from sympy.stats import cdf
+        mu, s = self.mean, self.shape
+        stdNormalcdf = cdf(Normal('x', 0, 1))
 
-        first_term = self._standardNormal_cdf(sqrt(shape/x) * ((x/mean - S.One)))
-        second_term = exp(2*shape/mean) * self._standardNormal_cdf(-sqrt(shape/x)*(x/mean + S.One))
+        first_term = stdNormalcdf(sqrt(s/x) * ((x/mu) - S.One))
+        second_term = exp(2*s/mu) * stdNormalcdf(-sqrt(s/x)*(x/mu + S.One))
 
         return  first_term + second_term
 
     def _characteristic_function(self, t):
-        mean, shape = self.mean, self.shape
-        return exp((shape/mean)*(1 - sqrt(1 - (2*mean**2*I*t)/shape)))
+        mu, s = self.mean, self.shape
+        return exp((s/mu)*(1 - sqrt(1 - (2*mu**2*I*t)/s)))
 
     def _moment_generating_function(self, t):
-        mean, shape = self.mean, self.shape
-        return exp((shape/mean)*(1 - sqrt(1 - (2*mean**2*t)/shape)))
+        mu, s = self.mean, self.shape
+        return exp((s/mu)*(1 - sqrt(1 - (2*mu**2*t)/s)))
 
 
 def NormalInverse(name, mean, shape):
@@ -2268,7 +2272,7 @@ def NormalInverse(name, mean, shape):
     Examples
     ========
 
-    >>> from sympy.stats import NormalInverse, density, E, std
+    >>> from sympy.stats import NormalInverse, density, cdf, E, std, skewness
     >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu", positive=True)
@@ -2293,6 +2297,9 @@ def NormalInverse(name, mean, shape):
 
     >>> std(X).expand()
     mu**(3/2)/sqrt(lambda)
+
+    >>> skewness(X).expand()
+    3*sqrt(mu)/sqrt(lambda)
 
     References
     ==========

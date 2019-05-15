@@ -147,12 +147,17 @@ def test_characteristic_function():
     Y = Normal('y', 1, 1)
     cf = characteristic_function(Y)
     assert cf(0) == 1
-    assert simplify(cf(1)) == exp(I - S(1)/2)
+    assert cf(1) == exp(I - S(1)/2)
 
     Z = Exponential('z', 5)
     cf = characteristic_function(Z)
     assert cf(0) == 1
-    assert simplify(cf(1)) == S(25)/26 + 5*I/26
+    assert cf(1).expand() == S(25)/26 + 5*I/26
+
+    X = NormalInverse('x', 1, 1)
+    cf = characteristic_function(X)
+    assert cf(0) == 1
+    assert cf(1) == exp(1 - sqrt(1 - 2*I))
 
 
 def test_sample_continuous():
@@ -561,8 +566,8 @@ def test_normal_inverse():
     assert density(X)(z) == sqrt(2)*sqrt(b)*sqrt(z**(-3))*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
     assert E(X) == a
     assert variance(X).expand() == a**3/b
-    assert cdf(X)(z) == (S.Half - erf(-sqrt(2)*(-sqrt(b)*(1 + z/a)/sqrt(z) - 1)/2)/2)*exp(2*b/a) +\
-        erf(sqrt(2)*(sqrt(b)*(-1 + z/a)/sqrt(z) - 1)/2)/2 + S.Half
+    assert cdf(X)(z) == (S.Half - erf(sqrt(2)*sqrt(b)*(1 + z/a)/(2*sqrt(z)))/2)*exp(2*b/a) +\
+         erf(sqrt(2)*sqrt(b)*(-1 + z/a)/(2*sqrt(z)))/2 + S.Half
 
     a = symbols('a', positive=False)
     raises(ValueError, lambda: NormalInverse('x', a, b))
