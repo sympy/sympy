@@ -1,5 +1,6 @@
-from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, Eq, Piecewise,
-    IndexedBase, besselk, gamma, Interval, Range, factorial, Mul, Integer)
+from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, IndexedBase,
+                    besselk, gamma, Interval, Range, factorial, Mul, Integer,
+                    Add, rf, Eq, Piecewise)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -248,6 +249,150 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     A random symbol
     """
     return multivariate_rv(NormalGammaDistribution, syms, mu, lamda, alpha, beta)
+
+#-------------------------------------------------------------------------------
+# Multivariate Beta/Dirichlet distribution ---------------------------------------------------------
+
+class MultivariateBetaDistribution(JointDistribution):
+
+    _argnames = ['alpha']
+    is_Continuous = True
+
+    def check(self, alpha):
+        _value_check(len(alpha) >= 2, "At least two categories should be passed.")
+        for a_k in alpha:
+            _value_check((a_k > 0) != False, "Each concentration parameter"
+                                            " should be positive.")
+
+    @property
+    def set(self):
+        k = len(self.alpha)
+        return Interval(0, 1)**k
+
+    def pdf(self, *syms):
+        alpha = self.alpha
+        B = Mul.fromiter(map(gamma, alpha))/gamma(Add(*alpha))
+        return Mul.fromiter([sym**(a_k - 1) for a_k, sym in zip(alpha, syms)])/B
+
+def MultivariateBeta(syms, *alpha):
+    """
+    Creates a continuous random variable with Dirichlet/Multivariate Beta
+    Distribution.
+
+    The density of the dirichlet distribution can be found at [1].
+
+    Parameters
+    ==========
+
+    alpha: positive real numbers signifying concentration numbers.
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv import marginal_distribution
+    >>> from sympy.stats.joint_rv_types import MultivariateBeta
+    >>> from sympy import Symbol
+    >>> a1 = Symbol('a1', positive=True)
+    >>> a2 = Symbol('a2', positive=True)
+    >>> B = MultivariateBeta('B', [a1, a2])
+    >>> C = MultivariateBeta('C', a1, a2)
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> density(B)(x, y)
+    x**(a1 - 1)*y**(a2 - 1)*gamma(a1 + a2)/(gamma(a1)*gamma(a2))
+    >>> marginal_distribution(C, C[0])(x)
+    x**(a1 - 1)*gamma(a1 + a2)/(a2*gamma(a1)*gamma(a2))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Dirichlet_distribution
+    .. [2] http://mathworld.wolfram.com/DirichletDistribution.html
+
+    """
+    if not isinstance(alpha[0], list):
+        alpha = (list(alpha),)
+    return multivariate_rv(MultivariateBetaDistribution, syms, alpha[0])
+
+Dirichlet = MultivariateBeta
+
+#-------------------------------------------------------------------------------
+# Multivariate Ewens distribution ---------------------------------------------------------
+
+class MultivariateEwensDistribution(JointDistribution):
+
+    _argnames = ['n', 'theta']
+    is_Discrete = True
+    is_Continuous = False
+
+    def check(self, n, theta):
+        _value_check(isinstance(n, Integer) and (n > 0) == True,
+                        "sample size should be positive integer.")
+        _value_check(theta.is_positive, "mutation rate should be positive.")
+
+    @property
+    def set(self):
+        prod_set = Range(0, self.n//1 + 1)
+        for i in range(2, self.n + 1):
+            prod_set *= Range(0, self.n//i + 1)
+        return prod_set
+
+    def pdf(self, *syms):
+        n, theta = self.n, self.theta
+        term_1 = factorial(n)/rf(theta, n)
+        term_2 = Mul.fromiter([theta**syms[j]/((j+1)**syms[j]*factorial(syms[j]))
+                            for j in range(n)])
+        cond = Eq(sum([(k+1)*syms[k] for k in range(n)]), n)
+        return Piecewise((term_1 * term_2, cond), (0, True))
+
+def MultivariateEwens(syms, n, theta):
+    """
+    Creates a discrete random variable with Multivariate Ewens
+    Distribution.
+
+    The density of the said distribution can be found at [1].
+
+    Parameters
+    ==========
+
+    n: postive integer of class Integer,
+            size of the sample or the integer whose partitions are considered
+    theta: mutation rate, must be positive real number.
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv import marginal_distribution
+    >>> from sympy.stats.joint_rv_types import MultivariateEwens
+    >>> from sympy import Symbol
+    >>> a1 = Symbol('a1', positive=True)
+    >>> a2 = Symbol('a2', positive=True)
+    >>> ed = MultivariateEwens('E', 2, 1)
+    >>> density(ed)(a1, a2)
+    Piecewise((2**(-a2)/(factorial(a1)*factorial(a2)), Eq(a1 + 2*a2, 2)), (0, True))
+    >>> marginal_distribution(ed, ed[0])(a1)
+    Piecewise((1/factorial(a1), Eq(a1, 2)), (0, True))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Ewens%27s_sampling_formula
+    .. [2] http://www.stat.rutgers.edu/home/hcrane/Papers/STS529.pdf
+
+    """
+    return multivariate_rv(MultivariateEwensDistribution, syms, n, theta)
 
 #-------------------------------------------------------------------------------
 # Multinomial distribution ---------------------------------------------------------
