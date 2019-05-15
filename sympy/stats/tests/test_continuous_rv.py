@@ -760,7 +760,6 @@ def test_wignersemicircle():
 
 def test_prefab_sampling():
     N = Normal('X', 0, 1)
-    NI = NormalInverse('X', 1, 1)
     L = LogNormal('L', 0, 1)
     E = Exponential('Ex', 1)
     P = Pareto('P', 1, 3)
@@ -768,7 +767,6 @@ def test_prefab_sampling():
     U = Uniform('U', 0, 1)
     B = Beta('B', 2, 5)
     G = Gamma('G', 1, 3)
-    GI = GammaInverse('G', 1, 3)
 
     variables = [N, NI, L, E, P, W, U, B, G, GI]
     niter = 10
