@@ -729,6 +729,13 @@ def probability(condition, given_condition=None, numsamples=None,
     condition = sympify(condition)
     given_condition = sympify(given_condition)
 
+    if isinstance(given_condition, RandomSymbol):
+        if any([dependent(rv, given_condition) for rv in random_symbols(condition)]):
+            from sympy.stats.symbolic_probability import Probability
+            return Probability(condition, given_condition)
+        else:
+            return probability(condition)
+
     if given_condition is not None and \
             not isinstance(given_condition, (Relational, Boolean)):
         raise ValueError("%s is not a relational or combination of relationals"
