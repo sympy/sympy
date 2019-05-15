@@ -211,8 +211,12 @@ def test_sympyify_iterables():
     L = sympify(['.5'], rational=True)
     assert isinstance(L, list) and L[0] is S.Half
     T = sympify(tuple(['.5']), rational=True)
+    assert isinstance(T, Tuple) and T[0] is not S.Half
+    T = sympify(tuple(['.5']), rational=True, deep=True)
     assert isinstance(T, Tuple) and T[0] is S.Half
     D = sympify({1: .5}, rational=True)
+    assert D[1] is not S.Half and list(D.keys())[0] is S.One
+    D = sympify({1: .5}, rational=True, deep=True)
     assert D[1] is S.Half and list(D.keys())[0] is S.One
     D = sympify(defaultdict(int, {1: .5}), rational=True)
     assert list(D.keys())[0] is S.One
@@ -222,7 +226,18 @@ def test_sympyify_iterables():
     ans = [.5]
     F = sympify(set(ans), rational=True)
     assert isinstance(F, FiniteSet)
+    assert list(F).pop() is not S.Half
+    F = sympify(set(ans), rational=True, deep=True)
+    assert isinstance(F, FiniteSet)
     assert list(F).pop() is S.Half
+    # check deep handling of xor
+    a = 'x^2'
+    p = x**2
+    xor = S(a, convert_xor=False)
+    assert xor != p
+    assert sympify(('x^2',), convert_xor=True) == (p,)
+    assert sympify(('x^2',), convert_xor=False) == (p,)
+    assert sympify(('x^2',), convert_xor=False, deep=True) == (xor,)
 
 
 def test_sympify4():

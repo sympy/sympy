@@ -78,7 +78,7 @@ def _convert_numpy_types(a):
 
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
-        evaluate=None):
+        evaluate=None, deep=False):
     """Converts an arbitrary expression to a type that can be used inside SymPy.
 
     For example, it will convert Python ints into instances of sympy.Integer,
@@ -244,6 +244,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Notes
     =====
 
+    The keywords ``rational`` and ``convert_xor`` are ignored only used
+    when the input is a string unless ``deep`` is True.
+
     Sometimes autosimplification during sympification results in expressions
     that are very different in structure than what was entered. Until such
     autosimplification is no longer done, the ``kernS`` function might be of
@@ -388,14 +391,14 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         if not known and not strict and iterable(a, exclude=None):
             return iwalk(a, lambda i: sympify(i, **kw))
         elif known:
-            if not convert_xor:
+            if deep and not convert_xor:
                 def do(a):
                     if isinstance(a, string_types):
                         return _sympify_str(a, **kw)
                     return a
                 a = iwalk(a, do)
             rv = known(a)
-            if rational:
+            if deep and rational:
                 rv = sympify(rv, rational=True, strict=strict)
             return rv
 
