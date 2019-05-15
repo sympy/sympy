@@ -2268,21 +2268,30 @@ def NormalInverse(name, mean, shape):
     ========
 
     >>> from sympy.stats import NormalInverse, density, E, std
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu", positive=True)
-    >>> l = Symbol("lambda", positive=True)
+    >>> lamda = Symbol("lambda", positive=True)
     >>> z = Symbol("z", positive=True)
-    >>> X = NormalInverse("x", mu, l)
+    >>> X = NormalInverse("x", mu, lamda)
 
-    >>> density(X)(z)
-    sqrt(2)*sqrt(lambda)*exp(-lambda*(-mu + z)**2/(2*mu**2*z))/(2*sqrt(pi)*z**(3/2))
+    >>> D = density(X)(z)
+    >>> pprint(D)
+                                     2
+                     -lamda*(-mu + z)
+                     ------------------
+                              2
+      ___   _______       2*mu *z
+    \/ 2 *\/ lamda *e
+    -----------------------------------
+                   ____  3/2
+               2*\/ pi *z
 
     >>> E(X)
     mu
 
     >>> std(X)
-    sqrt(-mu**2 + (lambda*mu**2 + mu**3)/lambda)
+    mu**(3/2)/sqrt(lamda)
 
     References
     ==========
@@ -2293,6 +2302,8 @@ def NormalInverse(name, mean, shape):
     """
 
     return rv(name, NormalInverseDistribution, (mean, shape))
+
+Wald = NormalInverse
 
 #-------------------------------------------------------------------------------
 # Pareto distribution ----------------------------------------------------------

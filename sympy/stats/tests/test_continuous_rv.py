@@ -544,15 +544,26 @@ def test_nakagami():
                                 (0, True))
 
 def test_normal_inverse():
+    # test for symbolic parameters
+    a, b = symbols('a b')
+    assert NormalInverse('x', a, b)
+
     a, b = symbols('a b', positive=True)
     z = Symbol('z', positive=True)
 
     X = NormalInverse('x', a, b)
     assert density(X)(z) == sqrt(2)*sqrt(b)*sqrt(z**(-3))*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
     assert E(X) == a
-    assert variance(X) == -a**2 + (a**3 + a**2*b)/b
-    assert cdf(X)(z) == (1/2 - erf(-sqrt(2)*(-sqrt(b)*(1 + z/a)/sqrt(z) - 1)/2)/2)*exp(2*b/a) +\
-        erf(sqrt(2)*(sqrt(b)*(-1 + z/a)/sqrt(z) - 1)/2)/2 + 1/2
+    assert variance(X).expand() == a**3/b
+    assert cdf(X)(z) == (S.Half - erf(-sqrt(2)*(-sqrt(b)*(1 + z/a)/sqrt(z) - 1)/2)/2)*exp(2*b/a) +\
+        erf(sqrt(2)*(sqrt(b)*(-1 + z/a)/sqrt(z) - 1)/2)/2 + S.Half
+
+    a = symbols('a', positive=False)
+    raises(ValueError, lambda: NormalInverse('x', a, b))
+
+    a = symbols('a', positive=True)
+    b = symbols('b', positive=False)
+    raises(ValueError, lambda: NormalInverse('x', a, b))
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True, finite=True)
@@ -743,6 +754,7 @@ def test_wignersemicircle():
 
 def test_prefab_sampling():
     N = Normal('X', 0, 1)
+    NI = NormalInverse('X', 1, 1)
     L = LogNormal('L', 0, 1)
     E = Exponential('Ex', 1)
     P = Pareto('P', 1, 3)
@@ -750,8 +762,9 @@ def test_prefab_sampling():
     U = Uniform('U', 0, 1)
     B = Beta('B', 2, 5)
     G = Gamma('G', 1, 3)
+    GI = GammaInverse('G', 1, 3)
 
-    variables = [N, L, E, P, W, U, B, G]
+    variables = [N, NI, L, E, P, W, U, B, G, GI]
     niter = 10
     for var in variables:
         for i in range(niter):
