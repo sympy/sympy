@@ -265,7 +265,7 @@ def test_geometric_sums():
     assert result.is_Float
 
     result = Sum(0.25**n, (n, 1, oo)).doit()
-    assert result == 1/3
+    assert abs(result - 1.0/3) < 1e-11
     assert result.is_Float
 
     result = Sum(0.99999**n, (n, 1, oo)).doit()
