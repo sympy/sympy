@@ -243,8 +243,8 @@ def test_beta_noncentral():
     dens = density(X)
     z = Symbol('z')
 
-    assert str(dens(z)) == 'Sum(z**(_k + a - 1)*(c/2)**_k*(1 - z)**(b - 1)*exp(-c/2)/\
-(beta(_k + a, b)*factorial(_k)), (_k, 0, oo))'
+    assert str(dens(z)) == ("Sum(z**(_k + a - 1)*(c/2)**_k*(1 - z)**(b - 1)*exp(-c/2)/"
+    "(beta(_k + a, b)*factorial(_k)), (_k, 0, oo))")
 
     # BetaNoncentral must allow Symbolic parameters
     # even when assumptions on symbols can be determined
@@ -722,8 +722,8 @@ def test_uniformsum():
     x = Symbol("x")
 
     X = UniformSum('x', n)
-    assert str(density(X)(x)) == 'Sum((-1)**_k*(-_k + x)**(n - 1)\
-*binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1)'
+    assert str(density(X)(x)) == ("Sum((-1)**_k*(-_k + x)**(n - 1)"
+    "*binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1)")
 
 
 def test_von_mises():
