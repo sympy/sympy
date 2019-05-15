@@ -2247,6 +2247,7 @@ class NormalInverseDistribution(SingleContinuousDistribution):
 def NormalInverse(name, mean, shape):
     r"""
     Create a continuous random variable with an Inverse Normal distribution.
+    Inverse Normal distribution is also known as Wald distribution.
 
     The density of the Inverse Normal distribution is given by
 

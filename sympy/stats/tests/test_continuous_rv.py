@@ -16,7 +16,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          LogNormal, Maxwell, Nakagami, Normal, NormalInverse, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
-                         VonMises, Weibull, WignerSemicircle, correlation,
+                         VonMises, Weibull, WignerSemicircle, Wald, correlation,
                          moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
@@ -547,6 +547,12 @@ def test_normal_inverse():
     # test for symbolic parameters
     a, b = symbols('a b')
     assert NormalInverse('x', a, b)
+
+    # Inverse Normal distribution is also known as Wald distribution
+    # `NormalInverse` can also be referred by the name `Wald` 
+    a, b, z = symbols('a b z')
+    X = Wald('x', a, b)
+    assert density(X)(z) == sqrt(2)*sqrt(b/z**3)*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
 
     a, b = symbols('a b', positive=True)
     z = Symbol('z', positive=True)

@@ -63,7 +63,7 @@ from .crv_types import (
     GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogNormal,
     Maxwell, Nakagami, Normal, NormalInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh,
     ShiftedGompertz, StudentT, Trapezoidal, Triangular, Uniform, UniformSum, VonMises,
-    Weibull, WignerSemicircle
+    Weibull, WignerSemicircle, Wald
 )
 __all__.extend(crv_types.__all__)
 
