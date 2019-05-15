@@ -768,7 +768,7 @@ def test_prefab_sampling():
     B = Beta('B', 2, 5)
     G = Gamma('G', 1, 3)
 
-    variables = [N, NI, L, E, P, W, U, B, G, GI]
+    variables = [N, L, E, P, W, U, B, G]
     niter = 10
     for var in variables:
         for i in range(niter):

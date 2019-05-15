@@ -2287,7 +2287,7 @@ def NormalInverse(name, mean, shape):
     -------------------------------------
                     ____  3/2
                 2*\/ pi *z
-    
+
     >>> E(X)
     mu
 
