@@ -266,6 +266,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     """
     from .basic import Basic
     from .numbers import Integer, Rational, Float
+    from .rules import Transform
     from sympy.utilities.misc import filldedent
     from sympy.utilities.iterables import iwalk
 
@@ -365,12 +366,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         # handle the rational flag as expediently as
         # possible on this SymPy object
         if rational:
-            f = done.atoms(Float)
-            r = list(f)
-            if rational == 'str':
-                r = map(str, r)
-            r = map(Rational, r)
-            return done.xreplace(dict(zip(f, r)))
+            return done.xreplace(Transform(
+                lambda x: Rational(str(x) if rational=='str' else x),
+                lambda x: x.is_Float))
         # otherwise it was a SymPy object and
         # we haven't made modifications so we
         # don't raise a CantSympify error
