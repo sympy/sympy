@@ -1,4 +1,4 @@
-from sympy import Identity
+from sympy import Identity, OneMatrix, ZeroMatrix
 from sympy.core import symbols
 from sympy.utilities.pytest import raises
 
@@ -37,12 +37,21 @@ def test_mixed_indexing():
     assert (X*HadamardProduct(Y, Z))[0, 0] == \
             X[0, 0]*Y[0, 0]*Z[0, 0] + X[0, 1]*Y[1, 0]*Z[1, 0]
 
+
 def test_canonicalize():
     X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
     expr = HadamardProduct(X, check=False)
     assert isinstance(expr, HadamardProduct)
     expr2 = expr.doit() # unpack is called
     assert isinstance(expr2, MatrixSymbol)
+    Z = ZeroMatrix(2, 2)
+    U = OneMatrix(2, 2)
+    assert HadamardProduct(Z, X).doit() == Z
+    assert HadamardProduct(U, X, X, U).doit() == HadamardPower(X, 2)
+    assert HadamardProduct(X, U, Y).doit() == HadamardProduct(X, Y)
+    assert HadamardProduct(X, Z, U, Y).doit() == Z
+
 
 def test_hadamard():
     m, n, p = symbols('m, n, p', integer=True)

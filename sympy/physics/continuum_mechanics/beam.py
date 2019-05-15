@@ -1500,7 +1500,7 @@ class Beam3D(Beam):
     is restricted.
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam3D
-    >>> from sympy import symbols, simplify
+    >>> from sympy import symbols, simplify, collect
     >>> l, E, G, I, A = symbols('l, E, G, I, A')
     >>> b = Beam3D(l, E, G, I, A)
     >>> x, q, m = symbols('x, q, m')
@@ -1515,20 +1515,17 @@ class Beam3D(Beam):
     >>> b.solve_slope_deflection()
     >>> b.slope()
     [0, 0, l*x*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
-    + q*x**3/(6*E*I) + x**2*(-l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I))
-    - m)/(2*E*I)]
+        + x**2*(-3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - 3*m + q*x)/(6*E*I)]
     >>> dx, dy, dz = b.deflection()
-    >>> dx
-    0
-    >>> dz
-    0
-    >>> expectedy = (
-    ... -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
-    ... + l*m*x**2/(4*E*I) - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
-    ... + q*x**4/(24*E*I) + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G)
-    ... )
-    >>> simplify(dy - expectedy)
-    0
+    >>> dy = collect(simplify(dy), x)
+    >>> dx == dz == 0
+    True
+    >>> dy == (x*(12*A*E*G*I*l**3*q - 24*A*E*G*I*l**2*m + 144*E**2*I**2*l*q +
+    ...           x**3*(A**2*G**2*l**2*q + 12*A*E*G*I*q) +
+    ...           x**2*(-2*A**2*G**2*l**3*q - 24*A*E*G*I*l*q - 48*A*E*G*I*m) +
+    ...           x*(A**2*G**2*l**4*q + 72*A*E*G*I*l*m - 144*E**2*I**2*q)
+    ...           )/(24*A*E*G*I*(A*G*l**2 + 12*E*I)))
+    True
 
     References
     ==========

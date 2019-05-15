@@ -40,6 +40,7 @@ def test_transpose():
     MT = Matrix(2, 2, [1, 3, 2 + I, 4])
     assert transpose(M) == MT
     assert transpose(2*M) == 2*MT
+    assert transpose(x*M) == x*MT
     assert transpose(MatMul(2, M)) == MatMul(2, MT).doit()
 
 

@@ -1,12 +1,14 @@
 from sympy import (Symbol, Abs, exp, S, N, pi, simplify, Interval, erf, erfc, Ne,
                    Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, cos, atan, besseli, factorial, binomial,
+                   Piecewise, Integral, sin, cos, tan, atan, besseli, factorial, binomial,
                    floor, expand_func, Rational, I, re, im, lambdify, hyper, diff, Or, Mul)
 from sympy.core.compatibility import range
 from sympy.external import import_module
+from sympy.functions.special.error_functions import erfinv
+from sympy.sets.sets import Intersection, FiniteSet
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, characteristic_function, ContinuousRV, sample,
-                         Arcsin, Benini, Beta, BetaPrime, Cauchy,
+                         Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy,
                          Chi, ChiSquared,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
@@ -15,7 +17,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, correlation,
-                         moment, cmoment, smoment)
+                         moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
@@ -40,7 +42,7 @@ def test_single_normal():
             2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
     assert P(X**2 < 1) == erf(2**S.Half/2)
-
+    assert quantile(Y)(x) == Intersection(S.Reals, FiniteSet(sqrt(2)*sigma*(sqrt(2)*mu/(2*sigma) + erfinv(2*x - 1))))
     assert E(X, Eq(X, mu)) == mu
 
 
@@ -72,6 +74,7 @@ def test_ContinuousDomain():
 @slow
 def test_multiple_normal():
     X, Y = Normal('x', 0, 1), Normal('y', 0, 1)
+    p = Symbol("p", positive=True)
 
     assert E(X + Y) == 0
     assert variance(X + Y) == 2
@@ -90,7 +93,7 @@ def test_multiple_normal():
     assert smoment(X + Y, 3) == skewness(X + Y)
     assert E(X, Eq(X + Y, 0)) == 0
     assert variance(X, Eq(X + Y, 0)) == S.Half
-
+    assert quantile(X)(p) == sqrt(2)*erfinv(2*p - S.One)
 
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, finite=True)
@@ -228,6 +231,37 @@ def test_beta():
     assert expand_func(E(B)) == a / S(a + b)
     assert expand_func(variance(B)) == (a*b) / S((a + b)**2 * (a + b + 1))
 
+def test_beta_noncentral():
+    a, b = symbols('a b', positive=True)
+    c = Symbol('c', nonnegative=True)
+    _k = Symbol('k')
+
+    X = BetaNoncentral('x', a, b, c)
+
+    assert pspace(X).domain.set == Interval(0, 1)
+
+    dens = density(X)
+    z = Symbol('z')
+
+    assert str(dens(z)) == ("Sum(z**(_k + a - 1)*(c/2)**_k*(1 - z)**(b - 1)*exp(-c/2)/"
+    "(beta(_k + a, b)*factorial(_k)), (_k, 0, oo))")
+
+    # BetaCentral should not raise if the assumptions
+    # on the symbols can not be determined
+    a, b, c = symbols('a b c')
+    assert BetaNoncentral('x', a, b, c)
+
+    a = Symbol('a', positive=False)
+    raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
+
+    a = Symbol('a', positive=True)
+    b = Symbol('b', positive=False)
+    raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
+
+    a = Symbol('a', positive=True)
+    b = Symbol('b', positive=True)
+    c = Symbol('c', nonnegative=False)
+    raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
 
 def test_betaprime():
     alpha = Symbol("alpha", positive=True)
@@ -247,11 +281,12 @@ def test_betaprime():
 def test_cauchy():
     x0 = Symbol("x0")
     gamma = Symbol("gamma", positive=True)
+    p = Symbol("p", positive=True)
 
     X = Cauchy('x', x0, gamma)
     assert density(X)(x) == 1/(pi*gamma*(1 + (x - x0)**2/gamma**2))
-    assert cdf(X)(x) == atan((x - x0)/gamma)/pi + S.Half
     assert diff(cdf(X)(x), x) == density(X)(x)
+    assert quantile(X)(p) == gamma*tan(pi*(p - S.Half)) + x0
 
     gamma = Symbol("gamma", positive=False)
     raises(ValueError, lambda: Cauchy('x', x0, gamma))
@@ -343,6 +378,7 @@ def test_erlang():
 def test_exponential():
     rate = Symbol('lambda', positive=True, real=True, finite=True)
     X = Exponential('x', rate)
+    p = Symbol("p", positive=True, real=True,finite=True)
 
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
@@ -353,6 +389,7 @@ def test_exponential():
     assert P(X > 0) == S(1)
     assert P(X > 1) == exp(-rate)
     assert P(X > 10) == exp(-10*rate)
+    assert quantile(X)(p) == -log(1-p)/rate
 
     assert where(X <= 1).set == Interval(0, 1)
 
@@ -474,10 +511,12 @@ def test_laplace():
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
+    p = Symbol("p", positive=True)
 
     X = Logistic('x', mu, s)
     assert density(X)(x) == exp((-x + mu)/s)/(s*(exp((-x + mu)/s) + 1)**2)
     assert cdf(X)(x) == 1/(exp((mu - x)/s) + 1)
+    assert quantile(X)(p) == mu - s*log(-S(1) + 1/p)
 
 
 def test_lognormal():
@@ -677,14 +716,14 @@ def test_uniform_P():
     assert P(X < l) == 0 and P(X > l + w) == 0
 
 
-@XFAIL
 def test_uniformsum():
     n = Symbol("n", integer=True)
     _k = Symbol("k")
+    x = Symbol("x")
 
     X = UniformSum('x', n)
-    assert density(X)(x) == (Sum((-1)**_k*(-_k + x)**(n - 1)
-                        *binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1))
+    assert str(density(X)(x)) == ("Sum((-1)**_k*(-_k + x)**(n - 1)"
+    "*binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1)")
 
 
 def test_von_mises():

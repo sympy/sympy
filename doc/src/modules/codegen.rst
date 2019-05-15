@@ -612,3 +612,10 @@ Fortran utilities (sympy.codegen.futils)
 
 .. automodule:: sympy.codegen.futils
    :members:
+
+
+Array utilities (sympy.codegen.array_utils)
+-------------------------------------------
+
+.. automodule:: sympy.codegen.array_utils
+   :members:

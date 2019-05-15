@@ -22,8 +22,15 @@ from sympy.core.compatibility import as_int, range
 from sympy.stats.rv import _value_check
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
 
-__all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
-        'Binomial', 'Hypergeometric']
+__all__ = ['FiniteRV',
+'DiscreteUniform',
+'Die',
+'Bernoulli',
+'Coin',
+'Binomial',
+'Hypergeometric',
+'Rademacher'
+]
 
 def rv(name, cls, *args):
     args = list(map(sympify, args))
