@@ -1093,7 +1093,7 @@ class Float(Number):
                     try:
                         assert num[0] in (0, 1)
                         assert num[1] >= 0
-                        assert all(type(i) is int for i in num)
+                        assert all(type(i) in (long, int) for i in num)
                     except AssertionError:
                         raise ValueError('malformed mpf: %s' % num)
                     else:
@@ -1311,14 +1311,9 @@ class Float(Number):
                 return False
             return other.__eq__(self)
         if other.is_Float:
-            # compare at the same precision
-            # so Float(.1, 3) == Float(.1, 33)
-            a, b = self._mpf_, other._mpf_
-            if self._prec != other._prec:
-                p = min(self._prec, other._prec)
-                a = mpf_norm(a, p)
-                b = mpf_norm(b, p)
-            return bool(mlib.mpf_eq(a, b))
+            # comparison is exact
+            # so Float(.1, 3) != Float(.1, 33)
+            return self._mpf_ == other._mpf_
         if other.is_Rational:
             return other.__eq__(self)
         if other.is_Number:
@@ -1781,6 +1776,10 @@ class Rational(Number):
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
+        if not isinstance(other, Number):
+            # S(0) == S.false is False
+            # S(0) == False is True
+            return False
         if not self:
             return not other
         if other.is_NumberSymbol:

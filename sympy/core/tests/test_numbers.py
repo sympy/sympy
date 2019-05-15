@@ -1622,16 +1622,25 @@ def test_Catalan_EulerGamma_prec():
     assert n._as_mpf_val(20) == f._mpf_
 
 
+def test_bool_eq():
+    assert 0 == False
+    assert S(0) == False
+    assert S(0) != S.false
+    assert 1 == True
+    assert S(1) == True
+    assert S(1) != S.true
+
+
 def test_Float_eq():
     # all .5 values are the same
     assert Float(.5, 10) == Float(.5, 11) == Float(.5, 1)
-    # and even floats that aren't exact in base-2 still
-    # compare the same because they are compared at the
-    # same precision
-    assert Float(.12, 3) == Float(.12, 4)
-    assert Float(.12, 3) == .12
-    assert 0.12 == Float(.12, 3)
-    assert Float('.12', 22) == .12
+    # but floats that aren't exact in base-2 still
+    # don't compare the same because they have different
+    # underlying mpf values
+    assert Float(.12, 3) != Float(.12, 4)
+    assert Float(.12, 3) != .12
+    assert 0.12 != Float(.12, 3)
+    assert Float('.12', 22) != .12
     # issue 11707
     # but Float/Rational -- except for 0 --
     # are exact so Rational(x) = Float(y) only if
