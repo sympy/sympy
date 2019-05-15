@@ -12,6 +12,7 @@ from sympy.core.compatibility import (
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
+from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float, Integer, mod_inverse
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -1499,7 +1500,8 @@ class MatrixEigen(MatrixSubspaces):
     def is_positive_definite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
-            return all(x.is_positive for x in eigen.keys())
+            args = (x.is_positive for x in eigen.keys())
+            return fuzzy_and(args)
 
         elif self.is_square:
             return ((self + self.H) / 2).is_positive_definite
@@ -1508,7 +1510,8 @@ class MatrixEigen(MatrixSubspaces):
     def is_positive_semidefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
-            return all(x.is_nonnegative for x in eigen.keys())
+            args = (x.is_nonnegative for x in eigen.keys())
+            return fuzzy_and(args)
 
         elif self.is_square:
             return ((self + self.H) / 2).is_positive_semidefinite
@@ -1517,7 +1520,8 @@ class MatrixEigen(MatrixSubspaces):
     def is_negative_definite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
-            return all(x.is_negative for x in eigen.keys())
+            args = (x.is_negative for x in eigen.keys())
+            return fuzzy_and(args)
 
         elif self.is_square:
             return ((self + self.H) / 2).is_negative_definite
@@ -1526,7 +1530,8 @@ class MatrixEigen(MatrixSubspaces):
     def is_negative_semidefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
-            return all(x.is_nonpositive for x in eigen.keys())
+            args = (x.is_nonpositive for x in eigen.keys())
+            return fuzzy_and(args)
 
         elif self.is_square:
             return ((self + self.H) / 2).is_negative_semidefinite
@@ -1535,25 +1540,99 @@ class MatrixEigen(MatrixSubspaces):
     def is_indefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
-            any_positive = False
-            any_negative = False
 
-            for x in eigen.keys():
-                if any_positive and any_negative:
-                    break
+            args1 = (x.is_positive for x in eigen.keys())
+            any_positive = fuzzy_or(args1)
+            args2 = (x.is_negative for x in eigen.keys())
+            any_negative = fuzzy_or(args2)
 
-                if any_positive is False:
-                    if x.is_positive:
-                        any_positive = True
-
-                if any_negative is False:
-                    if x.is_negative:
-                        any_negative = True
-
-            return any_positive and any_negative
+            return fuzzy_and([any_positive, any_negative])
 
         elif self.is_square:
             return ((self + self.H) / 2).is_indefinite
+
+    _doc_positive_definite = \
+        """Finds out the definiteness of a matrix.
+
+        Examples
+        ========
+
+        An example of numeric positive definite matrix:
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[1, -2], [-2, 6]])
+        >>> A.is_positive_definite
+        True
+        >>> A.is_positive_semidefinite
+        True
+        >>> A.is_negative_definite
+        False
+        >>> A.is_negative_semidefinite
+        False
+        >>> A.is_indefinite
+        False
+
+        An example of numeric negative definite matrix:
+
+        >>> A = Matrix([[-1, 2], [2, -6]])
+        >>> A.is_positive_definite
+        False
+        >>> A.is_positive_semidefinite
+        False
+        >>> A.is_negative_definite
+        True
+        >>> A.is_negative_semidefinite
+        True
+        >>> A.is_indefinite
+        False
+
+        An example of numeric indefinite matrix:
+
+        >>> A = Matrix([[1, 2], [2, 1]])
+        >>> A.is_positive_definite
+        False
+        >>> A.is_positive_semidefinite
+        False
+        >>> A.is_negative_definite
+        True
+        >>> A.is_negative_semidefinite
+        True
+        >>> A.is_indefinite
+        False
+
+        Notes
+        =====
+
+        Definitiveness is not very commonly discussed for non-hermitian
+        matrices.
+
+        However, computing the definitiveness of a matrix can be
+        generalized over any real matrix by taking the symmetric part:
+
+        ``A_S = 1/2(A+A^(T))``
+
+        Or over any complex matrix by taking the hermitian part:
+
+        ``A_H = 1/2(A+A^(H))``
+
+        And using the method using eigenvalue computation.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Definiteness_of_a_matrix#Eigenvalues
+
+        .. [2] http://mathworld.wolfram.com/PositiveDefiniteMatrix.html
+
+        .. [3] Johnson, C. R. "Positive Definite Matrices." Amer.
+            Math. Monthly 77, 259-264 1970.
+        """
+
+    is_positive_definite.__doc__ = _doc_positive_definite
+    is_positive_semidefinite.__doc__ = _doc_positive_definite
+    is_negative_definite.__doc__ = _doc_positive_definite
+    is_negative_semidefinite.__doc__ = _doc_positive_definite
+    is_indefinite.__doc__ = _doc_positive_definite
 
     def jordan_form(self, calc_transform=True, **kwargs):
         """Return ``(P, J)`` where `J` is a Jordan block
