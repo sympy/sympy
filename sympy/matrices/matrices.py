@@ -1500,7 +1500,7 @@ class MatrixEigen(MatrixSubspaces):
     def is_positive_definite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
-            args = (x.is_positive for x in eigen.keys())
+            args = [x.is_positive for x in eigen.keys()]
             return fuzzy_and(args)
 
         elif self.is_square:
@@ -1510,7 +1510,7 @@ class MatrixEigen(MatrixSubspaces):
     def is_positive_semidefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
-            args = (x.is_nonnegative for x in eigen.keys())
+            args = [x.is_nonnegative for x in eigen.keys()]
             return fuzzy_and(args)
 
         elif self.is_square:
@@ -1520,7 +1520,7 @@ class MatrixEigen(MatrixSubspaces):
     def is_negative_definite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
-            args = (x.is_negative for x in eigen.keys())
+            args = [x.is_negative for x in eigen.keys()]
             return fuzzy_and(args)
 
         elif self.is_square:
@@ -1530,7 +1530,7 @@ class MatrixEigen(MatrixSubspaces):
     def is_negative_semidefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
-            args = (x.is_nonpositive for x in eigen.keys())
+            args = [x.is_nonpositive for x in eigen.keys()]
             return fuzzy_and(args)
 
         elif self.is_square:
@@ -1541,9 +1541,9 @@ class MatrixEigen(MatrixSubspaces):
         if self.is_hermitian:
             eigen = self.eigenvals()
 
-            args1 = (x.is_positive for x in eigen.keys())
+            args1 = [x.is_positive for x in eigen.keys()]
             any_positive = fuzzy_or(args1)
-            args2 = (x.is_negative for x in eigen.keys())
+            args2 = [x.is_negative for x in eigen.keys()]
             any_negative = fuzzy_or(args2)
 
             return fuzzy_and([any_positive, any_negative])
@@ -1552,7 +1552,7 @@ class MatrixEigen(MatrixSubspaces):
             return ((self + self.H) / 2).is_indefinite
 
     _doc_positive_definite = \
-        """Finds out the definiteness of a matrix.
+        r"""Finds out the definiteness of a matrix.
 
         Examples
         ========
@@ -1609,13 +1609,13 @@ class MatrixEigen(MatrixSubspaces):
         However, computing the definitiveness of a matrix can be
         generalized over any real matrix by taking the symmetric part:
 
-        ``A_S = 1/2(A+A^(T))``
+        `A_S = 1/2 (A + A^{T})`
 
         Or over any complex matrix by taking the hermitian part:
 
-        ``A_H = 1/2(A+A^(H))``
+        `A_H = 1/2 (A + A^{H})`
 
-        And using the method using eigenvalue computation.
+        And computing the eigenvalues.
 
         References
         ==========

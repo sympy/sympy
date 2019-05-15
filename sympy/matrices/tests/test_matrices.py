@@ -1182,19 +1182,77 @@ def test_eigen():
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
 
 def test_definite():
-    m = Matrix([[1, 2], [2, 1]])
-    assert m.is_positive_definite == False
-    assert m.is_positive_semidefinite == False
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == True
-
+    # Examples from Gilbert Strang, "Introduction to Linear Algebra"
+    # Positive definite
     m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
     assert m.is_positive_definite == True
     assert m.is_positive_semidefinite == True
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
+
+    m = Matrix([[5, 4], [4, 5]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Positive semidefinite
+    m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[1, 2], [2, 4]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Examples from Mathematica documentation
+    # Non-hermitian positive definite
+    m = Matrix([[2, 3], [4, 8]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[1, 2*I], [-I, 4]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Symbolic Examples
+    a = Symbol('a', positive=True)
+    b = Symbol('b', negative=True)
+    m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == False
+    assert m.is_negative_definite == True
+    assert m.is_negative_semidefinite == True
+    assert m.is_indefinite == False
+
+    m = Matrix([[a, 0], [0, b]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == False
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == True
+
 
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
