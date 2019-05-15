@@ -15,6 +15,7 @@ from sympy.logic.boolalg import BooleanFunction
 from sympy.matrices import Matrix
 from sympy.tensor.indexed import Idx
 from sympy.sets.sets import Interval
+from sympy.sets.fancysets import Range
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
 
@@ -36,6 +37,10 @@ def _common_new(cls, function, *symbols, **assumptions):
 
     if symbols:
         limits, orientation = _process_limits(*symbols)
+        for i, li in enumerate(limits):
+            if len(li) == 4:
+                function = function.subs(li[0], li[-1])
+                limits[i] = tuple(li[:-1])
     else:
         # symbol not provided -- we can still try to compute a general form
         free = function.free_symbols
@@ -90,35 +95,54 @@ def _process_limits(*symbols):
                 limits.append(Tuple(V))
             continue
         elif is_sequence(V, Tuple):
-            V = sympify(flatten(V))
+            if len(V) == 2 and isinstance(V[1], Range):
+                lo = V[1].inf
+                hi = V[1].sup
+                dx = abs(V[1].step)
+                V = [V[0]] + [0, (hi - lo)//dx, dx*V[0] + lo]
+            V = sympify(flatten(V))  # a list of sympified elements
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
-                if len(V) == 2 and isinstance(V[1], Interval):
+                if len(V) == 2 and isinstance(V[1], Interval):  # 2 -> 3
+                    # Interval
                     V[1:] = [V[1].start, V[1].end]
-
-                if len(V) == 3:
-                    if V[1] is None and V[2] is not None:
-                        nlim = [V[2]]
-                    elif V[1] is not None and V[2] is None:
+                elif len(V) == 3:
+                    # general case
+                    if V[2] is None and not V[1] is None:
                         orientation *= -1
-                        nlim = [V[1]]
-                    elif V[1] is None and V[2] is None:
-                        nlim = []
-                    else:
-                        nlim = V[1:]
-                    limits.append(Tuple(newsymbol, *nlim))
-                    if isinstance(V[0], Idx):
-                        if V[0].lower is not None and not bool(nlim[0] >= V[0].lower):
-                            raise ValueError("Summation exceeds Idx lower range.")
-                        if V[0].upper is not None and not bool(nlim[1] <= V[0].upper):
-                            raise ValueError("Summation exceeds Idx upper range.")
-                    continue
-                elif len(V) == 1 or (len(V) == 2 and V[1] is None):
-                    limits.append(Tuple(newsymbol))
-                    continue
-                elif len(V) == 2:
-                    limits.append(Tuple(newsymbol, V[1]))
-                    continue
+                    V = [newsymbol] + [i for i in V[1:] if i is not None]
+
+                if not isinstance(newsymbol, Idx) or len(V) == 3:
+                    if len(V) == 4:
+                        limits.append(Tuple(*V))
+                        continue
+                    if len(V) == 3:
+                        if isinstance(newsymbol, Idx):
+                            # Idx represents an integer which may have
+                            # specified values it can take on; if it is
+                            # given such a value, an error is raised here
+                            # if the summation would try to give it a larger
+                            # or smaller value than permitted. None and Symbolic
+                            # values will not raise an error.
+                            lo, hi = newsymbol.lower, newsymbol.upper
+                            try:
+                                if lo is not None and not bool(V[1] >= lo):
+                                    raise ValueError("Summation will set Idx value too low.")
+                            except TypeError:
+                                pass
+                            try:
+                                if hi is not None and not bool(V[2] <= hi):
+                                    raise ValueError("Summation will set Idx value too high.")
+                            except TypeError:
+                                pass
+                        limits.append(Tuple(*V))
+                        continue
+                    if len(V) == 1 or (len(V) == 2 and V[1] is None):
+                        limits.append(Tuple(newsymbol))
+                        continue
+                    elif len(V) == 2:
+                        limits.append(Tuple(newsymbol, V[1]))
+                        continue
 
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
