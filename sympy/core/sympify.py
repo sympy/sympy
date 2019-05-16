@@ -78,7 +78,7 @@ def _convert_numpy_types(a):
 
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
-        evaluate=None, deep=False):
+        evaluate=None, deep=False, _from_sympify=False):
     """Converts an arbitrary expression to a type that can be used inside SymPy.
 
     For example, it will convert Python ints into instances of sympy.Integer,
@@ -265,8 +265,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     """
     from .basic import Basic
-    from .numbers import Integer, Rational, Float
+    from .numbers import Integer, Rational, Float, Number
     from .rules import Transform
+    from sympy.logic.boolalg import BooleanAtom
     from sympy.utilities.misc import filldedent
     from sympy.utilities.iterables import iwalk
 
@@ -291,18 +292,15 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             done = a
 
     # see if we can't do it
-    def check(i):
-        if strict and isinstance(i, string_types):
-            raise SympifyError(i)
-        if isinstance(i, CantSympify):
-            if done is None:
-                raise SympifyError(i)
-            elif rational and i.atoms(Float):
-                raise SympifyError(filldedent('''
-                    SymPy object %s cannot be modified.
-                ''' % i))
-        return i
-    iwalk(a, do=check, sanitize=check)
+    if strict and isinstance(a, string_types):
+        raise SympifyError(a)
+    if isinstance(a, CantSympify):
+        if done is None:
+            raise SympifyError(a)
+        elif rational and a.atoms(Float):
+            raise SympifyError(filldedent('''
+                SymPy object %s cannot be modified.
+            ''' % a))
 
     # let `a` do it
     _sympy_ = getattr(a, "_sympy_", None)
@@ -316,23 +314,15 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         except AttributeError:
             pass
 
-    # Python primitives
-    # True/False/None/float/int quick exits
-    if a is None:
-        if strict:
-            raise SympifyError(a)
-        else:
+    if not _from_sympify:
+        a = _sympify_python_types(a, strict, rational)
+        if a is None:
             return a
-    if a is True or a is False:
-        return converter[bool](a)
-    if type(a) is float:
-        if rational:
-            if rational == 'str':
-                return Rational(str(a))
-            return Rational(*a.as_integer_ratio())
-        return Float(a)
-    elif type(a) in integer_types:
-        return Integer(a)
+        if isinstance(a, BooleanAtom):
+            return a
+        if isinstance(a, Number):
+            if not (deep and rational and isinstance(a, Float)):
+                return a
 
     # kwargs
     if evaluate is None:
@@ -345,7 +335,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         convert_xor=convert_xor,
         strict=strict,
         rational=rational,
-        evaluate=evaluate)
+        evaluate=evaluate,
+        deep=deep)
 
     # Support for basic numpy datatypes
     # Note that this check exists to avoid importing NumPy when not necessary
@@ -387,7 +378,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     known = _wrapper(a)
     if not isinstance(a, string_types):
         if not known and not strict and iterable(a, exclude=None):
-            return iwalk(a, lambda i: sympify(i, **kw))
+            def ok(a):
+                if isinstance(a, CantSympify):
+                    raise SympifyError(a)
+                return a
+            return iwalk(a, lambda i: sympify(i, **kw),
+                sanitize=ok)
         elif known:
             if deep and not convert_xor:
                 def do(a):
@@ -426,6 +422,29 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     # and try to parse it. If it fails, then we have no luck and
     # return an exception.
     return _sympify_str(a, **kw)
+
+
+def _sympify_python_types(a, strict, rational):
+    from .numbers import Integer, Rational, Float
+    # Python primitives
+    # True/False/None/float/int quick exits
+    if not isinstance(a, CantSympify):
+        if a is None:
+            if strict:
+                raise SympifyError(a)
+            else:
+                return a
+        if a is True or a is False:
+            return converter[bool](a)
+        if type(a) is float:
+            if rational:
+                if rational == 'str':
+                    return Rational(str(a))
+                return Rational(*a.as_integer_ratio())
+            return Float(a)
+        elif type(a) in integer_types:
+            return Integer(a)
+    return a
 
 
 def _sympify_str(a, **kw):
@@ -486,7 +505,14 @@ def _sympify(a):
     see: sympify
 
     """
-    return sympify(a, strict=True)
+    from sympy.logic.boolalg import BooleanAtom
+    from .numbers import Number
+    if a is None:
+        raise SympifyError(a)
+    a = _sympify_python_types(a, strict=True, rational=False)
+    if a is None or isinstance(a, (Number, BooleanAtom)):
+        return a
+    return sympify(a, strict=True, _from_sympify=True)
 
 
 def kernS(s):

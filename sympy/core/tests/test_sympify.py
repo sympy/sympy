@@ -616,7 +616,8 @@ def test_issue_10295():
     assert sympify(a2) == ImmutableDenseNDimArray([i for i in range(24)], (2, 4, 3))
 
     A = numpy.array([0.5])
-    assert S(A, rational=True)[0] is S.Half
+    assert S(A, rational=True)[0] is not S.Half
+    assert S(A, rational=True, deep=True)[0] is S.Half
 
 
 def test_Range():
