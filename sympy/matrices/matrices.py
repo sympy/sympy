@@ -1496,15 +1496,60 @@ class MatrixEigen(MatrixSubspaces):
                 ret = False
         return ret
 
-    @property
-    def is_positive_definite(self):
+    def _eval_is_positive_definite(self, method="eigen"):
+        """Algorithm dump for computing positive-definiteness of a
+        matrix.
+
+        Parameters
+        ==========
+
+        method : str, optional
+            Specifies the method for computing positive-definiteness of
+            a matrix.
+
+            If ``'eigen'``, it computes the full eigenvalues and decides
+            if the matrix is positive-definite.
+
+            If ``'CH'``, it attempts computing the Cholesky
+            decomposition to detect the definitiveness.
+
+            If ``'LDL'``, it attempts computing the LDL
+            decomposition to detect the definitiveness.
+        """
         if self.is_hermitian:
-            eigen = self.eigenvals()
-            args = [x.is_positive for x in eigen.keys()]
-            return fuzzy_and(args)
+            if method == 'eigen':
+                eigen = self.eigenvals()
+                args = [x.is_positive for x in eigen.keys()]
+                return fuzzy_and(args)
+
+            elif method == 'CH':
+                try:
+                    self.cholesky(hermitian=True)
+                except ValueError as e:
+                    if str(e) == "Matrix must be positive-definite":
+                        return False
+                    return None
+                return True
+
+            elif method == 'LDL':
+                try:
+                    self.LDLdecomposition(hermitian=True)
+                except ValueError as e:
+                    if str(e) == "Matrix must be positive-definite":
+                        return False
+                    return None
+                return True
+
+            else:
+                raise NotImplementedError()
 
         elif self.is_square:
-            return ((self + self.H) / 2).is_positive_definite
+            M_H = (self + self.H) / 2
+            return M_H._eval_is_positive_definite(method=method)
+
+    @property
+    def is_positive_definite(self):
+        return self._eval_is_positive_definite()
 
     @property
     def is_positive_semidefinite(self):
