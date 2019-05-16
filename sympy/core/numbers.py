@@ -548,6 +548,9 @@ class Number(AtomicExpr):
 
         try:
             other = Number(other)
+            if other.is_infinite or self.is_infinite or \
+                    S.NaN in (self, other):
+                raise TypeError
         except TypeError:
             msg = "unsupported operand type(s) for divmod(): '%s' and '%s'"
             raise TypeError(msg % (type(self).__name__, type(other).__name__))
