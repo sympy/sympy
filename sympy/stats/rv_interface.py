@@ -9,7 +9,7 @@ from sympy.solvers.inequalities import reduce_inequalities
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'covariance',
         'dependent', 'independent', 'random_symbols', 'correlation',
-        'moment', 'cmoment', 'sampling_density', 'moment_generating_function', 'quantile']
+        'moment', 'cmoment', 'smoment', 'sampling_density', 'moment_generating_function', 'quantile']
 
 
 

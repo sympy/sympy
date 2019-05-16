@@ -18,6 +18,7 @@ from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
         Dict, Basic, KroneckerDelta, Dummy, Eq)
+from sympy import beta as beta_fn
 from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
 from sympy.stats.rv import _value_check
@@ -313,30 +314,22 @@ def Binomial(name, n, p, succ=1, fail=0):
 class BetaBinomialDistribution(SingleFiniteDistribution):
     _argnames = ('n', 'alpha', 'beta')
 
-    def __new__(cls, *args):
-        n = args[BetaBinomialDistribution._argnames.index('n')]
-        alpha = args[BetaBinomialDistribution._argnames.index('alpha')]
-        beta = args[BetaBinomialDistribution._argnames.index('beta')]
-        n_sym = sympify(n)
-        alpha_sym = sympify(alpha)
-        beta_sym = sympify(beta)
-
-        if fuzzy_not(fuzzy_and((n_sym.is_integer, n_sym.is_nonnegative))):
-            raise ValueError("'n' must be positive integer. n = %s." % str(n))
-        elif (alpha_sym > 0) == False:
-            raise ValueError("'alpha' must be: alpha > 0 . alpha = %s" % str(alpha))
-        elif (beta_sym > 0) == False:
-            raise ValueError("'beta' must be: beta > 0 . beta = %s" % str(beta))
-        else:
-            return super(BetaBinomialDistribution, cls).__new__(cls, *args)
+    @staticmethod
+    def check(n, alpha, beta):
+        _value_check((n.is_integer, n.is_nonnegative),
+        "'n' must be nonnegative integer. n = %s." % str(n))
+        _value_check((alpha > 0),
+        "'alpha' must be: alpha > 0 . alpha = %s" % str(alpha))
+        _value_check((beta > 0),
+        "'beta' must be: beta > 0 . beta = %s" % str(beta))
 
     @property
     @cacheit
     def dict(self):
-        n, alpha, beta = self.n, self.alpha, self.beta
+        n, a, b = self.n, self.alpha, self.beta
         n = as_int(n)
         return dict((k,
-                binomial(n, k) * beta_fn(k + alpha, n - k + beta) / beta_fn(alpha, beta)) for k in range(0, n + 1))
+                binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b)) for k in range(0, n + 1))
 
 
 def BetaBinomial(name, n, alpha, beta):
