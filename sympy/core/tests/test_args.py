@@ -1250,7 +1250,8 @@ def test_sympy__stats__crv__ContinuousDistribution():
 
 def test_sympy__stats__frv_types__FiniteDistributionHandmade():
     from sympy.stats.frv_types import FiniteDistributionHandmade
-    assert _test_args(FiniteDistributionHandmade({1: 1}))
+    from sympy import Dict
+    assert _test_args(FiniteDistributionHandmade(Dict({1: 1})))
 
 
 def test_sympy__stats__crv__ContinuousDistributionHandmade():
@@ -1284,6 +1285,10 @@ def test_sympy__stats__crv_types__BeniniDistribution():
 def test_sympy__stats__crv_types__BetaDistribution():
     from sympy.stats.crv_types import BetaDistribution
     assert _test_args(BetaDistribution(1, 1))
+
+def test_sympy__stats__crv_types__BetaNoncentralDistribution():
+    from sympy.stats.crv_types import BetaNoncentralDistribution
+    assert _test_args(BetaNoncentralDistribution(1, 1, 1))
 
 
 def test_sympy__stats__crv_types__BetaPrimeDistribution():
@@ -1500,6 +1505,21 @@ def test_sympy__stats__joint_rv_types__NormalGammaDistribution():
     from sympy.stats.joint_rv_types import NormalGammaDistribution
     assert _test_args(NormalGammaDistribution(1, 2, 3, 4))
 
+def test_sympy__stats__joint_rv_types__MultivariateBetaDistribution():
+    from sympy.stats.joint_rv_types import MultivariateBetaDistribution
+    assert _test_args(MultivariateBetaDistribution([1, 2, 3]))
+
+def test_sympy__stats__joint_rv_types__MultivariateEwensDistribution():
+    from sympy.stats.joint_rv_types import MultivariateEwensDistribution
+    assert _test_args(MultivariateEwensDistribution(5, 1))
+
+def test_sympy__stats__joint_rv_types__MultinomialDistribution():
+    from sympy.stats.joint_rv_types import MultinomialDistribution
+    assert _test_args(MultinomialDistribution(5, [0.5, 0.1, 0.3]))
+
+def test_sympy__stats__joint_rv_types__NegativeMultinomialDistribution():
+    from sympy.stats.joint_rv_types import NegativeMultinomialDistribution
+    assert _test_args(NegativeMultinomialDistribution(5, [0.5, 0.1, 0.3]))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy

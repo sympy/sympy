@@ -58,7 +58,7 @@ __all__.extend(frv_types.__all__)
 from . import crv_types
 from .crv_types import (
     ContinuousRV,
-    Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
+    Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
     Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
     GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogNormal,
     Maxwell, Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh,

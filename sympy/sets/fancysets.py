@@ -476,8 +476,8 @@ class Range(Set):
             n = ceiling((stop - ref)/step)
             if n <= 0:
                 # null Range
-                start = end = 0
-                step = 1
+                start = end = S.Zero
+                step = S.One
             else:
                 end = ref + n*step
         return Basic.__new__(cls, start, end, step)
