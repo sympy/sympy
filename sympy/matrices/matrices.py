@@ -1547,11 +1547,9 @@ class MatrixEigen(MatrixSubspaces):
             M_H = (self + self.H) / 2
             return M_H._eval_is_positive_definite(method=method)
 
-    @property
     def is_positive_definite(self):
         return self._eval_is_positive_definite()
 
-    @property
     def is_positive_semidefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
@@ -1561,7 +1559,6 @@ class MatrixEigen(MatrixSubspaces):
         elif self.is_square:
             return ((self + self.H) / 2).is_positive_semidefinite
 
-    @property
     def is_negative_definite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
@@ -1571,7 +1568,6 @@ class MatrixEigen(MatrixSubspaces):
         elif self.is_square:
             return ((self + self.H) / 2).is_negative_definite
 
-    @property
     def is_negative_semidefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
@@ -1581,7 +1577,6 @@ class MatrixEigen(MatrixSubspaces):
         elif self.is_square:
             return ((self + self.H) / 2).is_negative_semidefinite
 
-    @property
     def is_indefinite(self):
         if self.is_hermitian:
             eigen = self.eigenvals()
@@ -1673,11 +1668,16 @@ class MatrixEigen(MatrixSubspaces):
             Math. Monthly 77, 259-264 1970.
         """
 
-    is_positive_definite.__doc__ = _doc_positive_definite
-    is_positive_semidefinite.__doc__ = _doc_positive_definite
-    is_negative_definite.__doc__ = _doc_positive_definite
-    is_negative_semidefinite.__doc__ = _doc_positive_definite
-    is_indefinite.__doc__ = _doc_positive_definite
+    is_positive_definite = \
+        property(fget=is_positive_definite, doc=_doc_positive_definite)
+    is_positive_semidefinite = \
+        property(fget=is_positive_semidefinite, doc=_doc_positive_definite)
+    is_negative_definite = \
+        property(fget=is_negative_definite, doc=_doc_positive_definite)
+    is_negative_semidefinite = \
+        property(fget=is_negative_semidefinite, doc=_doc_positive_definite)
+    is_indefinite = \
+        property(fget=is_indefinite, doc=_doc_positive_definite)
 
     def jordan_form(self, calc_transform=True, **kwargs):
         """Return ``(P, J)`` where `J` is a Jordan block
