@@ -1017,7 +1017,7 @@ def trigamma(x):
     """
     return polygamma(1, x)
 
-def multivariate_gamma(x, p):
+def multivariate_gamma(x, p, evaluate=True):
     r"""
     The multivariate gamma function is a generalization of the gamma function i.e,
 
@@ -1072,8 +1072,11 @@ def multivariate_gamma(x, p):
     .. [1] https://en.wikipedia.org/wiki/Multivariate_gamma_function
     """
     psym = sympify(p)
-    if fuzzy_not(fuzzy_and([psym.is_integer, psym.is_positive])):
+    if psym.is_integer is False or psym.is_positive is False:
         raise TypeError('p must be a positive integer')
     from sympy import Product
     from sympy.abc import k
+    if evaluate:
+        return (pi**(psym*(psym-1)/4)*Product(gamma(x + (1 - k)/2),
+        (k, 1, psym))).doit()
     return pi**(psym*(psym-1)/4)*Product(gamma(x + (1 - k)/2), (k, 1, psym))
