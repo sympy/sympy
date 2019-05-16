@@ -441,6 +441,13 @@ def test_issue_14528():
     assert isinstance(gamma(k), gamma)
 
 def test_multivariate_gamma():
+    from sympy import Product
+    p = Symbol('p')
+    k = Symbol('k')
+
+    assert multivariate_gamma(x, p) == pi**(p*(p - 1)/4)*Product(gamma(-k/2 + x + S(1)/2),
+    (k, 1, p))
+
     assert multivariate_gamma(nan, 1) == nan
     assert multivariate_gamma(oo, 1).doit() == oo
 
@@ -466,14 +473,14 @@ def test_multivariate_gamma():
     assert multivariate_gamma(x + 2, 1).expand(func=True, mul=False).doit() == x*(x + 1)*\
         gamma(x)
     assert multivariate_gamma(x - 1, 2).expand(func=True).doit() == sqrt(pi)*gamma(x)*\
-        gamma(x - S.Half)/((x - 3/2)*(x - 1))
+        gamma(x - S.Half)/((x - S(3)/2)*(x - 1))
     assert multivariate_gamma(x + 2, 2).expand(func=True, mul=False).doit() == sqrt(pi)*\
         x*(x - S.Half)*(x + S.Half)*(x + 1)*gamma(x)*gamma(x - S.Half)
-    assert multivariate_gamma(x - 1, 3).expand(func=True).doit() == pi**(3/2)*gamma(x)*\
-        gamma(x - 1)*gamma(x - S.Half)/((x - 2)*(x - 3/2)*(x - 1))
+    assert multivariate_gamma(x - 1, 3).expand(func=True).doit() == pi**(S(3)/2)*gamma(x)*\
+        gamma(x - 1)*gamma(x - S.Half)/((x - 2)*(x - S(3)/2)*(x - 1))
 
     assert multivariate_gamma(n, 1).rewrite(factorial).doit() == factorial(n - 1)
     assert multivariate_gamma(n, 2).rewrite(factorial).doit() == sqrt(pi)*\
-        factorial(n - 3/2)*factorial(n - 1)
-    assert multivariate_gamma(n, 3).rewrite(factorial).doit() == pi**(3/2)*\
-        factorial(n - 2)*factorial(n - 3/2)*factorial(n - 1)
+        factorial(n - S(3)/2)*factorial(n - 1)
+    assert multivariate_gamma(n, 3).rewrite(factorial).doit() == pi**(S(3)/2)*\
+        factorial(n - 2)*factorial(n - S(3)/2)*factorial(n - 1)

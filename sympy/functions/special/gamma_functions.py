@@ -13,7 +13,6 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
-from sympy.utilities.misc import filldedent
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -1019,8 +1018,9 @@ def multivariate_gamma(x, p):
 
     Special case, multivariate_gamma(x, 1) = gamma(x)
 
-    Parameter
-    =========
+    Parameters
+    ==========
+
     p: order or dimension of the multivariate gamma function
 
     Examples
@@ -1043,24 +1043,20 @@ def multivariate_gamma(x, p):
     sqrt(pi)/2
 
     Writing multivariate_gamma in terms of gamma function
-    >>> multivariate_gamma(x, 1).doit() == gamma(x)
-    True
-    >>> multivariate_gamma(x, 2).doit() == pi**(0.5)*gamma(x)*gamma(x - 0.5)
-    True
-    >>> multivariate_gamma(x, 3).doit() == pi**(1.5)*gamma(x)*gamma(x - 0.5)*gamma(x - 1)
-    True
+    >>> multivariate_gamma(x, 1).doit()
+    gamma(x)
+
+    >>> multivariate_gamma(x, 2).doit()
+    pi**(0.5)*gamma(x)*gamma(x - 0.5)
+
+    >>> multivariate_gamma(x, 3).doit()
+    pi**(1.5)*gamma(x)*gamma(x - 0.5)*gamma(x - 1)
 
     See Also
     ========
 
-    gamma: Gamma function.
-    lowergamma: Lower incomplete gamma function.
-    uppergamma: Upper incomplete gamma function.
-    polygamma: Polygamma function.
-    loggamma: Log Gamma function.
-    digamma: Digamma function.
-    trigamma: Trigamma function.
-    sympy.functions.special.beta_functions.beta: Euler Beta function.
+    gamma, lowergamma, uppergamma, polygamma, loggamma, digamma, trigamma
+    sympy.functions.special.beta_functions.beta
 
     References
     ==========
@@ -1068,7 +1064,7 @@ def multivariate_gamma(x, p):
     .. [1] https://en.wikipedia.org/wiki/Multivariate_gamma_function
     """
     psym = sympify(p)
-    if not (psym.is_integer and psym.is_positive):
+    if psym.is_integer is False or psym.is_positive is False:
         raise TypeError('p must be a positive integer')
     from sympy import Product
     from sympy.abc import k
