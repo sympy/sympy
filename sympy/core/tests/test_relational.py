@@ -601,6 +601,7 @@ def test_issue_8245():
     assert not isa < a
     assert isa >= a
     assert not isa > a
+    assert isa > 0
 
     a = sqrt(2)
     r = Rational(str(a.n(30)))

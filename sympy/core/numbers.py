@@ -1351,7 +1351,8 @@ class Float(Number):
                 o = Float(sign(other))
             else:
                 s = self
-                o = Float._new(other._as_mpf_val(self._prec), self._prec)
+                o = Float._new(other._as_mpf_val(self._prec),
+                    self._prec, zero=False)
                 if Rational(o) != other:
                     # other either had a high-precision numerator or
                     # denominator that was not a power of 2
