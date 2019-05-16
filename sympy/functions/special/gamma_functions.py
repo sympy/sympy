@@ -5,8 +5,8 @@ from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from .zeta_functions import zeta
-from .error_functions import erf, erfc
+from sympy.functions.special.zeta_functions import zeta
+from sympy.functions.special.error_functions import erf, erfc
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -1047,10 +1047,10 @@ def multivariate_gamma(x, p):
     gamma(x)
 
     >>> multivariate_gamma(x, 2).doit()
-    pi**(0.5)*gamma(x)*gamma(x - 0.5)
+    sqrt(pi)*gamma(x)*gamma(x - 1/2)
 
     >>> multivariate_gamma(x, 3).doit()
-    pi**(1.5)*gamma(x)*gamma(x - 0.5)*gamma(x - 1)
+    pi**(3/2)*gamma(x)*gamma(x - 1)*gamma(x - 1/2)
 
     See Also
     ========
