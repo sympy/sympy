@@ -5,7 +5,10 @@ from sympy.core.compatibility import range
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
+<<<<<<< HEAD
 from sympy.core.logic import fuzzy_and, fuzzy_not
+=======
+>>>>>>> f39fa8a601e9b89d41d2a817a82dfa9d5c500f9e
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.error_functions import erf, erfc
 from sympy.functions.elementary.exponential import exp, log
