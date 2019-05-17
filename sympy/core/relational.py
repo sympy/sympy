@@ -569,24 +569,8 @@ class Equality(Relational):
         Eq(y, b**2 + c + x**3/8)
 
         """
-        sequence = args
-        only_eqs = all(isinstance(arg, Eq) for arg in args)
-
-        if len(args) == 1:
-            if isinstance(args[0], Eq):
-                sequence = ({args[0].lhs: args[0].rhs}, )
-        elif len(args) == 2 and not only_eqs:
-                sequence = ({args[0]: args[1]}, )
-        elif args and only_eqs:
-            sub_eqs = {}
-            for arg in args:
-                sub_eqs[arg.lhs] = arg.rhs
-            sequence = (sub_eqs, )
-
-        return Eq(
-            self.lhs.subs(*sequence, **kwargs),
-            self.rhs.subs(*sequence, **kwargs),
-        )
+        from sympy import Basic
+        return Basic.subs(self, [i if not isinstance(i, Eq) else i.args for i in args], **kwargs)
 
 Eq = Equality
 
