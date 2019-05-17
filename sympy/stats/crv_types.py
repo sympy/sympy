@@ -1073,7 +1073,7 @@ def Exponential(name, rate):
 
     >>> from sympy.stats import Exponential, density, cdf, E
     >>> from sympy.stats import variance, std, skewness, quantile
-    >>> from sympy import Symbol, symbols
+    >>> from sympy import Symbol
 
     >>> l = Symbol("lambda", positive=True)
     >>> z = Symbol("z")
@@ -1935,15 +1935,15 @@ class LogLogisticDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, b = self.alpha, self.beta
-        return ((b / a) * (x / a)**(b - 1)) / (1 + (x / a)**b)**2
+        return ((b/a)*(x/a)**(b - 1))/(1 + (x/a)**b)**2
 
     def _cdf(self, x):
         a, b = self.alpha, self.beta
-        return 1 / (1 + (x / a)**(-b))
+        return 1/(1 + (x/a)**(-b))
 
     def _quantile(self, p):
         a, b = self.alpha, self.beta
-        return a * ((p / (1 - p))**(1 / b))
+        return a*((p/(1 - p))**(1/b))
 
 def LogLogistic(name, alpha, beta):
     r"""
