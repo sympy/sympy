@@ -73,7 +73,7 @@ class MatAdd(MatrixExpr, Add):
 
         obj = Basic.__new__(cls, *args)
         if check:
-            if all(not isinstance(i, MatrixExpr) for i in args):
+            if any(not isinstance(i, MatrixExpr) for i in args):
                 return Add.fromiter(args)
             validate(*args)
         return obj
