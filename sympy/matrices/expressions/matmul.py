@@ -29,15 +29,17 @@ class MatMul(MatrixExpr, Mul):
     """
     is_MatMul = True
 
+    identity = GenericIdentity()
+
     def __new__(cls, *args, **kwargs):
         check = kwargs.get('check', True)
 
         if not args:
-            return GenericIdentity()
+            return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericIdentity().shape
-        args = filter(lambda i: GenericIdentity() != i, args)
+        args = filter(lambda i: i != cls.identity, args)
         args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()

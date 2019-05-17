@@ -31,13 +31,15 @@ class MatAdd(MatrixExpr, Add):
     """
     is_MatAdd = True
 
+    identity = GenericZeroMatrix()
+
     def __new__(cls, *args, **kwargs):
         if not args:
-            return GenericZeroMatrix()
+            return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericZeroMatrix().shape
-        args = filter(lambda i: GenericZeroMatrix() != i, args)
+        args = filter(lambda i: i != cls.identity, args)
         args = list(map(sympify, args))
         check = kwargs.get('check', False)
 
