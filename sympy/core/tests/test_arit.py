@@ -852,6 +852,16 @@ def test_Add_is_negative_positive():
     assert z.is_zero
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
     assert z.is_zero
+    # a root from issue 2897
+    s = (sqrt(842721)/9 + 102)**(-1*S(1)/3)/(
+        -S(3)/2 - 3*sqrt(3)*I/2) - 2 + (
+        sqrt(842721)/9 + 102)**(S(1)/3)*(-S(1)/2 - sqrt(3)*I/2)
+    assert s.is_positive is False
+    # these will hopefully evaluate at some point
+    # since there is a non-zero imaginary part
+    assert s.is_real is None
+    assert s.is_zero is None
+
 
 def test_Add_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)

@@ -1,6 +1,6 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
-    integrate, log, Mul, N, oo, pi, Pow, product, Product,
+    integrate, log, Mul, N, oo, pi, Pow, product, Product, ln,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
@@ -561,3 +561,9 @@ def test_issue_11151():
     expr1 = Sum(0, (x, 1, 2))
     expr2 = expr1/expr0
     assert simplify(factor(expr2) - expr2) == 0
+
+
+def test_issue_10073():
+    # formerly an error in handling n2 value calculated
+    assert (1/(-ln(35) + 2*sqrt(4)) > 0.1) == True
+    assert (1/(-ln(35) + 2*sqrt(3)) > 0.1) == False
