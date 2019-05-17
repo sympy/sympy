@@ -1379,10 +1379,11 @@ class Float(Number):
         elif other.is_Float:
             return _sympify(bool(
                         op(self._mpf_, other._mpf_)))
-        elif other.is_comparable:
+        elif other.is_comparable and other not in (
+                S.Infinity, S.NegativeInfinity):
             other = other.evalf(prec_to_dps(self._prec))
             if other._prec > 1:
-                if other.is_Number and other is not S.NaN:
+                if other.is_Number:
                     return _sympify(bool(
                         op(self._mpf_, other._as_mpf_val(self._prec))))
 
