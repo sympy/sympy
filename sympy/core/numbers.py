@@ -1340,20 +1340,14 @@ class Float(Number):
             return other
         elif other.is_Rational:
             from sympy.functions.elementary.complexes import sign
-            from sympy.functions.elementary.exponential import log
-            # we don't want to lose precision in other when making
-            # the comparison and we don't want to express Float
-            # as a Rational because it has the potential to create
-            # very large Rationals, so we try identify easy cases
-            # and finally use logarithms to make the determination
+            # Try to identify easy cases before using multiplication.
             if sign(self) != sign(other):
-                s = Float(sign(self))
-                o = Float(sign(other))
+                s = mlib.from_int(sign(self))
+                o = mlib.from_int(sign(other))
             else:
-                s = self
-                o = Float._new(other._as_mpf_val(self._prec),
-                    self._prec, zero=False)
-                if Rational(o) != other:
+                s = self._mpf_
+                o = other._as_mpf_val(self._prec)
+                if Rational(Float._new(o, self._prec)) != other:
                     # other either had a high-precision numerator or
                     # denominator that was not a power of 2
                     if s == other:
@@ -1362,25 +1356,9 @@ class Float(Number):
                             return S.true
                         return S.false
                     else:
-                        # self and other have the same sign and other
-                        # requires more precision than self to be
-                        # represented fully: how is m*2**e is related to a/b?
-                        swap = False
-                        if sign(other) < 0:
-                            swap = True
-                            s = -s
-                            other = -other
-                        # log(m*2**e, 2) <?> log(a, 2) - log(b, 2)
-                        # log(m, 2) + e <?> log(a, 2) - log(b, 2)
-                        # e <?> log(a, 2) - log(b, 2) - log(m, 2)
-                        _, m, e, _ = s._mpf_
-                        s = Float(0)
-                        o = Float(1)
-                        if e > log(other.p, 2) - log(other.q, 2) - log(m, 2):
-                            swap = not swap
-                        if swap:
-                            s, o = o, s
-            return _sympify(bool(op(s._mpf_, o._mpf_)))
+                        s = mlib.mpf_mul(self._mpf_, mlib.from_int(other.q))
+                        o = mlib.from_int(other.p)
+            return _sympify(bool(op(s, o)))
         elif other.is_Float:
             return _sympify(bool(
                         op(self._mpf_, other._mpf_)))
