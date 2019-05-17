@@ -831,7 +831,7 @@ class Expr(Basic, EvalfMixin):
             if not i.is_Number or not r.is_Number:
                 return False
             if r._prec != 1 and i._prec != 1:
-                return bool(not i and op(n))
+                return bool(not i and op(r))
             elif r._prec == 1 and (not i or i._prec == 1) and \
                     self.is_algebraic and not self.has(Function):
                 try:
