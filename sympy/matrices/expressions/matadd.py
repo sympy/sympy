@@ -39,7 +39,7 @@ class MatAdd(MatrixExpr, Add):
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericZeroMatrix().shape
-        args = filter(lambda i: isinstance(i, cls.identity), args)
+        args = filter(lambda i: isinstance(i, cls.identity.__class__), args)
         args = list(map(sympify, args))
         check = kwargs.get('check', False)
 
