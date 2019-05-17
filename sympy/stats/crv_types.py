@@ -25,6 +25,7 @@ Gompertz
 Kumaraswamy
 Laplace
 Logistic
+LogLogistic
 LogNormal
 Maxwell
 Nakagami
@@ -87,6 +88,7 @@ __all__ = ['ContinuousRV',
 'Kumaraswamy',
 'Laplace',
 'Logistic',
+'LogLogistic',
 'LogNormal',
 'Maxwell',
 'Nakagami',
@@ -1916,6 +1918,95 @@ def Logistic(name, mu, s):
     """
 
     return rv(name, LogisticDistribution, (mu, s))
+
+#-------------------------------------------------------------------------------
+# Log-logistic distribution --------------------------------------------------------
+
+
+class LogLogisticDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(alpha, beta):
+        _value_check(alpha > 0, "Scale parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
+
+    def pdf(self, x):
+        a, b = self.alpha, self.beta
+        return ((b / a) * (x / a)**(b - 1)) / (1 + (x / a)**b)**2
+
+    def _cdf(self, x):
+        a, b = self.alpha, self.beta
+        return 1 / (1 + (x / a)**(-b))
+
+    def _quantile(self, p):
+        a, b = self.alpha, self.beta
+        return a * ((p / (1 - p))**(1 / b))
+
+def LogLogistic(name, alpha, beta):
+    r"""
+    Create a continuous random variable with a log-logistic distribution.
+    The distribution is unimodal when `beta > 1`.
+
+    The density of the log-logistic distribution is given by
+
+    .. math::
+        f(x) := \frac{(\frac{\beta}{\alpha})(\frac{x}{\alpha})^{\beta - 1}}
+                {(1 + (\frac{x}{\alpha})^{\beta})^2}
+
+    Parameters
+    ==========
+
+    alpha : Real number, `\alpha > 0`, scale parameter and median of distribution
+    beta : Real number, `\beta > 0` a shape parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import LogLogistic, density, cdf, quantile
+    >>> from sympy import Symbol, pprint
+
+    >>> alpha = Symbol("alpha", real=True, positive=True)
+    >>> beta = Symbol("beta", real=True, positive=True)
+    >>> p = Symbol("p")
+    >>> z = Symbol("z", positive=True)
+
+    >>> X = LogLogistic("x", alpha, beta)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+                  beta - 1
+           /  z  \
+      beta*|-----|
+           \alpha/
+    ------------------------
+                           2
+          /       beta    \
+          |/  z  \        |
+    alpha*||-----|     + 1|
+          \\alpha/        /
+
+    >>> cdf(X)(z)
+    1/(1 + (z/alpha)**(-beta))
+
+    >>> quantile(X)(p)
+    alpha*(p/(1 - p))**(1/beta)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Log-logistic_distribution
+
+    """
+
+    return rv(name, LogLogisticDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
 # Log Normal distribution ------------------------------------------------------

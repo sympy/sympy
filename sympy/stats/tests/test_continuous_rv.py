@@ -12,7 +12,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          Chi, ChiSquared,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
-                         Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
+                         Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic, LogLogistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
@@ -517,6 +517,24 @@ def test_logistic():
     assert density(X)(x) == exp((-x + mu)/s)/(s*(exp((-x + mu)/s) + 1)**2)
     assert cdf(X)(x) == 1/(exp((mu - x)/s) + 1)
     assert quantile(X)(p) == mu - s*log(-S(1) + 1/p)
+
+def test_loglogistic():
+    a, b = symbols('a b')
+    assert LogLogistic('x', a, b)
+
+    a = Symbol('a', positive=False)
+    b = Symbol('b', positive=True)
+    raises(ValueError, lambda: LogLogistic('x', a, b))
+
+    a = Symbol('a', positive=True)
+    b = Symbol('b', positive=False)
+    raises(ValueError, lambda: LogLogistic('x', a, b))
+
+    a, b, z, p = symbols('a b z p', positive=True)
+    X = LogLogistic('x', a, b)
+    assert density(X)(z) == b*(z/a)**(b - 1)/(a*((z/a)**b + 1)**2)
+    assert cdf(X)(z) == 1/(1 + (z/a)**(-b))
+    assert quantile(X)(p) == a*(p/(1 - p))**(1/b)
 
 
 def test_lognormal():
