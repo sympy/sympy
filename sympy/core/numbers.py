@@ -26,8 +26,8 @@ from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp import mpnumeric
 from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
-    fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
-    prec_to_dps)
+    fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
+    prec_to_dps, fone, fnone)
 from sympy.utilities.misc import debug, filldedent
 from .evaluate import global_evaluate
 
@@ -96,7 +96,7 @@ def mpf_norm(mpf, prec):
         # it assumes that if man is zero the result is 0
         # (see issue 6639)
         if not bc:
-            return _mpf_zero
+            return fzero
         else:
             # don't change anything; this should already
             # be a well formed mpf tuple
@@ -1113,7 +1113,7 @@ class Float(Number):
     @classmethod
     def _new(cls, _mpf_, _prec, zero=True):
         # special cases
-        if zero and _mpf_ == _mpf_zero:
+        if zero and _mpf_ == fzero:
             return S.Zero  # Float(0) -> 0.0; Float._new((0,0,0,0)) -> 0
         elif _mpf_ == _mpf_nan:
             return S.NaN
@@ -1176,7 +1176,7 @@ class Float(Number):
         return False
 
     def _eval_is_integer(self):
-        return self._mpf_ == _mpf_zero
+        return self._mpf_ == fzero
 
     def _eval_is_negative(self):
         if self._mpf_ == _mpf_ninf:
@@ -1193,10 +1193,10 @@ class Float(Number):
         return self.num > 0
 
     def _eval_is_zero(self):
-        return self._mpf_ == _mpf_zero
+        return self._mpf_ == fzero
 
     def __nonzero__(self):
-        return self._mpf_ != _mpf_zero
+        return self._mpf_ != fzero
 
     __bool__ = __nonzero__
 
@@ -1285,7 +1285,7 @@ class Float(Number):
                 return Float._new(y, prec)
             except mlib.ComplexResult:
                 re, im = mlib.mpc_pow(
-                    (mpfself, _mpf_zero), (expt, _mpf_zero), prec, rnd)
+                    (mpfself, fzero), (expt, fzero), prec, rnd)
                 return Float._new(re, prec) + \
                     Float._new(im, prec)*S.ImaginaryUnit
 
@@ -1293,7 +1293,7 @@ class Float(Number):
         return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
 
     def __int__(self):
-        if self._mpf_ == _mpf_zero:
+        if self._mpf_ == fzero:
             return 0
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
 
@@ -1336,9 +1336,7 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if other.is_NumberSymbol:
-            return other
-        elif other.is_Rational:
+        if other.is_Rational:
             from sympy.functions.elementary.complexes import sign
             from sympy.functions.elementary.exponential import log
             # we don't want to lose precision in other when making
@@ -1347,17 +1345,16 @@ class Float(Number):
             # very large Rationals, so we try identify easy cases
             # and finally use logarithms to make the determination
             if sign(self) != sign(other):
-                s = Float(sign(self))
-                o = Float(sign(other))
+                s = Float._new([fnone, fzero, fone][sign(self) + 1], 1, zero=False)
+                o = Float._new([fnone, fzero, fone][sign(other) + 1], 1, zero=False)
             else:
                 s = self
-                o = Float._new(other._as_mpf_val(self._prec),
-                    self._prec, zero=False)
+                o = Float._new(other._as_mpf_val(self._prec), self._prec, zero=False)
                 if Rational(o) != other:
                     # other either had a high-precision numerator or
                     # denominator that was not a power of 2
                     if s == other:
-                        if op((1,)*4, (1,)*4):
+                        if op(fone, fone):
                             # == is permited by op
                             return S.true
                         return S.false
@@ -1374,8 +1371,8 @@ class Float(Number):
                         # log(m, 2) + e <?> log(a, 2) - log(b, 2)
                         # e <?> log(a, 2) - log(b, 2) - log(m, 2)
                         _, m, e, _ = s._mpf_
-                        s = Float(0)
-                        o = Float(1)
+                        s = Float._new(fzero, 1, zero=False)
+                        o = Float._new(fone, 1)
                         if e > log(other.p, 2) - log(other.q, 2) - log(m, 2):
                             swap = not swap
                         if swap:
@@ -1392,35 +1389,35 @@ class Float(Number):
                         op(self._mpf_, other._as_mpf_val(self._prec))))
 
     def __gt__(self, other):
+        if isinstance(other, NumberSymbol):
+            return other.__lt__(self)
         rv = self._Frel(other, mlib.mpf_gt)
         if rv is None:
             return Expr.__gt__(self, other)
-        if rv.is_NumberSymbol:
-            return rv.__lt__(self)
         return rv
 
     def __ge__(self, other):
+        if isinstance(other, NumberSymbol):
+            return other.__le__(self)
         rv = self._Frel(other, mlib.mpf_ge)
         if rv is None:
             return Expr.__ge__(self, other)
-        if rv.is_NumberSymbol:
-            return rv.__le__(self)
         return rv
 
     def __lt__(self, other):
+        if isinstance(other, NumberSymbol):
+            return other.__gt__(self)
         rv = self._Frel(other, mlib.mpf_lt)
         if rv is None:
             return Expr.__lt__(self, other)
-        if rv.is_NumberSymbol:
-            return rv.__gt__(self)
         return rv
 
     def __le__(self, other):
+        if isinstance(other, NumberSymbol):
+            return other.__ge__(self)
         rv = self._Frel(other, mlib.mpf_le)
         if rv is None:
             return Expr.__le__(self, other)
-        if rv.is_NumberSymbol:
-            return rv.__ge__(self)
         return rv
 
     def __hash__(self):
