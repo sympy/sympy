@@ -1348,35 +1348,33 @@ class Float(Number):
                 s = Float._new([fnone, fzero, fone][sign(self) + 1], 1, zero=False)
                 o = Float._new([fnone, fzero, fone][sign(other) + 1], 1, zero=False)
             else:
-                s = self
-                o = Float._new(other._as_mpf_val(self._prec), self._prec, zero=False)
-                if Rational(o) != other:
-                    # other either had a high-precision numerator or
-                    # denominator that was not a power of 2
-                    if s == other:
-                        if op(fone, fone):
-                            # == is permited by op
-                            return S.true
-                        return S.false
-                    else:
-                        # self and other have the same sign and other
-                        # requires more precision than self to be
-                        # represented fully: how is m*2**e is related to a/b?
-                        swap = False
-                        if sign(other) < 0:
-                            swap = True
-                            s = -s
-                            other = -other
-                        # log(m*2**e, 2) <?> log(a, 2) - log(b, 2)
-                        # log(m, 2) + e <?> log(a, 2) - log(b, 2)
-                        # e <?> log(a, 2) - log(b, 2) - log(m, 2)
-                        _, m, e, _ = s._mpf_
-                        s = Float._new(fzero, 1, zero=False)
-                        o = Float._new(fone, 1)
-                        if e > log(other.p, 2) - log(other.q, 2) - log(m, 2):
-                            swap = not swap
-                        if swap:
-                            s, o = o, s
+               # other either had a high-precision numerator or
+                # denominator that was not a power of 2
+                if self == other:
+                    if op(fone, fone):
+                        # == is permited by op
+                        return S.true
+                    return S.false
+                else:
+                    # self and other have the same sign and other
+                    # requires more precision than self to be
+                    # represented fully: how is m*2**e is related to a/b?
+                    swap = False
+                    s = self
+                    if sign(other) < 0:
+                        swap = True
+                        s = -s
+                        other = -other
+                    # log(m*2**e, 2) <?> log(a, 2) - log(b, 2)
+                    # log(m, 2) + e <?> log(a, 2) - log(b, 2)
+                    # e <?> log(a, 2) - log(b, 2) - log(m, 2)
+                    _, m, e, _ = s._mpf_
+                    s = Float._new(fzero, 1, zero=False)
+                    o = Float._new(fone, 1)
+                    if e > log(other.p, 2) - log(other.q, 2) - log(m, 2):
+                        swap = not swap
+                    if swap:
+                        s, o = o, s
             return _sympify(bool(op(s._mpf_, o._mpf_)))
         elif other.is_Float:
             return _sympify(bool(
