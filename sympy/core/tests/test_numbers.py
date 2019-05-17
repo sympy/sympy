@@ -15,7 +15,7 @@ from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
 from sympy.core.mod import Mod
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
-from sympy.utilities.iterables import permutations, cartes
+from sympy.utilities.iterables import permutations
 from sympy.utilities.pytest import XFAIL, raises
 
 from mpmath import mpf
@@ -177,10 +177,18 @@ def test_divmod():
     assert divmod(S(4), S(-2.1)) == divmod(4, -2.1)
     assert divmod(S(-8), S(-2.5) ) == Tuple(3 , -0.5)
 
-    for i, j in cartes(*[[S.One, oo, -oo, S.NaN]]*2):
-        if i == j == 1:
-            continue
-        raises(TypeError, lambda: divmod(i, j))
+    assert divmod(oo, 1) == (S.NaN, S.NaN)
+    assert divmod(S.NaN, 1) == (S.NaN, S.NaN)
+    assert divmod(1, S.NaN) == (S.NaN, S.NaN)
+    ans = [(-1, oo), (-1, oo), (0, 0), (0, 1), (0, 2)]
+    OO = float('inf')
+    ANS = [tuple(map(float, i)) for i in ans]
+    assert [divmod(i, oo) for i in range(-2, 3)] == ans
+    assert [divmod(i, OO) for i in range(-2, 3)] ==  ANS
+    ans = [(0, -2), (0, -1), (0, 0), (-1, -oo), (-1, -oo)]
+    ANS = [tuple(map(float, i)) for i in ans]
+    assert [divmod(i, -oo) for i in range(-2, 3)] == ans
+    assert [divmod(i, -OO) for i in range(-2, 3)] == ANS
     assert divmod(S(3.5), S(-2)) == divmod(3.5, -2)
     assert divmod(-S(3.5), S(-2)) == divmod(-3.5, -2)
 
