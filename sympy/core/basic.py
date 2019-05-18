@@ -1085,7 +1085,17 @@ class Basic(with_metaclass(ManagedProperties)):
                     hit = True
                     args[i] = arg
             if hit:
-                rv = self.func(*args)
+                # XXX Hack for substituting a matrix with a non-matrix
+                # in MatAdd
+                from sympy.matrices.expressions.matadd import MatAdd
+                if isinstance(self, MatAdd):
+                    try:
+                        rv = self.func(*args, check=True)
+                    except TypeError:
+                        rv = self.func(*args, check=False)
+                else:
+                    rv = self.func(*args)
+
                 hack2 = hints.get('hack2', False)
                 if hack2 and self.is_Mul and not rv.is_Mul:  # 2-arg hack
                     coeff = S.One
