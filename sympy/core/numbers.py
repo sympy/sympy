@@ -1015,7 +1015,7 @@ class Float(Number):
             elif num == '-inf':
                 return S.NegativeInfinity
         elif isinstance(num, float) and num == 0:
-            num = '0'
+            num = fzero
         elif isinstance(num, float) and num == float('inf'):
             return S.Infinity
         elif isinstance(num, float) and num == float('-inf'):
@@ -1023,7 +1023,7 @@ class Float(Number):
         elif isinstance(num, float) and num == float('nan'):
             return S.NaN
         elif isinstance(num, (SYMPY_INTS, Integer)):
-            num = str(num)  # faster than mlib.from_int
+            num = mlib.from_int(num)
         elif num is S.Infinity:
             return num
         elif num is S.NegativeInfinity:
@@ -1176,7 +1176,6 @@ class Float(Number):
 
     def __ceil__(self):
         return self.ceiling()
-
 
     @property
     def num(self):
@@ -1363,45 +1362,18 @@ class Float(Number):
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         if other.is_Rational:
-            from sympy.functions.elementary.complexes import sign
-            from sympy.functions.elementary.exponential import log
-            # we don't want to lose precision in other when making
-            # the comparison and we don't want to express Float
-            # as a Rational because it has the potential to create
-            # very large Rationals, so we try identify easy cases
-            # and finally use logarithms to make the determination
-            if sign(self) != sign(other):
-                s = Float._new([fnone, fzero, fone][sign(self) + 1], 1, zero=False)
-                o = Float._new([fnone, fzero, fone][sign(other) + 1], 1, zero=False)
-            else:
-               # other either had a high-precision numerator or
-                # denominator that was not a power of 2
-                if self == other:
-                    if op(fone, fone):
-                        # == is permited by op
-                        return S.true
-                    return S.false
-                else:
-                    # self and other have the same sign and other
-                    # requires more precision than self to be
-                    # represented fully: how is m*2**e is related to a/b?
-                    swap = False
-                    s = self
-                    if sign(other) < 0:
-                        swap = True
-                        s = -s
-                        other = -other
-                    # log(m*2**e, 2) <?> log(a, 2) - log(b, 2)
-                    # log(m, 2) + e <?> log(a, 2) - log(b, 2)
-                    # e <?> log(a, 2) - log(b, 2) - log(m, 2)
-                    _, m, e, _ = s._mpf_
-                    s = Float._new(fzero, 1, zero=False)
-                    o = Float._new(fone, 1)
-                    if e > log(other.p, 2) - log(other.q, 2) - log(m, 2):
-                        swap = not swap
-                    if swap:
-                        s, o = o, s
-            return _sympify(bool(op(s._mpf_, o._mpf_)))
+            # test self*other.q <?> other.p without losing precision
+            '''
+            >>> f = Float(.1,2)
+            >>> i = 1234567890
+            >>> (f*i)._mpf_
+            (0, 471, 18, 9)
+            >>> mlib.mpf_mul(f._mpf_, mlib.from_int(i))
+            (0, 505555550955, -12, 39)
+            '''
+            smpf = mlib.mpf_mul(self._mpf_, mlib.from_int(other.q))
+            ompf = mlib.from_int(other.p)
+            return _sympify(bool(op(smpf, ompf)))
         elif other.is_Float:
             return _sympify(bool(
                         op(self._mpf_, other._mpf_)))
