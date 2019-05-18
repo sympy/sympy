@@ -1015,7 +1015,7 @@ class Float(Number):
             elif num == '-inf':
                 return S.NegativeInfinity
         elif isinstance(num, float) and num == 0:
-            num = fzero
+            num = '0'
         elif isinstance(num, float) and num == float('inf'):
             return S.Infinity
         elif isinstance(num, float) and num == float('-inf'):
@@ -1023,7 +1023,7 @@ class Float(Number):
         elif isinstance(num, float) and num == float('nan'):
             return S.NaN
         elif isinstance(num, (SYMPY_INTS, Integer)):
-            num = mlib.from_int(num)
+            num = str(num)
         elif num is S.Infinity:
             return num
         elif num is S.NegativeInfinity:
