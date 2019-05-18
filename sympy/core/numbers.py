@@ -545,9 +545,12 @@ class Number(AtomicExpr):
 
     def __divmod__(self, other):
         from .containers import Tuple
+        from sympy.functions.elementary.complexes import sign
 
         try:
             other = Number(other)
+            if self.is_infinite or S.NaN in (self, other):
+                return (S.NaN, S.NaN)
         except TypeError:
             msg = "unsupported operand type(s) for divmod(): '%s' and '%s'"
             raise TypeError(msg % (type(self).__name__, type(other).__name__))
@@ -555,10 +558,16 @@ class Number(AtomicExpr):
             raise ZeroDivisionError('modulo by zero')
         if self.is_Integer and other.is_Integer:
             return Tuple(*divmod(self.p, other.p))
+        elif isinstance(other, Float):
+            rat = self/Rational(other)
         else:
             rat = self/other
-        w = int(rat) if rat > 0 else int(rat) - 1
-        r = self - other*w
+        if other.is_finite:
+            w = int(rat) if rat > 0 else int(rat) - 1
+            r = self - other*w
+        else:
+            w = 0 if not self or (sign(self) == sign(other)) else -1
+            r = other if w else self
         return Tuple(w, r)
 
     def __rdivmod__(self, other):
@@ -2304,7 +2313,9 @@ class Integer(Rational):
         return self, S.One
 
     def __floordiv__(self, other):
-        return Integer(self.p // Integer(other).p)
+        if isinstance(other, Integer):
+            return Integer(self.p // other)
+        return Integer(divmod(self, other)[0])
 
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
