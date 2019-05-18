@@ -30,3 +30,10 @@ def test_doit_args():
 def test_generic_identity():
     assert MatAdd.identity == GenericZeroMatrix()
     assert MatAdd.identity != S.Zero
+
+
+def test_scalar_add_issue():
+    assert MatAdd(1, 2) == 3
+    assert MatAdd(1, 2).is_Matrix == False
+    assert MatAdd(1, 2, check=False).__class__ == MatAdd
+    assert MatAdd(1, 2, check=False).is_Matrix == True

@@ -33,20 +33,6 @@ class MatAdd(MatrixExpr, Add):
 
         Default is ``True``.
 
-        Some examples are :
-
-        ``MatAdd`` falls back to ``Add`` if none of the arguments are
-        matrices
-        >>> MatAdd(1, 2, 3)
-        6
-
-        ``MatAdd`` will not attempt any fall back if ``check=False``
-        >>> x = MatAdd(1, 2, 3)
-        >>> x
-        1 + 2 + 3
-        >>> x.is_Matrix
-        True
-
         .. Warning::
             Setting this flag to ``False`` is dangerous. Only use when you
             can guarantee that the arguments are in matrix context. The
@@ -57,12 +43,19 @@ class MatAdd(MatrixExpr, Add):
     ========
 
     Symbolic matrix addition with matrix symbols:
+
     >>> from sympy import MatAdd, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
     >>> C = MatrixSymbol('C', 5, 5)
     >>> MatAdd(A, B, C)
     A + B + C
+
+    ``MatAdd`` falls back to ``Add`` if none of the arguments are
+    matrices
+
+    >>> MatAdd(1, 2, 3)
+    6
     """
     is_MatAdd = True
 
