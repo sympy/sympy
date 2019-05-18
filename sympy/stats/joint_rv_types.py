@@ -467,12 +467,12 @@ def GeneralizedMultivariateLogGamma(syms, omega, v, l, mu):
 
     >>> from sympy.stats import density
     >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> from sympy.stats.joint_rv_types import GMVLG
+    >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma
     >>> from sympy import Matrix, symbols
     >>> omega = Matrix([[1, 0.5, 0.5], [0.5, 1, 0.5], [0.5, 0.5, 1]])
     >>> v = 1
     >>> l, mu = [1, 1, 1], [1, 1, 1]
-    >>> G = GMVLG('G', omega, v, l, mu)
+    >>> G = GeneralizedMultivariateLogGamma('G', omega, v, l, mu)
     >>> y = symbols('y_1:4', positive=True)
     >>> density(G)(y[0], y[1], y[2])
     sqrt(2)*Sum((1 - sqrt(2)/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) -
@@ -483,6 +483,11 @@ def GeneralizedMultivariateLogGamma(syms, omega, v, l, mu):
 
     .. [1] https://en.wikipedia.org/wiki/Generalized_multivariate_log-gamma_distribution
     .. [2] https://www.researchgate.net/publication/234137346_On_a_multivariate_log-gamma_distribution_and_the_use_of_the_distribution_in_the_Bayesian_analysis
+
+    Note
+    ====
+    If the GeneralizedMultivariateLogGamma is too long to type use,
+    `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG`
 
     """
     return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
