@@ -381,16 +381,11 @@ class Range(Set):
         >>> from sympy import Range, symbols
         >>> list(Range(3))
         [0, 1, 2]
-        >>> sr, sp, st = symbols('sr, sp, st', positive=True)
-        >>> R = Range(sr, sp, st)
-        >>> R
-        Range(sr, sp, st)
-        >>> R.subs(sr, 0)
-        Range(0, sp, st)
-        >>> R.subs(sp, 20)
-        Range(sr, 20, st)
-        >>> R.subs(st, 1)
-        Range(sr, sp, 1)
+        >>> r, p, t = symbols('r, p, t', positive=True)
+        >>> Range(r, p, t)
+        Range(r, p, t)
+        >>> (_).subs(r, 0)
+        Range(0, p, t)
 
     The step can also be negative:
 
@@ -459,10 +454,6 @@ class Range(Set):
 
         start, stop, step = map(_sympify, [start, stop, step])
 
-        tmp_obj = Basic(start, stop, step)
-        if tmp_obj.atoms(Float) and (not tmp_obj.atoms(Symbol)):
-            raise ValueError('Floats are not permitted in Range.')
-
         if step.is_infinite:
             raise ValueError(filldedent('''
     Range cannot have an infinite step size.'''))
@@ -482,8 +473,11 @@ class Range(Set):
                 end = stop
             else:
                 ref = start if start.is_finite else stop
+                if any(i.is_number and i.has(Float) for i in (step, stop - ref)):
+                    raise ValueError(filldedent('''
+    Only symbolic and integervalues are allowed in Range.'''))
                 n = ceiling((stop - ref)/step)
-                if n <= 0:
+                if (n <= 0) == True:
                     # null Range
                     start = end = S.Zero
                     step = S.One
