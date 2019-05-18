@@ -94,6 +94,8 @@ def test_GeneralizedMultivariateLogGammaDistribution():
                      [0.5, 0.5, 0.5, 1, 0.5],
                      [0.5, 0.5, 0.5, 0.5, 1]])
     l_f1 = [1, 2, 3, 4, 5]
+    omega_f5 = Matrix([[1]])
+    mu_f5 = l_f5 = [1]
     raises(ValueError, lambda: GMVLG('G', omega_f1, v, l, mu))
     raises(ValueError, lambda: GMVLG('G', omega_f2, v, l, mu))
     raises(ValueError, lambda: GMVLG('G', omega_f3, v, l, mu))
@@ -102,6 +104,7 @@ def test_GeneralizedMultivariateLogGammaDistribution():
     raises(ValueError, lambda: GMVLG('G', omega, v, l, m_f))
     raises(ValueError, lambda: GMVLG('G', omega_f4, v, l, mu))
     raises(ValueError, lambda: GMVLG('G', omega, v, l_f1, mu))
+    raises(ValueError, lambda: GMVLG('G', omega_f5, v, l_f5, mu_f5))
 
 def test_MultivariateBeta():
     from sympy.stats.joint_rv_types import MultivariateBeta

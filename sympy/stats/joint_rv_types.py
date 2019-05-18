@@ -416,7 +416,7 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
             _value_check((muk > 0), "mu must be a positive vector.")
         _value_check(len(l) > 1,"the distribution should have at least"
                                 " two random variables.")
-        _value_check(omega.shape == (len(l), len(mu)),
+        _value_check((omega.shape[0] == len(l), len(l) == len(mu)),
                         "lamda, mu should be of same length and omega should "
                         " be of shape (length of lamda, length of mu)")
 
