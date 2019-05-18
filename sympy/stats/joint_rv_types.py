@@ -405,15 +405,17 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
     def check(self, omega, v, l, mu):
         _value_check(omega.is_square, "the matrix must be square")
         for val in omega.values():
-            _value_check((val >= 0) != False and (val <= 1) != False,
+            _value_check((val >= 0, val <= 1),
                 "all values in matrix must be between 0 and 1(both inclusive).")
         _value_check(omega.diagonal().equals(ones(1, omega.shape[0])),
                         "all the elements of diagonal should be 1.")
-        _value_check((v > 0) != False, "v must be positive")
+        _value_check((v > 0), "v must be positive")
         for lk in l:
-            _value_check((lk > 0) != False, "lamda must be a positive vector.")
+            _value_check((lk > 0), "lamda must be a positive vector.")
         for muk in mu:
-            _value_check((muk > 0) != False, "mu must be a positive vector.")
+            _value_check((muk > 0), "mu must be a positive vector.")
+        _value_check(len(l) > 1,"the distribution should have at least"
+                                " two random variables.")
         _value_check(omega.shape == (len(l), len(mu)),
                         "lamda, mu should be of same length and omega should "
                         " be of shape (length of lamda, length of mu)")
@@ -485,8 +487,6 @@ def GeneralizedMultivariateLogGamma(syms, omega, v, l, mu):
     """
     return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
                             syms, omega, v, l, mu)
-
-GMVLG = GeneralizedMultivariateLogGamma
 
 #-------------------------------------------------------------------------------
 # Multinomial distribution ---------------------------------------------------------
