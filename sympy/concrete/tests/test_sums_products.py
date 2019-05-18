@@ -10,7 +10,6 @@ from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.matrices import Matrix
 from sympy.core.mod import Mod
-from sympy.core.numbers import comp
 from sympy.core.compatibility import range
 
 n = Symbol('n', integer=True)
@@ -266,7 +265,7 @@ def test_geometric_sums():
     assert result.is_Float
 
     result = Sum(0.25**n, (n, 1, oo)).doit()
-    assert comp(result, 1/3.0)
+    assert result == 1/3.
     assert result.is_Float
 
     result = Sum(0.99999**n, (n, 1, oo)).doit()

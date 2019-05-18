@@ -109,13 +109,14 @@ def test_IndependentProductPSpace():
 def test_E():
     assert E(5) == 5
 
+
 def test_H():
     X = Normal('X', 0, 1)
     D = Die('D', sides = 4)
     G = Geometric('G', 0.5)
     assert H(X, X > 0) == -log(2)/2 + S(1)/2 + log(pi)/2
     assert H(D, D > 2) == log(2)
-    assert comp(H(G).evalf().round(2), 1.39, 10**-2)
+    assert comp(H(G).evalf().round(2), 1.39)
 
 
 def test_Sample():

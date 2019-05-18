@@ -10,6 +10,7 @@ from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError, _convert_numpy_types
 from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
+from .evalf import pure_complex
 from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
@@ -39,21 +40,24 @@ _LOG2 = math.log(2)
 
 
 def comp(z1, z2, tol=None):
-    """Return a bool indicating whether the error between z1 and z2 is <= tol.
+    """Return a bool indicating whether the error between z1 and z2
+    is <= tol.
 
-    If ``tol`` is None then True will be returned if there is a significant
-    difference between the numbers: ``abs(z1 - z2)*10**p <= 1/2`` where ``p``
-    is the lower of the precisions of the values. A comparison of strings will
-    be made if ``z1`` is a Number and a) ``z2`` is a string or b) ``tol`` is ''
-    and ``z2`` is a Number.
+    If ``tol`` is None then True will be returned if there is a
+    significant difference between the numbers:
+    ``abs(z1 - z2)*10**p <= 1/2`` where ``p`` is the lower of the
+    precisions of the values. A comparison of strings will be made
+    if ``z1`` is a Number and ``z2`` is a string or ``tol`` is ''.
 
-    When ``tol`` is a nonzero value, if z2 is non-zero and ``|z1| > 1``
-    the error is normalized by ``|z1|``, so if you want to see if the
-    absolute error between ``z1`` and ``z2`` is <= ``tol`` then call this
-    as ``comp(z1 - z2, 0, tol)``.
+    When ``tol`` is a nonzero value, if z2 is non-zero and
+    ``|z1| > 1`` the error is normalized by ``|z1|``, so if you want
+    to see if the absolute error between ``z1`` and ``z2`` is less
+    than or equal to ``tol`` then call this as
+    ``comp(z1 - z2, 0, tol)``.
     """
     if type(z2) is str:
-        if not isinstance(z1, Number):
+        z = sympify(z2)
+        if not pure_complex(z1, or_real=True):
             raise ValueError('when z2 is a str z1 must be a Number')
         return str(z1) == z2
     if not z1:
@@ -61,15 +65,37 @@ def comp(z1, z2, tol=None):
     if not z1:
         return True
     if not tol:
+        a, b = z1, z2
+        if tol == '':
+            return str(a) == str(b)
         if tol is None:
-            if type(z2) is str and getattr(z1, 'is_Number', False):
-                return str(z1) == z2
-            a, b = Float(z1), Float(z2)
-            return int(abs(a - b)*10**prec_to_dps(
-                min(a._prec, b._prec)))*2 <= 1
-        elif all(getattr(i, 'is_Number', False) for i in (z1, z2)):
-            return z1._prec == z2._prec and str(z1) == str(z2)
-        raise ValueError('exact comparison requires two Numbers')
+            a, b = sympify(a), sympify(b)
+            if not all(i.is_number for i in (a, b)):
+                raise ValueError('expecting 2 numbers')
+            fa = a.atoms(Float)
+            fb = b.atoms(Float)
+            if not fa and not fb:
+                # no floats -- compare exactly
+                return a == b
+            # get a to be pure_complex
+            for do in range(2):
+                ca = pure_complex(a, or_real=True)
+                if not ca:
+                    if fa:
+                        a = a.n(prec_to_dps(min([i._prec for i in fa])))
+                        ca = pure_complex(a, or_real=True)
+                        break
+                    else:
+                        fa, fb = fb, fa
+                        a, b = b, a
+            cb = pure_complex(b)
+            if not cb and fb:
+                b = b.n(prec_to_dps(min([i._prec for i in fb])))
+                cb = pure_complex(b, or_real=True)
+            if ca and cb and (ca[1] or cb[1]):
+                return all(comp(i, j) for i, j in zip(ca, cb))
+            tol = 10**prec_to_dps(min(a._prec, getattr(b, '_prec', a._prec)))
+            return 2*int(abs(a - b)*tol) <= 1
     diff = abs(z1 - z2)
     az1 = abs(z1)
     if z2 and az1 > 1:

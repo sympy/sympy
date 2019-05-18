@@ -1732,17 +1732,38 @@ def test_Float_idempotence():
     assert not same_and_same_prec(z, x)
 
 
-def test_comp():
+def test_comp1():
     # sqrt(2) = 1.414213 5623730950...
     a = sqrt(2).n(7)
     assert comp(a, 1.41421346) is False
     assert comp(a, 1.41421347)
+    #                  ...
     assert comp(a, 1.41421366)
     assert comp(a, 1.41421367) is False
     assert comp(sqrt(2).n(2), '1.4')
     assert comp(sqrt(2).n(2), Float(1.4, 2), '')
-    raises(ValueError, lambda: comp(sqrt(2).n(2), 1.4, ''))
+    assert comp(sqrt(2).n(2), 1.4, '')
     assert comp(sqrt(2).n(2), Float(1.4, 3), '') is False
+    assert comp(sqrt(2) + sqrt(3)*I, 1.4 + 1.7*I, .1)
+    assert not comp(sqrt(2) + sqrt(3)*I, (1.5 + 1.7*I)*0.89, .1)
+    assert comp(sqrt(2) + sqrt(3)*I, (1.5 + 1.7*I)*0.90, .1)
+    assert comp(sqrt(2) + sqrt(3)*I, (1.5 + 1.7*I)*1.07, .1)
+    assert not comp(sqrt(2) + sqrt(3)*I, (1.5 + 1.7*I)*1.08, .1)
+    assert [(i, j)
+            for i in range(130, 150)
+            for j in range(170, 180)
+            if comp((sqrt(2)+ I*sqrt(3)).n(2), i/100. + I*j/100.)] == [
+        (141, 173), (141, 174), (142, 173), (142, 174)]
+    raises(ValueError, lambda: comp(t, '1'))
+    raises(ValueError, lambda: comp(t, 1))
+    assert comp(0, 0.0)
+    assert comp(.5, S.Half)
+    assert comp(2 + sqrt(2), 2.0 + sqrt(2))
+    assert not comp(0, 1)
+    assert not comp(2, sqrt(2))
+    assert not comp(2 + I, 2.0 + sqrt(2))
+    assert not comp(2.0 + sqrt(2), 2 + I)
+    assert not comp(2.0 + sqrt(2), sqrt(3))
 
 
 def test_issue_9491():
