@@ -5,6 +5,7 @@ from sympy.core.expr import Expr
 from sympy.core import Basic
 from sympy.core.compatibility import Iterable
 from sympy.tensor.array import MutableDenseNDimArray
+from sympy import  Symbol
 
 class ArrayComprehension(Basic):
     """
@@ -13,7 +14,7 @@ class ArrayComprehension(Basic):
     def __new__(cls, expr, *bounds, **assumptions):
         if any(len(l) != 3 or None for l in bounds):
             raise ValueError('ArrayComprehension requires values lower and upper bound'
-                              'for the expression')
+                              ' for the expression')
         cls.default_assumptions = assumptions
         obj = Expr.__new__(cls, **assumptions)
         obj.expr = expr
@@ -33,7 +34,7 @@ class ArrayComprehension(Basic):
         for index, value in enumerate(self.bounds):
             var, inf, sup = map(sympify, value)
             # Array will not ne expanded if there is a symbolic dimension
-            if any(i.is_symbol for i in [inf, sup]):
+            if Basic(inf, sup).atoms(Symbol):
                 return self
         arr = self._expand_array()
         return arr
@@ -41,8 +42,6 @@ class ArrayComprehension(Basic):
     # Add/replace a boudary of variable
     def add_bound(self, bound):
         return 0
-
-
 
     def _expand_array(self):
         # To perform a subs at every element of the array.
@@ -53,7 +52,7 @@ class ArrayComprehension(Basic):
                 arr[index] = arr[index].subs(var, val)
             return arr.tolist()
 
-        # Recursive function to perform subs at every variable according to its boundary 
+        # Recursive function to perform subs at every variable according to its boundary
         def f(expr, bounds):
             if len(bounds)== 1:
                 var, inf, sup = bounds[0]
@@ -68,4 +67,3 @@ class ArrayComprehension(Basic):
                 return list_gen
 
         return f(self.expr, self.bounds)
-
