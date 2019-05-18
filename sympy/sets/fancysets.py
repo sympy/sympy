@@ -11,6 +11,7 @@ from sympy.logic.boolalg import And
 from sympy.sets.sets import Set, Interval, Union, FiniteSet
 from sympy.utilities.misc import filldedent
 from sympy.core.numbers import Float
+from sympy.core.containers import Tuple
 
 
 class Naturals(with_metaclass(Singleton, Set)):
@@ -473,9 +474,9 @@ class Range(Set):
                 end = stop
             else:
                 ref = start if start.is_finite else stop
-                if any(i.is_number and i.has(Float) for i in (step, stop - ref)):
+                if Tuple(step, stop, ref).has(Float):
                     raise ValueError(filldedent('''
-    Only symbolic and integervalues are allowed in Range.'''))
+    Floats are not permitted in Range.'''))
                 n = ceiling((stop - ref)/step)
                 if (n <= 0) == True:
                     # null Range
