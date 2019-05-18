@@ -2,7 +2,8 @@ from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range, Xor)
 from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
+from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
+    CantSympify)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, XFAIL, skip
@@ -171,7 +172,17 @@ def test_issue_16772():
     # args are only sympified without the flags being passed
     # along; list, on the other hand, is not converted
     # with a converter so its args are traversed later
+    ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
+
+
+@XFAIL
+def test_issue_16859():
+    # because there is a converter for float, the
+    # CantSympify class designation is ignored
+    class no(float, CantSympify):
+        pass
+    raises(SympifyError, lambda: sympify(no(1.2)))
 
 
 def test_sympify4():
