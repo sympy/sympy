@@ -415,7 +415,7 @@ class MultinomialDistribution(JointDistribution):
     @property
     def set(self):
         i = Symbol('i', negative=False, positive=True)
-        return imageset(i, i, Intersection(S.Naturals0, Interval(0, self.n)))**len(self.p)
+        return Intersection(S.Naturals0, Interval(0, self.n))**len(self.p)
 
     def pdf(self, *x):
         n, p = self.n, self.p
