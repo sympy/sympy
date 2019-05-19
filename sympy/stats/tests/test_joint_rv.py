@@ -95,15 +95,15 @@ def test_Multinomial():
     p1, p2, p3, p4 = symbols('p1, p2, p3, p4', positive=True)
     p1_f, n_f = symbols('p1_f, n_f', negative=True)
     M = Multinomial('M', n, [p1, p2, p3, p4])
-    C = Multinomial('C', n, p1, p2, p3)
+    C = Multinomial('C', 3, p1, p2, p3)
     f = factorial
     assert density(M)(x1, x2, x3, x4) == Piecewise((p1**x1*p2**x2*p3**x3*p4**x4*
                                             f(n)/(f(x1)*f(x2)*f(x3)*f(x4)),
                                             Eq(n, x1 + x2 + x3 + x4)), (0, True))
-    marg = Sum(Piecewise((p1**x1*p2**C[1]*p3**C[2]*factorial(n)/(factorial(x1)*
-            factorial(C[1])*factorial(C[2])), Eq(n, x1 + C[1] + C[2])), (0, True)
-            ), (C[1], 0, n), (C[2], 0, n))
-    assert str(marginal_distribution(C, C[0])(x1)) == str(marg)
+    assert marginal_distribution(C, C[0])(x1).subs(x1, 1) ==\
+                                                            3*p1*p2**2 +\
+                                                            6*p1*p2*p3 +\
+                                                            3*p1*p3**2
     raises(ValueError, lambda: Multinomial('b1', 5, [p1, p2, p3, p1_f]))
     raises(ValueError, lambda: Multinomial('b2', n_f, [p1, p2, p3, p4]))
     raises(ValueError, lambda: Multinomial('b3', n, 0.5, 0.4, 0.3, 0.1))

@@ -1,6 +1,6 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, IndexedBase,
                     besselk, gamma, Interval, Range, factorial, Mul, Integer,
-                    Add, rf, Eq, Piecewise)
+                    Add, rf, Eq, Piecewise, Symbol, imageset, Intersection)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -404,17 +404,17 @@ class MultinomialDistribution(JointDistribution):
     is_Discrete = True
 
     def check(self, n, p):
-        _value_check(((n > 0) != False),
+        _value_check(n > 0,
                         "number of trials must be a positve integer")
         for p_k in p:
-            _value_check((p_k >= 0) != False and (p_k <= 1) != False,
+            _value_check((p_k >= 0, p_k <= 1),
                         "probability must be at least a positive symbol.")
-        _value_check(Eq(sum(p), 1) != False,
+        _value_check(Eq(sum(p), 1),
                         "probabilities must sum to 1")
 
     @property
     def set(self):
-        return Interval(0, self.n)**len(self.p)
+        return Intersection(S.Naturals0, Interval(0, self.n))**len(self.p)
 
     def pdf(self, *x):
         n, p = self.n, self.p
@@ -443,7 +443,6 @@ def Multinomial(syms, n, *p):
     >>> from sympy.stats import density
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> from sympy.stats.joint_rv_types import Multinomial
-    >>> from sympy import Symbol
     >>> from sympy import symbols
     >>> x1, x2, x3 = symbols('x1, x2, x3', nonnegative=True, integer=True)
     >>> p1, p2, p3 = symbols('p1, p2, p3', positive=True)
