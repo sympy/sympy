@@ -1,6 +1,6 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, IndexedBase,
                     besselk, gamma, Interval, Range, factorial, Mul, Integer,
-                    Add, rf, Eq, Piecewise)
+                    Add, rf, Eq, Piecewise, Symbol, imageset)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -414,7 +414,8 @@ class MultinomialDistribution(JointDistribution):
 
     @property
     def set(self):
-        return Interval(0, self.n)**len(self.p)
+        i = Symbol('i', negative=False, integer=True)
+        return imageset(i, i, Interval(0, self.n))**len(self.p)
 
     def pdf(self, *x):
         n, p = self.n, self.p
