@@ -26,7 +26,7 @@ def intersection_sets(a, b):
 def intersection_sets(a, b):
     try:
         from sympy.functions.elementary.integers import floor, ceiling
-        if b._inf == S.NegativeInfinity and b._sup == S.Infinity:
+        if b._inf is S.NegativeInfinity and b._sup is S.Infinity:
             return a
         s = Range(ceiling(b.left), floor(b.right) + 1)
         return intersection_sets(s, b)  # take out endpoints if open interval
