@@ -5,14 +5,13 @@ from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import Dummy, symbols
+from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And
 from sympy.sets.sets import Set, Interval, Union, FiniteSet
 from sympy.utilities.misc import filldedent
-from sympy.core.numbers import Float
+from sympy.core.numbers import Integer
 from sympy.core.containers import Tuple
-
 
 class Naturals(with_metaclass(Singleton, Set)):
     """
@@ -377,7 +376,7 @@ class Range(Set):
     when stop is not given it defaults to 1.
 
     `Range(stop)` is the same as `Range(0, stop, 1)` and the stop value
-    (juse as for Python ranges) is not included in the Range values.
+    (just as for Python ranges) is not included in the Range values.
 
         >>> from sympy import Range, symbols
         >>> list(Range(3))
@@ -474,9 +473,10 @@ class Range(Set):
                 end = stop
             else:
                 ref = start if start.is_finite else stop
-                if Tuple(step, stop, ref).has(Float):
+                t = Tuple(step, stop, ref)
+                if not t.atoms(Symbol, Integer, S.Infinity, S.NegativeInfinity) == t.atoms():
                     raise ValueError(filldedent('''
-    Floats are not permitted in Range.'''))
+    Only Symbol and Integer are permitted in Range.'''))
                 n = ceiling((stop - ref)/step)
                 if (n <= 0) == True:
                     # null Range
@@ -536,14 +536,17 @@ class Range(Set):
         if not self:
             return 0
         dif = self.stop - self.start
-        if dif.is_infinite:
+        if dif.is_infinite or Tuple(dif, self.step).has(Symbol):
             raise ValueError(
-                "Use .size to get the length of an infinite Range")
+                "Use .size to get the length of an infinite and symbolic Range.")
         return abs(dif//self.step)
 
     @property
     def size(self):
         try:
+            dif = self.stop - self.start
+            if Tuple(dif, self.step).has(Symbol):
+                return abs(dif//self.step)
             return _sympify(len(self))
         except ValueError:
             return S.Infinity

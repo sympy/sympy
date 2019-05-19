@@ -9,6 +9,7 @@ from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, t
+from sympy.functions.elementary.integers import floor
 
 import itertools
 
@@ -157,6 +158,7 @@ def test_Range_set():
     n, m = symbols('n, m', positive=True)
     assert Range(m, n + 2, 1).sup == n + 1
     assert Range(m, n, 1).inf == m
+    assert Range(n, m, 1).size == Abs(floor(m - n))
 
     assert len(Range(10, 38, 10)) == 3
 
@@ -167,6 +169,7 @@ def test_Range_set():
     raises(ValueError, lambda: Range(oo, -oo, -1))
     raises(ValueError, lambda: Range(-oo, oo, 2))
     raises(ValueError, lambda: Range(1, 10, 0))
+    raises(ValueError, lambda: Range(0, pi, 1))
 
     assert 5 in Range(0, oo, 5)
     assert -5 in Range(-oo, 0, 5)
