@@ -469,14 +469,14 @@ class Range(Set):
         if start.is_infinite:
             end = stop
         else:
+            t = Tuple(step, stop, start)
+            if not t.atoms(Symbol, Integer, S.Infinity, S.NegativeInfinity) == t.atoms():
+                raise ValueError(filldedent('''
+Only Symbol and Integer are permitted in Range.'''))
             if not all(w.is_number for w in [start, stop, step]):
                 end = stop
             else:
                 ref = start if start.is_finite else stop
-                t = Tuple(step, stop, ref)
-                if not t.atoms(Symbol, Integer, S.Infinity, S.NegativeInfinity) == t.atoms():
-                    raise ValueError(filldedent('''
-    Only Symbol and Integer are permitted in Range.'''))
                 n = ceiling((stop - ref)/step)
                 if (n <= 0) == True:
                     # null Range
