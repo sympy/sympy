@@ -404,7 +404,7 @@ class MultinomialDistribution(JointDistribution):
     is_Discrete = True
 
     def check(self, n, p):
-        _value_check(((n > 0) != False),
+        _value_check(n > 0,
                         "number of trials must be a positve integer")
         for p_k in p:
             _value_check((p_k >= 0) != False and (p_k <= 1) != False,
