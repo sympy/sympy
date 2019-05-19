@@ -444,7 +444,6 @@ def Multinomial(syms, n, *p):
     >>> from sympy.stats import density
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> from sympy.stats.joint_rv_types import Multinomial
-    >>> from sympy import Symbol
     >>> from sympy import symbols
     >>> x1, x2, x3 = symbols('x1, x2, x3', nonnegative=True, integer=True)
     >>> p1, p2, p3 = symbols('p1, p2, p3', positive=True)
