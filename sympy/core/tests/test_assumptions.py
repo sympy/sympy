@@ -1,4 +1,4 @@
-from sympy import I, sqrt, log, exp, cos, sin, asin, factorial, Mod, pi
+from sympy import I, sqrt, log, exp, sin, asin, factorial, Mod, pi
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.facts import InconsistentAssumptions
 from sympy import simplify
@@ -1063,9 +1063,9 @@ def test_issue_10024():
 def test_issue_10302():
     x = Symbol('x')
     r = Symbol('r', real=True)
-    u = cos(1)**2 + sin(1)**2 - 1
+    u = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
     i = u + u*I
-    assert i.is_real is None  # w/o simplification must fail
+    assert i.is_real is None  # w/o simplification this should fail
     assert (u + i).is_zero is None
     assert (1 + i).is_zero is False
     a = Dummy('a', zero=True)
