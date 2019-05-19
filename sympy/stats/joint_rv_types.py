@@ -361,7 +361,7 @@ def MultivariateEwens(syms, n, theta):
     Parameters
     ==========
 
-    n: postive integer of class Integer,
+    n: positive integer of class Integer,
             size of the sample or the integer whose partitions are considered
     theta: mutation rate, must be positive real number.
 
@@ -430,7 +430,7 @@ def Multinomial(syms, n, *p):
 
     Parameters
     ==========
-    n: postive integer of class Integer,
+    n: positive integer of class Integer,
        number of trials
     p: event probabilites, >= 0 and <= 1
 
@@ -498,7 +498,7 @@ def NegativeMultinomial(syms, k0, *p):
 
     Parameters
     ==========
-    k0: postive integer of class Integer,
+    k0: positive integer of class Integer,
         number of failures before the experiment is stopped
     p: event probabilites, >= 0 and <= 1
 
