@@ -1,5 +1,5 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Rational,
-                    simplify, Piecewise, factorial, Eq, gamma)
+                    simplify, Piecewise, factorial, Eq, gamma, Sum)
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV
@@ -93,15 +93,20 @@ def test_Multinomial():
     from sympy.stats.joint_rv_types import Multinomial
     n, x1, x2, x3, x4 = symbols('n, x1, x2, x3, x4', nonnegative=True, integer=True)
     p1, p2, p3, p4 = symbols('p1, p2, p3, p4', positive=True)
-    p1_f = symbols('p1_f', negative=True)
-    M = Multinomial('M', 3, [p1, p2, p3, p4])
-    M_c = Multinomial('C', 3, 0.5, 0.4, 0.3, 0.2)
+    p1_f, n_f = symbols('p1_f, n_f', negative=True)
+    M = Multinomial('M', n, [p1, p2, p3, p4])
+    C = Multinomial('C', 3, p1, p2, p3)
     f = factorial
-    assert simplify(density(M)(x1, x2, x3, x4) -
-            S(6)*p1**x1*p2**x2*p3**x3*p4**x4/(f(x1)*f(x2)*f(x3)*f(x4))) == S(0)
-    assert marginal_distribution(M_c, M_c[0])(1).round(2) == 7.29
+    assert density(M)(x1, x2, x3, x4) == Piecewise((p1**x1*p2**x2*p3**x3*p4**x4*
+                                            f(n)/(f(x1)*f(x2)*f(x3)*f(x4)),
+                                            Eq(n, x1 + x2 + x3 + x4)), (0, True))
+    assert marginal_distribution(C, C[0])(x1).subs(x1, 1) ==\
+                                                            3*p1*p2**2 +\
+                                                            6*p1*p2*p3 +\
+                                                            3*p1*p3**2
     raises(ValueError, lambda: Multinomial('b1', 5, [p1, p2, p3, p1_f]))
-    raises(ValueError, lambda: Multinomial('b2', n, [p1, p2, p3, p4]))
+    raises(ValueError, lambda: Multinomial('b2', n_f, [p1, p2, p3, p4]))
+    raises(ValueError, lambda: Multinomial('b3', n, 0.5, 0.4, 0.3, 0.1))
 
 def test_NegativeMultinomial():
     from sympy.stats.joint_rv_types import NegativeMultinomial
@@ -109,15 +114,15 @@ def test_NegativeMultinomial():
     p1, p2, p3, p4 = symbols('p1, p2, p3, p4', positive=True)
     p1_f = symbols('p1_f', negative=True)
     N = NegativeMultinomial('N', 4, [p1, p2, p3, p4])
-    N_c = NegativeMultinomial('C', 4, 0.1, 0.2, 0.3)
+    C = NegativeMultinomial('C', 4, 0.1, 0.2, 0.3)
     g = gamma
     f = factorial
     assert simplify(density(N)(x1, x2, x3, x4) -
             p1**x1*p2**x2*p3**x3*p4**x4*(-p1 - p2 - p3 - p4 + 1)**4*g(x1 + x2 +
             x3 + x4 + 4)/(6*f(x1)*f(x2)*f(x3)*f(x4))) == S(0)
-    assert marginal_distribution(N_c, N_c[0])(1).evalf().round(2) == 0.33
+    assert marginal_distribution(C, C[0])(1).evalf().round(2) == 0.33
     raises(ValueError, lambda: NegativeMultinomial('b1', 5, [p1, p2, p3, p1_f]))
-    raises(ValueError, lambda: NegativeMultinomial('b2', k0, [p1, p2, p3, p4]))
+    raises(ValueError, lambda: NegativeMultinomial('b2', k0, 0.5, 0.4, 0.3, 0.4))
 
 def test_JointPSpace_margial_distribution():
     from sympy.stats.joint_rv_types import MultivariateT
