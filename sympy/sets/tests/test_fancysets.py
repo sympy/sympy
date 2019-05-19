@@ -5,7 +5,8 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
                              Intersection)
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye)
+                   Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye, Piecewise,
+                   ceiling)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, t
@@ -137,6 +138,24 @@ def test_inf_Range_len():
 def test_Range_set():
     empty = Range(0)
 
+    # testing corner cases
+    assert Range(1,oo,-1) == Range(0, 0, 1)
+    assert Range(1,oo,1) == Range(1, oo, 1)
+    assert Range(1,-oo,1) == Range(0, 0, 1)
+    assert Range(1,-oo,-1) == Range(1, -oo, -1)
+    assert Range(oo,1,1) == Range(0, 0, 1)
+    assert Range(oo,1,-1) == Range(oo, 1, -1)
+    assert Range(-oo,1,-1) == Range(0, 0, 1)
+    assert Range(-oo,1,1) == Range(-oo, 1, 1)
+    triplets = ((1, 5, 2), (1, 6, 2), (6, 1, -2), (6, 0, -2), (oo, 1, -2),
+                (-oo, 1, 2), (1, oo, 2), (1, -oo, -2))
+    answers = ((1, 5, 2, 1, 3), (1, 7, 2, 1, 5), (6, 0, -2, 2, 6), (6, 0, -2, 2, 6),
+                (oo, 1, -2, 3, oo), (-oo, 1, 2, -oo, -1), (1, oo, 2, 1, oo),
+                (1, -oo, -2, -oo, 1))
+    for r, a in zip(triplets, answers):
+        z = Range(*r)
+        assert (z.start, z.stop, z.step, z.inf, z.sup) == a
+
     assert Range(5) == Range(0, 5) == Range(0, 5, 1)
 
     r = Range(10, 20, 2)
@@ -156,9 +175,11 @@ def test_Range_set():
     assert Range(10, 67, 10).sup == 60
     assert Range(60, 7, -10).inf == 10
     n, m = symbols('n, m', positive=True)
-    assert Range(m, n + 2, 1).sup == n + 1
+    assert Range(m, n + 2, 1).sup == m + Piecewise((ceiling(-m + n) + 2, -m + n + 2 > 0),
+                                                        (0, True)) - 1
     assert Range(m, n, 1).inf == m
-    assert Range(n, m, 1).size == Abs(floor(m - n))
+    assert Range(n, m, 1).size == Piecewise((ceiling(m - n), m - n > 0), (0, True))
+    assert Range(n, m, 1).boundary == Range(n, m, 1)
 
     assert len(Range(10, 38, 10)) == 3
 
@@ -209,6 +230,7 @@ def test_Range_set():
     raises(IndexError, lambda: Range(10)[-20])
     raises(IndexError, lambda: Range(10)[20])
     raises(ValueError, lambda: Range(2, -oo, -2)[2:2:0])
+    raises(NotImplementedError, lambda: Range(n, m)[4:5])
     assert Range(2, -oo, -2)[2:2:2] == empty
     assert Range(2, -oo, -2)[:2:2] == Range(2, -2, -4)
     raises(ValueError, lambda: Range(-oo, 4, 2)[:2:2])
@@ -392,11 +414,9 @@ def test_Complex():
     assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) == False
     assert str(S.Complexes) == "S.Complexes"
 
-
-def take(n, iterable):
-    "Return first n items of the iterable as a list"
-    return list(itertools.islice(iterable, n))
-
+def take(iter, n):
+    """Return ``n`` items from ``iter`` iterator. """
+    return [ iter[i] for i in range(n) ]
 
 def test_intersections():
     assert S.Integers.intersect(S.Reals) == S.Integers
@@ -407,7 +427,7 @@ def test_intersections():
     assert 5 in S.Integers.intersect(Interval(3, oo))
     assert -5 in S.Integers.intersect(Interval(-oo, 3))
     assert all(x.is_Integer
-            for x in take(10, S.Integers.intersect(Interval(3, oo)) ))
+            for x in take(S.Integers.intersect(Interval(3, oo)), 10))
 
 
 def test_infinitely_indexed_set_1():

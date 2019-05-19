@@ -7,6 +7,8 @@ from sympy.core.function import Lambda
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.relational import Eq, Gt, Ge, Le
+from sympy.core.mod import Mod
 from sympy.logic.boolalg import And
 from sympy.sets.sets import Set, Interval, Union, FiniteSet
 from sympy.utilities.misc import filldedent
@@ -383,9 +385,9 @@ class Range(Set):
         [0, 1, 2]
         >>> r, p, t = symbols('r, p, t', positive=True)
         >>> Range(r, p, t)
-        Range(r, p, t)
+        Range(r, r + t*Piecewise((ceiling((p - r)/t), t*(p - r) > 0), (0, True)), t)
         >>> (_).subs(r, 0)
-        Range(0, p, t)
+        Range(0, t*Piecewise((ceiling(p/t), t**2*ceiling(p/t) > 0), (0, True)), t)
 
     The step can also be negative:
 
@@ -409,7 +411,7 @@ class Range(Set):
         >>> next(iter(r))
         Traceback (most recent call last):
         ...
-        ValueError: Cannot iterate over Range with infinite start
+        ValueError: Cannot iterate over infinite or symbolic Range.
         >>> next(iter(r.reversed))
         0
 
@@ -439,7 +441,9 @@ class Range(Set):
     is_iterable = True
 
     def __new__(cls, *args):
-        from sympy.functions.elementary.integers import ceiling
+        from sympy.functions.elementary.integers import ceiling, floor
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.functions.elementary.complexes import Abs
         if len(args) == 1:
             if isinstance(args[0], range if PY3 else xrange):
                 args = args[0].__reduce__()[1]  # use pickle method
@@ -456,7 +460,20 @@ class Range(Set):
 
         if step.is_infinite:
             raise ValueError(filldedent('''
-    Range cannot have an infinite step size.'''))
+        Range cannot have an infinite step size.'''))
+
+        # make literal
+        oo = S.Infinity
+        t = [start, stop, step]
+        for i, ti in enumerate(t):
+          if ti.is_zero:
+            t[i] = S.Zero
+          elif ti.is_infinite:
+            if ti.is_positive:
+              t[i] = oo
+          elif ti.is_negative:
+              t[i] = -oo
+        del t
 
         if all(i.is_infinite for i in  (start, stop)):
             if start == stop:
@@ -464,27 +481,33 @@ class Range(Set):
                 start = stop = S.One
             else:
                 raise ValueError(filldedent('''
-    Either the start or end value of the Range must be finite.'''))
+        Either the start or end value of the Range must be finite.'''))
 
         if start.is_infinite:
-            end = stop
-        else:
-            t = Tuple(step, stop, start)
-            if not t.atoms(Symbol, Integer, S.Infinity, S.NegativeInfinity) == t.atoms():
+            if step.is_negative and start is -oo:
+              start = stop = S.One
+            elif step.is_positive and start is oo:
+              start = stop = S.One
+        elif stop.is_infinite:
+            if step.is_negative and stop is oo:
+              start = stop = S.One
+            elif step.is_positive and stop is -oo:
+              start = stop = S.One
+        if not any(i.is_infinite for i in (start, stop)):
+            t = step, stop, start
+            if not all(i.atoms(Symbol, Integer) == i.atoms() for i in t):
                 raise ValueError(filldedent('''
-Only Symbol and Integer are permitted in Range.'''))
-            if not all(w.is_number for w in [start, stop, step]):
-                end = stop
+        Only Symbol and Integer are permitted in Range.'''))
+            from sympy import Piecewise
+            n = Piecewise((ceiling((stop - start)/step), Gt((stop-start)*step,0)),(0, True))
+            if (n <= 0) == True:
+                # null Range
+                start = stop = S.Zero
+                step = S.One
             else:
-                ref = start if start.is_finite else stop
-                n = ceiling((stop - ref)/step)
-                if (n <= 0) == True:
-                    # null Range
-                    start = end = S.Zero
-                    step = S.One
-                else:
-                    end = ref + n*step
-        return Basic.__new__(cls, start, end, step)
+                stop = start + n*step
+
+        return Basic.__new__(cls, start, stop, step)
 
     start = property(lambda self: self.args[0])
     stop = property(lambda self: self.args[1])
@@ -512,15 +535,14 @@ Only Symbol and Integer are permitted in Range.'''))
         if other.is_infinite:
             return S.false
         if not other.is_integer:
-            return other.is_integer
-        ref = self.start if self.start.is_finite else self.stop
-        if (ref - other) % self.step:  # off sequence
             return S.false
-        return _sympify(other >= self.inf and other <= self.sup)
+        ref = self.stop if self.start.is_infinite else self.start
+        return And(Eq((ref - other) % self.step, 0), Ge(other, self.inf), Le(other, self.sup))
 
     def __iter__(self):
-        if self.start in [S.NegativeInfinity, S.Infinity]:
-            raise ValueError("Cannot iterate over Range with infinite start")
+        if self.start in (S.Infinity, S.NegativeInfinity) or \
+            Tuple(self.start, self.stop, self.stop).atoms(Symbol):
+            raise ValueError("Cannot iterate over infinite or symbolic Range.")
         elif self:
             i = self.start
             step = self.step
@@ -532,6 +554,7 @@ Only Symbol and Integer are permitted in Range.'''))
                 yield i
                 i += step
 
+
     def __len__(self):
         if not self:
             return 0
@@ -539,24 +562,27 @@ Only Symbol and Integer are permitted in Range.'''))
         if dif.is_infinite or Tuple(dif, self.step).has(Symbol):
             raise ValueError(
                 "Use .size to get the length of an infinite and symbolic Range.")
-        return abs(dif//self.step)
+        return dif//self.step
+
 
     @property
     def size(self):
         try:
-            dif = self.stop - self.start
-            if Tuple(dif, self.step).has(Symbol):
-                return abs(dif//self.step)
-            return _sympify(len(self))
+            return (self.stop - self.start)//self.step
         except ValueError:
             return S.Infinity
 
     def __nonzero__(self):
+        from sympy.functions.elementary.piecewise import Piecewise
+        if Tuple(self.start, self.stop).atoms(Symbol):
+            return Piecewise((False, Eq(self.start, self.stop)), (True, True))
         return self.start != self.stop
 
     __bool__ = __nonzero__
 
     def __getitem__(self, i):
+        if Tuple(self.start, self.stop, self.step).atoms(Symbol):
+            raise NotImplementedError("Cannot access items in symbolic ranges.")
         from sympy.functions.elementary.integers import ceiling
         ooslice = "cannot slice from the end with an infinite value"
         zerostep = "slice step cannot be zero"
@@ -676,7 +702,7 @@ Only Symbol and Integer are permitted in Range.'''))
 
     @property
     def _inf(self):
-        if not self:
+        if not self.size.atoms(Symbol) and not self:
             raise NotImplementedError
         if self.step > 0:
             return self.start
@@ -685,7 +711,7 @@ Only Symbol and Integer are permitted in Range.'''))
 
     @property
     def _sup(self):
-        if not self:
+        if not self.size.atoms(Symbol) and not self:
             raise NotImplementedError
         if self.step > 0:
             return self.stop - self.step
