@@ -407,7 +407,7 @@ class MultinomialDistribution(JointDistribution):
         _value_check(n > 0,
                         "number of trials must be a positve integer")
         for p_k in p:
-            _value_check((p_k >= 0) != False and (p_k <= 1) != False,
+            _value_check((p_k >= 0, p_k <= 1),
                         "probability must be at least a positive symbol.")
         _value_check(Eq(sum(p), 1) != False,
                         "probabilities must sum to 1")
