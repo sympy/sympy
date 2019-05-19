@@ -11,6 +11,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import Derivative, Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
+from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.sets.sets import Interval
 from sympy.core.singleton import S
@@ -781,6 +782,32 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     if f.is_polynomial(x):
         return None
 
+    fps_sym = False
+    terms = []
+    if isinstance(f, Add):
+        for t in Add.make_args(f):
+            terms.append(t)
+    else:
+        terms.append(f)
+
+    nterms = []
+    symb = S.Zero
+    for t in terms:
+        if isinstance(t, Mul):
+            nterm = S.One
+            for term in Mul.make_args(t):
+                if not (isinstance(term, Pow) and term.exp.is_symbol):
+                    nterm *= term
+                else:
+                    if term.exp.is_symbol:
+                        symb = term.exp
+                        fps_sym = True
+            nterms.append(nterm)
+        else:
+            nterms.append(t)
+
+    f = Add(*nterms)
+
     #  Break instances of Add
     #  this allows application of different
     #  algorithms on different terms increasing the
@@ -824,8 +851,12 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
         return None
 
     ak = sequence(result[0], (k, result[2], oo))
-    xk = sequence(x**k, (k, 0, oo))
-    ind = result[1]
+    if fps_sym:
+        xk = sequence(x**k*x**symb, (k, 0, oo))
+        ind = result[1]*x**symb
+    else:
+        xk = sequence(x**k, (k, 0, oo))
+        ind = result[1]
 
     return ak, xk, ind
 
