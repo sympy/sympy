@@ -750,10 +750,7 @@ class Expr(Basic, EvalfMixin):
                     # we will handle the checking ourselves using nsimplify
                     # to see if we are in the right ballpark or not and if so
                     # *then* the simplification will be attempted.
-                    if s.is_Symbol:
-                        sol = list(solveset(diff, s))
-                    else:
-                        sol = solve(diff, s)
+                    sol = solve(diff, s, simplify=False)
                     if sol:
                         if s in sol:
                             # the self-consistent result is present
