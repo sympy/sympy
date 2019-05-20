@@ -43,17 +43,62 @@ def comp(z1, z2, tol=None):
     """Return a bool indicating whether the error between z1 and z2
     is <= tol.
 
-    If ``tol`` is None then True will be returned if there is a
-    significant difference between the numbers:
-    ``abs(z1 - z2)*10**p <= 1/2`` where ``p`` is the lower of the
-    precisions of the values. A comparison of strings will be made
+    Examples
+    ========
+
+    If ``tol`` is None then True will be returned if
+    ``abs(z1 - z2)*10**p <= 5`` where ``p`` is minimum value of the
+    decimal precision of each value.
+
+    >>> from sympy.core.numbers import comp, pi
+    >>> pi4 = pi.n(4); pi4
+    3.142
+    >>> comp(_, 3.142)
+    True
+    >>> comp(pi4, 3.141)
+    False
+    >>> comp(pi4, 3.143)
+    False
+
+    A comparison of strings will be made
     if ``z1`` is a Number and ``z2`` is a string or ``tol`` is ''.
 
-    When ``tol`` is a nonzero value, if z2 is non-zero and
-    ``|z1| > 1`` the error is normalized by ``|z1|``, so if you want
-    to see if the absolute error between ``z1`` and ``z2`` is less
-    than or equal to ``tol`` then call this as
-    ``comp(z1 - z2, 0, tol)``.
+    >>> comp(pi4, 3.1415)
+    True
+    >>> comp(pi4, 3.1415, '')
+    False
+
+    When ``tol`` is provided and ``z2`` is non-zero and
+    ``|z1| > 1`` the error is normalized by ``|z1|``:
+
+    >>> abs(pi4 - 3.14)/pi4
+    0.000509791731426756
+    >>> comp(pi4, 3.14, .001)  # difference less than 0.1%
+    True
+    >>> comp(pi4, 3.14, .0005)  # difference less than 0.1%
+    False
+
+    When ``|z1| <= 1`` the absolute error is used:
+
+    >>> 1/pi4
+    0.3183
+    >>> abs(1/pi4 - 0.3183)/(1/pi4)
+    3.07371499106316e-5
+    >>> abs(1/pi4 - 0.3183)
+    9.78393554684764e-6
+    >>> comp(1/pi4, 0.3183, 1e-5)
+    True
+
+    To see if the absolute error between ``z1`` and ``z2`` is less
+    than or equal to ``tol``, call this as ``comp(z1 - z2, 0, tol)``
+    or ``comp(z1 - z2, tol=tol)``:
+
+    >>> abs(pi4 - 3.14)
+    0.00160156249999988
+    >>> comp(pi4 - 3.14, 0, .002)
+    True
+    >>> comp(pi4 - 3.14, 0, .001)
+    False
     """
     if type(z2) is str:
         z = sympify(z2)
@@ -95,7 +140,7 @@ def comp(z1, z2, tol=None):
             if ca and cb and (ca[1] or cb[1]):
                 return all(comp(i, j) for i, j in zip(ca, cb))
             tol = 10**prec_to_dps(min(a._prec, getattr(b, '_prec', a._prec)))
-            return 2*int(abs(a - b)*tol) <= 1
+            return int(abs(a - b)*tol) <= 5
     diff = abs(z1 - z2)
     az1 = abs(z1)
     if z2 and az1 > 1:
@@ -1125,18 +1170,17 @@ class Float(Number):
                     # handle normalization hack
                     return Float._new(num, precision)
                 else:
-                    try:
-                        assert num[0] in (0, 1)
-                        assert num[1] >= 0
-                        assert all(type(i) in (long, int) for i in num)
-                    except AssertionError:
-                        raise ValueError('malformed mpf: %s' % num)
-                    else:
-                        # don't compute number or else it may
-                        # over/underflow
-                        return Float._new(
-                            (num[0], num[1], num[2], bitcount(num[1])),
-                            precision)
+                    if not all((
+                            num[0] in (0, 1),
+                            num[1] >= 0,
+                            all(type(i) in (long, int) for i in num)
+                            )):
+                        raise ValueError('malformed mpf: %s' % (num,))
+                    # don't compute number or else it may
+                    # over/underflow
+                    return Float._new(
+                        (num[0], num[1], num[2], bitcount(num[1])),
+                        precision)
         else:
             try:
                 _mpf_ = num._as_mpf_val(precision)
