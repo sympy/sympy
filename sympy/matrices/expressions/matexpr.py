@@ -534,19 +534,25 @@ class MatrixExpr(Expr):
                 return [(MatrixElement(identity, i1, i2), (i1, i2))]
             elif isinstance(expr, MatrixElement):
                 matrix_symbol, i1, i2 = expr.args
-                if i1 in index_ranges:
+                count = 1
+                for i_other in index_ranges:
+                    if i_other == i1 or i_other == i2:
+                        continue
+                    r1, r2 = index_ranges[i_other]
+                    count *= r2 - r1 + 1
+                if i1 in index_ranges and i2 in index_ranges:
                     r1, r2 = index_ranges[i1]
                     if r1 != 0 or matrix_symbol.shape[0] != r2+1:
                         raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
                             (r1, r2), matrix_symbol.shape[0]))
-                if i2 in index_ranges:
                     r1, r2 = index_ranges[i2]
                     if r1 != 0 or matrix_symbol.shape[1] != r2+1:
                         raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
                             (r1, r2), matrix_symbol.shape[1]))
-                if (i1 == i2) and (i1 in index_ranges):
-                    return [(trace(matrix_symbol), None)]
-                return [(MatrixElement(matrix_symbol, i1, i2), (i1, i2))]
+                    if (i1 == i2) and (i1 in index_ranges):
+                        return [(count * trace(matrix_symbol), None)]
+                # return [(count * MatrixElement(matrix_symbol, i1, i2), (i1, i2))]
+                return [(count * expr, None)]
             elif isinstance(expr, Sum):
                 return recurse_expr(
                     expr.args[0],
