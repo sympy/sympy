@@ -101,7 +101,6 @@ def test_image_is_ImageSet():
     assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)
 
 
-@XFAIL
 def test_halfcircle():
     # This test sometimes works and sometimes doesn't.
     # It may be an issue with solve? Maybe with using Lambdas/dummys?

@@ -272,6 +272,7 @@ class ImageSet(Set):
     def _contains(self, other):
         from sympy.matrices import Matrix
         from sympy.solvers.solveset import solveset, linsolve
+        from sympy.solvers.solvers import solve
         from sympy.utilities.iterables import is_sequence, iterable, cartes
         L = self.lamda
         if is_sequence(other):
@@ -299,26 +300,36 @@ class ImageSet(Set):
                 solns = list(linsolve([e - val for e, val in
                 zip(L.expr, other)], variables))
             else:
-                syms = [e.free_symbols & free for e in eqs]
-                solns = {}
-                for i, (e, s, v) in enumerate(zip(eqs, syms, other)):
-                    if not s:
-                        if e != v:
-                            return S.false
-                        solns[vars[i]] = [v]
-                        continue
-                    elif len(s) == 1:
-                        sy = s.pop()
-                        sol = solveset(e, sy)
-                        if sol is S.EmptySet:
-                            return S.false
-                        elif isinstance(sol, FiniteSet):
-                            solns[sy] = list(sol)
+                try:
+                    syms = [e.free_symbols & free for e in eqs]
+                    solns = {}
+                    for i, (e, s, v) in enumerate(zip(eqs, syms, other)):
+                        if not s:
+                            if e != v:
+                                return S.false
+                            solns[vars[i]] = [v]
+                            continue
+                        elif len(s) == 1:
+                            sy = s.pop()
+                            sol = solveset(e, sy)
+                            if sol is S.EmptySet:
+                                return S.false
+                            elif isinstance(sol, FiniteSet):
+                                solns[sy] = list(sol)
+                            else:
+                                raise NotImplementedError
                         else:
                             raise NotImplementedError
-                    else:
-                        raise NotImplementedError
-                solns = cartes(*[solns[s] for s in variables])
+                    solns = cartes(*[solns[s] for s in variables])
+                except NotImplementedError:
+                    solns = solve([e - val for e, val in
+                        zip(L.expr, other)], variables, set=True)
+                    if solns:
+                        _v, solns = solns
+                        # watch for infinite solutions like solving
+                        # for x, y and getting (x, 0), (0, y), (0, 0)
+                        solns = [i for i in solns if not any(
+                            s in i for s in variables)]
         else:
             x = L.variables[0]
             if isinstance(L.expr, Expr):
