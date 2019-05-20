@@ -470,8 +470,11 @@ class Range(Set):
     Either the start or end value of the Range must be finite.'''))
 
         if start.is_infinite:
-            end = stop
-        else:
+            if step*(stop - start) < 0:
+                start = stop = S.One
+            else:
+                end = stop
+        if not start.is_infinite:
             ref = start if start.is_finite else stop
             n = ceiling((stop - ref)/step)
             if n <= 0:

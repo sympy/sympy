@@ -159,6 +159,10 @@ def test_Range_set():
 
     assert Range(0, 0, 5) == empty
     assert Range(oo, oo, 1) == empty
+    assert Range(oo, 1, 1) == empty
+    assert Range(-oo, 1, -1) == empty
+    assert Range(1, oo, -1) == empty
+    assert Range(1, -oo, 1) == empty
     raises(ValueError, lambda: Range(1, 4, oo))
     raises(ValueError, lambda: Range(-oo, oo))
     raises(ValueError, lambda: Range(oo, -oo, -1))
