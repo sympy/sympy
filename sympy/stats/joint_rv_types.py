@@ -1,7 +1,7 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, IndexedBase,
                     besselk, gamma, Interval, Range, factorial, Mul, Integer,
                     Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
-                  imageset, Intersection)
+                  imageset, Intersection, Matrix)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -400,16 +400,11 @@ def MultivariateEwens(syms, n, theta):
 
 class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
 
-    _argnames = ['omega', 'v', 'l', 'mu']
+    _argnames = ['delta', 'v', 'l', 'mu']
     is_Continuous=True
 
-    def check(self, omega, v, l, mu):
-        _value_check(omega.is_square, "the matrix must be square")
-        for val in omega.values():
-            _value_check((val >= 0, val <= 1),
-                "all values in matrix must be between 0 and 1(both inclusive).")
-        _value_check(omega.diagonal().equals(ones(1, omega.shape[0])),
-                        "all the elements of diagonal should be 1.")
+    def check(self, delta, v, l, mu):
+        _value_check((delta >= 0, delta <= 1), "delta must be in range [0, 1].")
         _value_check((v > 0), "v must be positive")
         for lk in l:
             _value_check((lk > 0), "lamda must be a positive vector.")
@@ -417,9 +412,6 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
             _value_check((muk > 0), "mu must be a positive vector.")
         _value_check(len(l) > 1,"the distribution should have at least"
                                 " two random variables.")
-        _value_check((omega.shape[0] == len(l), len(l) == len(mu)),
-                        "lamda, mu should be of same length and omega should "
-                        " be of shape (length of lamda, length of mu)")
 
     @property
     def set(self):
@@ -428,10 +420,9 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
 
     def pdf(self, *y):
         from sympy.functions.special.gamma_functions import gamma
-        omega, v, l, mu = self.omega, self.v, self.l, self.mu
+        d, v, l, mu = self.delta, self.v, self.l, self.mu
         n = Symbol('n', negative=False, integer=True)
         k = len(l)
-        d = Pow(Rational(omega.det()), Rational(1, k - 1))
         sterm1 = Pow((1 - d), n)/\
                 ((gamma(v + n)**(k - 1))*gamma(v)*gamma(n + 1))
         sterm2 = Mul.fromiter([mui*li**(-v - n) for mui, li in zip(mu, l)])
@@ -441,7 +432,7 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
         term2 = exp(sterm3 - sterm4)
         return Pow(d, v) * Sum(term1 * term2, (n, 0, S.Infinity))
 
-def GeneralizedMultivariateLogGamma(syms, omega, v, l, mu):
+def GeneralizedMultivariateLogGamma(syms, v, l, mu, omega_delta=None):
     """
     Creates a joint random variable with generalized multivariate log gamma
     distribution.
@@ -452,8 +443,8 @@ def GeneralizedMultivariateLogGamma(syms, omega, v, l, mu):
     ==========
 
     syms: list/tuple/set of symbols for identifying each component
-    omega: A matrix
-           with each square root of absolute value of correlation
+    omega_delta: A matrix or a constant in range [0, 1]
+                 every matrix element should be square root of absolute value of correlation coefficient
     v: positive real
     l: a list of positive reals
     mu: a list of positive reals
@@ -473,11 +464,16 @@ def GeneralizedMultivariateLogGamma(syms, omega, v, l, mu):
     >>> omega = Matrix([[1, 0.5, 0.5], [0.5, 1, 0.5], [0.5, 0.5, 1]])
     >>> v = 1
     >>> l, mu = [1, 1, 1], [1, 1, 1]
-    >>> G = GeneralizedMultivariateLogGamma('G', omega, v, l, mu)
+    >>> G = GeneralizedMultivariateLogGamma('G', v, l, mu, omega)
     >>> y = symbols('y_1:4', positive=True)
     >>> density(G)(y[0], y[1], y[2])
     sqrt(2)*Sum((1 - sqrt(2)/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) -
     exp(y_2) - exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
+    >>> d = 0.5
+    >>> Gd = GeneralizedMultivariateLogGamma('G', v, l, mu, d)
+    >>> density(Gd)(y[0], y[1], y[2])
+    0.5*Sum(0.5**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
+    exp(y_3))/gamma(n + 1)**3, (n, 0, oo))
 
     References
     ==========
@@ -491,8 +487,27 @@ def GeneralizedMultivariateLogGamma(syms, omega, v, l, mu):
     `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG`
 
     """
+    if omega_delta == None:
+        raise ValueError("Insufficient parameters, please pass exactly any one of "
+                            " matrix omega or constant delta.")
+    if isinstance(omega_delta, Matrix):
+        omega = omega_delta
+        _value_check(omega.is_square, "omega must be a square matrix")
+        for val in omega.values():
+            _value_check((val >= 0, val <= 1),
+                "all values in matrix must be between 0 and 1(both inclusive).")
+        _value_check(omega.diagonal().equals(ones(1, omega.shape[0])),
+                        "all the elements of diagonal should be 1.")
+        _value_check((omega.shape[0] == len(l), len(l) == len(mu)),
+                        "lamda, mu should be of same length and omega should "
+                        " be of shape (length of lamda, length of mu)")
+        _value_check(len(l) > 1,"the distribution should have at least"
+                                " two random variables.")
+        delta = Pow(Rational(omega.det()), Rational(1, len(l) - 1))
+    else:
+        delta = omega_delta
     return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
-                            syms, omega, v, l, mu)
+                            syms, delta, v, l, mu)
 
 #-------------------------------------------------------------------------------
 # Multinomial distribution ---------------------------------------------------------

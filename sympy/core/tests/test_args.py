@@ -1509,7 +1509,7 @@ def test_sympy__stats__joint_rv_types__GeneralizedMultivariateLogGammaDistributi
                      [0.5, 0.5, 1, 0.5],
                      [0.5, 0.5, 0.5, 1]])
     v, l, mu = (4, [1, 2, 3, 4], [1, 2, 3, 4])
-    assert _test_args(GeneralizedMultivariateLogGammaDistribution(omega, v, l, mu))
+    assert _test_args(GeneralizedMultivariateLogGammaDistribution(v, l, mu, omega))
 
 def test_sympy__stats__joint_rv_types__MultivariateBetaDistribution():
     from sympy.stats.joint_rv_types import MultivariateBetaDistribution

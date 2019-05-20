@@ -64,7 +64,13 @@ def test_GeneralizedMultivariateLogGammaDistribution():
     v, l, mu = (4, [1, 2, 3, 4], [1, 2, 3, 4])
     y_1, y_2, y_3, y_4 = symbols('y_1:5', real=True)
     n = symbols('n', negative=False, integer=True)
-    G = GMVLG('G', omega, v, l, mu)
+    delta = symbols('d', positive=True)
+    G = GMVLG('G', v, l, mu, omega)
+    Gd = GMVLG('Gd', v, l, mu, delta)
+    dend = ("d**4*Sum(4*24**(-n - 4)*(1 - d)**n*exp((n + 4)*(y_1 + 2*y_2 + 3*y_3 "
+            "+ 4*y_4) - exp(y_1) - exp(2*y_2)/2 - exp(3*y_3)/3 - exp(4*y_4)/4)/"
+            "(gamma(n + 1)*gamma(n + 4)**3), (n, 0, oo))")
+    assert str(density(Gd)(y_1, y_2, y_3, y_4)) == dend
     den = ("5*2**(2/3)*5**(1/3)*Sum(4*24**(-n - 4)*(-2**(2/3)*5**(1/3)/4 + 1)**n*"
           "exp((n + 4)*(y_1 + 2*y_2 + 3*y_3 + 4*y_4) - exp(y_1) - exp(2*y_2)/2 - "
           "exp(3*y_3)/3 - exp(4*y_4)/4)/(gamma(n + 1)*gamma(n + 4)**3), (n, 0, oo))/64")
@@ -96,15 +102,18 @@ def test_GeneralizedMultivariateLogGammaDistribution():
     l_f1 = [1, 2, 3, 4, 5]
     omega_f5 = Matrix([[1]])
     mu_f5 = l_f5 = [1]
-    raises(ValueError, lambda: GMVLG('G', omega_f1, v, l, mu))
-    raises(ValueError, lambda: GMVLG('G', omega_f2, v, l, mu))
-    raises(ValueError, lambda: GMVLG('G', omega_f3, v, l, mu))
-    raises(ValueError, lambda: GMVLG('G', omega, v_f, l, mu))
-    raises(ValueError, lambda: GMVLG('G', omega, v, l_f, mu))
-    raises(ValueError, lambda: GMVLG('G', omega, v, l, m_f))
-    raises(ValueError, lambda: GMVLG('G', omega_f4, v, l, mu))
-    raises(ValueError, lambda: GMVLG('G', omega, v, l_f1, mu))
-    raises(ValueError, lambda: GMVLG('G', omega_f5, v, l_f5, mu_f5))
+
+    raises(ValueError, lambda: GMVLG('G', v, l, mu, omega_f1))
+    raises(ValueError, lambda: GMVLG('G', v, l, mu, omega_f2))
+    raises(ValueError, lambda: GMVLG('G', v, l, mu, omega_f3))
+    raises(ValueError, lambda: GMVLG('G', v_f, l, mu, omega))
+    raises(ValueError, lambda: GMVLG('G', v, l_f, mu, omega))
+    raises(ValueError, lambda: GMVLG('G', v, l, m_f, omega))
+    raises(ValueError, lambda: GMVLG('G', v, l, mu, omega_f4))
+    raises(ValueError, lambda: GMVLG('G', v, l_f1, mu, omega))
+    raises(ValueError, lambda: GMVLG('G', v, l_f5, mu_f5, omega_f5))
+    raises(ValueError, lambda: GMVLG('G', v, l, mu, 1.5))
+    raises(ValueError, lambda: GMVLG('G', v, l, mu))
 
 def test_MultivariateBeta():
     from sympy.stats.joint_rv_types import MultivariateBeta
