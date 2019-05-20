@@ -1,6 +1,7 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, IndexedBase,
                     besselk, gamma, Interval, Range, factorial, Mul, Integer,
-                    Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum)
+                    Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
+                  imageset, Intersection)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -361,7 +362,7 @@ def MultivariateEwens(syms, n, theta):
     Parameters
     ==========
 
-    n: postive integer of class Integer,
+    n: positive integer of class Integer,
             size of the sample or the integer whose partitions are considered
     theta: mutation rate, must be positive real number.
 
@@ -503,21 +504,23 @@ class MultinomialDistribution(JointDistribution):
     is_Discrete = True
 
     def check(self, n, p):
-        _value_check(((n > 0) != False) and isinstance(n, Integer),
+        _value_check(n > 0,
                         "number of trials must be a positve integer")
         for p_k in p:
-            _value_check((p_k >= 0) != False,
-                        "probability must be at least a positive symbol.")
+            _value_check((p_k >= 0, p_k <= 1),
+                        "probability must be in range [0, 1]")
+        _value_check(Eq(sum(p), 1),
+                        "probabilities must sum to 1")
 
     @property
     def set(self):
-        return Range(0, self.n)**len(self.p)
+        return Intersection(S.Naturals0, Interval(0, self.n))**len(self.p)
 
     def pdf(self, *x):
         n, p = self.n, self.p
         term_1 = factorial(n)/Mul.fromiter([factorial(x_k) for x_k in x])
         term_2 = Mul.fromiter([p_k**x_k for p_k, x_k in zip(p, x)])
-        return term_1*term_2
+        return Piecewise((term_1 * term_2, Eq(sum(x), n)), (0, True))
 
 def Multinomial(syms, n, *p):
     """
@@ -527,7 +530,7 @@ def Multinomial(syms, n, *p):
 
     Parameters
     ==========
-    n: postive integer of class Integer,
+    n: positive integer of class Integer,
        number of trials
     p: event probabilites, >= 0 and <= 1
 
@@ -540,16 +543,15 @@ def Multinomial(syms, n, *p):
     >>> from sympy.stats import density
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> from sympy.stats.joint_rv_types import Multinomial
-    >>> from sympy import Symbol
     >>> from sympy import symbols
     >>> x1, x2, x3 = symbols('x1, x2, x3', nonnegative=True, integer=True)
     >>> p1, p2, p3 = symbols('p1, p2, p3', positive=True)
     >>> M = Multinomial('M', 3, p1, p2, p3)
     >>> density(M)(x1, x2, x3)
-    6*p1**x1*p2**x2*p3**x3/(factorial(x1)*factorial(x2)*factorial(x3))
+    Piecewise((6*p1**x1*p2**x2*p3**x3/(factorial(x1)*factorial(x2)*factorial(x3)),
+    Eq(x1 + x2 + x3, 3)), (0, True))
     >>> marginal_distribution(M, M[0])(x1).subs(x1, 1)
-    3*p1*p2**2*p3**2/2 + 3*p1*p2**2*p3 + 3*p1*p2**2 + 3*p1*p2*p3**2 +
-    6*p1*p2*p3 + 6*p1*p2 + 3*p1*p3**2 + 6*p1*p3 + 6*p1
+    3*p1*p2**2 + 6*p1*p2*p3 + 3*p1*p3**2
 
     References
     ==========
@@ -570,21 +572,23 @@ class NegativeMultinomialDistribution(JointDistribution):
     is_Discrete = True
 
     def check(self, k0, p):
-        _value_check(((k0 > 0) != False) and isinstance(k0, Integer),
+        _value_check(k0 > 0,
                         "number of failures must be a positve integer")
         for p_k in p:
-            _value_check((p_k >= 0) != False,
-                        "probability must be at least a positive symbol.")
+            _value_check((p_k >= 0, p_k <= 1),
+                        "probability must be in range [0, 1].")
+        _value_check(sum(p) <= 1,
+                        "success probabilities must not be greater than 1.")
 
     @property
     def set(self):
-        return S.Naturals0**len(self.p)
+        return Range(0, S.Infinity)**len(self.p)
 
     def pdf(self, *k):
         k0, p = self.k0, self.p
         term_1 = (gamma(k0 + sum(k))*(1 - sum(p))**k0)/gamma(k0)
         term_2 = Mul.fromiter([pi**ki/factorial(ki) for pi, ki in zip(p, k)])
-        return term_1*term_2
+        return term_1 * term_2
 
 def NegativeMultinomial(syms, k0, *p):
     """
@@ -594,7 +598,7 @@ def NegativeMultinomial(syms, k0, *p):
 
     Parameters
     ==========
-    k0: postive integer of class Integer,
+    k0: positive integer of class Integer,
         number of failures before the experiment is stopped
     p: event probabilites, >= 0 and <= 1
 
