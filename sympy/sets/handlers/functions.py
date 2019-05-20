@@ -1,11 +1,12 @@
 from sympy import Set, symbols, exp, log, S, Wild
 from sympy.core import Expr, Add
+from sympy.core.mod import Mod
 from sympy.core.function import Lambda, _coeff_isneg, FunctionClass
 from sympy.logic.boolalg import true
 from sympy.multipledispatch import dispatch
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
                         EmptySet, Intersection, Range)
-from sympy.sets.fancysets import Integers
+from sympy.sets.fancysets import Integers, Naturals
 
 
 _x, _y = symbols("x y")
@@ -186,7 +187,30 @@ def _set_function(f, self):
     match = expr.match(a*n + b)
     if match and match[a]:
         # canonical shift
-        expr = match[a]*n + match[b] % match[a]
+        mod = match[b] % match[a]
+        newexpr = match[a]*n + mod
+        if newexpr.count(Mod) <= f.expr.count(Mod):
+            expr = newexpr
 
     if expr != f.expr:
         return ImageSet(Lambda(n, expr), S.Integers)
+
+@dispatch(FunctionUnion, Naturals)
+def _set_function(f, self):
+    expr = f.expr
+    if not isinstance(expr, Expr):
+        return
+
+    if len(f.variables) > 1:
+        return
+
+    x = f.variables[0]
+    if not expr.free_symbols - {x}:
+        step = expr.coeff(x)
+        c = expr.subs(x, 0)
+        if c.is_Integer and step.is_Integer and expr == step*x + c:
+            if self is S.Naturals:
+                c += step
+            if step > 0:
+                return Range(c, S.Infinity, step)
+            return Range(c, S.NegativeInfinity, step)

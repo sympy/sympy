@@ -338,8 +338,8 @@ def test_Integers_eval_imageset():
     im = imageset(Lambda(x, -2*x - S(11)/7), S.Integers)
     assert im == ans
     y = Symbol('y')
-    assert imageset(x, 2*x + y, S.Integers) == \
-        imageset(x, 2*x + y % 2, S.Integers)
+    L = imageset(x, 2*x + y, S.Integers)
+    assert y + 4 in L
 
     _x = symbols('x', negative=True)
     eq = _x**2 - _x + 1
@@ -498,6 +498,9 @@ def test_ImageSet_simplification():
     assert imageset(Lambda(n, sin(n)),
                     imageset(Lambda(m, tan(m)), S.Integers)) == \
             imageset(Lambda(m, sin(tan(m))), S.Integers)
+    assert imageset(n, 1 + 2*n, S.Naturals) == Range(3, oo, 2)
+    assert imageset(n, 1 + 2*n, S.Naturals0) == Range(1, oo, 2)
+    assert imageset(n, 1 - 2*n, S.Naturals) == Range(-1, -oo, -2)
 
 
 def test_ImageSet_contains():
