@@ -1875,6 +1875,10 @@ class Rational(Number):
             # so we can just check equivalence of args
             return self.p == other.p and self.q == other.q
         if other.is_Float:
+            # all Floats have a denominator that is a power of 2
+            # so if self doesn't, it can't be equal to other
+            if self.q & (self.q - 1):
+                return False
             s, m, t = other._mpf_[:3]
             if s:
                 m = -m
