@@ -319,6 +319,9 @@ class ImageSet(Set):
                             else:
                                 raise NotImplementedError
                         else:
+                            # if there is more than 1 symbol from
+                            # variables in expr than this is a
+                            # coupled system
                             raise NotImplementedError
                     solns = cartes(*[solns[s] for s in variables])
                 except NotImplementedError:
