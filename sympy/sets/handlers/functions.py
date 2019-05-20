@@ -1,6 +1,5 @@
 from sympy import Set, symbols, exp, log, S, Wild
 from sympy.core import Expr, Add
-from sympy.core.mod import Mod
 from sympy.core.function import Lambda, _coeff_isneg, FunctionClass
 from sympy.logic.boolalg import true
 from sympy.multipledispatch import dispatch
@@ -187,10 +186,17 @@ def _set_function(f, self):
     match = expr.match(a*n + b)
     if match and match[a]:
         # canonical shift
-        mod = match[b] % match[a]
-        newexpr = match[a]*n + mod
-        if newexpr.count(Mod) <= f.expr.count(Mod):
-            expr = newexpr
+        b = match[b]
+        if abs(match[a]) == 1:
+            nonint = []
+            for bi in Add.make_args(b):
+                if not bi.is_integer:
+                    nonint.append(bi)
+            b = Add(*nonint)
+        if b.is_number:
+            expr = match[a]*n + b % match[a]
+        else:
+            expr = match[a]*n + b
 
     if expr != f.expr:
         return ImageSet(Lambda(n, expr), S.Integers)
