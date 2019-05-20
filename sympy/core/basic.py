@@ -1883,21 +1883,28 @@ def _aresame(a, b):
     Examples
     ========
 
-    To SymPy, 2.0 == 2:
+    In SymPy (as in Python) two numbers compare the same if they
+    have the same underlying base-2 representation even though
+    they may not be the same type:
 
     >>> from sympy import S
     >>> 2.0 == S(2)
     True
+    >>> 0.5 == S.Half
+    True
 
-    Since a simple 'same or not' result is sometimes useful, this routine was
-    written to provide that query:
+    This routine was written to provide a query for such cases that
+    would give false when the types do not match:
 
     >>> from sympy.core.basic import _aresame
     >>> _aresame(S(2.0), S(2))
     False
 
     """
+    from .numbers import Number
     from .function import AppliedUndef, UndefinedFunction as UndefFunc
+    if isinstance(a, Number) and isinstance(b, Number):
+        return a == b and a.__class__ == b.__class__
     for i, j in zip_longest(preorder_traversal(a), preorder_traversal(b)):
         if i != j or type(i) != type(j):
             if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or

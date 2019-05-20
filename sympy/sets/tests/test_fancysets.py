@@ -523,7 +523,10 @@ def test_ComplexRegion_contains():
     r1 = Interval(0, 1)
     theta1 = Interval(0, 2*S.Pi)
     c3 = ComplexRegion(r1*theta1, polar=True)
-    assert 0.5 + 0.6*I in c3
+    assert (0.5 + 6*I/10) in c3
+    assert (S.Half + 6*I/10) in c3
+    assert (S.Half + .6*I) in c3
+    assert (0.5 + .6*I) in c3
     assert I in c3
     assert 1 in c3
     assert 0 in c3

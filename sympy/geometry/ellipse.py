@@ -738,7 +738,13 @@ class Ellipse(GeometrySet):
             else:
                 return False
         elif isinstance(o, Line2D):
-            return len(self.intersection(o)) == 1
+            hit = self.intersection(o)
+            if not hit:
+                return False
+            if len(hit) == 1:
+                return True
+            # might return None if it can't decide
+            return hit[0].equals(hit[1])
         elif isinstance(o, Ray2D):
             intersect = self.intersection(o)
             if len(intersect) == 1:
