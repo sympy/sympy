@@ -407,6 +407,13 @@ def test_is_subset():
     assert FiniteSet(1, 2, 3, 4).issubset(Interval(0, 5)) is True
     assert S.EmptySet.issubset(FiniteSet(1, 2, 3)) is True
 
+    assert S.Naturals.is_subset(S.Integers)
+    assert S.Naturals0.is_subset(S.Integers)
+    rationals = ImageSet(Lambda((x, y), x/y), S.Integers*S.Naturals)
+    assert S.Integers.is_subset(rationals)
+    assert S.Naturals.is_subset(rationals)
+    assert S.Naturals0.is_subset(rationals)
+
 
 def test_is_proper_subset():
     assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True

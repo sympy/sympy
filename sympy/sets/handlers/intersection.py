@@ -3,7 +3,7 @@ from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import Integers, Naturals, Reals, Range, ImageSet
-from sympy.sets.sets import UniversalSet, imageset
+from sympy.sets.sets import UniversalSet, imageset, ProductSet
 
 
 @dispatch(ConditionSet, ConditionSet)
@@ -13,6 +13,14 @@ def intersection_sets(a, b):
 @dispatch(ConditionSet, Set)
 def intersection_sets(a, b):
     return ConditionSet(a.sym, a.condition, Intersection(a.base_set, b))
+
+@dispatch(Naturals, Integers)
+def intersection_sets(a, b):
+    return a
+
+@dispatch(Integers, Naturals)
+def intersection_sets(a, b):
+    return b
 
 @dispatch(Naturals, Interval)
 def intersection_sets(a, b):
@@ -227,7 +235,21 @@ def intersection_sets(a, b):
 @dispatch(ImageSet, Set)
 def intersection_sets(self, other):
     from sympy.solvers.diophantine import diophantine
-    if self.base_set is S.Integers:
+    if isinstance(self.base_set, ProductSet
+            ) and any(other.is_subset(a) for a in self.base_set.args):
+        if other is S.Reals and Dummy(
+                real=True) in self:
+            return other
+        elif other is S.Integers and Dummy(
+                integer=True) in self:
+            return other
+        elif other is S.Naturals and Dummy(
+                integer=True, positive=True) in self:
+            return other
+        elif other is S.Naturals0 and Dummy(
+                integer=True, nonnegative=True) in self:
+            return other
+    elif self.base_set is S.Integers:
         g = None
         if isinstance(other, ImageSet) and other.base_set is S.Integers:
             g = other.lamda.expr
