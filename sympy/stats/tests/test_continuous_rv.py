@@ -159,7 +159,74 @@ def test_characteristic_function():
     assert cf(1).expand() == S(25)/26 + 5*I/26
 
 def test_moment_generating_function():
-    t = S('t')
+    t = symbols('t', positive=True)
+
+    # Symbolic tests
+    a, b, c = symbols('a b c')
+
+    mgf = moment_generating_function(Beta('x', a, b))(t)
+    assert mgf == hyper((a,), (a + b,), t)
+
+    mgf = moment_generating_function(Chi('x', a))(t)
+    assert mgf == sqrt(2)*t*gamma(a/2 + 1/2)*\
+        hyper((a/2 + 1/2,), (3/2,), t**2/2)/gamma(a/2) +\
+        hyper((a/2,), (1/2,), t**2/2)
+
+    mgf = moment_generating_function(ChiSquared('x', a))(t)
+    assert mgf == (1 - 2*t)**(-a/2)
+
+    mgf = moment_generating_function(Erlang('x', a, b))(t)
+    assert mgf == (1 - t/b)**(-a)
+
+    mgf = moment_generating_function(Exponential('x', a))(t)
+    assert mgf == a/(a - t)
+
+    mgf = moment_generating_function(Gamma('x', a, b))(t)
+    assert mgf == (-b*t + 1)**(-a)
+
+    mgf = moment_generating_function(Gumbel('x', a, b))(t)
+    assert mgf == exp(I*b*t)*gamma(-a*t + 1)
+
+    mgf = moment_generating_function(Gompertz('x', a, b))(t)
+    assert mgf == b*exp(b)*expint(t/a, b)
+
+    mgf = moment_generating_function(Laplace('x', a, b))(t)
+    assert mgf == exp(a*t)/(-b**2*t**2 + 1)
+
+    mgf = moment_generating_function(Logistic('x', a, b))(t)
+    assert mgf == exp(a*t)*beta(-b*t + 1, b*t + 1)
+
+    mgf = moment_generating_function(Normal('x', a, b))(t)
+    assert mgf == exp(a*t + b**2*t**2/2)
+
+    mgf = moment_generating_function(Pareto('x', a, b))(t)
+    assert mgf == b*(-a*t)**b*uppergamma(-b, -a*t)
+
+    mgf = moment_generating_function(QuadraticU('x', a, b))(t)
+    assert str(mgf) == ("(3*(t*(-4*b + (a + b)**2) + 4)*exp(b*t) - "
+    "3*(t*(a**2 + 2*a*(b - 2) + b**2) + 4)*exp(a*t))/(t**2*(a - b)**3)")
+
+    mgf = moment_generating_function(RaisedCosine('x', a, b))(t)
+    assert mgf == pi**2*exp(a*t)*sinh(b*t)/(b*t*(b**2*t**2 + pi**2))
+
+    mgf = moment_generating_function(Rayleigh('x', a))(t)
+    assert mgf == sqrt(2)*sqrt(pi)*a*t*(erf(sqrt(2)*a*t/2) + 1)\
+        *exp(a**2*t**2/2)/2 + 1
+
+    mgf = moment_generating_function(Triangular('x', a, b, c))(t)
+    assert str(mgf) == ("(-2*(-a + b)*exp(c*t) + 2*(a + c)*exp(b*t) + "
+    "2*(b - c)*exp(a*t))/(t**2*(-a + b)*(-a + c)*(b - c))")
+
+    mgf = moment_generating_function(Uniform('x', a, b))(t)
+    assert mgf == (-exp(a*t) + exp(b*t))/(t*(-a + b))
+
+    mgf = moment_generating_function(UniformSum('x', a))(t)
+    assert mgf == ((exp(t) - 1)/t)**a
+
+    mgf = moment_generating_function(WignerSemicircle('x', a))(t)
+    assert mgf == 2*besseli(1, a*t)/(a*t)
+
+    # Numeric tests
 
     mgf = moment_generating_function(Beta('x', 1, 1))(t)
     assert mgf.diff(t).subs(t, 1) == hyper((2,), (3,), 1)/2
@@ -220,7 +287,8 @@ def test_moment_generating_function():
     assert mgf.diff(t).subs(t, 1) == 1
 
     mgf = moment_generating_function(WignerSemicircle('x', 1))(t)
-    assert mgf.diff(t).subs(t, 0) == 0
+    assert mgf.diff(t).subs(t, 1) == -2*besseli(1, 1) + besseli(2, 1) +\
+        besseli(0, 1)
 
 
 def test_sample_continuous():

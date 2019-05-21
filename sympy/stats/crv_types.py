@@ -163,7 +163,8 @@ def rv(symbol, cls, args):
 class ArcsinDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
-    set = Interval(0, 1)
+    def set(self):
+        return Interval(self.a, self.b)
 
     def pdf(self, x):
         return 1/(pi*sqrt((x - self.a)*(self.b - x)))
@@ -1790,6 +1791,7 @@ class LaplaceDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(mu, b):
         _value_check(b > 0, "Scale parameter b must be positive.")
+        _value_check(mu.is_real, "Location parameter mu should be real")
 
     def pdf(self, x):
         mu, b = self.mu, self.b
@@ -2832,9 +2834,9 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(a, b, c, d):
         _value_check(a < d, "Lower bound parameter a < %s. a = %s"%(d, a))
-        _value_check(And(a <= b, b < c),
+        _value_check((a <= b, b < c),
         "Level start parameter b must be in range [%s, %s). b = %s"%(a, c, b))
-        _value_check(And(b < c, c <= d),
+        _value_check((b < c, c <= d),
         "Level end parameter c must be in range (%s, %s]. c = %s"%(b, d, c))
         _value_check(d >= c, "Upper bound parameter d > %s. d = %s"%(c, d))
 
@@ -2925,7 +2927,7 @@ class TriangularDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(a, b, c):
         _value_check(b > a, "Parameter b > %s. b = %s"%(a, b))
-        _value_check(And(a <= c, c <= b),
+        _value_check((a <= c, c <= b),
         "Parameter c must be in range [%s, %s]. c = %s"%(a, b, c))
 
     def pdf(self, x):
@@ -3135,7 +3137,7 @@ class UniformSumDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(n):
-        _value_check(And(n > 0, n.is_integer),
+        _value_check((n > 0, n.is_integer),
         "Parameter n must be positive integer.")
 
     def pdf(self, x):
