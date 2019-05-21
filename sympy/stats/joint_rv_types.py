@@ -400,7 +400,7 @@ def MultivariateEwens(syms, n, theta):
 
 class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
 
-    _argnames = ['delta', 'v', 'l', 'mu']
+    _argnames = ['delta', 'v', 'lamda', 'mu']
     is_Continuous=True
 
     def check(self, delta, v, l, mu):
@@ -416,11 +416,11 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
     @property
     def set(self):
         from sympy.sets.sets import Interval
-        return S.Reals**len(self.l)
+        return S.Reals**len(self.lamda)
 
     def pdf(self, *y):
         from sympy.functions.special.gamma_functions import gamma
-        d, v, l, mu = self.delta, self.v, self.l, self.mu
+        d, v, l, mu = self.delta, self.v, self.lamda, self.mu
         n = Symbol('n', negative=False, integer=True)
         k = len(l)
         sterm1 = Pow((1 - d), n)/\
@@ -432,7 +432,7 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
         term2 = exp(sterm3 - sterm4)
         return Pow(d, v) * Sum(term1 * term2, (n, 0, S.Infinity))
 
-def GeneralizedMultivariateLogGamma(syms, v, l, mu, omega_delta=None):
+def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     """
     Creates a joint random variable with generalized multivariate log gamma
     distribution.
@@ -443,10 +443,9 @@ def GeneralizedMultivariateLogGamma(syms, v, l, mu, omega_delta=None):
     ==========
 
     syms: list/tuple/set of symbols for identifying each component
-    omega_delta: A matrix or a constant in range [0, 1]
-                 every matrix element should be square root of absolute value of correlation coefficient
+    delta: A constant in range [0, 1]
     v: positive real
-    l: a list of positive reals
+    lamda: a list of positive reals
     mu: a list of positive reals
 
     Returns
@@ -460,17 +459,12 @@ def GeneralizedMultivariateLogGamma(syms, v, l, mu, omega_delta=None):
     >>> from sympy.stats import density
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma
-    >>> from sympy import Matrix, symbols
-    >>> omega = Matrix([[1, 0.5, 0.5], [0.5, 1, 0.5], [0.5, 0.5, 1]])
+    >>> from sympy import symbols
     >>> v = 1
     >>> l, mu = [1, 1, 1], [1, 1, 1]
-    >>> G = GeneralizedMultivariateLogGamma('G', v, l, mu, omega)
-    >>> y = symbols('y_1:4', positive=True)
-    >>> density(G)(y[0], y[1], y[2])
-    sqrt(2)*Sum((1 - sqrt(2)/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) -
-    exp(y_2) - exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
     >>> d = 0.5
-    >>> Gd = GeneralizedMultivariateLogGamma('G', v, l, mu, d)
+    >>> y = symbols('y_1:4', positive=True)
+    >>> Gd = GeneralizedMultivariateLogGamma('G', d, v, l, mu)
     >>> density(Gd)(y[0], y[1], y[2])
     0.5*Sum(0.5**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
     exp(y_3))/gamma(n + 1)**3, (n, 0, oo))
@@ -485,29 +479,74 @@ def GeneralizedMultivariateLogGamma(syms, v, l, mu, omega_delta=None):
     ====
     If the GeneralizedMultivariateLogGamma is too long to type use,
     `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG`
+    If you want to pass the matrix omega instead of the constant delta, then use,
+    GeneralizedMultivariateLogGammaOmega.
 
     """
-    if omega_delta == None:
-        raise ValueError("Insufficient parameters, please pass exactly any one of "
-                            " matrix omega or constant delta.")
-    if isinstance(omega_delta, Matrix):
-        omega = omega_delta
-        _value_check(omega.is_square, "omega must be a square matrix")
-        for val in omega.values():
-            _value_check((val >= 0, val <= 1),
-                "all values in matrix must be between 0 and 1(both inclusive).")
-        _value_check(omega.diagonal().equals(ones(1, omega.shape[0])),
-                        "all the elements of diagonal should be 1.")
-        _value_check((omega.shape[0] == len(l), len(l) == len(mu)),
-                        "lamda, mu should be of same length and omega should "
-                        " be of shape (length of lamda, length of mu)")
-        _value_check(len(l) > 1,"the distribution should have at least"
-                                " two random variables.")
-        delta = Pow(Rational(omega.det()), Rational(1, len(l) - 1))
-    else:
-        delta = omega_delta
     return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
-                            syms, delta, v, l, mu)
+                            syms, delta, v, lamda, mu)
+
+def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
+    """
+    Extends GeneralizedMultivariateLogGamma.
+
+    Parameters
+    ==========
+
+    syms: list/tuple/set of symbols for identifying each component
+    omega: A square matrix
+           Every element of square matrix must be absolute value of
+           sqaure root of correlation coefficient
+    v: positive real
+    lamda: a list of positive reals
+    mu: a list of positive reals
+
+    Returns
+    =======
+
+    A Random Symbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv import marginal_distribution
+    >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega
+    >>> from sympy import Matrix, symbols
+    >>> omega = Matrix([[1, 0.5, 0.5], [0.5, 1, 0.5], [0.5, 0.5, 1]])
+    >>> v = 1
+    >>> l, mu = [1, 1, 1], [1, 1, 1]
+    >>> G = GeneralizedMultivariateLogGammaOmega('G', omega, v, l, mu)
+    >>> y = symbols('y_1:4', positive=True)
+    >>> density(G)(y[0], y[1], y[2])
+    sqrt(2)*Sum((1 - sqrt(2)/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) -
+    exp(y_2) - exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
+
+    References
+    ==========
+
+    See refernces of GeneralizedMultivariateLogGamma.
+
+    Note
+    ====
+    If the GeneralizedMultivariateLogGamma is too long to type use,
+    `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO`
+    """
+    _value_check((omega.is_square, isinstance(omega, Matrix)), "omega must be a "
+                                                            " square matrix")
+    for val in omega.values():
+        _value_check((val >= 0, val <= 1),
+            "all values in matrix must be between 0 and 1(both inclusive).")
+    _value_check(omega.diagonal().equals(ones(1, omega.shape[0])),
+                    "all the elements of diagonal should be 1.")
+    _value_check((omega.shape[0] == len(lamda), len(lamda) == len(mu)),
+                    "lamda, mu should be of same length and omega should "
+                    " be of shape (length of lamda, length of mu)")
+    _value_check(len(lamda) > 1,"the distribution should have at least"
+                            " two random variables.")
+    delta = Pow(Rational(omega.det()), Rational(1, len(lamda) - 1))
+    return GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu)
+
 
 #-------------------------------------------------------------------------------
 # Multinomial distribution ---------------------------------------------------------
