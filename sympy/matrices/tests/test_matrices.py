@@ -2903,11 +2903,6 @@ def test_pinv():
     A1 = Matrix([[a, b], [c, d]])
     assert simplify(A1.pinv(method="RD")) == simplify(A1.inv())
 
-    # XXX Computing pinv using diagonalization makes an expression that
-    # is too complicated to simplify.
-    # A1 = Matrix([[a, b], [c, d]])
-    # assert simplify(A1.pinv(method="ED")) == simplify(A1.inv())
-
     # Test the four properties of the pseudoinverse for various matrices.
     As = [Matrix([[13, 104], [2212, 3], [-3, 5]]),
           Matrix([[1, 7, 9], [11, 17, 19]]),
@@ -2931,6 +2926,26 @@ def test_pinv():
         assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
+
+    # XXX Computing pinv using diagonalization makes an expression that
+    # is too complicated to simplify.
+    # A1 = Matrix([[a, b], [c, d]])
+    # assert simplify(A1.pinv(method="ED")) == simplify(A1.inv())
+
+    import random
+    q = A1.pinv(method="ED")
+    w = A1.inv()
+    v = (a, b, c, d)
+    for do in range(5):
+        while True:
+            reps = \
+                dict(zip(v, (random.randint(-10**5, 10**5) for i in v)))
+            if reps[a] * reps[d] - reps[b] * reps[c] != 0:
+                break
+        assert all(
+            i.n() == j.n()
+            for i, j in zip(q.subs(reps), w.subs(reps))
+            )
 
 def test_pinv_solve():
     # Fully determined system (unique result, identical to other solvers).
