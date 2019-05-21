@@ -14,6 +14,35 @@ from itertools import combinations
 x, y, z, t = symbols('x,y,z,t')
 
 
+def rel_check(a, b):
+    from sympy.utilities.pytest import raises
+    assert a.is_number and b.is_number
+    for do in range(len(set([type(a), type(b)]))):
+        if S.NaN in (a, b):
+            v = [(a == b), (a != b)]
+            assert len(set(v)) == 1 and v[0] == False
+            assert not (a != b) and not (a == b)
+            assert raises(TypeError, lambda: a < b)
+            assert raises(TypeError, lambda: a <= b)
+            assert raises(TypeError, lambda: a > b)
+            assert raises(TypeError, lambda: a >= b)
+        else:
+            E = [(a == b), (a != b)]
+            assert len(set(E)) == 2
+            v = [
+            (a < b), (a <= b), (a > b), (a >= b)]
+            i = [
+            [True,    True,     False,   False],
+            [False,   True,     False,   True], # <-- i == 1
+            [False,   False,    True,    True]].index(v)
+            if i == 1:
+                assert E[0] or (a.is_Float != b.is_Float) # ugh
+            else:
+                assert E[1]
+        a, b = b, a
+    return True
+
+
 def test_rel_ne():
     assert Relational(x, y, '!=') == Ne(x, y)
 
@@ -555,30 +584,32 @@ def test_ineq_avoid_wild_symbol_flip():
 
 def test_issue_8245():
     a = S("6506833320952669167898688709329/5070602400912917605986812821504")
-    q = a.n(10)
-    assert (a == q) is True
-    assert (a != q) is False
-    assert (a > q) == False
-    assert (a < q) == False
-    assert (a >= q) == True
-    assert (a <= q) == True
+    assert rel_check(a, a.n(10))
+    assert rel_check(a, a.n(20))
+    assert rel_check(a, a.n())
+    # prec of 30 is enough to fully capture a as mpf
+    assert Float(a, 30) == Float(str(a.p), '')/Float(str(a.q), '')
+    for i in range(31):
+        r = Rational(Float(a, i))
+        f = Float(r)
+        assert (f < a) == (Rational(f) < a)
+    # test sign handling
+    assert (-f < -a) == (Rational(-f) < -a)
+    # test equivalence handling
+    isa = Float(a.p,'')/Float(a.q,'')
+    assert isa <= a
+    assert not isa < a
+    assert isa >= a
+    assert not isa > a
+    assert isa > 0
 
     a = sqrt(2)
     r = Rational(str(a.n(30)))
-    assert (r == a) is False
-    assert (r != a) is True
-    assert (r > a) == True
-    assert (r < a) == False
-    assert (r >= a) == True
-    assert (r <= a) == False
+    assert rel_check(a, r)
+
     a = sqrt(2)
     r = Rational(str(a.n(29)))
-    assert (r == a) is False
-    assert (r != a) is True
-    assert (r > a) == False
-    assert (r < a) == True
-    assert (r >= a) == False
-    assert (r <= a) == True
+    assert rel_check(a, r)
 
     assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
 
@@ -758,22 +789,11 @@ def test_issues_13081_12583_12534():
     # pick one such precision and affirm that the reversed operation
     # gives the opposite result, i.e. if x < y is true then x > y
     # must be false
-    p = 20
-    # Rational vs NumberSymbol
-    G = [Rational(pi.n(i)) > pi for i in (p, p + 1)]
-    L = [Rational(pi.n(i)) < pi for i in (p, p + 1)]
-    assert G == [False, True]
-    assert all(i is not j for i, j in zip(L, G))
-    # Float vs NumberSymbol
-    G = [pi.n(i) > pi for i in (p, p + 1)]
-    L = [pi.n(i) < pi for i in (p, p + 1)]
-    assert G == [False, True]
-    assert all(i is not j for i, j in zip(L, G))
-    # Float vs Float
-    G = [pi.n(p) > pi.n(p + 1)]
-    L = [pi.n(p) < pi.n(p + 1)]
-    assert G == [True]
-    assert all(i is not j for i, j in zip(L, G))
+    for i in (20, 21):
+        v = pi.n(i)
+        assert rel_check(Rational(v), pi)
+        assert rel_check(v, pi)
+    assert rel_check(pi.n(20), pi.n(21))
     # Float vs Rational
     # the rational form is less than the floating representation
     # at the same precision

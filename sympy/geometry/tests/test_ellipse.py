@@ -472,7 +472,7 @@ def test_issue_15259():
     assert Circle((1, 2), 0) == Point(1, 2)
 
 
-def test_issue_15797():
+def test_issue_15797_equals():
     Ri = 0.024127189424130748
     Ci = (0.0864931002830291, 0.0819863295239654)
     A = Point(0, 0.0578591400998346)

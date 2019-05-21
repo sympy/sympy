@@ -256,6 +256,8 @@ class Pow(Expr):
                 return S.One
             elif e is S.One:
                 return b
+            elif e == -1 and not b:
+                return S.ComplexInfinity
             # Only perform autosimplification if exponent or base is a Symbol or number
             elif (b.is_Symbol or b.is_number) and (e.is_Symbol or e.is_number) and\
                 e.is_integer and _coeff_isneg(b):
@@ -677,7 +679,7 @@ class Pow(Expr):
                     # Allow fractional powers for commutative objects
                     pow = coeff1/coeff2
                     try:
-                        pow = as_int(pow, strict=False)
+                        as_int(pow, strict=False)
                         combines = True
                     except ValueError:
                         combines = isinstance(Pow._eval_power(
