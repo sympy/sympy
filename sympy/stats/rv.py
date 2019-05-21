@@ -507,6 +507,9 @@ def random_symbols(expr):
     """
     atoms = getattr(expr, 'atoms', None)
     if atoms is not None:
+        from sympy.stats.index_rv import IndexedRandomSymbol
+        if atoms(IndexedRandomSymbol) is not None:
+            return list(atoms(IndexedRandomSymbol))
         return list(atoms(RandomSymbol))
     else:
         return []
