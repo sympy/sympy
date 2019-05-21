@@ -2933,19 +2933,19 @@ def test_pinv():
     # assert simplify(A1.pinv(method="ED")) == simplify(A1.inv())
 
     import random
+    from sympy.core.numbers import comp
     q = A1.pinv(method="ED")
     w = A1.inv()
     v = (a, b, c, d)
-    for do in range(5):
-        while True:
-            reps = \
-                dict(zip(v, (random.randint(-10**5, 10**5) for i in v)))
-            if reps[a] * reps[d] - reps[b] * reps[c] != 0:
-                break
-        assert all(
-            i.n() == j.n()
-            for i, j in zip(q.subs(reps), w.subs(reps))
-            )
+    while True:
+        reps = \
+            dict(zip(v, (random.randint(-10**5, 10**5) for i in v)))
+        if (a*d - b*c).subs(reps) != 0:
+            break
+    assert all(
+        comp(i.n(), j.n())
+        for i, j in zip(q.subs(reps), w.subs(reps))
+        )
 
 def test_pinv_solve():
     # Fully determined system (unique result, identical to other solvers).
