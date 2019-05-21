@@ -204,7 +204,6 @@ def test_matrix_expression_from_index_summation():
 def test_issue_16860():
     from sympy.abc import a,b
     A = MatrixSymbol("A", k, k)
-    B = MatrixSymbol("B", k, k)
 
     # Test Sum expression with independent indices
     expr = Sum(A[a, a], (a, 0, k-1))
