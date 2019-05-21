@@ -200,3 +200,18 @@ def test_matrix_expression_from_index_summation():
 
     expr = Sum(A[i1, i2]*B[i2, 0], (i2, 0, k-1))
     assert MatrixExpr.from_index_summation(expr, i1) == MatrixElement(A*B, i1, 0)
+
+def test_issue_16860():
+    from sympy.abc import a,b
+    A = MatrixSymbol("A", k, k)
+    B = MatrixSymbol("B", k, k)
+
+    # Test Sum expression with independent indices
+    expr = Sum(A[a, a], (a, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, None) == trace(A)
+
+    expr = Sum(A[a, a], (a, 0, k-1), (b, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, None) == k*trace(A)
+
+    expr = Sum(A[a, a], (b, 0, k-1))
+    assert MatrixExpr.from_index_summation(expr, None) == k*A
