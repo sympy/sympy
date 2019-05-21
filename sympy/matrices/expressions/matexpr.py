@@ -454,6 +454,7 @@ class MatrixExpr(Expr):
                 nonmatargs = []
                 pos_arg = []
                 pos_ind = []
+                non_pos_ind = []
                 dlinks = {}
                 link_ind = []
                 counter = 0
@@ -482,6 +483,18 @@ class MatrixExpr(Expr):
                             link_ind[other_i[0]][other_i[1]] = (counter, i)
                         dlinks[ind] = (counter, i)
                     counter += 1
+                for ind in index_ranges:
+                    found = False
+                    for ind_range in pos_ind:
+                        if ind in ind_range:
+                            found = True
+                            break
+                    if not found:
+                        non_pos_ind.append(ind)
+                count = 1
+                for ind in non_pos_ind:
+                    r1, r2 = index_ranges[ind]
+                    count *= r2 - r1 + 1
                 counter2 = 0
                 lines = {}
                 while counter2 < len(link_ind):
@@ -509,7 +522,7 @@ class MatrixExpr(Expr):
                             break
                         cur_ind_pos = next_ind_pos
                 lines = {k: MatMul.fromiter(v) if len(v) != 1 else v[0] for k, v in lines.items()}
-                return [(Mul.fromiter(nonmatargs), None)] + [
+                return [(count, None)] + [(Mul.fromiter(nonmatargs), None)] + [
                     (MatrixElement(a, i, j), (i, j)) for (i, j), a in lines.items()
                 ]
             elif expr.is_Add:
@@ -551,9 +564,9 @@ class MatrixExpr(Expr):
                         raise ValueError("index range mismatch: {0} vs. (0, {1})".format(
                             (r1, r2), matrix_symbol.shape[1]))
                     if (i1 == i2) and (i1 in index_ranges):
+                        index_ranges.pop(i1)
                         return [(count * trace(matrix_symbol), None)]
-                return [(count * MatrixElement(matrix_symbol, i1, i2), (i1, i2))]
-                # return [(count * expr, None)]
+                return [(count, None)] + [(MatrixElement(matrix_symbol, i1, i2), (i1, i2))]
             elif isinstance(expr, Sum):
                 return recurse_expr(
                     expr.args[0],
@@ -561,7 +574,6 @@ class MatrixExpr(Expr):
                 )
             else:
                 return [(expr, None)]
-
         retvals = recurse_expr(expr)
         factors, indices = zip(*retvals)
         retexpr = Mul.fromiter(factors)
