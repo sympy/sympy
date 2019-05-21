@@ -1,5 +1,6 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
                     Mul, Rational, Integral, factorial, gamma, Piecewise, Eq)
+from sympy.core.numbers import comp
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
 from sympy.stats.joint_rv_types import JointRV
@@ -181,11 +182,12 @@ def test_NegativeMultinomial():
     assert simplify(density(N)(x1, x2, x3, x4) -
             p1**x1*p2**x2*p3**x3*p4**x4*(-p1 - p2 - p3 - p4 + 1)**4*g(x1 + x2 +
             x3 + x4 + 4)/(6*f(x1)*f(x2)*f(x3)*f(x4))) == S(0)
-    assert marginal_distribution(C, C[0])(1).evalf().round(2) == 0.33
+    assert comp(marginal_distribution(C, C[0])(1).evalf(), 0.33, .01)
     raises(ValueError, lambda: NegativeMultinomial('b1', 5, [p1, p2, p3, p1_f]))
     raises(ValueError, lambda: NegativeMultinomial('b2', k0, 0.5, 0.4, 0.3, 0.4))
 
-def test_JointPSpace_margial_distribution():
+
+def test_JointPSpace_marginal_distribution():
     from sympy.stats.joint_rv_types import MultivariateT
     from sympy import polar_lift
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
@@ -193,7 +195,7 @@ def test_JointPSpace_margial_distribution():
         8*polar_lift(x**2/2 + 1)**(S(5)/2))
     assert integrate(marginal_distribution(T, 1)(x), (x, -oo, oo)) == 1
     t = MultivariateT('T', [0, 0, 0], [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 3)
-    assert marginal_distribution(t, 0)(1).evalf().round(1) == 0.2
+    assert comp(marginal_distribution(t, 0)(1).evalf(), 0.2, .01)
 
 
 def test_JointRV():
