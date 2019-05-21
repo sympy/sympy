@@ -377,15 +377,13 @@ def test_fps__logarithmic_singularity_fail():
     assert fps(f, x) == log(2) - log(x) - x**2/4 - 3*x**4/64 + O(x**6)
 
 
-@XFAIL
-def test_fps__symbolic():
+def test_fps_symbolic():
     f = x**n*sin(x**2)
     assert fps(f, x).truncate(8) == x**2*x**n - x**6*x**n/6 + O(x**(n + 8), x)
 
     f = x**(n - 2)*cos(x)
     assert fps(f, x).truncate() == \
-        (x**n*(-S(1)/2 + x**(-2)) + x**2*x**n/24 - x**4*x**n/720 +
-         O(x**(n + 6), x))
+        (x**n*x**(-2) - x**n/2 + x**2*x**n/24 - x**4*x**n/720 + O(x**(n + 6), x))
 
     f = x**n*log(1 + x)
     fp = fps(f, x)
@@ -395,21 +393,20 @@ def test_fps__symbolic():
 
     f = x**(n - 2)*sin(x) + x**n*exp(x)
     assert fps(f, x).truncate() == \
-        (x**n*(1 + 1/x) + 5*x*x**n/6 + x**2*x**n/2 + 7*x**3*x**n/40 +
+        (x**n/x + x**n + 5*x*x**n/6 + x**2*x**n/2 + 7*x**3*x**n/40 +
          x**4*x**n/24 + 41*x**5*x**n/5040 + O(x**(n + 6), x))
 
     f = (x - 2)**n*log(1 + x)
     assert fps(f, x, 2).truncate() == \
-        ((x - 2)**n*log(3) - (x - 2)**2*(x - 2)**n/18 +
+        ((x - 2)**n*log(3) + (x - 2)*(x - 2)**n/3 - (x - 2)**2*(x - 2)**n/18 +
          (x - 2)**3*(x - 2)**n/81 - (x - 2)**4*(x - 2)**n/324 +
-         (x - 2)**5*(x - 2)**n/1215 + (x/3 - S(2)/3)*(x - 2)**n +
-         O((x - 2)**(n + 6), (x, 2)))
+         (x - 2)**5*(x - 2)**n/1215 + O((x - 2)**(n + 6), (x, 2)))
 
     f = x**n*atan(x)
     assert fps(f, x, oo).truncate() == \
-        (-x**n/(5*x**5) + x**n/(3*x**3) + x**n*(pi/2 - 1/x) +
-         O(x**(n - 6), (x, oo)))
-
+        (-(1/x)**n/(5*x**5) + (1/x)**n/(3*x**3) + (1/x)**n*(pi/2 - 1/x) +
+         O((1/x)**(n + 6), (x, oo)))
+        
 
 def test_fps__slow():
     f = x*exp(x)*sin(2*x)  # TODO: rsolve needs improvement

@@ -780,33 +780,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
                 result[2].subs(x, rep2 + rep2b))
 
     if f.is_polynomial(x):
-        return None
-
-    fps_sym = False
-    terms = []
-    if isinstance(f, Add):
-        for t in Add.make_args(f):
-            terms.append(t)
-    else:
-        terms.append(f)
-
-    nterms = []
-    symb = S.Zero
-    for t in terms:
-        if isinstance(t, Mul):
-            nterm = S.One
-            for term in Mul.make_args(t):
-                if not (isinstance(term, Pow) and term.exp.is_symbol):
-                    nterm *= term
-                else:
-                    if term.exp.is_symbol:
-                        symb = term.exp
-                        fps_sym = True
-            nterms.append(nterm)
-        else:
-            nterms.append(t)
-
-    f = Add(*nterms)
+        return None 
 
     #  Break instances of Add
     #  this allows application of different
@@ -838,6 +812,43 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
         return None
 
     result = None
+
+    fps_sym = False
+    terms = []
+    if isinstance(f, Add):
+        for t in Add.make_args(f):
+            terms.append(t)
+    else:
+        terms.append(f)
+
+    nterms = []
+    symb, res = S.Zero, S.Zero
+    for t in terms:
+        if isinstance(t, Mul):
+            nterm = S.One
+            for term in Mul.make_args(t):
+                if isinstance(term, Pow):
+                    if term.exp.is_symbol:
+                        symb = term.exp
+                        fps_sym = True
+                    elif sympify(term.exp).is_integer:
+                            nterm *= x**(term.exp)
+                    else:
+                        for subt in Add.make_args(term.exp):
+                            if subt.is_symbol:
+                                res = term.exp - subt
+                                if sympify(res).is_integer:
+                                    nterm *= x**res
+                                symb = subt
+                                fps_sym = True
+                else:
+                    if not (isinstance(term, Pow) and term.exp.is_symbol):
+                        nterm *= term
+            nterms.append(nterm)
+        else:
+            nterms.append(t)
+
+    f = Add(*nterms)
 
     # from here on it's x0=0 and dir=1 handling
     k = Dummy('k')
@@ -1005,6 +1016,21 @@ class FormalPowerSeries(SeriesBase):
 
     def _get_pow_x(self, term):
         """Returns the power of x in a term."""
+        '''
+        if isinstance(term, Pow) and term.exp.is_symbol:
+            return S.One
+        '''
+        ind = self.ind
+        for t in Add.make_args(ind):
+            if isinstance(t, Mul):
+                fterm, sterm = Mul.make_args(t)
+                if (isinstance(fterm, Pow) and fterm.exp.is_symbol) or \
+                 (isinstance(sterm, Pow) and sterm.exp.is_symbol):
+                    return S.One
+            else:
+                if isinstance(t, Pow) and t.exp.is_symbol:
+                    return S.One
+
         xterm, pow_x = term.as_independent(self.x)[1].as_base_exp()
         if not xterm.has(self.x):
             return S.Zero
@@ -1019,7 +1045,10 @@ class FormalPowerSeries(SeriesBase):
         terms = []
         for i, t in enumerate(self):
             xp = self._get_pow_x(t)
-            if xp >= n:
+            if xp.is_symbol:
+                terms.append(t)
+                continue
+            elif xp >= n:
                 break
             elif xp.is_integer is True and i == n + 1:
                 break
