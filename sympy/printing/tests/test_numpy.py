@@ -242,13 +242,17 @@ def test_issue_15601():
 def test_16857():
     if not np:
         skip("NumPy not installed")
+
     # Make a BlockMatrix and test its shape after printing. Fixes #16857.
     a_n = [MatrixSymbol('a_{}'.format(i), 10, 3) for i in range(2)]
     A = BlockMatrix([[a_i, a_i] for a_i in a_n])
     assert A.shape == (20, 6)
 
     f = lambdify(a_n, A)
-    a_arrays = [np.ones(a_i.shape) for a_i in a_n]
-    ans = f(*a_arrays)
-    assert ans.shape == A.shape
+    a_arrays = [np.full(a_i.shape, i) for i, a_i in enumerate(a_n)]
+    sympy_ans = f(*a_arrays)
+    assert sympy_ans.shape == A.shape
+    # Compare to direct numpy implementation
+    np_ans = np.block([[a_i, a_i] for a_i in a_arrays])
+    assert np.array_equal(np_ans, sympy_ans)
 
