@@ -732,6 +732,10 @@ def probability(condition, given_condition=None, numsamples=None,
     condition = sympify(condition)
     given_condition = sympify(given_condition)
 
+    from sympy import Indexed
+    if isinstance(condition, Indexed):
+        return condition.args[0].probability(condition, given_condition)
+
     if isinstance(given_condition, RandomSymbol):
         if any([dependent(rv, given_condition) for rv in random_symbols(condition)]):
             from sympy.stats.symbolic_probability import Probability

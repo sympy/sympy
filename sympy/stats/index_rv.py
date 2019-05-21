@@ -13,11 +13,8 @@ class IndexedRandomSymbol(RandomSymbol):
     type = property(lambda self: self.args[1])
     is_random = True
 
-    @property
-    def shape(self):
-        if not hasattr(self.type, 'shape'):
-            raise AttributeError("%s has no attribute shape"%(self.type))
-        return self.type.shape
+    def __getattr__(self, attr):
+        return getattr(self.type, attr)
 
     def _hashable_content(self):
         return self.type, self.symbol
