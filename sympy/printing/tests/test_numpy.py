@@ -255,4 +255,3 @@ def test_16857():
     # Compare to direct numpy implementation
     np_ans = np.block([[a_i, a_i] for a_i in a_arrays])
     assert np.array_equal(np_ans, sympy_ans)
-
