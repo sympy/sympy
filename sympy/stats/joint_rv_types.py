@@ -532,7 +532,7 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     If the GeneralizedMultivariateLogGammaOmega is too long to type use,
     `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO`
     """
-    _value_check((omega.is_square, isinstance(omega, Matrix)), "omega must be a "
+    _value_check((omega.is_square, isinstance(omega, Matrix)), "omega must be a"
                                                             " square matrix")
     for val in omega.values():
         _value_check((val >= 0, val <= 1),
