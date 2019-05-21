@@ -449,7 +449,7 @@ class MatrixExpr(Expr):
             rule = bottom_up(lambda x: reduce(lambda a, b: a*b, x.args) if isinstance(x, (Mul, MatMul)) else x)
             return rule(expr)
 
-        def recurse_expr(expr, index_ranges={}):
+        def recurse_expr(expr, index_ranges={}, was_matmul=None):
             if expr.is_Mul:
                 nonmatargs = []
                 pos_arg = []
@@ -459,7 +459,7 @@ class MatrixExpr(Expr):
                 counter = 0
                 args_ind = []
                 for arg in expr.args:
-                    retvals = recurse_expr(arg, index_ranges)
+                    retvals = recurse_expr(arg, index_ranges, was_matmul=True)
                     assert isinstance(retvals, list)
                     if isinstance(retvals, list):
                         for i in retvals:
@@ -535,11 +535,12 @@ class MatrixExpr(Expr):
             elif isinstance(expr, MatrixElement):
                 matrix_symbol, i1, i2 = expr.args
                 count = 1
-                for i_other in index_ranges:
-                    if i_other == i1 or i_other == i2:
-                        continue
-                    r1, r2 = index_ranges[i_other]
-                    count *= r2 - r1 + 1
+                if not was_matmul:
+                    for i_other in index_ranges:
+                        if i_other == i1 or i_other == i2:
+                            continue
+                        r1, r2 = index_ranges[i_other]
+                        count *= r2 - r1 + 1
                 if i1 in index_ranges and i2 in index_ranges:
                     r1, r2 = index_ranges[i1]
                     if r1 != 0 or matrix_symbol.shape[0] != r2+1:
@@ -551,8 +552,7 @@ class MatrixExpr(Expr):
                             (r1, r2), matrix_symbol.shape[1]))
                     if (i1 == i2) and (i1 in index_ranges):
                         return [(count * trace(matrix_symbol), None)]
-                # return [(count * MatrixElement(matrix_symbol, i1, i2), (i1, i2))]
-                return [(count * expr, None)]
+                return [(count * MatrixElement(matrix_symbol, i1, i2), (i1, i2))]                
             elif isinstance(expr, Sum):
                 return recurse_expr(
                     expr.args[0],
