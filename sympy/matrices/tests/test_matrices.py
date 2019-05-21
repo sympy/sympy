@@ -3359,9 +3359,13 @@ def test_issue_11238():
     m2 = Matrix([p1 - p0, p2 - p0])
     m3 = Matrix([simplify(p1 - p0), simplify(p2 - p0)])
 
-    assert m1.rank(simplify=True) == 1
-    assert m2.rank(simplify=True) == 1
-    assert m3.rank(simplify=True) == 1
+    # This system has expressions which are zero and
+    # cannot be easily proved to be such, so without
+    # numerical testing, these assertions will fail.
+    Z = lambda x: abs(x.n()) < 1e-20
+    assert m1.rank(simplify=True, iszerofunc=Z) == 1
+    assert m2.rank(simplify=True, iszerofunc=Z) == 1
+    assert m3.rank(simplify=True, iszerofunc=Z) == 1
 
 def test_as_real_imag():
     m1 = Matrix(2,2,[1,2,3,4])

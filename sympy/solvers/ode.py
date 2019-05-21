@@ -4055,7 +4055,7 @@ def ode_nth_order_reducible(eq, func, order, match):
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2))
+    >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2), 0)
     >>> dsolve(eq, f(x), hint='nth_order_reducible')
     ... # doctest: +NORMALIZE_WHITESPACE
     Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
