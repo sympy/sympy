@@ -20,12 +20,13 @@ def test_imageset():
     assert imageset(cos, ints) == ImageSet(Lambda(x, cos(x)), ints)
     def f(x):
         return cos(x)
-    raises(TypeError, lambda: imageset(f, ints))
+    assert imageset(f, ints) == imageset(x, cos(x), ints)
     f = lambda x: cos(x)
     assert imageset(f, ints) == ImageSet(Lambda(x, cos(x)), ints)
     assert imageset(x, 1, ints) == FiniteSet(1)
     assert imageset(x, y, ints) == FiniteSet(y)
-    assert (str(imageset(lambda y: x + y, Interval(-2, 1)).lamda.expr)
+    clash = Symbol('x', integer=true)
+    assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
     x1, x2 = symbols("x1, x2")
     assert imageset(lambda x,y: Add(x,y), Interval(1,2), Interval(2, 3)) == \
