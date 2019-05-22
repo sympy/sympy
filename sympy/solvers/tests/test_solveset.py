@@ -774,8 +774,12 @@ def test_solve_trig():
               imageset(Lambda(n, 2*n*pi + pi/3), S.Integers))
 
     y, a = symbols('y,a')
+    _ = Symbol('_')
     assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-        imageset(Lambda(n, 2*n*pi), S.Integers)
+        Union(ImageSet(Lambda(_, 2*_*pi), S.Integers),
+        Intersection(ImageSet(Lambda(_, -I*(I*(
+        2*_*pi + arg(-exp(-2*I*y))) +
+        2*im(y))), S.Integers), S.Reals))
 
     assert solveset_real(sin(2*x)*cos(x) + cos(2*x)*sin(x)-1, x) == \
                             ImageSet(Lambda(n, 2*n*pi/3 + pi/6), S.Integers)
@@ -791,10 +795,16 @@ def test_solve_trig():
                   2*pi), S.Integers))
 
     assert solveset_real(2*tan(x)*sin(x) + 1, x) == Union(
-        ImageSet(Lambda(n, 2*n*pi + atan(sqrt(2)*sqrt(-1 + sqrt(17))/
-            (-sqrt(17) + 1)) + pi), S.Integers),
-        ImageSet(Lambda(n, 2*n*pi - atan(sqrt(2)*sqrt(-1 + sqrt(17))/
-            (-sqrt(17) + 1)) + pi), S.Integers))
+        ImageSet(Lambda(_, 2*_*pi + atan(sqrt(2)*sqrt(-1 +sqrt(17))/
+            (1 - sqrt(17))) + pi), S.Integers),
+        ImageSet(Lambda(_, 2*_*pi - atan(sqrt(2)*sqrt(-1 + sqrt(17))/
+            (1 - sqrt(17))) + pi), S.Integers),
+        Intersection(ImageSet(Lambda(_, -I*(2*_*I*pi + Mod(log(
+        S(1)/4 + sqrt(2)*sqrt(1 + sqrt(17))/4 + sqrt(17)/4), 2*I*pi))),
+        S.Integers), S.Reals),
+        Intersection(ImageSet(Lambda(_, -I*(2*_*I*pi + Mod(log(
+        -sqrt(2)*sqrt(1 + sqrt(17))/4 + S(1)/4 + sqrt(17)/4), 2*I*pi))),
+        S.Integers), S.Reals))
 
     assert solveset_real(cos(2*x)*cos(4*x) - 1, x) == \
                             ImageSet(Lambda(n, n*pi), S.Integers)
