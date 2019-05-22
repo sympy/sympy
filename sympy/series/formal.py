@@ -780,7 +780,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
                 result[2].subs(x, rep2 + rep2b))
 
     if f.is_polynomial(x):
-        return None 
+        return None
 
     #  Break instances of Add
     #  this allows application of different
