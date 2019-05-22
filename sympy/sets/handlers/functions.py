@@ -167,9 +167,6 @@ def _set_function(f, self):
     if not isinstance(expr, Expr):
         return
 
-    if len(f.variables) > 1:
-        return
-
     n = f.variables[0]
 
     # f(x) + c and f(-x) + c cover the same integers
@@ -193,7 +190,7 @@ def _set_function(f, self):
                 if not bi.is_integer:
                     nonint.append(bi)
             b = Add(*nonint)
-        if b.is_number:
+        if b.is_number and b.is_real:
             expr = match[a]*n + b % match[a]
         else:
             expr = match[a]*n + b
@@ -201,13 +198,11 @@ def _set_function(f, self):
     if expr != f.expr:
         return ImageSet(Lambda(n, expr), S.Integers)
 
+
 @dispatch(FunctionUnion, Naturals)
 def _set_function(f, self):
     expr = f.expr
     if not isinstance(expr, Expr):
-        return
-
-    if len(f.variables) > 1:
         return
 
     x = f.variables[0]

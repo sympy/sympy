@@ -1,4 +1,5 @@
 from sympy.core.compatibility import range, PY3
+from sympy.core.expr import unchanged
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
@@ -770,3 +771,7 @@ def test_issue_16871():
 @XFAIL
 def test_issue_16871b():
     assert ImageSet(Lambda(x, x - 3), S.Integers).is_subset(S.Integers)
+
+
+def test_issue_16874():
+    assert unchanged(ImageSet, Lambda(x, x + 3*I), S.Integers)
