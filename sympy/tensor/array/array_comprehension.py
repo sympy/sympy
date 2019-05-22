@@ -4,12 +4,31 @@ from sympy.core.sympify import sympify
 from sympy.core.expr import Expr
 from sympy.core import Basic
 from sympy.core.compatibility import Iterable
-from sympy.tensor.array import MutableDenseNDimArray
+from sympy.tensor.array import MutableDenseNDimArray, ImmutableDenseNDimArray
 from sympy import  Symbol
+from sympy.core.sympify import sympify
+from sympy.core.compatibility import Iterable
+from sympy.core.numbers import Integer
 
 class ArrayComprehension(Basic):
     """
     Generate a list comprehension
+    If there is a symbolic dimension, for example, say [i for i in range(1, N)] where
+    N is a Symbol, then the expression will not be expanded to an array. Otherwise,
+    calling the doit() function will launch the expansion.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.array import ArrayComprehension
+    >>> from sympy.abc import i, j, k
+    >>> a = ArrayComprehension(10*i+j, (i, 1, 4), (j, 1, 3))
+    >>> a.doit()
+    [[11, 12, 13], [21, 22, 23], [31, 32, 33], [41, 42, 43]]
+    >>> b = ArrayComprehension(10*i+j, (i, 1, 4), (j, 1, k))
+    >>> b.doit()
+    ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k))
+
     """
     def __new__(cls, expr, *bounds, **assumptions):
         if any(len(l) != 3 or None for l in bounds):
@@ -18,16 +37,23 @@ class ArrayComprehension(Basic):
         cls.default_assumptions = assumptions
         obj = Expr.__new__(cls, **assumptions)
         obj.expr = expr
-        if cls._check_bounds_validity(bounds):
-            obj.bounds = bounds
+        obj.bounds = cls._check_bounds_validity(expr, bounds)
         arglist = [expr]
         arglist.extend(obj.bounds)
         obj._args = tuple(arglist)
         return obj
 
     @classmethod
-    def _check_bounds_validity(cls, bounds):
-        return True
+    def _check_bounds_validity(cls, expr, bounds):
+        bounds = sympify(bounds)
+        for var, inf, sup in bounds:
+            if var not in expr.free_symbols:
+                raise ValueError('Varialbe {} does not exist in expression'.format(var))
+            if any(not isinstance(i, (Integer, Symbol)) for i in [inf, sup]):
+                raise TypeError('Bounds should be an Integer or a Symbol')
+            if isinstance(inf, Integer) and isinstance(sup, Integer) and inf > sup:
+                raise ValueError('Lower bound should be inferior to upper bound')
+        return bounds
 
     def doit(self):
         expr = self.expr
@@ -39,8 +65,8 @@ class ArrayComprehension(Basic):
         arr = self._expand_array()
         return arr
 
-    # Add/replace a boudary of variable
-    def add_bound(self, bound):
+    # Substitute the variable with a value, so that the symbolic dimension can be expanded as well
+    def subs(self, var, val):
         return 0
 
     def _expand_array(self):
@@ -52,18 +78,13 @@ class ArrayComprehension(Basic):
                 arr[index] = arr[index].subs(var, val)
             return arr.tolist()
 
-        # Recursive function to perform subs at every variable according to its boundary
-        def f(expr, bounds):
-            if len(bounds)== 1:
-                var, inf, sup = bounds[0]
-                list_gen = [expr.subs(var, val) for val in range(inf, sup+1)]
-                return list_gen
-            else:
-                var, inf, sup = bounds[0]
-                list_gen = []
-                res = f(expr, bounds[1:])
-                for val in range(inf, sup+1):
-                    list_gen.append(_array_subs(res, var, val))
-                return list_gen
-
-        return f(self.expr, self.bounds)
+        list_gen = self.expr
+        for var, inf, sup in reversed(self.bounds):
+            list_expr = list_gen
+            list_gen = []
+            for val in range(inf, sup+1):
+                if not isinstance(list_expr, Iterable):
+                    list_gen.append(list_expr.subs(var, val))
+                else:
+                    list_gen.append(_array_subs(list_expr, var, val))
+        return ImmutableDenseNDimArray(list_gen)
