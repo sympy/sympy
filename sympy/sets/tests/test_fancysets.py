@@ -1,5 +1,5 @@
 from sympy.core.compatibility import range, PY3
-from sympy.core.expr import unchanged
+from sympy.core.mod import Mod
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
@@ -773,5 +773,6 @@ def test_issue_16871b():
     assert ImageSet(Lambda(x, x - 3), S.Integers).is_subset(S.Integers)
 
 
-def test_issue_16874():
-    assert unchanged(ImageSet, Lambda(x, x + 3*I), S.Integers)
+def test_no_mod_on_imaginary():
+    assert imageset(Lambda(x, 2*x + 3*I), S.Integers
+        ) == ImageSet(Lambda(x, 2*x + I), S.Integers)
