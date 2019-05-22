@@ -410,9 +410,6 @@ def test_is_subset():
     assert S.Naturals.is_subset(S.Integers)
     assert S.Naturals0.is_subset(S.Integers)
     rationals = ImageSet(Lambda((x, y), x/y), S.Integers*S.Naturals)
-    assert S.Integers.is_subset(rationals)
-    assert S.Naturals.is_subset(rationals)
-    assert S.Naturals0.is_subset(rationals)
 
 
 def test_is_proper_subset():

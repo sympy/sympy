@@ -307,6 +307,9 @@ class Set(Basic):
 
         """
         if isinstance(other, Set):
+            # XXX issue 16873
+            # self might be an unevaluated form of self
+            # so the equality test will fail
             return self.intersect(other) == self
         else:
             raise ValueError("Unknown argument '%s'" % other)

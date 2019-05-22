@@ -235,21 +235,7 @@ def intersection_sets(a, b):
 @dispatch(ImageSet, Set)
 def intersection_sets(self, other):
     from sympy.solvers.diophantine import diophantine
-    if isinstance(self.base_set, ProductSet
-            ) and any(other.is_subset(a) for a in self.base_set.args):
-        if other is S.Reals and Dummy(
-                real=True) in self:
-            return other
-        elif other is S.Integers and Dummy(
-                integer=True) in self:
-            return other
-        elif other is S.Naturals and Dummy(
-                integer=True, positive=True) in self:
-            return other
-        elif other is S.Naturals0 and Dummy(
-                integer=True, nonnegative=True) in self:
-            return other
-    elif self.base_set is S.Integers:
+    if self.base_set is S.Integers:
         g = None
         if isinstance(other, ImageSet) and other.base_set is S.Integers:
             g = other.lamda.expr
@@ -264,19 +250,24 @@ def intersection_sets(self, other):
             # on the variable name, they are replaced by the dummy variables
             # below
             a, b = Dummy('a'), Dummy('b')
-            f, g = f.subs(n, a), g.subs(m, b)
-            solns_set = diophantine(f - g)
-            if solns_set == set():
+            fa, ga = f.subs(n, a), g.subs(m, b)
+            solns = list(diophantine(fa - ga))
+            if not solns:
                 return EmptySet()
-            solns = list(diophantine(f - g))
 
             if len(solns) != 1:
                 return
-
-            # since 'a' < 'b', select soln for n
-            nsol = solns[0][0]
-            t = nsol.free_symbols.pop()
-            return imageset(Lambda(n, f.subs(a, nsol.subs(t, n))), S.Integers)
+            nsol = solns[0][0]  # since 'a' < 'b', nsol is first
+            t = nsol.free_symbols.pop()  # diophantine supplied symbol
+            nsol = nsol.subs(t, n)
+            if nsol != n:
+                # if nsol == n and we know were are working with
+                # a base_set of Integers then this was an unevaluated
+                # ImageSet representation of Integers, otherwise
+                # it is a new ImageSet intersection with a subset
+                # of integers
+                nsol = f.subs(n, nsol)
+            return imageset(Lambda(n, nsol), S.Integers)
 
     if other == S.Reals:
         from sympy.solvers.solveset import solveset_real

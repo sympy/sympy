@@ -756,3 +756,14 @@ def test_issue_11914():
     assert -3 in cp1.union(cp2)
     assert -3 in cp2.union(cp1)
     assert -5 not in cp1.union(cp2)
+
+
+def test_issue_16871():
+    assert ImageSet(Lambda(x, x), FiniteSet(1)) == {1}
+    assert ImageSet(Lambda(x, x - 3), S.Integers
+        ).intersection(S.Integers) is S.Integers
+
+
+@XFAIL
+def test_issue_16871b():
+    assert ImageSet(Lambda(x, x - 3), S.Integers).is_subset(S.Integers)
