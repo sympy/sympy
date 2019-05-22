@@ -2,7 +2,7 @@ from sympy.core.compatibility import range, PY3
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
-                             Intersection)
+                             Intersection, ProductSet)
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye)
@@ -95,6 +95,9 @@ def test_ImageSet():
     assert 2/pi not in ImageSet(Lambda((x, y), 2/x), c)
     assert 2/S(100) not in ImageSet(Lambda((x, y), 2/x), c)
     assert 2/S(3) in ImageSet(Lambda((x, y), 2/x), c)
+
+    assert imageset(lambda x, y: x + y, S.Integers, S.Naturals
+        ).base_set == ProductSet(S.Integers, S.Naturals)
 
 
 def test_image_is_ImageSet():
