@@ -6,7 +6,8 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
                              Intersection, ProductSet)
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye)
+                   Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
+                   Dummy)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, t
@@ -454,8 +455,14 @@ def test_imageset_intersect_real():
     assert imageset(Lambda(n, n + (n - 1)*(n + 1)*I), S.Integers).intersect(S.Reals) == \
             FiniteSet(-1, 1)
 
-    s = ImageSet(Lambda(n, -I*(I*(2*pi*n - pi/4) + log(Abs(sqrt(-I))))), S.Integers)
-    assert s.intersect(S.Reals) == imageset(Lambda(n, 2*n*pi - pi/4), S.Integers)
+    s = ImageSet(
+        Lambda(n, -I*(I*(2*pi*n - pi/4) + log(Abs(sqrt(-I))))),
+        S.Integers)
+    # s is unevaluated, but after intersection the result
+    # should be canonical
+    assert s.intersect(S.Reals) == imageset(
+        Lambda(n, 2*n*pi - pi/4), S.Integers) == ImageSet(
+        Lambda(n, 2*pi*n + 7*pi/4), S.Integers)
 
 
 def test_imageset_intersect_interval():
@@ -511,6 +518,17 @@ def test_ImageSet_simplification():
 def test_ImageSet_contains():
     from sympy.abc import x
     assert (2, S.Half) in imageset(x, (x, 1/x), S.Integers)
+    assert imageset(x, x + I*3, S.Integers).intersection(S.Reals) is S.EmptySet
+    i = Dummy(integer=True)
+    q = imageset(x, x + I*y, S.Integers).intersection(S.Reals)
+    assert q.subs(y, I*i).intersection(S.Integers) is S.Integers
+    q = imageset(x, x + I*y/x, S.Integers).intersection(S.Reals)
+    assert q.subs(y, 0) is S.Integers
+    assert q.subs(y, I*i*x).intersection(S.Integers) is S.Integers
+    z = cos(1)**2 + sin(1)**2 - 1
+    q = imageset(x, x + I*z, S.Integers).intersection(S.Reals)
+    assert q is not S.EmptySet
+
 
 
 def test_ComplexRegion_contains():

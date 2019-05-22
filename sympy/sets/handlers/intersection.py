@@ -289,9 +289,21 @@ def intersection_sets(self, other):
         re, im = f_.as_real_imag()
         im = expand_complex(im)
 
-        return imageset(Lambda(n_, re),
-                        self.base_set.intersect(
-                            solveset_real(im, n_)))
+        re = re.subs(n_, n)
+        im = im.subs(n_, n)
+        lam = Lambda(n, re)
+        base = self.base_set
+        if not im:
+            # allow re-evaluation
+            # of self in this case to make
+            # the result canonical
+            pass
+        elif im.free_symbols != {n}:
+            return S.EmptySet if im.is_zero is False else None
+        else:
+            # univarite imaginary part in same variable
+            base = self.base_set.intersect(solveset_real(im, n))
+        return imageset(lam, base)
 
     elif isinstance(other, Interval):
         from sympy.solvers.solveset import (invert_real, invert_complex,
