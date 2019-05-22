@@ -406,7 +406,7 @@ def test_fps_symbolic():
     assert fps(f, x, oo).truncate() == \
         (-(1/x)**n/(5*x**5) + (1/x)**n/(3*x**3) + (1/x)**n*(pi/2 - 1/x) +
          O((1/x)**(n + 6), (x, oo)))
-        
+
 
 def test_fps__slow():
     f = x*exp(x)*sin(2*x)  # TODO: rsolve needs improvement
