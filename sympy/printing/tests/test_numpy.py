@@ -243,9 +243,12 @@ def test_16857():
     if not np:
         skip("NumPy not installed")
 
-    a_n = [MatrixSymbol('a_{}'.format(i), 10, 3) for i in range(2)]
-    A = BlockMatrix([[a_i, a_i] for a_i in a_n])
+    a_1 = MatrixSymbol('a_1', 10, 3)
+    a_2 = MatrixSymbol('a_2', 10, 3)
+    a_3 = MatrixSymbol('a_3', 10, 3)
+    a_4 = MatrixSymbol('a_4', 10, 3)
+    A = BlockMatrix([[a_1, a_2], [a_3, a_4]])
     assert A.shape == (20, 6)
 
     printer = NumPyPrinter()
-    assert printer.doprint(A) == 'numpy.block([[a_0, a_0], [a_1, a_1]])'
+    assert printer.doprint(A) == 'numpy.block([[a_1, a_2], [a_3, a_4]])'
