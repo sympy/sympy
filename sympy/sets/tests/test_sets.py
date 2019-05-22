@@ -244,7 +244,14 @@ def test_complement():
     assert all(pt in notsquare for pt in [(-1, 0), (1.5, .5), (10, 10)])
 
 
-def test_intersect():
+def test_intersect1():
+    assert all(S.Integers.intersection(i) is i for i in
+        (S.Naturals, S.Naturals0))
+    assert all(i.intersection(S.Integers) is i for i in
+        (S.Naturals, S.Naturals0))
+    s =  S.Naturals0
+    assert S.Naturals.intersection(s) is s
+    assert s.intersection(S.Naturals) is s
     x = Symbol('x')
     assert Interval(0, 2).intersect(Interval(1, 2)) == Interval(1, 2)
     assert Interval(0, 2).intersect(Interval(1, 2, True)) == \
@@ -410,7 +417,6 @@ def test_is_subset():
 
     assert S.Naturals.is_subset(S.Integers)
     assert S.Naturals0.is_subset(S.Integers)
-    rationals = ImageSet(Lambda((x, y), x/y), S.Integers*S.Naturals)
 
 
 def test_is_proper_subset():

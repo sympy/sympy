@@ -78,6 +78,7 @@ def test_ImageSet():
     assert Rational(.25) in harmonics
     assert 0.25 not in harmonics
     assert Rational(.3) not in harmonics
+    assert (1, 2) not in harmonics
 
     assert harmonics.is_iterable
 

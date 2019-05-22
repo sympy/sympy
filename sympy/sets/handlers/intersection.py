@@ -2,7 +2,8 @@ from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
                    EmptySet, FiniteSet, Union, ComplexRegion, ProductSet)
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
-from sympy.sets.fancysets import Integers, Naturals, Reals, Range, ImageSet
+from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
+    ImageSet, Naturals0)
 from sympy.sets.sets import UniversalSet, imageset, ProductSet
 
 
@@ -21,6 +22,10 @@ def intersection_sets(a, b):
 @dispatch(Integers, Naturals)
 def intersection_sets(a, b):
     return b
+
+@dispatch(Naturals, Naturals)
+def intersection_sets(a, b):
+    return a if a is S.Naturals0 else b
 
 @dispatch(Naturals, Interval)
 def intersection_sets(a, b):
