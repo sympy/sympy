@@ -1332,27 +1332,21 @@ def test_nonlinsolve_using_substitution():
 def test_nonlinsolve_complex():
     x, y, z = symbols('x, y, z')
     n = Dummy('n')
-    real_soln = (log(sin(S(1)/3)), S(1)/3)
-    img_lamda = Lambda(n, 2*n*I*pi + log(sin(S(1)/3)))
-    complex_soln = (ImageSet(img_lamda, S.Integers), S(1)/3)
-    soln = FiniteSet(real_soln, complex_soln)
-    print(nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]))#assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == soln
+    assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == {
+        (ImageSet(Lambda(n, 2*n*I*pi + log(sin(S(1)/3))), S.Integers), S(1)/3)}
 
     system = [exp(x) - sin(y), 1/exp(y) - 3]
-    soln_x = ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers)
-    soln_real = FiniteSet((soln_x, -log(S(3))))
-    expr_x = I*(2*n*pi + arg(sin(2*n*I*pi + -log(3)))) + \
-        log(Abs(sin(2*n*I*pi + -log(3))))
-    soln_x = ImageSet(Lambda(n, expr_x), S.Integers)
-    expr_y = 2*n*I*pi + -log(3)
-    soln_y = ImageSet(Lambda(n, expr_y), S.Integers)
-    soln_complex = FiniteSet((soln_x, soln_y))
-    soln = soln_real + soln_complex
-    print(nonlinsolve(system, [x, y]))#assert nonlinsolve(system, [x, y]) == soln
+    assert nonlinsolve(system, [x, y]) == {
+        (ImageSet(Lambda(n, I*(2*n*pi + pi)
+                         + log(sin(log(3)))), S.Integers), -log(3)),
+        (ImageSet(Lambda(n, I*(2*n*pi + arg(sin(2*n*I*pi - log(3))))
+                         + log(Abs(sin(2*n*I*pi - log(3))))), S.Integers),
+        ImageSet(Lambda(n, 2*n*I*pi - log(3)), S.Integers))}
 
     system = [exp(x) - sin(y), y**2 - 4]
-    print(nonlinsolve(system, [x, y]))
-    #assert nonlinsolve(system, [x, y]) == {        (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2),        (ImageSet(Lambda(n, 2*n*I*pi + log(sin(2))), S.Integers), 2)}
+    assert nonlinsolve(system, [x, y]) == {
+        (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2),
+        (ImageSet(Lambda(n, 2*n*I*pi + log(sin(2))), S.Integers), 2)}
 
 
 @XFAIL
