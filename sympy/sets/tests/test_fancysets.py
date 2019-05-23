@@ -781,6 +781,10 @@ def test_issue_11914():
     assert -5 not in cp1.union(cp2)
 
 
+def test_issue_9543():
+    assert ImageSet(Lambda(x, x**2), S.Naturals).is_subset(S.Reals)
+
+
 def test_issue_16871():
     assert ImageSet(Lambda(x, x), FiniteSet(1)) == {1}
     assert ImageSet(Lambda(x, x - 3), S.Integers
