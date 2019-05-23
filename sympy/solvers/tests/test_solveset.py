@@ -1351,9 +1351,8 @@ def test_nonlinsolve_complex():
     print(nonlinsolve(system, [x, y]))#assert nonlinsolve(system, [x, y]) == soln
 
     system = [exp(x) - sin(y), y**2 - 4]
-    print(nonlinsolve(system, [x, y]))#assert nonlinsolve(system, [x, y]) == {
-        (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2),
-        (ImageSet(Lambda(n, 2*n*I*pi + log(sin(2))), S.Integers), 2)}
+    print(nonlinsolve(system, [x, y]))
+    #assert nonlinsolve(system, [x, y]) == {        (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2),        (ImageSet(Lambda(n, 2*n*I*pi + log(sin(2))), S.Integers), 2)}
 
 
 @XFAIL
