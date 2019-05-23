@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from random import randrange, choice
 from math import log
 from sympy.ntheory import primefactors
-from sympy import multiplicity
+from sympy import multiplicity, divisors, Integer, log
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -16,7 +16,7 @@ from sympy.core import Basic
 from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import sieve
-from sympy.utilities.iterables import has_variety, is_sequence, uniq
+from sympy.utilities.iterables import has_variety, is_sequence, uniq, flatten
 from sympy.utilities.randtest import _randrange
 from itertools import islice
 
@@ -693,6 +693,44 @@ class PermutationGroup(Basic):
         if self._transversals == []:
             self.schreier_sims()
         return self._transversals
+
+    def composition_series(self):
+        """
+        Add docs
+
+        """
+        if not self.is_solvable:
+            raise NotImplementedError('Group should be solvable')
+        der = self.derived_series()
+        series = [self]
+
+        for i in range(len(der)-1):
+            comp = []
+            low = der[i+1]
+            gns = low.generators
+            while low != der[i]:
+                while True:
+                    elm = der[i].random()
+                    if not elm in low:
+                        break
+
+                elm = [elm]
+                for pelm in elm:
+                    order = pelm.order()
+                    div = divisors(order)[1]
+                    l = Integer(log(order, div))
+
+                    pows = []
+                    for j in range(l-1, -1, -1):
+                        qelm = pelm**(div**j)
+                        if not qelm in low:
+                            comp.append(low)
+                            pows.append(qelm)
+                    low = PermutationGroup(gns + pows) if pows else low
+            series.append(comp)
+            series = flatten(series)
+        return series
+
 
     def coset_transversal(self, H):
         """Return a transversal of the right cosets of self by its subgroup H
