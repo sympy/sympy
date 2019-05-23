@@ -120,7 +120,7 @@ In the ``solveset`` module, the non linear system of equations is solved using
 
 	>>> system = [exp(x) - sin(y), 1/y - 3]
 	>>> nonlinsolve(system, vars)
-	{ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(1/3))), Integers), 1/3)}
+	{({2⋅n⋅ⅈ⋅π + log(sin(1/3)) | n ∊ ℤ}, 1/3)}
 
 4. When the system is positive-dimensional system (has infinitely many solutions):
 
