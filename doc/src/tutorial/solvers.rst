@@ -119,10 +119,10 @@ In the ``solveset`` module, the non linear system of equations is solved using
 	{(-2, -1), (2, 1), (-√2⋅ⅈ, √2⋅ⅈ), (√2⋅ⅈ, -√2⋅ⅈ)}
 
 	>>> n = Dummy()
-   >>> system = [exp(x) - sin(y), 1/y - 3]
-   >>> xpart = ImageSet(Lambda(n, 2*n*I*pi + log(sin(S(1)/3))), S.Integers)
+	>>> system = [exp(x) - sin(y), 1/y - 3]
+	>>> xpart = ImageSet(Lambda(n, 2*n*I*pi + log(sin(S(1)/3))), S.Integers)
 	>>> nonlinsolve(system, vars) == {(xpart, 1/3)}
-   True
+	True
 
 4. When the system is positive-dimensional system (has infinitely many solutions):
 
