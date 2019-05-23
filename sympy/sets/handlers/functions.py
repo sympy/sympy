@@ -191,7 +191,7 @@ def _set_function(f, self):
                 if not bi.is_integer:
                     nonint.append(bi)
             b = Add(*nonint)
-        if b.is_number:
+        if b.is_number and match[a].is_real:
             mod = b % match[a]
             reps = dict([(m, m.args[0]) for m in mod.atoms(Mod)
                 if not m.args[0].is_real])
