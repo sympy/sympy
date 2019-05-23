@@ -118,14 +118,12 @@ In the ``solveset`` module, the non linear system of equations is solved using
 	>>> nonlinsolve(system, vars)
 	{(-2, -1), (2, 1), (-√2⋅ⅈ, √2⋅ⅈ), (√2⋅ⅈ, -√2⋅ⅈ)}
 
-	>>> n = Dummy('n')
 	>>> system = [exp(x) - sin(y), 1/y - 3]
-	>>> real_soln = (log(sin(S(1)/3)), S(1)/3)
-	>>> img_lamda = Lambda(n, 2*n*I*pi + Mod(log(sin(S(1)/3)), 2*I*pi))
-	>>> complex_soln = (ImageSet(img_lamda, S.Integers), S(1)/3)
-	>>> soln = FiniteSet(real_soln, complex_soln)
-	>>> nonlinsolve(system, [x, y]) == soln
-	True
+	>>> nonlinsolve(system, vars)
+   {(ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(1/3))), S.Integers), 1/3)}
+
+
+
 
 4. If non linear system of equations is Positive dimensional system (A system with
 infinitely many solutions is said to be positive-dimensional):
