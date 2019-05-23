@@ -22,10 +22,12 @@ class ArrayComprehension(Basic):
 
     >>> from sympy.tensor.array import ArrayComprehension
     >>> from sympy.abc import i, j, k
-    >>> a = ArrayComprehension(10*i+j, (i, 1, 4), (j, 1, 3))
+    >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
+    >>> a
+    ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
     >>> a.doit()
     [[11, 12, 13], [21, 22, 23], [31, 32, 33], [41, 42, 43]]
-    >>> b = ArrayComprehension(10*i+j, (i, 1, 4), (j, 1, k))
+    >>> b = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k))
     >>> b.doit()
     ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k))
 
@@ -35,39 +37,68 @@ class ArrayComprehension(Basic):
             raise ValueError('ArrayComprehension requires values lower and upper bound'
                               ' for the expression')
         cls.default_assumptions = assumptions
-        obj = Expr.__new__(cls, **assumptions)
-        obj.expr = expr
-        obj.bounds = cls._check_bounds_validity(expr, bounds)
-        arglist = [expr]
-        arglist.extend(obj.bounds)
-        obj._args = tuple(arglist)
+        arglist = [sympify(expr)]
+        arglist.extend(cls._check_bounds_validity(expr, bounds))
+        obj = Basic.__new__(cls, *arglist, **assumptions)
+        obj._expr = arglist[0]
+        obj._bounds = arglist[1:]
         return obj
+
+    @property
+    def expr(self):
+        """
+        Return the expression that will be expanded to an array
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ArrayComprehension
+        >>> from sympy.abc import i, j, k
+        >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
+        >>> a.expr
+        10*i + j
+        """
+        return self._args[0]
+
+    @property
+    def bounds(self):
+        """
+        Return a list of the bounds that will be applied while expanding the array. Each
+        bound contrains firstly the an variable (not necessarily to be component of the
+        expression, e.g. an array of constant). Then the lower bound and the upper bound
+        define the length of this expansion.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ArrayComprehension
+        >>> from sympy.abc import i, j, k
+        >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
+        >>> a.bounds
+        ((i, 1, 4), (j, 1, 3))
+        """
+        return self._args[1:]
 
     @classmethod
     def _check_bounds_validity(cls, expr, bounds):
         bounds = sympify(bounds)
         for var, inf, sup in bounds:
-            if var not in expr.free_symbols:
-                raise ValueError('Varialbe {} does not exist in expression'.format(var))
-            if any(not isinstance(i, (Integer, Symbol)) for i in [inf, sup]):
-                raise TypeError('Bounds should be an Integer or a Symbol')
-            if isinstance(inf, Integer) and isinstance(sup, Integer) and inf > sup:
+            if any(not isinstance(i, Expr) for i in [inf, sup]):
+                raise TypeError('Bounds should be an Expression(combination of Integer and Symbol)')
+            if isinstance(inf, Integer) and isinstance(sup, Integer) and (inf > sup) == True:
                 raise ValueError('Lower bound should be inferior to upper bound')
         return bounds
 
     def doit(self):
-        expr = self.expr
+        expr = self._expr
         for index, value in enumerate(self.bounds):
             var, inf, sup = map(sympify, value)
             # Array will not ne expanded if there is a symbolic dimension
             if Basic(inf, sup).atoms(Symbol):
                 return self
+
         arr = self._expand_array()
         return arr
-
-    # Substitute the variable with a value, so that the symbolic dimension can be expanded as well
-    def subs(self, var, val):
-        return 0
 
     def _expand_array(self):
         # To perform a subs at every element of the array.
