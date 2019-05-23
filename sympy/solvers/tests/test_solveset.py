@@ -1341,8 +1341,8 @@ def test_nonlinsolve_complex():
     system = [exp(x) - sin(y), 1/exp(y) - 3]
     soln_x = ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers)
     soln_real = FiniteSet((soln_x, -log(S(3))))
-    expr_x = I*(2*n*pi + arg(sin(2*n*I*pi + -log(3))))) + \
-                log(Abs(sin(2*n*I*pi + -log(3))))
+    expr_x = I*(2*n*pi + arg(sin(2*n*I*pi + -log(3)))) + \
+        log(Abs(sin(2*n*I*pi + -log(3))))
     soln_x = ImageSet(Lambda(n, expr_x), S.Integers)
     expr_y = 2*n*I*pi + -log(3)
     soln_y = ImageSet(Lambda(n, expr_y), S.Integers)
