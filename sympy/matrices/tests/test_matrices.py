@@ -2931,17 +2931,11 @@ def test_pinv():
     # is too complicated to simplify.
     # A1 = Matrix([[a, b], [c, d]])
     # assert simplify(A1.pinv(method="ED")) == simplify(A1.inv())
-
-    import random
+    # so this is tested numerically at a fixed random point
     from sympy.core.numbers import comp
     q = A1.pinv(method="ED")
     w = A1.inv()
-    v = (a, b, c, d)
-    while True:
-        reps = \
-            dict(zip(v, (random.randint(-10**5, 10**5) for i in v)))
-        if (a*d - b*c).subs(reps) != 0:
-            break
+    reps = {a: -73633, b: 11362, c: 55486, d: 62570}
     assert all(
         comp(i.n(), j.n())
         for i, j in zip(q.subs(reps), w.subs(reps))
