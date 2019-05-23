@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from itertools import product
+import inspect
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import (iterable, with_metaclass,
@@ -307,6 +308,9 @@ class Set(Basic):
 
         """
         if isinstance(other, Set):
+            # XXX issue 16873
+            # self might be an unevaluated form of self
+            # so the equality test will fail
             return self.intersect(other) == self
         else:
             raise ValueError("Unknown argument '%s'" % other)
@@ -1755,7 +1759,7 @@ def imageset(*args):
     >>> imageset(sin, Interval(-2, 1))
     ImageSet(Lambda(x, sin(x)), Interval(-2, 1))
     >>> imageset(lambda y: x + y, Interval(-2, 1))
-    ImageSet(Lambda(_x, _x + x), Interval(-2, 1))
+    ImageSet(Lambda(y, x + y), Interval(-2, 1))
 
     Expressions applied to the set of Integers are simplified
     to show as few negatives as possible and linear expressions
@@ -1785,24 +1789,36 @@ def imageset(*args):
         f = args[0]
         set_list = args[1:]
 
-        if isinstance(f, Lambda):
-            pass
-        elif (
-                isinstance(f, FunctionClass) # like cos
-                or func_name(f) == '<lambda>'
-                ):
-            # TODO: should we support a way to sympify `lambda`?
-            if len(set_list) == 1:
-                var = _uniquely_named_symbol(Symbol('x'), f(Dummy()))
-                expr = f(var)
+    if isinstance(f, Lambda):
+        pass
+    elif callable(f):
+        nargs = getattr(f, 'nargs', {})
+        if nargs:
+            if len(nargs) != 1:
+                raise NotImplemented(filldedent('''
+                    This function can take more than 1 arg
+                    but the potentially complicated set input
+                    has not been analyzed at this point to
+                    know its dimensions. TODO
+                    '''))
+            N = nargs.args[0]
+            if N == 1:
+                s = 'x'
             else:
-                var = [Symbol('x%i' % (i+1)) for i in range(len(set_list))]
-                expr = f(*var)
-            f = Lambda(var, expr)
+                s = [Symbol('x%i' % i) for i in range(1, N + 1)]
         else:
-            raise TypeError(filldedent('''
-        expecting lambda, Lambda, or FunctionClass, not \'%s\'.''' %
-        func_name(f)))
+            if PY3:
+                s = inspect.signature(f).parameters
+            else:
+                s = inspect.getargspec(f).args
+        dexpr = _sympify(f(*[Dummy() for i in s]))
+        var = [_uniquely_named_symbol(Symbol(i), dexpr) for i in s]
+        expr = f(*var)
+        f = Lambda(var, expr)
+    else:
+        raise TypeError(filldedent('''
+            expecting lambda, Lambda, or FunctionClass,
+            not \'%s\'.''' % func_name(f)))
 
     if any(not isinstance(s, Set) for s in set_list):
         name = [func_name(s) for s in set_list]
@@ -1811,8 +1827,14 @@ def imageset(*args):
 
     if len(set_list) == 1:
         set = set_list[0]
-        r = set_function(f, set)
-        if r is None:
+        try:
+            # TypeError if arg count != set dimensions
+            r = set_function(f, set)
+            if r is None:
+                raise TypeError
+            if not r:
+                return r
+        except TypeError:
             r = ImageSet(f, set)
         if isinstance(r, ImageSet):
             f, set = r.args

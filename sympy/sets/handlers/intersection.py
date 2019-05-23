@@ -2,8 +2,9 @@ from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
                    EmptySet, FiniteSet, Union, ComplexRegion, ProductSet)
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
-from sympy.sets.fancysets import Integers, Naturals, Reals, Range, ImageSet
-from sympy.sets.sets import UniversalSet, imageset
+from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
+    ImageSet, Naturals0)
+from sympy.sets.sets import UniversalSet, imageset, ProductSet
 
 
 @dispatch(ConditionSet, ConditionSet)
@@ -13,6 +14,18 @@ def intersection_sets(a, b):
 @dispatch(ConditionSet, Set)
 def intersection_sets(a, b):
     return ConditionSet(a.sym, a.condition, Intersection(a.base_set, b))
+
+@dispatch(Naturals, Integers)
+def intersection_sets(a, b):
+    return a
+
+@dispatch(Integers, Naturals)
+def intersection_sets(a, b):
+    return b
+
+@dispatch(Naturals, Naturals)
+def intersection_sets(a, b):
+    return a if a is S.Naturals0 else b
 
 @dispatch(Naturals, Interval)
 def intersection_sets(a, b):
@@ -242,19 +255,24 @@ def intersection_sets(self, other):
             # on the variable name, they are replaced by the dummy variables
             # below
             a, b = Dummy('a'), Dummy('b')
-            f, g = f.subs(n, a), g.subs(m, b)
-            solns_set = diophantine(f - g)
-            if solns_set == set():
+            fa, ga = f.subs(n, a), g.subs(m, b)
+            solns = list(diophantine(fa - ga))
+            if not solns:
                 return EmptySet()
-            solns = list(diophantine(f - g))
 
             if len(solns) != 1:
                 return
-
-            # since 'a' < 'b', select soln for n
-            nsol = solns[0][0]
-            t = nsol.free_symbols.pop()
-            return imageset(Lambda(n, f.subs(a, nsol.subs(t, n))), S.Integers)
+            nsol = solns[0][0]  # since 'a' < 'b', nsol is first
+            t = nsol.free_symbols.pop()  # diophantine supplied symbol
+            nsol = nsol.subs(t, n)
+            if nsol != n:
+                # if nsol == n and we know were are working with
+                # a base_set of Integers then this was an unevaluated
+                # ImageSet representation of Integers, otherwise
+                # it is a new ImageSet intersection with a subset
+                # of integers
+                nsol = f.subs(n, nsol)
+            return imageset(Lambda(n, nsol), S.Integers)
 
     if other == S.Reals:
         from sympy.solvers.solveset import solveset_real
@@ -271,9 +289,24 @@ def intersection_sets(self, other):
         re, im = f_.as_real_imag()
         im = expand_complex(im)
 
-        return imageset(Lambda(n_, re),
-                        self.base_set.intersect(
-                            solveset_real(im, n_)))
+        re = re.subs(n_, n)
+        im = im.subs(n_, n)
+        ifree = im.free_symbols
+        lam = Lambda(n, re)
+        base = self.base_set
+        if not im:
+            # allow re-evaluation
+            # of self in this case to make
+            # the result canonical
+            pass
+        elif im.is_zero is False:
+            return S.EmptySet
+        elif ifree != {n}:
+            return None
+        else:
+            # univarite imaginary part in same variable
+            base = base.intersect(solveset_real(im, n))
+        return imageset(lam, base)
 
     elif isinstance(other, Interval):
         from sympy.solvers.solveset import (invert_real, invert_complex,

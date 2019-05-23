@@ -8,7 +8,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And
-from sympy.sets.sets import Set, Interval, Union, FiniteSet
+from sympy.sets.sets import Set, Interval, Union, FiniteSet, ProductSet
 from sympy.utilities.misc import filldedent
 
 
@@ -254,7 +254,7 @@ class ImageSet(Set):
         return Basic.__new__(cls, flambda, *sets)
 
     lamda = property(lambda self: self.args[0])
-    base_set = property(lambda self: self.args[1])
+    base_set = property(lambda self: ProductSet(self.args[1:]))
 
     def __iter__(self):
         already_seen = set()

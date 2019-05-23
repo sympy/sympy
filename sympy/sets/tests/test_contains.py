@@ -1,7 +1,8 @@
 from sympy import Symbol, Contains, S, Interval, FiniteSet, oo, Eq
-
+from sympy.utilities.pytest import raises
 
 def test_contains_basic():
+    raises(TypeError, lambda: Contains(S.Integers, 1))
     assert Contains(2, S.Integers) is S.true
     assert Contains(-2, S.Naturals) is S.false
 
