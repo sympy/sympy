@@ -6,6 +6,7 @@ Contains
 Arcsin
 Benini
 Beta
+BetaNoncentral
 BetaPrime
 Cauchy
 Chi
@@ -47,11 +48,11 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfi, I, hyper, uppergamma,
-                   sinh, atan, Ne, expint)
+                   Lambda, Basic, lowergamma, erf, erfi,  erfinv, I, hyper,
+                   uppergamma, sinh, atan, Ne, expint)
 
 from sympy import beta as beta_fn
-from sympy import cos, sin, exp, besseli, besselj, besselk
+from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy.external import import_module
 from sympy.matrices import MatrixBase
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
@@ -67,6 +68,7 @@ __all__ = ['ContinuousRV',
 'Arcsin',
 'Benini',
 'Beta',
+'BetaNoncentral',
 'BetaPrime',
 'Cauchy',
 'Chi',
@@ -398,6 +400,97 @@ def Beta(name, alpha, beta):
     return rv(name, BetaDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
+# Noncentral Beta distribution ------------------------------------------------------------
+
+
+class BetaNoncentralDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta', 'lamda')
+
+    set = Interval(0, 1)
+
+    @staticmethod
+    def check(alpha, beta, lamda):
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
+        _value_check(lamda >= 0, "Noncentrality parameter Lambda must be positive")
+
+    def pdf(self, x):
+        alpha, beta, lamda = self.alpha, self.beta, self.lamda
+        k = Dummy("k")
+        return Sum(exp(-lamda / 2) * (lamda / 2)**k * x**(alpha + k - 1) *(
+            1 - x)**(beta - 1) / (factorial(k) * beta_fn(alpha + k, beta)), (k, 0, oo))
+
+def BetaNoncentral(name, alpha, beta, lamda):
+    r"""
+    Create a Continuous Random Variable with a Type I Noncentral Beta distribution.
+
+    The density of the Noncentral Beta distribution is given by
+
+    .. math::
+        f(x) := \sum_{k=0}^\infty e^{-\lambda/2}\frac{(\lambda/2)^k}{k!}
+                \frac{x^{\alpha+k-1}(1-x)^{\beta-1}}{\mathrm{B}(\alpha+k,\beta)}
+
+    with :math:`x \in [0,1]`.
+
+    Parameters
+    ==========
+
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
+    lamda: Real number, `\lambda >= 0`, noncentrality parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import BetaNoncentral, density, cdf
+    >>> from sympy import Symbol, pprint
+
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> beta = Symbol("beta", positive=True)
+    >>> lamda = Symbol("lamda", nonnegative=True)
+    >>> z = Symbol("z")
+
+    >>> X = BetaNoncentral("x", alpha, beta, lamda)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+      oo
+    _____
+    \    `
+     \                                              -lamda
+      \                          k                  -------
+       \    k + alpha - 1 /lamda\         beta - 1     2
+        )  z             *|-----| *(1 - z)        *e
+       /                  \  2  /
+      /    ------------------------------------------------
+     /                  B(k + alpha, beta)*k!
+    /____,
+    k = 0
+
+    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
+    >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
+    exp(-1/2)*Integral(Sum(2**(-_k)*_x**_k/(beta(_k + 1, 1)*factorial(_k)), (_k, 0, oo)), (_x, 0, 2))
+
+    The argument evaluate=False prevents an attempt at evaluation
+    of the sum for general x, before the argument 2 is passed.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Noncentral_beta_distribution
+    .. [2] https://reference.wolfram.com/language/ref/NoncentralBetaDistribution.html
+
+    """
+
+    return rv(name, BetaNoncentralDistribution, (alpha, beta, lamda))
+
+
+#-------------------------------------------------------------------------------
 # Beta prime distribution ------------------------------------------------------
 
 
@@ -490,6 +583,9 @@ class CauchyDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError("The moment generating function for the "
                                   "Cauchy distribution does not exist.")
+
+    def _quantile(self, p):
+        return self.x0 + self.gamma*tan(pi*(p - S.Half))
 
 def Cauchy(name, x0, gamma):
     r"""
@@ -946,6 +1042,9 @@ class ExponentialDistribution(SingleContinuousDistribution):
         rate = self.rate
         return rate / (rate - t)
 
+    def _quantile(self, p):
+        return -log(1-p)/self.rate
+
 def Exponential(name, rate):
     r"""
     Create a continuous random variable with an Exponential distribution.
@@ -971,12 +1070,12 @@ def Exponential(name, rate):
     ========
 
     >>> from sympy.stats import Exponential, density, cdf, E
-    >>> from sympy.stats import variance, std, skewness
-    >>> from sympy import Symbol
+    >>> from sympy.stats import variance, std, skewness, quantile
+    >>> from sympy import Symbol, symbols
 
     >>> l = Symbol("lambda", positive=True)
     >>> z = Symbol("z")
-
+    >>> p = Symbol("p")
     >>> X = Exponential("x", l)
 
     >>> density(X)(z)
@@ -984,6 +1083,9 @@ def Exponential(name, rate):
 
     >>> cdf(X)(z)
     Piecewise((1 - exp(-lambda*z), z >= 0), (0, True))
+
+    >>> quantile(X)(p)
+    -log(1 - p)/lambda
 
     >>> E(X)
     1/lambda
@@ -1026,9 +1128,9 @@ class FDistributionDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(d1, d2):
-        _value_check(d1 > 0 and d1.is_integer, \
+        _value_check((d1 > 0, d1.is_integer),
             "Degrees of freedom d1 must be positive integer.")
-        _value_check(d2 > 0 and d2.is_integer, \
+        _value_check((d2 > 0, d2.is_integer),
             "Degrees of freedom d2 must be positive integer.")
 
     def pdf(self, x):
@@ -1764,6 +1866,9 @@ class LogisticDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return exp(self.mu*t) * Beta(1 - self.s*t, 1 + self.s*t)
 
+    def _quantile(self, p):
+        return self.mu - self.s*log(-S.One + S.One/p)
+
 def Logistic(name, mu, s):
     r"""
     Create a continuous random variable with a logistic distribution.
@@ -2088,6 +2193,10 @@ class NormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return exp(mean*t + std**2*t**2/2)
 
+    def _quantile(self, p):
+        mean, std = self.mean, self.std
+        return mean + std*sqrt(2)*erfinv(2*p - 1)
+
 def Normal(name, mean, std):
     r"""
     Create a continuous random variable with a Normal distribution.
@@ -2112,13 +2221,14 @@ def Normal(name, mean, std):
     Examples
     ========
 
-    >>> from sympy.stats import Normal, density, E, std, cdf, skewness
+    >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile
     >>> from sympy import Symbol, simplify, pprint, factor, together, factor_terms
 
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
     >>> z = Symbol("z")
     >>> y = Symbol("y")
+    >>> p = Symbol("p")
     >>> X = Normal("x", mu, sigma)
 
     >>> density(X)(z)
@@ -2132,6 +2242,9 @@ def Normal(name, mean, std):
        \    2*sigma    /   1
     -------------------- + -
              2             2
+
+    >>> quantile(X)(p)
+    mu + sqrt(2)*sigma*erfinv(2*p - 1)
 
     >>> simplify(skewness(X))
     0

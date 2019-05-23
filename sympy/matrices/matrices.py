@@ -4172,18 +4172,102 @@ class MatrixBase(MatrixDeprecated,
             arbitrary_matrix = self.__class__(cols, rows, w).T
         return A_pinv * B + (eye(A.cols) - A_pinv * A) * arbitrary_matrix
 
-    def pinv(self):
+    def _eval_pinv_full_rank(self):
+        """Subroutine for full row or column rank matrices.
+
+        For full row rank matrices, inverse of ``A * A.H`` Exists.
+        For full column rank matrices, inverse of ``A.H * A`` Exists.
+
+        This routine can apply for both cases by checking the shape
+        and have small decision.
+        """
+        if self.is_zero:
+            return self.H
+
+        if self.rows >= self.cols:
+            return (self.H * self).inv() * self.H
+        else:
+            return self.H * (self * self.H).inv()
+
+    def _eval_pinv_rank_decomposition(self):
+        """Subroutine for rank decomposition
+
+        With rank decompositions, `A` can be decomposed into two full-
+        rank matrices, and each matrix can take pseudoinverse
+        individually.
+        """
+        if self.is_zero:
+            return self.H
+
+        B, C = self.rank_decomposition()
+
+        Bp = B._eval_pinv_full_rank()
+        Cp = C._eval_pinv_full_rank()
+
+        return Cp * Bp
+
+    def _eval_pinv_diagonalization(self):
+        """Subroutine using diagonalization
+
+        This routine can sometimes fail if SymPy's eigenvalue
+        computation is not reliable.
+        """
+        if self.is_zero:
+            return self.H
+
+        A = self
+        AH = self.H
+
+        try:
+            if self.rows >= self.cols:
+                P, D = (AH * A).diagonalize(normalize=True)
+                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
+                return P * D_pinv * P.H * AH
+            else:
+                P, D = (A * AH).diagonalize(normalize=True)
+                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
+                return AH * P * D_pinv * P.H
+        except MatrixError:
+            raise NotImplementedError(
+                'pinv for rank-deficient matrices where '
+                'diagonalization of A.H*A fails is not supported yet.')
+
+
+    def pinv(self, method='RD'):
         """Calculate the Moore-Penrose pseudoinverse of the matrix.
 
         The Moore-Penrose pseudoinverse exists and is unique for any matrix.
         If the matrix is invertible, the pseudoinverse is the same as the
         inverse.
 
+        Parameters
+        ==========
+
+        method : String, optional
+            Specifies the method for computing the pseudoinverse.
+
+            If ``'RD'``, Rank-Decomposition will be used.
+
+            If ``'ED'``, Diagonalization will be used.
+
         Examples
         ========
 
+        Computing pseudoinverse by rank decomposition :
+
         >>> from sympy import Matrix
-        >>> Matrix([[1, 2, 3], [4, 5, 6]]).pinv()
+        >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
+        >>> A.pinv()
+        Matrix([
+        [-17/18,  4/9],
+        [  -1/9,  1/9],
+        [ 13/18, -2/9]])
+
+        Computing pseudoinverse by diagonalization :
+
+        >>> B = A.pinv(method='ED')
+        >>> B.simplify()
+        >>> B
         Matrix([
         [-17/18,  4/9],
         [  -1/9,  1/9],
@@ -4201,32 +4285,16 @@ class MatrixBase(MatrixDeprecated,
         .. [1] https://en.wikipedia.org/wiki/Moore-Penrose_pseudoinverse
 
         """
-        A = self
-        AH = self.H
         # Trivial case: pseudoinverse of all-zero matrix is its transpose.
-        if A.is_zero:
-            return AH
-        try:
-            if self.rows >= self.cols:
-                return (AH * A).inv() * AH
-            else:
-                return AH * (A * AH).inv()
-        except ValueError:
-            # Matrix is not full rank, so A*AH cannot be inverted.
-            pass
-        try:
-            # However, A*AH is Hermitian, so we can diagonalize it.
-            if self.rows >= self.cols:
-                P, D = (AH * A).diagonalize(normalize=True)
-                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
-                return P * D_pinv * P.H * AH
-            else:
-                P, D = (A * AH).diagonalize(normalize=True)
-                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
-                return AH * P * D_pinv * P.H
-        except MatrixError:
-            raise NotImplementedError('pinv for rank-deficient matrices where diagonalization '
-                                      'of A.H*A fails is not supported yet.')
+        if self.is_zero:
+            return self.H
+
+        if method == 'RD':
+            return self._eval_pinv_rank_decomposition()
+        elif method == 'ED':
+            return self._eval_pinv_diagonalization()
+        else:
+            raise ValueError()
 
     def print_nonzero(self, symb="X"):
         """Shows location of non-zero entries for fast shape lookup.

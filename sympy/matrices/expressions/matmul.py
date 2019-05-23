@@ -29,15 +29,17 @@ class MatMul(MatrixExpr, Mul):
     """
     is_MatMul = True
 
+    identity = GenericIdentity()
+
     def __new__(cls, *args, **kwargs):
         check = kwargs.get('check', True)
 
         if not args:
-            return GenericIdentity()
+            return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericIdentity().shape
-        args = filter(lambda i: GenericIdentity() != i, args)
+        args = filter(lambda i: cls.identity != i, args)
         args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
@@ -109,7 +111,27 @@ class MatMul(MatrixExpr, Mul):
         return coeff, MatMul(*matrices)
 
     def _eval_transpose(self):
-        return MatMul(*[transpose(arg) for arg in self.args[::-1]]).doit()
+        """Transposition of matrix multiplication.
+
+        Notes
+        =====
+
+        The following rules are applied.
+
+        Transposition for matrix multiplied with another matrix:
+        `\\left(A B\\right)^{T} = B^{T} A^{T}`
+
+        Transposition for matrix multiplied with scalar:
+        `\\left(c A\\right)^{T} = c A^{T}`
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Transpose
+        """
+        coeff, matrices = self.as_coeff_matrices()
+        return MatMul(
+            coeff, *[transpose(arg) for arg in matrices[::-1]]).doit()
 
     def _eval_adjoint(self):
         return MatMul(*[adjoint(arg) for arg in self.args[::-1]]).doit()

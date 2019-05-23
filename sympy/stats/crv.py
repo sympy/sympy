@@ -10,7 +10,7 @@ sympy.stats.frv
 
 from __future__ import print_function, division
 
-from sympy import (Interval, Intersection, symbols, sympify, Dummy,
+from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
 from sympy.functions.special.delta_functions import DiracDelta
@@ -290,6 +290,32 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         else:
             return Integral(expr * self.pdf(var), (var, self.set), **kwargs)
 
+    @cacheit
+    def compute_quantile(self, **kwargs):
+        """ Compute the Quantile from the PDF
+
+        Returns a Lambda
+        """
+        x, p = symbols('x, p', real=True, finite=True, cls=Dummy)
+        left_bound = self.set.start
+
+        pdf = self.pdf(x)
+        cdf = integrate(pdf, (x, left_bound, x), **kwargs)
+
+        quantile = solveset(cdf - p, x, S.Reals)
+        return Lambda(p, Piecewise((quantile, (p >= 0) & (p <= 1) ), (nan, True)))
+
+    def _quantile(self, x):
+        return None
+
+    def quantile(self, x, **kwargs):
+        """ Cumulative density function """
+        if len(kwargs) == 0:
+            quantile = self._quantile(x)
+            if quantile is not None:
+                return quantile
+        return self.compute_quantile(**kwargs)(x)
+
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
 
@@ -376,6 +402,20 @@ class ContinuousPSpace(PSpace):
         x, t = symbols('x, t', real=True, cls=Dummy)
         mgf = integrate(exp(t * x) * d(x), (x, -oo, oo), **kwargs)
         return Lambda(t, mgf)
+
+    @cacheit
+    def compute_quantile(self, expr, **kwargs):
+        if not self.domain.set.is_Interval:
+            raise ValueError(
+                "Quantile not well defined on multivariate expressions")
+
+        d = self.compute_cdf(expr, **kwargs)
+        x = symbols('x', real=True, finite=True, cls=Dummy)
+        p = symbols('x', real=True, positive=True, finite=True, cls=Dummy)
+
+        quantile = solveset(d(x) - p, x, self.set)
+
+        return Lambda(p, quantile)
 
     def probability(self, condition, **kwargs):
         z = Dummy('z', real=True, finite=True)
@@ -515,6 +555,14 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         fx = self.compute_density(self.value)
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
         return Lambda(y, fy)
+
+    def compute_quantile(self, expr, **kwargs):
+
+        if expr == self.value:
+            p = symbols("p", real=True, cls=Dummy)
+            return Lambda(p, self.distribution.quantile(p, **kwargs))
+        else:
+            return ContinuousPSpace.compute_quantile(self, expr, **kwargs)
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:

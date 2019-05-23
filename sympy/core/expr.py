@@ -681,6 +681,7 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.simplify.simplify import nsimplify, simplify
         from sympy.solvers.solveset import solveset
+        from sympy.solvers.solvers import solve
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
 
@@ -707,15 +708,19 @@ class Expr(Basic, EvalfMixin):
         if constant is False:
             return False
 
-        if constant is None and not diff.is_number:
-            # e.g. unless the right simplification is done, a symbolic
-            # zero is possible (see expression of issue 6829: without
-            # simplification constant will be None).
-            return
+        if not diff.is_number:
+            if constant is None:
+                # e.g. unless the right simplification is done, a symbolic
+                # zero is possible (see expression of issue 6829: without
+                # simplification constant will be None).
+                return
 
         if constant is True:
+            # this gives a number whether there are free symbols or not
             ndiff = diff._random()
-            if ndiff:
+            # is_comparable will work whether the result is real
+            # or complex; it could be None, however.
+            if ndiff and ndiff.is_comparable:
                 return False
 
         # sometimes we can use a simplified result to give a clue as to
@@ -723,47 +728,67 @@ class Expr(Basic, EvalfMixin):
         # then we should have been able to compute that and so now
         # we can just consider the cases where the approximation appears
         # to be zero -- we try to prove it via minimal_polynomial.
+        #
+        # removed
+        # ns = nsimplify(diff)
+        # if diff.is_number and (not ns or ns == diff):
+        #
+        # The thought was that if it nsimplifies to 0 that's a sure sign
+        # to try the following to prove it; or if it changed but wasn't
+        # zero that might be a sign that it's not going to be easy to
+        # prove. But tests seem to be working without that logic.
+        #
         if diff.is_number:
-            approx = diff.nsimplify()
-            if not approx:
-                # try to prove via self-consistency
-                surds = [s for s in diff.atoms(Pow) if s.args[0].is_Integer]
-                # it seems to work better to try big ones first
-                surds.sort(key=lambda x: -x.args[0])
-                for s in surds:
-                    try:
-                        # simplify is False here -- this expression has already
-                        # been identified as being hard to identify as zero;
-                        # we will handle the checking ourselves using nsimplify
-                        # to see if we are in the right ballpark or not and if so
-                        # *then* the simplification will be attempted.
-                        if s.is_Symbol:
-                            sol = list(solveset(diff, s))
-                        else:
-                            sol = [s]
-                        if sol:
-                            if s in sol:
-                                return True
-                            if s.is_extended_real:
-                                if any(nsimplify(si, [s]) == s and simplify(si) == s
-                                        for si in sol):
-                                    return True
-                    except NotImplementedError:
-                        pass
-
-                # try to prove with minimal_polynomial but know when
-                # *not* to use this or else it can take a long time. e.g. issue 8354
-                if True:  # change True to condition that assures non-hang
-                    try:
-                        mp = minimal_polynomial(diff)
-                        if mp.is_Symbol:
+            # try to prove via self-consistency
+            surds = [s for s in diff.atoms(Pow) if s.args[0].is_Integer]
+            # it seems to work better to try big ones first
+            surds.sort(key=lambda x: -x.args[0])
+            for s in surds:
+                try:
+                    # simplify is False here -- this expression has already
+                    # been identified as being hard to identify as zero;
+                    # we will handle the checking ourselves using nsimplify
+                    # to see if we are in the right ballpark or not and if so
+                    # *then* the simplification will be attempted.
+                    sol = solve(diff, s, simplify=False)
+                    if sol:
+                        if s in sol:
+                            # the self-consistent result is present
                             return True
-                        return False
-                    except (NotAlgebraic, NotImplementedError):
-                        pass
+                        if all(si.is_Integer for si in sol):
+                            # perfect powers are removed at instantiation
+                            # so surd s cannot be an integer
+                            return False
+                        if all(i.is_algebraic is False for i in sol):
+                            # a surd is algebraic
+                            return False
+                        if any(si in surds for si in sol):
+                            # it wasn't equal to s but it is in surds
+                            # and different surds are not equal
+                            return False
+                        if any(nsimplify(s - si) == 0 and
+                                simplify(s - si) == 0 for si in sol):
+                            return True
+                        if s.is_real:
+                            if any(nsimplify(si, [s]) == s and simplify(si) == s
+                                    for si in sol):
+                                return True
+                except NotImplementedError:
+                    pass
+
+            # try to prove with minimal_polynomial but know when
+            # *not* to use this or else it can take a long time. e.g. issue 8354
+            if True:  # change True to condition that assures non-hang
+                try:
+                    mp = minimal_polynomial(diff)
+                    if mp.is_Symbol:
+                        return True
+                    return False
+                except (NotAlgebraic, NotImplementedError):
+                    pass
 
         # diff has not simplified to zero; constant is either None, True
-        # or the number with significance (prec != 1) that was randomly
+        # or the number with significance (is_comparable) that was randomly
         # calculated twice as the same value.
         if constant not in (True, None) and constant != 0:
             return False
@@ -814,12 +839,12 @@ class Expr(Basic, EvalfMixin):
             if n2 == S.NaN:
                 return None
 
-            n, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not n.is_Number:
+            r, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not r.is_Number:
                 return False
-            if n._prec != 1 and i._prec != 1:
-                return bool(not i and n > 0)
-            elif n._prec == 1 and (not i or i._prec == 1) and \
+            if r._prec != 1 and i._prec != 1:
+                return bool(not i and r > 0)
+            elif r._prec == 1 and (not i or i._prec == 1) and \
                     self.is_algebraic and not self.has(Function):
                 try:
                     if minimal_polynomial(self).is_Symbol:
@@ -849,12 +874,12 @@ class Expr(Basic, EvalfMixin):
             if n2 == S.NaN:
                 return None
 
-            n, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not n.is_Number:
+            r, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not r.is_Number:
                 return False
-            if n._prec != 1 and i._prec != 1:
-                return bool(not i and n < 0)
-            elif n._prec == 1 and (not i or i._prec == 1) and \
+            if r._prec != 1 and i._prec != 1:
+                return bool(not i and r < 0)
+            elif r._prec == 1 and (not i or i._prec == 1) and \
                     self.is_algebraic and not self.has(Function):
                 try:
                     if minimal_polynomial(self).is_Symbol:
@@ -3427,7 +3452,7 @@ class Expr(Basic, EvalfMixin):
                 i *= -1
             return i*m
 
-        digits_to_decimal = _mag(x)
+        digits_to_decimal = _mag(x)  # _mag(12) = 2, _mag(.012) = -1
         allow = digits_needed = digits_to_decimal + p
         precs = [f._prec for f in x.atoms(Float)]
         dps = prec_to_dps(max(precs)) if precs else None
@@ -3511,7 +3536,7 @@ class Expr(Basic, EvalfMixin):
             if n is None:  # the single-arg case
                 return rv
             # use str or else it won't be a float
-            return Float(str(rv), digits_needed)
+            return Float(str(rv), dps)  # keep same precision
         else:
             if not allow and rv > self:
                 allow += 1

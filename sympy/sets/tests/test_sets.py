@@ -20,12 +20,13 @@ def test_imageset():
     assert imageset(cos, ints) == ImageSet(Lambda(x, cos(x)), ints)
     def f(x):
         return cos(x)
-    raises(TypeError, lambda: imageset(f, ints))
+    assert imageset(f, ints) == imageset(x, cos(x), ints)
     f = lambda x: cos(x)
     assert imageset(f, ints) == ImageSet(Lambda(x, cos(x)), ints)
     assert imageset(x, 1, ints) == FiniteSet(1)
     assert imageset(x, y, ints) == FiniteSet(y)
-    assert (str(imageset(lambda y: x + y, Interval(-2, 1)).lamda.expr)
+    clash = Symbol('x', integer=true)
+    assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
     x1, x2 = symbols("x1, x2")
     assert imageset(lambda x,y: Add(x,y), Interval(1,2), Interval(2, 3)) == \
@@ -243,7 +244,14 @@ def test_complement():
     assert all(pt in notsquare for pt in [(-1, 0), (1.5, .5), (10, 10)])
 
 
-def test_intersect():
+def test_intersect1():
+    assert all(S.Integers.intersection(i) is i for i in
+        (S.Naturals, S.Naturals0))
+    assert all(i.intersection(S.Integers) is i for i in
+        (S.Naturals, S.Naturals0))
+    s =  S.Naturals0
+    assert S.Naturals.intersection(s) is s
+    assert s.intersection(S.Naturals) is s
     x = Symbol('x')
     assert Interval(0, 2).intersect(Interval(1, 2)) == Interval(1, 2)
     assert Interval(0, 2).intersect(Interval(1, 2, True)) == \
@@ -406,6 +414,9 @@ def test_is_subset():
     # tests for the issubset alias
     assert FiniteSet(1, 2, 3, 4).issubset(Interval(0, 5)) is True
     assert S.EmptySet.issubset(FiniteSet(1, 2, 3)) is True
+
+    assert S.Naturals.is_subset(S.Integers)
+    assert S.Naturals0.is_subset(S.Integers)
 
 
 def test_is_proper_subset():

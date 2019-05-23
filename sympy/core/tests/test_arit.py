@@ -1,6 +1,7 @@
 from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
         Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
-        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, refine
+        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, refine,
+        floor
 )
 from sympy.core.compatibility import long, range
 from sympy.core.expr import unchanged
@@ -271,7 +272,7 @@ def test_pow_im():
 
 
 def test_real_mul():
-    assert Float(0) * pi * x == Float(0)
+    assert Float(0) * pi * x == 0
     assert set((Float(1) * pi * x).args) == {Float(1), pi, x}
 
 
@@ -1693,6 +1694,10 @@ def test_Mod():
     assert Mod(3*i, 2) == Mod(i, 2)
     assert Mod(8*i/j, 4) == 4*Mod(2*i/j, 1)
     assert Mod(8*i, 4) == 0
+
+    # rewrite
+    assert Mod(x, y).rewrite(floor) == x - y*floor(x/y)
+    assert ((x - Mod(x, y))/y).rewrite(floor) == floor(x/y)
 
 
 def test_Mod_is_integer():

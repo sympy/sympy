@@ -207,7 +207,7 @@ class Quantity(AtomicExpr):
                     raise ValueError(
                         'Dimension of "{0}" is {1}, '
                         'but it should be {2}'.format(
-                            addend, addend_dim.name, dim.name))
+                            addend, addend_dim, dim))
                 factor += addend_factor
             return factor, dim
         elif isinstance(expr, Derivative):

@@ -221,3 +221,7 @@ class Mod(Function):
     def _eval_is_nonpositive(self):
         if self.args[1].is_negative:
             return True
+
+    def _eval_rewrite_as_floor(self, a, b, **kwargs):
+        from sympy.functions.elementary.integers import floor
+        return a - b*floor(a/b)
