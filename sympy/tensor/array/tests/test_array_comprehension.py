@@ -13,7 +13,8 @@ def test_array_comprehension():
     assert isinstance(b.doit(), ArrayComprehension)
     assert isinstance(a.doit(), ImmutableDenseNDimArray)
     assert b.subs(j, 3) == ArrayComprehension(i, (i, 1, 4))
-    assert c.free_symbols == {i, j, k, l}
+    assert b.free_symbols == {j}
+    assert c.free_symbols == set()
     assert c.expr == i + j + k + l
     assert c.bounds == ((i, 1, 2), (j, 1, 3), (k, 1, 4), (l, 1, 5))
     assert c.doit().tolist() == [[[[4, 5, 6, 7, 8], [5, 6, 7, 8, 9], [6, 7, 8, 9, 10], [7, 8, 9, 10, 11]],
@@ -22,6 +23,8 @@ def test_array_comprehension():
                                  [[[5, 6, 7, 8, 9], [6, 7, 8, 9, 10], [7, 8, 9, 10, 11], [8, 9, 10, 11, 12]],
                                   [[6, 7, 8, 9, 10], [7, 8, 9, 10, 11], [8, 9, 10, 11, 12], [9, 10, 11, 12, 13]],
                                   [[7, 8, 9, 10, 11], [8, 9, 10, 11, 12], [9, 10, 11, 12, 13], [10, 11, 12, 13, 14]]]]
+    assert c.free_symbols == set()
     assert d.doit().tolist() == [k, k, k, k, k]
     raises(TypeError, lambda: ArrayComprehension(i*j, (i, 1, 3), (j, 2, [1, 3, 2])))
     raises(ValueError, lambda: ArrayComprehension(i*j, (i, 1, 3), (j, 2, 1)))
+    raises(ValueError, lambda: ArrayComprehension(i*j, (i, 1, 3), (j, 2, j+1)))

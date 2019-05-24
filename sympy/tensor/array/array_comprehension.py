@@ -5,9 +5,8 @@ from sympy.core.expr import Expr
 from sympy.core import Basic
 from sympy.core.compatibility import Iterable
 from sympy.tensor.array import MutableDenseNDimArray, ImmutableDenseNDimArray
-from sympy import  Symbol
+from sympy import Symbol
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import Iterable
 from sympy.core.numbers import Integer
 
 class ArrayComprehension(Basic):
@@ -36,12 +35,11 @@ class ArrayComprehension(Basic):
         if any(len(l) != 3 or None for l in bounds):
             raise ValueError('ArrayComprehension requires values lower and upper bound'
                               ' for the expression')
-        cls.default_assumptions = assumptions
         arglist = [sympify(expr)]
         arglist.extend(cls._check_bounds_validity(expr, bounds))
         obj = Basic.__new__(cls, *arglist, **assumptions)
-        obj._expr = arglist[0]
-        obj._bounds = arglist[1:]
+        obj._expr = obj._args[0]
+        obj._bounds = obj._args[1:]
         return obj
 
     @property
@@ -58,7 +56,7 @@ class ArrayComprehension(Basic):
         >>> a.expr
         10*i + j
         """
-        return self._args[0]
+        return self._expr
 
     @property
     def bounds(self):
@@ -79,6 +77,32 @@ class ArrayComprehension(Basic):
         """
         return self._args[1:]
 
+    @property
+    def free_symbols(self):
+        """
+        Return a set of the free_symbols in the array.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ArrayComprehension
+        >>> from sympy.abc import i, j, k
+        >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
+        >>> a.free_symbols
+        set()
+        >>> b = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k+3))
+        >>> b.free_symbols
+        {k}
+        """
+        expr_free_sym = self.expr.free_symbols
+        for var, inf, sup in self.bounds:
+            expr_free_sym.discard(var)
+            if len(inf.free_symbols) > 0:
+                expr_free_sym = expr_free_sym.union(inf.free_symbols)
+            if len(sup.free_symbols) > 0:
+                expr_free_sym = expr_free_sym.union(sup.free_symbols)
+        return expr_free_sym
+
     @classmethod
     def _check_bounds_validity(cls, expr, bounds):
         bounds = sympify(bounds)
@@ -87,6 +111,8 @@ class ArrayComprehension(Basic):
                 raise TypeError('Bounds should be an Expression(combination of Integer and Symbol)')
             if isinstance(inf, Integer) and isinstance(sup, Integer) and (inf > sup) == True:
                 raise ValueError('Lower bound should be inferior to upper bound')
+            if var in inf.free_symbols or var in sup.free_symbols:
+                raise ValueError('Variable should not be part of its bounds')
         return bounds
 
     def doit(self):
