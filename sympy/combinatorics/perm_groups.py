@@ -708,27 +708,26 @@ class PermutationGroup(Basic):
             comp = []
             low = der[i+1]
             gns = low.generators
-            while low != der[i]:
-                while True:
-                    elm = der[i].random()
-                    if not elm in low:
-                        break
+            for elm in der[i].generators:
+                if low == der[i]:
+                    break
+                if not elm in low:
+                    elm = [elm]
+                    for pelm in elm:
+                        order = pelm.order()
+                        div = divisors(order)[1]
+                        l = Integer(log(order, div))
 
-                elm = [elm]
-                for pelm in elm:
-                    order = pelm.order()
-                    div = divisors(order)[1]
-                    l = Integer(log(order, div))
-
-                    pows = []
-                    for j in range(l-1, -1, -1):
-                        qelm = pelm**(div**j)
-                        if not qelm in low:
-                            comp.append(low)
-                            pows.append(qelm)
-                    low = PermutationGroup(gns + pows) if pows else low
-            series.append(comp)
-            series = flatten(series)
+                        pows = []
+                        for j in range(l-1, -1, -1):
+                            qelm = pelm**(div**j)
+                            if not qelm in low:
+                                comp.append(low)
+                                pows.append(qelm)
+                        low = PermutationGroup(gns + pows) if pows else low
+            for g in comp:
+                if g not in series:
+                    series.append(g)
         return series
 
 
