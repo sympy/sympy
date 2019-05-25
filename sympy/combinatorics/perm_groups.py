@@ -16,7 +16,7 @@ from sympy.core import Basic
 from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import sieve
-from sympy.utilities.iterables import has_variety, is_sequence, uniq, flatten
+from sympy.utilities.iterables import has_variety, is_sequence, uniq
 from sympy.utilities.randtest import _randrange
 from itertools import islice
 
@@ -696,7 +696,30 @@ class PermutationGroup(Basic):
 
     def composition_series(self):
         """
-        Add docs
+        Return the composition series for a group as a list
+        of permutation groups.
+
+        A composition series is a subnormal series such that each
+        factor group `H(i+1) / H(i)` is simple.
+
+        A subnormal series is a composition series only if it is of
+        maximum length.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import (AlternatingGroup,
+        ... SymmetricGroup)
+        >>> S = SymmetricGroup(4)
+        >>> series = S.composition_series()
+        >>> len(series)
+        5
+        >>> A = AlternatingGroup(4)
+        >>> series[1] == A
+        True
+        >>> series[2].is_subgroup(A)
+        True
+        >>> len(A.composition_series())
+        4
 
         """
         if not self.is_solvable:

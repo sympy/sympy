@@ -987,3 +987,12 @@ def test_abelian_invariants():
     assert S.abelian_invariants() == [3, 3, 3, 3]
     S = G.sylow_subgroup(5)
     assert S.abelian_invariants() == [5, 5, 5]
+
+
+def test_composition_series():
+    a = Permutation(1, 2, 3)
+    b = Permutation(1, 2)
+    G = PermutationGroup([a, b])
+    assert G.composition_series() == G.derived_series()
+    # The first group in the list of composition series consists
+    # of group itself and the last one is an identity group.
