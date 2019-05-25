@@ -66,7 +66,11 @@ class Partition(FiniteSet):
         args = []
         for arg in partition:
             if isinstance(arg, list):
-                args.append(set(arg))
+                as_set = set(arg)
+                if len(as_set) < len(arg):
+                    raise ValueError(
+                        "Partition contained duplicated elements.")
+                args.append(as_set)
             else:
                 args.append(arg)
 
