@@ -64,7 +64,6 @@ def test_interval_arguments():
     raises(NotImplementedError, lambda: Interval(0, 1, z, And(x, y)))
 
 
-
 def test_interval_symbolic_end_points():
     a = Symbol('a', real=True)
 
@@ -148,6 +147,7 @@ def test_union_iter():
 
     # Round robin
     assert list(u) == [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+
 
 def test_difference():
     assert Interval(1, 3) - Interval(1, 2) == Interval(2, 3, True)
@@ -327,6 +327,7 @@ def test_intersection():
 
     # issue 12178
     assert Intersection() == S.UniversalSet
+
 
 def test_issue_9623():
     n = Symbol('n')
@@ -815,6 +816,7 @@ def test_image_FiniteSet():
     x = Symbol('x', real=True)
     assert imageset(x, 2*x, FiniteSet(1, 2, 3)) == FiniteSet(2, 4, 6)
 
+
 def test_image_Union():
     x = Symbol('x', real=True)
     assert imageset(x, x**2, Interval(-2, 0) + FiniteSet(1, 2, 3)) == \
@@ -948,7 +950,6 @@ def test_issue_9637():
     assert Complement(a, Interval(1, 3)) == Complement(a, Interval(1, 3), evaluate=False)
 
 
-
 @XFAIL
 def test_issue_9808():
     # See https://github.com/sympy/sympy/issues/16342
@@ -983,8 +984,10 @@ def test_issue_Symbol_inter():
     assert Intersection(FiniteSet(x**2, 1, sin(x)), FiniteSet(x**2, 2, sin(x)), r) == \
         Intersection(r, FiniteSet(x**2, sin(x)))
 
+
 def test_issue_11827():
     assert S.Naturals0**4
+
 
 def test_issue_10113():
     f = x**2/(x**2 - 4)
@@ -1077,6 +1080,7 @@ def test_issue_11174():
     soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
     assert Intersection(FiniteSet(x), S.Reals) == soln
 
+
 def test_finite_set_intersection():
     # The following should not produce recursion errors
     # Note: some of these are not completely correct. See
@@ -1089,6 +1093,7 @@ def test_finite_set_intersection():
         Intersection._handle_finite_sets([FiniteSet(1, 2, x), FiniteSet(2, 3, x, y)]) == \
         Intersection(FiniteSet(1, 2, x), FiniteSet(2, 3, x, y)) == \
         FiniteSet(1, 2, x)
+
 
 def test_union_intersection_constructor():
     # The actual exception does not matter here, so long as these fail

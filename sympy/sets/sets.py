@@ -1169,6 +1169,7 @@ class Union(Set, LatticeOp, EvalfMixin):
         else:
             raise TypeError("Not all constituent sets are iterable")
 
+
 class Intersection(Set, LatticeOp):
     """
     Represents an intersection of sets as a :class:`Set`.
