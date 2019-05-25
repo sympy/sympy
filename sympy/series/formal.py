@@ -827,7 +827,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
                     fps_sym = True
                 # if power is an integer
                 elif sympify(term.exp).is_integer:
-                        nterm *= x**(term.exp)
+                        nterm *= term
 
                 # for x**(n-2) or x**(n/2) symbolic terms
                 else:
@@ -1023,10 +1023,9 @@ class FormalPowerSeries(SeriesBase):
         ind = self.ind
         for t in Add.make_args(ind):
             if isinstance(t, Mul):
-                fterm, sterm = Mul.make_args(t)
-                if (isinstance(fterm, Pow) and fterm.exp.is_symbol) or \
-                 (isinstance(sterm, Pow) and sterm.exp.is_symbol):
-                    return S.One
+                for term in Mul.make_args(t):
+                    if (isinstance(term, Pow) and term.exp.is_symbol):
+                        return S.One
             else:
                 if isinstance(t, Pow):
                     if isinstance(t.exp, Mul) or t.exp.is_symbol:
