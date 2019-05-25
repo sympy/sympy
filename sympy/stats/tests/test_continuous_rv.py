@@ -185,7 +185,7 @@ def test_moment_generating_function():
     assert mgf == (-b*t + 1)**(-a)
 
     mgf = moment_generating_function(Gumbel('x', a, b))(t)
-    assert mgf == exp(I*b*t)*gamma(-a*t + 1)
+    assert mgf == exp(b*t)*gamma(-a*t + 1)
 
     mgf = moment_generating_function(Gompertz('x', a, b))(t)
     assert mgf == b*exp(b)*expint(t/a, b)
@@ -214,7 +214,7 @@ def test_moment_generating_function():
         *exp(a**2*t**2/2)/2 + 1
 
     mgf = moment_generating_function(Triangular('x', a, b, c))(t)
-    assert str(mgf) == ("(-2*(-a + b)*exp(c*t) + 2*(a + c)*exp(b*t) + "
+    assert str(mgf) == ("(-2*(-a + b)*exp(c*t) + 2*(-a + c)*exp(b*t) + "
     "2*(b - c)*exp(a*t))/(t**2*(-a + b)*(-a + c)*(b - c))")
 
     mgf = moment_generating_function(Uniform('x', a, b))(t)
@@ -249,7 +249,7 @@ def test_moment_generating_function():
     assert mgf.diff(t).subs(t, 0) == 1
 
     mgf = moment_generating_function(Gumbel('x', 1, 1))(t)
-    assert mgf.diff(t).subs(t, 0) == EulerGamma + I
+    assert mgf.diff(t).subs(t, 0) == EulerGamma + 1
 
     mgf = moment_generating_function(Gompertz('x', 1, 1))(t)
     assert mgf.diff(t).subs(t, 1) == -e*meijerg(((), (1, 1)),
@@ -278,7 +278,7 @@ def test_moment_generating_function():
     assert mgf.diff(t).subs(t, 0) == sqrt(2)*sqrt(pi)/2
 
     mgf = moment_generating_function(Triangular('x', 1, 3, 2))(t)
-    assert mgf.diff(t).subs(t, 1) == -e + 3*exp(3)
+    assert mgf.diff(t).subs(t, 1) == -e + exp(3)
 
     mgf = moment_generating_function(Uniform('x', 0, 1))(t)
     assert mgf.diff(t).subs(t, 1) == 1

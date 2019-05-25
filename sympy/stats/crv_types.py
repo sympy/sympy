@@ -1585,7 +1585,7 @@ class GumbelDistribution(SingleContinuousDistribution):
         return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
 
     def _moment_generating_function(self, t):
-        return gamma(1 - self.beta*t) * exp(I*self.mu*t)
+        return gamma(1 - self.beta*t) * exp(self.mu*t)
 
 def Gumbel(name, beta, mu):
     r"""
@@ -2125,7 +2125,7 @@ class NakagamiDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(mu, omega):
-        _value_check(mu >= 0.5, "Shape parameter mu must be positive.")
+        _value_check(mu >= S.Half, "Shape parameter mu must be greater than equal to 1/2.")
         _value_check(omega > 0, "Spread parameter omega must be positive.")
 
     def pdf(self, x):
@@ -2944,7 +2944,7 @@ class TriangularDistribution(SingleContinuousDistribution):
 
     def _moment_generating_function(self, t):
         a, b, c = self.a, self.b, self.c
-        return 2 * ((b - c) * exp(a * t) - (b - a) * exp(c * t) + (c + a) * exp(b * t)) / (
+        return 2 * ((b - c) * exp(a * t) - (b - a) * exp(c * t) + (c - a) * exp(b * t)) / (
         (b - a) * (c - a) * (b - c) * t ** 2)
 
 

@@ -76,6 +76,7 @@ class MultivariateNormalDistribution(JointDistribution):
         k = len(self.mu)
         return S.Reals**k
 
+    @staticmethod
     def check(self, mu, sigma):
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the mean vector and covariance matrix are incorrect.")
@@ -117,6 +118,7 @@ class MultivariateLaplaceDistribution(JointDistribution):
         k = len(self.mu)
         return S.Reals**k
 
+    @staticmethod
     def check(self, mu, sigma):
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the mean vector and covariance matrix are incorrect.")
@@ -151,6 +153,7 @@ class MultivariateTDistribution(JointDistribution):
         k = len(self.mu)
         return S.Reals**k
 
+    @staticmethod
     def check(self, mu, sigma, v):
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the location vector and shape matrix are incorrect.")
@@ -196,6 +199,7 @@ class NormalGammaDistribution(JointDistribution):
     _argnames = ['mu', 'lamda', 'alpha', 'beta']
     is_Continuous=True
 
+    @staticmethod
     def check(self, mu, lamda, alpha, beta):
         _value_check(mu.is_real, "Location must be real.")
         _value_check(lamda > 0, "Lambda must be positive")
@@ -258,6 +262,7 @@ class MultivariateBetaDistribution(JointDistribution):
     _argnames = ['alpha']
     is_Continuous = True
 
+    @staticmethod
     def check(self, alpha):
         _value_check(len(alpha) >= 2, "At least two categories should be passed.")
         for a_k in alpha:
@@ -331,6 +336,7 @@ class MultivariateEwensDistribution(JointDistribution):
     is_Discrete = True
     is_Continuous = False
 
+    @staticmethod
     def check(self, n, theta):
         _value_check(isinstance(n, Integer) and (n > 0) == True,
                         "sample size should be positive integer.")
@@ -403,6 +409,7 @@ class MultinomialDistribution(JointDistribution):
     is_Continuous=False
     is_Discrete = True
 
+    @staticmethod
     def check(self, n, p):
         _value_check(n > 0,
                         "number of trials must be a positve integer")
@@ -471,6 +478,7 @@ class NegativeMultinomialDistribution(JointDistribution):
     is_Continuous=False
     is_Discrete = True
 
+    @staticmethod
     def check(self, k0, p):
         _value_check(k0 > 0,
                         "number of failures must be a positve integer")
