@@ -994,5 +994,7 @@ def test_composition_series():
     b = Permutation(1, 2)
     G = PermutationGroup([a, b])
     assert G.composition_series() == G.derived_series()
-    # The first group in the list of composition series consists
-    # of group itself and the last one is an identity group.
+    # The first group in the composition series is always the
+    # group itself.
+    S = SymmetricGroup(4)
+    assert S.composition_series()[0] == S

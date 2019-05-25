@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from random import randrange, choice
 from math import log
 from sympy.ntheory import primefactors
-from sympy import multiplicity, divisors, Integer, log
+from sympy import multiplicity, factorint
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -701,7 +701,6 @@ class PermutationGroup(Basic):
 
         A composition series is a subnormal series such that each
         factor group `H(i+1) / H(i)` is simple.
-
         A subnormal series is a composition series only if it is of
         maximum length.
 
@@ -738,15 +737,13 @@ class PermutationGroup(Basic):
                     elm = [elm]
                     for pelm in elm:
                         order = pelm.order()
-                        div = divisors(order)[1]
-                        l = Integer(log(order, div))
-
+                        count = list(factorint(order).values())[0]
                         pows = []
-                        for j in range(l-1, -1, -1):
-                            qelm = pelm**(div**j)
+                        for j in range(count-1, -1, -1):
+                            qelm = pelm**(list(factorint(order).keys())[0]**j)
                             if not qelm in low:
-                                comp.append(low)
                                 pows.append(qelm)
+                        comp.append(low)
                         low = PermutationGroup(gns + pows) if pows else low
             for g in comp:
                 if g not in series:
