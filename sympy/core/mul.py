@@ -1061,12 +1061,8 @@ class Mul(Expr, AssocOp):
     def as_powers_dict(self):
         d = defaultdict(int)
         for term in self.args:
-            if term is S.NegativeInfinity:
-                for b, e in term.as_powers_dict():
-                    d[b] += e
-                continue
-            b, e = term.as_base_exp()
-            d[b] += e
+            for b, e in term.as_powers_dict().items():
+                d[b] += e
         return d
 
     def as_numer_denom(self):
