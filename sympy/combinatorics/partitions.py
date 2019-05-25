@@ -2,9 +2,10 @@ from __future__ import print_function, division
 
 from sympy.core import Basic, Dict, sympify
 from sympy.core.compatibility import as_int, default_sort_key, range
+from sympy.core.sympify import _sympify
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
-from sympy.sets.sets import FiniteSet
+from sympy.sets.sets import FiniteSet, Union
 from sympy.utilities.iterables import has_dups, flatten, group
 
 from collections import defaultdict
@@ -48,19 +49,27 @@ class Partition(FiniteSet):
         (1, 2, 3)
 
         """
-        args = partition
-        if not all(isinstance(part, (list, FiniteSet)) for part in args):
+        args = []
+        for arg in partition:
+            if isinstance(arg, list):
+                args.append(set(arg))
+            else:
+                args.append(arg)
+
+        args = [_sympify(arg) for arg in args]
+
+        if not all(isinstance(part, FiniteSet) for part in args):
             raise ValueError(
                 "Each argument to Partition should be a list or a FiniteSet")
 
         # sort so we have a canonical reference for RGS
-        partition = sorted(sum(partition, []), key=default_sort_key)
-        if has_dups(partition):
+        U = Union(*args)
+        if len(U) < sum(len(arg) for arg in args):
             raise ValueError("Partition contained duplicated elements.")
 
-        obj = FiniteSet.__new__(cls, *[FiniteSet(*x) for x in args])
-        obj.members = tuple(partition)
-        obj.size = len(partition)
+        obj = FiniteSet.__new__(cls, *args)
+        obj.members = tuple(U)
+        obj.size = len(U)
         return obj
 
     def sort_key(self, order=None):
