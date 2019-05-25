@@ -697,3 +697,22 @@ class Quaternion(Expr):
 
             return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
+
+    def differentiate(self, W):
+        """Returns the instantaneous quaternion derivative representing a quaternion rotating at the rate of W.
+
+        Parameters
+        ==========
+        W: 3D Vector
+            A pure quaternion representing angular velocity.
+            W = 0 + i*W_x + j*W_y + k*W_z
+
+        Returns
+        =======
+        A quaternion
+            Returns a quaternion derivative representing the rotation of
+            the given quaternion function at the rate of W.
+        """
+        vec = W._args
+        quat = Quaternion(0, vec[0], vec[1], vec[2])
+        return 0.5 * self * quat

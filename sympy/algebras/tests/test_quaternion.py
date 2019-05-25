@@ -1,10 +1,11 @@
 from sympy.algebras.quaternion import Quaternion
-from sympy import symbols, re, im, Add, Mul, I, Abs
+from sympy import Symbol, symbols, re, im, Add, Mul, I, Abs
 from sympy import cos, sin, sqrt, conjugate, log, acos, E, pi
 from sympy.utilities.pytest import raises
 from sympy import Matrix
 from sympy import diff, integrate, trigsimp
 from sympy import S, Rational
+from sympy.vector.vector import Vector
 
 x, y, z, w = symbols("x y z w")
 
@@ -136,3 +137,15 @@ def test_quaternion_rotation_iss1593():
                 [1,      0,      0],
                 [0, cos(x), -sin(x)],
                 [0, sin(x), cos(x)]]))
+
+
+def test_quaternion_differentiation():
+    q = Quaternion(1, 4, 5, 7)
+    v1 = Vector(1, 2, 3)
+    v2 = Vector(1, 4, 7)
+    v3 = Vector(9, 5, 8)
+    v4 = Vector(3, 5, 2)
+    assert q.differentiate(v1) == Quaternion(-17.5, 1.0, -1.5, 3.0)
+    assert q.differentiate(v2) == Quaternion(-36.5, 4.0, -8.5, 9.0)
+    assert q.differentiate(v3) == Quaternion(-58.5, 7.0, 18.0, -8.5)
+    assert q.differentiate(v4) == Quaternion(-25.5, -11.0, 9.0, 3.5)
