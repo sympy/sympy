@@ -33,11 +33,13 @@ def test_naturals():
     assert N.inf == 1
     assert N.sup == oo
 
+
 def test_naturals0():
     N = S.Naturals0
     assert 0 in N
     assert -1 not in N
     assert next(iter(N)) == 0
+
 
 def test_integers():
     Z = S.Integers
@@ -530,7 +532,6 @@ def test_ImageSet_contains():
     assert q is not S.EmptySet
 
 
-
 def test_ComplexRegion_contains():
 
     # contains in ComplexRegion
@@ -720,6 +721,7 @@ def test_issue_9980():
     assert c1.func(*c1.args) == c1
     assert R.func(*R.args) == R
 
+
 def test_issue_11732():
     interval12 = Interval(1, 2)
     finiteset1234 = FiniteSet(1, 2, 3, 4)
@@ -769,6 +771,7 @@ def test_issue_11938():
     assert Intersection(cp1, S.Reals) == Interval(-1, 1)
     assert Intersection(cp2, S.Reals) == Interval(-1, 0)
     assert Intersection(cp3, S.Reals) == FiniteSet(0)
+
 
 def test_issue_11914():
     a, b = Interval(0, 1), Interval(0, pi)
