@@ -666,7 +666,6 @@ class ProductSet(Set):
                                 for j, b in enumerate(self.sets))
                                 for i, a in enumerate(self.sets)))
 
-
     @property
     def is_iterable(self):
         """
