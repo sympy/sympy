@@ -37,6 +37,8 @@ class Partition(FiniteSet):
         Examples
         ========
 
+        Creating Partition from Python lists:
+
         >>> from sympy.combinatorics.partitions import Partition
         >>> a = Partition([1, 2], [3])
         >>> a
@@ -48,6 +50,18 @@ class Partition(FiniteSet):
         >>> a.members
         (1, 2, 3)
 
+        Creating Partition from Python sets:
+
+        >>> Partition({1, 2, 3}, {4, 5})
+        {{4, 5}, {1, 2, 3}}
+
+        Creating Partition from SymPy finite sets:
+
+        >>> from sympy.sets.sets import FiniteSet
+        >>> a = FiniteSet(1, 2, 3)
+        >>> b = FiniteSet(4, 5)
+        >>> Partition(a, b)
+        {{4, 5}, {1, 2, 3}}
         """
         args = []
         for arg in partition:
