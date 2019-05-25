@@ -526,7 +526,7 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     References
     ==========
 
-    See refernces of GeneralizedMultivariateLogGamma.
+    See references of GeneralizedMultivariateLogGamma.
 
     Notes
     =====
