@@ -1282,7 +1282,7 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     ========
 
     >>> from sympy import fps, O, ln, atan
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, n
 
     Rational Functions
 
