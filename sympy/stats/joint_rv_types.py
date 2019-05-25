@@ -1,6 +1,7 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, IndexedBase,
                     besselk, gamma, Interval, Range, factorial, Mul, Integer,
-                    Add, rf, Eq, Piecewise, Symbol, imageset, Intersection)
+                    Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
+                  imageset, Intersection, Matrix)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -393,6 +394,161 @@ def MultivariateEwens(syms, n, theta):
 
     """
     return multivariate_rv(MultivariateEwensDistribution, syms, n, theta)
+
+#-------------------------------------------------------------------------------
+# Generalized Multivariate Log Gamma distribution ---------------------------------------------------------
+
+class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
+
+    _argnames = ['delta', 'v', 'lamda', 'mu']
+    is_Continuous=True
+
+    def check(self, delta, v, l, mu):
+        _value_check((delta >= 0, delta <= 1), "delta must be in range [0, 1].")
+        _value_check((v > 0), "v must be positive")
+        for lk in l:
+            _value_check((lk > 0), "lamda must be a positive vector.")
+        for muk in mu:
+            _value_check((muk > 0), "mu must be a positive vector.")
+        _value_check(len(l) > 1,"the distribution should have at least"
+                                " two random variables.")
+
+    @property
+    def set(self):
+        from sympy.sets.sets import Interval
+        return S.Reals**len(self.lamda)
+
+    def pdf(self, *y):
+        from sympy.functions.special.gamma_functions import gamma
+        d, v, l, mu = self.delta, self.v, self.lamda, self.mu
+        n = Symbol('n', negative=False, integer=True)
+        k = len(l)
+        sterm1 = Pow((1 - d), n)/\
+                ((gamma(v + n)**(k - 1))*gamma(v)*gamma(n + 1))
+        sterm2 = Mul.fromiter([mui*li**(-v - n) for mui, li in zip(mu, l)])
+        term1 = sterm1 * sterm2
+        sterm3 = (v + n) * sum([mui * yi for mui, yi in zip(mu, y)])
+        sterm4 = sum([exp(mui * yi)/li for (mui, yi, li) in zip(mu, y, l)])
+        term2 = exp(sterm3 - sterm4)
+        return Pow(d, v) * Sum(term1 * term2, (n, 0, S.Infinity))
+
+def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
+    """
+    Creates a joint random variable with generalized multivariate log gamma
+    distribution.
+
+    The joint pdf can be found at [1].
+
+    Parameters
+    ==========
+
+    syms: list/tuple/set of symbols for identifying each component
+    delta: A constant in range [0, 1]
+    v: positive real
+    lamda: a list of positive reals
+    mu: a list of positive reals
+
+    Returns
+    =======
+
+    A Random Symbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv import marginal_distribution
+    >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma
+    >>> from sympy import symbols, S
+    >>> v = 1
+    >>> l, mu = [1, 1, 1], [1, 1, 1]
+    >>> d = S.Half
+    >>> y = symbols('y_1:4', positive=True)
+    >>> Gd = GeneralizedMultivariateLogGamma('G', d, v, l, mu)
+    >>> density(Gd)(y[0], y[1], y[2])
+    Sum(2**(-n)*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
+    exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Generalized_multivariate_log-gamma_distribution
+    .. [2] https://www.researchgate.net/publication/234137346_On_a_multivariate_log-gamma_distribution_and_the_use_of_the_distribution_in_the_Bayesian_analysis
+
+    Note
+    ====
+
+    If the GeneralizedMultivariateLogGamma is too long to type use,
+    `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG`
+    If you want to pass the matrix omega instead of the constant delta, then use,
+    GeneralizedMultivariateLogGammaOmega.
+
+    """
+    return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
+                            syms, delta, v, lamda, mu)
+
+def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
+    """
+    Extends GeneralizedMultivariateLogGamma.
+
+    Parameters
+    ==========
+
+    syms: list/tuple/set of symbols for identifying each component
+    omega: A square matrix
+           Every element of square matrix must be absolute value of
+           sqaure root of correlation coefficient
+    v: positive real
+    lamda: a list of positive reals
+    mu: a list of positive reals
+
+    Returns
+    =======
+
+    A Random Symbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density
+    >>> from sympy.stats.joint_rv import marginal_distribution
+    >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega
+    >>> from sympy import Matrix, symbols, S
+    >>> omega = Matrix([[1, S.Half, S.Half], [S.Half, 1, S.Half], [S.Half, S.Half, 1]])
+    >>> v = 1
+    >>> l, mu = [1, 1, 1], [1, 1, 1]
+    >>> G = GeneralizedMultivariateLogGammaOmega('G', omega, v, l, mu)
+    >>> y = symbols('y_1:4', positive=True)
+    >>> density(G)(y[0], y[1], y[2])
+    sqrt(2)*Sum((1 - sqrt(2)/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) -
+    exp(y_2) - exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
+
+    References
+    ==========
+
+    See references of GeneralizedMultivariateLogGamma.
+
+    Notes
+    =====
+
+    If the GeneralizedMultivariateLogGammaOmega is too long to type use,
+    `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO`
+    """
+    _value_check((omega.is_square, isinstance(omega, Matrix)), "omega must be a"
+                                                            " square matrix")
+    for val in omega.values():
+        _value_check((val >= 0, val <= 1),
+            "all values in matrix must be between 0 and 1(both inclusive).")
+    _value_check(omega.diagonal().equals(ones(1, omega.shape[0])),
+                    "all the elements of diagonal should be 1.")
+    _value_check((omega.shape[0] == len(lamda), len(lamda) == len(mu)),
+                    "lamda, mu should be of same length and omega should "
+                    " be of shape (length of lamda, length of mu)")
+    _value_check(len(lamda) > 1,"the distribution should have at least"
+                            " two random variables.")
+    delta = Pow(Rational(omega.det()), Rational(1, len(lamda) - 1))
+    return GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu)
+
 
 #-------------------------------------------------------------------------------
 # Multinomial distribution ---------------------------------------------------------
