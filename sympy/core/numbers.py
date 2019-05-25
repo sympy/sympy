@@ -3179,6 +3179,9 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     def ceiling(self):
         return self
 
+    def as_powers_dict(self):
+        return {S.NegativeOne: 1, S.Infinity: 1}
+
 
 class NaN(with_metaclass(Singleton, Number)):
     """
