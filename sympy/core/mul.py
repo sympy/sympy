@@ -1032,7 +1032,6 @@ class Mul(Expr, AssocOp):
         Returns lhs/rhs, but treats arguments like symbols, so things like
         oo/oo return 1, instead of a nan.
         """
-        from sympy.simplify.simplify import powsimp
         if lhs == rhs:
             return S.One
 
@@ -1045,19 +1044,17 @@ class Mul(Expr, AssocOp):
             return False
         if check(lhs, rhs) or check(rhs, lhs):
             return S.One
-        if lhs.is_Mul and rhs.is_Mul:
-            a = list(lhs.args)
-            b = [1]
-            for x in rhs.args:
-                if x in a:
-                    a.remove(x)
-                elif -x in a:
-                    a.remove(-x)
-                    b.append(-1)
-                else:
-                    b.append(x)
-            return lhs.func(*a)/rhs.func(*b)
-        return powsimp(lhs/rhs)
+        if any(i.is_Pow or i.is_Mul for i in (lhs, rhs)):
+            a = lhs.as_powers_dict()
+            b = rhs.as_powers_dict()
+            blen = len(b)
+            for bi in tuple(b.keys()):
+                if bi in a:
+                    a[bi] -= b.pop(bi)
+            if len(b) != blen:
+                lhs = Mul(*[b**e for b, e in a.items()])
+                rhs = Mul(*[b**e for b, e in b.items()])
+        return lhs/rhs
 
     def as_powers_dict(self):
         d = defaultdict(int)
