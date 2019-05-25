@@ -1051,10 +1051,11 @@ class Mul(Expr, AssocOp):
             for bi in tuple(b.keys()):
                 if bi in a:
                     a[bi] -= b.pop(bi)
+                    if not a[bi]:
+                        a.pop(bi)
             if len(b) != blen:
-                # do not recompute powers if exponent is 0
-                lhs = Mul(*[b**e for b, e in a.items() if e])
-                rhs = Mul(*[b**e for b, e in b.items() if e])
+                lhs = Mul(*[k**v for k, v in a.items()])
+                rhs = Mul(*[k**v for k, v in b.items()])
         return lhs/rhs
 
     def as_powers_dict(self):
