@@ -1023,8 +1023,8 @@ class FormalPowerSeries(SeriesBase):
         ind = self.ind
         for t in Add.make_args(ind):
             if isinstance(t, Mul):
-                for term in Mul.make_args(t):
-                    if (isinstance(term, Pow) and term.exp.is_symbol):
+                for subt in Mul.make_args(t):
+                    if (isinstance(subt, Pow) and subt.exp.is_symbol):
                         return S.One
             else:
                 if isinstance(t, Pow):
