@@ -813,42 +813,45 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
 
     result = None
 
+    # flag for indicating symbolic terms in a function
     fps_sym = False
-    terms = []
-    if isinstance(f, Add):
-        for t in Add.make_args(f):
-            terms.append(t)
-    else:
-        terms.append(f)
 
-    nterms = []
     symb, res = S.Zero, S.Zero
-    for t in terms:
-        if isinstance(t, Mul):
-            nterm = S.One
-            for term in Mul.make_args(t):
-                if isinstance(term, Pow):
-                    if term.exp.is_symbol:
+    if isinstance(f, Mul):
+        nterm = S.One
+        for term in Mul.make_args(f):
+            if isinstance(term, Pow):
+                # for x**n symbolic terms
+                if term.exp.is_symbol:
+                    symb = term.exp
+                    fps_sym = True
+                # if power is an integer
+                elif sympify(term.exp).is_integer:
+                        nterm *= x**(term.exp)
+
+                # for x**(n-2) or x**(n/2) symbolic terms
+                else:
+                    a, b, subt = S.Zero, S.Zero, S.Zero
+                    if isinstance(term.exp, Add):
+                        a, b = Add.make_args(term.exp)
+                        if a.is_symbol or b.is_symbol:
+                            if a.is_symbol:
+                                subt = a
+                            else:
+                                subt = b
+                            res = term.exp - subt
+                            if sympify(res).is_integer:
+                                nterm *= x**res
+                            symb = subt
+                            fps_sym = True
+
+                    if isinstance(term.exp, Mul):
                         symb = term.exp
                         fps_sym = True
-                    elif sympify(term.exp).is_integer:
-                            nterm *= x**(term.exp)
-                    else:
-                        for subt in Add.make_args(term.exp):
-                            if subt.is_symbol:
-                                res = term.exp - subt
-                                if sympify(res).is_integer:
-                                    nterm *= x**res
-                                symb = subt
-                                fps_sym = True
-                else:
-                    if not (isinstance(term, Pow) and term.exp.is_symbol):
-                        nterm *= term
-            nterms.append(nterm)
-        else:
-            nterms.append(t)
-
-    f = Add(*nterms)
+            else:
+                if not (isinstance(term, Pow) and term.exp.is_symbol):
+                    nterm *= term
+        f = nterm
 
     # from here on it's x0=0 and dir=1 handling
     k = Dummy('k')
@@ -862,6 +865,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
         return None
 
     ak = sequence(result[0], (k, result[2], oo))
+    # xk and ind mpdified for symbolic function
     if fps_sym:
         xk = sequence(x**k*x**symb, (k, 0, oo))
         ind = result[1]*x**symb
@@ -1016,10 +1020,6 @@ class FormalPowerSeries(SeriesBase):
 
     def _get_pow_x(self, term):
         """Returns the power of x in a term."""
-        '''
-        if isinstance(term, Pow) and term.exp.is_symbol:
-            return S.One
-        '''
         ind = self.ind
         for t in Add.make_args(ind):
             if isinstance(t, Mul):
@@ -1028,8 +1028,9 @@ class FormalPowerSeries(SeriesBase):
                  (isinstance(sterm, Pow) and sterm.exp.is_symbol):
                     return S.One
             else:
-                if isinstance(t, Pow) and t.exp.is_symbol:
-                    return S.One
+                if isinstance(t, Pow):
+                    if isinstance(t.exp, Mul) or t.exp.is_symbol:
+                        return S.One
 
         xterm, pow_x = term.as_independent(self.x)[1].as_base_exp()
         if not xterm.has(self.x):
@@ -1039,7 +1040,7 @@ class FormalPowerSeries(SeriesBase):
     def polynomial(self, n=6):
         """Truncated series as polynomial.
 
-        Returns series sexpansion of ``f`` upto order ``O(x**n)``
+        Returns series expansion of ``f`` upto order ``O(x**n)``
         as a polynomial(without ``O`` term).
         """
         terms = []
@@ -1290,6 +1291,11 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
 
     >>> fps(atan(x), full=True).truncate()
     x - x**3/3 + x**5/5 + O(x**6)
+
+    Symbolic functions
+
+    >>> fps(x**n*sin(x)).truncate(8)
+    x**2*x**n - x**6*x**n/6 + O(x**(n + 8), x)
 
     See Also
     ========
