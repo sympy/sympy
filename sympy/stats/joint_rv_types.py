@@ -459,15 +459,15 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     >>> from sympy.stats import density
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma
-    >>> from sympy import symbols
+    >>> from sympy import symbols, S
     >>> v = 1
     >>> l, mu = [1, 1, 1], [1, 1, 1]
-    >>> d = 0.5
+    >>> d = S.Half
     >>> y = symbols('y_1:4', positive=True)
     >>> Gd = GeneralizedMultivariateLogGamma('G', d, v, l, mu)
     >>> density(Gd)(y[0], y[1], y[2])
-    0.5*Sum(0.5**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
-    exp(y_3))/gamma(n + 1)**3, (n, 0, oo))
+    Sum(2**(-n)*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
+    exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
 
     References
     ==========
@@ -477,6 +477,7 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
 
     Note
     ====
+
     If the GeneralizedMultivariateLogGamma is too long to type use,
     `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG`
     If you want to pass the matrix omega instead of the constant delta, then use,
@@ -512,8 +513,8 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     >>> from sympy.stats import density
     >>> from sympy.stats.joint_rv import marginal_distribution
     >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega
-    >>> from sympy import Matrix, symbols
-    >>> omega = Matrix([[1, 0.5, 0.5], [0.5, 1, 0.5], [0.5, 0.5, 1]])
+    >>> from sympy import Matrix, symbols, S
+    >>> omega = Matrix([[1, S.Half, S.Half], [S.Half, 1, S.Half], [S.Half, S.Half, 1]])
     >>> v = 1
     >>> l, mu = [1, 1, 1], [1, 1, 1]
     >>> G = GeneralizedMultivariateLogGammaOmega('G', omega, v, l, mu)
@@ -527,8 +528,9 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
 
     See refernces of GeneralizedMultivariateLogGamma.
 
-    Note
-    ====
+    Notes
+    =====
+
     If the GeneralizedMultivariateLogGammaOmega is too long to type use,
     `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO`
     """

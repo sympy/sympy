@@ -59,10 +59,11 @@ def test_GeneralizedMultivariateLogGammaDistribution():
     from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO
     from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG
     from sympy import gamma
-    omega = Matrix([[1, 0.5, 0.5, 0.5],
-                     [0.5, 1, 0.5, 0.5],
-                     [0.5, 0.5, 1, 0.5],
-                     [0.5, 0.5, 0.5, 1]])
+    h = S.Half
+    omega = Matrix([[1, h, h, h],
+                     [h, 1, h, h],
+                     [h, h, 1, h],
+                     [h, h, h, 1]])
     v, l, mu = (4, [1, 2, 3, 4], [1, 2, 3, 4])
     y_1, y_2, y_3, y_4 = symbols('y_1:5', real=True)
     n = symbols('n', negative=False, integer=True)
@@ -84,23 +85,23 @@ def test_GeneralizedMultivariateLogGammaDistribution():
             "*gamma(n + 4)**3), (n, 0, oo)), (G[1], -oo, oo)), (G[2], -oo, oo)), (G[3]"
             ", -oo, oo))/5308416")
     assert str(marginal_distribution(G, G[0])(y_1)) == marg
-    omega_f1 = Matrix([[1, 0.5, 0.5]])
-    omega_f2 = Matrix([[1, 0.5, 0.5, 0.5],
-                     [0.5, 1, 2, 0.5],
-                     [0.5, 0.5, 1, 0.5],
-                     [0.5, 0.5, 0.5, 1]])
-    omega_f3 = Matrix([[6, 0.5, 0.5, 0.5],
-                     [0.5, 1, 2, 0.5],
-                     [0.5, 0.5, 1, 0.5],
-                     [0.5, 0.5, 0.5, 1]])
+    omega_f1 = Matrix([[1, h, h]])
+    omega_f2 = Matrix([[1, h, h, h],
+                     [h, 1, 2, h],
+                     [h, h, 1, h],
+                     [h, h, h, 1]])
+    omega_f3 = Matrix([[6, h, h, h],
+                     [h, 1, 2, h],
+                     [h, h, 1, h],
+                     [h, h, h, 1]])
     v_f = symbols("v_f", positive=False)
     l_f = [1, 2, v_f, 4]
     m_f = [v_f, 2, 3, 4]
-    omega_f4 = Matrix([[1, 0.5, 0.5, 0.5, 0.5],
-                     [0.5, 1, 0.5, 0.5, 0.5],
-                     [0.5, 0.5, 1, 0.5, 0.5],
-                     [0.5, 0.5, 0.5, 1, 0.5],
-                     [0.5, 0.5, 0.5, 0.5, 1]])
+    omega_f4 = Matrix([[1, h, h, h, h],
+                     [h, 1, h, h, h],
+                     [h, h, 1, h, h],
+                     [h, h, h, 1, h],
+                     [h, h, h, h, 1]])
     l_f1 = [1, 2, 3, 4, 5]
     omega_f5 = Matrix([[1]])
     mu_f5 = l_f5 = [1]
@@ -114,7 +115,7 @@ def test_GeneralizedMultivariateLogGammaDistribution():
     raises(ValueError, lambda: GMVLGO('G', omega_f4, v, l, mu))
     raises(ValueError, lambda: GMVLGO('G', omega, v, l_f1, mu))
     raises(ValueError, lambda: GMVLGO('G', omega_f5, v, l_f5, mu_f5))
-    raises(ValueError, lambda: GMVLG('G', 1.5, v, l, mu))
+    raises(ValueError, lambda: GMVLG('G', Rational(3, 2), v, l, mu))
 
 def test_MultivariateBeta():
     from sympy.stats.joint_rv_types import MultivariateBeta
