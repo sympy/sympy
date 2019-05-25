@@ -78,7 +78,8 @@ class Partition(FiniteSet):
 
         if not all(isinstance(part, FiniteSet) for part in args):
             raise ValueError(
-                "Each argument to Partition should be a list or a FiniteSet")
+                "Each argument to Partition should be " \
+                "a list, set, or a FiniteSet")
 
         # sort so we have a canonical reference for RGS
         U = Union(*args)
