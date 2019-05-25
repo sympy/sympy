@@ -64,17 +64,15 @@ class Partition(FiniteSet):
         {{4, 5}, {1, 2, 3}}
         """
         args = []
+        dups = False
         for arg in partition:
             if isinstance(arg, list):
                 as_set = set(arg)
                 if len(as_set) < len(arg):
-                    raise ValueError(
-                        "Partition contained duplicated elements.")
-                args.append(as_set)
-            else:
-                args.append(arg)
-
-        args = [_sympify(arg) for arg in args]
+                    dups = True
+                    break  # error below
+                arg = as_set
+            args.append(_sympify(arg))
 
         if not all(isinstance(part, FiniteSet) for part in args):
             raise ValueError(
@@ -83,8 +81,8 @@ class Partition(FiniteSet):
 
         # sort so we have a canonical reference for RGS
         U = Union(*args)
-        if len(U) < sum(len(arg) for arg in args):
-            raise ValueError("Partition contained duplicated elements.")
+        if dups or len(U) < sum(len(arg) for arg in args):
+            raise ValueError("Partition contained duplicate elements.")
 
         obj = FiniteSet.__new__(cls, *args)
         obj.members = tuple(U)
