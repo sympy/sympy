@@ -1292,11 +1292,6 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     >>> fps(atan(x), full=True).truncate()
     x - x**3/3 + x**5/5 + O(x**6)
 
-    Symbolic functions
-
-    >>> fps(x**n*sin(x)).truncate(8)
-    x**2*x**n - x**6*x**n/6 + O(x**(n + 8), x)
-
     See Also
     ========
 
