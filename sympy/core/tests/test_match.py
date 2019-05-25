@@ -399,10 +399,13 @@ def test_match_wild_wild():
 def test__combine_inverse():
     x, y = symbols("x y")
     assert Mul._combine_inverse(x*I*y, x*I) == y
-    assert Mul._combine_inverse(x*x**(1+y), x**(1+y)) == x
+    assert Mul._combine_inverse(x*x**(1 + y), x**(1 + y)) == x
     assert Mul._combine_inverse(x*I*y, y*I) == x
     assert Mul._combine_inverse(oo*I*y, y*I) == oo
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
+    assert Mul._combine_inverse(oo*I*y, oo*I) == y
+    assert Mul._combine_inverse(oo*y, -oo) == -y
+    assert Mul._combine_inverse(-oo*y, oo) == -y
     assert Add._combine_inverse(oo, oo) == S(0)
     assert Add._combine_inverse(oo*I, oo*I) == S(0)
     assert Add._combine_inverse(x*oo, x*oo) == S(0)
