@@ -2226,9 +2226,6 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
             raise NotImplementedError(
                 'Sampling the Inverse Normal Distribution requires Scipy.')
 
-    def _standardNormal_cdf(self, x):
-        return erf(sqrt(2)*(x - S.One)/2)/2 + S.Half
-
     def _cdf(self, x):
         from sympy.stats import cdf
         mu, s = self.mean, self.shape
