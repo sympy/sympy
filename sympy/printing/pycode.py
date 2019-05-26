@@ -362,6 +362,76 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         index = expr.args[1:]
         return "{}[{}]".format(str(base), ", ".join([self._print(ind) for ind in index]))
 
+    def _hprint_Pow(self, expr, rational=False, sqrt='math.sqrt'):
+        """Printing helper function for ``Pow``
+
+        Notes
+        =====
+
+        This only preprocesses the ``sqrt`` as math formatter
+
+        Examples
+        ========
+
+        >>> from sympy.functions import sqrt
+        >>> from sympy.printing.pycode import PythonCodePrinter
+        >>> from sympy.abc import x
+
+        Python code printer automatically looks up ``math.sqrt``.
+
+        >>> printer = PythonCodePrinter()
+        >>> printer._hprint_Pow(sqrt(x), rational=True)
+        'x**(0.5)'
+        >>> printer._hprint_Pow(sqrt(x), rational=False)
+        'math.sqrt(x)'
+        >>> printer._hprint_Pow(1/sqrt(x), rational=True)
+        'x**(-0.5)'
+        >>> printer._hprint_Pow(1/sqrt(x), rational=False)
+        '1/math.sqrt(x)'
+
+        Using sqrt from numpy or mpmath
+
+        >>> printer._hprint_Pow(sqrt(x), sqrt='numpy.sqrt')
+        'numpy.sqrt(x)'
+        >>> printer._hprint_Pow(sqrt(x), sqrt='mpmath.sqrt')
+        'mpmath.sqrt(x)'
+
+        See Also
+        ========
+
+        sympy.printing.str.StrPrinter._print_Pow
+        """
+        if expr.exp == S.Half and not rational:
+            func = self._module_format(sqrt)
+            arg = self._print(expr.base)
+            return '{func}({arg})'.format(func=func, arg=arg)
+
+        if expr.is_commutative:
+            if -expr.exp is S.Half and not rational:
+                func = self._module_format(sqrt)
+                num = self._print(S.One)
+                arg = self._print(expr.base)
+                return "{num}/{func}({arg})".format(
+                    num=num, func=func, arg=arg)
+
+        from .str import precedence
+        PREC = precedence(expr)
+
+        base_str = self.parenthesize(expr.base, PREC, strict=False)
+        exp_str = self.parenthesize(expr.exp, PREC, strict=False)
+        # XXX Implement a better parenthesis manager for printing Half.
+        # so that it can print like 'x**0.5' instead of 'x**(0.5)'
+        return "{}**{}".format(base_str, exp_str)
+
+    def _print_Pow(self, expr, rational=False):
+        return self._hprint_Pow(expr, rational=rational)
+
+    def _print_Rational(self, expr):
+        return self._print(expr.evalf())
+
+    def _print_Half(self, expr):
+        return self._print(expr.evalf())
+
 
 for k in PythonCodePrinter._kf:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
@@ -452,6 +522,10 @@ class MpmathPrinter(PythonCodePrinter):
     def _print_log1p(self, e):
         return '{0}({1}+1)'.format(
             self._module_format('mpmath.log'), self._print(e.args[0]))
+
+    def _print_Pow(self, expr, rational=False):
+        return self._hprint_Pow(expr, rational=rational, sqrt='mpmath.sqrt')
+
 
 for k in MpmathPrinter._kf:
     setattr(MpmathPrinter, '_print_%s' % k, _print_known_func)
@@ -574,17 +648,15 @@ class NumPyPrinter(PythonCodePrinter):
         #     own because StrPrinter doesn't define it.
         return '{0}({1})'.format(self._module_format('numpy.logical_not'), ','.join(self._print(i) for i in expr.args))
 
+    def _print_Pow(self, expr, rational=False):
+        return self._hprint_Pow(expr, rational=rational, sqrt='numpy.sqrt')
+
     def _print_Min(self, expr):
         return '{0}(({1}))'.format(self._module_format('numpy.amin'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Max(self, expr):
         return '{0}(({1}))'.format(self._module_format('numpy.amax'), ','.join(self._print(i) for i in expr.args))
 
-    def _print_Pow(self, expr):
-        if expr.exp == 0.5:
-            return '{0}({1})'.format(self._module_format('numpy.sqrt'), self._print(expr.base))
-        else:
-            return super(NumPyPrinter, self)._print_Pow(expr)
 
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format('numpy.angle'), self._print(expr.args[0]))
@@ -754,3 +826,6 @@ class SymPyPrinter(PythonCodePrinter):
         mod = expr.func.__module__ or ''
         return '%s(%s)' % (self._module_format(mod + ('.' if mod else '') + expr.func.__name__),
                            ', '.join(map(lambda arg: self._print(arg), expr.args)))
+
+    def _print_Pow(self, expr, rational=False):
+        return self._hprint_Pow(expr, rational=rational, sqrt='sympy.sqrt')

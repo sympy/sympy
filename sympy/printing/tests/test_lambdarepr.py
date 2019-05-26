@@ -1,4 +1,5 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify,Expr
+from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify, \
+                  Expr, sqrt
 from sympy.utilities.pytest import raises
 
 from sympy.printing.tensorflow import TensorflowPrinter
@@ -188,6 +189,12 @@ def test_multiple_sums():
     f_ref = s.subs(zip(args, vals)).doit()
     f_res = f(*vals)
     assert f_res == f_ref
+
+
+def test_sqrt():
+    prntr = LambdaPrinter()
+    assert prntr._print_Pow(sqrt(x), rational=False) == 'sqrt(x)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
 
 
 def test_settings():

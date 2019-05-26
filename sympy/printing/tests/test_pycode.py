@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
 from sympy.core.numbers import pi
-from sympy.functions import acos, Piecewise, sign
+from sympy.functions import acos, Piecewise, sign, sqrt
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol
 from sympy.printing.pycode import (
-    MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter
+    MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter,
+    SymPyPrinter
 )
 from sympy.utilities.pytest import raises
 from sympy.tensor import IndexedBase
@@ -19,14 +20,22 @@ p = IndexedBase("p")
 
 def test_PythonCodePrinter():
     prntr = PythonCodePrinter()
+
     assert not prntr.module_imports
+
     assert prntr.doprint(x**y) == 'x**y'
     assert prntr.doprint(Mod(x, 2)) == 'x % 2'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
     assert not prntr.module_imports
+
     assert prntr.doprint(pi) == 'math.pi'
     assert prntr.module_imports == {'math': {'pi'}}
+
+    assert prntr.doprint(x**(1/2)) == 'math.sqrt(x)'
+    assert prntr.doprint(sqrt(x)) == 'math.sqrt(x)'
+    assert prntr.module_imports == {'math': {'pi', 'sqrt'}}
+
     assert prntr.doprint(acos(x)) == 'math.acos(x)'
     assert prntr.doprint(Assignment(x, 2)) == 'x = 2'
     assert prntr.doprint(Piecewise((1, Eq(x, 0)),
@@ -68,6 +77,29 @@ def test_pycode_reserved_words():
     raises(ValueError, lambda: pycode(s1 + s2, error_on_reserved=True))
     py_str = pycode(s1 + s2)
     assert py_str in ('else_ + if_', 'if_ + else_')
+
+
+def test_sqrt():
+    prntr = PythonCodePrinter()
+    assert prntr._print_Pow(sqrt(x), rational=False) == 'math.sqrt(x)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(0.5)'
+
+    prntr = MpmathPrinter()
+    assert prntr._print_Pow(sqrt(x), rational=False) == 'mpmath.sqrt(x)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == \
+        'x**(mpmath.mpf(1)/mpmath.mpf(2))'
+
+    prntr = NumPyPrinter()
+    assert prntr._print_Pow(sqrt(x), rational=False) == 'numpy.sqrt(x)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(0.5)'
+
+    prntr = SciPyPrinter()
+    assert prntr._print_Pow(sqrt(x), rational=False) == 'numpy.sqrt(x)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(0.5)'
+
+    prntr = SymPyPrinter()
+    assert prntr._print_Pow(sqrt(x), rational=False) == 'sympy.sqrt(x)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(0.5)'
 
 
 class CustomPrintedObject(Expr):

@@ -31,6 +31,7 @@ from sympy.polys.rings import ring
 from sympy.polys.rootoftools import CRootOf
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.printing.lambdarepr import LambdaPrinter
+from sympy.printing.pycode import PythonCodePrinter
 from sympy.simplify.radsimp import _split_gcd
 from sympy.simplify.simplify import _is_sum_surds
 from sympy.utilities import (
@@ -1078,7 +1079,8 @@ class IntervalPrinter(LambdaPrinter):
         return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
 
     def _print_Pow(self, expr):
-        return super(IntervalPrinter, self)._print_Pow(expr, rational=True)
+        # XXX Isolate the math printer with python code printer.
+        return super(PythonCodePrinter, self)._print_Pow(expr, rational=True)
 
 
 @public
