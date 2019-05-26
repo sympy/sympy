@@ -669,7 +669,7 @@ class MatrixSpecial(MatrixRequired):
     @classmethod
     def _eval_eye(cls, rows, cols):
         def entry(i, j):
-            return S.One if i == j else S.Zero
+            return cls.one if i == j else cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
@@ -679,27 +679,27 @@ class MatrixSpecial(MatrixRequired):
                 if i == j:
                     return eigenvalue
                 elif j + 1 == i:
-                    return S.One
-                return S.Zero
+                    return cls.one
+                return cls.zero
         else:
             def entry(i, j):
                 if i == j:
                     return eigenvalue
                 elif i + 1 == j:
-                    return S.One
-                return S.Zero
+                    return cls.one
+                return cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
     def _eval_ones(cls, rows, cols):
         def entry(i, j):
-            return S.One
+            return cls.one
         return cls._new(rows, cols, entry)
 
     @classmethod
     def _eval_zeros(cls, rows, cols):
         def entry(i, j):
-            return S.Zero
+            return cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
@@ -2145,7 +2145,7 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return self * (S.One / other)
+        return self * (self.one / other)
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
@@ -2342,6 +2342,8 @@ class _MinimalMatrix(object):
     is_MatrixLike = True
     _sympify = staticmethod(sympify)
     _class_priority = 3
+    zero = S.Zero
+    one = S.One
 
     is_Matrix = True
     is_MatrixExpr = False
