@@ -1629,16 +1629,19 @@ def test_ElementwiseApplyFunction():
 def test_ZeroMatrix():
     from sympy import ZeroMatrix
     assert latex(ZeroMatrix(1, 1)) == r"\mathbb{0}"
+    assert latex(ZeroMatrix(1, 1, mat_symbol_style='bold')) == r"\mathbf{0}"
 
 
 def test_OneMatrix():
     from sympy import OneMatrix
     assert latex(OneMatrix(3, 4)) == r"\mathbb{1}"
+    assert latex(OneMatrix(3, 4), mat_symbol_style='bold') == r"\mathbf{1}"
 
 
 def test_Identity():
     from sympy import Identity
     assert latex(Identity(1)) == r"\mathbb{I}"
+    assert latex(Identity(1), mat_symbol_style='bold') == r"\mathbf{I}"
 
 
 def test_boolean_args_order():
