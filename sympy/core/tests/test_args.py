@@ -1501,6 +1501,11 @@ def test_sympy__stats__joint_rv_types__NormalGammaDistribution():
     from sympy.stats.joint_rv_types import NormalGammaDistribution
     assert _test_args(NormalGammaDistribution(1, 2, 3, 4))
 
+def test_sympy__stats__joint_rv_types__GeneralizedMultivariateLogGammaDistribution():
+    from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaDistribution
+    v, l, mu = (4, [1, 2, 3, 4], [1, 2, 3, 4])
+    assert _test_args(GeneralizedMultivariateLogGammaDistribution(S.Half, v, l, mu))
+
 def test_sympy__stats__joint_rv_types__MultivariateBetaDistribution():
     from sympy.stats.joint_rv_types import MultivariateBetaDistribution
     assert _test_args(MultivariateBetaDistribution([1, 2, 3]))

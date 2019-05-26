@@ -666,7 +666,6 @@ class ProductSet(Set):
                                 for j, b in enumerate(self.sets))
                                 for i, a in enumerate(self.sets)))
 
-
     @property
     def is_iterable(self):
         """
@@ -1168,6 +1167,7 @@ class Union(Set, LatticeOp, EvalfMixin):
             return roundrobin(*(iter(arg) for arg in self.args))
         else:
             raise TypeError("Not all constituent sets are iterable")
+
 
 class Intersection(Set, LatticeOp):
     """
