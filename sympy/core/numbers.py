@@ -1254,7 +1254,7 @@ class Float(Number):
         return False
 
     def _eval_is_integer(self):
-        return self._mpf_[2] == fzero[2]
+        return self._mpf_[2] >= 0
 
     def _eval_is_negative(self):
         if self._mpf_ == _mpf_ninf:

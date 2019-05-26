@@ -19,6 +19,7 @@ def test_gamma():
 
     assert gamma(-100) == zoo
     assert gamma(0) == zoo
+    assert gamma(-100.0) == zoo
 
     assert gamma(1) == 1
     assert gamma(2) == 1
