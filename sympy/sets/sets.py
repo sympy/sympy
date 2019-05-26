@@ -604,17 +604,6 @@ class ProductSet(Set):
     is_ProductSet = True
 
     def __new__(cls, *sets, **assumptions):
-        def flatten(arg):
-            if isinstance(arg, Set):
-                if arg.is_ProductSet:
-                    return sum(map(flatten, arg.args), [])
-                else:
-                    return [arg]
-            elif iterable(arg):
-                return sum(map(flatten, arg), [])
-            raise TypeError("Input must be Sets or iterables of Sets")
-        sets = flatten(list(sets))
-
         if EmptySet() in sets or len(sets) == 0:
             return EmptySet()
 
