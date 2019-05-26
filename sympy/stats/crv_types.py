@@ -2198,7 +2198,7 @@ def Normal(name, mean, std):
 
 
 #-------------------------------------------------------------------------------
-# Inverse Normal distribution ----------------------------------------------------------
+# Inverse Gaussian distribution ----------------------------------------------------------
 
 
 class GaussianInverseDistribution(SingleContinuousDistribution):
@@ -2224,7 +2224,7 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
             return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape))
         else:
             raise NotImplementedError(
-                'Sampling the Inverse Normal Distribution requires Scipy.')
+                'Sampling the Inverse Gaussian Distribution requires Scipy.')
 
     def _cdf(self, x):
         from sympy.stats import cdf
@@ -2247,10 +2247,10 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
 
 def GaussianInverse(name, mean, shape):
     r"""
-    Create a continuous random variable with an Inverse Normal distribution.
-    Inverse Normal distribution is also known as Wald distribution.
+    Create a continuous random variable with an Inverse Gaussian distribution.
+    Inverse Gaussian distribution is also known as Wald distribution.
 
-    The density of the Inverse Normal distribution is given by
+    The density of the Inverse Gaussian distribution is given by
 
     .. math::
         f(x) := \sqrt{\frac{\lambda}{2\pi x^3}} e^{-\frac{\lambda(x-\mu)^2}{2x\mu^2}}

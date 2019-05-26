@@ -548,12 +548,12 @@ def test_nakagami():
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
 
-def test_normal_inverse():
+def test_gaussian_inverse():
     # test for symbolic parameters
     a, b = symbols('a b')
     assert GaussianInverse('x', a, b)
 
-    # Inverse Normal distribution is also known as Wald distribution
+    # Inverse Gaussian distribution is also known as Wald distribution
     # `GaussianInverse` can also be referred by the name `Wald`
     a, b, z = symbols('a b z')
     X = Wald('x', a, b)
@@ -575,6 +575,13 @@ def test_normal_inverse():
     a = symbols('a', positive=True)
     b = symbols('b', positive=False)
     raises(ValueError, lambda: GaussianInverse('x', a, b))
+
+def test_sampling_gaussian_inverse():
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
+    X = GaussianInverse("x", 1, 1)
+    assert sample(X) in X.pspace.domain.set
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True, finite=True)
