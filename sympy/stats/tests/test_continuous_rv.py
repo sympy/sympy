@@ -13,7 +13,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
                          Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
-                         LogNormal, Maxwell, Nakagami, Normal, NormalInverse, Pareto,
+                         LogNormal, Maxwell, Nakagami, Normal, GaussianInverse, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, Wald, correlation,
@@ -154,7 +154,7 @@ def test_characteristic_function():
     assert cf(0) == 1
     assert cf(1).expand() == S(25)/26 + 5*I/26
 
-    X = NormalInverse('x', 1, 1)
+    X = GaussianInverse('x', 1, 1)
     cf = characteristic_function(X)
     assert cf(0) == 1
     assert cf(1) == exp(1 - sqrt(1 - 2*I))
@@ -551,10 +551,10 @@ def test_nakagami():
 def test_normal_inverse():
     # test for symbolic parameters
     a, b = symbols('a b')
-    assert NormalInverse('x', a, b)
+    assert GaussianInverse('x', a, b)
 
     # Inverse Normal distribution is also known as Wald distribution
-    # `NormalInverse` can also be referred by the name `Wald`
+    # `GaussianInverse` can also be referred by the name `Wald`
     a, b, z = symbols('a b z')
     X = Wald('x', a, b)
     assert density(X)(z) == sqrt(2)*sqrt(b/z**3)*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
@@ -562,7 +562,7 @@ def test_normal_inverse():
     a, b = symbols('a b', positive=True)
     z = Symbol('z', positive=True)
 
-    X = NormalInverse('x', a, b)
+    X = GaussianInverse('x', a, b)
     assert density(X)(z) == sqrt(2)*sqrt(b)*sqrt(z**(-3))*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
     assert E(X) == a
     assert variance(X).expand() == a**3/b
@@ -570,11 +570,11 @@ def test_normal_inverse():
          erf(sqrt(2)*sqrt(b)*(-1 + z/a)/(2*sqrt(z)))/2 + S.Half
 
     a = symbols('a', positive=False)
-    raises(ValueError, lambda: NormalInverse('x', a, b))
+    raises(ValueError, lambda: GaussianInverse('x', a, b))
 
     a = symbols('a', positive=True)
     b = symbols('b', positive=False)
-    raises(ValueError, lambda: NormalInverse('x', a, b))
+    raises(ValueError, lambda: GaussianInverse('x', a, b))
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True, finite=True)

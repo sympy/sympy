@@ -89,7 +89,7 @@ __all__ = ['ContinuousRV',
 'Maxwell',
 'Nakagami',
 'Normal',
-'NormalInverse',
+'GaussianInverse',
 'Pareto',
 'QuadraticU',
 'RaisedCosine',
@@ -2201,7 +2201,7 @@ def Normal(name, mean, std):
 # Inverse Normal distribution ----------------------------------------------------------
 
 
-class NormalInverseDistribution(SingleContinuousDistribution):
+class GaussianInverseDistribution(SingleContinuousDistribution):
     _argnames = ('mean', 'shape')
 
     @property
@@ -2248,7 +2248,7 @@ class NormalInverseDistribution(SingleContinuousDistribution):
         return exp((s/mu)*(1 - sqrt(1 - (2*mu**2*t)/s)))
 
 
-def NormalInverse(name, mean, shape):
+def GaussianInverse(name, mean, shape):
     r"""
     Create a continuous random variable with an Inverse Normal distribution.
     Inverse Normal distribution is also known as Wald distribution.
@@ -2272,13 +2272,13 @@ def NormalInverse(name, mean, shape):
     Examples
     ========
 
-    >>> from sympy.stats import NormalInverse, density, cdf, E, std, skewness
+    >>> from sympy.stats import GaussianInverse, density, cdf, E, std, skewness
     >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu", positive=True)
     >>> lamda = Symbol("lambda", positive=True)
     >>> z = Symbol("z", positive=True)
-    >>> X = NormalInverse("x", mu, lamda)
+    >>> X = GaussianInverse("x", mu, lamda)
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
@@ -2309,9 +2309,9 @@ def NormalInverse(name, mean, shape):
 
     """
 
-    return rv(name, NormalInverseDistribution, (mean, shape))
+    return rv(name, GaussianInverseDistribution, (mean, shape))
 
-Wald = NormalInverse
+Wald = GaussianInverse
 
 #-------------------------------------------------------------------------------
 # Pareto distribution ----------------------------------------------------------
