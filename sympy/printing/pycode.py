@@ -608,6 +608,10 @@ class NumPyPrinter(PythonCodePrinter):
             func = self._module_format('numpy.array')
         return "%s(%s)" % (func, self._print(expr.tolist()))
 
+    def _print_BlockMatrix(self, expr):
+        return '{0}({1})'.format(self._module_format('numpy.block'),
+                                 self._print(expr.args[0].tolist()))
+
     def _print_CodegenArrayTensorProduct(self, expr):
         array_list = [j for i, arg in enumerate(expr.args) for j in
                 (self._print(arg), "[%i, %i]" % (2*i, 2*i+1))]
