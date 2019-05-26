@@ -107,7 +107,7 @@ class gamma(Function):
                 return S.NaN
             elif arg is S.Infinity:
                 return S.Infinity
-            elif arg.is_Integer:
+            elif arg.is_integer:
                 if arg.is_positive:
                     return factorial(arg - 1)
                 else:
