@@ -14,10 +14,10 @@ from .compatibility import reduce, range
 from .expr import Expr
 from .evaluate import global_distribute
 
+
+
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
-
-
 class NC_Marker:
     is_Order = False
     is_Mul = False
@@ -1029,9 +1029,11 @@ class Mul(Expr, AssocOp):
     @staticmethod
     def _combine_inverse(lhs, rhs):
         """
-        Returns lhs/rhs, but treats arguments like symbols, so things like
-        oo/oo return 1, instead of a nan.
+        Returns lhs/rhs, but treats arguments like symbols, so things
+        like oo/oo return 1 (instead of a nan) and ``I`` behaves like
+        a symbol instead of sqrt(-1).
         """
+        from .symbol import Dummy
         if lhs == rhs:
             return S.One
 
@@ -1044,25 +1046,30 @@ class Mul(Expr, AssocOp):
             return False
         if check(lhs, rhs) or check(rhs, lhs):
             return S.One
-        if lhs.is_Mul and rhs.is_Mul:
-            a = list(lhs.args)
-            b = [1]
-            for x in rhs.args:
-                if x in a:
-                    a.remove(x)
-                elif -x in a:
-                    a.remove(-x)
-                    b.append(-1)
-                else:
-                    b.append(x)
-            return lhs.func(*a)/rhs.func(*b)
+        if any(i.is_Pow or i.is_Mul for i in (lhs, rhs)):
+            # gruntz and limit wants a literal I to not combine
+            # with a power of -1
+            d = Dummy('I')
+            _i = {S.ImaginaryUnit: d}
+            i_ = {d: S.ImaginaryUnit}
+            a = lhs.xreplace(_i).as_powers_dict()
+            b = rhs.xreplace(_i).as_powers_dict()
+            blen = len(b)
+            for bi in tuple(b.keys()):
+                if bi in a:
+                    a[bi] -= b.pop(bi)
+                    if not a[bi]:
+                        a.pop(bi)
+            if len(b) != blen:
+                lhs = Mul(*[k**v for k, v in a.items()]).xreplace(i_)
+                rhs = Mul(*[k**v for k, v in b.items()]).xreplace(i_)
         return lhs/rhs
 
     def as_powers_dict(self):
         d = defaultdict(int)
         for term in self.args:
-            b, e = term.as_base_exp()
-            d[b] += e
+            for b, e in term.as_powers_dict().items():
+                d[b] += e
         return d
 
     def as_numer_denom(self):
