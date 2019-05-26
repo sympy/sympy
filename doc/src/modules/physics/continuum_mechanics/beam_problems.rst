@@ -5,7 +5,7 @@ Solving Beam Bending Problems using Singularity Functions
 To make this document easier to read, enable pretty printing:
 
 .. plot::
-   :context:
+   :context: reset
    :format: doctest
    :include-source: True
 
@@ -175,7 +175,7 @@ final loading can be displayed:
        - 258⋅<x>   + 52⋅<x>   - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
 
 At this point, the beam is fully defined and the internal shear and bending
-moments are calculated like so:
+moments are calculated:
 
 .. plot::
    :context:
@@ -246,7 +246,7 @@ Example 2
 ---------
 
 There is a beam of length 30 meters. A moment of magnitude 120 Nm is
-applied in the clockwise direction at the end of the beam. A pointload
+applied in the clockwise direction at the end of the beam. A point load
 of magnitude 8 N is applied from the top of the beam at the starting
 point. There are two simple supports below the beam. One at the end
 and another one at a distance of 10 meters from the start. The
@@ -377,7 +377,7 @@ Example 4
 An overhanging beam of length 8 meters is pinned at 1 meter from starting point
 and supported by a roller 1 meter before the other end. It is subjected
 to a distributed constant load of 10 KN/m from the starting point till
-2 meters away from it. Two pointloads of 20KN and 8KN are applied at
+2 meters away from it. Two point loads of 20KN and 8KN are applied at
 5 meters and 7.5 meters away from the starting point respectively.
 
 ::
@@ -738,7 +738,7 @@ Example 9
 ---------
 
 There is a cantilever beam of length 4 meters. For first 2 meters
-its moment of inertia is ``1.5*I`` and ``I`` for the other end.
+its moment of inertia is ``1.5*I`` and ``I`` for the rest.
 A pointload of magnitude 20 N is applied from the top at its free end.
 
 ::
@@ -791,7 +791,7 @@ Example 10
 
 A combined beam, with constant flexural rigidity ``E*I``, is formed by joining
 a Beam of length ``2*l`` to the right of another Beam of length ``l``. The whole beam
-is fixed at both of its both end. A point load of magnitude ``P`` is also applied
+is fixed at both of its ends. A point load of magnitude ``P`` is also applied
 from the top at a distance of ``2*l`` from starting point.
 
 ::
@@ -866,7 +866,7 @@ from the top at a distance of ``2*l`` from starting point.
                         E⋅I                                               E⋅I                                                                             E⋅I
 
 Example 11
-==========
+----------
 
 Any type of load defined by a polynomial can be applied to the beam. This
 allows approximation of arbitrary load distributions. The following example

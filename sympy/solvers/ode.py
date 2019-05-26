@@ -4055,7 +4055,7 @@ def ode_nth_order_reducible(eq, func, order, match):
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2))
+    >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2), 0)
     >>> dsolve(eq, f(x), hint='nth_order_reducible')
     ... # doctest: +NORMALIZE_WHITESPACE
     Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
@@ -4132,11 +4132,14 @@ def _nth_algebraic_match(eq, func):
     var = func.args[0]
     subs_eqn = replace(eq, var)
     try:
-        solns = solve(subs_eqn, func)
+        # turn off simplification to protect Integrals that have
+        # _t instead of fx in them and would otherwise factor
+        # as t_*Integral(1, x)
+        solns = solve(subs_eqn, func, simplify=False)
     except NotImplementedError:
         solns = []
 
-    solns = [unreplace(soln, var) for soln in solns]
+    solns = [simplify(unreplace(soln, var)) for soln in solns]
     solns = [Equality(func, soln) for soln in solns]
     return {'var':var, 'solutions':solns}
 

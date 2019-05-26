@@ -38,6 +38,7 @@ from sympy.sets.sets import Set
 from sympy.matrices import Matrix, MatrixBase
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -506,6 +507,9 @@ def _solve_as_rational(f, symbol, domain):
             # coefficients in a ring over which finding roots
             # isn't implemented yet, e.g. ZZ[a] for some symbol a
             return ConditionSet(symbol, Eq(f, 0), domain)
+        except CoercionFailed:
+            # contained oo, zoo or nan
+            return S.EmptySet
     else:
         valid_solns = _solveset(g, symbol, domain)
         invalid_solns = _solveset(h, symbol, domain)
@@ -2314,20 +2318,17 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) +
-        log(sin(2))), Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
-        Mod(log(sin(2)), 2*I*pi)), Integers), 2)}
+    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
     {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
     (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
-    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), Integers),
-    ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi +
-    Mod(-log(3), 2*I*pi)))), Integers)),
-    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), Integers),
-    ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi +
-        Mod(-log(3), 2*I*pi)))), Integers))}
+    (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
+    ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers)),
+    (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
+    ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers))}
 
     """
 
@@ -2929,35 +2930,34 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([(x+y)**2 - 4, x + y - 2], [x, y])
     {(2 - y, y)}
 
-    2. If some of the equations are non polynomial equation then `nonlinsolve`
-    will call `substitution` function and returns real and complex solutions,
+    2. If some of the equations are non-polynomial then `nonlinsolve`
+    will call the `substitution` function and return real and complex solutions,
     if present.
 
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) +
-        log(sin(2))), Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
-        Mod(log(sin(2)), 2*I*pi)), Integers), 2)}
+    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
 
-    3. If system is Non linear polynomial zero dimensional then it returns
-    both solution (real and complex solutions, if present using
-    `solve_poly_system`):
+    3. If system is non-linear polynomial and zero-dimensional then it
+    returns both solution (real and complex solutions, if present) using
+    `solve_poly_system`:
 
     >>> from sympy import sqrt
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
     {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
 
-    4. `nonlinsolve` can solve some linear(zero or positive dimensional)
-    system (because it is using `groebner` function to get the
-    groebner basis and then `substitution` function basis as the new `system`).
-    But it is not recommended to solve linear system using `nonlinsolve`,
-    because `linsolve` is better for all kind of linear system.
+    4. `nonlinsolve` can solve some linear (zero or positive dimensional)
+    system (because it uses the `groebner` function to get the
+    groebner basis and then uses the `substitution` function basis as the
+    new `system`). But it is not recommended to solve linear system using
+    `nonlinsolve`, because `linsolve` is better for general linear systems.
 
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z])
     {(3*z - 5, 4 - z, z)}
 
-    5. System having polynomial equations and only real solution is present
-    (will be solved using `solve_poly_system`):
+    5. System having polynomial equations and only real solution is
+    solved using `solve_poly_system`:
 
     >>> e1 = sqrt(x**2 + y**2) - 10
     >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3

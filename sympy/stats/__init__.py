@@ -13,6 +13,7 @@ Queries on random expressions can be made using the functions
 ------------------------- -----------------------------
  ``P(condition)``          Probability
  ``E(expression)``         Expected value
+ ``H(expression)``         Entropy
  ``variance(expression)``  Variance
  ``density(expression)``   Probability Density Function
  ``sample(expression)``    Produce a realization
@@ -42,7 +43,8 @@ from . import rv_interface
 from .rv_interface import (
     cdf, characteristic_function, covariance, density, dependent, E, given, independent, P, pspace,
     random_symbols, sample, sample_iter, skewness, std, variance, where,
-    correlation, moment, cmoment, smoment, sampling_density, moment_generating_function,
+    correlation, moment, cmoment, smoment, sampling_density, moment_generating_function, entropy, H,
+    quantile
 )
 __all__.extend(rv_interface.__all__)
 
@@ -56,7 +58,7 @@ __all__.extend(frv_types.__all__)
 from . import crv_types
 from .crv_types import (
     ContinuousRV,
-    Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
+    Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
     Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
     GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogNormal,
     Maxwell, Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh,

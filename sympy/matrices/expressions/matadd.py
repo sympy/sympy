@@ -31,13 +31,15 @@ class MatAdd(MatrixExpr, Add):
     """
     is_MatAdd = True
 
+    identity = GenericZeroMatrix()
+
     def __new__(cls, *args, **kwargs):
         if not args:
-            return GenericZeroMatrix()
+            return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericZeroMatrix().shape
-        args = filter(lambda i: GenericZeroMatrix() != i, args)
+        args = filter(lambda i: cls.identity != i, args)
         args = list(map(sympify, args))
         check = kwargs.get('check', False)
 
@@ -52,8 +54,8 @@ class MatAdd(MatrixExpr, Add):
     def shape(self):
         return self.args[0].shape
 
-    def _entry(self, i, j, expand=None):
-        return Add(*[arg._entry(i, j) for arg in self.args])
+    def _entry(self, i, j, **kwargs):
+        return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])
 
     def _eval_transpose(self):
         return MatAdd(*[transpose(arg) for arg in self.args]).doit()

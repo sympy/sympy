@@ -738,7 +738,13 @@ class Ellipse(GeometrySet):
             else:
                 return False
         elif isinstance(o, Line2D):
-            return len(self.intersection(o)) == 1
+            hit = self.intersection(o)
+            if not hit:
+                return False
+            if len(hit) == 1:
+                return True
+            # might return None if it can't decide
+            return hit[0].equals(hit[1])
         elif isinstance(o, Ray2D):
             intersect = self.intersection(o)
             if len(intersect) == 1:
@@ -1021,6 +1027,36 @@ class Ellipse(GeometrySet):
         Circle(Point2D(1, 2), Max(a, b))
         """
         return Circle(self.center, Max(self.hradius, self.vradius))
+
+    def director_circle(self):
+        """
+        Returns a Circle consisting of all points where two perpendicular
+        tangent lines to the ellipse cross each other.
+
+        Returns
+        =======
+
+        Circle
+            A director circle returned as a geometric object.
+
+        Examples
+        ========
+
+        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> c = Point(3,8)
+        >>> Ellipse(c, 7, 9).director_circle()
+        Circle(Point2D(3, 8), sqrt(130))
+        >>> a, b = symbols('a b')
+        >>> Ellipse(c, a, b).director_circle()
+        Circle(Point2D(3, 8), sqrt(a**2 + b**2))
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Director_circle
+
+        """
+        return Circle(self.center, sqrt(self.hradius**2 + self.vradius**2))
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.

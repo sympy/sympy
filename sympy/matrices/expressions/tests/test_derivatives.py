@@ -3,10 +3,14 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
-from sympy import MatrixSymbol, Inverse, symbols, Determinant, Trace, Derivative, sin, exp, cos, tan, log
+from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
+                  Derivative, sin, exp, cos, tan, log, Lambda, S, sqrt,
+                  hadamard_product, DiagonalizeVector)
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
+from sympy.matrices.expressions import hadamard_power
 
 k = symbols("k")
+i, j = symbols("i j")
 
 X = MatrixSymbol("X", k, k)
 x = MatrixSymbol("x", k, 1)
@@ -36,6 +40,13 @@ def _check_derivative_with_explicit_matrix(expr, x, diffexpr, dim=2):
     diffexpr = diffexpr.as_explicit()
 
     assert expr.diff(x).reshape(*diffexpr.shape).tomatrix() == diffexpr
+
+
+def test_matrix_derivative_by_scalar():
+    assert A.diff(i) == ZeroMatrix(k, k)
+    assert (A*(X + B)*c).diff(i) == ZeroMatrix(k, 1)
+    assert x.diff(i) == ZeroMatrix(k, 1)
+    assert (x.T*y).diff(i) == ZeroMatrix(1, 1)
 
 
 def test_matrix_derivative_non_matrix_result():
@@ -288,6 +299,30 @@ def test_mixed_deriv_mixed_expressions():
     assert expr.diff(A) == (3*Trace(A)**2)*Identity(k)
 
 
+def test_derivatives_matrix_norms():
+
+    expr = x.T*y
+    assert expr.diff(x) == y
+
+    expr = (x.T*y)**S.Half
+    assert expr.diff(x) == y/(2*sqrt(x.T*y))
+
+    expr = (x.T*x)**S.Half
+    assert expr.diff(x) == x*(x.T*x)**(-S.Half)
+
+    expr = (c.T*a*x.T*b)**S.Half
+    assert expr.diff(x) == b/(2*sqrt(c.T*a*x.T*b))*c.T*a
+
+    expr = (c.T*a*x.T*b)**(S.One/3)
+    assert expr.diff(x) == b*(c.T*a*x.T*b)**(-2*S.One/3)*c.T*a/3
+
+    expr = (a.T*X*b)**S.Half
+    assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T
+
+    expr = d.T*x*(a.T*X*b)**S.Half*y.T*c
+    assert expr.diff(X) == a*x.T*d/(2*sqrt(a.T*X*b))*y.T*c*b.T
+
+
 def test_derivatives_elementwise_applyfunc():
     from sympy.matrices.expressions.diagonal import DiagonalizeVector
 
@@ -324,8 +359,41 @@ def test_derivatives_elementwise_applyfunc():
     #assert expr.diff(X) == ...
     #_check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
 
+    expr = a.T*A*X.applyfunc(sin)*B*b
+    assert expr.diff(X) == DiagonalizeVector(A.T*a)*X.applyfunc(cos)*DiagonalizeVector(B*b)
+
     expr = a.T * (A*X.applyfunc(sin)*B).applyfunc(log) * b
-    # assert expr.diff(X) == ...
+    # TODO: wrong
+    # assert expr.diff(X) == A.T*DiagonalizeVector(a)*(A*X.applyfunc(sin)*B).applyfunc(Lambda(k, 1/k))*DiagonalizeVector(b)*B.T
 
     expr = a.T * (X.applyfunc(sin)).applyfunc(log) * b
-    # assert expr.diff(X) == ...
+    # TODO: wrong
+    # assert expr.diff(X) == DiagonalizeVector(a)*X.applyfunc(sin).applyfunc(Lambda(k, 1/k))*DiagonalizeVector(b)
+
+
+def test_derivatives_of_hadamard_expressions():
+
+    # Hadamard Product
+
+    expr = hadamard_product(a, x, b)
+    assert expr.diff(x) == DiagonalizeVector(hadamard_product(b, a))
+
+    expr = a.T*hadamard_product(A, X, B)*b
+    assert expr.diff(X) == DiagonalizeVector(a)*hadamard_product(B, A)*DiagonalizeVector(b)
+
+    # Hadamard Power
+
+    expr = hadamard_power(x, 2)
+    assert expr.diff(x).doit() == 2*DiagonalizeVector(x)
+
+    expr = hadamard_power(x.T, 2)
+    assert expr.diff(x).doit() == 2*DiagonalizeVector(x)
+
+    expr = hadamard_power(x, S.Half)
+    assert expr.diff(x) == S.Half*DiagonalizeVector(hadamard_power(x, -S.Half))
+
+    expr = hadamard_power(a.T*X*b, 2)
+    assert expr.diff(X) == 2*a*a.T*X*b*b.T
+
+    expr = hadamard_power(a.T*X*b, S.Half)
+    assert expr.diff(X) == a/2*hadamard_power(a.T*X*b, -S.Half)*b.T

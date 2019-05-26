@@ -3110,6 +3110,22 @@ def test_MatrixExpressions():
     assert pretty(Z) == ascii_str
     assert upretty(Z) == ucode_str
 
+    # Apply function elementwise:
+
+    expr = (X.T*X).applyfunc(sin)
+
+    ascii_str = """\
+   / T     \\\n\
+sin\\X *X.../\
+"""
+    ucode_str = u("""\
+   ⎛ T     ⎞\n\
+sin⎝X ⋅X...⎠\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+
 def test_pretty_dotproduct():
     from sympy.matrices import Matrix, MatrixSymbol
     from sympy.matrices.expressions.dotproduct import DotProduct
@@ -4172,6 +4188,11 @@ GroebnerBasis⎝⎣2⋅x - y  - y + 1, y  + 2⋅y  - 3⋅y  - 16⋅y + 7⎦, x, 
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+def test_pretty_UniversalSet():
+    assert pretty(S.UniversalSet) == "UniversalSet"
+    assert upretty(S.UniversalSet) == u'𝕌'
 
 
 def test_pretty_Boolean():

@@ -1576,6 +1576,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('&#x2205;'))
         return x
 
+    def _print_UniversalSet(self, e):
+        x = self.dom.createElement('mo')
+        x.appendChild(self.dom.createTextNode('&#x1D54C;'))
+        return x
+
     def _print_Adjoint(self, expr):
         from sympy.matrices import MatrixSymbol
         mat = expr.arg
