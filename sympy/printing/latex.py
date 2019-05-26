@@ -1591,20 +1591,20 @@ class LatexPrinter(Printer):
             return "%s^{%s}" % (self._print(base), self._print(exp))
 
     def _print_MatrixSymbol(self, expr):
-        return self._print_Symbol(expr,
-                                  style=self._settings['mat_symbol_style'])
+        return self._print_Symbol(expr, style=self._settings[
+            'mat_symbol_style'])
 
     def _print_ZeroMatrix(self, Z):
-        return r"\mathbb{0}" if not self._settings['mat_symbol_style'
-            ] else r"\mathbf{0}"
+        return r"\mathbb{0}" if self._settings[
+            'mat_symbol_style'] == 'plain' else r"\mathbf{0}"
 
     def _print_OneMatrix(self, O):
-        return r"\mathbb{1}" if not self._settings['mat_symbol_style'
-            ] else r"\mathbf{1}"
+        return r"\mathbb{1}" if not self._settings[
+            'mat_symbol_style'] == 'plain' else r"\mathbf{1}"
 
     def _print_Identity(self, I):
-        return r"\mathbb{I}" if not self._settings['mat_symbol_style'
-            ] else r"\mathbf{I}"
+        return r"\mathbb{I}" if not self._settings[
+            'mat_symbol_style'] == 'plain' else r"\mathbf{I}"
 
     def _print_NDimArray(self, expr):
 
