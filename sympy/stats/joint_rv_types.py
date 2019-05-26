@@ -77,7 +77,8 @@ class MultivariateNormalDistribution(JointDistribution):
         k = len(self.mu)
         return S.Reals**k
 
-    def check(self, mu, sigma):
+    @staticmethod
+    def check(mu, sigma):
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the mean vector and covariance matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
@@ -118,7 +119,8 @@ class MultivariateLaplaceDistribution(JointDistribution):
         k = len(self.mu)
         return S.Reals**k
 
-    def check(self, mu, sigma):
+    @staticmethod
+    def check(mu, sigma):
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the mean vector and covariance matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
@@ -152,7 +154,8 @@ class MultivariateTDistribution(JointDistribution):
         k = len(self.mu)
         return S.Reals**k
 
-    def check(self, mu, sigma, v):
+    @staticmethod
+    def check(mu, sigma, v):
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the location vector and shape matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
@@ -197,7 +200,8 @@ class NormalGammaDistribution(JointDistribution):
     _argnames = ['mu', 'lamda', 'alpha', 'beta']
     is_Continuous=True
 
-    def check(self, mu, lamda, alpha, beta):
+    @staticmethod
+    def check(mu, lamda, alpha, beta):
         _value_check(mu.is_real, "Location must be real.")
         _value_check(lamda > 0, "Lambda must be positive")
         _value_check(alpha > 0, "alpha must be positive")
@@ -259,7 +263,8 @@ class MultivariateBetaDistribution(JointDistribution):
     _argnames = ['alpha']
     is_Continuous = True
 
-    def check(self, alpha):
+    @staticmethod
+    def check(alpha):
         _value_check(len(alpha) >= 2, "At least two categories should be passed.")
         for a_k in alpha:
             _value_check((a_k > 0) != False, "Each concentration parameter"
@@ -332,7 +337,8 @@ class MultivariateEwensDistribution(JointDistribution):
     is_Discrete = True
     is_Continuous = False
 
-    def check(self, n, theta):
+    @staticmethod
+    def check(n, theta):
         _value_check(isinstance(n, Integer) and (n > 0) == True,
                         "sample size should be positive integer.")
         _value_check(theta.is_positive, "mutation rate should be positive.")
@@ -559,7 +565,8 @@ class MultinomialDistribution(JointDistribution):
     is_Continuous=False
     is_Discrete = True
 
-    def check(self, n, p):
+    @staticmethod
+    def check(n, p):
         _value_check(n > 0,
                         "number of trials must be a positve integer")
         for p_k in p:
@@ -627,7 +634,8 @@ class NegativeMultinomialDistribution(JointDistribution):
     is_Continuous=False
     is_Discrete = True
 
-    def check(self, k0, p):
+    @staticmethod
+    def check(k0, p):
         _value_check(k0 > 0,
                         "number of failures must be a positve integer")
         for p_k in p:
