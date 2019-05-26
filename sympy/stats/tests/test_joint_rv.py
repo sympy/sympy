@@ -59,7 +59,7 @@ def test_MultivariateBeta():
     from sympy.stats.joint_rv_types import MultivariateBeta
     from sympy import gamma
     a1, a2 = symbols('a1, a2', positive=True)
-    a1_f, a2_f = symbols('a1, a2', positive=False)
+    a1_f, a2_f = symbols('a1, a2', positive=False, real=True)
     mb = MultivariateBeta('B', [a1, a2])
     mb_c = MultivariateBeta('C', a1, a2)
     assert density(mb)(1, 2) == S(2)**(a2 - 1)*gamma(a1 + a2)/\

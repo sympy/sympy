@@ -251,16 +251,16 @@ def test_beta_noncentral():
     a, b, c = symbols('a b c')
     assert BetaNoncentral('x', a, b, c)
 
-    a = Symbol('a', positive=False)
+    a = Symbol('a', positive=False, real=True)
     raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
 
     a = Symbol('a', positive=True)
-    b = Symbol('b', positive=False)
+    b = Symbol('b', positive=False, real=True)
     raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
 
     a = Symbol('a', positive=True)
     b = Symbol('b', positive=True)
-    c = Symbol('c', nonnegative=False)
+    c = Symbol('c', nonnegative=False, real=True)
     raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
 
 def test_betaprime():
