@@ -94,7 +94,7 @@ def test_GeneralizedMultivariateLogGammaDistribution():
                      [h, 1, 2, h],
                      [h, h, 1, h],
                      [h, h, h, 1]])
-    v_f = symbols("v_f", positive=False)
+    v_f = symbols("v_f", positive=False, real=True)
     l_f = [1, 2, v_f, 4]
     m_f = [v_f, 2, 3, 4]
     omega_f4 = Matrix([[1, h, h, h, h],
