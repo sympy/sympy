@@ -550,7 +550,8 @@ class Set(Basic):
     def __pow__(self, exp):
         if not sympify(exp).is_Integer and exp >= 0:
             raise ValueError("%s: Exponent must be a positive Integer" % exp)
-        return ProductSet([self]*exp)
+        sets = [self]*exp
+        return ProductSet(*sets)
 
     def __sub__(self, other):
         return Complement(self, other)
