@@ -40,12 +40,15 @@ class ArrayComprehension(Basic):
         obj = Basic.__new__(cls, *arglist, **assumptions)
         obj._expr = obj._args[0]
         obj._bounds = obj._args[1:]
+        obj._shape = cls._calculate_shape_from_bounds(obj._bounds)
+        obj._rank = len(obj._shape)
+        obj._loop_size = cls._calculate_loop_size(obj._shape)
         return obj
 
     @property
     def expr(self):
         """
-        Return the expression that will be expanded to an array
+        Returns the expression that will be expanded to an array
 
         Examples
         ========
@@ -61,7 +64,7 @@ class ArrayComprehension(Basic):
     @property
     def bounds(self):
         """
-        Return a list of the bounds that will be applied while expanding the array. Each
+        Returns a list of the bounds that will be applied while expanding the array. Each
         bound contrains firstly the an variable (not necessarily to be component of the
         expression, e.g. an array of constant). Then the lower bound and the upper bound
         define the length of this expansion.
@@ -80,7 +83,8 @@ class ArrayComprehension(Basic):
     @property
     def free_symbols(self):
         """
-        Return a set of the free_symbols in the array.
+        Returns a set of the free_symbols in the array. Variables appeared in the bounds
+        are supposed to be excluded from the free symbol set.
 
         Examples
         ========
@@ -103,17 +107,87 @@ class ArrayComprehension(Basic):
                 expr_free_sym = expr_free_sym.union(sup.free_symbols)
         return expr_free_sym
 
+    @property
+    def shape(self):
+        """
+        Returns the shape of the expanded array, which can have symbols. Note that both
+        the lower and the upper bounds are included while calculating the shape.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ArrayComprehension
+        >>> from sympy.abc import i, j, k
+        >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
+        >>> a.shape
+        (4, 3)
+        >>> b = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k+3))
+        >>> b.shape
+        (4, k + 3)
+        """
+        return self._shape
+
+    def rank(self):
+        """
+        Returns the rank of the expanded array.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ArrayComprehension
+        >>> from sympy.abc import i, j, k
+        >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
+        >>> a.rank()
+        2
+        """
+        return self._rank
+
+    def __len__(self):
+        """
+        Overload common function len().Returns the number of element in the expanded
+        array. Note that symbolic length is not supported and will raise an error.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ArrayComprehension
+        >>> from sympy.abc import i, j, k
+        >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
+        >>> len(a)
+        12
+        """
+        if len(self._loop_size.free_symbols) != 0:
+            raise ValueError('Symbolic length is not supported')
+        return self._loop_size
+
     @classmethod
     def _check_bounds_validity(cls, expr, bounds):
         bounds = sympify(bounds)
         for var, inf, sup in bounds:
             if any(not isinstance(i, Expr) for i in [inf, sup]):
                 raise TypeError('Bounds should be an Expression(combination of Integer and Symbol)')
-            if isinstance(inf, Integer) and isinstance(sup, Integer) and (inf > sup) == True:
+            if (inf > sup) == True:
                 raise ValueError('Lower bound should be inferior to upper bound')
             if var in inf.free_symbols or var in sup.free_symbols:
                 raise ValueError('Variable should not be part of its bounds')
         return bounds
+
+    @classmethod
+    def _calculate_shape_from_bounds(cls, bounds):
+        shape = []
+        for var, inf, sup in bounds:
+            shape.append(sup - inf + 1)
+        return tuple(shape)
+
+    @classmethod
+    def _calculate_loop_size(cls, shape):
+        if len(shape) == 0:
+            return 0
+        loop_size = 1
+        for l in shape:
+            loop_size = loop_size * l
+
+        return loop_size
 
     def doit(self):
         expr = self._expr
