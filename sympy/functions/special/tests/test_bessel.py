@@ -338,8 +338,11 @@ def test_bessel_nan():
 
 def test_conjugate():
     from sympy import conjugate, I, Symbol
-    n, z, x = Symbol('n'), Symbol('z', extended_real=False), Symbol('x', real=True)
-    y, t = Symbol('y', real=True, positive=True), Symbol('t', negative=True)
+    n = Symbol('n')
+    z = Symbol('z', extended_real=False)
+    x = Symbol('x', extended_real=True)
+    y = Symbol('y', real=True, positive=True)
+    t = Symbol('t', negative=True)
 
     for f in [besseli, besselj, besselk, bessely, hankel1, hankel2]:
         assert f(n, -1).conjugate() != f(conjugate(n), -1)
