@@ -2956,15 +2956,10 @@ class Infinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if other.is_extended_real:
-            if other is S.Infinity:
-                return S.true
-            elif other.is_finite or other is S.NegativeInfinity:
-                return S.false
-            elif other.is_extended_nonpositive:
-                return S.false
-            elif other.is_infinite and other.is_extended_positive:
-                return S.true
+        if other.is_infinite and other.is_extended_positive:
+            return S.true
+        elif other.is_real or other.is_extended_nonpositive:
+            return S.false
         return Expr.__le__(self, other)
 
     def __gt__(self, other):
@@ -2972,15 +2967,10 @@ class Infinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if other.is_extended_real:
-            if other is S.Infinity:
-                return S.false
-            elif other.is_finite or other is S.NegativeInfinity:
-                return S.true
-            elif other.is_extended_nonpositive:
-                return S.true
-            elif other.is_infinite and other.is_extended_positive:
-                return S.false
+        if other.is_infinite and other.is_extended_positive:
+            return S.false
+        elif other.is_real or other.is_extended_nonpositive:
+            return S.true
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
@@ -3147,15 +3137,10 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if other.is_extended_real:
-            if other is S.NegativeInfinity:
-                return S.false
-            elif other.is_finite or other is S.Infinity:
-                return S.true
-            elif other.is_extended_nonnegative:
-                return S.true
-            elif other.is_infinite and other.is_extended_negative:
-                return S.false
+        if other.is_infinite and other.is_extended_negative:
+            return S.false
+        elif other.is_real or other.is_extended_nonnegative:
+            return S.true
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -3181,15 +3166,10 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if other.is_extended_real:
-            if other is S.NegativeInfinity:
-                return S.true
-            if other.is_finite or other is S.Infinity:
-                return S.false
-            elif other.is_extended_nonnegative:
-                return S.false
-            elif other.is_infinite and other.is_extended_negative:
-                return S.true
+        if other.is_infinite and other.is_extended_negative:
+            return S.true
+        elif other.is_real or other.is_extended_nonnegative:
+            return S.false
         return Expr.__ge__(self, other)
 
     def __mod__(self, other):
