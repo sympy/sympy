@@ -1310,12 +1310,12 @@ class Mul(Expr, AssocOp):
                 saw_NON = True
             elif t.is_extended_nonnegative:
                 saw_NON = True
-            elif t.is_extended_positive is False:
+            elif t.is_positive is False:
                 sign = -sign
                 if saw_NOT:
                     return
                 saw_NOT = True
-            elif t.is_extended_negative is False:
+            elif t.is_negative is False:
                 if saw_NOT:
                     return
                 saw_NOT = True
@@ -1327,8 +1327,6 @@ class Mul(Expr, AssocOp):
             return False
 
     def _eval_is_extended_negative(self):
-        if self.args[0] == -1:
-            return (-self).is_extended_positive  # remove -1
         return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):
