@@ -430,15 +430,13 @@ class Pow(Expr):
         ext_neg = Pow._eval_is_extended_negative(self)
         if ext_neg is True:
             return self.is_finite
-        elif ext_neg is False:
-            return False
+        return ext_neg
 
     def _eval_is_positive(self):
-        ext_neg = Pow._eval_is_extended_positive(self)
-        if ext_neg is True:
+        ext_pos = Pow._eval_is_extended_positive(self)
+        if ext_pos is True:
             return self.is_finite
-        elif ext_neg is False:
-            return False
+        return ext_pos
 
     def _eval_is_extended_positive(self):
         from sympy import log
