@@ -247,5 +247,5 @@ def test_issue_12237():
     V = P(Y < 0, X)
     W = P(X + Y > 0, X)
     assert W == Probability(X + Y > 0, X)
-    assert U == BernoulliDistribution(1/2, 0, 1)
+    assert U == BernoulliDistribution(S(1)/2, S(0), S(1))
     assert str(V) == '1/2'
