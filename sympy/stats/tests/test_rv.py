@@ -6,6 +6,7 @@ from sympy.core.numbers import comp
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample, Geometric)
+from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, PSpace)
 from sympy.utilities.pytest import raises, XFAIL
@@ -244,5 +245,7 @@ def test_issue_12237():
     Y = Normal('Y', 0, 1)
     U = P(X > 0, X)
     V = P(Y < 0, X)
-    assert U == Probability(X > 0, X)
+    W = P(X + Y > 0, X)
+    assert W == Probability(X + Y > 0, X)
+    assert U == BernoulliDistribution(S(1)/2, S(0), S(1))
     assert str(V) == '1/2'
