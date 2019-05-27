@@ -739,10 +739,13 @@ class PermutationGroup(Basic):
                     for j in range(e):
                         series_segment.append(PermutationGroup([g] + Hgens))
                         g = g**p
+                        K = PermutationGroup([g] + Hgens)
+                    order = K.order()//H.order()
+                H = K
                 for grp in series_segment:
                     if not grp in series:
-                        series.append(grp)
-        series.append(PermutationGroup([self.identity()]))
+                        series.insert(len(series), grp)
+        series.insert(len(series), PermutationGroup([self.identity()]))
         return series
 
 
