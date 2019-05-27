@@ -9,7 +9,7 @@ Introduction
 
 Autolev (now superseded by MotionGenesis) is a domain specific programming
 language which is used for symbolic multibody dynamics. The SymPy mechanics
-module now has enough power and functionality to be a fully featured symbolic 
+module now has enough power and functionality to be a fully featured symbolic
 dynamics module. The PyDy package extends the SymPy output to the numerical
 domain for simulation, analyses and visualization. Autolev and SymPy Mechanics have
 a lot in common but there are also many differences between them.
@@ -26,15 +26,15 @@ For an introduction to Multibody dynamics in Python, `this <https://www.youtube.
 lecture is very helpful.
 
 You might also find the :ref:`Autolev Parser <autolev_parser>` which is
-a part of SymPy to be helpful. 
+a part of SymPy to be helpful.
 
 Some Key Differences
 ------------------------
 
 +-----------------------------------+-----------------------------------+
-|          **Autolev**              |         **SymPy Mechanics**       |            
+|          **Autolev**              |         **SymPy Mechanics**       |
 +===================================+===================================+
-||                                  ||                                  | 
+||                                  ||                                  |
 | Autolev is a domain specific      | SymPy is a library written in the |
 | programming language designed to  | general purpose language Python.  |
 | perform multibody dynamics. Since | Although Autolev's code is more   |
@@ -42,7 +42,7 @@ Some Key Differences
 | has a very rigid language         | an add on to Python) is more      |
 | specification. It predefines,     | flexible. The users have more     |
 | assumes and computes              | control over what they can do. For|
-| many things based on the          | example, one can create a class in| 
+| many things based on the          | example, one can create a class in|
 | input code. Its code is a lot     | their code for let's say a type of|
 | cleaner and concise as a result of| rigibodies with common            |
 | this.                             | properties.                       |
@@ -117,8 +117,8 @@ Mathematical Equivalents
 +-----------------------+-----------------------+-----------------------+
 ||                      ||                      ||                      |
 | ``Constants C+``      | ``c = sm.symbols(‘c’, | Refer to SymPy        |
-|                       | real=True,            | :ref:`assumptions     | 
-|                       | nonnegative=True)``   | <assumptions_module>` |            
+|                       | real=True,            | :ref:`assumptions     |
+|                       | nonnegative=True)``   | <assumptions_module>` |
 |                       |                       | for more information. |
 +-----------------------+-----------------------+-----------------------+
 ||                      ||                      ||                      |
@@ -142,9 +142,9 @@ Mathematical Equivalents
 |                       | b21 b22', real=True)``|                       |
 +-----------------------+-----------------------+-----------------------+
 ||                      ||                      ||                      |
-| ``Specified Phi``     | ``phi =               |                       | 
+| ``Specified Phi``     | ``phi =               |                       |
 |                       | me.dynamicsymbols(‘phi|                       |
-|                       | ')``                  |                       |       
+|                       | ')``                  |                       |
 +-----------------------+-----------------------+-----------------------+
 ||                      ||                      ||                      |
 | ``Variables q, s``    | ``q, s =              |                       |
@@ -269,7 +269,7 @@ Mathematical Equivalents
 |                       | ``.evalf()``          |                       |
 |                       |                       |                       |
 |                       | ``E.evalf((a +        |                       |
-|                       | sm.pi).subs({a: 3}))``|                       |                  
+|                       | sm.pi).subs({a: 3}))``|                       |
 +-----------------------+-----------------------+-----------------------+
 | ``P = Polynomial([a,  | ``p =                 | For more information  |
 | b, c], x)``           | sm.Poly(sm.Matrix([a, | refer to              |
@@ -285,13 +285,13 @@ Mathematical Equivalents
 |                       | reshape(3, 1), x),    | to polynomials and    |
 |                       | x)``                  | roots refer to        |
 |                       |                       | `mpmath/calculus. <htt|
-|                       |                       | p://docs.s            | 
+|                       |                       | p://docs.s            |
 |                       |                       | ympy.org/0.7.6/module |
 |                       |                       | s/mpmath/calculus/pol |
 |                       |                       | ynomials.html>`_      |
 +-----------------------+-----------------------+-----------------------+
 | ``Solve(A, x1, x2)``  | ``sm.linsolve(A,      | For more information  |
-|                       | (x1, x2))``           | refer to              |   
+|                       | (x1, x2))``           | refer to              |
 |                       |                       | :ref:`                |
 | where A is an         | where A is an         | solvers/solveset.     |
 | augmented matrix that | augmented matrix      | <solveset>`           |
@@ -307,10 +307,10 @@ Mathematical Equivalents
 | ``RowMatrix = [1, 2,  | ``row_matrix =        | For more information  |
 | 3, 4]``               | sm.Matrix([[1],[2],   | refer to              |
 |                       | [3],[4]])``           | :ref:`matrices.       |
-|                       |                       | <matrices>`           |            
-| ``ColMatrix = [1; 2;  | ``col_matrix =        |                       |                     
-| 3; 4]``               | sm.Matrix([1, 2, 3,   |                       |       
-|                       | 4])``                 |                       |           
+|                       |                       | <matrices>`           |
+| ``ColMatrix = [1; 2;  | ``col_matrix =        |                       |
+| 3; 4]``               | sm.Matrix([1, 2, 3,   |                       |
+|                       | 4])``                 |                       |
 |                       |                       |                       |
 | ``MO = [a, b; c, 0]`` | ``MO = sm.Matrix([[a, |                       |
 |                       | b], [c, 0]])``        |                       |
@@ -342,10 +342,10 @@ Mathematical Equivalents
 | ``Eig(A)``            | ``A.eigenvals()``     |                       |
 |                       |                       |                       |
 | ``Eig(A, EigVal,      | ``eigval =            |                       |
-| EigVec)``             | A.eigenvals()``       |                       |   
+| EigVec)``             | A.eigenvals()``       |                       |
 |                       |                       |                       |
 |                       | ``eigvec =            |                       |
-|                       | A.eigenvects()``      |                       |  
+|                       | A.eigenvects()``      |                       |
 +-----------------------+-----------------------+-----------------------+
 
 
@@ -418,8 +418,8 @@ Physical Equivalents
 | ``Inertia B, I1, I2,  | ``I = me.inertia(Bf,  | For more information  |
 | I3, I12, I23, I31``   | i1, i2, i3, i12, i23, | refer to the          |
 |                       | i31)``                | :ref:`mechanics api.  |
-|                       |                       | <part_bod>`           |                       
-|                       | ``B.inertia = (I, P)``|                       |                      
+|                       |                       | <part_bod>`           |
+|                       | ``B.inertia = (I, P)``|                       |
 |                       | where B is a          |                       |
 |                       | rigidbody, Bf is the  |                       |
 |                       | related frame and P is|                       |
@@ -433,7 +433,7 @@ Physical Equivalents
 |                       | ``I =                 |                       |
 |                       | me.outer(N.x, N.x)``  |                       |
 +-----------------------+-----------------------+-----------------------+
-| ``vec> = P_O_Q>/L``   | ``vec  =              | For more information  |                
+| ``vec> = P_O_Q>/L``   | ``vec  =              | For more information  |
 |                       | (Qo.pos_from(O))/L``  | refer to              |
 | ``vec> =              |                       | :ref:`physics/vectors.|
 | u1*N1> + u2*N2>``     | ``vec =               | <physics_vector>`     |
@@ -449,19 +449,19 @@ Physical Equivalents
 |                       |                       |                       |
 | ``DYAD>> = 3*A1>*A1> +| ``dyad =              |                       |
 | A2>*A2> + 2*A3>*A3>`` | 3*me.outer(a.x        |                       |
-|                       | ,a.x) + me.outer(a.y, |                       | 
+|                       | ,a.x) + me.outer(a.y, |                       |
 |                       | a.y) + 2*me.outer(a.z |                       |
 |                       | ,a.z)``               |                       |
 +-----------------------+-----------------------+-----------------------+
 | ``P_O_Q> = LA*A1>``   | ``Q.point =           | For more information  |
-|                       | O.locatenew(‘Qo’,     | refer to the          | 
+|                       | O.locatenew(‘Qo’,     | refer to the          |
 |                       | LA*A.x)``             | :ref:`kinematics api. |
 |                       |                       | <kinematics>`         |
 | ``P_P_Q> = LA*A1>``   | where A is a          |                       |
 |                       | reference frame.      |                       |
 |                       |                       |                       |
-|                       | ``Q.point =           |                       |   
-|                       | P.point.locatenew(‘Qo | All these vector and  | 
+|                       | ``Q.point =           |                       |
+|                       | P.point.locatenew(‘Qo | All these vector and  |
 |                       | ’,                    | kinematic functions   |
 |                       | LA*A.x)``             | are to be used on     |
 |                       |                       | ``Point`` objects and |
@@ -514,7 +514,7 @@ Physical Equivalents
 | where M is a matrix   | M)`` where M is a     |                       |
 | and A, B are frames.  | SymPy Matrix.         |                       |
 |                       |                       |                       |
-| ``D = A_B*2 + 1``     | ``D = A.dcm(B)*2 + 1``|                       | 
+| ``D = A_B*2 + 1``     | ``D = A.dcm(B)*2 + 1``|                       |
 +-----------------------+-----------------------+-----------------------+
 | ``CM(B)``             | ``B.masscenter``      |                       |
 +-----------------------+-----------------------+-----------------------+
@@ -651,7 +651,7 @@ on how it is done::
     plt.legend((str(position), str(speed)))
     plt.show()
 
-For information on all the things PyDy can accomplish refer to the 
+For information on all the things PyDy can accomplish refer to the
 `PyDy Documentation <https://www.pydy.org/documentation.html>`_.
 
 The tools in the PyDy workflow are :

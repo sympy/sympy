@@ -501,21 +501,21 @@ operation.  This means that a function will always return an object, and the
 original expression will not be modified. The following example snippet
 demonstrates how this works::
 
-	def main():
-	    var('x y a b')
-	    expr = 3*x + 4*y
-	    print('original =', expr)
-	    expr_modified = expr.subs({x: a, y: b})
-	    print('modified =', expr_modified)
+    def main():
+        var('x y a b')
+        expr = 3*x + 4*y
+        print('original =', expr)
+        expr_modified = expr.subs({x: a, y: b})
+        print('modified =', expr_modified)
 
-	if __name__ == "__main__":
-	    main()
+    if __name__ == "__main__":
+        main()
 
 The output shows that the :func:`subs` function has replaced variable
 :obj:`x` with variable :obj:`a`, and variable :obj:`y` with variable :obj:`b`::
 
-	original = 3*x + 4*y
-	modified = 3*a + 4*b
+    original = 3*x + 4*y
+    modified = 3*a + 4*b
 
 The :func:`subs` function does not modify the original expression :obj:`expr`.
 Rather, a modified copy of the expression is returned. This returned object

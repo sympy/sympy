@@ -470,7 +470,7 @@ traversals easy.  We could have also written our algorithm as
 Prevent expression evaluation
 =============================
 
-There are generally two ways to prevent the evaluation, either pass an 
+There are generally two ways to prevent the evaluation, either pass an
 ``evaluate=False`` parameter while constructing the expression, or create
 an evaluation stopper by wrapping the expression with ``UnevaluatedExpr``.
 

@@ -134,7 +134,7 @@ a theoretical foundation for implementing polynomials manipulation module.
     2008, Springer,
     https://www.researchgate.net/publication/225607735_Dixon_resultant's_solution_of_systems_of_geodetic_polynomial_equations.
 
-.. [Bruce97] Bruce Randall Donald, Deepak Kapur, and Joseph L. Mundy (Eds.). 
+.. [Bruce97] Bruce Randall Donald, Deepak Kapur, and Joseph L. Mundy (Eds.).
     "Symbolic and Numerical Computation for Artificial Intelligence",
     Chapter 2, Academic Press, Inc., Orlando, FL, USA, 1997,
     https://www2.cs.duke.edu/donaldlab/Books/SymbolicNumericalComputation/045-087.pdf.
