@@ -204,17 +204,25 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     >>> from sympy import Poly, Symbol
     >>> from sympy.solvers.inequalities import reduce_rational_inequalities
 
-    >>> x = Symbol('x', extended_real=True)
+    >>> x = Symbol('x', real=True)
 
     >>> reduce_rational_inequalities([[x**2 <= 0]], x)
     Eq(x, 0)
 
     >>> reduce_rational_inequalities([[x + 2 > 0]], x)
-    (-2 < x) & (x < oo)
+    -2 < x
     >>> reduce_rational_inequalities([[(x + 2, ">")]], x)
-    (-2 < x) & (x < oo)
+    -2 < x
     >>> reduce_rational_inequalities([[x + 2]], x)
     Eq(x, -2)
+
+    This function find the non-infinite solution set so if the unknown symbol
+    is declared as extended real rather than real then the result may include
+    finiteness conditions:
+
+    >>> y = Symbol('y', extended_real=True)
+    >>> reduce_rational_inequalities([[y + 2 > 0]], y)
+    (-2 < y) & (y < oo)
     """
     exact = True
     eqs = []
