@@ -1017,8 +1017,8 @@ def test_Pow_is_real():
     assert (i**k).is_real is None
     assert (i**(4*k)).is_extended_real is True
 
-    x = Symbol("x", nonnegative=True, finite=True)
-    y = Symbol("y", nonnegative=True, finite=True)
+    x = Symbol("x", nonnegative=True)
+    y = Symbol("y", nonnegative=True)
     assert im(x**y).expand(complex=True) is S.Zero
     assert (x**y).is_real is True
     i = Symbol('i', imaginary=True)
