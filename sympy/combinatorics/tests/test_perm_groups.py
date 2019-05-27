@@ -10,6 +10,7 @@ from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
 from sympy.utilities.pytest import raises, slow
+from sympy.combinatorics.homomorphisms import is_isomorphic
 
 rmul = Permutation.rmul
 
@@ -994,7 +995,13 @@ def test_composition_series():
     b = Permutation(1, 2)
     G = PermutationGroup([a, b])
     assert G.composition_series() == G.derived_series()
-    # The first group in the composition series is always the
-    # group itself.
+    # The first group in the composition series is always the group itself.
     S = SymmetricGroup(4)
     assert S.composition_series()[0] == S
+
+    # the composition series for C_12 is C_12 > C_6 > C_3 > triv
+    G = CyclicGroup(12)
+    series = G.composition_series()
+    assert is_isomorphic(series[1], CyclicGroup(6))
+    assert is_isomorphic(series[2], CyclicGroup(3))
+    assert series[3].is_trivial

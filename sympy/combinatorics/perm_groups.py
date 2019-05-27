@@ -707,7 +707,7 @@ class PermutationGroup(Basic):
         Examples
         ========
         >>> from sympy.combinatorics.named_groups import (AlternatingGroup,
-        ... SymmetricGroup)
+        ... CyclicGroup, SymmetricGroup)
         >>> S = SymmetricGroup(4)
         >>> series = S.composition_series()
         >>> len(series)
@@ -719,6 +719,9 @@ class PermutationGroup(Basic):
         True
         >>> len(A.composition_series())
         4
+        >>> G = CyclicGroup(4)
+        >>> G.composition_series()[1].order()
+        2
 
         """
         if not self.is_solvable:
@@ -727,27 +730,19 @@ class PermutationGroup(Basic):
         series = [self]
 
         for i in range(len(der)-1):
-            comp = []
-            low = der[i+1]
-            gns = low.generators
-            for elm in der[i].generators:
-                if low == der[i]:
-                    break
-                if not elm in low:
-                    elm = [elm]
-                    for pelm in elm:
-                        order = pelm.order()
-                        count = list(factorint(order).values())[0]
-                        pows = []
-                        for j in range(count-1, -1, -1):
-                            qelm = pelm**(list(factorint(order).keys())[0]**j)
-                            if not qelm in low:
-                                pows.append(qelm)
-                        comp.append(low)
-                        low = PermutationGroup(gns + pows) if pows else low
-            for g in comp:
-                if g not in series:
-                    series.append(g)
+            H = der[i+1]
+            Hgens = H.generators
+            for g in der[i].generators:
+                order = g.order()
+                series_segment = []
+                for p, e in factorint(order).items():
+                    for j in range(e):
+                        series_segment.append(PermutationGroup([g] + Hgens))
+                        g = g**p
+                for grp in series_segment:
+                    if not grp in series:
+                        series.append(grp)
+        series.append(PermutationGroup([self.identity()]))
         return series
 
 
