@@ -292,18 +292,18 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_real is False:
+            if me.is_complex and me.is_extended_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 >= 0)
-        if self.is_real or other.is_real:
+        if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_nonnegative is not None and \
-                    dif.is_nonnegative is not dif.is_negative:
-                return sympify(dif.is_nonnegative)
+            if dif.is_extended_nonnegative is not None and \
+                    dif.is_extended_nonnegative is not dif.is_extended_negative:
+                return sympify(dif.is_extended_nonnegative)
         return GreaterThan(self, other, evaluate=False)
 
     def __le__(self, other):
@@ -313,18 +313,18 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_real is False:
+            if me.is_complex and me.is_extended_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 <= 0)
-        if self.is_real or other.is_real:
+        if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_nonpositive is not None and \
-                    dif.is_nonpositive is not dif.is_positive:
-                return sympify(dif.is_nonpositive)
+            if dif.is_extended_nonpositive is not None and \
+                    dif.is_extended_nonpositive is not dif.is_extended_positive:
+                return sympify(dif.is_extended_nonpositive)
         return LessThan(self, other, evaluate=False)
 
     def __gt__(self, other):
@@ -334,18 +334,18 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_real is False:
+            if me.is_complex and me.is_extended_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 > 0)
-        if self.is_real or other.is_real:
+        if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_positive is not None and \
-                    dif.is_positive is not dif.is_nonpositive:
-                return sympify(dif.is_positive)
+            if dif.is_extended_positive is not None and \
+                    dif.is_extended_positive is not dif.is_extended_nonpositive:
+                return sympify(dif.is_extended_positive)
         return StrictGreaterThan(self, other, evaluate=False)
 
     def __lt__(self, other):
@@ -355,18 +355,18 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_real is False:
+            if me.is_complex and me.is_extended_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 < 0)
-        if self.is_real or other.is_real:
+        if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_negative is not None and \
-                    dif.is_negative is not dif.is_nonnegative:
-                return sympify(dif.is_negative)
+            if dif.is_extended_negative is not None and \
+                    dif.is_extended_negative is not dif.is_extended_nonnegative:
+                return sympify(dif.is_extended_negative)
         return StrictLessThan(self, other, evaluate=False)
 
     def __trunc__(self):
@@ -798,10 +798,30 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_is_positive(self):
+        finite = self.is_finite
+        if finite is False:
+            return False
+        extended_positive = self.is_extended_positive
+        if finite is True:
+            return extended_positive
+        if extended_positive is False:
+            return False
+
+    def _eval_is_negative(self):
+        finite = self.is_finite
+        if finite is False:
+            return False
+        extended_negative = self.is_extended_negative
+        if finite is True:
+            return extended_negative
+        if extended_negative is False:
+            return False
+
+    def _eval_is_extended_positive(self):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
-            if self.is_real is False:
+            if self.is_extended_real is False:
                 return False
 
             # check to see that we can get a value
@@ -832,11 +852,11 @@ class Expr(Basic, EvalfMixin):
                 except (NotAlgebraic, NotImplementedError):
                     pass
 
-    def _eval_is_negative(self):
+    def _eval_is_extended_negative(self):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
-            if self.is_real is False:
+            if self.is_extended_real is False:
                 return False
 
             # check to see that we can get a value
@@ -959,7 +979,7 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_conjugate(self):
-        if self.is_real:
+        if self.is_extended_real:
             return self
         elif self.is_imaginary:
             return -self
@@ -1253,7 +1273,7 @@ class Expr(Basic, EvalfMixin):
 
         if c and split_1 and (
             c[0].is_Number and
-            c[0].is_negative and
+            c[0].is_extended_negative and
                 c[0] is not S.NegativeOne):
             c[:1] = [S.NegativeOne, -c[0]]
 
@@ -3409,7 +3429,7 @@ class Expr(Basic, EvalfMixin):
                     'Expected a number but got %s:' % func_name(x))
         elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
             return x
-        if not x.is_real:
+        if not x.is_extended_real:
             i, r = x.as_real_imag()
             return i.round(n) + S.ImaginaryUnit*r.round(n)
         if not x:

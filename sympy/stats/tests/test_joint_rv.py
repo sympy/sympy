@@ -94,7 +94,7 @@ def test_GeneralizedMultivariateLogGammaDistribution():
                      [h, 1, 2, h],
                      [h, h, 1, h],
                      [h, h, h, 1]])
-    v_f = symbols("v_f", positive=False)
+    v_f = symbols("v_f", positive=False, real=True)
     l_f = [1, 2, v_f, 4]
     m_f = [v_f, 2, 3, 4]
     omega_f4 = Matrix([[1, h, h, h, h],
@@ -121,7 +121,7 @@ def test_MultivariateBeta():
     from sympy.stats.joint_rv_types import MultivariateBeta
     from sympy import gamma
     a1, a2 = symbols('a1, a2', positive=True)
-    a1_f, a2_f = symbols('a1, a2', positive=False)
+    a1_f, a2_f = symbols('a1, a2', positive=False, real=True)
     mb = MultivariateBeta('B', [a1, a2])
     mb_c = MultivariateBeta('C', a1, a2)
     assert density(mb)(1, 2) == S(2)**(a2 - 1)*gamma(a1 + a2)/\

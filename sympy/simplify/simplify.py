@@ -193,7 +193,7 @@ def _separatevars_dict(expr, symbols):
 def _is_sum_surds(p):
     args = p.args if p.is_Add else [p]
     for y in args:
-        if not ((y**2).is_Rational and y.is_real):
+        if not ((y**2).is_Rational and y.is_extended_real):
             return False
     return True
 
@@ -916,7 +916,7 @@ def logcombine(expr, force=False):
             # bool to tell whether the leading ``a`` in ``a*log(x)``
             # could appear as log(x**a)
             return (a is not S.NegativeOne and  # -1 *could* go, but we disallow
-                (a.is_real or force and a.is_real is not False))
+                (a.is_extended_real or force and a.is_extended_real is not False))
 
         def goodlog(l):
             # bool to tell whether log ``l``'s argument can combine with others

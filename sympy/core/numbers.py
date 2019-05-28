@@ -1026,6 +1026,7 @@ class Float(Number):
     is_number = True
 
     is_real = True
+    is_extended_real = True
 
     is_Float = True
 
@@ -1257,13 +1258,23 @@ class Float(Number):
         return self._mpf_ == fzero
 
     def _eval_is_negative(self):
+        if self._mpf_ == _mpf_ninf or self._mpf_ == _mpf_inf:
+            return False
+        return self.num < 0
+
+    def _eval_is_positive(self):
+        if self._mpf_ == _mpf_ninf or self._mpf_ == _mpf_inf:
+            return False
+        return self.num > 0
+
+    def _eval_is_extended_negative(self):
         if self._mpf_ == _mpf_ninf:
             return True
         if self._mpf_ == _mpf_inf:
             return False
         return self.num < 0
 
-    def _eval_is_positive(self):
+    def _eval_is_extended_positive(self):
         if self._mpf_ == _mpf_inf:
             return True
         if self._mpf_ == _mpf_ninf:
@@ -1791,7 +1802,7 @@ class Rational(Number):
         if isinstance(expt, Number):
             if isinstance(expt, Float):
                 return self._eval_evalf(expt._prec)**expt
-            if expt.is_negative:
+            if expt.is_extended_negative:
                 # (3/4)**-2 -> (4/3)**2
                 ne = -expt
                 if (ne is S.One):
@@ -1820,7 +1831,7 @@ class Rational(Number):
                 expt.p*(expt.q - 1), expt.q) / \
                     Integer(self.q)**Integer(expt.p)
 
-        if self.is_negative and expt.is_even:
+        if self.is_extended_negative and expt.is_even:
             return (-self)**expt
 
         return
@@ -1921,7 +1932,7 @@ class Rational(Number):
                 op = getattr(o, attr)
             if op:
                 return op(s)
-            if o.is_number and o.is_real:
+            if o.is_number and o.is_extended_real:
                 return Integer(s.p), s.q*o
 
     def __gt__(self, other):
@@ -2604,7 +2615,7 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
             return self
         if expt.is_negative:
             return S.ComplexInfinity
-        if expt.is_real is False:
+        if expt.is_extended_real is False:
             return S.NaN
         # infinities are already handled with pos and neg
         # tests above; now throw away leading numbers on Mul
@@ -2805,9 +2816,11 @@ class Infinity(with_metaclass(Singleton, Number)):
     """
 
     is_commutative = True
-    is_positive = True
-    is_infinite = True
     is_number = True
+    is_complex = False
+    is_extended_real = True
+    is_infinite = True
+    is_extended_positive = True
     is_prime = False
 
     __slots__ = []
@@ -2848,7 +2861,7 @@ class Infinity(with_metaclass(Singleton, Number)):
         if isinstance(other, Number):
             if other.is_zero or other is S.NaN:
                 return S.NaN
-            if other.is_positive:
+            if other.is_extended_positive:
                 return self
             return S.NegativeInfinity
         return NotImplemented
@@ -2861,7 +2874,7 @@ class Infinity(with_metaclass(Singleton, Number)):
                 other is S.NegativeInfinity or \
                     other is S.NaN:
                 return S.NaN
-            if other.is_nonnegative:
+            if other.is_extended_nonnegative:
                 return self
             return S.NegativeInfinity
         return NotImplemented
@@ -2894,15 +2907,15 @@ class Infinity(with_metaclass(Singleton, Number)):
         """
         from sympy.functions import re
 
-        if expt.is_positive:
+        if expt.is_extended_positive:
             return S.Infinity
-        if expt.is_negative:
+        if expt.is_extended_negative:
             return S.Zero
         if expt is S.NaN:
             return S.NaN
         if expt is S.ComplexInfinity:
             return S.NaN
-        if expt.is_real is False and expt.is_number:
+        if expt.is_extended_real is False and expt.is_number:
             expt_real = re(expt)
             if expt_real.is_positive:
                 return S.ComplexInfinity
@@ -2934,7 +2947,7 @@ class Infinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             return S.false
         return Expr.__lt__(self, other)
 
@@ -2943,13 +2956,10 @@ class Infinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if other.is_real:
-            if other.is_finite or other is S.NegativeInfinity:
-                return S.false
-            elif other.is_nonpositive:
-                return S.false
-            elif other.is_infinite and other.is_positive:
-                return S.true
+        if other.is_infinite and other.is_extended_positive:
+            return S.true
+        elif other.is_real or other.is_extended_nonpositive:
+            return S.false
         return Expr.__le__(self, other)
 
     def __gt__(self, other):
@@ -2957,13 +2967,10 @@ class Infinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if other.is_real:
-            if other.is_finite or other is S.NegativeInfinity:
-                return S.true
-            elif other.is_nonpositive:
-                return S.true
-            elif other.is_infinite and other.is_positive:
-                return S.false
+        if other.is_infinite and other.is_extended_positive:
+            return S.false
+        elif other.is_real or other.is_extended_nonpositive:
+            return S.true
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
@@ -2971,7 +2978,7 @@ class Infinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             return S.true
         return Expr.__ge__(self, other)
 
@@ -3001,10 +3008,13 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
     Infinity
     """
 
+    is_extended_real = True
+    is_complex = False
     is_commutative = True
-    is_negative = True
     is_infinite = True
+    is_extended_negative = True
     is_number = True
+    is_prime = False
 
     __slots__ = []
 
@@ -3044,7 +3054,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
         if isinstance(other, Number):
             if other.is_zero or other is S.NaN:
                 return S.NaN
-            if other.is_positive:
+            if other.is_extended_positive:
                 return self
             return S.Infinity
         return NotImplemented
@@ -3057,7 +3067,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                 other is S.NegativeInfinity or \
                     other is S.NaN:
                 return S.NaN
-            if other.is_nonnegative:
+            if other.is_extended_nonnegative:
                 return self
             return S.Infinity
         return NotImplemented
@@ -3098,7 +3108,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
                     expt is S.NegativeInfinity:
                 return S.NaN
 
-            if isinstance(expt, Integer) and expt.is_positive:
+            if isinstance(expt, Integer) and expt.is_extended_positive:
                 if expt.is_odd:
                     return S.NegativeInfinity
                 else:
@@ -3127,13 +3137,10 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if other.is_real:
-            if other.is_finite or other is S.Infinity:
-                return S.true
-            elif other.is_nonnegative:
-                return S.true
-            elif other.is_infinite and other.is_negative:
-                return S.false
+        if other.is_infinite and other.is_extended_negative:
+            return S.false
+        elif other.is_real or other.is_extended_nonnegative:
+            return S.true
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -3141,7 +3148,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             return S.true
         return Expr.__le__(self, other)
 
@@ -3150,7 +3157,7 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if other.is_real:
+        if other.is_extended_real:
             return S.false
         return Expr.__gt__(self, other)
 
@@ -3159,13 +3166,10 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if other.is_real:
-            if other.is_finite or other is S.Infinity:
-                return S.false
-            elif other.is_nonnegative:
-                return S.false
-            elif other.is_infinite and other.is_negative:
-                return S.true
+        if other.is_infinite and other.is_extended_negative:
+            return S.true
+        elif other.is_real or other.is_extended_nonnegative:
+            return S.false
         return Expr.__ge__(self, other)
 
     def __mod__(self, other):
@@ -3229,6 +3233,7 @@ class NaN(with_metaclass(Singleton, Number)):
 
     """
     is_commutative = True
+    is_extended_real = None
     is_real = None
     is_rational = None
     is_algebraic = None
@@ -3338,7 +3343,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     is_number = True
     is_prime = False
     is_complex = True
-    is_real = False
+    is_extended_real = False
 
     __slots__ = []
 
