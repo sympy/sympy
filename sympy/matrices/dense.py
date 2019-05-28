@@ -185,7 +185,7 @@ class DenseMatrix(MatrixBase):
         new_mat_cols = other.cols
 
         # preallocate the array
-        new_mat = [S.Zero]*new_mat_rows*new_mat_cols
+        new_mat = [self.zero]*new_mat_rows*new_mat_cols
 
         # if we multiply an n x 0 with a 0 x m, the
         # expected behavior is to produce an n x m matrix of zeros
