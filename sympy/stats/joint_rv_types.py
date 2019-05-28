@@ -1,12 +1,13 @@
 from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, IndexedBase,
                     besselk, gamma, Interval, Range, factorial, Mul, Integer,
                     Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
-                  imageset, Intersection, Matrix)
+                  imageset, Intersection, Matrix, symbols)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
     JointDistributionHandmade, MarginalDistribution)
 from sympy.stats.rv import _value_check, random_symbols
+from sympy.tensor.array import ArrayComprehension
 
 # __all__ = ['MultivariateNormal',
 # 'MultivariateLaplace',
@@ -345,18 +346,34 @@ class MultivariateEwensDistribution(JointDistribution):
 
     @property
     def set(self):
-        prod_set = Range(0, self.n//1 + 1)
+        if not isinstance(self.n, Integer):
+            i = Symbol('i', integer=True, positive=True)
+            s = ArrayComprehension(Intersection(S.Naturals0, Interval(0, self.n//i)),
+                                    (i, 1, self.n))
+            return Mul.fromiter(s.doit())
+        prod_set = Range(0, self.n + 1)
         for i in range(2, self.n + 1):
             prod_set *= Range(0, self.n//i + 1)
         return prod_set
 
     def pdf(self, *syms):
         n, theta = self.n, self.theta
+        condi = isinstance(self.n, Integer)
+        if (not isinstance(syms, Indexed)) and not condi:
+            raise ValueError("Please use Indexed object for syms as "
+                                "the dimension is symbolic")
+
         term_1 = factorial(n)/rf(theta, n)
-        term_2 = Mul.fromiter([theta**syms[j]/((j+1)**syms[j]*factorial(syms[j]))
-                            for j in range(n)])
-        cond = Eq(sum([(k+1)*syms[k] for k in range(n)]), n)
+        expri = lambda j: theta**syms[j]/((j+1)**syms[j]*factorial(syms[j]))
+        if condi:
+            term_2 = Mul.fromiter([expri(j) for j in range(n)])
+            cond = Eq(sum([(k + 1)*syms[k] for k in range(n)]), n)
+            return Piecewise((term_1 * term_2, cond), (0, True))
+        j, k = symbols('j, k', positive=True, integer=True)
+        term_2 = ArrayComprehension(expri(j), (j, 0, n - 1))
+        cond = ArrayComprehension((k + 1)*syms[k], (k, 0, n - 1))
         return Piecewise((term_1 * term_2, cond), (0, True))
+
 
 def MultivariateEwens(syms, n, theta):
     """

@@ -258,6 +258,9 @@ class Basic(with_metaclass(ManagedProperties)):
         (0, 1, 2, 3, 4)
 
         """
+        from sympy.tensor.array import ArrayComprehension
+        if isinstance(args, ArrayComprehension):
+            return cls(args, **assumptions)
         return cls(*tuple(args), **assumptions)
 
     @classmethod
