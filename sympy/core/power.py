@@ -307,6 +307,27 @@ class Pow(Expr):
     def class_key(cls):
         return 3, 2, cls.__name__
 
+    def __hash__(self):
+        # hash cannot be cached using cache_it because infinite recurrence
+        # occurs as hash is needed for setting cache dictionary keys
+        h = self._mhash
+        if h is None:
+            h = hash((type(self).__name__,) + self._hashable_content())
+            self._mhash = h
+        return h
+
+    def __eq__(self, other):
+        from .sympify import sympify, SympifyError
+        try:
+            other = sympify(other)
+        except SympifyError:
+            return False
+        if getattr(other, 'is_Symbol', None):
+            return self.base == other and self.exp == 1
+        if not isinstance(other, Pow):
+            return False
+        return self.base == other.base and self.exp == other.exp
+
     def _eval_refine(self, assumptions):
         from sympy.assumptions.ask import ask, Q
         b, e = self.as_base_exp()

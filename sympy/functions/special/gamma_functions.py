@@ -14,12 +14,7 @@ from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
 
-def intlike(n):
-    try:
-        as_int(n, strict=False)
-        return True
-    except ValueError:
-        return False
+
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -113,7 +108,7 @@ class gamma(Function):
                 return S.NaN
             elif arg is S.Infinity:
                 return S.Infinity
-            elif intlike(arg):
+            elif arg.is_integer:
                 if arg.is_positive:
                     return factorial(arg - 1)
                 else:

@@ -24,17 +24,13 @@ class AskPrimeHandler(CommonHandler):
     @staticmethod
     def _number(expr, assumptions):
         # helper method
-        exact = not expr.atoms(Float)
         try:
             i = int(expr.round())
             if (expr - i).equals(0) is False:
                 raise TypeError
         except TypeError:
             return False
-        if exact:
-            return isprime(i)
-        # when not exact, we won't give a True or False
-        # since the number represents an approximate value
+        return isprime(i)
 
     @staticmethod
     def Basic(expr, assumptions):
@@ -118,8 +114,6 @@ class AskEvenHandler(CommonHandler):
             if not (expr - i).equals(0):
                 raise TypeError
         except TypeError:
-            return False
-        if isinstance(expr, (float, Float)):
             return False
         return i % 2 == 0
 

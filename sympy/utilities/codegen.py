@@ -266,7 +266,7 @@ def get_default_datatype(expr, complex_allowed=None):
         final_dtype = "complex"
     else:
         final_dtype = "float"
-    if expr.is_integer:
+    if expr.is_integer and not expr.is_Float:
         return default_datatypes["int"]
     elif expr.is_real:
         return default_datatypes["float"]

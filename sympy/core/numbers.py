@@ -1017,12 +1017,9 @@ class Float(Number):
     >>> _.is_Float
     False
     """
-    __slots__ = ['_mpf_', '_prec']
+    __slots__ = ['_mpf_', '_prec', 'q']
 
-    # A Float represents many real numbers,
-    # both rational and irrational.
-    is_rational = None
-    is_irrational = None
+    is_rational = True
     is_number = True
 
     is_real = True
@@ -1205,6 +1202,7 @@ class Float(Number):
         obj = Expr.__new__(cls)
         obj._mpf_ = mpf_norm(_mpf_, _prec)
         obj._prec = _prec
+        obj.q = 0 if obj._mpf_[2] >= 0 else 2 if obj._mpf_[2] == -1 else None
         return obj
 
     # mpz can't be pickled
@@ -1255,7 +1253,7 @@ class Float(Number):
         return False
 
     def _eval_is_integer(self):
-        return self._mpf_ == fzero
+        return self.q == 0
 
     def _eval_is_negative(self):
         if self._mpf_ == _mpf_ninf or self._mpf_ == _mpf_inf:

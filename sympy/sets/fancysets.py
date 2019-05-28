@@ -463,7 +463,7 @@ class Range(Set):
         try:
             start, stop, step = [
                 w if w in [S.NegativeInfinity, S.Infinity]
-                else sympify(as_int(w))
+                else sympify(as_int(w, strict=False))
                 for w in (start, stop, step)]
         except ValueError:
             raise ValueError(filldedent('''

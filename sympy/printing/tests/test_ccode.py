@@ -639,9 +639,12 @@ def test_C99CodePrinter__precision():
     f32_printer = C99CodePrinter(dict(type_aliases={real: float32}))
     f64_printer = C99CodePrinter(dict(type_aliases={real: float64}))
     f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
-    assert f32_printer.doprint(sin(x+2.1)) == 'sinf(x + 2.1F)'
-    assert f64_printer.doprint(sin(x+2.1)) == 'sin(x + 2.1000000000000001)'
-    assert f80_printer.doprint(sin(x+Float('2.0'))) == 'sinl(x + 2.0L)'
+    assert f32_printer.doprint(sin(x + 2.1)
+        ) == 'sinf(x + 2.1F)'
+    assert f64_printer.doprint(sin(x + 2.1)
+        ) == 'sin(x + 2.1000000000000001)'
+    assert f80_printer.doprint(sin(x + Float('2.0'))
+        ) == 'sinl(x + 2.0L)'
 
     for printer, suffix in zip([f32_printer, f64_printer, f80_printer], ['f', '', 'l']):
         def check(expr, ref):
@@ -686,8 +689,8 @@ def test_C99CodePrinter__precision():
         check(gamma(x), 'tgamma{s}(x)')
         check(loggamma(x), 'lgamma{s}(x)')
 
-        check(ceiling(x + 2.), "ceil{s}(x + 2.0{S})")
-        check(floor(x + 2.), "floor{s}(x + 2.0{S})")
+        check(ceiling(x + 2.), "ceil{s}(x) + 2.0{S}")
+        check(floor(x + 2.), "floor{s}(x) + 2.0{S}")
         check(fma(x, y, -z), 'fma{s}(x, y, -z)')
         check(Max(x, 8.0, x**4.0), 'fmax{s}(8.0{S}, fmax{s}(x, pow{s}(x, 4.0{S})))')
         check(Min(x, 2.0), 'fmin{s}(2.0{S}, x)')

@@ -32,7 +32,7 @@ from sympy.sets.fancysets import Range
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in C89CodePrinter._print_Function(self)
 known_functions_C89 = {
-    "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
+    "Abs": [(lambda x: not x.is_integer or x.is_Float, "fabs"), (lambda x: x.is_integer and not x.is_Float, "abs")],
     "sin": "sin",
     "cos": "cos",
     "tan": "tan",

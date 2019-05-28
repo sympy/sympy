@@ -251,6 +251,27 @@ class Symbol(AtomicExpr, Boolean):
         # Note: user-specified assumptions not hashed, just derived ones
         return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
+    def __hash__(self):
+        # hash cannot be cached using cache_it because infinite recurrence
+        # occurs as hash is needed for setting cache dictionary keys
+        h = self._mhash
+        if h is None:
+            h = hash((type(self).__name__,) + self._hashable_content())
+            self._mhash = h
+        return h
+
+    def __eq__(self, other):
+        from .sympify import sympify, SympifyError
+        try:
+            other = sympify(other)
+        except SympifyError:
+            return False
+        if getattr(other, 'is_Pow', None):
+            return self == other.base and other.exp == 1
+        if not isinstance(other, Symbol):
+            return False
+        return self._hashable_content() == other._hashable_content()
+
     def _eval_subs(self, old, new):
         from sympy.core.power import Pow
         if old.is_Pow:
@@ -806,9 +827,9 @@ def disambiguate(*iter):
     for k in mapping:
         # the first or only symbol doesn't get subscripted but make
         # sure that it's a Symbol, not a Dummy
-        k0 = Symbol("%s" % (k), **mapping[k][0].assumptions0)
-        if k != k0:
-            reps[mapping[k][0]] = k0
+        mapk0 = Symbol("%s" % (k), **mapping[k][0].assumptions0)
+        if mapping[k][0] != mapk0:
+            reps[mapping[k][0]] = mapk0
         # the others get subscripts (and are made into Symbols)
         skip = 0
         for i in range(1, len(mapping[k])):
