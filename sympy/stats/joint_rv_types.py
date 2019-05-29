@@ -8,11 +8,17 @@ from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
     JointDistributionHandmade, MarginalDistribution)
 from sympy.stats.rv import _value_check, random_symbols
 
-# __all__ = ['MultivariateNormal',
-# 'MultivariateLaplace',
-# 'MultivariateT',
-# 'NormalGamma'
-# ]
+__all__ = ['JointRV',
+'Dirichlet',
+'GeneralizedMultivariateLogGamma',
+'GeneralizedMultivariateLogGammaOmega',
+'Multinomial',
+'MultivariateBeta',
+'MultivariateEwens',
+'MultivariateT',
+'NegativeMultinomial',
+'NormalGamma'
+]
 
 def multivariate_rv(cls, sym, *args):
     args = list(map(sympify, args))
