@@ -362,7 +362,7 @@ class Expr(Basic, EvalfMixin):
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 < 0)
-        if self.is_extended_real or other.is_extended_real:
+        if self.is_extended_real and other.is_extended_real:
             dif = self - other
             if dif.is_extended_negative is not None and \
                     dif.is_extended_negative is not dif.is_extended_nonnegative:
