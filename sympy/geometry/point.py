@@ -481,7 +481,7 @@ class Point(GeometryEntity):
         Parameters
         ==========
 
-        other : GeometryEntity
+        other : GeometryEntity or sequence of coordinates
 
         Returns
         =======
@@ -1205,7 +1205,7 @@ class Point3D(Point):
         Parameters
         ==========
 
-        other : GeometryEntity
+        other : GeometryEntity or sequence of coordinates
 
         Returns
         =======
