@@ -1246,7 +1246,8 @@ def test_sympy__stats__crv__ContinuousDistribution():
 
 def test_sympy__stats__frv_types__FiniteDistributionHandmade():
     from sympy.stats.frv_types import FiniteDistributionHandmade
-    assert _test_args(FiniteDistributionHandmade({1: 1}))
+    from sympy import Dict
+    assert _test_args(FiniteDistributionHandmade(Dict({1: 1})))
 
 
 def test_sympy__stats__crv__ContinuousDistributionHandmade():
@@ -1280,6 +1281,10 @@ def test_sympy__stats__crv_types__BeniniDistribution():
 def test_sympy__stats__crv_types__BetaDistribution():
     from sympy.stats.crv_types import BetaDistribution
     assert _test_args(BetaDistribution(1, 1))
+
+def test_sympy__stats__crv_types__BetaNoncentralDistribution():
+    from sympy.stats.crv_types import BetaNoncentralDistribution
+    assert _test_args(BetaNoncentralDistribution(1, 1, 1))
 
 
 def test_sympy__stats__crv_types__BetaPrimeDistribution():
@@ -1499,6 +1504,19 @@ def test_sympy__stats__joint_rv_types__MultivariateTDistribution():
 def test_sympy__stats__joint_rv_types__NormalGammaDistribution():
     from sympy.stats.joint_rv_types import NormalGammaDistribution
     assert _test_args(NormalGammaDistribution(1, 2, 3, 4))
+
+def test_sympy__stats__joint_rv_types__GeneralizedMultivariateLogGammaDistribution():
+    from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaDistribution
+    v, l, mu = (4, [1, 2, 3, 4], [1, 2, 3, 4])
+    assert _test_args(GeneralizedMultivariateLogGammaDistribution(S.Half, v, l, mu))
+
+def test_sympy__stats__joint_rv_types__MultivariateBetaDistribution():
+    from sympy.stats.joint_rv_types import MultivariateBetaDistribution
+    assert _test_args(MultivariateBetaDistribution([1, 2, 3]))
+
+def test_sympy__stats__joint_rv_types__MultivariateEwensDistribution():
+    from sympy.stats.joint_rv_types import MultivariateEwensDistribution
+    assert _test_args(MultivariateEwensDistribution(5, 1))
 
 def test_sympy__stats__joint_rv_types__MultinomialDistribution():
     from sympy.stats.joint_rv_types import MultinomialDistribution
@@ -3832,6 +3850,12 @@ def test_sympy__tensor__array__sparse_ndim_array__ImmutableSparseNDimArray():
     from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
     sparr = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
     assert _test_args(sparr)
+
+
+def test_sympy__tensor__array__array_comprehension__ArrayComprehension():
+    from sympy.tensor.array.array_comprehension import ArrayComprehension
+    arrcom = ArrayComprehension(x, (x, 1, 5))
+    assert _test_args(arrcom)
 
 
 def test_sympy__tensor__functions__TensorProduct():

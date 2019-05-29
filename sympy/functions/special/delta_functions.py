@@ -504,9 +504,9 @@ class Heaviside(Function):
         """
         H0 = sympify(H0)
         arg = sympify(arg)
-        if arg.is_negative:
+        if arg.is_extended_negative:
             return S.Zero
-        elif arg.is_positive:
+        elif arg.is_extended_positive:
             return S.One
         elif arg.is_zero:
             return H0
@@ -580,7 +580,7 @@ class Heaviside(Function):
         sign
 
         """
-        if arg.is_real:
+        if arg.is_extended_real:
             if H0 is None or H0 == S.Half:
                 return (sign(arg)+1)/2
 

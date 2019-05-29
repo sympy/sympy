@@ -460,8 +460,8 @@ class Integral(AddWithLimits):
                 continue
 
             if function.has(Abs, sign) and (
-                (len(xab) < 3 and all(x.is_real for x in xab)) or
-                (len(xab) == 3 and all(x.is_real and not x.is_infinite for
+                (len(xab) < 3 and all(x.is_extended_real for x in xab)) or
+                (len(xab) == 3 and all(x.is_extended_real and not x.is_infinite for
                  x in xab[1:]))):
                     # some improper integrals are better off with Abs
                     xr = Dummy("xr", real=True)
@@ -518,7 +518,7 @@ class Integral(AddWithLimits):
 
                 meijerg1 = meijerg
                 if (meijerg is not False and
-                        len(xab) == 3 and xab[1].is_real and xab[2].is_real
+                        len(xab) == 3 and xab[1].is_extended_real and xab[2].is_extended_real
                         and not function.is_Poly and
                         (xab[1].has(oo, -oo) or xab[2].has(oo, -oo))):
                     ret = try_meijerg(function, xab)

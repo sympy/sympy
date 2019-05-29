@@ -2915,19 +2915,45 @@ def test_atoms():
 def test_pinv():
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])
-    assert simplify(A1.pinv()) == simplify(A1.inv())
+    assert simplify(A1.pinv(method="RD")) == simplify(A1.inv())
+
     # Test the four properties of the pseudoinverse for various matrices.
     As = [Matrix([[13, 104], [2212, 3], [-3, 5]]),
           Matrix([[1, 7, 9], [11, 17, 19]]),
           Matrix([a, b])]
+
     for A in As:
-        A_pinv = A.pinv()
+        A_pinv = A.pinv(method="RD")
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert simplify(AAp * A) == A
         assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
+
+    # XXX Pinv with diagonalization makes expression too complicated.
+    for A in As:
+        A_pinv = simplify(A.pinv(method="ED"))
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
+    # XXX Computing pinv using diagonalization makes an expression that
+    # is too complicated to simplify.
+    # A1 = Matrix([[a, b], [c, d]])
+    # assert simplify(A1.pinv(method="ED")) == simplify(A1.inv())
+    # so this is tested numerically at a fixed random point
+    from sympy.core.numbers import comp
+    q = A1.pinv(method="ED")
+    w = A1.inv()
+    reps = {a: -73633, b: 11362, c: 55486, d: 62570}
+    assert all(
+        comp(i.n(), j.n())
+        for i, j in zip(q.subs(reps), w.subs(reps))
+        )
 
 def test_pinv_solve():
     # Fully determined system (unique result, identical to other solvers).
@@ -2967,14 +2993,25 @@ def test_pinv_rank_deficient():
     As = [Matrix([[1, 1, 1], [2, 2, 2]]),
           Matrix([[1, 0], [0, 0]]),
           Matrix([[1, 2], [2, 4], [3, 6]])]
+
     for A in As:
-        A_pinv = A.pinv()
+        A_pinv = A.pinv(method="RD")
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert simplify(AAp * A) == A
         assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
+
+    for A in As:
+        A_pinv = A.pinv(method="ED")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
     # Test solving with rank-deficient matrices.
     A = Matrix([[1, 0], [0, 0]])
     # Exact, non-unique solution.
@@ -3004,7 +3041,7 @@ def test_pinv_rank_deficient_when_diagonalization_fails():
         [ 7, 30, 10, 48, 90, 0],
         [0,0,0,0,0,0]])]
     for A in As:
-        A_pinv = A.pinv()
+        A_pinv = A.pinv(method="ED")
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert simplify(AAp * A) == A
@@ -3012,6 +3049,23 @@ def test_pinv_rank_deficient_when_diagonalization_fails():
         assert AAp.H == AAp
         assert ApA.H == ApA
 
+def test_pinv_succeeds_with_rank_decomposition_method():
+    # Test rank decomposition method of pseudoinverse succeeding
+    As = [Matrix([
+        [61, 89, 55, 20, 71, 0],
+        [62, 96, 85, 85, 16, 0],
+        [69, 56, 17,  4, 54, 0],
+        [10, 54, 91, 41, 71, 0],
+        [ 7, 30, 10, 48, 90, 0],
+        [0,0,0,0,0,0]])]
+    for A in As:
+        A_pinv = A.pinv(method="RD")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
 
 def test_gauss_jordan_solve():
 
@@ -3359,9 +3413,13 @@ def test_issue_11238():
     m2 = Matrix([p1 - p0, p2 - p0])
     m3 = Matrix([simplify(p1 - p0), simplify(p2 - p0)])
 
-    assert m1.rank(simplify=True) == 1
-    assert m2.rank(simplify=True) == 1
-    assert m3.rank(simplify=True) == 1
+    # This system has expressions which are zero and
+    # cannot be easily proved to be such, so without
+    # numerical testing, these assertions will fail.
+    Z = lambda x: abs(x.n()) < 1e-20
+    assert m1.rank(simplify=True, iszerofunc=Z) == 1
+    assert m2.rank(simplify=True, iszerofunc=Z) == 1
+    assert m3.rank(simplify=True, iszerofunc=Z) == 1
 
 def test_as_real_imag():
     m1 = Matrix(2,2,[1,2,3,4])

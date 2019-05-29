@@ -250,7 +250,7 @@ def test_exp_assumptions():
         assert e(i).is_imaginary is None
         assert e(r).is_real is True
         assert e(r).is_imaginary is False
-        assert e(re(x)).is_real is True
+        assert e(re(x)).is_extended_real is True
         assert e(re(x)).is_imaginary is False
 
     assert exp(0, evaluate=False).is_algebraic
@@ -273,10 +273,10 @@ def test_log_assumptions():
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
     z = symbols('z', zero=True)
-    x = symbols('x', infinite=True, positive=True)
+    x = symbols('x', infinite=True, extended_positive=True)
 
     assert log(z).is_positive is False
-    assert log(x).is_positive is True
+    assert log(x).is_extended_positive is True
     assert log(2) > 0
     assert log(1, evaluate=False).is_zero
     assert log(1 + z).is_zero

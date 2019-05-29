@@ -2,9 +2,11 @@ from __future__ import unicode_literals
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
         DiracDelta, Lambda, log, pi)
+from sympy.core.numbers import comp
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample, Geometric)
+from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, PSpace)
 from sympy.utilities.pytest import raises, XFAIL
@@ -108,13 +110,14 @@ def test_IndependentProductPSpace():
 def test_E():
     assert E(5) == 5
 
+
 def test_H():
     X = Normal('X', 0, 1)
     D = Die('D', sides = 4)
     G = Geometric('G', 0.5)
     assert H(X, X > 0) == -log(2)/2 + S(1)/2 + log(pi)/2
     assert H(D, D > 2) == log(2)
-    assert H(G).evalf().round(2) == 1.39
+    assert comp(H(G).evalf().round(2), 1.39)
 
 
 def test_Sample():
@@ -242,5 +245,7 @@ def test_issue_12237():
     Y = Normal('Y', 0, 1)
     U = P(X > 0, X)
     V = P(Y < 0, X)
-    assert U == Probability(X > 0, X)
+    W = P(X + Y > 0, X)
+    assert W == Probability(X + Y > 0, X)
+    assert U == BernoulliDistribution(S(1)/2, S(0), S(1))
     assert str(V) == '1/2'

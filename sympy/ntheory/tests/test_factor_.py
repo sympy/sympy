@@ -112,7 +112,8 @@ def test_multiplicity():
 
 
 def test_perfect_power():
-    assert perfect_power(0) is False
+    raises(ValueError, lambda: perfect_power(0))
+    raises(ValueError, lambda: perfect_power(Rational(25, 4)))
     assert perfect_power(1) is False
     assert perfect_power(2) is False
     assert perfect_power(3) is False

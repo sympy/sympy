@@ -1033,7 +1033,7 @@ def roots(f, *gens, **flags):
         handlers = {
             'Z': lambda r: r.is_Integer,
             'Q': lambda r: r.is_Rational,
-            'R': lambda r: r.is_real,
+            'R': lambda r: r.is_extended_real,
             'I': lambda r: r.is_imaginary,
         }
 

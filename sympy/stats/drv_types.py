@@ -50,7 +50,7 @@ class GeometricDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        _value_check(And(0 < p, p <= 1), "p must be between 0 and 1")
+        _value_check((0 < p, p <= 1), "p must be between 0 and 1")
 
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p
@@ -122,7 +122,7 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        _value_check(And(p > 0, p < 1), "p should be between 0 and 1")
+        _value_check((p > 0, p < 1), "p should be between 0 and 1")
 
     def pdf(self, k):
         p = self.p
@@ -200,7 +200,7 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
     @staticmethod
     def check(r, p):
         _value_check(r > 0, 'r should be positive')
-        _value_check(And(p > 0, p < 1), 'p should be between 0 and 1')
+        _value_check((p > 0, p < 1), 'p should be between 0 and 1')
 
     def pdf(self, k):
         r = self.r

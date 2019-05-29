@@ -90,7 +90,6 @@ class SingleFiniteDomain(FiniteDomain):
     @property
     def symbol(self):
         return self.args[0]
-        return tuple(self.symbols)[0]
 
     @property
     def symbols(self):
@@ -190,6 +189,10 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def __new__(cls, *args):
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
+
+    @staticmethod
+    def check(*args):
+        pass
 
     @property
     @cacheit
