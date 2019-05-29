@@ -381,11 +381,11 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
 
         >>> printer = PythonCodePrinter()
         >>> printer._hprint_Pow(sqrt(x), rational=True)
-        'x**(0.5)'
+        'x**(1./2.)'
         >>> printer._hprint_Pow(sqrt(x), rational=False)
         'math.sqrt(x)'
         >>> printer._hprint_Pow(1/sqrt(x), rational=True)
-        'x**(-0.5)'
+        'x**(-1./2.)'
         >>> printer._hprint_Pow(1/sqrt(x), rational=False)
         '1/math.sqrt(x)'
 
@@ -401,6 +401,8 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
 
         sympy.printing.str.StrPrinter._print_Pow
         """
+        PREC = precedence(expr)
+
         if expr.exp == S.Half and not rational:
             func = self._module_format(sqrt)
             arg = self._print(expr.base)
@@ -414,23 +416,20 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
                 return "{num}/{func}({arg})".format(
                     num=num, func=func, arg=arg)
 
-        from .str import precedence
-        PREC = precedence(expr)
-
         base_str = self.parenthesize(expr.base, PREC, strict=False)
         exp_str = self.parenthesize(expr.exp, PREC, strict=False)
-        # XXX Implement a better parenthesis manager for printing Half.
-        # so that it can print like 'x**0.5' instead of 'x**(0.5)'
         return "{}**{}".format(base_str, exp_str)
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational)
 
     def _print_Rational(self, expr):
-        return self._print(expr.evalf())
+        # XXX Py2 Compatibility
+        return '{}./{}.'.format(expr.p, expr.q)
 
     def _print_Half(self, expr):
-        return self._print(expr.evalf())
+        # XXX Py2 Compatibility
+        return self._print_Rational(expr)
 
 
 for k in PythonCodePrinter._kf:
@@ -496,11 +495,14 @@ class MpmathPrinter(PythonCodePrinter):
 
 
     def _print_Rational(self, e):
-        return '{0}({1})/{0}({2})'.format(
-            self._module_format('mpmath.mpf'),
-            e.p,
-            e.q,
-            )
+        return "{func}({p})/{func}({q})".format(
+            func=self._module_format('mpmath.mpf'),
+            q=self._print(e.q),
+            p=self._print(e.p)
+        )
+
+    def _print_Half(self, e):
+        return self._print_Rational(e)
 
     def _print_uppergamma(self, e):
         return "{0}({1}, {2}, {3})".format(
@@ -649,6 +651,9 @@ class NumPyPrinter(PythonCodePrinter):
         return '{0}({1})'.format(self._module_format('numpy.logical_not'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Pow(self, expr, rational=False):
+        # XXX Workaround for negative integer power error
+        if expr.exp.is_integer and expr.exp.is_negative:
+            expr = expr.base ** expr.exp.evalf()
         return self._hprint_Pow(expr, rational=rational, sqrt='numpy.sqrt')
 
     def _print_Min(self, expr):

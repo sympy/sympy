@@ -31,7 +31,7 @@ from sympy.polys.rings import ring
 from sympy.polys.rootoftools import CRootOf
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.printing.lambdarepr import LambdaPrinter
-from sympy.printing.pycode import PythonCodePrinter
+from sympy.printing.pycode import PythonCodePrinter, MpmathPrinter
 from sympy.simplify.radsimp import _split_gcd
 from sympy.simplify.simplify import _is_sum_surds
 from sympy.utilities import (
@@ -1069,19 +1069,20 @@ def to_number_field(extension, theta=None, **args):
                 "%s is not in a subfield of %s" % (root, theta.root))
 
 
-class IntervalPrinter(LambdaPrinter):
+class IntervalPrinter(MpmathPrinter, LambdaPrinter):
     """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
 
     def _print_Integer(self, expr):
-        return "mpi('%s')" % super(IntervalPrinter, self)._print_Integer(expr)
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Integer(expr)
 
     def _print_Rational(self, expr):
-        return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
+
+    def _print_Half(self, expr):
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
 
     def _print_Pow(self, expr):
-        # XXX Isolate the math printer with python code printer.
-        return super(PythonCodePrinter, self)._print_Pow(expr, rational=True)
-
+        return super(MpmathPrinter, self)._print_Pow(expr, rational=True)
 
 @public
 def isolate(alg, eps=None, fast=False):
