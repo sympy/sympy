@@ -737,11 +737,11 @@ def test_gaussian_inverse():
     assert cdf(X)(z) == (S.Half - erf(sqrt(2)*sqrt(b)*(1 + z/a)/(2*sqrt(z)))/2)*exp(2*b/a) +\
          erf(sqrt(2)*sqrt(b)*(-1 + z/a)/(2*sqrt(z)))/2 + S.Half
 
-    a = symbols('a', positive=False)
+    a = symbols('a', nonpositive=True)
     raises(ValueError, lambda: GaussianInverse('x', a, b))
 
     a = symbols('a', positive=True)
-    b = symbols('b', positive=False)
+    b = symbols('b', nonpositive=True)
     raises(ValueError, lambda: GaussianInverse('x', a, b))
 
 def test_sampling_gaussian_inverse():
