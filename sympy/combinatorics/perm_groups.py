@@ -695,12 +695,14 @@ class PermutationGroup(Basic):
         return self._transversals
 
     def composition_series(self):
-        """
+        r"""
         Return the composition series for a group as a list
         of permutation groups.
 
-        A composition series is a subnormal series such that each
-        factor group `H(i+1) / H(i)` is simple.
+        The composition series for a group `G` is defined as a
+        subnormal series `G = H_0 > H_1 > H_2 \ldots` A composition
+        series is a subnormal series such that each factor group
+        `H(i+1) / H(i)` is simple.
         A subnormal series is a composition series only if it is of
         maximum length.
 
@@ -710,15 +712,11 @@ class PermutationGroup(Basic):
         ... CyclicGroup, SymmetricGroup)
         >>> S = SymmetricGroup(4)
         >>> series = S.composition_series()
-        >>> len(series)
-        5
         >>> A = AlternatingGroup(4)
-        >>> series[1] == A
+        >>> series[2] == A
         True
-        >>> series[2].is_subgroup(A)
+        >>> series[1].is_subgroup(A)
         True
-        >>> len(A.composition_series())
-        4
         >>> G = CyclicGroup(4)
         >>> G.composition_series()[1].order()
         2
@@ -732,20 +730,19 @@ class PermutationGroup(Basic):
         for i in range(len(der)-1):
             H = der[i+1]
             Hgens = H.generators
+            seg = []
             for g in der[i].generators:
-                order = g.order()
-                series_segment = []
+                K = PermutationGroup([g] + Hgens)
+                order = K.order() // H.order()
                 for p, e in factorint(order).items():
                     for j in range(e):
-                        series_segment.append(PermutationGroup([g] + Hgens))
+                        seg.append(PermutationGroup([g] + Hgens))
                         g = g**p
-                        K = PermutationGroup([g] + Hgens)
-                    order = K.order()//H.order()
                 H = K
-                for grp in series_segment:
-                    if not grp in series:
-                        series.insert(len(series), grp)
-        series.insert(len(series), PermutationGroup([self.identity()]))
+            for grp in seg:
+                if not grp in series:
+                    series.insert(0, grp)
+        series.insert(0, PermutationGroup([self.identity()]))
         return series
 
 

@@ -994,14 +994,18 @@ def test_composition_series():
     a = Permutation(1, 2, 3)
     b = Permutation(1, 2)
     G = PermutationGroup([a, b])
-    assert G.composition_series() == G.derived_series()
-    # The first group in the composition series is always the group itself.
+    comp_series = G.composition_series()
+    comp_series.reverse()
+    assert comp_series == G.derived_series()
+    # The first group in the composition series is always the trivial group and
+    # the last group in the series is the group itself.
     S = SymmetricGroup(4)
-    assert S.composition_series()[0] == S
+    comp_series = S.composition_series()
+    assert comp_series[len(comp_series)-1] == S
 
     # the composition series for C_12 is C_12 > C_6 > C_3 > triv
     G = CyclicGroup(12)
     series = G.composition_series()
-    assert is_isomorphic(series[1], CyclicGroup(6))
-    assert is_isomorphic(series[2], CyclicGroup(3))
-    assert series[3].is_trivial
+    assert is_isomorphic(series[2], CyclicGroup(6))
+    assert is_isomorphic(series[1], CyclicGroup(3))
+    assert series[0].is_trivial
