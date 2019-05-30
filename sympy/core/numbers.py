@@ -1022,6 +1022,7 @@ class Float(Number):
     # A Float represents many real numbers,
     # both rational and irrational.
     is_rational = None
+    is_integer = None
     is_irrational = None
     is_number = True
 
@@ -1253,9 +1254,6 @@ class Float(Number):
         if self._mpf_ in (_mpf_inf, _mpf_ninf):
             return True
         return False
-
-    def _eval_is_integer(self):
-        return self._mpf_ == fzero
 
     def _eval_is_negative(self):
         if self._mpf_ == _mpf_ninf or self._mpf_ == _mpf_inf:
