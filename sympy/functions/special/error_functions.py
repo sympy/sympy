@@ -1121,7 +1121,7 @@ class expint(Function):
     Hence for :math:`z` with positive real part we have
 
     .. math:: \operatorname{E}_\nu(z)
-              =   \int_1^\infty \frac{e^{-zt}}{z^\nu} \mathrm{d}t,
+              =   \int_1^\infty \frac{e^{-zt}}{t^\nu} \mathrm{d}t,
 
     which explains the name.
 
