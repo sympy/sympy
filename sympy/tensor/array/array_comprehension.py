@@ -12,7 +12,7 @@ from sympy.core.numbers import Integer
 
 class ArrayComprehension(Basic):
     """
-    Generate a list comprehension
+    Generates a list comprehension
     If there is a symbolic dimension, for example, say [i for i in range(1, N)] where
     N is a Symbol, then the expression will not be expanded to an array. Otherwise,
     calling the doit() function will launch the expansion.
@@ -21,7 +21,8 @@ class ArrayComprehension(Basic):
     ========
 
     >>> from sympy.tensor.array import ArrayComprehension
-    >>> from sympy.abc import i, j, k
+    >>> from sympy import symbols
+    >>> i, j, k = symbols('i j k')
     >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
     >>> a
     ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
@@ -30,7 +31,6 @@ class ArrayComprehension(Basic):
     >>> b = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k))
     >>> b.doit()
     ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k))
-
     """
     def __new__(cls, function, *symbols, **assumptions):
         if any(len(l) != 3 or None for l in symbols):
@@ -38,60 +38,64 @@ class ArrayComprehension(Basic):
                               ' for the expression')
         arglist = [sympify(function)]
         arglist.extend(cls._check_limits_validity(function, symbols))
-        obj = Basic.__new__(cls, *arglist, **assumptions)
-        obj._function = obj._args[0]
-        obj._limits = obj._args[1:]
-        obj._shape = cls._calculate_shape_from_limits(obj._limits)
-        obj._rank = len(obj._shape)
-        obj._loop_size = cls._calculate_loop_size(obj._shape)
-        return obj
+        return Basic.__new__(cls, *arglist, **assumptions)
 
     @property
     def function(self):
         """
-        Return the function applied across limits
+        Returns
+        =======
+
+        The function applied across limits
 
         Examples
         ========
 
         >>> from sympy.tensor.array import ArrayComprehension
-        >>> from sympy.abc import i, j, k
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j')
         >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
         >>> a.function
         10*i + j
         """
-        return self._function
+        return self.args[0]
 
     @property
     def limits(self):
         """
-        Return a list of the limits that will be applied while expanding the array. Each
-        bound contrains firstly the an variable (not necessarily to be component of the
-        expression, e.g. an array of constant). Then the lower bound and the upper bound
-        define the length of this expansion.
+        Returns
+        =======
+
+        A list of the limits that will be applied while expanding the array.
 
         Examples
         ========
 
         >>> from sympy.tensor.array import ArrayComprehension
-        >>> from sympy.abc import i, j, k
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j')
         >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
         >>> a.limits
         ((i, 1, 4), (j, 1, 3))
         """
-        return self._limits
+        return self.args[1:]
 
     @property
     def free_symbols(self):
         """
-        Return a set of the free_symbols in the array. Variables appeared in the bounds
-        are supposed to be excluded from the free symbol set.
+        Returns
+        =======
+
+        A set of the free_symbols in the array.
+        Variables appeared in the bounds are supposed to be excluded
+        from the free symbol set.
 
         Examples
         ========
 
         >>> from sympy.tensor.array import ArrayComprehension
-        >>> from sympy.abc import i, j, k
+        >>> from sympy import symbols
+        >>> i, j, k = symbols('i j k')
         >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
         >>> a.free_symbols
         set()
@@ -99,50 +103,71 @@ class ArrayComprehension(Basic):
         >>> b.free_symbols
         {k}
         """
-        expr_free_sym = self._function.free_symbols
-        for var, inf, sup in self._limits:
+        expr_free_sym = self.function.free_symbols
+        for var, inf, sup in self.limits:
             expr_free_sym.discard(var)
-            if len(inf.free_symbols) > 0:
+            if inf.free_symbols:
                 expr_free_sym = expr_free_sym.union(inf.free_symbols)
-            if len(sup.free_symbols) > 0:
+            if sup.free_symbols:
                 expr_free_sym = expr_free_sym.union(sup.free_symbols)
         return expr_free_sym
 
     @property
     def variables(self):
         """
-        Return a list of the variables in the limits
+        Returns
+        =======
+
+        A tuple of the variables in the limits
 
         Examples
         ========
 
         >>> from sympy.tensor.array import ArrayComprehension
-        >>> from sympy.abc import i, j, k
+        >>> from sympy import symbols
+        >>> i, j, k = symbols('i j k')
         >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
         >>> a.variables
         [i, j]
         """
-        return [l[0] for l in self._limits]
+        return [l[0] for l in self.limits]
 
     @property
     def bound_symbols(self):
         """
-        Return only variables that are dummy variables. Note that all variables are
-        dummy variables since a limit without lower bound or upper bound is not accpted.
+        Returns
+        =======
+
+        Variables that are dummy variables.
+
+        Note
+        ====
+
+        Note that all variables are dummy variables since a limit without
+        lower bound or upper bound is not accepted.
         """
-        return [l[0] for l in self._limits if len(l) != 1]
+        return [l[0] for l in self.limits if len(l) != 1]
 
     @property
     def shape(self):
         """
-        Return the shape of the expanded array, which can have symbols. Note that both
-        the lower and the upper bounds are included while calculating the shape.
+        Returns
+        =======
+
+        The shape of the expanded array, which can have symbols.
+
+        Note
+        ====
+
+        Both the lower and the upper bounds are included while
+        calculating the shape.
 
         Examples
         ========
 
         >>> from sympy.tensor.array import ArrayComprehension
-        >>> from sympy.abc import i, j, k
+        >>> from sympy import symbols
+        >>> i, j, k = symbols('i j k')
         >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
         >>> a.shape
         (4, 3)
@@ -150,64 +175,80 @@ class ArrayComprehension(Basic):
         >>> b.shape
         (4, k + 3)
         """
-        return self._shape
+        return self._calculate_shape_from_limits(self.limits)
 
     @property
     def is_numeric(self):
         """
-        Return True if the expanded array is numeric, which means that there is not
+        Returns
+        =======
+
+        True if the expanded array is numeric, which means that there is no
         symbolic dimension.
 
         Examples
         ========
 
         >>> from sympy.tensor.array import ArrayComprehension
-        >>> from sympy.abc import i, j, k
+        >>> from sympy import symbols
+        >>> i, j, k = symbols('i j k')
         >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
         >>> a.is_numeric
         True
         >>> b = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k+3))
         >>> b.is_numeric
         False
-
         """
-        for var, inf, sup in self._limits:
+        for _, inf, sup in self.limits:
             if Basic(inf, sup).atoms(Symbol):
                 return False
         return True
 
     def rank(self):
         """
-        Return the rank of the expanded array.
+        Returns
+        =======
+
+        The rank of the expanded array.
 
         Examples
         ========
 
         >>> from sympy.tensor.array import ArrayComprehension
-        >>> from sympy.abc import i, j, k
+        >>> from sympy import symbols
+        >>> i, j, k = symbols('i j k')
         >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
         >>> a.rank()
         2
         """
-        return self._rank
+        return len(self.shape)
 
     def __len__(self):
         """
-        Overload common function len().Returns the number of element in the expanded
-        array. Note that symbolic length is not supported and will raise an error.
+        Returns
+        =======
+
+        The number of element in the expanded array.
+
+        Raises
+        ======
+
+        ValueError : When the length of the array is symbolic
 
         Examples
         ========
 
         >>> from sympy.tensor.array import ArrayComprehension
-        >>> from sympy.abc import i, j, k
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j')
         >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
         >>> len(a)
         12
         """
-        if len(self._loop_size.free_symbols) != 0:
+        loop_size = self._calculate_loop_size(self.shape)
+        if loop_size.free_symbols:
             raise ValueError('Symbolic length is not supported')
-        return self._loop_size
+        return loop_size
 
     @classmethod
     def _check_limits_validity(cls, function, limits):
@@ -224,7 +265,7 @@ class ArrayComprehension(Basic):
     @classmethod
     def _calculate_shape_from_limits(cls, limits):
         shape = []
-        for var, inf, sup in limits:
+        for _, inf, sup in limits:
             shape.append(sup - inf + 1)
         return tuple(shape)
 
@@ -254,8 +295,8 @@ class ArrayComprehension(Basic):
                 arr[index] = arr[index].subs(var, val)
             return arr.tolist()
 
-        list_gen = self._function
-        for var, inf, sup in reversed(self._limits):
+        list_gen = self.function
+        for var, inf, sup in reversed(self.limits):
             list_expr = list_gen
             list_gen = []
             for val in range(inf, sup+1):
