@@ -706,21 +706,6 @@ class PermutationGroup(Basic):
         A subnormal series is a composition series only if it is of
         maximum length.
 
-        Examples
-        ========
-        >>> from sympy.combinatorics.named_groups import (AlternatingGroup,
-        ... CyclicGroup, SymmetricGroup)
-        >>> S = SymmetricGroup(4)
-        >>> series = S.composition_series()
-        >>> A = AlternatingGroup(4)
-        >>> series[2] == A
-        True
-        >>> series[1].is_subgroup(A)
-        True
-        >>> G = CyclicGroup(4)
-        >>> G.composition_series()[1].order()
-        2
-
         """
         if not self.is_solvable:
             raise NotImplementedError('Group should be solvable')
@@ -728,21 +713,22 @@ class PermutationGroup(Basic):
         series = [self]
 
         for i in range(len(der)-1):
+            comp = []
             H = der[i+1]
-            Hgens = H.generators
-            seg = []
             for g in der[i].generators:
-                K = PermutationGroup([g] + Hgens)
-                order = K.order() // H.order()
-                for p, e in factorint(order).items():
-                    for j in range(e):
-                        seg.append(PermutationGroup([g] + Hgens))
-                        g = g**p
-                H = K
-            for grp in seg:
-                if not grp in series:
-                    series.insert(0, grp)
-        series.insert(0, PermutationGroup([self.identity()]))
+                if not g in H:
+                    order = g.order()
+                    p = list(factorint(order))[0]
+                    e = multiplicity(p, order)
+                    for j in range(e-1, -1, -1):
+                        qelm = g**(p**j)
+                        if not qelm in H:
+                            comp.append(H)
+                            H = PermutationGroup([qelm] + H.generators)
+            comp.reverse()
+            for i in comp:
+                if not i in series:
+                    series.append(i)
         return series
 
 
