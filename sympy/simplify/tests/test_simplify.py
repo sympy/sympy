@@ -399,6 +399,7 @@ def test_nsimplify():
     # Make sure nsimplify on expressions uses full precision
     assert nsimplify(pi.evalf(100)*x, rational_conversion='exact').evalf(100) == pi.evalf(100)*x
 
+
 def test_issue_9448():
     tmp = sympify("1/(1 - (-1)**(2/3) - (-1)**(1/3)) + 1/(1 + (-1)**(2/3) + (-1)**(1/3))")
     assert nsimplify(tmp) == S(1)/2
@@ -463,6 +464,12 @@ def test_logcombine_1():
     assert logcombine(3*log(w) + 3*log(z)) == log(w**3*z**3)
     assert logcombine(x*(y + 1) + log(2) + log(3)) == x*(y + 1) + log(6)
     assert logcombine((x + y)*log(w) + (-x - y)*log(3)) == (x + y)*log(w/3)
+    # a single unknown can combine
+    assert logcombine(log(x) + log(2)) == log(2*x)
+    eq = log(abs(x)) + log(abs(y))
+    assert logcombine(eq) == eq
+    reps = {x: 0, y: 0}
+    assert log(abs(x)*abs(y)).subs(reps) != eq.subs(reps)
 
 
 def test_logcombine_complex_coeff():
@@ -504,6 +511,16 @@ def test_posify():
         'Integral(1/_x, (y, 1, 3)) + Integral(_y, (y, 1, 3))'
     assert str(Sum(posify(1/x**n)[0], (n,1,3)).expand()) == \
         'Sum(_x**(-n), (n, 1, 3))'
+
+    # issue 16438
+    k = Symbol('k', finite=True)
+    eq, rep = posify(k)
+    assert eq.assumptions0 == {'positive': True, 'zero': False, 'imaginary': False,
+     'nonpositive': False, 'commutative': True, 'hermitian': True, 'real': True, 'nonzero': True,
+     'nonnegative': True, 'negative': False, 'complex': True, 'finite': True,
+     'infinite': False, 'extended_real':True, 'extended_negative': False,
+     'extended_nonnegative': True, 'extended_nonpositive': False,
+     'extended_nonzero': True, 'extended_positive': True}
 
 
 def test_issue_4194():
@@ -780,3 +797,12 @@ def test_nc_simplify():
     assert nc_simplify(expr) == (1-c)**-1
     # commutative expressions should be returned without an error
     assert nc_simplify(2*x**2) == 2*x**2
+
+def test_issue_15965():
+    A = Sum(z*x**y, (x, 1, a))
+    anew = z*Sum(x**y, (x, 1, a))
+    B = Integral(x*y, x)
+    bnew = y*Integral(x, x)
+    assert simplify(A + B) == anew + bnew
+    assert simplify(A) == anew
+    assert simplify(B) == bnew

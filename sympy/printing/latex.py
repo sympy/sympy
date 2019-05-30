@@ -410,6 +410,10 @@ class LatexPrinter(Printer):
         func = expr._expr
         return r"\nabla %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
+    def _print_Laplacian(self, expr):
+        func = expr._expr
+        return r"\triangle %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+
     def _print_Mul(self, expr):
         from sympy.core.power import Pow
         from sympy.physics.units import Quantity
@@ -552,20 +556,22 @@ class LatexPrinter(Printer):
                 return self._print(expr.base, exp=self._print(expr.exp))
             else:
                 tex = r"%s^{%s}"
-                exp = self._print(expr.exp)
-                # issue #12886: add parentheses around superscripts raised
-                # to powers
-                base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
-                if '^' in base and expr.base.is_Symbol:
-                    base = r"\left(%s\right)" % base
-                elif (isinstance(expr.base, Derivative)
-                        and base.startswith(r'\left(')
-                        and re.match(r'\\left\(\\d?d?dot', base)
-                        and base.endswith(r'\right)')):
-                    # don't use parentheses around dotted derivative
-                    base = base[6: -7]  # remove outermost added parens
+                return self._helper_print_standard_power(expr, tex)
 
-                return tex % (base, exp)
+    def _helper_print_standard_power(self, expr, template):
+        exp = self._print(expr.exp)
+        # issue #12886: add parentheses around superscripts raised
+        # to powers
+        base = self.parenthesize(expr.base, PRECEDENCE['Pow'])
+        if '^' in base and expr.base.is_Symbol:
+            base = r"\left(%s\right)" % base
+        elif (isinstance(expr.base, Derivative)
+            and base.startswith(r'\left(')
+            and re.match(r'\\left\(\\d?d?dot', base)
+            and base.endswith(r'\right)')):
+            # don't use parentheses around dotted derivative
+            base = base[6: -7]  # remove outermost added parens
+        return template % (base, exp)
 
     def _print_UnevaluatedExpr(self, expr):
         return self._print(expr.args[0])
@@ -817,6 +823,12 @@ class LatexPrinter(Printer):
 
     def _print_UndefinedFunction(self, expr):
         return self._hprint_Function(str(expr))
+
+    def _print_ElementwiseApplyFunction(self, expr):
+        return r"%s\left({%s}\ldots\right)" % (
+            self._print(expr.function),
+            self._print(expr.expr),
+        )
 
     @property
     def _special_function_classes(self):
@@ -1396,10 +1408,6 @@ class LatexPrinter(Printer):
 
     _print_RandomSymbol = _print_Symbol
 
-    def _print_MatrixSymbol(self, expr):
-        return self._print_Symbol(expr,
-                                  style=self._settings['mat_symbol_style'])
-
     def _deal_with_super_sub(self, string):
         if '{' in string:
             return string
@@ -1508,7 +1516,7 @@ class LatexPrinter(Printer):
         if not isinstance(mat, MatrixSymbol):
             return r"\left(%s\right)^{T}" % self._print(mat)
         else:
-            return "%s^{T}" % self._print(mat)
+            return "%s^{T}" % self.parenthesize(mat, precedence_traditional(expr), True)
 
     def _print_Trace(self, expr):
         mat = expr.arg
@@ -1554,37 +1562,49 @@ class LatexPrinter(Printer):
                                  self._print(expr.args[1]))
 
     def _print_HadamardProduct(self, expr):
-        from sympy import Add, MatAdd, MatMul
+        args = expr.args
+        prec = PRECEDENCE['Pow']
+        parens = self.parenthesize
 
-        def parens(x):
-            if isinstance(x, (Add, MatAdd, MatMul)):
-                return r"\left(%s\right)" % self._print(x)
-            return self._print(x)
-        return r' \circ '.join(map(parens, expr.args))
+        return r' \circ '.join(
+            map(lambda arg: parens(arg, prec, strict=True), args))
+
+    def _print_HadamardPower(self, expr):
+        template = r"%s^{\circ {%s}}"
+        return self._helper_print_standard_power(expr, template)
 
     def _print_KroneckerProduct(self, expr):
-        from sympy import Add, MatAdd, MatMul
+        args = expr.args
+        prec = PRECEDENCE['Pow']
+        parens = self.parenthesize
 
-        def parens(x):
-            if isinstance(x, (Add, MatAdd, MatMul)):
-                return r"\left(%s\right)" % self._print(x)
-            return self._print(x)
-        return r' \otimes '.join(map(parens, expr.args))
+        return r' \otimes '.join(
+            map(lambda arg: parens(arg, prec, strict=True), args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
         from sympy.matrices import MatrixSymbol
         if not isinstance(base, MatrixSymbol):
-            return r"\left(%s\right)^{%s}" % (self._print(base),
+            return "\\left(%s\\right)^{%s}" % (self._print(base),
                                               self._print(exp))
         else:
             return "%s^{%s}" % (self._print(base), self._print(exp))
 
+    def _print_MatrixSymbol(self, expr):
+        return self._print_Symbol(expr, style=self._settings[
+            'mat_symbol_style'])
+
     def _print_ZeroMatrix(self, Z):
-        return r"\mathbb{0}"
+        return r"\mathbb{0}" if self._settings[
+            'mat_symbol_style'] == 'plain' else r"\mathbf{0}"
+
+    def _print_OneMatrix(self, O):
+        return r"\mathbb{1}" if self._settings[
+            'mat_symbol_style'] == 'plain' else r"\mathbf{1}"
 
     def _print_Identity(self, I):
-        return r"\mathbb{I}"
+        return r"\mathbb{I}" if self._settings[
+            'mat_symbol_style'] == 'plain' else r"\mathbf{I}"
 
     def _print_NDimArray(self, expr):
 
@@ -1704,7 +1724,9 @@ class LatexPrinter(Printer):
             "^" if expr.is_up else "_",
             self._print(expr.args[0])
         )
-        return self._print(expr.args[0])
+
+    def _print_UniversalSet(self, expr):
+        return r"\mathbb{U}"
 
     def _print_tuple(self, expr):
         return r"\left( %s\right)" % \
@@ -1826,6 +1848,32 @@ class LatexPrinter(Printer):
         return (r"\left\{" +
                 r", ".join(self._print(el) for el in printset) +
                 r"\right\}")
+
+    def _print_bernoulli(self, expr, exp=None):
+        tex = r"B_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
+
+    _print_bell = _print_bernoulli
+
+    def _print_fibonacci(self, expr, exp=None):
+        tex = r"F_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
+
+    def _print_lucas(self, expr, exp=None):
+        tex = r"L_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
+
+    def _print_tribonacci(self, expr, exp=None):
+        tex = r"T_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^{%s}" % (tex, self._print(exp))
+        return tex
 
     def _print_SeqFormula(self, s):
         if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:
@@ -2541,3 +2589,132 @@ def print_latex(expr, **settings):
     """Prints LaTeX representation of the given expression. Takes the same
     settings as ``latex()``."""
     print(latex(expr, **settings))
+
+
+def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=False, **settings):
+    r"""
+    This function generates a LaTeX equation with a multiline right-hand side
+    in an ``align*``, ``eqnarray`` or ``IEEEeqnarray`` environment.
+
+    Parameters
+    ==========
+
+    lhs : Expr
+        Left-hand side of equation
+
+    rhs : Expr
+        Right-hand side of equation
+
+    terms_per_line : integer, optional
+        Number of terms per line to print. Default is 1.
+
+    environment : "string", optional
+        Which LaTeX wnvironment to use for the output. Options are "align*"
+        (default), "eqnarray", and "IEEEeqnarray".
+
+    use_dots : boolean, optional
+        If ``True``, ``\\dots`` is added to the end of each line. Default is ``False``.
+
+    Examples
+    ========
+
+    >>> from sympy import multiline_latex, symbols, sin, cos, exp, log, I
+    >>> x, y, alpha = symbols('x y alpha')
+    >>> expr = sin(alpha*y) + exp(I*alpha) - cos(log(y))
+    >>> print(multiline_latex(x, expr))
+    \begin{align*}
+    x = & e^{i \alpha} \\
+    & + \sin{\left(\alpha y \right)} \\
+    & - \cos{\left(\log{\left(y \right)} \right)}
+    \end{align*}
+
+    Using at most two terms per line:
+    >>> print(multiline_latex(x, expr, 2))
+    \begin{align*}
+    x = & e^{i \alpha} + \sin{\left(\alpha y \right)} \\
+    & - \cos{\left(\log{\left(y \right)} \right)}
+    \end{align*}
+
+    Using ``eqnarray`` and dots:
+    >>> print(multiline_latex(x, expr, terms_per_line=2, environment="eqnarray", use_dots=True))
+    \begin{eqnarray}
+    x & = & e^{i \alpha} + \sin{\left(\alpha y \right)} \dots\nonumber\\
+    & & - \cos{\left(\log{\left(y \right)} \right)}
+    \end{eqnarray}
+
+    Using ``IEEEeqnarray``:
+    >>> print(multiline_latex(x, expr, environment="IEEEeqnarray"))
+    \begin{IEEEeqnarray}{rCl}
+    x & = & e^{i \alpha} \nonumber\\
+    & & + \sin{\left(\alpha y \right)} \nonumber\\
+    & & - \cos{\left(\log{\left(y \right)} \right)}
+    \end{IEEEeqnarray}
+
+    Notes
+    =====
+
+    All optional parameters from ``latex`` can also be used.
+
+    """
+
+    # Based on code from https://github.com/sympy/sympy/issues/3001
+    l = LatexPrinter(**settings)
+    if environment == "eqnarray":
+        result = r'\begin{eqnarray}' + '\n'
+        first_term = '& = &'
+        nonumber = r'\nonumber'
+        end_term = '\n\\end{eqnarray}'
+        doubleet = True
+    elif environment == "IEEEeqnarray":
+        result = r'\begin{IEEEeqnarray}{rCl}' + '\n'
+        first_term = '& = &'
+        nonumber = r'\nonumber'
+        end_term = '\n\\end{IEEEeqnarray}'
+        doubleet = True
+    elif environment == "align*":
+        result = r'\begin{align*}' + '\n'
+        first_term = '= &'
+        nonumber = ''
+        end_term =  '\n\\end{align*}'
+        doubleet = False
+    else:
+        raise ValueError("Unknown environment: {}".format(environment))
+    dots = ''
+    if use_dots:
+        dots=r'\dots'
+    terms = rhs.as_ordered_terms()
+    n_terms = len(terms)
+    term_count = 1
+    for i in range(n_terms):
+        term = terms[i]
+        term_start = ''
+        term_end = ''
+        sign = '+'
+        if term_count > terms_per_line:
+            if doubleet:
+                term_start = '& & '
+            else:
+                term_start = '& '
+            term_count = 1
+        if term_count == terms_per_line:
+            # End of line
+            if i < n_terms-1:
+                # There are terms remaining
+                term_end = dots + nonumber + r'\\' + '\n'
+            else:
+                term_end = ''
+
+        if term.as_ordered_factors()[0] == -1:
+            term = -1*term
+            sign = r'-'
+        if i == 0: # beginning
+            if sign == '+':
+                sign = ''
+            result += r'{:s} {:s}{:s} {:s} {:s}'.format(l.doprint(lhs),
+                        first_term, sign, l.doprint(term), term_end)
+        else:
+            result += r'{:s}{:s} {:s} {:s}'.format(term_start, sign,
+                        l.doprint(term), term_end)
+        term_count += 1
+    result += end_term
+    return result

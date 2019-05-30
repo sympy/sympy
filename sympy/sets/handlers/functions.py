@@ -1,12 +1,12 @@
-from sympy.multipledispatch import dispatch, Dispatcher
-from sympy.core import Basic, Expr, Function, Add, Mul, Pow, Dummy, Integer
-from sympy import Min, Max, Set, sympify, symbols, exp, log, S, Wild
+from sympy import Set, symbols, exp, log, S, Wild
+from sympy.core import Expr, Add
+from sympy.core.function import Lambda, _coeff_isneg, FunctionClass
+from sympy.core.mod import Mod
+from sympy.logic.boolalg import true
+from sympy.multipledispatch import dispatch
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-    ProductSet, EmptySet, Intersection, Range)
-from sympy.core.function import Lambda, _coeff_isneg
-from sympy.sets.fancysets import Integers
-from sympy.core.function import FunctionClass
-from sympy.logic.boolalg import And, Or, Not, true, false
+                        EmptySet, Intersection, Range)
+from sympy.sets.fancysets import Integers, Naturals
 
 
 _x, _y = symbols("x y")
@@ -118,14 +118,14 @@ def _set_function(f, x):
 
 @dispatch(FunctionUnion, Union)
 def _set_function(f, x):
-    return Union(imageset(f, arg) for arg in x.args)
+    return Union(*(imageset(f, arg) for arg in x.args))
 
 @dispatch(FunctionUnion, Intersection)
 def _set_function(f, x):
     from sympy.sets.sets import is_function_invertible_in_set
     # If the function is invertible, intersect the maps of the sets.
     if is_function_invertible_in_set(f, x):
-        return Intersection(imageset(f, arg) for arg in x.args)
+        return Intersection(*(imageset(f, arg) for arg in x.args))
     else:
         return ImageSet(Lambda(_x, f(_x)), x)
 
@@ -168,9 +168,6 @@ def _set_function(f, self):
     if not isinstance(expr, Expr):
         return
 
-    if len(f.variables) > 1:
-        return
-
     n = f.variables[0]
 
     # f(x) + c and f(-x) + c cover the same integers
@@ -187,7 +184,39 @@ def _set_function(f, self):
     match = expr.match(a*n + b)
     if match and match[a]:
         # canonical shift
-        expr = match[a]*n + match[b] % match[a]
+        b = match[b]
+        if abs(match[a]) == 1:
+            nonint = []
+            for bi in Add.make_args(b):
+                if not bi.is_integer:
+                    nonint.append(bi)
+            b = Add(*nonint)
+        if b.is_number and match[a].is_real:
+            mod = b % match[a]
+            reps = dict([(m, m.args[0]) for m in mod.atoms(Mod)
+                if not m.args[0].is_real])
+            mod = mod.xreplace(reps)
+            expr = match[a]*n + mod
+        else:
+            expr = match[a]*n + b
 
     if expr != f.expr:
         return ImageSet(Lambda(n, expr), S.Integers)
+
+
+@dispatch(FunctionUnion, Naturals)
+def _set_function(f, self):
+    expr = f.expr
+    if not isinstance(expr, Expr):
+        return
+
+    x = f.variables[0]
+    if not expr.free_symbols - {x}:
+        step = expr.coeff(x)
+        c = expr.subs(x, 0)
+        if c.is_Integer and step.is_Integer and expr == step*x + c:
+            if self is S.Naturals:
+                c += step
+            if step > 0:
+                return Range(c, S.Infinity, step)
+            return Range(c, S.NegativeInfinity, step)

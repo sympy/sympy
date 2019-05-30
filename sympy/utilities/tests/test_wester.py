@@ -20,10 +20,12 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
     residue, Derivative, logcombine, Symbol, Intersection, Union,
-    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max)
+    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max, MatMul)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow, SKIP, skip, ON_TRAVIS
@@ -43,15 +45,15 @@ from sympy.integrals import integrate
 from sympy.integrals.transforms import laplace_transform,\
     inverse_laplace_transform, LaplaceTransform, fourier_transform,\
     mellin_transform
-from sympy.functions.special.error_functions import erf
-from sympy.functions.special.delta_functions import Heaviside
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.solveset import solveset, solveset_real, linsolve
 from sympy.solvers.ode import dsolve
 from sympy.core.relational import Equality
 from sympy.core.compatibility import range, PY3
 from itertools import islice, takewhile
+from sympy.series.formal import fps
 from sympy.series.fourier import fourier_series
+from sympy.calculus.util import minimum
 
 
 R = Rational
@@ -1303,11 +1305,9 @@ def test_O10():
                               [S(-423)/706]])]
 
 
-@XFAIL
 def test_P1():
-    raise NotImplementedError("Matrix property/function to extract Nth \
-diagonal not implemented. See Matlab diag(A,k) \
-http://www.mathworks.de/de/help/symbolic/diag.html")
+    assert Matrix(3, 3, lambda i, j: j - i).diagonal(-1) == Matrix(
+        1, 2, [-1, -1])
 
 
 def test_P2():
@@ -1318,7 +1318,6 @@ def test_P2():
                         [7, 8]])
 
 
-@XFAIL
 def test_P3():
     A = Matrix([
         [11, 12, 13, 14],
@@ -1327,20 +1326,23 @@ def test_P3():
         [41, 42, 43, 44]])
 
     A11 = A[0:3, 1:4]
-    A12 = A[(0, 1, 3), (2, 0, 3)]  # unsupported raises exception
+    A12 = A[(0, 1, 3), (2, 0, 3)]
     A21 = A
-    A221 = A[0:2, 2:4]
-    A222 = A[(3, 0), (2, 1)]   # unsupported raises exception
-    A22 = BlockMatrix([A221, A222])
-    B = BlockMatrix([[A11, A12],
-                    [A21, A22]])
-    assert B == Matrix([[12, 13, 14, 13, 11, 14],
-                        [22, 22, 24, 23, 21, 24],
-                        [32, 33, 34, 43, 41, 44],
-                        [11, 12, 13, 14, 13, 14],
-                        [21, 22, 23, 24, 23, 24],
-                        [31, 32, 33, 34, 43, 42],
-                        [41, 42, 43, 44, 13, 12]])
+    A221 = -A[0:2, 2:4]
+    A222 = -A[(3, 0), (2, 1)]
+    A22 = BlockMatrix([[A221, A222]]).T
+    rows = [[-A11, A12], [A21, A22]]
+    from sympy.utilities.pytest import raises
+    raises(ValueError, lambda: BlockMatrix(rows))
+    B = Matrix(rows)
+    assert B == Matrix([
+        [-12, -13, -14, 13, 11, 14],
+        [-22, -23, -24, 23, 21, 24],
+        [-32, -33, -34, 43, 41, 44],
+        [11, 12, 13, 14, -13, -23],
+        [21, 22, 23, 24, -14, -24],
+        [31, 32, 33, 34, -43, -13],
+        [41, 42, 43, 44, -42, -12]])
 
 
 @XFAIL
@@ -1348,20 +1350,11 @@ def test_P4():
     raise NotImplementedError("Block matrix diagonalization not supported")
 
 
-@XFAIL
 def test_P5():
     M = Matrix([[7, 11],
                 [3, 8]])
-    # Raises exception % not supported for matrices
     assert  M % 2 == Matrix([[1, 1],
                              [1, 0]])
-
-
-def test_P5_workaround():
-    M = Matrix([[7, 11],
-                [3, 8]])
-    assert  M.applyfunc(lambda i: i % 2) == Matrix([[1, 1],
-                                                    [1, 0]])
 
 
 def test_P6():
@@ -1410,6 +1403,14 @@ def test_P11():
     assert Matrix([[x, y],
                    [1, x*y]]).inv() == (1/(x**2 - 1))*Matrix([[x, -1],
                                                               [-1/y, x/y]])
+
+
+def test_P11_workaround():
+    M = Matrix([[x, y], [1, x*y]]).inv()
+    c = gcd(tuple(M))
+    assert MatMul(c, M/c, evaluate=False) == MatMul(c, Matrix([
+        [-x*y,  y],
+        [   1, -x]]), evaluate=False)
 
 
 def test_P12():
@@ -1715,19 +1716,19 @@ def test_P38():
     M=Matrix([[0, 1, 0],
               [0, 0, 0],
               [0, 0, 0]])
-    #raises NotImplementedError: Implemented only for diagonalizable matrices
+    #raises ValueError: Matrix det == 0; not invertible
     M**Rational(1,2)
 
 
 @XFAIL
 def test_P39():
-    '''
+    """
     M=Matrix([
         [1, 1],
         [2, 2],
         [3, 3]])
     M.SVD()
-    '''
+    """
     raise NotImplementedError("Singular value decomposition not implemented")
 
 
@@ -1781,9 +1782,10 @@ def test_R1():
     i, j, n = symbols('i j n', integer=True, positive=True)
     xn = MatrixSymbol('xn', n, 1)
     Sm = Sum((xn[i, 0] - Sum(xn[j, 0], (j, 0, n - 1))/n)**2, (i, 0, n - 1))
-    # raises TypeError: BooleanAtom not allowed in this context.
+    # sum does not calculate
+    # Unknown result
     Sm.doit()
-
+    raise NotImplementedError('Unknown result')
 
 @XFAIL
 def test_R2():
@@ -2244,10 +2246,8 @@ def test_U12():
         "External diff of differential form not supported")
 
 
-@XFAIL
 def test_U13():
-    #assert minimize(x**4 - x + 1, x)== -3*2**Rational(1,3)/8 + 1
-    raise NotImplementedError("minimize() not supported")
+    assert minimum(x**4 - x + 1, x) == -3*2**Rational(1,3)/8 + 1
 
 
 @XFAIL
@@ -2372,15 +2372,8 @@ def test_V15():
 
 @XFAIL
 def test_V16():
-# test case in Mathematica syntax:
-# In[53]:= Integrate[Cos[5*x]*CosIntegral[2*x], x]
-#          CosIntegral[2 x] Sin[5 x]   -SinIntegral[3 x] - SinIntegral[7 x]
-# Out[53]= ------------------------- + ------------------------------------
-#                      5                                10
-# cosine Integral function not supported
-# http://reference.wolfram.com/mathematica/ref/CosIntegral.html
-    raise NotImplementedError("cosine integral function not supported")
-
+    # Integral not calculated
+    assert integrate(cos(5*x)*Ci(2*x), x) == Ci(2*x)*sin(5*x)/5 - (Si(3*x) + Si(7*x))/10
 
 @XFAIL
 def test_V17():
@@ -2518,9 +2511,9 @@ def test_W18():
 
 @XFAIL
 def test_W19():
-    # integrate(cos_int(x)*bessel_j[0](2*sqrt(7*x)), x, 0, inf);
-    # Expected result is cos 7 - 1)/7   [Gradshteyn and Ryzhik 6.782(3)]
-    raise NotImplementedError("cosine integral function not supported")
+    # Integral not calculated
+    # Expected result is (cos 7 - 1)/7   [Gradshteyn and Ryzhik 6.782(3)]
+    assert integrate(Ci(x)*besselj(0, 2*sqrt(7*x)), (x, 0, oo)) == (cos(7) - 1)/7
 
 
 @XFAIL
@@ -2739,11 +2732,13 @@ def test_X17():
     #              inf
     #              ====     i1  2 i1          2 i1
     #              \        (- 1)   2      bern(2 i1) x
-    # (d41)               >        ------------------------------
+    # (d41)         >        ------------------------------
     #              /             2 i1 (2 i1)!
     #              ====
     #              i1 = 1
-    raise NotImplementedError("Formal power series not supported")
+    # fps does not calculate
+    assert fps(log(sin(x)/x)) == \
+        Sum((-1)**k*2**(2*k - 1)*bernoulli(2*k)*x**(2*k)/(k*factorial(2*k)), (k, 1, oo))
 
 
 @XFAIL
@@ -2756,7 +2751,22 @@ def test_X18():
     #                           )     -------------------------
     #                          /                 k!
     #                         -----
-    raise NotImplementedError("Formal power series not supported")
+    #
+    # Now, sympy returns
+    #      oo
+    #    _____
+    #    \    `
+    #     \        /          k             k\
+    #      \     k |I*(-1 - I)    I*(-1 + I) |
+    #       \   x *|----------- - -----------|
+    #       /      \     2             2     /
+    #      /    ------------------------------
+    #     /                   k!
+    #    /____,
+    #    k = 0
+    k = Dummy('k')
+    assert fps(exp(-x)*sin(x)) == \
+        Sum(2**(S(1)/2*k)*sin(S(3)/4*k*pi)*x**k/factorial(k), (k, 0, oo))
 
 
 @XFAIL

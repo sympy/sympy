@@ -7,11 +7,11 @@ try:
     @doctest_depends_on(modules=('pyglet',))
     def PygletPlot(*args, **kwargs):
         """
+
         Plot Examples
         =============
 
         See examples/advanced/pyglet_plotting.py for many more examples.
-
 
         >>> from sympy.plotting.pygletplot import PygletPlot as Plot
         >>> from sympy import symbols
@@ -76,7 +76,7 @@ try:
         1: parametric, cartesian, polar
         2: parametric, cartesian, cylindrical = polar, spherical
 
-        >>> Plot(1, mode='spherical') # doctest: +SKIP
+        >>> Plot(1, mode='spherical')
 
 
         Calculator-like Interface
@@ -86,8 +86,8 @@ try:
         >>> f = x**2
         >>> p[1] = f
         >>> p[2] = f.diff(x)
-        >>> p[3] = f.diff(x).diff(x) # doctest: +SKIP
-        >>> p # doctest: +SKIP
+        >>> p[3] = f.diff(x).diff(x)
+        >>> p
         [1]: x**2, 'mode=cartesian'
         [2]: 2*x, 'mode=cartesian'
         [3]: 2, 'mode=cartesian'
@@ -136,8 +136,8 @@ try:
         =============================
         """
 
-        import plot
-        return plot.PygletPlot(*args, **kwargs)
+        from sympy.plotting.pygletplot.plot import PygletPlot
+        return PygletPlot(*args, **kwargs)
 
 except Exception as e:
     def PygletPlot(*args, **kwargs):

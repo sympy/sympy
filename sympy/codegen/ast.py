@@ -130,10 +130,11 @@ from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.compatibility import string_types
 from sympy.core.expr import Expr
-from sympy.core.numbers import Float, Integer
+from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Lt, Le, Ge, Gt
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import iterable
+
 
 
 def _mk_Tuple(args):
@@ -383,7 +384,7 @@ class NoneToken(Token):
         return ()
 
     def __hash__(self):
-        return super(Token, self).__hash__()
+        return super(NoneToken, self).__hash__()
 
 
 none = NoneToken()
@@ -1249,6 +1250,10 @@ class FloatType(FloatBaseType):
 
     def cast_nocheck(self, value):
         """ Casts without checking if out of bounds or subnormal. """
+        if value == oo:  # float(oo) or oo
+            return float(oo)
+        elif value == -oo:  # float(-oo) or -oo
+            return float(-oo)
         return Float(str(sympify(value).evalf(self.decimal_dig)), self.decimal_dig)
 
     def _check(self, value):

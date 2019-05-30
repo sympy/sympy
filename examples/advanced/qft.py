@@ -15,8 +15,8 @@ SymPy, but that's a long journey.
 
 """
 
-from sympy import Basic, exp, Symbol, sin, Rational, I, Mul, Matrix, \
-    ones, sqrt, pprint, simplify, Eq, sympify
+from sympy import Basic, Symbol, Matrix, \
+    ones, sqrt, pprint, Eq, sympify
 
 from sympy.physics import msigma, mgamma
 

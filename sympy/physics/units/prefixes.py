@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Module defining unit prefixe class and some constants.
 

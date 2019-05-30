@@ -8,7 +8,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And
-from sympy.sets.sets import Set, Interval, Union, FiniteSet
+from sympy.sets.sets import Set, Interval, Union, FiniteSet, ProductSet
 from sympy.utilities.misc import filldedent
 
 
@@ -148,7 +148,34 @@ class Integers(with_metaclass(Singleton, Set)):
 
 
 class Reals(with_metaclass(Singleton, Interval)):
+    """
+    Represents all real numbers
+    from negative infinity to positive infinity,
+    including all integer, rational and irrational numbers.
+    This set is also available as the Singleton, S.Reals.
 
+
+    Examples
+    ========
+
+    >>> from sympy import S, Interval, Rational, pi, I
+    >>> 5 in S.Reals
+    True
+    >>> Rational(-1, 2) in S.Reals
+    True
+    >>> pi in S.Reals
+    True
+    >>> 3*I in S.Reals
+    False
+    >>> S.Reals.contains(pi)
+    True
+
+
+    See Also
+    ========
+
+    ComplexRegion
+    """
     def __new__(cls):
         return Interval.__new__(cls, -S.Infinity, S.Infinity)
 
@@ -227,7 +254,7 @@ class ImageSet(Set):
         return Basic.__new__(cls, flambda, *sets)
 
     lamda = property(lambda self: self.args[0])
-    base_set = property(lambda self: self.args[1])
+    base_set = property(lambda self: ProductSet(self.args[1:]))
 
     def __iter__(self):
         already_seen = set()
@@ -245,6 +272,7 @@ class ImageSet(Set):
     def _contains(self, other):
         from sympy.matrices import Matrix
         from sympy.solvers.solveset import solveset, linsolve
+        from sympy.solvers.solvers import solve
         from sympy.utilities.iterables import is_sequence, iterable, cartes
         L = self.lamda
         if is_sequence(other):
@@ -272,26 +300,39 @@ class ImageSet(Set):
                 solns = list(linsolve([e - val for e, val in
                 zip(L.expr, other)], variables))
             else:
-                syms = [e.free_symbols & free for e in eqs]
-                solns = {}
-                for i, (e, s, v) in enumerate(zip(eqs, syms, other)):
-                    if not s:
-                        if e != v:
-                            return S.false
-                        solns[vars[i]] = [v]
-                        continue
-                    elif len(s) == 1:
-                        sy = s.pop()
-                        sol = solveset(e, sy)
-                        if sol is S.EmptySet:
-                            return S.false
-                        elif isinstance(sol, FiniteSet):
-                            solns[sy] = list(sol)
+                try:
+                    syms = [e.free_symbols & free for e in eqs]
+                    solns = {}
+                    for i, (e, s, v) in enumerate(zip(eqs, syms, other)):
+                        if not s:
+                            if e != v:
+                                return S.false
+                            solns[vars[i]] = [v]
+                            continue
+                        elif len(s) == 1:
+                            sy = s.pop()
+                            sol = solveset(e, sy)
+                            if sol is S.EmptySet:
+                                return S.false
+                            elif isinstance(sol, FiniteSet):
+                                solns[sy] = list(sol)
+                            else:
+                                raise NotImplementedError
                         else:
+                            # if there is more than 1 symbol from
+                            # variables in expr than this is a
+                            # coupled system
                             raise NotImplementedError
-                    else:
-                        raise NotImplementedError
-                solns = cartes(*[solns[s] for s in variables])
+                    solns = cartes(*[solns[s] for s in variables])
+                except NotImplementedError:
+                    solns = solve([e - val for e, val in
+                        zip(L.expr, other)], variables, set=True)
+                    if solns:
+                        _v, solns = solns
+                        # watch for infinite solutions like solving
+                        # for x, y and getting (x, 0), (0, y), (0, 0)
+                        solns = [i for i in solns if not any(
+                            s in i for s in variables)]
         else:
             x = L.variables[0]
             if isinstance(L.expr, Expr):
@@ -365,9 +406,10 @@ class Range(Set):
         >>> Range(0, 10, 3)
         Range(0, 12, 3)
 
-    Infinite ranges are allowed. If the starting point is infinite,
-    then the final value is ``stop - step``. To iterate such a range,
-    it needs to be reversed:
+    Infinite ranges are allowed. ``oo`` and ``-oo`` are never included in the
+    set (``Range`` is always a subset of ``Integers``). If the starting point
+    is infinite, then the final value is ``stop - step``. To iterate such a
+    range, it needs to be reversed:
 
         >>> from sympy import oo
         >>> r = Range(-oo, 1)
@@ -390,7 +432,7 @@ class Range(Set):
         >>> list(_)
         [4, 6]
 
-    Athough slicing of a Range will always return a Range -- possibly
+    Although slicing of a Range will always return a Range -- possibly
     empty -- an empty set will be returned from any intersection that
     is empty:
 
@@ -442,14 +484,17 @@ class Range(Set):
     Either the start or end value of the Range must be finite.'''))
 
         if start.is_infinite:
-            end = stop
-        else:
+            if step*(stop - start) < 0:
+                start = stop = S.One
+            else:
+                end = stop
+        if not start.is_infinite:
             ref = start if start.is_finite else stop
             n = ceiling((stop - ref)/step)
             if n <= 0:
                 # null Range
-                start = end = 0
-                step = 1
+                start = end = S.Zero
+                step = S.One
             else:
                 end = ref + n*step
         return Basic.__new__(cls, start, end, step)

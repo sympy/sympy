@@ -285,20 +285,21 @@ def multiplicity(p, n):
 def perfect_power(n, candidates=None, big=True, factor=True):
     """
     Return ``(b, e)`` such that ``n`` == ``b**e`` if ``n`` is a
-    perfect power; otherwise return ``False``.
+    perfect power with ``e > 1``, else ``False``. A ValueError is
+    raised if ``n`` is not an integer or is not positive.
 
     By default, the base is recursively decomposed and the exponents
     collected so the largest possible ``e`` is sought. If ``big=False``
     then the smallest possible ``e`` (thus prime) will be chosen.
 
-    If ``candidates`` for exponents are given, they are assumed to be sorted
-    and the first one that is larger than the computed maximum will signal
-    failure for the routine.
+    If ``candidates`` for exponents are given, they are assumed to be
+    sorted and the first one that is larger than the computed maximum
+    will signal failure for the routine.
 
-    If ``factor=True`` then simultaneous factorization of n is attempted
-    since finding a factor indicates the only possible root for n. This
-    is True by default since only a few small factors will be tested in
-    the course of searching for the perfect power.
+    If ``factor=True`` then simultaneous factorization of n is
+    attempted since finding a factor indicates the only possible root
+    for n. This is True by default since only a few small factors will
+    be tested in the course of searching for the perfect power.
 
     Examples
     ========
@@ -306,11 +307,22 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     >>> from sympy import perfect_power
     >>> perfect_power(16)
     (2, 4)
-    >>> perfect_power(16, big = False)
+    >>> perfect_power(16, big=False)
     (4, 2)
+
+    Notes
+    =====
+
+    To know whether an integer is a perfect power of 2 use
+
+    >>> is2pow = lambda n: bool(n and not n & (n - 1))
+    >>> [(i, is2pow(i)) for i in range(5)]
+    [(0, False), (1, True), (2, True), (3, False), (4, True)]
     """
-    n = int(n)
+    n = as_int(n)
     if n < 3:
+        if n < 1:
+            raise ValueError('expecting positive n')
         return False
     logn = math.log(n, 2)
     max_possible = int(logn) + 2  # only check values less than this
@@ -382,8 +394,8 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 if m is not False:
                     r, e = m[0], e*m[1]
             return int(r), e
-    else:
-        return False
+
+    return False
 
 
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
@@ -987,17 +999,17 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                use_rho=use_rho, use_pm1=use_pm1,
                                verbose=verbose, visual=False)
     elif isinstance(n, Mul):
-        factordict = dict([(int(k), int(v)) for k, v in
-                           list(n.as_powers_dict().items())])
+        factordict = {int(k): int(v) for k, v in
+            n.as_powers_dict().items()}
     elif isinstance(n, dict):
         factordict = n
     if factordict and (isinstance(n, Mul) or isinstance(n, dict)):
         # check it
-        for k in list(factordict.keys()):
-            if isprime(k):
+        for key in list(factordict.keys()):
+            if isprime(key):
                 continue
-            e = factordict.pop(k)
-            d = factorint(k, limit=limit, use_trial=use_trial, use_rho=use_rho,
+            e = factordict.pop(key)
+            d = factorint(key, limit=limit, use_trial=use_trial, use_rho=use_rho,
                           use_pm1=use_pm1, verbose=verbose, visual=False)
             for k, v in d.items():
                 if k in factordict:

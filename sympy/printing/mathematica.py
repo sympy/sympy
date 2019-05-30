@@ -5,7 +5,6 @@ Mathematica code printer
 from __future__ import print_function, division
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.printing.str import StrPrinter
 
 # Used in MCodePrinter._print_Function(self)
 known_functions = {
@@ -33,6 +32,34 @@ known_functions = {
     "conjugate": [(lambda x: True, "Conjugate")],
     "Max": [(lambda *x: True, "Max")],
     "Min": [(lambda *x: True, "Min")],
+    "erf": [(lambda x: True, "Erf")],
+    "erf2": [(lambda *x: True, "Erf")],
+    "erfc": [(lambda x: True, "Erfc")],
+    "erfi": [(lambda x: True, "Erfi")],
+    "erfinv": [(lambda x: True, "InverseErf")],
+    "erfcinv": [(lambda x: True, "InverseErfc")],
+    "erf2inv": [(lambda *x: True, "InverseErf")],
+    "expint": [(lambda *x: True, "ExpIntegralE")],
+    "Ei": [(lambda x: True, "ExpIntegralEi")],
+    "fresnelc": [(lambda x: True, "FresnelC")],
+    "fresnels": [(lambda x: True, "FresnelS")],
+    "gamma": [(lambda x: True, "Gamma")],
+    "uppergamma": [(lambda *x: True, "Gamma")],
+    "polygamma": [(lambda *x: True, "PolyGamma")],
+    "loggamma": [(lambda x: True, "LogGamma")],
+    "beta": [(lambda *x: True, "Beta")],
+    "Ci": [(lambda x: True, "CosIntegral")],
+    "Si": [(lambda x: True, "SinIntegral")],
+    "Chi": [(lambda x: True, "CoshIntegral")],
+    "Shi": [(lambda x: True, "SinhIntegral")],
+    "li": [(lambda x: True, "LogIntegral")],
+    "factorial": [(lambda x: True, "Factorial")],
+    "factorial2": [(lambda x: True, "Factorial2")],
+    "subfactorial": [(lambda x: True, "Subfactorial")],
+    "catalan": [(lambda x: True, "CatalanNumber")],
+    "harmonic": [(lambda *x: True, "HarmonicNumber")],
+    "RisingFactorial": [(lambda *x: True, "Pochhammer")],
+    "FallingFactorial": [(lambda *x: True, "FactorialPower")],
 }
 
 
@@ -59,11 +86,11 @@ class MCodePrinter(CodePrinter):
         """Register function mappings supplied by user"""
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
-        userfuncs = settings.get('user_functions', {})
+        userfuncs = settings.get('user_functions', {}).copy()
         for k, v in userfuncs.items():
             if not isinstance(v, list):
                 userfuncs[k] = [(lambda *x: True, v)]
-                self.known_functions.update(userfuncs)
+        self.known_functions.update(userfuncs)
 
     def _format_code(self, lines):
         return lines
@@ -93,7 +120,7 @@ class MCodePrinter(CodePrinter):
     def _print_NegativeOne(self, expr):
         return '-1'
 
-    def _print_half(self, expr):
+    def _print_Half(self, expr):
         return '1/2'
 
     def _print_ImaginaryUnit(self, expr):

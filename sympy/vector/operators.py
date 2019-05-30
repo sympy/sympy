@@ -2,7 +2,7 @@ import collections
 from sympy.core.expr import Expr
 from sympy.core import sympify, S, preorder_traversal
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot, dot
+from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot
 from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative

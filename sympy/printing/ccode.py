@@ -62,7 +62,6 @@ known_functions = _known_functions_C9X
 known_functions_C99 = dict(_known_functions_C9X, **{
     'exp2': 'exp2',
     'expm1': 'expm1',
-    'expm1': 'expm1',
     'log10': 'log10',
     'log2': 'log2',
     'log1p': 'log1p',
@@ -221,7 +220,8 @@ class C89CodePrinter(CodePrinter):
     _ns = ''  # namespace, C++ uses 'std::'
     _kf = known_functions_C89  # known_functions-dict to copy
 
-    def __init__(self, settings={}):
+    def __init__(self, settings=None):
+        settings = settings or {}
         if self.math_macros is None:
             self.math_macros = settings.pop('math_macros', get_math_macros())
         self.type_aliases = dict(chain(self.type_aliases.items(),

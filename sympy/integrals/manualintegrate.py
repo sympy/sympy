@@ -161,10 +161,10 @@ def manual_subs(expr, *args):
             # that is, x**a = exp(a*y). Replace nontrivial powers of x
             # before subs turns them into `exp(y)**a`, but
             # do not replace x itself yet, to avoid `log(exp(y))`.
-            a = sympy.Wild('a')
-            expr = expr.replace(old.args[0]**(1 + a),
-                sympy.exp((1 + a)*new), exact=True)
-            new_subs.append((old.args[0], sympy.exp(new)))
+            x0 = old.args[0]
+            expr = expr.replace(lambda x: x.is_Pow and x.base == x0,
+                lambda x: sympy.exp(x.exp*new))
+            new_subs.append((x0, sympy.exp(new)))
 
     return expr.subs(list(sequence) + new_subs)
 
