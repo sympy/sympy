@@ -71,6 +71,15 @@ from . import drv_types
 from .drv_types import (Geometric, Logarithmic, NegativeBinomial, Poisson, YuleSimon, Zeta)
 __all__.extend(drv_types.__all__)
 
+from . import joint_rv_types
+from .joint_rv_types import (
+    JointRV,
+    Dirichlet, GeneralizedMultivariateLogGamma, GeneralizedMultivariateLogGammaOmega,
+    Multinomial, MultivariateBeta, MultivariateEwens, MultivariateT, NegativeMultinomial,
+    NormalGamma
+)
+__all__.extend(joint_rv_types.__all__)
+
 from . import symbolic_probability
 from .symbolic_probability import Probability, Expectation, Variance, Covariance
 __all__.extend(symbolic_probability.__all__)
