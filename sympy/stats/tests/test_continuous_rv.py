@@ -16,10 +16,10 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
                          Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
-                         LogNormal, Maxwell, Nakagami, Normal, Pareto,
+                         LogNormal, Maxwell, Nakagami, Normal, GaussianInverse, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
-                         VonMises, Weibull, WignerSemicircle, correlation,
+                         VonMises, Weibull, WignerSemicircle, Wald, correlation,
                          moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
@@ -157,6 +157,12 @@ def test_characteristic_function():
     cf = characteristic_function(Z)
     assert cf(0) == 1
     assert cf(1).expand() == S(25)/26 + 5*I/26
+
+    X = GaussianInverse('x', 1, 1)
+    cf = characteristic_function(X)
+    assert cf(0) == 1
+    assert cf(1) == exp(1 - sqrt(1 - 2*I))
+
 
 def test_moment_generating_function():
     t = symbols('t', positive=True)
@@ -710,6 +716,40 @@ def test_nakagami():
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
 
+def test_gaussian_inverse():
+    # test for symbolic parameters
+    a, b = symbols('a b')
+    assert GaussianInverse('x', a, b)
+
+    # Inverse Gaussian distribution is also known as Wald distribution
+    # `GaussianInverse` can also be referred by the name `Wald`
+    a, b, z = symbols('a b z')
+    X = Wald('x', a, b)
+    assert density(X)(z) == sqrt(2)*sqrt(b/z**3)*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
+
+    a, b = symbols('a b', positive=True)
+    z = Symbol('z', positive=True)
+
+    X = GaussianInverse('x', a, b)
+    assert density(X)(z) == sqrt(2)*sqrt(b)*sqrt(z**(-3))*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
+    assert E(X) == a
+    assert variance(X).expand() == a**3/b
+    assert cdf(X)(z) == (S.Half - erf(sqrt(2)*sqrt(b)*(1 + z/a)/(2*sqrt(z)))/2)*exp(2*b/a) +\
+         erf(sqrt(2)*sqrt(b)*(-1 + z/a)/(2*sqrt(z)))/2 + S.Half
+
+    a = symbols('a', nonpositive=True)
+    raises(ValueError, lambda: GaussianInverse('x', a, b))
+
+    a = symbols('a', positive=True)
+    b = symbols('b', nonpositive=True)
+    raises(ValueError, lambda: GaussianInverse('x', a, b))
+
+def test_sampling_gaussian_inverse():
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
+    X = GaussianInverse("x", 1, 1)
+    assert sample(X) in X.pspace.domain.set
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True)

@@ -61,9 +61,9 @@ from .crv_types import (
     Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
     Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
     GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogNormal,
-    Maxwell, Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh,
+    Maxwell, Nakagami, Normal, GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh,
     ShiftedGompertz, StudentT, Trapezoidal, Triangular, Uniform, UniformSum, VonMises,
-    Weibull, WignerSemicircle
+    Weibull, WignerSemicircle, Wald
 )
 __all__.extend(crv_types.__all__)
 
