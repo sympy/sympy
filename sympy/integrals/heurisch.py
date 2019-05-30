@@ -488,8 +488,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             if _derivation(p) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
                 return _deflation(c)*gcd(q, q.diff(y)).as_expr()
-        else:
-            return p
+
+        return p
 
     def _splitter(p):
         for y in V:
@@ -512,8 +512,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 q_split = _splitter(cancel(q / s))
 
                 return (c_split[0]*q_split[0]*s, c_split[1]*q_split[1])
-        else:
-            return (S.One, p)
+
+        return (S.One, p)
 
     special = {}
 
@@ -564,9 +564,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = itermonomials(V, A + B - 1 + degree_offset)
+        monoms = tuple(itermonomials(V, A + B - 1 + degree_offset))
     else:
-        monoms = itermonomials(V, A + B + degree_offset)
+        monoms = tuple(itermonomials(V, A + B + degree_offset))
 
     poly_coeffs = _symbols('A', len(monoms))
 

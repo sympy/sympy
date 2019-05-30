@@ -346,11 +346,15 @@ def test_is_solvable():
     b = Permutation([1, 0, 2])
     G = PermutationGroup([a, b])
     assert G.is_solvable
+    G = PermutationGroup([a])
+    assert G.is_solvable
     a = Permutation([1, 2, 3, 4, 0])
     b = Permutation([1, 0, 2, 3, 4])
     G = PermutationGroup([a, b])
     assert not G.is_solvable
-
+    P = SymmetricGroup(10)
+    S = P.sylow_subgroup(3)
+    assert S.is_solvable
 
 def test_rubik1():
     gens = rubik_cube_generators()
@@ -927,3 +931,59 @@ def test_elementary():
     assert G.is_elementary(2) == False
     H = AlternatingGroup(4).sylow_subgroup(2)
     assert H.is_elementary(2) == True
+
+
+def test_perfect():
+    G = AlternatingGroup(3)
+    assert G.is_perfect == False
+    G = AlternatingGroup(5)
+    assert G.is_perfect == True
+
+
+def test_index():
+    G = PermutationGroup(Permutation(0,1,2), Permutation(0,2,3))
+    H = G.subgroup([Permutation(0,1,3)])
+    assert G.index(H) == 4
+
+
+def test_cyclic():
+    G = SymmetricGroup(2)
+    assert G.is_cyclic
+    G = AbelianGroup(3, 7)
+    assert G.is_cyclic
+    G = AbelianGroup(7, 7)
+    assert not G.is_cyclic
+    G = AlternatingGroup(3)
+    assert G.is_cyclic
+    G = AlternatingGroup(4)
+    assert not G.is_cyclic
+
+
+def test_abelian_invariants():
+    G = AbelianGroup(2, 3, 4)
+    assert G.abelian_invariants() == [2, 3, 4]
+    G=PermutationGroup([Permutation(1, 2, 3, 4), Permutation(1, 2), Permutation(5, 6)])
+    assert G.abelian_invariants() == [2, 2]
+    G = AlternatingGroup(7)
+    assert G.abelian_invariants() == []
+    G = AlternatingGroup(4)
+    assert G.abelian_invariants() == [3]
+    G = DihedralGroup(4)
+    assert G.abelian_invariants() == [2, 2]
+
+    G = PermutationGroup([Permutation(1, 2, 3, 4, 5, 6, 7)])
+    assert G.abelian_invariants() == [7]
+    G = DihedralGroup(12)
+    S = G.sylow_subgroup(3)
+    assert S.abelian_invariants() == [3]
+    G = PermutationGroup(Permutation(0, 1, 2), Permutation(0, 2, 3))
+    assert G.abelian_invariants() == [3]
+    G = PermutationGroup([Permutation(0, 1), Permutation(0, 2, 4, 6)(1, 3, 5, 7)])
+    assert G.abelian_invariants() == [2, 4]
+    G = SymmetricGroup(30)
+    S = G.sylow_subgroup(2)
+    assert S.abelian_invariants() == [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+    S = G.sylow_subgroup(3)
+    assert S.abelian_invariants() == [3, 3, 3, 3]
+    S = G.sylow_subgroup(5)
+    assert S.abelian_invariants() == [5, 5, 5]

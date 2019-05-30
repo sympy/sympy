@@ -229,7 +229,7 @@ class Limit(Expr):
         # If no factorial term is present, e should remain unchanged.
         # factorial is defined to be zero for negative inputs (which
         # differs from gamma) so only rewrite for positive z0.
-        if z0.is_positive:
+        if z0.is_extended_positive:
             e = e.rewrite([factorial, RisingFactorial], gamma)
 
         if e.is_Mul:

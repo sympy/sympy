@@ -1,14 +1,34 @@
+"""
+
+Contains
+========
+Geometric
+Poisson
+Logarithmic
+NegativeBinomial
+Poisson
+YuleSimon
+Zeta
+"""
+
+
 from __future__ import print_function, division
 
-from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta, hyper, binomial,
-                   Piecewise, floor)
+from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta,
+    hyper, binomial, Piecewise, floor)
 from sympy.stats import density
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.rv import _value_check, RandomSymbol
 import random
 
-__all__ = ['Geometric', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'YuleSimon', 'Zeta']
+__all__ = ['Geometric',
+'Logarithmic',
+'NegativeBinomial',
+'Poisson',
+'YuleSimon',
+'Zeta'
+]
 
 
 def rv(symbol, cls, *args):
@@ -30,7 +50,7 @@ class GeometricDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        _value_check(And(0 < p, p <= 1), "p must be between 0 and 1")
+        _value_check((0 < p, p <= 1), "p must be between 0 and 1")
 
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p
@@ -102,7 +122,7 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        _value_check(And(p > 0, p < 1), "p should be between 0 and 1")
+        _value_check((p > 0, p < 1), "p should be between 0 and 1")
 
     def pdf(self, k):
         p = self.p
@@ -180,7 +200,7 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
     @staticmethod
     def check(r, p):
         _value_check(r > 0, 'r should be positive')
-        _value_check(And(p > 0, p < 1), 'p should be between 0 and 1')
+        _value_check((p > 0, p < 1), 'p should be between 0 and 1')
 
     def pdf(self, k):
         r = self.r

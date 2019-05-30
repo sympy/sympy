@@ -89,7 +89,7 @@ def _coeff_isneg(a):
         a = a.args[0]
     if a.is_Mul:
         a = a.args[0]
-    return a.is_Number and a.is_negative
+    return a.is_Number and a.is_extended_negative
 
 
 class PoleError(Exception):
@@ -102,7 +102,7 @@ class ArgumentIndexError(ValueError):
                (self.args[1], self.args[0]))
 
 
-# Python 2 and 3 compatible version that do not raise a Deprecation warning.
+# Python 2/3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
 
@@ -1184,8 +1184,8 @@ class Derivative(Expr):
     def __new__(cls, expr, *variables, **kwargs):
 
         from sympy.matrices.common import MatrixCommon
-        from sympy import Integer
-        from sympy.tensor.array import Array, NDimArray
+        from sympy import Integer, MatrixExpr
+        from sympy.tensor.array import Array, NDimArray, derive_by_array
         from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
@@ -1317,6 +1317,9 @@ class Derivative(Expr):
                         if not expr.xreplace({v: D}).has(D):
                             zero = True
                             break
+                    elif isinstance(v, MatrixExpr):
+                        zero = False
+                        break
                     elif isinstance(v, Symbol) and v not in free:
                         zero = True
                         break
@@ -1328,7 +1331,7 @@ class Derivative(Expr):
             if zero:
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
-                else:
+                elif expr.is_scalar:
                     return S.Zero
 
             # make the order of symbols canonical
@@ -2942,10 +2945,6 @@ def count_ops(expr, visual=False):
         while args:
             a = args.pop()
 
-            # XXX: This is a hack to support non-Basic args
-            if isinstance(a, string_types):
-                continue
-
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:
@@ -3033,10 +3032,6 @@ def count_ops(expr, visual=False):
             while args:
                 a = args.pop()
 
-                # XXX: This is a hack to support non-Basic args
-                if isinstance(a, string_types):
-                    continue
-
                 if a.args:
                     o = Symbol(a.func.__name__.upper())
                     if a.is_Boolean:
@@ -3061,9 +3056,10 @@ def count_ops(expr, visual=False):
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
 
-def nfloat(expr, n=15, exponent=False):
+def nfloat(expr, n=15, exponent=False, dkeys=False):
     """Make all Rationals in expr Floats except those in exponents
-    (unless the exponents flag is set to True).
+    (unless the exponents flag is set to True). When processing
+    dictionaries, don't modify the keys unless ``dkeys=True``.
 
     Examples
     ========
@@ -3076,15 +3072,31 @@ def nfloat(expr, n=15, exponent=False):
     >>> nfloat(x**4 + sqrt(y), exponent=True)
     x**4.0 + y**0.5
 
+    Container types are not modified:
+
+    >>> type(nfloat((1, 2))) is tuple
+    True
     """
     from sympy.core.power import Pow
     from sympy.polys.rootoftools import RootOf
 
+    kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+    # handling of iterable containers
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):
-            return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
-                               list(expr.items())])
-        return type(expr)([nfloat(a, n, exponent) for a in expr])
+            if dkeys:
+                args = [tuple(map(lambda i: nfloat(i, **kw), a))
+                    for a in expr.items()]
+            else:
+                args = [(k, nfloat(v, **kw)) for k, v in expr.items()]
+            if isinstance(expr, dict):
+                return type(expr)(args)
+            else:
+                return expr.func(*args)
+        elif isinstance(expr, Basic):
+            return expr.func(*[nfloat(a, **kw) for a in expr.args])
+        return type(expr)([nfloat(a, **kw) for a in expr])
+
     rv = sympify(expr)
 
     if rv.is_Number:
@@ -3096,6 +3108,8 @@ def nfloat(expr, n=15, exponent=False):
             rv = Float(rv.n(n), n)
         else:
             pass  # pure_complex(rv) is likely True
+        return rv
+    elif rv.is_Atom:
         return rv
 
     # watch out for RootOf instances that don't like to have

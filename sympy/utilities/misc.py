@@ -278,8 +278,8 @@ def find_executable(executable, path=None):
                 f = os.path.join(p, execname)
                 if os.path.isfile(f):
                     return f
-    else:
-        return None
+
+    return None
 
 
 def func_name(x, short=False):

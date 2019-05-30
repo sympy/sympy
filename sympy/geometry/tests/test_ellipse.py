@@ -472,7 +472,7 @@ def test_issue_15259():
     assert Circle((1, 2), 0) == Point(1, 2)
 
 
-def test_issue_15797():
+def test_issue_15797_equals():
     Ri = 0.024127189424130748
     Ci = (0.0864931002830291, 0.0819863295239654)
     A = Point(0, 0.0578591400998346)
@@ -494,3 +494,12 @@ def test_auxiliary_circle():
     assert e.auxiliary_circle() == Circle((x, y), Max(a, b))
     # a special case where Ellipse is a Circle
     assert Circle((3, 4), 8).auxiliary_circle() == Circle((3, 4), 8)
+
+
+def test_director_circle():
+    x, y, a, b = symbols('x y a b')
+    e = Ellipse((x, y), a, b)
+    # the general result
+    assert e.director_circle() == Circle((x, y), sqrt(a**2 + b**2))
+    # a special case where Ellipse is a Circle
+    assert Circle((3, 4), 8).director_circle() == Circle((3, 4), 8*sqrt(2))

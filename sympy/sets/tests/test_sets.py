@@ -20,12 +20,13 @@ def test_imageset():
     assert imageset(cos, ints) == ImageSet(Lambda(x, cos(x)), ints)
     def f(x):
         return cos(x)
-    raises(TypeError, lambda: imageset(f, ints))
+    assert imageset(f, ints) == imageset(x, cos(x), ints)
     f = lambda x: cos(x)
     assert imageset(f, ints) == ImageSet(Lambda(x, cos(x)), ints)
     assert imageset(x, 1, ints) == FiniteSet(1)
     assert imageset(x, y, ints) == FiniteSet(y)
-    assert (str(imageset(lambda y: x + y, Interval(-2, 1)).lamda.expr)
+    clash = Symbol('x', integer=true)
+    assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
     x1, x2 = symbols("x1, x2")
     assert imageset(lambda x,y: Add(x,y), Interval(1,2), Interval(2, 3)) == \
@@ -56,12 +57,11 @@ def test_interval_arguments():
     assert isinstance(Interval(0, Symbol('a')), Interval)
     assert Interval(Symbol('a', real=True, positive=True), 0) == S.EmptySet
     raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
-    raises(ValueError, lambda: Interval(0, Symbol('z', real=False)))
+    raises(ValueError, lambda: Interval(0, Symbol('z', extended_real=False)))
 
     raises(NotImplementedError, lambda: Interval(0, 1, And(x, y)))
     raises(NotImplementedError, lambda: Interval(0, 1, False, And(x, y)))
     raises(NotImplementedError, lambda: Interval(0, 1, z, And(x, y)))
-
 
 
 def test_interval_symbolic_end_points():
@@ -97,7 +97,7 @@ def test_union():
     assert Union(Interval(1, 2), S.EmptySet) == Interval(1, 2)
     assert Union(S.EmptySet) == S.EmptySet
 
-    assert Union(Interval(0, 1), [FiniteSet(1.0/n) for n in range(1, 10)]) == \
+    assert Union(Interval(0, 1), *[FiniteSet(1.0/n) for n in range(1, 10)]) == \
         Interval(0, 1)
 
     assert Interval(1, 2).union(Interval(2, 3)) == \
@@ -143,10 +143,11 @@ def test_union():
 
 def test_union_iter():
     # Use Range because it is ordered
-    u = Union(Range(3), Range(5), Range(3), evaluate=False)
+    u = Union(Range(3), Range(5), Range(4), evaluate=False)
 
     # Round robin
-    assert list(u) == [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 4]
+    assert list(u) == [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+
 
 def test_difference():
     assert Interval(1, 3) - Interval(1, 2) == Interval(2, 3, True)
@@ -171,8 +172,8 @@ def test_difference():
 def test_Complement():
     assert Complement(Interval(1, 3), Interval(1, 2)) == Interval(2, 3, True)
     assert Complement(FiniteSet(1, 3, 4), FiniteSet(3, 4)) == FiniteSet(1)
-    assert Complement(Union(Interval(0, 2),
-                            FiniteSet(2, 3, 4)), Interval(1, 3)) == \
+    assert Complement(Union(Interval(0, 2), FiniteSet(2, 3, 4)),
+                      Interval(1, 3)) == \
         Union(Interval(0, 1, False, True), FiniteSet(4))
 
     assert not 3 in Complement(Interval(0, 5), Interval(1, 4), evaluate=False)
@@ -243,7 +244,14 @@ def test_complement():
     assert all(pt in notsquare for pt in [(-1, 0), (1.5, .5), (10, 10)])
 
 
-def test_intersect():
+def test_intersect1():
+    assert all(S.Integers.intersection(i) is i for i in
+        (S.Naturals, S.Naturals0))
+    assert all(i.intersection(S.Integers) is i for i in
+        (S.Naturals, S.Naturals0))
+    s =  S.Naturals0
+    assert S.Naturals.intersection(s) is s
+    assert s.intersection(S.Naturals) is s
     x = Symbol('x')
     assert Interval(0, 2).intersect(Interval(1, 2)) == Interval(1, 2)
     assert Interval(0, 2).intersect(Interval(1, 2, True)) == \
@@ -312,14 +320,14 @@ def test_intersection():
     assert (2, 2, 2) not in i
     raises(ValueError, lambda: list(i))
 
-    assert Intersection(Intersection(S.Integers, S.Naturals, evaluate=False),
-                        S.Reals, evaluate=False) == \
-            Intersection(S.Integers, S.Naturals, S.Reals, evaluate=False)
+    a = Intersection(Intersection(S.Integers, S.Naturals, evaluate=False), S.Reals, evaluate=False)
+    assert a._argset == frozenset([Intersection(S.Naturals, S.Integers, evaluate=False), S.Reals])
 
     assert Intersection(S.Complexes, FiniteSet(S.ComplexInfinity)) == S.EmptySet
 
     # issue 12178
     assert Intersection() == S.UniversalSet
+
 
 def test_issue_9623():
     n = Symbol('n')
@@ -407,6 +415,9 @@ def test_is_subset():
     # tests for the issubset alias
     assert FiniteSet(1, 2, 3, 4).issubset(Interval(0, 5)) is True
     assert S.EmptySet.issubset(FiniteSet(1, 2, 3)) is True
+
+    assert S.Naturals.is_subset(S.Integers)
+    assert S.Naturals0.is_subset(S.Integers)
 
 
 def test_is_proper_subset():
@@ -805,6 +816,7 @@ def test_image_FiniteSet():
     x = Symbol('x', real=True)
     assert imageset(x, 2*x, FiniteSet(1, 2, 3)) == FiniteSet(2, 4, 6)
 
+
 def test_image_Union():
     x = Symbol('x', real=True)
     assert imageset(x, x**2, Interval(-2, 0) + FiniteSet(1, 2, 3)) == \
@@ -938,7 +950,9 @@ def test_issue_9637():
     assert Complement(a, Interval(1, 3)) == Complement(a, Interval(1, 3), evaluate=False)
 
 
+@XFAIL
 def test_issue_9808():
+    # See https://github.com/sympy/sympy/issues/16342
     assert Complement(FiniteSet(y), FiniteSet(1)) == Complement(FiniteSet(y), FiniteSet(1), evaluate=False)
     assert Complement(FiniteSet(1, 2, x), FiniteSet(x, y, 2, 3)) == \
         Complement(FiniteSet(1), FiniteSet(y), evaluate=False)
@@ -970,8 +984,10 @@ def test_issue_Symbol_inter():
     assert Intersection(FiniteSet(x**2, 1, sin(x)), FiniteSet(x**2, 2, sin(x)), r) == \
         Intersection(r, FiniteSet(x**2, sin(x)))
 
+
 def test_issue_11827():
     assert S.Naturals0**4
+
 
 def test_issue_10113():
     f = x**2/(x**2 - 4)
@@ -1018,7 +1034,7 @@ def test_issue_10326():
         assert i not in interval
 
     x = Symbol('x', real=True)
-    nr = Symbol('nr', real=False)
+    nr = Symbol('nr', extended_real=False)
     assert x + 1 in Interval(x, x + 4)
     assert nr not in Interval(x, x + 4)
     assert Interval(1, 2) in FiniteSet(Interval(0, 5), Interval(1, 2))
@@ -1063,3 +1079,36 @@ def test_issue_11174():
 
     soln = Intersection(S.Reals, FiniteSet(x), evaluate=False)
     assert Intersection(FiniteSet(x), S.Reals) == soln
+
+
+def test_finite_set_intersection():
+    # The following should not produce recursion errors
+    # Note: some of these are not completely correct. See
+    # https://github.com/sympy/sympy/issues/16342.
+    assert Intersection(FiniteSet(-oo, x), FiniteSet(x)) == FiniteSet(x)
+    assert Intersection._handle_finite_sets([FiniteSet(-oo, x), FiniteSet(0, x)]) == FiniteSet(x)
+
+    assert Intersection._handle_finite_sets([FiniteSet(-oo, x), FiniteSet(x)]) == FiniteSet(x)
+    assert Intersection._handle_finite_sets([FiniteSet(2, 3, x, y), FiniteSet(1, 2, x)]) == \
+        Intersection._handle_finite_sets([FiniteSet(1, 2, x), FiniteSet(2, 3, x, y)]) == \
+        Intersection(FiniteSet(1, 2, x), FiniteSet(2, 3, x, y)) == \
+        FiniteSet(1, 2, x)
+
+
+def test_union_intersection_constructor():
+    # The actual exception does not matter here, so long as these fail
+    sets = [FiniteSet(1), FiniteSet(2)]
+    raises(Exception, lambda: Union(sets))
+    raises(Exception, lambda: Intersection(sets))
+    raises(Exception, lambda: Union(tuple(sets)))
+    raises(Exception, lambda: Intersection(tuple(sets)))
+    raises(Exception, lambda: Union(i for i in sets))
+    raises(Exception, lambda: Intersection(i for i in sets))
+
+    # Python sets are treated the same as FiniteSet
+    # The union of a single set (of sets) is the set (of sets) itself
+    assert Union(set(sets)) == FiniteSet(*sets)
+    assert Intersection(set(sets)) == FiniteSet(*sets)
+
+    assert Union({1}, {2}) == FiniteSet(1, 2)
+    assert Intersection({1, 2}, {2, 3}) == FiniteSet(2)

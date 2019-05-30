@@ -593,7 +593,7 @@ def test_integrate_max_min():
     assert integrate(Min(exp(x), exp(-x))**2, x) == Piecewise( \
         (exp(2*x)/2, x <= 0), (1 - exp(-2*x)/2, True))
     # issue 7907
-    c = symbols('c', real=True)
+    c = symbols('c', extended_real=True)
     int1 = integrate(Max(c, x)*exp(-x**2), (x, -oo, oo))
     int2 = integrate(c*exp(-x**2), (x, -oo, c))
     int3 = integrate(x*exp(-x**2), (x, c, oo))
@@ -1261,6 +1261,13 @@ def test_issue_2708():
     assert integrate(exp(1.2*n*s*z*(-t + z)/t), (z, 0, x)) == \
         NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
                                   (z, 0, x))
+
+
+def test_issue_2884():
+    f = (4.000002016020*x + 4.000002016020*y + 4.000006024032)*exp(10.0*x)
+    e = integrate(f, (x, 0.1, 0.2))
+    assert str(e) == '1.86831064982608*y + 2.16387491480008'
+
 
 def test_issue_8368():
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \

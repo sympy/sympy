@@ -1,16 +1,29 @@
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, ordered
 from sympy.combinatorics.partitions import (Partition, IntegerPartition,
                                             RGS_enum, RGS_unrank, RGS_rank,
                                             random_integer_partition)
 from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import default_sort_key, partitions
+from sympy.sets.sets import Set, FiniteSet
 
+
+def test_partition_constructor():
+    raises(ValueError, lambda: Partition([1, 1, 2]))
+    raises(ValueError, lambda: Partition([1, 2, 3], [2, 3, 4]))
+    raises(ValueError, lambda: Partition(1, 2, 3))
+    raises(ValueError, lambda: Partition(*list(range(3))))
+
+    assert Partition([1, 2, 3], [4, 5]) == Partition([4, 5], [1, 2, 3])
+    assert Partition({1, 2, 3}, {4, 5}) == Partition([1, 2, 3], [4, 5])
+
+    a = FiniteSet(1, 2, 3)
+    b = FiniteSet(4, 5)
+    assert Partition(a, b) == Partition([1, 2, 3], [4, 5])
+    assert Partition({a, b}) == Partition(FiniteSet(a, b))
+    assert Partition({a, b}) != Partition(a, b)
 
 def test_partition():
     from sympy.abc import x
-
-    raises(ValueError, lambda: Partition(*list(range(3))))
-    raises(ValueError, lambda: Partition([1, 1, 2]))
 
     a = Partition([1, 2, 3], [4])
     b = Partition([1, 2], [3, 4])
@@ -98,3 +111,8 @@ def test_rgs():
     assert RGS_unrank(7, 5) == [0, 0, 1, 0, 2]
     assert RGS_unrank(23, 14) == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 2]
     assert RGS_rank(RGS_unrank(40, 100)) == 40
+
+def test_ordered_partition_9608():
+    a = Partition([1, 2, 3], [4])
+    b = Partition([1, 2], [3, 4])
+    assert list(ordered([a,b], Set._infimum_key))

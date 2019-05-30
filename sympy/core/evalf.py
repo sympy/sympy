@@ -1186,7 +1186,7 @@ def evalf_sum(expr, prec, options):
     if len(limits) != 1 or len(limits[0]) != 3:
         raise NotImplementedError
     if func is S.Zero:
-        return mpf(0), None, None, None
+        return None, None, prec, None
     prec2 = prec + 10
     try:
         n, a, b = limits[0]
@@ -1445,6 +1445,8 @@ class EvalfMixin(object):
             v = self._eval_evalf(prec)
             if v is None:
                 return self
+            elif not v.is_number:
+                return v
             try:
                 # If the result is numerical, normalize it
                 result = evalf(v, prec, options)

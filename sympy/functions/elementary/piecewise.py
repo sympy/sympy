@@ -3,7 +3,6 @@ from __future__ import print_function, division
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy, Symbol
 from sympy.core.basic import as_Basic
 from sympy.core.compatibility import range
-from sympy.core.function import UndefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.relational import (Equality, Unequality, Relational,
     _canonical)
@@ -325,6 +324,9 @@ class Piecewise(Function):
     def _eval_simplify(self, ratio, measure, rational, inverse):
         args = [a._eval_simplify(ratio, measure, rational, inverse)
             for a in self.args]
+        _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (
+            getattr(e.rhs, '_diff_wrt', None) or
+            isinstance(e.rhs, (Rational, NumberSymbol)))
         for i, (expr, cond) in enumerate(args):
             # try to simplify conditions and the expression for
             # equalities that are part of the condition, e.g.
@@ -342,23 +344,18 @@ class Piecewise(Function):
                 for j, e in enumerate(eqs):
                     # these blessed lhs objects behave like Symbols
                     # and the rhs are simple replacements for the "symbols"
-                    if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
-                        isinstance(e.rhs,
-                            (Rational, NumberSymbol,
-                            Symbol, UndefinedFunction)):
+                    if _blessed(e):
                         expr = expr.subs(*e.args)
                         eqs[j + 1:] = [ei.subs(*e.args) for ei in eqs[j + 1:]]
                         other = [ei.subs(*e.args) for ei in other]
                 cond = And(*(eqs + other))
                 args[i] = args[i].func(expr, cond)
-        # See if expressions valid for a single point happens to evaluate
+        # See if expressions valid for an Equal expression happens to evaluate
         # to the same function as in the next piecewise segment, see:
         # https://github.com/sympy/sympy/issues/8458
         prevexpr = None
         for i, (expr, cond) in reversed(list(enumerate(args))):
             if prevexpr is not None:
-                _prevexpr = prevexpr
-                _expr = expr
                 if isinstance(cond, And):
                     eqs, other = sift(cond.args,
                         lambda i: isinstance(i, Equality), binary=True)
@@ -366,20 +363,24 @@ class Piecewise(Function):
                     eqs, other = [cond], []
                 else:
                     eqs = other = []
-                if eqs:
+                _prevexpr = prevexpr
+                _expr = expr
+                if eqs and not other:
                     eqs = list(ordered(eqs))
-                    for j, e in enumerate(eqs):
+                    for e in eqs:
                         # these blessed lhs objects behave like Symbols
                         # and the rhs are simple replacements for the "symbols"
-                        if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
-                            isinstance(e.rhs,
-                                (Rational, NumberSymbol,
-                                Symbol, UndefinedFunction)):
+                        if _blessed(e):
                             _prevexpr = _prevexpr.subs(*e.args)
                             _expr = _expr.subs(*e.args)
+                # Did it evaluate to the same?
                 if _prevexpr == _expr:
+                    # Set the expression for the Not equal section to the same
+                    # as the next. These will be merged when creating the new
+                    # Piecewise
                     args[i] = args[i].func(args[i+1][0], cond)
                 else:
+                    # Update the expression that we compare against
                     prevexpr = expr
             else:
                 prevexpr = expr
@@ -915,6 +916,18 @@ class Piecewise(Function):
     _eval_is_odd = lambda self: self._eval_template_is_attr('is_odd')
     _eval_is_polar = lambda self: self._eval_template_is_attr('is_polar')
     _eval_is_positive = lambda self: self._eval_template_is_attr('is_positive')
+    _eval_is_extended_real = lambda self: self._eval_template_is_attr(
+            'is_extended_real')
+    _eval_is_extended_positive = lambda self: self._eval_template_is_attr(
+            'is_extended_positive')
+    _eval_is_extended_negative = lambda self: self._eval_template_is_attr(
+            'is_extended_negative')
+    _eval_is_extended_nonzero = lambda self: self._eval_template_is_attr(
+            'is_extended_nonzero')
+    _eval_is_extended_nonpositive = lambda self: self._eval_template_is_attr(
+            'is_extended_nonpositive')
+    _eval_is_extended_nonnegative = lambda self: self._eval_template_is_attr(
+            'is_extended_nonnegative')
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
     _eval_is_zero = lambda self: self._eval_template_is_attr(
         'is_zero')

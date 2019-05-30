@@ -3110,6 +3110,22 @@ def test_MatrixExpressions():
     assert pretty(Z) == ascii_str
     assert upretty(Z) == ucode_str
 
+    # Apply function elementwise:
+
+    expr = (X.T*X).applyfunc(sin)
+
+    ascii_str = """\
+   / T     \\\n\
+sin\\X *X.../\
+"""
+    ucode_str = u("""\
+   ⎛ T     ⎞\n\
+sin⎝X ⋅X...⎠\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+
 def test_pretty_dotproduct():
     from sympy.matrices import Matrix, MatrixSymbol
     from sympy.matrices.expressions.dotproduct import DotProduct
@@ -4174,6 +4190,11 @@ GroebnerBasis⎝⎣2⋅x - y  - y + 1, y  + 2⋅y  - 3⋅y  - 16⋅y + 7⎦, x, 
     assert upretty(expr) == ucode_str
 
 
+def test_pretty_UniversalSet():
+    assert pretty(S.UniversalSet) == "UniversalSet"
+    assert upretty(S.UniversalSet) == u'𝕌'
+
+
 def test_pretty_Boolean():
     expr = Not(x, evaluate=False)
 
@@ -4423,14 +4444,14 @@ u("""\
   n             \n\
 ______          \n\
 ╲               \n\
- ╲      ∞       \n\
-  ╲     ⌠       \n\
-   ╲    ⎮   n   \n\
-    ╲   ⎮  x  dx\n\
-    ╱   ⌡       \n\
-   ╱    -∞      \n\
-  ╱    k        \n\
- ╱              \n\
+ ╲              \n\
+  ╲     ∞       \n\
+   ╲    ⌠       \n\
+    ╲   ⎮   n   \n\
+    ╱   ⎮  x  dx\n\
+   ╱    ⌡       \n\
+  ╱     -∞      \n\
+ ╱     k        \n\
 ╱               \n\
 ‾‾‾‾‾‾          \n\
 k = 0           \
@@ -4474,14 +4495,14 @@ u("""\
 -∞                \n\
  ______           \n\
  ╲                \n\
-  ╲       ∞       \n\
-   ╲      ⌠       \n\
-    ╲     ⎮   n   \n\
-     ╲    ⎮  x  dx\n\
-     ╱    ⌡       \n\
-    ╱     -∞      \n\
-   ╱     k        \n\
-  ╱               \n\
+  ╲               \n\
+   ╲      ∞       \n\
+    ╲     ⌠       \n\
+     ╲    ⎮   n   \n\
+     ╱    ⎮  x  dx\n\
+    ╱     ⌡       \n\
+   ╱      -∞      \n\
+  ╱      k        \n\
  ╱                \n\
  ‾‾‾‾‾‾           \n\
  k = 0            \
@@ -4527,14 +4548,14 @@ u("""\
           -∞                         \n\
            ______                    \n\
            ╲                         \n\
-            ╲                ∞       \n\
-             ╲               ⌠       \n\
-              ╲              ⎮   n   \n\
-               ╲             ⎮  x  dx\n\
-               ╱             ⌡       \n\
-              ╱              -∞      \n\
-             ╱              k        \n\
-            ╱                        \n\
+            ╲                        \n\
+             ╲               ∞       \n\
+              ╲              ⌠       \n\
+               ╲             ⎮   n   \n\
+               ╱             ⎮  x  dx\n\
+              ╱              ⌡       \n\
+             ╱               -∞      \n\
+            ╱               k        \n\
            ╱                         \n\
            ‾‾‾‾‾‾                    \n\
      2        2       1   x          \n\
@@ -4572,14 +4593,14 @@ n  + n + x  + x + ─ + ─          \n\
                   x   n          \n\
          ______                  \n\
          ╲                       \n\
-          ╲              ∞       \n\
-           ╲             ⌠       \n\
-            ╲            ⎮   n   \n\
-             ╲           ⎮  x  dx\n\
-             ╱           ⌡       \n\
-            ╱            -∞      \n\
-           ╱            k        \n\
-          ╱                      \n\
+          ╲                      \n\
+           ╲             ∞       \n\
+            ╲            ⌠       \n\
+             ╲           ⎮   n   \n\
+             ╱           ⎮  x  dx\n\
+            ╱            ⌡       \n\
+           ╱             -∞      \n\
+          ╱             k        \n\
          ╱                       \n\
          ‾‾‾‾‾‾                  \n\
          k = 0                   \
@@ -4602,8 +4623,8 @@ u("""\
   ∞    \n\
  ___   \n\
  ╲     \n\
-  ╲   x\n\
-  ╱    \n\
+  ╲    \n\
+  ╱   x\n\
  ╱     \n\
  ‾‾‾   \n\
 x = 0  \
@@ -4655,10 +4676,10 @@ u("""\
   ∞    \n\
  ____  \n\
  ╲     \n\
-  ╲   x\n\
-   ╲  ─\n\
-   ╱  2\n\
-  ╱    \n\
+  ╲    \n\
+   ╲  x\n\
+   ╱  ─\n\
+  ╱   2\n\
  ╱     \n\
  ‾‾‾‾  \n\
 x = 0  \
@@ -4716,12 +4737,12 @@ u("""\
   ∞           \n\
 _____         \n\
 ╲             \n\
- ╲           n\n\
-  ╲   ⎛    x⎞ \n\
-   ╲  ⎜    ─⎟ \n\
-   ╱  ⎜ 3  2⎟ \n\
-  ╱   ⎝x ⋅y ⎠ \n\
- ╱            \n\
+ ╲            \n\
+  ╲          n\n\
+   ╲  ⎛    x⎞ \n\
+   ╱  ⎜    ─⎟ \n\
+  ╱   ⎜ 3  2⎟ \n\
+ ╱    ⎝x ⋅y ⎠ \n\
 ╱             \n\
 ‾‾‾‾‾         \n\
 x = 0         \
@@ -4844,14 +4865,14 @@ u("""\
     ∞          n                         \n\
   ______   ______                        \n\
   ╲        ╲                             \n\
-   ╲        ╲     ⎛        1    ⎞        \n\
-    ╲        ╲    ⎜1 + ─────────⎟        \n\
-     ╲        ╲   ⎜          1  ⎟        \n\
-      ╲        ╲  ⎜    1 + ─────⎟     1  \n\
-      ╱        ╱  ⎜            1⎟ + ─────\n\
-     ╱        ╱   ⎜        1 + ─⎟       1\n\
-    ╱        ╱    ⎝            k⎠   1 + ─\n\
-   ╱        ╱                           k\n\
+   ╲        ╲                            \n\
+    ╲        ╲    ⎛        1    ⎞        \n\
+     ╲        ╲   ⎜1 + ─────────⎟        \n\
+      ╲        ╲  ⎜          1  ⎟     1  \n\
+      ╱        ╱  ⎜    1 + ─────⎟ + ─────\n\
+     ╱        ╱   ⎜            1⎟       1\n\
+    ╱        ╱    ⎜        1 + ─⎟   1 + ─\n\
+   ╱        ╱     ⎝            k⎠       k\n\
   ╱        ╱                             \n\
   ‾‾‾‾‾‾   ‾‾‾‾‾‾                        \n\
       1   k = 111                        \n\
@@ -6208,7 +6229,7 @@ def test_issue_12675():
     ucode_str = \
 u("""\
 ⎛   t⎞    \n\
-⎜⎛x⎞ ⎟ e_j\n\
+⎜⎛x⎞ ⎟ j_e\n\
 ⎜⎜─⎟ ⎟    \n\
 ⎝⎝y⎠ ⎠    \
 """)
@@ -6216,7 +6237,7 @@ u("""\
     ucode_str = \
 u("""\
 ⎛1⎞    \n\
-⎜─⎟ e_j\n\
+⎜─⎟ j_e\n\
 ⎝y⎠    \
 """)
     assert upretty((1/y)*e.j) == ucode_str
@@ -6255,17 +6276,17 @@ def test_degree_printing():
 def test_vector_expr_pretty_printing():
     A = CoordSys3D('A')
 
-    assert upretty(Cross(A.i, A.x*A.i+3*A.y*A.j)) == u("(A_i)×((A_x) A_i + (3⋅A_y) A_j)")
-    assert upretty(x*Cross(A.i, A.j)) == u('x⋅(A_i)×(A_j)')
+    assert upretty(Cross(A.i, A.x*A.i+3*A.y*A.j)) == u("(i_A)×((x_A) i_A + (3⋅y_A) j_A)")
+    assert upretty(x*Cross(A.i, A.j)) == u('x⋅(i_A)×(j_A)')
 
-    assert upretty(Curl(A.x*A.i + 3*A.y*A.j)) == u("∇×((A_x) A_i + (3⋅A_y) A_j)")
+    assert upretty(Curl(A.x*A.i + 3*A.y*A.j)) == u("∇×((x_A) i_A + (3⋅y_A) j_A)")
 
-    assert upretty(Divergence(A.x*A.i + 3*A.y*A.j)) == u("∇⋅((A_x) A_i + (3⋅A_y) A_j)")
+    assert upretty(Divergence(A.x*A.i + 3*A.y*A.j)) == u("∇⋅((x_A) i_A + (3⋅y_A) j_A)")
 
-    assert upretty(Dot(A.i, A.x*A.i+3*A.y*A.j)) == u("(A_i)⋅((A_x) A_i + (3⋅A_y) A_j)")
+    assert upretty(Dot(A.i, A.x*A.i+3*A.y*A.j)) == u("(i_A)⋅((x_A) i_A + (3⋅y_A) j_A)")
 
-    assert upretty(Gradient(A.x+3*A.y)) == u("∇(A_x + 3⋅A_y)")
-    assert upretty(Laplacian(A.x+3*A.y)) == u("∆(A_x + 3⋅A_y)")
+    assert upretty(Gradient(A.x+3*A.y)) == u("∇(x_A + 3⋅y_A)")
+    assert upretty(Laplacian(A.x+3*A.y)) == u("∆(x_A + 3⋅y_A)")
     # TODO: add support for ASCII pretty.
 
 
@@ -6670,3 +6691,13 @@ def test_imaginary_unit():
 
     raises(TypeError, lambda: pretty(I, imaginary_unit=I))
     raises(ValueError, lambda: pretty(I, imaginary_unit="kkk"))
+
+
+def test_str_special_matrices():
+    from sympy.matrices import Identity, ZeroMatrix, OneMatrix
+    assert pretty(Identity(4)) == 'I'
+    assert upretty(Identity(4)) == u'𝕀'
+    assert pretty(ZeroMatrix(2, 2)) == '0'
+    assert upretty(ZeroMatrix(2, 2)) == u'𝟘'
+    assert pretty(OneMatrix(2, 2)) == '1'
+    assert upretty(OneMatrix(2, 2)) == u'𝟙'

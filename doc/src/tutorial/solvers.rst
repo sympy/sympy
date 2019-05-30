@@ -110,7 +110,7 @@ In the ``solveset`` module, the non linear system of equations is solved using
 	>>> nonlinsolve([x**2 + 1, y**2 + 1], [x, y])
 	{(-ⅈ, -ⅈ), (-ⅈ, ⅈ), (ⅈ, -ⅈ), (ⅈ, ⅈ)}
 
-3. When both real and complex solution is present:
+3. When both real and complex solution are present:
 
 	>>> from sympy import sqrt
 	>>> system = [x**2 - 2*y**2 -2, x*y - 2]
@@ -118,17 +118,11 @@ In the ``solveset`` module, the non linear system of equations is solved using
 	>>> nonlinsolve(system, vars)
 	{(-2, -1), (2, 1), (-√2⋅ⅈ, √2⋅ⅈ), (√2⋅ⅈ, -√2⋅ⅈ)}
 
-	>>> n = Dummy('n')
 	>>> system = [exp(x) - sin(y), 1/y - 3]
-	>>> real_soln = (log(sin(S(1)/3)), S(1)/3)
-	>>> img_lamda = Lambda(n, 2*n*I*pi + Mod(log(sin(S(1)/3)), 2*I*pi))
-	>>> complex_soln = (ImageSet(img_lamda, S.Integers), S(1)/3)
-	>>> soln = FiniteSet(real_soln, complex_soln)
-	>>> nonlinsolve(system, [x, y]) == soln
-	True
+	>>> nonlinsolve(system, vars)
+	{({2⋅n⋅ⅈ⋅π + log(sin(1/3)) | n ∊ ℤ}, 1/3)}
 
-4. If non linear system of equations is Positive dimensional system (A system with
-infinitely many solutions is said to be positive-dimensional):
+4. When the system is positive-dimensional system (has infinitely many solutions):
 
 	>>> nonlinsolve([x*y, x*y - x], [x, y])
 	{(0, y)}
@@ -155,7 +149,7 @@ infinitely many solutions is said to be positive-dimensional):
    3. Currently ``nonlinsolve`` is not properly capable of solving the system of equations
    having trigonometric functions.
 
-   ``solve`` can be used for such cases(not all solution):
+   ``solve`` can be used for such cases (but does not give all solution):
 
    >>> solve([sin(x + y), cos(x - y)], [x, y])
    ⎡⎛-3⋅π   3⋅π⎞  ⎛-π   π⎞  ⎛π  3⋅π⎞  ⎛3⋅π  π⎞⎤

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Classes and functions useful for rewriting expressions for optimized code
 generation. Some languages (or standards thereof), e.g. C99, offer specialized
@@ -35,7 +34,9 @@ from __future__ import (absolute_import, division, print_function)
 from itertools import chain
 from sympy import log, exp, Max, Min, Wild, expand_log, Dummy
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.mul import Mul
+from sympy.core.power import Pow
 from sympy.utilities.iterables import sift
 
 
@@ -198,7 +199,7 @@ def create_expand_pow_optimization(limit):
     """ Creates an instance of :class:`ReplaceOptim` for expanding ``Pow``.
 
     The requirements for expansions are that the base needs to be a symbol
-    and the exponent needs to be an integer (and be less than or equal to
+    and the exponent needs to be an Integer (and be less than or equal to
     ``limit``).
 
     Parameters
@@ -217,13 +218,15 @@ def create_expand_pow_optimization(limit):
     >>> expand_opt(x**5 + x**3)
     x**5 + x*x*x
     >>> expand_opt(x**5 + x**3 + sin(x)**3)
-    x**5 + x*x*x + sin(x)**3
+    x**5 + sin(x)**3 + x*x*x
 
     """
     return ReplaceOptim(
-        lambda e: e.is_Pow and e.base.is_symbol and e.exp.is_integer and e.exp.is_nonnegative and e.exp <= limit,
-        lambda p: Mul(*([p.base]*p.exp), evaluate=False)
-    )
+        lambda e: e.is_Pow and e.base.is_symbol and e.exp.is_Integer and abs(e.exp) <= limit,
+        lambda p: (
+            UnevaluatedExpr(Mul(*([p.base]*+p.exp), evaluate=False)) if p.exp > 0 else
+            1/UnevaluatedExpr(Mul(*([p.base]*-p.exp), evaluate=False))
+        ))
 
 # Collections of optimizations:
 optims_c99 = (expm1_opt, log1p_opt, exp2_opt, log2_opt, log2const_opt)
