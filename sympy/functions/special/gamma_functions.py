@@ -1017,7 +1017,11 @@ def trigamma(x):
     """
     return polygamma(1, x)
 
-def multivariate_gamma(x, p, evaluate=True):
+###############################################################################
+##################### COMPLETE MULTIVARIATE GAMMA FUNCTION ####################
+###############################################################################
+
+class multivariate_gamma(Function):
     r"""
     The multivariate gamma function is a generalization of the gamma function i.e,
 
@@ -1040,24 +1044,24 @@ def multivariate_gamma(x, p, evaluate=True):
     >>> p = Symbol('p', positive=True, integer=True)
 
     >>> multivariate_gamma(x, p)
-    pi**(p*(p - 1)/4)*Product(gamma(-k/2 + x + 1/2), (k, 1, p))
+    pi**(p*(p - 1)/4)*Product(gamma(-_k/2 + x + 1/2), (_k, 1, p))
 
     Several special values are known:
-    >>> multivariate_gamma(1, 1).doit()
+    >>> multivariate_gamma(1, 1)
     1
-    >>> multivariate_gamma(4, 1).doit()
+    >>> multivariate_gamma(4, 1)
     6
-    >>> multivariate_gamma(S(3)/2, 1).doit()
+    >>> multivariate_gamma(S(3)/2, 1)
     sqrt(pi)/2
 
     Writing multivariate_gamma in terms of gamma function
-    >>> multivariate_gamma(x, 1).doit()
+    >>> multivariate_gamma(x, 1)
     gamma(x)
 
-    >>> multivariate_gamma(x, 2).doit()
+    >>> multivariate_gamma(x, 2)
     sqrt(pi)*gamma(x)*gamma(x - 1/2)
 
-    >>> multivariate_gamma(x, 3).doit()
+    >>> multivariate_gamma(x, 3)
     pi**(3/2)*gamma(x)*gamma(x - 1)*gamma(x - 1/2)
 
     See Also
@@ -1071,12 +1075,30 @@ def multivariate_gamma(x, p, evaluate=True):
 
     .. [1] https://en.wikipedia.org/wiki/Multivariate_gamma_function
     """
-    psym = sympify(p)
-    if psym.is_integer is False or psym.is_positive is False:
-        raise TypeError('p must be a positive integer')
-    from sympy import Product
-    from sympy.abc import k
-    if evaluate:
-        return (pi**(psym*(psym-1)/4)*Product(gamma(x + (1 - k)/2),
-        (k, 1, psym))).doit()
-    return pi**(psym*(psym-1)/4)*Product(gamma(x + (1 - k)/2), (k, 1, psym))
+    unbranched = True
+
+    def fdiff(self, argindex=2):
+        print("*"*20)
+        from sympy import Sum
+        if argindex == 2:
+            x, p = self.args[0], self.args[1]
+            k = Dummy('k')
+            return self.func(x, p)*Sum(polygamma(0, x + (1 - k)/2), (k, 1, p))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, x, p):
+        from sympy import Product
+        x, p = list(map(sympify, (x, p)))
+        k = Dummy('k', real=True)
+        return (pi**(p*(p - 1)/4)*Product(gamma(x + (1 - k)/2),
+        (k, 1, p))).doit()
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), self.args[1])
+
+    def _eval_is_real(self):
+        x, p = self.args[0], self.args[1]
+        if (x > (p - 1)/2) or x.is_noninteger:
+            return True
