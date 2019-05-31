@@ -1,7 +1,10 @@
 from sympy.printing.codeprinter import CodePrinter
 
-import lfortran.asr.asr as asr
-import lfortran.asr.builder as builder
+from sympy.external import import_module
+
+lfortran = import_module("lfortran")
+asr = lfortran.asr.asr
+builder = lfortran.asr.builder
 
 
 class ASRConverter(CodePrinter):
