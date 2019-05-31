@@ -706,6 +706,24 @@ class PermutationGroup(Basic):
         A subnormal series is a composition series only if it is of
         maximum length.
 
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> from sympy.combinatorics.named_groups import CyclicGroup
+        >>> S = SymmetricGroup(12)
+        >>> G = S.sylow_subgroup(2)
+        >>> C = G.composition_series()
+        >>> [H.order() for H in C]
+        [1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]
+        >>> G = S.sylow_subgroup(3)
+        >>> C = G.composition_series()
+        >>> [H.order() for H in C]
+        [243, 81, 27, 9, 3, 1]
+        >>> G = CyclicGroup(12)
+        >>> C = G.composition_series()
+        >>> [H.order() for H in C]
+        [12, 6, 3, 1]
+
         """
         if not self.is_solvable:
             raise NotImplementedError('Group should be solvable')
@@ -713,22 +731,30 @@ class PermutationGroup(Basic):
         series = [self]
 
         for i in range(len(der)-1):
-            comp = []
             H = der[i+1]
+            Hgens = H.generators
+            seg = []
             for g in der[i].generators:
                 if not g in H:
                     order = g.order()
-                    p = list(factorint(order))[0]
-                    e = multiplicity(p, order)
-                    for j in range(e-1, -1, -1):
-                        qelm = g**(p**j)
-                        if not qelm in H:
-                            comp.append(H)
-                            H = PermutationGroup([qelm] + H.generators)
-            comp.reverse()
-            for i in comp:
-                if not i in series:
-                    series.append(i)
+                    for p, e in factorint(order).items():
+                        for j in range(e):
+                            if len(der) == 2:
+                                    seg.insert(0, PermutationGroup([g] + Hgens))
+                                    g = g**p
+                            else:
+                                g = g**(p**j)
+                                if not g in H:
+                                    seg.append(H)
+                                    H = PermutationGroup([g] + H.generators)
+            seg.reverse()
+            pgrp = PermutationGroup()
+            for grp in seg:
+                if not grp in series and grp.order() != pgrp.order():
+                    pgrp = grp
+                    series.append(grp)
+        if not PermutationGroup([grp.identity()]) in series:
+            series.append(PermutationGroup([grp.identity()]))
         return series
 
 
