@@ -1,6 +1,6 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
                     Mul, Rational, Integral, factorial, gamma, Piecewise, Eq, Product,
-                    IndexedBase)
+                    IndexedBase, RisingFactorial)
 from sympy.core.numbers import comp
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
@@ -157,10 +157,11 @@ def test_MultivariateEwens():
     # tests for symbolic dimensions
     eds = MultivariateEwens('E', n, theta)
     a = IndexedBase('a')
-    den = ("Piecewise((factorial(n)*Product(theta**a[j]*(j + 1)**(-a[j])/"
-           "factorial(a[j]), (j, 0, n - 1))/RisingFactorial(theta, n),"
-           " Eq(n, Sum((k + 1)*a[k], (k, 0, n - 1)))), (0, True))")
-    assert str(density(eds)(a)) == den
+    j, k = symbols('j, k')
+    den = Piecewise((factorial(n)*Product(theta**a[j]*(j + 1)**(-a[j])/
+           factorial(a[j]), (j, 0, n - 1))/RisingFactorial(theta, n),
+            Eq(n, Sum((k + 1)*a[k], (k, 0, n - 1)))), (0, True))
+    assert density(eds)(a).dummy_eq(den)
 
 def test_Multinomial():
     from sympy.stats.joint_rv_types import Multinomial
