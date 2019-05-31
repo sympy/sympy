@@ -51,7 +51,7 @@ def test_PythonCodePrinter():
 def test_MpmathPrinter():
     p = MpmathPrinter()
     assert p.doprint(sign(x)) == 'mpmath.sign(x)'
-    assert p.doprint(Rational(1, 2)) == "mpmath.mpf(1)/mpmath.mpf(2)"
+    assert p.doprint(Rational(1, 2)) == 'mpmath.mpf(1)/mpmath.mpf(2)'
 
 def test_NumPyPrinter():
     p = NumPyPrinter()
