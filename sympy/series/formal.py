@@ -8,7 +8,7 @@ from sympy import oo, zoo, nan
 from sympy.core.add import Add
 from sympy.core.compatibility import iterable
 from sympy.core.expr import Expr
-from sympy.core.function import Derivative, Function
+from sympy.core.function import Derivative, Function, expand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -811,47 +811,14 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
             return ak, xk, ind
         return None
 
+    syms = list(f.free_symbols.difference({x}))
+    symb = S.One
+    if len(syms) == S.One:
+        (t1, t2) = expand(f).as_independent(syms[0])
+        f = t1
+        symb = t2
+
     result = None
-
-    # flag for indicating symbolic terms in a function
-    fps_sym = False
-
-    symb, res = S.Zero, S.Zero
-    if isinstance(f, Mul):
-        nterm = S.One
-        for term in Mul.make_args(f):
-            if isinstance(term, Pow):
-                # for x**n symbolic terms
-                if term.exp.is_symbol:
-                    symb = term.exp
-                    fps_sym = True
-                # if power is an integer
-                elif sympify(term.exp).is_integer:
-                        nterm *= term
-
-                # for x**(n-2) or x**(n/2) symbolic terms
-                else:
-                    a, b, subt = S.Zero, S.Zero, S.Zero
-                    if isinstance(term.exp, Add):
-                        a, b = Add.make_args(term.exp)
-                        if a.is_symbol or b.is_symbol:
-                            if a.is_symbol:
-                                subt = a
-                            else:
-                                subt = b
-                            res = term.exp - subt
-                            if sympify(res).is_integer:
-                                nterm *= x**res
-                            symb = subt
-                            fps_sym = True
-
-                    if isinstance(term.exp, Mul):
-                        symb = term.exp
-                        fps_sym = True
-            else:
-                if not (isinstance(term, Pow) and term.exp.is_symbol):
-                    nterm *= term
-        f = nterm
 
     # from here on it's x0=0 and dir=1 handling
     k = Dummy('k')
@@ -865,13 +832,8 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
         return None
 
     ak = sequence(result[0], (k, result[2], oo))
-    # xk and ind mpdified for symbolic function
-    if fps_sym:
-        xk = sequence(x**k*x**symb, (k, 0, oo))
-        ind = result[1]*x**symb
-    else:
-        xk = sequence(x**k, (k, 0, oo))
-        ind = result[1]
+    xk = sequence(x**k*symb, (k, 0, oo))
+    ind = result[1]*symb
 
     return ak, xk, ind
 
@@ -1018,19 +980,19 @@ class FormalPowerSeries(SeriesBase):
 
         return self.ind + inf_sum
 
+    @property
+    def fps_sym(self):
+        """Returns whether the function contains symbolic terms"""
+        ind = self.ind
+        s = list(ind.free_symbols.difference({self.x}))
+        if len(s) == S.One:
+            return True
+        return False
+
     def _get_pow_x(self, term):
         """Returns the power of x in a term."""
-        ind = self.ind
-        for t in Add.make_args(ind):
-            if isinstance(t, Mul):
-                for subt in Mul.make_args(t):
-                    if (isinstance(subt, Pow) and subt.exp.is_symbol):
-                        return S.One
-            else:
-                if isinstance(t, Pow):
-                    if isinstance(t.exp, Mul) or t.exp.is_symbol:
-                        return S.One
-
+        if self.fps_sym:
+            return S.One
         xterm, pow_x = term.as_independent(self.x)[1].as_base_exp()
         if not xterm.has(self.x):
             return S.Zero
@@ -1045,10 +1007,7 @@ class FormalPowerSeries(SeriesBase):
         terms = []
         for i, t in enumerate(self):
             xp = self._get_pow_x(t)
-            if xp.is_symbol:
-                terms.append(t)
-                continue
-            elif xp >= n:
+            if xp >= n:
                 break
             elif xp.is_integer is True and i == n + 1:
                 break
