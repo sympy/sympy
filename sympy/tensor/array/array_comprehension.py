@@ -118,7 +118,7 @@ class ArrayComprehension(Basic):
         {k}
         """
         expr_free_sym = self.function.free_symbols
-        for var, inf, sup in self.limits:
+        for var, inf, sup in self._limits:
             expr_free_sym.discard(var)
             curr_free_syms = inf.free_symbols.union(sup.free_symbols)
             expr_free_sym = expr_free_sym.union(curr_free_syms)
@@ -144,7 +144,7 @@ class ArrayComprehension(Basic):
         >>> a.variables
         [i, j]
         """
-        return [l[0] for l in self.limits]
+        return [l[0] for l in self._limits]
 
     @property
     def bound_symbols(self):
@@ -222,7 +222,7 @@ class ArrayComprehension(Basic):
         >>> b.is_numeric
         False
         """
-        for _, inf, sup in self.limits:
+        for _, inf, sup in self._limits:
             if Basic(inf, sup).atoms(Symbol):
                 return False
         return True
@@ -320,7 +320,7 @@ class ArrayComprehension(Basic):
             return arr.tolist()
 
         list_gen = self.function
-        for var, inf, sup in reversed(self.limits):
+        for var, inf, sup in reversed(self._limits):
             list_expr = list_gen
             list_gen = []
             for val in range(inf, sup+1):
