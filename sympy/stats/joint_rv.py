@@ -161,7 +161,7 @@ class JointDistribution(Basic, NamedArgsMixin):
     def cdf(self, other):
         assert isinstance(other, dict)
         rvs = other.keys()
-        _set = self.domain.set
+        _set = self.domain.set.sets
         expr = self.pdf(tuple(i.args[0] for i in self.symbols))
         for i in range(len(other)):
             if rvs[i].is_Continuous:
@@ -227,7 +227,7 @@ def marginal_distribution(rv, *indices):
         if isinstance(indices[i], Indexed):
             indices[i] = indices[i].args[1]
     prob_space = rv.pspace
-    if indices == ():
+    if not indices:
         raise ValueError(
             "At least one component for marginal density is needed.")
     if hasattr(prob_space.distribution, 'marginal_distribution'):
@@ -324,7 +324,7 @@ class MarginalDistribution(Basic):
             count = len(expr.domain.args)
             x = Dummy('x', real=True, finite=True)
             syms = [Indexed(x, i) for i in count]
-            expr = expression.pdf(syms)
+            expr = expr.pdf(syms)
         return Lambda(syms, self.compute_pdf(expr, marginalise_out))(*x)
 
     def compute_pdf(self, expr, rvs):
