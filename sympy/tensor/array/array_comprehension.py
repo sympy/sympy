@@ -38,7 +38,12 @@ class ArrayComprehension(Basic):
                               ' for the expression')
         arglist = [sympify(function)]
         arglist.extend(cls._check_limits_validity(function, symbols))
-        return Basic.__new__(cls, *arglist, **assumptions)
+        obj = Basic.__new__(cls, *arglist, **assumptions)
+        obj._limits = obj._args[1:]
+        obj._shape = cls._calculate_shape_from_limits(obj._limits)
+        obj._rank = len(obj._shape)
+        obj._loop_size = cls._calculate_loop_size(obj._shape)
+        return obj
 
     @property
     def function(self):
@@ -60,7 +65,7 @@ class ArrayComprehension(Basic):
         >>> a.function
         10*i + j
         """
-        return self.args[0]
+        return self._args[0]
 
     @property
     def limits(self):
@@ -84,7 +89,7 @@ class ArrayComprehension(Basic):
         >>> a.limits
         ((i, 1, 4), (j, 1, 3))
         """
-        return self.args[1:]
+        return self._limits
 
     @property
     def free_symbols(self):
@@ -115,10 +120,8 @@ class ArrayComprehension(Basic):
         expr_free_sym = self.function.free_symbols
         for var, inf, sup in self.limits:
             expr_free_sym.discard(var)
-            if inf.free_symbols:
-                expr_free_sym = expr_free_sym.union(inf.free_symbols)
-            if sup.free_symbols:
-                expr_free_sym = expr_free_sym.union(sup.free_symbols)
+            curr_free_syms = inf.free_symbols.union(sup.free_symbols)
+            expr_free_sym = expr_free_sym.union(curr_free_syms)
         return expr_free_sym
 
     @property
@@ -192,7 +195,7 @@ class ArrayComprehension(Basic):
         >>> b.shape
         (4, k + 3)
         """
-        return self._calculate_shape_from_limits(self.limits)
+        return self._shape
 
     @property
     def is_numeric(self):
@@ -243,7 +246,7 @@ class ArrayComprehension(Basic):
         >>> a.rank()
         2
         """
-        return len(self.shape)
+        return self._rank
 
     def __len__(self):
         """
@@ -271,16 +274,16 @@ class ArrayComprehension(Basic):
         >>> len(a)
         12
         """
-        loop_size = self._calculate_loop_size(self.shape)
-        if loop_size.free_symbols:
+        if self._loop_size.free_symbols:
             raise ValueError('Symbolic length is not supported')
-        return loop_size
+        return self._loop_size
 
     @classmethod
     def _check_limits_validity(cls, function, limits):
         limits = sympify(limits)
         for var, inf, sup in limits:
-            if any(not isinstance(i, Expr) for i in [inf, sup]):
+            if any((not isinstance(i, Expr)) or i.atoms(Symbol, Integer) != i.atoms()
+                                                                for i in [inf, sup]):
                 raise TypeError('Bounds should be an Expression(combination of Integer and Symbol)')
             if (inf > sup) == True:
                 raise ValueError('Lower bound should be inferior to upper bound')
@@ -290,14 +293,11 @@ class ArrayComprehension(Basic):
 
     @classmethod
     def _calculate_shape_from_limits(cls, limits):
-        shape = []
-        for _, inf, sup in limits:
-            shape.append(sup - inf + 1)
-        return tuple(shape)
+        return tuple([sup - inf + 1 for _, inf, sup in limits])
 
     @classmethod
     def _calculate_loop_size(cls, shape):
-        if len(shape) == 0:
+        if not shape:
             return 0
         loop_size = 1
         for l in shape:
@@ -308,9 +308,7 @@ class ArrayComprehension(Basic):
     def doit(self):
         if not self.is_numeric:
             return self
-
-        arr = self._expand_array()
-        return arr
+        return self._expand_array()
 
     def _expand_array(self):
         # To perform a subs at every element of the array.
