@@ -4,10 +4,10 @@ from sympy import (FiniteSet, S, Symbol, sqrt, nan,
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
-    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
-    density, where, FiniteRV, pspace, cdf,
-    correlation, moment, cmoment, smoment, characteristic_function,
-    moment_generating_function, quantile)
+    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, kurtosis,
+    sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
+    cmoment, smoment, characteristic_function, moment_generating_function,
+    quantile)
 from sympy.stats.frv_types import DieDistribution
 from sympy.utilities.pytest import raises
 
@@ -66,6 +66,7 @@ def test_dice():
     assert correlation(X, Y) == 0
     assert correlation(X, Y) == correlation(Y, X)
     assert smoment(X + Y, 3) == skewness(X + Y)
+    assert smoment(X + Y, 4) == kurtosis(X + Y)
     assert smoment(X, 0) == 1
     assert P(X > 3) == S.Half
     assert P(2*X > 6) == S.Half
@@ -213,6 +214,7 @@ def test_binomial_numeric():
             assert variance(X) == n*p*(1 - p)
             if n > 0 and 0 < p < 1:
                 assert skewness(X) == (1 - 2*p)/sqrt(n*p*(1 - p))
+                assert kurtosis(X) == 3 + (1 - 6*p*(1 - p))/(n*p*(1 - p))
             for k in range(n + 1):
                 assert P(Eq(X, k)) == binomial(n, k)*p**k*(1 - p)**(n - k)
 
@@ -237,6 +239,7 @@ def test_binomial_symbolic():
     assert simplify(E(X)) == n*p == simplify(moment(X, 1))
     assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
     assert cancel((skewness(X) - (1 - 2*p)/sqrt(n*p*(1 - p)))) == 0
+    assert cancel((kurtosis(X)) - (3 + (1 - 6*p*(1 - p))/(n*p*(1 - p)))) == 0
     assert characteristic_function(X)(t) == p ** 2 * exp(2 * I * t) + 2 * p * (-p + 1) * exp(I * t) + (-p + 1) ** 2
     assert moment_generating_function(X)(t) == p ** 2 * exp(2 * t) + 2 * p * (-p + 1) * exp(t) + (-p + 1) ** 2
 

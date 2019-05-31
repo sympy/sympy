@@ -9,7 +9,7 @@ from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
 from sympy.sets.sets import Intersection, FiniteSet
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
-                         given, pspace, cdf, characteristic_function,
+                         kurtosis, given, pspace, cdf, characteristic_function,
                          moment_generating_function, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy,
                          Chi, ChiSquared,
@@ -87,6 +87,8 @@ def test_multiple_normal():
     assert covariance(2*X + Y, -X) == -2*variance(X)
     assert skewness(X) == 0
     assert skewness(X + Y) == 0
+    assert kurtosis(X) == 3
+    assert kurtosis(X+Y) == 3
     assert correlation(X, Y) == 0
     assert correlation(X, X + Y) == correlation(X, X - Y)
     assert moment(X, 2) == 1
@@ -95,6 +97,7 @@ def test_multiple_normal():
     assert cmoment(X, 2) == variance(X)
     assert smoment(X*X, 2) == 1
     assert smoment(X + Y, 3) == skewness(X + Y)
+    assert smoment(X + Y, 4) == kurtosis(X + Y)
     assert E(X, Eq(X + Y, 0)) == 0
     assert variance(X, Eq(X + Y, 0)) == S.Half
     assert quantile(X)(p) == sqrt(2)*erfinv(2*p - S.One)
@@ -526,6 +529,8 @@ def test_exponential():
     assert variance(X) == 1/rate**2
     assert skewness(X) == 2
     assert skewness(X) == smoment(X, 3)
+    assert kurtosis(X) == 9
+    assert kurtosis(X) == smoment(X, 4)
     assert smoment(2*X, 4) == smoment(X, 4)
     assert moment(X, 3) == 3*2*1/rate**3
     assert P(X > 0) == S(1)
@@ -594,6 +599,7 @@ def test_gamma():
     assert E(X) == k*theta
     assert variance(X) == k*theta**2
     assert skewness(X).expand() == 2/sqrt(k)
+    assert kurtosis(X).expand() == 3 + 6/k
 
 
 def test_gamma_inverse():
@@ -916,6 +922,8 @@ def test_weibull():
     assert E(X).expand() == a * gamma(1 + 1/b)
     assert variance(X).expand() == (a**2 * gamma(1 + 2/b) - E(X)**2).expand()
     assert simplify(skewness(X)) == (2*gamma(1 + 1/b)**3 - 3*gamma(1 + 1/b)*gamma(1 + 2/b) + gamma(1 + 3/b))/(-gamma(1 + 1/b)**2 + gamma(1 + 2/b))**(S(3)/2)
+    assert simplify(kurtosis(X)) == (-3*gamma(1 + 1/b)**4 +\
+        6*gamma(1 + 1/b)**2*gamma(1 + 2/b) - 4*gamma(1 + 1/b)*gamma(1 + 3/b) + gamma(1 + 4/b))/(gamma(1 + 1/b)**2 - gamma(1 + 2/b))**2
 
 def test_weibull_numeric():
     # Test for integers and rationals

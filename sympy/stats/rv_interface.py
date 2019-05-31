@@ -7,7 +7,7 @@ from sympy import Piecewise, sqrt, solveset, Symbol, S, log, Eq, Lambda, exp
 from sympy.solvers.inequalities import reduce_inequalities
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
-        'sample_iter', 'variance', 'std', 'skewness', 'covariance',
+        'sample_iter', 'variance', 'std', 'skewness', 'kurtosis', 'covariance',
         'dependent', 'independent', 'random_symbols', 'correlation',
         'moment', 'cmoment', 'sampling_density', 'moment_generating_function', 'quantile']
 
@@ -228,12 +228,12 @@ def smoment(X, n, condition=None, **kwargs):
 
 def skewness(X, condition=None, **kwargs):
     """
-    Measure of the asymmetry of the probability distribution
+    Measure of the asymmetry of the probability distribution.
 
     Positive skew indicates that most of the values lie to the right of
-    the mean
+    the mean.
 
-    skewness(X) = E( ((X - E(X))/sigma)**3 )
+    skewness(X) = E(((X - E(X))/sigma)**3)
 
     Examples
     ========
@@ -248,7 +248,36 @@ def skewness(X, condition=None, **kwargs):
     >>> skewness(Y)
     2
     """
-    return smoment(X, 3, condition, **kwargs)
+    return smoment(X, 3, condition=condition, **kwargs)
+
+def kurtosis(X, condition=None, **kwargs):
+    """
+    Measure of the tailedness (outliers) of the probability distribution.
+
+    Kurtosis of any univariate normal distribution is 3. Kurtosis less than
+    3 means that the distribution produces fewer and less extreme outliers
+    than the normal distribution.
+
+    kurtosis(X) = E(((X - E(X))/sigma)**4)
+
+    Examples
+    ========
+
+    >>> from sympy.stats import kurtosis, Exponential, Normal
+    >>> from sympy import Symbol
+    >>> X = Normal('X', 0, 1)
+    >>> kurtosis(X)
+    3
+    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
+    >>> Y = Exponential('Y', rate)
+    >>> kurtosis(Y)
+    9
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Kurtosis
+    """
+    return smoment(X, 4, condition=condition, **kwargs)
 
 
 
