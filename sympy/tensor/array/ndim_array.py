@@ -132,38 +132,36 @@ class NDimArray(object):
         from sympy.tensor.array import SparseNDimArray
         from sympy import Dict
 
-        if shape is None and iterable is None:
-            shape = ()
-            iterable = ()
-        # Construction of a sparse array from a disctionary
-        elif shape is not None and isinstance(iterable, (dict, Dict)):
-            return shape, iterable
-        # Construction of a sparse array from a sparse array
-        elif shape is None and isinstance(iterable, SparseNDimArray):
-            return iterable._shape, iterable._sparse_array
-        # Construction from another `NDimArray`:
-        elif shape is None and isinstance(iterable, NDimArray):
-            shape = iterable.shape
-            iterable = list(iterable)
-        # Construct N-dim array from an iterable (numpy arrays included):
-        elif shape is None and isinstance(iterable, Iterable):
-            iterable, shape = cls._scan_iterable_shape(iterable)
+        if shape is None:
+            if iterable is None:
+                shape = ()
+                iterable = ()
+            # Construction of a sparse array from a sparse array
+            elif isinstance(iterable, SparseNDimArray):
+                return iterable._shape, iterable._sparse_array
+            # Construction from another `NDimArray`:
+            elif isinstance(iterable, NDimArray):
+                shape = iterable.shape
+                iterable = list(iterable)
+            # Construct N-dim array from an iterable (numpy arrays included):
+            elif isinstance(iterable, Iterable):
+                iterable, shape = cls._scan_iterable_shape(iterable)
 
-        # Construct N-dim array from a Matrix:
-        elif shape is None and isinstance(iterable, MatrixBase):
-            shape = iterable.shape
+            # Construct N-dim array from a Matrix:
+            elif isinstance(iterable, MatrixBase):
+                shape = iterable.shape
 
-        # Construct N-dim array from another N-dim array:
-        elif shape is None and isinstance(iterable, NDimArray):
-            shape = iterable.shape
+            # Construct N-dim array from another N-dim array:
+            elif isinstance(iterable, NDimArray):
+                shape = iterable.shape
+
+            else:
+                shape = ()
+                iterable = (iterable,)
 
         # Construct NDimArray(iterable, shape)
         elif shape is not None:
             pass
-
-        else:
-            shape = ()
-            iterable = (iterable,)
 
         if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)

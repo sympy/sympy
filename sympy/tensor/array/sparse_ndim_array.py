@@ -110,7 +110,7 @@ class SparseNDimArray(NDimArray):
             raise ValueError("Invalid reshape parameters " + newshape)
 
         return type(self)(*(newshape + (self._sparse_array,)))
-    
+
     def _eval_derivative_n_times(self, s, n):
         from sympy import Integer, Derivative
         if isinstance(n, (int, Integer)):
@@ -124,10 +124,6 @@ class SparseNDimArray(NDimArray):
                     break
                 s_a = s_a2
             return type(self)(s_a, self._shape)
-        else:
-            return None
-                
-
 
 class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
 
