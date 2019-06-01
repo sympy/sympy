@@ -129,10 +129,18 @@ class NDimArray(object):
     @classmethod
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
+        from sympy import Dict
 
         if shape is None and iterable is None:
             shape = ()
             iterable = ()
+        # Construction of a sparse array from a disctionary
+        elif shape is not None and isinstance(iterable, (dict, Dict)):
+            return shape, iterable
+        # Construction of a sparse array from a sparse array
+        elif shape is None and isinstance(iterable, SparseNDimArray):
+            return iterable._shape, iterable._sparse_array
         # Construction from another `NDimArray`:
         elif shape is None and isinstance(iterable, NDimArray):
             shape = iterable.shape

@@ -109,7 +109,24 @@ class SparseNDimArray(NDimArray):
         if new_total_size != self._loop_size:
             raise ValueError("Invalid reshape parameters " + newshape)
 
-        return type(self)(*(newshape + (self._array,)))
+        return type(self)(*(newshape + (self._sparse_array,)))
+    
+    def _eval_derivative_n_times(self, s, n):
+        from sympy import Integer, Derivative
+        if isinstance(n, (int, Integer)):
+            s_a = self._sparse_array
+            for i in range(n):
+                s_a2 = {}
+                for key in s_a:
+                    value = _sympify(s_a[key])
+                    s_a2[key] = Derivative(value, s, **{'evaluate':True})
+                if s_a == s_a2 or s_a2 is None:
+                    break
+                s_a = s_a2
+            return type(self)(s_a, self._shape)
+        else:
+            return None
+                
 
 
 class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
