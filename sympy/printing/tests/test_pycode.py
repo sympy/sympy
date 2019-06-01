@@ -88,25 +88,31 @@ def test_sqrt():
     prntr = PythonCodePrinter()
     assert prntr._print_Pow(sqrt(x), rational=False) == 'math.sqrt(x)'
     assert prntr._print_Pow(1/sqrt(x), rational=False) == '1/math.sqrt(x)'
+
+    prntr = PythonCodePrinter({'standard' : 'python2'})
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1./2.)'
     assert prntr._print_Pow(1/sqrt(x), rational=True) == 'x**(-1./2.)'
+
+    prntr = PythonCodePrinter({'standard' : 'python3'})
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
+    assert prntr._print_Pow(1/sqrt(x), rational=True) == 'x**(-1/2)'
 
     prntr = MpmathPrinter()
     assert prntr._print_Pow(sqrt(x), rational=False) == 'mpmath.sqrt(x)'
     assert prntr._print_Pow(sqrt(x), rational=True) == \
         "x**(mpmath.mpf(1)/mpmath.mpf(2))"
 
-    prntr = NumPyPrinter()
+    prntr = NumPyPrinter({'standard' : 'python3'})
     assert prntr._print_Pow(sqrt(x), rational=False) == 'numpy.sqrt(x)'
-    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1./2.)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
 
-    prntr = SciPyPrinter()
+    prntr = SciPyPrinter({'standard' : 'python3'})
     assert prntr._print_Pow(sqrt(x), rational=False) == 'numpy.sqrt(x)'
-    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1./2.)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
 
-    prntr = SymPyPrinter()
+    prntr = SymPyPrinter({'standard' : 'python3'})
     assert prntr._print_Pow(sqrt(x), rational=False) == 'sympy.sqrt(x)'
-    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1./2.)'
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
 
 
 class CustomPrintedObject(Expr):
