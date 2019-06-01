@@ -1,5 +1,4 @@
 from sympy.core.compatibility import range, PY3
-from sympy.core.mod import Mod
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
@@ -32,6 +31,10 @@ def test_naturals():
 
     assert N.inf == 1
     assert N.sup == oo
+    assert not N.contains(oo)
+    for s in (S.Naturals0, S.Naturals):
+        assert s.intersection(S.Reals) is s
+        assert s.is_subset(S.Reals)
 
 
 def test_naturals0():
@@ -39,6 +42,7 @@ def test_naturals0():
     assert 0 in N
     assert -1 not in N
     assert next(iter(N)) == 0
+    assert not N.contains(oo)
 
 
 def test_integers():
@@ -46,6 +50,9 @@ def test_integers():
     assert 5 in Z
     assert -5 in Z
     assert 5.5 not in Z
+    assert not Z.contains(oo)
+    assert not Z.contains(-oo)
+
     zi = iter(Z)
     a, b, c, d = next(zi), next(zi), next(zi), next(zi)
     assert (a, b, c, d) == (0, 1, -1, 2)
@@ -385,6 +392,7 @@ def test_Reals():
     assert sqrt(-1) not in S.Reals
     assert S.Reals == Interval(-oo, oo)
     assert S.Reals != Interval(0, oo)
+    assert S.Reals.is_subset(Interval(-oo, oo))
 
 
 def test_Complex():

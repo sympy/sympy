@@ -173,10 +173,7 @@ class Integers(with_metaclass(Singleton, Set)):
     def _contains(self, other):
         if not isinstance(other, Expr):
             return S.false
-        elif other.is_integer:
-            return S.true
-        elif other.is_integer is False:
-            return S.false
+        return other.is_integer
 
     def __iter__(self):
         yield S.Zero
@@ -965,7 +962,6 @@ class ComplexRegion(Set):
                 new_sets.append(sets)
             # Normalize input theta
             for k, v in enumerate(new_sets):
-                from sympy.sets import ProductSet
                 new_sets[k] = ProductSet(v.args[0],
                                          normalize_theta_set(v.args[1]))
             sets = Union(*new_sets)

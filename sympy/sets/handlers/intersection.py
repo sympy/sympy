@@ -25,26 +25,11 @@ def intersection_sets(a, b):
 
 @dispatch(Naturals, Naturals)
 def intersection_sets(a, b):
-    return a if a is S.Naturals0 else b
-
-@dispatch(Naturals, Interval)
-def intersection_sets(a, b):
-    return Intersection(S.Integers, b, Interval(a._inf, S.Infinity))
+    return a if a is S.Naturals else b
 
 @dispatch(Interval, Naturals)
 def intersection_sets(a, b):
     return intersection_sets(b, a)
-
-@dispatch(Integers, Interval)
-def intersection_sets(a, b):
-    try:
-        from sympy.functions.elementary.integers import floor, ceiling
-        if b._inf is S.NegativeInfinity and b._sup is S.Infinity:
-            return a
-        s = Range(ceiling(b.left), floor(b.right) + 1)
-        return intersection_sets(s, b)  # take out endpoints if open interval
-    except ValueError:
-        return None
 
 @dispatch(ComplexRegion, Set)
 def intersection_sets(self, other):
@@ -458,3 +443,21 @@ def intersection_sets(a, b):
 @dispatch(Rationals, Reals)
 def intersection_sets(a, b):
     return a
+
+def _intlike_interval(a, b):
+    try:
+        from sympy.functions.elementary.integers import floor, ceiling
+        if b._inf is S.NegativeInfinity and b._sup is S.Infinity:
+            return a
+        s = Range(max(a.inf, ceiling(b.left)), floor(b.right) + 1)
+        return intersection_sets(s, b)  # take out endpoints if open interval
+    except ValueError:
+        return None
+
+@dispatch(Integers, Interval)
+def intersection_sets(a, b):
+    return _intlike_interval(a, b)
+
+@dispatch(Naturals, Interval)
+def intersection_sets(a, b):
+    return _intlike_interval(a, b)
