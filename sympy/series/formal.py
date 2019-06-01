@@ -814,9 +814,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     syms = list(f.free_symbols.difference({x}))
     symb = S.One
     if len(syms) == S.One:
-        (t1, t2) = expand(f).as_independent(syms[0])
-        f = t1
-        symb = t2
+        (f, symb) = expand(f).as_independent(syms[0])
 
     result = None
 
@@ -832,8 +830,8 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
         return None
 
     ak = sequence(result[0], (k, result[2], oo))
-    xk = sequence(x**k*symb, (k, 0, oo))
-    ind = result[1]*symb
+    xk = sequence(x**k * symb, (k, 0, oo))
+    ind = result[1] * symb
 
     return ak, xk, ind
 
@@ -984,7 +982,7 @@ class FormalPowerSeries(SeriesBase):
     def fps_sym(self):
         """Returns whether the function contains symbolic terms"""
         ind = self.ind
-        s = list(ind.free_symbols.difference({self.x}))
+        s = ind.free_symbols.difference({self.x})
         if len(s) == S.One:
             return True
         return False

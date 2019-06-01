@@ -393,8 +393,6 @@ def test_fps_symbolic():
          (x - 2)**3*(x - 2)**n/81 - (x - 2)**4*(x - 2)**n/324 +
          (x - 2)**5*(x - 2)**n/1215 + O((x - 2)**(n + 6), (x, 2)))
 
-@XFAIL
-def test_fps_add_symbolic():
     f = x**(n - 2)*cos(x)
     assert fps(f, x).truncate() == \
         (x**n*x**(-2) - x**n/2 + x**2*x**n/24 - x**4*x**n/720 + O(x**(n + 6), x))
@@ -406,8 +404,12 @@ def test_fps_add_symbolic():
 
     f = x**n*atan(x)
     assert fps(f, x, oo).truncate() == \
-        (-(1/x)**n/(5*x**5) + (1/x)**n/(3*x**3) + (1/x)**n*(pi/2 - 1/x) +
-         O((1/x)**(n + 6), (x, oo)))
+        (-x**n/(5*x**5) + x**n/(3*x**3) + x**n*(pi/2 - 1/x) +
+         O((1/x)**(-n)/x**6, (x, oo)))
+
+    f = x**(n/2)*cos(x)
+    assert fps(f,x).truncate() == \
+        x**(n/2) - x**2*x**(n/2)/2 + x**4*x**(n/2)/24 + O(x**(n/2 + 6), x)
 
 
 def test_fps__slow():
