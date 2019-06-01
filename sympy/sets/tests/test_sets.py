@@ -17,6 +17,7 @@ def test_imageset():
     raises(TypeError, lambda: imageset(x, ints))
     raises(ValueError, lambda: imageset(x, y, z, ints))
     raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))
+    raises(ValueError, lambda: imageset(Lambda(x, x), ints, ints))
     assert imageset(cos, ints) == ImageSet(Lambda(x, cos(x)), ints)
     def f(x):
         return cos(x)
@@ -24,7 +25,11 @@ def test_imageset():
     f = lambda x: cos(x)
     assert imageset(f, ints) == ImageSet(Lambda(x, cos(x)), ints)
     assert imageset(x, 1, ints) == FiniteSet(1)
-    assert imageset(x, y, ints) == FiniteSet(y)
+    assert imageset(x, y, ints) == Intersection({y}, ints)
+    assert imageset((x, y), (1, z), ints*S.Reals) == Intersection(
+        {(1, z)}, ints*S.Reals)
+    r = symbols('r', real=True)
+    assert imageset((x, y), (1, z), ints*S.Reals) == {(1, z)}
     clash = Symbol('x', integer=true)
     assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))

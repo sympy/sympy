@@ -295,10 +295,14 @@ class ImageSet(Set):
     def __new__(cls, flambda, *sets):
         if not isinstance(flambda, Lambda):
             raise ValueError('first argument must be a Lambda')
-        if flambda is S.IdentityFunction and len(sets) == 1:
+
+        if flambda is S.IdentityFunction:
+            if len(sets) != 1:
+                raise ValueError('identify function requires a single set')
             return sets[0]
-        if not flambda.expr.free_symbols or not flambda.expr.args:
-            return FiniteSet(flambda.expr)
+
+        if not set(flambda.variables) & flambda.expr.free_symbols:
+            return FiniteSet(flambda.expr).intersect(ProductSet(*sets))
 
         return Basic.__new__(cls, flambda, *sets)
 
