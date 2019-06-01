@@ -1864,6 +1864,9 @@ class Lambda(Expr):
         for i in v:
             if not getattr(i, 'is_symbol', False):
                 raise TypeError('variable is not a symbol: %s' % i)
+        if len(v) != len(set(v)):
+            x = [i for i in v if v.count(i) > 1][0]
+            raise SyntaxError("duplicate argument '%s' in Lambda args" % x)
         if len(v) == 1 and v[0] == expr:
             return S.IdentityFunction
 
