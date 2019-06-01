@@ -101,6 +101,46 @@ class Expr(Basic, EvalfMixin):
 
         return expr.class_key(), args, exp, coeff
 
+    def __hash__(self):
+        # hash cannot be cached using cache_it because infinite recurrence
+        # occurs as hash is needed for setting cache dictionary keys
+        h = self._mhash
+        if h is None:
+            h = hash((type(self).__name__,) + self._hashable_content())
+            self._mhash = h
+        return h
+
+    def _hashable_content(self):
+        """Return a tuple of information about self that can be used to
+        compute the hash. If a class defines additional attributes,
+        like ``name`` in Symbol, then this method should be updated
+        accordingly to return such relevant attributes.
+        Defining more than _hashable_content is necessary if __eq__ has
+        been defined by a class. See note about this in Basic.__eq__."""
+        return self._args
+
+    def __eq__(self, other):
+        try:
+            other = sympify(other)
+            if not isinstance(other, Expr):
+                return False
+        except (SympifyError, SyntaxError):
+            return False
+        # check for pure number expr
+        if  not (self.is_Number and other.is_Number) and (
+                type(self) != type(other)):
+            return False
+        a, b = self._hashable_content(), other._hashable_content()
+        if a != b:
+            return False
+        # check number *in* an expression
+        for a, b in zip(a, b):
+            if not isinstance(a, Expr):
+                continue
+            if a.is_Number and type(a) != type(b):
+                return False
+        return True
+
     # ***************
     # * Arithmetics *
     # ***************
