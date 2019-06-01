@@ -8,8 +8,60 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And
-from sympy.sets.sets import Set, Interval, Union, FiniteSet, ProductSet
+from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
+    ProductSet)
+from sympy.sets.contains import Contains
+from sympy.sets.conditionset import ConditionSet
+from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
+
+
+class Rationals(with_metaclass(Singleton, Set)):
+    """
+    Represents the rational numbers. This set is also available as
+    the Singleton, S.Rationals.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.Half in S.Rationals
+    True
+    >>> iterable = iter(S.Rationals)
+    >>> [next(iterable) for i in range(12)]
+    [0, 1, -1, 1/2, 2, -1/2, -2, 1/3, 3, -1/3, -3, 2/3]
+    """
+
+    is_iterable = True
+    _inf = S.NegativeInfinity
+    _sup = S.Infinity
+
+    def _contains(self, other):
+        other = sympify(other)
+        if not isinstance(other, Expr):
+            return S.false
+        if other.is_Number:
+            return _sympify(other.is_Rational)
+        return _sympify(other.is_rational)
+
+    def __iter__(self):
+        from sympy.core.numbers import igcd, Rational
+        yield S.Zero
+        yield S.One
+        yield S.NegativeOne
+        d = 2
+        while True:
+            for n in range(d):
+                if igcd(n, d) == 1:
+                    yield Rational(n, d)
+                    yield Rational(d, n)
+                    yield Rational(-n, d)
+                    yield Rational(-d, n)
+            d += 1
+
+    @property
+    def _boundary(self):
+        return self
 
 
 class Naturals(with_metaclass(Singleton, Set)):

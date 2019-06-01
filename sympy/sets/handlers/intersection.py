@@ -3,7 +3,7 @@ from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
-    ImageSet, Naturals0)
+    ImageSet, Naturals0, Rationals)
 from sympy.sets.sets import UniversalSet, imageset, ProductSet
 
 
@@ -446,3 +446,15 @@ def intersection_sets(a, b):
 @dispatch(Set, Set)
 def intersection_sets(a, b):
     return None
+
+@dispatch(Integers, Rationals)
+def intersection_sets(a, b):
+    return a
+
+@dispatch(Naturals, Rationals)
+def intersection_sets(a, b):
+    return a
+
+@dispatch(Rationals, Reals)
+def intersection_sets(a, b):
+    return a
