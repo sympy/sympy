@@ -78,7 +78,6 @@ def _print_known_const(self, expr):
 class AbstractPythonCodePrinter(CodePrinter):
     printmethod = "_pythoncode"
     language = "Python"
-    standard = "python3"
     reserved_words = _kw_py2and3.union(_kw_only_py3)
     modules = None  # initialized to a set in __init__
     tab = '    '
@@ -94,12 +93,25 @@ class AbstractPythonCodePrinter(CodePrinter):
         precision=17,
         inline=True,
         fully_qualified_modules=True,
-        contract=False
+        contract=False,
+        standard=None
     )
 
     def __init__(self, settings=None):
         super(AbstractPythonCodePrinter, self).__init__(settings)
+
+        # Python standard handler
+        std = self._settings['standard']
+        if std is None:
+            import sys
+            std = 'python{}'.format(sys.version_info.major)
+        if std not in ('python2', 'python3'):
+            raise ValueError('Unrecognized python standard : {}'.format(std))
+        self.standard = std
+
         self.module_imports = defaultdict(set)
+
+        # Known functions and constants handler
         self.known_functions = dict(self._kf, **(settings or {}).get(
             'user_functions', {}))
         self.known_constants = dict(self._kc, **(settings or {}).get(
@@ -333,6 +345,9 @@ class AbstractPythonCodePrinter(CodePrinter):
                 self._print(prnt.format_string), print_args)
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
+
+        if self.standard == 'python2':
+            return 'print %s' % print_args
         return 'print(%s)' % print_args
 
     def _print_Stream(self, strm):
@@ -424,11 +439,11 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._hprint_Pow(expr, rational=rational)
 
     def _print_Rational(self, expr):
-        # XXX Py2 Compatibility
-        return '{}./{}.'.format(expr.p, expr.q)
+        if self.standard == 'python2':
+            return '{}./{}.'.format(expr.p, expr.q)
+        return '{}/{}'.format(expr.p, expr.q)
 
     def _print_Half(self, expr):
-        # XXX Py2 Compatibility
         return self._print_Rational(expr)
 
 
@@ -450,6 +465,9 @@ def pycode(expr, **settings):
     fully_qualified_modules : bool
         Whether or not to write out full module names of functions
         (``math.sin`` vs. ``sin``). default: ``True``.
+    standard : str, optional
+        If 'python2', Python 2 sematics will be used.
+        If 'python3', Python 3 sematics will be used.
 
     Examples
     ========
