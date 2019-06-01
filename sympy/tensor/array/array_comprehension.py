@@ -131,7 +131,7 @@ class ArrayComprehension(Basic):
         Note that all variables are dummy variables since a limit without
         lower bound or upper bound is not accepted.
         """
-        return [l[0] for l in self.limits if len(l) != 1]
+        return [l[0] for l in self._limits if len(l) != 1]
 
     @property
     def shape(self):
