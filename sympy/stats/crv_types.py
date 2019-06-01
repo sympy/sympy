@@ -1980,6 +1980,10 @@ class LogLogisticDistribution(SingleContinuousDistribution):
         a, b = self.alpha, self.beta
         return a*((p/(1 - p))**(1/b))
 
+    def expectation(self, expr, var, **kwargs):
+        a, b = self.args
+        return Piecewise((S.NaN, b <= 1), (pi*a/(b*sin(pi/b)), True))
+
 def LogLogistic(name, alpha, beta):
     r"""
     Create a continuous random variable with a log-logistic distribution.
