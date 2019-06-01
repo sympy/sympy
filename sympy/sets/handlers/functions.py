@@ -1,4 +1,4 @@
-from sympy import Set, symbols, exp, log, S, Wild
+from sympy import Set, symbols, exp, log, S, Wild, Dummy, oo
 from sympy.core import Expr, Add
 from sympy.core.function import Lambda, _coeff_isneg, FunctionClass
 from sympy.core.mod import Mod
@@ -6,7 +6,7 @@ from sympy.logic.boolalg import true
 from sympy.multipledispatch import dispatch
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
                         EmptySet, Intersection, Range)
-from sympy.sets.fancysets import Integers, Naturals
+from sympy.sets.fancysets import Integers, Naturals, Reals
 
 
 _x, _y = symbols("x y")
@@ -37,6 +37,9 @@ def _set_function(f, x):
     if len(expr.free_symbols) > 1 or len(f.variables) != 1:
         return
     var = f.variables[0]
+    if not var.is_real:
+        if expr.subs(var, Dummy(real=True)).is_real is False:
+            return
 
     if expr.is_Piecewise:
         result = S.EmptySet
@@ -229,5 +232,13 @@ def _set_function(f, self):
                         return S.Naturals0
                     elif c == 1:
                         return S.Naturals
-                return Range(c, S.Infinity, step)
-            return Range(c, S.NegativeInfinity, step)
+                return Range(c, oo, step)
+            return Range(c, -oo, step)
+
+
+@dispatch(FunctionUnion, Reals)
+def _set_function(f, self):
+    expr = f.expr
+    if not isinstance(expr, Expr):
+        return
+    return _set_function(f, Interval(-oo, oo))

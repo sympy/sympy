@@ -19,6 +19,10 @@ def test_imageset():
     assert imageset(x, abs(x), S.Naturals0) is S.Naturals0
     assert imageset(x, abs(x), S.Naturals) is S.Naturals
     assert imageset(x, abs(x), S.Integers) is S.Naturals0
+    # issue 16878a
+    r = symbols('r', real=True)
+    assert (1, r) in imageset(x, (x, x), S.Reals)
+    assert 1 + I in imageset(x, x + I, S.Reals)
     raises(TypeError, lambda: imageset(x, ints))
     raises(ValueError, lambda: imageset(x, y, z, ints))
     raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))
@@ -33,8 +37,7 @@ def test_imageset():
     assert imageset(x, y, ints) == Intersection({y}, ints)
     assert imageset((x, y), (1, z), ints*S.Reals) == Intersection(
         {(1, z)}, ints*S.Reals)
-    r = symbols('r', real=True)
-    assert imageset((x, y), (1, z), ints*S.Reals) == {(1, z)}
+    assert imageset((x, y), (1, r), ints*S.Reals) == {(1, r)}
     clash = Symbol('x', integer=true)
     assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
@@ -1124,3 +1127,11 @@ def test_union_intersection_constructor():
 
     assert Union({1}, {2}) == FiniteSet(1, 2)
     assert Intersection({1, 2}, {2, 3}) == FiniteSet(2)
+
+
+@XFAIL
+def test_issue_16878b():
+    # in intersection_sets for (ImageSet, Set) there is no code
+    # that handles the base_set of S.Reals like there is
+    # for Integers
+    assert imageset(x, (x, x), S.Reals).is_subset(S.Reals**2) is True
