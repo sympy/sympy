@@ -48,6 +48,17 @@ def test_PythonCodePrinter():
     assert prntr.doprint(p[0, 1]) == 'p[0, 1]'
 
 
+def test_PythonCodePrinter_standard():
+    import sys
+    prntr = PythonCodePrinter()
+
+    python_version = sys.version_info.major
+    if python_version == 2:
+        assert prntr.standard == 'python2'
+    if python_version == 3:
+        assert prntr.standard == 'python3'
+
+
 def test_MpmathPrinter():
     p = MpmathPrinter()
     assert p.doprint(sign(x)) == 'mpmath.sign(x)'
