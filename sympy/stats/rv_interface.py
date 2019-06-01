@@ -270,7 +270,7 @@ def kurtosis(X, condition=None, **kwargs):
     kurtosis(X) = E(((X - E(X))/sigma)**4)
 
     Parameter
-    ==========
+    =========
 
     condition : Expr containing RandomSymbols
             A conditional expression. kurtosis(X, X>0) is kurtosis of X given X > 0
@@ -294,6 +294,7 @@ def kurtosis(X, condition=None, **kwargs):
     References
     ==========
     .. [1] https://en.wikipedia.org/wiki/Kurtosis
+    .. [2] http://mathworld.wolfram.com/Kurtosis.html
     """
     return smoment(X, 4, condition=condition, **kwargs)
 
