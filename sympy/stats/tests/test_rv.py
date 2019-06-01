@@ -166,7 +166,6 @@ def test_dependence():
     XX, YY = given(Tuple(X, Y), Eq(X + Y, 3))
     assert dependent(XX, YY)
 
-@XFAIL
 def test_dependent_finite():
     X, Y = Die('X'), Die('Y')
     # Dependence testing requires symbolic conditions which currently break

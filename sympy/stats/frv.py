@@ -11,9 +11,10 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul,
+from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul, Add,
         And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan)
 from sympy.sets.sets import FiniteSet
+from sympy.core.relational import Relational
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
         sumsets, rv_subs, NamedArgsMixin)
@@ -146,10 +147,10 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
         # Check that we aren't passed a condition like die1 == z
         # where 'z' is a symbol that we don't know about
         # We will never be able to test this equality through iteration
-        if not cond.free_symbols.issubset(domain.free_symbols):
-            raise ValueError('Condition "%s" contains foreign symbols \n%s.\n' % (
-                condition, tuple(cond.free_symbols - domain.free_symbols)) +
-                "Will be unable to iterate using this condition")
+        # if not cond.free_symbols.issubset(domain.free_symbols):
+        #     raise ValueError('Condition "%s" contains foreign symbols \n%s.\n' % (
+        #         condition, tuple(cond.free_symbols - domain.free_symbols)) +
+        #         "Will be unable to iterate using this condition")
 
         return Basic.__new__(cls, domain, cond)
 
@@ -323,6 +324,12 @@ class FinitePSpace(PSpace):
     def probability(self, condition):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
         assert cond_symbols.issubset(self.symbols)
+        if isinstance(condition, Relational) and \
+            (not cond_symbols.issubset(self.domain.free_symbols)):
+            rv = condition.lhs if isinstance(condition.rhs, Symbol) else condition.rhs
+            return sum(Piecewise(
+                       (self.prob_of(elem), condition.subs(rv, list(elem)[0][1])),
+                       (0, True)) for elem in self.domain)
         return sum(self.prob_of(elem) for elem in self.where(condition))
 
     def conditional_space(self, condition):
