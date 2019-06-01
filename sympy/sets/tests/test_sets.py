@@ -14,6 +14,11 @@ from sympy.abc import x, y, z, m, n
 
 def test_imageset():
     ints = S.Integers
+    assert imageset(x, x - 1, S.Naturals) is S.Naturals0
+    assert imageset(x, x + 1, S.Naturals0) is S.Naturals
+    assert imageset(x, abs(x), S.Naturals0) is S.Naturals0
+    assert imageset(x, abs(x), S.Naturals) is S.Naturals
+    assert imageset(x, abs(x), S.Integers) is S.Naturals0
     raises(TypeError, lambda: imageset(x, ints))
     raises(ValueError, lambda: imageset(x, y, z, ints))
     raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))

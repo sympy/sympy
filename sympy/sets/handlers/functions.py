@@ -169,6 +169,8 @@ def _set_function(f, self):
         return
 
     n = f.variables[0]
+    if expr == abs(n):
+        return S.Naturals0
 
     # f(x) + c and f(-x) + c cover the same integers
     # so choose the form that has the fewest negatives
@@ -212,11 +214,20 @@ def _set_function(f, self):
 
     x = f.variables[0]
     if not expr.free_symbols - {x}:
+        if expr == abs(x):
+            if self is S.Naturals:
+                return self
+            return S.Naturals0
         step = expr.coeff(x)
         c = expr.subs(x, 0)
         if c.is_Integer and step.is_Integer and expr == step*x + c:
             if self is S.Naturals:
                 c += step
             if step > 0:
+                if step == 1:
+                    if c == 0:
+                        return S.Naturals0
+                    elif c == 1:
+                        return S.Naturals
                 return Range(c, S.Infinity, step)
             return Range(c, S.NegativeInfinity, step)
