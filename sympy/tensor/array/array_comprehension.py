@@ -12,7 +12,7 @@ from sympy.core.numbers import Integer
 
 class ArrayComprehension(Basic):
     """
-    Generates a list comprehension
+    Generate a list comprehension
     If there is a symbolic dimension, for example, say [i for i in range(1, N)] where
     N is a Symbol, then the expression will not be expanded to an array. Otherwise,
     calling the doit() function will launch the expansion.
