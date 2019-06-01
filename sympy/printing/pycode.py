@@ -394,13 +394,13 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
 
         Python code printer automatically looks up ``math.sqrt``.
 
-        >>> printer = PythonCodePrinter()
+        >>> printer = PythonCodePrinter({'standard':'python3'})
         >>> printer._hprint_Pow(sqrt(x), rational=True)
-        'x**(1./2.)'
+        'x**(1/2)'
         >>> printer._hprint_Pow(sqrt(x), rational=False)
         'math.sqrt(x)'
         >>> printer._hprint_Pow(1/sqrt(x), rational=True)
-        'x**(-1./2.)'
+        'x**(-1/2)'
         >>> printer._hprint_Pow(1/sqrt(x), rational=False)
         '1/math.sqrt(x)'
 
