@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from sympy import (S, Symbol, Interval,
         Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
         DiracDelta, Lambda, log, pi)
@@ -248,4 +247,4 @@ def test_issue_12237():
     W = P(X + Y > 0, X)
     assert W == P(X + Y > 0, X)
     assert U == BernoulliDistribution(S(1)/2, S(0), S(1))
-    assert str(V) == '1/2'
+    assert V == S(1)/2
