@@ -261,7 +261,7 @@ def skewness(X, condition=None, **kwargs):
 
 def kurtosis(X, condition=None, **kwargs):
     """
-    Measure of the tailedness (outliers) of the probability distribution.
+    Characterizes the tails/outliers of a probability distribution.
 
     Kurtosis of any univariate normal distribution is 3. Kurtosis less than
     3 means that the distribution produces fewer and less extreme outliers
