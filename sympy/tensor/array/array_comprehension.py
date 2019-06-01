@@ -47,13 +47,7 @@ class ArrayComprehension(Basic):
 
     @property
     def function(self):
-        """Use for obtaining the function applied across limits
-
-        Returns
-        =======
-
-        Expr
-            The applied function
+        """The function applied across limits
 
         Examples
         ========
@@ -70,14 +64,7 @@ class ArrayComprehension(Basic):
     @property
     def limits(self):
         """
-        Used for obtaining the list of limits that will be applied
-        while expanding the array
-
-        Returns
-        =======
-
-        list
-            The required list of the limits
+        The list of limits that will be applied while expanding the array
 
         Examples
         ========
@@ -94,15 +81,9 @@ class ArrayComprehension(Basic):
     @property
     def free_symbols(self):
         """
-        Used for obtaining the set of the free_symbols in the array
+        The set of the free_symbols in the array
         Variables appeared in the bounds are supposed to be excluded
         from the free symbol set.
-
-        Returns
-        =======
-
-        set
-            The set of the free_symbols
 
         Examples
         ========
@@ -126,13 +107,7 @@ class ArrayComprehension(Basic):
 
     @property
     def variables(self):
-        """Used for obtaining the tuples of the variables in the limits
-
-        Returns
-        =======
-
-        tuple
-            The variables in the limits
+        """The tuples of the variables in the limits
 
         Examples
         ========
@@ -148,13 +123,7 @@ class ArrayComprehension(Basic):
 
     @property
     def bound_symbols(self):
-        """Used to obtain the dummay variables
-
-        Returns
-        =======
-
-        list
-            The list of bound symbols
+        """The list of dummy variables
 
         Note
         ====
@@ -167,14 +136,7 @@ class ArrayComprehension(Basic):
     @property
     def shape(self):
         """
-
-        Used for obtaining the shape of the expanded array, which may have symbols
-
-        Returns
-        =======
-
-        tuple
-            The shape of the expanded array.
+        The shape of the expanded array, which may have symbols
 
         Note
         ====
@@ -200,14 +162,8 @@ class ArrayComprehension(Basic):
     @property
     def is_numeric(self):
         """
-        Used to test if the array is numeric which means there is no symbolic
+        Test if the array is numeric which means there is no symbolic
         dimension
-
-        Returns
-        =======
-
-        Boolean
-            True if the expanded array is numeric, False otherwise
 
         Examples
         ========
@@ -228,13 +184,7 @@ class ArrayComprehension(Basic):
         return True
 
     def rank(self):
-        """Used to obtain the rank of the expanded array
-
-        Returns
-        =======
-
-        int
-            The rank
+        """The rank of the expanded array
 
         Examples
         ========
@@ -250,14 +200,8 @@ class ArrayComprehension(Basic):
 
     def __len__(self):
         """
-        Used to obtain the length of the expanded array which means the number
+        The length of the expanded array which means the number
         of elements in the array.
-
-        Returns
-        =======
-
-        int
-            The required length
 
         Raises
         ======
