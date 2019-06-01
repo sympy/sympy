@@ -192,9 +192,11 @@ def test_multiple_sums():
 
 
 def test_sqrt():
-    prntr = LambdaPrinter()
+    prntr = LambdaPrinter({'standard' : 'python2'})
     assert prntr._print_Pow(sqrt(x), rational=False) == 'sqrt(x)'
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1./2.)'
+    prntr = LambdaPrinter({'standard' : 'python3'})
+    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
 
 
 def test_settings():
