@@ -2218,6 +2218,10 @@ def test_sympy__functions__special__gamma_functions__uppergamma():
     from sympy.functions.special.gamma_functions import uppergamma
     assert _test_args(uppergamma(x, 2))
 
+def test_sympy__functions__special__gamma_functions__multivariate_gamma():
+    from sympy.functions.special.gamma_functions import multivariate_gamma
+    assert _test_args(multivariate_gamma(x, 1))
+
 
 def test_sympy__functions__special__beta_functions__beta():
     from sympy.functions.special.beta_functions import beta

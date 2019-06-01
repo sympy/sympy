@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
+from sympy.core import Add, S, sympify, oo, pi, Symbol, Dummy, expand_func
 from sympy.core.compatibility import range, as_int
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
@@ -1078,7 +1078,6 @@ class multivariate_gamma(Function):
     unbranched = True
 
     def fdiff(self, argindex=2):
-        print("*"*20)
         from sympy import Sum
         if argindex == 2:
             x, p = self.args[0], self.args[1]
@@ -1091,6 +1090,10 @@ class multivariate_gamma(Function):
     def eval(cls, x, p):
         from sympy import Product
         x, p = list(map(sympify, (x, p)))
+        if p.is_positive == False or p.is_integer == False:
+            raise ValueError('Order parameter must be positive integer.')
+        if p.is_positive == None or p.is_integer == None:
+            p = Symbol('p', integer=True, positive=True)
         k = Dummy('k', real=True)
         return (pi**(p*(p - 1)/4)*Product(gamma(x + (1 - k)/2),
         (k, 1, p))).doit()
@@ -1099,6 +1102,6 @@ class multivariate_gamma(Function):
         return self.func(self.args[0].conjugate(), self.args[1])
 
     def _eval_is_real(self):
-        x, p = self.args[0], self.args[1]
+        x, p = self.args
         if (x > (p - 1)/2) or x.is_noninteger:
             return True
