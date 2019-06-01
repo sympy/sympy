@@ -16,10 +16,10 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
                          Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic, LogLogistic,
-                         LogNormal, Maxwell, Nakagami, Normal, Pareto,
+                         LogNormal, Maxwell, Nakagami, Normal, GaussianInverse, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
-                         VonMises, Weibull, WignerSemicircle, correlation,
+                         VonMises, Weibull, WignerSemicircle, Wald, correlation,
                          moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
@@ -33,8 +33,8 @@ x, y, z = map(Symbol, 'xyz')
 
 
 def test_single_normal():
-    mu = Symbol('mu', real=True, finite=True)
-    sigma = Symbol('sigma', real=True, positive=True, finite=True)
+    mu = Symbol('mu', real=True)
+    sigma = Symbol('sigma', positive=True)
     X = Normal('x', 0, 1)
     Y = X*sigma + mu
 
@@ -100,13 +100,13 @@ def test_multiple_normal():
     assert quantile(X)(p) == sqrt(2)*erfinv(2*p - S.One)
 
 def test_symbolic():
-    mu1, mu2 = symbols('mu1 mu2', real=True, finite=True)
-    s1, s2 = symbols('sigma1 sigma2', real=True, finite=True, positive=True)
-    rate = Symbol('lambda', real=True, positive=True, finite=True)
+    mu1, mu2 = symbols('mu1 mu2', real=True)
+    s1, s2 = symbols('sigma1 sigma2', positive=True)
+    rate = Symbol('lambda', positive=True)
     X = Normal('x', mu1, s1)
     Y = Normal('y', mu2, s2)
     Z = Exponential('z', rate)
-    a, b, c = symbols('a b c', real=True, finite=True)
+    a, b, c = symbols('a b c', real=True)
 
     assert E(X) == mu1
     assert E(X + Y) == mu1 + mu2
@@ -157,6 +157,12 @@ def test_characteristic_function():
     cf = characteristic_function(Z)
     assert cf(0) == 1
     assert cf(1).expand() == S(25)/26 + 5*I/26
+
+    X = GaussianInverse('x', 1, 1)
+    cf = characteristic_function(X)
+    assert cf(0) == 1
+    assert cf(1) == exp(1 - sqrt(1 - 2*I))
+
 
 def test_moment_generating_function():
     t = symbols('t', positive=True)
@@ -333,17 +339,17 @@ def test_benini():
     assert density(X)(x) == ((alpha/x + 2*beta*log(x/sigma)/x)
                           *exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
 
-    alpha = Symbol("alpha", positive=False)
+    alpha = Symbol("alpha", nonpositive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
-    beta = Symbol("beta", positive=False)
+    beta = Symbol("beta", nonpositive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
     alpha = Symbol("alpha", positive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
     beta = Symbol("beta", positive=True)
-    sigma = Symbol("sigma", positive=False)
+    sigma = Symbol("sigma", nonpositive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
 
@@ -387,16 +393,16 @@ def test_beta_noncentral():
     a, b, c = symbols('a b c')
     assert BetaNoncentral('x', a, b, c)
 
-    a = Symbol('a', positive=False)
+    a = Symbol('a', positive=False, real=True)
     raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
 
     a = Symbol('a', positive=True)
-    b = Symbol('b', positive=False)
+    b = Symbol('b', positive=False, real=True)
     raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
 
     a = Symbol('a', positive=True)
     b = Symbol('b', positive=True)
-    c = Symbol('c', nonnegative=False)
+    c = Symbol('c', nonnegative=False, real=True)
     raises(ValueError, lambda: BetaNoncentral('x', a, b, c))
 
 def test_betaprime():
@@ -406,11 +412,11 @@ def test_betaprime():
     X = BetaPrime('x', alpha, betap)
     assert density(X)(x) == x**(alpha - 1)*(x + 1)**(-alpha - betap)/beta(alpha, betap)
 
-    alpha = Symbol("alpha", positive=False)
+    alpha = Symbol("alpha", nonpositive=True)
     raises(ValueError, lambda: BetaPrime('x', alpha, betap))
 
     alpha = Symbol("alpha", positive=True)
-    betap = Symbol("beta", positive=False)
+    betap = Symbol("beta", nonpositive=True)
     raises(ValueError, lambda: BetaPrime('x', alpha, betap))
 
 
@@ -424,7 +430,7 @@ def test_cauchy():
     assert diff(cdf(X)(x), x) == density(X)(x)
     assert quantile(X)(p) == gamma*tan(pi*(p - S.Half)) + x0
 
-    gamma = Symbol("gamma", positive=False)
+    gamma = Symbol("gamma", nonpositive=True)
     raises(ValueError, lambda: Cauchy('x', x0, gamma))
 
 
@@ -452,7 +458,7 @@ def test_chi_noncentral():
     raises(ValueError, lambda: ChiNoncentral('x', k, l))
 
     k = Symbol("k", integer=True, positive=True)
-    l = Symbol("l", positive=False)
+    l = Symbol("l", nonpositive=True)
     raises(ValueError, lambda: ChiNoncentral('x', k, l))
 
     k = Symbol("k", integer=False)
@@ -489,15 +495,15 @@ def test_dagum():
     assert cdf(X)(x) == Piecewise(((1 + (x/b)**(-a))**(-p), x >= 0),
                                     (0, True))
 
-    p = Symbol("p", positive=False)
+    p = Symbol("p", nonpositive=True)
     raises(ValueError, lambda: Dagum('x', p, a, b))
 
     p = Symbol("p", positive=True)
-    b = Symbol("b", positive=False)
+    b = Symbol("b", nonpositive=True)
     raises(ValueError, lambda: Dagum('x', p, a, b))
 
     b = Symbol("b", positive=True)
-    a = Symbol("a", positive=False)
+    a = Symbol("a", nonpositive=True)
     raises(ValueError, lambda: Dagum('x', p, a, b))
 
 
@@ -512,7 +518,7 @@ def test_erlang():
 
 
 def test_exponential():
-    rate = Symbol('lambda', positive=True, real=True, finite=True)
+    rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
     p = Symbol("p", positive=True, real=True,finite=True)
 
@@ -538,14 +544,14 @@ def test_f_distribution():
     assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
                              /(x*beta(d1/2, d2/2)))
 
-    d1 = Symbol("d1", positive=False)
+    d1 = Symbol("d1", nonpositive=True)
     raises(ValueError, lambda: FDistribution('x', d1, d1))
 
     d1 = Symbol("d1", positive=True, integer=False)
     raises(ValueError, lambda: FDistribution('x', d1, d1))
 
     d1 = Symbol("d1", positive=True)
-    d2 = Symbol("d2", positive=False)
+    d2 = Symbol("d2", nonpositive=True)
     raises(ValueError, lambda: FDistribution('x', d1, d2))
 
     d2 = Symbol("d2", positive=True, integer=False)
@@ -583,7 +589,7 @@ def test_gamma():
     # assert simplify(variance(X)) == k*theta**2  # handled numerically below
     assert E(X) == moment(X, 1)
 
-    k, theta = symbols('k theta', real=True, finite=True, positive=True)
+    k, theta = symbols('k theta', positive=True)
     X = Gamma('x', k, theta)
     assert E(X) == k*theta
     assert variance(X) == k*theta**2
@@ -658,12 +664,12 @@ def test_loglogistic():
     a, b = symbols('a b')
     assert LogLogistic('x', a, b)
 
-    a = Symbol('a', positive=False)
+    a = Symbol('a', negative=True)
     b = Symbol('b', positive=True)
     raises(ValueError, lambda: LogLogistic('x', a, b))
 
     a = Symbol('a', positive=True)
-    b = Symbol('b', positive=False)
+    b = Symbol('b', negative=True)
     raises(ValueError, lambda: LogLogistic('x', a, b))
 
     a, b, z, p = symbols('a b z p', positive=True)
@@ -672,10 +678,15 @@ def test_loglogistic():
     assert cdf(X)(z) == 1/(1 + (z/a)**(-b))
     assert quantile(X)(p) == a*(p/(1 - p))**(1/b)
 
+    # Expectation
+    assert E(X) == Piecewise((S.NaN, b <= 1), (pi*a/(b*sin(pi/b)), True))
+    b = symbols('b', prime=True) # b > 1
+    X = LogLogistic('x', a, b)
+    assert E(X) == pi*a/(b*sin(pi/b))
 
 def test_lognormal():
-    mean = Symbol('mu', real=True, finite=True)
-    std = Symbol('sigma', positive=True, real=True, finite=True)
+    mean = Symbol('mu', real=True)
+    std = Symbol('sigma', positive=True)
     X = LogNormal('x', mean, std)
     # The sympy integrator can't do this too well
     #assert E(X) == exp(mean+std**2/2)
@@ -728,9 +739,43 @@ def test_nakagami():
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
 
+def test_gaussian_inverse():
+    # test for symbolic parameters
+    a, b = symbols('a b')
+    assert GaussianInverse('x', a, b)
+
+    # Inverse Gaussian distribution is also known as Wald distribution
+    # `GaussianInverse` can also be referred by the name `Wald`
+    a, b, z = symbols('a b z')
+    X = Wald('x', a, b)
+    assert density(X)(z) == sqrt(2)*sqrt(b/z**3)*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
+
+    a, b = symbols('a b', positive=True)
+    z = Symbol('z', positive=True)
+
+    X = GaussianInverse('x', a, b)
+    assert density(X)(z) == sqrt(2)*sqrt(b)*sqrt(z**(-3))*exp(-b*(-a + z)**2/(2*a**2*z))/(2*sqrt(pi))
+    assert E(X) == a
+    assert variance(X).expand() == a**3/b
+    assert cdf(X)(z) == (S.Half - erf(sqrt(2)*sqrt(b)*(1 + z/a)/(2*sqrt(z)))/2)*exp(2*b/a) +\
+         erf(sqrt(2)*sqrt(b)*(-1 + z/a)/(2*sqrt(z)))/2 + S.Half
+
+    a = symbols('a', nonpositive=True)
+    raises(ValueError, lambda: GaussianInverse('x', a, b))
+
+    a = symbols('a', positive=True)
+    b = symbols('b', nonpositive=True)
+    raises(ValueError, lambda: GaussianInverse('x', a, b))
+
+def test_sampling_gaussian_inverse():
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
+    X = GaussianInverse("x", 1, 1)
+    assert sample(X) in X.pspace.domain.set
 
 def test_pareto():
-    xm, beta = symbols('xm beta', positive=True, finite=True)
+    xm, beta = symbols('xm beta', positive=True)
     alpha = beta + 5
     X = Pareto('x', xm, alpha)
 
@@ -827,8 +872,8 @@ def test_quadratic_u():
 
 
 def test_uniform():
-    l = Symbol('l', real=True, finite=True)
-    w = Symbol('w', positive=True, finite=True)
+    l = Symbol('l', real=True)
+    w = Symbol('w', positive=True)
     X = Uniform('x', l, l + w)
 
     assert E(X) == l + w/2
@@ -860,8 +905,8 @@ def test_uniform_P():
     I decided to regress on this class for general cleanliness (and I suspect
     speed) of the algorithm.
     """
-    l = Symbol('l', real=True, finite=True)
-    w = Symbol('w', positive=True, finite=True)
+    l = Symbol('l', real=True)
+    w = Symbol('w', positive=True)
     X = Uniform('x', l, l + w)
     assert P(X < l) == 0 and P(X > l + w) == 0
 
@@ -886,6 +931,9 @@ def test_von_mises():
 
 def test_weibull():
     a, b = symbols('a b', positive=True)
+    # FIXME: simplify(E(X)) seems to hang without extended_positive=True
+    # On a Linux machine this had a rapid memory leak...
+    # a, b = symbols('a b', positive=True)
     X = Weibull('x', a, b)
 
     assert E(X).expand() == a * gamma(1 + 1/b)
@@ -1021,10 +1069,10 @@ def test_issue_10003():
 
 @slow
 def test_precomputed_cdf():
-    x = symbols("x", real=True, finite=True)
-    mu = symbols("mu", real=True, finite=True)
-    sigma, xm, alpha = symbols("sigma xm alpha", positive=True, finite=True)
-    n = symbols("n", integer=True, positive=True, finite=True)
+    x = symbols("x", real=True)
+    mu = symbols("mu", real=True)
+    sigma, xm, alpha = symbols("sigma xm alpha", positive=True)
+    n = symbols("n", integer=True, positive=True)
     distribs = [
             Normal("X", mu, sigma),
             Pareto("P", xm, alpha),
@@ -1075,7 +1123,7 @@ def test_precomputed_characteristic_functions():
 
 
 def test_long_precomputed_cdf():
-    x = symbols("x", real=True, finite=True)
+    x = symbols("x", real=True)
     distribs = [
             Arcsin("A", -5, 9),
             Dagum("D", 4, 10, 3),

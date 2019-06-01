@@ -481,7 +481,7 @@ class Point(GeometryEntity):
         Parameters
         ==========
 
-        other : Point
+        other : GeometryEntity or sequence of coordinates
 
         Returns
         =======
@@ -1200,12 +1200,12 @@ class Point3D(Point):
         return [(point.x - self.x),(point.y - self.y),(point.z - self.z)]
 
     def intersection(self, other):
-        """The intersection between this point and another point.
+        """The intersection between this point and another GeometryEntity.
 
         Parameters
         ==========
 
-        other : Point
+        other : GeometryEntity or sequence of coordinates
 
         Returns
         =======

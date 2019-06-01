@@ -811,8 +811,16 @@ def test_Subs_printing():
     assert str(Subs(x, (x,), (1,))) == 'Subs(x, x, 1)'
     assert str(Subs(x + y, (x, y), (1, 2))) == 'Subs(x + y, (x, y), (1, 2))'
 
+
 def test_issue_15716():
     x = Symbol('x')
     e = -3**x*exp(-3)*log(3**x*exp(-3)/factorial(x))/factorial(x)
     assert str(Integral(e, (x, -oo, oo)).doit()) ==  '-(Integral(-3*3**x/factorial(x), (x, -oo, oo))' \
     ' + Integral(3**x*log(3**x/factorial(x))/factorial(x), (x, -oo, oo)))*exp(-3)'
+
+
+def test_str_special_matrices():
+    from sympy.matrices import Identity, ZeroMatrix, OneMatrix
+    assert str(Identity(4)) == 'I'
+    assert str(ZeroMatrix(2, 2)) == '0'
+    assert str(OneMatrix(2, 2)) == '1'

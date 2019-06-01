@@ -93,6 +93,7 @@ __all__ = ['ContinuousRV',
 'Maxwell',
 'Nakagami',
 'Normal',
+'GaussianInverse',
 'Pareto',
 'QuadraticU',
 'RaisedCosine',
@@ -1494,7 +1495,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
             from scipy.stats import invgamma
             return invgamma.rvs(float(self.a), 0, float(self.b))
         else:
-            raise NotImplementedError('Sampling the inverse Gamma Distribution requires Scipy.')
+            raise NotImplementedError('Sampling the Inverse Gamma Distribution requires Scipy.')
 
     def _characteristic_function(self, t):
         a, b = self.a, self.b
@@ -2395,7 +2396,7 @@ def Normal(name, mean, std):
 
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> pprint(density(m)(y, z))
+    >>> pprint(density(m)(y, z), use_unicode=False)
            /1   y\ /2*y   z\   /    z\ /  y   2*z    \
            |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
       ___  \2   2/ \ 3    3/   \    2/ \  3    3     /
@@ -2421,6 +2422,120 @@ def Normal(name, mean, std):
         return multivariate_rv(
             MultivariateNormalDistribution, name, mean, std)
     return rv(name, NormalDistribution, (mean, std))
+
+
+#-------------------------------------------------------------------------------
+# Inverse Gaussian distribution ----------------------------------------------------------
+
+
+class GaussianInverseDistribution(SingleContinuousDistribution):
+    _argnames = ('mean', 'shape')
+
+    @property
+    def set(self):
+        return Interval(0, oo)
+
+    @staticmethod
+    def check(mean, shape):
+        _value_check(shape > 0, "Shape parameter must be positive")
+        _value_check(mean > 0, "Mean must be positive")
+
+    def pdf(self, x):
+        mu, s = self.mean, self.shape
+        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/((2*pi*x**3)))
+
+    def sample(self):
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import invgauss
+            return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape))
+        else:
+            raise NotImplementedError(
+                'Sampling the Inverse Gaussian Distribution requires Scipy.')
+
+    def _cdf(self, x):
+        from sympy.stats import cdf
+        mu, s = self.mean, self.shape
+        stdNormalcdf = cdf(Normal('x', 0, 1))
+
+        first_term = stdNormalcdf(sqrt(s/x) * ((x/mu) - S.One))
+        second_term = exp(2*s/mu) * stdNormalcdf(-sqrt(s/x)*(x/mu + S.One))
+
+        return  first_term + second_term
+
+    def _characteristic_function(self, t):
+        mu, s = self.mean, self.shape
+        return exp((s/mu)*(1 - sqrt(1 - (2*mu**2*I*t)/s)))
+
+    def _moment_generating_function(self, t):
+        mu, s = self.mean, self.shape
+        return exp((s/mu)*(1 - sqrt(1 - (2*mu**2*t)/s)))
+
+
+def GaussianInverse(name, mean, shape):
+    r"""
+    Create a continuous random variable with an Inverse Gaussian distribution.
+    Inverse Gaussian distribution is also known as Wald distribution.
+
+    The density of the Inverse Gaussian distribution is given by
+
+    .. math::
+        f(x) := \sqrt{\frac{\lambda}{2\pi x^3}} e^{-\frac{\lambda(x-\mu)^2}{2x\mu^2}}
+
+    Parameters
+    ==========
+
+    mu : Positive number representing the mean
+    lambda : Positive number representing the shape parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import GaussianInverse, density, cdf, E, std, skewness
+    >>> from sympy import Symbol, pprint
+
+    >>> mu = Symbol("mu", positive=True)
+    >>> lamda = Symbol("lambda", positive=True)
+    >>> z = Symbol("z", positive=True)
+    >>> X = GaussianInverse("x", mu, lamda)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+                                       2
+                      -lambda*(-mu + z)
+                      -------------------
+                                2
+      ___   ________        2*mu *z
+    \/ 2 *\/ lambda *e
+    -------------------------------------
+                    ____  3/2
+                2*\/ pi *z
+
+    >>> E(X)
+    mu
+
+    >>> std(X).expand()
+    mu**(3/2)/sqrt(lambda)
+
+    >>> skewness(X).expand()
+    3*sqrt(mu)/sqrt(lambda)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution
+    .. [2] http://mathworld.wolfram.com/InverseGaussianDistribution.html
+
+    """
+
+    return rv(name, GaussianInverseDistribution, (mean, shape))
+
+Wald = GaussianInverse
 
 #-------------------------------------------------------------------------------
 # Pareto distribution ----------------------------------------------------------

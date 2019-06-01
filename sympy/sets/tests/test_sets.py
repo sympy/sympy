@@ -57,7 +57,7 @@ def test_interval_arguments():
     assert isinstance(Interval(0, Symbol('a')), Interval)
     assert Interval(Symbol('a', real=True, positive=True), 0) == S.EmptySet
     raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
-    raises(ValueError, lambda: Interval(0, Symbol('z', real=False)))
+    raises(ValueError, lambda: Interval(0, Symbol('z', extended_real=False)))
 
     raises(NotImplementedError, lambda: Interval(0, 1, And(x, y)))
     raises(NotImplementedError, lambda: Interval(0, 1, False, And(x, y)))
@@ -1034,7 +1034,7 @@ def test_issue_10326():
         assert i not in interval
 
     x = Symbol('x', real=True)
-    nr = Symbol('nr', real=False)
+    nr = Symbol('nr', extended_real=False)
     assert x + 1 in Interval(x, x + 4)
     assert nr not in Interval(x, x + 4)
     assert Interval(1, 2) in FiniteSet(Interval(0, 5), Interval(1, 2))

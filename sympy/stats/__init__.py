@@ -61,15 +61,24 @@ from .crv_types import (
     Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
     Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
     GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogLogistic, LogNormal,
-    Maxwell, Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh,
+    Maxwell, Nakagami, Normal, GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh,
     ShiftedGompertz, StudentT, Trapezoidal, Triangular, Uniform, UniformSum, VonMises,
-    Weibull, WignerSemicircle
+    Weibull, WignerSemicircle, Wald
 )
 __all__.extend(crv_types.__all__)
 
 from . import drv_types
 from .drv_types import (Geometric, Logarithmic, NegativeBinomial, Poisson, YuleSimon, Zeta)
 __all__.extend(drv_types.__all__)
+
+from . import joint_rv_types
+from .joint_rv_types import (
+    JointRV,
+    Dirichlet, GeneralizedMultivariateLogGamma, GeneralizedMultivariateLogGammaOmega,
+    Multinomial, MultivariateBeta, MultivariateEwens, MultivariateT, NegativeMultinomial,
+    NormalGamma
+)
+__all__.extend(joint_rv_types.__all__)
 
 from . import symbolic_probability
 from .symbolic_probability import Probability, Expectation, Variance, Covariance
