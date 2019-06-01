@@ -207,7 +207,7 @@ def cmoment(X, n, condition=None, **kwargs):
 def smoment(X, n, condition=None, **kwargs):
     """
     Return the nth Standardized moment of a random expression i.e.
-    E( ((X - mu)/sigma(X))**n )
+    E(((X - mu)/sigma(X))**n)
 
     Examples
     ========
@@ -235,6 +235,12 @@ def skewness(X, condition=None, **kwargs):
 
     skewness(X) = E(((X - E(X))/sigma)**3)
 
+    Parameter
+    ==========
+
+    condition : Expr containing RandomSymbols
+            A conditional expression. skewness(X, X>0) is skewness of X given X > 0
+
     Examples
     ========
 
@@ -243,6 +249,9 @@ def skewness(X, condition=None, **kwargs):
     >>> X = Normal('X', 0, 1)
     >>> skewness(X)
     0
+    >>> skewness(X, X > 0) # find skewness given X > 0
+    (-sqrt(2)/sqrt(pi) + 4*sqrt(2)/pi**(3/2))/(1 - 2/pi)**(3/2)
+
     >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
     >>> Y = Exponential('Y', rate)
     >>> skewness(Y)
@@ -260,6 +269,12 @@ def kurtosis(X, condition=None, **kwargs):
 
     kurtosis(X) = E(((X - E(X))/sigma)**4)
 
+    Parameter
+    ==========
+
+    condition : Expr containing RandomSymbols
+            A conditional expression. kurtosis(X, X>0) is kurtosis of X given X > 0
+
     Examples
     ========
 
@@ -268,7 +283,10 @@ def kurtosis(X, condition=None, **kwargs):
     >>> X = Normal('X', 0, 1)
     >>> kurtosis(X)
     3
-    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
+    >>> kurtosis(X, X > 0) # find kurtosis given X > 0
+    (-4/pi - 12/pi**2 + 3)/(1 - 2/pi)**2
+
+    >>> rate = Symbol('lamda', positive=True, real=True, finite=True)
     >>> Y = Exponential('Y', rate)
     >>> kurtosis(Y)
     9
