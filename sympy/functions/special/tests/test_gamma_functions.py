@@ -433,8 +433,8 @@ def test_issue_8524():
     assert gamma(e - S.Half).is_positive is False
 
 def test_issue_14450():
-    assert uppergamma(S(3)/8, x).evalf() == uppergamma(0.375, x)
-    assert lowergamma(x, S(3)/8).evalf() == lowergamma(x, 0.375)
+    assert uppergamma(S(3)/8, x).evalf() == uppergamma(S(3)/8, x)
+    assert lowergamma(x, S(3)/8).evalf() == lowergamma(x, S(3)/8)
     # some values from Wolfram Alpha for comparison
     assert abs(uppergamma(S(3)/8, 2).evalf() - 0.07105675881) < 1e-9
     assert abs(lowergamma(S(3)/8, 2).evalf() - 2.2993794256) < 1e-9

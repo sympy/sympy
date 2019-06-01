@@ -275,7 +275,7 @@ def test_issue_6100_12942_4473():
     assert x*y != (x*y)**1.0
     # Pow != Symbol
     assert (x**1.0)**1.0 != x
-    assert (x**1.0)**2.0 == x**2
+    assert (x**1.0)**2.0 != x**2
     b = Basic()
     assert Pow(b, 1.0, evaluate=False) != b
     # if the following gets distributed as a Mul (x**1.0*y**1.0 then

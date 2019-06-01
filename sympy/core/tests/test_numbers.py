@@ -1687,10 +1687,13 @@ def test_Float_eq():
     assert Float(.75) == S(3)/4
     assert Float(5/18) == 5/18
     # 4473
-    assert t**2 == t**2.0
     assert Float(2.) != 3
     assert Float((0,1,-3)) == S(1)/8
     assert Float((0,1,-3)) != S(1)/9
+    # 16196
+    assert 2 == Float(2)  # as per Python
+    # but in a computation...
+    assert t**2 != t**2.0
 
 
 def test_int_NumberSymbols():
