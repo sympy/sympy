@@ -1675,7 +1675,7 @@ def length(P, Q, D):
     >>> length(-2 , 4, 5) # (-2 + sqrt(5))/4
     3
     >>> length(-5, 4, 17) # (-5 + sqrt(17))/4
-    5
+    4
 
     See Also
     ========
