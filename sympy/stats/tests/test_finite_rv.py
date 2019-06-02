@@ -323,7 +323,7 @@ def test_FinitePSpace():
 
 def test_symbolic_conditions():
     B = Bernoulli('B', S(1)/4)
-    d, b = symbols('d, b')
+    b = symbols('d, b')
     Y = P(Eq(B, b))
     assert Y == \
     Piecewise((1/4, Eq(b, 1)), (0, True)) + Piecewise((3/4, Eq(b, 0)), (0, True))
