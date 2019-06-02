@@ -104,8 +104,7 @@ class gamma(Function):
     def fdiff(self, argindex=1):
         if argindex == 1:
             return self.func(self.args[0])*polygamma(0, self.args[0])
-        else:
-            raise ArgumentIndexError(self, argindex)
+        raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, arg):
@@ -117,8 +116,7 @@ class gamma(Function):
             elif intlike(arg):
                 if arg.is_positive:
                     return factorial(arg - 1)
-                else:
-                    return S.ComplexInfinity
+                return S.ComplexInfinity
             elif arg.is_Rational:
                 if arg.q == 2:
                     n = abs(arg.p) // arg.q
@@ -138,8 +136,7 @@ class gamma(Function):
 
                     if arg.is_positive:
                         return coeff*sqrt(S.Pi) / 2**n
-                    else:
-                        return 2**n*sqrt(S.Pi) / coeff
+                    return 2**n*sqrt(S.Pi) / coeff
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -406,8 +403,7 @@ class uppergamma(Function):
         elif argindex == 1:
             a, z = self.args
             return uppergamma(a, z)*log(z) + meijerg([], [1, 1], [0, 0, a], [], z)
-        else:
-            raise ArgumentIndexError(self, argindex)
+        raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
         from mpmath import mp, workprec
@@ -584,8 +580,7 @@ class polygamma(Function):
         if argindex == 2:
             n, z = self.args[:2]
             return polygamma(n + 1, z)
-        else:
-            raise ArgumentIndexError(self, argindex)
+        raise ArgumentIndexError(self, argindex)
 
     def _eval_is_positive(self):
         if self.args[1].is_positive and (self.args[0] > 0) == True:
@@ -641,7 +636,7 @@ class polygamma(Function):
 
     @classmethod
     def eval(cls, n, z):
-        n, z = list(map(sympify, (n, z)))
+        n, z = map(sympify, (n, z))
         from sympy import unpolarify
 
         if n.is_integer:
@@ -660,8 +655,7 @@ class polygamma(Function):
                         if n.is_Number:
                             if n is S.Zero:
                                 return S.Infinity
-                            else:
-                                return S.Zero
+                            return S.Zero
                     elif z.is_Integer:
                         if z.is_nonpositive:
                             return S.ComplexInfinity
@@ -714,8 +708,7 @@ class polygamma(Function):
                         i, coeff)) for i in range(0, int(coeff)) ]
                     if n == 0:
                         return Add(*tail)/coeff + log(coeff)
-                    else:
-                        return Add(*tail)/coeff**(n + 1)
+                    return Add(*tail)/coeff**(n + 1)
                 z *= coeff
 
         if n == 0 and z.is_Rational:
@@ -740,15 +733,13 @@ class polygamma(Function):
     def _eval_rewrite_as_zeta(self, n, z, **kwargs):
         if n >= S.One:
             return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
-        else:
-            return self
+        return self
 
     def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
         if n.is_integer:
             if n == S.Zero:
                 return harmonic(z - 1) - S.EulerGamma
-            else:
-                return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
+            return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
 
     def _eval_as_leading_term(self, x):
         from sympy import Order
@@ -756,8 +747,7 @@ class polygamma(Function):
         o = Order(z, x)
         if n == 0 and o.contains(1/x):
             return o.getn() * log(x)
-        else:
-            return self.func(n, z)
+        return self.func(n, z)
 
 
 class loggamma(Function):
@@ -949,8 +939,7 @@ class loggamma(Function):
     def fdiff(self, argindex=1):
         if argindex == 1:
             return polygamma(0, self.args[0])
-        else:
-            raise ArgumentIndexError(self, argindex)
+        raise ArgumentIndexError(self, argindex)
 
     def _sage_(self):
         import sage.all as sage
@@ -1083,20 +1072,19 @@ class multivariate_gamma(Function):
             x, p = self.args[0], self.args[1]
             k = Dummy('k')
             return self.func(x, p)*Sum(polygamma(0, x + (1 - k)/2), (k, 1, p))
-        else:
-            raise ArgumentIndexError(self, argindex)
+        raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, x, p):
         from sympy import Product
-        x, p = list(map(sympify, (x, p)))
+        x, p = map(sympify, (x, p))
         if p.is_positive == False or p.is_integer == False:
-            raise ValueError('Order parameter must be positive integer.')
+            raise ValueError('Order parameter p must be positive integer.')
         if p.is_positive == None or p.is_integer == None:
-            p = Symbol('p', integer=True, positive=True)
+            p = Symbol(p.name, integer=True, positive=True)
         k = Dummy('k', real=True)
         return (pi**(p*(p - 1)/4)*Product(gamma(x + (1 - k)/2),
-        (k, 1, p))).doit()
+                    (k, 1, p))).doit()
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate(), self.args[1])
