@@ -167,7 +167,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
             return val
         elif val.is_Equality:
             return val.lhs == val.rhs
-        raise ValueError("Undeciable if %s" % str(val))
+        raise ValueError("Undecidable if %s" % str(val))
 
     def __contains__(self, other):
         return other in self.fulldomain and self._test(other)
@@ -323,9 +323,12 @@ class FinitePSpace(PSpace):
 
     def probability(self, condition):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
-        assert cond_symbols.issubset(self.symbols)
+        cond = rv_subs(condition)
+        if not cond_symbols.issubset(self.symbols):
+            raise ValueError("Cannot compare foriegn random symbols, %s"
+                             %(str(cond_symbols - self.symbols)))
         if isinstance(condition, Relational) and \
-            (not cond_symbols.issubset(self.domain.free_symbols)):
+            (not cond.free_symbols.issubset(self.domain.free_symbols)):
             rv = condition.lhs if isinstance(condition.rhs, Symbol) else condition.rhs
             return sum(Piecewise(
                        (self.prob_of(elem), condition.subs(rv, list(elem)[0][1])),
