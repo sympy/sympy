@@ -142,7 +142,7 @@ def intersection_sets(a, b):
     # we want to know when the two equations might
     # have integer solutions so we use the diophantine
     # solver
-    va, vb = diop_linear(eq(r1, Dummy()) - eq(r2, Dummy()))
+    va, vb = diop_linear(eq(r1, Dummy('a')) - eq(r2, Dummy('b')))
 
     # check for no solution
     no_solution = va is None and vb is None
