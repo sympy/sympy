@@ -235,7 +235,7 @@ def skewness(X, condition=None, **kwargs):
 
     skewness(X) = E(((X - E(X))/sigma)**3)
 
-    Parameter
+    Parameters
     ==========
 
     condition : Expr containing RandomSymbols
@@ -269,8 +269,8 @@ def kurtosis(X, condition=None, **kwargs):
 
     kurtosis(X) = E(((X - E(X))/sigma)**4)
 
-    Parameter
-    =========
+    Parameters
+    ==========
 
     condition : Expr containing RandomSymbols
             A conditional expression. kurtosis(X, X>0) is kurtosis of X given X > 0
