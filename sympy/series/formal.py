@@ -779,7 +779,11 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
                 result[2].subs(x, rep2 + rep2b))
 
     if f.is_polynomial(x):
-        return None
+        k= Dummy('k')
+        ak = sequence(Coeff(f, x, k), (k, 1, oo))
+        xk = sequence(x**k, (k, 0, oo))
+        ind = f.coeff(x, 0)
+        return ak, xk, ind
 
     #  Break instances of Add
     #  this allows application of different
@@ -899,6 +903,16 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
         dir = sympify(dir)
 
     return _compute_fps(f, x, x0, dir, hyper, order, rational, full)
+
+
+class Coeff(Function):
+    """
+    Coeff(p, x, n) represents the nth coefficient of the polynomial p in x
+    """
+    @classmethod
+    def eval(cls, p, x, n):
+        if p.is_polynomial(x) and n.is_integer:
+            return p.coeff(x, n)
 
 
 class FormalPowerSeries(SeriesBase):
