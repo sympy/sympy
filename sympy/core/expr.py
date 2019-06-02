@@ -292,18 +292,18 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_real is False:
+            if me.is_complex and me.is_extended_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 >= 0)
-        if self.is_real or other.is_real:
+        if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_nonnegative is not None and \
-                    dif.is_nonnegative is not dif.is_negative:
-                return sympify(dif.is_nonnegative)
+            if dif.is_extended_nonnegative is not None and \
+                    dif.is_extended_nonnegative is not dif.is_extended_negative:
+                return sympify(dif.is_extended_nonnegative)
         return GreaterThan(self, other, evaluate=False)
 
     def __le__(self, other):
@@ -313,18 +313,18 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_real is False:
+            if me.is_complex and me.is_extended_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 <= 0)
-        if self.is_real or other.is_real:
+        if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_nonpositive is not None and \
-                    dif.is_nonpositive is not dif.is_positive:
-                return sympify(dif.is_nonpositive)
+            if dif.is_extended_nonpositive is not None and \
+                    dif.is_extended_nonpositive is not dif.is_extended_positive:
+                return sympify(dif.is_extended_nonpositive)
         return LessThan(self, other, evaluate=False)
 
     def __gt__(self, other):
@@ -334,18 +334,18 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_real is False:
+            if me.is_complex and me.is_extended_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 > 0)
-        if self.is_real or other.is_real:
+        if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_positive is not None and \
-                    dif.is_positive is not dif.is_nonpositive:
-                return sympify(dif.is_positive)
+            if dif.is_extended_positive is not None and \
+                    dif.is_extended_positive is not dif.is_extended_nonpositive:
+                return sympify(dif.is_extended_positive)
         return StrictGreaterThan(self, other, evaluate=False)
 
     def __lt__(self, other):
@@ -355,18 +355,18 @@ class Expr(Basic, EvalfMixin):
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         for me in (self, other):
-            if me.is_complex and me.is_real is False:
+            if me.is_complex and me.is_extended_real is False:
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 < 0)
-        if self.is_real or other.is_real:
+        if self.is_extended_real or other.is_extended_real:
             dif = self - other
-            if dif.is_negative is not None and \
-                    dif.is_negative is not dif.is_nonnegative:
-                return sympify(dif.is_negative)
+            if dif.is_extended_negative is not None and \
+                    dif.is_extended_negative is not dif.is_extended_nonnegative:
+                return sympify(dif.is_extended_negative)
         return StrictLessThan(self, other, evaluate=False)
 
     def __trunc__(self):
@@ -681,6 +681,7 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.simplify.simplify import nsimplify, simplify
         from sympy.solvers.solveset import solveset
+        from sympy.solvers.solvers import solve
         from sympy.polys.polyerrors import NotAlgebraic
         from sympy.polys.numberfields import minimal_polynomial
 
@@ -707,15 +708,19 @@ class Expr(Basic, EvalfMixin):
         if constant is False:
             return False
 
-        if constant is None and not diff.is_number:
-            # e.g. unless the right simplification is done, a symbolic
-            # zero is possible (see expression of issue 6829: without
-            # simplification constant will be None).
-            return
+        if not diff.is_number:
+            if constant is None:
+                # e.g. unless the right simplification is done, a symbolic
+                # zero is possible (see expression of issue 6829: without
+                # simplification constant will be None).
+                return
 
         if constant is True:
+            # this gives a number whether there are free symbols or not
             ndiff = diff._random()
-            if ndiff:
+            # is_comparable will work whether the result is real
+            # or complex; it could be None, however.
+            if ndiff and ndiff.is_comparable:
                 return False
 
         # sometimes we can use a simplified result to give a clue as to
@@ -723,47 +728,67 @@ class Expr(Basic, EvalfMixin):
         # then we should have been able to compute that and so now
         # we can just consider the cases where the approximation appears
         # to be zero -- we try to prove it via minimal_polynomial.
+        #
+        # removed
+        # ns = nsimplify(diff)
+        # if diff.is_number and (not ns or ns == diff):
+        #
+        # The thought was that if it nsimplifies to 0 that's a sure sign
+        # to try the following to prove it; or if it changed but wasn't
+        # zero that might be a sign that it's not going to be easy to
+        # prove. But tests seem to be working without that logic.
+        #
         if diff.is_number:
-            approx = diff.nsimplify()
-            if not approx:
-                # try to prove via self-consistency
-                surds = [s for s in diff.atoms(Pow) if s.args[0].is_Integer]
-                # it seems to work better to try big ones first
-                surds.sort(key=lambda x: -x.args[0])
-                for s in surds:
-                    try:
-                        # simplify is False here -- this expression has already
-                        # been identified as being hard to identify as zero;
-                        # we will handle the checking ourselves using nsimplify
-                        # to see if we are in the right ballpark or not and if so
-                        # *then* the simplification will be attempted.
-                        if s.is_Symbol:
-                            sol = list(solveset(diff, s))
-                        else:
-                            sol = [s]
-                        if sol:
-                            if s in sol:
-                                return True
-                            if s.is_real:
-                                if any(nsimplify(si, [s]) == s and simplify(si) == s
-                                        for si in sol):
-                                    return True
-                    except NotImplementedError:
-                        pass
-
-                # try to prove with minimal_polynomial but know when
-                # *not* to use this or else it can take a long time. e.g. issue 8354
-                if True:  # change True to condition that assures non-hang
-                    try:
-                        mp = minimal_polynomial(diff)
-                        if mp.is_Symbol:
+            # try to prove via self-consistency
+            surds = [s for s in diff.atoms(Pow) if s.args[0].is_Integer]
+            # it seems to work better to try big ones first
+            surds.sort(key=lambda x: -x.args[0])
+            for s in surds:
+                try:
+                    # simplify is False here -- this expression has already
+                    # been identified as being hard to identify as zero;
+                    # we will handle the checking ourselves using nsimplify
+                    # to see if we are in the right ballpark or not and if so
+                    # *then* the simplification will be attempted.
+                    sol = solve(diff, s, simplify=False)
+                    if sol:
+                        if s in sol:
+                            # the self-consistent result is present
                             return True
-                        return False
-                    except (NotAlgebraic, NotImplementedError):
-                        pass
+                        if all(si.is_Integer for si in sol):
+                            # perfect powers are removed at instantiation
+                            # so surd s cannot be an integer
+                            return False
+                        if all(i.is_algebraic is False for i in sol):
+                            # a surd is algebraic
+                            return False
+                        if any(si in surds for si in sol):
+                            # it wasn't equal to s but it is in surds
+                            # and different surds are not equal
+                            return False
+                        if any(nsimplify(s - si) == 0 and
+                                simplify(s - si) == 0 for si in sol):
+                            return True
+                        if s.is_real:
+                            if any(nsimplify(si, [s]) == s and simplify(si) == s
+                                    for si in sol):
+                                return True
+                except NotImplementedError:
+                    pass
+
+            # try to prove with minimal_polynomial but know when
+            # *not* to use this or else it can take a long time. e.g. issue 8354
+            if True:  # change True to condition that assures non-hang
+                try:
+                    mp = minimal_polynomial(diff)
+                    if mp.is_Symbol:
+                        return True
+                    return False
+                except (NotAlgebraic, NotImplementedError):
+                    pass
 
         # diff has not simplified to zero; constant is either None, True
-        # or the number with significance (prec != 1) that was randomly
+        # or the number with significance (is_comparable) that was randomly
         # calculated twice as the same value.
         if constant not in (True, None) and constant != 0:
             return False
@@ -773,10 +798,30 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_is_positive(self):
+        finite = self.is_finite
+        if finite is False:
+            return False
+        extended_positive = self.is_extended_positive
+        if finite is True:
+            return extended_positive
+        if extended_positive is False:
+            return False
+
+    def _eval_is_negative(self):
+        finite = self.is_finite
+        if finite is False:
+            return False
+        extended_negative = self.is_extended_negative
+        if finite is True:
+            return extended_negative
+        if extended_negative is False:
+            return False
+
+    def _eval_is_extended_positive(self):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
-            if self.is_real is False:
+            if self.is_extended_real is False:
                 return False
 
             # check to see that we can get a value
@@ -794,12 +839,12 @@ class Expr(Basic, EvalfMixin):
             if n2 == S.NaN:
                 return None
 
-            n, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not n.is_Number:
+            r, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not r.is_Number:
                 return False
-            if n._prec != 1 and i._prec != 1:
-                return bool(not i and n > 0)
-            elif n._prec == 1 and (not i or i._prec == 1) and \
+            if r._prec != 1 and i._prec != 1:
+                return bool(not i and r > 0)
+            elif r._prec == 1 and (not i or i._prec == 1) and \
                     self.is_algebraic and not self.has(Function):
                 try:
                     if minimal_polynomial(self).is_Symbol:
@@ -807,11 +852,11 @@ class Expr(Basic, EvalfMixin):
                 except (NotAlgebraic, NotImplementedError):
                     pass
 
-    def _eval_is_negative(self):
+    def _eval_is_extended_negative(self):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
-            if self.is_real is False:
+            if self.is_extended_real is False:
                 return False
 
             # check to see that we can get a value
@@ -829,12 +874,12 @@ class Expr(Basic, EvalfMixin):
             if n2 == S.NaN:
                 return None
 
-            n, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not n.is_Number:
+            r, i = self.evalf(2).as_real_imag()
+            if not i.is_Number or not r.is_Number:
                 return False
-            if n._prec != 1 and i._prec != 1:
-                return bool(not i and n < 0)
-            elif n._prec == 1 and (not i or i._prec == 1) and \
+            if r._prec != 1 and i._prec != 1:
+                return bool(not i and r < 0)
+            elif r._prec == 1 and (not i or i._prec == 1) and \
                     self.is_algebraic and not self.has(Function):
                 try:
                     if minimal_polynomial(self).is_Symbol:
@@ -934,7 +979,7 @@ class Expr(Basic, EvalfMixin):
         return None
 
     def _eval_conjugate(self):
-        if self.is_real:
+        if self.is_extended_real:
             return self
         elif self.is_imaginary:
             return -self
@@ -1228,7 +1273,7 @@ class Expr(Basic, EvalfMixin):
 
         if c and split_1 and (
             c[0].is_Number and
-            c[0].is_negative and
+            c[0].is_extended_negative and
                 c[0] is not S.NegativeOne):
             c[:1] = [S.NegativeOne, -c[0]]
 
@@ -3384,7 +3429,7 @@ class Expr(Basic, EvalfMixin):
                     'Expected a number but got %s:' % func_name(x))
         elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
             return x
-        if not x.is_real:
+        if not x.is_extended_real:
             i, r = x.as_real_imag()
             return i.round(n) + S.ImaginaryUnit*r.round(n)
         if not x:
@@ -3407,7 +3452,7 @@ class Expr(Basic, EvalfMixin):
                 i *= -1
             return i*m
 
-        digits_to_decimal = _mag(x)
+        digits_to_decimal = _mag(x)  # _mag(12) = 2, _mag(.012) = -1
         allow = digits_needed = digits_to_decimal + p
         precs = [f._prec for f in x.atoms(Float)]
         dps = prec_to_dps(max(precs)) if precs else None
@@ -3491,7 +3536,7 @@ class Expr(Basic, EvalfMixin):
             if n is None:  # the single-arg case
                 return rv
             # use str or else it won't be a float
-            return Float(str(rv), digits_needed)
+            return Float(str(rv), dps)  # keep same precision
         else:
             if not allow and rv > self:
                 allow += 1

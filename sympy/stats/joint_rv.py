@@ -16,6 +16,7 @@ from __future__ import print_function, division
 from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
  Dummy)
 from sympy.concrete.summations import Sum, summation
+from sympy.concrete.products import Product
 from sympy.core.compatibility import string_types
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
@@ -64,7 +65,11 @@ class JointPSpace(ProductPSpace):
     @property
     def component_count(self):
         _set = self.distribution.set
-        return len(_set.args) if isinstance(_set, ProductSet) else 1
+        if isinstance(_set, ProductSet):
+            return S(len(_set.args))
+        elif isinstance(_set, Product):
+            return _set.limits[0][-1]
+        return S(1)
 
     @property
     def pdf(self):
@@ -87,6 +92,9 @@ class JointPSpace(ProductPSpace):
 
     def marginal_distribution(self, *indices):
         count = self.component_count
+        if count.atoms(Symbol):
+            raise ValueError("Marginal distributions cannot be computed "
+                                "for symbolic dimensions. It is a work under progress.")
         orig = [Indexed(self.symbol, i) for i in range(count)]
         all_syms = [Symbol(str(i)) for i in orig]
         replace_dict = dict(zip(all_syms, orig))
@@ -101,7 +109,6 @@ class JointPSpace(ProductPSpace):
         if self.distribution.is_Continuous:
             f = Lambda(sym, integrate(self.distribution(*all_syms), *limits))
         elif self.distribution.is_Discrete:
-            limits = [(limit[0], limit[1].inf, limit[1].sup) for limit in limits]
             f = Lambda(sym, summation(self.distribution(*all_syms), *limits))
         return f.xreplace(replace_dict)
 
@@ -183,7 +190,7 @@ class JointRandomSymbol(RandomSymbol):
     """
     def __getitem__(self, key):
         if isinstance(self.pspace, JointPSpace):
-            if self.pspace.component_count <= key:
+            if (self.pspace.component_count <= key) == True:
                 raise ValueError("Index keys for %s can only up to %s." %
                     (self.name, self.pspace.component_count - 1))
             return Indexed(self, key)

@@ -174,7 +174,7 @@ def canonicalize(x):
 
     >>> X = HadamardProduct(A, OneMatrix(2, 2))
     >>> X
-    A.*OneMatrix(2, 2)
+    A.*1
     >>> canonicalize(X)
     A
 

@@ -159,11 +159,13 @@ class Basic(with_metaclass(ManagedProperties)):
         {'commutative': True}
         >>> x = Symbol("x", positive=True)
         >>> x.assumptions0
-        {'commutative': True, 'complex': True, 'hermitian': True,
-        'imaginary': False, 'negative': False, 'nonnegative': True,
-        'nonpositive': False, 'nonzero': True, 'positive': True, 'real': True,
-        'zero': False}
-
+        {'commutative': True, 'complex': True, 'extended_negative': False,
+         'extended_nonnegative': True, 'extended_nonpositive': False,
+         'extended_nonzero': True, 'extended_positive': True, 'extended_real':
+         True, 'finite': True, 'hermitian': True, 'imaginary': False,
+         'infinite': False, 'negative': False, 'nonnegative': True,
+         'nonpositive': False, 'nonzero': True, 'positive': True, 'real':
+         True, 'zero': False}
         """
         return {}
 
@@ -676,8 +678,8 @@ class Basic(with_metaclass(ManagedProperties)):
         1
 
         """
-        is_real = self.is_real
-        if is_real is False:
+        is_extended_real = self.is_extended_real
+        if is_extended_real is False:
             return False
         if not self.is_number:
             return False
@@ -1883,21 +1885,28 @@ def _aresame(a, b):
     Examples
     ========
 
-    To SymPy, 2.0 == 2:
+    In SymPy (as in Python) two numbers compare the same if they
+    have the same underlying base-2 representation even though
+    they may not be the same type:
 
     >>> from sympy import S
     >>> 2.0 == S(2)
     True
+    >>> 0.5 == S.Half
+    True
 
-    Since a simple 'same or not' result is sometimes useful, this routine was
-    written to provide that query:
+    This routine was written to provide a query for such cases that
+    would give false when the types do not match:
 
     >>> from sympy.core.basic import _aresame
     >>> _aresame(S(2.0), S(2))
     False
 
     """
+    from .numbers import Number
     from .function import AppliedUndef, UndefinedFunction as UndefFunc
+    if isinstance(a, Number) and isinstance(b, Number):
+        return a == b and a.__class__ == b.__class__
     for i, j in zip_longest(preorder_traversal(a), preorder_traversal(b)):
         if i != j or type(i) != type(j):
             if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or

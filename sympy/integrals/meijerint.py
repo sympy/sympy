@@ -1788,7 +1788,7 @@ def meijerint_definite(f, x, a, b):
         _debug('  Sensible splitting points:', innermost)
         for c in sorted(innermost, key=default_sort_key, reverse=True) + [S(0)]:
             _debug('  Trying to split at', c)
-            if not c.is_real:
+            if not c.is_extended_real:
                 _debug('  Non-real splitting point.')
                 continue
             res1 = _meijerint_definite_2(f.subs(x, x + c), x)

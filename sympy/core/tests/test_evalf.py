@@ -2,6 +2,7 @@ from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
     integrate, log, Mul, N, oo, pi, Pow, product, Product,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat)
+from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
 from mpmath import inf, ninf
@@ -234,6 +235,7 @@ def test_evalf_bugs():
     #issue 13076
     assert NS(Mul(Max(0, y), x, evaluate=False).evalf()) == 'x*Max(0, y)'
 
+
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
     b = floor(log(8)/log(2), evaluate=False)
@@ -252,14 +254,15 @@ def test_evalf_integer_parts():
                .evalf(1000)) == fibonacci(1000)
 
     assert ceiling(x).evalf(subs={x: 3}) == 3
-    assert ceiling(x).evalf(subs={x: 3*I}) == 3*I
-    assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2 + 3*I
+    assert ceiling(x).evalf(subs={x: 3*I}) == 3.0*I
+    assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2.0 + 3.0*I
     assert ceiling(x).evalf(subs={x: 3.}) == 3
-    assert ceiling(x).evalf(subs={x: 3.*I}) == 3*I
-    assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2 + 3*I
+    assert ceiling(x).evalf(subs={x: 3.*I}) == 3.0*I
+    assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2.0 + 3.0*I
 
     assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
     assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
+
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)
@@ -299,7 +302,7 @@ def test_evalf_divergent_series():
 
 def test_evalf_product():
     assert Product(n, (n, 1, 10)).evalf() == 3628800.
-    assert Product(1 - S.Half**2/n**2, (n, 1, oo)).evalf(5)==0.63662
+    assert comp(Product(1 - S.Half**2/n**2, (n, 1, oo)).n(5), 0.63662)
     assert Product(n, (n, -1, 3)).evalf() == 0
 
 

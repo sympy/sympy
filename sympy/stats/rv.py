@@ -730,7 +730,11 @@ def probability(condition, given_condition=None, numsamples=None,
     given_condition = sympify(given_condition)
 
     if isinstance(given_condition, RandomSymbol):
-        if any([dependent(rv, given_condition) for rv in random_symbols(condition)]):
+        condrv = random_symbols(condition)
+        if len(condrv) == 1 and condrv[0] == given_condition:
+            from sympy.stats.frv_types import BernoulliDistribution
+            return BernoulliDistribution(probability(condition), 0, 1)
+        if any([dependent(rv, given_condition) for rv in condrv]):
             from sympy.stats.symbolic_probability import Probability
             return Probability(condition, given_condition)
         else:

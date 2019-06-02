@@ -845,6 +845,24 @@ class PrettyPrinter(Printer):
 
         return prettyForm.__mul__(*args)
 
+    def _print_Identity(self, expr):
+        if self._use_unicode:
+            return prettyForm(u'\N{MATHEMATICAL DOUBLE-STRUCK CAPITAL I}')
+        else:
+            return prettyForm('I')
+
+    def _print_ZeroMatrix(self, expr):
+        if self._use_unicode:
+            return prettyForm(u'\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ZERO}')
+        else:
+            return prettyForm('0')
+
+    def _print_OneMatrix(self, expr):
+        if self._use_unicode:
+            return prettyForm(u'\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ONE}')
+        else:
+            return prettyForm('1')
+
     def _print_DotProduct(self, expr):
         args = list(expr.args)
 

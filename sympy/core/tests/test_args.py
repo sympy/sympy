@@ -1391,6 +1391,10 @@ def test_sympy__stats__crv_types__NormalDistribution():
     from sympy.stats.crv_types import NormalDistribution
     assert _test_args(NormalDistribution(0, 1))
 
+def test_sympy__stats__crv_types__GaussianInverseDistribution():
+    from sympy.stats.crv_types import GaussianInverseDistribution
+    assert _test_args(GaussianInverseDistribution(1, 1))
+
 
 def test_sympy__stats__crv_types__ParetoDistribution():
     from sympy.stats.crv_types import ParetoDistribution
@@ -1504,6 +1508,11 @@ def test_sympy__stats__joint_rv_types__MultivariateTDistribution():
 def test_sympy__stats__joint_rv_types__NormalGammaDistribution():
     from sympy.stats.joint_rv_types import NormalGammaDistribution
     assert _test_args(NormalGammaDistribution(1, 2, 3, 4))
+
+def test_sympy__stats__joint_rv_types__GeneralizedMultivariateLogGammaDistribution():
+    from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaDistribution
+    v, l, mu = (4, [1, 2, 3, 4], [1, 2, 3, 4])
+    assert _test_args(GeneralizedMultivariateLogGammaDistribution(S.Half, v, l, mu))
 
 def test_sympy__stats__joint_rv_types__MultivariateBetaDistribution():
     from sympy.stats.joint_rv_types import MultivariateBetaDistribution
@@ -3845,6 +3854,12 @@ def test_sympy__tensor__array__sparse_ndim_array__ImmutableSparseNDimArray():
     from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
     sparr = ImmutableSparseNDimArray(range(10, 34), (2, 3, 4))
     assert _test_args(sparr)
+
+
+def test_sympy__tensor__array__array_comprehension__ArrayComprehension():
+    from sympy.tensor.array.array_comprehension import ArrayComprehension
+    arrcom = ArrayComprehension(x, (x, 1, 5))
+    assert _test_args(arrcom)
 
 
 def test_sympy__tensor__functions__TensorProduct():

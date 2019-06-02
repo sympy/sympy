@@ -1484,7 +1484,6 @@ def get_known_facts():
         Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
         Implies(Q.integer, Q.rational),
         Implies(Q.rational, Q.algebraic),
-        Implies(Q.irrational, Q.finite),
         Implies(Q.algebraic, Q.complex),
         Implies(Q.algebraic, Q.finite),
         Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),

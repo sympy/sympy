@@ -8,7 +8,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And
-from sympy.sets.sets import Set, Interval, Union, FiniteSet
+from sympy.sets.sets import Set, Interval, Union, FiniteSet, ProductSet
 from sympy.utilities.misc import filldedent
 
 
@@ -254,7 +254,7 @@ class ImageSet(Set):
         return Basic.__new__(cls, flambda, *sets)
 
     lamda = property(lambda self: self.args[0])
-    base_set = property(lambda self: self.args[1])
+    base_set = property(lambda self: ProductSet(self.args[1:]))
 
     def __iter__(self):
         already_seen = set()
@@ -272,6 +272,7 @@ class ImageSet(Set):
     def _contains(self, other):
         from sympy.matrices import Matrix
         from sympy.solvers.solveset import solveset, linsolve
+        from sympy.solvers.solvers import solve
         from sympy.utilities.iterables import is_sequence, iterable, cartes
         L = self.lamda
         if is_sequence(other):
@@ -299,26 +300,39 @@ class ImageSet(Set):
                 solns = list(linsolve([e - val for e, val in
                 zip(L.expr, other)], variables))
             else:
-                syms = [e.free_symbols & free for e in eqs]
-                solns = {}
-                for i, (e, s, v) in enumerate(zip(eqs, syms, other)):
-                    if not s:
-                        if e != v:
-                            return S.false
-                        solns[vars[i]] = [v]
-                        continue
-                    elif len(s) == 1:
-                        sy = s.pop()
-                        sol = solveset(e, sy)
-                        if sol is S.EmptySet:
-                            return S.false
-                        elif isinstance(sol, FiniteSet):
-                            solns[sy] = list(sol)
+                try:
+                    syms = [e.free_symbols & free for e in eqs]
+                    solns = {}
+                    for i, (e, s, v) in enumerate(zip(eqs, syms, other)):
+                        if not s:
+                            if e != v:
+                                return S.false
+                            solns[vars[i]] = [v]
+                            continue
+                        elif len(s) == 1:
+                            sy = s.pop()
+                            sol = solveset(e, sy)
+                            if sol is S.EmptySet:
+                                return S.false
+                            elif isinstance(sol, FiniteSet):
+                                solns[sy] = list(sol)
+                            else:
+                                raise NotImplementedError
                         else:
+                            # if there is more than 1 symbol from
+                            # variables in expr than this is a
+                            # coupled system
                             raise NotImplementedError
-                    else:
-                        raise NotImplementedError
-                solns = cartes(*[solns[s] for s in variables])
+                    solns = cartes(*[solns[s] for s in variables])
+                except NotImplementedError:
+                    solns = solve([e - val for e, val in
+                        zip(L.expr, other)], variables, set=True)
+                    if solns:
+                        _v, solns = solns
+                        # watch for infinite solutions like solving
+                        # for x, y and getting (x, 0), (0, y), (0, 0)
+                        solns = [i for i in solns if not any(
+                            s in i for s in variables)]
         else:
             x = L.variables[0]
             if isinstance(L.expr, Expr):
@@ -470,8 +484,11 @@ class Range(Set):
     Either the start or end value of the Range must be finite.'''))
 
         if start.is_infinite:
-            end = stop
-        else:
+            if step*(stop - start) < 0:
+                start = stop = S.One
+            else:
+                end = stop
+        if not start.is_infinite:
             ref = start if start.is_finite else stop
             n = ceiling((stop - ref)/step)
             if n <= 0:

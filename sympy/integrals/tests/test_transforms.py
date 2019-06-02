@@ -350,7 +350,7 @@ def test_inverse_mellin_transform():
     # Now test the inverses of all direct transforms tested above
 
     # Section 8.4.2
-    nu = symbols('nu', real=True, finite=True)
+    nu = symbols('nu', real=True)
     assert IMT(-1/(nu + s), s, x, (-oo, None)) == x**nu*Heaviside(x - 1)
     assert IMT(1/(nu + s), s, x, (None, oo)) == x**nu*Heaviside(1 - x)
     assert simp_pows(IMT(gamma(beta)*gamma(s)/gamma(s + beta), s, x, (0, oo))) \
@@ -538,7 +538,7 @@ def test_issue_8368_7173():
 def test_inverse_laplace_transform():
     from sympy import sinh, cosh, besselj, besseli, simplify, factor_terms
     ILT = inverse_laplace_transform
-    a, b, c, = symbols('a b c', positive=True, finite=True)
+    a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
 
     def simp_hyp(expr):
@@ -607,7 +607,7 @@ def test_inverse_laplace_transform_delta_cond():
     assert ILT(exp(z*s), s, t, noconds=False) == \
         (DiracDelta(t + z), Eq(im(z), 0))
     # inversion does not exist: verify it doesn't evaluate to DiracDelta
-    for z in (Symbol('z', real=False),
+    for z in (Symbol('z', extended_real=False),
               Symbol('z', imaginary=True, zero=False)):
         f = ILT(exp(z*s), s, t, noconds=False)
         f = f[0] if isinstance(f, tuple) else f

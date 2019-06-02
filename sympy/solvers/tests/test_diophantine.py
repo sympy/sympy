@@ -273,11 +273,9 @@ def test_bf_pell():
 def test_length():
     assert length(2, 1, 0) == 1
     assert length(-2, 4, 5) == 3
-    assert length(-5, 4, 17) == 5
+    assert length(-5, 4, 17) == 4
     assert length(0, 4, 13) == 6
-    assert length(-31, 8, 613) == 69
     assert length(7, 13, 11) == 23
-    assert length(-40, 5, 23) == 4
     assert length(1, 6, 4) == 2
 
 

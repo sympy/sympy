@@ -531,8 +531,8 @@ def test_intersection_2d():
         Point2D(n/d*S(3)/2000, -S(497)/10)]
 
 
-@slow
 def test_line_intersection():
+    # see also test_issue_11238 in test_matrices.py
     x0 = tan(13*pi/45)
     x1 = sqrt(3)
     x2 = x0**2

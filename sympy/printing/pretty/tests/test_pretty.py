@@ -6691,3 +6691,13 @@ def test_imaginary_unit():
 
     raises(TypeError, lambda: pretty(I, imaginary_unit=I))
     raises(ValueError, lambda: pretty(I, imaginary_unit="kkk"))
+
+
+def test_str_special_matrices():
+    from sympy.matrices import Identity, ZeroMatrix, OneMatrix
+    assert pretty(Identity(4)) == 'I'
+    assert upretty(Identity(4)) == u'𝕀'
+    assert pretty(ZeroMatrix(2, 2)) == '0'
+    assert upretty(ZeroMatrix(2, 2)) == u'𝟘'
+    assert pretty(OneMatrix(2, 2)) == '1'
+    assert upretty(OneMatrix(2, 2)) == u'𝟙'
