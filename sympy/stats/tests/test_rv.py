@@ -1,18 +1,15 @@
-from __future__ import unicode_literals
-from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
+from sympy import (S, Symbol, Interval,
+        Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
         DiracDelta, Lambda, log, pi)
 from sympy.core.numbers import comp
-from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance, covariance,
-        skewness, density, given, independent, dependent, where, pspace,
+from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
+        density, given, independent, dependent, where, pspace,
         random_symbols, sample, Geometric)
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, PSpace)
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import range
-from sympy.abc import x
-from sympy.stats.symbolic_probability import Probability
 
 
 def test_where():
@@ -50,6 +47,7 @@ def test_random_symbols():
 
 def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
+    x = Symbol('x')
 
     raises(ValueError, lambda: pspace(5 + 3))
     raises(ValueError, lambda: pspace(x < 1))
@@ -181,7 +179,8 @@ def test_dependent_finite():
 
 def test_normality():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
-    x, z = symbols('x, z', real=True, finite=True)
+    x = Symbol('x', real=True, finite=True)
+    z = Symbol('z', real=True, finite=True)
     dens = density(X - Y, Eq(X + Y, z))
 
     assert integrate(dens(x), (x, -oo, oo)) == 1
@@ -246,6 +245,6 @@ def test_issue_12237():
     U = P(X > 0, X)
     V = P(Y < 0, X)
     W = P(X + Y > 0, X)
-    assert W == Probability(X + Y > 0, X)
+    assert W == P(X + Y > 0, X)
     assert U == BernoulliDistribution(S(1)/2, S(0), S(1))
-    assert str(V) == '1/2'
+    assert V == S(1)/2
