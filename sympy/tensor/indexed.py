@@ -388,7 +388,15 @@ class IndexedBase(Expr, NotIterable):
     >>> B[i, j].shape
     (o, p)
 
+    Assumptions can be specified with keyword arguments the same way as for Symbol:
 
+    >>> A_real = IndexedBase('A', real=True)
+    >>> A != A_real
+    True
+    >>> A.assumptions0
+    {'commutative': True}
+    >>> sorted(A_real.assumptions0.items())
+    [('commutative', True), ('complex', True), ('hermitian', True), ('imaginary', False), ('real', True)]
 
     """
     is_commutative = True
