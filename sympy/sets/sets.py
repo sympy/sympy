@@ -1944,7 +1944,7 @@ def simplify_intersection(args):
             raise TypeError("Input args to Union must be Sets")
 
     # If any EmptySets return EmptySet
-    if any(s.is_EmptySet for s in args):
+    if S.EmptySet in args:
         return S.EmptySet
 
     # Handle Finite sets

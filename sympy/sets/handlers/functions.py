@@ -59,7 +59,7 @@ def _set_function(f, x):
 
             # remove the part which has been `imaged`
             domain_set = Complement(domain_set, intrvl)
-            if domain_set.is_EmptySet:
+            if domain_set is S.EmptySet:
                 break
         return result
 
