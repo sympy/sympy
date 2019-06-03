@@ -779,7 +779,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
                 result[2].subs(x, rep2 + rep2b))
 
     if f.is_polynomial(x):
-        k= Dummy('k')
+        k = Dummy('k')
         ak = sequence(Coeff(f, x, k), (k, 1, oo))
         xk = sequence(x**k, (k, 0, oo))
         ind = f.coeff(x, 0)

@@ -3824,6 +3824,10 @@ def test_sympy__series__formal__FormalPowerSeries():
     from sympy.series.formal import fps
     assert _test_args(fps(log(1 + x), x))
 
+def test_sympy__series__formal__Coeff():
+    from sympy.series.formal import fps
+    assert _test_args(fps(x**2 + x + 1, x))
+
 
 def test_sympy__simplify__hyperexpand__Hyper_Function():
     from sympy.simplify.hyperexpand import Hyper_Function
