@@ -5,7 +5,7 @@ from sympy.core.expr import Expr
 from sympy.core import Basic
 from sympy.core.compatibility import Iterable
 from sympy.tensor.array import MutableDenseNDimArray, ImmutableDenseNDimArray
-from sympy import Symbol
+from sympy import Symbol, Dict
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Integer
 
@@ -257,6 +257,12 @@ class ArrayComprehension(Basic):
         list_gen = self._function
         for var, inf, sup in reversed(self._limits):
             list_expr = list_gen
+            if isinstance(list_expr, Dict) or isinstance(list_expr, dict):
+                list_expr = Dict(list_expr)
+                list_gen = dict()
+                for val in range(inf, sup+1):
+                    list_gen.update(list_expr.subs(var, val))
+                return Dict(list_gen)
             list_gen = []
             for val in range(inf, sup+1):
                 if not isinstance(list_expr, Iterable):

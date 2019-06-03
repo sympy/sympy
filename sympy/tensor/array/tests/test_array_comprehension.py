@@ -1,8 +1,9 @@
 from sympy.tensor.array.array_comprehension import ArrayComprehension
 from sympy.tensor.array import ImmutableDenseNDimArray
-from sympy.abc import i, j, k, l, n
+from sympy import symbols, Dict
 from sympy.utilities.pytest import raises
 
+i, j, k, l, n = symbols('i j k l n')
 
 def test_array_comprehension():
     a = ArrayComprehension(i*j, (i, 1, 3), (j, 2, 4))
@@ -10,6 +11,8 @@ def test_array_comprehension():
     c = ArrayComprehension(i+j+k+l, (i, 1, 2), (j, 1, 3), (k, 1, 4), (l, 1, 5))
     d = ArrayComprehension(k, (i, 1, 5))
     e = ArrayComprehension(i, (j, k+1, k+5))
+    f = ArrayComprehension(Dict((k, k**2)), (k, i, j))
+    g = ArrayComprehension({k: k**2}, (k, i, j))
     assert a.doit().tolist() == [[2, 3, 4], [4, 6, 8], [6, 9, 12]]
     assert a.shape == (3, 3)
     assert a.is_numeric == True
@@ -35,6 +38,10 @@ def test_array_comprehension():
     assert c.bound_symbols == [i, j, k, l]
     assert d.doit().tolist() == [k, k, k, k, k]
     assert len(e) == 5
+    assert isinstance(f.subs(i, 0), ArrayComprehension)
+    assert str(f.subs(i, 0).subs(j, 5).doit()) == '{0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}'
+    assert isinstance(g.subs(i, 0), ArrayComprehension)
+    assert str(g.subs(i, 0).subs(j, 5).doit()) == '{0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}'
     raises(TypeError, lambda: ArrayComprehension(i*j, (i, 1, 3), (j, 2, [1, 3, 2])))
     raises(ValueError, lambda: ArrayComprehension(i*j, (i, 1, 3), (j, 2, 1)))
     raises(ValueError, lambda: ArrayComprehension(i*j, (i, 1, 3), (j, 2, j+1)))
