@@ -21,6 +21,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
+from sympy.logic.boolalg import true
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
 from sympy.series import limit
@@ -259,7 +260,10 @@ class Integral(AddWithLimits):
         u = sympify(u)
         if isinstance(u, Expr):
             ufree = u.free_symbols
-            if len(ufree) != 1:
+            if len(ufree) == 0:
+                raise ValueError(filldedent('''
+                f(u) cannot be a constant'''))
+            if len(ufree) > 1:
                 raise ValueError(filldedent('''
                 When f(u) has more than one free symbol, the one replacing x
                 must be identified: pass f(u) as (f(u), u)'''))
@@ -272,6 +276,7 @@ class Integral(AddWithLimits):
                 a free symbol in expr, but symbol is not in expr's free
                 symbols.'''))
             if not isinstance(uvar, Symbol):
+                # This probably never evaluates to True
                 raise ValueError(filldedent('''
                 Expecting a tuple (expr, symbol) but didn't get
                 a symbol; got %s''' % uvar))
@@ -342,7 +347,7 @@ class Integral(AddWithLimits):
                 if len(xab) == 3:
                     a, b = xab[1:]
                     a, b = _calc_limit(a, b), _calc_limit(b, a)
-                    if a - b > 0:
+                    if (a - b > 0) in (True, true):
                         a, b = b, a
                         newfunc = -newfunc
                     newlimits.append((uvar, a, b))
