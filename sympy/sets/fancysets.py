@@ -4,12 +4,14 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
+from sympy.core.numbers import oo
+from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
-    ProductSet)
+    ProductSet, Intersection)
 from sympy.sets.contains import Contains
 from sympy.sets.conditionset import ConditionSet
 from sympy.utilities.iterables import flatten
@@ -345,7 +347,6 @@ class ImageSet(Set):
                 raise ValueError(filldedent('''
     `other` should be an ordered object like a Tuple.'''))
 
-        solns = None
         if self._is_multivariate():
             if not is_sequence(L.expr):
                 # exprs -> (numer, denom) and check again
@@ -393,6 +394,12 @@ class ImageSet(Set):
                         # for x, y and getting (x, 0), (0, y), (0, 0)
                         solns = [i for i in solns if not any(
                             s in i for s in variables)]
+                        if not solns:
+                            return False
+                    else:
+                        # not sure if [] means no solution or
+                        # couldn't find one
+                        return
         else:
             x = L.variables[0]
             if isinstance(L.expr, Expr):
@@ -404,31 +411,29 @@ class ImageSet(Set):
                     msgset = solnsSet
             else:
                 # scalar -> vector
+                # note: it is not necessary for components of other
+                # to be in the corresponding base set unless the
+                # computed component is always in the corresponding
+                # domain. e.g. 1/2 is in imageset(x, x/2, Integers)
+                # while it cannot be in imageset(x, x + 2, Integers).
+                # So when the base set is comprised of integers or reals
+                # perhaps a pre-check could be done to see if the computed
+                # values are still in the set.
+                dom = self.base_set
                 for e, o in zip(L.expr, other):
-                    solns = solveset(e - o, x)
-                    if solns is S.EmptySet:
-                        return S.false
-                    for soln in solns:
-                        try:
-                            if soln in self.base_set:
-                                break  # check next pair
-                        except TypeError:
-                            if self.base_set.contains(soln.evalf()):
-                                break
-                    else:
-                        return S.false  # never broke so there was no True
-                return S.true
-
-        if solns is None:
-            raise NotImplementedError(filldedent('''
-            Determining whether %s contains %s has not
-            been implemented.''' % (msgset, other)))
+                    msgset = dom
+                    other = e - o
+                    dom = dom.intersection(solveset(e - o, x, domain=dom))
+                    if not dom:
+                        # there is no solution in common
+                        return False
+                return not isinstance(dom, Intersection)
         for soln in solns:
             try:
                 if soln in self.base_set:
-                    return S.true
+                    return True
             except TypeError:
-                return self.base_set.contains(soln.evalf())
+                return
         return S.false
 
     @property
