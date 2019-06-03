@@ -1158,7 +1158,7 @@ class Union(Set, LatticeOp, EvalfMixin):
         return Union(*map(boundary_of_set, range(len(self.args))))
 
     def _contains(self, other):
-        if isinstance(other, Expr):
+        try:
             d = Dummy()
             r = self.as_relational(d).subs(d, other)
             b = tfn[r]
@@ -1166,7 +1166,8 @@ class Union(Set, LatticeOp, EvalfMixin):
                     for i in self.args):
                 return r
             return b
-        return Or(*[s.contains(other) for s in self.args])
+        except NotImplementedError:
+            return Or(*[s.contains(other) for s in self.args])
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
