@@ -337,15 +337,10 @@ class ImageSet(Set):
         from sympy.solvers.solvers import solve
         from sympy.utilities.iterables import is_sequence, iterable, cartes
         L = self.lamda
-        if is_sequence(other):
-            if not is_sequence(L.expr):
-                return S.false
-            if len(L.expr) != len(other):
-                raise ValueError(filldedent('''
-    Dimensions of other and output of Lambda are different.'''))
-        elif iterable(other):
-                raise ValueError(filldedent('''
-    `other` should be an ordered object like a Tuple.'''))
+        if is_sequence(other) != is_sequence(L.expr):
+            return False
+        elif is_sequence(other) and len(L.expr) != len(other):
+            return False
 
         if self._is_multivariate():
             if not is_sequence(L.expr):

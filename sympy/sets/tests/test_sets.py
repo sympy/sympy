@@ -24,6 +24,8 @@ def test_imageset():
     assert (1, r) not in imageset(x, (x, x), S.Reals)
     assert (r, r) in imageset(x, (x, x), S.Reals)
     assert 1 + I in imageset(x, x + I, S.Reals)
+    assert {1} not in imageset(x, (x,), S.Reals)
+    assert (1, 1) not in imageset(x, (x,) , S.Reals)
     raises(TypeError, lambda: imageset(x, ints))
     raises(ValueError, lambda: imageset(x, y, z, ints))
     raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))
