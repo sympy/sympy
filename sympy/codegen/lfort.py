@@ -78,11 +78,15 @@ class ASRConverter(CodePrinter):
         return self.translation_unit
 
 
-def sympy_to_asr(expr):
-    """Convert a Sympy expression to an Lfortran expression, either standalone or
-       wrapped in a function definition
 
-    """
+def sympy_to_lfortran(expr):
+    """Convert a SymPy expression to an LFortran ASR expression."""
+    converter = ASRConverter()
+    return converter._print(expr)
 
+
+def sympy_to_lfortran_wrapped(expr):
+    """Convert a Sympy expression to an Lfortran expression, wrapping it in a
+       function definition."""
     converter = ASRConverter()
     return converter.wrap_function_definition(expr)
