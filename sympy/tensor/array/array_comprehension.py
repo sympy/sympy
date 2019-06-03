@@ -5,7 +5,7 @@ from sympy.core.expr import Expr
 from sympy.core import Basic
 from sympy.core.compatibility import Iterable
 from sympy.tensor.array import MutableDenseNDimArray, ImmutableDenseNDimArray
-from sympy import Symbol
+from sympy import Symbol, Dict
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Integer
 
@@ -255,12 +255,18 @@ class ArrayComprehension(Basic):
             return arr.tolist()
 
         list_gen = self._function
+        if isinstance(list_gen, Dict) and len(list_gen.free_symbols) > 1:
+            raise ValueError("Cannot generate list for Dict "
+                             "having multiple symbols.")
         for var, inf, sup in reversed(self._limits):
             list_expr = list_gen
+            cond = isinstance(list_expr, Dict)
             list_gen = []
             for val in range(inf, sup+1):
-                if not isinstance(list_expr, Iterable):
+                if not isinstance(list_expr, Iterable) or cond:
                     list_gen.append(list_expr.subs(var, val))
                 else:
                     list_gen.append(_array_subs(list_expr, var, val))
+        if cond:
+            return list_gen
         return ImmutableDenseNDimArray(list_gen)

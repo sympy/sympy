@@ -2,6 +2,7 @@ from sympy.tensor.array.array_comprehension import ArrayComprehension
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.abc import i, j, k, l, n
 from sympy.utilities.pytest import raises
+from sympy import Dict
 
 
 def test_array_comprehension():
@@ -10,6 +11,7 @@ def test_array_comprehension():
     c = ArrayComprehension(i+j+k+l, (i, 1, 2), (j, 1, 3), (k, 1, 4), (l, 1, 5))
     d = ArrayComprehension(k, (i, 1, 5))
     e = ArrayComprehension(i, (j, k+1, k+5))
+    f = ArrayComprehension(Dict((k, k**2)), (k, 0, n+1))
     assert a.doit().tolist() == [[2, 3, 4], [4, 6, 8], [6, 9, 12]]
     assert a.shape == (3, 3)
     assert a.is_numeric == True
@@ -35,6 +37,7 @@ def test_array_comprehension():
     assert c.bound_symbols == [i, j, k, l]
     assert d.doit().tolist() == [k, k, k, k, k]
     assert len(e) == 5
+    assert f.subs(n, 3).doit() == [Dict((0, 0)), Dict((1, 1)), Dict((2, 4)), Dict((3, 9)), Dict((4, 16))]
     raises(TypeError, lambda: ArrayComprehension(i*j, (i, 1, 3), (j, 2, [1, 3, 2])))
     raises(ValueError, lambda: ArrayComprehension(i*j, (i, 1, 3), (j, 2, 1)))
     raises(ValueError, lambda: ArrayComprehension(i*j, (i, 1, 3), (j, 2, j+1)))
