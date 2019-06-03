@@ -15,7 +15,10 @@ class ASRConverter(CodePrinter):
         # process. Since this object is stateful, the intention is that each
         # instance of this class is used only once.
         self.translation_unit = builder.make_translation_unit()
+
+        # Build the types that should be used in conversion of reals
         self.type_integer = builder.make_type_integer()
+        self.type_real = builder.make_type_real()
 
         # Variables that will be used in the body of a function declaration.
         self.variables = []
@@ -55,6 +58,34 @@ class ASRConverter(CodePrinter):
 
     _print_One = _print_Integer
     _print_Zero = _print_Integer
+
+    def _print_Float(self, expr):
+        # Floating point numbers in LFortran are represented as strings.
+        # LFortran supports the _dp suffix, so we default to double precision
+        # for everything
+        printed = CodePrinter._print_Float(self, expr)
+        return asr.Num("%s_dp" % printed, type=self.type_real)
+
+    def _print_Rational(self, expr):
+        p = asr.Num("%d_dp" % expr.p, type=self.type_real)
+        q = asr.Num("%d_dp" % expr.q, type=self.type_real)
+        return builder.make_binop(p, asr.Div(), q)
+
+    def _print_Pow(self, expr):
+        # FIXME: Results in a type mismatch when the base contains a variable,
+        # since variables default to integers
+        if expr.exp == -1:
+            one = asr.Num("1_dp", type=self.type_real)
+            base = self._print(expr.base)
+            return builder.make_binop(one, asr.Div(), base)
+        else:
+            exp = self._print(expr.exp)
+            base = self._print(expr.base)
+            return builder.make_binop(base, asr.Pow(), exp)
+
+    def _print_Function(self, expr):
+        args = [self._print(x) for x in expr.args]
+        return asr.FuncCall(args=args)
 
     def _print_Symbol(self, expr):
         sym_name = expr.name
