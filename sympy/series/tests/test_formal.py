@@ -408,8 +408,12 @@ def test_fps_symbolic():
          O((1/x)**(-n)/x**6, (x, oo)))
 
     f = x**(n/2)*cos(x)
-    assert fps(f,x).truncate() == \
+    assert fps(f, x).truncate() == \
         x**(n/2) - x**2*x**(n/2)/2 + x**4*x**(n/2)/24 + O(x**(n/2 + 6), x)
+
+    f = x**(n+m)*sin(x)
+    assert fps(f, x).truncate() == \
+        x*x**(m + n) - x**3*x**(m + n)/6 + x**5*x**(m + n)/120 + O(x**(m + n + 6), x)
 
 
 def test_fps__slow():

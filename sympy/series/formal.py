@@ -23,6 +23,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
 from sympy.series.order import Order
+from sympy.simplify.powsimp import powsimp
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
 
@@ -813,8 +814,9 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
 
     syms = list(f.free_symbols.difference({x}))
     symb = S.One
-    if len(syms) == S.One:
-        (f, symb) = expand(f).as_independent(syms[0])
+    if len(syms) >= S.One:
+        (f, symb) = expand(f).as_independent(*syms)
+        symb = powsimp(symb)
 
     result = None
 
@@ -983,7 +985,7 @@ class FormalPowerSeries(SeriesBase):
         """Returns whether the function contains symbolic terms"""
         ind = self.ind
         s = ind.free_symbols.difference({self.x})
-        if len(s) == S.One:
+        if len(s) >= S.One:
             return True
         return False
 
