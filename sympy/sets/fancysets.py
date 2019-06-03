@@ -309,7 +309,7 @@ class ImageSet(Set):
             return sets[0]
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
-            return FiniteSet(flambda.expr).intersect(ProductSet(*sets))
+            return FiniteSet(flambda.expr)
 
         return Basic.__new__(cls, flambda, *sets)
 

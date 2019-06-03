@@ -72,7 +72,7 @@ def test_integers():
 def test_ImageSet():
     assert ImageSet(Lambda(x, 1), S.Integers) == FiniteSet(1)
     assert ImageSet(Lambda(x, y), S.Integers
-        ) == Intersection({y}, S.Integers)
+        ) == {y}
     squares = ImageSet(Lambda(x, x**2), S.Naturals)
     assert 4 in squares
     assert 5 not in squares

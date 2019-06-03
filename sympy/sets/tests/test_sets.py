@@ -35,10 +35,8 @@ def test_imageset():
     f = lambda x: cos(x)
     assert imageset(f, ints) == ImageSet(Lambda(x, cos(x)), ints)
     assert imageset(x, 1, ints) == FiniteSet(1)
-    assert imageset(x, y, ints) == Intersection({y}, ints)
-    assert imageset((x, y), (1, z), ints*S.Reals) == Intersection(
-        {(1, z)}, ints*S.Reals)
-    assert imageset((x, y), (1, r), ints*S.Reals) == {(1, r)}
+    assert imageset(x, y, ints) == {y}
+    assert imageset((x, y), (1, z), ints*S.Reals) == {(1, z)}
     clash = Symbol('x', integer=true)
     assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
