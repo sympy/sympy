@@ -21,7 +21,8 @@ def test_imageset():
     assert imageset(x, abs(x), S.Integers) is S.Naturals0
     # issue 16878a
     r = symbols('r', real=True)
-    assert (1, r) in imageset(x, (x, x), S.Reals)
+    assert (1, r) not in imageset(x, (x, x), S.Reals)
+    assert (r, r) in imageset(x, (x, x), S.Reals)
     assert 1 + I in imageset(x, x + I, S.Reals)
     raises(TypeError, lambda: imageset(x, ints))
     raises(ValueError, lambda: imageset(x, y, z, ints))
@@ -521,9 +522,9 @@ def test_contains():
 
     # non-bool results
     assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \
-        Or(And(x <= 2, x >= 1), And(x <= 4, x >= 3))
+        Or(And(S(1) <= x, x <= 2), And(S(3) <= x, x <= 4))
     assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
-        And(y <= 3, y <= x, y >= 1, y >= 2)
+        And(y <= 3, y <= x, S(1) <= y, S(2) <= y)
 
     assert (S.Complexes).contains(S.ComplexInfinity) == S.false
 
@@ -531,10 +532,10 @@ def test_contains():
 def test_interval_symbolic():
     x = Symbol('x')
     e = Interval(0, 1)
-    assert e.contains(x) == And(0 <= x, x <= 1)
+    assert e.contains(x) == And(S(0) <= x, x <= 1)
     raises(TypeError, lambda: x in e)
     e = Interval(0, 1, True, True)
-    assert e.contains(x) == And(0 < x, x < 1)
+    assert e.contains(x) == And(S(0) < x, x < 1)
 
 
 def test_union_contains():
@@ -542,9 +543,10 @@ def test_union_contains():
     i1 = Interval(0, 1)
     i2 = Interval(2, 3)
     i3 = Union(i1, i2)
+    assert i3.as_relational(x) == Or(And(S(0) <= x, x <= 1), And(S(2) <= x, x <= 3))
     raises(TypeError, lambda: x in i3)
     e = i3.contains(x)
-    assert e == Or(And(0 <= x, x <= 1), And(2 <= x, x <= 3))
+    assert e == i3.as_relational(x)
     assert e.subs(x, -0.5) is false
     assert e.subs(x, 0.5) is true
     assert e.subs(x, 1.5) is false
@@ -1013,7 +1015,7 @@ def test_issue_10113():
 
 def test_issue_10248():
     assert list(Intersection(S.Reals, FiniteSet(x))) == [
-        And(x < oo, x > -oo)]
+        (-oo < x) & (x < oo)]
 
 
 def test_issue_9447():

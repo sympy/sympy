@@ -830,7 +830,7 @@ def test_Rationals():
     assert 2 in S.Rationals
     r = symbols('r', rational=True)
     assert r in S.Rationals
-    raises(ValueError, lambda: x in S.Rationals)
+    raises(TypeError, lambda: x in S.Rationals)
 
 
 def test_imageset_intersection():

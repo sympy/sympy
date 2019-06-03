@@ -37,12 +37,11 @@ class Rationals(with_metaclass(Singleton, Set)):
     _sup = S.Infinity
 
     def _contains(self, other):
-        other = sympify(other)
         if not isinstance(other, Expr):
-            return S.false
+            return False
         if other.is_Number:
-            return _sympify(other.is_Rational)
-        return _sympify(other.is_rational)
+            return other.is_Rational
+        return other.is_rational
 
     def __iter__(self):
         from sympy.core.numbers import igcd, Rational
@@ -99,11 +98,11 @@ class Naturals(with_metaclass(Singleton, Set)):
 
     def _contains(self, other):
         if not isinstance(other, Expr):
-            return S.false
+            return False
         elif other.is_positive and other.is_integer:
-            return S.true
+            return True
         elif other.is_integer is False or other.is_positive is False:
-            return S.false
+            return False
 
     def __iter__(self):
         i = self._inf
@@ -114,6 +113,10 @@ class Naturals(with_metaclass(Singleton, Set)):
     @property
     def _boundary(self):
         return self
+
+    def as_relational(self, x):
+        from sympy.functions.elementary.integers import floor
+        return And(Eq(floor(x), x), x >= self.inf, x < oo)
 
 
 class Naturals0(Naturals):
@@ -194,6 +197,10 @@ class Integers(with_metaclass(Singleton, Set)):
     @property
     def _boundary(self):
         return self
+
+    def as_relational(self, x):
+        from sympy.functions.elementary.integers import floor
+        return And(Eq(floor(x), x), -oo < x, x < oo)
 
 
 class Reals(with_metaclass(Singleton, Interval)):
