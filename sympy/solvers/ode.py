@@ -4089,6 +4089,7 @@ def ode_nth_order_reducible(eq, func, order, match):
 
     return fsol
 
+
 def _nth_algebraic_match(eq, func):
     r"""
     Matches any differential equation that nth_algebraic can solve. Uses
@@ -4102,12 +4103,13 @@ def _nth_algebraic_match(eq, func):
     constants = iter_numbered_constants(eq)
     constant = lambda: next(constants, None)
 
-    # Like Derivative but "invertible"
+    # A class that behaves like Derivative but is "invertible"
     class diffx(Function):
+        isadiffx = True  # apparently not needed for PY3
         def inverse(self):
-            # We mustn't use integrate here because fx has been replaced by _t
-            # in the equation so integrals will not be correct while solve is
-            # still working.
+            # don't use integrate here because fx has been replaced by _t
+            # in the equation; integrals will not be correct while solve
+            # is at work.
             return lambda expr: Integral(expr, var) + constant()
 
     # Replace derivatives wrt the independent variable with diffx
@@ -4125,8 +4127,15 @@ def _nth_algebraic_match(eq, func):
         return eq.replace(Derivative, expand_diffx)
 
     # Restore derivatives in solution afterwards
+    from sympy.core.compatibility import PY3
     def unreplace(eq, var):
-        return eq.replace(diffx, lambda e: Derivative(e, var))
+        if PY3:
+            return eq.replace(diffx, lambda e: Derivative(e, var))
+        else:
+            from sympy.core.rules import Transform
+            return eq.xreplace(Transform(
+                lambda dx: Derivative(dx.args[0], var),
+                lambda dx: getattr(dx, 'isadiffx', None)))
 
     # The independent variable
     var = func.args[0]
