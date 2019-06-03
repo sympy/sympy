@@ -168,8 +168,8 @@ def test_Idx_subs():
 def test_IndexedBase_sugar():
     i, j = symbols('i j', integer=True)
     a = symbols('a')
-    A1 = Indexed(a, i, j, real=True)
-    A2 = IndexedBase(a, real=True)
+    A1 = Indexed(a, i, j)
+    A2 = IndexedBase(a)
     assert A1 == A2[i, j]
     assert A1 == A2[(i, j)]
     assert A1 == A2[[i, j]]
@@ -207,8 +207,7 @@ def test_IndexedBase_assumptions():
     i = Symbol('i', integer=True)
     a = Symbol('a')
     A = IndexedBase(a, positive=True)
-    b = Indexed(a, i, positive=True)
-    for c in (A, b, A[i]):
+    for c in (A, A[i]):
         assert c.is_real
         assert c.is_complex
         assert not c.is_imaginary
@@ -219,8 +218,7 @@ def test_IndexedBase_assumptions():
 
     assert A != IndexedBase(a)
     assert A == IndexedBase(a, positive=True, real=True)
-    assert b != Indexed(a, i, integer=True)
-    assert b == Indexed(a, i, positive=True, real=True)
+    assert A[i] != Indexed(a, i)
 
 
 def test_Indexed_constructor():

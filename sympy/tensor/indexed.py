@@ -128,10 +128,13 @@ class Indexed(Expr):
     >>> Indexed('A', i, j)
     A[i, j]
 
-    It is recommended that ``Indexed`` objects be created via ``IndexedBase``:
+    It is recommended that ``Indexed`` objects be created by indexing ``IndexedBase``:
+    ``IndexedBase('A')[i, j]`` instead of ``Indexed(IndexedBase('A'), i, j)``.
 
     >>> A = IndexedBase('A')
-    >>> Indexed('A', i, j) == A[i, j]
+    >>> a_ij = A[i, j]           # Prefer this,
+    >>> b_ij = Indexed(A, i, j)  # over this.
+    >>> a_ij == b_ij
     True
 
     """
@@ -140,24 +143,7 @@ class Indexed(Expr):
     is_symbol = True
     is_Atom = True
 
-    @staticmethod
-    def _filter_assumptions(kw_args):
-        """Split the given dict into two parts: assumptions and not assumptions.
-           Keys are taken as assumptions if they correspond to a handler on ``Q``."""
-        assumptions = {k: v for k, v in kw_args.items() if k in _assume_defined}
-        Symbol._sanitize(assumptions)
-        # return assumptions, not assumptions
-        return assumptions, {k: v for k, v in kw_args.items() if k not in assumptions}
-
-    @staticmethod
-    def _set_assumptions(obj, assumptions):
-        """Set assumptions on obj, making sure to apply consistent values."""
-        tmp_asm_copy = assumptions.copy()
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        assumptions['commutative'] = is_commutative
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
-
+   
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
         from sympy.tensor.array.ndim_array import NDimArray
@@ -166,7 +152,7 @@ class Indexed(Expr):
         if not args:
             raise IndexException("Indexed needs at least one index.")
         if isinstance(base, (string_types, Symbol)):
-            base = IndexedBase(base, **kw_args)
+            base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base, IndexedBase):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol, or IndexedBase as base."""))
@@ -177,9 +163,8 @@ class Indexed(Expr):
             else:
                 return base[args]
 
-        assumptions, kw_args = Indexed._filter_assumptions(kw_args)
         obj = Expr.__new__(cls, base, *args, **kw_args)
-        Indexed._set_assumptions(obj, assumptions)
+        IndexedBase._set_assumptions(obj, base.assumptions0)
         return obj
 
     def _hashable_content(self):
@@ -410,6 +395,24 @@ class IndexedBase(Expr, NotIterable):
     is_symbol = True
     is_Atom = True
 
+    @staticmethod
+    def _filter_assumptions(kw_args):
+        """Split the given dict into two parts: assumptions and not assumptions.
+           Keys are taken as assumptions if they correspond to an entry in ``_assume_defined``."""
+        assumptions = {k: v for k, v in kw_args.items() if k in _assume_defined}
+        Symbol._sanitize(assumptions)
+        # return assumptions, not assumptions
+        return assumptions, {k: v for k, v in kw_args.items() if k not in assumptions}
+
+    @staticmethod
+    def _set_assumptions(obj, assumptions):
+        """Set assumptions on obj, making sure to apply consistent values."""
+        tmp_asm_copy = assumptions.copy()
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        assumptions['commutative'] = is_commutative
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
+
     def __new__(cls, label, shape=None, **kw_args):
         from sympy import MatrixBase, NDimArray
 
@@ -440,9 +443,8 @@ class IndexedBase(Expr, NotIterable):
         obj._offset = offset
         obj._strides = strides
         obj._name = str(label)
-        assumptions, _ = Indexed._filter_assumptions(kw_args)
-        obj._init_assumptions = assumptions
-        Indexed._set_assumptions(obj, assumptions)
+        assumptions, _ = IndexedBase._filter_assumptions(kw_args)
+        IndexedBase._set_assumptions(obj, assumptions)
         return obj
 
     @property
@@ -458,7 +460,6 @@ class IndexedBase(Expr, NotIterable):
 
     def __getitem__(self, indices, **kw_args):
         # Propagate assumptions onto new Indexed object.
-        kw_args.update(self._init_assumptions)
         if is_sequence(indices):
             # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
