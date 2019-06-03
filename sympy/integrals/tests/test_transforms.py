@@ -9,10 +9,10 @@ from sympy.integrals.transforms import (mellin_transform,
     InverseSineTransform, InverseCosineTransform, IntegralTransformError)
 from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi, arg,
-    cos, S, Abs, And, Or, sin, sqrt, I, log, tan, hyperexpand, meijerg,
+    cos, S, Abs, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
-    exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
-    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2, Abs)
+    exp_polar, unpolarify, Function, expint, expand_mul,
+    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
 from sympy.utilities.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
