@@ -7,6 +7,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
+from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
 from sympy.core.relational import Ne
@@ -21,7 +22,6 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
-from sympy.logic.boolalg import true
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
 from sympy.series import limit
@@ -347,7 +347,7 @@ class Integral(AddWithLimits):
                 if len(xab) == 3:
                     a, b = xab[1:]
                     a, b = _calc_limit(a, b), _calc_limit(b, a)
-                    if (a - b > 0) in (True, true):
+                    if fuzzy_bool(a - b > 0):
                         a, b = b, a
                         newfunc = -newfunc
                     newlimits.append((uvar, a, b))
