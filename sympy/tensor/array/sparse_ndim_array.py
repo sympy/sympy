@@ -111,19 +111,40 @@ class SparseNDimArray(NDimArray):
 
         return type(self)(*(newshape + (self._sparse_array,)))
 
-    def _eval_derivative_n_times(self, s, n):
-        from sympy import Integer, Derivative
-        if isinstance(n, (int, Integer)):
+    def _eval_derivative_array(self, arg):
+        from sympy.core.compatibility import Iterable
+        from sympy.matrices.common import MatrixCommon
+        from sympy import Derivative
+        from sympy import Dict
+        if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):
+            return type(self)([self.diff(x) for x in arg])
+        else:
             s_a = self._sparse_array
-            for i in range(n):
-                s_a2 = {}
-                for key in s_a:
-                    value = _sympify(s_a[key])
-                    s_a2[key] = Derivative(value, s, **{'evaluate':True})
-                if s_a == s_a2 or s_a2 is None:
-                    break
-                s_a = s_a2
-            return type(self)(s_a, self._shape)
+            s_a2 = {}
+            for key in s_a:
+                value = _sympify(s_a[key])
+                deri = Derivative(value, arg, **{'evaluate':True})
+                if deri != 0:
+                    s_a2[key] = deri
+            return type(self)(Dict(s_a2), self._shape)
+
+    def __eq__(self, other):
+        if not isinstance(other, NDimArray):
+            return False
+
+        if self.shape != other.shape:
+            return False
+
+        if isinstance(other, SparseNDimArray):
+            from sympy import Dict
+            dict_self = Dict(self._sparse_array)
+            dict_other = Dict(other._sparse_array)
+            return dict_self == dict_other
+
+        return list(self) == list(other)
+
+    def __hash__(self):
+        return super(SparseNDimArray, self).__hash__()
 
 class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
 
