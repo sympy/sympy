@@ -2,6 +2,7 @@ from sympy.tensor.array.array_comprehension import ArrayComprehension
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.abc import i, j, k, l, n
 from sympy.utilities.pytest import raises
+from sympy.matrices import Matrix
 
 
 def test_array_comprehension():
@@ -13,6 +14,11 @@ def test_array_comprehension():
     assert a.doit().tolist() == [[2, 3, 4], [4, 6, 8], [6, 9, 12]]
     assert a.shape == (3, 3)
     assert a.is_numeric == True
+    assert a.tolist() == [[2, 3, 4], [4, 6, 8], [6, 9, 12]]
+    assert a.tomatrix() == Matrix([
+                           [2, 3, 4],
+                           [4, 6, 8],
+                           [6, 9, 12]])
     assert len(a) == 9
     assert isinstance(b.doit(), ArrayComprehension)
     assert isinstance(a.doit(), ImmutableDenseNDimArray)
@@ -40,3 +46,5 @@ def test_array_comprehension():
     raises(ValueError, lambda: ArrayComprehension(i*j, (i, 1, 3), (j, 2, j+1)))
     raises(ValueError, lambda: len(ArrayComprehension(i*j, (i, 1, 3), (j, 2, j+4))))
     raises(TypeError, lambda: ArrayComprehension(i*j, (i, 0, i + 1.5), (j, 0, 2)))
+    raises(ValueError, lambda: b.tolist())
+    raises(ValueError, lambda: b.tomatrix())

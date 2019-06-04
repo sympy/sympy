@@ -252,7 +252,8 @@ class ArrayComprehension(Basic):
     def doit(self):
         if not self.is_numeric:
             return self
-        return self._expand_array()
+
+        return ImmutableDenseNDimArray(self._expand_array())
 
     def _expand_array(self):
         # To perform a subs at every element of the array.
@@ -272,4 +273,59 @@ class ArrayComprehension(Basic):
                     list_gen.append(list_expr.subs(var, val))
                 else:
                     list_gen.append(_array_subs(list_expr, var, val))
-        return ImmutableDenseNDimArray(list_gen)
+        return list_gen
+
+    def tolist(self):
+        """Transform the expanded array to a list
+
+        Raises
+        ======
+
+        ValueError : When there is a symbolic dimension
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ArrayComprehension
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j')
+        >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
+        >>> a.tolist()
+        [[11, 12, 13], [21, 22, 23], [31, 32, 33], [41, 42, 43]]
+        """
+        if self.is_numeric:
+            return self._expand_array()
+
+        raise ValueError("A symbolic array cannot be expanded to a list")
+
+    def tomatrix(self):
+        """Transform the expanded array to a matrix
+
+        Raises
+        ======
+
+        ValueError : When there is a symbolic dimension
+        ValueError : When the rank of the expanded array is not equal to 2
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ArrayComprehension
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j')
+        >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
+        >>> a.tomatrix()
+        Matrix([
+        [11, 12, 13],
+        [21, 22, 23],
+        [31, 32, 33],
+        [41, 42, 43]])
+        """
+        from sympy.matrices import Matrix
+
+        if not self.is_numeric:
+            raise ValueError("A symbolic array cannot be expanded to a matrix")
+        if self.rank() != 2:
+            raise ValueError('Dimensions must be of size of 2')
+
+        return Matrix(self._expand_array())
