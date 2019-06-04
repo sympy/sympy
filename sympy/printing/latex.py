@@ -1718,9 +1718,11 @@ class LatexPrinter(Printer):
         if self._settings['decimal_separator'] =='comma':
             return r"\left( %s\right)" % \
                 r"; \  ".join([self._print(i) for i in expr])
-        else:
+        elif self._settings['decimal_separator'] =='period':
             return r"\left( %s\right)" % \
                 r", \  ".join([self._print(i) for i in expr])
+        else:
+            raise ValueError('DecimalSeparatorNotFoundError')
 
     def _print_TensorProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
@@ -1737,9 +1739,12 @@ class LatexPrinter(Printer):
         if self._settings['decimal_separator'] == 'comma':
             return r"\left[ %s\right]" % \
                 r"; \  ".join([self._print(i) for i in expr])
-        else:
+        elif self._settings['decimal_separator'] == 'period':
             return r"\left[ %s\right]" % \
                 r", \  ".join([self._print(i) for i in expr])
+        else:
+            raise ValueError('DecimalSeparatorNotFoundError')
+ 
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -1822,9 +1827,12 @@ class LatexPrinter(Printer):
         items = sorted(s, key=default_sort_key)
         if self._settings['decimal_separator'] == 'comma':
             items = "; ".join(map(self._print, items))
-        else:
+        elif self._settings['decimal_separator'] == 'period':
             items = ", ".join(map(self._print, items))
+        else:
+            raise ValueError('DecimalSeparatorNotFoundError')
         return r"\left\{%s\right\}" % items
+
 
     _print_frozenset = _print_set
 
@@ -2451,11 +2459,11 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         If set to ``True``, `\Re` and `\Im` is used for ``re`` and ``im``, respectively.
         The default is ``False`` leading to `\operatorname{re}` and `\operatorname{im}`.
     decimal_separator : string, optional
-        Specifies how to print decimal values using the right separator. The separator
-        is the symbol that separates the whole number part and the fractional parts of
-        the decimal. decimal_separator is either ``comma`` or ``period`` (which is
-        the default). If ``comma`` is specified, the decimals will be printed like 2{,}5.
-        If ``period`` is specified, the decimal is printed like 2.5( the standard in python).
+        Specifies what separator to use to separate the whole and fractional parts of a
+        floating point number as in `2.5` (for the default, "period") or `2{,}5`
+        when "comma" is specified. Lists, sets, and tuple are printed with semicolon
+        separating the elements when 'comma' is chosen([1; 2; 3] when comma is chosen and
+        [1,2,3] for when 'period' is chosen).
 
     Notes
     =====

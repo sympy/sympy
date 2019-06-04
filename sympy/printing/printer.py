@@ -287,11 +287,10 @@ class Printer(object):
                     return getattr(self, printmethod)(expr, **kwargs)
             # Unknown object, fall back to the emptyPrinter. Checks what type of
             # decimal separator to print.
-            if ('decimal_separator' in self._settings):
-                if (self._settings['decimal_separator'] == 'comma') & \
-                    (self.emptyPrinter == str):
-                    expr = str(expr)
-                    expr = expr.replace('.','{,}')
+            
+            if (self.emptyPrinter == str) & \
+                (self._settings.get('decimal_separator', None) == 'comma'):
+                expr = str(expr).replace('.', '{,}')
             return self.emptyPrinter(expr)
         finally:
             self._print_level -= 1
