@@ -158,6 +158,7 @@ from sympy.core.compatibility import integer_types
 
 
 from random import Random
+_local_random = Random()
 
 
 _assume_rules = FactRules([
@@ -313,7 +314,7 @@ def _ask(fact, obj):
 
     # Try assumption's prerequisites
     prereq = list(_assume_rules.prereq[fact])
-    Random().shuffle(prereq)
+    _local_random.shuffle(prereq)
     for pk in prereq:
         if pk in assumptions:
             continue
