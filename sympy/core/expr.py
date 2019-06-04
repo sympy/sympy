@@ -305,7 +305,7 @@ class Expr(Basic, EvalfMixin):
                     return S.true
             if (self.is_infinite and self.is_extended_nonnegative) \
                     or (other.is_infinite and other.is_extended_nonpositive):
-                return S.false
+                return S.true
             nneg = (self - other).is_extended_nonnegative
             if nneg is not None:
                 return sympify(nneg)
