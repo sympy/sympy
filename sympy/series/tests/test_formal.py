@@ -146,9 +146,16 @@ def test_fps():
     assert fps(2, x) == 2
     assert fps(2, x, dir='+') == 2
     assert fps(2, x, dir='-') == 2
-    assert fps(x**2 + x + 1) == x**2 + x + 1
     assert fps(1/x + 1/x**2) == 1/x + 1/x**2
     assert fps(log(1 + x), hyper=False, rational=False) == log(1 + x)
+
+    f = fps(x**2 + x + 1)
+    assert isinstance(f, FormalPowerSeries)
+    assert f.function == x**2 + x + 1
+    assert f[0] == 1
+    assert f[2] == x**2
+    assert f.truncate(4) == x**2 + x + 1 + O(x**4)
+    assert f.polynomial() == x**2 + x + 1
 
     f = fps(log(1 + x))
     assert isinstance(f, FormalPowerSeries)

@@ -647,6 +647,8 @@ def test_finite_basic():
     assert A >= AandB and B >= AandB
     assert A > AandB and B > AandB
 
+    assert FiniteSet(1.0) == FiniteSet(1)
+
 
 def test_powerset():
     # EmptySet

@@ -1367,6 +1367,10 @@ def test_sympy__stats__crv_types__LogisticDistribution():
     from sympy.stats.crv_types import LogisticDistribution
     assert _test_args(LogisticDistribution(0, 1))
 
+def test_sympy__stats__crv_types__LogLogisticDistribution():
+    from sympy.stats.crv_types import LogLogisticDistribution
+    assert _test_args(LogLogisticDistribution(1, 1))
+
 
 def test_sympy__stats__crv_types__LogNormalDistribution():
     from sympy.stats.crv_types import LogNormalDistribution
@@ -3823,6 +3827,10 @@ def test_sympy__series__fourier__FiniteFourierSeries():
 def test_sympy__series__formal__FormalPowerSeries():
     from sympy.series.formal import fps
     assert _test_args(fps(log(1 + x), x))
+
+def test_sympy__series__formal__Coeff():
+    from sympy.series.formal import fps
+    assert _test_args(fps(x**2 + x + 1, x))
 
 
 def test_sympy__simplify__hyperexpand__Hyper_Function():
