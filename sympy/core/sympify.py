@@ -53,7 +53,7 @@ class CantSympify(object):
 
 def _convert_numpy_types(a, **sympify_args):
     """
-    Converts a numpy datatype input to an appropriate sympy type.
+    Converts a numpy datatype input to an appropriate SymPy type.
     """
     import numpy as np
     if not isinstance(a, np.floating):
@@ -85,7 +85,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     with SAGE.
 
     It currently accepts as arguments:
-       - any object defined in sympy
+       - any object defined in SymPy
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
        - booleans, including ``None`` (will leave ``None`` unchanged)
