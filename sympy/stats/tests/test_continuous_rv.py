@@ -33,8 +33,8 @@ x, y, z = map(Symbol, 'xyz')
 
 
 def test_single_normal():
-    mu = Symbol('mu', real=True)
-    sigma = Symbol('sigma', positive=True)
+    mu = Symbol('mu', extended_real=True)
+    sigma = Symbol('sigma', extended_positive=True)
     X = Normal('x', 0, 1)
     Y = X*sigma + mu
 

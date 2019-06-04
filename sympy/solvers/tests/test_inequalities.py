@@ -2,7 +2,7 @@
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
+                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs, Piecewise)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
@@ -389,7 +389,7 @@ def test_issue_10198():
 def test_issue_10047():
     # this must remain an inequality, not True, since if x
     # is not real the inequality is invalid
-    assert solve(sin(x) < 2) == (x <= oo)
+    assert solve(sin(x) < 2) == True
 
 
 def test_issue_10268():
