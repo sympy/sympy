@@ -740,13 +740,14 @@ class LatexPrinter(Printer):
         Logic to decide how to render a function to latex
           - if it is a recognized latex name, use the appropriate latex command
           - if it is a single letter, just use that letter
+          - if it is a single letter before ^ or _ inserted by _deal_with_super_sub
           - if it is a longer name, then put \operatorname{} around it and be
             mindful of undercores in the name
         '''
         func = self._deal_with_super_sub(func)
         if func in accepted_latex_functions:
             name = r"\%s" % func
-        elif len(func) == 1 or func.startswith('\\'):
+        elif len(func) == 1 or func.startswith('\\') or func.find("_") == 1 or func.find("^") == 1:
             name = func
         else:
             name = r"\operatorname{%s}" % func
