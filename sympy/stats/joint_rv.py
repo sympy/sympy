@@ -74,16 +74,12 @@ class JointPSpace(ProductPSpace):
     @property
     def domain(self):
         rvs = random_symbols(self.distribution)
-        if len(rvs) == 0:
-            return SingleDomain(self.symbol, self.set)
+        if not rvs:
+            return SingleDomain(self.symbol, self.distribution.set)
         return ProductDomain(*[rv.pspace.domain for rv in rvs])
 
     def component_domain(self, index):
         return self.set.args[index]
-
-    @property
-    def symbols(self):
-        return self.domain.symbols
 
     def marginal_distribution(self, *indices):
         count = self.component_count
@@ -281,7 +277,8 @@ class MarginalDistribution(Basic):
     distribution.
     """
 
-    def __new__(cls, dist, rvs):
+    def __new__(cls, dist, *rvs):
+        rvs = list(*rvs)
         if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
             raise ValueError(filldedent('''Marginal distribution can be
              intitialised only in terms of random variables or indexed random
@@ -296,13 +293,11 @@ class MarginalDistribution(Basic):
 
     @property
     def set(self):
-        rvs = [i for i in random_symbols(self.args[1])]
-        marginalise_out = [i for i in random_symbols(self.args[1]) \
-         if i not in self.args[1]]
-        for i in rvs:
-            if i in marginalise_out:
-                rvs.remove(i)
-        return ProductSet((i.pspace.set for i in rvs))
+        rvs = set([i for i in random_symbols(self.args[1])])
+        marginalise_out = set([i for i in random_symbols(self.args[1]) \
+         if i not in self.args[1]])
+        rvs = rvs - marginalise_out
+        return ProductSet(*[rv.pspace.set for rv in rvs])
 
     @property
     def symbols(self):
