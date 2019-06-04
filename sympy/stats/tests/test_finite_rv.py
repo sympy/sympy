@@ -8,6 +8,7 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
     sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
     cmoment, smoment, characteristic_function, moment_generating_function,
     quantile)
+from sympy.stats.rv import Density
 from sympy.stats.frv_types import DieDistribution
 from sympy.utilities.pytest import raises
 
@@ -147,9 +148,9 @@ def test_die_args():
     raises(ValueError, lambda: Die('X', 0))
     raises(ValueError, lambda: Die('X', 1.5))  # issue 8103: non integer sides.
 
-    k = Symbol('k')
-    sym_die = Die('X', k)
-    raises(ValueError, lambda: density(sym_die).dict)
+    # k = Symbol('k')
+    # sym_die = Die('X', k)
+    # raises(ValueError, lambda: density(sym_die).dict)
 
 
 def test_bernoulli():
@@ -322,3 +323,10 @@ def test_FinitePSpace():
     X = Die('X', 6)
     space = pspace(X)
     assert space.density == DieDistribution(6)
+
+def test_sym_dim():
+    n = symbols('n', positive=True)
+    D = Die('D', n)
+    assert density(D).dict == Density(DieDistribution(n))
+    assert density(D).dict.subs(n, 4).doit() == \
+        {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}

@@ -16,10 +16,11 @@ Rademacher
 from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
-        Dict, Basic, KroneckerDelta, Dummy, Eq)
+        Dict, Basic, KroneckerDelta, Dummy, Eq, Intersection, Interval,
+        Symbol)
 from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
-from sympy.stats.rv import _value_check
+from sympy.stats.rv import _value_check, Density
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
 
 __all__ = ['FiniteRV',
@@ -31,6 +32,13 @@ __all__ = ['FiniteRV',
 'Hypergeometric',
 'Rademacher'
 ]
+
+def _is_sym_dim(n):
+    n = sympify(n)
+    if n.atoms(Symbol, Integer) == n.atoms() and\
+        n.has(Symbol):
+        return True
+    return False
 
 def rv(name, cls, *args):
     args = list(map(sympify, args))
@@ -131,16 +139,19 @@ class DieDistribution(SingleFiniteDistribution):
     @staticmethod
     def check(sides):
         _value_check((sides.is_positive, sides.is_integer),
-                    "number of sides must be a positive integer.")
+                        "number of sides must be a positive integer.")
 
     @property
     @cacheit
     def dict(self):
-        as_int(self.sides) # Check that self.sides can be converted to an integer
-        return super(DieDistribution, self).dict
+        if _is_sym_dim(self.sides):
+            return Density(self)
+        return dict((k, 1/self.sides) for k in self.set)
 
     @property
     def set(self):
+        if _is_sym_dim(self.sides):
+            return Intersection(S.Naturals0, Interval(0, self.sides))
         return list(map(Integer, list(range(1, self.sides + 1))))
 
     def pdf(self, x):
