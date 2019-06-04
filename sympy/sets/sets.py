@@ -1166,7 +1166,7 @@ class Union(Set, LatticeOp, EvalfMixin):
                     for i in self.args):
                 return r
             return b
-        except NotImplementedError:
+        except (TypeError, NotImplementedError):
             return Or(*[s.contains(other) for s in self.args])
 
     def as_relational(self, symbol):

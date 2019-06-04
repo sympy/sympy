@@ -3,7 +3,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, signsimp, Range, Add, symbols)
+    Matrix, signsimp, Range, Add, symbols, zoo)
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -1129,6 +1129,11 @@ def test_union_intersection_constructor():
 
     assert Union({1}, {2}) == FiniteSet(1, 2)
     assert Intersection({1, 2}, {2, 3}) == FiniteSet(2)
+
+
+def test_Union_contains():
+    assert zoo not in Union(
+        Interval.open(-oo, 0), Interval.open(0, oo))
 
 
 @XFAIL

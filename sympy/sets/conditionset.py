@@ -177,7 +177,11 @@ class ConditionSet(Set):
 
     def _contains(self, other):
         d = Dummy()
-        return self.as_relational(d).subs(d, other)
+        try:
+            return self.as_relational(d).subs(d, other)
+        except TypeError:
+            # couldn't do the substitution without error
+            return False
 
     def as_relational(self, other):
         return And(Lambda(self.sym, self.condition)(
