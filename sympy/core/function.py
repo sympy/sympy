@@ -3079,60 +3079,58 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     """
     from sympy.core.power import Pow
     from sympy.polys.rootoftools import RootOf
+    from sympy.utilities.iterables import iwalk
 
-    kw = dict(n=n, exponent=exponent, dkeys=dkeys)
-    # handling of iterable containers
-    if iterable(expr, exclude=string_types):
-        if isinstance(expr, (dict, Dict)):
-            if dkeys:
-                args = [tuple(map(lambda i: nfloat(i, **kw), a))
-                    for a in expr.items()]
-            else:
-                args = [(k, nfloat(v, **kw)) for k, v in expr.items()]
-            if isinstance(expr, dict):
-                return type(expr)(args)
-            else:
-                return expr.func(*args)
-        elif isinstance(expr, Basic):
-            return expr.func(*[nfloat(a, **kw) for a in expr.args])
-        return type(expr)([nfloat(a, **kw) for a in expr])
-
-    rv = sympify(expr)
-
-    if rv.is_Number:
-        return Float(rv, n)
-    elif rv.is_number:
-        # evalf doesn't always set the precision
-        rv = rv.n(n)
-        if rv.is_Number:
-            rv = Float(rv.n(n), n)
+    def do(expr):
+        if isinstance(expr, Basic):
+            if isinstance(expr, Dict) and not dkeys:
+                return expr.func(*[(k, do(v)) for k, v in expr.args])
+            elif iterable(expr, exclude=string_types):
+                return expr.func(*[do(a) for a in expr.args])
+            rv = expr
         else:
-            pass  # pure_complex(rv) is likely True
-        return rv
-    elif rv.is_Atom:
-        return rv
+            rv = sympify(expr)
 
-    # watch out for RootOf instances that don't like to have
-    # their exponents replaced with Dummies and also sometimes have
-    # problems with evaluating at low precision (issue 6393)
-    rv = rv.xreplace({ro: ro.n(n) for ro in rv.atoms(RootOf)})
+        if rv.is_Number:
+            return Float(rv, n)
+        elif rv.is_number:
+            # evalf doesn't always set the precision
+            rv = rv.n(n)
+            if rv.is_Number:
+                rv = Float(rv.n(n), n)
+            else:
+                pass  # pure_complex(rv) is likely True
+            return rv
+        elif rv.is_Atom:
+            return rv
 
-    if not exponent:
-        reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]
-        rv = rv.xreplace(dict(reps))
-    rv = rv.n(n)
-    if not exponent:
-        rv = rv.xreplace({d.exp: p.exp for p, d in reps})
-    else:
-        # Pow._eval_evalf special cases Integer exponents so if
-        # exponent is suppose to be handled we have to do so here
-        rv = rv.xreplace(Transform(
-            lambda x: Pow(x.base, Float(x.exp, n)),
-            lambda x: x.is_Pow and x.exp.is_Integer))
+        # watch out for RootOf instances that don't like to have
+        # their exponents replaced with Dummies and also sometimes have
+        # problems with evaluating at low precision (issue 6393)
+        rv = rv.xreplace({ro: ro.n(n) for ro in rv.atoms(RootOf)})
 
-    return rv.xreplace(Transform(
-        lambda x: x.func(*nfloat(x.args, n, exponent)),
-        lambda x: isinstance(x, Function)))
+        if not exponent:
+            reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)
+                if not p.is_number]  # it won't matter for number**exp
+            rv = rv.xreplace(dict(reps))
+        if isinstance(rv, Expr):
+            rv = rv.n(n)
+        else:
+            rv = rv.xreplace(Transform(
+                lambda x: x.n(n),
+                lambda x: hasattr(x, 'evalf')))
+        if not exponent:
+            rv = rv.xreplace({d.exp: p.exp for p, d in reps})
+        else:
+            # Pow._eval_evalf special cases Integer exponents so if
+            # exponent is suppose to be handled we have to do so here
+            rv = rv.xreplace(Transform(
+                lambda x: Pow(x.base, Float(x.exp, n)),
+                lambda x: x.is_Pow and x.exp.is_Integer))
 
+        return rv.xreplace(Transform(
+            lambda x: x.func(*nfloat(x.args, n, exponent)),
+            lambda x: isinstance(x, Function)))
+    return iwalk(expr, do, dkeys=dkeys)
 
 from sympy.core.symbol import Dummy, Symbol
