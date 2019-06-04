@@ -176,10 +176,7 @@ def test_issue_16772():
     assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
 
 
-@XFAIL
 def test_issue_16859():
-    # because there is a converter for float, the
-    # CantSympify class designation is ignored
     class no(float, CantSympify):
         pass
     raises(SympifyError, lambda: sympify(no(1.2)))
