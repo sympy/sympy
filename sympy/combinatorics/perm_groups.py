@@ -742,9 +742,9 @@ class PermutationGroup(Basic):
         [12, 6, 3, 1]
 
         """
-        if not self.is_solvable:
-            raise NotImplementedError('Group should be solvable')
         der = self.derived_series()
+        if not (all(g.is_identity for g in der[-1].generators)):
+            raise NotImplementedError('Group should be solvable')
         series = []
 
         for i in range(len(der)-1):
@@ -760,8 +760,9 @@ class PermutationGroup(Basic):
                         g = g**p
                 up_seg = down_seg + up_seg
                 H = K
+            up_seg[0] = der[i]
             series.extend(up_seg)
-        series.append(PermutationGroup([self.identity()]))
+        series.append(der[-1])
         return series
 
     def coset_transversal(self, H):
