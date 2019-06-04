@@ -1664,7 +1664,9 @@ class FiniteSet(Set, EvalfMixin):
         False
 
         """
-        return fuzzy_or([tfn[Eq(e, other)] for e in self.args])
+        # evaluate=True is needed to override evaluate=False context;
+        # we need Eq to do the evaluation
+        return fuzzy_or([tfn[Eq(e, other, evaluate=True)] for e in self.args])
 
     @property
     def _boundary(self):
