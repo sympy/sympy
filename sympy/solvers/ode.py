@@ -4092,9 +4092,12 @@ def ode_nth_order_reducible(eq, func, order, match):
 # This needs to produce an invertible function but the inverse depends
 # which variable we are integrating with respect to. Since the class can
 # be stored in cached results we need to ensure that we always get the
-# same class back for each particular integration variable.
-def _nth_algebraic_diffx(var, _stored={}):
-    cls = _stored.get(var, None)
+# same class back for each particular integration variable so we store these
+# classes in a global dict:
+_nth_algebraic_diffx_stored = {}
+
+def _nth_algebraic_diffx(var):
+    cls = _nth_algebraic_diffx_stored.get(var, None)
 
     if cls is None:
         # A class that behaves like Derivative wrt var but is "invertible".
@@ -4105,7 +4108,7 @@ def _nth_algebraic_diffx(var, _stored={}):
                 # is at work.
                 return lambda expr: Integral(expr, var) + Dummy('C')
 
-        _stored[var] = cls = diffx
+        cls = _nth_algebraic_diffx_stored.setdefault(var, diffx)
 
     return cls
 
