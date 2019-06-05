@@ -2644,6 +2644,8 @@ class PERTDistribution(SingleContinuousDistribution):
     def check(a, b, c):
         _value_check((b > a, b < c),
             "Parameter b must be in range (%s, %s). b = %s"%(a, c, b))
+        _value_check((a < c),
+            "Parameter a must be less than Parameter c. a = %s, c = %s"%(a, c))
 
     def pdf(self, x):
         a, b, c = self.a, self.b, self.c
