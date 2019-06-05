@@ -101,6 +101,46 @@ class Expr(Basic, EvalfMixin):
 
         return expr.class_key(), args, exp, coeff
 
+    def __hash__(self):
+        # hash cannot be cached using cache_it because infinite recurrence
+        # occurs as hash is needed for setting cache dictionary keys
+        h = self._mhash
+        if h is None:
+            h = hash((type(self).__name__,) + self._hashable_content())
+            self._mhash = h
+        return h
+
+    def _hashable_content(self):
+        """Return a tuple of information about self that can be used to
+        compute the hash. If a class defines additional attributes,
+        like ``name`` in Symbol, then this method should be updated
+        accordingly to return such relevant attributes.
+        Defining more than _hashable_content is necessary if __eq__ has
+        been defined by a class. See note about this in Basic.__eq__."""
+        return self._args
+
+    def __eq__(self, other):
+        try:
+            other = sympify(other)
+            if not isinstance(other, Expr):
+                return False
+        except (SympifyError, SyntaxError):
+            return False
+        # check for pure number expr
+        if  not (self.is_Number and other.is_Number) and (
+                type(self) != type(other)):
+            return False
+        a, b = self._hashable_content(), other._hashable_content()
+        if a != b:
+            return False
+        # check number *in* an expression
+        for a, b in zip(a, b):
+            if not isinstance(a, Expr):
+                continue
+            if a.is_Number and type(a) != type(b):
+                return False
+        return True
+
     # ***************
     # * Arithmetics *
     # ***************
@@ -2691,7 +2731,37 @@ class Expr(Basic, EvalfMixin):
         If ``x=None`` and ``self`` is univariate, the univariate symbol will
         be supplied, otherwise an error will be raised.
 
-        >>> from sympy import cos, exp
+        Parameters
+        ==========
+
+        expr : Expression
+               The expression whose series is to be expanded.
+
+        x : Symbol
+            It is the variable of the expression to be calculated.
+
+        x0 : Value
+             The value around which ``x`` is calculated. Can be any value
+             from ``-oo`` to ``oo``.
+
+        n : Value
+            The number of terms upto which the series is to be expanded.
+
+        dir : String, optional
+              The series-expansion can be bi-directional. If ``dir="+"``,
+              then (x->x0+). If ``dir="-", then (x->x0-). For infinite
+              ``x0`` (``oo`` or ``-oo``), the ``dir`` argument is determined
+              from the direction of the infinity (i.e., ``dir="-"`` for
+              ``oo``).
+
+        logx : optional
+               It is used to replace any log(x) in the returned series with a
+               symbolic value rather than evaluating the actual value.
+
+        Examples
+        ========
+
+        >>> from sympy import cos, exp, tan, oo, series
         >>> from sympy.abc import x, y
         >>> cos(x).series()
         1 - x**2/2 + x**4/24 + O(x**6)
@@ -2719,6 +2789,31 @@ class Expr(Basic, EvalfMixin):
         x
         >>> abs(x).series(dir="-")
         -x
+        >>> f = tan(x)
+        >>> f.series(x, 2, 6, "+")
+        tan(2) + (1 + tan(2)**2)*(x - 2) + (x - 2)**2*(tan(2)**3 + tan(2)) +
+        (x - 2)**3*(1/3 + 4*tan(2)**2/3 + tan(2)**4) + (x - 2)**4*(tan(2)**5 +
+        5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(2/15 + 17*tan(2)**2/15 +
+        2*tan(2)**4 + tan(2)**6) + O((x - 2)**6, (x, 2))
+
+        >>> f.series(x, 2, 3, "-")
+        tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2))
+        + O((x - 2)**3, (x, 2))
+
+        Returns
+        =======
+
+        Expr : Expression
+            Series expansion of the expression about x0
+
+        Raises
+        ======
+
+        TypeError
+            If "n" and "x0" are infinity objects
+
+        PoleError
+            If "x0" is an infinity object
 
         """
         from sympy import collect, Dummy, Order, Rational, Symbol, ceiling

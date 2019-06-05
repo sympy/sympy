@@ -1,5 +1,4 @@
 from __future__ import print_function, division
-
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
         characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
         sampling_density, moment_generating_function, _value_check, quantile)
@@ -7,7 +6,7 @@ from sympy import Piecewise, sqrt, solveset, Symbol, S, log, Eq, Lambda, exp
 from sympy.solvers.inequalities import reduce_inequalities
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
-        'sample_iter', 'variance', 'std', 'skewness', 'covariance',
+        'sample_iter', 'variance', 'std', 'skewness', 'kurtosis', 'covariance',
         'dependent', 'independent', 'random_symbols', 'correlation',
         'moment', 'cmoment', 'smoment', 'sampling_density', 'moment_generating_function', 'quantile']
 
@@ -207,7 +206,7 @@ def cmoment(X, n, condition=None, **kwargs):
 def smoment(X, n, condition=None, **kwargs):
     """
     Return the nth Standardized moment of a random expression i.e.
-    E( ((X - mu)/sigma(X))**n )
+    E(((X - mu)/sigma(X))**n)
 
     Examples
     ========
@@ -228,12 +227,18 @@ def smoment(X, n, condition=None, **kwargs):
 
 def skewness(X, condition=None, **kwargs):
     """
-    Measure of the asymmetry of the probability distribution
+    Measure of the asymmetry of the probability distribution.
 
     Positive skew indicates that most of the values lie to the right of
-    the mean
+    the mean.
 
-    skewness(X) = E( ((X - E(X))/sigma)**3 )
+    skewness(X) = E(((X - E(X))/sigma)**3)
+
+    Parameters
+    ==========
+
+    condition : Expr containing RandomSymbols
+            A conditional expression. skewness(X, X>0) is skewness of X given X > 0
 
     Examples
     ========
@@ -243,12 +248,54 @@ def skewness(X, condition=None, **kwargs):
     >>> X = Normal('X', 0, 1)
     >>> skewness(X)
     0
+    >>> skewness(X, X > 0) # find skewness given X > 0
+    (-sqrt(2)/sqrt(pi) + 4*sqrt(2)/pi**(3/2))/(1 - 2/pi)**(3/2)
+
     >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
     >>> Y = Exponential('Y', rate)
     >>> skewness(Y)
     2
     """
-    return smoment(X, 3, condition, **kwargs)
+    return smoment(X, 3, condition=condition, **kwargs)
+
+def kurtosis(X, condition=None, **kwargs):
+    """
+    Characterizes the tails/outliers of a probability distribution.
+
+    Kurtosis of any univariate normal distribution is 3. Kurtosis less than
+    3 means that the distribution produces fewer and less extreme outliers
+    than the normal distribution.
+
+    kurtosis(X) = E(((X - E(X))/sigma)**4)
+
+    Parameters
+    ==========
+
+    condition : Expr containing RandomSymbols
+            A conditional expression. kurtosis(X, X>0) is kurtosis of X given X > 0
+
+    Examples
+    ========
+
+    >>> from sympy.stats import kurtosis, Exponential, Normal
+    >>> from sympy import Symbol
+    >>> X = Normal('X', 0, 1)
+    >>> kurtosis(X)
+    3
+    >>> kurtosis(X, X > 0) # find kurtosis given X > 0
+    (-4/pi - 12/pi**2 + 3)/(1 - 2/pi)**2
+
+    >>> rate = Symbol('lamda', positive=True, real=True, finite=True)
+    >>> Y = Exponential('Y', rate)
+    >>> kurtosis(Y)
+    9
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Kurtosis
+    .. [2] http://mathworld.wolfram.com/Kurtosis.html
+    """
+    return smoment(X, 4, condition=condition, **kwargs)
 
 
 

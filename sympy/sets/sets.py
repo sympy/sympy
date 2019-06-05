@@ -1537,9 +1537,8 @@ class FiniteSet(Set, EvalfMixin):
         else:
             args = list(map(sympify, args))
 
-        args = list(ordered(frozenset(tuple(args)), Set._infimum_key))
+        args = list(ordered(set(args), Set._infimum_key))
         obj = Basic.__new__(cls, *args)
-        obj._elements = frozenset(args)
         return obj
 
     def _eval_Eq(self, other):
@@ -1615,7 +1614,7 @@ class FiniteSet(Set, EvalfMixin):
 
         """
         r = false
-        for e in self._elements:
+        for e in self.args:
             # override global evaluation so we can use Eq to do
             # do the evaluation
             t = Eq(e, other, evaluate=True)
@@ -1657,12 +1656,9 @@ class FiniteSet(Set, EvalfMixin):
     def _eval_evalf(self, prec):
         return FiniteSet(*[elem._eval_evalf(prec) for elem in self])
 
-    def _hashable_content(self):
-        return (self._elements,)
-
     @property
     def _sorted_args(self):
-        return tuple(ordered(self.args, Set._infimum_key))
+        return self.args
 
     def _eval_powerset(self):
         return self.func(*[self.func(*s) for s in subsets(self.args)])

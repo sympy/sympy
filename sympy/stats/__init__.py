@@ -42,7 +42,7 @@ __all__ = []
 from . import rv_interface
 from .rv_interface import (
     cdf, characteristic_function, covariance, density, dependent, E, given, independent, P, pspace,
-    random_symbols, sample, sample_iter, skewness, std, variance, where,
+    random_symbols, sample, sample_iter, skewness, kurtosis, std, variance, where,
     correlation, moment, cmoment, smoment, sampling_density, moment_generating_function, entropy, H,
     quantile
 )
@@ -60,7 +60,7 @@ from .crv_types import (
     ContinuousRV,
     Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
     Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
-    GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogNormal,
+    GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogLogistic, LogNormal,
     Maxwell, Nakagami, Normal, GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh,
     ShiftedGompertz, StudentT, Trapezoidal, Triangular, Uniform, UniformSum, VonMises,
     Weibull, WignerSemicircle, Wald

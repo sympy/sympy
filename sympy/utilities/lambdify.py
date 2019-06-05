@@ -744,6 +744,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 # Cannot infer name with certainty. arg_# will have to do.
                 names.append('arg_' + str(n))
 
+    # Create the function definition code and execute it
+    funcname = '_lambdifygenerated'
+    if _module_present('tensorflow', namespaces):
+        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
+    else:
+        funcprinter = _EvaluatorPrinter(printer, dummify)
+    funcstr = funcprinter.doprint(funcname, args, expr)
+
+    # Collect the module imports from the code printers.
     imp_mod_lines = []
     for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
         for k in keys:
@@ -754,17 +763,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
-
-    # Create the function definition code and execute it
-
-    funcname = '_lambdifygenerated'
-
-    if _module_present('tensorflow', namespaces):
-        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
-    else:
-        funcprinter = _EvaluatorPrinter(printer, dummify)
-
-    funcstr = funcprinter.doprint(funcname, args, expr)
 
     funclocals = {}
     global _lambdify_generated_counter
