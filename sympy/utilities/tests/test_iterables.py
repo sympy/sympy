@@ -1,5 +1,6 @@
 from __future__ import print_function
 from textwrap import dedent
+from collections import defaultdict
 
 from sympy import (
     symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
@@ -806,3 +807,9 @@ def test_iwalk():
     assert iwalk(input, do=add, sanitize=tup) == (4, (0.1, 3))
     assert iwalk({(1, 2): (3, 4)}, do=lambda i: i*10,
         dkeys=False) == {(1, 2): (30, 40)}
+    input = defaultdict(int, {1: .5})
+    f = lambda x: x + 1 if isinstance(x, int) else x - 1
+    ok = iwalk(input, do=f)
+    assert len(ok) == 1
+    assert list(ok.items()) == [(2, -0.5)]
+    assert ok[1] == 0
