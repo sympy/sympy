@@ -582,7 +582,8 @@ class Pow(Expr):
             return i.is_integer
 
     def _eval_is_complex(self):
-        if all(a.is_complex for a in self.args):
+        if all(a.is_complex for a in self.args) and self.base.is_zero is False \
+                or self.exp.is_nonnegative:
             return True
 
     def _eval_is_imaginary(self):
@@ -834,7 +835,7 @@ class Pow(Expr):
 
     def _eval_transpose(self):
         from sympy.functions.elementary.complexes import transpose
-        i, p = self.exp.is_integer, self.base.is_complex
+        i, p = self.exp.is_integer, (self.base.is_complex or self.base.is_infinite)
         if p:
             return self.base**self.exp
         if i:

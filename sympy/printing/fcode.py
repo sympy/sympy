@@ -204,7 +204,7 @@ class FCodePrinter(CodePrinter):
         arg, = expr.args
         if arg.is_integer:
             new_expr = merge(0, isign(1, arg), Eq(arg, 0))
-        elif arg.is_complex:
+        elif (arg.is_complex or arg.is_infinite):
             new_expr = merge(cmplx(literal_dp(0), literal_dp(0)), arg/Abs(arg), Eq(Abs(arg), literal_dp(0)))
         else:
             new_expr = merge(literal_dp(0), dsign(literal_dp(1), arg), Eq(arg, literal_dp(0)))

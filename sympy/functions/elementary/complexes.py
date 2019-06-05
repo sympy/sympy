@@ -284,7 +284,6 @@ class sign(Function):
     Abs, conjugate
     """
 
-    is_finite = True
     is_complex = True
 
     def doit(self, **hints):

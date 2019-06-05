@@ -1054,7 +1054,7 @@ def test_Pow_is_finite():
     assert (xe**xr).is_finite is None
     # FIXME: The line below should be True rather than None
     # assert (xr**xr).is_finite is True
-    assert (xr**xr).is_finite is None
+    assert (xr**xr).is_finite is True
 
     assert (p**xe).is_finite is None
     assert (p**xr).is_finite is True
@@ -1293,7 +1293,7 @@ def test_Mul_is_imaginary_real():
     assert (r*i1*i2).is_real is True
 
     # Github's issue 5874:
-    nr = Symbol('nr', real=False, complex=True, finite=True)  # e.g. I or 1 + I
+    nr = Symbol('nr', real=False, complex=True)  # e.g. I or 1 + I
     a = Symbol('a', real=True, nonzero=True)
     b = Symbol('b', real=True)
     assert (i1*nr).is_real is None
@@ -1898,8 +1898,8 @@ def test_mul_coeff():
 def test_mul_zero_detection():
     nz = Dummy(real=True, zero=False, finite=True)
     r = Dummy(real=True)
-    c = Dummy(real=False, complex=True, finite=True)
-    c2 = Dummy(real=False, complex=True, finite=True)
+    c = Dummy(real=False, complex=True)
+    c2 = Dummy(real=False, complex=True)
     i = Dummy(imaginary=True, finite=True)
     e = nz*r*c
     assert e.is_imaginary is None
@@ -1972,11 +1972,11 @@ def test_Mul_with_zero_infinite():
     inf = Dummy(finite=False)
 
     e = Mul(zer, inf, evaluate=False)
-    assert e.is_positive is None
+    assert e.is_extended_positive is None
     assert e.is_hermitian is None
 
     e = Mul(inf, zer, evaluate=False)
-    assert e.is_positive is None
+    assert e.is_extended_positive is None
     assert e.is_hermitian is None
 
 def test_Mul_does_not_cancel_infinities():

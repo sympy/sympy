@@ -376,7 +376,7 @@ class ManagedProperties(BasicMeta):
             if pname not in cls.__dict__:
                 setattr(cls, pname, make_property(fact))
 
-        # Finally, add any missing automagic property (e.g. for Basic)
+        # Finally, add any missing automatic property (e.g. for Basic)
         for fact in _assume_defined:
             pname = as_property(fact)
             if not hasattr(cls, pname):

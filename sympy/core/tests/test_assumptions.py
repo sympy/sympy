@@ -164,7 +164,7 @@ def test_neg_infinity():
 
 def test_zoo():
     zoo = S.ComplexInfinity
-    assert zoo.is_complex
+    assert zoo.is_complex is False
     assert zoo.is_real is False
     assert zoo.is_prime is False
 
@@ -1134,8 +1134,8 @@ def test_issue_16313():
 def test_issue_16579():
     # complex -> finite | infinite
     # with work on PR 16603 it may be changed in future to complex -> finite
-    x = Symbol('x', complex=True, finite=False)
-    y = Symbol('x', real=True, infinite=False)
+    #x = Symbol('x', complex=True, finite=False)
+    y = Symbol('x', extended_real=True, infinite=False)
 
-    assert x.is_infinite
+    # assert x.is_infinite
     assert y.is_finite
