@@ -7,7 +7,7 @@ from sympy.core.expr import unchanged
     Symbol, Dummy, gamma, I, oo, nan, zoo, factorial, sqrt, Rational,
     multivariate_gamma, log, polygamma, EulerGamma, pi, uppergamma, S,
     expand_func, loggamma, sin, cos, O, lowergamma, exp, erf, erfc,
-    exp_polar, harmonic, zeta,conjugate)
+    exp_polar, harmonic, zeta, conjugate)
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (test_derivative_numerically as td,
@@ -457,8 +457,16 @@ def test_multivariate_gamma():
     p = Symbol('p')
     _k = Dummy('_k')
 
-    assert str(multivariate_gamma(x, p)) == ("pi**(p*(p - 1)/4)*Product(gamma(-_k/2 + x + 1/2), "
-    "(_k, 1, p))")
+    assert multivariate_gamma(x, p).dummy_eq(pi**(p*(p - 1)/4)*\
+        Product(gamma(-_k/2 + x + 1/2), (_k, 1, p)))
+
+    assert conjugate(multivariate_gamma(x, p)).dummy_eq(pi**((conjugate(p) - 1)*\
+        conjugate(p)/4)*Product(gamma(-_k/2 + conjugate(x) + 1/2), (_k, 1, p)))
+    assert conjugate(multivariate_gamma(x, 1)) == gamma(conjugate(x))
+
+    p = Symbol('p', positive=True)
+    assert conjugate(multivariate_gamma(x, p)).dummy_eq(pi**(p*(p - 1)/4)*\
+        Product(gamma(-_k/2 + conjugate(x) + 1/2), (_k, 1, p)))
 
     assert multivariate_gamma(nan, 1) == nan
     assert multivariate_gamma(oo, 1).doit() == oo

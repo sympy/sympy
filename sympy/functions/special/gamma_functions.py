@@ -1069,7 +1069,7 @@ class multivariate_gamma(Function):
     def fdiff(self, argindex=2):
         from sympy import Sum
         if argindex == 2:
-            x, p = self.args[0], self.args[1]
+            x, p = self.args
             k = Dummy('k')
             return self.func(x, p)*Sum(polygamma(0, x + (1 - k)/2), (k, 1, p))
         raise ArgumentIndexError(self, argindex)
@@ -1080,14 +1080,13 @@ class multivariate_gamma(Function):
         x, p = map(sympify, (x, p))
         if p.is_positive == False or p.is_integer == False:
             raise ValueError('Order parameter p must be positive integer.')
-        if p.is_positive == None or p.is_integer == None:
-            p = Symbol(p.name, integer=True, positive=True)
         k = Dummy('k', real=True)
         return (pi**(p*(p - 1)/4)*Product(gamma(x + (1 - k)/2),
                     (k, 1, p))).doit()
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate(), self.args[1])
+        x, p = self.args
+        return self.func(x.conjugate(), p.conjugate())
 
     def _eval_is_real(self):
         x, p = self.args
