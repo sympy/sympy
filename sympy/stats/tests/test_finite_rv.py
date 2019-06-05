@@ -327,6 +327,7 @@ def test_FinitePSpace():
 def test_sym_dim():
     n = symbols('n', positive=True)
     D = Die('D', n)
-    assert density(D).dict == Density(DieDistribution(n))
-    assert density(D).dict.subs(n, 4).doit() == \
-        {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
+    dens = density(D).dict
+    assert dens == Density(DieDistribution(n))
+    assert set(dens.subs(n, 4).doit().keys()) == set([1, 2, 3, 4])
+    assert set(dens.subs(n, 4).doit().values()) == set([S(1)/4])
