@@ -1,0 +1,36 @@
+from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float)
+from sympy.stats import DiscreteMarkovChain, P
+from sympy.stats.rv import RandomIndexedSymbol
+from sympy.stats.symbolic_probability import Probability
+from sympy.utilities.pytest import raises
+
+def test_DiscreteMarkovChain():
+
+    # pass only the name
+    X = DiscreteMarkovChain("X")
+    assert X.is_Discrete == True
+    assert X.is_Continuous == False
+    assert X.state_space == S.Reals
+    assert X.index_set == S.Naturals0
+    assert X.trans_probs == None
+    t = symbols('t', positive=True, integer=True)
+    assert isinstance(X[t], RandomIndexedSymbol)
+
+    # pass name and state_space
+    Y = DiscreteMarkovChain("Y", [1, 2, 3])
+    assert Y.trans_probs == None
+    assert Y.state_space == FiniteSet(1, 2, 3)
+    assert P(Eq(Y[2], 1), Eq(Y[0], 2)) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
+
+    # pass name, state_space and trans_probs
+    T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
+    TS = MatrixSymbol('T', 3, 3)
+    Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    YS = DiscreteMarkovChain("Y", [0, 1, 2], TS)
+    assert P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2) == Float(0.36, 2)
+    assert str(P(Eq(YS[3], 2), Eq(YS[1], 1))) == \
+        "T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]"
+    TO = Matrix([[0.25, 0.75, 0],[0, 0.25, 0.75],[0.75, 0, 0.25]])
+    assert P(Eq(Y[3], 2), Eq(Y[1], 1), trans_probs=TO).round(3) == Float(0.375, 3)
+    TSO = MatrixSymbol('T', 4, 4)
+    raises(ValueError, lambda: str(P(Eq(YS[3], 2), Eq(YS[1], 1), trans_probs=TSO)))

@@ -1530,6 +1530,27 @@ def test_sympy__stats__joint_rv_types__NegativeMultinomialDistribution():
     from sympy.stats.joint_rv_types import NegativeMultinomialDistribution
     assert _test_args(NegativeMultinomialDistribution(5, [0.5, 0.1, 0.3]))
 
+def test_sympy__stats__rv__RandomIndexedSymbol():
+    from sympy.stats.rv import RandomIndexedSymbol, pspace
+    from sympy.tensor import Indexed
+    from sympy.stats.stochastic_process_types import DiscreteMarkovChain
+    X = DiscreteMarkovChain("X")
+    assert _test_args(RandomIndexedSymbol(X[0].symbol, pspace(X[0])))
+
+def test_sympy__stats__stochastic_process__StochasticPSpace():
+    from sympy.stats.stochastic_process import StochasticPSpace
+    from sympy.stats.stochastic_process_types import StochasticProcess
+    assert _test_args(StochasticPSpace("Y", StochasticProcess("Y", [1, 2, 3])))
+
+def test_sympy__stats__stochastic_process_types__StochasticProcess():
+    from sympy.stats.stochastic_process_types import StochasticProcess
+    assert _test_args(StochasticProcess("Y", [1, 2, 3]))
+
+def test_sympy__stats__stochastic_process_types__DiscreteMarkovChain():
+    from sympy.stats.stochastic_process_types import DiscreteMarkovChain
+    from sympy import MatrixSymbol
+    assert _test_args(DiscreteMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
+
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
     assert _test_args(Dummy('t'))

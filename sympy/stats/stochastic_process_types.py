@@ -1,0 +1,230 @@
+from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
+                    Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix)
+from sympy.core.compatibility import string_types
+from sympy.stats.rv import RandomIndexedSymbol, random_symbols, RandomSymbol
+from sympy.stats.symbolic_probability import Probability
+from sympy.stats.stochastic_process import StochasticPSpace
+
+__all__ = [
+    'StochasticProcess',
+    'DiscreteMarkovChain'
+]
+
+class StochasticProcess(Basic):
+    """
+    Base class for all the stochastic process whether
+    discrete or continuous.
+
+    Parameters
+    ==========
+
+    sym: Symbol or string_types
+    state_space: Set
+        The state space of the stochastic process, by default S.Reals.
+        For discrete sets it is zero indexed.
+    """
+
+    is_Continuous = None
+    is_Discrete = None
+
+    def __new__(cls, sym, state_space=S.Reals):
+        if isinstance(sym, string_types):
+            sym = Symbol(sym)
+        if not isinstance(sym, Symbol):
+            raise TypeError("Name of stochastic process should be either only "
+                            "a string or Symbol.")
+        if isinstance(state_space, set):
+            state_space = list(state_space)
+        if isinstance(state_space, (list, tuple)):
+            state_space = FiniteSet(*state_space)
+        if not isinstance(state_space, Set):
+            raise TypeError("state_space should be an instance of Set/list/tuple/set only.")
+        return Basic.__new__(cls, sym, state_space)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def state_space(self):
+        return self.args[1]
+
+    def __call__(self, time):
+        """
+        Overrided in continuous time stochastic process.
+        """
+        raise NotImplementedError("Use [] for indexing discrete time stochastic process.")
+
+    def __getitem__(self, time):
+        """
+        Overrided in discrete continuous process.
+        """
+        raise NotImplementedError("Use () for indexing continuous time stochastic process.")
+
+    def probability(self, condition):
+        raise NotImplementedError()
+
+class DiscreteMarkovChain(StochasticProcess):
+    """
+    Represents discrete Markov chain.
+
+    Parameters
+    ==========
+
+    sym: Symbol
+    state_space: Set
+        Optional, by default, S.Reals
+    trans_probs: Matrix/ImmutableMatrix/MatrixSymbol
+        Optional, by default, None
+
+    Examples
+    ========
+
+    >>> from sympy.stats.stochastic_process_types import DiscreteMarkovChain
+    >>> from sympy import Matrix, MatrixSymbol, Eq
+    >>> from sympy.stats import P
+    >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
+    >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    >>> YS = DiscreteMarkovChain("Y")
+    >>> Y.state_space
+    {0, 1, 2}
+    >>> Y.trans_probs
+    Matrix([
+    [0.5, 0.2, 0.3],
+    [0.2, 0.5, 0.3],
+    [0.2, 0.3, 0.5]])
+    >>> TS = MatrixSymbol('T', 3, 3)
+    >>> P(Eq(YS[3], 2), Eq(YS[1], 1), trans_probs=TS)
+    T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]
+    >>> P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2)
+    0.36
+    """
+
+    is_Discrete = True
+    is_Continuous = False
+
+    index_set = S.Naturals0
+
+    def __new__(cls, sym, state_space=S.Reals, trans_probs=None):
+        if isinstance(sym, string_types):
+            sym = Symbol(sym)
+        if not isinstance(sym, Symbol):
+            raise TypeError("Name of stochastic process should be either only "
+                            "a string or Symbol.")
+        if isinstance(state_space, set):
+            state_space = list(state_space)
+        if isinstance(state_space, (list, tuple)):
+            state_space = FiniteSet(*state_space)
+        if not isinstance(state_space, Set):
+            raise TypeError("state_space should be an instance of Set/list/tuple/set only.")
+        if trans_probs != None:
+            if not isinstance(trans_probs, (Matrix, MatrixSymbol, ImmutableMatrix)):
+                raise TypeError("Transition probabilities etiher should "
+                                "be a Matrix or a MatrixSymbol.")
+            if isinstance(trans_probs, Matrix):
+                trans_probs = ImmutableMatrix(trans_probs.tolist())
+        return Basic.__new__(cls, sym, state_space, trans_probs)
+
+    @property
+    def trans_probs(self):
+        """
+        Transition probabilities of discrete Markov chain,
+        either an instance of Matrix or MatrixSymbol.
+        """
+        return self.args[2]
+
+    def __getitem__(self, time):
+        """
+        For indexing discrete Markov chain.
+
+        Returns
+        =======
+
+        RandomIndexedSymbol
+        """
+        if time not in self.index_set:
+            raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
+        idx_obj = Indexed(self.symbol, time)
+        pspace_obj = StochasticPSpace(self.symbol, self)
+        return RandomIndexedSymbol(idx_obj, pspace_obj)
+
+    def probability(self, condition, given_condition, **kwargs):
+        """
+        Handles probability queries for discrete Markov chains.
+
+        Parameters
+        ==========
+
+        condition: Relational
+        given_condition: Relational/And
+        trans_probs: Matrix/MatrixSymbol
+            Overrides the one passed at the time of
+            object creation.
+
+        Returns
+        =======
+
+        Probability
+            If the transition probabilities are not available
+        Float
+            If the transition probabilites is Matrix
+        Expr
+            If the transition probabilities is MatrixSymbol
+
+        Note
+        ====
+
+        Any information passed at the time of query overrides
+        any information passed at the time of object creation like
+        transition probabilities, state space.
+        """
+
+        # transition probabilities are not available
+        if self.trans_probs == None and kwargs.get('trans_probs', False) is False:
+            return Probability(condition, given_condition, **kwargs)
+
+        # working out transition probabilities
+        trans_probs = kwargs.get('trans_probs', self.trans_probs)
+        if not isinstance(trans_probs, (Matrix, MatrixSymbol, ImmutableMatrix)):
+            raise TypeError("Transition probabilities etiher should "
+                                "be a Matrix or MatrixSymbol.")
+        if trans_probs.shape[0] != trans_probs.shape[1]:
+            raise ValueError("%s is not a square matrix"%(trans_probs))
+        if not isinstance(trans_probs, MatrixSymbol):
+            rows = trans_probs.tolist()
+            for row in rows:
+                if Eq(sum(row), 1) == False:
+                    raise ValueError("Probabilities in a row must sum to 1.")
+
+        # working out state spaces
+        state_space = kwargs.get('state_space', self.state_space)
+        rand_var = list(given_condition.atoms(RandomSymbol) -
+                    given_condition.atoms(RandomIndexedSymbol))
+        if len(rand_var) == 1:
+            state_space = rand_var[0].pspace.set
+        if not FiniteSet(*[i for i in range(trans_probs.shape[0])]).is_subset(state_space):
+            raise ValueError("state space is not compatible with the transition probabilites.")
+
+        if isinstance(condition, Eq) and \
+           isinstance(given_condition, Eq) and \
+            len(given_condition.atoms(RandomSymbol)) == 1:
+            # handles simple queries like P(Eq(X[i], dest_state), Eq(X[i], init_state))
+            lhsc, rhsc = condition.lhs, condition.rhs
+            lhsg, rhsg = given_condition.lhs, given_condition.rhs
+            if not isinstance(lhsc, RandomIndexedSymbol):
+                lhsc, rhsc = (rhsc, lhsc)
+            if not isinstance(lhsg, RandomIndexedSymbol):
+                lhsg, rhsg = rhsg, lhsg
+            keyc, statec, keyg, stateg = (lhsc.key, rhsc, lhsg.key, rhsg)
+            if stateg >= trans_probs.shape[0] == False or statec >= trans_probs.shape[1]:
+                raise IndexError("No information is avaliable for (%s, %s) in "
+                    "transition probabilities of shape, (%s, %s). "
+                    "State space is zero indexed."
+                    %(stateg, statec, trans_probs.shape[0], trans_probs.shape[1]))
+            if keyc < keyg:
+                raise ValueError("Incorrect given condition is given, probability "
+                      "of past state cannot be computed from future state.")
+            nsteptp = trans_probs**(keyc - keyg)
+            if hasattr(nsteptp, "__getitem__"):
+                return nsteptp.__getitem__((stateg, statec))
+            return Indexed(nsteptp, stateg, statec)
