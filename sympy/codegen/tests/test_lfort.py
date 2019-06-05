@@ -48,10 +48,11 @@ def ast_to_tuple(ast, expr_type):
     return to_tuple(ast)
 
 
-def asr_to_tuple(asr, expr_type):
-    return ast_to_tuple(lfortran.asr_to_ast(asr), expr_type)
+def lfort_tup(expr, expr_type):
+    out_asr = sympy_to_lfortran(expr)
+    return ast_to_tuple(lfortran.asr_to_ast(out_asr), expr_type)
 
 
-def src_to_tuple(src, expr_type):
-    return ast_to_tuple(lfortran.src_to_ast(src, translation_unit=False),
-                        expr_type)
+def fcode_tup(expr, expr_type):
+    return ast_to_tuple(lfortran.src_to_ast(fcode(expr),
+                                            translation_unit=False), expr_type)
