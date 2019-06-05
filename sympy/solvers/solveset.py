@@ -20,6 +20,8 @@ from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand)
+from sympy.core.mod import Mod
+from sympy.core.numbers import igcd
 from sympy.core.relational import Eq, Ne
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
@@ -36,9 +38,13 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set
 from sympy.matrices import Matrix, MatrixBase
+from sympy.ntheory import totient
+from sympy.ntheory.factor_ import divisors
+from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polytools import invert
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -572,7 +578,7 @@ def _solve_trig1(f, symbol, domain):
 def _solve_trig2(f, symbol, domain):
     """Secondary helper to solve trigonometric equations,
     called when first helper fails """
-    from sympy import ilcm, igcd, expand_trig, degree, simplify
+    from sympy import ilcm, expand_trig, degree, simplify
     f = trigsimp(f)
     f_original = f
     trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
@@ -931,6 +937,8 @@ def _solveset(f, symbol, domain, _check=False):
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result
+    elif _is_modular(f, symbol):
+        result = _solve_modular(f, symbol, domain)
     else:
         lhs, rhs_s = inverter(f, 0, symbol)
         if lhs == symbol:
@@ -997,6 +1005,291 @@ def _solveset(f, symbol, domain, _check=False):
                       or domain_check(fx, symbol, s)])
 
     return result
+
+
+def _is_modular(f, symbol):
+    """
+    Helper function to check below mentioned types of modular equations.
+    ``A - Mod(B, C) = 0``
+
+    A -> This can or cannot be a function of symbol.
+    B -> This is surely a function of symbol.
+    C -> It is an integer.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The equation to be checked.
+
+    symbol : Symbol
+        The concerned variable for which the equation is to be checked.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, exp, Mod
+    >>> from sympy.solvers.solveset import _is_modular as check
+    >>> x, y = symbols('x y')
+    >>> check(Mod(x, 3) - 1, x)
+    True
+    >>> check(Mod(x, 3) - 1, y)
+    False
+    >>> check(Mod(x, 3)**2 - 5, x)
+    False
+    >>> check(Mod(x, 3)**2 - y, x)
+    False
+    >>> check(exp(Mod(x, 3)) - 1, x)
+    False
+    >>> check(Mod(3, y) - 1, y)
+    False
+    """
+
+    if not f.has(Mod):
+        return False
+
+    # extract modterms from f.
+    modterms = list(f.atoms(Mod))
+
+    return (len(modterms) == 1 and  # only one Mod should be present
+            modterms[0].args[0].has(symbol) and  # B-> function of symbol
+            modterms[0].args[1].is_integer and  # C-> to be an integer.
+            any(isinstance(term, Mod)
+            for term in list(_term_factors(f)))  # free from other funcs
+            )
+
+
+def _invert_modular(modterm, rhs, n, symbol):
+    """
+    Helper function to invert modular equation.
+    ``Mod(a, m) - rhs = 0``
+
+    Generally it is inverted as (a, ImageSet(Lambda(n, m*n + rhs), S.Integers)).
+    More simplified form will be returned if possible.
+
+    If it is not invertible then (modterm, rhs) is returned.
+
+    The following cases arise while inverting equation ``Mod(a, m) - rhs = 0``:
+
+    1. If a is symbol then  m*n + rhs is the required solution.
+
+    2. If a is an instance of ``Add`` then we try to find two symbol independent
+       parts of a and the symbol independent part gets tranferred to the other
+       side and again the ``_invert_modular`` is called on the symbol
+       dependent part.
+
+    3. If a is an instance of ``Mul`` then same as we done in ``Add`` we separate
+       out the symbol dependent and symbol independent parts and transfer the
+       symbol independent part to the rhs with the help of invert and again the
+       ``_invert_modular`` is called on the symbol dependent part.
+
+    4. If a is an instance of ``Pow`` then two cases arise as following:
+
+        - If a is of type (symbol_indep)**(symbol_dep) then the remainder is
+          evaluated with the help of discrete_log function and then the least
+          period is being found out with the help of totient function.
+          period*n + remainder is the required solution in this case.
+          For reference: (https://en.wikipedia.org/wiki/Euler's_theorem)
+
+        - If a is of type (symbol_dep)**(symbol_indep) then we try to find all
+          primitive solutions list with the help of nthroot_mod function.
+          m*n + rem is the general solution where rem belongs to solutions list
+          from nthroot_mod function.
+
+    Parameters
+    ==========
+
+    modterm, rhs : Expr
+        The modular equation to be inverted, ``modterm - rhs = 0``
+
+    symbol : Symbol
+        The variable in the equation to be inverted.
+
+    n : Dummy
+        Dummy variable for output g_n.
+
+    Returns
+    =======
+
+    A tuple (f_x, g_n) is being returned where f_x is modular independent function
+    of symbol and g_n being set of values f_x can have.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, exp, Mod, Dummy, S
+    >>> from sympy.solvers.solveset import _invert_modular as invert_modular
+    >>> x, y = symbols('x y')
+    >>> n = Dummy('n')
+    >>> invert_modular(Mod(exp(x), 7), S(5), n, x)
+    (Mod(exp(x), 7), 5)
+    >>> invert_modular(Mod(x, 7), S(5), n, x)
+    (x, ImageSet(Lambda(_n, 7*_n + 5), Integers))
+    >>> invert_modular(Mod(3*x + 8, 7), S(5), n, x)
+    (x, ImageSet(Lambda(_n, 7*_n + 6), Integers))
+    >>> invert_modular(Mod(x**4, 7), S(5), n, x)
+    (x, EmptySet())
+    >>> invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x)
+    (x**2 + x + 1, ImageSet(Lambda(_n, 3*_n + 1), Naturals0))
+
+    """
+    a, m = modterm.args
+
+    if rhs.is_real is False or any(term.is_real is False
+            for term in list(_term_factors(a))):
+        # Check for complex arguments
+        return modterm, rhs
+
+    if abs(rhs) >= abs(m):
+        # if rhs has value greater than value of m.
+        return symbol, EmptySet()
+
+    if a is symbol:
+        return symbol, ImageSet(Lambda(n, m*n + rhs), S.Integers)
+
+    if a.is_Add:
+        # g + h = a
+        g, h = a.as_independent(symbol)
+        if g is not S.Zero:
+            x_indep_term = rhs - Mod(g, m)
+            return _invert_modular(Mod(h, m), Mod(x_indep_term, m), n, symbol)
+
+    if a.is_Mul:
+        # g*h = a
+        g, h = a.as_independent(symbol)
+        if g is not S.One:
+            x_indep_term = rhs*invert(g, m)
+            return _invert_modular(Mod(h, m), Mod(x_indep_term, m), n, symbol)
+
+    if a.is_Pow:
+        # base**expo = a
+        base, expo = a.args
+        if expo.has(symbol) and not base.has(symbol):
+            # remainder -> solution independent of n of equation.
+            # m, rhs are made coprime by dividing igcd(m, rhs)
+            try:
+                remainder = discrete_log(m / igcd(m, rhs), rhs, a.base)
+            except ValueError:  # log does not exist
+                return modterm, rhs
+            # period -> coefficient of n in the solution and also referred as
+            # the least period of expo in which it is repeats itself.
+            # (a**(totient(m)) - 1) divides m. Here is link of theorem:
+            # (https://en.wikipedia.org/wiki/Euler's_theorem)
+            period = totient(m)
+            for p in divisors(period):
+                # there might a lesser period exist than totient(m).
+                if pow(a.base, p, m / igcd(m, a.base)) == 1:
+                    period = p
+                    break
+            # recursion is not applied here since _invert_modular is currently
+            # not smart enough to handle infinite rhs as here expo has infinite
+            # rhs = ImageSet(Lambda(n, period*n + remainder), S.Naturals0).
+            return expo, ImageSet(Lambda(n, period*n + remainder), S.Naturals0)
+        elif base.has(symbol) and not expo.has(symbol):
+            try:
+                remainder_list = nthroot_mod(rhs, expo, m, all_roots=True)
+                if remainder_list is None:
+                    return symbol, EmptySet()
+            except (ValueError, NotImplementedError):
+                return modterm, rhs
+            g_n = EmptySet()
+            for rem in remainder_list:
+                g_n += ImageSet(Lambda(n, m*n + rem), S.Integers)
+            return base, g_n
+
+    return modterm, rhs
+
+
+def _solve_modular(f, symbol, domain):
+    r"""
+    Helper function for solving modular equations of type ``A - Mod(B, C) = 0``,
+    where A can or cannot be a function of symbol, B is surely a function of
+    symbol and C is an integer.
+
+    Currently ``_solve_modular`` is only able to solve cases
+    where A is not a function of symbol.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The modular equation to be solved, ``f = 0``
+
+    symbol : Symbol
+        The variable in the equation to be solved.
+
+    domain : Set
+        A set over which the equation is solved. It has to be a subset of
+        Integers.
+
+    Returns
+    =======
+
+    A set of integer solutions satisfying the given modular equation.
+    A ``ConditionSet`` if the equation is unsolvable.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import _solve_modular as solve_modulo
+    >>> from sympy import S, Symbol, sin, Intersection, Range, Interval
+    >>> from sympy.core.mod import Mod
+    >>> x = Symbol('x')
+    >>> solve_modulo(Mod(5*x - 8, 7) - 3, x, S.Integers)
+    ImageSet(Lambda(_n, 7*_n + 5), Integers)
+    >>> solve_modulo(Mod(5*x - 8, 7) - 3, x, S.Reals)  # domain should be subset of integers.
+    ConditionSet(x, Eq(Mod(5*x + 6, 7) - 3, 0), Reals)
+    >>> solve_modulo(-7 + Mod(x, 5), x, S.Integers)
+    EmptySet()
+    >>> solve_modulo(Mod(12**x, 21) - 18, x, S.Integers)
+    ImageSet(Lambda(_n, 6*_n + 2), Naturals0)
+    >>> solve_modulo(Mod(sin(x), 7) - 3, x, S.Integers) # not solvable
+    ConditionSet(x, Eq(Mod(sin(x), 7) - 3, 0), Integers)
+    >>> solve_modulo(3 - Mod(x, 5), x, Intersection(S.Integers, Interval(0, 100)))
+    Intersection(ImageSet(Lambda(_n, 5*_n + 3), Integers), Range(0, 101, 1))
+    """
+    # extract modterm and g_y from f
+    unsolved_result = ConditionSet(symbol, Eq(f, 0), domain)
+    modterm = list(f.atoms(Mod))[0]
+    rhs = -S.One*(f.subs(modterm, S.Zero))
+    if f.as_coefficients_dict()[modterm].is_negative:
+        # checks if coefficient of modterm is negative in main equation.
+        rhs *= -S.One
+
+    if not domain.is_subset(S.Integers):
+        return unsolved_result
+
+    if rhs.has(symbol):
+        # TODO Case: A-> function of symbol, can be extended here
+        # in future.
+        return unsolved_result
+
+    n = Dummy('n', integer=True)
+    f_x, g_n = _invert_modular(modterm, rhs, n, symbol)
+
+    if f_x is modterm and g_n is rhs:
+        return unsolved_result
+
+    if f_x is symbol:
+        if domain is not S.Integers:
+            return domain.intersect(g_n)
+        return g_n
+
+    if isinstance(g_n, ImageSet):
+        lamda_expr = g_n.lamda.expr
+        lamda_vars = g_n.lamda.variables
+        base_set = g_n.base_set
+        sol_set = _solveset(f_x - lamda_expr, symbol, S.Integers)
+        if isinstance(sol_set, FiniteSet):
+            tmp_sol = EmptySet()
+            for sol in sol_set:
+                tmp_sol += ImageSet(Lambda(lamda_vars, sol), base_set)
+            sol_set = tmp_sol
+        else:
+            sol_set =  ImageSet(Lambda(lamda_vars, sol_set), base_set)
+        return domain.intersect(sol_set)
+
+    return unsolved_result
 
 
 def _term_factors(f):

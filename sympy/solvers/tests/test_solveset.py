@@ -40,7 +40,7 @@ from sympy.solvers.solveset import (
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
     _solve_exponential, _is_logarithmic,
-    _solve_logarithm, _term_factors)
+    _solve_logarithm, _term_factors, _is_modular)
 
 
 a = Symbol('a', real=True)
@@ -2023,3 +2023,150 @@ def test_linear_coeffs():
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
     assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
+
+# modular tests
+def test_is_modular():
+    x, y = symbols('x y')
+
+    assert _is_modular(y, x) is False
+    assert _is_modular(Mod(x, 3) - 1, x) is True
+    assert _is_modular(Mod(x**3 - 3*x**2 - x + 1, 3) - 1, x) is True
+    assert _is_modular(Mod(exp(x + y), 3) - 2, x) is True
+    assert _is_modular(Mod(exp(x + y), 3) - log(x), x) is True
+    assert _is_modular(Mod(x, 3) - 1, y) is False
+    assert _is_modular(Mod(x, 3)**2 - 5, x) is False
+    assert _is_modular(Mod(x, 3)**2 - y, x) is False
+    assert _is_modular(exp(Mod(x, 3)) - 1, x) is False
+    assert _is_modular(Mod(3, y) - 1, y) is False
+
+
+def test_invert_modular():
+    x, y = symbols('x y')
+    n = Dummy('n', integer=True)
+    from sympy.solvers.solveset import _invert_modular as invert_modular
+
+    # non invertible cases
+    assert invert_modular(Mod(sin(x), 7), S(5), n, x) == (Mod(sin(x), 7), 5)
+    assert invert_modular(Mod(exp(x), 7), S(5), n, x) == (Mod(exp(x), 7), 5)
+    assert invert_modular(Mod(log(x), 7), S(5), n, x) == (Mod(log(x), 7), 5)
+    # a is symbol
+    assert invert_modular(Mod(x, 7), S(5), n, x) == \
+            (x, ImageSet(Lambda(n, 7*n + 5), S.Integers))
+    # a.is_Add
+    assert invert_modular(Mod(x + 8, 7), S(5), n, x) == \
+            (x, ImageSet(Lambda(n, 7*n + 4), S.Integers))
+    assert invert_modular(Mod(x**2 + x, 7), S(5), n, x) == \
+            (Mod(x**2 + x, 7), 5)
+    # a.is_Mul
+    assert invert_modular(Mod(3*x, 7), S(5), n, x) == \
+            (x, ImageSet(Lambda(n, 7*n + 4), S.Integers))
+    assert invert_modular(Mod((x + 1)*(x + 2), 7), S(5), n, x) == \
+            (Mod((x + 1)*(x + 2), 7), 5)
+    # a.is_Pow
+    assert invert_modular(Mod(x**4, 7), S(5), n, x) == \
+            (x, EmptySet())
+    assert invert_modular(Mod(3**x, 4), S(3), n, x) == \
+            (x, ImageSet(Lambda(n, 2*n + 1), S.Naturals0))
+    assert invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x) == \
+            (x**2 + x + 1, ImageSet(Lambda(n, 3*n + 1), S.Naturals0))
+
+
+def test_solve_modular():
+    x = Symbol('x')
+    n = Dummy('n', integer=True)
+    # if rhs has symbol (need to be implemented in future).
+    assert solveset(Mod(x, 4) - x, x, S.Integers) == \
+            ConditionSet(x, Eq(-x + Mod(x, 4), 0), \
+            S.Integers)
+    # when _invert_modular fails to invert
+    assert solveset(3 - Mod(sin(x), 7), x, S.Integers) == \
+            ConditionSet(x, Eq(Mod(sin(x), 7) - 3, 0), S.Integers)
+    assert solveset(3 - Mod(log(x), 7), x, S.Integers) == \
+            ConditionSet(x, Eq(Mod(log(x), 7) - 3, 0), S.Integers)
+    assert solveset(3 - Mod(exp(x), 7), x, S.Integers) == \
+            ConditionSet(x, Eq(Mod(exp(x), 7) - 3, 0), S.Integers)
+    # EmptySet solution definitely
+    assert solveset(7 - Mod(x, 5), x, S.Integers) == EmptySet()
+    assert solveset(5 - Mod(x, 5), x, S.Integers) == EmptySet()
+    # Negative m
+    assert solveset(2 + Mod(x, -3), x, S.Integers) == \
+            ImageSet(Lambda(n, -3*n - 2), S.Integers)
+    assert solveset(4 + Mod(x, -3), x, S.Integers) == EmptySet()
+    # linear expression in Mod
+    assert solveset(3 - Mod(x, 5), x, S.Integers) == ImageSet(Lambda(n, 5*n + 3), S.Integers)
+    assert solveset(3 - Mod(5*x - 8, 7), x, S.Integers) == \
+                ImageSet(Lambda(n, 7*n + 5), S.Integers)
+    assert solveset(3 - Mod(5*x, 7), x, S.Integers) == \
+                ImageSet(Lambda(n, 7*n + 2), S.Integers)
+    # higher degree expression in Mod
+    assert solveset(Mod(x**2, 160) - 9, x, S.Integers) == \
+            Union(ImageSet(Lambda(n, 160*n + 3), S.Integers),
+            ImageSet(Lambda(n, 160*n + 13), S.Integers),
+            ImageSet(Lambda(n, 160*n + 67), S.Integers),
+            ImageSet(Lambda(n, 160*n + 77), S.Integers),
+            ImageSet(Lambda(n, 160*n + 83), S.Integers),
+            ImageSet(Lambda(n, 160*n + 93), S.Integers),
+            ImageSet(Lambda(n, 160*n + 147), S.Integers),
+            ImageSet(Lambda(n, 160*n + 157), S.Integers))
+    assert solveset(3 - Mod(x**4, 7), x, S.Integers) == EmptySet()
+    assert solveset(Mod(x**4, 17) - 13, x, S.Integers) == \
+            Union(ImageSet(Lambda(n, 17*n + 3), S.Integers),
+            ImageSet(Lambda(n, 17*n + 5), S.Integers),
+            ImageSet(Lambda(n, 17*n + 12), S.Integers),
+            ImageSet(Lambda(n, 17*n + 14), S.Integers))
+    # a.is_Pow tests
+    assert solveset(Mod(7**x, 41) - 15, x, S.Integers) == \
+            ImageSet(Lambda(n, 40*n + 3), S.Naturals0)
+    assert solveset(Mod(12**x, 21) - 18, x, S.Integers) == \
+            ImageSet(Lambda(n, 6*n + 2), S.Naturals0)
+    assert solveset(Mod(3**x, 4) - 3, x, S.Integers) == \
+            ImageSet(Lambda(n, 2*n + 1), S.Naturals0)
+    assert solveset(Mod(2**x, 7) - 2 , x, S.Integers) == \
+            ImageSet(Lambda(n, 3*n + 1), S.Naturals0)
+    assert solveset(Mod(3**(3**x), 4) - 3, x, S.Integers) == \
+            Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1)/log(3)},
+            S.Integers)), S.Naturals0), S.Integers)
+    # Not Implemented for m without primitive root
+    assert solveset(Mod(x**3, 8) - 1, x, S.Integers) == \
+            ConditionSet(x, Eq(Mod(x**3, 8) - 1, 0), S.Integers)
+    assert solveset(Mod(x**4, 9) - 4, x, S.Integers) == \
+            ConditionSet(x, Eq(Mod(x**4, 9) - 4, 0), S.Integers)
+    # domain intersection
+    assert solveset(3 - Mod(5*x - 8, 7), x, S.Naturals0) == \
+            Intersection(ImageSet(Lambda(n, 7*n + 5), S.Integers), S.Naturals0)
+    # Complex args
+    assert solveset(Mod(x, 3) - I, x, S.Integers) == \
+            EmptySet()
+    assert solveset(Mod(I*x, 3) - 2, x, S.Integers) == \
+            ConditionSet(x, Eq(Mod(I*x, 3) - 2, 0), S.Integers)
+    assert solveset(Mod(I + x, 3) - 2, x, S.Integers) == \
+            ConditionSet(x, Eq(Mod(x + I, 3) - 2, 0), S.Integers)
+    # issue 13178
+    n = symbols('n', integer=True)
+    a = 742938285
+    z = 1898888478
+    m = 2**31 - 1
+    x = 20170816
+    assert solveset(x - Mod(a**n*z, m), n, S.Integers) == \
+            ImageSet(Lambda(n, 2147483646*n + 100), S.Naturals0)
+    assert solveset(x - Mod(a**n*z, m), n, S.Naturals0) == \
+            Intersection(ImageSet(Lambda(n, 2147483646*n + 100), S.Naturals0),
+            S.Naturals0)
+    assert solveset(x - Mod(a**(2*n)*z, m), n, S.Integers) == \
+            Intersection(ImageSet(Lambda(n, 1073741823*n + 50), S.Naturals0),
+            S.Integers)
+    assert solveset(x - Mod(a**(2*n + 7)*z, m), n, S.Integers) == EmptySet()
+    assert solveset(x - Mod(a**(n - 4)*z, m), n, S.Integers) == \
+            Intersection(ImageSet(Lambda(n, 2147483646*n + 104), S.Naturals0),
+            S.Integers)
+
+@XFAIL
+def test_solve_modular_fail():
+    # issue 17373 (https://github.com/sympy/sympy/issues/17373)
+    assert solveset(Mod(x**4, 14) - 11, x, S.Integers) == \
+            Union(ImageSet(Lambda(n, 14*n + 3), S.Integers),
+            ImageSet(Lambda(n, 14*n + 11), S.Integers))
+    assert solveset(Mod(x**31, 74) - 43, x, S.Integers) == \
+            ImageSet(Lambda(n, 74*n + 31), S.Integers)
+
+# end of modular tests
