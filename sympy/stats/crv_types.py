@@ -31,6 +31,7 @@ Maxwell
 Nakagami
 Normal
 Pareto
+PERT
 QuadraticU
 RaisedCosine
 Rayleigh
@@ -95,6 +96,7 @@ __all__ = ['ContinuousRV',
 'Normal',
 'GaussianInverse',
 'Pareto',
+'PERT',
 'QuadraticU',
 'RaisedCosine',
 'Rayleigh',
@@ -2626,6 +2628,88 @@ def Pareto(name, xm, alpha):
     """
 
     return rv(name, ParetoDistribution, (xm, alpha))
+
+#-------------------------------------------------------------------------------
+# PERT distribution ----------------------------------------------------------
+
+
+class PERTDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 'b', 'c')
+
+    @property
+    def set(self):
+        return Interval(self.a, self.c)
+
+    @staticmethod
+    def check(a, b, c):
+        _value_check((b > a, b < c),
+            "Parameter b must be in range (%s, %s). b = %s"%(a, c, b))
+
+    def pdf(self, x):
+        a, b, c = self.a, self.b, self.c
+        alpha = (4*b + c - 5*a)/(c - a)
+        beta = (5*c - a - 4*b)/(c - a)
+        num = (x - a)**(alpha - 1)*(c - x)**(beta - 1)
+        den = beta_fn(alpha, beta)*(c - a)**5
+        return num/den
+
+    def expectation(self, expr, var, **kwargs):
+        a, b, c = self.args
+        return (a + 4*b + c)/6
+
+def PERT(name, a, b, c):
+    r"""
+    Create a continuous random variable with the PERT distribution.
+
+    The density of the PERT distribution is given by
+
+    .. math::
+        f(x) := \frac{(x - a)^{(\alpha - 1)}(c - x)^{(\beta - 1)}}
+            {\text{Beta}(\alpha, \beta)(c - a)^{(\alpha + \beta - 1)}}
+
+    where :math: \alpha := \frac{(4b + c - 5a)}{(c - a)},
+        \beta := \frac{(5c - a - 4b)}{(c - a)}.
+
+    Parameters
+    ==========
+
+    a : Real number
+    b : Real number, `a < b < c`
+    c : Real number
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import PERT, density
+    >>> from sympy import symbols, pprint, simplify
+
+    >>> a, b, c, z = symbols('a b c z')
+
+    >>> X = PERT("x", a, b, c)
+
+    >>> pprint(density(X)(z), use_unicode=False)
+                 -5*a + 4*b + c             -a - 4*b + 5*c
+            -1 + --------------        -1 + --------------
+                     -a + c                     -a + c
+    (-a + z)                   *(c - z)
+    ------------------------------------------------------
+                 5  /-5*a + 4*b + c  -a - 4*b + 5*c\
+         (-a + c) *B|--------------, --------------|
+                    \    -a + c          -a + c    /
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/PERT_distribution
+
+    """
+
+    return rv(name, PERTDistribution, (a, b, c))
 
 #-------------------------------------------------------------------------------
 # QuadraticU distribution ------------------------------------------------------

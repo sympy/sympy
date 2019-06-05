@@ -17,7 +17,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
                          Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic, LogLogistic,
                          LogNormal, Maxwell, Nakagami, Normal, GaussianInverse, Pareto,
-                         QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
+                         PERT, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
                          VonMises, Weibull, WignerSemicircle, Wald, correlation,
                          moment, cmoment, smoment, quantile)
@@ -803,6 +803,25 @@ def test_pareto_numeric():
     assert E(X) == alpha*xm/S(alpha - 1)
     assert variance(X) == xm**2*alpha / S(((alpha - 1)**2*(alpha - 2)))
     # Skewness tests too slow. Try shortcutting function?
+
+def test_PERT():
+    a, b, c, z = symbols('a b c z')
+    X = PERT('x', a, b, c)
+    dens = density(X)
+    assert dens(z) == (-a + z)**(-1 + (-5*a + 4*b + c)/(-a + c))*(c - z)**(-1 + (-a - 4*b + 5*c)/\
+        (-a + c))/((-a + c)**5*beta((-5*a + 4*b + c)/(-a + c), (-a - 4*b + 5*c)/(-a + c)))
+    assert E(X) == a/6 + 2*b/3 + c/6
+
+    # Numberic
+    raises(ValueError, lambda: PERT('x', 2, 1, 3))
+    raises(ValueError, lambda: PERT('x', 1, 3, 2))
+
+    X = PERT('x', 1, 2, 3)
+    assert density(X)(z) == (3 - z)**2*(z - 1)**2/(32*beta(3, 3))
+    assert E(X) == 2
+    assert variance(X) == 2
+    assert skewness(X) == sqrt(2)/2
+    assert kurtosis(X) == S(1)/2
 
 
 def test_raised_cosine():
