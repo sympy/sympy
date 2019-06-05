@@ -188,6 +188,7 @@ def derive_by_array(expr, dx):
 
     """
     from sympy.matrices import MatrixBase
+    from sympy.tensor import SparseNDimArray
     array_types = (Iterable, MatrixBase, NDimArray)
     if isinstance(dx, array_types):
         dx = ImmutableDenseNDimArray(dx)
@@ -201,7 +202,10 @@ def derive_by_array(expr, dx):
         else:
             expr = ImmutableDenseNDimArray(expr)
         if isinstance(dx, array_types):
-            new_array = [[y.diff(x) for y in expr] for x in dx]
+            if isinstance(expr, SparseNDimArray):
+                new_array = _sparse_array_derive_by_array(expr, dx)
+            else:
+                new_array = [[y.diff(x) for y in expr] for x in dx]
             return type(expr)(new_array, dx.shape + expr.shape)
         else:
             return expr.diff(dx)
@@ -211,6 +215,19 @@ def derive_by_array(expr, dx):
         else:
             return diff(expr, dx)
 
+def _sparse_array_derive_by_array(expr, dx):
+    # Perfom a derivative on a sparse array by each term of dx. Regroup the returned
+    # diff sprase array by each term to a dictionary.
+
+    # Note that dx is supposed to be one-dimension array_type
+    # TODO: add support for multidimensional dx
+    sparse_array = {}
+    loop_size = len(expr)
+    for i, x in enumerate(dx):
+        sparse_diff = expr.diff(x)._sparse_array
+        for k in sparse_diff:
+            sparse_array[k + i*loop_size] = sparse_diff[k]
+    return sparse_array
 
 def permutedims(expr, perm):
     """

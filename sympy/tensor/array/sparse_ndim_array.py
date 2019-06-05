@@ -116,8 +116,9 @@ class SparseNDimArray(NDimArray):
         from sympy.matrices.common import MatrixCommon
         from sympy import Derivative
         from sympy import Dict
+        from sympy import derive_by_array
         if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):
-            return type(self)([self.diff(x) for x in arg])
+            return derive_by_array(self, arg)
         else:
             s_a = self._sparse_array
             s_a2 = {}
