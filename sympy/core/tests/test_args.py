@@ -1401,6 +1401,11 @@ def test_sympy__stats__crv_types__ParetoDistribution():
     assert _test_args(ParetoDistribution(1, 1))
 
 
+def test_sympy__stats__crv_types__PERTDistribution():
+    from sympy.stats.crv_types import PERTDistribution
+    assert _test_args(PERTDistribution(1, 2, 3))
+
+
 def test_sympy__stats__crv_types__QuadraticUDistribution():
     from sympy.stats.crv_types import QuadraticUDistribution
     assert _test_args(QuadraticUDistribution(1, 2))
