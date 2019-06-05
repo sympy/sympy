@@ -739,8 +739,7 @@ class LatexPrinter(Printer):
         r'''
         Logic to decide how to render a function to latex
           - if it is a recognized latex name, use the appropriate latex command
-          - if it is a single letter, just use that letter
-          - if it is a single letter before ^ or _ inserted by _deal_with_super_sub
+          - if it is a single letter, excluding sub- and superscripts, just use that letter
           - if it is a longer name, then put \operatorname{} around it and be
             mindful of undercores in the name
         '''
