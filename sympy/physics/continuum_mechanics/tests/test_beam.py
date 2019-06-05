@@ -598,3 +598,12 @@ def test_parabolic_loads():
     loading = beam.load.xreplace({L: 10, E: 20, I: 30, P: 40})
     assert loading.xreplace({x: 5}) == 40 * 5**8
     assert loading.xreplace({x: 15}) == 0
+
+
+def test_location():
+    E, I, L = symbols('E, I, L', positive=True)
+    beam = Beam(L, E, I)
+    R= symbols('R', real=True)
+
+    raises(ValueError, lambda: beam.apply_load(-R, L+1, -1))
+    raises(ValueError, lambda: beam.apply_load(R, L, -1, end=2*L))
