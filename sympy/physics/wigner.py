@@ -196,7 +196,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
         _Factlist[int(j_1 + j_2 + j_3 + 1)]
 
     ressqrt = sqrt(argsqrt)
-    if ressqrt.is_complex:
+    if ressqrt.is_complex or ressqrt.is_infinite:
         ressqrt = ressqrt.as_real_imag()[0]
 
     imin = max(-j_3 + j_1 + m_2, -j_3 + j_2 - m_1, 0)

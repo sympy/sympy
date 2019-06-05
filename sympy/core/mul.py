@@ -1179,7 +1179,7 @@ class Mul(Expr, AssocOp):
         t_not_re_im = None
 
         for t in self.args:
-            if t.is_complex is False and t.is_extended_real is False:
+            if (t.is_complex or t.is_infinite) is False and t.is_extended_real is False:
                 return False
             elif t.is_imaginary:  # I
                 real = not real

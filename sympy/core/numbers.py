@@ -3342,7 +3342,7 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     is_infinite = True
     is_number = True
     is_prime = False
-    is_complex = True
+    # is_complex = True
     is_extended_real = False
 
     __slots__ = []
