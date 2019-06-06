@@ -163,7 +163,11 @@ class Indexed(Expr):
                 return base[args]
 
         obj = Expr.__new__(cls, base, *args, **kw_args)
-        IndexedBase._set_assumptions(obj, base.assumptions0)
+
+        try:
+            IndexedBase._set_assumptions(obj, base.assumptions0)
+        except AttributeError:
+            IndexedBase._set_assumptions(obj, {})
         return obj
 
     def _hashable_content(self):
