@@ -467,7 +467,6 @@ class IndexedBase(Expr, NotIterable):
         return {k: v for k, v in self._assumptions.items() if v is not None}
 
     def __getitem__(self, indices, **kw_args):
-        # Propagate assumptions onto new Indexed object.
         if is_sequence(indices):
             # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
