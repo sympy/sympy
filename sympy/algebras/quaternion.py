@@ -350,7 +350,7 @@ class Quaternion(Expr):
         # If q1 is a number or a sympy expression instead of a quaternion
         if not isinstance(q1, Quaternion):
             if q2.real_field:
-                if q1.is_complex or q1.is_infinite:
+                if q1.is_complex:
                     return q2 * Quaternion(re(q1), im(q1), 0, 0)
                 else:
                     return Mul(q1, q2)
@@ -361,7 +361,7 @@ class Quaternion(Expr):
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
             if q1.real_field:
-                if q2.is_complex or q2.is_infinite:
+                if q2.is_complex:
                     return q1 * Quaternion(re(q2), im(q2), 0, 0)
                 else:
                     return Mul(q1, q2)

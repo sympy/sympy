@@ -494,7 +494,7 @@ def test_Abs_properties():
     assert Abs(z).is_real is True # since complex implies finite
     assert Abs(z).is_extended_real is True
     assert Abs(z).is_rational is None
-    assert Abs(z).is_positive is None
+    assert Abs(z).is_positive is True
     assert Abs(z).is_extended_positive is True
     assert Abs(z).is_zero is False
 
