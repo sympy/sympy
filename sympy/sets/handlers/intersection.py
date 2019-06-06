@@ -25,7 +25,7 @@ def intersection_sets(a, b):
 
 @dispatch(Naturals, Naturals)
 def intersection_sets(a, b):
-    return a if a is S.Naturals0 else b
+    return a if a is S.Naturals else b
 
 @dispatch(Naturals, Interval)
 def intersection_sets(a, b):
