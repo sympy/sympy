@@ -1,4 +1,5 @@
 from sympy import Symbol, Contains, S, Interval, FiniteSet, oo, Eq
+from sympy.core.expr import unchanged
 from sympy.utilities.pytest import raises
 
 def test_contains_basic():
@@ -12,8 +13,8 @@ def test_contains_basic():
 
 def test_issue_6194():
     x = Symbol('x')
-    assert Contains(x, Interval(0, 1)) != (x >= 0) & (x <= 1)
-    assert Interval(0, 1).contains(x) == (x >= 0) & (x <= 1)
+    assert unchanged(Contains, x, Interval(0, 1))
+    assert Interval(0, 1).contains(x) == (S(0) <= x) & (x <= 1)
     assert Contains(x, FiniteSet(0)) != S.false
     assert Contains(x, Interval(1, 1)) != S.false
     assert Contains(x, S.Integers) != S.false

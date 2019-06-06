@@ -171,8 +171,8 @@ def continued_fraction_periodic(p, q, d=0, s=1):
     if (d - p**2)%q:
         d *= q**2
         sd *= q
-        p *= abs(q)
-        q *= abs(q)
+        p *= q
+        q *= q
 
     terms = []
     pq = {}
