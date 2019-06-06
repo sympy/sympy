@@ -3182,7 +3182,7 @@ def power_representation(n, p, k, zeros=False):
             '''Todd G. Will, "When Is n^2 a Sum of k Squares?", [online].
                 Available: https://www.maa.org/sites/default/files/Will-MMz-201037918.pdf'''
             return
-        if feasible is 1:  # it's prime and k == 2
+        if feasible is not True:  # it's prime and k == 2
             yield prime_as_sum_of_two_squares(n)
             return
 

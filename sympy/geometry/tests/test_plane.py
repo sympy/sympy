@@ -196,7 +196,7 @@ def test_plane():
     assert pl8.intersection(Plane(p1, normal_vector=(-1, -1, -11)))[0].equals(
         Line3D(p1, direction_ratio=(1, -1, 0)))
     assert pl3.random_point() in pl3
-    assert len(pl8.intersection(Ray3D(Point3D(0, 2, 3), Point3D(1, 0, 3)))) is 0
+    assert len(pl8.intersection(Ray3D(Point3D(0, 2, 3), Point3D(1, 0, 3)))) == 0
     # check if two plane are equals
     assert pl6.intersection(pl6)[0].equals(pl6)
     assert pl8.equals(Plane(p1, normal_vector=(0, 12, 0))) is False
