@@ -328,8 +328,8 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
     def dict(self):
         n, a, b = self.n, self.alpha, self.beta
         n = as_int(n)
-        return dict((k,
-                binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b)) for k in range(0, n + 1))
+        return dict((k, binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b))
+            for k in range(0, n + 1))
 
 
 def BetaBinomial(name, n, alpha, beta):
