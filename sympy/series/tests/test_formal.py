@@ -379,7 +379,7 @@ def test_fps__logarithmic_singularity_fail():
 
 def test_fps_symbolic():
     f = x**n*sin(x**2)
-    assert fps(f, x).truncate(8) == x**2*x**n - x**6*x**n/6 + O(x**(n + 8), x)
+    assert fps(f, x).truncate(8) == x**(n + 2) - x**(n + 6)/6 + O(x**(n + 8), x)
 
     f = x**n*log(1 + x)
     fp = fps(f, x)
@@ -389,31 +389,30 @@ def test_fps_symbolic():
 
     f = (x - 2)**n*log(1 + x)
     assert fps(f, x, 2).truncate() == \
-        ((x - 2)**n*log(3) + (x - 2)*(x - 2)**n/3 - (x - 2)**2*(x - 2)**n/18 +
-         (x - 2)**3*(x - 2)**n/81 - (x - 2)**4*(x - 2)**n/324 +
-         (x - 2)**5*(x - 2)**n/1215 + O((x - 2)**(n + 6), (x, 2)))
+        ((x - 2)**n*log(3) + (x - 2)**(n + 1)/3 - (x - 2)**(n + 2)/18 + (x - 2)**(n + 3)/81 -
+         (x - 2)**(n + 4)/324 + (x - 2)**(n + 5)/1215 + O((x - 2)**(n + 6), (x, 2)))
 
     f = x**(n - 2)*cos(x)
     assert fps(f, x).truncate() == \
-        (x**n*x**(-2) - x**n/2 + x**2*x**n/24 - x**4*x**n/720 + O(x**(n + 6), x))
+        (x**(n - 2) - x**n/2 + x**(n + 2)/24 - x**(n + 4)/720 + O(x**(n + 6), x))
 
     f = x**(n - 2)*sin(x) + x**n*exp(x)
     assert fps(f, x).truncate() == \
-        (x**n/x + x**n + 5*x*x**n/6 + x**2*x**n/2 + 7*x**3*x**n/40 +
-         x**4*x**n/24 + 41*x**5*x**n/5040 + O(x**(n + 6), x))
+        (x**(n - 1) + x**n + 5*x**(n + 1)/6 + x**(n + 2)/2 + 7*x**(n + 3)/40 +
+         x**(n + 4)/24 + 41*x**(n + 5)/5040 + O(x**(n + 6), x))
 
     f = x**n*atan(x)
     assert fps(f, x, oo).truncate() == \
-        (-x**n/(5*x**5) + x**n/(3*x**3) + x**n*(pi/2 - 1/x) +
+        (-x**(n - 5)/5 + x**(n - 3)/3 + x**n*(pi/2 - 1/x) +
          O((1/x)**(-n)/x**6, (x, oo)))
 
     f = x**(n/2)*cos(x)
     assert fps(f, x).truncate() == \
-        x**(n/2) - x**2*x**(n/2)/2 + x**4*x**(n/2)/24 + O(x**(n/2 + 6), x)
+        x**(n/2) - x**(n/2 + 2)/2 + x**(n/2 + 4)/24 + O(x**(n/2 + 6), x)
 
     f = x**(n+m)*sin(x)
     assert fps(f, x).truncate() == \
-        x*x**(m + n) - x**3*x**(m + n)/6 + x**5*x**(m + n)/120 + O(x**(m + n + 6), x)
+        x**(m + n + 1) - x**(m + n + 3)/6 + x**(m + n + 5)/120 + O(x**(m + n + 6), x)
 
 
 def test_fps__slow():

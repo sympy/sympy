@@ -812,11 +812,9 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
             return ak, xk, ind
         return None
 
-    syms = list(f.free_symbols.difference({x}))
-    symb = S.One
-    if len(syms) >= S.One:
-        (f, symb) = expand(f).as_independent(*syms)
-        symb = powsimp(symb)
+    syms = f.free_symbols.difference({x})
+    (f, symb) = expand(f).as_independent(*syms)
+    symb = powsimp(symb)
 
     result = None
 
@@ -833,7 +831,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
 
     ak = sequence(result[0], (k, result[2], oo))
     xk = sequence(x**k * symb, (k, 0, oo))
-    ind = result[1] * symb
+    ind = powsimp(result[1] * symb)
 
     return ak, xk, ind
 
@@ -981,18 +979,12 @@ class FormalPowerSeries(SeriesBase):
         return self.ind + inf_sum
 
     @property
-    def fps_sym(self):
-        """Returns whether the function contains symbolic terms"""
-        ind = self.ind
-        s = ind.free_symbols.difference({self.x})
-        if len(s) >= S.One:
-            return True
-        return False
+    def free_symbols(self):
+        """Returns the free symbols of the formal power series"""
+        return self.function.free_symbols
 
     def _get_pow_x(self, term):
         """Returns the power of x in a term."""
-        if self.fps_sym:
-            return S.One
         xterm, pow_x = term.as_independent(self.x)[1].as_base_exp()
         if not xterm.has(self.x):
             return S.Zero
@@ -1006,7 +998,11 @@ class FormalPowerSeries(SeriesBase):
         """
         terms = []
         for i, t in enumerate(self):
+            t = powsimp(t)
             xp = self._get_pow_x(t)
+            sym = self.free_symbols
+            if xp.has(*sym):
+                xp = xp.as_coeff_add(*sym)[0]
             if xp >= n:
                 break
             elif xp.is_integer is True and i == n + 1:
@@ -1047,6 +1043,9 @@ class FormalPowerSeries(SeriesBase):
             ind = S.Zero
             for t in Add.make_args(self.ind):
                 pow_x = self._get_pow_x(t)
+                sym = self.free_symbols
+                if pow_x.has(*sym):
+                    pow_x = pow_x.as_coeff_add(*sym)[0]
                 if pt == 0 and pow_x < 1:
                     ind += t
                 elif pow_x >= pt and pow_x < pt + 1:
@@ -1249,6 +1248,11 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
 
     >>> fps(atan(x), full=True).truncate()
     x - x**3/3 + x**5/5 + O(x**6)
+
+    Symbolic Functions
+
+    >>> fps(x**n*sin(x**2), x).truncate(8)
+    -x**(n + 6)/6 + x**(n + 2) + O(x**(n + 8))
 
     See Also
     ========
