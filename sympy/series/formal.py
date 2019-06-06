@@ -814,6 +814,8 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
 
     syms = f.free_symbols.difference({x})
     (f, symb) = expand(f).as_independent(*syms)
+    if symb is S.Zero:
+        symb = S.One
     symb = powsimp(symb)
 
     result = None
