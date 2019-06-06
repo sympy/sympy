@@ -6,7 +6,7 @@ from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
 from sympy.utilities.pytest import raises
 
-from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate, diff
+from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate, diff, Dict
 from sympy.tensor.array import Array, NDimArray
 
 from sympy.tensor.array import tensorproduct, tensorcontraction, derive_by_array, permutedims
@@ -57,6 +57,7 @@ def test_tensorcontraction():
 
 def test_derivative_by_array():
     from sympy.abc import a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z
+    from sympy.tensor.array import MutableSparseNDimArray
 
     bexpr = x*y**2*exp(z)*log(t)
     sexpr = sin(bexpr)
@@ -83,6 +84,13 @@ def test_derivative_by_array():
     assert diff(Array([[x, y], [z, t]]), Array([x, y])) == Array([[[1, 0], [0, 0]], [[0, 1], [0, 0]]])
     assert diff(Array([[x, y], [z, t]]), Array([[x, y], [z, t]])) == Array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]],
                                                                          [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+
+    # test for large scale sparse array
+    b = MutableSparseNDimArray.zeros(10000, 20000)
+    b[0, 0] = i
+    b[0, 1] = j
+    assert derive_by_array(b, i)._sparse_array == Dict({0: 1})
+    assert derive_by_array(b, (i, j))._sparse_array == Dict({0: 1, 200000001: 1})
 
 
 def test_issue_emerged_while_discussing_10972():

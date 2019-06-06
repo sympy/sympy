@@ -426,9 +426,19 @@ class NDimArray(object):
         >>> a == b
         False
         """
+        from sympy.tensor.array import SparseNDimArray
         if not isinstance(other, NDimArray):
             return False
-        return (self.shape == other.shape) and (list(self) == list(other))
+
+        if not self.shape == other.shape:
+            return False
+
+        if isinstance(self, SparseNDimArray) and isinstance(other, SparseNDimArray):
+            return self._sparse_array.keys() == other._sparse_array.keys() and \
+                   all(v == other._sparse_array[k] for (k, v) in self._sparse_array.items()
+                       if k in other._sparse_array)
+
+        return list(self) == list(other)
 
     def __ne__(self, other):
         return not self == other

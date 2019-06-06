@@ -201,6 +201,7 @@ def derive_by_array(expr, dx):
             expr = expr.as_immutable()
         else:
             expr = ImmutableDenseNDimArray(expr)
+
         if isinstance(dx, array_types):
             if isinstance(expr, SparseNDimArray):
                 new_array = _sparse_array_derive_by_array(expr, dx)
@@ -208,7 +209,11 @@ def derive_by_array(expr, dx):
                 new_array = [[y.diff(x) for y in expr] for x in dx]
             return type(expr)(new_array, dx.shape + expr.shape)
         else:
-            return expr.diff(dx)
+            if isinstance(expr, SparseNDimArray):
+                new_array = {k: v.diff(dx) for (k, v) in expr._sparse_array.items() if v.diff(dx)!= 0}
+                return type(expr)(new_array, expr.shape)
+            else:
+                return expr.diff(dx)
     else:
         if isinstance(dx, array_types):
             return ImmutableDenseNDimArray([expr.diff(i) for i in dx], dx.shape)
@@ -219,12 +224,10 @@ def _sparse_array_derive_by_array(expr, dx):
     # Perfom a derivative on a sparse array by each term of dx. Regroup the returned
     # diff sprase array by each term to a dictionary.
 
-    # Note that dx is supposed to be one-dimension array_type
-    # TODO: add support for multidimensional dx
     sparse_array = {}
     loop_size = len(expr)
     for i, x in enumerate(dx):
-        sparse_diff = expr.diff(x)._sparse_array
+        sparse_diff = derive_by_array(expr, x)._sparse_array
         for k in sparse_diff:
             sparse_array[k + i*loop_size] = sparse_diff[k]
     return sparse_array

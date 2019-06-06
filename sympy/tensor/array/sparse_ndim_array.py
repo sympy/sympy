@@ -111,42 +111,6 @@ class SparseNDimArray(NDimArray):
 
         return type(self)(*(newshape + (self._sparse_array,)))
 
-    def _eval_derivative_array(self, arg):
-        from sympy.core.compatibility import Iterable
-        from sympy.matrices.common import MatrixCommon
-        from sympy import Derivative
-        from sympy import Dict
-        from sympy import derive_by_array
-        if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):
-            return derive_by_array(self, arg)
-        else:
-            s_a = self._sparse_array
-            s_a2 = {}
-            for key in s_a:
-                value = _sympify(s_a[key])
-                deri = Derivative(value, arg, **{'evaluate':True})
-                if deri != 0:
-                    s_a2[key] = deri
-            return type(self)(Dict(s_a2), self._shape)
-
-    def __eq__(self, other):
-        if not isinstance(other, NDimArray):
-            return False
-
-        if self.shape != other.shape:
-            return False
-
-        if isinstance(other, SparseNDimArray):
-            from sympy import Dict
-            dict_self = Dict(self._sparse_array)
-            dict_other = Dict(other._sparse_array)
-            return dict_self == dict_other
-
-        return list(self) == list(other)
-
-    def __hash__(self):
-        return super(SparseNDimArray, self).__hash__()
-
 class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
 
     def __new__(cls, iterable=None, shape=None, **kwargs):
