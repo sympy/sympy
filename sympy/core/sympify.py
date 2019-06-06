@@ -89,7 +89,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
        - booleans, including ``None`` (will leave ``None`` unchanged)
-       - lists, sets or tuples containing any of the above
+       - dict, lists, sets or tuples containing any of the above
 
     .. warning::
         Note that this function uses ``eval``, and thus shouldn't be used on
@@ -241,6 +241,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     Notes
     =====
+
+    The keywords ``rational`` and ``convert_xor`` are only used
+    when the input is a string.
 
     Sometimes autosimplification during sympification results in expressions
     that are very different in structure than what was entered. Until such
