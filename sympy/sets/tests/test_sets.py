@@ -249,11 +249,10 @@ def test_intersect1():
         (S.Naturals, S.Naturals0))
     assert all(i.intersection(S.Integers) is i for i in
         (S.Naturals, S.Naturals0))
-    s = S.Naturals
-    assert S.Naturals0.intersection(s) is s
-    assert s.intersection(S.Naturals0) is s
-    assert S.Naturals.intersect(s) is s
-    assert S.Naturals0.intersect(S.Naturals0) is s
+    assert S.Naturals0.intersection(S.Naturals) is S.Naturals
+    assert S.Naturals.intersection(S.Naturals0) is S.Naturals
+    assert S.Naturals.intersect(S.Naturals) is S.Naturals
+    assert S.Naturals0.intersect(S.Naturals0) is S.Naturals0
     x = Symbol('x')
     assert Interval(0, 2).intersect(Interval(1, 2)) == Interval(1, 2)
     assert Interval(0, 2).intersect(Interval(1, 2, True)) == \
