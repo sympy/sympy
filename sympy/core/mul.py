@@ -1105,8 +1105,17 @@ class Mul(Expr, AssocOp):
 
     _eval_is_commutative = lambda self: _fuzzy_group(
         a.is_commutative for a in self.args)
-    _eval_is_complex = lambda self: _fuzzy_group(
-        (a.is_complex for a in self.args), quick_exit=True)
+
+    def _eval_is_complex(self):
+        comp = _fuzzy_group((a.is_complex for a in self.args))
+        if comp is False:
+            if any(a.is_infinite for a in self.args):
+                if any(a.is_zero for a in self.args):
+                    return S.NaN.is_infinite
+                if any(a.is_zero is None for a in self.args):
+                    return None
+                return False
+        return comp
 
     def _eval_is_finite(self):
         if all(a.is_finite for a in self.args):

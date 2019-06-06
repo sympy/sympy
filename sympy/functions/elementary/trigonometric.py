@@ -473,6 +473,11 @@ class sin(TrigonometricFunction):
         if arg.is_extended_real:
             return True
 
+    def _eval_is_complex(self):
+        if self.args[0].is_extended_real \
+                or self.args[0].is_complex:
+            return True
+
 
 class cos(TrigonometricFunction):
     """
@@ -900,6 +905,11 @@ class cos(TrigonometricFunction):
         if arg.is_extended_real:
             return True
 
+    def _eval_is_complex(self):
+        if self.args[0].is_extended_real \
+            or self.args[0].is_complex:
+            return True
+
 
 class tan(TrigonometricFunction):
     """
@@ -1190,6 +1200,7 @@ class tan(TrigonometricFunction):
             return self.func(arg)
 
     def _eval_is_extended_real(self):
+        # FIXME: currently tan(pi/2) return zoo
         return self.args[0].is_extended_real
 
     def _eval_is_real(self):
@@ -1200,7 +1211,16 @@ class tan(TrigonometricFunction):
     def _eval_is_finite(self):
         arg = self.args[0]
 
+        if arg.is_real and (arg / pi - S.Half).is_integer is False:
+            return True
+
         if arg.is_imaginary:
+            return True
+
+    def _eval_is_complex(self):
+        arg = self.args[0]
+
+        if arg.is_real and (arg / pi - S.Half).is_integer is False:
             return True
 
 
@@ -1483,7 +1503,19 @@ class cot(TrigonometricFunction):
 
     def _eval_is_finite(self):
         arg = self.args[0]
+        if arg.is_real and (arg/pi).is_integer is False:
+            return True
         if arg.is_imaginary:
+            return True
+
+    def _eval_is_real(self):
+        arg = self.args[0]
+        if arg.is_real and (arg/pi).is_integer is False:
+            return True
+
+    def _eval_is_complex(self):
+        arg = self.args[0]
+        if arg.is_real and (arg / pi).is_integer is False:
             return True
 
     def _eval_subs(self, old, new):
@@ -1679,6 +1711,12 @@ class sec(ReciprocalTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_is_complex(self):
+        arg = self.args[0]
+
+        if arg.is_real and (arg / pi - S.Half).is_integer is False:
+            return True
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -1758,6 +1796,11 @@ class csc(ReciprocalTrigonometricFunction):
             return -cot(self.args[0])*csc(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_complex(self):
+        arg = self.args[0]
+        if arg.is_real and (arg / pi).is_integer is False:
+            return True
 
     @staticmethod
     @cacheit

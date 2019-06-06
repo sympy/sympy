@@ -208,8 +208,8 @@ def test_stieltjes_evalf():
 
 
 def test_issue_10475():
-    a = Symbol('a', real=True)
-    b = Symbol('b', positive=True)
+    a = Symbol('a', extended_real=True)
+    b = Symbol('b', extended_positive=True)
     s = Symbol('s', zero=False)
 
     assert zeta(2 + I).is_finite

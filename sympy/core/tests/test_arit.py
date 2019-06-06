@@ -1054,7 +1054,7 @@ def test_Pow_is_finite():
     assert (xe**xr).is_finite is None
     # FIXME: The line below should be True rather than None
     # assert (xr**xr).is_finite is True
-    assert (xr**xr).is_finite is True
+    assert (xr**xr).is_finite is None
 
     assert (p**xe).is_finite is None
     assert (p**xr).is_finite is True
@@ -1896,38 +1896,38 @@ def test_mul_coeff():
 
 
 def test_mul_zero_detection():
-    nz = Dummy(real=True, zero=False, finite=True)
-    r = Dummy(real=True)
-    c = Dummy(real=False, complex=True)
-    c2 = Dummy(real=False, complex=True)
-    i = Dummy(imaginary=True, finite=True)
+    nz = Dummy(real=True, zero=False)
+    r = Dummy(extended_real=True)
+    c = Dummy(extended_real=False, complex=True)
+    c2 = Dummy(extended_real=False, complex=True)
+    i = Dummy(imaginary=True)
     e = nz*r*c
     assert e.is_imaginary is None
-    assert e.is_real is None
+    assert e.is_extended_real is None
     e = nz*c
     assert e.is_imaginary is None
-    assert e.is_real is False
+    assert e.is_extended_real is False
     e = nz*i*c
     assert e.is_imaginary is False
-    assert e.is_real is None
+    assert e.is_extended_real is None
     # check for more than one complex; it is important to use
     # uniquely named Symbols to ensure that two factors appear
     # e.g. if the symbols have the same name they just become
     # a single factor, a power.
     e = nz*i*c*c2
     assert e.is_imaginary is None
-    assert e.is_real is None
+    assert e.is_extended_real is None
 
-    # _eval_is_real and _eval_is_zero both employ trapping of the
+    # _eval_is_extended_real and _eval_is_zero both employ trapping of the
     # zero value so args should be tested in both directions and
     # TO AVOID GETTING THE CACHED RESULT, Dummy MUST BE USED
 
     # real is unknonwn
     def test(z, b, e):
         if z.is_zero and b.is_finite:
-            assert e.is_real and e.is_zero
+            assert e.is_extended_real and e.is_zero
         else:
-            assert e.is_real is None
+            assert e.is_extended_real is None
             if b.is_finite:
                 if z.is_zero:
                     assert e.is_zero

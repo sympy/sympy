@@ -582,8 +582,8 @@ class Pow(Expr):
             return i.is_integer
 
     def _eval_is_complex(self):
-        if all(a.is_complex for a in self.args) and self.base.is_zero is False \
-                or self.exp.is_nonnegative:
+
+        if all(a.is_complex for a in self.args) and self._eval_is_finite():
             return True
 
     def _eval_is_imaginary(self):
