@@ -390,13 +390,10 @@ class IndexedBase(Expr, NotIterable):
     Assumptions can be specified with keyword arguments the same way as for Symbol:
 
     >>> A_real = IndexedBase('A', real=True)
+    >>> A_real.is_real
+    True
     >>> A != A_real
     True
-    >>> A.assumptions0
-    {'commutative': True}
-    >>> sorted(A_real.assumptions0.items())
-    [('commutative', True), ('complex', True), ('hermitian', True), ('imaginary', False), ('real', True)]
-
     """
     is_commutative = True
     is_symbol = True
