@@ -143,7 +143,7 @@ class Indexed(Expr):
     is_symbol = True
     is_Atom = True
 
-   
+
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
         from sympy.tensor.array.ndim_array import NDimArray
