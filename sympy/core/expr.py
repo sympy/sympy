@@ -300,9 +300,6 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 >= 0)
         if self.is_extended_real and other.is_extended_real:
-            if self.is_infinite and other.is_infinite:
-                if (self * other).is_extended_positive:  # inf < inf & -inf < -inf
-                    return S.true
             if (self.is_infinite and self.is_extended_nonnegative) \
                     or (other.is_infinite and other.is_extended_nonpositive):
                 return S.true
@@ -326,9 +323,6 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 <= 0)
         if self.is_extended_real and other.is_extended_real:
-            if self.is_infinite and other.is_infinite:
-                if (self * other).is_extended_positive:  # inf < inf & -inf < -inf
-                    return S.true
             if (self.is_infinite and self.is_extended_nonpositive) \
                     or (other.is_infinite and other.is_extended_nonnegative):
                 return S.true
@@ -353,10 +347,6 @@ class Expr(Basic, EvalfMixin):
             return _sympify(n2 > 0)
 
         if self.is_extended_real and other.is_extended_real:
-            if self.is_infinite and other.is_infinite:
-                if (self * other).is_extended_positive: # inf > inf & -inf > -inf
-                    return S.false
-
             if (self.is_infinite and self.is_extended_nonpositive) \
                     or (other.is_infinite and other.is_extended_nonnegative):
                 return S.false
@@ -380,9 +370,6 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 < 0)
         if self.is_extended_real and other.is_extended_real:
-            if self.is_infinite and other.is_infinite:
-                if (self * other).is_extended_positive:  # inf < inf & -inf < -inf
-                    return S.false
             if (self.is_infinite and self.is_extended_nonnegative) \
                     or (other.is_infinite and other.is_extended_nonpositive):
                 return S.false
