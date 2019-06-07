@@ -57,7 +57,7 @@ def test_tensorcontraction():
 
 def test_derivative_by_array():
     from sympy.abc import a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z
-    from sympy.tensor.array import MutableSparseNDimArray
+    from sympy.tensor.array import MutableSparseNDimArray, ImmutableSparseNDimArray
 
     bexpr = x*y**2*exp(z)*log(t)
     sexpr = sin(bexpr)
@@ -89,8 +89,8 @@ def test_derivative_by_array():
     b = MutableSparseNDimArray.zeros(10000, 20000)
     b[0, 0] = i
     b[0, 1] = j
-    assert derive_by_array(b, i)._sparse_array == Dict({0: 1})
-    assert derive_by_array(b, (i, j))._sparse_array == Dict({0: 1, 200000001: 1})
+    assert derive_by_array(b, i) == ImmutableSparseNDimArray({0: 1}, (10000, 20000))
+    assert derive_by_array(b, (i, j)) == ImmutableSparseNDimArray({0: 1, 200000001: 1}, (2, 10000, 20000))
 
 
 def test_issue_emerged_while_discussing_10972():

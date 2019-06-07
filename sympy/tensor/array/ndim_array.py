@@ -159,10 +159,6 @@ class NDimArray(object):
                 shape = ()
                 iterable = (iterable,)
 
-        # Construct NDimArray(iterable, shape)
-        elif shape is not None:
-            pass
-
         if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
 
@@ -257,10 +253,15 @@ class NDimArray(object):
     def _eval_derivative_array(self, arg):
         from sympy import derive_by_array
         from sympy import Tuple
+        from sympy import SparseNDimArray
         from sympy.matrices.common import MatrixCommon
+
         if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):
             return derive_by_array(self, arg)
         else:
+            if isinstance(self, SparseNDimArray):
+                new_array = {k: v.diff(arg) for (k, v) in self._sparse_array.items() if v.diff(arg)!= 0}
+                return type(self)(new_array, self.shape)
             return self.applyfunc(lambda x: x.diff(arg))
 
     def applyfunc(self, f):
