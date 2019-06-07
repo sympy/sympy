@@ -339,6 +339,10 @@ def test_diff_and_applyfunc():
     assert sdn == ImmutableSparseNDimArray([[x/2, y/2], [x*z/2, x*y*z/2]])
     assert sd != sdn
 
+    sdp = sd.applyfunc(lambda x: x+1)
+    assert sdp == ImmutableSparseNDimArray([[x + 1, y + 1], [x*z + 1, x*y*z + 1]])
+    assert sd != sdp
+
 
 def test_op_priority():
     from sympy.abc import x, y, z

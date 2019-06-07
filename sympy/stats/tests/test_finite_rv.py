@@ -356,3 +356,16 @@ def test_FinitePSpace():
     X = Die('X', 6)
     space = pspace(X)
     assert space.density == DieDistribution(6)
+
+def test_symbolic_conditions():
+    B = Bernoulli('B', S(1)/4)
+    D = Die('D', 4)
+    b, n = symbols('b, n')
+    Y = P(Eq(B, b))
+    Z = E(D > n)
+    assert Y == \
+    Piecewise((S(1)/4, Eq(b, 1)), (0, True)) + \
+    Piecewise((S(3)/4, Eq(b, 0)), (0, True))
+    assert Z == \
+    Piecewise((S(1)/4, n < 1), (0, True)) + Piecewise((S(1)/2, n < 2), (0, True)) + \
+    Piecewise((S(3)/4, n < 3), (0, True)) + Piecewise((S(1), n < 4), (0, True))

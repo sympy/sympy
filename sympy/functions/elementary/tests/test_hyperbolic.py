@@ -1,8 +1,9 @@
 from sympy import (symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log,
     sqrt, coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth,
     Integer, O, exp, sech, sec, csch, asech, acsch, acos, asin, expand_mul,
-    AccumBounds)
+    AccumBounds, im, re)
 
+from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 
 
@@ -68,11 +69,24 @@ def test_sinh():
 
     assert sinh(k*pi*I/2) == sin(k*pi/2)*I
 
+    assert sinh(x).as_real_imag(deep=False) == (cos(im(x))*sinh(re(x)),
+                sin(im(x))*cosh(re(x)))
+    x = Symbol('x', extended_real=True)
+    assert sinh(x).as_real_imag(deep=False) == (sinh(x), 0)
+
+    x = Symbol('x', real=True)
+    assert sinh(I*x).is_finite is True
+
 
 def test_sinh_series():
     x = Symbol('x')
     assert sinh(x).series(x, 0, 10) == \
         x + x**3/6 + x**5/120 + x**7/5040 + x**9/362880 + O(x**10)
+
+
+def test_sinh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: sinh(x).fdiff(2))
 
 
 def test_cosh():
@@ -135,11 +149,24 @@ def test_cosh():
 
     assert cosh(k*pi) == cosh(k*pi)
 
+    assert cosh(x).as_real_imag(deep=False) == (cos(im(x))*cosh(re(x)),
+                sin(im(x))*sinh(re(x)))
+    x = Symbol('x', extended_real=True)
+    assert cosh(x).as_real_imag(deep=False) == (cosh(x), 0)
+
+    x = Symbol('x', real=True)
+    assert cosh(I*x).is_finite is True
+
 
 def test_cosh_series():
     x = Symbol('x')
     assert cosh(x).series(x, 0, 10) == \
         1 + x**2/2 + x**4/24 + x**6/720 + x**8/40320 + O(x**10)
+
+
+def test_cosh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: cosh(x).fdiff(2))
 
 
 def test_tanh():
@@ -204,11 +231,22 @@ def test_tanh():
 
     assert tanh(k*pi*I/2) == tan(k*pi/2)*I
 
+    assert tanh(x).as_real_imag(deep=False) == (sinh(re(x))*cosh(re(x))/(cos(im(x))**2
+                                + sinh(re(x))**2),
+                                sin(im(x))*cos(im(x))/(cos(im(x))**2 + sinh(re(x))**2))
+    x = Symbol('x', extended_real=True)
+    assert tanh(x).as_real_imag(deep=False) == (tanh(x), 0)
+
 
 def test_tanh_series():
     x = Symbol('x')
     assert tanh(x).series(x, 0, 10) == \
         x - x**3/3 + 2*x**5/15 - 17*x**7/315 + 62*x**9/2835 + O(x**10)
+
+
+def test_tanh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: tanh(x).fdiff(2))
 
 
 def test_coth():
@@ -276,10 +314,22 @@ def test_coth():
     assert coth(log(tan(2))) == coth(log(-tan(2)))
     assert coth(1 + I*pi/2) == tanh(1)
 
+    assert coth(x).as_real_imag(deep=False) == (sinh(re(x))*cosh(re(x))/(sin(im(x))**2
+                                + sinh(re(x))**2),
+                                -sin(im(x))*cos(im(x))/(sin(im(x))**2 + sinh(re(x))**2))
+    x = Symbol('x', extended_real=True)
+    assert coth(x).as_real_imag(deep=False) == (coth(x), 0)
+
+
 def test_coth_series():
     x = Symbol('x')
     assert coth(x).series(x, 0, 8) == \
         1/x + x/3 - x**3/45 + 2*x**5/945 - x**7/4725 + O(x**8)
+
+
+def test_coth_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: coth(x).fdiff(2))
 
 
 def test_csch():
@@ -348,6 +398,11 @@ def test_csch_series():
           - 73*x**9/3421440 + O(x**10)
 
 
+def test_csch_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: csch(x).fdiff(2))
+
+
 def test_sech():
     x, y = symbols('x, y')
 
@@ -410,6 +465,11 @@ def test_sech_series():
         1 - x**2/2 + 5*x**4/24 - 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
 
+def test_sech_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: sech(x).fdiff(2))
+
+
 def test_asinh():
     x, y = symbols('x,y')
     assert asinh(x) == asinh(x)
@@ -445,6 +505,9 @@ def test_asinh():
     assert asinh(I*(sqrt(5) + 1)/4) == 3*pi*I/10
     assert asinh(-I*(sqrt(5) + 1)/4) == -3*pi*I/10
 
+    # Symmetry
+    assert asinh(-S.Half) == -asinh(S.Half)
+
 
 def test_asinh_rewrite():
     x = Symbol('x')
@@ -460,6 +523,11 @@ def test_asinh_series():
     assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
 
 
+def test_asinh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: asinh(x).fdiff(2))
+
+
 def test_acosh():
     x = Symbol('x')
 
@@ -471,6 +539,7 @@ def test_acosh():
     assert acosh(0) == I*pi/2
     assert acosh(Rational(1, 2)) == I*pi/3
     assert acosh(Rational(-1, 2)) == 2*pi*I/3
+    assert acosh(nan) == nan
 
     # at infinites
     assert acosh(oo) == oo
@@ -516,6 +585,11 @@ def test_acosh_series():
     assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
 
 
+def test_acosh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: acosh(x).fdiff(2))
+
+
 def test_asech():
     x = Symbol('x')
 
@@ -527,6 +601,7 @@ def test_asech():
     assert asech(0) == oo
     assert asech(2) == I*pi/3
     assert asech(-2) == 2*I*pi / 3
+    assert asech(nan) == nan
 
     # at infinites
     assert asech(oo) == I*pi/2
@@ -585,6 +660,11 @@ def test_asech_rewrite():
     assert asech(x).rewrite(log) == log(1/x + sqrt(1/x - 1) * sqrt(1/x + 1))
 
 
+def test_asech_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: asech(x).fdiff(2))
+
+
 def test_acsch():
     x = Symbol('x')
 
@@ -622,6 +702,7 @@ def test_acsch():
     assert acsch(I*sqrt(2 - 2/sqrt(5))) == -2*I*pi / 5
     assert acsch(-I*(sqrt(6) - sqrt(2))) == 5*I*pi / 12
     assert acsch(I*(sqrt(6) - sqrt(2))) == -5*I*pi / 12
+    assert acsch(nan) == nan
 
     # properties
     # acsch(x) == asinh(1/x)
@@ -654,6 +735,11 @@ def test_acsch_rewrite():
     assert acsch(x).rewrite(log) == log(1/x + sqrt(1/x**2 + 1))
 
 
+def test_acsch_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: acsch(x).fdiff(2))
+
+
 def test_atanh():
     x = Symbol('x')
 
@@ -663,6 +749,7 @@ def test_atanh():
     assert atanh(-I) == -I*pi/4
     assert atanh(1) == oo
     assert atanh(-1) == -oo
+    assert atanh(nan) == nan
 
     # at infinites
     assert atanh(oo) == -I*pi/2
@@ -690,6 +777,8 @@ def test_atanh():
     assert atanh(I*(sqrt(3) - 2)) == -pi*I/12
     assert atanh(oo) == -I*pi/2
 
+    # Symmetry
+    assert atanh(-S.Half) == -atanh(S.Half)
 
 def test_atanh_rewrite():
     x = Symbol('x')
@@ -702,6 +791,11 @@ def test_atanh_series():
         x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
 
 
+def test_atanh_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: atanh(x).fdiff(2))
+
+
 def test_acoth():
     x = Symbol('x')
 
@@ -711,6 +805,7 @@ def test_acoth():
     assert acoth(-I) == I*pi/4
     assert acoth(1) == oo
     assert acoth(-1) == -oo
+    assert acoth(nan) == nan
 
     # at infinites
     assert acoth(oo) == 0
@@ -737,6 +832,9 @@ def test_acoth():
     assert acoth(I*(2 - sqrt(3))) == -5*pi*I/12
     assert acoth(I*(sqrt(3) - 2)) == 5*pi*I/12
 
+    # Symmetry
+    assert acoth(-S.Half) == -acoth(S.Half)
+
 
 def test_acoth_rewrite():
     x = Symbol('x')
@@ -747,6 +845,11 @@ def test_acoth_series():
     x = Symbol('x')
     assert acoth(x).series(x, 0, 10) == \
         I*pi/2 + x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+
+
+def test_acoth_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: acoth(x).fdiff(2))
 
 
 def test_inverses():
