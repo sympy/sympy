@@ -122,7 +122,6 @@ def test_domains():
     Z = Die('x', 4)
 
     raises(ValueError, lambda: P(X > Z))  # Two domains with same internal symbol
-    # raises(ValueError, lambda: P(X > y))  # Tests for foreign symbol
 
     assert pspace(X + Y).domain.set == FiniteSet(1, 2, 3, 4, 5, 6)**2
 
@@ -323,8 +322,13 @@ def test_FinitePSpace():
 
 def test_symbolic_conditions():
     B = Bernoulli('B', S(1)/4)
-    b = symbols('b')
+    D = Die('D', 4)
+    b, n = symbols('b, n')
     Y = P(Eq(B, b))
+    Z = E(D > n)
     assert Y == \
-    Piecewise((Rational(1, 4), Eq(b, 1)), (0, True)) + \
-    Piecewise((Rational(3, 4), Eq(b, 0)), (0, True))
+    Piecewise((S(1)/4, Eq(b, 1)), (0, True)) + \
+    Piecewise((S(3)/4, Eq(b, 0)), (0, True))
+    assert Z == \
+    Piecewise((S(1)/4, n < 1), (0, True)) + Piecewise((S(1)/2, n < 2), (0, True)) + \
+    Piecewise((S(3)/4, n < 3), (0, True)) + Piecewise((S(1), n < 4), (0, True))

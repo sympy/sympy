@@ -19,6 +19,7 @@ from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
         sumsets, rv_subs, NamedArgsMixin)
 from sympy.core.containers import Dict
+from sympy.core.logic import Logic
 import random
 
 class FiniteDensity(dict):
@@ -144,14 +145,6 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
         if condition is True:
             return domain
         cond = rv_subs(condition)
-        # Check that we aren't passed a condition like die1 == z
-        # where 'z' is a symbol that we don't know about
-        # We will never be able to test this equality through iteration
-        # if not cond.free_symbols.issubset(domain.free_symbols):
-        #     raise ValueError('Condition "%s" contains foreign symbols \n%s.\n' % (
-        #         condition, tuple(cond.free_symbols - domain.free_symbols)) +
-        #         "Will be unable to iterate using this condition")
-
         return Basic.__new__(cls, domain, cond)
 
 
@@ -310,10 +303,12 @@ class FinitePSpace(PSpace):
     def compute_expectation(self, expr, rvs=None, **kwargs):
         rvs = rvs or self.values
         expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
-        parse_domain = [expr.xreplace(dict(elem)) for elem in self.domain]
         probs = [self.prob_of(elem) for elem in self.domain]
-        bools = parse_domain
-        if all(not isinstance(blv, bool) for blv in bools):
+        if isinstance(expr, (Logic, Relational)):
+            parse_domain = [tuple(elem)[0][1] for elem in self.domain]
+            bools = [expr.xreplace(dict(elem)) for elem in self.domain]
+        else:
+            parse_domain = [expr.xreplace(dict(elem)) for elem in self.domain]
             bools = [True for elem in self.domain]
         return sum([Piecewise((prob * elem, blv), (0, True))
                 for prob, elem, blv in zip(probs, parse_domain, bools)])
