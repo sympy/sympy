@@ -385,7 +385,7 @@ def test_fps_symbolic():
     fp = fps(f, x)
     k = fp.ak.variables[0]
     assert fp.infinite == \
-        Sum((-(-1)**(-k)*x**k*x**n)/k, (k, 1, oo))
+        Sum((-(-1)**(-k)*x**(k + n))/k, (k, 1, oo))
 
     f = (x - 2)**n*log(1 + x)
     assert fps(f, x, 2).truncate() == \
@@ -410,7 +410,7 @@ def test_fps_symbolic():
     assert fps(f, x).truncate() == \
         x**(n/2) - x**(n/2 + 2)/2 + x**(n/2 + 4)/24 + O(x**(n/2 + 6), x)
 
-    f = x**(n+m)*sin(x)
+    f = x**(n + m)*sin(x)
     assert fps(f, x).truncate() == \
         x**(m + n + 1) - x**(m + n + 3)/6 + x**(m + n + 5)/120 + O(x**(m + n + 6), x)
 

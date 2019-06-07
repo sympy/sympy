@@ -11,7 +11,6 @@ from sympy.core.expr import Expr
 from sympy.core.function import Derivative, Function, expand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
-from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.sets.sets import Interval
 from sympy.core.singleton import S
@@ -812,6 +811,7 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
             return ak, xk, ind
         return None
 
+    # The symbolic term, if present, is being seperated from the function 
     syms = f.free_symbols.difference({x})
     (f, symb) = expand(f).as_independent(*syms)
     if symb is S.Zero:
@@ -832,7 +832,8 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
         return None
 
     ak = sequence(result[0], (k, result[2], oo))
-    xk = sequence(x**k * symb, (k, 0, oo))
+    xk_formula = powsimp(x**k * symb)
+    xk = sequence(xk_formula, (k, 0, oo))
     ind = powsimp(result[1] * symb)
 
     return ak, xk, ind
@@ -846,7 +847,7 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
     (in order):
 
     * rational_algorithm
-    * Hypergeomitric algorithm
+    * Hypergeometric algorithm
 
     Parameters
     ==========
@@ -981,9 +982,18 @@ class FormalPowerSeries(SeriesBase):
         return self.ind + inf_sum
 
     @property
+    def variables(self):
+        """Returns a tuple of variables that are bounded"""
+        return ()
+
+    @property
     def free_symbols(self):
-        """Returns the free symbols of the formal power series"""
-        return self.function.free_symbols
+        """
+        This method returns the symbols in the object, excluding those
+        that take on a specific value (i.e. the dummy symbols).
+        """
+        return (set(j for i in self.args for j in i.free_symbols)
+                .difference(self.variables))
 
     def _get_pow_x(self, term):
         """Returns the power of x in a term."""
@@ -999,10 +1009,9 @@ class FormalPowerSeries(SeriesBase):
         as a polynomial(without ``O`` term).
         """
         terms = []
+        sym = self.free_symbols
         for i, t in enumerate(self):
-            t = powsimp(t)
             xp = self._get_pow_x(t)
-            sym = self.free_symbols
             if xp.has(*sym):
                 xp = xp.as_coeff_add(*sym)[0]
             if xp >= n:
@@ -1043,9 +1052,9 @@ class FormalPowerSeries(SeriesBase):
 
         if self.ind:
             ind = S.Zero
+            sym = self.free_symbols
             for t in Add.make_args(self.ind):
                 pow_x = self._get_pow_x(t)
-                sym = self.free_symbols
                 if pow_x.has(*sym):
                     pow_x = pow_x.as_coeff_add(*sym)[0]
                 if pt == 0 and pow_x < 1:
