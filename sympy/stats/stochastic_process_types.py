@@ -1,7 +1,8 @@
 from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
                     Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix)
+from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
+                            _symbol_converter)
 from sympy.core.compatibility import string_types
-from sympy.stats.rv import RandomIndexedSymbol, random_symbols, RandomSymbol
 from sympy.stats.symbolic_probability import Probability
 from sympy.stats.stochastic_process import StochasticPSpace
 
@@ -10,9 +11,36 @@ __all__ = [
     'DiscreteMarkovChain'
 ]
 
+def _set_converter(itr):
+    """
+    Helper function for converting list/tuple/set to Set.
+    If parameter is not an instance of list/tuple/set then
+    no operation is performed.
+
+    Returns
+    =======
+
+    Set
+        The argument converted to Set.
+
+
+    Raises
+    ======
+
+    TypeError
+        If the argument is not an instance of list/tuple/set.
+    """
+    if isinstance(itr, (list, tuple, set)):
+        itr = FiniteSet(*itr)
+    if not isinstance(itr, Set):
+        raise TypeError("%s is not an instance of list/tuple/set."%(itr))
+    return itr
+
+
+
 class StochasticProcess(Basic):
     """
-    Base class for all the stochastic process whether
+    Base class for all the stochastic processes whether
     discrete or continuous.
 
     Parameters
@@ -22,23 +50,19 @@ class StochasticProcess(Basic):
     state_space: Set
         The state space of the stochastic process, by default S.Reals.
         For discrete sets it is zero indexed.
+
+    See Also
+    ========
+
+    DiscreteTimeStochasticProcess
     """
 
     is_Continuous = None
     is_Discrete = None
 
     def __new__(cls, sym, state_space=S.Reals):
-        if isinstance(sym, string_types):
-            sym = Symbol(sym)
-        if not isinstance(sym, Symbol):
-            raise TypeError("Name of stochastic process should be either only "
-                            "a string or Symbol.")
-        if isinstance(state_space, set):
-            state_space = list(state_space)
-        if isinstance(state_space, (list, tuple)):
-            state_space = FiniteSet(*state_space)
-        if not isinstance(state_space, Set):
-            raise TypeError("state_space should be an instance of Set/list/tuple/set only.")
+        sym = _symbol_converter(sym)
+        state_space = _set_converter(state_space)
         return Basic.__new__(cls, sym, state_space)
 
     @property
@@ -51,20 +75,41 @@ class StochasticProcess(Basic):
 
     def __call__(self, time):
         """
-        Overrided in continuous time stochastic process.
+        Overrided in ContinuousTimeStochasticProcess.
         """
         raise NotImplementedError("Use [] for indexing discrete time stochastic process.")
 
     def __getitem__(self, time):
         """
-        Overrided in discrete continuous process.
+        Overrided in DiscreteTimeStochasticProcess.
         """
         raise NotImplementedError("Use () for indexing continuous time stochastic process.")
 
     def probability(self, condition):
         raise NotImplementedError()
 
-class DiscreteMarkovChain(StochasticProcess):
+class DiscreteTimeStochasticProcess(StochasticProcess):
+    """
+    Base class for all discrete stochastic processes.
+    """
+    def __getitem__(self, time):
+        """
+        For indexing discrete time stochastic processes.
+
+        Returns
+        =======
+
+        RandomIndexedSymbol
+        """
+        if time not in self.index_set:
+            raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
+        idx_obj = Indexed(self.symbol, time)
+        pspace_obj = StochasticPSpace(self.symbol, self)
+        return RandomIndexedSymbol(idx_obj, pspace_obj)
+
+# TODO: Define ContinuousTimeStochasticProcess
+
+class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
     """
     Represents discrete Markov chain.
 
@@ -106,17 +151,8 @@ class DiscreteMarkovChain(StochasticProcess):
     index_set = S.Naturals0
 
     def __new__(cls, sym, state_space=S.Reals, trans_probs=None):
-        if isinstance(sym, string_types):
-            sym = Symbol(sym)
-        if not isinstance(sym, Symbol):
-            raise TypeError("Name of stochastic process should be either only "
-                            "a string or Symbol.")
-        if isinstance(state_space, set):
-            state_space = list(state_space)
-        if isinstance(state_space, (list, tuple)):
-            state_space = FiniteSet(*state_space)
-        if not isinstance(state_space, Set):
-            raise TypeError("state_space should be an instance of Set/list/tuple/set only.")
+        sym = _symbol_converter(sym)
+        state_space = _set_converter(state_space)
         if trans_probs != None:
             if not isinstance(trans_probs, (Matrix, MatrixSymbol, ImmutableMatrix)):
                 raise TypeError("Transition probabilities etiher should "
@@ -132,21 +168,6 @@ class DiscreteMarkovChain(StochasticProcess):
         either an instance of Matrix or MatrixSymbol.
         """
         return self.args[2]
-
-    def __getitem__(self, time):
-        """
-        For indexing discrete Markov chain.
-
-        Returns
-        =======
-
-        RandomIndexedSymbol
-        """
-        if time not in self.index_set:
-            raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
-        idx_obj = Indexed(self.symbol, time)
-        pspace_obj = StochasticPSpace(self.symbol, self)
-        return RandomIndexedSymbol(idx_obj, pspace_obj)
 
     def probability(self, condition, given_condition, **kwargs):
         """
@@ -166,10 +187,8 @@ class DiscreteMarkovChain(StochasticProcess):
 
         Probability
             If the transition probabilities are not available
-        Float
-            If the transition probabilites is Matrix
         Expr
-            If the transition probabilities is MatrixSymbol
+            If the transition probabilities is MatrixSymbol or Matrix
 
         Note
         ====

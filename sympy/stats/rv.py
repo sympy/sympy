@@ -268,9 +268,6 @@ class RandomSymbol(Expr):
     def is_commutative(self):
         return self.symbol.is_commutative
 
-    def _hashable_content(self):
-        return self.pspace, self.symbol
-
     @property
     def free_symbols(self):
         return {self}
@@ -285,9 +282,6 @@ class RandomIndexedSymbol(RandomSymbol):
     symbol = property(lambda self: self.args[0])
     name = symbol
     key = property(lambda self: self.symbol.args[1])
-
-    def _hashable_content(self):
-        return self.pspace, self.name, self.key
 
 class ProductPSpace(PSpace):
     """
@@ -1401,3 +1395,49 @@ def _value_check(condition, message):
     if truth == False:
         raise ValueError(message)
     return truth == True
+
+def _symbol_converter(sym):
+    """
+    Casts the parameter to Symbol if it is of string_types
+    otherwise no operation is performed on it.
+
+    Parameters
+    ==========
+
+    sym
+        The parameter to be converted.
+
+    Returns
+    =======
+
+    Symbol
+        the parameter converted to Symbol.
+
+    Raises
+    ======
+
+    TypeError
+        If the parameter is not an instance of both string_types and
+        Symbol.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.stats.rv import _symbol_converter
+    >>> s = _symbol_converter('s')
+    >>> isinstance(s, Symbol)
+    True
+    >>> _symbol_converter(1)
+    Traceback (most recent call last):
+    ...
+    TypeError: 1 is neither a Symbol nor a string
+    >>> r = Symbol('r')
+    >>> isinstance(r, Symbol)
+    True
+    """
+    if isinstance(sym, string_types):
+            sym = Symbol(sym)
+    if not isinstance(sym, Symbol):
+        raise TypeError("%s is neither a Symbol nor a string"%(sym))
+    return sym
