@@ -9,6 +9,7 @@ Die
 Bernoulli
 Coin
 Binomial
+BetaBinomial
 Hypergeometric
 Rademacher
 """
@@ -17,6 +18,7 @@ from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
         Dict, Basic, KroneckerDelta, Dummy, Eq)
+from sympy import beta as beta_fn
 from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
 from sympy.stats.rv import _value_check
@@ -28,6 +30,7 @@ __all__ = ['FiniteRV',
 'Bernoulli',
 'Coin',
 'Binomial',
+'BetaBinomial',
 'Hypergeometric',
 'Rademacher'
 ]
@@ -304,6 +307,56 @@ def Binomial(name, n, p, succ=1, fail=0):
     """
 
     return rv(name, BinomialDistribution, n, p, succ, fail)
+
+#-------------------------------------------------------------------------------
+# Beta-binomial distribution ----------------------------------------------------------
+
+class BetaBinomialDistribution(SingleFiniteDistribution):
+    _argnames = ('n', 'alpha', 'beta')
+
+    @staticmethod
+    def check(n, alpha, beta):
+        _value_check((n.is_integer, n.is_nonnegative),
+        "'n' must be nonnegative integer. n = %s." % str(n))
+        _value_check((alpha > 0),
+        "'alpha' must be: alpha > 0 . alpha = %s" % str(alpha))
+        _value_check((beta > 0),
+        "'beta' must be: beta > 0 . beta = %s" % str(beta))
+
+    @property
+    @cacheit
+    def dict(self):
+        n, a, b = self.n, self.alpha, self.beta
+        n = as_int(n)
+        return dict((k, binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b))
+            for k in range(0, n + 1))
+
+
+def BetaBinomial(name, n, alpha, beta):
+    """
+    Create a Finite Random Variable representing a Beta-binomial distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import BetaBinomial, density
+    >>> from sympy import S
+
+    >>> X = BetaBinomial('X', 2, 1, 1)
+    >>> density(X).dict
+    {0: beta(1, 3)/beta(1, 1), 1: 2*beta(2, 2)/beta(1, 1), 2: beta(3, 1)/beta(1, 1)}
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Beta-binomial_distribution
+    .. [2] http://mathworld.wolfram.com/BetaBinomialDistribution.html
+
+    """
+
+    return rv(name, BetaBinomialDistribution, n, alpha, beta)
 
 
 class HypergeometricDistribution(SingleFiniteDistribution):
