@@ -83,6 +83,7 @@ __all__.extend(joint_rv_types.__all__)
 from . import stochastic_process_types
 from .stochastic_process_types import (
     StochasticProcess,
+    DiscreteTimeStochasticProcess,
     DiscreteMarkovChain
 )
 __all__.extend(stochastic_process_types.__all__)

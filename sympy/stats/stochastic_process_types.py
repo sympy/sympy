@@ -8,6 +8,7 @@ from sympy.stats.stochastic_process import StochasticPSpace
 
 __all__ = [
     'StochasticProcess',
+    'DiscreteTimeStochasticProcess',
     'DiscreteMarkovChain'
 ]
 
@@ -35,8 +36,6 @@ def _set_converter(itr):
     if not isinstance(itr, Set):
         raise TypeError("%s is not an instance of list/tuple/set."%(itr))
     return itr
-
-
 
 class StochasticProcess(Basic):
     """
