@@ -21,7 +21,7 @@ def test_imageset():
     assert imageset(x, abs(x), S.Integers) is S.Naturals0
     # issue 16878a
     r = symbols('r', real=True)
-    assert (1, r) not in imageset(x, (x, x), S.Reals)
+    assert (1, r) in imageset(x, (x, x), S.Reals) != False
     assert (r, r) in imageset(x, (x, x), S.Reals)
     assert 1 + I in imageset(x, x + I, S.Reals)
     assert {1} not in imageset(x, (x,), S.Reals)
@@ -341,6 +341,9 @@ def test_intersection():
 
     # issue 12178
     assert Intersection() == S.UniversalSet
+
+    # issue 16987
+    assert Intersection({1}, {1}, {x}) == Intersection({1}, {x})
 
 
 def test_issue_9623():

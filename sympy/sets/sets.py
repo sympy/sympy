@@ -23,7 +23,7 @@ from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or, Not, true, false
 from sympy.sets.contains import Contains
 from sympy.utilities import subsets
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, uniq
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
@@ -1260,7 +1260,7 @@ class Intersection(Set, LatticeOp):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
-        args = _sympify(args)
+        args = list(ordered(uniq(_sympify(args))))
 
         # Reduce sets using known rules
         if evaluate:
