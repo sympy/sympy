@@ -1260,7 +1260,7 @@ class Intersection(Set, LatticeOp):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
 
         # flatten inputs to merge intersections and iterables
-        args = _sympify(args)
+        args = list(ordered(set(_sympify(args))))
 
         # Reduce sets using known rules
         if evaluate:
