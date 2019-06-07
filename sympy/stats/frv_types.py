@@ -136,8 +136,8 @@ class DieDistribution(SingleFiniteDistribution):
     @property
     @cacheit
     def dict(self):
-        as_int(self.sides) # Check that self.sides can be converted to an integer
-        return super(DieDistribution, self).dict
+        as_int(self.sides)
+        return dict((k, Rational(1, self.sides)) for k in self.set)
 
     @property
     def set(self):

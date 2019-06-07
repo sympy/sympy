@@ -1,6 +1,6 @@
 from sympy import (FiniteSet, S, Symbol, sqrt, nan,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        cancel, exp, I, Piecewise)
+        cancel, exp, I, Piecewise, Rational)
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
@@ -326,4 +326,5 @@ def test_symbolic_conditions():
     b = symbols('b')
     Y = P(Eq(B, b))
     assert Y == \
-    Piecewise((1/4, Eq(b, 1)), (0, True)) + Piecewise((3/4, Eq(b, 0)), (0, True))
+    Piecewise((Rational(1, 4), Eq(b, 1)), (0, True)) + \
+    Piecewise((Rational(3, 4), Eq(b, 0)), (0, True))
