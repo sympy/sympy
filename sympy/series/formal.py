@@ -982,20 +982,6 @@ class FormalPowerSeries(SeriesBase):
 
         return self.ind + inf_sum
 
-    @property
-    def variables(self):
-        """Returns a tuple of variables that are bounded"""
-        return ()
-
-    @property
-    def free_symbols(self):
-        """
-        This method returns the symbols in the object, excluding those
-        that take on a specific value (i.e. the dummy symbols).
-        """
-        return (set(j for i in self.args for j in i.free_symbols)
-                .difference(self.variables))
-
     def _get_pow_x(self, term):
         """Returns the power of x in a term."""
         xterm, pow_x = term.as_independent(self.x)[1].as_base_exp()
