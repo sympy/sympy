@@ -92,7 +92,7 @@ class ASRConverter(CodePrinter):
 
         # TODO: Symbols can also be assignments, in which case the intent
         # should not be "in"
-        var = asr.Variable(name=sym_name, intent="in", type=self.type_integer)
+        var = asr.Variable(name=sym_name, intent="in", type=self.type_real)
         self.variables.append(var)
         return var
 
