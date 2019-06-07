@@ -12,7 +12,7 @@ from __future__ import print_function, division
 from itertools import product
 
 from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul, Add,
-        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan)
+        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan, Rational)
 from sympy.sets.sets import FiniteSet
 from sympy.core.relational import Relational
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
@@ -310,8 +310,13 @@ class FinitePSpace(PSpace):
     def compute_expectation(self, expr, rvs=None, **kwargs):
         rvs = rvs or self.values
         expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
-        return sum([expr.xreplace(dict(elem)) * self.prob_of(elem)
-                for elem in self.domain])
+        parse_domain = [expr.xreplace(dict(elem)) for elem in self.domain]
+        probs = [self.prob_of(elem) for elem in self.domain]
+        bools = parse_domain
+        if all(not isinstance(blv, bool) for blv in bools):
+            bools = [True for elem in self.domain]
+        return sum([Piecewise((prob * elem, blv), (0, True))
+                for prob, elem, blv in zip(probs, parse_domain, bools)])
 
     def compute_quantile(self, expr):
         cdf = self.compute_cdf(expr)
