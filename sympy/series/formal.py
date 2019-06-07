@@ -811,7 +811,8 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
             return ak, xk, ind
         return None
 
-    # The symbolic term, if present, is being seperated from the function 
+    # The symbolic term - symb, if present, is being separated from the function
+    # Otherwise symb is being set to S.One
     syms = f.free_symbols.difference({x})
     (f, symb) = expand(f).as_independent(*syms)
     if symb is S.Zero:
