@@ -3,11 +3,14 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
         conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn, Product,
-        AccumBounds)
+        AccumBounds, Interval, ImageSet, Lambda)
 from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.core.function import ArgumentIndexError
 from sympy.core.relational import Ne, Eq
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.sets.setexpr import SetExpr
+from sympy.utilities.pytest import XFAIL, slow, raises
+
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
@@ -134,6 +137,9 @@ def test_sin():
     assert isinstance(sin( re(x) - im(y)), sin) is True
     assert isinstance(sin(-re(x) + im(y)), sin) is False
 
+    assert sin(SetExpr(Interval(0, 1))) == SetExpr(ImageSet(Lambda(x, sin(x)),
+                       Interval(0, 1)))
+
     for d in list(range(1, 22)) + [60, 85]:
         for n in range(0, d*2 + 1):
             x = n*pi/d
@@ -180,6 +186,9 @@ def test_sin_rewrite():
     assert sin(x).rewrite(csc) == 1/csc(x)
     assert sin(x).rewrite(cos) == cos(x - pi / 2, evaluate=False)
     assert sin(x).rewrite(sec) == 1 / sec(x - pi / 2, evaluate=False)
+    assert sin(cos(x)).rewrite(exp) == -I*(-exp(I*(-exp(I*x)/2 - exp(-I*x)/2))
+                                           + exp(I*(exp(I*x)/2 + exp(-I*x)/2)))/2
+    assert sin(cos(x)).rewrite(Pow) == sin(cos(x))
 
 
 def test_sin_expansion():
@@ -204,6 +213,11 @@ def test_sin_AccumBounds():
     assert sin(AccumBounds(3*S.Pi/4, 7*S.Pi/4)) == AccumBounds(-1, sin(3*S.Pi/4))
     assert sin(AccumBounds(S.Pi/4, S.Pi/3)) == AccumBounds(sin(S.Pi/4), sin(S.Pi/3))
     assert sin(AccumBounds(3*S.Pi/4, 5*S.Pi/6)) == AccumBounds(sin(5*S.Pi/6), sin(3*S.Pi/4))
+
+
+def test_sin_fdiff():
+    assert sin(x).fdiff() == cos(x)
+    raises(ArgumentIndexError, lambda: sin(x).fdiff(2))
 
 
 def test_trig_symmetry():
@@ -381,6 +395,9 @@ def test_cos_rewrite():
     assert cos(x).rewrite(sec) == 1/sec(x)
     assert cos(x).rewrite(sin) == sin(x + pi/2, evaluate=False)
     assert cos(x).rewrite(csc) == 1/csc(-x + pi/2, evaluate=False)
+    assert cos(sin(x)).rewrite(exp) == exp(-exp(I*x)/2 + exp(-I*x)/2)/2 +\
+                                       exp(exp(I*x)/2 - exp(-I*x)/2)/2
+    assert cos(sin(x)).rewrite(Pow) == cos(sin(x))
 
 
 def test_cos_expansion():
@@ -403,6 +420,11 @@ def test_cos_AccumBounds():
     assert cos(AccumBounds(3*S.Pi/4, 5*S.Pi/4)) == AccumBounds(-1, cos(3*S.Pi/4))
     assert cos(AccumBounds(5*S.Pi/4, 4*S.Pi/3)) == AccumBounds(cos(5*S.Pi/4), cos(4*S.Pi/3))
     assert cos(AccumBounds(S.Pi/4, S.Pi/3)) == AccumBounds(cos(S.Pi/3), cos(S.Pi/4))
+
+
+def test_cos_fdiff():
+    assert cos(x).fdiff() == -sin(x)
+    raises(ArgumentIndexError, lambda: cos(x).fdiff(2))
 
 
 def test_tan():
@@ -528,6 +550,10 @@ def test_tan_rewrite():
     assert tan(8*pi/19).rewrite(sqrt) == tan(8*pi/19)
     assert tan(x).rewrite(sec) == sec(x)/sec(x - pi/2, evaluate=False)
     assert tan(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)/csc(x)
+    assert tan(sin(x)).rewrite(exp) == I*(exp(-exp(I*x)/2 + exp(-I*x)/2) -
+                   exp(exp(I*x)/2 - exp(-I*x)/2))/(exp(-exp(I*x)/2 +
+                       exp(-I*x)/2) + exp(exp(I*x)/2 - exp(-I*x)/2))
+    assert tan(sin(x)).rewrite(Pow) == tan(sin(x))
 
 
 def test_tan_subs():
@@ -552,6 +578,11 @@ def test_tan_AccumBounds():
     assert tan(AccumBounds(-oo, oo)) == AccumBounds(-oo, oo)
     assert tan(AccumBounds(S.Pi/3, 2*S.Pi/3)) == AccumBounds(-oo, oo)
     assert tan(AccumBounds(S.Pi/6, S.Pi/3)) == AccumBounds(tan(S.Pi/6), tan(S.Pi/3))
+
+
+def test_tan_fdiff():
+    assert tan(x).fdiff() == tan(x)**2 + 1
+    raises(ArgumentIndexError, lambda: tan(x).fdiff(2))
 
 
 def test_cot():
@@ -676,6 +707,10 @@ def test_cot_rewrite():
     assert cot(pi/19).rewrite(sqrt) == cot(pi/19)
     assert cot(x).rewrite(sec) == sec(x - pi / 2, evaluate=False) / sec(x)
     assert cot(x).rewrite(csc) == csc(x) / csc(- x + pi / 2, evaluate=False)
+    assert cot(sin(x)).rewrite(exp) == I*(exp(-exp(I*x)/2 + exp(-I*x)/2) +
+                       exp(exp(I*x)/2 - exp(-I*x)/2))/(-exp(-exp(I*x)/2 +
+                           exp(-I*x)/2) + exp(exp(I*x)/2 - exp(-I*x)/2))
+    assert cot(sin(x)).rewrite(Pow) == cot(sin(x))
 
 
 def test_cot_subs():
@@ -701,6 +736,11 @@ def test_cot_AccumBounds():
     assert cot(AccumBounds(-oo, oo)) == AccumBounds(-oo, oo)
     assert cot(AccumBounds(-S.Pi/3, S.Pi/3)) == AccumBounds(-oo, oo)
     assert cot(AccumBounds(S.Pi/6, S.Pi/3)) == AccumBounds(cot(S.Pi/3), cot(S.Pi/6))
+
+
+def test_cot_fdiff():
+    assert cot(x).fdiff() == -cot(x)**2 - 1
+    raises(ArgumentIndexError, lambda: cot(x).fdiff(2))
 
 
 def test_sinc():

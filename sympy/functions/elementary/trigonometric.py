@@ -305,6 +305,8 @@ class sin(TrigonometricFunction):
 
             if (2*pi_coeff).is_integer:
                 if pi_coeff.is_even:
+                    # Probably never happens since pi_coeff.is_integer is
+                    # tested above
                     return S.Zero
                 elif pi_coeff.is_even is False:
                     return S.NegativeOne**(pi_coeff - S.Half)
@@ -565,6 +567,8 @@ class cos(TrigonometricFunction):
 
             if (2*pi_coeff).is_integer:
                 if pi_coeff.is_even:
+                    # Probably never happens since pi_coeff.is_integer is
+                    # tested above
                     return (S.NegativeOne)**(pi_coeff/2)
                 elif pi_coeff.is_even is False:
                     return S.Zero
