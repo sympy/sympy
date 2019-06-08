@@ -139,8 +139,8 @@ def test_sparse():
     # test for large scale sparse array
     # tests for __mul__ and __rmul__
     a = ImmutableSparseNDimArray({1:2, 3:4}, (10000, 20000))
-    assert a * 3 == ImmutableDenseNDimArray({1:6, 3:12}, (10000, 20000))
-    assert 3 * a == ImmutableDenseNDimArray({1:6, 3:12}, (10000, 20000))
+    assert a * 3 == ImmutableSparseNDimArray({1:6, 3:12}, (10000, 20000))
+    assert 3 * a == ImmutableSparseNDimArray({1:6, 3:12}, (10000, 20000))
 
 
 def test_calculation():
