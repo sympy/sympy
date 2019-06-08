@@ -142,6 +142,8 @@ def test_cyclic_convolution():
              p*x + q*w + r*v + s*u,
              p*y + t*u]
 
+    raises(ValueError, lambda: convolution([1, 2, 3], [4, 5, 6], cycle=-1))
+
 
 def test_convolution_fft():
     assert all(convolution_fft([], x, dps=y) == [] for x in ([], [1]) for y in (None, 3))
