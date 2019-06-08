@@ -19,10 +19,6 @@ def intersection_sets(a, b):
 def intersection_sets(a, b):
     return a
 
-@dispatch(Integers, Naturals)
-def intersection_sets(a, b):
-    return b
-
 @dispatch(Naturals, Naturals)
 def intersection_sets(a, b):
     return a if a is S.Naturals else b
@@ -105,11 +101,7 @@ def intersection_sets(a, b):
 
 @dispatch(Range, Naturals)
 def intersection_sets(a, b):
-    return intersection_sets(a, Interval(1, S.Infinity))
-
-@dispatch(Naturals, Range)
-def intersection_sets(a, b):
-    return intersection_sets(b, a)
+    return intersection_sets(a, Interval(b.inf, S.Infinity))
 
 @dispatch(Range, Range)
 def intersection_sets(a, b):
