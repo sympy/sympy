@@ -8,7 +8,7 @@
 
 from __future__ import print_function, division
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, range, MutableSet
@@ -268,6 +268,9 @@ class Dict(Basic):
         from sympy.utilities import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
+
+# this handles dict, defaultdict, OrderedDict
+converter[dict] = lambda d: Dict(*d.items())
 
 class OrderedSet(MutableSet):
     def __init__(self, iterable=None):

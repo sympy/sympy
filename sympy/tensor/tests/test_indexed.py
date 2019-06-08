@@ -176,14 +176,15 @@ def test_IndexedBase_sugar():
     assert A1 == A2[Tuple(i, j)]
     assert all(a.is_Integer for a in A2[1, 0].args[1:])
 
+
 def test_IndexedBase_subs():
-    i, j, k = symbols('i j k', integer=True)
-    a, b, c = symbols('a b c')
+    i = symbols('i', integer=True)
+    a, b = symbols('a b')
     A = IndexedBase(a)
     B = IndexedBase(b)
-    C = IndexedBase(c)
     assert A[i] == B[i].subs(b, a)
-    assert isinstance(C[1].subs(C, {1: 2}), type(A[1]))
+    C = {1: 2}
+    assert C[1] == A[1].subs(A, C)
 
 
 def test_IndexedBase_shape():

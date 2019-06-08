@@ -3,7 +3,7 @@ from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
-    ImageSet, Naturals0)
+    ImageSet, Naturals0, Rationals)
 from sympy.sets.sets import UniversalSet, imageset, ProductSet
 
 
@@ -25,26 +25,11 @@ def intersection_sets(a, b):
 
 @dispatch(Naturals, Naturals)
 def intersection_sets(a, b):
-    return a if a is S.Naturals0 else b
-
-@dispatch(Naturals, Interval)
-def intersection_sets(a, b):
-    return Intersection(S.Integers, b, Interval(a._inf, S.Infinity))
+    return a if a is S.Naturals else b
 
 @dispatch(Interval, Naturals)
 def intersection_sets(a, b):
     return intersection_sets(b, a)
-
-@dispatch(Integers, Interval)
-def intersection_sets(a, b):
-    try:
-        from sympy.functions.elementary.integers import floor, ceiling
-        if b._inf is S.NegativeInfinity and b._sup is S.Infinity:
-            return a
-        s = Range(ceiling(b.left), floor(b.right) + 1)
-        return intersection_sets(s, b)  # take out endpoints if open interval
-    except ValueError:
-        return None
 
 @dispatch(ComplexRegion, Set)
 def intersection_sets(self, other):
@@ -157,7 +142,7 @@ def intersection_sets(a, b):
     # we want to know when the two equations might
     # have integer solutions so we use the diophantine
     # solver
-    va, vb = diop_linear(eq(r1, Dummy()) - eq(r2, Dummy()))
+    va, vb = diop_linear(eq(r1, Dummy('a')) - eq(r2, Dummy('b')))
 
     # check for no solution
     no_solution = va is None and vb is None
@@ -446,3 +431,33 @@ def intersection_sets(a, b):
 @dispatch(Set, Set)
 def intersection_sets(a, b):
     return None
+
+@dispatch(Integers, Rationals)
+def intersection_sets(a, b):
+    return a
+
+@dispatch(Naturals, Rationals)
+def intersection_sets(a, b):
+    return a
+
+@dispatch(Rationals, Reals)
+def intersection_sets(a, b):
+    return a
+
+def _intlike_interval(a, b):
+    try:
+        from sympy.functions.elementary.integers import floor, ceiling
+        if b._inf is S.NegativeInfinity and b._sup is S.Infinity:
+            return a
+        s = Range(max(a.inf, ceiling(b.left)), floor(b.right) + 1)
+        return intersection_sets(s, b)  # take out endpoints if open interval
+    except ValueError:
+        return None
+
+@dispatch(Integers, Interval)
+def intersection_sets(a, b):
+    return _intlike_interval(a, b)
+
+@dispatch(Naturals, Interval)
+def intersection_sets(a, b):
+    return _intlike_interval(a, b)
