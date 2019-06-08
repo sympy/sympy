@@ -131,6 +131,12 @@ def test_sparse():
     assert len(sparse_array._sparse_array) == 0
     assert sparse_array[0, 0] == 0
 
+    # tests for large scale sparse arrays
+    # tests for __mul__ and __rmul__
+    a = MutableSparseNDimArray({1:2, 3:4}, (10000, 20000))
+    assert a * 3 == MutableSparseNDimArray({1:6, 3:12}, (10000, 20000))
+    assert 3 * a == MutableSparseNDimArray({1:6, 3:12}, (10000, 20000))
+
 
 def test_calculation():
 
