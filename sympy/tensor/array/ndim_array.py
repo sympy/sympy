@@ -259,9 +259,6 @@ class NDimArray(object):
         if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):
             return derive_by_array(self, arg)
         else:
-            if isinstance(self, SparseNDimArray):
-                new_array = {k: v.diff(arg) for (k, v) in self._sparse_array.items() if v.diff(arg)!= 0}
-                return type(self)(new_array, self.shape)
             return self.applyfunc(lambda x: x.diff(arg))
 
     def applyfunc(self, f):
@@ -277,6 +274,11 @@ class NDimArray(object):
         >>> m.applyfunc(lambda i: 2*i)
         [[0, 2], [4, 6]]
         """
+        from sympy.tensor.array import SparseNDimArray
+
+        if isinstance(self, SparseNDimArray) and f(sympify(0)) == 0:
+            return type(self)({k: f(v) for k, v in self._sparse_array.items() if f(v) != 0}, self.shape)
+
         return type(self)(map(f, self), self.shape)
 
     def __str__(self):
@@ -435,9 +437,7 @@ class NDimArray(object):
             return False
 
         if isinstance(self, SparseNDimArray) and isinstance(other, SparseNDimArray):
-            return self._sparse_array.keys() == other._sparse_array.keys() and \
-                   all(v == other._sparse_array[k] for (k, v) in self._sparse_array.items()
-                       if k in other._sparse_array)
+            return dict(self._sparse_array) == dict(other._sparse_array)
 
         return list(self) == list(other)
 
