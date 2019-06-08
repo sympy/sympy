@@ -1,5 +1,6 @@
 from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
-                    Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix)
+                    Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
+                    nsimplify)
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
 from sympy.core.compatibility import string_types
@@ -198,7 +199,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         """
 
         # transition probabilities are not available
-        if self.trans_probs == None and kwargs.get('trans_probs', False) is False:
+        if (self.trans_probs == None and kwargs.get('trans_probs', False) is False) or \
+            given_condition == None:
             return Probability(condition, given_condition, **kwargs)
 
         # working out transition probabilities
@@ -211,28 +213,34 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         if not isinstance(trans_probs, MatrixSymbol):
             rows = trans_probs.tolist()
             for row in rows:
-                if Eq(sum(row), 1) == False:
-                    raise ValueError("Probabilities in a row must sum to 1.")
+                if (sum(row) - 1) != 0:
+                    raise ValueError("Probabilities in a row must sum to 1. "
+                    "If you are using Float or floats then please use Rational.")
 
         # working out state spaces
         state_space = kwargs.get('state_space', self.state_space)
-        rand_var = list(given_condition.atoms(RandomSymbol) -
-                    given_condition.atoms(RandomIndexedSymbol))
-        if len(rand_var) == 1:
-            state_space = rand_var[0].pspace.set
+        # if given condition is None, then there is no need to work out
+        # state_space from random variables
+        if given_condition != None:
+            rand_var = list(given_condition.atoms(RandomSymbol) -
+                        given_condition.atoms(RandomIndexedSymbol))
+            if len(rand_var) == 1:
+                state_space = rand_var[0].pspace.set
         if not FiniteSet(*[i for i in range(trans_probs.shape[0])]).is_subset(state_space):
             raise ValueError("state space is not compatible with the transition probabilites.")
 
         if isinstance(condition, Eq) and \
-           isinstance(given_condition, Eq) and \
+            isinstance(given_condition, Eq) and \
             len(given_condition.atoms(RandomSymbol)) == 1:
             # handles simple queries like P(Eq(X[i], dest_state), Eq(X[i], init_state))
+            if given_condition == None:
+                return Probability(condition)
             lhsc, rhsc = condition.lhs, condition.rhs
             lhsg, rhsg = given_condition.lhs, given_condition.rhs
             if not isinstance(lhsc, RandomIndexedSymbol):
                 lhsc, rhsc = (rhsc, lhsc)
             if not isinstance(lhsg, RandomIndexedSymbol):
-                lhsg, rhsg = rhsg, lhsg
+                lhsg, rhsg = (rhsg, lhsg)
             keyc, statec, keyg, stateg = (lhsc.key, rhsc, lhsg.key, rhsg)
             if stateg >= trans_probs.shape[0] == False or statec >= trans_probs.shape[1]:
                 raise IndexError("No information is avaliable for (%s, %s) in "
@@ -246,3 +254,24 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             if hasattr(nsteptp, "__getitem__"):
                 return nsteptp.__getitem__((stateg, statec))
             return Indexed(nsteptp, stateg, statec)
+
+        if isinstance(condition, And) and \
+            isinstance(given_condition, Eq) and \
+            len(given_condition.atoms(RandomSymbol)) <= 1:
+            # handle queries like,
+            # P(Eq(X[i+k], s1) & Eq(X[i+m], s2) . . . & Eq(X[i], sn), Eq(P(X[i]), prob))
+            conds = condition.args
+            i, result = -1, 1
+            while i > -len(conds):
+                result *= self.probability(conds[i], conds[i-1], **kwargs)
+                i -= 1
+            if given_condition == None:
+                return result * Probability(conds[i])
+            if isinstance(given_condition, Eq):
+                if not isinstance(given_condition.lhs, Probability) or \
+                    given_condition.lhs.args[0] != conds[i]:
+                    raise ValueError("Probability for %s needed", conds[i])
+                return result * given_condition.rhs
+
+        raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
+                                "implemented yet."%(condition, given_condition))

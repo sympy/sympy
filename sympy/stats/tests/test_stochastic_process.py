@@ -1,4 +1,4 @@
-from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float)
+from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And)
 from sympy.stats import DiscreteMarkovChain, P
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability
@@ -34,3 +34,10 @@ def test_DiscreteMarkovChain():
     assert P(Eq(Y[3], 2), Eq(Y[1], 1), trans_probs=TO).round(3) == Float(0.375, 3)
     TSO = MatrixSymbol('T', 4, 4)
     raises(ValueError, lambda: str(P(Eq(YS[3], 2), Eq(YS[1], 1), trans_probs=TSO)))
+
+    #extended tests for probability queries
+    TO1 = Matrix([[S(1)/4, S(3)/4, 0],[S(1)/3, S(1)/3, S(1)/3],[0, S(1)/4, S(3)/4]])
+    assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)),
+            Eq(Probability(Eq(Y[0], 0)), S(1)/4), trans_probs=TO1) == S(1)/16
+    assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), trans_probs=TO1) == \
+            Probability(Eq(Y[0], 0) & Eq(Y[1], 1) & Eq(Y[2], 1))
