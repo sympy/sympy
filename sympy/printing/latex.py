@@ -744,12 +744,27 @@ class LatexPrinter(Printer):
             mindful of undercores in the name
         '''
         func = self._deal_with_super_sub(func)
+        superscriptidx = func.find("^")
+        subscriptidx = func.find("_")
         if func in accepted_latex_functions:
             name = r"\%s" % func
-        elif len(func) == 1 or func.startswith('\\') or func.find("_") == 1 or func.find("^") == 1:
+        elif len(func) == 1 or func.startswith('\\') or subscriptidx == 1 or superscriptidx == 1:
             name = func
         else:
-            name = r"\operatorname{%s}" % func
+            if superscriptidx > 0 and subscriptidx > 0:
+                name = r"\operatorname{%s}%s" %(
+                    func[:min(subscriptidx,superscriptidx)],
+                    func[min(subscriptidx,superscriptidx):])
+            elif superscriptidx > 0:
+                name = r"\operatorname{%s}%s" %(
+                    func[:superscriptidx],
+                    func[superscriptidx:])
+            elif subscriptidx > 0:
+                name = r"\operatorname{%s}%s" %(
+                    func[:subscriptidx],
+                    func[subscriptidx:])
+            else:
+                name = r"\operatorname{%s}" % func
         return name
 
     def _print_Function(self, expr, exp=None):

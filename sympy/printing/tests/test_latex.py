@@ -328,15 +328,36 @@ def test_latex_functions():
     assert latex(a1(x)) == r"a_{1}{\left(x \right)}"
     assert latex(Function('a_1')) == r"a_{1}"
 
-    assert latex(Function('ab1')**2) == r"\operatorname{ab}_{1}^2"
-    assert latex(Function('ab')**2) == r"\operatorname{ab}^2"
-    assert latex(Function('a1')**2) == r"a_{1}^2"
-    assert latex(Function('a')**2) == r"a^2"
-
+    # Issue #16925
+    # multi letter function names
+    # > simple
+    assert latex(Function('ab_1')) == r"\operatorname{ab}_{1}"
     assert latex(Function('ab1')) == r"\operatorname{ab}_{1}"
     assert latex(Function('ab')) == r"\operatorname{ab}"
+    # > with argument
+
+    # > with power
+    # assert latex(Function('ab')**2) == r"\operatorname{ab}^2"
+    # assert latex(Function('ab1')**2) == r"\operatorname{ab}_{1}^2"
+    # assert latex(Function('ab_1')**2) == r"\operatorname{ab}_{1}^2"
+
+    # > with combined
+
+    # single letter function names
+    # > simple
+    assert latex(Function('a_1')) == r"a_{1}"
     assert latex(Function('a1')) == r"a_{1}"
     assert latex(Function('a')) == r"a"
+
+    # > with argument
+
+    # > with power
+    # assert latex(Function('a')**2) == r"a^2"
+    # assert latex(Function('a1')**2) == r"a_{1}^2"
+    # assert latex(Function('a_1')**2) == r"a_{1}^2"
+
+    # > with combined
+
 
     # issue 5868
     omega1 = Function('omega1')
