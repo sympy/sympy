@@ -582,6 +582,9 @@ class StrPrinter(Printer):
     def _print_Naturals0(self, expr):
         return 'Naturals0'
 
+    def _print_Rationals(self, expr):
+        return 'Rationals'
+
     def _print_Reals(self, expr):
         return 'Reals'
 

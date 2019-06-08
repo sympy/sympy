@@ -17,6 +17,7 @@ from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.external import import_module
 
 import mpmath
+from collections import defaultdict, OrderedDict
 from mpmath.rational import mpq
 
 
@@ -176,10 +177,7 @@ def test_issue_16772():
     assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
 
 
-@XFAIL
 def test_issue_16859():
-    # because there is a converter for float, the
-    # CantSympify class designation is ignored
     class no(float, CantSympify):
         pass
     raises(SympifyError, lambda: sympify(no(1.2)))
@@ -682,3 +680,18 @@ def test_issue_5939():
      a = Symbol('a')
      b = Symbol('b')
      assert sympify('''a+\nb''') == a + b
+
+
+def test_issue_16759():
+    d = sympify({.5: 1})
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
+    d = sympify(OrderedDict({.5: 1}))
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
+    d = sympify(defaultdict(int, {.5: 1}))
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One

@@ -1,9 +1,9 @@
-from sympy import (FiniteSet, S, Symbol, sqrt, nan,
+from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
         cancel, exp, I, Piecewise)
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
-from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
+from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
     Hypergeometric, Rademacher, P, E, variance, covariance, skewness, kurtosis,
     sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
     cmoment, smoment, characteristic_function, moment_generating_function,
@@ -248,6 +248,40 @@ def test_binomial_symbolic():
     Y = Binomial('Y', n, p, succ=H, fail=T)
     assert simplify(E(Y) - (n*(H*p + T*(1 - p)))) == 0
 
+def test_beta_binomial():
+    # verify parameters
+    raises(ValueError, lambda: BetaBinomial('b', .2, 1, 2))
+    raises(ValueError, lambda: BetaBinomial('b', 2, -1, 2))
+    raises(ValueError, lambda: BetaBinomial('b', 2, 1, -2))
+    assert BetaBinomial('b', 2, 1, 1)
+
+    # test numeric values
+    nvals = range(1,5)
+    alphavals = [S(1)/4, S.Half, S(3)/4, 1, 10]
+    betavals = [S(1)/4, S.Half, S(3)/4, 1, 10]
+
+    for n in nvals:
+        for a in alphavals:
+            for b in betavals:
+                X = BetaBinomial('X', n, a, b)
+                assert E(X) == moment(X, 1)
+                assert variance(X) == cmoment(X, 2)
+
+    # test symbolic
+    n, a, b = symbols('a b n')
+    assert BetaBinomial('x', n, a, b)
+    n = 2 # Because we're using for loops, can't do symbolic n
+    a, b = symbols('a b', positive=True)
+    X = BetaBinomial('X', n, a, b)
+    t = Symbol('t')
+
+    assert E(X).expand() == moment(X, 1).expand()
+    assert variance(X).expand() == cmoment(X, 2).expand()
+    assert skewness(X) == smoment(X, 3)
+    assert characteristic_function(X)(t) == exp(2*I*t)*beta(a + 2, b)/beta(a, b) +\
+         2*exp(I*t)*beta(a + 1, b + 1)/beta(a, b) + beta(a, b + 2)/beta(a, b)
+    assert moment_generating_function(X)(t) == exp(2*t)*beta(a + 2, b)/beta(a, b) +\
+         2*exp(t)*beta(a + 1, b + 1)/beta(a, b) + beta(a, b + 2)/beta(a, b)
 
 def test_hypergeometric_numeric():
     for N in range(1, 5):
