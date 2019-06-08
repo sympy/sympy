@@ -163,6 +163,8 @@ class gamma(Function):
 
     def _eval_is_real(self):
         x = self.args[0]
+        if intlike(x) and x <= 0:
+            return
         if x.is_positive or x.is_noninteger:
             return True
 
@@ -1010,14 +1012,14 @@ def trigamma(x):
 ##################### COMPLETE MULTIVARIATE GAMMA FUNCTION ####################
 ###############################################################################
 
-class multivariate_gamma(Function):
+class multigamma(Function):
     r"""
     The multivariate gamma function is a generalization of the gamma function i.e,
 
     .. math::
         \Gamma_p(z) = \pi^{p(p-1)/4}\prod_{k=1}^p \Gamma[z + (1 - k)/2].
 
-    Special case, multivariate_gamma(x, 1) = gamma(x)
+    Special case, multigamma(x, 1) = gamma(x)
 
     Parameters
     ==========
@@ -1027,30 +1029,30 @@ class multivariate_gamma(Function):
     Examples
     ========
 
-    >>> from sympy import S, I, pi, oo, gamma, multivariate_gamma
+    >>> from sympy import S, I, pi, oo, gamma, multigamma
     >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> p = Symbol('p', positive=True, integer=True)
 
-    >>> multivariate_gamma(x, p)
+    >>> multigamma(x, p)
     pi**(p*(p - 1)/4)*Product(gamma(-_k/2 + x + 1/2), (_k, 1, p))
 
     Several special values are known:
-    >>> multivariate_gamma(1, 1)
+    >>> multigamma(1, 1)
     1
-    >>> multivariate_gamma(4, 1)
+    >>> multigamma(4, 1)
     6
-    >>> multivariate_gamma(S(3)/2, 1)
+    >>> multigamma(S(3)/2, 1)
     sqrt(pi)/2
 
-    Writing multivariate_gamma in terms of gamma function
-    >>> multivariate_gamma(x, 1)
+    Writing multigamma in terms of gamma function
+    >>> multigamma(x, 1)
     gamma(x)
 
-    >>> multivariate_gamma(x, 2)
+    >>> multigamma(x, 2)
     sqrt(pi)*gamma(x)*gamma(x - 1/2)
 
-    >>> multivariate_gamma(x, 3)
+    >>> multigamma(x, 3)
     pi**(3/2)*gamma(x)*gamma(x - 1)*gamma(x - 1/2)
 
     See Also
@@ -1086,9 +1088,15 @@ class multivariate_gamma(Function):
 
     def _eval_conjugate(self):
         x, p = self.args
-        return self.func(x.conjugate(), p.conjugate())
+        return self.func(x.conjugate(), p)
 
     def _eval_is_real(self):
         x, p = self.args
-        if (x > (p - 1)/2) or x.is_noninteger:
+        if p.is_Integer:
+            for k in range(p):
+                num = (x - k/S(2))
+                if intlike(num) and num <= 0:
+                    return
+                elif num.is_nonpositive and num.is_integer:
+                    return
             return True

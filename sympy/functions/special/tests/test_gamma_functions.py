@@ -5,7 +5,7 @@ from sympy import (
 
 from sympy.core.expr import unchanged
     Symbol, Dummy, gamma, I, oo, nan, zoo, factorial, sqrt, Rational,
-    multivariate_gamma, log, polygamma, EulerGamma, pi, uppergamma, S,
+    multigamma, log, polygamma, EulerGamma, pi, uppergamma, S,
     expand_func, loggamma, sin, cos, O, lowergamma, exp, erf, erfc,
     exp_polar, harmonic, zeta, conjugate)
 from sympy.core.function import ArgumentIndexError
@@ -34,6 +34,9 @@ def test_gamma():
     assert gamma(102) == factorial(101)
 
     assert gamma(Rational(1, 2)) == sqrt(pi)
+
+    assert gamma(-1.0, evaluate=False).is_real == None
+    assert gamma(-1.0, evaluate=False).doit().is_real == False
 
     assert gamma(Rational(3, 2)) == Rational(1, 2)*sqrt(pi)
     assert gamma(Rational(5, 2)) == Rational(3, 4)*sqrt(pi)
@@ -452,53 +455,58 @@ def test_issue_14528():
     k = Symbol('k', integer=True, nonpositive=True)
     assert isinstance(gamma(k), gamma)
 
-def test_multivariate_gamma():
+def test_multigamma():
     from sympy import Product
     p = Symbol('p')
     _k = Dummy('_k')
 
-    assert multivariate_gamma(x, p).dummy_eq(pi**(p*(p - 1)/4)*\
-        Product(gamma(-_k/2 + x + 1/2), (_k, 1, p)))
+    assert multigamma(x, p).dummy_eq(pi**(p*(p - 1)/4)*Product(gamma(-_k/2 + x + 1/2),
+    (_k, 1, p)))
 
-    assert conjugate(multivariate_gamma(x, p)).dummy_eq(pi**((conjugate(p) - 1)*\
+    assert conjugate(multigamma(x, p)).dummy_eq(pi**((conjugate(p) - 1)*\
         conjugate(p)/4)*Product(gamma(-_k/2 + conjugate(x) + 1/2), (_k, 1, p)))
-    assert conjugate(multivariate_gamma(x, 1)) == gamma(conjugate(x))
+    assert conjugate(multigamma(x, 1)) == gamma(conjugate(x))
 
     p = Symbol('p', positive=True)
-    assert conjugate(multivariate_gamma(x, p)).dummy_eq(pi**(p*(p - 1)/4)*\
+    assert conjugate(multigamma(x, p)).dummy_eq(pi**(p*(p - 1)/4)*\
         Product(gamma(-_k/2 + conjugate(x) + 1/2), (_k, 1, p)))
 
-    assert multivariate_gamma(nan, 1) == nan
-    assert multivariate_gamma(oo, 1).doit() == oo
+    assert multigamma(nan, 1) == nan
+    assert multigamma(oo, 1).doit() == oo
 
-    assert multivariate_gamma(1, 1) == 1
-    assert multivariate_gamma(2, 1) == 1
-    assert multivariate_gamma(3, 1) == 2
+    assert multigamma(-S(1)/2, 3, evaluate=False).is_real == None
+    assert multigamma(S(1)/2, 3, evaluate=False).is_real == None
+    assert multigamma(-S(1)/2, 3, evaluate=False).doit().is_real == False
+    assert multigamma(S(1)/2, 3, evaluate=False).doit().is_real == False
 
-    assert multivariate_gamma(102, 1) == factorial(101)
-    assert multivariate_gamma(Rational(1, 2), 1) == sqrt(pi)
+    assert multigamma(1, 1) == 1
+    assert multigamma(2, 1) == 1
+    assert multigamma(3, 1) == 2
 
-    assert multivariate_gamma(1, 2) == pi
-    assert multivariate_gamma(2, 2) == pi/2
+    assert multigamma(102, 1) == factorial(101)
+    assert multigamma(Rational(1, 2), 1) == sqrt(pi)
 
-    assert multivariate_gamma(1, 3) == zoo
-    assert multivariate_gamma(2, 3) == pi**2/2
-    assert multivariate_gamma(3, 3) == 3*pi**2/2
+    assert multigamma(1, 2) == pi
+    assert multigamma(2, 2) == pi/2
 
-    assert multivariate_gamma(x, 1).diff(x) == gamma(x)*polygamma(0, x)
-    assert multivariate_gamma(x, 2).diff(x) == sqrt(pi)*gamma(x)*gamma(x - S(1)/2)*\
+    assert multigamma(1, 3) == zoo
+    assert multigamma(2, 3) == pi**2/2
+    assert multigamma(3, 3) == 3*pi**2/2
+
+    assert multigamma(x, 1).diff(x) == gamma(x)*polygamma(0, x)
+    assert multigamma(x, 2).diff(x) == sqrt(pi)*gamma(x)*gamma(x - S(1)/2)*\
         polygamma(0, x) + sqrt(pi)*gamma(x)*gamma(x - S(1)/2)*polygamma(0, x - S(1)/2)
 
-    assert multivariate_gamma(x - 1, 1).expand(func=True) == gamma(x)/(x - 1)
-    assert multivariate_gamma(x + 2, 1).expand(func=True, mul=False) == x*(x + 1)*\
+    assert multigamma(x - 1, 1).expand(func=True) == gamma(x)/(x - 1)
+    assert multigamma(x + 2, 1).expand(func=True, mul=False) == x*(x + 1)*\
         gamma(x)
-    assert multivariate_gamma(x - 1, 2).expand(func=True) == sqrt(pi)*gamma(x)*\
+    assert multigamma(x - 1, 2).expand(func=True) == sqrt(pi)*gamma(x)*\
         gamma(x + S(1)/2)/(x**3 - 3*x**2 + 11*x/4 - S(3)/4)
-    assert multivariate_gamma(x - 1, 3).expand(func=True) == pi**(S(3)/2)*gamma(x)**2*\
+    assert multigamma(x - 1, 3).expand(func=True) == pi**(S(3)/2)*gamma(x)**2*\
         gamma(x + S(1)/2)/(x**5 - 6*x**4 + 55*x**3/4 - 15*x**2 + 31*x/4 - S(3)/2)
 
-    assert multivariate_gamma(n, 1).rewrite(factorial) == factorial(n - 1)
-    assert multivariate_gamma(n, 2).rewrite(factorial) == sqrt(pi)*\
+    assert multigamma(n, 1).rewrite(factorial) == factorial(n - 1)
+    assert multigamma(n, 2).rewrite(factorial) == sqrt(pi)*\
         factorial(n - S(3)/2)*factorial(n - 1)
-    assert multivariate_gamma(n, 3).rewrite(factorial) == pi**(S(3)/2)*\
+    assert multigamma(n, 3).rewrite(factorial) == pi**(S(3)/2)*\
         factorial(n - 2)*factorial(n - S(3)/2)*factorial(n - 1)
