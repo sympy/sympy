@@ -1,8 +1,9 @@
 from sympy import (
     Symbol, Dummy, diff, Derivative, Rational, roots, S, sqrt, hyper,
     cos, gamma, conjugate, factorial, pi, oo, zoo, binomial, RisingFactorial,
-    legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
-    laguerre, assoc_laguerre, laguerre_poly, hermite, gegenbauer, jacobi, jacobi_normalized)
+    legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root,
+    chebyshevu_root, laguerre, assoc_laguerre, laguerre_poly, hermite,
+    gegenbauer, jacobi, jacobi_normalized, Sum)
 
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import raises, XFAIL
@@ -45,6 +46,14 @@ def test_jacobi():
         jacobi(m, conjugate(a), conjugate(b), conjugate(x))
 
     assert diff(jacobi(n, a, b, x), n) == Derivative(jacobi(n, a, b, x), n)
+    assert str(diff(jacobi(n, a, b, x), a)) == 'Sum((jacobi(n, a, b, x) + '\
+        '(2*_k + a + b + 1)*RisingFactorial(_k + b + 1, -_k + n)*jacobi(_k, a,'\
+        ' b, x)/((-_k + n)*RisingFactorial(_k + a + b + 1, -_k + n)))/(_k + a'\
+        ' + b + n + 1), (_k, 0, n - 1))'
+    assert str(diff(jacobi(n, a, b, x), b)) == 'Sum(((-1)**(-_k + n)*(2*_k + '\
+        'a + b + 1)*RisingFactorial(_k + a + 1, -_k + n)*jacobi(_k, a, b, x)/'\
+        '((-_k + n)*RisingFactorial(_k + a + b + 1, -_k + n)) + jacobi(n, a, '\
+        'b, x))/(_k + a + b + n + 1), (_k, 0, n - 1))'
     assert diff(jacobi(n, a, b, x), x) == \
         (a/2 + b/2 + n/2 + S(1)/2)*jacobi(n - 1, a + 1, b + 1, x)
 
@@ -54,6 +63,10 @@ def test_jacobi():
 
     raises(ValueError, lambda: jacobi(-2.1, a, b, x))
     raises(ValueError, lambda: jacobi(Dummy(positive=True, integer=True), 1, 2, oo))
+
+    assert str(jacobi(n, a, b, x).rewrite("polynomial")) == 'Sum((1/2 - x/2)'\
+        '**_k*RisingFactorial(-n, _k)*RisingFactorial(_k + a + 1, -_k + n)*'\
+        'RisingFactorial(a + b + n + 1, _k)/factorial(_k), (_k, 0, n))/factorial(n)'
 
 
 def test_gegenbauer():
@@ -87,7 +100,19 @@ def test_gegenbauer():
     assert conjugate(gegenbauer(n, a, x)) == gegenbauer(n, conjugate(a), conjugate(x))
 
     assert diff(gegenbauer(n, a, x), n) == Derivative(gegenbauer(n, a, x), n)
+    assert str(diff(gegenbauer(n, a, x), a)) == 'Sum((2*(-1)**(-_k + n) + 2)*'\
+        '(_k + a)*gegenbauer(_k, a, x)/((-_k + n)*(_k + 2*a + n)) + ((2*_k + '\
+        '2)/((_k + 2*a)*(2*_k + 2*a + 1)) + 2/(_k + 2*a + n))*gegenbauer(n, a'\
+        ', x), (_k, 0, n - 1))'
     assert diff(gegenbauer(n, a, x), x) == 2*a*gegenbauer(n - 1, a + 1, x)
+
+    assert str(diff(gegenbauer(n, a, x), a).rewrite('polynomial')) == \
+         'Sum((2*(-1)**(-_k + n) + 2)*(_k + a)*Sum((-1)**_k*(2*x)**(_k - 2*_k'\
+         ')*RisingFactorial(a, _k - _k)/(factorial(_k)*factorial(_k - 2*_k)),'\
+         ' (_k, 0, floor(_k/2)))/((-_k + n)*(_k + 2*a + n)) + ((2*_k + 2)/((_'\
+         'k + 2*a)*(2*_k + 2*a + 1)) + 2/(_k + 2*a + n))*Sum((-1)**_k*(2*x)**'\
+         '(-2*_k + n)*RisingFactorial(a, -_k + n)/(factorial(_k)*factorial(-2'\
+         '*_k + n)), (_k, 0, floor(n/2))), (_k, 0, n - 1))'
 
 
 def test_legendre():
