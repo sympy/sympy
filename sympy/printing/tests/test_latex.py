@@ -335,13 +335,20 @@ def test_latex_functions():
     assert latex(Function('ab1')) == r"\operatorname{ab}_{1}"
     assert latex(Function('ab')) == r"\operatorname{ab}"
     # > with argument
+    assert latex(Function('ab')(Symbol('x'))) == r"\operatorname{ab}{\left(x \right)}"
+    assert latex(Function('ab1')(Symbol('x'))) == r"\operatorname{ab}_{1}{\left(x \right)}"
+    assert latex(Function('ab_1')(Symbol('x'))) == r"\operatorname{ab}_{1}{\left(x \right)}"
 
     # > with power
-    # assert latex(Function('ab')**2) == r"\operatorname{ab}^2"
-    # assert latex(Function('ab1')**2) == r"\operatorname{ab}_{1}^2"
-    # assert latex(Function('ab_1')**2) == r"\operatorname{ab}_{1}^2"
+    #   does not work on functions without brackets
 
-    # > with combined
+    # > with argument and power combined
+    assert latex(Function('ab')()**2) == r"\operatorname{ab}^{2}{\left( \right)}"
+    assert latex(Function('ab1')()**2) == r"\operatorname{ab}_{1}^{2}{\left( \right)}"
+    assert latex(Function('ab_1')()**2) == r"\operatorname{ab}_{1}^{2}{\left( \right)}"
+    assert latex(Function('ab')(Symbol('x'))**2) == r"\operatorname{ab}^{2}{\left(x \right)}"
+    assert latex(Function('ab1')(Symbol('x'))**2) == r"\operatorname{ab}_{1}^{2}{\left(x \right)}"
+    assert latex(Function('ab_1')(Symbol('x'))**2) == r"\operatorname{ab}_{1}^{2}{\left(x \right)}"
 
     # single letter function names
     # > simple
@@ -350,13 +357,20 @@ def test_latex_functions():
     assert latex(Function('a')) == r"a"
 
     # > with argument
+    assert latex(Function('a')()) == r"a{\left( \right)}"
+    assert latex(Function('a1')()) == r"a_{1}{\left( \right)}"
+    assert latex(Function('a_1')()) == r"a_{1}{\left( \right)}"
 
     # > with power
-    # assert latex(Function('a')**2) == r"a^2"
-    # assert latex(Function('a1')**2) == r"a_{1}^2"
-    # assert latex(Function('a_1')**2) == r"a_{1}^2"
+    #   does not work on functions without brackets
 
-    # > with combined
+    # > with argument and power combined
+    assert latex(Function('a')()**2) == r"a^{2}{\left( \right)}"
+    assert latex(Function('a1')()**2) == r"a_{1}^{2}{\left( \right)}"
+    assert latex(Function('a_1')()**2) == r"a_{1}^{2}{\left( \right)}"
+    assert latex(Function('a')(Symbol('x'))**2) == r"a^{2}{\left(x \right)}"
+    assert latex(Function('a1')(Symbol('x'))**2) == r"a_{1}^{2}{\left(x \right)}"
+    assert latex(Function('a_1')(Symbol('x'))**2) == r"a_{1}^{2}{\left(x \right)}"
 
 
     # issue 5868
