@@ -17,7 +17,7 @@ from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import cos
+from sympy.functions.elementary.trigonometric import cos, sec
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
 
@@ -362,10 +362,8 @@ class gegenbauer(OrthogonalPolynomial):
                 if (re(a) > S.Half) == True:
                     return S.ComplexInfinity
                 else:
-                    # No sec function available yet
-                    #return (cos(S.Pi*(a+n)) * sec(S.Pi*a) * gamma(2*a+n) /
-                    #            (gamma(2*a) * gamma(n+1)))
-                    return None
+                    return (cos(S.Pi*(a+n)) * sec(S.Pi*a) * gamma(2*a+n) /
+                                (gamma(2*a) * gamma(n+1)))
 
             # Symbolic result C^a_n(x)
             # C^a_n(-x)  --->  (-1)**n * C^a_n(x)

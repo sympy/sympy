@@ -93,6 +93,8 @@ def test_gegenbauer():
     assert gegenbauer(n, a, 1) == gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
 
     assert gegenbauer(n, Rational(3, 4), -1) == zoo
+    assert gegenbauer(n, Rational(1, 4), -1) == (sqrt(2)*cos(pi*(n + S(1)/4))*
+                      gamma(n + S(1)/2)/(sqrt(pi)*gamma(n + 1)))
 
     m = Symbol("m", positive=True)
     assert gegenbauer(m, a, oo) == oo*RisingFactorial(a, m)
