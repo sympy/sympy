@@ -550,8 +550,8 @@ def test_tan_rewrite():
     assert tan(x).rewrite(sec) == sec(x)/sec(x - pi/2, evaluate=False)
     assert tan(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)/csc(x)
     assert tan(sin(x)).rewrite(Pow) == tan(sin(x))
-    assert tan(2*pi/5, evaluate=False).rewrite(sqrt) == sqrt(sqrt(5)/8 + 5/8)/\
-                                                        (-1/4 + sqrt(5)/4)
+    assert tan(2*pi/5, evaluate=False).rewrite(sqrt) == sqrt(sqrt(5)/8 +
+               S(5)/8)/(-S(1)/4 + sqrt(5)/4)
 
 
 def test_tan_subs():
@@ -678,7 +678,7 @@ def test_cot_series():
     # issue 6210
     assert cot(x**4 + x**5).series(x, 0, 1) == \
         x**(-4) - 1/x**3 + x**(-2) - 1/x + 1 + O(x)
-    assert cot(pi*(1-x)).series(x, 0) == -1/(pi*x) + pi*x/3 + O(x**3)
+    assert cot(pi*(1-x)).series(x, 0, 3) == -1/(pi*x) + pi*x/3 + O(x**3)
     assert cot(x).taylor_term(0, x) == 1/x
     assert cot(x).taylor_term(2, x) == S.Zero
     assert cot(x).taylor_term(3, x) == -x**3/45
@@ -709,12 +709,9 @@ def test_cot_rewrite():
     assert cot(pi/19).rewrite(sqrt) == cot(pi/19)
     assert cot(x).rewrite(sec) == sec(x - pi / 2, evaluate=False) / sec(x)
     assert cot(x).rewrite(csc) == csc(x) / csc(- x + pi / 2, evaluate=False)
-    assert cot(sin(x)).rewrite(exp) == I*(exp(-exp(I*x)/2 + exp(-I*x)/2) +
-                       exp(exp(I*x)/2 - exp(-I*x)/2))/(-exp(-exp(I*x)/2 +
-                           exp(-I*x)/2) + exp(exp(I*x)/2 - exp(-I*x)/2))
     assert cot(sin(x)).rewrite(Pow) == cot(sin(x))
-    assert cos(2*pi/5, evaluate=False).rewrite(sqrt) == (-1/4 + sqrt(5)/4)/\
-                                                        sqrt(sqrt(5)/8 + 5/8)
+    assert cot(2*pi/5, evaluate=False).rewrite(sqrt) == (-S(1)/4 + sqrt(5)/4)/\
+                                                        sqrt(sqrt(5)/8 + S(5)/8)
 
 
 def test_cot_subs():
