@@ -18,6 +18,7 @@ from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
         sumsets, rv_subs, NamedArgsMixin)
 from sympy.core.containers import Dict
+from sympy.stats.symbolic_probability import Expectation, Probability
 import random
 
 class FiniteDensity(dict):
@@ -252,6 +253,9 @@ class FinitePSpace(PSpace):
         obj._density = density
         return obj
 
+    def distribution(self):
+        return self.args[1]
+
     def prob_of(self, elem):
         elem = sympify(elem)
         return self._density.get(elem, 0)
@@ -306,6 +310,18 @@ class FinitePSpace(PSpace):
         return Lambda(t, sum(exp(k * t) * v for k, v in d.items()))
 
     def compute_expectation(self, expr, rvs=None, **kwargs):
+        from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
+                                            HypergeometricDistribution
+        rands = random_symbols(expr)
+        for rv in rands:
+            dist = rv.pspace.distribution
+            cond1 = isinstance(dist, DieDistribution) and dist.sides.has(Symbol)
+            cond2 = isinstance(dist, BinomialDistribution) and dist.n.has(Symbol)
+            cond3 = isinstance(dist, HypergeometricDistribution) and \
+                    (dist.N.has(Symbol) or dist.n.has(Symbol) or dist.m.has(Symbol))
+            if cond1 or cond2 or cond3:
+                return Expectation(expr, **kwargs)
+
         rvs = rvs or self.values
         expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
         return sum([expr.xreplace(dict(elem)) * self.prob_of(elem)
@@ -320,7 +336,18 @@ class FinitePSpace(PSpace):
         return Lambda(p, Piecewise(*set))
 
     def probability(self, condition):
-        cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
+        rvs = random_symbols(condition)
+        from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
+                                            HypergeometricDistribution
+        for rv in rvs:
+            dist = rv.pspace.distribution
+            cond1 = isinstance(dist, DieDistribution) and dist.sides.has(Symbol)
+            cond2 = isinstance(dist, BinomialDistribution) and dist.n.has(Symbol)
+            cond3 = isinstance(dist, HypergeometricDistribution) and \
+                    (dist.N.has(Symbol) or dist.n.has(Symbol) or dist.m.has(Symbol))
+            if cond1 or cond2 or cond3:
+                return Probability(condition)
+        cond_symbols = frozenset(rs.symbol for rs in rvs)
         assert cond_symbols.issubset(self.symbols)
         return sum(self.prob_of(elem) for elem in self.where(condition))
 

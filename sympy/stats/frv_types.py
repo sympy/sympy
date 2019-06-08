@@ -139,14 +139,14 @@ class DieDistribution(SingleFiniteDistribution):
     @staticmethod
     def check(sides):
         _value_check((sides.is_positive, sides.is_integer),
-                        "number of sides must be a positive integer.")
+                    "number of sides must be a positive integer.")
 
     @property
     @cacheit
     def dict(self):
         if _is_sym_dim(self.sides):
             return Density(self)
-        return dict((k, 1/self.sides) for k in self.set)
+        return dict((k, S(1)/self.sides) for k in self.set)
 
     @property
     def set(self):
@@ -177,6 +177,7 @@ def Die(name, sides=6):
     ========
 
     >>> from sympy.stats import Die, density
+    >>> from sympy import Symbol
 
     >>> D6 = Die('D6', 6) # Six sided Die
     >>> density(D6).dict
@@ -184,6 +185,13 @@ def Die(name, sides=6):
 
     >>> D4 = Die('D4', 4) # Four sided Die
     >>> density(D4).dict
+    {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
+
+    >>> n = Symbol('n', positive=True, integer=True)
+    >>> Dn = Die('Dn', n) # n sided Die
+    >>> density(Dn).dict
+    Density(DieDistribution(n))
+    >>> density(Dn).dict.subs(n, 4).doit()
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
     """
 
@@ -285,10 +293,10 @@ class BinomialDistribution(SingleFiniteDistribution):
     @cacheit
     def dict(self):
         n, p, succ, fail = self.n, self.p, self.succ, self.fail
-        n = as_int(n)
+        if _is_sym_dim(n):
+            return Density(self)
         return dict((k*succ + (n - k)*fail,
                 binomial(n, k) * p**k * (1 - p)**(n - k)) for k in range(0, n + 1))
-
 
 def Binomial(name, n, p, succ=1, fail=0):
     """
@@ -300,10 +308,18 @@ def Binomial(name, n, p, succ=1, fail=0):
     ========
 
     >>> from sympy.stats import Binomial, density
-    >>> from sympy import S
+    >>> from sympy import S, Symbol
 
     >>> X = Binomial('X', 4, S.Half) # Four "coin flips"
     >>> density(X).dict
+    {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
+
+    >>> n = Symbol('n', positive=True, integer=True)
+    >>> p = Symbol('p', positive=True)
+    >>> X = Binomial('X', n, S.Half) # n "coin flips"
+    >>> density(X).dict
+    Density(BinomialDistribution(n, 1/2, 1, 0))
+    >>> density(X).dict.subs(n, 4).doit()
     {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
 
     References
@@ -324,6 +340,8 @@ class HypergeometricDistribution(SingleFiniteDistribution):
     @cacheit
     def dict(self):
         N, m, n = self.N, self.m, self.n
+        if any(_is_sym_dim(x) for x in (N, m, n)):
+            return Density(self)
         N, m, n = list(map(sympify, (N, m, n)))
         density = dict((sympify(k),
                         Rational(binomial(m, k) * binomial(N - m, n - k),
