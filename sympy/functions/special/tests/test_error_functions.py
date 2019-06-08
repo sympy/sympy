@@ -7,7 +7,7 @@ from sympy import (
     gamma, uppergamma,
     Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
     fresnels, fresnelc,
-    hyper, meijerg)
+    hyper, meijerg, E)
 
 from sympy.functions.special.error_functions import _erfs, _eis
 
@@ -85,6 +85,7 @@ def test_erf():
 
     raises(ArgumentIndexError, lambda: erf(x).fdiff(2))
 
+    assert erf(x).inverse() == erfinv
 
 
 def test_erf_series():
@@ -163,6 +164,8 @@ def test_erfc():
     assert erfc(xr).as_real_imag(deep=False) == (erfc(xr), 0)
     raises(ArgumentIndexError, lambda: erfc(x).fdiff(2))
 
+    assert erfc(x).inverse() == erfcinv
+
 
 def test_erfc_series():
     assert erfc(x).series(x, 0, 7) == 1 - 2*x/sqrt(pi) + \
@@ -206,6 +209,7 @@ def test_erfi():
     assert erfi(z).rewrite('uppergamma') == (sqrt(-z**2)/z*(uppergamma(S.Half,
         -z**2)/sqrt(S.Pi) - S.One))
     assert erfi(z).rewrite('expint') == sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
+    assert erfi(z).rewrite('tractable') == -I*(-_erfs(I*z)*exp(z**2) + 1)
     assert expand_func(erfi(I*z)) == I*erf(z)
 
     assert erfi(x).as_real_imag() == \
@@ -214,6 +218,17 @@ def test_erfi():
          I*(erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
          erfi(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
          re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+
+    assert erfi(x).as_real_imag(deep=False) == \
+        ((erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
+         erfi(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
+         I*(erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
+         erfi(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
+         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+
+    xr = Symbol('x', extended_real=True)
+    assert erfi(xr).as_real_imag() == (erfi(xr), 0)
+    assert erfi(xr).as_real_imag(deep=False) == (erfi(xr), 0)
 
     raises(ArgumentIndexError, lambda: erfi(x).fdiff(2))
 
@@ -260,7 +275,15 @@ def test_erf2():
     assert erf2(x, y).rewrite('erfc') == erfc(x) - erfc(y)
     assert erf2(x, y).rewrite('erfi') == I*(erfi(I*x) - erfi(I*y))
 
-    raises(ArgumentIndexError, lambda: erfi(x).fdiff(3))
+    assert erf2(x, y).diff(x) == erf2(x, y).fdiff(1)
+    assert erf2(x, y).diff(y) == erf2(x, y).fdiff(2)
+    assert erf2(x, y).diff(x) == -2*exp(-x**2)/sqrt(pi)
+    assert erf2(x, y).diff(y) == 2*exp(-y**2)/sqrt(pi)
+    raises(ArgumentIndexError, lambda: erf2(x, y).fdiff(3))
+
+    assert erf2(x, y).is_extended_real is None
+    xr, yr = symbols('xr yr', extended_real=True)
+    assert erf2(xr, yr).is_extended_real is True
 
 
 def test_erfinv():
@@ -273,8 +296,10 @@ def test_erfinv():
     assert erfinv(erf(-w)) == -w
 
     assert erfinv(x).diff() == sqrt(pi)*exp(erfinv(x)**2)/2
+    raises(ArgumentIndexError, lambda: erfinv(x).fdiff(2))
 
     assert erfinv(z).rewrite('erfcinv') == erfcinv(1-z)
+    assert erfinv(z).inverse() == erf
 
 
 def test_erfinv_evalf():
@@ -287,8 +312,10 @@ def test_erfcinv():
     assert erfcinv(nan) == S.NaN
 
     assert erfcinv(x).diff() == -sqrt(pi)*exp(erfcinv(x)**2)/2
+    raises(ArgumentIndexError, lambda: erfcinv(x).fdiff(2))
 
     assert erfcinv(z).rewrite('erfinv') == erfinv(1-z)
+    assert erfcinv(z).inverse() == erfc
 
 
 def test_erf2inv():
@@ -304,6 +331,7 @@ def test_erf2inv():
 
     assert erf2inv(x, y).diff(x) == exp(-x**2 + erf2inv(x, y)**2)
     assert erf2inv(x, y).diff(y) == sqrt(pi)*exp(erf2inv(x, y)**2)/2
+    raises(ArgumentIndexError, lambda: erf2inv(x, y).fdiff(3))
 
 
 # NOTE we multiply by exp_polar(I*pi) and need this to be on the principal
@@ -346,6 +374,10 @@ def tn_branch(func, s=None):
 
 
 def test_ei():
+    assert Ei(0) == S.NegativeInfinity
+    assert Ei(oo) == S.Infinity
+    assert Ei(-oo) == S.Zero
+
     assert tn_branch(Ei)
     assert mytd(Ei(x), exp(x)/x, x)
     assert mytn(Ei(x), Ei(x).rewrite(uppergamma),
@@ -367,8 +399,11 @@ def test_ei():
 
     assert Ei(x).series(x) == EulerGamma + log(x) + x + x**2/4 + \
         x**3/18 + x**4/96 + x**5/600 + O(x**6)
+    assert Ei(x).series(x, 1, 3) == Ei(1) + E*(x - 1) + O((x - 1)**3, (x, 1))
 
     assert str(Ei(cos(2)).evalf(n=10)) == '-0.6760647401'
+    raises(ArgumentIndexError, lambda: Ei(x).fdiff(2))
+
 
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),
@@ -397,6 +432,8 @@ def test_expint():
     assert expint(2, x*exp_polar(2*I*pi)) == 2*I*pi*x + expint(2, x)
     assert expint(2, x*exp_polar(-2*I*pi)) == -2*I*pi*x + expint(2, x)
     assert expint(1, x).rewrite(Ei).rewrite(expint) == expint(1, x)
+    assert expint(x, y).rewrite(Ei) == expint(x, y)
+    assert expint(x, y).rewrite(Ci) == expint(x, y)
 
     assert mytn(E1(x), E1(x).rewrite(Shi), Shi(x) - Chi(x), x)
     assert mytn(E1(polar_lift(I)*x), E1(polar_lift(I)*x).rewrite(Si),
@@ -417,6 +454,9 @@ def test_expint():
     assert expint(4, z).series(z) == S(1)/3 - z/2 + z**2/2 + \
         z**3*(log(z)/6 - S(11)/36 + EulerGamma/6) - z**4/24 + \
         z**5/240 + O(z**6)
+    assert expint(z, y).series(z, 0, 2) == exp(-y)/y - z*meijerg(((), (1, 1)),
+                                  ((0, 0, 1), ()), y)/y + O(z**2)
+    raises(ArgumentIndexError, lambda: expint(x, y).fdiff(3))
 
 
 def test__eis():
@@ -490,6 +530,7 @@ def test_li():
                                       meijerg(((), (1,)), ((0, 0), ()), -log(z)))
 
     assert gruntz(1/li(z), z, oo) == 0
+    raises(ArgumentIndexError, lambda: li(z).fdiff(2))
 
 
 def test_Li():
@@ -502,6 +543,7 @@ def test_Li():
 
     assert gruntz(1/Li(z), z, oo) == 0
     assert Li(z).rewrite(li) == li(z) - li(2)
+    raises(ArgumentIndexError, lambda: Li(z).fdiff(2))
 
 
 def test_si():
@@ -601,6 +643,7 @@ def test_fresnel():
     assert fresnels(0) == 0
     assert fresnels(oo) == S.Half
     assert fresnels(-oo) == -S.Half
+    assert fresnels(I*oo) == -I*S.Half
 
     assert fresnels(z) == fresnels(z)
     assert fresnels(-z) == -fresnels(z)
@@ -644,6 +687,7 @@ def test_fresnel():
     assert fresnelc(0) == 0
     assert fresnelc(oo) == S.Half
     assert fresnelc(-oo) == -S.Half
+    assert fresnelc(I*oo) == I*S.Half
 
     assert fresnelc(z) == fresnelc(z)
     assert fresnelc(-z) == -fresnelc(z)
@@ -663,6 +707,13 @@ def test_fresnel():
     assert fresnelc(w).is_extended_real is True
 
     assert fresnelc(z).as_real_imag() == \
+        ((fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 +
+          fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
+          I*(fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z))) -
+          fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))) *
+          re(z)*Abs(im(z))/(2*im(z)*Abs(re(z)))))
+
+    assert fresnelc(z).as_real_imag(deep=False) == \
         ((fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 +
           fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
           I*(fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z))) -
@@ -692,6 +743,13 @@ def test_fresnel():
     verify_numerically(im(fresnelc(z)), fresnelc(z).as_real_imag()[1], z)
     verify_numerically(fresnelc(z), fresnelc(z).rewrite(hyper), z)
     verify_numerically(fresnelc(z), fresnelc(z).rewrite(meijerg), z)
+
+    raises(ArgumentIndexError, lambda: fresnels(z).fdiff(2))
+    raises(ArgumentIndexError, lambda: fresnelc(z).fdiff(2))
+
+    assert fresnels(x).taylor_term(-1, x) == S.Zero
+    assert fresnelc(x).taylor_term(-1, x) == S.Zero
+    assert fresnelc(x).taylor_term(1, x) == -pi**2*x**5/40
 
 
 @slow
