@@ -211,6 +211,7 @@ def test_Range_set():
     assert empty.intersect(S.Integers) == empty
     assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Naturals) == Range(1, 10, 1)
+    assert Range(-1, 10, 1).intersect(S.Naturals0) == Range(0, 10, 1)
 
 
     # test slicing
