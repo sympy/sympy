@@ -4515,6 +4515,12 @@ class PermutationGroup(Basic):
         G._fp_presentation = simplify_presentation(G_p)
         return G._fp_presentation
 
+    def pc_group(self):
+        from sympy.combinatorics.pc_groups import PcGroup
+        if not self.is_polycyclic:
+            raise ValueError("The group must be solvable")
+        return PcGroup(self.generators)
+
 
 def _orbit(degree, generators, alpha, action='tuples'):
     r"""Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
