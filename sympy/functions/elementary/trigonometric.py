@@ -304,11 +304,9 @@ class sin(TrigonometricFunction):
                 return S.Zero
 
             if (2*pi_coeff).is_integer:
-                if pi_coeff.is_even:
-                    # Probably never happens since pi_coeff.is_integer is
-                    # tested above
-                    return S.Zero
-                elif pi_coeff.is_even is False:
+                # is_even-case handled above as then pi_coeff.is_integer,
+                # so check if known to be not even
+                if pi_coeff.is_even is False:
                     return S.NegativeOne**(pi_coeff - S.Half)
 
             if not pi_coeff.is_Rational:
@@ -566,11 +564,9 @@ class cos(TrigonometricFunction):
                 return (S.NegativeOne)**pi_coeff
 
             if (2*pi_coeff).is_integer:
-                if pi_coeff.is_even:
-                    # Probably never happens since pi_coeff.is_integer is
-                    # tested above
-                    return (S.NegativeOne)**(pi_coeff/2)
-                elif pi_coeff.is_even is False:
+                # is_even-case handled above as then pi_coeff.is_integer,
+                # so check if known to be not even
+                if pi_coeff.is_even is False:
                     return S.Zero
 
             if not pi_coeff.is_Rational:
@@ -1491,8 +1487,6 @@ class cot(TrigonometricFunction):
             return True
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
         arg = self.args[0]
         argnew = arg.subs(old, new)
         if arg != argnew and (argnew/S.Pi).is_integer:
