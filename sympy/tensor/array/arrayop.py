@@ -42,6 +42,8 @@ def tensorproduct(*args):
     >>> p
     [[[[x, y], [z, t]], [[0, 0], [0, 0]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[x, y], [z, t]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[0, 0], [0, 0]], [[x, y], [z, t]]]]
     """
+    from sympy.tensor.array import SparseNDimArray
+
     if len(args) == 0:
         return S.One
     if len(args) == 1:
@@ -54,6 +56,14 @@ def tensorproduct(*args):
 
     if not isinstance(a, NDimArray) or not isinstance(b, NDimArray):
         return a*b
+
+    if isinstance(a, SparseNDimArray) and not isinstance(b, NDimArray):
+        return type(a)({k: b*v for (k, v) in a._sparse_array}, a.shape)
+
+    if isinstance(b, SparseNDimArray) and not isinstance(a, NDimArray):
+        return type(b)({k: a*v for (k, v) in b._sparse_array}, b.shape)
+
+    # TODO: product for two sparse arrays
 
     al = list(a)
     bl = list(b)

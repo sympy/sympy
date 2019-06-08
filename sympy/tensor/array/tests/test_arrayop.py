@@ -7,7 +7,7 @@ from sympy.combinatorics.permutations import _af_invert
 from sympy.utilities.pytest import raises
 
 from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate, diff
-from sympy.tensor.array import Array, NDimArray
+from sympy.tensor.array import Array, NDimArray, MutableSparseNDimArray
 
 from sympy.tensor.array import tensorproduct, tensorcontraction, derive_by_array, permutedims
 
@@ -42,6 +42,11 @@ def test_tensorproduct():
     assert tensorproduct(a, A, B) == Array([[a*x, 2*a*x, 3*a*x], [a*y, 2*a*y, 3*a*y]])
     assert tensorproduct(A, B, a) == Array([[a*x, 2*a*x, 3*a*x], [a*y, 2*a*y, 3*a*y]])
     assert tensorproduct(B, a, A) == Array([[a*x, a*y], [2*a*x, 2*a*y], [3*a*x, 3*a*y]])
+
+    # tests for large scale sparse array
+    a = MutableSparseNDimArray.zeros(10000, 20000)
+    assert tensorproduct(a, x) == MutableSparseNDimArray.zeros(10000, 20000)
+    assert tensorproduct(x, a) == MutableSparseNDimArray.zeros(10000, 20000)
 
 
 def test_tensorcontraction():
