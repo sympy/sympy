@@ -72,7 +72,19 @@ def test_erf():
          erf(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
          re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
 
+    assert erf(x).as_real_imag(deep=False) == \
+        ((erf(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
+         erf(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
+         I*(erf(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
+         erf(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
+         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+
+    xr = Symbol('x', extended_real=True)
+    assert erf(xr).as_real_imag() == (erf(xr), 0)
+    assert erf(xr).as_real_imag(deep=False) == (erf(xr), 0)
+
     raises(ArgumentIndexError, lambda: erf(x).fdiff(2))
+
 
 
 def test_erf_series():
@@ -112,6 +124,8 @@ def test_erfc():
     assert erfc(I).is_real is False
     assert erfc(0).is_real is True
 
+    assert erfc(erfinv(x)) == 1 - x
+
     assert conjugate(erfc(z)) == erfc(conjugate(z))
 
     assert erfc(x).as_leading_term(x) == S.One
@@ -127,6 +141,7 @@ def test_erfc():
     assert erfc(z).rewrite('meijerg') == 1 - z*meijerg([S.Half], [], [0], [-S.Half], z**2)/sqrt(pi)
     assert erfc(z).rewrite('uppergamma') == 1 - sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erfc(z).rewrite('expint') == S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
+    assert erfc(z).rewrite('tractable') == _erfs(z)*exp(-z**2)
     assert expand_func(erf(x) + erfc(x)) == S.One
 
     assert erfc(x).as_real_imag() == \
@@ -136,6 +151,16 @@ def test_erfc():
          erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
          re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
 
+    assert erfc(x).as_real_imag(deep=False) == \
+        ((erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
+         erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
+         I*(erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
+         erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
+         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+
+    xr = Symbol('x', extended_real=True)
+    assert erfc(xr).as_real_imag() == (erfc(xr), 0)
+    assert erfc(xr).as_real_imag(deep=False) == (erfc(xr), 0)
     raises(ArgumentIndexError, lambda: erfc(x).fdiff(2))
 
 
@@ -242,6 +267,7 @@ def test_erfinv():
     assert erfinv(0) == 0
     assert erfinv(1) == S.Infinity
     assert erfinv(nan) == S.NaN
+    assert erfinv(-1) == S.NegativeInfinity
 
     assert erfinv(erf(w)) == w
     assert erfinv(erf(-w)) == -w
@@ -270,7 +296,11 @@ def test_erf2inv():
     assert erf2inv(0, 1) == S.Infinity
     assert erf2inv(1, 0) == S.One
     assert erf2inv(0, y) == erfinv(y)
-    assert erf2inv(oo,y) == erfcinv(-y)
+    assert erf2inv(oo, y) == erfcinv(-y)
+    assert erf2inv(x, 0) == x
+    assert erf2inv(x, oo) == erfinv(x)
+    assert erf2inv(nan, 0) == nan
+    assert erf2inv(0, nan) == nan
 
     assert erf2inv(x, y).diff(x) == exp(-x**2 + erf2inv(x, y)**2)
     assert erf2inv(x, y).diff(y) == sqrt(pi)*exp(erf2inv(x, y)**2)/2

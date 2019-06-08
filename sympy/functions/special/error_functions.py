@@ -128,6 +128,8 @@ class erf(Function):
         if isinstance(arg, erfcinv):
             return S.One - arg.args[0]
 
+        # Unlikely to happend since erf2inv(0, x) is evaluated to
+        # erfinv(x)
         if isinstance(arg, erf2inv) and arg.args[0] is S.Zero:
             return arg.args[1]
 
@@ -513,6 +515,8 @@ class erfi(Function):
                 return I*nz.args[0]
             if isinstance(nz, erfcinv):
                 return I*(S.One - nz.args[0])
+            # Unlikely to happend since erf2inv(0, x) is evaluated to
+            # erfinv(x)
             if isinstance(nz, erf2inv) and nz.args[0] is S.Zero:
                 return I*nz.args[1]
 
