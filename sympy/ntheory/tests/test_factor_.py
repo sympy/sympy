@@ -1,5 +1,5 @@
 from sympy import (Sieve, binomial_coefficients, binomial_coefficients_list,
-    Mul, S, Pow, sieve, Symbol, summation, Dummy,
+    Mul, S, Pow, sieve, Symbol, summation, Dummy, Dict,
     factorial as fac)
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
@@ -263,6 +263,11 @@ def test_factorint():
     assert factorint((p1*p2**2)**3) == {p1: 3, p2: 6}
     # Test for non integer input
     raises(ValueError, lambda: factorint(4.5))
+    # test dict/Dict input
+    sans = '2**10*3**3'
+    n = {4: 2, 12: 3}
+    assert str(factorint(n)) == sans
+    assert str(factorint(Dict(n))) == sans
 
 
 def test_divisors_and_divisor_count():

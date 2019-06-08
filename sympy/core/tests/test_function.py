@@ -207,6 +207,9 @@ def test_Lambda():
     raises(TypeError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
 
+    raises(SyntaxError, lambda: Lambda((x, x), x + 2))
+
+
 
 def test_IdentityFunction():
     assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
