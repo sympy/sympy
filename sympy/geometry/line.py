@@ -68,6 +68,7 @@ class LinearEntity(GeometrySet):
 
     """
     def __new__(cls, p1, p2=None, **kwargs):
+        invalid_escape = '\e'
         p1, p2 = Point._normalize_dimension(p1, p2)
         if p1 == p2:
             # sometimes we return a single point if we are not given two unique
