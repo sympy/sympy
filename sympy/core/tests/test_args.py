@@ -1550,6 +1550,18 @@ def test_sympy__stats__stochastic_process_types__DiscreteTimeStochasticProcess()
     from sympy.stats.stochastic_process_types import DiscreteTimeStochasticProcess
     assert _test_args(DiscreteTimeStochasticProcess("Y", [1, 2, 3]))
 
+def test_sympy__stats__stochastic_process_types__TransitionMatrix():
+    from sympy.stats.stochastic_process_types import TransitionMatrix, DiscreteMarkovChain
+    from sympy import MatrixSymbol
+    DMC = DiscreteMarkovChain("Y")
+    assert _test_args(TransitionMatrix(DMC, MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__stochastic_process_types__StateSpace():
+    from sympy.stats.stochastic_process_types import StateSpace, DiscreteMarkovChain
+    from sympy import MatrixSymbol
+    DMC = DiscreteMarkovChain("Y")
+    assert _test_args(StateSpace(DMC, [0, 1, 2]))
+
 def test_sympy__stats__stochastic_process_types__DiscreteMarkovChain():
     from sympy.stats.stochastic_process_types import DiscreteMarkovChain
     from sympy import MatrixSymbol

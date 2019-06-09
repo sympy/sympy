@@ -4,13 +4,17 @@ from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
 from sympy.core.compatibility import string_types
+from sympy.core.relational import Relational
 from sympy.stats.symbolic_probability import Probability
 from sympy.stats.stochastic_process import StochasticPSpace
+from sympy.logic.boolalg import Boolean
 
 __all__ = [
     'StochasticProcess',
     'DiscreteTimeStochasticProcess',
-    'DiscreteMarkovChain'
+    'DiscreteMarkovChain',
+    'TransitionMatrix',
+    'StateSpace'
 ]
 
 def _set_converter(itr):
@@ -37,6 +41,16 @@ def _set_converter(itr):
     if not isinstance(itr, Set):
         raise TypeError("%s is not an instance of list/tuple/set."%(itr))
     return itr
+
+def _matrix_checks(matrix):
+    if not isinstance(matrix, (Matrix, MatrixSymbol, ImmutableMatrix)):
+        raise TypeError("Transition probabilities etiher should "
+                            "be a Matrix or a MatrixSymbol.")
+    if matrix.shape[0] != matrix.shape[1]:
+        raise ValueError("%s is not a square matrix"%(matrix))
+    if isinstance(matrix, Matrix):
+        matrix = ImmutableMatrix(matrix.tolist())
+    return matrix
 
 class StochasticProcess(Basic):
     """
@@ -109,6 +123,38 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
 
 # TODO: Define ContinuousTimeStochasticProcess
 
+class TransitionMatrix(Boolean):
+    """
+    Assumes that the matrix is the transition matrix
+    of the process.
+    """
+
+    def __new__(cls, process, matrix):
+        if not isinstance(process, DiscreteMarkovChain):
+            raise ValueError("Currently only DiscreteMarkovChain "
+                                "support TransitionMatrix.")
+        matrix = _matrix_checks(matrix)
+        return Basic.__new__(cls, process, matrix)
+
+    process = property(lambda self: self.args[0])
+    matrix = property(lambda self: self.args[1])
+
+class StateSpace(Boolean):
+
+    def __new__(cls, process, state_space):
+        if not isinstance(process, DiscreteMarkovChain):
+            raise ValueError("Currently only DiscreteMarkovChain "
+                                "support StateSpace.")
+        state_space = _set_converter(state_space)
+        return Basic.__new__(cls, process, state_space)
+
+    process = property(lambda self: self.args[0])
+    state_space = property(lambda self: self.args[1])
+
+    def __bool__(self):
+        return True
+
+
 class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
     """
     Represents discrete Markov chain.
@@ -125,7 +171,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
     Examples
     ========
 
-    >>> from sympy.stats.stochastic_process_types import DiscreteMarkovChain
+    >>> from sympy.stats import DiscreteMarkovChain, TransitionMatrix
     >>> from sympy import Matrix, MatrixSymbol, Eq
     >>> from sympy.stats import P
     >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
@@ -139,14 +185,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
     [0.2, 0.5, 0.3],
     [0.2, 0.3, 0.5]])
     >>> TS = MatrixSymbol('T', 3, 3)
-    >>> P(Eq(YS[3], 2), Eq(YS[1], 1), trans_probs=TS)
+    >>> P(Eq(YS[3], 2), Eq(YS[1], 1) & TransitionMatrix(YS, TS))
     T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]
     >>> P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2)
     0.36
     """
-
-    is_Discrete = True
-    is_Continuous = False
 
     index_set = S.Naturals0
 
@@ -154,11 +197,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         sym = _symbol_converter(sym)
         state_space = _set_converter(state_space)
         if trans_probs != None:
-            if not isinstance(trans_probs, (Matrix, MatrixSymbol, ImmutableMatrix)):
-                raise TypeError("Transition probabilities etiher should "
-                                "be a Matrix or a MatrixSymbol.")
-            if isinstance(trans_probs, Matrix):
-                trans_probs = ImmutableMatrix(trans_probs.tolist())
+            trans_probs = _matrix_checks(trans_probs)
         return Basic.__new__(cls, sym, state_space, trans_probs)
 
     @property
@@ -178,9 +217,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
 
         condition: Relational
         given_condition: Relational/And
-        trans_probs: Matrix/MatrixSymbol
-            Overrides the one passed at the time of
-            object creation.
 
         Returns
         =======
@@ -196,20 +232,34 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         Any information passed at the time of query overrides
         any information passed at the time of object creation like
         transition probabilities, state space.
+
+        Pass the transition matrix using TransitionMatrix and state space
+        using StateSpace in given_condition using & or And.
         """
 
-        # transition probabilities are not available
-        if (self.trans_probs == None and kwargs.get('trans_probs', False) is False) or \
+        # extracting transition matrix and state space
+        trans_probs, state_space = self.trans_probs, self.state_space
+        if isinstance(given_condition, And):
+            gcs = given_condition.args
+            for gc in gcs:
+                if isinstance(gc, TransitionMatrix):
+                    trans_probs = gc.matrix
+                if isinstance(gc, StateSpace):
+                    state_space = gc.state_space
+                if isinstance(gc, Eq):
+                    given_condition = gc
+        if isinstance(given_condition, TransitionMatrix):
+            trans_probs = given_condition.matrix
+        if isinstance(given_condition, StateSpace):
+            state_space = given_condition.state_space
+
+        # given_condition does not have sufficient information
+        # for computations
+        if trans_probs == None or \
             given_condition == None:
             return Probability(condition, given_condition, **kwargs)
 
         # working out transition probabilities
-        trans_probs = kwargs.get('trans_probs', self.trans_probs)
-        if not isinstance(trans_probs, (Matrix, MatrixSymbol, ImmutableMatrix)):
-            raise TypeError("Transition probabilities etiher should "
-                                "be a Matrix or MatrixSymbol.")
-        if trans_probs.shape[0] != trans_probs.shape[1]:
-            raise ValueError("%s is not a square matrix"%(trans_probs))
         if not isinstance(trans_probs, MatrixSymbol):
             rows = trans_probs.tolist()
             for row in rows:
@@ -217,8 +267,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
                     raise ValueError("Probabilities in a row must sum to 1. "
                     "If you are using Float or floats then please use Rational.")
 
-        # working out state spaces
-        state_space = kwargs.get('state_space', self.state_space)
         # if given condition is None, then there is no need to work out
         # state_space from random variables
         if given_condition != None:
@@ -233,8 +281,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             isinstance(given_condition, Eq) and \
             len(given_condition.atoms(RandomSymbol)) == 1:
             # handles simple queries like P(Eq(X[i], dest_state), Eq(X[i], init_state))
-            if given_condition == None:
-                return Probability(condition)
             lhsc, rhsc = condition.lhs, condition.rhs
             lhsg, rhsg = given_condition.lhs, given_condition.rhs
             if not isinstance(lhsc, RandomIndexedSymbol):
@@ -255,17 +301,16 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
                 return nsteptp.__getitem__((stateg, statec))
             return Indexed(nsteptp, stateg, statec)
 
-        if isinstance(condition, And) and \
-            isinstance(given_condition, Eq) and \
-            len(given_condition.atoms(RandomSymbol)) <= 1:
+        if isinstance(condition, And):
             # handle queries like,
             # P(Eq(X[i+k], s1) & Eq(X[i+m], s2) . . . & Eq(X[i], sn), Eq(P(X[i]), prob))
             conds = condition.args
             i, result = -1, 1
             while i > -len(conds):
-                result *= self.probability(conds[i], conds[i-1], **kwargs)
+                result *= self.probability(conds[i], conds[i-1] & \
+                            TransitionMatrix(self, trans_probs) & StateSpace(self, state_space))
                 i -= 1
-            if given_condition == None:
+            if isinstance(given_condition, (TransitionMatrix, StateSpace)):
                 return result * Probability(conds[i])
             if isinstance(given_condition, Eq):
                 if not isinstance(given_condition.lhs, Probability) or \
