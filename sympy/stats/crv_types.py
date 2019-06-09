@@ -1620,11 +1620,6 @@ def Gumbel(name, beta, mu, **kwargs):
 
     with :math:`x \in [ - \infty, \infty ]`.
 
-    For Minimum
-    .. math::
-        f(x) := \frac{e^{- e^{\frac{- \mu + x}{\beta}}
-                + \frac{- \mu + x}{\beta}}}{\beta}
-
     Parameters
     ==========
 
