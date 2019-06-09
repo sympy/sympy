@@ -148,10 +148,6 @@ class StateSpace(Boolean):
     process = property(lambda self: self.args[0])
     state_space = property(lambda self: self.args[1])
 
-    def __bool__(self):
-        return True
-
-
 class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
     """
     Represents discrete Markov chain.
