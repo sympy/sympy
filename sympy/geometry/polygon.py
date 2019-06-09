@@ -783,6 +783,47 @@ class Polygon(GeometrySet):
             return list(ordered(intersection_result))
 
 
+    def cut_section(self, line):
+        """
+        Returns a new polygon (or a segment) formed by the intersecting line
+        and the part of the polygon above it.
+
+        Examples
+        =======
+
+        >>> from sympy import Point, Polygon, Line
+        >>> a, b = 20, 10
+        >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
+        >>> rectangle = Polygon(p1, p2, p3, p4)
+        >>> t = rectangle.cut_section(Line((0, 5), slope=0))
+        >>> t
+        Polygon(Point2D(0, 10), Point2D(0, 5), Point2D(20, 5), Point2D(20, 10))
+        >>> t.area
+        100
+        >>> t.centroid
+        Point2D(10, 15/2)
+        """
+        intersection_points = self.intersection(line)
+        if not intersection_points:
+            raise ValueError("This line does not intersect the polygon")
+        points = self.vertices
+        eq = line.equation()
+
+        x = _symbol('x', real=True)
+        y = _symbol('y', real=True)
+
+        new_vertices = []
+        done = True
+        for point in points:
+            if eq.evalf(subs={x: point.x, y: point.y}) > 0:
+                new_vertices.append(point)
+            elif done:                                     # to avoid repeated addition of
+                new_vertices += intersection_points        # intersection_points in new_vertices
+                done = False
+
+        return Polygon(*new_vertices)
+
+
     def distance(self, o):
         """
         Returns the shortest distance between self and o.
