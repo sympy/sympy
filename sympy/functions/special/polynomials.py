@@ -805,7 +805,19 @@ class legendre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
         elif argindex == 2:
             # Diff wrt x
-            # Find better formula, this is unsuitable for x = 1
+            # Find better formula, this is unsuitable for x = +/-1
+            # http://www.autodiff.org/ad16/Oral/Buecker_Legendre.pdf says
+            # at x = 1:
+            #    n*(n + 1)/2            , m = 0
+            #    oo                     , m = 1
+            #    -(n-1)*n*(n+1)*(n+2)/4 , m = 2
+            #    0                      , m = 3, 4, ..., n
+            #
+            # at x = -1
+            #    (-1)**(n+1)*n*(n + 1)/2       , m = 0
+            #    (-1)**n*oo                    , m = 1
+            #    (-1)**n*(n-1)*n*(n+1)*(n+2)/4 , m = 2
+            #    0                             , m = 3, 4, ..., n
             n, x = self.args
             return n/(x**2 - 1)*(x*legendre(n, x) - legendre(n - 1, x))
         else:
