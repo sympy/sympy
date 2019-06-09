@@ -10,6 +10,7 @@
 
 # Regular Python bytecode file
 *.pyc
+*.pyc.*
 
 # Optimized Python bytecode file
 *.pyo
