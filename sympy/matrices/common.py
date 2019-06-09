@@ -523,8 +523,12 @@ class MatrixShaping(MatrixRequired):
         k = as_int(k)
         r = 0 if k > 0 else -k
         c = 0 if r else k
-        for i in range(min(self.shape) - max(r, c)):
-            rv.append(self[r + i, c + i])
+        while True:
+            if r == self.rows or c == self.cols:
+                break
+            rv.append(self[r, c])
+            r += 1
+            c += 1
         if not rv:
             raise ValueError(filldedent('''
             The %s diagonal is out of range [%s, %s]''' % (
@@ -665,7 +669,7 @@ class MatrixSpecial(MatrixRequired):
     @classmethod
     def _eval_eye(cls, rows, cols):
         def entry(i, j):
-            return S.One if i == j else S.Zero
+            return cls.one if i == j else cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
@@ -675,27 +679,27 @@ class MatrixSpecial(MatrixRequired):
                 if i == j:
                     return eigenvalue
                 elif j + 1 == i:
-                    return S.One
-                return S.Zero
+                    return cls.one
+                return cls.zero
         else:
             def entry(i, j):
                 if i == j:
                     return eigenvalue
                 elif i + 1 == j:
-                    return S.One
-                return S.Zero
+                    return cls.one
+                return cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
     def _eval_ones(cls, rows, cols):
         def entry(i, j):
-            return S.One
+            return cls.one
         return cls._new(rows, cols, entry)
 
     @classmethod
     def _eval_zeros(cls, rows, cols):
         def entry(i, j):
-            return S.Zero
+            return cls.zero
         return cls._new(rows, cols, entry)
 
     @classmethod
@@ -754,8 +758,9 @@ class MatrixSpecial(MatrixRequired):
         [3, 0, 0],
         [0, 4, 5]])
 
-        Elements within a list need not all be of the same length unless
-        `strict` is set to True:
+        When `unpack` is False, elements within a list need not all be
+        of the same length. Setting `strict` to True would raise a
+        ValueError for the following:
 
         >>> Matrix.diag([[1, 2, 3], [4, 5], [6]], unpack=False)
         Matrix([
@@ -790,6 +795,7 @@ class MatrixSpecial(MatrixRequired):
        """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
+        from sympy.matrices.sparse import SparseMatrix
         klass = kwargs.get('cls', kls)
         strict = kwargs.get('strict', False) # lists -> Matrices
         unpack = kwargs.get('unpack', True)  # unpack single sequence
@@ -799,49 +805,47 @@ class MatrixSpecial(MatrixRequired):
 
         # fill a default dict with the diagonal entries
         diag_entries = defaultdict(int)
-        R = C = 0  # keep track of the biggest index seen
+        rmax = cmax = 0  # keep track of the biggest index seen
         for m in args:
-            if hasattr(m, 'rows') or isinstance(m, list):
-                # in this case, we're a matrix or list
-                if hasattr(m, 'rows'):
-                    # convert to list of lists
-                    r, c = m.shape
-                    m = m.tolist()
+            if isinstance(m, list):
+                if strict:
+                    # if malformed, Matrix will raise an error
+                    _ = Matrix(m)
+                    r, c = _.shape
+                    m = _.tolist()
                 else:
-                    # make sure all list elements are lists
-                    r = len(m)
-                    if strict:
-                        # let Matrix raise the error
-                        m = Matrix(m)
-                        c = m.cols
-                        m = m.tolist()
-                    else:
-                        m = [mi if isinstance(mi, list) else [mi]
-                            for mi in m]
-                        c = max(map(len, m))
-                # process list of lists
-                for i in range(len(m)):
-                    for j, mij in enumerate(m[i]):
-                        diag_entries[(i + R, j + C)] = mij
-                R += r
-                C += c
-            else:
-                # in this case, we're a single value
-                diag_entries[(R, C)] = m
-                R += 1
-                C += 1
+                    m = SparseMatrix(m)
+                    for (i, j), _ in m._smat.items():
+                        diag_entries[(i + rmax, j + cmax)] = _
+                    r, c = m.shape
+                    m = []  # to skip process below
+            elif hasattr(m, 'shape'):  # a Matrix
+                # convert to list of lists
+                r, c = m.shape
+                m = m.tolist()
+            else:  # in this case, we're a single value
+                diag_entries[(rmax, cmax)] = m
+                rmax += 1
+                cmax += 1
+                continue
+            # process list of lists
+            for i in range(len(m)):
+                for j, _ in enumerate(m[i]):
+                    diag_entries[(i + rmax, j + cmax)] = _
+            rmax += r
+            cmax += c
         rows = kwargs.get('rows', None)
         cols = kwargs.get('cols', None)
         if rows is None:
             rows, cols = cols, rows
         if rows is None:
-            rows, cols = R, C
+            rows, cols = rmax, cmax
         else:
             cols = rows if cols is None else cols
-        if rows < R or cols < C:
+        if rows < rmax or cols < cmax:
             raise ValueError(filldedent('''
                 The constructed matrix is {} x {} but a size of {} x {}
-                was specified.'''.format(R, C, rows, cols)))
+                was specified.'''.format(rmax, cmax, rows, cols)))
         return klass._eval_diag(rows, cols, diag_entries)
 
     @classmethod
@@ -2141,7 +2145,7 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return self * (S.One / other)
+        return self * (self.one / other)
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
@@ -2338,6 +2342,8 @@ class _MinimalMatrix(object):
     is_MatrixLike = True
     _sympify = staticmethod(sympify)
     _class_priority = 3
+    zero = S.Zero
+    one = S.One
 
     is_Matrix = True
     is_MatrixExpr = False

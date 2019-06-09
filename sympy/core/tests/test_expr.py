@@ -8,7 +8,7 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    integrate, gammasimp)
 from sympy.core.expr import ExprBuilder
 from sympy.core.function import AppliedUndef
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, round, PY3
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 
@@ -16,6 +16,10 @@ from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
+
+# replace 3 instances with int when PY2 is dropped and
+# delete this line
+_rint = int if PY3 else float
 
 class DummyNumber(object):
     """
@@ -716,6 +720,11 @@ def test_replace():
     f = Function('f')
     assert (n1*f(n2)).replace(f, lambda x: x) == n1*n2
     assert (n3*f(n2)).replace(f, lambda x: x) == n3*n2
+
+    # issue 16725
+    assert S(0).replace(Wild('x'), 1) == 1
+    # let the user override the default decision of False
+    assert S(0).replace(Wild('x'), 1, exact=True) == 0
 
 
 def test_find():
@@ -1643,48 +1652,62 @@ def test_random():
 def test_round():
     from sympy.abc import x
 
-    assert Float('0.1249999').round(2) == 0.12
+    assert str(Float('0.1249999').round(2)) == '0.12'
     d20 = 12345678901234567890
     ans = S(d20).round(2)
-    assert ans.is_Float and ans == d20
+    assert ans.is_Integer and ans == d20
     ans = S(d20).round(-2)
-    assert ans.is_Float and ans == 12345678901234567900
-    assert S('1/7').round(4) == 0.1429
-    assert S('.[12345]').round(4) == 0.1235
-    assert S('.1349').round(2) == 0.13
+    assert ans.is_Integer and ans == 12345678901234567900
+    assert str(S('1/7').round(4)) == '0.1429'
+    assert str(S('.[12345]').round(4)) == '0.1235'
+    assert str(S('.1349').round(2)) == '0.13'
     n = S(12345)
     ans = n.round()
-    assert ans.is_Float
+    assert ans.is_Integer
     assert ans == n
     ans = n.round(1)
-    assert ans.is_Float
+    assert ans.is_Integer
     assert ans == n
     ans = n.round(4)
-    assert ans.is_Float
+    assert ans.is_Integer
     assert ans == n
-    assert n.round(-1) == 12350
+    assert n.round(-1) == 12340
 
-    r = n.round(-4)
+    r = Float(str(n)).round(-4)
     assert r == 10000
-    # in fact, it should equal many values since __eq__
-    # compares at equal precision
-    assert all(r == i for i in range(9984, 10049))
 
     assert n.round(-5) == 0
 
-    assert (pi + sqrt(2)).round(2) == 4.56
+    assert str((pi + sqrt(2)).round(2)) == '4.56'
     assert (10*(pi + sqrt(2))).round(-1) == 50
     raises(TypeError, lambda: round(x + 2, 2))
-    assert S(2.3).round(1) == 2.3
-    e = S(12.345).round(2)
-    assert e == round(12.345, 2)
-    assert type(e) is Float
+    assert str(S(2.3).round(1)) == '2.3'
+    # rounding in SymPy (as in Decimal) should be
+    # exact for the given precision; we check here
+    # that when a 5 follows the last digit that
+    # the rounded digit will be even.
+    for i in range(-99, 100):
+        # construct a decimal that ends in 5, e.g. 123 -> 0.1235
+        s = str(abs(i))
+        p = len(s)  # we are going to round to the last digit of i
+        n = '0.%s5' % s  # put a 5 after i's digits
+        j = p + 2  # 2 for '0.'
+        if i < 0:  # 1 for '-'
+            j += 1
+            n = '-' + n
+        v = str(Float(n).round(p))[:j]  # pertinent digits
+        if v.endswith('.'):
+          continue  # it ends with 0 which is even
+        L = int(v[-1])  # last digit
+        assert L % 2 == 0, (n, '->', v)
 
     assert (Float(.3, 3) + 2*pi).round() == 7
     assert (Float(.3, 3) + 2*pi*100).round() == 629
-    assert (Float(.03, 3) + 2*pi/100).round(5) == 0.09283
-    assert (Float(.03, 3) + 2*pi/100).round(4) == 0.0928
     assert (pi + 2*E*I).round() == 3 + 5*I
+    # don't let request for extra precision give more than
+    # what is known (in this case, only 3 digits)
+    assert str((Float(.03, 3) + 2*pi/100).round(5)) == '0.0928'
+    assert str((Float(.03, 3) + 2*pi/100).round(4)) == '0.0928'
 
     assert S.Zero.round() == 0
 
@@ -1700,8 +1723,8 @@ def test_round():
     raises(TypeError, lambda: f(1).round())
 
     # exact magnitude of 10
-    assert str(S(1).round()) == '1.'
-    assert str(S(100).round()) == '100.'
+    assert str(S(1).round()) == '1'
+    assert str(S(100).round()) == '100'
 
     # applied to real and imaginary portions
     assert (2*pi + E*I).round() == 6 + 3*I
@@ -1713,17 +1736,17 @@ def test_round():
     # then coerce the floats to the same precision) or re-create
     # the floats
     assert str((pi/10 + E*I).round(2)) == '0.31 + 2.72*I'
-    assert (pi/10 + E*I).round(2).as_real_imag() == (0.31, 2.72)
-    assert (pi/10 + E*I).round(2) == Float(0.31, 2) + I*Float(2.72, 3)
+    assert str((pi/10 + E*I).round(2).as_real_imag()) == '(0.31, 2.72)'
+    assert str((pi/10 + E*I).round(2)) == '0.31 + 2.72*I'
 
     # issue 6914
     assert (I**(I + 3)).round(3) == Float('-0.208', '')*I
 
     # issue 8720
-    assert S(-123.6).round() == -124.
-    assert S(-1.5).round() == -2.
-    assert S(-100.5).round() == -101.
-    assert S(-1.5 - 10.5*I).round() == -2.0 - 11.0*I
+    assert S(-123.6).round() == -124
+    assert S(-1.5).round() == -2
+    assert S(-100.5).round() == -100
+    assert S(-1.5 - 10.5*I).round() == -2 - 10*I
 
     # issue 7961
     assert str(S(0.006).round(2)) == '0.01'
@@ -1734,6 +1757,20 @@ def test_round():
     assert S.Infinity.round() == S.Infinity
     assert S.NegativeInfinity.round() == S.NegativeInfinity
     assert S.ComplexInfinity.round() == S.ComplexInfinity
+
+    # check that types match
+    for i in range(2):
+        f = float(i)
+        # 2 args
+        assert all(type(round(i, p)) is _rint for p in (-1, 0, 1))
+        assert all(S(i).round(p).is_Integer for p in (-1, 0, 1))
+        assert all(type(round(f, p)) is float for p in (-1, 0, 1))
+        assert all(S(f).round(p).is_Float for p in (-1, 0, 1))
+        # 1 arg (p is None)
+        assert type(round(i)) is _rint
+        assert S(i).round().is_Integer
+        assert type(round(f)) is _rint
+        assert S(f).round().is_Integer
 
 
 def test_held_expression_UnevaluatedExpr():
@@ -1809,7 +1846,9 @@ def test_issue_7426():
 
 
 def test_issue_1112():
-    x = Symbol('x', positive=False)
+    x = Symbol('x', extended_positive=False)
+    assert (x > 0) is S.false
+    x = Symbol('x', positive=False, real=True)
     assert (x > 0) is S.false
 
 
@@ -1833,6 +1872,11 @@ def test_normal():
     x = symbols('x')
     e = Mul(S.Half, 1 + x, evaluate=False)
     assert e.normal() == e
+
+
+def test_expr():
+    x = symbols('x')
+    raises(TypeError, lambda: tan(x).series(x, 2, oo, "+"))
 
 
 def test_ExprBuilder():

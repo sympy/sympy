@@ -603,8 +603,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 mrow.appendChild(x)
                 mrow.appendChild(y)
             for term in terms:
-                x = self._print(term)
-                mrow.appendChild(x)
+                mrow.appendChild(self.parenthesize(term, PRECEDENCE['Mul']))
                 if not term == terms[-1]:
                     y = self.dom.createElement('mo')
                     y.appendChild(self.dom.createTextNode(self.mathml_tag(expr)))
@@ -1576,6 +1575,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createTextNode('&#x2205;'))
         return x
 
+    def _print_UniversalSet(self, e):
+        x = self.dom.createElement('mo')
+        x.appendChild(self.dom.createTextNode('&#x1D54C;'))
+        return x
+
     def _print_Adjoint(self, expr):
         from sympy.matrices import MatrixSymbol
         mat = expr.arg
@@ -1677,6 +1681,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_ZeroMatrix(self, Z):
         x = self.dom.createElement('mn')
         x.appendChild(self.dom.createTextNode('&#x1D7D8'))
+        return x
+
+    def _print_OneMatrix(self, Z):
+        x = self.dom.createElement('mn')
+        x.appendChild(self.dom.createTextNode('&#x1D7D9'))
         return x
 
     def _print_Identity(self, I):

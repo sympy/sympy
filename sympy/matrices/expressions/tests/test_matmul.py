@@ -1,8 +1,9 @@
-from sympy.core import I, symbols, Basic, Mul
+from sympy.core import I, symbols, Basic, Mul, S
 from sympy.functions import adjoint, transpose
 from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
         eye, ImmutableMatrix)
 from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow
+from sympy.matrices.expressions.matexpr import GenericIdentity
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
@@ -40,6 +41,7 @@ def test_transpose():
     MT = Matrix(2, 2, [1, 3, 2 + I, 4])
     assert transpose(M) == MT
     assert transpose(2*M) == 2*MT
+    assert transpose(x*M) == x*MT
     assert transpose(MatMul(2, M)) == MatMul(2, MT).doit()
 
 
@@ -148,3 +150,7 @@ def test_issue_12950():
 def test_construction_with_Mul():
     assert Mul(C, D) == MatMul(C, D)
     assert Mul(D, C) == MatMul(D, C)
+
+def test_generic_identity():
+    assert MatMul.identity == GenericIdentity()
+    assert MatMul.identity != S.One

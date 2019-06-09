@@ -58,7 +58,7 @@ else:
     coverage.process_startup()
 ''')
 EOF
-    export COVERAGE_PROCESS_START=$TRAVIS_BUILD_DIR/.coveragerc
+    export COVERAGE_PROCESS_START=$TRAVIS_BUILD_DIR/coveragerc_travis
 fi
 
 if [[ "${TEST_ASCII}" == "true" ]]; then

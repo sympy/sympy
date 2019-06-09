@@ -399,6 +399,7 @@ def test_nsimplify():
     # Make sure nsimplify on expressions uses full precision
     assert nsimplify(pi.evalf(100)*x, rational_conversion='exact').evalf(100) == pi.evalf(100)*x
 
+
 def test_issue_9448():
     tmp = sympify("1/(1 - (-1)**(2/3) - (-1)**(1/3)) + 1/(1 + (-1)**(2/3) + (-1)**(1/3))")
     assert nsimplify(tmp) == S(1)/2
@@ -516,7 +517,10 @@ def test_posify():
     eq, rep = posify(k)
     assert eq.assumptions0 == {'positive': True, 'zero': False, 'imaginary': False,
      'nonpositive': False, 'commutative': True, 'hermitian': True, 'real': True, 'nonzero': True,
-     'nonnegative': True, 'negative': False, 'complex': True, 'finite': True, 'infinite': False}
+     'nonnegative': True, 'negative': False, 'complex': True, 'finite': True,
+     'infinite': False, 'extended_real':True, 'extended_negative': False,
+     'extended_nonnegative': True, 'extended_nonpositive': False,
+     'extended_nonzero': True, 'extended_positive': True}
 
 
 def test_issue_4194():
@@ -793,3 +797,12 @@ def test_nc_simplify():
     assert nc_simplify(expr) == (1-c)**-1
     # commutative expressions should be returned without an error
     assert nc_simplify(2*x**2) == 2*x**2
+
+def test_issue_15965():
+    A = Sum(z*x**y, (x, 1, a))
+    anew = z*Sum(x**y, (x, 1, a))
+    B = Integral(x*y, x)
+    bnew = y*Integral(x, x)
+    assert simplify(A + B) == anew + bnew
+    assert simplify(A) == anew
+    assert simplify(B) == bnew

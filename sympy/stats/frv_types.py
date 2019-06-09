@@ -9,6 +9,7 @@ Die
 Bernoulli
 Coin
 Binomial
+BetaBinomial
 Hypergeometric
 Rademacher
 """
@@ -16,34 +17,46 @@ Rademacher
 from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
-        Dict, Basic, KroneckerDelta, Dummy)
+        Dict, Basic, KroneckerDelta, Dummy, Eq)
+from sympy import beta as beta_fn
 from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
-from sympy.core.logic import fuzzy_not, fuzzy_and
+from sympy.stats.rv import _value_check
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
 
-__all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
-        'Binomial', 'Hypergeometric']
+__all__ = ['FiniteRV',
+'DiscreteUniform',
+'Die',
+'Bernoulli',
+'Coin',
+'Binomial',
+'BetaBinomial',
+'Hypergeometric',
+'Rademacher'
+]
 
 def rv(name, cls, *args):
-    density = cls(*args)
-    return SingleFinitePSpace(name, density).value
+    args = list(map(sympify, args))
+    i = 0
+    while i < len(args): # Converting to Dict since dict is not hashable
+        if isinstance(args[i], dict):
+            args[i] = Dict(args[i])
+        i += 1
+    dist = cls(*args)
+    dist.check(*args)
+    return SingleFinitePSpace(name, dist).value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
     @property
     def dict(self):
         return self.args[0]
 
-    def __new__(cls, density):
-        density = Dict(density)
-        for k in density.values():
-            k_sym = sympify(k)
-            if fuzzy_not(fuzzy_and((k_sym.is_nonnegative, (k_sym - 1).is_nonpositive))):
-                raise ValueError("Probability at a point must be between 0 and 1.")
-        sum_sym = sum(density.values())
-        if sum_sym != 1:
-            raise ValueError("Total Probability must be equal to 1.")
-        return Basic.__new__(cls, density)
+    @staticmethod
+    def check(density):
+        for p in density.values():
+            _value_check((p >= 0, p <= 1),
+                        "Probability at a point must be between 0 and 1.")
+        _value_check(Eq(sum(density.values()), 1), "Total Probability must be 1.")
 
 def FiniteRV(name, density):
     """
@@ -118,12 +131,10 @@ def DiscreteUniform(name, items):
 class DieDistribution(SingleFiniteDistribution):
     _argnames = ('sides',)
 
-    def __new__(cls, sides):
-        sides_sym = sympify(sides)
-        if fuzzy_not(fuzzy_and((sides_sym.is_integer, sides_sym.is_positive))):
-            raise ValueError("'sides' must be a positive integer.")
-        else:
-            return super(DieDistribution, cls).__new__(cls, sides)
+    @staticmethod
+    def check(sides):
+        _value_check((sides.is_positive, sides.is_integer),
+                    "number of sides must be a positive integer.")
 
     @property
     @cacheit
@@ -174,14 +185,10 @@ def Die(name, sides=6):
 class BernoulliDistribution(SingleFiniteDistribution):
     _argnames = ('p', 'succ', 'fail')
 
-    def __new__(cls, *args):
-        p = args[BernoulliDistribution._argnames.index('p')]
-        p_sym = sympify(p)
-
-        if fuzzy_not(fuzzy_and((p_sym.is_nonnegative, (p_sym - 1).is_nonpositive))):
-            raise ValueError("p = %s is not in range [0, 1]." % str(p))
-        else:
-            return super(BernoulliDistribution, cls).__new__(cls, *args)
+    @staticmethod
+    def check(p, succ, fail):
+        _value_check((p >= 0, p <= 1),
+                    "p should be in range [0, 1].")
 
     @property
     @cacheit
@@ -259,18 +266,12 @@ def Coin(name, p=S.Half):
 class BinomialDistribution(SingleFiniteDistribution):
     _argnames = ('n', 'p', 'succ', 'fail')
 
-    def __new__(cls, *args):
-        n = args[BinomialDistribution._argnames.index('n')]
-        p = args[BinomialDistribution._argnames.index('p')]
-        n_sym = sympify(n)
-        p_sym = sympify(p)
-
-        if fuzzy_not(fuzzy_and((n_sym.is_integer, n_sym.is_nonnegative))):
-            raise ValueError("'n' must be positive integer. n = %s." % str(n))
-        elif fuzzy_not(fuzzy_and((p_sym.is_nonnegative, (p_sym - 1).is_nonpositive))):
-            raise ValueError("'p' must be: 0 <= p <= 1 . p = %s" % str(p))
-        else:
-            return super(BinomialDistribution, cls).__new__(cls, *args)
+    @staticmethod
+    def check(n, p, succ, fail):
+        _value_check((n.is_integer, n.is_nonnegative),
+                    "'n' must be nonnegative integer.")
+        _value_check((p <= 1, p >= 0),
+                    "p should be in range [0, 1].")
 
     @property
     @cacheit
@@ -306,6 +307,56 @@ def Binomial(name, n, p, succ=1, fail=0):
     """
 
     return rv(name, BinomialDistribution, n, p, succ, fail)
+
+#-------------------------------------------------------------------------------
+# Beta-binomial distribution ----------------------------------------------------------
+
+class BetaBinomialDistribution(SingleFiniteDistribution):
+    _argnames = ('n', 'alpha', 'beta')
+
+    @staticmethod
+    def check(n, alpha, beta):
+        _value_check((n.is_integer, n.is_nonnegative),
+        "'n' must be nonnegative integer. n = %s." % str(n))
+        _value_check((alpha > 0),
+        "'alpha' must be: alpha > 0 . alpha = %s" % str(alpha))
+        _value_check((beta > 0),
+        "'beta' must be: beta > 0 . beta = %s" % str(beta))
+
+    @property
+    @cacheit
+    def dict(self):
+        n, a, b = self.n, self.alpha, self.beta
+        n = as_int(n)
+        return dict((k, binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b))
+            for k in range(0, n + 1))
+
+
+def BetaBinomial(name, n, alpha, beta):
+    """
+    Create a Finite Random Variable representing a Beta-binomial distribution.
+
+    Returns a RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import BetaBinomial, density
+    >>> from sympy import S
+
+    >>> X = BetaBinomial('X', 2, 1, 1)
+    >>> density(X).dict
+    {0: beta(1, 3)/beta(1, 1), 1: 2*beta(2, 2)/beta(1, 1), 2: beta(3, 1)/beta(1, 1)}
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Beta-binomial_distribution
+    .. [2] http://mathworld.wolfram.com/BetaBinomialDistribution.html
+
+    """
+
+    return rv(name, BetaBinomialDistribution, n, alpha, beta)
 
 
 class HypergeometricDistribution(SingleFiniteDistribution):

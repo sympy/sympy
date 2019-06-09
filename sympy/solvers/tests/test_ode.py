@@ -8,6 +8,8 @@ from sympy.solvers.ode import (_undetermined_coefficients_match,
     checksysodesol, solve_ics, dsolve, get_numbered_constants)
 from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
+from sympy.utilities.misc import filldedent
+
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 u, x, y, z = symbols('u,x:z', real=True)
@@ -256,14 +258,17 @@ def test_linear_2eq_order2():
     # FIXME: assert checksysodesol(eq7, sol7) == (True, [0, 0])
 
     eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
-    sol8 = ("[Eq(x(t), -sqrt(133)*((-sqrt(133) - 1)*(C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
-    "C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + O(t**6)) - (-1 + sqrt(133))*(C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) + "
-    "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6)) - 4*C2*(133*t**8/24 - t**3/6 + sqrt(133)*t**3/2 + 1) + "
-    "4*C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - 4*C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + "
-    "4*C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/3192), Eq(y(t), -sqrt(133)*(-C2*(133*t**8/24 - t**3/6 + "
-    "sqrt(133)*t**3/2 + 1) + C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - C1*t*(sqrt(133)*t**4/6 - t**3/12 + 1) + "
-    "C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6))/266)]")
-    assert str(dsolve(eq8)) == sol8
+    assert filldedent(dsolve(eq8)) == filldedent('''
+        [Eq(x(t), -sqrt(133)*(-(-1 + sqrt(133))*(C2*(-sqrt(133)*t**3/6 -
+        t**3/6 + 1) + C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6)) +
+        (-sqrt(133) - 1)*(C2*(-t**3/6 + sqrt(133)*t**3/6 + 1) + C1*t*(-t**3/12
+        + sqrt(133)*t**3/12 + 1) + O(t**6)) + 4*C2*(-sqrt(133)*t**3/6 - t**3/6
+        + 1) - 4*C2*(-t**3/6 + sqrt(133)*t**3/6 + 1) +
+        4*C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) - 4*C1*t*(-t**3/12 +
+        sqrt(133)*t**3/12 + 1) + O(t**6))/3192), Eq(y(t),
+        -sqrt(133)*(C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - C2*(-t**3/6 +
+        sqrt(133)*t**3/6 + 1) + C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) -
+        C1*t*(-t**3/12 + sqrt(133)*t**3/12 + 1) + O(t**6))/266)]''')
     # FIXME: assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
     eq9 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
@@ -3251,7 +3256,7 @@ def test_nth_algebraic():
     eqn = Eq(Derivative(f(x), x), Derivative(g(x), x))
     sol = Eq(f(x), C1 + g(x))
     assert checkodesol(eqn, sol, order=1, solve_for_func=False)[0]
-    assert sol == dsolve(eqn, f(x), hint='nth_algebraic')
+    assert sol == dsolve(eqn, f(x), hint='nth_algebraic'), dsolve(eqn, f(x), hint='nth_algebraic')
     assert sol == dsolve(eqn, f(x))
 
     eqn = (diff(f(x)) - x)*(diff(f(x)) + x)
@@ -3409,6 +3414,18 @@ def test_factoring_ode():
     soln = Eq(f(x), (C1*x**2/2 + C2*x + C3 - x)/(1 + x))
     assert checkodesol(eqn, soln, order=2, solve_for_func=False)[0]
     assert soln == dsolve(eqn, f(x))
+
+
+def test_issue_11542():
+    m = 96
+    g = 9.8
+    k = .2
+    f1 = g * m
+    t = Symbol('t')
+    v = Function('v')
+    v_equation = dsolve(f1 - k * (v(t) ** 2) - m * Derivative(v(t)), 0)
+    assert str(v_equation) == \
+        'Eq(v(t), -68.585712797929/tanh(C1 - 0.142886901662352*t))'
 
 
 def test_issue_15913():

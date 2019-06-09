@@ -53,6 +53,7 @@ from sympy.core.compatibility import range, PY3
 from itertools import islice, takewhile
 from sympy.series.formal import fps
 from sympy.series.fourier import fourier_series
+from sympy.calculus.util import minimum
 
 
 R = Rational
@@ -365,7 +366,7 @@ def test_G17():
 
 def test_G18():
     assert cf_p(1, 2, 5) == [[1]]
-    assert cf_r([[1]]) == S.Half + sqrt(5)/2
+    assert cf_r([[1]]).expand() == S.Half + sqrt(5)/2
 
 
 @XFAIL
@@ -2245,10 +2246,8 @@ def test_U12():
         "External diff of differential form not supported")
 
 
-@XFAIL
 def test_U13():
-    #assert minimize(x**4 - x + 1, x)== -3*2**Rational(1,3)/8 + 1
-    raise NotImplementedError("minimize() not supported")
+    assert minimum(x**4 - x + 1, x) == -3*2**Rational(1,3)/8 + 1
 
 
 @XFAIL

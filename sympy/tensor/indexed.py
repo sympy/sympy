@@ -148,7 +148,10 @@ class Indexed(Expr):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base, IndexedBase):
             raise TypeError(filldedent("""
-                Indexed expects string, Symbol, or IndexedBase as base."""))
+                The base can only be replaced with a string, Symbol,
+                IndexedBase or an object with a method for getting
+                items (i.e. an object with a `__getitem__` method).
+                """))
         args = list(map(sympify, args))
         if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
             if len(args) == 1:
@@ -602,7 +605,8 @@ class Idx(Expr):
                 raise ValueError(filldedent("""
                     Idx range tuple must have length 2, but got %s""" % len(range)))
             for bound in range:
-                if bound.is_integer is False:
+                if (bound.is_integer is False and bound is not S.Infinity
+                        and bound is not S.NegativeInfinity):
                     raise TypeError("Idx object requires integer bounds.")
             args = label, Tuple(*range)
         elif isinstance(range, Expr):

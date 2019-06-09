@@ -11,8 +11,8 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import (Basic, Symbol, cacheit, sympify, Mul,
-        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy)
+from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul,
+        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan)
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
@@ -90,7 +90,6 @@ class SingleFiniteDomain(FiniteDomain):
     @property
     def symbol(self):
         return self.args[0]
-        return tuple(self.symbols)[0]
 
     @property
     def symbols(self):
@@ -190,6 +189,10 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def __new__(cls, *args):
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
+
+    @staticmethod
+    def check(*args):
+        pass
 
     @property
     @cacheit
@@ -307,6 +310,14 @@ class FinitePSpace(PSpace):
         expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
         return sum([expr.xreplace(dict(elem)) * self.prob_of(elem)
                 for elem in self.domain])
+
+    def compute_quantile(self, expr):
+        cdf = self.compute_cdf(expr)
+        p = symbols('p', real=True, finite=True, cls=Dummy)
+        set = ((nan, (p < 0) | (p > 1)),)
+        for key, value in cdf.items():
+            set = set + ((key, p <= value), )
+        return Lambda(p, Piecewise(*set))
 
     def probability(self, condition):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
