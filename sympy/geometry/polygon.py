@@ -789,7 +789,7 @@ class Polygon(GeometrySet):
         and the part of the polygon above it.
 
         Examples
-        =======
+        ========
 
         >>> from sympy import Point, Polygon, Line
         >>> a, b = 20, 10
@@ -812,13 +812,25 @@ class Polygon(GeometrySet):
         x = _symbol('x', real=True)
         y = _symbol('y', real=True)
 
+        # considering equation of line to be `ax +by + c`
+        a = eq.coeff(x)
+        b = eq.coeff(y)
+
         new_vertices = []
         done = True
         for point in points:
-            if eq.evalf(subs={x: point.x, y: point.y}) > 0:
+            if b:
+                compare = (eq.evalf(subs={x: point.x, y: point.y}))/b
+            else:
+                # when coefficient of y is 0, right side of the line is
+                # considered
+                compare = (eq.subs(x, point.x))/a
+                intersection_points = intersection_points[::-1]
+
+            if compare > 0:
                 new_vertices.append(point)
-            elif done:                                     # to avoid repeated addition of
-                new_vertices += intersection_points        # intersection_points in new_vertices
+            elif done:                               # to avoid repeated addition of
+                new_vertices += intersection_points  # intersection_points in new_vertices
                 done = False
 
         return Polygon(*new_vertices)
