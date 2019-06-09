@@ -1,18 +1,17 @@
 from __future__ import (absolute_import, division, print_function)
 
 import os
-import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import warnings
-from distutils.sysconfig import get_config_var, get_config_vars
+from distutils.errors import CompileError
+from distutils.sysconfig import get_config_var
 
 from .util import (
     get_abspath, make_dirs, copy, Glob, ArbitraryDepthGlob,
-    glob_at_depth, CompileError,
-    import_module_from_file, pyx_is_cplus,
+    glob_at_depth, import_module_from_file, pyx_is_cplus,
     sha256_of_string, sha256_of_file
 )
 
@@ -30,7 +29,7 @@ if os.name == 'posix':
 elif os.name == 'nt':
     objext = '.obj'
 else:
-    warning.warng("Unknown os.name: {}".format(os.name))
+    warnings.warn("Unknown os.name: {}".format(os.name))
     objext = '.o'
 
 

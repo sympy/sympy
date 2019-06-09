@@ -19,6 +19,7 @@ def test_gamma():
 
     assert gamma(-100) == zoo
     assert gamma(0) == zoo
+    assert gamma(-100.0) == zoo
 
     assert gamma(1) == 1
     assert gamma(2) == 1
@@ -65,8 +66,10 @@ def test_gamma():
     # Test a bug:
     assert expand_func(gamma(x + Rational(3, 4))) == gamma(x + Rational(3, 4))
 
+    # XXX: Not sure about these tests. I can fix them by defining e.g.
+    # exp_polar.is_integer but I'm not sure if that makes sense.
     assert gamma(3*exp_polar(I*pi)/4).is_nonnegative is False
-    assert gamma(3*exp_polar(I*pi)/4).is_nonpositive is True
+    assert gamma(3*exp_polar(I*pi)/4).is_extended_nonpositive is True
 
 
 def test_gamma_rewrite():
@@ -430,8 +433,8 @@ def test_issue_8524():
     assert gamma(e - S.Half).is_positive is False
 
 def test_issue_14450():
-    assert uppergamma(S(3)/8, x).evalf() == uppergamma(0.375, x)
-    assert lowergamma(x, S(3)/8).evalf() == lowergamma(x, 0.375)
+    assert uppergamma(S(3)/8, x).evalf() == uppergamma(S(3)/8, x)
+    assert lowergamma(x, S(3)/8).evalf() == lowergamma(x, S(3)/8)
     # some values from Wolfram Alpha for comparison
     assert abs(uppergamma(S(3)/8, 2).evalf() - 0.07105675881) < 1e-9
     assert abs(lowergamma(S(3)/8, 2).evalf() - 2.2993794256) < 1e-9

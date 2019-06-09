@@ -1,6 +1,7 @@
 """Finitely Presented Groups and its algorithms. """
 
 from __future__ import print_function, division
+from sympy import S
 from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
                                                 free_group)
 from sympy.combinatorics.rewritingsystem import RewritingSystem
@@ -360,7 +361,6 @@ class FpGroup(DefaultPrinting):
             C = self.coset_enumeration(H, strategy)
             return len(C.table)
 
-
     def __str__(self):
         if self.free_group.rank > 30:
             str_form = "<fp group with %s generators>" % self.free_group.rank
@@ -383,7 +383,6 @@ class FpGroup(DefaultPrinting):
         '''
         from sympy.combinatorics import Permutation, PermutationGroup
         from sympy.combinatorics.homomorphisms import homomorphism
-        from sympy import S
         if self.order() == S.Infinity:
             raise NotImplementedError("Permutation presentation of infinite "
                                                   "groups is not implemented")
@@ -512,6 +511,43 @@ class FpGroup(DefaultPrinting):
         '''
         P, T = self._to_perm_group()
         return T.invert(P._elements)
+
+    @property
+    def is_cyclic(self):
+        """
+        Return ``True`` if group is Cyclic.
+
+        """
+        if len(self.generators) <= 1:
+            return True
+        try:
+            P, T = self._to_perm_group()
+        except NotImplementedError:
+            raise NotImplementedError("Check for infinite Cyclic group "
+                                      "is not implemented")
+        return P.is_cyclic
+
+    def abelian_invariants(self):
+        """
+        Return Abelian Invariants of a group.
+        """
+        try:
+            P, T = self._to_perm_group()
+        except NotImplementedError:
+            raise NotImplementedError("abelian invariants is not implemented"
+                                      "for infinite group")
+        return P.abelian_invariants()
+
+    def composition_series(self):
+        """
+        Return subnormal series of maximum length for a group.
+        """
+        try:
+            P, T = self._to_perm_group()
+        except NotImplementedError:
+            raise NotImplementedError("composition series is not implemented"
+                                      "for infinite group")
+        return P.composition_series()
 
 
 class FpSubgroup(DefaultPrinting):

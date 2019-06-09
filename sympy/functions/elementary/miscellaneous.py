@@ -6,7 +6,6 @@ from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
-from sympy.core.evaluate import global_evaluate
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
@@ -517,7 +516,7 @@ class MinMaxBase(Expr, LatticeOp):
         for arg in arg_sequence:
 
             # pre-filter, checking comparability of arguments
-            if not isinstance(arg, Expr) or arg.is_real is False or (
+            if not isinstance(arg, Expr) or arg.is_extended_real is False or (
                     arg.is_number and
                     not arg.is_comparable):
                 raise ValueError("The argument '%s' is not comparable." % arg)
@@ -639,6 +638,7 @@ class MinMaxBase(Expr, LatticeOp):
     _eval_is_prime = lambda s: _torf(i.is_prime for i in s.args)
     _eval_is_rational = lambda s: _torf(i.is_rational for i in s.args)
     _eval_is_real = lambda s: _torf(i.is_real for i in s.args)
+    _eval_is_extended_real = lambda s: _torf(i.is_extended_real for i in s.args)
     _eval_is_transcendental = lambda s: _torf(i.is_transcendental for i in s.args)
     _eval_is_zero = lambda s: _torf(i.is_zero for i in s.args)
 

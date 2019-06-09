@@ -3,7 +3,7 @@ from sympy import (
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
-    factor_terms, DiracDelta, Heaviside, Add, Mul, factorial)
+    factor_terms, DiracDelta, Heaviside, Add, Mul, factorial, Ge)
 from sympy.printing import srepr
 from sympy.utilities.pytest import raises, slow
 
@@ -14,7 +14,7 @@ a, b, c, d, x, y = symbols('a:d, x, y')
 z = symbols('z', nonzero=True)
 
 
-def test_piecewise():
+def test_piecewise1():
 
     # Test canonicalization
     assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
@@ -144,8 +144,8 @@ def test_piecewise():
         (x**3/3 + S(4)/3, x < 0),
         (x*log(x) - x + S(4)/3, True))
     p = Piecewise((x, x < 1), (x**2, -1 <= x), (x, 3 < x))
-    assert integrate(p, (x, -2, 2)) == 5/6.0
-    assert integrate(p, (x, 2, -2)) == -5/6.0
+    assert integrate(p, (x, -2, 2)) == S(5)/6
+    assert integrate(p, (x, 2, -2)) == -S(5)/6
     p = Piecewise((0, x < 0), (1, x < 1), (0, x < 2), (1, x < 3), (0, True))
     assert integrate(p, (x, -oo, oo)) == 2
     p = Piecewise((x, x < -10), (x**2, x <= -1), (x, 1 < x))
@@ -433,6 +433,18 @@ def test_piecewise_simplify():
             (2*x, And(Eq(a, 0), Eq(y, 0))),
             (2, And(Eq(a, 1), Eq(y, 0))),
             (0, True))
+    args = (2, And(Eq(x, 2), Ge(y ,0))), (x, True)
+    assert Piecewise(*args).simplify() == Piecewise(*args)
+    args = (1, Eq(x, 0)), (sin(x)/x, True)
+    assert Piecewise(*args).simplify() == Piecewise(*args)
+    assert Piecewise((2 + y, And(Eq(x, 2), Eq(y, 0))), (x, True)
+        ).simplify() == x
+    # check that x or f(x) are recognized as being Symbol-like for lhs
+    args = Tuple((1, Eq(x, 0)), (sin(x) + 1 + x, True))
+    ans = x + sin(x) + 1
+    f = Function('f')
+    assert Piecewise(*args).simplify() == ans
+    assert Piecewise(*args.subs(x, f(x))).simplify() == ans.subs(x, f(x))
 
 
 def test_piecewise_solve():
@@ -534,10 +546,9 @@ def test_piecewise_fold():
 def test_piecewise_fold_piecewise_in_cond():
     p1 = Piecewise((cos(x), x < 0), (0, True))
     p2 = Piecewise((0, Eq(p1, 0)), (p1 / Abs(p1), True))
-    p3 = piecewise_fold(p2)
-    assert(p2.subs(x, -pi/2) == 0.0)
-    assert(p2.subs(x, 1) == 0.0)
-    assert(p2.subs(x, -pi/4) == 1.0)
+    assert p2.subs(x, -pi/2) == 0
+    assert p2.subs(x, 1) == 0
+    assert p2.subs(x, -pi/4) == 1
     p4 = Piecewise((0, Eq(p1, 0)), (1,True))
     ans = piecewise_fold(p4)
     for i in range(-1, 1):

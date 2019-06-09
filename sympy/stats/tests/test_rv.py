@@ -1,15 +1,15 @@
-from __future__ import unicode_literals
-from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-        DiracDelta)
-from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, variance, covariance,
-        skewness, density, given, independent, dependent, where, pspace,
-        random_symbols, sample)
+from sympy import (S, Symbol, Interval,
+        Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
+        DiracDelta, Lambda, log, pi)
+from sympy.core.numbers import comp
+from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
+        density, given, independent, dependent, where, pspace,
+        random_symbols, sample, Geometric)
+from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, PSpace)
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import range
-from sympy.abc import x
 
 
 def test_where():
@@ -47,6 +47,7 @@ def test_random_symbols():
 
 def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
+    x = Symbol('x')
 
     raises(ValueError, lambda: pspace(5 + 3))
     raises(ValueError, lambda: pspace(x < 1))
@@ -106,6 +107,15 @@ def test_IndependentProductPSpace():
 
 def test_E():
     assert E(5) == 5
+
+
+def test_H():
+    X = Normal('X', 0, 1)
+    D = Die('D', sides = 4)
+    G = Geometric('G', 0.5)
+    assert H(X, X > 0) == -log(2)/2 + S(1)/2 + log(pi)/2
+    assert H(D, D > 2) == log(2)
+    assert comp(H(G).evalf().round(2), 1.39)
 
 
 def test_Sample():
@@ -169,7 +179,8 @@ def test_dependent_finite():
 
 def test_normality():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
-    x, z = symbols('x, z', real=True, finite=True)
+    x = Symbol('x', real=True, finite=True)
+    z = Symbol('z', real=True, finite=True)
     dens = density(X - Y, Eq(X + Y, z))
 
     assert integrate(dens(x), (x, -oo, oo)) == 1
@@ -227,3 +238,13 @@ def test_issue_8129():
     assert P(X >= X) == 1
     assert P(X > X) == 0
     assert P(X > X+1) == 0
+
+def test_issue_12237():
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 1)
+    U = P(X > 0, X)
+    V = P(Y < 0, X)
+    W = P(X + Y > 0, X)
+    assert W == P(X + Y > 0, X)
+    assert U == BernoulliDistribution(S(1)/2, S(0), S(1))
+    assert V == S(1)/2

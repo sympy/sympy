@@ -63,6 +63,15 @@ def is_square(n, prep=True):
     If n is suspected of *not* being a square then this is a
     quick method of confirming that it is not.
 
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_square
+    >>> is_square(25)
+    True
+    >>> is_square(2)
+    False
+
     References
     ==========
 

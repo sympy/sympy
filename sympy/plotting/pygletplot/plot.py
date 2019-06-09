@@ -1,29 +1,28 @@
 from __future__ import print_function, division
 
-from sympy import Integer
-from sympy.core.compatibility import is_sequence, SYMPY_INTS
-
 from threading import RLock
 
 # it is sufficient to import "pyglet" here once
 try:
-    from pyglet.gl import *
+    import pyglet.gl as pgl
 except ImportError:
     raise ImportError("pyglet is required for plotting.\n "
                       "visit http://www.pyglet.org/")
 
-from plot_object import PlotObject
-from plot_axes import PlotAxes
-from plot_window import PlotWindow
-from plot_mode import PlotMode
+from sympy.core.compatibility import is_sequence, SYMPY_INTS
+from sympy.core.numbers import Integer
+from sympy.geometry.entity import GeometryEntity
+from sympy.plotting.pygletplot.plot_axes import PlotAxes
+from sympy.plotting.pygletplot.plot_mode import PlotMode
+from sympy.plotting.pygletplot.plot_object import PlotObject
+from sympy.plotting.pygletplot.plot_window import PlotWindow
+from sympy.plotting.pygletplot.util import parse_option_string
+from sympy.utilities.decorator import doctest_depends_on
 
 from time import sleep
 from os import getcwd, listdir
-from util import parse_option_string
 
-from sympy.geometry.entity import GeometryEntity
-
-from sympy.utilities.decorator import doctest_depends_on
+import ctypes
 
 @doctest_depends_on(modules=('pyglet',))
 class PygletPlot(object):
@@ -32,7 +31,6 @@ class PygletPlot(object):
     =============
 
     See examples/advanced/pyglet_plotting.py for many more examples.
-
 
     >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> from sympy.abc import x, y, z
@@ -95,7 +93,7 @@ class PygletPlot(object):
     1: parametric, cartesian, polar
     2: parametric, cartesian, cylindrical = polar, spherical
 
-    >>> Plot(1, mode='spherical') # doctest: +SKIP
+    >>> Plot(1, mode='spherical')
 
 
     Calculator-like Interface
@@ -105,8 +103,8 @@ class PygletPlot(object):
     >>> f = x**2
     >>> p[1] = f
     >>> p[2] = f.diff(x)
-    >>> p[3] = f.diff(x).diff(x) # doctest: +SKIP
-    >>> p # doctest: +SKIP
+    >>> p[3] = f.diff(x).diff(x)
+    >>> p
     [1]: x**2, 'mode=cartesian'
     [2]: 2*x, 'mode=cartesian'
     [3]: 2, 'mode=cartesian'
@@ -226,6 +224,9 @@ class PygletPlot(object):
             True OR False
 
         """
+        # Register the plot modes
+        from . import plot_modes
+
         self._win_args = win_args
         self._window = None
 
@@ -256,8 +257,8 @@ class PygletPlot(object):
             self._win_args['visible'] = True
             self.axes.reset_resources()
 
-            if hasattr(self, '_doctest_depends_on'):
-                self._win_args['runfromdoctester'] = True
+            #if hasattr(self, '_doctest_depends_on'):
+            #    self._win_args['runfromdoctester'] = True
 
             self._window = PlotWindow(self, **self._win_args)
 
@@ -411,9 +412,7 @@ class ScreenShot:
         self.flag = 0
 
     def __nonzero__(self):
-        if self.screenshot_requested:
-            return 1
-        return 0
+        return self.screenshot_requested
 
     __bool__ = __nonzero__
 
@@ -423,9 +422,9 @@ class ScreenShot:
             return
 
         size_x, size_y = self._plot._window.get_size()
-        size = size_x*size_y*4*sizeof(c_ubyte)
-        image = create_string_buffer(size)
-        glReadPixels(0, 0, size_x, size_y, GL_RGBA, GL_UNSIGNED_BYTE, image)
+        size = size_x*size_y*4*ctypes.sizeof(ctypes.c_ubyte)
+        image = ctypes.create_string_buffer(size)
+        pgl.glReadPixels(0, 0, size_x, size_y, pgl.GL_RGBA, pgl.GL_UNSIGNED_BYTE, image)
         from PIL import Image
         im = Image.frombuffer('RGBA', (size_x, size_y),
                               image.raw, 'raw', 'RGBA', 0, 1)

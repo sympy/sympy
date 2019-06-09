@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Number
-from sympy.core import Mul, Basic, sympify, Add
+from sympy.core import Mul, Basic, sympify
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
 from sympy.matrices.expressions.transpose import transpose
@@ -12,7 +12,7 @@ from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.matrices import MatrixBase
 
-
+# XXX: MatMul should perhaps not subclass directly from Mul
 class MatMul(MatrixExpr, Mul):
     """
     A product of matrix expressions
@@ -29,15 +29,17 @@ class MatMul(MatrixExpr, Mul):
     """
     is_MatMul = True
 
+    identity = GenericIdentity()
+
     def __new__(cls, *args, **kwargs):
         check = kwargs.get('check', True)
 
         if not args:
-            return GenericIdentity()
+            return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericIdentity().shape
-        args = filter(lambda i: GenericIdentity() != i, args)
+        args = filter(lambda i: cls.identity != i, args)
         args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
@@ -55,7 +57,7 @@ class MatMul(MatrixExpr, Mul):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
 
-    def _entry(self, i, j, expand=True):
+    def _entry(self, i, j, expand=True, **kwargs):
         from sympy import Dummy, Sum, Mul, ImmutableMatrix, Integer
 
         coeff, matrices = self.as_coeff_matrices()
@@ -67,11 +69,21 @@ class MatMul(MatrixExpr, Mul):
         ind_ranges = [None]*(len(matrices) - 1)
         indices[0] = i
         indices[-1] = j
+
+        def f():
+            counter = 1
+            while True:
+                yield Dummy("i_%i" % counter)
+                counter += 1
+
+        dummy_generator = kwargs.get("dummy_generator", f())
+
         for i in range(1, len(matrices)):
-            indices[i] = Dummy("i_%i" % i)
+            indices[i] = next(dummy_generator)
+
         for i, arg in enumerate(matrices[:-1]):
             ind_ranges[i] = arg.shape[1] - 1
-        matrices = [arg[indices[i], indices[i+1]] for i, arg in enumerate(matrices)]
+        matrices = [arg._entry(indices[i], indices[i+1], dummy_generator=dummy_generator) for i, arg in enumerate(matrices)]
         expr_in_sum = Mul.fromiter(matrices)
         if any(v.has(ImmutableMatrix) for v in matrices):
             expand = True
@@ -99,7 +111,27 @@ class MatMul(MatrixExpr, Mul):
         return coeff, MatMul(*matrices)
 
     def _eval_transpose(self):
-        return MatMul(*[transpose(arg) for arg in self.args[::-1]]).doit()
+        """Transposition of matrix multiplication.
+
+        Notes
+        =====
+
+        The following rules are applied.
+
+        Transposition for matrix multiplied with another matrix:
+        `\\left(A B\\right)^{T} = B^{T} A^{T}`
+
+        Transposition for matrix multiplied with scalar:
+        `\\left(c A\\right)^{T} = c A^{T}`
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Transpose
+        """
+        coeff, matrices = self.as_coeff_matrices()
+        return MatMul(
+            coeff, *[transpose(arg) for arg in matrices[::-1]]).doit()
 
     def _eval_adjoint(self):
         return MatMul(*[adjoint(arg) for arg in self.args[::-1]]).doit()
@@ -134,7 +166,6 @@ class MatMul(MatrixExpr, Mul):
         else:
             args = self.args
         # treat scalar*MatrixSymbol or scalar*MatPow separately
-        mats = [arg for arg in self.args if arg.is_Matrix]
         expr = canonicalize(MatMul(*args))
         return expr
 
@@ -152,19 +183,19 @@ class MatMul(MatrixExpr, Mul):
             left_args = self.args[:ind]
             right_args = self.args[ind+1:]
 
-            right_mat = MatMul.fromiter(right_args)
-            right_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(right_args)])
-            left_mat = MatMul.fromiter(left_args)
-            left_rev = MatMul.fromiter([Transpose(i).doit() for i in reversed(left_args)])
+            if right_args:
+                right_mat = MatMul.fromiter(right_args)
+            else:
+                right_mat = Identity(self.shape[1])
+            if left_args:
+                left_rev = MatMul.fromiter([Transpose(i).doit() if i.is_Matrix else i for i in reversed(left_args)])
+            else:
+                left_rev = Identity(self.shape[0])
 
             d = self.args[ind]._eval_derivative_matrix_lines(x)
             for i in d:
-                if i.transposed:
-                    i.append_first(right_mat)
-                    i.append_second(left_rev)
-                else:
-                    i.append_first(left_rev)
-                    i.append_second(right_mat)
+                i.append_first(left_rev)
+                i.append_second(right_mat)
                 lines.append(i)
 
         return lines
