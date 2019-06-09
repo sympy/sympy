@@ -222,6 +222,7 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
 
     values = property(lambda self: self.dict.values)
     items = property(lambda self: self.dict.items)
+    is_symbolic = property(lambda self: False)
     __iter__ = property(lambda self: self.dict.__iter__)
     __getitem__ = property(lambda self: self.dict.__getitem__)
 
@@ -253,6 +254,7 @@ class FinitePSpace(PSpace):
         obj._density = density
         return obj
 
+    @property
     def distribution(self):
         return self.args[1]
 
@@ -310,16 +312,10 @@ class FinitePSpace(PSpace):
         return Lambda(t, sum(exp(k * t) * v for k, v in d.items()))
 
     def compute_expectation(self, expr, rvs=None, **kwargs):
-        from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
-                                            HypergeometricDistribution
         rands = random_symbols(expr)
         for rv in rands:
-            dist = rv.pspace.distribution
-            cond1 = isinstance(dist, DieDistribution) and dist.sides.has(Symbol)
-            cond2 = isinstance(dist, BinomialDistribution) and dist.n.has(Symbol)
-            cond3 = isinstance(dist, HypergeometricDistribution) and \
-                    (dist.N.has(Symbol) or dist.n.has(Symbol) or dist.m.has(Symbol))
-            if cond1 or cond2 or cond3:
+            if hasattr(rv.pspace.distribution, 'is_symbolic') and \
+                rv.pspace.distribution.is_symbolic:
                 return Expectation(expr, **kwargs)
 
         rvs = rvs or self.values
@@ -337,15 +333,9 @@ class FinitePSpace(PSpace):
 
     def probability(self, condition):
         rvs = random_symbols(condition)
-        from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
-                                            HypergeometricDistribution
         for rv in rvs:
-            dist = rv.pspace.distribution
-            cond1 = isinstance(dist, DieDistribution) and dist.sides.has(Symbol)
-            cond2 = isinstance(dist, BinomialDistribution) and dist.n.has(Symbol)
-            cond3 = isinstance(dist, HypergeometricDistribution) and \
-                    (dist.N.has(Symbol) or dist.n.has(Symbol) or dist.m.has(Symbol))
-            if cond1 or cond2 or cond3:
+            if hasattr(rv.pspace.distribution, 'is_symbolic') and \
+                rv.pspace.distribution.is_symbolic:
                 return Probability(condition)
         cond_symbols = frozenset(rs.symbol for rs in rvs)
         assert cond_symbols.issubset(self.symbols)

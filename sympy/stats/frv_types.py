@@ -145,9 +145,13 @@ class DieDistribution(SingleFiniteDistribution):
                     "number of sides must be a positive integer.")
 
     @property
+    def is_symbolic(self):
+        return _is_sym_dim(self.sides)
+
+    @property
     @cacheit
     def dict(self):
-        if _is_sym_dim(self.sides):
+        if self.is_symbolic:
             return Density(self)
         return dict((k, S(1)/self.sides) for k in self.set)
 
@@ -293,11 +297,15 @@ class BinomialDistribution(SingleFiniteDistribution):
                     "p should be in range [0, 1].")
 
     @property
+    def is_symbolic(self):
+        return _is_sym_dim(self.n)
+
+    @property
     @cacheit
     def dict(self):
-        n, p, succ, fail = self.n, self.p, self.succ, self.fail
-        if _is_sym_dim(n):
+        if self.is_symbolic:
             return Density(self)
+        n, p, succ, fail = self.n, self.p, self.succ, self.fail
         return dict((k*succ + (n - k)*fail,
                 binomial(n, k) * p**k * (1 - p)**(n - k)) for k in range(0, n + 1))
 
@@ -390,11 +398,15 @@ class HypergeometricDistribution(SingleFiniteDistribution):
     _argnames = ('N', 'm', 'n')
 
     @property
+    def is_symbolic(self):
+        return any(_is_sym_dim(x) for x in (self.N, self.m, self.n))
+
+    @property
     @cacheit
     def dict(self):
-        N, m, n = self.N, self.m, self.n
-        if any(_is_sym_dim(x) for x in (N, m, n)):
+        if self.is_symbolic:
             return Density(self)
+        N, m, n = self.N, self.m, self.n
         N, m, n = list(map(sympify, (N, m, n)))
         density = dict((sympify(k),
                         Rational(binomial(m, k) * binomial(N - m, n - k),
