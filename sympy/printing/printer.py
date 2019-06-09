@@ -287,7 +287,6 @@ class Printer(object):
                     return getattr(self, printmethod)(expr, **kwargs)
             # Unknown object, fall back to the emptyPrinter. Checks what type of
             # decimal separator to print.
-            
             if (self.emptyPrinter == str) & \
                 (self._settings.get('decimal_separator', None) == 'comma'):
                 expr = str(expr).replace('.', '{,}')
