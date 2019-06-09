@@ -603,6 +603,7 @@ class chebyshevu(OrthogonalPolynomial):
             # U_{-n}(x)  --->  -U_{n-2}(x)
             if n.could_extract_minus_sign():
                 if n == S.NegativeOne:
+                    # n can not be -1 here
                     return S.Zero
                 else:
                     return -chebyshevu(-n - 2, x)
