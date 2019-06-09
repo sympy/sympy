@@ -71,9 +71,6 @@ class StochasticProcess(Basic):
     DiscreteTimeStochasticProcess
     """
 
-    is_Continuous = None
-    is_Discrete = None
-
     def __new__(cls, sym, state_space=S.Reals):
         sym = _symbol_converter(sym)
         state_space = _set_converter(state_space)
