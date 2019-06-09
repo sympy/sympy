@@ -2,6 +2,9 @@ from __future__ import print_function, division
 
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.special.gamma_functions import gamma, digamma
+from sympy.functions.special.hyper import hyper
+from sympy.functions.elementary.exponential import log
+from sympy import Symbol, S
 
 ###############################################################################
 ############################ COMPLETE BETA  FUNCTION ##########################
@@ -109,3 +112,75 @@ class beta(Function):
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate(), self.args[1].conjugate())
+
+###############################################################################
+########################### INCOMPLETE BETA  FUNCTION #########################
+###############################################################################
+
+
+class betainc(Function):
+    r"""
+    The incomplete beta function is a generalization of the beta function,
+
+    .. math::
+        \mathrm{B}_{z}(a,b) := \int^{z}_{0} t^{a-1} (1-t)^{b-1} \mathrm{d}t.
+
+    Incomplete beta function satisfies properties like:
+
+    .. math::
+        \mathrm{B}_{1}(a,b) = \mathrm{B}(a,b) \\
+
+    See Also
+    ========
+    Gamma function, Upper incomplete gamma function, Lower incomplete gamma function,
+    Polygamma function, Log Gamma function, Digamma function, Trigamma function.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Beta_function#Incomplete_beta_function
+    .. [2] http://mathworld.wolfram.com/IncompleteBetaFunction.html
+    """
+    nargs = 3
+
+    def fdiff(self, argindex):
+        z, a, b = self.args
+        if argindex == 1:
+            # Diff wrt z
+            return (1 - z)**(b - 1)*z**(a - 1)
+        elif argindex == 2:
+            # Diff wrt a
+            term1 = betainc(z, a, b)*log(z)
+            term2 = z**a*gamma(a)**2*hyper([a, a, 1-b], [a+1, a+1], z)
+            return  term1 - term2
+        elif argindex == 3:
+            term1 = gamma(b)**2*(1 - z)**b*hyper([b, b, 1-a], [b+1, b+1], 1-z)
+            term2 = log(1 - z)*self.func(1 - z, a, b)
+            term3 = (digamma(b) - digamma(a + b))*beta(a, b)
+            return term1 - term2 + term3
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, z, a, b):
+        from sympy import Integral
+        t = Symbol('t')
+        integrand = t**(a - 1)*(1 - t)**(b - 1)
+        if z.is_Number:
+            if z > 1 or z < 0:
+                return S.NaN
+            if a.is_Number and b.is_Number:
+                print(a, b)
+                return integrand.integrate((t, 0, z))
+
+    def _eval_rewrite_as_hyper(self, **kwargs):
+        z, a, b = self.args
+        return gamma(a)*z**a*hyper([a, 1-b], [a+1], z)
+
+    def _eval_is_real(self):
+        z, a, b = self.args
+        return a.is_real and b.is_real
+
+    def _eval_conjugate(self):
+        z, a, b = self.args
+        return self.func(z, a.conjugate(), b.conjugate())
