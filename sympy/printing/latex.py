@@ -1763,7 +1763,7 @@ class LatexPrinter(Printer):
                 r", \  ".join([self._print(i) for i in expr])
         else:
             raise ValueError('DecimalSeparatorNotFoundError')
- 
+
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
