@@ -4,7 +4,7 @@ from sympy.tensor.indexed import IndexException
 from sympy.utilities.pytest import raises, XFAIL
 
 # import test:
-from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
+from sympy import IndexedBase, Idx, Indexed, S, sin, cos, exp, log, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
     GreaterThan, StrictLessThan, Range, Array, Subs, Function, KroneckerDelta, Derivative
 
 
@@ -202,6 +202,24 @@ def test_IndexedBase_shape():
     assert F.shape == Tuple(m)
     assert F[i].subs(i, j) == F[j]
     raises(IndexException, lambda: F[i, j])
+
+
+def test_IndexedBase_assumptions():
+    i = Symbol('i', integer=True)
+    a = Symbol('a')
+    A = IndexedBase(a, positive=True)
+    for c in (A, A[i]):
+        assert c.is_real
+        assert c.is_complex
+        assert not c.is_imaginary
+        assert c.is_nonnegative
+        assert c.is_nonzero
+        assert c.is_commutative
+        assert log(exp(c)) == c
+
+    assert A != IndexedBase(a)
+    assert A == IndexedBase(a, positive=True, real=True)
+    assert A[i] != Indexed(a, i)
 
 
 def test_Indexed_constructor():
