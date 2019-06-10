@@ -163,8 +163,10 @@ class gamma(Function):
 
     def _eval_is_real(self):
         x = self.args[0]
+        if x.is_nonpositive and x.is_integer:
+            return False
         if intlike(x) and x <= 0:
-            return
+            return False
         if x.is_positive or x.is_noninteger:
             return True
 
@@ -1082,7 +1084,7 @@ class multigamma(Function):
         x, p = map(sympify, (x, p))
         if p.is_positive == False or p.is_integer == False:
             raise ValueError('Order parameter p must be positive integer.')
-        k = Dummy('k', real=True)
+        k = Dummy('k', integer=True, positive=True)
         return (pi**(p*(p - 1)/4)*Product(gamma(x + (1 - k)/2),
                     (k, 1, p))).doit()
 
@@ -1092,11 +1094,8 @@ class multigamma(Function):
 
     def _eval_is_real(self):
         x, p = self.args
-        if p.is_Integer:
-            for k in range(p):
-                num = (x - k/S(2))
-                if intlike(num) and num <= 0:
-                    return
-                elif num.is_nonpositive and num.is_integer:
-                    return
+        if x.is_Number and p.is_Number:
+            y = 2*x
+            if y <= (p - 1) and intlike(y):
+                return False
             return True
