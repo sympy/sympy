@@ -1100,12 +1100,14 @@ def test_function_assumptions():
     x = Symbol('x')
     f = Function('f')
     f_real = Function('f', real=True)
+    f_real_inherit = Function(Symbol('f', real=True))
 
     assert f != f_real
     assert f(x) != f_real(x)
 
     assert f(x).is_real is None
     assert f_real(x).is_real is True
+    assert f_real_inherit(x).is_real is True
 
     # Can also do it this way, but it won't be equal to f_real because of the
     # way UndefinedFunction.__new__ works.

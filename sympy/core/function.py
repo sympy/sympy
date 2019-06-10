@@ -372,10 +372,14 @@ class Function(Application, Expr):
     >>> g.diff(x)
     Derivative(g(x), x)
 
-    Assumptions can be passed to Function.
+    Assumptions can be passed to Function, and if function is initialized with a
+    symbol, the function inherits the associated assumptions:
 
     >>> f_real = Function('f', real=True)
     >>> f_real(x).is_real
+    True
+    >>> f_real_inherit = Function(Symbol('f', real=True))
+    >>> f_real_inherit(x).is_real
     True
 
     Note that assumptions on a function are unrelated to the assumptions on
@@ -863,6 +867,9 @@ class UndefinedFunction(FunctionClass):
     def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
         __dict__ = __dict__ or {}
         # Allow Function('f', real=True)
+        # and/or Function(Symbol('f', real=True))
+        if hasattr(name, "assumptions0"):
+            kwargs.update(name.assumptions0)
         __dict__.update({'is_' + arg: val for arg, val in kwargs.items() if arg in _assume_defined})
         # You can add other attributes, although they do have to be hashable
         # (but seriously, if you want to add anything other than assumptions,
@@ -871,7 +878,7 @@ class UndefinedFunction(FunctionClass):
         # Save these for __eq__
         __dict__.update({'_extra_kwargs': kwargs})
         __dict__['__module__'] = None # For pickling
-        ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
+        ret = super(UndefinedFunction, mcl).__new__(mcl, str(name), bases, __dict__)
         ret.name = name
         return ret
 
