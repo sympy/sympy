@@ -222,6 +222,17 @@ def test_IndexedBase_assumptions():
     assert A[i] != Indexed(a, i)
 
 
+def test_IndexedBase_assumptions_inheritance():
+    I = Symbol('I', integer=True)
+    I_inherit = IndexedBase(I)
+    I_explicit = IndexedBase('I', integer=True)
+
+    assert I_inherit.is_integer
+    assert I_explicit.is_integer
+    assert I_inherit.assumptions0 == I_explicit.assumptions0
+    assert I_inherit != I_explicit  # Because the underlying symbol is different.
+
+
 def test_Indexed_constructor():
     i, j = symbols('i j', integer=True)
     A = Indexed('A', i, j)

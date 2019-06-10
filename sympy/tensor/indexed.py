@@ -410,6 +410,14 @@ class IndexedBase(Expr, NotIterable):
     True
     >>> A != A_real
     True
+
+    Assumptions can also be inherited from the symbol used to initialize the IndexedBase:
+
+    >>> I = symbols('I', integer=True)
+    >>> C_inherit = IndexedBase(I)
+    >>> C_explicit = IndexedBase('I', integer=True)
+    >>> C_inherit.assumptions0 == C_explicit.assumptions0
+    True
     """
     is_commutative = True
     is_symbol = True
@@ -463,7 +471,19 @@ class IndexedBase(Expr, NotIterable):
         obj._offset = offset
         obj._strides = strides
         obj._name = str(label)
-        assumptions, _ = IndexedBase._filter_assumptions(kw_args)
+
+        assumptions = label.assumptions0
+        passed_assumptions, _ = IndexedBase._filter_assumptions(kw_args)
+        for k, passed in passed_assumptions.items():
+            inherited = assumptions.get(k, None)
+            if inherited is None:
+                assumptions[k] = passed
+            elif passed !=  inherited:
+                raise ValueError(
+                    "clash between assumptions inherited from label and passed assumptions"
+                )
+            else:
+                pass  # passed == inherited
         IndexedBase._set_assumptions(obj, assumptions)
         return obj
 
