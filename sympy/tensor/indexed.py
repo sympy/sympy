@@ -416,7 +416,7 @@ class IndexedBase(Expr, NotIterable):
     >>> I = symbols('I', integer=True)
     >>> C_inherit = IndexedBase(I)
     >>> C_explicit = IndexedBase('I', integer=True)
-    >>> C_inherit.assumptions0 == C_explicit.assumptions0
+    >>> C_inherit == C_explicit
     True
     """
     is_commutative = True
@@ -463,6 +463,14 @@ class IndexedBase(Expr, NotIterable):
         offset = kw_args.pop('offset', S.Zero)
         strides = kw_args.pop('strides', None)
 
+        # If label is a symbol, ensure the stored label is a plain (no assumptions) symbol,
+        # and propagate any extra assumptions onto the new object.
+        if isinstance(label, Symbol):
+            assumptions = label.assumptions0
+            label = Symbol(str(label))
+        else:
+            assumptions = {}
+
         if shape is not None:
             obj = Expr.__new__(cls, label, shape)
         else:
@@ -472,7 +480,7 @@ class IndexedBase(Expr, NotIterable):
         obj._strides = strides
         obj._name = str(label)
 
-        assumptions = label.assumptions0
+        # Combine assumptions from kw_args and symbol.
         passed_assumptions, _ = IndexedBase._filter_assumptions(kw_args)
         for k, v in passed_assumptions.items():
             if k in assumptions and v != assumptions[k]:

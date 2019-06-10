@@ -229,8 +229,7 @@ def test_IndexedBase_assumptions_inheritance():
 
     assert I_inherit.is_integer
     assert I_explicit.is_integer
-    assert I_inherit.assumptions0 == I_explicit.assumptions0
-    assert I_inherit != I_explicit  # Because the underlying symbol is different.
+    assert I_inherit == I_explicit
 
 
 def test_Indexed_constructor():
