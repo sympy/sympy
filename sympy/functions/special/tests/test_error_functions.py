@@ -38,6 +38,7 @@ def test_erf():
     assert erf(erfinv(x)) == x
     assert erf(erfcinv(x)) == 1 - x
     assert erf(erf2inv(0, x)) == x
+    assert erf(erf2inv(0, x, evaluate=False)) == x # To cover code in erf
     assert erf(erf2inv(0, erf(erfcinv(1 - erf(erfinv(x)))))) == x
 
     assert erf(I).is_real is False
@@ -66,22 +67,15 @@ def test_erf():
     assert limit(((1 - erf(x))*exp(x**2)*sqrt(pi)*x - 1)*2*x**2, x, oo) == -1
 
     assert erf(x).as_real_imag() == \
-        ((erf(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
-         erf(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
-         I*(erf(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
-         erf(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
-         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+        (erf(re(x) - I*im(x))/2 + erf(re(x) + I*im(x))/2,
+         -I*(-erf(re(x) - I*im(x)) + erf(re(x) + I*im(x)))/2)
 
     assert erf(x).as_real_imag(deep=False) == \
-        ((erf(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
-         erf(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
-         I*(erf(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
-         erf(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
-         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+        (erf(re(x) - I*im(x))/2 + erf(re(x) + I*im(x))/2,
+         -I*(-erf(re(x) - I*im(x)) + erf(re(x) + I*im(x)))/2)
 
-    xr = Symbol('x', extended_real=True)
-    assert erf(xr).as_real_imag() == (erf(xr), 0)
-    assert erf(xr).as_real_imag(deep=False) == (erf(xr), 0)
+    assert erf(w).as_real_imag() == (erf(w), 0)
+    assert erf(w).as_real_imag(deep=False) == (erf(w), 0)
 
     raises(ArgumentIndexError, lambda: erf(x).fdiff(2))
 
@@ -146,22 +140,15 @@ def test_erfc():
     assert expand_func(erf(x) + erfc(x)) == S.One
 
     assert erfc(x).as_real_imag() == \
-        ((erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
-         erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
-         I*(erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
-         erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
-         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+        (erfc(re(x) - I*im(x))/2 + erfc(re(x) + I*im(x))/2,
+         -I*(-erfc(re(x) - I*im(x)) + erfc(re(x) + I*im(x)))/2)
 
     assert erfc(x).as_real_imag(deep=False) == \
-        ((erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
-         erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
-         I*(erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
-         erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
-         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+        (erfc(re(x) - I*im(x))/2 + erfc(re(x) + I*im(x))/2,
+         -I*(-erfc(re(x) - I*im(x)) + erfc(re(x) + I*im(x)))/2)
 
-    xr = Symbol('x', extended_real=True)
-    assert erfc(xr).as_real_imag() == (erfc(xr), 0)
-    assert erfc(xr).as_real_imag(deep=False) == (erfc(xr), 0)
+    assert erfc(w).as_real_imag() == (erfc(w), 0)
+    assert erfc(w).as_real_imag(deep=False) == (erfc(w), 0)
     raises(ArgumentIndexError, lambda: erfc(x).fdiff(2))
 
     assert erfc(x).inverse() == erfcinv
@@ -192,6 +179,7 @@ def test_erfi():
     assert erfi(I*erfinv(x)) == I*x
     assert erfi(I*erfcinv(x)) == I*(1 - x)
     assert erfi(I*erf2inv(0, x)) == I*x
+    assert erfi(I*erf2inv(0, x, evaluate=False)) == I*x # To cover code in erfi
 
     assert erfi(I).is_real is False
     assert erfi(0).is_real is True
@@ -213,22 +201,14 @@ def test_erfi():
     assert expand_func(erfi(I*z)) == I*erf(z)
 
     assert erfi(x).as_real_imag() == \
-        ((erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
-         erfi(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
-         I*(erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
-         erfi(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
-         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
-
+        (erfi(re(x) - I*im(x))/2 + erfi(re(x) + I*im(x))/2,
+         -I*(-erfi(re(x) - I*im(x)) + erfi(re(x) + I*im(x)))/2)
     assert erfi(x).as_real_imag(deep=False) == \
-        ((erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
-         erfi(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
-         I*(erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
-         erfi(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
-         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+        (erfi(re(x) - I*im(x))/2 + erfi(re(x) + I*im(x))/2,
+         -I*(-erfi(re(x) - I*im(x)) + erfi(re(x) + I*im(x)))/2)
 
-    xr = Symbol('x', extended_real=True)
-    assert erfi(xr).as_real_imag() == (erfi(xr), 0)
-    assert erfi(xr).as_real_imag(deep=False) == (erfi(xr), 0)
+    assert erfi(w).as_real_imag() == (erfi(w), 0)
+    assert erfi(w).as_real_imag(deep=False) == (erfi(w), 0)
 
     raises(ArgumentIndexError, lambda: erfi(x).fdiff(2))
 
@@ -637,6 +617,7 @@ def test_ci():
                                         expint(1, x*exp_polar(I*pi/2))/2
     assert Ci(x).rewrite(expint) == -expint(1, x*exp_polar(-I*pi/2))/2 -\
                                         expint(1, x*exp_polar(I*pi/2))/2
+    raises(ArgumentIndexError, lambda: Ci(x).fdiff(2))
 
 
 def test_fresnel():
@@ -664,18 +645,26 @@ def test_fresnel():
         pi*z**3/6 - pi**3*z**7/336 + pi**5*z**11/42240 + O(z**15)
 
     assert fresnels(w).is_extended_real is True
+    assert fresnels(w).is_finite is True
 
-    assert fresnels(z).as_real_imag() == \
-        ((fresnels(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 +
-          fresnels(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
-          I*(fresnels(re(z) - I*re(z)*Abs(im(z))/Abs(re(z))) -
-          fresnels(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))) *
-          re(z)*Abs(im(z))/(2*im(z)*Abs(re(z)))))
+    assert fresnels(z).is_extended_real is None
+    assert fresnels(z).is_finite is None
+
+    assert fresnels(z).as_real_imag() == (fresnels(re(z) - I*im(z))/2 +
+                    fresnels(re(z) + I*im(z))/2,
+                    -I*(-fresnels(re(z) - I*im(z)) + fresnels(re(z) + I*im(z)))/2)
+
+    assert fresnels(z).as_real_imag(deep=False) == (fresnels(re(z) - I*im(z))/2 +
+                    fresnels(re(z) + I*im(z))/2,
+                    -I*(-fresnels(re(z) - I*im(z)) + fresnels(re(z) + I*im(z)))/2)
+
+    assert fresnels(w).as_real_imag() == (fresnels(w), 0)
+    assert fresnels(w).as_real_imag(deep=True) == (fresnels(w), 0)
 
     assert fresnels(2 + 3*I).as_real_imag() == (
-        fresnels(2 + 3*I)/2 + fresnels(2 - 3*I)/2,
-        I*(fresnels(2 - 3*I) - fresnels(2 + 3*I))/2
-    )
+            fresnels(2 + 3*I)/2 + fresnels(2 - 3*I)/2,
+            -I*(fresnels(2 + 3*I) - fresnels(2 - 3*I))/2
+            )
 
     assert expand_func(integrate(fresnels(z), z)) == \
         z*fresnels(z) + cos(pi*z**2/2)/pi
@@ -707,22 +696,16 @@ def test_fresnel():
     assert fresnelc(w).is_extended_real is True
 
     assert fresnelc(z).as_real_imag() == \
-        ((fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 +
-          fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
-          I*(fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z))) -
-          fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))) *
-          re(z)*Abs(im(z))/(2*im(z)*Abs(re(z)))))
+        (fresnelc(re(z) - I*im(z))/2 + fresnelc(re(z) + I*im(z))/2,
+         -I*(-fresnelc(re(z) - I*im(z)) + fresnelc(re(z) + I*im(z)))/2)
 
     assert fresnelc(z).as_real_imag(deep=False) == \
-        ((fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z)))/2 +
-          fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))/2,
-          I*(fresnelc(re(z) - I*re(z)*Abs(im(z))/Abs(re(z))) -
-          fresnelc(re(z) + I*re(z)*Abs(im(z))/Abs(re(z)))) *
-          re(z)*Abs(im(z))/(2*im(z)*Abs(re(z)))))
+        (fresnelc(re(z) - I*im(z))/2 + fresnelc(re(z) + I*im(z))/2,
+         -I*(-fresnelc(re(z) - I*im(z)) + fresnelc(re(z) + I*im(z)))/2)
 
     assert fresnelc(2 + 3*I).as_real_imag() == (
         fresnelc(2 - 3*I)/2 + fresnelc(2 + 3*I)/2,
-        I*(fresnelc(2 - 3*I) - fresnelc(2 + 3*I))/2
+         -I*(fresnelc(2 + 3*I) - fresnelc(2 - 3*I))/2
     )
 
     assert expand_func(integrate(fresnelc(z), z)) == \
