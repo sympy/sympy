@@ -869,7 +869,13 @@ class UndefinedFunction(FunctionClass):
         # Allow Function('f', real=True)
         # and/or Function(Symbol('f', real=True))
         if hasattr(name, "assumptions0"):
-            kwargs.update(name.assumptions0)
+            for k, v in name.assumptions0.items():
+                if k in kwargs and v != kwargs[k]:
+                    raise ValueError(
+                        "clash between assumptions inherited from name and passed assumptions"
+                    )
+                else:
+                    kwargs[k] = v
         __dict__.update({'is_' + arg: val for arg, val in kwargs.items() if arg in _assume_defined})
         # You can add other attributes, although they do have to be hashable
         # (but seriously, if you want to add anything other than assumptions,

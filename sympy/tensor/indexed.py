@@ -474,16 +474,13 @@ class IndexedBase(Expr, NotIterable):
 
         assumptions = label.assumptions0
         passed_assumptions, _ = IndexedBase._filter_assumptions(kw_args)
-        for k, passed in passed_assumptions.items():
-            inherited = assumptions.get(k, None)
-            if inherited is None:
-                assumptions[k] = passed
-            elif passed !=  inherited:
+        for k, v in passed_assumptions.items():
+            if k in assumptions and v != assumptions[k]:
                 raise ValueError(
                     "clash between assumptions inherited from label and passed assumptions"
                 )
             else:
-                pass  # passed == inherited
+                assumptions[k] = v
         IndexedBase._set_assumptions(obj, assumptions)
         return obj
 
