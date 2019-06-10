@@ -1,6 +1,11 @@
 from sympy.codegen.lfort import sympy_to_lfortran
 from sympy.external import import_module
 from sympy.printing.fcode import fcode
+
+from sympy.utilities.pytest import XFAIL
+
+from sympy import Integer, Float
+
 lfortran = import_module("lfortran")
 
 
@@ -56,3 +61,49 @@ def lfort_tup(expr, expr_type):
 def fcode_tup(expr, expr_type):
     return ast_to_tuple(lfortran.src_to_ast(fcode(expr),
                                             translation_unit=False), expr_type)
+
+
+def test_integer():
+    exprs = [
+        Integer(1),
+        Integer(0),
+        Integer(42),
+        Integer(1000000),
+    ]
+    expr_type = "integer"
+    for expr in exprs:
+        assert lfort_tup(expr, expr_type) == fcode_tup(expr, expr_type)
+
+
+@XFAIL
+def test_integer_failing():
+    exprs = [
+        Integer(-42),       # Parsed as unary subtraction, generated as BinOp
+        Integer(-1)         # Node visitor not implemented
+    ]
+    expr_type = "integer"
+    for expr in exprs:
+        assert lfort_tup(expr, expr_type) == fcode_tup(expr, expr_type)
+
+
+def test_float():
+    exprs = [
+        Float(0.0),
+        Float(1e20),
+    ]
+    expr_type = "real"
+    for expr in exprs:
+        assert lfort_tup(expr, expr_type) == fcode_tup(expr, expr_type)
+
+
+def test_symbol_addition():
+    from sympy.abc import x, y, z
+    exprs = [
+        x + y,
+        x + 1.0,
+        1.0 * x + 3.0,
+        x + y + z
+    ]
+    expr_type = "real"
+    for expr in exprs:
+        assert lfort_tup(expr, expr_type) == fcode_tup(expr, expr_type)
