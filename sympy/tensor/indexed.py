@@ -411,7 +411,7 @@ class IndexedBase(Expr, NotIterable):
     >>> A != A_real
     True
 
-    Assumptions can also be inherited from the symbol used to initialize the IndexedBase:
+    Assumptions can also be inherited if a Symbol is used to initialize the IndexedBase:
 
     >>> I = symbols('I', integer=True)
     >>> C_inherit = IndexedBase(I)

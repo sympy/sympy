@@ -373,7 +373,7 @@ class Function(Application, Expr):
     Derivative(g(x), x)
 
     Assumptions can be passed to Function, and if function is initialized with a
-    symbol, the function inherits the associated assumptions:
+    Symbol, the function inherits the name and assumptions associated with the Symbol:
 
     >>> f_real = Function('f', real=True)
     >>> f_real(x).is_real
@@ -868,7 +868,7 @@ class UndefinedFunction(FunctionClass):
         __dict__ = __dict__ or {}
         # Allow Function('f', real=True)
         # and/or Function(Symbol('f', real=True))
-        if hasattr(name, "assumptions0"):
+        if isinstance(name, Symbol):
             for k, v in name.assumptions0.items():
                 if k in kwargs and v != kwargs[k]:
                     raise ValueError(

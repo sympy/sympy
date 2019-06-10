@@ -1107,7 +1107,7 @@ def test_function_assumptions():
 
     assert f(x).is_real is None
     assert f_real(x).is_real is True
-    assert f_real_inherit(x).is_real is True
+    assert f_real_inherit(x).is_real is True and f_real_inherit.name == 'f'
 
     # Can also do it this way, but it won't be equal to f_real because of the
     # way UndefinedFunction.__new__ works.
