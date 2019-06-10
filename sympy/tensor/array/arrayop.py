@@ -206,10 +206,9 @@ def derive_by_array(expr, dx):
         if isinstance(dx, array_types):
             if isinstance(expr, SparseNDimArray):
                 lp = len(expr)
-                new_array = {k + i*lp: expr.diff(x)._sparse_array[k]
-                             for k in expr._sparse_array
+                new_array = {k + i*lp: v
                              for i, x in enumerate(dx)
-                             if k in expr.diff(x)._sparse_array.keys()}
+                             for k, v in expr.diff(x)._sparse_array.items()}
             else:
                 new_array = [[y.diff(x) for y in expr] for x in dx]
             return type(expr)(new_array, dx.shape + expr.shape)
@@ -220,6 +219,7 @@ def derive_by_array(expr, dx):
             return ImmutableDenseNDimArray([expr.diff(i) for i in dx], dx.shape)
         else:
             return diff(expr, dx)
+
 
 def permutedims(expr, perm):
     """

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Basic
+from sympy import S
 from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
@@ -276,7 +277,7 @@ class NDimArray(object):
         """
         from sympy.tensor.array import SparseNDimArray
 
-        if isinstance(self, SparseNDimArray) and f(sympify(0)) == 0:
+        if isinstance(self, SparseNDimArray) and f(S.Zero) == 0:
             return type(self)({k: f(v) for k, v in self._sparse_array.items() if f(v) != 0}, self.shape)
 
         return type(self)(map(f, self), self.shape)
