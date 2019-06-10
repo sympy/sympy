@@ -100,6 +100,7 @@ def test__erfs():
     assert expand(erf(z).rewrite('tractable').diff(z).rewrite('intractable')) \
         == erf(z).diff(z)
     assert _erfs(z).rewrite("intractable") == (-erf(z) + 1)*exp(z**2)
+    raises(ArgumentIndexError, lambda: _erfs(z).fdiff(2))
 
 
 def test_erfc():
@@ -458,6 +459,7 @@ def test__eis():
 
     assert _eis(z).series(z, n=3) == EulerGamma + log(z) + z*(-log(z) - \
         EulerGamma + 1) + z**2*(log(z)/2 - S(3)/4 + EulerGamma/2) + O(z**3*log(z))
+    raises(ArgumentIndexError, lambda: _eis(z).fdiff(2))
 
 
 def tn_arg(func):

@@ -1238,7 +1238,7 @@ class assoc_laguerre(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+    def _eval_rewrite_as_polynomial(self, n, alpha, x, **kwargs):
         from sympy import Sum
         # Make sure n \in N_0
         if n.is_negative or n.is_integer is False:
