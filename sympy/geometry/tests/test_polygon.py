@@ -522,3 +522,12 @@ def test_second_moment_of_area():
     assert (I_xx - rectangle.second_moment_of_area(p)[0]) == 0
     assert (I_yy - rectangle.second_moment_of_area(p)[1]) == 0
     assert (I_xy - rectangle.second_moment_of_area(p)[2]) == 0
+
+
+def test_cut_section():
+    p = Polygon((-1, -1),(1, 2.5),(2, 1),(3, 2.5),(4, 2),(5, 3),(-1, 3))
+    l = Line((0, 0),(4.5, 3))
+    assert p.cut_section(l) == Polygon(
+        Point2D(-9/13, -6/13), Point2D(1, 5/2), Point2D(24/13, 16/13),
+        Point2D(12/5, 8/5), Point2D(3, 5/2), Point2D(24/7, 16/7),
+        Point2D(9/2, 3), Point2D(-1, 3), Point2D(-1, -2/3))

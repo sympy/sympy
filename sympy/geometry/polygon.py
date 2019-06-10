@@ -2,7 +2,7 @@ from __future__ import division, print_function
 
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, range, ordered
-from sympy.core.symbol import _symbol, Dummy
+from sympy.core.symbol import _symbol, Dummy, symbols
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -806,35 +806,49 @@ class Polygon(GeometrySet):
         intersection_points = self.intersection(line)
         if not intersection_points:
             raise ValueError("This line does not intersect the polygon")
-        points = self.vertices
-        eq = line.equation()
 
-        x = _symbol('x', real=True)
-        y = _symbol('y', real=True)
+        points = self.vertices
+        points.append(points[0])
+
+        x, y = symbols('x, y', real=True, cls=Dummy)
+        eq = line.equation(x, y)
 
         # considering equation of line to be `ax +by + c`
         a = eq.coeff(x)
         b = eq.coeff(y)
 
         new_vertices = []
-        done = True
+        # prev is true when previous point is above the line
+        prev = True
+        prev_point = None
         for point in points:
-            if b:
-                compare = (eq.evalf(subs={x: point.x, y: point.y}))/b
-            else:
-                # when coefficient of y is 0, right side of the line is
-                # considered
-                compare = (eq.subs(x, point.x))/a
-                intersection_points = intersection_points[::-1]
+            # when coefficient of y is 0, right side of the line is
+            # considered
+            compare = (eq.evalf(subs={x: point.x, y: point.y}))/b if b \
+                    else (eq.subs(x, point.x))/a
 
-            if compare > 0:
+            # if point lies above line
+            if compare >= 0:
+                if not prev:
+                    # if previous point lies below the line, the intersection
+                    # point of the polygon egde and the line has to be included
+                    edge = Line(point, prev_point)
+                    new_point = edge.intersection(line)
+                    new_vertices.append(new_point[0])
+
                 new_vertices.append(point)
-            elif done:                               # to avoid repeated addition of
-                new_vertices += intersection_points  # intersection_points in new_vertices
-                done = False
+                prev = True
+
+            else:
+                if prev and prev_point:
+                    edge = Line(point, prev_point)
+                    new_point = edge.intersection(line)
+                    new_vertices.append(new_point[0])
+                prev = False
+
+            prev_point = point
 
         return Polygon(*new_vertices)
-
 
     def distance(self, o):
         """
