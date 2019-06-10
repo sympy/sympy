@@ -34,9 +34,13 @@ class ASRConverter(CodePrinter):
             raise NotImplementedError("Conversion method %s not implemented." %
                                       convertmethod)
 
-    def _print_arith(self, expr, op, order=None):
+    def _print_arith(self, expr, op, ordered):
         "A generalized converter for binary arithmetic expressions."
-        terms = super(StrPrinter, self)._as_ordered_terms(expr, order)
+
+        if ordered:
+            terms = super(StrPrinter, self)._as_ordered_terms(expr, None)
+        else:
+            terms = list(expr.args)
 
         first_left = self._print(terms[0])
         first_right = self._print(terms[1])
@@ -51,10 +55,10 @@ class ASRConverter(CodePrinter):
 
     # Only works with Add and Mul so far
     def _print_Add(self, expr):
-        return self._print_arith(expr, asr.Add())
+        return self._print_arith(expr, asr.Add(), ordered=True)
 
     def _print_Mul(self, expr):
-        return self._print_arith(expr, asr.Mul())
+        return self._print_arith(expr, asr.Mul(), ordered=False)
 
     def _print_Integer(self, expr):
         return asr.Num(expr.p, type=self.type_integer)
