@@ -1,4 +1,5 @@
 from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.str import StrPrinter
 
 from sympy.external import import_module
 
@@ -33,9 +34,9 @@ class ASRConverter(CodePrinter):
             raise NotImplementedError("Conversion method %s not implemented." %
                                       convertmethod)
 
-    def _print_arith(self, expr, op):
+    def _print_arith(self, expr, op, order=None):
         "A generalized converter for binary arithmetic expressions."
-        terms = list(expr.args)
+        terms = super(StrPrinter, self)._as_ordered_terms(expr, order)
 
         first_left = self._print(terms[0])
         first_right = self._print(terms[1])
