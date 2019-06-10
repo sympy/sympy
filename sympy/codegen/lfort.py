@@ -11,6 +11,8 @@ class ASRConverter(CodePrinter):
 
     def __init__(self):
 
+        super(ASRConverter, self).__init__()
+
         # The translation unit that will be modified during the conversion
         # process. Since this object is stateful, the intention is that each
         # instance of this class is used only once.
@@ -63,7 +65,7 @@ class ASRConverter(CodePrinter):
         # Floating point numbers in LFortran are represented as strings.
         # LFortran supports the _dp suffix, so we default to double precision
         # for everything
-        printed = CodePrinter._print_Float(self, expr)
+        printed = super(CodePrinter, self)._print_Float(expr)
         return asr.Num("%s_dp" % printed, type=self.type_real)
 
     def _print_Rational(self, expr):
