@@ -61,6 +61,10 @@ class ASRConverter(CodePrinter):
     _print_One = _print_Integer
     _print_Zero = _print_Integer
 
+    def _print_NegativeOne(self, expr):
+        return asr.UnaryOp(asr.USub(), asr.Num(1, type=self.type_integer),
+                           self.type_integer)
+
     def _print_Float(self, expr):
         # Floating point numbers in LFortran are represented as strings.
         # LFortran supports the _dp suffix, so we default to double precision
