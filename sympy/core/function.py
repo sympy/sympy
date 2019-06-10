@@ -874,8 +874,7 @@ class UndefinedFunction(FunctionClass):
                     raise ValueError(
                         "clash between assumptions inherited from name and passed assumptions"
                     )
-                else:
-                    kwargs[k] = v
+                kwargs[k] = v
         __dict__.update({'is_' + arg: val for arg, val in kwargs.items() if arg in _assume_defined})
         # You can add other attributes, although they do have to be hashable
         # (but seriously, if you want to add anything other than assumptions,

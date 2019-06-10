@@ -479,8 +479,7 @@ class IndexedBase(Expr, NotIterable):
                 raise ValueError(
                     "clash between assumptions inherited from label and passed assumptions"
                 )
-            else:
-                assumptions[k] = v
+            assumptions[k] = v
         IndexedBase._set_assumptions(obj, assumptions)
         return obj
 
