@@ -8,7 +8,7 @@ from sympy import (
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, XFAIL, skip
 
 x = Symbol('x')
 
@@ -342,8 +342,8 @@ def test_laguerre():
     raises(ArgumentIndexError, lambda: laguerre(n, x).fdiff(3))
 
 
-@XFAIL
 def test_legendre_fail():
+    skip("Infinite recursion kills Travis")
     n = Symbol("n")
     assert laguerre(-n, x) == exp(x)*laguerre(n-1, -x)
     assert laguerre(-3, x) == exp(x)*laguerre(2, -x)
