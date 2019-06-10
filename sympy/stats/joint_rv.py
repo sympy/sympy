@@ -278,7 +278,7 @@ class MarginalDistribution(Basic):
     """
 
     def __new__(cls, dist, *rvs):
-        rvs = list(*rvs)
+        rvs = list(rvs)
         if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
             raise ValueError(filldedent('''Marginal distribution can be
              intitialised only in terms of random variables or indexed random
