@@ -1,9 +1,0 @@
-{
-    "python.pythonPath": "/usr/bin/python3",
-    "editor.fontSize": 30,
-    "git.ignoreLimitWarning": true,
-    "files.trimTrailingWhitespace": true,
-    "terminal.integrated.fontSize": 25,
-    "files.insertFinalNewline": true
-
-}
