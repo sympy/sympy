@@ -50,7 +50,7 @@ from __future__ import print_function, division
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfi,  erfinv, I, hyper,
-                   uppergamma, sinh, atan, Ne, expint)
+                   uppergamma, sinh, atan, Ne, expint, Integral)
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
@@ -1563,38 +1563,51 @@ def GammaInverse(name, a, b):
     return rv(name, GammaInverseDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
-# Gumbel distribution --------------------------------------------------------
+# Gumbel distribution (Maximum and Minimum) --------------------------------------------------------
 
 
 class GumbelDistribution(SingleContinuousDistribution):
-    _argnames = ('beta', 'mu')
+    _argnames = ('beta', 'mu', 'minimum')
 
     set = Interval(-oo, oo)
 
     @staticmethod
-    def check(beta, mu):
+    def check(beta, mu, minimum):
         _value_check(beta > 0, "Scale parameter beta must be positive.")
 
     def pdf(self, x):
         beta, mu = self.beta, self.mu
         z = (x - mu)/beta
-        return (1/beta)*exp(-(z + exp(-z)))
+        f_max = (1/beta)*exp(-z - exp(-z))
+        f_min = (1/beta)*exp(z - exp(z))
+        return Piecewise((f_min, self.minimum), (f_max, not self.minimum))
 
     def _cdf(self, x):
         beta, mu = self.beta, self.mu
-        return exp(-exp((mu - x)/beta))
+        z = (x - mu)/beta
+        F_max = exp(-exp(-z))
+        F_min = 1 - exp(-exp(z))
+        return Piecewise((F_min, self.minimum), (F_max, not self.minimum))
 
     def _characteristic_function(self, t):
-        return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
+        cf_max = gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
+        x = Dummy('x')
+        cf_min = Integral(self.pdf(x) * exp(I*t*x), (x, self.set))
+        return Piecewise((cf_min, self.minimum), (cf_max, not self.minimum))
 
     def _moment_generating_function(self, t):
-        return gamma(1 - self.beta*t) * exp(self.mu*t)
+        mgf_max = gamma(1 - self.beta*t) * exp(self.mu*t)
+        x = Dummy('x')
+        mgf_min = Integral(self.pdf(x) * exp(t*x), (x, self.set))
+        return Piecewise((mgf_min, self.minimum), (mgf_max, not self.minimum))
 
-def Gumbel(name, beta, mu):
+def Gumbel(name, beta, mu, minimum=False):
     r"""
     Create a Continuous Random Variable with Gumbel distribution.
 
     The density of the Gumbel distribution is given by
+
+    For Maximum
 
     .. math::
         f(x) := \dfrac{1}{\beta} \exp \left( -\dfrac{x-\mu}{\beta}
@@ -1602,19 +1615,28 @@ def Gumbel(name, beta, mu):
 
     with :math:`x \in [ - \infty, \infty ]`.
 
+    For Minimum
+
+    .. math::
+        f(x) := \frac{e^{- e^{\frac{- \mu + x}{\beta}} + \frac{- \mu + x}{\beta}}}{\beta}
+
+    with :math:`x \in [ - \infty, \infty ]`.
+
     Parameters
     ==========
 
-    mu: Real number, 'mu' is a location
-    beta: Real number, 'beta > 0' is a scale
+    mu : Real number, 'mu' is a location
+    beta : Real number, 'beta > 0' is a scale
+    minimum : Boolean, by default, False, for enabling minimum distribution
 
     Returns
-    ==========
+    =======
 
     A RandomSymbol
 
     Examples
-    ==========
+    ========
+
     >>> from sympy.stats import Gumbel, density, E, variance, cdf
     >>> from sympy import Symbol, simplify, pprint
     >>> x = Symbol("x")
@@ -1631,9 +1653,11 @@ def Gumbel(name, beta, mu):
 
     .. [1] http://mathworld.wolfram.com/GumbelDistribution.html
     .. [2] https://en.wikipedia.org/wiki/Gumbel_distribution
+    .. [3] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_max.html
+    .. [4] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_min.html
 
     """
-    return rv(name, GumbelDistribution, (beta, mu))
+    return rv(name, GumbelDistribution, (beta, mu, minimum))
 
 #-------------------------------------------------------------------------------
 # Gompertz distribution --------------------------------------------------------
