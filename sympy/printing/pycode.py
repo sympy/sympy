@@ -608,6 +608,13 @@ class NumPyPrinter(PythonCodePrinter):
             func = self._module_format('numpy.array')
         return "%s(%s)" % (func, self._print(expr.tolist()))
 
+    def _print_Identity(self, expr):
+        shape = expr.shape
+        if all([dim.is_Integer for dim in shape]):
+            return "%s(%s)" % (self._module_format('numpy.eye'), self._print(expr.shape[0]))
+        else:
+            raise NotImplementedError
+
     def _print_BlockMatrix(self, expr):
         return '{0}({1})'.format(self._module_format('numpy.block'),
                                  self._print(expr.args[0].tolist()))

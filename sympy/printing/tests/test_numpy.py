@@ -1,6 +1,6 @@
 from sympy import (
     Piecewise, lambdify, Equality, Unequality, Sum, Mod, cbrt, sqrt,
-    MatrixSymbol, BlockMatrix
+    MatrixSymbol, BlockMatrix, Identity
 )
 from sympy import eye
 from sympy.abc import x, i, j, a, b, c, d
@@ -252,3 +252,16 @@ def test_16857():
 
     printer = NumPyPrinter()
     assert printer.doprint(A) == 'numpy.block([[a_1, a_2], [a_3, a_4]])'
+
+
+def test_issue_17006():
+    if not np:
+        skip("NumPy not installed")
+
+    M = MatrixSymbol("M", 2, 2)
+
+    f = lambdify(M, M + Identity(2))
+    ma = np.matrix([[1, 2], [3, 4]])
+    mr = np.matrix([[2, 2], [3, 5]])
+
+    assert (f(ma) == mr).all()
