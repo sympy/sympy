@@ -11,14 +11,16 @@ from __future__ import print_function, division
 
 from itertools import product
 
-from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul,
-        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan)
+from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul, Add,
+        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan, Rational)
 from sympy.sets.sets import FiniteSet
+from sympy.core.relational import Relational
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
         sumsets, rv_subs, NamedArgsMixin)
 from sympy.core.containers import Dict
 from sympy.stats.symbolic_probability import Expectation, Probability
+from sympy.core.logic import Logic
 import random
 
 class FiniteDensity(dict):
@@ -143,14 +145,6 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
         if condition is True:
             return domain
         cond = rv_subs(condition)
-        # Check that we aren't passed a condition like die1 == z
-        # where 'z' is a symbol that we don't know about
-        # We will never be able to test this equality through iteration
-        if not cond.free_symbols.issubset(domain.free_symbols):
-            raise ValueError('Condition "%s" contains foreign symbols \n%s.\n' % (
-                condition, tuple(cond.free_symbols - domain.free_symbols)) +
-                "Will be unable to iterate using this condition")
-
         return Basic.__new__(cls, domain, cond)
 
 
@@ -166,7 +160,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
             return val
         elif val.is_Equality:
             return val.lhs == val.rhs
-        raise ValueError("Undeciable if %s" % str(val))
+        raise ValueError("Undecidable if %s" % str(val))
 
     def __contains__(self, other):
         return other in self.fulldomain and self._test(other)
@@ -320,8 +314,15 @@ class FinitePSpace(PSpace):
 
         rvs = rvs or self.values
         expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
-        return sum([expr.xreplace(dict(elem)) * self.prob_of(elem)
-                for elem in self.domain])
+        probs = [self.prob_of(elem) for elem in self.domain]
+        if isinstance(expr, (Logic, Relational)):
+            parse_domain = [tuple(elem)[0][1] for elem in self.domain]
+            bools = [expr.xreplace(dict(elem)) for elem in self.domain]
+        else:
+            parse_domain = [expr.xreplace(dict(elem)) for elem in self.domain]
+            bools = [True for elem in self.domain]
+        return sum([Piecewise((prob * elem, blv), (0, True))
+                for prob, elem, blv in zip(probs, parse_domain, bools)])
 
     def compute_quantile(self, expr):
         cdf = self.compute_cdf(expr)
@@ -339,6 +340,17 @@ class FinitePSpace(PSpace):
                 return Probability(condition)
         cond_symbols = frozenset(rs.symbol for rs in rvs)
         assert cond_symbols.issubset(self.symbols)
+        cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
+        cond = rv_subs(condition)
+        if not cond_symbols.issubset(self.symbols):
+            raise ValueError("Cannot compare foriegn random symbols, %s"
+                             %(str(cond_symbols - self.symbols)))
+        if isinstance(condition, Relational) and \
+            (not cond.free_symbols.issubset(self.domain.free_symbols)):
+            rv = condition.lhs if isinstance(condition.rhs, Symbol) else condition.rhs
+            return sum(Piecewise(
+                       (self.prob_of(elem), condition.subs(rv, list(elem)[0][1])),
+                       (0, True)) for elem in self.domain)
         return sum(self.prob_of(elem) for elem in self.where(condition))
 
     def conditional_space(self, condition):

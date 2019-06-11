@@ -153,7 +153,7 @@ class DieDistribution(SingleFiniteDistribution):
     def dict(self):
         if self.is_symbolic:
             return Density(self)
-        return dict((k, S(1)/self.sides) for k in self.set)
+        return dict((k, Rational(1, self.sides)) for k in self.set)
 
     @property
     def set(self):
