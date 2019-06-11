@@ -1851,10 +1851,14 @@ class LatexPrinter(Printer):
 
     def _print_bernoulli(self, expr, exp=None):
         if len(expr.args) == 2:
-            tex = r"B_{%s}\left(%s\right)" % (self._print(expr.args[0]),
-                                              self._print(expr.args[1]))
-        else:
-            tex = r"B_{%s}" % self._print(expr.args[0])
+            if exp is not None:
+                return r"B_{%s}^{%s}\left(%s\right)" % (self._print(expr.args[0]),
+                                                       self._print(exp),
+                                                       self._print(expr.args[1]))
+            return r"B_{%s}\left(%s\right)" % (self._print(expr.args[0]),
+                                                  self._print(expr.args[1]))
+
+        tex = r"B_{%s}" % self._print(expr.args[0])
         if exp is not None:
             tex = r"%s^{%s}" % (tex, self._print(exp))
         return tex
@@ -1863,7 +1867,7 @@ class LatexPrinter(Printer):
         if len(expr.args) == 2:
             tex1 = r"B_{%s}" % self._print(expr.args[0])
             tex2 = r"\left(%s\right)" % self._print(expr.args[1])
-        if len(expr.args) == 3:
+        elif len(expr.args) == 3:
             tex1 = r"B_{%s, %s}" % (self._print(expr.args[0]),
                                     self._print(expr.args[1]))
             tex2 = r"\left(%s\right)" % r", ".join(self._print(el) for
