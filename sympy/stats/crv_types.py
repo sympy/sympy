@@ -1646,7 +1646,7 @@ def Gumbel(name, beta, mu, minimum=False):
     >>> density(X)(x)
     exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
     >>> cdf(X)(x)
-    exp(-exp((mu - x)/beta))
+    exp(-exp(-(-mu + x)/beta))
 
     References
     ==========
