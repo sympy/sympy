@@ -25,6 +25,7 @@ Gompertz
 Kumaraswamy
 Laplace
 Logistic
+LogLogistic
 LogNormal
 Maxwell
 Nakagami
@@ -87,10 +88,12 @@ __all__ = ['ContinuousRV',
 'Kumaraswamy',
 'Laplace',
 'Logistic',
+'LogLogistic',
 'LogNormal',
 'Maxwell',
 'Nakagami',
 'Normal',
+'GaussianInverse',
 'Pareto',
 'QuadraticU',
 'RaisedCosine',
@@ -1076,7 +1079,7 @@ def Exponential(name, rate):
 
     >>> from sympy.stats import Exponential, density, cdf, E
     >>> from sympy.stats import variance, std, skewness, quantile
-    >>> from sympy import Symbol, symbols
+    >>> from sympy import Symbol
 
     >>> l = Symbol("lambda", positive=True)
     >>> z = Symbol("z")
@@ -1492,7 +1495,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
             from scipy.stats import invgamma
             return invgamma.rvs(float(self.a), 0, float(self.b))
         else:
-            raise NotImplementedError('Sampling the inverse Gamma Distribution requires Scipy.')
+            raise NotImplementedError('Sampling the Inverse Gamma Distribution requires Scipy.')
 
     def _characteristic_function(self, t):
         a, b = self.a, self.b
@@ -1560,10 +1563,10 @@ def GammaInverse(name, a, b):
     return rv(name, GammaInverseDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
-# Gumbel distribution (Maximum and Minimum)--------------------------------------------------------
+# Gumbel distribution --------------------------------------------------------
 
 
-class GumbelDistributionMaximum(SingleContinuousDistribution):
+class GumbelDistribution(SingleContinuousDistribution):
     _argnames = ('beta', 'mu')
 
     set = Interval(-oo, oo)
@@ -1579,8 +1582,7 @@ class GumbelDistributionMaximum(SingleContinuousDistribution):
 
     def _cdf(self, x):
         beta, mu = self.beta, self.mu
-        z = (x - mu)/beta
-        return exp(-exp(-z))
+        return exp(-exp((mu - x)/beta))
 
     def _characteristic_function(self, t):
         return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
@@ -1588,32 +1590,12 @@ class GumbelDistributionMaximum(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return gamma(1 - self.beta*t) * exp(self.mu*t)
 
-class GumbelDistributionMinimum(SingleContinuousDistribution):
-    _argnames = ('beta', 'mu')
-
-    set = Interval(-oo, oo)
-
-    @staticmethod
-    def check(beta, mu):
-        _value_check(beta > 0, "beta must be positive")
-
-    def pdf(self, x):
-        beta, mu = self.beta, self.mu
-        z = (x - mu)/beta
-        return (1/beta)*exp(z - exp(z))
-
-    def _cdf(self, x):
-        beta, mu = self.beta, self.mu
-        z = (x - mu)/beta
-        return 1 - exp(-exp(z))
-
-def Gumbel(name, beta, mu, **kwargs):
+def Gumbel(name, beta, mu):
     r"""
     Create a Continuous Random Variable with Gumbel distribution.
 
-    The density of the Gumbel distribution is given by,
+    The density of the Gumbel distribution is given by
 
-    For Maximum
     .. math::
         f(x) := \dfrac{1}{\beta} \exp \left( -\dfrac{x-\mu}{\beta}
                 - \exp \left( -\dfrac{x - \mu}{\beta} \right) \right)
@@ -1625,8 +1607,6 @@ def Gumbel(name, beta, mu, **kwargs):
 
     mu: Real number, 'mu' is a location
     beta: Real number, 'beta > 0' is a scale
-    for_min: Boolean, optional, False, by default
-        For enabling the minimum distribution
 
     Returns
     ==========
@@ -1638,30 +1618,22 @@ def Gumbel(name, beta, mu, **kwargs):
     >>> from sympy.stats import Gumbel, density, E, variance, cdf
     >>> from sympy import Symbol, simplify, pprint
     >>> x = Symbol("x")
-    >>> y = Symbol("y")
     >>> mu = Symbol("mu")
     >>> beta = Symbol("beta", positive=True)
     >>> X = Gumbel("x", beta, mu)
-    >>> Y = Gumbel("y", beta, mu, for_min=True)
     >>> density(X)(x)
     exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
     >>> cdf(X)(x)
-    exp(-exp(-(-mu + x)/beta))
-    >>> density(Y)(y)
-    exp(-exp((-mu + y)/beta) + (-mu + y)/beta)/beta
+    exp(-exp((mu - x)/beta))
 
     References
     ==========
 
     .. [1] http://mathworld.wolfram.com/GumbelDistribution.html
     .. [2] https://en.wikipedia.org/wiki/Gumbel_distribution
-    .. [3] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_max.html
-    .. [4] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_min.html
 
     """
-    if kwargs.get('for_min', False):
-        return rv(name, GumbelDistributionMinimum, (beta, mu))
-    return rv(name, GumbelDistributionMaximum, (beta, mu))
+    return rv(name, GumbelDistribution, (beta, mu))
 
 #-------------------------------------------------------------------------------
 # Gompertz distribution --------------------------------------------------------
@@ -1981,6 +1953,99 @@ def Logistic(name, mu, s):
     """
 
     return rv(name, LogisticDistribution, (mu, s))
+
+#-------------------------------------------------------------------------------
+# Log-logistic distribution --------------------------------------------------------
+
+
+class LogLogisticDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(alpha, beta):
+        _value_check(alpha > 0, "Scale parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
+
+    def pdf(self, x):
+        a, b = self.alpha, self.beta
+        return ((b/a)*(x/a)**(b - 1))/(1 + (x/a)**b)**2
+
+    def _cdf(self, x):
+        a, b = self.alpha, self.beta
+        return 1/(1 + (x/a)**(-b))
+
+    def _quantile(self, p):
+        a, b = self.alpha, self.beta
+        return a*((p/(1 - p))**(1/b))
+
+    def expectation(self, expr, var, **kwargs):
+        a, b = self.args
+        return Piecewise((S.NaN, b <= 1), (pi*a/(b*sin(pi/b)), True))
+
+def LogLogistic(name, alpha, beta):
+    r"""
+    Create a continuous random variable with a log-logistic distribution.
+    The distribution is unimodal when `beta > 1`.
+
+    The density of the log-logistic distribution is given by
+
+    .. math::
+        f(x) := \frac{(\frac{\beta}{\alpha})(\frac{x}{\alpha})^{\beta - 1}}
+                {(1 + (\frac{x}{\alpha})^{\beta})^2}
+
+    Parameters
+    ==========
+
+    alpha : Real number, `\alpha > 0`, scale parameter and median of distribution
+    beta : Real number, `\beta > 0` a shape parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import LogLogistic, density, cdf, quantile
+    >>> from sympy import Symbol, pprint
+
+    >>> alpha = Symbol("alpha", real=True, positive=True)
+    >>> beta = Symbol("beta", real=True, positive=True)
+    >>> p = Symbol("p")
+    >>> z = Symbol("z", positive=True)
+
+    >>> X = LogLogistic("x", alpha, beta)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+                  beta - 1
+           /  z  \
+      beta*|-----|
+           \alpha/
+    ------------------------
+                           2
+          /       beta    \
+          |/  z  \        |
+    alpha*||-----|     + 1|
+          \\alpha/        /
+
+    >>> cdf(X)(z)
+    1/(1 + (z/alpha)**(-beta))
+
+    >>> quantile(X)(p)
+    alpha*(p/(1 - p))**(1/beta)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Log-logistic_distribution
+
+    """
+
+    return rv(name, LogLogisticDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
 # Log Normal distribution ------------------------------------------------------
@@ -2335,7 +2400,7 @@ def Normal(name, mean, std):
 
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> pprint(density(m)(y, z))
+    >>> pprint(density(m)(y, z), use_unicode=False)
            /1   y\ /2*y   z\   /    z\ /  y   2*z    \
            |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
       ___  \2   2/ \ 3    3/   \    2/ \  3    3     /
@@ -2361,6 +2426,120 @@ def Normal(name, mean, std):
         return multivariate_rv(
             MultivariateNormalDistribution, name, mean, std)
     return rv(name, NormalDistribution, (mean, std))
+
+
+#-------------------------------------------------------------------------------
+# Inverse Gaussian distribution ----------------------------------------------------------
+
+
+class GaussianInverseDistribution(SingleContinuousDistribution):
+    _argnames = ('mean', 'shape')
+
+    @property
+    def set(self):
+        return Interval(0, oo)
+
+    @staticmethod
+    def check(mean, shape):
+        _value_check(shape > 0, "Shape parameter must be positive")
+        _value_check(mean > 0, "Mean must be positive")
+
+    def pdf(self, x):
+        mu, s = self.mean, self.shape
+        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/((2*pi*x**3)))
+
+    def sample(self):
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import invgauss
+            return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape))
+        else:
+            raise NotImplementedError(
+                'Sampling the Inverse Gaussian Distribution requires Scipy.')
+
+    def _cdf(self, x):
+        from sympy.stats import cdf
+        mu, s = self.mean, self.shape
+        stdNormalcdf = cdf(Normal('x', 0, 1))
+
+        first_term = stdNormalcdf(sqrt(s/x) * ((x/mu) - S.One))
+        second_term = exp(2*s/mu) * stdNormalcdf(-sqrt(s/x)*(x/mu + S.One))
+
+        return  first_term + second_term
+
+    def _characteristic_function(self, t):
+        mu, s = self.mean, self.shape
+        return exp((s/mu)*(1 - sqrt(1 - (2*mu**2*I*t)/s)))
+
+    def _moment_generating_function(self, t):
+        mu, s = self.mean, self.shape
+        return exp((s/mu)*(1 - sqrt(1 - (2*mu**2*t)/s)))
+
+
+def GaussianInverse(name, mean, shape):
+    r"""
+    Create a continuous random variable with an Inverse Gaussian distribution.
+    Inverse Gaussian distribution is also known as Wald distribution.
+
+    The density of the Inverse Gaussian distribution is given by
+
+    .. math::
+        f(x) := \sqrt{\frac{\lambda}{2\pi x^3}} e^{-\frac{\lambda(x-\mu)^2}{2x\mu^2}}
+
+    Parameters
+    ==========
+
+    mu : Positive number representing the mean
+    lambda : Positive number representing the shape parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import GaussianInverse, density, cdf, E, std, skewness
+    >>> from sympy import Symbol, pprint
+
+    >>> mu = Symbol("mu", positive=True)
+    >>> lamda = Symbol("lambda", positive=True)
+    >>> z = Symbol("z", positive=True)
+    >>> X = GaussianInverse("x", mu, lamda)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+                                       2
+                      -lambda*(-mu + z)
+                      -------------------
+                                2
+      ___   ________        2*mu *z
+    \/ 2 *\/ lambda *e
+    -------------------------------------
+                    ____  3/2
+                2*\/ pi *z
+
+    >>> E(X)
+    mu
+
+    >>> std(X).expand()
+    mu**(3/2)/sqrt(lambda)
+
+    >>> skewness(X).expand()
+    3*sqrt(mu)/sqrt(lambda)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution
+    .. [2] http://mathworld.wolfram.com/InverseGaussianDistribution.html
+
+    """
+
+    return rv(name, GaussianInverseDistribution, (mean, shape))
+
+Wald = GaussianInverse
 
 #-------------------------------------------------------------------------------
 # Pareto distribution ----------------------------------------------------------
