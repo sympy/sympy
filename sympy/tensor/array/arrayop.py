@@ -195,6 +195,7 @@ def derive_by_array(expr, dx):
 
     """
     from sympy.matrices import MatrixBase
+    from sympy.tensor import SparseNDimArray
     array_types = (Iterable, MatrixBase, NDimArray)
 
     if isinstance(dx, array_types):
@@ -204,9 +205,19 @@ def derive_by_array(expr, dx):
                 raise ValueError("cannot derive by this array")
 
     if isinstance(expr, array_types):
-        expr = ImmutableDenseNDimArray(expr)
+        if isinstance(expr, NDimArray):
+            expr = expr.as_immutable()
+        else:
+            expr = ImmutableDenseNDimArray(expr)
+
         if isinstance(dx, array_types):
-            new_array = [[y.diff(x) for y in expr] for x in dx]
+            if isinstance(expr, SparseNDimArray):
+                lp = len(expr)
+                new_array = {k + i*lp: v
+                             for i, x in enumerate(dx)
+                             for k, v in expr.diff(x)._sparse_array.items()}
+            else:
+                new_array = [[y.diff(x) for y in expr] for x in dx]
             return type(expr)(new_array, dx.shape + expr.shape)
         else:
             return expr.diff(dx)
