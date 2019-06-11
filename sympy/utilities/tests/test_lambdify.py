@@ -28,7 +28,6 @@ MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
 scipy = import_module('scipy')
-scipy_special = import_module('scipy.special')
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 
@@ -1129,6 +1128,7 @@ def test_issue_15654():
     scipy_value = f(nv, lv, rv, Zv)
     assert abs(sympy_value - scipy_value) < 1e-15
 
+
 def test_issue_15827():
     if not numpy:
         skip("numpy not installed")
@@ -1154,3 +1154,13 @@ def test_issue_15827():
     assert numpy.array_equal(i(numpy.array([[1, 2, 3], [1, 2, 3]]), numpy.array([[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]]), \
     numpy.array([[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]])), numpy.array([[ 120, 240, 360, 480, 600], \
     [ 120, 240, 360, 480, 600]]))
+
+
+def test_issue_16930():
+    if not scipy:
+        skip("scipy not installed")
+
+    x = symbols("x")
+    f = lambda x:  S.GoldenRatio * x**2
+    f_ = lambdify(x, f(x), modules='scipy')
+    assert f_(1) == scipy.constants.golden_ratio

@@ -89,7 +89,7 @@ def _coeff_isneg(a):
         a = a.args[0]
     if a.is_Mul:
         a = a.args[0]
-    return a.is_Number and a.is_negative
+    return a.is_Number and a.is_extended_negative
 
 
 class PoleError(Exception):
@@ -1864,6 +1864,9 @@ class Lambda(Expr):
         for i in v:
             if not getattr(i, 'is_symbol', False):
                 raise TypeError('variable is not a symbol: %s' % i)
+        if len(v) != len(set(v)):
+            x = [i for i in v if v.count(i) > 1][0]
+            raise SyntaxError("duplicate argument '%s' in Lambda args" % x)
         if len(v) == 1 and v[0] == expr:
             return S.IdentityFunction
 
@@ -3010,7 +3013,7 @@ def count_ops(expr, visual=False):
             if not a.is_Symbol:
                 args.extend(a.args)
 
-    elif type(expr) is dict:
+    elif isinstance(expr, Dict):
         ops = [count_ops(k, visual=visual) +
                count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):

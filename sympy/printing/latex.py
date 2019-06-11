@@ -1408,10 +1408,6 @@ class LatexPrinter(Printer):
 
     _print_RandomSymbol = _print_Symbol
 
-    def _print_MatrixSymbol(self, expr):
-        return self._print_Symbol(expr,
-                                  style=self._settings['mat_symbol_style'])
-
     def _deal_with_super_sub(self, string):
         if '{' in string:
             return string
@@ -1594,14 +1590,21 @@ class LatexPrinter(Printer):
         else:
             return "%s^{%s}" % (self._print(base), self._print(exp))
 
+    def _print_MatrixSymbol(self, expr):
+        return self._print_Symbol(expr, style=self._settings[
+            'mat_symbol_style'])
+
     def _print_ZeroMatrix(self, Z):
-        return r"\mathbb{0}"
+        return r"\mathbb{0}" if self._settings[
+            'mat_symbol_style'] == 'plain' else r"\mathbf{0}"
 
     def _print_OneMatrix(self, O):
-        return r"\mathbb{1}"
+        return r"\mathbb{1}" if self._settings[
+            'mat_symbol_style'] == 'plain' else r"\mathbf{1}"
 
     def _print_Identity(self, I):
-        return r"\mathbb{I}"
+        return r"\mathbb{I}" if self._settings[
+            'mat_symbol_style'] == 'plain' else r"\mathbf{I}"
 
     def _print_NDimArray(self, expr):
 

@@ -18,13 +18,13 @@ from __future__ import print_function, division
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
         DiracDelta, Mul)
-from sympy.abc import x
 from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
 
+x = Symbol('x')
 
 class RandomDomain(Basic):
     """
@@ -730,7 +730,11 @@ def probability(condition, given_condition=None, numsamples=None,
     given_condition = sympify(given_condition)
 
     if isinstance(given_condition, RandomSymbol):
-        if any([dependent(rv, given_condition) for rv in random_symbols(condition)]):
+        condrv = random_symbols(condition)
+        if len(condrv) == 1 and condrv[0] == given_condition:
+            from sympy.stats.frv_types import BernoulliDistribution
+            return BernoulliDistribution(probability(condition), 0, 1)
+        if any([dependent(rv, given_condition) for rv in condrv]):
             from sympy.stats.symbolic_probability import Probability
             return Probability(condition, given_condition)
         else:

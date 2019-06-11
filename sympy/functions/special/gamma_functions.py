@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, as_int
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -14,6 +14,12 @@ from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
 
+def intlike(n):
+    try:
+        as_int(n, strict=False)
+        return True
+    except ValueError:
+        return False
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -107,7 +113,7 @@ class gamma(Function):
                 return S.NaN
             elif arg is S.Infinity:
                 return S.Infinity
-            elif arg.is_Integer:
+            elif intlike(arg):
                 if arg.is_positive:
                     return factorial(arg - 1)
                 else:

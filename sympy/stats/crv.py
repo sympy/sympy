@@ -191,7 +191,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if not inverse_cdf or len(inverse_cdf) != 1:
             raise NotImplementedError("Could not invert CDF")
 
-        return Lambda(z, inverse_cdf[0])
+        (icdf,) = inverse_cdf
+
+        return Lambda(z, icdf)
 
     @cacheit
     def compute_cdf(self, **kwargs):

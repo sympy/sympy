@@ -150,7 +150,7 @@ class VectorLatexPrinter(LatexPrinter):
             base = r"\ddddot{%s}" % base
         else: # Fallback to standard printing
             return LatexPrinter().doprint(der_expr)
-        if len(base_split) is not 1:
+        if len(base_split) != 1:
             base += '_' + base_split[1]
         return base
 

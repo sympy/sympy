@@ -468,6 +468,9 @@ def test_Float():
     assert Float('0.0').is_zero is True
 
     # rationality properties
+    # if the integer test fails then the use of intlike
+    # should be removed from gamma_functions.py
+    assert Float(1).is_integer is False
     assert Float(1).is_rational is None
     assert Float(1).is_irrational is None
     assert sqrt(2).n(15).is_rational is None
@@ -1523,7 +1526,7 @@ def test_zoo():
             assert (zoo + i) is S.NaN
             assert (zoo - i) is S.NaN
 
-        if fuzzy_not(i.is_zero) and (i.is_real or i.is_imaginary):
+        if fuzzy_not(i.is_zero) and (i.is_extended_real or i.is_imaginary):
             assert i*zoo is zoo
             assert zoo*i is zoo
         elif i.is_zero:
@@ -1557,20 +1560,28 @@ def test_zoo():
 
 def test_issue_4122():
     x = Symbol('x', nonpositive=True)
+    assert oo + x == oo
+    x = Symbol('x', extended_nonpositive=True)
     assert (oo + x).is_Add
     x = Symbol('x', finite=True)
     assert (oo + x).is_Add  # x could be imaginary
     x = Symbol('x', nonnegative=True)
+    assert oo + x == oo
+    x = Symbol('x', extended_nonnegative=True)
     assert oo + x == oo
     x = Symbol('x', finite=True, real=True)
     assert oo + x == oo
 
     # similarly for negative infinity
     x = Symbol('x', nonnegative=True)
+    assert -oo + x == -oo
+    x = Symbol('x', extended_nonnegative=True)
     assert (-oo + x).is_Add
     x = Symbol('x', finite=True)
     assert (-oo + x).is_Add
     x = Symbol('x', nonpositive=True)
+    assert -oo + x == -oo
+    x = Symbol('x', extended_nonpositive=True)
     assert -oo + x == -oo
     x = Symbol('x', finite=True, real=True)
     assert -oo + x == -oo
@@ -1676,10 +1687,13 @@ def test_Float_eq():
     assert Float(.75) == S(3)/4
     assert Float(5/18) == 5/18
     # 4473
-    assert t**2 == t**2.0
     assert Float(2.) != 3
     assert Float((0,1,-3)) == S(1)/8
     assert Float((0,1,-3)) != S(1)/9
+    # 16196
+    assert 2 == Float(2)  # as per Python
+    # but in a computation...
+    assert t**2 != t**2.0
 
 
 def test_int_NumberSymbols():

@@ -2,7 +2,7 @@ from sympy import (
     Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
     tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfc, erfi,
     EulerGamma, Expr, factor, Function, gamma, gammasimp, I, Idx, im, IndexedBase,
-    Integral, integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
+    integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
     symbols, sympify, tan, trigsimp, Tuple
@@ -294,7 +294,7 @@ def test_issue_3623():
 def test_issue_3664():
     n = Symbol('n', integer=True, nonzero=True)
     assert integrate(-1./2 * x * sin(n * pi * x/2), [x, -2, 0]) == \
-        2*cos(pi*n)/(pi*n)
+        2.0*cos(pi*n)/(pi*n)
     assert integrate(-Rational(1)/2 * x * sin(n * pi * x/2), [x, -2, 0]) == \
         2*cos(pi*n)/(pi*n)
 
@@ -416,6 +416,26 @@ def test_transform():
     i = Integral(x + y, (x, 1, 2), (y, 1, 2))
     assert i.transform(x, (x + 2*y, x)).doit() == \
         i.transform(x, (x + 2*z, x)).doit() == 3
+
+    i = Integral(x, (x, a, b))
+    assert i.transform(x, 2*s) == Integral(4*s, (s, a/2, b/2))
+    raises(ValueError, lambda: i.transform(x, 1))
+    raises(ValueError, lambda: i.transform(x, s*t))
+    raises(ValueError, lambda: i.transform(x, -s))
+    raises(ValueError, lambda: i.transform(x, (s, t)))
+    raises(ValueError, lambda: i.transform(2*x, 2*s))
+
+    i = Integral(x**2, (x, 1, 2))
+    raises(ValueError, lambda: i.transform(x**2, s))
+
+    am = Symbol('a', negative=True)
+    bp = Symbol('b', positive=True)
+    i = Integral(x, (x, bp, am))
+    i.transform(x, 2*s)
+    assert i.transform(x, 2*s) == Integral(-4*s, (s, am/2, bp/2))
+
+    i = Integral(x, (x, a))
+    assert i.transform(x, 2*s) == Integral(4*s, (s, a/2))
 
 
 def test_issue_4052():
@@ -593,7 +613,7 @@ def test_integrate_max_min():
     assert integrate(Min(exp(x), exp(-x))**2, x) == Piecewise( \
         (exp(2*x)/2, x <= 0), (1 - exp(-2*x)/2, True))
     # issue 7907
-    c = symbols('c', real=True)
+    c = symbols('c', extended_real=True)
     int1 = integrate(Max(c, x)*exp(-x**2), (x, -oo, oo))
     int2 = integrate(c*exp(-x**2), (x, -oo, c))
     int3 = integrate(x*exp(-x**2), (x, c, oo))

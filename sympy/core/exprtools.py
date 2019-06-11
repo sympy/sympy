@@ -65,7 +65,7 @@ def _monotonic_sign(self):
     2
     >>> F(nn - 1)  # could be negative, zero or positive
     """
-    if not self.is_real:
+    if not self.is_extended_real:
         return
 
     if (-self).is_Symbol:
@@ -94,14 +94,14 @@ def _monotonic_sign(self):
                 return S.One
             else:
                 return _eps
-        elif s.is_negative:
+        elif s.is_extended_negative:
             if s.is_even:
                 return S(-2)
             elif s.is_integer:
                 return S.NegativeOne
             else:
                 return -_eps
-        if s.is_zero or s.is_nonpositive or s.is_nonnegative:
+        if s.is_zero or s.is_extended_nonpositive or s.is_extended_nonnegative:
             return S.Zero
         return None
 
@@ -124,7 +124,7 @@ def _monotonic_sign(self):
                     try:
                         currentroots = real_roots(d)
                     except (PolynomialError, NotImplementedError):
-                        currentroots = [r for r in roots(d, x) if r.is_real]
+                        currentroots = [r for r in roots(d, x) if r.is_extended_real]
                 y = self.subs(x, x0)
                 if x.is_nonnegative and all(r <= x0 for r in currentroots):
                     if y.is_nonnegative and d.is_positive:

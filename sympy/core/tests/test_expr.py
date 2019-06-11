@@ -1846,7 +1846,9 @@ def test_issue_7426():
 
 
 def test_issue_1112():
-    x = Symbol('x', positive=False)
+    x = Symbol('x', extended_positive=False)
+    assert (x > 0) is S.false
+    x = Symbol('x', positive=False, real=True)
     assert (x > 0) is S.false
 
 
@@ -1870,6 +1872,11 @@ def test_normal():
     x = symbols('x')
     e = Mul(S.Half, 1 + x, evaluate=False)
     assert e.normal() == e
+
+
+def test_expr():
+    x = symbols('x')
+    raises(TypeError, lambda: tan(x).series(x, 2, oo, "+"))
 
 
 def test_ExprBuilder():

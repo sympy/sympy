@@ -4,8 +4,9 @@ from sympy import (
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
     Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
     ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda, Derivative)
-from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.expr import unchanged
+from sympy.core.function import ArgumentIndexError
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def N_equals(a, b):
@@ -436,7 +437,8 @@ def test_Abs():
     assert re(a).is_algebraic
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
-
+    assert Abs(x).fdiff() == sign(x)
+    raises(ArgumentIndexError, lambda: Abs(x).fdiff(2))
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
@@ -473,43 +475,60 @@ def test_Abs_real():
 
 def test_Abs_properties():
     x = Symbol('x')
-    assert Abs(x).is_real is True
+    assert Abs(x).is_real is None
+    assert Abs(x).is_extended_real is True
     assert Abs(x).is_rational is None
     assert Abs(x).is_positive is None
-    assert Abs(x).is_nonnegative is True
+    assert Abs(x).is_nonnegative is None
+    assert Abs(x).is_extended_positive is None
+    assert Abs(x).is_extended_nonnegative is True
+
+    f = Symbol('x', finite=True)
+    assert Abs(f).is_real is True
+    assert Abs(f).is_extended_real is True
+    assert Abs(f).is_rational is None
+    assert Abs(f).is_positive is None
+    assert Abs(f).is_nonnegative is True
+    assert Abs(f).is_extended_positive is None
+    assert Abs(f).is_extended_nonnegative is True
 
     z = Symbol('z', complex=True, zero=False)
-    assert Abs(z).is_real is True
+    assert Abs(z).is_real is None
+    assert Abs(z).is_extended_real is True
     assert Abs(z).is_rational is None
-    assert Abs(z).is_positive is True
+    assert Abs(z).is_positive is None
+    assert Abs(z).is_extended_positive is True
     assert Abs(z).is_zero is False
 
     p = Symbol('p', positive=True)
     assert Abs(p).is_real is True
+    assert Abs(p).is_extended_real is True
     assert Abs(p).is_rational is None
     assert Abs(p).is_positive is True
     assert Abs(p).is_zero is False
 
     q = Symbol('q', rational=True)
+    assert Abs(q).is_real is True
     assert Abs(q).is_rational is True
     assert Abs(q).is_integer is None
     assert Abs(q).is_positive is None
     assert Abs(q).is_nonnegative is True
 
     i = Symbol('i', integer=True)
+    assert Abs(i).is_real is True
     assert Abs(i).is_integer is True
     assert Abs(i).is_positive is None
     assert Abs(i).is_nonnegative is True
 
     e = Symbol('n', even=True)
     ne = Symbol('ne', real=True, even=False)
-    assert Abs(e).is_even
+    assert Abs(e).is_even is True
     assert Abs(ne).is_even is False
     assert Abs(i).is_even is None
 
     o = Symbol('n', odd=True)
     no = Symbol('no', real=True, odd=False)
-    assert Abs(o).is_odd
+    assert Abs(o).is_odd is True
     assert Abs(no).is_odd is False
     assert Abs(i).is_odd is None
 
@@ -895,7 +914,7 @@ def test_issue_14238():
     assert Abs(r + Piecewise((0, r > 0), (1 - r, True)))
 
 def test_zero_assumptions():
-    nr = Symbol('nonreal', real=False)
+    nr = Symbol('nonreal', real=False, finite=True)
     ni = Symbol('nonimaginary', imaginary=False)
     # imaginary implies not zero
     nzni = Symbol('nonzerononimaginary', zero=False, imaginary=False)

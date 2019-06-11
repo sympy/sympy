@@ -106,9 +106,11 @@ See the appropriate docstrings for a detailed explanation of the output.
 
 from __future__ import print_function, division
 
+from sympy.core.assumptions import StdFactKB, _assume_defined
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
                                       Iterable)
+from sympy.core.logic import fuzzy_bool
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
@@ -125,10 +127,13 @@ class Indexed(Expr):
     >>> Indexed('A', i, j)
     A[i, j]
 
-    It is recommended that ``Indexed`` objects be created via ``IndexedBase``:
+    It is recommended that ``Indexed`` objects be created by indexing ``IndexedBase``:
+    ``IndexedBase('A')[i, j]`` instead of ``Indexed(IndexedBase('A'), i, j)``.
 
     >>> A = IndexedBase('A')
-    >>> Indexed('A', i, j) == A[i, j]
+    >>> a_ij = A[i, j]           # Prefer this,
+    >>> b_ij = Indexed(A, i, j)  # over this.
+    >>> a_ij == b_ij
     True
 
     """
@@ -136,6 +141,7 @@ class Indexed(Expr):
     is_Indexed = True
     is_symbol = True
     is_Atom = True
+
 
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
@@ -148,7 +154,10 @@ class Indexed(Expr):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base, IndexedBase):
             raise TypeError(filldedent("""
-                Indexed expects string, Symbol, or IndexedBase as base."""))
+                The base can only be replaced with a string, Symbol,
+                IndexedBase or an object with a method for getting
+                items (i.e. an object with a `__getitem__` method).
+                """))
         args = list(map(sympify, args))
         if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
             if len(args) == 1:
@@ -156,7 +165,16 @@ class Indexed(Expr):
             else:
                 return base[args]
 
-        return Expr.__new__(cls, base, *args, **kw_args)
+        obj = Expr.__new__(cls, base, *args, **kw_args)
+
+        try:
+            IndexedBase._set_assumptions(obj, base.assumptions0)
+        except AttributeError:
+            IndexedBase._set_assumptions(obj, {})
+        return obj
+
+    def _hashable_content(self):
+        return super(Indexed, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def name(self):
@@ -186,6 +204,10 @@ class Indexed(Expr):
             if Tuple(self.indices).has(wrt):
                 return S.NaN
             return S.Zero
+
+    @property
+    def assumptions0(self):
+        return {k: v for k, v in self._assumptions.items() if v is not None}
 
     @property
     def base(self):
@@ -381,10 +403,35 @@ class IndexedBase(Expr, NotIterable):
     >>> B[i, j].shape
     (o, p)
 
+    Assumptions can be specified with keyword arguments the same way as for Symbol:
+
+    >>> A_real = IndexedBase('A', real=True)
+    >>> A_real.is_real
+    True
+    >>> A != A_real
+    True
     """
     is_commutative = True
     is_symbol = True
     is_Atom = True
+
+    @staticmethod
+    def _filter_assumptions(kw_args):
+        """Split the given dict into two parts: assumptions and not assumptions.
+           Keys are taken as assumptions if they correspond to an entry in ``_assume_defined``."""
+        assumptions = {k: v for k, v in kw_args.items() if k in _assume_defined}
+        Symbol._sanitize(assumptions)
+        # return assumptions, not assumptions
+        return assumptions, {k: v for k, v in kw_args.items() if k not in assumptions}
+
+    @staticmethod
+    def _set_assumptions(obj, assumptions):
+        """Set assumptions on obj, making sure to apply consistent values."""
+        tmp_asm_copy = assumptions.copy()
+        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
+        assumptions['commutative'] = is_commutative
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
 
     def __new__(cls, label, shape=None, **kw_args):
         from sympy import MatrixBase, NDimArray
@@ -416,11 +463,20 @@ class IndexedBase(Expr, NotIterable):
         obj._offset = offset
         obj._strides = strides
         obj._name = str(label)
+        assumptions, _ = IndexedBase._filter_assumptions(kw_args)
+        IndexedBase._set_assumptions(obj, assumptions)
         return obj
 
     @property
     def name(self):
         return self._name
+
+    def _hashable_content(self):
+        return super(IndexedBase, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
+
+    @property
+    def assumptions0(self):
+        return {k: v for k, v in self._assumptions.items() if v is not None}
 
     def __getitem__(self, indices, **kw_args):
         if is_sequence(indices):

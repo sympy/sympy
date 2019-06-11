@@ -582,6 +582,9 @@ class StrPrinter(Printer):
     def _print_Naturals0(self, expr):
         return 'Naturals0'
 
+    def _print_Rationals(self, expr):
+        return 'Rationals'
+
     def _print_Reals(self, expr):
         return 'Reals'
 
@@ -722,6 +725,9 @@ class StrPrinter(Printer):
 
     def _print_ZeroMatrix(self, expr):
         return "0"
+
+    def _print_OneMatrix(self, expr):
+        return "1"
 
     def _print_Predicate(self, expr):
         return "Q.%s" % expr.name

@@ -1,5 +1,6 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
-                    Mul, Rational, Integral, factorial, gamma, Piecewise, Eq)
+                    Mul, Rational, Integral, factorial, gamma, Piecewise, Eq, Product,
+                    IndexedBase, RisingFactorial)
 from sympy.core.numbers import comp
 from sympy.stats import density
 from sympy.stats.joint_rv import marginal_distribution
@@ -66,7 +67,6 @@ def test_GeneralizedMultivariateLogGammaDistribution():
                      [h, h, h, 1]])
     v, l, mu = (4, [1, 2, 3, 4], [1, 2, 3, 4])
     y_1, y_2, y_3, y_4 = symbols('y_1:5', real=True)
-    n = symbols('n', negative=False, integer=True)
     delta = symbols('d', positive=True)
     G = GMVLGO('G', omega, v, l, mu)
     Gd = GMVLG('Gd', delta, v, l, mu)
@@ -94,7 +94,7 @@ def test_GeneralizedMultivariateLogGammaDistribution():
                      [h, 1, 2, h],
                      [h, h, 1, h],
                      [h, h, h, 1]])
-    v_f = symbols("v_f", positive=False)
+    v_f = symbols("v_f", positive=False, real=True)
     l_f = [1, 2, v_f, 4]
     m_f = [v_f, 2, 3, 4]
     omega_f4 = Matrix([[1, h, h, h, h],
@@ -121,7 +121,7 @@ def test_MultivariateBeta():
     from sympy.stats.joint_rv_types import MultivariateBeta
     from sympy import gamma
     a1, a2 = symbols('a1, a2', positive=True)
-    a1_f, a2_f = symbols('a1, a2', positive=False)
+    a1_f, a2_f = symbols('a1, a2', positive=False, real=True)
     mb = MultivariateBeta('B', [a1, a2])
     mb_c = MultivariateBeta('C', a1, a2)
     assert density(mb)(1, 2) == S(2)**(a2 - 1)*gamma(a1 + a2)/\
@@ -135,7 +135,10 @@ def test_MultivariateBeta():
 
 def test_MultivariateEwens():
     from sympy.stats.joint_rv_types import MultivariateEwens
-    n, theta = symbols('n theta', positive=True)
+
+    n, theta, i = symbols('n theta i', positive=True)
+
+    # tests for integer dimensions
     theta_f = symbols('t_f', negative=True)
     a = symbols('a_1:4', positive = True, integer = True)
     ed = MultivariateEwens('E', 3, theta)
@@ -150,7 +153,15 @@ def test_MultivariateEwens():
                                                     (theta + 2)*factorial(a[1])),
                                                     Eq(2*a[1] + 1, 3)), (0, True))
     raises(ValueError, lambda: MultivariateEwens('e1', 5, theta_f))
-    raises(ValueError, lambda: MultivariateEwens('e1', n, theta))
+
+    # tests for symbolic dimensions
+    eds = MultivariateEwens('E', n, theta)
+    a = IndexedBase('a')
+    j, k = symbols('j, k')
+    den = Piecewise((factorial(n)*Product(theta**a[j]*(j + 1)**(-a[j])/
+           factorial(a[j]), (j, 0, n - 1))/RisingFactorial(theta, n),
+            Eq(n, Sum((k + 1)*a[k], (k, 0, n - 1)))), (0, True))
+    assert density(eds)(a).dummy_eq(den)
 
 def test_Multinomial():
     from sympy.stats.joint_rv_types import Multinomial
