@@ -1850,12 +1850,32 @@ class LatexPrinter(Printer):
                 r"\right\}")
 
     def _print_bernoulli(self, expr, exp=None):
-        tex = r"B_{%s}" % self._print(expr.args[0])
+        if len(expr.args) == 2:
+            tex = r"B_{%s}\left(%s\right)" % (self._print(expr.args[0]),
+                                              self._print(expr.args[1]))
+        else:
+            tex = r"B_{%s}" % self._print(expr.args[0])
         if exp is not None:
             tex = r"%s^{%s}" % (tex, self._print(exp))
         return tex
 
-    _print_bell = _print_bernoulli
+    def _print_bell(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex1 = r"B_{%s}" % self._print(expr.args[0])
+            tex2 = r"\left(%s\right)" % self._print(expr.args[1])
+        if len(expr.args) == 3:
+            tex1 = r"B_{%s, %s}" % (self._print(expr.args[0]),
+                                    self._print(expr.args[1]))
+            tex2 = r"\left(%s\right)" % r", ".join(self._print(el) for
+                                                   el in expr.args[2])
+        else:
+            tex1 = r"B_{%s}" % self._print(expr.args[0])
+            tex2 = ""
+        if exp is not None:
+            tex = r"%s^{%s}%s" % (tex1, self._print(exp), tex2)
+        else:
+            tex = tex1 + tex2
+        return tex
 
     def _print_fibonacci(self, expr, exp=None):
         tex = r"F_{%s}" % self._print(expr.args[0])

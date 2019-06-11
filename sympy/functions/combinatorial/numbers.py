@@ -226,11 +226,12 @@ class fibonacci(Function):
             return S.Infinity
 
         if n.is_Integer:
-            n = int(n)
-            if n < 0:
-                return S.NegativeOne**(n + 1) * fibonacci(-n)
             if sym is None:
-                return Integer(cls._fib(n))
+                n = int(n)
+                if n < 0:
+                    return S.NegativeOne**(n + 1) * fibonacci(-n)
+                else:
+                    return Integer(cls._fib(n))
             else:
                 if n < 1:
                     raise ValueError("Fibonacci polynomials are defined "
