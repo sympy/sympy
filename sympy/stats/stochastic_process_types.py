@@ -13,8 +13,8 @@ __all__ = [
     'StochasticProcess',
     'DiscreteTimeStochasticProcess',
     'DiscreteMarkovChain',
-    'TransitionMatrix',
-    'StateSpace'
+    'TransitionMatrixOf',
+    'StochasticStateSpaceOf'
 ]
 
 def _set_converter(itr):
@@ -120,7 +120,7 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
 
 # TODO: Define ContinuousTimeStochasticProcess
 
-class TransitionMatrix(Boolean):
+class TransitionMatrixOf(Boolean):
     """
     Assumes that the matrix is the transition matrix
     of the process.
@@ -129,19 +129,19 @@ class TransitionMatrix(Boolean):
     def __new__(cls, process, matrix):
         if not isinstance(process, DiscreteMarkovChain):
             raise ValueError("Currently only DiscreteMarkovChain "
-                                "support TransitionMatrix.")
+                                "support TransitionMatrixOf.")
         matrix = _matrix_checks(matrix)
         return Basic.__new__(cls, process, matrix)
 
     process = property(lambda self: self.args[0])
     matrix = property(lambda self: self.args[1])
 
-class StateSpace(Boolean):
+class StochasticStateSpaceOf(Boolean):
 
     def __new__(cls, process, state_space):
         if not isinstance(process, DiscreteMarkovChain):
             raise ValueError("Currently only DiscreteMarkovChain "
-                                "support StateSpace.")
+                                "support StochasticStateSpaceOf.")
         state_space = _set_converter(state_space)
         return Basic.__new__(cls, process, state_space)
 
@@ -164,7 +164,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
     Examples
     ========
 
-    >>> from sympy.stats import DiscreteMarkovChain, TransitionMatrix
+    >>> from sympy.stats import DiscreteMarkovChain, TransitionMatrixOf
     >>> from sympy import Matrix, MatrixSymbol, Eq
     >>> from sympy.stats import P
     >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
@@ -172,13 +172,13 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
     >>> YS = DiscreteMarkovChain("Y")
     >>> Y.state_space
     {0, 1, 2}
-    >>> Y.trans_probs
+    >>> Y.transition_probabilities
     Matrix([
     [0.5, 0.2, 0.3],
     [0.2, 0.5, 0.3],
     [0.2, 0.3, 0.5]])
     >>> TS = MatrixSymbol('T', 3, 3)
-    >>> P(Eq(YS[3], 2), Eq(YS[1], 1) & TransitionMatrix(YS, TS))
+    >>> P(Eq(YS[3], 2), Eq(YS[1], 1) & TransitionMatrixOf(YS, TS))
     T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]
     >>> P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2)
     0.36
@@ -194,7 +194,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         return Basic.__new__(cls, sym, state_space, trans_probs)
 
     @property
-    def trans_probs(self):
+    def transition_probabilities(self):
         """
         Transition probabilities of discrete Markov chain,
         either an instance of Matrix or MatrixSymbol.
@@ -226,24 +226,24 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         any information passed at the time of object creation like
         transition probabilities, state space.
 
-        Pass the transition matrix using TransitionMatrix and state space
-        using StateSpace in given_condition using & or And.
+        Pass the transition matrix using TransitionMatrixOf and state space
+        using StochasticStateSpaceOf in given_condition using & or And.
         """
 
         # extracting transition matrix and state space
-        trans_probs, state_space = self.trans_probs, self.state_space
+        trans_probs, state_space = self.transition_probabilities, self.state_space
         if isinstance(given_condition, And):
             gcs = given_condition.args
             for gc in gcs:
-                if isinstance(gc, TransitionMatrix):
+                if isinstance(gc, TransitionMatrixOf):
                     trans_probs = gc.matrix
-                if isinstance(gc, StateSpace):
+                if isinstance(gc, StochasticStateSpaceOf):
                     state_space = gc.state_space
                 if isinstance(gc, Eq):
                     given_condition = gc
-        if isinstance(given_condition, TransitionMatrix):
+        if isinstance(given_condition, TransitionMatrixOf):
             trans_probs = given_condition.matrix
-        if isinstance(given_condition, StateSpace):
+        if isinstance(given_condition, StochasticStateSpaceOf):
             state_space = given_condition.state_space
 
         # given_condition does not have sufficient information
@@ -301,9 +301,10 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             i, result = -1, 1
             while i > -len(conds):
                 result *= self.probability(conds[i], conds[i-1] & \
-                            TransitionMatrix(self, trans_probs) & StateSpace(self, state_space))
+                            TransitionMatrixOf(self, trans_probs) & \
+                            StochasticStateSpaceOf(self, state_space))
                 i -= 1
-            if isinstance(given_condition, (TransitionMatrix, StateSpace)):
+            if isinstance(given_condition, (TransitionMatrixOf, StochasticStateSpaceOf)):
                 return result * Probability(conds[i])
             if isinstance(given_condition, Eq):
                 if not isinstance(given_condition.lhs, Probability) or \

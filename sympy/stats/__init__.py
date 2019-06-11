@@ -85,8 +85,8 @@ from .stochastic_process_types import (
     StochasticProcess,
     DiscreteTimeStochasticProcess,
     DiscreteMarkovChain,
-    TransitionMatrix,
-    StateSpace
+    TransitionMatrixOf,
+    StochasticStateSpaceOf
 )
 __all__.extend(stochastic_process_types.__all__)
 
