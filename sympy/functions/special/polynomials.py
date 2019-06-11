@@ -1080,12 +1080,14 @@ class laguerre(OrthogonalPolynomial):
 
     @classmethod
     def eval(cls, n, x):
+        if n.is_integer is False:
+            raise ValueError("Error: n should be an integer.")
         if not n.is_Number:
             # Symbolic result L_n(x)
             # L_{n}(-x)  --->  exp(-x) * L_{-n-1}(x)
             # L_{-n}(x)  --->  exp(x) * L_{n-1}(-x)
             if n.could_extract_minus_sign():
-                return exp(x) * laguerre(n - 1, -x)
+                return exp(x)*laguerre(-n - 1, -x)
             # We can evaluate for some special values of x
             if x == S.Zero:
                 return S.One
@@ -1094,10 +1096,8 @@ class laguerre(OrthogonalPolynomial):
             elif x == S.Infinity:
                 return S.NegativeOne**n * S.Infinity
         else:
-            # n is a given fixed integer, evaluate into polynomial
             if n.is_negative:
-                raise ValueError(
-                    "The index n must be nonnegative integer (got %r)" % n)
+                return exp(x)*laguerre(-n - 1, -x)
             else:
                 return cls._eval_at_order(n, x)
 
@@ -1115,8 +1115,10 @@ class laguerre(OrthogonalPolynomial):
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
         from sympy import Sum
         # Make sure n \in N_0
-        if n.is_negative or n.is_integer is False:
-            raise ValueError("Error: n should be a non-negative integer.")
+        if n.is_negative:
+            return exp(x) * self._eval_rewrite_as_polynomial(-n - 1, -x, **kwargs)
+        if n.is_integer is False:
+            raise ValueError("Error: n should be an integer.")
         k = Dummy("k")
         kern = RisingFactorial(-n, k) / factorial(k)**2 * x**k
         return Sum(kern, (k, 0, n))
