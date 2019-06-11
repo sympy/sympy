@@ -1331,11 +1331,15 @@ def test_latex_numbers():
     assert latex(bell(n, x)**2) == r"B_{n}^{2}\left(x\right)"
     assert latex(bell(n, m, (x, y))**2) == r"B_{n, m}^{2}\left(x, y\right)"
     assert latex(fibonacci(n)) == r"F_{n}"
+    assert latex(fibonacci(n, x)) == r"F_{n}\left(x\right)"
     assert latex(fibonacci(n)**2) == r"F_{n}^{2}"
+    assert latex(fibonacci(n, x)**2) == r"F_{n}^{2}\left(x\right)"
     assert latex(lucas(n)) == r"L_{n}"
     assert latex(lucas(n)**2) == r"L_{n}^{2}"
     assert latex(tribonacci(n)) == r"T_{n}"
+    assert latex(tribonacci(n, x)) == r"T_{n}\left(x\right)"
     assert latex(tribonacci(n)**2) == r"T_{n}^{2}"
+    assert latex(tribonacci(n, x)**2) == r"T_{n}^{2}\left(x\right)"
 
 def test_latex_euler():
     assert latex(euler(n)) == r"E_{n}"
