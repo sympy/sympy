@@ -13,6 +13,7 @@ import linecache
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, PY3)
+from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
@@ -1226,15 +1227,17 @@ def implemented_function(symfunc, implementation):
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
     # if name, create function to hold implementation
-    _extra_kwargs = {}
+    kwargs = {}
     if isinstance(symfunc, UndefinedFunction):
-        _extra_kwargs = symfunc._extra_kwargs
+        kwargs = symfunc._kwargs
         symfunc = symfunc.__name__
     if isinstance(symfunc, string_types):
         # Keyword arguments to UndefinedFunction are added as attributes to
         # the created class.
-        symfunc = UndefinedFunction(symfunc, _imp_=staticmethod(implementation), **_extra_kwargs)
+        symfunc = UndefinedFunction(
+            symfunc, _imp_=staticmethod(implementation), **kwargs)
     elif not isinstance(symfunc, UndefinedFunction):
-        raise ValueError('symfunc should be either a string or'
-                         ' an UndefinedFunction instance.')
+        raise ValueError(filldedent('''
+            symfunc should be either a string or
+            an UndefinedFunction instance.'''))
     return symfunc

@@ -106,8 +106,9 @@ See the appropriate docstrings for a detailed explanation of the output.
 
 from __future__ import print_function, division
 
-from sympy.core.assumptions import StdFactKB, _assume_defined
-from sympy.core import Expr, Tuple, Symbol, sympify, S
+from sympy.core.assumptions import StdFactKB
+from sympy.core import Expr, Tuple, sympify, S
+from sympy.core.symbol import _filter_assumptions, Symbol
 from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
                                       Iterable)
 from sympy.core.logic import fuzzy_bool
@@ -424,15 +425,6 @@ class IndexedBase(Expr, NotIterable):
     is_Atom = True
 
     @staticmethod
-    def _filter_assumptions(kw_args):
-        """Split the given dict into two parts: assumptions and not assumptions.
-           Keys are taken as assumptions if they correspond to an entry in ``_assume_defined``."""
-        assumptions = {k: v for k, v in kw_args.items() if k in _assume_defined}
-        Symbol._sanitize(assumptions)
-        # return assumptions, not assumptions
-        return assumptions, {k: v for k, v in kw_args.items() if k not in assumptions}
-
-    @staticmethod
     def _set_assumptions(obj, assumptions):
         """Set assumptions on obj, making sure to apply consistent values."""
         tmp_asm_copy = assumptions.copy()
@@ -444,10 +436,12 @@ class IndexedBase(Expr, NotIterable):
     def __new__(cls, label, shape=None, **kw_args):
         from sympy import MatrixBase, NDimArray
 
+        assumptions, kw_args = _filter_assumptions(kw_args)
         if isinstance(label, string_types):
             label = Symbol(label)
         elif isinstance(label, Symbol):
-            pass
+            assumptions = label._merge(assumptions)
+            label = Symbol(label.name)
         elif isinstance(label, (MatrixBase, NDimArray)):
             return label
         elif isinstance(label, Iterable):
@@ -463,14 +457,6 @@ class IndexedBase(Expr, NotIterable):
         offset = kw_args.pop('offset', S.Zero)
         strides = kw_args.pop('strides', None)
 
-        # If label is a symbol, ensure the stored label is a plain (no assumptions) symbol,
-        # and propagate any extra assumptions onto the new object.
-        if isinstance(label, Symbol):
-            assumptions = label.assumptions0
-            label = Symbol(str(label))
-        else:
-            assumptions = {}
-
         if shape is not None:
             obj = Expr.__new__(cls, label, shape)
         else:
@@ -480,14 +466,6 @@ class IndexedBase(Expr, NotIterable):
         obj._strides = strides
         obj._name = str(label)
 
-        # Combine assumptions from kw_args and symbol.
-        passed_assumptions, _ = IndexedBase._filter_assumptions(kw_args)
-        for k, v in passed_assumptions.items():
-            if k in assumptions and v != assumptions[k]:
-                raise ValueError(
-                    "clash between assumptions inherited from label and passed assumptions"
-                )
-            assumptions[k] = v
         IndexedBase._set_assumptions(obj, assumptions)
         return obj
 

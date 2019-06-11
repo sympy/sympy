@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core.assumptions import StdFactKB
+from sympy.core.assumptions import StdFactKB, _assume_defined
 from sympy.core.compatibility import (string_types, range, is_sequence,
     ordered)
 from .basic import Basic
@@ -11,13 +11,24 @@ from .cache import cacheit
 from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.iterables import cartes
+from sympy.utilities.iterables import cartes, sift
 from sympy.core.containers import Tuple
 
 import string
 import re as _re
 import random
 
+
+def _filter_assumptions(kwargs):
+    """Split the given dict into assumptions and non-assumptions.
+    Keys are taken as assumptions if they correspond to an
+    entry in ``_assume_defined``.
+    """
+    assumptions, nonassumptions = map(dict, sift(kwargs.items(),
+        lambda i: i[0] in _assume_defined,
+        binary=True))
+    Symbol._sanitize(assumptions)
+    return assumptions, nonassumptions
 
 def _symbol(s, matching_symbol=None, **assumptions):
     """Return s if s is a Symbol, else if s is a string, return either
@@ -198,6 +209,17 @@ class Symbol(AtomicExpr, Boolean):
                 assumptions.pop(key)
                 continue
             assumptions[key] = bool(v)
+
+    def _merge(self, assumptions):
+        base = self.assumptions0
+        for k in set(assumptions) & set(base):
+            if assumptions[k] != base[k]:
+                raise ValueError(filldedent('''
+                    non-matching assumptions for %s: existing value
+                    is %s and new value is %s''' % (
+                    k, base[k], assumptions[k])))
+        base.update(assumptions)
+        return base
 
     def __new__(cls, name, **assumptions):
         """Symbols are identified by name and assumptions::
