@@ -1,7 +1,9 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func, Product, Mul, Piecewise, Mod,
-                   Eq, sqrt, Poly)
+                   oo, zoo, simplify, expand_func, Product, Mul, Piecewise,
+                   Mod, Eq, sqrt, Poly, Dummy)
+from sympy.core.expr import unchanged
+from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.utilities.pytest import XFAIL, raises, slow
@@ -23,6 +25,7 @@ def test_rf_eval_apply():
 
     assert rf(oo, 6) == oo
     assert rf(-oo, 7) == -oo
+    assert rf(-oo, 6) == oo
 
     assert rf(oo, -6) == oo
     assert rf(-oo, -7) == oo
@@ -60,6 +63,8 @@ def test_rf_eval_apply():
     assert rf(x, k).rewrite(binomial) == factorial(k)*binomial(x + k - 1, k)
     assert rf(n, k).rewrite(factorial) == \
         factorial(n + k - 1) / factorial(n - 1)
+    assert rf(x, y).rewrite(factorial) == rf(x, y)
+    assert rf(x, y).rewrite(binomial) == rf(x, y)
 
     import random
     from mpmath import rf as mpmath_rf
@@ -84,6 +89,7 @@ def test_ff_eval_apply():
 
     assert ff(oo, 6) == oo
     assert ff(-oo, 7) == -oo
+    assert ff(-oo, 6) == oo
 
     assert ff(oo, -6) == oo
     assert ff(-oo, -7) == oo
@@ -125,6 +131,8 @@ def test_ff_eval_apply():
     assert ff(x, k).rewrite(gamma) == (-1)**k*gamma(k - x) / gamma(-x)
     assert ff(n, k).rewrite(factorial) == factorial(n) / factorial(n - k)
     assert ff(x, k).rewrite(binomial) == factorial(k) * binomial(x, k)
+    assert ff(x, y).rewrite(factorial) == ff(x, y)
+    assert ff(x, y).rewrite(binomial) == ff(x, y)
 
     import random
     from mpmath import ff as mpmath_ff
@@ -225,6 +233,7 @@ def test_factorial_diff():
         gamma(1 + n)*polygamma(0, 1 + n)
     assert factorial(n**2).diff(n) == \
         2*n*gamma(1 + n**2)*polygamma(0, 1 + n**2)
+    raises(ArgumentIndexError, lambda: factorial(n**2).fdiff(2))
 
 
 def test_factorial_series():
@@ -239,7 +248,9 @@ def test_factorial_rewrite():
     k = Symbol('k', integer=True, nonnegative=True)
 
     assert factorial(n).rewrite(gamma) == gamma(n + 1)
-    assert str(factorial(k).rewrite(Product)) == 'Product(_i, (_i, 1, k))'
+    _i = Dummy('i')
+    assert factorial(k).rewrite(Product).dummy_eq(Product(_i, (_i, 1, k)))
+    assert factorial(n).rewrite(Product) == factorial(n)
 
 
 def test_factorial2():
@@ -264,9 +275,11 @@ def test_factorial2():
     nt = Symbol('nt', nonnegative=True)
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nn')
+    z = Symbol('z', zero=True)
     #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
-    raises (ValueError, lambda: factorial2(oo))
-    raises (ValueError, lambda: factorial2(S(5)/2))
+    raises(ValueError, lambda: factorial2(oo))
+    raises(ValueError, lambda: factorial2(S(5)/2))
+    raises(ValueError, lambda: factorial2(-4))
     assert factorial2(n).is_integer is None
     assert factorial2(tt - 1).is_integer
     assert factorial2(tte - 1).is_integer
@@ -306,6 +319,7 @@ def test_factorial2():
     assert factorial2(tte).is_odd is None
     assert factorial2(tte + 2).is_even is True
     assert factorial2(tpe).is_even is True
+    assert factorial2(tpe).is_odd is False
     assert factorial2(tto).is_odd is True
     assert factorial2(tf).is_even is None
     assert factorial2(tf).is_odd is None
@@ -313,6 +327,8 @@ def test_factorial2():
     assert factorial2(tfe).is_odd is None
     assert factorial2(tfo).is_even is False
     assert factorial2(tfo).is_odd is None
+    assert factorial2(z).is_even is False
+    assert factorial2(z).is_odd is True
 
 
 def test_factorial2_rewrite():
@@ -432,10 +448,30 @@ def test_binomial():
     assert binomial(I, 5) == S(1)/3 - I/S(12)
     assert binomial((2*I + 3), 7) == -13*I/S(63)
     assert isinstance(binomial(I, n), binomial)
+    assert expand_func(binomial(3, 2, evaluate=False)) == 3
+    assert expand_func(binomial(n, 0, evaluate=False)) == 1
+    assert expand_func(binomial(n, -2, evaluate=False)) == 0
+    assert expand_func(binomial(n, k)) == binomial(n, k)
+
+
+def test_binomial_Mod():
+    p, q = 10**5 + 3, 10**9 + 33 # prime modulo
+    r, s = 10**7 + 5, 33333333 # composite modulo
+
+    # A few tests to get coverage
+    # Lucas Theorem
+    assert Mod(binomial(156675, 4433, evaluate=False), p) == Mod(binomial(156675, 4433), p)
+
+    # factorial Mod
+    assert Mod(binomial(1234, 432, evaluate=False), q) == Mod(binomial(1234, 432), q)
+
+    # binomial factorize
+    assert Mod(binomial(253, 113, evaluate=False), r) == Mod(binomial(253, 113), r)
+
 
 
 @slow
-def test_binomial_Mod():
+def test_binomial_Mod_slow():
     p, q = 10**5 + 3, 10**9 + 33 # prime modulo
     r, s = 10**7 + 5, 33333333 # composite modulo
 
@@ -445,19 +481,16 @@ def test_binomial_Mod():
     assert (binomial(9, k) % 7).subs(k, 2) == 1
 
     # Lucas Theorem
-    assert Mod(binomial(156675, 4433, evaluate=False), p) == Mod(binomial(156675, 4433), p)
     assert Mod(binomial(123456, 43253, evaluate=False), p) == Mod(binomial(123456, 43253), p)
     assert Mod(binomial(-178911, 237, evaluate=False), p) == Mod(-binomial(178911 + 237 - 1, 237), p)
     assert Mod(binomial(-178911, 238, evaluate=False), p) == Mod(binomial(178911 + 238 - 1, 238), p)
 
     # factorial Mod
-    assert Mod(binomial(1234, 432, evaluate=False), q) == Mod(binomial(1234, 432), q)
     assert Mod(binomial(9734, 451, evaluate=False), q) == Mod(binomial(9734, 451), q)
     assert Mod(binomial(-10733, 4459, evaluate=False), q) == Mod(binomial(-10733, 4459), q)
     assert Mod(binomial(-15733, 4458, evaluate=False), q) == Mod(binomial(-15733, 4458), q)
 
     # binomial factorize
-    assert Mod(binomial(253, 113, evaluate=False), r) == Mod(binomial(253, 113), r)
     assert Mod(binomial(753, 119, evaluate=False), r) == Mod(binomial(753, 119), r)
     assert Mod(binomial(3781, 948, evaluate=False), s) == Mod(binomial(3781, 948), s)
     assert Mod(binomial(25773, 1793, evaluate=False), s) == Mod(binomial(25773, 1793), s)
@@ -480,17 +513,20 @@ def test_binomial_diff():
     assert binomial(n**2, k**3).diff(k) == \
         3*k**2*(-polygamma(
             0, 1 + k**3) + polygamma(0, 1 + n**2 - k**3))*binomial(n**2, k**3)
+    raises(ArgumentIndexError, lambda: binomial(n, k).fdiff(3))
 
 
 def test_binomial_rewrite():
     n = Symbol('n', integer=True)
     k = Symbol('k', integer=True)
+    x = Symbol('x')
 
     assert binomial(n, k).rewrite(
         factorial) == factorial(n)/(factorial(k)*factorial(n - k))
     assert binomial(
         n, k).rewrite(gamma) == gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
     assert binomial(n, k).rewrite(ff) == ff(n, k) / factorial(k)
+    assert binomial(n, x).rewrite(ff) == binomial(n, x)
 
 
 @XFAIL
@@ -506,6 +542,7 @@ def test_subfactorial():
         [1, 0, 1, 2, 9, 44, 265, 1854, 14833, 133496]))
     assert subfactorial(oo) == oo
     assert subfactorial(nan) == nan
+    assert unchanged(subfactorial, 2.2)
 
     x = Symbol('x')
     assert subfactorial(x).rewrite(uppergamma) == uppergamma(x + 1, -1)/S.Exp1
