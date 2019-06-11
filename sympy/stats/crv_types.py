@@ -1591,14 +1591,12 @@ class GumbelDistribution(SingleContinuousDistribution):
 
     def _characteristic_function(self, t):
         cf_max = gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
-        x = Dummy('x')
-        cf_min = Integral(self.pdf(x) * exp(I*t*x), (x, self.set))
+        cf_min = gamma(1 + I*self.beta*t) * exp(I*self.mu*t)
         return Piecewise((cf_min, self.minimum), (cf_max, not self.minimum))
 
     def _moment_generating_function(self, t):
         mgf_max = gamma(1 - self.beta*t) * exp(self.mu*t)
-        x = Dummy('x')
-        mgf_min = Integral(self.pdf(x) * exp(t*x), (x, self.set))
+        mgf_min = gamma(1 + self.beta*t) * exp(self.mu*t)
         return Piecewise((mgf_min, self.minimum), (mgf_max, not self.minimum))
 
 def Gumbel(name, beta, mu, minimum=False):
