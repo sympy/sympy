@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from random import randrange, choice
+from sympy.core.local_random import randrange, choice
 from math import log
 from sympy.ntheory import primefactors
 from sympy import multiplicity, factorint

@@ -19,7 +19,7 @@ from sympy import (Basic, E, polylog, N, Wild, WildFunction, factor, gcd, Sum, S
 from sympy.functions.special.hyper import TupleArg
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
 from sympy.utilities.iterables import flatten
-from random import randint
+from sympy.core.local_random import randint
 from sympy.logic.boolalg import Or
 
 matchpy = import_module("matchpy")

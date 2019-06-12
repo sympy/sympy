@@ -813,7 +813,7 @@ class Plane(GeometryEntity):
         >>> c.distance(p.p1).equals(1)
         True
         """
-        import random
+        from sympy.core import local_random as random
         if seed is not None:
             rng = random.Random(seed)
         else:

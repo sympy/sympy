@@ -9,7 +9,7 @@ from sympy.core.power import isqrt
 from sympy.core.singleton import S
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
-from random import randint, Random
+from sympy.core.local_random import randint, Random
 
 
 

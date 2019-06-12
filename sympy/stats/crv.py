@@ -19,7 +19,7 @@ from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
-import random
+from sympy.core import local_random as random
 
 
 class ContinuousDomain(RandomDomain):

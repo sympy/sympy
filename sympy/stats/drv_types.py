@@ -20,7 +20,7 @@ from sympy.stats import density
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.rv import _value_check, RandomSymbol
-import random
+from sympy.core import local_random as random
 
 __all__ = ['Geometric',
 'Logarithmic',

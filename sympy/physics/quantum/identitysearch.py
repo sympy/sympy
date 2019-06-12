@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from collections import deque
-from random import randint
+from sympy.core.local_random import randint
 
 from sympy.core.compatibility import range
 from sympy.external import import_module

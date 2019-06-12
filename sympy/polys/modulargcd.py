@@ -8,7 +8,7 @@ from sympy.polys.galoistools import (
 from sympy.polys.polyerrors import ModularGCDFailed
 
 from mpmath import sqrt
-import random
+from sympy.core import local_random as random
 
 
 def _trivial_gcd(f, g):

@@ -16,7 +16,7 @@ Medium Term Todo:
 from __future__ import print_function, division
 
 from itertools import chain
-import random
+from sympy.core import local_random as random
 
 from sympy import Add, I, Integer, Mul, Pow, sqrt, Tuple
 from sympy.core.numbers import Number

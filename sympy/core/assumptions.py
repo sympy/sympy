@@ -157,7 +157,7 @@ from sympy.core.core import BasicMeta
 from sympy.core.compatibility import integer_types
 
 
-from random import Random
+from sympy.core.local_random import Random
 _local_random = Random()
 
 

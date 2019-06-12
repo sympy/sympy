@@ -16,7 +16,7 @@ from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
-import random
+from sympy.core import local_random as random
 
 
 class DiscreteDistribution(Basic):

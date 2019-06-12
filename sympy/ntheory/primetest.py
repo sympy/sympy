@@ -642,5 +642,5 @@ def isprime(n):
     #return mr(n, [2]) and is_extra_strong_lucas_prp(n)
 
     # Add a random M-R base
-    #import random
+    #from sympy.core import local_random as random
     #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)

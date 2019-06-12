@@ -10,7 +10,7 @@ Todo:
 from __future__ import print_function, division
 
 import math
-import random
+from sympy.core import local_random as random
 
 from sympy import Mul, S
 from sympy import log, sqrt

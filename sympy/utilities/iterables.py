@@ -5,7 +5,7 @@ from itertools import (
     combinations, combinations_with_replacement, permutations,
     product, product as cartes
 )
-import random
+from sympy.core import local_random as random
 from operator import gt
 
 from sympy.core import Basic

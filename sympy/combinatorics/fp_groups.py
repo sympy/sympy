@@ -331,7 +331,7 @@ class FpGroup(DefaultPrinting):
         return gens[freqs.index(max(freqs))]
 
     def random(self):
-        import random
+        from sympy.core.compatibility from sympy.core import local_random as random
         r = self.free_group.identity
         for i in range(random.randint(2,3)):
             r = r*random.choice(self.generators)**random.choice([1,-1])

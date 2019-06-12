@@ -444,7 +444,7 @@ def kernS(s):
     XXX This hack should not be necessary once issue 4596 has been resolved.
     """
     import string
-    from random import choice
+    from sympy.core.local_random import choice
     from sympy.core.symbol import Symbol
     hit = False
     quoted = '"' in s or "'" in s

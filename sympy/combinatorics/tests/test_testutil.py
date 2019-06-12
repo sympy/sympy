@@ -5,7 +5,7 @@ from sympy.combinatorics.testutil import _verify_bsgs, _cmp_perm_lists,\
     _verify_normal_closure
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
-from random import shuffle
+from sympy.core.local_random import shuffle
 
 
 def test_cmp_perm_lists():

@@ -8,7 +8,7 @@ from sympy.core.compatibility import range
 from sympy.polys.monomials import monomial_min, monomial_div
 from sympy.polys.orderings import monomial_key
 
-import random
+from sympy.core import local_random as random
 
 def poly_LC(f, K):
     """

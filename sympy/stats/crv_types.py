@@ -61,7 +61,7 @@ from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistributio
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.joint_rv_types import multivariate_rv
 from sympy.stats.rv import _value_check, RandomSymbol
-import random
+from sympy.core import local_random as random
 
 oo = S.Infinity
 

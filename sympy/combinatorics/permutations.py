@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-import random
+from sympy.core import local_random as random
 from collections import defaultdict
 
 from sympy.core import Basic

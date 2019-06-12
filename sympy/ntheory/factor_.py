@@ -3,7 +3,7 @@ Integer factorization
 """
 from __future__ import print_function, division
 
-import random
+from sympy.core import local_random as random
 import math
 
 from sympy.core import sympify

@@ -689,7 +689,7 @@ def measure_partial_oneshot(qubit, bits, format='sympy'):
     result : Qubit
         The qubit that the system collapsed to upon measurement.
     """
-    import random
+    from sympy.core import local_random as random
     m = qubit_to_matrix(qubit, format)
 
     if format == 'sympy':
@@ -786,7 +786,7 @@ def measure_all_oneshot(qubit, format='sympy'):
     result : Qubit
         The qubit that the system collapsed to upon measurement.
     """
-    import random
+    from sympy.core import local_random as random
     m = qubit_to_matrix(qubit)
 
     if format == 'sympy':

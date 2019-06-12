@@ -18,7 +18,7 @@ from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
         sumsets, rv_subs, NamedArgsMixin)
 from sympy.core.containers import Dict
-import random
+from sympy.core import local_random as random
 
 class FiniteDensity(dict):
     """

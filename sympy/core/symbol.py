@@ -16,7 +16,7 @@ from sympy.core.containers import Tuple
 
 import string
 import re as _re
-import random
+from sympy.core import local_random as random
 
 
 def _symbol(s, matching_symbol=None, **assumptions):

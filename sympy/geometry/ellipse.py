@@ -32,7 +32,7 @@ from .point import Point, Point2D, Point3D
 from .line import Line, Segment
 from .util import idiff
 
-import random
+from sympy.core import local_random as random
 
 
 class Ellipse(GeometrySet):

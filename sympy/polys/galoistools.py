@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from random import uniform
+from sympy.core.local_random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
 
 from sympy.core.compatibility import SYMPY_INTS, range
