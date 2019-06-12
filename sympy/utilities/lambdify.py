@@ -1022,6 +1022,7 @@ class _EvaluatorPrinter(object):
         from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
         from sympy.matrices import DeferredVector
         from sympy.core.symbol import _uniquely_named_symbol
+        from sympy.core.expr import Expr
 
         # Args of type Dummy can cause name collisions with args
         # of type Symbol.  Force dummify of everything in this
@@ -1038,7 +1039,9 @@ class _EvaluatorPrinter(object):
             elif isinstance(arg, Basic) and arg.is_symbol:
                 s = self._argrepr(arg)
                 if dummify or not self._is_safe_ident(s):
-                    dummy = _uniquely_named_symbol(Dummy().name, expr)
+                    dummy = Dummy()
+                    if isinstance(expr, Expr):
+                        dummy = _uniquely_named_symbol(dummy.name, expr)
                     s = self._argrepr(dummy)
                     expr = self._subexpr(expr, {arg: dummy})
             elif dummify or isinstance(arg, (Function, Derivative)):
