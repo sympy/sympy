@@ -280,8 +280,8 @@ def not_empty_in(finset_intersection, *syms):
     if len(syms) == 0:
         raise ValueError("One or more symbols must be given in syms.")
 
-    if finset_intersection.is_EmptySet:
-        return EmptySet()
+    if finset_intersection is S.EmptySet:
+        return S.EmptySet
 
     if isinstance(finset_intersection, Union):
         elm_in_sets = finset_intersection.args[0]

@@ -898,13 +898,20 @@ def test_sympy__sets__setexpr__SetExpr():
     assert _test_args(SetExpr(Interval(0, 1)))
 
 
+def test_sympy__sets__fancysets__Rationals():
+    from sympy.sets.fancysets import Rationals
+    assert _test_args(Rationals())
+
+
 def test_sympy__sets__fancysets__Naturals():
     from sympy.sets.fancysets import Naturals
     assert _test_args(Naturals())
 
+
 def test_sympy__sets__fancysets__Naturals0():
     from sympy.sets.fancysets import Naturals0
     assert _test_args(Naturals0())
+
 
 def test_sympy__sets__fancysets__Integers():
     from sympy.sets.fancysets import Integers
@@ -1178,6 +1185,10 @@ def test_sympy__stats__frv_types__BernoulliDistribution():
 def test_sympy__stats__frv_types__BinomialDistribution():
     from sympy.stats.frv_types import BinomialDistribution
     assert _test_args(BinomialDistribution(5, S.Half, 1, 0))
+
+def test_sympy__stats__frv_types__BetaBinomialDistribution():
+    from sympy.stats.frv_types import BetaBinomialDistribution
+    assert _test_args(BetaBinomialDistribution(5, 1, 1))
 
 
 def test_sympy__stats__frv_types__HypergeometricDistribution():

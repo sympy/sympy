@@ -4,8 +4,9 @@ from sympy import (
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
     Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
     ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda, Derivative)
-from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.expr import unchanged
+from sympy.core.function import ArgumentIndexError
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def N_equals(a, b):
@@ -436,7 +437,8 @@ def test_Abs():
     assert re(a).is_algebraic
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
-
+    assert Abs(x).fdiff() == sign(x)
+    raises(ArgumentIndexError, lambda: Abs(x).fdiff(2))
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)

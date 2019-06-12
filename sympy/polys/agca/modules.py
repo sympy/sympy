@@ -26,7 +26,7 @@ from sympy.polys.agca.ideals import Ideal
 from sympy.polys.domains.field import Field
 from sympy.polys.orderings import ProductOrder, monomial_key
 from sympy.polys.polyerrors import CoercionFailed
-
+from sympy.core.basic import _aresame
 
 # TODO
 # - module saturation
@@ -357,7 +357,7 @@ class FreeModule(Module):
             if len(tpl) != self.rank:
                 raise CoercionFailed
             return FreeModuleElement(self, tpl)
-        elif elem is 0:
+        elif _aresame(elem, 0):
             return FreeModuleElement(self, (self.ring.convert(0),)*self.rank)
         else:
             raise CoercionFailed
