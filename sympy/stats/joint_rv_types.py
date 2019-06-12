@@ -34,7 +34,7 @@ def JointRV(symbol, pdf, _set=None):
 
     -- a symbol
     -- a PDF in terms of indexed symbols of the symbol given
-     as the first argument
+    as the first argument
 
     NOTE: As of now, the set for each component for a `JointRV` is
     equal to the set of all integers, which can not be changed.

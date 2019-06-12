@@ -69,6 +69,18 @@ Continuous Types
 .. autofunction:: WignerSemicircle
 .. autofunction:: ContinuousRV
 
+Joint Types
+-----------------
+.. autofunction:: JointRV
+.. autofunction:: GeneralizedMultivariateLogGamma
+.. autofunction:: GeneralizedMultivariateLogGammaOmega
+.. autofunction:: Multinomial
+.. autofunction:: MultivariateBeta
+.. autofunction:: MultivariateEwens
+.. autofunction:: MultivariateT
+.. autofunction:: NegativeMultinomial
+.. autofunction:: NormalGamma
+
 Interface
 ^^^^^^^^^
 
@@ -77,6 +89,7 @@ Interface
 .. autofunction:: E
 .. autoclass:: Expectation
 .. autofunction:: density
+.. autofunction:: entropy
 .. autofunction:: given
 .. autofunction:: where
 .. autofunction:: variance
