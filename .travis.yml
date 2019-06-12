@@ -42,7 +42,9 @@ matrix:
       sudo: true
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
-    - python: 3.8-dev
+
+    - stage: test
+      python: 3.8-dev
       dist: xenial
       sudo: true
       env:
@@ -57,9 +59,7 @@ matrix:
       sudo: true
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
-
-    - stage: test
-      python: 2.7
+    - python: 2.7
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
