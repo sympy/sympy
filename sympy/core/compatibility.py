@@ -954,3 +954,8 @@ try:
 except ImportError:  # Python 2.7
     def filterfalse(pred, itr):
         return filter(lambda x: not pred(x), itr)
+
+try:
+    from time import clock
+except ImportError: # Python 3.8+
+    from time import perf_counter as clock
