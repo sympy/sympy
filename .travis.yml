@@ -42,6 +42,21 @@ matrix:
       sudo: true
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
+    - python: 3.8-dev
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+    - python: 3.8-dev
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="2/2" TEST_SYMPY="true"
+    - python: 3.8-dev
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="2/2" TEST_SYMPY="true"
 
     - stage: test
       python: 2.7
