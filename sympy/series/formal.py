@@ -1143,6 +1143,66 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
+    def convolve(self, other, x=None, order=4):
+        """ Convolute two Formal Power Series and return the truncated terms upto specified order.
+
+        Parameters
+        ==========
+
+        order : Number, optional
+            Specifies the order of the term upto which the polynomial should
+            be truncated.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, sin, exp, convolution
+        >>> from sympy.abc import x
+        >>> f1 = fps(sin(x))
+        >>> f2 = fps(exp(x))
+
+        >>> f1.convolve(f2, x, 6)
+        x + x**2 + x**3/3 - x**5/12 + O(x**6)
+
+        See Also
+        ========
+
+        sympy.discrete.convolutions
+        """
+        from sympy.discrete.convolutions import convolution
+
+        if x is None:
+            x = self.x
+        if order is None:
+            return iter(self)
+
+        other = sympify(other)
+        if isinstance(other, FormalPowerSeries):
+            if self.dir != other.dir:
+                raise ValueError("Both series should be calculated from the"
+                                 " same direction.")
+            elif self.x0 != other.x0:
+                raise ValueError("Both series should be calculated about the"
+                                 " same point.")
+
+            trunc = (order + 2)/2 if (order % 2 == 0) else (order + 1)/2
+            coeff1, coeff2, terms = [], [], []
+            for pt in range(int(trunc)):
+                coeff1.append(self._eval_term(pt).as_coeff_mul(self.x)[0])
+                coeff2.append(other._eval_term(pt).as_coeff_mul(other.x)[0])
+
+            conv_coeff = convolution(coeff1, coeff2)
+            for i in range(int(order)):
+                pt_xk = self.xk.coeff(i)
+                terms.append(pt_xk * conv_coeff[i])
+
+            pt_xk = self.xk.coeff(order)
+            return Add(*terms) + Order(pt_xk, (self.x, self.x0))
+
+        else:
+            raise ValueError("Both series should be an instance of FormalPowerSeries"
+                             " class.")
+
     def __add__(self, other):
         other = sympify(other)
 

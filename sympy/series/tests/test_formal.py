@@ -507,3 +507,10 @@ def test_fps__operations():
     fi = f2.integrate(x)
     assert fi.function == sin(x)
     assert fi.truncate() == x - x**3/6 + x**5/120 + O(x**6)
+
+def test_fps__convolutions():
+    f1, f2, f3 = fps(sin(x)), fps(exp(x)), fps(cos(x))
+
+    assert f1.convolve(f2, x, 6) == x + x**2 + x**3/3 - x**5/12 + O(x**6)
+    assert f1.convolve(f2, x, 7) == x + x**2 + x**3/3 - x**5/12 - x**6/36 + O(x**7)
+    assert f1.convolve(f3, x, 7) == x - 2*x**3/3 + x**5/12 + O(x**7)
