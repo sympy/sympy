@@ -307,7 +307,9 @@ class MarginalDistribution(Basic):
     def pdf(self, *x):
         expr, rvs = self.args[0], self.args[1]
         marginalise_out = [i for i in random_symbols(expr) if i not in self.args[1]]
-        syms = [i.pspace.symbol for i in self.args[1]]
+        parse_args = [rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] \
+                        for rv in self.args[1]]
+        syms = [i.pspace.symbol for i in parse_args]
         for i in expr.atoms(Indexed):
             if isinstance(i, Indexed) and isinstance(i.base, RandomSymbol)\
              and i not in rvs:
