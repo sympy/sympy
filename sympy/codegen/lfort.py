@@ -26,14 +26,6 @@ class ASRConverter(CodePrinter):
         # Variables that will be used in the body of a function declaration.
         self.variables = []
 
-    def _print(self, expr, **kwargs):
-        convertmethod = '_print_' + type(expr).__name__
-        if hasattr(self, convertmethod):
-            return getattr(self, convertmethod)(expr, **kwargs)
-        else:
-            raise NotImplementedError("Conversion method %s not implemented." %
-                                      convertmethod)
-
     def _print_arith(self, expr, op, ordered):
         "A generalized converter for binary arithmetic expressions."
 
