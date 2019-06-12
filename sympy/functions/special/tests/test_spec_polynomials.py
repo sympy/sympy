@@ -269,13 +269,13 @@ def test_chebyshev():
 
     assert diff(chebyshevu(n, x), x) == \
         (-x*chebyshevu(n, x) + (n + 1)*chebyshevt(n + 1, x))/(x**2 - 1)
-    _k = Dummy('k')
 
-    assert str(chebyshevt(n, x).rewrite("polynomial")) == 'Sum(x**(-2*_k + n)'\
-                    '*(x**2 - 1)**_k*binomial(n, 2*_k), (_k, 0, floor(n/2)))'
-    assert str(chebyshevu(n, x).rewrite("polynomial")) == 'Sum((-1)**_k*(2*x)'\
-                    '**(-2*_k + n)*factorial(-_k + n)/(factorial(_k)*factoria'\
-                    'l(-2*_k + n)), (_k, 0, floor(n/2)))'
+    _k = Dummy('k')
+    assert chebyshevt(n, x).rewrite("polynomial").dummy_eq(Sum(x**(-2*_k + n)
+                    *(x**2 - 1)**_k*binomial(n, 2*_k), (_k, 0, floor(n/2))))
+    assert chebyshevu(n, x).rewrite("polynomial").dummy_eq(Sum((-1)**_k*(2*x)
+                    **(-2*_k + n)*factorial(-_k + n)/(factorial(_k)*
+                       factorial(-2*_k + n)), (_k, 0, floor(n/2))))
     raises(ArgumentIndexError, lambda: chebyshevt(n, x).fdiff(1))
     raises(ArgumentIndexError, lambda: chebyshevt(n, x).fdiff(3))
     raises(ArgumentIndexError, lambda: chebyshevu(n, x).fdiff(1))
@@ -300,9 +300,10 @@ def test_hermite():
 
     assert conjugate(hermite(n, x)) == hermite(n, conjugate(x))
 
-    assert  str(hermite(n, x).rewrite("polynomial")) == 'factorial(n)*Sum((-1'\
-        ')**_k*(2*x)**(-2*_k + n)/(factorial(_k)*factorial(-2*_k + n)), (_k, '\
-        '0, floor(n/2)))'
+    _k = Dummy('k')
+    assert  hermite(n, x).rewrite("polynomial").dummy_eq(factorial(n)*Sum((-1)
+        **_k*(2*x)**(-2*_k + n)/(factorial(_k)*factorial(-2*_k + n)), (_k,
+        0, floor(n/2))))
 
     assert diff(hermite(n, x), x) == 2*n*hermite(n - 1, x)
     assert diff(hermite(n, x), n) == Derivative(hermite(n, x), n)
@@ -332,8 +333,8 @@ def test_laguerre():
 
     _k = Dummy('k')
 
-    assert str(laguerre(n, x).rewrite("polynomial")) == \
-        'Sum(x**_k*RisingFactorial(-n, _k)/factorial(_k)**2, (_k, 0, n))'
+    assert laguerre(n, x).rewrite("polynomial").dummy_eq(
+        Sum(x**_k*RisingFactorial(-n, _k)/factorial(_k)**2, (_k, 0, n)))
 
     assert diff(laguerre(n, x), x) == -assoc_laguerre(n - 1, 1, x)
 
