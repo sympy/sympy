@@ -118,8 +118,6 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
         pspace_obj = StochasticPSpace(self.symbol, self)
         return RandomIndexedSymbol(idx_obj, pspace_obj)
 
-# TODO: Define ContinuousTimeStochasticProcess
-
 class TransitionMatrixOf(Boolean):
     """
     Assumes that the matrix is the transition matrix
