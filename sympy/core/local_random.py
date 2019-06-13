@@ -5,13 +5,29 @@ for replicating results when using seeds.
 """
 
 import random as std_random
-import sys
 
-_inst = std_random.Random()
-_thismodule = sys.modules[__name__]
-
-for method_name in std_random.__all__:
-    in_inst = hasattr(_inst, method_name)
-    parent = _inst if in_inst else std_random
-    method = getattr(parent, method_name)
-    setattr(_thismodule, method_name, method)
+Random = std_random.Random
+SystemRandom = std_random.SystemRandom
+_inst = Random()
+seed = _inst.seed
+random = _inst.random
+uniform = _inst.uniform
+triangular = _inst.triangular
+randint = _inst.randint
+choice = _inst.choice
+randrange = _inst.randrange
+sample = _inst.sample
+shuffle = _inst.shuffle
+choices = _inst.choices
+normalvariate = _inst.normalvariate
+lognormvariate = _inst.lognormvariate
+expovariate = _inst.expovariate
+vonmisesvariate = _inst.vonmisesvariate
+gammavariate = _inst.gammavariate
+gauss = _inst.gauss
+betavariate = _inst.betavariate
+paretovariate = _inst.paretovariate
+weibullvariate = _inst.weibullvariate
+getstate = _inst.getstate
+setstate = _inst.setstate
+getrandbits = _inst.getrandbits
