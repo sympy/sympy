@@ -1,13 +1,13 @@
-from sympy import (FiniteSet, S, Symbol, sqrt, nan,
+from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
         cancel, exp, I, Piecewise)
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
-from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
-    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
-    density, where, FiniteRV, pspace, cdf,
-    correlation, moment, cmoment, smoment, characteristic_function,
-    moment_generating_function, quantile)
+from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
+    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, kurtosis,
+    sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
+    cmoment, smoment, characteristic_function, moment_generating_function,
+    quantile)
 from sympy.stats.frv_types import DieDistribution
 from sympy.utilities.pytest import raises
 
@@ -66,6 +66,7 @@ def test_dice():
     assert correlation(X, Y) == 0
     assert correlation(X, Y) == correlation(Y, X)
     assert smoment(X + Y, 3) == skewness(X + Y)
+    assert smoment(X + Y, 4) == kurtosis(X + Y)
     assert smoment(X, 0) == 1
     assert P(X > 3) == S.Half
     assert P(2*X > 6) == S.Half
@@ -213,6 +214,7 @@ def test_binomial_numeric():
             assert variance(X) == n*p*(1 - p)
             if n > 0 and 0 < p < 1:
                 assert skewness(X) == (1 - 2*p)/sqrt(n*p*(1 - p))
+                assert kurtosis(X) == 3 + (1 - 6*p*(1 - p))/(n*p*(1 - p))
             for k in range(n + 1):
                 assert P(Eq(X, k)) == binomial(n, k)*p**k*(1 - p)**(n - k)
 
@@ -237,6 +239,7 @@ def test_binomial_symbolic():
     assert simplify(E(X)) == n*p == simplify(moment(X, 1))
     assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
     assert cancel((skewness(X) - (1 - 2*p)/sqrt(n*p*(1 - p)))) == 0
+    assert cancel((kurtosis(X)) - (3 + (1 - 6*p*(1 - p))/(n*p*(1 - p)))) == 0
     assert characteristic_function(X)(t) == p ** 2 * exp(2 * I * t) + 2 * p * (-p + 1) * exp(I * t) + (-p + 1) ** 2
     assert moment_generating_function(X)(t) == p ** 2 * exp(2 * t) + 2 * p * (-p + 1) * exp(t) + (-p + 1) ** 2
 
@@ -245,6 +248,40 @@ def test_binomial_symbolic():
     Y = Binomial('Y', n, p, succ=H, fail=T)
     assert simplify(E(Y) - (n*(H*p + T*(1 - p)))) == 0
 
+def test_beta_binomial():
+    # verify parameters
+    raises(ValueError, lambda: BetaBinomial('b', .2, 1, 2))
+    raises(ValueError, lambda: BetaBinomial('b', 2, -1, 2))
+    raises(ValueError, lambda: BetaBinomial('b', 2, 1, -2))
+    assert BetaBinomial('b', 2, 1, 1)
+
+    # test numeric values
+    nvals = range(1,5)
+    alphavals = [S(1)/4, S.Half, S(3)/4, 1, 10]
+    betavals = [S(1)/4, S.Half, S(3)/4, 1, 10]
+
+    for n in nvals:
+        for a in alphavals:
+            for b in betavals:
+                X = BetaBinomial('X', n, a, b)
+                assert E(X) == moment(X, 1)
+                assert variance(X) == cmoment(X, 2)
+
+    # test symbolic
+    n, a, b = symbols('a b n')
+    assert BetaBinomial('x', n, a, b)
+    n = 2 # Because we're using for loops, can't do symbolic n
+    a, b = symbols('a b', positive=True)
+    X = BetaBinomial('X', n, a, b)
+    t = Symbol('t')
+
+    assert E(X).expand() == moment(X, 1).expand()
+    assert variance(X).expand() == cmoment(X, 2).expand()
+    assert skewness(X) == smoment(X, 3)
+    assert characteristic_function(X)(t) == exp(2*I*t)*beta(a + 2, b)/beta(a, b) +\
+         2*exp(I*t)*beta(a + 1, b + 1)/beta(a, b) + beta(a, b + 2)/beta(a, b)
+    assert moment_generating_function(X)(t) == exp(2*t)*beta(a + 2, b)/beta(a, b) +\
+         2*exp(t)*beta(a + 1, b + 1)/beta(a, b) + beta(a, b + 2)/beta(a, b)
 
 def test_hypergeometric_numeric():
     for N in range(1, 5):
@@ -319,3 +356,16 @@ def test_FinitePSpace():
     X = Die('X', 6)
     space = pspace(X)
     assert space.density == DieDistribution(6)
+
+def test_symbolic_conditions():
+    B = Bernoulli('B', S(1)/4)
+    D = Die('D', 4)
+    b, n = symbols('b, n')
+    Y = P(Eq(B, b))
+    Z = E(D > n)
+    assert Y == \
+    Piecewise((S(1)/4, Eq(b, 1)), (0, True)) + \
+    Piecewise((S(3)/4, Eq(b, 0)), (0, True))
+    assert Z == \
+    Piecewise((S(1)/4, n < 1), (0, True)) + Piecewise((S(1)/2, n < 2), (0, True)) + \
+    Piecewise((S(3)/4, n < 3), (0, True)) + Piecewise((S(1), n < 4), (0, True))

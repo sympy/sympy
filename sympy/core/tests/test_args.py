@@ -898,13 +898,20 @@ def test_sympy__sets__setexpr__SetExpr():
     assert _test_args(SetExpr(Interval(0, 1)))
 
 
+def test_sympy__sets__fancysets__Rationals():
+    from sympy.sets.fancysets import Rationals
+    assert _test_args(Rationals())
+
+
 def test_sympy__sets__fancysets__Naturals():
     from sympy.sets.fancysets import Naturals
     assert _test_args(Naturals())
 
+
 def test_sympy__sets__fancysets__Naturals0():
     from sympy.sets.fancysets import Naturals0
     assert _test_args(Naturals0())
+
 
 def test_sympy__sets__fancysets__Integers():
     from sympy.sets.fancysets import Integers
@@ -1179,6 +1186,10 @@ def test_sympy__stats__frv_types__BinomialDistribution():
     from sympy.stats.frv_types import BinomialDistribution
     assert _test_args(BinomialDistribution(5, S.Half, 1, 0))
 
+def test_sympy__stats__frv_types__BetaBinomialDistribution():
+    from sympy.stats.frv_types import BetaBinomialDistribution
+    assert _test_args(BetaBinomialDistribution(5, 1, 1))
+
 
 def test_sympy__stats__frv_types__HypergeometricDistribution():
     from sympy.stats.frv_types import HypergeometricDistribution
@@ -1366,6 +1377,10 @@ def test_sympy__stats__crv_types__LaplaceDistribution():
 def test_sympy__stats__crv_types__LogisticDistribution():
     from sympy.stats.crv_types import LogisticDistribution
     assert _test_args(LogisticDistribution(0, 1))
+
+def test_sympy__stats__crv_types__LogLogisticDistribution():
+    from sympy.stats.crv_types import LogLogisticDistribution
+    assert _test_args(LogLogisticDistribution(1, 1))
 
 
 def test_sympy__stats__crv_types__LogNormalDistribution():
@@ -3823,6 +3838,10 @@ def test_sympy__series__fourier__FiniteFourierSeries():
 def test_sympy__series__formal__FormalPowerSeries():
     from sympy.series.formal import fps
     assert _test_args(fps(log(1 + x), x))
+
+def test_sympy__series__formal__Coeff():
+    from sympy.series.formal import fps
+    assert _test_args(fps(x**2 + x + 1, x))
 
 
 def test_sympy__simplify__hyperexpand__Hyper_Function():

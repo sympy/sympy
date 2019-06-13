@@ -175,7 +175,15 @@ class ConditionSet(Set):
         s, c, b = self.args
         return (c.free_symbols - s.free_symbols) | b.free_symbols
 
-    def contains(self, other):
+    def _contains(self, other):
+        d = Dummy()
+        try:
+            return self.as_relational(d).subs(d, other)
+        except TypeError:
+            # couldn't do the substitution without error
+            return False
+
+    def as_relational(self, other):
         return And(Lambda(self.sym, self.condition)(
             other), self.base_set.contains(other))
 
