@@ -5,7 +5,6 @@ for replicating results when using seeds.
 """
 
 import random as std_random
-import numpy
 import sys
 
 _inst = std_random.Random()
@@ -16,5 +15,3 @@ for method_name in std_random.__all__:
     parent = _inst if in_inst else std_random
     method = getattr(parent, method_name)
     setattr(_thismodule, method_name, method)
-
-numpy_random = numpy.random.RandomState
