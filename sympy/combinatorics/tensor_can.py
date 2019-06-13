@@ -246,7 +246,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     these symmetries, one can represent the tensor by `g`, which transforms
     as
 
-    `g -> d*g*s`, so it belongs to the coset `D*g*S`, or in other words 
+    `g -> d*g*s`, so it belongs to the coset `D*g*S`, or in other words
     to the set of all permutations allowed by the slot and dummy symmetries.
 
     Let us explain the conventions by an example.
