@@ -18,7 +18,6 @@ choice = _inst.choice
 randrange = _inst.randrange
 sample = _inst.sample
 shuffle = _inst.shuffle
-choices = _inst.choices
 normalvariate = _inst.normalvariate
 lognormvariate = _inst.lognormvariate
 expovariate = _inst.expovariate
