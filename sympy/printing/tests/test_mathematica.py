@@ -7,7 +7,7 @@ from sympy.functions import (exp, sin, cos, fresnelc, fresnels, conjugate, Max,
                              erf2, expint, erfinv, erfcinv, Ei, Si, Ci, li,
                              Shi, Chi, uppergamma, beta, subfactorial, erf2inv,
                              factorial, factorial2, catalan, RisingFactorial,
-                             FallingFactorial, harmonic)
+                             FallingFactorial, harmonic, atan2, sec, acsc)
 
 from sympy import mathematica_code as mcode
 
@@ -32,8 +32,10 @@ def test_Rational():
 def test_Function():
     assert mcode(f(x, y, z)) == "f[x, y, z]"
     assert mcode(sin(x) ** cos(x)) == "Sin[x]^Cos[x]"
+    assert mcode(sec(x) * acsc(x)) == "ArcCsc[x]*Sec[x]"
+    assert mcode(atan2(x, y)) == "ArcTan[x, y]"
     assert mcode(conjugate(x)) == "Conjugate[x]"
-    assert mcode(Max(x,y,z)*Min(y,z)) == "Max[x, y, z]*Min[y, z]"
+    assert mcode(Max(x, y, z)*Min(y, z)) == "Max[x, y, z]*Min[y, z]"
     assert mcode(fresnelc(x)) == "FresnelC[x]"
     assert mcode(fresnels(x)) == "FresnelS[x]"
     assert mcode(gamma(x)) == "Gamma[x]"
@@ -230,6 +232,7 @@ def test_comment():
     from sympy.printing.mathematica import MCodePrinter
     assert MCodePrinter()._get_comment("Hello World") == \
         "(* Hello World *)"
+
 
 def test_userfuncs():
     # Dictionary mutation test
