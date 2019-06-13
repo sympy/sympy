@@ -5,7 +5,7 @@ from sympy.core.compatibility import default_sort_key
 from sympy.core.evaluate import global_evaluate
 from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
-from sympy.stats.rv import randomSymbol, probability, expectation
+from sympy.stats.rv import RandomSymbol, probability, expectation
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
 
