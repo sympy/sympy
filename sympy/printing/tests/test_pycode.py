@@ -7,7 +7,7 @@ from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
 from sympy.core.numbers import pi
 from sympy.functions import acos, Piecewise, sign
 from sympy.logic import And, Or
-from sympy.matrices import SparseMatrix, MatrixSymbol
+from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter
 )
@@ -49,6 +49,7 @@ def test_NumPyPrinter():
     A = MatrixSymbol("A", 2, 2)
     assert p.doprint(A**(-1)) == "numpy.linalg.inv(A)"
     assert p.doprint(A**5) == "numpy.linalg.matrix_power(A, 5)"
+    assert p.doprint(Identity(3)) == "numpy.eye(3)"
 
 
 def test_SciPyPrinter():
