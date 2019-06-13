@@ -53,7 +53,7 @@ matrix:
       dist: xenial
       sudo: true
       env:
-        - SPLIT="2/2" TEST_SYMPY="true"
+        - SPLIT="1/2" TEST_SYMPY="true"
     - python: 3.8-dev
       dist: xenial
       sudo: true
