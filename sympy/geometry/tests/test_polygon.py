@@ -525,9 +525,23 @@ def test_second_moment_of_area():
 
 
 def test_cut_section():
-    p = Polygon((-1, -1),(1, 2.5),(2, 1),(3, 2.5),(4, 2),(5, 3),(-1, 3))
-    l = Line((0, 0),(4.5, 3))
-    assert p.cut_section(l) == Polygon(
-        Point2D(-9/13, -6/13), Point2D(1, 5/2), Point2D(24/13, 16/13),
-        Point2D(12/5, 8/5), Point2D(3, 5/2), Point2D(24/7, 16/7),
-        Point2D(9/2, 3), Point2D(-1, 3), Point2D(-1, -2/3))
+    # concave polygon
+    p = Polygon((-1, -1), (1, S(5)/2), (2, 1), (3, S(5)/2), (4, 2), (5, 3), (-1, 3))
+    l = Line((0, 0), (S(9)/2, 3))
+    p1 = p.cut_section(l)[0]
+    p2 = p.cut_section(l)[1]
+    assert p1 == Polygon(
+        Point2D(-S(9)/13, -S(6)/13), Point2D(1, S(5)/2), Point2D(S(24)/13, S(16)/13),
+        Point2D(S(12)/5, S(8)/5), Point2D(3, S(5)/2), Point2D(S(24)/7, S(16)/7),
+        Point2D(S(9)/2, 3), Point2D(-1, 3), Point2D(-1, -S(2)/3))
+    assert p2 == Polygon(Point2D(-1, -1), Point2D(-S(9)/13, -S(6)/13), Point2D(S(24)/13, S(16)/13),
+        Point2D(2, 1), Point2D(S(12)/5, S(8)/5), Point2D(S(24)/7, S(16)/7), Point2D(4, 2), Point2D(5, 3),
+        Point2D(S(9)/2, 3), Point2D(-1, -S(2)/3))
+
+    # convex polygon
+    p = RegularPolygon(Point2D(0,0), 6, 6)
+    s = p.cut_section(Line((0, 0), slope=1))
+    assert s[0] == Polygon(Point2D(-3*sqrt(3) + 9, -3*sqrt(3) + 9), Point2D(3, 3*sqrt(3)),
+        Point2D(-3, 3*sqrt(3)), Point2D(-6, 0), Point2D(-9 + 3*sqrt(3), -9 + 3*sqrt(3)))
+    assert s[1] == Polygon(Point2D(6, 0), Point2D(-3*sqrt(3) + 9, -3*sqrt(3) + 9),
+        Point2D(-9 + 3*sqrt(3), -9 + 3*sqrt(3)), Point2D(-3, -3*sqrt(3)), Point2D(3, -3*sqrt(3)))

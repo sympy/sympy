@@ -785,23 +785,32 @@ class Polygon(GeometrySet):
 
     def cut_section(self, line):
         """
-        Returns a new polygon (or a segment) formed by the intersecting line
-        and the part of the polygon above it.
+        Returns a tuple of two polygon segments that lie above and below
+        the intersecting line respectively.
+
+        References
+        ==========
+
+        https://github.com/sympy/sympy/wiki/A-method-to-return-a-cut-section-of-any-polygon-geometry
 
         Examples
         ========
 
-        >>> from sympy import Point, Polygon, Line
+        >>> from sympy import Point, Symbol, Polygon, Line
         >>> a, b = 20, 10
         >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
         >>> rectangle = Polygon(p1, p2, p3, p4)
         >>> t = rectangle.cut_section(Line((0, 5), slope=0))
         >>> t
-        Polygon(Point2D(0, 10), Point2D(0, 5), Point2D(20, 5), Point2D(20, 10))
-        >>> t.area
+        (Polygon(Point2D(0, 10), Point2D(0, 5), Point2D(20, 5), Point2D(20, 10)),
+        Polygon(Point2D(0, 5), Point2D(0, 0), Point2D(20, 0), Point2D(20, 5)))
+        >>> upper_segment, lower_segment = t
+        >>> upper_segment.area
         100
-        >>> t.centroid
+        >>> upper_segment.centroid
         Point2D(10, 15/2)
+        >>> lower_segment.centroid
+        Point2D(10, 5/2)
         """
         intersection_points = self.intersection(line)
         if not intersection_points:
@@ -817,7 +826,8 @@ class Polygon(GeometrySet):
         a = eq.coeff(x)
         b = eq.coeff(y)
 
-        new_vertices = []
+        upper_vertices = []
+        lower_vertices = []
         # prev is true when previous point is above the line
         prev = True
         prev_point = None
@@ -834,21 +844,25 @@ class Polygon(GeometrySet):
                     # point of the polygon egde and the line has to be included
                     edge = Line(point, prev_point)
                     new_point = edge.intersection(line)
-                    new_vertices.append(new_point[0])
+                    upper_vertices.append(new_point[0])
+                    lower_vertices.append(new_point[0])
 
-                new_vertices.append(point)
+                upper_vertices.append(point)
                 prev = True
-
             else:
                 if prev and prev_point:
                     edge = Line(point, prev_point)
                     new_point = edge.intersection(line)
-                    new_vertices.append(new_point[0])
+                    upper_vertices.append(new_point[0])
+                    lower_vertices.append(new_point[0])
+                lower_vertices.append(point)
                 prev = False
+
 
             prev_point = point
 
-        return Polygon(*new_vertices)
+        return Polygon(*upper_vertices), Polygon(*lower_vertices)
+
 
     def distance(self, o):
         """
