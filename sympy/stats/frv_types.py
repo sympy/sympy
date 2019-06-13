@@ -18,7 +18,7 @@ from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
         Dict, Basic, KroneckerDelta, Dummy, Eq, Intersection, Interval,
-        Symbol)
+        Symbol, Lambda, Piecewise, Or)
 from sympy import beta as beta_fn
 from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
@@ -55,9 +55,19 @@ def rv(name, cls, *args):
     return SingleFinitePSpace(name, dist).value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
+
     @property
     def dict(self):
         return self.args[0]
+
+    def pdf(self, x):
+        x = Symbol('x')
+        return Lambda(x, Piecewise(*(
+            [(v, Eq(k, x)) for k, v in self.dict.items()] + [(0, True)])))
+
+    @property
+    def set(self):
+        return list(self.dict.keys())
 
     @staticmethod
     def check(density):
@@ -96,7 +106,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return self.args
+        return list(self.args)
 
     def pdf(self, x):
         if x in self.args:
@@ -149,15 +159,16 @@ class DieDistribution(SingleFiniteDistribution):
         return _is_sym_dim(self.sides)
 
     @property
-    @cacheit
-    def dict(self):
-        if self.is_symbolic:
-            return Density(self)
-        return dict((k, Rational(1, self.sides)) for k in self.set)
+    def high(self):
+        return self.sides
+
+    @property
+    def low(self):
+        return S(0)
 
     @property
     def set(self):
-        if _is_sym_dim(self.sides):
+        if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.sides))
         return list(map(Integer, list(range(1, self.sides + 1))))
 
@@ -169,6 +180,7 @@ class DieDistribution(SingleFiniteDistribution):
             return S.Zero
         if x.is_Symbol:
             i = Dummy('i', integer=True, positive=True)
+            t = Dummy('t')
             return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides))
         raise ValueError("'x' expected as an argument of type 'number' or 'symbol', "
                         "not %s" % (type(x)))
@@ -214,9 +226,11 @@ class BernoulliDistribution(SingleFiniteDistribution):
                     "p should be in range [0, 1].")
 
     @property
-    @cacheit
-    def dict(self):
-        return {self.succ: self.p, self.fail: 1 - self.p}
+    def set(self):
+        return [self.succ, self.fail]
+
+    def pdf(self, x):
+        return Piecewise((self.p, x == self.succ), (1 - self.p, x == self.fail), (0, True))
 
 
 def Bernoulli(name, p, succ=1, fail=0):
@@ -297,17 +311,35 @@ class BinomialDistribution(SingleFiniteDistribution):
                     "p should be in range [0, 1].")
 
     @property
+    def high(self):
+        return self.n
+
+    @property
+    def low(self):
+        return S(0)
+
+    @property
     def is_symbolic(self):
         return _is_sym_dim(self.n)
+
+    @property
+    def set(self):
+        if self.is_symbolic:
+            return Intersection(S.Naturals0, Interval(0, self.n))
+        return list(self.dict.keys())
+
+
+    def pdf(self, k):
+        n, p = self.n, self.p
+        return binomial(n, k) * p**k * (1 - p)**(n - k)
 
     @property
     @cacheit
     def dict(self):
         if self.is_symbolic:
             return Density(self)
-        n, p, succ, fail = self.n, self.p, self.succ, self.fail
-        return dict((k*succ + (n - k)*fail,
-                binomial(n, k) * p**k * (1 - p)**(n - k)) for k in range(0, n + 1))
+        return dict((k*self.succ + (self.n-k)*self.fail, self.pdf(k))
+                    for k in range(0, self.n + 1))
 
 def Binomial(name, n, p, succ=1, fail=0):
     """
@@ -359,12 +391,26 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
         "'beta' must be: beta > 0 . beta = %s" % str(beta))
 
     @property
-    @cacheit
-    def dict(self):
+    def high(self):
+        return self.n
+
+    @property
+    def low(self):
+        return S(0)
+
+    @property
+    def is_symbolic(self):
+        return _is_sym_dim(self.n)
+
+    @property
+    def set(self):
+        if self.is_symbolic:
+            return Intersection(S.Naturals0, Interval(0, self.n))
+        return list(map(Integer, list(range(0, self.n + 1))))
+
+    def pdf(self, k):
         n, a, b = self.n, self.alpha, self.beta
-        n = as_int(n)
-        return dict((k, binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b))
-            for k in range(0, n + 1))
+        return binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b)
 
 
 def BetaBinomial(name, n, alpha, beta):
@@ -402,18 +448,23 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         return any(_is_sym_dim(x) for x in (self.N, self.m, self.n))
 
     @property
-    @cacheit
-    def dict(self):
-        if self.is_symbolic:
-            return Density(self)
-        N, m, n = self.N, self.m, self.n
-        N, m, n = list(map(sympify, (N, m, n)))
-        density = dict((sympify(k),
-                        Rational(binomial(m, k) * binomial(N - m, n - k),
-                                 binomial(N, n)))
-                        for k in range(max(0, n + m - N), min(m, n) + 1))
-        return density
+    def high(self):
+        return max(self.n, self.K)
 
+    @property
+    def low(self):
+        return min(0, self.n + self.m - self.N)
+
+    @property
+    def set(self):
+        N, m, n = self.N, self.m, self.n
+        if self.is_symbolic:
+            return Intersection(S.Naturals0, Interval(max(0, n + m - N), min(n, m)))
+        return [i for i in range(max(0, n + m - N), min(n, m) + 1)]
+
+    def pdf(self, k):
+        N, m, n = self.N, self.m, self.n
+        return Rational(binomial(m, k) * binomial(N - m, n - k), binomial(N, n))
 
 def Hypergeometric(name, N, m, n):
     """
@@ -442,11 +493,15 @@ def Hypergeometric(name, N, m, n):
 
 
 class RademacherDistribution(SingleFiniteDistribution):
-    @property
-    @cacheit
-    def dict(self):
-        return {-1: S.Half, 1: S.Half}
 
+    @property
+    def set(self):
+        return [-1, 1]
+
+    @property
+    def pdf(self):
+        k = Dummy('k')
+        return Lambda(k, Piecewise((S.Half, Or(Eq(k, -1), Eq(k, 1))), (0, True)))
 
 def Rademacher(name):
     """

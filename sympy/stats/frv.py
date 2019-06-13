@@ -12,12 +12,13 @@ from __future__ import print_function, division
 from itertools import product
 
 from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul, Add,
-        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan, Rational)
+        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan, Rational,
+        Sum)
 from sympy.sets.sets import FiniteSet
 from sympy.core.relational import Relational
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
-        sumsets, rv_subs, NamedArgsMixin)
+        sumsets, rv_subs, NamedArgsMixin, Density)
 from sympy.core.containers import Dict
 from sympy.stats.symbolic_probability import Expectation, Probability
 from sympy.core.logic import Logic
@@ -192,27 +193,34 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     @property
     @cacheit
     def dict(self):
+        if self.is_symbolic:
+            return Density(self)
         return dict((k, self.pdf(k)) for k in self.set)
 
-    @property
-    def pdf(self):
-        x = Symbol('x')
-        return Lambda(x, Piecewise(*(
-            [(v, Eq(k, x)) for k, v in self.dict.items()] + [(0, True)])))
+    def pdf(self, *args): # to be overrided by specific distribution
+        pass
 
     @property
     def characteristic_function(self):
         t = Dummy('t', real=True)
-        return Lambda(t, sum(exp(I*k*t)*v for k, v in self.dict.items()))
+        k = Dummy('k', positive=True, integer=True)
+        func = Sum(exp(I*k*t)*self.pdf(k), (k, self.low, self.high))
+        if not self.is_symbolic:
+            func = func.doit()
+        return Lambda(t, func)
 
     @property
     def moment_generating_function(self):
         t = Dummy('t', real=True)
-        return Lambda(t, sum(exp(k * t) * v for k, v in self.dict.items()))
+        k = Dummy('k', positive=True, integer=True)
+        func = Sum(exp(k*t)*self.pdf(k), (k, self.low, self.high))
+        if not self.is_symbolic:
+            func = func.doit()
+        return Lambda(t, func)
 
     @property
-    def set(self):
-        return list(self.dict.keys())
+    def set(self): # to be overrided by specific distribution
+        pass
 
     values = property(lambda self: self.dict.values)
     items = property(lambda self: self.dict.items)
@@ -220,7 +228,8 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     __iter__ = property(lambda self: self.dict.__iter__)
     __getitem__ = property(lambda self: self.dict.__getitem__)
 
-    __call__ = pdf
+    def __call__(self, *args):
+        return self.pdf(*args)
 
     def __contains__(self, other):
         return other in self.set
@@ -248,10 +257,6 @@ class FinitePSpace(PSpace):
         obj._density = density
         return obj
 
-    @property
-    def distribution(self):
-        return self.args[1]
-
     def prob_of(self, elem):
         elem = sympify(elem)
         return self._density.get(elem, 0)
@@ -261,6 +266,15 @@ class FinitePSpace(PSpace):
         return ConditionalFiniteDomain(self.domain, condition)
 
     def compute_density(self, expr):
+        if isinstance(self.args[1], SingleFiniteDistribution) and \
+            self.args[1].is_symbolic:
+            cond = expr
+            if not isinstance(expr, (Relational, Logic)):
+                cond = True
+            k = Dummy('k', integer=True)
+            return Lambda(k,
+            Piecewise((self.pdf(k), And(k >= self.args[1].low,
+            k <= self.args[1].high, cond)), (0, True)))
         expr = expr.xreplace(dict(((rs, rs.symbol) for rs in self.values)))
         d = FiniteDensity()
         for elem in self.domain:
@@ -272,6 +286,10 @@ class FinitePSpace(PSpace):
     @cacheit
     def compute_cdf(self, expr):
         d = self.compute_density(expr)
+        if isinstance(self.args[1], SingleFiniteDistribution) and \
+            self.args[1].is_symbolic:
+            k, ki = Dummy('k ki')
+            return Lambda(k, Sum(d(ki), (ki, self.args[1].low, k)))
         cum_prob = 0
         cdf = []
         for key in sorted(d):
@@ -295,21 +313,27 @@ class FinitePSpace(PSpace):
     def compute_characteristic_function(self, expr):
         d = self.compute_density(expr)
         t = Dummy('t', real=True)
-
+        if isinstance(self.args[1], SingleFiniteDistribution) and \
+            self.args[1].is_symbolic:
+            k, ki = Dummy('k ki')
+            return Lambda(k, Sum(d(ki)*exp(I*ki*t), (ki, self.args[1].low, self.args[1].high)))
         return Lambda(t, sum(exp(I*k*t)*v for k,v in d.items()))
 
     @cacheit
     def compute_moment_generating_function(self, expr):
         d = self.compute_density(expr)
         t = Dummy('t', real=True)
-
-        return Lambda(t, sum(exp(k * t) * v for k, v in d.items()))
+        if isinstance(self.args[1], SingleFiniteDistribution) and \
+            self.args[1].is_symbolic:
+            k, ki = Dummy('k ki')
+            return Lambda(k, Sum(d(ki)*exp(ki*t), (ki, self.args[1].low, self.args[1].high)))
+        return Lambda(t, sum(exp(k*t)*v for k,v in d.items()))
 
     def compute_expectation(self, expr, rvs=None, **kwargs):
         rands = random_symbols(expr)
         for rv in rands:
-            if hasattr(rv.pspace.distribution, 'is_symbolic') and \
-                rv.pspace.distribution.is_symbolic:
+            if hasattr(rv.pspace.args[1], 'is_symbolic') and \
+                rv.pspace.args[1].is_symbolic:
                 return Expectation(expr, **kwargs)
 
         rvs = rvs or self.values
@@ -335,8 +359,8 @@ class FinitePSpace(PSpace):
     def probability(self, condition):
         rvs = random_symbols(condition)
         for rv in rvs:
-            if hasattr(rv.pspace.distribution, 'is_symbolic') and \
-                rv.pspace.distribution.is_symbolic:
+            if hasattr(rv.pspace.args[1], 'is_symbolic') and \
+                rv.pspace.args[1].is_symbolic:
                 return Probability(condition)
         cond_symbols = frozenset(rs.symbol for rs in rvs)
         assert cond_symbols.issubset(self.symbols)
