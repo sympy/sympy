@@ -66,6 +66,15 @@ known_functions = {
     "harmonic": [(lambda *x: True, "HarmonicNumber")],
     "RisingFactorial": [(lambda *x: True, "Pochhammer")],
     "FallingFactorial": [(lambda *x: True, "FactorialPower")],
+    "laguerre": [(lambda *x: True, "LaguerreL")],
+    "assoc_laguerre": [(lambda *x: True, "LaguerreL")],
+    "hermite": [(lambda *x: True, "HermiteH")],
+    "jacobi": [(lambda *x: True, "JacobiP")],
+    "gegenbauer": [(lambda *x: True, "GegenbauerC")],
+    "chebyshevt": [(lambda *x: True, "ChebyshevT")],
+    "chebyshevu": [(lambda *x: True, "ChebyshevU")],
+    "legendre": [(lambda *x: True, "LegendreP")],
+    "assoc_legendre": [(lambda *x: True, "LegendreP")],
 }
 
 
