@@ -139,6 +139,10 @@ def test_sparse():
     b[1, 1] = 2
     assert a != b
 
+    # __mul__ and __rmul__
+    assert a * 3 == MutableSparseNDimArray({200001: 3}, (100000, 200000))
+    assert 3 * a == MutableSparseNDimArray({200001: 3}, (100000, 200000))
+
 
 def test_calculation():
 

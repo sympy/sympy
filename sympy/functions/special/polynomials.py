@@ -17,7 +17,7 @@ from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import cos
+from sympy.functions.elementary.trigonometric import cos, sec
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
 
@@ -145,9 +145,6 @@ class jacobi(OrthogonalPolynomial):
         elif b == -a:
             # P^{a, -a}_n(x)
             return gamma(n + a + 1) / gamma(n + 1) * (1 + x)**(a/2) / (1 - x)**(a/2) * assoc_legendre(n, -a, x)
-        elif a == -b:
-            # P^{-b, b}_n(x)
-            return gamma(n - b + 1) / gamma(n + 1) * (1 - x)**(b/2) / (1 + x)**(b/2) * assoc_legendre(n, b, x)
 
         if not n.is_Number:
             # Symbolic result P^{a,b}_n(x)
@@ -361,10 +358,8 @@ class gegenbauer(OrthogonalPolynomial):
                 if (re(a) > S.Half) == True:
                     return S.ComplexInfinity
                 else:
-                    # No sec function available yet
-                    #return (cos(S.Pi*(a+n)) * sec(S.Pi*a) * gamma(2*a+n) /
-                    #            (gamma(2*a) * gamma(n+1)))
-                    return None
+                    return (cos(S.Pi*(a+n)) * sec(S.Pi*a) * gamma(2*a+n) /
+                                (gamma(2*a) * gamma(n+1)))
 
             # Symbolic result C^a_n(x)
             # C^a_n(-x)  --->  (-1)**n * C^a_n(x)
@@ -604,6 +599,7 @@ class chebyshevu(OrthogonalPolynomial):
             # U_{-n}(x)  --->  -U_{n-2}(x)
             if n.could_extract_minus_sign():
                 if n == S.NegativeOne:
+                    # n can not be -1 here
                     return S.Zero
                 else:
                     return -chebyshevu(-n - 2, x)
@@ -809,7 +805,19 @@ class legendre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
         elif argindex == 2:
             # Diff wrt x
-            # Find better formula, this is unsuitable for x = 1
+            # Find better formula, this is unsuitable for x = +/-1
+            # http://www.autodiff.org/ad16/Oral/Buecker_Legendre.pdf says
+            # at x = 1:
+            #    n*(n + 1)/2            , m = 0
+            #    oo                     , m = 1
+            #    -(n-1)*n*(n+1)*(n+2)/4 , m = 2
+            #    0                      , m = 3, 4, ..., n
+            #
+            # at x = -1
+            #    (-1)**(n+1)*n*(n + 1)/2       , m = 0
+            #    (-1)**n*oo                    , m = 1
+            #    (-1)**n*(n-1)*n*(n+1)*(n+2)/4 , m = 2
+            #    0                             , m = 3, 4, ..., n
             n, x = self.args
             return n/(x**2 - 1)*(x*legendre(n, x) - legendre(n - 1, x))
         else:
@@ -1232,7 +1240,7 @@ class assoc_laguerre(OrthogonalPolynomial):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+    def _eval_rewrite_as_polynomial(self, n, alpha, x, **kwargs):
         from sympy import Sum
         # Make sure n \in N_0
         if n.is_negative or n.is_integer is False:
