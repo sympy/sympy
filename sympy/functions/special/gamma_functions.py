@@ -1094,8 +1094,13 @@ class multigamma(Function):
 
     def _eval_is_real(self):
         x, p = self.args
+        y = 2*x
+        if isinstance(x, Symbol) or isinstance(p, Symbol):
+            if (y <= (p - 1)) is True and y.is_integer:
+                return False
+            if (y > (p - 1)) is True or y.is_noninteger:
+                return True
         if x.is_Number and p.is_Number:
-            y = 2*x
             if y <= (p - 1) and intlike(y):
                 return False
             return True

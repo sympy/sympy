@@ -35,10 +35,6 @@ def test_gamma():
 
     assert gamma(Rational(1, 2)) == sqrt(pi)
 
-    assert gamma(-1.0, evaluate=False).is_real == False
-    assert gamma(0, evaluate=False).is_real == False
-    assert gamma(-2, evaluate=False).is_real == False
-
     assert gamma(Rational(3, 2)) == Rational(1, 2)*sqrt(pi)
     assert gamma(Rational(5, 2)) == Rational(3, 4)*sqrt(pi)
     assert gamma(Rational(7, 2)) == Rational(15, 8)*sqrt(pi)
@@ -80,6 +76,15 @@ def test_gamma():
     # exp_polar.is_integer but I'm not sure if that makes sense.
     assert gamma(3*exp_polar(I*pi)/4).is_nonnegative is False
     assert gamma(3*exp_polar(I*pi)/4).is_extended_nonpositive is True
+
+    y = Symbol('y', nonpositive=True, integer=True)
+    assert gamma(y).is_real == False
+    y = Symbol('y', positive=True, noninteger=True)
+    assert gamma(y).is_real == True
+
+    assert gamma(-1.0, evaluate=False).is_real == False
+    assert gamma(0, evaluate=False).is_real == False
+    assert gamma(-2, evaluate=False).is_real == False
 
 
 def test_gamma_rewrite():
@@ -474,11 +479,6 @@ def test_multigamma():
     assert multigamma(nan, 1) == nan
     assert multigamma(oo, 1).doit() == oo
 
-    assert multigamma(-S(1)/2, 3, evaluate=False).is_real == False
-    assert multigamma(S(1)/2, 3, evaluate=False).is_real == False
-    assert multigamma(0, 1, evaluate=False).is_real == False
-    assert multigamma(1, 3, evaluate=False).is_real == False
-
     assert multigamma(1, 1) == 1
     assert multigamma(2, 1) == 1
     assert multigamma(3, 1) == 2
@@ -510,3 +510,8 @@ def test_multigamma():
         factorial(n - S(3)/2)*factorial(n - 1)
     assert multigamma(n, 3).rewrite(factorial) == pi**(S(3)/2)*\
         factorial(n - 2)*factorial(n - S(3)/2)*factorial(n - 1)
+
+    assert multigamma(-S(1)/2, 3, evaluate=False).is_real == False
+    assert multigamma(S(1)/2, 3, evaluate=False).is_real == False
+    assert multigamma(0, 1, evaluate=False).is_real == False
+    assert multigamma(1, 3, evaluate=False).is_real == False
