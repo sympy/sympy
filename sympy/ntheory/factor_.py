@@ -8,6 +8,7 @@ import math
 
 from sympy.core import sympify
 from sympy.core.compatibility import as_int, SYMPY_INTS, range, string_types
+from sympy.core.containers import Dict
 from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
 from sympy.core.function import Function
@@ -985,6 +986,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     smoothness, smoothness_p, divisors
 
     """
+    if isinstance(n, Dict):
+        n = dict(n)
     if multiple:
         fac = factorint(n, limit=limit, use_trial=use_trial,
                            use_rho=use_rho, use_pm1=use_pm1,

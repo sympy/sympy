@@ -167,4 +167,5 @@ def test_contains():
     assert ConditionSet(x, y > 5, Interval(1, 7)
         ).contains(8) is S.false
     assert ConditionSet(x, y > 5, Interval(1, 7)
-        ).contains(w) == And(w >= 1, w <= 7, y > 5)
+        ).contains(w) == And(S(1) <= w, w <= 7, y > 5)
+    assert 0 not in ConditionSet(x, 1/x >= 0, S.Reals)
