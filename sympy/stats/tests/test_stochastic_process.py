@@ -2,6 +2,7 @@ from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And)
 from sympy.stats import DiscreteMarkovChain, P, TransitionMatrixOf
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability
+from sympy.stats.joint_rv import JointDistribution
 from sympy.utilities.pytest import raises
 
 def test_DiscreteMarkovChain():
@@ -28,6 +29,8 @@ def test_DiscreteMarkovChain():
     TS = MatrixSymbol('T', 3, 3)
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     YS = DiscreteMarkovChain("Y", [0, 1, 2], TS)
+    assert Y.joint_distribution(1, Y[2], 3) == JointDistribution(Y[1], Y[2], Y[3])
+    raises(ValueError, lambda: Y.joint_distribution(Y[1].symbol, Y[2].symbol))
     assert P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2) == Float(0.36, 2)
     assert str(P(Eq(YS[3], 2), Eq(YS[1], 1))) == \
         "T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]"

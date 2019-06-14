@@ -11,10 +11,15 @@ class StochasticPSpace(ProductPSpace):
     and their random variables. Contains mechanics to do
     computations for queries of stochastic processes.
 
-    Initialized by symbol and the specific process.
+    Initialized by symbol, the specific process and
+    distribution(optional) if the random indexed symbols
+    of the process follows any specific distribution, like,
+    in Bernoulli Process, each random indexed symbol follows
+    Bernoulli distribution. For processes with memory, this
+    parameter should not be passed.
     """
 
-    def __new__(cls, sym, process):
+    def __new__(cls, sym, process, distribution=None):
         if isinstance(sym, string_types):
             sym = Symbol(sym)
         if not isinstance(sym, Symbol):
@@ -23,7 +28,7 @@ class StochasticPSpace(ProductPSpace):
         from sympy.stats.stochastic_process_types import StochasticProcess
         if not isinstance(process, StochasticProcess):
             raise TypeError("`process` must be an instance of StochasticProcess.")
-        return Basic.__new__(cls, sym, process)
+        return Basic.__new__(cls, sym, process, distribution)
 
     @property
     def process(self):
@@ -41,6 +46,10 @@ class StochasticPSpace(ProductPSpace):
     def symbol(self):
         return self.args[0]
 
+    @property
+    def distribution(self):
+        return self.args[2]
+
     def probability(self, condition, given_condition=None, **kwargs):
         """
         Transfers the task of handling queries to the specific stochastic
@@ -48,30 +57,3 @@ class StochasticPSpace(ProductPSpace):
         queries.
         """
         return self.process.probability(condition, given_condition, **kwargs)
-
-    def joint_distribution(self, *args):
-        """
-        Computes the joint distribution of the random indexed variables.
-
-        Parameters
-        ==========
-
-        args: iterable
-            The finite list of random indexed variables of a stochastic
-            process whose joint distribution has to be computed.
-
-        Returns
-        =======
-
-        JointDistribution
-            The joint distribution of the list of random indexed variables.
-            An unevaluated object is returned if it is not possible to
-            compute the joint distribution.
-
-        Raises
-        ======
-
-        ValueError: When the time/key of random indexed variables
-                    is not in strictly increasing order.
-        """
-        NotImplementedError()

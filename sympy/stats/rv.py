@@ -280,7 +280,7 @@ class RandomIndexedSymbol(RandomSymbol):
         return Basic.__new__(cls, idx_obj, pspace)
 
     symbol = property(lambda self: self.args[0])
-    name = symbol
+    name = property(lambda self: str(self.args[0]))
     key = property(lambda self: self.symbol.args[1])
 
 class ProductPSpace(PSpace):
