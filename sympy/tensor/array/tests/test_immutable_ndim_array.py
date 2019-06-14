@@ -1,7 +1,7 @@
 from copy import copy
 
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-from sympy import Symbol, Rational, SparseMatrix, Dict, diff, symbols, Indexed, IndexedBase
+from sympy import Symbol, Rational, SparseMatrix, Dict, diff, symbols, Indexed, IndexedBase, S
 from sympy.core.compatibility import long
 from sympy.matrices import Matrix
 from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
@@ -135,6 +135,24 @@ def test_sparse():
     raises(TypeError, sparse_assignment)
     assert len(sparse_array._sparse_array) == 1
     assert sparse_array[0, 0] == 0
+    assert sparse_array/0 == ImmutableSparseNDimArray([[S.NaN, S.NaN], [S.NaN, S.ComplexInfinity]], (2, 2))
+
+    # test for large scale sparse array
+    # equality test
+    assert ImmutableSparseNDimArray.zeros(100000, 200000) == ImmutableSparseNDimArray.zeros(100000, 200000)
+
+    # __mul__ and __rmul__
+    a = ImmutableSparseNDimArray({200001: 1}, (100000, 200000))
+    assert a * 3 == ImmutableSparseNDimArray({200001: 3}, (100000, 200000))
+    assert 3 * a == ImmutableSparseNDimArray({200001: 3}, (100000, 200000))
+    assert a * 0 == ImmutableSparseNDimArray({}, (100000, 200000))
+    assert 0 * a == ImmutableSparseNDimArray({}, (100000, 200000))
+
+    # __div__
+    assert a/3 == ImmutableSparseNDimArray({200001: S.One/3}, (100000, 200000))
+
+    # __neg__
+    assert -a == ImmutableSparseNDimArray({200001: -1}, (100000, 200000))
 
 
 def test_calculation():
