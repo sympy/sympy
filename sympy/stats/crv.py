@@ -410,8 +410,8 @@ class ContinuousPSpace(PSpace):
                 "Quantile not well defined on multivariate expressions")
 
         d = self.compute_cdf(expr, **kwargs)
-        x = symbols('x', real=True, finite=True, cls=Dummy)
-        p = symbols('x', real=True, positive=True, finite=True, cls=Dummy)
+        x = symbols('x', real=True, cls=Dummy)
+        p = symbols('x', positive=True, cls=Dummy)
 
         quantile = solveset(d(x) - p, x, self.set)
 
