@@ -670,6 +670,34 @@ class NumPyPrinter(PythonCodePrinter):
     def _print_CodegenArrayElementwiseAdd(self, expr):
         return self._expand_fold_binary_op('numpy.add', expr.args)
 
+    def _print_DiagonalizeVector(self, expr):
+        pass
+
+    def _print_KroneckerProduct(self, expr):
+        pass
+
+    def _print_ZeroMatrix(self, expr):
+        pass
+
+    def _print_OneMatrix(self, expr):
+        pass
+
+    def _print_FunctionMatrix(self, expr):
+        pass
+
+    def _print_Adjoint(self, expr):
+        pass
+
+    def _print_HadamardProduct(self, expr):
+        pass
+
+    def _print_DiagonalMatrix(self, expr):
+        pass
+
+    def _print_DiagonalOf(self, expr):
+        pass
+
+
 
 for k in NumPyPrinter._kf:
     setattr(NumPyPrinter, '_print_%s' % k, _print_known_func)
