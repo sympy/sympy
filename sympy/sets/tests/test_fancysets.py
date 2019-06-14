@@ -2,11 +2,11 @@ from sympy.core.compatibility import range, PY3
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
-                             Intersection, ProductSet)
+                             Intersection, ProductSet, Contains)
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
-                   Dummy)
+                   Dummy, floor, And, Eq)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, t
@@ -36,6 +36,8 @@ def test_naturals():
         assert s.intersection(S.Reals) is s
         assert s.is_subset(S.Reals)
 
+    assert N.as_relational(x) == And(Eq(floor(x), x), x >= S.One, x < oo)
+
 
 def test_naturals0():
     N = S.Naturals0
@@ -43,6 +45,7 @@ def test_naturals0():
     assert -1 not in N
     assert next(iter(N)) == 0
     assert not N.contains(oo)
+    assert N.contains(sin(x)) == Contains(sin(x), N)
 
 
 def test_integers():
@@ -68,8 +71,11 @@ def test_integers():
 
     assert Z.boundary == Z
 
+    assert Z.as_relational(x) == And(Eq(floor(x), x), -oo < x, x < oo)
+
 
 def test_ImageSet():
+    raises(ValueError, lambda: ImageSet(x, S.Integers))
     assert ImageSet(Lambda(x, 1), S.Integers) == FiniteSet(1)
     assert ImageSet(Lambda(x, y), S.Integers
         ) == {y}
@@ -409,6 +415,7 @@ def test_Complex():
     assert S.Complexes == ComplexRegion(S.Reals*S.Reals)
     assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) == False
     assert str(S.Complexes) == "S.Complexes"
+    assert repr(S.Complexes) == "S.Complexes"
 
 
 def take(n, iterable):
@@ -570,6 +577,8 @@ def test_ComplexRegion_contains():
     assert 1 + I not in c3
     assert 1 - I not in c3
 
+    raises(ValueError, lambda: ComplexRegion(r1*theta1, polar=2))
+
 
 def test_ComplexRegion_intersect():
 
@@ -649,6 +658,13 @@ def test_ComplexRegion_union():
     assert c5.union(Interval(2, 4)) == Union(c5, ComplexRegion.from_real(Interval(2, 4)))
 
 
+def test_ComplexRegion_from_real():
+    c1 = ComplexRegion(Interval(0, 1) * Interval(0, 2 * S.Pi), polar=True)
+
+    raises(ValueError, lambda: c1.from_real(c1))
+    assert c1.from_real(Interval(-1, 1)) == ComplexRegion(Interval(-1, 1) * FiniteSet(0), False)
+
+
 def test_ComplexRegion_measure():
     a, b = Interval(2, 5), Interval(4, 8)
     theta1, theta2 = Interval(0, 2*S.Pi), Interval(0, S.Pi)
@@ -705,6 +721,14 @@ def test_normalize_theta_set():
 
     # ValueError for non-real sets
     raises(ValueError, lambda: normalize_theta_set(S.Complexes))
+
+    # NotImplementedError for subset of reals
+    raises(NotImplementedError, lambda: normalize_theta_set(Interval(0, 1)))
+
+    # NotImplementedError without pi as coefficient
+    raises(NotImplementedError, lambda: normalize_theta_set(Interval(1, 2*pi)))
+    raises(NotImplementedError, lambda: normalize_theta_set(Interval(2*pi, 10)))
+    raises(NotImplementedError, lambda: normalize_theta_set(FiniteSet(0, 3, 3*pi)))
 
 
 def test_ComplexRegion_FiniteSet():
@@ -832,6 +856,7 @@ def test_Rationals():
     r = symbols('r', rational=True)
     assert r in S.Rationals
     raises(TypeError, lambda: x in S.Rationals)
+    assert S.Rationals.boundary == S.Rationals
 
 
 def test_imageset_intersection():
