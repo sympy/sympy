@@ -1845,9 +1845,11 @@ def test_issue_7426():
     assert f1.equals(f2) is None
 
 
-def test_issue_1112():
-    # x = Symbol('x', extended_positive=False)
-    # assert (x > 0) is S.false
+def test_issue_11122():
+    x = Symbol('x', extended_positive=False)
+    assert (x > 0) is not S.false
+    # (x > 0) should remain unevaluated after PR #16956
+
     x = Symbol('x', positive=False, real=True)
     assert (x > 0) is S.false
 
