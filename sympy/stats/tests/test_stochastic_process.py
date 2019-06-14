@@ -13,12 +13,15 @@ def test_DiscreteMarkovChain():
     assert X.transition_probabilities == None
     t = symbols('t', positive=True, integer=True)
     assert isinstance(X[t], RandomIndexedSymbol)
+    raises(TypeError, lambda: DiscreteMarkovChain(1))
+    raises(NotImplementedError, lambda: X(t))
 
     # pass name and state_space
     Y = DiscreteMarkovChain("Y", [1, 2, 3])
     assert Y.transition_probabilities == None
     assert Y.state_space == FiniteSet(1, 2, 3)
     assert P(Eq(Y[2], 1), Eq(Y[0], 2)) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
+    raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
 
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
@@ -32,6 +35,11 @@ def test_DiscreteMarkovChain():
     assert P(Eq(Y[3], 2), Eq(Y[1], 1) & TransitionMatrixOf(Y, TO)).round(3) == Float(0.375, 3)
     TSO = MatrixSymbol('T', 4, 4)
     raises(ValueError, lambda: str(P(Eq(YS[3], 2), Eq(YS[1], 1) & TransitionMatrixOf(YS, TSO))))
+    raises(TypeError, lambda: DiscreteMarkovChain("Z", [0, 1, 2], symbols('M')))
+    raises(ValueError, lambda: DiscreteMarkovChain("Z", [0, 1, 2], MatrixSymbol('T', 3, 4)))
+    raises(IndexError, lambda: str(P(Eq(YS[3], 3), Eq(YS[1], 1))))
+    raises(ValueError, lambda: str(P(Eq(YS[1], 1), Eq(YS[2], 2))))
+
 
     # extended tests for probability queries
     TO1 = Matrix([[S(1)/4, S(3)/4, 0],[S(1)/3, S(1)/3, S(1)/3],[0, S(1)/4, S(3)/4]])
@@ -39,3 +47,4 @@ def test_DiscreteMarkovChain():
             Eq(Probability(Eq(Y[0], 0)), S(1)/4) & TransitionMatrixOf(Y, TO1)) == S(1)/16
     assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), TransitionMatrixOf(Y, TO1)) == \
             Probability(Eq(Y[0], 0))/4
+    raises (ValueError, lambda: str(P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), Eq(Y[1], 1))))
