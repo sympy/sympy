@@ -526,6 +526,51 @@ class NumPyPrinter(PythonCodePrinter):
                                self._print(arg1),
                                self._print(arg2))
 
+    def _print_ZeroMatrix(self, expr):
+        return '{}({})'.format(self._module_format('numpy.zeros'),
+            self._print(expr.shape))
+
+    def _print_OneMatrix(self, expr):
+        return '{}({})'.format(self._module_format('numpy.ones'),
+            self._print(expr.shape))
+
+    def _print_FunctionMatrix(self, expr):
+        from sympy.core.function import Lambda
+        from sympy.abc import i, j
+        lamda = expr.lamda
+        if not isinstance(lamda, Lambda):
+            lamda = Lambda((i, j), lamda(i, j))
+        return '{}(lambda {}: {}, {})'.format(self._module_format('numpy.fromfunction'),
+            ', '.join(self._print(arg) for arg in lamda.args[0]),
+            self._print(lamda.args[1]), self._print(expr.shape))
+
+    def _print_HadamardProduct(self, expr):
+        func = self._module_format('numpy.multiply')
+        return ''.join('{}({}, '.format(func, self._print(arg)) \
+            for arg in expr.args[:-1]) + "{}{}".format(self._print(expr.args[-1]),
+            ')' * (len(expr.args) - 1))
+
+    def _print_KroneckerProduct(self, expr):
+        func = self._module_format('numpy.kron')
+        return ''.join('{}({}, '.format(func, self._print(arg)) \
+            for arg in expr.args[:-1]) + "{}{}".format(self._print(expr.args[-1]),
+            ')' * (len(expr.args) - 1))
+
+    def _print_Adjoint(self, expr):
+        return '{}.getH()'.format(self._print(expr.arg))
+
+    def _print_DiagonalOf(self, expr):
+        return '{}({})'.format(self._module_format('numpy.diag'), self._print(expr.arg))
+
+    def _print_DiagonalizeVector(self, expr):
+        return '{}({})'.format(self._module_format('numpy.diagflat'),
+            self._print(expr.args[0]))
+
+    def _print_DiagonalMatrix(self, expr):
+        return '{}({}, {}({}, {}))'.format(self._module_format('numpy.multiply'),
+            self._print(expr.arg), self._module_format('numpy.eye'),
+            self._print(expr.shape[0]), self._print(expr.shape[1]))
+
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
         exprs = '[{0}]'.format(','.join(self._print(arg.expr) for arg in expr.args))
