@@ -16,6 +16,7 @@ from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy, symbols, Symbol
 from sympy.core.sympify import sympify
+from sympy.discrete.convolutions import convolution
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.elementary.integers import floor, frac, ceiling
 from sympy.functions.elementary.miscellaneous import Min, Max
@@ -23,7 +24,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp
-from sympy.series.sequences import sequence
+from sympy.series.sequences import sequence, SeqMul
 from sympy.series.series_class import SeriesBase
 
 
@@ -1143,15 +1144,22 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
-    def convolve(self, other, x=None, order=4):
+    def convolve(self, other, x=None, n=6, cycle=0, dyadic=False, subset=False):
         """ Convolute two Formal Power Series and return the truncated terms upto specified order.
 
         Parameters
         ==========
 
-        order : Number, optional
+        n : Number, optional
             Specifies the order of the term upto which the polynomial should
             be truncated.
+        cycle : Integer
+            Specifies the length for doing cyclic convolution.
+        dyadic : bool
+            Identifies the convolution type as dyadic (*bitwise-XOR*)
+            convolution, which is performed using **FWHT**.
+        subset : bool
+            Identifies the convolution type as subset convolution.
 
         Examples
         ========
@@ -1161,47 +1169,61 @@ class FormalPowerSeries(SeriesBase):
         >>> f1 = fps(sin(x))
         >>> f2 = fps(exp(x))
 
-        >>> f1.convolve(f2, x, 6)
-        x + x**2 + x**3/3 - x**5/12 + O(x**6)
+        >>> f1.convolve(f2, x, 4)
+        x + x**2 + x**3/3 + O(x**4)
+
+        >>> f1.convolve(f2, x, 4, cycle=4)
+        11*x/12 + 35*x**2/36 + x**3/3 + O(x**4)
+
+        >>> f1.convolve(f2, x, 6, dyadic=True)
+        4667/4800 + 2641*x/2880 + x**3/3 + x**4/60 + x**5/20 + O(x**6)
+
+        >>> f1.convolve(f2, x, 6, subset=True)
+        x + x**3/3 + x**5/20 + O(x**6)
 
         See Also
         ========
 
         sympy.discrete.convolutions
         """
-        from sympy.discrete.convolutions import convolution
-
         if x is None:
             x = self.x
-        if order is None:
+        if n is None:
             return iter(self)
 
         other = sympify(other)
-        if isinstance(other, FormalPowerSeries):
-            if self.dir != other.dir:
-                raise ValueError("Both series should be calculated from the"
-                                 " same direction.")
-            elif self.x0 != other.x0:
-                raise ValueError("Both series should be calculated about the"
-                                 " same point.")
 
-            trunc = (order + 2)/2 if (order % 2 == 0) else (order + 1)/2
-            coeff1, coeff2, terms = [], [], []
-            for pt in range(int(trunc)):
-                coeff1.append(self._eval_term(pt).as_coeff_mul(self.x)[0])
-                coeff2.append(other._eval_term(pt).as_coeff_mul(other.x)[0])
-
-            conv_coeff = convolution(coeff1, coeff2)
-            for i in range(int(order)):
-                pt_xk = self.xk.coeff(i)
-                terms.append(pt_xk * conv_coeff[i])
-
-            pt_xk = self.xk.coeff(order)
-            return Add(*terms) + Order(pt_xk, (self.x, self.x0))
-
-        else:
+        if  not isinstance(other, FormalPowerSeries):
             raise ValueError("Both series should be an instance of FormalPowerSeries"
                              " class.")
+
+        if self.dir != other.dir:
+            raise ValueError("Both series should be calculated from the"
+                             " same direction.")
+        elif self.x0 != other.x0:
+            raise ValueError("Both series should be calculated about the"
+                             " same point.")
+
+        elif self.x != other.x:
+            raise ValueError("Both series should have the same symbol.")
+
+        if cycle > n:
+            raise ValueError("Value of cycle should be less than or equal to n.")
+
+        k = self.ak.variables[0]
+        coeff1 = sequence(self.ak.formula, (k, 0, n-1))
+
+        k = other.ak.variables[0]
+        coeff2 = sequence(other.ak.formula, (k, 0, n-1))
+
+        conv_coeff = convolution(coeff1, coeff2, cycle, None, None, dyadic, subset)
+        conv_seq = sequence(tuple(conv_coeff), (k, 0, n-1))
+
+        k = self.xk.variables[0]
+        xk_seq = sequence(self.xk.formula, (k, 0, n-1))
+        terms = SeqMul(xk_seq * conv_seq, evaluate=False)[:]
+
+        return Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
     def __add__(self, other):
         other = sympify(other)

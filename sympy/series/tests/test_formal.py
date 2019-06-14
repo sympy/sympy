@@ -508,9 +508,26 @@ def test_fps__operations():
     assert fi.function == sin(x)
     assert fi.truncate() == x - x**3/6 + x**5/120 + O(x**6)
 
-def test_fps__convolutions():
+def test_fps__convolution():
     f1, f2, f3 = fps(sin(x)), fps(exp(x)), fps(cos(x))
 
-    assert f1.convolve(f2, x, 6) == x + x**2 + x**3/3 - x**5/12 + O(x**6)
-    assert f1.convolve(f2, x, 7) == x + x**2 + x**3/3 - x**5/12 - x**6/36 + O(x**7)
-    assert f1.convolve(f3, x, 7) == x - 2*x**3/3 + x**5/12 + O(x**7)
+    raises(ValueError, lambda: f1.convolve(exp(x), x))
+    raises(ValueError, lambda: f1.convolve(fps(exp(x), dir=-1), x, 4))
+    raises(ValueError, lambda: f1.convolve(fps(exp(x), x0=1), x, 4))
+    raises(ValueError, lambda: f1.convolve(fps(exp(y)), x, 4))
+
+    assert f1.convolve(f2, x, 3) == x + x**2 + O(x**3)
+    assert f1.convolve(f2, x, 4) == x + x**2 + x**3/3 + O(x**4)
+    assert f1.convolve(f3, x, 4) == x - 2*x**3/3 + O(x**4)
+
+    assert f1.convolve(f2, x, 4, cycle=4) == 11*x/12 + 35*x**2/36 + x**3/3 + O(x**4)
+    assert f1.convolve(f3, x, 4, cycle=3) == -S(2)/3 + x + x**2/12 - 2*x**3/3 + O(x**4)
+    raises(ValueError, lambda: f1.convolve(f2, x, 4, cycle=6))
+
+    assert f1.convolve(f2, x, 6, dyadic=True) == \
+        S(4667)/4800 + 2641*x/2880 + x**3/3 + x**4/60 + x**5/20 + O(x**6)
+    assert f1.convolve(f3, x, 5, cycle=4, dyadic=True) == 9*x/8 - 97*x**3/144 + O(x**5)
+
+    assert f1.convolve(f2, x, 6, subset=True) == x + x**3/3 + x**5/20 + O(x**6)
+    assert f1.convolve(f3, x, 5, cycle=5, subset=True) == \
+        S(1)/24 + x - x**2/144 - 2*x**3/3 + O(x**5)
