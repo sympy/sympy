@@ -47,7 +47,7 @@ WignerSemicircle
 
 from __future__ import print_function, division
 
-from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
+from sympy import (log, sqrt, pi, S, Symbol, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfi,  erfinv, I, hyper,
                    uppergamma, sinh, atan, Ne, expint)
@@ -2319,6 +2319,32 @@ class NormalDistribution(SingleContinuousDistribution):
 
     def sample(self):
         return random.normalvariate(self.mean, self.std)
+
+    def _sample_numpy(self, **kwargs):
+        mean, std = self.mean, self.std
+        if isinstance(mean, Symbol) or isinstance(std, Symbol):
+            raise ValueError('Cannot sample from Symbolic parameters.')
+
+        numpy = import_module('numpy')
+        if numpy:
+            mean, std = float(mean), float(std)
+            return numpy.random.normal(mean, std, kwargs.get('size', 1))
+        else:
+            raise NotImplementedError(
+                'Sampling the Normal distribution requires Numpy.')
+
+    def _sample_scipy(self, **kwargs):
+        mean, std = self.mean, self.std
+        if isinstance(mean, Symbol) or isinstance(std, Symbol):
+            raise ValueError('Cannot sample from Symbolic parameters.')
+
+        scipy = import_module('scipy')
+        if scipy:
+            mean, std = float(mean), float(std)
+            return scipy.stats.norm.rvs(mean, std, kwargs.get('size', 1))
+        else:
+            raise NotImplementedError(
+                'Sampling the Normal distribution requires Scipy.')
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
