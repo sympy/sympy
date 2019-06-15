@@ -613,7 +613,7 @@ class NumPyPrinter(PythonCodePrinter):
         if all([dim.is_Integer for dim in shape]):
             return "%s(%s)" % (self._module_format('numpy.eye'), self._print(expr.shape[0]))
         else:
-            raise NotImplementedError
+            raise NotImplementedError("Non-symbolic matrix dimensions are not supported")
 
     def _print_BlockMatrix(self, expr):
         return '{0}({1})'.format(self._module_format('numpy.block'),
