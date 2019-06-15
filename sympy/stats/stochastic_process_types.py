@@ -6,7 +6,7 @@ from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
 from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
-from sympy.stats.symbolic_probability import Probability
+from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.logic.boolalg import Boolean
 
@@ -142,8 +142,12 @@ class StochasticProcess(Basic):
             return JointDistribution(*args)
         # TODO: Add tests for the below part of the method, when implementation of Bernoulli Process
         # is completed
-        pdf = Lambda(*args, Mul.fromiter(arg.pspace.distribution.pdf(arg) for arg in args))
+        pdf = Lambda(*[arg.name for arg in args],
+                Mul.fromiter(arg.pspace.distribution.pdf(arg) for arg in args))
         return JointDistributionHandmade(pdf)
+
+    def expectation(self, condition, given_condition):
+        raise NotImplementedError("Abstract method for expectation queries.")
 
 class DiscreteTimeStochasticProcess(StochasticProcess):
     """
@@ -247,7 +251,79 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         """
         return self.args[2]
 
-    def probability(self, condition, given_condition, **kwargs):
+    def _extract_information(self, given_condition):
+        """
+        Helper function to extract information, like,
+        transition probabilities, state space, etc.
+        """
+        trans_probs, state_space = self.transition_probabilities, self.state_space
+        if isinstance(given_condition, And):
+            gcs = given_condition.args
+            for gc in gcs:
+                if isinstance(gc, TransitionMatrixOf):
+                    trans_probs = gc.matrix
+                if isinstance(gc, StochasticStateSpaceOf):
+                    state_space = gc.state_space
+                if isinstance(gc, Eq):
+                    given_condition = gc
+        if isinstance(given_condition, TransitionMatrixOf):
+            trans_probs = given_condition.matrix
+        if isinstance(given_condition, StochasticStateSpaceOf):
+            state_space = given_condition.state_space
+        return trans_probs, state_space, given_condition
+
+    def _check_trans_probs(self, trans_probs):
+        """
+        Helper function for checking the validity of transition
+        probabilities.
+        """
+        if not isinstance(trans_probs, MatrixSymbol):
+            rows = trans_probs.tolist()
+            for row in rows:
+                if (sum(row) - 1) != 0:
+                    raise ValueError("Probabilities in a row must sum to 1. "
+                    "If you are using Float or floats then please use Rational.")
+
+    def _work_out_state_space(self, state_space, given_condition, trans_probs):
+        """
+        Helper function to extract state space if there
+        is a random symbol in the given condition.
+        """
+        # if given condition is None, then there is no need to work out
+        # state_space from random variables
+        if given_condition != None:
+            rand_var = list(given_condition.atoms(RandomSymbol) -
+                        given_condition.atoms(RandomIndexedSymbol))
+            if len(rand_var) == 1:
+                state_space = rand_var[0].pspace.set
+        if not FiniteSet(*[i for i in range(trans_probs.shape[0])]).is_subset(state_space):
+            raise ValueError("state space is not compatible with the transition probabilites.")
+        return state_space
+
+    def _preprocess(self, given_condition):
+        """
+        Helper function for pre-processing the information.
+        """
+        is_insufficient = False
+
+        # extracting transition matrix and state space
+        trans_probs, state_space, given_condition = self._extract_information(given_condition)
+
+        # given_condition does not have sufficient information
+        # for computations
+        if trans_probs == None or \
+            given_condition == None:
+            is_insufficient = True
+        else:
+            # checking transition probabilities
+            self._check_trans_probs(trans_probs)
+
+            # working out state space
+            state_space = self._work_out_state_space(state_space, given_condition, trans_probs)
+
+        return is_insufficient, trans_probs, state_space, given_condition
+
+    def probability(self, condition, given_condition):
         """
         Handles probability queries for discrete Markov chains.
 
@@ -276,45 +352,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         using StochasticStateSpaceOf in given_condition using & or And.
         """
 
-        # extracting transition matrix and state space
-        trans_probs, state_space = self.transition_probabilities, self.state_space
-        if isinstance(given_condition, And):
-            gcs = given_condition.args
-            for gc in gcs:
-                if isinstance(gc, TransitionMatrixOf):
-                    trans_probs = gc.matrix
-                if isinstance(gc, StochasticStateSpaceOf):
-                    state_space = gc.state_space
-                if isinstance(gc, Eq):
-                    given_condition = gc
-        if isinstance(given_condition, TransitionMatrixOf):
-            trans_probs = given_condition.matrix
-        if isinstance(given_condition, StochasticStateSpaceOf):
-            state_space = given_condition.state_space
+        check, trans_probs, state_space, given_condition = \
+            self._preprocess(given_condition)
 
-        # given_condition does not have sufficient information
-        # for computations
-        if trans_probs == None or \
-            given_condition == None:
-            return Probability(condition, given_condition, **kwargs)
-
-        # working out transition probabilities
-        if not isinstance(trans_probs, MatrixSymbol):
-            rows = trans_probs.tolist()
-            for row in rows:
-                if (sum(row) - 1) != 0:
-                    raise ValueError("Probabilities in a row must sum to 1. "
-                    "If you are using Float or floats then please use Rational.")
-
-        # if given condition is None, then there is no need to work out
-        # state_space from random variables
-        if given_condition != None:
-            rand_var = list(given_condition.atoms(RandomSymbol) -
-                        given_condition.atoms(RandomIndexedSymbol))
-            if len(rand_var) == 1:
-                state_space = rand_var[0].pspace.set
-        if not FiniteSet(*[i for i in range(trans_probs.shape[0])]).is_subset(state_space):
-            raise ValueError("state space is not compatible with the transition probabilites.")
+        if check:
+            return Probability(condition, given_condition)
 
         if isinstance(condition, Eq) and \
             isinstance(given_condition, Eq) and \
@@ -360,3 +402,42 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(condition, given_condition))
+
+    def expectation(self, condition, given_condition=None):
+        """
+        Handles expectation queries for discrete markov chains.
+
+        Parameters
+        ==========
+
+        condition: Relational, Logic
+            Condition for which expectation has to be computed. Must
+            contain a RandomIndexedSymbol of the process.
+        given_condition: Relational, Logic
+            The given conditions under which computations should be done.
+
+        Returns
+        =======
+
+        Expectation
+            Unevaluated object if computations cannot be done due to
+            insufficient information.
+        Expr
+            In all other cases when the computations are successfull.
+
+        Note
+        ====
+
+        Any information passed at the time of query overrides
+        any information passed at the time of object creation like
+        transition probabilities, state space.
+
+        Pass the transition matrix using TransitionMatrixOf and state space
+        using StochasticStateSpaceOf in given_condition using & or And.
+        """
+
+        check, trans_probs, state_space, given_condition = \
+            self._preprocess(given_condition)
+
+        if check:
+            return Expectation(condition, given_condition)
