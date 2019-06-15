@@ -46,18 +46,18 @@ class StochasticPSpace(ProductPSpace):
     def distribution(self):
         return self.args[2]
 
-    def probability(self, condition, given_condition=None):
+    def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
         Transfers the task of handling queries to the specific stochastic
         process because every process has their own logic of handling such
         queries.
         """
-        return self.process.probability(condition, given_condition)
+        return self.process.probability(condition, given_condition, evaluate, **kwargs)
 
-    def compute_expectation(self, condition, given_condition=None):
+    def compute_expectation(self, expr, condition=None, evaluate=True, **kwargs):
         """
         Transfers the task of handling queries to the specific stochastic
         process because every process has their own logic of handling such
         queries.
         """
-        return self.process.expectation(self, condition, given_condition)
+        return self.process.expectation(expr, condition, evaluate, **kwargs)

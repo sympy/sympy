@@ -1,6 +1,6 @@
 from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
                     Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
-                    nsimplify, Lambda, Mul)
+                    nsimplify, Lambda, Mul, Sum, Dummy, Lt)
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -300,11 +300,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             raise ValueError("state space is not compatible with the transition probabilites.")
         return state_space
 
-    def _preprocess(self, given_condition):
+    def _preprocess(self, given_condition, evaluate):
         """
         Helper function for pre-processing the information.
         """
         is_insufficient = False
+
+        if not evaluate: # avoid pre-processing if the result is not to be evaluated
+            return (True, None, None, None)
 
         # extracting transition matrix and state space
         trans_probs, state_space, given_condition = self._extract_information(given_condition)
@@ -323,7 +326,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
 
         return is_insufficient, trans_probs, state_space, given_condition
 
-    def probability(self, condition, given_condition):
+    def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
         Handles probability queries for discrete Markov chains.
 
@@ -353,7 +356,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         """
 
         check, trans_probs, state_space, given_condition = \
-            self._preprocess(given_condition)
+            self._preprocess(given_condition, evaluate)
 
         if check:
             return Probability(condition, given_condition)
@@ -369,7 +372,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             if not isinstance(lhsg, RandomIndexedSymbol):
                 lhsg, rhsg = (rhsg, lhsg)
             keyc, statec, keyg, stateg = (lhsc.key, rhsc, lhsg.key, rhsg)
-            if stateg >= trans_probs.shape[0] == False or statec >= trans_probs.shape[1]:
+            if Lt(stateg, trans_probs.shape[0]) == False or Lt(statec, trans_probs.shape[1]) == False:
                 raise IndexError("No information is avaliable for (%s, %s) in "
                     "transition probabilities of shape, (%s, %s). "
                     "State space is zero indexed."
@@ -403,17 +406,17 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(condition, given_condition))
 
-    def expectation(self, condition, given_condition=None):
+    def expectation(self, expr, condition=None, evaluate=True, **kwargs):
         """
         Handles expectation queries for discrete markov chains.
 
         Parameters
         ==========
 
-        condition: Relational, Logic
+        expr: RandomIndexedSymbol, Relational, Logic
             Condition for which expectation has to be computed. Must
             contain a RandomIndexedSymbol of the process.
-        given_condition: Relational, Logic
+        condition: Relational, Logic
             The given conditions under which computations should be done.
 
         Returns
@@ -436,8 +439,33 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         using StochasticStateSpaceOf in given_condition using & or And.
         """
 
-        check, trans_probs, state_space, given_condition = \
-            self._preprocess(given_condition)
+        check, trans_probs, state_space, condition = \
+            self._preprocess(condition, evaluate)
 
         if check:
-            return Expectation(condition, given_condition)
+            return Expectation(expr, condition)
+
+        if isinstance(expr, RandomIndexedSymbol):
+            if isinstance(condition, Eq):
+                # handle queries similar to E(X[i], Eq(X[i-m], <some-state>))
+                lhsg, rhsg = condition.lhs, condition.rhs
+                if not isinstance(lhsg, RandomIndexedSymbol):
+                    lhsg, rhsg = (rhsg, lhsg)
+                if rhsg not in self.state_space:
+                    raise ValueError("%s state is not in the state space."%(rhsg))
+                if expr.key < lhsg.key:
+                    raise ValueError("Incorrect given condition is given, expectation "
+                      "time %s < time %s"%(expr.key, lhsg.key))
+                cond = condition & TransitionMatrixOf(self, trans_probs) & \
+                        StochasticStateSpaceOf(self, state_space)
+                s = Dummy('s')
+                func = Lambda(s, self.probability(Eq(expr, s), cond)*s)
+                return Sum(func(s), (s, state_space.inf, state_space.sup)).doit()
+
+        raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
+                                "implemented yet."%(expr, condition))
+
+
+
+
+

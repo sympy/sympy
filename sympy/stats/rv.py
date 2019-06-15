@@ -683,6 +683,9 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     if numsamples:  # Computing by monte carlo sampling?
         return sampling_E(expr, condition, numsamples=numsamples)
 
+    if expr.has(RandomIndexedSymbol):
+        return pspace(expr).compute_expectation(expr, condition, evaluate, **kwargs)
+
     # Create new expr and recompute E
     if condition is not None:  # If there is a condition
         return expectation(given(expr, condition), evaluate=evaluate)
@@ -737,7 +740,7 @@ def probability(condition, given_condition=None, numsamples=None,
     given_condition = sympify(given_condition)
 
     if condition.has(RandomIndexedSymbol):
-        return pspace(condition).probability(condition, given_condition, **kwargs)
+        return pspace(condition).probability(condition, given_condition, evaluate, **kwargs)
 
     if isinstance(given_condition, RandomSymbol):
         condrv = random_symbols(condition)
