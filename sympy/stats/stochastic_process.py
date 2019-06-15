@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import Basic, Symbol
 from sympy.core.compatibility import string_types
-from sympy.stats.rv import ProductDomain
+from sympy.stats.rv import ProductDomain, _symbol_converter
 from sympy.stats.joint_rv import ProductPSpace, JointRandomSymbol
 
 class StochasticPSpace(ProductPSpace):
@@ -20,11 +20,7 @@ class StochasticPSpace(ProductPSpace):
     """
 
     def __new__(cls, sym, process, distribution=None):
-        if isinstance(sym, string_types):
-            sym = Symbol(sym)
-        if not isinstance(sym, Symbol):
-            raise TypeError("Name of stochastic process should be either only "
-                            "a string or Symbol.")
+        sym = _symbol_converter(sym)
         from sympy.stats.stochastic_process_types import StochasticProcess
         if not isinstance(process, StochasticProcess):
             raise TypeError("`process` must be an instance of StochasticProcess.")
