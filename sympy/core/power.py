@@ -24,6 +24,7 @@ def isqrt(n):
     """Return the largest integer less than or equal to sqrt(n)."""
     if n < 0:
         raise ValueError("n must be nonnegative")
+    n = int(n)
 
     # Fast path: with IEEE 754 binary64 floats and a correctly-rounded
     # math.sqrt, int(math.sqrt(n)) works for any integer n satisfying 0 <= n <
@@ -31,11 +32,11 @@ def isqrt(n):
     # IEEE 754 format floats *or* correct rounding of math.sqrt, so check the
     # answer and fall back to the slow method if necessary.
     if n < 4503599761588224:
-        s = int(_sqrt(int(n)))
+        s = int(_sqrt(n))
         if 0 <= n - s*s <= 2*s:
             return s
 
-    return integer_nthroot(int(n), 2)[0]
+    return integer_nthroot(n, 2)[0]
 
 
 def integer_nthroot(y, n):
