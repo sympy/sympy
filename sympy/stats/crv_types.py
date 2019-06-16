@@ -1625,7 +1625,7 @@ def Gumbel(name, beta, mu, minimum=False):
 
     mu : Real number, 'mu' is a location
     beta : Real number, 'beta > 0' is a scale
-    minimum : Boolean, by default, False, for enabling minimum distribution
+    minimum : Boolean, by default, False, set to True for enabling minimum distribution
 
     Returns
     =======
