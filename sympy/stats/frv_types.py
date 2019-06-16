@@ -22,7 +22,7 @@ from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
 from sympy import beta as beta_fn
 from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
-from sympy.stats.rv import _value_check, Density
+from sympy.stats.rv import _value_check, Density, RandomSymbol
 from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
 
 __all__ = ['FiniteRV',
@@ -178,12 +178,12 @@ class DieDistribution(SingleFiniteDistribution):
             if x.is_Integer and x >= 1 and x <= self.sides:
                 return Rational(1, self.sides)
             return S.Zero
-        if x.is_Symbol:
+        elif x.is_Symbol or isinstance(x, RandomSymbol):
             i = Dummy('i', integer=True, positive=True)
             t = Dummy('t')
             return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides))
-        raise ValueError("'x' expected as an argument of type 'number' or 'symbol', "
-                        "not %s" % (type(x)))
+        raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
+                        "'RandomSymbol' not %s" % (type(x)))
 
 
 def Die(name, sides=6):

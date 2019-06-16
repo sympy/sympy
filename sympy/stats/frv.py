@@ -201,24 +201,6 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
         pass
 
     @property
-    def characteristic_function(self):
-        t = Dummy('t', real=True)
-        k = Dummy('k', positive=True, integer=True)
-        func = Sum(exp(I*k*t)*self.pdf(k), (k, self.low, self.high))
-        if not self.is_symbolic:
-            func = func.doit()
-        return Lambda(t, func)
-
-    @property
-    def moment_generating_function(self):
-        t = Dummy('t', real=True)
-        k = Dummy('k', positive=True, integer=True)
-        func = Sum(exp(k*t)*self.pdf(k), (k, self.low, self.high))
-        if not self.is_symbolic:
-            func = func.doit()
-        return Lambda(t, func)
-
-    @property
     def set(self): # to be overrided by specific distribution
         pass
 
