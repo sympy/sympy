@@ -22,12 +22,15 @@ from math import sqrt as _sqrt
 
 def isqrt(n):
     """Return the largest integer less than or equal to sqrt(n)."""
+    if n < 0:
+        raise ValueError("n must be nonnegative")
+
     # Fast path: with IEEE 754 binary64 floats and a correctly-rounded
     # math.sqrt, int(math.sqrt(n)) works for any integer n satisfying 0 <= n <
     # 4503599761588224 = 2**52 + 2**27. But Python doesn't guarantee either
     # IEEE 754 format floats *or* correct rounding of math.sqrt, so check the
     # answer and fall back to the slow method if necessary.
-    if 0 <= n < 4503599761588224:
+    if n < 4503599761588224:
         s = int(_sqrt(int(n)))
         if 0 <= n - s*s <= 2*s:
             return s
