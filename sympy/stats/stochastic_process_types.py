@@ -143,7 +143,7 @@ class StochasticProcess(Basic):
         # TODO: Add tests for the below part of the method, when implementation of Bernoulli Process
         # is completed
         pdf = Lambda(*[arg.name for arg in args],
-                Mul.fromiter(arg.pspace.distribution.pdf(arg) for arg in args))
+                expr=Mul.fromiter(arg.pspace.distribution.pdf(arg) for arg in args))
         return JointDistributionHandmade(pdf)
 
     def expectation(self, condition, given_condition):
