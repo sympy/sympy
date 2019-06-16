@@ -464,8 +464,3 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(expr, condition))
-
-
-
-
-
