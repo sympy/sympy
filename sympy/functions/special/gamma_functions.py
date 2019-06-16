@@ -104,7 +104,8 @@ class gamma(Function):
     def fdiff(self, argindex=1):
         if argindex == 1:
             return self.func(self.args[0])*polygamma(0, self.args[0])
-        raise ArgumentIndexError(self, argindex)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, arg):
@@ -116,7 +117,8 @@ class gamma(Function):
             elif intlike(arg):
                 if arg.is_positive:
                     return factorial(arg - 1)
-                return S.ComplexInfinity
+                else:
+                    return S.ComplexInfinity
             elif arg.is_Rational:
                 if arg.q == 2:
                     n = abs(arg.p) // arg.q
@@ -136,7 +138,8 @@ class gamma(Function):
 
                     if arg.is_positive:
                         return coeff*sqrt(S.Pi) / 2**n
-                    return 2**n*sqrt(S.Pi) / coeff
+                    else:
+                        return 2**n*sqrt(S.Pi) / coeff
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -407,7 +410,8 @@ class uppergamma(Function):
         elif argindex == 1:
             a, z = self.args
             return uppergamma(a, z)*log(z) + meijerg([], [1, 1], [0, 0, a], [], z)
-        raise ArgumentIndexError(self, argindex)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
         from mpmath import mp, workprec
@@ -584,7 +588,8 @@ class polygamma(Function):
         if argindex == 2:
             n, z = self.args[:2]
             return polygamma(n + 1, z)
-        raise ArgumentIndexError(self, argindex)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     def _eval_is_positive(self):
         if self.args[1].is_positive and (self.args[0] > 0) == True:
@@ -659,7 +664,8 @@ class polygamma(Function):
                         if n.is_Number:
                             if n is S.Zero:
                                 return S.Infinity
-                            return S.Zero
+                            else:
+                                return S.Zero
                     elif z.is_Integer:
                         if z.is_nonpositive:
                             return S.ComplexInfinity
@@ -712,7 +718,8 @@ class polygamma(Function):
                         i, coeff)) for i in range(0, int(coeff)) ]
                     if n == 0:
                         return Add(*tail)/coeff + log(coeff)
-                    return Add(*tail)/coeff**(n + 1)
+                    else:
+                        return Add(*tail)/coeff**(n + 1)
                 z *= coeff
 
         if n == 0 and z.is_Rational:
@@ -943,7 +950,8 @@ class loggamma(Function):
     def fdiff(self, argindex=1):
         if argindex == 1:
             return polygamma(0, self.args[0])
-        raise ArgumentIndexError(self, argindex)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     def _sage_(self):
         import sage.all as sage
@@ -1076,7 +1084,8 @@ class multigamma(Function):
             x, p = self.args
             k = Dummy('k')
             return self.func(x, p)*Sum(polygamma(0, x + (1 - k)/2), (k, 1, p))
-        raise ArgumentIndexError(self, argindex)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, x, p):
@@ -1095,12 +1104,9 @@ class multigamma(Function):
     def _eval_is_real(self):
         x, p = self.args
         y = 2*x
-        if isinstance(x, Symbol) or isinstance(p, Symbol):
-            if (y <= (p - 1)) is True and y.is_integer:
-                return False
-            if (y > (p - 1)) is True or y.is_noninteger:
-                return True
-        if x.is_Number and p.is_Number:
-            if y <= (p - 1) and intlike(y):
-                return False
+        if y.is_integer and (y <= (p - 1)) is True:
+            return False
+        if intlike(y) and (y <= (p - 1)):
+            return False
+        if y > (p - 1) or y.is_noninteger:
             return True

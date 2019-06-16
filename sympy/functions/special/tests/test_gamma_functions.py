@@ -1,13 +1,9 @@
 from sympy import (
-    Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, multivariate_gamma,
+    Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, multigamma,
     log, polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-    cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic, zeta,conjugate)
+    cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic, zeta, conjugate)
 
 from sympy.core.expr import unchanged
-    Symbol, Dummy, gamma, I, oo, nan, zoo, factorial, sqrt, Rational,
-    multigamma, log, polygamma, EulerGamma, pi, uppergamma, S,
-    expand_func, loggamma, sin, cos, O, lowergamma, exp, erf, erfc,
-    exp_polar, harmonic, zeta, conjugate)
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (test_derivative_numerically as td,
@@ -515,3 +511,6 @@ def test_multigamma():
     assert multigamma(S(1)/2, 3, evaluate=False).is_real == False
     assert multigamma(0, 1, evaluate=False).is_real == False
     assert multigamma(1, 3, evaluate=False).is_real == False
+    assert multigamma(-1.0, 3, evaluate=False).is_real == False
+    assert multigamma(0.7, 3, evaluate=False).is_real == True
+    assert multigamma(3, 3, evaluate=False).is_real == True
