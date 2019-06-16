@@ -280,6 +280,8 @@ def test_array_permutedims():
 
     # test for large scale sparse array
     for SparseArrayType in [ImmutableSparseNDimArray, MutableSparseNDimArray]:
-        A = MutableSparseNDimArray({1:1, 10000:2}, (10000, 20000, 10000))
+        A = SparseArrayType({1:1, 10000:2}, (10000, 20000, 10000))
         assert permutedims(A, (0, 1, 2)) == A
-        assert permutedims(A, (1, 0, 2)) == ImmutableSparseNDimArray({1: 1, 100000000: 2}, (20000, 10000, 10000))
+        assert permutedims(A, (1, 0, 2)) == SparseArrayType({1: 1, 100000000: 2}, (20000, 10000, 10000))
+        B = SparseArrayType({1:1, 20000:2}, (10000, 20000))
+        assert B.transpose() == SparseArrayType({10000: 1, 1: 2}, (20000, 10000))
