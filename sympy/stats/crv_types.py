@@ -2317,31 +2317,30 @@ class NormalDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
-    def sample(self):
-        return random.normalvariate(self.mean, self.std)
-
-    def _sample_numpy(self, **kwargs):
+    def sample(self, **kwargs):
         mean, std = self.mean, self.std
-        if isinstance(mean, Symbol) or isinstance(std, Symbol):
-            raise ValueError('Cannot sample from Symbolic parameters.')
+        print("len: ", len(kwargs))
+        if len(kwargs) == 0 or mean.has(Symbol) or std.has(Symbol):
+            return random.normalvariate(self.mean, self.std)
+        objs = {}
+        mean, std, size = float(mean), float(std), kwargs.get('size', 1)
+        if kwargs.get('numpy', False):
+            objs['numpy'] = _sample_numpy(mean, std, size)
+        if kwargs.get('scipy', False):
+            objs['scipy'] = _sample_scipy(mean, std, size)
 
+    def _sample_numpy(mean, std, size):
         numpy = import_module('numpy')
         if numpy:
-            mean, std = float(mean), float(std)
-            return numpy.random.normal(mean, std, kwargs.get('size', 1))
+            return numpy.random.normal(mean, std, size)
         else:
             raise NotImplementedError(
                 'Sampling the Normal distribution requires Numpy.')
 
-    def _sample_scipy(self, **kwargs):
-        mean, std = self.mean, self.std
-        if isinstance(mean, Symbol) or isinstance(std, Symbol):
-            raise ValueError('Cannot sample from Symbolic parameters.')
-
+    def _sample_scipy(mean, std, size):
         scipy = import_module('scipy')
         if scipy:
-            mean, std = float(mean), float(std)
-            return scipy.stats.norm.rvs(mean, std, kwargs.get('size', 1))
+            return scipy.stats.norm.rvs(mean, std, size)
         else:
             raise NotImplementedError(
                 'Sampling the Normal distribution requires Scipy.')
