@@ -22,8 +22,10 @@ from math import sqrt as _sqrt
 
 def isqrt(n):
     """Return the largest integer less than or equal to sqrt(n)."""
-    if n < 17984395633462800708566937239552:
-        return int(_sqrt(n))
+    if n < 4503599761588224:
+        s = int(_sqrt(n))
+        if s**2 <= n and (s+1)**2 > n:
+            return s
     return integer_nthroot(int(n), 2)[0]
 
 
