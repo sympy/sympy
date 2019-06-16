@@ -1038,9 +1038,16 @@ def test_isqrt():
     assert isqrt(4503599761588224) == 67108864
     assert isqrt(9999999999999999) == 99999999
 
+    # Other corner cases, especially involving non-integers.
     raises(ValueError, lambda: isqrt(-1))
     raises(ValueError, lambda: isqrt(-10**1000))
     raises(ValueError, lambda: isqrt(-S.Half))
+
+    tiny = Rational(1, 10**1000)
+    raises(ValueError, lambda: isqrt(-tiny))
+    assert isqrt(1-tiny) == 0
+    assert isqrt(4503599761588224-tiny) == 67108864
+    assert isqrt(10**100 - tiny) == 10**50 - 1
 
     # Check that using an inaccurate math.sqrt doesn't affect the results.
     from sympy.core import power
