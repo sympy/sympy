@@ -3,13 +3,13 @@ from sympy import sieve
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
 
-class PcGroup(Basic):
+class PolycyclicGroup(Basic):
 
     is_group = True
     is_solvable = True
 
-    def __init__(self, _pcgs):
-        self.perm_group = PermutationGroup(_pcgs)
+    def __init__(self, pcgs_):
+        self.perm_group = PermutationGroup(pcgs_)
         self.pc_series = self._pc_series()
         self.pcgs = self._compute_pcgs()
 
@@ -72,8 +72,8 @@ def minimal_uncollected_subwords(word, relative_order):
     >>> F, x1, x2 = free_group("x1, x2")
     >>> word = x2**2*x1**7
     >>> relative_order = [3, 2]
-    >>> minimal_uncollected_subwords(word, relative_order))
-    {x1*x2**2: 0, x1**7: 1}
+    >>> minimal_uncollected_subwords(word, relative_order)
+    {x1**7: 1, x1*x2**2: 0}
 
     """
     array = word.array_form
@@ -112,7 +112,7 @@ def _relations(relators):
     >>> power_rel
     {x1**2: 1}
     >>> conj_rel
-    {x1*x2*x1**-1: x2**-1, x1**-1*x2*x1: x2**-1}
+    {x1**-1*x2*x1: x2**-1, x1*x2*x1**-1: x2**-1}
 
     """
     power_relators = {}

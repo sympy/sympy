@@ -4515,11 +4515,11 @@ class PermutationGroup(Basic):
         G._fp_presentation = simplify_presentation(G_p)
         return G._fp_presentation
 
-    def pc_group(self):
-        from sympy.combinatorics.pc_groups import PcGroup
+    def polycyclic_group(self):
+        from sympy.combinatorics.pc_groups import PolycyclicGroup
         if not self.is_polycyclic:
             raise ValueError("The group must be solvable")
-        return PcGroup(self.generators)
+        return PolycyclicGroup(self.generators)
 
 
 def _orbit(degree, generators, alpha, action='tuples'):
