@@ -248,8 +248,8 @@ class FinitePSpace(PSpace):
         return ConditionalFiniteDomain(self.domain, condition)
 
     def compute_density(self, expr):
-        if isinstance(self.args[1], SingleFiniteDistribution) and \
-            self.args[1].is_symbolic:
+        if hasattr(self.args[1],'is_symbolic') and \
+           self.args[1].is_symbolic:
             cond = expr
             if not isinstance(expr, (Relational, Logic)):
                 cond = True
@@ -268,9 +268,10 @@ class FinitePSpace(PSpace):
     @cacheit
     def compute_cdf(self, expr):
         d = self.compute_density(expr)
-        if isinstance(self.args[1], SingleFiniteDistribution) and \
-            self.args[1].is_symbolic:
-            k, ki = Dummy('k ki')
+        if hasattr(self.args[1], 'is_symbolic') and \
+           self.args[1].is_symbolic:
+            k = Dummy('k')
+            ki = Dummy('ki')
             return Lambda(k, Sum(d(ki), (ki, self.args[1].low, k)))
         cum_prob = 0
         cdf = []
@@ -295,20 +296,20 @@ class FinitePSpace(PSpace):
     def compute_characteristic_function(self, expr):
         d = self.compute_density(expr)
         t = Dummy('t', real=True)
-        if isinstance(self.args[1], SingleFiniteDistribution) and \
+        if hasattr(self.args[1], 'is_symbolic') and \
             self.args[1].is_symbolic:
-            k, ki = Dummy('k ki')
-            return Lambda(k, Sum(d(ki)*exp(I*ki*t), (ki, self.args[1].low, self.args[1].high)))
+            ki = Dummy('ki')
+            return Lambda(t, Sum(d(ki)*exp(I*ki*t), (ki, self.args[1].low, self.args[1].high)))
         return Lambda(t, sum(exp(I*k*t)*v for k,v in d.items()))
 
     @cacheit
     def compute_moment_generating_function(self, expr):
         d = self.compute_density(expr)
         t = Dummy('t', real=True)
-        if isinstance(self.args[1], SingleFiniteDistribution) and \
+        if hasattr(self.args[1], 'is_symbolic') and \
             self.args[1].is_symbolic:
-            k, ki = Dummy('k ki')
-            return Lambda(k, Sum(d(ki)*exp(ki*t), (ki, self.args[1].low, self.args[1].high)))
+            ki = Dummy('ki')
+            return Lambda(t, Sum(d(ki)*exp(ki*t), (ki, self.args[1].low, self.args[1].high)))
         return Lambda(t, sum(exp(k*t)*v for k,v in d.items()))
 
     def compute_expectation(self, expr, rvs=None, **kwargs):

@@ -1,6 +1,6 @@
 from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        cancel, exp, I, Piecewise)
+        cancel, exp, I, Piecewise, Sum, Dummy)
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
@@ -113,7 +113,7 @@ def test_dice():
     raises(ValueError, lambda: Die('X', 1.5))  # issue 8103: non integer sides.
 
     # symbolic test for die
-    n = Symbol('k', positive=True)
+    n, k = symbols('n, k', positive=True)
     D = Die('D', n)
     dens = density(D).dict
     assert dens == Density(DieDistribution(n))
@@ -121,6 +121,22 @@ def test_dice():
     assert set(dens.subs(n, 4).doit().values()) == set([S(1)/4])
     assert P(D > 2) == Probability(D > 2)
     assert E(D) == Expectation(D)
+
+    ki = Dummy('ki')
+    cumuf = cdf(D)(k)
+    assert cumuf.dummy_eq(
+    Sum(Piecewise((1/n, (ki >= 0) & (ki >= 1) & (ki <= n)), (0, True)), (ki, 0, k)))
+    assert cumuf.subs({n: 6, k: 2}).doit() == S(1)/3
+
+    t = Dummy('t')
+    cf = characteristic_function(D)(t)
+    assert cf.dummy_eq(
+    Sum(Piecewise((exp(ki*I*t)/n, (ki >= 0) & (ki >= 1) & (ki <= n)), (0, True)), (ki, 0, n)))
+    assert cf.subs(n, 3).doit() == exp(3*I*t)/3 + exp(2*I*t)/3 + exp(I*t)/3
+    mgf = moment_generating_function(D)(t)
+    assert mgf.dummy_eq(
+    Sum(Piecewise((exp(ki*t)/n, (ki >= 0) & (ki >= 1) & (ki <= n)), (0, True)), (ki, 0, n)))
+    assert mgf.subs(n, 3).doit() == exp(3*t)/3 + exp(2*t)/3 + exp(t)/3
 
 def test_given():
     X = Die('X', 6)
@@ -370,11 +386,11 @@ def test_DieDistribution():
     from sympy.abc import x
     X = DieDistribution(6)
     assert X.pdf(S(1)/2) == S.Zero
-    assert X.pdf(x).subs({x: 1}).doit() == S(1)/6
-    assert X.pdf(x).subs({x: 7}).doit() == 0
-    assert X.pdf(x).subs({x: -1}).doit() == 0
-    assert X.pdf(x).subs({x: S(1)/3}).doit() == 0
-    raises(TypeError, lambda: X.pdf(x).subs({x: Matrix([0, 0])}))
+    assert X.pdf(1).doit() == S(1)/6
+    assert X.pdf(7).doit() == 0
+    assert X.pdf(-1).doit() == 0
+    assert X.pdf(S(1)/3).doit() == 0
+    raises(ValueError, lambda: X.pdf(Matrix([0, 0])))
     raises(ValueError, lambda: X.pdf(x**2 - 1))
 
 def test_FinitePSpace():
