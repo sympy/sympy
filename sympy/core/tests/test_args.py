@@ -1359,7 +1359,7 @@ def test_sympy__stats__crv_types__GammaDistribution():
 
 def test_sympy__stats__crv_types__GumbelDistribution():
     from sympy.stats.crv_types import GumbelDistribution
-    assert _test_args(GumbelDistribution(1, 1))
+    assert _test_args(GumbelDistribution(1, 1, False))
 
 def test_sympy__stats__crv_types__GompertzDistribution():
     from sympy.stats.crv_types import GompertzDistribution
