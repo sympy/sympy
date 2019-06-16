@@ -1040,7 +1040,7 @@ def test_isqrt():
 
     raises(ValueError, lambda: isqrt(-1))
     raises(ValueError, lambda: isqrt(-10**1000))
-    raises(ValueError, lambda: -S.Half)
+    raises(ValueError, lambda: isqrt(-S.Half))
 
     # Check that using an inaccurate math.sqrt doesn't affect the results.
     from sympy.core import power
