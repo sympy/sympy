@@ -226,6 +226,33 @@ def test_sqrt():
         skip("NumPy not installed")
     assert abs(lambdify((a,), sqrt(a), 'numpy')(4) - 2) < 1e-16
 
+
+def test_optim():
+    if not np:
+        skip("NumPy not installed")
+
+    from sympy.assumptions import Q, assuming
+
+    M = MatrixSymbol("M", 3, 3)
+    x = MatrixSymbol("x", 3, 1)
+
+    expr = M**(-1) * x + x
+
+    p = NumPyPrinter(settings={'optimize': False})
+    p_opt = NumPyPrinter(settings={'optimize': True})
+
+    with assuming(Q.fullrank(M)):
+        f = lambdify((M, x), expr, printer=p)
+        f_opt = lambdify((M, x), expr, printer=p_opt)
+
+    m0 = np.array([[1, 2, 3], [3, 2, 5], [5, 6, 7]])
+    assert np.linalg.matrix_rank(m0) == 3
+
+    x0 = np.array([3, 4, 5])
+
+    assert np.allclose(f_opt(m0, x0), f(m0, x0))
+
+
 def test_issue_15601():
     if not np:
         skip("Numpy not installed")

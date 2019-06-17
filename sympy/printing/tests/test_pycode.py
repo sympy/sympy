@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+from sympy.assumptions import assuming, Q
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
@@ -50,6 +51,15 @@ def test_NumPyPrinter():
     assert p.doprint(A**(-1)) == "numpy.linalg.inv(A)"
     assert p.doprint(A**5) == "numpy.linalg.matrix_power(A, 5)"
 
+def test_NumPyPrinter_optimization():
+    p = NumPyPrinter(settings={'optimize': True})
+    A = MatrixSymbol('A', 2, 2)
+    x = MatrixSymbol('x', 2, 1)
+    y = MatrixSymbol('y', 2, 1)
+
+    with assuming(Q.fullrank(A)):
+        assert p.doprint(A**(-1) * x) == 'numpy.linalg.solve(A, x)'
+        assert p.doprint(A**(-1) * x + y) == 'numpy.linalg.solve(A, x) + y'
 
 def test_SciPyPrinter():
     p = SciPyPrinter()

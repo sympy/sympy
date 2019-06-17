@@ -10,6 +10,8 @@ from itertools import chain
 from sympy.core import S
 from .precedence import precedence
 from .codeprinter import CodePrinter
+from sympy.codegen.ast import FunctionCall
+from sympy.assumptions import Q, ask
 
 _kw_py2and3 = {
     'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
@@ -488,6 +490,16 @@ class NumPyPrinter(PythonCodePrinter):
     ))
     _kc = {k: 'numpy.'+v for k, v in _known_constants_math.items()}
 
+    def __init__(self, settings=None):
+        # XXX: Needed to avoid circular import
+        from sympy.codegen.rewriting import ReplaceOptim
+
+        self.optimizations = [
+            ReplaceOptim(self._matinv_predicate,
+                         self._matinv_transform)
+        ]
+
+        super(NumPyPrinter, self).__init__(settings)
 
     def _print_seq(self, seq):
         "General sequence printer: converts to tuple"
@@ -669,6 +681,26 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_CodegenArrayElementwiseAdd(self, expr):
         return self._expand_fold_binary_op('numpy.add', expr.args)
+
+    def _matinv_predicate(self, expr):
+        # XXX: Needed to avoid circular import
+        from sympy.matrices.expressions.matexpr import MatrixSymbol
+        # TODO: We should be able to support more than 2 elements
+        if expr.is_MatMul and len(expr.args) == 2:
+            left, right = expr.args
+            if left.is_Inverse and right.shape[1] == 1:
+                inv_arg = left.arg
+                if isinstance(inv_arg, MatrixSymbol):
+                    return bool(ask(Q.fullrank(left.arg)))
+
+        return False
+
+    def _matinv_transform(self, expr):
+        left, right = expr.args
+        inv_arg = left.arg
+        return FunctionCall(self._module_format('numpy.linalg.solve'),
+                            [inv_arg, right])
+
 
 
 for k in NumPyPrinter._kf:
