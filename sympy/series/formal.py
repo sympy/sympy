@@ -1221,7 +1221,7 @@ class FormalPowerSeries(SeriesBase):
 
         k = self.xk.variables[0]
         xk_seq = sequence(self.xk.formula, (k, 0, n-1))
-        terms = SeqMul(xk_seq * conv_seq, evaluate=False)[:]
+        terms = xk_seq * conv_seq
 
         return Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
