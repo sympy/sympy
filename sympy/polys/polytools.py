@@ -1818,6 +1818,25 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
 
+    def power_list(f):
+        """
+        Returns a list of powers of variables in ``f``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> Poly(x**2 + y*x + 1, x, y).power_list()
+        (2, 1, 0)
+
+        """
+        if hasattr(f.rep, 'power_list'):
+            return f.rep.power_list()
+        else:  # pragma: no cover
+            raise OperationNotSupported(f, 'power_list')
+
     def homogenize(f, s):
         """
         Returns the homogeneous polynomial of ``f``.
@@ -4550,6 +4569,32 @@ def degree_list(f, *gens, **args):
     degrees = F.degree_list()
 
     return tuple(map(Integer, degrees))
+
+@public
+def power_list(f, *gens, **args):
+    """
+    Return a list of powers of ``f`` in all variables.
+
+    Examples
+    ========
+
+    >>> from sympy import power_list
+    >>> from sympy.abc import x, y
+
+    >>> power_list(x**2 + y*x + 1)
+    (2, 1, 0)
+
+    """
+    options.allowed_flags(args, ['polys'])
+
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed as exc:
+        raise ComputationFailed('power_list', 1, exc)
+
+    powers = F.power_list()
+
+    return tuple(map(Integer, powers))
 
 
 @public
