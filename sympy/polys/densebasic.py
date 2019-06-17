@@ -182,6 +182,36 @@ def dmp_degree(f, u):
     else:
         return len(f) - 1
 
+def dmp_power(f, u):
+    """
+    Return the powers of variable in ``f`` in ``x_0`` in ``K[X]``.
+
+    Note that the power of 0 is zero (the SymPy object S.Zero).
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densebasic import dmp_power
+
+    >>> dmp_power([[[]]], 2)
+    0
+
+    >>> f = ZZ.map([[2], [1, 2, 3]])
+
+    >>> dmp_power(f, 1)
+    [1, 0]
+
+    """
+    pow = []
+    if dmp_zero_p(f, u):
+        return [0]
+    else:
+        for i in range(len(f)):
+            if f[i] != 0:
+                pow.append(len(f) - i - 1)
+        return pow
+
 
 def _rec_degree_in(g, v, i, j):
     """Recursive helper function for :func:`dmp_degree_in`."""
@@ -230,6 +260,17 @@ def _rec_degree_list(g, v, i, degs):
             _rec_degree_list(c, v, i, degs)
 
 
+def _rec_power_list(g, v, i, pows):
+    """Recursive helper for :func:`dmp_power_list`."""
+    pows.extend(dmp_power(g, v))
+
+    if v > 0:
+        v, i = v - 1, i + 1
+
+        for c in g:
+            _rec_power_list(c, v, i, pows)
+
+
 def dmp_degree_list(f, u):
     """
     Return a list of degrees of ``f`` in ``K[X]``.
@@ -249,6 +290,27 @@ def dmp_degree_list(f, u):
     degs = [-oo]*(u + 1)
     _rec_degree_list(f, u, 0, degs)
     return tuple(degs)
+
+
+def dmp_power_list(f, u):
+    """
+    Return a list of powers of variables in ``f`` in ``K[X]``.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densebasic import dmp_power_list
+
+    >>> f = ZZ.map([[1], [1, 2, 3]])
+
+    >>> dmp_power_list(f, 1)
+    (2, 1, 0)
+
+    """
+    pows = []
+    _rec_power_list(f, u, 0, pows)
+    return tuple(sorted(set(pows), reverse=True))
 
 
 def dup_strip(f):
