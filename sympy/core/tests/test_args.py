@@ -1359,7 +1359,7 @@ def test_sympy__stats__crv_types__GammaDistribution():
 
 def test_sympy__stats__crv_types__GumbelDistribution():
     from sympy.stats.crv_types import GumbelDistribution
-    assert _test_args(GumbelDistribution(1, 1))
+    assert _test_args(GumbelDistribution(1, 1, False))
 
 def test_sympy__stats__crv_types__GompertzDistribution():
     from sympy.stats.crv_types import GompertzDistribution
@@ -1551,7 +1551,8 @@ def test_sympy__stats__rv__RandomIndexedSymbol():
 def test_sympy__stats__stochastic_process__StochasticPSpace():
     from sympy.stats.stochastic_process import StochasticPSpace
     from sympy.stats.stochastic_process_types import StochasticProcess
-    assert _test_args(StochasticPSpace("Y", StochasticProcess("Y", [1, 2, 3])))
+    from sympy.stats.frv_types import BernoulliDistribution
+    assert _test_args(StochasticPSpace("Y", StochasticProcess("Y", [1, 2, 3]), BernoulliDistribution(S(1)/2, 1, 0)))
 
 def test_sympy__stats__stochastic_process_types__StochasticProcess():
     from sympy.stats.stochastic_process_types import StochasticProcess
