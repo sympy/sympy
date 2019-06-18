@@ -35,7 +35,7 @@ from itertools import chain
 from sympy import log, exp, Max, Min, Wild, expand_log, Dummy
 from sympy.assumptions import Q, ask
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
-from sympy.codegen.ast import MatrixSolve
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow

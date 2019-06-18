@@ -2,7 +2,8 @@
 from __future__ import absolute_import
 
 from sympy.codegen import Assignment
-from sympy.codegen.ast import none, MatrixSolve
+from sympy.codegen.ast import none
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
 from sympy.core.numbers import pi
 from sympy.functions import acos, Piecewise, sign

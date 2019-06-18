@@ -4,7 +4,7 @@ from sympy import (
 )
 from sympy import eye
 from sympy.abc import x, i, j, a, b, c, d
-from sympy.codegen.ast import MatrixSolve
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Cbrt, Sqrt
 from sympy.codegen.array_utils import (CodegenArrayContraction,
         CodegenArrayTensorProduct, CodegenArrayDiagonal,
@@ -236,7 +236,7 @@ def test_matsolve():
     x = MatrixSymbol("x", 3, 1)
 
     expr = M**(-1) * x + x
-    matsolve_expr = MatrixSolve(M, x)
+    matsolve_expr = MatrixSolve(M, x) + x
 
     f = lambdify((M, x), expr)
     f_matsolve = lambdify((M, x), matsolve_expr)

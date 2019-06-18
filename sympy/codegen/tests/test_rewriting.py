@@ -3,7 +3,7 @@ from __future__ import (absolute_import, print_function)
 from sympy import log, exp, Symbol, Pow, sin, MatrixSymbol
 from sympy.assumptions import assuming, Q
 from sympy.printing.ccode import ccode
-from sympy.codegen.ast import MatrixSolve
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
 from sympy.codegen.rewriting import (
     optimize, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
