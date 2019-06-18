@@ -133,6 +133,7 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Lt, Le, Ge, Gt
 from sympy.core.sympify import _sympify, sympify, SympifyError
+from sympy.matrices import MatrixExpr
 from sympy.utilities.iterables import iterable
 
 
@@ -1810,3 +1811,10 @@ class FunctionCall(Token, Expr):
 
     _construct_name = String
     _construct_function_args = staticmethod(lambda args: Tuple(*args))
+
+
+class MatrixSolve(Token, MatrixExpr):
+    __slots__ = ['matrix', 'vector']
+
+    _construct_matrix = staticmethod(sympify)
+    _construct_vector = staticmethod(sympify)

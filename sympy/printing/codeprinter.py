@@ -54,7 +54,6 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
-        'optimize': False
     }
 
     def __init__(self, settings=None):
@@ -77,12 +76,6 @@ class CodePrinter(StrPrinter):
             variable with name ``assign_to``.
         """
         from sympy.matrices.expressions.matexpr import MatrixSymbol
-
-        if self._settings.get('optimize'):
-            # XXX: To avoid circular import
-            from sympy.codegen.rewriting import optimize
-            if hasattr(self, 'optimizations'):
-                expr = optimize(expr, self.optimizations)
 
         if isinstance(assign_to, string_types):
             if expr.is_Matrix:
