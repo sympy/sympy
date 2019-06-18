@@ -1222,9 +1222,9 @@ def test_Poly_total_degree():
     assert total_degree(Poly(x**9 + x*z*y + x**3*z**2 + z**7,x), z) == 7
 
 def test_Poly_power_list():
-    assert Poly(0, x).power_list() == (0,)
-    assert Poly(0, x, y).power_list() == (0,)
-    assert Poly(0, x, y, z).power_list() == (0,)
+    assert Poly(0, x).power_list() == ()
+    assert Poly(0, x, y).power_list() == ()
+    assert Poly(0, x, y, z).power_list() == ()
 
     assert Poly(1, x).power_list() == (0,)
     assert Poly(1, x, y).power_list() == (0,)
@@ -1236,6 +1236,13 @@ def test_Poly_power_list():
     assert power_list(x, x) == (1,)
 
     assert power_list(x*y**2 + x + 1) == (2, 1, 0)
+    assert power_list(x*y**2 + x) == (2, 1, 0) # power of y is zero with x
+    assert power_list(x*y**2) == (2, 1)
+
+    assert power_list(x**8*(1 - x)**9) == (17, 16, 15, 14, 13, 12, 11, 10, 9, 8)
+    # >>>expand(x**8*(1 - x)**9)
+    # -x**17 + 9*x**16 - 36*x**15 + 84*x**14 - 126*x**13 + 126*x**12 - 84*x**11
+    # + 36*x**10 - 9*x**9 + x**8
 
     raises(ComputationFailed, lambda: power_list(1))
 
