@@ -1503,12 +1503,28 @@ def test_issue_15509():
         (-sin(a*x_1 + b)/a + sin(a*x_2 + b)/a, (a > -oo) & (a < oo) & Ne(a, 0)), \
             (-x_1*cos(b) + x_2*cos(b), True))
 
-@slow
-def test_issue_4311():
-    x = symbols('x')
-    assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)
+
+def test_issue_4311_fast():
     x = symbols('x', real=True)
     assert integrate(x*abs(9-x**2), x) == Piecewise(
         (x**4/4 - 9*x**2/2, x <= -3),
         (-x**4/4 + 9*x**2/2 - S(81)/2, x <= 3),
         (x**4/4 - 9*x**2/2, True))
+
+
+@slow
+def test_issue_4311_slow():
+    x = symbols('x')
+    assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)
+
+
+def test_integrate_with_complex_constants():
+    K = Symbol('K', real=True, positive=True)
+    x = Symbol('x', real=True)
+    assert integrate(exp(-I*K*x**2), x) == sqrt(pi)*erf(sqrt(I)*sqrt(K)*x)/(2*
+                    sqrt(I)*sqrt(K))
+    m = Symbol('m', real=True)
+    assert integrate(exp(-I*K*x**2+m*x), x) == sqrt(I)*sqrt(pi)*exp(-I*m**2
+                    /(4*K))*erfi((-2*I*K*x + m)/(2*sqrt(K)*sqrt(-I)))/(2*sqrt(K))
+    assert integrate(1/(m + I*b*x**2), x) == -sqrt(I/(b*m))*log(-m*sqrt(I/(b*m))
+        + x)/2 + sqrt(I/(b*m))*log(m*sqrt(I/(b*m)) + x)/2
