@@ -245,7 +245,7 @@ before_install:
       coverage debug sys;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.8-dev" ]; then
-        pip uninstall Cython;
+        pip uninstall -y Cython;
     fi
   - |
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
