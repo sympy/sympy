@@ -22,14 +22,13 @@ def test_density():
 
 def test_MarginalDistribution():
     a1, p1, p2, p3 = symbols('a1 p1 p2 p3', positive=True)
-    c = IndexedBase('c')
     C = Multinomial('C', 3, p1, p2, p3)
     B = MultivariateBeta('B', a1, C[0])
     MGR = MarginalDistribution(B, C[0])
-    MGR.pdf(c.args[0]) == \
-    Piecewise((6*p1**c[0]*p2**c[1]*p3**c[2]/(factorial(c[0])*factorial(c[1])*
-    factorial(c[2])), Eq(c[0] + c[1] + c[2], 3)), (0, True))*gamma(a1 +
-    c[0])*B[0]**(a1 - 1)*B[1]**(c[0] - 1)*B/(gamma(a1)*gamma(c[0]))
+    str(MGR.pdf(C)) == \
+    str(Piecewise((6*p1**C[0]*p2**C[1]*p3**C[2]/(factorial(C[0])*factorial(C[1])*
+    factorial(C[2])), Eq(C[0] + C[1] + C[2], 3)), (0, True))*gamma(a1 + C[0])*
+    B[0]**(a1 - 1)*B[1]**(C[0] - 1)*B/(gamma(a1)*gamma(C[0])))
 
 def test_compound_distribution():
     Y = Poisson('Y', 1)

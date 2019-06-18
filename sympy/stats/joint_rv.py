@@ -163,7 +163,8 @@ class JointDistribution(Basic, NamedArgsMixin):
         return self.density.args[1]
 
     def cdf(self, other):
-        assert isinstance(other, dict)
+        if not isinstance(other, dict):
+            raise ValueError("%s should be of type dict, got %s"%(other, type(other)))
         rvs = other.keys()
         _set = self.domain.set.sets
         expr = self.pdf(tuple(i.args[0] for i in self.symbols))
@@ -286,7 +287,6 @@ class MarginalDistribution(Basic):
     """
 
     def __new__(cls, dist, *rvs):
-        rvs = list(rvs)
         if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
             raise ValueError(filldedent('''Marginal distribution can be
              intitialised only in terms of random variables or indexed random
@@ -302,7 +302,7 @@ class MarginalDistribution(Basic):
     @property
     def set(self):
         rvs = set([i for i in random_symbols(self.args[1])])
-        marginalise_out = set([i for i in random_symbols(self.args[1]) \
+        marginalise_out = set([i for i in random_symbols(self.args[1])
          if i not in self.args[1]])
         rvs = rvs - marginalise_out
         return ProductSet(*[rv.pspace.set for rv in rvs])
@@ -315,9 +315,9 @@ class MarginalDistribution(Basic):
     def pdf(self, *x):
         expr, rvs = self.args[0], self.args[1]
         marginalise_out = [i for i in random_symbols(expr) if i not in self.args[1]]
-        parse_args = [rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] \
+        parse_args = [rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0]
                         for rv in self.args[1]]
-        syms = [i.pspace.symbol for i in parse_args]
+        syms = [i for i in parse_args]
         for i in expr.atoms(Indexed):
             if isinstance(i, Indexed) and isinstance(i.base, RandomSymbol)\
              and i not in rvs:
