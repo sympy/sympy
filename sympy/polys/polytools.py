@@ -1830,12 +1830,16 @@ class Poly(Expr):
 
         >>> Poly(x**2 + y*x + 1, x, y).power_list()
         (2, 1, 0)
+        >>> Poly(0, x).power_list()
+        ()
+        >>> Poly(1, x).power_list()
+        (0,)
 
         """
         if hasattr(f.rep, 'power_list'):
             return f.rep.power_list()
-        else:  # pragma: no cover
-            raise OperationNotSupported(f, 'power_list')
+        # pragma: no cover
+        raise OperationNotSupported(f, 'power_list')
 
     def homogenize(f, s):
         """
