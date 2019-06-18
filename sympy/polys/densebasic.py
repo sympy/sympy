@@ -186,7 +186,8 @@ def dmp_power(f, u):
     """
     Return the powers of variable in ``f`` in ``x_0`` in ``K[X]``.
 
-    Note that the power of 0 is zero (the SymPy object S.Zero).
+    Note that the power present of variable present
+    in 0 is nothing i.e empty list [].
 
     Examples
     ========
@@ -195,7 +196,7 @@ def dmp_power(f, u):
     >>> from sympy.polys.densebasic import dmp_power
 
     >>> dmp_power([[[]]], 2)
-    0
+    []
 
     >>> f = ZZ.map([[2], [1, 2, 3]])
 
@@ -205,12 +206,13 @@ def dmp_power(f, u):
     """
     pow = []
     if dmp_zero_p(f, u):
-        return [0]
-    else:
-        for i in range(len(f)):
-            if f[i] != 0:
-                pow.append(len(f) - i - 1)
-        return pow
+        return []
+    for i, fi in enumerate(f):
+        if not isinstance(fi, list) and fi != 0:
+            pow.append(len(f) - i - 1)
+        if isinstance(fi, list) and len(fi) != 0:
+            pow.append(len(f) - i - 1)
+    return pow
 
 
 def _rec_degree_in(g, v, i, j):
