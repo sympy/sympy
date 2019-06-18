@@ -13,7 +13,7 @@ def render_as_module(content, standard='python3'):
         See the parameter ``standard`` in
         :meth:`sympy.printing.pycode.pycode`
     """
-    printer = PythonCodePrinter(standard=standard)
+    printer = PythonCodePrinter({'standard':standard})
     pystr = printer.doprint(content)
     if printer._settings['fully_qualified_modules']:
         module_imports_str = '\n'.join('import %s' % k for k in printer.module_imports)

@@ -50,7 +50,7 @@ def test_PythonCodePrinter():
 
 def test_PythonCodePrinter_standard():
     import sys
-    prntr = PythonCodePrinter()
+    prntr = PythonCodePrinter({'standard':None})
 
     python_version = sys.version_info.major
     if python_version == 2:
@@ -113,15 +113,15 @@ def test_sqrt():
     assert prntr._print_Pow(sqrt(x), rational=True) == \
         "x**(mpmath.mpf(1)/mpmath.mpf(2))"
 
-    prntr = NumPyPrinter({'standard' : 'python3'})
+    prntr = NumPyPrinter()
     assert prntr._print_Pow(sqrt(x), rational=False) == 'numpy.sqrt(x)'
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
 
-    prntr = SciPyPrinter({'standard' : 'python3'})
+    prntr = SciPyPrinter()
     assert prntr._print_Pow(sqrt(x), rational=False) == 'numpy.sqrt(x)'
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
 
-    prntr = SymPyPrinter({'standard' : 'python3'})
+    prntr = SymPyPrinter()
     assert prntr._print_Pow(sqrt(x), rational=False) == 'sympy.sqrt(x)'
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
 
