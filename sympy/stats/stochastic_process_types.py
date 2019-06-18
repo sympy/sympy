@@ -1,6 +1,7 @@
 from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
                     Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
-                    nsimplify, Lambda, Mul, Sum, Dummy, Lt)
+                    nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
+                    linsolve, Piecewise, zeros)
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -231,9 +232,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
     >>> P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2)
     0.36
     """
-
-    is_markov = True
-
     index_set = S.Naturals0
 
     def __new__(cls, sym, state_space=S.Reals, trans_probs=None):
@@ -325,6 +323,34 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             state_space = self._work_out_state_space(state_space, given_condition, trans_probs)
 
         return is_insufficient, trans_probs, state_space, given_condition
+
+    def is_absorbing_state(self, state):
+        trans_probs = self.transition_probabilities
+        if isinstance(trans_probs, ImmutableMatrix) and \
+            state < trans_probs.shape[0]:
+            return S(trans_probs[state, state]) == S.One
+
+    @property
+    def is_absorbing_chain(self):
+        trans_probs = self.transition_probabilities
+        return any(self.is_absorbing_state(state) == True
+                    for state in range(trans_probs.shape[0]))
+
+    @property
+    def fixed_row_vector(self):
+        trans_probs = self.transition_probabilities
+        if trans_probs == None:
+            return None
+        if isinstance(trans_probs, MatrixSymbol):
+            wm = MatrixSymbol('wm', 1, trans_probs.shape[0])
+            return Lambda((wm, trans_probs), Eq(wm*trans_probs, wm))
+        w = IndexedBase('w')
+        wi = [w[i] for i in range(trans_probs.shape[0])]
+        wm = Matrix([wi])
+        eqs = (wm*trans_probs - wm).tolist()[0]
+        eqs.append(sum(wi) - 1)
+        soln = linsolve(eqs, wi)
+        return ImmutableMatrix([*soln])
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
