@@ -44,7 +44,22 @@ matrix:
         - SPLIT="2/2" TEST_SYMPY="true"
 
     - stage: test
-      python: 2.7
+      python: 3.8-dev
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+    - python: 3.8-dev
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="1/2" TEST_SYMPY="true"
+    - python: 3.8-dev
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="2/2" TEST_SYMPY="true"
+    - python: 2.7
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
@@ -228,6 +243,9 @@ before_install:
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
       pip install coverage;
       coverage debug sys;
+    fi
+  - if [ "$TRAVIS_PYTHON_VERSION" == "3.8-dev" ]; then
+        pip uninstall -y Cython;
     fi
   - |
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
