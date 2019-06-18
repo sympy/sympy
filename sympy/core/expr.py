@@ -300,8 +300,8 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 >= 0)
         if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_nonnegative) \
-                    or (other.is_infinite and other.is_extended_nonpositive):
+            if (self.is_infinite and self.is_extended_positive) \
+                    or (other.is_infinite and other.is_extended_negative):
                 return S.true
             nneg = (self - other).is_extended_nonnegative
             if nneg is not None:
@@ -323,8 +323,8 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 <= 0)
         if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_nonpositive) \
-                    or (other.is_infinite and other.is_extended_nonnegative):
+            if (self.is_infinite and self.is_extended_negative) \
+                    or (other.is_infinite and other.is_extended_positive):
                 return S.true
             npos = (self - other).is_extended_nonpositive
             if npos is not None:
@@ -347,8 +347,8 @@ class Expr(Basic, EvalfMixin):
             return _sympify(n2 > 0)
 
         if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_nonpositive) \
-                    or (other.is_infinite and other.is_extended_nonnegative):
+            if (self.is_infinite and self.is_extended_negative) \
+                    or (other.is_infinite and other.is_extended_positive):
                 return S.false
             pos = (self - other).is_extended_positive
             if pos is not None:
@@ -370,8 +370,8 @@ class Expr(Basic, EvalfMixin):
         if n2 is not None:
             return _sympify(n2 < 0)
         if self.is_extended_real and other.is_extended_real:
-            if (self.is_infinite and self.is_extended_nonnegative) \
-                    or (other.is_infinite and other.is_extended_nonpositive):
+            if (self.is_infinite and self.is_extended_positive) \
+                    or (other.is_infinite and other.is_extended_negative):
                 return S.false
             neg = (self - other).is_extended_negative
             if neg is not None:

@@ -33,15 +33,15 @@ x, y, z = map(Symbol, 'xyz')
 
 
 def test_single_normal():
-    mu = Symbol('mu', extended_real=True)
-    sigma = Symbol('sigma', extended_positive=True)
+    mu = Symbol('mu', real=True)
+    sigma = Symbol('sigma', positive=True)
     X = Normal('x', 0, 1)
     Y = X*sigma + mu
 
     assert E(Y) == mu
     assert variance(Y) == sigma**2
     pdf = density(Y)
-    x = Symbol('x')
+    x = Symbol('x', real=True)
     assert (pdf(x) ==
             2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
