@@ -94,7 +94,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         inline=True,
         fully_qualified_modules=True,
         contract=False,
-        standard=None
+        standard='python3'
     )
 
     def __init__(self, settings=None):
@@ -346,8 +346,8 @@ class AbstractPythonCodePrinter(CodePrinter):
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
 
-        # if self.standard == 'python2':
-        #     return 'print %s' % print_args
+        if self.standard == 'python2':
+            return 'print %s' % print_args
         return 'print(%s)' % print_args
 
     def _print_Stream(self, strm):
@@ -465,9 +465,10 @@ def pycode(expr, **settings):
     fully_qualified_modules : bool
         Whether or not to write out full module names of functions
         (``math.sin`` vs. ``sin``). default: ``True``.
-    standard : str, optional
+    standard : str or None, optional
         If 'python2', Python 2 sematics will be used.
         If 'python3', Python 3 sematics will be used.
+        If None, the standard will be automatically detected.
 
     Examples
     ========
