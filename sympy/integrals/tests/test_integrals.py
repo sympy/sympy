@@ -1528,3 +1528,5 @@ def test_integrate_with_complex_constants():
                     /(4*K))*erfi((-2*I*K*x + m)/(2*sqrt(K)*sqrt(-I)))/(2*sqrt(K))
     assert integrate(1/(m + I*b*x**2), x) == -sqrt(I/(b*m))*log(-m*sqrt(I/(b*m))
         + x)/2 + sqrt(I/(b*m))*log(m*sqrt(I/(b*m)) + x)/2
+    assert integrate(1/(1 + I*x**2), x) == -sqrt(I)*log(x - sqrt(I))/2 +\
+        sqrt(I)*log(x + sqrt(I))/2
