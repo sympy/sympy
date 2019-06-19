@@ -1222,9 +1222,9 @@ def test_Poly_total_degree():
     assert total_degree(Poly(x**9 + x*z*y + x**3*z**2 + z**7,x), z) == 7
 
 def test_Poly_power_list():
-    assert Poly(0, x).power_list() == ()
-    assert Poly(0, x, y).power_list() == ()
-    assert Poly(0, x, y, z).power_list() == ()
+    assert Poly(0, x).power_list() == (0,)
+    assert Poly(0, x, y).power_list() == (0,)
+    assert Poly(0, x, y, z).power_list() == (0,)
 
     assert Poly(1, x).power_list() == (0,)
     assert Poly(1, x, y).power_list() == (0,)
