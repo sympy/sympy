@@ -41,7 +41,7 @@ def test_single_normal():
     assert E(Y) == mu
     assert variance(Y) == sigma**2
     pdf = density(Y)
-    x = Symbol('x')
+    x = Symbol('x', real=True)
     assert (pdf(x) ==
             2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
