@@ -248,15 +248,6 @@ class FinitePSpace(PSpace):
         return ConditionalFiniteDomain(self.domain, condition)
 
     def compute_density(self, expr):
-        if hasattr(self.args[1],'is_symbolic') and \
-           self.args[1].is_symbolic:
-            cond = expr
-            if not isinstance(expr, (Relational, Logic)):
-                cond = True
-            k = Dummy('k', integer=True)
-            return Lambda(k,
-            Piecewise((self.pdf(k), And(k >= self.args[1].low,
-            k <= self.args[1].high, cond)), (0, True)))
         expr = expr.xreplace(dict(((rs, rs.symbol) for rs in self.values)))
         d = FiniteDensity()
         for elem in self.domain:
@@ -268,11 +259,6 @@ class FinitePSpace(PSpace):
     @cacheit
     def compute_cdf(self, expr):
         d = self.compute_density(expr)
-        if hasattr(self.args[1], 'is_symbolic') and \
-           self.args[1].is_symbolic:
-            k = Dummy('k')
-            ki = Dummy('ki')
-            return Lambda(k, Sum(d(ki), (ki, self.args[1].low, k)))
         cum_prob = 0
         cdf = []
         for key in sorted(d):
@@ -296,29 +282,15 @@ class FinitePSpace(PSpace):
     def compute_characteristic_function(self, expr):
         d = self.compute_density(expr)
         t = Dummy('t', real=True)
-        if hasattr(self.args[1], 'is_symbolic') and \
-            self.args[1].is_symbolic:
-            ki = Dummy('ki')
-            return Lambda(t, Sum(d(ki)*exp(I*ki*t), (ki, self.args[1].low, self.args[1].high)))
         return Lambda(t, sum(exp(I*k*t)*v for k,v in d.items()))
 
     @cacheit
     def compute_moment_generating_function(self, expr):
         d = self.compute_density(expr)
         t = Dummy('t', real=True)
-        if hasattr(self.args[1], 'is_symbolic') and \
-            self.args[1].is_symbolic:
-            ki = Dummy('ki')
-            return Lambda(t, Sum(d(ki)*exp(ki*t), (ki, self.args[1].low, self.args[1].high)))
         return Lambda(t, sum(exp(k*t)*v for k,v in d.items()))
 
     def compute_expectation(self, expr, rvs=None, **kwargs):
-        rands = random_symbols(expr)
-        for rv in rands:
-            if hasattr(rv.pspace.args[1], 'is_symbolic') and \
-                rv.pspace.args[1].is_symbolic:
-                return Expectation(expr, **kwargs)
-
         rvs = rvs or self.values
         expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
         probs = [self.prob_of(elem) for elem in self.domain]
@@ -340,13 +312,6 @@ class FinitePSpace(PSpace):
         return Lambda(p, Piecewise(*set))
 
     def probability(self, condition):
-        rvs = random_symbols(condition)
-        for rv in rvs:
-            if hasattr(rv.pspace.args[1], 'is_symbolic') and \
-                rv.pspace.args[1].is_symbolic:
-                return Probability(condition)
-        cond_symbols = frozenset(rs.symbol for rs in rvs)
-        assert cond_symbols.issubset(self.symbols)
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
         cond = rv_subs(condition)
         if not cond_symbols.issubset(self.symbols):
@@ -385,6 +350,50 @@ class FinitePSpace(PSpace):
                 return dict(list(zip(expr, value)))
 
         assert False, "We should never have gotten to this point"
+
+class SymbolicSingleFinitePSpace(SinglePSpace):
+    """
+    Represents probability space of finite
+    random variables with symbolic dimensions.
+    """
+    @property
+    def distribution(self):
+        return self.args[1]
+
+    @cacheit
+    def compute_characteristic_function(self, expr):
+        d = self.compute_density(expr)
+        t = Dummy('t', real=True)
+        ki = Dummy('ki')
+        return Lambda(t, Sum(d(ki)*exp(I*ki*t), (ki, self.args[1].low, self.args[1].high)))
+
+    @cacheit
+    def compute_moment_generating_function(self, expr):
+        d = self.compute_density(expr)
+        t = Dummy('t', real=True)
+        ki = Dummy('ki')
+        return Lambda(t, Sum(d(ki)*exp(ki*t), (ki, self.args[1].low, self.args[1].high)))
+
+    def compute_density(self, expr):
+        cond = expr
+        if not isinstance(expr, (Relational, Logic)):
+            cond = True
+        k = Dummy('k', integer=True)
+        return Lambda(k,
+        Piecewise((self.pdf(k), And(k >= self.args[1].low,
+        k <= self.args[1].high, cond)), (0, True)))
+
+    def compute_cdf(self, expr):
+        d = self.compute_density(expr)
+        k = Dummy('k')
+        ki = Dummy('ki')
+        return Lambda(k, Sum(d(ki), (ki, self.args[1].low, k)))
+
+    def compute_expectation(self, expr, rvs=None, **kwargs):
+        return Expectation(expr, **kwargs)
+
+    def probability(self, condition):
+        return Probability(condition)
 
 
 class SingleFinitePSpace(SinglePSpace, FinitePSpace):

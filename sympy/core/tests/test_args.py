@@ -1238,6 +1238,12 @@ def test_sympy__stats__frv__SingleFinitePSpace():
 
     assert _test_args(SingleFinitePSpace(Symbol('x'), die))
 
+def test_sympy__stats__frv__SymbolicSingleFinitePSpace():
+    from sympy.stats.frv import SingleFinitePSpace
+    from sympy import Symbol
+
+    assert _test_args(SingleFinitePSpace(Symbol('x'), die))
+
 
 def test_sympy__stats__frv__ProductFinitePSpace():
     from sympy.stats.frv import SingleFinitePSpace, ProductFinitePSpace

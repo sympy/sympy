@@ -144,6 +144,7 @@ def test_given():
     assert where(X > 2, X > 5).as_boolean() == Eq(X.symbol, 6)
     assert sample(X, X > 5) == 6
 
+
 def test_domains():
     X, Y = Die('x', 6), Die('y', 6)
     x, y = X.symbol, Y.symbol

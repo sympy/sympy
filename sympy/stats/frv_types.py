@@ -23,7 +23,8 @@ from sympy import beta as beta_fn
 from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
 from sympy.stats.rv import _value_check, Density, RandomSymbol
-from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
+from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution,
+                            SymbolicSingleFinitePSpace)
 
 __all__ = ['FiniteRV',
 'DiscreteUniform',
@@ -52,6 +53,8 @@ def rv(name, cls, *args):
         i += 1
     dist = cls(*args)
     dist.check(*args)
+    if dist.is_symbolic:
+        return SymbolicSingleFinitePSpace(name, dist).value
     return SingleFinitePSpace(name, dist).value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
