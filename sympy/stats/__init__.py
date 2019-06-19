@@ -80,6 +80,16 @@ from .joint_rv_types import (
 )
 __all__.extend(joint_rv_types.__all__)
 
+from . import stochastic_process_types
+from .stochastic_process_types import (
+    StochasticProcess,
+    DiscreteTimeStochasticProcess,
+    DiscreteMarkovChain,
+    TransitionMatrixOf,
+    StochasticStateSpaceOf
+)
+__all__.extend(stochastic_process_types.__all__)
+
 from . import symbolic_probability
 from .symbolic_probability import Probability, Expectation, Variance, Covariance
 __all__.extend(symbolic_probability.__all__)
