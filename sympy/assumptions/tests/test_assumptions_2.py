@@ -2,7 +2,7 @@
 rename this to test_assumptions.py when the old assumptions system is deleted
 """
 from sympy.abc import x, y
-from sympy.assumptions.assume import global_assumptions, Predicate
+from sympy.assumptions.assume import global_assumptions, AssumptionsPredicate
 from sympy.assumptions.ask import _extract_facts, Q
 from sympy.core import symbols
 from sympy.logic.boolalg import Or
@@ -24,7 +24,7 @@ def test_pretty():
 
 
 def test_extract_facts():
-    a, b = symbols('a b', cls=Predicate)
+    a, b = symbols('a b', cls=AssumptionsPredicate)
     assert _extract_facts(a(x), x) == a
     assert _extract_facts(a(x), y) is None
     assert _extract_facts(~a(x), x) == ~a

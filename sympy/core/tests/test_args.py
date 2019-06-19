@@ -80,15 +80,15 @@ def _test_args(obj):
     return all(isinstance(arg, Basic) for arg in obj.args)
 
 
-def test_sympy__assumptions__assume__AppliedPredicate():
-    from sympy.assumptions.assume import AppliedPredicate, Predicate
+def test_sympy__assumptions__assume__AppliedAssumptionsPredicate():
+    from sympy.assumptions.assume import AppliedAssumptionsPredicate, AssumptionsPredicate
     from sympy import Q
-    assert _test_args(AppliedPredicate(Predicate("test"), 2))
+    assert _test_args(AppliedAssumptionsPredicate(AssumptionsPredicate("test"), 2))
     assert _test_args(Q.is_true(True))
 
-def test_sympy__assumptions__assume__Predicate():
-    from sympy.assumptions.assume import Predicate
-    assert _test_args(Predicate("test"))
+def test_sympy__assumptions__assume__AssumptionsPredicate():
+    from sympy.assumptions.assume import AssumptionsPredicate
+    assert _test_args(AssumptionsPredicate("test"))
 
 def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
     from sympy.assumptions.sathandlers import UnevaluatedOnFree
@@ -2619,16 +2619,6 @@ def test_sympy__logic__FOL__FOL():
     pass
 
 
-@SKIP("abstract class")
-def test_sympy__logic__FOL__Callable():
-    pass
-
-
-@SKIP("abstract class")
-def test_sympy__logic__FOL__Applied():
-    pass
-
-
 def test_sympy__logic__FOL__Predicate():
     from sympy.logic.FOL import Predicate
     assert _test_args(Predicate('P'))
@@ -2640,14 +2630,13 @@ def test_sympy__logic__FOL__AppliedPredicate():
     assert _test_args(P(x, y))
 
 
-def test_sympy__logic__FOL__Function():
-    from sympy.logic.FOL import Function
-    assert _test_args(Function('f'))
+def test_sympy__logic__FOL__FOLFunction():
+    pass
 
 
-def test_sympy__logic__FOL__AppliedFunction():
-    from sympy.logic.FOL import Function
-    f = Function('f')
+def test_sympy__logic__FOL__AppliedFOLFunction():
+    from sympy.logic.FOL import FOLFunction
+    f = FOLFunction('f')
     assert _test_args(f(x, y))
 
 

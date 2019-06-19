@@ -64,7 +64,7 @@ class TautologicalHandler(AskHandler):
     BooleanFalse = staticmethod(CommonHandler.AlwaysFalse)
 
     @staticmethod
-    def AppliedPredicate(expr, assumptions):
+    def AppliedAssumptionsPredicate(expr, assumptions):
         return ask(expr, assumptions)
 
     @staticmethod

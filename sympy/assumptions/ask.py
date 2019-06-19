@@ -1,8 +1,8 @@
 """Module for querying SymPy objects about assumptions."""
 from __future__ import print_function, division
 
-from sympy.assumptions.assume import (global_assumptions, Predicate,
-        AppliedPredicate)
+from sympy.assumptions.assume import (global_assumptions, AssumptionsPredicate,
+        AppliedAssumptionsPredicate)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
 from sympy.core.decorators import deprecated
@@ -48,7 +48,7 @@ class AssumptionKeys(object):
 
         """
         # TODO: Add examples
-        return Predicate('hermitian')
+        return AssumptionsPredicate('hermitian')
 
     @predicate_memo
     def antihermitian(self):
@@ -66,7 +66,7 @@ class AssumptionKeys(object):
 
         """
         # TODO: Add examples
-        return Predicate('antihermitian')
+        return AssumptionsPredicate('antihermitian')
 
     @predicate_memo
     def real(self):
@@ -123,7 +123,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Real_number
 
         """
-        return Predicate('real')
+        return AssumptionsPredicate('real')
 
     @predicate_memo
     def extended_real(self):
@@ -147,7 +147,7 @@ class AssumptionKeys(object):
         True
 
         """
-        return Predicate('extended_real')
+        return AssumptionsPredicate('extended_real')
 
     @predicate_memo
     def imaginary(self):
@@ -175,7 +175,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Imaginary_number
 
         """
-        return Predicate('imaginary')
+        return AssumptionsPredicate('imaginary')
 
     @predicate_memo
     def complex(self):
@@ -203,7 +203,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Complex_number
 
         """
-        return Predicate('complex')
+        return AssumptionsPredicate('complex')
 
     @predicate_memo
     def algebraic(self):
@@ -230,7 +230,7 @@ class AssumptionKeys(object):
 
         .. [1] https://en.wikipedia.org/wiki/Algebraic_number
         """
-        return Predicate('algebraic')
+        return AssumptionsPredicate('algebraic')
 
     @predicate_memo
     def transcendental(self):
@@ -243,7 +243,7 @@ class AssumptionKeys(object):
 
         """
         # TODO: Add examples
-        return Predicate('transcendental')
+        return AssumptionsPredicate('transcendental')
 
     @predicate_memo
     def integer(self):
@@ -267,7 +267,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Integer
 
         """
-        return Predicate('integer')
+        return AssumptionsPredicate('integer')
 
     @predicate_memo
     def rational(self):
@@ -294,7 +294,7 @@ class AssumptionKeys(object):
         https://en.wikipedia.org/wiki/Rational_number
 
         """
-        return Predicate('rational')
+        return AssumptionsPredicate('rational')
 
     @predicate_memo
     def irrational(self):
@@ -323,7 +323,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Irrational_number
 
         """
-        return Predicate('irrational')
+        return AssumptionsPredicate('irrational')
 
     @predicate_memo
     def finite(self):
@@ -354,7 +354,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Finite
 
         """
-        return Predicate('finite')
+        return AssumptionsPredicate('finite')
 
     @predicate_memo
     @deprecated(useinstead="finite", issue=9425, deprecated_since_version="1.0")
@@ -362,7 +362,7 @@ class AssumptionKeys(object):
         """
         See documentation of ``Q.finite``.
         """
-        return Predicate('finite')
+        return AssumptionsPredicate('finite')
 
     @predicate_memo
     def infinite(self):
@@ -374,7 +374,7 @@ class AssumptionKeys(object):
 
         """
         # TODO: Add examples
-        return Predicate('infinite')
+        return AssumptionsPredicate('infinite')
 
     @predicate_memo
     @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="1.0")
@@ -382,7 +382,7 @@ class AssumptionKeys(object):
         """
         See documentation of ``Q.infinite``.
         """
-        return Predicate('infinite')
+        return AssumptionsPredicate('infinite')
 
     @predicate_memo
     @deprecated(useinstead="zero", issue=9675, deprecated_since_version="1.0")
@@ -390,7 +390,7 @@ class AssumptionKeys(object):
         """
         See documentation of ``Q.zero``.
         """
-        return Predicate('zero')
+        return AssumptionsPredicate('zero')
 
     @predicate_memo
     def positive(self):
@@ -428,7 +428,7 @@ class AssumptionKeys(object):
         True
 
         """
-        return Predicate('positive')
+        return AssumptionsPredicate('positive')
 
     @predicate_memo
     def negative(self):
@@ -466,7 +466,7 @@ class AssumptionKeys(object):
         True
 
         """
-        return Predicate('negative')
+        return AssumptionsPredicate('negative')
 
     @predicate_memo
     def zero(self):
@@ -492,7 +492,7 @@ class AssumptionKeys(object):
         True
 
         """
-        return Predicate('zero')
+        return AssumptionsPredicate('zero')
 
     @predicate_memo
     def nonzero(self):
@@ -532,7 +532,7 @@ class AssumptionKeys(object):
         False
 
         """
-        return Predicate('nonzero')
+        return AssumptionsPredicate('nonzero')
 
     @predicate_memo
     def nonpositive(self):
@@ -565,7 +565,7 @@ class AssumptionKeys(object):
         False
 
         """
-        return Predicate('nonpositive')
+        return AssumptionsPredicate('nonpositive')
 
     @predicate_memo
     def nonnegative(self):
@@ -598,7 +598,7 @@ class AssumptionKeys(object):
         False
 
         """
-        return Predicate('nonnegative')
+        return AssumptionsPredicate('nonnegative')
 
     @predicate_memo
     def even(self):
@@ -622,7 +622,7 @@ class AssumptionKeys(object):
         False
 
         """
-        return Predicate('even')
+        return AssumptionsPredicate('even')
 
     @predicate_memo
     def odd(self):
@@ -645,7 +645,7 @@ class AssumptionKeys(object):
         False
 
         """
-        return Predicate('odd')
+        return AssumptionsPredicate('odd')
 
     @predicate_memo
     def prime(self):
@@ -672,7 +672,7 @@ class AssumptionKeys(object):
         False
 
         """
-        return Predicate('prime')
+        return AssumptionsPredicate('prime')
 
     @predicate_memo
     def composite(self):
@@ -696,7 +696,7 @@ class AssumptionKeys(object):
         True
 
         """
-        return Predicate('composite')
+        return AssumptionsPredicate('composite')
 
     @predicate_memo
     def commutative(self):
@@ -708,7 +708,7 @@ class AssumptionKeys(object):
 
         """
         # TODO: Add examples
-        return Predicate('commutative')
+        return AssumptionsPredicate('commutative')
 
     @predicate_memo
     def is_true(self):
@@ -727,7 +727,7 @@ class AssumptionKeys(object):
         True
 
         """
-        return Predicate('is_true')
+        return AssumptionsPredicate('is_true')
 
     @predicate_memo
     def symmetric(self):
@@ -760,7 +760,7 @@ class AssumptionKeys(object):
         """
         # TODO: Add handlers to make these keys work with
         # actual matrices and add more examples in the docstring.
-        return Predicate('symmetric')
+        return AssumptionsPredicate('symmetric')
 
     @predicate_memo
     def invertible(self):
@@ -790,7 +790,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Invertible_matrix
 
         """
-        return Predicate('invertible')
+        return AssumptionsPredicate('invertible')
 
     @predicate_memo
     def orthogonal(self):
@@ -825,7 +825,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Orthogonal_matrix
 
         """
-        return Predicate('orthogonal')
+        return AssumptionsPredicate('orthogonal')
 
     @predicate_memo
     def unitary(self):
@@ -857,7 +857,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Unitary_matrix
 
         """
-        return Predicate('unitary')
+        return AssumptionsPredicate('unitary')
 
     @predicate_memo
     def positive_definite(self):
@@ -889,7 +889,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Positive-definite_matrix
 
         """
-        return Predicate('positive_definite')
+        return AssumptionsPredicate('positive_definite')
 
     @predicate_memo
     def upper_triangular(self):
@@ -914,7 +914,7 @@ class AssumptionKeys(object):
         .. [1] http://mathworld.wolfram.com/UpperTriangularMatrix.html
 
         """
-        return Predicate('upper_triangular')
+        return AssumptionsPredicate('upper_triangular')
 
     @predicate_memo
     def lower_triangular(self):
@@ -938,7 +938,7 @@ class AssumptionKeys(object):
 
         .. [1] http://mathworld.wolfram.com/LowerTriangularMatrix.html
         """
-        return Predicate('lower_triangular')
+        return AssumptionsPredicate('lower_triangular')
 
     @predicate_memo
     def diagonal(self):
@@ -966,7 +966,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Diagonal_matrix
 
         """
-        return Predicate('diagonal')
+        return AssumptionsPredicate('diagonal')
 
     @predicate_memo
     def fullrank(self):
@@ -991,7 +991,7 @@ class AssumptionKeys(object):
         True
 
         """
-        return Predicate('fullrank')
+        return AssumptionsPredicate('fullrank')
 
     @predicate_memo
     def square(self):
@@ -1022,7 +1022,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Square_matrix
 
         """
-        return Predicate('square')
+        return AssumptionsPredicate('square')
 
     @predicate_memo
     def integer_elements(self):
@@ -1041,7 +1041,7 @@ class AssumptionKeys(object):
         True
 
         """
-        return Predicate('integer_elements')
+        return AssumptionsPredicate('integer_elements')
 
     @predicate_memo
     def real_elements(self):
@@ -1060,7 +1060,7 @@ class AssumptionKeys(object):
         True
 
         """
-        return Predicate('real_elements')
+        return AssumptionsPredicate('real_elements')
 
     @predicate_memo
     def complex_elements(self):
@@ -1081,7 +1081,7 @@ class AssumptionKeys(object):
         True
 
         """
-        return Predicate('complex_elements')
+        return AssumptionsPredicate('complex_elements')
 
     @predicate_memo
     def singular(self):
@@ -1106,7 +1106,7 @@ class AssumptionKeys(object):
         .. [1] http://mathworld.wolfram.com/SingularMatrix.html
 
         """
-        return Predicate('singular')
+        return AssumptionsPredicate('singular')
 
     @predicate_memo
     def normal(self):
@@ -1129,7 +1129,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Normal_matrix
 
         """
-        return Predicate('normal')
+        return AssumptionsPredicate('normal')
 
     @predicate_memo
     def triangular(self):
@@ -1154,7 +1154,7 @@ class AssumptionKeys(object):
         .. [1] https://en.wikipedia.org/wiki/Triangular_matrix
 
         """
-        return Predicate('triangular')
+        return AssumptionsPredicate('triangular')
 
     @predicate_memo
     def unit_triangular(self):
@@ -1173,7 +1173,7 @@ class AssumptionKeys(object):
         True
 
         """
-        return Predicate('unit_triangular')
+        return AssumptionsPredicate('unit_triangular')
 
 
 Q = AssumptionKeys()
@@ -1194,7 +1194,7 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
         return
     if not expr.has(symbol):
         return
-    if isinstance(expr, AppliedPredicate):
+    if isinstance(expr, AppliedAssumptionsPredicate):
         if expr.arg == symbol:
             return expr.func
         else:
@@ -1246,13 +1246,13 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     """
     from sympy.assumptions.satask import satask
 
-    if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
+    if not isinstance(proposition, (BooleanFunction, AppliedAssumptionsPredicate, bool, BooleanAtom)):
         raise TypeError("proposition must be a valid logical expression")
 
-    if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
+    if not isinstance(assumptions, (BooleanFunction, AppliedAssumptionsPredicate, bool, BooleanAtom)):
         raise TypeError("assumptions must be a valid logical expression")
 
-    if isinstance(proposition, AppliedPredicate):
+    if isinstance(proposition, AppliedAssumptionsPredicate):
         key, expr = proposition.func, sympify(proposition.arg)
     else:
         key, expr = Q.is_true, sympify(proposition)
@@ -1296,7 +1296,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
                     return False
                 if Not(key) in known_facts_dict[assum]:
                     return True
-    elif (isinstance(key, Predicate) and
+    elif (isinstance(key, AssumptionsPredicate) and
             isinstance(local_facts, Not) and local_facts.args[0].is_Atom):
         if local_facts.args[0] in known_facts_dict[key]:
             return False
@@ -1338,18 +1338,18 @@ def register_handler(key, handler):
         True
 
     """
-    if type(key) is Predicate:
+    if type(key) is AssumptionsPredicate:
         key = key.name
     Qkey = getattr(Q, key, None)
     if Qkey is not None:
         Qkey.add_handler(handler)
     else:
-        setattr(Q, key, Predicate(key, handlers=[handler]))
+        setattr(Q, key, AssumptionsPredicate(key, handlers=[handler]))
 
 
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
-    if type(key) is Predicate:
+    if type(key) is AssumptionsPredicate:
         key = key.name
     getattr(Q, key).remove_handler(handler)
 

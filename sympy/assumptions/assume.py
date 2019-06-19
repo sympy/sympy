@@ -4,8 +4,9 @@ from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.source import get_class
 from contextlib import contextmanager
+from sympy.logic.FOL import Predicate, AppliedPredicate
+from sympy.utilities.source import get_class
 
 
 class AssumptionsContext(set):
@@ -18,7 +19,7 @@ class AssumptionsContext(set):
     Examples
     ========
 
-    >>> from sympy import AppliedPredicate, Q
+    >>> from sympy import AppliedAssumptionsPredicate, Q
     >>> from sympy.assumptions.assume import global_assumptions
     >>> global_assumptions
     AssumptionsContext()
@@ -46,7 +47,7 @@ class AssumptionsContext(set):
 global_assumptions = AssumptionsContext()
 
 
-class AppliedPredicate(Boolean):
+class AppliedAssumptionsPredicate(AppliedPredicate):
     """The class of expressions resulting from applying a Predicate.
 
     Examples
@@ -57,7 +58,7 @@ class AppliedPredicate(Boolean):
     >>> Q.integer(x)
     Q.integer(x)
     >>> type(Q.integer(x))
-    <class 'sympy.assumptions.assume.AppliedPredicate'>
+    <class 'sympy.assumptions.assume.AppliedAssumptionsPredicate'>
 
     """
     __slots__ = []
@@ -68,43 +69,14 @@ class AppliedPredicate(Boolean):
 
     is_Atom = True  # do not attempt to decompose this
 
-    @property
-    def arg(self):
-        """
-        Return the expression used by this assumption.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, Symbol
-        >>> x = Symbol('x')
-        >>> a = Q.integer(x + 1)
-        >>> a.arg
-        x + 1
-
-        """
-        return self._args[1]
-
-    @property
-    def args(self):
-        return self._args[1:]
-
-    @property
-    def func(self):
-        return self._args[0]
-
-    @cacheit
-    def sort_key(self, order=None):
-        return (self.class_key(), (2, (self.func.name, self.arg.sort_key())),
-                S.One.sort_key(), S.One)
 
     def __eq__(self, other):
-        if type(other) is AppliedPredicate:
+        if type(other) is AppliedAssumptionsPredicate:
             return self._args == other._args
         return False
 
     def __hash__(self):
-        return super(AppliedPredicate, self).__hash__()
+        return super(AppliedAssumptionsPredicate, self).__hash__()
 
     def _eval_ask(self, assumptions):
         return self.func.eval(self.arg, assumptions)
@@ -119,14 +91,14 @@ class AppliedPredicate(Boolean):
         return set()
 
 
-class Predicate(Boolean):
+class AssumptionsPredicate(Predicate):
     """A predicate is a function that returns a boolean value.
 
     Predicates merely wrap their argument and remain unevaluated:
 
         >>> from sympy import Q, ask
         >>> type(Q.prime)
-        <class 'sympy.assumptions.assume.Predicate'>
+        <class 'sympy.assumptions.assume.AssumptionsPredicate'>
         >>> Q.prime.name
         'prime'
         >>> Q.prime(7)
@@ -151,8 +123,7 @@ class Predicate(Boolean):
     is_Atom = True
 
     def __new__(cls, name, handlers=None):
-        obj = Boolean.__new__(cls)
-        obj.name = name
+        obj = super(AssumptionsPredicate, cls).__new__(cls, name)
         obj.handlers = handlers or []
         return obj
 
@@ -162,18 +133,15 @@ class Predicate(Boolean):
     def __getnewargs__(self):
         return (self.name,)
 
-    def __call__(self, expr):
-        return AppliedPredicate(self, expr)
-
     def add_handler(self, handler):
         self.handlers.append(handler)
 
     def remove_handler(self, handler):
         self.handlers.remove(handler)
 
-    @cacheit
-    def sort_key(self, order=None):
-        return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
+    @classmethod
+    def apply(cls):
+        return AppliedAssumptionsPredicate
 
     def eval(self, expr, assumptions=True):
         """
@@ -205,6 +173,10 @@ class Predicate(Boolean):
                         raise ValueError('incompatible resolutors')
                 break
         return res
+
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
 
 
 @contextmanager

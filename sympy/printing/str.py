@@ -82,9 +82,6 @@ class StrPrinter(Printer):
     def _print_Or(self, expr):
         return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
 
-    def _print_AppliedPredicate(self, expr):
-        return '%s(%s)' % (self._print(expr.func), self._print(expr.arg))
-
     def _print_Basic(self, expr):
         l = [self._print(o) for o in expr.args]
         return expr.__class__.__name__ + "(%s)" % ", ".join(l)
@@ -730,7 +727,19 @@ class StrPrinter(Printer):
         return "1"
 
     def _print_Predicate(self, expr):
+        return "%s" % expr.name
+
+    def _print_Predicate(self, expr):
+        return "%s" % expr.name
+
+    def _print_AppliedPredicate(self, expr):
+        return "%s(%s)" % (expr.name, ', '.join(str(arg) for arg in expr.args))
+
+    def _print_AssumptionsPredicate(self, expr):
         return "Q.%s" % expr.name
+
+    def _print_AppliedAssumptionsPredicate(self, expr):
+        return '%s(%s)' % (self._print(expr.func), self._print(expr.arg))
 
     def _print_str(self, expr):
         return str(expr)

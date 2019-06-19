@@ -8,121 +8,22 @@ from itertools import chain, combinations, product
 
 from sympy.core import Symbol
 from sympy.core.compatibility import iterable, ordered
+from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.logic.boolalg import (And, Boolean, BooleanFunction,
     conjuncts, disjuncts, eliminate_implications, false, Implies,
     Not, Or, to_cnf, true)
 from sympy.utilities.iterables import numbered_symbols
 
 
-class FOL(BooleanFunction):
+class FOL(Boolean):
     """
     Abstract base class for all First Order Logic classes.
     Only attributes and dispatcher methods that need to be inherited by
     every other classes in the module should go here.
     """
 
-    def to_nnf(self, simplify=True):
-        return self
 
-
-class Callable(FOL):
-    """
-    Abstract base class for 'Predicate' and 'Function'.
-    This class provides the functionality for the 'Predicate' and
-    'Function' objects to be called to yield its 'Applied' version.
-    The classes extending 'Callable' simply need to override 'apply'
-    method to return the appropriate 'Applied' class. This class is
-    then called with the arguments supplied to the call to return an
-    object of type 'AppliedPredicate' or 'AppliedFunction'.
-    """
-
-    def __init__(self, name):
-        self._name = name
-
-    def __call__(self, *args):
-        """
-        Uses internal dispatching to return the appropriate Applied
-        object with the given arguments.
-        """
-        return self.apply()(self, *args)
-
-    def __eq__(self, other):
-        return isinstance(other, self.func) and self.name == other.name
-
-    def __hash__(self):
-        return super(Callable, self).__hash__()
-
-    def _hashable_content(self):
-        return (self.func, self.name)
-
-    def _sympystr(self, *args, **kwargs):
-        return self.name
-
-    @classmethod
-    def apply(cls):
-        """
-        Returns the 'Applied' version of the class.
-        This method is intended to be overridden by the subclass
-        returning the corresponding applied class.
-        """
-        raise NotImplementedError()
-
-    @property
-    def name(self):
-        return self._name
-
-
-class Applied(FOL):
-    """
-    Abstract base class for 'AppliedPredicate' and 'AppliedFunction'.
-    This class provides common functionality for all subclasses to
-    sanitize given arguments such that any non-Boolean argument is
-    converted to a Constant. It also provides methods to return the
-    original Callable object which was called to obtain this object.
-    """
-
-    def __init__(self, func, *args):
-        if not args:
-            raise ValueError("Use a constant instead of %s()" % func)
-        args = [arg if isinstance(arg, (Boolean, Symbol))
-                    else Constant(arg) for arg in args]
-        self._args = tuple(args)
-        self._func = func
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return (self.func, self.args) == (other.func, other.args)
-        else:
-            return False
-
-    def __hash__(self):
-        return super(Applied, self).__hash__()
-
-    def _hashable_content(self):
-        return (self.__class__, self.name) + self.args
-
-    def _sympystr(self, *args, **kwargs):
-        return "%s(%s)" % (self.name,
-            ', '.join(str(arg) for arg in self.args))
-
-    @property
-    def name(self):
-        """
-        Returns the name of the original 'Predicate' or 'Function'
-        """
-        return self.func.name
-
-    @property
-    def func(self):
-        """
-        Returns the class from which the given class was applied.
-        This functionality is different from the usual SymPy convention
-        of returning the __class__ of the object.
-        """
-        return self._func
-
-
-class Predicate(Callable):
+class Predicate(FOL):
     """
     Creates a Predicate with the given name.
     To apply, simply call the Predicate object with arguments.
@@ -139,48 +40,120 @@ class Predicate(Callable):
     Knows(A, B)
     """
 
+    def __new__(cls, name):
+        obj = super(Predicate, cls).__new__(cls)
+        obj._name = name
+        return obj
+
+    def __call__(self, *args):
+        """
+        Uses internal dispatching to return the appropriate Applied
+        object with the given arguments.
+        """
+        return self.apply()(self, *args)
+
+    def __eq__(self, other):
+        return isinstance(other, self.func) and self.name == other.name
+
+    def __hash__(self):
+        return super(Predicate, self).__hash__()
+
+    def _hashable_content(self):
+        return (self.func, self.name)
+
     @classmethod
     def apply(cls):
+        """
+        Returns the 'Applied' version of the class.
+        """
         return AppliedPredicate
 
+    @property
+    def name(self):
+        return self._name
 
-class AppliedPredicate(Applied):
+
+class AppliedPredicate(FOL):
     """
     Applied version of Predicate.
     All AppliedPredicate objects are intended to be created by
     calling the corresponding 'Predicate' object with arguments.
     """
 
+    def __new__(cls, func, *args):
+        if not args:
+            raise ValueError("Use a constant instead of %s()" % func)
+        args = [arg if isinstance(arg, (Boolean, Symbol, ))
+                    else Constant(arg) for arg in args]
+        obj = super(AppliedPredicate, cls).__new__(cls, func, *args)
+        return obj
 
-class Function(Callable):
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (self.func, self.args) == (other.func, other.args)
+        else:
+            return False
+
+    def __hash__(self):
+        return super(AppliedPredicate, self).__hash__()
+
+    def _hashable_content(self):
+        return (self.__class__, self.name) + self.args
+
+
+    @property
+    def name(self):
+        """
+        Returns the name of the original 'Predicate' or 'Function'
+        """
+        return self.func.name
+
+    @property
+    def arg(self):
+        return self._args[1]
+
+    @property
+    def args(self):
+        return self._args[1:]
+
+    @property
+    def func(self):
+        return self._args[0]
+
+class FOLFunction(UndefinedFunction):
     """
     Creates a Function with the given name.
-    To apply, simply call the Function object with arguments.
+    To apply, simply call the Function object with name.
 
     Examples
     ========
 
     >>> from sympy.abc import A, B
-    >>> from sympy.logic.FOL import Function
-    >>> f = Function('f')
+    >>> from sympy.logic.FOL import FOLFunction
+    >>> f = FOLFunction('f')
     >>> f(1, 2)
     f(1, 2)
-    >>> g = Function('g')
+    >>> g = FOLFunction('g')
     >>> f(A, g(A, B))
     f(A, g(A, B))
     """
+    def __new__(cls, name):
+        obj = super(FOLFunction, cls).__new__(cls, name, bases=(AppliedFOLFunction,))
+        return obj
 
-    @classmethod
-    def apply(cls):
-        return AppliedFunction
-
-
-class AppliedFunction(Applied):
+class AppliedFOLFunction(AppliedUndef):
     """
     Applied version of Function.
     All AppliedFunction objects are intended to be created by
     calling the corresponding 'Function' object with arguments.
     """
+
+    def __new__(cls, *args):
+        if not args:
+            raise ValueError("Use a constant instead of %s()" % args[0])
+        args = [arg if isinstance(arg, (Boolean, Symbol))
+                else Constant(arg) for arg in args]
+        return super(AppliedFOLFunction, cls).__new__(cls, *args)
 
 
 class Constant(Boolean):
@@ -213,8 +186,8 @@ class Constant(Boolean):
     construct then this class can be safely removed.
     """
 
-    def __new__(cls, name, **kwargs):
-        return super(Boolean, cls).__new__(cls, str(name), **kwargs)
+    def __new__(cls, name):
+        return super(Constant, cls).__new__(cls, name)
 
     def __init__(self, name):
         if isinstance(name, self.func):
@@ -231,9 +204,6 @@ class Constant(Boolean):
     def _hashable_content(self):
         return (self.func, str(self.name))
 
-    def _sympystr(self, *args, **kwargs):
-        return str(self.name)
-
     @property
     def name(self):
         return self._name
@@ -244,7 +214,7 @@ class Quantifier(FOL):
     Abstract base class for ForAll and Exists.
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args):
 
         var = args[:-1]
         expr = args[-1]
@@ -268,12 +238,13 @@ class Quantifier(FOL):
             return expr
 
         args = tuple(ordered(var)) + (expr, )
-        obj = super(Quantifier, cls).__new__(cls, *args, **kwargs)
+        obj = super(Quantifier, cls).__new__(cls, *args)
         return obj
 
     def _sympystr(self, *args, **kwargs):
-        return "%s((%s), %s)" % (self.func, ', '.join(
+        return "%s((%s), %s)" % (self.func.__name__, ', '.join(
                 str(v) for v in self.vars), self.expr)
+
 
     @property
     def vars(self):
@@ -394,7 +365,7 @@ def fol_true(expr, model={}):
             else:
                 model[key] = Constant(val)
 
-        elif isinstance(key, Callable):
+        elif isinstance(key, (Predicate, FOLFunction)):
             if hasattr(val, '__call__'):
                 continue
             mapping = {}
@@ -461,7 +432,7 @@ def _fol_true(expr, model={}):
     args = [_fol_true(arg, model) for arg in expr.args]
 
     # Functions / Predicates
-    if isinstance(expr, Applied):
+    if isinstance(expr, (AppliedPredicate, AppliedFOLFunction)):
         args = [a.name if isinstance(a, Constant) else a for a in args]
         mapping = model.get(expr.func)
         if mapping is None:
@@ -581,7 +552,7 @@ def _to_pnf(expr):
     if not isinstance(expr, BooleanFunction):
         return expr
 
-    if isinstance(expr, Applied):
+    if isinstance(expr, (AppliedPredicate, AppliedFOLFunction)):
         return expr
 
     if isinstance(expr, Not):
@@ -662,7 +633,7 @@ def to_snf(expr, functions=None, variables=None, constants=None):
     var_list = []
 
     if functions is None:
-        skolemFunc = numbered_symbols('f', Function)
+        skolemFunc = numbered_symbols('f', FOLFunction)
     else:
         skolemFunc = functions
     if constants is None:
@@ -702,7 +673,7 @@ def mgu(expr1, expr2):
     ========
 
     >>> from sympy.abc import X, Y, Z
-    >>> from sympy.logic.FOL import Predicate, Function, Constant, mgu
+    >>> from sympy.logic.FOL import Predicate, FOLFunction, Constant, mgu
     >>> P = Predicate('P')
     >>> f = Function('f')
     >>> g = Function('g')
@@ -718,7 +689,8 @@ def mgu(expr1, expr2):
     .. [1] http://en.wikipedia.org/wiki/Unification_(computer_science)
     """
 
-    if any([not isinstance(expr1, Applied), not isinstance(expr2, Applied),
+    if any([not isinstance(expr1, (AppliedPredicate,AppliedFOLFunction)),
+                not isinstance(expr2,(AppliedPredicate,AppliedFOLFunction)),
             expr1.func != expr2.func, len(expr1.args) != len(expr2.args)]):
         return False
 
@@ -739,7 +711,8 @@ def mgu(expr1, expr2):
                 return False
             sub[arg1] = arg2
 
-        elif isinstance(arg1, Applied) and isinstance(arg2, Applied):
+        elif isinstance(arg1, (AppliedPredicate, AppliedFOLFunction))\
+                and isinstance(arg2, (AppliedPredicate, AppliedFOLFunction)):
             sub = mgu(arg1, arg2)
             if not sub:
                 return False
@@ -772,7 +745,7 @@ def resolve(*expr):
     ========
 
     >>> from sympy.abc import X, Y, Z
-    >>> from sympy.logic.FOL import Predicate, Function, Constant, resolve
+    >>> from sympy.logic.FOL import Predicate, FOLFunction, Constant, resolve
     >>> P = Predicate('P')
     >>> Q = Predicate('Q')
     >>> f = Function('f')
@@ -962,7 +935,7 @@ class FOL_KB():
             if result:
                 break
         if all_answers or self.query_vars:
-            return list(ordered(self.models))
+            return self.models
         return result
 
     def _ask(self, query, limit, all_answers=False, level=0, unifiers=[]):

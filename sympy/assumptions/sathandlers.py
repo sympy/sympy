@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy.assumptions.ask import Q
-from sympy.assumptions.assume import Predicate, AppliedPredicate
+from sympy.assumptions.assume import AssumptionsPredicate, AppliedAssumptionsPredicate
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
 from sympy.core.compatibility import MutableMapping
 from sympy.core.numbers import ImaginaryUnit
@@ -52,8 +52,8 @@ class UnevaluatedOnFree(BooleanFunction):
     def __new__(cls, arg):
         # Mostly type checking here
         arg = _sympify(arg)
-        predicates = arg.atoms(Predicate)
-        applied_predicates = arg.atoms(AppliedPredicate)
+        predicates = arg.atoms(AssumptionsPredicate)
+        applied_predicates = arg.atoms(AppliedAssumptionsPredicate)
         if predicates and applied_predicates:
             raise ValueError("arg must be either completely free or singly applied")
         if not applied_predicates:
@@ -63,11 +63,11 @@ class UnevaluatedOnFree(BooleanFunction):
             return obj
         predicate_args = {pred.args[0] for pred in applied_predicates}
         if len(predicate_args) > 1:
-            raise ValueError("The AppliedPredicates in arg must be applied to a single expression.")
+            raise ValueError("The AppliedAssumptionsPredicates in arg must be applied to a single expression.")
         obj = BooleanFunction.__new__(cls, arg)
         obj.expr = predicate_args.pop()
         obj.pred = arg.xreplace(Transform(lambda e: e.func, lambda e:
-            isinstance(e, AppliedPredicate)))
+            isinstance(e, AppliedAssumptionsPredicate)))
         applied = obj.apply()
         if applied is None:
             return obj
@@ -176,7 +176,7 @@ def _old_assump_replacer(obj):
     # - real means real or infinite in the old assumptions.
     # - nonzero does not imply real in the old assumptions.
     # - finite means finite and not zero in the old assumptions.
-    if not isinstance(obj, AppliedPredicate):
+    if not isinstance(obj, AppliedAssumptionsPredicate):
         return obj
 
     e = obj.args[0]
