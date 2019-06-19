@@ -39,6 +39,11 @@ class NonSquareMatrixError(ShapeError):
     pass
 
 
+class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
+    """The matrix is not a positive-definite matrix."""
+    pass
+
+
 class MatrixRequired(object):
     """All subclasses of matrix objects must implement the
     required matrix properties listed here."""

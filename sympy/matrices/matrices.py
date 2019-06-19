@@ -29,7 +29,8 @@ from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.misc import filldedent
 
 from .common import (
-    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError)
+    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError,
+    NonPositiveDefiniteMatrixError)
 
 
 def _iszero(x):
@@ -1525,19 +1526,15 @@ class MatrixEigen(MatrixSubspaces):
             elif method == 'CH':
                 try:
                     self.cholesky(hermitian=True)
-                except ValueError as e:
-                    if str(e) == "Matrix must be positive-definite":
-                        return False
-                    raise ValueError()
+                except NonPositiveDefiniteMatrixError:
+                    return False
                 return True
 
             elif method == 'LDL':
                 try:
                     self.LDLdecomposition(hermitian=True)
-                except ValueError as e:
-                    if str(e) == "Matrix must be positive-definite":
-                        return False
-                    raise ValueError()
+                except NonPositiveDefiniteMatrixError:
+                    return False
                 return True
 
             else:
