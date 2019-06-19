@@ -81,6 +81,10 @@ Joint Types
 .. autofunction:: NegativeMultinomial
 .. autofunction:: NormalGamma
 
+Stochastic Processes
+-----------------
+.. autofunction:: DiscreteMarkovChain
+
 Interface
 ^^^^^^^^^
 
