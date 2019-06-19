@@ -5,14 +5,15 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Matrix, Basic, Dict)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.basic import _aresame
+from sympy.core.cache import clear_cache
+from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
 from sympy.core.function import PoleError, _mexpand, arity
 from sympy.core.sympify import sympify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
-from sympy.utilities.iterables import subsets, variations
-from sympy.core.cache import clear_cache
-from sympy.core.compatibility import range
 from sympy.tensor.array import NDimArray
+from sympy.utilities.iterables import subsets, variations
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
@@ -175,12 +176,12 @@ def test_Lambda():
     assert e(y) == y**2
 
     assert Lambda((), 42)() == 42
-    assert Lambda((), 42) == Lambda((), 42)
+    assert unchanged(Lambda, (), 42)
     assert Lambda((), 42) != Lambda((), 43)
     assert Lambda((), f(x))() == f(x)
     assert Lambda((), 42).nargs == FiniteSet(0)
 
-    assert Lambda(x, x**2) == Lambda(x, x**2)
+    assert unchanged(Lambda, (x,), x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
     assert Lambda((x, y), x**y) == Lambda((y, x), y**x)

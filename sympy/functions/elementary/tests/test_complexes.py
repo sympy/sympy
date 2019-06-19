@@ -41,7 +41,7 @@ def test_re():
     assert re(i*I) == I * i
     assert re(i) == 0
 
-    assert re(x + y) == re(x + y)
+    assert re(x + y) == re(x) + re(y)
     assert re(x + r) == re(x) + r
 
     assert re(re(x)) == re(x)
@@ -137,7 +137,7 @@ def test_im():
     assert im(i*I) == 0
     assert im(i) == -I * i
 
-    assert im(x + y) == im(x + y)
+    assert im(x + y) == im(x) + im(y)
     assert im(x + r) == im(x)
     assert im(x + r*I) == im(x) + r
 
@@ -350,6 +350,7 @@ def test_as_real_imag():
 def test_sign_issue_3068():
     n = pi**1000
     i = int(n)
+    x = Symbol('x')
     assert (n - i).round() == 1  # doesn't hang
     assert sign(n - i) == 1
     # perhaps it's not possible to get the sign right when
@@ -806,7 +807,7 @@ def test_derivatives_issue_4757():
 
 
 def test_issue_11413():
-    from sympy import symbols, Matrix, simplify
+    from sympy import Matrix, simplify
     v0 = Symbol('v0')
     v1 = Symbol('v1')
     v2 = Symbol('v2')
@@ -853,6 +854,7 @@ def test_periodic_argument():
 @XFAIL
 def test_principal_branch_fail():
     # TODO XXX why does abs(x)._eval_evalf() not fall back to global evalf?
+    from sympy import principal_branch
     assert N_equals(principal_branch((1 + I)**2, pi/2), 0)
 
 
@@ -892,10 +894,12 @@ def test_issue_6167_6151():
     i = int(n)
     assert sign(n - i) == 1
     assert abs(n - i) == n - i
+    x = Symbol('x')
     eps = pi**-1500
     big = pi**1000
     one = cos(x)**2 + sin(x)**2
     e = big*one - big + eps
+    from sympy import simplify
     assert sign(simplify(e)) == 1
     for xi in (111, 11, 1, S(1)/10):
         assert sign(e.subs(x, xi)) == 1
