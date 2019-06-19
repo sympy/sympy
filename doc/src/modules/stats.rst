@@ -82,7 +82,7 @@ Joint Types
 .. autofunction:: NormalGamma
 
 Stochastic Processes
------------------
+-----------------------
 .. autofunction:: DiscreteMarkovChain
 
 Interface
