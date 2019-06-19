@@ -13,6 +13,7 @@ def render_as_module(content, standard='python3'):
         See the parameter ``standard`` in
         :meth:`sympy.printing.pycode.pycode`
     """
+    # XXX Remove the keyword 'standard' after dropping python 2 support.
     printer = PythonCodePrinter({'standard':standard})
     pystr = printer.doprint(content)
     if printer._settings['fully_qualified_modules']:
