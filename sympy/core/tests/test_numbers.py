@@ -8,11 +8,11 @@ from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
                    AlgebraicNumber, simplify, sin, fibonacci, RealField,
                    sympify, srepr)
 from sympy.core.compatibility import long
-from sympy.core.power import integer_nthroot, isqrt, integer_log
+from sympy.core.expr import unchanged
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
-from sympy.core.mod import Mod
+from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
@@ -1261,7 +1261,7 @@ def test_no_len():
 
 
 def test_issue_3321():
-    assert sqrt(Rational(1, 5)) == sqrt(Rational(1, 5))
+    assert sqrt(Rational(1, 5)) == Rational(1, 5)**S.Half
     assert 5 * sqrt(Rational(1, 5)) == sqrt(5)
 
 

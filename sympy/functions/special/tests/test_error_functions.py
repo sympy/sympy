@@ -1,6 +1,6 @@
 from sympy import (
     symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
-    re, im, Abs, O, exp_polar, polar_lift, gruntz, limit,
+    re, im, O, exp_polar, polar_lift, gruntz, limit,
     Symbol, I, integrate, Integral, S,
     sqrt, sin, cos, sinc, sinh, cosh, exp, log, pi, EulerGamma,
     erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
@@ -9,10 +9,9 @@ from sympy import (
     fresnels, fresnelc,
     hyper, meijerg, E)
 
-from sympy.functions.special.error_functions import _erfs, _eis
-
+from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-
+from sympy.functions.special.error_functions import _erfs, _eis
 from sympy.utilities.pytest import raises, slow
 
 x, y, z = symbols('x,y,z')
@@ -628,7 +627,7 @@ def test_fresnel():
     assert fresnels(-oo) == -S.Half
     assert fresnels(I*oo) == -I*S.Half
 
-    assert fresnels(z) == fresnels(z)
+    assert unchanged(fresnels, z)
     assert fresnels(-z) == -fresnels(z)
     assert fresnels(I*z) == -I*fresnels(z)
     assert fresnels(-I*z) == I*fresnels(z)
@@ -680,7 +679,7 @@ def test_fresnel():
     assert fresnelc(-oo) == -S.Half
     assert fresnelc(I*oo) == I*S.Half
 
-    assert fresnelc(z) == fresnelc(z)
+    assert unchanged(fresnelc, z)
     assert fresnelc(-z) == -fresnelc(z)
     assert fresnelc(I*z) == I*fresnelc(z)
     assert fresnelc(-I*z) == -I*fresnelc(z)
