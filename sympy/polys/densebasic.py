@@ -262,17 +262,6 @@ def _rec_degree_list(g, v, i, degs):
             _rec_degree_list(c, v, i, degs)
 
 
-def _rec_power_list(g, v, i, pows):
-    """Recursive helper for :func:`dmp_power_list`."""
-    pows.extend(dmp_power(g, v))
-
-    if v > 0:
-        v, i = v - 1, i + 1
-
-        for c in g:
-            _rec_power_list(c, v, i, pows)
-
-
 def dmp_degree_list(f, u):
     """
     Return a list of degrees of ``f`` in ``K[X]``.
@@ -292,27 +281,6 @@ def dmp_degree_list(f, u):
     degs = [-oo]*(u + 1)
     _rec_degree_list(f, u, 0, degs)
     return tuple(degs)
-
-
-def dmp_power_list(f, u):
-    """
-    Return a list of powers of variables in ``f`` in ``K[X]``.
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densebasic import dmp_power_list
-
-    >>> f = ZZ.map([[1], [1, 2, 3]])
-
-    >>> dmp_power_list(f, 1)
-    (2, 1, 0)
-
-    """
-    pows = []
-    _rec_power_list(f, u, 0, pows)
-    return tuple(sorted(set(pows), reverse=True))
 
 
 def dup_strip(f):

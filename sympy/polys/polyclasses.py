@@ -45,7 +45,6 @@ from sympy.polys.densebasic import (
     dup_strip,
     dup_degree, dmp_degree_in,
     dmp_degree_list,
-    dmp_power_list,
     dmp_negative_p,
     dup_LC, dmp_ground_LC,
     dup_TC, dmp_ground_TC,
@@ -526,10 +525,6 @@ class DMP(PicklableWithSlots, CantSympify):
     def total_degree(f):
         """Returns the total degree of ``f``. """
         return max(sum(m) for m in f.monoms())
-
-    def power_list(f):
-        """Returns a list of powers of variables in ``f``. """
-        return dmp_power_list(f.rep, f.lev)
 
     def homogenize(f, s):
         """Return homogeneous polynomial of ``f``"""
