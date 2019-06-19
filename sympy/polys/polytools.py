@@ -1836,14 +1836,11 @@ class Poly(Expr):
         (0,)
 
         """
-        if hasattr(f.rep, 'power_list'):
-            power = []
-            for i in f.monoms():
-                power += list(i)
-            power = reversed(list(set(power)))
-            return tuple(power)
-        # pragma: no cover
-        raise OperationNotSupported(f, 'power_list')
+        power = []
+        for i in f.monoms():
+            power += list(i)
+        power = reversed(list(set(power)))
+        return tuple(power)
 
     def homogenize(f, s):
         """
@@ -4591,9 +4588,9 @@ def power_list(f, *gens, **args):
 
     >>> power_list(x**2 + y*x + 1)
     (2, 1, 0)
-    >>> Poly(0, x).power_list()
+    >>> power_list(0, x)
     (0,)
-    >>> Poly(1, x).power_list()
+    >>> power_list(1, x)
     (0,)
 
     """
