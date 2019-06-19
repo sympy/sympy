@@ -1528,7 +1528,7 @@ class MatrixEigen(MatrixSubspaces):
                 except ValueError as e:
                     if str(e) == "Matrix must be positive-definite":
                         return False
-                    return None
+                    raise ValueError()
                 return True
 
             elif method == 'LDL':
@@ -1537,7 +1537,7 @@ class MatrixEigen(MatrixSubspaces):
                 except ValueError as e:
                     if str(e) == "Matrix must be positive-definite":
                         return False
-                    return None
+                    raise ValueError()
                 return True
 
             else:
