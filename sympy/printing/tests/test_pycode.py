@@ -58,6 +58,7 @@ def test_PythonCodePrinter_standard():
     if python_version == 3:
         assert prntr.standard == 'python3'
 
+    raises(ValueError, lambda: PythonCodePrinter({'standard':'python4'}))
 
 def test_MpmathPrinter():
     p = MpmathPrinter()
