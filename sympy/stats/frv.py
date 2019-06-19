@@ -360,6 +360,9 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
     def distribution(self):
         return self.args[1]
 
+    def pdf(self, expr):
+        return self.distribution.pdf(expr)
+
     @cacheit
     def compute_characteristic_function(self, expr):
         d = self.compute_density(expr)

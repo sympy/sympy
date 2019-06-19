@@ -183,7 +183,7 @@ class DieDistribution(SingleFiniteDistribution):
             return S.Zero
         elif x.is_Symbol or isinstance(x, RandomSymbol):
             i = Dummy('i', integer=True, positive=True)
-            return Lambda(x, Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides)))
+            return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides))
         raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
 
