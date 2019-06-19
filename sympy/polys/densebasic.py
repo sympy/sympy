@@ -182,38 +182,6 @@ def dmp_degree(f, u):
     else:
         return len(f) - 1
 
-def dmp_power(f, u):
-    """
-    Return the powers of variable in ``f`` in ``x_0`` in ``K[X]``.
-
-    Note that the power present of variable present
-    in 0 is nothing i.e empty list [].
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densebasic import dmp_power
-
-    >>> dmp_power([[[]]], 2)
-    []
-
-    >>> f = ZZ.map([[2], [1, 2, 3]])
-
-    >>> dmp_power(f, 1)
-    [1, 0]
-
-    """
-    pow = []
-    if dmp_zero_p(f, u):
-        return []
-    for i, fi in enumerate(f):
-        if not isinstance(fi, list) and fi != 0:
-            pow.append(len(f) - i - 1)
-        if isinstance(fi, list) and len(fi) != 0:
-            pow.append(len(f) - i - 1)
-    return pow
-
 
 def _rec_degree_in(g, v, i, j):
     """Recursive helper function for :func:`dmp_degree_in`."""
