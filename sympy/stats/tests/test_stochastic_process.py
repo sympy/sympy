@@ -1,4 +1,5 @@
-from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And)
+from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
+                   ImmutableMatrix)
 from sympy.stats import DiscreteMarkovChain, P, TransitionMatrixOf, E
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
@@ -67,7 +68,7 @@ def test_DiscreteMarkovChain():
     assert Y3.is_absorbing_chain == False
     TO4 = Matrix([[S(1)/5, S(2)/5, S(2)/5], [S(1)/10, S(1)/2, S(2)/5], [S(3)/5, S(3)/10, S(1)/10]])
     Y4 = DiscreteMarkovChain('Y', trans_probs=TO4)
-    w = Matrix([[S(11)/39, S(16)/39, S(4)/13]])
+    w = ImmutableMatrix([[S(11)/39, S(16)/39, S(4)/13]])
     assert Y4.fixed_row_vector == w
     TS1 = MatrixSymbol('T', 3, 3)
     Y5 = DiscreteMarkovChain('Y', trans_probs=TS1)

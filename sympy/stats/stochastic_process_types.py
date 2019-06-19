@@ -349,8 +349,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         wm = Matrix([wi])
         eqs = (wm*trans_probs - wm).tolist()[0]
         eqs.append(sum(wi) - 1)
-        soln = linsolve(eqs, wi)
-        return ImmutableMatrix([*soln])
+        soln = list(linsolve(eqs, wi))[0]
+        return ImmutableMatrix([[sol for sol in soln]])
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
