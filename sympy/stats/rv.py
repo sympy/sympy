@@ -369,7 +369,7 @@ class IndependentProductPSpace(ProductPSpace):
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
 
-    def sample(self):
+    def sample(self, **kwargs):
         return {k: v for space in self.spaces
             for k, v in space.sample().items()}
 
@@ -989,7 +989,7 @@ def sample(expr, condition=None, **kwargs):
 
     >>> die_roll = sample(X + Y + Z) # A random realization of three dice
     """
-    return next(sample_iter(expr, condition, numsamples=1))
+    return next(sample_iter(expr, condition, numsamples=1, **kwargs))
 
 
 def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
@@ -1098,7 +1098,7 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
     # Check that lambdify can handle the expression
     # Some operations like Sum can prove difficult
     try:
-        d = ps.sample()  # a dictionary that maps RVs to values
+        d = ps.sample(**kwargs)  # a dictionary that maps RVs to values
         args = [d[rv] for rv in rvs]
         fn(*args)
         if condition:
@@ -1109,7 +1109,7 @@ def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
     def return_generator():
         count = 0
         while count < numsamples:
-            d = ps.sample()  # a dictionary that maps RVs to values
+            d = ps.sample(**kwargs)  # a dictionary that maps RVs to values
             args = [d[rv] for rv in rvs]
 
             if condition:  # Check that these values satisfy the condition
@@ -1138,7 +1138,7 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
     count = 0
     while count < numsamples:
-        d = ps.sample()  # a dictionary that maps RVs to values
+        d = ps.sample(**kwargs)  # a dictionary that maps RVs to values
 
         if condition is not None:  # Check that these values satisfy the condition
             gd = condition.xreplace(d)

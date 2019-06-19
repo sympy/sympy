@@ -2339,33 +2339,34 @@ class NormalDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
-    def sample(self, **kwargs):
+    def _sample_python(self, **kwargs):
         mean, std = self.mean, self.std
-        print("len: ", len(kwargs))
         if len(kwargs) == 0 or mean.has(Symbol) or std.has(Symbol):
             return random.normalvariate(self.mean, self.std)
         objs = {}
-        mean, std, size = float(mean), float(std), kwargs.get('size', 1)
+        size = kwargs.get('size', 1)
         if kwargs.get('numpy', False):
-            objs['numpy'] = _sample_numpy(mean, std, size)
+            numpy = import_module('numpy')
+            if numpy:
+                objs['numpy'] = self._sample_numpy(numpy, self.args, size)
+            else:
+                raise NotImplementedError(
+                    'Sampling the Normal distribution requires Numpy.')
         if kwargs.get('scipy', False):
-            objs['scipy'] = _sample_scipy(mean, std, size)
+            scipy = import_module('scipy')
+            if scipy:
+                objs['scipy'] = self._sample_scipy(scipy, self.args, size)
+            else:
+                raise NotImplementedError(
+                    'Sampling the Normal distribution requires Scipy.')
+        return objs
 
-    def _sample_numpy(mean, std, size):
-        numpy = import_module('numpy')
-        if numpy:
-            return numpy.random.normal(mean, std, size)
-        else:
-            raise NotImplementedError(
-                'Sampling the Normal distribution requires Numpy.')
+    def _sample_numpy(self, numpy, args, size):
+        return numpy.random.normal(args[0], args[1], size)
 
-    def _sample_scipy(mean, std, size):
-        scipy = import_module('scipy')
-        if scipy:
-            return scipy.stats.norm.rvs(mean, std, size)
-        else:
-            raise NotImplementedError(
-                'Sampling the Normal distribution requires Scipy.')
+    def _sample_scipy(self, scipy, args, size):
+        from scipy.stats import norm
+        return norm.rvs(args[0], args[1], size)
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
