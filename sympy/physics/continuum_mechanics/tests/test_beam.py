@@ -18,7 +18,7 @@ def test_Beam():
     b = Beam(1, E, I)
     assert b.length == 1
     assert b.elastic_modulus == E
-    assert b.second_moment == I
+    assert b.second_moment[0] == I
     assert b.variable == x
 
     # Test the length setter
@@ -30,8 +30,8 @@ def test_Beam():
     assert b.elastic_modulus == E_1
 
     # Test the I setter
-    b.second_moment = I_1
-    assert b.second_moment is I_1
+    b.second_moment[0] = I_1
+    assert b.second_moment[0] is I_1
 
     # Test the variable setter
     b.variable = y
@@ -301,7 +301,7 @@ def test_composite_beam():
     b.bc_slope = [(0, 0)]
     b.bc_deflection = [(0, 0)]
     assert b.length == 4
-    assert b.second_moment == Piecewise((1.5*I, x <= 2), (I, x <= 4))
+    assert b.second_moment[0] == Piecewise((1.5*I, x <= 2), (I, x <= 4))
     assert b.slope().subs(x, 4) == 120.0/(E*I)
     assert b.slope().subs(x, 2) == 80.0/(E*I)
     assert int(b.deflection().subs(x, 4).args[0]) == 302  # Coefficient of 1/(E*I)

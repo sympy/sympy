@@ -13,6 +13,7 @@ from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
+from sympy.geometry.entity import GeometryEntity
 
 class Beam(object):
     """
@@ -65,26 +66,29 @@ class Beam(object):
          + Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
     """
 
-    def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x'), base_char='C'):
+    def __init__(self, length, elastic_modulus, shape, variable=Symbol('x'), base_char='C'):
         """Initializes the class.
 
         Parameters
         ==========
         length : Sympifyable
             A Symbol or value representing the Beam's length.
+
         elastic_modulus : Sympifyable
             A SymPy expression representing the Beam's Modulus of Elasticity.
             It is a measure of the stiffness of the Beam material. It can
             also be a continuous function of position along the beam.
-        second_moment : Sympifyable
-            A SymPy expression representing the Beam's Second moment of area.
-            It is a geometrical property of an area which reflects how its
-            points are distributed with respect to its neutral axis. It can
-            also be a continuous function of position along the beam.
+
+        shape : Geometry object or Sympifiable
+            Describes the shape of the beam via a Geometry object representing
+            the shape of the cross-section of the beam or via a sympy expression
+            representing the Beam's Second moment of area.
+
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
+
         base_char : String, optional
             A String that will be used as base character to generate sequential
             symbols for integration constants in cases where boundary conditions
@@ -92,7 +96,7 @@ class Beam(object):
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
-        self.second_moment = second_moment
+        self.shape = shape
         self.variable = variable
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
@@ -103,7 +107,8 @@ class Beam(object):
         self._hinge_position = None
 
     def __str__(self):
-        str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
+        shape_description = self._shape if self._shape else self._second_moment[0]
+        str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(shape_description))
         return str_sol
 
     @property
@@ -165,12 +170,26 @@ class Beam(object):
 
     @property
     def second_moment(self):
-        """Second moment of area of the Beam. """
+        """A list of the second moment of area of the Beam: [Ixx, Iyy, Ixy]. """
         return self._second_moment
 
     @second_moment.setter
     def second_moment(self, i):
         self._second_moment = sympify(i)
+
+    @property
+    def shape(self):
+        """Shape of the Beam """
+        return self._shape
+
+    @shape.setter
+    def shape(self, s):
+        if isinstance(s, GeometryEntity):
+            self._shape = s
+            self.second_moment = list(s.second_moment_of_area())
+        else:
+            self._shape = None
+            self.second_moment = [s, None, None]
 
     @property
     def boundary_conditions(self):
@@ -263,11 +282,11 @@ class Beam(object):
         x = self.variable
         E = self.elastic_modulus
         new_length = self.length + beam.length
-        if self.second_moment != beam.second_moment:
-            new_second_moment = Piecewise((self.second_moment, x<=self.length),
-                                    (beam.second_moment, x<=new_length))
+        if self.second_moment[0] != beam.second_moment[0]:
+            new_second_moment = Piecewise((self.second_moment[0], x<=self.length),
+                                    (beam.second_moment[0], x<=new_length))
         else:
-            new_second_moment = self.second_moment
+            new_second_moment = self.second_moment[0]
 
         if via == "fixed":
             new_beam = Beam(new_length, E, new_second_moment, x)
@@ -583,7 +602,7 @@ class Beam(object):
         x = self.variable
         l = self._hinge_position
         E = self._elastic_modulus
-        I = self._second_moment
+        I = self._second_moment[0]
 
         if isinstance(I, Piecewise):
             I1 = I.args[0][0]
@@ -984,7 +1003,7 @@ class Beam(object):
         """
         x = self.variable
         E = self.elastic_modulus
-        I = self.second_moment
+        I = self.second_moment[0]
 
         if self._composite_type == "hinge":
             return self._hinge_beam_slope
@@ -1052,7 +1071,7 @@ class Beam(object):
         """
         x = self.variable
         E = self.elastic_modulus
-        I = self.second_moment
+        I = self.second_moment[0]
         if self._composite_type == "hinge":
             return self._hinge_beam_deflection
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
@@ -1560,7 +1579,8 @@ class Beam3D(Beam):
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
         """
-        super(Beam3D, self).__init__(length, elastic_modulus, second_moment, variable)
+        super(Beam3D, self).__init__(length, elastic_modulus, variable)
+        self.second_moment = second_moment
         self.shear_modulus = shear_modulus
         self.area = area
         self._load_vector = [0, 0, 0]
