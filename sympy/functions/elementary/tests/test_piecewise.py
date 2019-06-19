@@ -3,11 +3,11 @@ from sympy import (
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
-    factor_terms, DiracDelta, Heaviside, Add, Mul, factorial, Ge)
+    DiracDelta, Heaviside, Add, Mul, factorial, Ge)
+from sympy.core.expr import unchanged
+from sympy.functions.elementary.piecewise import Undefined
 from sympy.printing import srepr
 from sympy.utilities.pytest import raises, slow
-
-from sympy.functions.elementary.piecewise import Undefined
 
 
 a, b, c, d, x, y = symbols('a:d, x, y')
@@ -17,7 +17,7 @@ z = symbols('z', nonzero=True)
 def test_piecewise1():
 
     # Test canonicalization
-    assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
+    assert unchanged(Piecewise, (x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, True), (1, True)) == \
         Piecewise((x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, False), (-1, 1 > 2)) == \

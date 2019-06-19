@@ -166,10 +166,11 @@ def test_pow():
     k = Symbol('k', even=True)
     o = Symbol('o', odd=True)
 
-    assert (-1)**x == (-1)**x
-    assert (-1)**n == (-1)**n
+    assert unchanged(Pow, -1, x)
+    assert unchanged(Pow, -1, n)
     assert (-2)**k == 2**k
     assert (-1)**k == 1
+    assert (-1)**o == -1
 
 
 def test_pow2():

@@ -7,18 +7,20 @@ from sympy import (
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
     symbols, sympify, tan, trigsimp, Tuple
 )
+from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.functions.elementary.integers import floor
+from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
-from sympy.integrals.integrals import Integral
 
-x, y, a, t, x_1, x_2, z, s, b= symbols('x y a t x_1 x_2 z s b')
+x, y, a, t, x_1, x_2, z, s, b = symbols('x y a t x_1 x_2 z s b')
 n = Symbol('n', integer=True)
 f = Function('f')
+
 
 def test_principal_value():
     g = 1 / x
@@ -46,6 +48,7 @@ def test_principal_value():
     f = 1 / ((x ** 2 - 1) * (1 + x ** 2))
     assert Integral(f, (x, -oo, oo)).principal_value() == -pi / 2
     assert Integral(f, (x, -2, 2)).principal_value() == -atan(2) - log(3) / 2
+
 
 def diff_test(i):
     """Return the set of symbols, s, which were used in testing that
@@ -309,6 +312,7 @@ def test_issue_3686():  # remove this when fresnel itegrals are implemented
     assert expand_func(integrate(sin(x**2), x)) == \
         sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/2
 
+
 def test_integrate_units():
     m = units.m
     s = units.s
@@ -541,7 +545,7 @@ def test_integrate_SingularityFunction():
     assert integrate(in_3, x) == out_3_1
     assert integrate(in_3, y) == out_3_2
 
-    assert Integral(in_3, x) == Integral(in_3, x)
+    assert unchanged(Integral, in_3, x)
     assert Integral(in_3, x).doit() == out_3_1
 
     in_4 = 10*SingularityFunction(x, -4, 7) - 2*SingularityFunction(x, 10, -2)
