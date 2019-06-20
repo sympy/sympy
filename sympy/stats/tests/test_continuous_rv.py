@@ -1256,7 +1256,8 @@ def test_conditional_eq():
 def test_temporary_sample_python():
     distribs = [
             Normal("N", 0, 1),
-            Gamma("G", 2, 7)
+            Gamma("G", 2, 7),
+            Exponential('E', 2)
     ]
     size = 10
     for X in distribs:

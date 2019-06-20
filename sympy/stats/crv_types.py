@@ -1151,8 +1151,24 @@ class ExponentialDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return self.rate * exp(-self.rate*x)
 
-    def sample(self):
-        return random.expovariate(self.rate)
+    def _sample_random(self, size):
+        return [random.expovariate(self.rate) for i in range(size)]
+
+    def _sample_numpy(self, numpy, size):
+        rate = float(self.rate)
+        return numpy.random.exponential(1/rate, size)
+
+    def _sample_scipy(self, scipy, size):
+        rate = float(self.rate)
+        from scipy.stats import expon
+        return expon.rvs(loc=0, scale=1/rate, size=size)
+
+    def _sample_pymc3(self, pymc3, size):
+        rate = float(self.rate)
+        with pymc3.Model() as model:
+            X = pymc3.Exponential('X', lam=rate)
+            return pymc3.sample(size, chains=1)[:]['X']
+
 
     def _cdf(self, x):
         return Piecewise(
@@ -1600,7 +1616,6 @@ class GammaDistribution(SingleContinuousDistribution):
         with pymc3.Model() as model:
             X = pymc3.Gamma('X', alpha=k, beta=1/theta)
             return pymc3.sample(size, chains=1)[:]['X']
-
 
     def _cdf(self, x):
         k, theta = self.k, self.theta
