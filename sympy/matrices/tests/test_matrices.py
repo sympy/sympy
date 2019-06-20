@@ -1856,12 +1856,6 @@ def test_issue_15887():
 
     # Test deprecated cache and kwargs
     with warns_deprecated_sympy():
-        a._cache_eigenvects
-
-    with warns_deprecated_sympy():
-        a._cache_is_diagonalizable
-
-    with warns_deprecated_sympy():
         a.is_diagonalizable(clear_cache=True)
 
     with warns_deprecated_sympy():

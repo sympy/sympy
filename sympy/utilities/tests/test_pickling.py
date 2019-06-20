@@ -33,9 +33,7 @@ from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
 
 excluded_attrs = set(
-    ['_assumptions', '_mhash', 'message',
-    # XXX Remove these after deprecation is done for issue #15887
-    '_cache_eigenvects', '_cache_is_diagonalizable']
+    ['_assumptions', '_mhash', 'message']
     )
 
 
