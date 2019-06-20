@@ -32,9 +32,7 @@ from sympy import symbols, S
 from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
 
-excluded_attrs = set(
-    ['_assumptions', '_mhash', 'message']
-    )
+excluded_attrs = set(['_assumptions', '_mhash', 'message'])
 
 
 def check(a, exclude=[], check_attr=True):
