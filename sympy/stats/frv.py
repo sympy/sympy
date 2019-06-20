@@ -13,7 +13,7 @@ from itertools import product
 
 from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul, Add,
         And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan, Rational,
-        Sum)
+        Sum, Intersection)
 from sympy.sets.sets import FiniteSet
 from sympy.core.relational import Relational
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
@@ -87,7 +87,8 @@ class SingleFiniteDomain(FiniteDomain):
     """
 
     def __new__(cls, symbol, set):
-        if not isinstance(set, FiniteSet):
+        if not isinstance(set, FiniteSet) and \
+            not isinstance(set, Intersection):
             set = FiniteSet(*set)
         return Basic.__new__(cls, symbol, set)
 
@@ -356,6 +357,10 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
     Represents probability space of finite
     random variables with symbolic dimensions.
     """
+    @property
+    def domain(self):
+        return SingleFiniteDomain(self.symbol, self.distribution.set)
+
     def prob_of(self, elem):
         elem = sympify(elem)
         return self.pdf(elem)
@@ -381,6 +386,11 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
         ki = Dummy('ki')
         return Lambda(t, Sum(d(ki)*exp(ki*t), (ki, self.args[1].low, self.args[1].high)))
 
+    def compute_quantile(self, expr):
+        raise NotImplementedError("Computing quantile for random variables "
+        "with symbolic dimension because the bounds of searching the required "
+        "value is undetermined.")
+
     def compute_density(self, expr):
         cond = expr
         if not isinstance(expr, (Relational, Logic)):
@@ -396,11 +406,28 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
         ki = Dummy('ki')
         return Lambda(k, Sum(d(ki), (ki, self.args[1].low, k)))
 
+    def sorted_cdf(self, expr):
+        raise NotImplementedError("Sorted cdf of random variables with "
+                "symbolic dimensions is currently not possible.")
+
     def compute_expectation(self, expr, rvs=None, **kwargs):
         return Expectation(expr, **kwargs)
 
     def probability(self, condition):
         return Probability(condition)
+
+    def conditional_space(self, condition):
+        """
+        This method is used for transferring the
+        computation to probability method because
+        conditional space of random variables with
+        symbolic dimensions is currently not possible.
+        """
+        return self
+
+    def sample(self):
+        raise NotImplementedError("Sampling of random variables with "
+                "symbolic dimensions is not possible.")
 
 
 class SingleFinitePSpace(SinglePSpace, FinitePSpace):

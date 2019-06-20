@@ -55,7 +55,7 @@ def rv(name, cls, *args):
     dist.check(*args)
     if dist.is_symbolic:
         return SymbolicSingleFinitePSpace(name, dist).value
-    return SymbolicSingleFinitePSpace(name, dist).value
+    return SingleFinitePSpace(name, dist).value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
 
@@ -178,10 +178,9 @@ class DieDistribution(SingleFiniteDistribution):
     def pdf(self, x):
         x = sympify(x)
         if x.is_number:
-            if x.is_Integer:
-                return Piecewise((S(1)/self.sides,
-                (Gt(x, 0) != False) & (Lt(x, self.sides + 1) != False)), (
-                S.Zero, True))
+            return Piecewise((S(1)/self.sides,
+            (Gt(x, 0) != False) & (Lt(x, self.sides + 1) != False) & x.is_Integer), (
+            S.Zero, True))
         elif x.is_Symbol or isinstance(x, RandomSymbol):
             i = Dummy('i', integer=True, positive=True)
             return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides))
