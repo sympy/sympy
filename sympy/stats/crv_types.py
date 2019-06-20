@@ -2388,7 +2388,7 @@ class NormalDistribution(SingleContinuousDistribution):
         return norm.rvs(mean, std, size)
 
     def _sample_pymc3(self, pymc3, size):
-        mean, std = self.mean, self.std
+        mean, std = float(self.mean), float(self.std)
         with pymc3.Model() as model:
             X = pymc3.Normal('X', mean, std)
             return pymc3.sample(size, chains=1)[:]['X']
