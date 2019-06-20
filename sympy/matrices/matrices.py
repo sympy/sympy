@@ -2408,11 +2408,6 @@ class MatrixBase(MatrixDeprecated,
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
         return "Matrix(%s)" % str(self.tolist())
 
-    def _diagonalize_clear_subproducts(self):
-        del self._is_symbolic
-        del self._is_symmetric
-        del self._eigenvects
-
     def _format_str(self, printer=None):
         if not printer:
             from sympy.printing.str import StrPrinter
