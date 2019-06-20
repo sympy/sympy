@@ -1275,6 +1275,15 @@ class LatexPrinter(Printer):
             return r"\zeta^{%s}%s" % (self._print(exp), tex)
         return r"\zeta%s" % tex
 
+    def _print_stieltjes(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"_{%s}\left(%s\right)" % tuple(map(self._print, expr.args))
+        else:
+            tex = r"_{%s}" % self._print(expr.args[0])
+        if exp is not None:
+            return r"\gamma^{%s}%s" % (self._print(exp), tex)
+        return r"\gamma%s" % tex
+
     def _print_lerchphi(self, expr, exp=None):
         tex = r"\left(%s, %s, %s\right)" % tuple(map(self._print, expr.args))
         if exp is None:

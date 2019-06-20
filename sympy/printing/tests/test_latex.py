@@ -17,7 +17,7 @@ from sympy import (
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
-    UnevaluatedExpr, Quaternion, I, KroneckerProduct, Intersection)
+    UnevaluatedExpr, Quaternion, I, KroneckerProduct, Intersection, stieltjes)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -411,7 +411,6 @@ def test_latex_functions():
     assert latex(im(x)) == r'\operatorname{im}{\left(x\right)}'
     assert latex(root(x, y)) == r'x^{\frac{1}{y}}'
     assert latex(arg(x)) == r'\arg{\left(x \right)}'
-    assert latex(zeta(x)) == r'\zeta\left(x\right)'
 
     assert latex(zeta(x)) == r"\zeta\left(x\right)"
     assert latex(zeta(x)**2) == r"\zeta^{2}\left(x\right)"
@@ -424,6 +423,10 @@ def test_latex_functions():
         polylog(x, y)**2) == r"\operatorname{Li}_{x}^{2}\left(y\right)"
     assert latex(lerchphi(x, y, n)) == r"\Phi\left(x, y, n\right)"
     assert latex(lerchphi(x, y, n)**2) == r"\Phi^{2}\left(x, y, n\right)"
+    assert latex(stieltjes(x)) == r"\gamma_{x}"
+    assert latex(stieltjes(x)**2) == r"\gamma^{2}_{x}"
+    assert latex(stieltjes(x, y)) == r"\gamma_{x}\left(y\right)"
+    assert latex(stieltjes(x, y)**2) == r"\gamma^{2}_{x}\left(y\right)"
 
     assert latex(elliptic_k(z)) == r"K\left(z\right)"
     assert latex(elliptic_k(z)**2) == r"K^{2}\left(z\right)"
