@@ -1009,6 +1009,20 @@ def test_issue_4890():
         sqrt(pi)*exp(1/(4*z))*erf(sqrt(z)*log(x) - 1/(2*sqrt(z)))/(2*sqrt(z))
 
 
+def test_issue_4326():
+    assert not integrate(((h*(x - R + b))/b)*sqrt(R**2 - x**2), (x, R - b, R)).has(Integral)
+
+
+def test_issue_4551():
+    assert not integrate(1/(x*sqrt(1 - x**2)), x).has(Integral)
+
+
+def test_issue_4737():
+    # Implementation of Si()
+    assert integrate(sin(x)/x, x) == Si(x)
+    assert integrate(sin(x)/x, (x, 0, oo)) == pi/2
+
+
 def test_issue_4376():
     n = Symbol('n', integer=True, positive=True)
     assert simplify(integrate(n*(x**(1/n) - 1), (x, 0, S.Half)) -
