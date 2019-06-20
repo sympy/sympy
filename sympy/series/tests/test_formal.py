@@ -507,3 +507,23 @@ def test_fps__operations():
     fi = f2.integrate(x)
     assert fi.function == sin(x)
     assert fi.truncate() == x - x**3/6 + x**5/120 + O(x**6)
+
+
+def test_fps__composition():
+    f1, f2, f3 = fps(exp(x)), fps(sin(x)), fps(cos(x))
+
+    raises(ValueError, lambda: f1.compose(sin(x), x))
+    raises(ValueError, lambda: f1.compose(fps(sin(x), dir=-1), x, 4))
+    raises(ValueError, lambda: f1.compose(fps(sin(x), x0=1), x, 4))
+    raises(ValueError, lambda: f1.compose(fps(sin(y)), x, 4))
+
+    raises(ValueError, lambda: f1.compose(f3, x))
+    raises(ValueError, lambda: f2.compose(f3, x))
+
+    assert f1.compose(f2, x) == 1 + x + x**2/2 - x**4/8 - x**5/15 + O(x**6)
+    assert f1.compose(f2, x, n=4) == 1 + x + x**2/2 + O(x**4)
+    assert f1.compose(f2, x, n=8) == \
+        1 + x + x**2/2 - x**4/8 - x**5/15 - x**6/240 + x**7/90 + O(x**8)
+
+    assert f2.compose(f2, x, n=4) == x - x**3/6 + O(x**4)
+    assert f2.compose(f2, x, n=8) == x - x**3/6 + 11*x**5/120 - 127*x**7/5040 + O(x**8)
