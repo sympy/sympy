@@ -545,7 +545,8 @@ def test_integrate_SingularityFunction():
     assert integrate(in_3, x) == out_3_1
     assert integrate(in_3, y) == out_3_2
 
-    assert unchanged(Integral, in_3, x)
+    assert unchanged(Integral, in_3, (x,))
+    assert Integral(in_3, x) == Integral(in_3, (x,))
     assert Integral(in_3, x).doit() == out_3_1
 
     in_4 = 10*SingularityFunction(x, -4, 7) - 2*SingularityFunction(x, 10, -2)
