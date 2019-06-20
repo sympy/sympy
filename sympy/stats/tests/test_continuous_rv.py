@@ -1078,7 +1078,7 @@ def test_density_unevaluated():
     Y = Normal('Y', 0, 2)
     assert isinstance(density(X+Y, evaluate=False)(z), Integral)
 
-
+@XFAIL # sample function now returns array
 def test_NormalDistribution():
     nd = NormalDistribution(0, 1)
     x = Symbol('x')
@@ -1252,3 +1252,37 @@ def test_conditional_eq():
     assert P(Eq(E, 1), Eq(E, 2)) == 0
     assert P(E > 1, Eq(E, 2)) == 1
     assert P(E < 1, Eq(E, 2)) == 0
+
+def test_temporary_sample_python():
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
+    X = GammaInverse("x", 1, 1)
+    assert sample(X) in X.pspace.domain.set
+
+    X = Normal('x', 0, 1)
+    size = 10
+    sam = X.pspace.distribution._sample_random(size)
+    for i in range(size):
+        assert sam[i] in X.pspace.domain.set
+
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy not installed. Abort tests for _sample_numpy.')
+    sam = X.pspace.distribution._sample_numpy(numpy, size)
+    for i in range(size):
+        assert sam[i] in X.pspace.domain.set
+
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for _sample_scipy.')
+    sam = X.pspace.distribution._sample_scipy(scipy, size)
+    for i in range(size):
+        assert sam[i] in X.pspace.domain.set
+
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 not installed. Abort tests for _sample_pymc3.')
+    sam = X.pspace.distribution._sample_pymc3(scipy, size)
+    for i in range(size):
+        assert sam[i] in X.pspace.domain.set

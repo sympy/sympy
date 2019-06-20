@@ -2548,8 +2548,23 @@ class NormalDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
-    def sample(self):
-        return random.normalvariate(self.mean, self.std)
+    def _sample_random(self, size):
+        return [random.normalvariate(self.mean, self.std) for i in range(size)]
+
+    def _sample_numpy(self, numpy, size):
+        mean, std = float(self.mean), float(self.std)
+        return numpy.random.normal(mean, std, size)
+
+    def _sample_scipy(self, scipy, size):
+        mean, std = float(self.mean), float(self.std)
+        from scipy.stats import norm
+        return norm.rvs(mean, std, size)
+
+    def _sample_pymc3(sefl, pymc3, size):
+        mean, std = float(self.mean), float(self.std)
+        with pymc3.Model() as model:
+            X = pymc3.Normal('X', mean, std)
+            return pymc3.sample(size, chains=1)[:]['X']
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
