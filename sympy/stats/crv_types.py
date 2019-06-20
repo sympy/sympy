@@ -1611,7 +1611,7 @@ class GammaDistribution(SingleContinuousDistribution):
         from scipy.stats import gamma
         return gamma.rvs(a=k, loc=0, scale=theta, size=size)
 
-    def _sample_pymc3(sefl, pymc3, size):
+    def _sample_pymc3(self, pymc3, size):
         k, theta = float(self.k), float(self.theta)
         with pymc3.Model() as model:
             X = pymc3.Gamma('X', alpha=k, beta=1/theta)
@@ -2591,7 +2591,7 @@ class NormalDistribution(SingleContinuousDistribution):
         from scipy.stats import norm
         return norm.rvs(mean, std, size)
 
-    def _sample_pymc3(sefl, pymc3, size):
+    def _sample_pymc3(self, pymc3, size):
         mean, std = float(self.mean), float(self.std)
         with pymc3.Model() as model:
             X = pymc3.Normal('X', mean, std)

@@ -1282,6 +1282,6 @@ def test_temporary_sample_python():
         pymc3 = import_module('pymc3')
         if not pymc3:
             skip('PyMC3 not installed. Abort tests for _sample_pymc3.')
-        sam = X.pspace.distribution._sample_pymc3(scipy, size)
+        sam = X.pspace.distribution._sample_pymc3(pymc3, size)
         for i in range(size):
             assert sam[i] in X.pspace.domain.set
