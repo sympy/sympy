@@ -1583,8 +1583,24 @@ class GammaDistribution(SingleContinuousDistribution):
         k, theta = self.k, self.theta
         return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
 
-    def sample(self):
-        return random.gammavariate(self.k, self.theta)
+    def _sample_random(self, size):
+        return [random.gammavariate(self.k, self.theta) for i in range(size)]
+
+    def _sample_numpy(self, numpy, size):
+        k, theta = float(self.k), float(self.theta)
+        return numpy.random.gamma(k, theta, size)
+
+    def _sample_scipy(self, scipy, size):
+        k, theta = float(self.k), float(self.theta)
+        from scipy.stats import gamma
+        return gamma.rvs(a=k, loc=0, scale=theta, size=size)
+
+    def _sample_pymc3(sefl, pymc3, size):
+        k, theta = float(self.k), float(self.theta)
+        with pymc3.Model() as model:
+            X = pymc3.Gamma('X', alpha=k, beta=1/theta)
+            return pymc3.sample(size, chains=1)[:]['X']
+
 
     def _cdf(self, x):
         k, theta = self.k, self.theta
