@@ -1,7 +1,7 @@
 from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
                     Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
                     nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
-                    linsolve, Piecewise, zeros)
+                    linsolve, Piecewise, eye)
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -324,6 +324,68 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
 
         return is_insufficient, trans_probs, state_space, given_condition
 
+    def _transient2transient(self):
+        """
+        Computes the one step probabilities of transient
+        states to transient states. Used in finding
+        fundamental matrix, absorbing probabilties.
+        """
+        trans_probs = self.transition_probabilities
+        if not isinstance(trans_probs, ImmutableMatrix):
+            return None
+
+        m, trans_states, t2t = trans_probs.shape[0], [], []
+        for i in range(m):
+            if trans_probs[i, i] != 1:
+                trans_states.append(i)
+
+        for si in trans_states:
+            tij = []
+            for sj in trans_states:
+                tij.append(trans_probs[si, sj])
+            t2t.append(tij)
+
+        return ImmutableMatrix(t2t)
+
+    def _transient2absorbing(self):
+        """
+        Computes the one step probabilities of transient
+        states to absorbing states. Used in finding
+        fundamental matrix, absorbing probabilties.
+        """
+        trans_probs = self.transition_probabilities
+        if not isinstance(trans_probs, ImmutableMatrix):
+            return None
+
+        m, trans_states, absorb_states, t2a = \
+            trans_probs.shape[0], [], [], []
+        for i in range(m):
+            if trans_probs[i, i] == 1:
+                absorb_states.append(i)
+            else:
+                trans_states.append(i)
+
+        if not absorb_states or not trans_states:
+            return None
+
+        for si in trans_states:
+            tij = []
+            for sj in absorb_states:
+                tij.append(trans_probs[si, sj])
+            t2a.append(tij)
+
+        return ImmutableMatrix(t2a)
+
+    @property
+    def fundamental_matrix(self):
+        Q = self._transient2transient()
+        if Q == None:
+            return None
+        I = eye(Q.shape[0])
+        if (I - Q).det() == 0:
+            raise ValueError("Fundamental matrix doesn't exists.")
+        return (I - Q).inv()
+
     def is_absorbing_state(self, state):
         trans_probs = self.transition_probabilities
         if isinstance(trans_probs, ImmutableMatrix) and \
@@ -351,6 +413,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         eqs.append(sum(wi) - 1)
         soln = list(linsolve(eqs, wi))[0]
         return ImmutableMatrix([[sol for sol in soln]])
+
+    @property
+    def limiting_distribution(self):
+        """
+        The fixed row vector is the limiting
+        distribution of a discrete Markov chain.
+        """
+        return self.fixed_row_vector
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """

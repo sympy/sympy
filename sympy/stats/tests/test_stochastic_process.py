@@ -32,6 +32,8 @@ def test_DiscreteMarkovChain():
     TS = MatrixSymbol('T', 3, 3)
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     YS = DiscreteMarkovChain("Y", [0, 1, 2], TS)
+    assert YS._transient2transient() == None
+    assert YS._transient2absorbing() == None
     assert Y.joint_distribution(1, Y[2], 3) == JointDistribution(Y[1], Y[2], Y[3])
     raises(ValueError, lambda: Y.joint_distribution(Y[1].symbol, Y[2].symbol))
     assert P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2) == Float(0.36, 2)
@@ -64,12 +66,19 @@ def test_DiscreteMarkovChain():
     TO3 = Matrix([[S(1)/4, S(3)/4, 0],[S(1)/3, S(1)/3, S(1)/3],[0, S(1)/4, S(3)/4]])
     Y2 = DiscreteMarkovChain('Y', trans_probs=TO2)
     Y3 = DiscreteMarkovChain('Y', trans_probs=TO3)
+    assert Y3._transient2absorbing() == None
+    raises (ValueError, lambda: Y3.fundamental_matrix)
     assert Y2.is_absorbing_chain == True
     assert Y3.is_absorbing_chain == False
     TO4 = Matrix([[S(1)/5, S(2)/5, S(2)/5], [S(1)/10, S(1)/2, S(2)/5], [S(3)/5, S(3)/10, S(1)/10]])
     Y4 = DiscreteMarkovChain('Y', trans_probs=TO4)
     w = ImmutableMatrix([[S(11)/39, S(16)/39, S(4)/13]])
-    assert Y4.fixed_row_vector == w
+    assert Y4.limiting_distribution == w
     TS1 = MatrixSymbol('T', 3, 3)
     Y5 = DiscreteMarkovChain('Y', trans_probs=TS1)
-    assert Y5.fixed_row_vector(w, TO4).doit() == True
+    assert Y5.limiting_distribution(w, TO4).doit() == True
+    TO6 = Matrix([[S(1), 0, 0, 0, 0],[S(1)/2, 0, S(1)/2, 0, 0],[0, S(1)/2, 0, S(1)/2, 0], [0, 0, S(1)/2, 0, S(1)/2], [0, 0, 0, 0, 1]])
+    Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
+    assert Y6._transient2absorbing() == Matrix([[1/2, 0], [0, 0], [0, 1/2]])
+    assert Y6._transient2transient() == Matrix([[0, 1/2, 0], [1/2, 0, 1/2], [0, 1/2, 0]])
+    assert Y6.fundamental_matrix == Matrix([[3/2, 1, 1/2], [1, 2, 1], [1/2, 1, 3/2]])
