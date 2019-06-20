@@ -1,6 +1,7 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
                              chebyshevt, conjugate, DiracDelta, exp, expint,
                              factorial, floor, harmonic, Heaviside, im,
@@ -13,7 +14,7 @@ from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
-                            HadamardProduct, SparseMatrix, MatrixSolve)
+                            HadamardProduct, SparseMatrix)
 from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
                                             besselk, hankel1, hankel2, airyai,
                                             airybi, airyaiprime, airybiprime)
