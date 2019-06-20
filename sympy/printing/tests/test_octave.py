@@ -13,7 +13,7 @@ from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
-                            HadamardProduct, SparseMatrix)
+                            HadamardProduct, SparseMatrix, MatrixSolve)
 from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
                                             besselk, hankel1, hankel2, airyai,
                                             airybi, airyaiprime, airybiprime)
@@ -250,6 +250,12 @@ def test_MatrixSymbol():
     assert mcode(A**3) == "A^3"
     assert mcode(A**(S.Half)) == "A^(1/2)"
 
+
+def test_MatrixSolve():
+    n = Symbol('n', integer=True)
+    A = MatrixSymbol('A', n, n)
+    x = MatrixSymbol('x', n, 1)
+    assert mcode(MatrixSolve(A, x)) == "A \\ x"
 
 def test_special_matrices():
     assert mcode(6*Identity(3)) == "6*eye(3)"
