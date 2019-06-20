@@ -66,7 +66,7 @@ class Beam(object):
          + Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
     """
 
-    def __init__(self, length, elastic_modulus, shape, variable=Symbol('x'), base_char='C'):
+    def __init__(self, length, elastic_modulus, second_moment, variable=Symbol('x'), base_char='C'):
         """Initializes the class.
 
         Parameters
@@ -79,10 +79,14 @@ class Beam(object):
             It is a measure of the stiffness of the Beam material. It can
             also be a continuous function of position along the beam.
 
-        shape : Geometry object or Sympifiable
-            Describes the shape of the beam via a Geometry object representing
-            the shape of the cross-section of the beam or via a sympy expression
-            representing the Beam's Second moment of area.
+        second_moment : Sympifiable or Geometry object
+            Describes the cross-section of the beam  via a sympy expression
+            representing the Beam's Second moment of area. It is a geometrical
+            property of an area which reflects how its points are distributed
+            with respect to its neutral axis. It can also be a continuous
+            function of position along the beam.
+            Or via a Geometry object representing the shape of the cross-section
+            of the beam.
 
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
@@ -96,7 +100,7 @@ class Beam(object):
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
-        self.shape = shape
+        self.second_moment = second_moment
         self.variable = variable
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
@@ -107,7 +111,7 @@ class Beam(object):
         self._hinge_position = None
 
     def __str__(self):
-        shape_description = self._shape if self._shape else self._second_moment[0]
+        shape_description = self._cross_section if self._cross_section else self._second_moment
         str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(shape_description))
         return str_sol
 
@@ -170,26 +174,26 @@ class Beam(object):
 
     @property
     def second_moment(self):
-        """A list of the second moment of area of the Beam: [Ixx, Iyy, Ixy]. """
+        """Second moment of area of the Beam. """
         return self._second_moment
 
     @second_moment.setter
     def second_moment(self, i):
-        self._second_moment = sympify(i)
+        if isinstance(i, GeometryEntity):
+            self.cross_section = i
+            self._second_moment = i.second_moment_of_area()[0]
+        else:
+            self.cross_section = None
+            self._second_moment = sympify(i)
 
     @property
-    def shape(self):
-        """Shape of the Beam """
-        return self._shape
+    def cross_section(self):
+        """Cross_section of the Beam """
+        return self._cross_section
 
-    @shape.setter
-    def shape(self, s):
-        if isinstance(s, GeometryEntity):
-            self._shape = s
-            self.second_moment = list(s.second_moment_of_area())
-        else:
-            self._shape = None
-            self.second_moment = [s, None, None]
+    @cross_section.setter
+    def cross_section(self, s):
+        self._cross_section = s
 
     @property
     def boundary_conditions(self):
@@ -282,11 +286,11 @@ class Beam(object):
         x = self.variable
         E = self.elastic_modulus
         new_length = self.length + beam.length
-        if self.second_moment[0] != beam.second_moment[0]:
-            new_second_moment = Piecewise((self.second_moment[0], x<=self.length),
-                                    (beam.second_moment[0], x<=new_length))
+        if self.second_moment != beam.second_moment:
+            new_second_moment = Piecewise((self.second_moment, x<=self.length),
+                                    (beam.second_moment, x<=new_length))
         else:
-            new_second_moment = self.second_moment[0]
+            new_second_moment = self.second_moment
 
         if via == "fixed":
             new_beam = Beam(new_length, E, new_second_moment, x)
@@ -602,7 +606,7 @@ class Beam(object):
         x = self.variable
         l = self._hinge_position
         E = self._elastic_modulus
-        I = self._second_moment[0]
+        I = self._second_moment
 
         if isinstance(I, Piecewise):
             I1 = I.args[0][0]
@@ -1003,7 +1007,7 @@ class Beam(object):
         """
         x = self.variable
         E = self.elastic_modulus
-        I = self.second_moment[0]
+        I = self.second_moment
 
         if self._composite_type == "hinge":
             return self._hinge_beam_slope
@@ -1071,7 +1075,7 @@ class Beam(object):
         """
         x = self.variable
         E = self.elastic_modulus
-        I = self.second_moment[0]
+        I = self.second_moment
         if self._composite_type == "hinge":
             return self._hinge_beam_deflection
         if not self._boundary_conditions['deflection'] and not self._boundary_conditions['slope']:
@@ -1579,8 +1583,7 @@ class Beam3D(Beam):
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
         """
-        super(Beam3D, self).__init__(length, elastic_modulus, variable)
-        self.second_moment = second_moment
+        super(Beam3D, self).__init__(length, elastic_modulus, second_moment, variable)
         self.shear_modulus = shear_modulus
         self.area = area
         self._load_vector = [0, 0, 0]
