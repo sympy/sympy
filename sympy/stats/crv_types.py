@@ -2339,33 +2339,59 @@ class NormalDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
-    def sample(self, **kwargs):
-        mean, std = self.mean, self.std
-        print("len: ", len(kwargs))
-        if len(kwargs) == 0 or mean.has(Symbol) or std.has(Symbol):
-            return random.normalvariate(self.mean, self.std)
+    def _sample_python(self, **kwargs):
+        for arg in self.args:
+            has_symbol = True
+            if arg.has(Symbol):
+                break
+            is_symbol = False
+        if len(kwargs) == 0 or has_symbol:
+            return self._sample_random()
         objs = {}
-        mean, std, size = float(mean), float(std), kwargs.get('size', 1)
+        size = kwargs.get('size', 1)
         if kwargs.get('numpy', False):
-            objs['numpy'] = _sample_numpy(mean, std, size)
+            numpy = import_module('numpy')
+            if numpy:
+                objs['numpy'] = self._sample_numpy(numpy, size)
+            else:
+                raise NotImplementedError(
+                    'Sampling the Normal distribution requires Numpy.')
         if kwargs.get('scipy', False):
-            objs['scipy'] = _sample_scipy(mean, std, size)
+            scipy = import_module('scipy')
+            if scipy:
+                objs['scipy'] = self._sample_scipy(scipy, size)
+            else:
+                raise NotImplementedError(
+                    'Sampling the Normal distribution requires Scipy.')
+        if kwargs.get('pymc3', False):
+            pymc3 = import_module('pymc3')
+            if pymc3:
+                objs['pymc3'] = self._sample_pymc3(pymc3, size)
+            else:
+                raise NotImplementedError(
+                    'Sampling the Normal distribution requires PyMC3')
+        if not objs:
+            raise ValueError(
+                'Please enter the library to which the random is to be exported.')
+        return objs
 
-    def _sample_numpy(mean, std, size):
-        numpy = import_module('numpy')
-        if numpy:
-            return numpy.random.normal(mean, std, size)
-        else:
-            raise NotImplementedError(
-                'Sampling the Normal distribution requires Numpy.')
+    def _sample_random(self):
+        return random.normalvariate(self.mean, self.std)
 
-    def _sample_scipy(mean, std, size):
-        scipy = import_module('scipy')
-        if scipy:
-            return scipy.stats.norm.rvs(mean, std, size)
-        else:
-            raise NotImplementedError(
-                'Sampling the Normal distribution requires Scipy.')
+    def _sample_numpy(self, numpy, size):
+        mean, std = float(self.mean), float(self.std)
+        return numpy.random.normal(mean, std, size)
+
+    def _sample_scipy(self, scipy, size):
+        mean, std = float(self.mean), float(self.std)
+        from scipy.stats import norm
+        return norm.rvs(mean, std, size)
+
+    def _sample_pymc3(self, pymc3, size):
+        mean, std = self.mean, self.std
+        with pymc3.Model() as model:
+            X = pymc3.Normal('X', mean, std)
+            return pymc3.sample(size, chains=1)[:]['X']
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
