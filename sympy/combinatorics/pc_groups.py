@@ -61,6 +61,15 @@ class PolycyclicGroup(Basic):
 
 class Collector(DefaultPrinting):
 
+    """
+    References
+    ==========
+
+    .. [1] Holt, D., Eick, B., O'Brien, E.
+           "Handbook of Computational Group Theory"
+           Section 8.1.3
+    """
+
     def __init__(self, pc_relators, word):
         self.pc_relators = pc_relators
         self.word = word
@@ -75,7 +84,7 @@ class Collector(DefaultPrinting):
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
 
-        Example 8.7 Pg. 281 from Handbook
+        Example 8.7 Pg. 281 from [1]
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
         >>> word = x2**2*x1**7
@@ -95,11 +104,11 @@ class Collector(DefaultPrinting):
         uncollected_subwords = {}
         for i in range(len(array)-1):
             if array[i+1][1] > 0 and index[array[i][0]] > index[array[i+1][0]]:
-                # case-1:  v = x[i]**a*x[i+1]
+                # case-1:  v = x[i]**a*x[i+1], where index[x[i]] > index[x[i+1]]
                 uncollected_subwords[((array[i][0], array[i][1]), (array[i+1][0], 1))] = 0
 
             elif array[i+1][1] < 0 and index[array[i][0]] > index[array[i+1][0]]:
-                # case-2: v = x[i]**a*x[i+1]*-1
+                # case-2: v = x[i]**a*x[i+1]*-1, where index[x[i]] > index[x[i+1]]
                 uncollected_subwords[((array[i][0], array[i][1]), (array[i+1][0], -1))] = 0
 
             if array[i][1] < 0 or array[i][1] > index[array[i][0]]:
@@ -183,7 +192,7 @@ class Collector(DefaultPrinting):
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
 
-        Example 8.7 Pg. 282 from Handbook
+        Example 8.7 Pg. 282 from [1]
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
         >>> word = x2**2*x1
@@ -208,7 +217,7 @@ class Collector(DefaultPrinting):
                 word = conj_word[len(conj_word)-1]**loop*conj_word.subword(0, len(conj_word)-loop)
         return conj_word
 
-    def _index(self, w):
+    def index(self, w):
         """
         Returns the start and ending index of a given
         subword in a word.
@@ -222,10 +231,10 @@ class Collector(DefaultPrinting):
         >>> word = x2**2*x1**7
         >>> collector = Collector(pc_relators, word)
         >>> w = x2**2*x1
-        >>> collector._index(w)
+        >>> collector.index(w)
         (0, 3)
         >>> w = x1**7
-        >>> collector._index(w)
+        >>> collector.index(w)
         (2, 9)
 
         """
@@ -268,7 +277,7 @@ def collected_word(pc_relators, word):
             if collector.word.array_form[len(collector.word.array_form)-1][1] > 0:
                 collector.word = collector.conjugate_word()
         else:
-            low, high = collector._index(w)
+            low, high = collector.index(w)
             collector.word = w
             w = collector.conjugate_word()
             collector.word = word
