@@ -1144,22 +1144,23 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
-    def convolve(self, other, x=None, n=6, cycle=0, dyadic=False, subset=False):
+    def convolve(self, other, x=None, n=6, cycle=0, method=None):
         """ Convolute two Formal Power Series and return the truncated terms upto specified order.
 
         Parameters
         ==========
 
         n : Number, optional
-            Specifies the order of the term upto which the polynomial should
+            Specifies the order of the term up to which the polynomial should
             be truncated.
         cycle : Integer
             Specifies the length for doing cyclic convolution.
-        dyadic : bool
-            Identifies the convolution type as dyadic (*bitwise-XOR*)
-            convolution, which is performed using **FWHT**.
-        subset : bool
-            Identifies the convolution type as subset convolution.
+        method : 'dyadic', 'subset' or None
+            dyadic : Identifies the convolution type as dyadic (*bitwise-XOR*)
+                    convolution, which is performed using **FWHT**.
+            subset : Identifies the convolution type as subset convolution.
+            None : Simple linear convolution. If cycle is non-zero, then it will be
+                    interpreted as cyclic convolution.
 
         Examples
         ========
@@ -1175,10 +1176,10 @@ class FormalPowerSeries(SeriesBase):
         >>> f1.convolve(f2, x, 4, cycle=4)
         11*x/12 + 35*x**2/36 + x**3/3 + O(x**4)
 
-        >>> f1.convolve(f2, x, 6, dyadic=True)
+        >>> f1.convolve(f2, x, 6, method='dyadic')
         4667/4800 + 2641*x/2880 + x**3/3 + x**4/60 + x**5/20 + O(x**6)
 
-        >>> f1.convolve(f2, x, 6, subset=True)
+        >>> f1.convolve(f2, x, 6, method='subset')
         x + x**3/3 + x**5/20 + O(x**6)
 
         See Also
@@ -1210,15 +1211,24 @@ class FormalPowerSeries(SeriesBase):
         if cycle > n:
             raise ValueError("Value of cycle should be less than or equal to n.")
 
+        if method not in ['dyadic', 'subset', None]:
+            raise ValueError("Method of convolution should either be dyadic, subset or None.")
+
         k = self.ak.variables[0]
         coeff1 = sequence(self.ak.formula, (k, 0, n-1))
 
         k = other.ak.variables[0]
         coeff2 = sequence(other.ak.formula, (k, 0, n-1))
 
-        conv_coeff = convolution(coeff1, coeff2, cycle, None, None, dyadic, subset)
-        conv_seq = sequence(tuple(conv_coeff), (k, 0, n-1))
+        conv_coeff =[]
+        if method == 'dyadic':
+            conv_coeff = convolution(coeff1, coeff2, cycle, None, None, True, False)
+        elif method == 'subset':
+            conv_coeff = convolution(coeff1, coeff2, cycle, None, None, False, True)
+        elif method is None:
+            conv_coeff = convolution(coeff1, coeff2, cycle, None, None, False, False)
 
+        conv_seq = sequence(tuple(conv_coeff), (k, 0, n-1))
         k = self.xk.variables[0]
         xk_seq = sequence(self.xk.formula, (k, 0, n-1))
         terms = xk_seq * conv_seq

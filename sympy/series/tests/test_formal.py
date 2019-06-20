@@ -524,10 +524,12 @@ def test_fps__convolution():
     assert f1.convolve(f3, x, 4, cycle=3) == -S(2)/3 + x + x**2/12 - 2*x**3/3 + O(x**4)
     raises(ValueError, lambda: f1.convolve(f2, x, 4, cycle=6))
 
-    assert f1.convolve(f2, x, 6, dyadic=True) == \
+    assert f1.convolve(f2, x, 6, method='dyadic') == \
         S(4667)/4800 + 2641*x/2880 + x**3/3 + x**4/60 + x**5/20 + O(x**6)
-    assert f1.convolve(f3, x, 5, cycle=4, dyadic=True) == 9*x/8 - 97*x**3/144 + O(x**5)
+    assert f1.convolve(f3, x, 5, cycle=4, method='dyadic') == 9*x/8 - 97*x**3/144 + O(x**5)
 
-    assert f1.convolve(f2, x, 6, subset=True) == x + x**3/3 + x**5/20 + O(x**6)
-    assert f1.convolve(f3, x, 5, cycle=5, subset=True) == \
+    raises(ValueError, lambda: f1.convolve(f2, x, 6, method='linear'))
+
+    assert f1.convolve(f2, x, 6, method='subset') == x + x**3/3 + x**5/20 + O(x**6)
+    assert f1.convolve(f3, x, 5, cycle=5, method='subset') == \
         S(1)/24 + x - x**2/144 - 2*x**3/3 + O(x**5)
