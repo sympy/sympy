@@ -453,6 +453,22 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         self._mat = flat_list
         return self
 
+    @classmethod
+    def _from_flattened_list(cls, rows, cols, flat_list):
+        """Private matrix creation method without sympify.
+
+        Parameters
+        ==========
+
+        rows, cols : Integer
+        mat : list
+        """
+        self = object.__new__(cls)
+        self.rows = rows
+        self.cols = cols
+        self._mat = flat_list
+        return self
+
     def __setitem__(self, key, value):
         """
 
