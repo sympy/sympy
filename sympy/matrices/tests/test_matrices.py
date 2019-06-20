@@ -1181,6 +1181,129 @@ def test_eigen():
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
 
+def test_definite():
+    # Examples from Gilbert Strang, "Introduction to Linear Algebra"
+    # Positive definite matrices
+    m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[5, 4], [4, 5]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Positive semidefinite matrices
+    m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[1, 2], [2, 4]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Examples from Mathematica documentation
+    # Non-hermitian positive definite matrices
+    m = Matrix([[2, 3], [4, 8]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[1, 2*I], [-I, 4]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Symbolic matrices examples
+    a = Symbol('a', positive=True)
+    b = Symbol('b', negative=True)
+    m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == False
+    assert m.is_negative_definite == True
+    assert m.is_negative_semidefinite == True
+    assert m.is_indefinite == False
+
+    m = Matrix([[a, 0], [0, b]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == False
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == True
+
+
+def test_positive_definite():
+    # Test alternative algorithms for testing positive definitiveness.
+    m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[5, 4], [4, 5]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
+
+    m = Matrix([[1, 2], [2, 4]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
+
+    m = Matrix([[2, 3], [4, 8]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[1, 2*I], [-I, 4]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    a = Symbol('a', positive=True)
+    b = Symbol('b', negative=True)
+    m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
+
+    m = Matrix([[a, 0], [0, b]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
+
+
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
     assert Matrix([[x, 2], [x + y, 4]]).subs([[x, -1], [y, -2]]) == \

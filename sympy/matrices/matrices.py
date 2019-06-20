@@ -12,6 +12,7 @@ from sympy.core.compatibility import (
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
+from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float, Integer, mod_inverse
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -28,7 +29,8 @@ from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.misc import filldedent
 
 from .common import (
-    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError)
+    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError,
+    NonPositiveDefiniteMatrixError)
 
 
 def _iszero(x):
@@ -1494,6 +1496,185 @@ class MatrixEigen(MatrixSubspaces):
             if mult != len(basis):
                 ret = False
         return ret
+
+    def _eval_is_positive_definite(self, method="eigen"):
+        """Algorithm dump for computing positive-definiteness of a
+        matrix.
+
+        Parameters
+        ==========
+
+        method : str, optional
+            Specifies the method for computing positive-definiteness of
+            a matrix.
+
+            If ``'eigen'``, it computes the full eigenvalues and decides
+            if the matrix is positive-definite.
+
+            If ``'CH'``, it attempts computing the Cholesky
+            decomposition to detect the definitiveness.
+
+            If ``'LDL'``, it attempts computing the LDL
+            decomposition to detect the definitiveness.
+        """
+        if self.is_hermitian:
+            if method == 'eigen':
+                eigen = self.eigenvals()
+                args = [x.is_positive for x in eigen.keys()]
+                return fuzzy_and(args)
+
+            elif method == 'CH':
+                try:
+                    self.cholesky(hermitian=True)
+                except NonPositiveDefiniteMatrixError:
+                    return False
+                return True
+
+            elif method == 'LDL':
+                try:
+                    self.LDLdecomposition(hermitian=True)
+                except NonPositiveDefiniteMatrixError:
+                    return False
+                return True
+
+            else:
+                raise NotImplementedError()
+
+        elif self.is_square:
+            M_H = (self + self.H) / 2
+            return M_H._eval_is_positive_definite(method=method)
+
+    def is_positive_definite(self):
+        return self._eval_is_positive_definite()
+
+    def is_positive_semidefinite(self):
+        if self.is_hermitian:
+            eigen = self.eigenvals()
+            args = [x.is_nonnegative for x in eigen.keys()]
+            return fuzzy_and(args)
+
+        elif self.is_square:
+            return ((self + self.H) / 2).is_positive_semidefinite
+
+    def is_negative_definite(self):
+        if self.is_hermitian:
+            eigen = self.eigenvals()
+            args = [x.is_negative for x in eigen.keys()]
+            return fuzzy_and(args)
+
+        elif self.is_square:
+            return ((self + self.H) / 2).is_negative_definite
+
+    def is_negative_semidefinite(self):
+        if self.is_hermitian:
+            eigen = self.eigenvals()
+            args = [x.is_nonpositive for x in eigen.keys()]
+            return fuzzy_and(args)
+
+        elif self.is_square:
+            return ((self + self.H) / 2).is_negative_semidefinite
+
+    def is_indefinite(self):
+        if self.is_hermitian:
+            eigen = self.eigenvals()
+
+            args1 = [x.is_positive for x in eigen.keys()]
+            any_positive = fuzzy_or(args1)
+            args2 = [x.is_negative for x in eigen.keys()]
+            any_negative = fuzzy_or(args2)
+
+            return fuzzy_and([any_positive, any_negative])
+
+        elif self.is_square:
+            return ((self + self.H) / 2).is_indefinite
+
+    _doc_positive_definite = \
+        r"""Finds out the definiteness of a matrix.
+
+        Examples
+        ========
+
+        An example of numeric positive definite matrix:
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[1, -2], [-2, 6]])
+        >>> A.is_positive_definite
+        True
+        >>> A.is_positive_semidefinite
+        True
+        >>> A.is_negative_definite
+        False
+        >>> A.is_negative_semidefinite
+        False
+        >>> A.is_indefinite
+        False
+
+        An example of numeric negative definite matrix:
+
+        >>> A = Matrix([[-1, 2], [2, -6]])
+        >>> A.is_positive_definite
+        False
+        >>> A.is_positive_semidefinite
+        False
+        >>> A.is_negative_definite
+        True
+        >>> A.is_negative_semidefinite
+        True
+        >>> A.is_indefinite
+        False
+
+        An example of numeric indefinite matrix:
+
+        >>> A = Matrix([[1, 2], [2, 1]])
+        >>> A.is_positive_definite
+        False
+        >>> A.is_positive_semidefinite
+        False
+        >>> A.is_negative_definite
+        True
+        >>> A.is_negative_semidefinite
+        True
+        >>> A.is_indefinite
+        False
+
+        Notes
+        =====
+
+        Definitiveness is not very commonly discussed for non-hermitian
+        matrices.
+
+        However, computing the definitiveness of a matrix can be
+        generalized over any real matrix by taking the symmetric part:
+
+        `A_S = 1/2 (A + A^{T})`
+
+        Or over any complex matrix by taking the hermitian part:
+
+        `A_H = 1/2 (A + A^{H})`
+
+        And computing the eigenvalues.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Definiteness_of_a_matrix#Eigenvalues
+
+        .. [2] http://mathworld.wolfram.com/PositiveDefiniteMatrix.html
+
+        .. [3] Johnson, C. R. "Positive Definite Matrices." Amer.
+            Math. Monthly 77, 259-264 1970.
+        """
+
+    is_positive_definite = \
+        property(fget=is_positive_definite, doc=_doc_positive_definite)
+    is_positive_semidefinite = \
+        property(fget=is_positive_semidefinite, doc=_doc_positive_definite)
+    is_negative_definite = \
+        property(fget=is_negative_definite, doc=_doc_positive_definite)
+    is_negative_semidefinite = \
+        property(fget=is_negative_semidefinite, doc=_doc_positive_definite)
+    is_indefinite = \
+        property(fget=is_indefinite, doc=_doc_positive_definite)
 
     def jordan_form(self, calc_transform=True, **kwargs):
         """Return ``(P, J)`` where `J` is a Jordan block
