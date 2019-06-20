@@ -1106,24 +1106,6 @@ class MatrixEigen(MatrixSubspaces):
     """Provides basic matrix eigenvalue/vector operations.
     Should not be instantiated directly."""
 
-    @property
-    def _cache_is_diagonalizable(self):
-        SymPyDeprecationWarning(
-            feature='_cache_is_diagonalizable',
-            deprecated_since_version="1.4",
-            issue=15887
-            ).warn()
-        return None
-
-    @property
-    def _cache_eigenvects(self):
-        SymPyDeprecationWarning(
-            feature='_cache_eigenvects',
-            deprecated_since_version="1.4",
-            issue=15887
-            ).warn()
-        return None
-
     def diagonalize(self, reals_only=False, sort=False, normalize=False):
         """
         Return (P, D), where D is diagonal and
@@ -2407,11 +2389,6 @@ class MatrixBase(MatrixDeprecated,
         if self.rows == 0 or self.cols == 0:
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
         return "Matrix(%s)" % str(self.tolist())
-
-    def _diagonalize_clear_subproducts(self):
-        del self._is_symbolic
-        del self._is_symmetric
-        del self._eigenvects
 
     def _format_str(self, printer=None):
         if not printer:
