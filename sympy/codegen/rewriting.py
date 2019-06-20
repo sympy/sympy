@@ -231,7 +231,7 @@ def create_expand_pow_optimization(limit):
             1/UnevaluatedExpr(Mul(*([p.base]*-p.exp), evaluate=False))
         ))
 
-
+# Optimization procedures for turning A**(-1) * x into MatrixSolve(A, x)
 def _matinv_predicate(expr):
     # TODO: We should be able to support more than 2 elements
     if expr.is_MatMul and len(expr.args) == 2:
