@@ -18,7 +18,7 @@ from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
         Dict, Basic, KroneckerDelta, Dummy, Eq, Intersection, Interval,
-        Symbol, Lambda, Piecewise, Or)
+        Symbol, Lambda, Piecewise, Or, Gt, Lt)
 from sympy import beta as beta_fn
 from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
@@ -55,7 +55,7 @@ def rv(name, cls, *args):
     dist.check(*args)
     if dist.is_symbolic:
         return SymbolicSingleFinitePSpace(name, dist).value
-    return SingleFinitePSpace(name, dist).value
+    return SymbolicSingleFinitePSpace(name, dist).value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
 
@@ -178,9 +178,10 @@ class DieDistribution(SingleFiniteDistribution):
     def pdf(self, x):
         x = sympify(x)
         if x.is_number:
-            if x.is_Integer and x >= 1 and x <= self.sides:
-                return Rational(1, self.sides)
-            return S.Zero
+            if x.is_Integer:
+                return Piecewise((S(1)/self.sides,
+                (Gt(x, 0) != False) & (Lt(x, self.sides + 1) != False)), (
+                S.Zero, True))
         elif x.is_Symbol or isinstance(x, RandomSymbol):
             i = Dummy('i', integer=True, positive=True)
             return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides))

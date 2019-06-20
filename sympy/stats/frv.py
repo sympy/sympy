@@ -356,6 +356,10 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
     Represents probability space of finite
     random variables with symbolic dimensions.
     """
+    def prob_of(self, elem):
+        elem = sympify(elem)
+        return self.pdf(elem)
+
     @property
     def distribution(self):
         return self.args[1]
