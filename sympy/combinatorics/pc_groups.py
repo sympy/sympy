@@ -1,7 +1,7 @@
 from sympy.core import Basic
 from sympy import sieve
-from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.printing.defaults import DefaultPrinting
 
 class PolycyclicGroup(Basic):
 
@@ -59,181 +59,221 @@ class PolycyclicGroup(Basic):
         return exponent
 
 
-def minimal_uncollected_subwords(word, relative_order):
-    """
-    Returns the minimal uncollected subwords.
+class Collector(DefaultPrinting):
 
-    Examples
-    ========
-    >>> from sympy.combinatorics.pc_groups import minimal_uncollected_subwords
-    >>> from sympy.combinatorics.free_groups import free_group
+    def __init__(self, pc_relators, word):
+        self.pc_relators = pc_relators
+        self.word = word
+        self.group = word.group
 
-    Example 8.7 Pg. 281 from Handbook
-    >>> F, x1, x2 = free_group("x1, x2")
-    >>> word = x2**2*x1**7
-    >>> relative_order = [3, 2]
-    >>> minimal_uncollected_subwords(word, relative_order)
-    {x1**7: 1, x1*x2**2: 0}
+    def minimal_uncollected_subwords(self):
+        """
+        Returns the minimal uncollected subwords.
 
-    """
-    array = word.array_form
-    uncollected_subwords = {}
-    for i in range(len(array)-1):
-        if array[i+1][1] > 0:
-            # case-1:  v = x[i]**a*x[i+1]
-            uncollected_subwords[array[i][0]**array[i][1]*array[i+1][0]] = 0
-        else:
-            # case-2: v = x[i]**a*x[i+1]*-1
-            uncollected_subwords[array[i][0]**array[i][1]*array[i+1][0]**-1] = 0
+        Examples
+        ========
+        >>> from sympy.combinatorics.pc_groups import Collector
+        >>> from sympy.combinatorics.free_groups import free_group
 
-        if all(array[i][1]!=exp for exp in range(relative_order[i])):
+        Example 8.7 Pg. 281 from Handbook
+        >>> F, x1, x2 = free_group("x1, x2")
+        >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
+        >>> word = x2**2*x1**7
+        >>> collector = Collector(pc_relators, word)
+        >>> collector.minimal_uncollected_subwords()
+        {((x1, 7),): 1, ((x2, 2), (x1, 1)): 0}
+
+        """
+        group = self.word.group
+        gens = group.symbols
+        index = {}
+        i = 1
+        for g in gens:
+            index[g] = i
+            i += 1
+        array = self.word.array_form
+        uncollected_subwords = {}
+        for i in range(len(array)-1):
+            if array[i+1][1] > 0 and index[array[i][0]] > index[array[i+1][0]]:
+                # case-1:  v = x[i]**a*x[i+1]
+                uncollected_subwords[((array[i][0], array[i][1]), (array[i+1][0], 1))] = 0
+
+            elif array[i+1][1] < 0 and index[array[i][0]] > index[array[i+1][0]]:
+                # case-2: v = x[i]**a*x[i+1]*-1
+                uncollected_subwords[((array[i][0], array[i][1]), (array[i+1][0], -1))] = 0
+
+            if array[i][1] < 0 or array[i][1] > index[array[i][0]]:
+                # case-3: v = x[i]**a
+                uncollected_subwords[((array[i][0], array[1][1]), )] = 1
+
+        i = len(array)-1
+        if array[i][1] < 0 or array[i][1] > index[array[i][0]]:
             # case-3: v = x[i]**a
-            uncollected_subwords[array[i][0]**array[i][1]] = 1
+            uncollected_subwords[((array[i][0], array[1][1]), )] = 1
 
-    i = len(array)-1
-    if all(array[i][1]!=exp for exp in range(relative_order[i])):
-        # case-3: v = x[i]**a
-        uncollected_subwords[array[i][0]**array[i][1]] = 1
+        return uncollected_subwords
 
-    return uncollected_subwords
+    def relations(self):
+        """
+        Separates the given relators of pc presentation in power and
+        conjugate relations.
 
-def _relations(relators):
+        Examples
+        ========
+        >>> from sympy.combinatorics.pc_groups import Collector
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> F, x1, x2 = free_group("x1, x2")
+        >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
+        >>> word = x2**2*x1**7
+        >>> collector = Collector(pc_relators, word)
+        >>> power_rel, conj_rel = collector.relations()
+        >>> power_rel
+        {x1**2: 1}
+        >>> conj_rel
+        {x1**-1*x2*x1: x2**-1, x1*x2*x1**-1: x2**-1}
+
+        """
+        power_relators = {}
+        conjugate_relators = {}
+        for key, value in self.pc_relators.items():
+            if len(key.array_form) == 1:
+                power_relators[key] = value
+            else:
+                conjugate_relators[key] = value
+        return power_relators, conjugate_relators
+
+    def reduce_word(self):
+        """
+        Reduce the given word with the help of power
+        relators only.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.pc_groups import Collector
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> F, x1, x2 = free_group("x1, x2")
+        >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
+        >>> word = x1**7
+        >>> collector = Collector(pc_relators, word)
+        >>> collector.reduce_word()
+        x1
+
+        """
+        group = self.word.group
+        power_relators = self.relations()[0]
+        dividend = self.word.array_form[0][1]
+        rem = dividend
+        for w, v in power_relators.items():
+            divisor = w.array_form[0][1]
+            if w.letter_form_elm[0] == self.word.letter_form_elm[0] and dividend % divisor < rem:
+                rem = dividend % divisor
+                quo = dividend // divisor
+                value = power_relators[w]
+                reduced_word = (value**quo)*(self.word.letter_form_elm[0]**rem)
+                return group.dtype(reduced_word)
+        return None
+
+    def conjugate_word(self):
+        """
+        Returns the reduced word with the help of
+        conjugate relators.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.pc_groups import Collector
+        >>> from sympy.combinatorics.free_groups import free_group
+
+        Example 8.7 Pg. 282 from Handbook
+        >>> F, x1, x2 = free_group("x1, x2")
+        >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
+        >>> word = x2**2*x1
+        >>> collector = Collector(pc_relators, word)
+        >>> collector.conjugate_word()
+        x1*x2**-2
+
+        """
+        conjugate_relators = self.relations()[1]
+        exp = self.word.array_form[0][1]
+        w = (self.word[len(self.word)-1].inverse()*self.word.letter_form_elm[0]*self.word.subword(exp, len(self.word)))
+        if w in conjugate_relators:
+            conj_word = self.word[len(self.word)-1]*(conjugate_relators[w]**exp)
+        else:
+            loop = self.word.array_form[len(self.word.array_form)-1][1]
+            if loop%2 == 0:
+                conj_word = self.word[len(self.word)-1]**loop*self.word.subword(0, len(self.word)-loop)
+            else:
+                low, high = abs(self.word.array_form[0][1]), abs(self.word.array_form[1][1])
+                high = high + low
+                conj_word = self.word.eliminate_word(self.word.subword(low, high), self.word.subword(low, high).inverse())
+                word = conj_word[len(conj_word)-1]**loop*conj_word.subword(0, len(conj_word)-loop)
+        return conj_word
+
+    def _index(self, w):
+        """
+        Returns the start and ending index of a given
+        subword in a word.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.pc_groups import Collector
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> F, x1, x2 = free_group("x1, x2")
+        >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
+        >>> word = x2**2*x1**7
+        >>> collector = Collector(pc_relators, word)
+        >>> w = x2**2*x1
+        >>> collector._index(w)
+        (0, 3)
+        >>> w = x1**7
+        >>> collector._index(w)
+        (2, 9)
+
+        """
+        low = -1
+        high = -1
+        for i in range(len(self.word)-len(w)+1):
+            if self.word.subword(i, i+len(w)) == w:
+                low = i
+                high = i+len(w)
+                break
+        if low == high == -1:
+            raise ValueError("Given word is not a subword")
+        return low, high
+
+def collected_word(pc_relators, word):
     """
-    Separates the given relators of pc presentation in power and
-    conjugate relations.
-
     Examples
     ========
-    >>> from sympy.combinatorics.pc_groups import _relations
+    >>> from sympy.combinatorics.pc_groups import collected_word
+    >>> from sympy.combinatorics.pc_groups import Collector
     >>> from sympy.combinatorics.free_groups import free_group
     >>> F, x1, x2 = free_group("x1, x2")
     >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-    >>> power_rel, conj_rel = _relations(pc_relators)
-    >>> power_rel
-    {x1**2: 1}
-    >>> conj_rel
-    {x1**-1*x2*x1: x2**-1, x1*x2*x1**-1: x2**-1}
-
-    """
-    power_relators = {}
-    conjugate_relators = {}
-    for key, value in relators.items():
-        if len(key.array_form) == 1:
-            power_relators[key] = value
-        else:
-            conjugate_relators[key] = value
-    return power_relators, conjugate_relators
-
-def _reduce_word(word, power_relators):
-    """
-    Reduce the given word with the help of power
-    relators only.
-
-    Examples
-    ========
-    >>> from sympy.combinatorics.pc_groups import _reduce_word
-    >>> from sympy.combinatorics.free_groups import free_group
-    >>> F, x1, x2 = free_group("x1, x2")
-    >>> power_relators = {x1**2: 1}
-    >>> word = x1**7
-    >>> _reduce_word(word, power_relators)
-    x1
-
-    """
-    group = word.group
-    dividend = word.array_form[0][1]
-    rem = dividend
-    for w, v in power_relators.items():
-        divisor = w.array_form[0][1]
-        if w.letter_form_elm[0] == word.letter_form_elm[0] and dividend % divisor < rem:
-            rem = dividend % divisor
-            quo = dividend // divisor
-            value = power_relators[w]
-    word = (value**quo)*(word.letter_form_elm[0]**rem)
-    return group.dtype(word)
-
-def _conjugate_word(word, conjugate_relators):
-    """
-    Returns the reduced word with the help of
-    conjugate relators.
-
-    Examples
-    ========
-    >>> from sympy.combinatorics.pc_groups import _conjugate_word
-    >>> from sympy.combinatorics.free_groups import free_group
-
-    Example 8.7 Pg. 282 from Handbook
-    >>> F, x1, x2 = free_group("x1, x2")
-    >>> word = x2**2*x1
-    >>> conjugate_relators = {x1*x2*x1**-1: x2**-1, x1**-1*x2*x1: x2**-1}
-    >>> _conjugate_word(word, conjugate_relators)
+    >>> word = x2**2*x1**7
+    >>> collector = Collector(pc_relators, word)
+    >>> collected_word(pc_relators, word)
     x1*x2**-2
 
     """
-    exp = word.array_form[0][1]
-    w = (word[len(word)-1].inverse()*word.letter_form_elm[0]*word.subword(exp, len(word)))
-    if w in conjugate_relators:
-        word = word[len(word)-1]*(conjugate_relators[w]**exp)
-    else:
-        loop = word.array_form[len(word.array_form)-1][1]
-        if loop%2 == 0:
-            word = word[len(word)-1]**loop*word.subword(0, len(word)-loop)
-        else:
-            low, high = abs(word.array_form[0][1]), abs(word.array_form[1][1])
-            high = high + low
-            print(word.subword(low, high))
-            word = word.eliminate_word(word.subword(low, high), word.subword(low, high).inverse())
-            word = word[len(word)-1]**loop*word.subword(0, len(word)-loop)
-    return word
+    collector = Collector(pc_relators, word)
+    group = collector.word.group
+    uncollected_subwords = collector.minimal_uncollected_subwords()
+    power_relators, conjugate_relators = collector.relations()
 
-def _index(word, w):
-    """
-    Returns the start and ending index of a given
-    subword in a word.
-
-    Examples
-    ========
-    >>> from sympy.combinatorics.pc_groups import _index
-    >>> from sympy.combinatorics.free_groups import free_group
-    >>> F, x1, x2 = free_group("x1, x2")
-    >>> word = x2**2*x1**7
-    >>> w = x2**2*x1
-    >>> _index(word, w)
-    (0, 3)
-    >>> w = x1**7
-    >>> _index(word, w)
-    (2, 9)
-
-    """
-    low = -1
-    high = -1
-    for i in range(len(word)-len(w)+1):
-        if word.subword(i, i+len(w)) == w:
-            low = i
-            high = i+len(w)
-            break
-    if low == high == -1:
-        raise ValueError("Given word is not a subword")
-    return low, high
-
-def collected_word(pc_relators, word, relative_order):
-    """
-
-    """
-    group = word.group
-    uncollected_subwords = minimal_uncollected_subwords(word, relative_order)
-    power_relators, conjugate_relators = _relations(pc_relators)
     for w, case in uncollected_subwords.items():
+        w = group.dtype(w)
         if case == 1:
-            _word = _reduce_word(w, power_relators)
-            word = word.eliminate_word(w, _word)
-            word = _conjugate_word(word, conjugate_relators)
-
+            _word = collector.reduce_word()
+            collector.word = collector.word.eliminate_word(w, _word)
+            if collector.word.array_form[len(collector.word.array_form)-1][1] > 0:
+                collector.word = collector.conjugate_word()
         else:
-            low, high = _index(word, w)
-            w = _conjugate_word(w, conjugate_relators)
-            word = word.substituted_word(low, high, w)
-            word = _conjugate_word(word, conjugate_relators)
-            _word = word.subword(0, word.array_form[0][1])
-            word = word.eliminate_word( _word, _reduce_word(_word, power_relators))
-    return word
+            low, high = collector._index(w)
+            collector.word = w
+            w = collector.conjugate_word()
+            collector.word = word
+            collector.word = collector.word.substituted_word(low, high, w)
+            collector.word = collector.conjugate_word()
+            _word = collector.word.subword(0, collector.word.array_form[0][1])
+            collector.word = collector.word.eliminate_word( _word, collector.reduce_word())
+    return collector.word
