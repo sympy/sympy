@@ -379,7 +379,7 @@ def test_creation_16723():
             sympify_callback_arguments=False,
             sympify_callback_return=True
             ).tolist() == \
-                [[S(1), S(1)/2], [S(1)/2, S(1)/3]]
+                [[1, 1/2], [1/2, 1/3]]
 
     assert Matrix(
             2, 2, lambda i, j: 1 / (i + j + 1),
