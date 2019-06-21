@@ -74,6 +74,7 @@ def test_DiscreteMarkovChain():
     Y4 = DiscreteMarkovChain('Y', trans_probs=TO4)
     w = ImmutableMatrix([[S(11)/39, S(16)/39, S(4)/13]])
     assert Y4.limiting_distribution == w
+    assert Y4.is_regular() == True
     TS1 = MatrixSymbol('T', 3, 3)
     Y5 = DiscreteMarkovChain('Y', trans_probs=TS1)
     assert Y5.limiting_distribution(w, TO4).doit() == True
@@ -82,3 +83,4 @@ def test_DiscreteMarkovChain():
     assert Y6._transient2absorbing() == ImmutableMatrix([[S(1)/2, 0], [0, 0], [0, S(1)/2]])
     assert Y6._transient2transient() == ImmutableMatrix([[0, S(1)/2, 0], [S(1)/2, 0, S(1)/2], [0, S(1)/2, 0]])
     assert Y6.fundamental_matrix() == ImmutableMatrix([[S(3)/2, S(1), S(1)/2], [S(1), S(2), S(1)], [S(1)/2, S(1), S(3)/2]])
+    assert Y6.absorbing_probabilites() == ImmutableMatrix([[S(3)/4, S(1)/4], [S(1)/2, S(1)/2], [S(1)/4, S(3)/4]])

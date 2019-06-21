@@ -375,6 +375,25 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             raise ValueError("Fundamental matrix doesn't exists.")
         return ImmutableMatrix((I - Q).inv().tolist())
 
+    def absorbing_probabilites(self):
+        """
+        Computes the absorbing probabilities, i.e.,
+        the ij-th entry of the matrix denotes the
+        probability of Markov chain being absorbed
+        in state j starting from state i.
+        """
+        R = self._transient2absorbing()
+        N = self.fundamental_matrix()
+        if R == None or N == None:
+            return None
+        return N*R
+
+    def is_regular(self):
+        w = self.fixed_row_vector()
+        if w is None or isinstance(w, (Lambda)):
+            return None
+        return all((wi > 0) == True for wi in w.row(0))
+
     def is_absorbing_state(self, state):
         trans_probs = self.transition_probabilities
         if isinstance(trans_probs, ImmutableMatrix) and \
