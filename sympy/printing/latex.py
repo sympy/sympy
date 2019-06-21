@@ -1374,6 +1374,30 @@ class LatexPrinter(Printer):
             tex = r"\left(" + tex + r"\right)^{%s}" % (self._print(exp))
         return tex
 
+    def __print_mathieu_functions(self, character, args, prime=False, exp=None):
+        a, q, z = map(self._print, args)
+        sup = ""
+        if prime:
+            if exp:
+                sup = r"^{\prime %s}" % (self._print(exp))
+            else:
+                sup = r"^{\prime}"
+        elif exp:
+            sup = r"^{%s}" % (self._print(exp))
+        return r"%s%s\left(%s, %s, %s\right)" % (character, sup, a, q, z)
+
+    def _print_mathieuc(self, expr, exp=None):
+        return self.__print_mathieu_functions("C", expr.args, exp=exp)
+
+    def _print_mathieus(self, expr, exp=None):
+        return self.__print_mathieu_functions("S", expr.args, exp=exp)
+
+    def _print_mathieucprime(self, expr, exp=None):
+        return self.__print_mathieu_functions("C", expr.args, prime=True, exp=exp)
+
+    def _print_mathieusprime(self, expr, exp=None):
+        return self.__print_mathieu_functions("S", expr.args, prime=True, exp=exp)
+
     def _print_Rational(self, expr):
         if expr.q != 1:
             sign = ""

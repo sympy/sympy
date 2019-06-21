@@ -17,7 +17,8 @@ from sympy import (
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
-    UnevaluatedExpr, Quaternion, I, KroneckerProduct, Intersection, stieltjes)
+    UnevaluatedExpr, Quaternion, I, KroneckerProduct, Intersection, stieltjes,
+    mathieuc, mathieus, mathieucprime, mathieusprime)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -1053,6 +1054,16 @@ def test_mode():
         expr, mode='equation') == '\\begin{equation}x + y\\end{equation}'
     raises(ValueError, lambda: latex(expr, mode='foo'))
 
+
+def test_latex_mathieu():
+    assert latex(mathieuc(x, y, z)) == r"C\left(x, y, z\right)"
+    assert latex(mathieus(x, y, z)) == r"S\left(x, y, z\right)"
+    assert latex(mathieuc(x, y, z)**2) == r"C^{2}\left(x, y, z\right)"
+    assert latex(mathieus(x, y, z)**2) == r"S^{2}\left(x, y, z\right)"
+    assert latex(mathieucprime(x, y, z)) == r"C^{\prime}\left(x, y, z\right)"
+    assert latex(mathieusprime(x, y, z)) == r"S^{\prime}\left(x, y, z\right)"
+    assert latex(mathieucprime(x, y, z)**2) == r"C^{\prime 2}\left(x, y, z\right)"
+    assert latex(mathieusprime(x, y, z)**2) == r"S^{\prime 2}\left(x, y, z\right)"
 
 def test_latex_Piecewise():
     p = Piecewise((x, x < 1), (x**2, True))
