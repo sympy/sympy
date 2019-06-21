@@ -384,7 +384,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         I = eye(Q.shape[0])
         if (I - Q).det() == 0:
             raise ValueError("Fundamental matrix doesn't exists.")
-        return (I - Q).inv()
+        return ImmutableMatrix((I - Q).inv().tolist())
 
     def is_absorbing_state(self, state):
         trans_probs = self.transition_probabilities

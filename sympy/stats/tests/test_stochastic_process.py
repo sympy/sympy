@@ -79,6 +79,6 @@ def test_DiscreteMarkovChain():
     assert Y5.limiting_distribution(w, TO4).doit() == True
     TO6 = Matrix([[S(1), 0, 0, 0, 0],[S(1)/2, 0, S(1)/2, 0, 0],[0, S(1)/2, 0, S(1)/2, 0], [0, 0, S(1)/2, 0, S(1)/2], [0, 0, 0, 0, 1]])
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
-    assert Y6._transient2absorbing() == Matrix([[1/2, 0], [0, 0], [0, 1/2]])
-    assert Y6._transient2transient() == Matrix([[0, 1/2, 0], [1/2, 0, 1/2], [0, 1/2, 0]])
-    assert Y6.fundamental_matrix == Matrix([[3/2, 1, 1/2], [1, 2, 1], [1/2, 1, 3/2]])
+    assert Y6._transient2absorbing() == ImmutableMatrix([[S(1)/2, 0], [0, 0], [0, S(1)/2]])
+    assert Y6._transient2transient() == ImmutableMatrix([[0, S(1)/2, 0], [S(1)/2, 0, S(1)/2], [0, S(1)/2, 0]])
+    assert Y6.fundamental_matrix == ImmutableMatrix([[S(3)/2, S(1), S(1)/2], [S(1), S(2), S(1)], [S(1)/2, S(1), S(3)/2]])
