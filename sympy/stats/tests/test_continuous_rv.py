@@ -705,7 +705,6 @@ def test_lognormal():
     #assert variance(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
     # Right now, only density function and sampling works
-    # Test sampling: Only e^mean in sample std of 0
     for i in range(3):
         X = LogNormal('x', i, 1)
         assert sample(X) in X.pspace.domain.set
