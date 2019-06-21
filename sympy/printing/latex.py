@@ -2482,7 +2482,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         Specifies what separator to use to separate the whole and fractional parts of a
         floating point number as in `2.5` for the default, ``period`` or `2{,}5`
         when ``comma`` is specified. Lists, sets, and tuple are printed with semicolon
-        separating the elements when ``comma`` is chosen. For example, [1; 2; 3] when 
+        separating the elements when ``comma`` is chosen. For example, [1; 2; 3] when
         ``comma is chosen and [1,2,3] for when ``period`` is chosen.
 
     Notes
