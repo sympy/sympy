@@ -182,6 +182,7 @@ def test_Lambda():
     assert Lambda((), 42).nargs == FiniteSet(0)
 
     assert unchanged(Lambda, (x,), x**2)
+    assert Lambda(x, x**2) == Lambda((x,), x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
     assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
