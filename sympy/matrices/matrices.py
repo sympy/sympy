@@ -2444,6 +2444,30 @@ class MatrixBase(MatrixDeprecated,
           rows.append(r)
       return cls._new(rows)
 
+
+    @classmethod
+    def _eval_handle_creation_inputs_ndarray(cls, arg):
+        """NumPy array or matrix or some other object that implements
+        __array__. So let's first use this method to get a numpy.array()
+        and then make a python list out of it.
+        """
+        arr = arg.__array__()
+
+        if len(arr.shape) == 1:
+            rows, cols = arr.shape[0], 1
+            flat_list = [S.Zero] * rows
+            for i in range(len(arr)):
+                flat_list[i] = cls._sympify(arr[i])
+            return rows, cols, flat_list
+
+        if len(arr.shape) == 2:
+            rows, cols = arr.shape
+            flat_list = [cls._sympify(i) for i in arr.ravel()]
+            return rows, cols, flat_list
+
+        raise NotImplementedError(
+            "SymPy supports just 1D and 2D arrays")
+
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
         """Return the number of rows, cols and flat matrix elements.
@@ -2526,6 +2550,11 @@ class MatrixBase(MatrixDeprecated,
 
         flat_list = None
 
+        # Matrix()
+        if not args:
+            # Empty Matrix
+            return 0, 0, []
+
         if len(args) == 1:
             # Matrix(SparseMatrix(...))
             if isinstance(args[0], SparseMatrix):
@@ -2541,23 +2570,7 @@ class MatrixBase(MatrixDeprecated,
 
             # Matrix(numpy.ones((2, 2)))
             elif hasattr(args[0], "__array__"):
-                # NumPy array or matrix or some other object that implements
-                # __array__. So let's first use this method to get a
-                # numpy.array() and then make a python list out of it.
-                arr = args[0].__array__()
-                if len(arr.shape) == 2:
-                    rows, cols = arr.shape[0], arr.shape[1]
-                    flat_list = [cls._sympify(i) for i in arr.ravel()]
-                    return rows, cols, flat_list
-                elif len(arr.shape) == 1:
-                    rows, cols = arr.shape[0], 1
-                    flat_list = [cls.zero] * rows
-                    for i in range(len(arr)):
-                        flat_list[i] = cls._sympify(arr[i])
-                    return rows, cols, flat_list
-                else:
-                    raise NotImplementedError(
-                        "SymPy supports just 1D and 2D matrices")
+                return cls._eval_handle_creation_inputs_ndarray(args[0])
 
             # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
             elif is_sequence(args[0]) \
@@ -2701,13 +2714,6 @@ class MatrixBase(MatrixDeprecated,
                     raise ValueError(
                         'List length should be equal to rows*columns')
                 flat_list = [cls._sympify(i) for i in flat_list]
-
-
-        # Matrix()
-        elif len(args) == 0:
-            # Empty Matrix
-            rows = cols = 0
-            flat_list = []
 
         if flat_list is None:
             raise TypeError(filldedent('''
