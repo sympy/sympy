@@ -1829,18 +1829,20 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(x**2 + y*x + 1, x, y).power_list()
-        (2, 1, 0)
+        [(2, 1, 0), (1, 0)]
         >>> Poly(0, x).power_list()
-        (0,)
-        >>> Poly(1, x).power_list()
-        (0,)
-
+        [(0,)]
+        >>> Poly(x, x).power_list()
+        [(1,)]
         """
         power = []
-        for i in f.monoms():
-            power += list(i)
-        power = reversed(list(set(power)))
-        return tuple(power)
+        for i in range(len(f.gens)):
+            tmp = []
+            for j in f.monoms():
+                tmp.append(j[i])
+            tmp = reversed(list(set(tmp)))
+            power.append(tuple(tmp))
+        return power
 
     def homogenize(f, s):
         """
@@ -4587,11 +4589,11 @@ def power_list(f, *gens, **args):
     >>> from sympy.abc import x, y
 
     >>> power_list(x**2 + y*x + 1)
-    (2, 1, 0)
+    [(2, 1, 0), (1, 0)]
     >>> power_list(0, x)
-    (0,)
-    >>> power_list(1, x)
-    (0,)
+    [(0,)]
+    >>> power_list(x, x)
+    [(1,)]
 
     """
     options.allowed_flags(args, ['polys'])
@@ -4603,7 +4605,7 @@ def power_list(f, *gens, **args):
 
     powers = F.power_list()
 
-    return tuple(map(Integer, powers))
+    return list(powers)
 
 
 @public
