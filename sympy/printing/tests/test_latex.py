@@ -2284,7 +2284,6 @@ def test_latex_decimal_separator():
     x, y, z, t = symbols('x y z t')
     k, m, n = symbols('k m n', integer=True)
     f, g, h = symbols('f g h', cls=Function)
-    # init_printing()
 
     # comma decimal_separator
     assert(latex([1, 2.3, 4.5], decimal_separator='comma') == r'\left[ 1; \  2{,}3; \  4{,}5\right]')
@@ -2307,7 +2306,6 @@ def test_latex_decimal_separator():
     y = symbols('y')
     z = symbols('z')
     assert(latex(x*5.3 + 2**y**3.4 + 4.5 + z, decimal_separator = 'comma')== r'2^{y^{3{,}4}} + 5{,}3 x + z + 4{,}5')
-    #print(srepr(x*5.3 + 2**y**3.4 + 4.5 + z))
 
     assert(latex(0.987, decimal_separator='comma') == r'0{,}987')
     assert(latex(S(0.987), decimal_separator='comma')== r'0{,}987')
@@ -2321,5 +2319,9 @@ def test_latex_decimal_separator():
 
     x = symbols('x')
     assert(latex(1.2*x+3.4, decimal_separator='comma')==r'1{,}2 x + 3{,}4')
-
     assert(latex(FiniteSet(1, 2.3, 4.5), decimal_separator='period')==r'\left\{1, 2.3, 4.5\right\}')
+
+    # Error Handling tests
+    raises(ValueError, lambda: latex([1,2.3,4.5], decimal_separator='non_existing_decimal_separator_in_list'))
+    raises(ValueError, lambda: latex(FiniteSet(1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_set'))
+    raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))

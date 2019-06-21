@@ -1734,7 +1734,6 @@ class LatexPrinter(Printer):
         return r"\mathbb{U}"
 
     def _print_tuple(self, expr):
-        print('ehh')
         if self._settings['decimal_separator'] =='comma':
             return r"\left( %s\right)" % \
                 r"; \  ".join([self._print(i) for i in expr])
@@ -1742,7 +1741,7 @@ class LatexPrinter(Printer):
             return r"\left( %s\right)" % \
                 r", \  ".join([self._print(i) for i in expr])
         else:
-            raise ValueError('DecimalSeparatorNotFoundError')
+            raise ValueError('Unknown Decimal Separator')
 
     def _print_TensorProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
@@ -1763,7 +1762,7 @@ class LatexPrinter(Printer):
             return r"\left[ %s\right]" % \
                 r", \  ".join([self._print(i) for i in expr])
         else:
-            raise ValueError('DecimalSeparatorNotFoundError')
+            raise ValueError('Unknown Decimal Separator')
 
 
     def _print_dict(self, d):
@@ -1850,7 +1849,7 @@ class LatexPrinter(Printer):
         elif self._settings['decimal_separator'] == 'period':
             items = ", ".join(map(self._print, items))
         else:
-            raise ValueError('DecimalSeparatorNotFoundError')
+            raise ValueError('Unknown Decimal Separator')
         return r"\left\{%s\right\}" % items
 
 
@@ -2412,7 +2411,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
           mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
           order=None, symbol_names=None, root_notation=True,
           mat_symbol_style="plain", imaginary_unit="i", gothic_re_im=False,
-          decimal_separator = "period" ):
+          decimal_separator="period" ):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2483,7 +2482,7 @@ def latex(expr, fold_frac_powers=False, fold_func_brackets=False,
         floating point number as in `2.5` for the default, ``period`` or `2{,}5`
         when ``comma`` is specified. Lists, sets, and tuple are printed with semicolon
         separating the elements when ``comma`` is chosen. For example, [1; 2; 3] when
-        ``comma is chosen and [1,2,3] for when ``period`` is chosen.
+        ``comma`` is chosen and [1,2,3] for when ``period`` is chosen.
 
     Notes
     =====
