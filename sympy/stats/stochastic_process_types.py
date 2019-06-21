@@ -334,16 +334,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         if not isinstance(trans_probs, ImmutableMatrix):
             return None
 
-        m, trans_states, t2t = trans_probs.shape[0], [], []
-        for i in range(m):
-            if trans_probs[i, i] != 1:
-                trans_states.append(i)
-
-        for si in trans_states:
-            tij = []
-            for sj in trans_states:
-                tij.append(trans_probs[si, sj])
-            t2t.append(tij)
+        m = trans_probs.shape[0]
+        trans_states = [i for i in range(m) if trans_probs[i, i] != 1]
+        t2t = [[trans_probs[si, sj] for sj in trans_states] for si in trans_states]
 
         return ImmutableMatrix(t2t)
 
@@ -357,8 +350,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         if not isinstance(trans_probs, ImmutableMatrix):
             return None
 
-        m, trans_states, absorb_states, t2a = \
-            trans_probs.shape[0], [], [], []
+        m, trans_states, absorb_states = \
+            trans_probs.shape[0], [], []
         for i in range(m):
             if trans_probs[i, i] == 1:
                 absorb_states.append(i)
@@ -368,15 +361,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         if not absorb_states or not trans_states:
             return None
 
-        for si in trans_states:
-            tij = []
-            for sj in absorb_states:
-                tij.append(trans_probs[si, sj])
-            t2a.append(tij)
+        t2a = [[trans_probs[si, sj] for sj in absorb_states]
+                for si in trans_states]
 
         return ImmutableMatrix(t2a)
 
-    @property
     def fundamental_matrix(self):
         Q = self._transient2transient()
         if Q == None:
@@ -392,13 +381,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             state < trans_probs.shape[0]:
             return S(trans_probs[state, state]) == S.One
 
-    @property
     def is_absorbing_chain(self):
         trans_probs = self.transition_probabilities
         return any(self.is_absorbing_state(state) == True
                     for state in range(trans_probs.shape[0]))
 
-    @property
     def fixed_row_vector(self):
         trans_probs = self.transition_probabilities
         if trans_probs == None:
@@ -420,7 +407,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         The fixed row vector is the limiting
         distribution of a discrete Markov chain.
         """
-        return self.fixed_row_vector
+        return self.fixed_row_vector()
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """

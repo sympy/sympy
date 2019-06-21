@@ -67,9 +67,9 @@ def test_DiscreteMarkovChain():
     Y2 = DiscreteMarkovChain('Y', trans_probs=TO2)
     Y3 = DiscreteMarkovChain('Y', trans_probs=TO3)
     assert Y3._transient2absorbing() == None
-    raises (ValueError, lambda: Y3.fundamental_matrix)
-    assert Y2.is_absorbing_chain == True
-    assert Y3.is_absorbing_chain == False
+    raises (ValueError, lambda: Y3.fundamental_matrix())
+    assert Y2.is_absorbing_chain() == True
+    assert Y3.is_absorbing_chain() == False
     TO4 = Matrix([[S(1)/5, S(2)/5, S(2)/5], [S(1)/10, S(1)/2, S(2)/5], [S(3)/5, S(3)/10, S(1)/10]])
     Y4 = DiscreteMarkovChain('Y', trans_probs=TO4)
     w = ImmutableMatrix([[S(11)/39, S(16)/39, S(4)/13]])
@@ -81,4 +81,4 @@ def test_DiscreteMarkovChain():
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
     assert Y6._transient2absorbing() == ImmutableMatrix([[S(1)/2, 0], [0, 0], [0, S(1)/2]])
     assert Y6._transient2transient() == ImmutableMatrix([[0, S(1)/2, 0], [S(1)/2, 0, S(1)/2], [0, S(1)/2, 0]])
-    assert Y6.fundamental_matrix == ImmutableMatrix([[S(3)/2, S(1), S(1)/2], [S(1), S(2), S(1)], [S(1)/2, S(1), S(3)/2]])
+    assert Y6.fundamental_matrix() == ImmutableMatrix([[S(3)/2, S(1), S(1)/2], [S(1), S(2), S(1)], [S(1)/2, S(1), S(3)/2]])
