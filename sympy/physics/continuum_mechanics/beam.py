@@ -71,6 +71,7 @@ class Beam(object):
 
         Parameters
         ==========
+
         length : Sympifyable
             A Symbol or value representing the Beam's length.
 
@@ -79,14 +80,15 @@ class Beam(object):
             It is a measure of the stiffness of the Beam material. It can
             also be a continuous function of position along the beam.
 
-        second_moment : Sympifiable or Geometry object
+        second_moment : Sympifyable or Geometry object
             Describes the cross-section of the beam  via a sympy expression
             representing the Beam's Second moment of area. It is a geometrical
             property of an area which reflects how its points are distributed
             with respect to its neutral axis. It can also be a continuous
-            function of position along the beam.
-            Or via a Geometry object representing the shape of the cross-section
-            of the beam.
+            function of position along the beam. Alternatively ``second_moment``
+            can be a geometry object such as a ``Polygon`` from the geometry module
+            representing the shape of the cross-section of the beam. The second moment
+            of area will be computed from the gemetry object internally.
 
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
@@ -100,7 +102,12 @@ class Beam(object):
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
-        self.second_moment = second_moment
+        if isinstance(second_moment, GeometryEntity):
+            self._cross_section = second_moment
+            self.second_moment = second_moment.second_moment_of_area()[0]
+        else:
+            self._cross_section = None
+            self.second_moment = second_moment
         self.variable = variable
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
@@ -179,21 +186,12 @@ class Beam(object):
 
     @second_moment.setter
     def second_moment(self, i):
-        if isinstance(i, GeometryEntity):
-            self.cross_section = i
-            self._second_moment = i.second_moment_of_area()[0]
-        else:
-            self.cross_section = None
-            self._second_moment = sympify(i)
+        self._second_moment = sympify(i)
 
     @property
     def cross_section(self):
-        """Cross_section of the Beam """
+        """Cross-section of the beam"""
         return self._cross_section
-
-    @cross_section.setter
-    def cross_section(self, s):
-        self._cross_section = s
 
     @property
     def boundary_conditions(self):
