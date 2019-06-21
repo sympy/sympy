@@ -2656,11 +2656,7 @@ class MatrixBase(MatrixDeprecated,
         the row are matrices
         """
         def ismat(i):
-            if evaluate:
-                return isinstance(i, MatrixBase)
-            return isinstance(i, MatrixBase) and \
-                (isinstance(i, BlockMatrix) or \
-                isinstance(i, MatrixSymbol))
+            return isinstance(i, MatrixBase)
 
         flat_list = []
         ncol = set()
