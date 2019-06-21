@@ -1536,4 +1536,6 @@ def N(x, n=15, **options):
     1.291
 
     """
-    return sympify(x).evalf(n, **options)
+    # by using rational=True, any evaluation of a string
+    # will be done using exact values for the Floats
+    return sympify(x, rational=True).evalf(n, **options)

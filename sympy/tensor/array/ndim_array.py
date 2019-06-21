@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Basic
+from sympy import S
 from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
@@ -129,33 +130,35 @@ class NDimArray(object):
     @classmethod
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
+        from sympy import Dict
 
-        if shape is None and iterable is None:
-            shape = ()
-            iterable = ()
-        # Construction from another `NDimArray`:
-        elif shape is None and isinstance(iterable, NDimArray):
-            shape = iterable.shape
-            iterable = list(iterable)
-        # Construct N-dim array from an iterable (numpy arrays included):
-        elif shape is None and isinstance(iterable, Iterable):
-            iterable, shape = cls._scan_iterable_shape(iterable)
+        if shape is None:
+            if iterable is None:
+                shape = ()
+                iterable = ()
+            # Construction of a sparse array from a sparse array
+            elif isinstance(iterable, SparseNDimArray):
+                return iterable._shape, iterable._sparse_array
+            # Construction from another `NDimArray`:
+            elif isinstance(iterable, NDimArray):
+                shape = iterable.shape
+                iterable = list(iterable)
+            # Construct N-dim array from an iterable (numpy arrays included):
+            elif isinstance(iterable, Iterable):
+                iterable, shape = cls._scan_iterable_shape(iterable)
 
-        # Construct N-dim array from a Matrix:
-        elif shape is None and isinstance(iterable, MatrixBase):
-            shape = iterable.shape
+            # Construct N-dim array from a Matrix:
+            elif isinstance(iterable, MatrixBase):
+                shape = iterable.shape
 
-        # Construct N-dim array from another N-dim array:
-        elif shape is None and isinstance(iterable, NDimArray):
-            shape = iterable.shape
+            # Construct N-dim array from another N-dim array:
+            elif isinstance(iterable, NDimArray):
+                shape = iterable.shape
 
-        # Construct NDimArray(iterable, shape)
-        elif shape is not None:
-            pass
-
-        else:
-            shape = ()
-            iterable = (iterable,)
+            else:
+                shape = ()
+                iterable = (iterable,)
 
         if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
@@ -251,7 +254,9 @@ class NDimArray(object):
     def _eval_derivative_array(self, arg):
         from sympy import derive_by_array
         from sympy import Tuple
+        from sympy import SparseNDimArray
         from sympy.matrices.common import MatrixCommon
+
         if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):
             return derive_by_array(self, arg)
         else:
@@ -270,6 +275,11 @@ class NDimArray(object):
         >>> m.applyfunc(lambda i: 2*i)
         [[0, 2], [4, 6]]
         """
+        from sympy.tensor.array import SparseNDimArray
+
+        if isinstance(self, SparseNDimArray) and f(S.Zero) == 0:
+            return type(self)({k: f(v) for k, v in self._sparse_array.items() if f(v) != 0}, self.shape)
+
         return type(self)(map(f, self), self.shape)
 
     def __str__(self):
@@ -367,28 +377,47 @@ class NDimArray(object):
 
     def __mul__(self, other):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
+
         other = sympify(other)
+        if isinstance(self, SparseNDimArray):
+            if(other == S.Zero):
+                return type(self)({}, self.shape)
+            return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [i*other for i in self]
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
+
         other = sympify(other)
+        if isinstance(self, SparseNDimArray):
+            if(other == S.Zero):
+                return type(self)({}, self.shape)
+            return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [other*i for i in self]
         return type(self)(result_list, self.shape)
 
     def __div__(self, other):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected")
+
         other = sympify(other)
+        if isinstance(self, SparseNDimArray) and other != S.Zero:
+            return type(self)({k: v/other for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [i/other for i in self]
         return type(self)(result_list, self.shape)
 
@@ -396,6 +425,11 @@ class NDimArray(object):
         raise NotImplementedError('unsupported operation on NDimArray')
 
     def __neg__(self):
+        from sympy.tensor.array import SparseNDimArray
+
+        if isinstance(self, SparseNDimArray):
+            return type(self)({k: -v for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [-i for i in self]
         return type(self)(result_list, self.shape)
 
@@ -420,9 +454,17 @@ class NDimArray(object):
         >>> a == b
         False
         """
+        from sympy.tensor.array import SparseNDimArray
         if not isinstance(other, NDimArray):
             return False
-        return (self.shape == other.shape) and (list(self) == list(other))
+
+        if not self.shape == other.shape:
+            return False
+
+        if isinstance(self, SparseNDimArray) and isinstance(other, SparseNDimArray):
+            return dict(self._sparse_array) == dict(other._sparse_array)
+
+        return list(self) == list(other)
 
     def __ne__(self, other):
         return not self == other

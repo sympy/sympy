@@ -4089,6 +4089,28 @@ def ode_nth_order_reducible(eq, func, order, match):
 
     return fsol
 
+# This needs to produce an invertible function but the inverse depends
+# which variable we are integrating with respect to. Since the class can
+# be stored in cached results we need to ensure that we always get the
+# same class back for each particular integration variable so we store these
+# classes in a global dict:
+_nth_algebraic_diffx_stored = {}
+
+def _nth_algebraic_diffx(var):
+    cls = _nth_algebraic_diffx_stored.get(var, None)
+
+    if cls is None:
+        # A class that behaves like Derivative wrt var but is "invertible".
+        class diffx(Function):
+            def inverse(self):
+                # don't use integrate here because fx has been replaced by _t
+                # in the equation; integrals will not be correct while solve
+                # is at work.
+                return lambda expr: Integral(expr, var) + Dummy('C')
+
+        cls = _nth_algebraic_diffx_stored.setdefault(var, diffx)
+
+    return cls
 
 def _nth_algebraic_match(eq, func):
     r"""
@@ -4099,18 +4121,11 @@ def _nth_algebraic_match(eq, func):
     solution (apart from evaluating the integrals).
     """
 
-    # Each integration should generate a different constant
-    constants = iter_numbered_constants(eq)
-    constant = lambda: next(constants, None)
+    # The independent variable
+    var = func.args[0]
 
-    # A class that behaves like Derivative but is "invertible"
-    class diffx(Function):
-        isadiffx = True  # apparently not needed for PY3
-        def inverse(self):
-            # don't use integrate here because fx has been replaced by _t
-            # in the equation; integrals will not be correct while solve
-            # is at work.
-            return lambda expr: Integral(expr, var) + constant()
+    # Derivative that solve can handle:
+    diffx = _nth_algebraic_diffx(var)
 
     # Replace derivatives wrt the independent variable with diffx
     def replace(eq, var):
@@ -4127,18 +4142,9 @@ def _nth_algebraic_match(eq, func):
         return eq.replace(Derivative, expand_diffx)
 
     # Restore derivatives in solution afterwards
-    from sympy.core.compatibility import PY3
     def unreplace(eq, var):
-        if PY3:
-            return eq.replace(diffx, lambda e: Derivative(e, var))
-        else:
-            from sympy.core.rules import Transform
-            return eq.xreplace(Transform(
-                lambda dx: Derivative(dx.args[0], var),
-                lambda dx: getattr(dx, 'isadiffx', None)))
+        return eq.replace(diffx, lambda e: Derivative(e, var))
 
-    # The independent variable
-    var = func.args[0]
     subs_eqn = replace(eq, var)
     try:
         # turn off simplification to protect Integrals that have

@@ -7,11 +7,14 @@ from sympy.functions import (exp, sin, cos, fresnelc, fresnels, conjugate, Max,
                              erf2, expint, erfinv, erfcinv, Ei, Si, Ci, li,
                              Shi, Chi, uppergamma, beta, subfactorial, erf2inv,
                              factorial, factorial2, catalan, RisingFactorial,
-                             FallingFactorial, harmonic)
+                             FallingFactorial, harmonic, atan2, sec, acsc,
+                             hermite, laguerre, assoc_laguerre, jacobi,
+                             gegenbauer, chebyshevt, chebyshevu, legendre,
+                             assoc_legendre)
 
 from sympy import mathematica_code as mcode
 
-x, y, z = symbols('x,y,z')
+x, y, z, w = symbols('x,y,z,w')
 f = Function('f')
 
 
@@ -32,8 +35,10 @@ def test_Rational():
 def test_Function():
     assert mcode(f(x, y, z)) == "f[x, y, z]"
     assert mcode(sin(x) ** cos(x)) == "Sin[x]^Cos[x]"
+    assert mcode(sec(x) * acsc(x)) == "ArcCsc[x]*Sec[x]"
+    assert mcode(atan2(x, y)) == "ArcTan[x, y]"
     assert mcode(conjugate(x)) == "Conjugate[x]"
-    assert mcode(Max(x,y,z)*Min(y,z)) == "Max[x, y, z]*Min[y, z]"
+    assert mcode(Max(x, y, z)*Min(y, z)) == "Max[x, y, z]*Min[y, z]"
     assert mcode(fresnelc(x)) == "FresnelC[x]"
     assert mcode(fresnels(x)) == "FresnelS[x]"
     assert mcode(gamma(x)) == "Gamma[x]"
@@ -63,6 +68,18 @@ def test_Function():
     assert mcode(catalan(x)) == "CatalanNumber[x]"
     assert mcode(harmonic(x)) == "HarmonicNumber[x]"
     assert mcode(harmonic(x, y)) == "HarmonicNumber[x, y]"
+
+
+def test_special_polynomials():
+    assert mcode(hermite(x, y)) == "HermiteH[x, y]"
+    assert mcode(laguerre(x, y)) == "LaguerreL[x, y]"
+    assert mcode(assoc_laguerre(x, y, z)) == "LaguerreL[x, y, z]"
+    assert mcode(jacobi(x, y, z, w)) == "JacobiP[x, y, z, w]"
+    assert mcode(gegenbauer(x, y, z)) == "GegenbauerC[x, y, z]"
+    assert mcode(chebyshevt(x, y)) == "ChebyshevT[x, y]"
+    assert mcode(chebyshevu(x, y)) == "ChebyshevU[x, y]"
+    assert mcode(legendre(x, y)) == "LegendreP[x, y]"
+    assert mcode(assoc_legendre(x, y, z)) == "LegendreP[x, y, z]"
 
 
 def test_Pow():
@@ -230,6 +247,7 @@ def test_comment():
     from sympy.printing.mathematica import MCodePrinter
     assert MCodePrinter()._get_comment("Hello World") == \
         "(* Hello World *)"
+
 
 def test_userfuncs():
     # Dictionary mutation test

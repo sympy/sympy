@@ -41,8 +41,9 @@ def test_single_normal():
     assert E(Y) == mu
     assert variance(Y) == sigma**2
     pdf = density(Y)
-    x = Symbol('x')
-    assert (pdf(x) == \
+
+    x = Symbol('x', real=True)
+    assert (pdf(x) ==
             2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
     assert P(X**2 < 1) == erf(2**S.Half/2)
@@ -631,9 +632,15 @@ def test_gumbel():
     beta = Symbol("beta", positive=True)
     mu = Symbol("mu")
     x = Symbol("x")
+    y = Symbol("y")
     X = Gumbel("x", beta, mu)
-    assert str(density(X)(x)) == 'exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta'
-    assert cdf(X)(x) == exp(-exp((mu - x)/beta))
+    Y = Gumbel("y", beta, mu, minimum=True)
+    assert density(X)(x).expand() == \
+    exp(mu/beta)*exp(-x/beta)*exp(-exp(mu/beta)*exp(-x/beta))/beta
+    assert density(Y)(y).expand() == \
+    exp(-mu/beta)*exp(y/beta)*exp(-exp(-mu/beta)*exp(y/beta))/beta
+    assert cdf(X)(x).expand() == \
+    exp(-exp(mu/beta)*exp(-x/beta))
 
 
 def test_kumaraswamy():

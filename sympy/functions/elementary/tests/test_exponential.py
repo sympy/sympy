@@ -4,6 +4,8 @@ from sympy import (
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
     AccumBounds, MatrixSymbol, Pow)
 from sympy.abc import x, y, z
+from sympy.core.function import ArgumentIndexError
+from sympy.utilities.pytest import raises
 
 
 def test_exp_values():
@@ -40,6 +42,9 @@ def test_exp_values():
 
     assert exp(3*log(x) + oo*x) == exp(oo*x) * x**3
     assert exp(4*log(x)*log(y) + 3*log(x)) == x**3 * exp(4*log(x)*log(y))
+
+    assert exp(-oo, evaluate=False).is_finite is True
+    assert exp(oo, evaluate=False).is_finite is False
 
 
 def test_exp_log():
@@ -138,11 +143,17 @@ def test_exp_taylor_term():
     assert exp(x).taylor_term(1, x) == x
     assert exp(x).taylor_term(3, x) == x**3/6
     assert exp(x).taylor_term(4, x) == x**4/24
+    assert exp(x).taylor_term(-1, x) == S.Zero
 
 
 def test_exp_MatrixSymbol():
     A = MatrixSymbol("A", 2, 2)
     assert exp(A).has(exp)
+
+
+def test_exp_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: exp(x).fdiff(2))
 
 
 def test_log_values():
@@ -409,6 +420,19 @@ def test_issue_5673():
     assert e.is_positive is not True
     e3 = -2 + exp(exp(LambertW(log(2)))*LambertW(log(2)))
     assert e3.is_nonzero is not True
+
+
+def test_log_fdiff():
+    x = Symbol('x')
+    raises(ArgumentIndexError, lambda: log(x).fdiff(2))
+
+
+def test_log_taylor_term():
+    x = symbols('x')
+    assert log(x).taylor_term(0, x) == x
+    assert log(x).taylor_term(1, x) == -x**2/2
+    assert log(x).taylor_term(4, x) == x**5/5
+    assert log(x).taylor_term(-1, x) == S.Zero
 
 
 def test_exp_expand_NC():
