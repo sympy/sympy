@@ -1239,9 +1239,6 @@ def test_Poly_power_list():
     assert power_list(x*y**2) == [(1,), (2,)]
 
     assert power_list(x**8*(1 - x)**9) == [(17, 16, 15, 14, 13, 12, 11, 10, 9, 8)]
-    # >>>expand(x**8*(1 - x)**9)
-    # -x**17 + 9*x**16 - 36*x**15 + 84*x**14 - 126*x**13 + 126*x**12 - 84*x**11
-    # + 36*x**10 - 9*x**9 + x**8
 
     raises(ComputationFailed, lambda: power_list(1))
 
