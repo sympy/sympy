@@ -23,7 +23,7 @@ from sympy import beta as beta_fn
 from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
 from sympy.stats.rv import _value_check, Density, RandomSymbol
-from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution,
+from sympy.stats.frv import (SingleFiniteDistribution,
                             SymbolicSingleFinitePSpace)
 
 __all__ = ['FiniteRV',
@@ -53,9 +53,7 @@ def rv(name, cls, *args):
         i += 1
     dist = cls(*args)
     dist.check(*args)
-    if dist.is_symbolic:
-        return SymbolicSingleFinitePSpace(name, dist).value
-    return SingleFinitePSpace(name, dist).value
+    return SymbolicSingleFinitePSpace(name, dist).value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
 
@@ -167,7 +165,7 @@ class DieDistribution(SingleFiniteDistribution):
 
     @property
     def low(self):
-        return S(0)
+        return S(1)
 
     @property
     def set(self):
@@ -177,15 +175,11 @@ class DieDistribution(SingleFiniteDistribution):
 
     def pdf(self, x):
         x = sympify(x)
-        if x.is_number:
-            return Piecewise((S(1)/self.sides,
-            (Gt(x, 0) != False) & (Lt(x, self.sides + 1) != False) & x.is_Integer), (
-            S.Zero, True))
-        elif x.is_Symbol or isinstance(x, RandomSymbol):
-            i = Dummy('i', integer=True, positive=True)
-            return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides))
-        raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
+        if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
+            raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
+        i = Dummy('i', integer=True, positive=True)
+        return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides)).doit()
 
 
 def Die(name, sides=6):
@@ -331,9 +325,14 @@ class BinomialDistribution(SingleFiniteDistribution):
         return list(self.dict.keys())
 
 
-    def pdf(self, k):
+    def pdf(self, x):
         n, p = self.n, self.p
-        return binomial(n, k) * p**k * (1 - p)**(n - k)
+        x = sympify(x)
+        if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
+            raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
+                        "'RandomSymbol' not %s" % (type(x)))
+        i = Dummy('i', integer=True)
+        return Sum(KroneckerDelta(x, i)*binomial(n, x) * p**x * (1 - p)**(n - x), (i, 0, n)).doit()
 
     @property
     @cacheit

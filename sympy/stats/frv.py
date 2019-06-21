@@ -352,7 +352,7 @@ class FinitePSpace(PSpace):
 
         assert False, "We should never have gotten to this point"
 
-class SymbolicSingleFinitePSpace(SinglePSpace):
+class SymbolicSingleFinitePSpace(SinglePSpace, FinitePSpace):
     """
     Represents probability space of finite
     random variables with symbolic dimensions.
@@ -361,9 +361,28 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
     def domain(self):
         return SingleFiniteDomain(self.symbol, self.distribution.set)
 
-    def prob_of(self, elem):
-        elem = sympify(elem)
-        return self.pdf(elem)
+    @property
+    def _is_symbolic(self):
+        """
+        Helper property to check if the distribution
+        of the random variable is symbolic.
+        """
+        return isinstance(self.domain.set, Intersection)
+
+    def _is_logical(self, expr):
+        """
+        Helper function to check if an expression
+        is logical.
+
+        Returns
+        =======
+
+        True
+            If the expression is logical.
+        False
+            In all other cases.
+        """
+        return isinstance(expr, (Relational, Logic))
 
     @property
     def distribution(self):
@@ -392,9 +411,7 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
         "value is undetermined.")
 
     def compute_density(self, expr):
-        cond = expr
-        if not isinstance(expr, (Relational, Logic)):
-            cond = True
+        cond = True if not self._is_logical(expr) else expr
         k = Dummy('k', integer=True)
         return Lambda(k,
         Piecewise((self.pdf(k), And(k >= self.args[1].low,
@@ -411,7 +428,14 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
                 "symbolic dimensions is currently not possible.")
 
     def compute_expectation(self, expr, rvs=None, **kwargs):
-        return Expectation(expr, **kwargs)
+        if self._is_symbolic:
+            rv = random_symbols(expr)[0]
+            k = Dummy('k', integer=True)
+            cond = True if not self._is_logical(expr) else expr.subs(rv, k)
+            return Sum(Piecewise((self.pdf(k) * k, cond), (0, True)),
+                (k, self.distribution.low, self.distribution.high)).doit()
+        self.conditional_space(expr).compute_expectation(expr, rvs, **kwargs)
+
 
     def probability(self, condition):
         return Probability(condition)
@@ -423,7 +447,9 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
         conditional space of random variables with
         symbolic dimensions is currently not possible.
         """
-        return self
+        if self._is_symbolic:
+            return self
+        return self.__class__.__bases__[1].conditional_space(condition)
 
     def sample(self):
         raise NotImplementedError("Sampling of random variables with "
