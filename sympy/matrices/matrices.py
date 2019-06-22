@@ -2708,6 +2708,8 @@ class MatrixBase(MatrixDeprecated,
 
             dat = do(dat)
 
+        dat = cls._sympify(dat)
+
         # Empty matrix
         if dat == [] or dat == [[]]:
             return 0, 0, []
