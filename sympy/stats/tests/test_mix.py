@@ -21,7 +21,7 @@ def test_density():
         sqrt(2)*exp(-(x - 1)**2/8)/(4*sqrt(pi))
 
 def test_MarginalDistribution():
-    a1, p1, p2 = symbols('a1 p1 p2 p3', positive=True)
+    a1, p1, p2 = symbols('a1 p1 p2', positive=True)
     C = Multinomial('C', 2, p1, p2)
     B = MultivariateBeta('B', a1, C[0])
     MGR = MarginalDistribution(B, C[0])
