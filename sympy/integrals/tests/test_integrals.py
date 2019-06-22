@@ -1365,6 +1365,11 @@ def test_issue_11856():
     t = symbols('t')
     assert integrate(sinc(pi*t), t) == Si(pi*t)/pi
 
+
+def test_issue_11876():
+    assert integrate(sqrt(log(1/x)), (x, 0, 1)) == sqrt(pi)/2
+
+
 def test_issue_4950():
     assert integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) ==\
         -2.4*exp(8*x) - 12.0*exp(5*x)
@@ -1392,6 +1397,10 @@ def test_issue_12645():
 
 def test_issue_12677():
     assert integrate(sin(x) / (cos(x)**3) , (x, 0, pi/6)) == Rational(1,6)
+
+
+def test_issue_14078():
+    assert integrate((cos(3*x)-cos(x))/x, (x, 0, oo)) == -log(3)
 
 def test_issue_14064():
     assert integrate(1/cosh(x), (x, 0, oo)) == pi/2
