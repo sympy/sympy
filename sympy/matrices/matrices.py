@@ -2699,13 +2699,7 @@ class MatrixBase(MatrixDeprecated,
 
         >>> Matrix._handle_list_of_lists(
         ...     [Matrix([[1, 2], [3, 4]]), Matrix([[5, 6], [7, 8]])])
-        (2, 1, [Matrix([
-            [1, 2],
-            [3, 4]]), Matrix([
-            [5, 6],
-            [7, 8]])])
-
-        TODO Possible logic flaw
+        (4, 2, [1, 2, 3, 4, 5, 6, 7, 8])
         """
         def ismat(i):
             return isinstance(i, MatrixBase)
@@ -2723,10 +2717,9 @@ class MatrixBase(MatrixDeprecated,
             if not row:
                 continue
 
-            # XXX WIP for flattening single matrix
             if is_Matrix:
-                r = c = 1
-                flat = [row]
+                r, c = row.shape
+                flat = row._mat
             else:
                 r, c, flat = cls._handle_list_of_matrixlikes_row(row)
 
