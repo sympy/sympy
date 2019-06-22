@@ -22,13 +22,16 @@ def test_density():
 
 def test_MarginalDistribution():
     a1, p1, p2, p3 = symbols('a1 p1 p2 p3', positive=True)
-    C = Multinomial('C', 3, p1, p2, p3)
+    C = Multinomial('C', 2, p1, p2)
     B = MultivariateBeta('B', a1, C[0])
     MGR = MarginalDistribution(B, C[0])
-    assert str(MGR.pdf(C)) == \
-    str(B*Piecewise((6*p1**C[0]*p2**C[1]*p3**C[2]/(factorial(C[0])*factorial(C[1])*
-    factorial(C[2])), Eq(C[0] + C[1] + C[2], 3)), (0, True))*gamma(a1 + C[0])*
-    B[0]**(a1 - 1)*B[1]**(C[0] - 1)/(gamma(a1)*gamma(C[0])))
+    mgrc1 = ("B*Piecewise((2*p1**C[0]*p2**C[1]/(factorial(C[0])*factorial"
+    "(C[1])), Eq(C[0] + C[1], 2)), (0, True))*gamma(a1 + C[0])*B[0]**(a1 - "
+    "1)*B[1]**(C[0] - 1)/(gamma(a1)*gamma(C[0]))")
+    mgrc2 = ("Piecewise((2*p1**C[0]*p2**C[1]/(factorial(C[0])*"
+    "factorial(C[1])), Eq(C[0] + C[1], 2)), (0, True))*gamma(a1 + C[0])*"
+    "B[0]**(a1 - 1)*B[1]**(C[0] - 1)*B/(gamma(a1)*gamma(C[0]))")
+    assert str(MGR(C)) == mgrc1 or str(MGR(C)) == mgrc2
 
 def test_compound_distribution():
     Y = Poisson('Y', 1)
