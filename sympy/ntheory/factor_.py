@@ -326,10 +326,10 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     be aware that a false negative result will be returned if the
     provided candidates are too large:
 
-    >>> perfect_power(60**3, [20])
+    >>> perfect_power(60**3, [20])  # 2**20 > 60**3 so 20 is impossibly large
     False
 
-    To only test for exponents in candidates, use False for ``factor``:
+    To only test for exponents in ``candidates``, use False for ``factor``:
 
     >>> perfect_power(60**3, [19])
     (60, 3)
