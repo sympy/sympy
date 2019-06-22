@@ -2574,6 +2574,11 @@ class MatrixBase(MatrixDeprecated,
                 if i:
                     ncol.add(len(i))
                     flat_list.extend(i)
+                else:
+                    # XXX Hack to allow empty container to be used
+                    # as a matrix element
+                    ncol.add(1)
+                    flat_list.append(i)
 
             else:
                 ncol.add(1)
