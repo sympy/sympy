@@ -295,11 +295,13 @@ def perfect_power(n, candidates=None, big=True, factor=True):
 
     If ``candidates`` for exponents are given, they are assumed to be
     sorted and the first one that is larger than the computed maximum
-    will signal failure for the routine.
+    will signal failure for the routine. (A smaller exponent than any
+    in ``candidates`` may be returned if ``factor`` is True. And
+    if ``big`` is True, a larger exponent may be returned.)
 
-    If ``factor=True`` then simultaneous factorization of n is
+    If ``factor=True`` then simultaneous factorization of ``n`` is
     attempted since finding a factor indicates the only possible root
-    for n. This is True by default since only a few small factors will
+    for ``n``. This is True by default since only a few small factors will
     be tested in the course of searching for the perfect power.
 
     Examples
@@ -319,6 +321,32 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     >>> is2pow = lambda n: bool(n and not n & (n - 1))
     >>> [(i, is2pow(i)) for i in range(5)]
     [(0, False), (1, True), (2, True), (3, False), (4, True)]
+
+    It is not necessary to provide candidates. But if you do then
+    be aware that a false negative result will be returned if the
+    provided candidates are too large:
+
+    >>> perfect_power(60**3, [20])
+    False
+
+    To only test for exponents in candidates, use False for ``factor``:
+
+    >>> perfect_power(60**3, [19])
+    (60, 3)
+    >>> perfect_power(60**3, [19], factor=False)
+    False
+
+    To strictly test for only exponents in ``candidates``, use False
+    for ``factor`` and for ``big``:
+
+    >>> perfect_power(16, [2], factor=False)
+    (2, 4)
+    >>> perfect_power(16, [2], factor=False, big=False)
+    (4, 2)
+    >>> perfect_power(16, [3], factor=False, big=False)
+    False
+    >>> perfect_power(16, [3, 4], factor=False, big=False)
+    (2, 4)
     """
     n = as_int(n)
     if n < 3:
