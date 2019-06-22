@@ -1339,7 +1339,10 @@ def test_failing_assumptions():
     assert failing_assumptions(6*x + y, **x.assumptions0) == \
     {'real': None, 'imaginary': None, 'complex': None, 'hermitian': None,
     'positive': None, 'nonpositive': None, 'nonnegative': None, 'nonzero': None,
-    'negative': None, 'zero': None}
+    'negative': None, 'zero': None, 'extended_real': None, 'finite': None,
+    'infinite': None, 'extended_negative': None, 'extended_nonnegative': None,
+    'extended_nonpositive': None, 'extended_nonzero': None,
+    'extended_positive': None }
 
 def test_issue_6056():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
@@ -2038,3 +2041,8 @@ def test_issue_15731():
     b = Symbol('b', positive=True)
     assert solve(b**x - b**2, x) == [2]
     assert solve(b**x - 1/b, x) == [-1]
+
+
+def test_issue_10933():
+    assert solve(x**4 + y*(x + 0.1), x)  # doesn't fail
+    assert solve(I*x**4 + x**3 + x**2 + 1.)  # doesn't fail

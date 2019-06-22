@@ -184,6 +184,7 @@ def test_check_unit_consistency():
     raises(ValueError, lambda: check_unit_consistency(u - w))
     raises(ValueError, lambda: check_unit_consistency(u + 1))
     raises(ValueError, lambda: check_unit_consistency(u - 1))
+    raises(ValueError, lambda: check_unit_consistency(1 - exp(u / w)))
 
 
 def test_mul_div():

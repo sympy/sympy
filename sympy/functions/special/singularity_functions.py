@@ -158,12 +158,12 @@ class SingularityFunction(Function):
             return S.NaN
         if (n + 2).is_negative:
             raise ValueError("Singularity Functions are not defined for exponents less than -2.")
-        if shift.is_negative:
+        if shift.is_extended_negative:
             return S.Zero
-        if n.is_nonnegative and shift.is_nonnegative:
+        if n.is_nonnegative and shift.is_extended_nonnegative:
             return (x - a)**n
         if n == -1 or n == -2:
-            if shift.is_negative or shift.is_positive:
+            if shift.is_negative or shift.is_extended_positive:
                 return S.Zero
             if shift.is_zero:
                 return S.Infinity

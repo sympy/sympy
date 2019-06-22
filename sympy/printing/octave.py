@@ -401,14 +401,15 @@ class OctaveCodePrinter(CodePrinter):
         return "eye(" + s + ")"
 
 
-    def _print_uppergamma(self, expr):
-        return "gammainc(%s, %s, 'upper')" % (self._print(expr.args[1]),
-                                              self._print(expr.args[0]))
-
-
     def _print_lowergamma(self, expr):
-        return "gammainc(%s, %s, 'lower')" % (self._print(expr.args[1]),
-                                              self._print(expr.args[0]))
+        # Octave implements regularized incomplete gamma function
+        return "(gammainc({1}, {0}).*gamma({0}))".format(
+            self._print(expr.args[0]), self._print(expr.args[1]))
+
+
+    def _print_uppergamma(self, expr):
+        return "(gammainc({1}, {0}, 'upper').*gamma({0}))".format(
+            self._print(expr.args[0]), self._print(expr.args[1]))
 
 
     def _print_sinc(self, expr):

@@ -53,6 +53,7 @@ from sympy.core.compatibility import range, PY3
 from itertools import islice, takewhile
 from sympy.series.formal import fps
 from sympy.series.fourier import fourier_series
+from sympy.calculus.util import minimum
 
 
 R = Rational
@@ -365,7 +366,7 @@ def test_G17():
 
 def test_G18():
     assert cf_p(1, 2, 5) == [[1]]
-    assert cf_r([[1]]) == S.Half + sqrt(5)/2
+    assert cf_r([[1]]).expand() == S.Half + sqrt(5)/2
 
 
 @XFAIL
@@ -1317,7 +1318,6 @@ def test_P2():
                         [7, 8]])
 
 
-@XFAIL
 def test_P3():
     A = Matrix([
         [11, 12, 13, 14],
@@ -1328,20 +1328,21 @@ def test_P3():
     A11 = A[0:3, 1:4]
     A12 = A[(0, 1, 3), (2, 0, 3)]
     A21 = A
-    A221 = A[0:2, 2:4]
-    A222 = A[(3, 0), (2, 1)]
-    A22 = BlockMatrix([A221, A222])
-    B = BlockMatrix([[A11, A12],
-                    [A21, A22]])
-    # B is a matrix consisting of several matrices
-    # https://github.com/sympy/sympy/issues/16278
-    assert B == Matrix([[12, 13, 14, 13, 11, 14],
-                        [22, 23, 24, 23, 21, 24],
-                        [32, 33, 34, 43, 41, 44],
-                        [11, 12, 13, 14, 13, 14],
-                        [21, 22, 23, 24, 23, 24],
-                        [31, 32, 33, 34, 43, 42],
-                        [41, 42, 43, 44, 13, 12]])
+    A221 = -A[0:2, 2:4]
+    A222 = -A[(3, 0), (2, 1)]
+    A22 = BlockMatrix([[A221, A222]]).T
+    rows = [[-A11, A12], [A21, A22]]
+    from sympy.utilities.pytest import raises
+    raises(ValueError, lambda: BlockMatrix(rows))
+    B = Matrix(rows)
+    assert B == Matrix([
+        [-12, -13, -14, 13, 11, 14],
+        [-22, -23, -24, 23, 21, 24],
+        [-32, -33, -34, 43, 41, 44],
+        [11, 12, 13, 14, -13, -23],
+        [21, 22, 23, 24, -14, -24],
+        [31, 32, 33, 34, -43, -13],
+        [41, 42, 43, 44, -42, -12]])
 
 
 @XFAIL
@@ -2245,10 +2246,8 @@ def test_U12():
         "External diff of differential form not supported")
 
 
-@XFAIL
 def test_U13():
-    #assert minimize(x**4 - x + 1, x)== -3*2**Rational(1,3)/8 + 1
-    raise NotImplementedError("minimize() not supported")
+    assert minimum(x**4 - x + 1, x) == -3*2**Rational(1,3)/8 + 1
 
 
 @XFAIL

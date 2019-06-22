@@ -3,16 +3,15 @@
 """
 Plotting Examples
 
-Suggested Usage:    python -i plotting.py
+Suggested Usage:    python -i pyglet_plotting.py
 """
 
 
-from sympy import symbols
+from sympy import symbols, sin, cos, pi, sqrt
+from sympy.core.compatibility import range, clock
 from sympy.plotting.pygletplot import PygletPlot
-from sympy import sin, cos, pi, sqrt, exp
-from sympy.core.compatibility import range
 
-from time import sleep, clock
+from time import sleep
 
 
 def main():

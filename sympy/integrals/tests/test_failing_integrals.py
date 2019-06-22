@@ -23,18 +23,15 @@ def test_issue_4212():
 
 
 @XFAIL
-def test_issue_4326():
-    assert integrate(((h*(x - R + b))/b)*sqrt(R**2 - x**2), (x, R - b, R)).has(Integral)
-
-
-@XFAIL
 def test_issue_4491():
+    # Can be solved via variable transformation x = y - 1
     assert not integrate(x*sqrt(x**2 + 2*x + 4), x).has(Integral)
 
 
 @XFAIL
 def test_issue_4511():
     # This works, but gives a complicated answer.  The correct answer is x - cos(x).
+    # If current answer is simplified, 1 - cos(x) + x is obtained.
     # The last one is what Maple gives.  It is also quite slow.
     assert integrate(cos(x)**2 / (1 - sin(x))) in [x - cos(x), 1 - cos(x) + x,
             -2/(tan((S(1)/2)*x)**2 + 1) + x]
@@ -56,22 +53,6 @@ def test_issue_4540():
     assert not integrate(
         (sin(1/x) - x*exp(x)) /
         ((-sin(1/x) + x*exp(x))*x + x*sin(1/x)), x).has(Integral)
-
-
-@XFAIL
-def test_issue_4551():
-    assert integrate(1/(x*sqrt(1 - x**2)), x).has(Integral)
-
-
-@XFAIL
-def test_issue_4737a():
-    # Implementation of Si()
-    assert integrate(sin(x)/x, x).has(Integral)
-
-
-@XFAIL
-def test_issue_1638b():
-    assert integrate(sin(x)/x, (x, -oo, oo)) == pi/2
 
 
 @XFAIL
