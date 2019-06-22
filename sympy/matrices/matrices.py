@@ -2470,7 +2470,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     @classmethod
-    def _handle_column_vector(cls, dat):
+    def _handle_column_vector(cls, dat, evaluate=True):
         """Creation input handler for a 1D list containing scalars or
         matrix-like entries.
 
@@ -2565,7 +2565,7 @@ class MatrixBase(MatrixDeprecated,
         flat_list = []
 
         for i in dat:
-            if ismat(i):
+            if ismat(i) and evaluate:
                 flat_list.extend(i._mat)
                 if any(i.shape):
                     ncol.add(i.cols)
@@ -2592,7 +2592,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     @classmethod
-    def _handle_row_vector(cls, dat):
+    def _handle_row_vector(cls, dat, evaluate=True):
         # Transpose every matrix entries before passig to the column
         # vector processor and transpose it back to get the row
         # vector form.
@@ -2604,7 +2604,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 dat_new.append(i)
 
-        rows, cols, flat_list = cls._handle_column_vector(dat_new)
+        rows, cols, flat_list = cls._handle_column_vector(dat_new, evaluate=evaluate)
 
         T = reshape(flat_list, [cols])
         flat_list = [T[i][j] for j in range(cols) for i in range(rows)]
@@ -2613,7 +2613,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     @classmethod
-    def _handle_list_of_lists(cls, dat):
+    def _handle_list_of_lists(cls, dat, evaluate=True):
         """Creation handler for a 2D structure.
 
         Parameters
@@ -2642,6 +2642,9 @@ class MatrixBase(MatrixDeprecated,
         def ismat(i):
             return isinstance(i, MatrixBase)
 
+        def raw(i):
+            return is_sequence(i) and not ismat(i)
+
         flat_list = []
         ncol = set()
         rows = cols = 0
@@ -2650,12 +2653,12 @@ class MatrixBase(MatrixDeprecated,
             if not row:
                 continue
 
-            if ismat(row):
+            if ismat(row) and evaluate:
                 r, c = row.shape
                 flat = row._mat
 
-            elif is_sequence(row):
-                r, c, flat = cls._handle_row_vector(row)
+            elif raw(row):
+                r, c, flat = cls._handle_row_vector(row, evaluate=evaluate)
 
             else:
                 r = c = 1
@@ -2709,7 +2712,7 @@ class MatrixBase(MatrixDeprecated,
         if dat == [] or dat == [[]]:
             return 0, 0, []
 
-        return cls._handle_list_of_lists(dat)
+        return cls._handle_list_of_lists(dat, evaluate=evaluate)
 
 
     @classmethod
