@@ -707,8 +707,8 @@ def test_lognormal():
     # Right now, only density function and sampling works
     # Test sampling: Only e^mean in sample std of 0
     for i in range(3):
-        X = LogNormal('x', i, 0)
-        assert S(sample(X)) == N(exp(i))
+        X = LogNormal('x', i, 1)
+        assert sample(X) in X.pspace.domain.set
     # The sympy integrator can't do this too well
     #assert E(X) ==
 
