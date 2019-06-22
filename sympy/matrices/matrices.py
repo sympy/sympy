@@ -2622,8 +2622,7 @@ class MatrixBase(MatrixDeprecated,
 
         for i in dat:
             if ismat(i):
-                flat_list.extend(
-                    [k for j in i.tolist() for k in j])
+                flat_list.extend(i._mat)
                 if any(i.shape):
                     ncol.add(i.cols)
 
