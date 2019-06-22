@@ -79,9 +79,9 @@ class ExpBase(Function):
     def _eval_is_finite(self):
         arg = self.args[0]
         if arg.is_infinite:
-            if arg.is_negative:
+            if arg.is_extended_negative:
                 return True
-            if arg.is_positive:
+            if arg.is_extended_positive:
                 return False
         if arg.is_finite:
             return True
