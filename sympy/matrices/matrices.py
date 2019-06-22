@@ -2526,7 +2526,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     @classmethod
-    def _handle_list_of_matrixlikes(cls, dat):
+    def _handle_column_vector(cls, dat):
         """Creation input handler for a 1D list containing scalars or
         matrix-like entries.
 
@@ -2551,58 +2551,58 @@ class MatrixBase(MatrixDeprecated,
             Creating a matrix from explicit matrices:
 
             >>> from sympy.matrices import Matrix, ones, zeros
-            >>> Matrix._handle_list_of_matrixlikes(
+            >>> Matrix._handle_column_vector(
             ...     [ones(2, 2), zeros(1, 2)])
             (3, 2, [1, 1, 1, 1, 0, 0])
 
             Truncating empty matrices:
 
-            >>> Matrix._handle_list_of_matrixlikes(
+            >>> Matrix._handle_column_vector(
             ...     [ones(2, 2), ones(0, 0)])
             (2, 2, [1, 1, 1, 1])
 
             Pure lists:
 
-            >>> Matrix._handle_list_of_matrixlikes(
+            >>> Matrix._handle_column_vector(
             ...     [[1, 2], [3, 4], [5, 6]])
             (3, 2, [1, 2, 3, 4, 5, 6])
 
             Matrices mixed with lists:
 
-            >>> Matrix._handle_list_of_matrixlikes([ones(2, 2), [0, 0]])
+            >>> Matrix._handle_column_vector([ones(2, 2), [0, 0]])
             (3, 2, [1, 1, 1, 1, 0, 0])
 
             Empty matrix:
 
-            >>> Matrix._handle_list_of_matrixlikes([list(), Matrix()])
+            >>> Matrix._handle_column_vector([list(), Matrix()])
             (0, 0, [])
 
         Examples with scalars:
 
             Only scalars:
 
-            >>> Matrix._handle_list_of_matrixlikes([1, 2, 3])
+            >>> Matrix._handle_column_vector([1, 2, 3])
             (3, 1, [1, 2, 3])
 
             Scalars mixed with 1*1 matrices:
 
-            >>> Matrix._handle_list_of_matrixlikes([Matrix([1]), 2, 3])
+            >>> Matrix._handle_column_vector([Matrix([1]), 2, 3])
             (3, 1, [1, 2, 3])
 
             Scalars mixed with empty matrices:
 
-            >>> Matrix._handle_list_of_matrixlikes([Matrix(), 2, 3])
+            >>> Matrix._handle_column_vector([Matrix(), 2, 3])
             (2, 1, [2, 3])
 
             Scalars mixed with column vector:
 
-            >>> Matrix._handle_list_of_matrixlikes(
+            >>> Matrix._handle_column_vector(
             ...     [Matrix([1, 2]), 3, 4])
             (4, 1, [1, 2, 3, 4])
 
             Salars mixed with matrix-like sequence:
 
-            >>> Matrix._handle_list_of_matrixlikes([[1], 2, 3])
+            >>> Matrix._handle_column_vector([[1], 2, 3])
             (3, 1, [1, 2, 3])
 
         See Also
@@ -2777,7 +2777,7 @@ class MatrixBase(MatrixDeprecated,
 
         # A column as a list of matrix-like values
         if evaluate and any(ismat(i) for i in dat):
-            return cls._handle_list_of_matrixlikes(dat)
+            return cls._handle_column_vector(dat)
 
         return cls._handle_list_of_lists(dat)
 
