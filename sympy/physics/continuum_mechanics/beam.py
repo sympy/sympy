@@ -103,10 +103,9 @@ class Beam(object):
         self.length = length
         self.elastic_modulus = elastic_modulus
         if isinstance(second_moment, GeometryEntity):
-            self._cross_section = second_moment
-            self.second_moment = second_moment.second_moment_of_area()[0]
+            self.cross_section = second_moment
         else:
-            self._cross_section = None
+            self.cross_section = None
             self.second_moment = second_moment
         self.variable = variable
         self._base_char = base_char
@@ -186,12 +185,19 @@ class Beam(object):
 
     @second_moment.setter
     def second_moment(self, i):
+        self._cross_section = None
         self._second_moment = sympify(i)
 
     @property
     def cross_section(self):
         """Cross-section of the beam"""
         return self._cross_section
+
+    @cross_section.setter
+    def cross_section(self, s):
+        if s:
+            self._second_moment = s.second_moment_of_area()[0]
+        self._cross_section = s
 
     @property
     def boundary_conditions(self):

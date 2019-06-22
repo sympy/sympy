@@ -602,10 +602,22 @@ def test_parabolic_loads():
 
 
 def test_cross_section():
+    I = Symbol('I')
     l = Symbol('l')
     E = Symbol('E')
     C3, C4 = symbols('C3, C4')
-    a, c, g, h, r = symbols('a, c, g, h, r')
+    a, c, g, h, r, n = symbols('a, c, g, h, r, n')
+
+    # test for second_moment and cross_section setter
+    b0 = Beam(l, E, I)
+    assert b0.second_moment == I
+    assert b0.cross_section == None
+    b0.cross_section = Circle((0, 0), 5)
+    assert b0.second_moment == 625*pi/4
+    assert b0.cross_section == Circle((0, 0), 5)
+    b0.second_moment = 2*n - 6
+    assert b0.second_moment == 2*n-6
+    assert b0.cross_section == None
 
     # beam with a circular cross-section
     b1 = Beam(50, E, Circle((0, 0), r))
