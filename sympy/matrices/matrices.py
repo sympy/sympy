@@ -2446,7 +2446,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     @classmethod
-    def _eval_handle_creation_inputs_ndarray(cls, arg):
+    def _handle_ndarray(cls, arg):
         """NumPy array or matrix or some other object that implements
         __array__. So let's first use this method to get a numpy.array()
         and then make a python list out of it.
@@ -2698,7 +2698,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     @classmethod
-    def _eval_handle_creation_inputs_sequence(cls, arg, evaluate=True):
+    def _handle_sequence(cls, arg, evaluate=True):
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.matrices.expressions.blockmatrix import BlockMatrix
 
@@ -2851,13 +2851,12 @@ class MatrixBase(MatrixDeprecated,
 
             # Matrix(numpy.ones((2, 2)))
             if hasattr(args[0], "__array__"):
-                return cls._eval_handle_creation_inputs_ndarray(args[0])
+                return cls._handle_ndarray(args[0])
 
             # Matrix([1, 2, 3]) or Matrix([[1, 2], [3, 4]])
             if is_sequence(args[0]) and \
                 not isinstance(args[0], DeferredVector):
-                return cls._eval_handle_creation_inputs_sequence(
-                    args[0], evaluate=evaluate)
+                return cls._handle_sequence(args[0], evaluate=evaluate)
 
         elif len(args) == 3:
             rows = as_int(args[0])
