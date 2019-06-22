@@ -399,7 +399,7 @@ def test_DieDistribution():
     assert X.pdf(x).subs({x: 7}).doit() == 0
     assert X.pdf(x).subs({x: -1}).doit() == 0
     assert X.pdf(x).subs({x: S(1)/3}).doit() == 0
-    raises(TypeError, lambda: X.pdf(x).subs({x: Matrix([0, 0])}))
+    raises(ValueError, lambda: X.pdf(Matrix([0, 0])))
     raises(ValueError, lambda: X.pdf(x**2 - 1))
 
 def test_FinitePSpace():
