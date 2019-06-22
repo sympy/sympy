@@ -1078,7 +1078,7 @@ def test_density_unevaluated():
     Y = Normal('Y', 0, 2)
     assert isinstance(density(X+Y, evaluate=False)(z), Integral)
 
-@XFAIL # sample function now returns array
+
 def test_NormalDistribution():
     nd = NormalDistribution(0, 1)
     x = Symbol('x')
@@ -1253,18 +1253,16 @@ def test_conditional_eq():
     assert P(E > 1, Eq(E, 2)) == 1
     assert P(E < 1, Eq(E, 2)) == 0
 
-def test_temporary_sample_python():
+def test_sampling_methods():
     distribs = [
+            Beta("B", 1, 1),
             Normal("N", 0, 1),
             Gamma("G", 2, 7),
-            Exponential('E', 2)
+            Exponential("E", 2),
+            LogNormal("LN", 0, 1)
     ]
     size = 10
     for X in distribs:
-        sam = X.pspace.distribution._sample_random(size)
-        for i in range(size):
-            assert sam[i] in X.pspace.domain.set
-
         numpy = import_module('numpy')
         if not numpy:
             skip('Numpy not installed. Abort tests for _sample_numpy.')

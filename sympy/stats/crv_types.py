@@ -176,6 +176,11 @@ class ArcsinDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 1/(pi*sqrt((x - self.a)*(self.b - x)))
 
+    def _sample_scipy(self, scipy, size):
+        a = float(self.a)
+        from scipy.stats import arcsine
+        return arcsine.rvs(loc=a)
+
     def _cdf(self, x):
         from sympy import asin
         a, b = self.a, self.b
@@ -343,8 +348,20 @@ class BetaDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1) * (1 - x)**(beta - 1) / beta_fn(alpha, beta)
 
-    def sample(self):
-        return random.betavariate(self.alpha, self.beta)
+    def _sample_numpy(self, numpy, size):
+        a, b = float(self.alpha), float(self.beta)
+        return numpy.random.beta(a=a, b=b, size=size)
+
+    def _sample_scipy(self, scipy, size):
+        a, b = float(self.alpha), float(self.beta)
+        from scipy.stats import beta
+        return beta.rvs(a=a, b=b, size=size)
+
+    def _sample_pymc3(self, pymc3, size):
+        a, b = float(self.alpha), float(self.beta)
+        with pymc3.Model():
+            pymc3.Beta('X', alpha=a, beta=b)
+            return pymc3.sample(size, chains=1)[:]['X']
 
     def _characteristic_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
@@ -518,6 +535,11 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
 
+    def _sample_scipy(self, scipy, size):
+        alpha, beta = float(self.alpha), float(self.beta)
+        from scipy.stats import betaprime
+        return betaprime.rvs(a=alpha, b=beta, size=size)
+
 def BetaPrime(name, alpha, beta):
     r"""
     Create a continuous random variable with a Beta prime distribution.
@@ -582,6 +604,21 @@ class CauchyDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
+
+    def _sample_numpy(self, numpy, size):
+        x0, gamma = float(self.x0), float(self.gamma)
+        return numpy.random.normal(mean, std, size)
+
+    def _sample_scipy(self, scipy, size):
+        mean, std = float(self.mean), float(self.std)
+        from scipy.stats import norm
+        return norm.rvs(mean, std, size)
+
+    def _sample_pymc3(self, pymc3, size):
+        mean, std = float(self.mean), float(self.std)
+        with pymc3.Model():
+            pymc3.Normal('X', mean, std)
+            return pymc3.sample(size, chains=1)[:]['X']
 
     def _cdf(self, x):
         x0, gamma = self.x0, self.gamma
@@ -1151,9 +1188,6 @@ class ExponentialDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return self.rate * exp(-self.rate*x)
 
-    def _sample_random(self, size):
-        return [random.expovariate(self.rate) for i in range(size)]
-
     def _sample_numpy(self, numpy, size):
         rate = float(self.rate)
         return numpy.random.exponential(1/rate, size)
@@ -1165,8 +1199,8 @@ class ExponentialDistribution(SingleContinuousDistribution):
 
     def _sample_pymc3(self, pymc3, size):
         rate = float(self.rate)
-        with pymc3.Model() as model:
-            X = pymc3.Exponential('X', lam=rate)
+        with pymc3.Model():
+            pymc3.Exponential('X', lam=rate)
             return pymc3.sample(size, chains=1)[:]['X']
 
 
@@ -1599,9 +1633,6 @@ class GammaDistribution(SingleContinuousDistribution):
         k, theta = self.k, self.theta
         return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
 
-    def _sample_random(self, size):
-        return [random.gammavariate(self.k, self.theta) for i in range(size)]
-
     def _sample_numpy(self, numpy, size):
         k, theta = float(self.k), float(self.theta)
         return numpy.random.gamma(k, theta, size)
@@ -1613,8 +1644,8 @@ class GammaDistribution(SingleContinuousDistribution):
 
     def _sample_pymc3(self, pymc3, size):
         k, theta = float(self.k), float(self.theta)
-        with pymc3.Model() as model:
-            X = pymc3.Gamma('X', alpha=k, beta=1/theta)
+        with pymc3.Model():
+            pymc3.Gamma('X', alpha=k, beta=1/theta)
             return pymc3.sample(size, chains=1)[:]['X']
 
     def _cdf(self, x):
@@ -2322,8 +2353,20 @@ class LogNormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return exp(-(log(x) - mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
 
-    def sample(self):
-        return random.lognormvariate(self.mean, self.std)
+    def _sample_numpy(self, numpy, size):
+        mean, std = float(self.mean), float(self.std)
+        return numpy.random.lognormal(mean, std, size)
+
+    def _sample_scipy(self, scipy, size):
+        mean, std = float(self.mean), float(self.std)
+        from scipy.stats import lognorm
+        return lognorm.rvs(s=std, loc=0, scale=exp(mean), size=size)
+
+    def _sample_pymc3(self, pymc3, size):
+        mean, std = float(self.mean), float(self.std)
+        with pymc3.Model():
+            pymc3.Lognormal('X', mu=mean, sigma=std)
+            return pymc3.sample(size, chains=1)[:]['X']
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
@@ -2579,9 +2622,6 @@ class NormalDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
-    def _sample_random(self, size):
-        return [random.normalvariate(self.mean, self.std) for i in range(size)]
-
     def _sample_numpy(self, numpy, size):
         mean, std = float(self.mean), float(self.std)
         return numpy.random.normal(mean, std, size)
@@ -2593,8 +2633,8 @@ class NormalDistribution(SingleContinuousDistribution):
 
     def _sample_pymc3(self, pymc3, size):
         mean, std = float(self.mean), float(self.std)
-        with pymc3.Model() as model:
-            X = pymc3.Normal('X', mean, std)
+        with pymc3.Model():
+            pymc3.Normal('X', mean, std)
             return pymc3.sample(size, chains=1)[:]['X']
 
     def _cdf(self, x):
@@ -2837,9 +2877,6 @@ class ParetoDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         xm, alpha = self.xm, self.alpha
         return alpha * xm**alpha / x**(alpha + 1)
-
-    def sample(self):
-        return random.paretovariate(self.alpha)
 
     def _cdf(self, x):
         xm, alpha = self.xm, self.alpha

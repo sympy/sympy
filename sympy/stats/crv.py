@@ -17,6 +17,7 @@ from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
+from sympy.external import import_module
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 import random
@@ -171,6 +172,8 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     def sample(self):
         """ A random realization from the distribution """
+        scipy = import_module('scipy')
+        return self._sample_scipy(scipy, size=())
         icdf = self._inverse_cdf_expression()
         return icdf(random.uniform(0, 1))
 
