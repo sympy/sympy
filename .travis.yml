@@ -44,7 +44,22 @@ matrix:
         - SPLIT="2/2" TEST_SYMPY="true"
 
     - stage: test
-      python: 2.7
+      python: 3.8-dev
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_DOCTESTS="true" FASTCACHE="false" TEST_SETUP="true"
+    - python: 3.8-dev
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="1/2" TEST_SYMPY="true"
+    - python: 3.8-dev
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="2/2" TEST_SYMPY="true"
+    - python: 2.7
       env:
         - TEST_ASCII="true"
         # space separated list of optional dependencies(conda packages) to install and test
@@ -229,6 +244,9 @@ before_install:
       pip install coverage;
       coverage debug sys;
     fi
+  - if [ "$TRAVIS_PYTHON_VERSION" == "3.8-dev" ]; then
+        pip uninstall -y Cython;
+    fi
   - |
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     # We do this conditionally because it saves us some downloading if the
@@ -281,6 +299,9 @@ install:
   - pip install mpmath
   # -We:invalid makes invalid escape sequences error in Python 3.6. See
   # -#12028.
+  # SyntaxWarning flag for catching errors in Python3.8
+  # Issue -  #16973. -We:invalid can be dropped from 3.8 onwards, but
+  # it needs to be there for earlier versions.
   - |
     if [[ "${TEST_SETUP}" == "true" ]]; then
       # The install cycle below is to test installation on systems without
@@ -290,7 +311,7 @@ install:
       ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;
       ~/.venv-no-setuptools/bin/python -We:invalid setup.py -q install;
     fi
-    python -We:invalid -m compileall -f -q sympy/;
+    python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/;
     python -We:invalid setup.py -q install;
     pip list --format=columns;
 

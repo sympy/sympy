@@ -111,7 +111,6 @@ class SparseNDimArray(NDimArray):
 
         return type(self)(*(newshape + (self._array,)))
 
-
 class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
 
     def __new__(cls, iterable=None, shape=None, **kwargs):

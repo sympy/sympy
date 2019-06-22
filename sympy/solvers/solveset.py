@@ -2364,8 +2364,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     complements = {}
     intersections = {}
 
-    # when total_solveset_call is equals to total_conditionset
-    # means solvest fail to solve all the eq.
+    # when total_solveset_call equals total_conditionset
+    # it means that solveset failed to solve all eqs.
     total_conditionset = -1
     total_solveset_call = -1
 

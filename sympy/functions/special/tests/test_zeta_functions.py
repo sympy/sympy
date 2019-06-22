@@ -1,9 +1,11 @@
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
-                   exp_polar, polar_lift, O, stieltjes, Abs, Sum)
+                   exp_polar, polar_lift, O, stieltjes, Abs, Sum, oo)
+from sympy.core.function import ArgumentIndexError
+from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically as tn)
-from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
 
 x = Symbol('x')
 a = Symbol('a')
@@ -39,6 +41,8 @@ def test_zeta_eval():
     assert zeta(2, -2) == pi**2/6 + Rational(5, 4)
     assert zeta(4, -3) == pi**4/90 + Rational(1393, 1296)
     assert zeta(6, -4) == pi**6/945 + Rational(3037465, 2985984)
+
+    assert zeta(oo) == 1
 
     assert zeta(-1) == -Rational(1, 12)
     assert zeta(-2) == 0
@@ -81,6 +85,7 @@ def test_dirichlet_eta_eval():
 def test_rewriting():
     assert dirichlet_eta(x).rewrite(zeta) == (1 - 2**(1 - x))*zeta(x)
     assert zeta(x).rewrite(dirichlet_eta) == dirichlet_eta(x)/(1 - 2**(1 - x))
+    assert zeta(x).rewrite(dirichlet_eta, a=2) == zeta(x)
     assert tn(dirichlet_eta(x), dirichlet_eta(x).rewrite(zeta), x)
     assert tn(zeta(x), zeta(x).rewrite(dirichlet_eta), x)
 
@@ -106,6 +111,10 @@ def test_derivatives():
     assert td(polylog(b, z), z)
     assert td(lerchphi(c, b, x), x)
     assert td(lerchphi(x, b, c), x)
+    raises(ArgumentIndexError, lambda: lerchphi(c, b, x).fdiff(2))
+    raises(ArgumentIndexError, lambda: lerchphi(c, b, x).fdiff(4))
+    raises(ArgumentIndexError, lambda: polylog(b, z).fdiff(1))
+    raises(ArgumentIndexError, lambda: polylog(b, z).fdiff(3))
 
 
 def myexpand(func, target):
