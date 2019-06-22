@@ -2675,7 +2675,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     @classmethod
-    def _handle_list_of_lists(cls, dat, evaluate=True):
+    def _handle_list_of_lists(cls, dat):
         """Creation handler for a 2D structure.
 
         Parameters
@@ -2791,7 +2791,7 @@ class MatrixBase(MatrixDeprecated,
         if evaluate and any(ismat(i) for i in dat):
             return cls._handle_list_of_matrixlikes(dat)
 
-        return cls._handle_list_of_lists(dat, evaluate=evaluate)
+        return cls._handle_list_of_lists(dat)
 
 
     @classmethod
