@@ -2470,7 +2470,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     @classmethod
-    def _handle_list_of_matrices(cls, dat, evaluate=True):
+    def _handle_list_of_matrices(cls, dat):
         """A creation input handler for a 1D list purely containing
         matrices.
 
