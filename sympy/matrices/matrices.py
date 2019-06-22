@@ -2470,62 +2470,6 @@ class MatrixBase(MatrixDeprecated,
 
 
     @classmethod
-    def _handle_list_of_matrices(cls, dat):
-        """A creation input handler for a 1D list purely containing
-        matrices.
-
-        Parameters
-        ==========
-
-        dat : list
-            A list purely containing SymPy explicit matrices.
-
-            Matrix expressions are not allowed. Use a preprocesser to
-            make it an explicit matrix, before passing to this routine.
-
-        Returns
-        =======
-
-        rows, cols, flat_list
-            ``flat_list`` is a row-major flattening of a
-            vertically-stacked matrices from the list.
-
-        Examples
-        ========
-
-        Creating a matrix from explicit matrices:
-
-        >>> from sympy.matrices import Matrix, ones, zeros
-        >>> Matrix._handle_list_of_matrices([ones(2, 2), zeros(1, 2)])
-        (3, 2, [1, 1, 1, 1, 0, 0])
-
-        Any empty matrix can be truncated:
-
-        >>> Matrix._handle_list_of_matrices(
-        ...     [ones(2, 2), ones(0, 0), ones(2, 2)])
-        (4, 2, [1, 1, 1, 1, 1, 1, 1, 1])
-
-        >>> Matrix._handle_list_of_matrices(
-        ...     [ones(2, 2), ones(0, 2), ones(2, 2)])
-        (4, 2, [1, 1, 1, 1, 1, 1, 1, 1])
-
-        Trivial case when every matrices are empty:
-        >>> Matrix._handle_list_of_matrices([ones(0, 0), ones(0, 0)])
-        (0, 0, [])
-        """
-        ncol = set(i.cols for i in dat if any(i.shape))
-        if ncol:
-            if len(ncol) > 1:
-                raise ValueError('Mismatched dimensions')
-            flat_list = \
-                [_ for i in dat for r in i.tolist() for _ in r]
-            cols = ncol.pop()
-            rows = len(flat_list)//cols
-            return rows, cols, flat_list
-        return 0, 0, []
-
-
-    @classmethod
     def _handle_column_vector(cls, dat):
         """Creation input handler for a 1D list containing scalars or
         matrix-like entries.
@@ -2660,7 +2604,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 dat_new.append(i)
 
-        rows, cols, flat_list = cls._handle_list_of_matrixlikes(dat_new)
+        rows, cols, flat_list = cls._handle_column_vector(dat_new)
 
         T = reshape(flat_list, [cols])
         flat_list = [T[i][j] for j in range(cols) for i in range(rows)]
@@ -2703,20 +2647,19 @@ class MatrixBase(MatrixDeprecated,
         rows = cols = 0
 
         for row in dat:
-            is_Matrix = getattr(row, 'is_Matrix', False)
-
-            if not is_sequence(row) and not is_Matrix:
-                raise ValueError('expecting list of lists')
-
             if not row:
                 continue
 
-            if is_Matrix:
+            if ismat(row):
                 r, c = row.shape
                 flat = row._mat
 
-            else:
+            elif is_sequence(row):
                 r, c, flat = cls._handle_row_vector(row)
+
+            else:
+                r = c = 1
+                flat = [row]
 
             ncol.add(c)
             if len(ncol) > 1:
@@ -2765,19 +2708,6 @@ class MatrixBase(MatrixDeprecated,
         # Empty matrix
         if dat == [] or dat == [[]]:
             return 0, 0, []
-
-        # A column as a list of scalar values
-        if not any(raw(i) or ismat(i) for i in dat):
-            flat_list = [cls._sympify(i) for i in dat]
-            return len(flat_list), 1, flat_list
-
-        # A column as a list of matrices
-        if evaluate and all(ismat(i) for i in dat):
-            return cls._handle_list_of_matrices(dat)
-
-        # A column as a list of matrix-like values
-        if evaluate and any(ismat(i) for i in dat):
-            return cls._handle_column_vector(dat)
 
         return cls._handle_list_of_lists(dat)
 
