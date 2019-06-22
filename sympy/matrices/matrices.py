@@ -2650,10 +2650,14 @@ class MatrixBase(MatrixDeprecated,
 
     @classmethod
     def _handle_list_of_lists(cls, dat, evaluate=True):
-        """
-        list of lists; each sublist is a logical row
-        which might consist of many rows if the values in
-        the row are matrices
+        """Creation handler for a 2D structure.
+
+        Parameters
+        ==========
+
+        dat : list of lists
+            Each sublist is a logical row which might consist of many
+            rows if the values in the row are matrices.
         """
         def ismat(i):
             return isinstance(i, MatrixBase)
