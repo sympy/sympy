@@ -9,6 +9,7 @@ i = Symbol('i', imaginary=True)
 y = Symbol('y', real=True)
 k, n = symbols('k,n', integer=True)
 
+
 def test_floor():
 
     assert floor(nan) == nan
@@ -66,7 +67,7 @@ def test_floor():
 
     assert floor(floor(pi)) == 3
     assert floor(floor(y)) == floor(y)
-    assert floor(floor(x)) == floor(floor(x))
+    assert floor(floor(x)) == floor(x)
 
     assert unchanged(floor, x)
     assert unchanged(floor, 2*x)
@@ -181,11 +182,11 @@ def test_ceiling():
 
     assert ceiling(ceiling(pi)) == 4
     assert ceiling(ceiling(y)) == ceiling(y)
-    assert ceiling(ceiling(x)) == ceiling(ceiling(x))
+    assert ceiling(ceiling(x)) == ceiling(x)
 
-    assert ceiling(x) == ceiling(x)
-    assert ceiling(2*x) == ceiling(2*x)
-    assert ceiling(k*x) == ceiling(k*x)
+    assert unchanged(ceiling, x)
+    assert unchanged(ceiling, 2*x)
+    assert unchanged(ceiling, k*x)
 
     assert ceiling(k) == k
     assert ceiling(2*k) == 2*k

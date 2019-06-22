@@ -485,13 +485,15 @@ def test_li():
     assert li(oo) == oo
 
     assert isinstance(li(z), li)
+    assert unchanged(li, -zp)
+    assert unchanged(li, zn)
 
     assert diff(li(z), z) == 1/log(z)
 
     assert conjugate(li(z)) == li(conjugate(z))
     assert conjugate(li(-zr)) == li(-zr)
-    assert conjugate(li(-zp)) == conjugate(li(-zp))
-    assert conjugate(li(zn)) == conjugate(li(zn))
+    assert unchanged(conjugate, li(-zp))
+    assert unchanged(conjugate, li(zn))
 
     assert li(z).rewrite(Li) == Li(z) + li(2)
     assert li(z).rewrite(Ei) == Ei(log(z))
