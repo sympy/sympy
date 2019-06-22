@@ -1,7 +1,7 @@
 from copy import copy
 
 from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
-from sympy import Symbol, Rational, SparseMatrix, diff, sympify
+from sympy import Symbol, Rational, SparseMatrix, diff, sympify, S
 from sympy.core.compatibility import long
 from sympy.matrices import Matrix
 from sympy.tensor.array.sparse_ndim_array import MutableSparseNDimArray
@@ -122,6 +122,7 @@ def test_sparse():
     sparse_array[0, 0] = 123
     assert len(sparse_array._sparse_array) == 2
     assert sparse_array[0, 0] == 123
+    assert sparse_array/0 == MutableSparseNDimArray([[S.ComplexInfinity, S.NaN], [S.NaN, S.ComplexInfinity]], (2, 2))
 
     # when element in sparse array become zero it will disappear from
     # dictionary
@@ -132,12 +133,25 @@ def test_sparse():
     assert sparse_array[0, 0] == 0
 
     # test for large scale sparse array
+    # equality test
     a = MutableSparseNDimArray.zeros(100000, 200000)
     b = MutableSparseNDimArray.zeros(100000, 200000)
     assert a == b
     a[1, 1] = 1
     b[1, 1] = 2
     assert a != b
+
+    # __mul__ and __rmul__
+    assert a * 3 == MutableSparseNDimArray({200001: 3}, (100000, 200000))
+    assert 3 * a == MutableSparseNDimArray({200001: 3}, (100000, 200000))
+    assert a * 0 == MutableSparseNDimArray({}, (100000, 200000))
+    assert 0 * a == MutableSparseNDimArray({}, (100000, 200000))
+
+    # __div__
+    assert a/3 == MutableSparseNDimArray({200001: S.One/3}, (100000, 200000))
+
+    # __neg__
+    assert -a == MutableSparseNDimArray({200001: -1}, (100000, 200000))
 
 
 def test_calculation():

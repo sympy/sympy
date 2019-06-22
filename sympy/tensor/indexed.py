@@ -106,8 +106,9 @@ See the appropriate docstrings for a detailed explanation of the output.
 
 from __future__ import print_function, division
 
-from sympy.core.assumptions import StdFactKB, _assume_defined
-from sympy.core import Expr, Tuple, Symbol, sympify, S
+from sympy.core.assumptions import StdFactKB
+from sympy.core import Expr, Tuple, sympify, S
+from sympy.core.symbol import _filter_assumptions, Symbol
 from sympy.core.compatibility import (is_sequence, string_types, NotIterable,
                                       Iterable)
 from sympy.core.logic import fuzzy_bool
@@ -410,19 +411,18 @@ class IndexedBase(Expr, NotIterable):
     True
     >>> A != A_real
     True
+
+    Assumptions can also be inherited if a Symbol is used to initialize the IndexedBase:
+
+    >>> I = symbols('I', integer=True)
+    >>> C_inherit = IndexedBase(I)
+    >>> C_explicit = IndexedBase('I', integer=True)
+    >>> C_inherit == C_explicit
+    True
     """
     is_commutative = True
     is_symbol = True
     is_Atom = True
-
-    @staticmethod
-    def _filter_assumptions(kw_args):
-        """Split the given dict into two parts: assumptions and not assumptions.
-           Keys are taken as assumptions if they correspond to an entry in ``_assume_defined``."""
-        assumptions = {k: v for k, v in kw_args.items() if k in _assume_defined}
-        Symbol._sanitize(assumptions)
-        # return assumptions, not assumptions
-        return assumptions, {k: v for k, v in kw_args.items() if k not in assumptions}
 
     @staticmethod
     def _set_assumptions(obj, assumptions):
@@ -436,10 +436,12 @@ class IndexedBase(Expr, NotIterable):
     def __new__(cls, label, shape=None, **kw_args):
         from sympy import MatrixBase, NDimArray
 
+        assumptions, kw_args = _filter_assumptions(kw_args)
         if isinstance(label, string_types):
             label = Symbol(label)
         elif isinstance(label, Symbol):
-            pass
+            assumptions = label._merge(assumptions)
+            label = Symbol(label.name)
         elif isinstance(label, (MatrixBase, NDimArray)):
             return label
         elif isinstance(label, Iterable):
@@ -463,7 +465,7 @@ class IndexedBase(Expr, NotIterable):
         obj._offset = offset
         obj._strides = strides
         obj._name = str(label)
-        assumptions, _ = IndexedBase._filter_assumptions(kw_args)
+
         IndexedBase._set_assumptions(obj, assumptions)
         return obj
 

@@ -377,28 +377,47 @@ class NDimArray(object):
 
     def __mul__(self, other):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
+
         other = sympify(other)
+        if isinstance(self, SparseNDimArray):
+            if(other == S.Zero):
+                return type(self)({}, self.shape)
+            return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [i*other for i in self]
         return type(self)(result_list, self.shape)
 
     def __rmul__(self, other):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected, use tensorproduct(...) for tensorial product")
+
         other = sympify(other)
+        if isinstance(self, SparseNDimArray):
+            if(other == S.Zero):
+                return type(self)({}, self.shape)
+            return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [other*i for i in self]
         return type(self)(result_list, self.shape)
 
     def __div__(self, other):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected")
+
         other = sympify(other)
+        if isinstance(self, SparseNDimArray) and other != S.Zero:
+            return type(self)({k: v/other for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [i/other for i in self]
         return type(self)(result_list, self.shape)
 
@@ -406,6 +425,11 @@ class NDimArray(object):
         raise NotImplementedError('unsupported operation on NDimArray')
 
     def __neg__(self):
+        from sympy.tensor.array import SparseNDimArray
+
+        if isinstance(self, SparseNDimArray):
+            return type(self)({k: -v for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [-i for i in self]
         return type(self)(result_list, self.shape)
 

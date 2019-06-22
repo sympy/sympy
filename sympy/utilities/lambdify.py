@@ -13,6 +13,7 @@ import linecache
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, PY3)
+from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
@@ -1020,6 +1021,8 @@ class _EvaluatorPrinter(object):
         """
         from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
         from sympy.matrices import DeferredVector
+        from sympy.core.symbol import _uniquely_named_symbol
+        from sympy.core.expr import Expr
 
         # Args of type Dummy can cause name collisions with args
         # of type Symbol.  Force dummify of everything in this
@@ -1037,6 +1040,8 @@ class _EvaluatorPrinter(object):
                 s = self._argrepr(arg)
                 if dummify or not self._is_safe_ident(s):
                     dummy = Dummy()
+                    if isinstance(expr, Expr):
+                        dummy = _uniquely_named_symbol(dummy.name, expr)
                     s = self._argrepr(dummy)
                     expr = self._subexpr(expr, {arg: dummy})
             elif dummify or isinstance(arg, (Function, Derivative)):
@@ -1226,15 +1231,17 @@ def implemented_function(symfunc, implementation):
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
     # if name, create function to hold implementation
-    _extra_kwargs = {}
+    kwargs = {}
     if isinstance(symfunc, UndefinedFunction):
-        _extra_kwargs = symfunc._extra_kwargs
+        kwargs = symfunc._kwargs
         symfunc = symfunc.__name__
     if isinstance(symfunc, string_types):
         # Keyword arguments to UndefinedFunction are added as attributes to
         # the created class.
-        symfunc = UndefinedFunction(symfunc, _imp_=staticmethod(implementation), **_extra_kwargs)
+        symfunc = UndefinedFunction(
+            symfunc, _imp_=staticmethod(implementation), **kwargs)
     elif not isinstance(symfunc, UndefinedFunction):
-        raise ValueError('symfunc should be either a string or'
-                         ' an UndefinedFunction instance.')
+        raise ValueError(filldedent('''
+            symfunc should be either a string or
+            an UndefinedFunction instance.'''))
     return symfunc

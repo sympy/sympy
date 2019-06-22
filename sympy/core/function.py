@@ -372,10 +372,14 @@ class Function(Application, Expr):
     >>> g.diff(x)
     Derivative(g(x), x)
 
-    Assumptions can be passed to Function.
+    Assumptions can be passed to Function, and if function is initialized with a
+    Symbol, the function inherits the name and assumptions associated with the Symbol:
 
     >>> f_real = Function('f', real=True)
     >>> f_real(x).is_real
+    True
+    >>> f_real_inherit = Function(Symbol('f', real=True))
+    >>> f_real_inherit(x).is_real
     True
 
     Note that assumptions on a function are unrelated to the assumptions on
@@ -861,32 +865,49 @@ class UndefinedFunction(FunctionClass):
     The (meta)class of undefined functions.
     """
     def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
-        __dict__ = __dict__ or {}
+        from .symbol import _filter_assumptions
         # Allow Function('f', real=True)
-        __dict__.update({'is_' + arg: val for arg, val in kwargs.items() if arg in _assume_defined})
+        # and/or Function(Symbol('f', real=True))
+        assumptions, kwargs = _filter_assumptions(kwargs)
+        if isinstance(name, Symbol):
+            assumptions = name._merge(assumptions)
+            name = name.name
+        elif not isinstance(name, string_types):
+            raise TypeError('expecting string or Symbol for name')
+        else:
+            commutative = assumptions.get('commutative', None)
+            assumptions = Symbol(name, **assumptions).assumptions0
+            if commutative is None:
+                assumptions.pop('commutative')
+        __dict__ = __dict__ or {}
+        # put the `is_*` for into __dict__
+        __dict__.update({'is_%s' % k: v for k, v in assumptions.items()})
         # You can add other attributes, although they do have to be hashable
         # (but seriously, if you want to add anything other than assumptions,
         # just subclass Function)
         __dict__.update(kwargs)
+        # add back the sanitized assumptions without the is_ prefix
+        kwargs.update(assumptions)
         # Save these for __eq__
-        __dict__.update({'_extra_kwargs': kwargs})
-        __dict__['__module__'] = None # For pickling
-        ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
-        ret.name = name
-        return ret
+        __dict__.update({'_kwargs': kwargs})
+        # do this for pickling
+        __dict__['__module__'] = None
+        obj = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
+        obj.name = name
+        return obj
 
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-    _extra_kwargs = {}
+    _kwargs = {}
 
     def __hash__(self):
-        return hash((self.class_key(), frozenset(self._extra_kwargs.items())))
+        return hash((self.class_key(), frozenset(self._kwargs.items())))
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
             self.class_key() == other.class_key() and
-            self._extra_kwargs == other._extra_kwargs)
+            self._kwargs == other._kwargs)
 
     def __ne__(self, other):
         return not self == other

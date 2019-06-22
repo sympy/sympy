@@ -768,7 +768,7 @@ class MatrixSymbol(MatrixExpr):
     def _eval_subs(self, old, new):
         # only do substitutions in shape
         shape = Tuple(*self.shape)._subs(old, new)
-        return MatrixSymbol(self.name, *shape)
+        return MatrixSymbol(self.args[0], *shape)
 
     def __call__(self, *args):
         raise TypeError("%s object is not callable" % self.__class__)
@@ -782,7 +782,7 @@ class MatrixSymbol(MatrixExpr):
 
     def doit(self, **hints):
         if hints.get('deep', True):
-            return type(self)(self.name, self.args[1].doit(**hints),
+            return type(self)(self.args[0], self.args[1].doit(**hints),
                     self.args[2].doit(**hints))
         else:
             return self
