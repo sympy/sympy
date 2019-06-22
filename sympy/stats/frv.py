@@ -199,11 +199,11 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
         return dict((k, self.pdf(k)) for k in self.set)
 
     def pdf(self, *args): # to be overrided by specific distribution
-        pass
+        raise NotImplementedError()
 
     @property
     def set(self): # to be overrided by specific distribution
-        pass
+        raise NotImplementedError()
 
     values = property(lambda self: self.dict.values)
     items = property(lambda self: self.dict.items)
