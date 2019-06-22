@@ -120,22 +120,24 @@ def test_dice():
     assert set(dens.subs(n, 4).doit().keys()) == set([1, 2, 3, 4])
     assert set(dens.subs(n, 4).doit().values()) == set([S(1)/4])
     assert P(D > 2) == Probability(D > 2)
-    assert E(D) == Expectation(D)
+    k = Dummy('k', integer=True)
+    assert E(D).dummy_eq(
+        Sum(Piecewise((k/n, (k >= 1) & (k <= n)), (0, True)), (k, 1, n)))
 
     ki = Dummy('ki')
     cumuf = cdf(D)(k)
     assert cumuf.dummy_eq(
-    Sum(Piecewise((1/n, (ki >= 0) & (ki >= 1) & (ki <= n)), (0, True)), (ki, 0, k)))
+    Sum(Piecewise((1/n, (ki >= 1) & (ki <= n)), (0, True)), (ki, 1, k)))
     assert cumuf.subs({n: 6, k: 2}).doit() == S(1)/3
 
     t = Dummy('t')
     cf = characteristic_function(D)(t)
     assert cf.dummy_eq(
-    Sum(Piecewise((exp(ki*I*t)/n, (ki >= 0) & (ki >= 1) & (ki <= n)), (0, True)), (ki, 0, n)))
+    Sum(Piecewise((exp(ki*I*t)/n, (ki >= 1) & (ki <= n)), (0, True)), (ki, 1, n)))
     assert cf.subs(n, 3).doit() == exp(3*I*t)/3 + exp(2*I*t)/3 + exp(I*t)/3
     mgf = moment_generating_function(D)(t)
     assert mgf.dummy_eq(
-    Sum(Piecewise((exp(ki*t)/n, (ki >= 0) & (ki >= 1) & (ki <= n)), (0, True)), (ki, 0, n)))
+    Sum(Piecewise((exp(ki*t)/n, (ki >= 1) & (ki <= n)), (0, True)), (ki, 1, n)))
     assert mgf.subs(n, 3).doit() == exp(3*t)/3 + exp(2*t)/3 + exp(t)/3
 
 def test_given():
@@ -275,8 +277,11 @@ def test_binomial_symbolic():
     set([S(0), S(1), S(2), S(3), S(4)])
     assert set(density(B).dict.subs(n, 4).doit().values()) == \
     set([(1 - p)**4, 4*p*(1 - p)**3, 6*p**2*(1 - p)**2, 4*p**3*(1 - p), p**4])
+    k = Dummy('k', integer=True)
     assert P(B > 2) == Probability(B > 2)
-    assert E(B > 2) == Expectation(B > 2)
+    assert E(B > 2).dummy_eq(
+        Sum(Piecewise((k*p**k*(1 - p)**(-k + n)*binomial(n, k), (k >= 0)
+        & (k <= n) & (k > 2)), (0, True)), (k, 0, n)))
 
 def test_beta_binomial():
     # verify parameters
@@ -338,8 +343,11 @@ def test_hypergeometric_symbolic():
     assert dens.subs(N, 5).doit() == Density(HypergeometricDistribution(5, m, n))
     assert set(dens.subs({N: 3, m: 2, n: 1}).doit().keys()) == set([S(0), S(1)])
     assert set(dens.subs({N: 3, m: 2, n: 1}).doit().values()) == set([S(1)/3, S(2)/3])
+    k = Dummy('k', integer=True)
     assert prob == Probability(H > 2)
-    assert expec == Expectation(H > 2)
+    assert expec.dummy_eq(
+        Sum(Piecewise((k*binomial(m, k)*binomial(N - m, -k + n)
+        /binomial(N, n), k > 2), (0, True)), (k, 0, n)))
 
 def test_rademacher():
     X = Rademacher('X')

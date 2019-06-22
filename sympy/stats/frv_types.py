@@ -24,7 +24,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
 from sympy.stats.rv import _value_check, Density, RandomSymbol
 from sympy.stats.frv import (SingleFiniteDistribution,
-                            SymbolicSingleFinitePSpace)
+                            SingleFinitePSpace)
 
 __all__ = ['FiniteRV',
 'DiscreteUniform',
@@ -53,7 +53,7 @@ def rv(name, cls, *args):
         i += 1
     dist = cls(*args)
     dist.check(*args)
-    return SymbolicSingleFinitePSpace(name, dist).value
+    return SingleFinitePSpace(name, dist).value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
 
@@ -450,22 +450,22 @@ class HypergeometricDistribution(SingleFiniteDistribution):
 
     @property
     def high(self):
-        return max(self.n, self.K)
+        return Piecewise((self.n, Lt(self.n, self.m) != False), (self.m, True))
 
     @property
     def low(self):
-        return min(0, self.n + self.m - self.N)
+        return Piecewise((0, Gt(0, self.n + self.m - self.N) != False), (self.n + self.m - self.N, True))
 
     @property
     def set(self):
         N, m, n = self.N, self.m, self.n
         if self.is_symbolic:
-            return Intersection(S.Naturals0, Interval(max(0, n + m - N), min(n, m)))
+            return Intersection(S.Naturals0, Interval(self.low, self.high))
         return [i for i in range(max(0, n + m - N), min(n, m) + 1)]
 
     def pdf(self, k):
         N, m, n = self.N, self.m, self.n
-        return Rational(binomial(m, k) * binomial(N - m, n - k), binomial(N, n))
+        return S(binomial(m, k) * binomial(N - m, n - k))/binomial(N, n)
 
 def Hypergeometric(name, N, m, n):
     """

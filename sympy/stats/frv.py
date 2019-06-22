@@ -242,14 +242,17 @@ class FinitePSpace(PSpace):
 
     def prob_of(self, elem):
         elem = sympify(elem)
-        return self._density.get(elem, 0)
+        density = self._density
+        if isinstance(list(density.keys())[0], FiniteSet):
+            return density.get(elem, 0)
+        return density.get(tuple(elem)[0][1], 0)
 
     def where(self, condition):
         assert all(r.symbol in self.symbols for r in random_symbols(condition))
         return ConditionalFiniteDomain(self.domain, condition)
 
     def compute_density(self, expr):
-        expr = expr.xreplace(dict(((rs, rs.symbol) for rs in self.values)))
+        expr = rv_subs(expr, self.values)
         d = FiniteDensity()
         for elem in self.domain:
             val = expr.xreplace(dict(elem))
@@ -293,7 +296,7 @@ class FinitePSpace(PSpace):
 
     def compute_expectation(self, expr, rvs=None, **kwargs):
         rvs = rvs or self.values
-        expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
+        expr = rv_subs(expr, rvs)
         probs = [self.prob_of(elem) for elem in self.domain]
         if isinstance(expr, (Logic, Relational)):
             parse_domain = [tuple(elem)[0][1] for elem in self.domain]
@@ -352,10 +355,15 @@ class FinitePSpace(PSpace):
 
         assert False, "We should never have gotten to this point"
 
-class SymbolicSingleFinitePSpace(SinglePSpace):
+class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     """
-    Represents probability space of finite
-    random variables with symbolic dimensions.
+    A single finite probability space
+
+    Represents the probabilities of a set of random events that can be
+    attributed to a single variable/symbol.
+
+    This class is implemented by many of the standard FiniteRV types such as
+    Die, Bernoulli, Coin, etc....
     """
     @property
     def domain(self):
@@ -391,41 +399,58 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
     def pdf(self, expr):
         return self.distribution.pdf(expr)
 
+    @property
+    @cacheit
+    def _density(self):
+        return dict((FiniteSet((self.symbol, val)), prob)
+                    for val, prob in self.distribution.dict.items())
+
     @cacheit
     def compute_characteristic_function(self, expr):
-        d = self.compute_density(expr)
-        t = Dummy('t', real=True)
-        ki = Dummy('ki')
-        return Lambda(t, Sum(d(ki)*exp(I*ki*t), (ki, self.args[1].low, self.args[1].high)))
+        if self._is_symbolic:
+            d = self.compute_density(expr)
+            t = Dummy('t', real=True)
+            ki = Dummy('ki')
+            return Lambda(t, Sum(d(ki)*exp(I*ki*t), (ki, self.args[1].low, self.args[1].high)))
+        expr = rv_subs(expr, self.values)
+        return FinitePSpace(self.domain, self.distribution).compute_characteristic_function(expr)
 
     @cacheit
     def compute_moment_generating_function(self, expr):
-        d = self.compute_density(expr)
-        t = Dummy('t', real=True)
-        ki = Dummy('ki')
-        return Lambda(t, Sum(d(ki)*exp(ki*t), (ki, self.args[1].low, self.args[1].high)))
+        if self._is_symbolic:
+            d = self.compute_density(expr)
+            t = Dummy('t', real=True)
+            ki = Dummy('ki')
+            return Lambda(t, Sum(d(ki)*exp(ki*t), (ki, self.args[1].low, self.args[1].high)))
+        expr = rv_subs(expr, self.values)
+        return FinitePSpace(self.domain, self.distribution).compute_moment_generating_function(expr)
 
     def compute_quantile(self, expr):
-        raise NotImplementedError("Computing quantile for random variables "
-        "with symbolic dimension because the bounds of searching the required "
-        "value is undetermined.")
+        if self._is_symbolic:
+            raise NotImplementedError("Computing quantile for random variables "
+            "with symbolic dimension because the bounds of searching the required "
+            "value is undetermined.")
+        expr = rv_subs(expr, self.values)
+        return FinitePSpace(self.domain, self.distribution).compute_quantile(expr)
 
     def compute_density(self, expr):
-        cond = True if not self._is_logical(expr) else expr
-        k = Dummy('k', integer=True)
-        return Lambda(k,
-        Piecewise((self.pdf(k), And(k >= self.args[1].low,
-        k <= self.args[1].high, cond)), (0, True)))
+        if self._is_symbolic:
+            cond = True if not self._is_logical(expr) else expr
+            k = Dummy('k', integer=True)
+            return Lambda(k,
+            Piecewise((self.pdf(k), And(k >= self.args[1].low,
+            k <= self.args[1].high, cond)), (0, True)))
+        expr = rv_subs(expr, self.values)
+        return FinitePSpace(self.domain, self.distribution).compute_density(expr)
 
     def compute_cdf(self, expr):
-        d = self.compute_density(expr)
-        k = Dummy('k')
-        ki = Dummy('ki')
-        return Lambda(k, Sum(d(ki), (ki, self.args[1].low, k)))
-
-    def sorted_cdf(self, expr):
-        raise NotImplementedError("Sorted cdf of random variables with "
-                "symbolic dimensions is currently not possible.")
+        if self._is_symbolic:
+            d = self.compute_density(expr)
+            k = Dummy('k')
+            ki = Dummy('ki')
+            return Lambda(k, Sum(d(ki), (ki, self.args[1].low, k)))
+        expr = rv_subs(expr, self.values)
+        return FinitePSpace(self.domain, self.distribution).compute_cdf(expr)
 
     def compute_expectation(self, expr, rvs=None, **kwargs):
         if self._is_symbolic:
@@ -434,10 +459,14 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
             cond = True if not self._is_logical(expr) else expr.subs(rv, k)
             return Sum(Piecewise((self.pdf(k) * k, cond), (0, True)),
                 (k, self.distribution.low, self.distribution.high)).doit()
+        expr = rv_subs(expr, rvs)
         return FinitePSpace(self.domain, self.distribution).compute_expectation(expr, rvs, **kwargs)
 
     def probability(self, condition):
-        return Probability(condition)
+        if self._is_symbolic:
+            return Probability(condition)
+        condition = rv_subs(condition)
+        return FinitePSpace(self.domain, self.distribution).probability(condition)
 
     def conditional_space(self, condition):
         """
@@ -446,32 +475,13 @@ class SymbolicSingleFinitePSpace(SinglePSpace):
         conditional space of random variables with
         symbolic dimensions is currently not possible.
         """
-        return self
-
-    def sample(self):
-        raise NotImplementedError("Sampling of random variables with "
-                "symbolic dimensions is not possible.")
-
-
-class SingleFinitePSpace(SinglePSpace, FinitePSpace):
-    """
-    A single finite probability space
-
-    Represents the probabilities of a set of random events that can be
-    attributed to a single variable/symbol.
-
-    This class is implemented by many of the standard FiniteRV types such as
-    Die, Bernoulli, Coin, etc....
-    """
-    @property
-    def domain(self):
-        return SingleFiniteDomain(self.symbol, self.distribution.set)
-
-    @property
-    @cacheit
-    def _density(self):
-        return dict((FiniteSet((self.symbol, val)), prob)
-                    for val, prob in self.distribution.dict.items())
+        if self._is_symbolic:
+            return self
+        domain = self.where(condition)
+        prob = self.probability(condition)
+        density = dict((key, val / prob)
+                for key, val in self._density.items() if domain._test(key))
+        return FinitePSpace(domain, density)
 
 
 class ProductFinitePSpace(IndependentProductPSpace, FinitePSpace):
