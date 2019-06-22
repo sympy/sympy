@@ -2658,6 +2658,28 @@ class MatrixBase(MatrixDeprecated,
         dat : list of lists
             Each sublist is a logical row which might consist of many
             rows if the values in the row are matrices.
+
+        Examples
+        ========
+
+        A row block matrix:
+
+        >>> from sympy.matrices import Matrix
+        >>> Matrix._handle_list_of_lists(
+        ...     [[Matrix([[1, 2], [3, 4]]), Matrix([[5, 6], [7, 8]])]])
+        (2, 4, [1, 2, 5, 6, 3, 4, 7, 8])
+
+        A column block matrix:
+
+        >>> Matrix._handle_list_of_lists(
+        ...     [Matrix([[1, 2], [3, 4]]), Matrix([[5, 6], [7, 8]])])
+        (2, 1, [Matrix([
+            [1, 2],
+            [3, 4]]), Matrix([
+            [5, 6],
+            [7, 8]])])
+
+        TODO Possible logic flaw
         """
         def ismat(i):
             return isinstance(i, MatrixBase)
