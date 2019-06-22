@@ -2648,28 +2648,23 @@ class MatrixBase(MatrixDeprecated,
 
 
     @classmethod
-    def _handle_list_of_matrixlikes_row(cls, dat):
-        def ismat(i):
-            return isinstance(i, MatrixBase)
-
-        def raw(i):
-            return is_sequence(i) and not ismat(i)
-
-        nrow = set()
-        args = list()
+    def _handle_row_vector(cls, dat):
+        # Transpose every matrix entries before passig to the column
+        # vector processor and transpose it back to get the row
+        # vector form.
+        dat_new = []
 
         for i in dat:
-            if ismat(i):
-                args.append(i)
-            elif raw(i):
-                args.append(cls(i))
+            if isinstance(i, MatrixBase):
+                dat_new.append(i.T)
             else:
-                args.append(cls(1, 1, [i]))
+                dat_new.append(i)
 
-        mat = cls.hstack(*args)
+        rows, cols, flat_list = cls._handle_list_of_matrixlikes(dat_new)
 
-        rows, cols = mat.shape
-        flat_list = mat._mat
+        T = reshape(flat_list, [cols])
+        flat_list = [T[i][j] for j in range(cols) for i in range(rows)]
+        rows, cols = cols, rows
         return rows, cols, flat_list
 
 
@@ -2719,8 +2714,9 @@ class MatrixBase(MatrixDeprecated,
             if is_Matrix:
                 r, c = row.shape
                 flat = row._mat
+
             else:
-                r, c, flat = cls._handle_list_of_matrixlikes_row(row)
+                r, c, flat = cls._handle_row_vector(row)
 
             ncol.add(c)
             if len(ncol) > 1:
