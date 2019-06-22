@@ -2655,9 +2655,6 @@ class MatrixBase(MatrixDeprecated,
         rows = cols = 0
 
         for row in dat:
-            if not row:
-                continue
-
             if ismat(row) and evaluate:
                 r, c = row.shape
                 flat = row._mat
