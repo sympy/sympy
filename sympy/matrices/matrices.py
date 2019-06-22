@@ -2649,6 +2649,32 @@ class MatrixBase(MatrixDeprecated,
 
 
     @classmethod
+    def _handle_list_of_matrixlikes_row(cls, dat):
+        def ismat(i):
+            return isinstance(i, MatrixBase)
+
+        def raw(i):
+            return is_sequence(i) and not ismat(i)
+
+        nrow = set()
+        args = list()
+
+        for i in dat:
+            if ismat(i):
+                args.append(i)
+            elif raw(i):
+                args.append(cls(i))
+            else:
+                args.append(cls(1, 1, [i]))
+
+        mat = cls.hstack(*args)
+
+        rows, cols = mat.shape
+        flat_list = mat._mat
+        return rows, cols, flat_list
+
+
+    @classmethod
     def _handle_list_of_lists(cls, dat, evaluate=True):
         """Creation handler for a 2D structure.
 
@@ -2697,21 +2723,12 @@ class MatrixBase(MatrixDeprecated,
             if not row:
                 continue
 
-            if evaluate and all(ismat(i) for i in row):
-                r, c, flatT = \
-                    cls._handle_creation_inputs([i.T for i in row])
-                T = reshape(flatT, [c])
-                flat = [T[i][j] for j in range(c) for i in range(r)]
-                r, c = c, r
-
+            # XXX WIP for flattening single matrix
+            if is_Matrix:
+                r = c = 1
+                flat = [row]
             else:
-                r = 1
-                if is_Matrix:
-                    c = 1
-                    flat = [row]
-                else:
-                    c = len(row)
-                    flat = [cls._sympify(i) for i in row]
+                r, c, flat = cls._handle_list_of_matrixlikes_row(row)
 
             ncol.add(c)
             if len(ncol) > 1:
