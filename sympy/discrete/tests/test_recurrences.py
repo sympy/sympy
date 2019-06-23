@@ -55,3 +55,4 @@ def test_linrec():
         58516436*x + 56372788*y
     assert linrec(coeffs=[0]*50 + [1, 2, 3], init=[x, y, z], n=1000) == \
         11477135884896*x + 25999077948732*y + 41975630244216*z
+    assert linrec(coeffs=[], init=[1, 1], n=20) == 0

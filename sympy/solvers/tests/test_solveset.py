@@ -119,31 +119,31 @@ def test_invert_real():
                 imageset(Lambda(n, 2*n*pi - acos(y)), S.Integers)))
 
     assert invert_real(cos(exp(x)), y, x) == \
-        (x, Union(imageset(Lambda(n, log(2*n*pi + Mod(acos(y), 2*pi))), S.Integers), \
-                imageset(Lambda(n, log(2*n*pi + Mod(-acos(y), 2*pi))), S.Integers)))
+        (x, Union(imageset(Lambda(n, log(2*n*pi + acos(y))), S.Integers), \
+                imageset(Lambda(n, log(2*n*pi - acos(y))), S.Integers)))
 
     assert invert_real(sec(x), y, x) == \
         (x, Union(imageset(Lambda(n, 2*n*pi + asec(y)), S.Integers), \
                 imageset(Lambda(n, 2*n*pi - asec(y)), S.Integers)))
 
     assert invert_real(sec(exp(x)), y, x) == \
-        (x, Union(imageset(Lambda(n, log(2*n*pi + Mod(asec(y), 2*pi))), S.Integers), \
-                imageset(Lambda(n, log(2*n*pi + Mod(-asec(y), 2*pi))), S.Integers)))
+        (x, Union(imageset(Lambda(n, log(2*n*pi + asec(y))), S.Integers), \
+                imageset(Lambda(n, log(2*n*pi - asec(y))), S.Integers)))
 
     assert invert_real(tan(x), y, x) == \
-        (x, imageset(Lambda(n, n*pi + atan(y) % pi), S.Integers))
+        (x, imageset(Lambda(n, n*pi + atan(y)), S.Integers))
 
     assert invert_real(tan(exp(x)), y, x) == \
-        (x, imageset(Lambda(n, log(n*pi + atan(y) % pi)), S.Integers))
+        (x, imageset(Lambda(n, log(n*pi + atan(y))), S.Integers))
 
     assert invert_real(cot(x), y, x) == \
-        (x, imageset(Lambda(n, n*pi + acot(y) % pi), S.Integers))
+        (x, imageset(Lambda(n, n*pi + acot(y)), S.Integers))
 
     assert invert_real(cot(exp(x)), y, x) == \
-        (x, imageset(Lambda(n, log(n*pi + acot(y) % pi)), S.Integers))
+        (x, imageset(Lambda(n, log(n*pi + acot(y))), S.Integers))
 
     assert invert_real(tan(tan(x)), y, x) == \
-        (tan(x), imageset(Lambda(n, n*pi + atan(y) % pi), S.Integers))
+        (tan(x), imageset(Lambda(n, n*pi + atan(y)), S.Integers))
 
     x = Symbol('x', positive=True)
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
@@ -473,9 +473,9 @@ def test_solve_sqrt_3():
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
         4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
             4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
-    unsolved_object = ConditionSet(q, Eq(sqrt((m - q)**2 + (-m/(2*q) + 1/2)**2) -
-        sqrt((-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2 + (m**2/2 - m -
-        sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - 1/4)**2), 0), S.Reals)
+    unsolved_object = ConditionSet(q, Eq(sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) -
+        sqrt((-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m -
+        sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2), 0), S.Reals)
     assert solveset_real(eq, q) == unsolved_object
 
 
@@ -616,7 +616,7 @@ def test_rewrite_trigh():
 
 
 def test_real_imag_splitting():
-    a, b = symbols('a b', real=True, finite=True)
+    a, b = symbols('a b', real=True)
     assert solveset_real(sqrt(a**2 - b**2) - 3, a) == \
         FiniteSet(-sqrt(b**2 + 9), sqrt(b**2 + 9))
     assert solveset_real(sqrt(a**2 + b**2) - 3, a) != \
@@ -628,7 +628,7 @@ def test_units():
 
 
 def test_solve_only_exp_1():
-    y = Symbol('y', positive=True, finite=True)
+    y = Symbol('y', positive=True)
     assert solveset_real(exp(x) - y, x) == FiniteSet(log(y))
     assert solveset_real(exp(x) + exp(-x) - 4, x) == \
         FiniteSet(log(-sqrt(3) + 2), log(sqrt(3) + 2))
@@ -775,7 +775,10 @@ def test_solve_trig():
 
     y, a = symbols('y,a')
     assert solveset(sin(y + a) - sin(y), a, domain=S.Reals) == \
-        imageset(Lambda(n, 2*n*pi), S.Integers)
+        Union(ImageSet(Lambda(n, 2*n*pi), S.Integers),
+        Intersection(ImageSet(Lambda(n, -I*(I*(
+        2*n*pi + arg(-exp(-2*I*y))) +
+        2*im(y))), S.Integers), S.Reals))
 
     assert solveset_real(sin(2*x)*cos(x) + cos(2*x)*sin(x)-1, x) == \
                             ImageSet(Lambda(n, 2*n*pi/3 + pi/6), S.Integers)
@@ -791,10 +794,10 @@ def test_solve_trig():
                   2*pi), S.Integers))
 
     assert solveset_real(2*tan(x)*sin(x) + 1, x) == Union(
-        ImageSet(Lambda(n, 2*n*pi + atan(sqrt(2)*sqrt(-1 + sqrt(17))/
-            (-sqrt(17) + 1)) + pi), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + atan(sqrt(2)*sqrt(-1 +sqrt(17))/
+            (1 - sqrt(17))) + pi), S.Integers),
         ImageSet(Lambda(n, 2*n*pi - atan(sqrt(2)*sqrt(-1 + sqrt(17))/
-            (-sqrt(17) + 1)) + pi), S.Integers))
+            (1 - sqrt(17))) + pi), S.Integers))
 
     assert solveset_real(cos(2*x)*cos(4*x) - 1, x) == \
                             ImageSet(Lambda(n, n*pi), S.Integers)
@@ -1060,6 +1063,11 @@ def test_linear_eq_to_matrix():
         Matrix([[1]]), Matrix([[-1]]))
 
 
+def test_issue_16577():
+    assert linear_eq_to_matrix(Eq(a*(2*x + 3*y) + 4*y, 5), x, y) == (
+        Matrix([[2*a, 3*a + 4]]), Matrix([[5]]))
+
+
 def test_linsolve():
     x, y, z, u, v, w = symbols("x, y, z, u, v, w")
     x1, x2, x3, x4 = symbols('x1, x2, x3, x4')
@@ -1223,7 +1231,7 @@ def test_nonlinsolve_abs():
 def test_raise_exception_nonlinsolve():
     raises(IndexError, lambda: nonlinsolve([x**2 -1], []))
     raises(ValueError, lambda: nonlinsolve([x**2 -1]))
-    raises(NotImplementedError, lambda: nonlinsolve([(x+y)**2 - 9, x**2 - y**2 -3/4], (x, y)))
+    raises(NotImplementedError, lambda: nonlinsolve([(x+y)**2 - 9, x**2 - y**2 - 0.75], (x, y)))
 
 
 def test_trig_system():
@@ -1260,7 +1268,7 @@ def test_trig_system_fail():
 
 
 def test_nonlinsolve_positive_dimensional():
-    x, y, z, a, b, c, d = symbols('x, y, z, a, b, c, d', real = True)
+    x, y, z, a, b, c, d = symbols('x, y, z, a, b, c, d', extended_real = True)
     assert nonlinsolve([x*y, x*y - x], [x, y]) == FiniteSet((0, y))
 
     system = [a**2 + a*c, a - b]
@@ -1324,31 +1332,21 @@ def test_nonlinsolve_using_substitution():
 def test_nonlinsolve_complex():
     x, y, z = symbols('x, y, z')
     n = Dummy('n')
-    real_soln = (log(sin(S(1)/3)), S(1)/3)
-    img_lamda = Lambda(n, 2*n*I*pi + Mod(log(sin(S(1)/3)), 2*I*pi))
-    complex_soln = (ImageSet(img_lamda, S.Integers), S(1)/3)
-    soln = FiniteSet(real_soln, complex_soln)
-    assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == soln
+    assert nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]) == {
+        (ImageSet(Lambda(n, 2*n*I*pi + log(sin(S(1)/3))), S.Integers), S(1)/3)}
 
     system = [exp(x) - sin(y), 1/exp(y) - 3]
-    soln_x = ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers)
-    soln_real = FiniteSet((soln_x, -log(S(3))))
-    # Mod(-log(3), 2*I*pi) is equal to -log(3).
-    expr_x = I*(2*n*pi + arg(sin(2*n*I*pi + Mod(-log(3), 2*I*pi)))) + \
-                log(Abs(sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
-    soln_x = ImageSet(Lambda(n, expr_x), S.Integers)
-    expr_y = 2*n*I*pi + Mod(-log(3), 2*I*pi)
-    soln_y = ImageSet(Lambda(n, expr_y), S.Integers)
-    soln_complex = FiniteSet((soln_x, soln_y))
-    soln = soln_real + soln_complex
-    assert nonlinsolve(system, [x, y]) == soln
+    assert nonlinsolve(system, [x, y]) == {
+        (ImageSet(Lambda(n, I*(2*n*pi + pi)
+                         + log(sin(log(3)))), S.Integers), -log(3)),
+        (ImageSet(Lambda(n, I*(2*n*pi + arg(sin(2*n*I*pi - log(3))))
+                         + log(Abs(sin(2*n*I*pi - log(3))))), S.Integers),
+        ImageSet(Lambda(n, 2*n*I*pi - log(3)), S.Integers))}
 
     system = [exp(x) - sin(y), y**2 - 4]
-    s1 = (log(sin(2)), 2)
-    s2 = (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2 )
-    img = ImageSet(Lambda(n, 2*n*I*pi + Mod(log(sin(2)), 2*I*pi)), S.Integers)
-    s3 = (img, 2)
-    assert nonlinsolve(system, [x, y]) == FiniteSet(s1, s2, s3)
+    assert nonlinsolve(system, [x, y]) == {
+        (ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2),
+        (ImageSet(Lambda(n, 2*n*I*pi + log(sin(2))), S.Integers), 2)}
 
 
 @XFAIL
@@ -1374,11 +1372,11 @@ def test_issue_5132_1():
     s_real_y = -log(3)
     s_real_z = sqrt(-exp(2*x) - sin(log(3)))
     soln_real = FiniteSet((s_real_y, s_real_z), (s_real_y, -s_real_z))
-    lam = Lambda(n, 2*n*I*pi + Mod(-log(3), 2*I*pi))
+    lam = Lambda(n, 2*n*I*pi + -log(3))
     s_complex_y = ImageSet(lam, S.Integers)
-    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + -log(3))))
     s_complex_z_1 = ImageSet(lam, S.Integers)
-    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + -log(3))))
     s_complex_z_2 = ImageSet(lam, S.Integers)
     soln_complex = FiniteSet(
                                             (s_complex_y, s_complex_z_1),
@@ -1533,16 +1531,15 @@ def test_issue_5132_substitution():
     s_real_y = -log(3)
     s_real_z = sqrt(-exp(2*x) - sin(log(3)))
     soln_real = FiniteSet((s_real_y, s_real_z), (s_real_y, -s_real_z))
-    lam = Lambda(n, 2*n*I*pi + Mod(-log(3), 2*I*pi))
+    lam = Lambda(n, 2*n*I*pi + -log(3))
     s_complex_y = ImageSet(lam, S.Integers)
-    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    lam = Lambda(n, sqrt(-exp(2*x) + sin(2*n*I*pi + -log(3))))
     s_complex_z_1 = ImageSet(lam, S.Integers)
-    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + Mod(-log(3), 2*I*pi))))
+    lam = Lambda(n, -sqrt(-exp(2*x) + sin(2*n*I*pi + -log(3))))
     s_complex_z_2 = ImageSet(lam, S.Integers)
     soln_complex = FiniteSet(
-                                            (s_complex_y, s_complex_z_1),
-                                            (s_complex_y, s_complex_z_2)
-                                        )
+        (s_complex_y, s_complex_z_1),
+        (s_complex_y, s_complex_z_2))
     soln = soln_real + soln_complex
     assert substitution(eqs, [y, z]) == soln
 
@@ -2025,3 +2022,4 @@ def test_linear_coeffs():
         linear_coeffs(x + 2*x**2 + x**3, x, x**2))
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
+    assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]

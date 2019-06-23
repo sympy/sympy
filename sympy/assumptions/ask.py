@@ -1386,7 +1386,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
 
     from sympy.core.cache import cacheit
-    from sympy.logic.boolalg import And, Not, Or
+    from sympy.logic.boolalg import And
     from sympy.assumptions.ask import Q
 
     # -{ Known facts in Conjunctive Normal Form }-
@@ -1485,12 +1485,14 @@ def get_known_facts():
         Implies(Q.integer, Q.rational),
         Implies(Q.rational, Q.algebraic),
         Implies(Q.algebraic, Q.complex),
-        Equivalent(Q.transcendental | Q.algebraic, Q.complex),
+        Implies(Q.algebraic, Q.finite),
+        Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),
         Implies(Q.transcendental, ~Q.algebraic),
+        Implies(Q.transcendental, Q.finite),
         Implies(Q.imaginary, Q.complex & ~Q.real),
         Implies(Q.imaginary, Q.antihermitian),
         Implies(Q.antihermitian, ~Q.hermitian),
-        Equivalent(Q.irrational | Q.rational, Q.real),
+        Equivalent(Q.irrational | Q.rational, Q.real & Q.finite),
         Implies(Q.irrational, ~Q.rational),
         Implies(Q.zero, Q.even),
 

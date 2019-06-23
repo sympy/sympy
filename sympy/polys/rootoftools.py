@@ -6,7 +6,6 @@ from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import range, ordered
-from sympy.core.function import AppliedUndef
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -289,6 +288,7 @@ class ComplexRootOf(RootOf):
     __slots__ = ['index']
     is_complex = True
     is_number = True
+    is_finite = True
 
     def __new__(cls, f, x, index=None, radicals=False, expand=True):
         """ Construct an indexed complex root of a polynomial.

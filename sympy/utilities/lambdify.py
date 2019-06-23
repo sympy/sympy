@@ -13,6 +13,7 @@ import linecache
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins, PY3)
+from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
@@ -681,7 +682,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if use_imps:
         namespaces.append(_imp_namespace(expr))
     # Check for dict before iterating
-    if isinstance(modules, (dict, str)) or not hasattr(modules, '__iter__'):
+    if isinstance(modules, (dict, string_types)) or not hasattr(modules, '__iter__'):
         namespaces.append(modules)
     else:
         # consistency check
@@ -744,6 +745,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 # Cannot infer name with certainty. arg_# will have to do.
                 names.append('arg_' + str(n))
 
+    # Create the function definition code and execute it
+    funcname = '_lambdifygenerated'
+    if _module_present('tensorflow', namespaces):
+        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
+    else:
+        funcprinter = _EvaluatorPrinter(printer, dummify)
+    funcstr = funcprinter.doprint(funcname, args, expr)
+
+    # Collect the module imports from the code printers.
     imp_mod_lines = []
     for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
         for k in keys:
@@ -754,17 +764,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
-
-    # Create the function definition code and execute it
-
-    funcname = '_lambdifygenerated'
-
-    if _module_present('tensorflow', namespaces):
-        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
-    else:
-        funcprinter = _EvaluatorPrinter(printer, dummify)
-
-    funcstr = funcprinter.doprint(funcname, args, expr)
 
     funclocals = {}
     global _lambdify_generated_counter
@@ -856,7 +855,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
         from sympy.printing.lambdarepr import lambdarepr
 
     def sub_args(args, dummies_dict):
-        if isinstance(args, str):
+        if isinstance(args, string_types):
             return args
         elif isinstance(args, DeferredVector):
             return str(args)
@@ -924,14 +923,14 @@ def lambdastr(args, expr, printer=None, dummify=None):
     if dummify:
         args = sub_args(args, dummies_dict)
     else:
-        if isinstance(args, str):
+        if isinstance(args, string_types):
             pass
         elif iterable(args, exclude=DeferredVector):
             args = ",".join(str(a) for a in args)
 
     # Transform expr
     if dummify:
-        if isinstance(expr, str):
+        if isinstance(expr, string_types):
             pass
         else:
             expr = sub_expr(expr, dummies_dict)
@@ -1004,14 +1003,14 @@ class _EvaluatorPrinter(object):
     if PY3:
         @classmethod
         def _is_safe_ident(cls, ident):
-            return isinstance(ident, str) and ident.isidentifier() \
+            return isinstance(ident, string_types) and ident.isidentifier() \
                     and not keyword.iskeyword(ident)
     else:
         _safe_ident_re = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
 
         @classmethod
         def _is_safe_ident(cls, ident):
-            return isinstance(ident, str) and cls._safe_ident_re.match(ident) \
+            return isinstance(ident, string_types) and cls._safe_ident_re.match(ident) \
                 and not (keyword.iskeyword(ident) or ident == 'None')
 
     def _preprocess(self, args, expr):
@@ -1022,6 +1021,8 @@ class _EvaluatorPrinter(object):
         """
         from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
         from sympy.matrices import DeferredVector
+        from sympy.core.symbol import _uniquely_named_symbol
+        from sympy.core.expr import Expr
 
         # Args of type Dummy can cause name collisions with args
         # of type Symbol.  Force dummify of everything in this
@@ -1039,6 +1040,8 @@ class _EvaluatorPrinter(object):
                 s = self._argrepr(arg)
                 if dummify or not self._is_safe_ident(s):
                     dummy = Dummy()
+                    if isinstance(expr, Expr):
+                        dummy = _uniquely_named_symbol(dummy.name, expr)
                     s = self._argrepr(dummy)
                     expr = self._subexpr(expr, {arg: dummy})
             elif dummify or isinstance(arg, (Function, Derivative)):
@@ -1228,15 +1231,17 @@ def implemented_function(symfunc, implementation):
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
     # if name, create function to hold implementation
-    _extra_kwargs = {}
+    kwargs = {}
     if isinstance(symfunc, UndefinedFunction):
-        _extra_kwargs = symfunc._extra_kwargs
+        kwargs = symfunc._kwargs
         symfunc = symfunc.__name__
     if isinstance(symfunc, string_types):
         # Keyword arguments to UndefinedFunction are added as attributes to
         # the created class.
-        symfunc = UndefinedFunction(symfunc, _imp_=staticmethod(implementation), **_extra_kwargs)
+        symfunc = UndefinedFunction(
+            symfunc, _imp_=staticmethod(implementation), **kwargs)
     elif not isinstance(symfunc, UndefinedFunction):
-        raise ValueError('symfunc should be either a string or'
-                         ' an UndefinedFunction instance.')
+        raise ValueError(filldedent('''
+            symfunc should be either a string or
+            an UndefinedFunction instance.'''))
     return symfunc

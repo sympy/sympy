@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 """
 Definition of physical dimensions.
 
@@ -18,7 +16,6 @@ import collections
 
 from sympy import Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict, default_sort_key
 from sympy.core.compatibility import reduce, string_types
-from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -265,8 +262,8 @@ class Dimension(Expr):
         for dpow in dim_sys.get_dimensional_dependencies(self).values():
             if not isinstance(dpow, (int, Integer)):
                 return False
-        else:
-            return True
+
+        return True
 
 
 # base dimensions (MKS)

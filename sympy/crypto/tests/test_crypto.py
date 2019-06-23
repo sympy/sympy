@@ -14,13 +14,13 @@ from sympy.crypto.crypto import (cycle_list,
       dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
       decipher_bifid, bifid_square, padded_key, uniq, decipher_gm,
       encipher_gm, gm_public_key, gm_private_key, encipher_bg, decipher_bg,
-      bg_private_key, bg_public_key)
+      bg_private_key, bg_public_key, encipher_rot13, decipher_rot13,
+      encipher_atbash, decipher_atbash)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
 from sympy.utilities.pytest import raises, slow, warns_deprecated_sympy
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from random import randrange
 
@@ -37,6 +37,12 @@ def test_encipher_shift():
     assert encipher_shift("ABC", -1) == "ZAB"
     assert decipher_shift("ZAB", -1) == "ABC"
 
+def test_encipher_rot13():
+    assert encipher_rot13("ABC") == "NOP"
+    assert encipher_rot13("NOP") == "ABC"
+    assert decipher_rot13("ABC") == "NOP"
+    assert decipher_rot13("NOP") == "ABC"
+
 
 def test_encipher_affine():
     assert encipher_affine("ABC", (1, 0)) == "ABC"
@@ -47,6 +53,11 @@ def test_encipher_affine():
     assert encipher_affine("ABC", (3, 16)) == "QTW"
     assert decipher_affine("QTW", (3, 16)) == "ABC"
 
+def test_encipher_atbash():
+    assert encipher_atbash("ABC") == "ZYX"
+    assert encipher_atbash("ZYX") == "ABC"
+    assert decipher_atbash("ABC") == "ZYX"
+    assert decipher_atbash("ZYX") == "ABC"
 
 def test_encipher_substitution():
     assert encipher_substitution("ABC", "BAC", "ABC") == "BAC"
@@ -152,7 +163,6 @@ def test_rsa_public_key():
     assert rsa_public_key(5, 3, 3) == (15, 3)
     assert rsa_public_key(8, 8, 8) is False
 
-    raises(SymPyDeprecationWarning, lambda: rsa_public_key(2, 2, 1))
     with warns_deprecated_sympy():
         assert rsa_public_key(2, 2, 1) == (4, 1)
 
@@ -163,7 +173,6 @@ def test_rsa_private_key():
     assert rsa_private_key(23,29,5) == (667,493)
     assert rsa_private_key(8, 8, 8) is False
 
-    raises(SymPyDeprecationWarning, lambda: rsa_private_key(2, 2, 1))
     with warns_deprecated_sympy():
         assert rsa_private_key(2, 2, 1) == (4, 1)
 
@@ -238,6 +247,8 @@ def test_encode_morse():
     assert encode_morse(' ', sep='`') == '``'
     assert encode_morse(' ', sep='``') == '````'
     assert encode_morse('!@#$%^&*()_+') == '-.-.--|.--.-.|...-..-|-.--.|-.--.-|..--.-|.-.-.'
+    assert encode_morse('12345') == '.----|..---|...--|....-|.....'
+    assert encode_morse('67890') == '-....|--...|---..|----.|-----'
 
 
 def test_decode_morse():

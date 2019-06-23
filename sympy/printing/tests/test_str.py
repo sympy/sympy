@@ -4,7 +4,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, log, MatrixSymbol)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
@@ -15,8 +15,6 @@ from sympy.core.compatibility import range
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
-from sympy import MatrixSymbol
-from sympy import factorial, log, integrate
 
 x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')
@@ -514,10 +512,8 @@ def test_Float():
     assert str(pi.evalf(1 + 14)) == '3.14159265358979'
     assert str(pi.evalf(1 + 64)) == ('3.141592653589793238462643383279'
                                      '5028841971693993751058209749445923')
-    assert str(pi.round(-1)) == '0.'
+    assert str(pi.round(-1)) == '0.0'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
-    assert str(Float(S.Infinity)) == 'inf'
-    assert str(Float(S.NegativeInfinity)) == '-inf'
 
 
 def test_Relational():
@@ -713,6 +709,10 @@ def test_FiniteSet():
     assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
 
 
+def test_UniversalSet():
+    assert str(S.UniversalSet) == 'UniversalSet'
+
+
 def test_PrettyPoly():
     from sympy.polys.domains import QQ
     F = QQ.frac_field(x, y)
@@ -811,8 +811,16 @@ def test_Subs_printing():
     assert str(Subs(x, (x,), (1,))) == 'Subs(x, x, 1)'
     assert str(Subs(x + y, (x, y), (1, 2))) == 'Subs(x + y, (x, y), (1, 2))'
 
+
 def test_issue_15716():
     x = Symbol('x')
     e = -3**x*exp(-3)*log(3**x*exp(-3)/factorial(x))/factorial(x)
     assert str(Integral(e, (x, -oo, oo)).doit()) ==  '-(Integral(-3*3**x/factorial(x), (x, -oo, oo))' \
     ' + Integral(3**x*log(3**x/factorial(x))/factorial(x), (x, -oo, oo)))*exp(-3)'
+
+
+def test_str_special_matrices():
+    from sympy.matrices import Identity, ZeroMatrix, OneMatrix
+    assert str(Identity(4)) == 'I'
+    assert str(ZeroMatrix(2, 2)) == '0'
+    assert str(OneMatrix(2, 2)) == '1'

@@ -332,13 +332,13 @@ def _check_homomorphism(domain, codomain, images):
             # both indices
             while i < len(r):
                 power = r_arr[j][1]
-                if isinstance(domain, PermutationGroup):
+                if isinstance(domain, PermutationGroup) and r[i] in gens:
                     s = domain.generators[gens.index(r[i])]
                 else:
                     s = r[i]
                 if s in images:
                     w = w*images[s]**power
-                else:
+                elif s**-1 in images:
                     w = w*images[s**-1]**power
                 i += abs(power)
                 j += 1
@@ -353,7 +353,7 @@ def _check_homomorphism(domain, codomain, images):
                 # truth of equality otherwise
                 success = codomain.make_confluent()
                 s = codomain.equals(_image(r), identity)
-                if s in None and not success:
+                if s is None and not success:
                     raise RuntimeError("Can't determine if the images "
                         "define a homomorphism. Try increasing "
                         "the maximum number of rewriting rules "

@@ -2,17 +2,18 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
-        Matrix, Basic)
+        Matrix, Basic, Dict)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.basic import _aresame
-from sympy.core.function import PoleError, _mexpand
+from sympy.core.cache import clear_cache
+from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
+from sympy.core.function import PoleError, _mexpand, arity
 from sympy.core.sympify import sympify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
-from sympy.utilities.iterables import subsets, variations
-from sympy.core.cache import clear_cache
-from sympy.core.compatibility import range
 from sympy.tensor.array import NDimArray
+from sympy.utilities.iterables import subsets, variations
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
@@ -158,6 +159,16 @@ def test_nargs():
     raises(ValueError, lambda: Function('f', nargs=()))
 
 
+def test_arity():
+    f = lambda x, y: 1
+    assert arity(f) == 2
+    def f(x, y, z=None):
+        pass
+    assert arity(f) == (2, 3)
+    assert arity(lambda *x: x) is None
+    assert arity(log) == (1, 2)
+
+
 def test_Lambda():
     e = Lambda(x, x**2)
     assert e(4) == 16
@@ -165,12 +176,13 @@ def test_Lambda():
     assert e(y) == y**2
 
     assert Lambda((), 42)() == 42
-    assert Lambda((), 42) == Lambda((), 42)
+    assert unchanged(Lambda, (), 42)
     assert Lambda((), 42) != Lambda((), 43)
     assert Lambda((), f(x))() == f(x)
     assert Lambda((), 42).nargs == FiniteSet(0)
 
-    assert Lambda(x, x**2) == Lambda(x, x**2)
+    assert unchanged(Lambda, (x,), x**2)
+    assert Lambda(x, x**2) == Lambda((x,), x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
     assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
@@ -196,6 +208,9 @@ def test_Lambda():
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
     raises(TypeError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
+
+    raises(SyntaxError, lambda: Lambda((x, x), x + 2))
+
 
 
 def test_IdentityFunction():
@@ -301,11 +316,9 @@ def test_Subs():
         ).doit() == 2*exp(x)
     assert Subs(Derivative(g(x)**2, g(x), x), g(x), exp(x)
         ).doit(deep=False) == 2*Derivative(exp(x), x)
-
-    assert Derivative(f(x, g(x)), x).doit() == Derivative(g(x), x
-        )*Subs(Derivative(f(x, y), y), y, g(x)
-        ) + Subs(Derivative(f(y, g(x)), y), y, x)
-
+    assert Derivative(f(x, g(x)), x).doit() == Derivative(
+        f(x, g(x)), g(x))*Derivative(g(x), x) + Subs(Derivative(
+        f(y, g(x)), y), y, x)
 
 def test_doitdoit():
     done = Derivative(f(x, g(x)), x, g(x)).doit()
@@ -814,8 +827,6 @@ def test_nfloat():
     assert _aresame(nfloat(big), Float_big)
     assert _aresame(nfloat(big*x), Float_big*x)
     assert _aresame(nfloat(x**big, exponent=True), x**Float_big)
-    assert nfloat({x: sqrt(2)}) == {x: nfloat(sqrt(2))}
-    assert nfloat({sqrt(2): x}) == {sqrt(2): x}
     assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
 
     # issue 6342
@@ -829,6 +840,28 @@ def test_nfloat():
     # issue 7122
     eq = cos(3*x**4 + y)*rootof(x**5 + 3*x**3 + 1, 0)
     assert str(nfloat(eq, exponent=False, n=1)) == '-0.7*cos(3.0*x**4 + y)'
+
+    # issue 10933
+    for t in (dict, Dict):
+        d = t({S.Half: S.Half})
+        n = nfloat(d)
+        assert isinstance(n, t)
+        assert _aresame(list(n.items()).pop(), (S.Half, Float(.5)))
+    for t in (dict, Dict):
+        d = t({S.Half: S.Half})
+        n = nfloat(d, dkeys=True)
+        assert isinstance(n, t)
+        assert _aresame(list(n.items()).pop(), (Float(.5), Float(.5)))
+    d = [S.Half]
+    n = nfloat(d)
+    assert type(n) is list
+    assert _aresame(n[0], Float(.5))
+    assert _aresame(nfloat(Eq(x, S.Half)).rhs, Float(.5))
+    assert _aresame(nfloat(S(True)), S(True))
+    assert _aresame(nfloat(Tuple(S.Half))[0], Float(.5))
+    assert nfloat(Eq((3 - I)**2/2 + I, 0)) == S.false
+    # pass along kwargs
+    assert nfloat([{S.Half: x}], dkeys=True) == [{Float(0.5): x}]
 
 
 def test_issue_7068():
@@ -1069,15 +1102,20 @@ def test_function_assumptions():
     x = Symbol('x')
     f = Function('f')
     f_real = Function('f', real=True)
+    f_real1 = Function('f', real=1)
+    f_real_inherit = Function(Symbol('f', real=True))
 
+    assert f_real == f_real1  # assumptions are sanitized
     assert f != f_real
     assert f(x) != f_real(x)
 
     assert f(x).is_real is None
     assert f_real(x).is_real is True
+    assert f_real_inherit(x).is_real is True and f_real_inherit.name == 'f'
 
     # Can also do it this way, but it won't be equal to f_real because of the
-    # way UndefinedFunction.__new__ works.
+    # way UndefinedFunction.__new__ works. Any non-recognized assumptions
+    # are just added literally as something which is used in the hash
     f_real2 = Function('f', is_real=True)
     assert f_real2(x).is_real is True
 
@@ -1129,7 +1167,7 @@ def test_issue_15241():
     assert (y*G + y*Gy*G).diff(y, G) == y*Gy.diff(y) + Gy + 1
 
 
-def test_issue_15266():
+def test_issue_15226():
     assert Subs(Derivative(f(y), x, y), y, g(x)).doit() != 0
 
 

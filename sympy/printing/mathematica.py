@@ -5,7 +5,6 @@ Mathematica code printer
 from __future__ import print_function, division
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.printing.str import StrPrinter
 
 # Used in MCodePrinter._print_Function(self)
 known_functions = {
@@ -15,9 +14,15 @@ known_functions = {
     "cos": [(lambda x: True, "Cos")],
     "tan": [(lambda x: True, "Tan")],
     "cot": [(lambda x: True, "Cot")],
+    "sec": [(lambda x: True, "Sec")],
+    "csc": [(lambda x: True, "Csc")],
     "asin": [(lambda x: True, "ArcSin")],
     "acos": [(lambda x: True, "ArcCos")],
     "atan": [(lambda x: True, "ArcTan")],
+    "acot": [(lambda x: True, "ArcCot")],
+    "asec": [(lambda x: True, "ArcSec")],
+    "acsc": [(lambda x: True, "ArcCsc")],
+    "atan2": [(lambda *x: True, "ArcTan")],
     "sinh": [(lambda x: True, "Sinh")],
     "cosh": [(lambda x: True, "Cosh")],
     "tanh": [(lambda x: True, "Tanh")],
@@ -33,6 +38,43 @@ known_functions = {
     "conjugate": [(lambda x: True, "Conjugate")],
     "Max": [(lambda *x: True, "Max")],
     "Min": [(lambda *x: True, "Min")],
+    "erf": [(lambda x: True, "Erf")],
+    "erf2": [(lambda *x: True, "Erf")],
+    "erfc": [(lambda x: True, "Erfc")],
+    "erfi": [(lambda x: True, "Erfi")],
+    "erfinv": [(lambda x: True, "InverseErf")],
+    "erfcinv": [(lambda x: True, "InverseErfc")],
+    "erf2inv": [(lambda *x: True, "InverseErf")],
+    "expint": [(lambda *x: True, "ExpIntegralE")],
+    "Ei": [(lambda x: True, "ExpIntegralEi")],
+    "fresnelc": [(lambda x: True, "FresnelC")],
+    "fresnels": [(lambda x: True, "FresnelS")],
+    "gamma": [(lambda x: True, "Gamma")],
+    "uppergamma": [(lambda *x: True, "Gamma")],
+    "polygamma": [(lambda *x: True, "PolyGamma")],
+    "loggamma": [(lambda x: True, "LogGamma")],
+    "beta": [(lambda *x: True, "Beta")],
+    "Ci": [(lambda x: True, "CosIntegral")],
+    "Si": [(lambda x: True, "SinIntegral")],
+    "Chi": [(lambda x: True, "CoshIntegral")],
+    "Shi": [(lambda x: True, "SinhIntegral")],
+    "li": [(lambda x: True, "LogIntegral")],
+    "factorial": [(lambda x: True, "Factorial")],
+    "factorial2": [(lambda x: True, "Factorial2")],
+    "subfactorial": [(lambda x: True, "Subfactorial")],
+    "catalan": [(lambda x: True, "CatalanNumber")],
+    "harmonic": [(lambda *x: True, "HarmonicNumber")],
+    "RisingFactorial": [(lambda *x: True, "Pochhammer")],
+    "FallingFactorial": [(lambda *x: True, "FactorialPower")],
+    "laguerre": [(lambda *x: True, "LaguerreL")],
+    "assoc_laguerre": [(lambda *x: True, "LaguerreL")],
+    "hermite": [(lambda *x: True, "HermiteH")],
+    "jacobi": [(lambda *x: True, "JacobiP")],
+    "gegenbauer": [(lambda *x: True, "GegenbauerC")],
+    "chebyshevt": [(lambda *x: True, "ChebyshevT")],
+    "chebyshevu": [(lambda *x: True, "ChebyshevU")],
+    "legendre": [(lambda *x: True, "LegendreP")],
+    "assoc_legendre": [(lambda *x: True, "LegendreP")],
 }
 
 
@@ -59,11 +101,11 @@ class MCodePrinter(CodePrinter):
         """Register function mappings supplied by user"""
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
-        userfuncs = settings.get('user_functions', {})
+        userfuncs = settings.get('user_functions', {}).copy()
         for k, v in userfuncs.items():
             if not isinstance(v, list):
                 userfuncs[k] = [(lambda *x: True, v)]
-                self.known_functions.update(userfuncs)
+        self.known_functions.update(userfuncs)
 
     def _format_code(self, lines):
         return lines
@@ -93,7 +135,7 @@ class MCodePrinter(CodePrinter):
     def _print_NegativeOne(self, expr):
         return '-1'
 
-    def _print_half(self, expr):
+    def _print_Half(self, expr):
         return '1/2'
 
     def _print_ImaginaryUnit(self, expr):
@@ -156,6 +198,55 @@ class MCodePrinter(CodePrinter):
                 '}'
 
         def print_dims():
+            return self.doprint(expr.shape)
+
+        return 'SparseArray[{}, {}]'.format(print_data(), print_dims())
+
+    def _print_ImmutableDenseNDimArray(self, expr):
+        return self.doprint(expr.tolist())
+
+    def _print_ImmutableSparseNDimArray(self, expr):
+        def print_string_list(string_list):
+            return '{' + ', '.join(a for a in string_list) + '}'
+
+        def to_mathematica_index(*args):
+            """Helper function to change Python style indexing to
+            Pathematica indexing.
+
+            Python indexing (0, 1 ... n-1)
+            -> Mathematica indexing (1, 2 ... n)
+            """
+            return tuple(i + 1 for i in args)
+
+        def print_rule(pos, val):
+            """Helper function to print a rule of Mathematica"""
+            return '{} -> {}'.format(self.doprint(pos), self.doprint(val))
+
+        def print_data():
+            """Helper function to print data part of Mathematica
+            sparse array.
+
+            It uses the fourth notation ``SparseArray[data,{d1,d2,...}]``
+            from
+            https://reference.wolfram.com/language/ref/SparseArray.html
+
+            ``data`` must be formatted with rule.
+            """
+            return print_string_list(
+                [print_rule(
+                    to_mathematica_index(*(expr._get_tuple_index(key))),
+                    value)
+                for key, value in sorted(expr._sparse_array.items())]
+            )
+
+        def print_dims():
+            """Helper function to print dimensions part of Mathematica
+            sparse array.
+
+            It uses the fourth notation ``SparseArray[data,{d1,d2,...}]``
+            from
+            https://reference.wolfram.com/language/ref/SparseArray.html
+            """
             return self.doprint(expr.shape)
 
         return 'SparseArray[{}, {}]'.format(print_data(), print_dims())

@@ -42,7 +42,7 @@ Moved modules:
     * `reduce()`
     * `StringIO()`
     * `cStringIO()` (same as `StingIO()` in Python 3)
-    * Python 2 `__builtins__`, access with Python 3 name, `builtins`
+    * Python 2 `__builtin__`, access with Python 3 name, `builtins`
 
 Iterator/list changes:
     * `xrange` renamed as `range` in Python 3, import `range` for Python 2/3
@@ -90,9 +90,10 @@ if PY3:
     from io import StringIO
     cStringIO = StringIO
 
-    exec_=getattr(builtins, "exec")
+    exec_ = getattr(builtins, "exec")
 
-    range=range
+    range = range
+    round = round
 
     from collections.abc import (Mapping, Callable, MutableMapping,
         MutableSet, Iterable, Hashable)
@@ -141,7 +142,14 @@ else:
         elif _locs_ is None:
             _locs_ = _globs_
         exec("exec _code_ in _globs_, _locs_")
-    range=xrange
+
+    range = xrange
+    _round = round
+    def round(x, *args):
+        try:
+            return x.__round__(*args)
+        except (AttributeError, TypeError):
+            return _round(x, *args)
 
     from collections import (Mapping, Callable, MutableMapping,
         MutableSet, Iterable, Hashable)
@@ -238,16 +246,17 @@ def with_metaclass(meta, *bases):
 
 class NotIterable:
     """
-    Use this as mixin when creating a class which is not supposed to return
-    true when iterable() is called on its instances. I.e. avoid infinite loop
-    when calling e.g. list() on the instance
+    Use this as mixin when creating a class which is not supposed to
+    return true when iterable() is called on its instances because
+    calling list() on the instance, for example, would result in
+    an infinite loop.
     """
     pass
 
 def iterable(i, exclude=(string_types, dict, NotIterable)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
-    True also indicates that the iterator is finite, i.e. you e.g.
+    True also indicates that the iterator is finite, e.g. you can
     call list(...) on the instance.
 
     When SymPy is working with iterables, it is almost always assuming
@@ -945,3 +954,8 @@ try:
 except ImportError:  # Python 2.7
     def filterfalse(pred, itr):
         return filter(lambda x: not pred(x), itr)
+
+try:
+    from time import clock
+except ImportError: # Python 3.8+
+    from time import perf_counter as clock

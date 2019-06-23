@@ -21,12 +21,12 @@ from sympy.core.sympify import sympify
 from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
     Pow, Unequality)
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
+from sympy.core.function import (expand_mul, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
                           Function, expand_power_exp, Lambda, _mexpand, expand)
 from sympy.integrals.integrals import Integral
 from sympy.core.numbers import ilcm, Float, Rational
-from sympy.core.relational import Relational, Ge, _canonical
+from sympy.core.relational import Relational, Ge
 from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.core.power import integer_log
 from sympy.logic.boolalg import And, Or, BooleanAtom
@@ -41,7 +41,7 @@ from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, factor, Poly, together, degree
+from sympy.polys import roots, cancel, factor, Poly, degree
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
@@ -466,7 +466,8 @@ def solve(f, *symbols, **flags):
     * f
         - a single Expr or Poly that must be zero,
         - an Equality
-        - a Relational expression or boolean
+        - a Relational expression
+        - a Boolean
         - iterable of one or more of the above
 
     * symbols (object(s) to solve for) specified as
@@ -919,7 +920,8 @@ def solve(f, *symbols, **flags):
                        )
                       )
     f, symbols = (_sympified_list(w) for w in [f, symbols])
-
+    if isinstance(f, list):
+        f = [s for s in f if s is not S.true and s is not True]
     implicit = flags.get('implicit', False)
 
     # preprocess symbol(s)
@@ -979,7 +981,7 @@ def solve(f, *symbols, **flags):
                     fi = fi.rewrite(Add, evaluate=False)
             f[i] = fi
 
-        if isinstance(fi, (bool, BooleanAtom)) or fi.is_Relational:
+        if fi.is_Relational:
             return reduce_inequalities(f, symbols=symbols)
 
         if isinstance(fi, Poly):
@@ -997,7 +999,7 @@ def solve(f, *symbols, **flags):
 
         # if we can split it into real and imaginary parts then do so
         freei = f[i].free_symbols
-        if freei and all(s.is_real or s.is_imaginary for s in freei):
+        if freei and all(s.is_extended_real or s.is_imaginary for s in freei):
             fr, fi = f[i].as_real_imag()
             # accept as long as new re, im, arg or atan2 are not introduced
             had = f[i].atoms(re, im, arg, atan2)
@@ -1008,6 +1010,11 @@ def solve(f, *symbols, **flags):
                 f[i: i + 1] = [fr, fi]
 
     # real/imag handling -----------------------------
+    if any(isinstance(fi, (bool, BooleanAtom)) for fi in f):
+        if flags.get('set', False):
+            return [], set()
+        return []
+
     w = Dummy('w')
     piece = Lambda(w, Piecewise((w, Ge(w, 0)), (-w, True)))
     for i, fi in enumerate(f):
@@ -1016,10 +1023,10 @@ def solve(f, *symbols, **flags):
         for a in fi.atoms(Abs):
             if not a.has(*symbols):
                 continue
-            if a.args[0].is_real is None:
+            if a.args[0].is_extended_real is None:
                 raise NotImplementedError('solving %s when the argument '
                     'is not real or imaginary.' % a)
-            reps.append((a, piece(a.args[0]) if a.args[0].is_real else \
+            reps.append((a, piece(a.args[0]) if a.args[0].is_extended_real else \
                 piece(a.args[0]*S.ImaginaryUnit)))
         fi = fi.subs(reps)
 
@@ -1034,7 +1041,7 @@ def solve(f, *symbols, **flags):
     # see if re(s) or im(s) appear
     irf = []
     for s in symbols:
-        if s.is_real or s.is_imaginary:
+        if s.is_extended_real or s.is_imaginary:
             continue  # neither re(x) nor im(x) will appear
         # if re(s) or im(s) appear, the auxiliary equation must be present
         if any(fi.has(re(s), im(s)) for fi in f):
@@ -1127,7 +1134,7 @@ def solve(f, *symbols, **flags):
                     continue
             pot.skip()
     del seen
-    non_inverts = dict(list(zip(non_inverts, [Dummy() for d in non_inverts])))
+    non_inverts = dict(list(zip(non_inverts, [Dummy() for _ in non_inverts])))
     f = [fi.subs(non_inverts) for fi in f]
 
     # Both xreplace and subs are needed below: xreplace to force substitution
@@ -1172,8 +1179,8 @@ def solve(f, *symbols, **flags):
     if non_inverts:
 
         def _do_dict(solution):
-            return dict([(k, v.subs(non_inverts)) for k, v in
-                         solution.items()])
+            return {k: v.subs(non_inverts) for k, v in
+                         solution.items()}
         for i in range(1):
             if isinstance(solution, dict):
                 solution = _do_dict(solution)
@@ -1207,12 +1214,12 @@ def solve(f, *symbols, **flags):
     if swap_sym:
         symbols = [swap_sym.get(k, k) for k in symbols]
         if isinstance(solution, dict):
-            solution = dict([(swap_sym.get(k, k), v.subs(swap_sym))
-                             for k, v in solution.items()])
+            solution = {swap_sym.get(k, k): v.subs(swap_sym)
+                             for k, v in solution.items()}
         elif solution and isinstance(solution, list) and isinstance(solution[0], dict):
             for i, sol in enumerate(solution):
-                solution[i] = dict([(swap_sym.get(k, k), v.subs(swap_sym))
-                              for k, v in sol.items()])
+                solution[i] = {swap_sym.get(k, k): v.subs(swap_sym)
+                              for k, v in sol.items()}
 
     # undo the dictionary solutions returned when the system was only partially
     # solved with poly-system if all symbols are present
@@ -1642,8 +1649,8 @@ def _solve(f, *symbols, **flags):
                 soln = None
                 deg = poly.degree()
                 flags['tsolve'] = True
-                solvers = dict([(k, flags.get(k, True)) for k in
-                    ('cubics', 'quartics', 'quintics')])
+                solvers = {k: flags.get(k, True) for k in
+                    ('cubics', 'quartics', 'quintics')}
                 soln = roots(poly, **solvers)
                 if sum(soln.values()) < deg:
                     # e.g. roots(32*x**5 + 400*x**4 + 2032*x**3 +
@@ -2997,7 +3004,7 @@ def nsolve(*args, **kwargs):
         f = lambdify(fargs, f, modules)
         x = sympify(findroot(f, x0, **kwargs))
         if as_dict:
-            return [dict([(fargs, x)])]
+            return [{fargs: x}]
         return x
 
     if len(fargs) > f.cols:

@@ -46,13 +46,11 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
-from sympy.core.compatibility import string_types, with_metaclass, range
+from sympy.core.compatibility import string_types, with_metaclass, PY3, range
 from sympy.utilities import default_sort_key
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import has_dups
+from sympy.utilities.iterables import has_dups, sift
 from sympy.core.evaluate import global_evaluate
-
-import sys
 
 import mpmath
 import mpmath.libmp as mlib
@@ -91,7 +89,7 @@ def _coeff_isneg(a):
         a = a.args[0]
     if a.is_Mul:
         a = a.args[0]
-    return a.is_Number and a.is_negative
+    return a.is_Number and a.is_extended_negative
 
 
 class PoleError(Exception):
@@ -103,41 +101,50 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                (self.args[1], self.args[0]))
 
-def _getnargs(cls):
-    if hasattr(cls, 'eval'):
-        if sys.version_info < (3, ):
-            return _getnargs_old(cls.eval)
+
+# Python 2/3 version that does not raise a Deprecation warning
+def arity(cls):
+    """Return the arity of the function if it is known, else None.
+
+    When default values are specified for some arguments, they are
+    optional and the arity is reported as a tuple of possible values.
+
+    Examples
+    ========
+
+    >>> from sympy.core.function import arity
+    >>> from sympy import log
+    >>> arity(lambda x: x)
+    1
+    >>> arity(log)
+    (1, 2)
+    >>> arity(lambda *x: sum(x)) is None
+    True
+    """
+    eval_ = getattr(cls, 'eval', cls)
+    if PY3:
+        parameters = inspect.signature(eval_).parameters.items()
+        if [p for _, p in parameters if p.kind == p.VAR_POSITIONAL]:
+            return
+        p_or_k = [p for _, p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
+        # how many have no default and how many have a default value
+        no, yes = map(len, sift(p_or_k,
+            lambda p:p.default == p.empty, binary=True))
+        return no if not yes else tuple(range(no, no + yes + 1))
+    else:
+        cls_ = int(hasattr(cls, 'eval'))  # correction for cls arguments
+        evalargspec = inspect.getargspec(eval_)
+        if evalargspec.varargs:
+            return
         else:
-            return _getnargs_new(cls.eval)
-    else:
-        return None
-
-def _getnargs_old(eval_):
-    evalargspec = inspect.getargspec(eval_)
-    if evalargspec.varargs:
-        return None
-    else:
-        evalargs = len(evalargspec.args) - 1  # subtract 1 for cls
-        if evalargspec.defaults:
-            # if there are default args then they are optional; the
-            # fewest args will occur when all defaults are used and
-            # the most when none are used (i.e. all args are given)
-            return tuple(range(
-                evalargs - len(evalargspec.defaults), evalargs + 1))
-
-        return evalargs
-
-def _getnargs_new(eval_):
-    parameters = inspect.signature(eval_).parameters.items()
-    if [p for n,p in parameters if p.kind == p.VAR_POSITIONAL]:
-        return None
-    else:
-        p_or_k = [p for n,p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
-        num_no_default = len(list(filter(lambda p:p.default == p.empty, p_or_k)))
-        num_with_default = len(list(filter(lambda p:p.default != p.empty, p_or_k)))
-        if not num_with_default:
-            return num_no_default
-        return tuple(range(num_no_default, num_no_default+num_with_default+1))
+            evalargs = len(evalargspec.args) - cls_
+            if evalargspec.defaults:
+                # if there are default args then they are optional; the
+                # fewest args will occur when all defaults are used and
+                # the most when none are used (i.e. all args are given)
+                fewest = evalargs - len(evalargspec.defaults)
+                return tuple(range(fewest, evalargs + 1))
+            return evalargs
 
 
 class FunctionClass(ManagedProperties):
@@ -152,7 +159,7 @@ class FunctionClass(ManagedProperties):
     def __init__(cls, *args, **kwargs):
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
-        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', _getnargs(cls)))
+        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', arity(cls)))
 
         # Canonicalize nargs here; change to set in nargs.
         if is_sequence(nargs):
@@ -365,10 +372,14 @@ class Function(Application, Expr):
     >>> g.diff(x)
     Derivative(g(x), x)
 
-    Assumptions can be passed to Function.
+    Assumptions can be passed to Function, and if function is initialized with a
+    Symbol, the function inherits the name and assumptions associated with the Symbol:
 
     >>> f_real = Function('f', real=True)
     >>> f_real(x).is_real
+    True
+    >>> f_real_inherit = Function(Symbol('f', real=True))
+    >>> f_real_inherit(x).is_real
     True
 
     Note that assumptions on a function are unrelated to the assumptions on
@@ -663,7 +674,7 @@ class Function(Application, Expr):
             # where 'logx' is given in the argument
             a = [t._eval_nseries(x, n, logx) for t in args]
             z = [r - r0 for (r, r0) in zip(a, a0)]
-            p = [Dummy() for t in z]
+            p = [Dummy() for _ in z]
             q = []
             v = None
             for ai, zi, pi in zip(a0, z, p):
@@ -789,13 +800,13 @@ class Function(Application, Expr):
     def _sage_(self):
         import sage.all as sage
         fname = self.func.__name__
-        func = getattr(sage, fname,None)
+        func = getattr(sage, fname, None)
         args = [arg._sage_() for arg in self.args]
 
         # In the case the function is not known in sage:
         if func is None:
             import sympy
-            if getattr(sympy, fname,None) is None:
+            if getattr(sympy, fname, None) is None:
                 # abstract function
                 return sage.function(fname)(*args)
 
@@ -854,32 +865,49 @@ class UndefinedFunction(FunctionClass):
     The (meta)class of undefined functions.
     """
     def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
-        __dict__ = __dict__ or {}
+        from .symbol import _filter_assumptions
         # Allow Function('f', real=True)
-        __dict__.update({'is_' + arg: val for arg, val in kwargs.items() if arg in _assume_defined})
+        # and/or Function(Symbol('f', real=True))
+        assumptions, kwargs = _filter_assumptions(kwargs)
+        if isinstance(name, Symbol):
+            assumptions = name._merge(assumptions)
+            name = name.name
+        elif not isinstance(name, string_types):
+            raise TypeError('expecting string or Symbol for name')
+        else:
+            commutative = assumptions.get('commutative', None)
+            assumptions = Symbol(name, **assumptions).assumptions0
+            if commutative is None:
+                assumptions.pop('commutative')
+        __dict__ = __dict__ or {}
+        # put the `is_*` for into __dict__
+        __dict__.update({'is_%s' % k: v for k, v in assumptions.items()})
         # You can add other attributes, although they do have to be hashable
         # (but seriously, if you want to add anything other than assumptions,
         # just subclass Function)
         __dict__.update(kwargs)
+        # add back the sanitized assumptions without the is_ prefix
+        kwargs.update(assumptions)
         # Save these for __eq__
-        __dict__.update({'_extra_kwargs': kwargs})
-        __dict__['__module__'] = None # For pickling
-        ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
-        ret.name = name
-        return ret
+        __dict__.update({'_kwargs': kwargs})
+        # do this for pickling
+        __dict__['__module__'] = None
+        obj = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
+        obj.name = name
+        return obj
 
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-    _extra_kwargs = {}
+    _kwargs = {}
 
     def __hash__(self):
-        return hash((self.class_key(), frozenset(self._extra_kwargs.items())))
+        return hash((self.class_key(), frozenset(self._kwargs.items())))
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
             self.class_key() == other.class_key() and
-            self._extra_kwargs == other._extra_kwargs)
+            self._kwargs == other._kwargs)
 
     def __ne__(self, other):
         return not self == other
@@ -1177,8 +1205,8 @@ class Derivative(Expr):
     def __new__(cls, expr, *variables, **kwargs):
 
         from sympy.matrices.common import MatrixCommon
-        from sympy import Integer
-        from sympy.tensor.array import Array, NDimArray
+        from sympy import Integer, MatrixExpr
+        from sympy.tensor.array import Array, NDimArray, derive_by_array
         from sympy.utilities.misc import filldedent
 
         expr = sympify(expr)
@@ -1310,6 +1338,9 @@ class Derivative(Expr):
                         if not expr.xreplace({v: D}).has(D):
                             zero = True
                             break
+                    elif isinstance(v, MatrixExpr):
+                        zero = False
+                        break
                     elif isinstance(v, Symbol) and v not in free:
                         zero = True
                         break
@@ -1321,7 +1352,7 @@ class Derivative(Expr):
             if zero:
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
-                else:
+                elif expr.is_scalar:
                     return S.Zero
 
             # make the order of symbols canonical
@@ -1389,9 +1420,8 @@ class Derivative(Expr):
                 if obj is not None:
                     # remove the dummy that was used
                     obj = obj.subs(v, old_v)
-                # restore expr and v
+                # restore expr
                 expr = old_expr
-                v = old_v
 
             if obj is None:
                 # we've already checked for quick-exit conditions
@@ -1551,7 +1581,10 @@ class Derivative(Expr):
         if hints.get('deep', True):
             expr = expr.doit(**hints)
         hints['evaluate'] = True
-        return self.func(expr, *self.variable_count, **hints)
+        rv = self.func(expr, *self.variable_count, **hints)
+        if rv!= self and rv.has(Derivative):
+            rv =  rv.doit(**hints)
+        return rv
 
     @_sympifyit('z0', NotImplementedError)
     def doit_numerically(self, z0):
@@ -1561,8 +1594,6 @@ class Derivative(Expr):
         When we can represent derivatives at a point, this should be folded
         into the normal evalf. For now, we need a special method.
         """
-        import mpmath
-        from sympy.core.expr import Expr
         if len(self.free_symbols) != 1 or len(self.variables) != 1:
             raise NotImplementedError('partials and higher order derivatives')
         z = list(self.free_symbols)[0]
@@ -1672,7 +1703,7 @@ class Derivative(Expr):
             if (nfree - ofree) & forbidden:
                 return Subs(self, old, new)
 
-        viter = ((i, j) for ((i,_), (j,_)) in zip(newargs[1:], args[1:]))
+        viter = ((i, j) for ((i, _), (j, _)) in zip(newargs[1:], args[1:]))
         if any(i != j for i, j in viter):  # a wrt-variable change
             # case (2) can't change vars by introducing a variable
             # that is contained in expr, e.g.
@@ -1854,6 +1885,9 @@ class Lambda(Expr):
         for i in v:
             if not getattr(i, 'is_symbol', False):
                 raise TypeError('variable is not a symbol: %s' % i)
+        if len(v) != len(set(v)):
+            x = [i for i in v if v.count(i) > 1][0]
+            raise SyntaxError("duplicate argument '%s' in Lambda args" % x)
         if len(v) == 1 and v[0] == expr:
             return S.IdentityFunction
 
@@ -2935,10 +2969,6 @@ def count_ops(expr, visual=False):
         while args:
             a = args.pop()
 
-            # XXX: This is a hack to support non-Basic args
-            if isinstance(a, string_types):
-                continue
-
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:
@@ -3004,7 +3034,7 @@ def count_ops(expr, visual=False):
             if not a.is_Symbol:
                 args.extend(a.args)
 
-    elif type(expr) is dict:
+    elif isinstance(expr, Dict):
         ops = [count_ops(k, visual=visual) +
                count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):
@@ -3025,10 +3055,6 @@ def count_ops(expr, visual=False):
             args = [expr]
             while args:
                 a = args.pop()
-
-                # XXX: This is a hack to support non-Basic args
-                if isinstance(a, string_types):
-                    continue
 
                 if a.args:
                     o = Symbol(a.func.__name__.upper())
@@ -3054,9 +3080,10 @@ def count_ops(expr, visual=False):
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
 
-def nfloat(expr, n=15, exponent=False):
+def nfloat(expr, n=15, exponent=False, dkeys=False):
     """Make all Rationals in expr Floats except those in exponents
-    (unless the exponents flag is set to True).
+    (unless the exponents flag is set to True). When processing
+    dictionaries, don't modify the keys unless ``dkeys=True``.
 
     Examples
     ========
@@ -3069,15 +3096,31 @@ def nfloat(expr, n=15, exponent=False):
     >>> nfloat(x**4 + sqrt(y), exponent=True)
     x**4.0 + y**0.5
 
+    Container types are not modified:
+
+    >>> type(nfloat((1, 2))) is tuple
+    True
     """
     from sympy.core.power import Pow
     from sympy.polys.rootoftools import RootOf
 
+    kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+    # handling of iterable containers
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):
-            return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
-                               list(expr.items())])
-        return type(expr)([nfloat(a, n, exponent) for a in expr])
+            if dkeys:
+                args = [tuple(map(lambda i: nfloat(i, **kw), a))
+                    for a in expr.items()]
+            else:
+                args = [(k, nfloat(v, **kw)) for k, v in expr.items()]
+            if isinstance(expr, dict):
+                return type(expr)(args)
+            else:
+                return expr.func(*args)
+        elif isinstance(expr, Basic):
+            return expr.func(*[nfloat(a, **kw) for a in expr.args])
+        return type(expr)([nfloat(a, **kw) for a in expr])
+
     rv = sympify(expr)
 
     if rv.is_Number:
@@ -3089,6 +3132,8 @@ def nfloat(expr, n=15, exponent=False):
             rv = Float(rv.n(n), n)
         else:
             pass  # pure_complex(rv) is likely True
+        return rv
+    elif rv.is_Atom:
         return rv
 
     # watch out for RootOf instances that don't like to have

@@ -167,9 +167,9 @@ class CoordSys3D(Basic):
             if isinstance(transformation, Lambda):
                 variable_names = ["x1", "x2", "x3"]
             elif isinstance(transformation, Symbol):
-                if transformation.name is 'spherical':
+                if transformation.name == 'spherical':
                     variable_names = ["r", "theta", "phi"]
-                elif transformation.name is 'cylindrical':
+                elif transformation.name == 'cylindrical':
                     variable_names = ["r", "theta", "z"]
                 else:
                     variable_names = ["x", "y", "z"]
@@ -200,7 +200,7 @@ class CoordSys3D(Basic):
         vector_names = list(vector_names)
         latex_vects = [(r'\mathbf{\hat{%s}_{%s}}' % (x, name)) for
                            x in vector_names]
-        pretty_vects = [(name + '_' + x) for x in vector_names]
+        pretty_vects = ['%s_%s' % (x, name) for x in vector_names]
 
         obj._vector_names = vector_names
 
@@ -216,7 +216,7 @@ class CoordSys3D(Basic):
         variable_names = list(variable_names)
         latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
                          x in variable_names]
-        pretty_scalars = [(name + '_' + x) for x in variable_names]
+        pretty_scalars = ['%s_%s' % (x, name) for x in variable_names]
 
         obj._variable_names = variable_names
         obj._vector_names = vector_names

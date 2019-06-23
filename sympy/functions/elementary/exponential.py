@@ -173,8 +173,8 @@ class exp_polar(ExpBase):
     def _eval_power(self, other):
         return self.func(self.args[0]*other)
 
-    def _eval_is_real(self):
-        if self.args[0].is_real:
+    def _eval_is_extended_real(self):
+        if self.args[0].is_extended_real:
             return True
 
     def as_base_exp(self):
@@ -379,8 +379,8 @@ class exp(ExpBase):
             return new**self.exp._subs(old, new)
         return Function._eval_subs(self, old, new)
 
-    def _eval_is_real(self):
-        if self.args[0].is_real:
+    def _eval_is_extended_real(self):
+        if self.args[0].is_extended_real:
             return True
         elif self.args[0].is_imaginary:
             arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
@@ -397,8 +397,8 @@ class exp(ExpBase):
         else:
             return s.is_algebraic
 
-    def _eval_is_positive(self):
-        if self.args[0].is_real:
+    def _eval_is_extended_positive(self):
+        if self.args[0].is_extended_real:
             return not self.args[0] is S.NegativeInfinity
         elif self.args[0].is_imaginary:
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
@@ -550,9 +550,7 @@ class log(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
-        if arg is S.ComplexInfinity:
-                return S.ComplexInfinity
-        if isinstance(arg, exp) and arg.args[0].is_real:
+        if isinstance(arg, exp) and arg.args[0].is_extended_real:
             return arg.args[0]
         elif isinstance(arg, exp_polar):
             return unpolarify(arg.exp)
@@ -643,7 +641,7 @@ class log(Function):
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
         elif arg.is_Pow or isinstance(arg, exp):
-            if force or (arg.exp.is_real and (arg.base.is_positive or ((arg.exp+1)
+            if force or (arg.exp.is_extended_real and (arg.base.is_positive or ((arg.exp+1)
                 .is_positive and (arg.exp-1).is_nonpositive))) or arg.base.is_polar:
                 b = arg.base
                 e = arg.exp
@@ -724,8 +722,8 @@ class log(Function):
         else:
             return s.is_algebraic
 
-    def _eval_is_real(self):
-        return self.args[0].is_positive
+    def _eval_is_extended_real(self):
+        return self.args[0].is_extended_positive
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -733,14 +731,14 @@ class log(Function):
             return False
         return arg.is_finite
 
-    def _eval_is_positive(self):
-        return (self.args[0] - 1).is_positive
+    def _eval_is_extended_positive(self):
+        return (self.args[0] - 1).is_extended_positive
 
     def _eval_is_zero(self):
         return (self.args[0] - 1).is_zero
 
-    def _eval_is_nonnegative(self):
-        return (self.args[0] - 1).is_nonnegative
+    def _eval_is_extended_nonnegative(self):
+        return (self.args[0] - 1).is_extended_nonnegative
 
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
@@ -860,7 +858,7 @@ class LambertW(Function):
 
         raise ArgumentIndexError(self, argindex)
 
-    def _eval_is_real(self):
+    def _eval_is_extended_real(self):
         x = self.args[0]
         if len(self.args) == 1:
             k = S.Zero
@@ -877,8 +875,11 @@ class LambertW(Function):
             elif x.is_nonpositive or (x + 1/S.Exp1).is_nonnegative:
                 return False
         elif fuzzy_not(k.is_zero) and fuzzy_not((k + 1).is_zero):
-            if x.is_real:
+            if x.is_extended_real:
                 return False
+
+    def _eval_is_finite(self):
+        return self.args[0].is_finite
 
     def _eval_is_algebraic(self):
         s = self.func(*self.args)

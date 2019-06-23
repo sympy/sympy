@@ -35,7 +35,9 @@ class AssocOp(Basic):
         if evaluate is None:
             evaluate = global_evaluate[0]
         if not evaluate:
-            return cls._from_args(args)
+            obj = cls._from_args(args)
+            obj = cls._exec_constructor_postprocessors(obj)
+            return obj
 
         if len(args) == 0:
             return cls.identity
@@ -126,6 +128,8 @@ class AssocOp(Basic):
                 seq.extend(o.args)
             else:
                 new_seq.append(o)
+        new_seq.reverse()
+
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
@@ -294,7 +298,7 @@ class AssocOp(Basic):
         was a number with no functions it would have been evaluated, but
         it wasn't so we must judiciously extract the numbers and reconstruct
         the object. This is *not* simply replacing numbers with evaluated
-        numbers. Nunmbers should be handled in the largest pure-number
+        numbers. Numbers should be handled in the largest pure-number
         expression as possible. So the code below separates ``self`` into
         number and non-number parts and evaluates the number parts and
         walks the args of the non-number part recursively (doing the same

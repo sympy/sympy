@@ -3,31 +3,32 @@ from __future__ import print_function, division
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, range
+from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
+from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
-from sympy.integrals.manualintegrate import manualintegrate
-from sympy.integrals.trigonometry import trigintegrate
-from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
-from sympy.matrices import MatrixBase
-from sympy.utilities.misc import filldedent
-from sympy.polys import Poly, PolynomialError
-from sympy.functions import Piecewise, sqrt, sign, piecewise_fold, tan, cot, atan
+from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.integrals.manualintegrate import manualintegrate
+from sympy.integrals.trigonometry import trigintegrate
+from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
+from sympy.matrices import MatrixBase
+from sympy.polys import Poly, PolynomialError
 from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
+from sympy.utilities.misc import filldedent
 
 
 class Integral(AddWithLimits):
@@ -259,7 +260,10 @@ class Integral(AddWithLimits):
         u = sympify(u)
         if isinstance(u, Expr):
             ufree = u.free_symbols
-            if len(ufree) != 1:
+            if len(ufree) == 0:
+                raise ValueError(filldedent('''
+                f(u) cannot be a constant'''))
+            if len(ufree) > 1:
                 raise ValueError(filldedent('''
                 When f(u) has more than one free symbol, the one replacing x
                 must be identified: pass f(u) as (f(u), u)'''))
@@ -272,6 +276,7 @@ class Integral(AddWithLimits):
                 a free symbol in expr, but symbol is not in expr's free
                 symbols.'''))
             if not isinstance(uvar, Symbol):
+                # This probably never evaluates to True
                 raise ValueError(filldedent('''
                 Expecting a tuple (expr, symbol) but didn't get
                 a symbol; got %s''' % uvar))
@@ -342,7 +347,7 @@ class Integral(AddWithLimits):
                 if len(xab) == 3:
                     a, b = xab[1:]
                     a, b = _calc_limit(a, b), _calc_limit(b, a)
-                    if a - b > 0:
+                    if fuzzy_bool(a - b > 0):
                         a, b = b, a
                         newfunc = -newfunc
                     newlimits.append((uvar, a, b))
@@ -460,8 +465,8 @@ class Integral(AddWithLimits):
                 continue
 
             if function.has(Abs, sign) and (
-                (len(xab) < 3 and all(x.is_real for x in xab)) or
-                (len(xab) == 3 and all(x.is_real and not x.is_infinite for
+                (len(xab) < 3 and all(x.is_extended_real for x in xab)) or
+                (len(xab) == 3 and all(x.is_extended_real and not x.is_infinite for
                  x in xab[1:]))):
                     # some improper integrals are better off with Abs
                     xr = Dummy("xr", real=True)
@@ -518,7 +523,7 @@ class Integral(AddWithLimits):
 
                 meijerg1 = meijerg
                 if (meijerg is not False and
-                        len(xab) == 3 and xab[1].is_real and xab[2].is_real
+                        len(xab) == 3 and xab[1].is_extended_real and xab[2].is_extended_real
                         and not function.is_Poly and
                         (xab[1].has(oo, -oo) or xab[2].has(oo, -oo))):
                     ret = try_meijerg(function, xab)
@@ -1099,6 +1104,16 @@ class Integral(AddWithLimits):
             if leading_term != 0:
                 break
         return integrate(leading_term, *self.args[1:])
+
+    def _eval_simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
+        from sympy.core.exprtools import factor_terms
+        from sympy.simplify.simplify import simplify
+
+        expr = factor_terms(self)
+        kwargs = dict(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
+        if isinstance(expr, Integral):
+            return expr.func(*[simplify(i, **kwargs) for i in expr.args])
+        return expr.simplify(**kwargs)
 
     def as_sum(self, n=None, method="midpoint", evaluate=True):
         """

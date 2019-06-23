@@ -8,7 +8,7 @@ from sympy import oo, zoo, nan
 from sympy.core.add import Add
 from sympy.core.compatibility import iterable
 from sympy.core.expr import Expr
-from sympy.core.function import Derivative, Function
+from sympy.core.function import Derivative, Function, expand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.relational import Eq
@@ -22,6 +22,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
 from sympy.series.order import Order
+from sympy.simplify.powsimp import powsimp
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
 
@@ -207,8 +208,6 @@ def simpleDE(f, x, g, order=4):
         eq = f.diff(x, k) + Add(*[a[i]*f.diff(x, i) for i in range(0, k)])
         DE = g(x).diff(x, k) + Add(*[a[i]*g(x).diff(x, i) for i in range(0, k)])
         return eq, DE
-
-    eq, DE = _makeDE(order)
 
     found = False
     for k in range(1, order + 1):
@@ -781,7 +780,11 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
                 result[2].subs(x, rep2 + rep2b))
 
     if f.is_polynomial(x):
-        return None
+        k = Dummy('k')
+        ak = sequence(Coeff(f, x, k), (k, 1, oo))
+        xk = sequence(x**k, (k, 0, oo))
+        ind = f.coeff(x, 0)
+        return ak, xk, ind
 
     #  Break instances of Add
     #  this allows application of different
@@ -812,6 +815,14 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
             return ak, xk, ind
         return None
 
+    # The symbolic term - symb, if present, is being separated from the function
+    # Otherwise symb is being set to S.One
+    syms = f.free_symbols.difference({x})
+    (f, symb) = expand(f).as_independent(*syms)
+    if symb is S.Zero:
+        symb = S.One
+    symb = powsimp(symb)
+
     result = None
 
     # from here on it's x0=0 and dir=1 handling
@@ -826,8 +837,9 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
         return None
 
     ak = sequence(result[0], (k, result[2], oo))
-    xk = sequence(x**k, (k, 0, oo))
-    ind = result[1]
+    xk_formula = powsimp(x**k * symb)
+    xk = sequence(xk_formula, (k, 0, oo))
+    ind = powsimp(result[1] * symb)
 
     return ak, xk, ind
 
@@ -840,7 +852,7 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
     (in order):
 
     * rational_algorithm
-    * Hypergeomitric algorithm
+    * Hypergeometric algorithm
 
     Parameters
     ==========
@@ -901,6 +913,16 @@ def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
         dir = sympify(dir)
 
     return _compute_fps(f, x, x0, dir, hyper, order, rational, full)
+
+
+class Coeff(Function):
+    """
+    Coeff(p, x, n) represents the nth coefficient of the polynomial p in x
+    """
+    @classmethod
+    def eval(cls, p, x, n):
+        if p.is_polynomial(x) and n.is_integer:
+            return p.coeff(x, n)
 
 
 class FormalPowerSeries(SeriesBase):
@@ -984,12 +1006,15 @@ class FormalPowerSeries(SeriesBase):
     def polynomial(self, n=6):
         """Truncated series as polynomial.
 
-        Returns series sexpansion of ``f`` upto order ``O(x**n)``
+        Returns series expansion of ``f`` upto order ``O(x**n)``
         as a polynomial(without ``O`` term).
         """
         terms = []
+        sym = self.free_symbols
         for i, t in enumerate(self):
             xp = self._get_pow_x(t)
+            if xp.has(*sym):
+                xp = xp.as_coeff_add(*sym)[0]
             if xp >= n:
                 break
             elif xp.is_integer is True and i == n + 1:
@@ -1028,8 +1053,11 @@ class FormalPowerSeries(SeriesBase):
 
         if self.ind:
             ind = S.Zero
+            sym = self.free_symbols
             for t in Add.make_args(self.ind):
                 pow_x = self._get_pow_x(t)
+                if pow_x.has(*sym):
+                    pow_x = pow_x.as_coeff_add(*sym)[0]
                 if pt == 0 and pow_x < 1:
                     ind += t
                 elif pow_x >= pt and pow_x < pt + 1:
@@ -1222,8 +1250,8 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
     Examples
     ========
 
-    >>> from sympy import fps, O, ln, atan
-    >>> from sympy.abc import x
+    >>> from sympy import fps, O, ln, atan, sin
+    >>> from sympy.abc import x, n
 
     Rational Functions
 
@@ -1232,6 +1260,11 @@ def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
 
     >>> fps(atan(x), full=True).truncate()
     x - x**3/3 + x**5/5 + O(x**6)
+
+    Symbolic Functions
+
+    >>> fps(x**n*sin(x**2), x).truncate(8)
+    -x**(n + 6)/6 + x**(n + 2) + O(x**(n + 8))
 
     See Also
     ========
