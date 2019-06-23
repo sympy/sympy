@@ -926,7 +926,7 @@ class Coeff(Function):
             return p.coeff(x, n)
 
 
-class CoeffBellCompose(Function):
+class CoeffBell(Function):
     """
     CoeffBellCompose(f, n, k) represents Bell polynomials of the second kind.
     Note that both ``n`` and ``k`` should be integers.
@@ -948,7 +948,6 @@ class CoeffBellCompose(Function):
     ========
 
     sympy.functions.combinatorial.numbers.bell
-
     """
     @classmethod
     def eval(cls, f, n, k):
@@ -1218,8 +1217,11 @@ class FormalPowerSeries(SeriesBase):
         ========
 
         sympy.functions.combinatorial.numbers.bell
-        Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
 
+        References
+        ==========
+
+        [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
         """
         if x is None:
             x = self.x
@@ -1247,16 +1249,82 @@ class FormalPowerSeries(SeriesBase):
                 "constant coefficient term.")
 
         k = Dummy('k')
-        j = symbols('j')
         terms = []
 
         for i in range(1, n):
-            bell_seq = sequence(CoeffBellCompose(g, i, k), (k, 1, i))
-            fact_seq = sequence(factorial(j), (j, 1, i))
+            bell_seq = sequence(CoeffBell(g, i, k), (k, 1, i))
+            fact_seq = sequence(factorial(k), (k, 1, i))
             seq = (self.ak * fact_seq * bell_seq)[:]
             terms.append(Add(*seq) * self.xk.coeff(i) / factorial(i))
 
         return self.ind + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
+
+    def inverse(self, x=None, n=6):
+        """
+        Returns the truncated terms of the inverse of the formal power series,
+        up to specified `n`.
+
+        If `f` and `g` are two formal power series of two different functions,
+        then the coefficient sequence ``ak`` of the composed formal power series
+        `fp` will be :-
+
+        .. math::
+        \sum\limits_{k=0}^{n} (-1)^{k} x_0^{-k-1} B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})
+
+        Parameters
+        ==========
+
+        n : Number, optional
+            Specifies the order of the term up to which the polynomial should
+            be truncated.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, exp, cos, bell
+        >>> from sympy.abc import x
+        >>> f1 = fps(exp(x))
+        >>> f2 = fps(cos(x))
+
+        >>> f1.inverse(x)
+        1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + O(x**6)
+
+        >>> f2.inverse(x, n=8)
+        1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + O(x**8)
+
+        See Also
+        ========
+
+        sympy.functions.combinatorial.numbers.bell
+
+        References
+        ==========
+
+        [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
+        """
+        if x is None:
+            x = self.x
+        if n is None:
+            return iter(self)
+
+        f = self.function
+        if self._eval_term(0) is S.Zero:
+            raise ValueError("Constant coefficient should exist for an inverse of a formal"
+                " power series to exist.")
+        inv = self._eval_term(0)
+
+        k = Dummy('k')
+        terms = []
+
+        for i in range(0, n):
+            bell_seq = sequence(CoeffBell(f, i, k), (k, 0, i))
+            fact_seq = sequence(factorial(k), (k, 0, i))
+            sign_seq = sequence((1, -1), (k, 0, i))
+            inv_seq = sequence(inv ** (-(k + 1)), (k, 0 ,i))
+            seq = (sign_seq * fact_seq * inv_seq * bell_seq)[:]
+            terms.append(Add(*seq) * self.xk.coeff(i) / factorial(i))
+
+        return Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
     def __add__(self, other):
         other = sympify(other)
