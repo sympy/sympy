@@ -35,7 +35,7 @@ from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.bsplines import bspline_basis, bspline_basis_set, interpolating_spline
 from sympy.functions.special.bessel import (besselj, bessely, besseli, besselk,
-        hankel1, hankel2, jn, yn, jn_zeros, hn1, hn2, airyai, airybi, airyaiprime, airybiprime)
+        hankel1, hankel2, jn, yn, jn_zeros, hn1, hn2, airyai, airybi, airyaiprime, airybiprime, marcum_q)
 from sympy.functions.special.hyper import hyper, meijerg, appellf1
 from sympy.functions.special.polynomials import (legendre, assoc_legendre,
         hermite, chebyshevt, chebyshevu, chebyshevu_root, chebyshevt_root,

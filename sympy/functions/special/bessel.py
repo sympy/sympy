@@ -1660,3 +1660,90 @@ class airybiprime(AiryBase):
                     pf = (d**m * z**(n*m)) / (d * z**n)**m
                     newarg = c * d**m * z**(n*m)
                     return S.Half * (sqrt(3)*(pf - S.One)*airyaiprime(newarg) + (pf + S.One)*airybiprime(newarg))
+
+
+class marcum_q(Function):
+    r"""
+    The Marcum Q-function
+
+    It is defined by the meromorphic continuation of
+
+    .. math::
+        Q_m(a, b) = a^{- m + 1} \int_{b}^{\infty} x^{m} e^{- \frac{a^{2}}{2} - \frac{x^{2}}{2}} I_{m - 1}\left(a x\right)\, dx
+
+    Examples
+    ========
+
+    >>> from sympy import marcum_q
+    >>> from sympy.abc import m, a, b, x
+    >>> marcum_q(m, a, b)
+    marcum_q(m, a, b)
+
+    Special values:
+
+    >>> marcum_q(m, 0, b)
+    uppergamma(m, b**2/2)/gamma(m)
+    >>> marcum_q(0, 0, 0)
+    0
+    >>> marcum_q(0, a, 0)
+    1 - exp(-a**2/2)
+    >>> marcum_q(1, a, a)
+    1/2 + exp(-a**2)*besseli(0, a**2)/2
+    >>> marcum_q(2, a, a)
+    1/2 + exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2)
+
+    Differentiation with respect to a and b is supported:
+
+    >>> from sympy import diff
+    >>> diff(marcum_q(m, a, b), a)
+    a*(-marcum_q(m, a, b) + marcum_q(m + 1, a, b))
+    >>> diff(marcum_q(m, a, b), b)
+    -a**(1 - m)*b**m*exp(-a**2/2 - b**2/2)*besseli(m - 1, a*b)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Marcum_Q-function
+    .. [2] http://mathworld.wolfram.com/MarcumQ-Function.html
+    """
+
+    @classmethod
+    def eval(cls, m, a, b):
+        from sympy import exp, uppergamma
+
+        if a == 0:
+            if m == 0 and b == 0:
+                return S.Zero
+
+            return uppergamma(m, b**2 / 2) / gamma(m)
+
+        if m == 0 and b == 0:
+            return 1 - 1 / exp(a**2 / 2)
+
+        if a == b:
+            if m == 1:
+                return (1 + exp(-a**2) * besseli(0, a**2)) / 2
+            if m == 2:
+                return S.Half + S.Half * exp(-a**2) * besseli(0, a**2) + exp(-a**2) * besseli(1, a**2)
+
+    def fdiff(self, argindex=2):
+        from sympy import exp
+        m, a, b = self.args
+        if argindex == 2:
+            return a * (-marcum_q(m, a, b) + marcum_q(1+m, a, b))
+        elif argindex == 3:
+            return (-b**m / a**(m-1)) * exp(-(a**2 + b**2)/2) * besseli(m-1, a*b)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
+        m, a, b = self.args
+        from sympy import Integral, exp, Dummy, oo
+        x = Dummy('x')
+        return Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, oo])
+
+    def _eval_rewrite_as_Sum(self, *args, **kwargs):
+        m, a, b = self.args
+        from sympy import Sum, exp, Dummy, oo
+        k = Dummy('k')
+        return exp(-(a**2 + b**2) / 2) * Sum((a/b)**k * besseli(k, a*b), [k, 1-m, oo])
