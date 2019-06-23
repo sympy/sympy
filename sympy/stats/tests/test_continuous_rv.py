@@ -1255,13 +1255,15 @@ def test_conditional_eq():
 
 def test_sampling_methods():
     distribs = [
-            Beta("B", 1, 1),
-            Normal("N", 0, 1),
-            Gamma("G", 2, 7),
-            Exponential("E", 2),
-            LogNormal("LN", 0, 1)
+        Beta("B", 1, 1),
+        Normal("N", 0, 1),
+        Gamma("G", 2, 7),
+        Exponential("E", 2),
+        LogNormal("LN", 0, 1),
+        Pareto("P", 1, 1),
+        ChiSquared("CS", 2)
     ]
-    size = 10
+    size = 5
     for X in distribs:
         numpy = import_module('numpy')
         if not numpy:

@@ -361,7 +361,7 @@ class BetaDistribution(SingleContinuousDistribution):
         a, b = float(self.alpha), float(self.beta)
         with pymc3.Model():
             pymc3.Beta('X', alpha=a, beta=b)
-            return pymc3.sample(size, chains=1)[:]['X']
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def _characteristic_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
@@ -605,20 +605,16 @@ class CauchyDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
-    def _sample_numpy(self, numpy, size):
-        x0, gamma = float(self.x0), float(self.gamma)
-        return numpy.random.normal(mean, std, size)
-
     def _sample_scipy(self, scipy, size):
-        mean, std = float(self.mean), float(self.std)
-        from scipy.stats import norm
-        return norm.rvs(mean, std, size)
+        x0, gamma = float(self.x0), float(self.gamma)
+        from scipy.stats import cauchy
+        return cauchy.rvs(loc=x0, scale=gamma, size=size)
 
     def _sample_pymc3(self, pymc3, size):
-        mean, std = float(self.mean), float(self.std)
+        x0, gamma = float(self.x0), float(self.gamma)
         with pymc3.Model():
-            pymc3.Normal('X', mean, std)
-            return pymc3.sample(size, chains=1)[:]['X']
+            pymc3.Cauchy('X', alpha=x0, beta=gamma)
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def _cdf(self, x):
         x0, gamma = self.x0, self.gamma
@@ -695,6 +691,11 @@ class ChiDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         return 2**(1 - self.k/2)*x**(self.k - 1)*exp(-x**2/2)/gamma(self.k/2)
+
+    def _sample_scipy(self, scipy, size):
+        k = float(self.k)
+        from scipy.stats import chi
+        return chi.rvs(df=k, size=size)
 
     def _characteristic_function(self, t):
         k = self.k
@@ -851,10 +852,25 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
                 (0, True)
         )
 
+    def _sample_numpy(self, numpy, size):
+        k = float(self.k)
+        return numpy.random.chisquare(df=k, size=size)
+
+    def _sample_scipy(self, scipy, size):
+        k = float(self.k)
+        from scipy.stats import chi2
+        return chi2.rvs(df=k, size=size)
+
+    def _sample_pymc3(self, pymc3, size):
+        k = float(self.k)
+        with pymc3.Model():
+            pymc3.ChiSquared('X', nu=k)
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+
     def _characteristic_function(self, t):
         return (1 - 2*I*t)**(-self.k/2)
 
-    def  _moment_generating_function(self, t):
+    def _moment_generating_function(self, t):
         return (1 - 2*t)**(-self.k/2)
 
 def ChiSquared(name, k):
@@ -1201,8 +1217,7 @@ class ExponentialDistribution(SingleContinuousDistribution):
         rate = float(self.rate)
         with pymc3.Model():
             pymc3.Exponential('X', lam=rate)
-            return pymc3.sample(size, chains=1)[:]['X']
-
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def _cdf(self, x):
         return Piecewise(
@@ -1646,7 +1661,7 @@ class GammaDistribution(SingleContinuousDistribution):
         k, theta = float(self.k), float(self.theta)
         with pymc3.Model():
             pymc3.Gamma('X', alpha=k, beta=1/theta)
-            return pymc3.sample(size, chains=1)[:]['X']
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def _cdf(self, x):
         k, theta = self.k, self.theta
@@ -2366,7 +2381,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
         mean, std = float(self.mean), float(self.std)
         with pymc3.Model():
             pymc3.Lognormal('X', mu=mean, sigma=std)
-            return pymc3.sample(size, chains=1)[:]['X']
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
@@ -2635,7 +2650,7 @@ class NormalDistribution(SingleContinuousDistribution):
         mean, std = float(self.mean), float(self.std)
         with pymc3.Model():
             pymc3.Normal('X', mean, std)
-            return pymc3.sample(size, chains=1)[:]['X']
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
@@ -2877,6 +2892,21 @@ class ParetoDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         xm, alpha = self.xm, self.alpha
         return alpha * xm**alpha / x**(alpha + 1)
+
+    def _sample_numpy(self, numpy, size):
+        xm, alpha = float(self.xm), float(self.alpha)
+        return (numpy.random.pareto(a=alpha, size=1000) + 1) * xm
+
+    def _sample_scipy(self, scipy, size):
+        xm, alpha = float(self.xm), float(self.alpha)
+        from scipy.stats import pareto
+        return pareto.rvs(b=alpha, scale=xm, size=size)
+
+    def _sample_pymc3(self, pymc3, size):
+        xm, alpha = float(self.xm), float(self.alpha)
+        with pymc3.Model():
+            pymc3.Pareto('X', alpha=alpha, m=xm)
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def _cdf(self, x):
         xm, alpha = self.xm, self.alpha
