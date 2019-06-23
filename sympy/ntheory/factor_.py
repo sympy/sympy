@@ -286,18 +286,18 @@ def multiplicity(p, n):
 def perfect_power(n, candidates=None, big=True, factor=True):
     """
     Return ``(b, e)`` such that ``n`` == ``b**e`` if ``n`` is a
-    perfect power with ``e > 1``, else ``False``. A ValueError is
-    raised if ``n`` is not an integer or is not positive.
+    perfect power with ``e > 1``, None, or False. A ValueError
+    is raised if ``n`` is not an integer or is not positive.
 
     By default, the base is recursively decomposed and the exponents
     collected so the largest possible ``e`` is sought. If ``big=False``
     then the smallest possible ``e`` (thus prime) will be chosen.
 
     If ``candidates`` for exponents are given, they are assumed to be
-    sorted and the first one that is larger than the computed maximum
-    will signal failure for the routine. (A smaller exponent than any
-    in ``candidates`` may be returned if ``factor`` is True. And
-    if ``big`` is True, a larger exponent may be returned.)
+    sorted. If ``n`` cannot be written in terms of any one of them
+    then None will be returned. If no candidates are provided, all
+    plausible values will be tested and False will be returned if
+    ``n`` cannot be written as a power.
 
     If ``factor=True`` then simultaneous factorization of ``n`` is
     attempted since finding a factor indicates the only possible root
@@ -322,31 +322,12 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     >>> [(i, is2pow(i)) for i in range(5)]
     [(0, False), (1, True), (2, True), (3, False), (4, True)]
 
-    It is not necessary to provide candidates. But if you do then
-    be aware that a false negative result will be returned if the
-    provided candidates are too large:
+    It is not necessary to provide candidates. When provided, None
+    will be returned if none of them can be used to express the
+    given number as a power.
 
-    >>> perfect_power(60**3, [20])  # 2**20 > 60**3 so 20 is impossibly large
-    False
-
-    To only test for exponents in ``candidates``, use False for ``factor``:
-
-    >>> perfect_power(60**3, [19])
-    (60, 3)
-    >>> perfect_power(60**3, [19], factor=False)
-    False
-
-    To strictly test for only exponents in ``candidates``, use False
-    for ``factor`` and for ``big``:
-
-    >>> perfect_power(16, [2], factor=False)
-    (2, 4)
-    >>> perfect_power(16, [2], factor=False, big=False)
-    (4, 2)
-    >>> perfect_power(16, [3], factor=False, big=False)
-    False
-    >>> perfect_power(16, [3, 4], factor=False, big=False)
-    (2, 4)
+    >>> perfect_power(60**3, [5]) is None
+    True
     """
     n = as_int(n)
     if n < 3:
@@ -358,6 +339,10 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     not_square = n % 10 in [2, 3, 7, 8]  # squares cannot end in 2, 3, 7, 8
     if not candidates:
         candidates = primerange(2 + not_square, max_possible)
+        failure = False
+    else:
+        failure = None
+        candidates = [i for i in candidates if i < max_possible]
 
     afactor = 2 + n % 2
     for e in candidates:
@@ -365,7 +350,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
             if e == 1 or e == 2 and not_square:
                 continue
         if e > max_possible:
-            return False
+            return failure
 
         # see if there is a factor present
         if factor:
@@ -400,11 +385,16 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                         e //= g
                         r, e = r**m*afactor**e, g
                 if not big:
+                    if failure is None:
+                        for i in candidates:
+                            if not e % i:
+                                return r**(e//i), i
+                        return failure
                     e0 = primefactors(e)
                     if len(e0) > 1 or e0[0] != e:
                         e0 = e0[0]
                         r, e = r**(e//e0), e0
-                return r, e
+                    return r, e
             else:
                 # get the next factor ready for the next pass through the loop
                 afactor = nextprime(afactor)
@@ -421,10 +411,19 @@ def perfect_power(n, candidates=None, big=True, factor=True):
             if big:
                 m = perfect_power(r, big=big, factor=factor)
                 if m is not False:
-                    r, e = m[0], e*m[1]
-            return int(r), e
+                    r, e = int(m[0]), e*m[1]
+                if failure is None and e not in candidates:
+                    # a smaller e might be in the candidates
+                    for i in candidates:
+                        if not e % i:
+                            enew = e//i
+                            if enew in candidates:
+                                return r**i, enew
+                    return failure
+            if e in candidates:
+                return r, e
 
-    return False
+    return failure
 
 
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
