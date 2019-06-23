@@ -13,7 +13,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          moment_generating_function, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy,
                          Chi, ChiSquared,
-                         ChiNoncentral, Dagum, Erlang, Exponential,
+                         ChiNoncentral, Dagum, Erlang, ExGaussian, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
                          Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic, LogLogistic,
                          LogNormal, Maxwell, Nakagami, Normal, GaussianInverse, Pareto,
@@ -539,6 +539,25 @@ def test_exponential():
     assert quantile(X)(p) == -log(1-p)/rate
 
     assert where(X <= 1).set == Interval(0, 1)
+
+
+def test_exgaussian():
+    m = Symbol("m")
+    s = Symbol("s", positive=True)
+    l = Symbol("l", positive=True)
+    z = Symbol("z")
+    X = ExGaussian("x", m, s, l)
+
+    assert density(X)(z) == l*exp(l*(l*s**2 + 2*m - 2*z)/2) *\
+        erfc(sqrt(2)*(l*s**2 + m - z)/(2*s))/2
+
+    assert simplify(cdf(X)(z)) == (erf(sqrt(2)*(l*s**2 + m - z)/(2*s)) -
+    1)*exp(l*(l*s**2 + 2*m - 2*z)/2)/2 - erf(sqrt(2)*(m - z)/(2*s))/2 + S(1)/2
+
+    assert variance(X).expand() == s**2 + l**(-2)
+
+    assert skewness(X).expand() == 2/(l**3*s**2*sqrt(s**2 + l**(-2)) + l *
+                                      sqrt(s**2 + l**(-2)))
 
 
 def test_f_distribution():
