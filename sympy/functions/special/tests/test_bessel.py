@@ -3,10 +3,10 @@ from itertools import product
 from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
                    bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
                    expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
-                   Abs, I, O, oo, conjugate)
+                   Abs, I, O, oo, conjugate, uppergamma, exp)
 from sympy.functions.special.bessel import fn
 from sympy.functions.special.bessel import (airyai, airybi,
-                                            airyaiprime, airybiprime)
+                                            airyaiprime, airybiprime, marcum_q)
 from sympy.utilities.randtest import (random_complex_number as randcplx,
                                       verify_numerically as tn,
                                       test_derivative_numerically as td,
@@ -557,3 +557,20 @@ def test_airybiprime():
     assert expand_func(airybiprime(2*(3*z**5)**(S(1)/3))) == (
         sqrt(3)*(z**(S(5)/3)/(z**5)**(S(1)/3) - 1)*airyaiprime(2*3**(S(1)/3)*z**(S(5)/3))/2 +
         (z**(S(5)/3)/(z**5)**(S(1)/3) + 1)*airybiprime(2*3**(S(1)/3)*z**(S(5)/3))/2)
+
+
+def test_marcum_q():
+    m = Symbol('m')
+    a = Symbol('a')
+    b = Symbol('b')
+
+    assert marcum_q(0, 0, 0) == 0
+    assert marcum_q(m, 0, b) == uppergamma(m, b**2/2)/gamma(m)
+    assert marcum_q(2, 0, 5) == 27*exp(-S(25)/2)/2
+    assert marcum_q(0, a, 0) == 1 - exp(-a**2/2)
+    assert marcum_q(0, pi, 0) == 1 - exp(-pi**2/2)
+    assert marcum_q(1, a, a) == S.Half + exp(-a**2)*besseli(0, a**2)/2
+    assert marcum_q(2, a, a) == S.Half + exp(-a**2)*besseli(0, a**2)/2 + exp(-a**2)*besseli(1, a**2)
+
+    assert diff(marcum_q(1, a, 3), a) == a*(-marcum_q(1, a, 3) + marcum_q(2, a, 3))
+    assert diff(marcum_q(2, 3, b), b) == -b**2*exp(-b**2/2 - S(9)/2)*besseli(1, 3*b)/3
