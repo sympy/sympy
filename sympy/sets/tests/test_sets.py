@@ -1134,7 +1134,7 @@ def test_union_intersection_constructor():
     assert Union({1}, {2}) == FiniteSet(1, 2)
     assert Intersection({1, 2}, {2, 3}) == FiniteSet(2)
 
-    
+
 def test_Union_imageset_linear_expression():
     img1 = ImageSet(Lambda(n, 4*n + 4), S.Integers)
     img2 = ImageSet(Lambda(n, 4*n), S.Integers)
@@ -1251,7 +1251,7 @@ def test_union_imageset():
     uni2 = ImageSet(Lambda(n, pi * n / 2 + pi / 3), S.Integers)
     assert Union(img1, img2) == uni1
     assert Union(img3, img4) == uni2
-    
+
 
 def test_Union_contains():
     assert zoo not in Union(
