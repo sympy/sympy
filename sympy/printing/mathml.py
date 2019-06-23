@@ -534,6 +534,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'primeomega': '&#x3A9;',
             'fresnels': 'S',
             'fresnelc': 'C',
+            'LambertW': 'W',
             'Heaviside': '&#x398;',
             'BooleanTrue': 'True',
             'BooleanFalse': 'False',

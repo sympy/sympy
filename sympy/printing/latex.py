@@ -2196,6 +2196,9 @@ class LatexPrinter(Printer):
     def _print_Object(self, object):
         return self._print(Symbol(object.name))
 
+    def _print_LambertW(self, expr):
+        return r"W\left(%s\right)" % self._print(expr.args[0])
+
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)
         codomain = self._print(morphism.codomain)

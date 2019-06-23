@@ -487,6 +487,22 @@ class CodePrinter(StrPrinter):
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
+    def _print_erf2(self, expr):
+        # Generic approach if erf is supported, but not erf2
+        if expr.func.__name__ in self.known_functions or not "erf" in self.known_functions:
+            return self._print_Function(expr)
+        else:
+            from sympy.functions.special.error_functions import erf
+            return self._print(erf(expr.args[1]) - erf(expr.args[0]))
+
+    def _print_Li(self, expr):
+        # Generic approach if li is supported, but not Li
+        if expr.func.__name__ in self.known_functions or not "li" in self.known_functions:
+            return self._print_Function(expr)
+        else:
+            from sympy.functions.special.error_functions import li
+            return self._print(li(expr.args[0]) - li(2))
+
     def _print_not_supported(self, expr):
         self._not_supported.add(expr)
         return self.emptyPrinter(expr)
