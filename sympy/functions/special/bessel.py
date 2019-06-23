@@ -1736,26 +1736,22 @@ class marcum_q(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Integral(self, *args, **kwargs):
-        m, a, b = self.args
+    def _eval_rewrite_as_Integral(self, m, a, b, **kwargs):
         from sympy import Integral, exp, Dummy, oo
         x = Dummy('x')
         return Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, oo])
 
-    def _eval_rewrite_as_Sum(self, *args, **kwargs):
-        m, a, b = self.args
+    def _eval_rewrite_as_Sum(self, m, a, b, **kwargs):
         from sympy import Sum, exp, Dummy, oo
         k = Dummy('k')
         return exp(-(a**2 + b**2) / 2) * Sum((a/b)**k * besseli(k, a*b), [k, 1-m, oo])
 
-    def _eval_rewrite_as_besseli(self, *args, **kwargs):
-        m, a, b = self.args
-
+    def _eval_rewrite_as_besseli(self, m, a, b, **kwargs):
         if a == b:
             from sympy import exp
 
             if m == 1:
                 return (1 + exp(-a**2) * besseli(0, a**2)) / 2
             if m.is_number and m.is_integer and m >= 2:
-                s = sum([besseli(i, a**2) for i in range(1,  m)])
+                s = sum([besseli(i, a**2) for i in range(1, m)])
                 return S.Half + exp(-a**2) * besseli(0, a**2) / 2 + exp(-a**2) * s
