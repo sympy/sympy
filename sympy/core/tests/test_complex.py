@@ -1,14 +1,14 @@
 from sympy import (S, Symbol, sqrt, I, Integer, Rational, cos, sin, im, re, Abs,
         exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, symbols,
-        expand_complex)
-
+        expand_complex, Pow)
+from sympy.core.expr import unchanged
 
 def test_complex():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
     e = (a + I*b)*(a - I*b)
     assert e.expand() == a**2 + b**2
-    assert sqrt(I) == sqrt(I)
+    assert sqrt(I) == Pow(I, Rational(1, 2))
 
 
 def test_conjugate():
@@ -38,7 +38,7 @@ def test_conjugate():
 def test_abs1():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
-    assert abs(a) == abs(a)
+    assert abs(a) == Abs(a)
     assert abs(-a) == abs(a)
     assert abs(a + I*b) == sqrt(a**2 + b**2)
 
