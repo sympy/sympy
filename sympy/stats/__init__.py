@@ -50,7 +50,7 @@ __all__.extend(rv_interface.__all__)
 
 from . import frv_types
 from .frv_types import (
-    Bernoulli, Binomial, Coin, Die, DiscreteUniform, FiniteRV, Hypergeometric,
+    Bernoulli, Binomial, BetaBinomial, Coin, Die, DiscreteUniform, FiniteRV, Hypergeometric,
     Rademacher,
 )
 __all__.extend(frv_types.__all__)
@@ -79,6 +79,16 @@ from .joint_rv_types import (
     NormalGamma
 )
 __all__.extend(joint_rv_types.__all__)
+
+from . import stochastic_process_types
+from .stochastic_process_types import (
+    StochasticProcess,
+    DiscreteTimeStochasticProcess,
+    DiscreteMarkovChain,
+    TransitionMatrixOf,
+    StochasticStateSpaceOf
+)
+__all__.extend(stochastic_process_types.__all__)
 
 from . import symbolic_probability
 from .symbolic_probability import Probability, Expectation, Variance, Covariance

@@ -5,8 +5,8 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
                    exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate, gammasimp)
-from sympy.core.expr import ExprBuilder
+                   integrate, gammasimp, Gt)
+from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range, round, PY3
 from sympy.physics.secondquant import FockState
@@ -1845,9 +1845,11 @@ def test_issue_7426():
     assert f1.equals(f2) is None
 
 
-def test_issue_1112():
+def test_issue_11122():
     x = Symbol('x', extended_positive=False)
-    assert (x > 0) is S.false
+    assert unchanged(Gt, x, 0)  # (x > 0)
+    # (x > 0) should remain unevaluated after PR #16956
+
     x = Symbol('x', positive=False, real=True)
     assert (x > 0) is S.false
 
@@ -1872,6 +1874,11 @@ def test_normal():
     x = symbols('x')
     e = Mul(S.Half, 1 + x, evaluate=False)
     assert e.normal() == e
+
+
+def test_expr():
+    x = symbols('x')
+    raises(TypeError, lambda: tan(x).series(x, 2, oo, "+"))
 
 
 def test_ExprBuilder():

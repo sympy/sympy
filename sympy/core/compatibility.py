@@ -42,7 +42,7 @@ Moved modules:
     * `reduce()`
     * `StringIO()`
     * `cStringIO()` (same as `StingIO()` in Python 3)
-    * Python 2 `__builtins__`, access with Python 3 name, `builtins`
+    * Python 2 `__builtin__`, access with Python 3 name, `builtins`
 
 Iterator/list changes:
     * `xrange` renamed as `range` in Python 3, import `range` for Python 2/3
@@ -954,3 +954,8 @@ try:
 except ImportError:  # Python 2.7
     def filterfalse(pred, itr):
         return filter(lambda x: not pred(x), itr)
+
+try:
+    from time import clock
+except ImportError: # Python 3.8+
+    from time import perf_counter as clock

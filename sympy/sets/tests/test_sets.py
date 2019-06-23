@@ -3,7 +3,8 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     FiniteSet, Intersection, imageset, I, true, false, ProductSet, E,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Eq, Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, signsimp, Range, Add, symbols, Dummy)
+    Matrix, signsimp, Range, Add, symbols, Dummy, zoo)
+
 from mpmath import mpi
 
 from sympy.core.compatibility import range
@@ -14,9 +15,22 @@ from sympy.abc import x, y, z, m, n
 
 def test_imageset():
     ints = S.Integers
+    assert imageset(x, x - 1, S.Naturals) is S.Naturals0
+    assert imageset(x, x + 1, S.Naturals0) is S.Naturals
+    assert imageset(x, abs(x), S.Naturals0) is S.Naturals0
+    assert imageset(x, abs(x), S.Naturals) is S.Naturals
+    assert imageset(x, abs(x), S.Integers) is S.Naturals0
+    # issue 16878a
+    r = symbols('r', real=True)
+    assert (1, r) in imageset(x, (x, x), S.Reals) != False
+    assert (r, r) in imageset(x, (x, x), S.Reals)
+    assert 1 + I in imageset(x, x + I, S.Reals)
+    assert {1} not in imageset(x, (x,), S.Reals)
+    assert (1, 1) not in imageset(x, (x,) , S.Reals)
     raises(TypeError, lambda: imageset(x, ints))
     raises(ValueError, lambda: imageset(x, y, z, ints))
     raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))
+    raises(ValueError, lambda: imageset(Lambda(x, x), ints, ints))
     assert imageset(cos, ints) == ImageSet(Lambda(x, cos(x)), ints)
     def f(x):
         return cos(x)
@@ -24,7 +38,8 @@ def test_imageset():
     f = lambda x: cos(x)
     assert imageset(f, ints) == ImageSet(Lambda(x, cos(x)), ints)
     assert imageset(x, 1, ints) == FiniteSet(1)
-    assert imageset(x, y, ints) == FiniteSet(y)
+    assert imageset(x, y, ints) == {y}
+    assert imageset((x, y), (1, z), ints*S.Reals) == {(1, z)}
     clash = Symbol('x', integer=true)
     assert (str(imageset(lambda x: x + clash, Interval(-2, 1)).lamda.expr)
         in ('_x + x', 'x + _x'))
@@ -250,8 +265,8 @@ def test_intersect1():
     assert all(i.intersection(S.Integers) is i for i in
         (S.Naturals, S.Naturals0))
     s =  S.Naturals0
-    assert S.Naturals.intersection(s) is s
-    assert s.intersection(S.Naturals) is s
+    assert S.Naturals.intersection(s) is S.Naturals
+    assert s.intersection(S.Naturals) is S.Naturals
     x = Symbol('x')
     assert Interval(0, 2).intersect(Interval(1, 2)) == Interval(1, 2)
     assert Interval(0, 2).intersect(Interval(1, 2, True)) == \
@@ -327,6 +342,9 @@ def test_intersection():
 
     # issue 12178
     assert Intersection() == S.UniversalSet
+
+    # issue 16987
+    assert Intersection({1}, {1}, {x}) == Intersection({1}, {x})
 
 
 def test_issue_9623():
@@ -508,9 +526,9 @@ def test_contains():
 
     # non-bool results
     assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \
-        Or(And(x <= 2, x >= 1), And(x <= 4, x >= 3))
+        Or(And(S(1) <= x, x <= 2), And(S(3) <= x, x <= 4))
     assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
-        And(y <= 3, y <= x, y >= 1, y >= 2)
+        And(y <= 3, y <= x, S(1) <= y, S(2) <= y)
 
     assert (S.Complexes).contains(S.ComplexInfinity) == S.false
 
@@ -518,10 +536,10 @@ def test_contains():
 def test_interval_symbolic():
     x = Symbol('x')
     e = Interval(0, 1)
-    assert e.contains(x) == And(0 <= x, x <= 1)
+    assert e.contains(x) == And(S(0) <= x, x <= 1)
     raises(TypeError, lambda: x in e)
     e = Interval(0, 1, True, True)
-    assert e.contains(x) == And(0 < x, x < 1)
+    assert e.contains(x) == And(S(0) < x, x < 1)
 
 
 def test_union_contains():
@@ -529,9 +547,10 @@ def test_union_contains():
     i1 = Interval(0, 1)
     i2 = Interval(2, 3)
     i3 = Union(i1, i2)
+    assert i3.as_relational(x) == Or(And(S(0) <= x, x <= 1), And(S(2) <= x, x <= 3))
     raises(TypeError, lambda: x in i3)
     e = i3.contains(x)
-    assert e == Or(And(0 <= x, x <= 1), And(2 <= x, x <= 3))
+    assert e == i3.as_relational(x)
     assert e.subs(x, -0.5) is false
     assert e.subs(x, 0.5) is true
     assert e.subs(x, 1.5) is false
@@ -1000,7 +1019,7 @@ def test_issue_10113():
 
 def test_issue_10248():
     assert list(Intersection(S.Reals, FiniteSet(x))) == [
-        And(x < oo, x > -oo)]
+        (-oo < x) & (x < oo)]
 
 
 def test_issue_9447():
@@ -1115,6 +1134,7 @@ def test_union_intersection_constructor():
     assert Union({1}, {2}) == FiniteSet(1, 2)
     assert Intersection({1, 2}, {2, 3}) == FiniteSet(2)
 
+    
 def test_Union_imageset_linear_expression():
     img1 = ImageSet(Lambda(n, 4*n + 4), S.Integers)
     img2 = ImageSet(Lambda(n, 4*n), S.Integers)
@@ -1231,3 +1251,16 @@ def test_union_imageset():
     uni2 = ImageSet(Lambda(n, pi * n / 2 + pi / 3), S.Integers)
     assert Union(img1, img2) == uni1
     assert Union(img3, img4) == uni2
+    
+
+def test_Union_contains():
+    assert zoo not in Union(
+        Interval.open(-oo, 0), Interval.open(0, oo))
+
+
+@XFAIL
+def test_issue_16878b():
+    # in intersection_sets for (ImageSet, Set) there is no code
+    # that handles the base_set of S.Reals like there is
+    # for Integers
+    assert imageset(x, (x, x), S.Reals).is_subset(S.Reals**2) is True

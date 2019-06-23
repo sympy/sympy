@@ -160,9 +160,9 @@ class ArrayComprehension(Basic):
         return self._shape
 
     @property
-    def is_numeric(self):
+    def is_shape_numeric(self):
         """
-        Test if the array is numeric which means there is no symbolic
+        Test if the array is shape-numeric which means there is no symbolic
         dimension
 
         Examples
@@ -172,10 +172,10 @@ class ArrayComprehension(Basic):
         >>> from sympy import symbols
         >>> i, j, k = symbols('i j k')
         >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
-        >>> a.is_numeric
+        >>> a.is_shape_numeric
         True
         >>> b = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k+3))
-        >>> b.is_numeric
+        >>> b.is_shape_numeric
         False
         """
         for _, inf, sup in self._limits:
@@ -250,9 +250,10 @@ class ArrayComprehension(Basic):
         return loop_size
 
     def doit(self):
-        if not self.is_numeric:
+        if not self.is_shape_numeric:
             return self
-        return self._expand_array()
+
+        return ImmutableDenseNDimArray(self._expand_array())
 
     def _expand_array(self):
         # To perform a subs at every element of the array.
@@ -272,4 +273,59 @@ class ArrayComprehension(Basic):
                     list_gen.append(list_expr.subs(var, val))
                 else:
                     list_gen.append(_array_subs(list_expr, var, val))
-        return ImmutableDenseNDimArray(list_gen)
+        return list_gen
+
+    def tolist(self):
+        """Transform the expanded array to a list
+
+        Raises
+        ======
+
+        ValueError : When there is a symbolic dimension
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ArrayComprehension
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j')
+        >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
+        >>> a.tolist()
+        [[11, 12, 13], [21, 22, 23], [31, 32, 33], [41, 42, 43]]
+        """
+        if self.is_shape_numeric:
+            return self._expand_array()
+
+        raise ValueError("A symbolic array cannot be expanded to a list")
+
+    def tomatrix(self):
+        """Transform the expanded array to a matrix
+
+        Raises
+        ======
+
+        ValueError : When there is a symbolic dimension
+        ValueError : When the rank of the expanded array is not equal to 2
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.array import ArrayComprehension
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j')
+        >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
+        >>> a.tomatrix()
+        Matrix([
+        [11, 12, 13],
+        [21, 22, 23],
+        [31, 32, 33],
+        [41, 42, 43]])
+        """
+        from sympy.matrices import Matrix
+
+        if not self.is_shape_numeric:
+            raise ValueError("A symbolic array cannot be expanded to a matrix")
+        if self._rank != 2:
+            raise ValueError('Dimensions must be of size of 2')
+
+        return Matrix(self._expand_array())

@@ -2,11 +2,13 @@ from sympy import (
     Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
     polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
     cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic, zeta,conjugate)
+
+from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
+from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       verify_numerically as tn)
-from sympy.utilities.pytest import raises
 
 x = Symbol('x')
 y = Symbol('y')
@@ -125,8 +127,8 @@ def test_lowergamma():
         lowergamma(-2, x*exp_polar(I*pi)) + 2*pi*I
 
     assert conjugate(lowergamma(x, y)) == lowergamma(conjugate(x), conjugate(y))
-    assert conjugate(lowergamma(x, 0)) == conjugate(lowergamma(x, 0))
-    assert conjugate(lowergamma(x, -oo)) == conjugate(lowergamma(x, -oo))
+    assert conjugate(lowergamma(x, 0)) == 0
+    assert unchanged(conjugate, lowergamma(x, -oo))
 
     assert lowergamma(
         x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
@@ -160,6 +162,8 @@ def test_uppergamma():
     assert tn(uppergamma(S.Half - 3, x, evaluate=False),
               uppergamma(S.Half - 3, x), x)
 
+    assert unchanged(uppergamma, x, -oo)
+
     assert tn_branch(-3, uppergamma)
     assert tn_branch(-4, uppergamma)
     assert tn_branch(S(1)/3, uppergamma)
@@ -175,7 +179,7 @@ def test_uppergamma():
 
     assert conjugate(uppergamma(x, y)) == uppergamma(conjugate(x), conjugate(y))
     assert conjugate(uppergamma(x, 0)) == gamma(conjugate(x))
-    assert conjugate(uppergamma(x, -oo)) == conjugate(uppergamma(x, -oo))
+    assert unchanged(conjugate, uppergamma(x, -oo))
 
     assert uppergamma(x, y).rewrite(expint) == y**x*expint(-x + 1, y)
     assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
@@ -183,6 +187,7 @@ def test_uppergamma():
     assert uppergamma(70, 6) == 69035724522603011058660187038367026272747334489677105069435923032634389419656200387949342530805432320*exp(-6)
     assert (uppergamma(S(77) / 2, 6) - uppergamma(S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
     assert (uppergamma(-S(77) / 2, 6) - uppergamma(-S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
+
 
 def test_polygamma():
     from sympy import I
@@ -375,9 +380,9 @@ def test_loggamma():
     assert s1 == loggamma(x).rewrite('intractable').series(x)
 
     assert conjugate(loggamma(x)) == loggamma(conjugate(x))
-    assert conjugate(loggamma(0)) == conjugate(loggamma(0))
+    assert conjugate(loggamma(0)) == oo
     assert conjugate(loggamma(1)) == loggamma(conjugate(1))
-    assert conjugate(loggamma(-oo)) == conjugate(loggamma(-oo))
+    assert conjugate(loggamma(-oo)) == conjugate(zoo)
     assert loggamma(x).is_real is None
     y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
     assert loggamma(y).is_real

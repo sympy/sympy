@@ -339,11 +339,13 @@ class Expr(Basic, EvalfMixin):
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 >= 0)
-        if self.is_extended_real or other.is_extended_real:
-            dif = self - other
-            if dif.is_extended_nonnegative is not None and \
-                    dif.is_extended_nonnegative is not dif.is_extended_negative:
-                return sympify(dif.is_extended_nonnegative)
+        if self.is_extended_real and other.is_extended_real:
+            if (self.is_infinite and self.is_extended_positive) \
+                    or (other.is_infinite and other.is_extended_negative):
+                return S.true
+            nneg = (self - other).is_extended_nonnegative
+            if nneg is not None:
+                return sympify(nneg)
         return GreaterThan(self, other, evaluate=False)
 
     def __le__(self, other):
@@ -360,11 +362,13 @@ class Expr(Basic, EvalfMixin):
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 <= 0)
-        if self.is_extended_real or other.is_extended_real:
-            dif = self - other
-            if dif.is_extended_nonpositive is not None and \
-                    dif.is_extended_nonpositive is not dif.is_extended_positive:
-                return sympify(dif.is_extended_nonpositive)
+        if self.is_extended_real and other.is_extended_real:
+            if (self.is_infinite and self.is_extended_negative) \
+                    or (other.is_infinite and other.is_extended_positive):
+                return S.true
+            npos = (self - other).is_extended_nonpositive
+            if npos is not None:
+                return sympify(npos)
         return LessThan(self, other, evaluate=False)
 
     def __gt__(self, other):
@@ -381,11 +385,14 @@ class Expr(Basic, EvalfMixin):
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 > 0)
-        if self.is_extended_real or other.is_extended_real:
-            dif = self - other
-            if dif.is_extended_positive is not None and \
-                    dif.is_extended_positive is not dif.is_extended_nonpositive:
-                return sympify(dif.is_extended_positive)
+
+        if self.is_extended_real and other.is_extended_real:
+            if (self.is_infinite and self.is_extended_negative) \
+                    or (other.is_infinite and other.is_extended_positive):
+                return S.false
+            pos = (self - other).is_extended_positive
+            if pos is not None:
+                return sympify(pos)
         return StrictGreaterThan(self, other, evaluate=False)
 
     def __lt__(self, other):
@@ -402,11 +409,13 @@ class Expr(Basic, EvalfMixin):
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 < 0)
-        if self.is_extended_real or other.is_extended_real:
-            dif = self - other
-            if dif.is_extended_negative is not None and \
-                    dif.is_extended_negative is not dif.is_extended_nonnegative:
-                return sympify(dif.is_extended_negative)
+        if self.is_extended_real and other.is_extended_real:
+            if (self.is_infinite and self.is_extended_positive) \
+                    or (other.is_infinite and other.is_extended_negative):
+                return S.false
+            neg = (self - other).is_extended_negative
+            if neg is not None:
+                return sympify(neg)
         return StrictLessThan(self, other, evaluate=False)
 
     def __trunc__(self):
@@ -2731,7 +2740,37 @@ class Expr(Basic, EvalfMixin):
         If ``x=None`` and ``self`` is univariate, the univariate symbol will
         be supplied, otherwise an error will be raised.
 
-        >>> from sympy import cos, exp
+        Parameters
+        ==========
+
+        expr : Expression
+               The expression whose series is to be expanded.
+
+        x : Symbol
+            It is the variable of the expression to be calculated.
+
+        x0 : Value
+             The value around which ``x`` is calculated. Can be any value
+             from ``-oo`` to ``oo``.
+
+        n : Value
+            The number of terms upto which the series is to be expanded.
+
+        dir : String, optional
+              The series-expansion can be bi-directional. If ``dir="+"``,
+              then (x->x0+). If ``dir="-", then (x->x0-). For infinite
+              ``x0`` (``oo`` or ``-oo``), the ``dir`` argument is determined
+              from the direction of the infinity (i.e., ``dir="-"`` for
+              ``oo``).
+
+        logx : optional
+               It is used to replace any log(x) in the returned series with a
+               symbolic value rather than evaluating the actual value.
+
+        Examples
+        ========
+
+        >>> from sympy import cos, exp, tan, oo, series
         >>> from sympy.abc import x, y
         >>> cos(x).series()
         1 - x**2/2 + x**4/24 + O(x**6)
@@ -2759,6 +2798,31 @@ class Expr(Basic, EvalfMixin):
         x
         >>> abs(x).series(dir="-")
         -x
+        >>> f = tan(x)
+        >>> f.series(x, 2, 6, "+")
+        tan(2) + (1 + tan(2)**2)*(x - 2) + (x - 2)**2*(tan(2)**3 + tan(2)) +
+        (x - 2)**3*(1/3 + 4*tan(2)**2/3 + tan(2)**4) + (x - 2)**4*(tan(2)**5 +
+        5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(2/15 + 17*tan(2)**2/15 +
+        2*tan(2)**4 + tan(2)**6) + O((x - 2)**6, (x, 2))
+
+        >>> f.series(x, 2, 3, "-")
+        tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2))
+        + O((x - 2)**3, (x, 2))
+
+        Returns
+        =======
+
+        Expr : Expression
+            Series expansion of the expression about x0
+
+        Raises
+        ======
+
+        TypeError
+            If "n" and "x0" are infinity objects
+
+        PoleError
+            If "x0" is an infinity object
 
         """
         from sympy import collect, Dummy, Order, Rational, Symbol, ceiling

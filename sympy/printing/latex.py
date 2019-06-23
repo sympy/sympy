@@ -1849,19 +1849,39 @@ class LatexPrinter(Printer):
                 r", ".join(self._print(el) for el in printset) +
                 r"\right\}")
 
-    def _print_bernoulli(self, expr, exp=None):
-        tex = r"B_{%s}" % self._print(expr.args[0])
+    def __print_number_polynomial(self, expr, letter, exp=None):
+        if len(expr.args) == 2:
+            if exp is not None:
+                return r"%s_{%s}^{%s}\left(%s\right)" % (letter,
+                            self._print(expr.args[0]), self._print(exp),
+                            self._print(expr.args[1]))
+            return r"%s_{%s}\left(%s\right)" % (letter,
+                        self._print(expr.args[0]), self._print(expr.args[1]))
+
+        tex = r"%s_{%s}" % (letter, self._print(expr.args[0]))
         if exp is not None:
             tex = r"%s^{%s}" % (tex, self._print(exp))
         return tex
 
-    _print_bell = _print_bernoulli
+    def _print_bernoulli(self, expr, exp=None):
+        return self.__print_number_polynomial(expr, "B", exp)
+
+    def _print_bell(self, expr, exp=None):
+        if len(expr.args) == 3:
+            tex1 = r"B_{%s, %s}" % (self._print(expr.args[0]),
+                                self._print(expr.args[1]))
+            tex2 = r"\left(%s\right)" % r", ".join(self._print(el) for
+                                               el in expr.args[2])
+            if exp is not None:
+                tex = r"%s^{%s}%s" % (tex1, self._print(exp), tex2)
+            else:
+                tex = tex1 + tex2
+            return tex
+        return self.__print_number_polynomial(expr, "B", exp)
+
 
     def _print_fibonacci(self, expr, exp=None):
-        tex = r"F_{%s}" % self._print(expr.args[0])
-        if exp is not None:
-            tex = r"%s^{%s}" % (tex, self._print(exp))
-        return tex
+        return self.__print_number_polynomial(expr, "F", exp)
 
     def _print_lucas(self, expr, exp=None):
         tex = r"L_{%s}" % self._print(expr.args[0])
@@ -1870,10 +1890,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_tribonacci(self, expr, exp=None):
-        tex = r"T_{%s}" % self._print(expr.args[0])
-        if exp is not None:
-            tex = r"%s^{%s}" % (tex, self._print(exp))
-        return tex
+        return self.__print_number_polynomial(expr, "T", exp)
 
     def _print_SeqFormula(self, s):
         if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:

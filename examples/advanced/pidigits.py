@@ -9,7 +9,7 @@ computation of the digits of pi.
 from mpmath import libmp, pi
 
 import math
-from time import clock
+from sympy.core.compatibility import clock
 import sys
 
 

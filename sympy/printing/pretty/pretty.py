@@ -163,6 +163,7 @@ class PrettyPrinter(Printer):
     _print_Naturals = _print_Atom
     _print_Naturals0 = _print_Atom
     _print_Integers = _print_Atom
+    _print_Rationals = _print_Atom
     _print_Complexes = _print_Atom
 
     def _print_Reals(self, e):
