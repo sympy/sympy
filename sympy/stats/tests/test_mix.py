@@ -28,10 +28,7 @@ def test_MarginalDistribution():
     mgrc1 = ("B*Piecewise((2*p1**C[0]*p2**C[1]/(factorial(C[0])*factorial"
     "(C[1])), Eq(C[0] + C[1], 2)), (0, True))*gamma(a1 + C[0])*B[0]**(a1 - "
     "1)*B[1]**(C[0] - 1)/(gamma(a1)*gamma(C[0]))")
-    mgrc2 = ("Piecewise((2*p1**C[0]*p2**C[1]/(factorial(C[0])*"
-    "factorial(C[1])), Eq(C[0] + C[1], 2)), (0, True))*gamma(a1 + C[0])*"
-    "B[0]**(a1 - 1)*B[1]**(C[0] - 1)*B/(gamma(a1)*gamma(C[0]))")
-    assert str(MGR(C)) == mgrc1 or str(MGR(C)) == mgrc2
+    assert str(MGR(C)) == mgrc1
 
 def test_compound_distribution():
     Y = Poisson('Y', 1)
