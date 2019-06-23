@@ -286,8 +286,11 @@ def multiplicity(p, n):
 def perfect_power(n, candidates=None, big=True, factor=True):
     """
     Return ``(b, e)`` such that ``n`` == ``b**e`` if ``n`` is a
-    perfect power with ``e > 1``, None, or False. A ValueError
-    is raised if ``n`` is not an integer or is not positive.
+    perfect power with ``e > 1``. False is returned
+    when ``n`` is definitely not a perfect power; None is returned
+    if candidates were provided but none of them allowed the
+    rewriting of ``n`` as a power. A ValueError is raised if
+    ``n`` is not an integer or is not positive.
 
     By default, the base is recursively decomposed and the exponents
     collected so the largest possible ``e`` is sought. If ``big=False``
@@ -372,8 +375,8 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                     # not then it's not a perfect power
                     n //= afactor**e
                     m = perfect_power(n, candidates=primefactors(e), big=big)
-                    if m is False:
-                        return False
+                    if not m:
+                        return False  # not generic failure in this case
                     else:
                         r, m = m
                         # adjust the two exponents so the bases can
