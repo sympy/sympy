@@ -5,7 +5,8 @@ from sympy.core.compatibility import range
 from sympy.core.numbers import comp
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
                          density, given, independent, dependent, where, pspace,
-                         random_symbols, sample, Geometric)
+                         factorialmoment, random_symbols, sample, Geometric,
+                         Poisson, Binomial, Hypergeometric)
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
                             RandomSymbol, PSpace)
@@ -150,6 +151,15 @@ def test_given():
     B = given(X, Y > 2)
 
     assert X == A == B
+
+
+def test_factorialmoment():
+    X = Poisson('x', 2)
+    Y = Binomial('y', 2, 0.5)
+    Z = Hypergeometric('z', 4, 2, 2)
+    assert factorialmoment(X, 2) == 4
+    assert factorialmoment(Y, 2) == 0.5
+    assert factorialmoment(Z, 2) == S(1)/3
 
 
 def test_dependence():
