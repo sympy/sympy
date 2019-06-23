@@ -186,7 +186,10 @@ class Beam(object):
     @second_moment.setter
     def second_moment(self, i):
         self._cross_section = None
-        self._second_moment = sympify(i)
+        if isinstance(i, GeometryEntity):
+            raise ValueError("To update cross-section geometry use `cross_section` attribute")
+        else:
+            self._second_moment = sympify(i)
 
     @property
     def cross_section(self):

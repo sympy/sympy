@@ -618,6 +618,8 @@ def test_cross_section():
     b0.second_moment = 2*n - 6
     assert b0.second_moment == 2*n-6
     assert b0.cross_section == None
+    with raises(ValueError):
+        b0.second_moment = Circle((0, 0), 5)
 
     # beam with a circular cross-section
     b1 = Beam(50, E, Circle((0, 0), r))
