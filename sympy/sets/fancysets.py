@@ -381,6 +381,80 @@ class ImageSet(Set):
         base_set = self.base_set
         return SetExpr(base_set)._eval_func(f).set
 
+    def _union(self, other):
+        from sympy.polys import Poly
+        from sympy.simplify import simplify
+        from sympy.polys.polyerrors import PolynomialError
+        from sympy.polys.polytools import lcm
+        from sympy import solveset, Symbol, linsolve
+
+        if other is S.EmptySet:
+            return self
+
+        def unify_img(base, self_expr, other_expr, self_sym, other_sym):
+            a, c = self_expr.coeff(self_sym), other_expr.coeff(other_sym)
+            b, d = self_expr.subs(self_sym, 0), other_expr.subs(other_sym, 0)
+            # an + b, cn+d
+            b = b%a
+            d = d%c
+            p = lcm(a, c)
+            if a == c and b == d:
+                return ImageSet(Lambda(self_sym, a*self_sym + b), base)
+            if a == c and p%abs(b - d) != 0:
+                return None
+            list1=[]
+            n = 0
+            while a*n + b <= 2*p:
+                list1.append(a*n +b)
+                n += 1
+            n = 0
+            while c*n + d <= 2*p:
+                list1.append(c*n + d)
+                n += 1
+            list1 = (sorted(set(list1)))
+            x = Symbol('x')
+            y = Symbol('y')
+            eqs = [x*0 + y - list1[0], x + y - list1[1]]
+            x, y = list(linsolve(eqs, x, y))[0]
+            n = 0
+            flag = 0
+            while n <= len(list1):
+                try:
+                    if x*n + y != list1[n]:
+                        flag = 1
+                        break
+                except IndexError:
+                    break
+                n += 1
+            if flag == 0:
+                return ImageSet(Lambda(self_sym, x*self_sym + y), base)
+            else:
+                return None
+
+        if isinstance(other, ImageSet):
+            base = other.base_set
+            if base != self.base_set:
+                return None
+
+            if len(self.lamda.variables) > 1 or len(other.lamda.variables) > 1:
+                return None
+
+            self_sym, other_sym = self.lamda.variables[0], other.lamda.variables[0]
+            self_expr, other_expr = self.lamda.expr, other.lamda.expr
+
+            try:
+                linear = Poly(self_expr, self_sym).is_linear and \
+                    Poly(other_expr, other_sym).is_linear
+                if not linear:
+                    return None
+            except PolynomialError:
+                return None
+
+            result = unify_img(base, self_expr, other_expr, self_sym, other_sym)
+
+            return result
+        else:
+            return None
 
 class Range(Set):
     """
