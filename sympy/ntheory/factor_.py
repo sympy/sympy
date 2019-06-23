@@ -394,7 +394,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                     if len(e0) > 1 or e0[0] != e:
                         e0 = e0[0]
                         r, e = r**(e//e0), e0
-                    return r, e
+                return r, e
             else:
                 # get the next factor ready for the next pass through the loop
                 afactor = nextprime(afactor)
