@@ -82,7 +82,7 @@ class Beam(object):
 
         second_moment : Sympifyable or Geometry object
             Describes the cross-section of the beam via a SymPy expression
-            representing the Beam's Second moment of area. It is a geometrical
+            representing the Beam's second moment of area. It is a geometrical
             property of an area which reflects how its points are distributed
             with respect to its neutral axis. It can also be a continuous
             function of position along the beam. Alternatively ``second_moment``
