@@ -11,7 +11,7 @@ from sympy.codegen.array_utils import (CodegenArrayContraction,
 from sympy.printing.lambdarepr import NumPyPrinter
 
 from sympy.utilities.pytest import warns_deprecated_sympy
-from sympy.utilities.pytest import skip
+from sympy.utilities.pytest import skip, raises
 from sympy.external import import_module
 
 np = import_module('numpy')
@@ -261,7 +261,12 @@ def test_issue_17006():
     M = MatrixSymbol("M", 2, 2)
 
     f = lambdify(M, M + Identity(2))
-    ma = np.matrix([[1, 2], [3, 4]])
-    mr = np.matrix([[2, 2], [3, 5]])
+    ma = np.array([[1, 2], [3, 4]])
+    mr = np.array([[2, 2], [3, 5]])
 
     assert (f(ma) == mr).all()
+
+    from sympy import symbols
+    n = symbols('n', integer=True)
+    N = MatrixSymbol("M", n, n)
+    raises(NotImplementedError, lambdify(N, N + Identity(n)))
