@@ -21,10 +21,8 @@ from sympy.core.compatibility import iterable
 matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
 numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
 
-
 __doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
 
-from sympy.plotting import plot, PlotGrid
 
 class Beam(object):
     """
