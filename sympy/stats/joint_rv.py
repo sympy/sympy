@@ -301,7 +301,7 @@ class MarginalDistribution(Basic):
 
     @property
     def set(self):
-        rvs = set([i for i in random_symbols(self.args[1])])
+        rvs = set([random_symbols(self.args[1])])
         marginalise_out = set([i for i in random_symbols(self.args[1])
          if i not in self.args[1]])
         rvs = rvs - marginalise_out
