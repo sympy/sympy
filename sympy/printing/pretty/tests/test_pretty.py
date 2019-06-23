@@ -20,7 +20,8 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
     meijerg, sin, sqrt, subfactorial, tan, uppergamma, lerchphi,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta, bell,
-    bernoulli, fibonacci, tribonacci, lucas)
+    bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
+    mathieusprime, mathieucprime)
 
 from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerProduct
 
@@ -1603,6 +1604,20 @@ B \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = bernoulli(n, x)
+    ascii_str = \
+"""\
+B (x)\n\
+ n   \
+"""
+    ucode_str = \
+u("""\
+B (x)\n\
+ n   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
     expr = fibonacci(n)
     ascii_str = \
 """\
@@ -1642,6 +1657,58 @@ u("""\
 T \n\
  n\
 """)
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = stieltjes(n)
+    ascii_str = \
+"""\
+stieltjes \n\
+         n\
+"""
+    ucode_str = \
+u("""\
+γ \n\
+ n\
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = stieltjes(n, x)
+    ascii_str = \
+"""\
+stieltjes (x)\n\
+         n   \
+"""
+    ucode_str = \
+u("""\
+γ (x)\n\
+ n   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = mathieuc(x, y, z)
+    ascii_str = 'C(x, y, z)'
+    ucode_str = u('C(x, y, z)')
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = mathieus(x, y, z)
+    ascii_str = 'S(x, y, z)'
+    ucode_str = u('S(x, y, z)')
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = mathieucprime(x, y, z)
+    ascii_str = "C'(x, y, z)"
+    ucode_str = u("C'(x, y, z)")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = mathieusprime(x, y, z)
+    ascii_str = "S'(x, y, z)"
+    ucode_str = u("S'(x, y, z)")
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 

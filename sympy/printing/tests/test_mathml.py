@@ -4,7 +4,8 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     S, MatrixSymbol, Function, Derivative, log, true, false, Range, Min, Max, \
     Lambda, IndexedBase, symbols, zoo, elliptic_f, elliptic_e, elliptic_pi, Ei, \
     expint, jacobi, gegenbauer, chebyshevt, chebyshevu, legendre, assoc_legendre, \
-    laguerre, assoc_laguerre, hermite
+    laguerre, assoc_laguerre, hermite, euler, stieltjes, mathieuc, mathieus, \
+    mathieucprime, mathieusprime
 
 from sympy import elliptic_k, totient, reduced_totient, primenu, primeomega, \
     fresnelc, fresnels, Heaviside
@@ -1362,12 +1363,42 @@ def test_mathml_presentation_numbers():
         '<msub><mi>B</mi><mi>n</mi></msub>'
     assert mathml(bell(n), printer='presentation') == \
         '<msub><mi>B</mi><mi>n</mi></msub>'
+    assert mathml(euler(n), printer='presentation') == \
+        '<msub><mi>E</mi><mi>n</mi></msub>'
     assert mathml(fibonacci(n), printer='presentation') == \
         '<msub><mi>F</mi><mi>n</mi></msub>'
     assert mathml(lucas(n), printer='presentation') == \
         '<msub><mi>L</mi><mi>n</mi></msub>'
     assert mathml(tribonacci(n), printer='presentation') == \
         '<msub><mi>T</mi><mi>n</mi></msub>'
+    assert mathml(bernoulli(n, x), printer='presentation') == \
+        '<mrow><msub><mi>B</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(bell(n, x), printer='presentation') == \
+        '<mrow><msub><mi>B</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(euler(n, x), printer='presentation') == \
+        '<mrow><msub><mi>E</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(fibonacci(n, x), printer='presentation') == \
+        '<mrow><msub><mi>F</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mathml(tribonacci(n, x), printer='presentation') == \
+        '<mrow><msub><mi>T</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
+
+
+def test_mathml_presentation_mathieu():
+    assert mathml(mathieuc(x, y, z), printer='presentation') == \
+        '<mrow><mi>C</mi><mfenced><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow>'
+    assert mathml(mathieus(x, y, z), printer='presentation') == \
+        '<mrow><mi>S</mi><mfenced><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow>'
+    assert mathml(mathieucprime(x, y, z), printer='presentation') == \
+        '<mrow><mi>C&#x2032;</mi><mfenced><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow>'
+    assert mathml(mathieusprime(x, y, z), printer='presentation') == \
+        '<mrow><mi>S&#x2032;</mi><mfenced><mi>x</mi><mi>y</mi><mi>z</mi></mfenced></mrow>'
+
+
+def test_mathml_presentation_stieltjes():
+    assert mathml(stieltjes(n), printer='presentation') == \
+         '<msub><mi>&#x03B3;</mi><mi>n</mi></msub>'
+    assert mathml(stieltjes(n, x), printer='presentation') == \
+         '<mrow><msub><mi>&#x03B3;</mi><mi>n</mi></msub><mfenced><mi>x</mi></mfenced></mrow>'
 
 
 def test_print_matrix_symbol():

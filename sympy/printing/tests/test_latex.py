@@ -1355,6 +1355,7 @@ def test_latex_numbers():
     assert latex(tribonacci(n)**2) == r"T_{n}^{2}"
     assert latex(tribonacci(n, x)**2) == r"T_{n}^{2}\left(x\right)"
 
+
 def test_latex_euler():
     assert latex(euler(n)) == r"E_{n}"
     assert latex(euler(n, x)) == r"E_{n}\left(x\right)"
