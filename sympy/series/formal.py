@@ -927,8 +927,7 @@ class Coeff(Function):
 
 
 class CoeffBell(Function):
-    """
-    CoeffBellCompose(f, n, k) represents Bell polynomials of the second kind.
+    """CoeffBellCompose(f, n, k) represents Bell polynomials of the second kind.
     Note that both ``n`` and ``k`` should be integers.
 
     The second kind of Bell polynomials (are sometimes called "partial" Bell
@@ -1181,8 +1180,7 @@ class FormalPowerSeries(SeriesBase):
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
     def compose(self, other, x=None, n=6):
-        """
-        Returns the truncated terms of the formal power series of the composed function,
+        """Returns the truncated terms of the formal power series of the composed function,
         up to specified `n`.
 
         If `f` and `g` are two formal power series of two different functions,
@@ -1221,7 +1219,7 @@ class FormalPowerSeries(SeriesBase):
         References
         ==========
 
-        [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
+        .. [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
         """
         if x is None:
             x = self.x
@@ -1260,8 +1258,7 @@ class FormalPowerSeries(SeriesBase):
         return self.ind + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
     def inverse(self, x=None, n=6):
-        """
-        Returns the truncated terms of the inverse of the formal power series,
+        """Returns the truncated terms of the inverse of the formal power series,
         up to specified `n`.
 
         If `f` and `g` are two formal power series of two different functions,
@@ -1300,7 +1297,7 @@ class FormalPowerSeries(SeriesBase):
         References
         ==========
 
-        [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
+        .. [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
         """
         if x is None:
             x = self.x
