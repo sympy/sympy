@@ -734,9 +734,9 @@ def stationary_points(f, symbol, domain=S.Reals):
     EmptySet()
 
     >>> pprint(stationary_points(sin(x), x), use_unicode=False)
-              pi                              3*pi
-    {2*n*pi + -- | n in Integers} U {2*n*pi + ---- | n in Integers}
-              2                                2
+            pi
+    {n*pi + -- | n in Integers}
+            2
 
     >>> stationary_points(sin(x),x, Interval(0, 4*pi))
     {pi/2, 3*pi/2, 5*pi/2, 7*pi/2}
