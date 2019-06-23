@@ -1,5 +1,5 @@
 from sympy import (Interval, Intersection, Set, EmptySet, S, sympify,
-                   FiniteSet, Union, ComplexRegion, ProductSet)
+                   FiniteSet, Union, ComplexRegion, ProductSet, ImageSet)
 from sympy.multipledispatch import dispatch
 from sympy.sets.fancysets import Integers
 from sympy.sets.sets import UniversalSet
@@ -111,6 +111,10 @@ def union_sets(a, b):
         return set((
             FiniteSet(*[x for x in a if not b.contains(x)]), b))
     return None
+
+@dispatch(ImageSet, ImageSet)
+def union_sets(a, b):
+    return a._union(b)
 
 @dispatch(Set, Set)
 def union_sets(a, b):
