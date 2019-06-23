@@ -415,16 +415,17 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 m = perfect_power(r, big=big, factor=factor)
                 if m is not False:
                     r, e = int(m[0]), e*m[1]
-                if failure is None and e not in candidates:
-                    # a smaller e might be in the candidates
-                    for i in candidates:
-                        if not e % i:
-                            enew = e//i
-                            if enew in candidates:
-                                return r**i, enew
-                    return failure
-            if e in candidates:
+                    if failure is None and e not in candidates:
+                        # a smaller e might be in the candidates
+                        for i in candidates:
+                            if not e % i:
+                                enew = e//i
+                                if enew in candidates:
+                                    return r**i, enew
+                        return failure
+            if failure is False or e in candidates:
                 return r, e
+            break
 
     return failure
 
