@@ -1145,7 +1145,8 @@ class FormalPowerSeries(SeriesBase):
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
     def convolve(self, other, x=None, n=6, cycle=0, method=None):
-        """ Convolute two Formal Power Series and return the truncated terms upto specified order.
+        """Convolute two Formal Power Series and return the truncated terms
+        upto specified order.
 
         Parameters
         ==========
@@ -1156,11 +1157,11 @@ class FormalPowerSeries(SeriesBase):
         cycle : Integer
             Specifies the length for doing cyclic convolution.
         method : 'dyadic', 'subset' or None
-            dyadic : Identifies the convolution type as dyadic (*bitwise-XOR*)
-                    convolution, which is performed using **FWHT**.
-            subset : Identifies the convolution type as subset convolution.
-            None : Simple linear convolution. If cycle is non-zero, then it will be
-                    interpreted as cyclic convolution.
+            Set dyadic to identify the convolution type as dyadic (*bitwise-XOR*)
+            convolution, which is performed using **FWHT**.
+            Set subset to identify the convolution type as subset convolution.
+            Else, set None to interpret it as simple linear convolution. If 
+            cycle is non-zero, then it will be interpreted as cyclic convolution.
 
         Examples
         ========
