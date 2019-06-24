@@ -10,12 +10,16 @@
 
 # Regular Python bytecode file
 *.pyc
+__pycache__/
 
 # Optimized Python bytecode file
 *.pyo
 
 # Vim's swap files
 *.sw[op]
+
+# VSCode settings file
+.vscode/
 
 # Generated files from Jython
 *$py.class

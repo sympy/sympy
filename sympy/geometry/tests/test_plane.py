@@ -90,8 +90,18 @@ def test_plane():
     assert pl6.distance(pl6.p1) == 0
     assert pl7.distance(pl6) == 0
     assert pl7.distance(l1) == 0
-    assert pl6.distance(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == 0
-    pl6.distance(Plane(Point3D(5, 5, 5), normal_vector=(8, 8, 8))) == sqrt(3)
+    assert pl6.distance(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == \
+        pl6.distance(Point3D(1, 3, 4)) == 4*sqrt(3)/3
+    assert pl6.distance(Segment3D(Point3D(1, 3, 4), Point3D(0, 3, 7))) == \
+        pl6.distance(Point3D(0, 3, 7)) == 2*sqrt(3)/3
+    assert pl6.distance(Segment3D(Point3D(0, 3, 7), Point3D(-1, 3, 10))) == 0
+    assert pl6.distance(Segment3D(Point3D(-1, 3, 10), Point3D(-2, 3, 13))) == 0
+    assert pl6.distance(Segment3D(Point3D(-2, 3, 13), Point3D(-3, 3, 16))) == \
+        pl6.distance(Point3D(-2, 3, 13)) == 2*sqrt(3)/3
+    assert pl6.distance(Plane(Point3D(5, 5, 5), normal_vector=(8, 8, 8))) == sqrt(3)
+    assert pl6.distance(Ray3D(Point3D(1, 3, 4), direction_ratio=[1, 0, -3])) == 4*sqrt(3)/3
+    assert pl6.distance(Ray3D(Point3D(2, 3, 1), direction_ratio=[-1, 0, 3])) == 0
+
 
     assert pl6.angle_between(pl3) == pi/2
     assert pl6.angle_between(pl6) == 0
@@ -155,8 +165,7 @@ def test_plane():
         ) == [Line3D(Point3D(-24, -12, 0), Point3D(-25, -13, -1))]
     assert pl6.intersection(Ray3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == [
         Point3D(-1, 3, 10)]
-    assert pl6.intersection(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == [
-        Point3D(-1, 3, 10)]
+    assert pl6.intersection(Segment3D(Point3D(2, 3, 1), Point3D(1, 3, 4))) == []
     assert pl7.intersection(Line(Point(2, 3), Point(4, 2))) == [
         Point3D(S(13)/2, S(3)/4, 0)]
     r = Ray(Point(2, 3), Point(4, 2))
@@ -187,7 +196,7 @@ def test_plane():
     assert pl8.intersection(Plane(p1, normal_vector=(-1, -1, -11)))[0].equals(
         Line3D(p1, direction_ratio=(1, -1, 0)))
     assert pl3.random_point() in pl3
-    assert len(pl8.intersection(Ray3D(Point3D(0, 2, 3), Point3D(1, 0, 3)))) is 0
+    assert len(pl8.intersection(Ray3D(Point3D(0, 2, 3), Point3D(1, 0, 3)))) == 0
     # check if two plane are equals
     assert pl6.intersection(pl6)[0].equals(pl6)
     assert pl8.equals(Plane(p1, normal_vector=(0, 12, 0))) is False

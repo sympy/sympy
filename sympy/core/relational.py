@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .add import _unevaluated_Add, Add
 from .basic import S
 from .compatibility import ordered
@@ -15,6 +16,7 @@ __all__ = (
     'Relational', 'Equality', 'Unequality', 'StrictLessThan', 'LessThan',
     'StrictGreaterThan', 'GreaterThan',
 )
+
 
 
 # Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
@@ -300,6 +302,10 @@ class Relational(Boolean, Expr, EvalfMixin):
         else:
             return self
 
+    def _eval_trigsimp(self, **opts):
+        from sympy.simplify import trigsimp
+        return self.func(trigsimp(self.lhs, **opts), trigsimp(self.rhs, **opts))
+
     def __nonzero__(self):
         raise TypeError("cannot determine truth value of Relational")
 
@@ -381,11 +387,20 @@ class Equality(Relational):
 
     is_Equality = True
 
-    def __new__(cls, lhs, rhs=0, **options):
+    def __new__(cls, lhs, rhs=None, **options):
         from sympy.core.add import Add
         from sympy.core.logic import fuzzy_bool
         from sympy.core.expr import _n2
         from sympy.simplify.simplify import clear_coefficients
+
+        if rhs is None:
+            SymPyDeprecationWarning(
+                feature="Eq(expr) with rhs default to 0",
+                useinstead="Eq(expr, 0)",
+                issue=16587,
+                deprecated_since_version="1.5"
+            ).warn()
+            rhs = 0
 
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)

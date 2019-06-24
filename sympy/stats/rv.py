@@ -3,7 +3,7 @@ Main Random Variables Module
 
 Defines abstract random variable type.
 Contains interfaces for probability space object (PSpace) as well as standard
-operators, P, E, sample, density, where
+operators, P, E, sample, density, where, quantile
 
 See Also
 ========
@@ -17,14 +17,14 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta, Mul)
-from sympy.abc import x
+        DiracDelta, Mul, Indexed)
 from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
 
+x = Symbol('x')
 
 class RandomDomain(Basic):
     """
@@ -268,13 +268,20 @@ class RandomSymbol(Expr):
     def is_commutative(self):
         return self.symbol.is_commutative
 
-    def _hashable_content(self):
-        return self.pspace, self.symbol
-
     @property
     def free_symbols(self):
         return {self}
 
+class RandomIndexedSymbol(RandomSymbol):
+
+    def __new__(cls, idx_obj, pspace=None):
+        if not isinstance(idx_obj, Indexed):
+            raise TypeError("An indexed object is expected not %s"%(idx_obj))
+        return Basic.__new__(cls, idx_obj, pspace)
+
+    symbol = property(lambda self: self.args[0])
+    name = property(lambda self: str(self.args[0]))
+    key = property(lambda self: self.symbol.args[1])
 
 class ProductPSpace(PSpace):
     """
@@ -676,6 +683,9 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     if numsamples:  # Computing by monte carlo sampling?
         return sampling_E(expr, condition, numsamples=numsamples)
 
+    if expr.has(RandomIndexedSymbol):
+        return pspace(expr).compute_expectation(expr, condition, evaluate, **kwargs)
+
     # Create new expr and recompute E
     if condition is not None:  # If there is a condition
         return expectation(given(expr, condition), evaluate=evaluate)
@@ -728,6 +738,20 @@ def probability(condition, given_condition=None, numsamples=None,
 
     condition = sympify(condition)
     given_condition = sympify(given_condition)
+
+    if condition.has(RandomIndexedSymbol):
+        return pspace(condition).probability(condition, given_condition, evaluate, **kwargs)
+
+    if isinstance(given_condition, RandomSymbol):
+        condrv = random_symbols(condition)
+        if len(condrv) == 1 and condrv[0] == given_condition:
+            from sympy.stats.frv_types import BernoulliDistribution
+            return BernoulliDistribution(probability(condition), 0, 1)
+        if any([dependent(rv, given_condition) for rv in condrv]):
+            from sympy.stats.symbolic_probability import Probability
+            return Probability(condition, given_condition)
+        else:
+            return probability(condition)
 
     if given_condition is not None and \
             not isinstance(given_condition, (Relational, Boolean)):
@@ -995,7 +1019,7 @@ def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
     See Also
     ========
 
-    Sample
+    sample
     sampling_P
     sampling_E
     sample_iter_lambdify
@@ -1009,6 +1033,51 @@ def sample_iter(expr, condition=None, numsamples=S.Infinity, **kwargs):
     except TypeError:
         return sample_iter_subs(expr, condition, numsamples, **kwargs)
 
+def quantile(expr, evaluate=True, **kwargs):
+    r"""
+    Return the :math:`p^{th}` order quantile of a probability distribution.
+
+    Quantile is defined as the value at which the probability of the random
+    variable is less than or equal to the given probability.
+
+    ..math::
+        Q(p) = inf{x \in (-\infty, \infty) such that p <= F(x)}
+
+    Examples
+    ========
+
+    >>> from sympy.stats import quantile, Die, Exponential
+    >>> from sympy import Symbol, pprint
+    >>> p = Symbol("p")
+
+    >>> l = Symbol("lambda", positive=True)
+    >>> X = Exponential("x", l)
+    >>> quantile(X)(p)
+    -log(1 - p)/lambda
+
+    >>> D = Die("d", 6)
+    >>> pprint(quantile(D)(p), use_unicode=False)
+    /nan  for Or(p > 1, p < 0)
+    |
+    | 1       for p <= 1/6
+    |
+    | 2       for p <= 1/3
+    |
+    < 3       for p <= 1/2
+    |
+    | 4       for p <= 2/3
+    |
+    | 5       for p <= 5/6
+    |
+    \ 6        for p <= 1
+
+    """
+    result = pspace(expr).compute_quantile(expr, **kwargs)
+
+    if evaluate and hasattr(result, 'doit'):
+        return result.doit()
+    else:
+        return result
 
 def sample_iter_lambdify(expr, condition=None, numsamples=S.Infinity, **kwargs):
     """
@@ -1273,9 +1342,105 @@ class NamedArgsMixin(object):
 
 def _value_check(condition, message):
     """
-    Check a condition on input value.
+    Raise a ValueError with message if condition is False, else
+    return True if all conditions were True, else False.
 
-    Raises ValueError with message if condition is not True
+    Examples
+    ========
+
+    >>> from sympy.stats.rv import _value_check
+    >>> from sympy.abc import a, b, c
+    >>> from sympy import And, Dummy
+
+    >>> _value_check(2 < 3, '')
+    True
+
+    Here, the condition is not False, but it doesn't evaluate to True
+    so False is returned (but no error is raised). So checking if the
+    return value is True or False will tell you if all conditions were
+    evaluated.
+
+    >>> _value_check(a < b, '')
+    False
+
+    In this case the condition is False so an error is raised:
+
+    >>> r = Dummy(real=True)
+    >>> _value_check(r < r - 1, 'condition is not true')
+    Traceback (most recent call last):
+    ...
+    ValueError: condition is not true
+
+    If no condition of many conditions must be False, they can be
+    checked by passing them as an iterable:
+
+    >>> _value_check((a < 0, b < 0, c < 0), '')
+    False
+
+    The iterable can be a generator, too:
+
+    >>> _value_check((i < 0 for i in (a, b, c)), '')
+    False
+
+    The following are equivalent to the above but do not pass
+    an iterable:
+
+    >>> all(_value_check(i < 0, '') for i in (a, b, c))
+    False
+    >>> _value_check(And(a < 0, b < 0, c < 0), '')
+    False
     """
-    if condition == False:
+    from sympy.core.compatibility import iterable
+    from sympy.core.logic import fuzzy_and
+    if not iterable(condition):
+        condition = [condition]
+    truth = fuzzy_and(condition)
+    if truth == False:
         raise ValueError(message)
+    return truth == True
+
+def _symbol_converter(sym):
+    """
+    Casts the parameter to Symbol if it is of string_types
+    otherwise no operation is performed on it.
+
+    Parameters
+    ==========
+
+    sym
+        The parameter to be converted.
+
+    Returns
+    =======
+
+    Symbol
+        the parameter converted to Symbol.
+
+    Raises
+    ======
+
+    TypeError
+        If the parameter is not an instance of both string_types and
+        Symbol.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol
+    >>> from sympy.stats.rv import _symbol_converter
+    >>> s = _symbol_converter('s')
+    >>> isinstance(s, Symbol)
+    True
+    >>> _symbol_converter(1)
+    Traceback (most recent call last):
+    ...
+    TypeError: 1 is neither a Symbol nor a string
+    >>> r = Symbol('r')
+    >>> isinstance(r, Symbol)
+    True
+    """
+    if isinstance(sym, string_types):
+            sym = Symbol(sym)
+    if not isinstance(sym, Symbol):
+        raise TypeError("%s is neither a Symbol nor a string"%(sym))
+    return sym

@@ -270,6 +270,9 @@ def test_creation():
         Matrix((1, 2))[3] = 5
 
     assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
+    # anything can go into a matrix (laplace_transform uses tuples)
+    assert Matrix([[[], ()]]).tolist() == [[[], ()]]
+    assert Matrix([[[], ()]]).T.tolist() == [[[]], [()]]
 
     a = Matrix([[x, 0], [0, 0]])
     m = a
@@ -287,13 +290,9 @@ def test_creation():
 
     assert Matrix(b) == b
 
-    c = Matrix((
-        Matrix((
-            (1, 2, 3),
-            (4, 5, 6)
-        )),
-        (7, 8, 9)
-    ))
+    c23 = Matrix(2, 3, range(1, 7))
+    c13 = Matrix(1, 3, range(7, 10))
+    c = Matrix([c23, c13])
     assert c.cols == 3
     assert c.rows == 3
     assert c[:] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -304,6 +303,40 @@ def test_creation():
     assert Matrix(ImmutableMatrix(c)) == ImmutableMatrix(c).as_mutable()
 
     assert c is not Matrix(c)
+
+    dat = [[ones(3,2), ones(3,3)*2], [ones(2,3)*3, ones(2,2)*4]]
+    M = Matrix(dat)
+    assert M == Matrix([
+        [1, 1, 2, 2, 2],
+        [1, 1, 2, 2, 2],
+        [1, 1, 2, 2, 2],
+        [3, 3, 3, 4, 4],
+        [3, 3, 3, 4, 4]])
+    assert M.tolist() != dat
+    # keep block form if evaluate=False
+    assert Matrix(dat, evaluate=False).tolist() == dat
+    A = MatrixSymbol("A", 2, 2)
+    dat = [ones(2), A]
+    assert Matrix(dat) == Matrix([
+    [      1,       1],
+    [      1,       1],
+    [A[0, 0], A[0, 1]],
+    [A[1, 0], A[1, 1]]])
+    assert Matrix(dat, evaluate=False).tolist() == [[i] for i in dat]
+
+    # 0-dim tolerance
+    assert Matrix([ones(2), ones(0)]) == Matrix([ones(2)])
+    raises(ValueError, lambda: Matrix([ones(2), ones(0, 3)]))
+    raises(ValueError, lambda: Matrix([ones(2), ones(3, 0)]))
+
+
+def test_irregular_block():
+    assert Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
+        ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7) == Matrix([
+        [1, 2, 2, 2, 3, 3],
+        [1, 2, 2, 2, 3, 3],
+        [4, 2, 2, 2, 5, 5],
+        [6, 6, 7, 7, 5, 5]])
 
 
 def test_tolist():
@@ -1148,6 +1181,129 @@ def test_eigen():
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
 
+def test_definite():
+    # Examples from Gilbert Strang, "Introduction to Linear Algebra"
+    # Positive definite matrices
+    m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[5, 4], [4, 5]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Positive semidefinite matrices
+    m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[1, 2], [2, 4]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Examples from Mathematica documentation
+    # Non-hermitian positive definite matrices
+    m = Matrix([[2, 3], [4, 8]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[1, 2*I], [-I, 4]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    # Symbolic matrices examples
+    a = Symbol('a', positive=True)
+    b = Symbol('b', negative=True)
+    m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
+    assert m.is_positive_definite == True
+    assert m.is_positive_semidefinite == True
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == False
+
+    m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == False
+    assert m.is_negative_definite == True
+    assert m.is_negative_semidefinite == True
+    assert m.is_indefinite == False
+
+    m = Matrix([[a, 0], [0, b]])
+    assert m.is_positive_definite == False
+    assert m.is_positive_semidefinite == False
+    assert m.is_negative_definite == False
+    assert m.is_negative_semidefinite == False
+    assert m.is_indefinite == True
+
+
+def test_positive_definite():
+    # Test alternative algorithms for testing positive definitiveness.
+    m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[5, 4], [4, 5]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
+
+    m = Matrix([[1, 2], [2, 4]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
+
+    m = Matrix([[2, 3], [4, 8]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[1, 2*I], [-I, 4]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    a = Symbol('a', positive=True)
+    b = Symbol('b', negative=True)
+    m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
+    assert m._eval_is_positive_definite(method='eigen') == True
+    assert m._eval_is_positive_definite(method='LDL') == True
+    assert m._eval_is_positive_definite(method='CH') == True
+
+    m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
+
+    m = Matrix([[a, 0], [0, b]])
+    assert m._eval_is_positive_definite(method='eigen') == False
+    assert m._eval_is_positive_definite(method='LDL') == False
+    assert m._eval_is_positive_definite(method='CH') == False
+
+
 def test_subs():
     assert Matrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
     assert Matrix([[x, 2], [x + y, 4]]).subs([[x, -1], [y, -2]]) == \
@@ -1699,12 +1855,6 @@ def test_issue_15887():
     raises(MatrixError, lambda: a.diagonalize())
 
     # Test deprecated cache and kwargs
-    with warns_deprecated_sympy():
-        a._cache_eigenvects
-
-    with warns_deprecated_sympy():
-        a._cache_is_diagonalizable
-
     with warns_deprecated_sympy():
         a.is_diagonalizable(clear_cache=True)
 
@@ -2649,7 +2799,6 @@ def test_invertible_check():
     raises(ValueError, lambda: m.inv(method="LU"))
 
 
-@XFAIL
 def test_issue_3959():
     x, y = symbols('x, y')
     e = x*y
@@ -2883,19 +3032,45 @@ def test_atoms():
 def test_pinv():
     # Pseudoinverse of an invertible matrix is the inverse.
     A1 = Matrix([[a, b], [c, d]])
-    assert simplify(A1.pinv()) == simplify(A1.inv())
+    assert simplify(A1.pinv(method="RD")) == simplify(A1.inv())
+
     # Test the four properties of the pseudoinverse for various matrices.
     As = [Matrix([[13, 104], [2212, 3], [-3, 5]]),
           Matrix([[1, 7, 9], [11, 17, 19]]),
           Matrix([a, b])]
+
     for A in As:
-        A_pinv = A.pinv()
+        A_pinv = A.pinv(method="RD")
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert simplify(AAp * A) == A
         assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
+
+    # XXX Pinv with diagonalization makes expression too complicated.
+    for A in As:
+        A_pinv = simplify(A.pinv(method="ED"))
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
+    # XXX Computing pinv using diagonalization makes an expression that
+    # is too complicated to simplify.
+    # A1 = Matrix([[a, b], [c, d]])
+    # assert simplify(A1.pinv(method="ED")) == simplify(A1.inv())
+    # so this is tested numerically at a fixed random point
+    from sympy.core.numbers import comp
+    q = A1.pinv(method="ED")
+    w = A1.inv()
+    reps = {a: -73633, b: 11362, c: 55486, d: 62570}
+    assert all(
+        comp(i.n(), j.n())
+        for i, j in zip(q.subs(reps), w.subs(reps))
+        )
 
 def test_pinv_solve():
     # Fully determined system (unique result, identical to other solvers).
@@ -2935,14 +3110,25 @@ def test_pinv_rank_deficient():
     As = [Matrix([[1, 1, 1], [2, 2, 2]]),
           Matrix([[1, 0], [0, 0]]),
           Matrix([[1, 2], [2, 4], [3, 6]])]
+
     for A in As:
-        A_pinv = A.pinv()
+        A_pinv = A.pinv(method="RD")
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert simplify(AAp * A) == A
         assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
+
+    for A in As:
+        A_pinv = A.pinv(method="ED")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
+
     # Test solving with rank-deficient matrices.
     A = Matrix([[1, 0], [0, 0]])
     # Exact, non-unique solution.
@@ -2963,7 +3149,7 @@ def test_pinv_rank_deficient():
 @XFAIL
 def test_pinv_rank_deficient_when_diagonalization_fails():
     # Test the four properties of the pseudoinverse for matrices when
-    # diagonalization of A.H*A fails.'
+    # diagonalization of A.H*A fails.
     As = [Matrix([
         [61, 89, 55, 20, 71, 0],
         [62, 96, 85, 85, 16, 0],
@@ -2972,7 +3158,7 @@ def test_pinv_rank_deficient_when_diagonalization_fails():
         [ 7, 30, 10, 48, 90, 0],
         [0,0,0,0,0,0]])]
     for A in As:
-        A_pinv = A.pinv()
+        A_pinv = A.pinv(method="ED")
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert simplify(AAp * A) == A
@@ -2980,6 +3166,23 @@ def test_pinv_rank_deficient_when_diagonalization_fails():
         assert AAp.H == AAp
         assert ApA.H == ApA
 
+def test_pinv_succeeds_with_rank_decomposition_method():
+    # Test rank decomposition method of pseudoinverse succeeding
+    As = [Matrix([
+        [61, 89, 55, 20, 71, 0],
+        [62, 96, 85, 85, 16, 0],
+        [69, 56, 17,  4, 54, 0],
+        [10, 54, 91, 41, 71, 0],
+        [ 7, 30, 10, 48, 90, 0],
+        [0,0,0,0,0,0]])]
+    for A in As:
+        A_pinv = A.pinv(method="RD")
+        AAp = A * A_pinv
+        ApA = A_pinv * A
+        assert simplify(AAp * A) == A
+        assert simplify(ApA * A_pinv) == A_pinv
+        assert AAp.H == AAp
+        assert ApA.H == ApA
 
 def test_gauss_jordan_solve():
 
@@ -3327,9 +3530,13 @@ def test_issue_11238():
     m2 = Matrix([p1 - p0, p2 - p0])
     m3 = Matrix([simplify(p1 - p0), simplify(p2 - p0)])
 
-    assert m1.rank(simplify=True) == 1
-    assert m2.rank(simplify=True) == 1
-    assert m3.rank(simplify=True) == 1
+    # This system has expressions which are zero and
+    # cannot be easily proved to be such, so without
+    # numerical testing, these assertions will fail.
+    Z = lambda x: abs(x.n()) < 1e-20
+    assert m1.rank(simplify=True, iszerofunc=Z) == 1
+    assert m2.rank(simplify=True, iszerofunc=Z) == 1
+    assert m3.rank(simplify=True, iszerofunc=Z) == 1
 
 def test_as_real_imag():
     m1 = Matrix(2,2,[1,2,3,4])

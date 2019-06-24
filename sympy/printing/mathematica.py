@@ -14,9 +14,15 @@ known_functions = {
     "cos": [(lambda x: True, "Cos")],
     "tan": [(lambda x: True, "Tan")],
     "cot": [(lambda x: True, "Cot")],
+    "sec": [(lambda x: True, "Sec")],
+    "csc": [(lambda x: True, "Csc")],
     "asin": [(lambda x: True, "ArcSin")],
     "acos": [(lambda x: True, "ArcCos")],
     "atan": [(lambda x: True, "ArcTan")],
+    "acot": [(lambda x: True, "ArcCot")],
+    "asec": [(lambda x: True, "ArcSec")],
+    "acsc": [(lambda x: True, "ArcCsc")],
+    "atan2": [(lambda *x: True, "ArcTan")],
     "sinh": [(lambda x: True, "Sinh")],
     "cosh": [(lambda x: True, "Cosh")],
     "tanh": [(lambda x: True, "Tanh")],
@@ -32,6 +38,43 @@ known_functions = {
     "conjugate": [(lambda x: True, "Conjugate")],
     "Max": [(lambda *x: True, "Max")],
     "Min": [(lambda *x: True, "Min")],
+    "erf": [(lambda x: True, "Erf")],
+    "erf2": [(lambda *x: True, "Erf")],
+    "erfc": [(lambda x: True, "Erfc")],
+    "erfi": [(lambda x: True, "Erfi")],
+    "erfinv": [(lambda x: True, "InverseErf")],
+    "erfcinv": [(lambda x: True, "InverseErfc")],
+    "erf2inv": [(lambda *x: True, "InverseErf")],
+    "expint": [(lambda *x: True, "ExpIntegralE")],
+    "Ei": [(lambda x: True, "ExpIntegralEi")],
+    "fresnelc": [(lambda x: True, "FresnelC")],
+    "fresnels": [(lambda x: True, "FresnelS")],
+    "gamma": [(lambda x: True, "Gamma")],
+    "uppergamma": [(lambda *x: True, "Gamma")],
+    "polygamma": [(lambda *x: True, "PolyGamma")],
+    "loggamma": [(lambda x: True, "LogGamma")],
+    "beta": [(lambda *x: True, "Beta")],
+    "Ci": [(lambda x: True, "CosIntegral")],
+    "Si": [(lambda x: True, "SinIntegral")],
+    "Chi": [(lambda x: True, "CoshIntegral")],
+    "Shi": [(lambda x: True, "SinhIntegral")],
+    "li": [(lambda x: True, "LogIntegral")],
+    "factorial": [(lambda x: True, "Factorial")],
+    "factorial2": [(lambda x: True, "Factorial2")],
+    "subfactorial": [(lambda x: True, "Subfactorial")],
+    "catalan": [(lambda x: True, "CatalanNumber")],
+    "harmonic": [(lambda *x: True, "HarmonicNumber")],
+    "RisingFactorial": [(lambda *x: True, "Pochhammer")],
+    "FallingFactorial": [(lambda *x: True, "FactorialPower")],
+    "laguerre": [(lambda *x: True, "LaguerreL")],
+    "assoc_laguerre": [(lambda *x: True, "LaguerreL")],
+    "hermite": [(lambda *x: True, "HermiteH")],
+    "jacobi": [(lambda *x: True, "JacobiP")],
+    "gegenbauer": [(lambda *x: True, "GegenbauerC")],
+    "chebyshevt": [(lambda *x: True, "ChebyshevT")],
+    "chebyshevu": [(lambda *x: True, "ChebyshevU")],
+    "legendre": [(lambda *x: True, "LegendreP")],
+    "assoc_legendre": [(lambda *x: True, "LegendreP")],
 }
 
 
@@ -92,7 +135,7 @@ class MCodePrinter(CodePrinter):
     def _print_NegativeOne(self, expr):
         return '-1'
 
-    def _print_half(self, expr):
+    def _print_Half(self, expr):
         return '1/2'
 
     def _print_ImaginaryUnit(self, expr):

@@ -133,7 +133,7 @@ class SparseMatrix(MatrixBase):
                         value = self._sympify(
                             op(self._sympify(i), self._sympify(j)))
                         if value:
-                            self._smat[(i, j)] = value
+                            self._smat[i, j] = value
             elif isinstance(args[2], (dict, Dict)):
                 def update(i, j, v):
                     # update self._smat and make sure there are
@@ -193,7 +193,7 @@ class SparseMatrix(MatrixBase):
                         row = [row]
                     for j, vij in enumerate(row):
                         if vij:
-                            self._smat[(i, j)] = self._sympify(vij)
+                            self._smat[i, j] = self._sympify(vij)
                     c = max(c, len(row))
                 self.rows = len(v) if c else 0
                 self.cols = c
@@ -206,7 +206,7 @@ class SparseMatrix(MatrixBase):
                     for j in range(self.cols):
                         value = _list[self.cols*i + j]
                         if value:
-                            self._smat[(i, j)] = value
+                            self._smat[i, j] = value
         return self
 
     def __eq__(self, other):
@@ -397,11 +397,11 @@ class SparseMatrix(MatrixBase):
             row, col = key
             if col >= icol:
                 col += other.cols
-            new_smat[(row, col)] = val
+            new_smat[row, col] = val
         # add other's keys
         for key, val in other._smat.items():
             row, col = key
-            new_smat[(row, col + icol)] = val
+            new_smat[row, col + icol] = val
         return self._new(self.rows, self.cols + other.cols, new_smat)
 
     def _eval_conjugate(self):
@@ -422,7 +422,7 @@ class SparseMatrix(MatrixBase):
             # keeping only the ones that are desired
             for rk, ck in self._smat:
                 if rk in urow and ck in ucol:
-                    smat[(urow.index(rk), ucol.index(ck))] = self._smat[(rk, ck)]
+                    smat[urow.index(rk), ucol.index(ck)] = self._smat[rk, ck]
 
         rv = self._new(len(urow), len(ucol), smat)
         # rv is nominally correct but there might be rows/cols
@@ -484,7 +484,7 @@ class SparseMatrix(MatrixBase):
                 indices = set(col_lookup[col].keys()) & set(row_lookup[row].keys())
                 if indices:
                     val = sum(row_lookup[row][k]*col_lookup[col][k] for k in indices)
-                    smat[(row, col)] = val
+                    smat[row, col] = val
         return self._new(self.rows, other.cols, smat)
 
     def _eval_row_insert(self, irow, other):
@@ -496,11 +496,11 @@ class SparseMatrix(MatrixBase):
             row, col = key
             if row >= irow:
                 row += other.rows
-            new_smat[(row, col)] = val
+            new_smat[row, col] = val
         # add other's keys
         for key, val in other._smat.items():
             row, col = key
-            new_smat[(row + irow, col)] = val
+            new_smat[row + irow, col] = val
         return self._new(self.rows + other.rows, self.cols, new_smat)
 
     def _eval_scalar_mul(self, other):
@@ -1022,9 +1022,9 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         if rv is not None:
             i, j, value = rv
             if value:
-                self._smat[(i, j)] = value
+                self._smat[i, j] = value
             elif (i, j) in self._smat:
-                del self._smat[(i, j)]
+                del self._smat[i, j]
 
     def as_mutable(self):
         return self.copy()
@@ -1120,7 +1120,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 for j in range(B.cols):
                     v = b[k]
                     if v:
-                        A._smat[(i + A.rows, j)] = v
+                        A._smat[i + A.rows, j] = v
                     k += 1
         else:
             for (i, j), v in B._smat.items():
@@ -1148,7 +1148,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
             v = self._smat.get((i, j), S.Zero)
             fv = f(v, i)
             if fv:
-                self._smat[(i, j)] = fv
+                self._smat[i, j] = fv
             elif v:
                 self._smat.pop((i, j))
 
@@ -1328,11 +1328,11 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 for j in range(B.cols):
                     v = b[k]
                     if v:
-                        A._smat[(i, j + A.cols)] = v
+                        A._smat[i, j + A.cols] = v
                     k += 1
         else:
             for (i, j), v in B._smat.items():
-                A._smat[(i, j + A.cols)] = v
+                A._smat[i, j + A.cols] = v
         A.cols += B.cols
         return A
 
@@ -1363,7 +1363,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
             v = self._smat.get((i, j), S.Zero)
             fv = f(v, j)
             if fv:
-                self._smat[(i, j)] = fv
+                self._smat[i, j] = fv
             elif v:
                 self._smat.pop((i, j))
 

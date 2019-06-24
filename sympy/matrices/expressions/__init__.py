@@ -5,7 +5,7 @@ from .blockmatrix import BlockMatrix, BlockDiagMatrix, block_collapse, blockcut
 from .funcmatrix import FunctionMatrix
 from .inverse import Inverse
 from .matadd import MatAdd
-from .matexpr import (Identity, MatrixExpr, MatrixSymbol, ZeroMatrix,
+from .matexpr import (Identity, MatrixExpr, MatrixSymbol, ZeroMatrix, OneMatrix,
                       matrix_symbols)
 from .matmul import MatMul
 from .matpow import MatPow
