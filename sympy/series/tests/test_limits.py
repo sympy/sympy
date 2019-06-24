@@ -4,7 +4,8 @@ from sympy import (
     limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
     atan, gamma, Symbol, S, pi, Integral, Rational, I, EulerGamma,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels)
+    binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
+    acos, erfi)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -540,3 +541,7 @@ def test_issue_14377():
 
 def test_issue_15984():
     assert limit((-x + log(exp(x) + 1))/x, x, oo, dir='-').doit() == 0
+
+
+def test_issue_13575():
+    assert isinstance(limit(acos(erfi(x)), x, 1), Add)
