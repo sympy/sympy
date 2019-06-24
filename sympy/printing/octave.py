@@ -233,6 +233,10 @@ class OctaveCodePrinter(CodePrinter):
         return '%s^%s' % (self.parenthesize(expr.base, PREC),
                           self.parenthesize(expr.exp, PREC))
 
+    def _print_MatrixSolve(self, expr):
+        PREC = precedence(expr)
+        return "%s \\ %s" % (self.parenthesize(expr.matrix, PREC),
+                             self.parenthesize(expr.vector, PREC))
 
     def _print_Pi(self, expr):
         return 'pi'

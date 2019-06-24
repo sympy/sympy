@@ -626,6 +626,11 @@ class NumPyPrinter(PythonCodePrinter):
                                self._print(arg1),
                                self._print(arg2))
 
+    def _print_MatrixSolve(self, expr):
+        return "%s(%s, %s)" % (self._module_format('numpy.linalg.solve'),
+                               self._print(expr.matrix),
+                               self._print(expr.vector))
+
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
         exprs = '[{0}]'.format(','.join(self._print(arg.expr) for arg in expr.args))

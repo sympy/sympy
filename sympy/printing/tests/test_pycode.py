@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
 from sympy.core.singleton import S
 from sympy.core.numbers import pi
@@ -72,6 +73,10 @@ def test_NumPyPrinter():
     assert p.doprint(A**(-1)) == "numpy.linalg.inv(A)"
     assert p.doprint(A**5) == "numpy.linalg.matrix_power(A, 5)"
 
+    u = MatrixSymbol('x', 2, 1)
+    v = MatrixSymbol('y', 2, 1)
+    assert p.doprint(MatrixSolve(A, u)) == 'numpy.linalg.solve(A, x)'
+    assert p.doprint(MatrixSolve(A, u) + v) == 'numpy.linalg.solve(A, x) + y'
     # Workaround for numpy negative integer power errors
     assert p.doprint(x**-1) == 'x**(-1.0)'
     assert p.doprint(x**-2) == 'x**(-2.0)'

@@ -1,6 +1,7 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
                              chebyshevt, conjugate, DiracDelta, exp, expint,
                              factorial, floor, harmonic, Heaviside, im,
@@ -250,6 +251,12 @@ def test_MatrixSymbol():
     assert mcode(A**3) == "A^3"
     assert mcode(A**(S.Half)) == "A^(1/2)"
 
+
+def test_MatrixSolve():
+    n = Symbol('n', integer=True)
+    A = MatrixSymbol('A', n, n)
+    x = MatrixSymbol('x', n, 1)
+    assert mcode(MatrixSolve(A, x)) == "A \\ x"
 
 def test_special_matrices():
     assert mcode(6*Identity(3)) == "6*eye(3)"
