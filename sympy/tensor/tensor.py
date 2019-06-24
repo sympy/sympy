@@ -1285,7 +1285,7 @@ class TensorSymmetry(Basic):
 
     A tensor can have an arbitrary monoterm symmetry provided by its BSGS.
     Multiterm symmetries, like the cyclic symmetry of the Riemann tensor
-    (Bianchi identity), are not covere
+    (Bianchi identity), are not covered
 
     See Also
     ========
@@ -1526,8 +1526,7 @@ def tensorhead(name, typ, sym=None, comm=0):
     >>> A(a, -b)
     A(a, -b)
 
-    If no symmetry parameter is provided, assume there are no index
-    symmetries:
+    If no symmetry parameter is provided, assume there are no index symmetries:
 
     >>> B = tensorhead('B', [Lorentz, Lorentz])
     >>> B(a, -b)
