@@ -4,8 +4,9 @@ from sympy import (
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
     Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
     ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda, Derivative)
-from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.expr import unchanged
+from sympy.core.function import ArgumentIndexError
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def N_equals(a, b):
@@ -40,7 +41,7 @@ def test_re():
     assert re(i*I) == I * i
     assert re(i) == 0
 
-    assert re(x + y) == re(x + y)
+    assert re(x + y) == re(x) + re(y)
     assert re(x + r) == re(x) + r
 
     assert re(re(x)) == re(x)
@@ -136,7 +137,7 @@ def test_im():
     assert im(i*I) == 0
     assert im(i) == -I * i
 
-    assert im(x + y) == im(x + y)
+    assert im(x + y) == im(x) + im(y)
     assert im(x + r) == im(x)
     assert im(x + r*I) == im(x) + r
 
@@ -349,6 +350,7 @@ def test_as_real_imag():
 def test_sign_issue_3068():
     n = pi**1000
     i = int(n)
+    x = Symbol('x')
     assert (n - i).round() == 1  # doesn't hang
     assert sign(n - i) == 1
     # perhaps it's not possible to get the sign right when
@@ -436,7 +438,8 @@ def test_Abs():
     assert re(a).is_algebraic
     assert re(x).is_algebraic is None
     assert re(t).is_algebraic is False
-
+    assert Abs(x).fdiff() == sign(x)
+    raises(ArgumentIndexError, lambda: Abs(x).fdiff(2))
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
@@ -473,43 +476,60 @@ def test_Abs_real():
 
 def test_Abs_properties():
     x = Symbol('x')
-    assert Abs(x).is_real is True
+    assert Abs(x).is_real is None
+    assert Abs(x).is_extended_real is True
     assert Abs(x).is_rational is None
     assert Abs(x).is_positive is None
-    assert Abs(x).is_nonnegative is True
+    assert Abs(x).is_nonnegative is None
+    assert Abs(x).is_extended_positive is None
+    assert Abs(x).is_extended_nonnegative is True
+
+    f = Symbol('x', finite=True)
+    assert Abs(f).is_real is True
+    assert Abs(f).is_extended_real is True
+    assert Abs(f).is_rational is None
+    assert Abs(f).is_positive is None
+    assert Abs(f).is_nonnegative is True
+    assert Abs(f).is_extended_positive is None
+    assert Abs(f).is_extended_nonnegative is True
 
     z = Symbol('z', complex=True, zero=False)
-    assert Abs(z).is_real is True
+    assert Abs(z).is_real is None
+    assert Abs(z).is_extended_real is True
     assert Abs(z).is_rational is None
-    assert Abs(z).is_positive is True
+    assert Abs(z).is_positive is None
+    assert Abs(z).is_extended_positive is True
     assert Abs(z).is_zero is False
 
     p = Symbol('p', positive=True)
     assert Abs(p).is_real is True
+    assert Abs(p).is_extended_real is True
     assert Abs(p).is_rational is None
     assert Abs(p).is_positive is True
     assert Abs(p).is_zero is False
 
     q = Symbol('q', rational=True)
+    assert Abs(q).is_real is True
     assert Abs(q).is_rational is True
     assert Abs(q).is_integer is None
     assert Abs(q).is_positive is None
     assert Abs(q).is_nonnegative is True
 
     i = Symbol('i', integer=True)
+    assert Abs(i).is_real is True
     assert Abs(i).is_integer is True
     assert Abs(i).is_positive is None
     assert Abs(i).is_nonnegative is True
 
     e = Symbol('n', even=True)
     ne = Symbol('ne', real=True, even=False)
-    assert Abs(e).is_even
+    assert Abs(e).is_even is True
     assert Abs(ne).is_even is False
     assert Abs(i).is_even is None
 
     o = Symbol('n', odd=True)
     no = Symbol('no', real=True, odd=False)
-    assert Abs(o).is_odd
+    assert Abs(o).is_odd is True
     assert Abs(no).is_odd is False
     assert Abs(i).is_odd is None
 
@@ -787,7 +807,7 @@ def test_derivatives_issue_4757():
 
 
 def test_issue_11413():
-    from sympy import symbols, Matrix, simplify
+    from sympy import Matrix, simplify
     v0 = Symbol('v0')
     v1 = Symbol('v1')
     v2 = Symbol('v2')
@@ -834,6 +854,7 @@ def test_periodic_argument():
 @XFAIL
 def test_principal_branch_fail():
     # TODO XXX why does abs(x)._eval_evalf() not fall back to global evalf?
+    from sympy import principal_branch
     assert N_equals(principal_branch((1 + I)**2, pi/2), 0)
 
 
@@ -873,10 +894,12 @@ def test_issue_6167_6151():
     i = int(n)
     assert sign(n - i) == 1
     assert abs(n - i) == n - i
+    x = Symbol('x')
     eps = pi**-1500
     big = pi**1000
     one = cos(x)**2 + sin(x)**2
     e = big*one - big + eps
+    from sympy import simplify
     assert sign(simplify(e)) == 1
     for xi in (111, 11, 1, S(1)/10):
         assert sign(e.subs(x, xi)) == 1
@@ -895,7 +918,7 @@ def test_issue_14238():
     assert Abs(r + Piecewise((0, r > 0), (1 - r, True)))
 
 def test_zero_assumptions():
-    nr = Symbol('nonreal', real=False)
+    nr = Symbol('nonreal', real=False, finite=True)
     ni = Symbol('nonimaginary', imaginary=False)
     # imaginary implies not zero
     nzni = Symbol('nonzerononimaginary', zero=False, imaginary=False)

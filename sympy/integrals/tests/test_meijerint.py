@@ -309,7 +309,7 @@ def test_inversion_conditional_output():
 def test_inversion_exp_real_nonreal_shift():
     from sympy import Symbol, DiracDelta
     r = Symbol('r', real=True)
-    c = Symbol('c', real=False)
+    c = Symbol('c', extended_real=False)
     a = 1 + 2*I
     z = Symbol('z')
     assert not meijerint_inversion(exp(r*s), s, t).is_Piecewise
@@ -374,10 +374,9 @@ def test_probability():
     # various integrals from probability theory
     from sympy.abc import x, y
     from sympy import symbols, Symbol, Abs, expand_mul, gammasimp, powsimp, sin
-    mu1, mu2 = symbols('mu1 mu2', real=True, nonzero=True, finite=True)
-    sigma1, sigma2 = symbols('sigma1 sigma2', real=True, nonzero=True,
-                             finite=True, positive=True)
-    rate = Symbol('lambda', real=True, positive=True, finite=True)
+    mu1, mu2 = symbols('mu1 mu2', nonzero=True)
+    sigma1, sigma2 = symbols('sigma1 sigma2', positive=True)
+    rate = Symbol('lambda', positive=True)
 
     def normal(x, mu, sigma):
         return 1/sqrt(2*pi*sigma**2)*exp(-(x - mu)**2/2/sigma**2)
@@ -521,8 +520,12 @@ def test_probability():
     # higher moments oo
 
     # log-logistic
+    alpha, beta = symbols('alpha beta', positive=True)
     distn = (beta/alpha)*x**(beta - 1)/alpha**(beta - 1)/ \
         (1 + x**beta/alpha**beta)**2
+    # FIXME: If alpha, beta are not declared as finite the line below hangs
+    # after the changes in:
+    #    https://github.com/sympy/sympy/pull/16603
     assert simplify(integrate(distn, (x, 0, oo))) == 1
     # NOTE the conditions are a mess, but correctly state beta > 1
     assert simplify(integrate(x*distn, (x, 0, oo), conds='none')) == \

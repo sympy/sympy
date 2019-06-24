@@ -357,6 +357,11 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         PREC = precedence(expr)
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
+    def _print_Indexed(self, expr):
+        base = expr.args[0]
+        index = expr.args[1:]
+        return "{}[{}]".format(str(base), ", ".join([self._print(ind) for ind in index]))
+
 
 for k in PythonCodePrinter._kf:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
@@ -602,6 +607,10 @@ class NumPyPrinter(PythonCodePrinter):
         if func is None:
             func = self._module_format('numpy.array')
         return "%s(%s)" % (func, self._print(expr.tolist()))
+
+    def _print_BlockMatrix(self, expr):
+        return '{0}({1})'.format(self._module_format('numpy.block'),
+                                 self._print(expr.args[0].tolist()))
 
     def _print_CodegenArrayTensorProduct(self, expr):
         array_list = [j for i, arg in enumerate(expr.args) for j in

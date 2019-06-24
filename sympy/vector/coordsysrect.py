@@ -167,9 +167,9 @@ class CoordSys3D(Basic):
             if isinstance(transformation, Lambda):
                 variable_names = ["x1", "x2", "x3"]
             elif isinstance(transformation, Symbol):
-                if transformation.name is 'spherical':
+                if transformation.name == 'spherical':
                     variable_names = ["r", "theta", "phi"]
-                elif transformation.name is 'cylindrical':
+                elif transformation.name == 'cylindrical':
                     variable_names = ["r", "theta", "z"]
                 else:
                     variable_names = ["x", "y", "z"]

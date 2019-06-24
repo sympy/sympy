@@ -2,7 +2,8 @@ from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range, Xor)
 from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
+from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
+    CantSympify)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.utilities.pytest import raises, XFAIL, skip
@@ -16,6 +17,7 @@ from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.external import import_module
 
 import mpmath
+from collections import defaultdict, OrderedDict
 from mpmath.rational import mpq
 
 
@@ -161,9 +163,24 @@ def test_sympify_bool():
 def test_sympyify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(['.3', '.2'], rational=True) == ans
-    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
     assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
     assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
+
+
+@XFAIL
+def test_issue_16772():
+    # because there is a converter for tuple, the
+    # args are only sympified without the flags being passed
+    # along; list, on the other hand, is not converted
+    # with a converter so its args are traversed later
+    ans = [Rational(3, 10), Rational(1, 5)]
+    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
+
+
+def test_issue_16859():
+    class no(float, CantSympify):
+        pass
+    raises(SympifyError, lambda: sympify(no(1.2)))
 
 
 def test_sympify4():
@@ -663,3 +680,18 @@ def test_issue_5939():
      a = Symbol('a')
      b = Symbol('b')
      assert sympify('''a+\nb''') == a + b
+
+
+def test_issue_16759():
+    d = sympify({.5: 1})
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
+    d = sympify(OrderedDict({.5: 1}))
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One
+    d = sympify(defaultdict(int, {.5: 1}))
+    assert S.Half not in d
+    assert Float(.5) in d
+    assert d[.5] is S.One

@@ -12,6 +12,7 @@ from sympy.core.compatibility import (
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.function import expand_mul
+from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float, Integer, mod_inverse
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -28,7 +29,8 @@ from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.misc import filldedent
 
 from .common import (
-    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError)
+    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError,
+    NonPositiveDefiniteMatrixError)
 
 
 def _iszero(x):
@@ -83,7 +85,7 @@ class MatrixDeterminant(MatrixCommon):
 
         # the 0 x 0 case is trivial
         if self.rows == 0 and self.cols == 0:
-            return self._new(1,1, [S.One])
+            return self._new(1,1, [self.one])
 
         #
         # Partition self = [ a_11  R ]
@@ -111,11 +113,11 @@ class MatrixDeterminant(MatrixCommon):
         for i in range(self.rows - 2):
             diags.append(A * diags[i])
         diags = [(-R*d)[0, 0] for d in diags]
-        diags = [S.One, -a] + diags
+        diags = [self.one, -a] + diags
 
         def entry(i,j):
             if j > i:
-                return S.Zero
+                return self.zero
             return diags[i - j]
 
         toeplitz = self._new(self.cols + 1, self.rows, entry)
@@ -158,9 +160,9 @@ class MatrixDeterminant(MatrixCommon):
 
         # handle the trivial cases
         if self.rows == 0 and self.cols == 0:
-            return self._new(1, 1, [S.One])
+            return self._new(1, 1, [self.one])
         elif self.rows == 1 and self.cols == 1:
-            return self._new(2, 1, [S.One, -self[0,0]])
+            return self._new(2, 1, [self.one, -self[0,0]])
 
         submat, toeplitz = self._eval_berkowitz_toeplitz_matrix()
         return toeplitz * submat._eval_berkowitz_vector()
@@ -181,7 +183,7 @@ class MatrixDeterminant(MatrixCommon):
         # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
         def bareiss(mat, cumm=1):
             if mat.rows == 0:
-                return S.One
+                return mat.one
             elif mat.rows == 1:
                 return mat[0, 0]
 
@@ -192,7 +194,7 @@ class MatrixDeterminant(MatrixCommon):
             pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0],
                                          iszerofunc=iszerofunc)
             if pivot_pos is None:
-                return S.Zero
+                return mat.zero
 
             # if we have a valid pivot, we'll do a "row swap", so keep the
             # sign of the det
@@ -234,7 +236,7 @@ class MatrixDeterminant(MatrixCommon):
         instead of a copy."""
 
         if self.rows == 0:
-            return S.One
+            return self.one
             # sympy/matrices/tests/test_matrices.py contains a test that
             # suggests that the determinant of a 0 x 0 matrix is one, by
             # convention.
@@ -251,10 +253,10 @@ class MatrixDeterminant(MatrixCommon):
         # Bottom right entry of U is 0 => det(A) = 0.
         # It may be impossible to determine if this entry of U is zero when it is symbolic.
         if iszerofunc(lu[lu.rows-1, lu.rows-1]):
-            return S.Zero
+            return self.zero
 
         # Compute det(P)
-        det = -S.One if len(row_swaps)%2 else S.One
+        det = -self.one if len(row_swaps)%2 else self.one
 
         # Compute det(U) by calculating the product of U's diagonal entries.
         # The upper triangular portion of lu is the upper triangular portion of the
@@ -456,7 +458,7 @@ class MatrixDeterminant(MatrixCommon):
 
         n = self.rows
         if n == 0:
-            return S.One
+            return self.one
         elif n == 1:
             return self[0,0]
         elif n == 2:
@@ -726,11 +728,11 @@ class MatrixReductions(MatrixDeterminant):
             # before we zero the other rows
             if normalize_last is False:
                 i, j = piv_row, piv_col
-                mat[i*cols + j] = S.One
+                mat[i*cols + j] = self.one
                 for p in range(i*cols + j + 1, (i + 1)*cols):
                     mat[p] = mat[p] / pivot_val
                 # after normalizing, the pivot value is 1
-                pivot_val = S.One
+                pivot_val = self.one
 
             # zero above and below the pivot
             for row in range(rows):
@@ -752,7 +754,7 @@ class MatrixReductions(MatrixDeterminant):
         if normalize_last is True and normalize is True:
             for piv_i, piv_j in enumerate(pivot_cols):
                 pivot_val = mat[piv_i*cols + piv_j]
-                mat[piv_i*cols + piv_j] = S.One
+                mat[piv_i*cols + piv_j] = self.one
                 for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
                     mat[p] = mat[p] / pivot_val
 
@@ -1010,8 +1012,8 @@ class MatrixSubspaces(MatrixReductions):
         for free_var in free_vars:
             # for each free variable, we will set it to 1 and all others
             # to 0.  Then, we will use back substitution to solve the system
-            vec = [S.Zero]*self.cols
-            vec[free_var] = S.One
+            vec = [self.zero]*self.cols
+            vec[free_var] = self.one
             for piv_row, piv_col in enumerate(pivots):
                 vec[piv_col] -= reduced[piv_row, free_var]
             basis.append(vec)
@@ -1103,24 +1105,6 @@ class MatrixSubspaces(MatrixReductions):
 class MatrixEigen(MatrixSubspaces):
     """Provides basic matrix eigenvalue/vector operations.
     Should not be instantiated directly."""
-
-    @property
-    def _cache_is_diagonalizable(self):
-        SymPyDeprecationWarning(
-            feature='_cache_is_diagonalizable',
-            deprecated_since_version="1.4",
-            issue=15887
-            ).warn()
-        return None
-
-    @property
-    def _cache_eigenvects(self):
-        SymPyDeprecationWarning(
-            feature='_cache_eigenvects',
-            deprecated_since_version="1.4",
-            issue=15887
-            ).warn()
-        return None
 
     def diagonalize(self, reals_only=False, sort=False, normalize=False):
         """
@@ -1495,6 +1479,185 @@ class MatrixEigen(MatrixSubspaces):
                 ret = False
         return ret
 
+    def _eval_is_positive_definite(self, method="eigen"):
+        """Algorithm dump for computing positive-definiteness of a
+        matrix.
+
+        Parameters
+        ==========
+
+        method : str, optional
+            Specifies the method for computing positive-definiteness of
+            a matrix.
+
+            If ``'eigen'``, it computes the full eigenvalues and decides
+            if the matrix is positive-definite.
+
+            If ``'CH'``, it attempts computing the Cholesky
+            decomposition to detect the definitiveness.
+
+            If ``'LDL'``, it attempts computing the LDL
+            decomposition to detect the definitiveness.
+        """
+        if self.is_hermitian:
+            if method == 'eigen':
+                eigen = self.eigenvals()
+                args = [x.is_positive for x in eigen.keys()]
+                return fuzzy_and(args)
+
+            elif method == 'CH':
+                try:
+                    self.cholesky(hermitian=True)
+                except NonPositiveDefiniteMatrixError:
+                    return False
+                return True
+
+            elif method == 'LDL':
+                try:
+                    self.LDLdecomposition(hermitian=True)
+                except NonPositiveDefiniteMatrixError:
+                    return False
+                return True
+
+            else:
+                raise NotImplementedError()
+
+        elif self.is_square:
+            M_H = (self + self.H) / 2
+            return M_H._eval_is_positive_definite(method=method)
+
+    def is_positive_definite(self):
+        return self._eval_is_positive_definite()
+
+    def is_positive_semidefinite(self):
+        if self.is_hermitian:
+            eigen = self.eigenvals()
+            args = [x.is_nonnegative for x in eigen.keys()]
+            return fuzzy_and(args)
+
+        elif self.is_square:
+            return ((self + self.H) / 2).is_positive_semidefinite
+
+    def is_negative_definite(self):
+        if self.is_hermitian:
+            eigen = self.eigenvals()
+            args = [x.is_negative for x in eigen.keys()]
+            return fuzzy_and(args)
+
+        elif self.is_square:
+            return ((self + self.H) / 2).is_negative_definite
+
+    def is_negative_semidefinite(self):
+        if self.is_hermitian:
+            eigen = self.eigenvals()
+            args = [x.is_nonpositive for x in eigen.keys()]
+            return fuzzy_and(args)
+
+        elif self.is_square:
+            return ((self + self.H) / 2).is_negative_semidefinite
+
+    def is_indefinite(self):
+        if self.is_hermitian:
+            eigen = self.eigenvals()
+
+            args1 = [x.is_positive for x in eigen.keys()]
+            any_positive = fuzzy_or(args1)
+            args2 = [x.is_negative for x in eigen.keys()]
+            any_negative = fuzzy_or(args2)
+
+            return fuzzy_and([any_positive, any_negative])
+
+        elif self.is_square:
+            return ((self + self.H) / 2).is_indefinite
+
+    _doc_positive_definite = \
+        r"""Finds out the definiteness of a matrix.
+
+        Examples
+        ========
+
+        An example of numeric positive definite matrix:
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[1, -2], [-2, 6]])
+        >>> A.is_positive_definite
+        True
+        >>> A.is_positive_semidefinite
+        True
+        >>> A.is_negative_definite
+        False
+        >>> A.is_negative_semidefinite
+        False
+        >>> A.is_indefinite
+        False
+
+        An example of numeric negative definite matrix:
+
+        >>> A = Matrix([[-1, 2], [2, -6]])
+        >>> A.is_positive_definite
+        False
+        >>> A.is_positive_semidefinite
+        False
+        >>> A.is_negative_definite
+        True
+        >>> A.is_negative_semidefinite
+        True
+        >>> A.is_indefinite
+        False
+
+        An example of numeric indefinite matrix:
+
+        >>> A = Matrix([[1, 2], [2, 1]])
+        >>> A.is_positive_definite
+        False
+        >>> A.is_positive_semidefinite
+        False
+        >>> A.is_negative_definite
+        True
+        >>> A.is_negative_semidefinite
+        True
+        >>> A.is_indefinite
+        False
+
+        Notes
+        =====
+
+        Definitiveness is not very commonly discussed for non-hermitian
+        matrices.
+
+        However, computing the definitiveness of a matrix can be
+        generalized over any real matrix by taking the symmetric part:
+
+        `A_S = 1/2 (A + A^{T})`
+
+        Or over any complex matrix by taking the hermitian part:
+
+        `A_H = 1/2 (A + A^{H})`
+
+        And computing the eigenvalues.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Definiteness_of_a_matrix#Eigenvalues
+
+        .. [2] http://mathworld.wolfram.com/PositiveDefiniteMatrix.html
+
+        .. [3] Johnson, C. R. "Positive Definite Matrices." Amer.
+            Math. Monthly 77, 259-264 1970.
+        """
+
+    is_positive_definite = \
+        property(fget=is_positive_definite, doc=_doc_positive_definite)
+    is_positive_semidefinite = \
+        property(fget=is_positive_semidefinite, doc=_doc_positive_definite)
+    is_negative_definite = \
+        property(fget=is_negative_definite, doc=_doc_positive_definite)
+    is_negative_semidefinite = \
+        property(fget=is_negative_semidefinite, doc=_doc_positive_definite)
+    is_indefinite = \
+        property(fget=is_indefinite, doc=_doc_positive_definite)
+
     def jordan_form(self, calc_transform=True, **kwargs):
         """Return ``(P, J)`` where `J` is a Jordan block
         matrix and `P` is a matrix such that
@@ -1772,7 +1935,7 @@ class MatrixEigen(MatrixSubspaces):
         # Pad with zeros if singular values are computed in reverse way,
         # to give consistent format.
         if len(vals) < self.cols:
-            vals += [S.Zero] * (self.cols - len(vals))
+            vals += [self.zero] * (self.cols - len(vals))
 
         # sort them in descending order
         vals.sort(reverse=True, key=default_sort_key)
@@ -2005,7 +2168,7 @@ class MatrixDeprecated(MatrixCommon):
 
         berkowitz
         """
-        sign, minors = S.One, []
+        sign, minors = self.one, []
 
         for poly in self.berkowitz():
             minors.append(sign * poly[-1])
@@ -2039,14 +2202,14 @@ class MatrixDeprecated(MatrixCommon):
             for i, B in enumerate(items):
                 items[i] = (R * B)[0, 0]
 
-            items = [S.One, a] + items
+            items = [self.one, a] + items
 
             for i in range(n):
                 T[i:, i] = items[:n - i + 1]
 
             transforms[k - 1] = T
 
-        polys = [self._new([S.One, -A[0, 0]])]
+        polys = [self._new([self.one, -A[0, 0]])]
 
         for i, T in enumerate(transforms):
             polys.append(T * polys[i])
@@ -2132,6 +2295,8 @@ class MatrixBase(MatrixDeprecated,
     is_Matrix = True
     _class_priority = 3
     _sympify = staticmethod(sympify)
+    zero = S.Zero
+    one = S.One
 
     __hash__ = None  # Mutable
 
@@ -2224,11 +2389,6 @@ class MatrixBase(MatrixDeprecated,
         if self.rows == 0 or self.cols == 0:
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
         return "Matrix(%s)" % str(self.tolist())
-
-    def _diagonalize_clear_subproducts(self):
-        del self._is_symbolic
-        del self._is_symmetric
-        del self._eigenvects
 
     def _format_str(self, printer=None):
         if not printer:
@@ -2362,7 +2522,7 @@ class MatrixBase(MatrixDeprecated,
                     return rows, cols, flat_list
                 elif len(arr.shape) == 1:
                     rows, cols = arr.shape[0], 1
-                    flat_list = [S.Zero] * rows
+                    flat_list = [cls.zero] * rows
                     for i in range(len(arr)):
                         flat_list[i] = cls._sympify(arr[i])
                     return rows, cols, flat_list
@@ -2699,7 +2859,7 @@ class MatrixBase(MatrixDeprecated,
         singular_values
         """
         if not self:
-            return S.Zero
+            return self.zero
         singularvalues = self.singular_values()
         return Max(*singularvalues) / Min(*singularvalues)
 
@@ -3606,17 +3766,17 @@ class MatrixBase(MatrixDeprecated,
         def entry_L(i, j):
             if i < j:
                 # Super diagonal entry
-                return S.Zero
+                return self.zero
             elif i == j:
-                return S.One
+                return self.one
             elif j < combined.cols:
                 return combined[i, j]
             # Subdiagonal entry of L with no corresponding
             # entry in combined
-            return S.Zero
+            return self.zero
 
         def entry_U(i, j):
-            return S.Zero if i > j else combined[i, j]
+            return self.zero if i > j else combined[i, j]
 
         L = self._new(combined.rows, combined.rows, entry_L)
         U = self._new(combined.rows, combined.cols, entry_U)
@@ -3811,7 +3971,7 @@ class MatrixBase(MatrixDeprecated,
                 # These entries are zero by construction, so don't bother
                 # computing them.
                 for row in range(pivot_row + 1, lu.rows):
-                    lu[row, pivot_col] = S.Zero
+                    lu[row, pivot_col] = self.zero
 
             pivot_col += 1
             if pivot_col == lu.cols:
@@ -4172,18 +4332,102 @@ class MatrixBase(MatrixDeprecated,
             arbitrary_matrix = self.__class__(cols, rows, w).T
         return A_pinv * B + (eye(A.cols) - A_pinv * A) * arbitrary_matrix
 
-    def pinv(self):
+    def _eval_pinv_full_rank(self):
+        """Subroutine for full row or column rank matrices.
+
+        For full row rank matrices, inverse of ``A * A.H`` Exists.
+        For full column rank matrices, inverse of ``A.H * A`` Exists.
+
+        This routine can apply for both cases by checking the shape
+        and have small decision.
+        """
+        if self.is_zero:
+            return self.H
+
+        if self.rows >= self.cols:
+            return (self.H * self).inv() * self.H
+        else:
+            return self.H * (self * self.H).inv()
+
+    def _eval_pinv_rank_decomposition(self):
+        """Subroutine for rank decomposition
+
+        With rank decompositions, `A` can be decomposed into two full-
+        rank matrices, and each matrix can take pseudoinverse
+        individually.
+        """
+        if self.is_zero:
+            return self.H
+
+        B, C = self.rank_decomposition()
+
+        Bp = B._eval_pinv_full_rank()
+        Cp = C._eval_pinv_full_rank()
+
+        return Cp * Bp
+
+    def _eval_pinv_diagonalization(self):
+        """Subroutine using diagonalization
+
+        This routine can sometimes fail if SymPy's eigenvalue
+        computation is not reliable.
+        """
+        if self.is_zero:
+            return self.H
+
+        A = self
+        AH = self.H
+
+        try:
+            if self.rows >= self.cols:
+                P, D = (AH * A).diagonalize(normalize=True)
+                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
+                return P * D_pinv * P.H * AH
+            else:
+                P, D = (A * AH).diagonalize(normalize=True)
+                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
+                return AH * P * D_pinv * P.H
+        except MatrixError:
+            raise NotImplementedError(
+                'pinv for rank-deficient matrices where '
+                'diagonalization of A.H*A fails is not supported yet.')
+
+
+    def pinv(self, method='RD'):
         """Calculate the Moore-Penrose pseudoinverse of the matrix.
 
         The Moore-Penrose pseudoinverse exists and is unique for any matrix.
         If the matrix is invertible, the pseudoinverse is the same as the
         inverse.
 
+        Parameters
+        ==========
+
+        method : String, optional
+            Specifies the method for computing the pseudoinverse.
+
+            If ``'RD'``, Rank-Decomposition will be used.
+
+            If ``'ED'``, Diagonalization will be used.
+
         Examples
         ========
 
+        Computing pseudoinverse by rank decomposition :
+
         >>> from sympy import Matrix
-        >>> Matrix([[1, 2, 3], [4, 5, 6]]).pinv()
+        >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
+        >>> A.pinv()
+        Matrix([
+        [-17/18,  4/9],
+        [  -1/9,  1/9],
+        [ 13/18, -2/9]])
+
+        Computing pseudoinverse by diagonalization :
+
+        >>> B = A.pinv(method='ED')
+        >>> B.simplify()
+        >>> B
         Matrix([
         [-17/18,  4/9],
         [  -1/9,  1/9],
@@ -4201,32 +4445,16 @@ class MatrixBase(MatrixDeprecated,
         .. [1] https://en.wikipedia.org/wiki/Moore-Penrose_pseudoinverse
 
         """
-        A = self
-        AH = self.H
         # Trivial case: pseudoinverse of all-zero matrix is its transpose.
-        if A.is_zero:
-            return AH
-        try:
-            if self.rows >= self.cols:
-                return (AH * A).inv() * AH
-            else:
-                return AH * (A * AH).inv()
-        except ValueError:
-            # Matrix is not full rank, so A*AH cannot be inverted.
-            pass
-        try:
-            # However, A*AH is Hermitian, so we can diagonalize it.
-            if self.rows >= self.cols:
-                P, D = (AH * A).diagonalize(normalize=True)
-                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
-                return P * D_pinv * P.H * AH
-            else:
-                P, D = (A * AH).diagonalize(normalize=True)
-                D_pinv = D.applyfunc(lambda x: 0 if _iszero(x) else 1 / x)
-                return AH * P * D_pinv * P.H
-        except MatrixError:
-            raise NotImplementedError('pinv for rank-deficient matrices where diagonalization '
-                                      'of A.H*A fails is not supported yet.')
+        if self.is_zero:
+            return self.H
+
+        if method == 'RD':
+            return self._eval_pinv_rank_decomposition()
+        elif method == 'ED':
+            return self._eval_pinv_diagonalization()
+        else:
+            raise ValueError()
 
     def print_nonzero(self, symb="X"):
         """Shows location of non-zero entries for fast shape lookup.

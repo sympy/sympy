@@ -163,6 +163,7 @@ class PrettyPrinter(Printer):
     _print_Naturals = _print_Atom
     _print_Naturals0 = _print_Atom
     _print_Integers = _print_Atom
+    _print_Rationals = _print_Atom
     _print_Complexes = _print_Atom
 
     def _print_Reals(self, e):
@@ -384,23 +385,6 @@ class PrettyPrinter(Printer):
             l = self._print(str(tuple(i)).replace(',', ''))
             cyc = prettyForm(*cyc.right(l))
         return cyc
-
-    def _print_PDF(self, pdf):
-        lim = self._print(pdf.pdf.args[0])
-        lim = prettyForm(*lim.right(', '))
-        lim = prettyForm(*lim.right(self._print(pdf.domain[0])))
-        lim = prettyForm(*lim.right(', '))
-        lim = prettyForm(*lim.right(self._print(pdf.domain[1])))
-        lim = prettyForm(*lim.parens())
-
-        f = self._print(pdf.pdf.args[1])
-        f = prettyForm(*f.right(', '))
-        f = prettyForm(*f.right(lim))
-        f = prettyForm(*f.parens())
-
-        pform = prettyForm('PDF')
-        pform = prettyForm(*pform.right(f))
-        return pform
 
     def _print_Integral(self, integral):
         f = integral.function
@@ -861,6 +845,24 @@ class PrettyPrinter(Printer):
                 args[i] = self._print(a)
 
         return prettyForm.__mul__(*args)
+
+    def _print_Identity(self, expr):
+        if self._use_unicode:
+            return prettyForm(u'\N{MATHEMATICAL DOUBLE-STRUCK CAPITAL I}')
+        else:
+            return prettyForm('I')
+
+    def _print_ZeroMatrix(self, expr):
+        if self._use_unicode:
+            return prettyForm(u'\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ZERO}')
+        else:
+            return prettyForm('0')
+
+    def _print_OneMatrix(self, expr):
+        if self._use_unicode:
+            return prettyForm(u'\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ONE}')
+        else:
+            return prettyForm('1')
 
     def _print_DotProduct(self, expr):
         args = list(expr.args)
@@ -1361,8 +1363,9 @@ class PrettyPrinter(Printer):
     def _print_Function(self, e, sort=False, func_name=None):
         # optional argument func_name for supplying custom names
         # XXX works only for applied functions
-        func = e.func
-        args = e.args
+        return self._helper_print_function(e.func, e.args, sort=sort, func_name=func_name)
+
+    def _helper_print_function(self, func, args, sort=False, func_name=None, delimiter=', '):
         if sort:
             args = sorted(args, key=default_sort_key)
 
@@ -1370,7 +1373,7 @@ class PrettyPrinter(Printer):
             func_name = func.__name__
 
         prettyFunc = self._print(Symbol(func_name))
-        prettyArgs = prettyForm(*self._print_seq(args).parens())
+        prettyArgs = prettyForm(*self._print_seq(args, delimiter=delimiter).parens())
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -1380,6 +1383,12 @@ class PrettyPrinter(Printer):
         pform.prettyArgs = prettyArgs
 
         return pform
+
+    def _print_ElementwiseApplyFunction(self, e):
+        func = e.function
+        arg = e.expr
+        args = [arg, "..."]
+        return self._helper_print_function(func, args, delimiter="")
 
     @property
     def _special_function_classes(self):
@@ -2103,6 +2112,12 @@ class PrettyPrinter(Printer):
         pretty = prettyForm(*pretty.parens('(', ')', ifascii_nougly=True))
         pretty = prettyForm(*stringPict.next(type(s).__name__, pretty))
         return pretty
+
+    def _print_UniversalSet(self, s):
+        if self._use_unicode:
+            return prettyForm(u"\N{MATHEMATICAL DOUBLE-STRUCK CAPITAL U}")
+        else:
+            return prettyForm('UniversalSet')
 
     def _print_PolyRing(self, ring):
         return prettyForm(sstr(ring))

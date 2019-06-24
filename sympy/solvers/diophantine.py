@@ -1675,7 +1675,7 @@ def length(P, Q, D):
     >>> length(-2 , 4, 5) # (-2 + sqrt(5))/4
     3
     >>> length(-5, 4, 17) # (-5 + sqrt(17))/4
-    5
+    4
 
     See Also
     ========
@@ -3182,7 +3182,7 @@ def power_representation(n, p, k, zeros=False):
             '''Todd G. Will, "When Is n^2 a Sum of k Squares?", [online].
                 Available: https://www.maa.org/sites/default/files/Will-MMz-201037918.pdf'''
             return
-        if feasible is 1:  # it's prime and k == 2
+        if feasible is not True:  # it's prime and k == 2
             yield prime_as_sum_of_two_squares(n)
             return
 

@@ -776,7 +776,7 @@ def test_multivariate_bool_as_set():
 
 
 def test_all_or_nothing():
-    x = symbols('x', real=True)
+    x = symbols('x', extended_real=True)
     args = x >= -oo, x <= oo
     v = And(*args)
     if v.func is And:

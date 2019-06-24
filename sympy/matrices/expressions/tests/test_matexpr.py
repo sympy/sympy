@@ -1,5 +1,5 @@
 from sympy import (KroneckerDelta, diff, Piecewise, Sum, Dummy, factor,
-                   expand, zeros, gcd_terms, Eq)
+                   expand, zeros, gcd_terms, Eq, Symbol)
 
 from sympy.core import S, symbols, Add, Mul, SympifyError
 from sympy.core.compatibility import long
@@ -9,7 +9,7 @@ from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         SparseMatrix, Transpose, Adjoint)
 from sympy.matrices.expressions.matexpr import (MatrixElement,
-    GenericZeroMatrix, GenericIdentity)
+                                                GenericZeroMatrix, GenericIdentity, OneMatrix)
 from sympy.utilities.pytest import raises, XFAIL
 
 
@@ -74,6 +74,36 @@ def test_ZeroMatrix_doit():
     assert isinstance(Znn.rows, Add)
     assert Znn.doit() == ZeroMatrix(2*n, n)
     assert isinstance(Znn.doit().rows, Mul)
+
+
+def test_OneMatrix():
+    A = MatrixSymbol('A', n, m)
+    a = MatrixSymbol('a', n, 1)
+    U = OneMatrix(n, m)
+
+    assert U.shape == (n, m)
+    assert isinstance(A + U, Add)
+    assert transpose(U) == OneMatrix(m, n)
+    assert U.conjugate() == U
+
+    assert OneMatrix(n, n) ** 0 == Identity(n)
+    with raises(ShapeError):
+        U ** 0
+    with raises(ShapeError):
+        U ** 2
+
+    U = OneMatrix(n, n)
+    assert U[1, 2] == 1
+
+    U = OneMatrix(2, 3)
+    assert U.as_explicit() == ImmutableMatrix.ones(2, 3)
+
+
+def test_OneMatrix_doit():
+    Unn = OneMatrix(Add(n, n, evaluate=False), n)
+    assert isinstance(Unn.rows, Add)
+    assert Unn.doit() == OneMatrix(2 * n, n)
+    assert isinstance(Unn.doit().rows, Mul)
 
 
 def test_Identity():
@@ -517,3 +547,13 @@ def test_exp():
 
 def test_invalid_args():
     raises(SympifyError, lambda: MatrixSymbol(1, 2, 'A'))
+
+def test_matrixsymbol_from_symbol():
+    # The label should be preserved during doit and subs
+    A_label = Symbol('A', complex=True)
+    A = MatrixSymbol(A_label, 2, 2)
+
+    A_1 = A.doit()
+    A_2 = A.subs(2, 3)
+    assert A_1.args == A.args
+    assert A_2.args[0] == A.args[0]

@@ -26,9 +26,7 @@ ErrorListener = import_module('antlr4.error.ErrorListener',
 
 
 
-if ErrorListener is None:
-    pass
-else:
+if ErrorListener:
     class MathErrorListener(ErrorListener.ErrorListener):
         def __init__(self, src):
             super(ErrorListener.ErrorListener, self).__init__()

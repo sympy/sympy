@@ -1,8 +1,9 @@
 import string
 
 from sympy import (
-    Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I,
-    expand_func, diff, EulerGamma, cancel, re, im, Product, carmichael)
+    Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I, floor, limit,
+    expand_func, diff, EulerGamma, cancel, re, im, Product, carmichael,
+    TribonacciConstant)
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
@@ -10,9 +11,11 @@ from sympy.functions import (
 from sympy.functions.combinatorial.numbers import _nT
 
 from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
+from sympy.core.numbers import GoldenRatio
+
 from sympy.utilities.pytest import XFAIL, raises
 
-from sympy.core.numbers import GoldenRatio
 
 x = Symbol('x')
 
@@ -28,6 +31,9 @@ def test_carmichael():
     assert carmichael.is_prime(1729) == False
     assert carmichael.is_prime(1105) == False
     assert carmichael.is_prime(561) == False
+    raises(ValueError, lambda: carmichael.is_carmichael(-2))
+    raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(-2, 2))
+    raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(22, 2))
 
 
 def test_bernoulli():
@@ -63,6 +69,7 @@ def test_bernoulli():
     assert isinstance(bernoulli(2 * l + 1), bernoulli)
     assert isinstance(bernoulli(2 * m + 1), bernoulli)
     assert bernoulli(2 * n + 1) == 0
+    raises(ValueError, lambda: bernoulli(-2))
 
 
 def test_fibonacci():
@@ -89,6 +96,7 @@ def test_fibonacci():
     assert lucas(n).rewrite(sqrt) == \
         (fibonacci(n-1).rewrite(sqrt) + fibonacci(n+1).rewrite(sqrt)).simplify()
     assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
+    raises(ValueError, lambda: fibonacci(-3, x))
 
 
 def test_tribonacci():
@@ -116,6 +124,10 @@ def test_tribonacci():
     assert tribonacci(n).rewrite(sqrt).subs(n, 4).simplify() == tribonacci(4)
     assert tribonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
         tribonacci(10)
+    assert tribonacci(n).rewrite(TribonacciConstant) == floor(
+            3*TribonacciConstant**n*(102*sqrt(33) + 586)**(S(1)/3)/
+            (-2*(102*sqrt(33) + 586)**(S(1)/3) + 4 + (102*sqrt(33)
+            + 586)**(S(2)/3)) + S(1)/2)
     raises(ValueError, lambda: tribonacci(-1, x))
 
 
@@ -157,6 +169,9 @@ def test_bell():
     for i in [0, 2, 3, 7, 13, 42, 55]:
         assert bell(i).evalf() == bell(n).rewrite(Sum).evalf(subs={n: i})
 
+    m = Symbol("m")
+    assert bell(m).rewrite(Sum) == bell(m)
+    assert bell(n, m).rewrite(Sum) == bell(n, m)
     # issue 9184
     n = Dummy('n')
     assert bell(n).limit(n, S.Infinity) == S.Infinity
@@ -269,7 +284,7 @@ def test_harmonic_evalf():
     assert str(harmonic(1.5, 2).evalf(n=10)) == '1.154576311'  # issue 7443
 
 
-def test_harmonic_rewrite_polygamma():
+def test_harmonic_rewrite():
     n = Symbol("n")
     m = Symbol("m")
 
@@ -285,38 +300,17 @@ def test_harmonic_rewrite_polygamma():
 
     assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
 
+    _k = Dummy("k")
+    assert harmonic(n).rewrite(Sum).dummy_eq(Sum(1/_k, (_k, 1, n)))
+    assert harmonic(n, m).rewrite(Sum).dummy_eq(Sum(_k**(-m), (_k, 1, n)))
+
+
 @XFAIL
 def test_harmonic_limit_fail():
     n = Symbol("n")
     m = Symbol("m")
     # For m > 1:
     assert limit(harmonic(n, m), n, oo) == zeta(m)
-
-@XFAIL
-def test_harmonic_rewrite_sum_fail():
-    n = Symbol("n")
-    m = Symbol("m")
-
-    _k = Dummy("k")
-    assert harmonic(n).rewrite(Sum) == Sum(1/_k, (_k, 1, n))
-    assert harmonic(n, m).rewrite(Sum) == Sum(_k**(-m), (_k, 1, n))
-
-
-def replace_dummy(expr, sym):
-    dum = expr.atoms(Dummy)
-    if not dum:
-        return expr
-    assert len(dum) == 1
-    return expr.xreplace({dum.pop(): sym})
-
-
-def test_harmonic_rewrite_sum():
-    n = Symbol("n")
-    m = Symbol("m")
-
-    _k = Dummy("k")
-    assert replace_dummy(harmonic(n).rewrite(Sum), _k) == Sum(1/_k, (_k, 1, n))
-    assert replace_dummy(harmonic(n, m).rewrite(Sum), _k) == Sum(_k**(-m), (_k, 1, n))
 
 
 def test_euler():
@@ -342,15 +336,13 @@ def test_euler():
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
 
     assert euler(n).rewrite(Sum) == euler(n)
-    # XXX: Not sure what the guy who wrote this test was trying to do with the _j and _k stuff
     n = Symbol('n', integer=True, nonnegative=True)
     assert euler(2*n + 1).rewrite(Sum) == 0
-
-
-@XFAIL
-def test_euler_failing():
-    # depends on dummy variables being implemented https://github.com/sympy/sympy/issues/5665
-    assert euler(2*n).rewrite(Sum) == I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
+    _j = Dummy('j')
+    _k = Dummy('k')
+    assert euler(2*n).rewrite(Sum).dummy_eq(
+            I*Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*
+                  binomial(_k, _j)/_k, (_j, 0, _k), (_k, 1, 2*n + 1)))
 
 
 def test_euler_odd():
@@ -393,7 +385,7 @@ def test_catalan():
         assert catalan(n).rewrite(factorial).subs(n, i) == c
         assert catalan(n).rewrite(Product).subs(n, i).doit() == c
 
-    assert catalan(x) == catalan(x)
+    assert unchanged(catalan, x)
     assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
     assert catalan(Rational(1, 2)).rewrite(gamma) == 8/(3*pi)
     assert catalan(Rational(1, 2)).rewrite(factorial).rewrite(gamma) ==\
@@ -429,15 +421,22 @@ def test_genocchi():
 
     m = Symbol('m', integer=True)
     n = Symbol('n', integer=True, positive=True)
-    assert genocchi(m) == genocchi(m)
+    assert unchanged(genocchi, m)
+    assert genocchi(2*n + 1) == 0
     assert genocchi(n).rewrite(bernoulli) == (1 - 2 ** n) * bernoulli(n) * 2
     assert genocchi(2 * n).is_odd
+    assert genocchi(2 * n).is_even is False
+    assert genocchi(2 * n + 1).is_even
+    assert genocchi(n).is_integer
     assert genocchi(4 * n).is_positive
     # these are the only 2 prime Genocchi numbers
     assert genocchi(6, evaluate=False).is_prime == S(-3).is_prime
     assert genocchi(8, evaluate=False).is_prime
     assert genocchi(4 * n + 2).is_negative
+    assert genocchi(4 * n + 1).is_negative is False
     assert genocchi(4 * n - 2).is_negative
+    raises(ValueError, lambda: genocchi(S(5)/4))
+    raises(ValueError, lambda: genocchi(-2))
 
 
 def test_partition():

@@ -279,6 +279,7 @@ class KanesMethod(object):
         # pull out relevant velocities for constructing partial velocities
         vel_list, f_list = _f_list_parser(fl, N)
         vel_list = [msubs(i, self._qdot_u_map) for i in vel_list]
+        f_list = [msubs(i, self._qdot_u_map) for i in f_list]
 
         # Fill Fr with dot product of partial velocities and forces
         o = len(self.u)

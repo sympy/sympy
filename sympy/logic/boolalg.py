@@ -331,7 +331,7 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
 
         >>> from sympy import true
         >>> true.as_set()
-        UniversalSet()
+        UniversalSet
         """
         return S.UniversalSet
 

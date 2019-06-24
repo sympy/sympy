@@ -137,7 +137,7 @@ class Point(GeometryEntity):
                 Point requires 2 or more coordinates or
                 keyword `dim` > 1.'''))
         if len(coords) != dim:
-            message = ("Dimension of {} needs to be changed"
+            message = ("Dimension of {} needs to be changed "
                        "from {} to {}.").format(coords, len(coords), dim)
             if on_morph == 'ignore':
                 pass
@@ -324,7 +324,9 @@ class Point(GeometryEntity):
         points = [i - origin for i in points[1:]]
 
         m = Matrix([i.args for i in points])
-        return m.rank()
+        # XXX fragile -- what is a better way?
+        return m.rank(iszerofunc = lambda x:
+            abs(x.n(2)) < 1e-12 if x.is_number else x.is_zero)
 
     @property
     def ambient_dimension(self):
@@ -479,7 +481,7 @@ class Point(GeometryEntity):
         Parameters
         ==========
 
-        other : Point
+        other : GeometryEntity or sequence of coordinates
 
         Returns
         =======
@@ -1198,12 +1200,12 @@ class Point3D(Point):
         return [(point.x - self.x),(point.y - self.y),(point.z - self.z)]
 
     def intersection(self, other):
-        """The intersection between this point and another point.
+        """The intersection between this point and another GeometryEntity.
 
         Parameters
         ==========
 
-        other : Point
+        other : GeometryEntity or sequence of coordinates
 
         Returns
         =======

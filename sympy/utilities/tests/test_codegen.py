@@ -1,6 +1,6 @@
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.core.compatibility import StringIO
-from sympy import erf, Integral
+from sympy import erf, Integral, Symbol
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import (
@@ -578,6 +578,25 @@ def test_ccode_cse():
         '   e[0] = x0;\n'
         '   e[1] = x0 + x1;\n'
         '   e[2] = x0*x1;\n'
+        '}\n'
+    )
+    assert source == expected
+
+def test_ccode_unused_array_arg():
+    x = MatrixSymbol('x', 2, 1)
+    # x does not appear in output
+    name_expr = ("test", 1.0)
+    generator = CCodeGen()
+    result = codegen(name_expr, code_gen=generator, header=False, empty=False, argument_sequence=(x,))
+    source = result[0][1]
+    # note: x should appear as (double *)
+    expected = (
+        '#include "test.h"\n'
+        '#include <math.h>\n'
+        'double test(double *x) {\n'
+        '   double test_result;\n'
+        '   test_result = 1.0;\n'
+        '   return test_result;\n'
         '}\n'
     )
     assert source == expected
@@ -1423,6 +1442,7 @@ def test_fcode_matrixsymbol_slice_autoname():
     expected = expected % {'hash': out}
     assert source == expected
 
+
 def test_global_vars():
     x, y, z, t = symbols("x y z t")
     result = codegen(('f', x*y), "F95", header=False, empty=False,
@@ -1524,3 +1544,34 @@ def test_c_with_printer():
     ]
     result = codegen(("test", expr), "C","file", header=False, empty=False, printer = CustomPrinter())
     assert result == expected
+
+
+def test_fcode_complex():
+    import sympy.utilities.codegen
+    sympy.utilities.codegen.COMPLEX_ALLOWED = True
+    x = Symbol('x', real=True)
+    y = Symbol('y',real=True)
+    result = codegen(('test',x+y), 'f95', 'test', header=False, empty=False)
+    source = (result[0][1])
+    expected = (
+        "REAL*8 function test(x, y)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: x\n"
+        "REAL*8, intent(in) :: y\n"
+        "test = x + y\n"
+        "end function\n")
+    assert source == expected
+    x = Symbol('x')
+    y = Symbol('y',real=True)
+    result = codegen(('test',x+y), 'f95', 'test', header=False, empty=False)
+    source = (result[0][1])
+    expected = (
+        "COMPLEX*16 function test(x, y)\n"
+        "implicit none\n"
+        "COMPLEX*16, intent(in) :: x\n"
+        "REAL*8, intent(in) :: y\n"
+        "test = x + y\n"
+        "end function\n"
+        )
+    assert source==expected
+    sympy.utilities.codegen.COMPLEX_ALLOWED = False

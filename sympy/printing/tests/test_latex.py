@@ -23,12 +23,12 @@ from sympy.ntheory.factor_ import udivisor_sigma
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import (latex, translate, greek_letters_set,
-                                  tex_greek_dictionary)
+                                  tex_greek_dictionary, multiline_latex)
 from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 ImmutableSparseNDimArray,
                                 MutableSparseNDimArray,
-                                MutableDenseNDimArray)
-from sympy.tensor.array import tensorproduct
+                                MutableDenseNDimArray,
+                                tensorproduct)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
@@ -200,8 +200,6 @@ def test_latex_Float():
     assert latex(Float(1.0e-100)) == r"1.0 \cdot 10^{-100}"
     assert latex(Float(1.0e-100), mul_symbol="times") == \
         r"1.0 \times 10^{-100}"
-    assert latex(1.0*oo) == r"\infty"
-    assert latex(-1.0*oo) == r"- \infty"
 
 
 def test_latex_vector_expressions():
@@ -813,6 +811,10 @@ def test_latex_emptyset():
     assert latex(S.EmptySet) == r"\emptyset"
 
 
+def test_latex_universalset():
+    assert latex(S.UniversalSet) == r"\mathbb{U}"
+
+
 def test_latex_commutator():
     A = Operator('A')
     B = Operator('B')
@@ -1319,15 +1321,25 @@ def test_latex_numbers():
     assert latex(catalan(n)) == r"C_{n}"
     assert latex(catalan(n)**2) == r"C_{n}^{2}"
     assert latex(bernoulli(n)) == r"B_{n}"
+    assert latex(bernoulli(n, x)) == r"B_{n}\left(x\right)"
     assert latex(bernoulli(n)**2) == r"B_{n}^{2}"
+    assert latex(bernoulli(n, x)**2) == r"B_{n}^{2}\left(x\right)"
     assert latex(bell(n)) == r"B_{n}"
+    assert latex(bell(n, x)) == r"B_{n}\left(x\right)"
+    assert latex(bell(n, m, (x, y))) == r"B_{n, m}\left(x, y\right)"
     assert latex(bell(n)**2) == r"B_{n}^{2}"
+    assert latex(bell(n, x)**2) == r"B_{n}^{2}\left(x\right)"
+    assert latex(bell(n, m, (x, y))**2) == r"B_{n, m}^{2}\left(x, y\right)"
     assert latex(fibonacci(n)) == r"F_{n}"
+    assert latex(fibonacci(n, x)) == r"F_{n}\left(x\right)"
     assert latex(fibonacci(n)**2) == r"F_{n}^{2}"
+    assert latex(fibonacci(n, x)**2) == r"F_{n}^{2}\left(x\right)"
     assert latex(lucas(n)) == r"L_{n}"
     assert latex(lucas(n)**2) == r"L_{n}^{2}"
     assert latex(tribonacci(n)) == r"T_{n}"
+    assert latex(tribonacci(n, x)) == r"T_{n}\left(x\right)"
     assert latex(tribonacci(n)**2) == r"T_{n}^{2}"
+    assert latex(tribonacci(n, x)**2) == r"T_{n}^{2}\left(x\right)"
 
 def test_latex_euler():
     assert latex(euler(n)) == r"E_{n}"
@@ -1579,26 +1591,69 @@ def test_Adjoint():
     assert latex(Adjoint(Transpose(X))) == r'\left(X^{T}\right)^{\dagger}'
     assert latex(Transpose(Adjoint(X))) == r'\left(X^{\dagger}\right)^{T}'
     assert latex(Transpose(Adjoint(X) + Y)) == r'\left(X^{\dagger} + Y\right)^{T}'
+
+
+def test_Transpose():
+    from sympy.matrices import Transpose, MatPow, HadamardPower
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
     assert latex(Transpose(X)) == r'X^{T}'
     assert latex(Transpose(X + Y)) == r'\left(X + Y\right)^{T}'
 
+    assert latex(Transpose(HadamardPower(X, 2))) == \
+        r'\left(X^{\circ {2}}\right)^{T}'
+    assert latex(HadamardPower(Transpose(X), 2)) == \
+        r'\left(X^{T}\right)^{\circ {2}}'
+    assert latex(Transpose(MatPow(X, 2))) == \
+        r'\left(X^{2}\right)^{T}'
+    assert latex(MatPow(Transpose(X), 2)) == \
+        r'\left(X^{T}\right)^{2}'
+
 
 def test_Hadamard():
-    from sympy.matrices import MatrixSymbol, HadamardProduct
+    from sympy.matrices import MatrixSymbol, HadamardProduct, HadamardPower
+    from sympy.matrices.expressions import MatAdd, MatMul, MatPow
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert latex(HadamardProduct(X, Y*Y)) == r'X \circ Y^{2}'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
 
+    assert latex(HadamardPower(X, 2)) == r'X^{\circ {2}}'
+    assert latex(HadamardPower(X, -1)) == r'X^{\circ {-1}}'
+    assert latex(HadamardPower(MatAdd(X, Y), 2)) == \
+        r'\left(X + Y\right)^{\circ {2}}'
+    assert latex(HadamardPower(MatMul(X, Y), 2)) == \
+        r'\left(X Y\right)^{\circ {2}}'
+
+    assert latex(HadamardPower(MatPow(X, -1), -1)) == \
+        r'\left(X^{-1}\right)^{\circ {-1}}'
+    assert latex(MatPow(HadamardPower(X, -1), -1)) == \
+        r'\left(X^{\circ {-1}}\right)^{-1}'
+
+
+def test_ElementwiseApplyFunction():
+    from sympy.matrices import MatrixSymbol
+    X = MatrixSymbol('X', 2, 2)
+    expr = (X.T*X).applyfunc(sin)
+    assert latex(expr) == r"\sin\left({X^{T} X}\ldots\right)"
+
 
 def test_ZeroMatrix():
     from sympy import ZeroMatrix
-    assert latex(ZeroMatrix(1, 1)) == r"\mathbb{0}"
+    assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"\mathbb{0}"
+    assert latex(ZeroMatrix(1, 1), mat_symbol_style='bold') == r"\mathbf{0}"
+
+
+def test_OneMatrix():
+    from sympy import OneMatrix
+    assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"\mathbb{1}"
+    assert latex(OneMatrix(3, 4), mat_symbol_style='bold') == r"\mathbf{1}"
 
 
 def test_Identity():
     from sympy import Identity
-    assert latex(Identity(1)) == r"\mathbb{I}"
+    assert latex(Identity(1), mat_symbol_style='plain') == r"\mathbb{I}"
+    assert latex(Identity(1), mat_symbol_style='bold') == r"\mathbf{I}"
 
 
 def test_boolean_args_order():
@@ -2073,6 +2128,58 @@ def test_latex_printer_tensor():
     expr = TensorElement(K(i, j, -k, -l), {i: 3})
     assert latex(expr) == 'K{}^{i=3,j}{}_{kl}'
 
+
+def test_multiline_latex():
+    a, b, c, d, e, f = symbols('a b c d e f')
+    expr = -a + 2*b -3*c +4*d -5*e
+    expected = r"\begin{eqnarray}" + "\n"\
+    r"f & = &- a \nonumber\\" + "\n"\
+    r"& & + 2 b \nonumber\\" + "\n"\
+    r"& & - 3 c \nonumber\\" + "\n"\
+    r"& & + 4 d \nonumber\\" + "\n"\
+    r"& & - 5 e " + "\n"\
+    r"\end{eqnarray}"
+    assert multiline_latex(f, expr, environment="eqnarray") == expected
+
+    expected2 = r'\begin{eqnarray}' + '\n'\
+    r'f & = &- a + 2 b \nonumber\\' + '\n'\
+    r'& & - 3 c + 4 d \nonumber\\' + '\n'\
+    r'& & - 5 e ' + '\n'\
+    r'\end{eqnarray}'
+
+    assert multiline_latex(f, expr, 2, environment="eqnarray") == expected2
+
+    expected3 = r'\begin{eqnarray}' + '\n'\
+    r'f & = &- a + 2 b - 3 c \nonumber\\'+ '\n'\
+    r'& & + 4 d - 5 e ' + '\n'\
+    r'\end{eqnarray}'
+
+    assert multiline_latex(f, expr, 3, environment="eqnarray") == expected3
+
+    expected3dots = r'\begin{eqnarray}' + '\n'\
+    r'f & = &- a + 2 b - 3 c \dots\nonumber\\'+ '\n'\
+    r'& & + 4 d - 5 e ' + '\n'\
+    r'\end{eqnarray}'
+
+    assert multiline_latex(f, expr, 3, environment="eqnarray", use_dots=True) == expected3dots
+
+    expected3align = r'\begin{align*}' + '\n'\
+    r'f = &- a + 2 b - 3 c \\'+ '\n'\
+    r'& + 4 d - 5 e ' + '\n'\
+    r'\end{align*}'
+
+    assert multiline_latex(f, expr, 3) == expected3align
+    assert multiline_latex(f, expr, 3, environment='align*') == expected3align
+
+    expected2ieee = r'\begin{IEEEeqnarray}{rCl}' + '\n'\
+    r'f & = &- a + 2 b \nonumber\\' + '\n'\
+    r'& & - 3 c + 4 d \nonumber\\' + '\n'\
+    r'& & - 5 e ' + '\n'\
+    r'\end{IEEEeqnarray}'
+
+    assert multiline_latex(f, expr, 2, environment="IEEEeqnarray") == expected2ieee
+
+    raises(ValueError, lambda: multiline_latex(f, expr, environment="foo"))
 
 def test_issue_15353():
     from sympy import ConditionSet, Tuple, FiniteSet, S, sin, cos

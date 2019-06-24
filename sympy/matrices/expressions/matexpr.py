@@ -69,6 +69,7 @@ class MatrixExpr(Expr):
     is_commutative = False
     is_number = False
     is_symbol = False
+    is_scalar = False
 
     def __new__(cls, *args, **kwargs):
         args = map(_sympify, args)
@@ -197,7 +198,14 @@ class MatrixExpr(Expr):
         return Adjoint(self)
 
     def _eval_derivative(self, x):
-        return _matrix_derivative(self, x)
+        # x is a scalar:
+        return ZeroMatrix(self.shape[0], self.shape[1])
+
+    def _eval_derivative_array(self, x):
+        if isinstance(x, MatrixExpr):
+            return _matrix_derivative(self, x)
+        else:
+            return self._eval_derivative(x)
 
     def _eval_derivative_n_times(self, x, n):
         return Basic._eval_derivative_n_times(self, x, n)
@@ -500,7 +508,6 @@ class MatrixExpr(Expr):
                             lines[(index1, index2)] = cur_line
                             break
                         cur_ind_pos = next_ind_pos
-                ret_indices = list(j for i in lines for j in i)
                 lines = {k: MatMul.fromiter(v) if len(v) != 1 else v[0] for k, v in lines.items()}
                 return [(Mul.fromiter(nonmatargs), None)] + [
                     (MatrixElement(a, i, j), (i, j)) for (i, j), a in lines.items()
@@ -611,6 +618,7 @@ def get_postprocessor(cls):
         return mat_class(cls._from_args(nonmatrices), *matrices).doit(deep=False)
     return _postprocessor
 
+
 Basic._constructor_postprocessor_mapping[MatrixExpr] = {
     "Mul": [get_postprocessor(Mul)],
     "Add": [get_postprocessor(Add)],
@@ -622,6 +630,10 @@ def _matrix_derivative(expr, x):
     lines = expr._eval_derivative_matrix_lines(x)
 
     parts = [i.build() for i in lines]
+
+    from sympy.codegen.array_utils import recognize_matrix_expression
+
+    parts = [[recognize_matrix_expression(j).doit() for j in i] for i in parts]
 
     def _get_shape(elem):
         if isinstance(elem, MatrixExpr):
@@ -756,7 +768,7 @@ class MatrixSymbol(MatrixExpr):
     def _eval_subs(self, old, new):
         # only do substitutions in shape
         shape = Tuple(*self.shape)._subs(old, new)
-        return MatrixSymbol(self.name, *shape)
+        return MatrixSymbol(self.args[0], *shape)
 
     def __call__(self, *args):
         raise TypeError("%s object is not callable" % self.__class__)
@@ -770,7 +782,7 @@ class MatrixSymbol(MatrixExpr):
 
     def doit(self, **hints):
         if hints.get('deep', True):
-            return type(self)(self.name, self.args[1].doit(**hints),
+            return type(self)(self.args[0], self.args[1].doit(**hints),
                     self.args[2].doit(**hints))
         else:
             return self
@@ -975,6 +987,45 @@ class GenericZeroMatrix(ZeroMatrix):
         return super(GenericZeroMatrix, self).__hash__()
 
 
+class OneMatrix(MatrixExpr):
+    """
+    Matrix whose all entries are ones.
+    """
+    def __new__(cls, m, n):
+        obj = super(OneMatrix, cls).__new__(cls, m, n)
+        return obj
+
+    @property
+    def shape(self):
+        return self._args
+
+    def as_explicit(self):
+        from sympy import ImmutableDenseMatrix
+        return ImmutableDenseMatrix.ones(*self.shape)
+
+    def _eval_transpose(self):
+        return OneMatrix(self.cols, self.rows)
+
+    def _eval_trace(self):
+        return S.One*self.rows
+
+    def _eval_determinant(self):
+        condition = Eq(self.shape[0], 1) & Eq(self.shape[1], 1)
+        if condition == True:
+            return S.One
+        elif condition == False:
+            return S.Zero
+        else:
+            from sympy import Determinant
+            return Determinant(self)
+
+    def conjugate(self):
+        return self
+
+    def _entry(self, i, j, **kwargs):
+        return S.One
+
+
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
 
@@ -997,8 +1048,10 @@ class _LeftRightArgs(object):
         self._lines = [i for i in lines]
         self._first_pointer_parent = self._lines
         self._first_pointer_index = 0
+        self._first_line_index = 0
         self._second_pointer_parent = self._lines
         self._second_pointer_index = 1
+        self._second_line_index = 1
         self.higher = higher
 
     @property
@@ -1030,6 +1083,7 @@ class _LeftRightArgs(object):
     def transpose(self):
         self._first_pointer_parent, self._second_pointer_parent = self._second_pointer_parent, self._first_pointer_parent
         self._first_pointer_index, self._second_pointer_index = self._second_pointer_index, self._first_pointer_index
+        self._first_line_index, self._second_line_index = self._second_line_index, self._first_line_index
         return self
 
     @staticmethod
@@ -1088,6 +1142,27 @@ class _LeftRightArgs(object):
             rank += 2
         return rank
 
+    def _multiply_pointer(self, pointer, other):
+        from sympy.core.expr import ExprBuilder
+        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+
+        subexpr = ExprBuilder(
+            CodegenArrayContraction,
+            [
+                ExprBuilder(
+                    CodegenArrayTensorProduct,
+                    [
+                        pointer,
+                        other
+                    ]
+                ),
+                (1, 2)
+            ],
+            validator=CodegenArrayContraction._validate
+        )
+
+        return subexpr
+
     def append_first(self, other):
         self.first_pointer *= other
 
@@ -1101,6 +1176,13 @@ class _LeftRightArgs(object):
         if not isinstance(other, _LeftRightArgs):
             return False
         return (self.first == other.first) and (self.second == other.second)
+
+
+def _make_matrix(x):
+    from sympy import ImmutableDenseMatrix
+    if isinstance(x, MatrixExpr):
+        return x
+    return ImmutableDenseMatrix([[x]])
 
 
 from .matmul import MatMul

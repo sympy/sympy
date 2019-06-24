@@ -52,8 +52,8 @@ class Transpose(MatrixExpr):
     def shape(self):
         return self.arg.shape[::-1]
 
-    def _entry(self, i, j, expand=False):
-        return self.arg._entry(j, i, expand=expand)
+    def _entry(self, i, j, expand=False, **kwargs):
+        return self.arg._entry(j, i, expand=expand, **kwargs)
 
     def _eval_adjoint(self):
         return conjugate(self.arg)
