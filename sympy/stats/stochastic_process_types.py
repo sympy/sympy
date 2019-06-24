@@ -257,13 +257,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         trans_probs, state_space = self.transition_probabilities, self.state_space
         if isinstance(given_condition, And):
             gcs = given_condition.args
+            given_condition = True
             for gc in gcs:
                 if isinstance(gc, TransitionMatrixOf):
                     trans_probs = gc.matrix
                 if isinstance(gc, StochasticStateSpaceOf):
                     state_space = gc.state_space
                 if isinstance(gc, Eq):
-                    given_condition = gc
+                    given_condition = given_condition & gc
         if isinstance(given_condition, TransitionMatrixOf):
             trans_probs = given_condition.matrix
         if isinstance(given_condition, StochasticStateSpaceOf):
@@ -309,7 +310,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
 
         # extracting transition matrix and state space
         trans_probs, state_space, given_condition = self._extract_information(given_condition)
-
         # given_condition does not have sufficient information
         # for computations
         if trans_probs == None or \
@@ -489,7 +489,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
 
         if isinstance(condition, And):
             # handle queries like,
-            # P(Eq(X[i+k], s1) & Eq(X[i+m], s2) . . . & Eq(X[i], sn), Eq(P(X[i]), prob))
+            # P(Eq(X[i+k], s1) & Eq(X[i+m], s2) . . . & Eq(X[i], sn), Eq(P(Eq(X[i], si)), prob))
             conds = condition.args
             i, result = -1, 1
             while i > -len(conds):
@@ -499,6 +499,16 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
                 i -= 1
             if isinstance(given_condition, (TransitionMatrixOf, StochasticStateSpaceOf)):
                 return result * Probability(conds[i])
+            if isinstance(given_condition, And):
+                idx_sym = conds[i].atoms(RandomIndexedSymbol)
+                prob, count = S(0), 0
+                for gc in given_condition.args:
+                    if gc.atoms(RandomIndexedSymbol) == idx_sym:
+                        prob += gc.rhs if isinstance(gc.lhs, Probability) else gc.lhs
+                        count += 1
+                if isinstance(state_space, FiniteSet) and \
+                    count == len(state_space) - 1:
+                    given_condition = Eq(Probability(conds[i]), S(1) - prob)
             if isinstance(given_condition, Eq):
                 if not isinstance(given_condition.lhs, Probability) or \
                     given_condition.lhs.args[0] != conds[i]:
