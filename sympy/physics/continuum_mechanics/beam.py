@@ -96,9 +96,9 @@ class Beam(object):
             property of an area which reflects how its points are distributed
             with respect to its neutral axis. It can also be a continuous
             function of position along the beam. Alternatively ``second_moment``
-            can be a geometry object such as a ``Polygon`` from the geometry module
+            can be a shape object such as a ``Polygon`` from the geometry module
             representing the shape of the cross-section of the beam. The second moment
-            of area will be computed from the gemetry object internally.
+            of area will be computed from the shape object internally.
 
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
