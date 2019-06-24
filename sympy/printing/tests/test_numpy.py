@@ -269,4 +269,4 @@ def test_issue_17006():
     from sympy import symbols
     n = symbols('n', integer=True)
     N = MatrixSymbol("M", n, n)
-    raises(NotImplementedError, lambdify(N, N + Identity(n)))
+    raises(NotImplementedError, lambda: lambdify(N, N + Identity(n)))
