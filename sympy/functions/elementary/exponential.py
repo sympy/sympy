@@ -550,8 +550,6 @@ class log(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
-        if arg is S.ComplexInfinity:
-                return S.ComplexInfinity
         if isinstance(arg, exp) and arg.args[0].is_extended_real:
             return arg.args[0]
         elif isinstance(arg, exp_polar):

@@ -10,4 +10,5 @@ Naturals = S.Naturals
 Naturals0 = S.Naturals0
 UniversalSet = S.UniversalSet
 Integers = S.Integers
+Rationals = S.Rationals
 del S

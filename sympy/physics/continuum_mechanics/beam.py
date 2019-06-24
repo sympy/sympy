@@ -14,6 +14,16 @@ from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
+from sympy.external import import_module
+from sympy.utilities.decorator import doctest_depends_on
+from sympy import lambdify
+from sympy.core.compatibility import iterable
+
+matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
+numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
+
+__doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
+
 
 class Beam(object):
     """
@@ -1674,6 +1684,29 @@ class Beam3D(Beam):
         along y and z axis at ``0``.
         """
         return self._boundary_conditions
+
+    def polar_moment(self):
+        """
+        Returns the polar moment of area of the beam
+        about the X axis with respect to the centroid.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+        >>> from sympy import symbols
+        >>> l, E, G, I, A = symbols('l, E, G, I, A')
+        >>> b = Beam3D(l, E, G, I, A)
+        >>> b.polar_moment()
+        2*I
+        >>> I1 = [9, 15]
+        >>> b = Beam3D(l, E, G, I1, A)
+        >>> b.polar_moment()
+        24
+        """
+        if not iterable(self.second_moment):
+            return 2*self.second_moment
+        return sum(self.second_moment)
 
     def apply_load(self, value, start, order, dir="y"):
         """

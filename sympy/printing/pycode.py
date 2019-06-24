@@ -78,7 +78,6 @@ def _print_known_const(self, expr):
 class AbstractPythonCodePrinter(CodePrinter):
     printmethod = "_pythoncode"
     language = "Python"
-    standard = "python3"
     reserved_words = _kw_py2and3.union(_kw_only_py3)
     modules = None  # initialized to a set in __init__
     tab = '    '
@@ -94,12 +93,26 @@ class AbstractPythonCodePrinter(CodePrinter):
         precision=17,
         inline=True,
         fully_qualified_modules=True,
-        contract=False
+        contract=False,
+        standard='python3'
     )
 
     def __init__(self, settings=None):
         super(AbstractPythonCodePrinter, self).__init__(settings)
+
+        # XXX Remove after dropping python 2 support.
+        # Python standard handler
+        std = self._settings['standard']
+        if std is None:
+            import sys
+            std = 'python{}'.format(sys.version_info.major)
+        if std not in ('python2', 'python3'):
+            raise ValueError('Unrecognized python standard : {}'.format(std))
+        self.standard = std
+
         self.module_imports = defaultdict(set)
+
+        # Known functions and constants handler
         self.known_functions = dict(self._kf, **(settings or {}).get(
             'user_functions', {}))
         self.known_constants = dict(self._kc, **(settings or {}).get(
@@ -333,6 +346,10 @@ class AbstractPythonCodePrinter(CodePrinter):
                 self._print(prnt.format_string), print_args)
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
+
+        # XXX Remove after dropping python 2 support.
+        if self.standard == 'python2':
+            return 'print %s' % print_args
         return 'print(%s)' % print_args
 
     def _print_Stream(self, strm):
@@ -362,6 +379,76 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         index = expr.args[1:]
         return "{}[{}]".format(str(base), ", ".join([self._print(ind) for ind in index]))
 
+    def _hprint_Pow(self, expr, rational=False, sqrt='math.sqrt'):
+        """Printing helper function for ``Pow``
+
+        Notes
+        =====
+
+        This only preprocesses the ``sqrt`` as math formatter
+
+        Examples
+        ========
+
+        >>> from sympy.functions import sqrt
+        >>> from sympy.printing.pycode import PythonCodePrinter
+        >>> from sympy.abc import x
+
+        Python code printer automatically looks up ``math.sqrt``.
+
+        >>> printer = PythonCodePrinter({'standard':'python3'})
+        >>> printer._hprint_Pow(sqrt(x), rational=True)
+        'x**(1/2)'
+        >>> printer._hprint_Pow(sqrt(x), rational=False)
+        'math.sqrt(x)'
+        >>> printer._hprint_Pow(1/sqrt(x), rational=True)
+        'x**(-1/2)'
+        >>> printer._hprint_Pow(1/sqrt(x), rational=False)
+        '1/math.sqrt(x)'
+
+        Using sqrt from numpy or mpmath
+
+        >>> printer._hprint_Pow(sqrt(x), sqrt='numpy.sqrt')
+        'numpy.sqrt(x)'
+        >>> printer._hprint_Pow(sqrt(x), sqrt='mpmath.sqrt')
+        'mpmath.sqrt(x)'
+
+        See Also
+        ========
+
+        sympy.printing.str.StrPrinter._print_Pow
+        """
+        PREC = precedence(expr)
+
+        if expr.exp == S.Half and not rational:
+            func = self._module_format(sqrt)
+            arg = self._print(expr.base)
+            return '{func}({arg})'.format(func=func, arg=arg)
+
+        if expr.is_commutative:
+            if -expr.exp is S.Half and not rational:
+                func = self._module_format(sqrt)
+                num = self._print(S.One)
+                arg = self._print(expr.base)
+                return "{num}/{func}({arg})".format(
+                    num=num, func=func, arg=arg)
+
+        base_str = self.parenthesize(expr.base, PREC, strict=False)
+        exp_str = self.parenthesize(expr.exp, PREC, strict=False)
+        return "{}**{}".format(base_str, exp_str)
+
+    def _print_Pow(self, expr, rational=False):
+        return self._hprint_Pow(expr, rational=rational)
+
+    def _print_Rational(self, expr):
+        # XXX Remove after dropping python 2 support.
+        if self.standard == 'python2':
+            return '{}./{}.'.format(expr.p, expr.q)
+        return '{}/{}'.format(expr.p, expr.q)
+
+    def _print_Half(self, expr):
+        return self._print_Rational(expr)
+
 
 for k in PythonCodePrinter._kf:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_func)
@@ -381,6 +468,12 @@ def pycode(expr, **settings):
     fully_qualified_modules : bool
         Whether or not to write out full module names of functions
         (``math.sin`` vs. ``sin``). default: ``True``.
+    standard : str or None, optional
+        If 'python2', Python 2 sematics will be used.
+        If 'python3', Python 3 sematics will be used.
+        If None, the standard will be automatically detected.
+        Default is 'python3'. And this parameter may be removed in the
+        future.
 
     Examples
     ========
@@ -426,11 +519,14 @@ class MpmathPrinter(PythonCodePrinter):
 
 
     def _print_Rational(self, e):
-        return '{0}({1})/{0}({2})'.format(
-            self._module_format('mpmath.mpf'),
-            e.p,
-            e.q,
-            )
+        return "{func}({p})/{func}({q})".format(
+            func=self._module_format('mpmath.mpf'),
+            q=self._print(e.q),
+            p=self._print(e.p)
+        )
+
+    def _print_Half(self, e):
+        return self._print_Rational(e)
 
     def _print_uppergamma(self, e):
         return "{0}({1}, {2}, {3})".format(
@@ -452,6 +548,10 @@ class MpmathPrinter(PythonCodePrinter):
     def _print_log1p(self, e):
         return '{0}({1}+1)'.format(
             self._module_format('mpmath.log'), self._print(e.args[0]))
+
+    def _print_Pow(self, expr, rational=False):
+        return self._hprint_Pow(expr, rational=rational, sqrt='mpmath.sqrt')
+
 
 for k in MpmathPrinter._kf:
     setattr(MpmathPrinter, '_print_%s' % k, _print_known_func)
@@ -574,17 +674,18 @@ class NumPyPrinter(PythonCodePrinter):
         #     own because StrPrinter doesn't define it.
         return '{0}({1})'.format(self._module_format('numpy.logical_not'), ','.join(self._print(i) for i in expr.args))
 
+    def _print_Pow(self, expr, rational=False):
+        # XXX Workaround for negative integer power error
+        if expr.exp.is_integer and expr.exp.is_negative:
+            expr = expr.base ** expr.exp.evalf()
+        return self._hprint_Pow(expr, rational=rational, sqrt='numpy.sqrt')
+
     def _print_Min(self, expr):
         return '{0}(({1}))'.format(self._module_format('numpy.amin'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Max(self, expr):
         return '{0}(({1}))'.format(self._module_format('numpy.amax'), ','.join(self._print(i) for i in expr.args))
 
-    def _print_Pow(self, expr):
-        if expr.exp == 0.5:
-            return '{0}({1})'.format(self._module_format('numpy.sqrt'), self._print(expr.base))
-        else:
-            return super(NumPyPrinter, self)._print_Pow(expr)
 
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format('numpy.angle'), self._print(expr.args[0]))
@@ -754,3 +855,6 @@ class SymPyPrinter(PythonCodePrinter):
         mod = expr.func.__module__ or ''
         return '%s(%s)' % (self._module_format(mod + ('.' if mod else '') + expr.func.__name__),
                            ', '.join(map(lambda arg: self._print(arg), expr.args)))
+
+    def _print_Pow(self, expr, rational=False):
+        return self._hprint_Pow(expr, rational=rational, sqrt='sympy.sqrt')

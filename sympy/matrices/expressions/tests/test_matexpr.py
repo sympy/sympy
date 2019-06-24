@@ -1,5 +1,5 @@
 from sympy import (KroneckerDelta, diff, Piecewise, Sum, Dummy, factor,
-                   expand, zeros, gcd_terms, Eq)
+                   expand, zeros, gcd_terms, Eq, Symbol)
 
 from sympy.core import S, symbols, Add, Mul, SympifyError
 from sympy.core.compatibility import long
@@ -547,3 +547,13 @@ def test_exp():
 
 def test_invalid_args():
     raises(SympifyError, lambda: MatrixSymbol(1, 2, 'A'))
+
+def test_matrixsymbol_from_symbol():
+    # The label should be preserved during doit and subs
+    A_label = Symbol('A', complex=True)
+    A = MatrixSymbol(A_label, 2, 2)
+
+    A_1 = A.doit()
+    A_2 = A.subs(2, 3)
+    assert A_1.args == A.args
+    assert A_2.args[0] == A.args[0]

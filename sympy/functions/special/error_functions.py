@@ -19,6 +19,23 @@ from sympy.functions.special.hyper import hyper, meijerg
 # TODO series expansions
 # TODO see the "Note:" in Ei
 
+# Helper function
+def real_to_real_as_real_imag(self, deep=True, **hints):
+    if self.args[0].is_extended_real:
+        if deep:
+            hints['complex'] = False
+            return (self.expand(deep, **hints), S.Zero)
+        else:
+            return (self, S.Zero)
+    if deep:
+        x, y = self.args[0].expand(deep, **hints).as_real_imag()
+    else:
+        x, y = self.args[0].as_real_imag()
+    re = (self.func(x + I*y) + self.func(x - I*y))/2
+    im = (self.func(x + I*y) - self.func(x - I*y))/(2*I)
+    return (re, im)
+
+
 ###############################################################################
 ################################ ERROR FUNCTION ###############################
 ###############################################################################
@@ -128,6 +145,7 @@ class erf(Function):
         if isinstance(arg, erfcinv):
             return S.One - arg.args[0]
 
+        # Only happens with unevaluated erf2inv
         if isinstance(arg, erf2inv) and arg.args[0] is S.Zero:
             return arg.args[1]
 
@@ -204,23 +222,7 @@ class erf(Function):
         else:
             return self.func(arg)
 
-    def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_extended_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            x, y = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            x, y = self.args[0].as_real_imag()
-
-        sq = -y**2/x**2
-        re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
-        im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
-                    self.func(x + x*sqrt(sq)))
-        return (re, im)
+    as_real_imag = real_to_real_as_real_imag
 
 
 class erfc(Function):
@@ -396,23 +398,8 @@ class erfc(Function):
         else:
             return self.func(arg)
 
-    def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_extended_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            x, y = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            x, y = self.args[0].as_real_imag()
+    as_real_imag = real_to_real_as_real_imag
 
-        sq = -y**2/x**2
-        re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
-        im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
-                    self.func(x + x*sqrt(sq)))
-        return (re, im)
 
 class erfi(Function):
     r"""
@@ -513,6 +500,7 @@ class erfi(Function):
                 return I*nz.args[0]
             if isinstance(nz, erfcinv):
                 return I*(S.One - nz.args[0])
+            # Only happens with unevaluated erf2inv
             if isinstance(nz, erf2inv) and nz.args[0] is S.Zero:
                 return I*nz.args[1]
 
@@ -568,23 +556,8 @@ class erfi(Function):
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
 
-    def as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_extended_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            x, y = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            x, y = self.args[0].as_real_imag()
+    as_real_imag = real_to_real_as_real_imag
 
-        sq = -y**2/x**2
-        re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
-        im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
-                    self.func(x + x*sqrt(sq)))
-        return (re, im)
 
 class erf2(Function):
     r"""
@@ -1578,6 +1551,8 @@ class TrigonometricIntegral(Function):
         arg = unpolarify(self.args[0])
         if argindex == 1:
             return self._trigfunc(arg)/arg
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Ei(self, z, **kwargs):
         return self._eval_rewrite_as_expint(z).rewrite(Ei)
@@ -2031,8 +2006,6 @@ class FresnelIntegral(Function):
         # if any were extracted automatically
         if z is S.Infinity:
             return S.Half
-        elif z is I*S.Infinity:
-            return cls._sign*I*S.Half
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -2043,35 +2016,12 @@ class FresnelIntegral(Function):
     def _eval_is_extended_real(self):
         return self.args[0].is_extended_real
 
+    _eval_is_finite = _eval_is_extended_real
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _as_real_imag(self, deep=True, **hints):
-        if self.args[0].is_extended_real:
-            if deep:
-                hints['complex'] = False
-                return (self.expand(deep, **hints), S.Zero)
-            else:
-                return (self, S.Zero)
-        if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
-        else:
-            re, im = self.args[0].as_real_imag()
-        return (re, im)
-
-    def as_real_imag(self, deep=True, **hints):
-        # Fresnel S
-        # http://functions.wolfram.com/06.32.19.0003.01
-        # http://functions.wolfram.com/06.32.19.0006.01
-        # Fresnel C
-        # http://functions.wolfram.com/06.33.19.0003.01
-        # http://functions.wolfram.com/06.33.19.0006.01
-        x, y = self._as_real_imag(deep=deep, **hints)
-        sq = -y**2/x**2
-        re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
-        im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
-                self.func(x + x*sqrt(sq)))
-        return (re, im)
+    as_real_imag = real_to_real_as_real_imag
 
 
 class fresnels(FresnelIntegral):

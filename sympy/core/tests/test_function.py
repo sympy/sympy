@@ -5,14 +5,15 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Matrix, Basic, Dict)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.basic import _aresame
+from sympy.core.cache import clear_cache
+from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
 from sympy.core.function import PoleError, _mexpand, arity
 from sympy.core.sympify import sympify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
-from sympy.utilities.iterables import subsets, variations
-from sympy.core.cache import clear_cache
-from sympy.core.compatibility import range
 from sympy.tensor.array import NDimArray
+from sympy.utilities.iterables import subsets, variations
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
@@ -175,12 +176,13 @@ def test_Lambda():
     assert e(y) == y**2
 
     assert Lambda((), 42)() == 42
-    assert Lambda((), 42) == Lambda((), 42)
+    assert unchanged(Lambda, (), 42)
     assert Lambda((), 42) != Lambda((), 43)
     assert Lambda((), f(x))() == f(x)
     assert Lambda((), 42).nargs == FiniteSet(0)
 
-    assert Lambda(x, x**2) == Lambda(x, x**2)
+    assert unchanged(Lambda, (x,), x**2)
+    assert Lambda(x, x**2) == Lambda((x,), x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
     assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
@@ -206,6 +208,9 @@ def test_Lambda():
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
     raises(TypeError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
+
+    raises(SyntaxError, lambda: Lambda((x, x), x + 2))
+
 
 
 def test_IdentityFunction():
@@ -1097,15 +1102,20 @@ def test_function_assumptions():
     x = Symbol('x')
     f = Function('f')
     f_real = Function('f', real=True)
+    f_real1 = Function('f', real=1)
+    f_real_inherit = Function(Symbol('f', real=True))
 
+    assert f_real == f_real1  # assumptions are sanitized
     assert f != f_real
     assert f(x) != f_real(x)
 
     assert f(x).is_real is None
     assert f_real(x).is_real is True
+    assert f_real_inherit(x).is_real is True and f_real_inherit.name == 'f'
 
     # Can also do it this way, but it won't be equal to f_real because of the
-    # way UndefinedFunction.__new__ works.
+    # way UndefinedFunction.__new__ works. Any non-recognized assumptions
+    # are just added literally as something which is used in the hash
     f_real2 = Function('f', is_real=True)
     assert f_real2(x).is_real is True
 

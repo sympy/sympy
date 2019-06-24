@@ -3,11 +3,11 @@ from sympy import (
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
-    factor_terms, DiracDelta, Heaviside, Add, Mul, factorial, Ge)
+    DiracDelta, Heaviside, Add, Mul, factorial, Ge)
+from sympy.core.expr import unchanged
+from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
 from sympy.utilities.pytest import raises, slow
-
-from sympy.functions.elementary.piecewise import Undefined
 
 
 a, b, c, d, x, y = symbols('a:d, x, y')
@@ -17,7 +17,9 @@ z = symbols('z', nonzero=True)
 def test_piecewise1():
 
     # Test canonicalization
-    assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
+    assert unchanged(Piecewise, ExprCondPair(x, x < 1), ExprCondPair(0, True))
+    assert Piecewise((x, x < 1), (0, True)) == Piecewise(ExprCondPair(x, x < 1),
+                                                         ExprCondPair(0, True))
     assert Piecewise((x, x < 1), (0, True), (1, True)) == \
         Piecewise((x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, False), (-1, 1 > 2)) == \
@@ -849,10 +851,10 @@ def test_holes():
     # this also tests that the integrate method is used on non-Piecwise
     # arguments in _eval_integral
     A, B = symbols("A B")
-    a, b = symbols('a b', finite=True)
+    a, b = symbols('a b', real=True)
     assert Piecewise((A, And(x < 0, a < 1)), (B, Or(x < 1, a > 2))
         ).integrate(x) == Piecewise(
-        (B*x, a > 2),
+        (B*x, (a > 2)),
         (Piecewise((A*x, x < 0), (B*x, x < 1), (nan, True)), a < 1),
         (Piecewise((B*x, x < 1), (nan, True)), True))
 
