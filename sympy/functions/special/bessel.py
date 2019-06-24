@@ -1736,13 +1736,13 @@ class marcum_q(Function):
 
     def _eval_rewrite_as_Integral(self, m, a, b, **kwargs):
         from sympy import Integral, exp, Dummy, oo
-        x = Dummy('x')
+        x = kwargs.get('x', Dummy('x'))
         return a ** (1 - m) * \
                Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, oo])
 
     def _eval_rewrite_as_Sum(self, m, a, b, **kwargs):
         from sympy import Sum, exp, Dummy, oo
-        k = Dummy('k')
+        k = kwargs.get('k', Dummy('k'))
         return exp(-(a**2 + b**2) / 2) * Sum((a/b)**k * besseli(k, a*b), [k, 1-m, oo])
 
     def _eval_rewrite_as_besseli(self, m, a, b, **kwargs):
