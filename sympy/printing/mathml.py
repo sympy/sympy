@@ -741,6 +741,53 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(x)
         return mrow
 
+    def _print_HBar(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('&#x210F;'))
+        return x
+
+    def _print_EulerGamma(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('&#x3B3;'))
+        return x
+
+    def _print_TribonacciConstant(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('TribonacciConstant'))
+        return x
+
+    def _print_Dagger(self, e):
+        msup = self.dom.createElement('msup')
+        msup.appendChild(self._print(e.args[0]))
+        msup.appendChild(self.dom.createTextNode('&#x2020;'))
+        return msup
+
+    def _print_Contains(self, e):
+        mrow = self.dom.createElement('mrow')
+        mrow.appendChild(self._print(e.args[0]))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x2208;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self._print(e.args[1]))
+        return mrow
+
+    def _print_HilbertSpace(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('&#x210B;'))
+        return x
+
+    def _print_ComplexSpace(self, e):
+        msup = self.dom.createElement('msup')
+        msup.appendChild(self.dom.createTextNode('&#x1D49E;'))
+        msup.appendChild(self._print(e.args[0]))
+        return msup
+
+    def _print_FockSpace(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('&#x2131;'))
+        return x
+
+
     def _print_Integral(self, expr):
         intsymbols = {1: "&#x222B;", 2: "&#x222C;", 3: "&#x222D;"}
 

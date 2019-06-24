@@ -41,7 +41,7 @@ def test_single_normal():
     assert E(Y) == mu
     assert variance(Y) == sigma**2
     pdf = density(Y)
-    x = Symbol('x')
+    x = Symbol('x', real=True)
     assert (pdf(x) ==
             2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
@@ -705,10 +705,9 @@ def test_lognormal():
     #assert variance(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
     # Right now, only density function and sampling works
-    # Test sampling: Only e^mean in sample std of 0
     for i in range(3):
-        X = LogNormal('x', i, 0)
-        assert S(sample(X)) == N(exp(i))
+        X = LogNormal('x', i, 1)
+        assert sample(X) in X.pspace.domain.set
     # The sympy integrator can't do this too well
     #assert E(X) ==
 
