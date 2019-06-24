@@ -35,6 +35,7 @@ from collections import defaultdict
 import operator
 import itertools
 from sympy import Rational, prod, Integer
+from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
@@ -1331,6 +1332,40 @@ class TensorSymmetry(Basic):
         obj = Basic.__new__(cls, base, generators, **kw_args)
         return obj
 
+    @classmethod
+    def from_direct_product(cls, *args):
+        """
+        Returns a TensorSymmetry object that is being a direct product of
+        fully (anti-)symmetric index permutation groups
+
+        Examples
+        ========
+
+        (*args) = (1): vector
+        (*args) = (2):  tensor with 2 symmetric indices
+        (*args) = (-2):  tensor with 2 antisymmetric indices
+        (*args) = (2, -2): tensor with the first 2 indices commuting and the last 2 anticommuting
+        (*args) = (1, 1, 1): tensor with 3 indices without any symmetry
+        """
+        base, sgs = [], [Permutation(1)]
+        for arg in args:
+            if arg > 0:
+                bsgs2 = get_symmetric_group_sgs(arg, False)
+            elif arg < 0:
+                bsgs2 = get_symmetric_group_sgs(-arg, True)
+            else:
+                continue
+            base, sgs = bsgs_direct_product(base, sgs, *bsgs2)
+
+        return TensorSymmetry(base, sgs)
+
+    @classmethod
+    def riemann(cls, *args):
+        """
+        Returns a monotorem symmetry of the Riemann tensor
+        """
+        return TensorSymmetry(riemann_bsgs)
+
     @property
     def base(self):
         return self.args[0]
@@ -1345,6 +1380,7 @@ class TensorSymmetry(Basic):
 
 
 def tensorsymmetry(*args):
+    # This method is obsolete, use TensorSymmetry.from_direct_product() instead
     """
     Return a ``TensorSymmetry`` object.
 
