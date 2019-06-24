@@ -1,7 +1,7 @@
 from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
                     Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
                     nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
-                    linsolve, Piecewise, eye)
+                    linsolve, Piecewise, eye, Or)
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -514,6 +514,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
                     given_condition.lhs.args[0] != conds[i]:
                     raise ValueError("Probability for %s needed", conds[i])
                 return result * given_condition.rhs
+
+        if isinstance(condition, Or):
+            conds, prob_sum = condition.args, S(0)
+            for cond in conds:
+                prob_sum += self.probability(cond, given_condition &
+                            TransitionMatrixOf(self, trans_probs) &
+                            StochasticStateSpaceOf(self, state_space))
+            return prob_sum
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(condition, given_condition))
