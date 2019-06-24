@@ -2432,30 +2432,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
             if sol.lhs == func:
                 s = sub_func_doit(ode_diff, func, sol.rhs)
-                if s.has(besselj):
-                    while True:
-                        besseljs = s.find(lambda x: isinstance(x, besselj))
-                        for ba in sorted(besseljs, key=lambda x: re(x.args[0])):
-                            a, x = ba.args
-                            bap1 = besselj(a+1, x)
-                            bap2 = besselj(a+2, x)
-                            if s.has(bap1) and s.has(bap2):
-                                s = s.subs(ba, 2*(a+1)/x*bap1 - bap2)
-                                break
-                        else:
-                            break
-                if s.has(bessely):
-                    while True:
-                        besselys = s.find(lambda x: isinstance(x, bessely))
-                        for ba in sorted(besselys, key=lambda x: re(x.args[0])):
-                            a, x = ba.args
-                            bap1 = bessely(a+1, x)
-                            bap2 = bessely(a+2, x)
-                            if s.has(bap1) and s.has(bap2):
-                                s = s.subs(ba, 2*(a+1)/x*bap1 - bap2)
-                                break
-                        else:
-                            break
+                s = simplify(s)
             else:
                 testnum += 1
                 continue
