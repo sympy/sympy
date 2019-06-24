@@ -3,7 +3,7 @@ from itertools import product
 from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
                    bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
                    expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
-                   Abs, I, O, oo, conjugate, uppergamma, exp)
+                   Abs, I, O, oo, conjugate, uppergamma, exp, Integral, Sum)
 from sympy.functions.special.bessel import fn
 from sympy.functions.special.bessel import (airyai, airybi,
                                             airyaiprime, airybiprime, marcum_q)
@@ -575,8 +575,13 @@ def test_marcum_q():
     assert diff(marcum_q(1, a, 3), a) == a*(-marcum_q(1, a, 3) + marcum_q(2, a, 3))
     assert diff(marcum_q(2, 3, b), b) == -b**2*exp(-b**2/2 - S(9)/2)*besseli(1, 3*b)/3
 
-    assert marcum_q(1, a, a).rewrite(besseli) == S.Half + exp(-a**2)*besseli(0, a**2)/2
-    assert marcum_q(2, a, a).rewrite(besseli) == S.Half + exp(-a**2)*besseli(0, a**2)/2 + \
+    assert eq([marcum_q(5, -2, 3).rewrite(Integral).evalf(10)],
+              [0.7905769565])
+    assert eq([marcum_q(1, 3, 1).rewrite(Sum).evalf(10)],
+              [0.9891705502])
+
+    assert marcum_q(1, a, a, evaluate=False).rewrite(besseli) == S.Half + exp(-a**2)*besseli(0, a**2)/2
+    assert marcum_q(2, a, a, evaluate=False).rewrite(besseli) == S.Half + exp(-a**2)*besseli(0, a**2)/2 + \
            exp(-a**2)*besseli(1, a**2)
     assert marcum_q(3, a, a).rewrite(besseli) == (besseli(1, a**2) + besseli(2, a**2))*exp(-a**2) + \
            S.Half + exp(-a**2)*besseli(0, a**2)/2
