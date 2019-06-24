@@ -575,8 +575,15 @@ def test_marcum_q():
     assert diff(marcum_q(1, a, 3), a) == a*(-marcum_q(1, a, 3) + marcum_q(2, a, 3))
     assert diff(marcum_q(2, 3, b), b) == -b**2*exp(-b**2/2 - S(9)/2)*besseli(1, 3*b)/3
 
+    x = Symbol('x')
+    assert marcum_q(2, 3, 4).rewrite(Integral, x=x) == \
+           Integral(x**2*exp(-x**2/2 - S(9)/2)*besseli(1, 3*x), (x, 4, oo))/3
     assert eq([marcum_q(5, -2, 3).rewrite(Integral).evalf(10)],
               [0.7905769565])
+
+    k = Symbol('k')
+    assert marcum_q(-3, -5, -7).rewrite(Sum, k=k) == \
+           exp(-37)*Sum((S(5)/7)**k*besseli(k, 35), (k, 4, oo))
     assert eq([marcum_q(1, 3, 1).rewrite(Sum).evalf(10)],
               [0.9891705502])
 
