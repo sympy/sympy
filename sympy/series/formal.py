@@ -1160,7 +1160,7 @@ class FormalPowerSeries(SeriesBase):
             Set dyadic to identify the convolution type as dyadic (*bitwise-XOR*)
             convolution, which is performed using **FWHT**.
             Set subset to identify the convolution type as subset convolution.
-            Else, set None to interpret it as simple linear convolution. If 
+            Else, set None to interpret it as simple linear convolution. If
             cycle is non-zero, then it will be interpreted as cyclic convolution.
 
         Examples
