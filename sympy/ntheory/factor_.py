@@ -297,9 +297,10 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     for ``n``. This is True by default since only a few small factors will
     be tested in the course of searching for the perfect power.
 
-    The use of ``candidates`` is for internal use; if provided, False
-    will be returned if ``n`` cannot be written as a power with one of
-    the candidates as an exponent.
+    The use of ``candidates`` is primarily for internal use; if provided,
+    False will be returned if ``n`` cannot be written as a power with one
+    of the candidates as an exponent and factoring (beyond testing for
+    a factor of 2) will not be attempted.
 
     Examples
     ========
@@ -309,8 +310,6 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     (2, 4)
     >>> perfect_power(16, big=False)
     (4, 2)
-    >>> perfect_power(16, [3])
-    False
 
     Notes
     =====
@@ -326,8 +325,12 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     one that is larger than the computed maximum exponent possible
     will signal failure for the routine.
 
-    >>> perfect_power(16, [5])
+    >>> perfect_power(3**8, [9])
     False
+    >>> perfect_power(3**8, [2, 4, 8])
+    (3, 8)
+    >>> perfect_power(3**8, [4, 8], big=False)
+    (9, 4)
 
     See Also
     ========
@@ -342,10 +345,12 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     logn = math.log(n, 2)
     max_possible = int(logn) + 2  # only check values less than this
     not_square = n % 10 in [2, 3, 7, 8]  # squares cannot end in 2, 3, 7, 8
+    min_possible = 2 + not_square
+    possible = primerange(min_possible, max_possible)
     if not candidates:
-        candidates = primerange(2 + not_square, max_possible)
+        candidates = possible
     else:
-        candidates = [i for i in candidates if 2 + not_square <= i < max_possible]
+        candidates = [i for i in candidates if min_possible <= i < max_possible]
         if n%2 == 0:
             e = trailing(n)
             candidates = [i for i in candidates if e%i == 0]
@@ -354,7 +359,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         for e in candidates:
             r, ok = integer_nthroot(n, e)
             if ok:
-                return (b, e)
+                return (r, e)
         return False
 
 
@@ -386,7 +391,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                     # not then it's not a perfect power
                     n //= afactor**e
                     m = perfect_power(n, candidates=primefactors(e), big=big)
-                    if m is False:
+                    if not m:
                         return False
                     else:
                         r, m = m
@@ -419,7 +424,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         if exact:
             if big:
                 m = perfect_power(r, big=big, factor=factor)
-                if m is not False:
+                if m:
                     r, e = m[0], e*m[1]
             return int(r), e
 
