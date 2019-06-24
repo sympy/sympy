@@ -1180,7 +1180,8 @@ class FormalPowerSeries(SeriesBase):
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
     def compose(self, other, x=None, n=6):
-        """Returns the truncated terms of the formal power series of the composed function,
+        r"""
+        Returns the truncated terms of the formal power series of the composed function,
         up to specified `n`.
 
         If `f` and `g` are two formal power series of two different functions,
@@ -1220,7 +1221,9 @@ class FormalPowerSeries(SeriesBase):
         ==========
 
         .. [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
+
         """
+
         if x is None:
             x = self.x
         if n is None:
@@ -1258,7 +1261,8 @@ class FormalPowerSeries(SeriesBase):
         return self.ind + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
     def inverse(self, x=None, n=6):
-        """Returns the truncated terms of the inverse of the formal power series,
+        r"""
+        Returns the truncated terms of the inverse of the formal power series,
         up to specified `n`.
 
         If `f` and `g` are two formal power series of two different functions,
@@ -1298,7 +1302,9 @@ class FormalPowerSeries(SeriesBase):
         ==========
 
         .. [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
+
         """
+
         if x is None:
             x = self.x
         if n is None:
