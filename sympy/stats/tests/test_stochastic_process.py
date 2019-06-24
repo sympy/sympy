@@ -91,4 +91,5 @@ def test_DiscreteMarkovChain():
     assert P(Eq(X[1], 2) & Eq(X[2], 1) & Eq(X[3], 0),
     Eq(P(Eq(X[1], 0)), S(1)/4) & Eq(P(Eq(X[1], 1)), S(1)/4)) == S(1)/12
     assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == S(2)/3
+    assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) == S(0)
     assert P(Ne(X[2], 2), Eq(X[1], 1)) == S(1)/3

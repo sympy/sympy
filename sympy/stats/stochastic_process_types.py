@@ -491,6 +491,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             # handle queries like,
             # P(Eq(X[i+k], s1) & Eq(X[i+m], s2) . . . & Eq(X[i], sn), Eq(P(Eq(X[i], si)), prob))
             conds = condition.args
+            idx2state = dict()
+            for cond in conds:
+                idx, state = (cond.lhs, cond.rhs) if isinstance(cond.lhs, RandomIndexedSymbol) else \
+                                (cond.rhs, cond.lhs)
+                idx2state[idx] = 1 if idx2state.get(idx, None) is None else \
+                                           idx2state[idx] + 1
+                if idx2state[idx] > 1:
+                    return S.Zero # a RandomIndexedSymbol cannot go to different states simultaneously
             i, result = -1, 1
             while i > -len(conds):
                 result *= self.probability(conds[i], conds[i-1] & \
