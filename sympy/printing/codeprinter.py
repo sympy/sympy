@@ -56,6 +56,13 @@ class CodePrinter(StrPrinter):
         'allow_unknown_functions': False,
     }
 
+    # Functions which are "simple" to rewrite to other functions that
+    # may be supported
+    _rewriteable_functions = {
+            'erf2': 'erf',
+            'Li': 'li',
+    }
+
     def __init__(self, settings=None):
 
         super(CodePrinter, self).__init__(settings=settings)
@@ -380,6 +387,10 @@ class CodePrinter(StrPrinter):
             return self._print(expr._imp_(*expr.args))
         elif expr.is_Function and self._settings.get('allow_unknown_functions', False):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
+        elif (expr.func.__name__ in self._rewriteable_functions and
+              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+            # Simple rewrite to supported function possible
+            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
         else:
             return self._print_not_supported(expr)
 
@@ -486,22 +497,6 @@ class CodePrinter(StrPrinter):
             return sign + '*'.join(a_str) + "/" + b_str[0]
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
-
-    def _print_erf2(self, expr):
-        # Generic approach if erf is supported, but not erf2
-        if expr.func.__name__ in self.known_functions or not "erf" in self.known_functions:
-            return self._print_Function(expr)
-        else:
-            from sympy.functions.special.error_functions import erf
-            return self._print(erf(expr.args[1]) - erf(expr.args[0]))
-
-    def _print_Li(self, expr):
-        # Generic approach if li is supported, but not Li
-        if expr.func.__name__ in self.known_functions or not "li" in self.known_functions:
-            return self._print_Function(expr)
-        else:
-            from sympy.functions.special.error_functions import li
-            return self._print(li(expr.args[0]) - li(2))
 
     def _print_not_supported(self, expr):
         self._not_supported.add(expr)
