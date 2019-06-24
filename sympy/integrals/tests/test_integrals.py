@@ -5,7 +5,7 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
-    symbols, sympify, tan, trigsimp, Tuple
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar
 )
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
@@ -1533,3 +1533,9 @@ def test_issue_4311():
         (x**4/4 - 9*x**2/2, x <= -3),
         (-x**4/4 + 9*x**2/2 - S(81)/2, x <= 3),
         (x**4/4 - 9*x**2/2, True))
+
+def test_issue_14241():
+    x = Symbol('x')
+    n = Symbol('n', positive=True, integer=True)
+    assert integrate(n * x ** (n - 1) / (x + 1), x) == \
+           n**2*x**n*lerchphi(x*exp_polar(I*pi), 1, n)*gamma(n)/gamma(n + 1)
