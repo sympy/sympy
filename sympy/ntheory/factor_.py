@@ -2,7 +2,6 @@
 Integer factorization
 """
 from __future__ import print_function, division
-
 import random
 import math
 
@@ -298,7 +297,9 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     for ``n``. This is True by default since only a few small factors will
     be tested in the course of searching for the perfect power.
 
-    The use of ``candidates`` is for internal use (see notes below).
+    The use of ``candidates`` is for internal use; if provided, False
+    will be returned if ``n`` cannot be written as a power with one of
+    the candidates as an exponent.
 
     Examples
     ========
@@ -308,6 +309,8 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     (2, 4)
     >>> perfect_power(16, big=False)
     (4, 2)
+    >>> perfect_power(16, [3])
+    False
 
     Notes
     =====
@@ -318,41 +321,19 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     >>> [(i, is2pow(i)) for i in range(5)]
     [(0, False), (1, True), (2, True), (3, False), (4, True)]
 
-    It is not necessary to provide ``candidates``, but if you do
-    there are some issues to keep in mind.
+    It is not necessary to provide ``candidates``. When provided
+    it will be assumed that they are sorted integers and the first
+    one that is larger than the computed maximum exponent possible
+    will signal failure for the routine.
 
-    They are assumed to be sorted and the first one that is larger
-    than the computed maximum will signal failure for the routine.
-    For example, if the smallest one is too large then a false
-    negative result will be returned:
-
-    >>> perfect_power(60**3, [20])  # 2**20 > 60**3
+    >>> perfect_power(16, [5])
     False
-
-    When ``factor`` is True it is possible to obtain
-    an exponent that is not in ``candidates``:
-
-    >>> perfect_power(60**3, [19])
-    (60, 3)
-
-    When ``big`` is True it is also possible that an exponent
-    that is a multiple of a candidate will be obtained:
-
-    >>> perfect_power(16, [2], factor=False)
-    (2, 4)
-
-    To strictly consider only candidates for exponents,
-    set ``big`` and ``factor`` to False or use `integer_nthroot`:
-
-    >>> perfect_power(16, [3], factor=False, big=False)
-    False
-    >>> integer_nthroot(16, 3)
-    (2, False)
 
     See Also
     ========
     sympy.core.power.integer_nthroot
     """
+    from sympy.core.power import integer_nthroot
     n = as_int(n)
     if n < 3:
         if n < 1:
@@ -363,6 +344,19 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     not_square = n % 10 in [2, 3, 7, 8]  # squares cannot end in 2, 3, 7, 8
     if not candidates:
         candidates = primerange(2 + not_square, max_possible)
+    else:
+        candidates = [i for i in candidates if 2 + not_square <= i < max_possible]
+        if n%2 == 0:
+            e = trailing(n)
+            candidates = [i for i in candidates if e%i == 0]
+        if big:
+            candidates = reversed(candidates)
+        for e in candidates:
+            r, ok = integer_nthroot(n, e)
+            if ok:
+                return (b, e)
+        return False
+
 
     afactor = 2 + n % 2
     for e in candidates:
