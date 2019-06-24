@@ -368,11 +368,11 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import Integral
-        >>> from sympy.abc import x, i
-        >>> Integral(x**i, (i, 1, 3)).doit()
-        Piecewise((x**3/log(x) - x/log(x),
-            (x > 1) | ((x >= 0) & (x < 1))), (2, True))
+        >>> from sympy import Integral, Piecewise, S
+        >>> from sympy.abc import x, t
+        >>> p = x**2 + Piecewise((0, x/t < 0), (1, True))
+        >>> p.integrate((t, S(4)/5, 1), (x, -1, 1))
+        1/3
 
         See Also
         ========
@@ -450,6 +450,20 @@ class Integral(AddWithLimits):
             elif len(xab) == 2:
                 uli = xab[1].free_symbols
             elif len(xab) == 3:
+                x, a, b = xab
+                try:
+                    l = sorted([a, b])
+                    if all(i.is_nonnegative for i in l) and not x.is_nonnegative:
+                        d = Dummy(positive=True)
+                    elif all(i.is_nonpositive for i in l) and not x.is_nonpositive:
+                        d = Dummy(negative=True)
+                    elif not x.is_real:  # l were sorted so they must be real
+                        d = Dummy(real=True)
+                    s = self.subs(x, d)
+                    # restore x in case nothing changed
+                    return s.doit(**hints).subs(d, x)
+                except TypeError:
+                    pass
                 uli = xab[1].free_symbols.union(xab[2].free_symbols)
             # this integral can be done as long as there is no blocking
             # limit that has been undone. An undone limit is blocking if
