@@ -346,9 +346,8 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     max_possible = int(logn) + 2  # only check values less than this
     not_square = n % 10 in [2, 3, 7, 8]  # squares cannot end in 2, 3, 7, 8
     min_possible = 2 + not_square
-    possible = primerange(min_possible, max_possible)
     if not candidates:
-        candidates = possible
+        candidates = primerange(min_possible, max_possible)
     else:
         candidates = [i for i in candidates if min_possible <= i < max_possible]
         if n%2 == 0:
