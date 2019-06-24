@@ -544,4 +544,10 @@ def test_issue_15984():
 
 
 def test_issue_13575():
-    assert isinstance(limit(acos(erfi(x)), x, 1), Add)
+    result = limit(acos(erfi(x)), x, 1)
+    assert isinstance(result, Add)
+
+    re, im = result.evalf().as_real_imag()
+
+    assert abs(re) < 1e-12
+    assert abs(im - 1.08633774961570) < 1e-12
