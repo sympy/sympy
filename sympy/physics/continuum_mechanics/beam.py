@@ -97,8 +97,10 @@ class Beam(object):
             with respect to its neutral axis. It can also be a continuous
             function of position along the beam. Alternatively ``second_moment``
             can be a shape object such as a ``Polygon`` from the geometry module
-            representing the shape of the cross-section of the beam. The second moment
-            of area will be computed from the shape object internally.
+            representing the shape of the cross-section of the beam. In such cases,
+            it is assumed that the x-axis of the shape object is aligned with the
+            bending axis of the beam. The second moment of area will be computed
+            from the shape object internally.
 
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
