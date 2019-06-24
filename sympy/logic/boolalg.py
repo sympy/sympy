@@ -719,11 +719,8 @@ class And(LatticeOp, BooleanFunction):
         from sympy.sets.sets import Intersection
         return Intersection(*[arg.as_set() for arg in self.args])
 
-    def _rewrite_as_Nor(self):
-        expr = 0
-        for arg in self.args:
-            expr = Or(expr, Not(arg))
-        return Not(expr)
+    def _eval_rewrite_as_Nor(self, *args, **kwargs):
+        return Nor(*[Not(arg) for arg in self.args])
 
 
 class Or(LatticeOp, BooleanFunction):
@@ -778,11 +775,8 @@ class Or(LatticeOp, BooleanFunction):
         from sympy.sets.sets import Union
         return Union(*[arg.as_set() for arg in self.args])
 
-    def _rewrite_as_Nand(self):
-        expr = 1
-        for arg in self.args:
-            expr = And(expr, Not(arg))
-        return Not(expr)
+    def _eval_rewrite_as_Nand(self, *args, **kwargs):
+        return Nand(*[Not(arg) for arg in self.args])
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
         # standard simplify
@@ -1016,17 +1010,15 @@ class Xor(BooleanFunction):
                 args.append(Or(*clause))
         return And._to_nnf(*args, simplify=simplify)
 
-    def _rewrite_as_And(self):
-        arguments = list(ordered(self._argset))
-        if len(arguments) == 2:
-            return Or(And(Not(arguments[0]), arguments[1]), And(Not(arguments[1]), arguments[0]))
-        else:
-            for i in range(len(arguments)-1):
-                eq = Or(And(Not(arguments[i]), arguments[i+1]), And(Not(arguments[i+1]), arguments[i])).simplify()
-                arguments[i+1] = eq
-        return eq
+    def _eval_rewrite_as_Or(self, *args, **kwargs):
+        a = self.args
+        return Or(*[_convert_to_varsSOP(x, self.args)
+                    for x in _get_odd_parity_terms(len(a))])
 
-    _rewrite_as_Or = _rewrite_as_And
+    def _eval_rewrite_as_And(self, *args, **kwargs):
+        a = self.args
+        return And(*[_convert_to_varsPOS(x, self.args)
+                     for x in _get_even_parity_terms(len(a))])
 
     def _eval_simplify(self, ratio, measure, rational, inverse):
         # as standard simplify uses simplify_logic which writes things as
@@ -1955,6 +1947,32 @@ def _convert_to_varsPOS(maxterm, variables):
     return Or(*temp)
 
 
+def _get_odd_parity_terms(n):
+    """
+    Returns a list of lists, with all possible combinations of n zeros and ones
+    with an odd number of ones.
+    """
+    op = []
+    for i in range(1, 2**n):
+        e = ibin(i, n)
+        if sum(e) % 2 == 1:
+            op.append(e)
+    return op
+
+
+def _get_even_parity_terms(n):
+    """
+    Returns a list of lists, with all possible combinations of n zeros and ones
+    with an even number of ones.
+    """
+    op = []
+    for i in range(2**n):
+        e = ibin(i, n)
+        if sum(e) % 2 == 0:
+            op.append(e)
+    return op
+
+
 def _simplified_pairs(terms):
     """
     Reduces a set of minterms, if possible, to a simplified set of minterms
@@ -2058,6 +2076,7 @@ def _input_to_binlist(inputlist, variables):
         else:
             raise TypeError("A term list can only contain lists, ints or dicts.")
     return binlist
+
 
 def SOPform(variables, minterms, dontcares=None):
     """

@@ -111,22 +111,22 @@ def test_Xor():
 
 def test_rewrite_as_And():
     expr = x ^ y
-    assert str(expr._rewrite_as_And()) == '(x & ~y) | (y & ~x)'
+    assert expr.rewrite(And) == (x & y) & (~y & ~x)
 
 
 def test_rewrite_as_Or():
     expr = x ^ y
-    assert str(expr._rewrite_as_Or()) == '(x & ~y) | (y & ~x)'
+    assert expr.rewrite(Or) == (x & ~y) | (y & ~x)
 
 
 def test_rewrite_as_Nand():
     expr = (y & z) | (z & ~w)
-    assert str(expr._rewrite_as_Nand()) == '~(~(y & z) & ~(z & ~w))'
+    assert expr.rewrite(Nand) == ~(~(y & z) & ~(z & ~w))
 
 
 def test_rewrite_as_Nor():
     expr = z & (y | ~w)
-    assert str(expr._rewrite_as_Nor()) == '~(~z | ~(y | ~w))'
+    assert expr.rewrite(Nor) == ~(~z | ~(y | ~w))
 
 
 def test_Not():
