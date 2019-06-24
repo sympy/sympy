@@ -515,6 +515,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False):
     kwargs = dict(ratio=ratio, measure=measure,
         rational=rational, inverse=inverse)
 
+    # no routine for Expr needs to check for is_zero
+    if isinstance(expr, Expr) and expr.is_zero:
+        return S.Zero
+
     _eval_simplify = getattr(expr, '_eval_simplify', None)
     if _eval_simplify is not None:
         return _eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
