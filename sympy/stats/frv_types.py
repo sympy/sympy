@@ -56,7 +56,7 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return list(self.dict.keys())
+        return set(self.dict.keys())
 
     @staticmethod
     def check(density):
@@ -95,7 +95,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return list(self.args)
+        return set(self.args)
 
     def pdf(self, x):
         if x in self.args:
@@ -159,7 +159,7 @@ class DieDistribution(SingleFiniteDistribution):
     def set(self):
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.sides))
-        return list(map(Integer, list(range(1, self.sides + 1))))
+        return set(map(Integer, list(range(1, self.sides + 1))))
 
     def pdf(self, x):
         x = sympify(x)
@@ -211,7 +211,7 @@ class BernoulliDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return [self.succ, self.fail]
+        return set([self.succ, self.fail])
 
     def pdf(self, x):
         return Piecewise((self.p, x == self.succ), (1 - self.p, x == self.fail), (0, True))
@@ -310,7 +310,7 @@ class BinomialDistribution(SingleFiniteDistribution):
     def set(self):
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.n))
-        return list(self.dict.keys())
+        return set(self.dict.keys())
 
 
     def pdf(self, x):
@@ -395,7 +395,7 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
     def set(self):
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.n))
-        return list(map(Integer, list(range(0, self.n + 1))))
+        return set(map(Integer, list(range(0, self.n + 1))))
 
     def pdf(self, k):
         n, a, b = self.n, self.alpha, self.beta
@@ -449,7 +449,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         N, m, n = self.N, self.m, self.n
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(self.low, self.high))
-        return [i for i in range(max(0, n + m - N), min(n, m) + 1)]
+        return set([i for i in range(max(0, n + m - N), min(n, m) + 1)])
 
     def pdf(self, k):
         N, m, n = self.N, self.m, self.n
@@ -485,7 +485,7 @@ class RademacherDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return [-1, 1]
+        return set([-1, 1])
 
     @property
     def pdf(self):
