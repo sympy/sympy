@@ -368,11 +368,11 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import Integral
-        >>> from sympy.abc import x, i
-        >>> Integral(x**i, (i, 1, 3)).doit()
-        Piecewise((x**3/log(x) - x/log(x),
-            (x > 1) | ((x >= 0) & (x < 1))), (2, True))
+        >>> from sympy import Integral, Piecewise, S
+        >>> from sympy.abc import x, t
+        >>> p = x**2 + Piecewise((0, x/t < 0), (1, True))
+        >>> p.integrate((t, S(4)/5, 1), (x, -1, 1))
+        1/3
 
         See Also
         ========
@@ -439,6 +439,29 @@ class Integral(AddWithLimits):
         # There is no trivial answer and special handling
         # is done so continue
 
+        # first make sure any definite limits have integration
+        # variables with matching assumptions
+        reps = {}
+        for xab in self.limits:
+            if len(xab) != 3:
+                continue
+            x, a, b = xab
+            l = (a, b)
+            if all(i.is_nonnegative for i in l) and not x.is_nonnegative:
+                d = Dummy(positive=True)
+            elif all(i.is_nonpositive for i in l) and not x.is_nonpositive:
+                d = Dummy(negative=True)
+            elif not x.is_real:  # l were sorted so they must be real
+                d = Dummy(real=True)
+            else:
+                d = None
+            if d:
+                reps[x] = d
+        if reps:
+            undo = dict([(v, k) for k, v in reps.items()])
+            return self.xreplace(reps).doit(**hints).xreplace(undo)
+
+        # continue with existing assumptions
         undone_limits = []
         # ulj = free symbols of any undone limits' upper and lower limits
         ulj = set()
