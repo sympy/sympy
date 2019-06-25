@@ -2,6 +2,7 @@
 Integer factorization
 """
 from __future__ import print_function, division
+
 import random
 import math
 
@@ -382,29 +383,21 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 if e == 1:
                     return False
 
-                # maybe the bth root of n is exact
-                r, exact = integer_nthroot(n, e)
-                if not exact:
-                    # then remove this factor and check to see if
-                    # any of e's factors are a common exponent; if
-                    # not then it's not a perfect power
-                    n //= afactor**e
-                    m = perfect_power(n, candidates=primefactors(e), big=big)
-                    if not m:
-                        return False
-                    else:
-                        r, m = m
-                        # adjust the two exponents so the bases can
-                        # be combined
-                        g = igcd(m, e)
-                        if g == 1:
-                            return False
-                        m //= g
-                        e //= g
-                        r, e = r**m*afactor**e, g
+                # remove this factor and check to see if
+                # any of e's factors are a common exponent; if
+                # not then it's not a perfect power
+                n //= afactor**e
+                # if we want the biggest exponent then we need
+                # to get the smallest in this call
+                rm = perfect_power(n, candidates=primefactors(e), big=not big)
+                if not rm:
+                    return False
+                r, m = rm
+                e //= m
+                r = afactor**m*integer_nthroot(n, e)[0]
                 if not big:
                     e0 = primefactors(e)
-                    if len(e0) > 1 or e0[0] != e:
+                    if e0[0] != e:
                         e0 = e0[0]
                         r, e = r**(e//e0), e0
                 return r, e
