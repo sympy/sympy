@@ -35,27 +35,6 @@ Features Supported
 - Binary operations (including Addition, Substraction, Multiplication, Division)
 
 
-Examples
-========
-
->> from sympy.parsing.fortran_parser import src_to_sympy
->> src = "integer :: a"
->> print(src_to_sympy(src))
-from sympy import Symbol
-a = Symbol('a', integer=True)
-
->> src = '''\
-... real :: a, b, c
-... c = a + b
-... '''
->> print(src_to_sympy(src))
-from sympy import Symbol
-a = Symbol('a', real=True)
-b = Symbol('b', real=True)
-c = Symbol('c', real=True)
-c = a + b
-
-
 Notes
 =====
 
@@ -389,6 +368,26 @@ def call_visitor(fort_node):
 
     fort_node : <lfortran.asr.asr.Assignment object> or <lfortran.asr.asr.BinOp object>
         The node for operation that the AST visitor is to be called upon
+
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.fortran_parser import src_to_sympy
+    >>> src = "integer :: a"
+    >>> print(src_to_sympy(src))
+    from sympy import Symbol
+    a = Symbol('a', integer=True)
+    >>> src2 = '''\
+    ... real :: a, b, c
+    ... c = a + b
+    ... '''
+    >>> print(src_to_sympy(src2))
+    from sympy import Symbol
+    a = Symbol('a', real=True)
+    b = Symbol('b', real=True)
+    c = Symbol('c', real=True)
+    c = a + b
 
     Returns
     =======
