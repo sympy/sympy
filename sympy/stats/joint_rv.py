@@ -17,7 +17,7 @@ from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
  Dummy)
 from sympy.concrete.summations import Sum, summation
 from sympy.concrete.products import Product
-from sympy.core.compatibility import string_types
+from sympy.core.compatibility import string_types, iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import ImmutableMatrix
@@ -287,6 +287,8 @@ class MarginalDistribution(Basic):
     """
 
     def __new__(cls, dist, *rvs):
+        if len(rvs) == 1 and iterable(rvs[0]):
+            rvs = tuple(rvs[0])
         if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
             raise ValueError(filldedent('''Marginal distribution can be
              intitialised only in terms of random variables or indexed random

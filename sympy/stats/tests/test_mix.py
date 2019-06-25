@@ -1,5 +1,7 @@
 from sympy import (Symbol, Eq, Ne, simplify, sqrt, exp, pi, symbols,
-                Piecewise, factorial, gamma, IndexedBase)
+                Piecewise, factorial, gamma, IndexedBase, Add, Pow, Mul,
+                Indexed, Integer)
+from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.stats import (Poisson, Beta, Exponential, P,
                         Multinomial, MultivariateBeta)
 from sympy.stats.crv_types import Normal
@@ -24,11 +26,24 @@ def test_MarginalDistribution():
     a1, p1, p2 = symbols('a1 p1 p2', positive=True)
     C = Multinomial('C', 2, p1, p2)
     B = MultivariateBeta('B', a1, C[0])
-    MGR = MarginalDistribution(B, C[0])
-    mgrc1 = ("B*Piecewise((2*p1**C[0]*p2**C[1]/(factorial(C[0])*factorial"
-    "(C[1])), Eq(C[0] + C[1], 2)), (0, True))*gamma(a1 + C[0])*B[0]**(a1 - "
-    "1)*B[1]**(C[0] - 1)/(gamma(a1)*gamma(C[0]))")
-    assert str(MGR(C)) == mgrc1
+    MGR = MarginalDistribution(B, (C[0],))
+    mgrc = Mul(Symbol('B'), Piecewise(ExprCondPair(Mul(Integer(2),
+    Pow(Symbol('p1', positive=True), Indexed(IndexedBase(Symbol('C')),
+    Integer(0))), Pow(Symbol('p2', positive=True),
+    Indexed(IndexedBase(Symbol('C')), Integer(1))),
+    Pow(factorial(Indexed(IndexedBase(Symbol('C')), Integer(0))), Integer(-1)),
+    Pow(factorial(Indexed(IndexedBase(Symbol('C')), Integer(1))), Integer(-1))),
+    Eq(Add(Indexed(IndexedBase(Symbol('C')), Integer(0)),
+    Indexed(IndexedBase(Symbol('C')), Integer(1))), Integer(2))),
+    ExprCondPair(Integer(0), True)), Pow(gamma(Symbol('a1', positive=True)),
+    Integer(-1)), gamma(Add(Symbol('a1', positive=True),
+    Indexed(IndexedBase(Symbol('C')), Integer(0)))),
+    Pow(gamma(Indexed(IndexedBase(Symbol('C')), Integer(0))), Integer(-1)),
+    Pow(Indexed(IndexedBase(Symbol('B')), Integer(0)),
+    Add(Symbol('a1', positive=True), Integer(-1))),
+    Pow(Indexed(IndexedBase(Symbol('B')), Integer(1)),
+    Add(Indexed(IndexedBase(Symbol('C')), Integer(0)), Integer(-1))))
+    assert MGR(C) == mgrc
 
 def test_compound_distribution():
     Y = Poisson('Y', 1)
