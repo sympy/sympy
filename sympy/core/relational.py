@@ -779,6 +779,9 @@ class Equality(Relational):
 
         >>> rel.divide_sides(Eq(c, d))
         Piecewise((Eq(a/c, b/c), Ne(c, 0)), (Eq(a, b), True))
+
+        >>> rel.divide_sides(Ne(c, d))
+        Piecewise((Eq(a, b), Eq(c, 0) | Eq(d, 0)), (Eq(a/c, b/d), Ne(a, 0) & Ne(c, 0) & Ne(d, 0)), (Ne(a/c, b/d), True))
         """
         from sympy.functions.elementary.piecewise import Piecewise
 
@@ -791,6 +794,14 @@ class Equality(Relational):
             expr = Eq(self.lhs / arg.lhs, self.rhs / arg.lhs)
             cond = Ne(arg.lhs, 0)
             return Piecewise([expr, cond], [self, True])
+
+        elif isinstance(arg, Ne):
+            expr1 = Eq(self.lhs, self.rhs)
+            cond1 = Eq(arg.lhs, 0) | Eq(arg.rhs, 0)
+            expr2 = Eq(self.lhs / arg.lhs, self.rhs / arg.rhs)
+            cond2 = Ne(arg.lhs, 0) & Ne(arg.rhs, 0) & Ne(self.lhs, 0)
+            default = Ne(self.lhs / arg.lhs, self.rhs / arg.rhs)
+            return Piecewise([expr1, cond1], [expr2, cond2], [default, True])
 
         else:
             raise NotImplementedError()
