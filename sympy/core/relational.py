@@ -772,13 +772,43 @@ class Equality(Relational):
         >>> rel.divide_sides(c)
         Piecewise((Eq(a/c, b/c), Ne(c, 0)), (Eq(a, b), True))
 
-        Dividing a relational to both sides:
+        Dividing an equality and an unequality to both sides:
 
         >>> rel.divide_sides(Eq(c, d))
         Piecewise((Eq(a/c, b/c), Ne(c, 0)), (Eq(a, b), True))
 
         >>> rel.divide_sides(Ne(c, d))
         Piecewise((Eq(a, b), Eq(c, 0) | Eq(d, 0)), (Eq(a/c, b/d), Ne(a, 0) & Ne(c, 0) & Ne(d, 0)), (Ne(a/c, b/d), True))
+
+        Dividing inequalities to both sides:
+
+        >>> c, d = symbols('c d', positive=True)
+
+        >>> rel.divide_sides(Ge(c, d))
+        Piecewise((a/d >= b/c, a > 0), (b/c >= a/d, a < 0), (Eq(a/d, b/c), True))
+
+        >>> rel.divide_sides(Le(c, d))
+        Piecewise((a/d <= b/c, a > 0), (b/c <= a/d, a < 0), (Eq(a/d, b/c), True))
+
+        >>> rel.divide_sides(Gt(c, d))
+        Piecewise((a/d > b/c, a > 0), (b/c > a/d, a < 0), (Eq(a/d, b/c), True))
+
+        >>> rel.divide_sides(Lt(c, d))
+        Piecewise((a/d < b/c, a > 0), (b/c < a/d, a < 0), (Eq(a/d, b/c), True))
+
+        >>> c, d = symbols('c d', negative=True)
+
+        >>> rel.divide_sides(Ge(c, d))
+        Piecewise((a/d >= b/c, a > 0), (b/c >= a/d, a < 0), (Eq(a/d, b/c), True))
+
+        >>> rel.divide_sides(Le(c, d))
+        Piecewise((a/d <= b/c, a > 0), (b/c <= a/d, a < 0), (Eq(a/d, b/c), True))
+
+        >>> rel.divide_sides(Gt(c, d))
+        Piecewise((a/d > b/c, a > 0), (b/c > a/d, a < 0), (Eq(a/d, b/c), True))
+
+        >>> rel.divide_sides(Lt(c, d))
+        Piecewise((a/d < b/c, a > 0), (b/c < a/d, a < 0), (Eq(a/d, b/c), True))
         """
         from sympy.functions.elementary.piecewise import Piecewise
 
@@ -799,6 +829,17 @@ class Equality(Relational):
             cond2 = Ne(arg.lhs, 0) & Ne(arg.rhs, 0) & Ne(self.lhs, 0)
             default = Ne(self.lhs / arg.lhs, self.rhs / arg.rhs)
             return Piecewise([expr1, cond1], [expr2, cond2], [default, True])
+
+        elif isinstance(arg, (Ge, Le, Gt, Lt)):
+            if arg.lhs.is_positive and arg.rhs.is_positive or \
+                arg.lhs.is_negative and arg.rhs.is_negative:
+                expr1 = arg.func(self.lhs / arg.rhs, self.rhs / arg.lhs)
+                cond1 = Gt(self.lhs, 0)
+                expr2 = arg.func(self.rhs / arg.lhs, self.lhs / arg.rhs)
+                cond2 = Lt(self.lhs, 0)
+                default = Eq(self.lhs / arg.rhs, self.rhs / arg.lhs)
+                return Piecewise(
+                    [expr1, cond1], [expr2, cond2], [default, True])
 
         raise NotImplementedError()
 
