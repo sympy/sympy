@@ -623,8 +623,7 @@ class Equality(Relational):
             return Ne(self.lhs + arg.lhs, self.rhs + arg.rhs)
         elif isinstance(arg, (Gt, Lt, Ge, Le)):
             return arg.func(self.lhs + arg.lhs, self.rhs + arg.rhs)
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def subtract_sides(self, arg):
         """Subtract sides for an equality
@@ -690,8 +689,7 @@ class Equality(Relational):
             return Ne(self.lhs - arg.lhs, self.rhs - arg.rhs)
         elif isinstance(arg, (Gt, Lt, Ge, Le)):
             return arg.func(self.lhs - arg.lhs, self.rhs - arg.rhs)
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def multiply_sides(self, arg):
         """Returns a new relational with ``arg`` multiplied to LHS and
@@ -755,8 +753,7 @@ class Equality(Relational):
             default = Eq(self.lhs * arg.lhs, self.rhs * arg.rhs)
             return Piecewise([expr1, cond1], [expr2, cond2], [default, True])
 
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def divide_sides(self, arg):
         """Returns a new relational with ``arg`` divided to LHS and RHS
@@ -803,8 +800,7 @@ class Equality(Relational):
             default = Ne(self.lhs / arg.lhs, self.rhs / arg.rhs)
             return Piecewise([expr1, cond1], [expr2, cond2], [default, True])
 
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
 
 Eq = Equality
