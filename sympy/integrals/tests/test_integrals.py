@@ -5,7 +5,7 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol,
-    symbols, sympify, tan, trigsimp, Tuple
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar
 )
 from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
@@ -1548,3 +1548,10 @@ def test_integrate_with_complex_constants():
     assert integrate(1/(1 + I*x**2), x) == -sqrt(I)*log(x - sqrt(I))/2 +\
         sqrt(I)*log(x + sqrt(I))/2
     assert integrate(exp(-I*x**2), x) == sqrt(pi)*erf(sqrt(I)*x)/(2*sqrt(I))
+
+
+def test_issue_14241():
+    x = Symbol('x')
+    n = Symbol('n', positive=True, integer=True)
+    assert integrate(n * x ** (n - 1) / (x + 1), x) == \
+           n**2*x**n*lerchphi(x*exp_polar(I*pi), 1, n)*gamma(n)/gamma(n + 1)

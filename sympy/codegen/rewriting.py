@@ -33,10 +33,13 @@ The ``optims_c99`` imported above is tuple containing the following instances
 from __future__ import (absolute_import, division, print_function)
 from itertools import chain
 from sympy import log, exp, Max, Min, Wild, expand_log, Dummy
+from sympy.assumptions import Q, ask
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.utilities.iterables import sift
 
 
@@ -227,6 +230,27 @@ def create_expand_pow_optimization(limit):
             UnevaluatedExpr(Mul(*([p.base]*+p.exp), evaluate=False)) if p.exp > 0 else
             1/UnevaluatedExpr(Mul(*([p.base]*-p.exp), evaluate=False))
         ))
+
+# Optimization procedures for turning A**(-1) * x into MatrixSolve(A, x)
+def _matinv_predicate(expr):
+    # TODO: We should be able to support more than 2 elements
+    if expr.is_MatMul and len(expr.args) == 2:
+        left, right = expr.args
+        if left.is_Inverse and right.shape[1] == 1:
+            inv_arg = left.arg
+            if isinstance(inv_arg, MatrixSymbol):
+                return bool(ask(Q.fullrank(left.arg)))
+
+    return False
+
+def _matinv_transform(expr):
+    left, right = expr.args
+    inv_arg = left.arg
+    return MatrixSolve(inv_arg, right)
+
+
+matinv_opt = ReplaceOptim(_matinv_predicate, _matinv_transform)
+
 
 # Collections of optimizations:
 optims_c99 = (expm1_opt, log1p_opt, exp2_opt, log2_opt, log2const_opt)

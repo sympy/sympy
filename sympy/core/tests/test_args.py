@@ -4503,6 +4503,14 @@ def test_sympy__codegen__fnodes__literal_dp():
     assert _test_args(literal_dp(1))
 
 
+def test_sympy__codegen__matrix_nodes__MatrixSolve():
+    from sympy.matrices import MatrixSymbol
+    from sympy.codegen.matrix_nodes import MatrixSolve
+    A = MatrixSymbol('A', 3, 3)
+    v = MatrixSymbol('x', 3, 1)
+    assert _test_args(MatrixSolve(A, v))
+
+
 def test_sympy__vector__coordsysrect__CoordSys3D():
     from sympy.vector.coordsysrect import CoordSys3D
     assert _test_args(CoordSys3D('C'))
