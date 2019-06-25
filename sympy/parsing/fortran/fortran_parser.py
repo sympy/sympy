@@ -110,6 +110,11 @@ class ASR2PyVisitor(asr.ASTVisitor):
 
         The function currently only supports variable assignment and binary
         operation assignments of varying multitudes
+
+        Raises
+        ======
+
+        NotImplementedError() when called for Numeric assignments or Arrays
         """
         #TODO: Arithmatic Assignment
         if isinstance(node.target, asr.Variable):
@@ -140,9 +145,9 @@ class ASR2PyVisitor(asr.ASTVisitor):
                         ], value = expr
                     )
             else:
-                raise NotImplementedError()
+                raise NotImplementedError("Numeric assignments not supported")
         else:
-            raise NotImplementedError("Array")
+            raise NotImplementedError("Arrays not supported")
         self.py_ast.body.append(new_node)
         fix_missing_locations(self.py_ast)
 
@@ -161,7 +166,12 @@ class ASR2PyVisitor(asr.ASTVisitor):
         =====
 
         The function currently only supports binary operations with Variables or
-        other boinary operation as nodes
+        other binary operation as nodes
+
+        Raises
+        ======
+
+        NotImplementedError() when called for Numeric assignments
         """
         #TODO: Integer Binary Operations
         op = node.op
@@ -200,7 +210,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
                         right = expr
                     )
             else:
-                raise NotImplementedError()
+                raise NotImplementedError("Numeric Assignments not supported")
         else:
             l_exp_ast = call_visitor_func(lhs)
             for exp in l_exp_ast.body:
@@ -223,7 +233,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
                         right = expr
                     )
             else:
-                raise NotImplementedError()
+                raise NotImplementedError("Numeric Assignments not supported")
         self.py_ast.body.append(new_node)
         fix_missing_locations(self.py_ast)
 
@@ -236,14 +246,19 @@ class ASR2PyVisitor(asr.ASTVisitor):
         Notes
         =====
         The functions currently only supports the declaration of integer and
-        real variables. Other data types are still under development
+        real variables. Other data types are still under development.
+
+        Raises
+        ======
+
+        NotImplementedError() when called for unsupported data types
         """
         if isinstance(node.type, asr.Integer):
             var_type = 'integer'
         elif isinstance(node.type, asr.Real):
             var_type = 'real'
         else:
-            raise NotImplementedError()
+            raise NotImplementedError("Data type not supported")
 
         new_node = Assign(
             targets = [
