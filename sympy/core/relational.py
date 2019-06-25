@@ -1421,6 +1421,61 @@ class GreaterThan(_Greater):
             return Gt(self.lhs + arg.rhs, self.rhs + arg.lhs)
         raise NotImplementedError()
 
+    def subtract_sides(self, arg):
+        """Subtract sides
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Ge(a, b)
+
+        Subtracting a constant to both sides:
+
+        >>> rel.subtract_sides(c)
+        a - c >= b - c
+
+        Subtracting an equality to both sides:
+
+        >>> rel.subtract_sides(Eq(c, d))
+        a - c >= b - d
+
+        Subtracting inequalities to both sides:
+
+        >>> rel.subtract_sides(Ge(c, d))
+        a - d >= b - c
+
+        >>> rel.subtract_sides(Le(c, d))
+        a - c >= b - d
+
+        >>> rel.subtract_sides(Gt(c, d))
+        a - d > b - c
+
+        >>> rel.subtract_sides(Lt(c, d))
+        a - c > b - d
+        """
+        if not getattr(arg, 'is_Relational', None):
+            return Ge(self.lhs - arg, self.rhs - arg)
+        elif isinstance(arg, Eq):
+            return Ge(self.lhs - arg.lhs, self.rhs - arg.rhs)
+        elif isinstance(arg, Ge):
+            return Ge(self.lhs - arg.rhs, self.rhs - arg.lhs)
+        elif isinstance(arg, Gt):
+            return Gt(self.lhs - arg.rhs, self.rhs - arg.lhs)
+        elif isinstance(arg, Le):
+            return Ge(self.lhs - arg.lhs, self.rhs - arg.rhs)
+        elif isinstance(arg, Lt):
+            return Gt(self.lhs - arg.lhs, self.rhs - arg.rhs)
+        raise NotImplementedError()
+
 
 Ge = GreaterThan
 
