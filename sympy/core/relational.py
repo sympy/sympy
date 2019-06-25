@@ -657,47 +657,19 @@ class Equality(Relational):
         else:
             raise NotImplementedError()
 
-    def divide_sides(self, arg, equivalent=True):
+    def divide_sides(self, arg):
         """Returns a new relational with ``arg`` divided to LHS and RHS"""
         from sympy.functions.elementary.piecewise import Piecewise
 
         if isinstance(arg, Equality):
-            if equivalent:
-                return Piecewise(
-                    (
-                        self.func(self.lhs / arg.lhs, self.rhs / arg.rhs),
-                        arg & \
-                        Ne(arg.lhs, S.Zero) & \
-                        Ne(arg.lhs, S.Infinity) & \
-                        Ne(arg.lhs, S.NegativeInfinity) & \
-                        Ne(arg.rhs, S.Zero) & \
-                        Ne(arg.rhs, S.Infinity) & \
-                        Ne(arg.rhs, S.NegativeInfinity)
-                    )
-                )
-            else:
-                return Piecewise(
-                    (
-                        self.func(self.lhs / arg.lhs, self.rhs / arg.rhs),
-                        arg & Ne(arg.lhs, 0) & Ne(arg.rhs, 0)
-                    )
-                )
+            expr = Eq(self.lhs / arg.lhs, self.rhs / arg.lhs)
+            cond = Ne(arg.lhs, 0)
+            return Piecewise([expr, cond], [self, True])
 
         elif not getattr(arg, 'is_Relational', None):
-            if equivalent:
-                return Piecewise(
-                    (
-                        self.func(self.lhs / arg, self.rhs / arg),
-c
-                    )
-                )
-            else:
-                return Piecewise(
-                    (
-                        self.func(self.lhs / arg, self.rhs / arg),
-                        Ne(arg, S.Zero)
-                    )
-                )
+            expr = Eq(self.lhs / arg, self.rhs / arg)
+            cond = Ne(arg, 0)
+            return Piecewise([expr, cond], [self, True])
 
         else:
             raise NotImplementedError()
