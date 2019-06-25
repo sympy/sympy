@@ -6705,7 +6705,7 @@ def test_str_special_matrices():
     assert upretty(OneMatrix(2, 2)) == u'𝟙'
 
 
-def test_pretty_functions():
+def test_pretty_misc_functions():
     assert pretty(LambertW(x)) == 'W(x)'
     assert upretty(LambertW(x)) == u'W(x)'
     assert pretty(LambertW(x, y)) == 'W(x, y)'
