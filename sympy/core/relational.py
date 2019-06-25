@@ -1020,6 +1020,43 @@ class Unequality(Relational):
 
         raise NotImplementedError()
 
+    def divide_sides(self, arg):
+        """Returns a new relational with ``arg`` divided to LHS and
+        RHS
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Ne(a, b)
+
+        Dividing a constant to both sides:
+
+        >>> rel.divide_sides(c)
+        Piecewise((Ne(a/c, b/c), Ne(c, 0)), (Ne(a, b), True))
+
+        Dividing an equality to both sides:
+
+        >>> rel.divide_sides(Eq(c, d))
+        Piecewise((Ne(a, b), Eq(c, 0)), (Ne(a/c, b/d), True))
+        """
+        from sympy.functions.elementary.piecewise import Piecewise
+
+        if not getattr(arg, 'is_Relational', None):
+            expr = Ne(self.lhs / arg, self.rhs / arg)
+            cond = Ne(arg, 0)
+            return Piecewise([expr, cond], [self, True])
+
+        elif isinstance(arg, Eq):
+            cond = Eq(arg.lhs, 0)
+            default = Ne(self.lhs / arg.lhs, self.rhs / arg.rhs)
+            return Piecewise([self, cond], [default, True])
+
+        raise NotImplementedError()
+
 
 Ne = Unequality
 
