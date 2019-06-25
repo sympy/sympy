@@ -1,17 +1,17 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
-                        Tuple, Symbol)
-from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
+                        Tuple, Symbol, EulerGamma, GoldenRatio, Catalan,
+                        Lambda, Mul, Pow, Mod)
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
                              chebyshevt, conjugate, DiracDelta, exp, expint,
                              factorial, floor, harmonic, Heaviside, im,
                              laguerre, LambertW, log, Max, Min, Piecewise,
                              polylog, re, RisingFactorial, sign, sinc, sqrt,
-                             zeta)
+                             zeta, binomial, legendre)
 from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
                              atan, asec, acsc, sinh, cosh, tanh, coth, csch,
                              sech, asinh, acosh, atanh, acoth, asech, acsch)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix)
@@ -23,8 +23,10 @@ from sympy.functions.special.gamma_functions import (gamma, lowergamma,
                                                      polygamma)
 from sympy.functions.special.error_functions import (Chi, Ci, erf, erfc, erfi,
                                                      erfcinv, erfinv, fresnelc,
-                                                     fresnels, li, Shi, Si)
-from sympy.utilities.pytest import XFAIL
+                                                     fresnels, li, Shi, Si, Li,
+                                                     erf2)
+from sympy.polys.polytools import gcd, lcm
+from sympy.ntheory.primetest import isprime
 from sympy.core.compatibility import range
 
 from sympy import octave_code
@@ -60,6 +62,7 @@ def test_Function():
     assert mcode(harmonic(x)) == 'harmonic(x)'
     assert mcode(bernoulli(x)) == "bernoulli(x)"
     assert mcode(bernoulli(x, y)) == "bernoulli(x, y)"
+    assert mcode(legendre(x, y)) == "legendre(x, y)"
 
 
 def test_Function_change_name():
@@ -84,6 +87,8 @@ def test_Function_change_name():
     assert mcode(DiracDelta(x, 3)) == "dirac(3, x)"
     assert mcode(Heaviside(x)) == "heaviside(x)"
     assert mcode(Heaviside(x, y)) == "heaviside(x, y)"
+    assert mcode(binomial(x, y)) == "bincoeff(x, y)"
+    assert mcode(Mod(x, y)) == "mod(x, y)"
 
 
 def test_minmax():
@@ -495,3 +500,8 @@ def test_MatrixElement_printing():
 def test_zeta_printing_issue_14820():
     assert octave_code(zeta(x)) == 'zeta(x)'
     assert octave_code(zeta(x, y)) == '% Not supported in Octave:\n% zeta\nzeta(x, y)'
+
+
+def test_automatic_rewrite():
+    assert octave_code(Li(x)) == 'logint(x) - logint(2)'
+    assert octave_code(erf2(x, y)) == '-erf(x) + erf(y)'

@@ -4,7 +4,8 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     S, MatrixSymbol, Function, Derivative, log, true, false, Range, Min, Max, \
     Lambda, IndexedBase, symbols, zoo, elliptic_f, elliptic_e, elliptic_pi, Ei, \
     expint, jacobi, gegenbauer, chebyshevt, chebyshevu, legendre, assoc_legendre, \
-    laguerre, assoc_laguerre, hermite, TribonacciConstant, EulerGamma, Contains
+    laguerre, assoc_laguerre, hermite, TribonacciConstant, Contains, \
+    LambertW
 
 from sympy import elliptic_k, totient, reduced_totient, primenu, primeomega, \
     fresnelc, fresnels, Heaviside
@@ -1132,6 +1133,11 @@ def test_print_FiniteSet():
     f1 = FiniteSet(x, 1, 3)
     assert mpp.doprint(f1) == \
         '<mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced>'
+
+
+def test_print_LambertW():
+    assert mpp.doprint(LambertW(x)) == '<mrow><mi>W</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(LambertW(x, y)) == '<mrow><mi>W</mi><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow>'
 
 
 def test_print_EmptySet():

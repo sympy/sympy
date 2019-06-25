@@ -29,13 +29,14 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "besseli", "besselj", "besselk", "bessely",
                    "bernoulli", "beta", "euler", "exp", "factorial", "floor",
                    "fresnelc", "fresnels", "gamma", "harmonic", "log",
-                   "polylog", "sign", "zeta"]
+                   "polylog", "sign", "zeta", "legendre"]
 
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
 known_fcns_src2 = {
     "Abs": "abs",
     "arg": "angle",  # arg/angle ok in Octave but only angle in Matlab
+    "binomial": "bincoeff",
     "ceiling": "ceil",
     "chebyshevu": "chebyshevU",
     "chebyshevt": "chebyshevT",
@@ -51,6 +52,7 @@ known_fcns_src2 = {
     "loggamma": "gammaln",
     "Max": "max",
     "Min": "min",
+    "Mod": "mod",
     "polygamma": "psi",
     "re": "real",
     "RisingFactorial": "pochhammer",

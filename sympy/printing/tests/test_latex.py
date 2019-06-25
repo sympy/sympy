@@ -17,7 +17,7 @@ from sympy import (
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
-    UnevaluatedExpr, Quaternion, I, KroneckerProduct, Intersection)
+    UnevaluatedExpr, Quaternion, I, KroneckerProduct, Intersection, LambertW)
 
 from sympy.ntheory.factor_ import udivisor_sigma
 
@@ -515,6 +515,8 @@ def test_latex_functions():
     assert latex(primeomega(n)) == r'\Omega\left(n\right)'
     assert latex(primeomega(n) ** 2) == \
         r'\left(\Omega\left(n\right)\right)^{2}'
+
+    assert latex(LambertW(n)) == r'W\left(n\right)'
 
     assert latex(Mod(x, 7)) == r'x\bmod{7}'
     assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'
