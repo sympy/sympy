@@ -382,13 +382,20 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 # if it's a trivial power we are done
                 if e == 1:
                     return False
-
+                if big:
+                    # see if other factors have the same
+                    # multiplicity
+                    a = afactor**e
+                    r, ok = integer_nthroot(n//a, e)
+                    if ok:
+                        return r*a, e
+                # Look for a smaller exponent:
                 # remove this factor and check to see if
                 # any of e's factors are a common exponent; if
                 # not then it's not a perfect power
                 n //= afactor**e
                 # if we want the biggest exponent then we need
-                # to get the smallest in this call
+                # to get the smallest exponent in this call
                 rm = perfect_power(n, candidates=primefactors(e), big=not big)
                 if not rm:
                     return False
