@@ -317,25 +317,26 @@ def perfect_power(n, candidates=None, big=True, factor=True):
 
     To know whether an integer is a perfect power of 2 use
 
-    >>> is2pow = lambda n: bool(n and not n & (n - 1))
-    >>> [(i, is2pow(i)) for i in range(5)]
-    [(0, False), (1, True), (2, True), (3, False), (4, True)]
+        >>> is2pow = lambda n: bool(n and not n & (n - 1))
+        >>> [(i, is2pow(i)) for i in range(5)]
+        [(0, False), (1, True), (2, True), (3, False), (4, True)]
 
     It is not necessary to provide ``candidates``. When provided
-    it will be assumed that they are sorted integers and the first
-    one that is larger than the computed maximum exponent possible
-    will signal failure for the routine.
+    it will be assumed that they are ints. The first one that is
+    larger than the computed maximum possible exponent will signal
+    failure for the routine.
 
-    >>> perfect_power(3**8, [9])
-    False
-    >>> perfect_power(3**8, [2, 4, 8])
-    (3, 8)
-    >>> perfect_power(3**8, [4, 8], big=False)
-    (9, 4)
+        >>> perfect_power(3**8, [9])
+        False
+        >>> perfect_power(3**8, [2, 4, 8])
+        (3, 8)
+        >>> perfect_power(3**8, [4, 8], big=False)
+        (9, 4)
 
     See Also
     ========
     sympy.core.power.integer_nthroot
+    primetest.is_square
     """
     from sympy.core.power import integer_nthroot
     n = as_int(n)
@@ -350,7 +351,8 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     if not candidates:
         candidates = primerange(min_possible, max_possible)
     else:
-        candidates = [i for i in candidates if min_possible <= i < max_possible]
+        candidates = sorted([i for i in candidates
+            if min_possible <= i < max_possible])
         if n%2 == 0:
             e = trailing(n)
             candidates = [i for i in candidates if e%i == 0]
@@ -362,44 +364,44 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 return (r, e)
         return False
 
+    def _factors():
+        rv = 2 + n % 2
+        while True:
+            yield rv
+            rv = nextprime(rv)
 
-    afactor = 2 + n % 2
-    for e in candidates:
+    for fac, e in zip(_factors(), candidates):
         # see if there is a factor present
-        if factor:
-            if n % afactor == 0:
-                # find what the potential power is
-                if afactor == 2:
-                    e = trailing(n)
-                else:
-                    e = multiplicity(afactor, n)
-                # if it's a trivial power we are done
-                if e == 1:
-                    return False
-
-                # maybe the e-th root of n is exact
-                r, exact = integer_nthroot(n, e)
-                if not exact:
-                    # Having a factor, we know that e is the maximal
-                    # possible value for a root of n.
-                    # If n = afactor**e*m can be written as a perfect
-                    # power then see if m can be written as r**E where
-                    # gcd(e, E) != 1 so n = (afactor**(e//E)*r)**E
-                    m = n//afactor**e
-                    rE = perfect_power(m, candidates=divisors(e), big=big)
-                    if not rE:
-                        return False
-                    else:
-                        r, E = rE
-                        return afactor**(e//E)*r, E
-                if not big:
-                    e0 = primefactors(e)
-                    if e0[0] != e:
-                        r, e = r**(e//e0[0]), e0[0]
-                return r, e
+        if factor and n % fac == 0:
+            # find what the potential power is
+            if fac == 2:
+                e = trailing(n)
             else:
-                # get the next factor ready for the next pass through the loop
-                afactor = nextprime(afactor)
+                e = multiplicity(fac, n)
+            # if it's a trivial power we are done
+            if e == 1:
+                return False
+
+            # maybe the e-th root of n is exact
+            r, exact = integer_nthroot(n, e)
+            if not exact:
+                # Having a factor, we know that e is the maximal
+                # possible value for a root of n.
+                # If n = fac**e*m can be written as a perfect
+                # power then see if m can be written as r**E where
+                # gcd(e, E) != 1 so n = (fac**(e//E)*r)**E
+                m = n//fac**e
+                rE = perfect_power(m, candidates=divisors(e, generator=True))
+                if not rE:
+                    return False
+                else:
+                    r, E = rE
+                    r, e = fac**(e//E)*r, E
+            if not big:
+                e0 = primefactors(e)
+                if e0[0] != e:
+                    r, e = r**(e//e0[0]), e0[0]
+            return r, e
 
         # Weed out downright impossible candidates
         if logn/e < 40:
