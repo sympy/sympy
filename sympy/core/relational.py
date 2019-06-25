@@ -628,28 +628,31 @@ class Equality(Relational):
         else:
             raise NotImplementedError()
 
-    def multiply_sides(self, arg, equivalent=True):
+    def multiply_sides(self, arg):
         """Returns a new relational with ``arg`` multiplied to LHS and RHS"""
         from sympy.functions.elementary.piecewise import Piecewise
 
-        if isinstance(arg, Equality):
-            if equivalent:
-                return Piecewise(
-                    (
-                        self.func(self.lhs * arg.lhs, self.rhs * arg.rhs),
-                        arg & Ne(arg.lhs, 0) & Ne(arg.rhs, 0)
-                    )
-                )
-            else:
-                return self.func(self.lhs * arg.lhs, self.rhs * arg.rhs)
+        if isinstance(arg, Eq):
+            return Eq(self.lhs * arg.lhs, self.rhs * arg.rhs)
+
+        elif isinstance(arg, Ne):
+            expr = Ne(self.lhs * arg.lhs, self.rhs * arg.rhs)
+            cond = Ne(self.lhs, 0)
+            default = Eq(self.lhs * arg.lhs, self.rhs * arg.rhs)
+            return Piecewise([expr, cond], [default, True])
+
+        elif isinstance(arg, [Gt, Lt, Ge, Le]):
+            expr1 = arg.func(self.lhs * arg.lhs, self.rhs * arg.rhs)
+            cond1 = Gt(self.lhs, 0)
+            expr2 = arg.func(self.rhs * arg.rhs, self.lhs * arg.lhs)
+            cond2 = Lt(self.lhs, 0)
+            default = Eq(self.lhs * arg.lhs, self.rhs * arg.rhs)
+            return Piecewise([expr1, cond1], [expr2, cond2], [default, True])
 
         elif not getattr(arg, 'is_Relational', None):
-            if equivalent:
-                return Piecewise(
-                    (self.func(self.lhs * arg, self.rhs * arg), Ne(arg, 0))
-                )
-            else:
-                return self.func(self.lhs * arg, self.rhs * arg)
+            expr = Eq(self.lhs * arg, self.rhs * arg)
+            cond = Ne(arg, 0)
+            return Piecewise([expr, cond])
 
         else:
             raise NotImplementedError()
