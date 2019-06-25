@@ -587,33 +587,33 @@ class Equality(Relational):
         >>> from sympy import symbols
         >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 
-        >>> x, y, a, b = symbols('x y a b')
-        >>> rel = Eq(x, y)
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Eq(a, b)
 
         Adding a constant to both sides:
 
-        >>> rel.add_sides(a)
-        Eq(a + x, a + y)
+        >>> rel.add_sides(c)
+        Eq(a + c, b + c)
 
         Adding an relationals to both sides:
 
-        >>> rel.add_sides(Eq(a, b))
-        Eq(a + x, b + y)
+        >>> rel.add_sides(Eq(c, d))
+        Eq(a + c, b + d)
 
-        >>> rel.add_sides(Ne(a, b))
-        Ne(a + x, b + y)
+        >>> rel.add_sides(Ne(c, d))
+        Ne(a + c, b + d)
 
-        >>> rel.add_sides(Ge(a, b))
-        a + x >= b + y
+        >>> rel.add_sides(Ge(c, d))
+        a + c >= b + d
 
-        >>> rel.add_sides(Le(a, b))
-        a + x <= b + y
+        >>> rel.add_sides(Le(c, d))
+        a + c <= b + d
 
-        >>> rel.add_sides(Gt(a, b))
-        a + x > b + y
+        >>> rel.add_sides(Gt(c, d))
+        a + c > b + d
 
-        >>> rel.add_sides(Lt(a, b))
-        a + x < b + y
+        >>> rel.add_sides(Lt(c, d))
+        a + c < b + d
         """
         if not getattr(arg, 'is_Relational', None):
             return self.func(self.lhs + arg, self.rhs + arg)
