@@ -459,7 +459,12 @@ class Integral(AddWithLimits):
                 reps[x] = d
         if reps:
             undo = dict([(v, k) for k, v in reps.items()])
-            return self.xreplace(reps).doit(**hints).xreplace(undo)
+            did = self.xreplace(reps).doit(**hints)
+            if type(did) is tuple:  # when separate=True
+                did = tuple([i.xreplace(undo) for i in did])
+            else:
+                did = did.xreplace(undo)
+            return did
 
         # continue with existing assumptions
         undone_limits = []
