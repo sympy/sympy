@@ -581,16 +581,48 @@ class Equality(Relational):
             | Gt  | Gt     |
             | Lt  | Lt     |
 
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> x, y, a, b = symbols('x y a b')
+        >>> rel = Eq(x, y)
+
+        Adding a constant to both sides:
+
+        >>> rel.add_sides(a)
+        Eq(a + x, a + y)
+
+        Adding an relationals to both sides:
+
+        >>> rel.add_sides(Eq(a, b))
+        Eq(a + x, b + y)
+
+        >>> rel.add_sides(Ne(a, b))
+        Ne(a + x, b + y)
+
+        >>> rel.add_sides(Ge(a, b))
+        a + x >= b + y
+
+        >>> rel.add_sides(Le(a, b))
+        a + x <= b + y
+
+        >>> rel.add_sides(Gt(a, b))
+        a + x > b + y
+
+        >>> rel.add_sides(Lt(a, b))
+        a + x < b + y
         """
-        if isinstance(arg, Equality):
-            return self.func(self.lhs + arg.lhs, self.rhs + arg.rhs)
-        elif isinstance(arg, Unequality):
-            return other.func(self.lhs + arg.lhs, self.rhs + arg.rhs)
-        elif isinstance(arg,
-            [GreaterThan, LessThan, StrictGreaterThan, StrictLessThan]):
-            return other.func(self.lhs + arg.lhs, self.rhs + arg.rhs)
-        elif not getattr(arg, 'is_Relational', None):
+        if not getattr(arg, 'is_Relational', None):
             return self.func(self.lhs + arg, self.rhs + arg)
+        elif isinstance(arg, Eq):
+            return Eq(self.lhs + arg.lhs, self.rhs + arg.rhs)
+        elif isinstance(arg, Ne):
+            return Ne(self.lhs + arg.lhs, self.rhs + arg.rhs)
+        elif isinstance(arg, (Gt, Lt, Ge, Le)):
+            return arg.func(self.lhs + arg.lhs, self.rhs + arg.rhs)
         else:
             raise NotImplementedError()
 
