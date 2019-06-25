@@ -1366,6 +1366,61 @@ class GreaterThan(_Greater):
         # We don't use the op symbol here: workaround issue #7951
         return _sympify(lhs.__ge__(rhs))
 
+    def add_sides(self, arg):
+        """Add sides
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Ge(a, b)
+
+        Adding a constant to both sides:
+
+        >>> rel.add_sides(c)
+        a + c >= b + c
+
+        Adding an equality to both sides:
+
+        >>> rel.add_sides(Eq(c, d))
+        a + c >= b + d
+
+        Adding inequalities to both sides:
+
+        >>> rel.add_sides(Ge(c, d))
+        a + c >= b + d
+
+        >>> rel.add_sides(Le(c, d))
+        a + d >= b + c
+
+        >>> rel.add_sides(Gt(c, d))
+        a + c > b + d
+
+        >>> rel.add_sides(Lt(c, d))
+        a + d > b + c
+        """
+        if not getattr(arg, 'is_Relational', None):
+            return Ge(self.lhs + arg, self.rhs + arg)
+        elif isinstance(arg, Eq):
+            return Ge(self.lhs + arg.lhs, self.rhs + arg.rhs)
+        elif isinstance(arg, Ge):
+            return Ge(self.lhs + arg.lhs, self.rhs + arg.rhs)
+        elif isinstance(arg, Gt):
+            return Gt(self.lhs + arg.lhs, self.rhs + arg.rhs)
+        elif isinstance(arg, Le):
+            return Ge(self.lhs + arg.rhs, self.rhs + arg.lhs)
+        elif isinstance(arg, Lt):
+            return Gt(self.lhs + arg.rhs, self.rhs + arg.lhs)
+        raise NotImplementedError()
+
 
 Ge = GreaterThan
 
