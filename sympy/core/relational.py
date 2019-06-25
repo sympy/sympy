@@ -949,6 +949,39 @@ class Unequality(Relational):
             return Ne(self.lhs + arg.lhs, self.rhs + arg.rhs)
         raise NotImplementedError()
 
+    def subtract_sides(self, arg):
+        """Subtract sides for an unequality
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Ne(a, b)
+
+        Subtracting a constant to both sides:
+
+        >>> rel.subtract_sides(c)
+        Ne(a - c, b - c)
+
+        Subtracting an equality to both sides:
+
+        >>> rel.subtract_sides(Eq(c, d))
+        Ne(a - c, b - d)
+        """
+        if not getattr(arg, 'is_Relational', None):
+            return Ne(self.lhs - arg, self.rhs - arg)
+        elif isinstance(arg, Eq):
+            return Ne(self.lhs - arg.lhs, self.rhs - arg.rhs)
+        raise NotImplementedError()
+
 
 Ne = Unequality
 
