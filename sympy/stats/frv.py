@@ -376,24 +376,10 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     def _is_symbolic(self):
         """
         Helper property to check if the distribution
-        of the random variable is symbolic.
+        of the random variable is having symbolic
+        dimension.
         """
-        return isinstance(self.domain.set, Intersection)
-
-    def _is_logical(self, expr):
-        """
-        Helper function to check if an expression
-        is logical.
-
-        Returns
-        =======
-
-        True
-            If the expression is logical.
-        False
-            In all other cases.
-        """
-        return isinstance(expr, (Relational, Logic))
+        return self.distribution.is_symbolic
 
     @property
     def distribution(self):
@@ -438,7 +424,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
 
     def compute_density(self, expr):
         if self._is_symbolic:
-            cond = True if not self._is_logical(expr) else expr
+            cond = True if not isinstance(expr, (Relational, Logic)) \
+                     else expr
             k = Dummy('k', integer=True)
             return Lambda(k,
             Piecewise((self.pdf(k), And(k >= self.args[1].low,
@@ -459,7 +446,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
         if self._is_symbolic:
             rv = random_symbols(expr)[0]
             k = Dummy('k', integer=True)
-            cond = True if not self._is_logical(expr) else expr.subs(rv, k)
+            cond = True if not isinstance(expr, (Relational, Logic)) \
+                    else expr.subs(rv, k)
             return Sum(Piecewise((self.pdf(k) * k, cond), (0, True)),
                 (k, self.distribution.low, self.distribution.high)).doit()
         expr = rv_subs(expr, rvs)

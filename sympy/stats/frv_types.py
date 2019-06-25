@@ -37,20 +37,8 @@ __all__ = ['FiniteRV',
 'Rademacher'
 ]
 
-def _is_sym_dim(n):
-    n = sympify(n)
-    if n.atoms(Symbol, Integer) == n.atoms() and\
-        n.has(Symbol):
-        return True
-    return False
-
 def rv(name, cls, *args):
     args = list(map(sympify, args))
-    i = 0
-    while i < len(args): # Converting to Dict since dict is not hashable
-        if isinstance(args[i], dict):
-            args[i] = Dict(args[i])
-        i += 1
     dist = cls(*args)
     dist.check(*args)
     return SingleFinitePSpace(name, dist).value
@@ -157,7 +145,7 @@ class DieDistribution(SingleFiniteDistribution):
 
     @property
     def is_symbolic(self):
-        return _is_sym_dim(self.sides)
+        return not self.sides.is_number
 
     @property
     def high(self):
@@ -316,7 +304,7 @@ class BinomialDistribution(SingleFiniteDistribution):
 
     @property
     def is_symbolic(self):
-        return _is_sym_dim(self.n)
+        return not self.n.is_number
 
     @property
     def set(self):
@@ -401,7 +389,7 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
 
     @property
     def is_symbolic(self):
-        return _is_sym_dim(self.n)
+        return not self.n.is_number
 
     @property
     def set(self):
@@ -446,7 +434,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
 
     @property
     def is_symbolic(self):
-        return any(_is_sym_dim(x) for x in (self.N, self.m, self.n))
+        return any(not x.is_number for x in (self.N, self.m, self.n))
 
     @property
     def high(self):
