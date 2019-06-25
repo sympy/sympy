@@ -611,6 +611,7 @@ def test_integrate_returns_piecewise():
     assert integrate(exp(x*y), (x, 0, z)) == Piecewise(
         (exp(y*z)/y - 1/y, (y > -oo) & (y < oo) & Ne(y, 0)), (z, True))
 
+
 def test_integrate_max_min():
     x = symbols('x', real=True)
     assert integrate(Min(x, 2), (x, 0, 3)) == 4
@@ -733,6 +734,7 @@ def test_expand():
     e = Integral(f(x)+f(x**2), (x, 1, y))
     assert e.expand() == Integral(f(x), (x, 1, y)) + Integral(f(x**2), (x, 1, y))
 
+
 def test_integration_variable():
     raises(ValueError, lambda: Integral(exp(-x**2), 3))
     raises(ValueError, lambda: Integral(exp(-x**2), (3, -oo, oo)))
@@ -782,6 +784,7 @@ def test_as_sum_left():
         y**2 + y + S(1)/3 - y/n - 1/(2*n) + 1/(6*n**2)
     assert e.as_sum(10, method="left", evaluate=False).has(Sum)
 
+
 def test_as_sum_right():
     e = Integral((x + y)**2, (x, 0, 1))
     assert e.as_sum(1, method="right").expand() == 1 + 2*y + y**2
@@ -801,6 +804,7 @@ def test_as_sum_trapezoid():
     assert e.as_sum(n, method="trapezoid").expand() == \
         y**2 + y + S(1)/3 + 1/(6*n**2)
     assert Integral(sign(x), (x, 0, 1)).as_sum(1, 'trapezoid') == S(1)/2
+
 
 def test_as_sum_raises():
     e = Integral((x + y)**2, (x, 0, 1))
@@ -1402,47 +1406,58 @@ def test_issue_12677():
 def test_issue_14078():
     assert integrate((cos(3*x)-cos(x))/x, (x, 0, oo)) == -log(3)
 
+
 def test_issue_14064():
     assert integrate(1/cosh(x), (x, 0, oo)) == pi/2
+
 
 def test_issue_14027():
     assert integrate(1/(1 + exp(x - S(1)/2)/(1 + exp(x))), x) == \
         x - exp(S(1)/2)*log(exp(x) + exp(S(1)/2)/(1 + exp(S(1)/2)))/(exp(S(1)/2) + E)
 
+
 def test_issue_8170():
     assert integrate(tan(x), (x, 0, pi/2)) == S.Infinity
+
 
 def test_issue_8440_14040():
     assert integrate(1/x, (x, -1, 1)) == S.NaN
     assert integrate(1/(x + 1), (x, -2, 3)) == S.NaN
+
 
 def test_issue_14096():
     assert integrate(1/(x + y)**2, (x, 0, 1)) == -1/(y + 1) + 1/y
     assert integrate(1/(1 + x + y + z)**2, (x, 0, 1), (y, 0, 1), (z, 0, 1)) == \
         -4*log(4) - 6*log(2) + 9*log(3)
 
+
 def test_issue_14144():
     assert Abs(integrate(1/sqrt(1 - x**3), (x, 0, 1)).n() - 1.402182) < 1e-6
     assert Abs(integrate(sqrt(1 - x**3), (x, 0, 1)).n() - 0.841309) < 1e-6
+
 
 def test_issue_14375():
     # This raised a TypeError. The antiderivative has exp_polar, which
     # may be possible to unpolarify, so the exact output is not asserted here.
     assert integrate(exp(I*x)*log(x), x).has(Ei)
 
+
 def test_issue_14437():
     f = Function('f')(x, y, z)
     assert integrate(f, (x, 0, 1), (y, 0, 2), (z, 0, 3)) == \
                 Integral(f, (x, 0, 1), (y, 0, 2), (z, 0, 3))
 
+
 def test_issue_14470():
     assert integrate(1/sqrt(exp(x) + 1), x) == \
         log(-1 + 1/sqrt(exp(x) + 1)) - log(1 + 1/sqrt(exp(x) + 1))
+
 
 def test_issue_14877():
     f = exp(1 - exp(x**2)*x + 2*x**2)*(2*x**3 + x)/(1 - exp(x**2)*x)**2
     assert integrate(f, x) == \
         -exp(2*x**2 - x*exp(x**2) + 1)/(x*exp(3*x**2) - exp(2*x**2))
+
 
 def test_issue_14782():
     f = sqrt(-x**2 + 1)*(-x**2 + x)
@@ -1516,6 +1531,7 @@ def test_issue_15640_log_substitutions():
     F = -sqrt(pi)*erfc(sqrt(log(x)))/2 - sqrt(log(x))/x
     assert integrate(f, x) == F and F.diff(x) == f
 
+
 def test_issue_15509():
     from sympy.vector import CoordSys3D
     N = CoordSys3D('N')
@@ -1535,6 +1551,8 @@ def test_issue_4311_fast():
 
 @slow
 def test_issue_4311_slow():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     x = symbols('x')
     assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)
 

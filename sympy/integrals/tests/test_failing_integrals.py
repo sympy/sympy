@@ -117,6 +117,8 @@ def test_issue_15925a():
 @XFAIL
 @slow
 def test_issue_15925b():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
     assert not integrate(sqrt((-12*cos(x)**2*sin(x))**2+(12*cos(x)*sin(x)**2)**2),
                          (x, 0, pi/6)).has(Integral)
 
