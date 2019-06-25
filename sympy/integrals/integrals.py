@@ -451,7 +451,7 @@ class Integral(AddWithLimits):
                 d = Dummy(positive=True)
             elif all(i.is_nonpositive for i in l) and not x.is_nonpositive:
                 d = Dummy(negative=True)
-            elif not x.is_real:  # l were sorted so they must be real
+            elif all(i.is_real for i in l) and not x.is_real:
                 d = Dummy(real=True)
             else:
                 d = None
