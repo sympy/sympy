@@ -18,11 +18,13 @@ if not os.path.exists('generated.py'):
     class RubiCodeGenerator(CodeGenerator):
         def final_label(self, pattern_index, subst_name):
             label = self._matcher.patterns[pattern_index][1]
+            if "<" in str(label):
+                import pdb; pdb.set_trace()
             if label is not None:
                 return label
             elif label is None:
                 return super().final_label(pattern_index, subst_name)
-        def constraint_repr(self, constraint):
+        def _constraint_repr(self, constraint):
             if isinstance(constraint, CustomConstraint) and isinstance(constraint.constraint, type(lambda: 0)):
                 src = get_short_lambda_source(constraint.constraint)
                 mapping = {k: v for v, k in constraint._variables.items() }
@@ -54,7 +56,7 @@ from sympy.integrals.rubi.constraints import *
 {}
     '''.strip()
 
-    generator = RubiCodeGenerator(rubi)
+    generator = RubiCodeGenerator(rubi.matcher)
     global_code, code = generator.generate_code()
     code = GENERATED_TEMPLATE.format(global_code, code)
 
