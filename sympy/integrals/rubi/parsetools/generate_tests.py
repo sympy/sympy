@@ -9,7 +9,7 @@ def generate_test_file():
     '''
     This function is assuming the name of file containing the fullform is test_1.m.
     It can be changes as per use.
-    See `rubi_parsing_guide.md` in `parsetools` for more details.
+    See https://github.com/sympy/sympy/wiki/Rubi-parsing-guide#parsing-tests for details.
     '''
     res =[]
     file_name = 'test_1.m'
