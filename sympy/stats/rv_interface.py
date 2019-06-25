@@ -7,7 +7,7 @@ from .rv import (probability, expectation, density, where, given, pspace, cdf,
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'kurtosis', 'covariance',
-        'dependent', 'independent', 'random_symbols', 'correlation', 'factorialmoment',
+        'dependent', 'independent', 'random_symbols', 'correlation', 'factorial_moment',
         'moment', 'cmoment', 'sampling_density', 'moment_generating_function', 'quantile']
 
 
@@ -298,12 +298,12 @@ def kurtosis(X, condition=None, **kwargs):
     return smoment(X, 4, condition=condition, **kwargs)
 
 
-def factorialmoment(X, n, condition=None, **kwargs):
+def factorial_moment(X, n, condition=None, **kwargs):
     """
     The factorial moment is a mathematical quantity defined as the expectation
     or average of the falling factorial of a random variable.
 
-    factorialmoment(X, n) = E(X*(X - 1)*(X - 2)*...*(X - n + 1))
+    factorial_moment(X, n) = E(X*(X - 1)*(X - 2)*...*(X - n + 1))
 
     Parameters
     ==========
@@ -315,14 +315,14 @@ def factorialmoment(X, n, condition=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import factorialmoment, Poisson, Binomial
+    >>> from sympy.stats import factorial_moment, Poisson, Binomial
     >>> from sympy import Symbol
     >>> lamda = Symbol('lamda')
     >>> X = Poisson('x', lamda)
-    >>> factorialmoment(X, 2)
+    >>> factorial_moment(X, 2)
     lamda**2
     >>> X = Binomial('x', 2, 0.5)
-    >>> factorialmoment(X, 2)
+    >>> factorial_moment(X, 2)
     0.5
 
     References

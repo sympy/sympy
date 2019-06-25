@@ -1,11 +1,11 @@
-from sympy import (S, Symbol, Interval,
+from sympy import (S, Symbol, Interval, exp, FallingFactorial, factorial,
                    Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
                    DiracDelta, log, pi)
 from sympy.core.compatibility import range
 from sympy.core.numbers import comp
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
                          density, given, independent, dependent, where, pspace,
-                         factorialmoment, random_symbols, sample, Geometric,
+                         factorial_moment, random_symbols, sample, Geometric,
                          Poisson, Binomial, Hypergeometric)
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
@@ -153,13 +153,28 @@ def test_given():
     assert X == A == B
 
 
-def test_factorialmoment():
+def test_factorial_moment():
     X = Poisson('x', 2)
     Y = Binomial('y', 2, 0.5)
     Z = Hypergeometric('z', 4, 2, 2)
-    assert factorialmoment(X, 2) == 4
-    assert factorialmoment(Y, 2) == 0.5
-    assert factorialmoment(Z, 2) == S(1)/3
+    assert factorial_moment(X, 2) == 4
+    assert factorial_moment(Y, 2) == 0.5
+    assert factorial_moment(Z, 2) == S(1)/3
+
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    l = Symbol('l')
+    X = Poisson('x', l)
+    Y = Binomial('y', 2, y)
+    Z = Hypergeometric('z', 10, 2, 3)
+    assert factorial_moment(X, x) == Sum(l**x*exp(-l)*\
+        FallingFactorial(x, x)/factorial(x), (x, 0, oo))
+    assert factorial_moment(Y, l) == y**2*FallingFactorial(
+        2, l) + 2*y*(1 - y)*FallingFactorial(1, l) + (1 - y)**2*\
+            FallingFactorial(0, l)
+    assert factorial_moment(Z, l) == 7*FallingFactorial(0, l)/\
+        15 + 7*FallingFactorial(1, l)/15 + FallingFactorial(2, l)/15
 
 
 def test_dependence():
