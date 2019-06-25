@@ -1542,12 +1542,9 @@ def test_issue_4311_slow():
 def test_integrate_with_complex_constants():
     K = Symbol('K', real=True, positive=True)
     x = Symbol('x', real=True)
-    assert integrate(exp(-I*K*x**2), x) == sqrt(pi)*erf(sqrt(I)*sqrt(K)*x)/(2*
-                    sqrt(I)*sqrt(K))
     m = Symbol('m', real=True)
     assert integrate(exp(-I*K*x**2+m*x), x) == sqrt(I)*sqrt(pi)*exp(-I*m**2
                     /(4*K))*erfi((-2*I*K*x + m)/(2*sqrt(K)*sqrt(-I)))/(2*sqrt(K))
-    assert integrate(1/(m + I*b*x**2), x) == -sqrt(I/(b*m))*log(-m*sqrt(I/(b*m))
-        + x)/2 + sqrt(I/(b*m))*log(m*sqrt(I/(b*m)) + x)/2
     assert integrate(1/(1 + I*x**2), x) == -sqrt(I)*log(x - sqrt(I))/2 +\
         sqrt(I)*log(x + sqrt(I))/2
+    assert integrate(exp(-I*x**2), x) == sqrt(pi)*erf(sqrt(I)*x)/(2*sqrt(I))

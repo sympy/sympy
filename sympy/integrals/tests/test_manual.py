@@ -108,19 +108,23 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1 / (16 + 16 * x**2), x) == atan(x) / 16
     assert manualintegrate(1 / (4 + x**2), x) == atan(x / 2) / 2
     assert manualintegrate(1 / (1 + 4 * x**2), x) == atan(2*x) / 2
-    assert manualintegrate(1/(a + b*x**2), x) == \
-        Piecewise((atan(x/sqrt(a/b))/(b*sqrt(a/b)), a/b > 0), \
-                  (-acoth(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 > -a/b)), \
-                  (-atanh(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 < -a/b)))
-    assert manualintegrate(1/(4 + b*x**2), x) == \
-        Piecewise((atan(x/(2*sqrt(1/b)))/(2*b*sqrt(1/b)), 4/b > 0), \
-                  (-acoth(x/(2*sqrt(-1/b)))/(2*b*sqrt(-1/b)), And(4/b < 0, x**2 > -4/b)), \
-                  (-atanh(x/(2*sqrt(-1/b)))/(2*b*sqrt(-1/b)), And(4/b < 0, x**2 < -4/b)))
-    assert manualintegrate(1/(a + 4*x**2), x) == \
-        Piecewise((atan(2*x/sqrt(a))/(2*sqrt(a)), a/4 > 0), \
-                  (-acoth(2*x/sqrt(-a))/(2*sqrt(-a)), And(a/4 < 0, x**2 > -a/4)), \
-                  (-atanh(2*x/sqrt(-a))/(2*sqrt(-a)), And(a/4 < 0, x**2 < -a/4)))
+    ra = Symbol('a', real=True)
+    rb = Symbol('b', real=True)
+    assert manualintegrate(1/(ra + rb*x**2), x) == \
+        Piecewise((atan(x/sqrt(ra/rb))/(rb*sqrt(ra/rb)), ra/rb > 0),
+                  (-acoth(x/sqrt(-ra/rb))/(rb*sqrt(-ra/rb)), And(ra/rb < 0, x**2 > -ra/rb)),
+                  (-atanh(x/sqrt(-ra/rb))/(rb*sqrt(-ra/rb)), And(ra/rb < 0, x**2 < -ra/rb)))
+    assert manualintegrate(1/(4 + rb*x**2), x) == \
+        Piecewise((atan(x/(2*sqrt(1/rb)))/(2*rb*sqrt(1/rb)), 4/rb > 0),
+                  (-acoth(x/(2*sqrt(-1/rb)))/(2*rb*sqrt(-1/rb)), And(4/rb < 0, x**2 > -4/rb)),
+                  (-atanh(x/(2*sqrt(-1/rb)))/(2*rb*sqrt(-1/rb)), And(4/rb < 0, x**2 < -4/rb)))
+    assert manualintegrate(1/(ra + 4*x**2), x) == \
+        Piecewise((atan(2*x/sqrt(ra))/(2*sqrt(ra)), ra/4 > 0),
+                  (-acoth(2*x/sqrt(-ra))/(2*sqrt(-ra)), And(ra/4 < 0, x**2 > -ra/4)),
+                  (-atanh(2*x/sqrt(-ra))/(2*sqrt(-ra)), And(ra/4 < 0, x**2 < -ra/4)))
     assert manualintegrate(1/(4 + 4*x**2), x) == atan(x) / 4
+
+    assert manualintegrate(1/(a + b*x**2), x) == atan(x/sqrt(a/b))/(b*sqrt(a/b))
 
     # asin
     assert manualintegrate(1/sqrt(1-x**2), x) == asin(x)
@@ -339,10 +343,7 @@ def test_issue_6746():
         (y + 1)**(n*x)/(n*log(y + 1))
     a = Symbol('a', negative=True)
     b = Symbol('b')
-    assert manualintegrate(1/(a + b*x**2), x) == \
-        Piecewise((atan(x/sqrt(a/b))/(b*sqrt(a/b)), a/b > 0), \
-        (-acoth(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 > -a/b)), \
-        (-atanh(x/sqrt(-a/b))/(b*sqrt(-a/b)), And(a/b < 0, x**2 < -a/b)))
+    assert manualintegrate(1/(a + b*x**2), x) == atan(x/sqrt(a/b))/(b*sqrt(a/b))
     b = Symbol('b', negative=True)
     assert manualintegrate(1/(a + b*x**2), x) == \
         atan(x/(sqrt(-a)*sqrt(-1/b)))/(b*sqrt(-a)*sqrt(-1/b))

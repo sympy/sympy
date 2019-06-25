@@ -739,7 +739,7 @@ def quadratic_denom_rule(integral):
         return
 
     a, b, c = match[a], match[b], match[c]
-    if b.is_real and c.is_real:
+    if b.is_extended_real and c.is_extended_real:
         return PiecewiseRule([(ArctanRule(a, b, c, integrand, symbol), sympy.Gt(c / b, 0)),
                               (ArccothRule(a, b, c, integrand, symbol), sympy.And(sympy.Gt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
                               (ArctanhRule(a, b, c, integrand, symbol), sympy.And(sympy.Lt(symbol ** 2, -c / b), sympy.Lt(c / b, 0))),
@@ -1483,7 +1483,7 @@ def eval_shi(a, b, integrand, symbol):
 
 @evaluates(ErfRule)
 def eval_erf(a, b, c, integrand, symbol):
-    if a.is_real:
+    if a.is_extended_real:
         return Piecewise(
             (sympy.sqrt(sympy.pi/(-a))/2 * sympy.exp(c - b**2/(4*a)) *
                 sympy.erf((-2*a*symbol - b)/(2*sympy.sqrt(-a))), a < 0),
