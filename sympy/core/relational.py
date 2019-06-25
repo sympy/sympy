@@ -595,8 +595,34 @@ class Equality(Relational):
             raise NotImplementedError()
 
     def subtract_sides(self, arg, equivalent=True):
+        """Subtract sides for an equality
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+            If ``arg`` is a constant, it will be subtracted from both of
+            the sides
+
+            If `arg` is is a relational, the following rule will be
+            applied.
+
+            | arg | result |
+            |-----|--------|
+            | Eq  | Eq     |
+            | Ne  | Ne     |
+            | Ge  | Ge     |
+            | Le  | Le     |
+            | Gt  | Gt     |
+            | Lt  | Lt     |
+        """
         if isinstance(arg, Equality):
             return self.func(self.lhs - arg.lhs, self.rhs - arg.rhs)
+        elif isinstance(arg, Unequality):
+            return other.func(self.lhs - arg.lhs, self.rhs - arg.rhs)
+        elif isinstance(arg,
+            [GreaterThan, LessThan, StrictGreaterThan, StrictLessThan]):
+            return other.func(self.lhs - arg.lhs, self.rhs - arg.rhs)
         elif not getattr(arg, 'is_Relational', None):
             return self.func(self.lhs - arg, self.rhs - arg)
         else:
