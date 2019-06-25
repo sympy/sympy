@@ -694,10 +694,51 @@ class Equality(Relational):
             raise NotImplementedError()
 
     def multiply_sides(self, arg):
-        """Returns a new relational with ``arg`` multiplied to LHS and RHS"""
+        """Returns a new relational with ``arg`` multiplied to LHS and
+        RHS
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Eq(a, b)
+
+        Multiplying a constant to both sides:
+
+        >>> rel.multiply_sides(c)
+        Piecewise((Eq(a*c, b*c), Ne(c, 0)), (Eq(a, b), True))
+
+        Multiplying a relational to both sides:
+
+        >>> rel.multiply_sides(Eq(c, d))
+        Eq(a*c, b*d)
+
+        >>> rel.multiply_sides(Ne(c, d))
+        Piecewise((Ne(a*c, b*d), Ne(a, 0)), (Eq(a*c, b*d), True))
+
+        >>> rel.multiply_sides(Ge(c, d))
+        Piecewise((a*c >= b*d, a > 0), (b*d >= a*c, a < 0), (Eq(a*c, b*d), True))
+
+        >>> rel.multiply_sides(Le(c, d))
+        Piecewise((a*c <= b*d, a > 0), (b*d <= a*c, a < 0), (Eq(a*c, b*d), True))
+
+        >>> rel.multiply_sides(Gt(c, d))
+        Piecewise((a*c > b*d, a > 0), (b*d > a*c, a < 0), (Eq(a*c, b*d), True))
+
+        >>> rel.multiply_sides(Lt(c, d))
+        Piecewise((a*c < b*d, a > 0), (b*d < a*c, a < 0), (Eq(a*c, b*d), True))
+        """
         from sympy.functions.elementary.piecewise import Piecewise
 
-        if isinstance(arg, Eq):
+        if not getattr(arg, 'is_Relational', None):
+            expr = Eq(self.lhs * arg, self.rhs * arg)
+            cond = Ne(arg, 0)
+            return Piecewise([expr, cond], [self, True])
+
+        elif isinstance(arg, Eq):
             return Eq(self.lhs * arg.lhs, self.rhs * arg.rhs)
 
         elif isinstance(arg, Ne):
@@ -706,18 +747,13 @@ class Equality(Relational):
             default = Eq(self.lhs * arg.lhs, self.rhs * arg.rhs)
             return Piecewise([expr, cond], [default, True])
 
-        elif isinstance(arg, [Gt, Lt, Ge, Le]):
+        elif isinstance(arg, (Gt, Lt, Ge, Le)):
             expr1 = arg.func(self.lhs * arg.lhs, self.rhs * arg.rhs)
             cond1 = Gt(self.lhs, 0)
             expr2 = arg.func(self.rhs * arg.rhs, self.lhs * arg.lhs)
             cond2 = Lt(self.lhs, 0)
             default = Eq(self.lhs * arg.lhs, self.rhs * arg.rhs)
             return Piecewise([expr1, cond1], [expr2, cond2], [default, True])
-
-        elif not getattr(arg, 'is_Relational', None):
-            expr = Eq(self.lhs * arg, self.rhs * arg)
-            cond = Ne(arg, 0)
-            return Piecewise([expr, cond])
 
         else:
             raise NotImplementedError()
