@@ -594,7 +594,7 @@ class Equality(Relational):
         else:
             raise NotImplementedError()
 
-    def subtract_sides(self, arg, equivalent=True):
+    def subtract_sides(self, arg):
         """Subtract sides for an equality
 
         Parameters
