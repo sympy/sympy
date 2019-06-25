@@ -982,6 +982,44 @@ class Unequality(Relational):
             return Ne(self.lhs - arg.lhs, self.rhs - arg.rhs)
         raise NotImplementedError()
 
+    def multiply_sides(self, arg):
+        """Returns a new relational with ``arg`` multiplied to LHS and
+        RHS
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Ne(a, b)
+
+        Multiplying a constant to both sides:
+
+        >>> rel.multiply_sides(c)
+        Piecewise((Ne(a*c, b*c), Ne(c, 0)), (Ne(a, b), True))
+
+        Multiplying an equality to both sides:
+
+        >>> rel.multiply_sides(Eq(c, d))
+        Piecewise((Ne(a*c, b*d), Ne(c, 0)), (Eq(a*c, b*d), True))
+        """
+        from sympy.functions.elementary.piecewise import Piecewise
+
+        if not getattr(arg, 'is_Relational', None):
+            expr = Ne(self.lhs * arg, self.rhs * arg)
+            cond = Ne(arg, 0)
+            return Piecewise([expr, cond], [self, True])
+
+        elif isinstance(arg, Eq):
+            expr = Ne(self.lhs * arg.lhs, self.rhs * arg.rhs)
+            cond = Ne(arg.lhs, 0)
+            default = Eq(self.lhs * arg.lhs, self.rhs * arg.rhs)
+            return Piecewise([expr, cond], [default, True])
+
+        raise NotImplementedError()
+
 
 Ne = Unequality
 
