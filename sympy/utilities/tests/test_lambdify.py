@@ -572,7 +572,7 @@ def test_tensorflow_basic_math():
     expr = Max(sin(x), Abs(1/(x+2)))
     func = lambdify(x, expr, modules="tensorflow")
     a = tensorflow.constant(0, dtype=tensorflow.float32)
-    s = tensorflow.Session()
+    s = tensorflow.compat.v1.Session()
     assert func(a).eval(session=s) == 0.5
 
 
@@ -581,8 +581,8 @@ def test_tensorflow_placeholders():
         skip("tensorflow not installed.")
     expr = Max(sin(x), Abs(1/(x+2)))
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
+    a = tensorflow.compat.v1.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.compat.v1.Session()
     assert func(a).eval(session=s, feed_dict={a: 0}) == 0.5
 
 
@@ -592,11 +592,11 @@ def test_tensorflow_variables():
     expr = Max(sin(x), Abs(1/(x+2)))
     func = lambdify(x, expr, modules="tensorflow")
     a = tensorflow.Variable(0, dtype=tensorflow.float32)
-    s = tensorflow.Session()
+    s = tensorflow.compat.v1.Session()
     if V(tensorflow.__version__) < '1.0':
         s.run(tensorflow.initialize_all_variables())
     else:
-        s.run(tensorflow.global_variables_initializer())
+        s.run(tensorflow.compat.v1.global_variables_initializer())
     assert func(a).eval(session=s) == 0.5
 
 
@@ -607,7 +607,7 @@ def test_tensorflow_logical_operations():
     func = lambdify([x, y], expr, modules="tensorflow")
     a = tensorflow.constant(False)
     b = tensorflow.constant(True)
-    s = tensorflow.Session()
+    s = tensorflow.compat.v1.Session()
     assert func(a, b).eval(session=s) == 0
 
 
@@ -616,8 +616,8 @@ def test_tensorflow_piecewise():
         skip("tensorflow not installed.")
     expr = Piecewise((0, Eq(x,0)), (-1, x < 0), (1, x > 0))
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
+    a = tensorflow.compat.v1.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.compat.v1.Session()
     assert func(a).eval(session=s, feed_dict={a: -1}) == -1
     assert func(a).eval(session=s, feed_dict={a: 0}) == 0
     assert func(a).eval(session=s, feed_dict={a: 1}) == 1
@@ -628,8 +628,8 @@ def test_tensorflow_multi_max():
         skip("tensorflow not installed.")
     expr = Max(x, -x, x**2)
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
+    a = tensorflow.compat.v1.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.compat.v1.Session()
     assert func(a).eval(session=s, feed_dict={a: -2}) == 4
 
 
@@ -638,8 +638,8 @@ def test_tensorflow_multi_min():
         skip("tensorflow not installed.")
     expr = Min(x, -x, x**2)
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
+    a = tensorflow.compat.v1.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.compat.v1.Session()
     assert func(a).eval(session=s, feed_dict={a: -2}) == -2
 
 
@@ -648,8 +648,8 @@ def test_tensorflow_relational():
         skip("tensorflow not installed.")
     expr = x >= 0
     func = lambdify(x, expr, modules="tensorflow")
-    a = tensorflow.placeholder(dtype=tensorflow.float32)
-    s = tensorflow.Session()
+    a = tensorflow.compat.v1.placeholder(dtype=tensorflow.float32)
+    s = tensorflow.compat.v1.Session()
     assert func(a).eval(session=s, feed_dict={a: 1})
 
 
@@ -978,7 +978,7 @@ def test_tensorflow_array_arg():
 
     fcall = f(tensorflow.constant([2.0, 1.0]))
 
-    s = tensorflow.Session()
+    s = tensorflow.compat.v1.Session()
     assert s.run(fcall) == 5
 
 
