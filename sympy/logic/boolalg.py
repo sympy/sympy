@@ -37,6 +37,7 @@ def as_Boolean(e):
     Traceback (most recent call last):
     ...
     TypeError: expecting bool or Boolean, not `2`.
+
     """
     from sympy.core.symbol import Symbol
     if e == True:
@@ -106,6 +107,7 @@ class Boolean(Basic):
         False
         >>> Not(And(A, Not(A))).equals(Or(B, Not(B)))
         False
+
         """
         from sympy.logic.inference import satisfiable
         from sympy.core.relational import Relational
@@ -136,6 +138,7 @@ class Boolean(Basic):
         Interval.open(-2, 2)
         >>> Or(x < -2, 2 < x).as_set()
         Union(Interval.open(-oo, -2), Interval.open(2, oo))
+
         """
         from sympy.calculus.util import periodicity
         from sympy.core.relational import Relational
@@ -307,6 +310,7 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
 
     See Also
     ========
+
     sympy.logic.boolalg.BooleanFalse
 
     """
@@ -332,6 +336,7 @@ class BooleanTrue(with_metaclass(Singleton, BooleanAtom)):
         >>> from sympy import true
         >>> true.as_set()
         UniversalSet
+
         """
         return S.UniversalSet
 
@@ -348,6 +353,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
 
     Notes
     ======
+
     See note in :py:class`sympy.logic.boolalg.BooleanTrue`
 
     Examples
@@ -374,6 +380,7 @@ class BooleanFalse(with_metaclass(Singleton, BooleanAtom)):
 
     See Also
     ========
+
     sympy.logic.boolalg.BooleanTrue
 
     """
@@ -538,6 +545,7 @@ class BooleanFunction(Application, Boolean):
             the resulting value is S.true. Default is None. If replacementvalue
             is None and dominatingvalue is not None,
             replacementvalue = dominatingvalue
+
         """
         from sympy.core.relational import Relational, _canonical
         if replacementvalue is None and dominatingvalue is not None:
@@ -1247,6 +1255,7 @@ class Equivalent(BooleanFunction):
     False
     >>> Equivalent(x, And(x, True))
     True
+
     """
     def __new__(cls, *args, **options):
         from sympy.core.relational import Relational
@@ -1462,6 +1471,7 @@ def distribute_and_over_or(expr):
     >>> from sympy.abc import A, B, C
     >>> distribute_and_over_or(Or(A, And(Not(B), Not(C))))
     (A | ~B) & (A | ~C)
+
     """
     return _distribute((expr, And, Or))
 
@@ -1480,6 +1490,7 @@ def distribute_or_over_and(expr):
     >>> from sympy.abc import A, B, C
     >>> distribute_or_over_and(And(Or(Not(A), B), C))
     (B & C) | (C & ~A)
+
     """
     return _distribute((expr, Or, And))
 
@@ -1523,6 +1534,7 @@ def to_nnf(expr, simplify=True):
     (A | B) & (~C | ~D)
     >>> to_nnf(Equivalent(A >> B, B >> A))
     (A | ~B | (A & ~B)) & (B | ~A | (B & ~A))
+
     """
     if is_nnf(expr, simplify):
         return expr
@@ -1617,6 +1629,7 @@ def is_nnf(expr, simplified=True):
     False
     >>> is_nnf((A >> B) & (B >> A))
     False
+
     """
 
     expr = sympify(expr)
@@ -1750,6 +1763,7 @@ def eliminate_implications(expr):
     (A | ~B) & (B | ~A)
     >>> eliminate_implications(Equivalent(A, B, C))
     (A | ~C) & (B | ~A) & (C | ~B)
+
     """
     return to_nnf(expr, simplify=False)
 
@@ -1774,6 +1788,7 @@ def is_literal(expr):
     True
     >>> is_literal(Or(A, B))
     False
+
     """
     if isinstance(expr, Not):
         return not isinstance(expr.args[0], BooleanFunction)
@@ -2168,7 +2183,7 @@ def SOPform(variables, minterms, dontcares=None):
     References
     ==========
 
-    .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
+    .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
     variables = [sympify(v) for v in variables]
@@ -2242,7 +2257,7 @@ def POSform(variables, minterms, dontcares=None):
     References
     ==========
 
-    .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
+    .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
     variables = [sympify(v) for v in variables]
@@ -2366,6 +2381,9 @@ def _finger(eq):
     as a Symbol, counting Symbol as 1 and Not(Symbol) as 2
     and counting self as 1
     ]
+
+    Examples
+    ========
 
     >>> from sympy.logic.boolalg import _finger as finger
     >>> from sympy import And, Or, Not

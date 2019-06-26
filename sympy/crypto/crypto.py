@@ -182,27 +182,19 @@ def encipher_shift(msg, key, symbols=None):
     Performs shift cipher encryption on plaintext msg, and returns the
     ciphertext.
 
-    Notes
-    =====
+    Parameters
+    ==========
 
-    The shift cipher is also called the Caesar cipher, after
-    Julius Caesar, who, according to Suetonius, used it with a
-    shift of three to protect messages of military significance.
-    Caesar's nephew Augustus reportedly used a similar cipher, but
-    with a right shift of 1.
+            key : an integer (the secret key)
 
+            msg : plaintext of upper-case letters
+
+    Returns
+    =======
+
+            ct : ciphertext of upper-case letters
 
     ALGORITHM:
-
-        INPUT:
-
-            ``key``: an integer (the secret key)
-
-            ``msg``: plaintext of upper-case letters
-
-        OUTPUT:
-
-            ``ct``: ciphertext of upper-case letters
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
@@ -231,6 +223,15 @@ def encipher_shift(msg, key, symbols=None):
 
     >>> decipher_shift(ct, 1)
     'GONAVYBEATARMY'
+
+    Notes
+    =====
+
+    The shift cipher is also called the Caesar cipher, after
+    Julius Caesar, who, according to Suetonius, used it with a
+    shift of three to protect messages of military significance.
+    Caesar's nephew Augustus reportedly used a similar cipher, but
+    with a right shift of 1.
 
     References
     ==========
@@ -293,7 +294,7 @@ def encipher_rot13(msg, symbols=None):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/ROT13
+    .. [1] https://en.wikipedia.org/wiki/ROT13
 
     See Also
     ========
@@ -350,29 +351,24 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     `\mathrm{gcd}(a, N) = 1` and an error will be raised if this is
     not true.
 
-    Notes
-    =====
+    Parameters
+    ==========
 
-    This is a straightforward generalization of the shift cipher with
-    the added complexity of requiring 2 characters to be deciphered in
-    order to recover the key.
+            msg : string of characters that appear in ``symbols``
 
-    ALGORITHM:
-
-        INPUT:
-
-            ``msg``: string of characters that appear in ``symbols``
-
-            ``a, b``: a pair integers, with ``gcd(a, N) = 1``
+            a, b : a pair integers, with ``gcd(a, N) = 1``
             (the secret key)
 
-            ``symbols``: string of characters (default = uppercase
+            symbols : string of characters (default = uppercase
             letters). When no symbols are given, ``msg`` is converted
             to upper case letters and all other charactes are ignored.
 
-        OUTPUT:
+    Returns
+    =======
 
-            ``ct``: string of characters (the ciphertext message)
+            ct : string of characters (the ciphertext message)
+
+    ALGORITHM:
 
         STEPS:
             0. Number the letters of the alphabet from 0, ..., N
@@ -383,6 +379,13 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
                ``x`` in ``L1``.
             3. Compute from the list ``L2`` a string ``ct`` of
                corresponding letters.
+
+    Notes
+    =====
+
+    This is a straightforward generalization of the shift cipher with
+    the added complexity of requiring 2 characters to be deciphered in
+    order to recover the key.
 
     References
     ==========
