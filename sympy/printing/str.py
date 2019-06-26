@@ -531,6 +531,44 @@ class StrPrinter(Printer):
             return self._print(expr.as_expr())
 
     def _print_Pow(self, expr, rational=False):
+        """Printing helper function for ``Pow``
+
+        Parameters
+        ==========
+
+        rational : bool, optional
+            If ``True``, it will not attempt printing ``sqrt(x)`` or
+            ``x**S.Half`` as ``sqrt``, and will use ``x**(1/2)``
+            instead.
+
+            See examples for additional details
+
+        Examples
+        ========
+
+        >>> from sympy.functions import sqrt
+        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy.abc import x
+
+        How ``rational`` keyword works with ``sqrt``:
+
+        >>> printer = StrPrinter()
+        >>> printer._print_Pow(sqrt(x), rational=True)
+        'x**(1/2)'
+        >>> printer._print_Pow(sqrt(x), rational=False)
+        'sqrt(x)'
+        >>> printer._print_Pow(1/sqrt(x), rational=True)
+        'x**(-1/2)'
+        >>> printer._print_Pow(1/sqrt(x), rational=False)
+        '1/sqrt(x)'
+
+        Notes
+        =====
+
+        ``sqrt(x)`` is canonicalized as ``Pow(x, S.Half)`` in SymPy,
+        so there is no need of defining a separate printer for ``sqrt``.
+        Instead, it should be handled here as well.
+        """
         PREC = precedence(expr)
 
         if expr.exp is S.Half and not rational:

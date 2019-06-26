@@ -514,7 +514,9 @@ def random_symbols(expr):
     """
     atoms = getattr(expr, 'atoms', None)
     if atoms is not None:
-        return list(atoms(RandomSymbol))
+        comp = lambda rv: rv.symbol.name
+        l = list(atoms(RandomSymbol))
+        return sorted(l, key=comp)
     else:
         return []
 
