@@ -601,7 +601,7 @@ class chebyshevu(OrthogonalPolynomial):
                 if n == S.NegativeOne:
                     # n can not be -1 here
                     return S.Zero
-                else:
+                elif not (-n - 2).could_extract_minus_sign():
                     return -chebyshevu(-n - 2, x)
             # We can evaluate for some special values of x
             if x == S.Zero:
@@ -783,7 +783,7 @@ class legendre(OrthogonalPolynomial):
             if x.could_extract_minus_sign():
                 return S.NegativeOne**n * legendre(n, -x)
             # L_{-n}(x)  --->  L_{n-1}(x)
-            if n.could_extract_minus_sign():
+            if n.could_extract_minus_sign() and not(-n - S.One).could_extract_minus_sign():
                 return legendre(-n - S.One, x)
             # We can evaluate for some special values of x
             if x == S.Zero:
@@ -1094,8 +1094,8 @@ class laguerre(OrthogonalPolynomial):
             # Symbolic result L_n(x)
             # L_{n}(-x)  --->  exp(-x) * L_{-n-1}(x)
             # L_{-n}(x)  --->  exp(x) * L_{n-1}(-x)
-            if n.could_extract_minus_sign():
-                return exp(x)*laguerre(-n - 1, -x)
+            if n.could_extract_minus_sign() and not(-n - S.One).could_extract_minus_sign():
+                return exp(x)*laguerre(-n - S.One, -x)
             # We can evaluate for some special values of x
             if x == S.Zero:
                 return S.One
@@ -1195,7 +1195,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Laguerre_polynomial#Assoc_laguerre_polynomials
+    .. [1] https://en.wikipedia.org/wiki/Laguerre_polynomial#Generalized_Laguerre_polynomials
     .. [2] http://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
