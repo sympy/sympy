@@ -312,7 +312,6 @@ class BinomialDistribution(SingleFiniteDistribution):
             return Intersection(S.Naturals0, Interval(0, self.n))
         return set(self.dict.keys())
 
-
     def pdf(self, x):
         n, p = self.n, self.p
         x = sympify(x)
