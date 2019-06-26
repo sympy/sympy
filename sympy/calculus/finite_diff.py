@@ -465,7 +465,7 @@ def differentiate_finite(expr, *symbols,
     x0 = kwargs.pop('x0', None)
     wrt = kwargs.pop('wrt', None)
     evaluate = kwargs.pop('evaluate', False)
-    if kwargs != {}:
+    if kwargs:
         raise ValueError("Unknown kwargs: %s" % kwargs)
 
     Dexpr = expr.diff(*symbols, evaluate=evaluate)

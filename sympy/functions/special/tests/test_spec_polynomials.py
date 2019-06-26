@@ -10,6 +10,7 @@ from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 
+
 x = Symbol('x')
 
 
@@ -294,9 +295,9 @@ def test_hermite():
     assert hermite(6, x) == 64*x**6 - 480*x**4 + 720*x**2 - 120
 
     n = Symbol("n")
-    assert hermite(n, x) == hermite(n, x)
+    assert unchanged(hermite, n, x)
     assert hermite(n, -x) == (-1)**n*hermite(n, x)
-    assert hermite(-n, x) == hermite(-n, x)
+    assert unchanged(hermite, -n, x)
 
     assert hermite(n, 0) == 2**n*sqrt(pi)/gamma(S(1)/2 - n/2)
     assert hermite(n, oo) == oo
