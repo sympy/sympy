@@ -4,10 +4,11 @@ import inspect
 from sympy.integrals.rubi.parsetools.parse import (parse_full_form, downvalues_rules, temporary_variable_replacement,
     permanent_variable_replacement)
 
+
 def generate_rules_from_downvalues():
     '''
     This function generate rules and saves in file. For more details,
-    see https://github.com/sympy/sympy/wiki/Rubi-parsing-guide
+    see `https://github.com/sympy/sympy/wiki/Rubi-parsing-guide`
     '''
     cons_dict = {}
     cons_index =0

@@ -2,14 +2,19 @@ from sympy.integrals.rubi.parsetools.parse import generate_sympy_from_parsed, pa
 from sympy import sympify
 from sympy.integrals.rubi.utility_function import List, If
 import os, inspect
+
+
 def rubi_sstr(a):
     return rubi_printer(a, sympy_integers=True)
+
 
 def generate_test_file():
     '''
     This function is assuming the name of file containing the fullform is test_1.m.
     It can be changes as per use.
-    See https://github.com/sympy/sympy/wiki/Rubi-parsing-guide#parsing-tests for details.
+
+    For more details, see
+    `https://github.com/sympy/sympy/wiki/Rubi-parsing-guide#parsing-tests`
     '''
     res =[]
     file_name = 'test_1.m'
