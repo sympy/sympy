@@ -210,7 +210,8 @@ def test_tensorflow_transl():
     from sympy.utilities.lambdify import TENSORFLOW_TRANSLATIONS
     for sym, tens in TENSORFLOW_TRANSLATIONS.items():
         assert sym in sympy.__dict__
-        assert tens in tensorflow.__dict__
+        # XXX __dict__ is not supported after tensorflow 1.14.0
+        assert tens in tensorflow.__all__
 
 
 def test_numpy_translation_abs():
