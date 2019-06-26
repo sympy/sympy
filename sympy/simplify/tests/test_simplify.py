@@ -810,5 +810,5 @@ def test_issue_15965():
 
 def test_issue_7971():
     z = Integral(x, (x, 1, 1))
-    assert z is not S.Zero
-    assert simplify(z) == 0
+    assert z != 0
+    assert simplify(z) is S.Zero
