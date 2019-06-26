@@ -123,6 +123,7 @@ def test_dice():
     k = Dummy('k', integer=True)
     assert E(D).dummy_eq(
         Sum(Piecewise((k/n, (k >= 1) & (k <= n)), (0, True)), (k, 1, n)))
+    assert variance(D).subs(n, 6).doit() == S(35)/12
 
     ki = Dummy('ki')
     cumuf = cdf(D)(k)

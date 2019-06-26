@@ -446,9 +446,11 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
         if self._is_symbolic:
             rv = random_symbols(expr)[0]
             k = Dummy('k', integer=True)
+            expr = expr.subs(rv, k)
             cond = True if not isinstance(expr, (Relational, Logic)) \
-                    else expr.subs(rv, k)
-            return Sum(Piecewise((self.pdf(k) * k, cond), (0, True)),
+                    else expr
+            func = self.pdf(k) * k if cond != True else self.pdf(k) * expr
+            return Sum(Piecewise((func, cond), (0, True)),
                 (k, self.distribution.low, self.distribution.high)).doit()
         expr = rv_subs(expr, rvs)
         return FinitePSpace(self.domain, self.distribution).compute_expectation(expr, rvs, **kwargs)

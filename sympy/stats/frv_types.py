@@ -18,7 +18,7 @@ from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
         Dict, Basic, KroneckerDelta, Dummy, Eq, Intersection, Interval,
-        Symbol, Lambda, Piecewise, Or, Gt, Lt)
+        Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains, FiniteSet)
 from sympy import beta as beta_fn
 from sympy.concrete.summations import Sum
 from sympy.core.compatibility import as_int, range
@@ -166,9 +166,12 @@ class DieDistribution(SingleFiniteDistribution):
         if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
-        i = Dummy('i', integer=True, positive=True)
+        # cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
+        # return Piecewise(
+        # (S(1)/self.sides, cond),
+        # (S.Zero, True))
+        i = Dummy('i', integer=True)
         return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides)).doit()
-
 
 def Die(name, sides=6):
     """
