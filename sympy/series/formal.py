@@ -926,41 +926,6 @@ class Coeff(Function):
             return p.coeff(x, n)
 
 
-class CoeffBell(Function):
-    """CoeffBellCompose(f, n, k) represents Bell polynomials of the second kind.
-    Note that both ``n`` and ``k`` should be integers.
-
-    The second kind of Bell polynomials (are sometimes called "partial" Bell
-    polynomials or incomplete Bell polynomials) are defined as
-
-    .. math:: B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
-            \sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}
-                \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
-                \left(\frac{x_1}{1!} \right)^{j_1}
-                \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
-                \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.
-
-    * ``bell(n, k, (x1, x2, ...))`` gives Bell polynomials of the second kind,
-      `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`.
-
-    See Also
-    ========
-
-    sympy.functions.combinatorial.numbers.bell
-    """
-    @classmethod
-    def eval(cls, f, n, k):
-        fp = fps(f)
-        kv = fp.ak.variables[0]
-        i = symbols('i')
-
-        if n.is_integer and k.is_integer:
-            fp_seq = sequence(fp.ak.formula, (kv, 1, n-k+1))
-            fact_seq = sequence(factorial(i), (i, 1, n-k+1))
-            bell_seq = fp_seq * fact_seq
-            return bell(n, k, tuple(bell_seq))
-
-
 class FormalPowerSeries(SeriesBase):
     """Represents Formal Power Series of a function.
 
@@ -1179,6 +1144,42 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
+    def coeff_bell(self, n):
+        r"""
+        self.coeff_bell(n) returns a sequence of Bell polynomials of the second kind.
+        Note that ``n`` should be a integer.
+
+        The second kind of Bell polynomials (are sometimes called "partial" Bell
+        polynomials or incomplete Bell polynomials) are defined as
+
+        .. math:: B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
+                \sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}
+                    \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
+                    \left(\frac{x_1}{1!} \right)^{j_1}
+                    \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
+                    \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.
+
+        * ``bell(n, k, (x1, x2, ...))`` gives Bell polynomials of the second kind,
+          `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`.
+
+        See Also
+        ========
+
+        sympy.functions.combinatorial.numbers.bell
+
+        """
+
+        k = self.ak.variables[0]
+        ak_seq = sequence(self.ak.formula, (k, 1, oo))
+        fact_seq = sequence(factorial(k), (k, 1, oo))
+        bell_seq = (ak_seq * fact_seq)
+        inner_coeffs = []
+        for j in range(1, n+1):
+            inner_coeffs.append(bell(n, j, tuple(bell_seq[:n-j+1])))
+
+        k = Dummy('k')
+        return sequence(tuple(inner_coeffs), (k, 1, oo))
+
     def compose(self, other, x=None, n=6):
         r"""
         Returns the truncated terms of the formal power series of the composed function,
@@ -1253,9 +1254,9 @@ class FormalPowerSeries(SeriesBase):
         terms = []
 
         for i in range(1, n):
-            bell_seq = sequence(CoeffBell(g, i, k), (k, 1, i))
-            fact_seq = sequence(factorial(k), (k, 1, i))
-            seq = (self.ak * fact_seq * bell_seq)[:]
+            bell_seq = other.coeff_bell(i)
+            fact_seq = sequence(factorial(k), (k, 1, oo))
+            seq = (self.ak * fact_seq * bell_seq)[:i]
             terms.append(Add(*seq) * self.xk.coeff(i) / factorial(i))
 
         return self.ind + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
@@ -1320,14 +1321,14 @@ class FormalPowerSeries(SeriesBase):
         terms = []
 
         for i in range(0, n):
-            bell_seq = sequence(CoeffBell(f, i, k), (k, 0, i))
-            fact_seq = sequence(factorial(k), (k, 0, i))
-            sign_seq = sequence((1, -1), (k, 0, i))
-            inv_seq = sequence(inv ** (-(k + 1)), (k, 0 ,i))
-            seq = (sign_seq * fact_seq * inv_seq * bell_seq)[:]
+            bell_seq = self.coeff_bell(i)
+            fact_seq = sequence(factorial(k), (k, 1, oo))
+            sign_seq = sequence((-1, 1), (k, 1, oo))
+            inv_seq = sequence(inv ** (-(k + 1)), (k, 1, oo))
+            seq = (sign_seq * fact_seq * inv_seq * bell_seq)[:i]
             terms.append(Add(*seq) * self.xk.coeff(i) / factorial(i))
 
-        return Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
+        return self.ind + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
     def __add__(self, other):
         other = sympify(other)
