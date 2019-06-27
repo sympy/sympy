@@ -28,7 +28,6 @@ MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
 scipy = import_module('scipy')
-scipy_special = import_module('scipy.special')
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 
@@ -211,7 +210,8 @@ def test_tensorflow_transl():
     from sympy.utilities.lambdify import TENSORFLOW_TRANSLATIONS
     for sym, tens in TENSORFLOW_TRANSLATIONS.items():
         assert sym in sympy.__dict__
-        assert tens in tensorflow.__dict__
+        # XXX __dict__ is not supported after tensorflow 1.14.0
+        assert tens in tensorflow.__all__
 
 
 def test_numpy_translation_abs():
@@ -835,14 +835,7 @@ def test_lambdify_docstring():
 
 
 def test_special_printers():
-    class IntervalPrinter(LambdaPrinter):
-        """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
-
-        def _print_Integer(self, expr):
-            return "mpi('%s')" % super(IntervalPrinter, self)._print_Integer(expr)
-
-        def _print_Rational(self, expr):
-            return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
+    from sympy.polys.numberfields import IntervalPrinter
 
     def intervalrepr(expr):
         return IntervalPrinter().doprint(expr)
@@ -1129,6 +1122,7 @@ def test_issue_15654():
     scipy_value = f(nv, lv, rv, Zv)
     assert abs(sympy_value - scipy_value) < 1e-15
 
+
 def test_issue_15827():
     if not numpy:
         skip("numpy not installed")
@@ -1154,3 +1148,13 @@ def test_issue_15827():
     assert numpy.array_equal(i(numpy.array([[1, 2, 3], [1, 2, 3]]), numpy.array([[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]]), \
     numpy.array([[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]])), numpy.array([[ 120, 240, 360, 480, 600], \
     [ 120, 240, 360, 480, 600]]))
+
+
+def test_issue_16930():
+    if not scipy:
+        skip("scipy not installed")
+
+    x = symbols("x")
+    f = lambda x:  S.GoldenRatio * x**2
+    f_ = lambdify(x, f(x), modules='scipy')
+    assert f_(1) == scipy.constants.golden_ratio

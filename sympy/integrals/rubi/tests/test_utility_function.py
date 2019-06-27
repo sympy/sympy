@@ -108,6 +108,7 @@ from sympy.integrals.rubi.utility_function import (Set, With, Module,
 # EllipticF, ArcCot, ArcCoth, Tanh, Cosh, Sech, ArcSec, ArcSech, Subst,
 # SqrtNumberSumQ, Sin, Cos, Tan, Cot, Sec, Csc, Csch, TrigHyperbolicFreeQ,
 # InverseFunctionFreeQ, RealQ,
+from sympy.core.expr import unchanged
 from sympy.core.symbol import symbols, S
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec, atan2
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch, acoth
@@ -211,7 +212,7 @@ def test_Sqrt():
 
 def test_Util_Coefficient():
     from sympy.integrals.rubi.utility_function import Util_Coefficient
-    assert Util_Coefficient(a + b*x + c*x**3, x, a) == Util_Coefficient(a + b*x + c*x**3, x, a)
+    assert unchanged(Util_Coefficient, a + b*x + c*x**3, x, a)
     assert Util_Coefficient(a + b*x + c*x**3, x, 4).doit() == 0
 
 def test_Coefficient():
@@ -248,7 +249,7 @@ def test_IntegerPart():
 
 def test_AppellF1():
     assert AppellF1(1,0,0.5,1,0.5,0.25).evalf() == 1.154700538379251529018298
-    assert AppellF1(a, b, c, d, e, f) == AppellF1(a, b, c, d, e, f)
+    assert unchanged(AppellF1, a, b, c, d, e, f)
 
 def test_Simplify():
     assert Simplify(sin(x)**2 + cos(x)**2) == 1
@@ -2056,7 +2057,7 @@ def test_CoprimeQ():
 def test_Discriminant():
     from sympy.integrals.rubi.utility_function import Discriminant
     assert Discriminant(a*x**2 + b*x + c, x) == b**2 - 4*a*c
-    assert Discriminant(1/x, x) == Discriminant(1/x, x)
+    assert unchanged(Discriminant, 1/x, x)
 
 def test_Sum_doit():
     assert Sum_doit(2*x + 2, [x, 0, 1.7]) == 6

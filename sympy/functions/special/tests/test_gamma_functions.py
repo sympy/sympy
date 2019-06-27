@@ -2,11 +2,13 @@ from sympy import (
     Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
     polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
     cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic, zeta,conjugate)
+
+from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
+from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       verify_numerically as tn)
-from sympy.utilities.pytest import raises
 
 x = Symbol('x')
 y = Symbol('y')
@@ -19,6 +21,7 @@ def test_gamma():
 
     assert gamma(-100) == zoo
     assert gamma(0) == zoo
+    assert gamma(-100.0) == zoo
 
     assert gamma(1) == 1
     assert gamma(2) == 1
@@ -65,8 +68,10 @@ def test_gamma():
     # Test a bug:
     assert expand_func(gamma(x + Rational(3, 4))) == gamma(x + Rational(3, 4))
 
+    # XXX: Not sure about these tests. I can fix them by defining e.g.
+    # exp_polar.is_integer but I'm not sure if that makes sense.
     assert gamma(3*exp_polar(I*pi)/4).is_nonnegative is False
-    assert gamma(3*exp_polar(I*pi)/4).is_nonpositive is True
+    assert gamma(3*exp_polar(I*pi)/4).is_extended_nonpositive is True
 
 
 def test_gamma_rewrite():
@@ -122,8 +127,8 @@ def test_lowergamma():
         lowergamma(-2, x*exp_polar(I*pi)) + 2*pi*I
 
     assert conjugate(lowergamma(x, y)) == lowergamma(conjugate(x), conjugate(y))
-    assert conjugate(lowergamma(x, 0)) == conjugate(lowergamma(x, 0))
-    assert conjugate(lowergamma(x, -oo)) == conjugate(lowergamma(x, -oo))
+    assert conjugate(lowergamma(x, 0)) == 0
+    assert unchanged(conjugate, lowergamma(x, -oo))
 
     assert lowergamma(
         x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
@@ -157,6 +162,8 @@ def test_uppergamma():
     assert tn(uppergamma(S.Half - 3, x, evaluate=False),
               uppergamma(S.Half - 3, x), x)
 
+    assert unchanged(uppergamma, x, -oo)
+
     assert tn_branch(-3, uppergamma)
     assert tn_branch(-4, uppergamma)
     assert tn_branch(S(1)/3, uppergamma)
@@ -172,7 +179,7 @@ def test_uppergamma():
 
     assert conjugate(uppergamma(x, y)) == uppergamma(conjugate(x), conjugate(y))
     assert conjugate(uppergamma(x, 0)) == gamma(conjugate(x))
-    assert conjugate(uppergamma(x, -oo)) == conjugate(uppergamma(x, -oo))
+    assert unchanged(conjugate, uppergamma(x, -oo))
 
     assert uppergamma(x, y).rewrite(expint) == y**x*expint(-x + 1, y)
     assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
@@ -180,6 +187,7 @@ def test_uppergamma():
     assert uppergamma(70, 6) == 69035724522603011058660187038367026272747334489677105069435923032634389419656200387949342530805432320*exp(-6)
     assert (uppergamma(S(77) / 2, 6) - uppergamma(S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
     assert (uppergamma(-S(77) / 2, 6) - uppergamma(-S(77) / 2, 6, evaluate=False)).evalf() < 1e-16
+
 
 def test_polygamma():
     from sympy import I
@@ -372,9 +380,9 @@ def test_loggamma():
     assert s1 == loggamma(x).rewrite('intractable').series(x)
 
     assert conjugate(loggamma(x)) == loggamma(conjugate(x))
-    assert conjugate(loggamma(0)) == conjugate(loggamma(0))
+    assert conjugate(loggamma(0)) == oo
     assert conjugate(loggamma(1)) == loggamma(conjugate(1))
-    assert conjugate(loggamma(-oo)) == conjugate(loggamma(-oo))
+    assert conjugate(loggamma(-oo)) == conjugate(zoo)
     assert loggamma(x).is_real is None
     y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
     assert loggamma(y).is_real
@@ -430,8 +438,8 @@ def test_issue_8524():
     assert gamma(e - S.Half).is_positive is False
 
 def test_issue_14450():
-    assert uppergamma(S(3)/8, x).evalf() == uppergamma(0.375, x)
-    assert lowergamma(x, S(3)/8).evalf() == lowergamma(x, 0.375)
+    assert uppergamma(S(3)/8, x).evalf() == uppergamma(S(3)/8, x)
+    assert lowergamma(x, S(3)/8).evalf() == lowergamma(x, S(3)/8)
     # some values from Wolfram Alpha for comparison
     assert abs(uppergamma(S(3)/8, 2).evalf() - 0.07105675881) < 1e-9
     assert abs(lowergamma(S(3)/8, 2).evalf() - 2.2993794256) < 1e-9

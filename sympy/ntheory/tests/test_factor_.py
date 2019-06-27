@@ -1,5 +1,5 @@
 from sympy import (Sieve, binomial_coefficients, binomial_coefficients_list,
-    Mul, S, Pow, sieve, Symbol, summation, Dummy,
+    Mul, S, Pow, sieve, Symbol, summation, Dummy, Dict,
     factorial as fac)
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
@@ -112,7 +112,8 @@ def test_multiplicity():
 
 
 def test_perfect_power():
-    assert perfect_power(0) is False
+    raises(ValueError, lambda: perfect_power(0))
+    raises(ValueError, lambda: perfect_power(Rational(25, 4)))
     assert perfect_power(1) is False
     assert perfect_power(2) is False
     assert perfect_power(3) is False
@@ -145,6 +146,12 @@ def test_perfect_power():
     assert perfect_power(2**3*5**5) is False
     assert perfect_power(2*13**4) is False
     assert perfect_power(2**5*3**3) is False
+    t = 2**24
+    for d in divisors(24):
+        m = perfect_power(t*3**d)
+        assert m and m[1] == d or d == 1
+        m = perfect_power(t*3**d, big=False)
+        assert m and m[1] == 2 or d == 1 or d == 3, (d, m)
 
 
 def test_factorint():
@@ -262,6 +269,11 @@ def test_factorint():
     assert factorint((p1*p2**2)**3) == {p1: 3, p2: 6}
     # Test for non integer input
     raises(ValueError, lambda: factorint(4.5))
+    # test dict/Dict input
+    sans = '2**10*3**3'
+    n = {4: 2, 12: 3}
+    assert str(factorint(n)) == sans
+    assert str(factorint(Dict(n))) == sans
 
 
 def test_divisors_and_divisor_count():

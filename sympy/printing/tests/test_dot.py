@@ -1,11 +1,18 @@
 from sympy.printing.dot import (purestr, styleof, attrprint, dotnode,
         dotedges, dotprint)
-from sympy import Symbol, Integer, Basic, Expr, srepr
+from sympy import Symbol, Integer, Basic, Expr, srepr, Float, symbols
 from sympy.abc import x
 
+
 def test_purestr():
-    assert purestr(Symbol('x')) == "Symbol(x)"
+    assert purestr(Symbol('x')) == "Symbol('x')"
     assert purestr(Basic(1, 2)) == "Basic(1, 2)"
+    assert purestr(Float(2)) == "Float('2.0', precision=53)"
+
+    assert purestr(Symbol('x'), with_args=True) == ("Symbol('x')", ())
+    assert purestr(Basic(1, 2), with_args=True) == ('Basic(1, 2)', ('1', '2'))
+    assert purestr(Float(2), with_args=True) == \
+        ("Float('2.0', precision=53)", ())
 
 
 def test_styleof():
@@ -15,47 +22,62 @@ def test_styleof():
 
     assert styleof(x + 1, styles) == {'color': 'black', 'shape': 'ellipse'}
 
+
 def test_attrprint():
     assert attrprint({'color': 'blue', 'shape': 'ellipse'}) == \
            '"color"="blue", "shape"="ellipse"'
 
 def test_dotnode():
 
-    assert dotnode(x, repeat=False) ==\
-            '"Symbol(x)" ["color"="black", "label"="x", "shape"="ellipse"];'
+    assert dotnode(x, repeat=False) == \
+        '"Symbol(\'x\')" ["color"="black", "label"="x", "shape"="ellipse"];'
     assert dotnode(x+2, repeat=False) == \
-            '"Add(Integer(2), Symbol(x))" ["color"="black", "label"="Add", "shape"="ellipse"];'
+        '"Add(Integer(2), Symbol(\'x\'))" ' \
+        '["color"="black", "label"="Add", "shape"="ellipse"];', \
+        dotnode(x+2,repeat=0)
 
     assert dotnode(x + x**2, repeat=False) == \
-        '"Add(Symbol(x), Pow(Symbol(x), Integer(2)))" ["color"="black", "label"="Add", "shape"="ellipse"];'
+        '"Add(Symbol(\'x\'), Pow(Symbol(\'x\'), Integer(2)))" ' \
+        '["color"="black", "label"="Add", "shape"="ellipse"];'
     assert dotnode(x + x**2, repeat=True) == \
-        '"Add(Symbol(x), Pow(Symbol(x), Integer(2)))_()" ["color"="black", "label"="Add", "shape"="ellipse"];'
+        '"Add(Symbol(\'x\'), Pow(Symbol(\'x\'), Integer(2)))_()" ' \
+        '["color"="black", "label"="Add", "shape"="ellipse"];'
 
 def test_dotedges():
     assert sorted(dotedges(x+2, repeat=False)) == [
-        '"Add(Integer(2), Symbol(x))" -> "Integer(2)";',
-        '"Add(Integer(2), Symbol(x))" -> "Symbol(x)";'
-        ]
+        '"Add(Integer(2), Symbol(\'x\'))" -> "Integer(2)";',
+        '"Add(Integer(2), Symbol(\'x\'))" -> "Symbol(\'x\')";'
+    ]
     assert sorted(dotedges(x + 2, repeat=True)) == [
-        '"Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";',
-        '"Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";'
+        '"Add(Integer(2), Symbol(\'x\'))_()" -> "Integer(2)_(0,)";',
+        '"Add(Integer(2), Symbol(\'x\'))_()" -> "Symbol(\'x\')_(1,)";'
     ]
 
 def test_dotprint():
     text = dotprint(x+2, repeat=False)
     assert all(e in text for e in dotedges(x+2, repeat=False))
-    assert all(n in text for n in [dotnode(expr, repeat=False) for expr in (x, Integer(2), x+2)])
+    assert all(
+        n in text for n in [dotnode(expr, repeat=False)
+        for expr in (x, Integer(2), x+2)])
     assert 'digraph' in text
+
     text = dotprint(x+x**2, repeat=False)
     assert all(e in text for e in dotedges(x+x**2, repeat=False))
-    assert all(n in text for n in [dotnode(expr, repeat=False) for expr in (x, Integer(2), x**2)])
+    assert all(
+        n in text for n in [dotnode(expr, repeat=False)
+        for expr in (x, Integer(2), x**2)])
     assert 'digraph' in text
+
     text = dotprint(x+x**2, repeat=True)
     assert all(e in text for e in dotedges(x+x**2, repeat=True))
-    assert all(n in text for n in [dotnode(expr, pos=()) for expr in [x + x**2]])
+    assert all(
+        n in text for n in [dotnode(expr, pos=())
+        for expr in [x + x**2]])
+
     text = dotprint(x**x, repeat=True)
     assert all(e in text for e in dotedges(x**x, repeat=True))
-    assert all(n in text for n in [dotnode(x, pos=(0,)), dotnode(x, pos=(1,))])
+    assert all(
+        n in text for n in [dotnode(x, pos=(0,)), dotnode(x, pos=(1,))])
     assert 'digraph' in text
 
 def test_dotprint_depth():
@@ -68,9 +90,39 @@ def test_dotprint_depth():
 def test_Matrix_and_non_basics():
     from sympy import MatrixSymbol
     n = Symbol('n')
-    assert dotprint(MatrixSymbol('X', n, n))
+    assert dotprint(MatrixSymbol('X', n, n)) == \
+"""digraph{
+
+# Graph style
+"ordering"="out"
+"rankdir"="TD"
+
+#########
+# Nodes #
+#########
+
+"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" ["color"="black", "label"="MatrixSymbol", "shape"="ellipse"];
+"Symbol('X')_(0,)" ["color"="black", "label"="X", "shape"="ellipse"];
+"Symbol('n')_(1,)" ["color"="black", "label"="n", "shape"="ellipse"];
+"Symbol('n')_(2,)" ["color"="black", "label"="n", "shape"="ellipse"];
+
+#########
+# Edges #
+#########
+
+"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('X')_(0,)";
+"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('n')_(1,)";
+"MatrixSymbol(Symbol('X'), Symbol('n'), Symbol('n'))_()" -> "Symbol('n')_(2,)";
+}"""
+
 
 def test_labelfunc():
     text = dotprint(x + 2, labelfunc=srepr)
     assert "Symbol('x')" in text
     assert "Integer(2)" in text
+
+
+def test_commutative():
+    x, y = symbols('x y', commutative=False)
+    assert dotprint(x + y) == dotprint(y + x)
+    assert dotprint(x*y) != dotprint(y*x)

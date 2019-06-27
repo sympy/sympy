@@ -1,12 +1,13 @@
-from sympy import (FiniteSet, S, Symbol, sqrt,
+from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        cancel, exp, I)
+        cancel, exp, I, Piecewise)
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
-from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
-    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, sample,
-    density, where, FiniteRV, pspace, cdf,
-    correlation, moment, cmoment, smoment, characteristic_function, moment_generating_function)
+from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
+    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, kurtosis,
+    sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
+    cmoment, smoment, characteristic_function, moment_generating_function,
+    quantile)
 from sympy.stats.frv_types import DieDistribution
 from sympy.utilities.pytest import raises
 
@@ -48,7 +49,7 @@ def test_discreteuniform():
 def test_dice():
     # TODO: Make iid method!
     X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
-    a, b, t = symbols('a b t')
+    a, b, t, p = symbols('a b t p')
 
     assert E(X) == 3 + S.Half
     assert variance(X) == S(35)/12
@@ -65,6 +66,7 @@ def test_dice():
     assert correlation(X, Y) == 0
     assert correlation(X, Y) == correlation(Y, X)
     assert smoment(X + Y, 3) == skewness(X + Y)
+    assert smoment(X + Y, 4) == kurtosis(X + Y)
     assert smoment(X, 0) == 1
     assert P(X > 3) == S.Half
     assert P(2*X > 6) == S.Half
@@ -76,6 +78,9 @@ def test_dice():
     assert E(X + Y, Eq(X, Y)) == E(2*X)
     assert moment(X, 0) == 1
     assert moment(5*X, 2) == 25*moment(X, 2)
+    assert quantile(X)(p) == Piecewise((nan, (p > S.One) | (p < S(0))),\
+        (S.One, p <= S(1)/6), (S(2), p <= S(1)/3), (S(3), p <= S.Half),\
+        (S(4), p <= S(2)/3), (S(5), p <= S(5)/6), (S(6), p <= S.One))
 
     assert P(X > 3, X > 3) == S.One
     assert P(X > Y, Eq(Y, 6)) == S.Zero
@@ -158,11 +163,13 @@ def test_bernoulli():
     assert moment_generating_function(X)(t) == p * exp(a * t) + (-p + 1) * exp(b * t)
 
     X = Bernoulli('B', p, 1, 0)
+    z = Symbol("z")
 
     assert E(X) == p
     assert simplify(variance(X)) == p*(1 - p)
     assert E(a*X + b) == a*E(X) + b
     assert simplify(variance(a*X + b)) == simplify(a**2 * variance(X))
+    assert quantile(X)(z) == Piecewise((nan, (z > 1) | (z < 0)), (0, z <= 1 - p), (1, z <= 1))
 
     raises(ValueError, lambda: Bernoulli('B', 1.5))
     raises(ValueError, lambda: Bernoulli('B', -0.5))
@@ -207,8 +214,20 @@ def test_binomial_numeric():
             assert variance(X) == n*p*(1 - p)
             if n > 0 and 0 < p < 1:
                 assert skewness(X) == (1 - 2*p)/sqrt(n*p*(1 - p))
+                assert kurtosis(X) == 3 + (1 - 6*p*(1 - p))/(n*p*(1 - p))
             for k in range(n + 1):
                 assert P(Eq(X, k)) == binomial(n, k)*p**k*(1 - p)**(n - k)
+
+def test_binomial_quantile():
+    X = Binomial('X', 50, S.Half)
+    assert quantile(X)(0.95) == S(31)
+
+    X = Binomial('X', 5, S(1)/2)
+    p = Symbol("p", positive=True)
+    assert quantile(X)(p) == Piecewise((nan, p > S(1)), (S(0), p <= S(1)/32),\
+        (S(1), p <= S(3)/16), (S(2), p <= S(1)/2), (S(3), p <= S(13)/16),\
+        (S(4), p <= S(31)/32), (S(5), p <= S(1)))
+
 
 
 def test_binomial_symbolic():
@@ -220,6 +239,7 @@ def test_binomial_symbolic():
     assert simplify(E(X)) == n*p == simplify(moment(X, 1))
     assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
     assert cancel((skewness(X) - (1 - 2*p)/sqrt(n*p*(1 - p)))) == 0
+    assert cancel((kurtosis(X)) - (3 + (1 - 6*p*(1 - p))/(n*p*(1 - p)))) == 0
     assert characteristic_function(X)(t) == p ** 2 * exp(2 * I * t) + 2 * p * (-p + 1) * exp(I * t) + (-p + 1) ** 2
     assert moment_generating_function(X)(t) == p ** 2 * exp(2 * t) + 2 * p * (-p + 1) * exp(t) + (-p + 1) ** 2
 
@@ -228,6 +248,40 @@ def test_binomial_symbolic():
     Y = Binomial('Y', n, p, succ=H, fail=T)
     assert simplify(E(Y) - (n*(H*p + T*(1 - p)))) == 0
 
+def test_beta_binomial():
+    # verify parameters
+    raises(ValueError, lambda: BetaBinomial('b', .2, 1, 2))
+    raises(ValueError, lambda: BetaBinomial('b', 2, -1, 2))
+    raises(ValueError, lambda: BetaBinomial('b', 2, 1, -2))
+    assert BetaBinomial('b', 2, 1, 1)
+
+    # test numeric values
+    nvals = range(1,5)
+    alphavals = [S(1)/4, S.Half, S(3)/4, 1, 10]
+    betavals = [S(1)/4, S.Half, S(3)/4, 1, 10]
+
+    for n in nvals:
+        for a in alphavals:
+            for b in betavals:
+                X = BetaBinomial('X', n, a, b)
+                assert E(X) == moment(X, 1)
+                assert variance(X) == cmoment(X, 2)
+
+    # test symbolic
+    n, a, b = symbols('a b n')
+    assert BetaBinomial('x', n, a, b)
+    n = 2 # Because we're using for loops, can't do symbolic n
+    a, b = symbols('a b', positive=True)
+    X = BetaBinomial('X', n, a, b)
+    t = Symbol('t')
+
+    assert E(X).expand() == moment(X, 1).expand()
+    assert variance(X).expand() == cmoment(X, 2).expand()
+    assert skewness(X) == smoment(X, 3)
+    assert characteristic_function(X)(t) == exp(2*I*t)*beta(a + 2, b)/beta(a, b) +\
+         2*exp(I*t)*beta(a + 1, b + 1)/beta(a, b) + beta(a, b + 2)/beta(a, b)
+    assert moment_generating_function(X)(t) == exp(2*t)*beta(a + 2, b)/beta(a, b) +\
+         2*exp(t)*beta(a + 1, b + 1)/beta(a, b) + beta(a, b + 2)/beta(a, b)
 
 def test_hypergeometric_numeric():
     for N in range(1, 5):
@@ -259,16 +313,20 @@ def test_rademacher():
 
 def test_FiniteRV():
     F = FiniteRV('F', {1: S.Half, 2: S.One/4, 3: S.One/4})
+    p = Symbol("p", positive=True)
 
     assert dict(density(F).items()) == {S(1): S.Half, S(2): S.One/4, S(3): S.One/4}
     assert P(F >= 2) == S.Half
+    assert quantile(F)(p) == Piecewise((nan, p > S.One), (S.One, p <= S.Half),\
+        (S(2), p <= S(3)/4),(S(3), True))
 
     assert pspace(F).domain.as_boolean() == Or(
         *[Eq(F.symbol, i) for i in [1, 2, 3]])
 
     raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S.Half, 3: S.Half}))
     raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S(-1)/2, 3: S.One}))
-    raises(ValueError, lambda: FiniteRV('F', {1: S.One, 2: S(3)/2, 3: S.Zero, 4: S(-1)/2, 5: S(-3)/4, 6: S(-1)/4}))
+    raises(ValueError, lambda: FiniteRV('F', {1: S.One, 2: S(3)/2, 3: S.Zero,\
+        4: S(-1)/2, 5: S(-3)/4, 6: S(-1)/4}))
 
 def test_density_call():
     from sympy.abc import p
@@ -298,3 +356,16 @@ def test_FinitePSpace():
     X = Die('X', 6)
     space = pspace(X)
     assert space.density == DieDistribution(6)
+
+def test_symbolic_conditions():
+    B = Bernoulli('B', S(1)/4)
+    D = Die('D', 4)
+    b, n = symbols('b, n')
+    Y = P(Eq(B, b))
+    Z = E(D > n)
+    assert Y == \
+    Piecewise((S(1)/4, Eq(b, 1)), (0, True)) + \
+    Piecewise((S(3)/4, Eq(b, 0)), (0, True))
+    assert Z == \
+    Piecewise((S(1)/4, n < 1), (0, True)) + Piecewise((S(1)/2, n < 2), (0, True)) + \
+    Piecewise((S(3)/4, n < 3), (0, True)) + Piecewise((S(1), n < 4), (0, True))

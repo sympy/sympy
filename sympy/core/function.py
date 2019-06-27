@@ -89,7 +89,7 @@ def _coeff_isneg(a):
         a = a.args[0]
     if a.is_Mul:
         a = a.args[0]
-    return a.is_Number and a.is_negative
+    return a.is_Number and a.is_extended_negative
 
 
 class PoleError(Exception):
@@ -372,10 +372,14 @@ class Function(Application, Expr):
     >>> g.diff(x)
     Derivative(g(x), x)
 
-    Assumptions can be passed to Function.
+    Assumptions can be passed to Function, and if function is initialized with a
+    Symbol, the function inherits the name and assumptions associated with the Symbol:
 
     >>> f_real = Function('f', real=True)
     >>> f_real(x).is_real
+    True
+    >>> f_real_inherit = Function(Symbol('f', real=True))
+    >>> f_real_inherit(x).is_real
     True
 
     Note that assumptions on a function are unrelated to the assumptions on
@@ -861,32 +865,49 @@ class UndefinedFunction(FunctionClass):
     The (meta)class of undefined functions.
     """
     def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
-        __dict__ = __dict__ or {}
+        from .symbol import _filter_assumptions
         # Allow Function('f', real=True)
-        __dict__.update({'is_' + arg: val for arg, val in kwargs.items() if arg in _assume_defined})
+        # and/or Function(Symbol('f', real=True))
+        assumptions, kwargs = _filter_assumptions(kwargs)
+        if isinstance(name, Symbol):
+            assumptions = name._merge(assumptions)
+            name = name.name
+        elif not isinstance(name, string_types):
+            raise TypeError('expecting string or Symbol for name')
+        else:
+            commutative = assumptions.get('commutative', None)
+            assumptions = Symbol(name, **assumptions).assumptions0
+            if commutative is None:
+                assumptions.pop('commutative')
+        __dict__ = __dict__ or {}
+        # put the `is_*` for into __dict__
+        __dict__.update({'is_%s' % k: v for k, v in assumptions.items()})
         # You can add other attributes, although they do have to be hashable
         # (but seriously, if you want to add anything other than assumptions,
         # just subclass Function)
         __dict__.update(kwargs)
+        # add back the sanitized assumptions without the is_ prefix
+        kwargs.update(assumptions)
         # Save these for __eq__
-        __dict__.update({'_extra_kwargs': kwargs})
-        __dict__['__module__'] = None # For pickling
-        ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
-        ret.name = name
-        return ret
+        __dict__.update({'_kwargs': kwargs})
+        # do this for pickling
+        __dict__['__module__'] = None
+        obj = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
+        obj.name = name
+        return obj
 
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-    _extra_kwargs = {}
+    _kwargs = {}
 
     def __hash__(self):
-        return hash((self.class_key(), frozenset(self._extra_kwargs.items())))
+        return hash((self.class_key(), frozenset(self._kwargs.items())))
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
             self.class_key() == other.class_key() and
-            self._extra_kwargs == other._extra_kwargs)
+            self._kwargs == other._kwargs)
 
     def __ne__(self, other):
         return not self == other
@@ -1331,7 +1352,7 @@ class Derivative(Expr):
             if zero:
                 if isinstance(expr, (MatrixCommon, NDimArray)):
                     return expr.zeros(*expr.shape)
-                else:
+                elif expr.is_scalar:
                     return S.Zero
 
             # make the order of symbols canonical
@@ -1864,6 +1885,9 @@ class Lambda(Expr):
         for i in v:
             if not getattr(i, 'is_symbol', False):
                 raise TypeError('variable is not a symbol: %s' % i)
+        if len(v) != len(set(v)):
+            x = [i for i in v if v.count(i) > 1][0]
+            raise SyntaxError("duplicate argument '%s' in Lambda args" % x)
         if len(v) == 1 and v[0] == expr:
             return S.IdentityFunction
 
@@ -2945,10 +2969,6 @@ def count_ops(expr, visual=False):
         while args:
             a = args.pop()
 
-            # XXX: This is a hack to support non-Basic args
-            if isinstance(a, string_types):
-                continue
-
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:
@@ -3014,7 +3034,7 @@ def count_ops(expr, visual=False):
             if not a.is_Symbol:
                 args.extend(a.args)
 
-    elif type(expr) is dict:
+    elif isinstance(expr, Dict):
         ops = [count_ops(k, visual=visual) +
                count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):
@@ -3035,10 +3055,6 @@ def count_ops(expr, visual=False):
             args = [expr]
             while args:
                 a = args.pop()
-
-                # XXX: This is a hack to support non-Basic args
-                if isinstance(a, string_types):
-                    continue
 
                 if a.args:
                     o = Symbol(a.func.__name__.upper())
@@ -3064,9 +3080,10 @@ def count_ops(expr, visual=False):
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
 
-def nfloat(expr, n=15, exponent=False):
+def nfloat(expr, n=15, exponent=False, dkeys=False):
     """Make all Rationals in expr Floats except those in exponents
-    (unless the exponents flag is set to True).
+    (unless the exponents flag is set to True). When processing
+    dictionaries, don't modify the keys unless ``dkeys=True``.
 
     Examples
     ========
@@ -3079,15 +3096,31 @@ def nfloat(expr, n=15, exponent=False):
     >>> nfloat(x**4 + sqrt(y), exponent=True)
     x**4.0 + y**0.5
 
+    Container types are not modified:
+
+    >>> type(nfloat((1, 2))) is tuple
+    True
     """
     from sympy.core.power import Pow
     from sympy.polys.rootoftools import RootOf
 
+    kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+    # handling of iterable containers
     if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):
-            return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
-                               list(expr.items())])
-        return type(expr)([nfloat(a, n, exponent) for a in expr])
+            if dkeys:
+                args = [tuple(map(lambda i: nfloat(i, **kw), a))
+                    for a in expr.items()]
+            else:
+                args = [(k, nfloat(v, **kw)) for k, v in expr.items()]
+            if isinstance(expr, dict):
+                return type(expr)(args)
+            else:
+                return expr.func(*args)
+        elif isinstance(expr, Basic):
+            return expr.func(*[nfloat(a, **kw) for a in expr.args])
+        return type(expr)([nfloat(a, **kw) for a in expr])
+
     rv = sympify(expr)
 
     if rv.is_Number:
@@ -3099,6 +3132,8 @@ def nfloat(expr, n=15, exponent=False):
             rv = Float(rv.n(n), n)
         else:
             pass  # pure_complex(rv) is likely True
+        return rv
+    elif rv.is_Atom:
         return rv
 
     # watch out for RootOf instances that don't like to have

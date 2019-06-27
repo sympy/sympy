@@ -56,6 +56,13 @@ class CodePrinter(StrPrinter):
         'allow_unknown_functions': False,
     }
 
+    # Functions which are "simple" to rewrite to other functions that
+    # may be supported
+    _rewriteable_functions = {
+            'erf2': 'erf',
+            'Li': 'li',
+    }
+
     def __init__(self, settings=None):
 
         super(CodePrinter, self).__init__(settings=settings)
@@ -380,6 +387,10 @@ class CodePrinter(StrPrinter):
             return self._print(expr._imp_(*expr.args))
         elif expr.is_Function and self._settings.get('allow_unknown_functions', False):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
+        elif (expr.func.__name__ in self._rewriteable_functions and
+              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+            # Simple rewrite to supported function possible
+            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
         else:
             return self._print_not_supported(expr)
 
@@ -510,13 +521,10 @@ class CodePrinter(StrPrinter):
     _print_DeferredVector = _print_not_supported
     _print_NaN = _print_not_supported
     _print_NegativeInfinity = _print_not_supported
-    _print_Normal = _print_not_supported
     _print_Order = _print_not_supported
-    _print_PDF = _print_not_supported
     _print_RootOf = _print_not_supported
     _print_RootsOf = _print_not_supported
     _print_RootSum = _print_not_supported
-    _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
     _print_MutableSparseMatrix = _print_not_supported
     _print_ImmutableSparseMatrix = _print_not_supported

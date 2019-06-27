@@ -12,14 +12,15 @@ from sympy.functions import SingularityFunction, Piecewise, factorial
 from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
-from sympy.plotting import plot
+from sympy.plotting import plot, PlotGrid
+from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy import lambdify
+from sympy.core.compatibility import iterable
 
 matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
 numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
-
 
 __doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
 
@@ -80,21 +81,32 @@ class Beam(object):
 
         Parameters
         ==========
+
         length : Sympifyable
             A Symbol or value representing the Beam's length.
+
         elastic_modulus : Sympifyable
             A SymPy expression representing the Beam's Modulus of Elasticity.
             It is a measure of the stiffness of the Beam material. It can
             also be a continuous function of position along the beam.
-        second_moment : Sympifyable
-            A SymPy expression representing the Beam's Second moment of area.
-            It is a geometrical property of an area which reflects how its
-            points are distributed with respect to its neutral axis. It can
-            also be a continuous function of position along the beam.
+
+        second_moment : Sympifyable or Geometry object
+            Describes the cross-section of the beam via a SymPy expression
+            representing the Beam's second moment of area. It is a geometrical
+            property of an area which reflects how its points are distributed
+            with respect to its neutral axis. It can also be a continuous
+            function of position along the beam. Alternatively ``second_moment``
+            can be a shape object such as a ``Polygon`` from the geometry module
+            representing the shape of the cross-section of the beam. In such cases,
+            it is assumed that the x-axis of the shape object is aligned with the
+            bending axis of the beam. The second moment of area will be computed
+            from the shape object internally.
+
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
+
         base_char : String, optional
             A String that will be used as base character to generate sequential
             symbols for integration constants in cases where boundary conditions
@@ -102,7 +114,11 @@ class Beam(object):
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
-        self.second_moment = second_moment
+        if isinstance(second_moment, GeometryEntity):
+            self.cross_section = second_moment
+        else:
+            self.cross_section = None
+            self.second_moment = second_moment
         self.variable = variable
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
@@ -113,7 +129,8 @@ class Beam(object):
         self._hinge_position = None
 
     def __str__(self):
-        str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
+        shape_description = self._cross_section if self._cross_section else self._second_moment
+        str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(shape_description))
         return str_sol
 
     @property
@@ -180,7 +197,22 @@ class Beam(object):
 
     @second_moment.setter
     def second_moment(self, i):
-        self._second_moment = sympify(i)
+        self._cross_section = None
+        if isinstance(i, GeometryEntity):
+            raise ValueError("To update cross-section geometry use `cross_section` attribute")
+        else:
+            self._second_moment = sympify(i)
+
+    @property
+    def cross_section(self):
+        """Cross-section of the beam"""
+        return self._cross_section
+
+    @cross_section.setter
+    def cross_section(self, s):
+        if s:
+            self._second_moment = s.second_moment_of_area()[0]
+        self._cross_section = s
 
     @property
     def boundary_conditions(self):
@@ -1238,7 +1270,7 @@ class Beam(object):
         else:
             length = self.length
         return plot(shear_force.subs(subs), (self.variable, 0, length), title='Shear Force',
-                xlabel='position', ylabel='Value', line_color='g')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$', line_color='g')
 
     def plot_bending_moment(self, subs=None):
         """
@@ -1296,7 +1328,7 @@ class Beam(object):
         else:
             length = self.length
         return plot(bending_moment.subs(subs), (self.variable, 0, length), title='Bending Moment',
-                xlabel='position', ylabel='Value', line_color='b')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$', line_color='b')
 
     def plot_slope(self, subs=None):
         """
@@ -1354,7 +1386,7 @@ class Beam(object):
         else:
             length = self.length
         return plot(slope.subs(subs), (self.variable, 0, length), title='Slope',
-                xlabel='position', ylabel='Value', line_color='m')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$', line_color='m')
 
     def plot_deflection(self, subs=None):
         """
@@ -1413,57 +1445,53 @@ class Beam(object):
         else:
             length = self.length
         return plot(deflection.subs(subs), (self.variable, 0, length),
-                    title='Deflection', xlabel='position', ylabel='Value',
+                    title='Deflection', xlabel=r'$\mathrm{x}$', ylabel=r'$\delta$',
                     line_color='r')
 
-    @doctest_depends_on(modules=('numpy', 'matplotlib',))
+
     def plot_loading_results(self, subs=None):
         """
-        Returns Axes object containing subplots of Shear Force, Bending Moment,
+        Returns a subplot of Shear Force, Bending Moment,
         Slope and Deflection of the Beam object.
 
         Parameters
         ==========
-        subs : dictionary
-            Python dictionary containing Symbols as key and their
-            corresponding values.
 
-        .. note::
-           This method only works if numpy and matplotlib libraries
-           are installed on the system.
+        subs : dictionary
+               Python dictionary containing Symbols as key and their
+               corresponding values.
 
         Examples
         ========
-        There is a beam of length 8 meters. A constant distributed load of 10
-        KN/m is applied from half of the beam till the end. There are two
-        simple supports below the beam, one at the starting point and another
-        at the ending point of the beam. A pointload of magnitude 5 KN is also
-        applied from top of the beam, at a distance of 4 meters from the
-        starting point.  Take E = 200 GPa and I = 400*(10**-6) meter**4.
+
+        There is a beam of length 8 meters. A constant distributed load of 10 KN/m
+        is applied from half of the beam till the end. There are two simple supports
+        below the beam, one at the starting point and another at the ending point
+        of the beam. A pointload of magnitude 5 KN is also applied from top of the
+        beam, at a distance of 4 meters from the starting point.
+        Take E = 200 GPa and I = 400*(10**-6) meter**4.
 
         Using the sign convention of downwards forces being positive.
 
-        >>> from sympy.physics.continuum_mechanics.beam import Beam
-        >>> from sympy import symbols
-        >>> R1, R2 = symbols('R1, R2')
-        >>> b = Beam(8, 200*(10**9), 400*(10**-6))
-        >>> b.apply_load(5000, 2, -1)
-        >>> b.apply_load(R1, 0, -1)
-        >>> b.apply_load(R2, 8, -1)
-        >>> b.apply_load(10000, 4, 0, end=8)
-        >>> b.bc_deflection = [(0, 0), (8, 0)]
-        >>> b.solve_for_reaction_loads(R1, R2)
-        >>> axes = b.plot_loading_results()
-        """
-        if matplotlib is None:
-            raise ImportError('Install matplotlib to use this method.')
-        else:
-            plt = matplotlib.pyplot
-        if numpy is None:
-            raise ImportError('Install numpy to use this method.')
-        else:
-            linspace = numpy.linspace
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
 
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> from sympy.plotting import PlotGrid
+            >>> R1, R2 = symbols('R1, R2')
+            >>> b = Beam(8, 200*(10**9), 400*(10**-6))
+            >>> b.apply_load(5000, 2, -1)
+            >>> b.apply_load(R1, 0, -1)
+            >>> b.apply_load(R2, 8, -1)
+            >>> b.apply_load(10000, 4, 0, end=8)
+            >>> b.bc_deflection = [(0, 0), (8, 0)]
+            >>> b.solve_for_reaction_loads(R1, R2)
+            >>> axes = b.plot_loading_results()
+        """
+        length = self.length
         variable = self.variable
         if subs is None:
             subs = {}
@@ -1471,42 +1499,26 @@ class Beam(object):
             if sym == self.variable:
                 continue
             if sym not in subs:
-                raise ValueError('Value of %s was not passed.' % sym)
+                raise ValueError('Value of %s was not passed.' %sym)
         if self.length in subs:
             length = subs[self.length]
         else:
             length = self.length
 
-        # As we are using matplotlib directly in this method, we need to change
-        # SymPy methods to numpy functions.
-        shear = lambdify(variable,
-                         self.shear_force().subs(subs).rewrite(Piecewise),
-                         'numpy')
-        moment = lambdify(variable,
-                          self.bending_moment().subs(subs).rewrite(Piecewise),
-                          'numpy')
-        slope = lambdify(variable, self.slope().subs(subs).rewrite(Piecewise),
-                         'numpy')
-        deflection = lambdify(variable,
-                              self.deflection().subs(subs).rewrite(Piecewise),
-                              'numpy')
+        ax1 = plot(self.shear_force().subs(subs), (variable, 0, length),
+                   title="Shear Force", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$',
+                   line_color='g', show=False)
+        ax2 = plot(self.bending_moment().subs(subs), (variable, 0, length),
+                   title="Bending Moment", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$',
+                   line_color='b', show=False)
+        ax3 = plot(self.slope().subs(subs), (variable, 0, length),
+                   title="Slope", xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$',
+                   line_color='m', show=False)
+        ax4 = plot(self.deflection().subs(subs), (variable, 0, length),
+                   title="Deflection", xlabel=r'$\mathrm{x}$', ylabel=r'$\delta$',
+                   line_color='r', show=False)
 
-        points = linspace(0, float(length), num=100*length)
-
-        # Creating a grid for subplots with 2 rows and 2 columns
-        fig, axs = plt.subplots(4, 1)
-        # axs is a 2D-numpy array containing axes
-        axs[0].plot(points, shear(points))
-        axs[0].set_title("Shear Force")
-        axs[1].plot(points, moment(points))
-        axs[1].set_title("Bending Moment")
-        axs[2].plot(points, slope(points))
-        axs[2].set_title("Slope")
-        axs[3].plot(points, deflection(points))
-        axs[3].set_title("Deflection")
-
-        fig.tight_layout()    # For better spacing between subplots
-        return axs
+        return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
 
 class Beam3D(Beam):
@@ -1530,7 +1542,7 @@ class Beam3D(Beam):
     is restricted.
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam3D
-    >>> from sympy import symbols, simplify
+    >>> from sympy import symbols, simplify, collect
     >>> l, E, G, I, A = symbols('l, E, G, I, A')
     >>> b = Beam3D(l, E, G, I, A)
     >>> x, q, m = symbols('x, q, m')
@@ -1545,20 +1557,17 @@ class Beam3D(Beam):
     >>> b.solve_slope_deflection()
     >>> b.slope()
     [0, 0, l*x*(-l*q + 3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/(6*E*I)
-    + q*x**3/(6*E*I) + x**2*(-l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I))
-    - m)/(2*E*I)]
+        + x**2*(-3*l*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - 3*m + q*x)/(6*E*I)]
     >>> dx, dy, dz = b.deflection()
-    >>> dx
-    0
-    >>> dz
-    0
-    >>> expectedy = (
-    ... -l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I))
-    ... + l*m*x**2/(4*E*I) - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I)) - m*x**3/(6*E*I)
-    ... + q*x**4/(24*E*I) + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I)) - q*x**2/(2*A*G)
-    ... )
-    >>> simplify(dy - expectedy)
-    0
+    >>> dy = collect(simplify(dy), x)
+    >>> dx == dz == 0
+    True
+    >>> dy == (x*(12*A*E*G*I*l**3*q - 24*A*E*G*I*l**2*m + 144*E**2*I**2*l*q +
+    ...           x**3*(A**2*G**2*l**2*q + 12*A*E*G*I*q) +
+    ...           x**2*(-2*A**2*G**2*l**3*q - 24*A*E*G*I*l*q - 48*A*E*G*I*m) +
+    ...           x*(A**2*G**2*l**4*q + 72*A*E*G*I*l*m - 144*E**2*I**2*q)
+    ...           )/(24*A*E*G*I*(A*G*l**2 + 12*E*I)))
+    True
 
     References
     ==========
@@ -1677,6 +1686,29 @@ class Beam3D(Beam):
         along y and z axis at ``0``.
         """
         return self._boundary_conditions
+
+    def polar_moment(self):
+        """
+        Returns the polar moment of area of the beam
+        about the X axis with respect to the centroid.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+        >>> from sympy import symbols
+        >>> l, E, G, I, A = symbols('l, E, G, I, A')
+        >>> b = Beam3D(l, E, G, I, A)
+        >>> b.polar_moment()
+        2*I
+        >>> I1 = [9, 15]
+        >>> b = Beam3D(l, E, G, I1, A)
+        >>> b.polar_moment()
+        24
+        """
+        if not iterable(self.second_moment):
+            return 2*self.second_moment
+        return sum(self.second_moment)
 
     def apply_load(self, value, start, order, dir="y"):
         """

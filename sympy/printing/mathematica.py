@@ -14,9 +14,15 @@ known_functions = {
     "cos": [(lambda x: True, "Cos")],
     "tan": [(lambda x: True, "Tan")],
     "cot": [(lambda x: True, "Cot")],
+    "sec": [(lambda x: True, "Sec")],
+    "csc": [(lambda x: True, "Csc")],
     "asin": [(lambda x: True, "ArcSin")],
     "acos": [(lambda x: True, "ArcCos")],
     "atan": [(lambda x: True, "ArcTan")],
+    "acot": [(lambda x: True, "ArcCot")],
+    "asec": [(lambda x: True, "ArcSec")],
+    "acsc": [(lambda x: True, "ArcCsc")],
+    "atan2": [(lambda *x: True, "ArcTan")],
     "sinh": [(lambda x: True, "Sinh")],
     "cosh": [(lambda x: True, "Cosh")],
     "tanh": [(lambda x: True, "Tanh")],
@@ -32,6 +38,76 @@ known_functions = {
     "conjugate": [(lambda x: True, "Conjugate")],
     "Max": [(lambda *x: True, "Max")],
     "Min": [(lambda *x: True, "Min")],
+    "erf": [(lambda x: True, "Erf")],
+    "erf2": [(lambda *x: True, "Erf")],
+    "erfc": [(lambda x: True, "Erfc")],
+    "erfi": [(lambda x: True, "Erfi")],
+    "erfinv": [(lambda x: True, "InverseErf")],
+    "erfcinv": [(lambda x: True, "InverseErfc")],
+    "erf2inv": [(lambda *x: True, "InverseErf")],
+    "expint": [(lambda *x: True, "ExpIntegralE")],
+    "Ei": [(lambda x: True, "ExpIntegralEi")],
+    "fresnelc": [(lambda x: True, "FresnelC")],
+    "fresnels": [(lambda x: True, "FresnelS")],
+    "gamma": [(lambda x: True, "Gamma")],
+    "uppergamma": [(lambda *x: True, "Gamma")],
+    "polygamma": [(lambda *x: True, "PolyGamma")],
+    "loggamma": [(lambda x: True, "LogGamma")],
+    "beta": [(lambda *x: True, "Beta")],
+    "Ci": [(lambda x: True, "CosIntegral")],
+    "Si": [(lambda x: True, "SinIntegral")],
+    "Chi": [(lambda x: True, "CoshIntegral")],
+    "Shi": [(lambda x: True, "SinhIntegral")],
+    "li": [(lambda x: True, "LogIntegral")],
+    "factorial": [(lambda x: True, "Factorial")],
+    "factorial2": [(lambda x: True, "Factorial2")],
+    "subfactorial": [(lambda x: True, "Subfactorial")],
+    "catalan": [(lambda x: True, "CatalanNumber")],
+    "harmonic": [(lambda *x: True, "HarmonicNumber")],
+    "RisingFactorial": [(lambda *x: True, "Pochhammer")],
+    "FallingFactorial": [(lambda *x: True, "FactorialPower")],
+    "laguerre": [(lambda *x: True, "LaguerreL")],
+    "assoc_laguerre": [(lambda *x: True, "LaguerreL")],
+    "hermite": [(lambda *x: True, "HermiteH")],
+    "jacobi": [(lambda *x: True, "JacobiP")],
+    "gegenbauer": [(lambda *x: True, "GegenbauerC")],
+    "chebyshevt": [(lambda *x: True, "ChebyshevT")],
+    "chebyshevu": [(lambda *x: True, "ChebyshevU")],
+    "legendre": [(lambda *x: True, "LegendreP")],
+    "assoc_legendre": [(lambda *x: True, "LegendreP")],
+    "mathieuc": [(lambda *x: True, "MathieuC")],
+    "mathieus": [(lambda *x: True, "MathieuS")],
+    "mathieucprime": [(lambda *x: True, "MathieuCPrime")],
+    "mathieusprime": [(lambda *x: True, "MathieuSPrime")],
+    "stieltjes": [(lambda x: True, "StieltjesGamma")],
+    "elliptic_e": [(lambda *x: True, "EllipticE")],
+    "elliptic_f": [(lambda *x: True, "EllipticE")],
+    "elliptic_k": [(lambda x: True, "EllipticK")],
+    "elliptic_pi": [(lambda *x: True, "EllipticPi")],
+    "zeta": [(lambda *x: True, "Zeta")],
+    "besseli": [(lambda *x: True, "BesselI")],
+    "besselj": [(lambda *x: True, "BesselJ")],
+    "besselk": [(lambda *x: True, "BesselK")],
+    "bessely": [(lambda *x: True, "BesselY")],
+    "hankel1": [(lambda *x: True, "HankelH1")],
+    "hankel2": [(lambda *x: True, "HankelH2")],
+    "airyai": [(lambda x: True, "AiryAi")],
+    "airybi": [(lambda x: True, "AiryBi")],
+    "airyaiprime": [(lambda x: True, "AiryAiPrime")],
+    "airybiprime": [(lambda x: True, "AiryBiPrime")],
+    "polylog": [(lambda *x: True, "PolyLog")],
+    "lerchphi": [(lambda *x: True, "LerchPhi")],
+    "gcd": [(lambda *x: True, "GCD")],
+    "lcm": [(lambda *x: True, "LCM")],
+    "jn": [(lambda *x: True, "SphericalBesselJ")],
+    "yn": [(lambda *x: True, "SphericalBesselY")],
+    "hyper": [(lambda *x: True, "HypergeometricPFQ")],
+    "meijerg": [(lambda *x: True, "MeijerG")],
+    "appellf1": [(lambda *x: True, "AppellF1")],
+    "DiracDelta": [(lambda x: True, "DiracDelta")],
+    "Heaviside": [(lambda x: True, "HeavisideTheta")],
+    "KroneckerDelta": [(lambda *x: True, "KroneckerDelta")],
+    "LambertW": [(lambda x: True, "ProductLog")],
 }
 
 
@@ -92,7 +168,7 @@ class MCodePrinter(CodePrinter):
     def _print_NegativeOne(self, expr):
         return '-1'
 
-    def _print_half(self, expr):
+    def _print_Half(self, expr):
         return '1/2'
 
     def _print_ImaginaryUnit(self, expr):
@@ -214,6 +290,10 @@ class MCodePrinter(CodePrinter):
             for cond, mfunc in cond_mfunc:
                 if cond(*expr.args):
                     return "%s[%s]" % (mfunc, self.stringify(expr.args, ", "))
+        elif (expr.func.__name__ in self._rewriteable_functions and
+              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+            # Simple rewrite to supported function possible
+            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
         return expr.func.__name__ + "[%s]" % self.stringify(expr.args, ", ")
 
     _print_MinMaxBase = _print_Function

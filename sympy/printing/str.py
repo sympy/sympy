@@ -354,9 +354,6 @@ class StrPrinter(Printer):
     def _print_NegativeInfinity(self, expr):
         return '-oo'
 
-    def _print_Normal(self, expr):
-        return "Normal(%s, %s)" % (self._print(expr.mu), self._print(expr.sigma))
-
     def _print_Order(self, expr):
         if not expr.variables or all(p is S.Zero for p in expr.point):
             if len(expr.variables) <= 1:
@@ -427,11 +424,6 @@ class StrPrinter(Printer):
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % self._print(a) for a in expr.args]
         return 'PermutationGroup([\n%s])' % ',\n'.join(p)
-
-    def _print_PDF(self, expr):
-        return 'PDF(%s, (%s, %s, %s))' % \
-            (self._print(expr.pdf.args[1]), self._print(expr.pdf.args[0]),
-            self._print(expr.domain[0]), self._print(expr.domain[1]))
 
     def _print_Pi(self, expr):
         return 'pi'
@@ -529,6 +521,9 @@ class StrPrinter(Printer):
     def _print_ProductSet(self, p):
         return ' x '.join(self._print(set) for set in p.sets)
 
+    def _print_UniversalSet(self, p):
+        return 'UniversalSet'
+
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:
             return self._print(expr.as_poly().as_expr())
@@ -536,6 +531,44 @@ class StrPrinter(Printer):
             return self._print(expr.as_expr())
 
     def _print_Pow(self, expr, rational=False):
+        """Printing helper function for ``Pow``
+
+        Parameters
+        ==========
+
+        rational : bool, optional
+            If ``True``, it will not attempt printing ``sqrt(x)`` or
+            ``x**S.Half`` as ``sqrt``, and will use ``x**(1/2)``
+            instead.
+
+            See examples for additional details
+
+        Examples
+        ========
+
+        >>> from sympy.functions import sqrt
+        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy.abc import x
+
+        How ``rational`` keyword works with ``sqrt``:
+
+        >>> printer = StrPrinter()
+        >>> printer._print_Pow(sqrt(x), rational=True)
+        'x**(1/2)'
+        >>> printer._print_Pow(sqrt(x), rational=False)
+        'sqrt(x)'
+        >>> printer._print_Pow(1/sqrt(x), rational=True)
+        'x**(-1/2)'
+        >>> printer._print_Pow(1/sqrt(x), rational=False)
+        '1/sqrt(x)'
+
+        Notes
+        =====
+
+        ``sqrt(x)`` is canonicalized as ``Pow(x, S.Half)`` in SymPy,
+        so there is no need of defining a separate printer for ``sqrt``.
+        Instead, it should be handled here as well.
+        """
         PREC = precedence(expr)
 
         if expr.exp is S.Half and not rational:
@@ -586,6 +619,9 @@ class StrPrinter(Printer):
 
     def _print_Naturals0(self, expr):
         return 'Naturals0'
+
+    def _print_Rationals(self, expr):
+        return 'Rationals'
 
     def _print_Reals(self, expr):
         return 'Reals'
@@ -691,9 +727,6 @@ class StrPrinter(Printer):
 
         return "%s(%s)" % (cls, ", ".join(args))
 
-    def _print_Sample(self, expr):
-        return "Sample([%s])" % self.stringify(expr, ", ", 0)
-
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
 
@@ -730,6 +763,9 @@ class StrPrinter(Printer):
 
     def _print_ZeroMatrix(self, expr):
         return "0"
+
+    def _print_OneMatrix(self, expr):
+        return "1"
 
     def _print_Predicate(self, expr):
         return "Q.%s" % expr.name

@@ -1,16 +1,17 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
-                        Tuple, Symbol)
-from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
+                        Tuple, Symbol, EulerGamma, GoldenRatio, Catalan,
+                        Lambda, Mul, Pow, Mod)
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
                              chebyshevt, conjugate, DiracDelta, exp, expint,
                              factorial, floor, harmonic, Heaviside, im,
                              laguerre, LambertW, log, Max, Min, Piecewise,
                              polylog, re, RisingFactorial, sign, sinc, sqrt,
-                             zeta)
+                             zeta, binomial, legendre)
 from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
                              atan, asec, acsc, sinh, cosh, tanh, coth, csch,
                              sech, asinh, acosh, atanh, acoth, asech, acsch)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix)
@@ -22,8 +23,10 @@ from sympy.functions.special.gamma_functions import (gamma, lowergamma,
                                                      polygamma)
 from sympy.functions.special.error_functions import (Chi, Ci, erf, erfc, erfi,
                                                      erfcinv, erfinv, fresnelc,
-                                                     fresnels, li, Shi, Si)
-from sympy.utilities.pytest import XFAIL
+                                                     fresnels, li, Shi, Si, Li,
+                                                     erf2)
+from sympy.polys.polytools import gcd, lcm
+from sympy.ntheory.primetest import isprime
 from sympy.core.compatibility import range
 
 from sympy import octave_code
@@ -59,6 +62,7 @@ def test_Function():
     assert mcode(harmonic(x)) == 'harmonic(x)'
     assert mcode(bernoulli(x)) == "bernoulli(x)"
     assert mcode(bernoulli(x, y)) == "bernoulli(x, y)"
+    assert mcode(legendre(x, y)) == "legendre(x, y)"
 
 
 def test_Function_change_name():
@@ -83,6 +87,8 @@ def test_Function_change_name():
     assert mcode(DiracDelta(x, 3)) == "dirac(3, x)"
     assert mcode(Heaviside(x)) == "heaviside(x)"
     assert mcode(Heaviside(x, y)) == "heaviside(x, y)"
+    assert mcode(binomial(x, y)) == "bincoeff(x, y)"
+    assert mcode(Mod(x, y)) == "mod(x, y)"
 
 
 def test_minmax():
@@ -250,6 +256,12 @@ def test_MatrixSymbol():
     assert mcode(A**3) == "A^3"
     assert mcode(A**(S.Half)) == "A^(1/2)"
 
+
+def test_MatrixSolve():
+    n = Symbol('n', integer=True)
+    A = MatrixSymbol('A', n, n)
+    x = MatrixSymbol('x', n, 1)
+    assert mcode(MatrixSolve(A, x)) == "A \\ x"
 
 def test_special_matrices():
     assert mcode(6*Identity(3)) == "6*eye(3)"
@@ -463,8 +475,9 @@ def test_specfun():
     assert octave_code(airyaiprime(x)) == 'airy(1, x)'
     assert octave_code(airybi(x)) == 'airy(2, x)'
     assert octave_code(airybiprime(x)) == 'airy(3, x)'
-    assert octave_code(uppergamma(n, x)) == 'gammainc(x, n, \'upper\')'
-    assert octave_code(lowergamma(n, x)) == 'gammainc(x, n, \'lower\')'
+    assert octave_code(uppergamma(n, x)) == '(gammainc(x, n, \'upper\').*gamma(n))'
+    assert octave_code(lowergamma(n, x)) == '(gammainc(x, n).*gamma(n))'
+    assert octave_code(z**lowergamma(n, x)) == 'z.^(gammainc(x, n).*gamma(n))'
     assert octave_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*besselj(n + 1/2, x)/2'
     assert octave_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
     assert octave_code(LambertW(x)) == 'lambertw(x)'
@@ -487,3 +500,8 @@ def test_MatrixElement_printing():
 def test_zeta_printing_issue_14820():
     assert octave_code(zeta(x)) == 'zeta(x)'
     assert octave_code(zeta(x, y)) == '% Not supported in Octave:\n% zeta\nzeta(x, y)'
+
+
+def test_automatic_rewrite():
+    assert octave_code(Li(x)) == 'logint(x) - logint(2)'
+    assert octave_code(erf2(x, y)) == '-erf(x) + erf(y)'

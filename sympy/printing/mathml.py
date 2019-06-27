@@ -534,6 +534,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'primeomega': '&#x3A9;',
             'fresnels': 'S',
             'fresnelc': 'C',
+            'LambertW': 'W',
             'Heaviside': '&#x398;',
             'BooleanTrue': 'True',
             'BooleanFalse': 'False',
@@ -603,8 +604,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                 mrow.appendChild(x)
                 mrow.appendChild(y)
             for term in terms:
-                x = self._print(term)
-                mrow.appendChild(x)
+                mrow.appendChild(self.parenthesize(term, PRECEDENCE['Mul']))
                 if not term == terms[-1]:
                     y = self.dom.createElement('mo')
                     y.appendChild(self.dom.createTextNode(self.mathml_tag(expr)))
@@ -654,8 +654,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             return table
         brac = self.dom.createElement('mfenced')
         if self._settings["mat_delim"] == "[":
-            brac.setAttribute('open', '[')
             brac.setAttribute('close', ']')
+            brac.setAttribute('open', '[')
         brac.appendChild(table)
         return brac
 
@@ -741,6 +741,53 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(y)
         mrow.appendChild(x)
         return mrow
+
+    def _print_HBar(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('&#x210F;'))
+        return x
+
+    def _print_EulerGamma(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('&#x3B3;'))
+        return x
+
+    def _print_TribonacciConstant(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('TribonacciConstant'))
+        return x
+
+    def _print_Dagger(self, e):
+        msup = self.dom.createElement('msup')
+        msup.appendChild(self._print(e.args[0]))
+        msup.appendChild(self.dom.createTextNode('&#x2020;'))
+        return msup
+
+    def _print_Contains(self, e):
+        mrow = self.dom.createElement('mrow')
+        mrow.appendChild(self._print(e.args[0]))
+        mo = self.dom.createElement('mo')
+        mo.appendChild(self.dom.createTextNode('&#x2208;'))
+        mrow.appendChild(mo)
+        mrow.appendChild(self._print(e.args[1]))
+        return mrow
+
+    def _print_HilbertSpace(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('&#x210B;'))
+        return x
+
+    def _print_ComplexSpace(self, e):
+        msup = self.dom.createElement('msup')
+        msup.appendChild(self.dom.createTextNode('&#x1D49E;'))
+        msup.appendChild(self._print(e.args[0]))
+        return msup
+
+    def _print_FockSpace(self, e):
+        x = self.dom.createElement('mi')
+        x.appendChild(self.dom.createTextNode('&#x2131;'))
+        return x
+
 
     def _print_Integral(self, expr):
         intsymbols = {1: "&#x222B;", 2: "&#x222C;", 3: "&#x222D;"}
@@ -961,8 +1008,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_AccumulationBounds(self, i):
         brac = self.dom.createElement('mfenced')
-        brac.setAttribute('open', u'\u27e8')
         brac.setAttribute('close', u'\u27e9')
+        brac.setAttribute('open', u'\u27e8')
         brac.appendChild(self._print(i.min))
         brac.appendChild(self._print(i.max))
         return brac
@@ -1106,19 +1153,19 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         brac = self.dom.createElement('mfenced')
         if i.start == i.end:
             # Most often, this type of Interval is converted to a FiniteSet
-            brac.setAttribute('open', '{')
             brac.setAttribute('close', '}')
+            brac.setAttribute('open', '{')
             brac.appendChild(self._print(i.start))
         else:
-            if i.left_open:
-                brac.setAttribute('open', '(')
-            else:
-                brac.setAttribute('open', '[')
-
             if i.right_open:
                 brac.setAttribute('close', ')')
             else:
                 brac.setAttribute('close', ']')
+
+            if i.left_open:
+                brac.setAttribute('open', '(')
+            else:
+                brac.setAttribute('open', '[')
             brac.appendChild(self._print(i.start))
             brac.appendChild(self._print(i.end))
 
@@ -1128,8 +1175,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_Abs(self, expr, exp=None):
         mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mfenced')
-        x.setAttribute('open', '|')
         x.setAttribute('close', '|')
+        x.setAttribute('open', '|')
         x.appendChild(self._print(expr.args[0]))
         mrow.appendChild(x)
         return mrow
@@ -1191,8 +1238,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
         brac = self.dom.createElement('mfenced')
-        brac.setAttribute('open', '{')
         brac.setAttribute('close', '}')
+        brac.setAttribute('open', '{')
         for item in items:
             brac.appendChild(self._print(item))
         return brac
@@ -1309,8 +1356,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_Range(self, s):
         dots = u"\u2026"
         brac = self.dom.createElement('mfenced')
-        brac.setAttribute('open', '{')
         brac.setAttribute('close', '}')
+        brac.setAttribute('open', '{')
 
         if s.start.is_infinite:
             printset = dots, s[-1] - s.step, s[-1]
@@ -1507,8 +1554,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         power = expr.args[2]
         sup = self.dom.createElement('msup')
         brac = self.dom.createElement('mfenced')
-        brac.setAttribute('open', u'\u27e8')
         brac.setAttribute('close', u'\u27e9')
+        brac.setAttribute('open', u'\u27e8')
         brac.appendChild(self._print(shift))
         sup.appendChild(brac)
         sup.appendChild(self._print(power))
@@ -1574,6 +1621,11 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_EmptySet(self, e):
         x = self.dom.createElement('mo')
         x.appendChild(self.dom.createTextNode('&#x2205;'))
+        return x
+
+    def _print_UniversalSet(self, e):
+        x = self.dom.createElement('mo')
+        x.appendChild(self.dom.createTextNode('&#x1D54C;'))
         return x
 
     def _print_Adjoint(self, expr):
@@ -1661,9 +1713,27 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         sup.appendChild(self._print(exp))
         return sup
 
+    def _print_HadamardProduct(self, expr):
+        x = self.dom.createElement('mrow')
+        args = expr.args
+        for arg in args[:-1]:
+            x.appendChild(
+                self.parenthesize(arg, precedence_traditional(expr), False))
+            mo = self.dom.createElement('mo')
+            mo.appendChild(self.dom.createTextNode('&#x2218;'))
+            x.appendChild(mo)
+        x.appendChild(
+            self.parenthesize(args[-1], precedence_traditional(expr), False))
+        return x
+
     def _print_ZeroMatrix(self, Z):
         x = self.dom.createElement('mn')
         x.appendChild(self.dom.createTextNode('&#x1D7D8'))
+        return x
+
+    def _print_OneMatrix(self, Z):
+        x = self.dom.createElement('mn')
+        x.appendChild(self.dom.createTextNode('&#x1D7D9'))
         return x
 
     def _print_Identity(self, I):
@@ -1674,8 +1744,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_floor(self, e):
         mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mfenced')
-        x.setAttribute('open', u'\u230A')
         x.setAttribute('close', u'\u230B')
+        x.setAttribute('open', u'\u230A')
         x.appendChild(self._print(e.args[0]))
         mrow.appendChild(x)
         return mrow
@@ -1683,8 +1753,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_ceiling(self, e):
         mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mfenced')
-        x.setAttribute('open', u'\u2308')
         x.setAttribute('close', u'\u2309')
+        x.setAttribute('open', u'\u2308')
         x.appendChild(self._print(e.args[0]))
         mrow.appendChild(x)
         return mrow
@@ -1727,8 +1797,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         x = self.dom.createElement('msub')
         x.appendChild(self.parenthesize(e.parent, PRECEDENCE["Atom"], strict = True))
         brac = self.dom.createElement('mfenced')
-        brac.setAttribute("open", "")
         brac.setAttribute("close", "")
+        brac.setAttribute("open", "")
         for i in e.indices:
             brac.appendChild(self._print(i))
         x.appendChild(brac)

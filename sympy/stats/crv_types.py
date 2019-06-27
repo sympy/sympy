@@ -6,6 +6,7 @@ Contains
 Arcsin
 Benini
 Beta
+BetaNoncentral
 BetaPrime
 Cauchy
 Chi
@@ -24,6 +25,7 @@ Gompertz
 Kumaraswamy
 Laplace
 Logistic
+LogLogistic
 LogNormal
 Maxwell
 Nakagami
@@ -47,11 +49,11 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfi, I, hyper, uppergamma,
-                   sinh, atan, Ne, expint)
+                   Lambda, Basic, lowergamma, erf, erfi,  erfinv, I, hyper,
+                   uppergamma, sinh, atan, Ne, expint, Integral)
 
 from sympy import beta as beta_fn
-from sympy import cos, sin, exp, besseli, besselj, besselk
+from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy.external import import_module
 from sympy.matrices import MatrixBase
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
@@ -67,6 +69,7 @@ __all__ = ['ContinuousRV',
 'Arcsin',
 'Benini',
 'Beta',
+'BetaNoncentral',
 'BetaPrime',
 'Cauchy',
 'Chi',
@@ -85,10 +88,12 @@ __all__ = ['ContinuousRV',
 'Kumaraswamy',
 'Laplace',
 'Logistic',
+'LogLogistic',
 'LogNormal',
 'Maxwell',
 'Nakagami',
 'Normal',
+'GaussianInverse',
 'Pareto',
 'QuadraticU',
 'RaisedCosine',
@@ -160,6 +165,9 @@ def rv(symbol, cls, args):
 
 class ArcsinDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
+
+    def set(self):
+        return Interval(self.a, self.b)
 
     def pdf(self, x):
         return 1/(pi*sqrt((x - self.a)*(self.b - x)))
@@ -398,6 +406,97 @@ def Beta(name, alpha, beta):
     return rv(name, BetaDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
+# Noncentral Beta distribution ------------------------------------------------------------
+
+
+class BetaNoncentralDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta', 'lamda')
+
+    set = Interval(0, 1)
+
+    @staticmethod
+    def check(alpha, beta, lamda):
+        _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
+        _value_check(lamda >= 0, "Noncentrality parameter Lambda must be positive")
+
+    def pdf(self, x):
+        alpha, beta, lamda = self.alpha, self.beta, self.lamda
+        k = Dummy("k")
+        return Sum(exp(-lamda / 2) * (lamda / 2)**k * x**(alpha + k - 1) *(
+            1 - x)**(beta - 1) / (factorial(k) * beta_fn(alpha + k, beta)), (k, 0, oo))
+
+def BetaNoncentral(name, alpha, beta, lamda):
+    r"""
+    Create a Continuous Random Variable with a Type I Noncentral Beta distribution.
+
+    The density of the Noncentral Beta distribution is given by
+
+    .. math::
+        f(x) := \sum_{k=0}^\infty e^{-\lambda/2}\frac{(\lambda/2)^k}{k!}
+                \frac{x^{\alpha+k-1}(1-x)^{\beta-1}}{\mathrm{B}(\alpha+k,\beta)}
+
+    with :math:`x \in [0,1]`.
+
+    Parameters
+    ==========
+
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
+    lamda: Real number, `\lambda >= 0`, noncentrality parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import BetaNoncentral, density, cdf
+    >>> from sympy import Symbol, pprint
+
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> beta = Symbol("beta", positive=True)
+    >>> lamda = Symbol("lamda", nonnegative=True)
+    >>> z = Symbol("z")
+
+    >>> X = BetaNoncentral("x", alpha, beta, lamda)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+      oo
+    _____
+    \    `
+     \                                              -lamda
+      \                          k                  -------
+       \    k + alpha - 1 /lamda\         beta - 1     2
+        )  z             *|-----| *(1 - z)        *e
+       /                  \  2  /
+      /    ------------------------------------------------
+     /                  B(k + alpha, beta)*k!
+    /____,
+    k = 0
+
+    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
+    >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
+    exp(-1/2)*Integral(Sum(2**(-_k)*_x**_k/(beta(_k + 1, 1)*factorial(_k)), (_k, 0, oo)), (_x, 0, 2))
+
+    The argument evaluate=False prevents an attempt at evaluation
+    of the sum for general x, before the argument 2 is passed.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Noncentral_beta_distribution
+    .. [2] https://reference.wolfram.com/language/ref/NoncentralBetaDistribution.html
+
+    """
+
+    return rv(name, BetaNoncentralDistribution, (alpha, beta, lamda))
+
+
+#-------------------------------------------------------------------------------
 # Beta prime distribution ------------------------------------------------------
 
 
@@ -490,6 +589,9 @@ class CauchyDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError("The moment generating function for the "
                                   "Cauchy distribution does not exist.")
+
+    def _quantile(self, p):
+        return self.x0 + self.gamma*tan(pi*(p - S.Half))
 
 def Cauchy(name, x0, gamma):
     r"""
@@ -775,6 +877,8 @@ def ChiSquared(name, k):
 class DagumDistribution(SingleContinuousDistribution):
     _argnames = ('p', 'a', 'b')
 
+    set = Interval(0, oo)
+
     @staticmethod
     def check(p, a, b):
         _value_check(p > 0, "Shape parameter p must be positive.")
@@ -946,6 +1050,9 @@ class ExponentialDistribution(SingleContinuousDistribution):
         rate = self.rate
         return rate / (rate - t)
 
+    def _quantile(self, p):
+        return -log(1-p)/self.rate
+
 def Exponential(name, rate):
     r"""
     Create a continuous random variable with an Exponential distribution.
@@ -971,12 +1078,12 @@ def Exponential(name, rate):
     ========
 
     >>> from sympy.stats import Exponential, density, cdf, E
-    >>> from sympy.stats import variance, std, skewness
+    >>> from sympy.stats import variance, std, skewness, quantile
     >>> from sympy import Symbol
 
     >>> l = Symbol("lambda", positive=True)
     >>> z = Symbol("z")
-
+    >>> p = Symbol("p")
     >>> X = Exponential("x", l)
 
     >>> density(X)(z)
@@ -984,6 +1091,9 @@ def Exponential(name, rate):
 
     >>> cdf(X)(z)
     Piecewise((1 - exp(-lambda*z), z >= 0), (0, True))
+
+    >>> quantile(X)(p)
+    -log(1 - p)/lambda
 
     >>> E(X)
     1/lambda
@@ -1026,9 +1136,9 @@ class FDistributionDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(d1, d2):
-        _value_check(d1 > 0 and d1.is_integer, \
+        _value_check((d1 > 0, d1.is_integer),
             "Degrees of freedom d1 must be positive integer.")
-        _value_check(d2 > 0 and d2.is_integer, \
+        _value_check((d2 > 0, d2.is_integer),
             "Degrees of freedom d2 must be positive integer.")
 
     def pdf(self, x):
@@ -1103,6 +1213,13 @@ def FDistribution(name, d1, d2):
 class FisherZDistribution(SingleContinuousDistribution):
     _argnames = ('d1', 'd2')
 
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(d1, d2):
+        _value_check(d1 > 0, "Degree of freedom d1 must be positive.")
+        _value_check(d2 > 0, "Degree of freedom d2 must be positive.")
+
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
         return (2*d1**(d1/2)*d2**(d2/2) / beta_fn(d1/2, d2/2) *
@@ -1173,6 +1290,11 @@ class FrechetDistribution(SingleContinuousDistribution):
     _argnames = ('a', 's', 'm')
 
     set = Interval(0, oo)
+
+    @staticmethod
+    def check(a, s, m):
+        _value_check(a > 0, "Shape parameter alpha must be positive.")
+        _value_check(s > 0, "Scale parameter s must be positive.")
 
     def __new__(cls, a, s=1, m=0):
         a, s, m = list(map(sympify, (a, s, m)))
@@ -1373,7 +1495,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
             from scipy.stats import invgamma
             return invgamma.rvs(float(self.a), 0, float(self.b))
         else:
-            raise NotImplementedError('Sampling the inverse Gamma Distribution requires Scipy.')
+            raise NotImplementedError('Sampling the Inverse Gamma Distribution requires Scipy.')
 
     def _characteristic_function(self, t):
         a, b = self.a, self.b
@@ -1441,65 +1563,99 @@ def GammaInverse(name, a, b):
     return rv(name, GammaInverseDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
-# Gumbel distribution --------------------------------------------------------
+# Gumbel distribution (Maximum and Minimum) --------------------------------------------------------
 
 
 class GumbelDistribution(SingleContinuousDistribution):
-    _argnames = ('beta', 'mu')
+    _argnames = ('beta', 'mu', 'minimum')
 
     set = Interval(-oo, oo)
 
+    @staticmethod
+    def check(beta, mu, minimum):
+        _value_check(beta > 0, "Scale parameter beta must be positive.")
+
     def pdf(self, x):
         beta, mu = self.beta, self.mu
-        return (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
+        z = (x - mu)/beta
+        f_max = (1/beta)*exp(-z - exp(-z))
+        f_min = (1/beta)*exp(z - exp(z))
+        return Piecewise((f_min, self.minimum), (f_max, not self.minimum))
+
+    def _cdf(self, x):
+        beta, mu = self.beta, self.mu
+        z = (x - mu)/beta
+        F_max = exp(-exp(-z))
+        F_min = 1 - exp(-exp(z))
+        return Piecewise((F_min, self.minimum), (F_max, not self.minimum))
 
     def _characteristic_function(self, t):
-        return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
+        cf_max = gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
+        cf_min = gamma(1 + I*self.beta*t) * exp(I*self.mu*t)
+        return Piecewise((cf_min, self.minimum), (cf_max, not self.minimum))
 
     def _moment_generating_function(self, t):
-        return gamma(1 - self.beta*t) * exp(I*self.mu*t)
+        mgf_max = gamma(1 - self.beta*t) * exp(self.mu*t)
+        mgf_min = gamma(1 + self.beta*t) * exp(self.mu*t)
+        return Piecewise((mgf_min, self.minimum), (mgf_max, not self.minimum))
 
-def Gumbel(name, beta, mu):
+def Gumbel(name, beta, mu, minimum=False):
     r"""
     Create a Continuous Random Variable with Gumbel distribution.
 
     The density of the Gumbel distribution is given by
 
-    .. math::
-        f(x) := \exp \left( -exp \left( x + \exp \left( -x \right) \right) \right)
+    For Maximum
 
-    with ::math 'x \in [ - \inf, \inf ]'.
+    .. math::
+        f(x) := \dfrac{1}{\beta} \exp \left( -\dfrac{x-\mu}{\beta}
+                - \exp \left( -\dfrac{x - \mu}{\beta} \right) \right)
+
+    with :math:`x \in [ - \infty, \infty ]`.
+
+    For Minimum
+
+    .. math::
+        f(x) := \frac{e^{- e^{\frac{- \mu + x}{\beta}} + \frac{- \mu + x}{\beta}}}{\beta}
+
+    with :math:`x \in [ - \infty, \infty ]`.
 
     Parameters
     ==========
 
-    mu: Real number, 'mu' is a location
-    beta: Real number, 'beta > 0' is a scale
+    mu : Real number, 'mu' is a location
+    beta : Real number, 'beta > 0' is a scale
+    minimum : Boolean, by default, False, set to True for enabling minimum distribution
 
     Returns
-    ==========
+    =======
 
     A RandomSymbol
 
     Examples
-    ==========
-    >>> from sympy.stats import Gumbel, density, E, variance
+    ========
+
+    >>> from sympy.stats import Gumbel, density, E, variance, cdf
     >>> from sympy import Symbol, simplify, pprint
     >>> x = Symbol("x")
     >>> mu = Symbol("mu")
     >>> beta = Symbol("beta", positive=True)
     >>> X = Gumbel("x", beta, mu)
     >>> density(X)(x)
-    exp(exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
+    exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
+    >>> cdf(X)(x)
+    exp(-exp(-(-mu + x)/beta))
 
     References
     ==========
 
     .. [1] http://mathworld.wolfram.com/GumbelDistribution.html
     .. [2] https://en.wikipedia.org/wiki/Gumbel_distribution
+    .. [3] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_max.html
+    .. [4] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_min.html
 
     """
-    return rv(name, GumbelDistribution, (beta, mu))
+    return rv(name, GumbelDistribution, (beta, mu, minimum))
 
 #-------------------------------------------------------------------------------
 # Gompertz distribution --------------------------------------------------------
@@ -1655,6 +1811,13 @@ def Kumaraswamy(name, a, b):
 class LaplaceDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 'b')
 
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(mu, b):
+        _value_check(b > 0, "Scale parameter b must be positive.")
+        _value_check(mu.is_real, "Location parameter mu should be real")
+
     def pdf(self, x):
         mu, b = self.mu, self.b
         return 1/(2*b)*exp(-Abs(x - mu)/b)
@@ -1742,6 +1905,12 @@ def Laplace(name, mu, b):
 class LogisticDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 's')
 
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(mu, s):
+        _value_check(s > 0, "Scale parameter s must be positive.")
+
     def pdf(self, x):
         mu, s = self.mu, self.s
         return exp(-(x - mu)/s)/(s*(1 + exp(-(x - mu)/s))**2)
@@ -1754,7 +1923,10 @@ class LogisticDistribution(SingleContinuousDistribution):
         return Piecewise((exp(I*t*self.mu) * pi*self.s*t / sinh(pi*self.s*t), Ne(t, 0)), (S.One, True))
 
     def _moment_generating_function(self, t):
-        return exp(self.mu*t) * Beta(1 - self.s*t, 1 + self.s*t)
+        return exp(self.mu*t) * beta_fn(1 - self.s*t, 1 + self.s*t)
+
+    def _quantile(self, p):
+        return self.mu - self.s*log(-S.One + S.One/p)
 
 def Logistic(name, mu, s):
     r"""
@@ -1805,6 +1977,99 @@ def Logistic(name, mu, s):
     return rv(name, LogisticDistribution, (mu, s))
 
 #-------------------------------------------------------------------------------
+# Log-logistic distribution --------------------------------------------------------
+
+
+class LogLogisticDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(alpha, beta):
+        _value_check(alpha > 0, "Scale parameter Alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter Beta must be positive.")
+
+    def pdf(self, x):
+        a, b = self.alpha, self.beta
+        return ((b/a)*(x/a)**(b - 1))/(1 + (x/a)**b)**2
+
+    def _cdf(self, x):
+        a, b = self.alpha, self.beta
+        return 1/(1 + (x/a)**(-b))
+
+    def _quantile(self, p):
+        a, b = self.alpha, self.beta
+        return a*((p/(1 - p))**(1/b))
+
+    def expectation(self, expr, var, **kwargs):
+        a, b = self.args
+        return Piecewise((S.NaN, b <= 1), (pi*a/(b*sin(pi/b)), True))
+
+def LogLogistic(name, alpha, beta):
+    r"""
+    Create a continuous random variable with a log-logistic distribution.
+    The distribution is unimodal when `beta > 1`.
+
+    The density of the log-logistic distribution is given by
+
+    .. math::
+        f(x) := \frac{(\frac{\beta}{\alpha})(\frac{x}{\alpha})^{\beta - 1}}
+                {(1 + (\frac{x}{\alpha})^{\beta})^2}
+
+    Parameters
+    ==========
+
+    alpha : Real number, `\alpha > 0`, scale parameter and median of distribution
+    beta : Real number, `\beta > 0` a shape parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import LogLogistic, density, cdf, quantile
+    >>> from sympy import Symbol, pprint
+
+    >>> alpha = Symbol("alpha", real=True, positive=True)
+    >>> beta = Symbol("beta", real=True, positive=True)
+    >>> p = Symbol("p")
+    >>> z = Symbol("z", positive=True)
+
+    >>> X = LogLogistic("x", alpha, beta)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+                  beta - 1
+           /  z  \
+      beta*|-----|
+           \alpha/
+    ------------------------
+                           2
+          /       beta    \
+          |/  z  \        |
+    alpha*||-----|     + 1|
+          \\alpha/        /
+
+    >>> cdf(X)(z)
+    1/(1 + (z/alpha)**(-beta))
+
+    >>> quantile(X)(p)
+    alpha*(p/(1 - p))**(1/beta)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Log-logistic_distribution
+
+    """
+
+    return rv(name, LogLogisticDistribution, (alpha, beta))
+
+#-------------------------------------------------------------------------------
 # Log Normal distribution ------------------------------------------------------
 
 
@@ -1812,6 +2077,10 @@ class LogNormalDistribution(SingleContinuousDistribution):
     _argnames = ('mean', 'std')
 
     set = Interval(0, oo)
+
+    @staticmethod
+    def check(mean, std):
+        _value_check(std > 0, "Parameter std must be positive.")
 
     def pdf(self, x):
         mean, std = self.mean, self.std
@@ -1902,6 +2171,10 @@ class MaxwellDistribution(SingleContinuousDistribution):
 
     set = Interval(0, oo)
 
+    @staticmethod
+    def check(a):
+        _value_check(a > 0, "Parameter a must be positive.")
+
     def pdf(self, x):
         a = self.a
         return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
@@ -1971,6 +2244,11 @@ class NakagamiDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 'omega')
 
     set = Interval(0, oo)
+
+    @staticmethod
+    def check(mu, omega):
+        _value_check(mu >= S.Half, "Shape parameter mu must be greater than equal to 1/2.")
+        _value_check(omega > 0, "Spread parameter omega must be positive.")
 
     def pdf(self, x):
         mu, omega = self.mu, self.omega
@@ -2080,6 +2358,10 @@ class NormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return exp(mean*t + std**2*t**2/2)
 
+    def _quantile(self, p):
+        mean, std = self.mean, self.std
+        return mean + std*sqrt(2)*erfinv(2*p - 1)
+
 def Normal(name, mean, std):
     r"""
     Create a continuous random variable with a Normal distribution.
@@ -2104,13 +2386,14 @@ def Normal(name, mean, std):
     Examples
     ========
 
-    >>> from sympy.stats import Normal, density, E, std, cdf, skewness
+    >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile
     >>> from sympy import Symbol, simplify, pprint, factor, together, factor_terms
 
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
     >>> z = Symbol("z")
     >>> y = Symbol("y")
+    >>> p = Symbol("p")
     >>> X = Normal("x", mu, sigma)
 
     >>> density(X)(z)
@@ -2124,6 +2407,9 @@ def Normal(name, mean, std):
        \    2*sigma    /   1
     -------------------- + -
              2             2
+
+    >>> quantile(X)(p)
+    mu + sqrt(2)*sigma*erfinv(2*p - 1)
 
     >>> simplify(skewness(X))
     0
@@ -2140,7 +2426,7 @@ def Normal(name, mean, std):
 
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> pprint(density(m)(y, z))
+    >>> pprint(density(m)(y, z), use_unicode=False)
            /1   y\ /2*y   z\   /    z\ /  y   2*z    \
            |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
       ___  \2   2/ \ 3    3/   \    2/ \  3    3     /
@@ -2166,6 +2452,120 @@ def Normal(name, mean, std):
         return multivariate_rv(
             MultivariateNormalDistribution, name, mean, std)
     return rv(name, NormalDistribution, (mean, std))
+
+
+#-------------------------------------------------------------------------------
+# Inverse Gaussian distribution ----------------------------------------------------------
+
+
+class GaussianInverseDistribution(SingleContinuousDistribution):
+    _argnames = ('mean', 'shape')
+
+    @property
+    def set(self):
+        return Interval(0, oo)
+
+    @staticmethod
+    def check(mean, shape):
+        _value_check(shape > 0, "Shape parameter must be positive")
+        _value_check(mean > 0, "Mean must be positive")
+
+    def pdf(self, x):
+        mu, s = self.mean, self.shape
+        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/((2*pi*x**3)))
+
+    def sample(self):
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import invgauss
+            return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape))
+        else:
+            raise NotImplementedError(
+                'Sampling the Inverse Gaussian Distribution requires Scipy.')
+
+    def _cdf(self, x):
+        from sympy.stats import cdf
+        mu, s = self.mean, self.shape
+        stdNormalcdf = cdf(Normal('x', 0, 1))
+
+        first_term = stdNormalcdf(sqrt(s/x) * ((x/mu) - S.One))
+        second_term = exp(2*s/mu) * stdNormalcdf(-sqrt(s/x)*(x/mu + S.One))
+
+        return  first_term + second_term
+
+    def _characteristic_function(self, t):
+        mu, s = self.mean, self.shape
+        return exp((s/mu)*(1 - sqrt(1 - (2*mu**2*I*t)/s)))
+
+    def _moment_generating_function(self, t):
+        mu, s = self.mean, self.shape
+        return exp((s/mu)*(1 - sqrt(1 - (2*mu**2*t)/s)))
+
+
+def GaussianInverse(name, mean, shape):
+    r"""
+    Create a continuous random variable with an Inverse Gaussian distribution.
+    Inverse Gaussian distribution is also known as Wald distribution.
+
+    The density of the Inverse Gaussian distribution is given by
+
+    .. math::
+        f(x) := \sqrt{\frac{\lambda}{2\pi x^3}} e^{-\frac{\lambda(x-\mu)^2}{2x\mu^2}}
+
+    Parameters
+    ==========
+
+    mu : Positive number representing the mean
+    lambda : Positive number representing the shape parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import GaussianInverse, density, cdf, E, std, skewness
+    >>> from sympy import Symbol, pprint
+
+    >>> mu = Symbol("mu", positive=True)
+    >>> lamda = Symbol("lambda", positive=True)
+    >>> z = Symbol("z", positive=True)
+    >>> X = GaussianInverse("x", mu, lamda)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+                                       2
+                      -lambda*(-mu + z)
+                      -------------------
+                                2
+      ___   ________        2*mu *z
+    \/ 2 *\/ lambda *e
+    -------------------------------------
+                    ____  3/2
+                2*\/ pi *z
+
+    >>> E(X)
+    mu
+
+    >>> std(X).expand()
+    mu**(3/2)/sqrt(lambda)
+
+    >>> skewness(X).expand()
+    3*sqrt(mu)/sqrt(lambda)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution
+    .. [2] http://mathworld.wolfram.com/InverseGaussianDistribution.html
+
+    """
+
+    return rv(name, GaussianInverseDistribution, (mean, shape))
+
+Wald = GaussianInverse
 
 #-------------------------------------------------------------------------------
 # Pareto distribution ----------------------------------------------------------
@@ -2263,6 +2663,10 @@ class QuadraticUDistribution(SingleContinuousDistribution):
     @property
     def set(self):
         return Interval(self.a, self.b)
+
+    @staticmethod
+    def check(a, b):
+        _value_check(b > a, "Parameter b must be in range (%s, oo)."%(a))
 
     def pdf(self, x):
         a, b = self.a, self.b
@@ -2432,6 +2836,10 @@ class RayleighDistribution(SingleContinuousDistribution):
 
     set = Interval(0, oo)
 
+    @staticmethod
+    def check(sigma):
+        _value_check(sigma > 0, "Scale parameter sigma must be positive.")
+
     def pdf(self, x):
         sigma = self.sigma
         return x/sigma**2*exp(-x**2/(2*sigma**2))
@@ -2569,6 +2977,12 @@ def ShiftedGompertz(name, b, eta):
 class StudentTDistribution(SingleContinuousDistribution):
     _argnames = ('nu',)
 
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(nu):
+        _value_check(nu > 0, "Degrees of freedom nu must be positive.")
+
     def pdf(self, x):
         nu = self.nu
         return 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
@@ -2648,6 +3062,19 @@ def StudentT(name, nu):
 
 class TrapezoidalDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b', 'c', 'd')
+
+    @property
+    def set(self):
+        return Interval(self.a, self.d)
+
+    @staticmethod
+    def check(a, b, c, d):
+        _value_check(a < d, "Lower bound parameter a < %s. a = %s"%(d, a))
+        _value_check((a <= b, b < c),
+        "Level start parameter b must be in range [%s, %s). b = %s"%(a, c, b))
+        _value_check((b < c, c <= d),
+        "Level end parameter c must be in range (%s, %s]. c = %s"%(b, d, c))
+        _value_check(d >= c, "Upper bound parameter d > %s. d = %s"%(c, d))
 
     def pdf(self, x):
         a, b, c, d = self.a, self.b, self.c, self.d
@@ -2729,6 +3156,16 @@ def Trapezoidal(name, a, b, c, d):
 class TriangularDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b', 'c')
 
+    @property
+    def set(self):
+        return Interval(self.a, self.b)
+
+    @staticmethod
+    def check(a, b, c):
+        _value_check(b > a, "Parameter b > %s. b = %s"%(a, b))
+        _value_check((a <= c, c <= b),
+        "Parameter c must be in range [%s, %s]. c = %s"%(a, b, c))
+
     def pdf(self, x):
         a, b, c = self.a, self.b, self.c
         return Piecewise(
@@ -2743,7 +3180,7 @@ class TriangularDistribution(SingleContinuousDistribution):
 
     def _moment_generating_function(self, t):
         a, b, c = self.a, self.b, self.c
-        return 2 * ((b - c) * exp(a * t) - (b - a) * exp(c * t) + (c + a) * exp(b * t)) / (
+        return 2 * ((b - c) * exp(a * t) - (b - a) * exp(c * t) + (c - a) * exp(b * t)) / (
         (b - a) * (c - a) * (b - c) * t ** 2)
 
 
@@ -2818,6 +3255,14 @@ def Triangular(name, a, b, c):
 
 class UniformDistribution(SingleContinuousDistribution):
     _argnames = ('left', 'right')
+
+    @property
+    def set(self):
+        return Interval(self.left, self.right)
+
+    @staticmethod
+    def check(left, right):
+        _value_check(left < right, "Lower limit should be less than Upper limit.")
 
     def pdf(self, x):
         left, right = self.left, self.right
@@ -2925,6 +3370,11 @@ class UniformSumDistribution(SingleContinuousDistribution):
     @property
     def set(self):
         return Interval(0, self.n)
+
+    @staticmethod
+    def check(n):
+        _value_check((n > 0, n.is_integer),
+        "Parameter n must be positive integer.")
 
     def pdf(self, x):
         n = self.n
@@ -3170,6 +3620,10 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
     @property
     def set(self):
         return Interval(-self.R, self.R)
+
+    @staticmethod
+    def check(R):
+        _value_check(R > 0, "Radius R must be positive.")
 
     def pdf(self, x):
         R = self.R

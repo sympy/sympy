@@ -1,9 +1,10 @@
-from sympy import Symbol, symbols, S, simplify, Interval
+from sympy import Symbol, symbols, S, simplify, Interval, pi
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log
 from sympy.utilities.pytest import raises, slow
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
+from sympy.geometry import Circle, Polygon, Point2D, Triangle
 
 x = Symbol('x')
 y = Symbol('y')
@@ -501,19 +502,17 @@ def test_Beam3D():
     b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     b.solve_slope_deflection()
 
+    assert b.polar_moment() == 2*I
     assert b.shear_force() == [0, -q*x, 0]
     assert b.bending_moment() == [0, 0, -m*x + q*x**2/2]
-    expected_deflection = (-l**2*q*x**2/(12*E*I) + l**2*x**2*(A*G*l*(l*q - 2*m)
-            + 12*E*I*q)/(8*E*I*(A*G*l**2 + 12*E*I)) + l*m*x**2/(4*E*I)
-            - l*x**3*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(12*E*I*(A*G*l**2 + 12*E*I))
-            - m*x**3/(6*E*I) + q*x**4/(24*E*I)
-            + l*x*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(2*A*G*(A*G*l**2 + 12*E*I))
-            - q*x**2/(2*A*G)
-            )
+    expected_deflection = (x*(A*G*q*x**3/4 + A*G*x**2*(-l*(A*G*l*(l*q - 2*m) +
+        12*E*I*q)/(A*G*l**2 + 12*E*I)/2 - m) + 3*E*I*l*(A*G*l*(l*q - 2*m) +
+        12*E*I*q)/(A*G*l**2 + 12*E*I) + x*(-A*G*l**2*q/2 +
+        3*A*G*l**2*(A*G*l*(l*q - 2*m) + 12*E*I*q)/(A*G*l**2 + 12*E*I)/4 +
+        3*A*G*l*m/2 - 3*E*I*q))/(6*A*E*G*I))
     dx, dy, dz = b.deflection()
     assert dx == dz == 0
-    assert simplify(dy - expected_deflection) == 0  # == doesn't work
-
+    assert dy == expected_deflection
 
     b2 = Beam3D(30, E, G, I, A, x)
     b2.apply_load(50, start=0, order=0, dir="y")
@@ -524,12 +523,12 @@ def test_Beam3D():
     assert b2.reaction_loads == {R1: -750, R2: -750}
 
     b2.solve_slope_deflection()
-    assert b2.slope() == [0, 0, 25*x**3/(3*E*I) - 375*x**2/(E*I) + 3750*x/(E*I)]
-    expected_deflection = (25*x**4/(12*E*I) - 125*x**3/(E*I) + 1875*x**2/(E*I)
-                        - 25*x**2/(A*G) + 750*x/(A*G))
+    assert b2.slope() == [0, 0, x**2*(50*x - 2250)/(6*E*I) + 3750*x/(E*I)]
+    expected_deflection = (x*(25*A*G*x**3/2 - 750*A*G*x**2 + 4500*E*I +
+        15*x*(750*A*G - 10*E*I))/(6*A*E*G*I))
     dx, dy, dz = b2.deflection()
     assert dx == dz == 0
-    assert simplify(dy - expected_deflection) == 0  # == doesn't work
+    assert dy == expected_deflection
 
     # Test for solve_for_reaction_loads
     b3 = Beam3D(30, E, G, I, A, x)
@@ -541,6 +540,14 @@ def test_Beam3D():
     b3.apply_load(R4, start=30, order=-1, dir="z")
     b3.solve_for_reaction_loads(R1, R2, R3, R4)
     assert b3.reaction_loads == {R1: -120, R2: -120, R3: -1350, R4: -2700}
+
+
+def test_polar_moment_Beam3D():
+    l, E, G, A, I1, I2 = symbols('l, E, G, A, I1, I2')
+    I = [I1, I2]
+
+    b = Beam3D(l, E, G, I, A)
+    assert b.polar_moment() == I1 + I2
 
 
 def test_parabolic_loads():
@@ -601,3 +608,69 @@ def test_parabolic_loads():
     loading = beam.load.xreplace({L: 10, E: 20, I: 30, P: 40})
     assert loading.xreplace({x: 5}) == 40 * 5**8
     assert loading.xreplace({x: 15}) == 0
+
+
+def test_cross_section():
+    I = Symbol('I')
+    l = Symbol('l')
+    E = Symbol('E')
+    C3, C4 = symbols('C3, C4')
+    a, c, g, h, r, n = symbols('a, c, g, h, r, n')
+
+    # test for second_moment and cross_section setter
+    b0 = Beam(l, E, I)
+    assert b0.second_moment == I
+    assert b0.cross_section == None
+    b0.cross_section = Circle((0, 0), 5)
+    assert b0.second_moment == 625*pi/4
+    assert b0.cross_section == Circle((0, 0), 5)
+    b0.second_moment = 2*n - 6
+    assert b0.second_moment == 2*n-6
+    assert b0.cross_section == None
+    with raises(ValueError):
+        b0.second_moment = Circle((0, 0), 5)
+
+    # beam with a circular cross-section
+    b1 = Beam(50, E, Circle((0, 0), r))
+    assert b1.cross_section == Circle((0, 0), r)
+    assert b1.second_moment == pi*r*Abs(r)**3/4
+
+    b1.apply_load(-10, 0, -1)
+    b1.apply_load(R1, 5, -1)
+    b1.apply_load(R2, 50, -1)
+    b1.apply_load(90, 45, -2)
+    b1.solve_for_reaction_loads(R1, R2)
+    assert b1.load == (-10*SingularityFunction(x, 0, -1) + 82*SingularityFunction(x, 5, -1)/S(9)
+                         + 90*SingularityFunction(x, 45, -2) + 8*SingularityFunction(x, 50, -1)/9)
+    assert b1.bending_moment() == (-10*SingularityFunction(x, 0, 1) + 82*SingularityFunction(x, 5, 1)/9
+                                     + 90*SingularityFunction(x, 45, 0) + 8*SingularityFunction(x, 50, 1)/9)
+    q = (-5*SingularityFunction(x, 0, 2) + 41*SingularityFunction(x, 5, 2)/S(9)
+           + 90*SingularityFunction(x, 45, 1) + 4*SingularityFunction(x, 50, 2)/S(9))/(pi*E*r*Abs(r)**3)
+    assert b1.slope() == C3 + 4*q
+    q = (-5*SingularityFunction(x, 0, 3)/3 + 41*SingularityFunction(x, 5, 3)/27 + 45*SingularityFunction(x, 45, 2)
+           + 4*SingularityFunction(x, 50, 3)/27)/(pi*E*r*Abs(r)**3)
+    assert b1.deflection() == C3*x + C4 + 4*q
+
+    # beam with a recatangular cross-section
+    b2 = Beam(20, E, Polygon((0, 0), (a, 0), (a, c), (0, c)))
+    assert b2.cross_section == Polygon((0, 0), (a, 0), (a, c), (0, c))
+    assert b2.second_moment == a*c**3/12
+    # beam with a triangular cross-section
+    b3 = Beam(15, E, Triangle((0, 0), (g, 0), (g/2, h)))
+    assert b3.cross_section == Triangle(Point2D(0, 0), Point2D(g, 0), Point2D(g/2, h))
+    assert b3.second_moment == g*h**3/36
+
+    # composite beam
+    b = b2.join(b3, "fixed")
+    b.apply_load(-30, 0, -1)
+    b.apply_load(65, 0, -2)
+    b.apply_load(40, 0, -1)
+    b.bc_slope = [(0, 0)]
+    b.bc_deflection = [(0, 0)]
+
+    assert b.second_moment == Piecewise((a*c**3/12, x <= 20), (g*h**3/36, x <= 35))
+    assert b.cross_section == None
+    assert b.length == 35
+    assert b.slope().subs(x, 7) == 8400/(E*a*c**3)
+    assert b.slope().subs(x, 25) == 52200/(E*g*h**3) + 39600/(E*a*c**3)
+    assert b.deflection().subs(x, 30) == 537000/(E*g*h**3) + 712000/(E*a*c**3)
