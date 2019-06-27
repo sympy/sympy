@@ -1095,6 +1095,35 @@ class _Inequality(Relational):
         # make a "non-evaluated" Expr for the inequality
         return Relational.__new__(cls, lhs, rhs, **options)
 
+    def _add_sides(self, other):
+        """Internal routine for add_sides in inequalities"""
+
+        if not getattr(other, 'is_Relational', None):
+            return self.func(self.lhs + other, self.rhs + other)
+        elif isinstance(other, Eq):
+            return self.func(self.lhs + other.lhs, self.rhs + other.rhs)
+
+        elif isinstance(other, (Ge, Gt, Le, Lt)):
+            if isinstance(self, (Ge, Gt)) and isinstance(other, (Ge, Gt)) or \
+                isinstance(self, (Le, Lt)) and isinstance(other, (Le, Lt)):
+                args = [self.lhs + other.lhs, self.rhs + other.rhs]
+            else:
+                args = [self.lhs + other.rhs, self.rhs + other.lhs]
+
+            if isinstance(other, (Gt, Lt)):
+                if isinstance(self, Ge):
+                    func = Gt
+                elif isinstance(self, Le):
+                    func = Lt
+                else:
+                    func = self.func
+            else:
+                func = self.func
+
+            return func(*args)
+
+        raise NotImplementedError()
+
 
 class _Greater(_Inequality):
     """Not intended for general use
@@ -1407,19 +1436,7 @@ class GreaterThan(_Greater):
         >>> rel.add_sides(Lt(c, d))
         a + d > b + c
         """
-        if not getattr(arg, 'is_Relational', None):
-            return Ge(self.lhs + arg, self.rhs + arg)
-        elif isinstance(arg, Eq):
-            return Ge(self.lhs + arg.lhs, self.rhs + arg.rhs)
-        elif isinstance(arg, Ge):
-            return Ge(self.lhs + arg.lhs, self.rhs + arg.rhs)
-        elif isinstance(arg, Gt):
-            return Gt(self.lhs + arg.lhs, self.rhs + arg.rhs)
-        elif isinstance(arg, Le):
-            return Ge(self.lhs + arg.rhs, self.rhs + arg.lhs)
-        elif isinstance(arg, Lt):
-            return Gt(self.lhs + arg.rhs, self.rhs + arg.lhs)
-        raise NotImplementedError()
+        return self._add_sides(arg)
 
     def subtract_sides(self, arg):
         """Subtract sides
@@ -1731,19 +1748,7 @@ class LessThan(_Less):
         >>> rel.add_sides(Lt(c, d))
         a + c < b + d
         """
-        if not getattr(arg, 'is_Relational', None):
-            return Le(self.lhs + arg, self.rhs + arg)
-        elif isinstance(arg, Eq):
-            return Le(self.lhs + arg.lhs, self.rhs + arg.rhs)
-        elif isinstance(arg, Ge):
-            return Le(self.lhs + arg.rhs, self.rhs + arg.lhs)
-        elif isinstance(arg, Gt):
-            return Lt(self.lhs + arg.rhs, self.rhs + arg.lhs)
-        elif isinstance(arg, Le):
-            return Le(self.lhs + arg.lhs, self.rhs + arg.rhs)
-        elif isinstance(arg, Lt):
-            return Lt(self.lhs + arg.lhs, self.rhs + arg.rhs)
-        raise NotImplementedError()
+        return self._add_sides(arg)
 
     def subtract_sides(self, arg):
         """Subtract sides
@@ -2014,6 +2019,49 @@ class StrictGreaterThan(_Greater):
         # We don't use the op symbol here: workaround issue #7951
         return _sympify(lhs.__gt__(rhs))
 
+    def add_sides(self, arg):
+        """Add sides
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Gt(a, b)
+
+        Adding a constant to both sides:
+
+        >>> rel.add_sides(c)
+        a + c > b + c
+
+        Adding an equality to both sides:
+
+        >>> rel.add_sides(Eq(c, d))
+        a + c > b + d
+
+        Adding inequalities to both sides:
+
+        >>> rel.add_sides(Ge(c, d))
+        a + c > b + d
+
+        >>> rel.add_sides(Le(c, d))
+        a + d > b + c
+
+        >>> rel.add_sides(Gt(c, d))
+        a + c > b + d
+
+        >>> rel.add_sides(Lt(c, d))
+        a + d > b + c
+        """
+        return self._add_sides(arg)
+
 
 Gt = StrictGreaterThan
 
@@ -2028,6 +2076,49 @@ class StrictLessThan(_Less):
     def _eval_relation(cls, lhs, rhs):
         # We don't use the op symbol here: workaround issue #7951
         return _sympify(lhs.__lt__(rhs))
+
+    def add_sides(self, arg):
+        """Add sides
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Lt(a, b)
+
+        Adding a constant to both sides:
+
+        >>> rel.add_sides(c)
+        a + c < b + c
+
+        Adding an equality to both sides:
+
+        >>> rel.add_sides(Eq(c, d))
+        a + c < b + d
+
+        Adding inequalities to both sides:
+
+        >>> rel.add_sides(Ge(c, d))
+        a + d < b + c
+
+        >>> rel.add_sides(Le(c, d))
+        a + c < b + d
+
+        >>> rel.add_sides(Gt(c, d))
+        a + d < b + c
+
+        >>> rel.add_sides(Lt(c, d))
+        a + c < b + d
+        """
+        return self._add_sides(arg)
 
 
 Lt = StrictLessThan
