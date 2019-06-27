@@ -53,11 +53,13 @@ def test_piecewise1():
         ) == Piecewise((1, x > 0), (2, x > -1))
 
     # test for supporting Contains in Piecewise
-    assert Piecewise(
-        (S(1), And(Le(x, 6), Ge(x, 1), S.Integers.contains(x))),
-        (S(0), True)) == Piecewise(
-                        (1, Contains(x, S.Integers) & (x >= 1) & (x <= 6)),
-                        (0, True))
+    pargs = ((S(1), And(Le(x, 6), Ge(x, 1), Contains(x, S.Integers))),
+        (S(0), True))
+    pwise = Piecewise(*pargs)
+    assert pwise # checks whether the object has been created successfully
+    assert pwise.subs(x, S(3)/2) == S(0)
+    assert pwise.subs(x, 2) == S(1)
+    assert pwise.subs(x, 7) == S(0)
 
     # Test subs
     p = Piecewise((-1, x < -1), (x**2, x < 0), (log(x), x >= 0))

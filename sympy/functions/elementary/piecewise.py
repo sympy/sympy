@@ -190,8 +190,7 @@ class Piecewise(Function):
                     _c = c
                     x = free.pop()
                     try:
-                        if not c.has(Contains):
-                            c = c.as_set().as_relational(x)
+                        c = c.as_set().as_relational(x)
                     except NotImplementedError:
                         pass
                     else:
