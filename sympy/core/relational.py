@@ -1153,6 +1153,68 @@ class _Inequality(Relational):
 
         raise NotImplementedError()
 
+    def _multiply_sides(self, other):
+        from sympy.functions.elementary.piecewise import Piecewise
+
+        if not getattr(other, 'is_Relational', None):
+            expr1 = self.func(self.lhs * other, self.rhs * other)
+            cond1 = Gt(other, 0)
+            expr2 = self.func(self.rhs * other, self.lhs * other)
+            cond2 = Lt(other, 0)
+            return Piecewise([expr1, cond1], [expr2, cond2], [self, True])
+
+        elif isinstance(other, Eq):
+            expr1 = self.func(self.lhs * other.lhs, self.rhs * other.rhs)
+            cond1 = Gt(other.lhs, 0)
+            expr2 = self.func(self.rhs * other.rhs, self.lhs * other.lhs)
+            cond2 = Lt(other.lhs, 0)
+            default = Eq(self.lhs * other.lhs, self.rhs * other.rhs)
+            return Piecewise([expr1, cond1], [expr2, cond2], [self, True])
+
+        elif self.lhs.is_positive and self.rhs.is_positive and \
+            other.lhs.is_positive and other.rhs.is_positive:
+
+            if isinstance(self, (Ge, Gt)) and isinstance(other, (Ge, Gt)) or \
+                isinstance(self, (Le, Lt)) and isinstance(other, (Le, Lt)):
+                args = [self.lhs * other.lhs, self.rhs * other.rhs]
+            else:
+                args = [self.lhs * other.rhs, self.rhs * other.lhs]
+
+            if isinstance(other, (Gt, Lt)):
+                if isinstance(self, Ge):
+                    func = Gt
+                elif isinstance(self, Le):
+                    func = Lt
+                else:
+                    func = self.func
+            else:
+                func = self.func
+
+            return func(*args)
+
+        elif self.lhs.is_negative and self.rhs.is_negative and \
+            other.lhs.is_negative and other.rhs.is_negative:
+
+            if isinstance(self, (Ge, Gt)) and isinstance(other, (Ge, Gt)) or \
+                isinstance(self, (Le, Lt)) and isinstance(other, (Le, Lt)):
+                args = [self.rhs * other.rhs, self.lhs * other.lhs]
+            else:
+                args = [self.rhs * other.lhs, self.lhs * other.rhs]
+
+            if isinstance(other, (Gt, Lt)):
+                if isinstance(self, Ge):
+                    func = Gt
+                elif isinstance(self, Le):
+                    func = Lt
+                else:
+                    func = self.func
+            else:
+                func = self.func
+
+            return func(*args)
+
+        raise NotImplementedError()
+
 
 class _Greater(_Inequality):
     """Not intended for general use
@@ -1558,57 +1620,18 @@ class GreaterThan(_Greater):
         >>> rel = Ge(a, b)
 
         >>> rel.multiply_sides(Ge(c, d))
-        a*c <= b*d
+        b*d >= a*c
 
         >>> rel.multiply_sides(Le(c, d))
-        a*d <= b*c
+        b*c >= a*d
 
         >>> rel.multiply_sides(Gt(c, d))
-        a*c < b*d
+        b*d > a*c
 
         >>> rel.multiply_sides(Lt(c, d))
-        a*d < b*c
+        b*c > a*d
         """
-        from sympy.functions.elementary.piecewise import Piecewise
-
-        if not getattr(arg, 'is_Relational', None):
-            expr1 = Ge(self.lhs * arg, self.rhs * arg)
-            cond1 = Gt(arg, 0)
-            expr2 = Ge(self.rhs * arg, self.lhs * arg)
-            cond2 = Lt(arg, 0)
-            return Piecewise([expr1, cond1], [expr2, cond2], [self, True])
-
-        elif isinstance(arg, Eq):
-            expr1 = Ge(self.lhs * arg.lhs, self.rhs * arg.rhs)
-            cond1 = Gt(arg.lhs, 0)
-            expr2 = Ge(self.rhs * arg.rhs, self.lhs * arg.lhs)
-            cond2 = Lt(arg.lhs, 0)
-            default = Eq(self.lhs * arg.lhs, self.rhs * arg.rhs)
-            return Piecewise([expr1, cond1], [expr2, cond2], [self, True])
-
-        elif self.lhs.is_positive and self.rhs.is_positive and \
-            arg.lhs.is_positive and arg.rhs.is_positive:
-            if isinstance(arg, Ge):
-                return Ge(self.lhs * arg.lhs, self.rhs * arg.rhs)
-            elif isinstance(arg, Gt):
-                return Gt(self.lhs * arg.lhs, self.rhs * arg.rhs)
-            elif isinstance(arg, Le):
-                return Ge(self.lhs * arg.rhs, self.rhs * arg.lhs)
-            elif isinstance(arg, Lt):
-                return Gt(self.lhs * arg.rhs, self.rhs * arg.lhs)
-
-        elif self.lhs.is_negative and self.rhs.is_negative and \
-            arg.lhs.is_negative and arg.rhs.is_negative:
-            if isinstance(arg, Ge):
-                return Le(self.lhs * arg.lhs, self.rhs * arg.rhs)
-            elif isinstance(arg, Gt):
-                return Lt(self.lhs * arg.lhs, self.rhs * arg.rhs)
-            elif isinstance(arg, Le):
-                return Le(self.lhs * arg.rhs, self.rhs * arg.lhs)
-            elif isinstance(arg, Lt):
-                return Lt(self.lhs * arg.rhs, self.rhs * arg.lhs)
-
-        raise NotImplementedError()
+        return self._multiply_sides(arg)
 
     def divide_sides(self, arg):
         """Divide sides
@@ -1858,57 +1881,18 @@ class LessThan(_Less):
         >>> rel = Le(a, b)
 
         >>> rel.multiply_sides(Ge(c, d))
-        a*d >= b*c
+        b*c <= a*d
 
         >>> rel.multiply_sides(Le(c, d))
-        a*c >= b*d
+        b*d <= a*c
 
         >>> rel.multiply_sides(Gt(c, d))
-        a*d > b*c
+        b*c < a*d
 
         >>> rel.multiply_sides(Lt(c, d))
-        a*c > b*d
+        b*d < a*c
         """
-        from sympy.functions.elementary.piecewise import Piecewise
-
-        if not getattr(arg, 'is_Relational', None):
-            expr1 = Le(self.lhs * arg, self.rhs * arg)
-            cond1 = Gt(arg, 0)
-            expr2 = Le(self.rhs * arg, self.lhs * arg)
-            cond2 = Lt(arg, 0)
-            return Piecewise([expr1, cond1], [expr2, cond2], [self, True])
-
-        elif isinstance(arg, Eq):
-            expr1 = Le(self.lhs * arg.lhs, self.rhs * arg.rhs)
-            cond1 = Gt(arg.lhs, 0)
-            expr2 = Le(self.rhs * arg.rhs, self.lhs * arg.lhs)
-            cond2 = Lt(arg.lhs, 0)
-            default = Eq(self.lhs * arg.lhs, self.rhs * arg.rhs)
-            return Piecewise([expr1, cond1], [expr2, cond2], [self, True])
-
-        elif self.lhs.is_positive and self.rhs.is_positive and \
-            arg.lhs.is_positive and arg.rhs.is_positive:
-            if isinstance(arg, Ge):
-                return Le(self.lhs * arg.rhs, self.rhs * arg.lhs)
-            elif isinstance(arg, Gt):
-                return Lt(self.lhs * arg.rhs, self.rhs * arg.lhs)
-            elif isinstance(arg, Le):
-                return Le(self.lhs * arg.lhs, self.rhs * arg.rhs)
-            elif isinstance(arg, Lt):
-                return Lt(self.lhs * arg.lhs, self.rhs * arg.rhs)
-
-        elif self.lhs.is_negative and self.rhs.is_negative and \
-            arg.lhs.is_negative and arg.rhs.is_negative:
-            if isinstance(arg, Ge):
-                return Ge(self.lhs * arg.rhs, self.rhs * arg.lhs)
-            elif isinstance(arg, Gt):
-                return Gt(self.lhs * arg.rhs, self.rhs * arg.lhs)
-            elif isinstance(arg, Le):
-                return Ge(self.lhs * arg.lhs, self.rhs * arg.rhs)
-            elif isinstance(arg, Lt):
-                return Gt(self.lhs * arg.lhs, self.rhs * arg.rhs)
-
-        raise NotImplementedError()
+        return self._multiply_sides(arg)
 
     def divide_sides(self, arg):
         """Divide sides
@@ -2110,6 +2094,67 @@ class StrictGreaterThan(_Greater):
         """
         return self._subtract_sides(arg)
 
+    def multiply_sides(self, arg):
+        """Subtract sides
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Gt(a, b)
+
+        Multiplying a constant to both sides:
+
+        >>> rel.multiply_sides(c)
+        Piecewise((a*c > b*c, c > 0), (b*c > a*c, c < 0), (a > b, True))
+
+        Multiplying an equality to both sides:
+
+        >>> rel.multiply_sides(Eq(c, d))
+        Piecewise((a*c > b*d, c > 0), (b*d > a*c, c < 0), (a > b, True))
+
+        Multiplying inequalities to both sides:
+
+        >>> a, b, c, d = symbols('a b c d', positive=True)
+        >>> rel = Gt(a, b)
+
+        >>> rel.multiply_sides(Ge(c, d))
+        a*c > b*d
+
+        >>> rel.multiply_sides(Le(c, d))
+        a*d > b*c
+
+        >>> rel.multiply_sides(Gt(c, d))
+        a*c > b*d
+
+        >>> rel.multiply_sides(Lt(c, d))
+        a*d > b*c
+
+        >>> a, b, c, d = symbols('a b c d', negative=True)
+        >>> rel = Gt(a, b)
+
+        >>> rel.multiply_sides(Ge(c, d))
+        b*d > a*c
+
+        >>> rel.multiply_sides(Le(c, d))
+        b*c > a*d
+
+        >>> rel.multiply_sides(Gt(c, d))
+        b*d > a*c
+
+        >>> rel.multiply_sides(Lt(c, d))
+        b*c > a*d
+        """
+        return self._multiply_sides(arg)
+
 Gt = StrictGreaterThan
 
 
@@ -2209,6 +2254,67 @@ class StrictLessThan(_Less):
         a - d < b - c
         """
         return self._subtract_sides(arg)
+
+    def multiply_sides(self, arg):
+        """Multiply sides
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Lt(a, b)
+
+        Multiplying a constant to both sides:
+
+        >>> rel.multiply_sides(c)
+        Piecewise((a*c < b*c, c > 0), (b*c < a*c, c < 0), (a < b, True))
+
+        Multiplying an equality to both sides:
+
+        >>> rel.multiply_sides(Eq(c, d))
+        Piecewise((a*c < b*d, c > 0), (b*d < a*c, c < 0), (a < b, True))
+
+        Multiplying inequalities to both sides:
+
+        >>> a, b, c, d = symbols('a b c d', positive=True)
+        >>> rel = Lt(a, b)
+
+        >>> rel.multiply_sides(Ge(c, d))
+        a*d < b*c
+
+        >>> rel.multiply_sides(Le(c, d))
+        a*c < b*d
+
+        >>> rel.multiply_sides(Gt(c, d))
+        a*d < b*c
+
+        >>> rel.multiply_sides(Lt(c, d))
+        a*c < b*d
+
+        >>> a, b, c, d = symbols('a b c d', negative=True)
+        >>> rel = Lt(a, b)
+
+        >>> rel.multiply_sides(Ge(c, d))
+        b*c < a*d
+
+        >>> rel.multiply_sides(Le(c, d))
+        b*d < a*c
+
+        >>> rel.multiply_sides(Gt(c, d))
+        b*c < a*d
+
+        >>> rel.multiply_sides(Lt(c, d))
+        b*d < a*c
+        """
+        return self._multiply_sides(arg)
 
 
 Lt = StrictLessThan
