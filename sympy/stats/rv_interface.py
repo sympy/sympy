@@ -292,6 +292,7 @@ def kurtosis(X, condition=None, **kwargs):
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/Kurtosis
     .. [2] http://mathworld.wolfram.com/Kurtosis.html
     """
@@ -309,6 +310,7 @@ def factorial_moment(X, n, condition=None, **kwargs):
     ==========
 
     n: A natural number, n-th factorial moment.
+
     condition : Expr containing RandomSymbols
             A conditional expression.
 
@@ -316,22 +318,24 @@ def factorial_moment(X, n, condition=None, **kwargs):
     ========
 
     >>> from sympy.stats import factorial_moment, Poisson, Binomial
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, S
     >>> lamda = Symbol('lamda')
-    >>> X = Poisson('x', lamda)
+    >>> X = Poisson('X', lamda)
     >>> factorial_moment(X, 2)
     lamda**2
-    >>> X = Binomial('x', 2, 0.5)
-    >>> factorial_moment(X, 2)
-    0.5
+    >>> Y = Binomial('Y', 2, S.Half)
+    >>> factorial_moment(Y, 2)
+    1/2
+    >>> factorial_moment(Y, 2, Y > 1) # find factorial moment for Y > 1
+    2
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/Factorial_moment
     .. [2] http://mathworld.wolfram.com/FactorialMoment.html
     """
     return expectation(FallingFactorial(X, n), condition=condition, **kwargs)
-
 
 
 P = probability
