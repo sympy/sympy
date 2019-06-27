@@ -15,8 +15,65 @@ from heapq import heappush, heappop
 
 from sympy.core.compatibility import range
 from sympy import default_sort_key, ordered
-from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
+from sympy.logic.boolalg import (
+    And, Or, Not, conjuncts, to_cnf, _find_predicates)
 
+class EncodedCNF(object):
+    def __init__(self, data, encoding):
+        self.data = data
+        self.encoding = encoding
+
+    @classmethod
+    def from_cnf(cls, cnf):
+        symbols = set()
+        for clause in cnf.clauses:
+            symbols |= _find_predicates(clause)
+        symbols = sorted(symbols, key=default_sort_key)
+        encoding = SATEncoding(symbols)
+        data = [encoding.encode(clause) for clause in cnf.clauses]
+        return cls(data, encoding)
+
+    @property
+    def symbols(self):
+        return self.encoding.symbols
+
+    @property
+    def variables(self):
+        return range(1, len(self.symbols) + 1)
+
+    def copy(self):
+        new_data = [set(clause) for clause in self.data]
+        return type(self)(new_data, self.encoding)
+
+    def add_prop(self, prop):
+        clauses = [self.encoding.encode(clause) for clause in conjuncts(to_cnf(prop))]
+        self.data += clauses
+
+
+class SATEncoding(object):
+    def __init__(self, symbols):
+        self.symbols = symbols
+        n = len(self.symbols)
+        self.sym2num = dict(list(zip(self.symbols, list(range(1, n + 1)))))
+
+    def encode_arg(self, arg):
+        if arg.func is Not:
+            literal = arg.args[0]
+        else:
+            literal = arg
+        try:
+            value = self.sym2num[literal]
+        except KeyError:
+            n = len(self.symbols)
+            self.symbols.append(arg)
+            value = self.sym2num[arg] = n + 1
+        if arg.func is Not:
+            return -value
+        else:
+            return value
+
+    def encode(self, clause):
+        return {self.encode_arg(arg) for arg in Or.make_args(clause)}
 
 def dpll_satisfiable(expr, all_models=False):
     """
@@ -35,16 +92,17 @@ def dpll_satisfiable(expr, all_models=False):
     False
 
     """
+    from sympy.assumptions.satask import CNF
     clauses = conjuncts(to_cnf(expr))
     if False in clauses:
         if all_models:
             return (f for f in [False])
         return False
-    symbols = sorted(_find_predicates(expr), key=default_sort_key)
-    symbols_int_repr = range(1, len(symbols) + 1)
-    clauses_int_repr = to_int_repr(clauses, symbols)
+    kb = EncodedCNF.from_cnf(CNF(clauses))
+    return _satisfiable(kb, all_models=all_models)
 
-    solver = SATSolver(clauses_int_repr, symbols_int_repr, set(), symbols)
+def _satisfiable(kb, all_models=False):
+    solver = SATSolver._from_encoded(kb)
     models = solver._find_model()
 
     if all_models:
@@ -159,6 +217,10 @@ class SATSolver(object):
 
             for lit in self.clauses[i]:
                 self.occurrence_count[lit] += 1
+
+    @classmethod
+    def _from_encoded(cls, kb):
+        return cls(kb.data, kb.variables, set(), kb.symbols)
 
     def _find_model(self):
         """
