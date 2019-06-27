@@ -55,6 +55,12 @@ def deprecate_data():
     pass
 
 
+@deprecated(useinstead="TensorSymmetry constructor and methods", issue=17108,
+            deprecated_since_version="1.5")
+def deprecate_tensorsymmetry():
+    pass
+
+
 class _IndexStructure(CantSympify):
     """
     This class handles the indices (free and dummy ones). It contains the
@@ -1380,9 +1386,9 @@ class TensorSymmetry(Basic):
 
 
 def tensorsymmetry(*args):
-    # This method is obsolete, use TensorSymmetry.from_direct_product() instead
     """
-    Return a ``TensorSymmetry`` object.
+    Returns a ``TensorSymmetry`` object. This method is deprecated, use
+    TensorSymmetry.from_direct_product() or .riemann() instead.
 
     One can represent a tensor with any monoterm slot symmetry group
     using a BSGS.
@@ -1448,6 +1454,7 @@ def tensorsymmetry(*args):
                 raise NotImplementedError
         return bsgs
 
+    deprecate_tensorsymmetry()
     if not args:
         return TensorSymmetry(Tuple(), Tuple(Permutation(1)))
 
