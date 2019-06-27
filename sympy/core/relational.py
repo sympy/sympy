@@ -1124,6 +1124,35 @@ class _Inequality(Relational):
 
         raise NotImplementedError()
 
+    def _subtract_sides(self, other):
+        """Internal routine for subtract_sides in inequalities"""
+
+        if not getattr(other, 'is_Relational', None):
+            return self.func(self.lhs - other, self.rhs - other)
+        elif isinstance(other, Eq):
+            return self.func(self.lhs - other.lhs, self.rhs - other.rhs)
+
+        elif isinstance(other, (Ge, Gt, Le, Lt)):
+            if isinstance(self, (Ge, Gt)) and isinstance(other, (Ge, Gt)) or \
+                isinstance(self, (Le, Lt)) and isinstance(other, (Le, Lt)):
+                args = [self.lhs - other.rhs, self.rhs - other.lhs]
+            else:
+                args = [self.lhs - other.lhs, self.rhs - other.rhs]
+
+            if isinstance(other, (Gt, Lt)):
+                if isinstance(self, Ge):
+                    func = Gt
+                elif isinstance(self, Le):
+                    func = Lt
+                else:
+                    func = self.func
+            else:
+                func = self.func
+
+            return func(*args)
+
+        raise NotImplementedError()
+
 
 class _Greater(_Inequality):
     """Not intended for general use
@@ -1479,19 +1508,7 @@ class GreaterThan(_Greater):
         >>> rel.subtract_sides(Lt(c, d))
         a - c > b - d
         """
-        if not getattr(arg, 'is_Relational', None):
-            return Ge(self.lhs - arg, self.rhs - arg)
-        elif isinstance(arg, Eq):
-            return Ge(self.lhs - arg.lhs, self.rhs - arg.rhs)
-        elif isinstance(arg, Ge):
-            return Ge(self.lhs - arg.rhs, self.rhs - arg.lhs)
-        elif isinstance(arg, Gt):
-            return Gt(self.lhs - arg.rhs, self.rhs - arg.lhs)
-        elif isinstance(arg, Le):
-            return Ge(self.lhs - arg.lhs, self.rhs - arg.rhs)
-        elif isinstance(arg, Lt):
-            return Gt(self.lhs - arg.lhs, self.rhs - arg.rhs)
-        raise NotImplementedError()
+        return self._subtract_sides(arg)
 
     def multiply_sides(self, arg):
         """Subtract sides
@@ -1791,19 +1808,7 @@ class LessThan(_Less):
         >>> rel.subtract_sides(Lt(c, d))
         a - d < b - c
         """
-        if not getattr(arg, 'is_Relational', None):
-            return Le(self.lhs - arg, self.rhs - arg)
-        elif isinstance(arg, Eq):
-            return Le(self.lhs - arg.lhs, self.rhs - arg.rhs)
-        elif isinstance(arg, Ge):
-            return Le(self.lhs - arg.lhs, self.rhs - arg.rhs)
-        elif isinstance(arg, Gt):
-            return Lt(self.lhs - arg.lhs, self.rhs - arg.rhs)
-        elif isinstance(arg, Le):
-            return Le(self.lhs - arg.rhs, self.rhs - arg.lhs)
-        elif isinstance(arg, Lt):
-            return Lt(self.lhs - arg.rhs, self.rhs - arg.lhs)
-        raise NotImplementedError()
+        return self._subtract_sides(arg)
 
     def multiply_sides(self, arg):
         """Subtract sides
@@ -2062,6 +2067,48 @@ class StrictGreaterThan(_Greater):
         """
         return self._add_sides(arg)
 
+    def subtract_sides(self, arg):
+        """Subtract sides
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Gt(a, b)
+
+        Subtracting a constant to both sides:
+
+        >>> rel.subtract_sides(c)
+        a - c > b - c
+
+        Subtracting an equality to both sides:
+
+        >>> rel.subtract_sides(Eq(c, d))
+        a - c > b - d
+
+        Subtracting inequalities to both sides:
+
+        >>> rel.subtract_sides(Ge(c, d))
+        a - d > b - c
+
+        >>> rel.subtract_sides(Le(c, d))
+        a - c > b - d
+
+        >>> rel.subtract_sides(Gt(c, d))
+        a - d > b - c
+
+        >>> rel.subtract_sides(Lt(c, d))
+        a - c > b - d
+        """
+        return self._subtract_sides(arg)
 
 Gt = StrictGreaterThan
 
@@ -2119,6 +2166,49 @@ class StrictLessThan(_Less):
         a + c < b + d
         """
         return self._add_sides(arg)
+
+    def subtract_sides(self, arg):
+        """Subtract sides
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Lt(a, b)
+
+        Subtracting a constant to both sides:
+
+        >>> rel.subtract_sides(c)
+        a - c < b - c
+
+        Subtracting an equality to both sides:
+
+        >>> rel.subtract_sides(Eq(c, d))
+        a - c < b - d
+
+        Subtracting inequalities to both sides:
+
+        >>> rel.subtract_sides(Ge(c, d))
+        a - c < b - d
+
+        >>> rel.subtract_sides(Le(c, d))
+        a - d < b - c
+
+        >>> rel.subtract_sides(Gt(c, d))
+        a - c < b - d
+
+        >>> rel.subtract_sides(Lt(c, d))
+        a - d < b - c
+        """
+        return self._subtract_sides(arg)
 
 
 Lt = StrictLessThan
