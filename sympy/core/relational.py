@@ -1126,32 +1126,9 @@ class _Inequality(Relational):
 
     def _subtract_sides(self, other):
         """Internal routine for subtract_sides in inequalities"""
-
-        if not getattr(other, 'is_Relational', None):
-            return self.func(self.lhs - other, self.rhs - other)
-        elif isinstance(other, Eq):
-            return self.func(self.lhs - other.lhs, self.rhs - other.rhs)
-
-        elif isinstance(other, (Ge, Gt, Le, Lt)):
-            if isinstance(self, (Ge, Gt)) and isinstance(other, (Ge, Gt)) or \
-                isinstance(self, (Le, Lt)) and isinstance(other, (Le, Lt)):
-                args = [self.lhs - other.rhs, self.rhs - other.lhs]
-            else:
-                args = [self.lhs - other.lhs, self.rhs - other.rhs]
-
-            if isinstance(other, (Gt, Lt)):
-                if isinstance(self, Ge):
-                    func = Gt
-                elif isinstance(self, Le):
-                    func = Lt
-                else:
-                    func = self.func
-            else:
-                func = self.func
-
-            return func(*args)
-
-        raise NotImplementedError()
+        if isinstance(other, Relational):
+            return self.add_sides(other.reversedsign)
+        return self.add_sides(-other)
 
     def _multiply_sides(self, other):
         from sympy.functions.elementary.piecewise import Piecewise
