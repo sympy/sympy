@@ -31,7 +31,6 @@ oo = S.Infinity
 
 x, y, z = map(Symbol, 'xyz')
 
-@XFAIL
 def test_single_normal():
     mu = Symbol('mu', real=True)
     sigma = Symbol('sigma', positive=True)
