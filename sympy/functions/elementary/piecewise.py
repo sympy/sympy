@@ -6,6 +6,7 @@ from sympy.core.compatibility import range
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.relational import (Equality, Unequality, Relational,
     _canonical)
+from sympy.sets.contains import Contains
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
     true, false, Or, ITE, simplify_logic)
@@ -189,7 +190,8 @@ class Piecewise(Function):
                     _c = c
                     x = free.pop()
                     try:
-                        c = c.as_set().as_relational(x)
+                        if not c.has(Contains):
+                            c = c.as_set().as_relational(x)
                     except NotImplementedError:
                         pass
                     else:
