@@ -1900,6 +1900,105 @@ class LessThan(_Less):
 
         raise NotImplementedError()
 
+    def divide_sides(self, arg):
+        """Divide sides
+
+        Parameters
+        ==========
+
+        arg : Expr or Relational
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+
+        >>> a, b, c, d = symbols('a b c d')
+        >>> rel = Le(a, b)
+
+        Dividing a constant to both sides:
+
+        >>> rel.divide_sides(c)
+        Piecewise((a/c <= b/c, c > 0), (b/c <= a/c, c < 0), (a <= b, True))
+
+        Dividing an equality to both sides:
+
+        >>> rel.divide_sides(Eq(c, d))
+        Piecewise((a/c <= b/d, c > 0), (b/d <= a/c, c < 0), (a <= b, True))
+
+        Dividing inequalities to both sides:
+
+        >>> a, b, c, d = symbols('a b c d', positive=True)
+        >>> rel = Le(a, b)
+
+        >>> rel.divide_sides(Ge(c, d))
+        a/c <= b/d
+
+        >>> rel.divide_sides(Le(c, d))
+        a/d <= b/c
+
+        >>> rel.divide_sides(Gt(c, d))
+        a/c < b/d
+
+        >>> rel.divide_sides(Lt(c, d))
+        a/d < b/c
+
+        >>> a, b, c, d = symbols('a b c d', negative=True)
+        >>> rel = Le(a, b)
+
+        >>> rel.divide_sides(Ge(c, d))
+        a/c >= b/d
+
+        >>> rel.divide_sides(Le(c, d))
+        a/d >= b/c
+
+        >>> rel.divide_sides(Gt(c, d))
+        a/c > b/d
+
+        >>> rel.divide_sides(Lt(c, d))
+        a/d > b/c
+        """
+        from sympy.functions.elementary.piecewise import Piecewise
+
+        if not getattr(arg, 'is_Relational', None):
+            expr1 = Le(self.lhs / arg, self.rhs / arg)
+            cond1 = Gt(arg, 0)
+            expr2 = Le(self.rhs / arg, self.lhs / arg)
+            cond2 = Lt(arg, 0)
+            return Piecewise([expr1, cond1], [expr2, cond2], [self, True])
+
+        elif isinstance(arg, Eq):
+            expr1 = Le(self.lhs / arg.lhs, self.rhs / arg.rhs)
+            cond1 = Gt(arg.lhs, 0)
+            expr2 = Le(self.rhs / arg.rhs, self.lhs / arg.lhs)
+            cond2 = Lt(arg.lhs, 0)
+            return Piecewise([expr1, cond1], [expr2, cond2], [self, True])
+
+        elif self.lhs.is_positive and self.rhs.is_positive and \
+            arg.lhs.is_positive and arg.rhs.is_positive:
+            if isinstance(arg, Ge):
+                return Le(self.lhs / arg.lhs, self.rhs / arg.rhs)
+            elif isinstance(arg, Gt):
+                return Lt(self.lhs / arg.lhs, self.rhs / arg.rhs)
+            elif isinstance(arg, Le):
+                return Le(self.lhs / arg.rhs, self.rhs / arg.lhs)
+            elif isinstance(arg, Lt):
+                return Lt(self.lhs / arg.rhs, self.rhs / arg.lhs)
+
+        elif self.lhs.is_negative and self.rhs.is_negative and \
+            arg.lhs.is_negative and arg.rhs.is_negative:
+            if isinstance(arg, Ge):
+                return Ge(self.lhs / arg.lhs, self.rhs / arg.rhs)
+            elif isinstance(arg, Gt):
+                return Gt(self.lhs / arg.lhs, self.rhs / arg.rhs)
+            elif isinstance(arg, Le):
+                return Ge(self.lhs / arg.rhs, self.rhs / arg.lhs)
+            elif isinstance(arg, Lt):
+                return Gt(self.lhs / arg.rhs, self.rhs / arg.lhs)
+
+        raise NotImplementedError()
+
 
 Le = LessThan
 
