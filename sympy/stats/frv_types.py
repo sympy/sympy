@@ -49,7 +49,7 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
     def dict(self):
         return self.args[0]
 
-    def pdf(self, x):
+    def pmf(self, x):
         x = Symbol('x')
         return Lambda(x, Piecewise(*(
             [(v, Eq(k, x)) for k, v in self.dict.items()] + [(0, True)])))
@@ -97,7 +97,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
     def set(self):
         return set(self.args)
 
-    def pdf(self, x):
+    def pmf(self, x):
         if x in self.args:
             return self.p
         else:
@@ -161,7 +161,7 @@ class DieDistribution(SingleFiniteDistribution):
             return Intersection(S.Naturals0, Interval(0, self.sides))
         return set(map(Integer, list(range(1, self.sides + 1))))
 
-    def pdf(self, x):
+    def pmf(self, x):
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
@@ -216,7 +216,7 @@ class BernoulliDistribution(SingleFiniteDistribution):
     def set(self):
         return set([self.succ, self.fail])
 
-    def pdf(self, x):
+    def pmf(self, x):
         return Piecewise((self.p, x == self.succ), (1 - self.p, x == self.fail), (0, True))
 
 
@@ -315,7 +315,7 @@ class BinomialDistribution(SingleFiniteDistribution):
             return Intersection(S.Naturals0, Interval(0, self.n))
         return set(self.dict.keys())
 
-    def pdf(self, x):
+    def pmf(self, x):
         n, p = self.n, self.p
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
@@ -329,7 +329,7 @@ class BinomialDistribution(SingleFiniteDistribution):
     def dict(self):
         if self.is_symbolic:
             return Density(self)
-        return dict((k*self.succ + (self.n-k)*self.fail, self.pdf(k))
+        return dict((k*self.succ + (self.n-k)*self.fail, self.pmf(k))
                     for k in range(0, self.n + 1))
 
 def Binomial(name, n, p, succ=1, fail=0):
@@ -399,7 +399,7 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
             return Intersection(S.Naturals0, Interval(0, self.n))
         return set(map(Integer, list(range(0, self.n + 1))))
 
-    def pdf(self, k):
+    def pmf(self, k):
         n, a, b = self.n, self.alpha, self.beta
         return binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b)
 
@@ -453,7 +453,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
             return Intersection(S.Naturals0, Interval(self.low, self.high))
         return set([i for i in range(max(0, n + m - N), min(n, m) + 1)])
 
-    def pdf(self, k):
+    def pmf(self, k):
         N, m, n = self.N, self.m, self.n
         return S(binomial(m, k) * binomial(N - m, n - k))/binomial(N, n)
 
@@ -490,7 +490,7 @@ class RademacherDistribution(SingleFiniteDistribution):
         return set([-1, 1])
 
     @property
-    def pdf(self):
+    def pmf(self):
         k = Dummy('k')
         return Lambda(k, Piecewise((S.Half, Or(Eq(k, -1), Eq(k, 1))), (0, True)))
 

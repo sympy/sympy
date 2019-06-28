@@ -196,9 +196,9 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def dict(self):
         if self.is_symbolic:
             return Density(self)
-        return dict((k, self.pdf(k)) for k in self.set)
+        return dict((k, self.pmf(k)) for k in self.set)
 
-    def pdf(self, *args): # to be overrided by specific distribution
+    def pmf(self, *args): # to be overrided by specific distribution
         raise NotImplementedError()
 
     @property
@@ -212,7 +212,7 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     __getitem__ = property(lambda self: self.dict.__getitem__)
 
     def __call__(self, *args):
-        return self.pdf(*args)
+        return self.pmf(*args)
 
     def __contains__(self, other):
         return other in self.set
@@ -385,8 +385,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     def distribution(self):
         return self.args[1]
 
-    def pdf(self, expr):
-        return self.distribution.pdf(expr)
+    def pmf(self, expr):
+        return self.distribution.pmf(expr)
 
     @property
     @cacheit
@@ -428,7 +428,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
                      else expr
             k = Dummy('k', integer=True)
             return Lambda(k,
-            Piecewise((self.pdf(k), And(k >= self.args[1].low,
+            Piecewise((self.pmf(k), And(k >= self.args[1].low,
             k <= self.args[1].high, cond)), (0, True)))
         expr = rv_subs(expr, self.values)
         return FinitePSpace(self.domain, self.distribution).compute_density(expr)
@@ -449,7 +449,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
             expr = expr.subs(rv, k)
             cond = True if not isinstance(expr, (Relational, Logic)) \
                     else expr
-            func = self.pdf(k) * k if cond != True else self.pdf(k) * expr
+            func = self.pmf(k) * k if cond != True else self.pmf(k) * expr
             return Sum(Piecewise((func, cond), (0, True)),
                 (k, self.distribution.low, self.distribution.high)).doit()
         expr = rv_subs(expr, rvs)
@@ -457,7 +457,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
 
     def probability(self, condition):
         if self._is_symbolic:
-            return Probability(condition)
+            return self.compute_density(condition)
         condition = rv_subs(condition)
         return FinitePSpace(self.domain, self.distribution).probability(condition)
 

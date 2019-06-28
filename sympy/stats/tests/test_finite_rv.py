@@ -395,13 +395,13 @@ def test_density_call():
 def test_DieDistribution():
     from sympy.abc import x
     X = DieDistribution(6)
-    assert X.pdf(S(1)/2) == S.Zero
-    assert X.pdf(x).subs({x: 1}).doit() == S(1)/6
-    assert X.pdf(x).subs({x: 7}).doit() == 0
-    assert X.pdf(x).subs({x: -1}).doit() == 0
-    assert X.pdf(x).subs({x: S(1)/3}).doit() == 0
-    raises(ValueError, lambda: X.pdf(Matrix([0, 0])))
-    raises(ValueError, lambda: X.pdf(x**2 - 1))
+    assert X.pmf(S(1)/2) == S.Zero
+    assert X.pmf(x).subs({x: 1}).doit() == S(1)/6
+    assert X.pmf(x).subs({x: 7}).doit() == 0
+    assert X.pmf(x).subs({x: -1}).doit() == 0
+    assert X.pmf(x).subs({x: S(1)/3}).doit() == 0
+    raises(ValueError, lambda: X.pmf(Matrix([0, 0])))
+    raises(ValueError, lambda: X.pmf(x**2 - 1))
 
 def test_FinitePSpace():
     X = Die('X', 6)
