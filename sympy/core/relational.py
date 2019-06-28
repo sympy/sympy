@@ -566,20 +566,6 @@ class Equality(Relational):
         ==========
 
         arg : Expr or Relational
-            If ``arg`` is a constant, it will be added to both of the
-            sides
-
-            If `arg` is is a relational, the following rule will be
-            applied.
-
-            | arg | result |
-            |-----|--------|
-            | Eq  | Eq     |
-            | Ne  | Ne     |
-            | Ge  | Ge     |
-            | Le  | Le     |
-            | Gt  | Gt     |
-            | Lt  | Lt     |
 
         Examples
         ========
@@ -632,20 +618,6 @@ class Equality(Relational):
         ==========
 
         arg : Expr or Relational
-            If ``arg`` is a constant, it will be subtracted from both of
-            the sides
-
-            If `arg` is is a relational, the following rule will be
-            applied.
-
-            | arg | result |
-            |-----|--------|
-            | Eq  | Eq     |
-            | Ne  | Ne     |
-            | Ge  | Ge     |
-            | Le  | Le     |
-            | Gt  | Gt     |
-            | Lt  | Lt     |
 
         Examples
         ========
