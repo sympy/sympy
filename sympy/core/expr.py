@@ -3787,12 +3787,7 @@ def unchanged(func, *args):
     False
     """
     f = func(*args)
-    types = [type(arg) for arg in f.args]
-    try:
-        cargs = tuple([cast(a) for a, cast in zip(args, types)])
-    except:
-        cargs = tuple([cast(*a) for a, cast in zip(args, types)])
-    return f.func == func and f.args == cargs
+    return f.func == func and f.args == args
 
 
 class ExprBuilder(object):
