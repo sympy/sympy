@@ -166,12 +166,8 @@ class DieDistribution(SingleFiniteDistribution):
         if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
-        # cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
-        # return Piecewise(
-        # (S(1)/self.sides, cond),
-        # (S.Zero, True))
-        i = Dummy('i', integer=True)
-        return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides)).doit()
+        cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
+        return Piecewise((S(1)/self.sides, cond), (S.Zero, True))
 
 def Die(name, sides=6):
     """
@@ -321,8 +317,8 @@ class BinomialDistribution(SingleFiniteDistribution):
         if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
-        i = Dummy('i', integer=True)
-        return Sum(KroneckerDelta(x, i)*binomial(n, x) * p**x * (1 - p)**(n - x), (i, 0, n)).doit()
+        cond = Ge(x, 0) & Le(x, n) & Contains(x, S.Integers)
+        return Piecewise((binomial(n, x) * p**x * (1 - p)**(n - x), cond), (S.Zero, True))
 
     @property
     @cacheit
@@ -402,7 +398,6 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
     def pmf(self, k):
         n, a, b = self.n, self.alpha, self.beta
         return binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b)
-
 
 def BetaBinomial(name, n, alpha, beta):
     """
