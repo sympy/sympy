@@ -3778,6 +3778,7 @@ def unchanged(func, *args):
 
     >>> from sympy import Piecewise, cos, pi
     >>> from sympy.core.expr import unchanged
+    >>> from sympy.abc import x
 
     >>> unchanged(cos, 1)  # instead of assert cos(1) == cos(1)
     True
