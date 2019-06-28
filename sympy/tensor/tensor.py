@@ -1531,9 +1531,9 @@ class TensorType(Basic):
         else:
             raise ValueError('expecting a string')
         if len(names) == 1:
-            return TensorHead(names[0], self, comm)
+            return TensorHead(names[0], self.index_types, self.symmetry, comm)
         else:
-            return [TensorHead(name, self, comm) for name in names]
+            return [TensorHead(name, self.index_types, self.symmetry, comm) for name in names]
 
 
 def tensorhead(name, typ, sym=None, comm=0):
@@ -1557,9 +1557,7 @@ def tensorhead(name, typ, sym=None, comm=0):
     if sym is None:
         sym = [[1] for i in range(len(typ))]
     sym = tensorsymmetry(*sym)
-    S = TensorType(typ, sym)
-    th = S(name, comm)
-    return th
+    return TensorHead(name, typ, sym, comm)
 
 
 class TensorHead(Basic):
