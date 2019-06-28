@@ -3,7 +3,7 @@ from sympy import (
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
-    DiracDelta, Heaviside, Add, Mul, factorial, Ge)
+    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains, Le)
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
@@ -51,6 +51,14 @@ def test_piecewise1():
 
     assert Piecewise((1, x > 0), (2, And(x <= 0, x > -1))
         ) == Piecewise((1, x > 0), (2, x > -1))
+
+    # test for supporting Contains in Piecewise
+    pwise = Piecewise(
+        (1, And(x <= 6, x > 1, Contains(x, S.Integers))),
+        (0, True))
+    assert pwise.subs(x, pi) == 0
+    assert pwise.subs(x, 2) == 1
+    assert pwise.subs(x, 7) == 0
 
     # Test subs
     p = Piecewise((-1, x < -1), (x**2, x < 0), (log(x), x >= 0))
