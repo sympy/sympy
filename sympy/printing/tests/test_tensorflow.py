@@ -25,7 +25,7 @@ if tf is not None:
     llo = [[j for j in range(i, i+3)] for i in range(0, 9, 3)]
     m3x3 = tf.constant(llo)
     m3x3sympy = Matrix(llo)
-    session = tf.Session()
+    session = tf.compat.v1.Session()
 
 
 def _compare_tensorflow_matrix(variables, expr):
