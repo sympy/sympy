@@ -1,4 +1,4 @@
-from sympy.combinatorics.pc_groups import PolycyclicGroup, Collector, collected_word
+from sympy.combinatorics.pc_groups import PolycyclicGroup, Collector
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.free_groups import free_group
 
@@ -14,7 +14,8 @@ def test_collected_word():
 
     word = x3*x2*x1*x0
     relative_order = {x0: 2, x1: 3, x2: 2, x3: 2}
-    collected_word_ = collected_word(pc_relators, word, relative_order)
+    collector = Collector(pc_relators, relative_order)
+    collected_word_ = collector.collected_word(word)
 
     assert collected_word_ == x0*x1**2*x2*x3
 
