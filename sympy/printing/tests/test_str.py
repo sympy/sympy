@@ -813,10 +813,8 @@ def test_Subs_printing():
 
 
 def test_issue_15716():
-    x = Symbol('x')
-    e = -3**x*exp(-3)*log(3**x*exp(-3)/factorial(x))/factorial(x)
-    assert str(Integral(e, (x, -oo, oo)).doit()) ==  '-(Integral(-3*3**x/factorial(x), (x, -oo, oo))' \
-    ' + Integral(3**x*log(3**x/factorial(x))/factorial(x), (x, -oo, oo)))*exp(-3)'
+    e = Integral(factorial(x), (x, -oo, oo))
+    assert e.as_terms() == ([(e, ((1.0, 0.0), (1,), ()))], [e])
 
 
 def test_str_special_matrices():

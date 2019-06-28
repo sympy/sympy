@@ -806,3 +806,9 @@ def test_issue_15965():
     assert simplify(A + B) == anew + bnew
     assert simplify(A) == anew
     assert simplify(B) == bnew
+
+
+def test_issue_7971():
+    z = Integral(x, (x, 1, 1))
+    assert z != 0
+    assert simplify(z) is S.Zero

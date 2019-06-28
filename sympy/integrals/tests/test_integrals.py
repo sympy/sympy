@@ -1128,8 +1128,7 @@ def test_atom_bug():
 def test_limit_bug():
     z = Symbol('z', zero=False)
     assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
-        (log(z**2) + 2*EulerGamma + 2*log(pi))/(2*z) - \
-        (-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z + log(pi)/z
+        (log(z) + EulerGamma + log(pi))/z - Ci(pi**2*z)/z + log(pi)/z
 
 
 def test_issue_4703():
@@ -1208,9 +1207,10 @@ def test_issue_4326():
     R, b, h = symbols('R b h')
     # It doesn't matter if we can do the integral.  Just make sure the result
     # doesn't contain nan.  This is really a test against _eval_interval.
-    assert not integrate(((h*(x - R + b))/b)*sqrt(R**2 - x**2), (x, R - b, R)).has(nan)
+    e = integrate(((h*(x - R + b))/b)*sqrt(R**2 - x**2), (x, R - b, R))
+    assert not e.has(nan)
     # See that it evaluates
-    assert not integrate(((h*(x - R + b))/b)*sqrt(R**2 - x**2), (x, R - b, R)).has(Integral)
+    assert not e.has(Integral)
 
 
 def test_powers():
