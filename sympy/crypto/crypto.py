@@ -1411,7 +1411,7 @@ def rsa_public_key(p, q, e):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/RSA_(cryptosystem)
+    .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
 
     """
     n = p*q
