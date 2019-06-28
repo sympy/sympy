@@ -11,7 +11,7 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBi
 from sympy.stats.rv import Density
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
                                     HypergeometricDistribution
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.stats.symbolic_probability import Expectation, Probability
 
 oo = S.Infinity
@@ -119,7 +119,6 @@ def test_dice():
     assert dens == Density(DieDistribution(n))
     assert set(dens.subs(n, 4).doit().keys()) == set([1, 2, 3, 4])
     assert set(dens.subs(n, 4).doit().values()) == set([S(1)/4])
-    assert P(D > 2) == Probability(D > 2)
     k = Dummy('k', integer=True)
     assert E(D).dummy_eq(
         Sum(Piecewise((k/n, (k >= 1) & (k <= n)), (0, True)), (k, 1, n)))
@@ -273,13 +272,13 @@ def test_binomial_symbolic():
     # test symbolic dimensions
     n = symbols('n')
     B = Binomial('B', n, p)
+    raises(NotImplementedError, lambda: P(B > 2))
     assert density(B).dict == Density(BinomialDistribution(n, p, 1, 0))
     assert set(density(B).dict.subs(n, 4).doit().keys()) == \
     set([S(0), S(1), S(2), S(3), S(4)])
     assert set(density(B).dict.subs(n, 4).doit().values()) == \
     set([(1 - p)**4, 4*p*(1 - p)**3, 6*p**2*(1 - p)**2, 4*p**3*(1 - p), p**4])
     k = Dummy('k', integer=True)
-    assert P(B > 2) == Probability(B > 2)
     assert E(B > 2).dummy_eq(
         Sum(Piecewise((k*p**k*(1 - p)**(-k + n)*binomial(n, k), (k >= 0)
         & (k <= n) & (k > 2)), (0, True)), (k, 0, n)))
@@ -338,14 +337,12 @@ def test_hypergeometric_symbolic():
     N, m, n = symbols('N, m, n')
     H = Hypergeometric('H', N, m, n)
     dens = density(H).dict
-    prob = P(H > 2)
     expec = E(H > 2)
     assert dens == Density(HypergeometricDistribution(N, m, n))
     assert dens.subs(N, 5).doit() == Density(HypergeometricDistribution(5, m, n))
     assert set(dens.subs({N: 3, m: 2, n: 1}).doit().keys()) == set([S(0), S(1)])
     assert set(dens.subs({N: 3, m: 2, n: 1}).doit().values()) == set([S(1)/3, S(2)/3])
     k = Dummy('k', integer=True)
-    assert prob == Probability(H > 2)
     assert expec.dummy_eq(
         Sum(Piecewise((k*binomial(m, k)*binomial(N - m, -k + n)
         /binomial(N, n), k > 2), (0, True)), (k, 0, n)))

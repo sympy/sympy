@@ -424,9 +424,10 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
 
     def compute_density(self, expr):
         if self._is_symbolic:
-            cond = True if not isinstance(expr, (Relational, Logic)) \
-                     else expr
+            rv = list(random_symbols(expr))[0]
             k = Dummy('k', integer=True)
+            cond = True if not isinstance(expr, (Relational, Logic)) \
+                     else expr.subs(rv, k)
             return Lambda(k,
             Piecewise((self.pmf(k), And(k >= self.args[1].low,
             k <= self.args[1].high, cond)), (0, True)))
@@ -457,7 +458,9 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
 
     def probability(self, condition):
         if self._is_symbolic:
-            return self.compute_density(condition)
+            #TODO: Implement the mechanism for handling queries for symbolic sized distributions.
+            raise NotImplementedError("Currently, probability queries are not "
+            "supported for random variables with symbolic sized distributions.")
         condition = rv_subs(condition)
         return FinitePSpace(self.domain, self.distribution).probability(condition)
 
@@ -469,7 +472,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
         symbolic dimensions is currently not possible.
         """
         if self._is_symbolic:
-            return self
+            self
         domain = self.where(condition)
         prob = self.probability(condition)
         density = dict((key, val / prob)
