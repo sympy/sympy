@@ -70,9 +70,10 @@ class Collector(DefaultPrinting):
            Section 8.1.3
     """
 
-    def __init__(self, pc_relators, relative_order):
+    def __init__(self, pc_relators, relative_order, group):
         self.pc_relators = pc_relators
         self.relative_order = relative_order
+        self.group = group
 
     def minimal_uncollected_subwords(self, word):
         """
@@ -87,13 +88,14 @@ class Collector(DefaultPrinting):
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
         >>> relative_order = {x1: 2, x2: 3}
-        >>> collector = Collector(pc_relators, relative_order)
         >>> word = x2**2*x1**7
+        >>> group = word.group
+        >>> collector = Collector(pc_relators, relative_order, group)
         >>> collector.minimal_uncollected_subwords(word)
         {((x1, 7),): 2, ((x2, 2), (x1, 1)): 0}
 
         """
-        group = word.group
+        group = self.group
         index = {s: i+1 for i, s in enumerate(group.symbols)}
         array = word.array_form
         re = self.relative_order
@@ -102,15 +104,16 @@ class Collector(DefaultPrinting):
         for i in range(len(array)-1):
             s1, e1 = array[i]
             s2, e2 = array[i+1]
-            if e2 > 0 and index[s1] > index[s2]:
-                # case-0:  v = x[i]**a*x[i+1], where index[x[i]] > index[x[i+1]]
-                uncollected_subwords[((s1, e1), (s2, 1))] = 0
-
-            elif e2 < 0 and index[s1] > index[s2]:
-                # case-1: v = x[i]**a*x[i+1]*-1, where index[x[i]] > index[x[i+1]]
-                uncollected_subwords[((s1, e1), (s2, -1))] = 1
             s = ((s1, 1), )
             s = group.dtype(s)
+            if e1 > 0 and e1 < re[s]:
+                if e2 > 0 and index[s1] > index[s2]:
+                    # case-0:  v = x[i]**a*x[i+1], where index[x[i]] > index[x[i+1]]
+                    uncollected_subwords[((s1, e1), (s2, 1))] = 0
+
+                elif e2 < 0 and index[s1] > index[s2]:
+                    # case-1: v = x[i]**a*x[i+1]*-1, where index[x[i]] > index[x[i+1]]
+                    uncollected_subwords[((s1, e1), (s2, -1))] = 1
             if e1 > re[s]-1:
                 # case-2: v = x[i]**a
                 uncollected_subwords[((s1, e1), )] = 2
@@ -137,7 +140,9 @@ class Collector(DefaultPrinting):
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
         >>> relative_order = {x1: 2, x2: 3}
-        >>> collector = Collector(pc_relators, relative_order)
+        >>> word = x2**2*x1**7
+        >>> group = word.group
+        >>> collector = Collector(pc_relators, relative_order, group)
         >>> power_rel, conj_rel = collector.relations()
         >>> power_rel
         {x1**2: 1}
@@ -166,8 +171,9 @@ class Collector(DefaultPrinting):
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
         >>> relative_order = {x1: 2, x2: 3}
-        >>> collector = Collector(pc_relators, relative_order)
         >>> word = x2**2*x1**7
+        >>> group = word.group
+        >>> collector = Collector(pc_relators, relative_order, group)
         >>> w = x2**2*x1
         >>> collector.subword_index(word, w)
         (0, 3)
@@ -196,7 +202,9 @@ class Collector(DefaultPrinting):
         >>> F, x0, x1, x2 = free_group("x0, x1, x2")
         >>> pc_relators = {x0**-1*x1*x0: x1**2, x1**-1*x2*x1:x2, x0**-1*x2*x0:x2*x1}
         >>> relative_order = {x0: 2, x1: 2, x2: 3}
-        >>> collector = Collector(pc_relators, relative_order)
+        >>> word = x2**2*x1**7
+        >>> group = word.group
+        >>> collector = Collector(pc_relators, relative_order, group)
         >>> w = x2*x1
         >>> collector.map_relation(w)
         x2
@@ -220,13 +228,14 @@ class Collector(DefaultPrinting):
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
         >>> relative_order = {x1: 2, x2: 3}
-        >>> collector = Collector(pc_relators, relative_order)
         >>> word = x2**2*x1**7
+        >>> group = word.group
+        >>> collector = Collector(pc_relators, relative_order, group)
         >>> collector.collected_word(word)
         x1*x2**-2
 
         """
-        group = word.group
+        group = self.group
         while True:
             uncollected_subwords = self.minimal_uncollected_subwords(word)
             if not uncollected_subwords:

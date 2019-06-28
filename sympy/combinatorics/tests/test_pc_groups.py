@@ -14,7 +14,8 @@ def test_collected_word():
 
     word = x3*x2*x1*x0
     relative_order = {x0: 2, x1: 3, x2: 2, x3: 2}
-    collector = Collector(pc_relators, relative_order)
+    group = word.group
+    collector = Collector(pc_relators, relative_order, group)
     collected_word_ = collector.collected_word(word)
 
     assert collected_word_ == x0*x1**2*x2*x3
