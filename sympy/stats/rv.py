@@ -796,7 +796,10 @@ class Density(Basic):
 
     def doit(self, evaluate=True, **kwargs):
         from sympy.stats.joint_rv import JointPSpace
+        from sympy.stats.frv import SingleFiniteDistribution
         expr, condition = self.expr, self.condition
+        if isinstance(expr, SingleFiniteDistribution):
+            return expr.dict
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
@@ -1330,7 +1333,7 @@ def rv_subs(expr, symbols=None):
     if not symbols:
         return expr
     swapdict = {rv: rv.symbol for rv in symbols}
-    return expr.xreplace(swapdict)
+    return expr.subs(swapdict)
 
 class NamedArgsMixin(object):
     _argnames = ()
