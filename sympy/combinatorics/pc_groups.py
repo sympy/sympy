@@ -95,6 +95,10 @@ class Collector(DefaultPrinting):
         {((x1, 7),): 2, ((x2, 2), (x1, 1)): 0}
 
         """
+
+        # To handle the case word = <identity>
+        if not word:
+            return {}
         group = self.group
         index = {s: i+1 for i, s in enumerate(group.symbols)}
         array = word.array_form
@@ -106,17 +110,18 @@ class Collector(DefaultPrinting):
             s2, e2 = array[i+1]
             s = ((s1, 1), )
             s = group.dtype(s)
-            if e1 > 0 and e1 < re[s]:
-                if e2 > 0 and index[s1] > index[s2]:
-                    # case-0:  v = x[i]**a*x[i+1], where index[x[i]] > index[x[i+1]]
-                    uncollected_subwords[((s1, e1), (s2, 1))] = 0
-
-                elif e2 < 0 and index[s1] > index[s2]:
-                    # case-1: v = x[i]**a*x[i+1]*-1, where index[x[i]] > index[x[i+1]]
-                    uncollected_subwords[((s1, e1), (s2, -1))] = 1
             if e1 > re[s]-1:
                 # case-2: v = x[i]**a
                 uncollected_subwords[((s1, e1), )] = 2
+                continue
+
+            if e2 > 0 and index[s1] > index[s2]:
+                # case-0:  v = x[i]**a*x[i+1], where index[x[i]] > index[x[i+1]]
+                uncollected_subwords[((s1, e1), (s2, 1))] = 0
+
+            elif e2 < 0 and index[s1] > index[s2]:
+                # case-1: v = x[i]**a*x[i+1]*-1, where index[x[i]] > index[x[i+1]]
+                uncollected_subwords[((s1, e1), (s2, -1))] = 1
 
         i = len(array)-1
         s1, e1 = array[i]

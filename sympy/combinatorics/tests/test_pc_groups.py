@@ -29,3 +29,31 @@ def test_collected_word():
     word = x3*x2*x1*x0
     collected_word_ = x0*x1**2*x2*x3
     assert word == collected_word_
+
+
+
+    F, x0, x1 = free_group("x0, x1")
+    # polycyclic relators for Symmetricgroup(3)
+    pc_relators = {x0**2: (), x1**3: (), x0**-1*x1*x0: x1**2}
+    relative_order = {x0: 2, x1: 3}
+    group = F
+    collector = Collector(pc_relators, relative_order, group)
+
+    word = x1*x0
+    assert collector.collected_word(word) == x0*x1**2
+    word = x1*x0**2
+    assert collector.collected_word(word) == x1
+    word = x1**2*x0
+    assert collector.collected_word(word) == x0*x1
+    word = x1**4*x0**6
+    assert collector.collected_word(word) == x1
+    word = x0*x1
+    # The word is already collected
+    assert collector.collected_word(word) == x0*x1
+    word = x0**2*x1
+    assert collector.collected_word(word) == x1
+    word = x0**2*x1**3
+    # Handle Identity case
+    assert collector.collected_word(word) == F.identity
+    word = x1**-2*x0
+    assert collector.collected_word(word) == x0*x1**-4
