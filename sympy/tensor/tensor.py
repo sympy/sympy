@@ -1361,14 +1361,15 @@ class TensorSymmetry(Basic):
         Returns a TensorSymmetry object that is being a direct product of
         fully (anti-)symmetric index permutation groups.
 
-        Examples
-        ========
+        Notes
+        =====
 
-        (*args) = (1): vector
-        (*args) = (2):  tensor with 2 symmetric indices
-        (*args) = (-2):  tensor with 2 antisymmetric indices
-        (*args) = (2, -2): tensor with the first 2 indices commuting and the last 2 anticommuting
-        (*args) = (1, 1, 1): tensor with 3 indices without any symmetry
+        Some examples for different values of ``(*args)``:
+        ``(1)``         vector, equivalent to ``TensorSymmetry.fully_symmetric(1)``
+        ``(2)``         tensor with 2 symmetric indices, equivalent to ``.fully_symmetric(2)``
+        ``(-2)``        tensor with 2 antisymmetric indices, equivalent to ``.fully_symmetric(-2)``
+        ``(2, -2)``     tensor with the first 2 indices commuting and the last 2 anticommuting
+        ``(1, 1, 1)``   tensor with 3 indices without any symmetry
         """
         base, sgs = [], [Permutation(1)]
         for arg in args:

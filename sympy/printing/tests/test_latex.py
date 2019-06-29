@@ -2056,13 +2056,13 @@ def test_issue_9216():
 
 
 def test_latex_printer_tensor():
-    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensor_heads
     L = TensorIndexType("L")
     i, j, k, l = tensor_indices("i j k l", L)
     i0 = tensor_indices("i_0", L)
-    A, B, C, D = tensorhead("A B C D", [L], [[1]])
-    H = tensorhead("H", [L, L], [[1], [1]])
-    K = tensorhead("K", [L, L, L, L], [[1], [1], [1], [1]])
+    A, B, C, D = tensor_heads("A B C D", [L])
+    H = TensorHead("H", [L, L])
+    K = TensorHead("K", [L, L, L, L])
 
     assert latex(i) == "{}^{i}"
     assert latex(-i) == "{}_{i}"
