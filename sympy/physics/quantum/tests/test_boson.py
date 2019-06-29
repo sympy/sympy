@@ -16,7 +16,7 @@ def test_bosonoperator():
     assert a.is_annihilation
     assert not Dagger(a).is_annihilation
 
-    assert BosonOp("a") == BosonOp("a")
+    assert BosonOp("a") == BosonOp("a", True)
     assert BosonOp("a") != BosonOp("c")
     assert BosonOp("a", True) != BosonOp("a", False)
 

@@ -109,6 +109,26 @@ def test_Xor():
     assert Xor(e, e.canonical) == Xor(0, 0) == Xor(1, 1)
 
 
+def test_rewrite_as_And():
+    expr = x ^ y
+    assert expr.rewrite(And) == (x | y) & (~x | ~y)
+
+
+def test_rewrite_as_Or():
+    expr = x ^ y
+    assert expr.rewrite(Or) == (x & ~y) | (y & ~x)
+
+
+def test_rewrite_as_Nand():
+    expr = (y & z) | (z & ~w)
+    assert expr.rewrite(Nand) == ~(~(y & z) & ~(z & ~w))
+
+
+def test_rewrite_as_Nor():
+    expr = z & (y | ~w)
+    assert expr.rewrite(Nor) == ~(~z | ~(y | ~w))
+
+
 def test_Not():
     raises(TypeError, lambda: Not(True, False))
     assert Not(True) is false
@@ -776,7 +796,7 @@ def test_multivariate_bool_as_set():
 
 
 def test_all_or_nothing():
-    x = symbols('x', real=True)
+    x = symbols('x', extended_real=True)
     args = x >= -oo, x <= oo
     v = And(*args)
     if v.func is And:

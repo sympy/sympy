@@ -1286,9 +1286,12 @@ def TRmorrie(rv):
 
     """
 
-    def f(rv):
+    def f(rv, first=True):
         if not rv.is_Mul:
             return rv
+        if first:
+            n, d = rv.as_numer_denom()
+            return f(n, 0)/f(d, 0)
 
         args = defaultdict(list)
         coss = {}

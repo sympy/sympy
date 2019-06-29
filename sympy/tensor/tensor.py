@@ -107,13 +107,8 @@ class _IndexStructure(CantSympify):
         >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
         >>> _IndexStructure.from_indices(m0, m1, -m1, m3)
         _IndexStructure([(m0, 0), (m3, 3)], [(1, 2)], [Lorentz, Lorentz, Lorentz, Lorentz])
-
-        In case of many components the same indices have slightly different
-        indexes:
-
-        >>> _IndexStructure.from_indices(m0, m1, -m1, m3)
-        _IndexStructure([(m0, 0), (m3, 3)], [(1, 2)], [Lorentz, Lorentz, Lorentz, Lorentz])
         """
+
         free, dum = _IndexStructure._free_dum_from_indices(*indices)
         index_types = [i.tensor_index_type for i in indices]
         indices = _IndexStructure._replace_dummy_names(indices, free, dum)
@@ -318,7 +313,7 @@ class _IndexStructure(CantSympify):
         """
         Returns ``(g, dummies, msym, v)``, the entries of ``canonicalize``
 
-        see ``canonicalize`` in ``tensor_can.py``
+        see ``canonicalize`` in ``tensor_can.py`` in combinatorics module
         """
         # to be called after sorted_components
         from sympy.combinatorics.permutations import _af_new
@@ -915,7 +910,6 @@ class TensorIndexType(Basic):
 
     metric : metric symmetry or metric object or ``None``
 
-
     dim : dimension, it can be a symbol or an integer or ``None``
 
     eps_dim : dimension of the epsilon tensor
@@ -934,7 +928,7 @@ class TensorIndexType(Basic):
     ``dim``
     ``eps_dim``
     ``dummy_fmt``
-    ``data`` : a property to add ``ndarray`` values, to work in a specified basis.
+    ``data`` : (deprecated) a property to add ``ndarray`` values, to work in a specified basis.
 
     Notes
     =====
@@ -1157,14 +1151,14 @@ class TensorIndexType(Basic):
 
 class TensorIndex(Basic):
     """
-    Represents an abstract tensor index.
+    Represents a tensor index
 
     Parameters
     ==========
 
     name : name of the index, or ``True`` if you want it to be automatically assigned
     tensortype : ``TensorIndexType`` of the index
-    is_up :  flag for contravariant index
+    is_up :  flag for contravariant index (is_up=True by default)
 
     Attributes
     ==========
@@ -1179,30 +1173,30 @@ class TensorIndex(Basic):
     Tensor indices are contracted with the Einstein summation convention.
 
     An index can be in contravariant or in covariant form; in the latter
-    case it is represented prepending a ``-`` to the index name.
+    case it is represented prepending a ``-`` to the index name. Adding
+    ``-`` to a covariant (is_up=False) index makes it contravariant.
 
     Dummy indices have a name with head given by ``tensortype._dummy_fmt``
+
+    Similar to ``symbols`` multiple contravariant indices can be created
+    at once using ``tensor_indices(s, typ)``, where ``s`` is a string
+    of names.
 
 
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, TensorIndex
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorIndex, TensorHead
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> i = TensorIndex('i', Lorentz); i
-    i
-
-    If you want the index name to be automatically assigned, just put ``True``
-    in the ``name`` field, it will be generated using the reserved character
-    ``_`` in front of its name, in order to avoid conflicts with possible
-    existing indices:
-
-    >>> i0 = TensorIndex(True, Lorentz)
-    >>> i0
-    _i0
-    >>> i1 = TensorIndex(True, Lorentz)
-    >>> i1
-    _i1
+    >>> mu = TensorIndex('mu', Lorentz, is_up=False)
+    >>> nu, rho = tensor_indices('nu, rho', Lorentz)
+    >>> A = TensorHead('A', [Lorentz, Lorentz])
+    >>> A(mu, nu)
+    A(-mu, nu)
+    >>> A(-mu, -rho)
+    A(mu, -rho)
+    >>> A(mu, -mu)
+    A(-L_0, L_0)
     """
     def __new__(cls, name, tensortype, is_up=True):
         if isinstance(name, string_types):
@@ -1286,7 +1280,9 @@ def tensor_indices(s, typ):
 
 class TensorSymmetry(Basic):
     """
-    Monoterm symmetry of a tensor
+    Monoterm symmetry of a tensor (i.e. any symmetric or anti-symmetric
+    index permutation). For the relevant terminology see ``tensor_can.py``
+    section of the combinatorics module.
 
     Parameters
     ==========
@@ -1544,7 +1540,7 @@ def tensorhead(name, typ, sym=None, comm=0):
     Parameters
     ==========
 
-    name : name or sequence of names (as in ``symbol``)
+    name : name or sequence of names (as in ``symbols``)
 
     typ :  index types
 
@@ -1584,6 +1580,11 @@ class TensorHead(Basic):
     Notes
     =====
 
+    Similar to ``symbols`` multiple TensorHeads can be created using
+    ``tensorhead(s, typ, sym=None, comm=0)`` function, where ``s``
+    is the string of names and ``sym`` is the monoterm tensor symmetry
+    (see ``tensorsymmetry``).
+
     A ``TensorHead`` belongs to a commutation group, defined by a
     symbol on number ``comm`` (see ``_TensorManager.set_comm``);
     tensors in a commutation group have the same commutation properties;
@@ -1607,6 +1608,7 @@ class TensorHead(Basic):
 
     >>> from sympy.tensor.tensor import tensor_indices
     >>> from sympy import diag
+    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> i0, i1 = tensor_indices('i0:2', Lorentz)
 
     Specify a replacement dictionary to keep track of the arrays to use for
@@ -1832,9 +1834,6 @@ class TensExpr(Expr):
     currently the sums of tensors are distributed.
 
     A ``TensExpr`` can be a ``TensAdd`` or a ``TensMul``.
-
-    ``TensAdd`` objects are put in canonical form using the Butler-Portugal
-    algorithm for canonicalization under monoterm symmetries.
 
     ``TensMul`` objects are formed by products of component tensors,
     and include a coefficient, which is a SymPy expression.
@@ -2240,11 +2239,6 @@ class TensAdd(TensExpr, AssocOp):
     ``rank`` : rank of the tensor
     ``free_args`` : list of the free indices in sorted order
 
-    Notes
-    =====
-
-    Sum of more than one tensor are put automatically in canonical form.
-
     Examples
     ========
 
@@ -2436,7 +2430,7 @@ class TensAdd(TensExpr, AssocOp):
 
     def canon_bp(self):
         """
-        canonicalize using the Butler-Portugal algorithm for canonicalization
+        Canonicalize using the Butler-Portugal algorithm for canonicalization
         under monoterm symmetries.
         """
         expr = self.expand()
@@ -2620,6 +2614,16 @@ class Tensor(TensExpr):
     >>> A(mu, -nu)
     A(mu, -nu)
     >>> A(mu, -mu)
+    A(L_0, -L_0)
+
+    It is also possible to use symbols instead of inidices (appropriate indices
+    are then generated automatically).
+
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> A(x, mu)
+    A(x, mu)
+    >>> A(x, -x)
     A(L_0, -L_0)
 
     """
@@ -3829,7 +3833,8 @@ class TensorElement(TensExpr):
 
 def canon_bp(p):
     """
-    Butler-Portugal canonicalization
+    Butler-Portugal canonicalization. See ``tensor_can.py`` from the
+    combinatorics module for the details.
     """
     if isinstance(p, TensExpr):
         return p.canon_bp()
