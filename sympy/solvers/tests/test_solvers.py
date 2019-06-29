@@ -1346,16 +1346,10 @@ def test_failing_assumptions():
 
 def test_issue_6056():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
-    assert set([simplify(w) for w in solve(tanh(x - 1)*tanh(x + 1) + 1)]) == set([
-        -log(2)/2 + log(1 - I),
-        -log(2)/2 + log(-1 - I),
-        -log(2)/2 + log(1 + I),
-        -log(2)/2 + log(-1 + I),])
-    assert set([simplify(w) for w in solve((tanh(x + 3)*tanh(x - 3) + 1)**2)]) == set([
-        -log(2)/2 + log(1 - I),
-        -log(2)/2 + log(-1 - I),
-        -log(2)/2 + log(1 + I),
-        -log(2)/2 + log(-1 + I),])
+    assert solve(tanh(x - 1)*tanh(x + 1) + 1) == \
+            [-3*I*pi/4, -I*pi/4, I*pi/4, 3*I*pi/4]
+    assert solve((tanh(x + 3)*tanh(x - 3) + 1)**2) == \
+            [-3*I*pi/4, -I*pi/4, I*pi/4, 3*I*pi/4]
 
 
 def test_issue_5673():
