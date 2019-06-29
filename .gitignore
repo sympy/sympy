@@ -10,6 +10,7 @@
 
 # Regular Python bytecode file
 *.pyc
+__pycache__/
 
 # Optimized Python bytecode file
 *.pyo
@@ -19,6 +20,9 @@
 
 # VSCode settings file
 .vscode/
+
+# PyCharm settings file
+/.idea/
 
 # Generated files from Jython
 *$py.class

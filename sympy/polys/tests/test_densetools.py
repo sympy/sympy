@@ -120,7 +120,7 @@ def test_dup_diff():
     f = dup_normal([17, 34, 56, -345, 23, 76, 0, 0, 12, 3, 7], ZZ)
 
     assert dup_diff(f, 0, ZZ) == f
-    assert dup_diff(f, 1, ZZ) == dup_diff(f, 1, ZZ)
+    assert dup_diff(f, 1, ZZ) == [170, 306, 448, -2415, 138, 380, 0, 0, 24, 3]
     assert dup_diff(f, 2, ZZ) == dup_diff(dup_diff(f, 1, ZZ), 1, ZZ)
     assert dup_diff(
         f, 3, ZZ) == dup_diff(dup_diff(dup_diff(f, 1, ZZ), 1, ZZ), 1, ZZ)
@@ -133,7 +133,6 @@ def test_dup_diff():
     assert dup_diff(f, 3, K) == dup_normal([], K)
 
     assert dup_diff(f, 0, K) == f
-    assert dup_diff(f, 1, K) == dup_diff(f, 1, K)
     assert dup_diff(f, 2, K) == dup_diff(dup_diff(f, 1, K), 1, K)
     assert dup_diff(
         f, 3, K) == dup_diff(dup_diff(dup_diff(f, 1, K), 1, K), 1, K)
@@ -153,7 +152,10 @@ def test_dmp_diff():
         dup_diff([1, -1, 0, 0, 2], 1, ZZ)
 
     assert dmp_diff(f_6, 0, 3, ZZ) == f_6
-    assert dmp_diff(f_6, 1, 3, ZZ) == dmp_diff(f_6, 1, 3, ZZ)
+    assert dmp_diff(f_6, 1, 3, ZZ) == [[[[8460]], [[]]],
+                       [[[135, 0, 0], [], [], [-135, 0, 0]]],
+                       [[[]]],
+                       [[[-423]], [[-47]], [[]], [[141], [], [94, 0], []], [[]]]]
     assert dmp_diff(
         f_6, 2, 3, ZZ) == dmp_diff(dmp_diff(f_6, 1, 3, ZZ), 1, 3, ZZ)
     assert dmp_diff(f_6, 3, 3, ZZ) == dmp_diff(

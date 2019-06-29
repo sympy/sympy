@@ -4,7 +4,8 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     S, MatrixSymbol, Function, Derivative, log, true, false, Range, Min, Max, \
     Lambda, IndexedBase, symbols, zoo, elliptic_f, elliptic_e, elliptic_pi, Ei, \
     expint, jacobi, gegenbauer, chebyshevt, chebyshevu, legendre, assoc_legendre, \
-    laguerre, assoc_laguerre, hermite
+    laguerre, assoc_laguerre, hermite, TribonacciConstant, Contains, \
+    LambertW
 
 from sympy import elliptic_k, totient, reduced_totient, primenu, primeomega, \
     fresnelc, fresnels, Heaviside
@@ -22,6 +23,7 @@ from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.zeta_functions import polylog, lerchphi, zeta, dirichlet_eta
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, Xor, Not
 from sympy.matrices.expressions.determinant import Determinant
+from sympy.physics.quantum import ComplexSpace, HilbertSpace, FockSpace, hbar, Dagger
 from sympy.printing.mathml import mathml, MathMLContentPrinter, \
     MathMLPresentationPrinter, MathMLPrinter
 from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, \
@@ -1133,12 +1135,38 @@ def test_print_FiniteSet():
         '<mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi></mfenced>'
 
 
+def test_print_LambertW():
+    assert mpp.doprint(LambertW(x)) == '<mrow><mi>W</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(LambertW(x, y)) == '<mrow><mi>W</mi><mfenced><mi>x</mi><mi>y</mi></mfenced></mrow>'
+
+
 def test_print_EmptySet():
     assert mpp.doprint(EmptySet()) == '<mo>&#x2205;</mo>'
 
 
 def test_print_UniversalSet():
     assert mpp.doprint(S.UniversalSet) == '<mo>&#x1D54C;</mo>'
+
+
+def test_print_spaces():
+    assert mpp.doprint(HilbertSpace()) == '<mi>&#x210B;</mi>'
+    assert mpp.doprint(ComplexSpace(2)) == '<msup>&#x1D49E;<mn>2</mn></msup>'
+    assert mpp.doprint(FockSpace()) == '<mi>&#x2131;</mi>'
+
+
+def test_print_constants():
+    assert mpp.doprint(hbar) == '<mi>&#x210F;</mi>'
+    assert mpp.doprint(TribonacciConstant) == '<mi>TribonacciConstant</mi>'
+    assert mpp.doprint(EulerGamma) == '<mi>&#x3B3;</mi>'
+
+
+def test_print_Contains():
+    assert mpp.doprint(Contains(x, S.Naturals)) == \
+        '<mrow><mi>x</mi><mo>&#x2208;</mo><mi mathvariant="normal">&#x2115;</mi></mrow>'
+
+
+def test_print_Dagger():
+    assert mpp.doprint(Dagger(x)) == '<msup><mi>x</mi>&#x2020;</msup>'
 
 
 def test_print_SetOp():

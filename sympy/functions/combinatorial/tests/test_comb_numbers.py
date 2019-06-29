@@ -385,7 +385,7 @@ def test_catalan():
         assert catalan(n).rewrite(factorial).subs(n, i) == c
         assert catalan(n).rewrite(Product).subs(n, i).doit() == c
 
-    assert catalan(x) == catalan(x)
+    assert unchanged(catalan, x)
     assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
     assert catalan(Rational(1, 2)).rewrite(gamma) == 8/(3*pi)
     assert catalan(Rational(1, 2)).rewrite(factorial).rewrite(gamma) ==\
