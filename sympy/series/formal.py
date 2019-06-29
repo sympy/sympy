@@ -941,7 +941,17 @@ class FormalPowerSeries(SeriesBase):
     """
     def __new__(cls, *args):
         args = map(sympify, args)
-        return Expr.__new__(cls, *args)
+        obj = Expr.__new__(cls, *args)
+
+        ak = args[4][0]
+        k = ak.variables[0]
+        obj.ak_seq = sequence(ak.formula, (k, 1, oo))
+        obj.fact_seq = sequence(factorial(k), (k, 1, oo))
+        obj.bell_coeff_seq = obj.ak_seq * obj.fact_seq
+
+        k = Dummy('k')
+        obj.sign_seq = sequence((-1, 1), (k, 1, oo))
+        return obj
 
     @property
     def function(self):
@@ -1169,13 +1179,7 @@ class FormalPowerSeries(SeriesBase):
 
         """
 
-        k = self.ak.variables[0]
-        ak_seq = sequence(self.ak.formula, (k, 1, oo))
-        fact_seq = sequence(factorial(k), (k, 1, oo))
-        bell_seq = (ak_seq * fact_seq)
-        inner_coeffs = []
-        for j in range(1, n+1):
-            inner_coeffs.append(bell(n, j, tuple(bell_seq[:n-j+1])))
+        inner_coeffs = [bell(n, j, tuple(self.bell_coeff_seq[:n-j+1])) for j in range(1, n+1)]
 
         k = Dummy('k')
         return sequence(tuple(inner_coeffs), (k, 1, oo))
@@ -1186,10 +1190,11 @@ class FormalPowerSeries(SeriesBase):
         up to specified `n`.
 
         If `f` and `g` are two formal power series of two different functions,
-        then the coefficient sequence ``ak`` of the composed formal power series
-        `fp` will be :-
+        then the coefficient sequence ``ak`` of the composed formal power series `fp`
+        will be as follows.
 
         .. math::
+
         \sum\limits_{k=0}^{n} b_k B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})
 
         Parameters
@@ -1255,9 +1260,8 @@ class FormalPowerSeries(SeriesBase):
 
         for i in range(1, n):
             bell_seq = other.coeff_bell(i)
-            fact_seq = sequence(factorial(k), (k, 1, oo))
-            seq = (self.ak * fact_seq * bell_seq)[:i]
-            terms.append(Add(*seq) * self.xk.coeff(i) / factorial(i))
+            seq = (self.ak * self.fact_seq * bell_seq)
+            terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / factorial(i))
 
         return self.ind + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
@@ -1267,10 +1271,11 @@ class FormalPowerSeries(SeriesBase):
         up to specified `n`.
 
         If `f` and `g` are two formal power series of two different functions,
-        then the coefficient sequence ``ak`` of the composed formal power series
-        `fp` will be :-
+        then the coefficient sequence ``ak`` of the composed formal power series `fp`
+        will be as follows.
 
         .. math::
+
         \sum\limits_{k=0}^{n} (-1)^{k} x_0^{-k-1} B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})
 
         Parameters
@@ -1319,14 +1324,12 @@ class FormalPowerSeries(SeriesBase):
 
         k = Dummy('k')
         terms = []
+        inv_seq = sequence(inv ** (-(k + 1)), (k, 1, oo))
 
         for i in range(0, n):
             bell_seq = self.coeff_bell(i)
-            fact_seq = sequence(factorial(k), (k, 1, oo))
-            sign_seq = sequence((-1, 1), (k, 1, oo))
-            inv_seq = sequence(inv ** (-(k + 1)), (k, 1, oo))
-            seq = (sign_seq * fact_seq * inv_seq * bell_seq)[:i]
-            terms.append(Add(*seq) * self.xk.coeff(i) / factorial(i))
+            seq = (self.sign_seq * self.fact_seq * inv_seq * bell_seq)
+            terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / factorial(i))
 
         return self.ind + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
