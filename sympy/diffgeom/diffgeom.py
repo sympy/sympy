@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
 from itertools import permutations
+import itertools
+import copy
 
 from sympy.combinatorics import Permutation
 from sympy.core import AtomicExpr, Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add, symbols, Tuple
