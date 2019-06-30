@@ -1205,7 +1205,7 @@ class TensorArray:
             raise ValueError("Indexed tensors must come from the same coordinate system")
         self.covariant_slots = self.covariant_slots + [i+self.order for i in other.covariant_slots]
         self.contravariant_slots = self.contravariant_slots + [i+self.order for i in other.contravariant_slots]
-        indices = [(*a,*b) for (a,b) in itertools.product(self.indices(), other.indices())]
+        indices = [a+b for (a,b) in itertools.product(self.indices(), other.indices())]
         coeffs = [a * b for (a,b) in itertools.product(self.components(), other.components())]
         self.tensor = dict(zip(indices,coeffs))
         self.covariant_order += other.covariant_order
@@ -1385,7 +1385,7 @@ class TensorArray:
         coord_derivative = self.zero([k+1 for k in self.contravariant_slots],[0]+[k+1 for k in self.covariant_slots])
         for key,coef in self.tensor.items():
             for k in range(self.n):
-                coord_derivative.tensor[(k,*key)] = self.base_vectors[k](coef)
+                coord_derivative.tensor[(k,)+key] = self.base_vectors[k](coef)
         return contractions + coord_derivative
             
     
