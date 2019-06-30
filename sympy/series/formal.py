@@ -943,7 +943,7 @@ class FormalPowerSeries(SeriesBase):
         args = map(sympify, args)
         obj = Expr.__new__(cls, *args)
 
-        ak = list(args)[4][0]
+        ak = (obj.args)[4][0]
         k = ak.variables[0]
         obj.ak_seq = sequence(ak.formula, (k, 1, oo))
         obj.fact_seq = sequence(factorial(k), (k, 1, oo))
