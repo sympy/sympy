@@ -1,6 +1,5 @@
 from sympy.core import Basic
 from sympy import sieve
-from sympy.core import S
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 
@@ -84,12 +83,11 @@ class Collector(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
-        >>> from sympy.core import S
 
         Example 8.7 Pg. 281 from [1]
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2, x2: S.Infinity}
+        >>> relative_order = {x1: 2}
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -111,7 +109,7 @@ class Collector(DefaultPrinting):
             s2, e2 = array[i+1]
             s = ((s1, 1), )
             s = group.dtype(s)
-            if (e1 < 1 or e1 > re[s]-1) and re[s] != S.Infinity:
+            if s in re and (e1 < 0 or e1 > re[s]-1):
                 return ((s1, e1), )
 
             if index[s1] > index[s2]:
@@ -122,7 +120,7 @@ class Collector(DefaultPrinting):
         s1, e1 = array[i]
         s = ((s1, 1), )
         s = group.dtype(s)
-        if (e1 < 1 or e1 > re[s]-1) and re[s] != S.Infinity:
+        if s in re and (e1 < 0 or e1 > re[s]-1):
             return ((s1, e1), )
         return None
 
@@ -135,10 +133,10 @@ class Collector(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
-        >>> from sympy.core import S
+
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2, x2: S.Infinity}
+        >>> relative_order = {x1: 2}
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -167,10 +165,9 @@ class Collector(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
-        >>> from sympy.core import S
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2, x2: S.Infinity}
+        >>> relative_order = {x1: 2}
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -199,10 +196,9 @@ class Collector(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
-        >>> from sympy.core import S
         >>> F, x0, x1, x2 = free_group("x0, x1, x2")
         >>> pc_relators = {x0**-1*x1*x0: x1**2, x1**-1*x2*x1:x2, x0**-1*x2*x0:x2*x1}
-        >>> relative_order = {x0: 2, x1: 2, x2: S.Infinity}
+        >>> relative_order = {x0: 2, x1: 2, x2: 3}
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -226,10 +222,9 @@ class Collector(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
-        >>> from sympy.core import S
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2, x2: S.Infinity}
+        >>> relative_order = {x1: 2}
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -245,9 +240,9 @@ class Collector(DefaultPrinting):
             low, high = self.subword_index(word, group.dtype(w))
             if low == -1:
                 continue
+            s, e = w[0]
             if len(w) == 2 and w[1][1] > 0:
                 gens = list(sorted(group.dtype(w).contains_generators()))
-                s, e = w[0]
                 word_ = self.map_relation(group.dtype(w))
                 word_ = gens[0]*word_**e
                 word_ = group.dtype(word_)
@@ -255,24 +250,22 @@ class Collector(DefaultPrinting):
 
             elif len(w) == 2 and w[1][1] < 0:
                 gens = list(sorted(group.dtype(w).contains_generators()))
-                s, e = w[0]
                 word_ = self.map_relation(group.dtype(w))
                 word_ = gens[0]**-1*word_**e
                 word_ = group.dtype(word_)
                 word = word.substituted_word(low, high, word_)
 
-            s, e = w[0]
             s1 = ((s, 1), )
             s = group.dtype(s1)
-            re = self.relative_order[s]
-            if re == S.Infinity:
+            if not s in self.relative_order:
                 continue
+            re = self.relative_order[s]
             q = e//re
             r = e-q*re
             if r < 0 or r > re-1:
                 continue
 
-            if len(w) == 1 and (e < 1 or e > re-1):
+            if len(w) == 1 and (e < 0 or e > re-1):
                 key = ((w[0][0], re), )
                 key = group.dtype(key)
                 if self.pc_relators[key]:
