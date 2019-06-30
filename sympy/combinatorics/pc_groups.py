@@ -1,5 +1,6 @@
 from sympy.core import Basic
 from sympy import sieve
+from sympy.core import S
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 
@@ -75,7 +76,7 @@ class Collector(DefaultPrinting):
         self.relative_order = relative_order
         self.group = group
 
-    def minimal_uncollected_subwords(self, word):
+    def minimal_uncollected_subword(self, word):
         """
         Returns the minimal uncollected subwords.
 
@@ -83,55 +84,47 @@ class Collector(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.core import S
 
         Example 8.7 Pg. 281 from [1]
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2, x2: 3}
+        >>> relative_order = {x1: 2, x2: S.Infinity}
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
-        >>> collector.minimal_uncollected_subwords(word)
-        {((x1, 7),): 2, ((x2, 2), (x1, 1)): 0}
+        >>> collector.minimal_uncollected_subword(word)
+        ((x2, 2), (x1, 1))
 
         """
-
         # To handle the case word = <identity>
         if not word:
-            return {}
+            return None
+
         group = self.group
         index = {s: i+1 for i, s in enumerate(group.symbols)}
         array = word.array_form
         re = self.relative_order
-        uncollected_subwords = {}
 
         for i in range(len(array)-1):
             s1, e1 = array[i]
             s2, e2 = array[i+1]
             s = ((s1, 1), )
             s = group.dtype(s)
-            if e1 > re[s]-1:
-                # case-2: v = x[i]**a
-                uncollected_subwords[((s1, e1), )] = 2
-                continue
+            if (e1 < 1 or e1 > re[s]-1) and re[s] != S.Infinity:
+                return ((s1, e1), )
 
-            if e2 > 0 and index[s1] > index[s2]:
-                # case-0:  v = x[i]**a*x[i+1], where index[x[i]] > index[x[i+1]]
-                uncollected_subwords[((s1, e1), (s2, 1))] = 0
-
-            elif e2 < 0 and index[s1] > index[s2]:
-                # case-1: v = x[i]**a*x[i+1]*-1, where index[x[i]] > index[x[i+1]]
-                uncollected_subwords[((s1, e1), (s2, -1))] = 1
+            if index[s1] > index[s2]:
+                e = 1 if e2 > 0 else -1
+                return ((s1, e1), (s2, e))
 
         i = len(array)-1
         s1, e1 = array[i]
         s = ((s1, 1), )
         s = group.dtype(s)
-        if e1 > re[s]-1:
-            # case-2: v = x[i]**a
-            uncollected_subwords[((s1, e1), )] = 2
-
-        return uncollected_subwords
+        if (e1 < 1 or e1 > re[s]-1) and re[s] != S.Infinity:
+            return ((s1, e1), )
+        return None
 
     def relations(self):
         """
@@ -142,9 +135,10 @@ class Collector(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.core import S
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2, x2: 3}
+        >>> relative_order = {x1: 2, x2: S.Infinity}
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -173,9 +167,10 @@ class Collector(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.core import S
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2, x2: 3}
+        >>> relative_order = {x1: 2, x2: S.Infinity}
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -204,9 +199,10 @@ class Collector(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.core import S
         >>> F, x0, x1, x2 = free_group("x0, x1, x2")
         >>> pc_relators = {x0**-1*x1*x0: x1**2, x1**-1*x2*x1:x2, x0**-1*x2*x0:x2*x1}
-        >>> relative_order = {x0: 2, x1: 2, x2: 3}
+        >>> relative_order = {x0: 2, x1: 2, x2: S.Infinity}
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -230,9 +226,10 @@ class Collector(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.core import S
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2, x2: 3}
+        >>> relative_order = {x1: 2, x2: S.Infinity}
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -242,49 +239,50 @@ class Collector(DefaultPrinting):
         """
         group = self.group
         while True:
-            uncollected_subwords = self.minimal_uncollected_subwords(word)
-            if not uncollected_subwords:
+            w = self.minimal_uncollected_subword(word)
+            if not w:
                 break
-            w = list(uncollected_subwords)[0]
-            case = uncollected_subwords[w]
-            w = group.dtype(w)
-            low, high = self.subword_index(word, w)
+            low, high = self.subword_index(word, group.dtype(w))
             if low == -1:
                 continue
-            if case == 0:
-                gens = list(sorted(w.contains_generators()))
-                array = w.array_form
-                s, e = array[0]
-                word_ = self.map_relation(w)
+            if len(w) == 2 and w[1][1] > 0:
+                gens = list(sorted(group.dtype(w).contains_generators()))
+                s, e = w[0]
+                word_ = self.map_relation(group.dtype(w))
                 word_ = gens[0]*word_**e
                 word_ = group.dtype(word_)
                 word = word.substituted_word(low, high, word_)
 
-            elif case == 1:
-                gens = list(sorted(w.contains_generators()))
-                array = w.array_form
-                s, e = array[0]
-                word_ = self.map_relation(w)
-                word_ = (gens[0]**-1)*word_**e
+            elif len(w) == 2 and w[1][1] < 0:
+                gens = list(sorted(group.dtype(w).contains_generators()))
+                s, e = w[0]
+                word_ = self.map_relation(group.dtype(w))
+                word_ = gens[0]**-1*word_**e
                 word_ = group.dtype(word_)
                 word = word.substituted_word(low, high, word_)
 
-            else:
-                array = w.array_form
-                s, e = array[0]
-                s1 = ((s, 1), )
-                s = group.dtype(s1)
-                re = self.relative_order[s]
-                q = e//re
-                r = e-q*re
-                key = w[0]**re
+            s, e = w[0]
+            s1 = ((s, 1), )
+            s = group.dtype(s1)
+            re = self.relative_order[s]
+            if re == S.Infinity:
+                continue
+            q = e//re
+            r = e-q*re
+            if r < 0 or r > re-1:
+                continue
+
+            if len(w) == 1 and (e < 1 or e > re-1):
+                key = ((w[0][0], re), )
+                key = group.dtype(key)
                 if self.pc_relators[key]:
-                    word_ = ((w[0], r), (self.pc_relators[key], re))
+                    word_ = ((w[0][0], r), (self.pc_relators[key], q))
                     word_ = group.dtype(word_)
                 else:
                     if r != 0:
-                        word_ = w[0]**r
+                        word_ = ((w[0][0], r), )
+                        word_ = group.dtype(word_)
                     else:
                         word_ = None
-                word = word.eliminate_word(w, word_)
+                word = word.eliminate_word(group.dtype(w), word_)
         return word

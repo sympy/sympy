@@ -73,5 +73,5 @@ def test_collected_word():
     assert a**2*b**3 == Permutation(2)
 
     word = x1**-2*x0
-    assert collector.collected_word(word) == x0*x1**-4
-    assert b**-2*a == a*b**-4
+    assert collector.collected_word(word) == x0*x1**2
+    assert b**-2*a == a*b**2
