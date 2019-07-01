@@ -284,13 +284,8 @@ def permutedims(expr, perm):
     new_shape = perm(expr.shape)
 
     if isinstance(expr, SparseNDimArray):
-        new_array = {}
-        for k, v in expr._sparse_array.items():
-            index = 0
-            for i, idx in enumerate(perm(expr._get_tuple_index(k))):
-               index = index * new_shape[i] + idx
-            new_array[index] = v
-        return type(expr)(new_array, new_shape)
+        return type(expr)({tuple(perm(expr._get_tuple_index(k))): v
+                           for k, v in expr._sparse_array.items()}, new_shape)
 
     indices_span = perm([range(i) for i in expr.shape])
 
