@@ -1097,7 +1097,7 @@ class TensorArray:
     Examples
     ========
 
-    >>> from sympy.diffgeom import WedgeProduct
+    >>> from sympy.diffgeom import WedgeProduct, TensorArray, Differential
     >>> from sympy.diffgeom.rn import R2_r
     >>> wp=WedgeProduct(Differential(R2_r.x),Differential(R2_r.y))
     >>> TensorArray(wp).to_tensor()
@@ -1183,7 +1183,7 @@ class TensorArray:
         Tbasesdual = [
             [dualbasishelper(I,k) for k in range(self.order)] for I in self.indices()
         ]
-        return sum([TP(*dxI) * TI for (dxI,TI) in zip(Tbasesdual,self.components())])
+        return sum([TensorProduct(*dxI) * TI for (dxI,TI) in zip(Tbasesdual,self.components())])
     def indices(self):
         """
         Indices with nonzero components
@@ -1251,7 +1251,7 @@ class TensorArray:
 
         Example
         =======
-        >>> from sympy.diffgeom import TensorProduct
+        >>> from sympy.diffgeom import TensorProduct, TensorArray
         >>> from sympy.diffgeom.rn import R2_r
         >>> dxex=TensorProduct(R2_r.dx,R2_r.e_x)
         >>> dxexa=TensorArray(dxex)
@@ -1302,7 +1302,7 @@ class TensorArray:
         Example
         =======
 
-        >>> from sympy.diffgeom import TensorProduct
+        >>> from sympy.diffgeom import TensorProduct, TensorArray
         >>> from sympy.diffgeom.rn import R2_r
         >>> TensorArray(TensorProduct(R2_r.dx,R2_r.dy)).braid(0,1).to_tensor()
         """
