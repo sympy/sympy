@@ -1101,6 +1101,7 @@ class TensorArray:
     >>> from sympy.diffgeom.rn import R2_r
     >>> wp=WedgeProduct(Differential(R2_r.x),Differential(R2_r.y))
     >>> TensorArray(wp).to_tensor()
+    TensorProduct(dx, dy) - TensorProduct(dy, dx)
     """
     def _contravariant_slots(self,T):
         slots=[]
@@ -1256,7 +1257,7 @@ class TensorArray:
         >>> dxex=TensorProduct(R2_r.dx,R2_r.e_x)
         >>> dxexa=TensorArray(dxex)
         >>> dxexa.contract(0,1).to_tensor()
-
+        1
         """
         new = copy.copy(self)
         new._contract(a,b)
@@ -1305,6 +1306,7 @@ class TensorArray:
         >>> from sympy.diffgeom import TensorProduct, TensorArray
         >>> from sympy.diffgeom.rn import R2_r
         >>> TensorArray(TensorProduct(R2_r.dx,R2_r.dy)).braid(0,1).to_tensor()
+        TensorProduct(dy, dx)
         """
         res = copy.deepcopy(self)
         res.tensor = copy.deepcopy(self.tensor)
@@ -1705,6 +1707,7 @@ def expand_tensor(T):
     >>> from sympy.diffgeom import expand_tensor, TensorProduct
     >>> from sympy.diffgeom.rn import R2_r
     >>> expand_tensor(TensorProduct(R2_r.dx+2*R2_r.dy, R2_r.dy))
+    TensorProduct(dx, dy) + 2*TensorProduct(dy, dy)
     """
     return TensorArray(T).to_tensor()
 
