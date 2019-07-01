@@ -232,6 +232,7 @@ def test_expand_tensor():
     dt, dr, dtheta, dphi = cs.base_oneforms()
     f=Function('f')
     metric = f(r)**2*TP(dt, dt) - f(r)**(-2)*TP(dr, dr) - r**2*TP(dtheta, dtheta) - r**2*sin(theta)**2*TP(dphi, dphi)
+    G = TensorArray(metric)
     assert(expand_tensor(G) == metric)
 
 
