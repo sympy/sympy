@@ -941,17 +941,15 @@ class FormalPowerSeries(SeriesBase):
     """
     def __new__(cls, *args):
         args = map(sympify, args)
-        obj = Expr.__new__(cls, *args)
+        return Expr.__new__(cls, *args)
 
-        ak = (obj.args)[4][0]
+    def __init__(self, *args):
+        ak = args[4][0]
         k = ak.variables[0]
-        obj.ak_seq = sequence(ak.formula, (k, 1, oo))
-        obj.fact_seq = sequence(factorial(k), (k, 1, oo))
-        obj.bell_coeff_seq = obj.ak_seq * obj.fact_seq
-
-        k = Dummy('k')
-        obj.sign_seq = sequence((-1, 1), (k, 1, oo))
-        return obj
+        self.ak_seq = sequence(ak.formula, (k, 1, oo))
+        self.fact_seq = sequence(factorial(k), (k, 1, oo))
+        self.bell_coeff_seq = self.ak_seq * self.fact_seq
+        self.sign_seq = sequence((-1, 1), (k, 1, oo))
 
     @property
     def function(self):
@@ -1255,13 +1253,13 @@ class FormalPowerSeries(SeriesBase):
             raise ValueError("The formal power series of the inner function should not have any "
                 "constant coefficient term.")
 
-        k = Dummy('k')
         terms = []
+        aux_seq = self.ak * self.fact_seq
 
         for i in range(1, n):
             bell_seq = other.coeff_bell(i)
-            seq = (self.ak * self.fact_seq * bell_seq)
-            terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / factorial(i))
+            seq = (aux_seq * bell_seq)
+            terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / self.fact_seq[i-1])
 
         return self.ind + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
@@ -1325,11 +1323,12 @@ class FormalPowerSeries(SeriesBase):
         k = Dummy('k')
         terms = []
         inv_seq = sequence(inv ** (-(k + 1)), (k, 1, oo))
+        aux_seq = self.sign_seq * self.fact_seq * inv_seq
 
-        for i in range(0, n):
+        for i in range(1, n):
             bell_seq = self.coeff_bell(i)
-            seq = (self.sign_seq * self.fact_seq * inv_seq * bell_seq)
-            terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / factorial(i))
+            seq = (aux_seq * bell_seq)
+            terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / self.fact_seq[i-1])
 
         return self.ind + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
