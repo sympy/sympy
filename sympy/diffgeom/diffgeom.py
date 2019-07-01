@@ -1093,9 +1093,10 @@ class CovarDerivativeOp(Expr):
 class TensorArray:
     """
     Object representing a tensor as a multidimensional sparse symbolic array.
-    
+
     Examples
     ========
+
     >>> from sympy.diffgeom import WedgeProduct
     >>> from sympy.diffgeom.rn import R2_r
     >>> wp=WedgeProduct(Differential(R2_r.x),Differential(R2_r.y))
@@ -1209,7 +1210,7 @@ class TensorArray:
         coeffs = [a * b for (a,b) in itertools.product(self.components(), other.components())]
         self.tensor = dict(zip(indices,coeffs))
         self.covariant_order += other.covariant_order
-        self.contravariant_order += other.contravariant_order        
+        self.contravariant_order += other.contravariant_order
         self.order += other.order
     def TensorProduct(self,other):
         new = copy.copy(self) #shallow copy
@@ -1252,8 +1253,8 @@ class TensorArray:
         =======
         >>> from sympy.diffgeom import TensorProduct
         >>> from sympy.diffgeom.rn import R2_r
-        >>> dxex=TensorProduct(R2_r.dx,R2_r.e_x)                
-        >>> dxexa=TensorArray(dxex)                
+        >>> dxex=TensorProduct(R2_r.dx,R2_r.e_x)
+        >>> dxexa=TensorArray(dxex)
         >>> dxexa.contract(0,1).to_tensor()
 
         """
@@ -1300,9 +1301,10 @@ class TensorArray:
 
         Example
         =======
+
         >>> from sympy.diffgeom import TensorProduct
         >>> from sympy.diffgeom.rn import R2_r
-        >>> TensorArray(TensorProduct(R2_r.dx,R2_r.dy)).braid(0,1).to_tensor()  
+        >>> TensorArray(TensorProduct(R2_r.dx,R2_r.dy)).braid(0,1).to_tensor()
         """
         res = copy.deepcopy(self)
         res.tensor = copy.deepcopy(self.tensor)
@@ -1363,7 +1365,7 @@ class TensorArray:
         res = copy.copy(self)
         res.tensor={}
         res.contravariant_slots=contraslots
-        res.covariant_slots=coslots        
+        res.covariant_slots=coslots
         res.covariant_order=len(coslots)
         res.contravariant_order=len(contraslots)
         res.order = res.covariant_order+res.contravariant_order
@@ -1387,8 +1389,6 @@ class TensorArray:
             for k in range(self.n):
                 coord_derivative.tensor[(k,)+key] = self.base_vectors[k](coef)
         return contractions + coord_derivative
-            
-    
 
 ###############################################################################
 # Integral curves on vector fields
@@ -1705,7 +1705,6 @@ def expand_tensor(T):
     >>> from sympy.diffgeom import expand_tensor, TensorProduct
     >>> from sympy.diffgeom.rn import R2_r
     >>> expand_tensor(TensorProduct(R2_r.dx+2*R2_r.dy, R2_r.dy))
-    
     """
     return TensorArray(T).to_tensor()
 
