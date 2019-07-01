@@ -280,4 +280,5 @@ def test_curvature():
     D2Vtensor=[(k,simplify(v)) for (k,v) in D2V.tensor.items() if v != 0]
     D2Vtensor=[(k,v) for (k,v) in D2Vtensor if v!=0]
     D2Vtensor.sort()
-    assert(all([a==b for (a,b) in zip(rmvtensor,D2Vtensor)]))
+    for (a,b) in zip(rmvtensor,D2Vtensor):
+        assert(a==b)
