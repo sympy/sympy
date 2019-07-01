@@ -74,6 +74,7 @@ class Collector(DefaultPrinting):
         self.pc_relators = pc_relators
         self.relative_order = relative_order
         self.group = group
+        self.index = {s: i for i, s in enumerate(group.symbols)}
 
     def minimal_uncollected_subword(self, word):
         """
@@ -87,7 +88,7 @@ class Collector(DefaultPrinting):
         Example 8.7 Pg. 281 from [1]
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2}
+        >>> relative_order = [2, None]
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -100,16 +101,14 @@ class Collector(DefaultPrinting):
             return None
 
         group = self.group
-        index = {s: i+1 for i, s in enumerate(group.symbols)}
         array = word.array_form
         re = self.relative_order
+        index = self.index
 
         for i in range(len(array)-1):
             s1, e1 = array[i]
             s2, e2 = array[i+1]
-            s = ((s1, 1), )
-            s = group.dtype(s)
-            if s in re and (e1 < 0 or e1 > re[s]-1):
+            if re[index[s1]] and (e1 < 0 or e1 > re[index[s1]]-1):
                 return ((s1, e1), )
 
             if index[s1] > index[s2]:
@@ -118,9 +117,7 @@ class Collector(DefaultPrinting):
 
         i = len(array)-1
         s1, e1 = array[i]
-        s = ((s1, 1), )
-        s = group.dtype(s)
-        if s in re and (e1 < 0 or e1 > re[s]-1):
+        if re[index[s1]] and (e1 < 0 or e1 > re[index[s1]]-1):
             return ((s1, e1), )
         return None
 
@@ -136,7 +133,7 @@ class Collector(DefaultPrinting):
 
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2}
+        >>> relative_order = [2, None]
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -167,7 +164,7 @@ class Collector(DefaultPrinting):
         >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2}
+        >>> relative_order = [2, None]
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -197,8 +194,8 @@ class Collector(DefaultPrinting):
         >>> from sympy.combinatorics.pc_groups import Collector
         >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x0, x1, x2 = free_group("x0, x1, x2")
-        >>> pc_relators = {x0**-1*x1*x0: x1**2, x1**-1*x2*x1:x2, x0**-1*x2*x0:x2*x1}
-        >>> relative_order = {x0: 2, x1: 2, x2: 3}
+        >>> pc_relators = {x0**-1*x1*x0: x1**2, x1**-1*x2*x1: x2, x0**-1*x2*x0: x2*x1}
+        >>> relative_order = [2, 2, 3]
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -224,7 +221,7 @@ class Collector(DefaultPrinting):
         >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x1, x2 = free_group("x1, x2")
         >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = {x1: 2}
+        >>> relative_order = [2, None]
         >>> word = x2**2*x1**7
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
@@ -255,12 +252,10 @@ class Collector(DefaultPrinting):
                 word_ = group.dtype(word_)
                 word = word.substituted_word(low, high, word_)
 
-            s1 = ((s, 1), )
-            s = group.dtype(s1)
-            if not s in self.relative_order:
+            if not self.relative_order[self.index[s]]:
                 continue
-            re = self.relative_order[s]
-            q = e//re
+            re = self.relative_order[self.index[s]]
+            q = e // re
             r = e-q*re
             if r < 0 or r > re-1:
                 continue

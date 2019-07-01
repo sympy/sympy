@@ -13,7 +13,7 @@ def test_collected_word():
                   }
 
     word = x3*x2*x1*x0
-    relative_order = {x0: 2, x1: 3, x2: 2, x3: 2}
+    relative_order = [2, 3, 2, 2]
     group = word.group
     collector = Collector(pc_relators, relative_order, group)
     collected_word_ = collector.collected_word(word)
@@ -35,7 +35,7 @@ def test_collected_word():
     F, x0, x1 = free_group("x0, x1")
     # polycyclic relators for Symmetricgroup(3)
     pc_relators = {x0**2: (), x1**3: (), x0**-1*x1*x0: x1**2}
-    relative_order = {x0: 2, x1: 3}
+    relative_order = [2, 3]
     group = F
     collector = Collector(pc_relators, relative_order, group)
 
