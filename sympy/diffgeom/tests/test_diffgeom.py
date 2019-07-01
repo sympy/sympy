@@ -4,7 +4,7 @@ from sympy.diffgeom import (Commutator, Differential, TensorProduct,
         covariant_order, contravariant_order, twoform_to_matrix, metric_to_Christoffel_1st,
         metric_to_Christoffel_2nd, metric_to_Riemann_components,
         metric_to_Ricci_components, intcurve_diffequ, intcurve_series, TensorArray,
-        Manifold, Patch, CoordSystem)
+        Manifold, Patch, CoordSystem, expand_tensor)
 from sympy.core import Symbol, symbols
 from sympy import Function
 from sympy.simplify import trigsimp, simplify
