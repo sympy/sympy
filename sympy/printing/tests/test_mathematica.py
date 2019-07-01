@@ -10,7 +10,7 @@ from sympy.functions import (exp, sin, cos, fresnelc, fresnels, conjugate, Max,
                              FallingFactorial, harmonic, atan2, sec, acsc,
                              hermite, laguerre, assoc_laguerre, jacobi,
                              gegenbauer, chebyshevt, chebyshevu, legendre,
-                             assoc_legendre)
+                             assoc_legendre, Li, LambertW)
 
 from sympy import mathematica_code as mcode
 
@@ -68,6 +68,8 @@ def test_Function():
     assert mcode(catalan(x)) == "CatalanNumber[x]"
     assert mcode(harmonic(x)) == "HarmonicNumber[x]"
     assert mcode(harmonic(x, y)) == "HarmonicNumber[x, y]"
+    assert mcode(Li(x)) == "LogIntegral[x] - LogIntegral[2]"
+    assert mcode(LambertW(x)) == "ProductLog[x]"
 
 
 def test_special_polynomials():

@@ -83,6 +83,14 @@ def test_special_denom():
     Poly(1, t0), DE) == \
         (Poly(1, t0), Poly(I*k, t0), Poly(t0, t0), Poly(1, t0))
 
+    assert special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
+    Poly(t, t), DE, case='tan') == \
+           (Poly(1, t, t0, domain='ZZ'), Poly(t**2, t0, t, domain='ZZ[x]'),
+            Poly(t, t, t0, domain='ZZ'), Poly(1, t0, domain='ZZ'))
+
+    raises(ValueError, lambda: special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
+    Poly(t, t), DE, case='unrecognized_case'))
+
 
 # @XFAIL
 # Probably only fails in Python 2.7
