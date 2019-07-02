@@ -811,6 +811,11 @@ def test_issue_15965():
     assert simplify(B) == bnew
 
 
+def test_issue_17137():
+    assert simplify(cos(x)**I) == cos(x)**I
+    assert simplify(cos(x)**(2 + 3*I)) == cos(x)**(2 + 3*I)
+
+
 def test_issue_7971():
     z = Integral(x, (x, 1, 1))
     assert z != 0
