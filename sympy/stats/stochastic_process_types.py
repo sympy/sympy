@@ -1,7 +1,8 @@
 from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
                     Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
                     nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
-                    linsolve, Piecewise, eye, Or, Ne, Not)
+                    linsolve, Piecewise, eye, Or, Ne, Not, Intersection,
+                    Union)
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -263,7 +264,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
                     trans_probs = gc.matrix
                 if isinstance(gc, StochasticStateSpaceOf):
                     state_space = gc.state_space
-                if isinstance(gc, Eq):
+                if isinstance(gc, Relational):
                     given_condition = given_condition & gc
         if isinstance(given_condition, TransitionMatrixOf):
             trans_probs = given_condition.matrix
@@ -297,6 +298,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
                 state_space = rand_var[0].pspace.set
         if not FiniteSet(*[i for i in range(trans_probs.shape[0])]).is_subset(state_space):
             raise ValueError("state space is not compatible with the transition probabilites.")
+        state_space = FiniteSet(*[i for i in range(trans_probs.shape[0])])
         return state_space
 
     def _preprocess(self, given_condition, evaluate):
@@ -495,11 +497,17 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             for cond in conds:
                 idx, state = (cond.lhs, cond.rhs) if isinstance(cond.lhs, RandomIndexedSymbol) else \
                                 (cond.rhs, cond.lhs)
-                idx2state[idx] = 1 if idx2state.get(idx, None) is None else \
-                                           idx2state[idx] + 1
-                if idx2state[idx] > 1:
-                    return S.Zero # a RandomIndexedSymbol cannot go to different states simultaneously
+                idx2state[idx] = cond if idx2state.get(idx, None) is None else \
+                                           idx2state[idx] & cond
+            if any(len(Intersection(idx2state[idx].as_set(), state_space)) != 1
+                for idx in idx2state):
+                return S.Zero # a RandomIndexedSymbol cannot go to different states simultaneously
             i, result = -1, 1
+            conds = And(*[Intersection(idx2state[idx].as_set(), state_space).as_relational(idx) for idx in idx2state])
+            if not isinstance(conds, And):
+                return self.probability(conds, given_condition & TransitionMatrixOf(self, trans_probs)
+                                                & StochasticStateSpaceOf(self, state_space))
+            conds = conds.args
             while i > -len(conds):
                 result *= self.probability(conds[i], conds[i-1] & \
                             TransitionMatrixOf(self, trans_probs) & \
@@ -525,6 +533,18 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
 
         if isinstance(condition, Or):
             conds, prob_sum = condition.args, S(0)
+            idx2state = dict()
+            for cond in conds:
+                idx, state = (cond.lhs, cond.rhs) if isinstance(cond.lhs, RandomIndexedSymbol) else \
+                                (cond.rhs, cond.lhs)
+                idx2state[idx] = cond if idx2state.get(idx, None) is None else \
+                                           idx2state[idx] | cond
+            conds = Or(*[Intersection(idx2state[idx].as_set(), state_space).as_relational(idx)
+                        for idx in idx2state])
+            if not isinstance(conds, Or):
+                return self.probability(conds, given_condition & TransitionMatrixOf(self, trans_probs)
+                                                & StochasticStateSpaceOf(self, state_space))
+            conds = conds.args
             for cond in conds:
                 prob_sum += self.probability(cond, given_condition &
                             TransitionMatrixOf(self, trans_probs) &
