@@ -83,7 +83,7 @@ def test_codegen_einsum():
     if not tf:
         skip("TensorFlow not installed")
 
-    session = tf.Session()
+    session = tf.compat.v1.Session()
 
     M = MatrixSymbol("M", 2, 2)
     N = MatrixSymbol("N", 2, 2)
@@ -102,7 +102,7 @@ def test_codegen_extra():
     if not tf:
         skip("TensorFlow not installed")
 
-    session = tf.Session()
+    session = tf.compat.v1.Session()
 
     M = MatrixSymbol("M", 2, 2)
     N = MatrixSymbol("N", 2, 2)

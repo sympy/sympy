@@ -594,7 +594,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> result = func(tf.constant(1.0))
     >>> print(result) # a tf.Tensor representing the result of the calculation
     Tensor("Maximum:0", shape=(), dtype=float32)
-    >>> sess = tf.Session()
+    >>> sess = tf.compat.v1.Session()
     >>> sess.run(result) # compute result
     1.0
     >>> var = tf.Variable(1.0)
