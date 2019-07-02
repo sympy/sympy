@@ -1,7 +1,7 @@
 from sympy import (
-    Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
-    polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-    cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic, zeta,conjugate)
+    Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, multigamma,
+    log, polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
+    cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic, zeta, conjugate)
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -72,6 +72,15 @@ def test_gamma():
     # exp_polar.is_integer but I'm not sure if that makes sense.
     assert gamma(3*exp_polar(I*pi)/4).is_nonnegative is False
     assert gamma(3*exp_polar(I*pi)/4).is_extended_nonpositive is True
+
+    y = Symbol('y', nonpositive=True, integer=True)
+    assert gamma(y).is_real == False
+    y = Symbol('y', positive=True, noninteger=True)
+    assert gamma(y).is_real == True
+
+    assert gamma(-1.0, evaluate=False).is_real == False
+    assert gamma(0, evaluate=False).is_real == False
+    assert gamma(-2, evaluate=False).is_real == False
 
 
 def test_gamma_rewrite():
@@ -413,7 +422,7 @@ def test_issue_8657():
     m = Symbol('m', integer=True)
     o = Symbol('o', positive=True)
     p = Symbol('p', negative=True, integer=False)
-    assert gamma(n).is_real is None
+    assert gamma(n).is_real is False
     assert gamma(m).is_real is None
     assert gamma(o).is_real is True
     assert gamma(p).is_real is True
@@ -447,3 +456,61 @@ def test_issue_14450():
 def test_issue_14528():
     k = Symbol('k', integer=True, nonpositive=True)
     assert isinstance(gamma(k), gamma)
+
+def test_multigamma():
+    from sympy import Product
+    p = Symbol('p')
+
+    assert str(multigamma(x, p)) == ('pi**(p*(p - 1)/4)*Product(gamma(-_k/2 + x + 1/2), '
+    '(_k, 1, p))')
+
+    assert str(conjugate(multigamma(x, p))) == ('pi**((conjugate(p) - 1)*'
+    'conjugate(p)/4)*Product(gamma(-_k/2 + conjugate(x) + 1/2), (_k, 1, p))')
+    assert conjugate(multigamma(x, 1)) == gamma(conjugate(x))
+
+    p = Symbol('p', positive=True)
+    assert str(conjugate(multigamma(x, p))) == ('pi**(p*(p - 1)/4)*'
+    'Product(gamma(-_k/2 + conjugate(x) + 1/2), (_k, 1, p))')
+
+    assert multigamma(nan, 1) == nan
+    assert multigamma(oo, 1).doit() == oo
+
+    assert multigamma(1, 1) == 1
+    assert multigamma(2, 1) == 1
+    assert multigamma(3, 1) == 2
+
+    assert multigamma(102, 1) == factorial(101)
+    assert multigamma(Rational(1, 2), 1) == sqrt(pi)
+
+    assert multigamma(1, 2) == pi
+    assert multigamma(2, 2) == pi/2
+
+    assert multigamma(1, 3) == zoo
+    assert multigamma(2, 3) == pi**2/2
+    assert multigamma(3, 3) == 3*pi**2/2
+
+    assert multigamma(x, 1).diff(x) == gamma(x)*polygamma(0, x)
+    assert multigamma(x, 2).diff(x) == sqrt(pi)*gamma(x)*gamma(x - S(1)/2)*\
+        polygamma(0, x) + sqrt(pi)*gamma(x)*gamma(x - S(1)/2)*polygamma(0, x - S(1)/2)
+
+    assert multigamma(x - 1, 1).expand(func=True) == gamma(x)/(x - 1)
+    assert multigamma(x + 2, 1).expand(func=True, mul=False) == x*(x + 1)*\
+        gamma(x)
+    assert multigamma(x - 1, 2).expand(func=True) == sqrt(pi)*gamma(x)*\
+        gamma(x + S(1)/2)/(x**3 - 3*x**2 + 11*x/4 - S(3)/4)
+    assert multigamma(x - 1, 3).expand(func=True) == pi**(S(3)/2)*gamma(x)**2*\
+        gamma(x + S(1)/2)/(x**5 - 6*x**4 + 55*x**3/4 - 15*x**2 + 31*x/4 - S(3)/2)
+
+    assert multigamma(n, 1).rewrite(factorial) == factorial(n - 1)
+    assert multigamma(n, 2).rewrite(factorial) == sqrt(pi)*\
+        factorial(n - S(3)/2)*factorial(n - 1)
+    assert multigamma(n, 3).rewrite(factorial) == pi**(S(3)/2)*\
+        factorial(n - 2)*factorial(n - S(3)/2)*factorial(n - 1)
+
+    assert multigamma(-S(1)/2, 3, evaluate=False).is_real == False
+    assert multigamma(S(1)/2, 3, evaluate=False).is_real == False
+    assert multigamma(0, 1, evaluate=False).is_real == False
+    assert multigamma(1, 3, evaluate=False).is_real == False
+    assert multigamma(-1.0, 3, evaluate=False).is_real == False
+    assert multigamma(0.7, 3, evaluate=False).is_real == True
+    assert multigamma(3, 3, evaluate=False).is_real == True
