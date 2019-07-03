@@ -1402,7 +1402,7 @@ def compute_known_facts(known_facts, known_facts_keys):
         return And(
             %s
         )
-    
+
     # -{ Known facts in compressed sets }-
     @cacheit
     def get_known_facts_dict():
