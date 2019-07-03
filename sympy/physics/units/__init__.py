@@ -212,49 +212,76 @@ from .definitions import (
 
 def find_unit(quantity):
     """
-    Return a list of matching units or dimension names.
+    Return the list of units that match the given quantity.
 
-    - If ``quantity`` is a string -- units/dimensions containing the string
-    `quantity`.
-    - If ``quantity`` is a unit or dimension -- units having matching base
-    units or dimensions.
+    Parameters
+    ==========
+
+    quantity : Dimension Quantity or string
 
     Examples
     ========
 
     >>> from sympy.physics import units as u
-    >>> u.find_unit('charge')
-    ['C', 'coulomb', 'coulombs', 'planck_charge']
+
+    When the input quantity is a Dimension, it returns all units
+    corresponding to it.
+
     >>> u.find_unit(u.charge)
     ['C', 'coulomb', 'coulombs', 'planck_charge']
-    >>> u.find_unit("ampere")
-    ['ampere', 'amperes']
-    >>> u.find_unit('volt')
-    ['volt', 'volts', 'electronvolt', 'electronvolts', 'planck_voltage']
+
+    Similarly, when the input is a unit(Quantity), it returns
+    all the units congruous to it.
+
     >>> u.find_unit(u.inch**3)[:5]
     ['l', 'cl', 'dl', 'ml', 'liter']
+
+    When the input is a string, it returns units which have input
+    keyword as its substring or units corresponding to the input
+    unit or dimension.
+
+    >>> u.find_unit('char')
+    ['C', 'charge', 'coulomb', 'coulombs', 'planck_charge']
+    >>> u.find_unit('volt')
+    ['V', 'v', 'volt', 'volts', 'voltage', 'electronvolt', 'electronvolts', 'planck_voltage']
+    >>> u.find_unit("ampere")
+    ['A', 'ampere', 'amperes', 'planck_current']
     """
     import sympy.physics.units as u
-    rv = []
+    rv = set()
+    IA = [(i, getattr(u, i)) for i in dir(u)]
+    IA = [(i, a) for i, a in IA if isinstance(a, (Quantity, Dimension))]
     if isinstance(quantity, string_types):
-        rv = [i for i in dir(u) if quantity in i and isinstance(getattr(u, i), Quantity)]
-        dim = getattr(u, quantity)
-        if isinstance(dim, Dimension):
-            rv.extend(find_unit(dim))
+        if quantity is '':
+            return []
+        dim = getattr(u, quantity, None)
+        if dim is None:
+            for i, a in IA:
+                if quantity in i:
+                    rv.add(i)
+                    rv.update(find_unit(i))
+        else:
+            rv.update([i for i, _ in IA if quantity in i])
+            if isinstance(dim, Quantity):
+                dim = dim.dimension
+            for i, quant_attr in IA:
+                if quantity in i or (isinstance(quant_attr, Quantity)
+                        and quant_attr.dimension == dim):
+                    if not isinstance(quant_attr, Dimension):
+                        rv.add(i)
     else:
-        for i in sorted(dir(u)):
-            other = getattr(u, i)
-            if not isinstance(other, Quantity):
-                continue
+        for i, other in IA:
             if isinstance(quantity, Quantity):
-                if quantity.dimension == other.dimension:
-                    rv.append(str(i))
+                if isinstance(other, Quantity) and quantity.dimension == other.dimension:
+                    rv.add(i)
             elif isinstance(quantity, Dimension):
-                if other.dimension == quantity:
-                    rv.append(str(i))
-            elif other.dimension == Dimension(Quantity.get_dimensional_expr(quantity)):
-                rv.append(str(i))
-    return sorted(set(rv), key=lambda x: (len(x), x))
+                if isinstance(other, Quantity) and other.dimension == quantity:
+                    rv.add(i)
+            elif isinstance(other, Quantity) and other.dimension == Dimension(Quantity.get_dimensional_expr(quantity)):
+                rv.add(i)
+    if not rv:
+        return []
+    return list(list(zip(*sorted(zip([len(i) for i in rv], rv))))[1])
 
 # NOTE: the old units module had additional variables:
 # 'density', 'illuminance', 'resistance'.
