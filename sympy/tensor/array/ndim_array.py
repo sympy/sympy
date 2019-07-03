@@ -131,7 +131,7 @@ class NDimArray(object):
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import SparseNDimArray
-        from sympy import Dict
+        from sympy import Dict, Tuple
 
         if shape is None:
             if iterable is None:
@@ -159,6 +159,16 @@ class NDimArray(object):
             else:
                 shape = ()
                 iterable = (iterable,)
+
+        if isinstance(iterable, (Dict, dict)) and shape is not None:
+            new_dict = iterable.copy()
+            for k, v in new_dict.items():
+                if isinstance(k, (tuple, Tuple)):
+                    new_key = 0
+                    for i, idx in enumerate(k):
+                        new_key = new_key * shape[i] + idx
+                    iterable[new_key] = iterable[k]
+                    del iterable[k]
 
         if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
