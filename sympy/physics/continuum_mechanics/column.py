@@ -15,6 +15,7 @@ class Column(object):
         self._variable = Symbol('x')
         self._deflection = None
         self._slope = None
+        self._apply_load_conditions()
 
     @property
     def height(self):
@@ -48,7 +49,7 @@ class Column(object):
     def _apply_load_conditions(self):
         y = Function('y')
         x = self._variable
-        P = Symbol('P')
+        P = Symbol('P', positive=True)
 
         self._moment += P*y(x)
         if self.eccentricity:
@@ -80,7 +81,6 @@ class Column(object):
         y = Function('y')
         x = self._variable
 
-        self._apply_load_conditions()
         C1, C2 = symbols('C1, C2')
         E = self._elastic_modulus
         I = self._second_moment
@@ -97,12 +97,27 @@ class Column(object):
         self._slope = slope_sol.subs({C1: constants[0], C2:constants[1]})
 
 
+    def critical_load(self):
+        y = Function('y')
+        x = self._variable
+        P = Symbol('P', positive=true)
+
+        point, value = self._boundary_conditions['deflection'][-1]
+        defl_1 = self._deflection.subs(x, point) - value
+        critical_load = solve(defl_1, P)[0]
+
+        return critical_load
+
+
     def moment(self):
-        self._apply_load_conditions()
         return self._moment
 
+
     def slope(self):
-        return self._slope
+        P = Symbol('P', positive=True)
+        return self._slope.subs(P, self._load)
+
 
     def deflection(self):
-        return self._deflection
+        P = Symbol('P', positive=True)
+        return self._deflection.subs(P, self._load)
