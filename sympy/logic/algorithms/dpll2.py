@@ -15,7 +15,7 @@ from heapq import heappush, heappop
 
 from sympy.core.compatibility import range
 from sympy import default_sort_key, ordered
-from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates, CNF, EncodedCNF, to_int_repr2
+from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates, CNF, EncodedCNF
 
 
 def dpll_satisfiable(expr, all_models=False):

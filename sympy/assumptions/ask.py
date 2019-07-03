@@ -1399,9 +1399,9 @@ def compute_known_facts(known_facts, known_facts_keys):
     # -{ Known facts in Conjunctive Normal Form }-
     @cacheit
     def get_known_facts_cnf():
-        return And(*{
+        return And(
             %s
-        })
+        )
     
     # -{ Known facts in compressed sets }-
     @cacheit

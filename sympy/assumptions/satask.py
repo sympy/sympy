@@ -13,13 +13,15 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         use_known_facts=True, iterations=oo):
     props = CNF.from_prop(proposition)
     _props = CNF.from_prop(~proposition)
-    cxt = CNF()
-    cxt.extend(context)
+    if context:
+        tmp = CNF()
+        context = tmp.extend(context)
     assumptions = CNF.from_prop(assumptions)
 
-    sat = get_all_relevant_facts(props, assumptions, cxt,
+    sat = get_all_relevant_facts(props, assumptions, context,
         use_known_facts=use_known_facts, iterations=iterations)
-    sat.add_from_cnf(cxt)
+    if context:
+        sat.add_from_cnf(context)
     sat.add_from_cnf(assumptions)
 
     sat_true = sat.copy()
@@ -54,11 +56,6 @@ def get_relevant_facts(proposition, assumptions=None,
     if not assumptions:
         assumptions = CNF({S.true})
 
-    if not context:
-        ctx = CNF()
-        ctx.extend(context)
-        context = ctx
-
     if not relevant_facts:
         relevant_facts = set()
 
@@ -69,7 +66,7 @@ def get_relevant_facts(proposition, assumptions=None,
                 symbols |= find_symbols(a)
             return symbols
         if isinstance(pred.args, AppliedPredicate) \
-                and isinstance(pred.args[0],Symbol):
+                and isinstance(pred.args[0], Symbol):
             return {pred.args[0]}
         return pred.atoms(Symbol)
 
@@ -81,6 +78,8 @@ def get_relevant_facts(proposition, assumptions=None,
         lkeys |= assumptions.all_predicates()
         if context:
             lkeys |= context.all_predicates()
+
+        lkeys = lkeys - {S.true, S.false}
         tmp_keys = None
         while tmp_keys != set():
             tmp = set()
