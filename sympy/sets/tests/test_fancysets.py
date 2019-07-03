@@ -295,6 +295,12 @@ def test_Range_set():
         assert r.inf == rev.inf and r.sup == rev.sup
         assert r.step == -rev.step
 
+    # test symbolic Range
+    n = symbols('n', integer=True)
+    r = Range(1, n)
+    assert r.subs(n, -2) == Range(0, 0, 1)
+    assert r.subs(n, 3) == Range(1, 3, 1)
+
     # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
     # compatibility imports above)
     if PY3:

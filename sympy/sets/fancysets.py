@@ -520,20 +520,20 @@ class Range(Set):
             raise ValueError("step cannot be 0")
 
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
-        try:
-            start, stop, step = [
-                w if w in [S.NegativeInfinity, S.Infinity]
-                else sympify(as_int(w))
-                for w in (start, stop, step)]
-        except ValueError:
-            raise ValueError(filldedent('''
-    Finite arguments to Range must be integers; `imageset` can define
-    other cases, e.g. use `imageset(i, i/10, Range(3))` to give
-    [0, 1/10, 1/5].'''))
+        params = []
+        for w in (start, stop, step):
+            if w in [S.NegativeInfinity, S.Infinity] or sympify(w).is_integer == True:
+                params.append(sympify(w))
+            else:
+                raise ValueError(filldedent('''
+        Finite arguments to Range must be integer symbols; `imageset` can define
+        other cases, e.g. use `imageset(i, i/10, Range(3))` to give
+        [0, 1/10, 1/5].'''))
 
-        if not step.is_Integer:
-            raise ValueError(filldedent('''
-    Ranges must have a literal integer step.'''))
+        start, stop, step = params
+
+        if not step.is_finite == True:
+            raise ValueError("step must be a finite integer symbol.")
 
         if all(i.is_infinite for i in  (start, stop)):
             if start == stop:
@@ -551,7 +551,7 @@ class Range(Set):
         if not start.is_infinite:
             ref = start if start.is_finite else stop
             n = ceiling((stop - ref)/step)
-            if n <= 0:
+            if (n <= 0) == True:
                 # null Range
                 start = end = S.Zero
                 step = S.One
