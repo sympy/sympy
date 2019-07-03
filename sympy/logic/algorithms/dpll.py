@@ -12,7 +12,7 @@ from __future__ import print_function, division
 from sympy.core.compatibility import range
 from sympy import default_sort_key
 from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
-    to_int_repr, _find_predicates
+    to_int_repr, _find_predicates, CNF
 from sympy.logic.inference import pl_true, literal_symbol
 
 
@@ -29,7 +29,10 @@ def dpll_satisfiable(expr):
     False
 
     """
-    clauses = conjuncts(to_cnf(expr))
+    if not isinstance(expr, CNF):
+        clauses = conjuncts(to_cnf(expr))
+    else:
+        clauses = expr.clauses
     if False in clauses:
         return False
     symbols = sorted(_find_predicates(expr), key=default_sort_key)

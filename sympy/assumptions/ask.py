@@ -1388,14 +1388,21 @@ def compute_known_facts(known_facts, known_facts_keys):
     from sympy.core.cache import cacheit
     from sympy.logic.boolalg import And
     from sympy.assumptions.ask import Q
+    
+    # -{ Known facts as a set }-
+    @cacheit
+    def get_all_known_facts():
+        return {
+            %s
+        }
 
     # -{ Known facts in Conjunctive Normal Form }-
     @cacheit
     def get_known_facts_cnf():
-        return And(
+        return And(*{
             %s
-        )
-
+        })
+    
     # -{ Known facts in compressed sets }-
     @cacheit
     def get_known_facts_dict():
@@ -1408,6 +1415,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     HANG = ' '*8
     cnf = to_cnf(known_facts)
     c = LINE.join([str(a) for a in cnf.args])
+    p = LINE.join([str(Or.make_args(a)) for a in cnf.args])
     mapping = single_fact_lookup(known_facts_keys, cnf)
     items = sorted(mapping.items(), key=str)
     keys = [str(i[0]) for i in items]
@@ -1417,7 +1425,7 @@ def compute_known_facts(known_facts, known_facts_keys):
             subsequent_indent=HANG,
             break_long_words=False))
         for k, v in zip(keys, values)]) + ','
-    return fact_string % (c, m)
+    return fact_string % (p, c, m)
 
 # handlers tells us what ask handler we should use
 # for a particular key

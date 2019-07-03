@@ -15,7 +15,7 @@ from heapq import heappush, heappop
 
 from sympy.core.compatibility import range
 from sympy import default_sort_key, ordered
-from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates
+from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr, _find_predicates, CNF, EncodedCNF, to_int_repr2
 
 
 def dpll_satisfiable(expr, all_models=False):
@@ -35,16 +35,18 @@ def dpll_satisfiable(expr, all_models=False):
     False
 
     """
-    clauses = conjuncts(to_cnf(expr))
-    if False in clauses:
-        if all_models:
-            return (f for f in [False])
-        return False
-    symbols = sorted(_find_predicates(expr), key=default_sort_key)
-    symbols_int_repr = range(1, len(symbols) + 1)
-    clauses_int_repr = to_int_repr(clauses, symbols)
+    if not isinstance(expr, EncodedCNF):
+        exprs = EncodedCNF()
+        exprs.add_prop(expr)
+        expr = exprs
 
-    solver = SATSolver(clauses_int_repr, symbols_int_repr, set(), symbols)
+    # TODO: Check to handle this
+    # if False in clauses:
+    #     if all_models:
+    #         return (f for f in [False])
+    #     return False
+
+    solver = SATSolver(expr.data, expr.variables, set(), expr.symbols)
     models = solver._find_model()
 
     if all_models:

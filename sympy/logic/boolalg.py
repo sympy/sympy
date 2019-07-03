@@ -1529,7 +1529,7 @@ def to_nnf(expr, simplify=True):
     return expr.to_nnf(simplify)
 
 
-def to_cnf(expr, simplify=False):
+def to_cnf(expr, simplify=False, to_CNF=False):
     """
     Convert a propositional logical sentence s to conjunctive normal form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
@@ -1559,7 +1559,12 @@ def to_cnf(expr, simplify=False):
         return expr
 
     expr = eliminate_implications(expr)
-    return distribute_and_over_or(expr)
+    res = distribute_and_over_or(expr)
+
+    if to_CNF:
+        return CNF(conjuncts(res))
+
+    return res
 
 
 def to_dnf(expr, simplify=False):
@@ -1805,6 +1810,32 @@ def to_int_repr(clauses, symbols):
             return symbols[arg]
 
     return [set(append_symbol(arg, symbols) for arg in Or.make_args(c))
+            for c in clauses]
+
+def to_int_repr2(clauses, symbols):
+    """
+    Takes clauses in CNF format and puts them into an integer representation.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import to_int_repr
+    >>> from sympy.abc import x, y
+    >>> to_int_repr([x | y, y], [x, y]) == [{1, 2}, {2}]
+    True
+
+    """
+
+    # Convert the symbol list into a dict
+    symbols = dict(list(zip(symbols, list(range(1, len(symbols) + 1)))))
+
+    def append_symbol(arg, symbols):
+        if isinstance(arg, Not):
+            return -symbols[arg.args[0]]
+        else:
+            return symbols[arg]
+
+    return [set(append_symbol(arg, symbols) for arg in c)
             for c in clauses]
 
 
@@ -2598,3 +2629,101 @@ def simplify_patterns_xor():
                       And(Lt(a, Max(b, c)), Ge(a, Min(b, c)))),
                      )
     return _matchers_xor
+
+
+class CNF(object):
+    def __init__(self, clauses=None):
+        if not clauses:
+            clauses = set()
+        self.clauses = clauses
+
+    def add(self, prop):
+        clauses = And.make_args(to_cnf(prop))
+        self.clauses |= set(Or.make_args(clause) for clause in clauses)
+
+    def extend(self, props):
+        for p in props:
+            self.add(p)
+
+    def copy(self):
+        return CNF(set(self.clauses))
+
+    def add_clauses(self, clauses):
+        self.clauses |= clauses
+
+    @classmethod
+    def from_prop(cls, prop):
+        res = CNF()
+        res.add(prop)
+        return res
+
+    def __iand__(self, other):
+        self.clauses |= other.clauses
+        return self
+
+    def rcall(self, expr):
+        clauses = set(frozenset(p(expr) if not isinstance(p, Not) else Not(p.args[0](expr)) for p in clause)
+                        for clause in self.clauses)
+        return CNF(clauses)
+
+    def all_predicates(self):
+        predicates = set()
+        for c in self.clauses:
+            predicates |= {arg if not isinstance(arg, Not) else arg.args[0]
+                           for arg in c}
+
+        return predicates
+
+
+class EncodedCNF(object):
+    def __init__(self, data=None, encoding=None):
+        if not data and not encoding:
+            data = list()
+            encoding = dict()
+        self.data = data
+        self.encoding = encoding
+        self._symbols = list(encoding.keys())
+
+    def from_cnf(self, cnf):
+        self._symbols = list(cnf.all_predicates())
+        n = len(self._symbols)
+        self.encoding = dict(list(zip(self._symbols, list(range(1, n + 1)))))
+        self.data = [self.encode(clause) for clause in cnf.clauses]
+
+    @property
+    def symbols(self):
+        return self._symbols
+
+    @property
+    def variables(self):
+        return range(1, len(self._symbols) + 1)
+
+    def copy(self):
+        new_data = [set(clause) for clause in self.data]
+        return EncodedCNF(new_data, dict(self.encoding))
+
+    def add_prop(self, prop):
+        cnf = CNF.from_prop(prop)
+        self.add_from_cnf(cnf)
+
+    def add_from_cnf(self, cnf):
+        clauses = [self.encode(clause) for clause in cnf.clauses]
+        self.data += clauses
+
+    def encode_arg(self, arg):
+        if arg.func is Not:
+            literal = arg.args[0]
+        else:
+            literal = arg
+        value = self.encoding.get(literal, None)
+        if value is None:
+            n = len(self._symbols)
+            self._symbols.append(literal)
+            value = self.encoding[literal] = n + 1
+        if arg.func is Not:
+            return -value
+        else:
+            return value
+
+    def encode(self, clause):
+        return {self.encode_arg(arg) for arg in clause}

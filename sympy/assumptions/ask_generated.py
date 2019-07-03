@@ -10,10 +10,89 @@ from sympy.core.cache import cacheit
 from sympy.logic.boolalg import And
 from sympy.assumptions.ask import Q
 
+# -{ Known facts as a set }-
+@cacheit
+def get_all_known_facts():
+    return {
+        frozenset({Q.singular, Q.invertible}),
+        frozenset({~Q.rational, Q.algebraic}),
+        frozenset({~Q.imaginary, Q.antihermitian}),
+        frozenset({Q.complex, ~Q.algebraic}),
+        frozenset({~Q.imaginary, Q.complex}),
+        frozenset({Q.complex, ~Q.real}),
+        frozenset({Q.complex, ~Q.transcendental}),
+        frozenset({Q.complex_elements, ~Q.real_elements}),
+        frozenset({Q.even, ~Q.zero}),
+        frozenset({Q.extended_real, ~Q.infinite}),
+        frozenset({Q.extended_real, ~Q.real}),
+        frozenset({~Q.algebraic, Q.finite}),
+        frozenset({~Q.irrational, Q.finite}),
+        frozenset({~Q.rational, Q.finite}),
+        frozenset({~Q.transcendental, Q.finite}),
+        frozenset({Q.fullrank, ~Q.invertible}),
+        frozenset({~Q.real, Q.hermitian}),
+        frozenset({~Q.even, Q.integer}),
+        frozenset({~Q.odd, Q.integer}),
+        frozenset({~Q.prime, Q.integer}),
+        frozenset({~Q.positive_definite, Q.invertible}),
+        frozenset({~Q.unitary, Q.invertible}),
+        frozenset({Q.lower_triangular, ~Q.diagonal}),
+        frozenset({~Q.positive, Q.nonnegative}),
+        frozenset({~Q.zero, Q.nonnegative}),
+        frozenset({Q.nonpositive, ~Q.negative}),
+        frozenset({Q.nonpositive, ~Q.zero}),
+        frozenset({Q.nonzero, ~Q.negative}),
+        frozenset({Q.nonzero, ~Q.positive}),
+        frozenset({Q.normal, ~Q.diagonal}),
+        frozenset({~Q.unitary, Q.normal}),
+        frozenset({~Q.prime, Q.positive}),
+        frozenset({~Q.orthogonal, Q.positive_definite}),
+        frozenset({Q.rational, ~Q.integer}),
+        frozenset({Q.real, ~Q.irrational}),
+        frozenset({Q.real, ~Q.negative}),
+        frozenset({Q.real, ~Q.positive}),
+        frozenset({~Q.rational, Q.real}),
+        frozenset({~Q.zero, Q.real}),
+        frozenset({~Q.integer_elements, Q.real_elements}),
+        frozenset({Q.square, ~Q.invertible}),
+        frozenset({Q.square, ~Q.normal}),
+        frozenset({Q.square, ~Q.symmetric}),
+        frozenset({Q.symmetric, ~Q.diagonal}),
+        frozenset({~Q.lower_triangular, Q.triangular}),
+        frozenset({~Q.unit_triangular, Q.triangular}),
+        frozenset({Q.triangular, ~Q.upper_triangular}),
+        frozenset({~Q.orthogonal, Q.unitary}),
+        frozenset({Q.upper_triangular, ~Q.diagonal}),
+        frozenset({~Q.algebraic, ~Q.transcendental}),
+        frozenset({~Q.hermitian, ~Q.antihermitian}),
+        frozenset({~Q.prime, ~Q.composite}),
+        frozenset({~Q.even, ~Q.odd}),
+        frozenset({~Q.finite, ~Q.infinite}),
+        frozenset({~Q.imaginary, ~Q.real}),
+        frozenset({~Q.singular, ~Q.invertible}),
+        frozenset({~Q.rational, ~Q.irrational}),
+        frozenset({~Q.positive, ~Q.negative}),
+        frozenset({~Q.zero, ~Q.negative}),
+        frozenset({~Q.zero, ~Q.positive}),
+        frozenset({Q.odd, Q.even, ~Q.integer}),
+        frozenset({Q.infinite, Q.real, ~Q.extended_real}),
+        frozenset({~Q.triangular, Q.upper_triangular, Q.lower_triangular}),
+        frozenset({Q.negative, Q.positive, ~Q.nonzero}),
+        frozenset({Q.negative, Q.zero, ~Q.nonpositive}),
+        frozenset({Q.zero, ~Q.nonnegative, Q.positive}),
+        frozenset({Q.diagonal, ~Q.lower_triangular, ~Q.upper_triangular}),
+        frozenset({~Q.fullrank, Q.invertible, ~Q.square}),
+        frozenset({~Q.unitary, ~Q.real, Q.orthogonal}),
+        frozenset({Q.negative, Q.zero, ~Q.real, Q.positive}),
+        frozenset({~Q.complex, Q.algebraic, ~Q.finite, Q.transcendental}),
+        frozenset({~Q.positive, Q.composite, ~Q.integer, Q.prime}),
+        frozenset({Q.irrational, Q.rational, ~Q.finite, ~Q.real})
+    }
+
 # -{ Known facts in Conjunctive Normal Form }-
 @cacheit
 def get_known_facts_cnf():
-    return And(
+    return And(*{
         Q.invertible | Q.singular,
         Q.algebraic | ~Q.rational,
         Q.antihermitian | ~Q.imaginary,
@@ -87,7 +166,7 @@ def get_known_facts_cnf():
         Q.algebraic | Q.transcendental | ~Q.complex | ~Q.finite,
         Q.composite | Q.prime | ~Q.integer | ~Q.positive,
         Q.irrational | Q.rational | ~Q.finite | ~Q.real
-    )
+    })
 
 # -{ Known facts in compressed sets }-
 @cacheit
