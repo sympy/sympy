@@ -766,13 +766,14 @@ class Range(Set):
     def _boundary(self):
         return self
 
-    def as_relational(self, symbol):
-        """Rewrite a FiniteSet in terms of equalities and logic operators. """
-        if self.start.is_infinite or self.stop.is_infinite:
-            from sympy.functions.elementary.integers import floor
-            return And(symbol >= self.start, symbol < self.stop, Eq(floor(symbol), symbol))
-        else:
-            return Or(*[Eq(symbol, elem) for elem in self])
+    def as_relational(self, x):
+        """Rewrite a Range in terms of equalities and logic operators. """
+        from sympy.functions.elementary.integers import floor
+        i = (x - (self.inf if self.inf.is_finite else self.sup))/self.step
+        return And(
+            Eq(i, floor(i)),
+            x >= self.inf if self.inf in self else x > self.inf,
+            x <= self.sup if self.sup in self else x < self.sup)
 
 
 if PY3:
