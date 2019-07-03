@@ -357,7 +357,7 @@ class Product(ExprWithIntLimits):
         >>> from sympy import Interval, S, Product, Symbol, cos, pi, exp, oo
         >>> n = Symbol('n', integer=True)
         >>> Product(n/(n + 1), (n, 1, oo)).is_convergent()
-        False
+        True
         >>> Product(1/n**2, (n, 1, oo)).is_convergent()
         False
         >>> Product(cos(pi/n), (n, 1, oo)).is_convergent()
