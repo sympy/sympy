@@ -24,6 +24,7 @@ from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
+from sympy import limit, oo
 import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -437,6 +438,18 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         order = O(sequence_term, (sym, S.Infinity))
 
+        ### ------------- alternating series test ----------- ###
+        dict_val = sequence_term.match((-1)**(sym + p)*q)
+        if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
+            return S.true
+
+        ### ------ limit-comparison with p-series ------ ###
+        sequence_term_org, sym_org = self.function, self.limits[0][0]
+        if limit(sequence_term_org * sym_org, sym_org, oo) > 0:
+            return S.false
+        if limit(sequence_term_org * (sym_org ** 1.0001), sym_org, oo) < oo:
+            return S.true
+
         ### --------- p-series test (1/n**p) ---------- ###
         p1_series_test = order.expr.match(sym**p)
         if p1_series_test is not None:
@@ -495,12 +508,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     return S.false
         except NotImplementedError:
             pass
-
-        ### ------------- alternating series test ----------- ###
-        dict_val = sequence_term.match((-1)**(sym + p)*q)
-        if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
-            return S.true
-
 
         ### ------------- integral test -------------- ###
         check_interval = None

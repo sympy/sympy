@@ -3,7 +3,7 @@ from sympy import (
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, oo, pi, Piecewise, Product, product, Rational, S, simplify,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range)
+    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma)
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.concrete.expr_with_intlimits import ReorderError
@@ -187,9 +187,6 @@ def test_arithmetic_sums():
     assert Sum(x, (n, a, a)).doit() == x
     assert Sum(x, (x, a, a)).doit() == a
     assert Sum(x, (n, 1, a)).doit() == a*x
-    assert Sum(x, (x, Range(1, 11))).doit() == 55
-    assert Sum(x, (x, Range(1, 11, 2))).doit() == 25
-    assert Sum(x, (x, Range(1, 10, 2))) == Sum(x, (x, Range(9, 0, -2)))
     lo, hi = 1, 2
     s1 = Sum(n, (n, lo, hi))
     s2 = Sum(n, (n, hi, lo))
@@ -210,7 +207,6 @@ def test_arithmetic_sums():
     assert summation(cos(n), (n, x, x + 2)) == cos(x) + cos(x + 1) + cos(x + 2)
     assert isinstance(summation(cos(n), (n, x, x + S.Half)), Sum)
     assert summation(k, (k, 0, oo)) == oo
-    assert summation(k, (k, Range(1, 11))) == 55
 
 
 def test_polynomial_sums():
@@ -265,7 +261,7 @@ def test_geometric_sums():
     assert result.is_Float
 
     result = Sum(0.25**n, (n, 1, oo)).doit()
-    assert result == 1/3.
+    assert result == S(1)/3
     assert result.is_Float
 
     result = Sum(0.99999**n, (n, 1, oo)).doit()
@@ -997,6 +993,10 @@ def test_is_convergent():
     assert Sum(1/(x**3), (x, 1, oo)).is_convergent() is S.true
     assert Sum(1/(x**(S(1)/2)), (x, 1, oo)).is_convergent() is S.false
 
+    # limit comparison with p-series
+    assert Sum(factorial(n) / factorial(n+2), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(1 - cos(1/n), (n, 1, oo)).is_convergent is S.true
+
 
 def test_is_absolutely_convergent():
     assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false
@@ -1013,10 +1013,10 @@ def test_convergent_failing():
 def test_issue_6966():
     i, k, m = symbols('i k m', integer=True)
     z_i, q_i = symbols('z_i q_i')
-    a_k = Sum(-q_i*z_i/k,(i,1,m))
+    a_k = Sum(-q_i*z_i/k, (i, 1, m))
     b_k = a_k.diff(z_i)
     assert isinstance(b_k, Sum)
-    assert b_k == Sum(-q_i/k,(i,1,m))
+    assert b_k == Sum(-q_i/k, (i, 1, m))
 
 
 def test_issue_10156():
