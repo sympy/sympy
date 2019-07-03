@@ -768,8 +768,7 @@ class Range(Set):
 
     def as_relational(self, symbol):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
-        inf_end_points = [S.NegativeInfinity, S.Infinity]
-        if self.start in inf_end_points or self.stop in inf_end_points:
+        if self.start.is_infinite or self.stop.is_infinite:
             from sympy.functions.elementary.integers import floor
             return And(symbol >= self.start, symbol < self.stop, Eq(floor(symbol), symbol))
         else:
