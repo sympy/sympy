@@ -40,11 +40,11 @@ def dpll_satisfiable(expr, all_models=False):
         exprs.add_prop(expr)
         expr = exprs
 
-    # TODO: Check to handle this
-    # if False in clauses:
-    #     if all_models:
-    #         return (f for f in [False])
-    #     return False
+    # DONE: Check to handle this
+    if {False} in expr.data:
+        if all_models:
+            return (f for f in [False])
+        return False
 
     solver = SATSolver(expr.data, expr.variables, set(), expr.symbols)
     models = solver._find_model()

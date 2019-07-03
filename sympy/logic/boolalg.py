@@ -2701,4 +2701,4 @@ class EncodedCNF(object):
             return value
 
     def encode(self, clause):
-        return {self.encode_arg(arg) for arg in clause}
+        return {self.encode_arg(arg) if arg is not S.false else arg for arg in clause}
