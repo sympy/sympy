@@ -1388,7 +1388,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     from sympy.core.cache import cacheit
     from sympy.logic.boolalg import And
     from sympy.assumptions.ask import Q
-    
+
     # -{ Known facts as a set }-
     @cacheit
     def get_all_known_facts():
@@ -1402,7 +1402,7 @@ def compute_known_facts(known_facts, known_facts_keys):
         return And(
             %s
         )
-    
+
     # -{ Known facts in compressed sets }-
     @cacheit
     def get_known_facts_dict():
