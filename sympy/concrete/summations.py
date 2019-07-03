@@ -447,9 +447,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ### ------ limit-comparison with p-series ------ ###
         try:
             sequence_term_org, sym_org = self.function, self.limits[0][0]
-            if limit(sequence_term_org * sym_org, sym_org, oo) > 0:
+            if limit(sequence_term_org * sym_org, sym_org, oo) != 0:
                 return S.false
-            if limit(sequence_term_org * (sym_org ** 1.0001), sym_org, oo) < oo:
+            if oo > limit(sequence_term_org * (sym_org ** 1.0001), sym_org, oo) > -oo:
                 return S.true
         except TypeError:
             raise NotImplementedError
