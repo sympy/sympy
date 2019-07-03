@@ -1,7 +1,7 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
-                                StochasticStateSpaceOf)
+                                StochasticStateSpaceOf, variance)
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.joint_rv import JointDistribution
@@ -98,3 +98,5 @@ def test_DiscreteMarkovChain():
     assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == S(2)/3
     assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) == S(0)
     assert P(Ne(X[2], 2), Eq(X[1], 1)) == S(1)/3
+    assert E(X[1]**2, Eq(X[0], 1)) == S(8)/3
+    assert variance(X[1], Eq(X[0], 1)) == S(8)/9

@@ -1,8 +1,10 @@
+from __future__ import print_function, division
+
 from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
                     Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
                     nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
                     linsolve, Piecewise, eye, Or, Ne, Not, Intersection,
-                    Union)
+                    Union, Expr)
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -10,6 +12,7 @@ from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.stochastic_process import StochasticPSpace
+from sympy.core.logic import Logic
 from sympy.logic.boolalg import Boolean
 
 __all__ = [
@@ -599,22 +602,24 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         if check:
             return Expectation(expr, condition)
 
-        if isinstance(expr, RandomIndexedSymbol):
-            if isinstance(condition, Eq):
-                # handle queries similar to E(X[i], Eq(X[i-m], <some-state>))
-                lhsg, rhsg = condition.lhs, condition.rhs
-                if not isinstance(lhsg, RandomIndexedSymbol):
-                    lhsg, rhsg = (rhsg, lhsg)
-                if rhsg not in self.state_space:
-                    raise ValueError("%s state is not in the state space."%(rhsg))
-                if expr.key < lhsg.key:
-                    raise ValueError("Incorrect given condition is given, expectation "
-                      "time %s < time %s"%(expr.key, lhsg.key))
-                cond = condition & TransitionMatrixOf(self, trans_probs) & \
-                        StochasticStateSpaceOf(self, state_space)
-                s = Dummy('s')
-                func = Lambda(s, self.probability(Eq(expr, s), cond)*s)
-                return Sum(func(s), (s, state_space.inf, state_space.sup)).doit()
+        rvs = random_symbols(expr)
+        if isinstance(expr, Expr) and isinstance(condition, Eq) \
+            and len(rvs) == 1:
+            # handle queries similar to E(f(X[i]), Eq(X[i-m], <some-state>))
+            rv = list(rvs)[0]
+            lhsg, rhsg = condition.lhs, condition.rhs
+            if not isinstance(lhsg, RandomIndexedSymbol):
+                lhsg, rhsg = (rhsg, lhsg)
+            if rhsg not in self.state_space:
+                raise ValueError("%s state is not in the state space."%(rhsg))
+            if rv.key < rv.key:
+                raise ValueError("Incorrect given condition is given, expectation "
+                    "time %s < time %s"%(rv.key, rv.key))
+            cond = condition & TransitionMatrixOf(self, trans_probs) & \
+                    StochasticStateSpaceOf(self, state_space)
+            s = Dummy('s')
+            func = Lambda(s, self.probability(Eq(rv, s), cond)*expr.subs(rv, s))
+            return Sum(func(s), (s, state_space.inf, state_space.sup)).doit()
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(expr, condition))
