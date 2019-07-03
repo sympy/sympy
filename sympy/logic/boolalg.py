@@ -2686,7 +2686,7 @@ class EncodedCNF(object):
         self.data += clauses
 
     def encode_arg(self, arg):
-        if arg.func is Not:
+        if arg.func == Not:
             literal = arg.args[0]
         else:
             literal = arg
@@ -2695,7 +2695,7 @@ class EncodedCNF(object):
             n = len(self._symbols)
             self._symbols.append(literal)
             value = self.encoding[literal] = n + 1
-        if arg.func is Not:
+        if arg.func == Not:
             return -value
         else:
             return value
