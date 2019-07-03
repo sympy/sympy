@@ -309,6 +309,10 @@ def test_Range_set():
         assert Range(builtin_range(1000000000000)) == \
             Range(1000000000000)
 
+    # test Range.as_relational
+    assert Range(1, 4).as_relational(x) == Eq(x, 1) | Eq(x, 2) | Eq(x, 3)
+    assert Range(1, oo).as_relational(x) == (x >= 1) & (x < oo) & Eq(floor(x), x)
+
 
 def test_range_range_intersection():
     for a, b, r in [
