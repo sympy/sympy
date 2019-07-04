@@ -261,7 +261,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
         trans_probs, state_space = self.transition_probabilities, self.state_space
         if isinstance(given_condition, And):
             gcs = given_condition.args
-            given_condition = True
+            given_condition = S.true
             for gc in gcs:
                 if isinstance(gc, TransitionMatrixOf):
                     trans_probs = gc.matrix
@@ -492,6 +492,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
                 return nsteptp.__getitem__((stateg, statec))
             return Indexed(nsteptp, stateg, statec)
 
+        info = TransitionMatrixOf(self, trans_probs) & StochasticStateSpaceOf(self, state_space)
+        new_gc = given_condition & info
+
         if isinstance(condition, And):
             # handle queries like,
             # P(Eq(X[i+k], s1) & Eq(X[i+m], s2) . . . & Eq(X[i], sn), Eq(P(Eq(X[i], si)), prob))
@@ -506,15 +509,13 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
                 for idx in idx2state):
                 return S.Zero # a RandomIndexedSymbol cannot go to different states simultaneously
             i, result = -1, 1
-            conds = And(*[Intersection(idx2state[idx].as_set(), state_space).as_relational(idx) for idx in idx2state])
+            conds = And.fromiter(Intersection(idx2state[idx].as_set(), state_space).as_relational(idx)
+                                    for idx in idx2state)
             if not isinstance(conds, And):
-                return self.probability(conds, given_condition & TransitionMatrixOf(self, trans_probs)
-                                                & StochasticStateSpaceOf(self, state_space))
+                return self.probability(conds, new_gc)
             conds = conds.args
             while i > -len(conds):
-                result *= self.probability(conds[i], conds[i-1] & \
-                            TransitionMatrixOf(self, trans_probs) & \
-                            StochasticStateSpaceOf(self, state_space))
+                result *= self.probability(conds[i], conds[i-1] & info)
                 i -= 1
             if isinstance(given_condition, (TransitionMatrixOf, StochasticStateSpaceOf)):
                 return result * Probability(conds[i])
@@ -542,22 +543,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
                                 (cond.rhs, cond.lhs)
                 idx2state[idx] = cond if idx2state.get(idx, None) is None else \
                                            idx2state[idx] | cond
-            conds = Or(*[Intersection(idx2state[idx].as_set(), state_space).as_relational(idx)
-                        for idx in idx2state])
+            conds = Or.fromiter(Intersection(idx2state[idx].as_set(), state_space).as_relational(idx)
+                        for idx in idx2state)
             if not isinstance(conds, Or):
-                return self.probability(conds, given_condition & TransitionMatrixOf(self, trans_probs)
-                                                & StochasticStateSpaceOf(self, state_space))
-            conds = conds.args
-            for cond in conds:
-                prob_sum += self.probability(cond, given_condition &
-                            TransitionMatrixOf(self, trans_probs) &
-                            StochasticStateSpaceOf(self, state_space))
-            return prob_sum
+                return self.probability(conds, new_gc)
+            return sum([self.probability(cond, new_gc) for cond in conds.args])
 
         if isinstance(condition, Ne):
-            prob = self.probability(Not(condition), given_condition &
-                TransitionMatrixOf(self, trans_probs) &
-                StochasticStateSpaceOf(self, state_space))
+            prob = self.probability(Not(condition), new_gc)
             return S(1) - prob
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
@@ -612,7 +605,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
                 lhsg, rhsg = (rhsg, lhsg)
             if rhsg not in self.state_space:
                 raise ValueError("%s state is not in the state space."%(rhsg))
-            if rv.key < rv.key:
+            if rv.key < lhsg.key:
                 raise ValueError("Incorrect given condition is given, expectation "
                     "time %s < time %s"%(rv.key, rv.key))
             cond = condition & TransitionMatrixOf(self, trans_probs) & \

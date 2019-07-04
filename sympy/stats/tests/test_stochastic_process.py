@@ -100,3 +100,4 @@ def test_DiscreteMarkovChain():
     assert P(Ne(X[2], 2), Eq(X[1], 1)) == S(1)/3
     assert E(X[1]**2, Eq(X[0], 1)) == S(8)/3
     assert variance(X[1], Eq(X[0], 1)) == S(8)/9
+    raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
