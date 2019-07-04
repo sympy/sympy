@@ -1166,7 +1166,7 @@ class FormalPowerSeries(SeriesBase):
 
         Examples
         ========
-        
+
         >>> from sympy import fps, sin, exp, convolution
         >>> from sympy.abc import x
         >>> f1 = fps(sin(x))
@@ -1174,13 +1174,13 @@ class FormalPowerSeries(SeriesBase):
 
         >>> f1.product(f2, x, 4)
         x + x**2 + x**3/3 + O(x**4)
- 
+
         See Also
         ========
 
         sympy.discrete.convolutions
         """
- 
+
         if not isinstance(other, FormalPowerSeries):
             raise ValueError("Both series should be an instance of FormalPowerSeries"
                              " class.")
