@@ -16,6 +16,7 @@ from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy, symbols, Symbol
 from sympy.core.sympify import sympify
+from sympy.discrete.convolutions import convolution
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.combinatorial.numbers import bell
 from sympy.functions.elementary.integers import floor, frac, ceiling
@@ -24,7 +25,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp
-from sympy.series.sequences import sequence
+from sympy.series.sequences import sequence, SeqMul
 from sympy.series.series_class import SeriesBase
 
 
@@ -1152,6 +1153,63 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
+    def product(self, other, x=None, n=6):
+        """Multiplies two Formal Power Series, using discrete convolution and
+        return the truncated terms upto specified order.
+
+        Parameters
+        ==========
+
+        n : Number, optional
+            Specifies the order of the term up to which the polynomial should
+            be truncated.
+
+        Examples
+        ========
+        
+        >>> from sympy import fps, sin, exp, convolution
+        >>> from sympy.abc import x
+        >>> f1 = fps(sin(x))
+        >>> f2 = fps(exp(x))
+
+        >>> f1.product(f2, x, 4)
+        x + x**2 + x**3/3 + O(x**4)
+ 
+        See Also
+        ========
+
+        sympy.discrete.convolutions
+        """
+ 
+        if not isinstance(other, FormalPowerSeries):
+            raise ValueError("Both series should be an instance of FormalPowerSeries"
+                             " class.")
+
+        if self.dir != other.dir:
+            raise ValueError("Both series should be calculated from the"
+                             " same direction.")
+        elif self.x0 != other.x0:
+            raise ValueError("Both series should be calculated about the"
+                             " same point.")
+
+        elif self.x != other.x:
+            raise ValueError("Both series should have the same symbol.")
+
+        k = self.ak.variables[0]
+        coeff1 = sequence(self.ak.formula, (k, 0, oo))
+
+        k = other.ak.variables[0]
+        coeff2 = sequence(other.ak.formula, (k, 0, oo))
+
+        conv_coeff = convolution(coeff1[:n], coeff2[:n])
+
+        conv_seq = sequence(tuple(conv_coeff), (k, 0, oo))
+        k = self.xk.variables[0]
+        xk_seq = sequence(self.xk.formula, (k, 0, oo))
+        terms_seq = xk_seq * conv_seq
+
+        return Add(*(terms_seq[:n])) + Order(self.xk.coeff(n), (self.x, self.x0))
+
     def coeff_bell(self, n):
         r"""
         self.coeff_bell(n) returns a sequence of Bell polynomials of the second kind.
@@ -1245,6 +1303,7 @@ class FormalPowerSeries(SeriesBase):
         elif self.x0 != other.x0:
             raise ValueError("Both series should be calculated about the"
                              " same point.")
+
         elif self.x != other.x:
             raise ValueError("Both series should have the same symbol.")
 

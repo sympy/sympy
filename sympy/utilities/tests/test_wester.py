@@ -2546,8 +2546,6 @@ def test_W23():
 
 def test_W23b():
     # like W23 but limits are reversed
-    x = symbols('x', real=True, positive=True)
-    y = symbols('y', real=True)
     a, b = symbols('a b', real=True, positive=True)
     r2 = integrate(integrate(x/(x**2 + y**2), (y, -oo, oo)), (x, a, b))
     assert r2.collect(pi) == pi*(-a + b)

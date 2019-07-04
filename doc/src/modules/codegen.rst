@@ -548,6 +548,9 @@ Classes and functions for rewriting expressions (sympy.codegen.rewriting)
 .. automodule:: sympy.codegen.rewriting
    :members:
 
+.. automodule:: sympy.codegen.matrix_nodes
+   :members:
+
 Tools for simplifying expressions using approximations (sympy.codegen.approximations)
 -------------------------------------------------------------------------------------
 

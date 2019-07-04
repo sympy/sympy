@@ -2,9 +2,10 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
-        conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn, Product,
+        conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn,
         AccumBounds, Interval, ImageSet, Lambda)
 from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.core.relational import Ne, Eq
 from sympy.functions.elementary.piecewise import Piecewise
@@ -812,7 +813,7 @@ def test_asin():
     assert asin(p).is_positive is None
     assert asin(sin(S(7)/2)) == -S(7)/2 + pi
     assert asin(sin(-S(7)/4)) == S(7)/4 - pi
-    assert asin(cos(x)) == asin(cos(x))
+    assert unchanged(asin, cos(x))
 
 
 def test_asin_series():
@@ -918,7 +919,7 @@ def test_atan():
     assert atan(r).is_real is True
 
     assert atan(-2*I) == -I*atanh(2)
-    assert atan(cot(x)) == atan(cot(x))
+    assert unchanged(atan, cot(x))
     assert atan(cot(S(1)/4)) == -S(1)/4 + pi/2
     assert acot(S(1)/4).is_rational is False
 
@@ -1046,8 +1047,8 @@ def test_acot():
     assert acot(p).is_positive is True
     assert acot(I).is_positive is False
     assert acot(S(1)/4).is_rational is False
-    assert acot(cot(x)) == acot(cot(x))
-    assert acot(tan(x)) == acot(tan(x))
+    assert unchanged(acot, cot(x))
+    assert unchanged(acot, tan(x))
     assert acot(cot(S(1)/4)) == S(1)/4
     assert acot(tan(-S(1)/4)) == S(1)/4 - pi/2
 
@@ -1414,6 +1415,7 @@ def test_tancot_rewrite_sqrt():
                         assert not c1.has(cot, tan), "fails for %d*pi/%d" % (i, n)
                         assert 1e-3 > abs( cot(x.evalf(7)) - c1.evalf(4) ), "fails for %d*pi/%d" % (i, n)
 
+
 def test_sec():
     x = symbols('x', real=True)
     z = symbols('z')
@@ -1598,12 +1600,13 @@ def test_acsc():
     assert acsc(oo) == 0
     assert acsc(-oo) == 0
     assert acsc(zoo) == 0
+    assert acsc(0) == zoo
 
     assert acsc(csc(3)) == -3 + pi
     assert acsc(csc(4)) == -4 + pi
     assert acsc(csc(6)) == 6 - 2*pi
-    assert acsc(csc(x)) == acsc(csc(x))
-    assert acsc(sec(x)) == acsc(sec(x))
+    assert unchanged(acsc, csc(x))
+    assert unchanged(acsc, sec(x))
 
     assert acsc(x).diff(x) == -1/(x**2*sqrt(1 - 1/x**2))
     assert acsc(x).as_leading_term(x) == log(x)

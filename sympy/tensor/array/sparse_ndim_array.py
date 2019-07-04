@@ -109,7 +109,7 @@ class SparseNDimArray(NDimArray):
         if new_total_size != self._loop_size:
             raise ValueError("Invalid reshape parameters " + newshape)
 
-        return type(self)(*(newshape + (self._array,)))
+        return type(self)(self._sparse_array, newshape)
 
 class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
 
