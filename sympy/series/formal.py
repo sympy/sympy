@@ -1,4 +1,6 @@
-"""Formal Power Series"""
+
+
+    @property"""Formal Power Series"""
 
 from __future__ import print_function, division
 
@@ -1180,6 +1182,13 @@ class FormalPowerSeries(SeriesBase):
 
         sympy.discrete.convolutions
         """
+
+        if x is None:
+            x = self.x
+        if n is None:
+            return iter(self)
+
+        other = sympify(other)
 
         if not isinstance(other, FormalPowerSeries):
             raise ValueError("Both series should be an instance of FormalPowerSeries"
