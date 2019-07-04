@@ -526,7 +526,7 @@ class Range(Set):
                 params.append(sympify(w))
             else:
                 raise ValueError(filldedent('''
-        Finite arguments to Range must be integer symbols; `imageset` can define
+        Arguments to Range must be integers (or integer symbols); `imageset` can define
         other cases, e.g. use `imageset(i, i/10, Range(3))` to give
         [0, 1/10, 1/5].'''))
 
