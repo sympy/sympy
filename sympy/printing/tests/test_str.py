@@ -822,3 +822,7 @@ def test_str_special_matrices():
     assert str(Identity(4)) == 'I'
     assert str(ZeroMatrix(2, 2)) == '0'
     assert str(OneMatrix(2, 2)) == '1'
+
+
+def test_issue_14567():
+    assert str(factorial(Sum(-1, (x, 0, 0))) + y) == 'y + factorial(Sum(-1, (x, 0, 0)))'
