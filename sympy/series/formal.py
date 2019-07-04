@@ -1,6 +1,4 @@
-
-
-    @property"""Formal Power Series"""
+"""Formal Power Series"""
 
 from __future__ import print_function, division
 
