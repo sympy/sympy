@@ -1,11 +1,28 @@
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
-from sympy.vector.vector import Vector, BaseVector
-from sympy.vector.operators import gradient, curl, divergence
+from sympy.vector.vector import Vector, BaseVector, VectorAdd
+from sympy.vector.operators import curl, divergence
 from sympy import diff, integrate, S, simplify
-from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
+from sympy.matrices import Matrix
+
+
+def _compose(expr, system, variables):
+    from sympy.vector.operators import _get_coord_sys_from_expr
+
+    systems = _path(next(iter(_get_coord_sys_from_expr(expr))), system)[1][::-1]
+    eq = lambda x, y, z: (x, y, z)
+    eq = eq(*variables)
+    for i, j in enumerate(systems[1:]):
+        if j._parent == systems[i]:
+            eq = j._transformation_lambda(*eq)
+        else:
+            if systems[i]._transformation_lambda is not None:
+                eq = systems[i]._transformation_from_parent_lambda(*eq)
+            else:
+                raise ValueError()
+    return eq
 
 
 def express(expr, system, system2=None, variables=False):
@@ -55,6 +72,7 @@ def express(expr, system, system2=None, variables=False):
     True
 
     """
+    from sympy.vector.operators import _get_coord_sys_from_expr
 
     if expr == 0 or expr == Vector.zero:
         return expr
@@ -71,25 +89,26 @@ def express(expr, system, system2=None, variables=False):
         if variables:
             # If variables attribute is True, substitute
             # the coordinate variables in the Vector
-            system_list = []
-            for x in expr.atoms(BaseScalar, BaseVector):
+            coord_sys = list(_get_coord_sys_from_expr(expr))
+            base_sc = [i.base_scalars() for i in coord_sys]
+            trans_eq = [_compose(i, system, system.base_scalars()) for i in coord_sys]
+            trans_eq_dict = dict(zip([y for x in base_sc for y in x], [y for x in trans_eq for y in x]))
+            for x in expr.atoms(BaseScalar):
                 if x.system != system:
-                    system_list.append(x.system)
-            system_list = set(system_list)
-            subs_dict = {}
-            for f in system_list:
-                subs_dict.update(f.scalar_map(system))
-            expr = expr.subs(subs_dict)
+                    expr = expr.subs(x, trans_eq_dict[x])
         # Re-express in this coordinate system
-        outvec = Vector.zero
-        parts = expr.separate()
-        for x in parts:
-            if x != system:
-                temp = system.rotation_matrix(x) * parts[x].to_matrix(x)
-                outvec += matrix_to_vector(temp, system)
+
+        if isinstance(expr, VectorAdd):
+            return VectorAdd.fromiter([express(i, system=system) for i in expr.args])
+        else:
+            if isinstance(expr, BaseVector):
+                vector = expr
             else:
-                outvec += parts[x]
-        return outvec
+                vector = [i for i in expr.args if isinstance(i, Vector)][0]
+            trans_eq = _compose(vector, system, system.base_scalars())
+            jacobian = Matrix(trans_eq).jacobian(Matrix(system.base_scalars())).transpose()
+            components = list(jacobian * Matrix(expr._projections))
+            return VectorAdd.fromiter([i[0]*i[1] for i in zip(system.base_vectors(), components)])
 
     elif isinstance(expr, Dyadic):
         if system2 is None:
@@ -112,16 +131,14 @@ def express(expr, system, system2=None, variables=False):
                                 Vectors")
         if variables:
             # Given expr is a scalar field
-            system_set = set([])
-            expr = sympify(expr)
-            # Subsitute all the coordinate variables
+            coord_sys = list(_get_coord_sys_from_expr(expr))
+            base_sc = [i.base_scalars() for i in coord_sys]
+            trans_eq = [_compose(i, system, system.base_scalars()) for i in coord_sys]
+            trans_eq_dict = dict(zip([y for x in base_sc for y in x], [y for x in trans_eq for y in x]))
             for x in expr.atoms(BaseScalar):
                 if x.system != system:
-                    system_set.add(x.system)
-            subs_dict = {}
-            for f in system_set:
-                subs_dict.update(f.scalar_map(system))
-            return expr.subs(subs_dict)
+                    expr = expr.subs(x, trans_eq_dict[x])
+            return expr
         return expr
 
 

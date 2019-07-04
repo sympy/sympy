@@ -1,11 +1,12 @@
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.functions import express, matrix_to_vector, orthogonalize
+from sympy.vector.functions import express, matrix_to_vector, orthogonalize, _compose
 from sympy import symbols, S, sqrt, sin, cos, ImmutableMatrix as Matrix
 from sympy.utilities.pytest import raises
+from sympy import simplify
 
 N = CoordSys3D('N')
-q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
+q0, q1, q2, q3, q4, q5 = symbols('q0 q1 q2 q3 q4 q5')
 A = N.orient_new_axis('A', q1, N.k)
 B = A.orient_new_axis('B', q2, A.i)
 C = B.orient_new_axis('C', q3, B.j)
@@ -177,3 +178,41 @@ def test_orthogonalize():
         [(3*sqrt(10))*C.i/10 + (sqrt(10))*C.j/10, (-sqrt(10))*C.i/10 + (3*sqrt(10))*C.j/10]
     raises(ValueError, lambda: orthogonalize(v1, v2, v3))
     raises(ValueError, lambda: orthogonalize(v6, v7))
+
+
+def test_compose():
+    x, y, z, q = symbols('x y z q')
+
+    a = CoordSys3D('a')
+    b = a.locate_new('b', a.i + a.j)
+    c = b.orient_new_axis('c', q0, b.j)
+    d = c.create_new('d', transformation='spherical')
+    e = b.orient_new_axis('e', q1, b.j)
+    f = e.create_new('f', transformation='cylindrical')
+    g = a.orient_new_axis('g', q2, a.i)
+
+    v1 = b.x * b.i + b.z * b.k
+    assert _compose(v1, a, (x, y, z)) == (x - 1, y - 1, z)
+
+    v2 = a.x * a.i + a.z * a.k
+    assert _compose(v2, b, (x, y, z)) == (x + 1, y + 1, z)
+
+    v3 = c.y * c.i + c.k
+    assert _compose(v3, b, (x, y, z)) == (x * cos(q0) - z * sin(q0), y, x * sin(q0) + z * cos(q0))
+
+    assert _compose(v3, a, (x, y, z)) == (-z*sin(q0) + (x - 1)*cos(q0), y - 1, z*cos(q0) + (x - 1)*sin(q0))
+    assert simplify(_compose(v3, e, (x, y, z))) == \
+           (x * cos(q0 - q1) - z * sin(q0 - q1), y, x * sin(q0 - q1) + z * cos(q0 - q1))
+
+    v4 = 3 * d.r * d.i + d.j
+    assert _compose(v4, c, (x, y, z)) == (x * sin(y) * cos(z), x * sin(y) * sin(z), x * cos(y))
+    assert _compose(v4, a, (x, y, z)) == \
+            ((-z*sin(q0) + (x - 1)*cos(q0))*sin(y - 1)*cos(z*cos(q0) + (x - 1)*sin(q0)),
+            (-z*sin(q0) + (x - 1)*cos(q0))*sin(y - 1)*sin(z*cos(q0) + (x - 1)*sin(q0)),
+            (-z*sin(q0) + (x - 1)*cos(q0))*cos(y - 1))
+
+    v5 = f.i
+    assert simplify(_compose(v5, g, (x, y, z))) == \
+           (((x - 1)*cos(q1) - (y*sin(q2) + z*cos(q2))*sin(q1))*cos(y*cos(q2) - z*sin(q2) - 1),
+            ((x - 1)*cos(q1) - (y*sin(q2) + z*cos(q2))*sin(q1))*sin(y*cos(q2) - z*sin(q2) - 1),
+            (x - 1)*sin(q1) + (y*sin(q2) + z*cos(q2))*cos(q1))

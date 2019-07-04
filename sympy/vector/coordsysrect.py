@@ -132,7 +132,7 @@ class CoordSys3D(Basic):
             transformation = Tuple(rotation_matrix, location)
 
         if isinstance(transformation, Tuple):
-            lambda_transformation = CoordSys3D._compose_rotation_and_translation(
+            lambda_inverse = CoordSys3D._compose_rotation_and_translation(
                 transformation[0],
                 transformation[1],
                 parent
@@ -140,28 +140,28 @@ class CoordSys3D(Basic):
             r, l = transformation
             l = l._projections
             lambda_lame = CoordSys3D._get_lame_coeff('cartesian')
-            lambda_inverse = lambda x, y, z: r.inv()*Matrix(
-                [x-l[0], y-l[1], z-l[2]])
+            lambda_transformation = lambda x,y,z: tuple(CoordSys3D._inverse_rotation_matrix(r)*Matrix(
+                [x+l[0], y+l[1], z+l[2]]))
         elif isinstance(transformation, Symbol):
             trname = transformation.name
-            lambda_transformation = CoordSys3D._get_transformation_lambdas(trname)
+            lambda_transformation = CoordSys3D._set_inv_trans_equations(trname)
             if parent is not None:
                 if parent.lame_coefficients() != (S(1), S(1), S(1)):
                     raise ValueError('Parent for pre-defined coordinate '
                                  'system should be Cartesian.')
             lambda_lame = CoordSys3D._get_lame_coeff(trname)
-            lambda_inverse = CoordSys3D._set_inv_trans_equations(trname)
+            lambda_inverse = CoordSys3D._get_transformation_lambdas(trname)
         elif isinstance(transformation, Lambda):
             if not CoordSys3D._check_orthogonality(transformation):
                 raise ValueError("The transformation equation does not "
                                  "create orthogonal coordinate system")
-            lambda_transformation = transformation
-            lambda_lame = CoordSys3D._calculate_lame_coeff(lambda_transformation)
-            lambda_inverse = None
+            lambda_transformation = None
+            lambda_inverse = transformation
+            lambda_lame = CoordSys3D._calculate_lame_coeff(lambda_inverse)
         else:
-            lambda_transformation = lambda x, y, z: transformation(x, y, z)
+            lambda_transformation = None
+            lambda_inverse = lambda x, y, z: transformation(x, y, z)
             lambda_lame = CoordSys3D._get_lame_coeff(transformation)
-            lambda_inverse = None
 
         if variable_names is None:
             if isinstance(transformation, Lambda):
@@ -228,9 +228,9 @@ class CoordSys3D(Basic):
         obj._base_scalars = (x1, x2, x3)
 
         obj._transformation = transformation
-        obj._transformation_lambda = lambda_transformation
+        obj._transformation_lambda = lambda_inverse
         obj._lame_coefficients = lambda_lame(x1, x2, x3)
-        obj._transformation_from_parent_lambda = lambda_inverse
+        obj._transformation_from_parent_lambda = lambda_transformation
 
         setattr(obj, variable_names[0], x1)
         setattr(obj, variable_names[1], x2)
@@ -337,7 +337,7 @@ class CoordSys3D(Basic):
         x1, x2, x3 = symbols("x1, x2, x3", cls=Dummy, reals=True)
         x, y, z = symbols("x, y, z", cls=Dummy)
 
-        equations = self._transformation(x1, x2, x3)
+        equations = self._transformation_lambda(x1, x2, x3)
 
         try:
             solved = solve([equations[0] - x,
@@ -398,11 +398,12 @@ class CoordSys3D(Basic):
                                diff(equations(x1, x2, x3)[2], x3)**2)
                       )
 
-    def _inverse_rotation_matrix(self):
+    @staticmethod
+    def _inverse_rotation_matrix(matrix):
         """
         Returns inverse rotation matrix.
         """
-        return simplify(self._parent_rotation_matrix**-1)
+        return simplify(matrix**-1)
 
     @staticmethod
     def _get_transformation_lambdas(curv_coord_name):
@@ -480,6 +481,9 @@ class CoordSys3D(Basic):
         return self._transformation_lambda(*self.base_scalars())
 
     def transformation_from_parent(self):
+        if self._transformation_from_parent_lambda is None:
+            # TODO: specify how to calculate it
+            raise ValueError("no inverse transformation has been calculated.")
         if self._parent is None:
             raise ValueError("no parent coordinate system, use "
                              "`transformation_from_parent_function()`")
@@ -1036,9 +1040,9 @@ class CoordSys3D(Basic):
 
         dx, dy, dz = [translation.dot(i) for i in parent.base_vectors()]
         t = lambda x, y, z: (
-            x + dx,
-            y + dy,
-            z + dz,
+            x - dx,
+            y - dy,
+            z - dz,
         )
         return lambda x, y, z: t(*r(x, y, z))
 

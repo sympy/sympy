@@ -8,6 +8,8 @@ from sympy.vector.point import Point
 from sympy.vector.vector import Vector
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
+from sympy.core import S
+from sympy import Tuple
 
 
 x, y, z = symbols('x y z')
@@ -451,12 +453,56 @@ def test_rotation_trans_equations():
     from sympy import symbols
     q0 = symbols('q0')
     assert a._rotation_trans_equations(a._parent_rotation_matrix, a.base_scalars()) == (a.x, a.y, a.z)
-    assert a._rotation_trans_equations(a._inverse_rotation_matrix(), a.base_scalars()) == (a.x, a.y, a.z)
+    assert a._rotation_trans_equations(a._inverse_rotation_matrix(
+        a._parent_rotation_matrix), a.base_scalars()) == (a.x, a.y, a.z)
     b = a.orient_new_axis('b', 0, -a.k)
     assert b._rotation_trans_equations(b._parent_rotation_matrix, b.base_scalars()) == (b.x, b.y, b.z)
-    assert b._rotation_trans_equations(b._inverse_rotation_matrix(), b.base_scalars()) == (b.x, b.y, b.z)
+    assert b._rotation_trans_equations(b._inverse_rotation_matrix(
+        b._parent_rotation_matrix), b.base_scalars()) == (b.x, b.y, b.z)
     c = a.orient_new_axis('c', q0, -a.k)
     assert c._rotation_trans_equations(c._parent_rotation_matrix, c.base_scalars()) == \
            (-sin(q0) * c.y + cos(q0) * c.x, sin(q0) * c.x + cos(q0) * c.y, c.z)
-    assert c._rotation_trans_equations(c._inverse_rotation_matrix(), c.base_scalars()) == \
+    assert c._rotation_trans_equations(c._inverse_rotation_matrix(
+        c._parent_rotation_matrix), c.base_scalars()) == \
            (sin(q0) * c.y + cos(q0) * c.x, -sin(q0) * c.x + cos(q0) * c.y, c.z)
+
+
+def test_transformation_functions():
+    C = CoordSys3D("C")
+    D = C.locate_new("D", 3 * C.i)
+    assert D.transformation_from_parent() == (C.x + 3, C.y, C.z)
+    assert D.transformation_to_parent() == (D.x - 3, D.y, D.z)
+    assert express(C.x, D, variables=True) == D.x + 3
+    assert express(D.x, C, variables=True) == C.x - 3
+    E = C.orient_new_axis('E', q1, C.k)
+    assert E.transformation_from_parent() == (C.x*cos(q1) - C.y*sin(q1), C.x*sin(q1) + C.y*cos(q1), C.z)
+    assert E.transformation_to_parent() == (E.x*cos(q1) + E.y*sin(q1), -E.x*sin(q1) + E.y*cos(q1), E.z)
+    assert express(C.x, E, variables=True) == E.x*cos(q1) - E.y*sin(q1)
+    assert express(E.x, C, variables=True) == C.x*cos(q1) + C.y*sin(q1)
+    E = C.create_new('E', transformation=Tuple(Matrix([
+        [cos(q), sin(q), 0],
+        [-sin(q), cos(q), 0],
+        [0, 0, 1]]), Vector.zero))
+    E._calculate_inv_trans_equations()
+    assert E.transformation_to_parent() == (E.x*cos(q) + E.y*sin(q), -E.x*sin(q) + E.y*cos(q), E.z)
+    assert E.transformation_from_parent() == (C.x*cos(q) - C.y*sin(q), C.x*sin(q) + C.y*cos(q), C.z)
+    assert express(E.x, C, variables=True) == C.x*cos(q) + C.y*sin(q)
+    assert express(C.x, E, variables=True) == E.x*cos(q) - E.y*sin(q)
+    F = C.create_new("F", lambda x, y, z: (x**3, y, z))
+    F._calculate_inv_trans_equations()
+    assert F.transformation_from_parent() == (C.x**(S(1)/3), C.y, C.z)
+    assert F.transformation_to_parent() == (F.x1**3, F.x2, F.x3)
+    assert express(C.x, F, variables=True) == F.x1**(1/3)
+    assert express(F.x1, C, variables=True) == C.x**3
+    G = C.create_new('G', lambda r, theta, phi: (
+                    r * sin(theta) * cos(phi),
+                    r * sin(theta) * sin(phi),
+                    r * cos(theta)))
+    # assert raises(ValueError, lambda: G.transformation_from_parent())
+    assert G.transformation_to_parent() == (G.x1*sin(G.x2)*cos(G.x3), G.x1*sin(G.x2)*sin(G.x3), G.x1*cos(G.x2))
+    H = C.create_new("H", lambda x, y, z: (x-3, y, z))
+    H._calculate_inv_trans_equations()
+    assert H.transformation_from_parent() == (C.x + 3, C.y, C.z)
+    assert H.transformation_to_parent() == (H.x1 - 3, H.x2, H.x3)
+    assert express(C.x, H, variables=True) == H.x1 + 3
+    assert express(H.x1, C, variables=True) == C.x - 3
