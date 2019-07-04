@@ -1600,6 +1600,7 @@ def test_acsc():
     assert acsc(oo) == 0
     assert acsc(-oo) == 0
     assert acsc(zoo) == 0
+    assert acsc(0) == zoo
 
     assert acsc(csc(3)) == -3 + pi
     assert acsc(csc(4)) == -4 + pi
