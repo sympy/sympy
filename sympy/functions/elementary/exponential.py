@@ -481,6 +481,15 @@ class log(Function):
     a logarithm of a different base ``b``, use ``log(x, b)``,
     which is essentially short-hand for ``log(x)/log(b)``.
 
+    Examples
+    ========
+
+    >>> from sympy import log, S
+    >>> log(8, 2)
+    3
+    >>> log(S(8)/3, 2)
+    -log(3)/log(2) + 3
+
     See Also
     ========
 
@@ -522,11 +531,7 @@ class log(Function):
                 # or else expand_log in Mul would have to handle this
                 n = multiplicity(base, arg)
                 if n:
-                    den = base**n
-                    if den.is_Integer:
-                        return n + log(arg // den) / log(base)
-                    else:
-                        return n + log(arg / den) / log(base)
+                    return n + log(arg / base**n) / log(base)
                 else:
                     return log(arg)/log(base)
             except ValueError:
