@@ -212,6 +212,8 @@ def test_log_base():
     assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
     assert log(Rational(2, 3), Rational(2, 5)) == \
         log(S(2)/3)/log(S(2)/5)
+    # issue 17148
+    assert log(S(8)/3, 2) == -log(3)/log(2) + 3
 
 
 def test_log_symbolic():
