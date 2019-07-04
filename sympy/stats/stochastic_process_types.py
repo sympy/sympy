@@ -315,6 +315,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
 
         # extracting transition matrix and state space
         trans_probs, state_space, given_condition = self._extract_information(given_condition)
+
         # given_condition does not have sufficient information
         # for computations
         if trans_probs == None or \
