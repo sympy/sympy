@@ -474,8 +474,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         n_log_test = order.expr.match(1 / (sym ** p * log(sym) ** q * log(log(sym)) ** r))
         if n_log_test is not None:
             if (n_log_test[p] > 1 or
-                (n_log_test[p] == 1 and n_log_test[q] > 1) or
-                (n_log_test[p] == n_log_test[q] == 1 and n_log_test[r] > 1)):
+               (n_log_test[p] == 1 and n_log_test[q] > 1) or
+               (n_log_test[p] == n_log_test[q] == 1 and n_log_test[r] > 1)):
                 return S.true
             return S.false
 

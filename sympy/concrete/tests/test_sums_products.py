@@ -14,6 +14,7 @@ from sympy.core.compatibility import range
 
 n = Symbol('n', integer=True)
 
+
 def test_karr_convention():
     # Test the Karr summation convention that we want to hold.
     # See his paper "Summation in Finite Terms" for a detailed
@@ -993,9 +994,12 @@ def test_is_convergent():
     assert Sum(1/(x**3), (x, 1, oo)).is_convergent() is S.true
     assert Sum(1/(x**(S(1)/2)), (x, 1, oo)).is_convergent() is S.false
 
+
+def test_issue_16699():
     # limit comparison with p-series
     assert Sum(factorial(n) / factorial(n+2), (n, 1, oo)).is_convergent() is S.true
     assert Sum(1 - cos(1/n), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(log(n) - log(n + 1), (n, 1, oo)).is_convergent() is S.false
 
 
 def test_is_absolutely_convergent():
@@ -1057,7 +1061,7 @@ def test_issue_14111():
 
 
 def test_issue_14484():
-    raises(NotImplementedError, lambda: Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent())
+    assert Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent() is S.false
 
 
 def test_issue_14640():
