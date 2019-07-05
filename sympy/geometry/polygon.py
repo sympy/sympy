@@ -438,6 +438,32 @@ class Polygon(GeometrySet):
         return I_xx, I_yy, I_xy
 
 
+    def polar_modulus(self):
+        """Returns the polar modulus of a two-dimensional polygon"""
+        return self.second_moment_of_area()[0] + self.second_moment_of_area()[1]
+
+
+    def section_modulus(self, point=None):
+        """Returns a tuple with the section modulus of a two-dimensional
+        polygon.
+        """
+        x_c, y_c = self.centroid.x, self.centroid.y
+        if point is None:
+            # taking x and y as maximum distances from centroid
+            x_min, y_min, x_max, y_max = self.shape.bounds
+            y = max(y_c - y_min, y_max - y_c)
+            x = max(x_c - x_min, x_max - x_c)
+        else:
+            # taking x and y as distances of the given point from the centroid
+            y = point.y - y_c
+            x = point.x - x_c
+
+        S_x =  self.second_moment_of_area()[0]/y
+        S_y = self.second_moment_of_area()[1]/x
+
+        return S_x, S_y
+
+
     @property
     def sides(self):
         """The directed line segments that form the sides of the polygon.
