@@ -1,6 +1,7 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
-                   ImmutableMatrix)
-from sympy.stats import DiscreteMarkovChain, P, TransitionMatrixOf, E
+                   ImmutableMatrix, Ne, Lt, Gt)
+from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
+                                StochasticStateSpaceOf, variance)
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.joint_rv import JointDistribution
@@ -59,6 +60,10 @@ def test_DiscreteMarkovChain():
             Eq(Probability(Eq(Y[0], 0)), S(1)/4) & TransitionMatrixOf(Y, TO1)) == S(1)/16
     assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), TransitionMatrixOf(Y, TO1)) == \
             Probability(Eq(Y[0], 0))/4
+    assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
+        StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) == S(1)/4
+    assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
+        StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) == S(0)
     raises (ValueError, lambda: str(P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), Eq(Y[1], 1))))
 
     # testing properties of Markov chain
@@ -84,3 +89,15 @@ def test_DiscreteMarkovChain():
     assert Y6._transient2transient() == ImmutableMatrix([[0, S(1)/2, 0], [S(1)/2, 0, S(1)/2], [0, S(1)/2, 0]])
     assert Y6.fundamental_matrix() == ImmutableMatrix([[S(3)/2, S(1), S(1)/2], [S(1), S(2), S(1)], [S(1)/2, S(1), S(3)/2]])
     assert Y6.absorbing_probabilites() == ImmutableMatrix([[S(3)/4, S(1)/4], [S(1)/2, S(1)/2], [S(1)/4, S(3)/4]])
+
+    # testing miscellaneous queries
+    T = Matrix([[S(1)/2, S(1)/4, S(1)/4], [S(1)/3, 0, S(2)/3], [S(1)/2, S(1)/2, 0]])
+    X = DiscreteMarkovChain('X', [0, 1, 2], T)
+    assert P(Eq(X[1], 2) & Eq(X[2], 1) & Eq(X[3], 0),
+    Eq(P(Eq(X[1], 0)), S(1)/4) & Eq(P(Eq(X[1], 1)), S(1)/4)) == S(1)/12
+    assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == S(2)/3
+    assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) == S(0)
+    assert P(Ne(X[2], 2), Eq(X[1], 1)) == S(1)/3
+    assert E(X[1]**2, Eq(X[0], 1)) == S(8)/3
+    assert variance(X[1], Eq(X[0], 1)) == S(8)/9
+    raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
