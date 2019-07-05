@@ -1,6 +1,7 @@
 from sympy.combinatorics.pc_groups import PolycyclicGroup, Collector
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.free_groups import free_group
+from sympy.combinatorics.named_groups import SymmetricGroup
 
 def test_collected_word():
     F, x0, x1, x2, x3 = free_group("x0, x1, x2, x3")

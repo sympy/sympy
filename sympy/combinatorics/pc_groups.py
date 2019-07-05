@@ -3,30 +3,16 @@ from sympy import sieve
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 
-class PolycyclicGroup(Basic):
+class PolycyclicGroup(DefaultPrinting):
 
     is_group = True
     is_solvable = True
 
-    def __init__(self, pcgs_):
-        self.perm_group = PermutationGroup(pcgs_)
-        self.pc_series = self._pc_series()
-        self.pcgs = self._compute_pcgs()
+    def __init__(self, pc_sequence, pc_series):
+        self.pc_series = pc_series
+        self.pcgs = pc_sequence
 
-    def _pc_series(self):
-        return self.perm_group.composition_series()
-
-    def _compute_pcgs(self):
-        # computes the generating sequence for polycyclic groups.
-        series = self.pc_series
-        pcgs = []
-        for i in range(len(series)-1):
-            for g in series[i].generators:
-                if not g in series[i+1]:
-                    pcgs.append(g)
-        return pcgs
-
-    def relative_orders(self):
+    def relative_order(self):
         rel_orders = []
         for i in range(len(self.pc_series)-1):
             G = self.pc_series[i]
@@ -57,6 +43,94 @@ class PolycyclicGroup(Basic):
                         exponent[i] = exp
                         break
         return exponent
+
+    def power_relations(self, group):
+        power_relators = []
+        for i, s in enumerate(group.symbols):
+            gen = ((s, self.relative_order()[i]), )
+            gen = group.dtype(gen)
+            power_relators.append(gen)
+        power_relators.reverse()
+        return power_relators
+
+    def conjugate_relations(self, group):
+        conjugate_relations = []
+        g = group.symbols
+        for i in range(len(g)):
+            for j in range(i+1, len(g)):
+                x1 = g[i]
+                x2 = g[j]
+                relation = ((x1, -1), (x2, 1), (x1, 1))
+                conjugate_relations.append(group.dtype(relation))
+        conjugate_relations.reverse()
+        return conjugate_relations
+
+    def pc_presentation(self, group):
+        pc_relators = {}
+        sym = list(group.generators)
+        sym.reverse()
+
+        pc_sequence = self.pcgs
+        pc_sequence.reverse()
+
+        perm_to_free = {}
+        free_to_perm = {}
+
+        for gen, s in zip(pc_sequence, sym):
+            perm_to_free[gen] = s
+            perm_to_free[gen**2] = s**2
+            free_to_perm[s] = gen
+            free_to_perm[s**2] = gen**2
+
+        power_relators = self.power_relations(group)
+        conjugate_relators = self.conjugate_relations(group)
+
+        G = PermutationGroup([pc_sequence[0]])
+        for i, rel in enumerate(power_relators):
+            array = rel.array_form
+            s, e = array[0]
+
+            l = G.generator_product(free_to_perm[rel[0]]**e, original = True)
+            word = group.identity
+
+            for gens in l:
+                word = word*perm_to_free[gens]
+            collector = Collector(pc_relators, self.relative_order(), group)
+            word = collector.collected_word(word)
+
+            if word:
+                pc_relators[rel] = word
+            else:
+                pc_relators[rel] = ()
+
+            if i+1 < len(pc_sequence) and pc_sequence[i+1] not in G:
+                G = PermutationGroup(G.generators + [pc_sequence[i+1]])
+
+        G = PermutationGroup([pc_sequence[0], pc_sequence[1]])
+
+        for i, rel in enumerate(conjugate_relators, start = 1):
+            gens = sorted(rel.contains_generators())
+
+            gens = [free_to_perm[gens[0]], free_to_perm[gens[1]]]
+            relation = gens[0]**-1*gens[1]*gens[0]
+
+            l = G.generator_product(relation, original = True)
+
+            word = group.identity
+            for gen in l:
+                word = word*perm_to_free[gen]
+
+            collector = Collector(pc_relators, self.relative_order(), group)
+            word = collector.collected_word(word)
+            if word:
+                pc_relators[rel] = word
+            else:
+                pc_relators[rel] = ()
+
+            if i+1 < len(pc_sequence) and pc_sequence[i+1] not in G:
+                G = PermutationGroup(G.generators + [pc_sequence[i+1]] )
+
+        return pc_relators
 
 
 class Collector(DefaultPrinting):
@@ -117,6 +191,9 @@ class Collector(DefaultPrinting):
 
         i = len(array)-1
         s1, e1 = array[i]
+        # print(re)
+        # print(index)
+        # print("s1: ", s1, "e1: ", e1)
         if re[index[s1]] and (e1 < 0 or e1 > re[index[s1]]-1):
             return ((s1, e1), )
         return None

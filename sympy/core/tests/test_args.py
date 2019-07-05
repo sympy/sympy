@@ -487,13 +487,6 @@ def test_sympy__combinatorics__perm_groups__PermutationGroup():
     assert _test_args(PermutationGroup([Permutation([0, 1])]))
 
 
-@XFAIL
-def test_sympy__combinatorics__pc_groups__PolycyclicGroup():
-    from sympy.combinatorics.permutations import Permutation
-    from sympy.combinatorics.pc_groups import PolycyclicGroup
-    assert _test_args(PolycyclicGroup([Permutation(1, 2, 3)]))
-
-
 def test_sympy__combinatorics__polyhedron__Polyhedron():
     from sympy.combinatorics.permutations import Permutation
     from sympy.combinatorics.polyhedron import Polyhedron

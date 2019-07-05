@@ -4519,7 +4519,18 @@ class PermutationGroup(Basic):
         from sympy.combinatorics.pc_groups import PolycyclicGroup
         if not self.is_polycyclic:
             raise ValueError("The group must be solvable")
-        return PolycyclicGroup(self.generators)
+
+        pc_series = self.composition_series()
+        pc_sequence = []
+        ref = pc_series[0][0]
+
+        for i in range(len(pc_series)-1):
+            for g in pc_series[i].generators:
+                if not g in pc_series[i+1] and g.order() <= ref.order():
+                    ref = g
+            pc_sequence.append(ref)
+            ref = pc_series[0][0]
+        return PolycyclicGroup(pc_sequence, pc_series)
 
 
 def _orbit(degree, generators, alpha, action='tuples'):
