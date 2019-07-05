@@ -88,6 +88,7 @@ def test_pc_presentation():
     pc_presentation = pc_group.pc_presentation(F)
     assert pc_presentation == { x1**3: (), x0**3: (), x0**-1*x1*x0: x0**2 }
 
+    pc_group.pcgs.reverse()
     x0, x1 = pc_group.pcgs
     assert x0**-1*x1*x0 == x0**2
 
@@ -101,6 +102,7 @@ def test_pc_presentation():
     pc_presentation = pc_group.pc_presentation(F)
     assert pc_presentation == { x1**2: (), x0**2: (), x0**-1*x1*x0: x1 }
 
+    pc_group.pcgs.reverse()
     x0, x1 = pc_group.pcgs
     assert x0**-1*x1*x0 == x1
 
@@ -110,7 +112,6 @@ def test_pc_presentation():
     group = F
     S = SymmetricGroup(9)
     G = S.sylow_subgroup(3)
-    der = G.derived_series()
 
     pc_group = G.polycyclic_group()
     pc_presentation = pc_group.pc_presentation(F)
@@ -118,8 +119,8 @@ def test_pc_presentation():
                                 x1**-1*x2*x1: x2, x0**-1*x2*x0: x2,
                                 x0**-1*x1*x0: x0**2 }
 
-    # x0, x1, x2 = pc_group.pcgs  (I don't know why the sequence gets reversed here)
-    x0, x1, x2 = der[len(der)-2].generators
+    pc_group.pcgs.reverse()
+    x0, x1, x2 = pc_group.pcgs
     assert x1**-1*x2*x1 == x2
     assert x0**-1*x2*x0 == x2
     assert x0**-1*x1*x0 == x0**2
