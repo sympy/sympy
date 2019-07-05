@@ -107,6 +107,7 @@ def _peeloff_pi(arg):
     (x, pi/2)
     >>> peel(x + 2*pi/3 + pi*y)
     (x + pi*y + pi/6, pi/2)
+
     """
     for a in Add.make_args(arg):
         if a is S.Pi:
@@ -159,6 +160,7 @@ def _pi_coeff(arg, cycles=1):
     2
     >>> coeff(2*Dummy(even=True)*pi)
     0
+
     """
     arg = sympify(arg)
     if arg is S.Pi:
@@ -241,6 +243,7 @@ class sin(TrigonometricFunction):
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Sin
     .. [4] http://mathworld.wolfram.com/TrigonometryAngles.html
+
     """
 
     def period(self, symbol=None):
@@ -515,6 +518,7 @@ class cos(TrigonometricFunction):
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Cos
+
     """
 
     def period(self, symbol=None):
@@ -936,6 +940,7 @@ class tan(TrigonometricFunction):
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Tan
+
     """
 
     def period(self, symbol=None):
@@ -1239,6 +1244,7 @@ class cot(TrigonometricFunction):
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Cot
+
     """
 
     def period(self, symbol=None):
@@ -1644,6 +1650,7 @@ class sec(ReciprocalTrigonometricFunction):
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Sec
+
     """
 
     _reciprocal_of = cos
@@ -1724,6 +1731,7 @@ class csc(ReciprocalTrigonometricFunction):
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.14
     .. [3] http://functions.wolfram.com/ElementaryFunctions/Csc
+
     """
 
     _reciprocal_of = sin
@@ -1773,7 +1781,16 @@ class csc(ReciprocalTrigonometricFunction):
 
 
 class sinc(Function):
-    r"""Represents unnormalized sinc function
+    r"""
+    Represents an unnormalized sinc function:
+
+    .. math::
+
+        \operatorname{sinc}(x) =
+        \begin{cases}
+          \frac{\sin x}{x} & \qquad x \neq 0 \\
+          1 & \qquad x = 0
+        \end{cases}
 
     Examples
     ========
@@ -1875,9 +1892,11 @@ class asin(InverseTrigonometricFunction):
     Notes
     =====
 
-    asin(x) will evaluate automatically in the cases oo, -oo, 0, 1,
-    -1 and for some instances when the result is a rational multiple
-    of pi (see the eval class method).
+    ``asin(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
+    ``0``, ``1``, ``-1`` and for some instances when the result is a rational
+    multiple of pi (see the eval class method).
+
+    A purely imaginary argument will lead to an asinh expression.
 
     Examples
     ========
@@ -1900,6 +1919,7 @@ class asin(InverseTrigonometricFunction):
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSin
+
     """
 
     def fdiff(self, argindex=1):
@@ -2057,10 +2077,13 @@ class acos(InverseTrigonometricFunction):
     =====
 
     ``acos(x)`` will evaluate automatically in the cases
-    ``oo``, ``-oo``, ``0``, ``1``, ``-1``.
+    ``oo``, ``-oo``, ``0``, ``1``, ``-1`` and for some instances when
+    the result is a rational multiple of pi (see the eval class method).
 
     ``acos(zoo)`` evaluates to ``zoo``
     (see note in :py:class`sympy.functions.elementary.trigonometric.asec`)
+
+    A purely imaginary argument will be rewritten to asinh.
 
     Examples
     ========
@@ -2085,6 +2108,7 @@ class acos(InverseTrigonometricFunction):
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCos
+
     """
 
     def fdiff(self, argindex=1):
@@ -2233,8 +2257,9 @@ class atan(InverseTrigonometricFunction):
     Notes
     =====
 
-    atan(x) will evaluate automatically in the cases
-    oo, -oo, 0, 1, -1.
+    ``atan(x)`` will evaluate automatically in the cases
+    ``oo``, ``-oo``, ``0``, ``1``, ``-1`` and for some instances when the
+    result is a rational multiple of pi (see the eval class method).
 
     Examples
     ========
@@ -2259,6 +2284,7 @@ class atan(InverseTrigonometricFunction):
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan
+
     """
 
     def fdiff(self, argindex=1):
@@ -2422,6 +2448,7 @@ class acot(InverseTrigonometricFunction):
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCot
+
     """
 
     def fdiff(self, argindex=1):
@@ -2583,15 +2610,15 @@ class asec(InverseTrigonometricFunction):
     it can be defined [4]_ as
 
     .. math::
-        sec^{-1}(z) = -i*(log(\sqrt{1 - z^2} + 1) / z)
+        \operatorname{sec^{-1}}(z) = -i\frac{\log\left(\sqrt{1 - z^2} + 1\right)}{z}
 
     At ``x = 0``, for positive branch cut, the limit evaluates to ``zoo``. For
     negative branch cut, the limit
 
     .. math::
-        \lim_{z \to 0}-i*(log(-\sqrt{1 - z^2} + 1) / z)
+        \lim_{z \to 0}-i\frac{\log\left(-\sqrt{1 - z^2} + 1}{z}
 
-    simplifies to :math:`-i*log(z/2 + O(z^3))` which ultimately evaluates to
+    simplifies to :math:`-i*\log(z/2 + O(z^3))` which ultimately evaluates to
     ``zoo``.
 
     As ``asex(x)`` = ``asec(1/x)``, a similar argument can be given for
@@ -2619,6 +2646,7 @@ class asec(InverseTrigonometricFunction):
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSec
     .. [4] http://reference.wolfram.com/language/ref/ArcSec.html
+
     """
 
     @classmethod
@@ -2727,6 +2755,7 @@ class acsc(InverseTrigonometricFunction):
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] http://dlmf.nist.gov/4.23
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCsc
+
     """
 
     @classmethod
@@ -2824,6 +2853,13 @@ class atan2(InverseTrigonometricFunction):
     Attention: Note the role reversal of both arguments. The `y`-coordinate
     is the first argument and the `x`-coordinate the second.
 
+    If either `x` or `y` is complex:
+
+    .. math::
+
+        \operatorname{atan2}(y, x) =
+            -i\log\left(\frac{x + iy}{\sqrt{x**2 + y**2}}\right)
+
     Examples
     ========
 
@@ -2895,6 +2931,7 @@ class atan2(InverseTrigonometricFunction):
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] https://en.wikipedia.org/wiki/Atan2
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan2
+
     """
 
     @classmethod
