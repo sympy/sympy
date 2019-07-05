@@ -11,7 +11,7 @@ from sympy import (
 from sympy.core.mul import _keep_coeff
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.core.compatibility import range
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
@@ -820,3 +820,15 @@ def test_issue_7971():
     z = Integral(x, (x, 1, 1))
     assert z != 0
     assert simplify(z) is S.Zero
+
+
+def test_issue_17141():
+    # Check that there is no RecursionError
+    assert simplify(x**(1 / acos(I))) == x**(2/(pi - 2*I*log(1 + sqrt(2))))
+    assert simplify(acos(-I)**2*acos(I)**2) == \
+           log(1 + sqrt(2))**4 + pi**2*log(1 + sqrt(2))**2/2 + pi**4/16
+    assert simplify(2**acos(I)**2) == 2**((pi - 2*I*log(1 + sqrt(2)))**2/4)
+
+    # However, for a complex number it still happens
+    raises(RecursionError, lambda: simplify(2**acos(I+1)**2))
+    raises(RecursionError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))

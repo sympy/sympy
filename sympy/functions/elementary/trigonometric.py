@@ -2135,6 +2135,10 @@ class acos(InverseTrigonometricFunction):
             if arg in cst_table:
                 return cst_table[arg]
 
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return pi/2 - asin(arg)
+
         if isinstance(arg, cos):
             ang = arg.args[0]
             if ang.is_comparable:
