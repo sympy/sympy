@@ -1328,6 +1328,11 @@ def test_sympy__stats__crv_types__DagumDistribution():
     assert _test_args(DagumDistribution(1, 1, 1))
 
 
+def test_sympy__stats__crv_types__ExGaussianDistribution():
+    from sympy.stats.crv_types import ExGaussianDistribution
+    assert _test_args(ExGaussianDistribution(1, 1, 1))
+
+
 def test_sympy__stats__crv_types__ExponentialDistribution():
     from sympy.stats.crv_types import ExponentialDistribution
     assert _test_args(ExponentialDistribution(1))
