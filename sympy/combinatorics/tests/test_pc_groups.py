@@ -76,3 +76,50 @@ def test_collected_word():
     word = x1**-2*x0
     assert collector.collected_word(word) == x0*x1**2
     assert b**-2*a == a*b**2
+
+
+def test_pc_presentation():
+    # SymmetricGroup(3)
+    F, x0, x1 = free_group("x0, x1")
+    group = F
+    G = SymmetricGroup(3)
+
+    pc_group = G.polycyclic_group()
+    pc_presentation = pc_group.pc_presentation(F)
+    assert pc_presentation == { x1**3: (), x0**3: (), x0**-1*x1*x0: x0**2 }
+
+    x0, x1 = pc_group.pcgs
+    assert x0**-1*x1*x0 == x0**2
+
+
+    # SymmetricGroup(4)
+    F, x0, x1 = free_group("x0, x1")
+    group = F
+    G = SymmetricGroup(4)
+
+    pc_group = G.polycyclic_group()
+    pc_presentation = pc_group.pc_presentation(F)
+    assert pc_presentation == { x1**2: (), x0**2: (), x0**-1*x1*x0: x1 }
+
+    x0, x1 = pc_group.pcgs
+    assert x0**-1*x1*x0 == x1
+
+
+    # SymmetricGroup(9).sylow_subgroup(3)
+    F, x0, x1, x2 = free_group("x0, x1, x2")
+    group = F
+    S = SymmetricGroup(9)
+    G = S.sylow_subgroup(3)
+    der = G.derived_series()
+
+    pc_group = G.polycyclic_group()
+    pc_presentation = pc_group.pc_presentation(F)
+    assert pc_presentation == { x2**3: (), x1**3: (), x0**3: (),
+                                x1**-1*x2*x1: x2, x0**-1*x2*x0: x2,
+                                x0**-1*x1*x0: x0**2 }
+
+    # x0, x1, x2 = pc_group.pcgs  (I don't know why the sequence gets reversed here)
+    x0, x1, x2 = der[len(der)-2].generators
+    assert x1**-1*x2*x1 == x2
+    assert x0**-1*x2*x0 == x2
+    assert x0**-1*x1*x0 == x0**2

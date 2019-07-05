@@ -8,16 +8,17 @@ class PolycyclicGroup(DefaultPrinting):
     is_group = True
     is_solvable = True
 
-    def __init__(self, pc_sequence, pc_series):
-        self.pc_series = pc_series
+    def __init__(self, pc_sequence):
+        #self.pc_series = pc_series
         self.pcgs = pc_sequence
 
     def relative_order(self):
-        rel_orders = []
-        for i in range(len(self.pc_series)-1):
-            G = self.pc_series[i]
-            H = self.pc_series[i+1]
-            rel_orders.append(G.order()//H.order())
+        # rel_orders = []
+        # for i in range(len(self.pc_series)-1):
+        #     G = self.pc_series[i]
+        #     H = self.pc_series[i+1]
+        #     rel_orders.append(G.order()//H.order())
+        rel_orders = [g.order() for g in self.pcgs]
         return rel_orders
 
     def is_prime_order(self):
@@ -191,9 +192,7 @@ class Collector(DefaultPrinting):
 
         i = len(array)-1
         s1, e1 = array[i]
-        # print(re)
-        # print(index)
-        # print("s1: ", s1, "e1: ", e1)
+
         if re[index[s1]] and (e1 < 0 or e1 > re[index[s1]]-1):
             return ((s1, e1), )
         return None
