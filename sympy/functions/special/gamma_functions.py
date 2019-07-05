@@ -744,13 +744,15 @@ class polygamma(Function):
     def _eval_rewrite_as_zeta(self, n, z, **kwargs):
         if n >= S.One:
             return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
-        return self
+        else:
+            return self
 
     def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
         if n.is_integer:
             if n == S.Zero:
                 return harmonic(z - 1) - S.EulerGamma
-            return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
+            else:
+                return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
 
     def _eval_as_leading_term(self, x):
         from sympy import Order
@@ -758,7 +760,8 @@ class polygamma(Function):
         o = Order(z, x)
         if n == 0 and o.contains(1/x):
             return o.getn() * log(x)
-        return self.func(n, z)
+        else:
+            return self.func(n, z)
 
 
 class loggamma(Function):
@@ -1022,6 +1025,7 @@ def trigamma(x):
 ##################### COMPLETE MULTIVARIATE GAMMA FUNCTION ####################
 ###############################################################################
 
+
 class multigamma(Function):
     r"""
     The multivariate gamma function is a generalization of the gamma function i.e,
@@ -1082,7 +1086,7 @@ class multigamma(Function):
         from sympy import Sum
         if argindex == 2:
             x, p = self.args
-            k = Dummy('k')
+            k = Dummy("k")
             return self.func(x, p)*Sum(polygamma(0, x + (1 - k)/2), (k, 1, p))
         else:
             raise ArgumentIndexError(self, argindex)
@@ -1091,11 +1095,11 @@ class multigamma(Function):
     def eval(cls, x, p):
         from sympy import Product
         x, p = map(sympify, (x, p))
-        if p.is_positive == False or p.is_integer == False:
+        if p.is_positive is False or p.is_integer is False:
             raise ValueError('Order parameter p must be positive integer.')
-        k = Dummy('k', integer=True, positive=True)
+        k = Dummy("k")
         return (pi**(p*(p - 1)/4)*Product(gamma(x + (1 - k)/2),
-                    (k, 1, p))).doit()
+                                          (k, 1, p))).doit()
 
     def _eval_conjugate(self):
         x, p = self.args

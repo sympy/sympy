@@ -1,7 +1,8 @@
 from sympy import (
-    Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, multigamma,
-    log, polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-    cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic, zeta, conjugate)
+    Symbol, Dummy, gamma, I, oo, nan, zoo, factorial, sqrt, Rational,
+    multigamma, log, polygamma, EulerGamma, pi, uppergamma, S, expand_func,
+    loggamma, sin, cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic,
+    zeta, conjugate)
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -460,17 +461,18 @@ def test_issue_14528():
 def test_multigamma():
     from sympy import Product
     p = Symbol('p')
+    _k = Dummy('_k')
 
-    assert str(multigamma(x, p)) == ('pi**(p*(p - 1)/4)*Product(gamma(-_k/2 + x + 1/2), '
-    '(_k, 1, p))')
+    assert multigamma(x, p).dummy_eq(pi**(p*(p - 1)/4)*\
+        Product(gamma(x + (1 - _k)/2), (_k, 1, p)))
 
-    assert str(conjugate(multigamma(x, p))) == ('pi**((conjugate(p) - 1)*'
-    'conjugate(p)/4)*Product(gamma(-_k/2 + conjugate(x) + 1/2), (_k, 1, p))')
+    assert conjugate(multigamma(x, p)).dummy_eq(pi**((conjugate(p) - 1)*\
+        conjugate(p)/4)*Product(gamma(conjugate(x) + (1-conjugate(_k))/2), (_k, 1, p)))
     assert conjugate(multigamma(x, 1)) == gamma(conjugate(x))
 
     p = Symbol('p', positive=True)
-    assert str(conjugate(multigamma(x, p))) == ('pi**(p*(p - 1)/4)*'
-    'Product(gamma(-_k/2 + conjugate(x) + 1/2), (_k, 1, p))')
+    assert conjugate(multigamma(x, p)).dummy_eq(pi**((p - 1)*p/4)*\
+        Product(gamma(conjugate(x) + (1-conjugate(_k))/2), (_k, 1, p)))
 
     assert multigamma(nan, 1) == nan
     assert multigamma(oo, 1).doit() == oo
