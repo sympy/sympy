@@ -525,3 +525,19 @@ def test_second_moment_of_area():
 
     r = RegularPolygon(Point(0, 0), 5, 3)
     assert r.second_moment_of_area() == (1875*sqrt(3)/S(32), 1875*sqrt(3)/S(32), 0)
+
+
+def test_section_and_polar_modulus():
+    a, b = symbols('a, b', positive=True)
+    x, y = symbols('x, y')
+    rectangle = Polygon((0, b), (0, 0), (a, 0), (a, b))
+    assert rectangle.section_modulus(Point(x, y)) == (a*b**3/12/(-b/2 + y), a**3*b/12/(-a/2 + x))
+    assert rectangle.polar_modulus() == a**3*b/12 + a*b**3/12
+
+    convex = RegularPolygon((0, 0), 1, 6)
+    assert convex.section_modulus() == (5/S(8), 5*sqrt(3)/S(16))
+    assert convex.polar_modulus() == 5*sqrt(3)/S(8)
+
+    concave = Polygon((0, 0), (1, 8), (3, 4), (4, 6), (7, 1))
+    assert concave.section_modulus() == (-6371/S(429), -9778/S(519))
+    assert concave.polar_modulus() == -38669/S(252)
