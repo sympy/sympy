@@ -2616,10 +2616,10 @@ class asec(InverseTrigonometricFunction):
     negative branch cut, the limit
 
     .. math::
-        \lim_{z \to 0}-i\frac{\log\left(-\sqrt{1 - z^2} + 1}{z}
+        \lim_{z \to 0}-i\frac{\log\left(-\sqrt{1 - z^2} + 1\right)}{z}
 
-    simplifies to :math:`-i*\log(z/2 + O(z^3))` which ultimately evaluates to
-    ``zoo``.
+    simplifies to :math:`-i\log\left(z/2 + O\left(z^3\right)\right)` which
+    ultimately evaluates to ``zoo``.
 
     As ``asex(x)`` = ``asec(1/x)``, a similar argument can be given for
     ``acos(x)``.
