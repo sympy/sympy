@@ -522,3 +522,6 @@ def test_second_moment_of_area():
     assert (I_xx - rectangle.second_moment_of_area(p)[0]) == 0
     assert (I_yy - rectangle.second_moment_of_area(p)[1]) == 0
     assert (I_xy - rectangle.second_moment_of_area(p)[2]) == 0
+
+    r = RegularPolygon(Point(0, 0), 5, 3)
+    assert r.second_moment_of_area() == (1875*sqrt(3)/S(32), 1875*sqrt(3)/S(32), 0)

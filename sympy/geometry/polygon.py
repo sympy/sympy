@@ -413,7 +413,7 @@ class Polygon(GeometrySet):
         """
 
         I_xx, I_yy, I_xy = 0, 0, 0
-        args = self.args
+        args = self.vertices
         for i in range(len(args)):
             x1, y1 = args[i-1].args
             x2, y2 = args[i].args
