@@ -50,7 +50,7 @@ def _set_converter(itr):
 
 def _matrix_checks(matrix):
     if not isinstance(matrix, (Matrix, MatrixSymbol, ImmutableMatrix)):
-        raise TypeError("Transition probabilities etiher should "
+        raise TypeError("Transition probabilities either should "
                             "be a Matrix or a MatrixSymbol.")
     if matrix.shape[0] != matrix.shape[1]:
         raise ValueError("%s is not a square matrix"%(matrix))
@@ -94,13 +94,13 @@ class StochasticProcess(Basic):
 
     def __call__(self, time):
         """
-        Overrided in ContinuousTimeStochasticProcess.
+        Overridden in ContinuousTimeStochasticProcess.
         """
         raise NotImplementedError("Use [] for indexing discrete time stochastic process.")
 
     def __getitem__(self, time):
         """
-        Overrided in DiscreteTimeStochasticProcess.
+        Overridden in DiscreteTimeStochasticProcess.
         """
         raise NotImplementedError("Use () for indexing continuous time stochastic process.")
 
@@ -481,7 +481,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
                 lhsg, rhsg = (rhsg, lhsg)
             keyc, statec, keyg, stateg = (lhsc.key, rhsc, lhsg.key, rhsg)
             if Lt(stateg, trans_probs.shape[0]) == False or Lt(statec, trans_probs.shape[1]) == False:
-                raise IndexError("No information is avaliable for (%s, %s) in "
+                raise IndexError("No information is available for (%s, %s) in "
                     "transition probabilities of shape, (%s, %s). "
                     "State space is zero indexed."
                     %(stateg, statec, trans_probs.shape[0], trans_probs.shape[1]))
@@ -577,7 +577,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             Unevaluated object if computations cannot be done due to
             insufficient information.
         Expr
-            In all other cases when the computations are successfull.
+            In all other cases when the computations are successful.
 
         Note
         ====

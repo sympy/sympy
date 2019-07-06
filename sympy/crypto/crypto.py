@@ -361,7 +361,7 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
 
             symbols : string of characters (default = uppercase
             letters). When no symbols are given, ``msg`` is converted
-            to upper case letters and all other charactes are ignored.
+            to upper case letters and all other characters are ignored.
 
     Returns
     =======

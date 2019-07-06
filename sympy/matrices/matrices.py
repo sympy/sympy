@@ -310,7 +310,7 @@ class MatrixDeterminant(MatrixCommon):
         lambda**2 - lambda - 6
 
         And if ``x`` clashes with an existing symbol, underscores will
-        be preppended to the name to make it unique:
+        be prepended to the name to make it unique:
 
         >>> A = Matrix([[1, 2], [x, 0]])
         >>> A.charpoly(x).as_expr()
@@ -1273,7 +1273,7 @@ class MatrixEigen(MatrixSubspaces):
             else:
                 eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
 
-        # make sure the algebraic multiplicty sums to the
+        # make sure the algebraic multiplicity sums to the
         # size of the matrix
         if error_when_incomplete and (sum(eigs.values()) if
             isinstance(eigs, dict) else len(eigs)) != self.cols:
@@ -1671,7 +1671,7 @@ class MatrixEigen(MatrixSubspaces):
         calc_transform : bool
             If ``False``, then only `J` is returned.
         chop : bool
-            All matrices are convered to exact types when computing
+            All matrices are converted to exact types when computing
             eigenvalues and eigenvectors.  As a result, there may be
             approximation errors.  If ``chop==True``, these errors
             will be truncated.

@@ -2710,7 +2710,7 @@ def _tsolve(eq, sym, **flags):
                     except NotImplementedError:
                         pass
 
-                # Collect possible solutions and check with subtitution later.
+                # Collect possible solutions and check with substitution later.
                 check = []
                 if rhs == 1:
                     # f(x) ** g(x) = 1 -- g(x)=0 or f(x)=+-1

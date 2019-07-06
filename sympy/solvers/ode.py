@@ -1421,7 +1421,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 return x == coeff
             return False
 
-        # Find coefficient for higest derivative, multiply coefficients to
+        # Find coefficient for highest derivative, multiply coefficients to
         # bring the equation into Euler form if possible
         r_rescaled = None
         if r is not None:
@@ -2931,7 +2931,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
         isconstant = lambda s: s.startswith('C') and s[1:].isdigit()
         constantsymbols = [sym for sym in expr.free_symbols if isconstant(sym.name)]
 
-    # Find new constants checking that they aren't alread in the ODE
+    # Find new constants checking that they aren't already in the ODE
     if newconstants is None:
         iter_constants = numbered_symbols(start=1, prefix='C', exclude=variables)
     else:

@@ -90,7 +90,7 @@ def entropy(expr, condition=None, **kwargs):
     b: base of the logarithm, optional
        By default, it is taken as Euler's number
 
-    Retruns
+    Returns
     =======
 
     result : Entropy of the expression, a constant

@@ -3460,7 +3460,7 @@ def test_opportunistic_simplification():
 
 def test_partial_pivoting():
     # example from https://en.wikipedia.org/wiki/Pivot_element
-    # partial pivoting with back subsitution gives a perfect result
+    # partial pivoting with back substitution gives a perfect result
     # naive pivoting give an error ~1e-13, so anything better than
     # 1e-15 is good
     mm=Matrix([[0.003 ,59.14, 59.17],[ 5.291, -6.13,46.78]])

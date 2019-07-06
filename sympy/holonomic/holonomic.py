@@ -1994,7 +1994,7 @@ class HolonomicFunction(object):
         arg1 = roots(r.parent.base.to_sympy(a), recurrence.n)
         arg2 = roots(r.parent.base.to_sympy(b), recurrence.n)
 
-        # iterate thorugh the initial conditions to find
+        # iterate through the initial conditions to find
         # the hypergeometric representation of the given
         # function.
         # The answer will be a linear combination
@@ -2203,7 +2203,7 @@ def from_hyper(func, x0=0, evalf=False):
 
     if isinstance(simp, hyper):
         x0 = 1
-        # use evalf if the function can't be simpified
+        # use evalf if the function can't be simplified
         y0 = _find_conditions(simp, x, x0, sol.order, evalf)
         while not y0:
             x0 += 1

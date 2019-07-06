@@ -1923,7 +1923,7 @@ def test_mul_zero_detection():
     # zero value so args should be tested in both directions and
     # TO AVOID GETTING THE CACHED RESULT, Dummy MUST BE USED
 
-    # real is unknonwn
+    # real is unknown
     def test(z, b, e):
         if z.is_zero and b.is_finite:
             assert e.is_real and e.is_zero

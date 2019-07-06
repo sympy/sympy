@@ -198,11 +198,11 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
             return Density(self)
         return dict((k, self.pmf(k)) for k in self.set)
 
-    def pmf(self, *args): # to be overrided by specific distribution
+    def pmf(self, *args): # to be overridden by specific distribution
         raise NotImplementedError()
 
     @property
-    def set(self): # to be overrided by specific distribution
+    def set(self): # to be overridden by specific distribution
         raise NotImplementedError()
 
     values = property(lambda self: self.dict.values)
@@ -321,7 +321,7 @@ class FinitePSpace(PSpace):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
         cond = rv_subs(condition)
         if not cond_symbols.issubset(self.symbols):
-            raise ValueError("Cannot compare foriegn random symbols, %s"
+            raise ValueError("Cannot compare foreign random symbols, %s"
                              %(str(cond_symbols - self.symbols)))
         if isinstance(condition, Relational) and \
             (not cond.free_symbols.issubset(self.domain.free_symbols)):

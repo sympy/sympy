@@ -111,7 +111,7 @@ matrices, and much, much more, and do it all symbolically.  It includes
 modules for plotting, printing (like 2D pretty printed output of math
 formulas, or `\LaTeX`), code generation, physics, statistics, combinatorics,
 number theory, geometry, logic, and more. Here is a small sampling of the sort
-of symbolic power SymPy is capable of, to whet your appetite.
+of symbolic power SymPy is capable of, to wet your appetite.
 
  >>> from sympy import *
  >>> x, t, z, nu = symbols('x t z nu')

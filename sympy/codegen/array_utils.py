@@ -231,7 +231,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
     def _get_index_shifts(expr):
         """
         Get the mapping of indices at the positions before the contraction
-        occures.
+        occurs.
 
         Examples
         ========

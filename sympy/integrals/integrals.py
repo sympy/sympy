@@ -60,7 +60,7 @@ class Integral(AddWithLimits):
             (x, a, b) - definite integral
 
         The ``as_dummy`` method can be used to see which symbols cannot be
-        targeted by subs: those with a preppended underscore cannot be
+        targeted by subs: those with a prepended underscore cannot be
         changed with ``subs``. (Also, the integration variables themselves --
         the first element of a limit -- can never be changed by subs.)
 

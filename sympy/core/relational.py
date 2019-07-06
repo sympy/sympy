@@ -173,7 +173,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         This works more or less identical to ``~``/``Not``. The difference is
         that ``negated`` returns the relationship even if `evaluate=False`.
         Hence, this is useful in code when checking for e.g. negated relations
-        to exisiting ones as it will not be affected by the `evaluate` flag.
+        to existing ones as it will not be affected by the `evaluate` flag.
 
         """
         ops = {Eq: Ne, Ge: Lt, Gt: Le, Le: Gt, Lt: Ge, Ne: Eq}

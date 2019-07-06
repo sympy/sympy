@@ -142,7 +142,7 @@ class GeometryEntity(Basic):
         return a.__mul__(self)
 
     def __rsub__(self, a):
-        """Implementation of reverse substraction method."""
+        """Implementation of reverse subtraction method."""
         return a.__sub__(self)
 
     def __str__(self):
