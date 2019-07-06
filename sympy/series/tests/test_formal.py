@@ -536,8 +536,8 @@ def test_fps__composition():
     assert f1.compose(f2, x, n=8) == \
         1 + x + x**2/2 - x**4/8 - x**5/15 - x**6/240 + x**7/90 + O(x**8)
 
-    assert f2.compose(f2, x, n=4) == x - x**3/6 + O(x**4)
-    assert f2.compose(f2, x, n=8) == x - x**3/6 + 11*x**5/120 - 127*x**7/5040 + O(x**8)
+    assert f2.compose(f2, x, n=4) == x - x**3/3 + O(x**4)
+    assert f2.compose(f2, x, n=8) == x - x**3/3 + x**5/10 - 8*x**7/315 + O(x**8)
 
 def test_fps__inverse():
     f1, f2, f3 = fps(sin(x)), fps(exp(x)), fps(cos(x))
