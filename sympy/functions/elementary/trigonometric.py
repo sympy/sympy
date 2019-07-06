@@ -1310,6 +1310,8 @@ class cot(TrigonometricFunction):
                 return None
 
             if pi_coeff.is_Rational:
+                if pi_coeff.q == 5 or pi_coeff.q == 10:
+                    return tan(S.Pi/2 - arg)
                 if pi_coeff.q > 2 and not pi_coeff.q % 2:
                     narg = pi_coeff*S.Pi*2
                     cresult, sresult = cos(narg), cos(narg - S.Pi/2)
