@@ -1003,6 +1003,22 @@ class tan(TrigonometricFunction):
                 return None
 
             if pi_coeff.is_Rational:
+                q = pi_coeff.q
+                p = pi_coeff.p % q
+                # ensure simplified results are returned for n*pi/5, n*pi/10
+                table10 = {
+                    1: sqrt(1 - 2*sqrt(5)/5),
+                    2: sqrt(5 - 2*sqrt(5)),
+                    3: sqrt(1 + 2*sqrt(5)/5),
+                    4: sqrt(5 + 2*sqrt(5))
+                    }
+                if q == 5 or q == 10:
+                    n = 10 * p / q
+                    if n > 5:
+                        n = 10 - n
+                        return -table10[n]
+                    else:
+                        return table10[n]
                 if not pi_coeff.q % 2:
                     narg = pi_coeff*S.Pi*2
                     cresult, sresult = cos(narg), cos(narg - S.Pi/2)
@@ -1021,8 +1037,6 @@ class tan(TrigonometricFunction):
                     60: (20, 30),
                     120: (40, 60)
                     }
-                q = pi_coeff.q
-                p = pi_coeff.p % q
                 if q in table2:
                     nvala, nvalb = cls(p*S.Pi/table2[q][0]), cls(p*S.Pi/table2[q][1])
                     if None == nvala or None == nvalb:
