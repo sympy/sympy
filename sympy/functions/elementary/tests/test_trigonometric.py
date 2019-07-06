@@ -628,10 +628,10 @@ def test_cot():
     assert cot(7*pi/6) == sqrt(3)
     assert cot(-5*pi/6) == sqrt(3)
 
-    assert cot(pi/8).expand() == 1 + sqrt(2)
-    assert cot(3*pi/8).expand() == -1 + sqrt(2)
-    assert cot(5*pi/8).expand() == 1 - sqrt(2)
-    assert cot(7*pi/8).expand() == -1 - sqrt(2)
+    assert cot(pi/8) == 1 + sqrt(2)
+    assert cot(3*pi/8) == -1 + sqrt(2)
+    assert cot(5*pi/8) == 1 - sqrt(2)
+    assert cot(7*pi/8) == -1 - sqrt(2)
 
     assert cot(pi/12) == sqrt(3) + 2
     assert cot(5*pi/12) == -sqrt(3) + 2
