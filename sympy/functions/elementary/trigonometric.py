@@ -2621,7 +2621,7 @@ class asec(InverseTrigonometricFunction):
     simplifies to :math:`-i\log\left(z/2 + O\left(z^3\right)\right)` which
     ultimately evaluates to ``zoo``.
 
-    As ``asex(x)`` = ``asec(1/x)``, a similar argument can be given for
+    As ``asec(x)`` = ``asec(1/x)``, a similar argument can be given for
     ``acos(x)``.
 
     Examples
@@ -2731,8 +2731,8 @@ class acsc(InverseTrigonometricFunction):
     Notes
     =====
 
-    acsc(x) will evaluate automatically in the cases
-    oo, -oo, 0, 1, -1.
+    ``acsc(x)`` will evaluate automatically in the cases
+    ``oo``, ``-oo``, ``0``, ``1``, ``-1``.
 
     Examples
     ========
