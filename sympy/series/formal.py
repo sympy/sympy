@@ -1320,14 +1320,13 @@ class FormalPowerSeries(SeriesBase):
                 "constant coefficient term.")
 
         terms = []
-        aux_seq = self.ak * self.fact_seq
 
         for i in range(1, n):
             bell_seq = other.coeff_bell(i)
-            seq = (aux_seq * bell_seq)
+            seq = (self.bell_coeff_seq * bell_seq)
             terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / self.fact_seq[i-1])
 
-        return self.ind + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
+        return self._eval_term(0) + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
     def inverse(self, x=None, n=6):
         r"""
@@ -1396,7 +1395,7 @@ class FormalPowerSeries(SeriesBase):
             seq = (aux_seq * bell_seq)
             terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / self.fact_seq[i-1])
 
-        return self.ind + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
+        return self._eval_term(0) + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
     def __add__(self, other):
         other = sympify(other)
