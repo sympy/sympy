@@ -946,15 +946,15 @@ def encipher_bifid(msg, key, symbols=None):
 
             ciphertext (using Bifid5 cipher without spaces)
 
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Bifid_cipher
-
     See Also
     ========
 
     decipher_bifid, encipher_bifid5, encipher_bifid6
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Bifid_cipher
 
     """
     msg, key, A = _prep(msg, key, symbols, bifid10)
@@ -1121,22 +1121,6 @@ def encipher_bifid5(msg, key):
     Polybius square. The letter "J" is ignored so it must be replaced
     with something else (traditionally an "I") before encryption.
 
-    Parameters
-    ==========
-
-            msg : plaintext string; converted to upper case and
-            filtered of anything but all letters except J.
-
-            key : short string for key; non-alphabetic letters, J
-            and duplicated characters are ignored and then, if the
-            length is less than 25 characters, it is padded with other
-            letters of the alphabet (in alphabetical order).
-
-    Returns
-    ==========
-
-            ciphertext (all caps, no spaces)
-
     ALGORITHM: (5x5 case)
 
         STEPS:
@@ -1164,6 +1148,22 @@ def encipher_bifid5(msg, key):
             4. Let ``C`` be the list of all letters which are of the
                form ``S[i, j]``, for all ``(i, j)`` in ``L``. As a
                string, this is the ciphertext of ``msg``.
+
+    Parameters
+    ==========
+
+            msg : plaintext string; converted to upper case and
+            filtered of anything but all letters except J.
+
+            key : short string for key; non-alphabetic letters, J
+            and duplicated characters are ignored and then, if the
+            length is less than 25 characters, it is padded with other
+            letters of the alphabet (in alphabetical order).
+
+    Returns
+    =======
+
+            ct : ciphertext (all caps, no spaces)
 
     Examples
     ========
