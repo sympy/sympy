@@ -855,6 +855,8 @@ def test_acos():
     assert acos(sqrt(2)/2) == pi/4
     assert acos(-sqrt(2)/2) == (3*pi)/4
 
+    assert acos(2*I) == pi/2 - asin(2*I)
+
     assert acos(x).diff(x) == -1/sqrt(1 - x**2)
 
     assert acos(0.2).is_real is True
