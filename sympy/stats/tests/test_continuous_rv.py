@@ -13,7 +13,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          moment_generating_function, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy,
                          Chi, ChiSquared,
-                         ChiNoncentral, Dagum, Erlang, Exponential,
+                         ChiNoncentral, Dagum, Erlang, ExGaussian, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
                          Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic, LogLogistic,
                          LogNormal, Maxwell, Nakagami, Normal, GaussianInverse, Pareto,
@@ -41,7 +41,7 @@ def test_single_normal():
     assert E(Y) == mu
     assert variance(Y) == sigma**2
     pdf = density(Y)
-    x = Symbol('x')
+    x = Symbol('x', real=True)
     assert (pdf(x) ==
             2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
@@ -166,6 +166,11 @@ def test_characteristic_function():
     assert cf(0) == 1
     assert cf(1) == exp(1 - sqrt(1 - 2*I))
 
+    X = ExGaussian('x', 0, 1, 1)
+    cf = characteristic_function(X)
+    assert cf(0) == 1
+    assert cf(1) == (1 + I)*exp(-S(1)/2)/2
+
 
 def test_moment_generating_function():
     t = symbols('t', positive=True)
@@ -186,6 +191,9 @@ def test_moment_generating_function():
 
     mgf = moment_generating_function(Erlang('x', a, b))(t)
     assert mgf == (1 - t/b)**(-a)
+
+    mgf = moment_generating_function(ExGaussian("x", a, b, c))(t)
+    assert mgf == exp(a*t + b**2*t**2/2)/(1 - t/c)
 
     mgf = moment_generating_function(Exponential('x', a))(t)
     assert mgf == a/(a - t)
@@ -250,6 +258,9 @@ def test_moment_generating_function():
 
     mgf = moment_generating_function(Erlang('x', 1, 1))(t)
     assert mgf.diff(t).subs(t, 0) == 1
+
+    mgf = moment_generating_function(ExGaussian("x", 0, 1, 1))(t)
+    assert mgf.diff(t).subs(t, 2) == -exp(2)
 
     mgf = moment_generating_function(Exponential('x', 1))(t)
     assert mgf.diff(t).subs(t, 0) == 1
@@ -541,6 +552,31 @@ def test_exponential():
     assert where(X <= 1).set == Interval(0, 1)
 
 
+def test_exgaussian():
+    m, z = symbols("m, z")
+    s, l = symbols("s, l", positive=True)
+    X = ExGaussian("x", m, s, l)
+
+    assert density(X)(z) == l*exp(l*(l*s**2 + 2*m - 2*z)/2) *\
+        erfc(sqrt(2)*(l*s**2 + m - z)/(2*s))/2
+
+    # Note: actual_output simplifies to expected_output.
+    # Ideally cdf(X)(z) would return expected_output
+    # expected_output = (erf(sqrt(2)*(l*s**2 + m - z)/(2*s)) - 1)*exp(l*(l*s**2 + 2*m - 2*z)/2)/2 - erf(sqrt(2)*(m - z)/(2*s))/2 + S(1)/2
+    u = l*(z - m)
+    v = l*s
+    GaussianCDF1 = cdf(Normal('x', 0, v))(u)
+    GaussianCDF2 = cdf(Normal('x', v**2, v))(u)
+    actual_output = GaussianCDF1 - exp(-u + (v**2/2) + log(GaussianCDF2))
+    assert cdf(X)(z) == actual_output
+    # assert simplify(actual_output) == expected_output
+
+    assert variance(X).expand() == s**2 + l**(-2)
+
+    assert skewness(X).expand() == 2/(l**3*s**2*sqrt(s**2 + l**(-2)) + l *
+                                      sqrt(s**2 + l**(-2)))
+
+
 def test_f_distribution():
     d1 = Symbol("d1", positive=True)
     d2 = Symbol("d2", positive=True)
@@ -631,9 +667,15 @@ def test_gumbel():
     beta = Symbol("beta", positive=True)
     mu = Symbol("mu")
     x = Symbol("x")
+    y = Symbol("y")
     X = Gumbel("x", beta, mu)
-    assert str(density(X)(x)) == 'exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta'
-    assert cdf(X)(x) == exp(-exp((mu - x)/beta))
+    Y = Gumbel("y", beta, mu, minimum=True)
+    assert density(X)(x).expand() == \
+    exp(mu/beta)*exp(-x/beta)*exp(-exp(mu/beta)*exp(-x/beta))/beta
+    assert density(Y)(y).expand() == \
+    exp(-mu/beta)*exp(y/beta)*exp(-exp(-mu/beta)*exp(y/beta))/beta
+    assert cdf(X)(x).expand() == \
+    exp(-exp(mu/beta)*exp(-x/beta))
 
 
 def test_kumaraswamy():
@@ -699,10 +741,9 @@ def test_lognormal():
     #assert variance(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
     # Right now, only density function and sampling works
-    # Test sampling: Only e^mean in sample std of 0
     for i in range(3):
-        X = LogNormal('x', i, 0)
-        assert S(sample(X)) == N(exp(i))
+        X = LogNormal('x', i, 1)
+        assert sample(X) in X.pspace.domain.set
     # The sympy integrator can't do this too well
     #assert E(X) ==
 

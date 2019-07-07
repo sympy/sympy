@@ -131,7 +131,7 @@ class NDimArray(object):
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import SparseNDimArray
-        from sympy import Dict
+        from sympy import Dict, Tuple
 
         if shape is None:
             if iterable is None:
@@ -159,6 +159,16 @@ class NDimArray(object):
             else:
                 shape = ()
                 iterable = (iterable,)
+
+        if isinstance(iterable, (Dict, dict)) and shape is not None:
+            new_dict = iterable.copy()
+            for k, v in new_dict.items():
+                if isinstance(k, (tuple, Tuple)):
+                    new_key = 0
+                    for i, idx in enumerate(k):
+                        new_key = new_key * shape[i] + idx
+                    iterable[new_key] = iterable[k]
+                    del iterable[k]
 
         if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
@@ -384,6 +394,8 @@ class NDimArray(object):
 
         other = sympify(other)
         if isinstance(self, SparseNDimArray):
+            if(other == S.Zero):
+                return type(self)({}, self.shape)
             return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
 
         result_list = [i*other for i in self]
@@ -398,6 +410,8 @@ class NDimArray(object):
 
         other = sympify(other)
         if isinstance(self, SparseNDimArray):
+            if(other == S.Zero):
+                return type(self)({}, self.shape)
             return type(self)({k: other*v for (k, v) in self._sparse_array.items()}, self.shape)
 
         result_list = [other*i for i in self]
@@ -405,10 +419,15 @@ class NDimArray(object):
 
     def __div__(self, other):
         from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array import SparseNDimArray
 
         if isinstance(other, (Iterable, NDimArray, MatrixBase)):
             raise ValueError("scalar expected")
+
         other = sympify(other)
+        if isinstance(self, SparseNDimArray) and other != S.Zero:
+            return type(self)({k: v/other for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [i/other for i in self]
         return type(self)(result_list, self.shape)
 
@@ -416,6 +435,11 @@ class NDimArray(object):
         raise NotImplementedError('unsupported operation on NDimArray')
 
     def __neg__(self):
+        from sympy.tensor.array import SparseNDimArray
+
+        if isinstance(self, SparseNDimArray):
+            return type(self)({k: -v for (k, v) in self._sparse_array.items()}, self.shape)
+
         result_list = [-i for i in self]
         return type(self)(result_list, self.shape)
 

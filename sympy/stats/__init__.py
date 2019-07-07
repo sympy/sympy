@@ -59,7 +59,7 @@ from . import crv_types
 from .crv_types import (
     ContinuousRV,
     Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
-    Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
+    Dagum, Erlang, ExGaussian, Exponential, FDistribution, FisherZ, Frechet, Gamma,
     GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogLogistic, LogNormal,
     Maxwell, Nakagami, Normal, GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh,
     ShiftedGompertz, StudentT, Trapezoidal, Triangular, Uniform, UniformSum, VonMises,
@@ -79,6 +79,16 @@ from .joint_rv_types import (
     NormalGamma
 )
 __all__.extend(joint_rv_types.__all__)
+
+from . import stochastic_process_types
+from .stochastic_process_types import (
+    StochasticProcess,
+    DiscreteTimeStochasticProcess,
+    DiscreteMarkovChain,
+    TransitionMatrixOf,
+    StochasticStateSpaceOf
+)
+__all__.extend(stochastic_process_types.__all__)
 
 from . import symbolic_probability
 from .symbolic_probability import Probability, Expectation, Variance, Covariance

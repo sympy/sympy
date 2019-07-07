@@ -4,6 +4,7 @@ from sympy import (
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
     AccumBounds, MatrixSymbol, Pow)
 from sympy.abc import x, y, z
+from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises
 
@@ -173,10 +174,10 @@ def test_log_values():
     assert log(E) == 1
     assert log(-E).expand() == 1 + I*pi
 
-    assert log(pi) == log(pi)
+    assert unchanged(log, pi)
     assert log(-pi).expand() == log(pi) + I*pi
 
-    assert log(17) == log(17)
+    assert unchanged(log, 17)
     assert log(-17) == log(17) + I*pi
 
     assert log(I) == I*pi/2
@@ -211,6 +212,8 @@ def test_log_base():
     assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
     assert log(Rational(2, 3), Rational(2, 5)) == \
         log(S(2)/3)/log(S(2)/5)
+    # issue 17148
+    assert log(S(8)/3, 2) == -log(3)/log(2) + 3
 
 
 def test_log_symbolic():

@@ -1,12 +1,14 @@
 from sympy import AccumBounds, Symbol, floor, nan, oo, zoo, E, symbols, \
         ceiling, pi, Rational, Float, I, sin, exp, log, factorial, frac, Eq
 
+from sympy.core.expr import unchanged
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 i = Symbol('i', imaginary=True)
 y = Symbol('y', real=True)
 k, n = symbols('k,n', integer=True)
+
 
 def test_floor():
 
@@ -60,27 +62,27 @@ def test_floor():
     assert floor(E + 17) == 19
     assert floor(pi + 2) == 5
 
-    assert floor(E + pi) == floor(E + pi)
-    assert floor(I + pi) == floor(I + pi)
+    assert floor(E + pi) == 5
+    assert floor(I + pi) == 3 + I
 
     assert floor(floor(pi)) == 3
     assert floor(floor(y)) == floor(y)
-    assert floor(floor(x)) == floor(floor(x))
+    assert floor(floor(x)) == floor(x)
 
-    assert floor(x) == floor(x)
-    assert floor(2*x) == floor(2*x)
-    assert floor(k*x) == floor(k*x)
+    assert unchanged(floor, x)
+    assert unchanged(floor, 2*x)
+    assert unchanged(floor, k*x)
 
     assert floor(k) == k
     assert floor(2*k) == 2*k
     assert floor(k*n) == k*n
 
-    assert floor(k/2) == floor(k/2)
+    assert unchanged(floor, k/2)
 
-    assert floor(x + y) == floor(x + y)
+    assert unchanged(floor, x + y)
 
-    assert floor(x + 3) == floor(x + 3)
-    assert floor(x + k) == floor(x + k)
+    assert floor(x + 3) == floor(x) + 3
+    assert floor(x + k) == floor(x) + k
 
     assert floor(y + 3) == floor(y) + 3
     assert floor(y + k) == floor(y) + k
@@ -89,7 +91,7 @@ def test_floor():
 
     assert floor(k + n) == k + n
 
-    assert floor(x*I) == floor(x*I)
+    assert unchanged(floor, x*I)
     assert floor(k*I) == k*I
 
     assert floor(Rational(23, 10) - E*I) == 2 - 3*I
@@ -175,27 +177,27 @@ def test_ceiling():
     assert ceiling(E + 17) == 20
     assert ceiling(pi + 2) == 6
 
-    assert ceiling(E + pi) == ceiling(E + pi)
-    assert ceiling(I + pi) == ceiling(I + pi)
+    assert ceiling(E + pi) == 6
+    assert ceiling(I + pi) == I + 4
 
     assert ceiling(ceiling(pi)) == 4
     assert ceiling(ceiling(y)) == ceiling(y)
-    assert ceiling(ceiling(x)) == ceiling(ceiling(x))
+    assert ceiling(ceiling(x)) == ceiling(x)
 
-    assert ceiling(x) == ceiling(x)
-    assert ceiling(2*x) == ceiling(2*x)
-    assert ceiling(k*x) == ceiling(k*x)
+    assert unchanged(ceiling, x)
+    assert unchanged(ceiling, 2*x)
+    assert unchanged(ceiling, k*x)
 
     assert ceiling(k) == k
     assert ceiling(2*k) == 2*k
     assert ceiling(k*n) == k*n
 
-    assert ceiling(k/2) == ceiling(k/2)
+    assert unchanged(ceiling, k/2)
 
-    assert ceiling(x + y) == ceiling(x + y)
+    assert unchanged(ceiling, x + y)
 
-    assert ceiling(x + 3) == ceiling(x + 3)
-    assert ceiling(x + k) == ceiling(x + k)
+    assert ceiling(x + 3) == ceiling(x) + 3
+    assert ceiling(x + k) == ceiling(x) + k
 
     assert ceiling(y + 3) == ceiling(y) + 3
     assert ceiling(y + k) == ceiling(y) + k
@@ -204,7 +206,7 @@ def test_ceiling():
 
     assert ceiling(k + n) == k + n
 
-    assert ceiling(x*I) == ceiling(x*I)
+    assert unchanged(ceiling, x*I)
     assert ceiling(k*I) == k*I
 
     assert ceiling(Rational(23, 10) - E*I) == 3 - 2*I
@@ -254,7 +256,7 @@ def test_frac():
     assert frac(0.5 + I*r) == 0.5 + I*frac(r)
     assert frac(n + I*r) == I*frac(r)
     assert frac(n + I*k) == 0
-    assert frac(x + I*x) == frac(x + I*x)
+    assert unchanged(frac, x + I*x)
     assert frac(x + I*n) == frac(x)
 
     assert frac(x).rewrite(floor) == x - floor(x)

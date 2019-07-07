@@ -16,6 +16,7 @@ from sympy.sets.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy, symbols, Symbol
 from sympy.core.sympify import sympify
+from sympy.discrete.convolutions import convolution
 from sympy.functions.combinatorial.factorials import binomial, factorial, rf
 from sympy.functions.combinatorial.numbers import bell
 from sympy.functions.elementary.integers import floor, frac, ceiling
@@ -24,7 +25,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp
-from sympy.series.sequences import sequence
+from sympy.series.sequences import sequence, SeqMul
 from sympy.series.series_class import SeriesBase
 
 
@@ -1151,6 +1152,250 @@ class FormalPowerSeries(SeriesBase):
                           (k, ak.start + 1, ak.stop))
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
+
+    def product(self, other, x=None, n=6):
+        """Multiplies two Formal Power Series, using discrete convolution and
+        return the truncated terms upto specified order.
+
+        Parameters
+        ==========
+
+        n : Number, optional
+            Specifies the order of the term up to which the polynomial should
+            be truncated.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, sin, exp, convolution
+        >>> from sympy.abc import x
+        >>> f1 = fps(sin(x))
+        >>> f2 = fps(exp(x))
+
+        >>> f1.product(f2, x, 4)
+        x + x**2 + x**3/3 + O(x**4)
+
+        See Also
+        ========
+
+        sympy.discrete.convolutions
+        """
+
+        if x is None:
+            x = self.x
+        if n is None:
+            return iter(self)
+
+        other = sympify(other)
+
+        if not isinstance(other, FormalPowerSeries):
+            raise ValueError("Both series should be an instance of FormalPowerSeries"
+                             " class.")
+
+        if self.dir != other.dir:
+            raise ValueError("Both series should be calculated from the"
+                             " same direction.")
+        elif self.x0 != other.x0:
+            raise ValueError("Both series should be calculated about the"
+                             " same point.")
+
+        elif self.x != other.x:
+            raise ValueError("Both series should have the same symbol.")
+
+        k = self.ak.variables[0]
+        coeff1 = sequence(self.ak.formula, (k, 0, oo))
+
+        k = other.ak.variables[0]
+        coeff2 = sequence(other.ak.formula, (k, 0, oo))
+
+        conv_coeff = convolution(coeff1[:n], coeff2[:n])
+
+        conv_seq = sequence(tuple(conv_coeff), (k, 0, oo))
+        k = self.xk.variables[0]
+        xk_seq = sequence(self.xk.formula, (k, 0, oo))
+        terms_seq = xk_seq * conv_seq
+
+        return Add(*(terms_seq[:n])) + Order(self.xk.coeff(n), (self.x, self.x0))
+
+    def coeff_bell(self, n):
+        r"""
+        self.coeff_bell(n) returns a sequence of Bell polynomials of the second kind.
+        Note that ``n`` should be a integer.
+
+        The second kind of Bell polynomials (are sometimes called "partial" Bell
+        polynomials or incomplete Bell polynomials) are defined as
+
+        .. math:: B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
+                \sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}
+                    \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
+                    \left(\frac{x_1}{1!} \right)^{j_1}
+                    \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
+                    \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.
+
+        * ``bell(n, k, (x1, x2, ...))`` gives Bell polynomials of the second kind,
+          `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`.
+
+        See Also
+        ========
+
+        sympy.functions.combinatorial.numbers.bell
+
+        """
+
+        inner_coeffs = [bell(n, j, tuple(self.bell_coeff_seq[:n-j+1])) for j in range(1, n+1)]
+
+        k = Dummy('k')
+        return sequence(tuple(inner_coeffs), (k, 1, oo))
+
+    def compose(self, other, x=None, n=6):
+        r"""
+        Returns the truncated terms of the formal power series of the composed function,
+        up to specified `n`.
+
+        If `f` and `g` are two formal power series of two different functions,
+        then the coefficient sequence ``ak`` of the composed formal power series `fp`
+        will be as follows.
+
+        .. math::
+
+        \sum\limits_{k=0}^{n} b_k B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})
+
+        Parameters
+        ==========
+
+        n : Number, optional
+            Specifies the order of the term up to which the polynomial should
+            be truncated.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, sin, exp, bell
+        >>> from sympy.abc import x
+        >>> f1 = fps(exp(x))
+        >>> f2 = fps(sin(x))
+
+        >>> f1.compose(f2, x)
+        1 + x + x**2/2 - x**4/8 - x**5/15 + O(x**6)
+
+        >>> f1.compose(f2, x, n=8)
+        1 + x + x**2/2 - x**4/8 - x**5/15 - x**6/240 + x**7/90 + O(x**8)
+
+        See Also
+        ========
+
+        sympy.functions.combinatorial.numbers.bell
+
+        References
+        ==========
+
+        .. [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
+
+        """
+
+        if x is None:
+            x = self.x
+        if n is None:
+            return iter(self)
+
+        other = sympify(other)
+
+        if not isinstance(other, FormalPowerSeries):
+            raise ValueError("Both series should be an instance of FormalPowerSeries"
+                             " class.")
+
+        if self.dir != other.dir:
+            raise ValueError("Both series should be calculated from the"
+                             " same direction.")
+        elif self.x0 != other.x0:
+            raise ValueError("Both series should be calculated about the"
+                             " same point.")
+
+        elif self.x != other.x:
+            raise ValueError("Both series should have the same symbol.")
+
+        f, g = self.function, other.function
+        if other._eval_term(0).as_coeff_mul(other.x)[0] is not S.Zero:
+            raise ValueError("The formal power series of the inner function should not have any "
+                "constant coefficient term.")
+
+        terms = []
+
+        for i in range(1, n):
+            bell_seq = other.coeff_bell(i)
+            seq = (self.bell_coeff_seq * bell_seq)
+            terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / self.fact_seq[i-1])
+
+        return self._eval_term(0) + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
+
+    def inverse(self, x=None, n=6):
+        r"""
+        Returns the truncated terms of the inverse of the formal power series,
+        up to specified `n`.
+
+        If `f` and `g` are two formal power series of two different functions,
+        then the coefficient sequence ``ak`` of the composed formal power series `fp`
+        will be as follows.
+
+        .. math::
+
+        \sum\limits_{k=0}^{n} (-1)^{k} x_0^{-k-1} B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})
+
+        Parameters
+        ==========
+
+        n : Number, optional
+            Specifies the order of the term up to which the polynomial should
+            be truncated.
+
+        Examples
+        ========
+
+        >>> from sympy import fps, exp, cos, bell
+        >>> from sympy.abc import x
+        >>> f1 = fps(exp(x))
+        >>> f2 = fps(cos(x))
+
+        >>> f1.inverse(x)
+        1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + O(x**6)
+
+        >>> f2.inverse(x, n=8)
+        1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + O(x**8)
+
+        See Also
+        ========
+
+        sympy.functions.combinatorial.numbers.bell
+
+        References
+        ==========
+
+        .. [1] Comtet, Louis: Advanced combinatorics; the art of finite and infinite expansions. Reidel, 1974.
+
+        """
+
+        if x is None:
+            x = self.x
+        if n is None:
+            return iter(self)
+
+        f = self.function
+        if self._eval_term(0) is S.Zero:
+            raise ValueError("Constant coefficient should exist for an inverse of a formal"
+                " power series to exist.")
+        inv = self._eval_term(0)
+
+        k = Dummy('k')
+        terms = []
+        inv_seq = sequence(inv ** (-(k + 1)), (k, 1, oo))
+        aux_seq = self.sign_seq * self.fact_seq * inv_seq
+
+        for i in range(1, n):
+            bell_seq = self.coeff_bell(i)
+            seq = (aux_seq * bell_seq)
+            terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / self.fact_seq[i-1])
+
+        return self._eval_term(0) + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
 
     def __add__(self, other):
         other = sympify(other)

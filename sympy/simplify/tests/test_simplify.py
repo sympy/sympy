@@ -9,6 +9,7 @@ from sympy import (
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
     zoo)
 from sympy.core.mul import _keep_coeff
+from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.core.compatibility import range
@@ -724,6 +725,8 @@ def test_simplify_function_inverse():
     assert simplify(f(g(x)), inverse=True) == x
     assert simplify(f(g(sin(x)**2 + cos(x)**2)), inverse=True) == 1
     assert simplify(f(g(x, y)), inverse=True) == f(g(x, y))
+    assert unchanged(asin, sin(x))
+    assert simplify(asin(sin(x))) == asin(sin(x))
     assert simplify(2*asin(sin(3*x)), inverse=True) == 6*x
     assert simplify(log(exp(x))) == log(exp(x))
     assert simplify(log(exp(x)), inverse=True) == x
@@ -806,3 +809,14 @@ def test_issue_15965():
     assert simplify(A + B) == anew + bnew
     assert simplify(A) == anew
     assert simplify(B) == bnew
+
+
+def test_issue_17137():
+    assert simplify(cos(x)**I) == cos(x)**I
+    assert simplify(cos(x)**(2 + 3*I)) == cos(x)**(2 + 3*I)
+
+
+def test_issue_7971():
+    z = Integral(x, (x, 1, 1))
+    assert z != 0
+    assert simplify(z) is S.Zero

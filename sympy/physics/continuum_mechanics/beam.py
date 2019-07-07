@@ -13,6 +13,17 @@ from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
+from sympy.geometry.entity import GeometryEntity
+from sympy.external import import_module
+from sympy.utilities.decorator import doctest_depends_on
+from sympy import lambdify
+from sympy.core.compatibility import iterable
+
+matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
+numpy = import_module('numpy', __import__kwargs={'fromlist':['linspace']})
+
+__doctest_requires__ = {('Beam.plot_loading_results',): ['matplotlib']}
+
 
 class Beam(object):
     """
@@ -70,21 +81,32 @@ class Beam(object):
 
         Parameters
         ==========
+
         length : Sympifyable
             A Symbol or value representing the Beam's length.
+
         elastic_modulus : Sympifyable
             A SymPy expression representing the Beam's Modulus of Elasticity.
             It is a measure of the stiffness of the Beam material. It can
             also be a continuous function of position along the beam.
-        second_moment : Sympifyable
-            A SymPy expression representing the Beam's Second moment of area.
-            It is a geometrical property of an area which reflects how its
-            points are distributed with respect to its neutral axis. It can
-            also be a continuous function of position along the beam.
+
+        second_moment : Sympifyable or Geometry object
+            Describes the cross-section of the beam via a SymPy expression
+            representing the Beam's second moment of area. It is a geometrical
+            property of an area which reflects how its points are distributed
+            with respect to its neutral axis. It can also be a continuous
+            function of position along the beam. Alternatively ``second_moment``
+            can be a shape object such as a ``Polygon`` from the geometry module
+            representing the shape of the cross-section of the beam. In such cases,
+            it is assumed that the x-axis of the shape object is aligned with the
+            bending axis of the beam. The second moment of area will be computed
+            from the shape object internally.
+
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
             curve. By default, it is set to ``Symbol('x')``.
+
         base_char : String, optional
             A String that will be used as base character to generate sequential
             symbols for integration constants in cases where boundary conditions
@@ -92,7 +114,11 @@ class Beam(object):
         """
         self.length = length
         self.elastic_modulus = elastic_modulus
-        self.second_moment = second_moment
+        if isinstance(second_moment, GeometryEntity):
+            self.cross_section = second_moment
+        else:
+            self.cross_section = None
+            self.second_moment = second_moment
         self.variable = variable
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
@@ -103,7 +129,8 @@ class Beam(object):
         self._hinge_position = None
 
     def __str__(self):
-        str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._second_moment))
+        shape_description = self._cross_section if self._cross_section else self._second_moment
+        str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(shape_description))
         return str_sol
 
     @property
@@ -170,7 +197,22 @@ class Beam(object):
 
     @second_moment.setter
     def second_moment(self, i):
-        self._second_moment = sympify(i)
+        self._cross_section = None
+        if isinstance(i, GeometryEntity):
+            raise ValueError("To update cross-section geometry use `cross_section` attribute")
+        else:
+            self._second_moment = sympify(i)
+
+    @property
+    def cross_section(self):
+        """Cross-section of the beam"""
+        return self._cross_section
+
+    @cross_section.setter
+    def cross_section(self, s):
+        if s:
+            self._second_moment = s.second_moment_of_area()[0]
+        self._cross_section = s
 
     @property
     def boundary_conditions(self):
@@ -1644,6 +1686,29 @@ class Beam3D(Beam):
         along y and z axis at ``0``.
         """
         return self._boundary_conditions
+
+    def polar_moment(self):
+        """
+        Returns the polar moment of area of the beam
+        about the X axis with respect to the centroid.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+        >>> from sympy import symbols
+        >>> l, E, G, I, A = symbols('l, E, G, I, A')
+        >>> b = Beam3D(l, E, G, I, A)
+        >>> b.polar_moment()
+        2*I
+        >>> I1 = [9, 15]
+        >>> b = Beam3D(l, E, G, I1, A)
+        >>> b.polar_moment()
+        24
+        """
+        if not iterable(self.second_moment):
+            return 2*self.second_moment
+        return sum(self.second_moment)
 
     def apply_load(self, value, start, order, dir="y"):
         """

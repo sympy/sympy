@@ -1328,6 +1328,11 @@ def test_sympy__stats__crv_types__DagumDistribution():
     assert _test_args(DagumDistribution(1, 1, 1))
 
 
+def test_sympy__stats__crv_types__ExGaussianDistribution():
+    from sympy.stats.crv_types import ExGaussianDistribution
+    assert _test_args(ExGaussianDistribution(1, 1, 1))
+
+
 def test_sympy__stats__crv_types__ExponentialDistribution():
     from sympy.stats.crv_types import ExponentialDistribution
     assert _test_args(ExponentialDistribution(1))
@@ -1359,7 +1364,7 @@ def test_sympy__stats__crv_types__GammaDistribution():
 
 def test_sympy__stats__crv_types__GumbelDistribution():
     from sympy.stats.crv_types import GumbelDistribution
-    assert _test_args(GumbelDistribution(1, 1))
+    assert _test_args(GumbelDistribution(1, 1, False))
 
 def test_sympy__stats__crv_types__GompertzDistribution():
     from sympy.stats.crv_types import GompertzDistribution
@@ -1540,6 +1545,44 @@ def test_sympy__stats__joint_rv_types__MultinomialDistribution():
 def test_sympy__stats__joint_rv_types__NegativeMultinomialDistribution():
     from sympy.stats.joint_rv_types import NegativeMultinomialDistribution
     assert _test_args(NegativeMultinomialDistribution(5, [0.5, 0.1, 0.3]))
+
+def test_sympy__stats__rv__RandomIndexedSymbol():
+    from sympy.stats.rv import RandomIndexedSymbol, pspace
+    from sympy.tensor import Indexed
+    from sympy.stats.stochastic_process_types import DiscreteMarkovChain
+    X = DiscreteMarkovChain("X")
+    assert _test_args(RandomIndexedSymbol(X[0].symbol, pspace(X[0])))
+
+def test_sympy__stats__stochastic_process__StochasticPSpace():
+    from sympy.stats.stochastic_process import StochasticPSpace
+    from sympy.stats.stochastic_process_types import StochasticProcess
+    from sympy.stats.frv_types import BernoulliDistribution
+    assert _test_args(StochasticPSpace("Y", StochasticProcess("Y", [1, 2, 3]), BernoulliDistribution(S(1)/2, 1, 0)))
+
+def test_sympy__stats__stochastic_process_types__StochasticProcess():
+    from sympy.stats.stochastic_process_types import StochasticProcess
+    assert _test_args(StochasticProcess("Y", [1, 2, 3]))
+
+def test_sympy__stats__stochastic_process_types__DiscreteTimeStochasticProcess():
+    from sympy.stats.stochastic_process_types import DiscreteTimeStochasticProcess
+    assert _test_args(DiscreteTimeStochasticProcess("Y", [1, 2, 3]))
+
+def test_sympy__stats__stochastic_process_types__TransitionMatrixOf():
+    from sympy.stats.stochastic_process_types import TransitionMatrixOf, DiscreteMarkovChain
+    from sympy import MatrixSymbol
+    DMC = DiscreteMarkovChain("Y")
+    assert _test_args(TransitionMatrixOf(DMC, MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__stochastic_process_types__StochasticStateSpaceOf():
+    from sympy.stats.stochastic_process_types import StochasticStateSpaceOf, DiscreteMarkovChain
+    from sympy import MatrixSymbol
+    DMC = DiscreteMarkovChain("Y")
+    assert _test_args(StochasticStateSpaceOf(DMC, [0, 1, 2]))
+
+def test_sympy__stats__stochastic_process_types__DiscreteMarkovChain():
+    from sympy.stats.stochastic_process_types import DiscreteMarkovChain
+    from sympy import MatrixSymbol
+    assert _test_args(DiscreteMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
@@ -2179,6 +2222,10 @@ def test_sympy__functions__special__gamma_functions__polygamma():
 def test_sympy__functions__special__gamma_functions__uppergamma():
     from sympy.functions.special.gamma_functions import uppergamma
     assert _test_args(uppergamma(x, 2))
+
+def test_sympy__functions__special__gamma_functions__multigamma():
+    from sympy.functions.special.gamma_functions import multigamma
+    assert _test_args(multigamma(x, 1))
 
 
 def test_sympy__functions__special__beta_functions__beta():
@@ -4463,6 +4510,14 @@ def test_sympy__codegen__fnodes__literal_sp():
 def test_sympy__codegen__fnodes__literal_dp():
     from sympy.codegen.fnodes import literal_dp
     assert _test_args(literal_dp(1))
+
+
+def test_sympy__codegen__matrix_nodes__MatrixSolve():
+    from sympy.matrices import MatrixSymbol
+    from sympy.codegen.matrix_nodes import MatrixSolve
+    A = MatrixSymbol('A', 3, 3)
+    v = MatrixSymbol('x', 3, 1)
+    assert _test_args(MatrixSolve(A, v))
 
 
 def test_sympy__vector__coordsysrect__CoordSys3D():

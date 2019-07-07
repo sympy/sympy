@@ -12,8 +12,9 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.matrices.common import a2idx, classof
-from sympy.matrices.matrices import MatrixBase, ShapeError
+from sympy.matrices.common import \
+    a2idx, classof, ShapeError, NonPositiveDefiniteMatrixError
+from sympy.matrices.matrices import MatrixBase
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
@@ -145,7 +146,8 @@ class DenseMatrix(MatrixBase):
                 Lii2 = expand_mul(self[i, i] -
                     sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
                 if Lii2.is_positive is False:
-                    raise ValueError("Matrix must be positive-definite")
+                    raise NonPositiveDefiniteMatrixError(
+                        "Matrix must be positive-definite")
                 L[i, i] = sqrt(Lii2)
         else:
             for i in range(self.rows):
@@ -308,7 +310,8 @@ class DenseMatrix(MatrixBase):
                 D[i, i] = expand_mul(self[i, i] -
                     sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
                 if D[i, i].is_positive is False:
-                    raise ValueError("Matrix must be positive-definite")
+                    raise NonPositiveDefiniteMatrixError(
+                        "Matrix must be positive-definite")
         else:
             for i in range(self.rows):
                 for j in range(i):

@@ -2727,6 +2727,8 @@ class acsc(InverseTrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
+        if arg.is_zero:
+            return S.ComplexInfinity
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN

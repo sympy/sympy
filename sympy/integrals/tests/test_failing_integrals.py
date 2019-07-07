@@ -2,12 +2,12 @@
 
 from sympy import (
     integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos,
-    tan, S, log, gamma, sinh,
+    tan, S, log, gamma, sinh, sec, zeta, acos, atan, sech, csch
 )
 
 from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 
-from sympy.abc import x, k, c, y, R, b, h, a, m
+from sympy.abc import x, k, c, y, R, b, h, a, m, z
 
 
 @SKIP("Too slow for @slow")
@@ -23,18 +23,15 @@ def test_issue_4212():
 
 
 @XFAIL
-def test_issue_4326():
-    assert integrate(((h*(x - R + b))/b)*sqrt(R**2 - x**2), (x, R - b, R)).has(Integral)
-
-
-@XFAIL
 def test_issue_4491():
+    # Can be solved via variable transformation x = y - 1
     assert not integrate(x*sqrt(x**2 + 2*x + 4), x).has(Integral)
 
 
 @XFAIL
 def test_issue_4511():
     # This works, but gives a complicated answer.  The correct answer is x - cos(x).
+    # If current answer is simplified, 1 - cos(x) + x is obtained.
     # The last one is what Maple gives.  It is also quite slow.
     assert integrate(cos(x)**2 / (1 - sin(x))) in [x - cos(x), 1 - cos(x) + x,
             -2/(tan((S(1)/2)*x)**2 + 1) + x]
@@ -56,22 +53,6 @@ def test_issue_4540():
     assert not integrate(
         (sin(1/x) - x*exp(x)) /
         ((-sin(1/x) + x*exp(x))*x + x*sin(1/x)), x).has(Integral)
-
-
-@XFAIL
-def test_issue_4551():
-    assert integrate(1/(x*sqrt(1 - x**2)), x).has(Integral)
-
-
-@XFAIL
-def test_issue_4737a():
-    # Implementation of Si()
-    assert integrate(sin(x)/x, x).has(Integral)
-
-
-@XFAIL
-def test_issue_1638b():
-    assert integrate(sin(x)/x, (x, -oo, oo)) == pi/2
 
 
 @XFAIL
@@ -114,3 +95,154 @@ def test_issue_4941():
 def test_issue_4992():
     # Nonelementary integral.  Requires hypergeometric/Meijer-G handling.
     assert not integrate(log(x) * x**(k - 1) * exp(-x) / gamma(k), (x, 0, oo)).has(Integral)
+
+@XFAIL
+def test_issue_16084():
+    i = integrate(log(sin(x)), (x, 0, pi/2))
+    assert not i.has(Integral)
+    # assert i == -pi*log(2)/2
+
+@XFAIL
+def test_issue_16161():
+    i = integrate(x*sec(x)**2, x)
+    assert not i.has(Integral)
+    # assert i == x*tan(x) + log(cos(x))
+
+
+@XFAIL
+def test_issue_15925a():
+    assert not integrate(sqrt((1+sin(x))**2+(cos(x))**2), (x, -pi/2, pi/2)).has(Integral)
+
+
+@XFAIL
+@slow
+def test_issue_15925b():
+    assert not integrate(sqrt((-12*cos(x)**2*sin(x))**2+(12*cos(x)*sin(x)**2)**2),
+                         (x, 0, pi/6)).has(Integral)
+
+
+@XFAIL
+def test_issue_15925b_manual():
+    assert not integrate(sqrt((-12*cos(x)**2*sin(x))**2+(12*cos(x)*sin(x)**2)**2),
+                         (x, 0, pi/6), manual=True).has(Integral)
+
+
+@XFAIL
+@slow
+def test_issue_15227():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+    i = integrate(log(1-x)*log((1+x)**2)/x, (x, 0, 1))
+    assert not i.has(Integral)
+    # assert i == -5*zeta(3)/4
+
+
+@XFAIL
+@slow
+def test_issue_14716():
+    i = integrate(log(x + 5)*cos(pi*x),(x, S.Half, 1))
+    assert not i.has(Integral)
+    # Mathematica can not solve it either, but
+    # integrate(log(x + 5)*cos(pi*x),(x, S.Half, 1)).transform(x, y - 5).doit()
+    # works
+    # assert i == -log(S(11)/2)/pi - Si(11*pi/2)/pi + Si(6*pi)/pi
+
+
+@XFAIL
+def test_issue_14709a():
+    i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
+    assert not i.has(Integral)
+    # assert i == 5*h**2*pi/16
+
+
+@XFAIL
+def test_issue_14709b():
+    assert not integrate(x*acos(1 - 2*x/21323), (x, 0, 21323)).has(Integral)
+
+
+@slow
+@XFAIL
+def test_issue_14398():
+    assert not integrate(exp(x**2)*cos(x), x).has(Integral)
+
+
+@XFAIL
+def test_issue_14074():
+    i = integrate(log(sin(x)), (x, 0, pi/2))
+    assert not i.has(Integral)
+    # assert i == -pi*log(2)/2
+
+
+@XFAIL
+@slow
+def test_issue_14078b():
+    i = integrate((atan(4*x)-atan(2*x))/x, (x, 0, oo))
+    assert not i.has(Integral)
+    # assert i == pi*log(2)/2
+
+
+@XFAIL
+def test_issue_11845a():
+    assert not integrate(exp(y - x**3), (x, 0, 1)).has(Integral)
+
+
+@XFAIL
+def test_issue_11845b():
+    assert not integrate(exp(-y - x**3), (x, 0, 1)).has(Integral)
+
+
+@XFAIL
+def test_issue_11813():
+    assert not integrate((a - x)**(-S(1)/2)*x, (x, 0, a)).has(Integral)
+
+
+@XFAIL
+def test_issue_11742():
+    i =  integrate(sqrt(-x**2 + 8*x + 48), (x, 4, 12))
+    assert not i.has(Integral)
+    # assert i == 16*pi
+
+
+@XFAIL
+def test_issue_11254a():
+    assert not integrate(sech(x), (x, 0, 1)).has(Integral)
+
+
+@XFAIL
+def test_issue_11254b():
+    assert not integrate(csch(x), (x, 0, 1)).has(Integral)
+
+
+@XFAIL
+def test_issue_10584():
+    assert not integrate(sqrt(x**2 + 1/x**2), x).has(Integral)
+
+
+@XFAIL
+def test_issue_9723():
+    assert not integrate(sqrt(x + sqrt(x))).has(Integral)
+
+
+@XFAIL
+def test_issue_9101():
+    assert not integrate(log(x + sqrt(x**2 + y**2 + z**2)), z).has(Integral)
+
+
+@XFAIL
+def test_issue_7161():
+    assert not integrate(sqrt(x + 1/x - 2), (x, 0, 1)).has(Integral)
+
+
+@XFAIL
+def test_issue_7264():
+    assert not integrate(exp(x)*sqrt(1 + exp(2*x))).has(Integral)
+
+
+@XFAIL
+def test_issue_7147():
+    assert not integrate(x/sqrt(a*x**2 + b*x + c)**3, x).has(Integral)
+
+
+@XFAIL
+def test_issue_7109():
+    assert not integrate(sqrt(a**2/(a**2 - x**2)), x).has(Integral)

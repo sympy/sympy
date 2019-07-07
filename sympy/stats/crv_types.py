@@ -14,6 +14,7 @@ ChiNoncentral
 ChiSquared
 Dagum
 Erlang
+ExGaussian
 Exponential
 FDistribution
 FisherZ
@@ -49,8 +50,8 @@ from __future__ import print_function, division
 
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfi,  erfinv, I, hyper,
-                   uppergamma, sinh, atan, Ne, expint)
+                   Lambda, Basic, lowergamma, erf, erfc, erfi,  erfinv, I,
+                   hyper, uppergamma, sinh, atan, Ne, expint, Integral)
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
@@ -77,6 +78,7 @@ __all__ = ['ContinuousRV',
 'ChiSquared',
 'Dagum',
 'Erlang',
+'ExGaussian',
 'Exponential',
 'FDistribution',
 'FisherZ',
@@ -1017,6 +1019,120 @@ def Erlang(name, k, l):
 
     return rv(name, GammaDistribution, (k, S.One/l))
 
+# -------------------------------------------------------------------------------
+# ExGaussian distribution -----------------------------------------------------
+
+
+class ExGaussianDistribution(SingleContinuousDistribution):
+    _argnames = ('mean', 'std', 'rate')
+
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(mean, std, rate):
+        _value_check(
+            std > 0, "Standard deviation of ExGaussian must be positive.")
+        _value_check(rate > 0, "Rate of ExGaussian must be positive.")
+
+    def pdf(self, x):
+        mean, std, rate = self.mean, self.std, self.rate
+        term1 = rate/2
+        term2 = exp(rate * (2 * mean + rate * std**2 - 2*x)/2)
+        term3 = erfc((mean + rate*std**2 - x)/(sqrt(2)*std))
+        return term1*term2*term3
+
+    def _cdf(self, x):
+        from sympy.stats import cdf
+        mean, std, rate = self.mean, self.std, self.rate
+        u = rate*(x - mean)
+        v = rate*std
+        GaussianCDF1 = cdf(Normal('x', 0, v))(u)
+        GaussianCDF2 = cdf(Normal('x', v**2, v))(u)
+
+        return GaussianCDF1 - exp(-u + (v**2/2) + log(GaussianCDF2))
+
+    def _characteristic_function(self, t):
+        mean, std, rate = self.mean, self.std, self.rate
+        term1 = (1 - I*t/rate)**(-1)
+        term2 = exp(I*mean*t - std**2*t**2/2)
+        return term1 * term2
+
+    def _moment_generating_function(self, t):
+        mean, std, rate = self.mean, self.std, self.rate
+        term1 = (1 - t/rate)**(-1)
+        term2 = exp(mean*t + std**2*t**2/2)
+        return term1*term2
+
+
+def ExGaussian(name, mean, std, rate):
+    r"""
+    Create a continuous random variable with an Exponentially modified
+    Gaussian (EMG) distribution.
+
+    The density of the exponentially modified Gaussian distribution is given by
+
+    .. math::
+        f(x) := \frac{\lambda}{2}e^{\frac{\lambda}{2}(2\mu+\lambda\sigma^2-2x)}
+            \text{erfc}(\frac{\mu + \lambda\sigma^2 - x}{\sqrt{2}\sigma})
+
+    with `x > 0`. Note that the expected value is `1/\lambda`.
+
+    Parameters
+    ==========
+
+    mu : A Real number, the mean of Gaussian component
+    std: A positive Real number,
+        :math: `\sigma^2 > 0` the variance of Gaussian component
+    lambda: A positive Real number,
+        :math: `\lambda > 0` the rate of Exponential component
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import ExGaussian, density, cdf, E
+    >>> from sympy.stats import variance, skewness
+    >>> from sympy import Symbol, pprint, simplify
+
+    >>> mean = Symbol("mu")
+    >>> std = Symbol("sigma", positive=True)
+    >>> rate = Symbol("lamda", positive=True)
+    >>> z = Symbol("z")
+    >>> X = ExGaussian("x", mean, std, rate)
+
+    >>> pprint(density(X)(z), use_unicode=False)
+                 /           2             \
+           lamda*\lamda*sigma  + 2*mu - 2*z/
+           ---------------------------------     /  ___ /           2         \\
+                           2                     |\/ 2 *\lamda*sigma  + mu - z/|
+    lamda*e                                 *erfc|-----------------------------|
+                                                 \           2*sigma           /
+    ----------------------------------------------------------------------------
+                                         2
+
+    >>> cdf(X)(z)
+    -(erf(sqrt(2)*(-lamda**2*sigma**2 + lamda*(-mu + z))/(2*lamda*sigma))/2 + 1/2)*exp(lamda**2*sigma**2/2 - lamda*(-mu + z)) + erf(sqrt(2)*(-mu + z)/(2*sigma))/2 + 1/2
+
+    >>> E(X)
+    (lamda*mu + 1)/lamda
+
+    >>> simplify(variance(X))
+    sigma**2 + lamda**(-2)
+
+    >>> simplify(skewness(X))
+    2/(lamda**2*sigma**2 + 1)**(3/2)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
+    """
+    return rv(name, ExGaussianDistribution, (mean, std, rate))
+
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
 
@@ -1563,38 +1679,49 @@ def GammaInverse(name, a, b):
     return rv(name, GammaInverseDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
-# Gumbel distribution --------------------------------------------------------
+# Gumbel distribution (Maximum and Minimum) --------------------------------------------------------
 
 
 class GumbelDistribution(SingleContinuousDistribution):
-    _argnames = ('beta', 'mu')
+    _argnames = ('beta', 'mu', 'minimum')
 
     set = Interval(-oo, oo)
 
     @staticmethod
-    def check(beta, mu):
+    def check(beta, mu, minimum):
         _value_check(beta > 0, "Scale parameter beta must be positive.")
 
     def pdf(self, x):
         beta, mu = self.beta, self.mu
         z = (x - mu)/beta
-        return (1/beta)*exp(-(z + exp(-z)))
+        f_max = (1/beta)*exp(-z - exp(-z))
+        f_min = (1/beta)*exp(z - exp(z))
+        return Piecewise((f_min, self.minimum), (f_max, not self.minimum))
 
     def _cdf(self, x):
         beta, mu = self.beta, self.mu
-        return exp(-exp((mu - x)/beta))
+        z = (x - mu)/beta
+        F_max = exp(-exp(-z))
+        F_min = 1 - exp(-exp(z))
+        return Piecewise((F_min, self.minimum), (F_max, not self.minimum))
 
     def _characteristic_function(self, t):
-        return gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
+        cf_max = gamma(1 - I*self.beta*t) * exp(I*self.mu*t)
+        cf_min = gamma(1 + I*self.beta*t) * exp(I*self.mu*t)
+        return Piecewise((cf_min, self.minimum), (cf_max, not self.minimum))
 
     def _moment_generating_function(self, t):
-        return gamma(1 - self.beta*t) * exp(self.mu*t)
+        mgf_max = gamma(1 - self.beta*t) * exp(self.mu*t)
+        mgf_min = gamma(1 + self.beta*t) * exp(self.mu*t)
+        return Piecewise((mgf_min, self.minimum), (mgf_max, not self.minimum))
 
-def Gumbel(name, beta, mu):
+def Gumbel(name, beta, mu, minimum=False):
     r"""
     Create a Continuous Random Variable with Gumbel distribution.
 
     The density of the Gumbel distribution is given by
+
+    For Maximum
 
     .. math::
         f(x) := \dfrac{1}{\beta} \exp \left( -\dfrac{x-\mu}{\beta}
@@ -1602,19 +1729,28 @@ def Gumbel(name, beta, mu):
 
     with :math:`x \in [ - \infty, \infty ]`.
 
+    For Minimum
+
+    .. math::
+        f(x) := \frac{e^{- e^{\frac{- \mu + x}{\beta}} + \frac{- \mu + x}{\beta}}}{\beta}
+
+    with :math:`x \in [ - \infty, \infty ]`.
+
     Parameters
     ==========
 
-    mu: Real number, 'mu' is a location
-    beta: Real number, 'beta > 0' is a scale
+    mu : Real number, 'mu' is a location
+    beta : Real number, 'beta > 0' is a scale
+    minimum : Boolean, by default, False, set to True for enabling minimum distribution
 
     Returns
-    ==========
+    =======
 
     A RandomSymbol
 
     Examples
-    ==========
+    ========
+
     >>> from sympy.stats import Gumbel, density, E, variance, cdf
     >>> from sympy import Symbol, simplify, pprint
     >>> x = Symbol("x")
@@ -1624,16 +1760,18 @@ def Gumbel(name, beta, mu):
     >>> density(X)(x)
     exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
     >>> cdf(X)(x)
-    exp(-exp((mu - x)/beta))
+    exp(-exp(-(-mu + x)/beta))
 
     References
     ==========
 
     .. [1] http://mathworld.wolfram.com/GumbelDistribution.html
     .. [2] https://en.wikipedia.org/wiki/Gumbel_distribution
+    .. [3] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_max.html
+    .. [4] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_min.html
 
     """
-    return rv(name, GumbelDistribution, (beta, mu))
+    return rv(name, GumbelDistribution, (beta, mu, minimum))
 
 #-------------------------------------------------------------------------------
 # Gompertz distribution --------------------------------------------------------
@@ -2055,6 +2193,10 @@ class LogNormalDistribution(SingleContinuousDistribution):
     _argnames = ('mean', 'std')
 
     set = Interval(0, oo)
+
+    @staticmethod
+    def check(mean, std):
+        _value_check(std > 0, "Parameter std must be positive.")
 
     def pdf(self, x):
         mean, std = self.mean, self.std

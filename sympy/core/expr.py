@@ -339,11 +339,13 @@ class Expr(Basic, EvalfMixin):
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 >= 0)
-        if self.is_extended_real or other.is_extended_real:
-            dif = self - other
-            if dif.is_extended_nonnegative is not None and \
-                    dif.is_extended_nonnegative is not dif.is_extended_negative:
-                return sympify(dif.is_extended_nonnegative)
+        if self.is_extended_real and other.is_extended_real:
+            if (self.is_infinite and self.is_extended_positive) \
+                    or (other.is_infinite and other.is_extended_negative):
+                return S.true
+            nneg = (self - other).is_extended_nonnegative
+            if nneg is not None:
+                return sympify(nneg)
         return GreaterThan(self, other, evaluate=False)
 
     def __le__(self, other):
@@ -360,11 +362,13 @@ class Expr(Basic, EvalfMixin):
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 <= 0)
-        if self.is_extended_real or other.is_extended_real:
-            dif = self - other
-            if dif.is_extended_nonpositive is not None and \
-                    dif.is_extended_nonpositive is not dif.is_extended_positive:
-                return sympify(dif.is_extended_nonpositive)
+        if self.is_extended_real and other.is_extended_real:
+            if (self.is_infinite and self.is_extended_negative) \
+                    or (other.is_infinite and other.is_extended_positive):
+                return S.true
+            npos = (self - other).is_extended_nonpositive
+            if npos is not None:
+                return sympify(npos)
         return LessThan(self, other, evaluate=False)
 
     def __gt__(self, other):
@@ -381,11 +385,14 @@ class Expr(Basic, EvalfMixin):
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 > 0)
-        if self.is_extended_real or other.is_extended_real:
-            dif = self - other
-            if dif.is_extended_positive is not None and \
-                    dif.is_extended_positive is not dif.is_extended_nonpositive:
-                return sympify(dif.is_extended_positive)
+
+        if self.is_extended_real and other.is_extended_real:
+            if (self.is_infinite and self.is_extended_negative) \
+                    or (other.is_infinite and other.is_extended_positive):
+                return S.false
+            pos = (self - other).is_extended_positive
+            if pos is not None:
+                return sympify(pos)
         return StrictGreaterThan(self, other, evaluate=False)
 
     def __lt__(self, other):
@@ -402,11 +409,13 @@ class Expr(Basic, EvalfMixin):
         n2 = _n2(self, other)
         if n2 is not None:
             return _sympify(n2 < 0)
-        if self.is_extended_real or other.is_extended_real:
-            dif = self - other
-            if dif.is_extended_negative is not None and \
-                    dif.is_extended_negative is not dif.is_extended_nonnegative:
-                return sympify(dif.is_extended_negative)
+        if self.is_extended_real and other.is_extended_real:
+            if (self.is_infinite and self.is_extended_positive) \
+                    or (other.is_infinite and other.is_extended_negative):
+                return S.false
+            neg = (self - other).is_extended_negative
+            if neg is not None:
+                return sympify(neg)
         return StrictLessThan(self, other, evaluate=False)
 
     def __trunc__(self):
@@ -3767,18 +3776,26 @@ def unchanged(func, *args):
     Examples
     ========
 
+    >>> from sympy import Piecewise, cos, pi
     >>> from sympy.core.expr import unchanged
-    >>> from sympy.functions.elementary.trigonometric import cos
-    >>> from sympy.core.numbers import pi
+    >>> from sympy.abc import x
 
     >>> unchanged(cos, 1)  # instead of assert cos(1) == cos(1)
     True
 
     >>> unchanged(cos, pi)
     False
+
+    Comparison of args uses the builtin capabilities of the object's
+    arguments to test for equality so args can be defined loosely. Here,
+    the ExprCondPair arguments of Piecewise compare as equal to the
+    tuples that can be used to create the Piecewise:
+
+    >>> unchanged(Piecewise, (x, x > 1), (0, True))
+    True
     """
     f = func(*args)
-    return f.func == func and f.args == tuple([sympify(a) for a in args])
+    return f.func == func and f.args == args
 
 
 class ExprBuilder(object):
