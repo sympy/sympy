@@ -223,8 +223,7 @@ def test_harmonic_rational():
     Heee = harmonic(ne + pe/qe)
     Aeee = (-log(10) + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
-             + pi*(1/S(4) + sqrt(5)/4)/(2*sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 13944145/S(4720968))
+             + pi*sqrt(2*sqrt(5)/5 + 1)/2 + 13944145/S(4720968))
 
     Heeo = harmonic(ne + pe/qo)
     Aeeo = (-log(26) + 2*log(sin(3*pi/13))*cos(4*pi/13) + 2*log(sin(2*pi/13))*cos(32*pi/13)
@@ -237,7 +236,7 @@ def test_harmonic_rational():
              + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 11818877030/S(4286604231) + pi*(sqrt(5)/8 + 5/S(8))/sqrt(-sqrt(5)/8 + 5/S(8)))
+             + 11818877030/S(4286604231) + pi*sqrt(2*sqrt(5) + 5)/2)
 
     Heoo = harmonic(ne + po/qo)
     Aeoo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
@@ -248,8 +247,7 @@ def test_harmonic_rational():
     Hoee = harmonic(no + pe/qe)
     Aoee = (-log(10) + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
-             + pi*(1/S(4) + sqrt(5)/4)/(2*sqrt(-sqrt(5)/8 + 5/S(8)))
-             + 779405/S(277704))
+             + pi*sqrt(2*sqrt(5)/5 + 1)/2 + 779405/S(277704))
 
     Hoeo = harmonic(no + pe/qo)
     Aoeo = (-log(26) + 2*log(sin(3*pi/13))*cos(4*pi/13) + 2*log(sin(2*pi/13))*cos(32*pi/13)
@@ -262,7 +260,7 @@ def test_harmonic_rational():
              + 2*(-1/S(4) + sqrt(5)/4)*log(sqrt(-sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 - 1/S(4))*log(sqrt(sqrt(5)/8 + 5/S(8)))
              + 2*(-sqrt(5)/4 + 1/S(4))*log(1/S(4) + sqrt(5)/4)
-             + 486853480/S(186374097) + pi*(sqrt(5)/8 + 5/S(8))/sqrt(-sqrt(5)/8 + 5/S(8)))
+             + 486853480/S(186374097) + pi*sqrt(2*sqrt(5) + 5)/2)
 
     Hooo = harmonic(no + po/qo)
     Aooo = (-log(26) + 2*log(sin(3*pi/13))*cos(54*pi/13) + 2*log(sin(4*pi/13))*cos(6*pi/13)
@@ -272,7 +270,6 @@ def test_harmonic_rational():
 
     H = [Heee, Heeo, Heoe, Heoo, Hoee, Hoeo, Hooe, Hooo]
     A = [Aeee, Aeeo, Aeoe, Aeoo, Aoee, Aoeo, Aooe, Aooo]
-
     for h, a in zip(H, A):
         e = expand_func(h).doit()
         assert cancel(e/a) == 1
