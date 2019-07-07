@@ -4,7 +4,7 @@ from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
                     Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
                     nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
                     linsolve, Piecewise, eye, Or, Ne, Not, Intersection,
-                    Union, Expr)
+                    Union, Expr, Function, sympify, Le)
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -20,7 +20,9 @@ __all__ = [
     'DiscreteTimeStochasticProcess',
     'DiscreteMarkovChain',
     'TransitionMatrixOf',
-    'StochasticStateSpaceOf'
+    'StochasticStateSpaceOf',
+    'HoldingParametersOf',
+    'ContinuousMarkovChain'
 ]
 
 def _set_converter(itr):
@@ -173,6 +175,25 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
         pspace_obj = StochasticPSpace(self.symbol, self)
         return RandomIndexedSymbol(idx_obj, pspace_obj)
 
+class ContinuousTimeStochasticProcess(StochasticProcess):
+    """
+    Base class for all continuous time stochastic process.
+    """
+    def __call__(self, time):
+        """
+        For indexing continuous time stochastic processes.
+
+        Returns
+        =======
+
+        RandomIndexedSymbol
+        """
+        if time not in self.index_set:
+            raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
+        func_obj = Function(self.symbol)(time)
+        pspace_obj = StochasticPSpace(self.symbol, self)
+        return RandomIndexedSymbol(func_obj, pspace_obj)
+
 class TransitionMatrixOf(Boolean):
     """
     Assumes that the matrix is the transition matrix
@@ -201,6 +222,25 @@ class StochasticStateSpaceOf(Boolean):
     process = property(lambda self: self.args[0])
     state_space = property(lambda self: self.args[1])
 
+class HoldingParametersOf(Boolean):
+
+    def __new__(cls, process, hold_params):
+        if not isinstance(process, ContinuousMarkovChain):
+            raise ValueError("Currently, only ContinuousMarkovChain "
+                                "support HoldingParametersOf.")
+        if hold_params != None:
+            itr = None
+            if (isinstance(process.state_space, FiniteSet)):
+                itr = process.state_space
+            elif process.transition_matrix != None:
+                itr = range(process.transition_matrix.shape[0])
+            if itr != None and any(Le(hold_params[s], 0) == True for s in itr):
+                    raise ValueError("All holding parameter should be positive.")
+        return Basic.__new__(cls, process, hold_params)
+
+    process = property(lambda self: self.args[0])
+    holding_time_parameters = property(lambda self: self.args[1])
+
 class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
     """
     Represents discrete Markov chain.
@@ -208,7 +248,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
     Parameters
     ==========
 
-    sym: Symbol
+    sym: Symbol/string_types
     state_space: Set
         Optional, by default, S.Reals
     trans_probs: Matrix/ImmutableMatrix/MatrixSymbol
@@ -617,3 +657,62 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(expr, condition))
+
+class ContinuousMarkovChain(ContinuousTimeStochasticProcess, DiscreteMarkovChain):
+    """
+    Represents continuous Markov chain.
+
+    Parameters
+    ==========
+
+    sym: Symbol/string_types
+    state_space: Set
+        Optional, by default, S.Reals
+    trans_mat: Matrix/ImmutableMatrix/MatrixSymbol
+        Optional, by default, None
+    hold_params: list/tuple/dict/Function/
+        Optional, by default, None
+        Denotes the holding time parameters.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import ContinuousMarkovChain, HoldingParametersOf
+    >>> from sympy import Matrix, S, MatrixSymbol
+    >>> T = Matrix([[S(0), S(1)/2, S(1)/2], [S(0), S(1)/3, S(2)/3], [S(1)/2, S(0), S(1)/2]])
+    >>> C = ContinuousMarkovChain('C', state_space=[0, 1, 2], trans_mat=T, hold_params=[2, 3, 4])
+    >>> C.limiting_distribution()
+    Matrix([[2/5, 1/5, 2/5]])
+    """
+    index_set = S.Reals
+
+    def __new__(cls, sym, state_space=S.Reals, trans_mat=None, hold_params=None):
+        sym = _symbol_converter(sym)
+        state_space = _set_converter(state_space)
+        if trans_mat != None:
+            trans_mat = _matrix_checks(trans_mat)
+        self = Basic.__new__(cls, sym, state_space, trans_mat)
+        self.holding_time_parameters = \
+            HoldingParametersOf(self, hold_params).holding_time_parameters
+        return self
+
+    @property
+    def transition_matrix(self):
+        return self.args[2]
+
+    def generator_matrix(self):
+        t_mat, ht = self.transition_matrix, self.holding_time_parameters
+        if t_mat != None and ht != None:
+            self._check_trans_probs(t_mat)
+            m = t_mat.shape[0]
+            return ImmutableMatrix([[ht[si]*t_mat[si, sj] if si != sj else -ht[si]
+                                        for sj in range(m)] for si in range(m)])
+
+    def limiting_distribution(self):
+        t_mat, ht = self.transition_matrix, self.holding_time_parameters
+        if t_mat == None or ht == None or isinstance(t_mat, MatrixSymbol):
+            return None
+        d = DiscreteMarkovChain('D', state_space=self.state_space, trans_probs=self.transition_matrix)
+        l = d.limiting_distribution.tolist()[0]
+        denom = sum([l[j]/ht[j] for j in range(t_mat.shape[0])])
+        return ImmutableMatrix([[S(l[j])/(ht[j]*denom) for j in range(t_mat.shape[0])]])

@@ -1567,11 +1567,24 @@ def test_sympy__stats__stochastic_process_types__DiscreteTimeStochasticProcess()
     from sympy.stats.stochastic_process_types import DiscreteTimeStochasticProcess
     assert _test_args(DiscreteTimeStochasticProcess("Y", [1, 2, 3]))
 
+def test_sympy__stats__stochastic_process_types__ContinuousTimeStochasticProcess():
+    from sympy.stats.stochastic_process_types import ContinuousTimeStochasticProcess
+    assert _test_args(ContinuousTimeStochasticProcess("Y", [1, 2, 3]))
+
 def test_sympy__stats__stochastic_process_types__TransitionMatrixOf():
     from sympy.stats.stochastic_process_types import TransitionMatrixOf, DiscreteMarkovChain
     from sympy import MatrixSymbol
     DMC = DiscreteMarkovChain("Y")
     assert _test_args(TransitionMatrixOf(DMC, MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__stochastic_process_types__HoldingParametersOf():
+    from sympy.stats.stochastic_process_types import HoldingParametersOf, ContinuousMarkovChain
+    from sympy import Matrix, S
+    T1 = Matrix([[S(0), S(1), S(0)],
+                [S(0), S(0), S(1)],
+                [S(1)/2, S(1)/2, S(0)]])
+    CMC = ContinuousMarkovChain('C', state_space=[0, 1, 2], trans_mat=T1, hold_params=[2, 1, 3])
+    assert _test_args(HoldingParametersOf(CMC, [1, 2, 3]))
 
 def test_sympy__stats__stochastic_process_types__StochasticStateSpaceOf():
     from sympy.stats.stochastic_process_types import StochasticStateSpaceOf, DiscreteMarkovChain
@@ -1583,6 +1596,11 @@ def test_sympy__stats__stochastic_process_types__DiscreteMarkovChain():
     from sympy.stats.stochastic_process_types import DiscreteMarkovChain
     from sympy import MatrixSymbol
     assert _test_args(DiscreteMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__stochastic_process_types__ContinuousMarkovChain():
+    from sympy.stats.stochastic_process_types import ContinuousMarkovChain
+    from sympy import MatrixSymbol
+    assert _test_args(ContinuousMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3), [2, 3, 4]))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
