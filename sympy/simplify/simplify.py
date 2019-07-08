@@ -377,7 +377,7 @@ def signsimp(expr, evaluate=None):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True):
+def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
     """Simplifies the given expression.
 
     Simplification is not a well defined term and the exact strategies
@@ -514,18 +514,23 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     expression. You can avoid this behavior by passing ``doit=False`` as
     an argument.
     """
+    def done(e):
+        return e.doit() if doit else e
 
     expr = sympify(expr)
-    kwargs = dict(ratio=ratio, measure=measure,
-        rational=rational, inverse=inverse)
-
+    kwargs = dict(
+        ratio=kwargs.get('ratio', ratio),
+        measure=kwargs.get('measure', measure),
+        rational=kwargs.get('rational', rational),
+        inverse=kwargs.get('inverse', inverse),
+        doit=kwargs.get('doit', doit))
     # no routine for Expr needs to check for is_zero
     if isinstance(expr, Expr) and expr.is_zero and expr*0 is S.Zero:
         return S.Zero
 
     _eval_simplify = getattr(expr, '_eval_simplify', None)
     if _eval_simplify is not None:
-        return _eval_simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse, doit=doit)
+        return _eval_simplify(**kwargs)
 
     original_expr = expr = signsimp(expr)
 
@@ -542,7 +547,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
             return expr
 
     if not isinstance(expr, (Add, Mul, Pow, ExpBase)):
-        return expr.func(*[simplify(x, **kwargs) for x in expr.args])
+        return done(
+            expr.func(*[simplify(x, **kwargs) for x in expr.args]))
 
     if not expr.is_commutative:
         expr = nc_simplify(expr)
@@ -649,7 +655,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if floats and rational is None:
         expr = nfloat(expr, exponent=False)
 
-    return expr if not doit else expr.doit()
+    return done(expr)
 
 
 def sum_simplify(s, **kwargs):

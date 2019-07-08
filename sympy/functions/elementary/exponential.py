@@ -661,17 +661,16 @@ class log(Function):
 
         return self.func(arg)
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import expand_log, simplify, inversecombine
-        if (len(self.args) == 2):
-            return simplify(self.func(*self.args), ratio=ratio, measure=measure,
-                            rational=rational, inverse=inverse)
-        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure,
-                         rational=rational, inverse=inverse))
-        if inverse:
+        if len(self.args) == 2:  # it's unevaluated
+            return simplify(self.func(*self.args), **kwargs)
+
+        expr = self.func(simplify(self.args[0], **kwargs))
+        if kwargs['inverse']:
             expr = inversecombine(expr)
         expr = expand_log(expr, deep=True)
-        return min([expr, self], key=measure)
+        return min([expr, self], key=kwargs['measure'])
 
     def as_real_imag(self, deep=True, **hints):
         """
