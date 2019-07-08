@@ -1583,8 +1583,8 @@ def test_sympy__stats__stochastic_process_types__HoldingParametersOf():
     T1 = Matrix([[S(0), S(1), S(0)],
                 [S(0), S(0), S(1)],
                 [S(1)/2, S(1)/2, S(0)]])
-    CMC = ContinuousMarkovChain('C', state_space=[0, 1, 2], trans_mat=T1, hold_params=[2, 1, 3])
-    assert _test_args(HoldingParametersOf(CMC, [1, 2, 3]))
+    CMC = ContinuousMarkovChain('C', state_space=[0, 1, 2], trans_mat=T1)
+    assert _test_args(HoldingParametersOf(CMC, MatrixSymbol('H', 1, 3)))
 
 def test_sympy__stats__stochastic_process_types__StochasticStateSpaceOf():
     from sympy.stats.stochastic_process_types import StochasticStateSpaceOf, DiscreteMarkovChain

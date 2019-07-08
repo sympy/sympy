@@ -228,14 +228,13 @@ class HoldingParametersOf(Boolean):
         if not isinstance(process, ContinuousMarkovChain):
             raise ValueError("Currently, only ContinuousMarkovChain "
                                 "support HoldingParametersOf.")
-        if hold_params != None:
-            itr = None
-            if (isinstance(process.state_space, FiniteSet)):
-                itr = process.state_space
-            elif process.transition_matrix != None:
-                itr = range(process.transition_matrix.shape[0])
-            if itr != None and any(Le(hold_params[s], 0) == True for s in itr):
-                    raise ValueError("All holding parameter should be positive.")
+        itr = None
+        if (isinstance(process.state_space, FiniteSet)):
+            itr = process.state_space
+        elif process.transition_matrix != None:
+            itr = range(process.transition_matrix.shape[0])
+        if itr != None and any(Le(hold_params[s], 0) == True for s in itr):
+                raise ValueError("All holding parameter should be positive.")
         return Basic.__new__(cls, process, hold_params)
 
     process = property(lambda self: self.args[0])
@@ -691,10 +690,12 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, DiscreteMarkovChain
         state_space = _set_converter(state_space)
         if trans_mat != None:
             trans_mat = _matrix_checks(trans_mat)
-        self = Basic.__new__(cls, sym, state_space, trans_mat)
-        self.holding_time_parameters = \
-            HoldingParametersOf(self, hold_params).holding_time_parameters
-        return self
+        obj = Basic.__new__(cls, sym, state_space, trans_mat)
+        obj.holding_time_parameters = None
+        if hold_params != None:
+            obj.holding_time_parameters = \
+                HoldingParametersOf(obj, hold_params).holding_time_parameters
+        return obj
 
     @property
     def transition_matrix(self):
