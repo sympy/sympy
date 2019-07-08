@@ -12,6 +12,7 @@ import sys
 
 cin = import_module(
     'clang.cindex',
+    warn_not_installed=True,
     __import__kwargs = {
         'fromlist':['cindex']
     }
