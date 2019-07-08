@@ -4,7 +4,7 @@ from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
                     Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
                     nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
                     linsolve, Piecewise, eye, Or, Ne, Not, Intersection,
-                    Union, Expr, Function, sympify, Le)
+                    Union, Expr, Function, sympify, Le, exp, cacheit)
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
@@ -687,6 +687,17 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess):
     @property
     def generator_matrix(self):
         return self.args[2]
+
+    @cacheit
+    def transition_probabilities(self, gen_mat=None):
+        t = Dummy('t')
+        if isinstance(gen_mat, (Matrix, ImmutableMatrix)) and \
+                gen_mat.is_diagonalizable():
+            # for faster computation use diagonalized generator matrix
+            Q, D = gen_mat.diagonalize()
+            return Lambda(t, Q*exp(t*D)*Q.inv())
+        if gen_mat != None:
+            return Lambda(t, exp(t*gen_mat))
 
     def limiting_distribution(self):
         gen_mat = self.generator_matrix

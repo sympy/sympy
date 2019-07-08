@@ -1,5 +1,5 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
-                   ImmutableMatrix, Ne, Lt, Gt)
+                   ImmutableMatrix, Ne, Lt, Gt, exp)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain)
 from sympy.stats.rv import RandomIndexedSymbol
@@ -108,3 +108,15 @@ def test_ContinuousMarkovChain():
                  [S(3)/2, S(3)/2, S(-3)]])
     C1 = ContinuousMarkovChain('C', [0, 1, 2], T1)
     assert C1.limiting_distribution() == ImmutableMatrix([[S(3)/19, S(12)/19, S(4)/19]])
+
+    T2 = T1 = Matrix([[-S(1), S(1), S(0)], [S(1), -S(1), S(0)], [S(0), S(1), -S(1)]])
+    C2 = ContinuousMarkovChain('C', [0, 1, 2], T2)
+    A, t = C2.generator_matrix, symbols('t', positive=True)
+    assert C2.transition_probabilities(A)(t) == Matrix([[S(1)/2 + exp(-2*t)/2, S(1)/2 - exp(-2*t)/2, 0],
+                                                       [S(1)/2 - exp(-2*t)/2, S(1)/2 + exp(-2*t)/2, 0],
+                                                       [S(1)/2 - exp(-t) + exp(-2*t)/2, S(1)/2 -
+                                                       exp(-2*t)/2, exp(-t)]])
+    TS1 = MatrixSymbol('G', 3, 3)
+    CS1 = ContinuousMarkovChain('C', [0, 1, 2], TS1)
+    A = CS1.generator_matrix
+    assert CS1.transition_probabilities(A)(t) == exp(t*A)
