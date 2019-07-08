@@ -1020,10 +1020,17 @@ class FormalPowerSeries(SeriesBase):
         as a polynomial(without ``O`` term).
         """
         terms = []
-        sym = self.free_symbols
+        sym = set()
+        if self.is_finite:
+            if(n > len(self.ak)):
+                raise ValueError("The order of truncate should be less than the order"
+                        " specified in the related function.")
+
+        if not self.is_finite:
+            sym = self.free_symbols
         for i, t in enumerate(self):
             xp = self._get_pow_x(t)
-            if xp.has(*sym):
+            if xp.has(*sym) and not self.is_finite:
                 xp = xp.as_coeff_add(*sym)[0]
             if xp >= n:
                 break
@@ -1172,7 +1179,7 @@ class FormalPowerSeries(SeriesBase):
         >>> f1 = fps(sin(x))
         >>> f2 = fps(exp(x))
 
-        >>> f1.product(f2, x, 4)
+        >>> f1.product(f2, x, 4).truncate(4)
         x + x**2 + x**3/3 + O(x**4)
 
         See Also
@@ -1208,14 +1215,10 @@ class FormalPowerSeries(SeriesBase):
         k = other.ak.variables[0]
         coeff2 = sequence(other.ak.formula, (k, 0, oo))
 
-        conv_coeff = convolution(coeff1[:n], coeff2[:n])
+        funct = self.function * other.function
+        aks = convolution(coeff1[:n], coeff2[:n])
 
-        conv_seq = sequence(tuple(conv_coeff), (k, 0, oo))
-        k = self.xk.variables[0]
-        xk_seq = sequence(self.xk.formula, (k, 0, oo))
-        terms_seq = xk_seq * conv_seq
-
-        return Add(*(terms_seq[:n])) + Order(self.xk.coeff(n), (self.x, self.x0))
+        return FiniteFormalPowerSeries(funct, self.x, self.x0, self.dir, (aks, self.xk, self.ind))
 
     def coeff_bell(self, n):
         r"""
@@ -1275,10 +1278,10 @@ class FormalPowerSeries(SeriesBase):
         >>> f1 = fps(exp(x))
         >>> f2 = fps(sin(x))
 
-        >>> f1.compose(f2, x)
+        >>> f1.compose(f2, x).truncate()
         1 + x + x**2/2 - x**4/8 - x**5/15 + O(x**6)
 
-        >>> f1.compose(f2, x, n=8)
+        >>> f1.compose(f2, x, n=8).truncate(8)
         1 + x + x**2/2 - x**4/8 - x**5/15 - x**6/240 + x**7/90 + O(x**8)
 
         See Also
@@ -1315,18 +1318,19 @@ class FormalPowerSeries(SeriesBase):
             raise ValueError("Both series should have the same symbol.")
 
         f, g = self.function, other.function
+        funct = f.subs(x, g)
         if other._eval_term(0).as_coeff_mul(other.x)[0] is not S.Zero:
             raise ValueError("The formal power series of the inner function should not have any "
                 "constant coefficient term.")
 
-        terms = []
+        aks = [self._eval_term(0)]
 
         for i in range(1, n):
             bell_seq = other.coeff_bell(i)
             seq = (self.bell_coeff_seq * bell_seq)
-            terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / self.fact_seq[i-1])
+            aks.append(Add(*(seq[:i])) / self.fact_seq[i-1])
 
-        return self._eval_term(0) + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
+        return FiniteFormalPowerSeries(funct, self.x, self.x0, self.dir, (aks, self.xk, self.ind))
 
     def inverse(self, x=None, n=6):
         r"""
@@ -1356,10 +1360,10 @@ class FormalPowerSeries(SeriesBase):
         >>> f1 = fps(exp(x))
         >>> f2 = fps(cos(x))
 
-        >>> f1.inverse(x)
+        >>> f1.inverse(x).truncate()
         1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + O(x**6)
 
-        >>> f2.inverse(x, n=8)
+        >>> f2.inverse(x, n=8).truncate(8)
         1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + O(x**8)
 
         See Also
@@ -1386,16 +1390,17 @@ class FormalPowerSeries(SeriesBase):
         inv = self._eval_term(0)
 
         k = Dummy('k')
-        terms = []
+        funct = 1/self.function
+        aks = [inv]
         inv_seq = sequence(inv ** (-(k + 1)), (k, 1, oo))
         aux_seq = self.sign_seq * self.fact_seq * inv_seq
 
         for i in range(1, n):
             bell_seq = self.coeff_bell(i)
             seq = (aux_seq * bell_seq)
-            terms.append(Add(*(seq[:i])) * self.xk.coeff(i) / self.fact_seq[i-1])
+            aks.append(Add(*(seq[:i])) / self.fact_seq[i-1])
 
-        return self._eval_term(0) + Add(*terms) + Order(self.xk.coeff(n), (self.x, self.x0))
+        return FiniteFormalPowerSeries(funct, self.x, self.x0, self.dir, (aks, self.xk, self.ind))
 
     def __add__(self, other):
         other = sympify(other)
@@ -1483,56 +1488,37 @@ class FiniteFormalPowerSeries(FormalPowerSeries):
     sympy.series.formal.FormalPowerSeries
     sympy.series.formal.fps
     """
-    def __new__(cls, *args):
-        args = map(sympify, args)
-        return Expr.__new__(cls, *args)
+
+    is_finite = True
 
     def __init__(self, *args):
         pass
 
+    @property
+    def infinite(self):
+        raise NotImplementedError("No infinite version for an object of"
+                     " FiniteFormalPowerSeries class.")
+
     def _eval_term(self, pt):
+        """
+        Coefficient sequence is a list. Terms of the resultant series is calculated
+        by this function.
+        """
         try:
             pt_xk = self.xk.coeff(pt)
-            pt_ak = S.Zero
-            if pt is not S.Zero:
-                pt_ak = self.ak[pt-1]
+            pt_ak = self.ak[pt]
         except IndexError:
             term = S.Zero
         else:
             term = (pt_ak * pt_xk)
 
-        if self.ind:
-            ind = S.Zero
-            for t in Add.make_args(self.ind):
-                pow_x = self._get_pow_x(t)
-                if pt == 0 and pow_x < 1:
-                    ind += t
-                elif pow_x >= pt and pow_x < pt + 1:
-                    ind += t
-            term += ind
-
         return term.collect(self.x)
 
-    def polynomial(self, n=6):
-        """Truncated series as polynomial.
+    def _eval_derivative(self, x):
+        raise NotImplementedError
 
-        Returns series expansion of ``f`` upto order ``O(x**n)``
-        as a polynomial(without ``O`` term).
-        """
-        if (n > len(self.ak)+1):
-            raise ValueError("The order of truncate should be less than or equal to the"
-                "order specified in the compose function.")
-        terms = []
-        for i, t in enumerate(self):
-            xp = self._get_pow_x(t)
-            if xp >= n:
-                break
-            elif xp.is_integer is True and i == n + 1:
-                break
-            elif t is not S.Zero:
-                terms.append(t)
-
-        return Add(*terms)
+    def integrate(self, x):
+        raise NotImplementedError
 
 
 def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
