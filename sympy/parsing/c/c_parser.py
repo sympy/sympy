@@ -17,11 +17,51 @@ cin = import_module(
     }
 )
 
+"""
+This module contains all the necessary Classes and Function used to Parse C and C++ code into SymPy expression
+The module and its API are currently under development and experimental.
+It is also dependent on Clang's AST adn Sympy's Cdegen AST that is converted to SymPy syntax
+which might also bbe missing some features.
+The module only supports the features currently supported by the Clang and codegen AST
+which will be updated as the development of codegen AST and this module progresses.
+You might find unexpected bugs and exceptions while using the module, feel free
+to report them to the SymPy Issue Tracker
+The API for the module might also change while in development if better and more
+effective ways are discovered for the process
+
+Features Supported
+==================
+
+- Variable Declarations (integers and reals)
+- Assignment (using integer & floating literal and function calls)
+- Function Definitions nad Declaration
+- Function Calls
+- Compound statements, Return statements
+
+Notes
+=====
+
+The module is dependent on an external dependency which needs to be installed to use any features from the module.
+
+Clang: The C and C++ compiler which is used to extract an AST from the provided C source code.
+
+Refrences
+=========
+
+.. [1] https://github.com/sympy/sympy/issues
+.. [2] https://clang.llvm.org/docs/
+.. [3] https://clang.llvm.org/docs/IntroductionToTheClangAST.html
+"""
+
 class BaseParser(object):
+    """Base Class for the C parser
+    """
     def __init__(self):
+        """Initializes the Base C parser creating a Clang AST index"""
         self.index = cin.Index.create()
 
     def diagnostics(self, out):
+        """Diagostics function for the Clang AST"""
         for diag in self.tu.diagnostics:
             print('%s %s (line %s, col %s) %s' % (
                     {
@@ -38,11 +78,37 @@ class BaseParser(object):
                 ), file=out)
 
 class CCodeConverter(BaseParser):
+    """The Code Convereter for Clang AST
+
+
+    """
     def __init__(self, name):
+        """Initializes the code converter"""
         super(CCodeConverter, self).__init__()
         self._py_nodes = []
 
     def parse(self, filenames, flags):
+        """Function to parse a file with C source code
+
+        It takes the filename as an attribute and creates a Clang AST Translation Unit parsing the file.
+        Then the transformation function is called on the transaltion unit, whose reults are collected into a list which is returned by the function.
+
+        Parameters
+        ==========
+
+        filenames : string
+            Path to the C file to be parsed
+
+        flags: list
+            Arguments to be passed to Clang while parsing the C code
+
+        Returns
+        =======
+
+        py_nodes: list
+            A list of sympy AST nodes
+
+        """
         filename = os.path.abspath(filenames)
         self.tu = self.index.parse(
             filename,
@@ -58,26 +124,17 @@ class CCodeConverter(BaseParser):
                 pass
         return self._py_nodes
 
-    def parse_text(self, content, flags):
-        for f, c in content:
-            filename = os.path.abspath(f)
-
-            self.tu = self.index.parse(
-                filename,
-                args=flags,
-                unsaved_files=[(f, c)],
-                options=TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
-            )
-            for child in self.tu.cursor.get_children():
-                if child.kind == cin.CursorKind.VAR_DECL:
-                    self._py_nodes.append(self.transform(child))
-                elif (child.kind == cin.CursorKind.FUNCTION_DECL):
-                    self._py_nodes.append(self.transform(child))
-                else:
-                    pass
-            return self._py_nodes
-
     def transform(self, node):
+        """Transformation Function for a Clang AST nodes
+
+        It determines the kind of node and calss the respective transforation function for that node.
+
+        Raises
+        ======
+
+        NotImplementedError : if the transformation for the provided node is not implemented
+
+        """
         try:
             handler = getattr(self, 'transform_%s' % node.kind.name.lower())
         except AttributeError:
@@ -95,6 +152,26 @@ class CCodeConverter(BaseParser):
             return result
 
     def transform_var_decl(self, node):
+        """Transformation Function for Variable Declaration
+
+        Used to create nodes for variable declarations and assignments with values or function call for the respective nodes in the clang AST
+
+        Returns
+        =======
+
+        A variable node as Declaration, with the given value or 0 if the value is not provided
+
+        Raises
+        ======
+
+        NotImplementedError : if called for data types not currently implemented
+
+        Notes
+        =====
+
+        This function currently only supports basic Integer and Float data types
+
+        """
         try:
             children = node.get_children()
             prev_child = None
@@ -109,6 +186,7 @@ class CCodeConverter(BaseParser):
                 child = next(children)
 
             args = self.transform(child)
+            # List in case of variable assignment, FunctionCall node in case of a funcion call
             if (child.kind == cin.CursorKind.INTEGER_LITERAL
                 or child.kind == cin.CursorKind.UNEXPOSED_EXPR):
                 return Variable(
@@ -144,6 +222,19 @@ class CCodeConverter(BaseParser):
             )
 
     def transform_function_decl(self, node):
+        """Transformation Function For Function Declaration
+
+        Used to create nodes for function declarations and definitions for the respective nodes in the clang AST
+
+        Returns
+        =======
+
+        function : Codegen AST node
+            - FunctionPrototype node if function body is not present
+            - FunctionDefinition node if the function body is present
+
+
+        """
         token = node.get_tokens()
         c_ret_type = next(token).spelling
         if (c_ret_type == 'void'):
@@ -206,6 +297,22 @@ class CCodeConverter(BaseParser):
 
 
     def transform_parm_decl(self, node):
+        """Transformation function for Parameter Declaration
+
+        Used to create parameter nodes for the required functions for the respective nodes in the clang AST
+
+        Returns
+        =======
+
+        param : Codegen AST Node
+            Variable node with the value nad type of the variable
+
+        Raises
+        ======
+
+        ValueError if multiple children encountered in the parameter node
+
+        """
         if (node.type.kind == cin.TypeKind.INT):
             type = IntBaseType(String('integer'))
             value = Integer(0)
@@ -254,6 +361,24 @@ class CCodeConverter(BaseParser):
         return param
 
     def transform_integer_literal(self, node):
+        """Transformation function for integer literal
+
+        Used to get the value and type of the given integer literal.
+
+        Returns
+        =======
+
+        val : list
+            List with two arguments type and Value
+            type contains the type of the integer
+            value contains the value stored in the variable
+
+        Notes
+        =====
+
+        Only Base Integer type supported for now
+
+        """
         type = IntBaseType(String('integer'))
         try:
             value = next(node.get_tokens()).spelling
@@ -264,6 +389,24 @@ class CCodeConverter(BaseParser):
         return val
 
     def transform_floating_literal(self, node):
+        """Transformation function for floating literal
+
+        Used to get the value and type of the given floating literal.
+
+        Returns
+        =======
+
+        val : list
+            List with two arguments type and Value
+            type contains the type of float
+            value contains the value stored in the variable
+
+        Notes
+        =====
+
+        Only Base Float type supported for now
+
+        """
         type = FloatBaseType(String('real'))
         try:
             value = next(node.get_tokens()).spelling
@@ -299,9 +442,29 @@ class CCodeConverter(BaseParser):
         pass
 
     def transform_unexposed_decl(self,node):
+        """Transformation function for unexposed declarations"""
         pass
 
     def transform_unexposed_expr(self, node):
+        """Transformation function for unexposed expression
+
+        Unexposed expressions are used to wrap float, double literals and expressions
+
+        Returns
+        =======
+
+        expr : Codegen AST Node
+            the result from the wrapped expression
+
+        None : NoneType
+            No childs are found for the node
+
+        Raises
+        ======
+
+        ValueError if the expression contains multiple children
+
+        """
         # Ignore unexposed nodes; pass whatever is the first
         # (and should be only) child unaltered.
         try:
@@ -319,9 +482,21 @@ class CCodeConverter(BaseParser):
         return expr
 
     def transform_decl_ref_expr(self, node):
+        """Returns the name of the declaration reference"""
         return node.spelling
 
     def transform_call_expr(self, node):
+        """Transformation function for a call expression
+
+        Used to create function call nodes for the function calls present in the C code
+
+        Returns
+        =======
+
+        FunctionCall : Codegen AST Node
+            FunctionCall node with parameters if any parameters are present
+
+        """
         param = []
         children = node.get_children()
         child = next(children)
@@ -347,9 +522,22 @@ class CCodeConverter(BaseParser):
             return FunctionCall(first_child)
 
     def transform_return_stmt(self, node):
+        """Returns the Return Node for a return statement"""
         return Return(next(node.get_children()).spelling)
 
     def transform_compound_stmt(self, node):
+        """Transformation function for compond statemets
+
+        Returns
+        =======
+
+        expr : list
+            list of Nodes for the expressions present in the statement
+
+        None : NoneType
+            if the compound statement is empty
+
+        """
         try:
             expr = []
             children = node.get_children()
@@ -360,6 +548,23 @@ class CCodeConverter(BaseParser):
         return expr
 
     def transform_decl_stmt(self, node):
+        """Transformation function for declaration statements
+
+        These statements are used to wrap different kinds of declararions like variable or function declaration
+        The function calls the transformer function for the child of the given node
+
+        Returns
+        =======
+
+        statement : Codegen AST Node
+            contains the node returned by the children node for the type of declaration
+
+        Raises
+        ======
+
+        ValueError if multiple children present
+
+        """
         try:
             children = node.get_children()
             statement = self.transform(next(children))
@@ -375,6 +580,28 @@ class CCodeConverter(BaseParser):
         return statement
 
 def convert_c_file(filename):
+    """Function for converting a C source file
+
+    The function reads the source code present in the given file and parses it to give out sympy expressions
+
+    Parameters
+    ==========
+
+    filename : string
+        A string with the path to the C source file to be parsed
+
+    Returns
+    =======
+
+    res_src : list
+        List of Python expression strings
+
+    Note
+    ====
+
+    The Parser and it's API are currently under development and the API and the supported features can be changed while in development.
+
+    """
     res_src = []
     converter = CCodeConverter('output')
     p = converter.parse(filename, flags = [])

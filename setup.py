@@ -430,5 +430,8 @@ if __name__ == '__main__':
           install_requires=[
             'mpmath>=%s' % min_mpmath_version,
             ],
+          extra_require={
+            'clang' : ["clang"],
+            },
           **extra_kwargs
           )
