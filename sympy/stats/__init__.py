@@ -89,7 +89,7 @@ from .stochastic_process_types import (
     TransitionMatrixOf,
     StochasticStateSpaceOf,
     ContinuousMarkovChain,
-    HoldingParametersOf
+    GeneratorMatrixOf
 )
 __all__.extend(stochastic_process_types.__all__)
 

@@ -1577,14 +1577,11 @@ def test_sympy__stats__stochastic_process_types__TransitionMatrixOf():
     DMC = DiscreteMarkovChain("Y")
     assert _test_args(TransitionMatrixOf(DMC, MatrixSymbol('T', 3, 3)))
 
-def test_sympy__stats__stochastic_process_types__HoldingParametersOf():
-    from sympy.stats.stochastic_process_types import HoldingParametersOf, ContinuousMarkovChain
-    from sympy import Matrix, S
-    T1 = Matrix([[S(0), S(1), S(0)],
-                [S(0), S(0), S(1)],
-                [S(1)/2, S(1)/2, S(0)]])
-    CMC = ContinuousMarkovChain('C', state_space=[0, 1, 2], trans_mat=T1)
-    assert _test_args(HoldingParametersOf(CMC, MatrixSymbol('H', 1, 3)))
+def test_sympy__stats__stochastic_process_types__GeneratorMatrixOf():
+    from sympy.stats.stochastic_process_types import GeneratorMatrixOf, ContinuousMarkovChain
+    from sympy import MatrixSymbol
+    DMC = ContinuousMarkovChain("Y")
+    assert _test_args(GeneratorMatrixOf(DMC, MatrixSymbol('T', 3, 3)))
 
 def test_sympy__stats__stochastic_process_types__StochasticStateSpaceOf():
     from sympy.stats.stochastic_process_types import StochasticStateSpaceOf, DiscreteMarkovChain
@@ -1600,7 +1597,7 @@ def test_sympy__stats__stochastic_process_types__DiscreteMarkovChain():
 def test_sympy__stats__stochastic_process_types__ContinuousMarkovChain():
     from sympy.stats.stochastic_process_types import ContinuousMarkovChain
     from sympy import MatrixSymbol
-    assert _test_args(ContinuousMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3), [2, 3, 4]))
+    assert _test_args(ContinuousMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy

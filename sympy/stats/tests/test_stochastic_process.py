@@ -1,8 +1,7 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
-                         StochasticStateSpaceOf, variance, ContinuousMarkovChain,
-                         HoldingParametersOf)
+                         StochasticStateSpaceOf, variance, ContinuousMarkovChain)
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.joint_rv import JointDistribution
@@ -104,10 +103,8 @@ def test_DiscreteMarkovChain():
     raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
 
 def test_ContinuousMarkovChain():
-    T1 = Matrix([[S(0), S(1), S(0)],
-             [S(0), S(0), S(1)],
-             [S(1)/2, S(1)/2, S(0)]])
-    TS1, HS1 = MatrixSymbol('T', 3, 3), MatrixSymbol('H', 1, 3)
-    C1 = ContinuousMarkovChain('C', state_space=[0, 1, 2], trans_mat=T1, hold_params=[2, 1, 3])
+    T1 = Matrix([[S(-2), S(2), S(0)],
+                 [S(0), S(-1), S(1)],
+                 [S(3)/2, S(3)/2, S(-3)]])
+    C1 = ContinuousMarkovChain('C', [0, 1, 2], T1)
     assert C1.limiting_distribution() == ImmutableMatrix([[S(3)/19, S(12)/19, S(4)/19]])
-    assert C1.generator_matrix() == ImmutableMatrix([[S(-2), S(2), S(0)], [S(0), S(-1), S(1)], [S(3)/2, S(3)/2, S(-3)]])
