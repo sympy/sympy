@@ -360,7 +360,7 @@ def test_function_comparable_infinities():
 
 
 def test_deriv1():
-    # These all requre derivatives evaluated at a point (issue 4719) to work.
+    # These all require derivatives evaluated at a point (issue 4719) to work.
     # See issue 4624
     assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), x, 2*x)
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)

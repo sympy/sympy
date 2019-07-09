@@ -2308,7 +2308,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     the structure of the term.  For each term, we obtain a sequence of all
     dummy variables, where the order is determined by the index range, what
     factors the index belongs to and its position in each factor.  See
-    _get_ordered_dummies() for more inforation about the sorting of dummies.
+    _get_ordered_dummies() for more information about the sorting of dummies.
     The index sequence is then substituted consistently in each term.
 
     Examples

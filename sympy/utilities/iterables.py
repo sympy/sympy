@@ -686,7 +686,7 @@ def sift(seq, keyfunc, binary=False):
 
     If you need to sort the sifted items it might be better to use
     ``ordered`` which can economically apply multiple sort keys
-    to a squence while sorting.
+    to a sequence while sorting.
 
     See Also
     ========

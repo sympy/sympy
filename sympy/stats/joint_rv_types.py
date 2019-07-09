@@ -525,7 +525,7 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     syms: list/tuple/set of symbols for identifying each component
     omega: A square matrix
            Every element of square matrix must be absolute value of
-           sqaure root of correlation coefficient
+           square root of correlation coefficient
     v: positive real
     lamda: a list of positive reals
     mu: a list of positive reals
@@ -590,7 +590,7 @@ class MultinomialDistribution(JointDistribution):
     @staticmethod
     def check(n, p):
         _value_check(n > 0,
-                        "number of trials must be a positve integer")
+                        "number of trials must be a positive integer")
         for p_k in p:
             _value_check((p_k >= 0, p_k <= 1),
                         "probability must be in range [0, 1]")
@@ -659,7 +659,7 @@ class NegativeMultinomialDistribution(JointDistribution):
     @staticmethod
     def check(k0, p):
         _value_check(k0 > 0,
-                        "number of failures must be a positve integer")
+                        "number of failures must be a positive integer")
         for p_k in p:
             _value_check((p_k >= 0, p_k <= 1),
                         "probability must be in range [0, 1].")

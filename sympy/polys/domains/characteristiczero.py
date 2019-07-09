@@ -1,4 +1,4 @@
-"""Implementaton of :class:`CharacteristicZero` class. """
+"""Implementation of :class:`CharacteristicZero` class. """
 
 from __future__ import print_function, division
 

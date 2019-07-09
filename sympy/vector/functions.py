@@ -114,7 +114,7 @@ def express(expr, system, system2=None, variables=False):
             # Given expr is a scalar field
             system_set = set([])
             expr = sympify(expr)
-            # Subsitute all the coordinate variables
+            # Substitute all the coordinate variables
             for x in expr.atoms(BaseScalar):
                 if x.system != system:
                     system_set.add(x.system)
@@ -307,7 +307,7 @@ def scalar_potential(field, coord_sys):
     if field == Vector.zero:
         return S(0)
     # Express the field exntirely in coord_sys
-    # Subsitute coordinate variables also
+    # Substitute coordinate variables also
     if not isinstance(coord_sys, CoordSys3D):
         raise TypeError("coord_sys must be a CoordSys3D")
     field = express(field, coord_sys, variables=True)

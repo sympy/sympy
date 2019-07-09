@@ -581,7 +581,7 @@ class cos(TrigonometricFunction):
 
             # cosine formula #####################
             # https://github.com/sympy/sympy/issues/6048
-            # explicit calculations are preformed for
+            # explicit calculations are performed for
             # cos(k pi/n) for n = 8,10,12,15,20,24,30,40,60,120
             # Some other exact values like cos(k pi/240) can be
             # calculated using a partial-fraction decomposition

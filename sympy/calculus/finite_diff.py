@@ -148,7 +148,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     derivative is wanted, weights for 0th, 1st and 2nd order are
     calculated "for free", so are formulae using subsets of ``x_list``.
     This is something one can take advantage of to save computational cost.
-    Be aware that one should define ``x_list`` from nearest to farest from
+    Be aware that one should define ``x_list`` from nearest to furthest from
     ``x0``. If not, subsets of ``x_list`` will yield poorer approximations,
     which might not grand an order of accuracy of ``len(x_list) - order``.
 

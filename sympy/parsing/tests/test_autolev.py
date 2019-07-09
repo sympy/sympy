@@ -93,7 +93,7 @@ def test_dynamics_online():
 
 
 def test_output_01():
-    """Autolev example calculates the position, velocity, and accleration of a
+    """Autolev example calculates the position, velocity, and acceleration of a
     point and expresses in a single reference frame::
 
           (1) FRAMES C,D,F

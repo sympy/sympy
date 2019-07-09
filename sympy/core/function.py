@@ -1079,7 +1079,7 @@ class Derivative(Expr):
     derivatives wrt AppliedUndef and Derivatives are allowed.
     For example, in the Euler-Lagrange method one may write
     F(t, u, v) where u = f(t) and v = f'(t). These variables can be
-    written explicity as functions of time::
+    written explicitly as functions of time::
 
         >>> from sympy.abc import t
         >>> F = Function('F')
@@ -2062,7 +2062,7 @@ class Subs(Expr):
         else:
             expr = sympify(expr)
 
-        # use symbols with names equal to the point value (with preppended _)
+        # use symbols with names equal to the point value (with prepended _)
         # to give a variable-independent expression
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
@@ -2077,7 +2077,7 @@ class Subs(Expr):
             s_pts = {p: Symbol(pre + mystr(p)) for p in pts}
             reps = [(v, s_pts[p])
                 for v, p in zip(variables, point)]
-            # if any underscore-preppended symbol is already a free symbol
+            # if any underscore-prepended symbol is already a free symbol
             # and is a variable with a different point value, then there
             # is a clash, e.g. _0 clashes in Subs(_0 + _1, (_0, _1), (1, 0))
             # because the new symbol that would be created is _1 but _1
@@ -2215,7 +2215,7 @@ class Subs(Expr):
                     i.has(new) for i in self.args):
                 # the substitution is neutral
                 return self.xreplace({old: new})
-            # any occurance of old before this point will get
+            # any occurrence of old before this point will get
             # handled by replacements from here on
             i = self.variables.index(old)
             for j in range(i, len(self.variables)):
