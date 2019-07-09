@@ -272,9 +272,6 @@ def test_Range_set():
     raises(NotImplementedError, lambda: empty.inf)
     raises(NotImplementedError, lambda: empty.sup)
 
-    # testing if Range remains unchanged
-    assert unchanged(Range, 1, 5, 6)
-
     AB = [None] + list(range(12))
     for R in [
             Range(1, 10),

@@ -562,7 +562,8 @@ class Range(Set):
                     end = ref + n*step
         else:
             end = stop
-        if (end > stop) == True and (stop > start) == True:
+        # behave like Python 3 range if PY3 else behave like Python 2 xrange
+        if (end > stop) == True and (stop > start) == True and PY3:
             end_arg = stop
         else:
             end_arg = end
