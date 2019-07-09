@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from functools import wraps
 
-from sympy.core import Add, Mul, Pow, S, sympify, Float
+from sympy.core import Add, Mul, Pow, S, sympify, Float, Dummy
 from sympy.core.basic import Basic
 from sympy.core.compatibility import default_sort_key, string_types
 from sympy.core.function import Lambda
@@ -12,7 +12,7 @@ from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 
 # Backwards compatibility
-from sympy.codegen.ast import Assignment
+from sympy.codegen.ast import Assignment, Variable, float32, aug_assign
 
 
 class requires(object):
@@ -189,6 +189,11 @@ class CodePrinter(StrPrinter):
                         # lhs, and raise an exception if it does, as that
                         # syntax is currently undefined.  FIXME: What would be
                         # a good interpretation?
+
+                        # TODO: Should allow selection of type
+                        accum = Variable(Dummy('accum'), type=float32)
+                        accum_decl = accum.as_Declaration(value=0)
+
                         if assign_to is None:
                             raise AssignmentError(
                                 "need assignment variable for loops")
@@ -197,11 +202,15 @@ class CodePrinter(StrPrinter):
                                 this is undefined in CodePrinter")
 
                         lines.extend(openloop)
+                        lines.append(self._get_statement(self.doprint(accum_decl)))
                         lines.extend(openloop_d)
-                        text = "%s = %s" % (lhs_printed, StrPrinter.doprint(
-                            self, assign_to + term))
+
+                        term_assignment = aug_assign(accum, '+', term)
+                        text = self.doprint(term_assignment)
                         lines.append(self._get_statement(text))
                         lines.extend(closeloop_d)
+                        text = "%s = %s" % (lhs_printed, self.doprint(accum))
+                        lines.append(self._get_statement(text))
                         lines.extend(closeloop)
 
         return "\n".join(lines)
