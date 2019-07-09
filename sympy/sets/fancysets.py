@@ -5,7 +5,7 @@ from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.numbers import oo
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ge, Le
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols
 from sympy.core.sympify import _sympify, sympify, converter
@@ -592,6 +592,8 @@ class Range(Set):
             self._stop - self.step, self.start - self.step, -self.step)
 
     def _contains(self, other):
+        from sympy.functions.elementary.piecewise import Piecewise
+        other = _sympify(other)
         if not self:
             return S.false
         if other.is_infinite:
@@ -600,8 +602,9 @@ class Range(Set):
             return other.is_integer
         ref = self.start if self.start.is_finite else self._stop
         if (ref - other) % self.step:  # off sequence
+            #TODO: Update for symbolic steps after compeleting, _inf and _sup
             return S.false
-        return _sympify(other >= self.inf and other <= self.sup)
+        return Piecewise((True, Ge(other, self.inf) & Le(other, self.sup)), (False, True))
 
     def __iter__(self):
         if self.start in [S.NegativeInfinity, S.Infinity]:

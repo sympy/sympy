@@ -7,7 +7,7 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
-                   Dummy, floor, And, Eq, ceiling)
+                   Dummy, floor, And, Eq, ceiling, Piecewise)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, t
@@ -318,12 +318,27 @@ def test_Range_set():
                 (Range(-n - 5, -n*ceiling(-6/n) - n - 5, -n), [Range(-4, 2, 1), Range(0, 0, 1)]),
                 (Range(-n - 5, -n*ceiling(-4/n) - n - 5, -n), [Range(-4, 0, 1), Range(0, 0, 1)])]
     for r, expec in zip(ranges, expected):
+        rev = r.reversed
         try:
-            rev = r.reversed
             assert (rev, [rev.subs(n, -1), rev.subs(n, 0), rev.subs(n, 1)]) == expec
         except ValueError:
-            rev = r.reversed
             assert (rev, [rev.subs(n, -1), rev.subs(n, 1)]) == expec
+    expected = [(Piecewise((True, n <= 2), (False, True)), True, True, True),
+                (False, False, False, False), (False, False, False, False),
+                (False, False, False, False),
+                (Piecewise((True, n - 1 >= 2), (False, True)), False, False, False),
+                (Piecewise((True, n - 1 >= 2), (False, True)), False, False, False),
+                (False, False, False, False), (False, False, False, False),
+                (False, False, True), (False, False, True), (False, False, False),
+                (False, False, False)]
+    # TODO: Remove the slice after completing the TODO in _contains
+    for r, expec in zip(ranges[0:8], expected[0:8]):
+        try:
+            assert (r._contains(2), r.subs(n, -1)._contains(2), r.subs(n, 0)._contains(2), r.subs(n, 1)._contains(2)) == expec
+        except ValueError:
+            assert (r._contains(2), r.subs(n, -1)._contains(2), r.subs(n, 1)._contains(2)) == expec
+
+
 
 
     # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
