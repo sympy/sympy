@@ -7,7 +7,7 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
-                   Dummy, floor, And, Eq)
+                   Dummy, floor, And, Eq, ceiling)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, t
@@ -304,6 +304,30 @@ def test_Range_set():
     r = Range(1, n)
     assert r.subs(n, -2) == Range(0, 0, 1)
     assert r.subs(n, 3) == Range(1, 3, 1)
+    ranges = [ Range(n, 10, 1), Range(n, -10, 1), Range(n, -10, -1),
+               Range(n, 10, -1), Range(1, n, 1), Range(-1, n, 1),
+               Range(1, n, -1), Range(-1, n, -1), Range(1, 5, n),
+               Range(-1, 5, n), Range(1, -5, n), Range(-1, -5, n) ]
+    expected = [(Range(9, n - 1, -1), [Range(9, -2, -1), Range(9, -1, -1), Range(9, 0, -1)]),
+                (Range(-11, n - 1, -1), [Range(0, 0, 1), Range(0, 0, 1), Range(0, 0, 1)]),
+                (Range(-9, n + 1, 1), [Range(-9, 0, 1), Range(-9, 1, 1), Range(-9, 2, 1)]),
+                (Range(11, n + 1, 1), [Range(0, 0, 1), Range(0, 0, 1), Range(0, 0, 1)]),
+                (Range(n - 1, 0, -1), [Range(0, 0, 1), Range(0, 0, 1), Range(0, 0, 1)]),
+                (Range(n - 1, -2, -1), [Range(0, 0, 1), Range(-1, -2, -1), Range(0, -2, -1)]),
+                (Range(n + 1, 2, 1), [Range(0, 2, 1), Range(1, 2, 1), Range(0, 0, 1)]),
+                (Range(n + 1, 0, 1), [Range(0, 0, 1), Range(0, 0, 1), Range(0, 0, 1)]),
+                (Range(5 - n, -n*ceiling(4/n) - n + 5, -n), [Range(0, 0, 1), Range(4, 0, -1)]),
+                (Range(5 - n, -n*ceiling(6/n) - n + 5, -n), [Range(0, 0, 1), Range(4, -2, -1)]),
+                (Range(-n - 5, -n*ceiling(-6/n) - n - 5, -n), [Range(-4, 2, 1), Range(0, 0, 1)]),
+                (Range(-n - 5, -n*ceiling(-4/n) - n - 5, -n), [Range(-4, 0, 1), Range(0, 0, 1)])]
+    for r, expec in zip(ranges, expected):
+        try:
+            rev = r.reversed
+            assert (rev, [rev.subs(n, -1), rev.subs(n, 0), rev.subs(n, 1)]) == expec
+        except ValueError:
+            rev = r.reversed
+            assert (rev, [rev.subs(n, -1), rev.subs(n, 1)]) == expec
+
 
     # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
     # compatibility imports above)
