@@ -451,7 +451,7 @@ class Range(Set):
     `Range(stop)` is the same as `Range(0, stop, 1)` and the stop value
     (juse as for Python ranges) is not included in the Range values.
 
-        >>> from sympy import Range
+        >>> from sympy import Range, oo
         >>> list(Range(3))
         [0, 1, 2]
 
@@ -463,8 +463,10 @@ class Range(Set):
     The stop value is made canonical so equivalent ranges always
     have the same args:
 
-        >>> Range(0, 10, 3)
-        Range(0, 12, 3)
+        >>> Range(1, -oo, 2)
+        Range(0, 0, 1)
+        >>> Range(1, -oo, 3)
+        Range(0, 0, 1)
 
     Infinite ranges are allowed. ``oo`` and ``-oo`` are never included in the
     set (``Range`` is always a subset of ``Integers``). If the starting point
