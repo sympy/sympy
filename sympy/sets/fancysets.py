@@ -560,7 +560,13 @@ class Range(Set):
                     end = ref + n*step
         else:
             end = stop
-        return Basic.__new__(cls, start, end, step)
+        if (end > stop) == True and (stop > start) == True:
+            end_arg = stop
+        else:
+            end_arg = end
+        obj = Basic.__new__(cls, start, end_arg, step)
+        obj._stop = end
+        return obj
 
     start = property(lambda self: self.args[0])
     stop = property(lambda self: self.args[1])
@@ -580,7 +586,7 @@ class Range(Set):
         if not self:
             return self
         return self.func(
-            self.stop - self.step, self.start - self.step, -self.step)
+            self._stop - self.step, self.start - self.step, -self.step)
 
     def _contains(self, other):
         if not self:
@@ -589,7 +595,7 @@ class Range(Set):
             return S.false
         if not other.is_integer:
             return other.is_integer
-        ref = self.start if self.start.is_finite else self.stop
+        ref = self.start if self.start.is_finite else self._stop
         if (ref - other) % self.step:  # off sequence
             return S.false
         return _sympify(other >= self.inf and other <= self.sup)
@@ -602,8 +608,8 @@ class Range(Set):
             step = self.step
 
             while True:
-                if (step > 0 and not (self.start <= i < self.stop)) or \
-                   (step < 0 and not (self.stop < i <= self.start)):
+                if (step > 0 and not (self.start <= i < self._stop)) or \
+                   (step < 0 and not (self._stop < i <= self.start)):
                     break
                 yield i
                 i += step
@@ -611,7 +617,7 @@ class Range(Set):
     def __len__(self):
         if not self:
             return 0
-        dif = self.stop - self.start
+        dif = self._stop - self.start
         if dif.is_infinite:
             raise ValueError(
                 "Use .size to get the length of an infinite Range")
@@ -625,7 +631,7 @@ class Range(Set):
             return S.Infinity
 
     def __nonzero__(self):
-        return self.start != self.stop
+        return self.start != self._stop
 
     __bool__ = __nonzero__
 
@@ -659,7 +665,7 @@ class Range(Set):
                 # handle infinite on right
                 #   e.g. Range(0, oo) or Range(0, -oo, -1)
                 # --------------------
-                if self.stop.is_infinite:
+                if self._stop.is_infinite:
                     # start and stop are not interdependent --
                     # they only depend on step --so we use the
                     # equivalent reversed values
@@ -704,7 +710,7 @@ class Range(Set):
                         if step < 0:
                             return Range(self[start], self.start, ss)
                         else:  # > 0
-                            return Range(self[start], self.stop, ss)
+                            return Range(self[start], self._stop, ss)
                     elif stop < 0:
                         return Range(self[start], self[stop], ss)
                     elif stop == 0:
@@ -739,8 +745,8 @@ class Range(Set):
             if i == 0:
                 return self.start
             if i == -1 or i is S.Infinity:
-                return self.stop - self.step
-            rv = (self.stop if i < 0 else self.start) + i*self.step
+                return self._stop - self.step
+            rv = (self._stop if i < 0 else self.start) + i*self.step
             if rv.is_infinite:
                 raise ValueError(ooslice)
             if rv < self.inf or rv > self.sup:
@@ -754,14 +760,14 @@ class Range(Set):
         if self.step > 0:
             return self.start
         else:
-            return self.stop - self.step
+            return self._stop - self.step
 
     @property
     def _sup(self):
         if not self:
             raise NotImplementedError
         if self.step > 0:
-            return self.stop - self.step
+            return self._stop - self.step
         else:
             return self.start
 

@@ -1,4 +1,5 @@
 from sympy.core.compatibility import range, PY3
+from sympy.core.expr import unchanged
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
@@ -270,6 +271,9 @@ def test_Range_set():
     assert empty[:0] == empty
     raises(NotImplementedError, lambda: empty.inf)
     raises(NotImplementedError, lambda: empty.sup)
+
+    # testing if Range remains unchanged
+    assert unchanged(Range, 1, 5, 6)
 
     AB = [None] + list(range(12))
     for R in [
