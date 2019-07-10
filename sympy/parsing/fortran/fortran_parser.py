@@ -5,10 +5,18 @@ from ast import (
 )
 #External Dependecies
 #TODO: Find alternatives to remove astor
-from lfortran.asr import asr
-from lfortran.semantic.ast_to_asr import ast_to_asr
-from lfortran.ast import src_to_ast
+from sympy.external import import_module
 import astor
+
+lfortran = import_module(
+    'lfortran',
+    warn_not_installed=True
+)
+
+asr = lfortran.asr.asr
+asr_mod = lfortran.asr
+src_to_ast = lfortran.ast.src_to_ast
+ast_to_asr = lfortran.semantic.ast_to_asr.ast_to_asr
 
 """
 This module contains all the necessary Classes and Function used to Parse Fortran
