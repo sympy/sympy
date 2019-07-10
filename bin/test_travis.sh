@@ -138,7 +138,7 @@ test_list = [
     '*ipython*',
 
     # antlr, lfortran
-    'sympy/parsing/'',
+    'sympy/parsing/',
 
     # matchpy
     '*rubi*',
