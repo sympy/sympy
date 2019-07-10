@@ -3,7 +3,13 @@ from sympy.core import Symbol, diff, symbols
 from sympy import dsolve, Function, Derivative, Eq
 
 class Column(object):
-    def __init__(self, height, elastic_modulus, second_moment, load, eccentricity=None, top="pinned", bottom="pinned", boundary_conditions=None):
+    """
+    A column is a structural member designed to undertake axial
+    compressive loads. A column is characterized by its
+    cross-sectional profile(second moment of area), its length and
+    its material.
+    """
+    def __init__(self, height, elastic_modulus, second_moment, load, eccentricity=None, top="pinned", bottom="pinned", boundary_conditions={'deflection': [], 'slope': []}):
         self._height = height
         self._elastic_modulus = elastic_modulus
         self._second_moment = second_moment
@@ -11,42 +17,51 @@ class Column(object):
         self._eccentricity = eccentricity
         self._moment = 0
         self._end_conditions = {'top':top, 'bottom': bottom}
-        self._boundary_conditions = {'deflection': [], 'slope': []}
+        self._boundary_conditions = boundary_conditions
         self._variable = Symbol('x')
         self._deflection = None
         self._slope = None
+        self._critical_load = None
         self._apply_load_conditions()
 
     @property
     def height(self):
+        """Height of the column"""
         return self._height
 
     @property
     def elastic_modulus(self):
+        """Elastic modulus of the column"""
         return self._elastic_modulus
 
     @property
     def second_moment(self):
+        """Second moment of the column"""
         return self._second_moment
 
     @property
     def load(self):
+        """Load applied on the column"""
         return self._load
 
     @property
     def eccentricity(self):
+        """Eccentricity of the load applied on the column"""
         return self._eccentricity
 
     @property
     def end_conditions(self):
+        """End-conditions in the form of a dictionary"""
         return self._end_conditions
 
     @property
     def boundary_conditions(self):
+        """Boundary conditions in the form of a dictionary"""
         return self._boundary_conditions
 
 
     def _apply_load_conditions(self):
+
         y = Function('y')
         x = self._variable
         P = Symbol('P', positive=True)
@@ -55,6 +70,11 @@ class Column(object):
         if self.eccentricity:
             self._moment += P*eccentricity
 
+        # Initial boundary conditions, considering slope and deflection
+        # the bottom always zero
+        self._boundary_conditions['deflection'].append((0, 0))
+        self._boundary_conditions['slope'].append((0, 0))
+
         if self._end_conditions['top'] == "fixed" and self._end_conditions['bottom'] == "fixed":
             # `M` is the reaction moment
             M = Symbol('M')
@@ -62,22 +82,29 @@ class Column(object):
             # moment  = P*y - M
             self._moment -= M
 
-        if self._end_conditions['top'] == "pinned" and self._end_conditions['bottom'] == "fixed":
+        elif self._end_conditions['top'] == "pinned" and self._end_conditions['bottom'] == "fixed":
             # `F` is the horizontal force at the pinned end to counter the rection moment at fixed end
             F = Symbol('F')
             self._boundary_conditions['deflection'].append((self._height, 0))
             # moment = P*y - F(l - x)
             self._moment -= F*(self.height - x)
 
-        if self._end_conditions['top'] == "free" and self._end_conditions['bottom'] == "fixed":
+        elif self._end_conditions['top'] == "free" and self._end_conditions['bottom'] == "fixed":
             # `d` is the deflection at the free end
             d = Symbol('d')
             self._boundary_conditions['deflection'].append((self._height, d))
             # moment = P*y - P*d
             self._moment -= self.load*d
 
+        else:
+            raise TypeError("{} {} end-condition is not supported".format(sstr(self._end_conditions['top']), sstr(self._end_conditions['bottom'])))
+
 
     def solve_slope_deflection(self):
+        """
+        Solves the differnetial equation of buckling to determine the
+        deflection and slope equations.
+        """
         y = Function('y')
         x = self._variable
 
@@ -96,28 +123,77 @@ class Column(object):
         self._deflection = defl_sol.subs({C1: constants[0], C2:constants[1]})
         self._slope = slope_sol.subs({C1: constants[0], C2:constants[1]})
 
+        # if deflection is zero, no buckling occurs, which is not the case,
+        # so trying to solve for the constants differently
+        if self._deflection == 0:
+            self._deflection = defl_sol
+            self._slope = slope_sol
+
+            defl_eqs = []
+            # taking last two bounndary conditions which are actually
+            # the initial boundary conditions.
+            for point, value in self._boundary_conditions['deflection'][-2:]:
+                defl_eqs.append(self._deflection.subs(x, point) - value)
+
+            # solve for C1, C2 along with P
+            solns = solve(defl_eqs, (P, C1, C2), dict=True)
+            for sol in solns:
+                if self._deflection.subs(sol) == 0:
+                    # removing trivial solutions
+                    solns.remove(sol)
+
+            # checking if the constants are solved, and subtituting them in
+            # the deflection and slope equation
+            if C1 in solns[0].keys():
+                self._deflection.subs(C1, solns[0][C1])
+                self._slope.subs(C1, solns[0][C1])
+            if C2 in solns[0].keys():
+                self._deflection.subs(C2, solns[0][C2])
+                self._slope.subs(C2, solns[0][C2])
+
+            self._critical_load = solns[0][P]
+
 
     def critical_load(self):
+        """
+        Detrmines the critical load (for single bow buckling condition) of
+        the given column under the given conditions.
+        """
         y = Function('y')
         x = self._variable
         P = Symbol('P', positive=true)
 
-        point, value = self._boundary_conditions['deflection'][-1]
-        defl_1 = self._deflection.subs(x, point) - value
-        critical_load = solve(defl_1, P)[0]
+        if self._critical_load is None:
+            defl_eqs = []
+            # taking last two bounndary conditions which are actually
+            # the initial boundary conditions.
+            for point, value in self._boundary_conditions['deflection'][-2:]:
+                defl_eqs.append(self._deflection.subs(x, point) - value)
 
-        return critical_load
+            # C1, C2 already solved, solve for P
+            self._critical_load = solve(defl_eqs, P, dict=True)[0][P]
+
+        return self._critical_load
 
 
     def moment(self):
+        """Returns the moment equation in terms of any arbitrary point ``x``
+        on the column and the deflection at that point.
+        """
         return self._moment
 
 
     def slope(self):
+        """Returns the slope equation in terms of any arbitrary point ``x``
+        on the column.
+        """
         P = Symbol('P', positive=True)
         return self._slope.subs(P, self._load)
 
 
     def deflection(self):
+        """Returns the deflection equation in terms of any arbitrary point ``x``
+        on the column.
+        """
         P = Symbol('P', positive=True)
         return self._deflection.subs(P, self._load)
