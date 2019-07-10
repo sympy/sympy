@@ -79,48 +79,42 @@ def test_collected_word():
 
 
 def test_pc_presentation():
-    # SymmetricGroup(3)
-    F, x0, x1 = free_group("x0, x1")
-    group = F
-    G = SymmetricGroup(3)
+    F1, x0, x1 = free_group("x0, x1")
+    F2, x0, x1, x2, x3 = free_group("x0, x1, x2, x3")
+    F3, x0, x1, x2, x3, x4, x5, x6 = free_group("x0, x1, x2, x3, x4, x5, x6")
 
-    pc_group = G.polycyclic_group()
-    pc_presentation = pc_group.pc_presentation(F)
-    assert pc_presentation == { x1**3: (), x0**3: (), x0**-1*x1*x0: x0**2 }
+    l = [(SymmetricGroup(3), F1), (SymmetricGroup(4), F2),
+         (SymmetricGroup(9).sylow_subgroup(3), F2), (SymmetricGroup(9).sylow_subgroup(2), F3),
+         (SymmetricGroup(8).sylow_subgroup(2), F3)]
 
-    pc_group.pcgs.reverse()
-    x0, x1 = pc_group.pcgs
-    assert x0**-1*x1*x0 == x0**2
+    for t in l:
+        pc_group = t[0].polycyclic_group()
+        pc_presentation = pc_group.pc_presentation(t[1])
 
+        pcgs = pc_group.pcgs
+        free_to_perm = {}
+        for s, g in zip(t[1].symbols, pcgs):
+            free_to_perm[s] = g
 
-    # SymmetricGroup(4)
-    F, x0, x1 = free_group("x0, x1")
-    group = F
-    G = SymmetricGroup(4)
+        for k, v in pc_presentation.items():
+            k_array = k.array_form
+            if v != ():
+                v_array = v.array_form
 
-    pc_group = G.polycyclic_group()
-    pc_presentation = pc_group.pc_presentation(F)
-    assert pc_presentation == { x1**2: (), x0**2: (), x0**-1*x1*x0: x1 }
+            lhs = Permutation()
+            for gen in k_array:
+                s = gen[0]
+                e = gen[1]
+                lhs = lhs*free_to_perm[s]**e
 
-    pc_group.pcgs.reverse()
-    x0, x1 = pc_group.pcgs
-    assert x0**-1*x1*x0 == x1
+            if v == ():
+                assert lhs.is_identity
+                continue
 
+            rhs = Permutation()
+            for gen in v_array:
+                s = gen[0]
+                e = gen[1]
+                rhs = rhs*free_to_perm[s]**e
 
-    # SymmetricGroup(9).sylow_subgroup(3)
-    F, x0, x1, x2 = free_group("x0, x1, x2")
-    group = F
-    S = SymmetricGroup(9)
-    G = S.sylow_subgroup(3)
-
-    pc_group = G.polycyclic_group()
-    pc_presentation = pc_group.pc_presentation(F)
-    assert pc_presentation == { x2**3: (), x1**3: (), x0**3: (),
-                                x1**-1*x2*x1: x2, x0**-1*x2*x0: x2,
-                                x0**-1*x1*x0: x0**2 }
-
-    pc_group.pcgs.reverse()
-    x0, x1, x2 = pc_group.pcgs
-    assert x1**-1*x2*x1 == x2
-    assert x0**-1*x2*x0 == x2
-    assert x0**-1*x1*x0 == x0**2
+            assert lhs == rhs

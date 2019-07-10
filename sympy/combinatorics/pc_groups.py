@@ -70,7 +70,7 @@ class PolycyclicGroup(DefaultPrinting):
         >>> pc_group = G.polycyclic_group()
         >>> group = F
         >>> pc_group.power_relations(group)
-        [x1**2, x0**6]
+        [x1**3, x0**2]
 
         """
         power_relators = []
@@ -164,6 +164,7 @@ class PolycyclicGroup(DefaultPrinting):
         G = PermutationGroup([pc_sequence[0]])
         index = {s: i for i, s in enumerate(group.generators)}
         index1 = {i: s for i, s in enumerate(group.generators)}
+        pc_sequence.reverse()
 
         # compute the RHS of conjugate relations
         for rel in conjugate_relators:
@@ -177,6 +178,7 @@ class PolycyclicGroup(DefaultPrinting):
             relation = gens[0]**-1*gens[1]*gens[0]
 
             l = G.generator_product(relation, original = True)
+            l.reverse()
             word = group.identity
 
             # concatenate the generators in `l` to form the word
@@ -236,13 +238,13 @@ class Collector(DefaultPrinting):
         >>> group = word.group
         >>> collector = Collector(pc_relators, relative_order, group)
         >>> collector.minimal_uncollected_subword(word)
-        ((x2, 2), (x1, 1))
+        [((x2, 2), (x1, 1)), ((x1, 7),)]
 
         """
         # To handle the case word = <identity>
         if not word:
             return None
-
+        l = []
         group = self.group
         array = word.array_form
         re = self.relative_order
@@ -251,19 +253,21 @@ class Collector(DefaultPrinting):
         for i in range(len(array)-1):
             s1, e1 = array[i]
             s2, e2 = array[i+1]
+
             if re[index[s1]] and (e1 < 0 or e1 > re[index[s1]]-1):
-                return ((s1, e1), )
+                l.append(((s1, e1), ))
 
             if index[s1] > index[s2]:
                 e = 1 if e2 > 0 else -1
-                return ((s1, e1), (s2, e))
+                l.append(((s1, e1), (s2, e)))
 
         i = len(array)-1
         s1, e1 = array[i]
 
         if re[index[s1]] and (e1 < 0 or e1 > re[index[s1]]-1):
-            return ((s1, e1), )
-        return None
+            l.append(((s1, e1), ))
+
+        return l
 
     def relations(self):
         """
@@ -388,46 +392,50 @@ class Collector(DefaultPrinting):
         """
         group = self.group
         while True:
-            w = self.minimal_uncollected_subword(word)
-            if not w:
+            l = self.minimal_uncollected_subword(word)
+            if not l:
                 break
-            low, high = self.subword_index(word, group.dtype(w))
-            if low == -1:
-                continue
-            s, e = w[0]
-            if len(w) == 2 and w[1][1] > 0:
-                gens = list(sorted(group.dtype(w).contains_generators()))
-                word_ = self.map_relation(group.dtype(w))
-                word_ = gens[0]*word_**e
-                word_ = group.dtype(word_)
-                word = word.substituted_word(low, high, word_)
-
-            elif len(w) == 2 and w[1][1] < 0:
-                gens = list(sorted(group.dtype(w).contains_generators()))
-                word_ = self.map_relation(group.dtype(w))
-                word_ = gens[0]**-1*word_**e
-                word_ = group.dtype(word_)
-                word = word.substituted_word(low, high, word_)
-
-            if not self.relative_order[self.index[s]]:
-                continue
-            re = self.relative_order[self.index[s]]
-            q = e // re
-            r = e-q*re
-            if r < 0 or r > re-1:
-                continue
-
-            if len(w) == 1 and (e < 0 or e > re-1):
-                key = ((w[0][0], re), )
-                key = group.dtype(key)
-                if self.pc_relators[key]:
-                    word_ = ((w[0][0], r), (self.pc_relators[key], q))
+            l.sort(key = len)
+            for w in l:
+                if not w:
+                    break
+                low, high = self.subword_index(word, group.dtype(w))
+                if low == -1:
+                    continue
+                s, e = w[0]
+                if len(w) == 2 and w[1][1] > 0:
+                    gens = list(sorted(group.dtype(w).contains_generators()))
+                    word_ = self.map_relation(group.dtype(w))
+                    word_ = gens[0]*word_**e
                     word_ = group.dtype(word_)
-                else:
-                    if r != 0:
-                        word_ = ((w[0][0], r), )
+                    word = word.substituted_word(low, high, word_)
+
+                elif len(w) == 2 and w[1][1] < 0:
+                    gens = list(sorted(group.dtype(w).contains_generators()))
+                    word_ = self.map_relation(group.dtype(w))
+                    word_ = gens[0]**-1*word_**e
+                    word_ = group.dtype(word_)
+                    word = word.substituted_word(low, high, word_)
+
+                if not self.relative_order[self.index[s]]:
+                    continue
+                re = self.relative_order[self.index[s]]
+                q = e // re
+                r = e-q*re
+                if r < 0 or r > re-1:
+                    continue
+
+                if len(w) == 1 and (e < 0 or e > re-1):
+                    key = ((w[0][0], re), )
+                    key = group.dtype(key)
+                    if self.pc_relators[key]:
+                        word_ = ((w[0][0], r), (self.pc_relators[key], q))
                         word_ = group.dtype(word_)
                     else:
-                        word_ = None
-                word = word.eliminate_word(group.dtype(w), word_)
+                        if r != 0:
+                            word_ = ((w[0][0], r), )
+                            word_ = group.dtype(word_)
+                        else:
+                            word_ = None
+                    word = word.eliminate_word(group.dtype(w), word_)
         return word
