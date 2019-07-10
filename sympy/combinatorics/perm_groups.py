@@ -4520,10 +4520,22 @@ class PermutationGroup(Basic):
         if not self.is_polycyclic:
             raise ValueError("The group must be solvable")
 
-        series = self.derived_series()
-        pc_sequence = series[len(series)-2].generators
+        der = self.derived_series()
+        pc_series = []
+        pc_sequence = []
+        relative_order = []
+        pc_series.append(der[-1])
+        der.reverse()
 
-        return PolycyclicGroup(pc_sequence)
+        for i in range(len(der)-1):
+            H = der[i]
+            for g in der[i+1].generators:
+                if g not in H:
+                    H = PermutationGroup([g] + H.generators)
+                    pc_series.insert(0, H)
+                    pc_sequence.insert(0, g)
+
+        return PolycyclicGroup(pc_sequence, pc_series)
 
 
 def _orbit(degree, generators, alpha, action='tuples'):
