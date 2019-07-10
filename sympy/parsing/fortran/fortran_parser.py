@@ -245,7 +245,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
             ).as_Declaration(
                 type = var_type,
                 value = value
-            )               
+            )
             self.py_ast.append(new_node)
 
     def visit_Sequence(self, seq):
