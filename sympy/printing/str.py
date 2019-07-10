@@ -767,6 +767,9 @@ class StrPrinter(Printer):
     def _print_OneMatrix(self, expr):
         return "1"
 
+    def _print_MatrixWild(self, expr):
+        return expr.name + '_'
+
     def _print_Predicate(self, expr):
         return "Q.%s" % expr.name
 

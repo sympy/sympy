@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Number
-from sympy.core import Mul, Basic, sympify
+from sympy.core import Mul, Basic, Wild, sympify
 from sympy.core.compatibility import range
 from sympy.functions import adjoint
 from sympy.matrices.expressions.transpose import transpose
@@ -143,6 +143,91 @@ class MatMul(MatrixExpr, Mul):
             return factor * trace(mmul.doit())
         else:
             raise NotImplementedError("Can't simplify any further")
+
+    def matches(self, expr, repl_dict={}, old=False):
+        expr = sympify(expr)
+
+        c1, nc1 = self.args_cnc()
+        c2, nc2 = expr.args_cnc()
+        c1, c2 = [c or [1] for c in [c1, c2]]
+
+        comm_mul_self = self.func(*c1)
+        comm_mul_expr = expr.func(*c1)
+        repl_dict = comm_mul_expr.matches(comm_mul_self, repl_dict, old)
+
+        # If the commutative arguments didn't match and aren't equal, then
+        # then the expression as a whole doesn't match
+        if repl_dict is None and c1 != c2:
+            return None
+
+        # Now match the non-commutative arguments
+        # TODO: Need a type check here
+        repl_dict = MatMul._matches_noncomm(nc1, nc2, repl_dict)
+
+        return repl_dict
+
+    @staticmethod
+    def _matches_noncomm(nodes, targets, repl_dict={}):
+        agenda = []
+        state = (0, 0)
+        node_ind, target_ind = state
+        wildcard_dict = {}
+        repl_dict = repl_dict.copy()
+
+        while node_ind < len(nodes) and target_ind < len(targets):
+            node, target = nodes[node_ind], targets[target_ind]
+
+            if isinstance(node, Wild):
+                MatMul._matches_add_wildcard(wildcard_dict, state, node)
+
+            states_matches = MatMul._matches_new_states(wildcard_dict, state,
+                                                        nodes, targets)
+            if states_matches:
+                new_states, new_matches = states_matches
+                agenda.extend(new_states)
+                if new_matches:
+                    for match in new_matches:
+                        repl_dict[match] = new_matches[match]
+            if not agenda:
+                return None
+            else:
+                state = agenda.pop()
+                node_ind, target_ind = state
+
+        return repl_dict
+
+    @staticmethod
+    def _matches_add_wildcard(dictionary, state, wildcard):
+        node_ind, target_ind = state
+        if wildcard in dictionary:
+            begin, end = dictionary[wildcard]
+            dictionary[wildcard] = (begin, target_ind)
+        else:
+            dictionary[wildcard] = (target_ind, target_ind)
+
+    @staticmethod
+    def _matches_new_states(dictionary, state, nodes, targets):
+        node_ind, target_ind = state
+        node = nodes[node_ind]
+        target = targets[target_ind]
+
+        if isinstance(node, Wild):
+            match_attempt = MatMul._matches_match_wilds(dictionary, node,
+                                                        targets)
+            if match_attempt:
+                return [(node_ind, target_ind + 1),
+                        (node_ind + 1, target_ind + 1)], match_attempt
+        elif node == target:
+            return [(node_ind + 1, target_ind + 1)], None
+        else:
+            return None
+
+    @staticmethod
+    def _matches_match_wilds(dictionary, wildcard, targets):
+        begin, end = dictionary[wildcard]
+        terms = targets[begin:end + 1]
+        mul = MatMul(*terms)
+        return wildcard.matches(mul)
 
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import Determinant
