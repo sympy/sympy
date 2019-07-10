@@ -194,86 +194,12 @@ class ContinuousTimeStochasticProcess(StochasticProcess):
         pspace_obj = StochasticPSpace(self.symbol, self)
         return RandomIndexedSymbol(func_obj, pspace_obj)
 
-class TransitionMatrixOf(Boolean):
+class StochasticProcessUtil(StochasticProcess):
     """
-    Assumes that the matrix is the transition matrix
-    of the process.
+    Abstract class containining utility methods for
+    processing information contained in queries for
+    stochastic processes.
     """
-
-    def __new__(cls, process, matrix):
-        if not isinstance(process, DiscreteMarkovChain):
-            raise ValueError("Currently only DiscreteMarkovChain "
-                                "support TransitionMatrixOf.")
-        matrix = _matrix_checks(matrix)
-        return Basic.__new__(cls, process, matrix)
-
-    process = property(lambda self: self.args[0])
-    matrix = property(lambda self: self.args[1])
-
-class StochasticStateSpaceOf(Boolean):
-
-    def __new__(cls, process, state_space):
-        if not isinstance(process, DiscreteMarkovChain):
-            raise ValueError("Currently only DiscreteMarkovChain "
-                                "support StochasticStateSpaceOf.")
-        state_space = _set_converter(state_space)
-        return Basic.__new__(cls, process, state_space)
-
-    process = property(lambda self: self.args[0])
-    state_space = property(lambda self: self.args[1])
-
-class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
-    """
-    Represents discrete Markov chain.
-
-    Parameters
-    ==========
-
-    sym: Symbol/string_types
-    state_space: Set
-        Optional, by default, S.Reals
-    trans_probs: Matrix/ImmutableMatrix/MatrixSymbol
-        Optional, by default, None
-
-    Examples
-    ========
-
-    >>> from sympy.stats import DiscreteMarkovChain, TransitionMatrixOf
-    >>> from sympy import Matrix, MatrixSymbol, Eq
-    >>> from sympy.stats import P
-    >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
-    >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
-    >>> YS = DiscreteMarkovChain("Y")
-    >>> Y.state_space
-    {0, 1, 2}
-    >>> Y.transition_probabilities
-    Matrix([
-    [0.5, 0.2, 0.3],
-    [0.2, 0.5, 0.3],
-    [0.2, 0.3, 0.5]])
-    >>> TS = MatrixSymbol('T', 3, 3)
-    >>> P(Eq(YS[3], 2), Eq(YS[1], 1) & TransitionMatrixOf(YS, TS))
-    T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]
-    >>> P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2)
-    0.36
-    """
-    index_set = S.Naturals0
-
-    def __new__(cls, sym, state_space=S.Reals, trans_probs=None):
-        sym = _symbol_converter(sym)
-        state_space = _set_converter(state_space)
-        if trans_probs != None:
-            trans_probs = _matrix_checks(trans_probs)
-        return Basic.__new__(cls, sym, state_space, trans_probs)
-
-    @property
-    def transition_probabilities(self):
-        """
-        Transition probabilities of discrete Markov chain,
-        either an instance of Matrix or MatrixSymbol.
-        """
-        return self.args[2]
-
     def _extract_information(self, given_condition):
         """
         Helper function to extract information, like,
@@ -350,6 +276,86 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess):
             state_space = self._work_out_state_space(state_space, given_condition, trans_probs)
 
         return is_insufficient, trans_probs, state_space, given_condition
+
+class TransitionMatrixOf(Boolean):
+    """
+    Assumes that the matrix is the transition matrix
+    of the process.
+    """
+
+    def __new__(cls, process, matrix):
+        if not isinstance(process, DiscreteMarkovChain):
+            raise ValueError("Currently only DiscreteMarkovChain "
+                                "support TransitionMatrixOf.")
+        matrix = _matrix_checks(matrix)
+        return Basic.__new__(cls, process, matrix)
+
+    process = property(lambda self: self.args[0])
+    matrix = property(lambda self: self.args[1])
+
+class StochasticStateSpaceOf(Boolean):
+
+    def __new__(cls, process, state_space):
+        if not isinstance(process, DiscreteMarkovChain):
+            raise ValueError("Currently only DiscreteMarkovChain "
+                                "support StochasticStateSpaceOf.")
+        state_space = _set_converter(state_space)
+        return Basic.__new__(cls, process, state_space)
+
+    process = property(lambda self: self.args[0])
+    state_space = property(lambda self: self.args[1])
+
+class DiscreteMarkovChain(DiscreteTimeStochasticProcess, StochasticProcessUtil):
+    """
+    Represents discrete Markov chain.
+
+    Parameters
+    ==========
+
+    sym: Symbol/string_types
+    state_space: Set
+        Optional, by default, S.Reals
+    trans_probs: Matrix/ImmutableMatrix/MatrixSymbol
+        Optional, by default, None
+
+    Examples
+    ========
+
+    >>> from sympy.stats import DiscreteMarkovChain, TransitionMatrixOf
+    >>> from sympy import Matrix, MatrixSymbol, Eq
+    >>> from sympy.stats import P
+    >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
+    >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    >>> YS = DiscreteMarkovChain("Y")
+    >>> Y.state_space
+    {0, 1, 2}
+    >>> Y.transition_probabilities
+    Matrix([
+    [0.5, 0.2, 0.3],
+    [0.2, 0.5, 0.3],
+    [0.2, 0.3, 0.5]])
+    >>> TS = MatrixSymbol('T', 3, 3)
+    >>> P(Eq(YS[3], 2), Eq(YS[1], 1) & TransitionMatrixOf(YS, TS))
+    T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]
+    >>> P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2)
+    0.36
+    """
+    index_set = S.Naturals0
+
+    def __new__(cls, sym, state_space=S.Reals, trans_probs=None):
+        sym = _symbol_converter(sym)
+        state_space = _set_converter(state_space)
+        if trans_probs != None:
+            trans_probs = _matrix_checks(trans_probs)
+        return Basic.__new__(cls, sym, state_space, trans_probs)
+
+    @property
+    def transition_probabilities(self):
+        """
+        Transition probabilities of discrete Markov chain,
+        either an instance of Matrix or MatrixSymbol.
+        """
+        return self.args[2]
 
     def _transient2transient(self):
         """
@@ -652,7 +658,7 @@ class GeneratorMatrixOf(TransitionMatrixOf):
         matrix = _matrix_checks(matrix)
         return Basic.__new__(cls, process, matrix)
 
-class ContinuousMarkovChain(ContinuousTimeStochasticProcess):
+class ContinuousMarkovChain(ContinuousTimeStochasticProcess, StochasticProcessUtil):
     """
     Represents continuous Markov chain.
 
@@ -713,3 +719,37 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess):
         eqs.append(sum(wi) - 1)
         soln = list(linsolve(eqs, wi))[0]
         return ImmutableMatrix([[sol for sol in soln]])
+
+    def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
+        check, gen_mat, state_space, given_condition = \
+            self._preprocess(given_condition, evaluate)
+
+        if check:
+            return Probability(condition, given_condition)
+
+        trans_probs = self.transition_probabilities(gen_mat)
+
+        if isinstance(condition, tuple):
+            # to be used by inner API for computations
+            rv, states = condition
+            gcs, grvs = given_condition.args, given_condition.atoms(RandomIndexedSymbol)
+            for state in states:
+                min_key_rv = None
+                for grv in grvs:
+                    if grv.key <= rv.key:
+                        min_key_rv = grv
+                if min_key_rv == None:
+                    raise ValueError("Information insufficient for generating result.")
+
+                prob, gstate = None, None
+                for gc in gcs:
+                    if gc.has(min_key_rv):
+                        if gc.has(Probability):
+                            prob = gc.lhs if isinstance(gc.lhs, Probability) \
+                                        else gc.rhs
+                        else:
+                            key, gstate = gc.lhs.key, gc.rhs if isinstance(gc.lhs, RandomIndexedSymbol) \
+                                        else gc.rhs.key, gc.lhs
+
+                if state != None and key <= min_key_rv.key:
+                    return trans_probs(min_key_rv.key - key).__getitem__(gstate, state)

@@ -91,7 +91,9 @@ def test_DiscreteMarkovChain():
     assert Y6.absorbing_probabilites() == ImmutableMatrix([[S(3)/4, S(1)/4], [S(1)/2, S(1)/2], [S(1)/4, S(3)/4]])
 
     # testing miscellaneous queries
-    T = Matrix([[S(1)/2, S(1)/4, S(1)/4], [S(1)/3, 0, S(2)/3], [S(1)/2, S(1)/2, 0]])
+    T = Matrix([[S(1)/2, S(1)/4, S(1)/4],
+                [S(1)/3, 0, S(2)/3],
+                [S(1)/2, S(1)/2, 0]])
     X = DiscreteMarkovChain('X', [0, 1, 2], T)
     assert P(Eq(X[1], 2) & Eq(X[2], 1) & Eq(X[3], 0),
     Eq(P(Eq(X[1], 0)), S(1)/4) & Eq(P(Eq(X[1], 1)), S(1)/4)) == S(1)/12
