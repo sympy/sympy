@@ -1,6 +1,8 @@
-from sympy.solvers import linsolve, solve, solveset
+from sympy.solvers import linsolve, solve
 from sympy.core import Symbol, diff, symbols
-from sympy import dsolve, Function, Derivative, Eq
+from sympy import dsolve, Function, Derivative, Eq, cos, sin, sqrt, tan
+from sympy.core.symbol import Dummy
+from sympy.printing import sstr
 
 class Column(object):
     """
@@ -23,6 +25,10 @@ class Column(object):
         self._slope = None
         self._critical_load = None
         self._apply_load_conditions()
+
+    def __str__(self):
+        str_sol = 'Column({}, {}, {})'.format(sstr(self._height), sstr(self._elastic_modulus), sstr(self._second_moment))
+        return str_sol
 
     @property
     def height(self):
@@ -75,7 +81,10 @@ class Column(object):
         self._boundary_conditions['deflection'].append((0, 0))
         self._boundary_conditions['slope'].append((0, 0))
 
-        if self._end_conditions['top'] == "fixed" and self._end_conditions['bottom'] == "fixed":
+        if self._end_conditions['top'] == "pinned" and self._end_conditions['bottom'] == "pinned":
+            self._boundary_conditions['deflection'].append((self._height, 0))
+
+        elif self._end_conditions['top'] == "fixed" and self._end_conditions['bottom'] == "fixed":
             # `M` is the reaction moment
             M = Symbol('M')
             self._boundary_conditions['deflection'].append((self._height, 0))
@@ -97,7 +106,7 @@ class Column(object):
             self._moment -= self.load*d
 
         else:
-            raise TypeError("{} {} end-condition is not supported".format(sstr(self._end_conditions['top']), sstr(self._end_conditions['bottom'])))
+            raise ValueError("{} {} end-condition is not supported".format(sstr(self._end_conditions['top']), sstr(self._end_conditions['bottom'])))
 
 
     def solve_slope_deflection(self):
@@ -107,6 +116,7 @@ class Column(object):
         """
         y = Function('y')
         x = self._variable
+        P = Symbol('P', positive=True)
 
         C1, C2 = symbols('C1, C2')
         E = self._elastic_modulus
@@ -145,13 +155,13 @@ class Column(object):
             # checking if the constants are solved, and subtituting them in
             # the deflection and slope equation
             if C1 in solns[0].keys():
-                self._deflection.subs(C1, solns[0][C1])
-                self._slope.subs(C1, solns[0][C1])
+                self._deflection = self._deflection.subs(C1, solns[0][C1])
+                self._slope = self._slope.subs(C1, solns[0][C1])
             if C2 in solns[0].keys():
-                self._deflection.subs(C2, solns[0][C2])
-                self._slope.subs(C2, solns[0][C2])
-
-            self._critical_load = solns[0][P]
+                self._deflection = self._deflection.subs(C2, solns[0][C2])
+                self._slope = self._slope.subs(C2, solns[0][C2])
+            if P in solns[0].keys():
+                self._critical_load = solns[0][P]
 
 
     def critical_load(self):
@@ -161,7 +171,7 @@ class Column(object):
         """
         y = Function('y')
         x = self._variable
-        P = Symbol('P', positive=true)
+        P = Symbol('P', positive=True)
 
         if self._critical_load is None:
             defl_eqs = []
