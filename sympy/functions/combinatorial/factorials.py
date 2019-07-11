@@ -16,12 +16,13 @@ from math import sqrt as _sqrt
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.combsimp import combsimp
         # combinatorial function with non-integer arguments is
         # automatically passed to gammasimp
         expr = combsimp(self)
-        if measure(expr) <= ratio*measure(self):
+        measure = kwargs['measure']
+        if measure(expr) <= kwargs['ratio']*measure(self):
             return expr
         return self
 

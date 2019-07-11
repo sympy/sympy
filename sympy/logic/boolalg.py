@@ -428,15 +428,14 @@ class BooleanFunction(Application, Boolean):
     """
     is_Boolean = True
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
-        rv = self.func(*[a._eval_simplify(ratio=ratio, measure=measure,
-                                          rational=rational, inverse=inverse)
-                         for a in self.args])
+    def _eval_simplify(self, **kwargs):
+        rv = self.func(*[
+            a._eval_simplify(**kwargs) for a in self.args])
         return simplify_logic(rv)
 
-    def simplify(self, ratio=1.7, measure=count_ops, rational=False,
-                 inverse=False):
-        return self._eval_simplify(ratio, measure, rational, inverse)
+    def simplify(self, **kwargs):
+        from sympy.simplify.simplify import simplify
+        return simplify(self, **kwargs)
 
     # /// drop when Py2 is no longer supported
     def __lt__(self, other):
@@ -680,14 +679,14 @@ class And(LatticeOp, BooleanFunction):
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.core.relational import Equality, Relational
         from sympy.solvers.solveset import linear_coeffs
         # standard simplify
-        rv = super(And, self)._eval_simplify(
-            ratio, measure, rational, inverse)
+        rv = super(And, self)._eval_simplify(**kwargs)
         if not isinstance(rv, And):
             return rv
+
         # simplify args that are equalities involving
         # symbols so x == 0 & x == y -> x==0 & y == 0
         Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational),
@@ -697,6 +696,8 @@ class And(LatticeOp, BooleanFunction):
         eqs, other = sift(Rel, lambda i: isinstance(i, Equality), binary=True)
         if not eqs:
             return rv
+
+        measure, ratio = kwargs['measure'], kwargs['ratio']
         reps = {}
         sifted = {}
         if eqs:
@@ -803,15 +804,14 @@ class Or(LatticeOp, BooleanFunction):
     def _eval_rewrite_as_Nand(self, *args, **kwargs):
         return Nand(*[Not(arg) for arg in self.args])
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         # standard simplify
-        rv = super(Or, self)._eval_simplify(
-            ratio, measure, rational, inverse)
+        rv = super(Or, self)._eval_simplify(**kwargs)
         if not isinstance(rv, Or):
             return rv
         patterns = simplify_patterns_or()
         return self._apply_patternbased_simplification(rv, patterns,
-                                                       measure, S.true)
+            kwargs['measure'], S.true)
 
 
 class Not(BooleanFunction):
@@ -1048,18 +1048,16 @@ class Xor(BooleanFunction):
         return And(*[_convert_to_varsPOS(x, self.args)
                      for x in _get_even_parity_terms(len(a))])
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         # as standard simplify uses simplify_logic which writes things as
         # And and Or, we only simplify the partial expressions before using
         # patterns
-        rv = self.func(*[a._eval_simplify(ratio=ratio, measure=measure,
-                                          rational=rational, inverse=inverse)
-                       for a in self.args])
+        rv = self.func(*[a._eval_simplify(**kwargs) for a in self.args])
         if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
         patterns = simplify_patterns_xor()
         return self._apply_patternbased_simplification(rv, patterns,
-                                                       measure, None)
+            kwargs['measure'], None)
 
 
 class Nand(BooleanFunction):
