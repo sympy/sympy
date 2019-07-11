@@ -24,10 +24,14 @@ def satask(proposition, assumptions=True, context=global_assumptions,
         sat.add_from_cnf(context)
     sat.add_from_cnf(assumptions)
 
-    sat_true = sat.copy()
-    sat_false = sat.copy()
-    sat_true.add_from_cnf(props)
-    sat_false.add_from_cnf(_props)
+    return check_satisfiability(props, _props, sat)
+
+
+def check_satisfiability(prop, _prop, factbase):
+    sat_true = factbase.copy()
+    sat_false = factbase.copy()
+    sat_true.add_from_cnf(prop)
+    sat_false.add_from_cnf(_prop)
     can_be_true = satisfiable(sat_true)
     can_be_false = satisfiable(sat_false)
 
@@ -65,8 +69,7 @@ def get_relevant_facts(proposition, assumptions=None,
             for a in pred.all_predicates():
                 symbols |= find_symbols(a)
             return symbols
-        if isinstance(pred.args, AppliedPredicate) \
-                and isinstance(pred.args[0], Symbol):
+        if isinstance(pred.args, AppliedPredicate):
             return {pred.args[0]}
         return pred.atoms(Symbol)
 
@@ -91,7 +94,7 @@ def get_relevant_facts(proposition, assumptions=None,
             req_keys |= tmp_keys
         keys |= {l for l in lkeys if find_symbols(l) & req_keys != set()}
 
-        exprs = {key.args[0] for key in keys}
+        exprs = {key.args[0] if isinstance(key, AppliedPredicate) else key for key in keys}
         return exprs, relevant_facts
 
     for expr in exprs:

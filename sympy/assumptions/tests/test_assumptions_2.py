@@ -34,7 +34,6 @@ def test_extract_facts():
     assert _extract_facts(a(x) & b(y), x) == a
     assert _extract_facts(a(x) & b(y), y) == b
     assert _extract_facts(a(x) | b(y), x) == None
-    assert _extract_facts(~(a(x) | b(y)), x) == ~a
 
 
 def test_global():

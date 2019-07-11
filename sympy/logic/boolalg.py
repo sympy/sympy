@@ -1529,7 +1529,7 @@ def to_nnf(expr, simplify=True):
     return expr.to_nnf(simplify)
 
 
-def to_cnf(expr, simplify=False, to_CNF=False):
+def to_cnf(expr, simplify=False):
     """
     Convert a propositional logical sentence s to conjunctive normal form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
@@ -1560,9 +1560,6 @@ def to_cnf(expr, simplify=False, to_CNF=False):
 
     expr = eliminate_implications(expr)
     res = distribute_and_over_or(expr)
-
-    if to_CNF:
-        return CNF(conjuncts(res))
 
     return res
 
@@ -1695,44 +1692,23 @@ def _is_form(expr, function1, function2):
     """
     expr = sympify(expr)
 
-    # Special case of an Atom
-    if expr.is_Atom:
-        return True
-
-    # Special case of a single expression of function2
-    if isinstance(expr, function2):
-        for lit in expr.args:
-            if isinstance(lit, Not):
-                if not lit.args[0].is_Atom:
-                    return False
-            else:
-                if not lit.is_Atom:
-                    return False
-        return True
-
-    # Special case of a single negation
-    if isinstance(expr, Not):
-        if not expr.args[0].is_Atom:
-            return False
-
-    if not isinstance(expr, function1):
+    def is_a_literal(lit):
+        if isinstance(lit, Not) \
+                and lit.args[0].is_Atom:
+            return True
+        elif lit.is_Atom:
+            return True
         return False
 
-    for cls in expr.args:
-        if cls.is_Atom:
-            continue
-        if isinstance(cls, Not):
-            if not cls.args[0].is_Atom:
-                return False
-        elif not isinstance(cls, function2):
+    vals = function1.make_args(expr) if isinstance(expr, function1) else [expr]
+    for lit in vals:
+        if isinstance(lit, function2):
+            vals2 = function2.make_args(lit) if isinstance(lit, function2) else [lit]
+            for l in vals2:
+                if is_a_literal(l) is False:
+                    return False
+        elif is_a_literal(lit) is False:
             return False
-        for lit in cls.args:
-            if isinstance(lit, Not):
-                if not lit.args[0].is_Atom:
-                    return False
-            else:
-                if not lit.is_Atom:
-                    return False
 
     return True
 
