@@ -1553,6 +1553,12 @@ def test_sympy__stats__rv__RandomIndexedSymbol():
     X = DiscreteMarkovChain("X")
     assert _test_args(RandomIndexedSymbol(X[0].symbol, pspace(X[0])))
 
+def test_sympy__stats__rv__RandomMatrixSymbol():
+    from sympy.stats.rv import RandomMatrixSymbol
+    from sympy.stats.random_matrix import RandomMatrixPSpace
+    pspace = RandomMatrixPSpace('P')
+    assert _test_args(RandomMatrixSymbol('M', 3, 3, pspace))
+
 def test_sympy__stats__stochastic_process__StochasticPSpace():
     from sympy.stats.stochastic_process import StochasticPSpace
     from sympy.stats.stochastic_process_types import StochasticProcess
@@ -1583,6 +1589,23 @@ def test_sympy__stats__stochastic_process_types__DiscreteMarkovChain():
     from sympy.stats.stochastic_process_types import DiscreteMarkovChain
     from sympy import MatrixSymbol
     assert _test_args(DiscreteMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__random_matrix__RandomMatrixPSpace():
+    from sympy.stats.random_matrix import RandomMatrixPSpace
+    from sympy.stats.random_matrix_models import RandomMatrixEnsemble
+    assert _test_args(RandomMatrixPSpace('P', RandomMatrixEnsemble()))
+
+def test_sympy__stats__random_matrix_models__RandomMatrixEnsemble():
+    from sympy.stats.random_matrix_models import RandomMatrixEnsemble
+    assert _test_args(RandomMatrixEnsemble())
+
+def test_sympy__stats__random_matrix_models__GaussianEnsemble():
+    from sympy.stats.random_matrix_models import GaussianEnsemble
+    assert _test_args(GaussianEnsemble('G', 3))
+
+def test_sympy__stats__random_matrix_models__GaussianUnitaryEnsemble():
+    from sympy.stats import GaussianUnitaryEnsemble
+    assert _test_args(GaussianUnitaryEnsemble('U', 3))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy

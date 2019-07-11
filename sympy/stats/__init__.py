@@ -90,6 +90,13 @@ from .stochastic_process_types import (
 )
 __all__.extend(stochastic_process_types.__all__)
 
+from . import random_matrix_models
+from .random_matrix_models import (
+    GaussianUnitaryEnsemble,
+    GUE
+)
+__all__.extend(random_matrix_models.__all__)
+
 from . import symbolic_probability
 from .symbolic_probability import Probability, Expectation, Variance, Covariance
 __all__.extend(symbolic_probability.__all__)

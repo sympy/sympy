@@ -17,9 +17,10 @@ from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta, Mul, Indexed)
+        DiracDelta, Mul, Indexed, MatrixSymbol)
 from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
+from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
@@ -282,6 +283,16 @@ class RandomIndexedSymbol(RandomSymbol):
     symbol = property(lambda self: self.args[0])
     name = property(lambda self: str(self.args[0]))
     key = property(lambda self: self.symbol.args[1])
+
+class RandomMatrixSymbol(MatrixSymbol):
+    def __new__(cls, symbol, n, m, pspace=None):
+        from sympy.stats.random_matrix import RandomMatrixPSpace
+        n, m = _sympify(n), _sympify(m)
+        symbol = _symbol_converter(symbol)
+        return Basic.__new__(cls, symbol, n, m, pspace)
+
+    symbol = property(lambda self: self.args[0])
+    pspace = property(lambda self: self.args[3])
 
 class ProductPSpace(PSpace):
     """
@@ -797,7 +808,10 @@ class Density(Basic):
     def doit(self, evaluate=True, **kwargs):
         from sympy.stats.joint_rv import JointPSpace
         from sympy.stats.frv import SingleFiniteDistribution
+        from sympy.stats.random_matrix_models import RandomMatrixEnsemble
         expr, condition = self.expr, self.condition
+        if isinstance(expr, RandomMatrixEnsemble):
+            return expr.density()
         if isinstance(expr, SingleFiniteDistribution):
             return expr.dict
         if condition is not None:
