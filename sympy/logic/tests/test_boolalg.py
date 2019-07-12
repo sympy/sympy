@@ -365,7 +365,7 @@ def test_bool_map():
     assert bool_map(Xor(x, y, z), ~Xor(x, y, z)) == False
     assert bool_map(Xor(a, x, y, z), ~Xor(a, x, y, z)) == False
 
-    
+
 def test_bool_symbol():
     """Test that mixing symbols with boolean values
     works as expected"""
