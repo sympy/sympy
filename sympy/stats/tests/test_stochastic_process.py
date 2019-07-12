@@ -111,7 +111,7 @@ def test_ContinuousMarkovChain():
     C1 = ContinuousMarkovChain('C', [0, 1, 2], T1)
     assert C1.limiting_distribution() == ImmutableMatrix([[S(3)/19, S(12)/19, S(4)/19]])
 
-    T2 = T1 = Matrix([[-S(1), S(1), S(0)], [S(1), -S(1), S(0)], [S(0), S(1), -S(1)]])
+    T2 = Matrix([[-S(1), S(1), S(0)], [S(1), -S(1), S(0)], [S(0), S(1), -S(1)]])
     C2 = ContinuousMarkovChain('C', [0, 1, 2], T2)
     A, t = C2.generator_matrix, symbols('t', positive=True)
     assert C2.transition_probabilities(A)(t) == Matrix([[S(1)/2 + exp(-2*t)/2, S(1)/2 - exp(-2*t)/2, 0],

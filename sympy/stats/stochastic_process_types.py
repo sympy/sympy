@@ -203,9 +203,13 @@ class StochasticProcessUtil(StochasticProcess):
     def _extract_information(self, given_condition):
         """
         Helper function to extract information, like,
-        transition probabilities, state space, etc.
+        transition matrix/generator matrix, state space, etc.
         """
-        trans_probs, state_space = self.transition_probabilities, self.state_space
+        if isinstance(self, DiscreteMarkovChain):
+            trans_probs = self.transition_probabilities
+        elif isinstance(self, ContinuousMarkovChain):
+            trans_probs = self.generator_matrix
+        state_space = self.state_space
         if isinstance(given_condition, And):
             gcs = given_condition.args
             given_condition = S.true
@@ -222,7 +226,7 @@ class StochasticProcessUtil(StochasticProcess):
             state_space = given_condition.state_space
         return trans_probs, state_space, given_condition
 
-    def _check_trans_probs(self, trans_probs):
+    def _check_trans_probs(self, trans_probs, row_sum=1):
         """
         Helper function for checking the validity of transition
         probabilities.
@@ -230,9 +234,9 @@ class StochasticProcessUtil(StochasticProcess):
         if not isinstance(trans_probs, MatrixSymbol):
             rows = trans_probs.tolist()
             for row in rows:
-                if (sum(row) - 1) != 0:
-                    raise ValueError("Probabilities in a row must sum to 1. "
-                    "If you are using Float or floats then please use Rational.")
+                if (sum(row) - row_sum) != 0:
+                    raise ValueError("Values in a row must sum to %s. "
+                    "If you are using Float or floats then please use Rational."%(row_sum))
 
     def _work_out_state_space(self, state_space, given_condition, trans_probs):
         """
@@ -270,7 +274,10 @@ class StochasticProcessUtil(StochasticProcess):
             is_insufficient = True
         else:
             # checking transition probabilities
-            self._check_trans_probs(trans_probs)
+            if isinstance(self, DiscreteMarkovChain):
+                self._check_trans_probs(trans_probs, row_sum=1)
+            elif isinstance(self, ContinuousMarkovChain):
+                self._check_trans_probs(trans_probs, row_sum=0)
 
             # working out state space
             state_space = self._work_out_state_space(state_space, given_condition, trans_probs)
@@ -732,24 +739,28 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, StochasticProcessUt
         if isinstance(condition, tuple):
             # to be used by inner API for computations
             rv, states = condition
-            gcs, grvs = given_condition.args, given_condition.atoms(RandomIndexedSymbol)
-            for state in states:
-                min_key_rv = None
-                for grv in grvs:
-                    if grv.key <= rv.key:
-                        min_key_rv = grv
-                if min_key_rv == None:
-                    raise ValueError("Information insufficient for generating result.")
+            if isinstance(given_condition, And):
+                gcs = given_condition.args
+            else:
+                gcs = (given_condition, )
+            grvs = given_condition.atoms(RandomIndexedSymbol)
 
-                prob, gstate = None, None
-                for gc in gcs:
-                    if gc.has(min_key_rv):
-                        if gc.has(Probability):
-                            prob = gc.lhs if isinstance(gc.lhs, Probability) \
-                                        else gc.rhs
-                        else:
-                            key, gstate = gc.lhs.key, gc.rhs if isinstance(gc.lhs, RandomIndexedSymbol) \
-                                        else gc.rhs.key, gc.lhs
+            min_key_rv = None
+            for grv in grvs:
+                if grv.key <= rv.key:
+                    min_key_rv = grv
+            if min_key_rv == None:
+                raise ValueError("Information insufficient for generating result.")
 
-                if state != None and key <= min_key_rv.key:
-                    return trans_probs(min_key_rv.key - key).__getitem__(gstate, state)
+            prob, gstate = S(1), None
+            for gc in gcs:
+                if gc.has(min_key_rv):
+                    if gc.has(Probability):
+                        prob, gp = (gc.rhs, gc.lhs) if isinstance(gc.lhs, Probability) \
+                                    else (gc.lhs, gc.rhs)
+                        gr = list(gp.atoms(Eq))[0]
+                        gstate = gr.lhs if isinstance(gr.rhs, RandomIndexedSymbol) else gr.rhs
+                    else:
+                        _, gstate = (gc.lhs.key, gc.rhs) if isinstance(gc.lhs, RandomIndexedSymbol) \
+                                    else (gc.rhs.key, gc.lhs)
+            return prob * sum([trans_probs(rv.key - min_key_rv.key).__getitem__((gstate, state)) for state in states])

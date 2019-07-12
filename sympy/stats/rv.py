@@ -281,7 +281,13 @@ class RandomIndexedSymbol(RandomSymbol):
 
     symbol = property(lambda self: self.args[0])
     name = property(lambda self: str(self.args[0]))
-    key = property(lambda self: self.symbol.args[1])
+
+    @property
+    def key(self):
+        if isinstance(self.symbol, Indexed):
+            return self.symbol.args[1]
+        elif isinstance(self.symbol, Function):
+            return self.symbol.args[0]
 
 class ProductPSpace(PSpace):
     """
