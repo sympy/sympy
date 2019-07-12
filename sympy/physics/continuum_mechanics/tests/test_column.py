@@ -51,7 +51,7 @@ def test_column():
 
 @XFAIL
 def test_critical_load_pinned_fixed():
-    # the deflction equation of pinned-pinned end-condition
+    # the deflction equation of pinned-fixed end-condition
     # comes out to be of the form `a*cos(x) - b*sin(x)` for which
     # solve should return in the form `x = atan(a/b)`. solve() currently
     # gives the answer in other form. Either we can get a way to convert it

@@ -10,8 +10,77 @@ class Column(object):
     compressive loads. A column is characterized by its
     cross-sectional profile(second moment of area), its length and
     its material.
+
+    Examples
+    ========
+
+    There is a solid round bar 3 m long with second-moment I is used as a
+    column with both the ends pinned. Young's modulus of the Column is E.
+    The buckling load applied is 78KN
+
+    >>> from sympy.physics.continuum_mechanics.column import Column
+    >>> from sympy import Symbol, symbols
+    >>> E, I, P = symbols('E, I, P', positive=True)
+    >>> c = Column(3, E, I, 78000, top="pinned", bottom="pinned")
+    >>> c.end_conditions
+    {'bottom': 'pinned', 'top': 'pinned'}
+    >>> c.boundary_conditions
+    {'deflection': [(0, 0), (3, 0)], 'slope': [(0, 0)]}
+    >>> c.moment()
+    78000*y(x)
+    >>> c.solve_slope_deflection()
+    >>> c.deflection()
+    C1*sin(20*sqrt(195)*x/(sqrt(E)*sqrt(I)))
+    >>> c.slope()
+    20*sqrt(195)*C1*cos(20*sqrt(195)*x/(sqrt(E)*sqrt(I)))/(sqrt(E)*sqrt(I))
+    >>> c.critical_load()
+    pi**2*E*I/9
     """
-    def __init__(self, height, elastic_modulus, second_moment, load, eccentricity=None, top="pinned", bottom="pinned", boundary_conditions={'deflection': [], 'slope': []}):
+    def __init__(self, height, elastic_modulus, second_moment, load, eccentricity=None, top="pinned", bottom="pinned", bc_slope=None, bc_deflection=None):
+        """
+        Parameters
+        ==========
+
+        height: Sympifyable
+            A symbol or a value representing column's height
+
+        elastic_modulus: Sympifyable
+            A symbol or a value representing the Column's modulus of
+            elasticity. It is a measure of the stiffness of the Column
+            material.
+
+        second_moment: Sympifyable
+            A symbol or a value representing Column's second-moment of area
+            It is a geometrical property of an area which reflects how its
+            points are distributed with respect to its neutral axis.
+
+        load: Sympifyable
+            A symbol or a value representing the load applied on the Column.
+
+        eccentricity: Sympifyable (default=None)
+            A symbol or a value representing the eccentricity of the load
+            applied. Eccentricity is the distance of the point of application
+            of load from the neutral axis.
+
+        top: string (default="pinned")
+            A string representing the top-end condition of the column.
+            It can be: pinned
+                       fixed
+                       free
+
+        bottom: string (default="pinned")
+            A string representing the bottom-end condition of the column.
+            It can be: pinned
+                       fixed
+
+        bc_slope: list of tuples
+            A list of tuples representing the boundary conditions of slope.
+            The tuple takes two elements `location` and `value`.
+
+        bc_deflection: list of tuples
+            A list of tuples representing the boundary conditions of deflection
+            The tuple consists of two elements `location` and `value`.
+        """
         self._height = height
         self._elastic_modulus = elastic_modulus
         self._second_moment = second_moment
@@ -19,7 +88,11 @@ class Column(object):
         self._eccentricity = eccentricity
         self._moment = 0
         self._end_conditions = {'top':top, 'bottom': bottom}
-        self._boundary_conditions = boundary_conditions
+        self._boundary_conditions = {'deflection': [], 'slope': []}
+        if bc_deflection:
+            self._boundary_conditions['deflection'] = bc_deflection
+        if bc_slope:
+            self._boundary_conditions['slope'] = bc_slope
         self._variable = Symbol('x')
         self._deflection = None
         self._slope = None
@@ -67,7 +140,6 @@ class Column(object):
 
 
     def _apply_load_conditions(self):
-
         y = Function('y')
         x = self._variable
         P = Symbol('P', positive=True)
@@ -103,7 +175,7 @@ class Column(object):
             d = Symbol('d')
             self._boundary_conditions['deflection'].append((self._height, d))
             # moment = P*y - P*d
-            self._moment -= self.load*d
+            self._moment -= P*d
 
         else:
             raise ValueError("{} {} end-condition is not supported".format(sstr(self._end_conditions['top']), sstr(self._end_conditions['bottom'])))
@@ -113,6 +185,29 @@ class Column(object):
         """
         Solves the differnetial equation of buckling to determine the
         deflection and slope equations.
+
+        Examples
+        ========
+
+        A column of timber section is 8m long both ends being fixed.
+        Young's modulus of the timber is E and second-moment I.
+        The applied load on the column is 360KN.
+
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy import Symbol, symbols
+        >>> E, I, P = symbols('E, I, P', positive=True)
+        >>> c = Column(8, E, I, 360000, top="fixed", bottom="fixed")
+        >>> c.end_conditions
+        {'bottom': 'fixed', 'top': 'fixed'}
+        >>> c.boundary_conditions
+        {'deflection': [(0, 0), (8, 0)], 'slope': [(0, 0)]}
+        >>> c.moment()
+        -M + 360000*y(x)
+        >>> c.solve_slope_deflection()
+        >>> c.deflection()
+        -M*cos(600*x/(sqrt(E)*sqrt(I)))/360000 + M/360000
+        >>> c.slope()
+        M*sin(600*x/(sqrt(E)*sqrt(I)))/(600*sqrt(E)*sqrt(I))
         """
         y = Function('y')
         x = self._variable
@@ -168,6 +263,31 @@ class Column(object):
         """
         Detrmines the critical load (for single bow buckling condition) of
         the given column under the given conditions.
+
+        Examples
+        ========
+
+        A solid round bar 10 long is used as a column. The young's modulus
+        is E and the second moment is I. One end of the column is fixed
+        and other end is free. A load of 15KN is applied on it.
+
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy import Symbol, symbols
+        >>> E, I, P = symbols('E, I, P', positive=True)
+        >>> c = Column(10, E, I, 15000, top="free", bottom="fixed")
+        >>> c.end_conditions
+        {'bottom': 'fixed', 'top': 'free'}
+        >>> c.boundary_conditions
+        {'deflection': [(0, 0), (10, d)], 'slope': [(0, 0)]}
+        >>> c.moment()
+        -15000*d + 15000*y(x)
+        >>> c.solve_slope_deflection()
+        >>> c.deflection()
+        -d*cos(50*sqrt(6)*x/(sqrt(E)*sqrt(I))) + d
+        >>> c.slope()
+        50*sqrt(6)*d*sin(50*sqrt(6)*x/(sqrt(E)*sqrt(I)))/(sqrt(E)*sqrt(I))
+        >>> c.critical_load()
+        pi**2*E*I/400
         """
         y = Function('y')
         x = self._variable
@@ -190,7 +310,8 @@ class Column(object):
         """Returns the moment equation in terms of any arbitrary point ``x``
         on the column and the deflection at that point.
         """
-        return self._moment
+        P = Symbol('P', positive=True)
+        return self._moment.subs(P, self._load)
 
 
     def slope(self):
