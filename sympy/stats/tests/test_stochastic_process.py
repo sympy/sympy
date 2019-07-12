@@ -1,5 +1,5 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
-                   ImmutableMatrix, Ne, Lt, Gt, exp)
+                   ImmutableMatrix, Ne, Lt, Gt, exp, Not)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain)
 from sympy.stats.rv import RandomIndexedSymbol
@@ -118,6 +118,15 @@ def test_ContinuousMarkovChain():
                                                        [S(1)/2 - exp(-2*t)/2, S(1)/2 + exp(-2*t)/2, 0],
                                                        [S(1)/2 - exp(-t) + exp(-2*t)/2, S(1)/2 -
                                                        exp(-2*t)/2, exp(-t)]])
+    assert P(Eq(C2(1), 1), Eq(C2(0), 1), evaluate=False) == Probability(Eq(C2(1), 1))
+    assert P(Eq(C2(1), 1), Eq(C2(0), 1)) == exp(-2)/2 + S(1)/2
+    assert P(Eq(C2(1), 0) & Eq(C2(2), 1) & Eq(C2(3), 1),
+                Eq(P(Eq(C2(1), 0)), S(1)/2)) == (S(1)/8 - exp(-2)/8)*(S(1)/4 - exp(-4)/4)
+    assert P(Not(Eq(C2(1), 0) & Eq(C2(2), 1) & Eq(C2(3), 2)) |
+                (Eq(C2(1), 0) & Eq(C2(2), 1) & Eq(C2(3), 2)),
+                Eq(P(Eq(C2(1), 0)), S(1)/4) & Eq(P(Eq(C2(1), 1)), S(1)/4)) == S(1)
+    raises(KeyError, lambda: P(Eq(C2(1), 0), Eq(P(Eq(C2(1), 1)), S(1)/2)))
+    raises(ValueError, lambda: P(Eq(C2(1), 0), Eq(P(Eq(C2(5), 1)), S(1)/2)))
     TS1 = MatrixSymbol('G', 3, 3)
     CS1 = ContinuousMarkovChain('C', [0, 1, 2], TS1)
     A = CS1.generator_matrix

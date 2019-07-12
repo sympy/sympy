@@ -736,9 +736,10 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, StochasticProcessUt
 
         trans_probs = self.transition_probabilities(gen_mat)
 
-        if isinstance(condition, tuple):
-            # to be used by inner API for computations
-            rv, states = condition
+        if isinstance(condition, Relational):
+            info_insuff = "Information insufficient for generating result."
+            rv, states = (*condition.atoms(RandomIndexedSymbol),
+                            Intersection(condition.as_set(), state_space))
             if isinstance(given_condition, And):
                 gcs = given_condition.args
             else:
@@ -750,17 +751,53 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, StochasticProcessUt
                 if grv.key <= rv.key:
                     min_key_rv = grv
             if min_key_rv == None:
-                raise ValueError("Information insufficient for generating result.")
+                raise ValueError(info_insuff)
 
-            prob, gstate = S(1), None
+            prob, gstate = dict(), None
             for gc in gcs:
                 if gc.has(min_key_rv):
                     if gc.has(Probability):
-                        prob, gp = (gc.rhs, gc.lhs) if isinstance(gc.lhs, Probability) \
+                        p, gp = (gc.rhs, gc.lhs) if isinstance(gc.lhs, Probability) \
                                     else (gc.lhs, gc.rhs)
-                        gr = list(gp.atoms(Eq))[0]
-                        gstate = gr.lhs if isinstance(gr.rhs, RandomIndexedSymbol) else gr.rhs
+                        gr = gp.args[0]
+                        gset = Intersection(gr.as_set(), state_space)
+                        prob[gset] = p
                     else:
                         _, gstate = (gc.lhs.key, gc.rhs) if isinstance(gc.lhs, RandomIndexedSymbol) \
                                     else (gc.rhs.key, gc.lhs)
-            return prob * sum([trans_probs(rv.key - min_key_rv.key).__getitem__((gstate, state)) for state in states])
+
+            if prob:
+                gstates = Union(*prob.keys())
+                if len(gstates) == 1:
+                    gstate = list(gstates)[0]
+                    gprob = list(prob.values())[0]
+                    prob[gstates] = gprob
+                elif len(gstates) == len(state_space) - 1:
+                    gstate = list(state_space - gstates)[0]
+                    gprob = S(1) - sum(prob.values())
+                    prob[state_space - gstates] = gprob
+                else:
+                    raise ValueError("Conflicting information.")
+            else:
+                gprob = S(1)
+
+            if min_key_rv == rv:
+                return sum([prob[FiniteSet(state)] for state in states])
+            return gprob * sum([trans_probs(rv.key - min_key_rv.key).__getitem__((gstate, state)) for state in states])
+
+        if isinstance(condition, Not):
+            expr = condition.args[0]
+            return S(1) - self.probability(expr, given_condition, evaluate, **kwargs)
+
+        if isinstance(condition, And):
+            prod = S(1)
+            for expr in condition.args:
+                prod *= self.probability(expr, given_condition, evaluate, **kwargs)
+            return prod
+
+        if isinstance(condition, Or):
+            return sum([self.probability(expr, given_condition, evaluate, **kwargs)
+                        for expr in condition.args])
+
+        raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
+                                "implemented yet."%(expr, condition))
