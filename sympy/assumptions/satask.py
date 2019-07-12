@@ -1,12 +1,12 @@
 from __future__ import print_function, division
 
 from sympy import Symbol, S, Or
-from sympy.assumptions.ask_generated import get_known_facts_cnf, get_all_known_facts
+from sympy.assumptions.ask_generated import get_all_known_facts
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.assumptions.sathandlers import fact_registry
-from sympy.core import oo, Tuple
+from sympy.core import oo
 from sympy.logic.inference import satisfiable
-from sympy.logic.boolalg import And, CNF, conjuncts, EncodedCNF
+from sympy.logic.boolalg import CNF, EncodedCNF
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,
