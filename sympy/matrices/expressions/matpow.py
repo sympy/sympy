@@ -81,6 +81,10 @@ class MatPow(MatrixExpr):
             return Inverse(base).doit(**kwargs)
         elif exp is S.One:
             return base
+        elif exp.is_Number or exp.is_negative is not None or (isinstance(base, MatrixBase) and base.det() != 0):
+            jordan_pow = getattr(base, '_matrix_pow_by_jordan_blocks', None)
+            if jordan_pow is not None:
+                return jordan_pow (exp)
         return MatPow(base, exp)
 
     def _eval_transpose(self):
