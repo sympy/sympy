@@ -2433,7 +2433,7 @@ def _finger(eq):
                     raise NotImplementedError('unexpected level of nesting')
     inv = defaultdict(list)
     for k, v in ordered(iter(d.items())):
-        v[-1] = tuple(sorted([k + (va,) for k, va in v[-1].items()]))
+        v[-1] = tuple(sorted([i + (j,) for i, j in v[-1].items()]))
         inv[tuple(v)].append(k)
     return inv
 
