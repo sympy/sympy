@@ -311,7 +311,9 @@ class Piecewise(Function):
         for e, c in self.args:
             if hints.get('deep', True):
                 if isinstance(e, Basic):
-                    e = e.doit(**hints)
+                    newe = e.doit(**hints)
+                    if newe != self:
+                        e = newe
                 if isinstance(c, Basic):
                     c = c.doit(**hints)
             newargs.append((e, c))
