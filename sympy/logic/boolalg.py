@@ -2385,7 +2385,7 @@ def _finger(eq):
     ========
 
     >>> from sympy.logic.boolalg import _finger as finger
-    >>> from sympy import And, Or, Not, to_cnf, symbols
+    >>> from sympy import And, Or, Not, Xor, to_cnf, symbols
     >>> from sympy.abc import a, b, x, y
     >>> eq = Or(And(Not(y), a), And(Not(y), b), And(x, y))
     >>> dict(finger(eq))
