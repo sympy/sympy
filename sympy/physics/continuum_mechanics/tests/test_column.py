@@ -2,6 +2,7 @@ from sympy import S, cos, sin, pi, sqrt, Function
 from sympy.physics.continuum_mechanics.column import Column
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.symbol import Symbol, symbols
+from sympy.physics.units import meter, newton, kilo, giga, milli
 
 
 E, I  = symbols('E, I', positive=True)
@@ -48,6 +49,21 @@ def test_column():
     assert c4.slope() == F*cos(sqrt(P)*x/(sqrt(E)*sqrt(I)))/P - F/P + F*l*sin(sqrt(P)*x/(sqrt(E)*sqrt(I)))/(sqrt(E)*sqrt(I)*sqrt(P))
 
     raises(ValueError, lambda: Column(l, E, I, P, top="free", bottom="free"))
+
+
+def test_column_with_units():
+    c = Column(3*meter, 2*10**5*newton/(milli*meter)**2, I*(milli*meter)**4, 38*kilo*newton, top="free", bottom="fixed")
+    c.solve_slope_deflection()
+    assert c.critical_load().subs(I, 56.25*10**6) == 312500.0*pi**2*newton
+
+    c = Column(l*meter, E*newton/(milli*meter)**2, I*(milli*meter)**4, P*newton, top="fixed", bottom="fixed")
+    c.solve_slope_deflection()
+    assert c.critical_load() == pi**2*newton*E*I/(250000*l**2)
+
+    c = Column(15*meter, E*newton/(milli*meter)**2, 100*10**6*(milli*meter)**4, P*newton, top="pinned", bottom="pinned")
+    c.solve_slope_deflection()
+    assert c.critical_load().subs(E, 2*10**5) == 800000*pi**2*newton/9
+
 
 @XFAIL
 def test_critical_load_pinned_fixed():
