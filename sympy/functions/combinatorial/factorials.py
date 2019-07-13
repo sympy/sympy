@@ -578,7 +578,7 @@ class RisingFactorial(CombinatorialFunction):
                                             r*(x - i),
                                             range(1, abs(int(k)) + 1), 1)
         else:
-            if k.is_number:
+            if k.is_integer == False:
                 if x.is_integer and x.is_negative:
                     return S.Zero
 
