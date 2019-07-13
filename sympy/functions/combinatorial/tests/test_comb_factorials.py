@@ -32,7 +32,11 @@ def test_rf_eval_apply():
 
     assert rf(-1, pi) == 0
     assert rf(-5, 1 + I) == 0
-    assert unchanged(rf, -3, x)
+
+    assert unchanged(rf, -3, k)
+    assert unchanged(rf, x, Symbol('k', integer=False))
+    assert rf(-3, Symbol('k', integer=False)) == 0
+    assert rf(Symbol('x', negative=True, integer=True), Symbol('k', integer=False)) == 0
 
     assert rf(x, 0) == 1
     assert rf(x, 1) == x
