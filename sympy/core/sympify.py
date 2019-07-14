@@ -263,19 +263,16 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     """
     try:
-        if a in sympy_classes:
+        if a.__sympy__:
             return a
-    except TypeError: # Type of a is unhashable
+    except AttributeError:  # a is not a sympy object
         pass
-    cls = getattr(a, "__class__", None)
-    if cls is None:
-        cls = type(a) # Probably an old-style class
-    if cls in sympy_classes:
-        return a
 
     if isinstance(a, CantSympify):
         raise SympifyError(a)
-
+    cls = getattr(a, "__class__", None)
+    if cls is None:
+        cls = type(a)  # Probably an old-style class
     try:
         return converter[cls](a)
     except KeyError:
