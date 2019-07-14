@@ -470,10 +470,15 @@ def test_tan():
     assert tan(7*pi/6) == 1/sqrt(3)
     assert tan(-5*pi/6) == 1/sqrt(3)
 
-    assert tan(pi/8).expand() == -1 + sqrt(2)
-    assert tan(3*pi/8).expand() == 1 + sqrt(2)
-    assert tan(5*pi/8).expand() == -1 - sqrt(2)
-    assert tan(7*pi/8).expand() == 1 - sqrt(2)
+    assert tan(pi/8) == -1 + sqrt(2)
+    assert tan(3*pi/8) == 1 + sqrt(2)  # issue 15959
+    assert tan(5*pi/8) == -1 - sqrt(2)
+    assert tan(7*pi/8) == 1 - sqrt(2)
+
+    assert tan(pi/10) == sqrt(1 - 2*sqrt(5)/5)
+    assert tan(3*pi/10) == sqrt(1 + 2*sqrt(5)/5)
+    assert tan(17*pi/10) == -sqrt(1 + 2*sqrt(5)/5)
+    assert tan(-31*pi/10) == -sqrt(1 - 2*sqrt(5)/5)
 
     assert tan(pi/12) == -sqrt(3) + 2
     assert tan(5*pi/12) == sqrt(3) + 2
@@ -488,8 +493,6 @@ def test_tan():
     assert tan(17*pi/24).radsimp() == -2 + sqrt(3) + sqrt(2) - sqrt(6)
     assert tan(19*pi/24).radsimp() == 2 - sqrt(3) + sqrt(2) - sqrt(6)
     assert tan(23*pi/24).radsimp() == 2 + sqrt(3) - sqrt(2) - sqrt(6)
-
-    assert 1 == (tan(8*pi/15)*cos(8*pi/15)/sin(8*pi/15)).ratsimp()
 
     assert tan(x*I) == tanh(x)*I
 
@@ -647,8 +650,6 @@ def test_cot():
     assert cot(19*pi/24).radsimp() == sqrt(2) + sqrt(3) - 2 - sqrt(6)
     assert cot(23*pi/24).radsimp() == -sqrt(2) - sqrt(3) - 2 - sqrt(6)
 
-    assert 1 == (cot(4*pi/15)*sin(4*pi/15)/cos(4*pi/15)).ratsimp()
-
     assert cot(x*I) == -coth(x)*I
     assert cot(k*pi*I) == -coth(k*pi)*I
 
@@ -671,6 +672,16 @@ def test_cot():
     assert cot(i).is_finite is True
 
     assert cot(x).subs(x, 3*pi) == zoo
+
+
+def test_tan_cot_sin_cos_evalf():
+    assert abs((tan(8*pi/15)*cos(8*pi/15)/sin(8*pi/15) - 1).evalf()) < 1e-14
+    assert abs((cot(4*pi/15)*sin(4*pi/15)/cos(4*pi/15) - 1).evalf()) < 1e-14
+
+@XFAIL
+def test_tan_cot_sin_cos_ratsimp():
+    assert 1 == (tan(8*pi/15)*cos(8*pi/15)/sin(8*pi/15)).ratsimp()
+    assert 1 == (cot(4*pi/15)*sin(4*pi/15)/cos(4*pi/15)).ratsimp()
 
 
 def test_cot_series():
@@ -1735,6 +1746,3 @@ def test_issue_14543():
     assert sec(pi/2 + x) == -csc(x)
     assert sec(3*pi/2 + x) == csc(x)
     assert sec(3*pi/2 - x) == -csc(x)
-
-def test_issue_15959():
-    assert tan(3*pi/8) == 1 + sqrt(2)
