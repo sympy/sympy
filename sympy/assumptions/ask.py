@@ -8,7 +8,7 @@ from sympy.core.cache import cacheit
 from sympy.core.decorators import deprecated
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
-                                 BooleanFunction, BooleanAtom, CNF, EncodedCNF)
+                                 BooleanFunction, BooleanAtom, CNF, EncodedCNF, Literal)
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
 
@@ -1213,31 +1213,26 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
 
 
 def _extract_all_facts(expr, symbol, check_reversed_rel=True):
-    if isinstance(symbol, Relational):
-        if check_reversed_rel:
-            rev = _extract_all_facts(expr, symbol.reversed, False)
-            if rev is not None:
-                return rev
+    facts = []
+    for clause in expr.clauses:
+        args = []
+        for literal in clause:
+            if isinstance(literal.lit, AppliedPredicate):
+                if literal.lit.arg == symbol:
+                    args.append(Literal(literal.lit.func))
+                else:
+                    args.append(None)
+                continue
 
-    if isinstance(expr, AppliedPredicate):
-        if expr.arg == symbol:
-            return expr.func
-        return
-
-    if isinstance(expr, Not):
-        if expr.args[0].arg == symbol:
-            return expr.func(expr.args[0].func)
-        return
-
-    if isinstance(expr, frozenset):
-        args = [_extract_all_facts(e, symbol) for e in expr if e not in (True, False)]
+            if isinstance(symbol, Relational):
+                if check_reversed_rel:
+                    rev = _extract_all_facts(expr, symbol.reversed, False)
+                    args.append(rev)
         if args and all(x is not None for x in args):
-            return frozenset(args)
+            facts.append(frozenset(args))
         else:
-            return None
-
-    args = [_extract_all_facts(clause, symbol) for clause in expr.clauses]
-    args = [arg for arg in args if arg is not None]
+            facts.append(None)
+    args = [arg for arg in facts if arg is not None]
     return set(args)
 
 
@@ -1290,49 +1285,51 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     assump = CNF.from_prop(assumptions)
     assump.extend(context)
 
-    local_facts = _extract_all_facts(assump, expr)
+    # local_facts = _extract_all_facts(assump, expr)
 
     known_facts_cnf = get_all_known_facts()
     known_facts_dict = get_known_facts_dict()
 
     enc_cnf = EncodedCNF()
     enc_cnf.from_cnf(CNF(known_facts_cnf))
-    enc_cnf.add_from_cnf(CNF(local_facts))
+    # enc_cnf.add_from_cnf(CNF(local_facts))
 
-    if local_facts and satisfiable(enc_cnf) is False:
-        raise ValueError("inconsistent assumptions %s" % assumptions)
-
-    if local_facts:
-        local_facts_ = And(*(Or(*(a for a in clause)) for clause in local_facts))
-
-        # See if there's a straight-forward conclusion we can make for the inference
-        if local_facts_.is_Atom:
-            if key in known_facts_dict[local_facts_]:
-                return True
-            if Not(key) in known_facts_dict[local_facts_]:
-                return False
-        elif (isinstance(local_facts_, And) and
-              all(k in known_facts_dict for k in local_facts_.args)):
-            for assum in local_facts_.args:
-                if assum.is_Atom:
-                    if key in known_facts_dict[assum]:
-                        return True
-                    if Not(key) in known_facts_dict[assum]:
-                        return False
-                elif isinstance(assum, Not) and assum.args[0].is_Atom:
-                    if key in known_facts_dict[assum]:
-                        return False
-                    if Not(key) in known_facts_dict[assum]:
-                        return True
-        elif (isinstance(key, Predicate) and
-              isinstance(local_facts_, Not) and local_facts_.args[0].is_Atom):
-            if local_facts_.args[0] in known_facts_dict[key]:
-                return False
+    # if local_facts and satisfiable(enc_cnf) is False:
+    #     raise ValueError("inconsistent assumptions %s" % assumptions)
+    #
+    # if local_facts:
+    #     local_facts_ = And(*(Or(*(a for a in clause)) for clause in local_facts))
+    #
+    #     # See if there's a straight-forward conclusion we can make for the inference
+    #     if local_facts_.is_Atom:
+    #         if key in known_facts_dict[local_facts_]:
+    #             return True
+    #         if Not(key) in known_facts_dict[local_facts_]:
+    #             return False
+    #     elif (isinstance(local_facts_, And) and
+    #           all(k in known_facts_dict for k in local_facts_.args)):
+    #         for assum in local_facts_.args:
+    #             if assum.is_Atom:
+    #                 if key in known_facts_dict[assum]:
+    #                     return True
+    #                 if Not(key) in known_facts_dict[assum]:
+    #                     return False
+    #             elif isinstance(assum, Not) and assum.args[0].is_Atom:
+    #                 if key in known_facts_dict[assum]:
+    #                     return False
+    #                 if Not(key) in known_facts_dict[assum]:
+    #                     return True
+    #     elif (isinstance(key, Predicate) and
+    #           isinstance(local_facts_, Not) and local_facts_.args[0].is_Atom):
+    #         if local_facts_.args[0] in known_facts_dict[key]:
+    #             return False
 
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
+
+    # using satask (still costly)
     res = satask(proposition, assumptions=assumptions, context=context)
 
     if res is not None:

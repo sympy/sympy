@@ -2616,6 +2616,9 @@ class Literal(object):
         h = hash((type(self).__name__,) + self.arg)
         return h
 
+    def rcall(self, expr):
+        return Literal(self.lit(expr), self.is_Not)
+
 
 class CNF(object):
     def __init__(self, clauses=None):
@@ -2651,7 +2654,7 @@ class CNF(object):
     def all_predicates(self):
         predicates = set()
         for c in self.clauses:
-            predicates |= {Not(arg.lit) if arg.is_Not else arg.lit for arg in c}
+            predicates |= {arg.lit for arg in c}
 
         return predicates
 
@@ -2722,9 +2725,9 @@ class CNF(object):
             cnfs = []
             for i in range(0, len(expr.args)+1, 2):
                 for neg in combinations(expr.args, i):
-                    clause = [CNF._not(s)._not() if s in neg else CNF.to_CNF(s)
+                    clause = [CNF.to_CNF(s)._not() if s in neg else CNF.to_CNF(s)
                               for s in expr.args ]
-                    cnfs.append(clause)
+                    cnfs.append(CNF.all_or(*clause))
             return CNF.all_and(*cnfs)
 
         if klass == Xnor:
@@ -2746,6 +2749,9 @@ class CNF(object):
                 a = CNF.to_CNF(a)
                 b = CNF.to_CNF(b)
                 cnfs.append(a._not()._or(b))
+            a = CNF.to_CNF(expr.args[-1])
+            b = CNF.to_CNF(expr.args[0])
+            cnfs.append(a._not()._or(b))
             return CNF.all_and(*cnfs)
 
         if klass == ITE:
