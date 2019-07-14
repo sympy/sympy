@@ -1110,8 +1110,6 @@ git_whitelist = {
     # This is just a distribute version of setup.py. Used mainly for setup.py
     # develop, which we don't care about in the release tarball
     'setupegg.py',
-    # Example on how to use tox to test Sympy. For development.
-    'tox.ini.sample',
     # pytest stuff
     'conftest.py',
     # Encrypted deploy key for deploying dev docs to GitHub
