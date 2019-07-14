@@ -194,6 +194,9 @@ if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_l
 EOF
     cd ..
     bin/doctest doc/src/modules/numeric-computation.rst
+    # Disabled in CI - for now - because it keeps finding denial-of-service bugs.
+    # See https://github.com/sympy/sympy/pull/17190 for details.
+    # python bin/test_hypothesis.py
 fi
 
 # This is separate because it needs to be run with subprocess=False
