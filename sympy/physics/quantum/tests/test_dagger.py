@@ -9,7 +9,7 @@ from sympy.utilities.pytest import skip
 def test_constants():
     assert Dagger(0) == 0
     assert Dagger(1) == 1
-    assert Dagger(1 + 1 * I) == 1 - 1 * I
+    assert Dagger(1 + I) == 1 - I
 
 
 def test_scalars():
