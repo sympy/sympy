@@ -2581,6 +2581,42 @@ def simplify_patterns_xor():
     return _matchers_xor
 
 
+class Literal(object):
+    """
+    The smallest element of a CNF object
+    """
+    def __init__(self, lit, is_not=False):
+        if isinstance(lit, Not):
+            self.lit = lit.args[0]
+            self.is_Not = True
+        else:
+            self.lit = lit
+            self.is_Not = False
+
+        self.is_Not = self.is_Not or is_not
+
+    @property
+    def arg(self):
+        return (self.is_Not, self.lit)
+
+    def __invert__(self):
+        is_not = not self.is_Not
+        return Literal(self.lit, is_not=is_not)
+
+    def __str__(self):
+        return type(self).__name__+'( '+ str(self.lit)+ ', ' + str(self.is_Not)+')'
+
+    __repr__ = __str__
+
+    def __eq__(self, other):
+        return (self.is_Not == other.is_Not) and \
+               (self.lit == other.lit)
+
+    def __hash__(self):
+        h = hash((type(self).__name__,) + self.arg)
+        return h
+
+
 class CNF(object):
     def __init__(self, clauses=None):
         if not clauses:
@@ -2588,8 +2624,8 @@ class CNF(object):
         self.clauses = clauses
 
     def add(self, prop):
-        clauses = And.make_args(to_cnf(prop))
-        self.clauses |= set(Or.make_args(clause) for clause in clauses)
+        clauses = CNF.to_CNF(prop).clauses
+        self.clauses |= clauses
 
     def extend(self, props):
         for p in props:
@@ -2612,18 +2648,122 @@ class CNF(object):
         self.clauses |= other.clauses
         return self
 
-    def rcall(self, expr):
-        clauses = set(frozenset(p(expr) if not isinstance(p, Not) else Not(p.args[0](expr)) for p in clause)
-                        for clause in self.clauses)
-        return CNF(clauses)
-
     def all_predicates(self):
         predicates = set()
         for c in self.clauses:
-            predicates |= {arg if not isinstance(arg, Not) else arg.args[0]
-                           for arg in c}
+            predicates |= {Not(arg.lit) if arg.is_Not else arg.lit for arg in c}
 
         return predicates
+
+    def _or(self, cnf):
+        clauses = set()
+        for a in self.clauses:
+            for b in cnf.clauses:
+                clauses.add(a.union(b))
+        return CNF(clauses)
+
+    def _and(self, cnf):
+        clauses = self.clauses.union(cnf.clauses)
+        return CNF(clauses)
+
+    def _not(self):
+        cnfs = []
+        for clause in self.clauses:
+            tmp = set()
+            for literal in clause:
+                tmp.add(frozenset((~literal,)))
+            cnfs.append(CNF(tmp))
+        return CNF.all_or(*cnfs)
+
+    @classmethod
+    def all_or(cls, *cnfs):
+        b = cnfs[0].copy()
+        for rest in cnfs[1:]:
+            b = b._or(rest)
+        return b
+
+    @classmethod
+    def all_and(cls, *cnfs):
+        b = cnfs[0].copy()
+        for rest in cnfs[1:]:
+            b = b._and(rest)
+        return b
+
+    @classmethod
+    def to_CNF(cls, expr):
+        if not isinstance(expr, BooleanFunction):
+            tmp = set()
+            tmp.add(frozenset((Literal(expr),)))
+            return CNF(tmp)
+
+        klass = type(expr)
+        if klass == Not :
+            return CNF.to_CNF(expr.args[0])._not()
+
+        if klass == Or :
+            return CNF.all_or(*[CNF.to_CNF(arg)
+                                for arg in expr.args])
+
+        if klass == And :
+            return CNF.all_and(*[CNF.to_CNF(arg)
+                                 for arg in expr.args])
+
+        if klass == Nand:
+            tmp = CNF.all_and(*[CNF.to_CNF(arg)
+                                for arg in expr.args])
+            return tmp._not()
+
+        if klass == Nor:
+            tmp = CNF.all_or(*[CNF.to_CNF(arg)
+                               for arg in expr.args])
+            return tmp._not()
+
+        if klass == Xor:
+            cnfs = []
+            for i in range(0, len(expr.args)+1, 2):
+                for neg in combinations(expr.args, i):
+                    clause = [CNF._not(s)._not() if s in neg else CNF.to_CNF(s)
+                              for s in expr.args ]
+                    cnfs.append(clause)
+            return CNF.all_and(*cnfs)
+
+        if klass == Xnor:
+            cnfs = []
+            for i in range(0, len(expr.args) + 1, 2):
+                for neg in combinations(expr.args, i):
+                    clause = [CNF._not(s)._not() if s in neg else CNF.to_CNF(s)
+                              for s in expr.args]
+                    cnfs.append(clause)
+            return CNF.all_and(*cnfs)._not()
+
+        if klass == Implies:
+            L, R = map(CNF.to_CNF, expr.args)
+            return L._not()._or(R)
+
+        if klass == Equivalent:
+            cnfs = []
+            for a,b in zip(expr.args, expr.args[1:]):
+                a = CNF.to_CNF(a)
+                b = CNF.to_CNF(b)
+                cnfs.append(a._not()._or(b))
+            return CNF.all_and(*cnfs)
+
+        if klass == ITE:
+            L, M, R = map(CNF.to_CNF, expr.args)
+            return CNF.all_and(L._not()._or(M), L._or(R))
+
+        else:
+            return CNF.to_CNF(to_cnf(expr))
+
+    @classmethod
+    def CNF_to_cnf(cls, cnf):
+        '''
+        For checking. Remove after everything works
+        '''
+        def remove_literal(arg):
+            return Not(arg.lit) if arg.is_Not else arg.lit
+
+        return And(*(Or(*(remove_literal(arg) for arg in clause)) for clause in cnf.clauses))
 
 
 class EncodedCNF(object):
@@ -2662,16 +2802,13 @@ class EncodedCNF(object):
         self.data += clauses
 
     def encode_arg(self, arg):
-        if arg.func == Not:
-            literal = arg.args[0]
-        else:
-            literal = arg
+        literal = arg.lit
         value = self.encoding.get(literal, None)
         if value is None:
             n = len(self._symbols)
             self._symbols.append(literal)
             value = self.encoding[literal] = n + 1
-        if arg.func == Not:
+        if arg.is_Not:
             return -value
         else:
             return value

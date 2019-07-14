@@ -1418,7 +1418,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
 
     from sympy.core.cache import cacheit
-    from sympy.logic.boolalg import And
+    from sympy.logic.boolalg import And, Literal
     from sympy.assumptions.ask import Q
 
     # -{ Known facts as a set }-
@@ -1446,8 +1446,9 @@ def compute_known_facts(known_facts, known_facts_keys):
     LINE = ",\n        "
     HANG = ' '*8
     cnf = to_cnf(known_facts)
+    cnf_ = CNF.to_CNF(known_facts)
     c = LINE.join([str(a) for a in cnf.args])
-    p = LINE.join([str(Or.make_args(a)) for a in cnf.args])
+    p = LINE.join([str(clause) for clause in cnf_.clauses])
     mapping = single_fact_lookup(known_facts_keys, cnf)
     items = sorted(mapping.items(), key=str)
     keys = [str(i[0]) for i in items]
