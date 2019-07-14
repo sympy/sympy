@@ -1657,7 +1657,11 @@ class MatrixOperations(MatrixRequired):
     operations.  Should not be instantiated directly."""
 
     def _eval_adjoint(self):
-        return self.transpose().conjugate()
+        # in cases where the elements of the matrix are not simple
+        # scalars (e.g. an operator or another matrix), the correct
+        # definition of the adjoint is the transpose of the adjoint
+        # of each element.
+        return self.applyfunc(lambda x: x.adjoint()).transpose()
 
     def _eval_applyfunc(self, f):
         out = self._new(self.rows, self.cols, [f(x) for x in self])
@@ -1805,7 +1809,7 @@ class MatrixOperations(MatrixRequired):
         conjugate: By-element conjugation
         D: Dirac conjugation
         """
-        return self.T.C
+        return self.adjoint()
 
     def permute(self, perm, orientation='rows', direction='forward'):
         """Permute the rows or columns of a matrix by the given list of swaps.
