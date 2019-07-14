@@ -384,7 +384,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     the appropriate solver function.
 
     Use of ``diophantine()`` is recommended over other helper functions.
-    ``diop_solve()`` can return either a set or a tuple depending on the 
+    ``diop_solve()`` can return either a set or a tuple depending on the
     nature of the equation.
 
     Usage
