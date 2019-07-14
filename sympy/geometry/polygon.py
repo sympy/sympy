@@ -450,7 +450,8 @@ class Polygon(GeometrySet):
         >>> rectangle.polar_modulus()
         a**3*b/12 + a*b**3/12
         """
-        return self.second_moment_of_area()[0] + self.second_moment_of_area()[1]
+        second_moment = self.second_moment_of_area()
+        return second_moment[0] + second_moment[1]
 
 
     def section_modulus(self, point=None):
@@ -485,7 +486,7 @@ class Polygon(GeometrySet):
         >>> rectangle.section_modulus(Point(a/4, b/4))
         (-a*b**2/3, -a**2*b/3)
         """
-        x_c, y_c = self.centroid.x, self.centroid.y
+        x_c, y_c = self.centroid
         if point is None:
             # taking x and y as maximum distances from centroid
             x_min, y_min, x_max, y_max = self.bounds
@@ -496,8 +497,9 @@ class Polygon(GeometrySet):
             y = point.y - y_c
             x = point.x - x_c
 
-        S_x =  self.second_moment_of_area()[0]/y
-        S_y = self.second_moment_of_area()[1]/x
+        second_moment= self.second_moment_of_area()
+        S_x = second_moment[0]/y
+        S_y = second_moment[1]/x
 
         return S_x, S_y
 
