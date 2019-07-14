@@ -27,13 +27,50 @@ class PolycyclicGroup(DefaultPrinting):
         return len(self.pcgs)
 
     def exponent_vector(self, element, group):
+        """
+        Return the exponent vector of length equal to the
+        length of polycyclic generating sequence.
+
+        For a given generator/element `g` of the polycyclic group,
+        it can be represented as `g = x{1}**e{1}....x{n}**e{n}`,
+        where `x{i}` represents polycyclic generators and `n` is
+        the number of generators in the group equal to the length
+        of pcgs.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> G = SymmetricGroup(4)
+        >>> PcGroup = G.polycyclic_group()
+        >>> pcgs = PcGroup.pcgs
+        >>> group, x0, x1, x2, x3 = free_group("x0, x1, x2, x3")
+        >>> PcGroup.exponent_vector(G[0], group)
+        [1, 0, 0, 0]
+        >>> exp = PcGroup.exponent_vector(G[1], group)
+        >>> g = Permutation()
+        >>> for i in range(len(exp)):
+        ...     g = g*pcgs[i] if exp[i] else g
+        >>> assert g == G[1]
+
+        References
+        ==========
+
+        .. [1] Holt, D., Eick, B., O'Brien, E.
+               "Handbook of Computational Group Theory"
+                Section 8.1.1, Definition 8.4
+
+        """
         G = PermutationGroup()
         for g in self.pcgs:
-            G = PermutationGroup(G.generators + [g])
+            G = PermutationGroup([g] + G.generators)
         gens = G.generator_product(element, original = True)
+        gens.reverse()
 
         perm_to_free = {}
         for sym, g in zip(group.generators, self.pcgs):
+            perm_to_free[g**-1] = sym**-1
             perm_to_free[g] = sym
         w = group.identity
         for g in gens:
@@ -49,6 +86,63 @@ class PolycyclicGroup(DefaultPrinting):
         for t in word:
             exp_vector[index[t[0]]] = t[1]
         return exp_vector
+
+    def depth(self, element, group):
+        """
+        Return the depth of a given element.
+
+        The depth of a given element `g` is defined by
+        `dep{g} = i if e{1} = e{2} = ... = e{i-1} = 0`
+        and `e{i} != 0`, where `e` represents the exponent-vector.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> group, x, y = free_group("x, y")
+        >>> G = SymmetricGroup(3)
+        >>> PcGroup = G.polycyclic_group()
+        >>> PcGroup.depth(G[0], group)
+        2
+        >>> PcGroup.depth(G[1], group)
+        1
+
+        References
+        ==========
+
+        .. [1] Holt, D., Eick, B., O'Brien, E.
+               "Handbook of Computational Group Theory"
+                Section 8.1.1, Definition 8.5
+
+        """
+        exp_vector = self.exponent_vector(element, group)
+        return next((i+1 for i, x in enumerate(exp_vector) if x), len(self.pcgs)+1)
+
+    def leading_exponent(self, element, group):
+        """
+        Return the leading non-zero exponent.
+
+        The leading exponent for a given element `g` is defined
+        by `leading_exponent{g} = e{i}`, if `depth{g} = i`.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> group, x, y = free_group("x, y")
+        >>> G = SymmetricGroup(3)
+        >>> PcGroup = G.polycyclic_group()
+        >>> PcGroup.leading_exponent(G[0], group)
+        1
+        >>> PcGroup.leading_exponent(G[1], group)
+        1
+
+        """
+        exp_vector = self.exponent_vector(element, group)
+        depth = self.depth(element, group)
+        if depth != len(self.pcgs)+1:
+            return exp_vector[depth-1]
+        return None
 
     def power_relations(self, group):
         """
@@ -149,7 +243,7 @@ class PolycyclicGroup(DefaultPrinting):
         s = index[0]
         re = self.relative_order()[0]
         power_relator = s**re
-        relators.insert(i+1, power_relator)
+        relators.insert(len(relators)+1, power_relator)
 
         # Initialize a group `G` which will be expanded as
         # moving up

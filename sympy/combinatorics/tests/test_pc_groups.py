@@ -118,3 +118,25 @@ def test_pc_presentation():
                 rhs = rhs*free_to_perm[s]**e
 
             assert lhs == rhs
+
+
+def test_exponent_vector():
+    F1, x0, x1 = free_group("x0, x1")
+    F2, x0, x1, x2, x3 = free_group("x0, x1, x2, x3")
+    F3, x0, x1, x2, x3, x4, x5, x6 = free_group("x0, x1, x2, x3, x4, x5, x6")
+
+    l = [(SymmetricGroup(3), F1), (SymmetricGroup(4), F2),
+         (SymmetricGroup(9).sylow_subgroup(3), F2), (SymmetricGroup(9).sylow_subgroup(2), F3),
+         (SymmetricGroup(8).sylow_subgroup(2), F3)]
+
+    for t in l:
+        PcGroup = t[0].polycyclic_group()
+        pcgs = PcGroup.pcgs
+
+        for gen in t[0].generators:
+            exp = PcGroup.exponent_vector(gen, t[1])
+            g = Permutation()
+            for i in range(len(exp)):
+                g = g*pcgs[i] if exp[i] else g
+
+            assert g == gen
