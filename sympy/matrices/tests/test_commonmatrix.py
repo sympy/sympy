@@ -481,6 +481,12 @@ def test_adjoint():
     assert ans.adjoint() == Matrix(dat)
 
 
+def test_adjoint_with_matrix_elements():
+    submat = Matrix([[0, I], [1, 0]])
+    mat = Matrix([[0, submat], [1, 0]])
+    assert mat.adjoint() == Matrix([[0, 1], [submat.adjoint(), 0]])
+
+
 def test_as_real_imag():
     m1 = OperationsOnlyMatrix(2, 2, [1, 2, 3, 4])
     m3 = OperationsOnlyMatrix(2, 2,
@@ -508,6 +514,12 @@ def test_conjugate():
     assert M.H == Matrix([[ 0, 1],
                           [-I, 2],
                           [ 5, 0]])
+
+
+def test_hermitian_conjugate_with_matrix_elements():
+    submat = Matrix([[0, I], [1, 0]])
+    mat = Matrix([[0, submat], [1, 0]])
+    assert mat.H == mat.adjoint()
 
 
 def test_doit():
