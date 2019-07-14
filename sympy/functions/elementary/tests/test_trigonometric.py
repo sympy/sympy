@@ -465,6 +465,11 @@ def test_tan():
     assert tan(17*pi/4) == S.One
     assert tan(-3*pi/4) == S.One
 
+    assert tan(pi/5) == sqrt(5 - 2*sqrt(5))
+    assert tan(2*pi/5) == sqrt(5 + 2*sqrt(5))
+    assert tan(18*pi/5) == -sqrt(5 + 2*sqrt(5))
+    assert tan(-16*pi/5) == -sqrt(5 - 2*sqrt(5))
+
     assert tan(pi/6) == 1/sqrt(3)
     assert tan(-pi/6) == -1/sqrt(3)
     assert tan(7*pi/6) == 1/sqrt(3)
@@ -926,6 +931,20 @@ def test_atan():
     assert atan(0) == 0
     assert atan(1) == pi/4
     assert atan(sqrt(3)) == pi/3
+    assert atan(-(1 + sqrt(2))) == -3*pi/8
+    assert atan(sqrt((5 - 2 * sqrt(5)))) == pi/5
+    assert atan(-sqrt(1 - 2 * sqrt(5)/ 5)) == -pi/10
+    assert atan(sqrt(1 + 2 * sqrt(5) / 5)) == 3*pi/10
+    assert atan(-2 + sqrt(3)) == -pi/12
+    assert atan(2 + sqrt(3)) == 5*pi/12
+    assert atan(-2 - sqrt(3)) == -5*pi/12
+
+    # check round-trip for exact values:
+    for d in [5, 6, 8, 10, 12]:
+        for num in range(-(d//2), d//2 + 1):
+            if gcd(num, d) == 1:
+                assert atan(tan(num*pi/d)) == num*pi/d
+
     assert atan(oo) == pi/2
     assert atan(x).diff(x) == 1/(1 + x**2)
 
