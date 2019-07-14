@@ -1944,6 +1944,30 @@ class InverseTrigonometricFunction(Function):
             2 + sqrt(3): 5*S.Pi/12
         }
 
+    @staticmethod
+    def _acsc_table():
+        # Keys for which could_extract_minus_sign()
+        # will obviously return True are omitted.
+        return {
+            2*sqrt(3)/3: S.Pi/3,
+            sqrt(2): S.Pi/4,
+            sqrt(2 + 2*sqrt(5)/5): S.Pi/5,
+            1/sqrt(S(5)/8 - sqrt(5)/8): S.Pi/5,
+            sqrt(2 - 2*sqrt(5)/5): 2*S.Pi/5,
+            1/sqrt(S(5)/8 + sqrt(5)/8): 2*S.Pi/5,
+            2: S.Pi/6,
+            sqrt(4 + 2*sqrt(2)): S.Pi/8,
+            2/sqrt(2 - sqrt(2)): S.Pi/8,
+            sqrt(4 - 2*sqrt(2)): 3*S.Pi/8,
+            2/sqrt(2 + sqrt(2)): 3*S.Pi/8,
+            1 + sqrt(5): S.Pi/10,
+            sqrt(5) - 1: 3*S.Pi/10,
+            -(sqrt(5) - 1): -3*S.Pi/10,
+            sqrt(6) + sqrt(2): S.Pi/12,
+            sqrt(6) - sqrt(2): 5*S.Pi/12,
+            -(sqrt(6) - sqrt(2)): -5*S.Pi/12
+        }
+
 
 class asin(InverseTrigonometricFunction):
     """
@@ -2628,8 +2652,9 @@ class asec(InverseTrigonometricFunction):
     Notes
     =====
 
-    ``asec(x)`` will evaluate automatically in the cases
-    ``oo``, ``-oo``, ``0``, ``1``, ``-1``.
+    ``asec(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
+    ``0``, ``1``, ``-1`` and for some instances when the result is a rational
+    multiple of pi (see the eval class method).
 
     ``asec(x)`` has branch cut in the interval [-1, 1]. For complex arguments,
     it can be defined [4]_ as
@@ -2687,6 +2712,13 @@ class asec(InverseTrigonometricFunction):
                 return S.Pi
         if arg in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
             return S.Pi/2
+
+        if arg.is_number:
+            acsc_table = cls._acsc_table()
+            if arg in acsc_table:
+                return pi/2 - acsc_table[arg]
+            elif -arg in acsc_table:
+                return pi/2 + acsc_table[-arg]
 
         if isinstance(arg, sec):
             ang = arg.args[0]
@@ -2756,8 +2788,9 @@ class acsc(InverseTrigonometricFunction):
     Notes
     =====
 
-    ``acsc(x)`` will evaluate automatically in the cases
-    ``oo``, ``-oo``, ``0``, ``1``, ``-1``.
+    ``acsc(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
+    ``0``, ``1``, ``-1`` and for some instances when the result is a rational
+    multiple of pi (see the eval class method).
 
     Examples
     ========
@@ -2796,6 +2829,14 @@ class acsc(InverseTrigonometricFunction):
                 return -S.Pi/2
         if arg in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
             return S.Zero
+
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)
+
+        if arg.is_number:
+            acsc_table = cls._acsc_table()
+            if arg in acsc_table:
+                return acsc_table[arg]
 
         if isinstance(arg, csc):
             ang = arg.args[0]

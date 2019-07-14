@@ -1615,6 +1615,15 @@ def test_asec():
     assert asec(-oo) == pi/2
     assert asec(zoo) == pi/2
 
+    assert asec(sec(13*pi/4)) == 3*pi/4
+    assert asec(1 + sqrt(5)) == 2*pi/5
+    assert asec(2/sqrt(3)) == pi/6
+    assert asec(sqrt(4 - 2*sqrt(2))) == pi/8
+    assert asec(-sqrt(4 + 2*sqrt(2))) == 5*pi/8
+    assert asec(sqrt(2 + 2*sqrt(5)/5)) == 3*pi/10
+    assert asec(-sqrt(2 + 2*sqrt(5)/5)) == 7*pi/10
+    assert asec(sqrt(2) - sqrt(6)) == 11*pi/12
+
     assert asec(x).diff(x) == 1/(x**2*sqrt(1 - 1/x**2))
     assert asec(x).as_leading_term(x) == log(x)
 
@@ -1651,6 +1660,16 @@ def test_acsc():
     assert acsc(csc(6)) == 6 - 2*pi
     assert unchanged(acsc, csc(x))
     assert unchanged(acsc, sec(x))
+
+    assert acsc(2/sqrt(3)) == pi/3
+    assert acsc(csc(13*pi/4)) == -pi/4
+    assert acsc(sqrt(2 + 2*sqrt(5)/5)) == pi/5
+    assert acsc(-sqrt(2 + 2*sqrt(5)/5)) == -pi/5
+    assert acsc(-2) == -pi/6
+    assert acsc(-sqrt(4 + 2*sqrt(2))) == -pi/8
+    assert acsc(sqrt(4 - 2*sqrt(2))) == 3*pi/8
+    assert acsc(1 + sqrt(5)) == pi/10
+    assert acsc(sqrt(2) - sqrt(6)) == -5*pi/12
 
     assert acsc(x).diff(x) == -1/(x**2*sqrt(1 - 1/x**2))
     assert acsc(x).as_leading_term(x) == log(x)
