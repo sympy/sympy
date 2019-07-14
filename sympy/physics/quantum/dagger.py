@@ -78,12 +78,7 @@ class Dagger(adjoint):
 
     def __new__(cls, arg):
         if hasattr(arg, 'adjoint'):
-            obj = arg.adjoint()
-        elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose'):
-            obj = arg.conjugate().transpose()
-        if obj is not None:
-            return obj
-        return Expr.__new__(cls, arg)
-
-adjoint.__name__ = "Dagger"
-adjoint._sympyrepr = lambda a, b: "Dagger(%s)" % b._print(a.args[0])
+            return arg.adjoint()
+        if hasattr(arg, 'conjugate') and hasattr(arg, 'transpose'):
+            return arg.conjugate().transpose()
+        return adjoint.__new__(cls, arg)
