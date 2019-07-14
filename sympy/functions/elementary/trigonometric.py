@@ -1896,7 +1896,25 @@ class sinc(Function):
 class InverseTrigonometricFunction(Function):
     """Base class for inverse trigonometric functions."""
 
-    pass
+    @staticmethod
+    def _atan_table():
+        # Only keys with could_extract_minus_sign() == False
+        # are actually needed.
+        return {
+            sqrt(3)/3: S.Pi/6,
+            1/sqrt(3): S.Pi/6,
+            sqrt(3): S.Pi/3,
+            sqrt(2) - 1: S.Pi/8,
+            1 - sqrt(2): -S.Pi/8,
+            1 + sqrt(2): 3*S.Pi/8,
+            sqrt(5 - 2*sqrt(5)): S.Pi/5,
+            sqrt(5 + 2*sqrt(5)): 2*S.Pi/5,
+            sqrt(1 - 2*sqrt(5)/5): S.Pi/10,
+            sqrt(1 + 2*sqrt(5)/5): 3*S.Pi/10,
+            2 - sqrt(3): S.Pi/12,
+            -2 + sqrt(3): -S.Pi/12,
+            2 + sqrt(3): 5*S.Pi/12
+        }
 
 
 class asin(InverseTrigonometricFunction):
@@ -2353,25 +2371,9 @@ class atan(InverseTrigonometricFunction):
             return -cls(-arg)
 
         if arg.is_number:
-            cst_table = {
-                sqrt(3)/3: 6,
-                -sqrt(3)/3: -6,
-                1/sqrt(3): 6,
-                -1/sqrt(3): -6,
-                sqrt(3): 3,
-                -sqrt(3): -3,
-                (1 + sqrt(2)): S(8)/3,
-                -(1 + sqrt(2)): S(8)/3,
-                (sqrt(2) - 1): 8,
-                (1 - sqrt(2)): -8,
-                sqrt((5 + 2*sqrt(5))): S(5)/2,
-                -sqrt((5 + 2*sqrt(5))): -S(5)/2,
-                (2 - sqrt(3)): 12,
-                -(2 - sqrt(3)): -12
-            }
-
-            if arg in cst_table:
-                return S.Pi / cst_table[arg]
+            atan_table = cls._atan_table()
+            if arg in atan_table:
+                return atan_table[arg]
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -2447,10 +2449,33 @@ class atan(InverseTrigonometricFunction):
 
 
 class acot(InverseTrigonometricFunction):
-    """
+    r"""
     The inverse cotangent function.
 
     Returns the arc cotangent of x (measured in radians).
+
+    Notes
+    =====
+
+    ``acot(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
+    ``zoo``, ``0``, ``1``, ``-1`` and for some instances when the result is a
+    rational multiple of pi (see the eval class method).
+
+    A purely imaginary argument will lead to an ``acoth`` expression.
+
+    ``acot(x)`` has a branch cut along `(-i, i)`, hence it is discontinuous
+    at 0. Its range for real ``x`` is `(-\frac{\pi}{2}, \frac{\pi}{2}]`.
+
+    Examples
+    ========
+
+    >>> from sympy import acot, sqrt
+    >>> acot(0)
+    pi/2
+    >>> acot(1)
+    pi/4
+    >>> acot(sqrt(3) - 2)
+    -5*pi/12
 
     See Also
     ========
@@ -2461,9 +2486,8 @@ class acot(InverseTrigonometricFunction):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCot
+    .. [1] http://dlmf.nist.gov/4.23
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCot
 
     """
 
@@ -2513,27 +2537,12 @@ class acot(InverseTrigonometricFunction):
             return -cls(-arg)
 
         if arg.is_number:
-            cst_table = {
-                sqrt(3)/3: 3,
-                -sqrt(3)/3: -3,
-                1/sqrt(3): 3,
-                -1/sqrt(3): -3,
-                sqrt(3): 6,
-                -sqrt(3): -6,
-                (1 + sqrt(2)): 8,
-                -(1 + sqrt(2)): -8,
-                (1 - sqrt(2)): -S(8)/3,
-                (sqrt(2) - 1): S(8)/3,
-                sqrt(5 + 2*sqrt(5)): 10,
-                -sqrt(5 + 2*sqrt(5)): -10,
-                (2 + sqrt(3)): 12,
-                -(2 + sqrt(3)): -12,
-                (2 - sqrt(3)): S(12)/5,
-                -(2 - sqrt(3)): -S(12)/5,
-            }
-
-            if arg in cst_table:
-                return S.Pi / cst_table[arg]
+            atan_table = cls._atan_table()
+            if arg in atan_table:
+                ang = pi/2 - atan_table[arg]
+                if ang > pi/2: # restrict to (-pi/2,pi/2]
+                    ang -= pi
+                return ang
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
