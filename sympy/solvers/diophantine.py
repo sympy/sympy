@@ -383,6 +383,10 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     ``classify_diop()`` to determine the type of the equation and calls
     the appropriate solver function.
 
+    Use of ``diophantine()`` is recommended over other helper functions.
+    ``diop_solve()`` can return either a set or a tuple depending on the 
+    nature of the equation.
+
     Usage
     =====
 
