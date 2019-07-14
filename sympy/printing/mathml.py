@@ -15,6 +15,7 @@ from sympy.printing.printer import Printer
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
 
+
 class MathMLPrinterBase(Printer):
     """Contains common code required for MathMLContentPrinter and
     MathMLPresentationPrinter.
@@ -138,6 +139,14 @@ class MathMLContentPrinter(MathMLPrinterBase):
             'Number': 'cn',
             'int': 'cn',
             'Pow': 'power',
+            'Max': 'max',
+            'Min': 'min',
+            'Abs': 'abs',
+            'And': 'and',
+            'Or': 'or',
+            'Xor': 'xor',
+            'Not': 'not',
+            'Implies': 'implies',
             'Symbol': 'ci',
             'MatrixSymbol': 'ci',
             'RandomSymbol': 'ci',
@@ -147,14 +156,27 @@ class MathMLContentPrinter(MathMLPrinterBase):
             'cos': 'cos',
             'tan': 'tan',
             'cot': 'cot',
+            'csc': 'csc',
+            'sec': 'sec',
+            'sinh': 'sinh',
+            'cosh': 'cosh',
+            'tanh': 'tanh',
+            'coth': 'coth',
+            'csch': 'csch',
+            'sech': 'sech',
             'asin': 'arcsin',
             'asinh': 'arcsinh',
             'acos': 'arccos',
             'acosh': 'arccosh',
             'atan': 'arctan',
             'atanh': 'arctanh',
-            'acot': 'arccot',
             'atan2': 'arctan',
+            'acot': 'arccot',
+            'acoth': 'arccoth',
+            'asec': 'arcsec',
+            'asech': 'arcsech',
+            'acsc': 'arccsc',
+            'acsch': 'arccsch',
             'log': 'ln',
             'Equality': 'eq',
             'Unequality': 'neq',
@@ -297,6 +319,18 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Infinity(self, e):
         return self.dom.createElement('infinity')
+
+    def _print_NaN(self, e):
+        return self.dom.createElement('notanumber')
+
+    def _print_EmptySet(self, e):
+        return self.dom.createElement('emptyset')
+
+    def _print_BooleanTrue(self, e):
+        return self.dom.createElement('true')
+
+    def _print_BooleanFalse(self, e):
+        return self.dom.createElement('false')
 
     def _print_NegativeInfinity(self, e):
         x = self.dom.createElement('apply')
@@ -484,6 +518,10 @@ class MathMLContentPrinter(MathMLPrinterBase):
         dom_element = self.dom.createElement(self.mathml_tag(p))
         dom_element.appendChild(self.dom.createTextNode(str(p)))
         return dom_element
+
+    _print_Implies = _print_AssocOp
+    _print_Not = _print_AssocOp
+    _print_Xor = _print_AssocOp
 
 
 class MathMLPresentationPrinter(MathMLPrinterBase):
