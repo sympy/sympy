@@ -816,6 +816,12 @@ def test_asin():
     assert asin((sqrt(3) - 1)/sqrt(2**3)) == pi/12
     assert asin(-(sqrt(3) - 1)/sqrt(2**3)) == -pi/12
 
+    # check round-trip for exact values:
+    for d in [5, 6, 8, 10, 12]:
+        for n in range(-(d//2), d//2 + 1):
+            if gcd(n, d) == 1:
+                assert asin(sin(n*pi/d)) == n*pi/d
+
     assert asin(x).diff(x) == 1/sqrt(1 - x**2)
 
     assert asin(0.2).is_real is True
@@ -870,6 +876,12 @@ def test_acos():
     assert acos(-1) == pi
     assert acos(sqrt(2)/2) == pi/4
     assert acos(-sqrt(2)/2) == (3*pi)/4
+
+    # check round-trip for exact values:
+    for d in [5, 6, 8, 10, 12]:
+        for num in range(d):
+            if gcd(num, d) == 1:
+                assert acos(cos(num*pi/d)) == num*pi/d
 
     assert acos(2*I) == pi/2 - asin(2*I)
 

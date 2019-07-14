@@ -1897,6 +1897,34 @@ class InverseTrigonometricFunction(Function):
     """Base class for inverse trigonometric functions."""
 
     @staticmethod
+    def _asin_table():
+        # Only keys with could_extract_minus_sign() == False
+        # are actually needed.
+        return {
+            sqrt(3)/2: S.Pi/3,
+            sqrt(2)/2: S.Pi/4,
+            1/sqrt(2): S.Pi/4,
+            sqrt((5 - sqrt(5))/8): S.Pi/5,
+            sqrt(2)*sqrt(5 - sqrt(5))/4: S.Pi/5,
+            sqrt((5 + sqrt(5))/8): 2*S.Pi/5,
+            sqrt(2)*sqrt(5 + sqrt(5))/4: 2*S.Pi/5,
+            S.Half: S.Pi/6,
+            sqrt(2 - sqrt(2))/2: S.Pi/8,
+            sqrt(S.Half - sqrt(2)/4): S.Pi/8,
+            sqrt(2 + sqrt(2))/2: 3*S.Pi/8,
+            sqrt(S.Half + sqrt(2)/4): 3*S.Pi/8,
+            (sqrt(5) - 1)/4: S.Pi/10,
+            (1 - sqrt(5))/4: -S.Pi/10,
+            (sqrt(5) + 1)/4: 3*S.Pi/10,
+            sqrt(6)/4 - sqrt(2)/4: S.Pi/12,
+            -sqrt(6)/4 + sqrt(2)/4: -S.Pi/12,
+            (sqrt(3) - 1)/sqrt(8): S.Pi/12,
+            (1 - sqrt(3))/sqrt(8): -S.Pi/12,
+            sqrt(6)/4 + sqrt(2)/4: 5*S.Pi/12,
+            (1 + sqrt(3))/sqrt(8): 5*S.Pi/12
+        }
+
+    @staticmethod
     def _atan_table():
         # Only keys with could_extract_minus_sign() == False
         # are actually needed.
@@ -1999,29 +2027,9 @@ class asin(InverseTrigonometricFunction):
             return -cls(-arg)
 
         if arg.is_number:
-            cst_table = {
-                sqrt(3)/2: 3,
-                -sqrt(3)/2: -3,
-                sqrt(2)/2: 4,
-                -sqrt(2)/2: -4,
-                1/sqrt(2): 4,
-                -1/sqrt(2): -4,
-                sqrt((5 - sqrt(5))/8): 5,
-                -sqrt((5 - sqrt(5))/8): -5,
-                S.Half: 6,
-                -S.Half: -6,
-                sqrt(2 - sqrt(2))/2: 8,
-                -sqrt(2 - sqrt(2))/2: -8,
-                (sqrt(5) - 1)/4: 10,
-                (1 - sqrt(5))/4: -10,
-                (sqrt(3) - 1)/sqrt(2**3): 12,
-                (1 - sqrt(3))/sqrt(2**3): -12,
-                (sqrt(5) + 1)/4: S(10)/3,
-                -(sqrt(5) + 1)/4: -S(10)/3
-            }
-
-            if arg in cst_table:
-                return S.Pi / cst_table[arg]
+            asin_table = cls._asin_table()
+            if arg in asin_table:
+                return asin_table[arg]
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -2179,19 +2187,11 @@ class acos(InverseTrigonometricFunction):
             return S.ComplexInfinity
 
         if arg.is_number:
-            cst_table = {
-                S.Half: S.Pi/3,
-                -S.Half: 2*S.Pi/3,
-                sqrt(2)/2: S.Pi/4,
-                -sqrt(2)/2: 3*S.Pi/4,
-                1/sqrt(2): S.Pi/4,
-                -1/sqrt(2): 3*S.Pi/4,
-                sqrt(3)/2: S.Pi/6,
-                -sqrt(3)/2: 5*S.Pi/6,
-            }
-
-            if arg in cst_table:
-                return cst_table[arg]
+            asin_table = cls._asin_table()
+            if arg in asin_table:
+                return pi/2 - asin_table[arg]
+            elif -arg in asin_table:
+                return pi/2 + asin_table[-arg]
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
