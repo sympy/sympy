@@ -191,6 +191,13 @@ def test_log_values():
     assert log(0, 2) == zoo
     assert log(0, 5) == zoo
 
+    assert log(sqrt(3)/2 + I*S.Half) == I*pi/6
+    assert log(S.Half - I*sqrt(3)/2) == -I*pi/3
+    assert log(sqrt(2)/2 + I*sqrt(2)/2) == I*pi/4
+    assert log(-S.Half + I*sqrt(3)/2) == I*2*pi/3
+    assert log(-sqrt(2)/2 - I*sqrt(2)/2) == -I*3*pi/4
+    assert log(-sqrt(3)/2 - I*S.Half) == -I*5*pi/6
+
     assert exp(-log(3))**(-1) == 3
 
     assert log(S.Half) == -log(2)

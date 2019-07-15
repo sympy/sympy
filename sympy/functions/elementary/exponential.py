@@ -12,6 +12,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
@@ -568,12 +569,29 @@ class log(Function):
             return arg._eval_func(cls)
 
         if arg.is_number:
+            I = S.ImaginaryUnit
             if arg.is_negative:
-                return S.Pi * S.ImaginaryUnit + cls(-arg)
+                return S.Pi * I + cls(-arg)
             elif arg is S.ComplexInfinity:
                 return S.ComplexInfinity
             elif arg is S.Exp1:
                 return S.One
+            cst_table = {
+                sqrt(3)/2 + I*S.Half: S.Pi/6,
+                sqrt(3)/2 - I*S.Half: -S.Pi/6,
+                sqrt(2)/2 + I*sqrt(2)/2: S.Pi/4,
+                sqrt(2)/2 - I*sqrt(2)/2: -S.Pi/4,
+                S.Half + I*sqrt(3)/2: S.Pi/3,
+                S.Half - I*sqrt(3)/2: -S.Pi/3,
+                -S.Half + I*sqrt(3)/2: 2*S.Pi/3,
+                -S.Half - I*sqrt(3)/2: -2*S.Pi/3,
+                -sqrt(2)/2 + I*sqrt(2)/2: 3*S.Pi/4,
+                -sqrt(2)/2 - I*sqrt(2)/2: -3*S.Pi/4,
+                -sqrt(3)/2 + I*S.Half: 5*S.Pi/6,
+                -sqrt(3)/2 - I*S.Half: -5*S.Pi/6
+            }
+            if arg in cst_table:
+                return I * cst_table[arg]
 
         # don't autoexpand Pow or Mul (see the issue 3351):
         if not arg.is_Add:
