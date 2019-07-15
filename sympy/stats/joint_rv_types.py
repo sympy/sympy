@@ -129,7 +129,6 @@ def MultivariateNormal(name, mu, sigma):
     name: string, representing name for the multivariate Normal distribution
     mu: A list representing the mean vector
     sigma: A positive definite square matrix,
-         :math:`\sigma^2 > 0` the variance
 
     Returns
     =======
