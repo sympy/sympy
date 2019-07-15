@@ -319,9 +319,9 @@ def test_Range_set():
                 (Range(-n - 5, -n*ceiling(-4/n) - n - 5, -n), [Range(-4, 0, 1), Range(0, 0, 1)])]
     for r, expec in zip(ranges, expected):
         rev = r.reversed
-        try:
+        if not r.step.has(Symbol):
             assert (rev, [rev.subs(n, -1), rev.subs(n, 0), rev.subs(n, 1)]) == expec
-        except ValueError:
+        else:
             assert (rev, [rev.subs(n, -1), rev.subs(n, 1)]) == expec
     expected = [(Piecewise((True, n <= 2), (False, True)), True, True, True),
                 (False, False, False, False), (False, False, False, False),
@@ -333,13 +333,10 @@ def test_Range_set():
                 (False, False, False)]
     # TODO: Remove the slice after completing the TODO in _contains
     for r, expec in zip(ranges[0:8], expected[0:8]):
-        try:
+        if not r.step.has(Symbol):
             assert (r._contains(2), r.subs(n, -1)._contains(2), r.subs(n, 0)._contains(2), r.subs(n, 1)._contains(2)) == expec
-        except ValueError:
+        else:
             assert (r._contains(2), r.subs(n, -1)._contains(2), r.subs(n, 1)._contains(2)) == expec
-
-
-
 
     # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
     # compatibility imports above)
