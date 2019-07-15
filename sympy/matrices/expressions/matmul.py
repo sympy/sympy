@@ -161,7 +161,6 @@ class MatMul(MatrixExpr, Mul):
             return None
 
         # Now match the non-commutative arguments
-        # TODO: Need a type check here
         repl_dict = MatMul._matches_noncomm(nc1, nc2, repl_dict)
 
         return repl_dict

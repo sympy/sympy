@@ -1029,6 +1029,8 @@ class OneMatrix(MatrixExpr):
 class MatrixWild(MatrixSymbol, Wild):
 
     def matches(self, expr, repl_dict={}, old=False):
+        if not isinstance(expr, MatrixExpr):
+            return None
         repl_dict = repl_dict.copy()
         # Make sure dimensions match
         for selfdim, exprdim in zip(self.shape, expr.shape):
