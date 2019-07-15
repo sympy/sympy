@@ -1,9 +1,9 @@
-from sympy.core import I, symbols, Basic, Mul, S
+from sympy.core import I, symbols, Basic, Mul, S, Wild
 from sympy.functions import adjoint, transpose
 from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
         eye, ImmutableMatrix)
 from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow
-from sympy.matrices.expressions.matexpr import GenericIdentity
+from sympy.matrices.expressions.matexpr import GenericIdentity, MatrixWild
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, xxinv, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
@@ -113,6 +113,17 @@ def test_matmul_scalar_Matrix_doit():
 def test_matmul_sympify():
     assert isinstance(MatMul(eye(1), eye(1)).args[0], Basic)
 
+def test_matmul_matrix_wild():
+    W = MatrixWild('W', n, n)
+    X = MatrixWild('X', m, n)
+
+    assert (D * C).match(W) == {W: D * C}
+    assert (E * D * C).match(E * W) == {W: D * C}
+    assert (D * C * A).match(W * A) == {W: D * C}
+
+    assert ((D ** 2) * C * A).match(W * D * C * A) == {W: D}
+    assert (D * C * A).match(W * D * C * A) is None
+    assert (D**(-1)).match(W**(-1)) == {W: D}
 
 def test_collapse_MatrixBase():
     A = Matrix([[1, 1], [1, 1]])
