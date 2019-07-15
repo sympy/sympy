@@ -7,7 +7,7 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
-                   Dummy, floor, And, Eq, ceiling, Piecewise)
+                   Dummy, floor, And, Eq, ceiling, Piecewise, Ne, Mod)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, t
@@ -324,15 +324,17 @@ def test_Range_set():
         else:
             assert (rev, [rev.subs(n, -1), rev.subs(n, 1)]) == expec
     expected = [(Piecewise((True, n <= 2), (False, True)), True, True, True),
-                (False, False, False, False), (False, False, False, False),
-                (False, False, False, False),
+                (False, False, False, False), (Piecewise((False, Ne(Mod(n, -1), 0)),
+                (True, n >= 2), (False, True)), False, False, False), (False, False, False, False),
                 (Piecewise((True, n - 1 >= 2), (False, True)), False, False, False),
                 (Piecewise((True, n - 1 >= 2), (False, True)), False, False, False),
                 (False, False, False, False), (False, False, False, False),
-                (False, False, True), (False, False, True), (False, False, False),
-                (False, False, False)]
-    # TODO: Remove the slice after completing the TODO in _contains
-    for r, expec in zip(ranges[0:8], expected[0:8]):
+                (Piecewise((False, Ne(Mod(-1, n), 0)), (True, (n >= 0) & (n <= 3)),
+                (False, True)), False, True), (Piecewise((False, Ne(Mod(-3, n), 0)),
+                (True, (n >= 0) & (n <= 3)), (False, True)), False, True),
+                (False, False, False), (False, False, False)]
+
+    for r, expec in zip(ranges, expected):
         if not r.step.has(Symbol):
             assert (r._contains(2), r.subs(n, -1)._contains(2), r.subs(n, 0)._contains(2), r.subs(n, 1)._contains(2)) == expec
         else:

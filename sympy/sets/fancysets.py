@@ -5,7 +5,7 @@ from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.numbers import oo
-from sympy.core.relational import Eq, Ge, Le
+from sympy.core.relational import Eq, Ge, Le, Ne
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols
 from sympy.core.sympify import _sympify, sympify, converter
@@ -506,7 +506,6 @@ class Range(Set):
         EmptySet()
 
     """
-
     is_iterable = True
 
     def __new__(cls, *args):
@@ -601,10 +600,9 @@ class Range(Set):
         if not other.is_integer:
             return other.is_integer
         ref = self.start if self.start.is_finite else self._stop
-        if (ref - other) % self.step:  # off sequence
-            #TODO: Update for symbolic steps after compeleting, _inf and _sup
-            return S.false
-        return Piecewise((True, Ge(other, self.inf) & Le(other, self.sup)), (False, True))
+        return Piecewise((False, Ne((ref - other) % self.step, S.Zero)),
+                         (True, Ge(other, self.inf) & Le(other, self.sup)),
+                         (False, True))
 
     def __iter__(self):
         if self.start in [S.NegativeInfinity, S.Infinity]:
@@ -761,21 +759,19 @@ class Range(Set):
 
     @property
     def _inf(self):
+        from sympy.functions.elementary.piecewise import Piecewise
         if not self:
             raise NotImplementedError
-        if self.step > 0:
-            return self.start
-        else:
-            return self._stop - self.step
+        return Piecewise((self.start, Ge(self.step, S.Zero)),
+                         (self._stop - self.step, True))
 
     @property
     def _sup(self):
+        from sympy.functions.elementary.piecewise import Piecewise
         if not self:
             raise NotImplementedError
-        if self.step > 0:
-            return self._stop - self.step
-        else:
-            return self.start
+        return Piecewise((self._stop - self.step, Ge(self.step, S.Zero)),
+                         (self.start, True))
 
     @property
     def _boundary(self):
