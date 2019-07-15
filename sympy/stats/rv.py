@@ -299,6 +299,7 @@ class ProductPSpace(PSpace):
 
     sympy.stats.rv.IndependentProductPSpace
     sympy.stats.joint_rv.JointPSpace
+    sympy.stats.compound_rv.CompoundPSpace
     """
     pass
 
