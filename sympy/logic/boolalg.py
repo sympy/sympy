@@ -2586,7 +2586,7 @@ class Literal(object):
     The smallest element of a CNF object
     """
     def __init__(self, lit, is_not=False):
-        if isinstance(lit, Not):
+        if type(lit).__name__ == 'Not':
             self.lit = lit.args[0]
             self.is_Not = True
         else:
@@ -2699,29 +2699,29 @@ class CNF(object):
             tmp.add(frozenset((Literal(expr),)))
             return CNF(tmp)
 
-        klass = type(expr)
-        if klass == Not :
+        klass = type(expr).__name__
+        if klass == 'Not' :
             return CNF.to_CNF(expr.args[0])._not()
 
-        if klass == Or :
+        if klass == 'Or' :
             return CNF.all_or(*[CNF.to_CNF(arg)
                                 for arg in expr.args])
 
-        if klass == And :
+        if klass == 'And' :
             return CNF.all_and(*[CNF.to_CNF(arg)
                                  for arg in expr.args])
 
-        if klass == Nand:
+        if klass == 'Nand':
             tmp = CNF.all_and(*[CNF.to_CNF(arg)
                                 for arg in expr.args])
             return tmp._not()
 
-        if klass == Nor:
+        if klass == 'Nor':
             tmp = CNF.all_or(*[CNF.to_CNF(arg)
                                for arg in expr.args])
             return tmp._not()
 
-        if klass == Xor:
+        if klass == 'Xor':
             cnfs = []
             for i in range(0, len(expr.args)+1, 2):
                 for neg in combinations(expr.args, i):
@@ -2730,7 +2730,7 @@ class CNF(object):
                     cnfs.append(CNF.all_or(*clause))
             return CNF.all_and(*cnfs)
 
-        if klass == Xnor:
+        if klass == 'Xnor':
             cnfs = []
             for i in range(0, len(expr.args) + 1, 2):
                 for neg in combinations(expr.args, i):
@@ -2739,11 +2739,11 @@ class CNF(object):
                     cnfs.append(clause)
             return CNF.all_and(*cnfs)._not()
 
-        if klass == Implies:
+        if klass == 'Implies':
             L, R = map(CNF.to_CNF, expr.args)
             return L._not()._or(R)
 
-        if klass == Equivalent:
+        if klass == 'Equivalent':
             cnfs = []
             for a,b in zip(expr.args, expr.args[1:]):
                 a = CNF.to_CNF(a)
@@ -2754,7 +2754,7 @@ class CNF(object):
             cnfs.append(a._not()._or(b))
             return CNF.all_and(*cnfs)
 
-        if klass == ITE:
+        if klass == 'ITE':
             L, M, R = map(CNF.to_CNF, expr.args)
             return CNF.all_and(L._not()._or(M), L._or(R))
 
