@@ -160,7 +160,11 @@ class MatMul(MatrixExpr, Mul):
         if repl_dict is None and c1 != c2:
             return None
 
-        # Now match the non-commutative arguments
+        # Now match the non-commutative arguments, expanding powers to
+        # multiplications
+        nc1 = MatMul._matches_expand_matpows(nc1)
+        nc2 = MatMul._matches_expand_matpows(nc2)
+
         repl_dict = MatMul._matches_noncomm(nc1, nc2, repl_dict)
 
         return repl_dict
@@ -227,6 +231,16 @@ class MatMul(MatrixExpr, Mul):
         terms = targets[begin:end + 1]
         mul = MatMul(*terms)
         return wildcard.matches(mul)
+
+    @staticmethod
+    def _matches_expand_matpows(arg_list):
+        new_args = []
+        for arg in arg_list:
+            if isinstance(arg, MatPow) and arg.exp > 0:
+                new_args.extend([arg.base] * arg.exp)
+            else:
+                new_args.append(arg)
+        return new_args
 
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import Determinant
