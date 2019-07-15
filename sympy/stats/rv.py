@@ -320,7 +320,7 @@ class IndependentProductPSpace(ProductPSpace):
         symbols = FiniteSet(*[val.symbol for val in rs_space_dict.keys()])
 
         # Overlapping symbols
-        from sympy.stats.joint_rv import MarginalDistribution, CompoundDistribution
+        from sympy.stats.compound_rv import CompoundDistribution, MarginalDistribution
         if len(symbols) < sum(len(space.symbols) for space in spaces if not
          isinstance(space.distribution, (
             CompoundDistribution, MarginalDistribution))):
@@ -803,6 +803,7 @@ class Density(Basic):
 
     def doit(self, evaluate=True, **kwargs):
         from sympy.stats.joint_rv import JointPSpace
+        from sympy.stats.compound_rv import CompoundPSpace
         from sympy.stats.frv import SingleFiniteDistribution
         expr, condition = self.expr, self.condition
         if isinstance(expr, SingleFiniteDistribution):
@@ -812,6 +813,9 @@ class Density(Basic):
             expr = given(expr, condition, **kwargs)
         if isinstance(expr, RandomSymbol) and \
             isinstance(expr.pspace, JointPSpace):
+            return expr.pspace.distribution
+        if isinstance(expr, RandomSymbol) and \
+            isinstance(expr.pspace, CompoundPSpace):
             return expr.pspace.distribution
         if not random_symbols(expr):
             return Lambda(x, DiracDelta(x - expr))

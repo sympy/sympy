@@ -12,14 +12,13 @@ sympy.stats.joint_rv
 
 from __future__ import print_function, division
 
-from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
+from sympy import (Basic, Lambda, Indexed, Symbol, ProductSet, S,
                    Dummy)
-from sympy.concrete.summations import Sum, summation
+from sympy.concrete.summations import summation
 from sympy.concrete.products import Product
 from sympy.core.compatibility import string_types, iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
-from sympy.matrices import ImmutableMatrix
 from sympy.stats.crv import (ContinuousDistribution,
                              SingleContinuousDistribution, SingleContinuousPSpace)
 from sympy.stats.drv import (DiscreteDistribution,
@@ -58,6 +57,10 @@ class CompoundPSpace(ProductPSpace):
     @property
     def distribution(self):
         return self.args[1]
+
+    @property
+    def value(self):
+        return CompoundRandomSymbol(self.symbol, self)
 
     @property
     def component_count(self):
@@ -137,6 +140,20 @@ class CompoundPSpace(ProductPSpace):
         raise NotImplementedError()
 
 
+class CompoundRandomSymbol(RandomSymbol):
+    """
+    Representation of random symbols with joint probability distributions
+    to allow indexing."
+    """
+
+    def __getitem__(self, key):
+        if isinstance(self.pspace, CompoundPSpace):
+            if (self.pspace.component_count <= key) is True:
+                raise ValueError("Index keys for %s can only up to %s." %
+                                 (self.name, self.pspace.component_count - 1))
+            return Indexed(self, key)
+
+
 class CompoundDistribution(Basic, NamedArgsMixin):
     """
     Represents a compound probability distribution.
@@ -170,6 +187,81 @@ class CompoundDistribution(Basic, NamedArgsMixin):
 
     def set(self):
         return self.args[0].set
+
+    def __call__(self, *args):
+        return self.pdf(*args)
+
+
+class MarginalDistribution(Basic):
+    """
+    Represents the marginal distribution of a joint probability space.
+
+    Initialised using a probability distribution and random variables(or
+    their indexed components) which should be a part of the resultant
+    distribution.
+    """
+
+    def __new__(cls, dist, *rvs):
+        if len(rvs) == 1 and iterable(rvs[0]):
+            rvs = tuple(rvs[0])
+        if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
+            raise ValueError(filldedent('''Marginal distribution can be
+             intitialised only in terms of random variables or indexed random
+             variables'''))
+        rvs = Tuple.fromiter(rv for rv in rvs)
+        if len(random_symbols(dist)) == 0:
+            return dist
+        return Basic.__new__(cls, dist, rvs)
+
+    def check(self):
+        pass
+
+    @property
+    def set(self):
+        rvs = [i for i in self.args[1] if isinstance(i, RandomSymbol)]
+        return ProductSet(*[rv.pspace.set for rv in rvs])
+
+    @property
+    def symbols(self):
+        rvs = self.args[1]
+        return set([rv.pspace.symbol for rv in rvs])
+
+    def pdf(self, *x):
+        expr, rvs = self.args[0], self.args[1]
+        marginalise_out = [i for i in random_symbols(expr) if i not in rvs]
+        if isinstance(expr, CompoundDistribution):
+            syms = Dummy('x', real=True)
+            expr = expr.args[0].pdf(syms)
+        else:
+            syms = [rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] for rv in rvs]
+        return Lambda(syms, self.compute_pdf(expr, marginalise_out))(*x)
+
+    def compute_pdf(self, expr, rvs):
+        for rv in rvs:
+            lpdf = 1
+            if isinstance(rv, RandomSymbol):
+                lpdf = rv.pspace.pdf
+            expr = self.marginalise_out(expr * lpdf, rv)
+        return expr
+
+    @staticmethod
+    def marginalise_out(expr, rv):
+        from sympy.concrete.summations import Sum
+        if isinstance(rv, RandomSymbol):
+            dom = rv.pspace.set
+        elif isinstance(rv, Indexed):
+            dom = rv.base.component_domain(
+                rv.pspace.component_domain(rv.args[1]))
+        expr = expr.xreplace({rv: rv.pspace.symbol})
+        if rv.pspace.is_Continuous:
+            # TODO: Modify to support integration for all kinds of sets.
+            expr = Integral(expr, (rv.pspace.symbol, dom))
+        elif rv.pspace.is_Discrete:
+            # incorporate this into `Sum`/`summation`
+            if dom in (S.Integers, S.Naturals, S.Naturals0):
+                dom = (dom.inf, dom.sup)
+            expr = Sum(expr, (rv.pspace.symbol, dom))
+        return expr
 
     def __call__(self, *args):
         return self.pdf(*args)

@@ -59,9 +59,10 @@ from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    hyper, uppergamma, sinh, Ne, expint)
 from sympy.external import import_module
 from sympy.matrices import MatrixBase
+from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
                              ContinuousDistributionHandmade)
-from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
+from sympy.stats.joint_rv import CompoundDistribution
 from sympy.stats.joint_rv_types import multivariate_rv
 from sympy.stats.rv import _value_check, RandomSymbol
 
@@ -156,7 +157,7 @@ def rv(symbol, cls, args):
     dist.check(*args)
     pspace = SingleContinuousPSpace(symbol, dist)
     if any(isinstance(arg, RandomSymbol) for arg in args):
-        pspace = JointPSpace(symbol, CompoundDistribution(dist))
+        pspace = CompoundPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
 
 ########################################
