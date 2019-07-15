@@ -2752,6 +2752,11 @@ def test_sympy__matrices__expressions__matexpr__GenericIdentity():
     from sympy.matrices.expressions.matexpr import GenericIdentity
     assert _test_args(GenericIdentity())
 
+
+def test_sympy__matrices__expressions__matexpr__MatrixWild():
+    from sympy.matrices.expressions.matexpr import MatrixWild
+    assert _test_args(MatrixWild('W', x, y))
+
 @SKIP("abstract class")
 def test_sympy__matrices__expressions__matexpr__MatrixExpr():
     pass
