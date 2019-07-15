@@ -1563,6 +1563,10 @@ def test_sympy__stats__stochastic_process_types__StochasticProcess():
     from sympy.stats.stochastic_process_types import StochasticProcess
     assert _test_args(StochasticProcess("Y", [1, 2, 3]))
 
+def test_sympy__stats__stochastic_process_types__StochasticProcessUtil():
+    from sympy.stats.stochastic_process_types import StochasticProcessUtil
+    assert _test_args(StochasticProcessUtil("Y", [1, 2, 3]))
+
 def test_sympy__stats__stochastic_process_types__DiscreteTimeStochasticProcess():
     from sympy.stats.stochastic_process_types import DiscreteTimeStochasticProcess
     assert _test_args(DiscreteTimeStochasticProcess("Y", [1, 2, 3]))
