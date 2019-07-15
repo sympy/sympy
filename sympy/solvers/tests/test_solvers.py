@@ -1837,19 +1837,16 @@ def test_issue_8828():
 @slow
 def test_issue_2840_8155():
     assert solve(sin(3*x) + sin(6*x)) == [
-        0, -pi, pi, 14*pi/9, 16*pi/9, 2*pi, 2*I*(log(2) - log(-1 - sqrt(3)*I)),
-        2*I*(log(2) - log(-1 + sqrt(3)*I)), 2*I*(log(2) - log(1 - sqrt(3)*I)),
-        2*I*(log(2) - log(1 + sqrt(3)*I)), 2*I*(log(2) - log(-sqrt(3) - I)),
-        2*I*(log(2) - log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)),
-        2*I*(log(2) - log(sqrt(3) + I)), -2*I*log(-(-1)**(S(1)/9)), -2*I*log(
-        -(-1)**(S(2)/9)), -2*I*log(-sin(pi/18) - I*cos(pi/18)), -2*I*log(-sin(
-        pi/18) + I*cos(pi/18)), -2*I*log(sin(pi/18) - I*cos(pi/18)), -2*I*log(
-        sin(pi/18) + I*cos(pi/18)), -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(
-        -I*pi/9)), -2*I*log(exp(I*pi/9)), -2*I*log(exp(2*I*pi/9))]
+        0, -5*pi/3, -4*pi/3, -pi, -2*pi/3, -pi/3, pi/3, 2*pi/3, pi, 4*pi/3,
+        14*pi/9, 5*pi/3, 16*pi/9, 2*pi, -2*I*log(-(-1)**(S(1)/9)),
+        -2*I*log(-(-1)**(S(2)/9)), -2*I*log(-sin(pi/18) - I*cos(pi/18)),
+        -2*I*log(-sin(pi/18) + I*cos(pi/18)),
+        -2*I*log(sin(pi/18) - I*cos(pi/18)),
+        -2*I*log(sin(pi/18) + I*cos(pi/18)),
+        -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(-I*pi/9)),
+        -2*I*log(exp(I*pi/9)), -2*I*log(exp(2*I*pi/9))]
     assert solve(2*sin(x) - 2*sin(2*x)) == [
-        0, -pi, pi, 2*I*(log(2) - log(-sqrt(3) - I)), 2*I*(log(2) -
-        log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)), 2*I*(log(2) -
-        log(sqrt(3) + I))]
+        0, -5*pi/3, -pi, -pi/3, pi/3, pi, 5*pi/3]
 
 
 def test_issue_9567():
