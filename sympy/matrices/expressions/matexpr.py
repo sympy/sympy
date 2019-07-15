@@ -1032,10 +1032,16 @@ class MatrixWild(MatrixSymbol, Wild):
         repl_dict = repl_dict.copy()
         # Make sure dimensions match
         for selfdim, exprdim in zip(self.shape, expr.shape):
-            matches = selfdim.matches(exprdim)
+            matches = selfdim.matches(exprdim, repl_dict)
             if matches is not None:
                 for match in matches:
-                    repl_dict[match] = matches[match]
+                    if (match in repl_dict and repl_dict[match]
+                            != matches[match]):
+                        # The dimension was matched before, but this new match
+                        # isn't the same
+                        return None
+                    else:
+                        repl_dict[match] = matches[match]
             elif selfdim != exprdim:
                 return None
 
