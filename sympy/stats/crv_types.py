@@ -48,21 +48,21 @@ WignerSemicircle
 
 from __future__ import print_function, division
 
-from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
-                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfc, erfi,  erfinv, I,
-                   hyper, uppergamma, sinh, atan, Ne, expint, Integral)
+import random
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
+from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma,
+                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
+                   Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I,
+                   hyper, uppergamma, sinh, Ne, expint)
 from sympy.external import import_module
 from sympy.matrices import MatrixBase
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
-        ContinuousDistributionHandmade)
+                             ContinuousDistributionHandmade)
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
-from sympy.stats.joint_rv_types import multivariate_rv
+from sympy.stats.joint_rv_types import MultivariateNormal, MultivariateLaplace
 from sympy.stats.rv import _value_check, RandomSymbol
-import random
 
 oo = S.Infinity
 
@@ -2008,10 +2008,7 @@ def Laplace(name, mu, b):
 
     if isinstance(mu, (list, MatrixBase)) and\
         isinstance(b, (list, MatrixBase)):
-        from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution
-        return multivariate_rv(
-            MultivariateLaplaceDistribution, name, mu, b)
-
+        return MultivariateLaplace(name, mu, b)
     return rv(name, LaplaceDistribution, (mu, b))
 
 #-------------------------------------------------------------------------------
@@ -2564,9 +2561,7 @@ def Normal(name, mean, std):
 
     if isinstance(mean, (list, MatrixBase)) and\
         isinstance(std, (list, MatrixBase)):
-        from sympy.stats.joint_rv_types import MultivariateNormalDistribution
-        return multivariate_rv(
-            MultivariateNormalDistribution, name, mean, std)
+        return MultivariateNormal(name, mean, std)
     return rv(name, NormalDistribution, (mean, std))
 
 

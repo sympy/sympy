@@ -1,24 +1,27 @@
-from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, IndexedBase,
-                    besselk, gamma, Interval, Range, factorial, Mul, Integer,
-                    Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
-                  imageset, Intersection, Matrix, symbols, Product, IndexedBase)
+from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed,
+                   besselk, gamma, Interval, Range, factorial, Mul, Integer,
+                   Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
+                   Intersection, Matrix, symbols, Product, IndexedBase)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
-    JointDistributionHandmade, MarginalDistribution)
+                                  JointDistributionHandmade, MarginalDistribution)
 from sympy.stats.rv import _value_check, random_symbols
 
 __all__ = ['JointRV',
-'Dirichlet',
-'GeneralizedMultivariateLogGamma',
-'GeneralizedMultivariateLogGammaOmega',
-'Multinomial',
-'MultivariateBeta',
-'MultivariateEwens',
-'MultivariateT',
-'NegativeMultinomial',
-'NormalGamma'
-]
+           'Dirichlet',
+           'GeneralizedMultivariateLogGamma',
+           'GeneralizedMultivariateLogGammaOmega',
+           'Multinomial',
+           'MultivariateBeta',
+           'MultivariateEwens',
+           'MultivariateLaplace',
+           'MultivariateNormal',
+           'MultivariateT',
+           'NegativeMultinomial',
+           'NormalGamma'
+           ]
+
 
 def multivariate_rv(cls, sym, *args):
     args = list(map(sympify, args))
@@ -26,6 +29,7 @@ def multivariate_rv(cls, sym, *args):
     args = dist.args
     dist.check(*args)
     return JointPSpace(sym, dist).value
+
 
 def JointRV(symbol, pdf, _set=None):
     """
@@ -55,12 +59,12 @@ def JointRV(symbol, pdf, _set=None):
     >>> density(N1)(1, 2)
     exp(-2)/(2*pi)
     """
-    #TODO: Add support for sets provided by the user
+    # TODO: Add support for sets provided by the user
     symbol = sympify(symbol)
     syms = list(i for i in pdf.free_symbols if isinstance(i, Indexed)
-        and i.base == IndexedBase(symbol))
-    syms.sort(key = lambda index: index.args[1])
-    _set = S.Reals**len(syms)
+                and i.base == IndexedBase(symbol))
+    syms.sort(key=lambda index: index.args[1])
+    _set = S.Reals ** len(syms)
     pdf = Lambda(syms, pdf)
     dist = JointDistributionHandmade(pdf, _set)
     jrv = JointPSpace(symbol, dist).value
@@ -70,35 +74,36 @@ def JointRV(symbol, pdf, _set=None):
         return JointPSpace(symbol, dist).value
     return jrv
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Multivariate Normal distribution ---------------------------------------------------------
 
 class MultivariateNormalDistribution(JointDistribution):
     _argnames = ['mu', 'sigma']
 
-    is_Continuous=True
+    is_Continuous = True
 
     @property
     def set(self):
         k = len(self.mu)
-        return S.Reals**k
+        return S.Reals ** k
 
     @staticmethod
     def check(mu, sigma):
         _value_check(len(mu) == len(sigma.col(0)),
-            "Size of the mean vector and covariance matrix are incorrect.")
-        #check if covariance matrix is positive definite or not.
+                     "Size of the mean vector and covariance matrix are incorrect.")
+        # check if covariance matrix is positive definite or not.
         _value_check((i > 0 for i in sigma.eigenvals().keys()),
-            "The covariance matrix must be positive definite. ")
+                     "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
         k = len(mu)
         args = ImmutableMatrix(args)
         x = args - mu
-        return  S(1)/sqrt((2*pi)**(k)*det(sigma))*exp(
-            -S(1)/2*x.transpose()*(sigma.inv()*\
-                x))[0]
+        return S(1) / sqrt((2 * pi) ** (k) * det(sigma)) * exp(
+            -S(1) / 2 * x.transpose() * (sigma.inv() *
+                                         x))[0]
 
     def marginal_distribution(self, indices, sym):
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
@@ -109,29 +114,50 @@ class MultivariateNormalDistribution(JointDistribution):
                 _mu = _mu.row_del(i)
                 _sigma = _sigma.col_del(i)
                 _sigma = _sigma.row_del(i)
-        return Lambda(sym, S(1)/sqrt((2*pi)**(len(_mu))*det(_sigma))*exp(
-            -S(1)/2*(_mu - sym).transpose()*(_sigma.inv()*\
-                (_mu - sym)))[0])
+        return Lambda(sym, S(1) / sqrt((2 * pi) ** (len(_mu)) * det(_sigma)) * exp(
+            -S(1) / 2 * (_mu - sym).transpose() * (_sigma.inv() *
+                                                   (_mu - sym)))[0])
 
-#-------------------------------------------------------------------------------
+
+def MultivariateNormal(name, mu, sigma):
+    """
+    Creates a joint random variable with multivariate Normal distribution.
+
+    Parameters
+    ==========
+
+    name: string, representing name for the multivariate Normal distribution
+    mu: A list representing the mean vector
+    sigma: A positive definite square matrix,
+         :math:`\sigma^2 > 0` the variance
+
+    Returns
+    =======
+
+    A random symbol
+    """
+    return multivariate_rv(MultivariateNormalDistribution, name, mu, sigma)
+
+
+# -------------------------------------------------------------------------------
 # Multivariate Laplace distribution ---------------------------------------------------------
 
 class MultivariateLaplaceDistribution(JointDistribution):
     _argnames = ['mu', 'sigma']
-    is_Continuous=True
+    is_Continuous = True
 
     @property
     def set(self):
         k = len(self.mu)
-        return S.Reals**k
+        return S.Reals ** k
 
     @staticmethod
     def check(mu, sigma):
         _value_check(len(mu) == len(sigma.col(0)),
-            "Size of the mean vector and covariance matrix are incorrect.")
-        #check if covariance matrix is positive definite or not.
+                     "Size of the mean vector and covariance matrix are incorrect.")
+        # check if covariance matrix is positive definite or not.
         _value_check((i > 0 for i in sigma.eigenvals().keys()),
-            "The covariance matrix must be positive definite. ")
+                     "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
@@ -140,33 +166,54 @@ class MultivariateLaplaceDistribution(JointDistribution):
         sigma_inv = sigma.inv()
         args = ImmutableMatrix(args)
         args_T = args.transpose()
-        x = (mu_T*sigma_inv*mu)[0]
-        y = (args_T*sigma_inv*args)[0]
-        v = 1 - k/2
-        return S(2)/((2*pi)**(S(k)/2)*sqrt(det(sigma)))\
-        *(y/(2 + x))**(S(v)/2)*besselk(v, sqrt((2 + x)*(y)))\
-        *exp((args_T*sigma_inv*mu)[0])
+        x = (mu_T * sigma_inv * mu)[0]
+        y = (args_T * sigma_inv * args)[0]
+        v = 1 - k / 2
+        return S(2) / ((2 * pi) ** (S(k) / 2) * sqrt(det(sigma))) \
+               * (y / (2 + x)) ** (S(v) / 2) * besselk(v, sqrt((2 + x) * (y))) \
+               * exp((args_T * sigma_inv * mu)[0])
 
 
-#-------------------------------------------------------------------------------
+def MultivariateLaplace(name, mu, b):
+    """
+    Creates a joint random variable with multivariate Laplace distribution.
+
+    Parameters
+    ==========
+
+    name: string, representing name for the multivariate Laplace distribution
+    mu : A list/matrix, the location (mean) or the
+        location vector
+    b : A positive definite matrix, representing a scale
+        or the covariance matrix.
+
+    Returns
+    =======
+
+    A random symbol
+    """
+    return multivariate_rv(MultivariateLaplaceDistribution, name, mu, b)
+
+
+# -------------------------------------------------------------------------------
 # Multivariate StudentT distribution ---------------------------------------------------------
 
 class MultivariateTDistribution(JointDistribution):
     _argnames = ['mu', 'shape_mat', 'dof']
-    is_Continuous=True
+    is_Continuous = True
 
     @property
     def set(self):
         k = len(self.mu)
-        return S.Reals**k
+        return S.Reals ** k
 
     @staticmethod
     def check(mu, sigma, v):
         _value_check(len(mu) == len(sigma.col(0)),
-            "Size of the location vector and shape matrix are incorrect.")
-        #check if covariance matrix is positive definite or not.
+                     "Size of the location vector and shape matrix are incorrect.")
+        # check if covariance matrix is positive definite or not.
         _value_check((i > 0 for i in sigma.eigenvals().keys()),
-            "The shape matrix must be positive definite. ")
+                     "The shape matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.shape_mat
@@ -175,8 +222,9 @@ class MultivariateTDistribution(JointDistribution):
         sigma_inv = sigma.inv()
         args = ImmutableMatrix(args)
         x = args - mu
-        return gamma((k + v)/2)/(gamma(v/2)*(v*pi)**(k/2)*sqrt(det(sigma)))\
-        *(1 + 1/v*(x.transpose()*sigma_inv*x)[0])**((-v - k)/2)
+        return gamma((k + v) / 2) / (gamma(v / 2) * (v * pi) ** (k / 2) * sqrt(det(sigma))) \
+               * (1 + 1 / v * (x.transpose() * sigma_inv * x)[0]) ** ((-v - k) / 2)
+
 
 def MultivariateT(syms, mu, sigma, v):
     """
@@ -198,13 +246,12 @@ def MultivariateT(syms, mu, sigma, v):
     return multivariate_rv(MultivariateTDistribution, syms, mu, sigma, v)
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Multivariate Normal Gamma distribution ---------------------------------------------------------
 
 class NormalGammaDistribution(JointDistribution):
-
     _argnames = ['mu', 'lamda', 'alpha', 'beta']
-    is_Continuous=True
+    is_Continuous = True
 
     @staticmethod
     def check(mu, lamda, alpha, beta):
@@ -215,30 +262,31 @@ class NormalGammaDistribution(JointDistribution):
 
     @property
     def set(self):
-        return S.Reals*Interval(0, S.Infinity)
+        return S.Reals * Interval(0, S.Infinity)
 
     def pdf(self, x, tau):
         beta, alpha, lamda = self.beta, self.alpha, self.lamda
         mu = self.mu
 
-        return beta**alpha*sqrt(lamda)/(gamma(alpha)*sqrt(2*pi))*\
-        tau**(alpha - S(1)/2)*exp(-1*beta*tau)*\
-        exp(-1*(lamda*tau*(x - mu)**2)/S(2))
+        return beta ** alpha * sqrt(lamda) / (gamma(alpha) * sqrt(2 * pi)) * \
+               tau ** (alpha - S(1) / 2) * exp(-1 * beta * tau) * \
+               exp(-1 * (lamda * tau * (x - mu) ** 2) / S(2))
 
     def marginal_distribution(self, indices, *sym):
         if len(indices) == 2:
             return self.pdf(*sym)
         if indices[0] == 0:
-            #For marginal over `x`, return non-standardized Student-T's
-            #distribution
+            # For marginal over `x`, return non-standardized Student-T's
+            # distribution
             x = sym[0]
-            v, mu, sigma = self.alpha - S(1)/2, self.mu, \
-                S(self.beta)/(self.lamda * self.alpha)
-            return Lambda(sym, gamma((v + 1)/2)/(gamma(v/2)*sqrt(pi*v)*sigma)*\
-                (1 + 1/v*((x - mu)/sigma)**2)**((-v -1)/2))
-        #For marginal over `tau`, return Gamma distribution as per construction
+            v, mu, sigma = self.alpha - S(1) / 2, self.mu, \
+                           S(self.beta) / (self.lamda * self.alpha)
+            return Lambda(sym, gamma((v + 1) / 2) / (gamma(v / 2) * sqrt(pi * v) * sigma) * \
+                          (1 + 1 / v * ((x - mu) / sigma) ** 2) ** ((-v - 1) / 2))
+        # For marginal over `tau`, return Gamma distribution as per construction
         from sympy.stats.crv_types import GammaDistribution
         return Lambda(sym, GammaDistribution(self.alpha, self.beta)(sym[0]))
+
 
 def NormalGamma(syms, mu, lamda, alpha, beta):
     """
@@ -261,11 +309,11 @@ def NormalGamma(syms, mu, lamda, alpha, beta):
     """
     return multivariate_rv(NormalGammaDistribution, syms, mu, lamda, alpha, beta)
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Multivariate Beta/Dirichlet distribution ---------------------------------------------------------
 
 class MultivariateBetaDistribution(JointDistribution):
-
     _argnames = ['alpha']
     is_Continuous = True
 
@@ -274,17 +322,18 @@ class MultivariateBetaDistribution(JointDistribution):
         _value_check(len(alpha) >= 2, "At least two categories should be passed.")
         for a_k in alpha:
             _value_check((a_k > 0) != False, "Each concentration parameter"
-                                            " should be positive.")
+                                             " should be positive.")
 
     @property
     def set(self):
         k = len(self.alpha)
-        return Interval(0, 1)**k
+        return Interval(0, 1) ** k
 
     def pdf(self, *syms):
         alpha = self.alpha
-        B = Mul.fromiter(map(gamma, alpha))/gamma(Add(*alpha))
-        return Mul.fromiter([sym**(a_k - 1) for a_k, sym in zip(alpha, syms)])/B
+        B = Mul.fromiter(map(gamma, alpha)) / gamma(Add(*alpha))
+        return Mul.fromiter([sym ** (a_k - 1) for a_k, sym in zip(alpha, syms)]) / B
+
 
 def MultivariateBeta(syms, *alpha):
     """
@@ -332,13 +381,14 @@ def MultivariateBeta(syms, *alpha):
         alpha = (list(alpha),)
     return multivariate_rv(MultivariateBetaDistribution, syms, alpha[0])
 
+
 Dirichlet = MultivariateBeta
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Multivariate Ewens distribution ---------------------------------------------------------
 
 class MultivariateEwensDistribution(JointDistribution):
-
     _argnames = ['n', 'theta']
     is_Discrete = True
     is_Continuous = False
@@ -346,18 +396,18 @@ class MultivariateEwensDistribution(JointDistribution):
     @staticmethod
     def check(n, theta):
         _value_check((n > 0),
-                        "sample size should be positive integer.")
+                     "sample size should be positive integer.")
         _value_check(theta.is_positive, "mutation rate should be positive.")
 
     @property
     def set(self):
         if not isinstance(self.n, Integer):
             i = Symbol('i', integer=True, positive=True)
-            return Product(Intersection(S.Naturals0, Interval(0, self.n//i)),
-                                    (i, 1, self.n))
+            return Product(Intersection(S.Naturals0, Interval(0, self.n // i)),
+                           (i, 1, self.n))
         prod_set = Range(0, self.n + 1)
         for i in range(2, self.n + 1):
-            prod_set *= Range(0, self.n//i + 1)
+            prod_set *= Range(0, self.n // i + 1)
         return prod_set
 
     def pdf(self, *syms):
@@ -365,18 +415,18 @@ class MultivariateEwensDistribution(JointDistribution):
         condi = isinstance(self.n, Integer)
         if not (isinstance(syms[0], IndexedBase) or condi):
             raise ValueError("Please use IndexedBase object for syms as "
-                                "the dimension is symbolic")
-        term_1 = factorial(n)/rf(theta, n)
+                             "the dimension is symbolic")
+        term_1 = factorial(n) / rf(theta, n)
         if condi:
-            term_2 = Mul.fromiter([theta**syms[j]/((j+1)**syms[j]*factorial(syms[j]))
-                                    for j in range(n)])
-            cond = Eq(sum([(k + 1)*syms[k] for k in range(n)]), n)
+            term_2 = Mul.fromiter([theta ** syms[j] / ((j + 1) ** syms[j] * factorial(syms[j]))
+                                   for j in range(n)])
+            cond = Eq(sum([(k + 1) * syms[k] for k in range(n)]), n)
             return Piecewise((term_1 * term_2, cond), (0, True))
         syms = syms[0]
         j, k = symbols('j, k', positive=True, integer=True)
-        term_2 = Product(theta**syms[j]/((j+1)**syms[j]*factorial(syms[j])),
-                            (j, 0, n - 1))
-        cond = Eq(Sum((k + 1)*syms[k], (k, 0, n - 1)), n)
+        term_2 = Product(theta ** syms[j] / ((j + 1) ** syms[j] * factorial(syms[j])),
+                         (j, 0, n - 1))
+        cond = Eq(Sum((k + 1) * syms[k], (k, 0, n - 1)), n)
         return Piecewise((term_1 * term_2, cond), (0, True))
 
 
@@ -423,13 +473,13 @@ def MultivariateEwens(syms, n, theta):
     """
     return multivariate_rv(MultivariateEwensDistribution, syms, n, theta)
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Generalized Multivariate Log Gamma distribution ---------------------------------------------------------
 
 class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
-
     _argnames = ['delta', 'v', 'lamda', 'mu']
-    is_Continuous=True
+    is_Continuous = True
 
     def check(self, delta, v, l, mu):
         _value_check((delta >= 0, delta <= 1), "delta must be in range [0, 1].")
@@ -438,27 +488,27 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
             _value_check((lk > 0), "lamda must be a positive vector.")
         for muk in mu:
             _value_check((muk > 0), "mu must be a positive vector.")
-        _value_check(len(l) > 1,"the distribution should have at least"
-                                " two random variables.")
+        _value_check(len(l) > 1, "the distribution should have at least"
+                                 " two random variables.")
 
     @property
     def set(self):
-        from sympy.sets.sets import Interval
-        return S.Reals**len(self.lamda)
+        return S.Reals ** len(self.lamda)
 
     def pdf(self, *y):
         from sympy.functions.special.gamma_functions import gamma
         d, v, l, mu = self.delta, self.v, self.lamda, self.mu
         n = Symbol('n', negative=False, integer=True)
         k = len(l)
-        sterm1 = Pow((1 - d), n)/\
-                ((gamma(v + n)**(k - 1))*gamma(v)*gamma(n + 1))
-        sterm2 = Mul.fromiter([mui*li**(-v - n) for mui, li in zip(mu, l)])
+        sterm1 = Pow((1 - d), n) / \
+                 ((gamma(v + n) ** (k - 1)) * gamma(v) * gamma(n + 1))
+        sterm2 = Mul.fromiter([mui * li ** (-v - n) for mui, li in zip(mu, l)])
         term1 = sterm1 * sterm2
         sterm3 = (v + n) * sum([mui * yi for mui, yi in zip(mu, y)])
-        sterm4 = sum([exp(mui * yi)/li for (mui, yi, li) in zip(mu, y, l)])
+        sterm4 = sum([exp(mui * yi) / li for (mui, yi, li) in zip(mu, y, l)])
         term2 = exp(sterm3 - sterm4)
         return Pow(d, v) * Sum(term1 * term2, (n, 0, S.Infinity))
+
 
 def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     """
@@ -513,7 +563,8 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
 
     """
     return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
-                            syms, delta, v, lamda, mu)
+                           syms, delta, v, lamda, mu)
+
 
 def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     """
@@ -563,49 +614,49 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO`
     """
     _value_check((omega.is_square, isinstance(omega, Matrix)), "omega must be a"
-                                                            " square matrix")
+                                                               " square matrix")
     for val in omega.values():
         _value_check((val >= 0, val <= 1),
-            "all values in matrix must be between 0 and 1(both inclusive).")
+                     "all values in matrix must be between 0 and 1(both inclusive).")
     _value_check(omega.diagonal().equals(ones(1, omega.shape[0])),
-                    "all the elements of diagonal should be 1.")
+                 "all the elements of diagonal should be 1.")
     _value_check((omega.shape[0] == len(lamda), len(lamda) == len(mu)),
-                    "lamda, mu should be of same length and omega should "
-                    " be of shape (length of lamda, length of mu)")
-    _value_check(len(lamda) > 1,"the distribution should have at least"
-                            " two random variables.")
+                 "lamda, mu should be of same length and omega should "
+                 " be of shape (length of lamda, length of mu)")
+    _value_check(len(lamda) > 1, "the distribution should have at least"
+                                 " two random variables.")
     delta = Pow(Rational(omega.det()), Rational(1, len(lamda) - 1))
     return GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu)
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Multinomial distribution ---------------------------------------------------------
 
 class MultinomialDistribution(JointDistribution):
-
     _argnames = ['n', 'p']
-    is_Continuous=False
+    is_Continuous = False
     is_Discrete = True
 
     @staticmethod
     def check(n, p):
         _value_check(n > 0,
-                        "number of trials must be a positive integer")
+                     "number of trials must be a positive integer")
         for p_k in p:
             _value_check((p_k >= 0, p_k <= 1),
-                        "probability must be in range [0, 1]")
+                         "probability must be in range [0, 1]")
         _value_check(Eq(sum(p), 1),
-                        "probabilities must sum to 1")
+                     "probabilities must sum to 1")
 
     @property
     def set(self):
-        return Intersection(S.Naturals0, Interval(0, self.n))**len(self.p)
+        return Intersection(S.Naturals0, Interval(0, self.n)) ** len(self.p)
 
     def pdf(self, *x):
         n, p = self.n, self.p
-        term_1 = factorial(n)/Mul.fromiter([factorial(x_k) for x_k in x])
-        term_2 = Mul.fromiter([p_k**x_k for p_k, x_k in zip(p, x)])
+        term_1 = factorial(n) / Mul.fromiter([factorial(x_k) for x_k in x])
+        term_2 = Mul.fromiter([p_k ** x_k for p_k, x_k in zip(p, x)])
         return Piecewise((term_1 * term_2, Eq(sum(x), n)), (0, True))
+
 
 def Multinomial(syms, n, *p):
     """
@@ -644,37 +695,38 @@ def Multinomial(syms, n, *p):
     .. [2] http://mathworld.wolfram.com/MultinomialDistribution.html
     """
     if not isinstance(p[0], list):
-        p = (list(p), )
+        p = (list(p),)
     return multivariate_rv(MultinomialDistribution, syms, n, p[0])
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Negative Multinomial Distribution ---------------------------------------------------------
 
 class NegativeMultinomialDistribution(JointDistribution):
-
     _argnames = ['k0', 'p']
-    is_Continuous=False
+    is_Continuous = False
     is_Discrete = True
 
     @staticmethod
     def check(k0, p):
         _value_check(k0 > 0,
-                        "number of failures must be a positive integer")
+                     "number of failures must be a positive integer")
         for p_k in p:
             _value_check((p_k >= 0, p_k <= 1),
-                        "probability must be in range [0, 1].")
+                         "probability must be in range [0, 1].")
         _value_check(sum(p) <= 1,
-                        "success probabilities must not be greater than 1.")
+                     "success probabilities must not be greater than 1.")
 
     @property
     def set(self):
-        return Range(0, S.Infinity)**len(self.p)
+        return Range(0, S.Infinity) ** len(self.p)
 
     def pdf(self, *k):
         k0, p = self.k0, self.p
-        term_1 = (gamma(k0 + sum(k))*(1 - sum(p))**k0)/gamma(k0)
-        term_2 = Mul.fromiter([pi**ki/factorial(ki) for pi, ki in zip(p, k)])
+        term_1 = (gamma(k0 + sum(k)) * (1 - sum(p)) ** k0) / gamma(k0)
+        term_2 = Mul.fromiter([pi ** ki / factorial(ki) for pi, ki in zip(p, k)])
         return term_1 * term_2
+
 
 def NegativeMultinomial(syms, k0, *p):
     """
@@ -715,5 +767,5 @@ def NegativeMultinomial(syms, k0, *p):
     .. [2] http://mathworld.wolfram.com/NegativeBinomialDistribution.html
     """
     if not isinstance(p[0], list):
-        p = (list(p), )
+        p = (list(p),)
     return multivariate_rv(NegativeMultinomialDistribution, syms, k0, p[0])
