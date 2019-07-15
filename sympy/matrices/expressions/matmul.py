@@ -151,8 +151,8 @@ class MatMul(MatrixExpr, Mul):
         c2, nc2 = expr.args_cnc()
         c1, c2 = [c or [1] for c in [c1, c2]]
 
-        comm_mul_self = self.func(*c1)
-        comm_mul_expr = expr.func(*c1)
+        comm_mul_self = Mul(*c1)
+        comm_mul_expr = Mul(*c2)
         repl_dict = comm_mul_expr.matches(comm_mul_self, repl_dict, old)
 
         # If the commutative arguments didn't match and aren't equal, then
