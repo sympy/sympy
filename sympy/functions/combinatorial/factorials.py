@@ -579,6 +579,10 @@ class RisingFactorial(CombinatorialFunction):
                                             r*(x - i),
                                             range(1, abs(int(k)) + 1), 1)
 
+        if k.is_integer == False:
+            if x.is_integer and x.is_negative:
+                return S.Zero
+
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma
         return gamma(x + k) / gamma(x)
