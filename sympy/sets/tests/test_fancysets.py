@@ -333,12 +333,35 @@ def test_Range_set():
                 (False, True)), False, True), (Piecewise((False, Ne(Mod(-3, n), 0)),
                 (True, (n >= 0) & (n <= 3)), (False, True)), False, True),
                 (False, False, False), (False, False, False)]
-
     for r, expec in zip(ranges, expected):
         if not r.step.has(Symbol):
             assert (r._contains(2), r.subs(n, -1)._contains(2), r.subs(n, 0)._contains(2), r.subs(n, 1)._contains(2)) == expec
         else:
             assert (r._contains(2), r.subs(n, -1)._contains(2), r.subs(n, 1)._contains(2)) == expec
+
+    expected = [[Piecewise((Abs(n - 10), n - 10 < 0), (0, True)), S(11), S(10), S(9)],
+                [Piecewise((Abs(n + 10), n + 10 < 0), (0, True)), S(0), S(0), S(0)],
+                [Piecewise((Abs(n + 10), n + 10 > 0), (0, True)), S(9), S(10), S(11)],
+                [Piecewise((Abs(n - 10), n - 10 > 0), (0, True)), S(0), S(0), S(0)],
+                [Piecewise((Abs(n - 1), n - 1 > 0), (0, True)), S(0), S(0), S(0)],
+                [Piecewise((Abs(n + 1), n + 1 > 0), (0, True)), S(0), S(1), S(2)],
+                [Piecewise((Abs(n - 1), n - 1 < 0), (0, True)), S(2), S(1), S(0)],
+                [Piecewise((Abs(n + 1), n + 1 < 0), (0, True)), S(0), S(0), S(0)],
+                [Piecewise((Abs(floor(4/n)), ceiling(4/n) > 0), (0, True)), S(0), S(4)],
+                [Piecewise((Abs(floor(6/n)), ceiling(6/n) > 0), (0, True)), S(0), S(6)],
+                [Piecewise((Abs(floor(-6/n)), ceiling(-6/n) > 0), (0, True)), S(6), S(0)],
+                [Piecewise((Abs(floor(-4/n)), ceiling(-4/n) > 0), (0, True)), S(4), S(0)]]
+    for r, expec in zip(ranges, expected):
+        size = r.size
+        if not r.step.has(Symbol):
+            assert [size, size.subs(n, -1), size.subs(n, 0), size.subs(n, 1)] == expec
+        else:
+            assert [size, size.subs(n, -1), size.subs(n, 1)] == expec
+
+    ranges = [Range(n, 10, 1), Range(1, n, 1), Range(-1, -5, n)]
+    for r in ranges:
+        raises(ValueError, lambda: [e for e in r])
+        raises(ValueError, lambda: len(r))
 
     # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
     # compatibility imports above)

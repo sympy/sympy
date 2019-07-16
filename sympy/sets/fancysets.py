@@ -5,9 +5,9 @@ from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.numbers import oo
-from sympy.core.relational import Eq, Ge, Le, Ne
+from sympy.core.relational import Eq, Ge, Le, Ne, Gt
 from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import Dummy, symbols
+from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
@@ -605,34 +605,39 @@ class Range(Set):
                          (False, True))
 
     def __iter__(self):
+        if any(param.is_Symbol for param in (self.start, self._stop, self.step)):
+            raise ValueError("Cannot iterate over symbolic Range.")
         if self.start in [S.NegativeInfinity, S.Infinity]:
             raise ValueError("Cannot iterate over Range with infinite start")
         elif self:
             i = self.start
             step = self.step
 
-            while True:
-                if (step > 0 and not (self.start <= i < self._stop)) or \
-                   (step < 0 and not (self._stop < i <= self.start)):
-                    break
+            while not ((step > 0 and not (self.start <= i < self._stop)) or
+                        (step < 0 and not (self._stop < i <= self.start))):
                 yield i
                 i += step
 
     def __len__(self):
-        if not self:
-            return 0
-        dif = self._stop - self.start
-        if dif.is_infinite:
+        size = _sympify(self.size)
+        if size.has(Symbol) or size.is_infinite:
             raise ValueError(
-                "Use .size to get the length of an infinite Range")
-        return abs(dif//self.step)
+                "Use .size to get the length of an infinite and symbolic Range")
+        return int(size)
 
     @property
     def size(self):
-        try:
-            return _sympify(len(self))
-        except ValueError:
+        from sympy.functions.elementary.integers import floor, ceiling
+        from sympy.functions.elementary.piecewise import Piecewise
+        if not self:
+            return S.Zero
+        start, stop, step = self.start, self._stop, self.step
+        dif = stop - start
+        if dif.is_infinite:
             return S.Infinity
+        null = ceiling(dif/step)
+        return Piecewise((abs(floor(dif/step)), Gt(null, S.Zero)),
+                         (S.Zero, True))
 
     def __nonzero__(self):
         return self.start != self._stop
