@@ -234,6 +234,7 @@ class RandomSymbol(Expr):
 
     def __new__(cls, symbol, pspace=None):
         from sympy.stats.joint_rv import JointRandomSymbol
+        from sympy.stats.compound_rv import CompoundRandomSymbol
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
@@ -242,6 +243,8 @@ class RandomSymbol(Expr):
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
         if cls == JointRandomSymbol and isinstance(pspace, SinglePSpace):
+            cls = RandomSymbol
+        if cls == CompoundRandomSymbol and isinstance(pspace, SinglePSpace):
             cls = RandomSymbol
         return Basic.__new__(cls, symbol, pspace)
 
