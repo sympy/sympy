@@ -2246,8 +2246,8 @@ class MatrixArithmetic(MatrixRequired):
 
         try:
             return a._matrix_pow_by_jordan_blocks(exp)
-        except ValueError:
-            if exp.is_negative or exp.is_number:
+        except (ValueError, AttributeError) as e:
+            if isinstance (e, ValueError) and (exp.is_negative or exp.is_number):
                 raise
             from sympy.matrices.expressions import MatPow
             return MatPow(a, exp)
