@@ -226,10 +226,15 @@ class MatMul(MatrixExpr, Mul):
             if match_attempt:
                 return [(node_ind, target_ind + 1),
                         (node_ind + 1, target_ind + 1)], match_attempt
-        elif node == target:
-            return [(node_ind + 1, target_ind + 1)], None
         else:
-            return None
+            match_attempt = node.matches(target)
+
+            if match_attempt:
+                return [(node_ind + 1, target_ind + 1)], match_attempt
+            elif node == target:
+                return [(node_ind + 1, target_ind + 1)], None
+            else:
+                return None
 
     @staticmethod
     def _matches_match_wilds(dictionary, wildcard, targets):
