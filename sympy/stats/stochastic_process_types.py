@@ -738,7 +738,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, StochasticProcessUt
 
         if isinstance(condition, Relational):
             info_insuff = "Information insufficient for generating result."
-            rv, states = (*condition.atoms(RandomIndexedSymbol),
+            rv, states = (list(condition.atoms(RandomIndexedSymbol))[0],
                             Intersection(condition.as_set(), state_space))
             if isinstance(given_condition, And):
                 gcs = given_condition.args
