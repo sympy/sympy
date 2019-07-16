@@ -198,6 +198,16 @@ def test_log_values():
     assert log(-sqrt(2)/2 - I*sqrt(2)/2) == -I*3*pi/4
     assert log(-sqrt(3)/2 - I*S.Half) == -I*5*pi/6
 
+    assert log(-S(1)/4 + sqrt(5)/4 - I*sqrt(sqrt(5)/8 + S(5)/8)) == -I*2*pi/5
+    assert log(sqrt(S(5)/8 - sqrt(5)/8) + I*(S(1)/4 + sqrt(5)/4)) == I*3*pi/10
+    assert log(-sqrt(sqrt(2)/4 + S(1)/2) + I*sqrt(S(1)/2 - sqrt(2)/4)) == I*7*pi/8
+    assert log(-sqrt(6)/4 - sqrt(2)/4 + I*(-sqrt(6)/4 + sqrt(2)/4)) == -I*11*pi/12
+
+    assert log(-1 + I*sqrt(3)) == log(2) + I*2*pi/3
+    assert log(5 + 5*I) == log(5*sqrt(2)) + I*pi/4
+    assert log(5*(1 + I)/sqrt(2)) == log(5) + I*pi/4
+    assert log(-sqrt(6) + sqrt(2) - I*sqrt(6) - I*sqrt(2)) == log(4) - I*7*pi/12
+
     assert exp(-log(3))**(-1) == 3
 
     assert log(S.Half) == -log(2)
