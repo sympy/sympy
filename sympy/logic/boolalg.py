@@ -2581,27 +2581,42 @@ def simplify_patterns_xor():
     return _matchers_xor
 
 
+literals_store = dict()  # A strategy to reduce extra creation of Literals
+
+
 class Literal(object):
     """
     The smallest element of a CNF object
     """
-    def __init__(self, lit, is_not=False):
-        if type(lit).__name__ == 'Not':
-            self.lit = lit.args[0]
-            self.is_Not = True
+    def __new__(cls, lit, is_not=False):
+        if type(lit) is int:
+            obj = super(Literal, cls).__new__(cls)
+            obj.code = lit
+            obj.is_Not = is_not
+            return obj
+        k = literals_store.get(lit, None)
+        if k is not None:
+            return Literal(k, is_not)
         else:
-            self.lit = lit
-            self.is_Not = False
-
-        self.is_Not = self.is_Not or is_not
+            obj = super(Literal, cls).__new__(cls)
+            obj.code = len(literals_store) + 1
+            literals_store[lit] = obj.code
+            obj.is_Not = (type(lit).__name__ == 'Not') or is_not
+            return obj
 
     @property
     def arg(self):
-        return (self.is_Not, self.lit)
+        return self.is_Not, self.code
+
+    @property
+    def lit(self):
+        for k,v in literals_store.items():
+            if v == self.code:
+                return k
 
     def __invert__(self):
         is_not = not self.is_Not
-        return Literal(self.lit, is_not=is_not)
+        return Literal(self.code, is_not=is_not)
 
     def __str__(self):
         return type(self).__name__+'( '+ str(self.lit)+ ', ' + str(self.is_Not)+')'
@@ -2610,7 +2625,7 @@ class Literal(object):
 
     def __eq__(self, other):
         return (self.is_Not == other.is_Not) and \
-               (self.lit == other.lit)
+               (self.code == other.code)
 
     def __hash__(self):
         h = hash((type(self).__name__,) + self.arg)
@@ -2705,11 +2720,11 @@ class CNF(object):
 
         if klass == 'Or' :
             return CNF.all_or(*[CNF.to_CNF(arg)
-                                for arg in expr.args])
+                                for arg in Or.make_args(expr)])
 
         if klass == 'And' :
             return CNF.all_and(*[CNF.to_CNF(arg)
-                                 for arg in expr.args])
+                                 for arg in And.make_args(expr)])
 
         if klass == 'Nand':
             tmp = CNF.all_and(*[CNF.to_CNF(arg)
