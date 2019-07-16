@@ -2238,19 +2238,24 @@ class MatrixArithmetic(MatrixRequired):
             # Jordan block algorithm is faster than
             # computation by recursion.
             elif a.rows == 2 and exp > 100000:
-                try:
-                    return a._matrix_pow_by_jordan_blocks(exp)
-                except (MatrixError, AttributeError):
-                    pass # a may not have _matrix_pow_by_jordan_blocks?
+                jordan_pow = getattr (a, '_matrix_pow_by_jordan_blocks', None)
+                if jordan_pow:
+                    try:
+                        return jordan_pow(exp)
+                    except MatrixError:
+                        pass # a may not have _matrix_pow_by_jordan_blocks?
             return a._eval_pow_by_recursion(exp)
 
-        try:
-            return a._matrix_pow_by_jordan_blocks(exp)
-        except (ValueError, AttributeError) as e:
-            if isinstance (e, ValueError) and (exp.is_negative or exp.is_number):
-                raise
-            from sympy.matrices.expressions import MatPow
-            return MatPow(a, exp)
+        jordan_pow = getattr (a, '_matrix_pow_by_jordan_blocks', None)
+        if jordan_pow:
+            try:
+                return jordan_pow(exp)
+            except ValueError:
+                if exp.is_negative or exp.is_number:
+                    raise
+
+        from sympy.matrices.expressions import MatPow
+        return MatPow(a, exp)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
