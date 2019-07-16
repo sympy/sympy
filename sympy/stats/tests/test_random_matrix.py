@@ -1,5 +1,5 @@
 from sympy import sqrt, exp, Trace, pi, S
-from sympy.stats import GUE, density
+from sympy.stats import GaussianUnitaryEnsemble as GUE, density
 from sympy.stats.rv import RandomMatrixSymbol, Density
 from sympy.stats.random_matrix_models import GaussianEnsemble
 from sympy.utilities.pytest import raises

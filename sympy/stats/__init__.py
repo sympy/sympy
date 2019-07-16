@@ -93,7 +93,6 @@ __all__.extend(stochastic_process_types.__all__)
 from . import random_matrix_models
 from .random_matrix_models import (
     GaussianUnitaryEnsemble,
-    GUE
 )
 __all__.extend(random_matrix_models.__all__)
 

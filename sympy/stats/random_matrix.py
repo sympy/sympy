@@ -12,3 +12,5 @@ class RandomMatrixPSpace(PSpace):
     def __new__(cls, sym, model=None):
         sym = _symbol_converter(sym)
         return Basic.__new__(cls, sym, model)
+
+    model = property(lambda self: self.args[1])

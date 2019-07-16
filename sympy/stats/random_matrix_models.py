@@ -7,7 +7,6 @@ from sympy.stats.random_matrix import RandomMatrixPSpace
 
 __all__ = [
     'GaussianUnitaryEnsemble',
-    'GUE'
 ]
 
 class RandomMatrixEnsemble(Basic):
@@ -35,13 +34,15 @@ class GaussianEnsemble(RandomMatrixEnsemble):
         if dim.is_integer == False:
             raise ValueError("Dimension of the random matrices must be "
                                 "integers, received %s instead."%(dim))
-        return Basic.__new__(cls, sym, dim)
+        self = Basic.__new__(cls, sym, dim)
+        rmp = RandomMatrixPSpace(sym, model=self)
+        return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
 
     symbol = property(lambda self: self.args[0])
     dimension = property(lambda self: self.args[1])
 
-    def density(self):
-        return Density(self)
+    def density(self, expr):
+        return Density(expr)
 
 class GaussianUnitaryEnsemble(GaussianEnsemble):
     """
@@ -60,10 +61,8 @@ class GaussianUnitaryEnsemble(GaussianEnsemble):
         n = self.dimension
         return 2**(S(n)/2) * pi**(S(n**2)/2)
 
-    def density(self):
+    def density(self, expr):
         n, ZGUE = self.dimension, self.normalization_constant
         h_pspace = RandomMatrixPSpace('P', model=self)
         H = RandomMatrixSymbol('H', n, n, pspace=h_pspace)
         return Lambda(H, exp(S(n)/2 * Trace(H**2))/ZGUE)
-
-GUE = GaussianUnitaryEnsemble
