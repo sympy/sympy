@@ -4,6 +4,7 @@ from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, I
                    Intersection, Matrix, symbols, Product, IndexedBase)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
+from sympy.functions.special.gamma_functions import multigamma
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
     JointDistributionHandmade, MarginalDistribution)
 from sympy.stats.rv import _value_check, random_symbols
@@ -17,7 +18,8 @@ __all__ = ['JointRV',
 'MultivariateEwens',
 'MultivariateT',
 'NegativeMultinomial',
-'NormalGamma'
+'NormalGamma',
+'Wishart'
 ]
 
 def multivariate_rv(cls, sym, *args):
@@ -88,7 +90,7 @@ class MultivariateNormalDistribution(JointDistribution):
         _value_check(len(mu) == len(sigma.col(0)),
             "Size of the mean vector and covariance matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
-        _value_check((i > 0 for i in sigma.eigenvals().keys()),
+        _value_check(sigma.is_positive_definite,
             "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
@@ -716,3 +718,73 @@ def NegativeMultinomial(syms, k0, *p):
     if not isinstance(p[0], list):
         p = (list(p), )
     return multivariate_rv(NegativeMultinomialDistribution, syms, k0, p[0])
+
+
+# -------------------------------------------------------------------------------
+# Wishart distribution ---------------------------------------------------------
+
+class WishartDistribution(JointDistribution):
+    _argnames = ['n', 'V']
+
+    is_Continuous = True
+
+    @property
+    def set(self):
+        raise NotImplementedError()
+
+    @staticmethod
+    def check(n, V):
+        p = V.shape[0]
+        _value_check(n > p - 1,
+                     "Degrees of freedom must be greater than p")
+        # check if scale matrix is positive definite or not.
+        if not isinstance(V, MatrixSymbol):
+            _value_check(V.is_positive_definite,
+                         "The scale matrix must be positive definite. ")
+
+    def pdf(self, args):
+        n, V = self.n, self.V
+        p = V.shape[0]
+        if isinstance(args, MatrixSymbol):
+            x = args
+        else:
+            x = ImmutableMatrix(args)
+        num = det(x) ** (n - p - 1) * exp(-Trace(Inverse(V) * x) / 2)
+        den = 2 ** (n * p / 2) * det(V) ** (n / 2) * multigamma(n / 2, p)
+        return num / den
+
+
+def Wishart(name, n, V):
+    """
+    Creates a joint random variable with Wishart distribution.
+
+    Parameters
+    ==========
+
+    name: string, representing name of Wishart distribution
+    n: int, degrees of freedom, Real
+    V: The shape matrix for the distribution, positive definite
+
+
+    Returns
+    =======
+
+    A random symbol
+
+
+    Examples
+    ========
+    >>> from sympy.stats import Wishart, density
+    >>> X = Wishart('x', 2, [[2, 1], [1, 2]])
+    >>> density(X)([[1, 0], [0, 1]])
+    exp(-Trace(Matrix([
+    [ 2/3, -1/3],
+    [-1/3,  2/3]]))/2)/(12*pi)
+
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Wishart_distribution
+    .. [2] http://mathworld.wolfram.com/WishartDistribution.html
+    """
+    return multivariate_rv(WishartDistribution, name, n, V)

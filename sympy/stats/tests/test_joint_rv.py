@@ -1,14 +1,17 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
-                   Rational, factorial, gamma, Piecewise, Eq, Product,
-                   IndexedBase, RisingFactorial)
+                   Rational, factorial, Piecewise, Eq, Product, gamma, MatrixSymbol,
+                   IndexedBase, RisingFactorial, Trace, Determinant, Dummy, polar_lift)
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix
-from sympy.stats import density
-from sympy.stats.crv_types import Normal
-from sympy.stats.joint_rv import marginal_distribution
-from sympy.stats.joint_rv_types import JointRV
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.stats import density, E
+from sympy.stats.crv_types import Normal, Laplace
+from sympy.stats.joint_rv import marginal_distribution, JointDistributionHandmade
+from sympy.stats.joint_rv_types import (JointRV, MultivariateT, MultivariateBeta, NormalGamma,
+                                        GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
+                                        GeneralizedMultivariateLogGammaOmega as GMVLGO, Multinomial,
+                                        NegativeMultinomial, Wishart)
+from sympy.utilities.pytest import raises, XFAIL, slow
 
 x, y, z, a, b = symbols('x y z a b')
 
@@ -29,7 +32,6 @@ def test_Normal():
     raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
 
 def test_MultivariateTDist():
-    from sympy.stats.joint_rv_types import MultivariateT
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert(density(t1))(1, 1) == 1/(8*pi)
     assert integrate(density(t1)(x, y), (x, -oo, oo), \
@@ -39,7 +41,6 @@ def test_MultivariateTDist():
     assert density(t2)(1, 2) == 1/(2*pi*sqrt(x*y))
 
 def test_multivariate_laplace():
-    from sympy.stats.crv_types import Laplace
     raises(ValueError, lambda: Laplace('T', [1, 2], [[1, 2], [2, 1]]))
     L = Laplace('L', [1, 0], [[1, 2], [0, 1]])
     assert density(L)(2, 3) == exp(2)*besselk(0, sqrt(3))/pi
@@ -48,7 +49,6 @@ def test_multivariate_laplace():
         exp(2/y)*besselk(0, sqrt((2 + 4/y + 1/x)/y))/(pi*sqrt(x*y))
 
 def test_NormalGamma():
-    from sympy.stats.joint_rv_types import NormalGamma
     from sympy import gamma
     ng = NormalGamma('G', 1, 2, 3, 4)
     assert density(ng)(1, 1) == 32*exp(-4)/sqrt(pi)
@@ -58,8 +58,6 @@ def test_NormalGamma():
     assert marginal_distribution(ng, y)(1) == exp(-S(1)/4)/128
 
 def test_GeneralizedMultivariateLogGammaDistribution():
-    from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO
-    from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG
     h = S.Half
     omega = Matrix([[1, h, h, h],
                      [h, 1, h, h],
@@ -118,8 +116,6 @@ def test_GeneralizedMultivariateLogGammaDistribution():
     raises(ValueError, lambda: GMVLG('G', Rational(3, 2), v, l, mu))
 
 def test_MultivariateBeta():
-    from sympy.stats.joint_rv_types import MultivariateBeta
-    from sympy import gamma
     a1, a2 = symbols('a1, a2', positive=True)
     a1_f, a2_f = symbols('a1, a2', positive=False, real=True)
     mb = MultivariateBeta('B', [a1, a2])
@@ -134,8 +130,6 @@ def test_MultivariateBeta():
     raises(ValueError, lambda: MultivariateBeta('b4', [a1_f, a2_f]))
 
 def test_MultivariateEwens():
-    from sympy.stats.joint_rv_types import MultivariateEwens
-
     n, theta, i = symbols('n theta i', positive=True)
 
     # tests for integer dimensions
@@ -164,7 +158,6 @@ def test_MultivariateEwens():
     assert density(eds)(a).dummy_eq(den)
 
 def test_Multinomial():
-    from sympy.stats.joint_rv_types import Multinomial
     n, x1, x2, x3, x4 = symbols('n, x1, x2, x3, x4', nonnegative=True, integer=True)
     p1, p2, p3, p4 = symbols('p1, p2, p3, p4', positive=True)
     p1_f, n_f = symbols('p1_f, n_f', negative=True)
@@ -183,7 +176,6 @@ def test_Multinomial():
     raises(ValueError, lambda: Multinomial('b3', n, 0.5, 0.4, 0.3, 0.1))
 
 def test_NegativeMultinomial():
-    from sympy.stats.joint_rv_types import NegativeMultinomial
     k0, x1, x2, x3, x4 = symbols('k0, x1, x2, x3, x4', nonnegative=True, integer=True)
     p1, p2, p3, p4 = symbols('p1, p2, p3, p4', positive=True)
     p1_f = symbols('p1_f', negative=True)
@@ -199,9 +191,24 @@ def test_NegativeMultinomial():
     raises(ValueError, lambda: NegativeMultinomial('b2', k0, 0.5, 0.4, 0.3, 0.4))
 
 
+def test_Wishart():
+    n, p = symbols('n p')
+    _k = Dummy('k')
+    A = MatrixSymbol('A', p, p)
+    V = MatrixSymbol('V', p, p)
+    X = Wishart('X', n, V)
+    density(X)(A).dummy_eq(2 ** (-n * p / 2) * pi ** (-p * (p - 1) / 4) * exp(-Trace(V ** (-1) * A) / 2) *
+                           Determinant(A) ** (n - p - 1) * (Determinant(V) ** (n / 2)) ** (-1) / Product(
+        gamma(-_k / 2 + n / 2 + 1 / 2), (_k, 1, p)))
+
+    X = Wishart('X', 2, [[1, 0], [0, 1]])
+    assert density(X)([[2, 0], [0, 2]]) == exp(-Trace(Matrix([[2, 0], [0, 2]]))/2)/(16*pi)
+    raises(ValueError, lambda: Wishart('X', 1, [[1, 0], [0, 1]]))
+    raises(ValueError, lambda: Wishart('X', 2, [[0, 1], [1, 0]]))
+
+
+@slow
 def test_JointPSpace_marginal_distribution():
-    from sympy.stats.joint_rv_types import MultivariateT
-    from sympy import polar_lift
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
         8*polar_lift(x**2/2 + 1)**(S(5)/2))
@@ -211,7 +218,6 @@ def test_JointPSpace_marginal_distribution():
 
 
 def test_JointRV():
-    from sympy.stats.joint_rv import JointDistributionHandmade
     x1, x2 = (Indexed('x', i) for i in (1, 2))
     pdf = exp(-x1**2/2 + x1 - x2**2/2 - S(1)/2)/(2*pi)
     X = JointRV('x', pdf)
@@ -220,13 +226,10 @@ def test_JointRV():
     assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(-S(1)/2)/(2*sqrt(pi))
 
 def test_expectation():
-    from sympy import simplify
-    from sympy.stats import E
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
     assert simplify(E(m[1])) == y
 
 @XFAIL
 def test_joint_vector_expectation():
-    from sympy.stats import E
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
     assert E(m) == (x, y)

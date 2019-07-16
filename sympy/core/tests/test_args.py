@@ -1546,6 +1546,12 @@ def test_sympy__stats__joint_rv_types__NegativeMultinomialDistribution():
     from sympy.stats.joint_rv_types import NegativeMultinomialDistribution
     assert _test_args(NegativeMultinomialDistribution(5, [0.5, 0.1, 0.3]))
 
+
+def test_sympy__stats__joint_rv_types__WishartDistribution():
+    from sympy.stats.joint_rv_types import WishartDistribution
+    assert _test_args(WishartDistribution(2, [[1, 0], [0, 1]]))
+
+
 def test_sympy__stats__rv__RandomIndexedSymbol():
     from sympy.stats.rv import RandomIndexedSymbol, pspace
     from sympy.tensor import Indexed

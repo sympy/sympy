@@ -76,7 +76,7 @@ from .joint_rv_types import (
     JointRV,
     Dirichlet, GeneralizedMultivariateLogGamma, GeneralizedMultivariateLogGammaOmega,
     Multinomial, MultivariateBeta, MultivariateEwens, MultivariateT, NegativeMultinomial,
-    NormalGamma
+    NormalGamma, Wishart
 )
 __all__.extend(joint_rv_types.__all__)
 
