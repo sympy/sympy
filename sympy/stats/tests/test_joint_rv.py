@@ -1,14 +1,15 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
-                    Mul, Rational, Integral, factorial, gamma, Piecewise, Eq, Product,
-                    IndexedBase, RisingFactorial)
+                   Rational, factorial, gamma, Piecewise, Eq, Product,
+                   IndexedBase, RisingFactorial)
 from sympy.core.numbers import comp
-from sympy.stats import density
-from sympy.stats.joint_rv import marginal_distribution
-from sympy.stats.joint_rv_types import JointRV
-from sympy.stats.crv_types import Normal
-from sympy.utilities.pytest import raises, XFAIL
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix
+from sympy.stats import density
+from sympy.stats.crv_types import Normal
+from sympy.stats.joint_rv import marginal_distribution
+from sympy.stats.joint_rv_types import JointRV, MultivariateNormal, MultivariateLaplace
+from sympy.utilities.pytest import raises, XFAIL
+
 x, y, z, a, b = symbols('x y z a b')
 
 def test_Normal():
@@ -26,6 +27,23 @@ def test_Normal():
     assert density(N)(0, 0) == exp(-2/y - 1/(2*x))/(2*pi*sqrt(x*y))
 
     raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
+
+
+def test_MultivariateNormal():
+    m = MultivariateNormal('A', [1, 2], [[1, 0], [0, 1]])
+    assert density(m)(1, 2) == 1 / (2 * pi)
+    raises(ValueError, lambda: m[2])
+    raises(ValueError,
+           lambda: MultivariateNormal('M', [1, 2], [[0, 0], [0, 1]]))
+    n = MultivariateNormal('B', [1, 2, 3], [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    p = MultivariateNormal('C', Matrix([1, 2]), Matrix([[1, 0], [0, 1]]))
+    assert density(m)(x, y) == density(p)(x, y)
+    assert marginal_distribution(n, 0, 1)(1, 2) == 1 / (2 * pi)
+    assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
+    N = Normal('N', [1, 2], [[x, 0], [0, y]])
+    assert density(N)(0, 0) == exp(-2 / y - 1 / (2 * x)) / (2 * pi * sqrt(x * y))
+
+    raises(ValueError, lambda: MultivariateNormal('M', [1, 2], [[1, 1], [1, -1]]))
 
 def test_MultivariateTDist():
     from sympy.stats.joint_rv_types import MultivariateT
@@ -46,6 +64,15 @@ def test_multivariate_laplace():
     assert density(L1)(0, 1) == \
         exp(2/y)*besselk(0, sqrt((2 + 4/y + 1/x)/y))/(pi*sqrt(x*y))
 
+
+def test_MultivariateLaplace():
+    raises(ValueError, lambda: MultivariateLaplace('T', [1, 2], [[1, 2], [2, 1]]))
+    L = MultivariateLaplace('L', [1, 0], [[1, 2], [0, 1]])
+    assert density(L)(2, 3) == exp(2) * besselk(0, sqrt(3)) / pi
+    L1 = MultivariateLaplace('L1', [1, 2], [[x, 0], [0, y]])
+    assert density(L1)(0, 1) == \
+           exp(2 / y) * besselk(0, sqrt((2 + 4 / y + 1 / x) / y)) / (pi * sqrt(x * y))
+
 def test_NormalGamma():
     from sympy.stats.joint_rv_types import NormalGamma
     from sympy import gamma
@@ -59,7 +86,6 @@ def test_NormalGamma():
 def test_GeneralizedMultivariateLogGammaDistribution():
     from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO
     from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG
-    from sympy import gamma
     h = S.Half
     omega = Matrix([[1, h, h, h],
                      [h, 1, h, h],
