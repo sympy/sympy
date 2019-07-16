@@ -167,7 +167,7 @@ class MatMul(MatrixExpr, Mul):
 
         repl_dict = MatMul._matches_noncomm(nc1, nc2, repl_dict)
 
-        return repl_dict
+        return repl_dict or None
 
     @staticmethod
     def _matches_noncomm(nodes, targets, repl_dict={}):
@@ -229,7 +229,7 @@ class MatMul(MatrixExpr, Mul):
     def _matches_match_wilds(dictionary, wildcard, targets):
         begin, end = dictionary[wildcard]
         terms = targets[begin:end + 1]
-        mul = MatMul(*terms)
+        mul = MatMul(*terms) if len(terms) > 1 else terms[0]
         return wildcard.matches(mul)
 
     @staticmethod
