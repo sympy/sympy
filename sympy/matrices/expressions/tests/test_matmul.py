@@ -116,14 +116,26 @@ def test_matmul_sympify():
 def test_matmul_matrix_wild():
     W = MatrixWild('W', n, n)
     X = MatrixWild('X', m, n)
+    M = MatrixSymbol('M', n, n)
+    N = MatrixSymbol('N', n, n)
 
     assert (D * C).match(W) == {W: D * C}
     assert (E * D * C).match(E * W) == {W: D * C}
     assert (D * C * A).match(W * A) == {W: D * C}
+    assert (M * D * C * N * D).match(M * W * D) == {W: D * C * N}
 
     assert ((D ** 2) * C * A).match(W * D * C * A) == {W: D}
+    assert ((D ** 3) * C * A).match(D * W * D * C * A) == {W: D}
+    assert (C * (D ** 4) * M).match(C * D**2 * W * M) == {W: MatMul(D, D)}
+
     assert (D * C * A).match(W * D * C * A) is None
+    assert (D * C * A).match(D * C * A * X) is None
+    assert (D * C * A).match(D * C * W * A) is None
+
+    assert (D * C * A).match(D * W) is None
+
     assert (D**(-1)).match(W**(-1)) == {W: D}
+    assert (D.T * C).match(W.T * C) == {W: D}
 
 def test_collapse_MatrixBase():
     A = Matrix([[1, 1], [1, 1]])
