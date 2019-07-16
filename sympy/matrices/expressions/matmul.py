@@ -177,7 +177,13 @@ class MatMul(MatrixExpr, Mul):
         wildcard_dict = {}
         repl_dict = repl_dict.copy()
 
-        while node_ind < len(nodes) and target_ind < len(targets):
+        while target_ind < len(targets):
+            # Skip to the next state if the node index has advanced too far but
+            # the end of the targets hasn't been reached
+            if node_ind >= len(nodes):
+                state = agenda.pop()
+                node_ind, target_ind = state
+                continue
             node, target = nodes[node_ind], targets[target_ind]
 
             if isinstance(node, Wild):
