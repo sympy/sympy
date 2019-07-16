@@ -582,6 +582,7 @@ class log(Function):
             elif arg is S.Exp1:
                 return S.One
 
+        if arg.is_number and arg.is_algebraic:
             # Check for arguments involving rational
             # multiples of pi
             r_ = re(arg)
