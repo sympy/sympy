@@ -2223,6 +2223,7 @@ class MatrixArithmetic(MatrixRequired):
             raise NonSquareMatrixError()
         a = self
         exp = sympify(exp)
+        jordan_pow = getattr (a, '_matrix_pow_by_jordan_blocks', None)
 
         if exp.is_Number and exp % 1 == 0:
             if a.rows == 1:
@@ -2237,16 +2238,13 @@ class MatrixArithmetic(MatrixRequired):
             # When certain conditions are met,
             # Jordan block algorithm is faster than
             # computation by recursion.
-            elif a.rows == 2 and exp > 100000:
-                jordan_pow = getattr (a, '_matrix_pow_by_jordan_blocks', None)
-                if jordan_pow:
-                    try:
-                        return jordan_pow(exp)
-                    except MatrixError:
-                        pass # a may not have _matrix_pow_by_jordan_blocks?
+            elif a.rows == 2 and exp > 100000 and jordan_pow:
+                try:
+                    return jordan_pow(exp)
+                except MatrixError:
+                    pass # a may not have _matrix_pow_by_jordan_blocks?
             return a._eval_pow_by_recursion(exp)
 
-        jordan_pow = getattr (a, '_matrix_pow_by_jordan_blocks', None)
         if jordan_pow:
             try:
                 return jordan_pow(exp)
