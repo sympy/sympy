@@ -478,6 +478,7 @@ class exp(ExpBase):
 class log(Function):
     r"""
     The natural logarithm function `\ln(x)` or `\log(x)`.
+
     Logarithms are taken with the natural base, `e`. To get
     a logarithm of a different base ``b``, use ``log(x, b)``,
     which is essentially short-hand for ``log(x)/log(b)``.
@@ -485,16 +486,19 @@ class log(Function):
     Examples
     ========
 
-    >>> from sympy import log, S
+    >>> from sympy import log, sqrt, S, I
     >>> log(8, 2)
     3
     >>> log(S(8)/3, 2)
     -log(3)/log(2) + 3
+    >>> log(-1 + I*sqrt(3))
+    log(2) + 2*I*pi/3
 
     See Also
     ========
 
     exp
+
     """
 
     def fdiff(self, argindex=1):
