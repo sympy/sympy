@@ -2218,37 +2218,39 @@ class MatrixArithmetic(MatrixRequired):
         return self._eval_scalar_mul(-1)
 
     @call_highest_priority('__rpow__')
-    def __pow__(self, num):
+    def __pow__(self, exp):
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
-        jordan_pow = getattr(a, '_matrix_pow_by_jordan_blocks', None)
-        num = sympify(num)
-        if num.is_Number and num % 1 == 0:
+        exp = sympify(exp)
+
+        if exp.is_Number and exp % 1 == 0:
             if a.rows == 1:
-                return a._new([[a[0]**num]])
-            if num == 0:
+                return a._new([[a[0]**exp]])
+            if exp == 0:
                 return self._new(self.rows, self.cols, lambda i, j: int(i == j))
-            if num < 0:
-                num = -num
+            if exp == 1:
+                return self
+            if exp < 0:
+                exp = -exp
                 a = a.inv()
             # When certain conditions are met,
             # Jordan block algorithm is faster than
             # computation by recursion.
-            elif a.rows == 2 and num > 100000 and jordan_pow is not None:
+            elif a.rows == 2 and exp > 100000:
                 try:
-                    return jordan_pow(num)
-                except MatrixError:
-                    pass
-            return a._eval_pow_by_recursion(num)
-        elif not num.is_Number and num.is_negative is None and a.det() == 0:
+                    return a._matrix_pow_by_jordan_blocks(exp)
+                except (MatrixError, AttributeError):
+                    pass # a may not have _matrix_pow_by_jordan_blocks?
+            return a._eval_pow_by_recursion(exp)
+
+        try:
+            return a._matrix_pow_by_jordan_blocks(exp)
+        except ValueError:
+            if exp.is_negative or exp.is_number:
+                raise
             from sympy.matrices.expressions import MatPow
-            return MatPow(a, num)
-        elif isinstance(num, (Expr, float)):
-            return jordan_pow(num)
-        else:
-            raise TypeError(
-                "Only SymPy expressions or integers are supported as exponent for matrices")
+            return MatPow(a, exp)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
