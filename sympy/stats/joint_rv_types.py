@@ -2,7 +2,7 @@ from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, I
                    Range, factorial, Mul, Integer,
                    Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
                    Intersection, Matrix, symbols, Product, IndexedBase)
-from sympy.matrices import ImmutableMatrix
+from sympy.matrices import ImmutableMatrix, MatrixSymbol, Trace, Inverse
 from sympy.matrices.expressions.determinant import det
 from sympy.functions.special.gamma_functions import multigamma
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -727,6 +727,7 @@ class WishartDistribution(JointDistribution):
     _argnames = ['n', 'V']
 
     is_Continuous = True
+    is_Discrete = False
 
     @property
     def set(self):
@@ -765,15 +766,14 @@ def Wishart(name, n, V):
     n: int, degrees of freedom, Real
     V: The shape matrix for the distribution, positive definite
 
-
     Returns
     =======
 
     A random symbol
 
-
     Examples
     ========
+
     >>> from sympy.stats import Wishart, density
     >>> X = Wishart('x', 2, [[2, 1], [1, 2]])
     >>> density(X)([[1, 0], [0, 1]])
@@ -784,6 +784,7 @@ def Wishart(name, n, V):
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/Wishart_distribution
     .. [2] http://mathworld.wolfram.com/WishartDistribution.html
     """

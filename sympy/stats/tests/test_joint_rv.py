@@ -1,6 +1,6 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
                    Rational, factorial, Piecewise, Eq, Product, gamma, MatrixSymbol,
-                   IndexedBase, RisingFactorial, Trace, Determinant, Dummy, polar_lift)
+                   IndexedBase, RisingFactorial, Trace, Dummy, polar_lift)
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix
@@ -197,9 +197,9 @@ def test_Wishart():
     A = MatrixSymbol('A', p, p)
     V = MatrixSymbol('V', p, p)
     X = Wishart('X', n, V)
-    density(X)(A).dummy_eq(2 ** (-n * p / 2) * pi ** (-p * (p - 1) / 4) * exp(-Trace(V ** (-1) * A) / 2) *
-                           Determinant(A) ** (n - p - 1) * (Determinant(V) ** (n / 2)) ** (-1) / Product(
-        gamma(-_k / 2 + n / 2 + 1 / 2), (_k, 1, p)))
+    assert str(density(X)(A)) == ("2**(-n*p/2)*pi**(-p*(p - 1)/4)*exp(-Trace(V**(-1)*A)/2)*"
+                                  "Determinant(A)**(n - p - 1)*(Determinant(V)**(n/2))**(-1)/"
+                                  "Product(gamma(-_k/2 + n/2 + 1/2), (_k, 1, p))")
 
     X = Wishart('X', 2, [[1, 0], [0, 1]])
     assert density(X)([[2, 0], [0, 2]]) == exp(-Trace(Matrix([[2, 0], [0, 2]]))/2)/(16*pi)
