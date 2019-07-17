@@ -2639,6 +2639,149 @@ class Literal(object):
     def rcall(self, expr):
         return Literal(self.lit(expr), self.is_Not)
 
+    def __lt__(self, other):
+        sign = -1 if self.is_Not else 1
+        return sign*self.code < sign*other.code
+
+
+def literal_sort_key(lit):
+    _type = type(lit).__name__
+    if _type == 'Literal':
+        return (lit.code, lit.is_Not)
+
+    if _type == 'AND':
+        return (-2, lit.args)
+
+    if _type == 'OR':
+        return (-1, lit.args)
+
+
+class OR(object):
+    def __init__(self, *args):
+        self._args = args
+
+    def __invert__(self):
+        return AND(*self._args)
+
+    @property
+    def args(self):
+        return sorted(self._args, key=literal_sort_key)
+
+    def __hash__(self):
+        return hash((type(self).__name__, ) + tuple(self.args))
+
+    def __eq__(self, other):
+        return self.args == other.args
+
+    def __str__(self):
+        s = '(' + ' | '.join([str(arg) for arg in self.args]) + ')'
+        return s
+
+    __repr__ = __str__
+
+
+class AND(object):
+    def __init__(self, *args):
+        self._args = args
+
+    def __invert__(self):
+        return OR(*self._args)
+
+    @property
+    def args(self):
+        return sorted(self._args, key=literal_sort_key)
+
+    def __hash__(self):
+        return hash((type(self).__name__, ) + tuple(self.args))
+
+    def __eq__(self, other):
+        return self.args == other.args
+
+    def __str__(self):
+        s = '('+' & '.join([str(arg) for arg in self.args])+')'
+        return s
+
+    __repr__ = __str__
+
+
+def to_NNF(expr):
+    if not isinstance(expr, BooleanFunction):
+        return Literal(expr)
+
+    klass = type(expr).__name__
+    if klass == 'Not':
+        arg = expr.args[0]
+        # attempt 1 just inverting after converting to NNF
+        tmp = to_NNF(arg)
+        return ~tmp
+
+    if klass == 'Or':
+        return OR(*[to_NNF(x) for x in Or.make_args(expr)])
+
+    if klass == 'And':
+        return AND(*[to_NNF(x) for x in And.make_args(expr)])
+
+    if klass == 'Nand':
+        tmp = AND(*[to_NNF(x) for x in expr.args])
+        return ~tmp
+
+    if klass == 'Nor':
+        tmp = OR(*[to_NNF(x) for x in expr.args])
+        return ~tmp
+
+    if klass == 'Xor':
+        cnfs = []
+        for i in range(0, len(expr.args) + 1, 2):
+            for neg in combinations(expr.args, i):
+                clause = [~to_NNF(s) if s in neg else to_NNF(s)
+                          for s in expr.args]
+                cnfs.append(OR(*clause))
+        return AND(*cnfs)
+
+    if klass == 'Xnor':
+        cnfs = []
+        for i in range(0, len(expr.args) + 1, 2):
+            for neg in combinations(expr.args, i):
+                clause = [~to_NNF(s) if s in neg else to_NNF(s)
+                          for s in expr.args]
+                cnfs.append(OR(*clause))
+        return ~AND(*cnfs)
+
+    if klass == 'Implies':
+        L, R = map(to_NNF, expr.args)
+        return OR(~L, R)
+
+    if klass == 'Equivalent':
+        cnfs = []
+        for a, b in zip(expr.args, expr.args[1:]):
+            a = to_NNF(a)
+            b = to_NNF(b)
+            cnfs.append(OR(~a, b))
+        a = to_NNF(expr.args[-1])
+        b = to_NNF(expr.args[0])
+        cnfs.append(OR(~a, b))
+        return AND(*cnfs)
+
+    if klass == 'ITE':
+        L, M, R = map(CNF.to_CNF, expr.args)
+        return AND(OR(~L, M), OR(L, R))
+
+
+def Distribute(expr):
+    if not isinstance(expr, (AND, OR)):
+        tmp = set()
+        tmp.add(frozenset((expr,)))
+        return CNF(tmp)
+
+    klass = type(expr).__name__
+    if klass == 'OR':
+        return CNF.all_or(*[Distribute(arg)
+                            for arg in expr._args])
+
+    if klass == 'AND':
+        return CNF.all_and(*[Distribute(arg)
+                             for arg in expr._args])
+
 
 class CNF(object):
     def __init__(self, clauses=None):
@@ -2648,12 +2791,6 @@ class CNF(object):
 
     def add(self, prop):
         clauses = CNF.to_CNF(prop).clauses
-        clss = to_cnf(prop)
-        CLSS = And.make_args(clss)
-        CLSS = set((frozenset((Literal(x) for x in Or.make_args(clause))) for clause in CLSS))
-        if CLSS != clauses:
-            print(prop, CNF.CNF_to_cnf(CNF(clauses)), clss, sep='\n\n')
-            k = input('I am waiting')
         self.clauses |= clauses
 
     def __str__(self):
@@ -2693,7 +2830,7 @@ class CNF(object):
 
     def _or(self, cnf):
         clauses = set()
-        print('in or:',len(self.clauses), len(cnf.clauses))
+        # print('in or:',len(self.clauses), len(cnf.clauses))
         for a,b in product(self.clauses, cnf.clauses):
             tmp = set(a)
             for t in b:
@@ -2702,15 +2839,15 @@ class CNF(object):
                 tmp.add(t)
             else:
                 clauses.add(frozenset(tmp))
-        print('or out')
+        # print('or out')
         # print(clauses)
         # k = input('move ahead:')
         return CNF(clauses)
 
     def _and(self, cnf):
-        print('in and:', len(self.clauses), len(cnf.clauses))
+        # print('in and:', len(self.clauses), len(cnf.clauses))
         clauses = self.clauses.union(cnf.clauses)
-        print('out and')
+        # print('out and')
         # print(clauses)
         # k = input('move ahead:')
         return CNF(clauses)
@@ -2745,72 +2882,9 @@ class CNF(object):
 
     @classmethod
     def to_CNF(cls, expr):
-        if not isinstance(expr, BooleanFunction):
-            tmp = set()
-            tmp.add(frozenset((Literal(expr),)))
-            return CNF(tmp)
-
-        klass = type(expr).__name__
-        if klass == 'Not' :
-            return CNF.to_CNF(expr.args[0])._not()
-
-        if klass == 'Or' :
-            return CNF.all_or(*[CNF.to_CNF(arg)
-                                for arg in Or.make_args(expr)])
-
-        if klass == 'And' :
-            return CNF.all_and(*[CNF.to_CNF(arg)
-                                 for arg in And.make_args(expr)])
-
-        if klass == 'Nand':
-            tmp = CNF.all_and(*[CNF.to_CNF(arg)
-                                for arg in expr.args])
-            return tmp._not()
-
-        if klass == 'Nor':
-            tmp = CNF.all_or(*[CNF.to_CNF(arg)
-                               for arg in expr.args])
-            return tmp._not()
-
-        if klass == 'Xor':
-            cnfs = []
-            for i in range(0, len(expr.args)+1, 2):
-                for neg in combinations(expr.args, i):
-                    clause = [CNF.to_CNF(s)._not() if s in neg else CNF.to_CNF(s)
-                              for s in expr.args ]
-                    cnfs.append(CNF.all_or(*clause))
-            return CNF.all_and(*cnfs)
-
-        if klass == 'Xnor':
-            cnfs = []
-            for i in range(0, len(expr.args) + 1, 2):
-                for neg in combinations(expr.args, i):
-                    clause = [CNF._not(s)._not() if s in neg else CNF.to_CNF(s)
-                              for s in expr.args]
-                    cnfs.append(clause)
-            return CNF.all_and(*cnfs)._not()
-
-        if klass == 'Implies':
-            L, R = map(CNF.to_CNF, expr.args)
-            return (L._and(R._not()))._not()
-
-        if klass == 'Equivalent':
-            cnfs = []
-            for a,b in zip(expr.args, expr.args[1:]):
-                a = CNF.to_CNF(a)
-                b = CNF.to_CNF(b)
-                cnfs.append(a._not()._or(b))
-            a = CNF.to_CNF(expr.args[-1])
-            b = CNF.to_CNF(expr.args[0])
-            cnfs.append(a._not()._or(b))
-            return CNF.all_and(*cnfs)
-
-        if klass == 'ITE':
-            L, M, R = map(CNF.to_CNF, expr.args)
-            return CNF.all_and(L._not()._or(M), L._or(R))
-
-        else:
-            return CNF.to_CNF(to_cnf(expr))
+        expr = to_NNF(expr)
+        expr = Distribute(expr)
+        return expr
 
     @classmethod
     def CNF_to_cnf(cls, cnf):
