@@ -3,8 +3,8 @@ from sympy import (
     collect,cos, cosh, cot, coth, count_ops, csch, Derivative, diff, E,
     Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
     factorial, Float, fraction, Function, gamma, GoldenRatio, hyper,
-    hypersimp, I, Integral, integrate, log, logcombine, Lt, Matrix,
-    MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
+    hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
+    Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
     Rational, root, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
     zoo)
@@ -837,3 +837,19 @@ def test_issue_17141():
     else:
         raises(RuntimeError, lambda: simplify(2**acos(I+1)**2))
         raises(RuntimeError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
+
+
+def test_simplify_kroneckerdelta():
+    i, j = symbols("i j")
+
+    assert simplify(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
+    assert simplify(KroneckerDelta(0, j)) == KroneckerDelta(0, j)
+    assert simplify(KroneckerDelta(i, 0)) == KroneckerDelta(i, 0)
+
+    # issue 17214
+    e1 = KroneckerDelta(0, j) * KroneckerDelta(1, j)
+    assert simplify(e1) == 0
+
+    n = Symbol('n', integer=True)
+    e2 = KroneckerDelta(0, n) * KroneckerDelta(1, n)
+    assert simplify(e2) == 0
