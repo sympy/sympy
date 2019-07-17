@@ -2221,17 +2221,19 @@ class MatrixArithmetic(MatrixRequired):
     def __pow__(self, exp):
         if self.rows != self.cols:
             raise NonSquareMatrixError()
-        a = self
         exp = sympify(exp)
+
+        if exp.is_zero:
+            return self._new(self.rows, self.cols, lambda i, j: int(i == j))
+        if exp == 1:
+            return self
+
+        a = self
         jordan_pow = getattr (a, '_matrix_pow_by_jordan_blocks', None)
 
         if exp.is_Number and exp % 1 == 0:
             if a.rows == 1:
                 return a._new([[a[0]**exp]])
-            if exp == 0:
-                return self._new(self.rows, self.cols, lambda i, j: int(i == j))
-            if exp == 1:
-                return self
             if exp < 0:
                 exp = -exp
                 a = a.inv()
