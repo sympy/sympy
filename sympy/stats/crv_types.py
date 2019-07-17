@@ -62,7 +62,7 @@ from sympy.matrices import MatrixBase
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
                              ContinuousDistributionHandmade)
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
-from sympy.stats.joint_rv_types import multivariate_rv
+from sympy.stats.joint_rv_types import MultivariateLaplace, MultivariateNormal
 from sympy.stats.rv import _value_check, RandomSymbol
 
 oo = S.Infinity
@@ -2097,9 +2097,7 @@ def Laplace(name, mu, b):
 
     if isinstance(mu, (list, MatrixBase)) and\
         isinstance(b, (list, MatrixBase)):
-        from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution
-        return multivariate_rv(
-            MultivariateLaplaceDistribution, name, mu, b)
+        return MultivariateLaplace(name, mu, b)
 
     return rv(name, LaplaceDistribution, (mu, b))
 
@@ -2653,9 +2651,7 @@ def Normal(name, mean, std):
 
     if isinstance(mean, (list, MatrixBase)) and\
         isinstance(std, (list, MatrixBase)):
-        from sympy.stats.joint_rv_types import MultivariateNormalDistribution
-        return multivariate_rv(
-            MultivariateNormalDistribution, name, mean, std)
+        return MultivariateNormal(name, mean, std)
     return rv(name, NormalDistribution, (mean, std))
 
 

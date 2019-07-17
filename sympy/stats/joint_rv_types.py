@@ -15,6 +15,8 @@ __all__ = ['JointRV',
 'Multinomial',
 'MultivariateBeta',
 'MultivariateEwens',
+'MultivariateLaplace',
+'MultivariateNormal',
 'MultivariateT',
 'NegativeMultinomial',
 'NormalGamma'
@@ -113,6 +115,26 @@ class MultivariateNormalDistribution(JointDistribution):
             -S(1)/2*(_mu - sym).transpose()*(_sigma.inv()*\
                 (_mu - sym)))[0])
 
+
+def MultivariateNormal(name, mu, sigma):
+    """
+    Creates a joint random variable with multivariate Normal distribution.
+
+    Parameters
+    ==========
+
+    name: string, representing name for the multivariate Normal distribution
+    mu: A list representing the mean vector
+    sigma: A positive definite square matrix
+
+    Returns
+    =======
+
+    A random symbol
+    """
+    return multivariate_rv(MultivariateNormalDistribution, name, mu, sigma)
+
+
 #-------------------------------------------------------------------------------
 # Multivariate Laplace distribution ---------------------------------------------------------
 
@@ -146,6 +168,28 @@ class MultivariateLaplaceDistribution(JointDistribution):
         return S(2)/((2*pi)**(S(k)/2)*sqrt(det(sigma)))\
         *(y/(2 + x))**(S(v)/2)*besselk(v, sqrt((2 + x)*(y)))\
         *exp((args_T*sigma_inv*mu)[0])
+
+
+def MultivariateLaplace(name, mu, b):
+    """
+    Creates a joint random variable with multivariate Laplace distribution.
+
+    Parameters
+    ==========
+
+    name: string, representing name for the multivariate Laplace distribution
+    mu : A list/matrix, the location (mean) or the
+        location vector
+    b : A positive definite matrix, representing a scale
+        or the covariance matrix.
+
+    Returns
+    =======
+
+    A random symbol
+    """
+    return multivariate_rv(MultivariateLaplaceDistribution, name, mu, b)
+
 
 
 #-------------------------------------------------------------------------------
