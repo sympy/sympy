@@ -17,6 +17,7 @@ from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -589,6 +590,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
 
+    if expr.has(KroneckerDelta):
+        expr = expr.rewrite(Piecewise)
+
     expr = piecewise_fold(expr)
 
     if expr.has(BesselBase):
@@ -614,10 +618,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     if expr.has(Product):
         expr = product_simplify(expr)
-
-    if expr.has(KroneckerDelta):
-        from sympy.functions.elementary.piecewise import Piecewise
-        expr = simplify(expr.rewrite(Piecewise))
 
     from sympy.physics.units import Quantity
     from sympy.physics.units.util import quantity_simplify
