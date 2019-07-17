@@ -359,8 +359,13 @@ def test_Range_set():
             assert [size, size.subs(n, -1), size.subs(n, 1)] == expec
 
     ranges = [Range(n, 10, 1), Range(1, n, 1), Range(-1, -5, n)]
+    expected = [[n, n + 1, n + 2, n + 3, n + 4, n + 5],
+                [1, 2, 3, 4, 5, 6],
+                [-1, n - 1, 2*n - 1, 3*n - 1, 4*n - 1, 5*n - 1]]
+    for r, expec in zip(ranges, expected):
+        it = iter(r)
+        assert [next(it) for i in range(6)] == expec
     for r in ranges:
-        raises(ValueError, lambda: [e for e in r])
         raises(ValueError, lambda: len(r))
 
     # Make sure to use range in Python 3 and xrange in Python 2 (regardless of

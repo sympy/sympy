@@ -5,11 +5,11 @@ from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.numbers import oo
-from sympy.core.relational import Eq, Ge, Le, Ne, Gt
+from sympy.core.relational import Eq, Ge, Le, Ne, Gt, Lt
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, converter
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Not, Or
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
     ProductSet, Intersection)
 from sympy.sets.contains import Contains
@@ -605,16 +605,17 @@ class Range(Set):
                          (False, True))
 
     def __iter__(self):
-        if any(param.is_Symbol for param in (self.start, self._stop, self.step)):
-            raise ValueError("Cannot iterate over symbolic Range.")
+        # print([param.is_Symbol for param in (self.start, self._stop, self.step)])
+        # if any(param.is_Symbol for param in (self.start, self._stop, self.step)):
+        #     raise ValueError("Cannot iterate over symbolic Range.")
         if self.start in [S.NegativeInfinity, S.Infinity]:
             raise ValueError("Cannot iterate over Range with infinite start")
         elif self:
             i = self.start
             step = self.step
 
-            while not ((step > 0 and not (self.start <= i < self._stop)) or
-                        (step < 0 and not (self._stop < i <= self.start))):
+            while And(Or(Le(step, 0), And(Le(self.start, i), Lt(i, self._stop))),
+                     Or(Ge(step, 0), And(Lt(self._stop, i), Le(i, self.start)))) != False:
                 yield i
                 i += step
 
