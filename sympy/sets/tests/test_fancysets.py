@@ -365,6 +365,23 @@ def test_Range_set():
     for r, expec in zip(ranges, expected):
         it = iter(r)
         assert [next(it) for i in range(6)] == expec
+    i = symbols('i', integer=True)
+    expected = [[Piecewise((0, n - 10 >= 0), (n, True)),
+                Piecewise((0, n - 10 >= 0), (9, True)),
+                Piecewise((0, n - 10 >= 0), (9, True)),
+                (8, 8), (n + 2, n + 2)],
+                [Piecewise((0, n - 1 <= 0), (1, True)),
+                Piecewise((0, n - 1 <= 0), (n - 1, True)),
+                Piecewise((0, n - 1 <= 0), (n - 1, True)),
+                (n - 2, n - 2), (3, 3)], [Piecewise((0, ceiling(-4/n) <= 0),
+                (-1, n >= 0), (-n - 5, True)),
+                Piecewise((0, ceiling(-4/n) <= 0), (-n - 5, n >= 0),
+                (-1, True)), Piecewise((0, ceiling(-4/n) <= 0),
+                (-n - 5, n >= 0), (-1, True)), (-2*n - 5, -2*n - 5),
+                (2*n - 1, 2*n - 1)]]
+    for r, expec in (ranges, expected):
+        assert [r[0], r[-1], r[S.Infinity],
+                (r[-2], r[i].subs(i, -2)), (r[2], r[i].subs(i, 2))] == expec
     for r in ranges:
         raises(ValueError, lambda: len(r))
 

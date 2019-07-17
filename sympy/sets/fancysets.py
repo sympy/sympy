@@ -601,7 +601,7 @@ class Range(Set):
             return other.is_integer
         ref = self.start if self.start.is_finite else self._stop
         return Piecewise((False, Ne((ref - other) % self.step, S.Zero)),
-                         (True, Ge(other, self.inf) & Le(other, self.sup)),
+                         (True, Ge(other, self._inf) & Le(other, self._sup)),
                          (False, True))
 
     def __iter__(self):
@@ -647,6 +647,7 @@ class Range(Set):
 
     def __getitem__(self, i):
         from sympy.functions.elementary.integers import ceiling
+        from sympy.functions.elementary.piecewise import Piecewise
         ooslice = "cannot slice from the end with an infinite value"
         zerostep = "slice step cannot be zero"
         # if we had to take every other element in the following
@@ -750,34 +751,44 @@ class Range(Set):
                 elif start > 0:
                     raise ValueError(ooslice)
         else:
-            if not self:
+            i = _sympify(i)
+            if not self or ((i.is_integer == False) and (i.is_infinite == False)):
                 raise IndexError('Range index out of range')
-            if i == 0:
-                return self.start
-            if i == -1 or i is S.Infinity:
-                return self._stop - self.step
-            rv = (self._stop if i < 0 else self.start) + i*self.step
-            if rv.is_infinite:
+            if i == S(0):
+                return Piecewise((self._inf, Gt(self.step, 0)), (self._sup, True))
+            if i == -S(1) or i is S.Infinity:
+                return Piecewise((self._sup, Gt(self.step, 0)), (self._inf, True))
+            start, stop, step = self.start, self._stop, self.step
+            rvstop, rvstart = (stop + i*step, start + i*step)
+            rv = Piecewise((rvstop, Lt(i, 0)), (rvstart, True))
+            if Or(And(rvstop.is_infinite, Lt(i, 0)), And(rvstart.is_infinite, Ge(i, 0))) == True:
                 raise ValueError(ooslice)
-            if rv < self.inf or rv > self.sup:
+            if Or(And(Or(Lt(rvstop, self._inf), Gt(rvstop, self._sup)), Lt(i, 0)),
+                  And(Or(Lt(rvstart, self._inf), Gt(rvstart, self._sup)), Ge(i, 0))) == True:
                 raise IndexError("Range index out of range")
             return rv
 
     @property
     def _inf(self):
         from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.functions.elementary.integers import ceiling
         if not self:
             raise NotImplementedError
-        return Piecewise((self.start, Ge(self.step, S.Zero)),
-                         (self._stop - self.step, True))
+        start, stop, step = self.start, self._stop, self.step
+        return Piecewise((S.Zero, Le(ceiling((stop - start)/step), S.Zero)),
+                        (start, Ge(step, S.Zero)),
+                        (stop - step, True))
 
     @property
     def _sup(self):
         from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.functions.elementary.integers import ceiling
         if not self:
             raise NotImplementedError
-        return Piecewise((self._stop - self.step, Ge(self.step, S.Zero)),
-                         (self.start, True))
+        start, stop, step = self.start, self._stop, self.step
+        return Piecewise((S.Zero, Le(ceiling((stop - start)/step), S.Zero)),
+                        (stop - step, Ge(step, S.Zero)),
+                        (start, True))
 
     @property
     def _boundary(self):
