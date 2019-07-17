@@ -19,6 +19,7 @@ from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import together, cancel, factor
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
@@ -613,6 +614,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     if expr.has(Product):
         expr = product_simplify(expr)
+
+    if expr.has(KroneckerDelta):
+        from sympy.functions.elementary.piecewise import Piecewise
+        expr = simplify(expr.rewrite(Piecewise))
 
     from sympy.physics.units import Quantity
     from sympy.physics.units.util import quantity_simplify
