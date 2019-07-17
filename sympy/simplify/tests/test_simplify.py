@@ -853,3 +853,9 @@ def test_simplify_kroneckerdelta():
     n = Symbol('n', integer=True)
     e2 = KroneckerDelta(0, n) * KroneckerDelta(1, n)
     assert simplify(e2) == 0
+
+    M = Matrix(4, 4, lambda i, j: KroneckerDelta(j - i, n) if i <= j else 0)
+    assert simplify(M**2) == Matrix([[KroneckerDelta(0, n), 0, KroneckerDelta(1, n), 0],
+                                     [0, KroneckerDelta(0, n), 0, KroneckerDelta(1, n)],
+                                     [0, 0, KroneckerDelta(0, n), 0],
+                                     [0, 0, 0, KroneckerDelta(0, n)]])
