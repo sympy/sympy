@@ -170,10 +170,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self):
+    def sample(self, size=()):
         """ A random realization from the distribution """
-        scipy = import_module('scipy')
-        return self._sample_scipy(scipy, size=())
+        return self._sample_scipy(size)
         icdf = self._inverse_cdf_expression()
         return icdf(random.uniform(0, 1))
 

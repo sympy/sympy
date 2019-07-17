@@ -1268,20 +1268,20 @@ def test_sampling_methods():
         numpy = import_module('numpy')
         if not numpy:
             skip('Numpy not installed. Abort tests for _sample_numpy.')
-        sam = X.pspace.distribution._sample_numpy(numpy, size)
+        sam = X.pspace.distribution._sample_numpy(size)
         for i in range(size):
             assert sam[i] in X.pspace.domain.set
 
         scipy = import_module('scipy')
         if not scipy:
             skip('Scipy not installed. Abort tests for _sample_scipy.')
-        sam = X.pspace.distribution._sample_scipy(scipy, size)
+        sam = X.pspace.distribution._sample_scipy(size)
         for i in range(size):
             assert sam[i] in X.pspace.domain.set
 
         pymc3 = import_module('pymc3')
         if not pymc3:
             skip('PyMC3 not installed. Abort tests for _sample_pymc3.')
-        sam = X.pspace.distribution._sample_pymc3(pymc3, size)
+        sam = X.pspace.distribution._sample_pymc3(size)
         for i in range(size):
             assert sam[i] in X.pspace.domain.set

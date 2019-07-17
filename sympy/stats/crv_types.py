@@ -176,10 +176,14 @@ class ArcsinDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 1/(pi*sqrt((x - self.a)*(self.b - x)))
 
-    def _sample_scipy(self, scipy, size):
+    def _sample_scipy(self, size):
         a = float(self.a)
-        from scipy.stats import arcsine
-        return arcsine.rvs(loc=a)
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import arcsine
+            return arcsine.rvs(loc=a, size=size)
+        else:
+            raise NotImplementedError('Sampling the Arcsin Distribution requires Scipy.')
 
     def _cdf(self, x):
         from sympy import asin
@@ -348,20 +352,37 @@ class BetaDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1) * (1 - x)**(beta - 1) / beta_fn(alpha, beta)
 
-    def _sample_numpy(self, numpy, size):
-        a, b = float(self.alpha), float(self.beta)
-        return numpy.random.beta(a=a, b=b, size=size)
+    def _sample_python(self, size):
+        if size == ():
+            return random.betavariate(self.alpha, self.beta)
+        return [random.betavariate(self.alpha, self.beta) for i in range(size)]
 
-    def _sample_scipy(self, scipy, size):
+    def _sample_numpy(self, size):
         a, b = float(self.alpha), float(self.beta)
-        from scipy.stats import beta
-        return beta.rvs(a=a, b=b, size=size)
+        numpy = import_module('numpy')
+        if numpy:
+            return numpy.random.beta(a=a, b=b, size=size)
+        else:
+            raise NotImplementedError('Sampling the Beta Distribution requires Numpy.')
 
-    def _sample_pymc3(self, pymc3, size):
+    def _sample_scipy(self, size):
         a, b = float(self.alpha), float(self.beta)
-        with pymc3.Model():
-            pymc3.Beta('X', alpha=a, beta=b)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import beta
+            return beta.rvs(a=a, b=b, size=size)
+        else:
+            raise NotImplementedError('Sampling the Beta Distribution requires Scipy.')
+
+    def _sample_pymc3(self, size):
+        a, b = float(self.alpha), float(self.beta)
+        pymc3 = import_module('pymc3')
+        if pymc3:
+            with pymc3.Model():
+                pymc3.Beta('X', alpha=a, beta=b)
+                return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        else:
+            raise NotImplementedError('Sampling the Beta Distribution requires PyMC3.')
 
     def _characteristic_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
@@ -535,10 +556,15 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
 
-    def _sample_scipy(self, scipy, size):
+    def _sample_scipy(self, size):
         alpha, beta = float(self.alpha), float(self.beta)
-        from scipy.stats import betaprime
-        return betaprime.rvs(a=alpha, b=beta, size=size)
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import betaprime
+            return betaprime.rvs(a=alpha, b=beta, size=size)
+        else:
+            raise NotImplementedError('Sampling the BetaPrime Distribution requires Scipy.')
+
 
 def BetaPrime(name, alpha, beta):
     r"""
@@ -605,16 +631,24 @@ class CauchyDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
 
-    def _sample_scipy(self, scipy, size):
+    def _sample_scipy(self, size):
         x0, gamma = float(self.x0), float(self.gamma)
-        from scipy.stats import cauchy
-        return cauchy.rvs(loc=x0, scale=gamma, size=size)
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import cauchy
+            return cauchy.rvs(loc=x0, scale=gamma, size=size)
+        else:
+            raise NotImplementedError('Sampling the Cauchy Distribution requires Scipy.')
 
-    def _sample_pymc3(self, pymc3, size):
+    def _sample_pymc3(self, size):
         x0, gamma = float(self.x0), float(self.gamma)
-        with pymc3.Model():
-            pymc3.Cauchy('X', alpha=x0, beta=gamma)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        pymc3 = import_module('pymc3')
+        if pymc3:
+            with pymc3.Model():
+                pymc3.Cauchy('X', alpha=x0, beta=gamma)
+                return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        else:
+            raise NotImplementedError('Sampling the Cauchy Distribution requires PyMC3.')
 
     def _cdf(self, x):
         x0, gamma = self.x0, self.gamma
@@ -692,10 +726,14 @@ class ChiDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return 2**(1 - self.k/2)*x**(self.k - 1)*exp(-x**2/2)/gamma(self.k/2)
 
-    def _sample_scipy(self, scipy, size):
+    def _sample_scipy(self, size):
         k = float(self.k)
-        from scipy.stats import chi
-        return chi.rvs(df=k, size=size)
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import chi
+            return chi.rvs(df=k, size=size)
+        else:
+            raise NotImplementedError('Sampling the Chi Distribution requires Scipy.')
 
     def _characteristic_function(self, t):
         k = self.k
@@ -852,20 +890,32 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
                 (0, True)
         )
 
-    def _sample_numpy(self, numpy, size):
+    def _sample_numpy(self, size):
         k = float(self.k)
-        return numpy.random.chisquare(df=k, size=size)
+        numpy = import_module('numpy')
+        if numpy:
+            return numpy.random.chisquare(df=k, size=size)
+        else:
+            raise NotImplementedError('Sampling the ChiSquared Distribution requires Numpy.')
 
-    def _sample_scipy(self, scipy, size):
+    def _sample_scipy(self, size):
         k = float(self.k)
-        from scipy.stats import chi2
-        return chi2.rvs(df=k, size=size)
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import chi2
+            return chi2.rvs(df=k, size=size)
+        else:
+            raise NotImplementedError('Sampling the ChiSquared Distribution requires Scipy.')
 
-    def _sample_pymc3(self, pymc3, size):
+    def _sample_pymc3(self, size):
         k = float(self.k)
-        with pymc3.Model():
-            pymc3.ChiSquared('X', nu=k)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        pymc3 = import_module('pymc3')
+        if pymc3:
+            with pymc3.Model():
+                pymc3.ChiSquared('X', nu=k)
+                return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        else:
+            raise NotImplementedError('Sampling the ChiSquared Distribution requires PyMC3.')
 
     def _characteristic_function(self, t):
         return (1 - 2*I*t)**(-self.k/2)
@@ -1204,20 +1254,37 @@ class ExponentialDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return self.rate * exp(-self.rate*x)
 
-    def _sample_numpy(self, numpy, size):
+    def _sample_numpy(self, size):
         rate = float(self.rate)
-        return numpy.random.exponential(1/rate, size)
+        numpy = import_module('numpy')
+        if numpy:
+            return numpy.random.exponential(1/rate, size)
+        else:
+            raise NotImplementedError('Sampling the Exponential Distribution requires Numpy.')
 
-    def _sample_scipy(self, scipy, size):
-        rate = float(self.rate)
-        from scipy.stats import expon
-        return expon.rvs(loc=0, scale=1/rate, size=size)
+    def _sample_python(self, size):
+        if size == ():
+            return random.expovariate(self.rate)
+        return [random.expovariate(self.rate) for i in range(size)]
 
-    def _sample_pymc3(self, pymc3, size):
+    def _sample_scipy(self, size):
         rate = float(self.rate)
-        with pymc3.Model():
-            pymc3.Exponential('X', lam=rate)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import expon
+            return expon.rvs(loc=0, scale=1/rate, size=size)
+        else:
+            raise NotImplementedError('Sampling the Exponential Distribution requires Scipy.')
+
+    def _sample_pymc3(self, size):
+        rate = float(self.rate)
+        pymc3 = import_module('pymc3')
+        if pymc3:
+            with pymc3.Model():
+                pymc3.Exponential('X', lam=rate)
+                return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        else:
+            raise NotImplementedError('Sampling the Exponential Distribution requires PyMC3.')
 
     def _cdf(self, x):
         return Piecewise(
@@ -1648,20 +1715,37 @@ class GammaDistribution(SingleContinuousDistribution):
         k, theta = self.k, self.theta
         return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
 
-    def _sample_numpy(self, numpy, size):
-        k, theta = float(self.k), float(self.theta)
-        return numpy.random.gamma(k, theta, size)
+    def _sample_python(self, size):
+        if size == ():
+            return random.gammavariate(self.k, self.theta)
+        return [random.gammavariate(self.k, self.theta) for i in range(size)]
 
-    def _sample_scipy(self, scipy, size):
+    def _sample_numpy(self, size):
         k, theta = float(self.k), float(self.theta)
-        from scipy.stats import gamma
-        return gamma.rvs(a=k, loc=0, scale=theta, size=size)
+        numpy = import_module('numpy')
+        if numpy:
+            return numpy.random.gamma(k, theta, size)
+        else:
+            raise NotImplementedError('Sampling the Gamma Distribution requires Numpy.')
 
-    def _sample_pymc3(self, pymc3, size):
+    def _sample_scipy(self, size):
         k, theta = float(self.k), float(self.theta)
-        with pymc3.Model():
-            pymc3.Gamma('X', alpha=k, beta=1/theta)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import gamma
+            return gamma.rvs(a=k, loc=0, scale=theta, size=size)
+        else:
+            raise NotImplementedError('Sampling the Gamma Distribution requires Scipy.')
+
+    def _sample_pymc3(self, size):
+        k, theta = float(self.k), float(self.theta)
+        pymc3 = import_module('pymc3')
+        if pymc3:
+            with pymc3.Model():
+                pymc3.Gamma('X', alpha=k, beta=1/theta)
+                return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        else:
+            raise NotImplementedError('Sampling the Gamma Distribution requires PyMC3.')
 
     def _cdf(self, x):
         k, theta = self.k, self.theta
@@ -1770,7 +1854,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         return Piecewise((uppergamma(a,b/x)/gamma(a), x > 0),
                         (S.Zero, True))
 
-    def sample(self):
+    def _sample_scipy(self):
         scipy = import_module('scipy')
         if scipy:
             from scipy.stats import invgamma
@@ -2368,20 +2452,37 @@ class LogNormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return exp(-(log(x) - mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
 
-    def _sample_numpy(self, numpy, size):
-        mean, std = float(self.mean), float(self.std)
-        return numpy.random.lognormal(mean, std, size)
+    def _sample_python(self, size):
+        if size == ():
+            return random.lognormvariate(self.mean, self.std)
+        return [random.lognormvariate(self.mean, self.std) for i in range(size)]
 
-    def _sample_scipy(self, scipy, size):
+    def _sample_numpy(self, size):
         mean, std = float(self.mean), float(self.std)
-        from scipy.stats import lognorm
-        return lognorm.rvs(s=std, loc=0, scale=exp(mean), size=size)
+        numpy = import_module('numpy')
+        if numpy:
+            return numpy.random.lognormal(mean, std, size)
+        else:
+            raise NotImplementedError('Sampling the LogNormal Distribution requires Numpy.')
 
-    def _sample_pymc3(self, pymc3, size):
+    def _sample_scipy(self, size):
         mean, std = float(self.mean), float(self.std)
-        with pymc3.Model():
-            pymc3.Lognormal('X', mu=mean, sigma=std)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import lognorm
+            return lognorm.rvs(s=std, loc=0, scale=exp(mean), size=size)
+        else:
+            raise NotImplementedError('Sampling the LogNormal Distribution requires Scipy.')
+
+    def _sample_pymc3(self, size):
+        mean, std = float(self.mean), float(self.std)
+        pymc3 = import_module('pymc3')
+        if pymc3:
+            with pymc3.Model():
+                pymc3.Lognormal('X', mu=mean, sigma=std)
+                return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        else:
+            raise NotImplementedError('Sampling the LogNormal Distribution requires PyMC3.')
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
@@ -2637,20 +2738,37 @@ class NormalDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
-    def _sample_numpy(self, numpy, size):
-        mean, std = float(self.mean), float(self.std)
-        return numpy.random.normal(mean, std, size)
+    def _sample_python(self, size):
+        if size == ():
+            return random.normalvariate(self.mean, self.std)
+        return [random.normalvariate(self.mean, self.std) for i in range(size)]
 
-    def _sample_scipy(self, scipy, size):
+    def _sample_numpy(self, size):
         mean, std = float(self.mean), float(self.std)
-        from scipy.stats import norm
-        return norm.rvs(mean, std, size)
+        numpy = import_module('numpy')
+        if numpy:
+            return numpy.random.normal(mean, std, size)
+        else:
+            raise NotImplementedError('Sampling the Normal Distribution requires Numpy.')
 
-    def _sample_pymc3(self, pymc3, size):
+    def _sample_scipy(self, size):
         mean, std = float(self.mean), float(self.std)
-        with pymc3.Model():
-            pymc3.Normal('X', mean, std)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import norm
+            return norm.rvs(mean, std, size)
+        else:
+            raise NotImplementedError('Sampling the Normal Distribution requires Scipy.')
+
+    def _sample_pymc3(self, size):
+        mean, std = float(self.mean), float(self.std)
+        pymc3 = import_module('pymc3')
+        if pymc3:
+            with pymc3.Model():
+                pymc3.Normal('X', mean, std)
+                return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        else:
+            raise NotImplementedError('Sampling the Normal Distribution requires PyMC3.')
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
@@ -2780,14 +2898,32 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
         mu, s = self.mean, self.shape
         return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/((2*pi*x**3)))
 
-    def sample(self):
+    def _sample_numpy(self, size):
+        xm, alpha = float(self.xm), float(self.alpha)
+        numpy = import_module('numpy')
+        if numpy:
+            return (numpy.random.pareto(a=alpha, size=1000) + 1) * xm
+        else:
+            raise NotImplementedError('Sampling the Pareto Distribution requires Numpy.')
+
+    def _sample_scipy(self, size):
+        xm, alpha = float(self.xm), float(self.alpha)
         scipy = import_module('scipy')
         if scipy:
-            from scipy.stats import invgauss
-            return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape))
+            from scipy.stats import pareto
+            return pareto.rvs(b=alpha, scale=xm, size=size)
         else:
-            raise NotImplementedError(
-                'Sampling the Inverse Gaussian Distribution requires Scipy.')
+            raise NotImplementedError('Sampling the Pareto Distribution requires Scipy.')
+
+    def _sample_pymc3(self, size):
+        xm, alpha = float(self.xm), float(self.alpha)
+        pymc3 = import_module('pymc3')
+        if pymc3:
+            with pymc3.Model():
+                pymc3.Pareto('X', alpha=alpha, m=xm)
+                return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        else:
+            raise NotImplementedError('Sampling the Pareto Distribution requires PyMC3.')
 
     def _cdf(self, x):
         from sympy.stats import cdf
@@ -2893,20 +3029,37 @@ class ParetoDistribution(SingleContinuousDistribution):
         xm, alpha = self.xm, self.alpha
         return alpha * xm**alpha / x**(alpha + 1)
 
-    def _sample_numpy(self, numpy, size):
-        xm, alpha = float(self.xm), float(self.alpha)
-        return (numpy.random.pareto(a=alpha, size=1000) + 1) * xm
+    def _sample_python(self, size):
+        if size == ():
+            return random.paretovariate(self.alpha)
+        return [random.paretovariate(self.alpha) for i in range(size)]
 
-    def _sample_scipy(self, scipy, size):
+    def _sample_numpy(self, size):
         xm, alpha = float(self.xm), float(self.alpha)
-        from scipy.stats import pareto
-        return pareto.rvs(b=alpha, scale=xm, size=size)
+        numpy = import_module('numpy')
+        if numpy:
+            return (numpy.random.pareto(a=alpha, size=1000) + 1) * xm
+        else:
+            raise NotImplementedError('Sampling the Pareto Distribution requires Numpy.')
 
-    def _sample_pymc3(self, pymc3, size):
+    def _sample_scipy(self, size):
         xm, alpha = float(self.xm), float(self.alpha)
-        with pymc3.Model():
-            pymc3.Pareto('X', alpha=alpha, m=xm)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import pareto
+            return pareto.rvs(b=alpha, scale=xm, size=size)
+        else:
+            raise NotImplementedError('Sampling the Pareto Distribution requires Scipy.')
+
+    def _sample_pymc3(self, size):
+        xm, alpha = float(self.xm), float(self.alpha)
+        pymc3 = import_module('pymc3')
+        if pymc3:
+            with pymc3.Model():
+                pymc3.Pareto('X', alpha=alpha, m=xm)
+                return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        else:
+            raise NotImplementedError('Sampling the Pareto Distribution requires PyMC3.')
 
     def _cdf(self, x):
         xm, alpha = self.xm, self.alpha
@@ -3615,8 +3768,37 @@ class UniformDistribution(SingleContinuousDistribution):
                               Min(self.left, self.right): self.left})
         return result
 
-    def sample(self):
-        return random.uniform(self.left, self.right)
+    def _sample_python(self, size):
+        if size == ():
+            return random.uniform(self.left, self.right)
+        return [random.uniform(self.left, self.right) for i in range(size)]
+
+    def _sample_numpy(self, size):
+        left, right = float(self.left), float(self.right)
+        numpy = import_module('numpy')
+        if numpy:
+            return numpy.random.uniform(low=left, high=right, size=size)
+        else:
+            raise NotImplementedError('Sampling the Beta Distribution requires Numpy.')
+
+    def _sample_scipy(self, size):
+        left, right = float(self.left), float(self.right)
+        scipy = import_module('scipy')
+        if scipy:
+            from scipy.stats import uniform
+            return uniform.rvs(loc=left, scale=right-left, size=size)
+        else:
+            raise NotImplementedError('Sampling the Beta Distribution requires Scipy.')
+
+    def _sample_pymc3(self, size):
+        left, right = float(self.left), float(self.right)
+        pymc3 = import_module('pymc3')
+        if pymc3:
+            with pymc3.Model():
+                pymc3.Uniform('X', lower=left, upper=right)
+                return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        else:
+            raise NotImplementedError('Sampling the Beta Distribution requires PyMC3.')
 
 
 def Uniform(name, left, right):
@@ -3870,8 +4052,10 @@ class WeibullDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
 
-    def sample(self):
-        return random.weibullvariate(self.alpha, self.beta)
+    def _sample_python(self, size):
+        if size == ():
+            return random.weibullvariate(self.alpha, self.beta)
+        return [random.weibullvariate(self.alpha, self.beta) for i in range(size)]
 
 def Weibull(name, alpha, beta):
     r"""
