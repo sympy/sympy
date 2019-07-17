@@ -3133,6 +3133,35 @@ class MatrixBase(MatrixDeprecated,
     def _eval_matrix_exp_jblock(self):
         """A helper function to compute an exponential of a Jordan block
         matrix
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix
+        >>> l = Symbol('lamda')
+
+        A trivial example of 1*1 Jordan block:
+
+        >>> m = Matrix([[l]])
+        >>> m._eval_matrix_exp_jblock()
+        Matrix([[exp(lamda)]])
+
+        An example of 3*3 Jordan block:
+
+        >>> m = Matrix(
+        ...     [[l, 1, 0],
+        ...     [0, l, 1],
+        ...     [0, 0, l]])
+        >>> m._eval_matrix_exp_jblock()
+        Matrix([
+        [exp(lamda), exp(lamda), exp(lamda)/2],
+        [         0, exp(lamda),   exp(lamda)],
+        [         0,          0,   exp(lamda)]])
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Matrix_function#Jordan_decomposition
         """
         size = self.rows
         l = self[0, 0]
