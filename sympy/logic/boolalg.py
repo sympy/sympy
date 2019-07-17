@@ -2661,7 +2661,7 @@ class OR(object):
         self._args = args
 
     def __invert__(self):
-        return AND(*self._args)
+        return AND(*[~arg for arg in self._args])
 
     @property
     def args(self):
@@ -2685,7 +2685,7 @@ class AND(object):
         self._args = args
 
     def __invert__(self):
-        return OR(*self._args)
+        return OR(*[~arg for arg in self._args])
 
     @property
     def args(self):
