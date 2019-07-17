@@ -590,10 +590,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
 
-    if expr.has(KroneckerDelta):
-        expr = expr.rewrite(Piecewise)
-
     expr = piecewise_fold(expr)
+
+    if expr.has(KroneckerDelta):
+        expr = kroneckersimp(expr)
 
     if expr.has(BesselBase):
         expr = besselsimp(expr)
@@ -1104,6 +1104,48 @@ def bottom_up(rv, F, atoms=False, nonbasic=False):
                 pass
 
     return rv
+
+
+def kroneckersimp(expr):
+    """
+    Simplify expressions with KroneckerDelta.
+
+    The only simplification attempted is to identify multiplicative cancellation.
+    """
+    def args_cancel(a1, a2, a3, a4):
+        return a1.equals(a2) and not a3.equals(a4)
+
+    def cancel_kronecker_mul(m):
+        args = m.args
+        deltas = [a for a in args if isinstance(a, KroneckerDelta)]
+
+        for i in range(len(deltas)):
+            args1 = deltas[i].args
+            for j in range(i+1, len(deltas)):
+                args2 = deltas[j].args
+                for i1 in range(2):
+                    for i2 in range(2):
+                        a1 = args1[i1]
+                        a2 = args2[i2]
+                        a3 = args1[(i1 + 1) % 2]
+                        a4 = args2[(i2 + 1) % 2]
+                        if args_cancel(a1, a2, a3, a4):
+                            return Mul(*((0,) + args))
+        return m
+
+    def is_mul_with_kronecker(e):
+        return isinstance(e, Mul) and e.has(KroneckerDelta)
+
+    if not expr.has(KroneckerDelta):
+        return expr
+
+    newexpr = expr
+    expr = None
+    while newexpr != expr:
+        expr = newexpr
+        newexpr = expr.replace(is_mul_with_kronecker, cancel_kronecker_mul)
+
+    return expr
 
 
 def besselsimp(expr):
