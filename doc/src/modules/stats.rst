@@ -77,8 +77,6 @@ Joint Types
 .. autofunction:: Multinomial
 .. autofunction:: MultivariateBeta
 .. autofunction:: MultivariateEwens
-.. autofunction:: MultivariateLaplace
-.. autofunction:: MultivariateNormal
 .. autofunction:: MultivariateT
 .. autofunction:: NegativeMultinomial
 .. autofunction:: NormalGamma

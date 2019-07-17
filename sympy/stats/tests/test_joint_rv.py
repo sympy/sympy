@@ -7,7 +7,7 @@ from sympy.matrices import Matrix
 from sympy.stats import density
 from sympy.stats.crv_types import Normal
 from sympy.stats.joint_rv import marginal_distribution
-from sympy.stats.joint_rv_types import JointRV
+from sympy.stats.joint_rv_types import JointRV, MultivariateLaplace, MultivariateNormal
 from sympy.utilities.pytest import raises, XFAIL
 
 x, y, z, a, b = symbols('x y z a b')
