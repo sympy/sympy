@@ -8,9 +8,10 @@ from sympy.core.cache import cacheit
 from sympy.core.decorators import deprecated
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
-                                 BooleanFunction, BooleanAtom, CNF, EncodedCNF, Literal)
+                                 BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
+from sympy.assumptions.CNF import CNF, EncodedCNF, Literal
 
 
 # Deprecated predicates should be added to this list
@@ -1415,7 +1416,8 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
 
     from sympy.core.cache import cacheit
-    from sympy.logic.boolalg import And, Literal
+    from sympy.logic.boolalg import And
+    from sympy.assumptions.CNF import Literal
     from sympy.assumptions.ask import Q
 
     # -{ Known facts as a set }-
