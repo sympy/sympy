@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify, expand_mul,
                         expand_func, Function, Dummy, Expr, factor_terms,
-                        expand_power_exp)
+                        expand_power_exp, Eq)
 from sympy.core.compatibility import iterable, ordered, range, as_int
 from sympy.core.evaluate import global_evaluate
 from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
@@ -1113,7 +1113,7 @@ def kroneckersimp(expr):
     The only simplification attempted is to identify multiplicative cancellation.
     """
     def args_cancel(a1, a2, a3, a4):
-        return a1.equals(a2) and not a3.equals(a4)
+        return Eq(a1, a2) is S.true and Eq(a3, a4) is S.false
 
     def cancel_kronecker_mul(m):
         args = m.args
