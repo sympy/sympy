@@ -2594,6 +2594,9 @@ class Literal(object):
             obj.code = lit
             obj.is_Not = is_not
             return obj
+        if type(lit).__name__ == 'Not':
+            lit = lit.args[0]
+            is_not = True
         k = literals_store.get(lit, None)
         if k is not None:
             return Literal(k, is_not)
@@ -2601,7 +2604,7 @@ class Literal(object):
             obj = super(Literal, cls).__new__(cls)
             obj.code = len(literals_store) + 1
             literals_store[lit] = obj.code
-            obj.is_Not = (type(lit).__name__ == 'Not') or is_not
+            obj.is_Not = is_not
             return obj
 
     @property
@@ -2619,7 +2622,9 @@ class Literal(object):
         return Literal(self.code, is_not=is_not)
 
     def __str__(self):
-        return type(self).__name__+'( '+ str(self.lit)+ ', ' + str(self.is_Not)+')'
+        # checking fix later
+        return '~'+str(self.lit) if self.is_Not else str(self.lit)
+        # return type(self).__name__+'( '+ str(self.lit)+ ', ' + str(self.is_Not)+')'
 
     __repr__ = __str__
 
@@ -2643,7 +2648,20 @@ class CNF(object):
 
     def add(self, prop):
         clauses = CNF.to_CNF(prop).clauses
+        clss = to_cnf(prop)
+        CLSS = And.make_args(clss)
+        CLSS = set((frozenset((Literal(x) for x in Or.make_args(clause))) for clause in CLSS))
+        if CLSS != clauses:
+            print(prop, CNF.CNF_to_cnf(CNF(clauses)), clss, sep='\n\n')
+            k = input('I am waiting')
         self.clauses |= clauses
+
+    def __str__(self):
+        s = '&'.join(
+            ['(' + '|'.join([str(lit) for lit in clause]) +')'
+            for clause in self.clauses]
+        )
+        return s
 
     def extend(self, props):
         for p in props:
@@ -2675,23 +2693,41 @@ class CNF(object):
 
     def _or(self, cnf):
         clauses = set()
-        for a in self.clauses:
-            for b in cnf.clauses:
-                clauses.add(a.union(b))
+        print('in or:',len(self.clauses), len(cnf.clauses))
+        for a,b in product(self.clauses, cnf.clauses):
+            tmp = set(a)
+            for t in b:
+                if ~t in b:
+                    break
+                tmp.add(t)
+            else:
+                clauses.add(frozenset(tmp))
+        print('or out')
+        # print(clauses)
+        # k = input('move ahead:')
         return CNF(clauses)
 
     def _and(self, cnf):
+        print('in and:', len(self.clauses), len(cnf.clauses))
         clauses = self.clauses.union(cnf.clauses)
+        print('out and')
+        # print(clauses)
+        # k = input('move ahead:')
         return CNF(clauses)
 
     def _not(self):
-        cnfs = []
-        for clause in self.clauses:
-            tmp = set()
-            for literal in clause:
-                tmp.add(frozenset((~literal,)))
-            cnfs.append(CNF(tmp))
-        return CNF.all_or(*cnfs)
+        clss = list(self.clauses)
+        ll = set()
+        for x in clss[-1]:
+            ll.add(frozenset((~x,)))
+        ll = CNF(ll)
+
+        for rest in clss[:-1]:
+            p = set()
+            for x in rest:
+                p.add(frozenset((~x,)))
+            ll = ll._or(CNF(p))
+        return ll
 
     @classmethod
     def all_or(cls, *cnfs):
@@ -2756,7 +2792,7 @@ class CNF(object):
 
         if klass == 'Implies':
             L, R = map(CNF.to_CNF, expr.args)
-            return L._not()._or(R)
+            return (L._and(R._not()))._not()
 
         if klass == 'Equivalent':
             cnfs = []
