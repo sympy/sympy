@@ -1112,10 +1112,10 @@ def kroneckersimp(expr):
 
     The only simplification currently attempted is to identify multiplicative cancellation:
 
-    >>> from sympy import kroneckersimp
+    >>> from sympy import KroneckerDelta, kroneckersimp
     >>> from sympy.abc import i, j
-    >>> kroneckersimp(KroneckerDelta(0, j) * KroneckerDelta(1, j))
-    >>> 0
+    >>> kroneckersimp(1 + KroneckerDelta(0, j) * KroneckerDelta(1, j))
+    1
     """
     def args_cancel(a1, a2, a3, a4):
         return Eq(a1, a2) is S.true and Eq(a3, a4) is S.false
