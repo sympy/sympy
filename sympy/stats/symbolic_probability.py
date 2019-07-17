@@ -7,7 +7,7 @@ from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
 from sympy.stats.rv import RandomSymbol, probability, expectation
 
-__all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
+__all__ = ['Probability', 'Expectation', 'Variance', 'Covariance', 'RandomSymbol']
 
 
 class Probability(Expr):

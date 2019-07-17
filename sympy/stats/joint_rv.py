@@ -11,23 +11,24 @@ sympy.stats.drv
 
 from __future__ import print_function, division
 
-# __all__ = ['marginal_distribution']
-
 from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
- Dummy)
-from sympy.concrete.summations import Sum, summation
+                   Dummy)
 from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum, summation
 from sympy.core.compatibility import string_types, iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import ImmutableMatrix
 from sympy.stats.crv import (ContinuousDistribution,
-    SingleContinuousDistribution, SingleContinuousPSpace)
+                             SingleContinuousDistribution, SingleContinuousPSpace)
 from sympy.stats.drv import (DiscreteDistribution,
-    SingleDiscreteDistribution, SingleDiscretePSpace)
+                             SingleDiscreteDistribution, SingleDiscretePSpace)
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-     ProductDomain, RandomSymbol, random_symbols, SingleDomain)
+                            ProductDomain, RandomSymbol, random_symbols, SingleDomain)
 from sympy.utilities.misc import filldedent
+
+
+# __all__ = ['marginal_distribution']
 
 
 class JointPSpace(ProductPSpace):
