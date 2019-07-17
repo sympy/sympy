@@ -39,6 +39,11 @@ class NonSquareMatrixError(ShapeError):
     pass
 
 
+class NonInvertibleMatrixError(ValueError, MatrixError):
+    """The matrix in not invertible (division by multidimensional zero error)."""
+    pass
+
+
 class NonPositiveDefiniteMatrixError(ValueError, MatrixError):
     """The matrix is not a positive-definite matrix."""
     pass
@@ -2221,15 +2226,14 @@ class MatrixArithmetic(MatrixRequired):
     def __pow__(self, exp):
         if self.rows != self.cols:
             raise NonSquareMatrixError()
+        a = self
+        jordan_pow = getattr (a, '_matrix_pow_by_jordan_blocks', None)
         exp = sympify(exp)
 
         if exp.is_zero:
             return self._new(self.rows, self.cols, lambda i, j: int(i == j))
         if exp == 1:
             return self
-
-        a = self
-        jordan_pow = getattr (a, '_matrix_pow_by_jordan_blocks', None)
 
         if exp.is_Number and exp % 1 == 0:
             if a.rows == 1:

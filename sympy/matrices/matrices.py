@@ -29,8 +29,8 @@ from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.misc import filldedent
 
 from .common import (
-    MatrixCommon, MatrixError, NonSquareMatrixError, ShapeError,
-    NonPositiveDefiniteMatrixError)
+    MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
+    ShapeError, NonPositiveDefiniteMatrixError)
 
 
 def _iszero(x):
@@ -2363,10 +2363,13 @@ class MatrixBase(MatrixDeprecated,
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
             l = jc[0, 0]
-            if l == 0 and (n < N - 1) != False:
-                raise ValueError("Matrix det == 0; not invertible")
-            elif l == 0 and N > 1 and n % 1 != 0:
-                raise ValueError("Non-integer power cannot be evaluated")
+            if l == 0:
+                if isinstance (n, Expr) and not n.is_extended_real:
+                    raise NonInvertibleMatrixError("Non-invertible matrix to non-real power")
+                if (n < N - 1) != False:
+                    raise NonInvertibleMatrixError("Matrix det == 0; not invertible")
+                if (N > 1 and n % 1 != 0):
+                    raise ValueError("Non-integer power cannot be evaluated")
             for i in range(N):
                 for j in range(N-i):
                     bn = binomial(n, i)
@@ -3364,7 +3367,7 @@ class MatrixBase(MatrixDeprecated,
         try:
             det_inv = mod_inverse(det_K, m)
         except ValueError:
-            raise ValueError('Matrix is not invertible (mod %d)' % m)
+            raise NonInvertibleMatrixError('Matrix is not invertible (mod %d)' % m)
 
         K_adj = self.adjugate()
         K_inv = self.__class__(N, N,
@@ -3392,7 +3395,7 @@ class MatrixBase(MatrixDeprecated,
             ok = self.rref(simplify=True)[0]
             zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
         if zero:
-            raise ValueError("Matrix det == 0; not invertible.")
+            raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
         return self.adjugate() / d
 
@@ -3413,7 +3416,7 @@ class MatrixBase(MatrixDeprecated,
         big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
         red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
-            raise ValueError("Matrix det == 0; not invertible.")
+            raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
         return self._new(red[:, big.rows:])
 
@@ -3432,7 +3435,7 @@ class MatrixBase(MatrixDeprecated,
 
         ok = self.rref(simplify=True)[0]
         if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
-            raise ValueError("Matrix det == 0; not invertible.")
+            raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
         return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
 
@@ -4876,7 +4879,7 @@ class MatrixBase(MatrixDeprecated,
             try:
                 soln, param = self.gauss_jordan_solve(rhs)
                 if param:
-                    raise ValueError("Matrix det == 0; not invertible. "
+                    raise NonInvertibleMatrixError("Matrix det == 0; not invertible. "
                     "Try ``self.gauss_jordan_solve(rhs)`` to obtain a parametric solution.")
             except ValueError:
                 # raise same error as in inv:

@@ -240,7 +240,7 @@ def test_power():
     A = Matrix([[8, 1], [3, 2]])
     assert A**10.0 == Matrix([[1760744107, 272388050], [817164150, 126415807]])
     A = Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 1
-    assert A**10.2 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 2
     assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     n = Symbol('n', integer=True)
@@ -260,6 +260,14 @@ def test_power():
     assert An.subs(n, 2).doit() == A**2
     raises(ValueError, lambda: An.subs(n, -2).doit())
     assert An * An == A**(2*n)
+
+    # concretizing non-integer, complex and infinite powers
+    A = Matrix ([[2,0,0],[0,2,0],[0,0,2]])
+    assert A**2.1 == diag (2**2.1, 2**2.1, 2**2.1)
+    assert A**I == diag (2**I, 2**I, 2**I)
+    A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])
+    raises(ValueError, lambda: A**2.1)
+    raises(ValueError, lambda: A**I)
 
 
 def test_creation():
