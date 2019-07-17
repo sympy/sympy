@@ -2363,19 +2363,17 @@ class MatrixBase(MatrixDeprecated,
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
             l = jc[0, 0]
-            if l == 0:
-                if isinstance (n, Expr) and not n.is_extended_real:
-                    raise NonInvertibleMatrixError("Non-invertible matrix to non-real power")
-                if (n < N - 1) != False:
-                    raise NonInvertibleMatrixError("Matrix det == 0; not invertible")
-                if (N > 1 and n % 1 != 0):
-                    raise ValueError("Non-integer power cannot be evaluated")
+            if l == 0 and not (n.is_integer and n.is_nonnegative):
+                raise NonInvertibleMatrixError("Non-invertible matrix can only be raised to a nonnegative integer power")
             for i in range(N):
                 for j in range(N-i):
                     bn = binomial(n, i)
                     if isinstance(bn, binomial):
                         bn = bn._eval_expand_func()
-                    jc[j, i+j] = l**(n-i)*bn
+                    if not l.is_zero or (n >= i) == True:
+                        jc[j, i+j] = l**(n-i)*bn
+                    else:
+                        jc[j, i+j] = 0
 
         P, J = self.jordan_form()
         jordan_cells = J.get_diag_blocks()
