@@ -3142,16 +3142,13 @@ class MatrixBase(MatrixDeprecated,
 
         A trivial example of 1*1 Jordan block:
 
-        >>> m = Matrix([[l]])
+        >>> m = Matrix.jordan_block(1, l)
         >>> m._eval_matrix_exp_jblock()
         Matrix([[exp(lamda)]])
 
         An example of 3*3 Jordan block:
 
-        >>> m = Matrix(
-        ...     [[l, 1, 0],
-        ...     [0, l, 1],
-        ...     [0, 0, l]])
+        >>> m = Matrix.jordan_block(3, l)
         >>> m._eval_matrix_exp_jblock()
         Matrix([
         [exp(lamda), exp(lamda), exp(lamda)/2],
