@@ -132,8 +132,6 @@ class PolycyclicGroup(DefaultPrinting):
         >>> group, x, y = free_group("x, y")
         >>> G = SymmetricGroup(3)
         >>> PcGroup = G.polycyclic_group()
-        >>> PcGroup.leading_exponent(G[0], group)
-        1
         >>> PcGroup.leading_exponent(G[1], group)
         1
 
@@ -145,17 +143,64 @@ class PolycyclicGroup(DefaultPrinting):
         return None
 
     def pc_presentation(self, group):
+        """
+        Return the polycyclic presentation.
+
+        There are two types of relations used in polycyclic
+        presentation.
+        i) Power relations of the form `x{i}^re{i} = R{i}{i}`,
+        `for 0 <= i < length(pcgs)` where `x` represents polycyclic
+        generator and `re` is the corresponding relative order.
+
+        ii) Conjugate relations of the form `x{j}^-1*x{i}*x{j}`,
+        `for 0 <= j < i <= length(pcgs)`.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> S = SymmetricGroup(49).sylow_subgroup(7)
+        >>> der = S.derived_series()
+        >>> G = der[len(der)-2]
+        >>> PcGroup = G.polycyclic_group()
+        >>> pcgs = PcGroup.pcgs
+        >>> len(pcgs)
+        6
+        >>> group, x0, x1, x2, x3, x4, x5 = free_group("x0, x1, x2, x3, x4, x5")
+        >>> pc_resentation = PcGroup.pc_presentation(group)
+        >>> free_to_perm = {}
+        >>> for s, g in zip(group.symbols, pcgs):
+        ...     free_to_perm[s] = g
+
+        >>> for k, v in pc_resentation.items():
+        ...     k_array = k.array_form
+        ...     if v != ():
+        ...        v_array = v.array_form
+        ...     lhs = Permutation()
+        ...     for gen in k_array:
+        ...         s = gen[0]
+        ...         e = gen[1]
+        ...         lhs = lhs*free_to_perm[s]**e
+        ...     if v == ():
+        ...         assert lhs.is_identity
+        ...         continue
+        ...     rhs = Permutation()
+        ...     for gen in v_array:
+        ...         s = gen[0]
+        ...         e = gen[1]
+        ...         rhs = rhs*free_to_perm[s]**e
+        ...     assert lhs == rhs
+
+        """
         rel_order = self.relative_order()
         pc_relators = {}
         perm_to_free = {}
-        free_to_perm = {}
         pcgs = self.pcgs
 
         for gen, s in zip(pcgs, group.generators):
             perm_to_free[gen**-1] = s**-1
             perm_to_free[gen] = s
-            free_to_perm[s**-1] = gen**-1
-            free_to_perm[s] = gen
 
         collector = Collector(pc_relators, rel_order, group)
         pcgs.reverse()
