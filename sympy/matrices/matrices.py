@@ -3130,6 +3130,21 @@ class MatrixBase(MatrixDeprecated,
 
         return work
 
+    def _eval_matrix_exp_jblock(self):
+        """A helper function to compute an exponential of a Jordan block
+        matrix
+        """
+        size = self.rows
+        l = self[0, 0]
+        exp_l = exp(l)
+
+        bands = {0: exp_l}
+        for i in range(1, size):
+            bands[i] = exp_l / factorial(i)
+
+        from .sparsetools import banded
+        return self.__class__(banded(size, bands))
+
     def exp(self):
         """Return the exponentiation of a square matrix."""
         if not self.is_square:
@@ -3142,27 +3157,7 @@ class MatrixBase(MatrixDeprecated,
             raise NotImplementedError(
                 "Exponentiation is implemented only for matrices for which the Jordan normal form can be computed")
 
-        def _jblock_exponential(b):
-            # This function computes the matrix exponential for one single Jordan block
-            nr = b.rows
-            l = b[0, 0]
-            if nr == 1:
-                res = exp(l)
-            else:
-                from sympy import eye
-                # extract the diagonal part
-                d = b[0, 0] * eye(nr)
-                # and the nilpotent part
-                n = b - d
-                # compute its exponential
-                nex = eye(nr)
-                for i in range(1, nr):
-                    nex = nex + n ** i / factorial(i)
-                # combine the two parts
-                res = exp(b[0, 0]) * nex
-            return (res)
-
-        blocks = list(map(_jblock_exponential, cells))
+        blocks = [cell._eval_matrix_exp_jblock() for cell in cells]
         from sympy.matrices import diag
         from sympy import re
         eJ = diag(*blocks)
