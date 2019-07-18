@@ -2078,6 +2078,15 @@ def test_exp():
     assert m.exp() == Matrix([[E*cos(1), -E*sin(1)], [E*sin(1), E*cos(1)]])
 
 
+def test_log():
+    m = Matrix(
+        [[0, 0, 1],
+        [0, 0, 0],
+        [-1, 0, 0]]
+    )
+    raises(MatrixError, lambda: m.log())
+
+
 def test_has():
     A = Matrix(((x, y), (2, 3)))
     assert A.has(x)

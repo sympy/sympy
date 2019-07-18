@@ -3227,6 +3227,11 @@ class MatrixBase(MatrixDeprecated,
         size = self.rows
         l = self[0, 0]
 
+        if l.is_zero:
+            raise MatrixError(
+                'Could not take logarithm or reciprocal for the given '
+                'eigenvalue {}'.format(l))
+
         bands = {0: log(l)}
         for i in range(1, size):
             bands[i] = -((-l) ** -i) / i
