@@ -950,81 +950,128 @@ class Mul(Expr, AssocOp):
             return AssocOp._matches_commutative(self, expr, repl_dict, old)
         elif self.is_commutative is not expr.is_commutative:
             return None
+
+        # Proceed only if both both expressions are non-commutative
         c1, nc1 = self.args_cnc()
         c2, nc2 = expr.args_cnc()
-        repl_dict = repl_dict.copy()
-        if c1:
-            if not c2:
-                c2 = [1]
-            a = self.func(*c1)
-            if isinstance(a, AssocOp):
-                repl_dict = a._matches_commutative(self.func(*c2), repl_dict, old)
-            else:
-                repl_dict = a.matches(self.func(*c2), repl_dict)
-        if repl_dict:
-            a = self.func(*nc1)
-            if isinstance(a, self.func):
-                repl_dict = a._matches(self.func(*nc2), repl_dict)
-            else:
-                repl_dict = a.matches(self.func(*nc2), repl_dict)
+        c1, c2 = [c or [1] for c in [c1, c2]]
+
+        # TODO: Should these be self.func?
+        comm_mul_self = Mul(*c1)
+        comm_mul_expr = Mul(*c2)
+
+        repl_dict = comm_mul_self.matches(comm_mul_expr, repl_dict, old)
+
+        # If the commutative arguments didn't match and aren't equal, then
+        # then the expression as a whole doesn't match
+        if repl_dict is None and c1 != c2:
+            return None
+
+        # Now match the non-commutative arguments, expanding powers to
+        # multiplications
+        nc1 = Mul._matches_expand_matpows(nc1)
+        nc2 = Mul._matches_expand_matpows(nc2)
+
+        repl_dict = Mul._matches_noncomm(nc1, nc2, repl_dict)
+
         return repl_dict or None
 
-    def _matches(self, expr, repl_dict={}):
-        # weed out negative one prefixes#
-        from sympy import Wild
-        sign = 1
-        a, b = self.as_two_terms()
-        if a is S.NegativeOne:
-            if b.is_Mul:
-                sign = -sign
+    @staticmethod
+    def _matches_expand_matpows(arg_list):
+        new_args = []
+        for arg in arg_list:
+            if arg.is_Pow and arg.exp > 0:
+                new_args.extend([arg.base] * arg.exp)
             else:
-                # the remainder, b, is not a Mul anymore
-                return b.matches(-expr, repl_dict)
-        expr = sympify(expr)
-        if expr.is_Mul and expr.args[0] is S.NegativeOne:
-            expr = -expr
-            sign = -sign
+                new_args.append(arg)
+        return new_args
 
-        if not expr.is_Mul:
-            # expr can only match if it matches b and a matches +/- 1
-            if len(self.args) == 2:
-                # quickly test for equality
-                if b == expr:
-                    return a.matches(Rational(sign), repl_dict)
-                # do more expensive match
-                dd = b.matches(expr, repl_dict)
-                if dd is None:
-                    return None
-                dd = a.matches(Rational(sign), dd)
-                return dd
-            return None
+    @staticmethod
+    def _matches_noncomm(nodes, targets, repl_dict={}):
+        # List of possible future states to be considered
+        agenda = []
+        # The current matching state, storing index in nodes and targets
+        state = (0, 0)
+        node_ind, target_ind = state
+        # Mapping between wildcards and the index ranges they match
+        wildcard_dict = {}
+        repl_dict = repl_dict.copy()
 
-        d = repl_dict.copy()
+        while target_ind < len(targets) and node_ind < len(nodes):
+            node = nodes[node_ind]
 
-        # weed out identical terms
-        pp = list(self.args)
-        ee = list(expr.args)
-        for p in self.args:
-            if p in expr.args:
-                ee.remove(p)
-                pp.remove(p)
+            if node.is_Wild:
+                Mul._matches_add_wildcard(wildcard_dict, state, node)
 
-        # only one symbol left in pattern -> match the remaining expression
-        if len(pp) == 1 and isinstance(pp[0], Wild):
-            if len(ee) == 1:
-                d[pp[0]] = sign * ee[0]
-            else:
-                d[pp[0]] = sign * expr.func(*ee)
-            return d
-
-        if len(ee) != len(pp):
-            return None
-
-        for p, e in zip(pp, ee):
-            d = p.xreplace(d).matches(e, d)
-            if d is None:
+            states_matches = Mul._matches_new_states(wildcard_dict, state,
+                                                     nodes, targets)
+            if states_matches:
+                new_states, new_matches = states_matches
+                agenda.extend(new_states)
+                if new_matches:
+                    for match in new_matches:
+                        repl_dict[match] = new_matches[match]
+            if not agenda:
                 return None
-        return d
+            else:
+                state = agenda.pop()
+                node_ind, target_ind = state
+
+        return repl_dict
+
+    @staticmethod
+    def _matches_add_wildcard(dictionary, state, wildcard):
+        node_ind, target_ind = state
+        if wildcard in dictionary:
+            begin, end = dictionary[wildcard]
+            dictionary[wildcard] = (begin, target_ind)
+        else:
+            dictionary[wildcard] = (target_ind, target_ind)
+
+    @staticmethod
+    def _matches_new_states(dictionary, state, nodes, targets):
+        node_ind, target_ind = state
+        node = nodes[node_ind]
+        target = targets[target_ind]
+
+        # Don't advance at all if we've exhausted the targets but not the nodes
+        if target_ind >= len(targets) - 1 and node_ind < len(nodes) - 1:
+            return None
+
+        if node.is_Wild:
+            match_attempt = Mul._matches_match_wilds(dictionary, node,
+                                                        targets)
+            if match_attempt:
+                # A wildcard node can match more than one target, so only the
+                # target index is advanced
+                new_state = [(node_ind, target_ind + 1)]
+                # Only move on to the next node if there is one
+                if node_ind < len(nodes) - 1:
+                    new_state.append((node_ind + 1, target_ind + 1))
+                return new_state, match_attempt
+        else:
+            # If we're not at a wildcard, then make sure we haven't exhausted
+            # nodes but not targets, since in this case one node can only match
+            # one target
+            if node_ind >= len(nodes) - 1 and target_ind < len(targets) - 1:
+                return None
+
+            match_attempt = node.matches(target)
+
+            if match_attempt:
+                return [(node_ind + 1, target_ind + 1)], match_attempt
+            elif node == target:
+                return [(node_ind + 1, target_ind + 1)], None
+            else:
+                return None
+
+    @staticmethod
+    def _matches_match_wilds(dictionary, wildcard, targets):
+        begin, end = dictionary[wildcard]
+        terms = targets[begin:end + 1]
+        # TODO: Should this be self.func?
+        mul = Mul(*terms) if len(terms) > 1 else terms[0]
+        return wildcard.matches(mul)
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
