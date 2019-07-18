@@ -3,25 +3,22 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re,
-                   im, lambdify, hyper, diff, Or, Mul)
+                   im, lambdify, hyper, diff, Or, Mul, sign)
 from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
 from sympy.sets.sets import Intersection, FiniteSet
-from sympy.stats import (P, E, where, density, variance, covariance, skewness,
-                         kurtosis, given, pspace, cdf, characteristic_function,
-                         moment_generating_function, ContinuousRV, sample,
-                         Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy,
-                         Chi, ChiSquared,
-                         ChiNoncentral, Dagum, Erlang, ExGaussian, Exponential,
-                         FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
-                         Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic, LogLogistic,
-                         LogNormal, Maxwell, Nakagami, Normal, GaussianInverse, Pareto,
-                         QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
-                         StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
-                         VonMises, Weibull, WignerSemicircle, Wald, correlation,
-                         moment, cmoment, smoment, quantile)
+from sympy.stats import (P, E, where, density, variance, covariance, skewness, kurtosis,
+                         given, pspace, cdf, characteristic_function, moment_generating_function,
+                         ContinuousRV, sample, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
+                         Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
+                         Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
+                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
+                         LogLogistic, LogNormal, Maxwell, Nakagami, Normal, GaussianInverse,
+                         Pareto, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz, StudentT,
+                         Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
+                         WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
@@ -531,27 +528,6 @@ def test_erlang():
                                (0, True))
 
 
-def test_exponential():
-    rate = Symbol('lambda', positive=True)
-    X = Exponential('x', rate)
-    p = Symbol("p", positive=True, real=True,finite=True)
-
-    assert E(X) == 1/rate
-    assert variance(X) == 1/rate**2
-    assert skewness(X) == 2
-    assert skewness(X) == smoment(X, 3)
-    assert kurtosis(X) == 9
-    assert kurtosis(X) == smoment(X, 4)
-    assert smoment(2*X, 4) == smoment(X, 4)
-    assert moment(X, 3) == 3*2*1/rate**3
-    assert P(X > 0) == S(1)
-    assert P(X > 1) == exp(-rate)
-    assert P(X > 10) == exp(-10*rate)
-    assert quantile(X)(p) == -log(1-p)/rate
-
-    assert where(X <= 1).set == Interval(0, 1)
-
-
 def test_exgaussian():
     m, z = symbols("m, z")
     s, l = symbols("s, l", positive=True)
@@ -575,6 +551,42 @@ def test_exgaussian():
 
     assert skewness(X).expand() == 2/(l**3*s**2*sqrt(s**2 + l**(-2)) + l *
                                       sqrt(s**2 + l**(-2)))
+
+
+def test_exponential():
+    rate = Symbol('lambda', positive=True)
+    X = Exponential('x', rate)
+    p = Symbol("p", positive=True, real=True,finite=True)
+
+    assert E(X) == 1/rate
+    assert variance(X) == 1/rate**2
+    assert skewness(X) == 2
+    assert skewness(X) == smoment(X, 3)
+    assert kurtosis(X) == 9
+    assert kurtosis(X) == smoment(X, 4)
+    assert smoment(2*X, 4) == smoment(X, 4)
+    assert moment(X, 3) == 3*2*1/rate**3
+    assert P(X > 0) == S(1)
+    assert P(X > 1) == exp(-rate)
+    assert P(X > 10) == exp(-10*rate)
+    assert quantile(X)(p) == -log(1-p)/rate
+
+    assert where(X <= 1).set == Interval(0, 1)
+
+
+def test_exponential_power():
+    mu = Symbol('mu')
+    z = Symbol('z')
+    alpha = Symbol('alpha', positive=True)
+    beta = Symbol('beta', positive=True)
+
+    X = ExponentialPower('x', mu, alpha, beta)
+
+    assert density(X)(z) == beta*exp(-(Abs(mu - z)/alpha)
+                                     ** beta)/(2*alpha*gamma(1/beta))
+    assert cdf(X)(z) == S.Half + lowergamma(1/beta,
+                            (Abs(mu - z)/alpha)**beta)*sign(-mu + z)/\
+                                (2*gamma(1/beta))
 
 
 def test_f_distribution():
