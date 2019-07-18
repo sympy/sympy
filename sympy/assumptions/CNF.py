@@ -14,6 +14,8 @@ class Literal(object):
     """
     The smallest element of a CNF object
     """
+    literals_count = 0
+
     def __new__(cls, lit, is_not=False):
         if type(lit) is int:
             obj = super(Literal, cls).__new__(cls)
@@ -28,7 +30,11 @@ class Literal(object):
             return Literal(k, is_not)
         else:
             obj = super(Literal, cls).__new__(cls)
-            obj.code = len(literals_store) + 1
+            if lit is False:
+                obj.code = 0
+            else:
+                cls.literals_count += 1
+                obj.code = cls.literals_count
             literals_store[lit] = obj.code
             obj.is_Not = is_not
             return obj
@@ -380,4 +386,4 @@ class EncodedCNF(object):
             return value
 
     def encode(self, clause):
-        return {self.encode_arg(arg) if arg is not S.false else arg for arg in clause}
+        return {self.encode_arg(arg) if arg is arg.code else S.false for arg in clause}

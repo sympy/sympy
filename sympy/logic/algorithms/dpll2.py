@@ -15,7 +15,7 @@ from heapq import heappush, heappop
 
 from sympy.core.compatibility import range
 from sympy import ordered
-from sympy.assumptions.CNF import EncodedCNF
+from sympy.assumptions.CNF import EncodedCNF, Literal
 
 
 def dpll_satisfiable(expr, all_models=False):
