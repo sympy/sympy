@@ -1029,6 +1029,32 @@ class Piecewise(Function):
             last = ITE(c, a, last)
         return _canonical(last)
 
+    def _eval_rewrite_as_KroneckerDelta(self, *args):
+        from sympy import Ne, Eq, KroneckerDelta
+
+        equalities = []
+        true_value = None
+        for i in args:
+            if isinstance(i[1], Eq) or isinstance(i[1], Ne):
+                equalities.append(i)
+            elif i[1] is S.true:
+                if true_value is None:
+                    true_value = i[0]
+            else:
+                return
+
+        if true_value is not None:
+            equals = equalities[::-1]
+            result = true_value
+
+            for i in equals:
+                k = KroneckerDelta(*i[1].args)
+                if isinstance(i[1], Eq):
+                    result = k * i[0] + (1 - k) * result
+                else:
+                    result = (1 - k) * i[0] + k * result
+            return result
+
 
 def piecewise_fold(expr):
     """
