@@ -1117,25 +1117,27 @@ def kroneckersimp(expr):
     >>> kroneckersimp(1 + KroneckerDelta(0, j) * KroneckerDelta(1, j))
     1
     """
-    def args_cancel(a1, a2, a3, a4):
-        return Eq(a1, a2) is S.true and Eq(a3, a4) is S.false
+    def args_cancel(args1, args2):
+        for i1 in range(2):
+            for i2 in range(2):
+                a1 = args1[i1]
+                a2 = args2[i2]
+                a3 = args1[(i1 + 1) % 2]
+                a4 = args2[(i2 + 1) % 2]
+                if Eq(a1, a2) is S.true and Eq(a3, a4) is S.false:
+                    return True
+        return False
 
     def cancel_kronecker_mul(m):
+        from sympy.utilities.iterables import subsets
+
         args = m.args
         deltas = [a for a in args if isinstance(a, KroneckerDelta)]
-
-        for i in range(len(deltas)):
-            args1 = deltas[i].args
-            for j in range(i+1, len(deltas)):
-                args2 = deltas[j].args
-                for i1 in range(2):
-                    for i2 in range(2):
-                        a1 = args1[i1]
-                        a2 = args2[i2]
-                        a3 = args1[(i1 + 1) % 2]
-                        a4 = args2[(i2 + 1) % 2]
-                        if args_cancel(a1, a2, a3, a4):
-                            return Mul(*((0,) + args))
+        for delta1, delta2 in subsets(deltas, 2):
+            args1 = delta1.args
+            args2 = delta2.args
+            if args_cancel(args1, args2):
+                return 0*m
         return m
 
     def is_mul_with_kronecker(e):
