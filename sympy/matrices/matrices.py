@@ -3235,7 +3235,20 @@ class MatrixBase(MatrixDeprecated,
         return self.__class__(banded(size, bands))
 
     def log(self):
-        """Return the logarithm of a square matrix"""
+        """Return the logarithm of a square matrix
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix([[1, 1], [0, 1]])
+        >>> m.log()
+        Matrix([[0, 1], [0, 0]])
+
+        >>> m = Matrix([[S(5)/4, S(3)/4], [S(3)/4, S(5)/4]])
+        >>> m.log()
+        Matrix([[0, log(2)], [log(2), 0]])
+        """
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Logarithm is valid only for square matrices")
