@@ -7,8 +7,6 @@ from .evalf import EvalfMixin, pure_complex
 from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, range, Iterable
-from sympy.functions import exp, log
-from sympy.series.gruntz import mrv, rewrite, mrv_leadterm
 from sympy.utilities.misc import func_name
 from mpmath.libmp import mpf_log, prec_to_dps
 from collections import defaultdict
@@ -3000,11 +2998,11 @@ class Expr(Basic, EvalfMixin):
 
         >>> e = exp(exp(x)/(1 - 1/x))
 
-        >>> e.aseries(x, bound=3)
-        exp(exp(x)/x**2)*exp(exp(x)/x)*exp(-exp(x) + exp(x)/(1 - 1/x) - exp(x)/x - exp(x)/x**2)*exp(exp(x))
-
         >>> e.aseries(x)
         exp(exp(x)/(1 - 1/x))
+
+        >>> e.aseries(x, bound=3)
+        exp(exp(x)/x**2)*exp(exp(x)/x)*exp(-exp(x) + exp(x)/(1 - 1/x) - exp(x)/x - exp(x)/x**2)*exp(exp(x))
 
         Returns
         =======
@@ -3025,7 +3023,7 @@ class Expr(Basic, EvalfMixin):
         the algorithm tries to find a normalised representation of the mrv set and rewrites f
         using this normalised representation.
 
-        If the expansion contains an order term, it will be either ``O(x**(-n))`` or ``O(w**(-n))``
+        If the expansion contains an order term, it will be either ``O(x ** (-n))`` or ``O(w ** (-n))``
         where ``w`` belongs to the most rapidly varying expression of ``self``.
 
         References
@@ -3041,55 +3039,65 @@ class Expr(Basic, EvalfMixin):
         See the docstring of Expr.aseries() for complete details of this wrapper.
         """
 
+        from sympy import Order, Dummy
+        from sympy.functions import exp, log
+        from sympy.series.gruntz import mrv, rewrite, mrv_leadterm
+
         if x.is_positive is x.is_negative is None:
-            xpos = C.Dummy('x', positive=True, bounded=True)
+            xpos = Dummy('x', positive=True)
             return self.subs(x, xpos).aseries(xpos, n, bound, hir).subs(xpos, x)
 
-        omega, exps = mrv(self, x)
-        if x in omega:
+        om, exps = mrv(self, x)
+
+        if x in om:
             s = self.subs(x, exp(x)).aseries(x, n, bound, hir).subs(x, log(x))
             if s.getO():
-                o = C.Order(1/x**n, (x, S.Infinity))
-                return s + o
+                return s + Order(1/x**n, (x, S.Infinity))
             return s
-        d = C.Dummy('d', positive=True)
-        f, logw = rewrite(exps, omega, x, d)
 
-        if self in omega:
+        k = Dummy('k', positive=True)
+        func, logw = rewrite(exps, om, x, k)
+
+        if self in om:
             if bound <= 0:
                 return self
             s = (self.exp).aseries(x, n, bound=bound)
             s = s.func(*[t.removeO() for t in s.args])
-            r = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
-            f = exp(self.args[0] - r.args[0]) / d
-            logw = log(1/r)
+            res = exp(s.subs(x, 1/x).as_leading_term(x).subs(x, 1/x))
 
-        s = f.series(d, 0, n)
+            func = exp(self.args[0] - res.args[0]) / k
+            logw = log(1/res)
+
+        s = func.series(k, 0, n)
 
         # Hierarchical series
         if hir:
-            return s.subs(d, exp(logw))
+            ord_term = s.getO()
+            '''
+            s = s.removeO()
+            '''
+            return s.subs(k, exp(logw))
 
         o = s.getO()
-        terms = sorted(Add.make_args(s.removeO()), key=lambda i: int(i.as_coeff_exponent(d)[1]))
+        terms = sorted(Add.make_args(s.removeO()), key=lambda i: int(i.as_coeff_exponent(k)[1]))
         s = S.Zero
         has_ord = False
 
         for t in terms:
-            coeff, expo = t.as_coeff_exponent(d)
+            coeff, expo = t.as_coeff_exponent(k)
             if coeff.has(x):
-                s1 = coeff.aseries(x, n, bound=bound-1)
-                if has_ord and s1.getO():
+                snew = coeff.aseries(x, n, bound=bound-1)
+                if has_ord and snew.getO():
                     break
-                elif s1.getO():
+                elif snew.getO():
                     has_ord = True
-                s += (s1 * d**expo)
+                s += (snew * k**expo)
             else:
                 s += t
+
         if not o or has_ord:
-            return s.subs(d, exp(logw))
-        else:
-            return (s + o).subs(d, exp(logw))
+            return s.subs(k, exp(logw))
+        return (s + o).subs(k, exp(logw))
 
 
     def taylor_term(self, n, x, *previous_terms):
