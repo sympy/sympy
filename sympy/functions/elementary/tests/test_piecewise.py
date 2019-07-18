@@ -1,7 +1,7 @@
 from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, ITE,
-    Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
-    Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
+    Integral, integrate, Interval, KroneckerDelta, lambdify, log, Max, Min,
+    oo, Or, pi, Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo,
     DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains, Le)
 from sympy.core.expr import unchanged
@@ -1226,3 +1226,24 @@ def test_issue_8458():
     # Test for problem highlighted during review
     p3 = Piecewise((x+1, Eq(x, -1)), (4*x + (y-2)**4, Eq(x, 0) & Eq(x+y, 2)), (sin(x), True))
     assert p3.simplify() == Piecewise((0, Eq(x, -1)), (sin(x), True))
+
+
+def test_eval_rewrite_as_KroneckerDelta():
+    x, y, z, n, t = symbols('x y z n t')
+    K = KroneckerDelta
+    f = lambda p: p.rewrite(K)
+
+    p1 = Piecewise((0, Eq(x, y)), (1, True))
+    assert f(p1) == 1 - K(x, y)
+
+    p2 = Piecewise((x, Eq(y,0)), (z, Eq(t,0)), (n, True))
+    assert f(p2) == x*K(0, y) + (1 - K(0, y))*(n*(1 - K(0, t)) + z*K(0, t))
+
+    p3 = Piecewise((1, Ne(x, y)), (0, True))
+    assert f(p3) == 1 - K(x, y)
+
+    p4 = Piecewise((1, Eq(x, 3)), (4, True), (5, True))
+    assert f(p4) == 4 - 3*K(3, x)
+
+    p5 = Piecewise((3, Ne(x, 2)), (4, Eq(y, 2)), (5, True))
+    assert f(p5) == (5 - K(2, y))*K(2, x) - 3*K(2, x) + 3
