@@ -3164,8 +3164,8 @@ class MatrixBase(MatrixDeprecated,
         l = self[0, 0]
         exp_l = exp(l)
 
-        bands = {0: exp_l}
-        for i in range(1, size):
+        bands = dict()
+        for i in range(size):
             bands[i] = exp_l / factorial(i)
 
         from .sparsetools import banded
