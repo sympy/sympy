@@ -1,12 +1,11 @@
-
-
-# Reduces unnecessary creation of literals
-# Doubles up as an encoding strategy
 from itertools import combinations, product
 
 from sympy import S
 from sympy.logic.boolalg import BooleanFunction, Or, And, Not
 
+
+# Reduces unnecessary creation of literals
+# Doubles up as an encoding strategy
 literals_store = dict()
 
 
@@ -30,7 +29,7 @@ class Literal(object):
             return Literal(k, is_not)
         else:
             obj = super(Literal, cls).__new__(cls)
-            if lit is False:
+            if lit == False:
                 obj.code = 0
             else:
                 cls.literals_count += 1
@@ -386,4 +385,4 @@ class EncodedCNF(object):
             return value
 
     def encode(self, clause):
-        return {self.encode_arg(arg) if arg is arg.code else S.false for arg in clause}
+        return {self.encode_arg(arg) if arg.code else arg.code for arg in clause}
