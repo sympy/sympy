@@ -1253,6 +1253,7 @@ def test_conditional_eq():
     assert P(E > 1, Eq(E, 2)) == 1
     assert P(E < 1, Eq(E, 2)) == 0
 
+
 def test_sampling_methods():
     distribs = [
         Beta("B", 1, 1),
@@ -1264,24 +1265,27 @@ def test_sampling_methods():
         ChiSquared("CS", 2)
     ]
     size = 5
-    for X in distribs:
-        numpy = import_module('numpy')
-        if not numpy:
-            skip('Numpy not installed. Abort tests for _sample_numpy.')
-        sam = X.pspace.distribution._sample_numpy(size)
-        for i in range(size):
-            assert sam[i] in X.pspace.domain.set
-
-        scipy = import_module('scipy')
-        if not scipy:
-            skip('Scipy not installed. Abort tests for _sample_scipy.')
-        sam = X.pspace.distribution._sample_scipy(size)
-        for i in range(size):
-            assert sam[i] in X.pspace.domain.set
-
-        pymc3 = import_module('pymc3')
-        if not pymc3:
-            skip('PyMC3 not installed. Abort tests for _sample_pymc3.')
-        sam = X.pspace.distribution._sample_pymc3(size)
-        for i in range(size):
-            assert sam[i] in X.pspace.domain.set
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy not installed. Abort tests for _sample_numpy.')
+    else:
+        for X in distribs:
+            sam = X.pspace.distribution._sample_numpy(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for _sample_scipy.')
+    else:
+        for X in distribs:
+            sam = X.pspace.distribution._sample_scipy(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 not installed. Abort tests for _sample_pymc3.')
+    else:
+        for X in distribs:
+            sam = X.pspace.distribution._sample_pymc3(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set

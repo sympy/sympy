@@ -172,9 +172,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     def sample(self, size=()):
         """ A random realization from the distribution """
-        return self._sample_scipy(size)
-        icdf = self._inverse_cdf_expression()
-        return icdf(random.uniform(0, 1))
+        return self._sample_python(size)
 
     @cacheit
     def _inverse_cdf_expression(self):
