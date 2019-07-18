@@ -1,18 +1,17 @@
 from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta,
-        symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        cancel, exp, I, Piecewise, Sum, Dummy)
+                   symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
+                   cancel, exp, I, Piecewise, Sum, Dummy)
 from sympy.core.compatibility import range
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
-    Hypergeometric, Rademacher, P, E, variance, covariance, skewness, kurtosis,
-    sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
-    cmoment, smoment, characteristic_function, moment_generating_function,
-    quantile)
-from sympy.stats.rv import Density
+                         Hypergeometric, Rademacher, P, E, variance, covariance, skewness,
+                         sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
+                         cmoment, smoment, characteristic_function, moment_generating_function,
+                         quantile,  kurtosis)
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
-                                    HypergeometricDistribution
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.stats.symbolic_probability import Expectation, Probability
+    HypergeometricDistribution
+from sympy.stats.rv import Density
+from sympy.utilities.pytest import raises
 
 oo = S.Infinity
 

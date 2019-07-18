@@ -16,8 +16,8 @@ sympy.stats.rv_interface
 from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-        Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta, Mul, Indexed)
+                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
+                   DiracDelta, Mul, Indexed)
 from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
