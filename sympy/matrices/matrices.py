@@ -18,7 +18,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol, symbols
 from sympy.core.sympify import sympify
-from sympy.functions import exp, factorial
+from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import PurePoly, cancel, roots
@@ -3199,6 +3199,59 @@ class MatrixBase(MatrixDeprecated,
             return type(self)(re(ret))
         else:
             return type(self)(ret)
+
+    def _eval_matrix_log_jblock(self):
+        """Helper function to compute logarithm of a jordan block.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix
+        >>> l = Symbol('lamda')
+
+        A trivial example of 1*1 Jordan block:
+
+        >>> m = Matrix.jordan_block(1, l)
+        >>> m._eval_matrix_log_jblock()
+        Matrix([[log(lamda)]])
+
+        An example of 3*3 Jordan block:
+
+        >>> m = Matrix.jordan_block(3, l)
+        >>> m._eval_matrix_log_jblock()
+        Matrix([
+        [log(lamda),    1/lamda, -1/(2*lamda**2)],
+        [         0, log(lamda),         1/lamda],
+        [         0,          0,      log(lamda)]])
+        """
+        size = self.rows
+        l = self[0, 0]
+
+        bands = {0: log(l)}
+        for i in range(1, size):
+            bands[i] = -((-l) ** -i) / i
+
+        from .sparsetools import banded
+        return self.__class__(banded(size, bands))
+
+    def log(self):
+        """Return the logarithm of a square matrix"""
+        if not self.is_square:
+            raise NonSquareMatrixError(
+                "Logarithm is valid only for square matrices")
+        try:
+            P, J = self.jordan_form()
+            cells = J.get_diag_blocks()
+        except MatrixError:
+            raise NotImplementedError(
+                "Logarithm is implemented only for matrices for which "
+                "the Jordan normal form can be computed")
+
+        blocks = [cell._eval_matrix_log_jblock() for cell in cells]
+        from sympy.matrices import diag
+        eJ = diag(*blocks)
+        ret = P * eJ * P.inv()
+        return ret
 
     def gauss_jordan_solve(self, B, freevar=False):
         """
