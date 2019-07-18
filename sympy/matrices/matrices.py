@@ -20,6 +20,7 @@ from sympy.core.symbol import Dummy, Symbol, _uniquely_named_symbol, symbols
 from sympy.core.sympify import sympify
 from sympy.functions import exp, factorial
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import PurePoly, cancel, roots
 from sympy.printing import sstr
 from sympy.simplify import nsimplify
@@ -2357,22 +2358,25 @@ class MatrixBase(MatrixDeprecated,
         return not self == other
 
     def _matrix_pow_by_jordan_blocks(self, num):
-        from sympy.matrices import diag, MutableMatrix
+        from sympy.matrices import diag, MutableMatrix, eye
         from sympy import binomial
 
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
             l = jc[0, 0]
             if l == 0:
-                if not n.is_Number or (not (n.is_integer and n.is_nonnegative) and \
-                        ((n < N - 1) != False or (N > 1 and n % 1 != 0))):
+                if not (n.is_integer and n.is_nonnegative):
                     raise NonInvertibleMatrixError("Non-invertible matrix can only be raised to a nonnegative integer")
-            for i in range(N):
-                for j in range(N-i):
-                    bn = binomial(n, i)
-                    if isinstance(bn, binomial):
-                        bn = bn._eval_expand_func()
-                    jc[j, i+j] = l**(n-i)*bn
+                for i in range (N):
+                    for j in range (N):
+                        jc[i,j] = KroneckerDelta(j-i, n) if i<=j else 0
+            else:
+                for i in range(N):
+                    for j in range(N-i):
+                        bn = binomial(n, i)
+                        if isinstance(bn, binomial):
+                            bn = bn._eval_expand_func()
+                        jc[j, i+j] = l**(n-i)*bn
 
         P, J = self.jordan_form()
         jordan_cells = J.get_diag_blocks()

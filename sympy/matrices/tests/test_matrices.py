@@ -248,8 +248,7 @@ def test_power():
     n = Symbol('n', integer=True, negative=True)
     raises(ValueError, lambda: A**n)
     n = Symbol('n', integer=True, nonnegative=True)
-    assert isinstance(A**n, MatPow)
-    assert A**(n + 2) == MatPow (A, (n + 2))
+    assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     raises(ValueError, lambda: A**(S(3)/2))
     A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
     assert A**5.0 == Matrix([[168,  72,  89], [291, 144, 161], [572, 267, 329]])
@@ -262,6 +261,11 @@ def test_power():
     assert An * An == A**(2*n)
 
     # concretizing non-integer, complex and infinite powers
+    A = Matrix ([[0,0,0],[0,0,0],[0,0,0]])
+    n = Symbol('n', integer=True, positive=True)
+    assert A**n == A
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert A**n != A
     A = Matrix ([[2,0,0],[0,2,0],[0,0,2]])
     assert A**2.1 == diag (2**2.1, 2**2.1, 2**2.1)
     assert A**I == diag (2**I, 2**I, 2**I)
