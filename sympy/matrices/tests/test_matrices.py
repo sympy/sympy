@@ -232,7 +232,7 @@ def test_power():
     raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(S(10)))
 
     # test issue 11964
-    # raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(-10))
+    raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(S(-10)))
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])  # Nilpotent jordan block size 3
     assert A**10.0 == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     raises(ValueError, lambda: A**2.1)
@@ -244,12 +244,12 @@ def test_power():
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 2
     assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     n = Symbol('n', integer=True)
-    # assert isinstance(A**n, MatPow)
+    assert isinstance(A**n, MatPow)
     n = Symbol('n', integer=True, negative=True)
     raises(ValueError, lambda: A**n)
     n = Symbol('n', integer=True, nonnegative=True)
-    # assert isinstance(A**n, MatPow)
-    assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    assert isinstance(A**n, MatPow)
+    assert A**(n + 2) == MatPow (A, (n + 2))
     raises(ValueError, lambda: A**(S(3)/2))
     A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
     assert A**5.0 == Matrix([[168,  72,  89], [291, 144, 161], [572, 267, 329]])

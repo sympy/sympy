@@ -130,3 +130,11 @@ class MatPow(MatrixExpr):
         else:
             raise NotImplementedError("cannot evaluate %s derived by %s" % (self, x))
         return newexpr._eval_derivative_matrix_lines(x)
+
+    def subs(self, *args, **kwargs):
+        """Attempt a doit() after substitution."""
+        a = MatPow(self.args[0].subs(*args, **kwargs), self.args[1].subs(*args, **kwargs))
+        try:
+            return a.doit()
+        except:
+            return a
