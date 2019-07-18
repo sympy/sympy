@@ -1,5 +1,6 @@
-from sympy import (S, Symbol, Interval, FallingFactorial, Eq, cos, And, Tuple, integrate, oo,
-                   sin, Sum, Basic, DiracDelta, log, pi)
+from sympy import (S, Symbol, symbols, Interval, FallingFactorial,
+                   Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
+                   DiracDelta, log, pi)
 from sympy.core.compatibility import range
 from sympy.core.numbers import comp
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
