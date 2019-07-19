@@ -184,7 +184,7 @@ def test_ndim_array_converting():
     assert (isinstance(matrix, Matrix))
 
     for i in range(len(dense_array)):
-        assert dense_array[i] == matrix[i]
+        assert dense_array[dense_array._get_tuple_index(i)] == matrix[i]
     assert matrix.shape == dense_array.shape
 
     assert MutableDenseNDimArray(matrix) == dense_array
@@ -200,7 +200,7 @@ def test_ndim_array_converting():
     assert(isinstance(matrix, SparseMatrix))
 
     for i in range(len(sparse_array)):
-        assert sparse_array[i] == matrix[i]
+        assert sparse_array[sparse_array._get_tuple_index(i)] == matrix[i]
     assert matrix.shape == sparse_array.shape
 
     assert MutableSparseNDimArray(matrix) == sparse_array

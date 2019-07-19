@@ -5,6 +5,9 @@ from sympy import Basic, Tuple, S
 from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
+from sympy.core.compatibility import SYMPY_INTS
+from sympy.core.numbers import Integer
+
 
 
 class DenseNDimArray(NDimArray):
@@ -44,6 +47,16 @@ class DenseNDimArray(NDimArray):
         if syindex is not None:
             return syindex
 
+        if isinstance(index, (SYMPY_INTS, Integer)):
+            index = Tuple(index)
+        if not isinstance(index, (tuple, slice)):
+            index = tuple(index)
+        if not isinstance(index, slice) and len(index) < self.rank():
+            index = [i for i in index]
+            for i in range(len(index), self.rank()):
+                index.append(slice(None))
+            index = tuple(index)
+
         if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
             sl_factors, eindices = self._get_slice_data_for_array_access(index)
             array = [self._array[self._parse_index(i)] for i in eindices]
@@ -53,6 +66,8 @@ class DenseNDimArray(NDimArray):
             if isinstance(index, slice):
                 return self._array[index]
             else:
+                if self.shape == ():
+                    index = ()
                 index = self._parse_index(index)
                 return self._array[index]
 

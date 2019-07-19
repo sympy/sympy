@@ -4,6 +4,7 @@ from sympy import S, Dict, Basic, Tuple
 from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
+from sympy.core.numbers import Integer
 
 import functools
 
@@ -27,10 +28,6 @@ class SparseNDimArray(NDimArray):
         0
         >>> a[1, 1]
         3
-        >>> a[0]
-        0
-        >>> a[2]
-        2
 
         Symbolic indexing:
 
@@ -47,6 +44,11 @@ class SparseNDimArray(NDimArray):
         syindex = self._check_symbolic_index(index)
         if syindex is not None:
             return syindex
+
+        if isinstance(index, Integer):
+            index = Tuple(index)
+        if not isinstance(index, (tuple, slice)):
+            index = tuple(index)
 
         # `index` is a tuple with one or more slices:
         if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
@@ -101,7 +103,7 @@ class SparseNDimArray(NDimArray):
     def __iter__(self):
         def iterator():
             for i in range(self._loop_size):
-                yield self[i]
+                yield self[self._get_tuple_index(i)]
         return iterator()
 
     def reshape(self, *newshape):
