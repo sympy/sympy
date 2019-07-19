@@ -1247,3 +1247,33 @@ def test_eval_rewrite_as_KroneckerDelta():
 
     p5 = Piecewise((3, Ne(x, 2)), (4, Eq(y, 2)), (5, True))
     assert f(p5) == (5 - K(2, y))*K(2, x) - 3*K(2, x) + 3
+
+    p6 = Piecewise((0, Ne(x, 1) & Ne(y, 4)), (1, True))
+    assert f(p6) == -(1 - K(1, x)) * (1 - K(4, y)) + 1
+
+    p7 = Piecewise((2, Eq(y, 3) & Ne(x, 2)), (1, True))
+    assert f(p7) == (1 - K(2, x)) * K(3, y) + 1
+
+    p8 = Piecewise((4, Eq(x, 3) & Ne(y, 2)), (1, True))
+    assert f(p8) == 3 * (1 - K(2, y)) * K(3, x) + 1
+
+    p9 = Piecewise((6, Eq(x, 4) & Eq(y, 1)), (1, True))
+    assert f(p9) == 5 * K(1, y) * K(4, x) + 1
+
+    p10 = Piecewise((4, Ne(x, -4) | Ne(y, 1)), (1, True))
+    assert f(p10) == -3 * K(-4, x) * K(1, y) + 4
+
+    p11 = Piecewise((1, Eq(y, 2) | Ne(x, -3)), (2, True))
+    assert f(p11) == (1 - K(2, y)) * K(-3, x) + 1
+
+    p12 = Piecewise((-1, Eq(x, 1) | Ne(y, 3)), (1, True))
+    assert f(p12) == 2 * (1 - K(1, x)) * K(3, y) - 1
+
+    p13 = Piecewise((3, Eq(x, 2) | Eq(y, 4)), (1, True))
+    assert f(p13) == -2 * (1 - K(2, x)) * (1 - K(4, y)) + 3
+
+    p14 = Piecewise((1, Ne(x, 0) | Ne(y, 1)), (3, True))
+    assert f(p14) == 2 * K(0, x) * K(1, y) + 1
+
+    p15 = Piecewise((2, Eq(x, 3) | Ne(y, 2)), (3, Eq(x, 4) & Eq(y, 5)), (1, True))
+    assert f(p15) == (1 - K(3, x)) * (2 * K(4, x) * K(5, y) + 1) * K(2, y) - 2 * (1 - K(3, x)) * K(2, y) + 2
