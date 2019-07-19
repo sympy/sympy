@@ -2231,9 +2231,9 @@ class MatrixArithmetic(MatrixRequired):
         exp = sympify(exp)
 
         if exp.is_zero:
-            return self._new(self.rows, self.cols, lambda i, j: int(i == j))
+            return a._new(a.rows, a.cols, lambda i, j: int(i == j))
         if exp == 1:
-            return self
+            return a
 
         if exp.is_Number and exp % 1 == 0:
             if a.rows == 1:
@@ -2244,12 +2244,15 @@ class MatrixArithmetic(MatrixRequired):
             # When certain conditions are met,
             # Jordan block algorithm is faster than
             # computation by recursion.
-            elif a.rows == 2 and exp > 100000 and jordan_pow:
+            elif a.rows == 2 and exp > 100000 and jordan_pow is not None:
                 try:
                     return jordan_pow(exp)
                 except MatrixError:
-                    pass # a may not have _matrix_pow_by_jordan_blocks?
+                    pass
             return a._eval_pow_by_recursion(exp)
+
+        if a.is_diagonal ():
+            return a._new(a.rows, a.cols, lambda i, j: a[i,j]**exp if i == j else 0)
 
         if jordan_pow:
             try:

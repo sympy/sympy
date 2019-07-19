@@ -260,7 +260,7 @@ def test_power():
     raises(ValueError, lambda: An.subs(n, -2).doit())
     assert An * An == A**(2*n)
 
-    # concretizing non-integer, complex and infinite powers
+    # concretizing behavior for non-integer and complex powers
     A = Matrix ([[0,0,0],[0,0,0],[0,0,0]])
     n = Symbol('n', integer=True, positive=True)
     assert A**n == A
