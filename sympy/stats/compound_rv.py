@@ -13,19 +13,36 @@ sympy.stats.joint_rv
 from __future__ import print_function, division
 
 from sympy import (Basic, Lambda, Indexed, Symbol, ProductSet, S,
-                   Dummy)
-from sympy.concrete.summations import summation
+                   Dummy, sqrt)
 from sympy.concrete.products import Product
+from sympy.concrete.summations import summation
 from sympy.core.compatibility import string_types, iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
-from sympy.stats.crv import (ContinuousDistribution,
-                             SingleContinuousDistribution, SingleContinuousPSpace)
-from sympy.stats.drv import (DiscreteDistribution,
-                             SingleDiscreteDistribution, SingleDiscretePSpace)
-from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-                            ProductDomain, RandomSymbol, random_symbols, SingleDomain)
+from sympy.stats.crv import (ContinuousDistribution, SingleContinuousPSpace)
+from sympy.stats.drv import (DiscreteDistribution, SingleDiscretePSpace)
+from sympy.stats.rv import (ProductPSpace, NamedArgsMixin, ProductDomain,
+                            RandomSymbol, random_symbols, SingleDomain)
 from sympy.utilities.misc import filldedent
+
+
+def compute_distribution(dist):
+    from sympy.stats.crv_types import NormalDistribution
+    if isinstance(dist.compound_distribution(), NormalDistribution):
+        print(compoundNormal(dist))
+    latent_distributions = dist.latent_distributions
+    for distributions in latent_distributions:
+        print(distributions.pspace)
+    return dist
+
+
+def compoundNormal(dist):
+    from sympy.stats.crv_types import NormalDistribution
+    mean, std = dist.compound_distribution().args
+    print('mean: ', mean, 'std: ', std)
+    if isinstance(mean.pspace.distribution, NormalDistribution):
+        mu, sigma = mean.pspace.distribution.args
+        return NormalDistribution(mu, sqrt(sigma ** 2 + std ** 2))
 
 
 class CompoundPSpace(ProductPSpace):
@@ -36,10 +53,7 @@ class CompoundPSpace(ProductPSpace):
     """
 
     def __new__(cls, sym, dist):
-        if isinstance(dist, SingleContinuousDistribution):
-            return SingleContinuousPSpace(sym, dist)
-        if isinstance(dist, SingleDiscreteDistribution):
-            return SingleDiscretePSpace(sym, dist)
+        dist = compute_distribution(dist)
         if isinstance(sym, string_types):
             sym = Symbol(sym)
         if not isinstance(sym, Symbol):
@@ -171,6 +185,9 @@ class CompoundDistribution(Basic, NamedArgsMixin):
         if not any([isinstance(i, RandomSymbol) for i in _args]):
             return dist
         return Basic.__new__(cls, dist)
+
+    def compound_distribution(self):
+        return self.args[0]
 
     @property
     def latent_distributions(self):
