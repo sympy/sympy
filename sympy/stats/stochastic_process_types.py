@@ -1,19 +1,17 @@
 from __future__ import print_function, division
 
 from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
-                    Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
-                    nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
-                    linsolve, Piecewise, eye, Or, Ne, Not, Intersection,
-                    Union, Expr)
+                   Set, And, Eq, FiniteSet, ImmutableMatrix,
+                   Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
+                   linsolve, eye, Or, Ne, Not, Intersection,
+                   Expr)
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import Boolean
+from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
-from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
-from sympy.core.compatibility import string_types
-from sympy.core.relational import Relational
-from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.stochastic_process import StochasticPSpace
-from sympy.core.logic import Logic
-from sympy.logic.boolalg import Boolean
+from sympy.stats.symbolic_probability import Probability, Expectation
 
 __all__ = [
     'StochasticProcess',

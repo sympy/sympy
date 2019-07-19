@@ -260,22 +260,23 @@ def test_conjugate_transpose():
     assert p.transpose().doit() == p.doit().transpose()
 
 
-def test_simplify():
+def test_simplify_prod():
     y, t, b, c = symbols('y, t, b, c', integer = True)
 
-    assert simplify(Product(x*y, (x, n, m), (y, a, k)) * \
+    _simplify = lambda e: simplify(e, doit=False)
+    assert _simplify(Product(x*y, (x, n, m), (y, a, k)) * \
         Product(y, (x, n, m), (y, a, k))) == \
             Product(x*y**2, (x, n, m), (y, a, k))
-    assert simplify(3 * y* Product(x, (x, n, m)) * Product(x, (x, m + 1, a))) \
+    assert _simplify(3 * y* Product(x, (x, n, m)) * Product(x, (x, m + 1, a))) \
         == 3 * y * Product(x, (x, n, a))
-    assert simplify(Product(x, (x, k + 1, a)) * Product(x, (x, n, k))) == \
+    assert _simplify(Product(x, (x, k + 1, a)) * Product(x, (x, n, k))) == \
         Product(x, (x, n, a))
-    assert simplify(Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))) == \
+    assert _simplify(Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))) == \
         Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))
-    assert simplify(Product(x, (t, a, b)) * Product(y, (t, a, b)) * \
+    assert _simplify(Product(x, (t, a, b)) * Product(y, (t, a, b)) * \
         Product(x, (t, b+1, c))) == Product(x*y, (t, a, b)) * \
             Product(x, (t, b+1, c))
-    assert simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
+    assert _simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
         Product(y, (t, a, b))) == Product(x*y, (t, a, b)) * \
             Product(x, (t, b+1, c))
 

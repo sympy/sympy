@@ -1,9 +1,9 @@
 from __future__ import print_function, division
+
+from sympy import sqrt, Symbol, log, exp
 from .rv import (probability, expectation, density, where, given, pspace, cdf,
-        characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
-        sampling_density, moment_generating_function, _value_check, quantile)
-from sympy import Piecewise, sqrt, solveset, Symbol, S, log, Eq, Lambda, exp
-from sympy.solvers.inequalities import reduce_inequalities
+                 characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
+                 sampling_density, moment_generating_function, quantile)
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf', 'characteristic_function', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'kurtosis', 'covariance',

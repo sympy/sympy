@@ -361,6 +361,10 @@ def test_bool_map():
     assert bool_map(Xor(x, y), ~Xor(x, y)) == False
     assert bool_map(And(x, y), Or(x, y)) is None
     assert bool_map(And(x, y), And(x, y, z)) is None
+    # issue 16179
+    assert bool_map(Xor(x, y, z), ~Xor(x, y, z)) == False
+    assert bool_map(Xor(a, x, y, z), ~Xor(a, x, y, z)) == False
+
 
 def test_bool_symbol():
     """Test that mixing symbols with boolean values

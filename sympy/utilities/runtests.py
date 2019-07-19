@@ -1088,7 +1088,7 @@ class SymPyTests(object):
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
-        self._root_dir = sympy_dir
+        self._root_dir = get_sympy_dir()
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._testfiles = []
@@ -1339,7 +1339,7 @@ class SymPyDocTests(object):
 
     def __init__(self, reporter, normal):
         self._count = 0
-        self._root_dir = sympy_dir
+        self._root_dir = get_sympy_dir()
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._normal = normal
@@ -2347,5 +2347,3 @@ class PyTestReporter(Reporter):
         self.write(" ")
         self.write("[FAIL]", "Red", align="right")
         self.write("\n")
-
-sympy_dir = get_sympy_dir()

@@ -623,7 +623,7 @@ def test_Piecewise():
 def test_polymorphism():
     class A(Basic):
         def _eval_simplify(x, **kwargs):
-            return 1
+            return S.One
 
     a = A(5, 2)
     assert simplify(a) == 1
@@ -805,10 +805,11 @@ def test_issue_15965():
     A = Sum(z*x**y, (x, 1, a))
     anew = z*Sum(x**y, (x, 1, a))
     B = Integral(x*y, x)
-    bnew = y*Integral(x, x)
-    assert simplify(A + B) == anew + bnew
+    bdo = x**2*y/2
+    assert simplify(A + B) == anew + bdo
     assert simplify(A) == anew
-    assert simplify(B) == bnew
+    assert simplify(B) == bdo
+    assert simplify(B, doit=False) == y*Integral(x, x)
 
 
 def test_issue_17137():
