@@ -51,7 +51,7 @@ class GaussianUnitaryEnsemble(GaussianEnsemble):
     Examples
     ========
 
-    >>> from sympy.stats import GUE, density
+    >>> from sympy.stats import GaussianUnitaryEnsemble as GUE, density
     >>> G = GUE('U', 2)
     >>> density(G)
     Lambda(H, exp(Trace(H**2))/(2*pi**2))
