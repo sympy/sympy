@@ -3200,7 +3200,7 @@ class MatrixBase(MatrixDeprecated,
         else:
             return type(self)(ret)
 
-    def _eval_matrix_log_jblock(self, principal=True):
+    def _eval_matrix_log_jblock(self):
         """Helper function to compute logarithm of a jordan block.
 
         Examples
@@ -3232,12 +3232,6 @@ class MatrixBase(MatrixDeprecated,
                 'Could not take logarithm or reciprocal for the given '
                 'eigenvalue {}'.format(l))
 
-        if l.is_negative and principal:
-            raise NonPositiveDefiniteMatrixError(
-                "A negative eigenvalue {} is found. Only positive "
-                "definite matrices have principal logarithm. Set "
-                "'principal=False' if you want non-principal result.")
-
         bands = {0: log(l)}
         for i in range(1, size):
             bands[i] = -((-l) ** -i) / i
@@ -3245,7 +3239,7 @@ class MatrixBase(MatrixDeprecated,
         from .sparsetools import banded
         return self.__class__(banded(size, bands))
 
-    def log(self, principal=True):
+    def log(self):
         """Return the logarithm of a square matrix
 
         Examples
@@ -3278,7 +3272,7 @@ class MatrixBase(MatrixDeprecated,
         ...      [S(5)/4, S(3)/4]])
         >>> m.is_positive_definite
         False
-        >>> m.log(principal=False)
+        >>> m.log()
         Matrix([
         [         I*pi/2, log(2) - I*pi/2],
         [log(2) - I*pi/2,          I*pi/2]])
@@ -3290,7 +3284,7 @@ class MatrixBase(MatrixDeprecated,
         ...      [1, 0, 0, 0]])
         >>> m.is_positive_definite
         False
-        >>> m.log(principal=False)
+        >>> m.log()
         Matrix([
         [ I*pi/2,       0,       0, -I*pi/2],
         [      0,  I*pi/2, -I*pi/2,       0],
@@ -3309,7 +3303,7 @@ class MatrixBase(MatrixDeprecated,
                 "the Jordan normal form can be computed")
 
         blocks = [
-            cell._eval_matrix_log_jblock(principal=principal)
+            cell._eval_matrix_log_jblock()
             for cell in cells]
         from sympy.matrices import diag
         eJ = diag(*blocks)
