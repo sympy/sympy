@@ -1,21 +1,29 @@
 from sympy.core.sympify import _sympify
-from sympy import Tuple, Basic
+from sympy import Tuple, Basic, S
 from sympy.tensor.array.ndim_array import NDimArray
 from sympy.tensor.array.sparse_ndim_array import SparseNDimArray
 from sympy.tensor.array.dense_ndim_array import DenseNDimArray
+from sympy.core.sympify import sympify
 from sympy.core.compatibility import Iterable
 
 import functools
 
-# A set of functions that could be adde to the base class
-# in order to avoid code repetition
-def check_bound(shape, index):
-    if len(shape) != len(index):
-        return False
-    return all([shape[i] > index[i] for i in range(len(shape))])
+
+class SparseArrayFormat(SparseNDimArray):
+    def _check_bound(self, shape, index):
+        if len(shape) != len(index):
+            return False
+        return all([shape[i] > index[i] for i in range(len(shape))])
+
+    # A test for mul and rmul, this code should be added to the original
+    # function once the test is valide
+    def __mul__(self, other):
+        other = sympify(other)
+        return self.toscr()._mul(other)
+
 
 # Row-based linked list sparse matrix(LIL)
-class lil(Basic, SparseNDimArray):
+class LilSparseArray(SparseArrayFormat):
     """
     Create a sparse array with Row-based linked list sparse matrix(LIL) format.
     This data structure is efficient in incremental construction of sparse arrays.
@@ -38,17 +46,18 @@ class lil(Basic, SparseNDimArray):
     Examples
     ========
 
-    >>> from sympy.tensor.array.sp_utils import lil
-    >>> a = lil([[1, 0, 0], [0, 2, 0], [0, 0, 3]])
-    >>> a._data
+    >>> from sympy.tensor.array.sp_utils import LilSparseArray
+    >>> A = [[1, 0, 0,], [0, 2, 0], [0, 0, 3]]
+    >>> sp_A_lil = LilSparseArray(A)
+    >>> sp_A_lil._data
     [[1], [2], [3]]
-    >>> a._rows
-    [[1], [2], [3]]
-    >>> a[0, 1]
+    >>> sp_A_lil._rows
+    [[0], [1], [2]]
+    >>> sp_A_lil[0, 0]
     1
-    >>> a[0, 1] = 3
-    >>> a.tolist()
-    [[1, 0, 0], [0, 2, 0], [0, 0, 3]]
+    >>> sp_A_lil[0, 1] = 3
+    >>> sp_A_lil.tolist()
+    [[1, 3, 0], [0, 2, 0], [0, 0, 3]]
     """
     def __new__(cls, iterable=None, shape=None, **kwargs):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
@@ -62,7 +71,7 @@ class lil(Basic, SparseNDimArray):
         data = cls._empty(shape)
         rows = cls._empty(shape)
 
-        self = Basic.__new__(cls, data, rows, shape, **kwargs)
+        self = Basic.__new__(cls, data, rows, shape,)
         self._shape = shape
         self._rank = len(shape)
         self._loop_size = loop_size
@@ -120,7 +129,7 @@ class lil(Basic, SparseNDimArray):
     def __getitem__(self, index):
         if not isinstance(index, (tuple, Tuple)):
             index = self._get_tuple_index(index)
-        if not check_bound(self._shape, index):
+        if not self._check_bound(self._shape, index):
             raise ValueError('Index ' + str(index) + ' out of border')
 
         row_values = self._get_row(self._data, index)
@@ -136,7 +145,7 @@ class lil(Basic, SparseNDimArray):
     def __setitem__(self, index, value):
         if not isinstance(index, (tuple, Tuple)):
             index = self._get_tuple_index(index)
-        if not check_bound(self._shape, index):
+        if not self._check_bound(self._shape, index):
             raise ValueError('Index ' + str(index) + ' out of border')
 
         row_values = self._get_row(self._data, index)
@@ -152,7 +161,7 @@ class lil(Basic, SparseNDimArray):
     # TODO: convert to other formats
 
 
-class coo(Basic, SparseNDimArray):
+class CooSparseArray(SparseArrayFormat):
     '''
     Coordinate list format. This format is not very efficient for calculation. But it
     can be easily cast to csr/csc format.
@@ -168,12 +177,14 @@ class coo(Basic, SparseNDimArray):
     contains as many as the number of rank lists, which represent the coordinate(the
     tuple index) of the value.
     In this case:
-    >>> sp_A = coo(A)
-    >>> sp_A._data
+    >>> from sympy.tensor.array.sp_utils import CooSparseArray
+    >>> A = [[1, 0, 0,], [0, 2, 0], [0, 0, 3]]
+    >>> sp_A_coo = CooSparseArray(A)
+    >>> sp_A_coo._data
     [1, 2, 3]
-    >>> sp_A._coor
-    [[0, 1, 2]
-      0, 1, 2]]
+    >>> sp_A_coo._coor
+    [[0, 1, 2],
+     [0, 1, 2]]
     '''
     def __new__(cls, iterable=None, shape=None, **kwargs):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
@@ -184,7 +195,7 @@ class coo(Basic, SparseNDimArray):
         data = []
         coor = [[] for i in range(len(shape))]
 
-        self = Basic.__new__(cls, data, coor, shape, **kwargs)
+        self = object.__new__(cls)
         self._data = data
         self._coor = coor
         self._shape = shape
@@ -209,7 +220,7 @@ class coo(Basic, SparseNDimArray):
     def __getitem__(self, index):
         if not isinstance(index, (tuple, Tuple)):
             index = self._get_tuple_index(index)
-        if not check_bound(self._shape, index):
+        if not self._check_bound(self._shape, index):
             raise ValueError('Index ' + str(index) + ' out of border')
 
         for i in range(len(self._data)):
@@ -224,7 +235,7 @@ class coo(Basic, SparseNDimArray):
         return iterator()
 
 
-class csr(Basic, SparseNDimArray):
+class CsrSparseArray(SparseArrayFormat):
     '''
     Compressed Sparse Row. This format is widely used. It has the following advantages:
     - Efficient item access and slicing
@@ -245,11 +256,14 @@ class csr(Basic, SparseNDimArray):
     it will have (a, b, c) rows. And the (a, b, c) is also flatten for the purpose of simplicity.
 
     In this case, we have:
-    >>> sp_A._data
+    >>> from sympy.tensor.array.sp_utils import CsrSparseArray
+    >>> A = [[1, 0, 0,], [0, 2, 0], [0, 0, 3]]
+    >>> sp_A_csr = CsrSparseArray(A)
+    >>> sp_A_csr._data
     [1, 2, 3]
-    >>> sp_A._col_ind
+    >>> sp_A_csr._col_ind
     [0, 1, 2]
-    >>> sp_A._row_ptr
+    >>> sp_A_csr._row_ptr
     [0, 1, 2, 4]
 
     For the last list, there is one more element in the end(we have 3 rows but 4 pointers).
@@ -268,7 +282,7 @@ class csr(Basic, SparseNDimArray):
         col_ind = []
         row_ptr = []
 
-        self = Basic.__new__(cls, data, col_ind, row_ptr, shape, **kwargs)
+        self = object.__new__(cls)
         self._data = data
         self._col_ind = col_ind
         self._row_ptr = row_ptr
@@ -320,7 +334,7 @@ class csr(Basic, SparseNDimArray):
     def __getitem__(self, index):
         if not isinstance(index, (tuple, Tuple)):
             index = self._get_tuple_index(index)
-        if not check_bound(self._shape, index):
+        if not self._check_bound(self._shape, index):
             raise ValueError('Index ' + str(index) + ' out of border')
 
         row_idx = self.calculate_integer_index(index[:-1])

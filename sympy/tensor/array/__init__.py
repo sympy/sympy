@@ -205,6 +205,6 @@ from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray,
 from .ndim_array import NDimArray
 from .arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims
 from .array_comprehension import ArrayComprehension
-from .sp_utils import lil, coo, csr
+from .sp_utils import LilSparseArray, CooSparseArray, CsrSparseArray
 
 Array = ImmutableDenseNDimArray
