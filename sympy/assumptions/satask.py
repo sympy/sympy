@@ -6,7 +6,7 @@ from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.assumptions.sathandlers import fact_registry
 from sympy.core import oo
 from sympy.logic.inference import satisfiable
-from sympy.assumptions.CNF import CNF, EncodedCNF
+from sympy.assumptions.cnf import CNF, EncodedCNF
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,

@@ -11,7 +11,7 @@ from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
                                  BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
-from sympy.assumptions.CNF import CNF, EncodedCNF, Literal
+from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 
 # Deprecated predicates should be added to this list

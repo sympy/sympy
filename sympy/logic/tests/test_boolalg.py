@@ -16,7 +16,7 @@ from sympy.logic.boolalg import (
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean)
-from sympy.assumptions.CNF import CNF
+from sympy.assumptions.cnf import CNF
 
 from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.utilities import cartes

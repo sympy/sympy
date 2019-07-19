@@ -4,8 +4,7 @@ from sympy import S
 from sympy.logic.boolalg import BooleanFunction, Or, And, Not
 
 
-# Reduces unnecessary creation of literals
-# Doubles up as an encoding strategy
+# Early encoding for literals
 literals_store = dict()
 
 
@@ -16,42 +15,32 @@ class Literal(object):
     literals_count = 0
 
     def __new__(cls, lit, is_not=False):
-        if type(lit) is int:
-            obj = super(Literal, cls).__new__(cls)
-            obj.code = lit
-            obj.is_Not = is_not
-            return obj
         if type(lit).__name__ == 'Not':
             lit = lit.args[0]
             is_not = True
         k = literals_store.get(lit, None)
         if k is not None:
-            return Literal(k, is_not)
+            code = k
+        elif lit in (S.false, False):
+            code = 0
         else:
-            obj = super(Literal, cls).__new__(cls)
-            if lit == False:
-                obj.code = 0
-            else:
-                cls.literals_count += 1
-                obj.code = cls.literals_count
-            literals_store[lit] = obj.code
-            obj.is_Not = is_not
-            return obj
+            cls.literals_count += 1
+            code = cls.literals_count
+        obj = super(Literal, cls).__new__(cls)
+        obj.code = code
+        obj.lit = lit
+        literals_store[lit] = obj.code
+        obj.is_Not = is_not
+        return obj
 
     @property
     def arg(self):
         sign = -1 if self.is_Not else 1
         return sign*self.code
 
-    @property
-    def lit(self):
-        for k, v in literals_store.items():
-            if v == self.code:
-                return k
-
     def __invert__(self):
         is_not = not self.is_Not
-        return Literal(self.code, is_not=is_not)
+        return Literal(self.lit, is_not=is_not)
 
     def __str__(self):
         return '%s( %s, %s)' % (type(self).__name__, self.lit, self.is_Not)
@@ -235,7 +224,7 @@ class CNF(object):
 
     def add(self, prop):
         clauses = CNF.to_CNF(prop).clauses
-        self.clauses |= clauses
+        self.add_clauses(clauses)
 
     def __str__(self):
         s = ' & '.join(
@@ -262,14 +251,13 @@ class CNF(object):
         return res
 
     def __iand__(self, other):
-        self.clauses |= other.clauses
+        self.add_clauses(other.clauses)
         return self
 
     def all_predicates(self):
         predicates = set()
         for c in self.clauses:
             predicates |= {arg.lit for arg in c}
-
         return predicates
 
     def _or(self, cnf):
@@ -277,11 +265,8 @@ class CNF(object):
         for a, b in product(self.clauses, cnf.clauses):
             tmp = set(a)
             for t in b:
-                if ~t in b:
-                    break
                 tmp.add(t)
-            else:
-                clauses.add(frozenset(tmp))
+            clauses.add(frozenset(tmp))
         return CNF(clauses)
 
     def _and(self, cnf):
