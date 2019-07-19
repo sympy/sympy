@@ -188,6 +188,8 @@ class Symbol(AtomicExpr, Boolean):
             raise ValueError(
                 '%scommutativity must be True or False.' % whose)
 
+        assumptions.setdefault('finite', True)
+
         # sanitize other assumptions so 1 -> True and 0 -> False
         for key in list(assumptions.keys()):
             from collections import defaultdict
