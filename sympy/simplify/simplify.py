@@ -1131,9 +1131,6 @@ def kroneckersimp(expr):
     def cancel_kronecker_mul(m):
         from sympy.utilities.iterables import subsets
 
-        if m.has(Piecewise):
-            m = m.rewrite(KroneckerDelta)
-
         args = m.args
         deltas = [a for a in args if isinstance(a, KroneckerDelta)]
         for delta1, delta2 in subsets(deltas, 2):
@@ -1144,7 +1141,7 @@ def kroneckersimp(expr):
         return m
 
     def is_mul_with_kronecker(e):
-        return isinstance(e, Mul) and e.has(KroneckerDelta) or e.has(Piecewise)
+        return isinstance(e, Mul) and e.has(KroneckerDelta)
 
     if not expr.has(KroneckerDelta):
         return expr
@@ -1153,6 +1150,10 @@ def kroneckersimp(expr):
     expr = None
     while newexpr != expr:
         expr = newexpr
+
+        if expr.has(Piecewise):
+            expr = expr.rewrite(KroneckerDelta)
+
         newexpr = expr.replace(is_mul_with_kronecker, cancel_kronecker_mul)
 
     return expr
