@@ -188,8 +188,6 @@ class Symbol(AtomicExpr, Boolean):
             raise ValueError(
                 '%scommutativity must be True or False.' % whose)
 
-        assumptions.setdefault('finite', True)
-
         # sanitize other assumptions so 1 -> True and 0 -> False
         for key in list(assumptions.keys()):
             from collections import defaultdict
@@ -256,6 +254,8 @@ class Symbol(AtomicExpr, Boolean):
         # be strict about commutativity
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         assumptions['commutative'] = is_commutative
+        if 'finite' not in assumptions and 'infinite' not in assumptions:
+            assumptions['finite'] = True
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = tmp_asm_copy  # Issue #8873
         return obj
