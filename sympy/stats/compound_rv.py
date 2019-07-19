@@ -29,17 +29,16 @@ from sympy.utilities.misc import filldedent
 def compute_distribution(dist):
     from sympy.stats.crv_types import NormalDistribution
     if isinstance(dist.compound_distribution(), NormalDistribution):
-        print(compoundNormal(dist))
+        return compute_normal(dist)
     latent_distributions = dist.latent_distributions
     for distributions in latent_distributions:
         print(distributions.pspace)
     return dist
 
 
-def compoundNormal(dist):
+def compute_normal(dist):
     from sympy.stats.crv_types import NormalDistribution
     mean, std = dist.compound_distribution().args
-    print('mean: ', mean, 'std: ', std)
     if isinstance(mean.pspace.distribution, NormalDistribution):
         mu, sigma = mean.pspace.distribution.args
         return NormalDistribution(mu, sqrt(sigma ** 2 + std ** 2))
@@ -53,11 +52,11 @@ class CompoundPSpace(ProductPSpace):
     """
 
     def __new__(cls, sym, dist):
-        dist = compute_distribution(dist)
         if isinstance(sym, string_types):
             sym = Symbol(sym)
         if not isinstance(sym, Symbol):
             raise TypeError("s should have been string or Symbol")
+        dist = compute_distribution(dist)
         return Basic.__new__(cls, sym, dist)
 
     @property
