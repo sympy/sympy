@@ -1582,7 +1582,7 @@ class While(Token):
     Parameters
     ==========
 
-    condition : expression convertable to Boolean
+    condition : expression convertible to Boolean
     body : CodeBlock or iterable
         When passed an iterable it is used to instantiate a CodeBlock.
 

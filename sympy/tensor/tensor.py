@@ -595,7 +595,7 @@ class _TensorDataLazyEvaluator(CantSympify):
         # inverse, this is not the case for other tensors.
         self._substitutions_dict_tensmul[metric, True, True] = data
         inverse_transpose = self.inverse_transpose_matrix(data)
-        # in symmetric spaces, the traspose is the same as the original matrix,
+        # in symmetric spaces, the transpose is the same as the original matrix,
         # the full covariant metric tensor is the inverse transpose, so this
         # code will be able to handle non-symmetric metrics.
         self._substitutions_dict_tensmul[metric, False, False] = inverse_transpose

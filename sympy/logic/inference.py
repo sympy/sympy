@@ -148,6 +148,7 @@ def pl_true(expr, model={}, deep=False):
     >>> pl_true(A & B & (~A | ~B), {A: True})
     >>> pl_true(A & B & (~A | ~B), {A: True}, deep=True)
     False
+
     """
 
     from sympy.core.symbol import Symbol
@@ -254,6 +255,7 @@ class PropKB(KB):
         >>> l.tell(y)
         >>> l.clauses
         [y, x | y]
+
         """
         for c in conjuncts(to_cnf(sentence)):
             self.clauses_.add(c)
@@ -272,6 +274,7 @@ class PropKB(KB):
         True
         >>> l.ask(y)
         False
+
         """
         return entails(query, self.clauses_)
 
@@ -294,6 +297,7 @@ class PropKB(KB):
         >>> l.retract(x | y)
         >>> l.clauses
         []
+
         """
         for c in conjuncts(to_cnf(sentence)):
             self.clauses_.discard(c)

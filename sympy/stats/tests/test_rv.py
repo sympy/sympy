@@ -1,15 +1,15 @@
 from sympy import (S, Symbol, Interval,
-        Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-        DiracDelta, Lambda, log, pi)
+                   Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
+                   DiracDelta, log, pi)
+from sympy.core.compatibility import range
 from sympy.core.numbers import comp
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
-        density, given, independent, dependent, where, pspace,
-        random_symbols, sample, Geometric)
+                         density, given, independent, dependent, where, pspace,
+                         random_symbols, sample, Geometric)
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
-        RandomSymbol, PSpace)
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.core.compatibility import range
+                            RandomSymbol, PSpace)
+from sympy.utilities.pytest import raises
 
 
 def test_where():

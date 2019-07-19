@@ -65,7 +65,7 @@ def test_replace_qdots_in_force():
     assert (KM2.mass_matrix.expand() == mass_matrix_expected.expand())
     assert (KM2.forcing.expand() == forcing_matrix_expected.expand())
 
-    # Check fr1 with reference fr_expected from [1] with u:s insted of qdots.
+    # Check fr1 with reference fr_expected from [1] with u:s instead of qdots.
     fr1_expected = Matrix([ 0, -(sig*q2 + delta * u2) ])
     assert fr1.expand() == fr1_expected.expand()
 

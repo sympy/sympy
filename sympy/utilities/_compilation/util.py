@@ -117,7 +117,7 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         raise FileNotFoundError("Source: `{}` does not exist".format(src))
 
     # We accept both (re)naming destination file _or_
-    # passing a (possible non-existant) destination directory
+    # passing a (possible non-existent) destination directory
     if dest_is_dir:
         if not dst[-1] == '/':
             dst = dst+'/'

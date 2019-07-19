@@ -14,13 +14,14 @@ Zeta
 
 from __future__ import print_function, division
 
-from sympy import (factorial, exp, S, sympify, And, I, zeta, polylog, log, beta,
-    hyper, binomial, Piecewise, floor)
+import random
+
+from sympy import (factorial, exp, S, sympify, I, zeta, polylog, log, beta,
+                   hyper, binomial, Piecewise, floor)
 from sympy.stats import density
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.rv import _value_check, RandomSymbol
-import random
 
 __all__ = ['Geometric',
 'Logarithmic',

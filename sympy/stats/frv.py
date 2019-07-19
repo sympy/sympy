@@ -9,20 +9,20 @@ sympy.stats.crv
 """
 from __future__ import print_function, division
 
+import random
 from itertools import product
 
-from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul, Add,
-        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan, Rational,
-        Sum, Intersection)
-from sympy.sets.sets import FiniteSet
-from sympy.core.relational import Relational
-from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
-        PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
-        sumsets, rv_subs, NamedArgsMixin, Density)
+from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul,
+                   And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan,
+                   Sum, Intersection)
 from sympy.core.containers import Dict
-from sympy.stats.symbolic_probability import Expectation, Probability
 from sympy.core.logic import Logic
-import random
+from sympy.core.relational import Relational
+from sympy.sets.sets import FiniteSet
+from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
+                            PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
+                            sumsets, rv_subs, NamedArgsMixin, Density)
+
 
 class FiniteDensity(dict):
     """
@@ -198,11 +198,11 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
             return Density(self)
         return dict((k, self.pmf(k)) for k in self.set)
 
-    def pmf(self, *args): # to be overrided by specific distribution
+    def pmf(self, *args): # to be overridden by specific distribution
         raise NotImplementedError()
 
     @property
-    def set(self): # to be overrided by specific distribution
+    def set(self): # to be overridden by specific distribution
         raise NotImplementedError()
 
     values = property(lambda self: self.dict.values)
@@ -321,7 +321,7 @@ class FinitePSpace(PSpace):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
         cond = rv_subs(condition)
         if not cond_symbols.issubset(self.symbols):
-            raise ValueError("Cannot compare foriegn random symbols, %s"
+            raise ValueError("Cannot compare foreign random symbols, %s"
                              %(str(cond_symbols - self.symbols)))
         if isinstance(condition, Relational) and \
             (not cond.free_symbols.issubset(self.domain.free_symbols)):

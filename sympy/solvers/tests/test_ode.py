@@ -2235,8 +2235,8 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol8 = Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)
     sol9 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
     sol10 = Eq(f(x), (C1 + x*(C2 + log(x)))*exp(-x))
-    sol11 = Eq(f(x), cos(x)*(C2 - Integral(1/cos(x), x)) + sin(x)*(C1 +
-        Integral(1/sin(x), x)))
+    sol11 = Eq(f(x), (C1 + log(sin(x) - 1)/2 - log(sin(x) + 1)/2
+        )*cos(x) + (C2 + log(cos(x) - 1)/2 - log(cos(x) + 1)/2)*sin(x))
     sol12 = Eq(f(x), C1 + C2*x + x**3*(C3 + log(x)/6) + C4*x**2)
     sol1s = constant_renumber(sol1)
     sol2s = constant_renumber(sol2)
@@ -2285,8 +2285,15 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     sol_simp = dsolve(eq, f(x), hint=our_hint, simplify=True)
     sol_nsimp = dsolve(eq, f(x), hint=our_hint, simplify=False)
     assert sol_simp != sol_nsimp
-    assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
+    # /----------
+    # eq.subs(*sol_simp.args) doesn't simplify to zero without help
+    zero = checkodesol(eq, sol_simp, order=5, solve_for_func=False)[1]
+    # if this fails because zero.is_zero, replace this block with
+    # assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
+    assert not zero.is_zero and zero.rewrite(exp).simplify() == 0
+    # \-----------
     assert checkodesol(eq, sol_nsimp, order=5, solve_for_func=False)[0]
+
 
 def test_Liouville_ODE():
     hint = 'Liouville'

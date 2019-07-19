@@ -796,7 +796,7 @@ def limited_integrate(fa, fd, G, DE):
     Solves the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
     """
     fa, fd = fa*Poly(1/fd.LC(), DE.t), fd.monic()
-    # interpretting limited integration problem as a
+    # interpreting limited integration problem as a
     # parametric Risch DE problem
     Fa = Poly(0, DE.t)
     Fd = Poly(1, DE.t)

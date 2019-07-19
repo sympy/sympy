@@ -1,19 +1,17 @@
 from __future__ import print_function, division
 
 from sympy import (Symbol, Matrix, MatrixSymbol, S, Indexed, Basic,
-                    Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
-                    nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
-                    linsolve, Piecewise, eye, Or, Ne, Not, Intersection,
-                    Union, Expr, Function, sympify, Le, exp, cacheit)
+                   Set, And, Tuple, Eq, FiniteSet, ImmutableMatrix,
+                   nsimplify, Lambda, Mul, Sum, Dummy, Lt, IndexedBase,
+                   linsolve, Piecewise, eye, Or, Ne, Not, Intersection,
+                   Union, Expr, Function, sympify, Le, exp, cacheit)
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import Boolean
+from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter)
-from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
-from sympy.core.compatibility import string_types
-from sympy.core.relational import Relational
-from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.stochastic_process import StochasticPSpace
-from sympy.core.logic import Logic
-from sympy.logic.boolalg import Boolean
+from sympy.stats.symbolic_probability import Probability, Expectation
 
 __all__ = [
     'StochasticProcess',
@@ -52,7 +50,7 @@ def _set_converter(itr):
 
 def _matrix_checks(matrix):
     if not isinstance(matrix, (Matrix, MatrixSymbol, ImmutableMatrix)):
-        raise TypeError("Transition probabilities etiher should "
+        raise TypeError("Transition probabilities either should "
                             "be a Matrix or a MatrixSymbol.")
     if matrix.shape[0] != matrix.shape[1]:
         raise ValueError("%s is not a square matrix"%(matrix))
@@ -96,13 +94,13 @@ class StochasticProcess(Basic):
 
     def __call__(self, time):
         """
-        Overrided in ContinuousTimeStochasticProcess.
+        Overridden in ContinuousTimeStochasticProcess.
         """
         raise NotImplementedError("Use [] for indexing discrete time stochastic process.")
 
     def __getitem__(self, time):
         """
-        Overrided in DiscreteTimeStochasticProcess.
+        Overridden in DiscreteTimeStochasticProcess.
         """
         raise NotImplementedError("Use () for indexing continuous time stochastic process.")
 
@@ -515,7 +513,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, StochasticProcessUtil):
                 lhsg, rhsg = (rhsg, lhsg)
             keyc, statec, keyg, stateg = (lhsc.key, rhsc, lhsg.key, rhsg)
             if Lt(stateg, trans_probs.shape[0]) == False or Lt(statec, trans_probs.shape[1]) == False:
-                raise IndexError("No information is avaliable for (%s, %s) in "
+                raise IndexError("No information is available for (%s, %s) in "
                     "transition probabilities of shape, (%s, %s). "
                     "State space is zero indexed."
                     %(stateg, statec, trans_probs.shape[0], trans_probs.shape[1]))
@@ -611,7 +609,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, StochasticProcessUtil):
             Unevaluated object if computations cannot be done due to
             insufficient information.
         Expr
-            In all other cases when the computations are successfull.
+            In all other cases when the computations are successful.
 
         Note
         ====

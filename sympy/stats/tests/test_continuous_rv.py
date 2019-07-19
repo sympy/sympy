@@ -1,7 +1,8 @@
-from sympy import (Symbol, Abs, exp, expint, S, N, pi, simplify, Interval, erf, erfc, Ne,
-                   EulerGamma, Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And,
-                   gamma, beta, Piecewise, Integral, sin, cos, tan, atan, sinh, cosh,
-                   besseli, factorial, binomial, floor, expand_func, Rational, I, re,
+from sympy import E as e
+from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
+                   EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
+                   gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
+                   besseli, floor, expand_func, Rational, I, re,
                    im, lambdify, hyper, diff, Or, Mul)
 from sympy.core.compatibility import range
 from sympy.external import import_module
@@ -25,7 +26,6 @@ from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.randtest import verify_numerically as tn
-from sympy import E as e
 
 oo = S.Infinity
 

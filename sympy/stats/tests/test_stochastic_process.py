@@ -2,10 +2,11 @@ from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain)
+from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
-from sympy.stats.joint_rv import JointDistribution
 from sympy.utilities.pytest import raises
+
 
 def test_DiscreteMarkovChain():
 

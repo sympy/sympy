@@ -2025,6 +2025,20 @@ def test_Matrix_berkowitz_charpoly():
     assert p.as_expr().subs(p.gen, x) == x**2 - 3*x
 
 
+def test_exp_jordan_block():
+    l = Symbol('lamda')
+
+    m = Matrix.jordan_block(1, l)
+    assert m._eval_matrix_exp_jblock() == Matrix([[exp(l)]])
+
+    m = Matrix.jordan_block(3, l)
+    assert m._eval_matrix_exp_jblock() == \
+        Matrix([
+            [exp(l), exp(l), exp(l)/2],
+            [0, exp(l), exp(l)],
+            [0, 0, exp(l)]])
+
+
 def test_exp():
     m = Matrix([[3, 4], [0, -2]])
     m_exp = Matrix([[exp(3), -4*exp(-2)/5 + 4*exp(3)/5], [0, exp(-2)]])
@@ -3460,7 +3474,7 @@ def test_opportunistic_simplification():
 
 def test_partial_pivoting():
     # example from https://en.wikipedia.org/wiki/Pivot_element
-    # partial pivoting with back subsitution gives a perfect result
+    # partial pivoting with back substitution gives a perfect result
     # naive pivoting give an error ~1e-13, so anything better than
     # 1e-15 is good
     mm=Matrix([[0.003 ,59.14, 59.17],[ 5.291, -6.13,46.78]])

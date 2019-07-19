@@ -101,7 +101,7 @@ Coefficients of `c_i` evaluated at `x_i + 2*h`:
 	>>> m32 = P(x0+2*h, x0, c, n).diff(c[1])
 	>>> m33 = P(x0+2*h, x0, c, n).diff(c[2])
 
-Matrix of the coeffcients is 3x3 in this case:
+Matrix of the coefficients is 3x3 in this case:
 
 	>>> M = Matrix([[m11, m12, m13], [m21, m22, m23], [m31, m32, m33]])
 
@@ -143,7 +143,7 @@ at `x_i` and thus using points at `x_{i-1}`,  `x_{i}`,  and `x_{i+1}`. So here i
 	>>> m31 = P(x0+h, x0, c, n).diff(c[0])
 	>>> m32 = P(x0+h, x0, c, n).diff(c[1])
 	>>> m33 = P(x0+h, x0, c, n).diff(c[2])
-	>>> # matrix of the coeffcients is 3x3 in this case
+	>>> # matrix of the coefficients is 3x3 in this case
 	>>> M = Matrix([[m11, m12, m13], [m21, m22, m23], [m31, m32, m33]])
 
 Now that we have the matrix of coefficients we next form the right-hand-side and solve by inverting `M`:
@@ -219,7 +219,7 @@ degree polynomial P coefficients of `c_i` evaluated at `x_i, x_{i-1},` and `x_{i
     >>> m32 = P(xN-2*h, xN, c, n).diff(c[1])
     >>> m33 = P(xN-2*h, xN, c, n).diff(c[2])
 
-Next we construct the `3 \times 3` matrix of the coeffcients:
+Next we construct the `3 \times 3` matrix of the coefficients:
 
     >>> M = Matrix([[m11, m12, m13], [m21, m22, m23], [m31, m32, m33]])
     >>> # matrix of the function values...actually a vector of right hand sides
@@ -247,7 +247,7 @@ Also,  we note that output of formats appropriate to Fortran,  C,  etc. may be d
 given above.
 
 Next we show how to perform these and many other discritizations of derivatives,  but using a
-much more efficient approach originally due to Bengt Fornberg and now incorported into SymPy.
+much more efficient approach originally due to Bengt Fornberg and now incorporated into SymPy.
 
 
 

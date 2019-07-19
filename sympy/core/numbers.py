@@ -2542,9 +2542,9 @@ class AlgebraicNumber(Expr):
 
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.polys import CRootOf, minpoly
-
+        measure, ratio = kwargs['measure'], kwargs['ratio']
         for r in [r for r in self.minpoly.all_roots() if r.func != CRootOf]:
             if minpoly(self.root - r).is_Symbol:
                 # use the matching root if it's simpler
@@ -3206,7 +3206,7 @@ class NaN(with_metaclass(Singleton, Number)):
     the examples below.
 
     NaN is not comparable so inequalities raise a TypeError.  This is in
-    constrast with floating point nan where all inequalities are false.
+    contrast with floating point nan where all inequalities are false.
 
     NaN is a singleton, and can be accessed by ``S.NaN``, or can be imported
     as ``nan``.

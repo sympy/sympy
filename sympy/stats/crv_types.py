@@ -272,7 +272,7 @@ def Benini(name, alpha, beta, sigma):
                 -\beta\log^2\left[{\frac{x}{\sigma}}\right]}
                 \left(\frac{\alpha}{x}+\frac{2\beta\log{\frac{x}{\sigma}}}{x}\right)
 
-    This is a heavy-tailed distrubtion and is also known as the log-Rayleigh
+    This is a heavy-tailed distribution and is also known as the log-Rayleigh
     distribution.
 
     Parameters
@@ -2491,7 +2491,7 @@ def Normal(name, mean, std):
     ==========
 
     mu : Real number or a list representing the mean or the mean vector
-    sigma : Real number or a positive definite sqaure matrix,
+    sigma : Real number or a positive definite square matrix,
          :math:`\sigma^2 > 0` the variance
 
     Returns

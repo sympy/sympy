@@ -1539,3 +1539,6 @@ def test_issue_14241():
     n = Symbol('n', positive=True, integer=True)
     assert integrate(n * x ** (n - 1) / (x + 1), x) == \
            n**2*x**n*lerchphi(x*exp_polar(I*pi), 1, n)*gamma(n)/gamma(n + 1)
+
+def test_issue_13112():
+    assert integrate(sin(t)**2 / (5 - 4*cos(t)), [t, 0, 2*pi]) == pi / 4
