@@ -14,6 +14,7 @@ from sympy.matrices import (
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
 from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple, Wild
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.solvers import solve
@@ -248,6 +249,10 @@ def test_power():
     n = Symbol('n', integer=True, negative=True)
     raises(ValueError, lambda: A**n)
     n = Symbol('n', integer=True, nonnegative=True)
+    assert A**n == Matrix([
+        [KroneckerDelta(0, n), KroneckerDelta(1, n), -KroneckerDelta(0, n) - KroneckerDelta(1, n) + 1],
+        [                   0, KroneckerDelta(0, n),                         1 - KroneckerDelta(0, n)],
+        [                   0,                    0,                                                1]])
     assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     raises(ValueError, lambda: A**(S(3)/2))
     A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
@@ -261,11 +266,12 @@ def test_power():
     assert An * An == A**(2*n)
 
     # concretizing behavior for non-integer and complex powers
-    A = Matrix ([[0,0,0],[0,0,0],[0,0,0]])
+    A = Matrix([[0,0,0],[0,0,0],[0,0,0]])
     n = Symbol('n', integer=True, positive=True)
     assert A**n == A
     n = Symbol('n', integer=True, nonnegative=True)
-    assert A**n != A
+    assert A**n == diag(0**n, 0**n, 0**n)
+    assert (A**n).subs(n, 0) == eye(3)
     A = Matrix ([[2,0,0],[0,2,0],[0,0,2]])
     assert A**2.1 == diag (2**2.1, 2**2.1, 2**2.1)
     assert A**I == diag (2**I, 2**I, 2**I)
