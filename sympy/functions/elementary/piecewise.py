@@ -1032,11 +1032,13 @@ class Piecewise(Function):
     def _eval_rewrite_as_KroneckerDelta(self, *args):
         from sympy import Ne, Eq, KroneckerDelta
 
-        equalities = []
+        conditions = []
         true_value = None
         for i in args:
             if isinstance(i[1], Eq) or isinstance(i[1], Ne):
-                equalities.append(i)
+                conditions.append(i)
+            elif isinstance(i[1], And) or isinstance(i[1], Or):
+                conditions.append(i)
             elif i[1] is S.true:
                 if true_value is None:
                     true_value = i[0]
@@ -1044,15 +1046,37 @@ class Piecewise(Function):
                 return
 
         if true_value is not None:
-            equals = equalities[::-1]
+            conditions = conditions[::-1]
             result = true_value
 
-            for i in equals:
-                k = KroneckerDelta(*i[1].args)
+            for i in conditions:
                 if isinstance(i[1], Eq):
+                    k = KroneckerDelta(*i[1].args)
                     result = k * i[0] + (1 - k) * result
-                else:
+                elif isinstance(i[1], Ne):
+                    k = KroneckerDelta(*i[1].args)
                     result = (1 - k) * i[0] + k * result
+                elif isinstance(i[1], And):
+                    k = 1
+                    for c in i[1].args:
+                        if isinstance(c, Eq):
+                            k *= KroneckerDelta(*c.args)
+                        elif isinstance(c, Ne):
+                            k *= (1 - KroneckerDelta(*c.args))
+                        else:
+                            return
+                    result = k * i[0] + (1 - k) * result
+                elif isinstance(i[1], Or):
+                    k = 1
+                    for c in i[1].args:
+                        if isinstance(c, Eq):
+                            k *= 1 - KroneckerDelta(*c.args)
+                        elif isinstance(c, Ne):
+                            k *= KroneckerDelta(*c.args)
+                        else:
+                            return
+                    result = (1 - k) * i[0] + k * result
+
             return result
 
 
