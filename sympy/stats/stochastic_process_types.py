@@ -536,10 +536,9 @@ class MarkovProcess(StochasticProcess):
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(expr, condition))
 
-
 class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     """
-    Represents discrete Markov chain.
+    Represents discrete time Markov chain.
 
     Parameters
     ==========
@@ -571,6 +570,12 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]
     >>> P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2)
     0.36
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Markov_chain#Discrete-time_Markov_chain
+    .. [2] https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     """
     index_set = S.Naturals0
 
@@ -695,7 +700,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
 class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     """
-    Represents continuous Markov chain.
+    Represents continuous time Markov chain.
 
     Parameters
     ==========
@@ -715,6 +720,12 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     >>> C = ContinuousMarkovChain('C', state_space=[0, 1], gen_mat=G)
     >>> C.limiting_distribution()
     Matrix([[1/2, 1/2]])
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Markov_chain#Continuous-time_Markov_chain
+    .. [2] http://u.math.biu.ac.il/~amirgi/CTMCnotes.pdf
     """
     index_set = S.Reals
 
