@@ -249,6 +249,6 @@ given above.
 Next we show how to perform these and many other discritizations of derivatives,  but using a
 much more efficient approach originally due to Bengt Fornberg and now incorporated into SymPy.
 
-:doc:`src/tutorial/calculus`
+:doc:`/src/tutorial/calculus`
 
 :ref:`finite_diff`
