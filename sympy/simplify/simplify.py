@@ -1146,14 +1146,14 @@ def kroneckersimp(expr):
     if not expr.has(KroneckerDelta):
         return expr
 
+    if expr.has(Piecewise):
+        expr = expr.rewrite(KroneckerDelta)
+
     newexpr = expr
     expr = None
+
     while newexpr != expr:
         expr = newexpr
-
-        if expr.has(Piecewise):
-            expr = expr.rewrite(KroneckerDelta)
-
         newexpr = expr.replace(is_mul_with_kronecker, cancel_kronecker_mul)
 
     return expr
