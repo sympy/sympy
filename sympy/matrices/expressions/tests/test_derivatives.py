@@ -70,6 +70,14 @@ def test_matrix_derivative_by_scalar():
     assert expr.diff(x) == 2*mu*Identity(k)
 
 
+def test_matrix_derivative_by_matrix_element():
+    from .matexpr import SingleEntryMatrix
+
+    M = MatrixSymbol('M', 2, 2)
+    assert M[1, 1].diff(M) == SingleEntryMatrix(2, 2, 1, 1)
+    assert M.diff(M[0, 0]) == SingleEntryMatrix(2, 2, 0, 0)
+
+
 def test_matrix_derivative_non_matrix_result():
     # This is a 4-dimensional array:
     assert A.diff(A) == Derivative(A, A)
