@@ -10,17 +10,18 @@ sympy.stats.frv
 
 from __future__ import print_function, division
 
+import random
+
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
-        Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
+                   Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
+                   Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
+from sympy.external import import_module
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
-from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
-from sympy.external import import_module
+from sympy.solvers.solveset import solveset
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
-import random
+                            ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 
 
 class ContinuousDomain(RandomDomain):
@@ -322,6 +323,22 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
     @property
     def set(self):
         return self.args[1]
+
+    def _sample_scipy(self, size):
+        handmade_pdf = self.pdf
+        scipy = import_module('scipy')
+        from scipy.stats import rv_continuous
+        class scipy_pdf(rv_continuous):
+            def _pdf(self, z):
+                return handmade_pdf(z)
+
+        scipy_rv = scipy_pdf(a=self.set._inf, b=self.set._sup, name='scipy_pdf')
+
+        return scipy_rv.rvs(size=size)
+
+    def sample(self, size=()):
+        icdf = self._inverse_cdf_expression()
+        return icdf(random.uniform(0, 1))
 
     def __new__(cls, pdf, set=Interval(-oo, oo)):
         return Basic.__new__(cls, pdf, set)
