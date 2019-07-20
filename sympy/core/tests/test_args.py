@@ -2930,6 +2930,11 @@ def test_sympy__matrices__expressions__matexpr__OneMatrix():
     assert _test_args(OneMatrix(3, 5))
 
 
+def test_sympy__matrices__expressions__matexpr__SingleEntryMatrix():
+    from sympy.matrices.expressions.matexpr import SingleEntryMatrix
+    assert _test_args(SingleEntryMatrix(3, 4, 1, 2))
+
+
 def test_sympy__matrices__expressions__matexpr__GenericZeroMatrix():
     from sympy.matrices.expressions.matexpr import GenericZeroMatrix
     assert _test_args(GenericZeroMatrix())
