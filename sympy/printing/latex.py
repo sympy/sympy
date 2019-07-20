@@ -1726,6 +1726,12 @@ class LatexPrinter(Printer):
         perm_str = self._print(P.args[0])
         return "P_{%s}" % perm_str
 
+    def _print_SingleEntryMatrix(self, expr):
+        _, _, i, j = expr.args
+        if self._settings['mat_symbol_style'] == 'plain':
+            return r"\mathbb{J}" + "^{%s, %s}" % (i, j)
+        return r"\mathbf{J}" + "^{%s, %s}" % (i, j)
+
     def _print_NDimArray(self, expr):
 
         if expr.rank() == 0:
