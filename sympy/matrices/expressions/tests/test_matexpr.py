@@ -249,6 +249,21 @@ def test_SingleEntryMatrix():
     raises(ValueError, lambda: SingleEntryMatrix(2, 2, -1, -1))
     raises(ValueError, lambda: SingleEntryMatrix(-1, -1, 0, 0))
 
+    n = Symbol('n', integer=False)
+    raises(ValueError, lambda: SingleEntryMatrix(n, n, 3, 3))
+    n = Symbol('n', integer=True, negative=True)
+    raises(ValueError, lambda: SingleEntryMatrix(n, n, 3, 3))
+    n = Symbol('n', integer=True, positive=True)
+    assert SingleEntryMatrix(n, n, 3, 3)
+
+    i, j = symbols('i j', integer=False)
+    raises(ValueError, lambda: SingleEntryMatrix(n, n, i, j))
+    i, j = symbols('i j', integer=True, nonnegative=False)
+    raises(ValueError, lambda: SingleEntryMatrix(n, n, i, j))
+    i, j = symbols('i j', integer=True, nonnegative=True)
+    assert SingleEntryMatrix(n, n, i, j)
+
+
 def test_addition():
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', n, m)

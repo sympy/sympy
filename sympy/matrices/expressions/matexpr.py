@@ -1121,15 +1121,26 @@ class SingleEntryMatrix(MatrixExpr):
     is 1.
     """
     def __new__(cls, m, n, i, j):
-        if m <= 0 or n <= 0:
+        m, n, i, j = _sympify(m), _sympify(n), _sympify(i), _sympify(j)
+
+        if not i.is_integer or not j.is_integer or \
+            not m.is_integer or not n.is_integer:
             raise ValueError(
-                "Matrix dimensions ({}, {}) should be positive "
-                "integers.".format(m, n)
+                "Matrix dimensions ({}, {}) and index specifications "
+                "({}, {}) should be integers or integer symbols."
+                .format(m, n, i, j)
             )
-        if i >= m or j >= n or i < 0 or j < 0:
+
+        if not m.is_positive or not n.is_positive:
             raise ValueError(
-                'The location ({}, {}) of the single entry is out of '
-                'the matrix dimensions ({}, {})'.format(i, j, m, n))
+                "Matrix dimensions ({}, {}) should be positives".format(m, n)
+            )
+
+        if (i >= m) == True or (j >= n) == True \
+            or i.is_negative or j.is_negative:
+            raise ValueError(
+                'The index ({}, {}) of the single entry is out of '
+                'the matrix bounds ({}, {})'.format(i, j, m, n))
 
         obj = super(SingleEntryMatrix, cls).__new__(cls, m, n, i, j)
         return obj
