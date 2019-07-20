@@ -26,22 +26,22 @@ from sympy.stats.rv import (ProductPSpace, NamedArgsMixin, ProductDomain,
 from sympy.utilities.misc import filldedent
 
 
-def compute_distribution(dist):
+def compute_distribution(sym, dist):
     from sympy.stats.crv_types import NormalDistribution
     if isinstance(dist.compound_distribution(), NormalDistribution):
-        return compute_normal(dist)
+        return compute_normal(sym, dist)
     latent_distributions = dist.latent_distributions
     for distributions in latent_distributions:
         print(distributions.pspace)
     return dist
 
 
-def compute_normal(dist):
+def compute_normal(sym, dist):
     from sympy.stats.crv_types import NormalDistribution
     mean, std = dist.compound_distribution().args
     if isinstance(mean.pspace.distribution, NormalDistribution):
         mu, sigma = mean.pspace.distribution.args
-        return NormalDistribution(mu, sqrt(sigma ** 2 + std ** 2))
+        return SingleContinuousPSpace(sym, NormalDistribution(mu, sqrt(sigma ** 2 + std ** 2)))
 
 
 class CompoundPSpace(ProductPSpace):
@@ -56,7 +56,9 @@ class CompoundPSpace(ProductPSpace):
             sym = Symbol(sym)
         if not isinstance(sym, Symbol):
             raise TypeError("s should have been string or Symbol")
-        dist = compute_distribution(dist)
+        dist = compute_distribution(sym, dist)
+        if not isinstance(dist, CompoundDistribution):
+            return dist
         return Basic.__new__(cls, sym, dist)
 
     @property

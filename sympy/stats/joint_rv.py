@@ -19,10 +19,6 @@ from sympy.core.compatibility import string_types, iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import ImmutableMatrix
-from sympy.stats.crv import (ContinuousDistribution,
-                             SingleContinuousDistribution, SingleContinuousPSpace)
-from sympy.stats.drv import (DiscreteDistribution,
-                             SingleDiscreteDistribution, SingleDiscretePSpace)
 from sympy.stats.compound_rv import CompoundDistribution
 from sympy.stats.crv import (SingleContinuousDistribution, SingleContinuousPSpace)
 from sympy.stats.drv import (SingleDiscreteDistribution, SingleDiscretePSpace)
