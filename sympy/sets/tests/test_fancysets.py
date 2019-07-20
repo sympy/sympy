@@ -7,7 +7,7 @@ from sympy.sets.sets import (FiniteSet, Interval, imageset, Union,
 from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
-                   Dummy, floor, And, Eq, ceiling, Piecewise, Ne, Mod)
+                   Dummy, floor, And, Eq, ceiling, Piecewise, Ne, Mod, ITE)
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, t
@@ -324,20 +324,34 @@ def test_Range_set():
         else:
             assert (rev, [rev.subs(n, -1), rev.subs(n, 1)]) == expec
     expected = [(Piecewise((True, n <= 2), (False, True)), True, True, True),
-                (False, False, False, False), (Piecewise((False, Ne(Mod(n, -1), 0)),
-                (True, n >= 2), (False, True)), False, False, False), (False, False, False, False),
-                (Piecewise((True, n - 1 >= 2), (False, True)), False, False, False),
-                (Piecewise((True, n - 1 >= 2), (False, True)), False, False, False),
+                (False, False, False, False),
+                (Piecewise((False, Ne(Mod(n, -1), 0)), (True, n >= 2), (False, True)), False, False, False),
+                (False, False, False, False),
+                (Piecewise((True, n >= 3), (False, True)), False, False, False),
+                (Piecewise((True, n >= 3), (False, True)), False, False, False),
                 (False, False, False, False), (False, False, False, False),
-                (Piecewise((False, Ne(Mod(-1, n), 0)), (True, (n >= 0) & (n <= 3)),
+                (Piecewise((False, Ne(Mod(-1, n), 0)),
+                (True, ITE((ceiling(4/n) <= 0) & ((n >= 0) | (ceiling(4/n) <= 0)), False,
+                ITE((n >= 0) & ((n >= 0) | (ceiling(4/n) <= 0)), n - 5 <= -2, ITE((n >= 0)
+                | (ceiling(4/n) <= 0), False, ITE(n >= 0, (n - 5 >= -2) & (n - 5 <= -2), False))))),
                 (False, True)), False, True), (Piecewise((False, Ne(Mod(-3, n), 0)),
-                (True, (n >= 0) & (n <= 3)), (False, True)), False, True),
-                (False, False, False), (False, False, False)]
+                (True, ITE((ceiling(6/n) <= 0) & ((n >= 0) | (ceiling(6/n) <= 0)), False,
+                ITE((n >= 0) & ((n >= 0) | (ceiling(6/n) <= 0)), n - 5 <= -2, ITE((n >= 0)
+                | (ceiling(6/n) <= 0), False, ITE(n >= 0, (n - 5 >= -2) & (n - 5 <= -2), False))))),
+                (False, True)), False, True), (Piecewise((False, Ne(Mod(-1, n), 0)),
+                (True, ITE((ceiling(-6/n) <= 0) & ((n >= 0) | (ceiling(-6/n) <= 0)), False, ITE((n >= 0) &
+                ((n >= 0) | (ceiling(-6/n) <= 0)), n + 5 <= -2, ITE((n >= 0) | (ceiling(-6/n) <= 0), False,
+                ITE(n >= 0, (n + 5 >= -2) & (n + 5 <= -2), False))))), (False, True)), False, False),
+                (Piecewise((False, Ne(Mod(-3, n), 0)), (True, ITE((ceiling(-4/n) <= 0) & ((n >= 0) |
+                (ceiling(-4/n) <= 0)), False, ITE((n >= 0) & ((n >= 0) | (ceiling(-4/n) <= 0)), n + 5 <= -2,
+                ITE((n >= 0) | (ceiling(-4/n) <= 0), False, ITE(n >= 0, (n + 5 >= -2) & (n + 5 <= -2), False))))),
+                (False, True)), False, False)]
     for r, expec in zip(ranges, expected):
+        rc = r._contains(2)
         if not r.step.has(Symbol):
-            assert (r._contains(2), r.subs(n, -1)._contains(2), r.subs(n, 0)._contains(2), r.subs(n, 1)._contains(2)) == expec
+            assert (rc, rc.subs(n, -1), rc.subs(n, 0), rc.subs(n, 1)) == expec
         else:
-            assert (r._contains(2), r.subs(n, -1)._contains(2), r.subs(n, 1)._contains(2)) == expec
+            assert (rc, rc.subs(n, -1), rc.subs(n, 1)) == expec
 
     expected = [[Piecewise((Abs(n - 10), n - 10 < 0), (0, True)), S(11), S(10), S(9)],
                 [Piecewise((Abs(n + 10), n + 10 < 0), (0, True)), S(0), S(0), S(0)],
@@ -359,12 +373,7 @@ def test_Range_set():
             assert [size, size.subs(n, -1), size.subs(n, 1)] == expec
 
     ranges = [Range(n, 10, 1), Range(1, n, 1), Range(-1, -5, n)]
-    expected = [[n, n + 1, n + 2, n + 3, n + 4, n + 5],
-                [1, 2, 3, 4, 5, 6],
-                [-1, n - 1, 2*n - 1, 3*n - 1, 4*n - 1, 5*n - 1]]
-    for r, expec in zip(ranges, expected):
-        it = iter(r)
-        assert [next(it) for i in range(6)] == expec
+    assert [i for i in Range(n, n + 6)] == [n, n + 1, n + 2, n + 3, n + 4, n + 5]
     i = symbols('i', integer=True)
     expected = [[Piecewise((0, n - 10 >= 0), (n, True)),
                 Piecewise((0, n - 10 >= 0), (9, True)),
@@ -373,17 +382,23 @@ def test_Range_set():
                 [Piecewise((0, n - 1 <= 0), (1, True)),
                 Piecewise((0, n - 1 <= 0), (n - 1, True)),
                 Piecewise((0, n - 1 <= 0), (n - 1, True)),
-                (n - 2, n - 2), (3, 3)], [Piecewise((0, ceiling(-4/n) <= 0),
-                (-1, n >= 0), (-n - 5, True)),
-                Piecewise((0, ceiling(-4/n) <= 0), (-n - 5, n >= 0),
-                (-1, True)), Piecewise((0, ceiling(-4/n) <= 0),
-                (-n - 5, n >= 0), (-1, True)), (-2*n - 5, -2*n - 5),
-                (2*n - 1, 2*n - 1)]]
-    for r, expec in (ranges, expected):
+                (n - 2, n - 2), (3, 3)],
+                [Piecewise((Piecewise((0, ceiling(-4/n) <= 0),
+                (-1, n >= 0), (-n - 5, True)), n > 0),
+                (Piecewise((0, ceiling(-4/n) <= 0), (-n - 5, n >= 0),
+                (-1, True)), True)), Piecewise((Piecewise((0, ceiling(-4/n) <= 0),
+                (-n - 5, n >= 0), (-1, True)), n > 0),
+                (Piecewise((0, ceiling(-4/n) <= 0), (-1, n >= 0),
+                (-n - 5, True)), True)), Piecewise((Piecewise((0, ceiling(-4/n) <= 0),
+                (-n - 5, n >= 0), (-1, True)), n > 0),
+                (Piecewise((0, ceiling(-4/n) <= 0), (-1, n >= 0), (-n - 5, True)), True)),
+                (-2*n - 5, -2*n - 5), (2*n - 1, 2*n - 1)]]
+    for r, expec in zip(ranges, expected):
         assert [r[0], r[-1], r[S.Infinity],
                 (r[-2], r[i].subs(i, -2)), (r[2], r[i].subs(i, 2))] == expec
     for r in ranges:
         raises(ValueError, lambda: len(r))
+        raises(ValueError, lambda: [i for i in r])
 
     # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
     # compatibility imports above)

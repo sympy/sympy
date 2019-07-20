@@ -610,7 +610,9 @@ class Range(Set):
         #     raise ValueError("Cannot iterate over symbolic Range.")
         if self.start in [S.NegativeInfinity, S.Infinity]:
             raise ValueError("Cannot iterate over Range with infinite start")
-        elif self:
+        if self.size.is_Integer == False and self.size not in [S.NegativeInfinity, S.Infinity]:
+            raise ValueError("Cannot iterate over symbolic sized range.")
+        if self:
             i = self.start
             step = self.step
 
