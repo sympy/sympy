@@ -658,100 +658,112 @@ class Range(Set):
         ambiguous = "cannot unambiguously re-stride from the end " + \
             "with an infinite value"
         if isinstance(i, slice):
-            if self.size.is_finite:
-                start, stop, step = i.indices(self.size)
-                n = ceiling((stop - start)/step)
-                if n <= 0:
-                    return Range(0)
-                canonical_stop = start + n*step
-                end = canonical_stop - step
-                ss = step*self.step
-                return Range(self[start], self[end] + ss, ss)
-            else:  # infinite Range
-                start = i.start
-                stop = i.stop
-                if i.step == 0:
-                    raise ValueError(zerostep)
-                step = i.step or 1
-                ss = step*self.step
-                #---------------------
-                # handle infinite on right
-                #   e.g. Range(0, oo) or Range(0, -oo, -1)
-                # --------------------
-                if self._stop.is_infinite:
-                    # start and stop are not interdependent --
-                    # they only depend on step --so we use the
-                    # equivalent reversed values
-                    return self.reversed[
-                        stop if stop is None else -stop + 1:
-                        start if start is None else -start:
-                        step].reversed
-                #---------------------
-                # handle infinite on the left
-                #   e.g. Range(oo, 0, -1) or Range(-oo, 0)
-                # --------------------
-                # consider combinations of
-                # start/stop {== None, < 0, == 0, > 0} and
-                # step {< 0, > 0}
-                if start is None:
-                    if stop is None:
-                        if step < 0:
-                            return Range(self[-1], self.start, ss)
-                        elif step > 1:
-                            raise ValueError(ambiguous)
-                        else:  # == 1
-                            return self
-                    elif stop < 0:
-                        if step < 0:
-                            return Range(self[-1], self[stop], ss)
-                        else:  # > 0
-                            return Range(self.start, self[stop], ss)
-                    elif stop == 0:
-                        if step > 0:
-                            return Range(0)
-                        else:  # < 0
-                            raise ValueError(ooslice)
-                    elif stop == 1:
-                        if step > 0:
-                            raise ValueError(ooslice)  # infinite singleton
-                        else:  # < 0
-                            raise ValueError(ooslice)
-                    else:  # > 1
-                        raise ValueError(ooslice)
-                elif start < 0:
-                    if stop is None:
-                        if step < 0:
-                            return Range(self[start], self.start, ss)
-                        else:  # > 0
-                            return Range(self[start], self._stop, ss)
-                    elif stop < 0:
-                        return Range(self[start], self[stop], ss)
-                    elif stop == 0:
-                        if step < 0:
-                            raise ValueError(ooslice)
-                        else:  # > 0
-                            return Range(0)
-                    elif stop > 0:
-                        raise ValueError(ooslice)
-                elif start == 0:
-                    if stop is None:
-                        if step < 0:
-                            raise ValueError(ooslice)  # infinite singleton
-                        elif step > 1:
-                            raise ValueError(ambiguous)
-                        else:  # == 1
-                            return self
-                    elif stop < 0:
-                        if step > 1:
-                            raise ValueError(ambiguous)
-                        elif step == 1:
-                            return Range(self.start, self[stop], ss)
-                        else:  # < 0
-                            return Range(0)
-                    else:  # >= 0
-                        raise ValueError(ooslice)
-                elif start > 0:
-                    raise ValueError(ooslice)
+            if self.size == S.Zero:
+                return Range(0)
+            # if self.size.is_finite:
+            istart, istop, istep = i.start, i.stop, i.step
+            start = self[0] if (istart == None) else self[istart]
+            step = self.step if (istep == None) else istep * self.step
+            stop = self._stop if (istop == None or Ge(istop, self.size) == True) else self[istop]
+            # print(start, stop, step)
+            # n = ceiling((stop - start)/step)
+            # if n <= 0:
+            #     return Range(0)
+            # canonical_stop = start + n*step
+            # end = canonical_stop - step
+            # ss = step*self.step
+            # print(self[start], self[stop], ss)
+            if  ((Lt(step, 0) == True) and Lt(self.step, 0) == False) or \
+                ((Gt(step, 0) == True) and Gt(self.step, 0) == False):
+                stop = self[-1] if (istop == None or Ge(istop, self.size) == True) else self[istop]
+                return Range(stop, start, step)
+            stop = self._stop if (istop == None or Ge(istop, self.size) == True) else self[istop]
+            return Range(start, stop, step)
+            # else:  # infinite Range
+            #     start = i.start
+            #     stop = i.stop
+            #     if i.step == 0:
+            #         raise ValueError(zerostep)
+            #     step = i.step or 1
+            #     ss = step*self.step
+            #     #---------------------
+            #     # handle infinite on right
+            #     #   e.g. Range(0, oo) or Range(0, -oo, -1)
+            #     # --------------------
+            #     if self._stop.is_infinite:
+            #         # start and stop are not interdependent --
+            #         # they only depend on step --so we use the
+            #         # equivalent reversed values
+            #         return self.reversed[
+            #             stop if stop is None else -stop + 1:
+            #             start if start is None else -start:
+            #             step].reversed
+            #     #---------------------
+            #     # handle infinite on the left
+            #     #   e.g. Range(oo, 0, -1) or Range(-oo, 0)
+            #     # --------------------
+            #     # consider combinations of
+            #     # start/stop {== None, < 0, == 0, > 0} and
+            #     # step {< 0, > 0}
+            #     if start is None:
+            #         if stop is None:
+            #             if step < 0:
+            #                 return Range(self[-1], self.start, ss)
+            #             elif step > 1:
+            #                 raise ValueError(ambiguous)
+            #             else:  # == 1
+            #                 return self
+            #         elif stop < 0:
+            #             if step < 0:
+            #                 return Range(self[-1], self[stop], ss)
+            #             else:  # > 0
+            #                 return Range(self.start, self[stop], ss)
+            #         elif stop == 0:
+            #             if step > 0:
+            #                 return Range(0)
+            #             else:  # < 0
+            #                 raise ValueError(ooslice)
+            #         elif stop == 1:
+            #             if step > 0:
+            #                 raise ValueError(ooslice)  # infinite singleton
+            #             else:  # < 0
+            #                 raise ValueError(ooslice)
+            #         else:  # > 1
+            #             raise ValueError(ooslice)
+            #     elif start < 0:
+            #         if stop is None:
+            #             if step < 0:
+            #                 return Range(self[start], self.start, ss)
+            #             else:  # > 0
+            #                 return Range(self[start], self._stop, ss)
+            #         elif stop < 0:
+            #             return Range(self[start], self[stop], ss)
+            #         elif stop == 0:
+            #             if step < 0:
+            #                 raise ValueError(ooslice)
+            #             else:  # > 0
+            #                 return Range(0)
+            #         elif stop > 0:
+            #             raise ValueError(ooslice)
+            #     elif start == 0:
+            #         if stop is None:
+            #             if step < 0:
+            #                 raise ValueError(ooslice)  # infinite singleton
+            #             elif step > 1:
+            #                 raise ValueError(ambiguous)
+            #             else:  # == 1
+            #                 return self
+            #         elif stop < 0:
+            #             if step > 1:
+            #                 raise ValueError(ambiguous)
+            #             elif step == 1:
+            #                 return Range(self.start, self[stop], ss)
+            #             else:  # < 0
+            #                 return Range(0)
+            #         else:  # >= 0
+            #             raise ValueError(ooslice)
+            #     elif start > 0:
+            #         raise ValueError(ooslice)
         else:
             i = _sympify(i)
             if not self or ((i.is_integer == False) and (i.is_infinite == False)):
