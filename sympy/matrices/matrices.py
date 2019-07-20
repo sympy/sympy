@@ -3239,8 +3239,18 @@ class MatrixBase(MatrixDeprecated,
         from .sparsetools import banded
         return self.__class__(banded(size, bands))
 
-    def log(self):
+    def log(self, simplify=cancel):
         """Return the logarithm of a square matrix
+
+        Parameters
+        ==========
+
+        simplify : function, bool
+            The function to simplify the result with.
+
+            Default is ``cancel``, which is effective to reduce the
+            expression growing for taking reciprocals and inverses for
+            symbolic matrices.
 
         Examples
         ========
@@ -3294,8 +3304,13 @@ class MatrixBase(MatrixDeprecated,
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Logarithm is valid only for square matrices")
+
         try:
-            P, J = self.jordan_form()
+            if simplify:
+                P, J = simplify(self).jordan_form()
+            else:
+                P, J = self.jordan_form()
+
             cells = J.get_diag_blocks()
         except MatrixError:
             raise NotImplementedError(
@@ -3307,7 +3322,13 @@ class MatrixBase(MatrixDeprecated,
             for cell in cells]
         from sympy.matrices import diag
         eJ = diag(*blocks)
-        ret = P * eJ * P.inv()
+
+        if simplify:
+            ret = simplify(P * eJ * simplify(P.inv()))
+            ret = self.__class__(ret)
+        else:
+            ret = P * eJ * P.inv()
+
         return ret
 
     def gauss_jordan_solve(self, B, freevar=False):
