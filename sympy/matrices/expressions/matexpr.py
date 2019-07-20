@@ -734,6 +734,8 @@ class MatrixElement(Expr):
             from sympy import MatrixBase
             if isinstance(self.parent, MatrixBase):
                 return self.parent.diff(v)[self.i, self.j]
+            elif self.parent == v:
+                return SingleEntryMatrix(v.rows, v.cols, self.i, self.j)
             return S.Zero
 
         M = self.args[0]
@@ -826,8 +828,11 @@ class MatrixSymbol(MatrixExpr):
         return self
 
     def _eval_derivative(self, x):
-        # x is a scalar:
-        return ZeroMatrix(self.shape[0], self.shape[1])
+        if isinstance(x, MatrixElement):
+            if self == x.parent:
+                return SingleEntryMatrix(self.rows, self.cols, x.i, x.j)
+
+        return super(MatrixSymbol, self)._eval_derivative(x)
 
     def _eval_derivative_matrix_lines(self, x):
         if self != x:
@@ -1109,6 +1114,28 @@ class OneMatrix(MatrixExpr):
 
     def _entry(self, i, j, **kwargs):
         return S.One
+
+
+class SingleEntryMatrix(MatrixExpr):
+    """A matrix which is zero everywhere except the entry (i, j) which
+    is 1.
+    """
+    def __new__(cls, m, n, i, j):
+        if i >= m or j >= n or i < 0 or j < 0:
+            raise ValueError(
+                'The location ({}, {}) of the single entry is out of '
+                'the matrix dimensions ({}, {})'.format(i, j, m, n))
+
+        obj = super(SingleEntryMatrix, cls).__new__(cls, m, n, i, j)
+        return obj
+
+    @property
+    def shape(self):
+        return self._args[:2]
+
+    def _entry(self, i, j, **kwargs):
+        _, _, ii, jj = self._args
+        return KroneckerDelta(i, ii) * KroneckerDelta(j, jj)
 
 
 def matrix_symbols(expr):
