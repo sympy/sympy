@@ -1121,6 +1121,11 @@ class SingleEntryMatrix(MatrixExpr):
     is 1.
     """
     def __new__(cls, m, n, i, j):
+        if m <= 0 or n <= 0:
+            raise ValueError(
+                "Matrix dimensions ({}, {}) should be positive "
+                "integers.".format(m, n)
+            )
         if i >= m or j >= n or i < 0 or j < 0:
             raise ValueError(
                 'The location ({}, {}) of the single entry is out of '
