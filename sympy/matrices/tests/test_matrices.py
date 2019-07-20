@@ -272,12 +272,18 @@ def test_power():
     n = Symbol('n', integer=True, nonnegative=True)
     assert A**n == diag(0**n, 0**n, 0**n)
     assert (A**n).subs(n, 0) == eye(3)
+    assert (A**n).subs(n, 1) == zeros(3)
     A = Matrix ([[2,0,0],[0,2,0],[0,0,2]])
     assert A**2.1 == diag (2**2.1, 2**2.1, 2**2.1)
     assert A**I == diag (2**I, 2**I, 2**I)
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])
     raises(ValueError, lambda: A**2.1)
     raises(ValueError, lambda: A**I)
+    A = Matrix([[S.Half, S.Half],[S.Half, S.Half]])
+    assert A**S.Half == A
+    A = Matrix([[1, 1],[3, 3]])
+    assert (A**S.Half)**2 == A
+    assert (A**2)**S.Half == A
 
 
 def test_creation():

@@ -2364,14 +2364,15 @@ class MatrixBase(MatrixDeprecated,
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
             l = jc[0, 0]
-            if N == 1:
-                jc [0, 0] = l**n
-            elif l.is_zero:
-                if not (n.is_integer and n.is_nonnegative):
+            if l.is_zero:
+                if N == 1 and n.is_nonnegative:
+                    jc [0, 0] = l**n
+                elif not (n.is_integer and n.is_nonnegative):
                     raise NonInvertibleMatrixError("Non-invertible matrix can only be raised to a nonnegative integer")
-                for i in range (N):
-                    for j in range (N):
-                        jc[i,j] = KroneckerDelta(j-i, n) if i<=j else 0
+                else:
+                    for i in range (N):
+                        for j in range (N):
+                            jc[i,j] = KroneckerDelta(j-i, n) if i<=j else 0
             else:
                 for i in range(N):
                     for j in range(N-i):
