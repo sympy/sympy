@@ -2257,7 +2257,7 @@ class MatrixArithmetic(MatrixRequired):
         if jordan_pow:
             try:
                 return jordan_pow(exp)
-            except ValueError:
+            except NonInvertibleMatrixError:
                 # Raised by jordan_pow on zero determinant matrix unless exp is
                 # definitely known to be a non-negative integer.
                 # Here we raise if n is definitely not a non-negative integer
