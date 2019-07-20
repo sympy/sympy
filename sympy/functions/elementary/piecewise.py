@@ -1045,37 +1045,64 @@ class Piecewise(Function):
             else:
                 return
 
+        def rewrite_eq(args):
+            return KroneckerDelta(*args)
+
+        def rewrite_ne(args):
+            return KroneckerDelta(*args)
+
+        def rewrite_and(args):
+            k = 1
+            for c in args:
+                if isinstance(c, Eq):
+                    k *= rewrite_eq(c.args)
+                elif isinstance(c, Ne):
+                    k *= 1 - rewrite_ne(c.args)
+                elif isinstance(c, And):
+                    k *= rewrite_and(c.args)
+                elif isinstance(c, Or):
+                    k *= rewrite_or(c.args)
+                else:
+                    raise ValueError
+
+            return k
+
+        def rewrite_or(args):
+            k = 1
+            for c in args:
+                if isinstance(c, Eq):
+                    k *= 1 - rewrite_eq(c.args)
+                elif isinstance(c, Ne):
+                    k *= rewrite_ne(c.args)
+                elif isinstance(c, And):
+                    k *= rewrite_and(c.args)
+                elif isinstance(c, Or):
+                    k *= rewrite_or(c.args)
+                else:
+                    raise ValueError
+
+            return 1 - k
+
         if true_value is not None:
             conditions = conditions[::-1]
             result = true_value
 
             for i in conditions:
-                if isinstance(i[1], Eq):
-                    k = KroneckerDelta(*i[1].args)
-                    result = k * i[0] + (1 - k) * result
-                elif isinstance(i[1], Ne):
-                    k = KroneckerDelta(*i[1].args)
-                    result = (1 - k) * i[0] + k * result
-                elif isinstance(i[1], And):
-                    k = 1
-                    for c in i[1].args:
-                        if isinstance(c, Eq):
-                            k *= KroneckerDelta(*c.args)
-                        elif isinstance(c, Ne):
-                            k *= (1 - KroneckerDelta(*c.args))
-                        else:
-                            return
-                    result = k * i[0] + (1 - k) * result
-                elif isinstance(i[1], Or):
-                    k = 1
-                    for c in i[1].args:
-                        if isinstance(c, Eq):
-                            k *= 1 - KroneckerDelta(*c.args)
-                        elif isinstance(c, Ne):
-                            k *= KroneckerDelta(*c.args)
-                        else:
-                            return
-                    result = (1 - k) * i[0] + k * result
+                try:
+                    if isinstance(i[1], Eq):
+                        k = rewrite_eq(i[1].args)
+                    elif isinstance(i[1], Ne):
+                        k = 1 - rewrite_ne(i[1].args)
+                    elif isinstance(i[1], And):
+                        k = rewrite_and(i[1].args)
+                    elif isinstance(i[1], Or):
+                        k = rewrite_or(i[1].args)
+                    else:
+                        return
+                except ValueError:
+                    return
+
+                result = k * i[0] + (1 - k) * result
 
             return result
 
