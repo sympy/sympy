@@ -2227,13 +2227,17 @@ class MatrixArithmetic(MatrixRequired):
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
-        jordan_pow = getattr (a, '_matrix_pow_by_jordan_blocks', None)
+        jordan_pow = getattr(a, '_matrix_pow_by_jordan_blocks', None)
         exp = sympify(exp)
 
         if exp.is_zero:
             return a._new(a.rows, a.cols, lambda i, j: int(i == j))
         if exp == 1:
             return a
+
+        diagonal = getattr(a, 'is_diagonal', None)
+        if diagonal is not None and diagonal():
+            return a._new(a.rows, a.cols, lambda i, j: a[i,j]**exp if i == j else 0)
 
         if exp.is_Number and exp % 1 == 0:
             if a.rows == 1:
@@ -2250,9 +2254,6 @@ class MatrixArithmetic(MatrixRequired):
                 except MatrixError:
                     pass
             return a._eval_pow_by_recursion(exp)
-
-        if a.is_diagonal ():
-            return a._new(a.rows, a.cols, lambda i, j: a[i,j]**exp if i == j else 0)
 
         if jordan_pow:
             try:

@@ -233,7 +233,7 @@ def test_power():
     raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(S(10)))
 
     # test issue 11964
-    raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(S(-10)))
+    raises(MatrixError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(S(-10)))
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])  # Nilpotent jordan block size 3
     assert A**10.0 == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     raises(ValueError, lambda: A**2.1)

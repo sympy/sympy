@@ -2358,7 +2358,7 @@ class MatrixBase(MatrixDeprecated,
         return not self == other
 
     def _matrix_pow_by_jordan_blocks(self, num):
-        from sympy.matrices import diag, MutableMatrix, eye
+        from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
 
         def jordan_cell_power(jc, n):
@@ -2366,20 +2366,21 @@ class MatrixBase(MatrixDeprecated,
             l = jc[0, 0]
             if l.is_zero:
                 if N == 1 and n.is_nonnegative:
-                    jc [0, 0] = l**n
+                    jc[0, 0] = l**n
                 elif not (n.is_integer and n.is_nonnegative):
                     raise NonInvertibleMatrixError("Non-invertible matrix can only be raised to a nonnegative integer")
                 else:
-                    for i in range (N):
-                        for j in range (N):
-                            jc[i,j] = KroneckerDelta(j-i, n) if i<=j else 0
+                    for i in range(N):
+                        jc[0,i] = KroneckerDelta(i, n)
             else:
                 for i in range(N):
-                    for j in range(N-i):
-                        bn = binomial(n, i)
-                        if isinstance(bn, binomial):
-                            bn = bn._eval_expand_func()
-                        jc[j, i+j] = l**(n-i)*bn
+                    bn = binomial(n, i)
+                    if isinstance(bn, binomial):
+                        bn = bn._eval_expand_func()
+                    jc[0, i] = l**(n-i)*bn
+            for i in range(N):
+                for j in range(1,N-i):
+                    jc[j, i+j] = jc [j-1, i+j-1]
 
         P, J = self.jordan_form()
         jordan_cells = J.get_diag_blocks()
