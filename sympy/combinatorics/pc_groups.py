@@ -26,7 +26,7 @@ class PolycyclicGroup(DefaultPrinting):
     def length(self):
         return len(self.pcgs)
 
-    def exponent_vector(self, element, group):
+    def exponent_vector(self, element, free_group):
         """
         Return the exponent vector of length equal to the
         length of polycyclic generating sequence.
@@ -34,7 +34,7 @@ class PolycyclicGroup(DefaultPrinting):
         For a given generator/element `g` of the polycyclic group,
         it can be represented as `g = x{1}**e{1}....x{n}**e{n}`,
         where `x{i}` represents polycyclic generators and `n` is
-        the number of generators in the group equal to the length
+        the number of generators in the free_group equal to the length
         of pcgs.
 
         Examples
@@ -45,10 +45,10 @@ class PolycyclicGroup(DefaultPrinting):
         >>> G = SymmetricGroup(4)
         >>> PcGroup = G.polycyclic_group()
         >>> pcgs = PcGroup.pcgs
-        >>> group, x0, x1, x2, x3 = free_group("x0, x1, x2, x3")
-        >>> PcGroup.exponent_vector(G[0], group)
+        >>> free_group, x0, x1, x2, x3 = free_group("x0, x1, x2, x3")
+        >>> PcGroup.exponent_vector(G[0], free_group)
         [1, 0, 0, 0]
-        >>> exp = PcGroup.exponent_vector(G[1], group)
+        >>> exp = PcGroup.exponent_vector(G[1], free_group)
         >>> g = Permutation()
         >>> for i in range(len(exp)):
         ...     g = g*pcgs[i] if exp[i] else g
@@ -69,25 +69,25 @@ class PolycyclicGroup(DefaultPrinting):
         gens.reverse()
 
         perm_to_free = {}
-        for sym, g in zip(group.generators, self.pcgs):
+        for sym, g in zip(free_group.generators, self.pcgs):
             perm_to_free[g**-1] = sym**-1
             perm_to_free[g] = sym
-        w = group.identity
+        w = free_group.identity
         for g in gens:
             w = w*perm_to_free[g]
 
-        pc_presentation = self.pc_presentation(group)
-        collector = Collector(pc_presentation, self.relative_order(), group)
+        pc_presentation = self.pc_presentation(free_group)
+        collector = Collector(pc_presentation, self.relative_order(), free_group)
         word = collector.collected_word(w)
 
-        index = {s: i for i, s in enumerate(group.symbols)}
-        exp_vector = [0]*len(group)
+        index = {s: i for i, s in enumerate(free_group.symbols)}
+        exp_vector = [0]*len(free_group)
         word = word.array_form
         for t in word:
             exp_vector[index[t[0]]] = t[1]
         return exp_vector
 
-    def depth(self, element, group):
+    def depth(self, element, free_group):
         """
         Return the depth of a given element.
 
@@ -99,12 +99,12 @@ class PolycyclicGroup(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.free_groups import free_group
-        >>> group, x, y = free_group("x, y")
+        >>> free_group, x, y = free_group("x, y")
         >>> G = SymmetricGroup(3)
         >>> PcGroup = G.polycyclic_group()
-        >>> PcGroup.depth(G[0], group)
+        >>> PcGroup.depth(G[0], free_group)
         2
-        >>> PcGroup.depth(G[1], group)
+        >>> PcGroup.depth(G[1], free_group)
         1
 
         References
@@ -115,10 +115,10 @@ class PolycyclicGroup(DefaultPrinting):
                 Section 8.1.1, Definition 8.5
 
         """
-        exp_vector = self.exponent_vector(element, group)
+        exp_vector = self.exponent_vector(element, free_group)
         return next((i+1 for i, x in enumerate(exp_vector) if x), len(self.pcgs)+1)
 
-    def leading_exponent(self, element, group):
+    def leading_exponent(self, element, free_group):
         """
         Return the leading non-zero exponent.
 
@@ -129,20 +129,20 @@ class PolycyclicGroup(DefaultPrinting):
         ========
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.free_groups import free_group
-        >>> group, x, y = free_group("x, y")
+        >>> free_group, x, y = free_group("x, y")
         >>> G = SymmetricGroup(3)
         >>> PcGroup = G.polycyclic_group()
-        >>> PcGroup.leading_exponent(G[1], group)
+        >>> PcGroup.leading_exponent(G[1], free_group)
         1
 
         """
-        exp_vector = self.exponent_vector(element, group)
-        depth = self.depth(element, group)
+        exp_vector = self.exponent_vector(element, free_group)
+        depth = self.depth(element, free_group)
         if depth != len(self.pcgs)+1:
             return exp_vector[depth-1]
         return None
 
-    def pc_presentation(self, group):
+    def pc_presentation(self, free_group):
         """
         Return the polycyclic presentation.
 
@@ -167,10 +167,10 @@ class PolycyclicGroup(DefaultPrinting):
         >>> pcgs = PcGroup.pcgs
         >>> len(pcgs)
         6
-        >>> group, x0, x1, x2, x3, x4, x5 = free_group("x0, x1, x2, x3, x4, x5")
-        >>> pc_resentation = PcGroup.pc_presentation(group)
+        >>> free_group, x0, x1, x2, x3, x4, x5 = free_group("x0, x1, x2, x3, x4, x5")
+        >>> pc_resentation = PcGroup.pc_presentation(free_group)
         >>> free_to_perm = {}
-        >>> for s, g in zip(group.symbols, pcgs):
+        >>> for s, g in zip(free_group.symbols, pcgs):
         ...     free_to_perm[s] = g
 
         >>> for k, v in pc_resentation.items():
@@ -198,11 +198,11 @@ class PolycyclicGroup(DefaultPrinting):
         perm_to_free = {}
         pcgs = self.pcgs
 
-        for gen, s in zip(pcgs, group.generators):
+        for gen, s in zip(pcgs, free_group.generators):
             perm_to_free[gen**-1] = s**-1
             perm_to_free[gen] = s
 
-        collector = Collector(pc_relators, rel_order, group)
+        collector = Collector(pc_relators, rel_order, free_group)
         pcgs.reverse()
         series = self.pc_series
         series.reverse()
@@ -216,7 +216,7 @@ class PolycyclicGroup(DefaultPrinting):
             l = G.generator_product(gen**re, original = True)
             l.reverse()
 
-            word = group.identity
+            word = free_group.identity
             for g in l:
                 word = word*perm_to_free[g]
 
@@ -227,17 +227,17 @@ class PolycyclicGroup(DefaultPrinting):
             collected_gens.append(gen)
             if len(collected_gens) > 1:
                 conj = collected_gens[len(collected_gens)-1]
-                conjecture = perm_to_free[conj]
+                conjugator = perm_to_free[conj]
 
                 for j in range(len(collected_gens)-1):
                     conjugated = perm_to_free[collected_gens[j]]
 
-                    relation = conjecture**-1*conjugated*conjecture
+                    relation = conjugator**-1*conjugated*conjugator
                     gens = conj**-1*collected_gens[j]*conj
 
                     l = G.generator_product(gens, original = True)
                     l.reverse()
-                    word = group.identity
+                    word = free_group.identity
                     for g in l:
                         word = word*perm_to_free[g]
 
@@ -261,11 +261,11 @@ class Collector(DefaultPrinting):
            Section 8.1.3
     """
 
-    def __init__(self, pc_relators, relative_order, group):
+    def __init__(self, pc_relators, relative_order, free_group):
         self.pc_relators = pc_relators
         self.relative_order = relative_order
-        self.group = group
-        self.index = {s: i for i, s in enumerate(group.symbols)}
+        self.free_group = free_group
+        self.index = {s: i for i, s in enumerate(free_group.symbols)}
 
     def minimal_uncollected_subword(self, word):
         """
@@ -293,8 +293,8 @@ class Collector(DefaultPrinting):
         >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
         >>> relative_order = [2, None]
         >>> word = x2**2*x1**7
-        >>> group = word.group
-        >>> collector = Collector(pc_relators, relative_order, group)
+        >>> free_group = word.group
+        >>> collector = Collector(pc_relators, relative_order, free_group)
         >>> collector.minimal_uncollected_subword(word)
         ((x1, 7),)
 
@@ -303,7 +303,6 @@ class Collector(DefaultPrinting):
         if not word:
             return None
 
-        group = self.group
         array = word.array_form
         re = self.relative_order
         index = self.index
@@ -338,8 +337,8 @@ class Collector(DefaultPrinting):
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
         >>> relative_order = [2, None]
         >>> word = x2**2*x1**7
-        >>> group = word.group
-        >>> collector = Collector(pc_relators, relative_order, group)
+        >>> free_group = word.group
+        >>> collector = Collector(pc_relators, relative_order, free_group)
         >>> power_rel, conj_rel = collector.relations()
         >>> power_rel
         {x1**2: 1}
@@ -369,8 +368,8 @@ class Collector(DefaultPrinting):
         >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
         >>> relative_order = [2, None]
         >>> word = x2**2*x1**7
-        >>> group = word.group
-        >>> collector = Collector(pc_relators, relative_order, group)
+        >>> free_group = word.group
+        >>> collector = Collector(pc_relators, relative_order, free_group)
         >>> w = x2**2*x1
         >>> collector.subword_index(word, w)
         (0, 3)
@@ -406,8 +405,8 @@ class Collector(DefaultPrinting):
         >>> pc_relators = {x0**-1*x1*x0: x1**2, x1**-1*x2*x1: x2, x0**-1*x2*x0: x2*x1}
         >>> relative_order = [2, 2, 3]
         >>> word = x2**2*x1**7
-        >>> group = word.group
-        >>> collector = Collector(pc_relators, relative_order, group)
+        >>> free_group = word.group
+        >>> collector = Collector(pc_relators, relative_order, free_group)
         >>> w = x2*x1
         >>> collector.map_relation(w)
         x2
@@ -416,9 +415,11 @@ class Collector(DefaultPrinting):
         x1**2
 
         """
-        group = w.group
-        gens = sorted(w.contains_generators())
-        key = gens[0]**-1*gens[1]*gens[0]
+        array = w.array_form
+        s1 = array[0][0]
+        s2 = array[1][0]
+        key = ((s2, -1), (s1, 1), (s2, 1))
+        key = self.free_group.dtype(key)
         return self.pc_relators[key]
 
 
@@ -439,56 +440,60 @@ class Collector(DefaultPrinting):
         >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
         >>> relative_order = [2, None]
         >>> word = x2**2*x1**7
-        >>> group = word.group
-        >>> collector = Collector(pc_relators, relative_order, group)
+        >>> free_group = word.group
+        >>> collector = Collector(pc_relators, relative_order, free_group)
         >>> collector.collected_word(word)
         x1*x2**-2
 
         """
-        group = self.group
+        free_group = self.free_group
         while True:
             w = self.minimal_uncollected_subword(word)
             if not w:
                 break
 
-            low, high = self.subword_index(word, group.dtype(w))
+            low, high = self.subword_index(word, free_group.dtype(w))
             if low == -1:
                 continue
-            s, e = w[0]
+            s1, e1 = w[0]
             if len(w) == 2 and w[1][1] > 0:
-                gens = list(sorted(group.dtype(w).contains_generators()))
-                word_ = self.map_relation(group.dtype(w))
-                word_ = gens[0]*word_**e
-                word_ = group.dtype(word_)
+                s2, e2 = w[1]
+                s2 = ((s2, 1), )
+                s2 = free_group.dtype(s2)
+                word_ = self.map_relation(free_group.dtype(w))
+                word_ = s2*word_**e1
+                word_ = free_group.dtype(word_)
                 word = word.substituted_word(low, high, word_)
 
-            elif len(w) == 2 and w[1][1] < 0:
-                gens = list(sorted(group.dtype(w).contains_generators()))
-                word_ = self.map_relation(group.dtype(w))
-                word_ = gens[0]**-1*word_**e
-                word_ = group.dtype(word_)
-                word = word.substituted_word(low, high, word_)
-
-            if not self.relative_order[self.index[s]]:
+            if not self.relative_order[self.index[s1]]:
                 continue
-            re = self.relative_order[self.index[s]]
-            q = e // re
-            r = e-q*re
+            re = self.relative_order[self.index[s1]]
+            q = e1 // re
+            r = e1-q*re
             if r < 0 or r > re-1:
                 continue
 
-            if len(w) == 1 and (e < 0 or e > re-1):
+            if len(w) == 1 and (e1 < 0 or e1 > re-1):
                 key = ((w[0][0], re), )
-                key = group.dtype(key)
+                key = free_group.dtype(key)
                 if self.pc_relators[key]:
                     word_ = ((w[0][0], r), (self.pc_relators[key], q))
-                    word_ = group.dtype(word_)
+                    word_ = free_group.dtype(word_)
                 else:
                     if r != 0:
                         word_ = ((w[0][0], r), )
-                        word_ = group.dtype(word_)
+                        word_ = free_group.dtype(word_)
                     else:
                         word_ = None
-                word = word.eliminate_word(group.dtype(w), word_)
+                word = word.eliminate_word(free_group.dtype(w), word_)
+
+            elif len(w) == 2 and w[1][1] < 0:
+                s2, e2 = w[1]
+                s2 = ((s2, 1), )
+                s2 = free_group.dtype(s2)
+                word_ = self.map_relation(free_group.dtype(w))
+                word_ = s2**-1*word_**e1
+                word_ = free_group.dtype(word_)
+                word = word.substituted_word(low, high, word_)
 
         return word
