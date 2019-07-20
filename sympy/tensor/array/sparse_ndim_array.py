@@ -121,7 +121,7 @@ class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
         cls._check_special_bounds(flat_list, shape)
-        loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else 0
+        loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
 
         # Sparse array:
         if isinstance(flat_list, (dict, Dict)):
@@ -158,7 +158,7 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
         self = object.__new__(cls)
         self._shape = shape
         self._rank = len(shape)
-        self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else 0
+        self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
 
         # Sparse array:
         if isinstance(flat_list, (dict, Dict)):
