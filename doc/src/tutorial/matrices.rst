@@ -151,7 +151,7 @@ raise it to the ``-1`` power.
     >>> N**-1
     Traceback (most recent call last):
     ...
-    ValueError: Matrix det == 0; not invertible.
+    sympy.matrices.common.NonInvertibleMatrixError: Matrix det == 0; not invertible.
 
 To take the transpose of a Matrix, use ``T``.
 

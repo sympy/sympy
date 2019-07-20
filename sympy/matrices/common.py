@@ -2258,7 +2258,11 @@ class MatrixArithmetic(MatrixRequired):
             try:
                 return jordan_pow(exp)
             except ValueError:
-                if exp.is_negative or exp.is_number:
+                # Raised by jordan_pow on zero determinant matrix unless exp is
+                # definitely known to be a non-negative integer.
+                # Here we raise if n is definitely not a non-negative integer
+                # but otherwise we can leave this as an unevaluated MatPow.
+                if exp.is_integer is False or exp.is_nonnegative is False:
                     raise
 
         from sympy.matrices.expressions import MatPow
