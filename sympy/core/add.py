@@ -230,8 +230,8 @@ class Add(Expr, AssocOp):
                         others.append(si)
                 if len(others) != len(s.args):
                     s = Add(*others, evaluate=False)
-                elif not other:
-                    continue  # all combined with others
+                elif not others:
+                    continue  # all combined with other terms
             else:
                 from sympy.core.compatibility import ordered
                 for t in ordered(terms):
