@@ -1058,8 +1058,6 @@ class Piecewise(Function):
                     k *= rewrite_eq(c.args)
                 elif isinstance(c, Ne):
                     k *= 1 - rewrite_ne(c.args)
-                elif isinstance(c, And):
-                    k *= rewrite_and(c.args)
                 elif isinstance(c, Or):
                     k *= rewrite_or(c.args)
                 else:
@@ -1075,9 +1073,7 @@ class Piecewise(Function):
                 elif isinstance(c, Ne):
                     k *= rewrite_ne(c.args)
                 elif isinstance(c, And):
-                    k *= rewrite_and(c.args)
-                elif isinstance(c, Or):
-                    k *= rewrite_or(c.args)
+                    k *= 1 - rewrite_and(c.args)
                 else:
                     raise ValueError
 
