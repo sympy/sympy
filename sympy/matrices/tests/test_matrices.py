@@ -279,11 +279,10 @@ def test_power():
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])
     raises(ValueError, lambda: A**2.1)
     raises(ValueError, lambda: A**I)
-    A = Matrix([[S.Half, S.Half],[S.Half, S.Half]])
+    A = Matrix([[S.Half, S.Half], [S.Half, S.Half]])
     assert A**S.Half == A
     A = Matrix([[1, 1],[3, 3]])
-    assert (A**S.Half)**2 == A
-    assert (A**2)**S.Half == A
+    assert A**S.Half == Matrix ([[S.Half, S.Half], [3*S.Half, 3*S.Half]])
 
 
 def test_creation():
