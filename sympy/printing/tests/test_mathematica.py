@@ -1,5 +1,5 @@
-from sympy.core import (S, pi, oo, symbols, Function,
-                        Rational, Integer, Tuple, Derivative)
+from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer, Tuple,
+                        Derivative, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.integrals import Integral
 from sympy.concrete import Sum
 from sympy.functions import (exp, sin, cos, fresnelc, fresnels, conjugate, Max,
@@ -30,6 +30,15 @@ def test_Rational():
     assert mcode(Rational(-3, -7)) == "3/7"
     assert mcode(x + Rational(3, 7)) == "x + 3/7"
     assert mcode(Rational(3, 7)*x) == "(3/7)*x"
+
+
+def test_Relational():
+    assert mcode(Eq(x, y)) == "x == y"
+    assert mcode(Ne(x, y)) == "x != y"
+    assert mcode(Le(x, y)) == "x <= y"
+    assert mcode(Lt(x, y)) == "x < y"
+    assert mcode(Gt(x, y)) == "x > y"
+    assert mcode(Ge(x, y)) == "x >= y"
 
 
 def test_Function():
