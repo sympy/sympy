@@ -1032,6 +1032,9 @@ class Piecewise(Function):
     def _eval_rewrite_as_KroneckerDelta(self, *args):
         from sympy import Ne, Eq, KroneckerDelta
 
+        class UnrecognizedCondition(Exception):
+            pass
+
         conditions = []
         true_value = None
         for i in args:
@@ -1061,7 +1064,7 @@ class Piecewise(Function):
                 elif isinstance(c, Or):
                     k *= rewrite_or(c.args)
                 else:
-                    raise ValueError
+                    raise UnrecognizedCondition
 
             return k
 
@@ -1075,7 +1078,7 @@ class Piecewise(Function):
                 elif isinstance(c, And):
                     k *= 1 - rewrite_and(c.args)
                 else:
-                    raise ValueError
+                    raise UnrecognizedCondition
 
             return 1 - k
 
@@ -1095,7 +1098,7 @@ class Piecewise(Function):
                         k = rewrite_or(i[1].args)
                     else:
                         return
-                except ValueError:
+                except UnrecognizedCondition:
                     return
 
                 result = k * i[0] + (1 - k) * result
