@@ -124,6 +124,8 @@ class Beam(object):
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
         self._applied_loads = []
+        self._applied_supports = []
+        self._support_as_loads = []
         self._reaction_loads = {}
         self._composite_type = None
         self._hinge_position = None
@@ -366,6 +368,8 @@ class Beam(object):
         (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + 4000/3)/(E*I)
         """
+        loc = sympify(loc)
+        self._applied_supports.append((loc, type))
         if type == "pin" or type == "roller":
             reaction_load = Symbol('R_'+str(loc))
             self.apply_load(reaction_load, loc, -1)
@@ -377,6 +381,9 @@ class Beam(object):
             self.apply_load(reaction_moment, loc, -2)
             self.bc_deflection.append((loc, 0))
             self.bc_slope.append((loc, 0))
+            self._support_as_loads.append((reaction_moment, loc, -2, None))
+
+        self._support_as_loads.append((reaction_load, loc, -1, None))
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -1519,6 +1526,91 @@ class Beam(object):
                    line_color='r', show=False)
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
+
+
+    def draw(self):
+        if matplotlib is None:
+            raise ImportError('Install matplotlib to use this method.')
+
+        if numpy is None:
+            raise ImportError('Install numpy to use this method.')
+
+
+        length = self.length
+        height = 0.08
+
+        fig = matplotlib.pyplot.figure()
+        ax = fig.add_subplot(111, xbound=(0, 50), ybound=(0,1))
+        rect = matplotlib.patches.Rectangle((0, 0), length, height, facecolor="brown")
+        ax.add_patch(rect)
+
+        self._draw_load_arrows(ax)
+        self._draw_supports(ax)
+        matplotlib.pyplot.axis("off") # to turn off axis
+        ax.set_ylim(-0.5, 0.5)
+        matplotlib.pyplot.show()
+
+
+    def _draw_load_arrows(self, ax):
+        loads = list(set(self.applied_loads) - set(self._support_as_loads))
+        height = 0.08
+        length = self.length
+
+        for load in loads:
+            if load[2] == -1:
+                if load[0].is_positive:
+                    ax.annotate('', xy=(load[1], height), xytext=(load[1], height*3), arrowprops=dict(width= 1.5, headlength=5, headwidth=5, facecolor='black'))
+                else:
+                    ax.annotate('', xy=(load[1], 0), xytext=(load[1], height - 4*height), arrowprops=dict(width= 1.5, headlength=5, headwidth=5, facecolor='black'))
+            elif load[2] == -2:
+                if load[0].is_negative:
+                    ax.plot([load[1]],[height/2], marker=r'$\circlearrowleft$', markersize=15)
+                else:
+                    ax.plot([load[1]],[height/2], marker=r'$\circlearrowright$', markersize=15)
+
+            elif load[2] == 0:
+                start = float(load[1])
+                end = float(load[3])
+
+                n = int((end - start)/length/0.06)
+                x_pos = numpy.linspace(start, end, n)
+
+                line = matplotlib.lines.Line2D([x_pos[0], x_pos[-1]], [3*height, 3*height], color="black")
+                ax.add_line(line)
+
+                for i in range(0, n):
+                    ax.annotate('', xy=(x_pos[i], height), xytext=(x_pos[i], 3*height), arrowprops=dict(width= 1.5, headlength=4, headwidth=4, facecolor='black'))
+
+            elif load[2] == 1:
+                start = float(load[1])
+                end = float(load[3])
+
+                n = int((end - start)/length/0.06)
+                x_pos = numpy.linspace(start, end, n)
+                y_pos = numpy.linspace(height, height*3, n)
+
+                line = matplotlib.lines.Line2D([x_pos[0], x_pos[-1]], [y_pos[0], y_pos[-1]], color="black")
+                ax.add_line(line)
+
+                for i in range(1, n):
+                    ax.annotate('', xy=(x_pos[i], height), xytext=(x_pos[i], y_pos[i]), arrowprops=dict(width= 1.5, headlength=4, headwidth=4, facecolor='black'))
+
+
+    def _draw_supports(self, ax):
+        height = 0.08
+        for support in self._applied_supports:
+            if support[1] == "pin":
+                ax.plot([support[0]], [0], marker=6, markersize=10, color="black")
+
+            elif support[1] == "roller":
+                ax.plot(support[0], [-0.018], marker='o', markersize=10, color="black")
+
+            elif support[1] == "fixed":
+                if support[0] == 0:
+                    clamp = matplotlib.patches.Rectangle((0, -0.2), -self.length/30, 0.4 + height, fill=False, hatch='/////')
+                else:
+                    clamp = matplotlib.patches.Rectangle((self.length, -0.2), self.length/30, 0.4 + height, fill=False, hatch='/////')
+                ax.add_patch(clamp)
 
 
 class Beam3D(Beam):
