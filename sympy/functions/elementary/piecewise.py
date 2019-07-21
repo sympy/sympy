@@ -1052,7 +1052,7 @@ class Piecewise(Function):
             return KroneckerDelta(*args)
 
         def rewrite_ne(args):
-            return KroneckerDelta(*args)
+            return 1 - KroneckerDelta(*args)
 
         def rewrite_and(args):
             k = 1
@@ -1060,7 +1060,7 @@ class Piecewise(Function):
                 if isinstance(c, Eq):
                     k *= rewrite_eq(c.args)
                 elif isinstance(c, Ne):
-                    k *= 1 - rewrite_ne(c.args)
+                    k *= rewrite_ne(c.args)
                 elif isinstance(c, Or):
                     k *= rewrite_or(c.args)
                 else:
@@ -1074,7 +1074,7 @@ class Piecewise(Function):
                 if isinstance(c, Eq):
                     k *= 1 - rewrite_eq(c.args)
                 elif isinstance(c, Ne):
-                    k *= rewrite_ne(c.args)
+                    k *= 1 - rewrite_ne(c.args)
                 elif isinstance(c, And):
                     k *= 1 - rewrite_and(c.args)
                 else:
@@ -1091,7 +1091,7 @@ class Piecewise(Function):
                     if isinstance(i[1], Eq):
                         k = rewrite_eq(i[1].args)
                     elif isinstance(i[1], Ne):
-                        k = 1 - rewrite_ne(i[1].args)
+                        k = rewrite_ne(i[1].args)
                     elif isinstance(i[1], And):
                         k = rewrite_and(i[1].args)
                     elif isinstance(i[1], Or):
