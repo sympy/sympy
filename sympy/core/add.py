@@ -241,8 +241,8 @@ class Add(Expr, AssocOp):
                     if ix > -1:
                         # s will be a new term and will be removed from t's args
                         ct = terms.pop(t)
-                        c += ct  # will be registered in terms below
-                        a = t.func(*(t.args[:_] + t.args[_+1:]), evaluate=False)
+                        c += ct  # will be registered to terms[s] below
+                        a = t.func(*(t.args[:ix] + t.args[ix+1:]), evaluate=False)
                         if a not in terms:
                             terms[a] = 0
                         terms[a] += ct
