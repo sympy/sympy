@@ -228,18 +228,20 @@ class Add(Expr, AssocOp):
                             return [S.NaN], [], None
                     else:
                         others.append(si)
-                if others:
+                if len(others) != len(s.args):
                     s = Add(*others, evaluate=False)
+                elif not other:
+                    continue  # all combined with others
             else:
                 from sympy.core.compatibility import ordered
                 for t in ordered(terms):
                     if not t.is_Add:
                         continue
-                    if s in t.args:
+                    if _, s in enumereate(t.args):
                         # s will be a new term and will be removed from t's args
                         ct = terms.pop(t)
                         c += ct  # will be registered in terms below
-                        a = t.func(*[i for i in t.args if i != s], evaluate=False)
+                        a = t.func(*(t.args[:_] + t.args[_+1:]), evaluate=False)
                         if a not in terms:
                             terms[a] = 0
                         terms[a] += ct
