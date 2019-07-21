@@ -194,7 +194,7 @@ class JuliaCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return ("{0} {1} {2}").format(lhs_code, op, rhs_code)
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     def _print_Pow(self, expr):
         powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'
