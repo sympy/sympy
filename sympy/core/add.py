@@ -93,6 +93,8 @@ class Add(Expr, AssocOp):
         >>> from sympy.abc import x, y
         >>> x + y - (x + y)
         0
+        >>> x + y - 2*(x + y)
+        -(x + y)
 
         In order for this to go to zero, negated terms would have to be
         collected and added at the end
@@ -215,11 +217,7 @@ class Add(Expr, AssocOp):
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
             elif s.is_Mul and all(si in terms for si in s.args):
-                for si in s.args:
-                    terms[s] += c
-                    if terms[s] is S.NaN and not extra:
-                        # we know for sure the result will be nan
-                        return [S.NaN], [], None
+                coeff += c
             else:
                 terms[s] = c
 
