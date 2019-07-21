@@ -237,7 +237,8 @@ class Add(Expr, AssocOp):
                 for t in ordered(terms):
                     if not t.is_Add:
                         continue
-                    for _, s in enumereate(t.args):
+                    ix = t.args.index(s)
+                    if ix > -1:
                         # s will be a new term and will be removed from t's args
                         ct = terms.pop(t)
                         c += ct  # will be registered in terms below
