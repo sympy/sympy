@@ -239,12 +239,12 @@ def test_Range_set():
     assert Range(-oo, 4, 2)[::-2] == Range(2, -oo, -4)
     assert Range(-oo, 4, 2)[::2] == Range(-oo, 4, 4)
     assert Range(oo, 2, -2)[::] == Range(oo, 2, -2)
-    assert Range(-oo, 4, 2)[:-2:-2] == Range(0, -oo, -4)
+    assert Range(-oo, 4, 2)[:-2:-2] == Range(2, 0, -4)
     assert Range(-oo, 4, 2)[:-2:2] == Range(-oo, 0, 4)
-    assert Range(-oo, 4, 2)[:0:-2] == empty
+    assert Range(-oo, 4, 2)[:0:-2] == Range(2, -oo, -4)
     raises(ValueError, lambda: Range(-oo, 4, 2)[:2:-2])
-    assert Range(-oo, 4, 2)[-2::-2] == Range(2, -2, -4)
-    assert Range(-oo, 4, 2)[-2:0:-2] == empty
+    assert Range(-oo, 4, 2)[-2::-2] == Range(0, -oo, -4)
+    assert Range(-oo, 4, 2)[-2:0:-2] == Range(0, -oo, -4)
     assert Range(-oo, 4, 2)[0::2] == Range(-oo, 4, 4)
     assert Range(oo, 2, -2)[0::] == Range(oo, 2, -2)
     assert Range(-oo, 4, 2)[0:-2:2] == Range(-oo, 0, 4)
@@ -254,8 +254,8 @@ def test_Range_set():
     assert Range(-oo, 4, 2)[-2::2] == Range(0, 4, 4)
     assert Range(oo, 0, -2)[-10:0:2] == empty
     raises(ValueError, lambda: Range(oo, 0, -2)[-10:10:2])
-    assert Range(oo, 0, -2)[0::-2] == Range(2, oo, 4)
-    assert Range(oo, 0, -2)[0:-4:-2] == Range(8, oo, 4)
+    assert Range(oo, 0, -2)[0::-2] == empty
+    assert Range(oo, 0, -2)[0:-4:-2] == empty
     assert Range(oo, 0, -2)[:0:2] == empty
     raises(ValueError, lambda: Range(oo, 0, -2)[:1:-1])
 
@@ -282,6 +282,7 @@ def test_Range_set():
             for reverse in range(2):
                 r = list(reversed(r))
                 R = R.reversed
+                print(R, a, b, c)
                 result = list(R[a:b:c])
                 ans = r[a:b:c]
                 txt = ('\n%s[%s:%s:%s] = %s -> %s' % (

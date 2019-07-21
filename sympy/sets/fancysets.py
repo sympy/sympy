@@ -662,11 +662,23 @@ class Range(Set):
                 return Range(0)
             # if self.size.is_finite:
             istart, istop, istep = i.start, i.stop, i.step
+            # if istop is not None and (Ge(istop, self.size) == True):
+            #     istop = -1
             if istep != None and istep < 0:
-                istart, istop, istep = (istop, istart, -istep)
-                tempr = self.reversed
+                if istart is not None and (Ge(istart, self.size) == True):
+                    istart = self.size - 1
+                if istart is None:
+                    istart = 0
+                else:
+                    istart = -(istart + 1)
+                if istop is not None and (Ge(istop, self.size) == True):
+                    istop = self.size - 1;
+                istop = -(istop + 1) if istop is not None else istop
+                return self.reversed[istart:istop:-istep]
             else:
                 tempr = self
+            if istart is not None and (Ge(istart, self.size) == True):
+                return Range(0)
             start = tempr[0] if (istart == None) else tempr[istart]
             step = tempr.step if (istep == None) else istep * tempr.step
             stop = tempr._stop if (istop == None or Ge(istop, tempr.size) == True) else tempr[istop]
@@ -683,9 +695,9 @@ class Range(Set):
             # if step_neg or step_pos:
             #     stop = self[-1] if (istop == None or Ge(istop, self.size) == True) else self[istop]
             #     if step_pos:
-            #         return Range(stop, start + S(1), step)
+            #         return Range(stop, start, -step)
             #     if step_neg:
-            #         return Range(stop, start - S(1), step)
+            #         return Range(stop, start, -step)
             return Range(start, stop, step)
             # else:  # infinite Range
             #     start = i.start
