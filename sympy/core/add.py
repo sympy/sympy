@@ -221,10 +221,10 @@ class Add(Expr, AssocOp):
                     coeff += c
                 else:
                     others = []
-                    for si in si.args:
+                    for si in s.args:
                         if si in terms:
                             terms[si] += c
-                            if terms[s] is S.NaN and not extra:
+                            if terms[si] is S.NaN and not extra:
                                 # we know for sure the result will be nan
                                 return [S.NaN], [], None
                         else:
