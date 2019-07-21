@@ -1140,9 +1140,6 @@ def kroneckersimp(expr):
                 return 0*m
         return m
 
-    def is_mul_with_kronecker(e):
-        return isinstance(e, Mul) and e.has(KroneckerDelta)
-
     if not expr.has(KroneckerDelta):
         return expr
 
@@ -1154,7 +1151,7 @@ def kroneckersimp(expr):
 
     while newexpr != expr:
         expr = newexpr
-        newexpr = expr.replace(is_mul_with_kronecker, cancel_kronecker_mul)
+        newexpr = expr.replace(lambda e: isinstance(e, Mul), cancel_kronecker_mul)
 
     return expr
 
