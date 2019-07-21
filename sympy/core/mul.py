@@ -185,18 +185,11 @@ class Mul(Expr, AssocOp):
             if not a.is_zero and a.is_Rational:
                 r, b = b.as_coeff_Mul()
                 if b.is_Add:
-                    if r is not S.One:  # 2-arg hack
+                    if r is not S.One and a*r is S.One:
+                        rv = [b], [], None
+                    else:
                         # leave the Mul as a Mul
                         rv = [cls(a*r, b, evaluate=False)], [], None
-                    elif global_distribute[0] and b.is_commutative:
-                        r, b = b.as_coeff_Add()
-                        bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                        _addsort(bargs)
-                        ar = a*r
-                        if ar:
-                            bargs.insert(0, ar)
-                        bargs = [Add._from_args(bargs)]
-                        rv = bargs, [], None
             if rv:
                 return rv
 
@@ -612,12 +605,6 @@ class Mul(Expr, AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if (global_distribute[0] and not nc_part and len(c_part) == 2 and
-                c_part[0].is_Number and c_part[0].is_finite and c_part[1].is_Add):
-            # 2*(1+a) -> 2 + 2 * a
-            coeff = c_part[0]
-            c_part = [Add(*[coeff*f for f in c_part[1].args])]
-
         return c_part, nc_part, order_symbols
 
     def _eval_power(b, e):
