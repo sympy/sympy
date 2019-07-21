@@ -87,6 +87,19 @@ class Add(Expr, AssocOp):
 
         NB: the removal of 0 is already handled by AssocOp.__new__
 
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> x + y - (x + y)
+        0
+
+        In order for this to go to zero, negated terms would have to be
+        collected and added at the end
+
+        >>> -(x + y) + x + y
+        x + y - (x + y)
+
         See also
         ========
 
@@ -201,6 +214,12 @@ class Add(Expr, AssocOp):
                 if terms[s] is S.NaN and not extra:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
+            elif s.is_Mul and all(si in terms for si in s.args):
+                for si in s.args:
+                    terms[s] += c
+                    if terms[s] is S.NaN and not extra:
+                        # we know for sure the result will be nan
+                        return [S.NaN], [], None
             else:
                 terms[s] = c
 
