@@ -254,8 +254,8 @@ def test_Range_set():
     assert Range(-oo, 4, 2)[-2::2] == Range(0, 4, 4)
     assert Range(oo, 0, -2)[-10:0:2] == empty
     raises(ValueError, lambda: Range(oo, 0, -2)[-10:10:2])
-    assert Range(oo, 0, -2)[0::-2] == empty
-    assert Range(oo, 0, -2)[0:-4:-2] == empty
+    assert Range(oo, 0, -2)[0::-2] == Range(2, oo, 4)
+    assert Range(oo, 0, -2)[0:-4:-2] == Range(8, oo, 4)
     assert Range(oo, 0, -2)[:0:2] == empty
     raises(ValueError, lambda: Range(oo, 0, -2)[:1:-1])
 

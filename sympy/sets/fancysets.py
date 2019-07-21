@@ -662,9 +662,14 @@ class Range(Set):
                 return Range(0)
             # if self.size.is_finite:
             istart, istop, istep = i.start, i.stop, i.step
-            start = self[0] if (istart == None) else self[istart]
-            step = self.step if (istep == None) else istep * self.step
-            stop = self._stop if (istop == None or Ge(istop, self.size) == True) else self[istop]
+            if istep != None and istep < 0:
+                istart, istop, istep = (istop, istart, -istep)
+                tempr = self.reversed
+            else:
+                tempr = self
+            start = tempr[0] if (istart == None) else tempr[istart]
+            step = tempr.step if (istep == None) else istep * tempr.step
+            stop = tempr._stop if (istop == None or Ge(istop, tempr.size) == True) else tempr[istop]
             # print(start, stop, step)
             # n = ceiling((stop - start)/step)
             # if n <= 0:
@@ -673,11 +678,14 @@ class Range(Set):
             # end = canonical_stop - step
             # ss = step*self.step
             # print(self[start], self[stop], ss)
-            if  ((Lt(step, 0) == True) and Lt(self.step, 0) == False) or \
-                ((Gt(step, 0) == True) and Gt(self.step, 0) == False):
-                stop = self[-1] if (istop == None or Ge(istop, self.size) == True) else self[istop]
-                return Range(stop, start, step)
-            stop = self._stop if (istop == None or Ge(istop, self.size) == True) else self[istop]
+            # step_neg = ((Lt(step, 0) == True) and Lt(self.step, 0) == False)
+            # step_pos = ((Gt(step, 0) == True) and Gt(self.step, 0) == False)
+            # if step_neg or step_pos:
+            #     stop = self[-1] if (istop == None or Ge(istop, self.size) == True) else self[istop]
+            #     if step_pos:
+            #         return Range(stop, start + S(1), step)
+            #     if step_neg:
+            #         return Range(stop, start - S(1), step)
             return Range(start, stop, step)
             # else:  # infinite Range
             #     start = i.start
