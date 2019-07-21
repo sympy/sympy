@@ -235,18 +235,17 @@ class Add(Expr, AssocOp):
             else:
                 from sympy.core.compatibility import ordered
                 for t in ordered(terms):
-                    if not t.is_Add:
+                    if not t.is_Add or s not in t.args:
                         continue
+                    # s will be a new term and will be removed from t's args
+                    ct = terms.pop(t)
+                    c += ct  # will be registered to terms[s] below
                     ix = t.args.index(s)
-                    if ix > -1:
-                        # s will be a new term and will be removed from t's args
-                        ct = terms.pop(t)
-                        c += ct  # will be registered to terms[s] below
-                        a = t.func(*(t.args[:ix] + t.args[ix+1:]), evaluate=False)
-                        if a not in terms:
-                            terms[a] = 0
-                        terms[a] += ct
-                        break
+                    a = t.func(*(t.args[:ix] + t.args[ix+1:]), evaluate=False)
+                    if a not in terms:
+                        terms[a] = 0
+                    terms[a] += ct
+                    break
 
             terms[s] = c
 
