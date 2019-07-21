@@ -251,4 +251,4 @@ much more efficient approach originally due to Bengt Fornberg and now incorporat
 
 :ref:`calculus-finite-differences`
 
-:ref:`finite_diff`
+:ref:`Finite difference weights <finite_diff>`
