@@ -1290,3 +1290,12 @@ def test_eval_rewrite_as_KroneckerDelta():
 
     p18 = Piecewise((-4, Eq(y, 1) | (Eq(x, -5) & Eq(x, z))), (4, True))
     assert f(p18) == 8*K(-5, x)*K(1, y)*K(x, z) - 8*K(-5, x)*K(x, z) - 8*K(1, y) + 4
+
+    p19 = Piecewise((0, x > 2), (1, True))
+    assert f(p19) == p19
+
+    p20 = Piecewise((0, And(x < 2, x > -5)), (1, True))
+    assert f(p20) == p20
+
+    p21 = Piecewise((0, Or(x > 1, x < 0)), (1, True))
+    assert f(p21) == p21
