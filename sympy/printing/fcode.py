@@ -369,6 +369,7 @@ class FCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
+        op = op if op not in self._relationals else self._relationals[op]
         return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
@@ -430,14 +431,6 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 'end do').format(target=target, start=start, stop=stop,
                         step=step, body=body)
-
-    def _print_Equality(self, expr):
-        lhs, rhs = expr.args
-        return ' == '.join(map(lambda arg: self._print(arg), (lhs, rhs)))
-
-    def _print_Unequality(self, expr):
-        lhs, rhs = expr.args
-        return ' /= '.join(map(lambda arg: self._print(arg), (lhs, rhs)))
 
     def _print_Type(self, type_):
         type_ = self.type_aliases.get(type_, type_)
