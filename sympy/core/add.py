@@ -216,8 +216,22 @@ class Add(Expr, AssocOp):
                 if terms[s] is S.NaN and not extra:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
-            elif s.is_Mul and all(si in terms for si in s.args):
-                coeff += c
+            elif s.is_Add:
+                if all(si in terms for si in s.args):
+                    coeff += c
+                else:
+                    others = []
+                    for si in si.args:
+                        if si in terms:
+                            terms[si] += c
+                            if terms[s] is S.NaN and not extra:
+                                # we know for sure the result will be nan
+                                return [S.NaN], [], None
+                        else:
+                            others.append(si)
+                    if others:
+                        s = Add(*others, evaluate=False)
+                    terms[s] = c
             else:
                 terms[s] = c
 
