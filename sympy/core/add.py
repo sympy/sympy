@@ -216,24 +216,37 @@ class Add(Expr, AssocOp):
                 if terms[s] is S.NaN and not extra:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
-            elif s.is_Add:
-                if all(si in terms for si in s.args):
-                    coeff += c
-                else:
-                    others = []
-                    for si in s.args:
-                        if si in terms:
-                            terms[si] += c
-                            if terms[si] is S.NaN and not extra:
-                                # we know for sure the result will be nan
-                                return [S.NaN], [], None
-                        else:
-                            others.append(si)
-                    if others:
-                        s = Add(*others, evaluate=False)
-                    terms[s] = c
+                continue
+
+            if s.is_Add:
+                others = []
+                for si in s.args:
+                    if si in terms:
+                        terms[si] += c
+                        if terms[si] is S.NaN and not extra:
+                            # we know for sure the result will be nan
+                            return [S.NaN], [], None
+                    else:
+                        others.append(si)
+                if others:
+                    s = Add(*others, evaluate=False)
             else:
-                terms[s] = c
+                from sympy.core.compatibility import ordered
+                for t in ordered(terms):
+                    if not t.is_Add:
+                        continue
+                    if s in t.args:
+                        # s will be a new term and will be removed from t's args
+                        ct = terms.pop(t)
+                        c += ct  # will be registered in terms below
+                        a = t.func(*[i for i in t.args if i != s], evaluate=False)
+                        if a not in terms:
+                            terms[a] = 0
+                        terms[a] += ct
+                        break
+
+            terms[s] = c
+
 
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]
