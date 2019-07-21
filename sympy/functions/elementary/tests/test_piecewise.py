@@ -1287,3 +1287,6 @@ def test_eval_rewrite_as_KroneckerDelta():
     p17 = Piecewise((0, Ne(t, x) & (Ne(m, n) | Ne(n, t) | Ne(n, x))),
                     (1, Ne(t, x)), (-1, Ne(m, n) | Ne(n, t) | Ne(n, x)), (0, True))
     assert f(p17) == K(m, n)*K(n, t)*K(n, x) - K(t, x)
+
+    p18 = Piecewise((-4, Eq(y, 1) | (Eq(x, -5) & Eq(x, z))), (4, True))
+    assert f(p18) == 8*K(-5, x)*K(1, y)*K(x, z) - 8*K(-5, x)*K(x, z) - 8*K(1, y) + 4
