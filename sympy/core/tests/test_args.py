@@ -1338,6 +1338,11 @@ def test_sympy__stats__crv_types__ExponentialDistribution():
     assert _test_args(ExponentialDistribution(1))
 
 
+def test_sympy__stats__crv_types__ExponentialPowerDistribution():
+    from sympy.stats.crv_types import ExponentialPowerDistribution
+    assert _test_args(ExponentialPowerDistribution(0, 1, 1))
+
+
 def test_sympy__stats__crv_types__FDistributionDistribution():
     from sympy.stats.crv_types import FDistributionDistribution
     assert _test_args(FDistributionDistribution(1, 1))
