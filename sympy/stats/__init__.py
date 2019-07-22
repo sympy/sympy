@@ -68,7 +68,8 @@ from .crv_types import (
 __all__.extend(crv_types.__all__)
 
 from . import drv_types
-from .drv_types import (Geometric, Logarithmic, NegativeBinomial, Poisson, YuleSimon, Zeta)
+from .drv_types import (Geometric, Logarithmic, NegativeBinomial, Poisson, Skellam,
+    YuleSimon, Zeta)
 __all__.extend(drv_types.__all__)
 
 from . import joint_rv_types
