@@ -77,6 +77,9 @@ def test_doit_with_MatrixBase():
     assert MatPow(X, -2).doit() == (X.inv())**2
     # less expensive than testing on a 2x2
     assert MatPow(ImmutableMatrix([4]), S.Half).doit() == ImmutableMatrix([2])
+    X = ImmutableMatrix([[0, 2], [0, 4]]) # det() == 0
+    raises(ValueError, lambda: MatPow(X,-1).doit())
+    raises(ValueError, lambda: MatPow(X,-2).doit())
 
 
 def test_doit_nonsquare():
@@ -86,6 +89,11 @@ def test_doit_nonsquare():
     raises(ShapeError, lambda: MatPow(X, 2).doit())
     raises(ShapeError, lambda: MatPow(X, -1).doit())
     raises(ShapeError, lambda: MatPow(X, pi).doit())
+
+
+def test_doit_equals_pow(): #17179
+    X = ImmutableMatrix ([[1,0],[0,1]])
+    assert MatPow(X, n).doit() == X**n == X
 
 
 def test_doit_nested_MatrixExpr():
