@@ -921,6 +921,15 @@ def test_matrix_sum():
     assert result.__class__ == ImmutableSparseMatrix
 
 
+@XFAIL
+def test_failing_matrix_sum():
+    n = Symbol('n', nonnegative=True)
+    # TODO Implement matrix geometric series summation.
+    A = Matrix([[0, 1, 0], [-1, 0, 0], [0, 0, 0]])
+    assert Sum(A ** n, (n, 1, 4)).doit() == \
+        Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+
+
 def test_indexed_idx_sum():
     i = symbols('i', cls=Idx)
     r = Indexed('r', i)
