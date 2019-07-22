@@ -69,13 +69,11 @@ class NDimArray(object):
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
 
     def _parse_index(self, index):
+        if isinstance(index, (SYMPY_INTS, Integer)):
+            raise ValueError("Only a tuple index is accepted")
 
-#        if isinstance(index, (SYMPY_INTS, Integer)):
-#            if index >= self._loop_size:
-#                raise ValueError("index out of range")
-#            return index
         if self._loop_size == 0:
-            raise ValueError("index out of range")
+            raise ValueError("Index not valide with an empty array")
 
         if len(index) != self._rank:
             raise ValueError('Wrong number of array axes')

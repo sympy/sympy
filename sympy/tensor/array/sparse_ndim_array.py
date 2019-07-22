@@ -5,6 +5,7 @@ from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
 from sympy.core.numbers import Integer
+from sympy.core.compatibility import SYMPY_INTS
 
 import functools
 
@@ -28,6 +29,10 @@ class SparseNDimArray(NDimArray):
         0
         >>> a[1, 1]
         3
+        >>> a[0]
+        [0, 1]
+        >>> a[1]
+        [2, 3]
 
         Symbolic indexing:
 
@@ -45,10 +50,11 @@ class SparseNDimArray(NDimArray):
         if syindex is not None:
             return syindex
 
-        if isinstance(index, Integer):
+        if isinstance(index, (SYMPY_INTS, Integer)):
             index = Tuple(index)
-        if not isinstance(index, (tuple, slice)):
-            index = tuple(index)
+        if not isinstance(index, slice) and len(index) < self.rank():
+            index = tuple([i for i in index] + \
+                          [slice(None) for i in range(len(index), self.rank())])
 
         # `index` is a tuple with one or more slices:
         if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):

@@ -30,6 +30,11 @@ class DenseNDimArray(NDimArray):
         0
         >>> a[1, 1]
         3
+        >>> a[0]
+        [0, 1]
+        >>> a[1]
+        [2, 3]
+
 
         Symbolic index:
 
@@ -49,13 +54,9 @@ class DenseNDimArray(NDimArray):
 
         if isinstance(index, (SYMPY_INTS, Integer)):
             index = Tuple(index)
-        if not isinstance(index, (tuple, slice)):
-            index = tuple(index)
         if not isinstance(index, slice) and len(index) < self.rank():
-            index = [i for i in index]
-            for i in range(len(index), self.rank()):
-                index.append(slice(None))
-            index = tuple(index)
+            index = tuple([i for i in index] + \
+                          [slice(None) for i in range(len(index), self.rank())])
 
         if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
             sl_factors, eindices = self._get_slice_data_for_array_access(index)
@@ -101,7 +102,10 @@ class DenseNDimArray(NDimArray):
         return Matrix(self.shape[0], self.shape[1], self._array)
 
     def __iter__(self):
-        return self._array.__iter__()
+        def iterator():
+            for i in range(self._loop_size):
+                yield self[self._get_tuple_index(i)]
+        return iterator()
 
     def reshape(self, *newshape):
         """
