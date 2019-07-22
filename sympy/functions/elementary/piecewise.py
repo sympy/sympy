@@ -1032,97 +1032,59 @@ class Piecewise(Function):
     def _eval_rewrite_as_KroneckerDelta(self, *args):
         from sympy import Ne, Eq, Not, KroneckerDelta
 
+        rules = {
+            And: [False, False],
+            Or: [True, True],
+            Not: [True, False],
+            Eq: [None, None],
+            Ne: [None, None]
+        }
+
         class UnrecognizedCondition(Exception):
             pass
 
-        def rewrite_eq(args):
-            return KroneckerDelta(*args)
+        def rewrite(cond):
+            if isinstance(cond, Eq):
+                return KroneckerDelta(*cond.args)
+            if isinstance(cond, Ne):
+                return 1 - KroneckerDelta(*cond.args)
 
-        def rewrite_ne(args):
-            return 1 - KroneckerDelta(*args)
+            cls, args = type(cond), cond.args
+            if cls not in rules:
+                raise UnrecognizedCondition(cls)
 
-        def rewrite_and(args):
+            b1, b2 = rules[cls]
             k = 1
             for c in args:
-                if isinstance(c, Eq):
-                    k *= rewrite_eq(c.args)
-                elif isinstance(c, Ne):
-                    k *= rewrite_ne(c.args)
-                elif isinstance(c, Or):
-                    k *= rewrite_or(c.args)
-                elif isinstance(c, Not):
-                    k *= rewrite_not(c.args)
+                if b1:
+                    k *= 1 - rewrite(c)
                 else:
-                    raise UnrecognizedCondition
+                    k *= rewrite(c)
 
+            if b2:
+                return 1 - k
             return k
-
-        def rewrite_or(args):
-            k = 1
-            for c in args:
-                if isinstance(c, Eq):
-                    k *= 1 - rewrite_eq(c.args)
-                elif isinstance(c, Ne):
-                    k *= 1 - rewrite_ne(c.args)
-                elif isinstance(c, And):
-                    k *= 1 - rewrite_and(c.args)
-                elif isinstance(c, Not):
-                    k *= 1 - rewrite_not(c.args)
-                else:
-                    raise UnrecognizedCondition
-
-            return 1 - k
-
-        def rewrite_not(args):
-            k = 1
-            for c in args:
-                if isinstance(c, Eq):
-                    k *= 1 - rewrite_eq(c.args)
-                elif isinstance(c, Ne):
-                    k *= 1 - rewrite_ne(c.args)
-                elif isinstance(c, And):
-                    k *= 1 - rewrite_and(c.args)
-                elif isinstance(c, Or):
-                    k *= 1 - rewrite_or(c.args)
-                else:
-                    raise UnrecognizedCondition
-
-            return k
-
-        allowed_types = [Eq, Ne, And, Or, Not]
 
         conditions = []
         true_value = None
-        for i in args:
-            if type(i[1]) in allowed_types:
-                conditions.append(i)
-            elif i[1] is S.true:
+        for value, cond in args:
+            if type(cond) in rules:
+                conditions.append((value, cond))
+            elif cond is S.true:
                 if true_value is None:
-                    true_value = i[0]
+                    true_value = value
             else:
                 return
 
         if true_value is not None:
             result = true_value
 
-            for i in conditions[::-1]:
+            for value, cond in conditions[::-1]:
                 try:
-                    if isinstance(i[1], Eq):
-                        k = rewrite_eq(i[1].args)
-                    elif isinstance(i[1], Ne):
-                        k = rewrite_ne(i[1].args)
-                    elif isinstance(i[1], And):
-                        k = rewrite_and(i[1].args)
-                    elif isinstance(i[1], Or):
-                        k = rewrite_or(i[1].args)
-                    elif isinstance(i[1], Not):
-                        k = rewrite_not(i[1].args)
-                    else:
-                        return
+                    k = rewrite(cond)
+                    result = k * value + (1 - k) * result
                 except UnrecognizedCondition:
                     return
-
-                result = k * i[0] + (1 - k) * result
 
             return result
 
