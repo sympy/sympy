@@ -1030,23 +1030,10 @@ class Piecewise(Function):
         return _canonical(last)
 
     def _eval_rewrite_as_KroneckerDelta(self, *args):
-        from sympy import Ne, Eq, KroneckerDelta
+        from sympy import Ne, Eq, Not, KroneckerDelta
 
         class UnrecognizedCondition(Exception):
             pass
-
-        conditions = []
-        true_value = None
-        for i in args:
-            if isinstance(i[1], Eq) or isinstance(i[1], Ne):
-                conditions.append(i)
-            elif isinstance(i[1], And) or isinstance(i[1], Or):
-                conditions.append(i)
-            elif i[1] is S.true:
-                if true_value is None:
-                    true_value = i[0]
-            else:
-                return
 
         def rewrite_eq(args):
             return KroneckerDelta(*args)
@@ -1063,6 +1050,8 @@ class Piecewise(Function):
                     k *= rewrite_ne(c.args)
                 elif isinstance(c, Or):
                     k *= rewrite_or(c.args)
+                elif isinstance(c, Not):
+                    k *= rewrite_not(c.args)
                 else:
                     raise UnrecognizedCondition
 
@@ -1077,16 +1066,46 @@ class Piecewise(Function):
                     k *= 1 - rewrite_ne(c.args)
                 elif isinstance(c, And):
                     k *= 1 - rewrite_and(c.args)
+                elif isinstance(c, Not):
+                    k *= 1 - rewrite_not(c.args)
                 else:
                     raise UnrecognizedCondition
 
             return 1 - k
 
+        def rewrite_not(args):
+            k = 1
+            for c in args:
+                if isinstance(c, Eq):
+                    k *= 1 - rewrite_eq(c.args)
+                elif isinstance(c, Ne):
+                    k *= 1 - rewrite_ne(c.args)
+                elif isinstance(c, And):
+                    k *= 1 - rewrite_and(c.args)
+                elif isinstance(c, Or):
+                    k *= 1 - rewrite_or(c.args)
+                else:
+                    raise UnrecognizedCondition
+
+            return k
+
+        allowed_types = [Eq, Ne, And, Or, Not]
+
+        conditions = []
+        true_value = None
+        for i in args:
+            if type(i[1]) in allowed_types:
+                conditions.append(i)
+            elif i[1] is S.true:
+                if true_value is None:
+                    true_value = i[0]
+            else:
+                return
+
         if true_value is not None:
-            conditions = conditions[::-1]
             result = true_value
 
-            for i in conditions:
+            for i in conditions[::-1]:
                 try:
                     if isinstance(i[1], Eq):
                         k = rewrite_eq(i[1].args)
@@ -1096,6 +1115,8 @@ class Piecewise(Function):
                         k = rewrite_and(i[1].args)
                     elif isinstance(i[1], Or):
                         k = rewrite_or(i[1].args)
+                    elif isinstance(i[1], Not):
+                        k = rewrite_not(i[1].args)
                     else:
                         return
                 except UnrecognizedCondition:
