@@ -282,7 +282,6 @@ def test_Range_set():
             for reverse in range(2):
                 r = list(reversed(r))
                 R = R.reversed
-                print(R, a, b, c)
                 result = list(R[a:b:c])
                 ans = r[a:b:c]
                 txt = ('\n%s[%s:%s:%s] = %s -> %s' % (
@@ -400,6 +399,10 @@ def test_Range_set():
     for r in ranges:
         raises(ValueError, lambda: len(r))
         raises(ValueError, lambda: [i for i in r])
+
+    r = Range(n, n + 6, 1)
+    assert r[0:10:2] == Range(n, n + 6, 2)
+    assert (r[0:10:2]).sup == n + 4
 
     # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
     # compatibility imports above)

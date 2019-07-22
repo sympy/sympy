@@ -651,139 +651,43 @@ class Range(Set):
         from sympy.functions.elementary.integers import ceiling
         from sympy.functions.elementary.piecewise import Piecewise
         ooslice = "cannot slice from the end with an infinite value"
-        zerostep = "slice step cannot be zero"
-        # if we had to take every other element in the following
-        # oo, ..., 6, 4, 2, 0
-        # we might get oo, ..., 4, 0 or oo, ..., 6, 2
-        ambiguous = "cannot unambiguously re-stride from the end " + \
-            "with an infinite value"
         if isinstance(i, slice):
+            if self.size.has(Symbol):
+                raise NotImplementedError("Cannot slice Range of symbolic sizes.")
             if self.size == S.Zero:
                 return Range(0)
-            # if self.size.is_finite:
             istart, istop, istep = i.start, i.stop, i.step
-            # if istop is not None and (Ge(istop, self.size) == True):
-            #     istop = -1
+            if any(isinstance(par, Symbol) for par in (istart, istop, istep)):
+                raise NotImplementedError("Range cannot be sliced because "
+                                          "slice has symbolic start, stop, or step.")
+            bound_check_f = lambda x: x is not None and \
+                                      ((Ge(x, self.size) == True) or
+                                      (Lt(x, -self.size) == True))
             if istep != None and istep < 0:
-                if istart is not None and (Ge(istart, self.size) == True):
+                if bound_check_f(istart):
                     istart = self.size - 1
+                if bound_check_f(istop):
+                    istop = self.size - 1
                 if istart is None:
                     istart = 0
                 else:
                     istart = -(istart + 1)
-                if istop is not None and (Ge(istop, self.size) == True):
-                    istop = self.size - 1;
                 istop = -(istop + 1) if istop is not None else istop
                 return self.reversed[istart:istop:-istep]
-            else:
-                tempr = self
-            if istart is not None and (Ge(istart, self.size) == True):
+            if bound_check_f(istart):
                 return Range(0)
-            start = tempr[0] if (istart == None) else tempr[istart]
-            step = tempr.step if (istep == None) else istep * tempr.step
-            stop = tempr._stop if (istop == None or Ge(istop, tempr.size) == True) else tempr[istop]
-            # print(start, stop, step)
-            # n = ceiling((stop - start)/step)
-            # if n <= 0:
-            #     return Range(0)
-            # canonical_stop = start + n*step
-            # end = canonical_stop - step
-            # ss = step*self.step
-            # print(self[start], self[stop], ss)
-            # step_neg = ((Lt(step, 0) == True) and Lt(self.step, 0) == False)
-            # step_pos = ((Gt(step, 0) == True) and Gt(self.step, 0) == False)
-            # if step_neg or step_pos:
-            #     stop = self[-1] if (istop == None or Ge(istop, self.size) == True) else self[istop]
-            #     if step_pos:
-            #         return Range(stop, start, -step)
-            #     if step_neg:
-            #         return Range(stop, start, -step)
+            start = self[0] if (istart == None) else self[istart]
+            step = self.step if (istep == None) else istep * self.step
+            if istop is None:
+                stop = self._stop
+            else:
+                bound_check = Or(And(Lt(istop, self.size), Ge(istop, S.Zero)),
+                                And(Ge(istop, -self.size), Le(istop, -1)))
+                if bound_check == False:
+                    stop = self._stop
+                else:
+                    stop = Piecewise((self[istop], bound_check), (self._stop, True))
             return Range(start, stop, step)
-            # else:  # infinite Range
-            #     start = i.start
-            #     stop = i.stop
-            #     if i.step == 0:
-            #         raise ValueError(zerostep)
-            #     step = i.step or 1
-            #     ss = step*self.step
-            #     #---------------------
-            #     # handle infinite on right
-            #     #   e.g. Range(0, oo) or Range(0, -oo, -1)
-            #     # --------------------
-            #     if self._stop.is_infinite:
-            #         # start and stop are not interdependent --
-            #         # they only depend on step --so we use the
-            #         # equivalent reversed values
-            #         return self.reversed[
-            #             stop if stop is None else -stop + 1:
-            #             start if start is None else -start:
-            #             step].reversed
-            #     #---------------------
-            #     # handle infinite on the left
-            #     #   e.g. Range(oo, 0, -1) or Range(-oo, 0)
-            #     # --------------------
-            #     # consider combinations of
-            #     # start/stop {== None, < 0, == 0, > 0} and
-            #     # step {< 0, > 0}
-            #     if start is None:
-            #         if stop is None:
-            #             if step < 0:
-            #                 return Range(self[-1], self.start, ss)
-            #             elif step > 1:
-            #                 raise ValueError(ambiguous)
-            #             else:  # == 1
-            #                 return self
-            #         elif stop < 0:
-            #             if step < 0:
-            #                 return Range(self[-1], self[stop], ss)
-            #             else:  # > 0
-            #                 return Range(self.start, self[stop], ss)
-            #         elif stop == 0:
-            #             if step > 0:
-            #                 return Range(0)
-            #             else:  # < 0
-            #                 raise ValueError(ooslice)
-            #         elif stop == 1:
-            #             if step > 0:
-            #                 raise ValueError(ooslice)  # infinite singleton
-            #             else:  # < 0
-            #                 raise ValueError(ooslice)
-            #         else:  # > 1
-            #             raise ValueError(ooslice)
-            #     elif start < 0:
-            #         if stop is None:
-            #             if step < 0:
-            #                 return Range(self[start], self.start, ss)
-            #             else:  # > 0
-            #                 return Range(self[start], self._stop, ss)
-            #         elif stop < 0:
-            #             return Range(self[start], self[stop], ss)
-            #         elif stop == 0:
-            #             if step < 0:
-            #                 raise ValueError(ooslice)
-            #             else:  # > 0
-            #                 return Range(0)
-            #         elif stop > 0:
-            #             raise ValueError(ooslice)
-            #     elif start == 0:
-            #         if stop is None:
-            #             if step < 0:
-            #                 raise ValueError(ooslice)  # infinite singleton
-            #             elif step > 1:
-            #                 raise ValueError(ambiguous)
-            #             else:  # == 1
-            #                 return self
-            #         elif stop < 0:
-            #             if step > 1:
-            #                 raise ValueError(ambiguous)
-            #             elif step == 1:
-            #                 return Range(self.start, self[stop], ss)
-            #             else:  # < 0
-            #                 return Range(0)
-            #         else:  # >= 0
-            #             raise ValueError(ooslice)
-            #     elif start > 0:
-            #         raise ValueError(ooslice)
         else:
             i = _sympify(i)
             if not self or ((i.is_integer == False) and (i.is_infinite == False)):
@@ -797,8 +701,9 @@ class Range(Set):
             rv = Piecewise((rvstop, Lt(i, 0)), (rvstart, True))
             if Or(And(rvstop.is_infinite, Lt(i, 0)), And(rvstart.is_infinite, Ge(i, 0))) == True:
                 raise ValueError(ooslice)
-            if Or(And(Or(Lt(rvstop, self._inf), Gt(rvstop, self._sup)), Lt(i, 0)),
-                  And(Or(Lt(rvstart, self._inf), Gt(rvstart, self._sup)), Ge(i, 0))) == True:
+            bound = Or(And(Or(Lt(rvstop, self._inf), Gt(rvstop, self._sup)), Lt(i, 0)),
+                  And(Or(Lt(rvstart, self._inf), Gt(rvstart, self._sup)), Ge(i, 0)))
+            if bound == True:
                 raise IndexError("Range index out of range")
             return rv
 
