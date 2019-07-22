@@ -1299,3 +1299,6 @@ def test_eval_rewrite_as_KroneckerDelta():
 
     p21 = Piecewise((0, Or(x > 1, x < 0)), (1, True))
     assert f(p21) == p21
+
+    p22 = Piecewise((0, ~((Eq(y, -1) | Ne(x, 0)) & (Ne(x, 1) | Ne(y, -1)))), (1, True))
+    assert f(p22) == K(-1, y)*K(0, x) - K(-1, y)*K(1, x) - K(0, x) + 1
