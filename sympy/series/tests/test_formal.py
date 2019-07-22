@@ -526,6 +526,10 @@ def test_fps__product():
     assert fprod.polynomial(4) == x + x**2 + x**3/3
 
     raises(NotImplementedError, lambda: fprod._eval_term(5))
+    raises(NotImplementedError, lambda: fprod.function)
+    raises(NotImplementedError, lambda: fprod.infinite)
+    raises(NotImplementedError, lambda: fprod._eval_derivative(x))
+    raises(NotImplementedError, lambda: fprod.integrate(x))
 
     assert f1.product(f3, x)._eval_terms(4) == x - 2*x**3/3
     assert f1.product(f3, x).truncate(4) == x - 2*x**3/3 + O(x**4)
@@ -551,6 +555,10 @@ def test_fps__compose():
     assert fcomp.truncate(5) == 1 + x + x**2/2 - x**4/8 + O(x**5)
 
     raises(NotImplementedError, lambda: fcomp._eval_term(5))
+    raises(NotImplementedError, lambda: fcomp.function)
+    raises(NotImplementedError, lambda: fcomp.infinite)
+    raises(NotImplementedError, lambda: fcomp._eval_derivative(x))
+    raises(NotImplementedError, lambda: fcomp.integrate(x))
 
     assert f1.compose(f2, x).truncate(4) == 1 + x + x**2/2 + O(x**4)
     assert f1.compose(f2, x).truncate(8) == \
@@ -576,6 +584,10 @@ def test_fps__inverse():
     assert finv.truncate(5) == 1 - x + x**2/2 - x**3/6 + x**4/24 + O(x**5)
 
     raises(NotImplementedError, lambda: finv._eval_term(5))
+    raises(NotImplementedError, lambda: finv.infinite)
+    raises(NotImplementedError, lambda: finv._eval_derivative(x))
+    raises(NotImplementedError, lambda: finv.integrate(x))
+
     assert f2.inverse(x).truncate(8) == \
         1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + x**6/720 - x**7/5040 + O(x**8)
 

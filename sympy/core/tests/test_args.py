@@ -3892,10 +3892,28 @@ def test_sympy__series__formal__Coeff():
     assert _test_args(fps(x**2 + x + 1, x))
 
 
+@SKIP('Abstract Class')
 def test_sympy__series__formal__FiniteFormalPowerSeries():
+    pass
+
+
+def test_sympy__series__formal__FormalPowerSeriesProduct():
+    from sympy.series.formal import fps
+    f1, f2 = fps(sin(x)), fps(exp(x))
+    assert _test_args(f1.product(f2, x))
+
+
+def test_sympy__series__formal__FormalPowerSeriesCompose():
     from sympy.series.formal import fps
     f1, f2 = fps(exp(x)), fps(sin(x))
     assert _test_args(f1.compose(f2, x))
+
+
+def test_sympy__series__formal__FormalPowerSeriesInverse():
+    from sympy.series.formal import fps
+    f1 = fps(exp(x))
+    assert _test_args(f1.inverse(x))
+
 
 def test_sympy__simplify__hyperexpand__Hyper_Function():
     from sympy.simplify.hyperexpand import Hyper_Function
