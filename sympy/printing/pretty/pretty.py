@@ -1901,6 +1901,8 @@ class PrettyPrinter(Printer):
         elif s.stop.is_infinite:
             it = iter(s)
             printset = next(it), next(it), dots
+        elif s.size.has(Symbol):
+            printset = s.start, s.start + s.step, dots, s.stop
         elif len(s) > 4:
             it = iter(s)
             printset = next(it), next(it), dots, s[-1]
