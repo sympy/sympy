@@ -505,6 +505,18 @@ class Range(Set):
         >>> Range(3).intersect(Range(4, oo))
         EmptySet()
 
+    Range also supports symbolic start, stop and step provided they
+    satisfy, is_integer=True, i.e., all the paramters should be integer
+    symbols:
+
+        >>> from sympy import symbols
+        >>> n = symbols('n', integer=True)
+        >>> Range(n, 10, 1)
+        Range(n, 10, 1)
+        >>> list(Range(n, n + 6))
+        [n, n + 1, n + 2, n + 3, n + 4, n + 5]
+        >>> Range(1, n, 1).size
+        Piecewise((Abs(n - 1), n - 1 > 0), (0, True))
     """
     is_iterable = True
 
