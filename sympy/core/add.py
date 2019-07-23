@@ -87,6 +87,34 @@ class Add(Expr, AssocOp):
 
         NB: the removal of 0 is already handled by AssocOp.__new__
 
+        Examples
+        ========
+
+        XXX The following highlight some of the logic of the flatten
+        routine.
+
+        >>> from sympy.abc import w, x, y, z
+
+        A negative term will cancel a positive term
+
+        >>> a = -(x + y)
+        >>> a - a
+        0
+
+        Any term in a negative term will combine with a matching
+        isolated term:
+
+        >>> 2*x + 2*y - (w - x + 2*y + z)
+        3*x - (w + z)
+        >>> x + 3 - (x + 2)
+        1
+
+        If a term is 2-arg Mul with coefficient other than -1,
+        nothing will happen to it:
+
+        >>> x + y - 2*(x + y)
+        x + y - 2*(x + y)
+
         See also
         ========
 
@@ -198,17 +226,47 @@ class Add(Expr, AssocOp):
             # 2*x**2 + 3*x**2  ->  5*x**2
             if s in terms:
                 terms[s] += c
-                if terms[s] is S.NaN and not extra:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
             else:
                 terms[s] = c
+
+        # remove args of negated Add when present in terms
+        from sympy.core.function import _coeff_isneg
+        for k, v in list(terms.items()):
+            if v == -1 and k.is_Add:
+                noma = []
+                for i in k.args:
+                    if i.is_Number:
+                        coeff -= i
+                    elif i in terms:
+                        terms[i] -= 1
+                    elif -i in terms:
+                        terms[-i] += 1
+                    else:
+                        c, m = i.as_coeff_Mul()
+                        if m in terms:
+                            terms[m] -= c
+                        else:
+                            noma.append(i)
+                if len(noma) != len(k.args):
+                    v = terms.pop(k)
+                    if noma:
+                        n = _unevaluated_Add(*noma)
+                        if n.is_Number:
+                            coeff += n*v
+                        else:
+                            c, n = n.as_coeff_Mul()
+                            v *= c
+                            if n not in terms:
+                                terms[n] = 0
+                            terms[n] += v
 
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]
         newseq = []
         noncommutative = False
         for s, c in terms.items():
+            if S.NaN in (s, c) and not extra:
+                return [S.NaN], [], None
             # 0*s
             if c is S.Zero:
                 continue
@@ -218,7 +276,7 @@ class Add(Expr, AssocOp):
             # c*s
             else:
                 if s.is_Mul:
-                    # Mul, already keeps its arguments in perfect order.
+                    # Mul, already keeps its arguments in perfect order
                     # so we can simply put c in slot0 and go the fast way.
                     cs = s._new_rawargs(*((c,) + s.args))
                     newseq.append(cs)
@@ -230,6 +288,9 @@ class Add(Expr, AssocOp):
                     newseq.append(Mul(c, s))
 
             noncommutative = noncommutative or not s.is_commutative
+
+        if coeff is S.NaN and not extra:
+            return [S.NaN], [], None
 
         # oo, -oo
         if coeff is S.Infinity:
