@@ -1,6 +1,6 @@
 from sympy.core.sympify import _sympify
 from sympy import Tuple, Basic, S
-from sympy.tensor.array.ndim_array import NDimArray
+from sympy.tensor.array.ndim_array import ImmutableNDimArray
 from sympy.tensor.array.sparse_ndim_array import SparseNDimArray
 from sympy.tensor.array.dense_ndim_array import DenseNDimArray
 from sympy.core.sympify import sympify
@@ -9,7 +9,10 @@ from sympy.core.compatibility import Iterable
 import functools
 
 
-class SparseArrayFormat(SparseNDimArray):
+class SparseArrayFormat(SparseNDimArray, ImmutableNDimArray):
+    """
+    A base class for all sparse array formats. It is supposed to be Immutable.
+    """
     def _check_bound(self, shape, index):
         if len(shape) != len(index):
             return False
@@ -20,6 +23,23 @@ class SparseArrayFormat(SparseNDimArray):
     def __mul__(self, other):
         other = sympify(other)
         return self.toscr()._mul(other)
+
+    def __setitem__(self, index, value):
+        raise TypeError('Immutable N-dim array')
+
+    def _calculate_integer_index(self, tuple_index):
+        integer_idx = 0
+        for i, idx in enumerate(tuple_index):
+            integer_idx = integer_idx*self._shape[i] + tuple_index[i]
+        return integer_idx
+
+    def _calculate_tuple_index(self, integer_idx):
+        index = []
+        for i, sh in enumerate(reversed(self._shape[:-1])):
+            index.append(integer_index % sh)
+            integer_index //= sh
+        index.reverse()
+        return tuple(index)
 
 
 # Row-based linked list sparse matrix(LIL)
@@ -71,12 +91,19 @@ class LilSparseArray(SparseArrayFormat):
         data = cls._empty(shape)
         rows = cls._empty(shape)
 
-        self = Basic.__new__(cls, data, rows, shape,)
+        self = Basic.__new__(cls, data, rows, shape, **kwargs)
         self._shape = shape
         self._rank = len(shape)
         self._loop_size = loop_size
 
         new_dict = {}
+
+        # initialization with (data, rows) as a tuple
+        if isinstance(iterable, (tuple, Tuple)):
+            self._data = iterable[0]
+            self._rows = iterable[1]
+            return self
+
         # if it is a dense array, it would be cast to a default sparse array
         # and then convert to a LIL format
         if isinstance(iterable, Iterable):
@@ -85,7 +112,6 @@ class LilSparseArray(SparseArrayFormat):
         if isinstance(iterable, SparseNDimArray):
             new_dict = iterable._sparse_array
 
-        # TODO: Enable the initialization with (data, rows) as a tuple
         else:
             raise NotImplementedError("Data type not yet supported")
 
@@ -195,12 +221,18 @@ class CooSparseArray(SparseArrayFormat):
         data = []
         coor = [[] for i in range(len(shape))]
 
-        self = object.__new__(cls)
+        self = Basic.__new__(cls, data, coor, shape, **kwargs)
         self._data = data
         self._coor = coor
         self._shape = shape
         self._rank = len(shape)
         self._loop_size = loop_size
+
+        # initialization with (data, coor) as a tuple
+        if isinstance(iterable, (tuple, Tuple)):
+            self._data = iterable[0]
+            self._coor = iterable[1]
+            return self
 
         if isinstance(iterable, Iterable):
             iterable = SparseNDimArray(iterable)
@@ -211,9 +243,7 @@ class CooSparseArray(SparseArrayFormat):
                 idx = self._get_tuple_index(k)
                 for i in range(len(shape)):
                     coor[i].append(idx[i])
-        # TODO: Enable the initialization with (data, coor) as a tuple
-        else:
-            raise NotImplementedError("Data type not yet supported")
+
 
         return self
 
@@ -233,6 +263,25 @@ class CooSparseArray(SparseArrayFormat):
             for i in range(self._loop_size):
                 yield self[i]
         return iterator()
+
+    def tocsr(self):
+        current_row = 0
+        row_ptr = []
+        for i in range(len(self._data)):
+            tuple_idx = tuple([self._coor[j][i] for j in range(len(self._shape))])
+            int_idx = self._calculate_integer_index(tuple_idx[:-1])
+            if int_idx == current_row:
+                row_ptr.append(i)
+                current_row += 1
+            if int_idx > current_row:
+                last_value = row_ptr[-1]
+                row_ptr += [last_value for j in range(current_row, int_idx)]
+                row_ptr.append(i)
+                current_row = row + 1
+        row_ptr.append(len(self._data) + 1)
+        return CsrSparseArray((self._data, self._coor[len(self._shape)-1], row_ptr),
+                               self._shape)
+
 
 
 class CsrSparseArray(SparseArrayFormat):
@@ -282,13 +331,20 @@ class CsrSparseArray(SparseArrayFormat):
         col_ind = []
         row_ptr = []
 
-        self = object.__new__(cls)
+        self = Basic.__new__(cls, data, col_ind, row_ptr, **kwargs)
         self._data = data
         self._col_ind = col_ind
         self._row_ptr = row_ptr
         self._shape = shape
         self._rank = len(shape)
         self._loop_size = loop_size
+
+        # initialization with (data, col_ind, row_ptr) as a tuple
+        if isinstance(iterable, (tuple, Tuple)):
+            self._data = iterable[0]
+            self._col_ind = iterable[1]
+            self._row_ptr = iterable[2]
+            return self
 
         if isinstance(iterable, Iterable):
             iterable = SparseNDimArray(iterable)
@@ -299,37 +355,18 @@ class CsrSparseArray(SparseArrayFormat):
                 data.append(v)
                 idx = self._get_tuple_index(k)
                 col_ind.append(idx[-1])
-                row = self.calculate_integer_index(idx[:-1])
+                row = self._calculate_integer_index(idx[:-1])
                 if row == current_row:
                     self._row_ptr.append(i)
                     current_row += 1
                 elif row > current_row:
                     last_value = self._row_ptr[-1]
-                    for j in range(current_row, row):
-                        self._row_ptr.append(last_value)
+                    self._row_ptr += [last_value for j in range(current_row, row)]
                     self._row_ptr.append(i)
                     current_row = row + 1
             self._row_ptr.append(len(iterable._sparse_array) + 1)
 
-        # TODO: Enable the initialization with (data, col_ind, row_ptr) as a tuple
-        else:
-            raise NotImplementedError("Data type not yet supported")
-
         return self
-
-    def calculate_integer_index(self, tuple_index):
-        integer_idx = 0
-        for i, idx in enumerate(tuple_index):
-            integer_idx = integer_idx*self._shape[i] + tuple_index[i]
-        return integer_idx
-
-    def calculate_tuple_index(self, integer_idx):
-        index = []
-        for i, sh in enumerate(reversed(self._shape[:-1])):
-            index.append(integer_index % sh)
-            integer_index //= sh
-        index.reverse()
-        return tuple(index)
 
     def __getitem__(self, index):
         if not isinstance(index, (tuple, Tuple)):
@@ -337,7 +374,7 @@ class CsrSparseArray(SparseArrayFormat):
         if not self._check_bound(self._shape, index):
             raise ValueError('Index ' + str(index) + ' out of border')
 
-        row_idx = self.calculate_integer_index(index[:-1])
+        row_idx = self._calculate_integer_index(index[:-1])
         row_start = self._row_ptr[row_idx]
         row_end = self._row_ptr[row_idx + 1]
         row_values = self._data[row_start:row_end]
