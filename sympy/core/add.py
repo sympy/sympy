@@ -118,7 +118,7 @@ class Add(Expr, AssocOp):
         >>> 2*x + 2*y + -1*(w - x + 2*y + z)
         3*x - (w + z)
 
-        If a term is 2-arg Mul with coefficient other than -1,
+        If a term is a 2-arg Mul with coefficient other than -1,
         nothing will happen to it:
 
         >>> x + y - 2*(x + y)

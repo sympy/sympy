@@ -94,6 +94,14 @@ class Mul(Expr, AssocOp):
 
     is_Mul = True
 
+    def __neg__(self):
+        c, a = self.as_coeff_Mul()
+        c = -c
+        if c is S.One:
+            return a
+        args = (c,) + self.make_args(a)
+        return self._from_args(args, self.is_commutative)
+
     @classmethod
     def flatten(cls, seq):
         """Return commutative, noncommutative and order arguments by
