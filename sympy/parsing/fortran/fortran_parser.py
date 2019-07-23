@@ -1,20 +1,20 @@
-from sympy.codegen.ast import ( Variable, IntBaseType, FloatBaseType, String, Return, FunctionDefinition)
+from sympy.codegen.ast import ( Variable, IntBaseType, FloatBaseType, String, Return, FunctionDefinition, Assignment )
+from sympy.core import Add, Mul
+from sympy import Symbol
 from sympy.external import import_module
-from sympy.printing import pycode
 
 lfortran = import_module(
     'lfortran',
     warn_not_installed=True
 )
 
-asr = lfortran.asr.asr
 asr_mod = lfortran.asr
+asr = lfortran.asr.asr
 src_to_ast = lfortran.ast.src_to_ast
 ast_to_asr = lfortran.semantic.ast_to_asr.ast_to_asr
 
 """
-This module contains all the necessary Classes and Function used to Parse Fortran
-code into SymPy expression
+This module contains all the necessary Classes and Function used to Parse Fortran code into SymPy expression
 
 The module and its API are currently under development and experimental.
 It is also dependent on LFortran for the ASR that is converted to SymPy syntax
@@ -33,6 +33,7 @@ Features Supported
 
 - Variable Declarations (integers and reals)
 - Function Definitions
+- Assignments and Basic Binary Operations
 
 
 Notes
@@ -49,6 +50,7 @@ Refrences
 .. [1] https://github.com/sympy/sympy/issues
 .. [2] https://gitlab.com/lfortran/lfortran
 .. [3] https://docs.lfortran.org/
+
 """
 
 class ASR2PyVisitor(asr.ASTVisitor):
@@ -56,12 +58,13 @@ class ASR2PyVisitor(asr.ASTVisitor):
     Visitor Class for LFortran ASR
 
     It is a Visitor class derived from asr.ASRVisitor which visits all the nodes
-    of the LFortran ASR and createds correspondiong Python AST node for each
+    of the LFortran ASR and createds correspondiong AST node for each
     ASR node
+
     """
     def __init__(self):
         """Initialize the parser"""
-        self.py_ast = []
+        self._py_ast = []
 
     def visit_TranslationUnit(self, node):
         """
@@ -84,135 +87,95 @@ class ASR2PyVisitor(asr.ASTVisitor):
         =====
 
         The function currently only supports variable assignment and binary
-        operation assignments of varying multitudes
+        operation assignments of varying multitudes. Any type of numbers or arrays are not supported.
 
         Raises
         ======
 
         NotImplementedError() when called for Numeric assignments or Arrays
+
         """
         #TODO: Arithmatic Assignment
-        #if isinstance(node.target, asr.Variable):
-        #    target = node.target
-        #    value = node.value
-        #    if isinstance(value, asr.Variable):
-        #        new_node = Assign(
-        #            targets = [
-        #                Name(
-        #                    id = target.name,
-        #                    ctx = Store()
-        #                )
-        #            ],
-        #            value = Name(
-        #                id = value.name,
-        #                ctx = Store()
-        #            )
-        #        )
-        #    elif (type(value) == asr.BinOp):
-        #        exp_ast = call_visitor_func(value)
-        #        for expr in exp_ast.body:
-        #            new_node = Assign(
-        #                targets = [
-        #                    Name(
-        #                        id = target.name,
-        #                        ctx = Store()
-        #                    )
-        #                ], value = expr
-        #            )
-        #    else:
-        #        raise NotImplementedError("Numeric assignments not supported")
-        #else:
-        #    raise NotImplementedError("Arrays not supported")
-        #self.py_ast.body.append(new_node)
-        #fix_missing_locations(self.py_ast)
-        raise NotImplementedError("Assignment not implemented in codegen AST")
+        if isinstance(node.target, asr.Variable):
+            target = node.target
+            value = node.value
+            if isinstance(value, asr.Variable):
+                new_node = Assignment(
+                        Variable(
+                                target.name
+                            ),
+                        Variable(
+                                value.name
+                            )
+                    )
+            elif (type(value) == asr.BinOp):
+                exp_ast = call_visitor(value)
+                for expr in exp_ast:
+                    new_node = Assignment(
+                            Variable(target.name),
+                            expr
+                        )
+            else:
+                raise NotImplementedError("Numeric assignments not supported")
+        else:
+            raise NotImplementedError("Arrays not supported")
+        self._py_ast.append(new_node)
 
     def visit_BinOp(self, node):
         """Visitor Function for Binary Operations
 
         Visits each binary operation present in the LFortran ASR like addition,
-        substraction, multiplication,division and creates the operation node in
-        the Python AST
+        substraction, multiplication,division and creates the corresponding operation node in SymPy's AST
 
         In case of more than one binary operations, the function calls the
-        call_visitor_func() function on the child nodes pertaining to the
-        binary operations recursively until all the operations have been included
+        call_visitor() function on the child nodes pertaining to the
+        binary operations recursively until all the operations have been processed.
 
         Notes
         =====
 
         The function currently only supports binary operations with Variables or
-        other binary operation as nodes
+        other binary operations. Numerics are not supported as of yet.
 
         Raises
         ======
 
         NotImplementedError() when called for Numeric assignments
+
         """
         #TODO: Integer Binary Operations
-        #op = node.op
-        #lhs = node.left
-        #rhs = node.right
+        op = node.op
+        lhs = node.left
+        rhs = node.right
 
-        #if isinstance(op, asr.Add):
-        #    bin_op = Add()
-        #elif isinstance(op, asr.Sub):
-        #    bin_op = Sub()
-        #elif isinstance(op, asr.Div):
-        #    bin_op = Div()
-        #elif isinstance(op, asr.Mul):
-        #    bin_op = Mult()
+        if (type(lhs) == asr.Variable):
+            left_value = Symbol(lhs.name)
+        elif(type(lhs) == asr.BinOp):
+            l_exp_ast = call_visitor(lhs)
+            for exp in l_exp_ast:
+                left_value = exp
+        else:
+            raise NotImplementedError("Numbers Currently not supported")
 
-        #if (type(lhs) == asr.Variable):
-        #    left_value = Name(
-        #        id = lhs.name,
-        #        ctx = Load()
-        #    )
-        #    if (type(rhs) == asr.Variable):
-        #        new_node = BinOp(
-        #            left = left_value,
-        #            op = bin_op,
-        #            right = Name(
-        #                id = rhs.name,
-        #                ctx = Load()
-        #            )
-        #        )
-        #    elif (type(rhs) == asr.BinOp):
-        #        r_exp_ast = call_visitor_func(rhs)
-        #        for expr in r_exp_ast.body:
-        #            new_node = BinOp(
-        #                left = left_value,
-        #                op = bin_op,
-        #                right = expr
-        #            )
-        #    else:
-        #        raise NotImplementedError("Numeric Assignments not supported")
-        #else:
-        #    l_exp_ast = call_visitor_func(lhs)
-        #    for exp in l_exp_ast.body:
-        #        left_value = exp
-        #    if (type(rhs) == asr.Variable):
-        #        new_node = BinOp(
-        #            left = left_value,
-        #            op = bin_op,
-        #            right = Name(
-        #                id = rhs.name,
-        #                ctx = Load()
-        #            )
-        #        )
-        #    elif(type(rhs) == asr.BinOp):
-        #        r_exp_ast = call_visitor_func(rhs)
-        #        for expr in r_exp_ast.body:
-        #            new_node = BinOp(
-        #                left = left_value,
-        #                op = bin_op,
-        #                right = expr
-        #            )
-        #    else:
-        #        raise NotImplementedError("Numeric Assignments not supported")
-        #self.py_ast.body.append(new_node)
-        #fix_missing_locations(self.py_ast)
-        raise NotImplementedError("Binary operations not implemented")
+        if (type(rhs) == asr.Variable):
+            right_value = Symbol(rhs.name)
+        elif(type(rhs) == asr.BinOp):
+            r_exp_ast = call_visitor(rhs)
+            for exp in r_exp_ast:
+                right_value = exp
+        else:
+            raise NotImplementedError("Numbers Currently not supported")
+
+        if isinstance(op, asr.Add):
+            new_node = Add(left_value, right_value)
+        elif isinstance(op, asr.Sub):
+            new_node = Add(left_value, -right_value)
+        elif isinstance(op, asr.Div):
+            new_node = Mul(left_value, 1/right_value)
+        elif isinstance(op, asr.Mul):
+            new_node = Mul(left_value, right_value)
+
+        self._py_ast.append(new_node)
 
     def visit_Variable(self, node):
         """Visitor Function for Variable Declaration
@@ -222,6 +185,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
 
         Notes
         =====
+
         The functions currently only supports the declaration of integer and
         real variables. Other data types are still under development.
 
@@ -229,6 +193,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
         ======
 
         NotImplementedError() when called for unsupported data types
+
         """
         if isinstance(node.type, asr.Integer):
             var_type = IntBaseType(String('integer'))
@@ -246,7 +211,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
                 type = var_type,
                 value = value
             )
-            self.py_ast.append(new_node)
+            self._py_ast.append(new_node)
 
     def visit_Sequence(self, seq):
         """Visitor Function for code sequence
@@ -259,7 +224,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
             for node in seq:
                 expr = call_visitor(node)
                 for elem in expr:
-                    self.py_ast.append(elem)
+                    self._py_ast.append(elem)
 
 
     def visit_Num(self, node):
@@ -267,10 +232,10 @@ class ASR2PyVisitor(asr.ASTVisitor):
 
         This function is currently under development and will be updated
         with improvements in the LFortran ASR
+
         """
         #TODO:Numbers when the LFortran ASR is updated
-        #py_ast.append(Num(n=node.n))
-        #fix_missing_locations(self.py_ast)
+        #self._py_ast.append(Integer(node.n))
         pass
 
     def visit_Function(self, node):
@@ -285,6 +250,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
 
         This function also the call_visior_function to parse the contents of
         the function body
+
         """
         # TODO: Return statement, variable declaration
         fn_args =[]
@@ -327,11 +293,11 @@ class ASR2PyVisitor(asr.ASTVisitor):
                     parameters = fn_args,
                     body = fn_body
                 )
-        self.py_ast.append(new_node)
+        self._py_ast.append(new_node)
 
     def ret_ast(self):
-        """Returns the AST"""
-        return self.py_ast
+        """Returns the AST nodes"""
+        return self._py_ast
 
 def call_visitor(fort_node):
     """Calls the AST Visitor on the Module
@@ -371,6 +337,7 @@ def src_to_sympy(src):
 
     py_src : string
         A string with the python source code compatible with SymPy
+
     """
     a_ast = src_to_ast(src,translation_unit=False)
     a = ast_to_asr(a_ast)

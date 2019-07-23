@@ -16,6 +16,7 @@ class SymPyExpression(Basic):
 
     Examples
     ========
+
     >>> src = '''\
     ... integer function f(a,b)
     ... integer, intent(in) :: a, b
@@ -30,17 +31,17 @@ class SymPyExpression(Basic):
     """
     def __init__(self, source_code = None, mode = None):
         """Constructor for SymPyExpression class"""
-        super(SymPyExpressions, self).__init__()
+        super(SymPyExpression, self).__init__()
         if mode == 'f' or mode == 'F':
             if source_code:
                 self._expr = src_to_sympy(source_code)
             else:
                 self._expr = []
-        elif mode == 'c'or mode == 'C':
-            if source_code:
-                self._expr = src_to_c(source_code)
-            else:
-                self._expr = []
+        #elif mode == 'c'or mode == 'C':
+            #if source_code:
+            #    self._expr = src_to_c(source_code)
+            #else:
+                #self._expr = []
         else:
             self._expr = []
 
@@ -72,8 +73,8 @@ class SymPyExpression(Basic):
         """
         if mode.lower() == 'f':
             self._expr = src_to_sympy(src_code)
-        elif mode.lower() == 'c':
-            self._expr = src_to_c(src_code)
+        #elif mode.lower() == 'c':
+        #    self._expr = src_to_c(src_code)
         else:
             raise NotImplementedError("The langauge parser has not been implemented. Invalid Input!")
 
@@ -97,3 +98,7 @@ class SymPyExpression(Basic):
         for iter in self._expr:
             self._fcode.append(fcode(iter))
         return self._fcode
+
+    def return_expr(self):
+        """Returns the expression list"""
+        return self._expr
