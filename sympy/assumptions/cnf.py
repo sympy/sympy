@@ -4,7 +4,7 @@ only and should not be used anywhere else as these don't posses the
 signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
-from itertools import combinations, product, zip_longest
+from itertools import combinations, product
 from sympy import S
 from sympy.logic.boolalg import BooleanFunction, Or, And, Not
 
@@ -181,10 +181,13 @@ def to_NNF(expr):
 
     if klass == 'Equivalent':
         cnfs = []
-        for a, b in zip_longest(expr.args, expr.args[1:], fillvalue=expr.args[0]):
+        for a, b in zip(expr.args, expr.args[1:]):
             a = to_NNF(a)
             b = to_NNF(b)
             cnfs.append(OR(~a, b))
+        a = to_NNF(expr.args[-1])
+        b = to_NNF(expr.args[0])
+        cnfs.append(OR(~a, b))
         return AND(*cnfs)
 
     if klass == 'ITE':
