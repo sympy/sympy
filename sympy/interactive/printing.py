@@ -53,6 +53,22 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     preamble = preamble % (fontsize, addpackages)
 
+    # Guess best font color if none was given based on the ip.colors string.
+    # From the IPython documentation:
+    #   It has four case-insensitive values: 'nocolor', 'neutral', 'linux',
+    #   'lightbg'. The default is neutral, which should be legible on either
+    #   dark or light terminal backgrounds. linux is optimised for dark
+    #   backgrounds and lightbg for light ones.
+    if forecolor.lower() == 'auto':
+        color = ip.colors.lower()
+        if color.lower() == 'lightbg':
+            forecolor = 'Black'
+        elif color.lower() == 'linux':
+            forecolor = 'White'
+        else:
+            # No idea, go with gray.
+            forecolor = 'Gray'
+
     imagesize = 'tight'
     offset = "0cm,0cm"
     resolution = round(150*scale)
@@ -319,7 +335,7 @@ NO_GLOBAL = False
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
-                  no_global=False, ip=None, euler=False, forecolor='Black',
+                  no_global=False, ip=None, euler=False, forecolor='Auto',
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='plain', print_builtin=True,
                   str_printer=None, pretty_printer=None,
@@ -372,8 +388,10 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     euler: boolean, optional, default=False
         Loads the euler package in the LaTeX preamble for handwritten style
         fonts (http://www.ctan.org/pkg/euler).
-    forecolor: string, optional, default='Black'
-        DVI setting for foreground color.
+    forecolor: string, optional, default='Auto'
+        DVI setting for foreground color. 'Auto' means that either 'Black' or
+        'White' will be selected based on a guess of the IPython terminal color
+        setting.
     backcolor: string, optional, default='Transparent'
         DVI setting for background color.
     fontsize: string, optional, default='10pt'
