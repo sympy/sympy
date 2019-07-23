@@ -1448,7 +1448,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     cnf_ = CNF.to_CNF(known_facts)
     c = LINE.join([str(a) for a in cnf.args])
 
-    p = LINE.join(sorted(['frozenset((' + ', '.join(str(lit) for lit in sorted(clause)) +'))' for clause in cnf_.clauses]))
+    p = LINE.join(sorted(['frozenset((' + ', '.join(str(lit) for lit in sorted(clause, key=str)) +'))' for clause in cnf_.clauses]))
     mapping = single_fact_lookup(known_facts_keys, cnf)
     items = sorted(mapping.items(), key=str)
     keys = [str(i[0]) for i in items]
