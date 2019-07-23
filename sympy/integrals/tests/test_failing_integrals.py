@@ -1,13 +1,17 @@
 # A collection of failing integrals from the issues.
 
 from sympy import (
-    integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos,
-    tan, S, log, gamma, sinh, sec, zeta, acos, atan, sech, csch
+    integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos, sympify, Piecewise,
+    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, sstr
 )
 
 from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 
-from sympy.abc import x, k, c, y, R, b, h, a, m, z
+from sympy.abc import x, k, c, y, b, h, a, m, z, n, t
+
+
+def NS(e, n=15, **options):
+    return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
 
 @SKIP("Too slow for @slow")
@@ -38,6 +42,14 @@ def test_issue_4511():
 
 
 @XFAIL
+def test_integrate_DiracDelta_fails():
+    # issue 6427
+    assert integrate(integrate(integrate(
+        DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == S(1)/2
+
+
+@XFAIL
+@slow
 def test_issue_4525():
     # Warning: takes a long time
     assert not integrate((x**m * (1 - x)**n * (a + b*x + c*x**2))/(1 + x**2), (x, 0, 1)).has(Integral)
@@ -229,6 +241,8 @@ def test_issue_9101():
 
 
 @XFAIL
+@slow
+@SKIP("Same as test_W3")
 def test_issue_7161():
     assert not integrate(sqrt(x + 1/x - 2), (x, 0, 1)).has(Integral)
 
@@ -246,3 +260,12 @@ def test_issue_7147():
 @XFAIL
 def test_issue_7109():
     assert not integrate(sqrt(a**2/(a**2 - x**2)), x).has(Integral)
+
+
+@XFAIL
+def test_integrate_Piecewise_rational_over_reals():
+    f = Piecewise(
+        (0,                                              t - 478.515625*pi <  0),
+        (13.2075145209219*pi/(0.000871222*t + 0.995)**2, t - 478.515625*pi >= 0))
+
+    assert integrate(f, (t, 0, oo)) == 15235.9375*pi

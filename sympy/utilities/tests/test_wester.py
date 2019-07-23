@@ -1014,7 +1014,7 @@ def test_M27():
     b = symbols('b', real=True)
     with assuming(Q.is_true(sin(cos(1/E**2) + 1) + b > 0)):
         # TODO: Replace solve with solveset
-        solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/e**2))**R(3/2), b + sin(1 + cos(1/e**2))**R(3/2)]
+        solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/E**2))**R(3/2), b + sin(1 + cos(1/E**2))**R(3/2)]
 
 
 @XFAIL
@@ -2402,6 +2402,7 @@ def test_W2():
 
 
 @XFAIL
+@slow
 def test_W3():
     # integral is not  calculated
     # https://github.com/sympy/sympy/issues/7161
@@ -2409,12 +2410,14 @@ def test_W3():
 
 
 @XFAIL
+@slow
 def test_W4():
     # integral is not  calculated
     assert integrate(sqrt(x + 1/x - 2), (x, 1, 2)) == -2*sqrt(2)/3 + S(4)/3
 
 
 @XFAIL
+@slow
 def test_W5():
     # integral is not  calculated
     assert integrate(sqrt(x + 1/x - 2), (x, 0, 2)) == -2*sqrt(2)/3 + S(8)/3

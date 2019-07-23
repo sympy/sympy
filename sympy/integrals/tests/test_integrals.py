@@ -14,12 +14,16 @@ from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
-from sympy.utilities.pytest import XFAIL, raises, slow, skip, ON_TRAVIS
+from sympy.utilities.pytest import raises, slow, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically
 
 x, y, a, t, x_1, x_2, z, s, b = symbols('x y a t x_1 x_2 z s b')
 n = Symbol('n', integer=True)
 f = Function('f')
+
+
+def NS(e, n=15, **options):
+    return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
 
 def test_principal_value():
@@ -449,9 +453,6 @@ def test_issue_4052():
     assert integrate(sin(acos(x)), x) == f
 
 
-def NS(e, n=15, **options):
-    return sstr(sympify(e).evalf(n, **options), full_prec=True)
-
 
 @slow
 def test_evalf_integrals():
@@ -520,14 +521,15 @@ def test_evalf_issue_939():
         integrate(1/(x**5 + 1), (x, 2, 4)), chop=True) == '0.0144361088886740'
 
 
-@XFAIL
-def test_failing_integrals():
-    #---
-    # Double integrals not implemented
-    assert NS(Integral(
-        sqrt(x) + x*y, (x, 1, 2), (y, -1, 1)), 15) == '2.43790283299492'
+def test_double_previously_failing_integrals():
+    # Double integrals not implemented <- Sure it is!
+    res = integrate(sqrt(x) + x*y, (x, 1, 2), (y, -1, 1))
+    # Old numerical test
+    assert NS(res, 15) == '2.43790283299492'
+    # Symbolic test
+    assert res == -S(4)/3 + 8*sqrt(2)/3
     # double integral + zero detection
-    assert NS(Integral(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0.0'
+    assert integrate(sin(x + x*y), (x, -1, 1), (y, -1, 1)) == S(0)
 
 
 def test_integrate_SingularityFunction():
@@ -576,13 +578,6 @@ def test_integrate_DiracDelta():
         1/sqrt(101*pi)
 
 
-@XFAIL
-def test_integrate_DiracDelta_fails():
-    # issue 6427
-    assert integrate(integrate(integrate(
-        DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == S(1)/2
-
-
 def test_integrate_returns_piecewise():
     assert integrate(x**y, x) == Piecewise(
         (x**(y + 1)/(y + 1), Ne(y, -1)), (log(x), True))
@@ -610,6 +605,7 @@ def test_integrate_returns_piecewise():
         (-x*cos(n*x)/n + sin(n*x)/n**2, Ne(n, 0)), (0, True))
     assert integrate(exp(x*y), (x, 0, z)) == Piecewise(
         (exp(y*z)/y - 1/y, (y > -oo) & (y < oo) & Ne(y, 0)), (z, True))
+
 
 def test_integrate_max_min():
     x = symbols('x', real=True)
@@ -1026,12 +1022,12 @@ def test_issue_4517():
 
 def test_issue_4527():
     k, m = symbols('k m', integer=True)
-    ans = integrate(sin(k*x)*sin(m*x), (x, 0, pi)
-            ).simplify() == Piecewise(
-        (0, Eq(k, 0) | Eq(m, 0)),
-        (-pi/2, Eq(k, -m)),
-        (pi/2, Eq(k, m)),
-        (0, True))
+    #ans = integrate(sin(k*x)*sin(m*x), (x, 0, pi)
+    #        ).simplify() == Piecewise(
+    #    (0, Eq(k, 0) | Eq(m, 0)),
+    #    (-pi/2, Eq(k, -m)),
+    #    (pi/2, Eq(k, m)),
+    #    (0, True))
     assert integrate(sin(k*x)*sin(m*x), (x,)) == Piecewise(
         (0, And(Eq(k, 0), Eq(m, 0))),
         (-x*sin(m*x)**2/2 - x*cos(m*x)**2/2 + sin(m*x)*cos(m*x)/(2*m), Eq(k, -m)),
@@ -1255,14 +1251,6 @@ def test_issue_6828():
     g = integrate(f, x).diff(x)
     assert verify_numerically(f, g, tol=1e-12)
 
-@XFAIL
-def test_integrate_Piecewise_rational_over_reals():
-    f = Piecewise(
-        (0,                                              t - 478.515625*pi <  0),
-        (13.2075145209219*pi/(0.000871222*t + 0.995)**2, t - 478.515625*pi >= 0))
-
-    assert integrate(f, (t, 0, oo)) == 15235.9375*pi
-
 
 def test_issue_4803():
     x_max = Symbol("x_max")
@@ -1280,6 +1268,7 @@ def test_issue_4492():
             (8*sqrt(x**2 - 5)), 1 < Abs(x**2)/5),
         ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
             (8*sqrt(-x**2 + 5)), True))
+
 
 def test_issue_2708():
     # This test needs to use an integration function that can
@@ -1366,6 +1355,7 @@ def test_issue_11856():
     assert integrate(sinc(pi*t), t) == Si(pi*t)/pi
 
 
+@slow
 def test_issue_11876():
     assert integrate(sqrt(log(1/x)), (x, 0, 1)) == sqrt(pi)/2
 
@@ -1444,9 +1434,15 @@ def test_issue_14877():
     assert integrate(f, x) == \
         -exp(2*x**2 - x*exp(x**2) + 1)/(x*exp(3*x**2) - exp(2*x**2))
 
+
 def test_issue_14782():
     f = sqrt(-x**2 + 1)*(-x**2 + x)
     assert integrate(f, [x, -1, 1]) == - pi / 8
+
+
+@slow
+def test_issue_14782_slow():
+    f = sqrt(-x**2 + 1)*(-x**2 + x)
     assert integrate(f, [x, 0, 1]) == S(1) / 3 - pi / 16
 
 
@@ -1525,9 +1521,11 @@ def test_issue_15509():
             (-x_1*cos(b) + x_2*cos(b), True))
 
 @slow
-def test_issue_4311():
+def test_issue_4311_slow():
     x = symbols('x')
     assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)
+
+def test_issue_4311():
     x = symbols('x', real=True)
     assert integrate(x*abs(9-x**2), x) == Piecewise(
         (x**4/4 - 9*x**2/2, x <= -3),
