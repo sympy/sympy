@@ -1213,7 +1213,7 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
         return expr.func(*args)
 
 
-def _extract_all_facts(expr, symbol, check_reversed_rel=True):
+def _extract_all_facts(expr, symbol):
     facts = []
     if isinstance(symbol, Relational):
         symbols = (symbol, symbol.reversed)
@@ -1447,7 +1447,8 @@ def compute_known_facts(known_facts, known_facts_keys):
     cnf = to_cnf(known_facts)
     cnf_ = CNF.to_CNF(known_facts)
     c = LINE.join([str(a) for a in cnf.args])
-    p = LINE.join([str(clause) for clause in cnf_.clauses])
+
+    p = LINE.join(sorted(['frozenset((' + ', '.join(str(lit) for lit in sorted(clause)) +'))' for clause in cnf_.clauses]))
     mapping = single_fact_lookup(known_facts_keys, cnf)
     items = sorted(mapping.items(), key=str)
     keys = [str(i[0]) for i in items]

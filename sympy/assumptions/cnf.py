@@ -1,5 +1,10 @@
-from itertools import combinations, product
-
+"""
+The classes used here are for the internal use of assumptions system
+only and should not be used anywhere else as these don't posses the
+signatures common to SymPy objects. For general use of logic constructs
+please refer to sympy.logic classes And, Or, Not, etc.
+"""
+from itertools import combinations, product, zip_longest
 from sympy import S
 from sympy.logic.boolalg import BooleanFunction, Or, And, Not
 
@@ -43,7 +48,7 @@ class Literal(object):
         return Literal(self.lit, is_not=is_not)
 
     def __str__(self):
-        return '%s( %s, %s)' % (type(self).__name__, self.lit, self.is_Not)
+        return '%s(%s, %s)' % (type(self).__name__, self.lit, self.is_Not)
 
     __repr__ = __str__
 
@@ -85,7 +90,7 @@ class OR(object):
         return AND(*[~arg for arg in self._args])
 
     def __hash__(self):
-        return hash((type(self).__name__, ) + tuple(self.args))
+        return hash((type(self).__name__,) + tuple(self.args))
 
     def __eq__(self, other):
         return self.args == other.args
@@ -112,7 +117,7 @@ class AND(object):
         return sorted(self._args, key=literal_sort_key)
 
     def __hash__(self):
-        return hash((type(self).__name__, ) + tuple(self.args))
+        return hash((type(self).__name__,) + tuple(self.args))
 
     def __eq__(self, other):
         return self.args == other.args
@@ -127,7 +132,7 @@ class AND(object):
 def to_NNF(expr):
     """
     Generates the Negation Normal Form of any boolean expression in terms
-    of AND , OR and Literal objects.
+    of AND, OR, and Literal objects.
     """
     if not isinstance(expr, BooleanFunction):
         return Literal(expr)
@@ -176,13 +181,10 @@ def to_NNF(expr):
 
     if klass == 'Equivalent':
         cnfs = []
-        for a, b in zip(expr.args, expr.args[1:]):
+        for a, b in zip_longest(expr.args, expr.args[1:], fillvalue=expr.args[0]):
             a = to_NNF(a)
             b = to_NNF(b)
             cnfs.append(OR(~a, b))
-        a = to_NNF(expr.args[-1])
-        b = to_NNF(expr.args[0])
-        cnfs.append(OR(~a, b))
         return AND(*cnfs)
 
     if klass == 'ITE':
