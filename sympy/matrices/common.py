@@ -2250,14 +2250,14 @@ class MatrixArithmetic(MatrixRequired):
             # computation by recursion.
             elif a.rows == 2 and exp > 100000 and jordan_pow is not None:
                 try:
-                    return jordan_pow(exp)
+                    return jordan_pow(exp).qsimp()
                 except MatrixError:
                     pass
-            return a._eval_pow_by_recursion(exp)
+            return a._eval_pow_by_recursion(exp).qsimp()
 
         if jordan_pow:
             try:
-                return jordan_pow(exp)
+                return jordan_pow(exp).qsimp()
             except NonInvertibleMatrixError:
                 # Raised by jordan_pow on zero determinant matrix unless exp is
                 # definitely known to be a non-negative integer.

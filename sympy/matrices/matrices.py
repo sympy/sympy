@@ -942,6 +942,64 @@ class MatrixReductions(MatrixDeterminant):
             ret = (ret, pivot_cols)
         return ret
 
+    from sympy.core.function import count_ops
+    def qsimp(self, ratio=1.7, measure=count_ops):
+        """A quick simplify function to prevent expression blowup during operations."""
+
+        from sympy.core import Add, Mul, Pow
+        from sympy.functions.elementary.exponential import ExpBase
+        from sympy.polys import together
+        from sympy.simplify.radsimp import radsimp, fraction, _mexpand
+        from sympy.simplify.powsimp import powsimp
+        from sympy.simplify.simplify import signsimp, bottom_up
+        from sympy.utilities.iterables import has_variety
+
+        def shorter(*choices):
+            '''Return the choice that has the fewest ops. In case of a tie,
+            the expression listed first is selected.'''
+            if not has_variety(choices):
+                return choices[0]
+            return min(choices, key=measure)
+
+        l = len(self)
+        e = [None]*l
+
+        for i in range (l):
+            expr = signsimp(self[i])
+
+            expr = bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
+            expr = Mul(*powsimp(expr).as_content_primitive())
+            _e = cancel(expr)
+            expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
+            expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
+
+            if ratio is S.Infinity:
+                expr = expr2
+            else:
+                expr = shorter(expr2, expr1, expr)
+            if not isinstance(expr, Basic):  # XXX: temporary hack
+                return expr
+
+            if isinstance(expr, (Add, Mul, Pow, ExpBase)):
+                original_expr = expr
+                numer, denom = expr.as_numer_denom()
+                if denom.is_Add:
+                    n, d = fraction(radsimp(1/denom, symbolic=False, max_terms=1))
+                    if n is not S.One:
+                        expr = (numer*n).expand()/d
+
+                if expr.could_extract_minus_sign():
+                    n, d = fraction(expr)
+                    if d != 0:
+                        expr = signsimp(-n/(-d))
+
+                if measure(expr) > ratio*measure(original_expr):
+                    expr = original_expr
+
+            e[i] = expr
+
+        return self._new(self.rows, self.cols, e)
+
 
 class MatrixSubspaces(MatrixReductions):
     """Provides methods relating to the fundamental subspaces
