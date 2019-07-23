@@ -2111,7 +2111,7 @@ class MatrixArithmetic(MatrixRequired):
         if num % 2 == 1:
             return self * self._eval_pow_by_recursion(num - 1)
         ret = self._eval_pow_by_recursion(num // 2)
-        return ret * ret
+        return (ret * ret).qsimp()
 
     def _eval_scalar_mul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other)
@@ -2250,14 +2250,16 @@ class MatrixArithmetic(MatrixRequired):
             # computation by recursion.
             elif a.rows == 2 and exp > 100000 and jordan_pow is not None:
                 try:
-                    return jordan_pow(exp).qsimp()
+                    return jordan_pow(exp)
                 except MatrixError:
                     pass
-            return a._eval_pow_by_recursion(exp).qsimp()
+            # return a._eval_pow_by_recursion(exp).qsimp()
+            a = a._eval_pow_by_recursion(exp)
+            return a
 
         if jordan_pow:
             try:
-                return jordan_pow(exp).qsimp()
+                return jordan_pow(exp)
             except NonInvertibleMatrixError:
                 # Raised by jordan_pow on zero determinant matrix unless exp is
                 # definitely known to be a non-negative integer.
