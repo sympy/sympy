@@ -27,9 +27,8 @@ class SymPyExpression(object):
     >>> a.convert_to_python()
     ['def f(a, b):\n    f = 0\n    r = 0\n    return f']
 
-
     """
-    
+
     def __init__(self, source_code = None, mode = None):
         """Constructor for SymPyExpression class"""
         super(SymPyExpression, self).__init__()

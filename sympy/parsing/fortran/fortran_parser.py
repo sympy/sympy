@@ -59,13 +59,13 @@ class ASR2PyVisitor(asr.ASTVisitor):
     Visitor Class for LFortran ASR
 
     It is a Visitor class derived from asr.ASRVisitor which visits all the nodes
-    of the LFortran ASR and createds correspondiong AST node for each
+    of the LFortran ASR and creates corresponding AST node for each
     ASR node
 
     """
 
     def __init__(self):
-        """Initialize the parser"""
+        """Initialize the Parser"""
         self._py_ast = []
 
     def visit_TranslationUnit(self, node):
@@ -89,7 +89,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
         =====
 
         The function currently only supports variable assignment and binary
-        operation assignments of varying multitudes. Any type of numbers or arrays are not supported.
+        operation assignments of varying multitudes. Any type of numberS or array is not supported.
 
         Raises
         ======
@@ -127,11 +127,10 @@ class ASR2PyVisitor(asr.ASTVisitor):
         """Visitor Function for Binary Operations
 
         Visits each binary operation present in the LFortran ASR like addition,
-        substraction, multiplication,division and creates the corresponding operation node in SymPy's AST
+        subtraction, multiplication, division and creates the corresponding operation node in SymPy's AST
 
         In case of more than one binary operations, the function calls the
-        call_visitor() function on the child nodes pertaining to the
-        binary operations recursively until all the operations have been processed.
+        call_visitor() function on the child nodes of the binary operations recursively until all the operations have been processed.
 
         Notes
         =====
@@ -188,7 +187,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
         Notes
         =====
 
-        The functions currently only supports the declaration of integer and
+        The functions currently only support declaration of integer and
         real variables. Other data types are still under development.
 
         Raises
@@ -221,12 +220,9 @@ class ASR2PyVisitor(asr.ASTVisitor):
         Visits a code sequence/ block and calls the visitor function on all the
         children of the code block to create corresponding code in python
         """
-        py_seq = []
         if seq is not None:
             for node in seq:
-                expr = call_visitor(node)
-                for elem in expr:
-                    self._py_ast.append(elem)
+                self._py_ast.append(call_visitor(node))
 
     def visit_Num(self, node):
         """Visitor Function for Numbers in ASR
@@ -246,7 +242,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
         function definition node in the Python AST with all the elements of the
         given function
 
-        The functions declares all the variables required as SymPy symbols in
+        The functions declare all the variables required as SymPy symbols in
         the function before the function definition
 
         This function also the call_visior_function to parse the contents of
@@ -304,7 +300,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
 def call_visitor(fort_node):
     """Calls the AST Visitor on the Module
 
-    Thsi function is used to call the AST visitor for a program or module
+    This function is used to call the AST visitor for a program or module
     It imports all the required modules and calls the visit() function
     on the given node
 
@@ -312,7 +308,7 @@ def call_visitor(fort_node):
     ==========
 
     fort_node : <lfortran.asr.asr.Assignment object> or <lfortran.asr.asr.BinOp object>
-        The node for operation that the AST visitor is to be called upon
+        Node for the operation that the AST visitor is to be called upon
 
     Returns
     =======
