@@ -89,9 +89,11 @@ def test_arit0():
     e = 2**a**2
     assert e == 2**(a**2)
     e = -(1 + a)
-    assert e == -1 - a
+    assert e == -1 - a and e.is_Add
+    e = -1*(1 + a)
+    assert e.args == (-1, 1 + a)
     e = Rational(1, 2)*(1 + a)
-    assert e == Rational(1, 2) + a/2
+    assert e.args == (Rational(1, 2), 1 + a) and e.is_Mul
 
 
 def test_div():
@@ -216,7 +218,7 @@ def test_pow_E():
         r, i = b.as_real_imag()
         if i:
             break
-    assert verify_numerically(b**(1/(log(-b) + sign(i)*I*pi).n()), S.Exp1)
+    assert verify_numerically(b**(1/(log(-b) + sign(i)*I*pi).n()), S.Exp1), (b, i)
 
 
 def test_pow_issue_3516():
@@ -1499,9 +1501,8 @@ def test_Add_as_content_primitive():
     # the coefficient may sort to a position other than 0
     p = 3 + x + y
     assert (2*p).expand().as_content_primitive() == (2, p)
-    assert (2.0*p).expand().as_content_primitive() == (1, 2.*p)
-    p *= -1
-    assert (2*p).expand().as_content_primitive() == (2, p)
+    assert (2.0*p).expand().as_content_primitive() == (1, (2.*p).x2())
+    assert (2*-p).expand().as_content_primitive() == (2, -p)
 
 
 def test_Mul_as_content_primitive():
@@ -1536,7 +1537,7 @@ def test_issue_5919():
     assert (x/(y*(1 + y))).expand() == x/(y**2 + y)
 
 
-def test_Mod():
+def test_Modarit():
     assert Mod(x, 1).func is Mod
     assert pi % pi == S.Zero
     assert Mod(5, 3) == 2
@@ -1565,7 +1566,7 @@ def test_Mod():
 
     # Float handling
     point3 = Float(3.3) % 1
-    assert (x - 3.3) % 1 == Mod(1.*x + 1 - point3, 1)
+    assert (x - 3.3) % 1 == Mod(1.0*(x + 1 - point3), 1)
     assert Mod(-3.3, 1) == 1 - point3
     assert Mod(0.7, 1) == Float(0.7)
     e = Mod(1.3, 1)
@@ -1633,7 +1634,7 @@ def test_Mod():
     assert (x + y) % x == y % x
     assert (x + y + 2) % x == (y + 2) % x
     assert (a + 3*x + 1) % (2*x) == Mod(a + x + 1, 2*x)
-    assert (12*x + 18*y) % (3*x) == 3*Mod(6*y, x)
+    assert (12*x + 18*y) % (3*x) == 3*Mod(2*(2*x + 3*y), x)
 
     # gcd extraction
     assert (-3*x) % (-2*y) == -Mod(3*x, 2*y)

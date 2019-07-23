@@ -101,13 +101,22 @@ class Add(Expr, AssocOp):
         >>> a - a
         0
 
-        Any term in a negative term will combine with a matching
-        isolated term:
+        A negated term will have the args flattened:
 
-        >>> 2*x + 2*y - (w - x + 2*y + z)
+        >>> z - (x + y)
+        -x - y + z
+
+        To keep this from being flattened, explicitly
+        multiply by -1:
+
+        >>> z + -1*(x + y)
+        z - (x + y)
+
+        Args within a negated sum will cancel with args
+        that are not nested:
+
+        >>> 2*x + 2*y + -1*(w - x + 2*y + z)
         3*x - (w + z)
-        >>> x + 3 - (x + 2)
-        1
 
         If a term is 2-arg Mul with coefficient other than -1,
         nothing will happen to it:
@@ -444,9 +453,9 @@ class Add(Expr, AssocOp):
                             # principle value
                             (D + r)/abs(i) + sign(i)*S.ImaginaryUnit)**e.p)
                 elif e == -1:
-                    return _unevaluated_Mul(
+                    return factor_terms(_unevaluated_Mul(
                         r - i*S.ImaginaryUnit,
-                        1/(r**2 + i**2))
+                        1/(r**2 + i**2)).x2(), sign=False)
         elif e.is_Number and abs(e) != 1:
             # handle the Float case: (2.0 + 4*x)**e -> 2.**e*(1 + 2.0*x)**e
             c, m = zip(*[i.as_coeff_Mul() for i in self.args])
@@ -815,7 +824,7 @@ class Add(Expr, AssocOp):
         coeff_old, terms_old = old.as_coeff_Add()
 
         if coeff_self.is_Rational and coeff_old.is_Rational:
-            if terms_self == terms_old:   # (2 + a).subs( 3 + a, y) -> -1 + y
+            if terms_self == terms_old:   # (2 + a).subs(3 + a, y) -> -1 + y
                 return self.func(new, coeff_self, -coeff_old)
             if terms_self == -terms_old:  # (2 + a).subs(-3 - a, y) -> -1 - y
                 return self.func(-new, coeff_self, coeff_old)
@@ -824,7 +833,7 @@ class Add(Expr, AssocOp):
                 or coeff_self == coeff_old:
             args_old, args_self = self.func.make_args(
                 terms_old), self.func.make_args(terms_self)
-            if len(args_old) < len(args_self):  # (a+b+c).subs(b+c,x) -> a+x
+            if len(args_old) < len(args_self):  # (a+b+c).subs(b+c, x) -> a+x
                 self_set = set(args_self)
                 old_set = set(args_old)
 
@@ -834,7 +843,7 @@ class Add(Expr, AssocOp):
                                *[s._subs(old, new) for s in ret_set])
 
                 args_old = self.func.make_args(
-                    -terms_old)     # (a+b+c+d).subs(-b-c,x) -> a-x+d
+                    -terms_old)     # (a+b+c+d).subs(-b-c, x) -> a-x+d
                 old_set = set(args_old)
                 if old_set < self_set:
                     ret_set = self_set - old_set
@@ -953,7 +962,8 @@ class Add(Expr, AssocOp):
         return self.func(*[t.transpose() for t in self.args])
 
     def __neg__(self):
-        return self*(-1)
+        args = [-i for i in self.args]
+        return _unevaluated_Add(*args)
 
     def _sage_(self):
         s = 0
@@ -1111,6 +1121,8 @@ class Add(Expr, AssocOp):
                     args = [ai/G for ai in args]
                     prim = G*prim.func(*args)
 
+        if not clear:
+            prim = prim.x2()
         return con, prim
 
     @property

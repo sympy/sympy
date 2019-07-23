@@ -43,30 +43,3 @@ def evaluate(x):
     global_evaluate[0] = x
     yield
     global_evaluate[0] = old
-
-
-@contextmanager
-def distribute(x):
-    """ Control automatic distribution of Number over Add
-
-    This context manager controls whether or not Mul distribute Number over
-    Add. Plan is to avoid distributing Number over Add in all of sympy. Once
-    that is done, this contextmanager will be removed.
-
-    Examples
-    ========
-
-    >>> from sympy.abc import x
-    >>> from sympy.core.evaluate import distribute
-    >>> print(2*(x + 1))
-    2*x + 2
-    >>> with distribute(False):
-    ...     print(2*(x + 1))
-    2*(x + 1)
-    """
-
-    old = global_distribute[0]
-
-    global_distribute[0] = x
-    yield
-    global_distribute[0] = old

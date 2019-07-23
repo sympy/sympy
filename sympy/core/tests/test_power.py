@@ -215,7 +215,8 @@ def test_power_rewrite_exp():
     assert expr.rewrite(exp).expand() == \
         169*exp(5*I*log(13)/2)*exp(4*I*atan(S(3)/2))*exp(-5*atan(S(3)/2))
 
-    assert ((6 + 7*I)**5).rewrite(exp) == 7225*sqrt(85)*exp(5*I*atan(S(7)/6))
+    assert ((6 + 7*I)**5).rewrite(exp) == \
+        exp(5*(log(sqrt(85)) + I*atan(S(7)/6)))
 
     expr = 5**(6 + 7*I)
     assert expr.rewrite(exp) == exp((6 + 7*I)*log(5))
@@ -357,7 +358,7 @@ def test_issue_7638():
     p = symbols('p', positive=True)
     assert cbrt(p**2) == p**(2/S(3))
     assert NS(((0.2 + 0.7*I)**(0.7 + 1.0*I))**(0.5 - 0.1*I), 1) == '0.4 + 0.2*I'
-    assert sqrt(1/(1 + I)) == sqrt(1 - I)/sqrt(2)  # or 1/sqrt(1 + I)
+    assert sqrt(1/(1 + I)) == sqrt(2)*sqrt(1 - I)/2
     e = 1/(1 - sqrt(2))
     assert sqrt(e) == I/sqrt(-1 + sqrt(2))
     assert e**-S.Half == -I*sqrt(-1 + sqrt(2))
@@ -401,12 +402,12 @@ def test_better_sqrt():
     n = Symbol('n', integer=True, nonnegative=True)
     assert sqrt(3 + 4*I) == 2 + I
     assert sqrt(3 - 4*I) == 2 - I
-    assert sqrt(-3 - 4*I) == 1 - 2*I
-    assert sqrt(-3 + 4*I) == 1 + 2*I
-    assert sqrt(32 + 24*I) == 6 + 2*I
-    assert sqrt(32 - 24*I) == 6 - 2*I
-    assert sqrt(-32 - 24*I) == 2 - 6*I
-    assert sqrt(-32 + 24*I) == 2 + 6*I
+    assert sqrt(-3 - 4*I) == 2*(S(1)/2 - I)
+    assert sqrt(-3 + 4*I) == 2*(S(1)/2 + I)
+    assert sqrt(32 + 24*I) == 2*(3 + I)
+    assert sqrt(32 - 24*I) == 2*(3 - I)
+    assert sqrt(-32 - 24*I) == 6*(S(1)/3 - I)
+    assert sqrt(-32 + 24*I) == 6*(S(1)/3 + I)
 
     # triple (3, 4, 5):
     # parity of 3 matches parity of 5 and
@@ -415,7 +416,7 @@ def test_better_sqrt():
     # triple (8, 15, 17)
     # parity of 8 doesn't match parity of 17 but
     # den/2, 8/2, is a square
-    assert sqrt((8 + 15*I)/8) == (5 + 3*I)/4
+    assert sqrt((8 + 15*I)/8) == 3*(S(5)/3 + I)/4
     # handle the denominator
     assert sqrt((3 - 4*I)/25) == (2 - I)/5
     assert sqrt((3 - 4*I)/26) == (2 - I)/sqrt(26)
@@ -424,8 +425,8 @@ def test_better_sqrt():
     assert sqrt((3 + 4*I)/(3 - 4*I)) == (3 + 4*I)/5
     assert sqrt(2/(3 + 4*I)) == sqrt(2)/5*(2 - I)
     assert sqrt(n/(3 + 4*I)).subs(n, 2) == sqrt(2)/5*(2 - I)
-    assert sqrt(-2/(3 + 4*I)) == sqrt(2)/5*(1 + 2*I)
-    assert sqrt(-n/(3 + 4*I)).subs(n, 2) == sqrt(2)/5*(1 + 2*I)
+    assert sqrt(-2/(3 + 4*I)) == sqrt(2)*(1 + 2*I)/5
+    assert sqrt(-n/(3 + 4*I)).subs(n, 2) == 2*sqrt(2)*(S(1)/2 + I)/5
     # power
     assert sqrt(1/(3 + I*4)) == (2 - I)/5
     assert sqrt(1/(3 - I)) == sqrt(10)*sqrt(3 + I)/10
@@ -442,7 +443,7 @@ def test_better_sqrt():
     eq = sqrt(a)
     assert eq.args == (a, S.Half)
     assert expand_multinomial(eq) == sqrt((-117 + 44*I)*(3 + 4*I))/125
-    assert eq.expand() == (7 - 24*I)/125
+    assert eq.expand() == ((7 - 24*I)/125).x2()
 
     # issue 12775
     # pos im part

@@ -1051,7 +1051,7 @@ class Derivative(Expr):
 
         >>> e = sqrt((x + 1)**2 + x)
         >>> diff(e, (x, 5), simplify=False).count_ops()
-        136
+        37
         >>> diff(e, (x, 5)).count_ops()
         30
 
@@ -1804,22 +1804,24 @@ class Derivative(Expr):
         passing a symbol as a parameter:
 
         >>> f(x).diff(x).as_finite_difference(h)
-        -f(-h/2 + x)/h + f(h/2 + x)/h
+        (-f(-h/2 + x) + f(h/2 + x))/h
 
         We can also specify the discretized values to be used in a
         sequence:
 
         >>> f(x).diff(x).as_finite_difference([x, x+h, x+2*h])
-        -3*f(x)/(2*h) + 2*f(h + x)/h - f(2*h + x)/(2*h)
+        (-3*f(x)/2 + 2*f(h + x) - f(2*h + x)/2)/h
 
         The algorithm is not restricted to use equidistant spacing, nor
         do we need to make the approximation around ``x0``, but we can get
         an expression estimating the derivative at an offset:
 
         >>> e, sq2 = exp(1), sqrt(2)
-        >>> xl = [x-h, x+h, x+e*h]
-        >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
-        2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/...
+        >>> xl = [x - h, x + h, x + e*h]
+        >>> f(x).diff(x, 1).as_finite_difference(xl, x + h*sq2)
+        ((-E - 1 + 2*sqrt(2))*f(-h + x)/(2*(1 + E)) +
+        (-2*sqrt(2) - 1 + E)*f(h + x)/(2*(-1 + E)) +
+        2*sqrt(2)*f(E*h + x)/((-1 + E)*(1 + E)))/h
 
         Partial derivatives are also supported:
 
@@ -1845,7 +1847,8 @@ class Derivative(Expr):
 
         """
         from ..calculus.finite_diff import _as_finite_diff
-        return _as_finite_diff(self, points, x0, wrt)
+        from sympy.core.exprtools import factor_terms
+        return factor_terms(_as_finite_diff(self, points, x0, wrt).x2())
 
 
 class Lambda(Expr):
@@ -2715,7 +2718,7 @@ def expand_multinomial(expr, deep=True):
     >>> from sympy import symbols, expand_multinomial, exp
     >>> x, y = symbols('x y', positive=True)
     >>> expand_multinomial((x + exp(x + 1))**2)
-    x**2 + 2*x*exp(x + 1) + exp(2*x + 2)
+    x**2 + 2*x*exp(x + 1) + exp(2*(x + 1))
 
     """
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,

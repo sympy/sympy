@@ -980,7 +980,6 @@ class Basic(with_metaclass(ManagedProperties)):
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
-            kwargs['hack2'] = True
             m = Dummy()
             for old, new in sequence:
                 d = Dummy(commutative=new.is_commutative)
@@ -1087,22 +1086,7 @@ class Basic(with_metaclass(ManagedProperties)):
                     hit = True
                     args[i] = arg
             if hit:
-                rv = self.func(*args)
-                hack2 = hints.get('hack2', False)
-                if hack2 and self.is_Mul and not rv.is_Mul:  # 2-arg hack
-                    coeff = S.One
-                    nonnumber = []
-                    for i in args:
-                        if i.is_Number:
-                            coeff *= i
-                        else:
-                            nonnumber.append(i)
-                    nonnumber = self.func(*nonnumber)
-                    if coeff is S.One:
-                        return nonnumber
-                    else:
-                        return self.func(coeff, nonnumber, evaluate=False)
-                return rv
+                return self.func(*args)
             return self
 
         if _aresame(self, old):
@@ -1852,7 +1836,7 @@ class Atom(Basic):
         if self == expr:
             return repl_dict
 
-    def xreplace(self, rule, hack2=False):
+    def xreplace(self, rule):
         return rule.get(self, self)
 
     def doit(self, **hints):

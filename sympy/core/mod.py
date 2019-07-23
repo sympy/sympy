@@ -102,9 +102,9 @@ class Mod(Function):
                 # |qinner| < |q| and have same sign
                 return p
         elif isinstance(-p, cls):
-            qinner = (-p).args[1]
+            pinner, qinner = (-p).args
             if qinner % q == 0:
-                return cls(-(-p).args[0], q)
+                return cls(-pinner, q)
             elif (qinner*(q + qinner)).is_nonpositive:
                 # |qinner| < |q| and have different sign
                 return p

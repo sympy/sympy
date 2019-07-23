@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from .add import _unevaluated_Add, Add
+from .add import _unevaluated_Add, _addsort, Add
 from .basic import S
 from .compatibility import ordered
 from .expr import Expr
@@ -501,14 +501,14 @@ class Equality(Relational):
         >>> eq.rewrite(Add, evaluate=None).args
         (b, b, x, -x)
         >>> eq.rewrite(Add, evaluate=False).args
-        (b, x, b, -x)
+        (b, x, -x, b)
         """
         L, R = args
         evaluate = kwargs.get('evaluate', True)
         if evaluate:
             # allow cancellation of args
             return L - R
-        args = Add.make_args(L) + Add.make_args(-R)
+        args = Add.make_args(L) + tuple([-i for i in Add.make_args(R)])
         if evaluate is None:
             # no cancellation, but canonical
             return _unevaluated_Add(*args)

@@ -1011,6 +1011,9 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
 
     >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
     y*(x + 1)*(x + y + 1)
+    >>> gcd_terms(4*x*(y + 1) + x*(4*y + 3) - x*(4*y + 4) + y)
+    x*(4*y + 3) + y
+
     >>> gcd_terms(x/2 + 1)
     (x + 2)/2
     >>> gcd_terms(x/2 + 1, clear=False)
@@ -1073,11 +1076,11 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
             c, _coeff = coeff.as_coeff_Mul()
             if not c.is_Integer and not clear and numer.is_Add:
                 n, d = c.as_numer_denom()
-                _numer = numer/d
+                _numer = (numer/d).x2()
                 if any(a.as_coeff_Mul()[0].is_Integer
                         for a in _numer.args):
                     numer = _numer
-                    coeff = n*_coeff
+                    coeff = (n*_coeff).x2()
         return _keep_coeff(coeff, factors*numer/denom, clear=clear)
 
     if not isinstance(terms, Basic):

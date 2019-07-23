@@ -195,7 +195,8 @@ def test_gcd_terms():
     assert gcd_terms(Dict((x*(1 + y), 2), (x + x*y, y + x*y))) == \
         Dict({x*(y + 1): 2, x + x*y: y*(1 + x)})
 
-    assert gcd_terms((2*x + 2)**3 + (2*x + 2)**2) == 4*(x + 1)**2*(2*x + 3)
+    assert gcd_terms((2*x + 2)**3 + (2*x + 2)**2) == 4*(x + 1)**2*(
+        2*(x + 1) + 1)
 
     assert gcd_terms(0) == 0
     assert gcd_terms(1) == 1
@@ -211,7 +212,7 @@ def test_gcd_terms():
     a = alpha**2 - alpha*x**2 + alpha + x**3 - x*(alpha + 1)
     rep = (alpha, (1 + sqrt(5))/2 + alpha1*x + alpha2*x**2 + alpha3*x**3)
     s = (a/(x - alpha)).subs(*rep).series(x, 0, 1)
-    assert simplify(collect(s, x)) == -sqrt(5)/2 - S(3)/2 + O(x)
+    assert simplify(collect(s, x)).x2() == -sqrt(5)/2 - S(3)/2 + O(x)
 
     # issue 5917
     assert _gcd_terms([S.Zero, S.Zero]) == (0, 0, 1)

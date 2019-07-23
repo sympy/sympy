@@ -2242,7 +2242,7 @@ class Expr(Basic, EvalfMixin):
                     else:
                         xc = cs.extract_multiplicatively(c)
                     if xc is not None:
-                        return xc*ps  # rely on 2-arg Mul to restore Add
+                        return (xc*ps).x2()
                 return  # |c| != 1 can only be extracted from cs
             if c == ps:
                 return cs
@@ -2291,15 +2291,6 @@ class Expr(Basic, EvalfMixin):
         >>> (y*(x + 1)).extract_additively(x + 1)
         >>> ((x + 1)*(x + 2*y + 1) + 3).extract_additively(x + 1)
         (x + 1)*(x + 2*y) + 3
-
-        Sometimes auto-expansion will return a less simplified result
-        than desired; gcd_terms might be used in such cases:
-
-        >>> from sympy import gcd_terms
-        >>> (4*x*(y + 1) + y).extract_additively(x)
-        4*x*(y + 1) + x*(4*y + 3) - x*(4*y + 4) + y
-        >>> gcd_terms(_)
-        x*(4*y + 3) + y
 
         See Also
         ========
@@ -2359,7 +2350,7 @@ class Expr(Basic, EvalfMixin):
             return xa + xa2
 
         # whole term as a term factor
-        co = self.coeff(c)
+        co = self.coeff(c).x2()
         xa0 = (co.extract_additively(1) or 0)*c
         if xa0:
             diff = self - co*c
@@ -2368,7 +2359,7 @@ class Expr(Basic, EvalfMixin):
         coeffs = []
         for a in Add.make_args(c):
             ac, at = a.as_coeff_Mul()
-            co = self.coeff(at)
+            co = self.coeff(at).x2()
             if not co:
                 return None
             coc, cot = co.as_coeff_Add()
@@ -3251,6 +3242,46 @@ class Expr(Basic, EvalfMixin):
     # Relevant subclasses should override _eval_expand_hint() methods.  See
     # the docstring of expand() for more info.
 
+    def x2(self):
+        """
+        >>> from sympy.abc import x, y
+        >>> 2*x + 2*y - 2*(x + y)
+        2*x + 2*y - 2*(x + y)
+        >>> _.x2()
+        0
+        >>> ((x + 2)/3 - (x - 2)/3).x2()
+        4/3
+        """
+        from sympy.core.add import _unevaluated_Add
+        from sympy.simplify.radsimp import fraction
+        c, i = self.as_coeff_Mul()
+        if c is not S.One and i.is_Add:
+            return _unevaluated_Add(*[c*i for i in i.args])
+        s = self
+        muls = {}
+        for i in s.atoms(Mul):
+            if i == s:
+                continue
+            n, d = fraction(i)
+            x2 = n.x2()
+            if x2 != n:
+                muls[i] = (x2/d).x2()
+        s = s.subs(muls)
+        adds = {}
+        for i in s.atoms(Add):
+            D = i.as_coefficients_dict()
+            for k in list(D.keys()):
+                if k.is_Add:
+                    v = D.pop(k)
+                    for j in k.args:
+                        n, d = fraction(j)
+                        c, j = (v*n).as_coeff_Mul()
+                        D[(j/d).x2()] += c
+            ii = _unevaluated_Add(*[k*v for k, v in D.items()])
+            if ii != i:
+                adds[i] = ii
+        return s.xreplace(adds)
+
     def _eval_expand_complex(self, **hints):
         real, imag = self.as_real_imag(**hints)
         return real + S.ImaginaryUnit*imag
@@ -3276,7 +3307,16 @@ class Expr(Basic, EvalfMixin):
                 sargs.append(arg)
 
             if hit:
-                expr = expr.func(*sargs)
+                if isinstance(expr, Add):
+                    from sympy.core.add import _unevaluated_Add
+                    c = defaultdict(int)
+                    for a in sargs:
+                        for ai in Add.make_args(a):
+                            k, ai = ai.as_coeff_Mul()
+                            c[ai] += k
+                    expr = _unevaluated_Add(*[Mul(v, k) for k, v in c.items()])
+                else:
+                    expr = expr.func(*sargs)
 
         if hasattr(expr, hint):
             newexpr = getattr(expr, hint)(**hints)

@@ -432,7 +432,7 @@ def test_division():
     assert (1/x).subs(x, 0) == 1/S(0)
 
 
-def test_add():
+def test_addsubs():
     a, b, c, d, x, y, t = symbols('a b c d x y t')
 
     assert (a**2 - b - c).subs(a**2 - b, d) in [d - c, a**2 - b - c]
@@ -681,16 +681,6 @@ def test_2arg_hack():
     assert (2*(y + 1 + N)).subs(N, 0, hack2=True) == ans
 
 
-@XFAIL
-def test_mul2():
-    """When this fails, remove things labelled "2-arg hack"
-    1) remove special handling in the fallback of subs that
-    was added in the same commit as this test
-    2) remove the special handling in Mul.flatten
-    """
-    assert (2*(x + 1)).is_Mul
-
-
 def test_noncommutative_subs():
     x,y = symbols('x,y', commutative=False)
     assert (x*y*x).subs([(x, x*y), (y, x)], simultaneous=True) == (x*y*x**2*y)
@@ -703,7 +693,7 @@ def test_issue_2877():
     def r(a, b, c):
         return factor(a*x**2 + b*x + c)
     e = r(5.0/6, 10, 5)
-    assert nsimplify(e) == 5*x**2/6 + 10*x + 5
+    assert nsimplify(e) == 10*(x**2/12 + x + S(1)/2)
 
 
 def test_issue_5910():

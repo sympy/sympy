@@ -117,7 +117,7 @@ def test_add():
 def test_sub():
     assert h - l == h - x == 1
     assert l - h == x - h == 2
-    assert x - l == -(l - x) == x + 1
+    assert x - l == x + 1
 
 
 def test_pow():

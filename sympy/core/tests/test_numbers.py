@@ -1619,7 +1619,7 @@ def test_GoldenRatio_expand():
 
 def test_TribonacciConstant_expand():
         assert TribonacciConstant.expand(func=True) == \
-          (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
+          S(1)/3 + cbrt(19 - 3*sqrt(33))/3 + cbrt(19 + 3*sqrt(33))/3
 
 
 def test_as_content_primitive():

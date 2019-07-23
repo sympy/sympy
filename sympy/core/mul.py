@@ -104,31 +104,18 @@ class Mul(Expr, AssocOp):
             * In an expression like ``a*b*c``, python process this through sympy
               as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
 
-              -  Sometimes terms are not combined as one would like:
-                 {c.f. https://github.com/sympy/sympy/issues/4596}
-
-                >>> from sympy import Mul, sqrt
-                >>> from sympy.abc import x, y, z
-                >>> 2*(x + 1) # this is the 2-arg Mul behavior
-                2*x + 2
-                >>> y*(x + 1)*2
-                2*y*(x + 1)
-                >>> 2*(x + 1)*y # 2-arg result will be obtained first
-                y*(2*x + 2)
-                >>> Mul(2, x + 1, y) # all 3 args simultaneously processed
-                2*y*(x + 1)
-                >>> 2*((x + 1)*y) # parentheses can control this behavior
-                2*y*(x + 1)
-
-                Powers with compound bases may not find a single base to
+              - Powers with compound bases may not find a single base to
                 combine with unless all arguments are processed at once.
                 Post-processing may be necessary in such cases.
                 {c.f. https://github.com/sympy/sympy/issues/5728}
 
+                >>> from sympy import sqrt, Mul
+                >>> from sympy.abc import x, y, z
+
                 >>> a = sqrt(x*sqrt(y))
                 >>> a**3
                 (x*sqrt(y))**(3/2)
-                >>> Mul(a,a,a)
+                >>> Mul(a, a, a)
                 (x*sqrt(y))**(3/2)
                 >>> a*a*a
                 x*sqrt(y)*sqrt(x*sqrt(y))
@@ -632,7 +619,11 @@ class Mul(Expr, AssocOp):
         p = Pow(b, e, evaluate=False)
 
         if e.is_Rational or e.is_Float:
-            return p._eval_expand_power_base()
+            p = p._eval_expand_power_base()
+
+        if p.is_number:
+            from sympy.core.exprtools import factor_terms
+            p = factor_terms(p.x2(), sign=False)
 
         return p
 
@@ -820,7 +811,6 @@ class Mul(Expr, AssocOp):
 
         sums must be a list of instances of Basic.
         """
-
         L = len(sums)
         if L == 1:
             return sums[0].args
@@ -829,7 +819,7 @@ class Mul(Expr, AssocOp):
         right = Mul._expandsums(sums[L//2:])
 
         terms = [Mul(a, b) for a in left for b in right]
-        added = Add(*terms)
+        added = Add(*terms).x2()
         return Add.make_args(added)  # it may have collapsed down to one term
 
     def _eval_expand_mul(self, **hints):
@@ -870,7 +860,7 @@ class Mul(Expr, AssocOp):
                     if t.is_Mul and any(a.is_Add for a in t.args) and deep:
                         t = t._eval_expand_mul()
                     args.append(t)
-                return Add(*args)
+                return Add(*args).x2()
             else:
                 return plain
 
@@ -1774,7 +1764,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
                 c, t = i.as_coeff_Mul()
                 r = c/q
                 if r == int(r):
-                    return coeff*factors
+                    return (coeff*factors).x2()
         return Mul(coeff, factors, evaluate=False)
     elif factors.is_Mul:
         margs = list(factors.args)

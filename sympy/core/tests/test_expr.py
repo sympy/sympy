@@ -12,7 +12,7 @@ from sympy.core.compatibility import range, round, PY3
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, XFAIL, slow
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
@@ -1617,7 +1617,9 @@ def test_equals():
     p = expand(q**3)**Rational(1, 3)
     assert (p - q).equals(0)
 
-    # issue 6829
+
+@slow
+def test_issue_6829():
     # eq = q*x + q/4 + x**4 + x**3 + 2*x**2 - S(1)/3
     # z = eq.subs(x, solve(eq, x)[0])
     q = symbols('q')
@@ -1867,7 +1869,7 @@ def test_issue_10755():
 
 def test_issue_11877():
     x = symbols('x')
-    assert integrate(log(S(1)/2 - x), (x, 0, S(1)/2)) == -S(1)/2 -log(2)/2
+    assert integrate(log(S(1)/2 - x), (x, 0, S(1)/2)).x2() == -S(1)/2 - log(2)/2
 
 
 def test_normal():

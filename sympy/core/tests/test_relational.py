@@ -827,7 +827,7 @@ def test_Equality_rewrite_as_Add():
     eq = Eq(x + y, y - x)
     assert eq.rewrite(Add) == 2*x
     assert eq.rewrite(Add, evaluate=None).args == (x, x, y, -y)
-    assert eq.rewrite(Add, evaluate=False).args == (x, y, x, -y)
+    assert eq.rewrite(Add, evaluate=False).args == (x, y, -y, x)
 
 
 def test_issue_15847():

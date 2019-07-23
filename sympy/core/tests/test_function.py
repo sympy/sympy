@@ -956,13 +956,14 @@ def test_Derivative_as_finite_difference():
             (S(1)/12*(f(x-2)-f(x+2)) + S(2)/3*(f(x+1)-f(x-1)))).simplify() == 0
 
     # Central 1st derivative "half-way"
-    assert (dfdx.as_finite_difference() -
-            (f(x + S(1)/2)-f(x - S(1)/2))).simplify() == 0
-    assert (dfdx.as_finite_difference(h) -
-            (f(x + h/S(2))-f(x - h/S(2)))/h).simplify() == 0
-    assert (dfdx.as_finite_difference([x - 3*h, x-h, x+h, x + 3*h]) -
-            (S(9)/(8*2*h)*(f(x+h) - f(x-h)) +
-             S(1)/(24*2*h)*(f(x - 3*h) - f(x + 3*h)))).simplify() == 0
+    assert dfdx.as_finite_difference().equals(
+        f(x + S(1)/2) - f(x - S(1)/2))
+    assert dfdx.as_finite_difference(h).equals(
+        (f(x + h/S(2)) - f(x - h/S(2)))/h)
+    assert dfdx.as_finite_difference([x - 3*h, x-h, x+h, x + 3*h]
+        ).equals(
+            S(9)/(8*2*h)*(f(x + h) - f(x - h)) +
+            S(1)/(24*2*h)*(f(x - 3*h) - f(x + 3*h)))
 
     # One sided 1st derivative at gridpoint
     assert (dfdx.as_finite_difference([0, 1, 2], 0) -

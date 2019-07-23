@@ -440,7 +440,7 @@ def test_issue_3883():
     f = (-gamma * (x - mu)**2 - log(gamma) + log(2*pi))/2
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
 
-    assert f.match(a * log(gamma) + b * gamma + c) == \
+    assert f.x2().match(a * log(gamma) + b * gamma + c) == \
         {a: -S(1)/2, b: -(x - mu)**2/2, c: log(2*pi)/2}
     assert f.expand().collect(gamma).match(a * log(gamma) + b * gamma + c) == \
         {a: -S(1)/2, b: (-(x - mu)**2/2).expand(), c: (log(2*pi)/2).expand()}
@@ -575,7 +575,7 @@ def test_issue_4319():
     x, y = symbols('x y')
 
     p = -x*(S(1)/8 - y)
-    ans = {S.Zero, y - S(1)/8}
+    ans = {S.Zero, -1*(-y + S(1)/8)}
 
     def ok(pat):
         assert set(p.match(pat).values()) == ans

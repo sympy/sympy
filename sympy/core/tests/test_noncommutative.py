@@ -52,7 +52,8 @@ def test_cancel():
     assert cancel(A*B - B*A) == A*B - B*A
     assert cancel(A*B*(x - 1)) == A*B*(x - 1)
     assert cancel(A*B*(x**2 - 1)/(x + 1)) == A*B*(x - 1)
-    assert cancel(A*B*(x**2 - 1)/(x + 1) - B*A*(x - 1)) == A*B*(x - 1) + (1 - x)*B*A
+    assert cancel(A*B*(x**2 - 1)/(x + 1) - B*A*(x - 1)) == \
+        A*B*(x - 1) - (x - 1)*B*A
 
 
 @XFAIL
