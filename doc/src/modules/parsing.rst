@@ -90,15 +90,20 @@ change between releases, and become stricter, more relaxed, or some mix.
 
 .. autoclass:: sympy.parsing.latex.LaTeXParsingError
 
-`Fortran` Parsing Refrence
+
+SymPy Expression Reference
+--------------------------
+
+.. autoclass:: SymPyExpression
+  :members:
+
+`Fortran` Parsing Reference
 ---------------------------------
 
 .. module:: sympy.parsing.fortran.fortran_parser
 
 .. autoclass:: ASR2PyVisitor
   :members:
-
-.. autofunction:: call_visitor_func
 
 .. autofunction:: call_visitor
 

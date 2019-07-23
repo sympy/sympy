@@ -8,6 +8,7 @@ integer :: a, b, c, d
 real :: p, q, r, s
 """
 
+
 def test_sym_expr():
     src1 = (
         src +
@@ -23,6 +24,7 @@ def test_sym_expr():
     for i in range(0,7):
         assert re.match(r'Declaration\(.*?\)', str(ls[i]))
     assert re.match(r'Assignment\(.*?\)', str(ls[8]))
+
 
 def test_assignment():
     src1 = (
@@ -45,6 +47,7 @@ def test_assignment():
                 str(ls1[iter])
             )
 
+
 def test_binop_add():
     src1 = (
         src +
@@ -64,6 +67,7 @@ def test_binop_add():
                 r'Assignment\(Variable\(\w+\),\s\w+(\s\+\s\w+)+\)',
                 str(ls1[iter])
             )
+
 
 def test_binop_sub():
     src1 = (
@@ -85,6 +89,7 @@ def test_binop_sub():
                 str(ls1[iter])
             )
 
+
 def test_binop_mul():
     src1 = (
         src +
@@ -104,6 +109,7 @@ def test_binop_mul():
                 r'Assignment\(Variable\(\w+\),\s\w+(\*\w+)+\)',
                 str(ls1[iter])
             )
+
 
 def test_binop_div():
     src1 = (
@@ -125,6 +131,7 @@ def test_binop_div():
                 r'Assignment\(Variable\(\w+\),\s\w+(/\w+)+\)',
                 str(ls1[iter])
             )
+
 
 def test_mul_binop():
     src1 = (
@@ -163,6 +170,7 @@ def test_function():
         #    str(iter)
         #)
 
+
 def test_var():
     expr1.convert_to_expr(src, 'f')
     for iter in expr1.return_expr():
@@ -170,6 +178,7 @@ def test_var():
             r'Declaration\(Variable\(\w+,\s*type\=(integer|real),\s*value\=.*\)\)',
             str(iter)
         )
+
 
 def test_convert_py():
     expr1.convert_to_expr(src, 'f')
@@ -179,6 +188,7 @@ def test_convert_py():
             str(iter)
         )
 
+
 def test_convert_fort():
     expr1.convert_to_expr(src, 'f')
     for iter in expr1.convert_to_fortran():
@@ -186,6 +196,7 @@ def test_convert_fort():
             r'\s*(integer|real)\*\d\s*.*',
             str(iter)
         )
+
 
 def test_convert_c():
     expr1.convert_to_expr(src, 'f')

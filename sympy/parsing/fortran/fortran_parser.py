@@ -53,6 +53,7 @@ Refrences
 
 """
 
+
 class ASR2PyVisitor(asr.ASTVisitor):
     """
     Visitor Class for LFortran ASR
@@ -62,6 +63,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
     ASR node
 
     """
+
     def __init__(self):
         """Initialize the parser"""
         self._py_ast = []
@@ -95,7 +97,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
         NotImplementedError() when called for Numeric assignments or Arrays
 
         """
-        #TODO: Arithmatic Assignment
+        # TODO: Arithmatic Assignment
         if isinstance(node.target, asr.Variable):
             target = node.target
             value = node.value
@@ -143,7 +145,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
         NotImplementedError() when called for Numeric assignments
 
         """
-        #TODO: Integer Binary Operations
+        # TODO: Integer Binary Operations
         op = node.op
         lhs = node.left
         rhs = node.right
@@ -226,7 +228,6 @@ class ASR2PyVisitor(asr.ASTVisitor):
                 for elem in expr:
                     self._py_ast.append(elem)
 
-
     def visit_Num(self, node):
         """Visitor Function for Numbers in ASR
 
@@ -234,8 +235,8 @@ class ASR2PyVisitor(asr.ASTVisitor):
         with improvements in the LFortran ASR
 
         """
-        #TODO:Numbers when the LFortran ASR is updated
-        #self._py_ast.append(Integer(node.n))
+        # TODO:Numbers when the LFortran ASR is updated
+        # self._py_ast.append(Integer(node.n))
         pass
 
     def visit_Function(self, node):
@@ -299,6 +300,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
         """Returns the AST nodes"""
         return self._py_ast
 
+
 def call_visitor(fort_node):
     """Calls the AST Visitor on the Module
 
@@ -322,6 +324,7 @@ def call_visitor(fort_node):
     v.visit(fort_node)
     res_ast = v.ret_ast()
     return res_ast
+
 
 def src_to_sympy(src):
     """Wrapper function to convert the given Fortran source code to SymPy Expressions

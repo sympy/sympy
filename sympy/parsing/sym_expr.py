@@ -1,8 +1,8 @@
 from sympy.parsing.fortran.fortran_parser import src_to_sympy
 from sympy.printing import pycode, ccode, fcode
-from sympy.core.basic import Basic
 
-class SymPyExpression(Basic):
+
+class SymPyExpression(object):
     """Class to store and handle SymPy expressions
 
     This class will hold SymPy Expressions and handle the API for the conversion to and from different languages.
@@ -29,19 +29,21 @@ class SymPyExpression(Basic):
 
 
     """
+    
     def __init__(self, source_code = None, mode = None):
         """Constructor for SymPyExpression class"""
         super(SymPyExpression, self).__init__()
-        if mode == 'f' or mode == 'F':
-            if source_code:
-                self._expr = src_to_sympy(source_code)
-            else:
-                self._expr = []
-        #elif mode == 'c'or mode == 'C':
-            #if source_code:
-            #    self._expr = src_to_c(source_code)
-            #else:
-                #self._expr = []
+        if mode:
+            if mode.lower() == 'f':
+                if source_code:
+                    self._expr = src_to_sympy(source_code)
+                else:
+                    raise ValueError('Source code not present')
+            #elif mode.lower == 'c':
+            #    if source_code:
+            #        self._expr = src_to_c(source_code)
+            #    else:
+            #        raise ValueError('Source code not present')
         else:
             self._expr = []
 
@@ -53,8 +55,11 @@ class SymPyExpression(Basic):
 
         src_code : String
             the source code or filename of the source code that is to be converted
+
         mode: String
             the mode to determine which parser is to be used according to the language of the source code
+            f or F for Fortran
+            c or C for C/C++
 
         Examples
         ========
@@ -71,12 +76,15 @@ class SymPyExpression(Basic):
         ['def f(a, b):\n    f = 0\n    r = 0\n    return f']
 
         """
-        if mode.lower() == 'f':
-            self._expr = src_to_sympy(src_code)
-        #elif mode.lower() == 'c':
-        #    self._expr = src_to_c(src_code)
+        if src_code:
+            if mode.lower() == 'f':
+                self._expr = src_to_sympy(src_code)
+            #elif mode.lower() == 'c':
+            #    self._expr = src_to_c(src_code)
+            else:
+                raise NotImplementedError("The langauge parser has not been implemented. Invalid Input!")
         else:
-            raise NotImplementedError("The langauge parser has not been implemented. Invalid Input!")
+            raise ValueError('Source code not present')
 
     def convert_to_python(self):
         """Returns a list with python code for the sympy expressions"""
