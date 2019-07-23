@@ -349,6 +349,14 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
 (-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) + \
 (-(h + sqrt(2)*h)/(2*h) + (-sqrt(2)*h + E*h)/(2*h))*f(h + x)/(-h + E*h)
 
+    To approximate ``derivative`` around ``x0`` using a non-equidistant
+    spacing step, the algorithm supports assignment of undefined
+    functions to ``points``:
+
+    >>> dx = Function('dx')
+    >>> as_finite_diff(f(x).diff(x), points=dx(x), x0=x-h)
+    -f(-h + x - dx(-h + x)/2)/dx(-h + x) + f(-h + x + dx(-h + x)/2)/dx(-h + x)
+
     Partial derivatives are also supported:
 
     >>> y = Symbol('y')
@@ -387,6 +395,9 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
         x0 = wrt
 
     if not iterable(points):
+        if hasattr(points, 'is_Function'):
+            if points.is_Function and wrt in points.args:
+                points = points.subs(wrt, x0)
         # points is simply the step-size, let's make it a
         # equidistant sequence centered around x0
         if order % 2 == 0:
