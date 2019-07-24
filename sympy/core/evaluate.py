@@ -43,3 +43,26 @@ def evaluate(x):
     global_evaluate[0] = x
     yield
     global_evaluate[0] = old
+
+
+@contextmanager
+def distribute(x):
+    """ Control automatic distribution of -1 over Add during
+    negation.
+
+    Examples
+    ========
+    >>> from sympy.abc import x
+    >>> from sympy.core.evaluate import distribute
+    >>> print(-(x + 1))
+    -x - 1
+    >>> with distribute(False):
+    ...     print(-(x + 1))
+    -x - 1
+    """
+
+    old = global_distribute[0]
+
+    global_distribute[0] = x
+    yield
+    global_distribute[0] = old
