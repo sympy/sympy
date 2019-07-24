@@ -1130,7 +1130,7 @@ def test_issue_15827():
     B = MatrixSymbol("B", 2, 3)
     C = MatrixSymbol("C", 3, 4)
     D = MatrixSymbol("D", 4, 5)
-    k=symbols("k")
+    k = symbols("k")
     f = lambdify(A, (2*k)*A)
     g = lambdify(A, (2+k)*A)
     h = lambdify(A, 2*A)
@@ -1139,8 +1139,8 @@ def test_issue_15827():
     numpy.array([[2*k, 4*k, 6*k], [2*k, 4*k, 6*k], [2*k, 4*k, 6*k]], dtype=object))
 
     assert numpy.array_equal(g(numpy.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])), \
-    numpy.array([[k + 2, 2*k + 4, 3*k + 6], [k + 2, 2*k + 4, 3*k + 6], \
-    [k + 2, 2*k + 4, 3*k + 6]], dtype=object))
+    numpy.array([[k + 2, 2*(k + 2), 3*(k + 2)], [k + 2, 2*(k + 2), 3*(k + 2)], \
+    [k + 2, 2*(k + 2), 3*(k + 2)]], dtype=object))
 
     assert numpy.array_equal(h(numpy.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])), \
     numpy.array([[2, 4, 6], [2, 4, 6], [2, 4, 6]]))

@@ -194,8 +194,8 @@ def _pi_coeff(arg, cycles=1):
                         return S.Zero
                     return S(2)
                 else:
-                    return c2*x
-            return cx
+                    cx = c2*x
+            return cx.x2()
 
 
 class sin(TrigonometricFunction):
