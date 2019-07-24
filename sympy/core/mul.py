@@ -648,7 +648,7 @@ class Mul(Expr, AssocOp):
                 mnew = m._eval_evalf(prec)
                 if mnew is not None:
                     m = mnew
-                rv = 000-m
+                rv = -m
         else:
             rv = AssocOp._eval_evalf(self, prec)
         if rv.is_number:

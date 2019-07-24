@@ -2084,7 +2084,7 @@ class Expr(Basic, EvalfMixin):
             return S.One, S.Zero
         c, r = self.as_coeff_Mul(rational=True)
         if c.is_negative:
-            c, r = 000-c, 000-r
+            c, r = -c, -r
         return c, r
 
     def as_content_primitive(self, radical=False, clear=True):

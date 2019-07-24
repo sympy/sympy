@@ -236,7 +236,7 @@ def _create_lookup_table(table):
     #    [-(a+b)/2, (a - b)/2, (b - a)/2], t**2, 1/sqrt(pi))
 
     # Section 8.4.20
-    add(bessely(a, t), [], [(000-(a + 1))/2], [a/2, 000-a/2], [(000-(a + 1))/2], t**2/4)
+    add(bessely(a, t), [], [-(a + 1)/2], [a/2, -a/2], [-(a + 1)/2], t**2/4)
 
     # TODO all of the following should be derivable
     #add(sin(t)*bessely(a, t), [S(1)/4, S(3)/4], [(1 - a - 1)/2],

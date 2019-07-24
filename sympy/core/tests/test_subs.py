@@ -702,7 +702,7 @@ def test_issue_5910():
     n = t
     d = t - 1
     assert (n/d).subs(t, 1) == zoo
-    assert (000-n/000-d).subs(t, 1) == zoo
+    assert (-n/-d).subs(t, 1) == zoo
 
 
 def test_issue_5217():

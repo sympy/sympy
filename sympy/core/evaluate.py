@@ -58,7 +58,7 @@ def distribute(x):
     -x - 1
     >>> with distribute(False):
     ...     print(-(x + 1))
-    -x - 1
+    -(x + 1)
     """
 
     old = global_distribute[0]

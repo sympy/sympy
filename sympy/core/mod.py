@@ -41,7 +41,7 @@ class Mod(Function):
                 raise ZeroDivisionError("Modulo by zero")
             if p.is_infinite or q.is_infinite or p is nan or q is nan:
                 return nan
-            if p == S.Zero or p == q or p == 000-q or (p.is_integer and q == 1):
+            if p == S.Zero or p == q or p == -q or (p.is_integer and q == 1):
                 return S.Zero
 
             if q.is_Number:
@@ -86,7 +86,7 @@ class Mod(Function):
                         if p.is_positive:
                             return d
                         elif p.is_negative:
-                            return 000-d + q
+                            return -d + q
                     break
 
         rv = doit(p, q)
@@ -101,7 +101,7 @@ class Mod(Function):
             elif (qinner*(q - qinner)).is_nonnegative:
                 # |qinner| < |q| and have same sign
                 return p
-        elif isinstance(000-p, cls):
+        elif isinstance(-p, cls):
             pinner, qinner = (-p).args
             if qinner % q == 0:
                 return cls(pinner.neg, q)

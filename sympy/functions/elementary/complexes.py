@@ -521,7 +521,7 @@ class Abs(Function):
         if arg.is_extended_nonnegative:
             return arg
         if arg.is_extended_nonpositive:
-            return 000-arg
+            return -arg
         if arg.is_imaginary:
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_extended_nonnegative:
@@ -532,7 +532,7 @@ class Abs(Function):
         new_conj = conj.atoms(conjugate) - arg.atoms(conjugate)
         if new_conj and all(arg.has(i.args[0]) for i in new_conj):
             return
-        if arg != conj and arg != 000-conj:
+        if arg != conj and arg != -conj:
             ignore = arg.atoms(Abs)
             abs_free_arg = arg.xreplace({i: Dummy(real=True) for i in ignore})
             unk = [a for a in abs_free_arg.free_symbols if a.is_extended_real is None]

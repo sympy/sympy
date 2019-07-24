@@ -88,10 +88,12 @@ def test_arit0():
     assert e == a**(-1)
     e = 2**a**2
     assert e == 2**(a**2)
-    e = 000-(1 + a)
-    assert e.is_Mul and e.args == (-1, 1 + a)
-    e = -1*(1 + a)
-    assert e.is_Mul and e.args == (-1, 1 + a)
+    from sympy.core.evaluate import distribute
+    with distribute(False):
+        e = -(1 + a)
+        assert e.is_Mul and e.args == (-1, 1 + a)
+        e = -1*(1 + a)
+        assert e.is_Mul and e.args == (-1, 1 + a)
     e = Rational(1, 2)*(1 + a)
     assert e.is_Mul and e.args == (Rational(1, 2), 1 + a)
 
@@ -218,7 +220,7 @@ def test_pow_E():
         r, i = b.as_real_imag()
         if i:
             break
-    assert verify_numerically(b**(1/(log(000-b) + sign(i)*I*pi).n()), S.Exp1), (b, i)
+    assert verify_numerically(b**(1/(log(-b) + sign(i)*I*pi).n()), S.Exp1), (b, i)
 
 
 def test_pow_issue_3516():
@@ -1502,7 +1504,7 @@ def test_Add_as_content_primitive():
     p = 3 + x + y
     assert (2*p).expand().as_content_primitive() == (2, p)
     assert (2.0*p).expand().as_content_primitive() == (1, (2.*p).x2())
-    assert (2*(000-p)).expand().as_content_primitive() == (2, p.neg)
+    assert (2*(-p)).expand().as_content_primitive() == (2, p.neg)
 
 
 def test_Mul_as_content_primitive():
