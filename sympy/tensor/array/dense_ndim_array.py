@@ -53,7 +53,7 @@ class DenseNDimArray(NDimArray):
             return syindex
 
         if isinstance(index, (SYMPY_INTS, Integer)):
-            index = Tuple(index)
+            index = (index, )
         if not isinstance(index, slice) and len(index) < self.rank():
             index = tuple([i for i in index] + \
                           [slice(None) for i in range(len(index), self.rank())])
