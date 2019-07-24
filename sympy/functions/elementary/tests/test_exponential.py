@@ -1,12 +1,12 @@
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
-    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
+    sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
     AccumBounds, MatrixSymbol, Pow)
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 
 def test_exp_values():
@@ -347,8 +347,6 @@ def test_log_expand():
         log((log(y) + log(z))*log(x)) + log(2)]
     assert log(x**log(x**2)).expand(deep=False) == log(x)*log(x**2)
     assert log(x**log(x**2)).expand() == 2*log(x)**2
-    assert (log(x*(y + z))*(x + y)), expand(mul=True, log=True) == y*log(
-        x) + y*log(y + z) + z*log(x) + z*log(y + z)
     x, y = symbols('x,y')
     assert log(x*y).expand(force=True) == log(x) + log(y)
     assert log(x**y).expand(force=True) == y*log(x)
@@ -358,6 +356,13 @@ def test_log_expand():
     # factoring and if simplification is sought, it's cheaper to put
     # logs together than it is to take them apart.
     assert log(2*3**2).expand() != 2*log(3) + log(2)
+
+
+@XFAIL
+def test_log_expand_fail():
+    x, y, z = symbols('x,y,z', positive=True)
+    assert (log(x*(y + z))*(x + y)).expand(mul=True, log=True) == y*log(
+        x) + y*log(y + z) + z*log(x) + z*log(y + z)
 
 
 def test_log_simplify():
@@ -420,7 +425,7 @@ def test_issue_5673():
     assert e.is_comparable is False
     assert e.is_positive is not True
     e2 = 1 - 1/(1 - exp(-1000))
-    assert e.is_positive is not True
+    assert e2.is_positive is not True
     e3 = -2 + exp(exp(LambertW(log(2)))*LambertW(log(2)))
     assert e3.is_nonzero is not True
 
@@ -484,14 +489,24 @@ def test_log_product():
     from sympy.abc import n, m
     i, j = symbols('i,j', positive=True, integer=True)
     x, y = symbols('x,y', positive=True)
-    from sympy.concrete import Product, Sum
-    f, g = Function('f'), Function('g')
+    from sympy.concrete import Product
     assert simplify(log(Product(x**i, (i, 1, n)))) == log(Product(x**i, (i, 1, n)))
     assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
             log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))
 
     expr = log(Product(-2, (n, 0, 4)))
     assert simplify(expr) == expr
+
+
+@XFAIL
+def test_log_product_simplify_to_sum():
+    from sympy.abc import n, m
+    i, j = symbols('i,j', positive=True, integer=True)
+    x, y = symbols('x,y', positive=True)
+    from sympy.concrete import Product, Sum
+    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
+    assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
+            Sum(i*log(x) + j*log(y), (i, 1, n), (j, 1, m))
 
 
 def test_issue_8866():

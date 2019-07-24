@@ -156,7 +156,7 @@ def test_issue_7663():
     x = Symbol('x')
     e = '2*(x+1)'
     assert parse_expr(e, evaluate=0) == parse_expr(e, evaluate=False)
-
+    assert parse_expr(e, evaluate=0) ==  Mul(2, x+1, evaluate=False)
 
 def test_issue_10560():
     inputs = {

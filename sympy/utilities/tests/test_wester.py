@@ -20,7 +20,7 @@ from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
     continued_fraction_reduce as cf_r, FiniteSet, elliptic_e, elliptic_f,
     powsimp, hessian, wronskian, fibonacci, sign, Lambda, Piecewise, Subs,
     residue, Derivative, logcombine, Symbol, Intersection, Union,
-    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max, MatMul)
+    EmptySet, Interval, Integral, idiff, ImageSet, acos, Max, MatMul, conjugate)
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
