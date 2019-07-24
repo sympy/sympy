@@ -125,24 +125,6 @@ class Add(Expr, AssocOp):
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         from sympy.tensor.tensor import TensExpr
-        rv = None
-        if len(seq) == 2:
-            a, b = seq
-            if b.is_Rational:
-                a, b = b, a
-            if a.is_Rational:
-                if b.is_Mul:
-                    if b.args[0] is S.NegativeOne and b.args[1].is_Add:
-                        _, b1 = b.as_two_terms()
-                        args = list(b1.args)
-                        if args[0].is_Number:
-                            a -= args.pop(0)
-                            b = 000-(Add._from_args(args, b.is_commutative))
-                    rv = [a, b], [], None
-            if rv:
-                if all(s.is_commutative for s in rv[0]):
-                    return rv
-                return [], rv[0], None
 
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
@@ -961,7 +943,14 @@ class Add(Expr, AssocOp):
 
     @property
     def neg(self):
-        args = [-i for i in self.args]
+        args = []
+        sargs = list(self.args)
+        while sargs:
+            i = sargs.pop()
+            if isinstance(i, Add):
+                sargs.extend(i.args)
+            else:
+                args.append(-i)
         return _unevaluated_Add(*args)
 
     def _sage_(self):
