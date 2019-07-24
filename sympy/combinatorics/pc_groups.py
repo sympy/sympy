@@ -9,7 +9,7 @@ class PolycyclicGroup(DefaultPrinting):
     is_group = True
     is_solvable = True
 
-    def __init__(self, pc_sequence, pc_series, relative_order, collector = None):
+    def __init__(self, pc_sequence, pc_series, relative_order, collector=None):
         self.pcgs = pc_sequence
         self.pc_series = pc_series
         self.relative_order = relative_order
@@ -33,7 +33,7 @@ class Collector(DefaultPrinting):
            Section 8.1.3
     """
 
-    def __init__(self, pcgs, pc_series, relative_order, group = None, pc_presentation = None):
+    def __init__(self, pcgs, pc_series, relative_order, group=None, pc_presentation=None):
         self.pcgs = pcgs
         self.pc_series = pc_series
         self.relative_order = relative_order
@@ -335,15 +335,15 @@ class Collector(DefaultPrinting):
             perm_to_free[gen**-1] = s**-1
             perm_to_free[gen] = s
 
-        pcgs.reverse()
-        series = self.pc_series
-        series.reverse()
+        pcgs = pcgs[::-1]
+        series = self.pc_series[::-1]
+        rel_order = rel_order[::-1]
         collected_gens = []
 
         for i, gen in enumerate(pcgs):
-            re = rel_order[len(rel_order)-i-1]
+            re = rel_order[i]
             relation = perm_to_free[gen]**re
-            G = series[i] if i != 0 else series[i+1]
+            G = series[i]
 
             l = G.generator_product(gen**re, original = True)
             l.reverse()
@@ -377,8 +377,6 @@ class Collector(DefaultPrinting):
                     pc_relators[relation] = word if word else ()
                     self.pc_presentation = pc_relators
 
-        series.reverse()
-        pcgs.reverse()
         return pc_relators
 
     def exponent_vector(self, element):

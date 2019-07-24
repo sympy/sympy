@@ -68,5 +68,5 @@ def test_exponent_vector():
             exp = collector.exponent_vector(gen)
             g = Permutation()
             for i in range(len(exp)):
-                g = g*pcgs[i] if exp[i] else g
+                g = g*pcgs[i]**exp[i] if exp[i] else g
             assert g == gen
