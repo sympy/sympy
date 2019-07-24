@@ -2,7 +2,7 @@ from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
-    AccumBounds, MatrixSymbol, Pow)
+    AccumBounds, MatrixSymbol, Pow, gcd)
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -191,9 +191,22 @@ def test_log_values():
     assert log(0, 2) == zoo
     assert log(0, 5) == zoo
 
-    assert log(sqrt(3)/2 + I*S.Half) == I*pi/6
+    assert exp(-log(3))**(-1) == 3
+
+    assert log(S.Half) == -log(2)
+    assert log(2*3).func is log
+    assert log(2*3**2).func is log
+
+
+def test_log_exact():
+    # check for pi/2, pi/3, pi/4, pi/6, pi/8, pi/12; pi/5, pi/10:
+    for n in range(-23, 24):
+        if gcd(n, 24) != 1:
+            assert log(exp(n*I*pi/24).rewrite(sqrt)) == n*I*pi/24
+        for n in range(-9, 10):
+            assert log(exp(n*I*pi/10).rewrite(sqrt)) == n*I*pi/10
+
     assert log(S.Half - I*sqrt(3)/2) == -I*pi/3
-    assert log(sqrt(2)/2 + I*sqrt(2)/2) == I*pi/4
     assert log(-S.Half + I*sqrt(3)/2) == I*2*pi/3
     assert log(-sqrt(2)/2 - I*sqrt(2)/2) == -I*3*pi/4
     assert log(-sqrt(3)/2 - I*S.Half) == -I*5*pi/6
@@ -205,14 +218,18 @@ def test_log_values():
 
     assert log(-1 + I*sqrt(3)) == log(2) + I*2*pi/3
     assert log(5 + 5*I) == log(5*sqrt(2)) + I*pi/4
-    assert log(5*(1 + I)/sqrt(2)) == log(5) + I*pi/4
+    assert log(sqrt(-12)) == log(2*sqrt(3)) + I*pi/2
     assert log(-sqrt(6) + sqrt(2) - I*sqrt(6) - I*sqrt(2)) == log(4) - I*7*pi/12
+    assert log(1 + I*sqrt(2-sqrt(2))/sqrt(2+sqrt(2))) == log(2/sqrt(sqrt(2) + 2)) + I*pi/8
+    assert log(cos(7*pi/12) + I*sin(7*pi/12)) == 7*I*pi/12
+    assert log(cos(6*pi/5) + I*sin(6*pi/5)) == -4*I*pi/5
 
-    assert exp(-log(3))**(-1) == 3
+    zero = (1 + sqrt(2))**2 - 3 - 2*sqrt(2)
+    assert log(zero - I*sqrt(3)) == log(sqrt(3)) - I*pi/2
+    assert unchanged(log, zero + I*zero) or log(zero + zero*I) == zoo
 
-    assert log(S.Half) == -log(2)
-    assert log(2*3).func is log
-    assert log(2*3**2).func is log
+    # bail quickly if no obvious simplification is possible:
+    assert unchanged(log, (sqrt(2)-1/sqrt(sqrt(3)+I))**1000)
 
 
 def test_log_base():
