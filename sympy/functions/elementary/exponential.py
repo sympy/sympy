@@ -408,7 +408,7 @@ class exp(ExpBase):
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import limit, oo, Order, powsimp
+        from sympy import limit, oo, Order, powsimp, Wild, expand_complex
         arg = self.args[0]
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
@@ -423,7 +423,12 @@ class exp(ExpBase):
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
         r += Order(o.expr.subs(t, (arg_series - arg0)), x)
         r = r.expand()
-        return powsimp(r, deep=True, combine='exp')
+        r = powsimp(r, deep=True, combine='exp')
+        # powsimp may introduce unexpanded (-1)**Rational; see PR #17201
+        simplerat = lambda x: x.is_Rational and x.q in [3, 4, 6]
+        w = Wild('w', properties=[simplerat])
+        r = r.replace((-1)**w, expand_complex((-1)**w))
+        return r
 
     def _taylor(self, x, n):
         from sympy import Order
@@ -582,37 +587,6 @@ class log(Function):
             elif arg is S.Exp1:
                 return S.One
 
-        if arg.is_number and arg.is_algebraic:
-            # Check for arguments involving rational
-            # multiples of pi
-            r_ = re(arg)
-            i_ = im(arg)
-            t = (i_/r_).cancel()
-            atan_table = {
-                # first quadrant only
-                sqrt(3): S.Pi/3,
-                1: S.Pi/4,
-                sqrt(2)*sqrt(5 - sqrt(5))/(1 + sqrt(5)): S.Pi/5,
-                sqrt(2)*sqrt(sqrt(5) + 5)/(-1 + sqrt(5)): 2*S.Pi/5,
-                sqrt(3)/3: S.Pi/6,
-                sqrt(2 - sqrt(2))/sqrt(sqrt(2) + 2): S.Pi/8,
-                sqrt(sqrt(2) + 2)/sqrt(2 - sqrt(2)): 3*S.Pi/8,
-                (-sqrt(2) + sqrt(10))/(2*sqrt(sqrt(5) + 5)): S.Pi/10,
-                (sqrt(2) + sqrt(10))/(2*sqrt(5 - sqrt(5))): 3*S.Pi/10,
-                (-1 + sqrt(3))/(1 + sqrt(3)): S.Pi/12,
-                (1 + sqrt(3))/(-1 + sqrt(3)): 5*S.Pi/12
-            }
-            if t in atan_table:
-                if r_.is_positive:
-                    return cls(Abs(arg)) + I * atan_table[t]
-                else:
-                    return cls(Abs(arg)) + I * (atan_table[t] - S.Pi)
-            elif -t in atan_table:
-                if r_.is_positive:
-                    return cls(Abs(arg)) + I * (-atan_table[-t])
-                else:
-                    return cls(Abs(arg)) + I * (S.Pi - atan_table[-t])
-
         # don't autoexpand Pow or Mul (see the issue 3351):
         if not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -627,6 +601,57 @@ class log(Function):
                         return S.Pi * S.ImaginaryUnit * S.Half + cls(coeff)
                     else:
                         return -S.Pi * S.ImaginaryUnit * S.Half + cls(-coeff)
+
+        if arg.is_number and arg.is_algebraic:
+            I = S.ImaginaryUnit
+            r_, i_ = arg.as_independent(I, as_Add=True)
+            i_ = i_.as_coefficient(I)
+            if i_ and i_.is_real and r_.is_real:
+                if r_.is_zero:
+                    if i_.is_positive:
+                        return S.Pi * I * S.Half + cls(i_)
+                    elif i_.is_negative:
+                        return -S.Pi * I * S.Half + cls(-i_)
+                    elif i_.is_zero:
+                        return zoo
+                else:
+                    from sympy.simplify import ratsimp
+                    # Check for arguments involving rational multiples of pi
+                    t = (i_/r_).cancel()
+                    atan_table = {
+                        # first quadrant only
+                        sqrt(3): S.Pi/3,
+                        1: S.Pi/4,
+                        sqrt(5 - 2*sqrt(5)): S.Pi/5,
+                        sqrt(2)*sqrt(5 - sqrt(5))/(1 + sqrt(5)): S.Pi/5,
+                        sqrt(5 + 2*sqrt(5)): 2*S.Pi/5,
+                        sqrt(2)*sqrt(sqrt(5) + 5)/(-1 + sqrt(5)): 2*S.Pi/5,
+                        sqrt(3)/3: S.Pi/6,
+                        sqrt(2) - 1: S.Pi/8,
+                        sqrt(2 - sqrt(2))/sqrt(sqrt(2) + 2): S.Pi/8,
+                        sqrt(2) + 1: 3*S.Pi/8,
+                        sqrt(sqrt(2) + 2)/sqrt(2 - sqrt(2)): 3*S.Pi/8,
+                        sqrt(1 - 2*sqrt(5)/5): S.Pi/10,
+                        (-sqrt(2) + sqrt(10))/(2*sqrt(sqrt(5) + 5)): S.Pi/10,
+                        sqrt(1 + 2*sqrt(5)/5): S.Pi/10,
+                        (sqrt(2) + sqrt(10))/(2*sqrt(5 - sqrt(5))): 3*S.Pi/10,
+                        2 - sqrt(3): S.Pi/12,
+                        (-1 + sqrt(3))/(1 + sqrt(3)): S.Pi/12,
+                        2 + sqrt(3): 5*S.Pi/12,
+                        (1 + sqrt(3))/(-1 + sqrt(3)): 5*S.Pi/12
+                    }
+                    if t in atan_table:
+                        modulus = ratsimp(Abs(arg))
+                        if r_.is_positive:
+                            return cls(modulus) + I * atan_table[t]
+                        else:
+                            return cls(modulus) + I * (atan_table[t] - S.Pi)
+                    elif -t in atan_table:
+                        modulus = ratsimp(Abs(arg))
+                        if r_.is_positive:
+                            return cls(modulus) + I * (-atan_table[-t])
+                        else:
+                            return cls(modulus) + I * (S.Pi - atan_table[-t])
 
     def as_base_exp(self):
         """
