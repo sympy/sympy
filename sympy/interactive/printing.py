@@ -389,11 +389,11 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         Loads the euler package in the LaTeX preamble for handwritten style
         fonts (http://www.ctan.org/pkg/euler).
     forecolor: string, optional, default='Auto'
-        DVI setting for foreground color. 'Auto' means that either 'Black' or
-        'White' will be selected based on a guess of the IPython terminal color
-        setting.
+        DVI setting for foreground color. 'Auto' means that either 'Black',
+        'White', or 'Gray' will be selected based on a guess of the IPython
+        terminal color setting. See notes.
     backcolor: string, optional, default='Transparent'
-        DVI setting for background color.
+        DVI setting for background color. See notes.
     fontsize: string, optional, default='10pt'
         A font size to pass to the LaTeX documentclass function in the
         preamble.
@@ -449,6 +449,32 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     >>> x**2 + x + y**2 + y # doctest: +SKIP
     x + y +
     x**2 + y**2
+
+    Notes
+    =====
+
+    The foreground and background colors can be selected when using 'png' LaTeX
+    rendering. Note that before the ``init_printing`` command is executed, the
+    LaTeX rendering is handled by the IPython console and not SymPy.
+
+    The colors can be selected among the 68 standard colors known to ``dvips``,
+    for a list see _[dvicolornames]. In addition, the background color can be
+    set to  'Transparent' (which is the default value).
+
+    When using the 'Auto' foreground color, the guess is based on the
+    ``colors`` variable in the IPython console, see _[ipythoncolors]. Hence, if
+    that variable is set correctly in your IPython console, there is a high
+    chance that the output will be readable, although manual settings may be
+    needed.
+
+
+    References
+    ==========
+
+    .. [dvicolornames] https://en.wikibooks.org/wiki/LaTeX/Colors#The_68_standard_colors_known_to_dvips
+
+    .. [ipythoncolors] https://ipython.readthedocs.io/en/stable/config/details.html#terminal-colors
+
     """
     import sys
     from sympy.printing.printer import Printer
