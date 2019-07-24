@@ -11,7 +11,7 @@ from sympy.core.compatibility import (
     reduce, string_types)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
-from sympy.core.function import expand_mul
+from sympy.core.function import expand_mul, count_ops
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float, Integer, mod_inverse
 from sympy.core.power import Pow
@@ -942,8 +942,7 @@ class MatrixReductions(MatrixDeterminant):
             ret = (ret, pivot_cols)
         return ret
 
-    from sympy.core.function import count_ops
-    def qsimp(self, ratio=1.7, measure=count_ops):
+    def qsimp(self, ratio=1.7, measure=count_ops, max_measure=5000):
         """A quick simplify function to prevent expression blowup during operations."""
 
         from sympy.core import Add, Mul, Pow
@@ -953,6 +952,9 @@ class MatrixReductions(MatrixDeterminant):
         from sympy.simplify.powsimp import powsimp
         from sympy.simplify.simplify import signsimp, bottom_up
         from sympy.utilities.iterables import has_variety
+
+        if measure(self) > max_measure:
+            return self
 
         def shorter(*choices):
             '''Return the choice that has the fewest ops. In case of a tie,
@@ -972,13 +974,7 @@ class MatrixReductions(MatrixDeterminant):
             _e = cancel(expr)
             expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
             expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
-
-            if ratio is S.Infinity:
-                expr = expr2
-            else:
-                expr = shorter(expr2, expr1, expr)
-            if not isinstance(expr, Basic):  # XXX: temporary hack
-                return expr
+            expr = shorter(expr2, expr1, expr)
 
             if isinstance(expr, (Add, Mul, Pow, ExpBase)):
                 original_expr = expr
@@ -2446,7 +2442,7 @@ class MatrixBase(MatrixDeprecated,
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
-        return self._new((P*diag(*jordan_cells)*P.inv()).qsimp())
+        return self._new(P*diag(*jordan_cells)*P.inv())
 
     def __repr__(self):
         return sstr(self)

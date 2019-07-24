@@ -2111,7 +2111,7 @@ class MatrixArithmetic(MatrixRequired):
         if num % 2 == 1:
             return self * self._eval_pow_by_recursion(num - 1)
         ret = self._eval_pow_by_recursion(num // 2)
-        return (ret * ret).qsimp()
+        return ret * ret
 
     def _eval_scalar_mul(self, other):
         return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other)
@@ -2205,7 +2205,7 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            return self._eval_matrix_mul(other)
+            return self._eval_matrix_mul(other).qsimp()
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_matrix_mul(self, other)
@@ -2253,9 +2253,7 @@ class MatrixArithmetic(MatrixRequired):
                     return jordan_pow(exp)
                 except MatrixError:
                     pass
-            # return a._eval_pow_by_recursion(exp).qsimp()
-            a = a._eval_pow_by_recursion(exp)
-            return a
+            return a._eval_pow_by_recursion(exp)
 
         if jordan_pow:
             try:
