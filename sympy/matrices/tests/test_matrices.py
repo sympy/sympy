@@ -2016,11 +2016,11 @@ def test_jordan_form_issue_15858():
         [0, 0, -1, -1],
         [0, 0, 2, 1]])
     (P, J) = A.jordan_form()
-    assert simplify(P) == Matrix([
+    assert simplify(P) == simplify(Matrix([ # can't just set it, evaluates
         [-I, -I/2, I, I/2],
         [-1 + I, 0, -1 - I, 0],
-        [0, I*(-1 + I)/2, 0, I*(1 + I)/2],
-        [0, 1, 0, 1]])
+        [0, (-1 - I)/2, 0, I*(1 + I)/2],
+        [0, 1, 0, 1]]))
     assert J == Matrix([
         [-I, 1, 0, 0],
         [0, -I, 0, 0],
@@ -2066,9 +2066,9 @@ def test_exp_jordan_block():
 
 def test_exp():
     m = Matrix([[3, 4], [0, -2]])
-    m_exp = Matrix([[exp(3), -4*exp(-2)/5 + 4*exp(3)/5], [0, exp(-2)]])
-    assert m.exp() == m_exp
-    assert exp(m) == m_exp
+    m_exp = simplify(Matrix([[exp(3), -4*exp(-2)/5 + 4*exp(3)/5], [0, exp(-2)]]))
+    assert simplify(m.exp()) == m_exp
+    assert simplify(exp(m)) == m_exp
 
     m = Matrix([[1, 0], [0, 1]])
     assert m.exp() == Matrix([[E, 0], [0, E]])
@@ -3128,7 +3128,7 @@ def test_pinv_solve():
     # Underdetermined system (infinite results).
     A = Matrix([[1, 0, 1], [0, 1, 1]])
     B = Matrix([5, 7])
-    solution = A.pinv_solve(B)
+    solution = A.pinv_solve(B).expand()
     w = {}
     for s in solution.atoms(Symbol):
         # Extract dummy symbols used in the solution.
