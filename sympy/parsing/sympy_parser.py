@@ -884,8 +884,16 @@ def stringify_expr(s, local_dict, global_dict, transformations):
 
     tokens = []
     input_code = StringIO(s.strip())
+    last = (None, None)
     for toknum, tokval, _, _, _ in generate_tokens(input_code.readline):
-        tokens.append((toknum, tokval))
+        now = toknum, tokval
+        # convert ... - ( -> ... + -1*(
+        if now[0] == last[0] == 53 and (last[1], now[1]) == ('-', '('):
+            tokens[-1] = (53, "+")
+            tokens.append((2, '-1'))
+            tokens.append((53, '*'))
+        tokens.append(now)
+        last = now
 
     for transform in transformations:
         tokens = transform(tokens, local_dict, global_dict)
