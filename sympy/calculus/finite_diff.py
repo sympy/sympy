@@ -395,9 +395,8 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
         x0 = wrt
 
     if not iterable(points):
-        if hasattr(points, 'is_Function'):
-            if points.is_Function and wrt in points.args:
-                points = points.subs(wrt, x0)
+        if getattr(points, 'is_Function', False) and wrt in points.args:
+            points = points.subs(wrt, x0)
         # points is simply the step-size, let's make it a
         # equidistant sequence centered around x0
         if order % 2 == 0:
