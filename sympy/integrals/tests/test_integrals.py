@@ -1022,8 +1022,13 @@ def test_issue_4517():
 
 def test_issue_4527():
     k, m = symbols('k m', integer=True)
-    #ans = integrate(sin(k*x)*sin(m*x), (x, 0, pi)
-    #        ).simplify() == Piecewise(
+    assert integrate(sin(k*x)*sin(m*x), (x, 0, pi)).simplify() == \
+        Piecewise((0, Eq(k, 0) | Eq(m, 0)),
+                  (-pi/2, Eq(k, -m) | (Eq(k, 0) & Eq(m, 0))),
+                  (pi/2, Eq(k, m) | (Eq(k, 0) & Eq(m, 0))),
+                  (0, True))
+    # Should be possible to further simplify to:
+    # Piecewise(
     #    (0, Eq(k, 0) | Eq(m, 0)),
     #    (-pi/2, Eq(k, -m)),
     #    (pi/2, Eq(k, m)),
@@ -1519,11 +1524,6 @@ def test_issue_15509():
     assert integrate(cos(a*x + b), (x, x_1, x_2), heurisch=True) == Piecewise(
         (-sin(a*x_1 + b)/a + sin(a*x_2 + b)/a, (a > -oo) & (a < oo) & Ne(a, 0)), \
             (-x_1*cos(b) + x_2*cos(b), True))
-
-@slow
-def test_issue_4311_slow():
-    x = symbols('x')
-    assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)
 
 def test_issue_4311():
     x = symbols('x', real=True)

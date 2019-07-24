@@ -1,17 +1,13 @@
 # A collection of failing integrals from the issues.
 
 from sympy import (
-    integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos, sympify, Piecewise,
-    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, sstr
+    integrate, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
+    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta
 )
 
 from sympy.utilities.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 
 from sympy.abc import x, k, c, y, b, h, a, m, z, n, t
-
-
-def NS(e, n=15, **options):
-    return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
 
 @SKIP("Too slow for @slow")
@@ -241,13 +237,6 @@ def test_issue_9101():
 
 
 @XFAIL
-@slow
-@SKIP("Same as test_W3")
-def test_issue_7161():
-    assert not integrate(sqrt(x + 1/x - 2), (x, 0, 1)).has(Integral)
-
-
-@XFAIL
 def test_issue_7264():
     assert not integrate(exp(x)*sqrt(1 + exp(2*x))).has(Integral)
 
@@ -268,4 +257,10 @@ def test_integrate_Piecewise_rational_over_reals():
         (0,                                              t - 478.515625*pi <  0),
         (13.2075145209219*pi/(0.000871222*t + 0.995)**2, t - 478.515625*pi >= 0))
 
-    assert integrate(f, (t, 0, oo)) == 15235.9375*pi
+    assert (integrate(f, (t, 0, oo)) - 15235.9375*pi).evalf() <= 1e-7
+
+
+@XFAIL
+@slow
+def test_issue_4311_slow():
+    assert not integrate(x*abs(9-x**2), x).has(Integral)
