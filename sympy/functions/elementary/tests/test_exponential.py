@@ -48,6 +48,18 @@ def test_exp_values():
     assert exp(oo, evaluate=False).is_finite is False
 
 
+def test_exp_period():
+    assert exp(9*I*pi/4) == exp(I*pi/4)
+    assert exp(46*I*pi/18) == exp(5*I*pi/9)
+    assert exp(25*I*pi/7) == exp(-3*I*pi/7)
+    assert exp(-19*I*pi/3) == exp(-I*pi/3)
+    assert exp(37*I*pi/8) - exp(-11*I*pi/8) == 0
+    assert exp(-5*I*pi/3) / exp(11*I*pi/5) * exp(148*I*pi/15) == 1
+
+    assert exp(2 - 17*I*pi/5) == exp(2 + 3*I*pi/5)
+    assert exp(log(3) + 29*I*pi/9) == 3 * exp(-7*I*pi/9)
+
+
 def test_exp_log():
     x = Symbol("x", real=True)
     assert log(exp(x)) == x
