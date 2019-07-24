@@ -943,14 +943,33 @@ class Add(Expr, AssocOp):
 
     @property
     def neg(self):
+        """Return self with all args negated and none are negated.
+
+        >>> from sympy import Add
+        >>> from sympy.abc import x, y, z
+        >>> eq = z - (x - (y + z))
+        >>> eq.neg
+        x - y - 2*z
+        >>> Add(x + y, z, evaluate=False).neg
+        -x - y - z
+        """
         args = []
         sargs = list(self.args)
+        rebuild = False
         while sargs:
             i = sargs.pop()
-            if isinstance(i, Add):
+            if i.is_Mul and (-i).is_Add:
+                sargs.extend([i.neg for i in (-i).args])
+            elif isinstance(i, Add):
                 sargs.extend(i.args)
+                rebuild = True
             else:
-                args.append(-i)
+                args.append(i)
+        if rebuild:
+            # collect common terms that may be present
+            args = Add(*args).args
+        args = [-i for i in args]
+        # negated args must be sorted
         return _unevaluated_Add(*args)
 
     def _sage_(self):
