@@ -295,7 +295,7 @@ class sin(TrigonometricFunction):
             return arg._eval_func(cls)
 
         if arg.could_extract_minus_sign():
-            return -cls(-arg)
+            return -cls(arg.neg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -556,7 +556,7 @@ class cos(TrigonometricFunction):
             return arg._eval_func(cls)
 
         if arg.could_extract_minus_sign():
-            return cls(-arg)
+            return cls(arg.neg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -985,7 +985,7 @@ class tan(TrigonometricFunction):
                 return AccumBounds(tan(min), tan(max))
 
         if arg.could_extract_minus_sign():
-            return -cls(-arg)
+            return -cls(arg.neg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -1292,7 +1292,7 @@ class cot(TrigonometricFunction):
             return -tan(arg + S.Pi/2)
 
         if arg.could_extract_minus_sign():
-            return -cls(-arg)
+            return -cls(arg.neg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -1531,9 +1531,9 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     def eval(cls, arg):
         if arg.could_extract_minus_sign():
             if cls._is_even:
-                return cls(-arg)
+                return cls(arg.neg)
             if cls._is_odd:
-                return -cls(-arg)
+                return -cls(arg.neg)
 
         pi_coeff = _pi_coeff(arg)
         if (pi_coeff is not None
@@ -1866,7 +1866,7 @@ class sinc(Function):
             return S.NaN
 
         if arg.could_extract_minus_sign():
-            return cls(-arg)
+            return cls(arg.neg)
 
         pi_coeff = _pi_coeff(arg)
         if pi_coeff is not None:
@@ -1962,10 +1962,10 @@ class InverseTrigonometricFunction(Function):
             2/sqrt(2 + sqrt(2)): 3*S.Pi/8,
             1 + sqrt(5): S.Pi/10,
             sqrt(5) - 1: 3*S.Pi/10,
-            -(sqrt(5) - 1): -3*S.Pi/10,
+            (sqrt(5) - 1).neg: -3*S.Pi/10,
             sqrt(6) + sqrt(2): S.Pi/12,
             sqrt(6) - sqrt(2): 5*S.Pi/12,
-            -(sqrt(6) - sqrt(2)): -5*S.Pi/12
+            (sqrt(6) - sqrt(2)).neg: -5*S.Pi/12
         }
 
 
@@ -2048,7 +2048,7 @@ class asin(InverseTrigonometricFunction):
             return S.ComplexInfinity
 
         if arg.could_extract_minus_sign():
-            return -cls(-arg)
+            return -cls(arg.neg)
 
         if arg.is_number:
             asin_table = cls._asin_table()
@@ -2392,7 +2392,7 @@ class atan(InverseTrigonometricFunction):
             return AccumBounds(-S.Pi/2, S.Pi/2)
 
         if arg.could_extract_minus_sign():
-            return -cls(-arg)
+            return -cls(arg.neg)
 
         if arg.is_number:
             atan_table = cls._atan_table()
@@ -2558,7 +2558,7 @@ class acot(InverseTrigonometricFunction):
             return S.Zero
 
         if arg.could_extract_minus_sign():
-            return -cls(-arg)
+            return -cls(arg.neg)
 
         if arg.is_number:
             atan_table = cls._atan_table()
@@ -2831,7 +2831,7 @@ class acsc(InverseTrigonometricFunction):
             return S.Zero
 
         if arg.could_extract_minus_sign():
-            return -cls(-arg)
+            return -cls(arg.neg)
 
         if arg.is_number:
             acsc_table = cls._acsc_table()

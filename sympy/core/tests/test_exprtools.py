@@ -442,4 +442,4 @@ def test_monotonic_sign():
     assert F(-2/(p - 1)/q) is None
 
     assert F((p - 1)*q + 1).is_positive
-    assert F(-(p - 1)*q - 1).is_negative
+    assert F((1 - p)*q - 1).is_negative

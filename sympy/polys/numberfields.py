@@ -656,7 +656,7 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
         result = result.primitive()[1]
         c = result.coeff(x**degree(result, x))
         if c.is_negative:
-            result = expand_mul(-result)
+            result = expand_mul(0-result)
         return cls(result, x, field=True) if polys else result.collect(x)
 
     if not domain.is_QQ:

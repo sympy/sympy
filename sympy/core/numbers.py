@@ -3249,6 +3249,9 @@ class NaN(with_metaclass(Singleton, Number)):
 
     __slots__ = []
 
+    def __neg__(self):
+        return self
+
     def __new__(cls):
         return AtomicExpr.__new__(cls)
 

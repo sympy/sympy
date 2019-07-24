@@ -330,11 +330,11 @@ def signsimp(expr, evaluate=None):
     >>> from sympy.abc import x, y
     >>> i = symbols('i', odd=True)
     >>> n = -1 + 1/x
-    >>> n/x/(-n)**2 - 1/n/x
+    >>> n/x/(n.neg)**2 - 1/n/x
     (-1 + 1/x)/(x*(1 - 1/x)**2) - 1/(x*(-1 + 1/x))
     >>> signsimp(_)
     0
-    >>> x*n + x*-n
+    >>> x*n + x*n.neg
     x*(-1 + 1/x) + x*(1 - 1/x)
     >>> signsimp(_)
     0
@@ -350,10 +350,11 @@ def signsimp(expr, evaluate=None):
     >>> n**i
     (-1 + 1/x)**i
 
-    By default, signsimp doesn't leave behind any hollow simplification:
-    if making an Add canonical wrt sign didn't change the expression, the
-    original Add is restored. If this is not desired then the keyword
-    ``evaluate`` can be set to False:
+    By default, signsimp doesn't leave behind any hollow
+    simplification: if making an Add canonical wrt sign doesn't change
+    the type of the expression, the original Add is restored.
+    If this is not desired then the keyword ``evaluate`` can be set to
+    False:
 
     >>> e = exp(y - x)
     >>> signsimp(e) == e
@@ -373,7 +374,12 @@ def signsimp(expr, evaluate=None):
     if e.is_Add:
         return e.func(*[signsimp(a, evaluate) for a in e.args])
     if evaluate:
-        e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
+        reps = {}
+        for m in e.atoms(Mul):
+            mnn = m.neg.neg
+            if mnn != m:
+                reps[m] = mnn
+        e = e.xreplace(reps)
     return e
 
 
@@ -426,8 +432,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     ::
 
-        >>> from sympy import sqrt, simplify, count_ops, oo
-        >>> root = 1/(sqrt(2)+3)
+        >>> from sympy import sqrt, simplify, count_ops, oo, roots
+        >>> root = list(roots(x**3 - 3*x - 5))[0]
 
     Since ``simplify(root)`` would result in a slightly longer expression,
     root is returned unchanged instead::
@@ -646,7 +652,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if expr.could_extract_minus_sign():
         n, d = fraction(expr)
         if d != 0:
-            expr = signsimp(-n/(-d))
+            expr = signsimp(n.neg/d.neg)
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
@@ -1283,7 +1289,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
     -2 + 2*GoldenRatio
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-    1/2 - I*sqrt(sqrt(5)/10 + 1/4)
+    1/2 - sqrt(5)*I*sqrt(2*sqrt(5) + 5)/10
     >>> nsimplify(I**I, [pi])
     exp(-pi/2)
     >>> nsimplify(pi, tolerance=0.01)

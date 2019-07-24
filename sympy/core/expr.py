@@ -160,7 +160,16 @@ class Expr(Basic, EvalfMixin):
         return self
 
     def __neg__(self):
-        return Mul(S.NegativeOne, self)
+        # Mul has its own __neg__ routine so here, we just
+        # create a 2-args Mul with the -1 in the canonical
+        # slot 0
+        assert not self.is_Add
+        c = self.is_commutative
+        return Mul._from_args((S.NegativeOne, self), c)
+
+    @property
+    def neg(self):
+        return -self
 
     def __abs__(self):
         from sympy import Abs
@@ -179,12 +188,22 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return Add(self, -other)
+        if other.is_Add:  # temporary workaround for booby-trap in __neg__
+            args = [S.NegativeOne, other]
+            nother = Mul._from_args(args, other.is_commutative)
+        else:
+            nother = -other
+        return Add(self, nother)  # nother->-other when booby-trap is gone
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return Add(other, -self)
+        if self.is_Add:  # temporary workaround for booby-trap in __neg__
+            args = [S.NegativeOne, self]
+            nself = Mul._from_args(args, self.is_commutative)
+        else:
+            nself = -self
+        return Add(nself, other)  # nself->-self when booby-trap is gone
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
@@ -2063,7 +2082,7 @@ class Expr(Basic, EvalfMixin):
             return S.One, S.Zero
         c, r = self.as_coeff_Mul(rational=True)
         if c.is_negative:
-            c, r = -c, -r
+            c, r = 000-c, 000-r
         return c, r
 
     def as_content_primitive(self, radical=False, clear=True):
@@ -2408,11 +2427,11 @@ class Expr(Basic, EvalfMixin):
 
         >>> from sympy.abc import x, y
         >>> e = x - y
-        >>> {i.could_extract_minus_sign() for i in (e, -e)}
+        >>> {i.could_extract_minus_sign() for i in (e, e.neg)}
         {False, True}
 
         """
-        negative_self = -self
+        negative_self = self.neg
         if self == negative_self:
             return False  # e.g. zoo*x == -zoo*x
         self_has_minus = (self.extract_multiplicatively(-1) is not None)

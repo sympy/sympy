@@ -17,14 +17,14 @@ def sub_pre(e):
     # make it canonical
     reps.sort(key=default_sort_key)
 
-    e = e.xreplace(dict((a, Mul._from_args([S.NegativeOne, -a])) for a in reps))
+    e = e.xreplace(dict((a, Mul._from_args([S.NegativeOne, a.neg])) for a in reps))
     # repeat again for persisting Adds but mark these with a leading 1, -1
     # e.g. y - x -> 1*-1*(x - y)
     if isinstance(e, Basic):
         negs = {}
         for a in sorted(e.atoms(Add), key=default_sort_key):
             if a in reps or a.could_extract_minus_sign():
-                negs[a] = Mul._from_args([S.One, S.NegativeOne, -a])
+                negs[a] = Mul._from_args([S.One, S.NegativeOne, a.neg])
         e = e.xreplace(negs)
     return e
 
@@ -36,7 +36,7 @@ def sub_post(e):
     for node in preorder_traversal(e):
         if isinstance(node, Mul) and \
             node.args[0] is S.One and node.args[1] is S.NegativeOne:
-            replacements.append((node, -Mul._from_args(node.args[2:])))
+            replacements.append((node, Mul._from_args(node.args[2:]).neg))
     for node, replacement in replacements:
         e = e.xreplace({node: replacement})
 

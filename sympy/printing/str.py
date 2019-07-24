@@ -575,7 +575,7 @@ class StrPrinter(Printer):
             return "sqrt(%s)" % self._print(expr.base)
 
         if expr.is_commutative:
-            if -expr.exp is S.Half and not rational:
+            if expr.exp.neg is S.Half and not rational:
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
                 return "%s/sqrt(%s)" % tuple(map(lambda arg: self._print(arg), (S.One, expr.base)))

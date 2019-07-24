@@ -1010,15 +1010,15 @@ class acosh(InverseHyperbolicFunction):
                 sqrt(3)/2: S.Pi/6,
                 -sqrt(3)/2: 5*S.Pi/6,
                 (sqrt(3) - 1)/sqrt(2**3): 5*S.Pi/12,
-                -(sqrt(3) - 1)/sqrt(2**3): 7*S.Pi/12,
+                (sqrt(3) - 1).neg/sqrt(2**3): 7*S.Pi/12,
                 sqrt(2 + sqrt(2))/2: S.Pi/8,
                 -sqrt(2 + sqrt(2))/2: 7*S.Pi/8,
                 sqrt(2 - sqrt(2))/2: 3*S.Pi/8,
                 -sqrt(2 - sqrt(2))/2: 5*S.Pi/8,
                 (1 + sqrt(3))/(2*sqrt(2)): S.Pi/12,
-                -(1 + sqrt(3))/(2*sqrt(2)): 11*S.Pi/12,
+                (1 + sqrt(3)).neg/(2*sqrt(2)): 11*S.Pi/12,
                 (sqrt(5) + 1)/4: S.Pi/5,
-                -(sqrt(5) + 1)/4: 4*S.Pi/5
+                (sqrt(5) + 1).neg/4: 4*S.Pi/5
             }
 
             if arg in cst_table:

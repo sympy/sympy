@@ -68,8 +68,8 @@ def _monotonic_sign(self):
     if not self.is_extended_real:
         return
 
-    if (-self).is_Symbol:
-        rv = _monotonic_sign(-self)
+    if self.neg.is_Symbol:
+        rv = _monotonic_sign(self.neg)
         return rv if rv is None else -rv
 
     if not self.is_Add and self.as_numer_denom()[1].is_number:

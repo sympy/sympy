@@ -1402,13 +1402,15 @@ class Basic(with_metaclass(ManagedProperties)):
         the right setting tricky:
 
         >>> e = x**(1 + y)
-        >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=False)
+        >>> old = x**(1 + a)
+        >>> Lnew = lambda a: x**a.neg
+        >>> (x**(1 + y)).replace(old, Lnew, exact=False)
         1
-        >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=True)
+        >>> (x**(1 + y)).replace(old, Lnew, exact=True)
         x**(-x - y + 1)
-        >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=False)
+        >>> (x**y).replace(old, Lnew, exact=False)
         1
-        >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=True)
+        >>> (x**y).replace(old, Lnew, exact=True)
         x**(1 - y)
 
         It is probably better to use a different form of the query

@@ -95,28 +95,20 @@ class Add(Expr, AssocOp):
 
         >>> from sympy.abc import w, x, y, z
 
-        A negative term will cancel a positive term
-
-        >>> a = -(x + y)
-        >>> a - a
-        0
-
-        A negated term will have the args flattened:
+        A negated term's args are not flattened:
 
         >>> z - (x + y)
-        -x - y + z
-
-        To keep this from being flattened, explicitly
-        multiply by -1:
-
-        >>> z + -1*(x + y)
         z - (x + y)
 
-        Args within a negated sum will cancel with args
+        But args within a negated sum will cancel with args
         that are not nested:
 
-        >>> 2*x + 2*y + -1*(w - x + 2*y + z)
-        3*x - (w + z)
+        >>> 2 - (x + 1)  # 2 - 1 and x no longer nested
+        1 - x
+        >>> 2*x - (x + y + 1)  # 2x - x and others nested
+        x - (y + 1)
+        >>> 1 + x - (x + y - z + 2)  # 1 - 2, x - x and others nested
+        -(y - z) - 1
 
         If a term is a 2-arg Mul with coefficient other than -1,
         nothing will happen to it:
@@ -140,6 +132,12 @@ class Add(Expr, AssocOp):
                 a, b = b, a
             if a.is_Rational:
                 if b.is_Mul:
+                    if b.args[0] is S.NegativeOne and b.args[1].is_Add:
+                        _, b1 = b.as_two_terms()
+                        args = list(b1.args)
+                        if args[0].is_Number:
+                            a -= args.pop(0)
+                            b = 000-(Add._from_args(args, b.is_commutative))
                     rv = [a, b], [], None
             if rv:
                 if all(s.is_commutative for s in rv[0]):
@@ -244,7 +242,7 @@ class Add(Expr, AssocOp):
             if v == -1 and k.is_Add:
                 noma = []
                 for i in k.args:
-                    if i.is_Number:
+                    if coeff and i.is_Number:
                         coeff -= i
                     elif i in terms:
                         terms[i] -= 1
@@ -826,8 +824,8 @@ class Add(Expr, AssocOp):
         if coeff_self.is_Rational and coeff_old.is_Rational:
             if terms_self == terms_old:   # (2 + a).subs(3 + a, y) -> -1 + y
                 return self.func(new, coeff_self, -coeff_old)
-            if terms_self == -terms_old:  # (2 + a).subs(-3 - a, y) -> -1 - y
-                return self.func(-new, coeff_self, coeff_old)
+            if terms_self == terms_old.neg:  # (2 + a).subs(-3 - a, y) -> -1 - y
+                return self.func(000-new, coeff_self, coeff_old)
 
         if coeff_self.is_Rational and coeff_old.is_Rational \
                 or coeff_self == coeff_old:
@@ -843,11 +841,11 @@ class Add(Expr, AssocOp):
                                *[s._subs(old, new) for s in ret_set])
 
                 args_old = self.func.make_args(
-                    -terms_old)     # (a+b+c+d).subs(-b-c, x) -> a-x+d
+                    terms_old.neg)     # (a+b+c+d).subs(-b-c, x) -> a-x+d
                 old_set = set(args_old)
                 if old_set < self_set:
                     ret_set = self_set - old_set
-                    return self.func(-new, coeff_self, coeff_old,
+                    return self.func(new.neg, coeff_self, coeff_old,
                                *[s._subs(old, new) for s in ret_set])
 
     def removeO(self):
@@ -961,7 +959,8 @@ class Add(Expr, AssocOp):
     def _eval_transpose(self):
         return self.func(*[t.transpose() for t in self.args])
 
-    def __neg__(self):
+    @property
+    def neg(self):
         args = [-i for i in self.args]
         return _unevaluated_Add(*args)
 

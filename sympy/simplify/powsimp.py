@@ -202,9 +202,9 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         be = list(c_powers.items())
         _n = S.NegativeOne
         for i, (b, e) in enumerate(be):
-            if ((-b).is_Symbol or b.is_Add) and -b in c_powers:
+            if (b.neg.is_Symbol or b.is_Add) and b.neg in c_powers:
                 if (b.is_positive in (0, 1) or e.is_integer):
-                    c_powers[-b] += c_powers.pop(b)
+                    c_powers[b.neg] += c_powers.pop(b)
                     if _n in c_powers:
                         c_powers[_n] += e
                     else:

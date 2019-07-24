@@ -41,7 +41,7 @@ class Mod(Function):
                 raise ZeroDivisionError("Modulo by zero")
             if p.is_infinite or q.is_infinite or p is nan or q is nan:
                 return nan
-            if p == S.Zero or p == q or p == -q or (p.is_integer and q == 1):
+            if p == S.Zero or p == q or p == 000-q or (p.is_integer and q == 1):
                 return S.Zero
 
             if q.is_Number:
@@ -81,12 +81,12 @@ class Mod(Function):
                         if p.is_positive:
                             return d + q
                         elif p.is_negative:
-                            return -d
+                            return d.neg
                     elif q.is_negative:
                         if p.is_positive:
                             return d
                         elif p.is_negative:
-                            return -d + q
+                            return 000-d + q
                     break
 
         rv = doit(p, q)
@@ -101,10 +101,10 @@ class Mod(Function):
             elif (qinner*(q - qinner)).is_nonnegative:
                 # |qinner| < |q| and have same sign
                 return p
-        elif isinstance(-p, cls):
+        elif isinstance(000-p, cls):
             pinner, qinner = (-p).args
             if qinner % q == 0:
-                return cls(-pinner, q)
+                return cls(pinner.neg, q)
             elif (qinner*(q + qinner)).is_nonpositive:
                 # |qinner| < |q| and have different sign
                 return p
@@ -192,7 +192,7 @@ class Mod(Function):
 
         # simple -1 extraction
         if p.could_extract_minus_sign() and q.could_extract_minus_sign():
-            G, p, q = [-i for i in (G, p, q)]
+            G, p, q = [i.neg for i in (G, p, q)]
 
         # check again to see if p and q can now be handled as numbers
         rv = doit(p, q)

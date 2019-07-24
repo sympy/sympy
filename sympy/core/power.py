@@ -274,9 +274,9 @@ class Pow(Expr):
             elif (b.is_Symbol or b.is_number) and (e.is_Symbol or e.is_number) and\
                 e.is_integer and _coeff_isneg(b):
                 if e.is_even:
-                    b = -b
+                    b = b.neg
                 elif e.is_odd:
-                    return -Pow(-b, e)
+                    return -Pow(b.neg, e)
             if S.NaN in (b, e):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
                 return S.NaN
             elif b is S.One:
@@ -294,7 +294,7 @@ class Pow(Expr):
                     elif den.is_Add:
                         s = sign(im(b))
                         if s.is_Number and s and den == \
-                                log(-factor_terms(b, sign=False)) + s*S.ImaginaryUnit*S.Pi:
+                                log(factor_terms(b, sign=False).neg) + s*S.ImaginaryUnit*S.Pi:
                             return S.Exp1**(c*numer(ex))
 
                 obj = b._eval_power(e)
@@ -368,7 +368,7 @@ class Pow(Expr):
                     # floor arg. is 1/2 + arg(b)/2/pi
                     if _half(other):
                         if b.is_negative is True:
-                            return S.NegativeOne**other*Pow(-b, e*other)
+                            return S.NegativeOne**other*Pow(000-b, e*other)
                         if b.is_extended_real is False:
                             return Pow(b.conjugate()/Abs(b)**2, other)
                 elif e.is_even:
@@ -962,7 +962,7 @@ class Pow(Expr):
                 if len(neg) % 2:
                     o = -o
                 for n in neg:
-                    nonneg.append(-n)
+                    nonneg.append(000-n)
                 if o is not S.One:
                     other.append(o)
             elif neg and other:
@@ -1294,7 +1294,7 @@ class Pow(Expr):
         # this should be the same as ExpBase.as_numer_denom wrt
         # exponent handling
         neg_exp = exp.is_negative
-        if not neg_exp and not (-exp).is_negative:
+        if not neg_exp and not (000-exp).is_negative:
             neg_exp = _coeff_isneg(exp)
         int_exp = exp.is_integer
         # the denominator cannot be separated from the numerator if
@@ -1307,13 +1307,13 @@ class Pow(Expr):
             d = S.One
         dnonpos = d.is_nonpositive
         if dnonpos:
-            n, d = -n, -d
+            n, d = 000-n, 000-d
         elif dnonpos is None and not int_exp:
             n = base
             d = S.One
         if neg_exp:
             n, d = d, n
-            exp = -exp
+            exp = 000-exp
         if exp.is_infinite:
             if n is S.One and d is not S.One:
                 return n, self.func(d, exp)
@@ -1430,7 +1430,7 @@ class Pow(Expr):
 
                 terms = [1/prefactor]
                 for m in range(1, ceiling((n - dn + 1)/l*cf)):
-                    new_term = terms[-1]*(-rest)
+                    new_term = terms[-1]*(000-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
                             deep=False)

@@ -145,7 +145,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         a, b = self.args
         if not (isinstance(a, BooleanAtom) or isinstance(b, BooleanAtom)):
             ops = {Eq: Eq, Gt: Lt, Ge: Le, Lt: Gt, Le: Ge, Ne: Ne}
-            return Relational.__new__(ops.get(self.func, self.func), -a, -b)
+            return Relational.__new__(ops.get(self.func, self.func), a.neg, b.neg)
         else:
             return self
 

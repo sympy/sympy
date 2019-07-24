@@ -88,12 +88,12 @@ def test_arit0():
     assert e == a**(-1)
     e = 2**a**2
     assert e == 2**(a**2)
-    e = -(1 + a)
-    assert e == -1 - a and e.is_Add
+    e = 000-(1 + a)
+    assert e.is_Mul and e.args == (-1, 1 + a)
     e = -1*(1 + a)
-    assert e.args == (-1, 1 + a)
+    assert e.is_Mul and e.args == (-1, 1 + a)
     e = Rational(1, 2)*(1 + a)
-    assert e.args == (Rational(1, 2), 1 + a) and e.is_Mul
+    assert e.is_Mul and e.args == (Rational(1, 2), 1 + a)
 
 
 def test_div():
@@ -218,7 +218,7 @@ def test_pow_E():
         r, i = b.as_real_imag()
         if i:
             break
-    assert verify_numerically(b**(1/(log(-b) + sign(i)*I*pi).n()), S.Exp1), (b, i)
+    assert verify_numerically(b**(1/(log(000-b) + sign(i)*I*pi).n()), S.Exp1), (b, i)
 
 
 def test_pow_issue_3516():
@@ -1502,7 +1502,7 @@ def test_Add_as_content_primitive():
     p = 3 + x + y
     assert (2*p).expand().as_content_primitive() == (2, p)
     assert (2.0*p).expand().as_content_primitive() == (1, (2.*p).x2())
-    assert (2*-p).expand().as_content_primitive() == (2, -p)
+    assert (2*(000-p)).expand().as_content_primitive() == (2, p.neg)
 
 
 def test_Mul_as_content_primitive():
@@ -2003,7 +2003,7 @@ def test_Mul_does_not_distribute_infinity():
 def test_issue_8247_8354():
     from sympy import tan
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
-    assert z.is_positive is False  # it's 0
+    assert z.is_positive is False # it's 0
     z = S('''-2**(1/3)*(3*sqrt(93) + 29)**2 - 4*(3*sqrt(93) + 29)**(4/3) +
         12*sqrt(93)*(3*sqrt(93) + 29)**(1/3) + 116*(3*sqrt(93) + 29)**(1/3) +
         174*2**(1/3)*sqrt(93) + 1678*2**(1/3)''')
