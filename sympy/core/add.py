@@ -943,7 +943,8 @@ class Add(Expr, AssocOp):
 
     @property
     def neg(self):
-        """Return self with all args negated and none are negated.
+        """Return self with all args negated taking care to
+        not return any unevaluated Add as an arg.
 
         >>> from sympy import Add
         >>> from sympy.abc import x, y, z
