@@ -1095,7 +1095,7 @@ def test_extractions():
     assert (1 - x - y).could_extract_minus_sign() is True
     assert (1 - x + y).could_extract_minus_sign() is False
     assert ((-x - x*y)/y).could_extract_minus_sign() is True
-    assert (000-(x + x*y)/y).could_extract_minus_sign() is True
+    assert (-(x + x*y)/y).could_extract_minus_sign() is True
     assert ((x + x*y)/(-y)).could_extract_minus_sign() is True
     assert ((x + x*y)/y).could_extract_minus_sign() is False
     assert (x*(-x - x**3)).could_extract_minus_sign() is True
