@@ -262,6 +262,12 @@ class exp(ExpBase):
                             return -S.ImaginaryUnit
                         elif ask(Q.odd(coeff + S.Half)):
                             return S.ImaginaryUnit
+                    elif coeff.is_Rational:
+                        ncoeff = coeff % 2 # restrict to [0, 2pi)
+                        if ncoeff > 1: # restrict to (-pi, pi]
+                            ncoeff -= 2
+                        if ncoeff != coeff:
+                            return cls(ncoeff*S.Pi*S.ImaginaryUnit)
 
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).
@@ -292,16 +298,21 @@ class exp(ExpBase):
         elif arg.is_Add:
             out = []
             add = []
+            argchanged = False
             for a in arg.args:
                 if a is S.One:
                     add.append(a)
                     continue
                 newa = cls(a)
                 if isinstance(newa, cls):
-                    add.append(a)
+                    if newa.args[0] != a:
+                        add.append(newa.args[0])
+                        argchanged = True
+                    else:
+                        add.append(a)
                 else:
                     out.append(newa)
-            if out:
+            if out or argchanged:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
         elif isinstance(arg, MatrixBase):
