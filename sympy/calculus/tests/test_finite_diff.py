@@ -1,6 +1,6 @@
 from itertools import product
 
-from sympy import S, symbols, Function, exp
+from sympy import S, symbols, Function, exp, diff
 from sympy.calculus.finite_diff import (
     apply_finite_diff, differentiate_finite, finite_diff_weights,
     as_finite_diff
@@ -116,7 +116,7 @@ def test_as_finite_diff():
     df_true = -f(x+dx(x)/2-dx(x+dx(x)/2)/2) / dx(x+dx(x)/2) \
               + f(x+dx(x)/2+dx(x+dx(x)/2)/2) / dx(x+dx(x)/2)
     df_test = diff(f(x), x).as_finite_difference(points=dx(x), x0=x+dx(x)/2)
-    assert df_true == df_test
+    assert (df_test - df_true).simplify() == 0
 
 
 def test_differentiate_finite():
