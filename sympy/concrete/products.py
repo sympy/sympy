@@ -205,6 +205,24 @@ class Product(ExprWithIntLimits):
         return self.term.is_zero
 
     def doit(self, **hints):
+        # first make sure any definite limits have product
+        # variables with matching assumptions
+        reps = {}
+        for xab in self.limits:
+            # Must be imported here to avoid circular imports
+            from .summations import dummy_with_properties
+            d = dummy_with_properties(xab)
+            if d:
+                reps[xab[0]] = d
+        if reps:
+            undo = dict([(v, k) for k, v in reps.items()])
+            did = self.xreplace(reps).doit(**hints)
+            if type(did) is tuple:  # when separate=True
+                did = tuple([i.xreplace(undo) for i in did])
+            else:
+                did = did.xreplace(undo)
+            return did
+
         f = self.function
         for index, limit in enumerate(self.limits):
             i, a, b = limit
@@ -304,6 +322,7 @@ class Product(ExprWithIntLimits):
                 if p is None:
                     p = self.func(with_k, (k, a, n)).doit()
                 return without_k**(n - a + 1)*p
+
 
         elif term.is_Pow:
             if not term.base.has(k):

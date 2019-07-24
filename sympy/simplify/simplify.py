@@ -11,12 +11,13 @@ from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, n
 from sympy.core.numbers import Float, I, pi, Rational, Integer
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
-from sympy.functions import gamma, exp, sqrt, log, exp_polar, piecewise_fold
+from sympy.functions import gamma, exp, sqrt, log, exp_polar
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold, piecewise_simplify_arguments
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
 from sympy.polys import together, cancel, factor
@@ -514,8 +515,18 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     expression. You can avoid this behavior by passing ``doit=False`` as
     an argument.
     """
+
+    def shorter(*choices):
+        """
+        Return the choice that has the fewest ops. In case of a tie,
+        the expression listed first is selected.
+        """
+        if not has_variety(choices):
+            return choices[0]
+        return min(choices, key=measure)
+
     def done(e):
-        return e.doit() if doit else e
+        return shorter(e.doit(), e) if doit else e
 
     expr = sympify(expr)
     kwargs = dict(
@@ -533,10 +544,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         return _eval_simplify(**kwargs)
 
     original_expr = expr = signsimp(expr)
-
-    from sympy.simplify.hyperexpand import hyperexpand
-    from sympy.functions.special.bessel import BesselBase
-    from sympy import Sum, Product, Integral
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
@@ -557,12 +564,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
 
-    def shorter(*choices):
-        '''Return the choice that has the fewest ops. In case of a tie,
-        the expression listed first is selected.'''
-        if not has_variety(choices):
-            return choices[0]
-        return min(choices, key=measure)
+
 
     # rationalize Floats
     floats = False
@@ -585,10 +587,18 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     expr = factor_terms(expr, sign=False)
 
+    from sympy.simplify.hyperexpand import hyperexpand
+    from sympy.functions.special.bessel import BesselBase
+    from sympy import Sum, Product, Integral
+
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
 
-    expr = piecewise_fold(expr)
+    if expr.has(Piecewise):
+        expr = piecewise_fold(expr)
+        if expr.has(Piecewise):
+            from sympy.functions.elementary.piecewise import piecewise_simplify
+            expr = piecewise_simplify_arguments(expr, **kwargs)
 
     if expr.has(BesselBase):
         expr = besselsimp(expr)

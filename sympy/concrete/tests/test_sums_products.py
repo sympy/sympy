@@ -290,7 +290,7 @@ def test_geometric_sums():
         exp(-2*I*pi*k*i/n) * exp(2*I*pi*q*i/n) / n, (i, 0, n - 1)
     )
     assert result.simplify() == Piecewise(
-            (1, Eq(exp(2*I*pi*(-k + q)/n), 1)), (0, True)
+            (1, Eq(exp(-2*I*pi*(k - q)/n), 1)), (0, True)
     )
 
 
@@ -723,6 +723,10 @@ def test_conjugate_transpose():
     assert p.conjugate().doit() == p.doit().conjugate()
     assert p.transpose().doit() == p.doit().transpose()
 
+    p = Sum(B**n*A, (n, 1, 3))
+    assert p.adjoint().doit() == p.doit().adjoint()
+    assert p.conjugate().doit() == p.doit().conjugate()
+    assert p.transpose().doit() == p.doit().transpose()
 
 def test_issue_4171():
     assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo
@@ -902,6 +906,9 @@ def test_issue_2787():
         (n*p, p/Abs(p - 1) <= 1),
         ((-p + 1)**n*Sum(k*p**k*(-p + 1)**(-k)*binomial(n, k), (k, 0, n)),
         True))
+    # Issue #17165: make sure that another simplify does not change/increase
+    # the result
+    assert res == res.simplify()
 
 
 def test_issue_4668():
@@ -1131,3 +1138,13 @@ def test_exceptions():
     raises(ReorderError, lambda: S.reorder_limit(0, 1))
     S = Sum(x*y, (x, a, b), (y, 1, 4))
     raises(NotImplementedError, lambda: S.is_convergent())
+
+def test_issue_17165():
+    n = symbols("n", integer=True)
+    x = symbols('x')
+    s = (x*Sum(x**n, (n, -1, oo)))
+    ssimp = s.doit().simplify()
+
+    assert ssimp == Piecewise((-1/(x - 1), Abs(x) < 1),
+                              (x*Sum(x**n, (n, -1, oo)), True))
+    assert ssimp == ssimp.simplify()
