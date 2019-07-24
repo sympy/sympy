@@ -59,14 +59,11 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
         if not isinstance(flat_list, Tuple):
             flat_list = Tuple(*flat_list)
 
-        return Basic.__new__(cls, rows, cols, flat_list)
-
-    @property
-    def _mat(self):
-        # self.args[2] is a Tuple.  Access to the elements
-        # of a tuple are significantly faster than Tuple,
-        # so return the internal tuple.
-        return self.args[2].args
+        obj = Basic.__new__(cls, rows, cols, flat_list)
+        obj.rows = int(rows)
+        obj.cols = int(cols)
+        obj._mat = flat_list.args
+        return obj
 
     def _entry(self, i, j, **kwargs):
         return DenseMatrix.__getitem__(self, (i, j))
@@ -100,18 +97,6 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),
                          Tuple(*(mat[i] for i in indices), sympify=False), copy=False)
-
-    @property
-    def cols(self):
-        return int(self.args[1])
-
-    @property
-    def rows(self):
-        return int(self.args[0])
-
-    @property
-    def shape(self):
-        return tuple(int(i) for i in self.args[:2])
 
     def is_diagonalizable(self, reals_only=False, **kwargs):
         return super(ImmutableDenseMatrix, self).is_diagonalizable(
