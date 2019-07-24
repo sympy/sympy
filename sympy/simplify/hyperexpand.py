@@ -1400,7 +1400,7 @@ class ReduceOrder(Operator):
 
     @classmethod
     def meijer_plus(cls, a, b):
-        return cls._meijer(1 - a, 1 - b, 1)
+        return cls._meijer(1 + a.neg, 1 + b.neg, 1)
 
     def __str__(self):
         return '<Reduce order by cancelling upper %s with lower %s.>' % \

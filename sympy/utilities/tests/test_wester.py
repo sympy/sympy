@@ -700,7 +700,7 @@ def test_J9():
 
 def test_J10():
     mu, nu = symbols('mu, nu', integer=True)
-    assert assoc_legendre(nu, mu, 0) == 2**mu*sqrt(pi)/gamma((nu - mu)/2 + 1)/gamma((-nu - mu + 1)/2)
+    assert assoc_legendre(nu, mu, 0) == 2**mu*sqrt(pi)/gamma((mu - nu)/2/-1 + 1)/gamma((-nu - mu + 1)/2)
 
 
 def test_J11():
@@ -877,15 +877,17 @@ def test_M7():
     # TODO: Replace solve with solveset, as of now test fails for solveset
     sol = solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
         226*x**2 - 140*x + 46, x)
-    assert [s.simplify() for s in sol] == [
-        1 - sqrt(-6 - 2*I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 - 2*I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 + 2*I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 + 2*I*sqrt(3 + 4*sqrt (3)))/2,
-        1 - sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2]
+    from sympy.core.evaluate import distribute
+    with distribute(False):
+        assert sol==[
+            -(-2 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3))))/2,
+            -(-2 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3))))/2,
+            -(-2 + sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3))))/2,
+            -(-2 + sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3))/2,
+            (2 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3))))/2,
+            (2 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3))))/2,
+            (2 + sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3))))/2,
+            (2 + sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3))/2]
 
 
 @XFAIL  # There are an infinite number of solutions.
@@ -986,7 +988,7 @@ def test_M23():
     x = symbols('x', complex=True)
     # TODO: Replace solve with solveset, as of now test fails for solveset
     assert solve(x - 1/sqrt(1 + x**2)) == [
-        -I*sqrt(S.Half + sqrt(5)/2), sqrt(-S.Half + sqrt(5)/2)]
+        sqrt(2)*sqrt(-1 + sqrt(5))/2, -sqrt(2)*I*sqrt(1 + sqrt(5))/2]
 
 
 def test_M24():
@@ -1488,13 +1490,14 @@ def test_P19():
                 [w,    x,    y,    z],
                 [w**2, x**2, y**2, z**2],
                 [w**3, x**3, y**3, z**3]])
-    assert M.det() == (w**3*x**2*y   - w**3*x**2*z - w**3*x*y**2 + w**3*x*z**2
-                       + w**3*y**2*z - w**3*y*z**2 - w**2*x**3*y + w**2*x**3*z
-                       + w**2*x*y**3 - w**2*x*z**3 - w**2*y**3*z + w**2*y*z**3
-                       + w*x**3*y**2 - w*x**3*z**2 - w*x**2*y**3 + w*x**2*z**3
-                       + w*y**3*z**2 - w*y**2*z**3 - x**3*y**2*z + x**3*y*z**2
-                       + x**2*y**3*z - x**2*y*z**3 - x*y**3*z**2 + x*y**2*z**3
-                       )
+    assert M.det().x2() == (
+        w**3*x**2*y   - w**3*x**2*z - w**3*x*y**2 + w**3*x*z**2
+        + w**3*y**2*z - w**3*y*z**2 - w**2*x**3*y + w**2*x**3*z
+        + w**2*x*y**3 - w**2*x*z**3 - w**2*y**3*z + w**2*y*z**3
+        + w*x**3*y**2 - w*x**3*z**2 - w*x**2*y**3 + w*x**2*z**3
+        + w*y**3*z**2 - w*y**2*z**3 - x**3*y**2*z + x**3*y*z**2
+        + x**2*y**3*z - x**2*y*z**3 - x*y**3*z**2 + x*y**2*z**3
+        )
 
 
 @XFAIL
@@ -1522,12 +1525,14 @@ def test_P23():
         [0, 1, 2, 1, 0],
         [0, 0, 1, 2, 1],
         [0, 0, 0, 1, 2]])
-    assert M.eigenvals() == {
-        S('1'): 1,
-        S('2'): 1,
-        S('3'): 1,
-        S('sqrt(3) + 2'): 1,
-        S('-sqrt(3) + 2'): 1}
+    from sympy.core.evaluate import distribute
+    with distribute(False):
+        assert M.eigenvals() == {
+            S('1'): 1,
+            S('2'): 1,
+            S('3'): 1,
+            sqrt(3) + 2: 1,
+            -(2 - sqrt(3)): 1}
 
 
 def test_P24():
@@ -1539,14 +1544,12 @@ def test_P24():
                 [ -52,  -43,   49,   44, -599,  411,  208,  208],
                 [ -49,   -8,    8,   59,  208,  208,   99, -911],
                 [  29,  -44,   52,  -23,  208,  208, -911,   99]])
-    assert M.eigenvals() == {
-        S('0'): 1,
-        S('10*sqrt(10405)'): 1,
-        S('100*sqrt(26) + 510'): 1,
-        S('1000'): 2,
-        S('-100*sqrt(26) + 510'): 1,
-        S('-10*sqrt(10405)'): 1,
-        S('1020'): 1}
+    from sympy.core.evaluate import distribute
+    with distribute(False):
+        assert M.eigenvals() == {
+            1020: 1, 1000: 2, -10*(-51 + 10*sqrt(26)): 1,
+            10*(10*sqrt(26) + 51): 1, -10*sqrt(10405): 1,
+            10*sqrt(10405): 1, 0: 1}
 
 
 def test_P25():
@@ -1574,9 +1577,10 @@ def test_P26():
                 [  0,   0,   0,   0,   0,  1,  0,  0,  0],
                 [  0,   0,   0,   0,   0,  0,  1, -1, -1],
                 [  0,   0,   0,   0,   0,  0,  0,  1,  0]])
-    assert M.eigenvals(error_when_incomplete=False) == {
-        S('-1/2 - sqrt(3)*I/2'): 2,
-        S('-1/2 + sqrt(3)*I/2'): 2}
+    from sympy.core.evaluate import distribute
+    with distribute(False):
+        assert M.eigenvals(error_when_incomplete=False) == {
+            -(1 + sqrt(3)*I)/2: 2, (-1 + sqrt(3)*I)/2: 2}
 
 
 def test_P27():
@@ -1586,31 +1590,34 @@ def test_P27():
                 [0,  0, a, 0, 0],
                 [0,  0, 0, a, 0],
                 [0, -2, 0, 0, 2]])
-    assert M.eigenvects() == [(a, 3, [Matrix([[1],
-                                       [0],
-                                       [0],
-                                       [0],
-                                       [0]]),
-                               Matrix([[0],
-                                       [0],
-                                       [1],
-                                       [0],
-                                       [0]]),
-                               Matrix([[0],
-                                       [0],
-                                       [0],
-                                       [1],
-                                       [0]])]),
-                        (1 - I, 1, [Matrix([[          0],
-                                            [-1/(-1 + I)],
-                                            [          0],
-                                            [          0],
-                                            [          1]])]),
-                        (1 + I, 1, [Matrix([[          0],
-                                            [-1/(-1 - I)],
-                                            [          0],
-                                            [          0],
-                                            [          1]])])]
+    from sympy.core.evaluate import distribute
+    with distribute(False):
+        assert M.eigenvects() == [(a, 3, [Matrix([
+        [1],
+        [0],
+        [0],
+        [0],
+        [0]]), Matrix([
+        [0],
+        [0],
+        [1],
+        [0],
+        [0]]), Matrix([
+        [0],
+        [0],
+        [0],
+        [1],
+        [0]])]), (-(-1 + I), 1, [Matrix([
+        [        0],
+        [(1 + I)/2],
+        [        0],
+        [        0],
+        [        1]])]), (1 + I, 1, [Matrix([
+        [        0],
+        [(1 - I)/2],
+        [        0],
+        [        0],
+        [        1]])])]
 
 
 @XFAIL
@@ -1942,7 +1949,7 @@ def test_R18():
     k = symbols('k', integer=True, positive=True)
     Sm = Sum(1/(2**k*k**2), (k, 1, oo))
     T = Sm.doit()
-    assert T.simplify() == -log(2)**2/2 + pi**2/12
+    assert T == -log(2)**2/2 + pi**2/12
 
 
 @slow
@@ -2308,7 +2315,7 @@ def test_V6():
 
 def test_V7():
     r1 = integrate(sinh(x)**4/cosh(x)**2)
-    assert r1.simplify() == -3*x/2 + sinh(x)**3/(2*cosh(x)) + 3*tanh(x)/2
+    assert r1.simplify() == (-3*x + sinh(x)**3/cosh(x) + 3*tanh(x))/2
 
 
 @XFAIL
@@ -2932,7 +2939,7 @@ def test_Y9():
 
 def test_Y10():
     assert (fourier_transform(abs(x)*exp(-3*abs(x)), x, z) ==
-            (-8*pi**2*z**2 + 18)/(16*pi**4*z**4 + 72*pi**2*z**2 + 81))
+            (8*pi**2*z**2 - 18)/(16*pi**4*z**4 + 72*pi**2*z**2 + 81)/-1)
 
 
 @SKIP("https://github.com/sympy/sympy/issues/7181")
