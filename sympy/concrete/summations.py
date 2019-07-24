@@ -961,10 +961,62 @@ def eval_sum(f, limits):
 
 
 def eval_sum_direct(expr, limits):
+    """
+    Evalutate expression directly, but perform some simple checks first
+    to possibly result in a smaller expression and faster execution.
+    """
     from sympy.core import Add
     (i, a, b) = limits
 
     dif = b - a
+    # Linearity
+    if expr.is_Mul:
+        without_i, with_i = expr.as_coeff_mul_deps(i)
+        if without_i != 1:
+            s = eval_sum_direct(with_i, (i, a, b))
+            if s:
+                r = without_i*s
+                if not r is S.NaN:
+                    return r
+        else:
+            # It may be because expr is not commutative
+            if not expr.is_commutative:
+                L, R = expr.as_two_terms()
+
+                if not L.has(i):
+                    sR = eval_sum_direct(R, (i, a, b))
+                    if sR:
+                        return L*sR
+
+                if not R.has(i):
+                    sL = eval_sum_direct(L, (i, a, b))
+                    if sL:
+                        return sL*R
+        try:
+            expr = apart(expr, i)  # see if it becomes an Add
+        except PolynomialError:
+            pass
+
+    if expr.is_Add:
+        without_i, with_i = expr.as_coeff_add_deps(i)
+        if without_i != 0:
+            s = eval_sum_direct(with_i, (i, a, b))
+            if s:
+                r = without_i*(dif + 1) + s
+                if not r is S.NaN:
+                    return r
+        else:
+            # It may be because expr is not commutative
+            if not expr.is_commutative:
+                lsum = eval_sum_direct(L, (i, a, b))
+                rsum = eval_sum_direct(R, (i, a, b))
+
+                if None not in (lsum, rsum):
+                    r = lsum + rsum
+                    if not r is S.NaN:
+                        return r
+
+
     return Add(*[expr.subs(i, a + j) for j in range(dif + 1)])
 
 
@@ -978,18 +1030,27 @@ def eval_sum_symbolic(f, limits):
 
     # Linearity
     if f.is_Mul:
-        L, R = f.as_two_terms()
+        without_i, with_i = f.as_coeff_mul_deps(i)
+        if without_i != 1:
+            s = eval_sum_symbolic(with_i, (i, a, b))
+            if s:
+                r = without_i*s
+                if not r is S.NaN:
+                    return r
+        else:
+            # It may be because f is not commutative
+            if not f.is_commutative:
+                L, R = f.as_two_terms()
 
-        if not L.has(i):
-            sR = eval_sum_symbolic(R, (i, a, b))
-            if sR:
-                return L*sR
+                if not L.has(i):
+                    sR = eval_sum_symbolic(R, (i, a, b))
+                    if sR:
+                        return L*sR
 
-        if not R.has(i):
-            sL = eval_sum_symbolic(L, (i, a, b))
-            if sL:
-                return R*sL
-
+                if not R.has(i):
+                    sL = eval_sum_symbolic(L, (i, a, b))
+                    if sL:
+                        return sL*R
         try:
             f = apart(f, i)  # see if it becomes an Add
         except PolynomialError:
@@ -1002,13 +1063,24 @@ def eval_sum_symbolic(f, limits):
         if lrsum:
             return lrsum
 
-        lsum = eval_sum_symbolic(L, (i, a, b))
-        rsum = eval_sum_symbolic(R, (i, a, b))
+        without_i, with_i = f.as_coeff_add_deps(i)
+        if without_i != 0:
+            s = eval_sum_symbolic(with_i, (i, a, b))
+            if s:
+                r = without_i*(b - a + 1) + s
+                if not r is S.NaN:
+                    return r
+        else:
+            # It may be because f is not commutative
+            if not f.is_commutative:
+                lsum = eval_sum_symbolic(L, (i, a, b))
+                rsum = eval_sum_symbolic(R, (i, a, b))
 
-        if None not in (lsum, rsum):
-            r = lsum + rsum
-            if not r is S.NaN:
-                return r
+                if None not in (lsum, rsum):
+                    r = lsum + rsum
+                    if not r is S.NaN:
+                        return r
+
 
     # Polynomial terms with Faulhaber's formula
     n = Wild('n')

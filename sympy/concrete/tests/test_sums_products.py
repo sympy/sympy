@@ -321,7 +321,7 @@ def test_other_sums():
     f = m**2 + m*exp(m)
     g = 3*exp(S(3)/2)/2 + exp(S(1)/2)/2 - exp(-S(1)/2)/2 - 3*exp(-S(3)/2)/2 + 5
 
-    assert summation(f, (m, -S(3)/2, S(3)/2)).expand() == g
+    assert summation(f, (m, -S(3)/2, S(3)/2)) == g
     assert summation(f, (m, -1.5, 1.5)).evalf().epsilon_eq(g.evalf(), 1e-10)
 
 fac = factorial

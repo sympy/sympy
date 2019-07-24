@@ -351,6 +351,43 @@ class Add(Expr, AssocOp):
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
+    @cacheit
+    def as_coeff_add_deps(self, *deps):
+        """
+        Rewrite as two sums: one without terms in deps and one with.
+
+        If non-commutative, the terms without the deps only include those to
+        the left of the first non-commutative term.
+        """
+        if deps:
+            if self.is_commutative:
+                l1 = []
+                l2 = []
+                for f in self.args:
+                    if f.has(*deps):
+                        l2.append(f)
+                    else:
+                        l1.append(f)
+                return self._new_rawargs(*l1), self._new_rawargs(*l2)
+            else:
+                l1 = []
+                l2 = []
+                first_noncomm_detected = False
+                for f in self.args:
+                    if first_noncomm_detected:
+                        l2.append(f)
+                    else:
+                        if f.has(*deps):
+                            l2.append(f)
+                        else:
+                            l1.append(f)
+                        if not f.is_commutative:
+                            first_noncomm_detected = True
+                if l1:
+                    return self._new_rawargs(*l1), self._new_rawargs(*l2)
+
+        return S.Zero, self
+
     def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation. """
         coeff, args = self.args[0], self.args[1:]

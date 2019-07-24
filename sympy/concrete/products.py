@@ -251,8 +251,9 @@ class Product(ExprWithIntLimits):
             return deltaproduct(term, limits)
 
         dif = n - a
-        if dif.is_Integer:
-            return Mul(*[term.subs(k, a + i) for i in range(dif + 1)])
+        definite = dif.is_Integer
+        if definite and (dif < 100):
+            return self._eval_product_direct(term, limits)
 
         elif term.is_polynomial(k):
             poly = term.as_poly(k)
@@ -279,23 +280,30 @@ class Product(ExprWithIntLimits):
                 return self._eval_product(factored, (k, a, n))
 
         elif term.is_Mul:
-            exclude, include = [], []
+            without_k, with_k = term.as_coeff_mul_deps(k)
 
-            for t in term.args:
-                p = self._eval_product(t, (k, a, n))
+            if with_k.is_Mul:
+                exclude, include = [], []
+                for t in with_k.args:
+                    p = self._eval_product(t, (k, a, n))
 
-                if p is not None:
-                    exclude.append(p)
+                    if p is not None:
+                        exclude.append(p)
+                    else:
+                        include.append(t)
+
+                if not exclude:
+                    return None
                 else:
-                    include.append(t)
-
-            if not exclude:
-                return None
+                    arg = term._new_rawargs(*include)
+                    A = Mul(*exclude)
+                    B = self.func(arg, (k, a, n)).doit()
+                    return without_k**(n - a + 1)*A * B
             else:
-                arg = term._new_rawargs(*include)
-                A = Mul(*exclude)
-                B = self.func(arg, (k, a, n)).doit()
-                return A * B
+                p = self._eval_product(with_k, (k, a, n))
+                if p is None:
+                    p = self.func(with_k, (k, a, n)).doit()
+                return without_k**(n - a + 1)*p
 
         elif term.is_Pow:
             if not term.base.has(k):
@@ -316,6 +324,9 @@ class Product(ExprWithIntLimits):
             else:
                 return f
 
+        if definite:
+            return self._eval_product_direct(term, limits)
+
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import product_simplify
         rv = product_simplify(self)
@@ -325,6 +336,10 @@ class Product(ExprWithIntLimits):
         if self.is_commutative:
             return self.func(self.function.transpose(), *self.limits)
         return None
+
+    def _eval_product_direct(self, term, limits):
+        (k, a, n) = limits
+        return Mul(*[term.subs(k, a + i) for i in range(n - a + 1)])
 
     def is_convergent(self):
         r"""
