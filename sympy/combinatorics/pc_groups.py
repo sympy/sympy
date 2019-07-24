@@ -1,253 +1,25 @@
 from sympy.core import Basic
-from sympy import isprime
+from sympy import isprime, symbols
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
+from sympy.combinatorics.free_groups import free_group
 
 class PolycyclicGroup(DefaultPrinting):
 
     is_group = True
     is_solvable = True
 
-    def __init__(self, pc_sequence, pc_series):
+    def __init__(self, pc_sequence, pc_series, relative_order, collector = None):
         self.pcgs = pc_sequence
         self.pc_series = pc_series
-
-    def relative_order(self):
-        rel_orders = []
-        for i in range(len(self.pc_series)-1):
-            G = self.pc_series[i]
-            H = self.pc_series[i+1]
-            rel_orders.append(G.order() // H.order())
-        return rel_orders
+        self.relative_order = relative_order
+        self.collector = Collector(self.pcgs, pc_series, relative_order) if not collector else collector
 
     def is_prime_order(self):
-        return all(isprime(order) for order in self.relative_order())
+        return all(isprime(order) for order in self.relative_order)
 
     def length(self):
         return len(self.pcgs)
-
-    def exponent_vector(self, element, free_group):
-        """
-        Return the exponent vector of length equal to the
-        length of polycyclic generating sequence.
-
-        For a given generator/element `g` of the polycyclic group,
-        it can be represented as `g = x{1}**e{1}....x{n}**e{n}`,
-        where `x{i}` represents polycyclic generators and `n` is
-        the number of generators in the free_group equal to the length
-        of pcgs.
-
-        Examples
-        ========
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.free_groups import free_group
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> G = SymmetricGroup(4)
-        >>> PcGroup = G.polycyclic_group()
-        >>> pcgs = PcGroup.pcgs
-        >>> free_group, x0, x1, x2, x3 = free_group("x0, x1, x2, x3")
-        >>> PcGroup.exponent_vector(G[0], free_group)
-        [1, 0, 0, 0]
-        >>> exp = PcGroup.exponent_vector(G[1], free_group)
-        >>> g = Permutation()
-        >>> for i in range(len(exp)):
-        ...     g = g*pcgs[i] if exp[i] else g
-        >>> assert g == G[1]
-
-        References
-        ==========
-
-        .. [1] Holt, D., Eick, B., O'Brien, E.
-               "Handbook of Computational Group Theory"
-                Section 8.1.1, Definition 8.4
-
-        """
-        G = PermutationGroup()
-        for g in self.pcgs:
-            G = PermutationGroup([g] + G.generators)
-        gens = G.generator_product(element, original = True)
-        gens.reverse()
-
-        perm_to_free = {}
-        for sym, g in zip(free_group.generators, self.pcgs):
-            perm_to_free[g**-1] = sym**-1
-            perm_to_free[g] = sym
-        w = free_group.identity
-        for g in gens:
-            w = w*perm_to_free[g]
-
-        pc_presentation = self.pc_presentation(free_group)
-        collector = Collector(pc_presentation, self.relative_order(), free_group)
-        word = collector.collected_word(w)
-
-        index = {s: i for i, s in enumerate(free_group.symbols)}
-        exp_vector = [0]*len(free_group)
-        word = word.array_form
-        for t in word:
-            exp_vector[index[t[0]]] = t[1]
-        return exp_vector
-
-    def depth(self, element, free_group):
-        """
-        Return the depth of a given element.
-
-        The depth of a given element `g` is defined by
-        `dep{g} = i if e{1} = e{2} = ... = e{i-1} = 0`
-        and `e{i} != 0`, where `e` represents the exponent-vector.
-
-        Examples
-        ========
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.free_groups import free_group
-        >>> free_group, x, y = free_group("x, y")
-        >>> G = SymmetricGroup(3)
-        >>> PcGroup = G.polycyclic_group()
-        >>> PcGroup.depth(G[0], free_group)
-        2
-        >>> PcGroup.depth(G[1], free_group)
-        1
-
-        References
-        ==========
-
-        .. [1] Holt, D., Eick, B., O'Brien, E.
-               "Handbook of Computational Group Theory"
-                Section 8.1.1, Definition 8.5
-
-        """
-        exp_vector = self.exponent_vector(element, free_group)
-        return next((i+1 for i, x in enumerate(exp_vector) if x), len(self.pcgs)+1)
-
-    def leading_exponent(self, element, free_group):
-        """
-        Return the leading non-zero exponent.
-
-        The leading exponent for a given element `g` is defined
-        by `leading_exponent{g} = e{i}`, if `depth{g} = i`.
-
-        Examples
-        ========
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.free_groups import free_group
-        >>> free_group, x, y = free_group("x, y")
-        >>> G = SymmetricGroup(3)
-        >>> PcGroup = G.polycyclic_group()
-        >>> PcGroup.leading_exponent(G[1], free_group)
-        1
-
-        """
-        exp_vector = self.exponent_vector(element, free_group)
-        depth = self.depth(element, free_group)
-        if depth != len(self.pcgs)+1:
-            return exp_vector[depth-1]
-        return None
-
-    def pc_presentation(self, free_group):
-        """
-        Return the polycyclic presentation.
-
-        There are two types of relations used in polycyclic
-        presentation.
-        i) Power relations of the form `x{i}^re{i} = R{i}{i}`,
-        `for 0 <= i < length(pcgs)` where `x` represents polycyclic
-        generator and `re` is the corresponding relative order.
-
-        ii) Conjugate relations of the form `x{j}^-1*x{i}*x{j}`,
-        `for 0 <= j < i <= length(pcgs)`.
-
-        Examples
-        ========
-        >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> from sympy.combinatorics.free_groups import free_group
-        >>> S = SymmetricGroup(49).sylow_subgroup(7)
-        >>> der = S.derived_series()
-        >>> G = der[len(der)-2]
-        >>> PcGroup = G.polycyclic_group()
-        >>> pcgs = PcGroup.pcgs
-        >>> len(pcgs)
-        6
-        >>> free_group, x0, x1, x2, x3, x4, x5 = free_group("x0, x1, x2, x3, x4, x5")
-        >>> pc_resentation = PcGroup.pc_presentation(free_group)
-        >>> free_to_perm = {}
-        >>> for s, g in zip(free_group.symbols, pcgs):
-        ...     free_to_perm[s] = g
-
-        >>> for k, v in pc_resentation.items():
-        ...     k_array = k.array_form
-        ...     if v != ():
-        ...        v_array = v.array_form
-        ...     lhs = Permutation()
-        ...     for gen in k_array:
-        ...         s = gen[0]
-        ...         e = gen[1]
-        ...         lhs = lhs*free_to_perm[s]**e
-        ...     if v == ():
-        ...         assert lhs.is_identity
-        ...         continue
-        ...     rhs = Permutation()
-        ...     for gen in v_array:
-        ...         s = gen[0]
-        ...         e = gen[1]
-        ...         rhs = rhs*free_to_perm[s]**e
-        ...     assert lhs == rhs
-
-        """
-        rel_order = self.relative_order()
-        pc_relators = {}
-        perm_to_free = {}
-        pcgs = self.pcgs
-
-        for gen, s in zip(pcgs, free_group.generators):
-            perm_to_free[gen**-1] = s**-1
-            perm_to_free[gen] = s
-
-        collector = Collector(pc_relators, rel_order, free_group)
-        pcgs.reverse()
-        series = self.pc_series
-        series.reverse()
-        collected_gens = []
-
-        for i, gen in enumerate(pcgs):
-            re = rel_order[len(rel_order)-i-1]
-            relation = perm_to_free[gen]**re
-            G = series[i] if i != 0 else series[i+1]
-
-            l = G.generator_product(gen**re, original = True)
-            l.reverse()
-
-            word = free_group.identity
-            for g in l:
-                word = word*perm_to_free[g]
-
-            word = collector.collected_word(word)
-            pc_relators[relation] = word if word else ()
-            collector.pc_relators = pc_relators
-
-            collected_gens.append(gen)
-            if len(collected_gens) > 1:
-                conj = collected_gens[len(collected_gens)-1]
-                conjugator = perm_to_free[conj]
-
-                for j in range(len(collected_gens)-1):
-                    conjugated = perm_to_free[collected_gens[j]]
-
-                    relation = conjugator**-1*conjugated*conjugator
-                    gens = conj**-1*collected_gens[j]*conj
-
-                    l = G.generator_product(gens, original = True)
-                    l.reverse()
-                    word = free_group.identity
-                    for g in l:
-                        word = word*perm_to_free[g]
-
-                    word = collector.collected_word(word)
-                    pc_relators[relation] = word if word else ()
-                    collector.pc_relators = pc_relators
-
-        series.reverse()
-        pcgs.reverse()
-        return pc_relators
 
 
 class Collector(DefaultPrinting):
@@ -261,11 +33,13 @@ class Collector(DefaultPrinting):
            Section 8.1.3
     """
 
-    def __init__(self, pc_relators, relative_order, free_group):
-        self.pc_relators = pc_relators
+    def __init__(self, pcgs, pc_series, relative_order, group = None, pc_presentation = None):
+        self.pcgs = pcgs
+        self.pc_series = pc_series
         self.relative_order = relative_order
-        self.free_group = free_group
-        self.index = {s: i for i, s in enumerate(free_group.symbols)}
+        self.free_group = free_group('x:{0}'.format(len(pcgs)))[0] if not group else group
+        self.index = {s: i for i, s in enumerate(self.free_group.symbols)}
+        self.pc_presentation = self.pc_relators()
 
     def minimal_uncollected_subword(self, word):
         """
@@ -285,18 +59,15 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
-        >>> from sympy.combinatorics.pc_groups import Collector
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.free_groups import free_group
-
-        Example 8.7 Pg. 281 from [1]
+        >>> G = SymmetricGroup(4)
+        >>> PcGroup = G.polycyclic_group()
+        >>> collector = PcGroup.collector
         >>> F, x1, x2 = free_group("x1, x2")
-        >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = [2, None]
         >>> word = x2**2*x1**7
-        >>> free_group = word.group
-        >>> collector = Collector(pc_relators, relative_order, free_group)
         >>> collector.minimal_uncollected_subword(word)
-        ((x1, 7),)
+        ((x2, 2),)
 
         """
         # To handle the case word = <identity>
@@ -330,25 +101,20 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
-        >>> from sympy.combinatorics.pc_groups import Collector
-        >>> from sympy.combinatorics.free_groups import free_group
-
-        >>> F, x1, x2 = free_group("x1, x2")
-        >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = [2, None]
-        >>> word = x2**2*x1**7
-        >>> free_group = word.group
-        >>> collector = Collector(pc_relators, relative_order, free_group)
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> G = SymmetricGroup(3)
+        >>> PcGroup = G.polycyclic_group()
+        >>> collector = PcGroup.collector
         >>> power_rel, conj_rel = collector.relations()
         >>> power_rel
-        {x1**2: 1}
+        {x0**2: (), x1**3: ()}
         >>> conj_rel
-        {x1**-1*x2*x1: x2**-1, x1*x2*x1**-1: x2**-1}
+        {x0**-1*x1*x0: x1**2}
 
         """
         power_relators = {}
         conjugate_relators = {}
-        for key, value in self.pc_relators.items():
+        for key, value in self.pc_presentation.items():
             if len(key.array_form) == 1:
                 power_relators[key] = value
             else:
@@ -362,14 +128,13 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
-        >>> from sympy.combinatorics.pc_groups import Collector
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.free_groups import free_group
+        >>> G = SymmetricGroup(4)
+        >>> PcGroup = G.polycyclic_group()
+        >>> collector = PcGroup.collector
         >>> F, x1, x2 = free_group("x1, x2")
-        >>> pc_relators = {x1**2 : 1, x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = [2, None]
         >>> word = x2**2*x1**7
-        >>> free_group = word.group
-        >>> collector = Collector(pc_relators, relative_order, free_group)
         >>> w = x2**2*x1
         >>> collector.subword_index(word, w)
         (0, 3)
@@ -399,17 +164,12 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
-        >>> from sympy.combinatorics.pc_groups import Collector
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.free_groups import free_group
-        >>> F, x0, x1, x2 = free_group("x0, x1, x2")
-        >>> pc_relators = {x0**-1*x1*x0: x1**2, x1**-1*x2*x1: x2, x0**-1*x2*x0: x2*x1}
-        >>> relative_order = [2, 2, 3]
-        >>> word = x2**2*x1**7
-        >>> free_group = word.group
-        >>> collector = Collector(pc_relators, relative_order, free_group)
-        >>> w = x2*x1
-        >>> collector.map_relation(w)
-        x2
+        >>> G = SymmetricGroup(3)
+        >>> PcGroup = G.polycyclic_group()
+        >>> collector = PcGroup.collector
+        >>> F, x0, x1 = free_group("x0, x1")
         >>> w = x1*x0
         >>> collector.map_relation(w)
         x1**2
@@ -420,7 +180,7 @@ class Collector(DefaultPrinting):
         s2 = array[1][0]
         key = ((s2, -1), (s1, 1), (s2, 1))
         key = self.free_group.dtype(key)
-        return self.pc_relators[key]
+        return self.pc_presentation[key]
 
 
     def collected_word(self, word):
@@ -434,16 +194,31 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
-        >>> from sympy.combinatorics.pc_groups import Collector
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.free_groups import free_group
-        >>> F, x1, x2 = free_group("x1, x2")
-        >>> pc_relators = {x1**2 : (), x1*x2*x1**-1 : x2**-1, x1**-1*x2*x1 : x2**-1}
-        >>> relative_order = [2, None]
-        >>> word = x2**2*x1**7
-        >>> free_group = word.group
-        >>> collector = Collector(pc_relators, relative_order, free_group)
-        >>> collector.collected_word(word)
-        x1*x2**-2
+        >>> G = SymmetricGroup(4)
+        >>> PcGroup = G.polycyclic_group()
+        >>> collector = PcGroup.collector
+        >>> F, x0, x1, x2, x3 = free_group("x0, x1, x2, x3")
+        >>> word = x3*x2*x1*x0
+        >>> collected_word = collector.collected_word(word)
+        >>> free_to_perm = {}
+        >>> free_group = collector.free_group
+        >>> for sym, gen in zip(free_group.symbols, collector.pcgs):
+        ...     free_to_perm[sym] = gen
+        >>> G1 = PermutationGroup()
+        >>> for w in word:
+        ...     sym = w[0]
+        ...     perm = free_to_perm[sym]
+        ...     G1 = PermutationGroup([perm] + G1.generators)
+        >>> G2 = PermutationGroup()
+        >>> for w in collected_word:
+        ...     sym = w[0]
+        ...     perm = free_to_perm[sym]
+        ...     G2 = PermutationGroup([perm] + G2.generators)
+        >>> G1 == G2
+        True
 
         """
         free_group = self.free_group
@@ -476,8 +251,8 @@ class Collector(DefaultPrinting):
             if len(w) == 1 and (e1 < 0 or e1 > re-1):
                 key = ((w[0][0], re), )
                 key = free_group.dtype(key)
-                if self.pc_relators[key]:
-                    word_ = ((w[0][0], r), (self.pc_relators[key], q))
+                if self.pc_presentation[key]:
+                    word_ = ((w[0][0], r), (self.pc_presentation[key], q))
                     word_ = free_group.dtype(word_)
                 else:
                     if r != 0:
@@ -497,3 +272,224 @@ class Collector(DefaultPrinting):
                 word = word.substituted_word(low, high, word_)
 
         return word
+
+
+    def pc_relators(self):
+        """
+        Return the polycyclic presentation.
+
+        There are two types of relations used in polycyclic
+        presentation.
+        i) Power relations of the form `x{i}^re{i} = R{i}{i}`,
+        `for 0 <= i < length(pcgs)` where `x` represents polycyclic
+        generator and `re` is the corresponding relative order.
+
+        ii) Conjugate relations of the form `x{j}^-1*x{i}*x{j}`,
+        `for 0 <= j < i <= length(pcgs)`.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> S = SymmetricGroup(49).sylow_subgroup(7)
+        >>> der = S.derived_series()
+        >>> G = der[len(der)-2]
+        >>> PcGroup = G.polycyclic_group()
+        >>> collector = PcGroup.collector
+        >>> pcgs = PcGroup.pcgs
+        >>> len(pcgs)
+        6
+        >>> free_group = collector.free_group
+        >>> pc_resentation = collector.pc_presentation
+        >>> free_to_perm = {}
+        >>> for s, g in zip(free_group.symbols, pcgs):
+        ...     free_to_perm[s] = g
+
+        >>> for k, v in pc_resentation.items():
+        ...     k_array = k.array_form
+        ...     if v != ():
+        ...        v_array = v.array_form
+        ...     lhs = Permutation()
+        ...     for gen in k_array:
+        ...         s = gen[0]
+        ...         e = gen[1]
+        ...         lhs = lhs*free_to_perm[s]**e
+        ...     if v == ():
+        ...         assert lhs.is_identity
+        ...         continue
+        ...     rhs = Permutation()
+        ...     for gen in v_array:
+        ...         s = gen[0]
+        ...         e = gen[1]
+        ...         rhs = rhs*free_to_perm[s]**e
+        ...     assert lhs == rhs
+
+        """
+        free_group = self.free_group
+        rel_order = self.relative_order
+        pc_relators = {}
+        perm_to_free = {}
+        pcgs = self.pcgs
+
+        for gen, s in zip(pcgs, free_group.generators):
+            perm_to_free[gen**-1] = s**-1
+            perm_to_free[gen] = s
+
+        pcgs.reverse()
+        series = self.pc_series
+        series.reverse()
+        collected_gens = []
+
+        for i, gen in enumerate(pcgs):
+            re = rel_order[len(rel_order)-i-1]
+            relation = perm_to_free[gen]**re
+            G = series[i] if i != 0 else series[i+1]
+
+            l = G.generator_product(gen**re, original = True)
+            l.reverse()
+
+            word = free_group.identity
+            for g in l:
+                word = word*perm_to_free[g]
+
+            word = self.collected_word(word)
+            pc_relators[relation] = word if word else ()
+            self.pc_presentation = pc_relators
+
+            collected_gens.append(gen)
+            if len(collected_gens) > 1:
+                conj = collected_gens[len(collected_gens)-1]
+                conjugator = perm_to_free[conj]
+
+                for j in range(len(collected_gens)-1):
+                    conjugated = perm_to_free[collected_gens[j]]
+
+                    relation = conjugator**-1*conjugated*conjugator
+                    gens = conj**-1*collected_gens[j]*conj
+
+                    l = G.generator_product(gens, original = True)
+                    l.reverse()
+                    word = free_group.identity
+                    for g in l:
+                        word = word*perm_to_free[g]
+
+                    word = self.collected_word(word)
+                    pc_relators[relation] = word if word else ()
+                    self.pc_presentation = pc_relators
+
+        series.reverse()
+        pcgs.reverse()
+        return pc_relators
+
+    def exponent_vector(self, element):
+        """
+        Return the exponent vector of length equal to the
+        length of polycyclic generating sequence.
+
+        For a given generator/element `g` of the polycyclic group,
+        it can be represented as `g = x{1}**e{1}....x{n}**e{n}`,
+        where `x{i}` represents polycyclic generators and `n` is
+        the number of generators in the free_group equal to the length
+        of pcgs.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> G = SymmetricGroup(4)
+        >>> PcGroup = G.polycyclic_group()
+        >>> collector = PcGroup.collector
+        >>> pcgs = PcGroup.pcgs
+        >>> collector.exponent_vector(G[0])
+        [1, 0, 0, 0]
+        >>> exp = collector.exponent_vector(G[1])
+        >>> g = Permutation()
+        >>> for i in range(len(exp)):
+        ...     g = g*pcgs[i] if exp[i] else g
+        >>> assert g == G[1]
+
+        References
+        ==========
+
+        .. [1] Holt, D., Eick, B., O'Brien, E.
+               "Handbook of Computational Group Theory"
+                Section 8.1.1, Definition 8.4
+
+        """
+        free_group = self.free_group
+        G = PermutationGroup()
+        for g in self.pcgs:
+            G = PermutationGroup([g] + G.generators)
+        gens = G.generator_product(element, original = True)
+        gens.reverse()
+
+        perm_to_free = {}
+        for sym, g in zip(free_group.generators, self.pcgs):
+            perm_to_free[g**-1] = sym**-1
+            perm_to_free[g] = sym
+        w = free_group.identity
+        for g in gens:
+            w = w*perm_to_free[g]
+
+        pc_presentation = self.pc_presentation
+        word = self.collected_word(w)
+
+        index = self.index
+        exp_vector = [0]*len(free_group)
+        word = word.array_form
+        for t in word:
+            exp_vector[index[t[0]]] = t[1]
+        return exp_vector
+
+    def depth(self, element):
+        """
+        Return the depth of a given element.
+
+        The depth of a given element `g` is defined by
+        `dep{g} = i if e{1} = e{2} = ... = e{i-1} = 0`
+        and `e{i} != 0`, where `e` represents the exponent-vector.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> G = SymmetricGroup(3)
+        >>> PcGroup = G.polycyclic_group()
+        >>> collector = PcGroup.collector
+        >>> collector.depth(G[0])
+        2
+        >>> collector.depth(G[1])
+        1
+
+        References
+        ==========
+
+        .. [1] Holt, D., Eick, B., O'Brien, E.
+               "Handbook of Computational Group Theory"
+                Section 8.1.1, Definition 8.5
+
+        """
+        exp_vector = self.exponent_vector(element)
+        return next((i+1 for i, x in enumerate(exp_vector) if x), len(self.pcgs)+1)
+
+    def leading_exponent(self, element):
+        """
+        Return the leading non-zero exponent.
+
+        The leading exponent for a given element `g` is defined
+        by `leading_exponent{g} = e{i}`, if `depth{g} = i`.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> G = SymmetricGroup(3)
+        >>> PcGroup = G.polycyclic_group()
+        >>> collector = PcGroup.collector
+        >>> collector.leading_exponent(G[1])
+        1
+
+        """
+        exp_vector = self.exponent_vector(element)
+        depth = self.depth(element)
+        if depth != len(self.pcgs)+1:
+            return exp_vector[depth-1]
+        return None

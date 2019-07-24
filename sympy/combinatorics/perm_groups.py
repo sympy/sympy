@@ -4535,7 +4535,11 @@ class PermutationGroup(Basic):
                     pc_series.insert(0, H)
                     pc_sequence.insert(0, g)
 
-        return PolycyclicGroup(pc_sequence, pc_series)
+                    G1 = pc_series[0].order()
+                    G2 = pc_series[1].order()
+                    relative_order.insert(0, G1 // G2)
+
+        return PolycyclicGroup(pc_sequence, pc_series, relative_order, collector = None)
 
 
 def _orbit(degree, generators, alpha, action='tuples'):
