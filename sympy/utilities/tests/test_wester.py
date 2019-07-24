@@ -1008,7 +1008,6 @@ def test_M26():
     assert solve(sqrt(log(x)) - log(sqrt(x))) == [1, exp(4)]
 
 
-@XFAIL
 def test_M27():
     x = symbols('x', real=True)
     b = symbols('b', real=True)
@@ -1019,9 +1018,7 @@ def test_M27():
 
 @XFAIL
 def test_M28():
-    # TODO: Replace solve with solveset, as of now
-    # solveset doesn't supports assumptions
-    assert solve(5*x + exp((x - 5)/2) - 8*x**3, x, assume=Q.real(x)) == [-0.784966, -0.016291, 0.802557]
+    assert solveset_real(5*x + exp((x - 5)/2) - 8*x**3, x, assume=Q.real(x)) == [-0.784966, -0.016291, 0.802557]
 
 
 def test_M29():

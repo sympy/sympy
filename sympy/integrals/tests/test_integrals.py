@@ -1540,3 +1540,9 @@ def test_issue_14241():
 
 def test_issue_13112():
     assert integrate(sin(t)**2 / (5 - 4*cos(t)), [t, 0, 2*pi]) == pi / 4
+
+
+def test_issue_14709b():
+    h = Symbol('h', positive=True)
+    i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
+    assert i == 5*h**2*pi/16
