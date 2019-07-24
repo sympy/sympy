@@ -1,7 +1,7 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range, Xor)
-from sympy.abc import x, y, z
+from sympy.abc import x, y
 from sympy.core.sympify import (sympify, _sympify, SympifyError,
     CantSympify)
 from sympy.core.decorators import _sympifyit
@@ -665,13 +665,3 @@ def test_issue_16759():
     assert S.Half not in d
     assert Float(.5) in d
     assert d[.5] is S.One
-
-
-def test_issue_4596():
-    e = S('x - (y + z)')
-    assert e.is_Add and len(e.args) == 2 and e.expand() == x - y - z
-    # the number will always go to the constant
-    assert S('x - (y + z + 1)') == x + -1*(y + z) - 1
-    # unless evaluate is False
-    e = S('x - (y + z + 1)', evaluate=False)
-    assert len(e.args) == 2 and e.expand() == x - y - z - 1
