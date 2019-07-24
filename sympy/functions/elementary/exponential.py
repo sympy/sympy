@@ -211,7 +211,7 @@ class exp(ExpBase):
             if arg in [Ioo, -Ioo]:
                 return S.NaN
 
-            coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
+            coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit).x2()
             if coeff:
                 if ask(Q.integer(2*coeff)):
                     if ask(Q.even(coeff)):
