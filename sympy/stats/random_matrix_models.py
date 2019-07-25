@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
-from sympy import Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral
+from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
+                   gamma, Product, Dummy)
 from sympy.core.sympify import _sympify
 from sympy.stats.rv import _symbol_converter, Density, RandomMatrixSymbol
 from sympy.stats.random_matrix import RandomMatrixPSpace
@@ -45,6 +46,25 @@ class GaussianEnsemble(RandomMatrixEnsemble):
 
     def density(self, expr):
         return Density(expr)
+
+    def _compute_normalization_constant(self, beta, n):
+        """
+        Helper function for computing normalization
+        constant for joint probability density of eigen
+        values of Gaussian ensembles.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Selberg_integral#Mehta's_integral
+        """
+        n = S(n)
+        prod_term = lambda j: gamma(1 + S(j)/2)/gamma(S(3)/2)
+        j = Dummy('j', integer=True, positive=True)
+        term1 = Product(prod_term(j), (j, 1, n)).doit()
+        term2 = ((beta*n)/2)**(n*(n - 1)/4)
+        term3 = (2*pi)**(n/2)
+        return term1 * term2 * term3
 
 class GaussianUnitaryEnsemble(GaussianEnsemble):
     """
