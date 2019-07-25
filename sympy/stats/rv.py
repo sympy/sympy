@@ -810,8 +810,14 @@ class Density(Basic):
         from sympy.stats.frv import SingleFiniteDistribution
         from sympy.stats.random_matrix_models import RandomMatrixEnsemble
         expr, condition = self.expr, self.condition
-        if isinstance(expr, RandomMatrixSymbol):
-            return expr.pspace.model.density(expr)
+        if expr.has(RandomMatrixSymbol):
+            rms = expr.atoms(RandomMatrixSymbol)
+            if len(rms) > 2 or (not isinstance(expr, RandomMatrixSymbol)):
+                raise NotImplementedError("Currently, no algorithm has been "
+                        "implemented to handle general expressions containing "
+                        "multiple random matrices.")
+            rm = list(rms)[0]
+            return rm.pspace.model.density(expr)
         if isinstance(expr, SingleFiniteDistribution):
             return expr.dict
         if condition is not None:
