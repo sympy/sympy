@@ -315,10 +315,6 @@ class SparseMatrix(MatrixBase):
 
         return C
 
-    def _diagonal_solve(self, rhs):
-        "Diagonal solve."
-        return self._new(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
-
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using Cholesky or LDL (default)
         decomposition as selected with the ``method`` keyword: 'CH' or 'LDL',
