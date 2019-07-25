@@ -230,13 +230,13 @@ class Collector(DefaultPrinting):
             low, high = self.subword_index(word, free_group.dtype(w))
             if low == -1:
                 continue
+
             s1, e1 = w[0]
-
-            re = self.relative_order[self.index[s1]]
-            q = e1 // re
-            r = e1-q*re
-
             if len(w) == 1:
+                re = self.relative_order[self.index[s1]]
+                q = e1 // re
+                r = e1-q*re
+
                 key = ((w[0][0], re), )
                 key = free_group.dtype(key)
                 if self.pc_presentation[key]:
