@@ -81,3 +81,41 @@ class MpmathMatrix(MatrixExpr):
 
     def _eval_determinant(self):
         return _sympify(mpmath.det(self._wrapped._mat))
+
+    def _eval_rref(self, tol=10**-10):
+        # Experimental custom implementation
+        fabs = mpmath.fabs
+        mat = self._wrapped._mat.copy()
+
+        def is_zero(val):
+            return fabs(val) < tol
+
+        def find_pivot(vec):
+            max_index = None
+            max_value = 0
+            for index, value in enumerate(vec):
+                if fabs(value) > fabs(max_value) and not is_zero(value):
+                    value = max_value
+                    max_index = index
+
+            return max_index
+
+        row = 0
+        for col in range(mat.cols):
+            if is_zero(mat[row, col]):
+                pivot_pos = find_pivot(mat[row:, col])
+                if pivot_pos == None:
+                    continue
+                mat[row, col:], mat[row + pivot_pos, col:] = \
+                    mat[row + pivot_pos, col:], mat[row, col:]
+
+            mat[row, col:] /= mat[row, col]
+
+            for i in range(mat.rows):
+                if i == row:
+                    continue
+                mat[i, col:] -=  mat[i, col] * mat[row, col:]
+
+            row += 1
+
+        return MpmathMatrix(mat, copy=False)
