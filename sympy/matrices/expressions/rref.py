@@ -12,7 +12,7 @@ class ReducedRowEchelonForm(MatrixExpr):
             arg = arg.doit()
 
         if isinstance(arg, MatrixBase):
-            return arg.rref()
+            return arg.rref()[0]
         return arg._eval_rref()
 
     @property
