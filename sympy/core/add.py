@@ -891,9 +891,6 @@ class Add(Expr, AssocOp):
     def _eval_transpose(self):
         return self.func(*[t.transpose() for t in self.args])
 
-    def __neg__(self):
-        return self*(-1)
-
     def _sage_(self):
         s = 0
         for x in self.args:

@@ -160,7 +160,14 @@ class Expr(Basic, EvalfMixin):
         return self
 
     def __neg__(self):
-        return Mul(S.NegativeOne, self)
+        # Mul has its own __neg__ routine, so we just
+        # create a 2-args Mul with the -1 in the canonical
+        # slot 0.
+        from sympy.core.evaluate import global_distribute
+        if self.is_Add and global_distribute[0]:
+            return Add(*[-i for i in self.args])
+        c = self.is_commutative
+        return Mul._from_args((S.NegativeOne, self), c)
 
     def __abs__(self):
         from sympy import Abs
