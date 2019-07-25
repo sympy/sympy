@@ -729,6 +729,22 @@ def test_conjugate_transpose():
     assert p.conjugate().doit() == p.doit().conjugate()
     assert p.transpose().doit() == p.doit().transpose()
 
+
+def test_noncommutativity_honoured():
+    A, B = symbols("A B", commutative=False)
+    M = symbols('M', integer=True, positive=True)
+    p = Sum(A*B**n, (n, 1, M))
+    assert p.doit() == A*Piecewise((M, Eq(B, 1)),
+                                   ((B - B**(M + 1))*(1 - B)**(-1), True))
+
+    p = Sum(B**n*A, (n, 1, M))
+    assert p.doit() == Piecewise((M, Eq(B, 1)),
+                                 ((B - B**(M + 1))*(1 - B)**(-1), True))*A
+
+    p = Sum(B**n*A*B**n, (n, 1, M))
+    assert p.doit() == p
+
+
 def test_issue_4171():
     assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo
     assert summation(2*k + 1, (k, 0, oo)) == oo

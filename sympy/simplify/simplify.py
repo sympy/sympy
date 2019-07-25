@@ -17,7 +17,7 @@ from sympy.functions.elementary.complexes import unpolarify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold, piecewise_simplify_arguments
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
 from sympy.polys import together, cancel, factor
@@ -597,7 +597,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if expr.has(Piecewise):
         expr = piecewise_fold(expr)
         if expr.has(Piecewise):
-            from sympy.functions.elementary.piecewise import piecewise_simplify
+            # Simplify the arguments of the Piecewise
+            from sympy.functions.elementary.piecewise import (
+                    piecewise_simplify_arguments)
             expr = piecewise_simplify_arguments(expr, **kwargs)
 
     if expr.has(BesselBase):
