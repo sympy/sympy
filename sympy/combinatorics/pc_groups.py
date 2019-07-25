@@ -400,7 +400,7 @@ class Collector(DefaultPrinting):
         >>> exp = collector.exponent_vector(G[1])
         >>> g = Permutation()
         >>> for i in range(len(exp)):
-        ...     g = g*pcgs[i]*exp[i] if exp[i] else g
+        ...     g = g*pcgs[i]**exp[i] if exp[i] else g
         >>> assert g == G[1]
 
         References
