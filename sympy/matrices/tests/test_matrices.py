@@ -2511,10 +2511,6 @@ def test_diagonal_solve():
     A = Matrix([[1, 0], [1, 2]])
     raises(TypeError, lambda: A.diagonal_solve(B))
 
-    A = SparseMatrix.diag([1, 2, 3])
-    B = Matrix([[1, 2], [3, 4], [5, 6]])
-    assert A.diagonal_solve(B) == Matrix([[1, 2], [S(3)/2, 2], [S(5)/3, 2]])
-
 
 def test_matrix_norm():
     # Vector Tests
