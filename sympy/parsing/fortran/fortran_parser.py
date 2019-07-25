@@ -1,4 +1,5 @@
-from sympy.codegen.ast import ( Variable, IntBaseType, FloatBaseType, String, Return, FunctionDefinition, Assignment )
+from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
+                               Return, FunctionDefinition, Assignment)
 from sympy.core import Add, Mul
 from sympy import Symbol
 from sympy.external import import_module
@@ -14,19 +15,20 @@ src_to_ast = lfortran.ast.src_to_ast
 ast_to_asr = lfortran.semantic.ast_to_asr.ast_to_asr
 
 """
-This module contains all the necessary Classes and Function used to Parse Fortran code into SymPy expression
+This module contains all the necessary Classes and Function used to Parse
+Fortran code into SymPy expression
 
 The module and its API are currently under development and experimental.
 It is also dependent on LFortran for the ASR that is converted to SymPy syntax
 which is also under development.
 The module only supports the features currently supported by the LFortran ASR
-which will be updated as the development of LFortran and this module progresses.
+which will be updated as the development of LFortran and this module progresses
 
 You might find unexpected bugs and exceptions while using the module, feel free
 to report them to the SymPy Issue Tracker
 
-The API for the module might also change while in development if better and more
-effective ways are discovered for the process
+The API for the module might also change while in development if better and
+more effective ways are discovered for the process
 
 Features Supported
 ==================
@@ -58,8 +60,8 @@ class ASR2PyVisitor(asr.ASTVisitor):
     """
     Visitor Class for LFortran ASR
 
-    It is a Visitor class derived from asr.ASRVisitor which visits all the nodes
-    of the LFortran ASR and creates corresponding AST node for each
+    It is a Visitor class derived from asr.ASRVisitor which visits all the
+    nodes of the LFortran ASR and creates corresponding AST node for each
     ASR node
 
     """
@@ -89,7 +91,8 @@ class ASR2PyVisitor(asr.ASTVisitor):
         =====
 
         The function currently only supports variable assignment and binary
-        operation assignments of varying multitudes. Any type of numberS or array is not supported.
+        operation assignments of varying multitudes. Any type of numberS or
+        array is not supported.
 
         Raises
         ======
@@ -127,16 +130,18 @@ class ASR2PyVisitor(asr.ASTVisitor):
         """Visitor Function for Binary Operations
 
         Visits each binary operation present in the LFortran ASR like addition,
-        subtraction, multiplication, division and creates the corresponding operation node in SymPy's AST
+        subtraction, multiplication, division and creates the corresponding
+        operation node in SymPy's AST
 
         In case of more than one binary operations, the function calls the
-        call_visitor() function on the child nodes of the binary operations recursively until all the operations have been processed.
+        call_visitor() function on the child nodes of the binary operations
+        recursively until all the operations have been processed.
 
         Notes
         =====
 
-        The function currently only supports binary operations with Variables or
-        other binary operations. Numerics are not supported as of yet.
+        The function currently only supports binary operations with Variables
+        or other binary operations. Numerics are not supported as of yet.
 
         Raises
         ======
@@ -219,6 +224,7 @@ class ASR2PyVisitor(asr.ASTVisitor):
 
         Visits a code sequence/ block and calls the visitor function on all the
         children of the code block to create corresponding code in python
+
         """
         if seq is not None:
             for node in seq:
@@ -307,14 +313,15 @@ def call_visitor(fort_node):
     Parameters
     ==========
 
-    fort_node : <lfortran.asr.asr.Assignment object> or <lfortran.asr.asr.BinOp object>
-        Node for the operation that the AST visitor is to be called upon
+    fort_node : LFortran ASR object
+        Node for the operation for which the NodeVisitor is called
 
     Returns
     =======
 
     res_ast : list
         list of sympy AST Nodes
+
     """
     v = ASR2PyVisitor()
     v.visit(fort_node)

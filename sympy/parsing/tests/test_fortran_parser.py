@@ -1,5 +1,5 @@
 from sympy.parsing.sym_expr import SymPyExpression
-from sympy.codegen.ast import (Assignment, Declaration, FunctionDefinition, )
+from sympy.codegen.ast import (Assignment, Declaration, FunctionDefinition)
 import re
 
 expr1 = SymPyExpression()

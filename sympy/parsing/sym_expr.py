@@ -5,18 +5,25 @@ from sympy.printing import pycode, ccode, fcode
 class SymPyExpression(object):
     """Class to store and handle SymPy expressions
 
-    This class will hold SymPy Expressions and handle the API for the conversion to and from different languages.
+    This class will hold SymPy Expressions and handle the API for the
+    conversion to and from different languages.
 
-    It works with the C and the Fortran Parser to generate SymPy expressions which are stored here and which can be converted to multiple language's source code.
+    It works with the C and the Fortran Parser to generate SymPy expressions
+    which are stored here and which can be converted to multiple language's
+    source code.
 
     Notes
     =====
 
-    The module and its API are currently under development and experimental and can be changed during development.
+    -The module and its API are currently under development and experimental
+    and can be changed during development.
 
-    It currently only supports conversion from Fortran. The support for other languages is under development. The Fortran parser does not support numeric assignments, so all the variables have been Initialized to zero.
+    It currently only supports conversion from Fortran. The support for other
+    languages is under development. The Fortran parser does not support numeric
+    assignments, so all the variables have been Initialized to zero.
 
-    The module also depends on an external dependeny, LFortran which is required to use the Fortran parser
+    The module also depends on an external dependeny, LFortran which is
+    required to use the Fortran parser
 
     Examples
     ========
@@ -63,19 +70,22 @@ class SymPyExpression(object):
     def __init__(self, source_code = None, mode = None):
         """Constructor for SymPyExpression class"""
         super(SymPyExpression, self).__init__()
-        if mode:
-            if mode.lower() == 'f':
-                if source_code:
-                    self._expr = src_to_sympy(source_code)
-                else:
-                    raise ValueError('Source code not present')
-            #elif mode.lower == 'c':
-            #    if source_code:
-            #        self._expr = src_to_c(source_code)
-            #    else:
-            #        raise ValueError('Source code not present')
-        else:
+        if not(mode or source_code):
             self._expr = []
+        elif mode:
+            if source_code:
+                if mode.lower() == 'f':
+                    self._expr = src_to_sympy(source_code)
+                #elif mode.lower() == 'c':
+                #    self._expr = src_to_c(source_code)
+                else:
+                    raise NotImplementedError(
+                        'Parser for specified language is not implemented'
+                    )
+            else:
+                raise ValueError('Source code not present')
+        else:
+            raise ValueError('Please specify a mode for conversion')
 
     def convert_to_expr(self, src_code, mode):
         """Converts the given source code to sympy Expressions
@@ -84,10 +94,12 @@ class SymPyExpression(object):
         ==========
 
         src_code : String
-            the source code or filename of the source code that is to be converted
+            the source code or filename of the source code that is to be
+            converted
 
         mode: String
-            the mode to determine which parser is to be used according to the language of the source code
+            the mode to determine which parser is to be used according to the
+            language of the source code
             f or F for Fortran
             c or C for C/C++
 
@@ -122,7 +134,9 @@ class SymPyExpression(object):
             #elif mode.lower() == 'c':
             #    self._expr = src_to_c(src_code)
             else:
-                raise NotImplementedError("The langauge parser has not been implemented. Invalid Input!")
+                raise NotImplementedError(
+                    "Parser for specified language has not been implemented"
+                )
         else:
             raise ValueError('Source code not present')
 
