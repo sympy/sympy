@@ -1314,12 +1314,14 @@ def dummy_with_inherited_properties(limits):
         return None
     x, a, b = limits
     l = (a, b)
+
     assumptions_to_consider = ['extended_nonnegative', 'nonnegative',
                                'extended_nonpositive', 'nonpositive',
                                'extended_positive', 'positive',
                                'extended_negative', 'negative',
-                               'integer', 'rational', 'odd', 'even', 'finite',
+                               'integer', 'rational', 'finite',
                                'zero', 'real', 'extended_real']
+
     assumptions_to_keep = {}
     assumptions_to_add = {}
     for assum in assumptions_to_consider:

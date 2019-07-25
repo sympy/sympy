@@ -1184,12 +1184,14 @@ def test_dummy_with_inherited_properties():
     assert d.is_real
     assert d.is_integer
     assert d.is_positive
+    assert d.is_odd is None
 
     d = dummy_with_inherited_properties(Tuple(x, -5, 5))
     assert d.is_real
     assert d.is_integer
     assert d.is_positive is None
     assert d.is_extended_nonnegative is None
+    assert d.is_odd is None
 
     d = dummy_with_inherited_properties(Tuple(x, -1.5, 1.5))
     assert d.is_real
@@ -1202,3 +1204,5 @@ def test_dummy_with_inherited_properties():
     assert d.is_real
     assert d.is_positive
     assert d.is_integer
+
+    N = Symbol('N', integer=True, positive=True)
