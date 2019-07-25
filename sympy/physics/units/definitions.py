@@ -323,7 +323,7 @@ year = years = tropical_year
 # Newton constant
 G = gravitational_constant = Quantity("gravitational_constant", abbrev="G")
 gravitational_constant.set_dimension(length**3*mass**-1*time**-2)
-gravitational_constant.set_scale_factor(6.67408e-11*m**3/(kg*s**2))
+gravitational_constant.set_scale_factor(6.67430e-11*m**3/(kg*s**2))
 
 # speed of light
 c = speed_of_light = Quantity("speed_of_light", abbrev="c")
@@ -331,9 +331,10 @@ speed_of_light.set_dimension(velocity)
 speed_of_light.set_scale_factor(299792458*meter/second)
 
 # Reduced Planck constant
+# REF: NIST SP 959 (June 2019)
 hbar = Quantity("hbar", abbrev="hbar")
 hbar.set_dimension(action)
-hbar.set_scale_factor(1.05457266e-34*joule*second)
+hbar.set_scale_factor(1.054571817e-34*joule*second)
 
 # Planck constant
 planck = Quantity("planck", abbrev="h")
@@ -358,7 +359,7 @@ avogadro_constant.set_scale_factor(avogadro_number / mol)
 # Boltzmann constant
 boltzmann = boltzmann_constant = Quantity("boltzmann_constant")
 boltzmann_constant.set_dimension(energy/temperature)
-boltzmann_constant.set_scale_factor(1.38064852e-23*joule/kelvin)
+boltzmann_constant.set_scale_factor(1.380649e-23*joule/kelvin)
 
 # Stefan-Boltzmann constant
 stefan = stefan_boltzmann_constant = Quantity("stefan_boltzmann_constant")
