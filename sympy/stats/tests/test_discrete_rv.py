@@ -123,7 +123,7 @@ def test_discrete_probability():
         13*exp(-4) + 32*(-S(71)/32 + 3*exp(4)/32)*exp(-4)/3)
     assert P(X < S.Infinity) is S.One
     assert P(X > S.Infinity) is S.Zero
-    assert P(G < 3) == x*(-x + 1) + x
+    assert P(G < 3) == x*(2-x)
     assert P(Eq(G, 3)) == x*(-x + 1)**2
 
 
@@ -217,9 +217,14 @@ def test_conditional():
 def test_product_spaces():
     X1 = Geometric('X1', S(1)/2)
     X2 = Geometric('X2', S(1)/3)
-    assert str(P(X1 + X2 < 3, evaluate=False)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """\
-        + """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1))"""
+    #assert str(P(X1 + X2 < 3, evaluate=False)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """\
+    #    + """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1))"""
+    assert str(P(X1 + X2 < 3, evaluate=False)) == 'Sum(Piecewise((2**(-n)/4,'\
+        ' n + 2 >= 1), (0, True)), (n, -oo, -1))/3'
+    #assert str(P(X1 + X2 > 3)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """ +\
+    #    """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, 1, oo))"""
     assert str(P(X1 + X2 > 3)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """ +\
-        """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, 1, oo))"""
-    assert str(P(Eq(X1 + X2, 3))) == """Sum(Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, """ +\
-        """X2 <= 2), (0, True)), (X2, 1, oo))"""
+        """-X2 + n + 3 >= 1), (0, True)), (X2, 1, oo), (n, 1, oo))"""
+#    assert str(P(Eq(X1 + X2, 3))) == """Sum(Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, """ +\
+#        """X2 <= 2), (0, True)), (X2, 1, oo))"""
+    assert P(Eq(X1 + X2, 3)) == S(1)/12
