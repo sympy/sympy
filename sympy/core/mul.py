@@ -1001,7 +1001,7 @@ class Mul(Expr, AssocOp):
             node = nodes[node_ind]
 
             if node.is_Wild:
-                Mul._matches_add_wildcard(wildcard_dict, state, node)
+                Mul._matches_add_wildcard(wildcard_dict, state)
 
             states_matches = Mul._matches_new_states(wildcard_dict, state,
                                                      nodes, targets)
@@ -1020,13 +1020,13 @@ class Mul(Expr, AssocOp):
         return repl_dict
 
     @staticmethod
-    def _matches_add_wildcard(dictionary, state, wildcard):
+    def _matches_add_wildcard(dictionary, state):
         node_ind, target_ind = state
-        if wildcard in dictionary:
-            begin, end = dictionary[wildcard]
-            dictionary[wildcard] = (begin, target_ind)
+        if node_ind in dictionary:
+            begin, end = dictionary[node_ind]
+            dictionary[node_ind] = (begin, target_ind)
         else:
-            dictionary[wildcard] = (target_ind, target_ind)
+            dictionary[node_ind] = (target_ind, target_ind)
 
     @staticmethod
     def _matches_new_states(dictionary, state, nodes, targets):
@@ -1039,8 +1039,8 @@ class Mul(Expr, AssocOp):
             return None
 
         if node.is_Wild:
-            match_attempt = Mul._matches_match_wilds(dictionary, node,
-                                                        targets)
+            match_attempt = Mul._matches_match_wilds(dictionary, node_ind,
+                                                     nodes, targets)
             if match_attempt:
                 # A wildcard node can match more than one target, so only the
                 # target index is advanced
@@ -1066,8 +1066,9 @@ class Mul(Expr, AssocOp):
                 return None
 
     @staticmethod
-    def _matches_match_wilds(dictionary, wildcard, targets):
-        begin, end = dictionary[wildcard]
+    def _matches_match_wilds(dictionary, wildcard_ind, nodes, targets):
+        wildcard = nodes[wildcard_ind]
+        begin, end = dictionary[wildcard_ind]
         terms = targets[begin:end + 1]
         # TODO: Should this be self.func?
         mul = Mul(*terms) if len(terms) > 1 else terms[0]
