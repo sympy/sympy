@@ -18,10 +18,15 @@ import random
 
 from sympy import (factorial, exp, S, sympify, I, zeta, polylog, log, beta,
                    hyper, binomial, Piecewise, floor, besseli, sqrt)
+from sympy.external import import_module
 from sympy.stats import density
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.rv import _value_check, RandomSymbol
+
+numpy = import_module('numpy')
+scipy = import_module('scipy')
+pymc3 = import_module('pymc3')
 
 __all__ = ['Geometric',
 'Logarithmic',
@@ -64,6 +69,22 @@ class GeometricDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         p = self.p
         return p * exp(t) / (1 - (1 - p) * exp(t))
+
+    def _sample_numpy(self, size):
+        p = float(self.p)
+        return numpy.random.geometric(p=p, size=size)
+
+    def _sample_scipy(self, size):
+        p = float(self.p)
+        from scipy.stats import geom
+        return geom.rvs(p=p, size=size)
+
+    def _sample_pymc3(self, size):
+        p = float(self.p)
+        with pymc3.Model():
+            pymc3.Geometric('X', p=p)
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+
 
 def Geometric(name, p):
     r"""
@@ -138,9 +159,10 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
         p = self.p
         return log(1 - p * exp(t)) / log(1 - p)
 
-    def sample(self):
-        ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
+    def _sample_scipy(self, size):
+        p = float(self.p)
+        from scipy.stats import logser
+        return logser.rvs(p=p, size=size)
 
 
 def Logarithmic(name, p):
@@ -222,9 +244,6 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
 
         return ((1 - p) / (1 - p * exp(t)))**r
 
-    def sample(self):
-        ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
 
 
 def NegativeBinomial(name, r, p):
@@ -292,6 +311,21 @@ class PoissonDistribution(SingleDiscreteDistribution):
 
     def pdf(self, k):
         return self.lamda**k / factorial(k) * exp(-self.lamda)
+
+    def _sample_numpy(self, size):
+        lamda = float(self.lamda)
+        return numpy.random.poisson(lam=lamda, size=size)
+
+    def _sample_scipy(self, size):
+        lamda = float(self.lamda)
+        from scipy.stats import poisson
+        return poisson.rvs(mu=lamda, size=size)
+
+    def _sample_pymc3(self, size):
+        lamda = float(self.lamda)
+        with pymc3.Model():
+            pymc3.Poisson('X', mu=lamda)
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
     def sample(self):
         def search(x, y, u):
@@ -383,10 +417,15 @@ class SkellamDistribution(SingleDiscreteDistribution):
         _value_check(mu2 >= 0, 'Parameter mu2 must be >= 0')
 
     def pdf(self, k):
-        (mu1, mu2) = (self.mu1, self.mu2)
+        mu1, mu2 = self.mu1, self.mu2
         term1 = exp(-(mu1 + mu2)) * (mu1 / mu2) ** (k / 2)
         term2 = besseli(k, 2 * sqrt(mu1 * mu2))
         return term1 * term2
+
+    def _sample_scipy(self, size):
+        mu1, mu2 = float(self.mu1), float(self.mu2)
+        from scipy.stats import skellam
+        return skellam.rvs(mu1=mu1, mu2=mu2, size=size)
 
     def _cdf(self, x):
         raise NotImplementedError(
@@ -483,9 +522,10 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
         rho = self.rho
         return rho * hyper((1, 1), (rho + 2,), exp(t)) * exp(t) / (rho + 1)
 
-    def sample(self):
-        ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
+    def _sample_scipy(self, size):
+        rho = float(self.rho)
+        from scipy.stats import yulesimon
+        return yulesimon.rvs(alpha=rho, size=size)
 
 
 def YuleSimon(name, rho):
@@ -557,9 +597,14 @@ class ZetaDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         return polylog(self.s, exp(t)) / zeta(self.s)
 
-    def sample(self):
-        ### TODO
-        raise NotImplementedError("Sampling of %s is not implemented" % density(self))
+    def _sample_numpy(self, size):
+        s = float(self.s)
+        return numpy.random.zipf(a=s, size=size)
+
+    def _sample_scipy(self, size):
+        s = float(self.s)
+        from scipy.stats import zipf
+        return zipf.rvs(a=s, size=size)
 
 
 def Zeta(name, s):

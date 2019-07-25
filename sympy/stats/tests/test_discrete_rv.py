@@ -10,6 +10,8 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    Poisson, Geometric, Logarithmic, NegativeBinomial, Skellam,
                                    YuleSimon, Zeta)
 from sympy.stats.rv import sample
+from sympy.utilities.pytest import skip
+from sympy.external import import_module
 from sympy.utilities.pytest import slow, raises
 
 x = Symbol('x')
@@ -223,3 +225,49 @@ def test_product_spaces():
         """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, 1, oo))"""
     assert str(P(Eq(X1 + X2, 3))) == """Sum(Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, """ +\
         """X2 <= 2), (0, True)), (X2, 1, oo))"""
+
+
+def test_sampling_methods():
+    distribs_numpy = [
+        Geometric('G', 0.5),
+        Poisson('P', 1),
+        Zeta('Z', 2)
+    ]
+    distribs_scipy = [
+        Geometric('G', 0.5),
+        Logarithmic('L', 0.5),
+        Poisson('P', 1),
+        Skellam('S', 1, 1),
+        YuleSimon('Y', 1),
+        Zeta('Z', 2)
+    ]
+    distribs_pymc3 = [
+        Geometric('G', 0.5),
+        Poisson('P', 1),
+    ]
+    size = 5
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy not installed. Abort tests for _sample_numpy.')
+    else:
+        for X in distribs_numpy:
+            sam = X.pspace.distribution._sample_numpy(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for _sample_scipy.')
+    else:
+        for X in distribs_scipy:
+            sam = X.pspace.distribution._sample_scipy(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 not installed. Abort tests for _sample_pymc3.')
+    else:
+        for X in distribs_pymc3:
+            sam = X.pspace.distribution._sample_pymc3(size)
+            for i in range(size):
+                assert sam[i] in X.pspace.domain.set
+

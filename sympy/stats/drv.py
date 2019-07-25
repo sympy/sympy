@@ -45,8 +45,9 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self):
+    def sample(self, size=()):
         """ A random realization from the distribution """
+        return self._sample_scipy(size)
         icdf = self._inverse_cdf_expression()
         while True:
             sample_ = floor(list(icdf(random.uniform(0, 1)))[0])
