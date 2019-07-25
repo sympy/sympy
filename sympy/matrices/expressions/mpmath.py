@@ -1,6 +1,7 @@
 import mpmath
 
 from sympy.core.basic import Basic
+from sympy.core.sympify import _sympify
 from sympy.core.numbers import Integer
 
 from .matexpr import MatrixExpr, MatrixElement
@@ -77,3 +78,6 @@ class MpmathMatrix(MatrixExpr):
 
     def _eval_adjoint(self):
         return MpmathMatrix(self._wrapped._mat.transpose_conj(), copy=False)
+
+    def _eval_determinant(self):
+        return _sympify(mpmath.det(self._wrapped._mat))
