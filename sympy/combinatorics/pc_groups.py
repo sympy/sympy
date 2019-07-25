@@ -231,24 +231,12 @@ class Collector(DefaultPrinting):
             if low == -1:
                 continue
             s1, e1 = w[0]
-            if len(w) == 2 and w[1][1] > 0:
-                s2, e2 = w[1]
-                s2 = ((s2, 1), )
-                s2 = free_group.dtype(s2)
-                word_ = self.map_relation(free_group.dtype(w))
-                word_ = s2*word_**e1
-                word_ = free_group.dtype(word_)
-                word = word.substituted_word(low, high, word_)
 
-            if not self.relative_order[self.index[s1]]:
-                continue
             re = self.relative_order[self.index[s1]]
             q = e1 // re
             r = e1-q*re
-            if r < 0 or r > re-1:
-                continue
 
-            if len(w) == 1 and (e1 < 0 or e1 > re-1):
+            if len(w) == 1:
                 key = ((w[0][0], re), )
                 key = free_group.dtype(key)
                 if self.pc_presentation[key]:
@@ -261,6 +249,15 @@ class Collector(DefaultPrinting):
                     else:
                         word_ = None
                 word = word.eliminate_word(free_group.dtype(w), word_)
+
+            if len(w) == 2 and w[1][1] > 0:
+                s2, e2 = w[1]
+                s2 = ((s2, 1), )
+                s2 = free_group.dtype(s2)
+                word_ = self.map_relation(free_group.dtype(w))
+                word_ = s2*word_**e1
+                word_ = free_group.dtype(word_)
+                word = word.substituted_word(low, high, word_)
 
             elif len(w) == 2 and w[1][1] < 0:
                 s2, e2 = w[1]
@@ -403,7 +400,7 @@ class Collector(DefaultPrinting):
         >>> exp = collector.exponent_vector(G[1])
         >>> g = Permutation()
         >>> for i in range(len(exp)):
-        ...     g = g*pcgs[i] if exp[i] else g
+        ...     g = g*pcgs[i]*exp[i] if exp[i] else g
         >>> assert g == G[1]
 
         References
@@ -411,7 +408,7 @@ class Collector(DefaultPrinting):
 
         .. [1] Holt, D., Eick, B., O'Brien, E.
                "Handbook of Computational Group Theory"
-                Section 8.1.1, Definition 8.4
+               Section 8.1.1, Definition 8.4
 
         """
         free_group = self.free_group
@@ -463,7 +460,7 @@ class Collector(DefaultPrinting):
 
         .. [1] Holt, D., Eick, B., O'Brien, E.
                "Handbook of Computational Group Theory"
-                Section 8.1.1, Definition 8.5
+               Section 8.1.1, Definition 8.5
 
         """
         exp_vector = self.exponent_vector(element)
