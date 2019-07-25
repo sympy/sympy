@@ -42,7 +42,7 @@ __all__ = []
 from . import rv_interface
 from .rv_interface import (
     cdf, characteristic_function, covariance, density, dependent, E, given, independent, P, pspace,
-    random_symbols, sample, sample_iter, skewness, kurtosis, std, variance, where,
+    random_symbols, sample, sample_iter, skewness, kurtosis, std, variance, where, factorial_moment,
     correlation, moment, cmoment, smoment, sampling_density, moment_generating_function, entropy, H,
     quantile
 )
@@ -59,8 +59,8 @@ from . import crv_types
 from .crv_types import (
     ContinuousRV,
     Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
-    Dagum, Erlang, ExGaussian, Exponential, FDistribution, FisherZ, Frechet, Gamma,
-    GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogLogistic, LogNormal,
+    Dagum, Erlang, ExGaussian, Exponential, ExponentialPower, FDistribution, FisherZ, Frechet,
+    Gamma, GammaInverse, Gumbel, Gompertz, Kumaraswamy, Laplace, Logistic, LogLogistic, LogNormal,
     Maxwell, Nakagami, Normal, GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh,
     ShiftedGompertz, StudentT, Trapezoidal, Triangular, Uniform, UniformSum, VonMises,
     Weibull, WignerSemicircle, Wald
@@ -68,7 +68,8 @@ from .crv_types import (
 __all__.extend(crv_types.__all__)
 
 from . import drv_types
-from .drv_types import (Geometric, Logarithmic, NegativeBinomial, Poisson, YuleSimon, Zeta)
+from .drv_types import (Geometric, Logarithmic, NegativeBinomial, Poisson, Skellam,
+    YuleSimon, Zeta)
 __all__.extend(drv_types.__all__)
 
 from . import joint_rv_types
@@ -83,10 +84,13 @@ __all__.extend(joint_rv_types.__all__)
 from . import stochastic_process_types
 from .stochastic_process_types import (
     StochasticProcess,
+    ContinuousTimeStochasticProcess,
     DiscreteTimeStochasticProcess,
     DiscreteMarkovChain,
     TransitionMatrixOf,
-    StochasticStateSpaceOf
+    StochasticStateSpaceOf,
+    ContinuousMarkovChain,
+    GeneratorMatrixOf
 )
 __all__.extend(stochastic_process_types.__all__)
 

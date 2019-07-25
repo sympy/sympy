@@ -1976,11 +1976,12 @@ def _diop_ternary_quadratic(_var, coeff):
             min_sum = abs(s[0]) + abs(s[1])
 
             for r in sols:
-                if abs(r[0]) + abs(r[1]) < min_sum:
+                m = abs(r[0]) + abs(r[1])
+                if m < min_sum:
                     s = r
-                    min_sum = abs(s[0]) + abs(s[1])
+                    min_sum = m
 
-                x_0, y_0, z_0 = s[0], -coeff[x*z], s[1]
+            x_0, y_0, z_0 = s[0], -coeff[x*z], s[1]
 
         else:
             var[0], var[1] = _var[1], _var[0]

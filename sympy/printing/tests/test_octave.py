@@ -1,6 +1,6 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol, EulerGamma, GoldenRatio, Catalan,
-                        Lambda, Mul, Pow, Mod)
+                        Lambda, Mul, Pow, Mod, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
                              chebyshevt, conjugate, DiracDelta, exp, expint,
@@ -25,10 +25,6 @@ from sympy.functions.special.error_functions import (Chi, Ci, erf, erfc, erfi,
                                                      erfcinv, erfinv, fresnelc,
                                                      fresnels, li, Shi, Si, Li,
                                                      erf2)
-from sympy.polys.polytools import gcd, lcm
-from sympy.ntheory.primetest import isprime
-from sympy.core.compatibility import range
-
 from sympy import octave_code
 from sympy import octave_code as mcode
 
@@ -47,6 +43,15 @@ def test_Rational():
     assert mcode(Rational(-3, -7)) == "3/7"
     assert mcode(x + Rational(3, 7)) == "x + 3/7"
     assert mcode(Rational(3, 7)*x) == "3*x/7"
+
+
+def test_Relational():
+    assert mcode(Eq(x, y)) == "x == y"
+    assert mcode(Ne(x, y)) == "x != y"
+    assert mcode(Le(x, y)) == "x <= y"
+    assert mcode(Lt(x, y)) == "x < y"
+    assert mcode(Gt(x, y)) == "x > y"
+    assert mcode(Ge(x, y)) == "x >= y"
 
 
 def test_Function():

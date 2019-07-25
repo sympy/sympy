@@ -423,12 +423,13 @@ class AddWithLimits(ExprWithLimits):
         return self
 
     def _eval_expand_basic(self, **hints):
+        from sympy.matrices.matrices import MatrixBase
+
         summand = self.function.expand(**hints)
         if summand.is_Add and summand.is_commutative:
             return Add(*[self.func(i, *self.limits) for i in summand.args])
-        elif summand.is_Matrix:
-            return Matrix._new(summand.rows, summand.cols,
-                [self.func(i, *self.limits) for i in summand._mat])
+        elif isinstance(summand, MatrixBase):
+            return summand.applyfunc(lambda x: self.func(x, *self.limits))
         elif summand != self.function:
             return self.func(summand, *self.limits)
         return self

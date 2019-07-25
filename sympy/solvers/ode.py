@@ -3699,7 +3699,7 @@ def ode_Liouville(eq, func, order, match):
 def ode_2nd_power_series_ordinary(eq, func, order, match):
     r"""
     Gives a power series solution to a second order homogeneous differential
-    equation with polynomial coefficients at an ordinary point. A homogenous
+    equation with polynomial coefficients at an ordinary point. A homogeneous
     differential equation is of the form
 
     .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
@@ -3846,7 +3846,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     r"""
     Gives a power series solution to a second order homogeneous differential
     equation with polynomial coefficients at a regular point. A second order
-    homogenous differential equation is of the form
+    homogeneous differential equation is of the form
 
     .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
 
@@ -7926,7 +7926,7 @@ def sysode_linear_3eq_order1(match_):
     for i in range(3):
         for j in Add.make_args(eq[i]):
             if not j.has(x(t), y(t), z(t)):
-                raise NotImplementedError("Only homogeneous problems are supported, non-homogenous are not supported currently.")
+                raise NotImplementedError("Only homogeneous problems are supported, non-homogeneous are not supported currently.")
     if match_['type_of_equation'] == 'type1':
         sol = _linear_3eq_order1_type1(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type2':
