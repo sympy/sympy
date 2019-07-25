@@ -270,4 +270,3 @@ def test_sampling_methods():
             sam = X.pspace.distribution._sample_pymc3(size)
             for i in range(size):
                 assert sam[i] in X.pspace.domain.set
-
