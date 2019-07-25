@@ -181,6 +181,9 @@ def test_mul_noncommutative():
     assert (w*z).matches(x*A*B) is None
     assert (w*z).matches(x*y*A*B) is None
 
+    assert (w*A).matches(A) is None
+    assert (A*w*B).matches(A*B) is None
+
     assert (u*w*z).matches(x) is None
     assert (u*w*z).matches(x*y) is None
     assert (u*w*z).matches(A) is None
