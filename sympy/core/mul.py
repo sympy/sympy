@@ -1042,6 +1042,22 @@ class Mul(Expr, AssocOp):
             match_attempt = Mul._matches_match_wilds(dictionary, node_ind,
                                                      nodes, targets)
             if match_attempt:
+                # If the same node has been matched before, don't return
+                # anything if the current match is diverging from the previous
+                # match
+                other_node_inds = Mul._matches_get_other_nodes(dictionary,
+                                                               nodes, node_ind)
+                for ind in other_node_inds:
+                    other_begin, other_end = dictionary[ind]
+                    curr_begin, curr_end = dictionary[node_ind]
+
+                    other_targets = targets[other_begin:other_end + 1]
+                    current_targets = targets[curr_begin:curr_end + 1]
+
+                    for curr, other in zip(current_targets, other_targets):
+                        if curr != other:
+                            return None
+
                 # A wildcard node can match more than one target, so only the
                 # target index is advanced
                 new_state = [(node_ind, target_ind + 1)]
@@ -1073,6 +1089,14 @@ class Mul(Expr, AssocOp):
         # TODO: Should this be self.func?
         mul = Mul(*terms) if len(terms) > 1 else terms[0]
         return wildcard.matches(mul)
+
+    @staticmethod
+    def _matches_get_other_nodes(dictionary, nodes, node_ind):
+        other_node_inds = []
+        for ind in dictionary:
+            if nodes[ind] == nodes[node_ind]:
+                other_node_inds.append(ind)
+        return other_node_inds
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
