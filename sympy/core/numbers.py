@@ -3940,6 +3940,12 @@ except ImportError:
     pass
 
 
+def sympify_mpmath_matrix(x):
+    from sympy.matrices.expressions.mpmath import WrappedMpmathMatrix
+    return WrappedMpmathMatrix(x)
+
+converter[mpmath.matrix] = sympify_mpmath_matrix
+
 def sympify_mpmath(x):
     return Expr._from_mpmath(x, x.context.prec)
 

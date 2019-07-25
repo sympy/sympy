@@ -63,6 +63,11 @@ class MatPow(MatrixExpr):
             exp = exp*base.args[1]
             base = base.args[0]
 
+        # XXX Mpmath only supports integer matrix power
+        from .mpmath import MpmathMatrix
+        if isinstance(base, MpmathMatrix) and exp.is_Integer:
+            return base._eval_pow(exp)
+
         if exp.is_zero and base.is_square:
             if isinstance(base, MatrixBase):
                 return base.func(Identity(base.shape[0]))

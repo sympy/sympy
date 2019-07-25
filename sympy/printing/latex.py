@@ -1611,6 +1611,9 @@ class LatexPrinter(Printer):
         return r"\mathbb{I}" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{I}"
 
+    def _print_MpmathMatrix(self, expr):
+        return self._print(expr.as_explicit())
+
     def _print_NDimArray(self, expr):
 
         if expr.rank() == 0:

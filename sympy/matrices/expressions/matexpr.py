@@ -73,6 +73,7 @@ class MatrixExpr(Expr):
 
     def __new__(cls, *args, **kwargs):
         args = map(_sympify, args)
+        kwargs.pop('copy', None)
         return Basic.__new__(cls, *args, **kwargs)
 
     # The following is adapted from the core Expr object
