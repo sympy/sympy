@@ -108,6 +108,23 @@ def test_iterator():
         j += 1
 
 
+def test_getitem():
+    for ArrayType in [MutableDenseNDimArray, MutableSparseNDimArray]:
+        array = ArrayType(range(24)).reshape(2, 3, 4)
+        assert array.tolist() == [[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]], [[12, 13, 14, 15], [16, 17, 18, 19], [20, 21, 22, 23]]]
+        assert array[0] == ArrayType([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]])
+        assert array[0, 0] == ArrayType([0, 1, 2, 3])
+        value = 0
+        for i in range(2):
+            for j in range(3):
+                for k in range(4):
+                    assert array[i, j, k] == value
+                    value += 1
+
+    raises(ValueError, lambda: array[3, 4, 5])
+    raises(ValueError, lambda: array[3, 4, 5, 6])
+
+
 def test_sparse():
     sparse_array = MutableSparseNDimArray([0, 0, 0, 1], (2, 2))
     assert len(sparse_array) == 2 * 2
@@ -184,7 +201,7 @@ def test_ndim_array_converting():
     assert (isinstance(matrix, Matrix))
 
     for i in range(len(dense_array)):
-        assert dense_array[i] == matrix[i]
+        assert dense_array[dense_array._get_tuple_index(i)] == matrix[i]
     assert matrix.shape == dense_array.shape
 
     assert MutableDenseNDimArray(matrix) == dense_array
@@ -200,7 +217,7 @@ def test_ndim_array_converting():
     assert(isinstance(matrix, SparseMatrix))
 
     for i in range(len(sparse_array)):
-        assert sparse_array[i] == matrix[i]
+        assert sparse_array[sparse_array._get_tuple_index(i)] == matrix[i]
     assert matrix.shape == sparse_array.shape
 
     assert MutableSparseNDimArray(matrix) == sparse_array

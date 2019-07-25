@@ -160,7 +160,8 @@ def tensorcontraction(array, *contraction_axes):
         index_base_position = sum(icontrib)
         isum = S.Zero
         for sum_to_index in itertools.product(*summed_deltas):
-            isum += array[index_base_position + sum(sum_to_index)]
+            idx = array._get_tuple_index(index_base_position + sum(sum_to_index))
+            isum += array[idx]
 
         contracted_array.append(isum)
 
