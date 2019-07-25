@@ -1607,6 +1607,14 @@ def test_sympy__stats__random_matrix_models__GaussianUnitaryEnsemble():
     from sympy.stats import GaussianUnitaryEnsemble
     assert _test_args(GaussianUnitaryEnsemble('U', 3))
 
+def test_sympy__stats__random_matrix_models__GaussianOrthogonalEnsemble():
+    from sympy.stats import GaussianOrthogonalEnsemble
+    assert _test_args(GaussianOrthogonalEnsemble('U', 3))
+
+def test_sympy__stats__random_matrix_models__GaussianSymplecticEnsemble():
+    from sympy.stats import GaussianSymplecticEnsemble
+    assert _test_args(GaussianSymplecticEnsemble('U', 3))
+
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
     assert _test_args(Dummy('t'))
