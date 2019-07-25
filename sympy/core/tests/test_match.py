@@ -211,6 +211,17 @@ def test_mul_noncommutative():
     assert (u*v*A*B).matches(u*v*A*C) is None
 
 
+def test_mul_noncommutative_mismatch():
+    A, B, C = symbols('A B C', commutative=False)
+    w = symbols('w', cls=Wild, commutative=False)
+
+    assert (w*B*w).matches(A*B*A) == {w: A}
+    assert (w*B*w).matches(A*C*B*A*C) == {w: A*C}
+    assert (w*B*w).matches(A*C*B*A*B) is None
+    assert (w*B*w).matches(A*B*C) is None
+    assert (w*w*C).matches(A*B*C) is None
+
+
 def test_mul_noncommutative_pow():
     A, B, C = symbols('A B C', commutative=False)
     w = symbols('w', cls=Wild, commutative=False)
@@ -221,6 +232,10 @@ def test_mul_noncommutative_pow():
 
     assert (A*B*(w**(-1))).matches(A*B*(C**(-1))) == {w: C}
     assert (A*(B*w)**(-1)*C).matches(A*(B*C)**(-1)*C) == {w: C}
+
+    assert ((w**2)*B*C).matches((A**2)*B*C) == {w: A}
+    assert ((w**2)*B*(w**3)).matches((A**2)*B*(A**3)) == {w: A}
+    assert ((w**2)*B*(w**4)).matches((A**2)*B*(A**2)) is None
 
 def test_complex():
     a, b, c = map(Symbol, 'abc')
