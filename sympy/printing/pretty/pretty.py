@@ -1902,7 +1902,7 @@ class PrettyPrinter(Printer):
             it = iter(s)
             printset = next(it), next(it), dots
         elif s.size.has(Symbol):
-            printset = s.start, s.start + s.step, dots, s.stop
+            printset = s.start, s.start + s.step, dots, s.stop - s.step
         elif len(s) > 4:
             it = iter(s)
             printset = next(it), next(it), dots, s[-1]
