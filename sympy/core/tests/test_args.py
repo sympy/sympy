@@ -1338,6 +1338,11 @@ def test_sympy__stats__crv_types__ExponentialDistribution():
     assert _test_args(ExponentialDistribution(1))
 
 
+def test_sympy__stats__crv_types__ExponentialPowerDistribution():
+    from sympy.stats.crv_types import ExponentialPowerDistribution
+    assert _test_args(ExponentialPowerDistribution(0, 1, 1))
+
+
 def test_sympy__stats__crv_types__FDistributionDistribution():
     from sympy.stats.crv_types import FDistributionDistribution
     assert _test_args(FDistributionDistribution(1, 1))
@@ -1491,6 +1496,11 @@ def test_sympy__stats__drv_types__PoissonDistribution():
     assert _test_args(PoissonDistribution(1))
 
 
+def test_sympy__stats__drv_types__SkellamDistribution():
+    from sympy.stats.drv_types import SkellamDistribution
+    assert _test_args(SkellamDistribution(1, 1))
+
+
 def test_sympy__stats__drv_types__YuleSimonDistribution():
     from sympy.stats.drv_types import YuleSimonDistribution
     assert _test_args(YuleSimonDistribution(.5))
@@ -1569,15 +1579,29 @@ def test_sympy__stats__stochastic_process_types__StochasticProcess():
     from sympy.stats.stochastic_process_types import StochasticProcess
     assert _test_args(StochasticProcess("Y", [1, 2, 3]))
 
+def test_sympy__stats__stochastic_process_types__MarkovProcess():
+    from sympy.stats.stochastic_process_types import MarkovProcess
+    assert _test_args(MarkovProcess("Y", [1, 2, 3]))
+
 def test_sympy__stats__stochastic_process_types__DiscreteTimeStochasticProcess():
     from sympy.stats.stochastic_process_types import DiscreteTimeStochasticProcess
     assert _test_args(DiscreteTimeStochasticProcess("Y", [1, 2, 3]))
+
+def test_sympy__stats__stochastic_process_types__ContinuousTimeStochasticProcess():
+    from sympy.stats.stochastic_process_types import ContinuousTimeStochasticProcess
+    assert _test_args(ContinuousTimeStochasticProcess("Y", [1, 2, 3]))
 
 def test_sympy__stats__stochastic_process_types__TransitionMatrixOf():
     from sympy.stats.stochastic_process_types import TransitionMatrixOf, DiscreteMarkovChain
     from sympy import MatrixSymbol
     DMC = DiscreteMarkovChain("Y")
     assert _test_args(TransitionMatrixOf(DMC, MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__stochastic_process_types__GeneratorMatrixOf():
+    from sympy.stats.stochastic_process_types import GeneratorMatrixOf, ContinuousMarkovChain
+    from sympy import MatrixSymbol
+    DMC = ContinuousMarkovChain("Y")
+    assert _test_args(GeneratorMatrixOf(DMC, MatrixSymbol('T', 3, 3)))
 
 def test_sympy__stats__stochastic_process_types__StochasticStateSpaceOf():
     from sympy.stats.stochastic_process_types import StochasticStateSpaceOf, DiscreteMarkovChain
@@ -1589,6 +1613,11 @@ def test_sympy__stats__stochastic_process_types__DiscreteMarkovChain():
     from sympy.stats.stochastic_process_types import DiscreteMarkovChain
     from sympy import MatrixSymbol
     assert _test_args(DiscreteMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
+
+def test_sympy__stats__stochastic_process_types__ContinuousMarkovChain():
+    from sympy.stats.stochastic_process_types import ContinuousMarkovChain
+    from sympy import MatrixSymbol
+    assert _test_args(ContinuousMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
 
 def test_sympy__stats__random_matrix__RandomMatrixPSpace():
     from sympy.stats.random_matrix import RandomMatrixPSpace

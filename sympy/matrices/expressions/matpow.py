@@ -71,7 +71,7 @@ class MatPow(MatrixExpr):
             raise ValueError("Matrix determinant is 0, not invertible.")
         elif isinstance(base, (Identity, ZeroMatrix)):
             return base
-        elif isinstance(base, MatrixBase) and exp.is_number:
+        elif isinstance(base, MatrixBase):
             if exp is S.One:
                 return base
             return base**exp

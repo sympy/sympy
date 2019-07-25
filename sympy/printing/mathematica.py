@@ -157,6 +157,11 @@ class MCodePrinter(CodePrinter):
             res += '**'.join(self.parenthesize(a, PREC) for a in nc)
         return res
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     # Primitive numbers
     def _print_Zero(self, expr):
