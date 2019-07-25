@@ -1127,7 +1127,7 @@ def piecewise_simplify_arguments(expr, **kwargs):
 
 def piecewise_simplify(expr, **kwargs):
     expr = piecewise_simplify_arguments(expr, **kwargs)
-    args = expr.args
+    args = list(expr.args)
 
     _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (
         getattr(e.rhs, '_diff_wrt', None) or
