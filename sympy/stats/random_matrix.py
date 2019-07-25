@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Basic, MatrixSymbol
-from sympy.stats.rv import PSpace, _symbol_converter
+from sympy.stats.rv import PSpace, _symbol_converter, RandomMatrixSymbol
 
 class RandomMatrixPSpace(PSpace):
     """
@@ -14,3 +14,11 @@ class RandomMatrixPSpace(PSpace):
         return Basic.__new__(cls, sym, model)
 
     model = property(lambda self: self.args[1])
+
+    def compute_density(self, expr, *args):
+        rms = rms = expr.atoms(RandomMatrixSymbol)
+        if len(rms) > 2 or (not isinstance(expr, RandomMatrixSymbol)):
+            raise NotImplementedError("Currently, no algorithm has been "
+                    "implemented to handle general expressions containing "
+                    "multiple random matrices.")
+        return self.model.density(expr)

@@ -550,6 +550,10 @@ def pspace(expr):
     expr = sympify(expr)
     if isinstance(expr, RandomSymbol) and expr.pspace is not None:
         return expr.pspace
+    if expr.has(RandomMatrixSymbol):
+        rm = list(expr.atoms(RandomMatrixSymbol))[0]
+        return rm.pspace
+
     rvs = random_symbols(expr)
     if not rvs:
         raise ValueError("Expression containing Random Variable expected, not %s" % (expr))
@@ -808,16 +812,10 @@ class Density(Basic):
     def doit(self, evaluate=True, **kwargs):
         from sympy.stats.joint_rv import JointPSpace
         from sympy.stats.frv import SingleFiniteDistribution
-        from sympy.stats.random_matrix_models import RandomMatrixEnsemble
+        from sympy.stats.random_matrix_models import RandomMatrixPSpace
         expr, condition = self.expr, self.condition
         if expr.has(RandomMatrixSymbol):
-            rms = expr.atoms(RandomMatrixSymbol)
-            if len(rms) > 2 or (not isinstance(expr, RandomMatrixSymbol)):
-                raise NotImplementedError("Currently, no algorithm has been "
-                        "implemented to handle general expressions containing "
-                        "multiple random matrices.")
-            rm = list(rms)[0]
-            return rm.pspace.model.density(expr)
+            return pspace(expr).compute_density(expr)
         if isinstance(expr, SingleFiniteDistribution):
             return expr.dict
         if condition is not None:
