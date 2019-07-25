@@ -184,7 +184,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # variables with matching assumptions
         reps = {}
         for xab in self.limits:
-            d = dummy_with_properties(xab)
+            d = dummy_with_inherited_properties(xab)
             if d:
                 reps[xab[0]] = d
         if reps:
@@ -192,8 +192,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             did = self.xreplace(reps).doit(**hints)
             if type(did) is tuple:  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
-            else:
+            elif did is not None:
                 did = did.xreplace(undo)
+            else:
+                did = self
             return did
 
 
@@ -201,7 +203,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             expanded = self.expand()
             if self != expanded:
                 return expanded.doit()
-            return self
+            return _eval_matrix_sum(self)
 
         for n, limit in enumerate(self.limits):
             i, a, b = limit
@@ -996,18 +998,19 @@ def eval_sum_direct(expr, limits):
                 r = without_i*s
                 if not r is S.NaN:
                     return r
-        # Try term by term
-        L, R = expr.as_two_terms()
+        else:
+            # Try term by term
+            L, R = expr.as_two_terms()
 
-        if not L.has(i):
-            sR = eval_sum_direct(R, (i, a, b))
-            if sR:
-                return L*sR
+            if not L.has(i):
+                sR = eval_sum_direct(R, (i, a, b))
+                if sR:
+                    return L*sR
 
-        if not R.has(i):
-            sL = eval_sum_direct(L, (i, a, b))
-            if sL:
-                return sL*R
+            if not R.has(i):
+                sL = eval_sum_direct(L, (i, a, b))
+                if sL:
+                    return sL*R
         try:
             expr = apart(expr, i)  # see if it becomes an Add
         except PolynomialError:
@@ -1022,16 +1025,16 @@ def eval_sum_direct(expr, limits):
                 r = without_i*(dif + 1) + s
                 if not r is S.NaN:
                     return r
-        # Try term by term
-        L, R = expr.as_two_terms()
-        lsum = eval_sum_direct(L, (i, a, b))
-        rsum = eval_sum_direct(R, (i, a, b))
+        else:
+            # Try term by term
+            L, R = expr.as_two_terms()
+            lsum = eval_sum_direct(L, (i, a, b))
+            rsum = eval_sum_direct(R, (i, a, b))
 
-        if None not in (lsum, rsum):
-            r = lsum + rsum
-            if not r is S.NaN:
-                return r
-
+            if None not in (lsum, rsum):
+                r = lsum + rsum
+                if not r is S.NaN:
+                    return r
 
     return Add(*[expr.subs(i, a + j) for j in range(dif + 1)])
 
@@ -1054,18 +1057,19 @@ def eval_sum_symbolic(f, limits):
                 r = without_i*s
                 if not r is S.NaN:
                     return r
-        # Try term by term
-        L, R = f.as_two_terms()
+        else:
+            # Try term by term
+            L, R = f.as_two_terms()
 
-        if not L.has(i):
-            sR = eval_sum_symbolic(R, (i, a, b))
-            if sR:
-                return L*sR
+            if not L.has(i):
+                sR = eval_sum_symbolic(R, (i, a, b))
+                if sR:
+                    return L*sR
 
-        if not R.has(i):
-            sL = eval_sum_symbolic(L, (i, a, b))
-            if sL:
-                return sL*R
+            if not R.has(i):
+                sL = eval_sum_symbolic(L, (i, a, b))
+                if sL:
+                    return sL*R
         try:
             f = apart(f, i)  # see if it becomes an Add
         except PolynomialError:
@@ -1086,14 +1090,15 @@ def eval_sum_symbolic(f, limits):
                 r = without_i*(b - a + 1) + s
                 if not r is S.NaN:
                     return r
-        # Try term by term
-        lsum = eval_sum_symbolic(L, (i, a, b))
-        rsum = eval_sum_symbolic(R, (i, a, b))
+        else:
+            # Try term by term
+            lsum = eval_sum_symbolic(L, (i, a, b))
+            rsum = eval_sum_symbolic(R, (i, a, b))
 
-        if None not in (lsum, rsum):
-            r = lsum + rsum
-            if not r is S.NaN:
-                return r
+            if None not in (lsum, rsum):
+                r = lsum + rsum
+                if not r is S.NaN:
+                    return r
 
 
     # Polynomial terms with Faulhaber's formula
@@ -1282,7 +1287,22 @@ def eval_sum_hyper(f, i_a_b):
         return Piecewise(res, (old_sum, True))
 
 
-def dummy_with_properties(limits):
+def _eval_matrix_sum(expression):
+    f = expression.function
+    for n, limit in enumerate(expression.limits):
+        i, a, b = limit
+        dif = b - a
+        if dif.is_Integer:
+            if (dif < 0) == True:
+                a, b = b + 1, a - 1
+                f = -f
+
+            newf = eval_sum_direct(f, (i, a, b))
+            if newf is not None:
+                return newf.doit()
+
+
+def dummy_with_inherited_properties(limits):
     """
     Return a Dummy symbol that inherints as much assumptions based on the
     provided limits as possible.
@@ -1294,21 +1314,22 @@ def dummy_with_properties(limits):
         return None
     x, a, b = limits
     l = (a, b)
-    d = Dummy()
-    d._assumptions = x._assumptions
     assumptions_to_consider = ['extended_nonnegative', 'nonnegative',
                                'extended_nonpositive', 'nonpositive',
                                'extended_positive', 'positive',
                                'extended_negative', 'negative',
-                               'integer', 'rational', 'odd', 'even',
-                               'infinite', 'finite', 'zero']
-    assumptions_modified = False
+                               'integer', 'rational', 'odd', 'even', 'finite',
+                               'zero', 'real', 'extended_real']
+    assumptions_to_keep = {}
+    assumptions_to_add = {}
     for assum in assumptions_to_consider:
-        if (all(i._assumptions.get(assum, False) for i in l) and
-            not d._assumptions.get(assum, False)):
-            d._assumptions[assum] = True
-            assumptions_modified = True
-    if assumptions_modified:
-        return d
+        assum_true = x._assumptions.get(assum, None)
+        if assum_true:
+            assumptions_to_keep[assum] = True
+        elif all(i._assumptions.get(assum, None) for i in l):
+            assumptions_to_add[assum] = True
+    if assumptions_to_add:
+        assumptions_to_keep.update(assumptions_to_add)
+        return Dummy('d', **assumptions_to_keep)
     else:
         return None

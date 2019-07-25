@@ -210,8 +210,8 @@ class Product(ExprWithIntLimits):
         reps = {}
         for xab in self.limits:
             # Must be imported here to avoid circular imports
-            from .summations import dummy_with_properties
-            d = dummy_with_properties(xab)
+            from .summations import dummy_with_inherited_properties
+            d = dummy_with_inherited_properties(xab)
             if d:
                 reps[xab[0]] = d
         if reps:
