@@ -39,7 +39,7 @@ Features Supported
 Notes
 =====
 
-The module currently depends on two external dependencies
+The module depends on an external dependency
 
 LFortran : Required to parse Fortran source code into ASR
 
