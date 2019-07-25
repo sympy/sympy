@@ -829,11 +829,11 @@ def test_issue_17141():
     assert simplify(acos(-I)**2*acos(I)**2) == \
            log(1 + sqrt(2))**4 + pi**2*log(1 + sqrt(2))**2/2 + pi**4/16
     assert simplify(2**acos(I)**2) == 2**((pi - 2*I*log(1 + sqrt(2)))**2/4)
+    p = 2**acos(I+1)**2
+    assert simplify(p) == p
 
     # However, for a complex number it still happens
     if PY3:
-        raises(RecursionError, lambda: simplify(2**acos(I+1)**2))
         raises(RecursionError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
     else:
-        raises(RuntimeError, lambda: simplify(2**acos(I+1)**2))
         raises(RuntimeError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))

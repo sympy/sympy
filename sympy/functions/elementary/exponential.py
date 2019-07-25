@@ -693,17 +693,18 @@ class log(Function):
 
         """
         from sympy import Abs, arg
+        sarg = self.args[0]
         if deep:
-            abs = Abs(self.args[0].expand(deep, **hints))
-            arg = arg(self.args[0].expand(deep, **hints))
-        else:
-            abs = Abs(self.args[0])
-            arg = arg(self.args[0])
+            sarg = self.args[0].expand(deep, **hints)
+        abs = Abs(sarg)
+        if abs == sarg:
+            return self, S.Zero
+        arg = arg(sarg)
         if hints.get('log', False):  # Expand the log
             hints['complex'] = False
             return (log(abs).expand(deep, **hints), arg)
         else:
-            return (log(abs), arg)
+            return log(abs), arg
 
     def _eval_is_rational(self):
         s = self.func(*self.args)
