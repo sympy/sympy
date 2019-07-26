@@ -526,7 +526,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         return min(choices, key=measure)
 
     def done(e):
-        return shorter(e.doit(), e) if doit else e
+        return e.doit() if doit else e
 
     expr = sympify(expr)
     kwargs = dict(
@@ -601,6 +601,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
             from sympy.functions.elementary.piecewise import (
                     piecewise_simplify_arguments)
             expr = piecewise_simplify_arguments(expr, **kwargs)
+            if expr.has(Piecewise):
+                expr = piecewise_fold(expr)
 
     if expr.has(BesselBase):
         expr = besselsimp(expr)

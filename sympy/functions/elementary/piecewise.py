@@ -1116,11 +1116,14 @@ def piecewise_simplify_arguments(expr, **kwargs):
     args = []
     for e, c in expr.args:
         if isinstance(e, Basic):
-            newe = simplify(e, **kwargs)
+            olddoit = kwargs.pop('doit', None)
+            # Skip doit to avoid growth at every call for some integrals
+            # and sums, see sympy/sympy#17165
+            newe = simplify(e, doit=False, **kwargs)
             if newe != expr:
                 e = newe
         if isinstance(c, Basic):
-            c = simplify(c, **kwargs)
+            c = simplify(c, doit=olddoit, **kwargs)
         args.append((e, c))
     return Piecewise(*args)
 
