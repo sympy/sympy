@@ -316,16 +316,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         except AttributeError:
             pass
 
-    if not strict:
-        # Put numpy array conversion _before_ float/int, see
-        # <https://github.com/sympy/sympy/issues/13924>.
-        flat = getattr(a, "flat", None)
-        if flat is not None:
-            shape = getattr(a, "shape", None)
-            if shape is not None:
-                from ..tensor.array import Array
-                return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
-
     if not isinstance(a, string_types):
         for coerce in (float, int):
             try:

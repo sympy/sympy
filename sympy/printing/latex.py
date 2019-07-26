@@ -1614,6 +1614,9 @@ class LatexPrinter(Printer):
     def _print_MpmathMatrix(self, expr):
         return self._print(expr.as_explicit())
 
+    def _print_NumPyMatrix(self, expr):
+        return self._print(expr.as_explicit())
+
     def _print_NDimArray(self, expr):
 
         if expr.rank() == 0:

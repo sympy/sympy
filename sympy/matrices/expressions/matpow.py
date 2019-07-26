@@ -68,6 +68,10 @@ class MatPow(MatrixExpr):
         if isinstance(base, MpmathMatrix) and exp.is_Integer:
             return base._eval_pow(exp)
 
+        from .numpy import NumPyMatrix
+        if isinstance(base, NumPyMatrix) and exp.is_Integer:
+            return base._eval_pow(exp)
+
         if exp.is_zero and base.is_square:
             if isinstance(base, MatrixBase):
                 return base.func(Identity(base.shape[0]))
