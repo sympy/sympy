@@ -1026,16 +1026,19 @@ class Integral(AddWithLimits):
 
                 # fall back to heurisch
                 if heurisch is not False:
-                    try:
-                        if conds == 'piecewise':
-                            h = heurisch_wrapper(g, x, hints=[])
-                        else:
-                            h = heurisch_(g, x, hints=[])
-                    except PolynomialError:
-                        # XXX: this exception means there is a bug in the
-                        # implementation of heuristic Risch integration
-                        # algorithm.
-                        h = None
+                    if heurisch is True or not (g.has(Abs) or g.has(sign)):
+                        # heurisch cannot handle integrals with Abs or sign
+                        # anyway
+                        try:
+                            if conds == 'piecewise':
+                                h = heurisch_wrapper(g, x, hints=[])
+                            else:
+                                h = heurisch_(g, x, hints=[])
+                        except PolynomialError:
+                            # XXX: this exception means there is a bug in the
+                            # implementation of heuristic Risch integration
+                            # algorithm.
+                            h = None
             else:
                 h = None
 
