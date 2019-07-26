@@ -216,8 +216,7 @@ class DenseMatrix(MatrixBase):
                     # initially, and for a matrix, that is a mix of a scalar and
                     # a matrix, which raises a TypeError. Fall back to a
                     # block-matrix-safe way to multiply if the `sum` fails.
-                    e = reduce(lambda a,b: a + b, vec)
-                    new_mat[i] = _simplify(e, doit=False) if simplify else e
+                    new_mat[i] = reduce(lambda a,b: a + b, vec)
         return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):
