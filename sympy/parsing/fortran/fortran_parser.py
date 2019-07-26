@@ -4,10 +4,12 @@ from sympy.core import Add, Mul, Integer, Float
 from sympy import Symbol
 from sympy.external import import_module
 
-lfortran = import_module(
-    'lfortran',
-    warn_not_installed=True
-)
+lfortran = import_module('lfortran')
+
+if not lfortran:
+    #bin/test will not execute any tests now
+    disabled = True
+
 
 asr_mod = lfortran.asr
 asr = lfortran.asr.asr
