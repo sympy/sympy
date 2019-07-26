@@ -1,9 +1,10 @@
 from sympy import (
-    Abs, adjoint, arg, atan, atan2, conjugate, cos, DiracDelta, E, exp, expand,
-    Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
-    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise,
-    Interval, comp, Integral, Matrix, ImmutableMatrix, SparseMatrix,
-    ImmutableSparseMatrix, MatrixSymbol, FunctionMatrix, Lambda, Derivative)
+    Abs, acos, adjoint, arg, atan, atan2, conjugate, cos, DiracDelta,
+    E, exp, expand, Expr, Function, Heaviside, I, im, log, nan, oo,
+    pi, Rational, re, S, sign, sin, sqrt, Symbol, symbols, transpose,
+    zoo, exp_polar, Piecewise, Interval, comp, Integral, Matrix,
+    ImmutableMatrix, SparseMatrix, ImmutableSparseMatrix, MatrixSymbol,
+    FunctionMatrix, Lambda, Derivative)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import XFAIL, raises
@@ -440,6 +441,11 @@ def test_Abs():
     assert re(t).is_algebraic is False
     assert Abs(x).fdiff() == sign(x)
     raises(ArgumentIndexError, lambda: Abs(x).fdiff(2))
+
+    # doesn't have recursion error
+    arg = sqrt(acos(1 - I)*acos(1 + I))
+    assert abs(arg) == arg
+
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)

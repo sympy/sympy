@@ -507,3 +507,47 @@ def test_fps__operations():
     fi = f2.integrate(x)
     assert fi.function == sin(x)
     assert fi.truncate() == x - x**3/6 + x**5/120 + O(x**6)
+
+def test_fps__convolution():
+    f1, f2, f3 = fps(sin(x)), fps(exp(x)), fps(cos(x))
+
+    raises(ValueError, lambda: f1.product(exp(x), x))
+    raises(ValueError, lambda: f1.product(fps(exp(x), dir=-1), x, 4))
+    raises(ValueError, lambda: f1.product(fps(exp(x), x0=1), x, 4))
+    raises(ValueError, lambda: f1.product(fps(exp(y)), x, 4))
+
+    assert f1.product(f2, x, 3) == x + x**2 + O(x**3)
+    assert f1.product(f2, x, 4) == x + x**2 + x**3/3 + O(x**4)
+    assert f1.product(f3, x, 4) == x - 2*x**3/3 + O(x**4)
+
+def test_fps__composition():
+    f1, f2, f3 = fps(exp(x)), fps(sin(x)), fps(cos(x))
+
+    raises(ValueError, lambda: f1.compose(sin(x), x))
+    raises(ValueError, lambda: f1.compose(fps(sin(x), dir=-1), x, 4))
+    raises(ValueError, lambda: f1.compose(fps(sin(x), x0=1), x, 4))
+    raises(ValueError, lambda: f1.compose(fps(sin(y)), x, 4))
+
+    raises(ValueError, lambda: f1.compose(f3, x))
+    raises(ValueError, lambda: f2.compose(f3, x))
+
+    assert f1.compose(f2, x) == 1 + x + x**2/2 - x**4/8 - x**5/15 + O(x**6)
+    assert f1.compose(f2, x, n=4) == 1 + x + x**2/2 + O(x**4)
+    assert f1.compose(f2, x, n=8) == \
+        1 + x + x**2/2 - x**4/8 - x**5/15 - x**6/240 + x**7/90 + O(x**8)
+
+    assert f2.compose(f2, x, n=4) == x - x**3/3 + O(x**4)
+    assert f2.compose(f2, x, n=8) == x - x**3/3 + x**5/10 - 8*x**7/315 + O(x**8)
+
+def test_fps__inverse():
+    f1, f2, f3 = fps(sin(x)), fps(exp(x)), fps(cos(x))
+
+    raises(ValueError, lambda: f1.inverse(x))
+    raises(ValueError, lambda: f1.inverse(x, n=8))
+
+    assert f2.inverse(x) == 1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + O(x**6)
+    assert f2.inverse(x, n=8) == \
+        1 - x + x**2/2 - x**3/6 + x**4/24 - x**5/120 + x**6/720 - x**7/5040 + O(x**8)
+
+    assert f3.inverse(x) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
+    assert f3.inverse(x, n=8) == 1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + O(x**8)

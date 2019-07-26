@@ -1,7 +1,7 @@
-from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, IndexedBase,
-                    besselk, gamma, Interval, Range, factorial, Mul, Integer,
-                    Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
-                  imageset, Intersection, Matrix, symbols, Product, IndexedBase)
+from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, Interval,
+                   Range, factorial, Mul, Integer,
+                   Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
+                   Intersection, Matrix, symbols, Product, IndexedBase)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -34,7 +34,7 @@ def JointRV(symbol, pdf, _set=None):
 
     -- a symbol
     -- a PDF in terms of indexed symbols of the symbol given
-     as the first argument
+    as the first argument
 
     NOTE: As of now, the set for each component for a `JointRV` is
     equal to the set of all integers, which can not be changed.
@@ -443,7 +443,6 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
 
     @property
     def set(self):
-        from sympy.sets.sets import Interval
         return S.Reals**len(self.lamda)
 
     def pdf(self, *y):
@@ -525,7 +524,7 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     syms: list/tuple/set of symbols for identifying each component
     omega: A square matrix
            Every element of square matrix must be absolute value of
-           sqaure root of correlation coefficient
+           square root of correlation coefficient
     v: positive real
     lamda: a list of positive reals
     mu: a list of positive reals
@@ -590,7 +589,7 @@ class MultinomialDistribution(JointDistribution):
     @staticmethod
     def check(n, p):
         _value_check(n > 0,
-                        "number of trials must be a positve integer")
+                        "number of trials must be a positive integer")
         for p_k in p:
             _value_check((p_k >= 0, p_k <= 1),
                         "probability must be in range [0, 1]")
@@ -659,7 +658,7 @@ class NegativeMultinomialDistribution(JointDistribution):
     @staticmethod
     def check(k0, p):
         _value_check(k0 > 0,
-                        "number of failures must be a positve integer")
+                        "number of failures must be a positive integer")
         for p_k in p:
             _value_check((p_k >= 0, p_k <= 1),
                         "probability must be in range [0, 1].")

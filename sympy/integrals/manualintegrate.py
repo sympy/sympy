@@ -22,7 +22,7 @@ from collections import namedtuple, defaultdict
 
 import sympy
 
-from sympy.core.compatibility import reduce, Mapping
+from sympy.core.compatibility import reduce, Mapping, iterable
 from sympy.core.containers import Dict
 from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction

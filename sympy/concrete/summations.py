@@ -181,7 +181,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             f = self.function
 
         if self.function.is_Matrix:
-            return self.expand().doit()
+            expanded = self.expand()
+            if self != expanded:
+                return expanded.doit()
+            return self
 
         for n, limit in enumerate(self.limits):
             i, a, b = limit
@@ -271,7 +274,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
-    def _eval_simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import factor_sum, sum_combine
         from sympy.core.function import expand
         from sympy.core.mul import Mul

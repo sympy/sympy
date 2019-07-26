@@ -126,7 +126,7 @@ class KanesMethod(object):
             kd_eqs = [dynamicsymbols('dummy_kd')]
 
         if not isinstance(frame, ReferenceFrame):
-            raise TypeError('An intertial ReferenceFrame must be supplied')
+            raise TypeError('An inertial ReferenceFrame must be supplied')
         self._inertial = frame
 
         self._fr = None

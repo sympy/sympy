@@ -160,7 +160,8 @@ def tensorcontraction(array, *contraction_axes):
         index_base_position = sum(icontrib)
         isum = S.Zero
         for sum_to_index in itertools.product(*summed_deltas):
-            isum += array[index_base_position + sum(sum_to_index)]
+            idx = array._get_tuple_index(index_base_position + sum(sum_to_index))
+            isum += array[idx]
 
         contracted_array.append(isum)
 
@@ -195,7 +196,7 @@ def derive_by_array(expr, dx):
 
     """
     from sympy.matrices import MatrixBase
-    from sympy.tensor import SparseNDimArray
+    from sympy.tensor.array import SparseNDimArray
     array_types = (Iterable, MatrixBase, NDimArray)
 
     if isinstance(dx, array_types):
@@ -267,6 +268,8 @@ def permutedims(expr, perm):
     [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
 
     """
+    from sympy.tensor.array import SparseNDimArray
+
     if not isinstance(expr, NDimArray):
         raise TypeError("expression has to be an N-dim array")
 
@@ -279,6 +282,11 @@ def permutedims(expr, perm):
 
     # Get the inverse permutation:
     iperm = ~perm
+    new_shape = perm(expr.shape)
+
+    if isinstance(expr, SparseNDimArray):
+        return type(expr)({tuple(perm(expr._get_tuple_index(k))): v
+                           for k, v in expr._sparse_array.items()}, new_shape)
 
     indices_span = perm([range(i) for i in expr.shape])
 
@@ -286,7 +294,5 @@ def permutedims(expr, perm):
     for i, idx in enumerate(itertools.product(*indices_span)):
         t = iperm(idx)
         new_array[i] = expr[t]
-
-    new_shape = perm(expr.shape)
 
     return type(expr)(new_array, new_shape)

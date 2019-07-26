@@ -9,7 +9,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols
 from sympy.core.sympify import _sympify, sympify, converter
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Or
 from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
     ProductSet, Intersection)
 from sympy.sets.contains import Contains
@@ -765,6 +765,15 @@ class Range(Set):
     @property
     def _boundary(self):
         return self
+
+    def as_relational(self, x):
+        """Rewrite a Range in terms of equalities and logic operators. """
+        from sympy.functions.elementary.integers import floor
+        i = (x - (self.inf if self.inf.is_finite else self.sup))/self.step
+        return And(
+            Eq(i, floor(i)),
+            x >= self.inf if self.inf in self else x > self.inf,
+            x <= self.sup if self.sup in self else x < self.sup)
 
 
 if PY3:

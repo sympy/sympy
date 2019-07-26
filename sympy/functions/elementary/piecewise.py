@@ -57,12 +57,8 @@ class ExprCondPair(Tuple):
         yield self.expr
         yield self.cond
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
-        return self.func(*[a.simplify(
-            ratio=ratio,
-            measure=measure,
-            rational=rational,
-            inverse=inverse) for a in self.args])
+    def _eval_simplify(self, **kwargs):
+        return self.func(*[a.simplify(**kwargs) for a in self.args])
 
 class Piecewise(Function):
     """
@@ -315,15 +311,17 @@ class Piecewise(Function):
         for e, c in self.args:
             if hints.get('deep', True):
                 if isinstance(e, Basic):
-                    e = e.doit(**hints)
+                    newe = e.doit(**hints)
+                    if newe != self:
+                        e = newe
                 if isinstance(c, Basic):
                     c = c.doit(**hints)
             newargs.append((e, c))
         return self.func(*newargs)
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
-        args = [a._eval_simplify(ratio, measure, rational, inverse)
-            for a in self.args]
+    def _eval_simplify(self, **kwargs):
+        from sympy.simplify.simplify import simplify
+        args = [simplify(a, **kwargs) for a in self.args]
         _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (
             getattr(e.rhs, '_diff_wrt', None) or
             isinstance(e.rhs, (Rational, NumberSymbol)))

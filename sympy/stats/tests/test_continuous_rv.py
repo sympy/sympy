@@ -1,31 +1,28 @@
-from sympy import (Symbol, Abs, exp, expint, S, N, pi, simplify, Interval, erf, erfc, Ne,
-                   EulerGamma, Eq, log, lowergamma, uppergamma, Sum, symbols, sqrt, And,
-                   gamma, beta, Piecewise, Integral, sin, cos, tan, atan, sinh, cosh,
-                   besseli, factorial, binomial, floor, expand_func, Rational, I, re,
-                   im, lambdify, hyper, diff, Or, Mul)
+from sympy import E as e
+from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
+                   EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
+                   gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
+                   besseli, floor, expand_func, Rational, I, re,
+                   im, lambdify, hyper, diff, Or, Mul, sign)
 from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
 from sympy.sets.sets import Intersection, FiniteSet
-from sympy.stats import (P, E, where, density, variance, covariance, skewness,
-                         kurtosis, given, pspace, cdf, characteristic_function,
-                         moment_generating_function, ContinuousRV, sample,
-                         Arcsin, Benini, Beta, BetaNoncentral, BetaPrime, Cauchy,
-                         Chi, ChiSquared,
-                         ChiNoncentral, Dagum, Erlang, Exponential,
-                         FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
-                         Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic, LogLogistic,
-                         LogNormal, Maxwell, Nakagami, Normal, GaussianInverse, Pareto,
-                         QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
-                         StudentT, Trapezoidal, Triangular, Uniform, UniformSum,
-                         VonMises, Weibull, WignerSemicircle, Wald, correlation,
-                         moment, cmoment, smoment, quantile)
+from sympy.stats import (P, E, where, density, variance, covariance, skewness, kurtosis,
+                         given, pspace, cdf, characteristic_function, moment_generating_function,
+                         ContinuousRV, sample, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
+                         Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
+                         Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
+                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
+                         LogLogistic, LogNormal, Maxwell, Nakagami, Normal, GaussianInverse,
+                         Pareto, QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz, StudentT,
+                         Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
+                         WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.joint_rv import JointPSpace
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.randtest import verify_numerically as tn
-from sympy import E as e
 
 oo = S.Infinity
 
@@ -166,6 +163,11 @@ def test_characteristic_function():
     assert cf(0) == 1
     assert cf(1) == exp(1 - sqrt(1 - 2*I))
 
+    X = ExGaussian('x', 0, 1, 1)
+    cf = characteristic_function(X)
+    assert cf(0) == 1
+    assert cf(1) == (1 + I)*exp(-S(1)/2)/2
+
 
 def test_moment_generating_function():
     t = symbols('t', positive=True)
@@ -186,6 +188,9 @@ def test_moment_generating_function():
 
     mgf = moment_generating_function(Erlang('x', a, b))(t)
     assert mgf == (1 - t/b)**(-a)
+
+    mgf = moment_generating_function(ExGaussian("x", a, b, c))(t)
+    assert mgf == exp(a*t + b**2*t**2/2)/(1 - t/c)
 
     mgf = moment_generating_function(Exponential('x', a))(t)
     assert mgf == a/(a - t)
@@ -250,6 +255,9 @@ def test_moment_generating_function():
 
     mgf = moment_generating_function(Erlang('x', 1, 1))(t)
     assert mgf.diff(t).subs(t, 0) == 1
+
+    mgf = moment_generating_function(ExGaussian("x", 0, 1, 1))(t)
+    assert mgf.diff(t).subs(t, 2) == -exp(2)
 
     mgf = moment_generating_function(Exponential('x', 1))(t)
     assert mgf.diff(t).subs(t, 0) == 1
@@ -520,6 +528,31 @@ def test_erlang():
                                (0, True))
 
 
+def test_exgaussian():
+    m, z = symbols("m, z")
+    s, l = symbols("s, l", positive=True)
+    X = ExGaussian("x", m, s, l)
+
+    assert density(X)(z) == l*exp(l*(l*s**2 + 2*m - 2*z)/2) *\
+        erfc(sqrt(2)*(l*s**2 + m - z)/(2*s))/2
+
+    # Note: actual_output simplifies to expected_output.
+    # Ideally cdf(X)(z) would return expected_output
+    # expected_output = (erf(sqrt(2)*(l*s**2 + m - z)/(2*s)) - 1)*exp(l*(l*s**2 + 2*m - 2*z)/2)/2 - erf(sqrt(2)*(m - z)/(2*s))/2 + S(1)/2
+    u = l*(z - m)
+    v = l*s
+    GaussianCDF1 = cdf(Normal('x', 0, v))(u)
+    GaussianCDF2 = cdf(Normal('x', v**2, v))(u)
+    actual_output = GaussianCDF1 - exp(-u + (v**2/2) + log(GaussianCDF2))
+    assert cdf(X)(z) == actual_output
+    # assert simplify(actual_output) == expected_output
+
+    assert variance(X).expand() == s**2 + l**(-2)
+
+    assert skewness(X).expand() == 2/(l**3*s**2*sqrt(s**2 + l**(-2)) + l *
+                                      sqrt(s**2 + l**(-2)))
+
+
 def test_exponential():
     rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
@@ -539,6 +572,21 @@ def test_exponential():
     assert quantile(X)(p) == -log(1-p)/rate
 
     assert where(X <= 1).set == Interval(0, 1)
+
+
+def test_exponential_power():
+    mu = Symbol('mu')
+    z = Symbol('z')
+    alpha = Symbol('alpha', positive=True)
+    beta = Symbol('beta', positive=True)
+
+    X = ExponentialPower('x', mu, alpha, beta)
+
+    assert density(X)(z) == beta*exp(-(Abs(mu - z)/alpha)
+                                     ** beta)/(2*alpha*gamma(1/beta))
+    assert cdf(X)(z) == S.Half + lowergamma(1/beta,
+                            (Abs(mu - z)/alpha)**beta)*sign(-mu + z)/\
+                                (2*gamma(1/beta))
 
 
 def test_f_distribution():

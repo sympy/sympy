@@ -1247,7 +1247,7 @@ def test_trig_system():
 def test_trig_system_fail():
     # fails because solveset trig solver is not much smart.
     sys = [x + y - pi/2, sin(x) + sin(y) - 1]
-    # solveset returns conditonset for sin(x) + sin(y) - 1
+    # solveset returns conditionset for sin(x) + sin(y) - 1
     soln_1 = (ImageSet(Lambda(n, n*pi + pi/2), S.Integers),
         ImageSet(Lambda(n, n*pi)), S.Integers)
     soln_1 = FiniteSet(soln_1)

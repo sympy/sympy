@@ -160,7 +160,11 @@ class Expr(Basic, EvalfMixin):
         return self
 
     def __neg__(self):
-        return Mul(S.NegativeOne, self)
+        # Mul has its own __neg__ routine, so we just
+        # create a 2-args Mul with the -1 in the canonical
+        # slot 0.
+        c = self.is_commutative
+        return Mul._from_args((S.NegativeOne, self), c)
 
     def __abs__(self):
         from sympy import Abs
@@ -2172,6 +2176,7 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
+        from .add import _unevaluated_Add
         c = sympify(c)
         if self is S.NaN:
             return None
@@ -2253,9 +2258,10 @@ class Expr(Basic, EvalfMixin):
                 if newarg is None:
                     return  # all or nothing
                 newargs.append(newarg)
-            # args should be in same order so use unevaluated return
             if cs is not S.One:
-                return Add._from_args([cs*t for t in newargs])
+                args = [cs*t for t in newargs]
+                # args may be in different order
+                return _unevaluated_Add(*args)
             else:
                 return Add._from_args(newargs)
         elif self.is_Mul:
@@ -3384,12 +3390,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.integrals import integrate
         return integrate(self, *args, **kwargs)
 
-    def simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
+    def simplify(self, **kwargs):
         """See the simplify function in sympy.simplify"""
         from sympy.simplify import simplify
-        from sympy.core.function import count_ops
-        measure = measure or count_ops
-        return simplify(self, ratio, measure)
+        return simplify(self, **kwargs)
 
     def nsimplify(self, constants=[], tolerance=None, full=False):
         """See the nsimplify function in sympy.simplify"""
@@ -3776,18 +3780,26 @@ def unchanged(func, *args):
     Examples
     ========
 
+    >>> from sympy import Piecewise, cos, pi
     >>> from sympy.core.expr import unchanged
-    >>> from sympy.functions.elementary.trigonometric import cos
-    >>> from sympy.core.numbers import pi
+    >>> from sympy.abc import x
 
     >>> unchanged(cos, 1)  # instead of assert cos(1) == cos(1)
     True
 
     >>> unchanged(cos, pi)
     False
+
+    Comparison of args uses the builtin capabilities of the object's
+    arguments to test for equality so args can be defined loosely. Here,
+    the ExprCondPair arguments of Piecewise compare as equal to the
+    tuples that can be used to create the Piecewise:
+
+    >>> unchanged(Piecewise, (x, x > 1), (0, True))
+    True
     """
     f = func(*args)
-    return f.func == func and f.args == tuple([sympify(a) for a in args])
+    return f.func == func and f.args == args
 
 
 class ExprBuilder(object):

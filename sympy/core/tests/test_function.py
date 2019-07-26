@@ -2,7 +2,7 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
-        Matrix, Basic, Dict)
+        Matrix, Basic, Dict, oo, zoo, nan)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
@@ -351,7 +351,6 @@ def test_function_comparable():
     assert cos(Rational(1, 3)).is_comparable is True
 
 
-@XFAIL
 def test_function_comparable_infinities():
     assert sin(oo).is_comparable is False
     assert sin(-oo).is_comparable is False
@@ -360,7 +359,7 @@ def test_function_comparable_infinities():
 
 
 def test_deriv1():
-    # These all requre derivatives evaluated at a point (issue 4719) to work.
+    # These all require derivatives evaluated at a point (issue 4719) to work.
     # See issue 4624
     assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), x, 2*x)
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
@@ -803,7 +802,6 @@ def test_unhandled():
             else:
                 return None
 
-    d = Dummy()
     eq = MyExpr(f(x), y, z)
     assert diff(eq, x, y, f(x), z) == Derivative(eq, f(x))
     assert diff(eq, f(x), x) == Derivative(eq, f(x))

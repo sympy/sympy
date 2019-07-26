@@ -230,7 +230,7 @@ format, which can be rendered with Graphviz.  See the
 :ref:`tutorial-manipulation` section for some examples of the output of this
 printer.
 
-Here is an example of the raw ouput of the ``dotprint()`` function
+Here is an example of the raw output of the ``dotprint()`` function
 
     >>> from sympy.printing.dot import dotprint
     >>> from sympy.abc import x

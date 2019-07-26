@@ -392,10 +392,10 @@ class sign(Function):
     def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         from sympy.functions.special.delta_functions import Heaviside
         if arg.is_extended_real:
-            return Heaviside(arg)*2-1
+            return Heaviside(arg)*2 - 1
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
-        return self.func(self.args[0].factor())
+    def _eval_simplify(self, **kwargs):
+        return self.func(self.args[0].factor())  # XXX include doit?
 
 
 class Abs(Function):
