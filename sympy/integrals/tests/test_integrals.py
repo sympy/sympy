@@ -1548,14 +1548,6 @@ def test_issue_4311_fast():
         (x**4/4 - 9*x**2/2, True))
 
 
-@slow
-def test_issue_4311_slow():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
-    x = symbols('x')
-    assert integrate(x*abs(9-x**2), x) == Integral(x*abs(9-x**2), x)
-
-
 def test_integrate_with_complex_constants():
     K = Symbol('K', real=True, positive=True)
     x = Symbol('x', real=True)
