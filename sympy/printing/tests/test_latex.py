@@ -10,7 +10,7 @@ from sympy import (
     assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling, Complement,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
-    hyper, im, jacobi, laguerre, legendre, lerchphi, log,
+    hyper, im, jacobi, laguerre, legendre, lerchphi, log, frac,
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
@@ -370,8 +370,11 @@ def test_latex_functions():
 
     assert latex(floor(x)) == r"\left\lfloor{x}\right\rfloor"
     assert latex(ceiling(x)) == r"\left\lceil{x}\right\rceil"
+    assert latex(frac(x)) == r"\operatorname{frac}{\left(x\right)}"
     assert latex(floor(x)**2) == r"\left\lfloor{x}\right\rfloor^{2}"
     assert latex(ceiling(x)**2) == r"\left\lceil{x}\right\rceil^{2}"
+    assert latex(frac(x)**2) == r"\operatorname{frac}{\left(x\right)}^{2}"
+
     assert latex(Min(x, 2, x**3)) == r"\min\left(2, x, x^{3}\right)"
     assert latex(Min(x, y)**2) == r"\min\left(x, y\right)^{2}"
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
@@ -2286,7 +2289,7 @@ def test_DiffGeomMethods():
         r'\operatorname{d}\left(g{\left(\mathbf{x},\mathbf{y} \right)}\right)'
 
 
-def test_unit_ptinting():
+def test_unit_printing():
     assert latex(5*meter) == r'5 \text{m}'
     assert latex(3*gibibyte) == r'3 \text{gibibyte}'
     assert latex(4*microgram/second) == r'\frac{4 \mu\text{g}}{\text{s}}'

@@ -1733,6 +1733,13 @@ class LatexPrinter(Printer):
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
 
+    def _print_frac(self, expr, exp=None):
+        if exp is None:
+            return r"\operatorname{frac}{\left(%s\right)}" % self._print(expr.args[0])
+        else:
+            return r"\operatorname{frac}{\left(%s\right)}^{%s}" % (
+                    self._print(expr.args[0]), self._print(exp))
+
     def _print_tuple(self, expr):
         if self._settings['decimal_separator'] =='comma':
             return r"\left( %s\right)" % \
