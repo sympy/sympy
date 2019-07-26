@@ -684,6 +684,7 @@ def test_namespace_order():
     # previously gave 'second f'
     assert if1(1) == 'first f'
 
+    assert if2(1) == 'function g'
 
 def test_namespace_type():
     # lambdify had a bug where it would reject modules of type unicode

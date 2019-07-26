@@ -1115,6 +1115,9 @@ def test_extractions():
            ((-x - y)/(y - x)).could_extract_minus_sign() is False
     assert (x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
+    # check that result is canonical
+    eq = (3*x + 15*y).extract_multiplicatively(3)
+    assert eq.args == eq.func(*eq.args).args
 
 
 def test_nan_extractions():

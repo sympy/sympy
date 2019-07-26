@@ -250,18 +250,23 @@ class exp(ExpBase):
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
         elif arg.is_Mul:
-            if arg.is_number or arg.is_Symbol:
-                coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
-                if coeff:
-                    if ask(Q.integer(2*coeff)):
-                        if ask(Q.even(coeff)):
-                            return S.One
-                        elif ask(Q.odd(coeff)):
-                            return S.NegativeOne
-                        elif ask(Q.even(coeff + S.Half)):
-                            return -S.ImaginaryUnit
-                        elif ask(Q.odd(coeff + S.Half)):
-                            return S.ImaginaryUnit
+            coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
+            if coeff:
+                if (2*coeff).is_integer:
+                    if coeff.is_even:
+                        return S.One
+                    elif coeff.is_odd:
+                        return S.NegativeOne
+                    elif (coeff + S.Half).is_even:
+                        return -S.ImaginaryUnit
+                    elif (coeff + S.Half).is_odd:
+                        return S.ImaginaryUnit
+                elif coeff.is_Rational:
+                    ncoeff = coeff % 2 # restrict to [0, 2pi)
+                    if ncoeff > 1: # restrict to (-pi, pi]
+                        ncoeff -= 2
+                    if ncoeff != coeff:
+                        return cls(ncoeff*S.Pi*S.ImaginaryUnit)
 
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).
@@ -292,16 +297,21 @@ class exp(ExpBase):
         elif arg.is_Add:
             out = []
             add = []
+            argchanged = False
             for a in arg.args:
                 if a is S.One:
                     add.append(a)
                     continue
                 newa = cls(a)
                 if isinstance(newa, cls):
-                    add.append(a)
+                    if newa.args[0] != a:
+                        add.append(newa.args[0])
+                        argchanged = True
+                    else:
+                        add.append(a)
                 else:
                     out.append(newa)
-            if out:
+            if out or argchanged:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
         elif isinstance(arg, MatrixBase):
@@ -693,17 +703,18 @@ class log(Function):
 
         """
         from sympy import Abs, arg
+        sarg = self.args[0]
         if deep:
-            abs = Abs(self.args[0].expand(deep, **hints))
-            arg = arg(self.args[0].expand(deep, **hints))
-        else:
-            abs = Abs(self.args[0])
-            arg = arg(self.args[0])
+            sarg = self.args[0].expand(deep, **hints)
+        abs = Abs(sarg)
+        if abs == sarg:
+            return self, S.Zero
+        arg = arg(sarg)
         if hints.get('log', False):  # Expand the log
             hints['complex'] = False
             return (log(abs).expand(deep, **hints), arg)
         else:
-            return (log(abs), arg)
+            return log(abs), arg
 
     def _eval_is_rational(self):
         s = self.func(*self.args)
