@@ -120,7 +120,7 @@ class MapleCodePrinter(CodePrinter):
 
 
 def maple_code(expr, assign_to=None, **settings):
-    r"""Converts `expr` to a string of Julia code.
+    r"""Converts `expr` to a string of Maple code.
 
         Parameters
         ==========
