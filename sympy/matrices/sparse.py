@@ -369,7 +369,7 @@ class SparseMatrix(MatrixBase):
         if not sym:
             scale = (r1*rv[:, 0])[0, 0]
             rv /= scale
-        return self._new(rv)
+        return self._new(cancel(rv))
 
     def _eval_Abs(self):
         return self.applyfunc(lambda x: Abs(x))

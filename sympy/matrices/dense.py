@@ -208,7 +208,6 @@ class DenseMatrix(MatrixBase):
                     # initially, and for a matrix, that is a mix of a scalar and
                     # a matrix, which raises a TypeError. Fall back to a
                     # block-matrix-safe way to multiply if the `sum` fails.
-                    vec = ((mat[a]*other_mat[b]).expand() for a,b in zip(row_indices, col_indices))
                     new_mat[i] = cancel(reduce(lambda a,b: a + b, vec))
         return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
 
@@ -277,7 +276,7 @@ class DenseMatrix(MatrixBase):
             # make sure to add an invertibility check (as in inverse_LU)
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
-        return self._new(rv)
+        return self._new(cancel(rv))
 
     def _eval_scalar_mul(self, other):
         mat = [other*a for a in self._mat]
