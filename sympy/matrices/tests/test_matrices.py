@@ -4,9 +4,9 @@ from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, expand_mul, oo, pi, signsimp, simplify, sin, sqrt, symbols,
     sympify, trigsimp, tan, sstr, diff, Function)
-from sympy.matrices.matrices import (ShapeError, MatrixError,
-    NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
-    _simplify)
+from sympy.matrices.matrices import (
+    ShapeError, MatrixError, NonInvertibleMatrixError, NonSquareMatrixError,
+    DeferredVector, _find_reasonable_pivot_naive, _simplify)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
@@ -2833,9 +2833,9 @@ def test_invertible_check():
     # matrix will be returned even though m is not invertible
     assert m.rref()[0] != eye(3)
     assert m.rref(simplify=signsimp)[0] != eye(3)
-    raises(ValueError, lambda: m.inv(method="ADJ"))
-    raises(ValueError, lambda: m.inv(method="GE"))
-    raises(ValueError, lambda: m.inv(method="LU"))
+    raises(NonInvertibleMatrixError, lambda: m.inv(method="ADJ"))
+    raises(NonInvertibleMatrixError, lambda: m.inv(method="GE"))
+    raises(NonInvertibleMatrixError, lambda: m.inv(method="LU"))
 
 
 def test_issue_3959():
