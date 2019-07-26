@@ -177,7 +177,7 @@ class DenseMatrix(MatrixBase):
         return self._new(len(rowsList), len(colsList),
                          list(mat[i] for i in indices), copy=False)
 
-    def _eval_matrix_mul(self, other):
+    def _eval_matrix_mul(self, other, expand=True, simplify=True):
         from sympy import Add
         # cache attributes for faster access
         self_rows, self_cols = self.rows, self.cols
@@ -199,23 +199,30 @@ class DenseMatrix(MatrixBase):
                 row, col = i // new_mat_cols, i % new_mat_cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
                 col_indices = range(col, other_len, other_cols)
-                vec = ((mat[a]*other_mat[b]).expand(power_exp=False) for a,b in zip(row_indices, col_indices))
+
+                # vec = ((mat[a]*other_mat[b]).expand(power_exp=False) for a,b in zip(row_indices, col_indices))
+                vec = [None]*self_cols
+                for j,a,b in zip(range(self_cols), row_indices, col_indices):
+                    c = mat[a]*other_mat[b]
+                    _expand = expand and getattr(c, 'expand', None)
+                    vec[j] = _expand(power_exp=False) if expand else c
+
                 try:
-                    new_mat[i] = _simplify(Add(*vec))
+                    new_mat[i] = _simplify(Add(*vec), doit=False)
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
                     # initially, and for a matrix, that is a mix of a scalar and
                     # a matrix, which raises a TypeError. Fall back to a
                     # block-matrix-safe way to multiply if the `sum` fails.
-                    new_mat[i] = _simplify(reduce(lambda a,b: a + b, vec))
+                    new_mat[i] = _simplify(reduce(lambda a,b: a + b, vec), doit=False)
         return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):
         mat = [a*b for a,b in zip(self._mat, other._mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
-    def _eval_inverse(self, **kwargs):
+    def _eval_inverse(self, simplify=True, **kwargs):
         """Return the matrix inverse using the method indicated (default
         is Gauss elimination).
 
@@ -276,7 +283,9 @@ class DenseMatrix(MatrixBase):
             # make sure to add an invertibility check (as in inverse_LU)
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
-        return self._new(cancel(rv))
+        if simplify:
+            return self._new(_simplify(rv, doit=False))
+        return self._new(rv)
 
     def _eval_scalar_mul(self, other):
         mat = [other*a for a in self._mat]
