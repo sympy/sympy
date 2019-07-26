@@ -64,7 +64,7 @@ class MapleCodePrinter(CodePrinter):
     def __init__(self, settings=None):
         if settings is None:
             settings = dict()
-        CodePrinter.__init__(settings)
+        super(MapleCodePrinter, self).__init__(settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
@@ -78,6 +78,9 @@ class MapleCodePrinter(CodePrinter):
     def _declare_number_const(self, name, value):
         return "{0} := {1};".format(name,
                                     value.evalf(self._settings['precision']))
+
+    def _format_code(self, lines):
+        return lines
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
