@@ -350,7 +350,7 @@ class frac(Function):
                     (self.rewrite(ceiling) == other):
                 return S.true
             # Check if other < 0
-            if other.is_extended_real and other.is_extended_negative:
+            if other.is_extended_negative:
                 return S.false
             # Check if other >= 1
             res = self._value_one_or_more(other)
@@ -379,7 +379,7 @@ class frac(Function):
         if self.is_extended_real:
             other = _sympify(other)
             # Check if other <= 0
-            if other.is_extended_real and other.is_extended_nonpositive:
+            if other.is_extended_nonpositive:
                     return S.true
             # Check if other >= 1
             res = self._value_one_or_more(other)
@@ -395,7 +395,7 @@ class frac(Function):
             if res is not None:
                 return not(res)
             # Check if other >= 1
-            if other.is_extended_real and other.is_extended_negative:
+            if other.is_extended_negative:
                 return S.true
         return Gt(self, other, evaluate=False)
 
@@ -403,7 +403,7 @@ class frac(Function):
         if self.is_extended_real:
             other = _sympify(other)
             # Check if other < 0
-            if other.is_extended_real and other.is_extended_negative:
+            if other.is_extended_negative:
                 return S.false
             # Check if other >= 1
             res = self._value_one_or_more(other)
@@ -415,7 +415,7 @@ class frac(Function):
         if self.is_extended_real:
             other = _sympify(other)
             # Check if other <= 0
-            if other.is_extended_real and other.is_extended_nonpositive:
+            if other.is_extended_nonpositive:
                 return S.false
             # Check if other >= 1
             res = self._value_one_or_more(other)
