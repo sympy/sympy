@@ -1,17 +1,28 @@
-from sympy.parsing.sym_expr import SymPyExpression
+import re
+
 from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
                                Return, FunctionDefinition, Assignment,
                                Declaration, CodeBlock)
 from sympy.core import Integer, Float, Add
 from sympy import Symbol
-import re
 
-expr1 = SymPyExpression()
-expr2 = SymPyExpression()
-src = """\
-integer :: a, b, c, d
-real :: p, q, r, s
-"""
+
+from sympy.external import import_module
+lfortran = import_module('lfortran')
+if lfortran:
+    from sympy.parsing.sym_expr import SymPyExpression
+
+    expr1 = SymPyExpression()
+    expr2 = SymPyExpression()
+    src = """\
+    integer :: a, b, c, d
+    real :: p, q, r, s
+    """
+else:
+    #bin/test will not execute any tests now
+    disabled = True
+
+
 
 
 def test_sym_expr():

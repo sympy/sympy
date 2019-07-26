@@ -3,12 +3,10 @@ from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
 from sympy.core import Add, Mul, Integer, Float
 from sympy import Symbol
 from sympy.external import import_module
-
 lfortran = import_module('lfortran')
 
 if not lfortran:
-    #bin/test will not execute any tests now
-    disabled = True
+    raise Exception("fortran_parse requires the lfortran package")
 
 
 asr_mod = lfortran.asr
