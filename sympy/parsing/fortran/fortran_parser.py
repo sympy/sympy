@@ -1,6 +1,6 @@
 from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
                                Return, FunctionDefinition, Assignment)
-from sympy.core import Add, Mul
+from sympy.core import Add, Mul, Integer, Float
 from sympy import Symbol
 from sympy.external import import_module
 
@@ -203,10 +203,10 @@ class ASR2PyVisitor(asr.ASTVisitor):
         """
         if isinstance(node.type, asr.Integer):
             var_type = IntBaseType(String('integer'))
-            value = 0
+            value = Integer(0)
         elif isinstance(node.type, asr.Real):
             var_type = FloatBaseType(String('real'))
-            value = 0.0
+            value = Float(0.0)
         else:
             raise NotImplementedError("Data type not supported")
 
