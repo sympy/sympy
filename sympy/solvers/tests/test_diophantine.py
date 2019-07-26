@@ -1,5 +1,4 @@
-from sympy import (Add, factor_list, igcd, Matrix, Mul, S, simplify,
-    Symbol, symbols, Eq, pi, factorint, oo, powsimp)
+from sympy import (Add, Matrix, Mul, S, symbols, Eq, pi, factorint, oo, powsimp)
 from sympy.core.function import _mexpand
 from sympy.core.compatibility import range
 from sympy.functions.elementary.trigonometric import sin
@@ -20,7 +19,6 @@ from sympy.utilities import default_sort_key
 
 from sympy.utilities.pytest import slow, raises, XFAIL
 from sympy.utilities.iterables import (
-        permute_signs,
         signed_permutations)
 
 a, b, c, d, p, q, x, y, z, w, t, u, v, X, Y, Z = symbols(
@@ -826,6 +824,7 @@ def test_sum_of_squares_powers():
     eq = u**2 + v**2 + x**2 + y**2 + z**2 - 123
     ans = diop_general_sum_of_squares(eq, oo)  # allow oo to be used
     assert len(ans) == 14
+    assert ans == tru
 
     raises(ValueError, lambda: list(sum_of_squares(10, -1)))
     assert list(sum_of_squares(-10, 2)) == []

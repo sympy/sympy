@@ -3557,7 +3557,6 @@ def test_rank_decomposition():
     assert c.cols == f.rows == a.rank()
     assert c * f == a
 
-@slow
 def test_issue_11238():
     from sympy import Point
     xx = 8*tan(13*pi/45)/(tan(13*pi/45) + sqrt(3))
