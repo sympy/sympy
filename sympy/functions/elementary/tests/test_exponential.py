@@ -3,7 +3,7 @@ from sympy import (
     LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
     AccumBounds, MatrixSymbol, Pow, gcd)
-rom sympy.abc import x, y, z
+from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.pytest import raises, XFAIL
