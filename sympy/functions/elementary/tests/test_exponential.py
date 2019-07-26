@@ -59,6 +59,13 @@ def test_exp_period():
     assert exp(2 - 17*I*pi/5) == exp(2 + 3*I*pi/5)
     assert exp(log(3) + 29*I*pi/9) == 3 * exp(-7*I*pi/9)
 
+    n = Symbol('n', integer=True)
+    e = Symbol('e', even=True)
+    assert exp(e*I*pi) == 1
+    assert exp((e + 1)*I*pi) == -1
+    assert exp((1 + 4*n)*I*pi/2) == I
+    assert exp((-1 + 4*n)*I*pi/2) == -I
+
 
 def test_exp_log():
     x = Symbol("x", real=True)
