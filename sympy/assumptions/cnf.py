@@ -5,47 +5,31 @@ signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
 from itertools import combinations, product
-from sympy import S
-from sympy.logic.boolalg import BooleanFunction, Or, And, Not
-
-
-# Early encoding for literals
-literals_store = dict()
+from sympy import S, Nor, Nand, Xor, Implies, Equivalent, ITE
+from sympy.logic.boolalg import BooleanFunction, Or, And, Not, Xnor
+from sympy.core.compatibility import zip_longest
 
 
 class Literal(object):
     """
     The smallest element of a CNF object
     """
-    literals_count = 0
 
-    def __new__(cls, lit, is_not=False):
-        if type(lit).__name__ == 'Not':
-            lit = lit.args[0]
-            is_not = True
-        k = literals_store.get(lit, None)
-        if k is not None:
-            code = k
-        elif lit in (S.false, False):
-            code = 0
-        else:
-            cls.literals_count += 1
-            code = cls.literals_count
+    def __new__(cls, lit=None, is_Not=False):
         obj = super(Literal, cls).__new__(cls)
-        obj.code = code
+        if isinstance(lit, Not):
+            lit = lit.args[0]
+            is_Not = True
         obj.lit = lit
-        literals_store[lit] = obj.code
-        obj.is_Not = is_not
-        return obj
+        obj.is_Not = is_Not
 
     @property
     def arg(self):
-        sign = -1 if self.is_Not else 1
-        return sign*self.code
+        return self.lit
 
     def __invert__(self):
-        is_not = not self.is_Not
-        return Literal(self.lit, is_not=is_not)
+        is_Not = not self.is_Not
+        return Literal(self.lit, is_Not)
 
     def __str__(self):
         return '%s(%s, %s)' % (type(self).__name__, self.lit, self.is_Not)
@@ -53,26 +37,14 @@ class Literal(object):
     __repr__ = __str__
 
     def __eq__(self, other):
-        return self.arg == other.arg
+        return self.arg == other.arg and self.is_Not == other.is_Not
 
     def __hash__(self):
-        h = hash((type(self).__name__, + self.arg))
+        h = hash((type(self).__name__, self.arg, self.is_Not))
         return h
 
     def __lt__(self, other):
         return self.arg < other.arg
-
-
-def literal_sort_key(lit):
-    _type = type(lit).__name__
-    if _type == 'Literal':
-        return lit.arg
-
-    if _type == 'AND':
-        return -2, lit.args
-
-    if _type == 'OR':
-        return -1, lit.args
 
 
 class OR(object):
@@ -84,7 +56,7 @@ class OR(object):
 
     @property
     def args(self):
-        return sorted(self._args, key=literal_sort_key)
+        return sorted(self._args, key=str)
 
     def __invert__(self):
         return AND(*[~arg for arg in self._args])
@@ -114,7 +86,7 @@ class AND(object):
 
     @property
     def args(self):
-        return sorted(self._args, key=literal_sort_key)
+        return sorted(self._args, key=str)
 
     def __hash__(self):
         return hash((type(self).__name__,) + tuple(self.args))
@@ -137,27 +109,26 @@ def to_NNF(expr):
     if not isinstance(expr, BooleanFunction):
         return Literal(expr)
 
-    klass = type(expr).__name__
-    if klass == 'Not':
+    if isinstance(expr, Not):
         arg = expr.args[0]
         tmp = to_NNF(arg)  # Strategy: negate the NNF of expr
         return ~tmp
 
-    if klass == 'Or':
+    if isinstance(expr, Or):
         return OR(*[to_NNF(x) for x in Or.make_args(expr)])
 
-    if klass == 'And':
+    if isinstance(expr, And):
         return AND(*[to_NNF(x) for x in And.make_args(expr)])
 
-    if klass == 'Nand':
+    if isinstance(expr, Nand):
         tmp = AND(*[to_NNF(x) for x in expr.args])
         return ~tmp
 
-    if klass == 'Nor':
+    if isinstance(expr, Nor):
         tmp = OR(*[to_NNF(x) for x in expr.args])
         return ~tmp
 
-    if klass == 'Xor':
+    if isinstance(expr, Xor):
         cnfs = []
         for i in range(0, len(expr.args) + 1, 2):
             for neg in combinations(expr.args, i):
@@ -166,7 +137,7 @@ def to_NNF(expr):
                 cnfs.append(OR(*clause))
         return AND(*cnfs)
 
-    if klass == 'Xnor':
+    if isinstance(expr, Xnor):
         cnfs = []
         for i in range(0, len(expr.args) + 1, 2):
             for neg in combinations(expr.args, i):
@@ -175,24 +146,26 @@ def to_NNF(expr):
                 cnfs.append(OR(*clause))
         return ~AND(*cnfs)
 
-    if klass == 'Implies':
-        L, R = map(to_NNF, expr.args)
+    if isinstance(expr, Implies):
+        L, R = to_NNF(expr.args[0]), to_NNF(expr.args[1])
         return OR(~L, R)
 
-    if klass == 'Equivalent':
+    if isinstance(expr, Equivalent):
         cnfs = []
-        for a, b in zip(expr.args, expr.args[1:]):
+        for a, b in zip_longest(expr.args, expr.args[1:], fillvalue=expr.args[0]):
             a = to_NNF(a)
             b = to_NNF(b)
             cnfs.append(OR(~a, b))
-        a = to_NNF(expr.args[-1])
-        b = to_NNF(expr.args[0])
-        cnfs.append(OR(~a, b))
         return AND(*cnfs)
 
-    if klass == 'ITE':
-        L, M, R = map(CNF.to_CNF, expr.args)
+    if isinstance(expr, ITE):
+        L = to_NNF(expr.args[0])
+        M = to_NNF(expr.args[1])
+        R = to_NNF(expr.args[2])
         return AND(OR(~L, M), OR(L, R))
+
+    else:
+        raise NotImplementedError('NNF conversion not implemented for %s class' % type(expr).__name__)
 
 
 def distribute_AND_over_OR(expr):
@@ -206,12 +179,11 @@ def distribute_AND_over_OR(expr):
         tmp.add(frozenset((expr,)))
         return CNF(tmp)
 
-    klass = type(expr).__name__
-    if klass == 'OR':
+    if isinstance(expr, OR):
         return CNF.all_or(*[distribute_AND_over_OR(arg)
                             for arg in expr._args])
 
-    if klass == 'AND':
+    if isinstance(expr, AND):
         return CNF.all_and(*[distribute_AND_over_OR(arg)
                              for arg in expr._args])
 
@@ -251,7 +223,7 @@ class CNF(object):
 
     @classmethod
     def from_prop(cls, prop):
-        res = CNF()
+        res = cls()
         res.add(prop)
         return res
 
@@ -375,4 +347,4 @@ class EncodedCNF(object):
             return value
 
     def encode(self, clause):
-        return {self.encode_arg(arg) if arg.code else arg.code for arg in clause}
+        return {self.encode_arg(arg) if not arg.lit == S.false else 0 for arg in clause}
