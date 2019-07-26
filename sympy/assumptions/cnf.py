@@ -15,13 +15,14 @@ class Literal(object):
     The smallest element of a CNF object
     """
 
-    def __new__(cls, lit=None, is_Not=False):
+    def __new__(cls, lit, is_Not=False):
         obj = super(Literal, cls).__new__(cls)
         if isinstance(lit, Not):
             lit = lit.args[0]
             is_Not = True
         obj.lit = lit
         obj.is_Not = is_Not
+        return obj
 
     @property
     def arg(self):
