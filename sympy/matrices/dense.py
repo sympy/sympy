@@ -208,14 +208,16 @@ class DenseMatrix(MatrixBase):
                     vec[j] = _expand(power_exp=False) if expand else c
 
                 try:
-                    new_mat[i] = _simplify(Add(*vec), doit=False)
+                    e = Add(*vec)
+                    new_mat[i] = _simplify(e, doit=False) if simplify else e
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
                     # initially, and for a matrix, that is a mix of a scalar and
                     # a matrix, which raises a TypeError. Fall back to a
                     # block-matrix-safe way to multiply if the `sum` fails.
-                    new_mat[i] = _simplify(reduce(lambda a,b: a + b, vec), doit=False)
+                    e = reduce(lambda a,b: a + b, vec)
+                    new_mat[i] = _simplify(e, doit=False) if simplify else e
         return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):

@@ -89,3 +89,9 @@ class NewMatrix(MutableDenseMatrix):
             return sol, tau, free_var_index
         else:
             return sol, tau
+
+    def _eval_matrix_mul(self, other, expand=False, simplify=False):
+        return MutableDenseMatrix._eval_matrix_mul(self, other, expand=expand, simplify=simplify)
+
+    def _eval_inverse(self, simplify=False, **kwargs):
+        return MutableDenseMatrix._eval_inverse(self, simplify=simplify, **kwargs)
