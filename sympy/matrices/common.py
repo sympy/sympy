@@ -2205,9 +2205,7 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            a = self._eval_matrix_mul(other)
-            mulsimp = getattr(a, 'mulsimp', None)
-            return mulsimp() if mulsimp else a
+            return self._eval_matrix_mul(other)
 
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):

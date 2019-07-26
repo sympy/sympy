@@ -21,7 +21,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import exp, factorial
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.polys import PurePoly, cancel, roots, together
+from sympy.polys import PurePoly, cancel, roots
 from sympy.printing import sstr
 from sympy.simplify import nsimplify
 from sympy.simplify import simplify as _simplify
@@ -941,24 +941,6 @@ class MatrixReductions(MatrixDeterminant):
         if pivots:
             ret = (ret, pivot_cols)
         return ret
-
-    def mulsimp(self, measure=count_ops, threshold=None):
-        """A simple simplify function to prevent expression blowup during multiplication."""
-
-        l   = len(self)
-        e   = [None]*l
-        chg = False
-
-        for i in range (l):
-            expr = self[i]
-
-            if threshold is None or measure(expr) < threshold:
-                chg  = True
-                expr = cancel(expr)
-
-            e[i] = expr
-
-        return self._new(self.rows, self.cols, e) if chg else self
 
 
 class MatrixSubspaces(MatrixReductions):
@@ -3544,9 +3526,7 @@ class MatrixBase(MatrixDeprecated,
         if method is not None:
             kwargs['method'] = method
 
-        a = self._eval_inverse(**kwargs)
-        mulsimp = getattr(a, 'mulsimp', None)
-        return mulsimp() if mulsimp else a
+        return self._eval_inverse(**kwargs)
 
     def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
