@@ -942,7 +942,7 @@ class MatrixReductions(MatrixDeterminant):
             ret = (ret, pivot_cols)
         return ret
 
-    def mulsimp(self, measure=count_ops, threshold=500):
+    def mulsimp(self, measure=count_ops, threshold=None):
         """A simple simplify function to prevent expression blowup during multiplication."""
 
         l   = len(self)
