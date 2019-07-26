@@ -155,6 +155,8 @@ class floor(RoundFunction):
     def __le__(self, other):
         if self.args[0] == other and other.is_real:
             return S.true
+        if other == S.Infinity and self.is_finite:
+            return S.true
         return Le(self, other, evaluate=False)
 
     def __gt__(self, other):
@@ -243,6 +245,8 @@ class ceiling(RoundFunction):
 
     def __ge__(self, other):
         if self.args[0] == other and other.is_real:
+            return S.true
+        if other == S.NegativeInfinity and self.is_real:
             return S.true
         return Ge(self, other, evaluate=False)
 

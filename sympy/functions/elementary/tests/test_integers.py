@@ -113,6 +113,7 @@ def test_floor():
     assert (floor(x) > x).is_Relational
     assert (floor(x) <= y).is_Relational  # arg is not same as rhs
     assert (floor(x) > y).is_Relational
+    assert (floor(y) <= oo) == True
 
     assert floor(y).rewrite(frac) == y - frac(y)
     assert floor(y).rewrite(ceiling) == -ceiling(-y)
@@ -228,6 +229,7 @@ def test_ceiling():
     assert (ceiling(x) < x).is_Relational
     assert (ceiling(x) >= y).is_Relational  # arg is not same as rhs
     assert (ceiling(x) < y).is_Relational
+    assert (ceiling(y) >= -oo) == True
 
     assert ceiling(y).rewrite(floor) == -floor(-y)
     assert ceiling(y).rewrite(frac) == y + frac(-y)
