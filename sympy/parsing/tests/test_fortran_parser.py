@@ -103,14 +103,10 @@ def test_assignment():
     expr1.convert_to_expr(src1, 'f')
     ls1 = expr1.return_expr()
     for iter in range(0, 12):
-        if (iter < 8):
+        if iter < 8:
             assert isinstance(ls1[iter], Declaration)
         else:
             assert isinstance(ls1[iter], Assignment)
-            assert re.match(
-                r'Assignment\((?P<var>Variable)\(\w+\),\s(?P=var)\(\w+\)\)',
-                str(ls1[iter])
-            )
     assert ls1[8] == Assignment(
         Variable(Symbol('a')),
         Variable(Symbol('b'))
