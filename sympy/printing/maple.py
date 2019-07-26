@@ -40,6 +40,8 @@ known_functions = {
     'acoth': 'arccoth',
     'ceiling': 'ceil',
 }
+for _func in _known_func_same_name:
+    known_functions[_func] = _func
 
 atomic_expr = {
     # Sympy -> Maple
@@ -53,9 +55,6 @@ spec_relational_ops = {
     '==': '=',
     '!=': '<>'
 }
-
-for _func in _known_func_same_name:
-    known_functions[_func] = _func
 
 
 class MapleCodePrinter(CodePrinter):
