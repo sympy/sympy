@@ -336,9 +336,9 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
 
         return scipy_rv.rvs(size=size)
 
-    def sample(self, size=()):
+    def _sample_python(self, size):
         icdf = self._inverse_cdf_expression()
-        return icdf(random.uniform(0, 1))
+        return [icdf(random.uniform(0, 1)) for i in range(size)]
 
     def __new__(cls, pdf, set=Interval(-oo, oo)):
         return Basic.__new__(cls, pdf, set)

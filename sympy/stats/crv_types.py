@@ -182,12 +182,8 @@ class ArcsinDistribution(SingleContinuousDistribution):
 
     def _sample_scipy(self, size):
         a = float(self.a)
-        scipy = import_module('scipy')
-        if scipy:
-            from scipy.stats import arcsine
-            return arcsine.rvs(loc=a, size=size)
-        else:
-            raise NotImplementedError('Sampling the Arcsin Distribution requires Scipy.')
+        from scipy.stats import arcsine
+        return arcsine.rvs(loc=a, size=size)
 
     def _cdf(self, x):
         from sympy import asin
