@@ -50,8 +50,8 @@ def test_MultivariateTDist():
 def test_multivariate_laplace():
     from sympy.stats.crv_types import Laplace
     raises(ValueError, lambda: Laplace('T', [1, 2], [[1, 2], [2, 1]]))
-    L = Laplace('L', [1, 0], [[1, 2], [0, 1]])
-    assert density(L)(2, 3) == exp(2)*besselk(0, sqrt(3))/pi
+    L = Laplace('L', [1, 0], [[1, 0], [0, 1]])
+    assert density(L)(2, 3) == exp(2)*besselk(0, sqrt(39))/pi
     L1 = Laplace('L1', [1, 2], [[x, 0], [0, y]])
     assert density(L1)(0, 1) == \
         exp(2/y)*besselk(0, sqrt((2 + 4/y + 1/x)/y))/(pi*sqrt(x*y))
