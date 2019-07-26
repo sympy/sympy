@@ -3128,7 +3128,7 @@ def test_pinv_solve():
     # Underdetermined system (infinite results).
     A = Matrix([[1, 0, 1], [0, 1, 1]])
     B = Matrix([5, 7])
-    solution = A.pinv_solve(B).expand()
+    solution = A.pinv_solve(B)
     w = {}
     for s in solution.atoms(Symbol):
         # Extract dummy symbols used in the solution.
