@@ -17,24 +17,8 @@ from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 _known_func_same_name = [
-    'sin',
-    'cos',
-    'tan',
-    'sec',
-    'csc',
-    'cot',
-
-    'sinh',
-    'cosh',
-    'tanh',
-    'sech',
-    'csch',
-    'coth',
-
-    'exp',
-
-    'floor'
-
+    'sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'sinh', 'cosh', 'tanh', 'sech',
+    'csch', 'coth', 'exp', 'floor'
 ]
 
 known_functions = {
@@ -42,23 +26,26 @@ known_functions = {
     # FIXME: maybe need added
     'Abs': 'abs',
     'log': 'ln',
-
     'asin': 'arcsin',
     'acos': 'arccos',
     'atan': 'arctan',
     'asec': 'arcsec',
     'acsc': 'arccsc',
     'acot': 'arccot',
-
     'asinh': 'arcsinh',
     'acosh': 'arccosh',
     'atanh': 'arctanh',
     'asech': 'arcsech',
     'acsch': 'arccsch',
     'acoth': 'arccoth',
-
     'ceiling': 'ceil',
+}
 
+atomic_expr = {
+    # Sympy -> Maple
+    S('pi'): 'Pi',
+    S('I'): 'I',
+    S('oo'): 'infinity'
 }
 
 for _func in _known_func_same_name:
@@ -69,7 +56,6 @@ class MapleCodePrinter(CodePrinter):
     """
     Printer which converts single sympy expressions into single.
     """
-
     def __init__(self, settings=None):
         if settings is None:
             settings = dict()
@@ -85,7 +71,8 @@ class MapleCodePrinter(CodePrinter):
         return "# {0}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "{0} := {1};".format(name, value.evalf(self._settings['precision']))
+        return "{0} := {1};".format(name,
+                                    value.evalf(self._settings['precision']))
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
@@ -93,9 +80,10 @@ class MapleCodePrinter(CodePrinter):
             return '1/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5 or expr.exp == S(1) / 2:
             return 'sqrt(%s)' % self._print(expr.base)
+        elif expr.exp == -0.5 or expr.exp == -S(1) / 2:
+            return '1/sqrt(%s)' % self._print(expr.base)
         else:
-            return '%s^%s' % (self._print(expr.base),
-                              self._print(expr.exp))
+            return '%s^%s' % (self._print(expr.base), self._print(expr.exp))
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
@@ -108,20 +96,27 @@ class MapleCodePrinter(CodePrinter):
         # FIXME: rel_op might be different from maple.
         return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
+    def _print_AtomicExpr(self, expr):
+        """
+        Print constant like pi, e ...
+        """
+        return atomic_expr[expr]
+
     def _print_Idx(self, expr):
         return self._print(expr.label)
 
-    def _print_Exp1(self, expr):
-        return "exp(1)"
-
-    def _print_Pi(self, expr):
-        return 'Pi'
-
-    def _print_Infinity(self, expr):
-        return 'infinity'
-
-    def _print_NegativeInfinity(self, expr):
-        return '-infinity'
+    def _print_MatrixBase(self, expr):
+        if expr.cols == 0 or expr.rows == 0:
+            return '<>'
+        elif expr.cols == 1:
+            return '<%s>' % ','.join(list(expr.col(0)))
+        elif expr.rows == 1:
+            return '<%s>' % '|'.join(list(expr.col(0)))
+        else:
+            _row_content_list = [
+                '<%s>' % '|'.join(list(expr.row(i))) for i in range(expr.rows)
+            ]
+            return '<%s>' % ','.join(_row_content_list)
 
 
 def maple_code(expr, assign_to=None, **settings):
