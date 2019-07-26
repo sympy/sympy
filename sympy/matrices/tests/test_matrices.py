@@ -14,6 +14,7 @@ from sympy.matrices import (
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix, MatrixSymbol)
 from sympy.core.compatibility import long, iterable, range, Hashable
 from sympy.core import Tuple, Wild
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.solvers import solve
@@ -222,17 +223,17 @@ def test_power():
         [0, 0, b**n]])
 
     A = Matrix([[1, 0], [1, 7]])
-    assert A._matrix_pow_by_jordan_blocks(3) == A._eval_pow_by_recursion(3)
+    assert A._matrix_pow_by_jordan_blocks(S(3)) == A._eval_pow_by_recursion(3)
     A = Matrix([[2]])
-    assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(10) == \
+    assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(S(10)) == \
         A._eval_pow_by_recursion(10)
 
     # testing a matrix that cannot be jordan blocked issue 11766
     m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
-    raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(10))
+    raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(S(10)))
 
     # test issue 11964
-    raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(-10))
+    raises(MatrixError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(S(-10)))
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])  # Nilpotent jordan block size 3
     assert A**10.0 == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     raises(ValueError, lambda: A**2.1)
@@ -240,13 +241,18 @@ def test_power():
     A = Matrix([[8, 1], [3, 2]])
     assert A**10.0 == Matrix([[1760744107, 272388050], [817164150, 126415807]])
     A = Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 1
-    assert A**10.2 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 2
     assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     n = Symbol('n', integer=True)
     assert isinstance(A**n, MatPow)
-    n = Symbol('n', integer=True, nonnegative=True)
+    n = Symbol('n', integer=True, negative=True)
     raises(ValueError, lambda: A**n)
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert A**n == Matrix([
+        [KroneckerDelta(0, n), KroneckerDelta(1, n), -KroneckerDelta(0, n) - KroneckerDelta(1, n) + 1],
+        [                   0, KroneckerDelta(0, n),                         1 - KroneckerDelta(0, n)],
+        [                   0,                    0,                                                1]])
     assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     raises(ValueError, lambda: A**(S(3)/2))
     A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
@@ -258,6 +264,25 @@ def test_power():
     assert An.subs(n, 2).doit() == A**2
     raises(ValueError, lambda: An.subs(n, -2).doit())
     assert An * An == A**(2*n)
+
+    # concretizing behavior for non-integer and complex powers
+    A = Matrix([[0,0,0],[0,0,0],[0,0,0]])
+    n = Symbol('n', integer=True, positive=True)
+    assert A**n == A
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert A**n == diag(0**n, 0**n, 0**n)
+    assert (A**n).subs(n, 0) == eye(3)
+    assert (A**n).subs(n, 1) == zeros(3)
+    A = Matrix ([[2,0,0],[0,2,0],[0,0,2]])
+    assert A**2.1 == diag (2**2.1, 2**2.1, 2**2.1)
+    assert A**I == diag (2**I, 2**I, 2**I)
+    A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])
+    raises(ValueError, lambda: A**2.1)
+    raises(ValueError, lambda: A**I)
+    A = Matrix([[S.Half, S.Half], [S.Half, S.Half]])
+    assert A**S.Half == A
+    A = Matrix([[1, 1],[3, 3]])
+    assert A**S.Half == Matrix ([[S.Half, S.Half], [3*S.Half, 3*S.Half]])
 
 
 def test_creation():
@@ -2025,6 +2050,20 @@ def test_Matrix_berkowitz_charpoly():
     assert p.as_expr().subs(p.gen, x) == x**2 - 3*x
 
 
+def test_exp_jordan_block():
+    l = Symbol('lamda')
+
+    m = Matrix.jordan_block(1, l)
+    assert m._eval_matrix_exp_jblock() == Matrix([[exp(l)]])
+
+    m = Matrix.jordan_block(3, l)
+    assert m._eval_matrix_exp_jblock() == \
+        Matrix([
+            [exp(l), exp(l), exp(l)/2],
+            [0, exp(l), exp(l)],
+            [0, 0, exp(l)]])
+
+
 def test_exp():
     m = Matrix([[3, 4], [0, -2]])
     m_exp = Matrix([[exp(3), -4*exp(-2)/5 + 4*exp(3)/5], [0, exp(-2)]])
@@ -3518,7 +3557,6 @@ def test_rank_decomposition():
     assert c.cols == f.rows == a.rank()
     assert c * f == a
 
-@slow
 def test_issue_11238():
     from sympy import Point
     xx = 8*tan(13*pi/45)/(tan(13*pi/45) + sqrt(3))

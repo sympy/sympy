@@ -17,14 +17,13 @@ Rademacher
 from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
-        Dict, Basic, KroneckerDelta, Dummy, Eq, Intersection, Interval,
-        Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains, FiniteSet)
+                   Dummy, Eq, Intersection, Interval,
+                   Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains)
 from sympy import beta as beta_fn
-from sympy.concrete.summations import Sum
-from sympy.core.compatibility import as_int, range
-from sympy.stats.rv import _value_check, Density, RandomSymbol
+from sympy.core.compatibility import range
 from sympy.stats.frv import (SingleFiniteDistribution,
-                            SingleFinitePSpace)
+                             SingleFinitePSpace)
+from sympy.stats.rv import _value_check, Density, RandomSymbol
 
 __all__ = ['FiniteRV',
 'DiscreteUniform',

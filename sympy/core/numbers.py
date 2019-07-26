@@ -3255,6 +3255,9 @@ class NaN(with_metaclass(Singleton, Number)):
     def _latex(self, printer):
         return r"\text{NaN}"
 
+    def __neg__(self):
+        return self
+
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         return self

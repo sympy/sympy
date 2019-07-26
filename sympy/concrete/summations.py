@@ -181,7 +181,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             f = self.function
 
         if self.function.is_Matrix:
-            return self.expand().doit()
+            expanded = self.expand()
+            if self != expanded:
+                return expanded.doit()
+            return self
 
         for n, limit in enumerate(self.limits):
             i, a, b = limit

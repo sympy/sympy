@@ -1,7 +1,7 @@
-from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, Gt, IndexedBase,
-                    besselk, gamma, Interval, Range, factorial, Mul, Integer,
-                    Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
-                  imageset, Intersection, Matrix, symbols, Product, IndexedBase)
+from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, Interval,
+                   Range, factorial, Mul, Integer,
+                   Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
+                   Intersection, Matrix, symbols, Product, IndexedBase)
 from sympy.matrices import ImmutableMatrix
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
@@ -443,7 +443,6 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
 
     @property
     def set(self):
-        from sympy.sets.sets import Interval
         return S.Reals**len(self.lamda)
 
     def pdf(self, *y):

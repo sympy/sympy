@@ -80,7 +80,7 @@ from .algebras import *
 # from combinatorics import *
 # This module is slow to import:
 #from physics import units
-from .plotting import plot, textplot, plot_backends, plot_implicit
+from .plotting import plot, textplot, plot_backends, plot_implicit, plot_parametric
 from .printing import *
 from .interactive import init_session, init_printing
 

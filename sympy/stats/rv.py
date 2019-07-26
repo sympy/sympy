@@ -16,8 +16,8 @@ sympy.stats.rv_interface
 from __future__ import print_function, division
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-        Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-        DiracDelta, Mul, Indexed)
+                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
+                   DiracDelta, Mul, Indexed, Function)
 from sympy.core.compatibility import string_types
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
@@ -275,13 +275,19 @@ class RandomSymbol(Expr):
 class RandomIndexedSymbol(RandomSymbol):
 
     def __new__(cls, idx_obj, pspace=None):
-        if not isinstance(idx_obj, Indexed):
-            raise TypeError("An indexed object is expected not %s"%(idx_obj))
+        if not isinstance(idx_obj, (Indexed, Function)):
+            raise TypeError("An Function or Indexed object is expected not %s"%(idx_obj))
         return Basic.__new__(cls, idx_obj, pspace)
 
     symbol = property(lambda self: self.args[0])
     name = property(lambda self: str(self.args[0]))
-    key = property(lambda self: self.symbol.args[1])
+
+    @property
+    def key(self):
+        if isinstance(self.symbol, Indexed):
+            return self.symbol.args[1]
+        elif isinstance(self.symbol, Function):
+            return self.symbol.args[0]
 
 class ProductPSpace(PSpace):
     """

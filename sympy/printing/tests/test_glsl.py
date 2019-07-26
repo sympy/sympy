@@ -1,4 +1,5 @@
-from sympy.core import pi, oo, symbols, Rational, Integer, GoldenRatio, EulerGamma, Catalan, Lambda, Dummy
+from sympy.core import (pi, symbols, Rational, Integer, GoldenRatio, EulerGamma,
+                        Catalan, Lambda, Dummy, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
 from sympy.utilities.pytest import raises
 from sympy.printing.glsl import GLSLPrinter
@@ -35,6 +36,15 @@ def test_glsl_code_Pow():
     assert glsl_code(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2.0) + y)"
     assert glsl_code(x**-1.0) == '1.0/x'
+
+
+def test_glsl_code_Relational():
+    assert glsl_code(Eq(x, y)) == "x == y"
+    assert glsl_code(Ne(x, y)) == "x != y"
+    assert glsl_code(Le(x, y)) == "x <= y"
+    assert glsl_code(Lt(x, y)) == "x < y"
+    assert glsl_code(Gt(x, y)) == "x > y"
+    assert glsl_code(Ge(x, y)) == "x >= y"
 
 
 def test_glsl_code_constants_mathh():

@@ -1003,6 +1003,22 @@ class tan(TrigonometricFunction):
                 return None
 
             if pi_coeff.is_Rational:
+                q = pi_coeff.q
+                p = pi_coeff.p % q
+                # ensure simplified results are returned for n*pi/5, n*pi/10
+                table10 = {
+                    1: sqrt(1 - 2*sqrt(5)/5),
+                    2: sqrt(5 - 2*sqrt(5)),
+                    3: sqrt(1 + 2*sqrt(5)/5),
+                    4: sqrt(5 + 2*sqrt(5))
+                    }
+                if q == 5 or q == 10:
+                    n = 10 * p / q
+                    if n > 5:
+                        n = 10 - n
+                        return -table10[n]
+                    else:
+                        return table10[n]
                 if not pi_coeff.q % 2:
                     narg = pi_coeff*S.Pi*2
                     cresult, sresult = cos(narg), cos(narg - S.Pi/2)
@@ -1021,8 +1037,6 @@ class tan(TrigonometricFunction):
                     60: (20, 30),
                     120: (40, 60)
                     }
-                q = pi_coeff.q
-                p = pi_coeff.p % q
                 if q in table2:
                     nvala, nvalb = cls(p*S.Pi/table2[q][0]), cls(p*S.Pi/table2[q][1])
                     if None == nvala or None == nvalb:
@@ -1296,12 +1310,14 @@ class cot(TrigonometricFunction):
                 return None
 
             if pi_coeff.is_Rational:
+                if pi_coeff.q == 5 or pi_coeff.q == 10:
+                    return tan(S.Pi/2 - arg)
                 if pi_coeff.q > 2 and not pi_coeff.q % 2:
                     narg = pi_coeff*S.Pi*2
                     cresult, sresult = cos(narg), cos(narg - S.Pi/2)
                     if not isinstance(cresult, cos) \
                             and not isinstance(sresult, cos):
-                        return (1 + cresult)/sresult
+                        return 1/sresult + cresult/sresult
                 table2 = {
                     12: (3, 4),
                     20: (4, 5),
@@ -1880,7 +1896,77 @@ class sinc(Function):
 class InverseTrigonometricFunction(Function):
     """Base class for inverse trigonometric functions."""
 
-    pass
+    @staticmethod
+    def _asin_table():
+        # Only keys with could_extract_minus_sign() == False
+        # are actually needed.
+        return {
+            sqrt(3)/2: S.Pi/3,
+            sqrt(2)/2: S.Pi/4,
+            1/sqrt(2): S.Pi/4,
+            sqrt((5 - sqrt(5))/8): S.Pi/5,
+            sqrt(2)*sqrt(5 - sqrt(5))/4: S.Pi/5,
+            sqrt((5 + sqrt(5))/8): 2*S.Pi/5,
+            sqrt(2)*sqrt(5 + sqrt(5))/4: 2*S.Pi/5,
+            S.Half: S.Pi/6,
+            sqrt(2 - sqrt(2))/2: S.Pi/8,
+            sqrt(S.Half - sqrt(2)/4): S.Pi/8,
+            sqrt(2 + sqrt(2))/2: 3*S.Pi/8,
+            sqrt(S.Half + sqrt(2)/4): 3*S.Pi/8,
+            (sqrt(5) - 1)/4: S.Pi/10,
+            (1 - sqrt(5))/4: -S.Pi/10,
+            (sqrt(5) + 1)/4: 3*S.Pi/10,
+            sqrt(6)/4 - sqrt(2)/4: S.Pi/12,
+            -sqrt(6)/4 + sqrt(2)/4: -S.Pi/12,
+            (sqrt(3) - 1)/sqrt(8): S.Pi/12,
+            (1 - sqrt(3))/sqrt(8): -S.Pi/12,
+            sqrt(6)/4 + sqrt(2)/4: 5*S.Pi/12,
+            (1 + sqrt(3))/sqrt(8): 5*S.Pi/12
+        }
+
+    @staticmethod
+    def _atan_table():
+        # Only keys with could_extract_minus_sign() == False
+        # are actually needed.
+        return {
+            sqrt(3)/3: S.Pi/6,
+            1/sqrt(3): S.Pi/6,
+            sqrt(3): S.Pi/3,
+            sqrt(2) - 1: S.Pi/8,
+            1 - sqrt(2): -S.Pi/8,
+            1 + sqrt(2): 3*S.Pi/8,
+            sqrt(5 - 2*sqrt(5)): S.Pi/5,
+            sqrt(5 + 2*sqrt(5)): 2*S.Pi/5,
+            sqrt(1 - 2*sqrt(5)/5): S.Pi/10,
+            sqrt(1 + 2*sqrt(5)/5): 3*S.Pi/10,
+            2 - sqrt(3): S.Pi/12,
+            -2 + sqrt(3): -S.Pi/12,
+            2 + sqrt(3): 5*S.Pi/12
+        }
+
+    @staticmethod
+    def _acsc_table():
+        # Keys for which could_extract_minus_sign()
+        # will obviously return True are omitted.
+        return {
+            2*sqrt(3)/3: S.Pi/3,
+            sqrt(2): S.Pi/4,
+            sqrt(2 + 2*sqrt(5)/5): S.Pi/5,
+            1/sqrt(S(5)/8 - sqrt(5)/8): S.Pi/5,
+            sqrt(2 - 2*sqrt(5)/5): 2*S.Pi/5,
+            1/sqrt(S(5)/8 + sqrt(5)/8): 2*S.Pi/5,
+            2: S.Pi/6,
+            sqrt(4 + 2*sqrt(2)): S.Pi/8,
+            2/sqrt(2 - sqrt(2)): S.Pi/8,
+            sqrt(4 - 2*sqrt(2)): 3*S.Pi/8,
+            2/sqrt(2 + sqrt(2)): 3*S.Pi/8,
+            1 + sqrt(5): S.Pi/10,
+            sqrt(5) - 1: 3*S.Pi/10,
+            -(sqrt(5) - 1): -3*S.Pi/10,
+            sqrt(6) + sqrt(2): S.Pi/12,
+            sqrt(6) - sqrt(2): 5*S.Pi/12,
+            -(sqrt(6) - sqrt(2)): -5*S.Pi/12
+        }
 
 
 class asin(InverseTrigonometricFunction):
@@ -1965,29 +2051,9 @@ class asin(InverseTrigonometricFunction):
             return -cls(-arg)
 
         if arg.is_number:
-            cst_table = {
-                sqrt(3)/2: 3,
-                -sqrt(3)/2: -3,
-                sqrt(2)/2: 4,
-                -sqrt(2)/2: -4,
-                1/sqrt(2): 4,
-                -1/sqrt(2): -4,
-                sqrt((5 - sqrt(5))/8): 5,
-                -sqrt((5 - sqrt(5))/8): -5,
-                S.Half: 6,
-                -S.Half: -6,
-                sqrt(2 - sqrt(2))/2: 8,
-                -sqrt(2 - sqrt(2))/2: -8,
-                (sqrt(5) - 1)/4: 10,
-                (1 - sqrt(5))/4: -10,
-                (sqrt(3) - 1)/sqrt(2**3): 12,
-                (1 - sqrt(3))/sqrt(2**3): -12,
-                (sqrt(5) + 1)/4: S(10)/3,
-                -(sqrt(5) + 1)/4: -S(10)/3
-            }
-
-            if arg in cst_table:
-                return S.Pi / cst_table[arg]
+            asin_table = cls._asin_table()
+            if arg in asin_table:
+                return asin_table[arg]
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -2081,7 +2147,7 @@ class acos(InverseTrigonometricFunction):
     the result is a rational multiple of pi (see the eval class method).
 
     ``acos(zoo)`` evaluates to ``zoo``
-    (see note in :py:class`sympy.functions.elementary.trigonometric.asec`)
+    (see note in :class:`sympy.functions.elementary.trigonometric.asec`)
 
     A purely imaginary argument will be rewritten to asinh.
 
@@ -2145,19 +2211,11 @@ class acos(InverseTrigonometricFunction):
             return S.ComplexInfinity
 
         if arg.is_number:
-            cst_table = {
-                S.Half: S.Pi/3,
-                -S.Half: 2*S.Pi/3,
-                sqrt(2)/2: S.Pi/4,
-                -sqrt(2)/2: 3*S.Pi/4,
-                1/sqrt(2): S.Pi/4,
-                -1/sqrt(2): 3*S.Pi/4,
-                sqrt(3)/2: S.Pi/6,
-                -sqrt(3)/2: 5*S.Pi/6,
-            }
-
-            if arg in cst_table:
-                return cst_table[arg]
+            asin_table = cls._asin_table()
+            if arg in asin_table:
+                return pi/2 - asin_table[arg]
+            elif -arg in asin_table:
+                return pi/2 + asin_table[-arg]
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -2337,25 +2395,9 @@ class atan(InverseTrigonometricFunction):
             return -cls(-arg)
 
         if arg.is_number:
-            cst_table = {
-                sqrt(3)/3: 6,
-                -sqrt(3)/3: -6,
-                1/sqrt(3): 6,
-                -1/sqrt(3): -6,
-                sqrt(3): 3,
-                -sqrt(3): -3,
-                (1 + sqrt(2)): S(8)/3,
-                -(1 + sqrt(2)): S(8)/3,
-                (sqrt(2) - 1): 8,
-                (1 - sqrt(2)): -8,
-                sqrt((5 + 2*sqrt(5))): S(5)/2,
-                -sqrt((5 + 2*sqrt(5))): -S(5)/2,
-                (2 - sqrt(3)): 12,
-                -(2 - sqrt(3)): -12
-            }
-
-            if arg in cst_table:
-                return S.Pi / cst_table[arg]
+            atan_table = cls._atan_table()
+            if arg in atan_table:
+                return atan_table[arg]
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -2431,10 +2473,33 @@ class atan(InverseTrigonometricFunction):
 
 
 class acot(InverseTrigonometricFunction):
-    """
+    r"""
     The inverse cotangent function.
 
     Returns the arc cotangent of x (measured in radians).
+
+    Notes
+    =====
+
+    ``acot(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
+    ``zoo``, ``0``, ``1``, ``-1`` and for some instances when the result is a
+    rational multiple of pi (see the eval class method).
+
+    A purely imaginary argument will lead to an ``acoth`` expression.
+
+    ``acot(x)`` has a branch cut along `(-i, i)`, hence it is discontinuous
+    at 0. Its range for real ``x`` is `(-\frac{\pi}{2}, \frac{\pi}{2}]`.
+
+    Examples
+    ========
+
+    >>> from sympy import acot, sqrt
+    >>> acot(0)
+    pi/2
+    >>> acot(1)
+    pi/4
+    >>> acot(sqrt(3) - 2)
+    -5*pi/12
 
     See Also
     ========
@@ -2445,9 +2510,8 @@ class acot(InverseTrigonometricFunction):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCot
+    .. [1] http://dlmf.nist.gov/4.23
+    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCot
 
     """
 
@@ -2497,27 +2561,12 @@ class acot(InverseTrigonometricFunction):
             return -cls(-arg)
 
         if arg.is_number:
-            cst_table = {
-                sqrt(3)/3: 3,
-                -sqrt(3)/3: -3,
-                1/sqrt(3): 3,
-                -1/sqrt(3): -3,
-                sqrt(3): 6,
-                -sqrt(3): -6,
-                (1 + sqrt(2)): 8,
-                -(1 + sqrt(2)): -8,
-                (1 - sqrt(2)): -S(8)/3,
-                (sqrt(2) - 1): S(8)/3,
-                sqrt(5 + 2*sqrt(5)): 10,
-                -sqrt(5 + 2*sqrt(5)): -10,
-                (2 + sqrt(3)): 12,
-                -(2 + sqrt(3)): -12,
-                (2 - sqrt(3)): S(12)/5,
-                -(2 - sqrt(3)): -S(12)/5,
-            }
-
-            if arg in cst_table:
-                return S.Pi / cst_table[arg]
+            atan_table = cls._atan_table()
+            if arg in atan_table:
+                ang = pi/2 - atan_table[arg]
+                if ang > pi/2: # restrict to (-pi/2,pi/2]
+                    ang -= pi
+                return ang
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -2603,8 +2652,9 @@ class asec(InverseTrigonometricFunction):
     Notes
     =====
 
-    ``asec(x)`` will evaluate automatically in the cases
-    ``oo``, ``-oo``, ``0``, ``1``, ``-1``.
+    ``asec(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
+    ``0``, ``1``, ``-1`` and for some instances when the result is a rational
+    multiple of pi (see the eval class method).
 
     ``asec(x)`` has branch cut in the interval [-1, 1]. For complex arguments,
     it can be defined [4]_ as
@@ -2621,7 +2671,7 @@ class asec(InverseTrigonometricFunction):
     simplifies to :math:`-i\log\left(z/2 + O\left(z^3\right)\right)` which
     ultimately evaluates to ``zoo``.
 
-    As ``asec(x)`` = ``asec(1/x)``, a similar argument can be given for
+    As ``acos(x)`` = ``asec(1/x)``, a similar argument can be given for
     ``acos(x)``.
 
     Examples
@@ -2662,6 +2712,13 @@ class asec(InverseTrigonometricFunction):
                 return S.Pi
         if arg in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
             return S.Pi/2
+
+        if arg.is_number:
+            acsc_table = cls._acsc_table()
+            if arg in acsc_table:
+                return pi/2 - acsc_table[arg]
+            elif -arg in acsc_table:
+                return pi/2 + acsc_table[-arg]
 
         if isinstance(arg, sec):
             ang = arg.args[0]
@@ -2731,8 +2788,9 @@ class acsc(InverseTrigonometricFunction):
     Notes
     =====
 
-    ``acsc(x)`` will evaluate automatically in the cases
-    ``oo``, ``-oo``, ``0``, ``1``, ``-1``.
+    ``acsc(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
+    ``0``, ``1``, ``-1`` and for some instances when the result is a rational
+    multiple of pi (see the eval class method).
 
     Examples
     ========
@@ -2771,6 +2829,14 @@ class acsc(InverseTrigonometricFunction):
                 return -S.Pi/2
         if arg in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
             return S.Zero
+
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)
+
+        if arg.is_number:
+            acsc_table = cls._acsc_table()
+            if arg in acsc_table:
+                return acsc_table[arg]
 
         if isinstance(arg, csc):
             ang = arg.args[0]

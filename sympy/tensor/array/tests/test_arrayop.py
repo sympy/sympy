@@ -1,16 +1,15 @@
 import random
 
-import itertools
-
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
 from sympy.utilities.pytest import raises
 
 from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate, diff
-from sympy.tensor.array import Array, NDimArray, ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableSparseNDimArray
+from sympy.tensor.array import Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableSparseNDimArray
 
 from sympy.tensor.array import tensorproduct, tensorcontraction, derive_by_array, permutedims
-
+# Test import although not used in file
+from sympy.tensor.array import NDimArray
 
 def test_tensorproduct():
     x,y,z,t = symbols('x y z t')
@@ -63,7 +62,7 @@ def test_tensorcontraction():
 
 
 def test_derivative_by_array():
-    from sympy.abc import a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z
+    from sympy.abc import i, j, t, x, y, z
 
     bexpr = x*y**2*exp(z)*log(t)
     sexpr = sin(bexpr)

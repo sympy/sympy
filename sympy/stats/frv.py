@@ -9,20 +9,20 @@ sympy.stats.crv
 """
 from __future__ import print_function, division
 
+import random
 from itertools import product
 
-from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul, Add,
-        And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan, Rational,
-        Sum, Intersection)
-from sympy.sets.sets import FiniteSet
-from sympy.core.relational import Relational
-from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
-        PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
-        sumsets, rv_subs, NamedArgsMixin, Density)
+from sympy import (Basic, Symbol, symbols, cacheit, sympify, Mul,
+                   And, Or, Tuple, Piecewise, Eq, Lambda, exp, I, Dummy, nan,
+                   Sum, Intersection)
 from sympy.core.containers import Dict
-from sympy.stats.symbolic_probability import Expectation, Probability
 from sympy.core.logic import Logic
-import random
+from sympy.core.relational import Relational
+from sympy.sets.sets import FiniteSet
+from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
+                            PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
+                            sumsets, rv_subs, NamedArgsMixin, Density)
+
 
 class FiniteDensity(dict):
     """

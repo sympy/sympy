@@ -1,10 +1,10 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Integral, integrate, pi, Dummy, Derivative,
-                   diff, I, sqrt, erf, Piecewise, Eq, Ne, symbols, Rational,
+                   diff, I, sqrt, erf, Piecewise, Ne, symbols, Rational,
                    And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
                    Function, jacobi, gegenbauer, chebyshevt, chebyshevu,
                    legendre, hermite, laguerre, assoc_laguerre, uppergamma, li,
-                   Ei, Ci, Si, Chi, Shi, fresnels, fresnelc, polylog, erf, erfi,
+                   Ei, Ci, Si, Chi, Shi, fresnels, fresnelc, polylog, erfi,
                    sinh, cosh, elliptic_f, elliptic_e)
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, contains_dont_know, manual_subs)

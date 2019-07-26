@@ -1027,8 +1027,6 @@ def roots(f, *gens, **flags):
         for currentroot, k in _result.items():
             result[coeff*currentroot] = k
 
-    result.update(zeros)
-
     if filter not in [None, 'C']:
         handlers = {
             'Z': lambda r: r.is_Integer,
@@ -1060,6 +1058,9 @@ def roots(f, *gens, **flags):
         for k, v in result.items():
             result1[k + translate_x] = v
         result = result1
+
+    # adding zero roots after non-trivial roots have been translated
+    result.update(zeros)
 
     if not multiple:
         return result

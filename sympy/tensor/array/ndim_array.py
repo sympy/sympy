@@ -69,11 +69,11 @@ class NDimArray(object):
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
 
     def _parse_index(self, index):
-
         if isinstance(index, (SYMPY_INTS, Integer)):
-            if index >= self._loop_size:
-                raise ValueError("index out of range")
-            return index
+            raise ValueError("Only a tuple index is accepted")
+
+        if self._loop_size == 0:
+            raise ValueError("Index not valide with an empty array")
 
         if len(index) != self._rank:
             raise ValueError('Wrong number of array axes')
@@ -306,7 +306,7 @@ class NDimArray(object):
         """
         def f(sh, shape_left, i, j):
             if len(shape_left) == 1:
-                return "["+", ".join([str(self[e]) for e in range(i, j)])+"]"
+                return "["+", ".join([str(self[self._get_tuple_index(e)]) for e in range(i, j)])+"]"
 
             sh //= shape_left[0]
             return "[" + ", ".join([f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]) + "]" # + "\n"*len(shape_left)
@@ -356,7 +356,7 @@ class NDimArray(object):
 
         def f(sh, shape_left, i, j):
             if len(shape_left) == 1:
-                return [self[e] for e in range(i, j)]
+                return [self[self._get_tuple_index(e)] for e in range(i, j)]
             result = []
             sh //= shape_left[0]
             for e in range(shape_left[0]):
