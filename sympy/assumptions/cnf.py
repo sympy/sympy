@@ -43,9 +43,6 @@ class Literal(object):
         h = hash((type(self).__name__, self.arg, self.is_Not))
         return h
 
-    def __lt__(self, other):
-        return self.arg < other.arg
-
 
 class OR(object):
     """
