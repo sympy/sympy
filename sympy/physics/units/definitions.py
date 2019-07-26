@@ -369,7 +369,7 @@ stefan_boltzmann_constant.set_scale_factor(5.670367e-8*joule/(s*m**2*kelvin**4))
 # Atomic mass
 amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
 atomic_mass_constant.set_dimension(mass)
-atomic_mass_constant.set_scale_factor(1.660539040e-24*gram)
+atomic_mass_constant.set_scale_factor(1.660539060e-24*gram)
 
 # Molar gas constant
 R = molar_gas_constant = Quantity("molar_gas_constant", abbrev="R")
