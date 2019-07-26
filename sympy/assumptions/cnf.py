@@ -1,6 +1,6 @@
 """
 The classes used here are for the internal use of assumptions system
-only and should not be used anywhere else as these don't posses the
+only and should not be used anywhere else as these don't possess the
 signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
