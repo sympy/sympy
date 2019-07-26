@@ -4,7 +4,7 @@ from types import FunctionType
 
 from mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.core.add import Add, Mul
+from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.compatibility import (
     Callable, NotIterable, as_int, default_sort_key, is_sequence, range,
@@ -25,9 +25,6 @@ from sympy.polys import PurePoly, cancel, roots, together
 from sympy.printing import sstr
 from sympy.simplify import nsimplify
 from sympy.simplify import simplify as _simplify
-from sympy.simplify.radsimp import _mexpand
-from sympy.simplify.powsimp import powsimp
-from sympy.simplify.simplify import bottom_up
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, numbered_symbols, has_variety
 from sympy.utilities.misc import filldedent
@@ -945,11 +942,8 @@ class MatrixReductions(MatrixDeterminant):
             ret = (ret, pivot_cols)
         return ret
 
-    def mulsimp(self, measure=count_ops, threshold=100):
+    def mulsimp(self, measure=count_ops, threshold=500):
         """A simple simplify function to prevent expression blowup during multiplication."""
-
-        def shorter(*choices):
-            return choices[0] if not has_variety(choices) else min(choices, key=measure)
 
         l   = len(self)
         e   = [None]*l
@@ -959,13 +953,8 @@ class MatrixReductions(MatrixDeterminant):
             expr = self[i]
 
             if threshold is None or measure(expr) < threshold:
-                chg   = True
-                expr  = bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
-                expr  = Mul(*powsimp(expr).as_content_primitive())
-                _e    = cancel(expr)
-                expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
-                expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
-                expr  = shorter(expr2, expr1, expr)
+                chg  = True
+                expr = cancel(expr)
 
             e[i] = expr
 
@@ -3554,7 +3543,10 @@ class MatrixBase(MatrixDeprecated,
             raise NonSquareMatrixError()
         if method is not None:
             kwargs['method'] = method
-        return self._eval_inverse(**kwargs)
+
+        a = self._eval_inverse(**kwargs)
+        mulsimp = getattr(a, 'mulsimp', None)
+        return mulsimp() if mulsimp else a
 
     def is_nilpotent(self):
         """Checks if a matrix is nilpotent.

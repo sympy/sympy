@@ -199,7 +199,7 @@ class DenseMatrix(MatrixBase):
                 row, col = i // new_mat_cols, i % new_mat_cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
                 col_indices = range(col, other_len, other_cols)
-                vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
+                vec = ((mat[a]*other_mat[b]).expand() for a,b in zip(row_indices, col_indices))
                 try:
                     new_mat[i] = Add(*vec)
                 except (TypeError, SympifyError):
@@ -208,7 +208,7 @@ class DenseMatrix(MatrixBase):
                     # initially, and for a matrix, that is a mix of a scalar and
                     # a matrix, which raises a TypeError. Fall back to a
                     # block-matrix-safe way to multiply if the `sum` fails.
-                    vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
+                    vec = ((mat[a]*other_mat[b]).expand() for a,b in zip(row_indices, col_indices))
                     new_mat[i] = reduce(lambda a,b: a + b, vec)
         return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
 
