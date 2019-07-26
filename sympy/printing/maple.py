@@ -43,9 +43,15 @@ known_functions = {
 
 atomic_expr = {
     # Sympy -> Maple
-    S('pi'): 'Pi',
-    S('I'): 'I',
-    S('oo'): 'infinity'
+    S.Pi: 'Pi',
+    S.I: 'I',
+    S.Infinity: 'infinity'
+}
+
+spec_relational_ops = {
+    # Sympy -> Maple
+    '==': '=',
+    '!=': '<>'
 }
 
 for _func in _known_func_same_name:
@@ -93,7 +99,8 @@ class MapleCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        # FIXME: rel_op might be different from maple.
+        if op in spec_relational_ops:
+            op = spec_relational_ops[op]
         return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     def _print_AtomicExpr(self, expr):
@@ -104,6 +111,15 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
+
+    def _print_BooleanTrue(self, expr):
+        return "true"
+
+    def _print_BooleanFalse(self, expr):
+        return "false"
+
+    def _print_bool(self, expr):
+        return str(expr).lower()
 
     def _print_MatrixBase(self, expr):
         if expr.cols == 0 or expr.rows == 0:
