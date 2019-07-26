@@ -2,7 +2,7 @@ from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, I
                    Range, factorial, Mul, Integer,
                    Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
                    Intersection, Matrix, symbols, Product, IndexedBase)
-from sympy.matrices import ImmutableMatrix
+from sympy.matrices import ImmutableMatrix, MatrixSymbol
 from sympy.matrices.expressions.determinant import det
 from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
     JointDistributionHandmade, MarginalDistribution)
@@ -80,20 +80,21 @@ class MultivariateNormalDistribution(JointDistribution):
 
     @property
     def set(self):
-        k = len(self.mu)
+        k = self.mu.shape[0]
         return S.Reals**k
 
     @staticmethod
     def check(mu, sigma):
-        _value_check(len(mu) == len(sigma.col(0)),
+        _value_check(mu.shape[0] == sigma.shape[0],
             "Size of the mean vector and covariance matrix are incorrect.")
         #check if covariance matrix is positive definite or not.
-        _value_check((i > 0 for i in sigma.eigenvals().keys()),
+        if not isinstance(sigma, MatrixSymbol):
+            _value_check(sigma.is_positive_definite,
             "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
-        k = len(mu)
+        k = mu.shape[0]
         args = ImmutableMatrix(args)
         x = args - mu
         return  S(1)/sqrt((2*pi)**(k)*det(sigma))*exp(
@@ -103,7 +104,9 @@ class MultivariateNormalDistribution(JointDistribution):
     def marginal_distribution(self, indices, sym):
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
         _mu, _sigma = self.mu, self.sigma
-        k = len(self.mu)
+        k = self.mu.shape[0]
+        if not k.is_Integer:
+            raise ValueError('k must be of type int.')
         for i in range(k):
             if i not in indices:
                 _mu = _mu.row_del(i)
@@ -122,21 +125,22 @@ class MultivariateLaplaceDistribution(JointDistribution):
 
     @property
     def set(self):
-        k = len(self.mu)
+        k = self.mu.shape[0]
         return S.Reals**k
 
     @staticmethod
     def check(mu, sigma):
-        _value_check(len(mu) == len(sigma.col(0)),
-            "Size of the mean vector and covariance matrix are incorrect.")
-        #check if covariance matrix is positive definite or not.
-        _value_check((i > 0 for i in sigma.eigenvals().keys()),
-            "The covariance matrix must be positive definite. ")
+        _value_check(mu.shape[0] == sigma.shape[0],
+                     "Size of the mean vector and covariance matrix are incorrect.")
+        # check if covariance matrix is positive definite or not.
+        if not isinstance(sigma, MatrixSymbol):
+            _value_check(sigma.is_positive_definite,
+                         "The covariance matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
         mu_T = mu.transpose()
-        k = S(len(mu))
+        k = S(mu.shape[0])
         sigma_inv = sigma.inv()
         args = ImmutableMatrix(args)
         args_T = args.transpose()
@@ -157,21 +161,22 @@ class MultivariateTDistribution(JointDistribution):
 
     @property
     def set(self):
-        k = len(self.mu)
+        k = self.mu.shape[0]
         return S.Reals**k
 
     @staticmethod
     def check(mu, sigma, v):
-        _value_check(len(mu) == len(sigma.col(0)),
-            "Size of the location vector and shape matrix are incorrect.")
-        #check if covariance matrix is positive definite or not.
-        _value_check((i > 0 for i in sigma.eigenvals().keys()),
-            "The shape matrix must be positive definite. ")
+        _value_check(mu.shape[0] == sigma.shape[0],
+                     "Size of the location vector and shape matrix are incorrect.")
+        # check if covariance matrix is positive definite or not.
+        if not isinstance(sigma, MatrixSymbol):
+            _value_check(sigma.is_positive_definite,
+                         "The shape matrix must be positive definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.shape_mat
         v = S(self.dof)
-        k = S(len(mu))
+        k = S(mu.shape[0])
         sigma_inv = sigma.inv()
         args = ImmutableMatrix(args)
         x = args - mu

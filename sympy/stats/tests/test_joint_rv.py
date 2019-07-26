@@ -3,11 +3,11 @@ from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplif
                    IndexedBase, RisingFactorial)
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
-from sympy.matrices import Matrix
+from sympy.matrices import Matrix, MatrixSymbol
 from sympy.stats import density
 from sympy.stats.crv_types import Normal
 from sympy.stats.joint_rv import marginal_distribution
-from sympy.stats.joint_rv_types import JointRV
+from sympy.stats.joint_rv_types import JointRV, MultivariateNormalDistribution
 from sympy.utilities.pytest import raises, XFAIL
 
 x, y, z, a, b = symbols('x y z a b')
@@ -27,6 +27,15 @@ def test_Normal():
     assert density(N)(0, 0) == exp(-2/y - 1/(2*x))/(2*pi*sqrt(x*y))
 
     raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
+    # symbolic
+    n = symbols('n', natural=True)
+    mu = MatrixSymbol('mu', n, 1)
+    sigma = MatrixSymbol('sigma', n, n)
+    X = Normal('X', mu, sigma)
+    assert density(X) == MultivariateNormalDistribution(mu, sigma)
+    # Below tests should work after issue #17267 is resolved
+    # assert E(X) == mu
+    # assert variance(X) == sigma
 
 def test_MultivariateTDist():
     from sympy.stats.joint_rv_types import MultivariateT
