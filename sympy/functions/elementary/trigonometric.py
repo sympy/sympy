@@ -2147,7 +2147,7 @@ class acos(InverseTrigonometricFunction):
     the result is a rational multiple of pi (see the eval class method).
 
     ``acos(zoo)`` evaluates to ``zoo``
-    (see note in :py:class`sympy.functions.elementary.trigonometric.asec`)
+    (see note in :class:`sympy.functions.elementary.trigonometric.asec`)
 
     A purely imaginary argument will be rewritten to asinh.
 
@@ -2671,7 +2671,7 @@ class asec(InverseTrigonometricFunction):
     simplifies to :math:`-i\log\left(z/2 + O\left(z^3\right)\right)` which
     ultimately evaluates to ``zoo``.
 
-    As ``asec(x)`` = ``asec(1/x)``, a similar argument can be given for
+    As ``acos(x)`` = ``asec(1/x)``, a similar argument can be given for
     ``acos(x)``.
 
     Examples
