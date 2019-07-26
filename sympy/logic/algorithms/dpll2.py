@@ -40,7 +40,7 @@ def dpll_satisfiable(expr, all_models=False):
         exprs.add_prop(expr)
         expr = exprs
 
-    # DONE: Check to handle this
+    # Return UNSAT when False (encoded as 0) is present in the CNF
     if {0} in expr.data:
         if all_models:
             return (f for f in [False])
