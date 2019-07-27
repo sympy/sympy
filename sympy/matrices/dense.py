@@ -177,6 +177,30 @@ class DenseMatrix(MatrixBase):
         return self._new(len(rowsList), len(colsList),
                          list(mat[i] for i in indices), copy=False)
 
+    def _mulsimp(self, expr):
+        """A simple simplify function to prevent expression blowup during multiplication."""
+
+        from sympy.core import Add, Mul, Pow, factor_terms
+        from sympy.functions.elementary.exponential import ExpBase
+        from sympy.polys import together
+        from sympy.simplify.radsimp import radsimp, fraction, _mexpand
+        from sympy.simplify.powsimp import powsimp
+        from sympy.simplify.simplify import signsimp, bottom_up
+        from sympy.utilities.iterables import has_variety
+
+        def shorter(*choices):
+            return choices[0] if not has_variety(choices) else min(choices, key=count_ops)
+
+        expr  = bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
+        expr  = Mul(*powsimp(expr).as_content_primitive())
+        _e    = cancel(expr)
+        expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
+        expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
+        expr  = shorter(expr2, expr1, expr)
+        # expr  = factor_terms(expr, sign=False)
+
+        return expr
+
     def _eval_matrix_mul(self, other, expand=True, simplify=True):
         from sympy import Add
         # cache attributes for faster access
@@ -200,16 +224,16 @@ class DenseMatrix(MatrixBase):
                 row_indices = range(self_cols*row, self_cols*(row+1))
                 col_indices = range(col, other_len, other_cols)
 
-                # vec = ((mat[a]*other_mat[b]).expand(power_exp=False) for a,b in zip(row_indices, col_indices))
                 vec = [None]*self_cols
                 for j,a,b in zip(range(self_cols), row_indices, col_indices):
                     c = mat[a]*other_mat[b]
                     _expand = expand and getattr(c, 'expand', None)
-                    vec[j] = _expand(power_exp=False) if _expand else c
+                    vec[j] = _expand(deep=False, power_exp=False, basic=False) if _expand else c
 
                 try:
                     e = Add(*vec)
-                    new_mat[i] = _simplify(e, doit=False) if simplify else e
+                    # new_mat[i] = _simplify(e, doit=False) if simplify else e
+                    new_mat[i] = self._mulsimp(e) if simplify else e
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
@@ -223,7 +247,7 @@ class DenseMatrix(MatrixBase):
         mat = [a*b for a,b in zip(self._mat, other._mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
-    def _eval_inverse(self, simplify=True, **kwargs):
+    def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using the method indicated (default
         is Gauss elimination).
 
@@ -284,8 +308,6 @@ class DenseMatrix(MatrixBase):
             # make sure to add an invertibility check (as in inverse_LU)
             # if a new method is added.
             raise ValueError("Inversion method unrecognized")
-        if simplify:
-            return self._new(_simplify(rv, doit=False))
         return self._new(rv)
 
     def _eval_scalar_mul(self, other):
