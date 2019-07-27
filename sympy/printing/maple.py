@@ -46,7 +46,7 @@ for _func in _known_func_same_name:
 number_symbols = {
     # Sympy -> Maple
     S.Pi: 'Pi',
-    S.exp(1): 'exp(1)',
+    S.Exp1: 'exp(1)',
     S.Catalan: 'Catalan',
     S.EulerGamma: 'gamma'
 }
