@@ -669,7 +669,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if floats and rational is None:
         expr = nfloat(expr, exponent=False)
 
-    return done(expr)
+    expr = done(expr)
+    if expr.has(Piecewise):
+        expr = piecewise_fold(expr)
+
+    return expr
 
 
 def sum_simplify(s, **kwargs):

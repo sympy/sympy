@@ -1,5 +1,5 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
-                   zeta, pi, besseli)
+                   zeta, pi, besseli, Dummy, oo, Piecewise)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
@@ -219,12 +219,14 @@ def test_product_spaces():
     X2 = Geometric('X2', S(1)/3)
     #assert str(P(X1 + X2 < 3, evaluate=False)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """\
     #    + """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1))"""
-    assert str(P(X1 + X2 < 3, evaluate=False)) == 'Sum(Piecewise((2**(-n)/4,'\
-        ' n + 2 >= 1), (0, True)), (n, -oo, -1))/3'
+    n = Dummy('n')
+    assert P(X1 + X2 < 3, evaluate=False).dummy_eq(Sum(Piecewise((2**(-n)/4,
+         n + 2 >= 1), (0, True)), (n, -oo, -1))/3)
     #assert str(P(X1 + X2 > 3)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """ +\
     #    """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, 1, oo))"""
-    assert str(P(X1 + X2 > 3)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """ +\
-        """-X2 + n + 3 >= 1), (0, True)), (X2, 1, oo), (n, 1, oo))"""
+    assert P(X1 + X2 > 3).dummy_eq(Sum(Piecewise((2**(X2 - n - 2)*(S(2)/3)**(X2 - 1)/6,
+                                                 -X2 + n + 3 >= 1), (0, True)),
+                                       (X2, 1, oo), (n, 1, oo)))
 #    assert str(P(Eq(X1 + X2, 3))) == """Sum(Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, """ +\
 #        """X2 <= 2), (0, True)), (X2, 1, oo))"""
     assert P(Eq(X1 + X2, 3)) == S(1)/12
