@@ -361,7 +361,8 @@ def test_issue_7638():
     e = 1/(1 - sqrt(2))
     assert sqrt(e) == I/sqrt(-1 + sqrt(2))
     assert e**-S.Half == -I*sqrt(-1 + sqrt(2))
-    assert sqrt((cos(1)**2 + sin(1)**2 - 1)**(3 + I)).exp == S.Half
+    assert sqrt((cos(1)**2 + sin(1)**2 - 1)**(3 + I)).exp in [S.Half,
+                                                              S(3)/2 + I/2]
     assert sqrt(r**(4/S(3))) != r**(2/S(3))
     assert sqrt((p + I)**(4/S(3))) == (p + I)**(2/S(3))
     assert sqrt((p - p**2*I)**2) == p - p**2*I
