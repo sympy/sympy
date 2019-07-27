@@ -3286,9 +3286,7 @@ class MatrixBase(MatrixDeprecated,
 
         Examples for non positive-definite matrices:
 
-        >>> m = Matrix(
-        ...     [[S(3)/4, S(5)/4],
-        ...      [S(5)/4, S(3)/4]])
+        >>> m = Matrix([[S(3)/4, S(5)/4], [S(5)/4, S(3)/4]])
         >>> m.log()
         Matrix([
         [         I*pi/2, log(2) - I*pi/2],
