@@ -62,6 +62,7 @@ class MapleCodePrinter(CodePrinter):
     """
     Printer which converts single sympy expressions into single.
     """
+
     def __init__(self, settings=None):
         if settings is None:
             settings = dict()
@@ -126,6 +127,9 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_bool(self, expr):
         return str(expr).lower()
+
+    def _print_NaN(self, expr):
+        return 'NULL'
 
     def _print_MatrixBase(self, expr):
         if expr.cols == 0 or expr.rows == 0:
