@@ -404,18 +404,11 @@ def test_Range_set():
     assert r[0:10:2] == Range(n, n + 6, 2)
     assert (r[0:10:2]).sup == n + 4
 
-    # Make sure to use range in Python 3 and xrange in Python 2 (regardless of
-    # compatibility imports above)
+    assert Range(range(10)) == Range(10)
+    assert Range(range(1, 10)) == Range(1, 10)
+    assert Range(range(1, 10, 2)) == Range(1, 10, 2)
     if PY3:
-        builtin_range = range
-    else:
-        builtin_range = xrange
-
-    assert Range(builtin_range(10)) == Range(10)
-    assert Range(builtin_range(1, 10)) == Range(1, 10)
-    assert Range(builtin_range(1, 10, 2)) == Range(1, 10, 2)
-    if PY3:
-        assert Range(builtin_range(1000000000000)) == \
+        assert Range(range(1000000000000)) == \
             Range(1000000000000)
 
     # test Range.as_relational

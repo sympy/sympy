@@ -523,7 +523,7 @@ class Range(Set):
     def __new__(cls, *args):
         from sympy.functions.elementary.integers import ceiling
         if len(args) == 1:
-            if isinstance(args[0], range if PY3 else xrange):
+            if isinstance(args[0], range):
                 args = args[0].__reduce__()[1]  # use pickle method
 
         # expand range
@@ -573,8 +573,8 @@ class Range(Set):
                     end = ref + n*step
         else:
             end = stop
-        # behave like Python 3 range if PY3 else behave like Python 2 xrange
-        if (end > stop) == True and (stop > start) == True and PY3:
+
+        if (end > stop) == True and (stop > start) == True:
             end_arg = stop
         else:
             end_arg = end
@@ -617,9 +617,6 @@ class Range(Set):
                          (False, True))
 
     def __iter__(self):
-        # print([param.is_Symbol for param in (self.start, self._stop, self.step)])
-        # if any(param.is_Symbol for param in (self.start, self._stop, self.step)):
-        #     raise ValueError("Cannot iterate over symbolic Range.")
         if self.start in [S.NegativeInfinity, S.Infinity]:
             raise ValueError("Cannot iterate over Range with infinite start")
         if not (self.size.is_Integer or self.size in [S.NegativeInfinity, S.Infinity]):
