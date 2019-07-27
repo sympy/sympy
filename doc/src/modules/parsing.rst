@@ -94,6 +94,8 @@ change between releases, and become stricter, more relaxed, or some mix.
 SymPy Expression Reference
 --------------------------
 
+.. module:: sympy.parsing.sym_expr
+
 .. autoclass:: SymPyExpression
   :members:
 
