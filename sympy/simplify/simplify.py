@@ -594,15 +594,28 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
 
+    # Deal with Piecewise separately to avoid recursive growth of expressions
     if expr.has(Piecewise):
+        # Fold into a single Piecewise
         expr = piecewise_fold(expr)
+        # Apply doit, if doit=True
+        expr = done(expr)
+        # Still a Piecewise?
         if expr.has(Piecewise):
-            # Simplify the arguments of the Piecewise
-            from sympy.functions.elementary.piecewise import (
-                    piecewise_simplify_arguments)
-            expr = piecewise_simplify_arguments(expr, **kwargs)
+            # Fold into a single Piecewise, in case doit lead to some
+            # expressions being Piecewise
+            expr = piecewise_fold(expr)
+            # Still a Piecewise?
             if expr.has(Piecewise):
-                expr = piecewise_fold(expr)
+                from sympy.functions.elementary.piecewise import piecewise_simplify
+                # Do not apply doit on the segments as it has already
+                # been done above, but simplify
+                expr = piecewise_simplify(expr, deep=True, doit=False)
+                # Still a Piecewise?
+                if expr.has(Piecewise):
+                    # As all expressions have been simplified above with the
+                    # complete simplify, nothing more needs to be done here
+                    return expr
 
     if expr.has(BesselBase):
         expr = besselsimp(expr)
