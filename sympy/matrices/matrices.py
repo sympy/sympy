@@ -3273,16 +3273,12 @@ class MatrixBase(MatrixDeprecated,
         Examples for positive-definite matrices:
 
         >>> m = Matrix([[1, 1], [0, 1]])
-        >>> m.is_positive_definite
-        True
         >>> m.log()
         Matrix([
         [0, 1],
         [0, 0]])
 
         >>> m = Matrix([[S(5)/4, S(3)/4], [S(3)/4, S(5)/4]])
-        >>> m.is_positive_definite
-        True
         >>> m.log()
         Matrix([
         [     0, log(2)],
@@ -3293,8 +3289,6 @@ class MatrixBase(MatrixDeprecated,
         >>> m = Matrix(
         ...     [[S(3)/4, S(5)/4],
         ...      [S(5)/4, S(3)/4]])
-        >>> m.is_positive_definite
-        False
         >>> m.log()
         Matrix([
         [         I*pi/2, log(2) - I*pi/2],
@@ -3305,8 +3299,6 @@ class MatrixBase(MatrixDeprecated,
         ...      [0, 0, 1, 0],
         ...      [0, 1, 0, 0],
         ...      [1, 0, 0, 0]])
-        >>> m.is_positive_definite
-        False
         >>> m.log()
         Matrix([
         [ I*pi/2,       0,       0, -I*pi/2],
