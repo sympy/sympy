@@ -1,4 +1,4 @@
-from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, I
+from sympy import Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, I, Abs
 from sympy.core.compatibility import range
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point, Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
@@ -449,6 +449,28 @@ def test_second_moment_of_area():
     assert I_yy == e.second_moment_of_area()[1]
     assert I_xx == e.second_moment_of_area()[0]
     assert I_xy == e.second_moment_of_area()[2]
+
+
+def test_section_and_polar_modulus():
+    d = Symbol('d', positive=True)
+    c = Circle((3, 7), 8)
+    assert c.polar_modulus() == 2048*pi
+    assert c.section_modulus() == (128*pi, 128*pi)
+    c = Circle((2, 9), d/2)
+    assert c.polar_modulus() == pi*d**3*Abs(d)/64 + pi*d*Abs(d)**3/64
+    assert c.section_modulus() == (pi*d**3/S(32), pi*d**3/S(32))
+
+    a, b = symbols('a, b', positive=True)
+    e = Ellipse((4, 6), a, b)
+    assert e.section_modulus() == (pi*a*b**2/S(4), pi*a**2*b/S(4))
+    assert e.polar_modulus() == pi*a**3*b/S(4) + pi*a*b**3/S(4)
+    e = e.rotate(pi/2) # no change in polar and section modulus
+    assert e.section_modulus() == (pi*a**2*b/S(4), pi*a*b**2/S(4))
+    assert e.polar_modulus() == pi*a**3*b/S(4) + pi*a*b**3/S(4)
+
+    e = Ellipse((a, b), 2, 6)
+    assert e.section_modulus() == (18*pi, 6*pi)
+    assert e.polar_modulus() == 120*pi
 
 
 def test_circumference():

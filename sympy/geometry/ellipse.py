@@ -1336,6 +1336,7 @@ class Ellipse(GeometrySet):
         """
         return self.args[2]
 
+
     def second_moment_of_area(self, point=None):
         """Returns the second moment and product moment area of an ellipse.
 
@@ -1383,6 +1384,75 @@ class Ellipse(GeometrySet):
         I_xy = I_xy + self.area*(point[0] - self.center.x)*(point[1] - self.center.y)
 
         return I_xx, I_yy, I_xy
+
+
+    def polar_modulus(self):
+        """Returns the polar modulus of an Ellipse
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Circle, Ellipse
+        >>> c = Circle((5, 5), 4)
+        >>> c.polar_modulus()
+        128*pi
+        >>> a, b = symbols('a, b')
+        >>> e = Ellipse((0, 0), a, b)
+        >>> e.polar_modulus()
+        pi*a**3*b/4 + pi*a*b**3/4
+        """
+        second_moment = self.second_moment_of_area()
+        return second_moment[0] + second_moment[1]
+
+
+    def section_modulus(self, point=None):
+        """Returns a tuple with the section modulus of an ellipse
+
+        Parameters
+        ==========
+
+        point : Point, two-tuple of sympifyable objects, or None(default=None)
+            point is the point at which section modulus is to be found.
+            If "point=None" section modulus will be calculated for the
+            point farthest from the centroidal axis of the ellipse.
+
+        Returns
+        =======
+
+        S_x, S_y: numbers or SymPy expressions
+                  S_x is the section modulus wrt the x-axis
+                  S_y is the section modulus wrt the y-axis
+                  A negetive sign indicates that the section modulus is
+                  determined for a point below the centroidal axis.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Ellipse, Circle, Point2D
+        >>> d = Symbol('d', positive=True)
+        >>> c = Circle((0, 0), d/2)
+        >>> c.section_modulus()
+        (pi*d**3/32, pi*d**3/32)
+        >>> e = Ellipse(Point2D(0, 0), 2, 4)
+        >>> e.section_modulus()
+        (8*pi, 4*pi)
+        """
+        x_c, y_c = self.center
+        if point is None:
+            # taking x and y as maximum distances from centroid
+            x_min, y_min, x_max, y_max = self.bounds
+            y = max(y_c - y_min, y_max - y_c)
+            x = max(x_c - x_min, x_max - x_c)
+        else:
+            # taking x and y as distances of the given point from the center
+            y = point.y - y_c
+            x = point.x - x_c
+
+        second_moment = self.second_moment_of_area()
+        S_x = second_moment[0]/y
+        S_y = second_moment[1]/x
+
+        return S_x, S_y
 
 
 class Circle(Ellipse):
