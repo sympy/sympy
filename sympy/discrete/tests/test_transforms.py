@@ -27,7 +27,11 @@ def test_fft_ifft():
 
     x = Symbol('x', real=True)
     raises(TypeError, lambda: fft(x))
-    raises(ValueError, lambda: ifft([x, 2*x, 3*x**2, 4*x**3]))
+    assert ifft([x, 2*x, 3*x**2, 4*x**3]) == \
+        [x**3 + 3*x**2/4 + 3*x/4,
+         I*x**3 - 3*x**2/4 + x/4 - I*x/2,
+         -x**3 + 3*x**2/4 - x/4,
+         -I*x**3 - 3*x**2/4 + x/4 + I*x/2]
 
 
 def test_ntt_intt():

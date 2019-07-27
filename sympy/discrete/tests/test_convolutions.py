@@ -172,7 +172,10 @@ def test_convolution_fft():
                         [10037624576503, 1005370659728895, 9997492572392]
 
     raises(TypeError, lambda: convolution_fft(x, y))
-    raises(ValueError, lambda: convolution_fft([x, y], [y, x]))
+    assert convolution_fft([x, y], [y, x]) = \
+        [-x**2/4 + x*y/2 - y**2/4 + (x + y)**2/4,
+         3*x**2/4 - x*y/2 + 3*y**2/4 + (x + y)**2/4,
+         -x**2/4 + x*y/2 - y**2/4 + (x + y)**2/4]
 
 
 def test_convolution_ntt():
