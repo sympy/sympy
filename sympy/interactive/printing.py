@@ -306,12 +306,12 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         rendering in IPython notebook or text rendering in LaTeX documents
     wrap_line: boolean
         If True, lines will wrap at the end; if False, they will not wrap
-        but continue as one line. This is only relevant if `pretty_print` is
+        but continue as one line. This is only relevant if ``pretty_print`` is
         True.
     num_columns: int or None
         If int, number of columns before wrapping is set to num_columns; if
         None, number of columns before wrapping is set to terminal width.
-        This is only relevant if `pretty_print` is True.
+        This is only relevant if ``pretty_print`` is True.
     no_global: boolean
         If True, the settings become system wide;
         if False, use just for this console/session.
@@ -342,7 +342,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     latex_printer: function, optional, default=None
         A custom LaTeX printer. This should mimic sympy.printing.latex().
     scaling: float, optional, default=1.0
-        Scale the LaTeX output. Useful for high dpi screens.
+        Scale the LaTeX output when using the ``png`` backend. Useful for high
+        dpi screens.
 
     Examples
     ========
