@@ -29,17 +29,12 @@ def _fourier_transform(seq, dps, inverse=False, fourier_params=(1, 1)):
                         "for Fourier Transform")
 
     a = [sympify(arg) for arg in seq]
-    if any(x.has(Symbol) for x in a):
-        raise ValueError("Expected non-symbolic coefficients")
 
     n = len(a)
     if n < 2:
         return a
 
     (alpha, beta) = sympify(fourier_params)
-    beta = as_int(beta)
-    if beta not in [-1, 1]:
-        raise NotImplementedError("The second fourier_params must be 1 or -1")
 
     b = n.bit_length() - 1
     if n&(n - 1): # not a power of 2
