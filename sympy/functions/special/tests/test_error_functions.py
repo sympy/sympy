@@ -12,6 +12,7 @@ from sympy import (
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.special.error_functions import _erfs, _eis
+from sympy.simplify import simplify
 from sympy.utilities.pytest import raises, slow
 
 x, y, z = symbols('x,y,z')
@@ -671,7 +672,7 @@ def test_fresnel():
             -I*(fresnels(2 + 3*I) - fresnels(2 - 3*I))/2
             )
 
-    assert expand_func(integrate(fresnels(z), z)) == \
+    assert simplify(expand_func(integrate(fresnels(z), z))) == \
         z*fresnels(z) + cos(pi*z**2/2)/pi
 
     assert fresnels(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(9)/4) * \
@@ -713,7 +714,7 @@ def test_fresnel():
          -I*(fresnelc(2 + 3*I) - fresnelc(2 - 3*I))/2
     )
 
-    assert expand_func(integrate(fresnelc(z), z)) == \
+    assert simplify(expand_func(integrate(fresnelc(z), z))) == \
         z*fresnelc(z) - sin(pi*z**2/2)/pi
 
     assert fresnelc(z).rewrite(meijerg) == sqrt(2)*pi*z**(S(3)/4) * \

@@ -197,7 +197,6 @@ class DenseMatrix(MatrixBase):
         expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
         expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
         expr  = shorter(expr2, expr1, expr)
-        # expr  = factor_terms(expr, sign=False)
 
         return expr
 
@@ -228,11 +227,10 @@ class DenseMatrix(MatrixBase):
                 for j,a,b in zip(range(self_cols), row_indices, col_indices):
                     c = mat[a]*other_mat[b]
                     _expand = expand and getattr(c, 'expand', None)
-                    vec[j] = _expand(deep=False, power_exp=False, basic=False) if _expand else c
+                    vec[j] = _expand(power_exp=False, log=False, basic=False) if _expand else c
 
                 try:
                     e = Add(*vec)
-                    # new_mat[i] = _simplify(e, doit=False) if simplify else e
                     new_mat[i] = self._mulsimp(e) if simplify else e
                 except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)

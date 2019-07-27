@@ -648,7 +648,7 @@ def test_integrate():
     q = -Si(2*x) - cos(x)**2/x
     assert p == q
     p = expr_to_holonomic(sqrt(x**2+x)).integrate(x).to_expr()
-    q = (x**(S(3)/2)*(2*x**2 + 3*x + 1) - x*sqrt(x + 1)*asinh(sqrt(x)))/(4*x*sqrt(x + 1))
+    q = (sqrt(x)*(x*(2*x + 3) + 1) - sqrt(x + 1)*asinh(sqrt(x)))/(4*sqrt(x + 1)) # == (x**(S(3)/2)*(2*x**2 + 3*x + 1) - x*sqrt(x + 1)*asinh(sqrt(x)))/(4*x*sqrt(x + 1))
     assert p == q
     p = expr_to_holonomic(sqrt(x**2+1)).integrate(x).to_expr()
     q = (sqrt(x**2+1)).integrate(x)
@@ -719,7 +719,7 @@ def test_to_meijerg():
     p = hyper((-S(1)/2, -3), (), x)
     assert from_hyper(p).to_meijerg() == hyperexpand(p)
     p = hyper((S(1), S(3)), (S(2), ), x)
-    assert (hyperexpand(from_hyper(p).to_meijerg()) - hyperexpand(p)).expand() == 0
+    assert (hyperexpand(from_hyper(p).to_meijerg()) - hyperexpand(p)).simplify() == 0
     p = from_hyper(hyper((-2, -3), (S(1)/2, ), x))
     s = hyperexpand(hyper((-2, -3), (S(1)/2, ), x))
     C_0 = Symbol('C_0')
