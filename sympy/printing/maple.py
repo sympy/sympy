@@ -43,11 +43,12 @@ known_functions = {
 for _func in _known_func_same_name:
     known_functions[_func] = _func
 
-atomic_expr = {
+number_symbols = {
     # Sympy -> Maple
     S.Pi: 'Pi',
-    S.ImaginaryUnit: 'I',
-    S.Infinity: 'infinity'
+    S.exp(1): 'exp(1)',
+    S.Catalan: 'Catalan',
+    S.EulerGamma: 'gamma'
 }
 
 spec_relational_ops = {
@@ -105,11 +106,14 @@ class MapleCodePrinter(CodePrinter):
             op = spec_relational_ops[op]
         return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
-    def _print_AtomicExpr(self, expr):
-        """
-        Print constant like pi, e ...
-        """
-        return atomic_expr[expr]
+    def _print_NumberSymbol(self, expr):
+        return number_symbols[expr]
+
+    def _print_NegativeInfinity(self, expr):
+        return '-infinity'
+
+    def _print_Infinity(self, expr):
+        return 'infinity'
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
