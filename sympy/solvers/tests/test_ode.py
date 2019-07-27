@@ -1,4 +1,4 @@
-from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
+from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, simplify, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly, sec, Ei, re, im)
@@ -2732,20 +2732,24 @@ def test_issue_6989():
     k = Symbol('k')
 
     eq = f(x).diff(x) - x*exp(-k*x)
-    sol = Eq(f(x), C1 + Piecewise(
-            ((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
-            (x**2/2, True)
+    csol = Eq(f(x), Piecewise(
+            (C1 + (-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
+            (C1 + x**2/2, True)
         ))
-    assert dsolve(eq, f(x)) == sol
+    sol = dsolve(eq, f(x))
+    C = list(sol.free_symbols - {k, x})[0]
+    assert sol.subs(C, C1) == csol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = -f(x).diff(x) + x*exp(-k*x)
-    sol = Eq(f(x), C1 + Piecewise(
-        ((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
-        (+x**2/2, True)
+    csol = Eq(f(x), Piecewise(
+        (C1 + (-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
+        (C1 + +x**2/2, True)
     ))
-    assert dsolve(eq, f(x)) == sol
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+    sol = dsolve(eq, f(x))
+    C = list(sol.free_symbols - {k, x})[0]
+    assert sol.subs(C, C1) == csol
+    assert checkodesol(eq, csol, order=1, solve_for_func=False)[0]
 
 
 def test_heuristic1():
