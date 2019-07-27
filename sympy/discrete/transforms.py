@@ -89,8 +89,8 @@ def fft(seq, dps=None, fourier_params=(1, 1)):
     dps : Integer
         Specifies the number of decimal digits for precision.
 
-    fourier_params : (Number, Number)
-        Specifies the formula used for Fourier transformation.
+    fourier_params : (Expr, Expr)
+        Specifies the formula used for discrete Fourier transformation.
 
         (1, 1) is the SymPy's defaults.
 
@@ -105,12 +105,6 @@ def fft(seq, dps=None, fourier_params=(1, 1)):
 
         For further information about the options and formulas, see ``Notes``
         section.
-
-    Raises
-    ======
-
-    NotImplementedError :
-        If given ``fourier_params`` are not supported.
 
     Notes
     =====
@@ -141,6 +135,27 @@ def fft(seq, dps=None, fourier_params=(1, 1)):
     where `\omega_{N} = e^{2 \pi i \beta/N}`
 
     while `(\alpha,\beta)` are ``fourier_params``.
+
+    However, there may be certain restrictions which can be placed onto
+    `\alpha` and `\beta`, if you want to make your FFT scheme valid for
+    most of the context it is being used.
+    `\alpha` can work fine with any real numbers because it may only
+    scale the output result.
+    However, specifying `\beta` into zero or any number which is not
+    relatively prime to the length of the list may make the fourier
+    matrix singular, which may result in no theoritical way of inversing
+    the transform by another transform.
+    Specifying `\beta` into non-integer may result not make the fourier
+    matrix singular, but still it may not be possible to compute the
+    inverse from doing another forward transformation with negative
+    beta, and you may have to directly evaluate the inverse matrix to
+    get the original result back.
+    These behaviors may easily be observed by experimenting with our
+    library, and the conventional reason that most of the textbooks or
+    numerical libraries are setting `\beta` into `1` or `-1` is that
+    it is the most practical way of specifying the relatively-prime
+    integer without having to worry about cases where the length of the
+    the list to transform may vary.
 
     Examples
     ========
