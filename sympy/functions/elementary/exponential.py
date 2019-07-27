@@ -4,7 +4,8 @@ from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import range
-from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
+from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
+        expand_mul)
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
@@ -614,14 +615,20 @@ class log(Function):
 
         if arg.is_number and arg.is_algebraic:
             I = S.ImaginaryUnit
-            r_, i_ = arg.as_independent(I, as_Add=True)
+            # Match arg = coeff*(r_ + i_*I) with coeff>0, r_ and i_ real.
+            coeff, arg_ = arg.as_independent(I, as_Add=False)
+            if coeff.is_negative:
+                coeff *= -1
+                arg_ *= -1
+            arg_ = expand_mul(arg_, deep=False)
+            r_, i_ = arg_.as_independent(I, as_Add=True)
             i_ = i_.as_coefficient(I)
-            if i_ and i_.is_real and r_.is_real:
+            if coeff.is_real and i_ and i_.is_real and r_.is_real:
                 if r_.is_zero:
                     if i_.is_positive:
-                        return S.Pi * I * S.Half + cls(i_)
+                        return S.Pi * I * S.Half + cls(coeff * i_)
                     elif i_.is_negative:
-                        return -S.Pi * I * S.Half + cls(-i_)
+                        return -S.Pi * I * S.Half + cls(coeff * -i_)
                     elif i_.is_zero:
                         return zoo
                 else:
@@ -643,7 +650,7 @@ class log(Function):
                         sqrt(sqrt(2) + 2)/sqrt(2 - sqrt(2)): 3*S.Pi/8,
                         sqrt(1 - 2*sqrt(5)/5): S.Pi/10,
                         (-sqrt(2) + sqrt(10))/(2*sqrt(sqrt(5) + 5)): S.Pi/10,
-                        sqrt(1 + 2*sqrt(5)/5): S.Pi/10,
+                        sqrt(1 + 2*sqrt(5)/5): 3*S.Pi/10,
                         (sqrt(2) + sqrt(10))/(2*sqrt(5 - sqrt(5))): 3*S.Pi/10,
                         2 - sqrt(3): S.Pi/12,
                         (-1 + sqrt(3))/(1 + sqrt(3)): S.Pi/12,
@@ -651,13 +658,13 @@ class log(Function):
                         (1 + sqrt(3))/(-1 + sqrt(3)): 5*S.Pi/12
                     }
                     if t in atan_table:
-                        modulus = ratsimp(Abs(arg))
+                        modulus = ratsimp(coeff * Abs(arg_))
                         if r_.is_positive:
                             return cls(modulus) + I * atan_table[t]
                         else:
                             return cls(modulus) + I * (atan_table[t] - S.Pi)
                     elif -t in atan_table:
-                        modulus = ratsimp(Abs(arg))
+                        modulus = ratsimp(coeff * Abs(arg_))
                         if r_.is_positive:
                             return cls(modulus) + I * (-atan_table[-t])
                         else:

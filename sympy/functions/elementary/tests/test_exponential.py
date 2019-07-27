@@ -239,9 +239,15 @@ def test_log_exact():
     assert log(5 + 5*I) == log(5*sqrt(2)) + I*pi/4
     assert log(sqrt(-12)) == log(2*sqrt(3)) + I*pi/2
     assert log(-sqrt(6) + sqrt(2) - I*sqrt(6) - I*sqrt(2)) == log(4) - I*7*pi/12
+    assert log(-sqrt(6-3*sqrt(2)) - I*sqrt(6+3*sqrt(2))) == log(2*sqrt(3)) - 5*I*pi/8
     assert log(1 + I*sqrt(2-sqrt(2))/sqrt(2+sqrt(2))) == log(2/sqrt(sqrt(2) + 2)) + I*pi/8
     assert log(cos(7*pi/12) + I*sin(7*pi/12)) == 7*I*pi/12
     assert log(cos(6*pi/5) + I*sin(6*pi/5)) == -4*I*pi/5
+
+    assert log(5*(1 + I)/sqrt(2)) == log(5) + I*pi/4
+    assert log(sqrt(2)*(-sqrt(3) + 1 - sqrt(3)*I - I)) == log(4) - I*7*pi/12
+    assert log(-sqrt(2)*(1 - I*sqrt(3))) == log(2*sqrt(2)) + 2*I*pi/3
+    assert log(sqrt(3)*I*(-sqrt(6 - 3*sqrt(2)) - I*sqrt(3*sqrt(2) + 6))) == log(6) - I*pi/8
 
     zero = (1 + sqrt(2))**2 - 3 - 2*sqrt(2)
     assert log(zero - I*sqrt(3)) == log(sqrt(3)) - I*pi/2
@@ -249,6 +255,8 @@ def test_log_exact():
 
     # bail quickly if no obvious simplification is possible:
     assert unchanged(log, (sqrt(2)-1/sqrt(sqrt(3)+I))**1000)
+    # beware of non-real coefficients
+    assert unchanged(log, sqrt(2-sqrt(5))*(1 + I))
 
 
 def test_log_base():
