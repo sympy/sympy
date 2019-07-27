@@ -1055,12 +1055,12 @@ def test_atan2():
     assert rewrite == -I*log(abs(I*i + r)/sqrt(abs(i**2 + r**2))) + arg((I*i + r)/sqrt(i**2 + r**2))
     assert (e - rewrite).subs(reps).equals(0)
 
-    assert atan2(0, x) == Piecewise((pi, re(x) < 0),
-                                    (0, (re(x) > 0) | Ne(im(x), 0)),
-                                    (nan, True))
-    assert atan2(0, r) == Piecewise((pi, r < 0), (0, r > 0), (S.NaN, True))
-    assert atan2(0, i) == 0
-    assert atan2(0, r + i) == Piecewise((pi, r < 0), (0, True))
+    assert atan2(0, x).rewrite(atan) == Piecewise((pi, re(x) < 0),
+                                            (0, (re(x) > 0) | Ne(im(x), 0)),
+                                            (nan, True))
+    assert atan2(0, r).rewrite(atan) == Piecewise((pi, r < 0), (0, r > 0), (S.NaN, True))
+    assert atan2(0, i),rewrite(atan) == 0
+    assert atan2(0, r + i).rewrite(atan) == Piecewise((pi, r < 0), (0, True))
 
     assert atan2(y, x).rewrite(atan) == Piecewise(
             (2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)),

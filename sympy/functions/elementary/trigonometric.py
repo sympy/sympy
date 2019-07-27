@@ -3032,9 +3032,10 @@ class atan2(InverseTrigonometricFunction):
         if y.is_zero:
             if x.is_extended_real and fuzzy_not(x.is_zero):
                 return S.Pi * (S.One - Heaviside(x))
-            return Piecewise((S.Pi, re(x) < 0),
-                             (0, (re(x) > 0) |  Ne(im(x), 0)),
-                             (S.NaN, True))
+            if x.is_number:
+                return Piecewise((S.Pi, re(x) < 0),
+                                 (0, (re(x) > 0) |  Ne(im(x), 0)),
+                                 (S.NaN, True))
         if x.is_number and y.is_number:
             return -S.ImaginaryUnit*log(
                 (x + S.ImaginaryUnit*y)/sqrt(x**2 + y**2))
