@@ -2290,7 +2290,7 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     (t, zero) = checkodesol(eq, sol_simp, order=5, solve_for_func=False)
     # if this fails because zero.is_zero, replace this block with
     # assert checkodesol(eq, sol_simp, order=5, solve_for_func=False)[0]
-    assert zero.rewrite('exp').simplify() == 0
+    assert not zero.is_zero and zero.rewrite('exp').simplify() == 0
     # \-----------
     (t, zero) = checkodesol(eq, sol_nsimp, order=5, solve_for_func=False)
     # if this fails because zero.is_zero, replace this block with
