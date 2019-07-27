@@ -969,15 +969,15 @@ class Mul(Expr, AssocOp):
 
         # Now match the non-commutative arguments, expanding powers to
         # multiplications
-        nc1 = Mul._matches_expand_matpows(nc1)
-        nc2 = Mul._matches_expand_matpows(nc2)
+        nc1 = Mul._matches_expand_pows(nc1)
+        nc2 = Mul._matches_expand_pows(nc2)
 
         repl_dict = Mul._matches_noncomm(nc1, nc2, repl_dict)
 
         return repl_dict or None
 
     @staticmethod
-    def _matches_expand_matpows(arg_list):
+    def _matches_expand_pows(arg_list):
         new_args = []
         for arg in arg_list:
             if arg.is_Pow and arg.exp > 0:
