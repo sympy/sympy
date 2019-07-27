@@ -62,6 +62,8 @@ class MapleCodePrinter(CodePrinter):
     """
     Printer which converts single sympy expressions into single.
     """
+    printmethod = "_maple"
+    language = "maple"
 
     def __init__(self, settings=None):
         if settings is None:
@@ -131,18 +133,43 @@ class MapleCodePrinter(CodePrinter):
     def _print_NaN(self, expr):
         return 'NULL'
 
-    def _print_MatrixBase(self, expr):
+    def _get_matrix(self, expr, sparse=False):
         if expr.cols == 0 or expr.rows == 0:
-            return '<>'
+            _strM = 'Matrix([], storage = %s)' % 'sparse' if sparse else 'rectangular'
         elif expr.cols == 1:
-            return '<%s>' % ','.join(list(expr.col(0)))
+            _strM = 'Matrix([%s], storage = %s)' % (','.join(
+                str(_m) for _m in list(expr.col(0))), 'sparse' if sparse else
+                                                    'rectangular')
         elif expr.rows == 1:
-            return '<%s>' % '|'.join(list(expr.col(0)))
+            _strM = 'Matrix([%s], storage = %s)' % (','.join(
+                '[%s]' % str(_m)
+                for _m in list(str(_m) for _m in expr.col(0))), 'sparse' if
+                                                    sparse else 'rectangular')
         else:
             _row_content_list = [
-                '<%s>' % '|'.join(list(expr.row(i))) for i in range(expr.rows)
+                '[%s]' % ','.join(str(_m) for _m in list(expr.row(i)))
+                for i in range(expr.rows)
             ]
-            return '<%s>' % ','.join(_row_content_list)
+            _strM = 'Matrix([%s], storage = %s)' % (','.join(
+                _row_content_list), 'sparse' if sparse else 'rectangular')
+
+        return _strM
+
+    def _print_MatrixBase(self, expr):
+        return self._get_matrix(expr, sparse=False)
+
+    def _print_SparseMatrix(self, expr):
+        return self._get_matrix(expr, sparse=True)
+
+    _print_Matrix = \
+        _print_DenseMatrix = \
+        _print_MutableDenseMatrix = \
+        _print_ImmutableMatrix = \
+        _print_ImmutableDenseMatrix = \
+        _print_MatrixBase
+    _print_MutableSparseMatrix = \
+        _print_ImmutableSparseMatrix = \
+        _print_SparseMatrix
 
 
 def maple_code(expr, assign_to=None, **settings):
