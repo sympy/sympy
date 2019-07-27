@@ -16,7 +16,7 @@ class RandomMatrixPSpace(PSpace):
     model = property(lambda self: self.args[1])
 
     def compute_density(self, expr, *args):
-        rms = rms = expr.atoms(RandomMatrixSymbol)
+        rms = expr.atoms(RandomMatrixSymbol)
         if len(rms) > 2 or (not isinstance(expr, RandomMatrixSymbol)):
             raise NotImplementedError("Currently, no algorithm has been "
                     "implemented to handle general expressions containing "

@@ -99,7 +99,8 @@ from .random_matrix_models import (
     GaussianUnitaryEnsemble,
     GaussianOrthogonalEnsemble,
     GaussianSymplecticEnsemble,
-    joint_eigen_distribution
+    joint_eigen_distribution,
+    level_spacing_distribution
 )
 __all__.extend(random_matrix_models.__all__)
 

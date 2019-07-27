@@ -12,7 +12,8 @@ __all__ = [
     'GaussianUnitaryEnsemble',
     'GaussianOrthogonalEnsemble',
     'GaussianSymplecticEnsemble',
-    'joint_eigen_distribution'
+    'joint_eigen_distribution',
+    'level_spacing_distribution'
 ]
 
 class RandomMatrixEnsemble(Basic):
@@ -108,6 +109,11 @@ class GaussianUnitaryEnsemble(GaussianEnsemble):
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_dsitribution(2)
 
+    def level_spacing_distribution(self):
+        s = Dummy('s')
+        f = (32/pi**2)*(s**2)*exp((-4/pi)*s**2)
+        return Lambda(s, f)
+
 class GaussianOrthogonalEnsemble(GaussianEnsemble):
     """
     Represents Gaussian Orthogonal Ensembles.
@@ -134,6 +140,11 @@ class GaussianOrthogonalEnsemble(GaussianEnsemble):
 
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_dsitribution(1)
+
+    def level_spacing_distribution(self):
+        s = Dummy('s')
+        f = (pi/2)*s*exp((-pi/4)*s**2)
+        return Lambda(s, f)
 
 class GaussianSymplecticEnsemble(GaussianEnsemble):
     """
@@ -162,6 +173,14 @@ class GaussianSymplecticEnsemble(GaussianEnsemble):
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_dsitribution(4)
 
+    def level_spacing_distribution(self):
+        s = Dummy('s')
+        f = ((S(2)**18)/((S(3)**6)*(pi**3)))*(s**4)*exp((-64/(9*pi))*s**2)
+        return Lambda(s, f)
+
 @dispatch(RandomMatrixSymbol)
 def joint_eigen_distribution(mat):
     return mat.pspace.model.joint_eigen_distribution()
+
+def level_spacing_distribution(mat):
+    return mat.pspace.model.level_spacing_distribution()
