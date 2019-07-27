@@ -3178,7 +3178,20 @@ class MatrixBase(MatrixDeprecated,
         return self.__class__(banded(size, bands))
 
     def exp(self):
-        """Return the exponentiation of a square matrix."""
+        """Return the exponential of a square matrix
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Matrix
+
+        >>> t = Symbol('t')
+        >>> m = Matrix([[0, 1], [-1, 0]]) * t
+        >>> m.exp()
+        Matrix([
+        [    exp(I*t)/2 + exp(-I*t)/2, -I*exp(I*t)/2 + I*exp(-I*t)/2],
+        [I*exp(I*t)/2 - I*exp(-I*t)/2,      exp(I*t)/2 + exp(-I*t)/2]])
+        """
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Exponentiation is valid only for square matrices")
