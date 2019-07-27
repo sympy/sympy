@@ -46,7 +46,7 @@ for _func in _known_func_same_name:
 atomic_expr = {
     # Sympy -> Maple
     S.Pi: 'Pi',
-    S.I: 'I',
+    S.ImaginaryUnit: 'I',
     S.Infinity: 'infinity'
 }
 
