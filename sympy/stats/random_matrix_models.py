@@ -9,6 +9,7 @@ from sympy.stats.random_matrix import RandomMatrixPSpace
 from sympy.tensor.array import ArrayComprehension
 
 __all__ = [
+    'GaussianEnsemble',
     'GaussianUnitaryEnsemble',
     'GaussianOrthogonalEnsemble',
     'GaussianSymplecticEnsemble',
@@ -20,7 +21,7 @@ class RandomMatrixEnsemble(Basic):
     """
     Abstract class for random matrix ensembles.
     It acts as an umbrella for all the ensembles
-    defined in sympy.stats.
+    defined in sympy.stats.random_matrix_models.
     """
     pass
 
@@ -71,6 +72,11 @@ class GaussianEnsemble(RandomMatrixEnsemble):
         return term1 * term2 * term3
 
     def _compute_joint_eigen_dsitribution(self, beta):
+        """
+        Helper function for computing the joint
+        probability distribution of eigen values
+        of the random matrix.
+        """
         n = self.dimension
         Zbn = self._compute_normalization_constant(beta, n)
         l = IndexedBase('l')
@@ -180,7 +186,60 @@ class GaussianSymplecticEnsemble(GaussianEnsemble):
 
 @dispatch(RandomMatrixSymbol)
 def joint_eigen_distribution(mat):
+    """
+    For obtaining joint probability distribution
+    of eigen values of random matrix.
+
+    Parameters
+    ==========
+
+    mat: RandomMatrixSymbol
+        The matrix symbol whose eigen values are to be considered.
+
+    Returns
+    =======
+
+    Lambda
+
+    Examples
+    ========
+
+    >>> from sympy.stats import GaussianUnitaryEnsemble as GUE
+    >>> from sympy.stats import joint_eigen_distribution
+    >>> U = GUE('U', 2)
+    >>> joint_eigen_dsitribution(U)
+    Lambda((l[1], l[2]), exp(-l[1]**2 - l[2]**2)*Product(Abs(l[_i] - l[_j])**2, (_j, _i + 1, 2), (_i, 1, 1))/pi)
+    """
     return mat.pspace.model.joint_eigen_distribution()
 
 def level_spacing_distribution(mat):
+    """
+    For obtaining distribution of level spacings.
+
+    Parameters
+    ==========
+
+    mat: RandomMatrixSymbol
+        The random matrix symbol whose eigen values are
+        to be considered for finding the level spacings.
+
+    Returns
+    =======
+
+    Lambda
+
+    Examples
+    ========
+
+    >>> from sympy.stats import GaussianUnitaryEnsemble as GUE
+    >>> from sympy.stats import level_spacing_distribution
+    >>> U = GUE('U', 2)
+    >>> level_spacing_distribution(U)
+    Lambda(_s, 32*_s**2*exp(-4*_s**2/pi)/pi**2)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Random_matrix#Distribution_of_level_spacings
+    """
     return mat.pspace.model.level_spacing_distribution()
