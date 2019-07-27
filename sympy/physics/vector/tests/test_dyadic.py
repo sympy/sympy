@@ -3,6 +3,7 @@ from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols
 from sympy.physics.vector.dyadic import _check_dyadic
 from sympy.utilities.pytest import raises
 
+_OLD_Vector_simp = Vector.simp
 Vector.simp = True
 A = ReferenceFrame('A')
 
@@ -69,8 +70,7 @@ def test_dyadic_simplify():
 
     dy = N.x | N.x
     test1 = (1 / x + 1 / y) * dy
-    assert (N.x & test1 & N.x) != (x + y) / (x * y)
-    test1 = test1.simplify()
+    assert (N.x & test1 & N.x).expand() != (x + y) / (x * y)
     assert (N.x & test1 & N.x) == (x + y) / (x * y)
 
     test2 = (A**2 * s**4 / (4 * pi * k * m**3)) * dy
@@ -95,3 +95,10 @@ def test_dyadic_subs():
 
 def test_check_dyadic():
     raises(TypeError, lambda: _check_dyadic(0))
+
+
+# This is not a test but rather resets Vector.simp to its value before
+# importing this module as it was causing the following test to fail.
+# MUST BE LAST!
+def test_reset_vector_simp():
+    Vector.simp = _OLD_Vector_simp

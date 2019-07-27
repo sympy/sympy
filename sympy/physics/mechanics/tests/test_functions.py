@@ -253,7 +253,7 @@ def test_center_of_mass():
     assert point_o.pos_from(p1.point)-expr == 0
 
 # This is not a test but rather resets Vector.simp to its value before
-# importing this module as it was causing the following test to fail.
+# importing this module as it was causing the subsequent tests to fail.
 # MUST BE LAST!
 def test_reset_vector_simp():
     Vector.simp = _OLD_Vector_simp

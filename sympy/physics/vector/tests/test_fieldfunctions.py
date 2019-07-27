@@ -49,7 +49,7 @@ def test_gradient():
     assert gradient(2*R[0]**2, R) == 4*R[0]*R.x
     assert gradient(a*sin(R[1])/R[0], R) == \
            - a*sin(R[1])/R[0]**2*R.x + a*cos(R[1])/R[0]*R.y
-    assert gradient(P[0]*P[1], R) == \
+    assert gradient(P[0]*P[1], R).simplify() == \
            (-R[0]*sin(2*q) + R[1]*cos(2*q))*R.x + \
            (R[0]*cos(2*q) + R[1]*sin(2*q))*R.y
     assert gradient(P[0]*R[2], P) == P[2]*P.x + P[0]*P.z
