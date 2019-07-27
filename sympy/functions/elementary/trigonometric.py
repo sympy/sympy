@@ -2981,7 +2981,7 @@ class atan2(InverseTrigonometricFunction):
 
     >>> from sympy import atan
     >>> atan2(y, x).rewrite(atan)
-    Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)), (pi, x < 0), (0, x > 0), (nan, True))
+    Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)), (pi, re(x) < 0), (0, (re(x) > 0) | Ne(im(x), 0)), (nan, True))
 
     but note that this form is undefined on the negative real axis.
 
@@ -3029,8 +3029,12 @@ class atan2(InverseTrigonometricFunction):
                     return -S.Pi/2
                 elif y.is_zero:
                     return S.NaN
-        if y.is_zero and x.is_extended_real and fuzzy_not(x.is_zero):
-            return S.Pi * (S.One - Heaviside(x))
+        if y.is_zero:
+            if x.is_extended_real and fuzzy_not(x.is_zero):
+                return S.Pi * (S.One - Heaviside(x))
+            return Piecewise((S.Pi, re(x) < 0),
+                             (0, (re(x) > 0) |  Ne(im(x), 0)),
+                             (S.NaN, True))
         if x.is_number and y.is_number:
             return -S.ImaginaryUnit*log(
                 (x + S.ImaginaryUnit*y)/sqrt(x**2 + y**2))
@@ -3039,16 +3043,19 @@ class atan2(InverseTrigonometricFunction):
         return -S.ImaginaryUnit*log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
 
     def _eval_rewrite_as_atan(self, y, x, **kwargs):
-        return Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)), (pi, x < 0), (0, x > 0), (S.NaN, True))
+        from sympy import im, re
+        return Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)),
+                         (pi, re(x) < 0),
+                         (0, (re(x) > 0) | Ne(im(x), 0)),
+                         (S.NaN, True))
 
     def _eval_rewrite_as_arg(self, y, x, **kwargs):
         from sympy import arg
         if x.is_extended_real and y.is_extended_real:
             return arg(x + y*S.ImaginaryUnit)
-        I = S.ImaginaryUnit
-        n = x + I*y
+        n = x + S.ImaginaryUnit*y
         d = x**2 + y**2
-        return arg(n/sqrt(d)) - I*log(abs(n)/sqrt(abs(d)))
+        return arg(n/sqrt(d)) - S.ImaginaryUnit*log(abs(n)/sqrt(abs(d)))
 
     def _eval_is_extended_real(self):
         return self.args[0].is_extended_real and self.args[1].is_extended_real

@@ -1226,3 +1226,32 @@ def test_issue_8458():
     # Test for problem highlighted during review
     p3 = Piecewise((x+1, Eq(x, -1)), (4*x + (y-2)**4, Eq(x, 0) & Eq(x+y, 2)), (sin(x), True))
     assert p3.simplify() == Piecewise((0, Eq(x, -1)), (sin(x), True))
+
+def test_issue_16417():
+    from sympy import im, re
+    x = Symbol('x')
+    assert unchanged(Piecewise, (S.Pi, re(x) < 0),
+                 (0, Or(re(x) > 0, Ne(im(x), 0))),
+                 (S.NaN, True))
+    r = Symbol('r', real=True)
+    p = Piecewise((S.Pi, re(r) < 0),
+                 (0, Or(re(r) > 0, Ne(im(r), 0))),
+                 (S.NaN, True))
+    assert p == Piecewise((S.Pi, r < 0),
+                 (0, r > 0),
+                 (S.NaN, True), evaluate=False)
+    # Does not work since imaginary != 0...
+    #i = Symbol('i', imaginary=True)
+    #p = Piecewise((S.Pi, re(i) < 0),
+    #              (0, Or(re(i) > 0, Ne(im(i), 0))),
+    #              (S.NaN, True))
+    #assert p == Piecewise((0, Ne(im(i), 0)),
+    #                      (S.NaN, True), evaluate=False)
+    i = I*r
+    p = Piecewise((S.Pi, re(i) < 0),
+                  (0, Or(re(i) > 0, Ne(im(i), 0))),
+                  (S.NaN, True))
+    assert p == Piecewise((0, Ne(im(i), 0)),
+                          (S.NaN, True), evaluate=False)
+    assert p == Piecewise((0, Ne(r, 0)),
+                          (S.NaN, True), evaluate=False)

@@ -823,6 +823,13 @@ def test_issue_7971():
     assert simplify(z) is S.Zero
 
 
+@slow
+def test_issue_17141_slow():
+    # Should not give RecursionError
+    assert simplify((2**acos(I+1)**2).rewrite('log')) == 2**((pi + 2*I*log(-1 +
+                   sqrt(1 - (1 + I)**2) + I))**2/4)
+
+
 def test_issue_17141():
     # Check that there is no RecursionError
     assert simplify(x**(1 / acos(I))) == x**(2/(pi - 2*I*log(1 + sqrt(2))))
@@ -831,9 +838,3 @@ def test_issue_17141():
     assert simplify(2**acos(I)**2) == 2**((pi - 2*I*log(1 + sqrt(2)))**2/4)
     p = 2**acos(I+1)**2
     assert simplify(p) == p
-
-    # However, for a complex number it still happens
-    if PY3:
-        raises(RecursionError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
-    else:
-        raises(RuntimeError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
