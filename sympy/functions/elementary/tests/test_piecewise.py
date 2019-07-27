@@ -1228,7 +1228,10 @@ def test_issue_8458():
     assert p3.simplify() == Piecewise((0, Eq(x, -1)), (sin(x), True))
 
 def test_issue_16417():
-    from sympy import im, re
+    from sympy import im, re, Gt
+    z = Symbol('z')
+    assert unchanged(Piecewise, (1, Or(Eq(im(z), 0), Gt(re(z), 0))), (2, True))
+
     x = Symbol('x')
     assert unchanged(Piecewise, (S.Pi, re(x) < 0),
                  (0, Or(re(x) > 0, Ne(im(x), 0))),
