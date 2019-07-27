@@ -15,6 +15,7 @@ from sympy import maple_code
 
 x, y, z = symbols('x,y,z')
 
+
 def test_Integer():
     assert maple_code(Integer(67)) == "67"
     assert maple_code(Integer(-1)) == "-1"
@@ -26,7 +27,7 @@ def test_Rational():
     assert maple_code(Rational(3, -7)) == "-3/7"
     assert maple_code(Rational(-3, -7)) == "3/7"
     assert maple_code(x + Rational(3, 7)) == "x + 3/7"
-    assert maple_code(Rational(3, 7)*x) == "3*x/7"
+    assert maple_code(Rational(3, 7) * x) == "3*x/7"
 
 
 def test_Relational():
@@ -39,25 +40,27 @@ def test_Relational():
 
 
 def test_Function():
-    assert maple_code(sin(x) ** cos(x)) == "sin(x).^cos(x)"
+    assert maple_code(sin(x) ** cos(x)) == "sin(x)^cos(x)"
     assert maple_code(abs(x)) == "abs(x)"
     assert maple_code(ceiling(x)) == "ceil(x)"
 
 
 def test_Pow():
-    assert maple_code(x**3) == "x.^3"
-    assert maple_code(x**(y**3)) == "x.^(y.^3)"
-    assert maple_code(x**Rational(2, 3)) == 'x.^(2/3)'
-    g = implemented_function('g', Lambda(x, 2*x))
-    assert maple_code(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "(3.5*2*x).^(-x + y.^x)./(x.^2 + y)"
+    assert maple_code(x ** 3) == "x^3"
+    assert maple_code(x ** (y ** 3)) == "x^(y^3)"
+    assert maple_code(x ** Rational(2, 3)) == 'x^(2/3)'
+
+    # FIXME: not done yet.
+    g = implemented_function('g', Lambda(x, 2 * x))
+    assert maple_code(1 / (g(x) * 3.5) ** (x - y ** x) / (x ** 2 + y)) == \
+           "(3.5*2*x).^(-x + y.^x)/(x.^2 + y)"
     # For issue 14160
-    assert maple_code(Mul(-2, x, Pow(Mul(y,y,evaluate=False), -1, evaluate=False),
-                                                evaluate=False)) == '-2*x./(y.*y)'
+    assert maple_code(Mul(-2, x, Pow(Mul(y, y, evaluate=False), -1, evaluate=False),
+                          evaluate=False)) == '-2*x/(y.*y)'
 
 
 def test_basic_ops():
-    assert maple_code(x*y) == "x.*y"
+    assert maple_code(x * y) == "x*y"
     assert maple_code(x + y) == "x + y"
     assert maple_code(x - y) == "x - y"
     assert maple_code(-x) == "-x"
@@ -66,59 +69,59 @@ def test_basic_ops():
 def test_1_over_x_and_sqrt():
     # 1.0 and 0.5 would do something different in regular StrPrinter,
     # but these are exact in IEEE floating point so no different here.
-    assert maple_code(1/x) == '1./x'
-    assert maple_code(x**-1) == maple_code(x**-1.0) == '1./x'
-    assert maple_code(1/sqrt(x)) == '1./sqrt(x)'
-    assert maple_code(x**-S.Half) == maple_code(x**-0.5) == '1./sqrt(x)'
+    assert maple_code(1 / x) == '1/x'
+    assert maple_code(x ** -1) == maple_code(x ** -1.0) == '1/x'
+    assert maple_code(1 / sqrt(x)) == '1/sqrt(x)'
+    assert maple_code(x ** -S.Half) == maple_code(x ** -0.5) == '1/sqrt(x)'
     assert maple_code(sqrt(x)) == 'sqrt(x)'
-    assert maple_code(x**S.Half) == maple_code(x**0.5) == 'sqrt(x)'
-    assert maple_code(1/pi) == '1/pi'
-    assert maple_code(pi**-1) == maple_code(pi**-1.0) == '1/pi'
-    assert maple_code(pi**-0.5) == '1/sqrt(pi)'
+    assert maple_code(x ** S.Half) == maple_code(x ** 0.5) == 'sqrt(x)'
+    assert maple_code(1 / pi) == '1/pi'
+    assert maple_code(pi ** -1) == maple_code(pi ** -1.0) == '1/pi'
+    assert maple_code(pi ** -0.5) == '1/sqrt(pi)'
 
 
 def test_mix_number_mult_symbols():
-    assert maple_code(3*x) == "3*x"
-    assert maple_code(pi*x) == "pi*x"
-    assert maple_code(3/x) == "3./x"
-    assert maple_code(pi/x) == "pi./x"
-    assert maple_code(x/3) == "x/3"
-    assert maple_code(x/pi) == "x/pi"
-    assert maple_code(x*y) == "x.*y"
-    assert maple_code(3*x*y) == "3*x.*y"
-    assert maple_code(3*pi*x*y) == "3*pi*x.*y"
-    assert maple_code(x/y) == "x./y"
-    assert maple_code(3*x/y) == "3*x./y"
-    assert maple_code(x*y/z) == "x.*y./z"
-    assert maple_code(x/y*z) == "x.*z./y"
-    assert maple_code(1/x/y) == "1./(x.*y)"
-    assert maple_code(2*pi*x/y/z) == "2*pi*x./(y.*z)"
-    assert maple_code(3*pi/x) == "3*pi./x"
-    assert maple_code(S(3)/5) == "3/5"
-    assert maple_code(S(3)/5*x) == "3*x/5"
-    assert maple_code(x/y/z) == "x./(y.*z)"
-    assert maple_code((x+y)/z) == "(x + y)./z"
-    assert maple_code((x+y)/(z+x)) == "(x + y)./(x + z)"
-    assert maple_code((x+y)/EulerGamma) == "(x + y)/eulergamma"
-    assert maple_code(x/3/pi) == "x/(3*pi)"
-    assert maple_code(S(3)/5*x*y/pi) == "3*x.*y/(5*pi)"
+    assert maple_code(3 * x) == "3*x"
+    assert maple_code(pi * x) == "pi*x"
+    assert maple_code(3 / x) == "3/x"
+    assert maple_code(pi / x) == "pi/x"
+    assert maple_code(x / 3) == "x/3"
+    assert maple_code(x / pi) == "x/pi"
+    assert maple_code(x * y) == "x*y"
+    assert maple_code(3 * x * y) == "3*x*y"
+    assert maple_code(3 * pi * x * y) == "3*pi*x*y"
+    assert maple_code(x / y) == "x/y"
+    assert maple_code(3 * x / y) == "3*x/y"
+    assert maple_code(x * y / z) == "x*y/z"
+    assert maple_code(x / y * z) == "x*z/y"
+    assert maple_code(1 / x / y) == "1/(x*y)"
+    assert maple_code(2 * pi * x / y / z) == "2*pi*x/(y*z)"
+    assert maple_code(3 * pi / x) == "3*pi/x"
+    assert maple_code(S(3) / 5) == "3/5"
+    assert maple_code(S(3) / 5 * x) == "3*x/5"
+    assert maple_code(x / y / z) == "x/(y*z)"
+    assert maple_code((x + y) / z) == "(x + y)/z"
+    assert maple_code((x + y) / (z + x)) == "(x + y)/(x + z)"
+    assert maple_code((x + y) / EulerGamma) == "(x + y)/eulergamma"
+    assert maple_code(x / 3 / pi) == "x/(3*pi)"
+    assert maple_code(S(3) / 5 * x * y / pi) == "3*x*y/(5*pi)"
 
 
 def test_mix_number_pow_symbols():
-    assert maple_code(pi**3) == 'pi^3'
-    assert maple_code(x**2) == 'x.^2'
-    assert maple_code(x**(pi**3)) == 'x.^(pi^3)'
-    assert maple_code(x**y) == 'x.^y'
-    assert maple_code(x**(y**z)) == 'x.^(y.^z)'
-    assert maple_code((x**y)**z) == '(x.^y).^z'
+    assert maple_code(pi ** 3) == 'pi^3'
+    assert maple_code(x ** 2) == 'x.^2'
+    assert maple_code(x ** (pi ** 3)) == 'x.^(pi^3)'
+    assert maple_code(x ** y) == 'x.^y'
+    assert maple_code(x ** (y ** z)) == 'x.^(y.^z)'
+    assert maple_code((x ** y) ** z) == '(x.^y).^z'
 
 
 def test_imag():
     I = S('I')
-    assert maple_code(I) == "im"
-    assert maple_code(5*I) == "5im"
-    assert maple_code((S(3)/2)*I) == "3*im/2"
-    assert maple_code(3+4*I) == "3 + 4im"
+    assert maple_code(I) == "I"
+    assert maple_code(5 * I) == "5 * I"
+    assert maple_code((S(3) / 2) * I) == "3 * I/2"
+    assert maple_code(3 + 4 * I) == "3 + 4 * I"
 
 
 def test_constants():
@@ -132,12 +135,14 @@ def test_constants():
 
 
 def test_constants_other():
-    assert maple_code(2*GoldenRatio) == "2*golden"
-    assert maple_code(2*Catalan) == "2*catalan"
-    assert maple_code(2*EulerGamma) == "2*eulergamma"
+    # FIXME: need more info.
+    assert maple_code(2 * GoldenRatio) == "2*golden"
+    assert maple_code(2 * Catalan) == "2*catalan"
+    assert maple_code(2 * EulerGamma) == "2*gamma"
 
 
 def test_boolean():
+    # FIXME: need more info.
     assert maple_code(x & y) == "x && y"
     assert maple_code(x | y) == "x || y"
     assert maple_code(~x) == "!x"
@@ -148,17 +153,19 @@ def test_boolean():
 
 
 def test_Matrices():
-    assert maple_code(Matrix(1, 1, [10])) == "[10]"
-    A = Matrix([[1, sin(x/2), abs(x)],
+    assert maple_code(Matrix(1, 1, [10])) == "Matrix([10], storage = triangle)"
+
+    # FIXME: need to be improved.
+    A = Matrix([[1, sin(x / 2), abs(x)],
                 [0, 1, pi],
-                [0, exp(1), ceiling(x)]]);
+                [0, exp(1), ceiling(x)]])
     expected = ("[1 sin(x/2)  abs(x);\n"
                 "0        1      pi;\n"
                 "0        e ceil(x)]")
     assert maple_code(A) == expected
     # row and columns
-    assert maple_code(A[:,0]) == "[1, 0, 0]"
-    assert maple_code(A[0,:]) == "[1 sin(x/2) abs(x)]"
+    assert maple_code(A[:, 0]) == "[1, 0, 0]"
+    assert maple_code(A[0, :]) == "[1 sin(x/2) abs(x)]"
     # empty matrices
     assert maple_code(Matrix(0, 0, [])) == 'zeros(0, 0)'
     assert maple_code(Matrix(0, 3, [])) == 'zeros(0, 3)'
@@ -168,9 +175,9 @@ def test_Matrices():
 
 def test_vector_entries_hadamard():
     # For a row or column, user might to use the other dimension
-    A = Matrix([[1, sin(2/x), 3*pi/x/5]])
-    assert maple_code(A) == "[1 sin(2./x) 3*pi./(5*x)]"
-    assert maple_code(A.T) == "[1, sin(2./x), 3*pi./(5*x)]"
+    A = Matrix([[1, sin(2 / x), 3 * pi / x / 5]])
+    assert maple_code(A) == "Matrix([1,sin(2/x),3*pi/(5*x)], storage = triangle)"
+    assert maple_code(A.T) == "[1, sin(2/x), 3*pi/(5*x)]"
 
 
 @XFAIL
@@ -178,9 +185,9 @@ def test_Matrices_entries_not_hadamard():
     # For Matrix with col >= 2, row >= 2, they need to be scalars
     # FIXME: is it worth worrying about this?  Its not wrong, just
     # leave it user's responsibility to put scalar data for x.
-    A = Matrix([[1, sin(2/x), 3*pi/x/5], [1, 2, x*y]])
+    A = Matrix([[1, sin(2 / x), 3 * pi / x / 5], [1, 2, x * y]])
     expected = ("[1 sin(2/x) 3*pi/(5*x);\n"
-                "1        2        x*y]") # <- we give x.*y
+                "1        2        x*y]")  # <- we give x*y
     assert maple_code(A) == expected
 
 
@@ -188,43 +195,62 @@ def test_MatrixSymbol():
     n = Symbol('n', integer=True)
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', n, n)
-    assert maple_code(A*B) == "A*B"
-    assert maple_code(B*A) == "B*A"
-    assert maple_code(2*A*B) == "2*A*B"
-    assert maple_code(B*2*A) == "2*B*A"
-    assert maple_code(A*(B + 3*Identity(n))) == "A*(3*eye(n) + B)"
-    assert maple_code(A**(x**2)) == "A^(x.^2)"
-    assert maple_code(A**3) == "A^3"
-    assert maple_code(A**(S.Half)) == "A^(1/2)"
+    assert maple_code(A * B) == "A.B"
+    assert maple_code(B * A) == "B.A"
+    assert maple_code(2 * A * B) == "2*A.B"
+    assert maple_code(B * 2 * A) == "2*B.A"
+
+    # FIXME: need more info about eye.
+    assert maple_code(A * (B + 3 * Identity(n))) == "A*(3*eye(n) + B)"
+    assert maple_code(A ** (x ** 2)) == "A^(x^2)"
+    assert maple_code(A ** 3) == "A^3"
+    assert maple_code(A ** (S.Half)) == "A^(1/2)"
 
 
 def test_special_matrices():
-    assert maple_code(6*Identity(3)) == "6*eye(3)"
+    # FIXME: need more info about eye.
+    assert maple_code(6 * Identity(3)) == "6*eye(3)"
 
 
 def test_containers():
+    # FIXME: need more info.
     assert maple_code([1, 2, 3, [4, 5, [6, 7]], 8, [9, 10], 11]) == \
-        "Any[1, 2, 3, Any[4, 5, Any[6, 7]], 8, Any[9, 10], 11]"
+           "Any[1, 2, 3, Any[4, 5, Any[6, 7]], 8, Any[9, 10], 11]"
     assert maple_code((1, 2, (3, 4))) == "(1, 2, (3, 4))"
     assert maple_code([1]) == "Any[1]"
     assert maple_code((1,)) == "(1,)"
     assert maple_code(Tuple(*[1, 2, 3])) == "(1, 2, 3)"
-    assert maple_code((1, x*y, (3, x**2))) == "(1, x.*y, (3, x.^2))"
+    assert maple_code((1, x * y, (3, x ** 2))) == "(1, x*y, (3, x.^2))"
     # scalar, matrix, empty matrix and empty list
     assert maple_code((1, eye(3), Matrix(0, 0, []), [])) == "(1, [1 0 0;\n0 1 0;\n0 0 1], zeros(0, 0), Any[])"
 
 
 def test_julia_noninline():
-    source = maple_code((x+y)/Catalan, assign_to='me', inline=False)
+    # FIXME: need more info.
+    source = maple_code((x + y) / Catalan, assign_to='me', inline=False)
     expected = (
-        "const Catalan = %s\n"
-        "me = (x + y)/Catalan"
-    ) % Catalan.evalf(17)
+                   "const Catalan = %s\n"
+                   "me = (x + y)/Catalan"
+               ) % Catalan.evalf(17)
     assert source == expected
 
 
+"""
+ _____ _                     _       _         _            
+|_   _| |_  ___   __ ___  __| |___  | |__  ___| |_____ __ __
+  | | | ' \/ -_) / _/ _ \/ _` / -_) | '_ \/ -_) / _ \ V  V /
+  |_| |_||_\___| \__\___/\__,_\___| |_.__/\___|_\___/\_/\_/ 
+                                                            
+                 _   _         _                         _ _  __ _        _ 
+ _ _  ___ ___ __| | | |_ ___  | |__  ___   _ __  ___  __| (_)/ _(_)___ __| |
+| ' \/ -_) -_) _` | |  _/ _ \ | '_ \/ -_) | '  \/ _ \/ _` | |  _| / -_) _` |
+|_||_\___\___\__,_|  \__\___/ |_.__/\___| |_|_|_\___/\__,_|_|_| |_\___\__,_|
+                                                                            
+"""
+
+
 def test_julia_piecewise():
-    expr = Piecewise((x, x < 1), (x**2, True))
+    expr = Piecewise((x, x < 1), (x ** 2, True))
     assert maple_code(expr) == "((x < 1) ? (x) : (x.^2))"
     assert maple_code(expr, assign_to="r") == (
         "r = ((x < 1) ? (x) : (x.^2))")
@@ -234,7 +260,7 @@ def test_julia_piecewise():
         "else\n"
         "    r = x.^2\n"
         "end")
-    expr = Piecewise((x**2, x < 1), (x**3, x < 2), (x**4, x < 3), (x**5, True))
+    expr = Piecewise((x ** 2, x < 1), (x ** 3, x < 2), (x ** 4, x < 3), (x ** 5, True))
     expected = ("((x < 1) ? (x.^2) :\n"
                 "(x < 2) ? (x.^3) :\n"
                 "(x < 3) ? (x.^4) : (x.^5))")
@@ -251,16 +277,16 @@ def test_julia_piecewise():
         "    r = x.^5\n"
         "end")
     # Check that Piecewise without a True (default) condition error
-    expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
+    expr = Piecewise((x, x < 1), (x ** 2, x > 1), (sin(x), x > 0))
     raises(ValueError, lambda: maple_code(expr))
 
 
 def test_julia_piecewise_times_const():
-    pw = Piecewise((x, x < 1), (x**2, True))
-    assert maple_code(2*pw) == "2*((x < 1) ? (x) : (x.^2))"
-    assert maple_code(pw/x) == "((x < 1) ? (x) : (x.^2))./x"
-    assert maple_code(pw/(x*y)) == "((x < 1) ? (x) : (x.^2))./(x.*y)"
-    assert maple_code(pw/3) == "((x < 1) ? (x) : (x.^2))/3"
+    pw = Piecewise((x, x < 1), (x ** 2, True))
+    assert maple_code(2 * pw) == "2*((x < 1) ? (x) : (x.^2))"
+    assert maple_code(pw / x) == "((x < 1) ? (x) : (x.^2))/x"
+    assert maple_code(pw / (x * y)) == "((x < 1) ? (x) : (x.^2))/(x*y)"
+    assert maple_code(pw / 3) == "((x < 1) ? (x) : (x.^2))/3"
 
 
 def test_julia_matrix_assign_to():
@@ -286,16 +312,16 @@ def test_julia_matrix_1x1():
     C = MatrixSymbol('C', 1, 2)
     assert maple_code(A, assign_to=B) == "B = [3]"
     # FIXME?
-    #assert maple_code(A, assign_to=x) == "x = [3]"
+    # assert maple_code(A, assign_to=x) == "x = [3]"
     raises(ValueError, lambda: maple_code(A, assign_to=C))
 
 
 def test_julia_matrix_elements():
-    A = Matrix([[x, 2, x*y]])
-    assert maple_code(A[0, 0]**2 + A[0, 1] + A[0, 2]) == "x.^2 + x.*y + 2"
+    A = Matrix([[x, 2, x * y]])
+    assert maple_code(A[0, 0] ** 2 + A[0, 1] + A[0, 2]) == "x.^2 + x*y + 2"
     A = MatrixSymbol('AA', 1, 3)
     assert maple_code(A) == "AA"
-    assert maple_code(A[0, 0]**2 + sin(A[0,1]) + A[0,2]) == \
+    assert maple_code(A[0, 0] ** 2 + sin(A[0, 1]) + A[0, 2]) == \
            "sin(AA[1,2]) + AA[1,1].^2 + AA[1,3]"
     assert maple_code(sum(A)) == "AA[1,1] + AA[1,2] + AA[1,3]"
 
@@ -342,12 +368,12 @@ def test_haramard():
     v = MatrixSymbol('v', 3, 1)
     h = MatrixSymbol('h', 1, 3)
     C = HadamardProduct(A, B)
-    assert maple_code(C) == "A.*B"
-    assert maple_code(C*v) == "(A.*B)*v"
-    assert maple_code(h*C*v) == "h*(A.*B)*v"
-    assert maple_code(C*A) == "(A.*B)*A"
+    assert maple_code(C) == "A*B"
+    assert maple_code(C * v) == "(A*B)*v"
+    assert maple_code(h * C * v) == "h*(A*B)*v"
+    assert maple_code(C * A) == "(A*B)*A"
     # mixing Hadamard and scalar strange b/c we vectorize scalars
-    assert maple_code(C*x*y) == "(x.*y)*(A.*B)"
+    assert maple_code(C * x * y) == "(x*y)*(A*B)"
 
 
 def test_sparse():
@@ -356,9 +382,9 @@ def test_sparse():
     M[1, 2] = 20;
     M[1, 3] = 22;
     M[0, 3] = 30;
-    M[3, 0] = x*y;
+    M[3, 0] = x * y;
     assert maple_code(M) == (
-        "sparse([4, 2, 3, 1, 2], [1, 3, 3, 4, 4], [x.*y, 20, 10, 30, 22], 5, 6)"
+        "sparse([4, 2, 3, 1, 2], [1, 3, 3, 4, 4], [x*y, 20, 10, 30, 22], 5, 6)"
     )
 
 
@@ -370,8 +396,8 @@ def test_specfun():
         assert maple_code(f(x)) == f.__name__ + '(x)'
     assert maple_code(hankel1(n, x)) == 'hankelh1(n, x)'
     assert maple_code(hankel2(n, x)) == 'hankelh2(n, x)'
-    assert maple_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*besselj(n + 1/2, x)/2'
-    assert maple_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
+    assert maple_code(jn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1/x)*besselj(n + 1/2, x)/2'
+    assert maple_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1/x)*bessely(n + 1/2, x)/2'
 
 
 def test_MatrixElement_printing():
@@ -380,8 +406,8 @@ def test_MatrixElement_printing():
     B = MatrixSymbol("B", 1, 3)
     C = MatrixSymbol("C", 1, 3)
 
-    assert(maple_code(A[0, 0]) == "A[1,1]")
-    assert(maple_code(3 * A[0, 0]) == "3*A[1,1]")
+    assert (maple_code(A[0, 0]) == "A[1,1]")
+    assert (maple_code(3 * A[0, 0]) == "3*A[1,1]")
 
     F = C[0, 0].subs(C, A - B)
-    assert(maple_code(F) == "(A - B)[1,1]")
+    assert (maple_code(F) == "(A - B)[1,1]")
