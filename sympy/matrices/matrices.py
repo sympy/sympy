@@ -4007,14 +4007,9 @@ class MatrixBase(MatrixDeprecated,
             is_zero = iszerofunc(lu[i, j])
             if is_zero:
                 raise ValueError(msg_rank_error)
-
-            # It tries simplify again for the check, but it may not
-            # attempt to store the result back to the matrix since it
-            # sometimes makes the backward substitution bloated.
-            if is_zero == None:
-                if iszerofunc(_simplify(lu[i, j])):
+            elif is_zero == None:
+                if lu[i, j].equals(0):
                     raise ValueError(msg_rank_error)
-
 
         return lu, row_swaps
 
