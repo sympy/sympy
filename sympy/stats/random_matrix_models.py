@@ -1,15 +1,18 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
-                   gamma, Product, Dummy)
+                   gamma, Product, Dummy, Sum, Abs, IndexedBase)
 from sympy.core.sympify import _sympify
+from sympy.multipledispatch import dispatch
 from sympy.stats.rv import _symbol_converter, Density, RandomMatrixSymbol
 from sympy.stats.random_matrix import RandomMatrixPSpace
+from sympy.tensor.array import ArrayComprehension
 
 __all__ = [
     'GaussianUnitaryEnsemble',
     'GaussianOrthogonalEnsemble',
-    'GaussianSymplecticEnsemble'
+    'GaussianSymplecticEnsemble',
+    'joint_eigen_distribution'
 ]
 
 class RandomMatrixEnsemble(Basic):
@@ -59,12 +62,25 @@ class GaussianEnsemble(RandomMatrixEnsemble):
         .. [1] https://en.wikipedia.org/wiki/Selberg_integral#Mehta's_integral
         """
         n = S(n)
-        prod_term = lambda j: gamma(1 + S(j)/2)/gamma(S(3)/2)
+        prod_term = lambda j: gamma(1 + beta*S(j)/2)/gamma(S(1) + beta/S(2))
         j = Dummy('j', integer=True, positive=True)
         term1 = Product(prod_term(j), (j, 1, n)).doit()
-        term2 = ((beta*n)/2)**(n*(n - 1)/4)
+        term2 = (2/(beta*n))**(beta*n*(n - 1)/4 + n/2)
         term3 = (2*pi)**(n/2)
         return term1 * term2 * term3
+
+    def _compute_joint_eigen_dsitribution(self, beta):
+        n = self.dimension
+        Zbn = self._compute_normalization_constant(beta, n)
+        l = IndexedBase('l')
+        i = Dummy('i', integer=True, positive=True)
+        j = Dummy('j', integer=True, positive=True)
+        k = Dummy('k', integer=True, positive=True)
+        term1 = exp((-S(n)/2) * Sum(l[k]**2, (k, 1, n)).doit())
+        sub_term = Lambda(i, Product(Abs(l[j] - l[i])**beta, (j, i + 1, n)))
+        term2 = Product(sub_term(i).doit(), (i, 1, n - 1)).doit()
+        syms = ArrayComprehension(l[k], (k, 1, n)).doit()
+        return Lambda(syms, (term1 * term2)/Zbn)
 
 class GaussianUnitaryEnsemble(GaussianEnsemble):
     """
@@ -88,6 +104,9 @@ class GaussianUnitaryEnsemble(GaussianEnsemble):
         h_pspace = RandomMatrixPSpace('P', model=self)
         H = RandomMatrixSymbol('H', n, n, pspace=h_pspace)
         return Lambda(H, exp(-S(n)/2 * Trace(H**2))/ZGUE)
+
+    def joint_eigen_distribution(self):
+        return self._compute_joint_eigen_dsitribution(2)
 
 class GaussianOrthogonalEnsemble(GaussianEnsemble):
     """
@@ -113,6 +132,9 @@ class GaussianOrthogonalEnsemble(GaussianEnsemble):
         H = RandomMatrixSymbol('H', n, n, pspace=h_pspace)
         return Lambda(H, exp(-S(n)/4 * Trace(H**2))/ZGOE)
 
+    def joint_eigen_distribution(self):
+        return self._compute_joint_eigen_dsitribution(1)
+
 class GaussianSymplecticEnsemble(GaussianEnsemble):
     """
     Represents Gaussian Symplectic Ensembles.
@@ -136,3 +158,10 @@ class GaussianSymplecticEnsemble(GaussianEnsemble):
         h_pspace = RandomMatrixPSpace('P', model=self)
         H = RandomMatrixSymbol('H', n, n, pspace=h_pspace)
         return Lambda(H, exp(-S(n) * Trace(H**2))/ZGSE)
+
+    def joint_eigen_distribution(self):
+        return self._compute_joint_eigen_dsitribution(4)
+
+@dispatch(RandomMatrixSymbol)
+def joint_eigen_distribution(mat):
+    return mat.pspace.model.joint_eigen_distribution()
