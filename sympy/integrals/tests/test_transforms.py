@@ -743,7 +743,6 @@ def test_cosine_transform():
 
     assert cosine_transform(1/(a + t), t, w) == \
         sqrt(2)*(-sin(a*w)*Si(a*w) + pi*sin(a*w)/2 - cos(a*w)*Ci(a*w))/sqrt(pi)
-        # == sqrt(2)*((-2*Si(a*w) + pi)*sin(a*w)/2 - cos(a*w)*Ci(a*w))/sqrt(pi)
     assert inverse_cosine_transform(sqrt(2)*meijerg(((S(1)/2, 0), ()), (
         (S(1)/2, 0, 0), (S(1)/2,)), a**2*w**2/4)/(2*pi), w, t) == 1/(a + t)
 

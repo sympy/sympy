@@ -673,8 +673,8 @@ def test_issue_6348():
 def test_fresnel():
     from sympy import fresnels, fresnelc
 
-    assert simplify(expand_func(integrate(sin(pi*x**2/2), x))) == fresnels(x)
-    assert simplify(expand_func(integrate(cos(pi*x**2/2), x))) == fresnelc(x)
+    assert expand_func(integrate(sin(pi*x**2/2), x)) == fresnels(x)
+    assert expand_func(integrate(cos(pi*x**2/2), x)) == fresnelc(x)
 
 
 def test_issue_6860():
