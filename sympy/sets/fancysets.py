@@ -604,6 +604,7 @@ class Range(Set):
 
     def _contains(self, other):
         from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.functions.elementary.integers import ceiling
         other = _sympify(other)
         if not self:
             return S.false
@@ -612,8 +613,12 @@ class Range(Set):
         if not other.is_integer:
             return other.is_integer
         ref = self.start if self.start.is_finite else self._stop
-        return Piecewise((False, Ne((ref - other) % self.step, S.Zero)),
-                         (True, Ge(other, self._inf) & Le(other, self._sup)),
+        start, stop, step = self.start, self.stop, self.step
+        inf = Piecewise((start, Ge(step, S.Zero)), (stop - step, True))
+        sup = Piecewise((stop - step, Ge(step, S.Zero)), (start, True))
+        return Piecewise((False, Le(ceiling((stop - start)/step), S.Zero)),
+                         (False, Ne((ref - other) % self.step, S.Zero)),
+                         (True, Ge(other, inf) & Le(other, sup)),
                          (False, True))
 
     def __iter__(self):
@@ -708,8 +713,6 @@ class Range(Set):
             start, stop, step = self.start, self._stop, self.step
             rvstop, rvstart = (stop + i*step, start + i*step)
             rv = Piecewise((rvstop, Lt(i, 0)), (rvstart, True))
-            if Or(And(rvstop.is_infinite, Lt(i, 0)), And(rvstart.is_infinite, Ge(i, 0))) == True:
-                raise ValueError(ooslice)
             bound = Or(And(Or(Lt(rvstop, self._inf), Gt(rvstop, self._sup)), Lt(i, 0)),
                   And(Or(Lt(rvstart, self._inf), Gt(rvstart, self._sup)), Ge(i, 0)))
             if bound == True:
@@ -723,7 +726,7 @@ class Range(Set):
         if not self:
             raise NotImplementedError
         start, stop, step = self.start, self._stop, self.step
-        return Piecewise((S.Zero, Le(ceiling((stop - start)/step), S.Zero)),
+        return Piecewise((S.NaN, Le(ceiling((stop - start)/step), S.Zero)),
                         (start, Ge(step, S.Zero)),
                         (stop - step, True))
 
@@ -734,7 +737,7 @@ class Range(Set):
         if not self:
             raise NotImplementedError
         start, stop, step = self.start, self._stop, self.step
-        return Piecewise((S.Zero, Le(ceiling((stop - start)/step), S.Zero)),
+        return Piecewise((S.NaN, Le(ceiling((stop - start)/step), S.Zero)),
                         (stop - step, Ge(step, S.Zero)),
                         (start, True))
 
@@ -751,11 +754,7 @@ class Range(Set):
             x >= self.inf if self.inf in self else x > self.inf,
             x <= self.sup if self.sup in self else x < self.sup)
 
-
-if PY3:
-    converter[range] = Range
-else:
-    converter[xrange] = Range
+converter[range] = Range
 
 def normalize_theta_set(theta):
     """
