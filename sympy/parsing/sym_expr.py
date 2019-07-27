@@ -18,7 +18,7 @@ if lfortran:
         Notes
         =====
 
-        -The module and its API are currently under development and experimental
+        The module and its API are currently under development and experimental
         and can be changed during development.
 
         It currently only supports conversion from Fortran. The support for other
@@ -34,7 +34,7 @@ if lfortran:
         An example of variable definiton:
 
         >>> from sympy.parsing.sym_expr import SymPyExpression
-        >>> src2 = '''\
+        >>> src2 = '''
         ... integer :: a, b, c, d
         ... real :: p, q, r, s
         ... '''
@@ -46,7 +46,7 @@ if lfortran:
         An example of Assignment:
 
         >>> from sympy.parsing.sym_expr import SymPyExpression
-        >>> src3 = '''\
+        >>> src3 = '''
         ... integer :: a, b, c, d, e
         ... d = a + b - c
         ... e = b * d + c * e / a
@@ -58,7 +58,7 @@ if lfortran:
         An example of function definition:
 
         >>> from sympy.parsing.sym_expr import SymPyExpression
-        >>> src = '''\
+        >>> src = '''
         ... integer function f(a,b)
         ... integer, intent(in) :: a, b
         ... integer :: r
@@ -110,7 +110,7 @@ if lfortran:
             ========
 
             >>> from sympy.parsing.sym_expr import SymPyExpression
-            >>> src3 = '''\
+            >>> src3 = '''
             ... integer function f(a,b) result(r)
             ... integer, intent(in) :: a, b
             ... integer :: x
@@ -150,7 +150,7 @@ if lfortran:
             ========
 
             >>> from sympy.parsing.sym_expr import SymPyExpression
-            >>> src2 = '''\
+            >>> src2 = '''
             ... integer :: a, b, c, d
             ... real :: p, q, r, s
             ... c = a/b
@@ -176,7 +176,7 @@ if lfortran:
             ========
 
             >>> from sympy.parsing.sym_expr import SymPyExpression
-            >>> src2 = '''\
+            >>> src2 = '''
             ... integer :: a, b, c, d
             ... real :: p, q, r, s
             ... c = a/b
@@ -202,7 +202,7 @@ if lfortran:
             ========
 
             >>> from sympy.parsing.sym_expr import SymPyExpression
-            >>> src2 = '''\
+            >>> src2 = '''
             ... integer :: a, b, c, d
             ... real :: p, q, r, s
             ... c = a/b
@@ -227,7 +227,7 @@ if lfortran:
             ========
 
             >>> from sympy.parsing.sym_expr import SymPyExpression
-            >>> src3 = '''\
+            >>> src3 = '''
             ... integer function f(a,b)
             ... integer, intent(in) :: a, b
             ... integer :: r
