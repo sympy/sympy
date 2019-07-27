@@ -988,12 +988,18 @@ class Mul(Expr, AssocOp):
 
     @staticmethod
     def _matches_noncomm(nodes, targets, repl_dict={}):
+        """Non-commutative multiplication matcher.
+
+        `nodes` is a list of symbols within the matcher multiplication
+        expression, while `targets` is a list of arguments in the
+        multiplication expression being matched against.
+        """
         # List of possible future states to be considered
         agenda = []
         # The current matching state, storing index in nodes and targets
         state = (0, 0)
         node_ind, target_ind = state
-        # Mapping between wildcards and the index ranges they match
+        # Mapping between wildcard indices and the index ranges they match
         wildcard_dict = {}
         repl_dict = repl_dict.copy()
 
@@ -1083,6 +1089,7 @@ class Mul(Expr, AssocOp):
 
     @staticmethod
     def _matches_match_wilds(dictionary, wildcard_ind, nodes, targets):
+        """Determine matches of a wildcard with sub-expression in `target`."""
         wildcard = nodes[wildcard_ind]
         begin, end = dictionary[wildcard_ind]
         terms = targets[begin:end + 1]
@@ -1092,6 +1099,7 @@ class Mul(Expr, AssocOp):
 
     @staticmethod
     def _matches_get_other_nodes(dictionary, nodes, node_ind):
+        """Find other wildcards that may have already been matched."""
         other_node_inds = []
         for ind in dictionary:
             if nodes[ind] == nodes[node_ind]:
