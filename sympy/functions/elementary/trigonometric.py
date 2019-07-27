@@ -2981,7 +2981,7 @@ class atan2(InverseTrigonometricFunction):
 
     >>> from sympy import atan
     >>> atan2(y, x).rewrite(atan)
-    Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)), (pi, re(x) < 0), (0, (re(x) > 0) | Ne(im(x), 0)), (nan, True))
+    Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)), (pi, re(x) < 0), (0, Ne(x, 0)), (nan, True))
 
     but note that this form is undefined on the negative real axis.
 
@@ -3030,11 +3030,11 @@ class atan2(InverseTrigonometricFunction):
                 elif y.is_zero:
                     return S.NaN
         if y.is_zero:
-            if x.is_extended_real and fuzzy_not(x.is_zero):
+            if x.is_extended_nonzero:
                 return S.Pi * (S.One - Heaviside(x))
             if x.is_number:
                 return Piecewise((S.Pi, re(x) < 0),
-                                 (0, (re(x) > 0) |  Ne(im(x), 0)),
+                                 (0, Ne(x, 0)),
                                  (S.NaN, True))
         if x.is_number and y.is_number:
             return -S.ImaginaryUnit*log(
@@ -3044,10 +3044,10 @@ class atan2(InverseTrigonometricFunction):
         return -S.ImaginaryUnit*log((x + S.ImaginaryUnit*y) / sqrt(x**2 + y**2))
 
     def _eval_rewrite_as_atan(self, y, x, **kwargs):
-        from sympy import im, re
+        from sympy import re
         return Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)),
                          (pi, re(x) < 0),
-                         (0, (re(x) > 0) | Ne(im(x), 0)),
+                         (0, Ne(x, 0)),
                          (S.NaN, True))
 
     def _eval_rewrite_as_arg(self, y, x, **kwargs):

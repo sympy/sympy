@@ -1056,9 +1056,9 @@ def test_atan2():
     assert (e - rewrite).subs(reps).equals(0)
 
     assert atan2(0, x).rewrite(atan) == Piecewise((pi, re(x) < 0),
-                                            (0, (re(x) > 0) | Ne(im(x), 0)),
+                                            (0, Ne(x, 0)),
                                             (nan, True))
-    assert atan2(0, r).rewrite(atan) == Piecewise((pi, r < 0), (0, r > 0), (S.NaN, True))
+    assert atan2(0, r).rewrite(atan) == Piecewise((pi, r < 0), (0, Ne(r, 0)), (S.NaN, True))
     assert atan2(0, i),rewrite(atan) == 0
     assert atan2(0, r + i).rewrite(atan) == Piecewise((pi, r < 0), (0, True))
 
