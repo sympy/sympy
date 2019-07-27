@@ -197,6 +197,7 @@ class DenseMatrix(MatrixBase):
         expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
         expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
         expr  = shorter(expr2, expr1, expr)
+        expr  = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
 
         return expr
 
