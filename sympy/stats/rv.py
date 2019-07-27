@@ -820,7 +820,7 @@ class Density(Basic):
         from sympy.stats.frv import SingleFiniteDistribution
         from sympy.stats.random_matrix_models import RandomMatrixPSpace
         expr, condition = self.expr, self.condition
-        if expr.has(RandomMatrixSymbol):
+        if _sympify(expr).has(RandomMatrixSymbol):
             return pspace(expr).compute_density(expr)
         if isinstance(expr, SingleFiniteDistribution):
             return expr.dict
