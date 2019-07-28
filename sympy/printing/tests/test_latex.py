@@ -1,7 +1,7 @@
 from sympy import (
     Add, Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
     FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
-    Interval, InverseCosineTransform, InverseFourierTransform,
+    Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
@@ -137,6 +137,7 @@ def test_latex_basic():
     assert latex(~(x >> ~y)) == r"x \not\Rightarrow \neg y"
     assert latex(Implies(Or(x,y), z)) == r"\left(x \vee y\right) \Rightarrow z"
     assert latex(Implies(z, Or(x,y))) == r"z \Rightarrow \left(x \vee y\right)"
+    assert latex(~(x & y)) == r"\neg \left(x \wedge y\right)"
 
     assert latex(~x, symbol_names={x: "x_i"}) == r"\neg x_i"
     assert latex(x & y, symbol_names={x: "x_i", y: "y_i"}) == \
@@ -2290,6 +2291,12 @@ def test_unit_ptinting():
     assert latex(5*meter) == r'5 \text{m}'
     assert latex(3*gibibyte) == r'3 \text{gibibyte}'
     assert latex(4*microgram/second) == r'\frac{4 \mu\text{g}}{\text{s}}'
+
+
+def test_issue_17092():
+    x_star = Symbol('x^*')
+    assert latex(Derivative(x_star, x_star,2)) == r'\frac{d^{2}}{d \left(x^{*}\right)^{2}} x^{*}'
+
 
 def test_latex_decimal_separator():
 

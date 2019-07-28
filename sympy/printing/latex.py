@@ -206,6 +206,18 @@ class LatexPrinter(Printer):
         else:
             return self._print(item)
 
+    def parenthesize_super(self, s):
+        """ Parenthesize s if there is a superscript in s"""
+        if "^" in s:
+            return r"\left({}\right)".format(s)
+        return s
+
+    def embed_super(self, s):
+        """ Embed s in {} if there is a superscript in s"""
+        if "^" in s:
+            return "{{{}}}".format(s)
+        return s
+
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
 
@@ -671,7 +683,9 @@ class LatexPrinter(Printer):
             if num == 1:
                 tex += r"%s %s" % (diff_symbol, self._print(x))
             else:
-                tex += r"%s %s^{%s}" % (diff_symbol, self._print(x), num)
+                tex += r"%s %s^{%s}" % (diff_symbol,
+                                        self.parenthesize_super(self._print(x)),
+                                        num)
 
         if dim == 1:
             tex = r"\frac{%s}{%s}" % (diff_symbol, tex)
@@ -938,7 +952,7 @@ class LatexPrinter(Printer):
         if isinstance(e.args[0], Implies):
             return self._print_Implies(e.args[0], r"\not\Rightarrow")
         if (e.args[0].is_Boolean):
-            return r"\neg (%s)" % self._print(e.args[0])
+            return r"\neg \left(%s\right)" % self._print(e.args[0])
         else:
             return r"\neg %s" % self._print(e.args[0])
 
