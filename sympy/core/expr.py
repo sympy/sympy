@@ -3119,17 +3119,21 @@ class Expr(Basic, EvalfMixin):
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
         """
-        from sympy import Dummy, log
+        from sympy import Dummy, log, Piecewise, piecewise_fold
         from sympy.series.gruntz import calculate_series
 
+        if self.has(Piecewise):
+            expr = piecewise_fold(self)
+        else:
+            expr = self
         if self.removeO() == 0:
             return self
 
         if logx is None:
             d = Dummy('logx')
-            s = calculate_series(self, x, d).subs(d, log(x))
+            s = calculate_series(expr, x, d).subs(d, log(x))
         else:
-            s = calculate_series(self, x, logx)
+            s = calculate_series(expr, x, logx)
 
         return s.as_leading_term(x)
 
@@ -3208,7 +3212,7 @@ class Expr(Basic, EvalfMixin):
             from sympy.utilities.misc import filldedent
             raise ValueError(filldedent("""
                 cannot compute leadterm(%s, %s). The coefficient
-                should have been free of x but got %s""" % (self, x, c)))
+                should have been free of %s but got %s""" % (self, x, x, c)))
         c = c.subs(d, log(x))
         return c, e
 

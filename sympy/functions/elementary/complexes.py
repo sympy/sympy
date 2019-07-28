@@ -508,7 +508,8 @@ class Abs(Function):
                 a, b = log(base).as_real_imag()
                 z = a + I*b
                 return exp(re(exponent*z))
-
+            elif exponent is S.NegativeOne:
+                return Abs(base)**S.NegativeOne
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
