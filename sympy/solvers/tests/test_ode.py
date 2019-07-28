@@ -1,7 +1,7 @@
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
-    Rational, rootof, S, simplify, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec, Ei, re, im)
+    Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
+    Piecewise, symbols, Poly, sec, Ei, re, im, atan2, collect)
 from sympy.solvers.ode import (_undetermined_coefficients_match,
     checkodesol, classify_ode, classify_sysode, constant_renumber,
     constantsimp, homogeneous_order, infinitesimals, checkinfsol,
@@ -391,7 +391,7 @@ def test_linear_3eq_order1():
     sol6 = [Eq(x(t), C1*exp(2*t) + C2*(-sin(t)/5 + 3*cos(t)/5) + C3*(3*sin(t)/5 + cos(t)/5)),
             Eq(y(t), C2*(-sin(t)/5 + 3*cos(t)/5) + C3*(3*sin(t)/5 + cos(t)/5)),
             Eq(z(t), C1*exp(2*t) + C2*cos(t) + C3*sin(t))]
-    assert checksysodesol(eq5, sol5) == (True, [0, 0, 0])
+    assert checksysodesol(eq6, sol6) == (True, [0, 0, 0])
 
 
 def test_linear_3eq_order1_nonhomog():
@@ -2756,7 +2756,6 @@ def test_issue_6989():
 
 def test_heuristic1():
     y, a, b, c, a4, a3, a2, a1, a0 = symbols("y a b c a4 a3 a2 a1 a0")
-    y = Symbol('y')
     f = Function('f')
     xi = Function('xi')
     eta = Function('eta')
@@ -2806,7 +2805,6 @@ def test_issue_6247():
 
 
 def test_heuristic2():
-    y = Symbol('y')
     xi = Function('xi')
     eta = Function('eta')
     df = f(x).diff(x)
@@ -2821,7 +2819,6 @@ def test_heuristic2():
 
 @slow
 def test_heuristic3():
-    y = Symbol('y')
     xi = Function('xi')
     eta = Function('eta')
     a, b = symbols("a b")
@@ -2839,8 +2836,6 @@ def test_heuristic3():
 
 def test_heuristic_4():
     y, a = symbols("y a")
-    xi = Function('xi')
-    eta = Function('eta')
 
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     i = infinitesimals(eq, hint='chi')
@@ -2895,9 +2890,6 @@ def test_heuristic_abaco2_unique_unknown():
     assert checkinfsol(eq, i)[0]
 
 def test_heuristic_linear():
-    xi = Function('xi')
-    eta = Function('eta')
-    F = Function('F')
     a, b, m, n = symbols("a b m n")
 
     eq = x**(n*(m + 1) - m)*(f(x).diff(x)) - a*f(x)**n -b*x**(n*(m + 1))
@@ -3170,6 +3162,7 @@ def test_sysode_linear_neq_order1():
     assert checksysodesol(eq, sols_eq) == (True, [0, 0, 0, 0])
 
 
+@slow
 def test_nth_order_reducible():
     from sympy.solvers.ode import _nth_order_reducible_match
 

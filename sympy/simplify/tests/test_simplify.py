@@ -3,8 +3,8 @@ from sympy import (
     collect,cos, cosh, cot, coth, count_ops, csch, Derivative, diff, E,
     Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
     factorial, Float, fraction, Function, gamma, GoldenRatio, hyper,
-    hypersimp, I, Integral, integrate, log, logcombine, Lt, Matrix,
-    MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
+    hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
+    Matrix, MatrixSymbol, Mul, nsimplify, O, oo, pi, Piecewise, posify, rad,
     Rational, root, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan, tanh,
     zoo)
@@ -829,11 +829,35 @@ def test_issue_17141():
     assert simplify(acos(-I)**2*acos(I)**2) == \
            log(1 + sqrt(2))**4 + pi**2*log(1 + sqrt(2))**2/2 + pi**4/16
     assert simplify(2**acos(I)**2) == 2**((pi - 2*I*log(1 + sqrt(2)))**2/4)
+    p = 2**acos(I+1)**2
+    assert simplify(p) == p
 
     # However, for a complex number it still happens
     if PY3:
-        raises(RecursionError, lambda: simplify(2**acos(I+1)**2))
         raises(RecursionError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
     else:
-        raises(RuntimeError, lambda: simplify(2**acos(I+1)**2))
         raises(RuntimeError, lambda: simplify((2**acos(I+1)**2).rewrite('log')))
+
+
+def test_simplify_kroneckerdelta():
+    i, j = symbols("i j")
+    K = KroneckerDelta
+
+    assert simplify(K(i, j)) == K(i, j)
+    assert simplify(K(0, j)) == K(0, j)
+    assert simplify(K(i, 0)) == K(i, 0)
+
+    assert simplify(K(0, j).rewrite(Piecewise) * K(1, j)) == 0
+    assert simplify(K(1, i) + Piecewise((1, Eq(j, 2)), (0, True))) == K(1, i) + K(2, j)
+
+    # issue 17214
+    assert simplify(K(0, j) * K(1, j)) == 0
+
+    n = Symbol('n', integer=True)
+    assert simplify(K(0, n) * K(1, n)) == 0
+
+    M = Matrix(4, 4, lambda i, j: K(j - i, n) if i <= j else 0)
+    assert simplify(M**2) == Matrix([[K(0, n), 0, K(1, n), 0],
+                                     [0, K(0, n), 0, K(1, n)],
+                                     [0, 0, K(0, n), 0],
+                                     [0, 0, 0, K(0, n)]])

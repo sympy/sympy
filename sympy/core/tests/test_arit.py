@@ -4,6 +4,7 @@ from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
         floor
 )
 from sympy.core.compatibility import long, range
+from sympy.core.evaluate import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
 from sympy.utilities.pytest import XFAIL, raises
@@ -2035,3 +2036,15 @@ def test_divmod():
     assert divmod(x, y) == (x//y, x % y)
     assert divmod(x, 3) == (x//3, x % 3)
     assert divmod(3, x) == (3//x, 3 % x)
+
+
+def test__neg__():
+    assert -(x*y) == -x*y
+    assert -(-x*y) == x*y
+    assert -(1.*x) == -1.*x
+    assert -(-1.*x) == 1.*x
+    assert -(2.*x) == -2.*x
+    assert -(-2.*x) == 2.*x
+    with distribute(False):
+        eq = -(x + y)
+        assert eq.is_Mul and eq.args == (-1, x + y)

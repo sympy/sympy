@@ -135,6 +135,7 @@ def test_basic_state():
     assert s.up(0) == BosonState([n + 1, m])
 
 
+# 2019-07-24: No method move in the whole of SymPy
 @XFAIL
 def test_move1():
     i, j = symbols('i,j')
@@ -144,6 +145,7 @@ def test_move1():
     assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
 
 
+# 2019-07-24: No method move in the whole of SymPy
 @XFAIL
 def test_move2():
     i, j = symbols('i,j')

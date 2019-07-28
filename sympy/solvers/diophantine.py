@@ -102,7 +102,10 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     For example, when solving, `x^2 - y^2 = 0` this is treated as
     `(x + y)(x - y) = 0` and `x + y = 0` and `x - y = 0` are solved
     independently and combined. Each term is solved by calling
-    ``diop_solve()``.
+    ``diop_solve()``. (Although it is possible to call ``diop_solve()``
+    directly, one must be careful to pass an equation in the correct
+    form and to interpret the output correctly; ``diophantine()`` is
+    the public-facing function to use in general.)
 
     Output of ``diophantine()`` is a set of tuples. The elements of the
     tuple are the solutions for each variable in the equation and
@@ -382,6 +385,10 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     Unlike ``diophantine()``, factoring of ``eq`` is not attempted. Uses
     ``classify_diop()`` to determine the type of the equation and calls
     the appropriate solver function.
+
+    Use of ``diophantine()`` is recommended over other helper functions.
+    ``diop_solve()`` can return either a set or a tuple depending on the
+    nature of the equation.
 
     Usage
     =====

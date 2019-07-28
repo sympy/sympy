@@ -19,7 +19,7 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
-from sympy.utilities.pytest import slow, XFAIL, SKIP, raises, skip, ON_TRAVIS
+from sympy.utilities.pytest import slow, XFAIL, SKIP, raises
 from sympy.utilities.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
@@ -245,14 +245,14 @@ def test_solve_polynomial_cv_2():
 def test_quintics_1():
     f = x**5 - 110*x**3 - 55*x**2 + 2310*x + 979
     s = solve(f, check=False)
-    for root in s:
-        res = f.subs(x, root.n()).n()
+    for r in s:
+        res = f.subs(x, r.n()).n()
         assert tn(res, 0)
 
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
     s = solve(f)
-    for root in s:
-        assert root.func == CRootOf
+    for r in s:
+        assert r.func == CRootOf
 
     # if one uses solve to get the roots of a polynomial that has a CRootOf
     # solution, make sure that the use of nfloat during the solve process
@@ -274,14 +274,14 @@ def test_highorder_poly():
 def test_quintics_2():
     f = x**5 + 15*x + 12
     s = solve(f, check=False)
-    for root in s:
-        res = f.subs(x, root.n()).n()
+    for r in s:
+        res = f.subs(x, r.n()).n()
         assert tn(res, 0)
 
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
     s = solve(f)
-    for root in s:
-        assert root.func == CRootOf
+    for r in s:
+        assert r.func == CRootOf
 
 
 def test_solve_rational():
@@ -1557,7 +1557,7 @@ def test_issue_14607():
 
 
 def test_lambert_multivariate():
-    from sympy.abc import a, x, y
+    from sympy.abc import x, y
     assert _filtered_gens(Poly(x + 1/x + exp(x) + y), x) == set([x, exp(x)])
     assert _lambert(x, x) == []
     assert solve((x**2 - 2*x + 1).subs(x, log(x) + 3*x)) == [LambertW(3*S.Exp1)/3]

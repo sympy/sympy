@@ -9,7 +9,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import range
 from sympy.core.symbol import symbols
-from sympy.functions import (sin, cos, exp, tan, cot, atan, asin, atanh,
+from sympy.functions import (sin, cos, exp, tan, cot, atan, atanh,
     tanh, log, sqrt)
 from sympy.core.numbers import Rational
 from sympy.core import expand, S
@@ -215,7 +215,6 @@ def test_newton():
     R, x = ring('x', QQ)
     p = x**2 - 2
     r = rs_newton(p, x, 4)
-    f = [1, 0, -2]
     assert r == 8*x**4 + 4*x**2 + 2
 
 def test_compose_add():
@@ -232,7 +231,6 @@ def test_fun():
 
 def test_nth_root():
     R, x, y = ring('x, y', QQ)
-    r1 = rs_nth_root(1 + x**2*y, 4, x, 10)
     assert rs_nth_root(1 + x**2*y, 4, x, 10) == -77*x**8*y**4/2048 + \
         7*x**6*y**3/128 - 3*x**4*y**2/32 + x**2*y/4 + 1
     assert rs_nth_root(1 + x*y + x**2*y**3, 3, x, 5) == -x**4*y**6/9 + \
