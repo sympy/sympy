@@ -8,6 +8,9 @@
 # "git add -f". See "git help gitignore" for more information.
 
 
+# Virtualenv
+/.venv/
+
 # Regular Python bytecode file
 *.pyc
 __pycache__/
