@@ -14,26 +14,26 @@ class DFTMatrix(MatrixExpr):
     n = property(lambda self: self.args[0])
     shape = property(lambda self: (self.n, self.n))
 
-    def __new__(cls, n, fourier_params=(0, -1)):
+    def __new__(cls, n, a=0, b=-1)):
         n = _sympify(n)
         if n.is_number and not (n.is_integer and n.is_positive):
             raise ValueError(
                 'Matrix size {} should be specified as a positive integer.')
 
-        (a, b) = _sympify(fourier_params)
+        (a, b) = _sympify([a, b])
 
-        return MatrixExpr().__new__(cls, n, Tuple(a, b))
+        return MatrixExpr().__new__(cls, n, a, b)
 
     def _entry(self, i, j):
         n = self.rows
-        a, b = self.args[1][:]
+        a, b = self.args[1], self.args[2]
         w = exp(2*S.Pi*I*b / n)
 
         return w**(i*j) / sqrt(n**(1-a))
 
     def _eval_inverse(self):
         n = self.rows
-        a, b = self.args[1][:]
+        a, b = self.args[1], self.args[2]
 
         if b.is_number and b.is_integer:
             if b.gcd(n) != 1:
@@ -42,7 +42,7 @@ class DFTMatrix(MatrixExpr):
             if not b.is_integer:
                 return Inverse(self)
 
-            return DFTMatrix(n, fourier_params=(-a, -b))
+            return DFTMatrix(n, a=-a, b=-b)
 
 @deprecated(
     issue=99999,

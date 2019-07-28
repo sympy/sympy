@@ -255,8 +255,11 @@ class AskUnitaryHandler(CommonHandler):
             return ask(Q.unitary(expr.parent), assumptions)
 
     @staticmethod
-    def DFT(expr, assumptions):
-        return True
+    def DFTMatrix(expr, assumptions):
+        n = expr.args[0]
+        a, b = expr.args[1]
+        if a.is_zero and b.is_integer and n.gcd(b) == 1:
+            return True
 
     Factorization = staticmethod(partial(_Factorization, Q.unitary))
 
@@ -625,4 +628,6 @@ class AskComplexElementsHandler(CommonHandler):
     MatrixSlice = staticmethod(partial(MS_elements, Q.complex_elements))
     BlockMatrix = staticmethod(partial(BM_elements, Q.complex_elements))
 
-    DFT = staticmethod(CommonHandler.AlwaysTrue)
+    @staticmethod
+    def DFTMatrix(expr, assumptions):
+        return test_closed_group(expr, assumptions, Q.complex_elements)
