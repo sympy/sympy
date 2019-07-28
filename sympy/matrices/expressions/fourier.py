@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.sympify import _sympify
 from sympy.core.decorators import deprecated
+from sympy.core.containers import Tuple
 
 from .matexpr import MatrixExpr
 from .inverse import Inverse
@@ -21,18 +22,18 @@ class DFTMatrix(MatrixExpr):
 
         (a, b) = _sympify(fourier_params)
 
-        return MatrixExpr().__new__(cls, n, a, b)
+        return MatrixExpr().__new__(cls, n, Tuple(a, b))
 
     def _entry(self, i, j):
         n = self.rows
-        a, b = self.args[1], self.args[2]
+        a, b = self.args[1][:]
         w = exp(2*S.Pi*I*b / n)
 
         return w**(i*j) / sqrt(n**(1-a))
 
     def _eval_inverse(self):
         n = self.rows
-        a, b = self.args[1], self.args[2]
+        a, b = self.args[1][:]
 
         if b.is_number and b.is_integer:
             if b.gcd(n) != 1:
