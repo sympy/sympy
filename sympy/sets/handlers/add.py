@@ -4,7 +4,6 @@ from sympy.core.numbers import Infinity, NegativeInfinity
 from sympy.multipledispatch import dispatch
 from sympy.sets import Interval, FiniteSet
 
-
 _x, _y = symbols("x y")
 
 
@@ -12,9 +11,11 @@ _x, _y = symbols("x y")
 def _set_add(x, y):
     return None
 
+
 @dispatch(Expr, Expr)
 def _set_add(x, y):
-    return x+y
+    return x + y
+
 
 @dispatch(Interval, Interval)
 def _set_add(x, y):
@@ -23,13 +24,15 @@ def _set_add(x, y):
     https://en.wikipedia.org/wiki/Interval_arithmetic
     """
     return Interval(x.start + y.start, x.end + y.end,
-        x.left_open or y.left_open, x.right_open or y.right_open)
+                    x.left_open or y.left_open, x.right_open or y.right_open)
+
 
 @dispatch(Interval, Infinity)
 def _set_add(x, y):
     if x.start == S.NegativeInfinity:
         return Interval(-oo, oo)
     return FiniteSet({S.Infinity})
+
 
 @dispatch(Interval, NegativeInfinity)
 def _set_add(x, y):
@@ -42,9 +45,11 @@ def _set_add(x, y):
 def _set_sub(x, y):
     return None
 
+
 @dispatch(Expr, Expr)
 def _set_sub(x, y):
-    return x-y
+    return x - y
+
 
 @dispatch(Interval, Interval)
 def _set_sub(x, y):
@@ -53,16 +58,18 @@ def _set_sub(x, y):
     https://en.wikipedia.org/wiki/Interval_arithmetic
     """
     return Interval(x.start - y.end, x.end - y.start,
-        x.left_open or y.right_open, x.right_open or y.left_open)
+                    x.left_open or y.right_open, x.right_open or y.left_open)
+
 
 @dispatch(Interval, Infinity)
 def _set_sub(x, y):
-    if self.start is S.NegativeInfinity:
+    if x.start is S.NegativeInfinity:
         return Interval(-oo, oo)
     return FiniteSet(-oo)
 
+
 @dispatch(Interval, NegativeInfinity)
 def _set_sub(x, y):
-    if self.start is S.NegativeInfinity:
+    if x.start is S.NegativeInfinity:
         return Interval(-oo, oo)
     return FiniteSet(-oo)
