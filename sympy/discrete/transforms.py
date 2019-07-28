@@ -71,14 +71,10 @@ def _fourier_transform(seq, dps, inverse=False, fourier_params=(1, 1)):
 
 
 def fft(seq, dps=None, fourier_params=(1, 1)):
-    r"""
-    Performs the Discrete Fourier Transform (**DFT**) in the complex domain.
+    r"""Performs the Fast Fourier Transform (**FFT**).
 
     The sequence is automatically padded to the right with zeros, as the
     *radix-2 FFT* requires the number of sample points to be a power of 2.
-
-    This method should be used with default arguments only for short sequences
-    as the complexity of expressions increases with the size of the sequence.
 
     Parameters
     ==========
@@ -92,19 +88,25 @@ def fft(seq, dps=None, fourier_params=(1, 1)):
     fourier_params : (Expr, Expr)
         Specifies the formula used for discrete Fourier transformation.
 
-        (1, 1) is the SymPy's defaults.
+        Different libraries or CAS may use different conventions which
+        should be taken some precaution into.
+        The conventional settings are :
 
-        (1, -1) is equivalent to the NumPy and MATLAB's default settings for
-        the ``fft`` and ``ifft``.
+        SymPy : (1, 1)
 
-        (0, 1) is equivalent to the Mathematica's default settings for
-        ``Fourier`` and ``InverseFourier``.
+        NumPy, MATLAB : (1, -1)
 
-        (0, -1) is equivalent to the Maple's default settings for
-        ``FourierTransform`` and ``InverseFourierTransform``
+        Mathematica : (0, 1)
 
-        For further information about the options and formulas, see ``Notes``
-        section.
+        Maple : (0, -1)
+
+        You may also pass the symbols to get the full symbolic result
+        for the FFT.
+        However, we also do not block you from passing the numbers which
+        may be invalid to be consider a fourier transform, or out of
+        convention.
+
+        Explicit formula is described in the notes section below.
 
     Notes
     =====
