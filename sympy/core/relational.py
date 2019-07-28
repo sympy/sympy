@@ -173,7 +173,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         This works more or less identical to ``~``/``Not``. The difference is
         that ``negated`` returns the relationship even if `evaluate=False`.
         Hence, this is useful in code when checking for e.g. negated relations
-        to exisiting ones as it will not be affected by the `evaluate` flag.
+        to existing ones as it will not be affected by the `evaluate` flag.
 
         """
         ops = {Eq: Ne, Ge: Lt, Gt: Le, Le: Gt, Lt: Ge, Ne: Eq}
@@ -279,11 +279,9 @@ class Relational(Boolean, Expr, EvalfMixin):
                     return right
                 return left
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         r = self
-        r = r.func(*[i.simplify(ratio=ratio, measure=measure,
-                                rational=rational, inverse=inverse)
-                     for i in r.args])
+        r = r.func(*[i.simplify(**kwargs) for i in r.args])
         if r.is_Relational:
             dif = r.lhs - r.rhs
             # replace dif with a valid Number that will
@@ -297,7 +295,8 @@ class Relational(Boolean, Expr, EvalfMixin):
                 r = r.func._eval_relation(v, S.Zero)
 
         r = r.canonical
-        if measure(r) < ratio*measure(self):
+        measure = kwargs['measure']
+        if measure(r) < kwargs['ratio']*measure(self):
             return r
         else:
             return self
@@ -525,11 +524,10 @@ class Equality(Relational):
                 return set([self.rhs])
         return set()
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.solvers.solveset import linear_coeffs
         # standard simplify
-        e = super(Equality, self)._eval_simplify(
-            ratio, measure, rational, inverse)
+        e = super(Equality, self)._eval_simplify(**kwargs)
         if not isinstance(e, Equality):
             return e
         free = self.free_symbols
@@ -542,7 +540,8 @@ class Equality(Relational):
                     enew = e.func(x, -b/m)
                 else:
                     enew = e.func(m*x, -b)
-                if measure(enew) <= ratio*measure(e):
+                measure = kwargs['measure']
+                if measure(enew) <= kwargs['ratio']*measure(e):
                     e = enew
             except ValueError:
                 pass
@@ -612,10 +611,9 @@ class Unequality(Relational):
                 return set([self.rhs])
         return set()
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         # simplify as an equality
-        eq = Equality(*self.args)._eval_simplify(
-            ratio, measure, rational, inverse)
+        eq = Equality(*self.args)._eval_simplify(**kwargs)
         if isinstance(eq, Equality):
             # send back Ne with the new args
             return self.func(*eq.args)

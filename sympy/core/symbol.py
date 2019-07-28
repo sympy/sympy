@@ -113,7 +113,7 @@ def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumpti
             is printed, e.g. this includes underscores that appear on
             Dummy symbols)
         modify : a single arg function that changes its string argument
-            in some way (the default is to preppend underscores)
+            in some way (the default is to prepend underscores)
 
     Examples
     ========

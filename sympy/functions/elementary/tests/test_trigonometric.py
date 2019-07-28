@@ -2,9 +2,10 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
-        conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn, Product,
+        conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn,
         AccumBounds, Interval, ImageSet, Lambda)
 from sympy.core.compatibility import range
+from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.core.relational import Ne, Eq
 from sympy.functions.elementary.piecewise import Piecewise
@@ -464,15 +465,25 @@ def test_tan():
     assert tan(17*pi/4) == S.One
     assert tan(-3*pi/4) == S.One
 
+    assert tan(pi/5) == sqrt(5 - 2*sqrt(5))
+    assert tan(2*pi/5) == sqrt(5 + 2*sqrt(5))
+    assert tan(18*pi/5) == -sqrt(5 + 2*sqrt(5))
+    assert tan(-16*pi/5) == -sqrt(5 - 2*sqrt(5))
+
     assert tan(pi/6) == 1/sqrt(3)
     assert tan(-pi/6) == -1/sqrt(3)
     assert tan(7*pi/6) == 1/sqrt(3)
     assert tan(-5*pi/6) == 1/sqrt(3)
 
-    assert tan(pi/8).expand() == -1 + sqrt(2)
-    assert tan(3*pi/8).expand() == 1 + sqrt(2)
-    assert tan(5*pi/8).expand() == -1 - sqrt(2)
-    assert tan(7*pi/8).expand() == 1 - sqrt(2)
+    assert tan(pi/8) == -1 + sqrt(2)
+    assert tan(3*pi/8) == 1 + sqrt(2)  # issue 15959
+    assert tan(5*pi/8) == -1 - sqrt(2)
+    assert tan(7*pi/8) == 1 - sqrt(2)
+
+    assert tan(pi/10) == sqrt(1 - 2*sqrt(5)/5)
+    assert tan(3*pi/10) == sqrt(1 + 2*sqrt(5)/5)
+    assert tan(17*pi/10) == -sqrt(1 + 2*sqrt(5)/5)
+    assert tan(-31*pi/10) == -sqrt(1 - 2*sqrt(5)/5)
 
     assert tan(pi/12) == -sqrt(3) + 2
     assert tan(5*pi/12) == sqrt(3) + 2
@@ -487,8 +498,6 @@ def test_tan():
     assert tan(17*pi/24).radsimp() == -2 + sqrt(3) + sqrt(2) - sqrt(6)
     assert tan(19*pi/24).radsimp() == 2 - sqrt(3) + sqrt(2) - sqrt(6)
     assert tan(23*pi/24).radsimp() == 2 + sqrt(3) - sqrt(2) - sqrt(6)
-
-    assert 1 == (tan(8*pi/15)*cos(8*pi/15)/sin(8*pi/15)).ratsimp()
 
     assert tan(x*I) == tanh(x)*I
 
@@ -627,10 +636,10 @@ def test_cot():
     assert cot(7*pi/6) == sqrt(3)
     assert cot(-5*pi/6) == sqrt(3)
 
-    assert cot(pi/8).expand() == 1 + sqrt(2)
-    assert cot(3*pi/8).expand() == -1 + sqrt(2)
-    assert cot(5*pi/8).expand() == 1 - sqrt(2)
-    assert cot(7*pi/8).expand() == -1 - sqrt(2)
+    assert cot(pi/8) == 1 + sqrt(2)
+    assert cot(3*pi/8) == -1 + sqrt(2)
+    assert cot(5*pi/8) == 1 - sqrt(2)
+    assert cot(7*pi/8) == -1 - sqrt(2)
 
     assert cot(pi/12) == sqrt(3) + 2
     assert cot(5*pi/12) == -sqrt(3) + 2
@@ -645,8 +654,6 @@ def test_cot():
     assert cot(17*pi/24).radsimp() == sqrt(2) - sqrt(3) + 2 - sqrt(6)
     assert cot(19*pi/24).radsimp() == sqrt(2) + sqrt(3) - 2 - sqrt(6)
     assert cot(23*pi/24).radsimp() == -sqrt(2) - sqrt(3) - 2 - sqrt(6)
-
-    assert 1 == (cot(4*pi/15)*sin(4*pi/15)/cos(4*pi/15)).ratsimp()
 
     assert cot(x*I) == -coth(x)*I
     assert cot(k*pi*I) == -coth(k*pi)*I
@@ -670,6 +677,16 @@ def test_cot():
     assert cot(i).is_finite is True
 
     assert cot(x).subs(x, 3*pi) == zoo
+
+
+def test_tan_cot_sin_cos_evalf():
+    assert abs((tan(8*pi/15)*cos(8*pi/15)/sin(8*pi/15) - 1).evalf()) < 1e-14
+    assert abs((cot(4*pi/15)*sin(4*pi/15)/cos(4*pi/15) - 1).evalf()) < 1e-14
+
+@XFAIL
+def test_tan_cot_sin_cos_ratsimp():
+    assert 1 == (tan(8*pi/15)*cos(8*pi/15)/sin(8*pi/15)).ratsimp()
+    assert 1 == (cot(4*pi/15)*sin(4*pi/15)/cos(4*pi/15)).ratsimp()
 
 
 def test_cot_series():
@@ -799,6 +816,12 @@ def test_asin():
     assert asin((sqrt(3) - 1)/sqrt(2**3)) == pi/12
     assert asin(-(sqrt(3) - 1)/sqrt(2**3)) == -pi/12
 
+    # check round-trip for exact values:
+    for d in [5, 6, 8, 10, 12]:
+        for n in range(-(d//2), d//2 + 1):
+            if gcd(n, d) == 1:
+                assert asin(sin(n*pi/d)) == n*pi/d
+
     assert asin(x).diff(x) == 1/sqrt(1 - x**2)
 
     assert asin(0.2).is_real is True
@@ -812,7 +835,7 @@ def test_asin():
     assert asin(p).is_positive is None
     assert asin(sin(S(7)/2)) == -S(7)/2 + pi
     assert asin(sin(-S(7)/4)) == S(7)/4 - pi
-    assert asin(cos(x)) == asin(cos(x))
+    assert unchanged(asin, cos(x))
 
 
 def test_asin_series():
@@ -853,6 +876,14 @@ def test_acos():
     assert acos(-1) == pi
     assert acos(sqrt(2)/2) == pi/4
     assert acos(-sqrt(2)/2) == (3*pi)/4
+
+    # check round-trip for exact values:
+    for d in [5, 6, 8, 10, 12]:
+        for num in range(d):
+            if gcd(num, d) == 1:
+                assert acos(cos(num*pi/d)) == num*pi/d
+
+    assert acos(2*I) == pi/2 - asin(2*I)
 
     assert acos(x).diff(x) == -1/sqrt(1 - x**2)
 
@@ -912,13 +943,27 @@ def test_atan():
     assert atan(0) == 0
     assert atan(1) == pi/4
     assert atan(sqrt(3)) == pi/3
+    assert atan(-(1 + sqrt(2))) == -3*pi/8
+    assert atan(sqrt((5 - 2 * sqrt(5)))) == pi/5
+    assert atan(-sqrt(1 - 2 * sqrt(5)/ 5)) == -pi/10
+    assert atan(sqrt(1 + 2 * sqrt(5) / 5)) == 3*pi/10
+    assert atan(-2 + sqrt(3)) == -pi/12
+    assert atan(2 + sqrt(3)) == 5*pi/12
+    assert atan(-2 - sqrt(3)) == -5*pi/12
+
+    # check round-trip for exact values:
+    for d in [5, 6, 8, 10, 12]:
+        for num in range(-(d//2), d//2 + 1):
+            if gcd(num, d) == 1:
+                assert atan(tan(num*pi/d)) == num*pi/d
+
     assert atan(oo) == pi/2
     assert atan(x).diff(x) == 1/(1 + x**2)
 
     assert atan(r).is_real is True
 
     assert atan(-2*I) == -I*atanh(2)
-    assert atan(cot(x)) == atan(cot(x))
+    assert unchanged(atan, cot(x))
     assert atan(cot(S(1)/4)) == -S(1)/4 + pi/2
     assert acot(S(1)/4).is_rational is False
 
@@ -1046,8 +1091,8 @@ def test_acot():
     assert acot(p).is_positive is True
     assert acot(I).is_positive is False
     assert acot(S(1)/4).is_rational is False
-    assert acot(cot(x)) == acot(cot(x))
-    assert acot(tan(x)) == acot(tan(x))
+    assert unchanged(acot, cot(x))
+    assert unchanged(acot, tan(x))
     assert acot(cot(S(1)/4)) == S(1)/4
     assert acot(tan(-S(1)/4)) == S(1)/4 - pi/2
 
@@ -1414,6 +1459,7 @@ def test_tancot_rewrite_sqrt():
                         assert not c1.has(cot, tan), "fails for %d*pi/%d" % (i, n)
                         assert 1e-3 > abs( cot(x.evalf(7)) - c1.evalf(4) ), "fails for %d*pi/%d" % (i, n)
 
+
 def test_sec():
     x = symbols('x', real=True)
     z = symbols('z')
@@ -1569,6 +1615,15 @@ def test_asec():
     assert asec(-oo) == pi/2
     assert asec(zoo) == pi/2
 
+    assert asec(sec(13*pi/4)) == 3*pi/4
+    assert asec(1 + sqrt(5)) == 2*pi/5
+    assert asec(2/sqrt(3)) == pi/6
+    assert asec(sqrt(4 - 2*sqrt(2))) == pi/8
+    assert asec(-sqrt(4 + 2*sqrt(2))) == 5*pi/8
+    assert asec(sqrt(2 + 2*sqrt(5)/5)) == 3*pi/10
+    assert asec(-sqrt(2 + 2*sqrt(5)/5)) == 7*pi/10
+    assert asec(sqrt(2) - sqrt(6)) == 11*pi/12
+
     assert asec(x).diff(x) == 1/(x**2*sqrt(1 - 1/x**2))
     assert asec(x).as_leading_term(x) == log(x)
 
@@ -1598,12 +1653,23 @@ def test_acsc():
     assert acsc(oo) == 0
     assert acsc(-oo) == 0
     assert acsc(zoo) == 0
+    assert acsc(0) == zoo
 
     assert acsc(csc(3)) == -3 + pi
     assert acsc(csc(4)) == -4 + pi
     assert acsc(csc(6)) == 6 - 2*pi
-    assert acsc(csc(x)) == acsc(csc(x))
-    assert acsc(sec(x)) == acsc(sec(x))
+    assert unchanged(acsc, csc(x))
+    assert unchanged(acsc, sec(x))
+
+    assert acsc(2/sqrt(3)) == pi/3
+    assert acsc(csc(13*pi/4)) == -pi/4
+    assert acsc(sqrt(2 + 2*sqrt(5)/5)) == pi/5
+    assert acsc(-sqrt(2 + 2*sqrt(5)/5)) == -pi/5
+    assert acsc(-2) == -pi/6
+    assert acsc(-sqrt(4 + 2*sqrt(2))) == -pi/8
+    assert acsc(sqrt(4 - 2*sqrt(2))) == 3*pi/8
+    assert acsc(1 + sqrt(5)) == pi/10
+    assert acsc(sqrt(2) - sqrt(6)) == -5*pi/12
 
     assert acsc(x).diff(x) == -1/(x**2*sqrt(1 - 1/x**2))
     assert acsc(x).as_leading_term(x) == log(x)
@@ -1730,6 +1796,3 @@ def test_issue_14543():
     assert sec(pi/2 + x) == -csc(x)
     assert sec(3*pi/2 + x) == csc(x)
     assert sec(3*pi/2 - x) == -csc(x)
-
-def test_issue_15959():
-    assert tan(3*pi/8) == 1 + sqrt(2)

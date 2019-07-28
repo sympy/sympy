@@ -7,7 +7,9 @@ from sympy import (
     Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
     groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
-    Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio)
+    Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio,
+    LambertW, airyai, airybi, airyaiprime, airybiprime, fresnelc, fresnels,
+    Heaviside, dirichlet_eta)
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
@@ -6768,3 +6770,28 @@ def test_str_special_matrices():
     assert upretty(ZeroMatrix(2, 2)) == u'𝟘'
     assert pretty(OneMatrix(2, 2)) == '1'
     assert upretty(OneMatrix(2, 2)) == u'𝟙'
+
+
+def test_pretty_misc_functions():
+    assert pretty(LambertW(x)) == 'W(x)'
+    assert upretty(LambertW(x)) == u'W(x)'
+    assert pretty(LambertW(x, y)) == 'W(x, y)'
+    assert upretty(LambertW(x, y)) == u'W(x, y)'
+    assert pretty(airyai(x)) == 'Ai(x)'
+    assert upretty(airyai(x)) == u'Ai(x)'
+    assert pretty(airybi(x)) == 'Bi(x)'
+    assert upretty(airybi(x)) == u'Bi(x)'
+    assert pretty(airyaiprime(x)) == "Ai'(x)"
+    assert upretty(airyaiprime(x)) == u"Ai'(x)"
+    assert pretty(airybiprime(x)) == "Bi'(x)"
+    assert upretty(airybiprime(x)) == u"Bi'(x)"
+    assert pretty(fresnelc(x)) == 'C(x)'
+    assert upretty(fresnelc(x)) == u'C(x)'
+    assert pretty(fresnels(x)) == 'S(x)'
+    assert upretty(fresnels(x)) == u'S(x)'
+    assert pretty(Heaviside(x)) == 'Heaviside(x)'
+    assert upretty(Heaviside(x)) == u'θ(x)'
+    assert pretty(Heaviside(x, y)) == 'Heaviside(x, y)'
+    assert upretty(Heaviside(x, y)) == u'θ(x, y)'
+    assert pretty(dirichlet_eta(x)) == 'dirichlet_eta(x)'
+    assert upretty(dirichlet_eta(x)) == u'η(x)'

@@ -1,5 +1,5 @@
-from sympy.core import (S, pi, oo, symbols, Function,
-                        Rational, Integer, Tuple, Derivative)
+from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer, Tuple,
+                        Derivative, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.integrals import Integral
 from sympy.concrete import Sum
 from sympy.functions import (exp, sin, cos, fresnelc, fresnels, conjugate, Max,
@@ -10,7 +10,7 @@ from sympy.functions import (exp, sin, cos, fresnelc, fresnels, conjugate, Max,
                              FallingFactorial, harmonic, atan2, sec, acsc,
                              hermite, laguerre, assoc_laguerre, jacobi,
                              gegenbauer, chebyshevt, chebyshevu, legendre,
-                             assoc_legendre)
+                             assoc_legendre, Li, LambertW)
 
 from sympy import mathematica_code as mcode
 
@@ -30,6 +30,15 @@ def test_Rational():
     assert mcode(Rational(-3, -7)) == "3/7"
     assert mcode(x + Rational(3, 7)) == "x + 3/7"
     assert mcode(Rational(3, 7)*x) == "(3/7)*x"
+
+
+def test_Relational():
+    assert mcode(Eq(x, y)) == "x == y"
+    assert mcode(Ne(x, y)) == "x != y"
+    assert mcode(Le(x, y)) == "x <= y"
+    assert mcode(Lt(x, y)) == "x < y"
+    assert mcode(Gt(x, y)) == "x > y"
+    assert mcode(Ge(x, y)) == "x >= y"
 
 
 def test_Function():
@@ -68,6 +77,8 @@ def test_Function():
     assert mcode(catalan(x)) == "CatalanNumber[x]"
     assert mcode(harmonic(x)) == "HarmonicNumber[x]"
     assert mcode(harmonic(x, y)) == "HarmonicNumber[x, y]"
+    assert mcode(Li(x)) == "LogIntegral[x] - LogIntegral[2]"
+    assert mcode(LambertW(x)) == "ProductLog[x]"
 
 
 def test_special_polynomials():

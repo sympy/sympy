@@ -210,7 +210,8 @@ def test_tensorflow_transl():
     from sympy.utilities.lambdify import TENSORFLOW_TRANSLATIONS
     for sym, tens in TENSORFLOW_TRANSLATIONS.items():
         assert sym in sympy.__dict__
-        assert tens in tensorflow.__dict__
+        # XXX __dict__ is not supported after tensorflow 1.14.0
+        assert tens in tensorflow.__all__
 
 
 def test_numpy_translation_abs():
@@ -683,6 +684,7 @@ def test_namespace_order():
     # previously gave 'second f'
     assert if1(1) == 'first f'
 
+    assert if2(1) == 'function g'
 
 def test_namespace_type():
     # lambdify had a bug where it would reject modules of type unicode
@@ -834,14 +836,7 @@ def test_lambdify_docstring():
 
 
 def test_special_printers():
-    class IntervalPrinter(LambdaPrinter):
-        """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
-
-        def _print_Integer(self, expr):
-            return "mpi('%s')" % super(IntervalPrinter, self)._print_Integer(expr)
-
-        def _print_Rational(self, expr):
-            return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
+    from sympy.polys.numberfields import IntervalPrinter
 
     def intervalrepr(expr):
         return IntervalPrinter().doprint(expr)

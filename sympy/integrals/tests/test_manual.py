@@ -1,14 +1,14 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Symbol, Integral, integrate, pi, Dummy, Derivative,
-                   diff, I, sqrt, erf, Piecewise, Eq, Ne, symbols, Rational,
+                   diff, I, sqrt, erf, Piecewise, Ne, symbols, Rational,
                    And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
                    Function, jacobi, gegenbauer, chebyshevt, chebyshevu,
                    legendre, hermite, laguerre, assoc_laguerre, uppergamma, li,
-                   Ei, Ci, Si, Chi, Shi, fresnels, fresnelc, polylog, erf, erfi,
+                   Ei, Ci, Si, Chi, Shi, fresnels, fresnelc, polylog, erfi,
                    sinh, cosh, elliptic_f, elliptic_e)
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, contains_dont_know, manual_subs)
-from sympy.utilities.pytest import slow
+from sympy.utilities.pytest import raises, slow
 
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
 f = Function('f')
@@ -472,6 +472,9 @@ def test_manual_subs():
     assert manual_subs(expr, log(x), y) == y + exp(exp(y))
     # if exp(x) is y, then log(y) need not be x
     assert manual_subs(expr, exp(x), y) == log(x) + y
+
+    raises(ValueError, lambda: manual_subs(expr, x))
+    raises(ValueError, lambda: manual_subs(expr, exp(x), x, y))
 
 
 def test_issue_15471():

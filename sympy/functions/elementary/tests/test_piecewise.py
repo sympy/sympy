@@ -2,12 +2,12 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, ITE,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Tuple, zoo,
-    factor_terms, DiracDelta, Heaviside, Add, Mul, factorial, Ge)
+    cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo,
+    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains, Le)
+from sympy.core.expr import unchanged
+from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
 from sympy.utilities.pytest import raises, slow
-
-from sympy.functions.elementary.piecewise import Undefined
 
 
 a, b, c, d, x, y = symbols('a:d, x, y')
@@ -17,7 +17,9 @@ z = symbols('z', nonzero=True)
 def test_piecewise1():
 
     # Test canonicalization
-    assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
+    assert unchanged(Piecewise, ExprCondPair(x, x < 1), ExprCondPair(0, True))
+    assert Piecewise((x, x < 1), (0, True)) == Piecewise(ExprCondPair(x, x < 1),
+                                                         ExprCondPair(0, True))
     assert Piecewise((x, x < 1), (0, True), (1, True)) == \
         Piecewise((x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, False), (-1, 1 > 2)) == \
@@ -49,6 +51,14 @@ def test_piecewise1():
 
     assert Piecewise((1, x > 0), (2, And(x <= 0, x > -1))
         ) == Piecewise((1, x > 0), (2, x > -1))
+
+    # test for supporting Contains in Piecewise
+    pwise = Piecewise(
+        (1, And(x <= 6, x > 1, Contains(x, S.Integers))),
+        (0, True))
+    assert pwise.subs(x, pi) == 0
+    assert pwise.subs(x, 2) == 1
+    assert pwise.subs(x, 7) == 0
 
     # Test subs
     p = Piecewise((-1, x < -1), (x**2, x < 0), (log(x), x >= 0))
@@ -595,6 +605,9 @@ def test_doit():
     p2 = Piecewise((x, x < 1), (Integral(2 * x), -1 <= x), (x, 3 < x))
     assert p2.doit() == p1
     assert p2.doit(deep=False) == p2
+    # issue 17165
+    p1 = Sum(y**x, (x, -1, oo)).doit()
+    assert p1.doit() == p1
 
 
 def test_piecewise_interval():

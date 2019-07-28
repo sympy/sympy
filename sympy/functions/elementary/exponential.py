@@ -250,18 +250,23 @@ class exp(ExpBase):
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
         elif arg.is_Mul:
-            if arg.is_number or arg.is_Symbol:
-                coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
-                if coeff:
-                    if ask(Q.integer(2*coeff)):
-                        if ask(Q.even(coeff)):
-                            return S.One
-                        elif ask(Q.odd(coeff)):
-                            return S.NegativeOne
-                        elif ask(Q.even(coeff + S.Half)):
-                            return -S.ImaginaryUnit
-                        elif ask(Q.odd(coeff + S.Half)):
-                            return S.ImaginaryUnit
+            coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
+            if coeff:
+                if (2*coeff).is_integer:
+                    if coeff.is_even:
+                        return S.One
+                    elif coeff.is_odd:
+                        return S.NegativeOne
+                    elif (coeff + S.Half).is_even:
+                        return -S.ImaginaryUnit
+                    elif (coeff + S.Half).is_odd:
+                        return S.ImaginaryUnit
+                elif coeff.is_Rational:
+                    ncoeff = coeff % 2 # restrict to [0, 2pi)
+                    if ncoeff > 1: # restrict to (-pi, pi]
+                        ncoeff -= 2
+                    if ncoeff != coeff:
+                        return cls(ncoeff*S.Pi*S.ImaginaryUnit)
 
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).
@@ -292,16 +297,21 @@ class exp(ExpBase):
         elif arg.is_Add:
             out = []
             add = []
+            argchanged = False
             for a in arg.args:
                 if a is S.One:
                     add.append(a)
                     continue
                 newa = cls(a)
                 if isinstance(newa, cls):
-                    add.append(a)
+                    if newa.args[0] != a:
+                        add.append(newa.args[0])
+                        argchanged = True
+                    else:
+                        add.append(a)
                 else:
                     out.append(newa)
-            if out:
+            if out or argchanged:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
         elif isinstance(arg, MatrixBase):
@@ -481,6 +491,15 @@ class log(Function):
     a logarithm of a different base ``b``, use ``log(x, b)``,
     which is essentially short-hand for ``log(x)/log(b)``.
 
+    Examples
+    ========
+
+    >>> from sympy import log, S
+    >>> log(8, 2)
+    3
+    >>> log(S(8)/3, 2)
+    -log(3)/log(2) + 3
+
     See Also
     ========
 
@@ -522,11 +541,7 @@ class log(Function):
                 # or else expand_log in Mul would have to handle this
                 n = multiplicity(base, arg)
                 if n:
-                    den = base**n
-                    if den.is_Integer:
-                        return n + log(arg // den) / log(base)
-                    else:
-                        return n + log(arg / den) / log(base)
+                    return n + log(arg / base**n) / log(base)
                 else:
                     return log(arg)/log(base)
             except ValueError:
@@ -656,17 +671,16 @@ class log(Function):
 
         return self.func(arg)
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import expand_log, simplify, inversecombine
-        if (len(self.args) == 2):
-            return simplify(self.func(*self.args), ratio=ratio, measure=measure,
-                            rational=rational, inverse=inverse)
-        expr = self.func(simplify(self.args[0], ratio=ratio, measure=measure,
-                         rational=rational, inverse=inverse))
-        if inverse:
+        if len(self.args) == 2:  # it's unevaluated
+            return simplify(self.func(*self.args), **kwargs)
+
+        expr = self.func(simplify(self.args[0], **kwargs))
+        if kwargs['inverse']:
             expr = inversecombine(expr)
         expr = expand_log(expr, deep=True)
-        return min([expr, self], key=measure)
+        return min([expr, self], key=kwargs['measure'])
 
     def as_real_imag(self, deep=True, **hints):
         """
@@ -689,17 +703,18 @@ class log(Function):
 
         """
         from sympy import Abs, arg
+        sarg = self.args[0]
         if deep:
-            abs = Abs(self.args[0].expand(deep, **hints))
-            arg = arg(self.args[0].expand(deep, **hints))
-        else:
-            abs = Abs(self.args[0])
-            arg = arg(self.args[0])
+            sarg = self.args[0].expand(deep, **hints)
+        abs = Abs(sarg)
+        if abs == sarg:
+            return self, S.Zero
+        arg = arg(sarg)
         if hints.get('log', False):  # Expand the log
             hints['complex'] = False
             return (log(abs).expand(deep, **hints), arg)
         else:
-            return (log(abs), arg)
+            return log(abs), arg
 
     def _eval_is_rational(self):
         s = self.func(*self.args)

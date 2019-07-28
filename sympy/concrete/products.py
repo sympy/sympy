@@ -316,9 +316,10 @@ class Product(ExprWithIntLimits):
             else:
                 return f
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import product_simplify
-        return product_simplify(self)
+        rv = product_simplify(self)
+        return rv.doit() if kwargs['doit'] else rv
 
     def _eval_transpose(self):
         if self.is_commutative:

@@ -1421,7 +1421,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 return x == coeff
             return False
 
-        # Find coefficient for higest derivative, multiply coefficients to
+        # Find coefficient for highest derivative, multiply coefficients to
         # bring the equation into Euler form if possible
         r_rescaled = None
         if r is not None:
@@ -2931,7 +2931,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
         isconstant = lambda s: s.startswith('C') and s[1:].isdigit()
         constantsymbols = [sym for sym in expr.free_symbols if isconstant(sym.name)]
 
-    # Find new constants checking that they aren't alread in the ODE
+    # Find new constants checking that they aren't already in the ODE
     if newconstants is None:
         iter_constants = numbered_symbols(start=1, prefix='C', exclude=variables)
     else:
@@ -3699,7 +3699,7 @@ def ode_Liouville(eq, func, order, match):
 def ode_2nd_power_series_ordinary(eq, func, order, match):
     r"""
     Gives a power series solution to a second order homogeneous differential
-    equation with polynomial coefficients at an ordinary point. A homogenous
+    equation with polynomial coefficients at an ordinary point. A homogeneous
     differential equation is of the form
 
     .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
@@ -3846,7 +3846,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     r"""
     Gives a power series solution to a second order homogeneous differential
     equation with polynomial coefficients at a regular point. A second order
-    homogenous differential equation is of the form
+    homogeneous differential equation is of the form
 
     .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
 
@@ -5550,7 +5550,6 @@ def _solve_variation_of_parameters(eq, func, order, match):
     if r.get('simplify', True):
         wr = simplify(wr)  # We need much better simplification for
                            # some ODEs. See issue 4662, for example.
-
         # To reduce commonly occurring sin(x)**2 + cos(x)**2 to 1
         wr = trigsimp(wr, deep=True, recursive=True)
     if not wr:
@@ -7927,7 +7926,7 @@ def sysode_linear_3eq_order1(match_):
     for i in range(3):
         for j in Add.make_args(eq[i]):
             if not j.has(x(t), y(t), z(t)):
-                raise NotImplementedError("Only homogeneous problems are supported, non-homogenous are not supported currently.")
+                raise NotImplementedError("Only homogeneous problems are supported, non-homogeneous are not supported currently.")
     if match_['type_of_equation'] == 'type1':
         sol = _linear_3eq_order1_type1(x, y, z, t, r, eq)
     if match_['type_of_equation'] == 'type2':

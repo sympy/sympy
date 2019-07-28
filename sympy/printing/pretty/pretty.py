@@ -1436,6 +1436,35 @@ class PrettyPrinter(Printer):
         func_name = greek_unicode['Phi'] if self._use_unicode else 'lerchphi'
         return self._print_Function(e, func_name=func_name)
 
+    def _print_dirichlet_eta(self, e):
+        func_name = greek_unicode['eta'] if self._use_unicode else 'dirichlet_eta'
+        return self._print_Function(e, func_name=func_name)
+
+    def _print_Heaviside(self, e):
+        func_name = greek_unicode['theta'] if self._use_unicode else 'Heaviside'
+        return self._print_Function(e, func_name=func_name)
+
+    def _print_fresnels(self, e):
+        return self._print_Function(e, func_name="S")
+
+    def _print_fresnelc(self, e):
+        return self._print_Function(e, func_name="C")
+
+    def _print_airyai(self, e):
+        return self._print_Function(e, func_name="Ai")
+
+    def _print_airybi(self, e):
+        return self._print_Function(e, func_name="Bi")
+
+    def _print_airyaiprime(self, e):
+        return self._print_Function(e, func_name="Ai'")
+
+    def _print_airybiprime(self, e):
+        return self._print_Function(e, func_name="Bi'")
+
+    def _print_LambertW(self, e):
+        return self._print_Function(e, func_name="W")
+
     def _print_Lambda(self, e):
         vars, expr = e.args
         if self._use_unicode:
