@@ -146,10 +146,9 @@ def fft(seq, dps=None, fourier_params=(1, 1)):
     matrix singular, which may result in no theoritical way of inversing
     the transform by another transform.
     Specifying `\beta` into non-integer may result not make the fourier
-    matrix singular, but still it may not be possible to compute the
-    inverse from doing another forward transformation with negative
-    beta, and you may have to directly evaluate the inverse matrix to
-    get the original result back.
+    matrix singular in the loose definition, but cooley-tukey scheme
+    may break and the algorithm may not yield the same result as the
+    corresponding DFT matrix with the same parameter.
     These behaviors may easily be observed by experimenting with our
     library, and the conventional reason that most of the textbooks or
     numerical libraries are setting `\beta` into `1` or `-1` is that
