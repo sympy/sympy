@@ -35,7 +35,7 @@ def _init_python_printing(stringify_func, **settings):
 
 def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                            backcolor, fontsize, latex_mode, print_builtin,
-                           latex_printer, **settings):
+                           latex_printer, scale, **settings):
     """Setup printing in IPython interactive session. """
     try:
         from IPython.lib.latextools import latex_to_png
@@ -52,7 +52,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     imagesize = 'tight'
     offset = "0cm,0cm"
-    resolution = 150
+    resolution = round(150*scale)
     dvi = r"-T %s -D %d -bg %s -fg %s -O %s" % (
         imagesize, resolution, backcolor, forecolor, offset)
     dvioptions = dvi.split()
@@ -274,7 +274,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='plain', print_builtin=True,
                   str_printer=None, pretty_printer=None,
-                  latex_printer=None, **settings):
+                  latex_printer=None, scale=1.0, **settings):
     r"""
     Initializes pretty-printer depending on the environment.
 
@@ -306,12 +306,12 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         rendering in IPython notebook or text rendering in LaTeX documents
     wrap_line: boolean
         If True, lines will wrap at the end; if False, they will not wrap
-        but continue as one line. This is only relevant if `pretty_print` is
+        but continue as one line. This is only relevant if ``pretty_print`` is
         True.
     num_columns: int or None
         If int, number of columns before wrapping is set to num_columns; if
         None, number of columns before wrapping is set to terminal width.
-        This is only relevant if `pretty_print` is True.
+        This is only relevant if ``pretty_print`` is True.
     no_global: boolean
         If True, the settings become system wide;
         if False, use just for this console/session.
@@ -341,6 +341,9 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         A custom pretty printer. This should mimic sympy.printing.pretty().
     latex_printer: function, optional, default=None
         A custom LaTeX printer. This should mimic sympy.printing.latex().
+    scale: float, optional, default=1.0
+        Scale the LaTeX output when using the ``png`` backend. Useful for high
+        dpi screens.
 
     Examples
     ========
@@ -451,6 +454,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   "of IPython printing")
         _init_ipython_printing(ip, stringify_func, use_latex, euler,
                                forecolor, backcolor, fontsize, latex_mode,
-                               print_builtin, latex_printer, **settings)
+                               print_builtin, latex_printer, scale,
+                               **settings)
     else:
         _init_python_printing(stringify_func, **settings)
