@@ -17,6 +17,7 @@ from sympy import (
     Contains, divisor_sigma, SymmetricDifference, SeqPer, SeqFormula,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
+    stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
     UnevaluatedExpr, Quaternion, I, KroneckerProduct, Intersection, LambertW)
 
 from sympy.ntheory.factor_ import udivisor_sigma
@@ -411,7 +412,6 @@ def test_latex_functions():
     assert latex(im(x)) == r'\operatorname{im}{\left(x\right)}'
     assert latex(root(x, y)) == r'x^{\frac{1}{y}}'
     assert latex(arg(x)) == r'\arg{\left(x \right)}'
-    assert latex(zeta(x)) == r'\zeta\left(x\right)'
 
     assert latex(zeta(x)) == r"\zeta\left(x\right)"
     assert latex(zeta(x)**2) == r"\zeta^{2}\left(x\right)"
@@ -424,6 +424,10 @@ def test_latex_functions():
         polylog(x, y)**2) == r"\operatorname{Li}_{x}^{2}\left(y\right)"
     assert latex(lerchphi(x, y, n)) == r"\Phi\left(x, y, n\right)"
     assert latex(lerchphi(x, y, n)**2) == r"\Phi^{2}\left(x, y, n\right)"
+    assert latex(stieltjes(x)) == r"\gamma_{x}"
+    assert latex(stieltjes(x)**2) == r"\gamma_{x}^{2}"
+    assert latex(stieltjes(x, y)) == r"\gamma_{x}\left(y\right)"
+    assert latex(stieltjes(x, y)**2) == r"\gamma_{x}\left(y\right)^{2}"
 
     assert latex(elliptic_k(z)) == r"K\left(z\right)"
     assert latex(elliptic_k(z)**2) == r"K^{2}\left(z\right)"
@@ -1053,6 +1057,16 @@ def test_mode():
     raises(ValueError, lambda: latex(expr, mode='foo'))
 
 
+def test_latex_mathieu():
+    assert latex(mathieuc(x, y, z)) == r"C\left(x, y, z\right)"
+    assert latex(mathieus(x, y, z)) == r"S\left(x, y, z\right)"
+    assert latex(mathieuc(x, y, z)**2) == r"C\left(x, y, z\right)^{2}"
+    assert latex(mathieus(x, y, z)**2) == r"S\left(x, y, z\right)^{2}"
+    assert latex(mathieucprime(x, y, z)) == r"C^{\prime}\left(x, y, z\right)"
+    assert latex(mathieusprime(x, y, z)) == r"S^{\prime}\left(x, y, z\right)"
+    assert latex(mathieucprime(x, y, z)**2) == r"C^{\prime}\left(x, y, z\right)^{2}"
+    assert latex(mathieusprime(x, y, z)**2) == r"S^{\prime}\left(x, y, z\right)^{2}"
+
 def test_latex_Piecewise():
     p = Piecewise((x, x < 1), (x**2, True))
     assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 1 \\\\x^{2} &" \
@@ -1342,6 +1356,7 @@ def test_latex_numbers():
     assert latex(tribonacci(n, x)) == r"T_{n}\left(x\right)"
     assert latex(tribonacci(n)**2) == r"T_{n}^{2}"
     assert latex(tribonacci(n, x)**2) == r"T_{n}^{2}\left(x\right)"
+
 
 def test_latex_euler():
     assert latex(euler(n)) == r"E_{n}"
