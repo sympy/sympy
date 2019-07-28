@@ -131,7 +131,7 @@ class MapleCodePrinter(CodePrinter):
         return str(expr).lower()
 
     def _print_NaN(self, expr):
-        return 'NULL'
+        return 'undefined'
 
     def _get_matrix(self, expr, sparse=False):
         if expr.cols == 0 or expr.rows == 0:
