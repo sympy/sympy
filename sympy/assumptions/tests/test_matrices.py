@@ -214,8 +214,9 @@ def test_matrix_element_sets():
     assert ask(Q.complex(X[1, 2]), Q.complex_elements(X))
     assert ask(Q.integer_elements(Identity(3)))
     assert ask(Q.integer_elements(ZeroMatrix(3, 3)))
-    from sympy.matrices.expressions.fourier import DFT
-    assert ask(Q.complex_elements(DFT(3)))
+
+    from sympy.matrices.expressions.fourier import DFTMatrix
+    assert ask(Q.complex_elements(DFTMatrix(3)))
 
 
 def test_matrix_element_sets_slices_blocks():
