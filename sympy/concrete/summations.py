@@ -991,12 +991,12 @@ def eval_sum_direct(expr, limits):
     # Linearity
     if expr.is_Mul:
         # Try factor out everything not including i
-        without_i, with_i = expr.as_coeff_mul_deps(i)
+        without_i, with_i = expr.as_coeff_Mul(deps=[i])
         if without_i != 1:
             s = eval_sum_direct(with_i, (i, a, b))
             if s:
                 r = without_i*s
-                if not r is S.NaN:
+                if r is not S.NaN:
                     return r
         else:
             # Try term by term
@@ -1018,12 +1018,12 @@ def eval_sum_direct(expr, limits):
 
     if expr.is_Add:
         # Try factor out everything not including i
-        without_i, with_i = expr.as_coeff_add_deps(i)
+        without_i, with_i = expr.as_coeff_Add(deps=[i])
         if without_i != 0:
             s = eval_sum_direct(with_i, (i, a, b))
             if s:
                 r = without_i*(dif + 1) + s
-                if not r is S.NaN:
+                if r is not S.NaN:
                     return r
         else:
             # Try term by term
@@ -1033,7 +1033,7 @@ def eval_sum_direct(expr, limits):
 
             if None not in (lsum, rsum):
                 r = lsum + rsum
-                if not r is S.NaN:
+                if r is not S.NaN:
                     return r
 
     return Add(*[expr.subs(i, a + j) for j in range(dif + 1)])
@@ -1050,12 +1050,12 @@ def eval_sum_symbolic(f, limits):
     # Linearity
     if f.is_Mul:
         # Try factor out everything not including i
-        without_i, with_i = f.as_coeff_mul_deps(i)
+        without_i, with_i = f.as_coeff_Mul(deps=[i])
         if without_i != 1:
             s = eval_sum_symbolic(with_i, (i, a, b))
             if s:
                 r = without_i*s
-                if not r is S.NaN:
+                if r is not S.NaN:
                     return r
         else:
             # Try term by term
@@ -1083,12 +1083,12 @@ def eval_sum_symbolic(f, limits):
             return lrsum
 
         # Try factor out everything not including i
-        without_i, with_i = f.as_coeff_add_deps(i)
+        without_i, with_i = f.as_coeff_Add(deps=[i])
         if without_i != 0:
             s = eval_sum_symbolic(with_i, (i, a, b))
             if s:
                 r = without_i*(b - a + 1) + s
-                if not r is S.NaN:
+                if r is not S.NaN:
                     return r
         else:
             # Try term by term
@@ -1097,7 +1097,7 @@ def eval_sum_symbolic(f, limits):
 
             if None not in (lsum, rsum):
                 r = lsum + rsum
-                if not r is S.NaN:
+                if r is not S.NaN:
                     return r
 
 

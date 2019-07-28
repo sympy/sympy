@@ -606,6 +606,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
             # Fold into a single Piecewise, in case doit lead to some
             # expressions being Piecewise
             expr = piecewise_fold(expr)
+            # kroneckersimp also affects Piecewise
+            if expr.has(KroneckerDelta):
+                expr = kroneckersimp(expr)
             # Still a Piecewise?
             if expr.has(Piecewise):
                 from sympy.functions.elementary.piecewise import piecewise_simplify

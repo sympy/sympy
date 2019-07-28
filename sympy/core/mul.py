@@ -755,16 +755,11 @@ class Mul(Expr, AssocOp):
 
     @cacheit
     def as_coeff_mul(self, *deps, **kwargs):
-        rational = kwargs.pop('rational', True)
         if deps:
-            l1 = []
-            l2 = []
-            for f in self.args:
-                if f.has(*deps):
-                    l2.append(f)
-                else:
-                    l1.append(f)
-            return self._new_rawargs(*l1), tuple(l2)
+            from sympy.utilities.iterables import sift
+            l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
+            return self._new_rawargs(*l2), tuple(l1)
+        rational = kwargs.pop('rational', True)
         args = self.args
         if args[0].is_Number:
             if not rational or args[0].is_Rational:
@@ -773,54 +768,32 @@ class Mul(Expr, AssocOp):
                 return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
-    @cacheit
-    def as_coeff_mul_deps(self, *deps):
+    def as_coeff_Mul(self, rational=False, deps=None):
         """
-        Rewrite as two products: one without terms in deps and one with.
+        Efficiently extract the coefficient of a product.
 
+        If deps is not None:
+
+        Rewrite as two products, one without terms in deps and one with.
         If non-commutative, the terms without the deps only include those to
         the left of the first non-commutative term.
         """
         if deps:
-            if self.is_commutative:
-                l1 = []
-                l2 = []
-                for f in self.args:
-                    if f.has(*deps):
-                        l2.append(f)
-                    else:
-                        l1.append(f)
-                return self._new_rawargs(*l1), self._new_rawargs(*l2)
-            else:
-                l1 = []
-                l2 = []
-                first_noncomm_detected = False
-                for f in self.args:
-                    if first_noncomm_detected:
-                        l2.append(f)
-                    else:
-                        if f.has(*deps):
-                            l2.append(f)
-                        else:
-                            l1.append(f)
-                        if not f.is_commutative:
-                            first_noncomm_detected = True
-                if l1:
-                    return self._new_rawargs(*l1), self._new_rawargs(*l2)
-        return S.One, self
+            from sympy.utilities.iterables import sift
+            c, l2c = self.args_cnc()
+            l1, l2 = sift(c, lambda x: x.has(*deps), binary=True)
+            return self._new_rawargs(*l2), self._new_rawargs(*(l1 + l2c))
+        else:
+            coeff, args = self.args[0], self.args[1:]
 
-    def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
-        coeff, args = self.args[0], self.args[1:]
-
-        if coeff.is_Number:
-            if not rational or coeff.is_Rational:
-                if len(args) == 1:
-                    return coeff, args[0]
-                else:
-                    return coeff, self._new_rawargs(*args)
-            elif coeff.is_extended_negative:
-                return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
+            if coeff.is_Number:
+                if not rational or coeff.is_Rational:
+                    if len(args) == 1:
+                        return coeff, args[0]
+                    else:
+                        return coeff, self._new_rawargs(*args)
+                elif coeff.is_extended_negative:
+                    return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
         return S.One, self
 
     def as_real_imag(self, deep=True, **hints):

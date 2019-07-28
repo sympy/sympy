@@ -298,7 +298,7 @@ class Product(ExprWithIntLimits):
                 return self._eval_product(factored, (k, a, n))
 
         elif term.is_Mul:
-            without_k, with_k = term.as_coeff_mul_deps(k)
+            without_k, with_k = term.as_coeff_Mul(deps=[k])
 
             if with_k.is_Mul:
                 exclude, include = [], []
