@@ -72,4 +72,4 @@ def _set_sub(x, y):
 def _set_sub(x, y):
     if x.start is S.NegativeInfinity:
         return Interval(-oo, oo)
-    return FiniteSet(-oo)
+    return FiniteSet(oo)
