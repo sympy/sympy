@@ -157,7 +157,7 @@ class floor(RoundFunction):
     def __le__(self, other):
         if self.args[0] == other and other.is_real:
             return S.true
-        if other == S.Infinity and self.is_finite:
+        if other is S.Infinity and self.is_finite:
             return S.true
         return Le(self, other, evaluate=False)
 
@@ -248,7 +248,7 @@ class ceiling(RoundFunction):
     def __ge__(self, other):
         if self.args[0] == other and other.is_real:
             return S.true
-        if other == S.NegativeInfinity and self.is_real:
+        if other is S.NegativeInfinity and self.is_real:
             return S.true
         return Ge(self, other, evaluate=False)
 
@@ -380,7 +380,7 @@ class frac(Function):
             other = _sympify(other)
             # Check if other <= 0
             if other.is_extended_nonpositive:
-                    return S.true
+                return S.true
             # Check if other >= 1
             res = self._value_one_or_more(other)
             if res is not None:

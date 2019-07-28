@@ -247,7 +247,7 @@ def test_frac():
     assert isinstance(frac(x), frac)
     assert frac(oo) == AccumBounds(0, 1)
     assert frac(-oo) == AccumBounds(0, 1)
-    assert frac(zoo) == nan
+    assert frac(zoo) is nan
 
     assert frac(n) == 0
     assert frac(nan) == nan
