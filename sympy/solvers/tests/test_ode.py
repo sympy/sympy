@@ -670,7 +670,7 @@ def test_checkodesol():
     assert checkodesol(eqn, sol, order=2, solve_for_func=False)[0]
     eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (2*x**2 +25)*f(x)
     sol = Eq(f(x), C1*besselj(5*I, sqrt(2)*x) + C2*bessely(5*I, sqrt(2)*x))
-    assert checkodesol(eq, sol)
+    assert checkodesol(eq, sol) == (True, 0)
 
 @slow
 def test_dsolve_options():
