@@ -14,13 +14,13 @@ class DFTMatrix(MatrixExpr):
     n = property(lambda self: self.args[0])
     shape = property(lambda self: (self.n, self.n))
 
-    def __new__(cls, n, a=0, b=-1)):
+    def __new__(cls, n, a=0, b=-1):
         n = _sympify(n)
         if n.is_number and not (n.is_integer and n.is_positive):
             raise ValueError(
                 'Matrix size {} should be specified as a positive integer.')
 
-        (a, b) = _sympify([a, b])
+        (a, b) = _sympify(a), _sympify(b)
 
         return MatrixExpr().__new__(cls, n, a, b)
 

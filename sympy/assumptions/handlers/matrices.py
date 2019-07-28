@@ -257,7 +257,7 @@ class AskUnitaryHandler(CommonHandler):
     @staticmethod
     def DFTMatrix(expr, assumptions):
         n = expr.args[0]
-        a, b = expr.args[1]
+        a, b = expr.args[1], expr.args[2]
         if a.is_zero and b.is_integer and n.gcd(b) == 1:
             return True
 
