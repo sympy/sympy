@@ -262,7 +262,7 @@ from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, posify, cse
+    simplify, trigsimp, posify, cse, besselsimp
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect_const
 from sympy.solvers import solve
@@ -2432,7 +2432,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
             if sol.lhs == func:
                 s = sub_func_doit(ode_diff, func, sol.rhs)
-                s = simplify(s)
+                s = besselsimp(s)
             else:
                 testnum += 1
                 continue
