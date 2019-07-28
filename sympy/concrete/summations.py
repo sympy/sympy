@@ -981,7 +981,7 @@ def eval_sum(f, limits):
 
 def eval_sum_direct(expr, limits):
     """
-    Evalutate expression directly, but perform some simple checks first
+    Evaluate expression directly, but perform some simple checks first
     to possibly result in a smaller expression and faster execution.
     """
     from sympy.core import Add
