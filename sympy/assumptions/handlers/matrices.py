@@ -258,8 +258,21 @@ class AskUnitaryHandler(CommonHandler):
     def DFTMatrix(expr, assumptions):
         n = expr.args[0]
         a, b = expr.args[1], expr.args[2]
-        if a.is_zero and b.is_integer and n.gcd(b) == 1:
+        if ask(Q.zero(a), assumptions) and ask(Q.integer(b), assumptions) \
+            and b.gcd(n) == 1:
             return True
+
+        if ask(Q.zero(a)) == False:
+            return False
+
+        if ask(Q.integer(b)) == False:
+            return False
+
+        if ask(Q.integer(b)) and b.gcd(n) != 1:
+            return False
+
+        return None
+
 
     Factorization = staticmethod(partial(_Factorization, Q.unitary))
 
