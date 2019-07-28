@@ -2736,24 +2736,22 @@ def test_issue_6989():
     k = Symbol('k')
 
     eq = f(x).diff(x) - x*exp(-k*x)
-    csol = Eq(f(x), Piecewise(
-            (C1 + (-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
-            (C1 + x**2/2, True)
+    csol = Eq(f(x), C1 + Piecewise(
+            ((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
+            (x**2/2, True)
         ))
     sol = dsolve(eq, f(x))
-    C = list(sol.free_symbols - {k, x})[0]
-    assert sol.subs(C, C1) == csol
+    assert sol == csol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = -f(x).diff(x) + x*exp(-k*x)
-    csol = Eq(f(x), Piecewise(
-        (C1 + (-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
-        (C1 + +x**2/2, True)
+    csol = Eq(f(x), C1 + Piecewise(
+        ((-k*x - 1)*exp(-k*x)/k**2, Ne(k**2, 0)),
+        (x**2/2, True)
     ))
     sol = dsolve(eq, f(x))
-    C = list(sol.free_symbols - {k, x})[0]
-    assert sol.subs(C, C1) == csol
-    assert checkodesol(eq, csol, order=1, solve_for_func=False)[0]
+    assert sol == csol
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
 def test_heuristic1():

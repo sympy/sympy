@@ -613,6 +613,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
                 expr = piecewise_simplify(expr, deep=True, doit=False)
                 # Still a Piecewise?
                 if expr.has(Piecewise):
+                    # Try factor common terms
+                    expr = shorter(expr, factor_terms(expr))
                     # As all expressions have been simplified above with the
                     # complete simplify, nothing more needs to be done here
                     return expr
@@ -682,11 +684,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if floats and rational is None:
         expr = nfloat(expr, exponent=False)
 
-    expr = done(expr)
-    if expr.has(Piecewise):
-        expr = piecewise_fold(expr)
-
-    return expr
+    return done(expr)
 
 
 def sum_simplify(s, **kwargs):
