@@ -21,9 +21,9 @@ def test_dft_matrix():
     assert ask(Q.unitary(DFTMatrix(4, a=1, b=0))) == False
 
     assert ask(Q.unitary(DFTMatrix(n, a=1, b=0))) == False
-    assert ask(Q.unitary(DFTMatrix(4, a=a, b=0))) == None
+    assert ask(Q.unitary(DFTMatrix(4, a=a, b=0))) == False
     assert ask(Q.unitary(DFTMatrix(4, a=0, b=b))) == None
-    assert ask(Q.unitary(DFTMatrix(n, a=a, b=0))) == None
+    assert ask(Q.unitary(DFTMatrix(n, a=a, b=0))) == False
     assert ask(Q.unitary(DFTMatrix(n, a=1, b=b))) == False
     assert ask(Q.unitary(DFTMatrix(n, a=a, b=b))) == None
 

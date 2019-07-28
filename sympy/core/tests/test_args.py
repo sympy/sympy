@@ -2910,15 +2910,10 @@ def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     i, j = symbols('i,j')
     assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
-def test_sympy__matrices__expressions__fourier__DFT():
-    from sympy.matrices.expressions.fourier import DFT
+def test_sympy__matrices__expressions__fourier__DFTMatrix():
+    from sympy.matrices.expressions.fourier import DFTMatrix
     from sympy import S
-    assert _test_args(DFT(S(2)))
-
-def test_sympy__matrices__expressions__fourier__IDFT():
-    from sympy.matrices.expressions.fourier import IDFT
-    from sympy import S
-    assert _test_args(IDFT(S(2)))
+    assert _test_args(DFTMatrix(S(2)))
 
 from sympy.matrices.expressions import MatrixSymbol
 X = MatrixSymbol('X', 10, 10)
