@@ -120,15 +120,14 @@ def test_ContinuousMarkovChain():
         [(exp(2*t) - 1)*exp(-2*t)/2, (exp(2*t) + 1)*exp(-2*t)/2, 0],
         [(exp(2*t) - 2*exp(t) + 1)*exp(-2*t)/2, (exp(2*t) - 1)*exp(-2*t)/2, exp(-t)]])
     assert P(Eq(C2(1), 1), Eq(C2(0), 1), evaluate=False) == Probability(Eq(C2(1), 1))
-    assert P(Eq(C2(1), 1), Eq(C2(0), 1)) == exp(-2)/2 + S(1)/2
+    assert P(Eq(C2(1), 1), Eq(C2(0), 1)).expand() == exp(-2)/2 + S(1)/2
     assert P(Eq(C2(1), 0) & Eq(C2(2), 1) & Eq(C2(3), 1),
-                Eq(P(Eq(C2(1), 0)), S(1)/2)) == (S(1)/4 - exp(-2)/4)*(exp(-2)/2 + S(1)/2)
+                Eq(P(Eq(C2(1), 0)), S(1)/2)) == (-1 + exp(2))*(1 + exp(2))*exp(-4)/8
     assert P(Not(Eq(C2(1), 0) & Eq(C2(2), 1) & Eq(C2(3), 2)) |
                 (Eq(C2(1), 0) & Eq(C2(2), 1) & Eq(C2(3), 2)),
                 Eq(P(Eq(C2(1), 0)), S(1)/4) & Eq(P(Eq(C2(1), 1)), S(1)/4)) == S(1)
-    assert E(C2(S(3)/2), Eq(C2(0), 2)) == -exp(-3)/2 + 2*exp(-S(3)/2) + S(1)/2
-    assert variance(C2(S(3)/2), Eq(C2(0), 1)) == ((S(1)/2 - exp(-3)/2)**2*(exp(-3)/2 + S(1)/2)
-                                                    + (-S(1)/2 - exp(-3)/2)**2*(S(1)/2 - exp(-3)/2))
+    assert E(C2(S(3)/2), Eq(C2(0), 2)).expand() == -exp(-3)/2 + 2*exp(-S(3)/2) + S(1)/2
+    assert variance(C2(S(3)/2), Eq(C2(0), 1)).expand() == S(1)/4 - exp(-6)/4
     raises(KeyError, lambda: P(Eq(C2(1), 0), Eq(P(Eq(C2(1), 1)), S(1)/2)))
     assert P(Eq(C2(1), 0), Eq(P(Eq(C2(5), 1)), S(1)/2)) == Probability(Eq(C2(1), 0))
     TS1 = MatrixSymbol('G', 3, 3)
