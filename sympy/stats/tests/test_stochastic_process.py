@@ -115,9 +115,10 @@ def test_ContinuousMarkovChain():
     T2 = Matrix([[-S(1), S(1), S(0)], [S(1), -S(1), S(0)], [S(0), S(1), -S(1)]])
     C2 = ContinuousMarkovChain('C', [0, 1, 2], T2)
     A, t = C2.generator_matrix, symbols('t', positive=True)
-    assert C2.transition_probabilities(A)(t) == Matrix([[S(1)/2 + exp(-2*t)/2, S(1)/2 - exp(-2*t)/2, 0],
-                                                       [S(1)/2 - exp(-2*t)/2, S(1)/2 + exp(-2*t)/2, 0],
-                                                       [S(1)/2 - exp(-t) + exp(-2*t)/2, S(1)/2 - exp(-2*t)/2, exp(-t)]])
+    assert C2.transition_probabilities(A)(t) == Matrix([
+        [(exp(2*t) + 1)*exp(-2*t)/2, (exp(2*t) - 1)*exp(-2*t)/2, 0],
+        [(exp(2*t) - 1)*exp(-2*t)/2, (exp(2*t) + 1)*exp(-2*t)/2, 0],
+        [(exp(2*t) - 2*exp(t) + 1)*exp(-2*t)/2, (exp(2*t) - 1)*exp(-2*t)/2, exp(-t)]])
     assert P(Eq(C2(1), 1), Eq(C2(0), 1), evaluate=False) == Probability(Eq(C2(1), 1))
     assert P(Eq(C2(1), 1), Eq(C2(0), 1)) == exp(-2)/2 + S(1)/2
     assert P(Eq(C2(1), 0) & Eq(C2(2), 1) & Eq(C2(3), 1),

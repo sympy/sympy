@@ -24,7 +24,7 @@ def test_Normal():
     assert marginal_distribution(n, 0, 1)(1, 2) == 1/(2*pi)
     assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
     N = Normal('N', [1, 2], [[x, 0], [0, y]])
-    assert density(N)(0, 0) == exp(-2/y - 1/(2*x))/(2*pi*sqrt(x*y))
+    assert density(N)(0, 0) == exp((-4*x - y)/(2*x*y))/(2*pi*sqrt(x*y))
 
     raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
 
@@ -45,7 +45,7 @@ def test_multivariate_laplace():
     assert density(L)(2, 3) == exp(2)*besselk(0, sqrt(3))/pi
     L1 = Laplace('L1', [1, 2], [[x, 0], [0, y]])
     assert density(L1)(0, 1) == \
-        exp(2/y)*besselk(0, sqrt((2 + 4/y + 1/x)/y))/(pi*sqrt(x*y))
+        exp(2/y)*besselk(0, sqrt((2 + (4*x + y)/(x*y))/y))/(pi*sqrt(x*y))
 
 def test_NormalGamma():
     from sympy.stats.joint_rv_types import NormalGamma
