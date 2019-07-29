@@ -452,11 +452,7 @@ class ImageSet(Set):
             return self
 
         def unify_img(base, self_expr, other_expr, self_sym, other_sym):
-
-            if self_sym != other_sym:
-                return None
-
-            sym = self_sym
+            sym = Dummy('n')
 
             # self_expr = a*n + b, other_expr = c*n + d
             a, c = self_expr.coeff(self_sym), other_expr.coeff(other_sym)
