@@ -344,7 +344,7 @@ planck.set_scale_factor(2*pi*hbar)
 # Electronvolt
 eV = electronvolt = electronvolts = Quantity("electronvolt", abbrev="eV")
 electronvolt.set_dimension(energy)
-electronvolt.set_scale_factor(1.60219e-19*joule)
+electronvolt.set_scale_factor(1.602176634e-19*joule)
 
 # Avogadro number
 avogadro_number = Quantity("avogadro_number")
