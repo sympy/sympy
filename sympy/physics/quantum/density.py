@@ -247,11 +247,11 @@ def entropy(density):
 
     if isinstance(density, Matrix):
         eigvals = density.eigenvals().keys()
-        return expand(-sum(e * log(e) for e in eigvals))
+        return expand(-sum(e*log(e) for e in eigvals))
     elif isinstance(density, numpy_ndarray):
         import numpy as np
         eigvals = np.linalg.eigvals(density)
-        return -np.sum(eigvals * np.log(eigvals))
+        return -np.sum(eigvals*np.log(eigvals))
     else:
         raise ValueError(
             "numpy.ndarray, scipy.sparse or sympy matrix expected")
@@ -281,12 +281,12 @@ def fidelity(state1, state2):
     >>> up = JzKet(S(1)/2,S(1)/2)
     >>> down = JzKet(S(1)/2,-S(1)/2)
     >>> amp = 1/sqrt(2)
-    >>> updown = (amp * up) + (amp * down)
+    >>> updown = (amp*up) + (amp*down)
     >>>
     >>> # represent turns Kets into matrices
-    >>> up_dm = represent(up * Dagger(up))
-    >>> down_dm = represent(down * Dagger(down))
-    >>> updown_dm = represent(updown * Dagger(updown))
+    >>> up_dm = represent(up*Dagger(up))
+    >>> down_dm = represent(down*Dagger(down))
+    >>> updown_dm = represent(updown*Dagger(updown))
     >>>
     >>> fidelity(up_dm, up_dm)
     1
@@ -314,4 +314,4 @@ def fidelity(state1, state2):
                          "matrix obtained should be a square matrix")
 
     sqrt_state1 = state1**Rational(1, 2)
-    return Tr((sqrt_state1 * state2 * sqrt_state1)**Rational(1, 2)).doit()
+    return Tr((sqrt_state1*state2ssqrt_state1)**Rational(1, 2)).doit()
