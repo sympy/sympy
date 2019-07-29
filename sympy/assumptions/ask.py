@@ -1330,9 +1330,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     # using satask (still costly)
     res = satask(proposition, assumptions=assumptions, context=context)
-
-    if res is not None:
-        return res
     return res
 
 
