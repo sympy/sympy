@@ -48,7 +48,8 @@ number_symbols = {
     S.Pi: 'Pi',
     S.Exp1: 'exp(1)',
     S.Catalan: 'Catalan',
-    S.EulerGamma: 'gamma'
+    S.EulerGamma: 'gamma',
+    S.GoldenRatio: '(1/2 + (1/2)*sqrt(5))'
 }
 
 spec_relational_ops = {
@@ -113,11 +114,6 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_NumberSymbol(self, expr):
         return number_symbols[expr]
-
-    def _print_GoldenRatio(self, expr):
-        expanded = expr.expand(func=True)
-        PREC = precedence(expr)
-        return self.parenthesize(expanded, PREC)
 
     def _print_NegativeInfinity(self, expr):
         return '-infinity'
