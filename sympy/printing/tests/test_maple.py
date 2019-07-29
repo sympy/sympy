@@ -361,20 +361,6 @@ def test_maple_piecewise():
     raises(ValueError, lambda: maple_code(expr))
 
 
-r"""
- _____ _                     _       _         _
-|_   _| |_  ___   __ ___  __| |___  | |__  ___| |_____ __ __
-  | | | ' \/ -_) / _/ _ \/ _` / -_) | '_ \/ -_) / _ \ V  V /
-  |_| |_||_\___| \__\___/\__,_\___| |_.__/\___|_\___/\_/\_/
-
-                 _   _         _                         _ _  __ _        _
- _ _  ___ ___ __| | | |_ ___  | |__  ___   _ __  ___  __| (_)/ _(_)___ __| |
-| ' \/ -_) -_) _` | |  _/ _ \ | '_ \/ -_) | '  \/ _ \/ _` | |  _| / -_) _` |
-|_||_\___\___\__,_|  \__\___/ |_.__/\___| |_|_|_\___/\__,_|_|_| |_\___\__,_|
-
-"""
-
-
 def test_maple_piecewise_times_const():
     pw = Piecewise((x, x < 1), (x ** 2, True))
     assert maple_code(2 * pw) == "2*piecewise(x < 1, x, x^2)"
@@ -383,22 +369,8 @@ def test_maple_piecewise_times_const():
     assert maple_code(pw / 3) == "piecewise(x < 1, x, x^2)/3"
 
 
-def test_trick_indent_with_end_else_words():
-    # words starting with "end" or "else" do not confuse the indenter
-    t1 = S('endless');
-    t2 = S('elsewhere');
-    pw = Piecewise((t1, x < 0), (t2, x <= 1), (1, True))
-    assert maple_code(pw, inline=False) == (
-        "if (x < 0)\n"
-        "    endless\n"
-        "elseif (x <= 1)\n"
-        "    elsewhere\n"
-        "else\n"
-        "    1\n"
-        "end")
-
-
 def test_specfun():
+    # FIXME: don't know if maple support these feature.
     n = Symbol('n')
     for f in [besselj, bessely, besseli, besselk]:
         assert maple_code(f(n, x)) == f.__name__ + '(n, x)'
