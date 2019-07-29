@@ -1,9 +1,9 @@
 from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
-    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify,
+    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify, Identity,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range)
+    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, MatrixSymbol)
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic, _dummy_with_inherited_properties_concrete
 from sympy.concrete.expr_with_intlimits import ReorderError
@@ -1214,3 +1214,34 @@ def test__dummy_with_inherited_properties_concrete():
     N = Symbol('N', integer=True, positive=True)
     d = _dummy_with_inherited_properties_concrete(Tuple(N))
     assert d is None
+
+
+def test_matrixsymbol_summation_numerical_limits():
+    A = MatrixSymbol('A', 3, 3)
+    n = Symbol('n', integer=True)
+
+    assert Sum(A**n, (n, 0, 2)).doit() == Identity(3) + A + A**2
+    assert Sum(A, (n, 0, 2)).doit() == 3*A
+    assert Sum(n*A, (n, 0, 2)).doit() == 3*A
+
+    B = Matrix([[0, n, 0], [-1, 0, 0], [0, 0, 2]])
+    ans = Matrix([[0, 6, 0], [-4, 0, 0], [0, 0, 8]]) + 4*A
+    assert Sum(A+B, (n, 0, 3)).doit() == ans
+    ans = A*Matrix([[0, 6, 0], [-4, 0, 0], [0, 0, 8]])
+    assert Sum(A*B, (n, 0, 3)).doit() == ans
+
+    ans = (A**2*Matrix([[-2, 0, 0], [0,-2, 0], [0, 0, 4]]) +
+           A**3*Matrix([[0, -9, 0], [3, 0, 0], [0, 0, 8]]) +
+           A*Matrix([[0, 1, 0], [-1, 0, 0], [0, 0, 2]]))
+    assert Sum(A**n*B**n, (n, 1, 3)).doit() == ans
+
+
+@XFAIL
+def test_matrixsymbol_summation_symbolic_limits():
+    N = Symbol('N', integer=True, positive=True)
+
+    A = MatrixSymbol('A', 3, 3)
+    n = Symbol('n', integer=True)
+    assert Sum(A, (n, 0, N)).doit() == (N+1)*A
+    assert Sum(n*A, (n, 0, N)).doit() == (N**2/2+N/2)*A
+
