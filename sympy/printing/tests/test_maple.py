@@ -304,6 +304,20 @@ def test_sparse():
            'storage = sparse)'
 
 
+def test_maple_not_supported():
+    assert maple_code(S.ComplexInfinity) == (
+        "# Not supported in maple:\n"
+        "# ComplexInfinity\n"
+        "zoo"
+    )
+    f = Function('f')
+    assert maple_code(f(x).diff(x)) == (
+        "# Not supported in maple:\n"
+        "# Derivative\n"
+        "Derivative(f(x), x)"
+    )
+
+
 r"""
  _____ _                     _       _         _
 |_   _| |_  ___   __ ___  __| |___  | |__  ___| |_____ __ __
@@ -363,18 +377,6 @@ def test_maple_piecewise_times_const():
 
 
 
-def test_maple_not_supported():
-    assert maple_code(S.ComplexInfinity) == (
-        "# Not supported in Julia:\n"
-        "# ComplexInfinity\n"
-        "zoo"
-    )
-    f = Function('f')
-    assert maple_code(f(x).diff(x)) == (
-        "# Not supported in Julia:\n"
-        "# Derivative\n"
-        "Derivative(f(x), x)"
-    )
 
 
 def test_trick_indent_with_end_else_words():
