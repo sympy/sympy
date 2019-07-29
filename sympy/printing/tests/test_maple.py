@@ -266,23 +266,42 @@ def test_maple_matrix_assign_to_more():
 
 def test_maple_matrix_1x1():
     A = Matrix([[3]])
-    B = MatrixSymbol('B', 1, 1)
-    C = MatrixSymbol('C', 1, 2)
-    assert maple_code(A, assign_to=B) == "B = [3]"
-    # FIXME?
-    # assert maple_code(A, assign_to=x) == "x = [3]"
-    raises(ValueError, lambda: maple_code(A, assign_to=C))
+    assert maple_code(A, assign_to='B') == "B := Matrix([[3]], storage = rectangular)"
 
 
 def test_maple_matrix_elements():
     A = Matrix([[x, 2, x * y]])
-    assert maple_code(A[0, 0] ** 2 + A[0, 1] + A[0, 2]) == "x.^2 + x*y + 2"
-    A = MatrixSymbol('AA', 1, 3)
-    assert maple_code(A) == "AA"
-    assert maple_code(A[0, 0] ** 2 + sin(A[0, 1]) + A[0, 2]) == \
-           "sin(AA[1,2]) + AA[1,1].^2 + AA[1,3]"
-    assert maple_code(sum(A)) == "AA[1,1] + AA[1,2] + AA[1,3]"
+    assert maple_code(A[0, 0] ** 2 + A[0, 1] + A[0, 2]) == "x^2 + 2 + x*y"
+    AA = MatrixSymbol('AA', 1, 3)
+    assert maple_code(AA) == "AA"
 
+    # FIXME
+    assert maple_code(AA[0, 0] ** 2 + sin(AA[0, 1]) + AA[0, 2]) == \
+           "sin(AA[1,2]) + AA[1,1]^2 + AA[1,3]"
+    assert maple_code(sum(AA)) == "AA[1,1] + AA[1,2] + AA[1,3]"
+
+
+def test_maple_boolean():
+    assert maple_code(True) == "true"
+    assert maple_code(S.true) == "true"
+    assert maple_code(False) == "false"
+    assert maple_code(S.false) == "false"
+
+
+def test_sparse():
+    M = SparseMatrix(5, 6, {})
+    M[2, 2] = 10
+    M[1, 2] = 20
+    M[1, 3] = 22
+    M[0, 3] = 30
+    M[3, 0] = x * y
+    assert maple_code(M) == \
+           'Matrix([[0, 0, 0, 30, 0, 0],' \
+           ' [0, 0, 20, 22, 0, 0],' \
+           ' [0, 0, 10, 0, 0, 0],' \
+           ' [x*y, 0, 0, 0, 0, 0],' \
+           ' [0, 0, 0, 0, 0, 0]], ' \
+           'storage = sparse)'
 
 
 r"""
@@ -299,7 +318,7 @@ r"""
 """
 
 
-def test_julia_piecewise():
+def test_maple_piecewise():
     expr = Piecewise((x, x < 1), (x ** 2, True))
     assert maple_code(expr) == "((x < 1) ? (x) : (x.^2))"
     assert maple_code(expr, assign_to="r") == (
@@ -331,7 +350,7 @@ def test_julia_piecewise():
     raises(ValueError, lambda: maple_code(expr))
 
 
-def test_julia_piecewise_times_const():
+def test_maple_piecewise_times_const():
     pw = Piecewise((x, x < 1), (x ** 2, True))
     assert maple_code(2 * pw) == "2*((x < 1) ? (x) : (x.^2))"
     assert maple_code(pw / x) == "((x < 1) ? (x) : (x.^2))/x"
@@ -341,14 +360,10 @@ def test_julia_piecewise_times_const():
 
 
 
-def test_julia_boolean():
-    assert maple_code(True) == "true"
-    assert maple_code(S.true) == "true"
-    assert maple_code(False) == "false"
-    assert maple_code(S.false) == "false"
 
 
-def test_julia_not_supported():
+
+def test_maple_not_supported():
     assert maple_code(S.ComplexInfinity) == (
         "# Not supported in Julia:\n"
         "# ComplexInfinity\n"
@@ -391,21 +406,6 @@ def test_haramard():
     assert maple_code(C * x * y) == "(x*y)*(A*B)"
 
 
-def test_sparse():
-    M = SparseMatrix(5, 6, {})
-    M[2, 2] = 10
-    M[1, 2] = 20
-    M[1, 3] = 22
-    M[0, 3] = 30
-    M[3, 0] = x * y
-    assert maple_code(M) == \
-        'Matrix(' \
-            '[[0, 0, 0, 30, 0, 0],' \
-            ' [0, 0, 20, 22, 0, 0],' \
-            ' [0, 0, 10, 0, 0, 0],' \
-            ' [x*y, 0, 0, 0, 0, 0],' \
-            ' [0, 0, 0, 0, 0, 0]], '\
-            'storage = sparse)'
 
 
 def test_specfun():
