@@ -4,7 +4,8 @@ from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import range
-from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
+from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
+        expand_mul)
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
@@ -12,6 +13,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
@@ -417,7 +419,7 @@ class exp(ExpBase):
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import limit, oo, Order, powsimp
+        from sympy import limit, oo, Order, powsimp, Wild, expand_complex
         arg = self.args[0]
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
@@ -432,7 +434,12 @@ class exp(ExpBase):
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
         r += Order(o.expr.subs(t, (arg_series - arg0)), x)
         r = r.expand()
-        return powsimp(r, deep=True, combine='exp')
+        r = powsimp(r, deep=True, combine='exp')
+        # powsimp may introduce unexpanded (-1)**Rational; see PR #17201
+        simplerat = lambda x: x.is_Rational and x.q in [3, 4, 6]
+        w = Wild('w', properties=[simplerat])
+        r = r.replace((-1)**w, expand_complex((-1)**w))
+        return r
 
     def _taylor(self, x, n):
         from sympy import Order
@@ -487,6 +494,7 @@ class exp(ExpBase):
 class log(Function):
     r"""
     The natural logarithm function `\ln(x)` or `\log(x)`.
+
     Logarithms are taken with the natural base, `e`. To get
     a logarithm of a different base ``b``, use ``log(x, b)``,
     which is essentially short-hand for ``log(x)/log(b)``.
@@ -494,16 +502,19 @@ class log(Function):
     Examples
     ========
 
-    >>> from sympy import log, S
+    >>> from sympy import log, sqrt, S, I
     >>> log(8, 2)
     3
     >>> log(S(8)/3, 2)
     -log(3)/log(2) + 3
+    >>> log(-1 + I*sqrt(3))
+    log(2) + 2*I*pi/3
 
     See Also
     ========
 
     exp
+
     """
 
     def fdiff(self, argindex=1):
@@ -526,6 +537,7 @@ class log(Function):
         from sympy import unpolarify
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
+        from sympy.functions.elementary.complexes import Abs, re, im
 
         arg = sympify(arg)
 
@@ -578,8 +590,9 @@ class log(Function):
             return arg._eval_func(cls)
 
         if arg.is_number:
+            I = S.ImaginaryUnit
             if arg.is_negative:
-                return S.Pi * S.ImaginaryUnit + cls(-arg)
+                return S.Pi * I + cls(-arg)
             elif arg is S.ComplexInfinity:
                 return S.ComplexInfinity
             elif arg is S.Exp1:
@@ -599,6 +612,63 @@ class log(Function):
                         return S.Pi * S.ImaginaryUnit * S.Half + cls(coeff)
                     else:
                         return -S.Pi * S.ImaginaryUnit * S.Half + cls(-coeff)
+
+        if arg.is_number and arg.is_algebraic:
+            I = S.ImaginaryUnit
+            # Match arg = coeff*(r_ + i_*I) with coeff>0, r_ and i_ real.
+            coeff, arg_ = arg.as_independent(I, as_Add=False)
+            if coeff.is_negative:
+                coeff *= -1
+                arg_ *= -1
+            arg_ = expand_mul(arg_, deep=False)
+            r_, i_ = arg_.as_independent(I, as_Add=True)
+            i_ = i_.as_coefficient(I)
+            if coeff.is_real and i_ and i_.is_real and r_.is_real:
+                if r_.is_zero:
+                    if i_.is_positive:
+                        return S.Pi * I * S.Half + cls(coeff * i_)
+                    elif i_.is_negative:
+                        return -S.Pi * I * S.Half + cls(coeff * -i_)
+                    elif i_.is_zero:
+                        return zoo
+                else:
+                    from sympy.simplify import ratsimp
+                    # Check for arguments involving rational multiples of pi
+                    t = (i_/r_).cancel()
+                    atan_table = {
+                        # first quadrant only
+                        sqrt(3): S.Pi/3,
+                        1: S.Pi/4,
+                        sqrt(5 - 2*sqrt(5)): S.Pi/5,
+                        sqrt(2)*sqrt(5 - sqrt(5))/(1 + sqrt(5)): S.Pi/5,
+                        sqrt(5 + 2*sqrt(5)): 2*S.Pi/5,
+                        sqrt(2)*sqrt(sqrt(5) + 5)/(-1 + sqrt(5)): 2*S.Pi/5,
+                        sqrt(3)/3: S.Pi/6,
+                        sqrt(2) - 1: S.Pi/8,
+                        sqrt(2 - sqrt(2))/sqrt(sqrt(2) + 2): S.Pi/8,
+                        sqrt(2) + 1: 3*S.Pi/8,
+                        sqrt(sqrt(2) + 2)/sqrt(2 - sqrt(2)): 3*S.Pi/8,
+                        sqrt(1 - 2*sqrt(5)/5): S.Pi/10,
+                        (-sqrt(2) + sqrt(10))/(2*sqrt(sqrt(5) + 5)): S.Pi/10,
+                        sqrt(1 + 2*sqrt(5)/5): 3*S.Pi/10,
+                        (sqrt(2) + sqrt(10))/(2*sqrt(5 - sqrt(5))): 3*S.Pi/10,
+                        2 - sqrt(3): S.Pi/12,
+                        (-1 + sqrt(3))/(1 + sqrt(3)): S.Pi/12,
+                        2 + sqrt(3): 5*S.Pi/12,
+                        (1 + sqrt(3))/(-1 + sqrt(3)): 5*S.Pi/12
+                    }
+                    if t in atan_table:
+                        modulus = ratsimp(coeff * Abs(arg_))
+                        if r_.is_positive:
+                            return cls(modulus) + I * atan_table[t]
+                        else:
+                            return cls(modulus) + I * (atan_table[t] - S.Pi)
+                    elif -t in atan_table:
+                        modulus = ratsimp(coeff * Abs(arg_))
+                        if r_.is_positive:
+                            return cls(modulus) + I * (-atan_table[-t])
+                        else:
+                            return cls(modulus) + I * (S.Pi - atan_table[-t])
 
     def as_base_exp(self):
         """
