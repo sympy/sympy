@@ -210,8 +210,8 @@ class Product(ExprWithIntLimits):
         reps = {}
         for xab in self.limits:
             # Must be imported here to avoid circular imports
-            from .summations import dummy_with_inherited_properties
-            d = dummy_with_inherited_properties(xab)
+            from .summations import _dummy_with_inherited_properties_concrete
+            d = _dummy_with_inherited_properties_concrete(xab)
             if d:
                 reps[xab[0]] = d
         if reps:
@@ -298,7 +298,7 @@ class Product(ExprWithIntLimits):
                 return self._eval_product(factored, (k, a, n))
 
         elif term.is_Mul:
-            without_k, with_k = term.as_coeff_Mul(deps=[k])
+            without_k, with_k = term.as_independent(k)
 
             if with_k.is_Mul:
                 exclude, include = [], []

@@ -184,7 +184,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # variables with matching assumptions
         reps = {}
         for xab in self.limits:
-            d = dummy_with_inherited_properties(xab)
+            d = _dummy_with_inherited_properties_concrete(xab)
             if d:
                 reps[xab[0]] = d
         if reps:
@@ -991,7 +991,7 @@ def eval_sum_direct(expr, limits):
     # Linearity
     if expr.is_Mul:
         # Try factor out everything not including i
-        without_i, with_i = expr.as_coeff_Mul(deps=[i])
+        without_i, with_i = expr.as_independent(i)
         if without_i != 1:
             s = eval_sum_direct(with_i, (i, a, b))
             if s:
@@ -1018,7 +1018,7 @@ def eval_sum_direct(expr, limits):
 
     if expr.is_Add:
         # Try factor out everything not including i
-        without_i, with_i = expr.as_coeff_Add(deps=[i])
+        without_i, with_i = expr.as_independent(i)
         if without_i != 0:
             s = eval_sum_direct(with_i, (i, a, b))
             if s:
@@ -1050,7 +1050,7 @@ def eval_sum_symbolic(f, limits):
     # Linearity
     if f.is_Mul:
         # Try factor out everything not including i
-        without_i, with_i = f.as_coeff_Mul(deps=[i])
+        without_i, with_i = f.as_independent(i)
         if without_i != 1:
             s = eval_sum_symbolic(with_i, (i, a, b))
             if s:
@@ -1083,7 +1083,7 @@ def eval_sum_symbolic(f, limits):
             return lrsum
 
         # Try factor out everything not including i
-        without_i, with_i = f.as_coeff_Add(deps=[i])
+        without_i, with_i = f.as_independent(i)
         if without_i != 0:
             s = eval_sum_symbolic(with_i, (i, a, b))
             if s:
@@ -1302,10 +1302,10 @@ def _eval_matrix_sum(expression):
                 return newf.doit()
 
 
-def dummy_with_inherited_properties(limits):
+def _dummy_with_inherited_properties_concrete(limits):
     """
-    Return a Dummy symbol that inherints as much assumptions based on the
-    provided limits as possible.
+    Return a Dummy symbol that inherits as much assumptions based on the
+    provided symbol and limits as possible.
 
     If the symbol already has all possible assumptions, return None.
     Also returns None if no limits are provided.

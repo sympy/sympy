@@ -350,23 +350,11 @@ class Add(Expr, AssocOp):
     def as_coeff_Add(self, rational=False, deps=None):
         """
         Efficiently extract the coefficient of a summation.
-
-        If deps is not None:
-
-        Rewrite as two sums, one without terms in deps and one with.
-        If non-commutative, the terms without the deps only include those to
-        the left of the first non-commutative term.
         """
-        if deps:
-            from sympy.utilities.iterables import sift
-            c, l2c = self.args_cnc()
-            l1, l2 = sift(c[0].args, lambda x: x.has(*deps), binary=True)
-            return self._new_rawargs(*l2), self._new_rawargs(*(l1 + l2c))
-        else:
-            coeff, args = self.args[0], self.args[1:]
+        coeff, args = self.args[0], self.args[1:]
 
-            if coeff.is_Number and not rational or coeff.is_Rational:
-                return coeff, self._new_rawargs(*args)
+        if coeff.is_Number and not rational or coeff.is_Rational:
+            return coeff, self._new_rawargs(*args)
         return S.Zero, self
 
     # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we

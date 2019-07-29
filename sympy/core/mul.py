@@ -768,32 +768,20 @@ class Mul(Expr, AssocOp):
                 return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
-    def as_coeff_Mul(self, rational=False, deps=None):
+    def as_coeff_Mul(self, rational=False):
         """
         Efficiently extract the coefficient of a product.
-
-        If deps is not None:
-
-        Rewrite as two products, one without terms in deps and one with.
-        If non-commutative, the terms without the deps only include those to
-        the left of the first non-commutative term.
         """
-        if deps:
-            from sympy.utilities.iterables import sift
-            c, l2c = self.args_cnc()
-            l1, l2 = sift(c, lambda x: x.has(*deps), binary=True)
-            return self._new_rawargs(*l2), self._new_rawargs(*(l1 + l2c))
-        else:
-            coeff, args = self.args[0], self.args[1:]
+        coeff, args = self.args[0], self.args[1:]
 
-            if coeff.is_Number:
-                if not rational or coeff.is_Rational:
-                    if len(args) == 1:
-                        return coeff, args[0]
-                    else:
-                        return coeff, self._new_rawargs(*args)
-                elif coeff.is_extended_negative:
-                    return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
+        if coeff.is_Number:
+            if not rational or coeff.is_Rational:
+                if len(args) == 1:
+                    return coeff, args[0]
+                else:
+                    return coeff, self._new_rawargs(*args)
+            elif coeff.is_extended_negative:
+                return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
         return S.One, self
 
     def as_real_imag(self, deep=True, **hints):

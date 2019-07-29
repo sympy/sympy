@@ -5,7 +5,7 @@ from sympy import (
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
     Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range)
 from sympy.abc import a, b, c, d, k, m, x, y, z
-from sympy.concrete.summations import telescopic, dummy_with_inherited_properties
+from sympy.concrete.summations import telescopic, _dummy_with_inherited_properties_concrete
 from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.matrices import \
@@ -1170,39 +1170,47 @@ def test_issue_17165():
     assert ssimp == ssimp.simplify()
 
 
-def test_dummy_with_inherited_properties():
+def test__dummy_with_inherited_properties_concrete():
     x = Symbol('x')
 
     from sympy import Tuple
-    d = dummy_with_inherited_properties(Tuple(x, 0, 5))
+    d = _dummy_with_inherited_properties_concrete(Tuple(x, 0, 5))
     assert d.is_real
     assert d.is_integer
     assert d.is_nonnegative
     assert d.is_extended_nonnegative
 
-    d = dummy_with_inherited_properties(Tuple(x, 1, 9))
+    d = _dummy_with_inherited_properties_concrete(Tuple(x, 1, 9))
     assert d.is_real
     assert d.is_integer
     assert d.is_positive
     assert d.is_odd is None
 
-    d = dummy_with_inherited_properties(Tuple(x, -5, 5))
+    d = _dummy_with_inherited_properties_concrete(Tuple(x, -5, 5))
     assert d.is_real
     assert d.is_integer
     assert d.is_positive is None
     assert d.is_extended_nonnegative is None
     assert d.is_odd is None
 
-    d = dummy_with_inherited_properties(Tuple(x, -1.5, 1.5))
+    d = _dummy_with_inherited_properties_concrete(Tuple(x, -1.5, 1.5))
     assert d.is_real
     assert d.is_integer is None
     assert d.is_positive is None
     assert d.is_extended_nonnegative is None
 
     N = Symbol('N', integer=True, positive=True)
-    d = dummy_with_inherited_properties(Tuple(x, 2, N))
+    d = _dummy_with_inherited_properties_concrete(Tuple(x, 2, N))
     assert d.is_real
     assert d.is_positive
     assert d.is_integer
 
+    # Return None if no assumptions are added
     N = Symbol('N', integer=True, positive=True)
+    d = _dummy_with_inherited_properties_concrete(Tuple(N, 2, 4))
+    assert d is None
+
+    # Return None if no limits are given
+    N = Symbol('N', integer=True, positive=True)
+    d = _dummy_with_inherited_properties_concrete(Tuple(N))
+    assert d is None
