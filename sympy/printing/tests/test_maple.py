@@ -226,7 +226,7 @@ def test_containers():
     assert maple_code((1, eye(3), Matrix(0, 0, []), [])) == "(1, [1 0 0;\n0 1 0;\n0 0 1], zeros(0, 0), Any[])"
 
 
-def test_julia_noninline():
+def test_maple_noninline():
     # FIXME: need more info.
     source = maple_code((x + y) / Catalan, assign_to='me', inline=False)
     expected = (
@@ -234,6 +234,43 @@ def test_julia_noninline():
                    "me = (x + y)/Catalan"
                ) % Catalan.evalf(17)
     assert source == expected
+
+def test_maple_matrix_assign_to():
+    A = Matrix([[1, 2, 3]])
+    assert maple_code(A, assign_to='a') == "a = [1 2 3]"
+    A = Matrix([[1, 2], [3, 4]])
+    assert maple_code(A, assign_to='A') == "A = [1 2;\n3 4]"
+
+
+def test_maple_matrix_assign_to_more():
+    # assigning to Symbol or MatrixSymbol requires lhs/rhs match
+    A = Matrix([[1, 2, 3]])
+    B = MatrixSymbol('B', 1, 3)
+    C = MatrixSymbol('C', 2, 3)
+    assert maple_code(A, assign_to=B) == "B = [1 2 3]"
+    raises(ValueError, lambda: maple_code(A, assign_to=x))
+    raises(ValueError, lambda: maple_code(A, assign_to=C))
+
+
+def test_maple_matrix_1x1():
+    A = Matrix([[3]])
+    B = MatrixSymbol('B', 1, 1)
+    C = MatrixSymbol('C', 1, 2)
+    assert maple_code(A, assign_to=B) == "B = [3]"
+    # FIXME?
+    # assert maple_code(A, assign_to=x) == "x = [3]"
+    raises(ValueError, lambda: maple_code(A, assign_to=C))
+
+
+def test_maple_matrix_elements():
+    A = Matrix([[x, 2, x * y]])
+    assert maple_code(A[0, 0] ** 2 + A[0, 1] + A[0, 2]) == "x.^2 + x*y + 2"
+    A = MatrixSymbol('AA', 1, 3)
+    assert maple_code(A) == "AA"
+    assert maple_code(A[0, 0] ** 2 + sin(A[0, 1]) + A[0, 2]) == \
+           "sin(AA[1,2]) + AA[1,1].^2 + AA[1,3]"
+    assert maple_code(sum(A)) == "AA[1,1] + AA[1,2] + AA[1,3]"
+
 
 
 r"""
@@ -290,41 +327,6 @@ def test_julia_piecewise_times_const():
     assert maple_code(pw / 3) == "((x < 1) ? (x) : (x.^2))/3"
 
 
-def test_julia_matrix_assign_to():
-    A = Matrix([[1, 2, 3]])
-    assert maple_code(A, assign_to='a') == "a = [1 2 3]"
-    A = Matrix([[1, 2], [3, 4]])
-    assert maple_code(A, assign_to='A') == "A = [1 2;\n3 4]"
-
-
-def test_julia_matrix_assign_to_more():
-    # assigning to Symbol or MatrixSymbol requires lhs/rhs match
-    A = Matrix([[1, 2, 3]])
-    B = MatrixSymbol('B', 1, 3)
-    C = MatrixSymbol('C', 2, 3)
-    assert maple_code(A, assign_to=B) == "B = [1 2 3]"
-    raises(ValueError, lambda: maple_code(A, assign_to=x))
-    raises(ValueError, lambda: maple_code(A, assign_to=C))
-
-
-def test_julia_matrix_1x1():
-    A = Matrix([[3]])
-    B = MatrixSymbol('B', 1, 1)
-    C = MatrixSymbol('C', 1, 2)
-    assert maple_code(A, assign_to=B) == "B = [3]"
-    # FIXME?
-    # assert maple_code(A, assign_to=x) == "x = [3]"
-    raises(ValueError, lambda: maple_code(A, assign_to=C))
-
-
-def test_julia_matrix_elements():
-    A = Matrix([[x, 2, x * y]])
-    assert maple_code(A[0, 0] ** 2 + A[0, 1] + A[0, 2]) == "x.^2 + x*y + 2"
-    A = MatrixSymbol('AA', 1, 3)
-    assert maple_code(A) == "AA"
-    assert maple_code(A[0, 0] ** 2 + sin(A[0, 1]) + A[0, 2]) == \
-           "sin(AA[1,2]) + AA[1,1].^2 + AA[1,3]"
-    assert maple_code(sum(A)) == "AA[1,1] + AA[1,2] + AA[1,3]"
 
 
 def test_julia_boolean():
