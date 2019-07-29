@@ -4034,19 +4034,21 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     .. math :: x**2*\frac{d^2y}{dx^2} + x*\frac{dy}{dx}*y(x) + (x**2-n**2)*y(x)
 
     if n is integer then the solution is of the form Eq(f(x), C0*besselj(n,x)
-    + C1*bessely(n,x)) as both the solutions are linearly independant else if
+    + C1*bessely(n,x)) as both the solutions are linearly independent else if
     n is a fraction then the solution is of the form Eq(f(x), C0*besselj(n,x)
     + C1*besselj(-n,x)) which can also transform into Eq(f(x), C0*besselj(n,x)
     + C1*bessely(n,x)).
 
-    >>> from sympy.abc import x, y, a, v
+    >>> from sympy.abc import x, y, a
+    >>> from sympy import Symbol
+    >>> v = Symbol('v', positive=True)
     >>> from sympy.solvers.ode import dsolve, checkodesol
     >>> from sympy import pprint, Function
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = x**2*y.diff(x, 2) + x*y.diff(x) + (x**2 - v**2)*y
     >>> dsolve(genform)
-    Eq(f(x), C1*besselj(sqrt(v**2), x) + C2*bessely(sqrt(v**2), x))
+    Eq(f(x), C1*besselj(v, x) + C2*bessely(v, x))
 
 
     https://www.math24.net/bessel-differential-equation/
