@@ -105,6 +105,19 @@ class MapleCodePrinter(CodePrinter):
                 self.parenthesize(expr.base, PREC),
                 self.parenthesize(expr.exp, PREC))
 
+    def _print_Piecewise(self, expr):
+        if expr.args[-1].cond != True:
+            # We need the last conditional to be a True, otherwise the resulting
+            # function may not return a result.
+            raise ValueError("All Piecewise expressions must contain an "
+                             "(expr, True) statement to be used as a default "
+                             "condition. Without one, the generated "
+                             "expression may not evaluate to anything under "
+                             "some condition.")
+        _coup_list = [("{c}, {e}".format(c=c, e=e) if c is not True else "{e}".format(e=e)) for e, c in expr.args]
+        _inbrace = ', '.join(_coup_list)
+        return 'piecewise({_inbrace})'.join(_inbrace)
+
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
         return '%d/%d' % (p, q)
