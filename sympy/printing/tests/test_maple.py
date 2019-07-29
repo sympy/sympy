@@ -246,11 +246,12 @@ def test_maple_noninline():
                ) % Catalan.evalf(17)
     assert source == expected
 
+
 def test_maple_matrix_assign_to():
     A = Matrix([[1, 2, 3]])
-    assert maple_code(A, assign_to='a') == "a = [1 2 3]"
+    assert maple_code(A, assign_to='a') == "a := Matrix([[1], [2], [3]], storage = rectangular)"
     A = Matrix([[1, 2], [3, 4]])
-    assert maple_code(A, assign_to='A') == "A = [1 2;\n3 4]"
+    assert maple_code(A, assign_to='A') == "A := Matrix([[1, 2], [3, 4]], storage = rectangular)"
 
 
 def test_maple_matrix_assign_to_more():
