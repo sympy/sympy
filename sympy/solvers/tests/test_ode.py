@@ -270,17 +270,17 @@ def test_linear_2eq_order2():
     assert dsolve(eq8) == sol8
     assert checksysodesol(eq8, sol8) == (True, [0, 0])
     assert filldedent(dsolve(eq8)) == filldedent('''
-        [Eq(x(t), -sqrt(133)*(-(-1 + sqrt(133))*(C2*(-sqrt(133)*t**3/6 -
-        t**3/6 + 1) + C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) + O(t**6)) +
-        (-sqrt(133) - 1)*(C2*(-t**3/6 + sqrt(133)*t**3/6 + 1) + C1*t*(-t**3/12
-        + sqrt(133)*t**3/12 + 1) + O(t**6)) + 4*C2*(-sqrt(133)*t**3/6 - t**3/6
-        + 1) - 4*C2*(-t**3/6 + sqrt(133)*t**3/6 + 1) +
-        4*C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) - 4*C1*t*(-t**3/12 +
-        sqrt(133)*t**3/12 + 1) + O(t**6))/3192), Eq(y(t),
-        -sqrt(133)*(C2*(-sqrt(133)*t**3/6 - t**3/6 + 1) - C2*(-t**3/6 +
-        sqrt(133)*t**3/6 + 1) + C1*t*(-sqrt(133)*t**3/12 - t**3/12 + 1) -
-        C1*t*(-t**3/12 + sqrt(133)*t**3/12 + 1) + O(t**6))/266)]''')
-    # FIXME: assert checksysodesol(eq8, sol8) == (True, [0, 0])
+        [Eq(x(t), -sqrt(133)*(-4*C1*airyai(t*(-1 + sqrt(133))**(1/3)) +
+        4*C1*airyai(-t*(1 + sqrt(133))**(1/3)) - 4*C2*airybi(t*(-1 +
+        sqrt(133))**(1/3)) + 4*C2*airybi(-t*(1 + sqrt(133))**(1/3)) +
+        (-sqrt(133) - 1)*(C1*airyai(t*(-1 + sqrt(133))**(1/3)) +
+        C2*airybi(t*(-1 + sqrt(133))**(1/3))) - (-1 +
+        sqrt(133))*(C1*airyai(-t*(1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 +
+        sqrt(133))**(1/3))))/3192), Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 +
+        sqrt(133))**(1/3)) + C1*airyai(-t*(1 + sqrt(133))**(1/3)) -
+        C2*airybi(t*(-1 + sqrt(133))**(1/3)) + C2*airybi(-t*(1 +
+        sqrt(133))**(1/3)))/266)]''')
+    assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
     eq9 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
     sol9 = [Eq(x(t), -sqrt(133)*(4*C1*Integral(exp((-sqrt(133) - 1)*Integral(t, t)), t) + 4*C2 - \
