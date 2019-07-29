@@ -25,7 +25,7 @@ from sympy.polys import together, cancel, factor
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.powsimp import powsimp
-from sympy.simplify.radsimp import radsimp, fraction
+from sympy.simplify.radsimp import radsimp, fraction, collect_abs
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.iterables import has_variety, sift
@@ -516,8 +516,16 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     expression. You can avoid this behavior by passing ``doit=False`` as
     an argument.
     """
+    def shorter(*choices):
+        '''Return the choice that has the fewest ops. In case of a tie,
+        the expression listed first is selected.'''
+        if not has_variety(choices):
+            return choices[0]
+        return min(choices, key=measure)
+
     def done(e):
-        return e.doit() if doit else e
+        rv = e.doit() if doit else e
+        return shorter(rv, collect_abs(rv))
 
     expr = sympify(expr)
     kwargs = dict(
@@ -534,7 +542,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if _eval_simplify is not None:
         return _eval_simplify(**kwargs)
 
-    original_expr = expr = signsimp(expr)
+    original_expr = expr = collect_abs(signsimp(expr))
 
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
@@ -558,13 +566,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
-
-    def shorter(*choices):
-        '''Return the choice that has the fewest ops. In case of a tie,
-        the expression listed first is selected.'''
-        if not has_variety(choices):
-            return choices[0]
-        return min(choices, key=measure)
 
     # rationalize Floats
     floats = False

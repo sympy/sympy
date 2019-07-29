@@ -861,3 +861,7 @@ def test_simplify_kroneckerdelta():
                                      [0, K(0, n), 0, K(1, n)],
                                      [0, 0, K(0, n), 0],
                                      [0, 0, 0, K(0, n)]])
+
+
+def test_issue_17292():
+    assert simplify(abs(x)/abs(x**2)) == 1/abs(x)
