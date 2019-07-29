@@ -95,7 +95,9 @@ class MapleCodePrinter(CodePrinter):
         elif expr.exp == -0.5 or expr.exp == -S(1) / 2:
             return '1/sqrt(%s)' % self._print(expr.base)
         else:
-            return '%s^%s' % (self._print(expr.base), self._print(expr.exp))
+            return '%s^%s' % (
+                self.parenthesize(expr.base, PREC),
+                self.parenthesize(expr.exp, PREC))
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
@@ -111,6 +113,9 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_NumberSymbol(self, expr):
         return number_symbols[expr]
+
+    def _print_GoldenRatio(self, expr):
+        return self._print(expr.expand(func=True))
 
     def _print_NegativeInfinity(self, expr):
         return '-infinity'

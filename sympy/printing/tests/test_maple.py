@@ -48,6 +48,7 @@ def test_Function():
 def test_Pow():
     assert maple_code(x ** 3) == "x^3"
     assert maple_code(x ** (y ** 3)) == "x^(y^3)"
+    assert maple_code((x ** 3) ** y) == "(x^3)^y"
     assert maple_code(x ** Rational(2, 3)) == 'x^(2/3)'
 
     # FIXME: not done yet.
@@ -136,7 +137,7 @@ def test_constants():
 
 def test_constants_other():
     # FIXME: need more info.
-    assert maple_code(2 * GoldenRatio) == "2*golden"
+    assert maple_code(2 * GoldenRatio) == '1/2 + (1/2)*sqrt(5)'
     assert maple_code(2 * Catalan) == "2*catalan"
     assert maple_code(2 * EulerGamma) == "2*gamma"
 
