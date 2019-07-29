@@ -880,11 +880,17 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_HadamardProduct(self, expr):
-        from sympy import MatAdd, MatMul
+        from sympy import MatAdd, MatMul, HadamardProduct
         if self._use_unicode:
             delim = pretty_atom('Ring')
         else:
             delim = '.*'
+        return self._print_seq(expr.args, None, None, delim,
+                parenthesize=lambda x: isinstance(x, (MatAdd, MatMul, HadamardProduct)))
+
+    def _print_HadamardPower(self, expr):
+        from sympy import MatAdd, MatMul
+        delim = '.**'
         return self._print_seq(expr.args, None, None, delim,
                 parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
 

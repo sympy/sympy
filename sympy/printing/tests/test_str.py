@@ -771,7 +771,7 @@ def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
 
 def test_Complement():
-    assert str(Complement(S.Reals, S.Naturals)) == 'Reals \\ Naturals'
+    assert str(Complement(S.Reals, S.Naturals)) == 'Complement(Reals, Naturals)'
 
 def test_SymmetricDifference():
     assert str(SymmetricDifference(Interval(2, 3), Interval(3, 4),evaluate=False)) == \

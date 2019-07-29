@@ -269,7 +269,7 @@ def not_empty_in(finset_intersection, *syms):
     >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
     Interval(0, 2)
     >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
-    Union(Interval(-sqrt(2), -1), Interval(1, 2))
+    Union(Interval(1, 2), Interval(-sqrt(2), -1))
     >>> not_empty_in(FiniteSet(x**2/(x + 2)).intersect(Interval(1, oo)), x)
     Union(Interval.Lopen(-2, -1), Interval(2, oo))
     """
