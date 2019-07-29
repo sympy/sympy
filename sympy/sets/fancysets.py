@@ -452,42 +452,50 @@ class ImageSet(Set):
             return self
 
         def unify_img(base, self_expr, other_expr, self_sym, other_sym):
+
+            if self_sym != other_sym:
+                return None
+
+            sym = self_sym
+
+            # self_expr = a*n + b, other_expr = c*n + d
             a, c = self_expr.coeff(self_sym), other_expr.coeff(other_sym)
             b, d = self_expr.subs(self_sym, 0), other_expr.subs(other_sym, 0)
-            # an + b, cn+d
+
+            # preprocessing expressions
             b = b%a
             d = d%c
             p = lcm(a, c)
+
+            # check if both expressions are equal after preprocessing.
             if a == c and b == d:
-                return ImageSet(Lambda(self_sym, a*self_sym + b), base)
-            if a == c and p%abs(b - d) != 0:
+                return ImageSet(Lambda(sym, a*sym + b), base)
+
+            # check expressions of same divisor ring.
+            if a == c and p % abs(b - d) != 0:
                 return None
-            list1=[]
-            n = 0
-            while a*n + b <= 2*p:
-                list1.append(a*n +b)
-                n += 1
-            n = 0
-            while c*n + d <= 2*p:
-                list1.append(c*n + d)
-                n += 1
-            list1 = (sorted(set(list1)))
-            x = Symbol('x')
-            y = Symbol('y')
-            eqs = [x*0 + y - list1[0], x + y - list1[1]]
-            x, y = list(linsolve(eqs, x, y))[0]
-            n = 0
-            flag = 0
-            while n <= len(list1):
-                try:
-                    if x*n + y != list1[n]:
-                        flag = 1
-                        break
-                except IndexError:
+
+            # collecting points
+            f_n = lambda a, b, n: a*n + b
+            from sympy.functions.elementary.integers import ceiling
+
+            points = []
+            points.extend(f_n(a, b, n) for n in range(0, ceiling((p - b) / a) + 1))
+            points.extend(f_n(c, d, n) for n in range(0, ceiling((p - d) / c) + 1))
+
+            points = (sorted(set(points)))
+
+            # checking if points follow a linear relation
+            e, f = points[1] - points[0], points[0]
+
+            flag = True
+            for n in range(0, len(points)):
+                if f_n(e, f, n) != points[n]:
+                    flag = False
                     break
-                n += 1
-            if flag == 0:
-                return ImageSet(Lambda(self_sym, x*self_sym + y), base)
+            # if all points satisfy then e*n + f is the solution.
+            if flag:
+                return ImageSet(Lambda(sym, e*sym + f), base)
             else:
                 return None
 
