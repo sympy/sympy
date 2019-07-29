@@ -147,7 +147,7 @@ class MapleCodePrinter(CodePrinter):
                 storage='sparse' if sparse else 'rectangular')
         else:
             _strM = 'Matrix({list}, storage = {storage})'.format(
-                list=self._print(expr.tolist()),
+                list=str(expr.tolist()),
                 storage='sparse' if sparse else 'rectangular')
         return _strM
 
