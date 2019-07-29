@@ -154,41 +154,52 @@ def test_boolean():
 
 
 def test_Matrices():
-    assert maple_code(Matrix(1, 1, [10])) == "Matrix([10], storage = triangle)"
+    assert maple_code(Matrix(1, 1, [10])) == \
+        'Matrix([[10]], storage = rectangular)'
 
-    # FIXME: need to be improved.
     A = Matrix([[1, sin(x / 2), abs(x)],
                 [0, 1, pi],
                 [0, exp(1), ceiling(x)]])
-    expected = ("[1 sin(x/2)  abs(x);\n"
-                "0        1      pi;\n"
-                "0        e ceil(x)]")
+    expected = \
+        'Matrix(' \
+            '[[1, sin((1/2)*x), abs(x)],' \
+            ' [0, 1, Pi],' \
+            ' [0, exp(1), ceil(x)]], ' \
+            'storage = rectangular)'
     assert maple_code(A) == expected
+
     # row and columns
-    assert maple_code(A[:, 0]) == "[1, 0, 0]"
-    assert maple_code(A[0, :]) == "[1 sin(x/2) abs(x)]"
+    assert maple_code(A[:, 0]) == \
+        'Matrix([[1], [0], [0]], storage = rectangular)'
+    assert maple_code(A[0, :]) == \
+        'Matrix([[1, sin((1/2)*x), abs(x)]], storage = rectangular)'
+    assert maple_code(Matrix([[x, x - y, -y]])) == \
+        'Matrix([[x, x - y, -y]], storage = rectangular)'
+
     # empty matrices
-    assert maple_code(Matrix(0, 0, [])) == 'zeros(0, 0)'
-    assert maple_code(Matrix(0, 3, [])) == 'zeros(0, 3)'
-    # annoying to read but correct
-    assert maple_code(Matrix([[x, x - y, -y]])) == "[x x - y -y]"
+    assert maple_code(Matrix(0, 0, [])) == \
+        'Matrix([], storage = rectangular)'
+    assert maple_code(Matrix(0, 3, [])) == \
+        'Matrix([], storage = rectangular)'
 
 
 def test_vector_entries_hadamard():
     # For a row or column, user might to use the other dimension
     A = Matrix([[1, sin(2 / x), 3 * pi / x / 5]])
-    assert maple_code(A) == "Matrix([1,sin(2/x),3*pi/(5*x)], storage = triangle)"
-    assert maple_code(A.T) == "[1, sin(2/x), 3*pi/(5*x)]"
+    assert maple_code(A) == \
+        'Matrix([[1, sin(2/x), (3/5)*Pi/x]], storage = rectangular)'
+    assert maple_code(A.T) == \
+        'Matrix([[1], [sin(2/x)], [(3/5)*Pi/x]], storage = rectangular)'
 
 
-@XFAIL
 def test_Matrices_entries_not_hadamard():
     # For Matrix with col >= 2, row >= 2, they need to be scalars
     # FIXME: is it worth worrying about this?  Its not wrong, just
     # leave it user's responsibility to put scalar data for x.
     A = Matrix([[1, sin(2 / x), 3 * pi / x / 5], [1, 2, x * y]])
-    expected = ("[1 sin(2/x) 3*pi/(5*x);\n"
-                "1        2        x*y]")  # <- we give x*y
+    expected = \
+        'Matrix([[1, sin(2/x), (3/5)*Pi/x], [1, 2, x*y]], ' \
+        'storage = rectangular)'
     assert maple_code(A) == expected
 
 
@@ -379,14 +390,19 @@ def test_haramard():
 
 def test_sparse():
     M = SparseMatrix(5, 6, {})
-    M[2, 2] = 10;
-    M[1, 2] = 20;
-    M[1, 3] = 22;
-    M[0, 3] = 30;
-    M[3, 0] = x * y;
-    assert maple_code(M) == (
-        "sparse([4, 2, 3, 1, 2], [1, 3, 3, 4, 4], [x*y, 20, 10, 30, 22], 5, 6)"
-    )
+    M[2, 2] = 10
+    M[1, 2] = 20
+    M[1, 3] = 22
+    M[0, 3] = 30
+    M[3, 0] = x * y
+    assert maple_code(M) == \
+        'Matrix(' \
+            '[[0, 0, 0, 30, 0, 0],' \
+            ' [0, 0, 20, 22, 0, 0],' \
+            ' [0, 0, 10, 0, 0, 0],' \
+            ' [x*y, 0, 0, 0, 0, 0],' \
+            ' [0, 0, 0, 0, 0, 0]], '\
+            'storage = sparse)'
 
 
 def test_specfun():

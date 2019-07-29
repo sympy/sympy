@@ -138,24 +138,12 @@ class MapleCodePrinter(CodePrinter):
 
     def _get_matrix(self, expr, sparse=False):
         if expr.cols == 0 or expr.rows == 0:
-            _strM = 'Matrix([], storage = %s)' % 'sparse' if sparse else 'rectangular'
-        elif expr.cols == 1:
-            _strM = 'Matrix([%s], storage = %s)' % (','.join(
-                str(_m) for _m in list(expr.col(0))), 'sparse' if sparse else
-                                                    'rectangular')
-        elif expr.rows == 1:
-            _strM = 'Matrix([%s], storage = %s)' % (','.join(
-                '[%s]' % str(_m)
-                for _m in list(str(_m) for _m in expr.col(0))), 'sparse' if
-                                                    sparse else 'rectangular')
+            _strM = 'Matrix([], storage = %s)' % \
+                ('sparse' if sparse else 'rectangular')
         else:
-            _row_content_list = [
-                '[%s]' % ','.join(str(_m) for _m in list(expr.row(i)))
-                for i in range(expr.rows)
-            ]
-            _strM = 'Matrix([%s], storage = %s)' % (','.join(
-                _row_content_list), 'sparse' if sparse else 'rectangular')
-
+            _strM = 'Matrix({list}, storage = {storage})'.format(
+                list=self._print(expr.tolist()),
+                storage='sparse' if sparse else 'rectangular')
         return _strM
 
     def _print_MatrixBase(self, expr):
