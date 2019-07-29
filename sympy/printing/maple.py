@@ -151,6 +151,11 @@ class MapleCodePrinter(CodePrinter):
                 storage='sparse' if sparse else 'rectangular')
         return _strM
 
+    def _print_MatrixElement(self, expr):
+        return "{parent}[{i_maple}, {j_maple}]".format(
+            parent=self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True), i_maple=expr.i + 1,
+            j_maple=expr.j + 1)
+
     def _print_MatrixBase(self, expr):
         return self._get_matrix(expr, sparse=False)
 
