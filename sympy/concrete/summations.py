@@ -992,11 +992,6 @@ def eval_sum_direct(expr, limits):
     if expr.is_Mul:
         # Try factor out everything not including i
         without_i, with_i = expr.as_independent(i)
-        print("Eval sum direct")
-        print(expr)
-        print(i)
-        print(without_i)
-        print(with_i)
         if without_i != 1:
             s = eval_sum_direct(with_i, (i, a, b))
             if s:
