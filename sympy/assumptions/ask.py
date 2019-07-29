@@ -1214,7 +1214,7 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
 
 
 def _extract_all_facts(expr, symbol):
-    facts = []
+    facts = set()
     if isinstance(symbol, Relational):
         symbols = (symbol, symbol.reversed)
     else:
@@ -1224,17 +1224,15 @@ def _extract_all_facts(expr, symbol):
         for literal in clause:
             if isinstance(literal.lit, AppliedPredicate):
                 if literal.lit.arg in symbols:
+                    # Add literal if it has 'symbol' in it
                     args.append(Literal(literal.lit.func, literal.is_Not))
                 else:
-                    args.append(None)
-                continue
-
-        if args and all(x is not None for x in args):
-            facts.append(frozenset(args))
+                    # If any of the literals doesn't have 'symbol' don't add the whole clause.
+                    break
         else:
-            facts.append(None)
-    args = [arg for arg in facts if arg is not None]
-    return CNF(set(args))
+            if args:
+                facts.add(frozenset(args))
+    return CNF(facts)
 
 
 def ask(proposition, assumptions=True, context=global_assumptions):
