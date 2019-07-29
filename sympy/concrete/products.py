@@ -298,11 +298,13 @@ class Product(ExprWithIntLimits):
                 return self._eval_product(factored, (k, a, n))
 
         elif term.is_Mul:
-            without_k, with_k = term.as_independent(k)
+            # Factor in part without the summation variable and part with
+            without_k, with_k = term.as_coeff_mul(k)
 
-            if with_k.is_Mul:
+            if len(with_k) >= 2:
+                # More than one term including k, so still a multiplication
                 exclude, include = [], []
-                for t in with_k.args:
+                for t in with_k:
                     p = self._eval_product(t, (k, a, n))
 
                     if p is not None:
@@ -318,9 +320,10 @@ class Product(ExprWithIntLimits):
                     B = self.func(arg, (k, a, n)).doit()
                     return without_k**(n - a + 1)*A * B
             else:
-                p = self._eval_product(with_k, (k, a, n))
+                # Just a single term
+                p = self._eval_product(with_k[0], (k, a, n))
                 if p is None:
-                    p = self.func(with_k, (k, a, n)).doit()
+                    p = self.func(with_k[0], (k, a, n)).doit()
                 return without_k**(n - a + 1)*p
 
 
