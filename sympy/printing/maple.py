@@ -115,7 +115,9 @@ class MapleCodePrinter(CodePrinter):
         return number_symbols[expr]
 
     def _print_GoldenRatio(self, expr):
-        return self._print(expr.expand(func=True))
+        expanded = expr.expand(func=True)
+        PREC = precedence(expr)
+        return self.parenthesize(expanded, PREC)
 
     def _print_NegativeInfinity(self, expr):
         return '-infinity'

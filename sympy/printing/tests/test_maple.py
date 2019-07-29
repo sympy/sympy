@@ -27,7 +27,7 @@ def test_Rational():
     assert maple_code(Rational(3, -7)) == "-3/7"
     assert maple_code(Rational(-3, -7)) == "3/7"
     assert maple_code(x + Rational(3, 7)) == "x + 3/7"
-    assert maple_code(Rational(3, 7) * x) == "3*x/7"
+    assert maple_code(Rational(3, 7) * x) == '(3/7)*x'
 
 
 def test_Relational():
@@ -76,45 +76,45 @@ def test_1_over_x_and_sqrt():
     assert maple_code(x ** -S.Half) == maple_code(x ** -0.5) == '1/sqrt(x)'
     assert maple_code(sqrt(x)) == 'sqrt(x)'
     assert maple_code(x ** S.Half) == maple_code(x ** 0.5) == 'sqrt(x)'
-    assert maple_code(1 / pi) == '1/pi'
-    assert maple_code(pi ** -1) == maple_code(pi ** -1.0) == '1/pi'
-    assert maple_code(pi ** -0.5) == '1/sqrt(pi)'
+    assert maple_code(1 / pi) == '1/Pi'
+    assert maple_code(pi ** -1) == maple_code(pi ** -1.0) == '1/Pi'
+    assert maple_code(pi ** -0.5) == '1/sqrt(Pi)'
 
 
 def test_mix_number_mult_symbols():
     assert maple_code(3 * x) == "3*x"
-    assert maple_code(pi * x) == "pi*x"
+    assert maple_code(pi * x) == "Pi*x"
     assert maple_code(3 / x) == "3/x"
-    assert maple_code(pi / x) == "pi/x"
-    assert maple_code(x / 3) == "x/3"
-    assert maple_code(x / pi) == "x/pi"
+    assert maple_code(pi / x) == "Pi/x"
+    assert maple_code(x / 3) == '(1/3)*x'
+    assert maple_code(x / pi) == "x/Pi"
     assert maple_code(x * y) == "x*y"
     assert maple_code(3 * x * y) == "3*x*y"
-    assert maple_code(3 * pi * x * y) == "3*pi*x*y"
+    assert maple_code(3 * pi * x * y) == "3*Pi*x*y"
     assert maple_code(x / y) == "x/y"
     assert maple_code(3 * x / y) == "3*x/y"
     assert maple_code(x * y / z) == "x*y/z"
     assert maple_code(x / y * z) == "x*z/y"
     assert maple_code(1 / x / y) == "1/(x*y)"
-    assert maple_code(2 * pi * x / y / z) == "2*pi*x/(y*z)"
-    assert maple_code(3 * pi / x) == "3*pi/x"
+    assert maple_code(2 * pi * x / y / z) == "2*Pi*x/(y*z)"
+    assert maple_code(3 * pi / x) == "3*Pi/x"
     assert maple_code(S(3) / 5) == "3/5"
-    assert maple_code(S(3) / 5 * x) == "3*x/5"
+    assert maple_code(S(3) / 5 * x) == '(3/5)*x'
     assert maple_code(x / y / z) == "x/(y*z)"
     assert maple_code((x + y) / z) == "(x + y)/z"
     assert maple_code((x + y) / (z + x)) == "(x + y)/(x + z)"
-    assert maple_code((x + y) / EulerGamma) == "(x + y)/eulergamma"
-    assert maple_code(x / 3 / pi) == "x/(3*pi)"
-    assert maple_code(S(3) / 5 * x * y / pi) == "3*x*y/(5*pi)"
+    assert maple_code((x + y) / EulerGamma) == '(x + y)/gamma'
+    assert maple_code(x / 3 / pi) == '(1/3)*x/Pi'
+    assert maple_code(S(3) / 5 * x * y / pi) == '(3/5)*x*y/Pi'
 
 
 def test_mix_number_pow_symbols():
-    assert maple_code(pi ** 3) == 'pi^3'
-    assert maple_code(x ** 2) == 'x.^2'
-    assert maple_code(x ** (pi ** 3)) == 'x.^(pi^3)'
-    assert maple_code(x ** y) == 'x.^y'
-    assert maple_code(x ** (y ** z)) == 'x.^(y.^z)'
-    assert maple_code((x ** y) ** z) == '(x.^y).^z'
+    assert maple_code(pi ** 3) == 'Pi^3'
+    assert maple_code(x ** 2) == 'x^2'
+    assert maple_code(x ** (pi ** 3)) == 'x^(Pi^3)'
+    assert maple_code(x ** y) == 'x^y'
+    assert maple_code(x ** (y ** z)) == 'x^(y^z)'
+    assert maple_code((x ** y) ** z) == '(x^y)^z'
 
 
 def test_imag():
@@ -126,19 +126,19 @@ def test_imag():
 
 
 def test_constants():
-    assert maple_code(pi) == "pi"
-    assert maple_code(oo) == "Inf"
-    assert maple_code(-oo) == "-Inf"
-    assert maple_code(S.NegativeInfinity) == "-Inf"
-    assert maple_code(S.NaN) == "NaN"
-    assert maple_code(S.Exp1) == "e"
-    assert maple_code(exp(1)) == "e"
+    assert maple_code(pi) == "Pi"
+    assert maple_code(oo) == "infinity"
+    assert maple_code(-oo) == "-infinity"
+    assert maple_code(S.NegativeInfinity) == "-infinity"
+    assert maple_code(S.NaN) == "undefined"
+    assert maple_code(S.Exp1) == "exp(1)"
+    assert maple_code(exp(1)) == "exp(1)"
 
 
 def test_constants_other():
     # FIXME: need more info.
-    assert maple_code(2 * GoldenRatio) == '1/2 + (1/2)*sqrt(5)'
-    assert maple_code(2 * Catalan) == "2*catalan"
+    assert maple_code(2 * GoldenRatio) == '2*(1/2 + (1/2)*sqrt(5))'
+    assert maple_code(2 * Catalan) == '2*Catalan'
     assert maple_code(2 * EulerGamma) == "2*gamma"
 
 
