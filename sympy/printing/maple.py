@@ -48,7 +48,8 @@ number_symbols = {
     S.Pi: 'Pi',
     S.Exp1: 'exp(1)',
     S.Catalan: 'Catalan',
-    S.EulerGamma: 'gamma'
+    S.EulerGamma: 'gamma',
+    S.GoldenRatio: '(1/2 + (1/2)*sqrt(5))'
 }
 
 spec_relational_ops = {
@@ -119,11 +120,6 @@ class MapleCodePrinter(CodePrinter):
     def _print_NumberSymbol(self, expr):
         return number_symbols[expr]
 
-    def _print_GoldenRatio(self, expr):
-        expanded = expr.expand(func=True)
-        PREC = precedence(expr)
-        return self.parenthesize(expanded, PREC)
-
     def _print_NegativeInfinity(self, expr):
         return '-infinity'
 
@@ -147,24 +143,12 @@ class MapleCodePrinter(CodePrinter):
 
     def _get_matrix(self, expr, sparse=False):
         if expr.cols == 0 or expr.rows == 0:
-            _strM = 'Matrix([], storage = %s)' % 'sparse' if sparse else 'rectangular'
-        elif expr.cols == 1:
-            _strM = 'Matrix([%s], storage = %s)' % (','.join(
-                str(_m) for _m in list(expr.col(0))), 'sparse' if sparse else
-                                                    'rectangular')
-        elif expr.rows == 1:
-            _strM = 'Matrix([%s], storage = %s)' % (','.join(
-                '[%s]' % str(_m)
-                for _m in list(str(_m) for _m in expr.col(0))), 'sparse' if
-                                                    sparse else 'rectangular')
+            _strM = 'Matrix([], storage = %s)' % \
+                ('sparse' if sparse else 'rectangular')
         else:
-            _row_content_list = [
-                '[%s]' % ','.join(str(_m) for _m in list(expr.row(i)))
-                for i in range(expr.rows)
-            ]
-            _strM = 'Matrix([%s], storage = %s)' % (','.join(
-                _row_content_list), 'sparse' if sparse else 'rectangular')
-
+            _strM = 'Matrix({list}, storage = {storage})'.format(
+                list=self._print(expr.tolist()),
+                storage='sparse' if sparse else 'rectangular')
         return _strM
 
     def _print_MatrixBase(self, expr):
