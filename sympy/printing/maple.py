@@ -86,6 +86,11 @@ class MapleCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return lines
 
+    def _print_Assignment(self, expr):
+        lhs = expr.lhs
+        rhs = expr.rhs
+        return "{lhs} := {rhs}".format(lhs=lhs, rhs=rhs)
+
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp == -1:
