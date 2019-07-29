@@ -535,7 +535,7 @@ class Range(Set):
         start, stop, step = slc.start or 0, slc.stop, slc.step or 1
         params = []
         for w in (start, stop, step):
-            if w in [S.NegativeInfinity, S.Infinity] or sympify(w).is_integer == True:
+            if (w in [S.NegativeInfinity, S.Infinity]) or (sympify(w).is_integer == True):
                 params.append(sympify(w))
             else:
                 raise ValueError(filldedent('''
@@ -588,6 +588,8 @@ class Range(Set):
 
     @property
     def reversed(self):
+        from sympy.functions.elementary.integers import ceiling
+        from sympy.functions.elementary.piecewise import Piecewise
         """Return an equivalent Range in the opposite order.
 
         Examples
@@ -599,8 +601,10 @@ class Range(Set):
         """
         if not self:
             return self
-        return self.func(
-            self._stop - self.step, self.start - self.step, -self.step)
+        start, stop, step = self.start, self._stop, self.step
+        r1 = (Range(0, 0, 1), Le(ceiling((stop - start)/step), S.Zero))
+        r2 = (self.func(stop - step, start - step, -step), True)
+        return Piecewise(r1, r2)
 
     def _contains(self, other):
         from sympy.functions.elementary.piecewise import Piecewise
